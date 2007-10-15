@@ -46,7 +46,6 @@
 #include "nsBoxFrame.h"
 #include "nsIScrollbarFrame.h"
 
-class nsISupportsArray;
 class nsIScrollbarMediator;
 
 nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
