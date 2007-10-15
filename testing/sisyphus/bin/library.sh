@@ -178,8 +178,6 @@ if [[ -z "$LIBRARYSH" ]]; then
     TEST_HTTP=${TEST_HTTP:-test.mozilla.com}
     TEST_STARTUP_TIMEOUT=${TEST_STARTUP_TIMEOUT:-30}
 
-    TEST_TIMEZONE=`date +%z`
-
     TEST_MACHINE=`uname -n`
     TEST_KERNEL=`uname -r`
     TEST_PROCESSORTYPE=`uname -p`
@@ -201,6 +199,14 @@ if [[ -z "$LIBRARYSH" ]]; then
     else
         error "Unknown OS $OSTYPE"
     fi
+
+    # force en_US locale
+    if ! echo "$LANG" | grep -q en_US; then
+        LANG=en_US
+        LC_TIME=en_US
+    fi
+
+    TEST_TIMEZONE=`date +%z`
 
     # save starting directory
     STARTDIR=`pwd`
