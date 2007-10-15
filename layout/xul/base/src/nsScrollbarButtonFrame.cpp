@@ -156,14 +156,7 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   PRBool smoothScroll = PR_TRUE;
   switch (pressedButtonAction) {
     case 0:
-#ifdef MOZ_WIDGET_COCOA
-      // Emulate the Mac IE behavior of scrolling 2 lines instead of 1
-      // on a button press.  This makes scrolling appear smoother and
-      // keeps us competitive with IE.
-      mIncrement = direction * nsSliderFrame::GetIncrement(content) * 2;
-#else
       mIncrement = direction * nsSliderFrame::GetIncrement(content);
-#endif
       break;
     case 1:
       mIncrement = direction * nsSliderFrame::GetPageIncrement(content);
