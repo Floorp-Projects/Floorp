@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Chris Saari <saari@netscape.com>
+ *   Federico Mena-Quintero <federico@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,6 +59,7 @@
 #include "nsIProperties.h"
 #include "nsITimer.h"
 #include "nsWeakReference.h"
+#include "nsTArray.h"
 
 #define NS_IMGCONTAINER_CID \
 { /* 27f0682c-ff64-4dd2-ae7a-668e59f2fd38 */         \
@@ -192,14 +194,8 @@ private:
         timer->Cancel();
     }
   };
-  
-  inline gfxIImageFrame* inlinedGetCurrentFrame() {
-    if (!mAnim)
-      return mFrames.SafeObjectAt(0);
-    if (mAnim->lastCompositedFrameIndex == mAnim->currentAnimationFrameIndex)
-      return mAnim->compositingFrame;
-    return mFrames.SafeObjectAt(mAnim->currentAnimationFrameIndex);
-  }
+
+  nsresult GetCurrentFrameNoRef(gfxIImageFrame** aFrame);
   
   inline Anim* ensureAnimExists() {
     if (!mAnim)
@@ -283,10 +279,15 @@ private:
   nsIntSize                  mSize;
   
   //! All the <gfxIImageFrame>s of the PNG
+  // *** IMPORTANT: if you use mFrames in a method, call RestoreDiscardedData() first to ensure
+  //     that the frames actually exist (they may have been discarded to save memory).
   nsCOMArray<gfxIImageFrame> mFrames;
+  int                        mNumFrames; /* stored separately from mFrames.Count() to support discarded images */
   
   nsCOMPtr<nsIProperties>    mProperties;
-  
+
+  // *** IMPORTANT: if you use mAnim in a method, call RestoreDiscardedData() first to ensure
+  //     that the frames actually exist (they may have been discarded to save memory).
   imgContainer::Anim*        mAnim;
   
   //! See imgIContainer for mode constants
@@ -297,6 +298,19 @@ private:
   
   //! imgIContainerObserver
   nsWeakPtr                  mObserver;
+
+  PRBool                     mDiscardable;
+  PRBool                     mDiscarded;
+  nsCString                  mDiscardableMimeType;
+
+  nsTArray<char>             mRestoreData;
+  PRBool                     mRestoreDataDone;
+  nsCOMPtr<nsITimer>         mDiscardTimer;
+
+  nsresult ResetDiscardTimer (void);
+  nsresult RestoreDiscardedData (void);
+  nsresult ReloadImages (void);
+  static void sDiscardTimerCallback (nsITimer *aTimer, void *aClosure);
 };
 
 #endif /* __imgContainer_h__ */
