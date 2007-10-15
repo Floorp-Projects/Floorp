@@ -414,11 +414,10 @@ sub Announce {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $version = $config->Get(var => 'version');
-    my $ausDeliveryDir = $config->Get(var => 'ausDeliveryDir');
 
     $this->SendAnnouncement(
       subject => "$product $version update step finished",
-      message => "$product $version updates finished. Partial mars were copied to the candidates dir, and the snippets in $ausDeliveryDir-test were pushed live.",
+      message => "$product $version updates finished. Partial mars were copied to the candidates dir, and the test snippets were pushed live.",
     );
 }
 
