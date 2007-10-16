@@ -1,4 +1,4 @@
-pref("browser.places.sync.serverURL", "https://services.mozilla.com/user/");
+pref("browser.places.sync.serverURL", "https://services.mozilla.com/");
 pref("browser.places.sync.username", "nobody@mozilla.com");
 pref("browser.places.sync.rememberpassword", true);
 pref("browser.places.sync.autoconnect", true);
