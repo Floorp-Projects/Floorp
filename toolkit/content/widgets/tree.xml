@@ -56,7 +56,7 @@
                 onget="return this.treeBoxObject.treeBody;"/>
 
       <property name="editable"
-                onget="return this.getAttribute('editable') == 'true';"
+                onget="return this.hasAttribute('editable');"
                 onset="if (val) this.setAttribute('editable', 'true');
                        else this.removeAttribute('editable'); return val;"/>
 
@@ -69,8 +69,8 @@
                 onset="this.setAttribute('seltype', val); return val;"/>
 
       <property name="currentIndex"
-                onget="return this.view ? this.view.selection.currentIndex: - 1;"
-                onset="if (this.view) return this.view.selection.currentIndex = val; return val;"/>
+                onget="return this.view.selection.currentIndex;"
+                onset="return this.view.selection.currentIndex = val;"/>
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
 
@@ -105,13 +105,13 @@
                 onset="if (val) this.setAttribute('enableColumnDrag', 'true');
                        else this.removeAttribute('enableColumnDrag'); return val;"/>
 
-      <field name="_inputField">null</field>
+      <field name="mInputField">null</field>
 
       <property name="inputField" readonly="true">
         <getter><![CDATA[
-          if (!this._inputField)
-            this._inputField = document.getAnonymousElementByAttribute(this, "anonid", "input");
-          return this._inputField;
+          if (!this.mInputField)
+            this.mInputField = document.getAnonymousElementByAttribute(this, "anonid", "input");
+          return this.mInputField;
         ]]></getter>
       </property>
 
@@ -273,7 +273,7 @@
         ]]></body>
       </method>
 
-      <method name="_keyNavigate">
+      <method name="keyNavigate">
         <parameter name="event"/>
         <body><![CDATA[
           var key = String.fromCharCode(event.charCode).toLowerCase();
@@ -823,7 +823,7 @@
          else if (!this.disableKeyNavigation && event.charCode > 0 &&
                   !event.altKey && !this._isAccelPressed(event) &&
                   !event.metaKey && !event.ctrlKey) {
-           var l = this._keyNavigate(event);
+           var l = this.keyNavigate(event);
            if (l >= 0) {
              this.view.selection.timedSelect(l, this._selectDelay);
              this.treeBoxObject.ensureRowIsVisible(l);
@@ -834,10 +834,7 @@
     </handlers>    
   </binding>
 
-  <binding id="treecols">
-    <resources>
-      <stylesheet src="chrome://global/skin/tree.css"/>
-    </resources>
+  <binding id="treecols" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content orient="horizontal">
       <xul:hbox class="tree-scrollable-columns" flex="1">
         <children includes="treecol|splitter"/>
@@ -1097,11 +1094,10 @@
       <property name="ordinal">
         <getter><![CDATA[
           var val = this.getAttribute("ordinal");
-          return "" + (val == "" ? 1 : (val == "0" ? 0 : parseInt(val)));
+          return val == "" ? 1 : (val == "0" ? 0 : parseInt(val));
         ]]></getter>
         <setter><![CDATA[
           this.setAttribute("ordinal", val);
-          return val;
         ]]></setter>
       </property>
       
@@ -1117,7 +1113,7 @@
         ]]></getter>
       </property>
 
-      <method name="_onDragMouseMove">
+      <method name="onDragMouseMove">
         <parameter name="aEvent"/>
         <body><![CDATA[
           var col = document.treecolDragging;
@@ -1132,7 +1128,7 @@
             } else {
               col.mDragGesturing = false;
               col.setAttribute("dragging", "true");
-              window.addEventListener("click", col._onDragMouseClick, true);
+              window.addEventListener("click", col.onDragMouseClick, true);
             }
           }
                     
@@ -1183,7 +1179,7 @@
         ]]></body>        
       </method>
 
-      <method name="_onDragMouseUp">
+      <method name="onDragMouseUp">
         <parameter name="aEvent"/>
         <body><![CDATA[
           var col = document.treecolDragging;
@@ -1215,18 +1211,18 @@
           document.treecolDragging = null;
           col.removeAttribute("dragging");
           
-          window.removeEventListener("mousemove", col._onDragMouseMove, true);
-          window.removeEventListener("mouseup", col._onDragMouseUp, true);
+          window.removeEventListener("mousemove", col.onDragMouseMove, true);
+          window.removeEventListener("mouseup", col.onDragMouseUp, true);
           // we have to wait for the click event to fire before removing
           // cancelling handler
           var clickHandler = function(handler) { 
             window.removeEventListener("click", handler, true);
           };
-          window.setTimeout(clickHandler, 0, col._onDragMouseClick);
+          window.setTimeout(clickHandler, 0, col.onDragMouseClick);
         ]]></body>        
       </method>
 
-      <method name="_onDragMouseClick">
+      <method name="onDragMouseClick">
         <parameter name="aEvent"/>
         <body><![CDATA[
           // prevent click event from firing after column drag and drop
@@ -1248,8 +1244,8 @@
             if (cols[i].boxObject.width > 0) ++visible;
             
           if (visible > 1) {
-            window.addEventListener("mousemove", this._onDragMouseMove, true);
-            window.addEventListener("mouseup", this._onDragMouseUp, true);
+            window.addEventListener("mousemove", this.onDragMouseMove, true);
+            window.addEventListener("mouseup", this.onDragMouseUp, true);
             document.treecolDragging = this;
             this.mDragGesturing = true;
             this.mStartDragX = event.clientX;
