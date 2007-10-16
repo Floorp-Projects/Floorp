@@ -1347,9 +1347,9 @@ BookmarksSyncService.prototype = {
       }
 
       if (done)
-        this._info("Server reset completed successfully");
+        this._log.info("Server reset completed successfully");
       else
-        this._info("Server reset failed: could not sync bookmarks");
+        this._log.info("Server reset failed: could not sync bookmarks");
 
       this._os.notifyObservers(null, "bookmarks-sync:reset-server:end", "");
       if (onComplete)
