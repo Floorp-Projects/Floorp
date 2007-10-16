@@ -688,8 +688,11 @@ BookmarksSyncService.prototype = {
       if (command.data.type == "microsummary") {
         this._log.info("   \-> is a microsummary");
         let genURI = makeURI(command.data.generatorURI);
-        let micsum = this._ms.createMicrosummary(URI, genURI);
-        this._ms.setMicrosummary(newId, micsum);
+        try {
+          let micsum = this._ms.createMicrosummary(URI, genURI);
+          this._ms.setMicrosummary(newId, micsum);
+        }
+        catch(ex) { /* ignore "missing local generator" exceptions */ }
       }
       break;
     case "folder":
