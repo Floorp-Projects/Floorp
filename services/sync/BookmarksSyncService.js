@@ -1300,6 +1300,18 @@ BookmarksSyncService.prototype = {
 
   observe: function BSS__observe(subject, topic, data) {
     switch (topic) {
+    case "browser.places.sync.enabled":
+      switch (data) {
+      case false:
+        this._log.info("Disabling automagic bookmarks sync");
+        this._disableSchedule();
+        break;
+      case true:
+        this._log.info("Enabling automagic bookmarks sync");
+        this._enableSchedule();
+        break;
+      }
+      break;
     case "browser.places.sync.schedule":
       switch (data) {
       case 0:
