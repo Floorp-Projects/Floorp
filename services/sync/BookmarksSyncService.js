@@ -1321,9 +1321,17 @@ BookmarksSyncService.prototype = {
       this._dav.DELETE("bookmarks-deltas.json", cont);
       let deltasResp = yield;
 
-      if (statusResp.target.status < 200 || statusResp.target.status >= 300 ||
-          snapshotResp.target.status < 200 || snapshotResp.target.status >= 300 ||
-          deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
+      if (this._dav.unlock.async(this._dav, cont)) {
+        let unlocked = yield;
+        if (unlocked)
+          this._log.info("Lock released");
+        else
+          this._log.error("Could not unlock DAV collection");
+      }
+
+      if (!(statusResp.target.status == 200 || statusResp.target.status == 404 ||
+            snapshotResp.target.status == 200 || snapshotResp.target.status == 404 ||
+            deltasResp.target.status == 200 || deltasResp.target.status == 404)) {
         this._log.error("Could delete server data, response codes " +
                         statusResp.target.status + ", " +
                         snapshotResp.target.status + ", " +
@@ -1338,14 +1346,6 @@ BookmarksSyncService.prototype = {
       done = yield;
         
     } finally {
-      if (this._dav.unlock.async(this._dav, cont)) {
-        let unlocked = yield;
-        if (unlocked)
-          this._log.info("Lock released");
-        else
-          this._log.error("Could not unlock DAV collection");
-      }
-
       if (done)
         this._log.info("Server reset completed successfully");
       else
