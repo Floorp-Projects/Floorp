@@ -883,13 +883,14 @@ BookmarksSyncService.prototype = {
   _doSync: function BSS__doSync(onComplete) {
     let cont = yield;
     let synced = false;
+    let locked = null;
 
     try {
-      this._os.notifyObservers(null, "bookmarks-sync:start", "");
+      this._os.notifyObservers(null, "bookmarks-sync:sync-start", "");
 
       if (!this._dav.lock.async(this._dav, cont))
         return;
-      let locked = yield;
+      locked = yield;
 
       if (locked)
         this._log.info("Lock acquired");
@@ -957,11 +958,13 @@ BookmarksSyncService.prototype = {
         serverConflicts = ret.conflicts[1];
 
       this._log.info("Changes for client: " + clientChanges.length);
-      this._log.info("Changes for server: " + serverChanges.length);
+      this._log.info("Predicted changes for server: " +
+                     serverChanges.length);
       this._log.info("Client conflicts: " + clientConflicts.length);
       this._log.info("Server conflicts: " + serverConflicts.length);
       this._log.debug("Changes for client: " + this._mungeCommands(clientChanges));
-      this._log.debug("Changes for server: " + this._mungeCommands(serverChanges));
+      this._log.debug("Predicted changes for server: " +
+                      this._mungeCommands(serverChanges));
       this._log.debug("Client conflicts: " + this._mungeConflicts(clientConflicts));
       this._log.debug("Server conflicts: " + this._mungeConflicts(serverConflicts));
 
@@ -979,6 +982,10 @@ BookmarksSyncService.prototype = {
         this._log.warn("Conflicts found!  Discarding server changes");
       }
 
+      let savedSnap = eval(uneval(this._snapshot));
+      let savedVersion = this._snapshotVersion;
+      let newSnapshot;
+
       // 3.1) Apply server changes to local store
       if (clientChanges.length) {
         this._log.info("Applying changes locally");
@@ -988,17 +995,19 @@ BookmarksSyncService.prototype = {
         this._snapshot = this._applyCommandsToObj(clientChanges, localJson);
         this._snapshotVersion = server.maxVersion;
         this._applyCommands(clientChanges);
+        newSnapshot = this._getBookmarks();
 
-        let newSnapshot = this._getBookmarks();
         let diff = this._detectUpdates(this._snapshot, newSnapshot);
         if (diff.length != 0) {
           this._log.error("Commands did not apply correctly");
           this._log.debug("Diff from snapshot+commands -> " +
                           "new snapshot after commands:\n" +
                           this._mungeCommands(diff));
-          this._snapshot = newSnapshot;
-          // FIXME: What else can we do?
+          // FIXME: do we really want to revert the snapshot here?
+          this._snapshot = eval(uneval(savedSnap));
+          this._snapshotVersion = savedVersion;
         }
+
         this._saveSnapshot();
       }
 
@@ -1008,7 +1017,8 @@ BookmarksSyncService.prototype = {
       // current client snapshot.  In the case where there are no
       // conflicts, it should be the same as what the resolver returned
 
-      let serverDelta = this._detectUpdates(server.snapshot, this._snapshot);
+      newSnapshot = this._getBookmarks();
+      let serverDelta = this._detectUpdates(server.snapshot, newSnapshot);
 
       // Log an error if not the same
       if (!(serverConflicts.length ||
@@ -1016,10 +1026,16 @@ BookmarksSyncService.prototype = {
         this._log.error("Predicted server changes differ from " +
                         "actual server->client diff");
 
+      this._log.info("Actual changes for server: " + serverDelta.length);
+      this._log.debug("Actual changes for server: " +
+                      this._mungeCommands(serverDelta));
+
       if (serverDelta.length) {
         this._log.info("Uploading changes to server");
-        this._snapshot = this._getBookmarks();
+
+        this._snapshot = newSnapshot;
         this._snapshotVersion = ++server.maxVersion;
+
         server.deltas.push(serverDelta);
 
         this._dav.PUT("bookmarks-deltas.json",
@@ -1045,18 +1061,24 @@ BookmarksSyncService.prototype = {
           this._log.error("Could not update deltas on server");
         }
       }
+
       this._log.info("Sync complete");
       synced = true;
 
     } finally {
-      if (this._dav.unlock.async(this._dav, cont)) {
+      if (locked && this._dav.unlock.async(this._dav, cont)) {
         let unlocked = yield;
-        if (unlocked)
+        if (unlocked) {
+          locked = null;
           this._log.info("Lock released");
-        else
+          this._os.notifyObservers(null, "bookmarks-sync:sync-end", "");
+        } else {
           this._log.error("Could not unlock DAV collection");
+          this._os.notifyObservers(null, "bookmarks-sync:sync-error", "");
+        }
+      } else {
+        this._os.notifyObservers(null, "bookmarks-sync:sync-error", "");
       }
-      this._os.notifyObservers(null, "bookmarks-sync:end", "");
       if (onComplete)
         generatorDone(this, onComplete, synced);
     }
@@ -1301,7 +1323,7 @@ BookmarksSyncService.prototype = {
     let done = false;
 
     try {
-      this._os.notifyObservers(null, "bookmarks-sync:reset-server:start", "");
+      this._os.notifyObservers(null, "bookmarks-sync:reset-server-start", "");
 
       if (!this._dav.lock.async(this._dav, cont))
         return;
@@ -1340,7 +1362,6 @@ BookmarksSyncService.prototype = {
       }
 
       this._log.info("Server files deleted, starting sync");
-      this._os.notifyObservers(null, "bookmarks-sync:start", "");
       if (!this._doSync.async(this, cont))
         return;
       done = yield;
@@ -1351,7 +1372,7 @@ BookmarksSyncService.prototype = {
       else
         this._log.info("Server reset failed: could not sync bookmarks");
 
-      this._os.notifyObservers(null, "bookmarks-sync:reset-server:end", "");
+      this._os.notifyObservers(null, "bookmarks-sync:reset-server-end", "");
       if (onComplete)
         generatorDone(this, onComplete, done)
     }
@@ -1407,15 +1428,19 @@ BookmarksSyncService.prototype = {
 
   sync: function BSS_sync() {
     this._log.info("Beginning sync");
-    if (!this._doSync.async(this))
-      this._os.notifyObservers(null, "bookmarks-sync:end", false);
+    if (!this._doSync.async(this)) {
+      this._log.fatal("Could not start sync operation");
+      this._os.notifyObservers(null, "bookmarks-sync:sync-error", "");
+    }
   },
 
   login: function BSS_login() {
     this._log.info("Logging in");
     let callback = bind2(this, this._onLogin);
-    if (!this._dav.login.async(this._dav, callback))
+    if (!this._dav.login.async(this._dav, callback)) {
+      this._log.fatal("Could not start login operation");
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+    }
   },
 
   logout: function BSS_logout() {
