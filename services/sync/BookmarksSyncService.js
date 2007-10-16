@@ -161,7 +161,7 @@ BookmarksSyncService.prototype = {
     this._initLogs();
     this._log.info("Bookmarks Sync Service Initializing");
 
-    let serverURL = 'https://dotmoz.mozilla.org/';
+    let serverURL = 'https://services.mozilla.com/';
     let enabled = false;
     let schedule = 0;
     try {
@@ -1557,6 +1557,7 @@ function DAVCollection(baseURL) {
   this._userURL = baseURL;
   this._authProvider = new DummyAuthProvider();
 }
+
 DAVCollection.prototype = {
   __dp: null,
   get _dp() {
@@ -1726,6 +1727,8 @@ DAVCollection.prototype = {
   },
 
   logout: function DC_logout() {
+    this._userURL = this._baseURL; // XXX this shouldn't be necessary, suggests that we're not invalidating/caching auth correctly
+
     this._loggedIn = false;
     this.__auth = null;
   },
