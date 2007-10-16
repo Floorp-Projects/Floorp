@@ -565,8 +565,8 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
     nsTableRowGroupFrame* rg = cellMap->GetRowGroup();
     if (rg == &aParent) {
       cellMap->InsertRows(*this, aRows, rowIndex, aConsiderSpans, aDamageArea);
-      aDamageArea.y = PR_MIN(aFirstRowIndex, aDamageArea.y);
-      aDamageArea.height = PR_MAX(0, GetRowCount() - aDamageArea.y);
+      aDamageArea.y = aFirstRowIndex;
+      aDamageArea.height = PR_MAX(0, GetRowCount() - aFirstRowIndex);
 #ifdef DEBUG_TABLE_CELLMAP 
       Dump("after InsertRows");
 #endif
