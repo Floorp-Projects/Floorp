@@ -1482,7 +1482,7 @@ DAVCollection.prototype = {
       // fixme: make a request and get the realm
       let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
       let logins = lm.findLogins({}, URI.hostPort, null,
-                                 'Use your ldap username/password - dotmoz');
+                                 'services.mozilla.com');
 
       for (let i = 0; i < logins.length; i++) {
         if (logins[i].username == username) {
