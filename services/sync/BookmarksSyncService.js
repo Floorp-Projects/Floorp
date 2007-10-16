@@ -880,7 +880,7 @@ BookmarksSyncService.prototype = {
   // 3.1) Apply local delta with server changes ("D")
   // 3.2) Append server delta to the delta file and upload ("C")
 
-  _doSync: function BSS__doSync() {
+  _doSync: function BSS__doSync(onComplete) {
     let cont = yield;
     let synced = false;
 
@@ -1057,7 +1057,8 @@ BookmarksSyncService.prototype = {
           this._log.error("Could not unlock DAV collection");
       }
       this._os.notifyObservers(null, "bookmarks-sync:end", "");
-      generatorDone(this, onComplete, synced);
+      if (onComplete)
+        generatorDone(this, onComplete, synced);
     }
   },
 
@@ -1295,7 +1296,7 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  _resetServer: function BSS__resetServer() {
+  _resetServer: function BSS__resetServer(onComplete) {
     let cont = yield;
     let done = false;
 
@@ -1351,7 +1352,8 @@ BookmarksSyncService.prototype = {
         this._info("Server reset failed: could not sync bookmarks");
 
       this._os.notifyObservers(null, "bookmarks-sync:reset-server:end", "");
-      generatorDone(this, onComplete, done)
+      if (onComplete)
+        generatorDone(this, onComplete, done)
     }
   },
 
