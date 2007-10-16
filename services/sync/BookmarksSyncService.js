@@ -1030,8 +1030,8 @@ BookmarksSyncService.prototype = {
       // Log an error if not the same
       if (!(serverConflicts.length ||
             this._deepEquals(serverChanges, serverDelta)))
-        this._log.error("Predicted server changes differ from " +
-                        "actual server->client diff");
+        this._log.warn("Predicted server changes differ from " +
+                       "actual server->client diff (can be ignored in many cases)");
 
       this._log.info("Actual changes for server: " + serverDelta.length);
       this._log.debug("Actual changes for server: " +
