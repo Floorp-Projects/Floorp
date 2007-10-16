@@ -129,6 +129,9 @@ BookmarksSyncService.prototype = {
   // Timer object for yielding to the main loop
   _timer: null,
 
+  // Timer object for automagically syncing
+  _scheduleTimer: null,
+
   // DAVCollection object
   _dav: null,
 
@@ -159,16 +162,58 @@ BookmarksSyncService.prototype = {
     this._log.info("Bookmarks Sync Service Initializing");
 
     let serverURL = 'https://dotmoz.mozilla.org/';
+    let enabled = false;
+    let schedule = 0;
     try {
       let branch = Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
       serverURL = branch.getCharPref("browser.places.sync.serverURL");
+      enabled = branch.getBoolPref("browser.places.sync.enabled");
+      schedule = branch.getIntPref("browser.places.sync.schedule");
+
+      branch.addObserver("browser.places.sync", this, false);
     }
     catch (ex) { /* use defaults */ }
 
     this._log.info("Bookmarks login server: " + serverURL);
     this._dav = new DAVCollection(serverURL);
     this._readSnapshot();
+
+    if (!enabled) {
+      this._log.info("Bookmarks sync disabled");
+      return;
+    }
+
+    switch (schedule) {
+    case 0:
+      this._log.info("Bookmarks sync enabled, manual mode");
+      break;
+    case 1:
+      this._log.info("Bookmarks sync enabled, automagic mode");
+      this._enableSchedule();
+      break;
+    default:
+      this._log.info("Bookmarks sync enabled");
+      this._log.info("Invalid schedule setting: " + schedule);
+      break;
+    }
+  },
+
+  _enableSchedule: function BSS__enableSchedule() {
+    this._scheduleTimer = Cc["@mozilla.org/timer;1"].
+      createInstance(Ci.nsITimer);
+    let listener = new EventListener(bind2(this, this._onSchedule));
+    this._scheduleTimer.initWithCallback(listener, 1800000, // 30 min
+                                         this._scheduleTimer.TYPE_REPEATING_SLACK);
+  },
+
+  _disableSchedule: function BSS__disableSchedule() {
+    this._scheduleTimer = null;
+  },
+
+  _onSchedule: function BSS__onSchedule() {
+    this._log.info("Running scheduled sync");
+    this.sync();
   },
 
   _initLogs: function BSS__initLogs() {
@@ -1246,9 +1291,34 @@ BookmarksSyncService.prototype = {
   contractID: "@mozilla.org/places/sync-service;1",
   classID: Components.ID("{efb3ba58-69bc-42d5-a430-0746fa4b1a7f}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.IBookmarksSyncService,
+                                         Ci.nsIObserver,
                                          Ci.nsISupports]),
 
   // nsISupports
+
+  // nsIObserver
+
+  observe: function BSS__observe(subject, topic, data) {
+    switch (topic) {
+    case "browser.places.sync.schedule":
+      switch (data) {
+      case 0:
+        this._log.info("Disabling automagic bookmarks sync");
+        this._disableSchedule();
+        break;
+      case 1:
+        this._log.info("Enabling automagic bookmarks sync");
+        this._enableSchedule();
+        break;
+      default:
+        this._log.warn("Unknown schedule value set");
+        break;
+      }
+      break;
+    default:
+      // ignore, there are prefs we observe but don't care about
+    }
+  },
 
   // IBookmarksSyncService
 
