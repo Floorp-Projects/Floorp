@@ -22,7 +22,6 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
- *   Federico Mena-Quintero <federico@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -145,10 +144,4 @@ interface imgIContainer : nsISupports
    * @note -1 means forever.
    */
   attribute long loopCount;
-
-  /* Methods to discard uncompressed images and restore them again */
-  [noscript] void setDiscardable(in string aMimeType);
-  [noscript] void addRestoreData([array, size_is(aCount), const] in char data,
-                                 in unsigned long aCount);
-  [noscript] void restoreDataDone();
 };
