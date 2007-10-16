@@ -1585,7 +1585,7 @@ DAVCollection.prototype = {
       return this.__auth;
 
     try {
-      let URI = makeURI(this._baseURL);
+      let URI = makeURI(this._userURL);
       let username = 'nobody@mozilla.com';
       let password;
 
