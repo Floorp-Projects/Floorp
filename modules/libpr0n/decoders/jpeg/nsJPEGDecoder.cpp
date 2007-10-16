@@ -172,17 +172,17 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
   mImageLoad->GetImage(getter_AddRefs(mImage));
 
   if (!mImage) {
-      mImage = do_CreateInstance("@mozilla.org/image/container;1");
-      if (!mImage)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mImage = do_CreateInstance("@mozilla.org/image/container;1");
+    if (!mImage)
+      return NS_ERROR_OUT_OF_MEMORY;
       
-      mImageLoad->SetImage(mImage);
-      nsresult result = mImage->SetDiscardable("image/jpeg");
-      if (NS_FAILED(result)) {
-        mState = JPEG_ERROR;
-        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
-               (" (could not set image container to discardable)"));
-        return result;
+    mImageLoad->SetImage(mImage);
+    nsresult result = mImage->SetDiscardable("image/jpeg");
+    if (NS_FAILED(result)) {
+      mState = JPEG_ERROR;
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             (" (could not set image container to discardable)"));
+      return result;
     }
   }
 
