@@ -95,119 +95,103 @@ var PlacesUtils = {
   /**
    * The Bookmarks Service.
    */
-  _bookmarks: null,
   get bookmarks() {
-    if (!this._bookmarks) {
-      this._bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                        getService(Ci.nsINavBookmarksService);
-    }
-    return this._bookmarks;
+    var bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+    delete this.bookmarks;
+    return this.bookmarks = bms;
   },
 
   /**
    * The Nav History Service.
    */
-  _history: null,
   get history() {
-    if (!this._history) {
-      this._history = Cc["@mozilla.org/browser/nav-history-service;1"].
-                      getService(Ci.nsINavHistoryService);
-    }
-    return this._history;
+    var hst = Cc["@mozilla.org/browser/nav-history-service;1"].
+              getService(Ci.nsINavHistoryService);
+    delete this.history;
+    return this.history = hst;
   },
 
   /**
    * The Live Bookmark Service.
    */
-  _livemarks: null,
   get livemarks() {
-    if (!this._livemarks) {
-      this._livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
-                        getService(Ci.nsILivemarkService);
-    }
-    return this._livemarks;
+    var lms = Cc["@mozilla.org/browser/livemark-service;2"].
+              getService(Ci.nsILivemarkService);
+    delete this.livemarks;
+    return this.livemarks = lms;
   },
 
   /**
    * The Annotations Service.
    */
-  _annotations: null,
   get annotations() {
-    if (!this._annotations) {
-      this._annotations = Cc["@mozilla.org/browser/annotation-service;1"].
-                          getService(Ci.nsIAnnotationService);
-    }
-    return this._annotations;
+    var annos = Cc["@mozilla.org/browser/annotation-service;1"].
+                getService(Ci.nsIAnnotationService);
+    delete this.annotations;
+    return this.annotations = annos;
   },
 
   /**
    * The Favicons Service
    */
-  _favicons: null,
   get favicons() {
-    if (!this._favicons) {
-      this._favicons = Cc["@mozilla.org/browser/favicon-service;1"].
-                       getService(Ci.nsIFaviconService);
-    }
-    return this._favicons;
+    var favsvc = Cc["@mozilla.org/browser/favicon-service;1"].
+                 getService(Ci.nsIFaviconService);
+    delete this.favicons;
+    return this.favicons = favsvc;
   },
 
   /**
    * The Microsummary Service
    */
-  _microsummaries: null,
   get microsummaries() {
-    if (!this._microsummaries)
-      this._microsummaries = Cc["@mozilla.org/microsummary/service;1"].
-                             getService(Ci.nsIMicrosummaryService);
-    return this._microsummaries;
+    var mss = Cc["@mozilla.org/microsummary/service;1"].
+              getService(Ci.nsIMicrosummaryService);
+    delete this.microsummaries;
+    return this.microsummaries = mss;
   },
 
   /**
    * The Places Tagging Service
    */
   get tagging() {
-    if (!this._tagging)
-      this._tagging = Cc["@mozilla.org/browser/tagging-service;1"].
-                      getService(Ci.nsITaggingService);
-    return this._tagging;
+    var tagsvc = Cc["@mozilla.org/browser/tagging-service;1"].
+                 getService(Ci.nsITaggingService);
+    delete this.tagging;
+    return this.tagging = tagsvc;
   },
 
-  _RDF: null,
   get RDF() {
-    if (!this._RDF)
-      this._RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
-                  getService(Ci.nsIRDFService);
-    return this._RDF;
+    var RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+              getService(Ci.nsIRDFService);
+    delete this.RDF;
+    return this.RDF = RDF;
   },
 
-  _localStore: null,
   get localStore() {
-    if (!this._localStore)
-      this._localStore = this.RDF.GetDataSource("rdf:local-store");
-    return this._localStore;
+    var localStore = this.RDF.GetDataSource("rdf:local-store");
+    delete this.localStore;
+    return this.localStore = localStore;
   },
 
   get tm() {
-    return this.ptm.transactionManager;
+    delete this.tm;
+    return this.tm = this.ptm.transactionManager;
   },
 
-  _ptm: null,
   get ptm() {
-    if (!this._ptm) {
-      this._ptm = Cc["@mozilla.org/browser/placesTransactionsService;1"].
-                  getService(Components.interfaces.nsIPlacesTransactionsService);
-    }
-    return this._ptm;
+    var ptm = Cc["@mozilla.org/browser/placesTransactionsService;1"].
+              getService(Ci.nsIPlacesTransactionsService);
+    delete this.ptm
+    return this.ptm = ptm;
   },
 
-  _clipboard: null,
   get clipboard() {
-    if (!this._clipboard) {
-      this._clipboard = Cc["@mozilla.org/widget/clipboard;1"].
-                        getService(Ci.nsIClipboard);
-    }
-    return this._clipboard;
+    var clipboard = Cc["@mozilla.org/widget/clipboard;1"].
+                    getService(Ci.nsIClipboard);
+    delete this.clipboard;
+    return this.clipboard = clipboard;
   },
 
   /**
@@ -216,11 +200,9 @@ var PlacesUtils = {
    *          The string spec of the URI
    * @returns A URI object for the spec.
    */
-  _uri: function PU__uri(aSpec) {
+  _uri: function(aSpec) {
     NS_ASSERT(aSpec, "empty URL spec");
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-    return ios.newURI(aSpec, null, null);
+    return IO.newURI(aSpec);
   },
 
   /**
@@ -229,7 +211,7 @@ var PlacesUtils = {
    *          The string to wrap
    * @returns A nsISupportsString object containing a string.
    */
-  _wrapString: function PU__wrapString(aString) {
+  _wrapString: function(aString) {
     var s = Cc["@mozilla.org/supports-string;1"].
             createInstance(Ci.nsISupportsString);
     s.data = aString;
@@ -239,16 +221,14 @@ var PlacesUtils = {
   /**
    * String bundle helpers
    */
-  __bundle: null,
   get _bundle() {
-    if (!this.__bundle) {
-      const PLACES_STRING_BUNDLE_URI =
-        "chrome://browser/locale/places/places.properties";
-      this.__bundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                      getService(Ci.nsIStringBundleService).
-                      createBundle(PLACES_STRING_BUNDLE_URI);
-    }
-    return this.__bundle;
+    const PLACES_STRING_BUNDLE_URI =
+      "chrome://browser/locale/places/places.properties";
+    var bundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                 getService(Ci.nsIStringBundleService).
+                 createBundle(PLACES_STRING_BUNDLE_URI);
+    delete this._bundle;
+    return this._bundle = bundle;
   },
 
   getFormattedString: function PU_getFormattedString(key, params) {
@@ -265,7 +245,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a Bookmark folder, false otherwise
    */
-  nodeIsFolder: function PU_nodeIsFolder(aNode) {
+  nodeIsFolder: function(aNode) {
     NS_ASSERT(aNode, "null node");
     return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER);
   },
@@ -276,7 +256,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node represents a bookmarked URI, false otherwise
    */
-  nodeIsBookmark: function PU_nodeIsBookmark(aNode) {
+  nodeIsBookmark: function(aNode) {
     NS_ASSERT(aNode, "null node");
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI &&
            aNode.itemId != -1;
@@ -288,7 +268,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a Bookmark separator, false otherwise
    */
-  nodeIsSeparator: function PU_nodeIsSeparator(aNode) {
+  nodeIsSeparator: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR);
@@ -300,7 +280,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a visit item, false otherwise
    */
-  nodeIsVisit: function PU_nodeIsVisit(aNode) {
+  nodeIsVisit: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     const NHRN = Ci.nsINavHistoryResultNode;
@@ -315,7 +295,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a URL item, false otherwise
    */
-  nodeIsURI: function PU_nodeIsURI(aNode) {
+  nodeIsURI: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     const NHRN = Ci.nsINavHistoryResultNode;
@@ -331,7 +311,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a Query item, false otherwise
    */
-  nodeIsQuery: function PU_nodeIsQuery(aNode) {
+  nodeIsQuery: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
@@ -344,7 +324,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is readonly, false otherwise
    */
-  nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
+  nodeIsReadOnly: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     if (this.nodeIsFolder(aNode))
@@ -360,7 +340,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a host item, false otherwise
    */
-  nodeIsHost: function PU_nodeIsHost(aNode) {
+  nodeIsHost: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST;
@@ -372,7 +352,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a container item, false otherwise
    */
-  nodeIsContainer: function PU_nodeIsContainer(aNode) {
+  nodeIsContainer: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     const NHRN = Ci.nsINavHistoryResultNode;
@@ -393,7 +373,7 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a dynamic container item, false otherwise
    */
-  nodeIsDynamicContainer: function PU_nodeIsDynamicContainer(aNode) {
+  nodeIsDynamicContainer: function(aNode) {
     NS_ASSERT(aNode, "null node");
     if (aNode.type == NHRN.RESULT_TYPE_DYNAMIC_CONTAINER)
       return true;
@@ -407,7 +387,7 @@ var PlacesUtils = {
   *        A result Node
   * @returns true if the node is a livemark container item
   */
-  nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
+  nodeIsLivemarkContainer: function(aNode) {
     // Use the annotations service directly to avoid instantiating
     // the Livemark service on startup. (bug 398300)
     return this.nodeIsFolder(aNode) &&
@@ -420,7 +400,7 @@ var PlacesUtils = {
   *        A result node
   * @returns true if the node is a livemark container item
   */
-  nodeIsLivemarkItem: function PU_nodeIsLivemarkItem(aNode) {
+  nodeIsLivemarkItem: function(aNode) {
     return aNode.parent && this.nodeIsLivemarkContainer(aNode.parent);
   },
 
@@ -444,7 +424,7 @@ var PlacesUtils = {
    * @returns The index of the node within its parent container, or -1 if the
    *          node was not found or the node specified has no parent.
    */
-  getIndexOfNode: function PU_getIndexOfNode(aNode) {
+  getIndexOfNode: function(aNode) {
     NS_ASSERT(aNode, "null node");
 
     var parent = aNode.parent;
@@ -472,7 +452,7 @@ var PlacesUtils = {
    *          TYPE_HTML or TYPE_UNICODE.
    * @returns A string serialization of the node
    */
-  wrapNode: function PU_wrapNode(aNode, aType, aOverrideURI) {
+  wrapNode: function(aNode, aType, aOverrideURI) {
     var self = this;
 
     // when wrapping a node, we want all the items, even if the original
@@ -649,8 +629,8 @@ var PlacesUtils = {
    *          The index within the container the item is copied to
    * @returns A nsITransaction object that performs the copy.
    */
-  _getURIItemCopyTransaction: function (aData, aContainer, aIndex) {
-    return this.ptm.createItem(this._uri(aData.uri), aContainer, aIndex,
+  _getURIItemCopyTransaction: function(aData, aContainer, aIndex) {
+    return this.ptm.createItem(IO.newURI(aData.uri), aContainer, aIndex,
                                aData.title, "");
   },
 
@@ -668,10 +648,9 @@ var PlacesUtils = {
    *          when copying the item.
    * @returns A nsITransaction object that performs the copy.
    */
-  _getBookmarkItemCopyTransaction:
-  function PU__getBookmarkItemCopyTransaction(aData, aContainer, aIndex,
-                                              aExcludeAnnotations) {
-    var itemURL = this._uri(aData.uri);
+  _getBookmarkItemCopyTransaction: function(aData, aContainer, aIndex,
+                                            aExcludeAnnotations) {
+    var itemURL = IO.newURI(aData.uri);
     var itemTitle = aData.title;
     var keyword = aData.keyword;
     var annos = aData.annos;
@@ -698,8 +677,7 @@ var PlacesUtils = {
    *          The index in the destination container to insert the new items
    * @returns A nsITransaction object that will perform the copy.
    */
-  _getFolderCopyTransaction:
-  function PU__getFolderCopyTransaction(aData, aContainer, aIndex) {
+  _getFolderCopyTransaction: function(aData, aContainer, aIndex) {
     var self = this;
     function getChildItemsTransactions(aChildren) {
       var childItemsTransactions = [];
@@ -776,8 +754,8 @@ var PlacesUtils = {
         for (var i = 0; i < parts.length; i=i+2) {
           var uriString = parts[i];
           var titleString = parts[i+1];
-          // note:  this._uri() will throw if uriString is not a valid URI
-          if (this._uri(uriString)) {
+          // note:  newURI will throw if uriString is not a valid URI
+          if (IO.newURI(uriString)) {
             nodes.push({ uri: uriString,
                          title: titleString ? titleString : uriString });
           }
@@ -787,8 +765,8 @@ var PlacesUtils = {
         var parts = blob.split("\n");
         for (var i = 0; i < parts.length; i++) {
           var uriString = parts[i];
-          // note: this._uri() will throw if uriString is not a valid URI
-          if (uriString != "" && this._uri(uriString))
+          // note: newURI will throw if uriString is not a valid URI
+          if (uriString && IO.newURI(uriString))
             nodes.push({ uri: uriString, title: uriString });
         }
         break;
@@ -815,8 +793,7 @@ var PlacesUtils = {
    * @returns An object implementing nsITransaction that can perform
    *          the move/insert.
    */
-  makeTransaction: function PU_makeTransaction(data, type, container,
-                                               index, copy) {
+  makeTransaction: function(data, type, container, index, copy) {
     switch (data.type) {
     case this.TYPE_X_MOZ_PLACE_CONTAINER:
       if (data.folder) {
@@ -826,8 +803,8 @@ var PlacesUtils = {
       }
       else if (copy) {
         // Place is a Livemark Container, should be reinstantiated
-        var feedURI = this._uri(data.uri.feed);
-        var siteURI = this._uri(data.uri.site);
+        var feedURI = IO.newURI(data.uri.feed);
+        var siteURI = IO.newURI(data.uri.site);
         return this.ptm.createLivemark(feedURI, siteURI, data.title, container,
                                        index, data.annos);
       }
@@ -855,7 +832,7 @@ var PlacesUtils = {
     default:
       if (type == this.TYPE_X_MOZ_URL || type == this.TYPE_UNICODE) {
         var title = (type == this.TYPE_X_MOZ_URL) ? data.title : data.uri;
-        return this.ptm.createItem(this._uri(data.uri), container, index,
+        return this.ptm.createItem(IO.newURI(data.uri), container, index,
                                    title);
       }
       return null;
@@ -882,8 +859,7 @@ var PlacesUtils = {
    * @returns A nsINavHistoryResult containing the contents of the
    *          folder. The result.root is guaranteed to be open.
    */
-  getFolderContents:
-  function PU_getFolderContents(aFolderId, aExcludeItems, aExpandQueries) {
+  getFolderContents: function(aFolderId, aExcludeItems, aExpandQueries) {
     var query = this.history.getNewQuery();
     query.setFolders([aFolderId], 1);
     var options = this.history.getNewQueryOptions();
@@ -938,14 +914,9 @@ var PlacesUtils = {
    *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
    *    bookmarks root folder.
    */
-  showAddBookmarkUI: function PU_showAddBookmarkUI(aURI,
-                                                   aTitle,
-                                                   aDescription,
-                                                   aDefaultInsertionPoint,
-                                                   aShowPicker,
-                                                   aLoadInSidebar,
-                                                   aKeyword,
-                                                   aPostData) {
+  showAddBookmarkUI: function(aURI, aTitle, aDescription,
+                              aDefaultInsertionPoint, aShowPicker,
+                              aLoadInSidebar, aKeyword, aPostData) {
     var info = {
       action: "add",
       type: "bookmark"
@@ -990,10 +961,9 @@ var PlacesUtils = {
    * The keyword field will be visible only if the aKeyword parameter
    * was used.
    */
-  showMinimalAddBookmarkUI:
-  function PU_showMinimalAddBookmarkUI(aURI, aTitle, aDescription,
-                                       aDefaultInsertionPoint, aShowPicker,
-                                       aLoadInSidebar, aKeyword, aPostData) {
+  showMinimalAddBookmarkUI: function(aURI, aTitle, aDescription,
+                                     aDefaultInsertionPoint, aShowPicker,
+                                     aLoadInSidebar, aKeyword, aPostData) {
     var info = {
       action: "add",
       type: "bookmark",
@@ -1051,12 +1021,8 @@ var PlacesUtils = {
    *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
    *    bookmarks root folder.
    */
-  showAddLivemarkUI: function PU_showAddLivemarkURI(aFeedURI,
-                                                    aSiteURI,
-                                                    aTitle,
-                                                    aDescription,
-                                                    aDefaultInsertionPoint,
-                                                    aShowPicker) {
+  showAddLivemarkUI: function(aFeedURI, aSiteURI, aTitle, aDescription,
+                              aDefaultInsertionPoint, aShowPicker) {
     var info = {
       action: "add",
       type: "livemark"
@@ -1090,10 +1056,8 @@ var PlacesUtils = {
    * You can still pass in the various paramaters as the default properties
    * for the new live-bookmark.
    */
-  showMinimalAddLivemarkUI:
-  function PU_showMinimalAddLivemarkURI(aFeedURI, aSiteURI, aTitle,
-                                        aDescription, aDefaultInsertionPoint,
-                                        aShowPicker) {
+  showMinimalAddLivemarkUI: function(aFeedURI, aSiteURI, aTitle, aDescription,
+                                     aDefaultInsertionPoint, aShowPicker) {
     var info = {
       action: "add",
       type: "livemark",
@@ -1129,7 +1093,7 @@ var PlacesUtils = {
    *                  to be bookmarked.
    * @return true if any transaction has been performed.
    */
-  showMinimalAddMultiBookmarkUI: function PU_showAddMultiBookmarkUI(aURIList) {
+  showMinimalAddMultiBookmarkUI: function(aURIList) {
     NS_ASSERT(aURIList.length,
               "showAddMultiBookmarkUI expects a list of nsIURI objects");
     var info = {
@@ -1148,7 +1112,7 @@ var PlacesUtils = {
    *        bookmark identifier for which the properties are to be shown
    * @return true if any transaction has been performed.
    */
-  showBookmarkProperties: function PU_showBookmarkProperties(aId) {
+  showBookmarkProperties: function(aId) {
     var info = {
       action: "edit",
       type: "bookmark",
@@ -1164,7 +1128,7 @@ var PlacesUtils = {
    *        an integer representing the ID of the folder to edit
    * @return true if any transaction has been performed.
    */
-  showFolderProperties: function PU_showFolderProperties(aId) {
+  showFolderProperties: function(aId) {
     var info = {
       action: "edit",
       type: "folder",
@@ -1187,8 +1151,7 @@ var PlacesUtils = {
    *        see above
    * @return true if any transaction has been performed.
    */
-  showAddFolderUI:
-  function PU_showAddFolderUI(aTitle, aDefaultInsertionPoint, aShowPicker) {
+  showAddFolderUI: function(aTitle, aDefaultInsertionPoint, aShowPicker) {
     var info = {
       action: "add",
       type: "folder",
@@ -1223,7 +1186,7 @@ var PlacesUtils = {
    * Note: the return value of this method is not reliable in minimal UI mode
    * since the dialog may not be opened modally.
    */
-  _showBookmarkDialog: function PU__showBookmarkDialog(aInfo, aMinimalUI) {
+  _showBookmarkDialog: function(aInfo, aMinimalUI) {
     var dialogURL = aMinimalUI ?
                     "chrome://browser/content/places/bookmarkProperties2.xul" :
                     "chrome://browser/content/places/bookmarkProperties.xul";
@@ -1247,7 +1210,7 @@ var PlacesUtils = {
    *        a DOM node
    * @return the closet ancestor places view if exists, null otherwsie.
    */
-  getViewForNode: function PU_getViewForNode(aNode) {
+  getViewForNode: function(aNode) {
     var node = aNode;
     while (node) {
       // XXXmano: Use QueryInterface(nsIPlacesView) once we implement it...
@@ -1268,9 +1231,9 @@ var PlacesUtils = {
    * @return true if it's safe to open the node in the browser, false otherwise.
    *
    */
-  checkURLSecurity: function PU_checkURLSecurity(aURINode) {
+  checkURLSecurity: function(aURINode) {
     if (!this.nodeIsBookmark(aURINode)) {
-      var uri = this._uri(aURINode.uri);
+      var uri = IO.newURI(aURINode.uri);
       if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
         const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
         var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
@@ -1296,7 +1259,7 @@ var PlacesUtils = {
    * @return Array of objects, each containing the following properties:
    *         name, flags, expires, mimeType, type, value
    */
-  getAnnotationsForURI: function PU_getAnnotationsForURI(aURI) {
+  getAnnotationsForURI: function(aURI) {
     var annosvc = this.annotations;
     var annos = [], val = null;
     var annoNames = annosvc.getPageAnnotationNames(aURI, {});
@@ -1330,7 +1293,7 @@ var PlacesUtils = {
    * @return Array of objects, each containing the following properties:
    *         name, flags, expires, mimeType, type, value
    */
-  getAnnotationsForItem: function PU_getAnnotationsForItem(aItemId) {
+  getAnnotationsForItem: function(aItemId) {
     var annosvc = this.annotations;
     var annos = [], val = null;
     var annoNames = annosvc.getItemAnnotationNames(aItemId, {});
@@ -1364,7 +1327,7 @@ var PlacesUtils = {
    *        name, flags, expires, type, mimeType (only used for binary
    *        annotations) value.
    */
-  setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
+  setAnnotationsForURI: function(aURI, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
       var flags = ("flags" in anno) ? anno.flags : 0;
@@ -1389,7 +1352,7 @@ var PlacesUtils = {
    *        name, flags, expires, type, mimeType (only used for binary
    *        annotations) value.
    */
-  setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos) {
+  setAnnotationsForItem: function(aItemId, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
       var flags = ("flags" in anno) ? anno.flags : 0;
@@ -1412,7 +1375,7 @@ var PlacesUtils = {
    * @param aFolderId The folder id to get a query for.
    * @return string serialized place URI
    */
-  getQueryStringForFolder: function PU_getQueryStringForFolder(aFolderId) {
+  getQueryStringForFolder: function(aFolderId) {
     var options = this.history.getNewQueryOptions();
     var query = this.history.getNewQuery();
     query.setFolders([aFolderId], 1);
@@ -1427,7 +1390,7 @@ var PlacesUtils = {
    * @returns A description string if a META element was discovered with a
    *          "description" or "httpequiv" attribute, empty string otherwise.
    */
-  getDescriptionFromDocument: function PU_getDescriptionFromDocument(doc) {
+  getDescriptionFromDocument: function(doc) {
     var metaElements = doc.getElementsByTagName("META");
     for (var i = 0; i < metaElements.length; ++i) {
       if (metaElements[i].name.toLowerCase() == "description" ||
@@ -1440,17 +1403,15 @@ var PlacesUtils = {
 
   // identifier getters for special folders
   get placesRootId() {
-    if (!("_placesRootId" in this))
-      this._placesRootId = this.bookmarks.placesRoot;
-
-    return this._placesRootId;
+    var placesRootId = this.bookmarks.placesRoot;
+    delete this.placesRootId;
+    return this.placesRootId = placesRootId;
   },
 
   get bookmarksRootId() {
-    if (!("_bookmarksRootId" in this))
-      this._bookmarksRootId = this.bookmarks.bookmarksRoot;
-
-    return this._bookmarksRootId;
+    var bookmarksRootId = this.bookmarks.bookmarksRoot;
+    delete this.bookmarksRootId;
+    return this.bookmarksRootId = bookmarksRootId;
   },
 
   get toolbarFolderId() {
@@ -1458,17 +1419,15 @@ var PlacesUtils = {
   },
 
   get tagRootId() {
-    if (!("_tagRootId" in this))
-      this._tagRootId = this.bookmarks.tagRoot;
-
-    return this._tagRootId;
+    var tagRootId = this.bookmarks.tagRoot;
+    delete this.tagRootId;
+    return this.tagRootId = tagRootId;
   },
 
   get unfiledRootId() {
-    if (!("_unfiledRootId" in this))
-      this._unfiledRootId = this.bookmarks.unfiledRoot;
-
-    return this._unfiledRootId;
+    var unfiledRootId = this.bookmarks.unfiledRoot;
+    delete this.unfiledRootId;
+    return this.unfiledRootId = unfiledRootId;
   },
 
   /**
@@ -1477,7 +1436,7 @@ var PlacesUtils = {
    *   @param aURI
    *   @returns string of POST data
    */
-  setPostDataForURI: function PU_setPostDataForURI(aURI, aPostData) {
+  setPostDataForURI: function(aURI, aPostData) {
     const annos = this.annotations;
     if (aPostData)
       annos.setPageAnnotation(aURI, POST_DATA_ANNO, aPostData, 
@@ -1491,7 +1450,7 @@ var PlacesUtils = {
    * @param aURI
    * @returns string of POST data if set for aURI. null otherwise.
    */
-  getPostDataForURI: function PU_getPostDataForURI(aURI) {
+  getPostDataForURI: function(aURI) {
     const annos = this.annotations;
     if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
       return annos.getPageAnnotation(aURI, POST_DATA_ANNO);
@@ -1506,7 +1465,7 @@ var PlacesUtils = {
    * @returns the description of the given item, or an empty string if it is
    * not set.
    */
-  getItemDescription: function PU_getItemDescription(aItemId) {
+  getItemDescription: function(aItemId) {
     if (this.annotations.itemHasAnnotation(aItemId, DESCRIPTION_ANNO))
       return this.annotations.getItemAnnotation(aItemId, DESCRIPTION_ANNO);
     return "";
@@ -1516,8 +1475,7 @@ var PlacesUtils = {
    * Get the most recently added/modified bookmark for a URL, excluding items
    * under tag or livemark containers. -1 is returned if no item is found.
    */
-  getMostRecentBookmarkForURI:
-  function PU_getMostRecentBookmarkForURI(aURI) {
+  getMostRecentBookmarkForURI: function(aURI) {
     var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI, {});
     for each (var bk in bmkIds) {
       // Find the first folder which isn't a tag container
@@ -1533,8 +1491,7 @@ var PlacesUtils = {
     return -1;
   },
 
-  getMostRecentFolderForFeedURI:
-  function PU_getMostRecentFolderForFeedURI(aURI) {
+  getMostRecentFolderForFeedURI: function(aURI) {
     var feedSpec = aURI.spec
     var annosvc = this.annotations;
     var livemarks = annosvc.getItemsWithAnnotation(LMANNO_FEEDURI, {});
@@ -1545,7 +1502,7 @@ var PlacesUtils = {
     return -1;
   },
 
-  getURLsForContainerNode: function PU_getURLsForContainerNode(aNode) {
+  getURLsForContainerNode: function(aNode) {
     let urls = [];
     if (this.nodeIsFolder(aNode) && asQuery(aNode).queryOptions.excludeItems) {
       // grab manually
@@ -1574,7 +1531,7 @@ var PlacesUtils = {
   /**
    * Gives the user a chance to cancel loading lots of tabs at once
    */
-  _confirmOpenInTabs: function PU__confirmOpenInTabs(numTabsToOpen) {
+  _confirmOpenInTabs: function(numTabsToOpen) {
     var pref = Cc["@mozilla.org/preferences-service;1"].
                getService(Ci.nsIPrefBranch);
 
@@ -1614,7 +1571,7 @@ var PlacesUtils = {
     return reallyOpen;
   },
 
-  _openTabset: function PU__openTabset(aURLs, aEvent) {
+  _openTabset: function(aURLs, aEvent) {
     var browserWindow = getTopWin();
     var where = browserWindow ?
                 whereToOpenLink(aEvent, false, true) : "window";
@@ -1630,14 +1587,14 @@ var PlacesUtils = {
                                         replaceCurrentTab);
   },
 
-  openContainerNodeInTabs: function PU_openContainerInTabs(aNode, aEvent) {
+  openContainerNodeInTabs: function(aNode, aEvent) {
     var urlsToOpen = this.getURLsForContainerNode(aNode);
     if (!this._confirmOpenInTabs(urlsToOpen.length))
       return;
     this._openTabset(urlsToOpen, aEvent);
   },
 
-  openURINodesInTabs: function PU_openURINodesInTabs(aNodes, aEvent) {
+  openURINodesInTabs: function(aNodes, aEvent) {
     var urlsToOpen = [];
     for (var i=0; i < aNodes.length; i++) {
       if (this.nodeIsURI(aNodes[i]))
@@ -1646,22 +1603,20 @@ var PlacesUtils = {
     this._openTabset(urlsToOpen, aEvent);
   },
 
-  _placesFlavors: null,
   get placesFlavors() {
-    if (!this._placesFlavors) {
-      var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-                        PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-                        PlacesUtils.TYPE_X_MOZ_PLACE];
-      this._placesFlavors = Cc["@mozilla.org/supports-array;1"].
-                            createInstance(Ci.nsISupportsArray);
-      for (var i = 0; i < placeTypes.length; ++i) {
-        var cstring = Cc["@mozilla.org/supports-cstring;1"].
-                        createInstance(Ci.nsISupportsCString);
-        cstring.data = placeTypes[i];
-        this._placesFlavors.AppendElement(cstring);
-      }
+    var placeTypes = [this.TYPE_X_MOZ_PLACE_CONTAINER,
+                      this.TYPE_X_MOZ_PLACE_SEPARATOR,
+                      this.TYPE_X_MOZ_PLACE];
+    var placesFlavors = Cc["@mozilla.org/supports-array;1"].
+                        createInstance(Ci.nsISupportsArray);
+    for (var i = 0; i < placeTypes.length; ++i) {
+      var cstring = Cc["@mozilla.org/supports-cstring;1"].
+                    createInstance(Ci.nsISupportsCString);
+      cstring.data = placeTypes[i];
+      this._placesFlavors.AppendElement(cstring);
     }
-    return this._placesFlavors;
+    delete this.placesFlavors;
+    return this.placesFlavors = placesFlavors;
   }
 };
 
