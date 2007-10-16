@@ -217,6 +217,25 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
   png_set_progressive_read_fn(mPNG, static_cast<png_voidp>(this),
                               info_callback, row_callback, end_callback);
 
+
+  /* The image container may already exist if it is reloading itself from us.
+   * Check that it has the same width/height; otherwise create a new container.
+   */
+  mImageLoad->GetImage(getter_AddRefs(mImage));
+  if (!mImage) {
+    mImage = do_CreateInstance("@mozilla.org/image/container;1");
+    if (!mImage)
+      return NS_ERROR_OUT_OF_MEMORY;
+      
+    mImageLoad->SetImage(mImage);
+    if (NS_FAILED(mImage->SetDiscardable("image/png"))) {
+      PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("PNGDecoderAccounting: info_callback(): failed to set image container %p as discardable",
+              mImage.get()));
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -553,37 +572,14 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   /* The image container may already exist if it is reloading itself from us.
    * Check that it has the same width/height; otherwise create a new container.
    */
-  decoder->mImageLoad->GetImage(getter_AddRefs(decoder->mImage));
-  if (decoder->mImage) {
-    PRInt32 container_width, container_height;
-
-    decoder->mImage->GetWidth(&container_width);
-    decoder->mImage->GetHeight(&container_height);
-
-    if (container_width != width || container_height != height)
-      decoder->mImage = nsnull;
-  }
-
-  if (!decoder->mImage) {
-    decoder->mImage = do_CreateInstance("@mozilla.org/image/container;1");
-    if (!decoder->mImage)
-      longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
-
-    decoder->mImageLoad->SetImage(decoder->mImage);
-
+  PRInt32 containerWidth, containerHeight;
+  decoder->mImage->GetWidth(&containerWidth);
+  decoder->mImage->GetHeight(&containerHeight);
+  if (containerWidth == 0 && containerHeight == 0) {
+    // the image hasn't been inited yet
     decoder->mImage->Init(width, height, decoder->mObserver);
-
-    /* FIXME: is this MIME type always right for this decoder? */
-    if (NS_FAILED(decoder->mImage->SetDiscardable("image/png"))) {
-      PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-             ("PNGDecoderAccounting: info_callback(): failed to set image container %p as discardable",
-              decoder->mImage.get()));
-      longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
-    }
-
-    PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-           ("PNGDecoderAccounting: info_callback(): set image container %p as discardable",
-            decoder->mImage.get()));
+  } else if (containerWidth != width || containerHeight != height) {
+    longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_UNEXPECTED
   }
 
   if (decoder->mObserver)
