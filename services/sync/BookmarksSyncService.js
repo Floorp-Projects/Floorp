@@ -481,7 +481,7 @@ BookmarksSyncService.prototype = {
   _getPropagations: function BSS__getPropagations(commands, conflicts, propagations) {
     for (let i = 0; i < commands.length; i++) {
       let alsoConflicts = function(elt) {
-        return elt.action == "remove" &&
+        return (elt.action == "create" || elt.action == "remove") &&
           commands[i].parents.indexOf(elt.GUID) >= 0;
       };
       if (conflicts.some(alsoConflicts))
