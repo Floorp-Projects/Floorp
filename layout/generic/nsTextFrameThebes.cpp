@@ -572,16 +572,12 @@ public:
 
   void SetAtStartOfLine() {
     mStartOfLine = PR_TRUE;
-    mCanStopOnThisLine = PR_FALSE;
   }
   void SetSkipIncompleteTextRuns(PRBool aSkip) {
     mSkipIncompleteTextRuns = aSkip;
   }
   void SetCommonAncestorWithLastFrame(nsIFrame* aFrame) {
     mCommonAncestorWithLastFrame = aFrame;
-  }
-  PRBool CanStopOnThisLine() {
-    return mCanStopOnThisLine;
   }
   nsIFrame* GetCommonAncestorWithLastFrame() {
     return mCommonAncestorWithLastFrame;
@@ -692,7 +688,6 @@ private:
   PRPackedBool                  mTrimNextRunLeadingWhitespace;
   PRPackedBool                  mCurrentRunTrimLeadingWhitespace;
   PRPackedBool                  mSkipIncompleteTextRuns;
-  PRPackedBool                  mCanStopOnThisLine;
 };
 
 static nsIFrame*
@@ -805,10 +800,6 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
   return FB_CONTINUE;
 }
 
-// build text runs for the 50 lines following aForFrame, and stop after that
-// when we get a chance.
-#define NUM_LINES_TO_BUILD_TEXT_RUNS 50
-
 /**
  * General routine for building text runs. This is hairy because of the need
  * to build text runs that span content nodes.
@@ -853,9 +844,9 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   }
 
   // Find the line containing aForFrame
-  nsBlockFrame::line_iterator startLine;
+  nsBlockFrame::line_iterator line;
   if (aForFrameLine) {
-    startLine = *aForFrameLine;
+    line = *aForFrameLine;
   } else {
     NS_ASSERTION(aForFrame, "One of aForFrame or aForFrameLine must be set!");
     nsIFrame* immediateChild =
@@ -866,8 +857,8 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
         nsLayoutUtils::FindChildContainingDescendant(block,
           presContext->FrameManager()->GetPlaceholderFrameFor(immediateChild));
     }
-    startLine = block->FindLineFor(immediateChild);
-    NS_ASSERTION(startLine != block->end_lines(),
+    line = block->FindLineFor(immediateChild);
+    NS_ASSERTION(line != block->end_lines(),
                  "Frame is not in the block!!!");
   }
 
@@ -884,13 +875,12 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   // but we discard them instead of assigning them to frames.
   // This is a little awkward because we traverse lines in the reverse direction
   // but we traverse the frames in each line in the forward direction.
-  nsBlockInFlowLineIterator backIterator(block, startLine, PR_FALSE);
+  nsBlockInFlowLineIterator backIterator(block, line, PR_FALSE);
   nsTextFrame* stopAtFrame = aForFrame;
   nsTextFrame* nextLineFirstTextFrame = nsnull;
   PRBool seenTextRunBoundaryOnLaterLine = PR_FALSE;
   PRBool mayBeginInTextRun = PR_TRUE;
   PRBool inOverflow = PR_FALSE;
-  nsBlockFrame::line_iterator line;
   while (PR_TRUE) {
     line = backIterator.GetLine();
     block = backIterator.GetContainer();
@@ -939,8 +929,6 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   // text run boundary is required we flush textRunFrames ((re)building their
   // gfxTextRuns as necessary).
   nsBlockInFlowLineIterator forwardIterator(block, line, inOverflow);
-  PRBool seenStartLine = PR_FALSE;
-  PRUint32 linesAfterStartLine = 0;
   do {
     line = forwardIterator.GetLine();
     if (line->IsBlock())
@@ -953,21 +941,6 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     for (i = line->GetChildCount() - 1; i >= 0; --i) {
       scanner.ScanFrame(child);
       child = child->GetNextSibling();
-    }
-    if (line == startLine) {
-      seenStartLine = PR_TRUE;
-    }
-    if (seenStartLine) {
-      ++linesAfterStartLine;
-      if (linesAfterStartLine >= NUM_LINES_TO_BUILD_TEXT_RUNS && scanner.CanStopOnThisLine()) {
-        // Don't flush; we may be in the middle of a textrun that we can't
-        // end here. That's OK, we just won't build it.
-        // Note that we must already have finished the textrun for aForFrame,
-        // because we've seen the end of a textrun in a line after the line
-        // containing aForFrame.
-        scanner.ResetLineBreaker();
-        return;
-      }
     }
   } while (forwardIterator.Next());
 
@@ -1047,7 +1020,6 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks)
     mBreakSinks.Clear();
   }
 
-  mCanStopOnThisLine = PR_TRUE;
   ResetRunInfo();
 }
 
