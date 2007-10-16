@@ -445,9 +445,13 @@ BookmarksSyncService.prototype = {
     if (!a || !b ||
        a.action != b.action ||
        a.data.type != b.data.type ||
-       a.parentGUID != b.parentGUID ||
+       a.data.parentGUID != b.data.parentGUID ||
        a.GUID == b.GUID)
       return false;
+
+    this._log.debug("deciding on likeness of " + a.GUID + " vs " + b.GUID);
+    this._log.debug("they have the same action, type, and parent");
+    this._log.debug("parent is " + a.data.parentGUID);
 
     switch (a.data.type) {
     case "bookmark":
@@ -508,8 +512,8 @@ BookmarksSyncService.prototype = {
     for (let i = 0; i < list.length; i++) {
       if (!list[i])
         continue;
-      if (list[i].parentGUID == oldGUID)
-        list[i].parentGUID = newGUID;
+      if (list[i].data.parentGUID == oldGUID)
+        list[i].data.parentGUID = newGUID;
       for (let j = 0; j < list[i].parents.length; j++) {
         if (list[i].parents[j] == oldGUID)
           list[i].parents[j] = newGUID;
