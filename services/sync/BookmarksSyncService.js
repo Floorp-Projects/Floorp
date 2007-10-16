@@ -1551,6 +1551,7 @@ function xpath(xmlDoc, xpathString) {
 
 function DAVCollection(baseURL) {
   this._baseURL = baseURL;
+  this._userURL = baseURL;
   this._authProvider = new DummyAuthProvider();
 }
 DAVCollection.prototype = {
@@ -1619,6 +1620,10 @@ DAVCollection.prototype = {
     return this._baseURL;
   },
 
+  get userURL() {
+    return this._userURL;
+  },
+
   _loggedIn: false,
   _currentUserPath: "nobody",
 
@@ -1634,7 +1639,7 @@ DAVCollection.prototype = {
     request.addEventListener("load", new EventListener(onComplete), false);
     request.addEventListener("error", new EventListener(onComplete), false);
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
-    request.open(op, this._baseURL + path, true);
+    request.open(op, this._userURL + path, true);
   
     if (headers) {
       for (var key in headers) {
@@ -1709,7 +1714,7 @@ DAVCollection.prototype = {
       // FIXME: hack
       let path = this._currentUser.split("@");
       this._currentUserPath = path[0];
-      this._baseURL = this._baseURL + "user/" + this._currentUserPath + "/";
+      this._userURL = this._baseURL + "user/" + this._currentUserPath + "/";
       this._loggedIn = true;
 
     } finally {
