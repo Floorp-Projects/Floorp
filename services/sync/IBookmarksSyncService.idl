@@ -66,4 +66,9 @@ interface IBookmarksSyncService : nsISupports
    * (for stale locks, useful for debugging after a crash)
    */
   void resetLock();
+
+  /**
+   * Delete json on server and re-sync
+   */
+  void resetServer();
 };
