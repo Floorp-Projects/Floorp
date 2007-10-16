@@ -272,7 +272,7 @@ function tokenstr(tt) {
 Np.toString = function () {
     var a = [];
     for (var i in this) {
-        if (this.hasOwnProperty(i) && i != 'type')
+        if (this.hasOwnProperty(i) && i != 'type' && i != 'target')
             a.push({id: i, value: this[i]});
     }
     a.sort(function (a,b) { return (a.id < b.id) ? -1 : 1; });
