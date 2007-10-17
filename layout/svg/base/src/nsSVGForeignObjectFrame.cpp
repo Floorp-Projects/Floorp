@@ -365,10 +365,6 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::InitialUpdate()
 {
-  NS_ASSERTION(GetStateBits() & NS_FRAME_FIRST_REFLOW,
-               "Yikes! We've been called already! Hopefully we weren't called "
-               "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
-
   UpdateCoveredRegion();
   DoReflow();
 
@@ -588,10 +584,6 @@ nsSVGForeignObjectFrame::DoReflow()
 #ifdef DEBUG
   printf("**nsSVGForeignObjectFrame::DoReflow()\n");
 #endif
-
-  NS_ASSERTION(!(nsSVGUtils::GetOuterSVGFrame(this)->
-                             GetStateBits() & NS_FRAME_FIRST_REFLOW),
-               "Calling InitialUpdate too early - must not call DoReflow!!!");
 
   if (IsDisabled())
     return;
