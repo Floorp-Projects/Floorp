@@ -193,7 +193,7 @@ NS_HasPendingEvents(nsIThread *thread)
 #ifdef MOZILLA_INTERNAL_API
   if (!thread) {
     thread = NS_GetCurrentThread();
-    NS_ENSURE_TRUE(thread, PR_FALSE);
+    NS_ENSURE_STATE(thread);
   }
 #else
   nsCOMPtr<nsIThread> current;
@@ -213,7 +213,7 @@ NS_ProcessNextEvent(nsIThread *thread, PRBool mayWait)
 #ifdef MOZILLA_INTERNAL_API
   if (!thread) {
     thread = NS_GetCurrentThread();
-    NS_ENSURE_TRUE(thread, PR_FALSE);
+    NS_ENSURE_STATE(thread);
   }
 #else
   nsCOMPtr<nsIThread> current;

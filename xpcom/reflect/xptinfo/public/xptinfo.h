@@ -94,7 +94,7 @@ public:
         }
 
     PRBool IsArray() const
-        {return TagPart() == T_ARRAY;}
+        {return (PRBool) TagPart() == T_ARRAY;}
 
     // 'Dependent' means that params of this type are dependent upon other 
     // params. e.g. an T_INTERFACE_IS is dependent upon some other param at 
