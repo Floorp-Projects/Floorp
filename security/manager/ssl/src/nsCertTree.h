@@ -154,10 +154,9 @@ private:
   nsCOMPtr<nsICertOverrideService> mOverrideService;
 
   treeArrayEl *GetThreadDescAtIndex(PRInt32 _index);
-  already_AddRefed<nsIX509Cert> 
-    GetCertAtIndex(PRInt32 _index, PRInt32 *outAbsoluteCertOffset = nsnull);
-  already_AddRefed<nsCertTreeDispInfo> 
-    GetDispInfoAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset = nsnull);
+  nsIX509Cert *GetCertAtIndex(PRInt32 _index, PRInt32 *outAbsoluteCertOffset = nsnull);
+  nsCertTreeDispInfo *GetDispInfoAtIndex(PRInt32 index,  
+                                         PRInt32 *outAbsoluteCertOffset = nsnull);
   void FreeCertArray();
   nsresult UpdateUIContents();
 

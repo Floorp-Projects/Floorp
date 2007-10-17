@@ -38,17 +38,17 @@
 <!ENTITY certmgr.title                       "Certificate Manager">
 
 <!ENTITY certmgr.tab.mine                     "Your Certificates">
-<!ENTITY certmgr.tab.others2                  "People">
+<!ENTITY certmgr.tab.others                   "Other People's">
 <!ENTITY certmgr.tab.websites3                "Servers">
 <!ENTITY certmgr.tab.ca                       "Authorities">
-<!ENTITY certmgr.tab.orphan2                  "Others">
+<!ENTITY certmgr.tab.orphan                   "Extra">
 
 <!ENTITY certmgr.ca.builtins                  "Built-in CAs">
 <!ENTITY certmgr.ca.mycas                     "CAs Managed By You">
 
 <!ENTITY certmgr.mine                         "You have certificates from these organizations that identify you:">
 <!ENTITY certmgr.others                       "You have certificates on file that identify these people:">
-<!ENTITY certmgr.websites2                    "You have certificates on file that identify these servers:">
+<!ENTITY certmgr.websites                     "You have certificates on file that identify these web sites:">
 <!ENTITY certmgr.cas                          "You have certificates on file that identify these certificate authorities:">
 <!ENTITY certmgr.orphans                      "You have certificates on file that do not fit in any of the other categories:">
 
