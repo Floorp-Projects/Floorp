@@ -837,17 +837,17 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
           // the code that cares for displaying page info does this already.
           continue;
         }
-
+        
         // We have found a signer cert that we want to remember.
-        nsCAutoString nickname;
-        nickname = nsNSSCertificate::defaultServerNickname(node->cert);
-        if (!nickname.IsEmpty()) {
-          PK11SlotInfo *slot = PK11_GetInternalKeySlot();
-          if (slot) {
-            PK11_ImportCert(slot, node->cert, CK_INVALID_HANDLE, 
-                            const_cast<char*>(nickname.get()), PR_FALSE);
-            PK11_FreeSlot(slot);
-          }
+
+        if (!nssComponent) {
+          // delay getting the service until we really need it
+          nsresult rv;
+          nssComponent = do_GetService(kNSSComponentCID, &rv);
+        }
+        
+        if (nssComponent) {
+          nssComponent->RememberCert(node->cert);
         }
       }
 

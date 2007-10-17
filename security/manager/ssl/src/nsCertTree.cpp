@@ -291,11 +291,11 @@ nsCertTree::GetThreadDescAtIndex(PRInt32 index)
 //  GetCertAtIndex
 //
 //  If the row at index is a cert, return that cert.  Otherwise, return null.
-already_AddRefed<nsIX509Cert>
+nsIX509Cert *
 nsCertTree::GetCertAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset)
 {
   nsRefPtr<nsCertTreeDispInfo> certdi =
-    GetDispInfoAtIndex(index, outAbsoluteCertOffset);
+    getter_AddRefs(GetDispInfoAtIndex(index, outAbsoluteCertOffset));
   if (!certdi)
     return nsnull;
 
@@ -308,7 +308,7 @@ nsCertTree::GetCertAtIndex(PRInt32 index, PRInt32 *outAbsoluteCertOffset)
 }
 
 //  If the row at index is a cert, return that cert.  Otherwise, return null.
-already_AddRefed<nsCertTreeDispInfo>
+nsCertTreeDispInfo *
 nsCertTree::GetDispInfoAtIndex(PRInt32 index, 
                                PRInt32 *outAbsoluteCertOffset)
 {
@@ -606,6 +606,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
         certdi->mTypeOfEntry = nsCertTreeDispInfo::direct_db;
         // not necessary: certdi->mHostWithPort.Clear();
         certdi->mOverrideBits = nsCertOverride::ob_None;
+        NS_IF_ADDREF(certdi);
         mDispInfo.InsertElementAt(InsertPosition, certdi);
         ++count;
         ++InsertPosition;
@@ -833,7 +834,10 @@ nsCertTree::DeleteEntryObject(PRUint32 index)
         }
       }
 
+      nsCertTreeDispInfo *certdi2 = mDispInfo.ElementAt(certIndex);
       mDispInfo.RemoveElementAt(certIndex);
+      NS_IF_RELEASE(certdi2);
+      certdi2 = 0;
 
       if (canRemoveEntry) {
         RemoveCacheEntry(cert);
@@ -864,7 +868,7 @@ NS_IMETHODIMP
 nsCertTree::GetCert(PRUint32 aIndex, nsIX509Cert **_cert)
 {
   NS_ENSURE_ARG(_cert);
-  *_cert = GetCertAtIndex(aIndex).get();
+  *_cert = GetCertAtIndex(aIndex);
   return NS_OK;
 }
 
@@ -874,7 +878,7 @@ nsCertTree::GetTreeItem(PRUint32 aIndex, nsICertTreeItem **_treeitem)
   NS_ENSURE_ARG(_treeitem);
 
   nsRefPtr<nsCertTreeDispInfo> certdi = 
-    GetDispInfoAtIndex(aIndex);
+    getter_AddRefs(GetDispInfoAtIndex(aIndex));
   if (!certdi)
     return NS_ERROR_FAILURE;
 
@@ -889,7 +893,7 @@ nsCertTree::IsHostPortOverride(PRUint32 aIndex, PRBool *_retval)
   NS_ENSURE_ARG(_retval);
 
   nsRefPtr<nsCertTreeDispInfo> certdi = 
-    GetDispInfoAtIndex(aIndex);
+    getter_AddRefs(GetDispInfoAtIndex(aIndex));
   if (!certdi)
     return NS_ERROR_FAILURE;
 
@@ -1110,7 +1114,7 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
 
   PRInt32 absoluteCertOffset;
   nsRefPtr<nsCertTreeDispInfo> certdi = 
-    GetDispInfoAtIndex(row, &absoluteCertOffset);
+    getter_AddRefs(GetDispInfoAtIndex(row, &absoluteCertOffset));
   if (!certdi)
     return NS_ERROR_FAILURE;
 
@@ -1392,7 +1396,7 @@ nsCertTree::dumpMap()
       nsAutoString td(el->orgName);
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("thread desc[%d]: %s", i, NS_LossyConvertUTF16toASCII(td).get()));
     }
-    nsCOMPtr<nsIX509Cert> ct = GetCertAtIndex(i);
+    nsCOMPtr<nsIX509Cert> ct = getter_AddRefs(GetCertAtIndex(i));
     if (ct != nsnull) {
       PRUnichar *goo;
       ct->GetCommonName(&goo);
