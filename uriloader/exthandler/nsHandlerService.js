@@ -362,28 +362,7 @@ HandlerService.prototype = {
     this._removeAssertions(preferredHandlerID);
 
     var infoID = this._getInfoID(this._getClass(aHandlerInfo), aHandlerInfo.type);
-
-    // Get a list of possible handlers.  After we have removed the info record,
-    // we'll check if any other info records reference these handlers, and we'll
-    // remove the handler records that aren't referenced by other info records.
-    var possibleHandlerIDs = [];
-    var possibleHandlerTargets = this._getTargets(infoID, NC_POSSIBLE_APP);
-    while (possibleHandlerTargets.hasMoreElements()) {
-      let possibleHandlerTarget = possibleHandlerTargets.getNext();
-      // Note: possibleHandlerTarget should always be an nsIRDFResource.
-      // The conditional is just here in case of a corrupt RDF datasource.
-      if (possibleHandlerTarget instanceof Ci.nsIRDFResource)
-        possibleHandlerIDs.push(possibleHandlerTarget.ValueUTF8);
-    }
-
-    // Remove the info record.
     this._removeAssertions(infoID);
-
-    // Now that we've removed the info record, remove any possible handlers
-    // that aren't referenced by other info records.
-    for each (let possibleHandlerID in possibleHandlerIDs)
-      if (!this._existsResourceTarget(NC_POSSIBLE_APP, possibleHandlerID))
-        this._removeAssertions(possibleHandlerID);
 
     var typeID = this._getTypeID(this._getClass(aHandlerInfo), aHandlerInfo.type);
     this._removeAssertions(typeID);
@@ -1271,12 +1250,9 @@ HandlerService.prototype = {
     var properties = this._ds.ArcLabelsOut(source);
  
     while (properties.hasMoreElements()) {
-      let property = properties.getNext();
-      let targets = this._ds.GetTargets(source, property, true);
-      while (targets.hasMoreElements()) {
-        let target = targets.getNext();
-        this._ds.Unassert(source, property, target);
-      }
+      var property = properties.getNext();
+      var target = this._ds.GetTarget(source, property, true);
+      this._ds.Unassert(source, property, target);
     }
   }
 
