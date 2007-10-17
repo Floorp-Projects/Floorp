@@ -1307,7 +1307,7 @@ BookmarksSyncService.prototype = {
   _onLogin: function BSS__onLogin(success) {
     if (success) {
       this._log.info("Logged in");
-      this._log.info("Bookmarks sync server: " + this._dav.baseURL);
+      this._log.info("Bookmarks sync server: " + this._dav.userURL);
       this._os.notifyObservers(null, "bookmarks-sync:login", "");
     } else {
       this._log.info("Could not log in");
@@ -1584,12 +1584,14 @@ DAVCollection.prototype = {
   },
 
   // FIXME: should we regen this each time to prevent it from staying in memory?
+  __authURI: null,
   __auth: null,
   get _auth() {
-    if (this.__auth)
+    if (this.__auth && this._userURL == this.__authURI)
       return this.__auth;
 
     try {
+      this.__authURI = this._userURL;
       let URI = makeURI(this._userURL);
       let username = 'nobody@mozilla.com';
       let password;
@@ -1697,9 +1699,11 @@ DAVCollection.prototype = {
 
   login: function DC_login(onComplete) {
     let cont = yield;
-    this._loggedIn = false;
 
     try {
+      if (this._loggedIn)
+        return;
+
       let headers = {};
       if (this._auth)
         headers['Authorization'] = this._auth;
