@@ -103,7 +103,7 @@ public:
    * This function is especially useful for static hashtables.
    * @return PR_TRUE if the table has been initialized.
    */
-  PRBool IsInitialized() const { return !!this->mTable.entrySize; }
+  PRBool IsInitialized() const { return this->mTable.entrySize; }
 
   /**
    * Return the number of entries in the table.

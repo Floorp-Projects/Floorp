@@ -244,7 +244,7 @@ public:
     void                SetCallersTarget(nsIEventTarget* target);
     PRBool              IsSync() const
     {
-        return !!(mOwner->GetProxyType() & NS_PROXY_SYNC);
+        return mOwner->GetProxyType() & NS_PROXY_SYNC;
     }
 
 private:
