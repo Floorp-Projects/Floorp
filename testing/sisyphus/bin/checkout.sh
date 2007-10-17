@@ -65,14 +65,8 @@ case $product in
         if ! make -f client.mk checkout 2>&1; then
             error "during checkout of tree"
         fi
-
-        case "$extra" in
-            jprof)
-                cvs -z3 -q update -d -P tools/jprof
-                ;;
-        esac
-
         ;;
+
     js) 
     if [[ ! ( -d mozilla && \
         -e mozilla/js && \
