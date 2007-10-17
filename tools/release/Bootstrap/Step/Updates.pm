@@ -6,7 +6,7 @@ package Bootstrap::Step::Updates;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging GetLocaleManifest);
+use Bootstrap::Util qw(CvsCatfile SyncToStaging GetLocaleManifest);
 
 use File::Find qw(find);
 use POSIX qw(strftime);
@@ -396,7 +396,7 @@ sub Push {
       );
     }
 
-    SyncNightlyDirToStaging();
+    SyncToStaging();
 
     # Push test channels live
     $this->Shell(

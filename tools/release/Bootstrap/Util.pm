@@ -15,7 +15,7 @@ our @EXPORT_OK = qw(CvsCatfile CvsTag
                     GetLocaleManifest
                     GetBouncerPlatforms GetPatcherPlatforms
                     GetBouncerToPatcherPlatformMap
-                    SyncNightlyDirToStaging);
+                    SyncToStaging);
 
 our($DEFAULT_SHELL_TIMEOUT);
 
@@ -286,11 +286,14 @@ sub GetDiffFileList {
     return \@differentFiles;
 }
 
-sub SyncNightlyDirToStaging {
+sub SyncToStaging {
     my $config = new Bootstrap::Config();
+    my $version = $config->Get(var => 'version');
+    my $product = $config->Get(var => 'product');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
+    my $stageHome = $config->Get(var => 'stageHome');
     my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
     my $externalStagingUser = $config->Get(var => 'externalStagingUser');
@@ -298,24 +301,43 @@ sub SyncNightlyDirToStaging {
     
     my $rcTag = $productTag . '_RC' . $rc;
     my $pushLog  = catfile($logDir, 'build_' . $rcTag . '-push.log');
-    my $nightlyDir = $config->GetFtpNightlyDir();
+    my $dirName = $config->GetFtpNightlyDir();
 
     my $command = 'ssh';
     my @cmdArgs = ($stagingUser . '@' . $stagingServer,
-                   'rsync', '-av', $nightlyDir, 
+                   'rsync', '-av', $dirName, 
                    $externalStagingUser.'@'.$externalStagingServer.':'.
-                   $nightlyDir);
-    print 'Bootstrap::Util::SyncNightlyDirToStaging() Running shell command: '.$command.' '.join(' ', @cmdArgs)."\n";
+                   $dirName);
+    print 'Bootstrap::Util::SyncToStaging() Running shell command: '.$command.' '.join(' ', @cmdArgs)."\n";
 
     my $rv = RunShellCommand(command => $command,
                              args => \@cmdArgs, 
                              redirectStderr => 1,
                              logfile => $pushLog);
 
-    print 'Bootstrap::Util::SyncNightlyDirToStaging() Output: ' . 
+    print 'Bootstrap::Util::SyncToStaging() Output: ' . 
      $rv->{'output'} . "\n";
     if ($rv->{'exitValue'} != 0) {
-        die "ASSERT: SyncNightlyDirToStaging(): rsync failed\n";
+        die "ASSERT: SyncToStaging(): rsync failed\n";
+    }
+
+    $dirName = CvsCatfile($stageHome, $product.'-'.$version);
+
+    @cmdArgs = ($stagingUser . '@' . $stagingServer,
+                   'rsync', '-av', $dirName, 
+                   $externalStagingUser.'@'.$externalStagingServer.':'.
+                   $dirName);
+    print 'Bootstrap::Util::SyncToStaging() Running shell command: '.$command.' '.join(' ', @cmdArgs)."\n";
+
+    $rv = RunShellCommand(command => $command,
+                             args => \@cmdArgs, 
+                             redirectStderr => 1,
+                             logfile => $pushLog);
+
+    print 'Bootstrap::Util::SyncToStaging() Output: ' . 
+     $rv->{'output'} . "\n";
+    if ($rv->{'exitValue'} != 0) {
+        die "ASSERT: SyncToStaging(): rsync failed\n";
     }
 
 }
