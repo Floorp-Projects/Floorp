@@ -59,7 +59,6 @@ PACKAGE_FILE = pipnss.pkg
 CPPSRCS = 				\
 	nsNSSCleaner.cpp                \
 	nsCertOverrideService.cpp   \
-	nsRecentBadCerts.cpp \
 	nsPSMBackgroundThread.cpp       \
 	nsSSLThread.cpp                 \
 	nsCertVerificationThread.cpp    \

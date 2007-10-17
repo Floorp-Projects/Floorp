@@ -60,7 +60,6 @@
 #include "nsIClientAuthDialogs.h"
 #include "nsICertOverrideService.h"
 #include "nsIBadCertListener2.h"
-#include "nsRecentBadCerts.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -2343,8 +2342,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   nsCString hostWithPortString = hostString;
   hostWithPortString.AppendLiteral(":");
   hostWithPortString.AppendInt(port);
-
-  NS_ConvertUTF8toUTF16 hostWithPortStringUTF16(hostWithPortString);
+  
 
   // Check the name field against the desired hostname.
   if (hostname && hostname[0] &&
@@ -2446,7 +2444,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   {
     PRBool haveStoredOverride;
   
-    nsrv = overrideService->HasMatchingOverride(hostWithPortStringUTF16,
+    nsrv = overrideService->HasMatchingOverride(NS_ConvertUTF8toUTF16(hostWithPortString), 
                                                 ix509, 
                                                 &storedOverrideBits, 
                                                 &haveStoredOverride);
@@ -2489,13 +2487,6 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     }
   }
 
-  nsCOMPtr<nsIRecentBadCertsService> recentBadCertsService = 
-    do_GetService(NS_RECENTBADCERTS_CONTRACTID);
-
-  if (recentBadCertsService) {
-    recentBadCertsService->AddBadCert(hostWithPortStringUTF16, status);
-  }
-
   PR_SetError(errorCodeToReport, 0);
   if (!suppressMessage) {
     nsHandleInvalidCertError(infoObject,
@@ -2505,7 +2496,6 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
                              errorCodeToReport, 
                              ix509);
   }
-
   return cancel_and_failure(infoObject);
 }
 
