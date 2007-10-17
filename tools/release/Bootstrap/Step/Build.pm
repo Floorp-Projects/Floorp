@@ -6,7 +6,7 @@ package Bootstrap::Step::Build;
 use File::Temp qw(tempfile);
 
 use Bootstrap::Step;
-use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging);
+use Bootstrap::Util qw(CvsCatfile SyncToStaging);
 
 @ISA = ("Bootstrap::Step");
 
@@ -156,7 +156,7 @@ sub Push {
       logFile => $pushLog,
     );
 
-    SyncNightlyDirToStaging(); 
+    SyncToStaging(); 
 }
 
 sub Announce {
