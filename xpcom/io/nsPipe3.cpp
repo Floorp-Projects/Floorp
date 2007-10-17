@@ -1041,7 +1041,7 @@ nsPipeOutputStream::OnOutputException(nsresult reason, nsPipeEvents &events)
     LOG(("nsPipeOutputStream::OnOutputException [this=%x reason=%x]\n",
         this, reason));
 
-    PRBool result = PR_FALSE;
+    nsresult result = PR_FALSE;
 
     NS_ASSERTION(NS_FAILED(reason), "huh? successful exception");
     mWritable = PR_FALSE;

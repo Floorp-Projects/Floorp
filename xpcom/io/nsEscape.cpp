@@ -379,11 +379,11 @@ NS_COM PRBool NS_EscapeURL(const char *part,
     static const char hexChars[] = "0123456789ABCDEF";
     if (partLen < 0)
         partLen = strlen(part);
-    PRBool forced = !!(flags & esc_Forced);
-    PRBool ignoreNonAscii = !!(flags & esc_OnlyASCII);
-    PRBool ignoreAscii = !!(flags & esc_OnlyNonASCII);
-    PRBool writing = !!(flags & esc_AlwaysCopy);
-    PRBool colon = !!(flags & esc_Colon);
+    PRBool forced = (flags & esc_Forced);
+    PRBool ignoreNonAscii = (flags & esc_OnlyASCII);
+    PRBool ignoreAscii = (flags & esc_OnlyNonASCII);
+    PRBool writing = (flags & esc_AlwaysCopy);
+    PRBool colon = (flags & esc_Colon);
 
     register const unsigned char* src = (const unsigned char *) part;
 
@@ -461,10 +461,10 @@ NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRUint32 flags, nsACS
     if (len < 0)
         len = strlen(str);
 
-    PRBool ignoreNonAscii = !!(flags & esc_OnlyASCII);
-    PRBool ignoreAscii = !!(flags & esc_OnlyNonASCII);
-    PRBool writing = !!(flags & esc_AlwaysCopy);
-    PRBool skipControl = !!(flags & esc_SkipControl); 
+    PRBool ignoreNonAscii = (flags & esc_OnlyASCII);
+    PRBool ignoreAscii = (flags & esc_OnlyNonASCII);
+    PRBool writing = (flags & esc_AlwaysCopy);
+    PRBool skipControl = (flags & esc_SkipControl); 
 
     static const char hexChars[] = "0123456789ABCDEFabcdef";
 
