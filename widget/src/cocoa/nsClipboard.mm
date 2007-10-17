@@ -93,10 +93,7 @@ nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   for (unsigned int i = 0; i < outputCount; i++) {
     NSString* currentKey = [outputKeys objectAtIndex:i];
     id currentValue = [pasteboardOutputDict valueForKey:currentKey];
-    if (currentKey == NSStringPboardType ||
-        currentKey == kCorePboardType_url ||
-        currentKey == kCorePboardType_urld ||
-        currentKey == kCorePboardType_urln)
+    if (currentKey == NSStringPboardType)
       [generalPBoard setString:currentValue forType:currentKey];
     else
       [generalPBoard setData:currentValue forType:currentKey];
