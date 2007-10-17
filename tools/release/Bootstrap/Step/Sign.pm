@@ -4,7 +4,7 @@
 package Bootstrap::Step::Sign;
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(SyncNightlyDirToStaging);
+use Bootstrap::Util qw(SyncToStaging);
 @ISA = ("Bootstrap::Step");
 
 sub Execute {
@@ -36,7 +36,7 @@ sub Announce {
 }
 
 sub Push {
-    SyncNightlyDirToStaging();
+    SyncToStaging();
 }
 
 1;
