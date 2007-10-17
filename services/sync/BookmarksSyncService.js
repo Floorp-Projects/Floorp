@@ -1560,6 +1560,9 @@ function DAVCollection(baseURL) {
   this._baseURL = baseURL;
   this._userURL = baseURL;
   this._authProvider = new DummyAuthProvider();
+  let logSvc = Cc["@mozilla.org/log4moz/service;1"].
+    getService(Ci.ILog4MozService);
+  this._log = logSvc.getLogger("Service.DAV");
 }
 
 DAVCollection.prototype = {
@@ -1590,6 +1593,8 @@ DAVCollection.prototype = {
     if (this.__auth && this._userURL == this.__authURI)
       return this.__auth;
 
+    this._log.debug("Generating new authentication header");
+
     try {
       this.__authURI = this._userURL;
       let URI = makeURI(this._userURL);
@@ -1600,8 +1605,10 @@ DAVCollection.prototype = {
         getService(Ci.nsIPrefBranch);
       username = branch.getCharPref("browser.places.sync.username");
 
-      if (!username)
+      if (!username) {
+        this._log.info("No username found in password mgr, can't generate auth header");
         return null;
+      }
 
       // fixme: make a request and get the realm
       let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -1615,8 +1622,10 @@ DAVCollection.prototype = {
         }
       }
 
-      if (!password)
+      if (!password) {
+        this._log.info("No password found in password mgr, can't generate auth header");
         return null;
+      }
 
       this.__auth = "Basic " +
         this._base64.Base64.encode(username + ":" + password);
@@ -1643,7 +1652,9 @@ DAVCollection.prototype = {
   },
 
   _makeRequest: function DC__makeRequest(op, path, onComplete, headers) {
-    var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+    this._log.debug("Creating request, url=" + this._userURL + path);
+
+    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
   
     request.addEventListener("load", new EventListener(onComplete), false);
@@ -1652,7 +1663,8 @@ DAVCollection.prototype = {
     request.open(op, this._userURL + path, true);
   
     if (headers) {
-      for (var key in headers) {
+      let key;
+      for (key in headers) {
         request.setRequestHeader(key, headers[key]);
       }
     }
@@ -1701,8 +1713,10 @@ DAVCollection.prototype = {
     let cont = yield;
 
     try {
-      if (this._loggedIn)
+      if (this._loggedIn) {
+        this._log.debug("Login requested, but already logged in");
         return;
+      }
 
       let headers = {};
       if (this._auth)
@@ -1716,8 +1730,14 @@ DAVCollection.prototype = {
       request.send(null);
       let event = yield;
 
-      if (this._authProvider._authFailed || event.target.status >= 400)
+      if (this._authProvider._authFailed) {
+        this._log.warn("Login authentication failed");
         return;
+      }
+      if (event.target.status >= 400) {
+        this._log.warn("Login request failed, status " + event.target.status);
+        return;
+      }
   
       let branch = Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
@@ -1735,8 +1755,7 @@ DAVCollection.prototype = {
   },
 
   logout: function DC_logout() {
-    this._userURL = this._baseURL; // XXX this shouldn't be necessary, suggests that we're not invalidating/caching auth correctly
-
+    this._log.debug("Logging out (forgetting auth header)");
     this._loggedIn = false;
     this.__auth = null;
   },
@@ -1746,6 +1765,8 @@ DAVCollection.prototype = {
   _getActiveLock: function DC__getActiveLock(onComplete) {
     let cont = yield;
     let ret = null;
+
+    this._log.info("Getting active lock token");
 
     try {
       let headers = {'Content-Type': 'text/xml; charset="utf-8"',
@@ -1759,6 +1780,16 @@ DAVCollection.prototype = {
                    "  <D:prop><D:lockdiscovery/></D:prop>" +
                    "</D:propfind>");
       let event = yield;
+
+      if (this._authProvider._authFailed) {
+        this._log.warn("_getActiveLock: authentication failed");
+        return;
+      }
+      if (event.target.status >= 400) {
+        this._log.warn("_getActiveLock: got status " + event.target.status);
+        return;
+      }
+
       let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
       let token = tokens.iterateNext();
       ret = token.textContent;
@@ -1771,7 +1802,14 @@ DAVCollection.prototype = {
     let cont = yield;
     this._token = null;
 
+    this._log.info("Acquiring lock");
+
     try {
+      if (this._token) {
+        this._log.debug("Lock called, but we already hold a token");
+        return;
+      }
+
       headers = {'Content-Type': 'text/xml; charset="utf-8"',
                  'Timeout': 'Second-600',
                  'Depth': 'infinity'};
@@ -1786,8 +1824,14 @@ DAVCollection.prototype = {
                    "</D:lockinfo>");
       let event = yield;
 
-      if (event.target.status < 200 || event.target.status >= 300)
+      if (this._authProvider._authFailed) {
+        this._log.warn("lock: authentication failed");
         return;
+      }
+      if (event.target.status < 200 || event.target.status >= 300) {
+        this._log.warn("lock: got status " + event.target.status);
+        return;
+      }
 
       let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
       let token = tokens.iterateNext();
@@ -1802,9 +1846,13 @@ DAVCollection.prototype = {
   unlock: function DC_unlock(onComplete) {
     let cont = yield;
 
+    this._log.info("Releasing lock");
+
     try {
-      if (!this._token)
+      if (!this._token) {
+        this._log.debug("Unlock called, but we don't hold a token right now");
         return;
+      }
 
       let headers = {'Lock-Token': "<" + this._token + ">"};
       if (this._auth)
@@ -1814,8 +1862,14 @@ DAVCollection.prototype = {
       request.send(null);
       let event = yield;
 
-      if (event.target.status < 200 || event.target.status >= 300)
+      if (this._authProvider._authFailed) {
+        this._log.warn("unlock: authentication failed");
         return;
+      }
+      if (event.target.status < 200 || event.target.status >= 300) {
+        this._log.warn("unlock: got status " + event.target.status);
+        return;
+      }
 
       this._token = null;
     } finally {
