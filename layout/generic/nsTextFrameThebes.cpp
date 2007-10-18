@@ -598,9 +598,6 @@ public:
     mMaxTextLength = 0;
     mDoubleByteText = PR_FALSE;
   }
-  void ResetLineBreaker() {
-    mLineBreaker.Reset();
-  }
   void AccumulateRunInfo(nsTextFrame* aFrame);
   void BuildTextRunForFrames(void* aTextBuffer);
   void AssignTextRun(gfxTextRun* aTextRun);
