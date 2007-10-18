@@ -1622,10 +1622,9 @@ DAVCollection.prototype = {
   },
 
   // FIXME: should we regen this each time to prevent it from staying in memory?
-  __authURI: null,
   __auth: null,
   get _auth() {
-    if (this.__auth && this._userURL == this.__authURI)
+    if (this.__auth)
       return this.__auth;
 
     try {
@@ -1786,6 +1785,8 @@ DAVCollection.prototype = {
       }
    
       this._log.info("Logging in");
+
+      this._userURL = this._baseURL; // for createAcct.php
 
       // This ensures the auth header is correct, and it doubles as an
       // account creation request
