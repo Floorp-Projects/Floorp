@@ -1037,21 +1037,23 @@ BookmarksSyncService.prototype = {
 
         server.deltas.push(serverDelta);
 
-        this._dav.PUT("bookmarks-deltas.json",
-                      this._mungeCommands(server.deltas), cont);
+        gen = this._dav.PUT("bookmarks-deltas.json",
+                            this._mungeCommands(server.deltas), cont);
         let deltasPut = yield;
+        gen.close();
 
         // FIXME: need to watch out for the storage format version changing,
         // in that case we'll have to re-upload all the files, not just these
-        this._dav.PUT("bookmarks-status.json",
-                      uneval({GUID: this._snapshotGUID,
-                              formatVersion: STORAGE_FORMAT_VERSION,
-                              snapVersion: server.snapVersion,
-                              maxVersion: this._snapshotVersion}), cont);
+        gen = this._dav.PUT("bookmarks-status.json",
+                            uneval({GUID: this._snapshotGUID,
+                                    formatVersion: STORAGE_FORMAT_VERSION,
+                                    snapVersion: server.snapVersion,
+                                    maxVersion: this._snapshotVersion}), cont);
         let statusPut = yield;
+        gen.close();
 
-        if (deltasPut.target.status >= 200 && deltasPut.target.status < 300 &&
-            statusPut.target.status >= 200 && statusPut.target.status < 300) {
+        if (deltasPut.status >= 200 && deltasPut.status < 300 &&
+            statusPut.status >= 200 && statusPut.status < 300) {
           this._log.info("Successfully updated deltas and status on server");
           this._saveSnapshot();
         } else {
@@ -1145,14 +1147,16 @@ BookmarksSyncService.prototype = {
 
     try {
       this._log.info("Getting bookmarks status from server");
-      this._dav.GET("bookmarks-status.json", cont);
-      let statusResp = yield;
+      let gen = this._dav.GET("bookmarks-status.json", cont);
+      let resp = yield;
+      let status = resp.status;
+      gen.close();
   
-      switch (statusResp.target.status) {
+      switch (status) {
       case 200:
         this._log.info("Got bookmarks status from server");
   
-        let status = eval(statusResp.target.responseText);
+        let status = eval(resp.responseText);
         let snap, deltas, allDeltas;
   
         // Bail out if the server has a newer format version than we can parse
@@ -1177,24 +1181,28 @@ BookmarksSyncService.prototype = {
             this._log.info("Local snapshot is out of date");
   
           this._log.info("Downloading server snapshot");
-          this._dav.GET("bookmarks-snapshot.json", cont);
-          let snapResp = yield;
-          if (snapResp.target.status < 200 || snapResp.target.status >= 300) {
+          gen = this._dav.GET("bookmarks-snapshot.json", cont);
+          resp = yield;
+          gen.close()
+
+          if (resp.status < 200 || resp.status >= 300) {
             this._log.error("Could not download server snapshot");
             generatorDone(this, onComplete, ret)
             throw 'close generator';
           }
-          snap = eval(snapResp.target.responseText);
+          snap = eval(resp.responseText);
   
           this._log.info("Downloading server deltas");
-          this._dav.GET("bookmarks-deltas.json", cont);
-          let deltasResp = yield;
-          if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
+          gen = this._dav.GET("bookmarks-deltas.json", cont);
+          resp = yield;
+          gen.close();
+
+          if (resp.status < 200 || resp.status >= 300) {
             this._log.error("Could not download server deltas");
             generatorDone(this, onComplete, ret)
             throw 'close generator';
           }
-          allDeltas = eval(deltasResp.target.responseText);
+          allDeltas = eval(resp.responseText);
           deltas = eval(uneval(allDeltas));
   
         } else if (this._snapshotVersion >= status.snapVersion &&
@@ -1202,14 +1210,16 @@ BookmarksSyncService.prototype = {
           snap = eval(uneval(this._snapshot));
   
           this._log.info("Downloading server deltas");
-          this._dav.GET("bookmarks-deltas.json", cont);
-          let deltasResp = yield;
-          if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
+          gen = this._dav.GET("bookmarks-deltas.json", cont);
+          resp = yield;
+          gen.close();
+
+          if (resp.status < 200 || resp.status >= 300) {
             this._log.error("Could not download server deltas");
             generatorDone(this, onComplete, ret)
             throw 'close generator';
           }
-          allDeltas = eval(deltasResp.target.responseText);
+          allDeltas = eval(resp.responseText);
           deltas = allDeltas.slice(this._snapshotVersion - status.snapVersion);
   
         } else if (this._snapshotVersion == status.maxVersion) {
@@ -1217,14 +1227,16 @@ BookmarksSyncService.prototype = {
   
           // FIXME: could optimize this case by caching deltas file
           this._log.info("Downloading server deltas");
-          this._dav.GET("bookmarks-deltas.json", cont);
-          let deltasResp = yield;
-          if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
+          gen = this._dav.GET("bookmarks-deltas.json", cont);
+          resp = yield;
+          gen.close();
+
+          if (resp.status < 200 || resp.status >= 300) {
             this._log.error("Could not download server deltas");
             generatorDone(this, onComplete, ret)
             throw 'close generator';
           }
-          allDeltas = eval(deltasResp.target.responseText);
+          allDeltas = eval(resp.responseText);
           deltas = [];
   
         } else { // this._snapshotVersion > status.maxVersion
@@ -1253,34 +1265,40 @@ BookmarksSyncService.prototype = {
         this._snapshotVersion = 0;
         this._snapshotGUID = null; // in case there are other snapshots out there
   
-        this._dav.PUT("bookmarks-snapshot.json",
-                      this._mungeNodes(this._snapshot), cont);
-        let snapPut = yield;
-        if (snapPut.target.status < 200 || snapPut.target.status >= 300) {
+        gen = this._dav.PUT("bookmarks-snapshot.json",
+                            this._mungeNodes(this._snapshot), cont);
+        resp = yield;
+        gen.close();
+
+        if (resp.status < 200 || resp.status >= 300) {
           this._log.error("Could not upload snapshot to server, error code: " +
-                      snapPut.target.status);
+                          resp.status);
           generatorDone(this, onComplete, ret)
           throw 'close generator';
         }
   
-        this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
-        let deltasPut = yield;
-        if (deltasPut.target.status < 200 || deltasPut.target.status >= 300) {
+        gen = this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
+        resp = yield;
+        gen.close();
+
+        if (resp.status < 200 || resp.status >= 300) {
           this._log.error("Could not upload deltas to server, error code: " +
-                     deltasPut.target.status);
+                          resp.status);
           generatorDone(this, onComplete, ret)
           throw 'close generator';
         }
   
-        this._dav.PUT("bookmarks-status.json",
-                      uneval({GUID: this._snapshotGUID,
-                              formatVersion: STORAGE_FORMAT_VERSION,
-                              snapVersion: this._snapshotVersion,
-                              maxVersion: this._snapshotVersion}), cont);
-        let statusPut = yield;
-        if (statusPut.target.status < 200 || statusPut.target.status >= 300) {
+        gen = this._dav.PUT("bookmarks-status.json",
+                            uneval({GUID: this._snapshotGUID,
+                                    formatVersion: STORAGE_FORMAT_VERSION,
+                                    snapVersion: this._snapshotVersion,
+                                    maxVersion: this._snapshotVersion}), cont);
+        resp = yield;
+        gen.close();
+
+        if (resp.status < 200 || resp.status >= 300) {
           this._log.error("Could not upload status file to server, error code: " +
-                     statusPut.target.status);
+                          resp.status);
           generatorDone(this, onComplete, ret)
           throw 'close generator';
         }
@@ -1299,7 +1317,7 @@ BookmarksSyncService.prototype = {
   
       default:
         this._log.error("Could not get bookmarks.status: unknown HTTP status code " +
-                        statusResp.target.status);
+                        status);
         break;
       }
     } catch (e) {
@@ -1360,24 +1378,26 @@ BookmarksSyncService.prototype = {
         return;
       }
 
-      this._dav.DELETE("bookmarks-status.json", cont);
+      gen = this._dav.DELETE("bookmarks-status.json", cont);
       let statusResp = yield;
-      this._dav.DELETE("bookmarks-snapshot.json", cont);
+      gen.close();
+      gen = this._dav.DELETE("bookmarks-snapshot.json", cont);
       let snapshotResp = yield;
-      this._dav.DELETE("bookmarks-deltas.json", cont);
+      gen.close();
+      gen = this._dav.DELETE("bookmarks-deltas.json", cont);
       let deltasResp = yield;
+      gen.close();
 
       gen = this._dav.unlock.async(this._dav, cont);
       let unlocked = yield;
       gen.close();
 
-      if (!(statusResp.target.status == 200 || statusResp.target.status == 404 ||
-            snapshotResp.target.status == 200 || snapshotResp.target.status == 404 ||
-            deltasResp.target.status == 200 || deltasResp.target.status == 404)) {
+      if (!(statusResp.status == 200 || statusResp.status == 404 ||
+            snapshotResp.status == 200 || snapshotResp.status == 404 ||
+            deltasResp.status == 200 || deltasResp.status == 404)) {
         this._log.error("Could delete server data, response codes " +
-                        statusResp.target.status + ", " +
-                        snapshotResp.target.status + ", " +
-                        deltasResp.target.status);
+                        statusResp.status + ", " + snapshotResp.status + ", " +
+                        deltasResp.status);
         return;
       }
 
@@ -1608,9 +1628,9 @@ DAVCollection.prototype = {
     if (this.__auth && this._userURL == this.__authURI)
       return this.__auth;
 
-    this._log.debug("Generating new authentication header");
-
     try {
+      this._log.debug("Generating new authentication header");
+
       this.__authURI = this._userURL;
       let URI = makeURI(this._userURL);
       let username = 'nobody@mozilla.com';
@@ -1666,92 +1686,115 @@ DAVCollection.prototype = {
     return this._currentUser;
   },
 
-  _makeRequest: function DC__makeRequest(op, path, onComplete, headers) {
-    this._log.debug("Creating " + op + " request for" + this._userURL + path);
+  _makeRequest: function DC__makeRequest(onComplete, op, path, headers, data) {
+    let cont = yield;
+    let ret;
 
-    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-    request = request.QueryInterface(Ci.nsIDOMEventTarget);
+    try {
+      this._log.debug("Creating " + op + " request for " + this._userURL + path);
   
-    request.addEventListener("load", new EventListener(onComplete), false);
-    request.addEventListener("error", new EventListener(onComplete), false);
-    request = request.QueryInterface(Ci.nsIXMLHttpRequest);
-    request.open(op, this._userURL + path, true);
-  
-    if (headers) {
+      let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
+      request = request.QueryInterface(Ci.nsIDOMEventTarget);
+    
+      request.addEventListener("load", new EventListener(cont), false);
+      request.addEventListener("error", new EventListener(cont), false);
+      request = request.QueryInterface(Ci.nsIXMLHttpRequest);
+      request.open(op, this._userURL + path, true);
+    
       let key;
       for (key in headers) {
+        this._log.debug("HTTP Header " + key + ": " + headers[key]);
         request.setRequestHeader(key, headers[key]);
       }
+  
+      this._authProvider._authFailed = false;
+      request.channel.notificationCallbacks = this._authProvider;
+  
+      request.send(data);
+      let event = yield;
+      ret = event.target;
+
+      if (this._authProvider._authFailed)
+        this._log.warn("_makeRequest: authentication failed");
+      if (ret.status < 200 || ret.status >= 300)
+        this._log.warn("_makeRequest: got status " + ret.status);
+
+    } catch (e) {
+      if (e != 'close generator')
+        throw e;
+
+    } finally {
+      generatorDone(this, onComplete, ret);
+      yield; // onComplete is responsible for closing the generator
     }
-
-    request.channel.notificationCallbacks = this._authProvider;
-
-    return request;
+    this._log.warn("generator not properly closed");
   },
 
-  GET: function DC_GET(path, onComplete, headers) {
-    if (!headers)
-      headers = {'Content-type': 'text/plain'};
-    if (this._auth)
-      headers['Authorization'] = this._auth;
-    if (this._token)
-      headers['If'] = "<" + this._bashURL + "> (<" + this._token + ">)";
-    let request = this._makeRequest("GET", path, onComplete, headers);
-    request.send(null);
+  get _defaultHeaders() {
+    return {'Authorization': this._auth? this._auth : '',
+            'Content-type': 'text/plain',
+            'If': this._token?
+              "<" + this._userURL + "> (<" + this._token + ">)" : ''};
   },
 
-  PUT: function DC_PUT(path, data, onComplete, headers) {
-    if (!headers)
-      headers = {'Content-type': 'text/plain'};
-    if (this._auth)
-      headers['Authorization'] = this._auth;
-    if (this._token)
-      headers['If'] = "<" + this._bashURL + "> (<" + this._token + ">)";
-    let request = this._makeRequest("PUT", path, onComplete, headers);
-    request.send(data);
+  GET: function DC_GET(path, onComplete) {
+    return this._makeRequest.async(this, onComplete, "GET", path,
+                                   this._defaultHeaders);
   },
 
-  DELETE: function DC_DELETE(path, onComplete, headers) {
-    if (!headers)
-      headers = {'Content-type': 'text/plain'};
-    if (this._auth)
-      headers['Authorization'] = this._auth;
-    if (this._token)
-      headers['If'] = "<" + this._bashURL + "> (<" + this._token + ">)";
-    let request = this._makeRequest("DELETE", path, onComplete, headers);
-    request.send(null);
+  PUT: function DC_PUT(path, data, onComplete) {
+    return this._makeRequest.async(this, onComplete, "PUT", path,
+                                   this._defaultHeaders, data);
+  },
+
+  DELETE: function DC_DELETE(path, onComplete) {
+    return this._makeRequest.async(this, onComplete, "DELETE", path,
+                                   this._defaultHeaders);
+  },
+
+  PROPFIND: function DC_PROPFIND(path, data, onComplete) {
+    let headers = {'Content-type': 'text/xml; charset="utf-8"',
+                   'Depth': '0'};
+    headers.__proto__ = this._defaultHeaders;
+    return this._makeRequest.async(this, onComplete, "PROPFIND", path,
+                                   headers, data);
+  },
+
+  LOCK: function DC_LOCK(path, data, onComplete) {
+    let headers = {'Content-type': 'text/xml; charset="utf-8"',
+                   'Depth': 'infinity',
+                   'Timeout': 'Second-600'};
+    headers.__proto__ = this._defaultHeaders;
+    return this._makeRequest.async(this, onComplete, "LOCK", path, headers, data);
+  },
+
+  UNLOCK: function DC_UNLOCK(path, onComplete) {
+    let headers = {'Lock-Token': '<' + this._token + '>'};
+    headers.__proto__ = this._defaultHeaders;
+    return this._makeRequest.async(this, onComplete, "UNLOCK", path, headers);
   },
 
   // Login / Logout
 
   login: function DC_login(onComplete) {
     let cont = yield;
+
     try {
       if (this._loggedIn) {
         this._log.debug("Login requested, but already logged in");
         throw 'close generator';
       }
-
-      let headers = {};
-      if (this._auth)
-        headers['Authorization'] = this._auth;
    
-      this._authProvider._authFailed = false;
+      this._log.info("Logging in");
 
       // This ensures the auth header is correct, and it doubles as an
       // account creation request
-      let request = this._makeRequest("GET", "createAcct.php", cont, headers);
-      request.send(null);
-      let event = yield;
+      let gen = this.GET("createAcct.php", cont);
+      let resp = yield;
+      gen.close();
 
-      if (this._authProvider._authFailed) {
-        this._log.warn("Login authentication failed");
+      if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
         throw 'close generator';
-      }
-      if (event.target.status < 200 || event.target.status >= 400) {
-        this._log.warn("Login request failed, status " + event.target.status);
-        throw 'close generator';
-      }
   
       let branch = Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
@@ -1766,7 +1809,12 @@ DAVCollection.prototype = {
     } catch (e) {
       if (e != 'close generator')
         throw e;
+
     } finally {
+      if (this._loggedIn)
+        this._log.info("Logged in");
+      else
+        this._log.warn("Could not log in");
       generatorDone(this, onComplete, this._loggedIn);
       yield; // onComplete is responsible for closing the generator
     }
@@ -1787,35 +1835,30 @@ DAVCollection.prototype = {
 
     try {
       this._log.info("Getting active lock token");
+      let gen = this.PROPFIND("",
+                              "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
+                              "<D:propfind xmlns:D='DAV:'>" +
+                              "  <D:prop><D:lockdiscovery/></D:prop>" +
+                              "</D:propfind>", cont);
+      let resp = yield;
+      gen.close();
 
-      let headers = {'Content-Type': 'text/xml; charset="utf-8"',
-                     'Depth': '0'};
-      if (this._auth)
-        headers['Authorization'] = this._auth;
-
-      let request = this._makeRequest("PROPFIND", "", cont, headers);
-      request.send("<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
-                   "<D:propfind xmlns:D='DAV:'>" +
-                   "  <D:prop><D:lockdiscovery/></D:prop>" +
-                   "</D:propfind>");
-      let event = yield;
-
-      if (this._authProvider._authFailed) {
-        this._log.warn("_getActiveLock: authentication failed");
+      if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
         throw 'close generator';
-      }
-      if (event.target.status >= 400) {
-        this._log.warn("_getActiveLock: got status " + event.target.status);
-        throw 'close generator';
-      }
 
-      let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
+      let tokens = xpath(resp.responseXML, '//D:locktoken/D:href');
       let token = tokens.iterateNext();
       ret = token.textContent;
+
     } catch (e) {
       if (e != 'close generator')
         throw e;
+
     } finally {
+      if (ret)
+        this._log.debug("Found an active lock token");
+      else
+        this._log.debug("No active lock token found");
       generatorDone(this, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
@@ -1834,30 +1877,19 @@ DAVCollection.prototype = {
         throw 'close generator';
       }
 
-      headers = {'Content-Type': 'text/xml; charset="utf-8"',
-                 'Timeout': 'Second-600',
-                 'Depth': 'infinity'};
-      if (this._auth)
-        headers['Authorization'] = this._auth;
+      let gen = this.LOCK("",
+                          "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                          "<D:lockinfo xmlns:D=\"DAV:\">\n" +
+                          "  <D:locktype><D:write/></D:locktype>\n" +
+                          "  <D:lockscope><D:exclusive/></D:lockscope>\n" +
+                          "</D:lockinfo>", cont);
+      let resp = yield;
+      gen.close();
 
-      let request = this._makeRequest("LOCK", "", cont, headers);
-      request.send("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
-                   "<D:lockinfo xmlns:D=\"DAV:\">\n" +
-                   "  <D:locktype><D:write/></D:locktype>\n" +
-                   "  <D:lockscope><D:exclusive/></D:lockscope>\n" +
-                   "</D:lockinfo>");
-      let event = yield;
-
-      if (this._authProvider._authFailed) {
-        this._log.warn("lock: authentication failed");
+      if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
         throw 'close generator';
-      }
-      if (event.target.status < 200 || event.target.status >= 300) {
-        this._log.warn("lock: got status " + event.target.status);
-        throw 'close generator';
-      }
 
-      let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
+      let tokens = xpath(resp.responseXML, '//D:locktoken/D:href');
       let token = tokens.iterateNext();
       if (token)
         this._token = token.textContent;
@@ -1865,7 +1897,12 @@ DAVCollection.prototype = {
     } catch (e){
       if (e != 'close generator')
         throw e;
+
     } finally {
+      if (this._token)
+        this._log.info("Lock acquired");
+      else
+        this._log.warn("Could not acquire lock");
       generatorDone(this, onComplete, this._token);
       yield; // onComplete is responsible for closing the generator
     }
@@ -1882,27 +1919,19 @@ DAVCollection.prototype = {
         throw 'close generator';
       }
 
-      let headers = {'Lock-Token': "<" + this._token + ">"};
-      if (this._auth)
-        headers['Authorization'] = this._auth;
+      let gen = this.UNLOCK("", cont);
+      let resp = yield;
+      gen.close();
 
-      let request = this._makeRequest("UNLOCK", "", cont, headers);
-      request.send(null);
-      let event = yield;
-
-      if (this._authProvider._authFailed) {
-        this._log.warn("unlock: authentication failed");
+      if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
         throw 'close generator';
-      }
-      if (event.target.status < 200 || event.target.status >= 300) {
-        this._log.warn("unlock: got status " + event.target.status);
-        throw 'close generator';
-      }
 
       this._token = null;
+
     } catch (e){
       if (e != 'close generator')
         throw e;
+
     } finally {
       if (this._token) {
         this._log.info("Could not release lock");
@@ -1921,20 +1950,31 @@ DAVCollection.prototype = {
     let unlocked = true;
 
     try {
+      this._log.info("Forcibly releasing any server locks");
 
       let gen = this._getActiveLock.async(this, cont);
       this._token = yield;
       gen.close();
 
-      if (this._token) {
-        gen = this.unlock.async(this, cont);
-        unlocked = yield;
-        gen.close();
+      if (!this._token) {
+        this._log.info("No server lock found");
+        throw 'close generator';
       }
+
+      this._log.info("Server lock found, unlocking");
+      gen = this.unlock.async(this, cont);
+      unlocked = yield;
+      gen.close();
+
     } catch (e){
       if (e != 'close generator')
         throw e;
+
     } finally {
+      if (unlocked)
+        this._log.debug("Lock released");
+      else
+        this._log.debug("No lock released");
       generatorDone(this, onComplete, unlocked);
       yield; // onComplete is responsible for closing the generator
     }
@@ -1946,7 +1986,6 @@ DAVCollection.prototype = {
     let stolen = null;
 
     try {
-
       let gen = this.forceUnlock.async(this, cont);
       let unlocked = yield;
       gen.close();
@@ -1956,9 +1995,11 @@ DAVCollection.prototype = {
         stolen = yield;
         gen.close();
       }
+
     } catch (e){
       if (e != 'close generator')
         throw e;
+
     } finally {
       generatorDone(this, onComplete, stolen);
       yield; // onComplete is responsible for closing the generator
