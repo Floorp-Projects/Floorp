@@ -1109,6 +1109,17 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   if (textStyle1->WhiteSpaceIsSignificant() && HasTerminalNewline(aFrame1))
     return PR_FALSE;
 
+  if (aFrame1->GetContent() == aFrame2->GetContent() &&
+      aFrame1->GetNextInFlow() != aFrame2) {
+    // aFrame2 must be a non-fluid continuation of aFrame1. This can happen
+    // sometimes when the unicode-bidi property is used; the bidi resolver
+    // breaks text into different frames even though the text has the same
+    // direction. We can't allow these two frames to share the same textrun
+    // because that would violate our invariant that two flows in the same
+    // textrun have different content elements.
+    return PR_FALSE;
+  }
+
   nsStyleContext* sc2 = aFrame2->GetStyleContext();
   if (sc1 == sc2)
     return PR_TRUE;
@@ -1775,10 +1786,8 @@ nsTextFrame::EnsureTextRun(gfxContext* aReferenceContext, nsIFrame* aLineContain
     for (i = startAt; 0 <= i && i < userData->mMappedFlowCount; i += direction) {
       TextRunMappedFlow* flow = &userData->mMappedFlows[i];
       if (flow->mStartFrame->GetContent() == mContent) {
-        // This may not actually be the flow that we're in. But BuildTextRuns
-        // promises that this will work ... flows for the same content in the same
-        // textrun have to be consecutive, they can't skip characters in the middle.
-        // See assertion "Gap in textframes mapping content?!" above.
+        // Since textruns can only contain one flow for a given content element,
+        // this must be our flow.
         userData->mLastFlowIndex = i;
         gfxSkipCharsIterator iter(mTextRun->GetSkipChars(),
                                   flow->mDOMOffsetToBeforeTransformOffset, mContentOffset);
