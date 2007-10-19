@@ -71,6 +71,9 @@ public:
    */
   static PRBool GetValueString(HKEY hKey, const PRUnichar* pValueName, nsAString& result);
 
+  // Removes registry command handler parameters, quotes, and expands environment strings.
+  static PRBool CleanupCmdHandlerPath(nsAString& aCommandHandler);
+
 protected:
   nsresult GetDefaultAppInfo(const nsAString& aTypeName, nsAString& aDefaultDescription, nsIFile** aDefaultApplication);
   // Lookup a mime info by extension, using an optional type hint
