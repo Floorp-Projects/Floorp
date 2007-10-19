@@ -362,7 +362,7 @@ function initPlacesDefaultQueries() {
       var recentlyCreatedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-            "&sort=" + 
+            "&sort=" +
             Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
             "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
             "&maxResults=" + maxResults +
@@ -372,15 +372,17 @@ function initPlacesDefaultQueries() {
       var recentlyVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING + 
+            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING +
+            "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
             "&minVisits=1&maxResults=" + maxResults),
             defaultIndex, recentlyVisitedBookmarksTitle);
 
       var mostVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-            "&sort=" + 
-            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING + 
+            "&sort=" +
+            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
+            "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
             "&minVisits=1&maxResults=" + maxResults),
             defaultIndex, mostVisitedBookmarksTitle);
 
@@ -388,28 +390,28 @@ function initPlacesDefaultQueries() {
         IO.newURI("place:folder=" + tagRoot +
             "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-            "&applyOptionsToContainers=1" +  
-            "&sort=" + 
-            Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING + 
+            "&applyOptionsToContainers=1" +
+            "&sort=" +
+            Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
             "&resolveNullBookmarkTitles=1" +
             "&maxResults=" + maxResults),
             defaultIndex, recentlyUsedTagsTitle);
 
       var mostUsedTagsItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + tagRoot + 
+        IO.newURI("place:folder=" + tagRoot +
             "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&applyOptionsToContainers=1" +
-            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_COUNT_DESCENDING + 
+            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_COUNT_DESCENDING +
             "&resolveNullBookmarkTitles=1" +
             "&maxResults=" + maxResults),
             defaultIndex, mostUsedTagsTitle);
 
       var mostVisitedSitesItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:queryType=" + 
+        IO.newURI("place:queryType=" +
             Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
-            "&sort=" + 
-            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING + 
+            "&sort=" +
+            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
             "&maxResults=" + maxResults),
             defaultIndex, mostVisitedSitesTitle);
     }
