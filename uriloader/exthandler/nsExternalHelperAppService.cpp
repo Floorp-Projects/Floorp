@@ -2218,7 +2218,8 @@ nsresult nsExternalAppHandler::MaybeCloseWindow()
     nsCOMPtr<nsIDOMWindowInternal> opener;
     internalWindow->GetOpener(getter_AddRefs(opener));
 
-    if (opener) {
+    PRBool isClosed;
+    if (opener && NS_SUCCEEDED(opener->GetClosed(&isClosed)) && !isClosed) {
       mWindowContext = do_GetInterface(opener);
 
       // Now close the old window.  Do it on a timer so that we don't run
