@@ -103,6 +103,11 @@ CSRCS		= \
 		prmjtime.c \
 		$(NULL)
 
+ifdef HAVE_DTRACE
+CSRCS 		+= \
+		jsdtracef.c
+endif
+
 EXPORTS		= \
 		jsautocfg.h \
 		jsautokw.h \
@@ -151,6 +156,13 @@ EXPORTS		= \
 		jsxdrapi.h \
 		jsxml.h \
 		$(NULL)
+
+ifdef HAVE_DTRACE
+EXPORTS 	+= \
+		jsdtracef.h \
+		javascript-trace.h \
+		$(NULL)
+endif
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 EXPORTS		+= jscpucfg.h
@@ -201,6 +213,11 @@ JSJAVA_CFLAGS	= \
 
 HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
+
+ifdef HAVE_DTRACE
+DTRACE_PROBE_OBJ = $(LIBRARY_NAME)-dtrace.$(OBJ_SUFFIX)
+MOZILLA_DTRACE_SRC = $(srcdir)/javascript-trace.d
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -392,3 +409,11 @@ host_jskwgen.$(OBJ_SUFFIX): jsconfig.h jskeyword.tbl
 
 jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@
+
+ifdef HAVE_DTRACE
+javascript-trace.h: $(srcdir)/javascript-trace.d
+	dtrace -h -s $(srcdir)/javascript-trace.d -o javascript-trace.h.in
+	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
+	    javascript-trace.h.in > javascript-trace.h
+endif
+

@@ -83,6 +83,10 @@
 #include "jsxdrapi.h"
 #endif
 
+#ifdef INCLUDE_MOZILLA_DTRACE
+#include "jsdtracef.h"
+#endif
+
 #ifdef JS_THREADSAFE
 #define NATIVE_DROP_PROPERTY js_DropProperty
 
@@ -2511,16 +2515,21 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     uint32 nslots, i;
     JSTempValueRooter tvr;
 
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_OBJECT_CREATE_START_ENABLED())
+        jsdtrace_object_create_start(cx->fp, clasp);
+#endif
+
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (!proto) {
         if (!js_GetClassId(cx, clasp, &id))
-            return NULL;
+            goto earlybad;
         if (!js_GetClassPrototype(cx, parent, id, &proto))
-            return NULL;
+            goto earlybad;
         if (!proto &&
             !js_GetClassPrototype(cx, parent, INT_TO_JSID(JSProto_Object),
                                   &proto)) {
-            return NULL;
+            goto earlybad;
         }
     }
 
@@ -2536,7 +2545,7 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
      */
     obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
-        return NULL;
+        goto earlybad;
 
     /*
      * Initialize all JSObject fields before doing any operation that can
@@ -2621,11 +2630,26 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
     cx->weakRoots.newborn[GCX_OBJECT] = obj;
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_OBJECT_CREATE_ENABLED())
+        jsdtrace_object_create(cx, clasp, obj);
+    if (JAVASCRIPT_OBJECT_CREATE_DONE_ENABLED())
+        jsdtrace_object_create_done(cx->fp, clasp);
+#endif
     return obj;
 
 bad:
     obj = NULL;
     goto out;
+
+earlybad:
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_OBJECT_CREATE_ENABLED())
+        jsdtrace_object_create(cx, clasp, NULL);
+    if (JAVASCRIPT_OBJECT_CREATE_DONE_ENABLED())
+        jsdtrace_object_create_done(cx->fp, clasp);
+#endif
+    return NULL;
 }
 
 JS_BEGIN_EXTERN_C
@@ -2873,6 +2897,11 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
 
     /* Finalize obj first, in case it needs map and slots. */
     GC_AWARE_GET_CLASS(cx, obj)->finalize(cx, obj);
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
+        jsdtrace_object_finalize(obj);
+#endif
 
     /* Drop map and free slots. */
     js_DropObjectMap(cx, map, obj);
