@@ -1204,10 +1204,6 @@ function delayedStartup()
 
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler = new BookmarkAllTabsHandler();
-  
-  // Prevent chrome-spoofing popups from forging our chrome, by adding a
-  // notification box entry in cases of chromeless popups.
-  checkForChromelessWindow();
 }
 
 function BrowserShutdown()
@@ -5577,87 +5573,6 @@ BookmarkAllTabsHandler.prototype = {
     this._updateCommandState(aEvent.type == "TabClose");
   }
 };
-
-
-/**
- * Check the chromehidden attribute to see if the toolbar is hidden.  If so,
- * and if they haven't disabled the security.warn_chromeless_window.infobar
- * pref, show an infobar notification informing them of what's going on.  This
- * helps fight chrome spoofing on popups.  See bug 337344
- */
-function checkForChromelessWindow() {
-
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  
-  // true by default
-  if (!prefs.getBoolPref("browser.warn_chromeless_window.infobar"))
-    return;
-
-  if (document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1 ||
-      document.documentElement.getAttribute("chromehidden").indexOf("location") != -1) {
-    
-    var bundle_browser = document.getElementById("bundle_browser");
-    
-    // It's possible that something in the window.content.opener.location.path
-    // chain might be null.  Rather than chaining a ton of 99% pass null checks,
-    // though, let's try/catch in order to fail gracefully
-    try {
-      var messageString = bundle_browser.getFormattedString("chromelessWindow.warningMessage",
-                                                            [window.content.opener.location.host]);
-    } catch (ex) {
-        
-      // An exception here is not worth breaking our security warning, but is worth
-      // logging, since it shouldn't happen.
-      Components.utils.reportError(ex);
-      messageString = bundle_browser.getString("chromelessWindow.warningNoLocation");
-      
-    }
-
-    var notificationBox = gBrowser.getNotificationBox();
-    var notificationName = "chromeless-info";
-    if (notificationBox.getNotificationWithValue(notificationName)) {
-      Components.utils.reportError("Already have a chromeless-info notification!")
-      return;
-    }
-    
-    var buttons = [{
-      label: bundle_browser.getString("chromelessWindow.showToolbarsButton"),
-      accessKey: bundle_browser.getString("chromelessWindow.accessKey"),
-      popup: null,
-      callback: function() { return showToolbars(); }
-    }];
-
-    notificationBox.appendNotification(messageString,
-                                       notificationName,
-                                       "chrome://browser/skin/Info.png",
-                                       notificationBox.PRIORITY_INFO_HIGH,
-                                       buttons);
-  }
-}
-
-/**
- * Callback for "Show Toolbars" button in chromeless window notification box.
- * Resets visibility of the go button stack and url bar, and wipes the
- * chromehidden document attribute.
- */
-function showToolbars() {
-
-  // Unhide the chrome elements
-  document.documentElement.removeAttribute("chromehidden");
-  
-  // Undo the URLBar tweaks performed when the url bar was chromehidden
-  if (gURLBar) {
-    gURLBar.removeAttribute("readonly");
-    gURLBar.setAttribute("enablehistory", "true");
-  }
-  
-  var goButtonStack = document.getElementById("go-button-stack");
-  if (goButtonStack)
-    goButtonStack.removeAttribute("hidden");
-  
-  return false; // Dismiss the notification message
-}
 
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
