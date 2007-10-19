@@ -5221,7 +5221,8 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
     if (aDestroyFrames) {
       nsIFrame* nif = aDeletedFrame->GetNextInFlow();
       if (nif)
-        nsContainerFrame::DeleteNextInFlowChild(presContext, nif);
+        static_cast<nsContainerFrame*>(nif->GetParent())
+          ->nsContainerFrame::DeleteNextInFlowChild(presContext, nif);
       nsresult rv = nsContainerFrame::StealFrame(presContext, aDeletedFrame);
       NS_ENSURE_SUCCESS(rv, rv);
       aDeletedFrame->Destroy();
