@@ -3698,7 +3698,13 @@ nsContentUtils::IsNativeAnonymous(nsIContent* aContent)
       return PR_TRUE;
     }
 
-    NS_ASSERTION(!aContent->IsNativeAnonymous(),
+    // Nasty hack to work around spell-check resolving style on
+    // native-anonymous content that's already been torn down.  Don't assert
+    // !IsNativeAnonymous() if aContent->GetCurrentDoc() is null.  The caller
+    // will get "wrong" style data, but it's just asking for that sort of thing
+    // anyway.
+    NS_ASSERTION(!aContent->IsNativeAnonymous() ||
+                 !aContent->GetCurrentDoc(),
                  "Native anonymous node with wrong binding parent");
     aContent = bindingParent;
   }
