@@ -213,7 +213,7 @@ nsScriptableInputStream::ReadBoolean(PRBool* aBoolean)
 {
   PRUint8 byteResult;
   nsresult rv = Read8(&byteResult);
-  *aBoolean = byteResult;
+  *aBoolean = !!byteResult;
   return rv;
 }
 
