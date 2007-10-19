@@ -110,7 +110,7 @@
     ; Only register as the handler on Vista if the app registry name exists
     ; under the RegisteredApplications registry key.
     ${Unless} ${Errors}
-      SetVistaDefaultApp::SetAsDefault "${AppRegName}"
+      AppAssocReg::SetAppAsDefaultAll "${AppRegName}"
     ${EndUnless}
   ${EndIf}
 !endif
