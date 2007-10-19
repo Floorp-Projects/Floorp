@@ -164,7 +164,6 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     }
 
     textControl->SetTabIndex(-1);
-    textControl->SetDisabled(PR_TRUE);
     textControl->SetReadOnly(PR_TRUE);
   }
 
