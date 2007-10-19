@@ -1746,17 +1746,6 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     return NS_OK;
   }
 
-  // This may not be strictly needed, but lets do it as an extra level
-  // of safety. Ideally the check in nsGenericElement::AddScriptEventListener
-  // is enough.
-  nsCOMPtr<nsINode> nodeTarget = do_QueryInterface(aTarget);
-  if (nodeTarget) {
-    nsIDocument* doc = nodeTarget->GetOwnerDoc();
-    if (!doc || doc->IsLoadedAsData()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-
   nsresult rv;
   JSObject* target = nsnull;
   nsAutoGCRoot root(&target, &rv);
