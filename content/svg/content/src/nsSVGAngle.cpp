@@ -184,28 +184,22 @@ GetValueFromString(const nsAString &aValueAsString,
                    float *aValue,
                    PRUint16 *aUnitType)
 {
-  char *str = ToNewCString(aValueAsString);
-  if (!str)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ConvertUTF16toUTF8 value(aValueAsString);
+  const char *str = value.get();
 
-  nsresult rv = NS_ERROR_FAILURE;
+  if (NS_IsAsciiWhitespace(*str))
+    return NS_ERROR_FAILURE;
   
-  if (*str) {
-    char *rest;
-    *aValue = static_cast<float>(PR_strtod(str, &rest));
-    if (rest != str) {
-      *aUnitType = GetUnitTypeForString(nsCRT::strtok(rest,
-                                        "\x20\x9\xD\xA",
-                                        &rest));
-      if (IsValidUnitType(*aUnitType)) {
-        rv = NS_OK;
-      }
+  char *rest;
+  *aValue = float(PR_strtod(str, &rest));
+  if (rest != str) {
+    *aUnitType = GetUnitTypeForString(rest);
+    if (IsValidUnitType(*aUnitType)) {
+      return NS_OK;
     }
   }
   
-  nsMemory::Free(str);
-    
-  return rv;
+  return NS_ERROR_FAILURE;
 }
 
 float
