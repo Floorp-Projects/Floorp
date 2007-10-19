@@ -43,6 +43,7 @@ interface nsIURI;
 interface nsIFile;
 interface nsIUTF8StringEnumerator;
 interface nsIHandlerApp;
+interface nsIArray;
 interface nsIMutableArray;
 interface nsIInterfaceRequestor;
 
@@ -159,7 +160,7 @@ interface nsIHandlerInfo : nsISupports {
  * MIMEInfo objects are generally retrieved from the MIME Service
  * @see nsIMIMEService
  */
-[scriptable, uuid(a4011016-81a1-47d9-b01e-19a2272ae89b)]
+[scriptable, uuid(cd7083f8-5fe9-4248-bb09-0b0e2982fde8)]
 interface nsIMIMEInfo : nsIHandlerInfo {
     /**
      * Gives you an array of file types associated with this type.
@@ -217,6 +218,17 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * @returns PR_TRUE if the two are considered equal
      */
     boolean equals(in nsIMIMEInfo aMIMEInfo);
+
+    /** 
+     * Returns a list of nsILocalHandlerApp objects containing
+     * handlers associated with this mimeinfo. Implemented per 
+     * platform using information in this object to generate the
+     * best list. Typically used for an "open with" style user 
+     * option.
+     * 
+     * @return nsIArray of nsILocalHandlerApp
+     */
+    readonly attribute nsIArray possibleLocalHandlers;
 
     /**
      * Launches the application with the specified file, in a way that

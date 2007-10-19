@@ -1499,12 +1499,42 @@ var gApplicationsPane = {
     // as we handle it specially ourselves.
     aEvent.stopPropagation();
 
+    var handlerApp;
+
+#ifdef XP_WIN
+    var params = {};
+    var handlerInfo = this._handledTypes[this._list.selectedItem.type];
+
+    if (handlerInfo.type == TYPE_MAYBE_FEED) {
+      // MIME info will be null, create a temp object.
+      params.mimeInfo = this._mimeSvc.getFromTypeAndExtension(handlerInfo.type, 
+                                                 handlerInfo.primaryExtension);
+    } else {
+      params.mimeInfo = handlerInfo.wrappedHandlerInfo;
+    }
+
+    params.title         = this._prefsBundle.getString("fpTitleChooseApp");
+    params.description   = handlerInfo.description;
+    params.filename      = null;
+    params.handlerApp    = null;
+
+    window.openDialog("chrome://global/content/appPicker.xul", null,
+                      "chrome,modal,centerscreen,titlebar,dialog=yes",
+                      params);
+
+    if (params.handlerApp && 
+        params.handlerApp.executable && 
+        params.handlerApp.executable.isFile()) {
+      handlerApp = params.handlerApp;
+
+      // Add the app to the type's list of possible handlers.
+      handlerInfo.possibleApplicationHandlers.appendElement(handlerApp, false);
+    }
+#else
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     var winTitle = this._prefsBundle.getString("fpTitleChooseApp");
     fp.init(window, winTitle, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
-
-    var handlerApp;
 
     // Prompt the user to pick an app.  If they pick one, and it's a valid
     // selection, then add it to the list of possible handlers.
@@ -1519,6 +1549,7 @@ var gApplicationsPane = {
       let handlerInfo = this._handledTypes[this._list.selectedItem.type];
       handlerInfo.possibleApplicationHandlers.appendElement(handlerApp, false);
     }
+#endif
 
     // Rebuild the actions menu whether the user picked an app or canceled.
     // If they picked an app, we want to add the app to the menu and select it.

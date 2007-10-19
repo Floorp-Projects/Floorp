@@ -26,6 +26,7 @@
 #   Ben Goodger <ben@bengoodger.com> (2.0)
 #   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
 #   Dan Mosedale <dmose@mozilla.org>
+#   Jim Mathies <jmathies@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -931,10 +932,91 @@ nsUnknownContentTypeDialog.prototype = {
       return this.mDialog.document.getElementById(id);
     },
 
+    // Retrieve the pretty description from the file
+    getFileDisplayName: function getFileDisplayName(file)
+    { 
+#ifdef XP_WIN
+        if (file instanceof Components.interfaces.nsILocalFileWin) {
+          try {
+            return file.getVersionInfoField("FileDescription");
+          } catch (ex) {
+          }
+        }
+#endif
+        return file.leafName;
+    },
+
     // chooseApp:  Open file picker and prompt user for application.
     chooseApp: function() {
+#ifdef XP_WIN
+    // Protect against the lack of an extension    
+    var fileExtension = "";
+    try {
+        fileExtension = this.mLauncher.MIMEInfo.primaryExtension;
+    } catch(ex) {
+    }
+
+    // Try to use the pretty description of the type, if one is available.
+    var typeString = this.mLauncher.MIMEInfo.description;
+
+    if (!typeString) {
+      // If there is none, use the extension to 
+      // identify the file, e.g. "ZIP file"
+      if (fileExtension) {
+        typeString =
+          this.dialogElement("strings").
+          getFormattedString("fileType", [fileExtension.toUpperCase()]);
+      } else {
+        // If we can't even do that, just give up and show the MIME type.
+        typeString = this.mLauncher.MIMEInfo.MIMEType;
+      }
+    }
+
+    var params = {};
+    params.title = 
+      this.dialogElement("strings").getString("chooseAppFilePickerTitle");
+    params.description = typeString;
+    params.filename    = this.mLauncher.suggestedFileName;
+    params.mimeInfo    = this.mLauncher.MIMEInfo;
+    params.handlerApp  = null;
+
+    this.mDialog.openDialog("chrome://global/content/appPicker.xul", null,
+                            "chrome,modal,centerscreen,titlebar,dialog=yes",
+                            params);
+
+    if (params.handlerApp &&
+        params.handlerApp.executable &&
+        params.handlerApp.executable.isFile()) {
+        // Show the "handler" menulist since we have a (user-specified) 
+        // application now.
+        this.dialogElement("modeDeck").setAttribute("selectedIndex", "0");
+
+        // Remember the file they chose to run.
+        this.chosenApp = params.handlerApp;
+
+        // Update dialog
+        var otherHandler = this.dialogElement("otherHandler");
+        otherHandler.removeAttribute("hidden");
+        otherHandler.setAttribute("path",
+          this.getPath(this.chosenApp.executable));
+        otherHandler.label = 
+          this.getFileDisplayName(this.chosenApp.executable);
+        this.dialogElement("openHandler").selectedIndex = 1;
+        this.dialogElement("openHandler").setAttribute("lastSelectedItemID",
+          "otherHandler");
+        this.dialogElement("mode").selectedItem = this.dialogElement("open");
+    } else {
+        var openHandler = this.dialogElement("openHandler");
+        var lastSelectedID = openHandler.getAttribute("lastSelectedItemID");
+        if (!lastSelectedID)
+            lastSelectedID = "defaultHandler";
+        openHandler.selectedItem = this.dialogElement(lastSelectedID);
+    }
+
+#else
       var nsIFilePicker = Components.interfaces.nsIFilePicker;
-      var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+      var fp = Components.classes["@mozilla.org/filepicker;1"]
+                         .createInstance(nsIFilePicker);
       fp.init(this.mDialog,
               this.dialogElement("strings").getString("chooseAppFilePickerTitle"),
               nsIFilePicker.modeOpen);
@@ -970,6 +1052,7 @@ nsUnknownContentTypeDialog.prototype = {
           lastSelectedID = "defaultHandler";
         openHandler.selectedItem = this.dialogElement(lastSelectedID);
       }
+#endif
     },
 
     // Turn this on to get debugging messages.
