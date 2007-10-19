@@ -464,7 +464,7 @@ function getTargetFile(aFpP, aSkipPrompt)
                           .getService(Components.interfaces.nsIDownloadManager);
   try {                          
     var lastDir = prefs.getComplexValue("lastDir", nsILocalFile);
-    if (!useDownloadDir && lastDir.exists())
+    if ((!aSkipPrompt || !useDownloadDir) && lastDir.exists())
       dir = lastDir;
     else
       dir = dnldMgr.userDownloadsDirectory;
