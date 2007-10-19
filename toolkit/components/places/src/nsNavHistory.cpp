@@ -2059,7 +2059,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     // folder, we can more efficiently generate results.
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-    nsCOMPtr<nsNavHistoryResultNode> tempRootNode;
+    nsRefPtr<nsNavHistoryResultNode> tempRootNode;
     rv = bookmarks->ResultNodeForContainer(folderId, options,
                                            getter_AddRefs(tempRootNode));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3874,7 +3874,7 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
 
   PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
-    nsCOMPtr<nsNavHistoryResultNode> result;
+    nsRefPtr<nsNavHistoryResultNode> result;
     rv = RowToResult(row, aOptions, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
     aResults->AppendObject(result);
