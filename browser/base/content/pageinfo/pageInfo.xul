@@ -59,7 +59,7 @@
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
   onunload="onUnloadPageInfo()"
-  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
   align="stretch"
   screenX="10" screenY="10"
   width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
