@@ -432,7 +432,7 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
     const nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
   // build a comma separated string of visit ids to delete
-  nsCAutoString deletedVisitIds;
+  nsCString deletedVisitIds;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
     // Do not add comma separator for the first entry
     if (! deletedVisitIds.IsEmpty())
@@ -464,7 +464,7 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
     nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
   // build a comma separated string of place ids to delete
-  nsCAutoString deletedPlaceIds;
+  nsCString deletedPlaceIds;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
     // IF bookmarked entries OR "place" URIs do not delete
     if (aRecords[i].bookmarked ||
@@ -481,16 +481,15 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
     return NS_OK;
 
   return aConnection->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id IN (") +
-    deletedPlaceIds +
-    NS_LITERAL_CSTRING(") AND id IN (SELECT h.id FROM moz_places h "
-      "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
-      "WHERE v.id IS NULL) "
-      "AND id NOT IN (SELECT h.id FROM moz_places h "
-      "JOIN moz_annos a ON h.id = a.place_id "
-      "WHERE a.expiration = ") +
-    nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-    NS_LITERAL_CSTRING(")"));
+    NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id IN( ") +
+      deletedPlaceIds +
+      NS_LITERAL_CSTRING(") AND id IN( "    
+      "SELECT h.id FROM moz_places h "
+      "WHERE (SELECT id from moz_historyvisits WHERE place_id=h.id) IS NULL "
+      ") AND id NOT IN( " 
+      "SELECT DISTINCT place_id FROM moz_annos WHERE expiration = ") +
+      nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
+      NS_LITERAL_CSTRING(")"));              
 }
 
 
@@ -501,7 +500,7 @@ nsNavHistoryExpire::EraseFavicons(mozIStorageConnection* aConnection,
     const nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
   // build a comma separated string of favicon ids to delete
-  nsCAutoString deletedFaviconIds;
+  nsCString deletedFaviconIds;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
     // IF main entry not expired OR no favicon DO NOT DELETE
     if (! aRecords[i].erased || aRecords[i].faviconID == 0)
@@ -540,6 +539,9 @@ nsNavHistoryExpire::EraseAnnotations(mozIStorageConnection* aConnection,
     placeIds.AppendInt(aRecords[i].placeID);
   }
   
+  if (placeIds.IsEmpty())
+    return NS_OK;
+    
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DELETE FROM moz_annos WHERE place_id in (") +
       placeIds + NS_LITERAL_CSTRING(") AND expiration != ") +
