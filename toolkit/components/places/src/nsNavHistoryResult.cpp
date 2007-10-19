@@ -70,6 +70,7 @@
 #include "prprf.h"
 #include "mozStorageHelper.h"
 #include "nsAnnotationService.h"
+#include "nsCycleCollectionParticipant.h"
 
 #define ICONURI_QUERY "chrome://browser/skin/places/query.png"
 
@@ -102,8 +103,15 @@ inline PRInt32 CompareIntegers(PRUint32 a, PRUint32 b)
 
 // nsNavHistoryResultNode ******************************************************
 
-NS_IMPL_ISUPPORTS2(nsNavHistoryResultNode,
-                   nsNavHistoryResultNode, nsINavHistoryResultNode)
+NS_IMPL_CYCLE_COLLECTION_0(nsNavHistoryResultNode)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResultNode)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryResultNode)
+  NS_INTERFACE_MAP_ENTRY(nsINavHistoryResultNode)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsNavHistoryResultNode, nsINavHistoryResultNode)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsNavHistoryResultNode, nsINavHistoryResultNode)
 
 nsNavHistoryResultNode::nsNavHistoryResultNode(
     const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
@@ -259,10 +267,22 @@ nsNavHistoryFullVisitResultNode::nsNavHistoryFullVisitResultNode(
 
 // nsNavHistoryContainerResultNode *********************************************
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryContainerResultNode)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mResult)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mChildren)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mResult, nsINavHistoryResult)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mChildren)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
 NS_IMPL_RELEASE_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
 
-NS_INTERFACE_MAP_BEGIN(nsNavHistoryContainerResultNode)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsNavHistoryContainerResultNode)
   NS_INTERFACE_MAP_STATIC_AMBIGUOUS(nsNavHistoryContainerResultNode)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryContainerResultNode)
 NS_INTERFACE_MAP_END_INHERITING(nsNavHistoryResultNode)
@@ -1382,7 +1402,7 @@ nsNavHistoryContainerResultNode::ReplaceChildURIAt(PRUint32 aIndex,
 
   // Hold a reference so it doesn't go away as soon as we remove it from the
   // array. This needs to be passed to the view.
-  nsCOMPtr<nsNavHistoryResultNode> oldItem = mChildren[aIndex];
+  nsRefPtr<nsNavHistoryResultNode> oldItem = mChildren[aIndex];
 
   // actually replace
   if (! mChildren.ReplaceObjectAt(aNode, aIndex))
@@ -1420,7 +1440,7 @@ nsNavHistoryContainerResultNode::RemoveChildAt(PRInt32 aIndex,
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
   // hold an owning reference to keep from expiring while we work with it
-  nsCOMPtr<nsNavHistoryResultNode> oldNode = mChildren[aIndex];
+  nsRefPtr<nsNavHistoryResultNode> oldNode = mChildren[aIndex];
 
   // stats
   PRUint32 oldAccessCount = 0;
@@ -2385,7 +2405,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, PRInt64 aVisitId,
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv;
-  nsCOMPtr<nsNavHistoryResultNode> addition;
+  nsRefPtr<nsNavHistoryResultNode> addition;
   switch(mLiveUpdate) {
     case QUERYUPDATE_TIME: {
       // For these simple yet common cases we can check the time ourselves
@@ -3443,11 +3463,20 @@ nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
 
 
 // nsNavHistoryResult **********************************************************
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResult)
 
-NS_IMPL_ADDREF(nsNavHistoryResult)
-NS_IMPL_RELEASE(nsNavHistoryResult)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRootNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
 
-NS_INTERFACE_MAP_BEGIN(nsNavHistoryResult)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResult)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRootNode, nsINavHistoryContainerResultNode)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNavHistoryResult)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNavHistoryResult)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResult)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryResult)
   NS_INTERFACE_MAP_STATIC_AMBIGUOUS(nsNavHistoryResult)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryResult)
