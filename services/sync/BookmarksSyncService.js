@@ -323,8 +323,10 @@ BookmarksSyncService.prototype = {
     if (node.type == node.RESULT_TYPE_FOLDER) {
       if (this._ls.isLivemark(node.itemId)) {
         item.type = "livemark";
-        item.siteURI = this._ls.getSiteURI(node.itemId).spec;
-        item.feedURI = this._ls.getFeedURI(node.itemId).spec;
+        let siteURI = this._ls.getSiteURI(node.itemId);
+        let feedURI = this._ls.getFeedURI(node.itemId);
+        item.siteURI = siteURI? siteURI.spec : "";
+        item.feedURI = feedURI? feedURI.spec : "";
       } else {
         item.type = "folder";
         node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
