@@ -829,15 +829,30 @@ nsChangeHint nsStyleSVGReset::MaxDifference()
 #endif
 
 // nsStyleSVGPaint implementation
-nsStyleSVGPaint::~nsStyleSVGPaint() {
+nsStyleSVGPaint::~nsStyleSVGPaint()
+{
   if (mType == eStyleSVGPaintType_Server) {
     NS_IF_RELEASE(mPaint.mPaintServer);
-  } 
+  }
+}
+
+void
+nsStyleSVGPaint::SetType(nsStyleSVGPaintType aType)
+{
+  if (mType == eStyleSVGPaintType_Server) {
+    this->~nsStyleSVGPaint();
+    new (this) nsStyleSVGPaint();
+  }
+  mType = aType;
 }
 
 nsStyleSVGPaint& nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther) 
 {
-  mType = aOther.mType;
+  if (this == &aOther)
+    return *this;
+
+  SetType(aOther.mType);
+
   mFallbackColor = aOther.mFallbackColor;
   if (mType == eStyleSVGPaintType_Server) {
     mPaint.mPaintServer = aOther.mPaint.mPaintServer;
@@ -1263,6 +1278,8 @@ nsStyleContentData& nsStyleContentData::operator=(const nsStyleContentData& aOth
   if (this == &aOther)
     return *this;
   this->~nsStyleContentData();
+  new (this) nsStyleContentData();
+
   mType = aOther.mType;
   if (mType == eStyleContentType_Image) {
     mContent.mImage = aOther.mContent.mImage;
