@@ -1334,11 +1334,9 @@ BookmarksSyncService.prototype = {
     this._loginGen.close();
     this._loginGen = null;
     if (success) {
-      this._log.info("Logged in");
       this._log.info("Bookmarks sync server: " + this._dav.userURL);
       this._os.notifyObservers(null, "bookmarks-sync:login", "");
     } else {
-      this._log.info("Could not log in");
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
     }
   },
@@ -1423,6 +1421,20 @@ BookmarksSyncService.prototype = {
     this._log.warn("generator not properly closed");
   },
 
+  _resetClient: function BSS__resetClient(onComplete) {
+    let cont = yield;
+
+    try {
+
+    } catch (e) {
+      if (e != 'close generator')
+        throw e;
+
+    } finally {
+      generatorDone(this, onComplete, null);
+    }
+  },
+
   // XPCOM registration
   classDescription: "Bookmarks Sync Service",
   contractID: "@mozilla.org/places/sync-service;1",
@@ -1499,6 +1511,12 @@ BookmarksSyncService.prototype = {
     this._log.info("Resetting server data");
     let callback = bind2(this, this._onResetServer);
     this._resetServerGen = this._resetServer.async(this, callback);
+  },
+
+  resetClient: function BSS_resetClient() {
+    this._log.info("Resetting client data");
+    let callback = bind2(this, this._onResetClient);
+    this._resetClientGen = this._resetClient.async(this, callback);
   }
 };
 
@@ -1565,19 +1583,25 @@ function generatorDone(object, callback, retval) {
                                  0, object._timer.TYPE_ONE_SHOT);
 }
 
-function EventListener(handler) {
+function EventListener(handler, eventName) {
   this._handler = handler;
+  this._eventName = eventName;
+  let logSvc = Cc["@mozilla.org/log4moz/service;1"].
+    getService(Ci.ILog4MozService);
+  this._log = logSvc.getLogger("Service.EventHandler");
 }
 EventListener.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsISupports]),
 
   // DOM event listener
   handleEvent: function EL_handleEvent(event) {
+    this._log.debug("Handling event " + this._eventName);
     this._handler(event);
   },
 
   // nsITimerCallback
   notify: function EL_notify(timer) {
+    this._log.trace("Timer fired");
     this._handler(timer);
   }
 };
@@ -1695,8 +1719,8 @@ DAVCollection.prototype = {
       let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
       request = request.QueryInterface(Ci.nsIDOMEventTarget);
     
-      request.addEventListener("load", new EventListener(cont), false);
-      request.addEventListener("error", new EventListener(cont), false);
+      request.addEventListener("load", new EventListener(cont, "load"), false);
+      request.addEventListener("error", new EventListener(cont, "error"), false);
       request = request.QueryInterface(Ci.nsIXMLHttpRequest);
       request.open(op, this._userURL + path, true);
     
@@ -1915,7 +1939,7 @@ DAVCollection.prototype = {
     try {
       this._log.info("Releasing lock");
 
-      if (!this._token) {
+      if (this._token === null) {
         this._log.debug("Unlock called, but we don't hold a token right now");
         throw 'close generator';
       }
@@ -1938,7 +1962,7 @@ DAVCollection.prototype = {
         this._log.info("Could not release lock");
         generatorDone(this, onComplete, false);
       } else {
-        this._log.info("Lock released");
+        this._log.info("Lock released (or we didn't have one)");
         generatorDone(this, onComplete, true);
       }
       yield; // onComplete is responsible for closing the generator
