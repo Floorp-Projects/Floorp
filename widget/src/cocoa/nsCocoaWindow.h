@@ -87,6 +87,16 @@ class nsChildView;
 @end
 
 
+@interface BorderlessWindow : NSWindow
+{
+}
+
+- (BOOL)canBecomeKeyWindow;
+- (BOOL)canBecomeMainWindow;
+
+@end
+
+
 @interface WindowDelegate : NSObject
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
