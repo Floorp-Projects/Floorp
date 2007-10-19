@@ -574,8 +574,5 @@ pref("accessibility.blockautorefresh", false);
 // import bookmarks.html into Places bookmarks
 pref("browser.places.importBookmarksHTML", true);
 
-// Show infobar on chromeless windows
-pref("browser.warn_chromeless_window.infobar", false);
-
 // if false, will add the "Places" folder to the personal toolbar
 pref("browser.places.createdDefaultQueries", false);
