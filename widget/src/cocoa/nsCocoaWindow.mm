@@ -276,6 +276,14 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
         NS_ERROR("Unhandled window type!");
         return NS_ERROR_FAILURE;
     }
+
+    /* Apple's docs on NSWindow styles say that "a window's style mask should
+     * include NSTitledWindowMask if it includes any of the others [besides
+     * NSBorderlessWindowMask]".  This implies that a borderless window
+     * shouldn't have any other styles than NSBorderlessWindowMask.
+     */
+    if (!(features & NSTitledWindowMask))
+      features = NSBorderlessWindowMask;
     
     /* 
      * We pass a content area rect to initialize the native Cocoa window. The
@@ -318,6 +326,10 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     // If we're a popup window we need to use the PopupWindow class.
     else if (mWindowType == eWindowType_popup)
       windowClass = [PopupWindow class];
+    // If we're a non-popup borderless window we need to use the
+    // BorderlessWindow class.
+    else if (features == NSBorderlessWindowMask)
+      windowClass = [BorderlessWindow class];
     mWindow = [[windowClass alloc] initWithContentRect:rect styleMask:features 
                                    backing:NSBackingStoreBuffered defer:NO];
     
@@ -1454,6 +1466,32 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 - (void)setIsContextMenu:(BOOL)flag
 {
   mIsContextMenu = flag;
+}
+
+@end
+
+// According to Apple's docs on [NSWindow canBecomeKeyWindow] and [NSWindow
+// canBecomeMainWindow], windows without a title bar or resize bar can't (by
+// default) become key or main.  But if a window can't become key, it can't
+// accept keyboard input (bmo bug 393250).  And it should also be possible for
+// an otherwise "ordinary" window to become main.  We need to override these
+// two methods to make this happen.
+@implementation BorderlessWindow
+
+- (BOOL)canBecomeKeyWindow
+{
+  return YES;
+}
+
+// Apple's doc on this method says that the NSWindow class's default is not to
+// become main if the window isn't "visible" -- so we should replicate that
+// behavior here.  As best I can tell, the [NSWindow isVisible] method is an
+// accurate test of what Apple means by "visibility".
+- (BOOL)canBecomeMainWindow
+{
+  if (![self isVisible])
+    return NO;
+  return YES;
 }
 
 @end
