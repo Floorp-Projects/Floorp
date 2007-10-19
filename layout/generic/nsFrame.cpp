@@ -1396,7 +1396,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     nsRect clipRect;
     PRBool applyAbsPosClipping =
         ApplyAbsPosClipping(aBuilder, disp, aChild, &clipRect);
-    // A psuedo-stacking context (e.g., a positioned element with z-index auto).
+    // A pseudo-stacking context (e.g., a positioned element with z-index auto).
     // we allow positioned descendants of this element to escape to our
     // container's positioned descendant list, because they might be
     // z-index:non-auto
@@ -5393,8 +5393,8 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     return aProspectiveParent;
   }
 
-  // Otherwise, walk up out of all anon boxes.  For placeholder frames, walk ot
-  // of all pseudo-elements a well.  Otherwise ReParentStyleContext could cause
+  // Otherwise, walk up out of all anon boxes.  For placeholder frames, walk out
+  // of all pseudo-elements as well.  Otherwise ReParentStyleContext could cause
   // style data to be out of sync with the frame tree.
   nsIFrame* parent = aProspectiveParent;
   do {

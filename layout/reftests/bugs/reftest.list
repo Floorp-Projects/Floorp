@@ -30,6 +30,8 @@
 == 18217-zorder-3.html 18217-zorder-ref-inline.html
 == 18217-zorder-4.html 18217-zorder-ref-inline-table.html
 == 18217-zorder-5.html 18217-zorder-ref-inline-table.html
+== 23604-1.html 23604-1-ref.html
+== 23604-2.html 23604-2-ref.html
 fails == 25888-1l.html 25888-1l-ref.html # bug 25888
 fails != 25888-1l.html 25888-1l-notref.html # bug 25888
 fails == 25888-1r.html 25888-1r-ref.html # bug 25888
@@ -404,3 +406,4 @@ fails == 386310-1d.html 386310-1-ref.html
 == 395331-1.xml 395331-1-ref.xml
 == 396286-1.html about:blank  # crash test
 == 398289-1.html 398289-1-ref.html
+== 399384-1.html 399384-1-ref.html
