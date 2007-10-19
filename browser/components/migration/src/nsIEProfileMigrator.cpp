@@ -1532,7 +1532,7 @@ nsIEProfileMigrator::CopyCookies(PRBool aReplace)
 {
   // IE cookies are stored in files named <username>@domain[n].txt
   // (in <username>'s Cookies folder. isn't the naming redundant?)
-  PRBool rv = NS_OK;
+  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIFile> cookiesDir;
   nsCOMPtr<nsISimpleEnumerator> cookieFiles;
@@ -1543,8 +1543,33 @@ nsIEProfileMigrator::CopyCookies(PRBool aReplace)
 
   // find the cookies directory
   NS_GetSpecialDirectory(NS_WIN_COOKIES_DIR, getter_AddRefs(cookiesDir));
-  if (cookiesDir)
-    cookiesDir->GetDirectoryEntries(getter_AddRefs(cookieFiles));
+  if (!cookiesDir)
+    return NS_ERROR_FAILURE;
+
+  // Check for Vista's UAC, if so, tack on a "Low" sub dir
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (regKey) {
+    NS_NAMED_LITERAL_STRING(regPath,"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
+    if (NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                                  regPath,
+                                  nsIWindowsRegKey::ACCESS_QUERY_VALUE))) {
+      PRUint32 value;
+      if (NS_SUCCEEDED(regKey->ReadIntValue(NS_LITERAL_STRING("EnableLUA"),
+                                    &value)) &&
+          value == 1) {
+          nsAutoString dir;
+          // For cases where we are running under protected mode, check
+          // cookiesDir for the Low sub directory. (Simpler than using
+          // process token calls to check our Vista integrity level.)
+          cookiesDir->GetLeafName(dir);
+          if (!dir.EqualsLiteral("Low"))
+            cookiesDir->Append(NS_LITERAL_STRING("Low"));
+      }
+    }
+  }
+
+  cookiesDir->GetDirectoryEntries(getter_AddRefs(cookieFiles));
   if (!cookieFiles)
     return NS_ERROR_FAILURE;
 
