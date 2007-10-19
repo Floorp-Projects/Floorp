@@ -303,10 +303,13 @@ var next_test = function() {};
 
 function do_check_item(aItem, aVersion, aAddonsEntry) {
   if (aAddonsEntry.installed) {
-    do_check_neq(aItem, null);
-    do_check_eq(aItem.version, aVersion);
+    if (aItem == null)
+      do_throw("Addon " + aAddonsEntry.id + " wasn't detected");
+    if (aItem.version != aVersion)
+      do_throw("Addon " + aAddonsEntry.id + " was version " + aItem.version + " instead of " + aVersion);
   } else {
-    do_check_eq(aItem, null);
+    if (aItem != null)
+      do_throw("Addon " + aAddonsEntry.id + " was detected");
   }
 }
 
