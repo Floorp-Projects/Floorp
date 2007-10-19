@@ -68,7 +68,12 @@ interface IBookmarksSyncService : nsISupports
   void resetLock();
 
   /**
-   * Delete json on server and re-sync
+   * Delete json files on server
    */
   void resetServer();
+
+  /**
+   * Clear local snapshot
+   */
+  void resetClient();
 };

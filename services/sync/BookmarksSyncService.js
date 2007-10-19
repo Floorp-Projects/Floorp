@@ -334,11 +334,15 @@ BookmarksSyncService.prototype = {
         }
       }
       item.title = node.title;
-    } else if (node.type == node.RESULT_TYPE_URI) {
+    } else if (node.type == node.RESULT_TYPE_URI ||
+               node.type == node.RESULT_TYPE_QUERY) {
       if (this._ms.hasMicrosummary(node.itemId)) {
         item.type = "microsummary";
         let micsum = this._ms.getMicrosummary(node.itemId);
-        item.generatorURI = micsum.generator.uri.spec; // FIXME: might not be a remote generator!
+        item.generatorURI = micsum.generator.uri.spec; // breaks local generators
+      } else if (node.type == node.RESULT_TYPE_QUERY) {
+        item.type = "query";
+        item.title = node.title;
       } else {
         item.type = "bookmark";
         item.title = node.title;
@@ -348,8 +352,6 @@ BookmarksSyncService.prototype = {
       item.keyword = this._bms.getKeywordForBookmark(node.itemId);
     } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
       item.type = "separator";
-    } else if (node.type == node.RESULT_TYPE_QUERY) {
-      item.type = "query";
     } else {
       this._log.warn("Warning: unknown item type, cannot serialize: " + node.type);
       return;
@@ -607,9 +609,11 @@ BookmarksSyncService.prototype = {
   
       this._getPropagations(listB, conflicts[1], propagations[0]);
       ret = {propagations: propagations, conflicts: conflicts};
+
     } catch (e) {
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
+
     } finally {
       this._timer = null;
       generatorDone(this, onComplete, ret);
@@ -685,6 +689,7 @@ BookmarksSyncService.prototype = {
     }
 
     switch (command.data.type) {
+    case "query":
     case "bookmark":
     case "microsummary":
       this._log.info(" -> creating bookmark \"" + command.data.title + "\"");
@@ -1068,7 +1073,7 @@ BookmarksSyncService.prototype = {
 
     } catch (e) {
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
       let ok = false;
@@ -1320,9 +1325,11 @@ BookmarksSyncService.prototype = {
                         status);
         break;
       }
+
     } catch (e) {
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
+
     } finally {
       generatorDone(this, onComplete, ret)
       yield; // onComplete is responsible for closing the generator
@@ -1399,20 +1406,19 @@ BookmarksSyncService.prototype = {
         return;
       }
 
-      this._log.info("Server files deleted, starting sync");
-      gen = this._doSync.async(this, cont);
-      done = yield;
-      gen.close();
+      this._log.info("Server files deleted");
+      done = true;
         
     } catch (e) {
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
+
     } finally {
       if (done) {
         this._log.info("Server reset completed successfully");
         this._os.notifyObservers(null, "bookmarks-sync:reset-server-end", "");
       } else {
-        this._log.info("Server reset failed: could not sync bookmarks");
+        this._log.info("Server reset failed");
         this._os.notifyObservers(null, "bookmarks-sync:reset-server-error", "");
       }
       generatorDone(this, onComplete, done)
@@ -1423,15 +1429,23 @@ BookmarksSyncService.prototype = {
 
   _resetClient: function BSS__resetClient(onComplete) {
     let cont = yield;
+    let done = false;
 
     try {
+      this._log.info("Resetting client state");
+      this._snapshot = {};
+      this._snapshotVersion = -1;
+      this._saveSnapshot();
+
+      this._log.info("Client snapshot cleared");
+      done = true;
 
     } catch (e) {
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
-      generatorDone(this, onComplete, null);
+      generatorDone(this, onComplete, done);
     }
   },
 
@@ -1548,7 +1562,7 @@ Function.prototype.async = function(self, extra_args) {
       dump("async warning: generator stopped unexpectedly");
       return null;
     } else {
-      throw e;
+      this._log.error("Exception caught: " + e.message);
     }
   }
 }
@@ -1559,7 +1573,7 @@ function continueGenerator(generator, data) {
     if (e instanceof StopIteration)
       dump("continueGenerator warning: generator stopped unexpectedly");
     else
-      throw e;
+      this._log.error("Exception caught: " + e.message);
   }
 }
 
@@ -1744,7 +1758,7 @@ DAVCollection.prototype = {
 
     } catch (e) {
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
       generatorDone(this, onComplete, ret);
@@ -1833,7 +1847,7 @@ DAVCollection.prototype = {
 
     } catch (e) {
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (this._loggedIn)
@@ -1877,7 +1891,7 @@ DAVCollection.prototype = {
 
     } catch (e) {
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (ret)
@@ -1921,7 +1935,7 @@ DAVCollection.prototype = {
 
     } catch (e){
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (this._token)
@@ -1955,7 +1969,7 @@ DAVCollection.prototype = {
 
     } catch (e){
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (this._token) {
@@ -1993,7 +2007,7 @@ DAVCollection.prototype = {
 
     } catch (e){
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (unlocked)
@@ -2023,7 +2037,7 @@ DAVCollection.prototype = {
 
     } catch (e){
       if (e != 'close generator')
-        throw e;
+        this._log.error("Exception caught: " + e.message);
 
     } finally {
       generatorDone(this, onComplete, stolen);
