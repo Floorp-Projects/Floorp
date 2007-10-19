@@ -2219,6 +2219,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   if (root) {
     // Tear down the frames for the root element.
+    MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, PR_TRUE);
     nsNodeUtils::ContentRemoved(this, root, 0);
 
     // Put the root element back into the document, we don't notify
