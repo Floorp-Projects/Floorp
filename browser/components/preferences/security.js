@@ -234,9 +234,9 @@ var gSecurityPane = {
     var popup = document.getElementById(onloadPopupId);
 
     if (!popup) {
-      var providerBranch = Cc["@mozilla.org/preferences-service;1"]
-                             .getService(Ci.nsIPrefService)
-                             .getBranch("browser.safebrowsing.provider.");
+      var providerBranch = Cc["@mozilla.org/preferences-service;1"].
+                           getService(Ci.nsIPrefService).
+                           getBranch("browser.safebrowsing.provider.");
 
       // fill in onload phishing list data -- but require a privacy policy
       // URL be provided, and require it to be at a chrome URL so it's always
@@ -374,8 +374,8 @@ var gSecurityPane = {
   _masterPasswordSet: function ()
   {
     const Cc = Components.classes, Ci = Components.interfaces;
-    var secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
-                     .getService(Ci.nsIPKCS11ModuleDB);
+    var secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].
+                   getService(Ci.nsIPKCS11ModuleDB);
     var slot = secmodDB.findSlotByName("");
     if (slot) {
       var status = slot.status;
@@ -419,9 +419,12 @@ var gSecurityPane = {
    */
   _removeMasterPassword: function ()
   {
-    var secmodDB = Components.classes["@mozilla.org/security/pkcs11moduledb;1"]
-                              .getService(Components.interfaces.nsIPKCS11ModuleDB);
+    const Cc = Components.classes, Ci = Components.interfaces;
+    var secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].
+                   getService(Ci.nsIPKCS11ModuleDB);
     if (secmodDB.isFIPSEnabled) {
+      var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                          getService(Ci.nsIPromptService);
       var bundle = document.getElementById("bundlePreferences");
       promptService.alert(window,
                           bundle.getString("pw_change_failed_title"),
