@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(25f55fb2-a6f8-4f7f-93c3-3adafd5166bc)]
+[scriptable, uuid(7a55fc2b-afb3-41c6-9e50-3fee341fa87c)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -156,4 +156,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aElement the element to focus
    */
   void focus(in nsIDOMElement aElement);
+
+  /**
+   * Force a garbage collection. This will run the cycle-collector twice to
+   * make sure all garbage is collected.
+   *
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges in non-debug builds. Available to all callers in debug builds.
+   */
+  void garbageCollect();
 };
