@@ -95,6 +95,10 @@
   !include LogicLib.nsh
 !endif
 
+!ifndef WINMESSAGES_INCLUDED
+  !include WinMessages.nsh
+!endif
+
 !ifndef MUI_VERBOSE
   !include MUI.nsh
 !endif
@@ -3506,6 +3510,80 @@
 
 
 ################################################################################
+# Macros for custom branding
+
+/**
+ * Replaces the wizard's header image with the one specified.
+ *
+ * @param   _PATH_TO_IMAGE
+ *          Fully qualified path to the bitmap to use for the header image.
+ *
+ * $R8 = hwnd for the control returned from GetDlgItem.
+ * $R9 = _PATH_TO_IMAGE
+ */
+!macro ChangeMUIHeaderImage
+
+  !ifndef ${_MOZFUNC_UN}ChangeMUIHeaderImage
+    Var hHeaderBitmap
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}ChangeMUIHeaderImage "!insertmacro ${_MOZFUNC_UN}ChangeMUIHeaderImageCall"
+
+    Function ${_MOZFUNC_UN}ChangeMUIHeaderImage
+      Exch $R9
+      Push $R8
+
+      GetDlgItem $R8 $HWNDPARENT 1046
+      System::Call 'user32::LoadImage(i 0, t "$R9", i 0, i 0, i 0, i 0x0010|0x2000) i.s'
+      Pop $hHeaderBitmap
+      SendMessage $R8 ${STM_SETIMAGE} 0 $hHeaderBitmap
+      ; There is no way to specify a show function for a custom page so hide
+      ; and then show the control to force the bitmap to redraw.
+      ShowWindow $R8 ${SW_HIDE}
+      ShowWindow $R8 ${SW_SHOW}
+
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro ChangeMUIHeaderImageCall _PATH_TO_IMAGE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_IMAGE}"
+  Call ChangeMUIHeaderImage
+  !verbose pop
+!macroend
+
+!macro un.ChangeMUIHeaderImageCall _PATH_TO_IMAGE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_IMAGE}"
+  Call un.ChangeMUIHeaderImage
+  !verbose pop
+!macroend
+
+!macro un.ChangeMUIHeaderImage
+  !ifndef un.ChangeMUIHeaderImage
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro ChangeMUIHeaderImage
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+
+################################################################################
 # User interface callback helper defines and macros
 
 /* Install type defines */
@@ -3552,6 +3630,67 @@
 !macroend
 
 /**
+ * Unloads dll's and releases references when the installer and uninstaller
+ * exit.
+ */
+!macro OnEndCommon
+
+  !ifndef ${_MOZFUNC_UN}OnEndCommon
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}UnloadUAC
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}OnEndCommon "!insertmacro ${_MOZFUNC_UN}OnEndCommonCall"
+
+    Function ${_MOZFUNC_UN}OnEndCommon
+
+      ${${_MOZFUNC_UN}UnloadUAC}
+      StrCmp $hHeaderBitmap "" +3 +1
+      System::Call "gdi32::DeleteObject(i s)" $hHeaderBitmap
+      StrCpy $hHeaderBitmap ""
+
+      System::Free 0
+
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro OnEndCommonCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call OnEndCommon
+  !verbose pop
+!macroend
+
+!macro un.OnEndCommonCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.OnEndCommon
+  !verbose pop
+!macroend
+
+!macro un.OnEndCommon
+  !ifndef un.OnEndCommon
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro OnEndCommon
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
  * Called from the installer's .onInit function not to be confused with the
  * uninstaller's .onInit or the uninstaller's un.onInit functions.
  *
@@ -3569,10 +3708,10 @@
 
   !ifndef InstallOnInitCommon
     !insertmacro CloseApp
+    !insertmacro ElevateUAC
     !insertmacro GetOptions
     !insertmacro GetParameters
     !insertmacro GetSize
-    !insertmacro ElevateUAC
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -3588,6 +3727,7 @@
       !ifdef ___WINVER__NSH___
         ${Unless} ${AtLeastWin2000}
           MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
+          ; Nothing initialized so no need to call OnEndCommon
           Quit
         ${EndUnless}
       !endif
@@ -3645,11 +3785,13 @@
                 FileClose $R5
                 Delete $R6
                 ${If} ${Errors}
+                  ; Nothing initialized so no need to call OnEndCommon
                   Quit
                 ${EndIf}
               ${Else}
                 CreateDirectory "$INSTDIR"
                 ${If} ${Errors}
+                  ; Nothing initialized so no need to call OnEndCommon
                   Quit
                 ${EndIf}
               ${EndIf}
@@ -3673,6 +3815,7 @@
                     ClearErrors
                     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
                     ${If} ${Errors}
+                      ; Nothing initialized so no need to call OnEndCommon
                       Quit
                     ${EndIf}
                   ${EndIf}
@@ -3740,11 +3883,12 @@
 !macro UninstallOnInitCommon
 
   !ifndef UninstallOnInitCommon
+    !insertmacro ElevateUAC
     !insertmacro GetLongPath
     !insertmacro GetOptions
     !insertmacro GetParameters
+    !insertmacro UnloadUAC
     !insertmacro UpdateUninstallLog
-    !insertmacro ElevateUAC
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -3767,8 +3911,7 @@
       IfErrors showshortcuts +1
       ${ElevateUAC}
       ${HideShortcuts}
-      StrCpy $R1 "true"
-      StrCmp "$R1" "true" continue
+      GoTo finish
 
       ; Require elevation if the user can elevate
       showshortcuts:
@@ -3777,8 +3920,7 @@
       IfErrors defaultappuser +1
       ${ElevateUAC}
       ${ShowShortcuts}
-      StrCpy $R1 "true"
-      GoTo continue
+      GoTo finish
 
       ; Require elevation if the the StartMenuInternet registry keys require
       ; updating and the user can elevate
@@ -3787,8 +3929,7 @@
       ${GetOptions} "$R0" "/SetAsDefaultAppUser" $R2
       IfErrors defaultappglobal +1
       ${SetAsDefaultAppUser}
-      StrCpy $R1 "true"
-      GoTo continue
+      GoTo finish
 
       ; Require elevation if the user can elevate
       defaultappglobal:
@@ -3797,8 +3938,7 @@
       IfErrors postupdate +1
       ${ElevateUAC}
       ${SetAsDefaultAppGlobal}
-      StrCpy $R1 "true"
-      GoTo continue
+      GoTo finish
 
       ; Do not attempt to elevate. The application launching this executable is
       ; responsible for elevation if it is required.
@@ -3806,40 +3946,40 @@
       ${WordReplace} "$R0" "$\"" "" "+" $R0
       ClearErrors
       ${GetOptions} "$R0" "/PostUpdate" $R2
-      StrCpy $R1 "true"
       IfErrors continue +1
       ; If the uninstall.log does not exist don't perform post update
       ; operations. This prevents updating the registry for zip builds.
-      IfFileExists "$EXEDIR\uninstall.log" +1 continue
+      IfFileExists "$EXEDIR\uninstall.log" +1 finish
       ${PostUpdate}
       ClearErrors
       ${GetOptions} "$R0" "/UninstallLog=" $R2
       IfErrors updateuninstalllog +1
-      StrCmp "$R2" "" continue +1
+      StrCmp "$R2" "" finish +1
       GetFullPathName $R3 "$R2"
-      IfFileExists "$R3" +1 continue
+      IfFileExists "$R3" +1 finish
       Delete "$INSTDIR\uninstall\*wizard*"
       Delete "$INSTDIR\uninstall\uninstall.log"
       CopyFiles /SILENT /FILESONLY "$R3" "$INSTDIR\uninstall\"
       ${GetParent} "$R3" $R4
       Delete "$R3"
       RmDir "$R4"
-      GoTo continue
+      GoTo finish
 
       ; Do not attempt to elevate. The application launching this executable is
       ; responsible for elevation if it is required.
       updateuninstalllog:
       ${UpdateUninstallLog}
-      StrCpy $R1 "true"
-      
-      continue:
-      StrCmp $R1 "true" +1 +3
+
+      finish:
+      ${UnloadUAC}
       System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
       Quit
 
+      continue:
+
       ; If the uninstall.log does not exist don't perform uninstall
       ; operations. This prevents running the uninstaller for zip builds.
-      IfFileExists "$EXEDIR\uninstall.log" +2 +1
+      IfFileExists "$INSTDIR\uninstall\uninstall.log" +2 +1
       Quit
 
       ; Require elevation if the user can elevate
@@ -3856,6 +3996,7 @@
       ; so it won't be in use so it can delete itself.
       ExecWait $R1
       ${DeleteFile} "$EXEDIR\uninstaller.exe"
+      ${UnloadUAC}
       SetErrorLevel 0
       Quit
 
@@ -4111,50 +4252,63 @@
 !macro ElevateUAC
 
   !ifndef ${_MOZFUNC_UN}ElevateUAC
+    !ifdef USE_UAC_PLUGIN
+      !ifdef ___WINVER__NSH___
+        !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+        !insertmacro ${_MOZFUNC_UN_TMP}GetOptions
+        !insertmacro ${_MOZFUNC_UN_TMP}GetParameters
+        !undef _MOZFUNC_UN
+        !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+        !undef _MOZFUNC_UN_TMP
+      !endif
+    !endif
+
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
     !define ${_MOZFUNC_UN}ElevateUAC "!insertmacro ${_MOZFUNC_UN}ElevateUACCall"
 
     Function ${_MOZFUNC_UN}ElevateUAC
-      Push $R9
-      Push $0
+      ; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
+      !ifdef USE_UAC_PLUGIN
+        !ifdef ___WINVER__NSH___
+          Push $R9
+          Push $0
 
-; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
-!ifdef USE_UAC_PLUGIN
-      !ifdef ___WINVER__NSH___
-        ${If} ${AtLeastWinVista}
-          UAC::IsAdmin
-          ; If the user is not an admin already
-          ${If} "$0" != "1"
-            UAC::SupportsUAC
-            ; If the system supports UAC
-            ${If} "$0" == "1"
-              UAC::GetElevationType
-              ; If the user account has a split token
-              ${If} "$0" == "3"
-                UAC::RunElevated 
-                Quit
+          ${If} ${AtLeastWinVista}
+            UAC::IsAdmin
+            ; If the user is not an admin already
+            ${If} "$0" != "1"
+              UAC::SupportsUAC
+              ; If the system supports UAC
+              ${If} "$0" == "1"
+                UAC::GetElevationType
+                ; If the user account has a split token
+                ${If} "$0" == "3"
+                  UAC::RunElevated
+                  UAC::Unload
+                  ; Nothing besides UAC initialized so no need to call OnEndCommon
+                  Quit
+                ${EndIf}
+              ${EndIf}
+            ${Else}
+              ${GetParameters} $R9
+              ${If} $R9 != ""
+                ClearErrors
+                ${GetOptions} "$R9" "/UAC:" $0
+                ; If the command line contains /UAC then we need to initialize
+                ; the UAC plugin to use UAC::ExecCodeSegment to execute code in
+                ; the non-elevated context.
+                ${Unless} ${Errors}
+                  UAC::RunElevated 
+                ${EndUnless}
               ${EndIf}
             ${EndIf}
-          ${Else}
-            ${GetParameters} $R9
-            ${If} $R9 != ""
-              ClearErrors
-              ${GetOptions} "$R9" "/UAC:" $0
-              ; If the command line contains /UAC then we need to initialize
-              ; the UAC plugin to use UAC::ExecCodeSegment to execute code in
-              ; the non-elevated context.
-              ${Unless} ${Errors}
-                UAC::RunElevated 
-              ${EndUnless}
-            ${EndIf}
           ${EndIf}
-        ${EndIf}
-      !endif
-!endif
 
-      Pop $0
-      Pop $R9
+          Pop $0
+          Pop $R9
+        !endif
+      !endif
     FunctionEnd
 
     !verbose pop
@@ -4183,6 +4337,86 @@
     !define _MOZFUNC_UN "un."
 
     !insertmacro ElevateUAC
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Unloads the UAC plugin so the NSIS plugins can be removed when the installer
+ * and uninstaller exit.
+ *
+ * $R9 = return values from GetParameters and GetOptions macros
+ */
+!macro UnloadUAC
+
+  !ifndef ${_MOZFUNC_UN}UnloadUAC
+    !ifdef USE_UAC_PLUGIN
+      !ifdef ___WINVER__NSH___
+        !define _MOZFUNC_UN_TMP_UnloadUAC ${_MOZFUNC_UN}
+        !insertmacro ${_MOZFUNC_UN_TMP_UnloadUAC}GetOptions
+        !insertmacro ${_MOZFUNC_UN_TMP_UnloadUAC}GetParameters
+        !undef _MOZFUNC_UN
+        !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP_UnloadUAC}
+        !undef _MOZFUNC_UN_TMP_UnloadUAC
+      !endif
+    !endif
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}UnloadUAC "!insertmacro ${_MOZFUNC_UN}UnloadUACCall"
+
+    Function ${_MOZFUNC_UN}UnloadUAC
+      !ifdef USE_UAC_PLUGIN
+        !ifdef ___WINVER__NSH___
+          Push $R9
+
+          ${Unless} ${AtLeastWinVista}
+            Return
+          ${EndUnless}
+
+          ClearErrors
+          ${${_MOZFUNC_UN}GetParameters} $R9
+          ${${_MOZFUNC_UN}GetOptions} "$R9" "/UAC:" $R9
+          ; If the command line contains /UAC then we need to unload the UAC plugin
+          IfErrors +2 +1
+          UAC::Unload
+
+          ClearErrors
+
+          Pop $R9
+        !endif
+      !endif
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro UnloadUACCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call UnloadUAC
+  !verbose pop
+!macroend
+
+!macro un.UnloadUACCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.UnloadUAC
+  !verbose pop
+!macroend
+
+!macro un.UnloadUAC
+  !ifndef un.UnloadUAC
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro UnloadUAC
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN

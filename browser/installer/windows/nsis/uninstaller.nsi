@@ -35,12 +35,14 @@
 # ***** END LICENSE BLOCK *****
 
 # Required Plugins:
-# SetVistaDefaultApp http://nsis.sourceforge.net/SetVistaDefaultApp_plug-in
-# ShellLink          http://nsis.sourceforge.net/ShellLink_plug-in
-# UAC                http://nsis.sourceforge.net/UAC_plug-in
+# AppAssocReg http://nsis.sourceforge.net/Application_Association_Registration_plug-in
+# ShellLink   http://nsis.sourceforge.net/ShellLink_plug-in
+# UAC         http://nsis.sourceforge.net/UAC_plug-in
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
+
+RequestExecutionLevel user
 
 ; 7-Zip provides better compression than the lzma from NSIS so we add the files
 ; uncompressed and use 7-Zip to create a SFX archive of it
@@ -62,21 +64,11 @@ Var TmpVal
 ; The following includes are provided by NSIS.
 !include FileFunc.nsh
 !include LogicLib.nsh
+!include MUI.nsh
 !include TextFunc.nsh
 !include WinMessages.nsh
+!include WinVer.nsh
 !include WordFunc.nsh
-!include MUI.nsh
-
-; WinVer.nsh was added in the same release that RequestExecutionLevel so check
-; if ___WINVER__NSH___ is defined to determine if RequestExecutionLevel is
-; available.
-!include /NONFATAL WinVer.nsh
-!ifdef ___WINVER__NSH___
-  RequestExecutionLevel user
-!else
-  !warning "Uninstaller will be created without Vista compatibility.$\n            \
-            Upgrade your NSIS installation to at least version 2.22 to resolve."
-!endif
 
 !insertmacro StrFilter
 !insertmacro WordReplace
@@ -104,9 +96,11 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 !insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
+!insertmacro UnloadUAC
 !insertmacro WriteRegDWORD2
 !insertmacro WriteRegStr2
 
+!insertmacro un.ChangeMUIHeaderImage
 !insertmacro un.CleanVirtualStore
 !insertmacro un.GetLongPath
 !insertmacro un.GetSecondInstallPath
@@ -122,7 +116,10 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 !include shared.nsh
 
 ; Helper macros for ui callbacks. Insert these after shared.nsh
+!insertmacro OnEndCommon
 !insertmacro UninstallOnInitCommon
+
+!insertmacro un.OnEndCommon
 
 Name "${BrandFullName}"
 OutFile "helper.exe"
@@ -152,9 +149,11 @@ ShowUnInstDetails nevershow
  * Uninstall Pages
  */
 ; Welcome Page
+!define MUI_PAGE_CUSTOMFUNCTION_PRE un.preWelcome
 !insertmacro MUI_UNPAGE_WELCOME
 
 ; Uninstall Confirm Page
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW un.showConfirm
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.leaveConfirm
 !insertmacro MUI_UNPAGE_CONFIRM
 
@@ -354,7 +353,23 @@ FunctionEnd
 BrandingText " "
 
 ################################################################################
-# Page pre and leave functions
+# Page pre, show, and leave functions
+
+Function un.preWelcome
+  ${If} ${FileExists} "$INSTDIR\distribution\modern-wizard.bmp"
+    Delete "$PLUGINSDIR\modern-wizard.bmp"
+    CopyFiles /SILENT "$INSTDIR\distribution\modern-wizard.bmp" "$PLUGINSDIR\modern-wizard.bmp"
+  ${EndIf}
+FunctionEnd
+
+Function un.showConfirm
+  ${If} ${FileExists} "$INSTDIR\distribution\modern-header.bmp"
+  ${AndIf} $hHeaderBitmap == ""
+    Delete "$PLUGINSDIR\modern-header.bmp"
+    CopyFiles /SILENT "$INSTDIR\distribution\modern-header.bmp" "$PLUGINSDIR\modern-header.bmp"
+    ${un.ChangeMUIHeaderImage} "$PLUGINSDIR\modern-header.bmp"
+  ${EndIf}
+FunctionEnd
 
 ; Checks if the app being uninstalled is running.
 Function un.leaveConfirm
@@ -416,4 +431,16 @@ Function un.onInit
     Abort
   ${EndUnless}
   StrCpy $LANGUAGE 0
+
+  ; Initialize $hHeaderBitmap to prevent redundant changing of the bitmap if
+  ; the user clicks the back button
+  StrCpy $hHeaderBitmap ""
+FunctionEnd
+
+Function .onGUIEnd
+  ${OnEndCommon}
+FunctionEnd
+
+Function un.onGUIEnd
+  ${un.OnEndCommon}
 FunctionEnd
