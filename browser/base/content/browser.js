@@ -3975,6 +3975,8 @@ nsBrowserAccess.prototype =
           newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIWebNavigation)
                    .loadURI(url, loadflags, referrer, null, null);
+          if (!loadInBackground && isExternal)
+            newWindow.focus();
         } catch(e) {
         }
         break;
