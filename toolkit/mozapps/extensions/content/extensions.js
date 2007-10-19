@@ -726,8 +726,9 @@ function Startup()
   if ("arguments" in window) {
     try {
       var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+      var manager = window.arguments[1].QueryInterface(Components.interfaces.nsIObserver);
       showView("installs");
-      gDownloadManager.addDownloads(params);
+      gDownloadManager.addDownloads(params, manager);
     }
     catch (e) {
       if (window.arguments[0] == "updates-only") {
@@ -815,12 +816,14 @@ XPInstallDownloadManager.prototype = {
         var params = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
         var paramBlock = params.GetElementAt(0).QueryInterface(Components.interfaces.nsISupportsInterfacePointer);
         paramBlock = paramBlock.data.QueryInterface(Components.interfaces.nsIDialogParamBlock);
-        this.addDownloads(paramBlock);
+        var manager = params.GetElementAt(1).QueryInterface(Components.interfaces.nsISupportsInterfacePointer);
+        manager = manager.data.QueryInterface(Components.interfaces.nsIObserver);
+        this.addDownloads(paramBlock, manager);
         break;
     }
   },
 
-  addDownloads: function (aParams)
+  addDownloads: function (aParams, aManager)
   {
     var numXPInstallItems = aParams.GetInt(1);
     var items = [];
@@ -846,7 +849,7 @@ XPInstallDownloadManager.prototype = {
       var certName = aParams.GetString(i++);
     }
 
-    gExtensionManager.addDownloads(items, items.length, false);
+    gExtensionManager.addDownloads(items, items.length, aManager);
     updateOptionalViews();
     updateGlobalCommands();
   },
@@ -1725,7 +1728,7 @@ function installUpdatesAll() {
       items.push(gExtensionManager.getItemForID(getIDFromResourceURI(children[i].id)));
   }
   if (items.length > 0) {
-    gExtensionManager.addDownloads(items, items.length, true);
+    gExtensionManager.addDownloads(items, items.length, null);
     showView("installs");
     // Remove the updates view if there are no add-ons left to update
     updateOptionalViews();
@@ -2005,7 +2008,7 @@ var gExtensionsViewController = {
 
       showView("installs");
       var item = gExtensionManager.getItemForID(getIDFromResourceURI(aSelectedItem.id));
-      gExtensionManager.addDownloads([item], 1, true);
+      gExtensionManager.addDownloads([item], 1, null);
       // Remove the updates view if there are no add-ons left to update
       updateOptionalViews();
       updateGlobalCommands();
