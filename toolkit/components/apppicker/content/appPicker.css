@@ -1,0 +1,39 @@
+
+#app-picker {
+    width:320px !important;
+    max-width:320px !important;
+}
+
+#content-description {
+    font-weight:bold;
+}
+
+#suggested-filename {
+    font-weight:normal;
+}
+
+#file-info {
+}
+
+#app-picker-list {
+    height:225px;
+    min-height:225px;
+}
+
+#app-picker-item {
+    padding-bottom:5px;
+    padding-top:5px;
+}
+
+#app-picker-item-image {
+}
+
+#app-picker-item-cell {
+    font-weight:normal; 
+    padding-right:10px;
+    padding-left:10px;
+}
+
+#browse-button {
+    margin-top:10px;
+}
