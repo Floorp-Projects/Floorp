@@ -1968,7 +1968,7 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
 
     PRInt32 itemType = mDBGetChildren->AsInt32(kGetChildrenIndex_Type);
     PRInt64 id = mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemId);
-    nsCOMPtr<nsNavHistoryResultNode> node;
+    nsRefPtr<nsNavHistoryResultNode> node;
     if (itemType == TYPE_FOLDER || itemType == TYPE_DYNAMIC_CONTAINER) {
       if (itemType == TYPE_DYNAMIC_CONTAINER ||
           (itemType == TYPE_FOLDER && options->ExcludeReadOnlyFolders())) {
