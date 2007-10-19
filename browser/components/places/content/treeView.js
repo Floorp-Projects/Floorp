@@ -69,7 +69,7 @@ PlacesTreeView.prototype = {
   },
 
   _ensureValidRow: function PTV__ensureValidRow(aRow) {
-    if (aRow < 0 || aRow > this._visibleElements.length)
+    if (aRow < 0 || aRow >= this._visibleElements.length)
       throw Cr.NS_ERROR_INVALID_ARG;
   },
 
