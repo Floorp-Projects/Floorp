@@ -42,8 +42,6 @@
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
 
-RequestExecutionLevel user
-
 ; 7-Zip provides better compression than the lzma from NSIS so we add the files
 ; uncompressed and use 7-Zip to create a SFX archive of it
 SetDatablockOptimize on
@@ -67,8 +65,18 @@ Var TmpVal
 !include MUI.nsh
 !include TextFunc.nsh
 !include WinMessages.nsh
-!include WinVer.nsh
 !include WordFunc.nsh
+
+; WinVer.nsh was added in the same release that RequestExecutionLevel so check
+; if ___WINVER__NSH___ is defined to determine if RequestExecutionLevel is
+; available.
+!include /NONFATAL WinVer.nsh
+!ifdef ___WINVER__NSH___
+  RequestExecutionLevel user
+!else
+  !warning "Installer will be created without Vista compatibility.$\n            \
+            Upgrade your NSIS installation to at least version 2.22 to resolve."
+!endif
 
 !insertmacro StrFilter
 !insertmacro WordReplace
@@ -102,6 +110,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 
 !insertmacro un.ChangeMUIHeaderImage
 !insertmacro un.CleanVirtualStore
+!insertmacro un.DeleteRelativeProfiles
 !insertmacro un.GetLongPath
 !insertmacro un.GetSecondInstallPath
 !insertmacro un.ManualCloseAppPrompt
@@ -153,9 +162,7 @@ ShowUnInstDetails nevershow
 !insertmacro MUI_UNPAGE_WELCOME
 
 ; Uninstall Confirm Page
-!define MUI_PAGE_CUSTOMFUNCTION_SHOW un.showConfirm
-!define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.leaveConfirm
-!insertmacro MUI_UNPAGE_CONFIRM
+UninstPage custom un.preConfirm un.leaveConfirm
 
 ; Remove Files Page
 !insertmacro MUI_UNPAGE_INSTFILES
@@ -198,6 +205,11 @@ Section "Uninstall"
     Sleep 5000
     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
     ClearErrors
+  ${EndIf}
+
+  ${MUI_INSTALLOPTIONS_READ} $0 "unconfirm.ini" "Field 3" "State"
+  ${If} "$0" == "1"
+    ${un.DeleteRelativeProfiles} "Mozilla\Firefox"
   ${EndIf}
 
   SetShellVarContext current  ; Set SHCTX to HKCU
@@ -362,17 +374,41 @@ Function un.preWelcome
   ${EndIf}
 FunctionEnd
 
-Function un.showConfirm
+Function un.preConfirm
   ${If} ${FileExists} "$INSTDIR\distribution\modern-header.bmp"
   ${AndIf} $hHeaderBitmap == ""
     Delete "$PLUGINSDIR\modern-header.bmp"
     CopyFiles /SILENT "$INSTDIR\distribution\modern-header.bmp" "$PLUGINSDIR\modern-header.bmp"
     ${un.ChangeMUIHeaderImage} "$PLUGINSDIR\modern-header.bmp"
   ${EndIf}
+
+  !insertmacro un.createUnConfirmINI
+  !insertmacro MUI_HEADER_TEXT "$(UN_CONFIRM_PAGE_TITLE)" "$(UN_CONFIRM_PAGE_SUBTITLE)"
+  ; The Summary custom page has a textbox that will automatically receive
+  ; focus. This sets the focus to the Install button instead.
+  !insertmacro MUI_INSTALLOPTIONS_INITDIALOG "unconfirm.ini"
+  GetDlgItem $0 $HWNDPARENT 1
+  ${MUI_INSTALLOPTIONS_READ} $1 "unconfirm.ini" "Field 4" "HWND"
+  SetCtlColors $1 0x000000 0xFFFFEE
+  ShowWindow $1 ${SW_HIDE}
+  System::Call "user32::SetFocus(i r0, i 0x0007, i,i)i"
+  !insertmacro MUI_INSTALLOPTIONS_SHOW
 FunctionEnd
 
-; Checks if the app being uninstalled is running.
 Function un.leaveConfirm
+  ${MUI_INSTALLOPTIONS_READ} $0 "unconfirm.ini" "Settings" "State"
+  StrCmp $0 "3" +1 continue
+  ${MUI_INSTALLOPTIONS_READ} $0 "unconfirm.ini" "Field 3" "State"
+  ${MUI_INSTALLOPTIONS_READ} $1 "unconfirm.ini" "Field 4" "HWND"
+  StrCmp $0 1 +1 +3
+  ShowWindow $1 ${SW_SHOW}
+  Abort
+
+  ShowWindow $1 ${SW_HIDE}
+  Abort
+
+  continue:
+
   ; Try to delete the app executable and if we can't delete it try to find the
   ; app's message window and prompt the user to close the app. This allows
   ; running an instance that is located in another directory. If for whatever

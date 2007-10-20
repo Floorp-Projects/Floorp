@@ -534,6 +534,54 @@
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Bottom "150"
 !macroend
 
+!macro un.createUnConfirmINI
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Settings" NumFields "5"
+
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Type   "label"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Text   "$(UN_CONFIRM_UNINSTALLED_FROM)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Top    "5"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Bottom "15"
+
+  ; XXXrstrong - a side affect of using a READONLY textbox is if the path is
+  ; longer than the visible area of the textbox it will display the characters
+  ; at the end and the beginning of the path will be hidden. Since the path has
+  ; to be greater than 74 characters in length I'm not going to spend any
+  ; cycles trying to come up with a workaround.
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Type   "text"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" State  "$INSTDIR"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Top    "17"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Bottom "30"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" flags  "READONLY"
+
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Type   "checkbox"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Text   "$(UN_REMOVE_PROFILES)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Top    "40"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Bottom "50"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" State  "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" flags  "NOTIFY"
+
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Type   "text"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" State   "$(UN_REMOVE_PROFILES_DESC)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Top    "52"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Bottom "120"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" flags  "MULTILINE|READONLY"
+
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Type   "label"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Text   "$(UN_CONFIRM_CLICK)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Top    "130"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Bottom "150"
+!macroend
+
 /**
  * DEPRECATED - use GetParent instead.
  */
@@ -3035,6 +3083,108 @@
     !define _MOZFUNC_UN "un."
 
     !insertmacro CleanVirtualStore
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Deletes all relative profiles specified in an application's profiles.ini and
+ * performs various other cleanup.
+ *
+ * @param   _REL_PROFILE_PATH
+ *          The relative path to the profile directory.
+ *
+ * $R6 = value of IsRelative read from profiles.ini
+ * $R7 = value of Path to profile read from profiles.ini
+ * $R8 = counter for reading profiles (e.g. Profile0, Profile1, etc.)
+ * $R9 = _REL_PROFILE_PATH
+ */
+!macro DeleteRelativeProfiles
+
+  !ifndef ${_MOZFUNC_UN}DeleteRelativeProfiles
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}WordReplace
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}DeleteRelativeProfiles "!insertmacro ${_MOZFUNC_UN}DeleteRelativeProfilesCall"
+
+    Function ${_MOZFUNC_UN}DeleteRelativeProfiles
+      Exch $R9
+      Push $R8
+      Push $R7
+      Push $R6
+
+      SetShellVarContext current
+      StrCpy $R8 -1
+
+      loop:
+      IntOp $R8 $R8 + 1  ; Increment the counter.
+      ReadINIStr $R7 "$APPDATA\$R9\profiles.ini" "Profile$R8" "Path"
+      IfErrors end +1
+
+      ; Only remove relative profiles
+      ReadINIStr $R6 "$APPDATA\$R9\profiles.ini" "Profile$R8" "IsRelative"
+      StrCmp "$R6" "1" +1 loop
+
+      ; Relative paths in profiles.ini use / as a separator
+      ${${_MOZFUNC_UN}WordReplace} "$R7" "/" "\" "+" $R7
+
+      IfFileExists "$LOCALAPPDATA\$R9\$R7" +1 +2
+      RmDir /r "$LOCALAPPDATA\$R9\$R7"
+      IfFileExists "$APPDATA\$R9\$R7" +1 +2
+      RmDir /r "$APPDATA\$R9\$R7"
+      GoTo loop
+
+      end:
+      ; Remove profiles directory under LOCALAPPDATA (e.g. cache, etc.) since
+      ; they are at times abandoned.
+      RmDir /r "$LOCALAPPDATA\$R9\Profiles"
+      RmDir /r "$APPDATA\$R9\Crash Reports"
+      Delete "$APPDATA\$R9\profiles.ini"
+      Delete "$APPDATA\$R9\console.log"
+      Delete "$APPDATA\$R9\pluginreg.dat"
+
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro DeleteRelativeProfilesCall _REL_PROFILE_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_REL_PROFILE_PATH}"
+  Call DeleteRelativeProfiles
+  !verbose pop
+!macroend
+
+!macro un.DeleteRelativeProfilesCall _REL_PROFILE_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_REL_PROFILE_PATH}"
+  Call un.DeleteRelativeProfiles
+  !verbose pop
+!macroend
+
+!macro un.DeleteRelativeProfiles
+  !ifndef un.DeleteRelativeProfiles
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro DeleteRelativeProfiles
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN
