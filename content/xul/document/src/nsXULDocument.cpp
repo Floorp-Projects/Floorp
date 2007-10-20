@@ -4064,6 +4064,10 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
         // broadcaster element, and an 'attribute' element, which
         // specifies the name of the attribute to observe.
         nsIContent* parent = aElement->GetParent();
+        if (!parent) {
+             // <observes> is the root element
+            return NS_FINDBROADCASTER_NOT_FOUND;
+        }
 
         // If we're still parented by an 'overlay' tag, then we haven't
         // made it into the real document yet. Defer hookup.
