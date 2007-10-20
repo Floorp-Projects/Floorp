@@ -1543,8 +1543,10 @@ function makeFile(path) {
 }
 
 function makeURI(URIString) {
-  var ioservice = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
+  if (URIString === null || URIString == "")
+    return null;
+  let ioservice = Cc["@mozilla.org/network/io-service;1"].
+    getService(Ci.nsIIOService);
   return ioservice.newURI(URIString, null, null);
 }
 
