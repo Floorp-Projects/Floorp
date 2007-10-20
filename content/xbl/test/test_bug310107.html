@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=310107
+-->
+<head>
+  <title>Test for Bug 310107</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=310107">Mozilla Bug 310107</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 310107 **/
+SimpleTest.waitForExplicitFinish();
+
+var win = window.open("bug310107-resource.xhtml", "", "width=10, height=10");
+
+function runTest() {
+  window.el = win.document.getElementById("bar");
+  window.doc = win.document;
+  is(window.el.prop, 2, "Unexpected prop value at load");
+
+  win.location = "data:text/html,<body onload='window.opener.loadDone()'>";
+}
+
+function loadDone() {
+  is(window.el.prop, 2, "Prop still 2 because we're in bfcache");
+  is(window.el, window.doc.getElementById("bar"),
+     "document didn't get bfcached?");
+
+  // Remove our node from the DOM
+  window.el.parentNode.removeChild(window.el);
+
+  is(window.el.prop, undefined, "Binding should have been detached");
+  is(typeof(window.el.prop), "undefined", "Really undefined");
+
+  win.close();
+
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+</body>
+</html>
+
