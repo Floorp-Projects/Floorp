@@ -118,6 +118,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   mPlacedFloats = 0;
   mTotalPlacedFrames = 0;
   mTopEdge = 0;
+  mTrimmableWidth = 0;
 
   // Instead of always pre-initializing the free-lists for frames and
   // spans, we do it on demand so that situations that only use a few
@@ -1034,7 +1035,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       }
       
       if (!continuingTextRun) {
-        SetHasTrailingTextFrame(PR_FALSE);
+        if (!pfd->GetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE)) {
+          mTrimmableWidth = 0;
+        }
         if (!psd->mNoWrap && (!CanPlaceFloatNow() || placedFloat)) {
           // record soft break opportunity after this content that can't be
           // part of a text run. This is not a text frame so we know
@@ -1183,7 +1186,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
   // Set outside to PR_TRUE if the result of the reflow leads to the
   // frame sticking outside of our available area.
-  PRBool outside = pfd->mBounds.XMost() + endMargin > psd->mRightEdge;
+  PRBool outside = pfd->mBounds.XMost() - mTrimmableWidth + endMargin > psd->mRightEdge;
   if (!outside) {
     // If it fits, it fits
 #ifdef NOISY_CAN_PLACE_FRAME
