@@ -1039,25 +1039,19 @@ void
 nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument)
 {
   if (aOldDocument != aNewDocument) {
-    if (mNextBinding)
-      mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
-
-    // Only style bindings get their prototypes unhooked.
+    // Only style bindings get their prototypes unhooked.  First do ourselves.
     if (mIsStyleBinding) {
       // Now the binding dies.  Unhook our prototypes.
-      nsIContent* interfaceElement =
-        mPrototypeBinding->GetImmediateChild(nsGkAtoms::implementation);
-
-      if (interfaceElement) { 
-        nsIScriptGlobalObject *global = aOldDocument->GetScriptGlobalObject();
+      if (mPrototypeBinding->HasImplementation()) { 
+        nsIScriptGlobalObject *global = aOldDocument->GetScopeObject();
         if (global) {
           nsIScriptContext *context = global->GetContext();
           if (context) {
-            JSContext *jscontext = (JSContext *)context->GetNativeContext();
+            JSContext *cx = (JSContext *)context->GetNativeContext();
  
             nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
             nsresult rv = nsContentUtils::XPConnect()->
-              WrapNative(jscontext, global->GetGlobalJSObject(),
+              WrapNative(cx, global->GetGlobalJSObject(),
                          mBoundElement, NS_GET_IID(nsISupports),
                          getter_AddRefs(wrapper));
             if (NS_FAILED(rv))
@@ -1068,16 +1062,57 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             if (NS_FAILED(rv))
               return;
 
+            mPrototypeBinding->UndefineFields(cx, scriptObject);
+
             // XXX Stay in sync! What if a layered binding has an
             // <interface>?!
+            // XXXbz what does that comment mean, really?  It seems to date
+            // back to when there was such a thing as an <interface>, whever
+            // that was...
 
-            // XXX Sanity check to make sure our class name matches
-            // Pull ourselves out of the proto chain.
-            JSObject* ourProto = ::JS_GetPrototype(jscontext, scriptObject);
-            if (ourProto)
-            {
-              JSObject* grandProto = ::JS_GetPrototype(jscontext, ourProto);
-              ::JS_SetPrototype(jscontext, scriptObject, grandProto);
+            // Find the right prototype.
+            JSObject* base = scriptObject;
+            JSObject* proto;
+            JSAutoRequest ar(cx);
+            for ( ; true; base = proto) { // Will break out on null proto
+              proto = ::JS_GetPrototype(cx, base);
+              if (!proto) {
+                break;
+              }
+
+              JSClass* clazz = ::JS_GetClass(cx, proto);
+              if (!clazz ||
+                  (~clazz->flags &
+                   (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
+                  JSCLASS_RESERVED_SLOTS(clazz) != 1) {
+                // Clearly not the right class
+                continue;
+              }
+
+              nsCOMPtr<nsIXBLDocumentInfo> docInfo =
+                do_QueryInterface(static_cast<nsISupports*>
+                                             (::JS_GetPrivate(cx, proto)));
+              if (!docInfo) {
+                // Not the proto we seek
+                continue;
+              }
+              
+              jsval protoBinding;
+              if (!::JS_GetReservedSlot(cx, proto, 0, &protoBinding)) {
+                NS_ERROR("Really shouldn't happen");
+                continue;
+              }
+
+              if (JSVAL_TO_PRIVATE(protoBinding) != mPrototypeBinding) {
+                // Not the right binding
+                continue;
+              }
+
+              // Alright!  This is the right prototype.  Pull it out of the
+              // proto chain.
+              JSObject* grandProto = ::JS_GetPrototype(cx, proto);
+              ::JS_SetPrototype(cx, base, grandProto);
+              break;
             }
 
             // Don't remove the reference from the document to the
@@ -1088,7 +1123,14 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       }
     }
 
+    // Then do our ancestors.  This reverses the construction order, so that at
+    // all times things are consistent as far as everyone is concerned.
+    if (mNextBinding) {
+      mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
+    }
+
     // Update the anonymous content.
+    // XXXbz why not only for style bindings?
     nsIContent *anonymous = mContent;
     if (anonymous) {
       // Also kill the default content within all our insertion points.

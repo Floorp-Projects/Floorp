@@ -255,6 +255,19 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
 }
 
 void
+nsXBLProtoImpl::UndefineFields(JSContext *cx, JSObject *obj) const
+{
+  JSAutoRequest ar(cx);
+  for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
+    nsDependentString name(f->GetName());
+    jsval dummy;
+    ::JS_DeleteUCProperty2(cx, obj,
+                           reinterpret_cast<const jschar*>(name.get()),
+                           name.Length(), &dummy);
+  }
+}
+
+void
 nsXBLProtoImpl::DestroyMembers(nsXBLProtoImplMember* aBrokenMember)
 {
   NS_ASSERTION(mClassObject, "This should never be called when there is no class object");
