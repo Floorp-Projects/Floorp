@@ -1198,6 +1198,9 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
                        NS_FRAME_HAS_DIRTY_CHILDREN);
     rv = NS_OK;
   } else {
+    if (NS_UNLIKELY(aPrevFrame == mPopupFrame)) {
+      aPrevFrame = nsnull;
+    }
     rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);  
   }
 
