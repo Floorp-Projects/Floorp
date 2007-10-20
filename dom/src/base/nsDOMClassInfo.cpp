@@ -6971,11 +6971,19 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // We must ensure that the XBL Binding is installed before we hand
   // back this object.
 
-  if (doc->BindingManager()->GetBinding(content)) {
-    // There's already a binding for this element so nothing left to
-    // be done here.
+  nsRefPtr<nsXBLBinding> binding;
+  if ((binding = doc->BindingManager()->GetBinding(content))) {
+    // There's already a binding for this element, make sure that
+    // the script API has been installed.
+    // Note that this could end up recusing into code that calls
+    // WrapNative. So don't do anything important beyond this point
+    // as that will not be done to the wrapper returned from that
+    // WrapNative call.
+    // In theory we could also call ExecuteAttachedHandler here if
+    // we also removed the binding from the PAQ queue, but that seems
+    // like a scary change that would mosly just add more inconsistencies.
 
-    return NS_OK;
+    return binding->EnsureScriptAPI();
   }
 
   // Get the computed -moz-binding directly from the style context
@@ -6984,7 +6992,6 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   // Make sure the style context goes away _before_ we execute the binding
   // constructor, since the constructor can destroy the relevant presshell.
-  nsRefPtr<nsXBLBinding> binding;
   {
     // Scope for the nsRefPtr
     nsRefPtr<nsStyleContext> sc = pctx->StyleSet()->ResolveStyleFor(content,
@@ -7009,12 +7016,17 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
   
   if (binding) {
-    // Make sure the presshell is in a state where it's safe to execute script
+
+#ifdef DEBUG
     PRBool safeToRunScript = PR_FALSE;
     pctx->PresShell()->IsSafeToFlush(safeToRunScript);
-    if (safeToRunScript) {
-      binding->ExecuteAttachedHandler();
-    }
+    NS_ASSERTION(safeToRunScript, "Wrapping when it's not safe to flush");
+#endif
+
+    rv = binding->EnsureScriptAPI();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    binding->ExecuteAttachedHandler();
   }
 
   return NS_OK;
