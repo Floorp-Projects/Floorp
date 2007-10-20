@@ -69,6 +69,9 @@ nsPNGEncoder::~nsPNGEncoder()
     PR_Free(mImageBuffer);
     mImageBuffer = nsnull;
   }
+  // don't leak if EndImageEncode wasn't called
+  if (mPNG)
+    png_destroy_write_struct(&mPNG, &mPNGinfo);
 }
 
 // nsPNGEncoder::InitFromData
@@ -215,6 +218,10 @@ NS_IMETHODIMP nsPNGEncoder::AddImageFrame(const PRUint8* aData,
   if (mImageBuffer == nsnull)
     return NS_ERROR_NOT_INITIALIZED;
 
+  // EndImageEncode was done, or some error occurred earlier
+  if (!mPNG)
+    return NS_BASE_STREAM_CLOSED;
+
   // validate input format
   if (aInputFormat != INPUT_FORMAT_RGB &&
       aInputFormat != INPUT_FORMAT_RGBA &&
@@ -295,6 +302,10 @@ NS_IMETHODIMP nsPNGEncoder::EndImageEncode()
   // must be initialized
   if (mImageBuffer == nsnull)
     return NS_ERROR_NOT_INITIALIZED;
+
+  // EndImageEncode has already been called, or some error occurred earlier
+  if (!mPNG)
+    return NS_BASE_STREAM_CLOSED;
 
   // libpng's error handler jumps back here upon an error.
   if (setjmp(png_jmpbuf(mPNG))) {
