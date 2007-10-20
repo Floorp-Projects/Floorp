@@ -95,119 +95,92 @@ var PlacesUtils = {
   /**
    * The Bookmarks Service.
    */
-  _bookmarks: null,
   get bookmarks() {
-    if (!this._bookmarks) {
-      this._bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                        getService(Ci.nsINavBookmarksService);
-    }
-    return this._bookmarks;
+    delete this.bookmarks;
+    return this.bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                            getService(Ci.nsINavBookmarksService);
   },
 
   /**
    * The Nav History Service.
    */
-  _history: null,
   get history() {
-    if (!this._history) {
-      this._history = Cc["@mozilla.org/browser/nav-history-service;1"].
-                      getService(Ci.nsINavHistoryService);
-    }
-    return this._history;
+    delete this.history;
+    return this.history = Cc["@mozilla.org/browser/nav-history-service;1"].
+                          getService(Ci.nsINavHistoryService);
   },
 
   /**
    * The Live Bookmark Service.
    */
-  _livemarks: null,
   get livemarks() {
-    if (!this._livemarks) {
-      this._livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
-                        getService(Ci.nsILivemarkService);
-    }
-    return this._livemarks;
+    delete this.livemarks;
+    return this.livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
+                            getService(Ci.nsILivemarkService);
   },
 
   /**
    * The Annotations Service.
    */
-  _annotations: null,
   get annotations() {
-    if (!this._annotations) {
-      this._annotations = Cc["@mozilla.org/browser/annotation-service;1"].
-                          getService(Ci.nsIAnnotationService);
-    }
-    return this._annotations;
+    delete this.annotations;
+    return this.annotations = Cc["@mozilla.org/browser/annotation-service;1"].
+                              getService(Ci.nsIAnnotationService);
   },
 
   /**
    * The Favicons Service
    */
-  _favicons: null,
   get favicons() {
-    if (!this._favicons) {
-      this._favicons = Cc["@mozilla.org/browser/favicon-service;1"].
-                       getService(Ci.nsIFaviconService);
-    }
-    return this._favicons;
+    delete this.favicons;
+    return this.favicons = Cc["@mozilla.org/browser/favicon-service;1"].
+                           getService(Ci.nsIFaviconService);
   },
 
   /**
    * The Microsummary Service
    */
-  _microsummaries: null,
   get microsummaries() {
-    if (!this._microsummaries)
-      this._microsummaries = Cc["@mozilla.org/microsummary/service;1"].
-                             getService(Ci.nsIMicrosummaryService);
-    return this._microsummaries;
+    delete this.microsummaries;
+    return this.microsummaries = Cc["@mozilla.org/microsummary/service;1"].
+                                 getService(Ci.nsIMicrosummaryService);
   },
 
   /**
    * The Places Tagging Service
    */
   get tagging() {
-    if (!this._tagging)
-      this._tagging = Cc["@mozilla.org/browser/tagging-service;1"].
-                      getService(Ci.nsITaggingService);
-    return this._tagging;
+    delete this.tagging;
+    return this.tagging = Cc["@mozilla.org/browser/tagging-service;1"].
+                          getService(Ci.nsITaggingService);
   },
 
-  _RDF: null,
   get RDF() {
-    if (!this._RDF)
-      this._RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
-                  getService(Ci.nsIRDFService);
-    return this._RDF;
+    delete this.RDF;
+    return this.RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+                      getService(Ci.nsIRDFService);
   },
 
-  _localStore: null,
   get localStore() {
-    if (!this._localStore)
-      this._localStore = this.RDF.GetDataSource("rdf:local-store");
-    return this._localStore;
+    delete this.localStore;
+    return this.localStore = this.RDF.GetDataSource("rdf:local-store");
   },
 
   get tm() {
-    return this.ptm.transactionManager;
+    delete this.tm;
+    return this.tm = this.ptm.transactionManager;
   },
 
-  _ptm: null,
   get ptm() {
-    if (!this._ptm) {
-      this._ptm = Cc["@mozilla.org/browser/placesTransactionsService;1"].
-                  getService(Components.interfaces.nsIPlacesTransactionsService);
-    }
-    return this._ptm;
+    delete this.ptm;
+    return this.ptm = Cc["@mozilla.org/browser/placesTransactionsService;1"].
+                      getService(Ci.nsIPlacesTransactionsService);
   },
 
-  _clipboard: null,
   get clipboard() {
-    if (!this._clipboard) {
-      this._clipboard = Cc["@mozilla.org/widget/clipboard;1"].
-                        getService(Ci.nsIClipboard);
-    }
-    return this._clipboard;
+    delete this.clipboard;
+    return this.clipboard = Cc["@mozilla.org/widget/clipboard;1"].
+                            getService(Ci.nsIClipboard);
   },
 
   /**
@@ -218,9 +191,7 @@ var PlacesUtils = {
    */
   _uri: function PU__uri(aSpec) {
     NS_ASSERT(aSpec, "empty URL spec");
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-    return ios.newURI(aSpec, null, null);
+    return IO.newURI(aSpec);
   },
 
   /**
@@ -650,7 +621,7 @@ var PlacesUtils = {
    * @returns A nsITransaction object that performs the copy.
    */
   _getURIItemCopyTransaction: function (aData, aContainer, aIndex) {
-    return this.ptm.createItem(this._uri(aData.uri), aContainer, aIndex,
+    return this.ptm.createItem(IO.newURI(aData.uri), aContainer, aIndex,
                                aData.title, "");
   },
 
@@ -671,7 +642,7 @@ var PlacesUtils = {
   _getBookmarkItemCopyTransaction:
   function PU__getBookmarkItemCopyTransaction(aData, aContainer, aIndex,
                                               aExcludeAnnotations) {
-    var itemURL = this._uri(aData.uri);
+    var itemURL = IO.newURI(aData.uri);
     var itemTitle = aData.title;
     var keyword = aData.keyword;
     var annos = aData.annos;
@@ -724,8 +695,8 @@ var PlacesUtils = {
                                         folderItemsTransactions);
           }
           else { // node is a livemark
-            var feedURI = self._uri(node.uri.feed);
-            var siteURI = self._uri(node.uri.site);
+            var feedURI = IO.newURI(node.uri.feed);
+            var siteURI = IO.newURI(node.uri.site);
             txn = self.ptm.createLivemark(feedURI, siteURI, node.title,
                                           aContainer, index, node.annos);
           }
@@ -776,8 +747,8 @@ var PlacesUtils = {
         for (var i = 0; i < parts.length; i=i+2) {
           var uriString = parts[i];
           var titleString = parts[i+1];
-          // note:  this._uri() will throw if uriString is not a valid URI
-          if (this._uri(uriString)) {
+          // note:  IO.newURI() will throw if uriString is not a valid URI
+          if (IO.newURI(uriString)) {
             nodes.push({ uri: uriString,
                          title: titleString ? titleString : uriString });
           }
@@ -787,8 +758,8 @@ var PlacesUtils = {
         var parts = blob.split("\n");
         for (var i = 0; i < parts.length; i++) {
           var uriString = parts[i];
-          // note: this._uri() will throw if uriString is not a valid URI
-          if (uriString != "" && this._uri(uriString))
+          // note: IO.newURI() will throw if uriString is not a valid URI
+          if (uriString != "" && IO.newURI(uriString))
             nodes.push({ uri: uriString, title: uriString });
         }
         break;
@@ -826,8 +797,8 @@ var PlacesUtils = {
       }
       else if (copy) {
         // Place is a Livemark Container, should be reinstantiated
-        var feedURI = this._uri(data.uri.feed);
-        var siteURI = this._uri(data.uri.site);
+        var feedURI = IO.newURI(data.uri.feed);
+        var siteURI = IO.newURI(data.uri.site);
         return this.ptm.createLivemark(feedURI, siteURI, data.title, container,
                                        index, data.annos);
       }
@@ -855,7 +826,7 @@ var PlacesUtils = {
     default:
       if (type == this.TYPE_X_MOZ_URL || type == this.TYPE_UNICODE) {
         var title = (type == this.TYPE_X_MOZ_URL) ? data.title : data.uri;
-        return this.ptm.createItem(this._uri(data.uri), container, index,
+        return this.ptm.createItem(IO.newURI(data.uri), container, index,
                                    title);
       }
       return null;
@@ -1270,7 +1241,7 @@ var PlacesUtils = {
    */
   checkURLSecurity: function PU_checkURLSecurity(aURINode) {
     if (!this.nodeIsBookmark(aURINode)) {
-      var uri = this._uri(aURINode.uri);
+      var uri = IO.newURI(aURINode.uri);
       if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
         const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
         var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
@@ -1646,22 +1617,20 @@ var PlacesUtils = {
     this._openTabset(urlsToOpen, aEvent);
   },
 
-  _placesFlavors: null,
   get placesFlavors() {
-    if (!this._placesFlavors) {
-      var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-                        PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-                        PlacesUtils.TYPE_X_MOZ_PLACE];
-      this._placesFlavors = Cc["@mozilla.org/supports-array;1"].
-                            createInstance(Ci.nsISupportsArray);
-      for (var i = 0; i < placeTypes.length; ++i) {
-        var cstring = Cc["@mozilla.org/supports-cstring;1"].
-                        createInstance(Ci.nsISupportsCString);
-        cstring.data = placeTypes[i];
-        this._placesFlavors.AppendElement(cstring);
-      }
+    delete this.placesFlavors;
+    var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
+                      PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
+                      PlacesUtils.TYPE_X_MOZ_PLACE];
+    this.placesFlavors = Cc["@mozilla.org/supports-array;1"].
+                         createInstance(Ci.nsISupportsArray);
+    for (var i = 0; i < placeTypes.length; ++i) {
+      var cstring = Cc["@mozilla.org/supports-cstring;1"].
+                    createInstance(Ci.nsISupportsCString);
+      cstring.data = placeTypes[i];
+      this.placesFlavors.AppendElement(cstring);
     }
-    return this._placesFlavors;
+    return this.placesFlavors;
   }
 };
 
