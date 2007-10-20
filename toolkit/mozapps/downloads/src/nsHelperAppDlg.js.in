@@ -257,17 +257,25 @@ nsUnknownContentTypeDialog.prototype = {
 
       this.makeFileUnique(aLocalFile);
 
+#ifdef XP_WIN
+      let ext;
+      try {
+        // We can fail here if there's no primary extension set
+        ext = "." + this.mLauncher.MIMEInfo.primaryExtension;
+      } catch (e) { }
+
       // Append a file extension if it's an executable that doesn't have one
-      let ext = "." + this.mLauncher.MIMEInfo.primaryExtension;
+      // but make sure we actually have an extension to add
       let leaf = aLocalFile.leafName;
-      if (aLocalFile.isExecutable() &&
+      if (aLocalFile.isExecutable() && ext &&
           leaf.substring(leaf.length - ext.length) != ext) {
-        var f = aLocalFile.clone();
+        let f = aLocalFile.clone();
         aLocalFile.leafName = leaf + ext;
 
         f.remove(false);
         this.makeFileUnique(aLocalFile);
       }
+#endif
 
       return aLocalFile;
     },
