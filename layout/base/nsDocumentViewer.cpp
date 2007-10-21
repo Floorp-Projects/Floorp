@@ -993,7 +993,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     mPresShell->UnsuppressPainting();
   }
 
-  nsJSContext::LoadEnd(mDocument ? mDocument->GetScriptGlobalObject() : nsnull);
+  nsJSContext::LoadEnd();
 
 #ifdef NS_PRINTING
   // Check to see if someone tried to print during the load
