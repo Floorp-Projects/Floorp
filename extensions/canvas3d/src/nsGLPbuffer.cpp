@@ -46,13 +46,17 @@
 
 void *nsGLPbuffer::sCurrentContextToken = nsnull;
 
+static PRUint32 gActiveBuffers = 0;
+
 nsGLPbuffer::nsGLPbuffer()
     : mWidth(0), mHeight(0),
 #ifdef XP_WIN
     mGlewWindow(nsnull), mGlewDC(nsnull), mGlewWglContext(nsnull),
-    mPbufferDC(nsnull), mPbufferContext(nsnull)
+    mPbuffer(nsnull), mPbufferDC(nsnull), mPbufferContext(nsnull)
 #endif
 {
+    gActiveBuffers++;
+    fprintf (stderr, "nsGLPbuffer: gActiveBuffers: %d\n", gActiveBuffers);
 }
 
 PRBool
@@ -116,10 +120,14 @@ nsGLPbuffer::Init(nsCanvasRenderingContextGLPrivate *priv)
         return PR_FALSE;
     }
 
+    PRInt64 t1 = PR_Now();
+
     if (wglewInit() != GLEW_OK) {
         mPriv->LogMessage(NS_LITERAL_CSTRING("Canvas 3D: WGLEW init failed"));
         return PR_FALSE;
     }
+
+    PRInt64 t2 = PR_Now();
 
     fprintf (stderr, "nsGLPbuffer::Init!\n");
 #else
@@ -130,6 +138,12 @@ nsGLPbuffer::Init(nsCanvasRenderingContextGLPrivate *priv)
         mPriv->LogMessage(NS_LITERAL_CSTRING("Canvas 3D: GLEW init failed"));
         return PR_FALSE;
     }
+
+    PRInt64 t3 = PR_Now();
+
+    fprintf (stderr, "nsGLPbuffer:: Initialization took t2-t1: %f t3-t2: %f\n",
+             ((double)(t2-t1))/1000.0, ((double)(t3-t2))/1000.0);
+    fflush (stderr);
 
     return PR_TRUE;
 }
@@ -144,6 +158,17 @@ nsGLPbuffer::Resize(PRInt32 width, PRInt32 height)
     }
 
     Destroy();
+
+    mThebesSurface = CanvasGLThebes::CreateImageSurface(gfxIntSize(width, height), gfxASurface::ImageFormatARGB32);
+    if (mThebesSurface->CairoStatus() != 0) {
+        fprintf (stderr, "image surface failed\n");
+        return PR_FALSE;
+    }
+
+    // clear the surface
+    memset (mThebesSurface->Data(),
+            0,
+            height * mThebesSurface->Stride());
 
 #ifdef XP_WIN
     if (!wglMakeCurrent(mGlewDC, mGlewWglContext)) {
@@ -257,21 +282,6 @@ nsGLPbuffer::Resize(PRInt32 width, PRInt32 height)
 
     mPbufferDC = wglGetPbufferDCARB(mPbuffer);
     mPbufferContext = wglCreateContext(mPbufferDC);
-
-    mThebesSurface = new gfxImageSurface(gfxIntSize(width, height), gfxASurface::ImageFormatARGB32);
-#if 0
-    if (mThebesSurface->Status() != 0) {
-        fprintf (stderr, "image surface failed\n");
-        return PR_FALSE;
-    }
-#endif
-
-    {
-        nsRefPtr<gfxContext> ctx = new gfxContext(mThebesSurface);
-        ctx->SetColor(gfxRGBA(0, 1, 0, 1));
-        ctx->Paint();
-    }
-
 #endif
 
     mWidth = width;
@@ -304,6 +314,10 @@ nsGLPbuffer::~nsGLPbuffer()
         mGlewWindow = nsnull;
     }
 #endif
+
+    gActiveBuffers--;
+    fprintf (stderr, "nsGLPbuffer: gActiveBuffers: %d\n", gActiveBuffers);
+    fflush (stderr);
 }
 
 void
