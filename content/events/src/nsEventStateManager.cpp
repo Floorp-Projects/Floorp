@@ -136,9 +136,6 @@
 #include "nsEventDispatcher.h"
 #include "nsPresShellIterator.h"
 
-#include "nsServiceManagerUtils.h"
-#include "nsITimer.h"
-
 #ifdef XP_MACOSX
 #include <Events.h>
 #endif
@@ -146,8 +143,6 @@
 #if defined(DEBUG_rods) || defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
 #endif
-
-#define NS_USER_INTERACTION_INTERVAL 5000 // ms
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
@@ -175,41 +170,6 @@ static PRBool sKeyCausesActivation = PR_TRUE;
 static PRUint32 sESMInstanceCount = 0;
 static PRInt32 sChromeAccessModifier = 0, sContentAccessModifier = 0;
 PRInt32 nsEventStateManager::sUserInputEventDepth = 0;
-
-static PRUint32 gMouseOrKeyboardEventCounter = 0;
-static nsITimer* gUserInteractionTimer = nsnull;
-static nsITimerCallback* gUserInteractionTimerCallback = nsnull;
-
-class nsUITimerCallback : public nsITimerCallback
-{
-public:
-  nsUITimerCallback() : mPreviousCount(0) {}
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-private:
-  PRUint32 mPreviousCount;
-};
-
-NS_IMPL_ISUPPORTS1(nsUITimerCallback, nsITimerCallback)
-
-// If aTimer is nsnull, this method always sends "user-interaction-inactive"
-// notification.
-NS_IMETHODIMP
-nsUITimerCallback::Notify(nsITimer* aTimer)
-{
-  nsresult rv;
-  nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if ((gMouseOrKeyboardEventCounter == mPreviousCount) || !aTimer) {
-    gMouseOrKeyboardEventCounter = 0;
-    obs->NotifyObservers(nsnull, "user-interaction-inactive", nsnull);
-  } else {
-    obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
-  }
-  mPreviousCount = gMouseOrKeyboardEventCounter;
-  return NS_OK;
-}
 
 enum {
  MOUSE_SCROLL_N_LINES,
@@ -471,18 +431,6 @@ nsEventStateManager::nsEventStateManager()
     mTabbedThroughDocument(PR_FALSE),
     mAccessKeys(nsnull)
 {
-  if (sESMInstanceCount == 0) {
-    gUserInteractionTimerCallback = new nsUITimerCallback();
-    if (gUserInteractionTimerCallback) {
-      NS_ADDREF(gUserInteractionTimerCallback);
-      CallCreateInstance("@mozilla.org/timer;1", &gUserInteractionTimer);
-      if (gUserInteractionTimer) {
-        gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
-                                                NS_USER_INTERACTION_INTERVAL,
-                                                nsITimer::TYPE_REPEATING_SLACK);
-      }
-    }
-  }
   ++sESMInstanceCount;
 }
 
@@ -561,14 +509,6 @@ nsEventStateManager::~nsEventStateManager()
   if(sESMInstanceCount == 0) {
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
-    if (gUserInteractionTimerCallback) {
-      gUserInteractionTimerCallback->Notify(nsnull);
-      NS_RELEASE(gUserInteractionTimerCallback);
-    }
-    if (gUserInteractionTimer) {
-      gUserInteractionTimer->Cancel();
-      NS_RELEASE(gUserInteractionTimer);
-    }
   }
 
   delete mAccessKeys;
@@ -782,21 +722,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   if (NS_EVENT_NEEDS_FRAME(aEvent)) {
     NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null.  this should not happen.  see bug #13007");
     if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
-  }
-
-  if (NS_IS_TRUSTED_EVENT(aEvent) &&
-      ((aEvent->eventStructType == NS_MOUSE_EVENT  &&
-        static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal) ||
-       aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT ||
-       aEvent->eventStructType == NS_KEY_EVENT)) {
-    if (gMouseOrKeyboardEventCounter == 0) {
-      nsCOMPtr<nsIObserverService> obs =
-        do_GetService("@mozilla.org/observer-service;1");
-      if (obs) {
-        obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
-      }
-    }
-    ++gMouseOrKeyboardEventCounter;
   }
 
   *aStatus = nsEventStatus_eIgnore;
