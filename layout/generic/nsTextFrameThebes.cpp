@@ -1969,7 +1969,8 @@ public:
    * Count the number of justifiable characters in the given DOM range
    */
   PRUint32 ComputeJustifiableCharacters(PRInt32 aOffset, PRInt32 aLength);
-  void FindEndOfJustificationRange(gfxSkipCharsIterator* aIter);
+  void FindJustificationRange(gfxSkipCharsIterator* aStart,
+                              gfxSkipCharsIterator* aEnd);
 
   const nsStyleText* GetStyleText() { return mTextStyle; }
   nsTextFrame* GetFrame() { return mFrame; }
@@ -2141,8 +2142,8 @@ PropertyProvider::GetSpacingInternal(PRUint32 aStart, PRUint32 aLength,
     // Scan non-skipped characters and adjust justifiable chars, adding
     // justification space on either side of the cluster
     PRBool isCJK = IsChineseJapaneseLangGroup(mFrame);
-    gfxSkipCharsIterator justificationEnd(mStart);
-    FindEndOfJustificationRange(&justificationEnd);
+    gfxSkipCharsIterator justificationStart(mStart), justificationEnd(mStart);
+    FindJustificationRange(&justificationStart, &justificationEnd);
 
     nsSkipCharsRunIterator
       run(start, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aLength);
@@ -2158,7 +2159,8 @@ PropertyProvider::GetSpacingInternal(PRUint32 aStart, PRUint32 aLength,
           FindClusterEnd(mTextRun, run.GetOriginalOffset() + run.GetRunLength(), &iter);
           PRUint32 clusterLastChar = iter.GetSkippedOffset();
           // Only apply justification to characters before justificationEnd
-          if (clusterLastChar < justificationEnd.GetSkippedOffset()) {
+          if (clusterFirstChar >= justificationStart.GetSkippedOffset() &&
+              clusterLastChar < justificationEnd.GetSkippedOffset()) {
             aSpacing[clusterFirstChar - aStart].mBefore += halfJustificationSpace;
             aSpacing[clusterLastChar - aStart].mAfter += halfJustificationSpace;
           }
@@ -2329,18 +2331,31 @@ static PRUint32 GetSkippedDistance(const gfxSkipCharsIterator& aStart,
 }
 
 void
-PropertyProvider::FindEndOfJustificationRange(gfxSkipCharsIterator* aIter)
+PropertyProvider::FindJustificationRange(gfxSkipCharsIterator* aStart,
+                                         gfxSkipCharsIterator* aEnd)
 {
-  aIter->SetOriginalOffset(mStart.GetOriginalOffset() + mLength);
+  NS_ASSERTION(aStart && aEnd, "aStart or/and aEnd is null");
+  aStart->SetOriginalOffset(mStart.GetOriginalOffset());
+  aEnd->SetOriginalOffset(mStart.GetOriginalOffset() + mLength);
+
+  // Ignore first cluster at start of line for justification purposes
+  if (mFrame->GetStateBits() & TEXT_START_OF_LINE) {
+    while (aStart->GetOriginalOffset() < aEnd->GetOriginalOffset()) {
+      aStart->AdvanceOriginal(1);
+      if (!aStart->IsOriginalCharSkipped() &&
+          mTextRun->IsClusterStart(aStart->GetSkippedOffset()))
+        break;
+    }
+  }
 
   // Ignore trailing cluster at end of line for justification purposes
-  if (!(mFrame->GetStateBits() & TEXT_END_OF_LINE))
-    return;
-  while (aIter->GetOriginalOffset() > mStart.GetOriginalOffset()) {
-    aIter->AdvanceOriginal(-1);
-    if (!aIter->IsOriginalCharSkipped() &&
-        mTextRun->IsClusterStart(aIter->GetSkippedOffset()))
-      break;
+  if (mFrame->GetStateBits() & TEXT_END_OF_LINE) {
+    while (aEnd->GetOriginalOffset() > aStart->GetOriginalOffset()) {
+      aEnd->AdvanceOriginal(-1);
+      if (!aEnd->IsOriginalCharSkipped() &&
+          mTextRun->IsClusterStart(aEnd->GetSkippedOffset()))
+        break;
+    }
   }
 }
 
@@ -2351,14 +2366,14 @@ PropertyProvider::SetupJustificationSpacing()
       mTextStyle->WhiteSpaceIsSignificant())
     return;
 
-  gfxSkipCharsIterator end(mStart);
+  gfxSkipCharsIterator start(mStart), end(mStart);
   end.AdvanceOriginal(mLength);
   gfxSkipCharsIterator realEnd(end);
-  FindEndOfJustificationRange(&end);
+  FindJustificationRange(&start, &end);
 
   PRInt32 justifiableCharacters =
-    ComputeJustifiableCharacters(mStart.GetOriginalOffset(),
-                                 end.GetOriginalOffset() - mStart.GetOriginalOffset());
+    ComputeJustifiableCharacters(start.GetOriginalOffset(),
+                                 end.GetOriginalOffset() - start.GetOriginalOffset());
   if (justifiableCharacters == 0) {
     // Nothing to do, nothing is justifiable and we shouldn't have any
     // justification space assigned
@@ -5467,8 +5482,8 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
     PropertyProvider provider(mTextRun, textStyle, frag, this, start, contentLength,
                               nsnull, 0);
     PRBool isCJK = IsChineseJapaneseLangGroup(this);
-    gfxSkipCharsIterator justificationEnd(iter);
-    provider.FindEndOfJustificationRange(&justificationEnd);
+    gfxSkipCharsIterator justificationStart(iter), justificationEnd(iter);
+    provider.FindJustificationRange(&justificationStart, &justificationEnd);
 
     PRInt32 i;
     for (i = justificationEnd.GetOriginalOffset(); i < trimmed.GetEnd(); ++i) {
