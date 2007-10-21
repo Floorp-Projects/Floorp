@@ -437,6 +437,15 @@ JSArrayToSimpleBuffer (SimpleBuffer& sbuffer,
             ::JS_ValueToECMAUint32(ctx, jv, &iv);
             *ptr++ = (unsigned char) iv;
         }
+    } else if (typeParam == GL_UNSIGNED_SHORT) {
+        PRUint16 *ptr = (PRUint16*) sbuffer.data;
+        for (PRUint32 i = 0; i < arrayLen; i++) {
+            jsval jv;
+            uint32 iv;
+            ::JS_GetElement(ctx, arrayObj, i, &jv);
+            ::JS_ValueToECMAUint32(ctx, jv, &iv);
+            *ptr++ = (unsigned short) iv;
+        }
     } else if (typeParam == GL_UNSIGNED_INT) {
         PRUint32 *ptr = (PRUint32*) sbuffer.data;
         for (PRUint32 i = 0; i < arrayLen; i++) {
@@ -474,13 +483,44 @@ nsCanvasRenderingContextGLPrivate::LostCurrentContext(void *closure)
 NS_IMETHODIMP
 nsCanvasRenderingContextGLPrivate::SetCanvasElement(nsICanvasElement* aParentCanvas)
 {
+    nsresult rv;
+
+    if (aParentCanvas == nsnull) {
+        // we get this on shutdown; we should do some more cleanup here,
+        // but instead we just let our destructor do it.
+        return NS_OK;
+    }
+
+    LogMessage(NS_LITERAL_CSTRING("Canvas 3D: hello?"));
+
     if (!SafeToCreateCanvas3DContext())
         return NS_ERROR_FAILURE;
+
+    LogMessage(NS_LITERAL_CSTRING("Canvas 3D: is anyone there?"));
 
     mGLPbuffer = new nsGLPbuffer();
 
     if (!mGLPbuffer->Init(this))
         return NS_ERROR_FAILURE;
+
+    LogMessage(NS_LITERAL_CSTRING("Canvas 3D: it's dark in here."));
+
+    // Let's find our prefs
+    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mPrefWireframe = PR_FALSE;
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = prefService->GetBranch("extensions.canvas3d.", getter_AddRefs(prefBranch));
+    if (NS_SUCCEEDED(rv)) {
+        PRBool val;
+        rv = prefBranch->GetBoolPref("wireframe", &val);
+        if (NS_SUCCEEDED(rv))
+            mPrefWireframe = val;
+    }
+
+    fprintf (stderr, "Wireframe: %d\n", mPrefWireframe);
 
     if (!ValidateGL()) {
         // XXX over here we need to destroy mGLPbuffer and create a mesa buffer
@@ -499,6 +539,8 @@ nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
 {
     fprintf (stderr, "VVVV CanvasGLBuffer::SetDimensions %d %d\n", width, height);
 
+    LogMessage(NS_LITERAL_CSTRING("Canvas 3D: look! there's a light!"));
+
     if (mWidth == width && mHeight == height)
         return NS_OK;
 
@@ -506,6 +548,8 @@ nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
         LogMessage(NS_LITERAL_CSTRING("mGLPbuffer->Resize failed"));
         return NS_ERROR_FAILURE;
     }
+
+    LogMessage(NS_LITERAL_CSTRING("Canvas 3D: maybe that's the way out."));
 
     mWidth = width;
     mHeight = height;
@@ -525,7 +569,11 @@ nsCanvasRenderingContextGLPrivate::Render(gfxContext *ctx)
         return NS_OK;
 
     nsRefPtr<gfxASurface> surf = mGLPbuffer->ThebesSurface();
-    nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
+    nsRefPtr<gfxPattern> pat = CanvasGLThebes::CreatePattern(surf);
+    gfxMatrix m;
+    m.Translate(gfxPoint(0.0, mGLPbuffer->Height()));
+    m.Scale(1.0, -1.0);
+    pat->SetMatrix(m);
 
     // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
     // pixel alignment for this stuff!
@@ -569,6 +617,11 @@ nsCanvasRenderingContextGLPrivate::CairoSurfaceFromElement(nsIDOMElement *imgElt
             // XXX ERRMSG we need to report an error to developers here! (bug 329026)
             return NS_ERROR_NOT_AVAILABLE;
 
+        PRUint32 status;
+        imgRequest->GetImageStatus(&status);
+        if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0)
+            return NS_ERROR_NOT_AVAILABLE;
+
         nsCOMPtr<nsIURI> uri;
         rv = imageLoader->GetCurrentURI(uriOut);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -586,8 +639,8 @@ nsCanvasRenderingContextGLPrivate::CairoSurfaceFromElement(nsIDOMElement *imgElt
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsRefPtr<gfxImageSurface> surf =
-                new gfxImageSurface (gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
-            nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+                CanvasGLThebes::CreateImageSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+            nsRefPtr<gfxContext> ctx = CanvasGLThebes::CreateContext(surf);
             ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
             ctx->Paint();
             ctx->SetOperator(gfxContext::OPERATOR_OVER);
@@ -723,6 +776,8 @@ nsCanvasRenderingContextGLPrivate::nsCanvasRenderingContextGLPrivate()
     } else {
         NS_ADDREF(gJSRuntimeService);
     }
+
+    LogMessage(NS_LITERAL_CSTRING("Canvas 3D: where am I?"));
 }
 
 nsCanvasRenderingContextGLPrivate::~nsCanvasRenderingContextGLPrivate()
@@ -788,6 +843,28 @@ nsCanvasRenderingContextGLPrivate::SafeToCreateCanvas3DContext()
     LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Web content tried to create 3D Canvas Context, but pref extensions.canvas3d.enabledForWebContent is not set!"));
 
     return PR_FALSE;
+}
+
+gfxImageSurface *
+CanvasGLThebes::CreateImageSurface (const gfxIntSize &isize,
+                                    gfxASurface::gfxImageFormat fmt)
+{
+    /*void *p = NS_Alloc(sizeof(gfxImageSurface));*/
+    return new /*(p)*/ gfxImageSurface (isize, fmt);
+}
+
+gfxContext *
+CanvasGLThebes::CreateContext (gfxASurface *surf)
+{
+    void *p = NS_Alloc(sizeof(gfxContext));
+    return new (p) gfxContext (surf);
+}
+
+gfxPattern *
+CanvasGLThebes::CreatePattern (gfxASurface *surf)
+{
+    /*void *p = NS_Alloc(sizeof(gfxPattern));*/
+    return new /*(p)*/ gfxPattern(surf);
 }
 
 /*
