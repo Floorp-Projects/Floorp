@@ -76,6 +76,9 @@ public:
     }
 #endif
 
+    PRInt32 Width() { return mWidth; }
+    PRInt32 Height() { return mHeight; }
+
 protected:
     static void *sCurrentContextToken;
 

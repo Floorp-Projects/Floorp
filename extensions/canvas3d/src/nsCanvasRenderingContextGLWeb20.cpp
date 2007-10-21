@@ -41,6 +41,8 @@
 
 #include "nsIRenderingContext.h"
 
+#include "nsTArray.h"
+
 #define NSGL_CONTEXT_NAME nsCanvasRenderingContextGLWeb20
 
 #include "nsCanvasRenderingContextGL.h"
@@ -114,6 +116,9 @@ public:
     // nsICanvasRenderingContextPrivate
     virtual nsICanvasRenderingContextGL *GetSelf() { return this; }
     virtual PRBool ValidateGL();
+
+protected:
+    nsTArray<nsRefPtr<CanvasGLBuffer> > mAttribBuffers;
 };
 
 
@@ -215,6 +220,7 @@ nsCanvasRenderingContextGLWeb20::BufferData()
     jsuint type;
     jsuint usage;
     if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "uouu", &target, &arrayObj, &type, &usage) ||
+        arrayObj == NULL ||
         !::JS_IsArrayObject(js.ctx, arrayObj) ||
         !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
     {
@@ -248,6 +254,7 @@ nsCanvasRenderingContextGLWeb20::BufferSubData()
     jsuint offset;
     jsuint type;
     if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "uuou", &target, &offset, &arrayObj, &type) ||
+        arrayObj == NULL ||
         !::JS_IsArrayObject(js.ctx, arrayObj) ||
         !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
     {
@@ -372,7 +379,34 @@ GL_SAME_METHOD_3(DrawArrays, DrawArrays, PRUint32, PRUint32, PRUint32)
 NS_IMETHODIMP
 nsCanvasRenderingContextGLWeb20::DrawElements()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    if (js.argc != 3)
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    JSObject *arrayObj;
+    jsuint arrayLen;
+    jsuint mode;
+    jsuint count;
+    if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "uuo", &mode, &count, &arrayObj) ||
+        arrayObj == NULL ||
+        !::JS_IsArrayObject(js.ctx, arrayObj) ||
+        !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
+    {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    SimpleBuffer sbuffer;
+    nsresult rv = JSArrayToSimpleBuffer(sbuffer, GL_UNSIGNED_SHORT, 1, js.ctx, arrayObj, arrayLen);
+    if (NS_FAILED(rv))
+        return rv;
+
+    MakeContextCurrent();
+    glDrawElements(mode, count, GL_UNSIGNED_SHORT, sbuffer.data);
+
+    return NS_OK;
 }
 
 GL_SAME_METHOD_1(Enable, Enable, PRUint32)
@@ -1027,10 +1061,11 @@ nsCanvasRenderingContextGLWeb20::TexImage2DHTML(PRUint32 target, nsIDOMHTMLEleme
     }
 
     if (!image_data) {
-        nsRefPtr<gfxImageSurface> tmpImageSurface = new gfxImageSurface(gfxIntSize(width, height),
-                                                                        gfxASurface::ImageFormatARGB32);
-
-        nsRefPtr<gfxContext> cx = new gfxContext(tmpImageSurface);
+        nsRefPtr<gfxImageSurface> tmpImageSurface =
+            CanvasGLThebes::CreateImageSurface(gfxIntSize(width, height),
+                                               gfxASurface::ImageFormatARGB32);
+        nsRefPtr<gfxContext> cx =
+            CanvasGLThebes::CreateContext(tmpImageSurface);
         cx->SetSource(surf);
         cx->SetOperator(gfxContext::OPERATOR_SOURCE);
         cx->Paint();
@@ -1401,6 +1436,12 @@ nsCanvasRenderingContextGLWeb20::VertexAttribPointer()
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
+    // if it's out of bounds, bail
+    if (vertexAttribIndex >= mAttribBuffers.Length())
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    mAttribBuffers[vertexAttribIndex] = newBuffer;
+
     MakeContextCurrent();
     glVertexAttribPointer(vertexAttribIndex,
                           newBuffer->GetSimpleBuffer().sizePerVertex,
@@ -1417,6 +1458,14 @@ nsCanvasRenderingContextGLWeb20::ValidateGL()
     // make sure that the opengl stuff that we need is supported
     if (!GLEW_VERSION_2_0)
         return PR_FALSE;
+
+    GLint val;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &val);
+    mAttribBuffers.SetLength(val);
+
+    MakeContextCurrent();
+    if (mPrefWireframe)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     return PR_TRUE;
 }
