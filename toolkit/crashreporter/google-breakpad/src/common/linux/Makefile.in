@@ -57,17 +57,11 @@ CPPSRCS	= \
   guid_creator.cc \
   $(NULL)
 
-CSRCS = \
-  md5.c \
-  $(NULL)
-
 HOST_CPPSRCS = \
   dump_symbols.cc \
   file_id.cc \
   guid_creator.cc \
   $(NULL)
-
-HOST_CSRCS = $(CSRCS)
 
 # need static lib
 FORCE_STATIC_LIB = 1

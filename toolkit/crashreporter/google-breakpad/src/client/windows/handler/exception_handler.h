@@ -169,6 +169,12 @@ class ExceptionHandler {
   static bool WriteMinidump(const wstring &dump_path,
                             MinidumpCallback callback, void *callback_context);
 
+  // Get the thread ID of the thread requesting the dump (either the exception
+  // thread or any other thread that called WriteMinidump directly).  This
+  // may be useful if you want to include additional thread state in your
+  // dumps.
+  DWORD get_requesting_thread_id() const { return requesting_thread_id_; }
+
  private:
   friend class AutoExceptionHandler;
 

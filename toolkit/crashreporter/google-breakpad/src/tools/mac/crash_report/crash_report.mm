@@ -72,6 +72,7 @@ using google_breakpad::SystemInfo;
 typedef struct {
   NSString *minidumpPath;
   NSString *searchDir;
+  NSString *symbolSearchDir;
 } Options;
 
 //=============================================================================
@@ -190,8 +191,10 @@ static void Start(Options *options) {
   BasicSourceLineResolver resolver;
   string search_dir = options->searchDir ?
     [options->searchDir fileSystemRepresentation] : "";
+  string symbol_search_dir = options->symbolSearchDir ?
+    [options->symbolSearchDir fileSystemRepresentation] : "";
   scoped_ptr<OnDemandSymbolSupplier> symbol_supplier(
-    new OnDemandSymbolSupplier(search_dir));
+    new OnDemandSymbolSupplier(search_dir, symbol_search_dir));
   scoped_ptr<MinidumpProcessor>
     minidump_processor(new MinidumpProcessor(symbol_supplier.get(), &resolver));
   ProcessState process_state;
@@ -253,12 +256,19 @@ static void Start(Options *options) {
 
 //=============================================================================
 static void Usage(int argc, const char *argv[]) {
-  fprintf(stderr, "Convert a minidump to a crash report.  Breakpad symbol files\n");
-  fprintf(stderr, "will be used (or created if missing) in /tmp.\n");
-  fprintf(stderr, "Usage: %s [-s search-dir] minidump-file\n", argv[0]);
-  fprintf(stderr, "\t-s: Specify a search directory to use for missing modules\n");
-  fprintf(stderr, "\t-h: Usage\n");
-  fprintf(stderr, "\t-?: Usage\n");
+  fprintf(stderr, "Convert a minidump to a crash report.  Breakpad symbol "
+                  "files will be used (or created if missing) in /tmp.\n"
+                  "If a symbol-file-search-dir is specified, any symbol " 
+                  "files in it will be used instead of being loaded from "  
+                  "modules on disk.\n" 
+                  "If modules cannot be found at the paths stored in the "
+                  "minidump file, they will be searched for at "    
+                  "<module-search-dir>/<path-in-minidump-file>.\n");
+  fprintf(stderr, "Usage: %s [-s module-search-dir] [-S symbol-file-search-dir] minidump-file\n", argv[0]);
+  fprintf(stderr, "\t-s: Specify a search directory to use for missing modules\n" 
+                  "\t-S: Specify a search directory to use for symbol files\n"  
+                  "\t-h: Usage\n"
+                  "\t-?: Usage\n");
 }
 
 //=============================================================================
@@ -266,7 +276,7 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
   extern int optind;
   char ch;
 
-  while ((ch = getopt(argc, (char * const *)argv, "s:h?")) != -1) {
+  while ((ch = getopt(argc, (char * const *)argv, "S:s:h?")) != -1) {
     switch (ch) {
       case 's':
         options->searchDir = [[NSFileManager defaultManager]
@@ -274,6 +284,12 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
                                       length:strlen(optarg)];
         break;
 
+      case 'S':
+        options->symbolSearchDir = [[NSFileManager defaultManager]
+          stringWithFileSystemRepresentation:optarg
+                                      length:strlen(optarg)];
+        break;
+        
       case 'h':
       case '?':
         Usage(argc, argv);

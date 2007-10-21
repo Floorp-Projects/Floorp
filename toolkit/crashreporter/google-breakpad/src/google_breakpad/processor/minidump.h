@@ -177,7 +177,8 @@ class MinidumpContext : public MinidumpStream {
   // NULL.
   const MDRawContextX86* GetContextX86() const;
   const MDRawContextPPC* GetContextPPC() const;
-
+  const MDRawContextSPARC* GetContextSPARC() const;
+ 
   // Print a human-readable representation of the object to stdout.
   void Print();
 
@@ -204,6 +205,9 @@ class MinidumpContext : public MinidumpStream {
     MDRawContextBase* base;
     MDRawContextX86*  x86;
     MDRawContextPPC*  ppc;
+    // on Solaris SPARC, sparc is defined as a numeric constant,
+    // so variables can NOT be named as sparc
+    MDRawContextSPARC*  ctx_sparc;
   } context_;
 };
 
