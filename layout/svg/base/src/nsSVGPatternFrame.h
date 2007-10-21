@@ -73,8 +73,7 @@ public:
   // nsSVGPaintServerFrame methods:
   virtual PRBool SetupPaintServer(gfxContext *aContext,
                                   nsSVGGeometryFrame *aSource,
-                                  float aGraphicOpacity,
-                                  void **aClosure);
+                                  float aGraphicOpacity);
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
