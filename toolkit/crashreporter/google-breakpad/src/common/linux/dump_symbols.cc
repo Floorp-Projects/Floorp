@@ -494,7 +494,7 @@ bool WriteModuleInfo(int fd, ElfW(Half) arch, const std::string &obj_file) {
     size_t slash_pos = obj_file.find_last_of("/");
     if (slash_pos != std::string::npos)
       filename = obj_file.substr(slash_pos + 1);
-    return WriteFormat(fd, "MODULE Linux %s %s %s\n", arch_name,
+    return WriteFormat(fd, "MODULE linux %s %s %s\n", arch_name,
                        id_no_dash, filename.c_str());
   }
   return false;

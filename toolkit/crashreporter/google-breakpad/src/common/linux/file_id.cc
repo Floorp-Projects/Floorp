@@ -42,7 +42,7 @@
 #include <unistd.h>
 
 #include "common/linux/file_id.h"
-#include "common/linux/md5.h"
+#include "common/md5.h"
 
 namespace google_breakpad {
 

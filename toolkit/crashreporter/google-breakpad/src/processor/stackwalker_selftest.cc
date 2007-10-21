@@ -49,7 +49,17 @@
 //
 // Author: Mark Mentovai
 
-#if defined(__GNUC__) && (defined(__i386__) || defined(__ppc__))
+#include "processor/logging.h"
+
+#if defined(__i386) && !defined(__i386__)
+#define __i386__
+#endif
+#if defined(__sparc) && !defined(__sparc__)
+#define __sparc__
+#endif
+ 
+#if (defined(__SUNPRO_CC) || defined(__GNUC__)) && \
+    (defined(__i386__) || defined(__ppc__) || defined(__sparc__))
 
 
 #include <cstdio>
@@ -61,7 +71,6 @@
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/stack_frame.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
-#include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 
 using google_breakpad::BasicSourceLineResolver;
@@ -71,6 +80,7 @@ using google_breakpad::scoped_ptr;
 using google_breakpad::StackFrame;
 using google_breakpad::StackFramePPC;
 using google_breakpad::StackFrameX86;
+using google_breakpad::StackFrameSPARC;
 
 #if defined(__i386__)
 #include "processor/stackwalker_x86.h"
@@ -78,7 +88,10 @@ using google_breakpad::StackwalkerX86;
 #elif defined(__ppc__)
 #include "processor/stackwalker_ppc.h"
 using google_breakpad::StackwalkerPPC;
-#endif  // __i386__ || __ppc__
+#elif defined(__sparc__)
+#include "processor/stackwalker_sparc.h"
+using google_breakpad::StackwalkerSPARC;
+#endif  // __i386__ || __ppc__ || __sparc__
 
 #define RECURSION_DEPTH 100
 
@@ -115,6 +128,9 @@ class SelfMemoryRegion : public MemoryRegion {
     return true;
   }
 };
+
+
+#if defined(__GNUC__)
 
 
 #if defined(__i386__)
@@ -210,14 +226,87 @@ static u_int32_t GetPC() {
 }
 
 
-#endif  // __i386__ || __ppc__
+#elif defined(__sparc__)
 
+
+// GetSP returns the current value of the %sp/%o6/%g_r[14] register, which 
+// by convention, is the stack pointer on sparc.  Because it's implemented
+// as a function, %sp itself contains GetSP's own stack pointer and not 
+// the caller's stack pointer.  Dereference  to obtain the caller's stack 
+// pointer, which the compiler-generated prolog stored on the stack.
+// Because this function depends on the compiler-generated prolog, inlining
+// is disabled.
+static u_int32_t GetSP() __attribute__((noinline));
+static u_int32_t GetSP() {
+  u_int32_t sp;
+  __asm__ __volatile__(
+    "mov %%fp, %0"
+    : "=r" (sp)
+  );
+  return sp;
+}
+
+// GetFP returns the current value of the %fp register.  Because it's
+// implemented as a function, %fp itself contains GetFP's frame pointer
+// and not the caller's frame pointer.  Dereference %fp to obtain the
+// caller's frame pointer, which the compiler-generated preamble stored
+// on the stack (provided frame pointers are not being omitted.)  Because
+// this function depends on the compiler-generated preamble, inlining is
+// disabled.
+static u_int32_t GetFP() __attribute__((noinline));
+static u_int32_t GetFP() {
+  u_int32_t fp;
+  __asm__ __volatile__(
+    "ld [%%fp+56], %0"
+    : "=r" (fp)
+  );
+  return fp;
+}
+
+// GetPC returns the program counter identifying the next instruction to
+// execute after GetPC returns.  It obtains this information from the
+// link register, where it was placed by the branch instruction that called
+// GetPC.  Because this function depends on the caller's use of a branch
+// instruction, inlining is disabled.
+static u_int32_t GetPC() __attribute__((noinline));
+static u_int32_t GetPC() {
+  u_int32_t pc;
+  __asm__ __volatile__(
+    "mov %%i7, %0"
+    : "=r" (pc)
+  );
+  return pc + 8;
+}
+
+#endif  // __i386__ || __ppc__ || __sparc__
+
+#elif defined(__SUNPRO_CC)
+
+#if defined(__i386__)
+extern "C" {
+extern u_int32_t GetEIP();
+extern u_int32_t GetEBP();
+extern u_int32_t GetESP();
+}
+#elif defined(__sparc__)
+extern "C" {
+extern u_int32_t GetPC();
+extern u_int32_t GetFP();
+extern u_int32_t GetSP();
+}
+#endif // __i386__ || __sparc__
+
+#endif // __GNUC__ || __SUNPRO_CC
 
 // CountCallerFrames returns the number of stack frames beneath the function
 // that called CountCallerFrames.  Because this function's return value
 // is dependent on the size of the stack beneath it, inlining is disabled,
 // and any function that calls this should not be inlined either.
+#if defined(__GNUC__)
 static unsigned int CountCallerFrames() __attribute__((noinline));
+#elif defined(__SUNPRO_CC)
+static unsigned int CountCallerFrames();
+#endif
 static unsigned int CountCallerFrames() {
   SelfMemoryRegion memory;
   BasicSourceLineResolver resolver;
@@ -237,7 +326,15 @@ static unsigned int CountCallerFrames() {
 
   StackwalkerPPC stackwalker = StackwalkerPPC(NULL, &context, &memory, NULL,
                                               NULL, &resolver);
-#endif  // __i386__ || __ppc__
+#elif defined(__sparc__)
+  MDRawContextSPARC context = MDRawContextSPARC();
+  context.pc = GetPC();
+  context.g_r[14] = GetSP();
+  context.g_r[30] = GetFP();
+
+  StackwalkerSPARC stackwalker = StackwalkerSPARC(NULL, &context, &memory,
+                                                  NULL, NULL, &resolver);
+#endif  // __i386__ || __ppc__ || __sparc__
 
   CallStack stack;
   stackwalker.Walk(&stack);
@@ -257,7 +354,11 @@ static unsigned int CountCallerFrames() {
 #elif defined(__ppc__)
     StackFramePPC *frame_ppc = reinterpret_cast<StackFramePPC*>(frame);
     printf("  gpr[1] = 0x%08x\n", frame_ppc->context.gpr[1]);
-#endif  // __i386__ || __ppc__
+#elif defined(__sparc__)
+    StackFrameSPARC *frame_sparc = reinterpret_cast<StackFrameSPARC*>(frame);
+    printf("  sp = 0x%08x  fp = 0x%08x\n",
+           frame_sparc->context.g_r[14], frame_sparc->context.g_r[30]);
+#endif  // __i386__ || __ppc__ || __sparc__
   }
 #endif  // PRINT_STACKS
 
@@ -273,8 +374,12 @@ static unsigned int CountCallerFrames() {
 // have been reached, Recursor stops checking and returns success.  If the
 // frame count check fails at any depth, Recursor will stop and return false.
 // Because this calls CountCallerFrames, inlining is disabled.
+#if defined(__GNUC__)
 static bool Recursor(unsigned int depth, unsigned int parent_callers)
     __attribute__((noinline));
+#elif defined(__SUNPRO_CC)
+static bool Recursor(unsigned int depth, unsigned int parent_callers);
+#endif
 static bool Recursor(unsigned int depth, unsigned int parent_callers) {
   unsigned int callers = CountCallerFrames();
   if (callers != parent_callers + 1)
@@ -291,7 +396,11 @@ static bool Recursor(unsigned int depth, unsigned int parent_callers) {
 // Because this calls CountCallerFrames, inlining is disabled - but because
 // it's main (and nobody calls it other than the entry point), it wouldn't
 // be inlined anyway.
+#if defined(__GNUC__)
 int main(int argc, char** argv) __attribute__((noinline));
+#elif defined(__SUNPRO_CC)
+int main(int argc, char** argv);
+#endif
 int main(int argc, char** argv) {
   BPLOG_INIT(&argc, &argv);
 
@@ -299,9 +408,8 @@ int main(int argc, char** argv) {
 }
 
 
-#else  // __GNUC__ && (__i386__ || __ppc__)
-// Not gcc?  We use gcc's __asm__.
-// Not i386 or ppc?  We can only test stacks we know how to walk.
+#else
+// Not i386 or ppc or sparc?  We can only test stacks we know how to walk.
 
 
 int main(int argc, char **argv) {
@@ -314,4 +422,4 @@ int main(int argc, char **argv) {
 }
 
 
-#endif  // __GNUC__ && (__i386__ || __ppc__)
+#endif  // (__GNUC__ || __SUNPRO_CC) && (__i386__ || __ppc__ || __sparc__)

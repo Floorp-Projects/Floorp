@@ -33,13 +33,15 @@
 //
 // Author: Dan Waylonis
 
-#include <assert.h>
-#include <fcntl.h>
-#include <mach-o/arch.h>
-#include <mach-o/loader.h>
-#include <mach-o/swap.h>
-#include <string.h>
-#include <unistd.h>
+extern "C" {  // necessary for Leopard
+  #include <assert.h>
+  #include <fcntl.h>
+  #include <mach-o/arch.h>
+  #include <mach-o/loader.h>
+  #include <mach-o/swap.h>
+  #include <string.h>
+  #include <unistd.h>
+}
 
 #include "common/mac/macho_walker.h"
 #include "common/mac/macho_utilities.h"

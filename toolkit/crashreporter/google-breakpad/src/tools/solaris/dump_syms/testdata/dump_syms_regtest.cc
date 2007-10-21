@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2007, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,58 +27,38 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "processor/scoped_ptr.h"
-#include "common/mac/string_utilities.h"
+// ./dump_syms dump_syms_regtest.pdb > dump_syms_regtest.sym
 
-namespace MacStringUtils {
+namespace google_breakpad {
 
-using google_breakpad::scoped_array;
+class C {
+ public:
+  C() : member_(1) {}
+  virtual ~C() {}
 
-std::string ConvertToString(CFStringRef str) {
-  CFIndex length = CFStringGetLength(str);
-  std::string result;
+  void set_member(int value) { member_ = value; }
+  int member() const { return member_; }
 
-  if (!length)
-    return result;
+  void f() { member_ = g(); }
+  virtual int g() { return 2; }
+  static char* h(const C &that) { return 0; }
 
-  CFIndex maxUTF8Length =
-    CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
-  scoped_array<UInt8> buffer(new UInt8[maxUTF8Length + 1]);
-  CFIndex actualUTF8Length;
-  CFStringGetBytes(str, CFRangeMake(0, length), kCFStringEncodingUTF8, 0,
-                   false, buffer.get(), maxUTF8Length, &actualUTF8Length);
-  buffer[actualUTF8Length] = 0;
-  result.assign((const char *)buffer.get());
+ private:
+  int member_;
+};
 
-  return result;
+static int i() {
+  return 3;
 }
 
-unsigned int IntegerValueAtIndex(string &str, unsigned int idx) {
-  string digits("0123456789"), temp;
-  unsigned int start = 0;
-  unsigned int end;
-  unsigned int found = 0;
-  unsigned int result = 0;
+}  // namespace google_breakpad
 
-  for (; found <= idx; ++found) {
-    end = str.find_first_not_of(digits, start);
+int main(int argc, char **argv) {
+  google_breakpad::C object;
+  object.set_member(google_breakpad::i());
+  object.f();
+  int value = object.g();
+  char *nothing = object.h(object);
 
-    if (end == string::npos)
-      end = str.size();
-
-    temp = str.substr(start, end - start);
-
-    if (found == idx) {
-      result = atoi(temp.c_str());
-    }
-
-    start = str.find_first_of(digits, end + 1);
-
-    if (start == string::npos)
-      break;
-  }
-
-  return result;
+  return 0;
 }
-
-}  // namespace MacStringUtils

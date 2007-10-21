@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2007, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,58 +27,28 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "processor/scoped_ptr.h"
-#include "common/mac/string_utilities.h"
+// Author: Alfred Peng
 
-namespace MacStringUtils {
+#include <string>
+#include <cstdio>
 
-using google_breakpad::scoped_array;
+#include "common/solaris/dump_symbols.h"
 
-std::string ConvertToString(CFStringRef str) {
-  CFIndex length = CFStringGetLength(str);
-  std::string result;
+using namespace google_breakpad;
 
-  if (!length)
-    return result;
-
-  CFIndex maxUTF8Length =
-    CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
-  scoped_array<UInt8> buffer(new UInt8[maxUTF8Length + 1]);
-  CFIndex actualUTF8Length;
-  CFStringGetBytes(str, CFRangeMake(0, length), kCFStringEncodingUTF8, 0,
-                   false, buffer.get(), maxUTF8Length, &actualUTF8Length);
-  buffer[actualUTF8Length] = 0;
-  result.assign((const char *)buffer.get());
-
-  return result;
-}
-
-unsigned int IntegerValueAtIndex(string &str, unsigned int idx) {
-  string digits("0123456789"), temp;
-  unsigned int start = 0;
-  unsigned int end;
-  unsigned int found = 0;
-  unsigned int result = 0;
-
-  for (; found <= idx; ++found) {
-    end = str.find_first_not_of(digits, start);
-
-    if (end == string::npos)
-      end = str.size();
-
-    temp = str.substr(start, end - start);
-
-    if (found == idx) {
-      result = atoi(temp.c_str());
-    }
-
-    start = str.find_first_of(digits, end + 1);
-
-    if (start == string::npos)
-      break;
+int main(int argc, char **argv) {
+  if (argc != 2) {
+    fprintf(stderr, "Usage: %s <binary-with-stab-symbol>\n", argv[0]);
+    return 1;
   }
 
-  return result;
-}
+  const char *binary = argv[1];
 
-}  // namespace MacStringUtils
+  DumpSymbols dumper;
+  if (!dumper.WriteSymbolFile(binary, fileno(stdout))) {
+    fprintf(stderr, "Failed to write symbol file.\n");
+    return 1;
+  }
+
+  return 0;
+}

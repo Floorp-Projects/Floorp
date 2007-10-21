@@ -66,6 +66,7 @@ using google_breakpad::scoped_ptr;
 using google_breakpad::SimpleSymbolSupplier;
 using google_breakpad::StackFrame;
 using google_breakpad::StackFramePPC;
+using google_breakpad::StackFrameSPARC;
 using google_breakpad::StackFrameX86;
 
 // Separator character for machine readable output.
@@ -164,6 +165,16 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
         sequence = PrintRegister("srr0", frame_ppc->context.srr0, sequence);
       if (frame_ppc->context_validity & StackFramePPC::CONTEXT_VALID_GPR1)
         sequence = PrintRegister("r1", frame_ppc->context.gpr[1], sequence);
+    } else if (cpu == "sparc") {
+      const StackFrameSPARC *frame_sparc =
+          reinterpret_cast<const StackFrameSPARC*>(frame);
+
+      if (frame_sparc->context_validity & StackFrameSPARC::CONTEXT_VALID_SP)
+        sequence = PrintRegister("sp", frame_sparc->context.g_r[14], sequence);
+      if (frame_sparc->context_validity & StackFrameSPARC::CONTEXT_VALID_FP)
+        sequence = PrintRegister("fp", frame_sparc->context.g_r[30], sequence);
+      if (frame_sparc->context_validity & StackFrameSPARC::CONTEXT_VALID_PC)
+        sequence = PrintRegister("pc", frame_sparc->context.pc, sequence);
     }
 
     printf("\n");
