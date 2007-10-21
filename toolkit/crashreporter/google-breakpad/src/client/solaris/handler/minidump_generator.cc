@@ -60,7 +60,7 @@ bool MinidumpGenerator::WriteLwpStack(uintptr_t last_esp,
                                       UntypedMDRVA *memory,
                                       MDMemoryDescriptor *loc) {
   uintptr_t stack_bottom = lwp_lister_->GetLwpStackBottom(last_esp);
-  if (stack_bottom > last_esp) {
+  if (stack_bottom >= last_esp) {
     int size = stack_bottom - last_esp;
     if (size > 0) {
       if (!memory->Allocate(size))
@@ -74,6 +74,28 @@ bool MinidumpGenerator::WriteLwpStack(uintptr_t last_esp,
   return false;
 }
 
+#if TARGET_CPU_SPARC
+bool MinidumpGenerator::WriteContext(MDRawContextSPARC *context, prgregset_t regs,
+                                     prfpregset_t *fp_regs) {
+  if (!context || !regs)
+    return false;
+
+  context->context_flags = MD_CONTEXT_SPARC_FULL;
+
+  context->ccr = (unsigned int)(regs[32]);
+  context->pc = (unsigned int)(regs[R_PC]);
+  context->npc = (unsigned int)(regs[R_nPC]);
+  context->y = (unsigned int)(regs[R_Y]);
+  context->asi = (unsigned int)(regs[36]);
+  context->fprs = (unsigned int)(regs[37]);
+
+  for ( int i = 0 ; i < 32 ; ++i ){
+    context->g_r[i] = (unsigned int)(regs[i]);
+  }
+
+  return true;
+}
+#elif TARGET_CPU_X86
 bool MinidumpGenerator::WriteContext(MDRawContextX86 *context, prgregset_t regs,
                                      prfpregset_t *fp_regs) {
   if (!context || !regs)
@@ -100,23 +122,41 @@ bool MinidumpGenerator::WriteContext(MDRawContextX86 *context, prgregset_t regs,
 
   return true;
 }
+#endif /* TARGET_CPU_XXX */
 
 bool MinidumpGenerator::WriteLwpStream(lwpstatus_t *lsp, MDRawThread *lwp) {
   prfpregset_t fp_regs = lsp->pr_fpreg;
   prgregset_t *gregs = &(lsp->pr_reg);
   UntypedMDRVA memory(&writer_);
-  if (!WriteLwpStack((*gregs)[UESP],
+#if TARGET_CPU_SPARC
+  if (!WriteLwpStack((*gregs)[R_SP],
                      &memory,
                      &lwp->stack))
     return false;
 
   // Write context
+  TypedMDRVA<MDRawContextSPARC> context(&writer_);
+  if (!context.Allocate())
+    return false;
+  // should be the thread_id
+  lwp->thread_id = lsp->pr_lwpid;
+  lwp->thread_context = context.location();
+  memset(context.get(), 0, sizeof(MDRawContextSPARC));
+#elif TARGET_CPU_X86
+  if (!WriteLwpStack((*gregs)[UESP],
+                     &memory,
+                     &lwp->stack))
+  return false;
+
+  // Write context
   TypedMDRVA<MDRawContextX86> context(&writer_);
   if (!context.Allocate())
     return false;
-  lwp->thread_id = lwp_lister_->getpid();
+  // should be the thread_id
+  lwp->thread_id = lsp->pr_lwpid;
   lwp->thread_context = context.location();
   memset(context.get(), 0, sizeof(MDRawContextX86));
+#endif /* TARGET_CPU_XXX */
   return WriteContext(context.get(), (int *)gregs, &fp_regs);
 }
 
@@ -220,11 +260,11 @@ bool MinidumpGenerator::WriteLwpListStream(MDRawDirectory *dir) {
   if (lwp_count < 0)
     return false;
   TypedMDRVA<MDRawThreadList> list(&writer_);
-  if (!list.AllocateObjectAndArray(lwp_count, sizeof(MDRawThread)))
+  if (!list.AllocateObjectAndArray(lwp_count - 1, sizeof(MDRawThread)))
     return false;
   dir->stream_type = MD_THREAD_LIST_STREAM;
   dir->location = list.location();
-  list.get()->number_of_threads = lwp_count;
+  list.get()->number_of_threads = lwp_count - 1;
 
   LwpInfoCallbackCtx context;
   context.generator = this;
@@ -351,8 +391,8 @@ bool MinidumpGenerator::WriteSystemInfoStream(MDRawDirectory *dir) {
 
 bool MinidumpGenerator::WriteExceptionStream(MDRawDirectory *dir) {
   ucontext_t uc;
-  prgregset_t *gregs;
-  prfpregset_t fp_regs;
+  gregset_t *gregs;
+  fpregset_t fp_regs;
 
   if (getcontext(&uc) != 0)
     return false;
@@ -369,8 +409,34 @@ bool MinidumpGenerator::WriteExceptionStream(MDRawDirectory *dir) {
 
   gregs = &(uc.uc_mcontext.gregs);
   fp_regs = uc.uc_mcontext.fpregs;
+#if TARGET_CPU_SPARC
+  exception.get()->exception_record.exception_address = ((unsigned int *)gregs)[1];
+  // Write context of the exception.
+  TypedMDRVA<MDRawContextSPARC> context(&writer_);
+  if (!context.Allocate())
+    return false;
+  exception.get()->thread_context = context.location();
+  memset(context.get(), 0, sizeof(MDRawContextSPARC));
+  
+  // On Solaris i386, gregset_t = prgregset_t, fpregset_t = prfpregset_t
+  // But on Solaris Sparc are diffrent, see sys/regset.h and sys/procfs_isa.h
+  context.get()->context_flags = MD_CONTEXT_SPARC_FULL;
+  context.get()->ccr = ((unsigned int *)gregs)[0];
+  context.get()->pc = ((unsigned int *)gregs)[1];
+  context.get()->npc = ((unsigned int *)gregs)[2];
+  context.get()->y = ((unsigned int *)gregs)[3];
+  context.get()->asi = ((unsigned int *)gregs)[19];
+  context.get()->fprs = ((unsigned int *)gregs)[20];
+  for (int i = 0; i < 32; ++i) {
+    context.get()->g_r[i] = 0;
+  }
+  for (int i = 1; i < 16; ++i) {
+    context.get()->g_r[i] = ((unsigned int *)gregs)[i + 3];
+  }
+ 
+  return true;
+#elif TARGET_CPU_X86
   exception.get()->exception_record.exception_address = (*gregs)[EIP];
-
   // Write context of the exception.
   TypedMDRVA<MDRawContextX86> context(&writer_);
   if (!context.Allocate())
@@ -378,6 +444,7 @@ bool MinidumpGenerator::WriteExceptionStream(MDRawDirectory *dir) {
   exception.get()->thread_context = context.location();
   memset(context.get(), 0, sizeof(MDRawContextX86));
   return WriteContext(context.get(), (int *)gregs, &fp_regs);
+#endif /* TARGET_CPU_XXX */
 }
 
 bool MinidumpGenerator::WriteMiscInfoStream(MDRawDirectory *dir) {
@@ -466,7 +533,6 @@ void* MinidumpGenerator::Write() {
 bool MinidumpGenerator::WriteMinidumpToFile(const char *file_pathname,
                                             int signo) {
   assert(file_pathname != NULL);
-  assert(stack_ != NULL);
 
   if (file_pathname == NULL)
     return false;

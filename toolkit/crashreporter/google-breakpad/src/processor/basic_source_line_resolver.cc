@@ -48,7 +48,9 @@
 using std::map;
 using std::vector;
 using std::make_pair;
+#ifndef BSLR_NO_HASH_MAP
 using __gnu_cxx::hash;
+#endif  // BSLR_NO_HASH_MAP
 
 namespace google_breakpad {
 
@@ -116,7 +118,11 @@ class BasicSourceLineResolver::Module {
 
  private:
   friend class BasicSourceLineResolver;
+#ifdef BSLR_NO_HASH_MAP
+  typedef map<int, string> FileMap;
+#else  // BSLR_NO_HASH_MAP
   typedef hash_map<int, string> FileMap;
+#endif  // BSLR_NO_HASH_MAP
 
   // The types for stack_info_.  This is equivalent to MS DIA's
   // StackFrameTypeEnum.  Each identifies a different type of frame
@@ -594,8 +600,15 @@ bool BasicSourceLineResolver::Module::ParseStackInfo(char *stack_info_line) {
   return true;
 }
 
+#ifdef BSLR_NO_HASH_MAP
+bool BasicSourceLineResolver::CompareString::operator()(
+    const string &s1, const string &s2) const {
+  return strcmp(s1.c_str(), s2.c_str()) < 0;
+}
+#else  // BSLR_NO_HASH_MAP
 size_t BasicSourceLineResolver::HashString::operator()(const string &s) const {
   return hash<const char*>()(s.c_str());
 }
+#endif  // BSLR_NO_HASH_MAP
 
 }  // namespace google_breakpad
