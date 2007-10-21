@@ -642,12 +642,11 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
     break;
   }
 
-  void *closure;
-  if (HasFill() && SetupCairoFill(gfx, &closure)) {
+  if (HasFill() && SetupCairoFill(gfx)) {
     gfx->Fill();
   }
 
-  if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
+  if (HasStroke() && SetupCairoStroke(gfx)) {
     gfx->Stroke();
   }
 

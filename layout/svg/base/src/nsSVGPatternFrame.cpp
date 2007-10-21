@@ -831,11 +831,8 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
 PRBool
 nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
                                     nsSVGGeometryFrame *aSource,
-                                    float aGraphicOpacity,
-                                    void **aClosure)
+                                    float aGraphicOpacity)
 {
-  *aClosure = nsnull;
-
   if (aGraphicOpacity == 0.0f)
     return PR_FALSE;
 

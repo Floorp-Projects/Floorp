@@ -299,12 +299,11 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
     return NS_OK;
   }
 
-  void *closure;
-  if (HasFill() && SetupCairoFill(gfx, &closure)) {
+  if (HasFill() && SetupCairoFill(gfx)) {
     LoopCharacters(gfx, text, cp, FILL);
   }
 
-  if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
+  if (HasStroke() && SetupCairoStroke(gfx)) {
     gfx->NewPath();
     LoopCharacters(gfx, text, cp, STROKE);
     gfx->Stroke();
