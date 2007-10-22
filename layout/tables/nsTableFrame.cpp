@@ -3530,8 +3530,7 @@ nsTableFrame::IsAutoLayout()
   // (at least as long as FixedTableLayoutStrategy::GetPrefWidth returns
   // nscoord_MAX)
   const nsStyleCoord &width = GetStylePosition()->mWidth;
-  return (GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE &&
-          width.GetUnit() == eStyleUnit_Auto) ||
+  return (width.GetUnit() == eStyleUnit_Auto) ||
          (width.GetUnit() == eStyleUnit_Enumerated &&
           width.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC);
 }
