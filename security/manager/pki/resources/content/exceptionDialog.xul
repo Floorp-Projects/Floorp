@@ -67,9 +67,9 @@
     </vbox>
     <vbox flex="1">
       <description id="warningText"
-                   style="whitespace: -moz-pre-wrap"/>
+                   style="white-space: -moz-pre-wrap"/>
       <description id="warningSupplemental"
-                   style="font-weight: bold; whitespace: -moz-pre-wrap;">
+                   style="font-weight: bold; white-space: -moz-pre-wrap;">
         &exceptionMgr.supplementalWarning;
       </description>
     </vbox>
@@ -90,7 +90,7 @@
   <groupbox id="certStatusGroupBox" flex="1">
     <caption label="&exceptionMgr.certstatus.caption;"/>
     <hbox>
-      <description id="headerDescription" style="whitespace: -moz-pre-wrap;"
+      <description id="headerDescription" style="white-space: -moz-pre-wrap;"
                    flex="1"/>
       <vbox>
         <button id="viewCertButton" label="&exceptionMgr.certstatus.viewCert;"
@@ -100,13 +100,13 @@
     </hbox>      
     <description id="statusDescription"
                  style="font-weight: bold; padding-bottom: 1em;"/>
-    <description id="statusLongDescription" style="whitespace: -moz-pre-wrap;"/>
+    <description id="statusLongDescription" style="white-space: -moz-pre-wrap;"/>
     <description id="status2Description"
                  style="font-weight: bold; padding-bottom: 1em;"/>
-    <description id="status2LongDescription" style="whitespace: -moz-pre-wrap;"/>
+    <description id="status2LongDescription" style="white-space: -moz-pre-wrap;"/>
     <description id="status3Description" 
                  style="font-weight: bold; padding-bottom: 1em;"/>
-    <description id="status3LongDescription" style="whitespace: -moz-pre-wrap;"/>
+    <description id="status3LongDescription" style="white-space: -moz-pre-wrap;"/>
     <spacer flex="1"/>
   </groupbox>
 </dialog>
