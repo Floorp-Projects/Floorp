@@ -43,28 +43,9 @@
  * class gfxOS2Surface
  **********************************************************************/
 
-gfxOS2Surface::gfxOS2Surface(HPS aPS, const gfxIntSize& aSize)
-    : mOwnsPS(PR_FALSE), mHasWnd(PR_FALSE), mDC(nsnull), mPS(aPS), mBitmap(nsnull), mSize(aSize)
-{
-#ifdef DEBUG_thebes_2
-    printf("gfxOS2Surface[%#x]::gfxOS2Surface(HPS=%#x, Size=%dx%d)\n", (unsigned int)this,
-           (unsigned int)mPS, aSize.width, aSize.height);
-#endif
-
-    // create the cairo surface on the passed PS
-    cairo_surface_t *surf = cairo_os2_surface_create(mPS, mSize.width, mSize.height);
-#ifdef DEBUG_thebes_2
-    printf("  type(%#x)=%d (ID=%#x, h/w=%d/%d)\n", (unsigned int)surf,
-           cairo_surface_get_type(surf), (unsigned int)mPS, mSize.width, mSize.height);
-#endif
-    // XXX for now uncomment the mark_dirty function, see bug 371505
-    //cairo_surface_mark_dirty(surf);
-    Init(surf);
-}
-
 gfxOS2Surface::gfxOS2Surface(const gfxIntSize& aSize,
                              gfxASurface::gfxImageFormat aImageFormat)
-    : mOwnsPS(PR_TRUE), mHasWnd(PR_FALSE), mSize(aSize)
+    : mHasWnd(PR_FALSE), mSize(aSize)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Surface[%#x]::gfxOS2Surface(Size=%dx%d, %d)\n", (unsigned int)this,
@@ -105,13 +86,18 @@ gfxOS2Surface::gfxOS2Surface(const gfxIntSize& aSize,
     printf("  type(%#x)=%d (ID=%#x, h/w=%d/%d)\n", (unsigned int)surf,
            cairo_surface_get_type(surf), (unsigned int)mPS, mSize.width, mSize.height);
 #endif
-    // XXX for now uncomment the mark_dirty function, see bug 371505
-    //cairo_surface_mark_dirty(surf);
+    // Normally, OS/2 cairo surfaces have to be forced to redraw completely
+    // by calling cairo_surface_mark_dirty(surf), but Mozilla paints them in
+    // full, so that is not necessary here.
+
+    // manual refresh is done from nsWindow::OnPaint
+    cairo_os2_surface_set_manual_window_refresh(surf, 1);
+
     Init(surf);
 }
 
 gfxOS2Surface::gfxOS2Surface(HWND aWnd)
-    : mOwnsPS(PR_TRUE), mHasWnd(PR_TRUE), mDC(nsnull), mBitmap(nsnull)
+    : mHasWnd(PR_TRUE), mDC(nsnull), mBitmap(nsnull)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Surface[%#x]::gfxOS2Surface(HWND=%#x)\n", (unsigned int)this,
@@ -131,10 +117,15 @@ gfxOS2Surface::gfxOS2Surface(HWND aWnd)
     printf("  type(%#x)=%d (ID=%#x, h/w=%d/%d)\n", (unsigned int)surf,
            cairo_surface_get_type(surf), (unsigned int)mPS, mSize.width, mSize.height);
 #endif
+    // Normally, OS/2 cairo surfaces have to be forced to redraw completely
+    // by calling cairo_surface_mark_dirty(surf), but Mozilla paints them in
+    // full, so that is not necessary here.
+
     // record the window handle in the cairo surface, so that refresh works
     cairo_os2_surface_set_hwnd(surf, aWnd);
-    // XXX for now uncomment the mark_dirty function, see bug 371505
-    //cairo_surface_mark_dirty(surf);
+    // manual refresh is done from nsWindow::OnPaint
+    cairo_os2_surface_set_manual_window_refresh(surf, 1);
+
     Init(surf);
 }
 
@@ -149,7 +140,7 @@ gfxOS2Surface::~gfxOS2Surface()
     // hand were created on memory device contexts with the GPI functions, so
     // use those to clean up stuff.
     if (mHasWnd) {
-        if (mOwnsPS && mPS) {
+        if (mPS) {
             WinReleasePS(mPS);
         }
     } else {
@@ -157,11 +148,33 @@ gfxOS2Surface::~gfxOS2Surface()
             GpiSetBitmap(mPS, NULL);
             GpiDeleteBitmap(mBitmap);
         }
-        if (mOwnsPS && mPS) {
+        if (mPS) {
             GpiDestroyPS(mPS);
         }
         if (mDC) {
             DevCloseDC(mDC);
         }
     }
+}
+
+void gfxOS2Surface::Refresh(RECTL *aRect, HPS aPS)
+{
+#ifdef DEBUG_thebes_2
+    printf("gfxOS2Surface[%#x]::Refresh(x=%ld,%ld/y=%ld,%ld, HPS=%#x), mPS=%#x\n",
+           (unsigned int)this,
+           aRect->xLeft, aRect->xRight, aRect->yBottom, aRect->yTop,
+           (unsigned int)aPS, (unsigned int)mPS);
+#endif
+    cairo_os2_surface_refresh_window(CairoSurface(), aPS, aRect);
+}
+
+int gfxOS2Surface::Resize(const gfxIntSize& aSize)
+{
+#ifdef DEBUG_thebes_2
+    printf("gfxOS2Surface[%#x]::Resize(%dx%d)\n", (unsigned int)this,
+           aSize.width, aSize.height);
+#endif
+    mSize = aSize; // record the new size
+    // hardcode mutex timeout to 50ms for now
+    return cairo_os2_surface_set_size(CairoSurface(), mSize.width, mSize.height, 50);
 }
