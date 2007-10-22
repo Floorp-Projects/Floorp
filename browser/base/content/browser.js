@@ -3846,6 +3846,7 @@ nsBrowserStatusHandler.prototype =
       this.securityButton.removeAttribute("label");
 
     this.securityButton.setAttribute("tooltiptext", this._tooltipText);
+    getIdentityHandler().checkIdentity(this._state, this._host);
   },
 
   // simulate all change notifications after switching tabs
@@ -5615,7 +5616,7 @@ IdentityHandler.prototype = {
 
   // Cache the most recently seen SSLStatus and URI to prevent unnecessary updates
   _lastStatus : null,
-  _lastURI : null,
+  _lastHost : null,
 
   /**
    * Handler for mouseclicks on the "Tell me more about this website" link text
@@ -5663,27 +5664,17 @@ IdentityHandler.prototype = {
   /**
    * Determine the identity of the page being displayed by examining its SSL cert
    * (if available) and, if necessary, update the UI to reflect this.  Intended to
-   * be called by an nsIWebProgressListener.
-   *
-   * @param nsIWebProgress webProgress
-   * @param nsIRequest request
+   * be called by onSecurityChange
+   * 
    * @param PRUint32 state
+   * @param AUTF8String host
    */
-  checkIdentity : function(state) {
-    var currentURI = gBrowser.currentURI;
-    if (currentURI.schemeIs("http") && this._lastURI.schemeIs("http"))
-      return;
-
+  checkIdentity : function(state, host) {
     var currentStatus = gBrowser.securityUI
                                 .QueryInterface(Components.interfaces.nsISSLStatusProvider)
                                 .SSLStatus;
-    if (currentStatus == this._lastStatus && currentURI == this._lastURI) {
-      // No need to update, this is a no-op check
-      return;
-    }
-
     this._lastStatus = currentStatus;
-    this._lastURI = currentURI;
+    this._lastHost = host;
     
     if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
@@ -5721,7 +5712,7 @@ IdentityHandler.prototype = {
       // it's not the only place you have to check, there can be more than one domain,
       // et cetera, ad nauseum.  We know the cert is valid for location.host, so
       // let's just use that, it's what the status bar does too.
-      var icon_label = this._lastURI.host; 
+      var icon_label = this._lastHost; 
       var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                           [iData.caOrg]);
     }
@@ -5769,7 +5760,7 @@ IdentityHandler.prototype = {
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
 
-      var body = this._lastURI.host;     
+      var body = this._lastHost;     
       verifier = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                        [iData.caOrg]);
       supplemental = this._stringBundle.getString("identity.domainverified.supplemental");

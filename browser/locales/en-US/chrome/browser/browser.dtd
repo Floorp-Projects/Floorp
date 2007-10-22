@@ -345,3 +345,5 @@
 
 <!ENTITY editBookmark.done.label                      "Done">
 <!ENTITY editBookmark.delete.label                    "Delete">
+
+<!ENTITY identity.moreInfoLinkText "Tell me more about this web site...">
