@@ -390,6 +390,8 @@ fails == 386310-1d.html 386310-1-ref.html
 == 390318-1b.html 390318-1-ref.html
 == 391045.html 391045-ref.html # windows-specific bug, appears to pass on other platforms because of missing fonts
 == 391140-1.html 391140-1-ref.html
+== 391412-1a.html 391412-1-ref.html
+== 391412-1b.html 391412-1-ref.html
 == 391909-1.html 391909-1-ref.html
 == 391994-1.html 391994-1-ref.html
 == 392435-1.html 392435-1-ref.html
