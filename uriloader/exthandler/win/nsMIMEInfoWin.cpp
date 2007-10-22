@@ -227,6 +227,13 @@ nsMIMEInfoWin::GetProperty(const nsAString& aName, nsIVariant* *_retval)
   return NS_OK;
 }
 
+typedef HRESULT (STDMETHODCALLTYPE *MySHParseDisplayName)
+                 (PCWSTR pszName,
+                  IBindCtx *pbc,
+                  LPITEMIDLIST *ppidl,
+                  SFGAOF sfgaoIn,
+                  SFGAOF *psfgaoOut);
+
 // this implementation was pretty much copied verbatime from 
 // Tony Robinson's code in nsExternalProtocolWin.cpp
 nsresult
@@ -254,10 +261,46 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
     if (urlSpec.Length() > maxSafeURL)
       return NS_ERROR_FAILURE;
 
-    LONG r = (LONG) ::ShellExecute(NULL, "open", urlSpec.get(), NULL, NULL, 
-                                   SW_SHOWNORMAL);
-    if (r < 32) 
-      rv = NS_ERROR_FAILURE;
+    LPITEMIDLIST pidl;
+    SFGAOF sfgao;
+    
+    // Bug 394974
+    HMODULE hDll = ::LoadLibrary("shell32.dll");
+    MySHParseDisplayName pMySHParseDisplayName = NULL;
+    // Version 6.0 and higher
+    if (pMySHParseDisplayName = 
+          (MySHParseDisplayName)::GetProcAddress(hDll,
+                                                 "SHParseDisplayName")) {
+      if (SUCCEEDED(pMySHParseDisplayName(NS_ConvertUTF8toUTF16(urlSpec).get(),
+                                          NULL, &pidl, 0, &sfgao))) {
+        static const char cmdVerb[] = "open";
+        SHELLEXECUTEINFO sinfo;
+        memset(&sinfo, 0, sizeof(SHELLEXECUTEINFO));
+        sinfo.cbSize   = sizeof(SHELLEXECUTEINFO);
+        sinfo.fMask    = SEE_MASK_FLAG_DDEWAIT |
+                         SEE_MASK_FLAG_NO_UI |
+                         SEE_MASK_INVOKEIDLIST;
+        sinfo.hwnd     = NULL;
+        sinfo.lpVerb   = (LPCSTR)&cmdVerb;
+        sinfo.nShow    = SW_SHOWNORMAL;
+        sinfo.lpIDList = pidl;
+        
+        BOOL result = ShellExecuteEx(&sinfo);
+
+        CoTaskMemFree(pidl);
+
+        if (!result || ((int)sinfo.hInstApp) < 32)
+          rv = NS_ERROR_FAILURE;
+      }
+    } else {
+      // Version of shell32.dll < 6.0
+      LONG r = (LONG) ::ShellExecute(NULL, "open", urlSpec.get(), NULL, NULL, 
+                                     SW_SHOWNORMAL);
+      if (r < 32) 
+        rv = NS_ERROR_FAILURE;
+    }
+    if (hDll) 
+      ::FreeLibrary(hDll);
   }
 
   return rv;
