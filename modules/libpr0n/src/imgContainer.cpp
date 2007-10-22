@@ -272,7 +272,7 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
   if (!item)
     return NS_ERROR_INVALID_ARG;
 
-  if (mFrames.Count () == 0) {
+  if (mFrames.Count() == 0) {
     // This may not be an animated image, don't do all the animation stuff.
     mFrames.AppendObject(item);
 
@@ -281,8 +281,8 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
     return NS_OK;
   }
   
-  if (mFrames.Count () == 1) {
-    // Now that we got a second frame, initialize animation stuff.
+  if (mFrames.Count() == 1) {
+    // Since we're about to add our second frame, initialize animation stuff
     if (!ensureAnimExists())
       return NS_ERROR_OUT_OF_MEMORY;
     
@@ -308,10 +308,10 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
 
   mNumFrames++;
   
-  // If this is our second frame, start the animation.
-  // Must be called after AppendObject because StartAnimation checks for > 1
-  // frame
-  if (mFrames.Count () == 1)
+  // If this is our second frame (We've just added our second frame above),
+  // count should now be 2.  This must be called after we AppendObject 
+  // because StartAnimation checks for > 1 frames
+  if (mFrames.Count() == 2)
     StartAnimation();
   
   return NS_OK;
