@@ -3270,22 +3270,12 @@ nsJSContext::CC()
 #endif
   // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
   // we do not explicitly call ::JS_GC() here.
-  PRBool firstRun = nsCycleCollector_collect();
+  sPreviousCCDidCollect = nsCycleCollector_collect();
 #ifdef DEBUG_smaug
-  printf("(1) %s\n", firstRun ?
+  printf("(1) %s\n", sPreviousCCDidCollect ?
                      "Cycle collector did collect nodes" :
                      "Cycle collector did not collect nodes");
 #endif
-  PRBool secondRun = PR_FALSE;
-  if (!sUserIsActive) {
-    secondRun = nsCycleCollector_collect();
-#ifdef DEBUG_smaug
-    printf("(2) %s\n", secondRun ?
-                       "Cycle collector did collect nodes" :
-                       "Cycle collector did not collect nodes");
-#endif
-  }
-  sPreviousCCDidCollect = firstRun || secondRun;
 }
 
 //static
