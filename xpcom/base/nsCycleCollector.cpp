@@ -869,7 +869,7 @@ struct nsCycleCollector
     PRBool Forget(nsISupports *n);
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
-    void Collect(PRUint32 aTryCollections = 1);
+    PRBool Collect(PRUint32 aTryCollections = 1);
     void Shutdown();
 
 #ifdef DEBUG_CC
@@ -2021,9 +2021,10 @@ nsCycleCollector::Freed(void *n)
 }
 #endif
 
-void
+PRBool
 nsCycleCollector::Collect(PRUint32 aTryCollections)
 {
+    PRBool didCollect = PR_FALSE;
 #if defined(DEBUG_CC) && !defined(__MINGW32__)
     if (!mParams.mDoNothing && mParams.mHookMalloc)
         InitMemHook();
@@ -2031,7 +2032,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
     // This can legitimately happen in a few cases. See bug 383651.
     if (mCollectionInProgress)
-        return;
+        return didCollect;
 
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: Starting nsCycleCollector::Collect(%d)\n", aTryCollections);
@@ -2168,8 +2169,11 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
                 // mBuf.GetSize() == 0 check above), we should stop
                 // repeating collections if we didn't collect anything
                 // this time.
-                if (!collected)
+                if (!collected) {
                     aTryCollections = 0;
+                } else {
+                    didCollect = PR_TRUE;
+                }
             }
 
 #ifdef DEBUG_CC
@@ -2194,6 +2198,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 #ifdef DEBUG_CC
     ExplainLiveExpectedGarbage();
 #endif
+    return didCollect;
 }
 
 void
@@ -2594,11 +2599,10 @@ NS_CycleCollectorForget(nsISupports *n)
 }
 
 
-void 
+PRBool
 nsCycleCollector_collect()
 {
-    if (sCollector)
-        sCollector->Collect();
+    return sCollector ? sCollector->Collect() : PR_FALSE;
 }
 
 nsresult 
