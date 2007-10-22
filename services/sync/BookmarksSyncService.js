@@ -742,6 +742,11 @@ BookmarksSyncService.prototype = {
 
   _removeCommand: function BSS__removeCommand(command) {
     var itemId = this._bms.getItemIdForGUID(command.GUID);
+    if (itemId < 0) {
+      this._log.warn("Attempted to remove item " + command.GUID +
+                     ", but it does not exist.  Skipping.");
+      return;
+    }
     var type = this._bms.getItemType(itemId);
 
     switch (type) {
@@ -1337,6 +1342,21 @@ BookmarksSyncService.prototype = {
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
+  },
+
+  _encrypt: function BSS__encrypt(string, passphrase) {
+    let koFactory = Cc["@mozilla.org/security/keyobjectfactory;1"].
+      getService(Ci.nsIKeyObjectFactory);
+    let ko = koFactory.keyFromString(2, passphrase); // 2 is AES
+    let streamCipher = Cc["@mozilla.org/security/streamcipher;1"].
+      getService(Ci.nsIStreamCipher);
+    streamCipher.init(ko);
+    streamCipher.updateFromString(string);
+    return streamCipher.finish(true);
+  },
+
+  _decrypt: function BSS__decrypt(string, passphrase) {
+    // FIXME
   },
 
   _onLogin: function BSS__onLogin(success) {
