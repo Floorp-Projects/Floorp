@@ -48,12 +48,12 @@ trap 'echo -e "\n*** ERROR ***\n\b" && tail $TEST_LOG' ERR
 #
 # options processing
 #
-options="p:b:B:T:e:d:"
+options="p:b:B:T:e:d:v"
 function usage()
 {
     cat<<EOF
 usage: 
-$SCRIPT -p products -b branches -B buildcommands -T buildtypes [-e extra]
+$SCRIPT -p products -b branches -B buildcommands -T buildtypes [-e extra] [-v]
 
 variable            description
 ===============     ===========================================================
@@ -64,6 +64,7 @@ variable            description
 -e extra            optional. extra qualifier to pick build tree and mozconfig.
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
+-v                  optional. verbose - copies log file output to stdout.
 
 note that the environment variables should have the same names as in the 
 "variable" column.
@@ -84,6 +85,7 @@ while getopts $options optname ;
       e) extra="-$OPTARG"
           extraflag="-e $OPTARG";;
       d) datafiles=$OPTARG;;
+      v) verbose=1;;
   esac
 done
 
@@ -109,10 +111,13 @@ if echo "$buildcommands" | grep -iq clean; then
                 TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
                 TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${TEST_MACHINE},clean.log"
 
-                echo "$TEST_LOG"
+                echo "log: $TEST_LOG"
 
-                clean.sh -p $product -b $branch -T $buildtype $extraflag > $TEST_LOG 2>&1
-
+                if [[ "$verbose" == "1" ]]; then
+                    clean.sh -p $product -b $branch -T $buildtype $extraflag 2>&1 | tee $TEST_LOG
+                else
+                    clean.sh -p $product -b $branch -T $buildtype $extraflag > $TEST_LOG 2>&1
+                fi
             done
         done
     done
@@ -126,10 +131,13 @@ if echo "$buildcommands" | grep -iq checkout; then
             TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
             TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${TEST_MACHINE},checkout.log"
 
-            echo "$TEST_LOG"
+            echo "log: $TEST_LOG"
 
-
-            checkout.sh -p $product -b $branch -T opt $extraflag > $TEST_LOG 2>&1
+            if [[ "$verbose" == "1" ]]; then
+                checkout.sh -p $product -b $branch -T opt $extraflag 2>&1 | tee $TEST_LOG
+            else
+                checkout.sh -p $product -b $branch -T opt $extraflag > $TEST_LOG 2>&1
+            fi
 
         done
     done
@@ -143,9 +151,14 @@ if echo "$buildcommands" | grep -iq build; then
                 TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
                 TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${TEST_MACHINE},build.log"
 
-                echo "$TEST_LOG"
+                echo "log: $TEST_LOG"
 
-                build.sh -p $product -b $branch -T $buildtype $extraflag > $TEST_LOG 2>&1
+                if [[ "$verbose" == "1" ]]; then
+                    build.sh -p $product -b $branch -T $buildtype $extraflag 2>&1 | tee $TEST_LOG
+                else
+                    build.sh -p $product -b $branch -T $buildtype $extraflag > $TEST_LOG 2>&1
+                fi
+
             done
         done
     done

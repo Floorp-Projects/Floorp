@@ -227,7 +227,7 @@ foreach $fix (@fixes) {
 }
 close OUTPUT;
 
-print STDOUT "$outputprefix-results-possible-fixes.log\n";
+print STDOUT "log: $outputprefix-results-possible-fixes.log\n";
 
 debug "finding regressions";
 
@@ -292,7 +292,7 @@ foreach $failure (@failures) {
 }
 close OUTPUT;
 
-print STDOUT "$outputprefix-results-possible-regressions.log\n";
+print STDOUT "log: $outputprefix-results-possible-regressions.log\n";
 
 
 sub debug {
