@@ -1304,4 +1304,26 @@ NS_GetInnermostURI(nsIURI *uri)
     return uri;
 }
 
+/**
+ * Get the "final" URI for a channel.  This is either the same as GetURI or
+ * GetOriginalURI, depending on whether this channel has
+ * nsIChanel::LOAD_REPLACE set.  For channels without that flag set, the final
+ * URI is the original URI, while for ones with the flag the final URI is the
+ * channel URI.
+ */
+inline nsresult
+NS_GetFinalChannelURI(nsIChannel* channel, nsIURI** uri)
+{
+    *uri = nsnull;
+    nsLoadFlags loadFlags = 0;
+    nsresult rv = channel->GetLoadFlags(&loadFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    if (loadFlags & nsIChannel::LOAD_REPLACE) {
+        return channel->GetURI(uri);
+    }
+    
+    return channel->GetOriginalURI(uri);
+}
+
 #endif // !nsNetUtil_h__
