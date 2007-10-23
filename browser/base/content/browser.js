@@ -3941,6 +3941,10 @@ nsBrowserAccess.prototype =
       return null;
     }
 
+    if (!gPrefService)
+      gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefBranch2);
+
     var loadflags = isExternal ?
                        Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                        Ci.nsIWebNavigation.LOAD_FLAGS_NONE;

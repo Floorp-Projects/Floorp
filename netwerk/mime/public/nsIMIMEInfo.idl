@@ -114,12 +114,9 @@ interface nsIHandlerInfo : nsISupports {
      *
      * @param aWindowContext 
      *        The window to parent the dialog against, and, if a web handler
-     *        is chosen, it is loaded in this window as well.  This parameter
-     *        may be ultimately passed nsIURILoader.openURI in the case of a
-     *        web handler, and aWindowContext is null or not present, web
-     *        handlers will fail.  We need to do better than that; bug 394483
-     *        filed in order to track.
-     *       
+     *        is chosen, it is loaded in this window as well.  See 
+     *        nsIHandlerApp.launchWithURI for more details.
+     *
      * @throw NS_ERROR_INVALID_ARG if preferredAction is not valid for this
      * call. Other exceptions may be thrown.
      */
@@ -279,9 +276,16 @@ interface nsIHandlerApp : nsISupports {
      *        The URI to launch this application with
      *
      * @param aWindowContext 
-     *        Required for web handlers; is passed through to 
-     *        nsIURILoader.openURI, but see bug 394483 for info on 
-     *        how this needs to evolve.
+     *
+     *        Currently only relevant to web-handler apps.  If given, this
+     *        represents the docshell to load the handler in and is passed
+     *        through to nsIURILoader.openURI.  If this parameter is null or
+     *        not present, the web handler app implementation will attempt to 
+     *        find/create a place to load the handler and do so.  As of this
+     *        writing, it tries to load the web handler in a new window using
+     *        nsIBrowserDOMWindow.openURI.  In the future, it may attempt to 
+     *        have a more comprehensive strategy which could include handing
+     *        off to the system default browser (bug 394479).
      */
     void launchWithURI(in nsIURI aURI, 
                        [optional] in nsIInterfaceRequestor aWindowContext);
