@@ -395,6 +395,11 @@ Section "-Application" APP_IDX
     StrCpy $TmpVal "HKLM" ; used primarily for logging
     ${RegCleanMain} "Software\Mozilla"
     ${RegCleanUninstall}
+
+    ReadRegStr $0 HKLM "Software\mozilla.org\Mozilla" "CurrentVersion"
+    ${If} "$0" != "${GREVersion}"
+      WriteRegStr HKLM "Software\mozilla.org\Mozilla" "CurrentVersion" "${GREVersion}"
+    ${EndIf}
   ${EndIf}
 
   ${RemoveDeprecatedKeys}
