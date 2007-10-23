@@ -707,7 +707,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     NS_NewCSSStyleSheet(getter_AddRefs(mSheet));
     NS_ENSURE_TRUE(mSheet, NS_ERROR_OUT_OF_MEMORY);
 
-    mSheet->SetURIs(aSheetURI, aBaseURI);
+    mSheet->SetURIs(aSheetURI, aSheetURI, aBaseURI);
     mSheet->SetPrincipal(aSheetPrincipal);
     mNameSpaceMap = nsnull;
   }
