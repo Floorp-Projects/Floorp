@@ -943,7 +943,7 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
   }
 
   // Check if the frame we are composing wants the previous image restored afer
-  // it is done. Don't store it (again) if last frame wanted it's image restored
+  // it is done. Don't store it (again) if last frame wanted its image restored
   // too
   if ((nextFrameDisposalMethod == imgIContainer::kDisposeRestorePrevious) &&
       (prevFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious)) {
@@ -1089,7 +1089,19 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
   dstImg->GetSurface(getter_AddRefs(dstSurf));
 
   gfxContext dst(dstSurf);
+  
+  // first clear the surface if the blend flag says so
+  PRInt32 blendMethod;
+  aSrc->GetBlendMethod(&blendMethod);
+  gfxContext::GraphicsOperator defaultOperator = dst.CurrentOperator();
+  if (blendMethod == imgIContainer::kBlendSource) {
+    dst.SetOperator(gfxContext::OPERATOR_CLEAR);
+    dst.Rectangle(gfxRect(aDstRect.x, aDstRect.y, aDstRect.width, aDstRect.height));
+    dst.Fill();
+  }
+  
   dst.NewPath();
+  dst.SetOperator(defaultOperator);
   // We don't use PixelSnappedRectangleAndSetPattern because if
   // these coords aren't already pixel aligned, we've lost
   // before we've even begun.
