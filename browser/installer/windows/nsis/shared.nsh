@@ -55,6 +55,11 @@
     ${SetStartMenuInternet}
     ${FixShellIconHandler}
     ${SetUninstallKeys}
+
+    ReadRegStr $0 HKLM "Software\mozilla.org\Mozilla" "CurrentVersion"
+    ${If} "$0" != "${GREVersion}"
+      WriteRegStr HKLM "Software\mozilla.org\Mozilla" "CurrentVersion" "${GREVersion}"
+    ${EndIf}
   ${EndIf}
 
   ${RemoveDeprecatedKeys}
