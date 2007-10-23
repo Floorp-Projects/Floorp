@@ -110,6 +110,23 @@ IsTransformOnlyTranslateOrFlip(CGAffineTransform aTransform)
 }
 
 
+// We separate this into its own function because after an @try, all local
+// variables within that function get marked as volatile, and our C++ type
+// system doesn't like volatile things.
+static PRBool
+LockFocusOnImage(NSImage* aImage)
+{
+  @try {
+    [aImage lockFocus];
+  } @catch (NSException* e) {
+    NS_WARNING(nsPrintfCString(256, "Exception raised while drawing to offscreen buffer: \"%s - %s\"", 
+                               [[e name] UTF8String], [[e reason] UTF8String]).get());
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+
 void
 nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind inKind,
                                       const HIRect& inBoxRect, PRBool inChecked,
@@ -189,13 +206,10 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     drawFrame.size.height = offscreenHeight - NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
 
     // draw into offscreen image
-    NS_DURING
-      [image lockFocus];
-    NS_HANDLER
-      NS_ASSERTION(0, "Could not lock focus on offscreen buffer");
+    if (!LockFocusOnImage(image)) {
       [image release];
       return;
-    NS_ENDHANDLER
+    }
     [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationLow];
     HIThemeDrawButton(&drawFrame, &bdi, (CGContext*)[[NSGraphicsContext currentContext] graphicsPort], kHIThemeOrientationInverted, NULL);
     [image unlockFocus];
@@ -520,13 +534,10 @@ nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRec
     ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
   else {
     NSImage *buffer = [[NSImage alloc] initWithSize:NSMakeSize(aBoxRect.size.width, aBoxRect.size.height)];
-    NS_DURING
-      [buffer lockFocus];
-    NS_HANDLER
-      NS_ASSERTION(0, "Could not lock focus on offscreen buffer");
+    if (!LockFocusOnImage(buffer)) {
       [buffer release];
       return;
-    NS_ENDHANDLER
+    }
     ::HIThemeDrawTrack(&tdi, NULL, (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort],
                        kHIThemeOrientationInverted);
     [buffer unlockFocus];
