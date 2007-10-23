@@ -1315,6 +1315,18 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   geckoWindow->DispatchEvent(&guiEvent, status);
 }
 
+// Retain and release "self" to avoid crashes when our widget (and its native
+// window) is closed as a result of processing a key equivalent (e.g.
+// Command+w or Command+q).  This workaround is only needed for a window
+// that can become key.
+- (BOOL)performKeyEquivalent:(NSEvent*)theEvent
+{
+  NSWindow *nativeWindow = [self retain];
+  BOOL retval = [super performKeyEquivalent:theEvent];
+  [nativeWindow release];
+  return retval;
+}
+
 @end
 
 @implementation PopupWindow
@@ -1492,6 +1504,18 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   if (![self isVisible])
     return NO;
   return YES;
+}
+
+// Retain and release "self" to avoid crashes when our widget (and its native
+// window) is closed as a result of processing a key equivalent (e.g.
+// Command+w or Command+q).  This workaround is only needed for a window
+// that can become key.
+- (BOOL)performKeyEquivalent:(NSEvent*)theEvent
+{
+  NSWindow *nativeWindow = [self retain];
+  BOOL retval = [super performKeyEquivalent:theEvent];
+  [nativeWindow release];
+  return retval;
 }
 
 @end

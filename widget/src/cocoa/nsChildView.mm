@@ -4025,16 +4025,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild || nsTSMManager::IsComposing())
     return NO;
 
-  // Retain and release our native window to avoid crashes when it's closed
-  // as a result of processing a key equivalent (e.g. Command+w or Command+q).
-  NSWindow *ourNativeWindow = [self nativeWindow];
-  if (ourNativeWindow)
-    ourNativeWindow = [ourNativeWindow retain];
   // see if the menu system will handle the event
-  BOOL menuRetval = [[NSApp mainMenu] performKeyEquivalent:theEvent];
-  if (ourNativeWindow)
-    [ourNativeWindow release];
-  if (menuRetval)
+  if ([[NSApp mainMenu] performKeyEquivalent:theEvent])
     return YES;
 
   // don't handle this if certain modifiers are down - those should
