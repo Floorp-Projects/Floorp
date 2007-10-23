@@ -135,7 +135,7 @@ EXTRA_DSO_LDOPTS += \
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS		+= $(call EXPAND_LIBNAME, shell32)
+OS_LIBS		+= $(call EXPAND_LIBNAME, shell32 ole32)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
