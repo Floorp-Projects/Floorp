@@ -321,7 +321,7 @@ sub SyncToStaging {
         die "ASSERT: SyncToStaging(): rsync failed\n";
     }
 
-    $dirName = CvsCatfile($stageHome, $product.'-'.$version);
+    $dirName = CvsCatfile($stageHome, $product.'-'.$version.'/');
 
     @cmdArgs = ($stagingUser . '@' . $stagingServer,
                    'rsync', '-av', $dirName, 
