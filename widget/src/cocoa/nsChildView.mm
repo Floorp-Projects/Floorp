@@ -3855,6 +3855,22 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 #pragma mark -
 
 
++ (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent
+{
+  NSEvent* newEvent = [NSEvent keyEventWithType:type
+                                       location:[theEvent locationInWindow] 
+                                  modifierFlags:[theEvent modifierFlags]
+                                      timestamp:[theEvent timestamp]
+                                   windowNumber:[theEvent windowNumber]
+                                        context:[theEvent context]
+                                     characters:[theEvent characters]
+                    charactersIgnoringModifiers:[theEvent charactersIgnoringModifiers]
+                                      isARepeat:[theEvent isARepeat]
+                                        keyCode:[theEvent keyCode]];
+  return newEvent;
+}
+
+
 // Handle matching cocoa IME with gecko key events. Sends a key down and key press
 // event to gecko.
 - (void)keyDown:(NSEvent*)theEvent
@@ -3879,6 +3895,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;
     mKeyHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+    if (!mGeckoChild)
+      return;
   }
 
   // Check to see if we are still the first responder.
@@ -3910,6 +3928,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       geckoEvent.nativeMsg = &macEvent;
 
       mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      if (!mGeckoChild)
+        return;
       dispatchedKeyPress = PR_TRUE;
     }
   }
@@ -3928,6 +3948,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   mKeyHandled = PR_FALSE;
 }
 
+static BOOL keyUpAlreadySentKeyDown = NO;
 
 - (void)keyUp:(NSEvent*)theEvent
 {
@@ -3935,7 +3956,57 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild || [[theEvent characters] length] == 0)
     return;
 
-  // Fire a key up.
+  // Cocoa doesn't send an NSKeyDown event for control-tab, so if this
+  // is an NSKeyUp event for control-tab, send a down event to gecko first.
+  if (!keyUpAlreadySentKeyDown && [theEvent modifierFlags] & NSControlKeyMask && [theEvent keyCode] == kTabKeyCode) {
+    // We'll need an NSKeyDown copy of our native event so we convert to a gecko event correctly.
+    NSEvent* nativeKeyDownEvent = [ChildView makeNewCocoaEventWithType:NSKeyDown fromEvent:theEvent];
+
+    // send a key down event if we should
+    PRBool keyDownHandled = PR_FALSE;
+    if (![nativeKeyDownEvent isARepeat]) {
+      nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
+      [self convertCocoaKeyEvent:nativeKeyDownEvent toGeckoEvent:&geckoEvent];
+
+      // create native EventRecord for use by plugins
+      EventRecord macEvent;
+      ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
+      geckoEvent.nativeMsg = &macEvent;
+      keyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      if (!mGeckoChild)
+        return;
+    }
+
+    // Check to see if we are still the first responder.
+    // The key down event may have shifted the focus, in which
+    // case we should not fire the key press.
+    NSResponder* resp = [[self window] firstResponder];
+    if (resp != (NSResponder*)self) {
+      keyUpAlreadySentKeyDown = YES;
+      [resp keyUp:theEvent];      
+      keyUpAlreadySentKeyDown = NO;
+      return;
+    }
+
+    // now send a key press event if we should
+    if (!nsTSMManager::IsComposing()) {
+      nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
+      [self convertCocoaKeyEvent:nativeKeyDownEvent toGeckoEvent:&geckoEvent];
+
+      if (keyDownHandled)
+        geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+
+      // create native EventRecord for use by plugins
+      EventRecord macEvent;
+      ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
+      geckoEvent.nativeMsg = &macEvent;
+
+      mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      if (!mGeckoChild)
+        return;
+    }
+  }
+
   nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, nsnull);
   [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
