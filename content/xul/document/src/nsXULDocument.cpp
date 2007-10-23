@@ -424,18 +424,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     mChannel = aChannel;
 
     // Get the URI.  Note that this should match nsDocShell::OnLoadingSite
-    // XXXbz this code is repeated from nsDocument::Reset and
-    // nsScriptSecurityManager::GetChannelPrincipal; we really need to refactor
-    // this part better.
-    nsLoadFlags loadFlags = 0;
-    nsresult rv = aChannel->GetLoadFlags(&loadFlags);
-    if (NS_SUCCEEDED(rv)) {
-        if (loadFlags & nsIChannel::LOAD_REPLACE) {
-            rv = aChannel->GetURI(getter_AddRefs(mDocumentURI));
-        } else {
-            rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURI));
-        }
-    }
+    nsresult rv =
+        NS_GetFinalChannelURI(aChannel, getter_AddRefs(mDocumentURI));
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = ResetStylesheetsToURI(mDocumentURI);
