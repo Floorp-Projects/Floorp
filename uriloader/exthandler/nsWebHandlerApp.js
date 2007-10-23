@@ -44,6 +44,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cc = Components.classes;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsWebHandler class
@@ -95,25 +96,62 @@ nsWebHandlerApp.prototype = {
     // encode the URI to be handled
     var escapedUriSpecToHandle = encodeURIComponent(aURI.spec);
 
-    // insert the encoded URI 
-    var uriToSend = this.uriTemplate.replace("%s", escapedUriSpecToHandle);
+    // insert the encoded URI and create the object version 
+    var uriSpecToSend = this.uriTemplate.replace("%s", escapedUriSpecToHandle);
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
+    var uriToSend = ioService.newURI(uriSpecToSend, null, null);
+    
+    // if we have a window context, use the URI loader to load there
+    if (aWindowContext) {
 
-    // create a channel from this URI
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
-                    getService(Components.interfaces.nsIIOService);
-    var channel = ioService.newChannel(uriToSend, null, null);
-    channel.loadFlags = Components.interfaces.nsIChannel.LOAD_DOCUMENT_URI;
+      // create a channel from this URI
+      var channel = ioService.newChannelFromURI(uriToSend);
+      channel.loadFlags = Ci.nsIChannel.LOAD_DOCUMENT_URI;
 
-    // load the channel
-    var uriLoader = Components.classes["@mozilla.org/uriloader;1"].
-                    getService(Components.interfaces.nsIURILoader);
-    // XXX ideally, aIsContentPreferred (the second param) should really be
-    // passed in from above.  Practically, true is probably a reasonable
-    // default since browsers don't care much, and link click is likely to be
-    // the more interesting case for non-browser apps.  See 
-    // <https://bugzilla.mozilla.org/show_bug.cgi?id=392957#c9> for details.
-    uriLoader.openURI(channel, true, aWindowContext);
+      // load the channel
+      var uriLoader = Cc["@mozilla.org/uriloader;1"].
+                      getService(Ci.nsIURILoader);
+      // XXX ideally, aIsContentPreferred (the second param) should really be
+      // passed in from above.  Practically, true is probably a reasonable
+      // default since browsers don't care much, and link click is likely to be
+      // the more interesting case for non-browser apps.  See 
+      // <https://bugzilla.mozilla.org/show_bug.cgi?id=392957#c9> for details.
+      uriLoader.openURI(channel, true, aWindowContext);
+      return;
+    } 
 
+    // since we don't have a window context, hand it off to a browser
+    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
+      getService(Ci.nsIWindowMediator);
+
+    // get browser dom window
+    var browserDOMWin = windowMediator.getMostRecentWindow("navigator:browser")
+                        .QueryInterface(Ci.nsIDOMChromeWindow)
+                        .browserDOMWindow;
+
+    // if we got an exception, there are several possible reasons why:
+    // a) this gecko embedding doesn't provide an nsIBrowserDOMWindow
+    //    implementation (i.e. doesn't support browser-style functionality),
+    //    so we need to kick the URL out to the OS default browser.  This is
+    //    the subject of bug 394479.
+    // b) this embedding does provide an nsIBrowserDOMWindow impl, but
+    //    there doesn't happen to be a browser window open at the moment; one
+    //    should be opened.  It's not clear whether this situation will really
+    //    ever occur in real life.  If it does, the only API that I can find
+    //    that seems reasonably likely to work for most embedders is the
+    //    command line handler.  
+    // c) something else went wrong 
+    //
+    // it's not clear how one would differentiate between the three cases
+    // above, so for now we don't catch the exception
+
+    // openURI
+    browserDOMWin.openURI(uriToSend,
+                          null, // no window.opener 
+                          Ci.nsIBrowserDOMWindow.OPEN_DEFAULT_WINDOW,
+                          Ci.nsIBrowserDOMWindow.OPEN_NEW);
+      
     return;
   },
 

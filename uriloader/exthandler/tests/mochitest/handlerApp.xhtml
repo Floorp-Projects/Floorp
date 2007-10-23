@@ -12,11 +12,17 @@ Pseudo Web Handler App
 <![CDATA[
 function onLoad() {
 
-	var originalUriToHandle = encodeURIComponent(window.opener.testURI); 
-    
-  window.opener.is(location.search, "?uri=" + originalUriToHandle,
-                   "uri passed to web-handler app");
-  window.opener.SimpleTest.finish() 
+  // if we have a window.opener, this must be the windowContext
+  // instance of this test.  check that we got the URI right and clean up.
+  if (window.opener) {
+    window.opener.is(location.search, 
+                     "?uri=" + encodeURIComponent(window.opener.testURI), 
+                     "uri passed to web-handler app");
+    window.opener.SimpleTest.finish();
+  } 
+
+  // ensure that we actually have the privs to close non-script-opened windows
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect'); 
   window.close();
 }
 ]]>
