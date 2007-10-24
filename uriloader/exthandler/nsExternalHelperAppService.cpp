@@ -2138,16 +2138,11 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
     mOutStream = nsnull;
   }
 
-  // clean up after ourselves and delete the temp file...
-  // but only if we got asked to open the file. when saving,
-  // we leave the file there - the partial file might be useful
-  // But if we haven't received disposition info yet, then we're
-  // here because the user cancelled the helper app dialog.
-  // Delete the file in this case.
-  nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
-  mMimeInfo->GetPreferredAction(&action);
-  if (mTempFile &&
-      (!mReceivedDispositionInfo || action != nsIMIMEInfo::saveToDisk))
+  // Clean up after ourselves and delete the temp file only if the user
+  // canceled the helper app dialog (we didn't get the disposition info yet).
+  // We leave the partial file for everything else because it could be useful
+  // e.g., resume a download
+  if (mTempFile && !mReceivedDispositionInfo)
   {
     mTempFile->Remove(PR_FALSE);
     mTempFile = nsnull;
