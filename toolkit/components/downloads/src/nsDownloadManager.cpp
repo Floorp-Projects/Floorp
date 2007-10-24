@@ -96,7 +96,7 @@ static PRBool gStoppingDownloads = PR_FALSE;
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
-#define DM_SCHEMA_VERSION      7
+#define DM_SCHEMA_VERSION      8
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
 
@@ -308,7 +308,7 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     }
     // Fallthrough to the next upgrade
 
-  case 5:
+  case 5: // This version adds two columns for tracking transfer progress
     {
       rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "ALTER TABLE moz_downloads "
@@ -351,6 +351,20 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     }
     // Fallthrough to next upgrade
 
+  case 7: // This version adds a column to remember to auto-resume downloads
+    {
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_downloads "
+        "ADD COLUMN autoResume INTEGER NOT NULL DEFAULT 0"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Finally, update the schemaVersion variable and the database schema
+      schemaVersion = 8;
+      rv = mDBConn->SetSchemaVersion(schemaVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Fallthrough to the next upgrade
+
   // Extra sanity checking for developers
 #ifndef DEBUG
   case DM_SCHEMA_VERSION:
@@ -382,7 +396,7 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
       rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT id, name, source, target, tempPath, startTime, endTime, state, "
                "referrer, entityID, currBytes, maxBytes, mimeType, "
-               "preferredApplication, preferredAction "
+               "preferredApplication, preferredAction, autoResume "
         "FROM moz_downloads"), getter_AddRefs(stmt));
       if (NS_SUCCEEDED(rv))
         break;
@@ -430,7 +444,8 @@ nsDownloadManager::CreateTable()
       "maxBytes INTEGER NOT NULL DEFAULT -1, "
       "mimeType TEXT, "
       "preferredApplication TEXT, "
-      "preferredAction INTEGER NOT NULL DEFAULT 0"
+      "preferredAction INTEGER NOT NULL DEFAULT 0, "
+      "autoResume INTEGER NOT NULL DEFAULT 0"
     ")"));
 }
 
@@ -771,8 +786,9 @@ nsDownloadManager::Init()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
     "SET tempPath = ?1, startTime = ?2, endTime = ?3, state = ?4, "
-        "referrer = ?5, entityID = ?6, currBytes = ?7, maxBytes = ?8 "
-    "WHERE id = ?9"), getter_AddRefs(mUpdateDownloadStatement));
+        "referrer = ?5, entityID = ?6, currBytes = ?7, maxBytes = ?8, "
+        "autoResume = ?9 "
+    "WHERE id = ?10"), getter_AddRefs(mUpdateDownloadStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Do things *after* initializing various download manager properties such as
@@ -825,7 +841,7 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, state, startTime, source, target, tempPath, name, referrer, "
            "entityID, currBytes, maxBytes, mimeType, preferredAction, "
-           "preferredApplication "
+           "preferredApplication, autoResume "
     "FROM moz_downloads "
     "WHERE id = ?1"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -928,6 +944,9 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
     // Compensate for the i++s skipped in the true block
     i += 2;
   }
+
+  dl->mAutoResume =
+    static_cast<enum nsDownload::AutoResume>(stmt->AsInt32(i++));
 
   // Addrefing and returning
   NS_ADDREF(*retVal = dl);
@@ -1651,7 +1670,8 @@ nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTE
                            mStartTime(0),
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
                            mResumedAt(-1),
-                           mSpeed(0)
+                           mSpeed(0),
+                           mAutoResume(DONT_RESUME)
 {
 }
 
@@ -2454,6 +2474,12 @@ nsDownload::IsRealPaused()
 }
 
 PRBool
+nsDownload::ShouldAutoResume()
+{
+  return mAutoResume == AUTO_RESUME;
+}
+
+PRBool
 nsDownload::IsFinishable()
 {
   return mDownloadState == nsIDownloadManager::DOWNLOAD_NOTSTARTED ||
@@ -2519,6 +2545,10 @@ nsDownload::UpdateDB()
   PRInt64 maxBytes;
   (void)GetSize(&maxBytes);
   rv = stmt->BindInt64Parameter(i++, maxBytes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // autoResume
+  rv = stmt->BindInt32Parameter(i++, mAutoResume);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // id
