@@ -382,6 +382,7 @@ fails == 386310-1d.html 386310-1-ref.html
 == 387876-2.html 387876-2-ref.html
 == 387876-3a.html 387876-3-ref.html
 == 387876-3b.html 387876-3-ref.html
+== 389468-1.html 389468-1-ref.html
 == 389636-1.html about:blank  # assertion test
 == 389924-1a.html 389924-1-ref.html
 == 389924-1b.html 389924-1-ref.html
