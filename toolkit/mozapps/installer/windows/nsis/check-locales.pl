@@ -51,7 +51,7 @@ sub readProperties
 
     $contents =~ s/\\$$//gm;
 
-    return $contents =~ /^\s*([^#!\r\n]*)$/gm;
+    return $contents =~ /^\s*([^#!\n]*)$/gm;
 }
 
 sub checkProperties
