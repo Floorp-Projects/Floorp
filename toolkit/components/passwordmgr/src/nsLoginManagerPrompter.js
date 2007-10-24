@@ -183,83 +183,99 @@ LoginManagerPrompter.prototype = {
         var selectedLogin = null;
         var checkbox = { value : false };
         var checkboxLabel = null;
+        var epicfail = false;
 
-        this.log("===== promptAuth called =====");
+        try {
 
-        // If the user submits a login but it fails, we need to remove the
-        // notification bar that was displayed. Conveniently, the user will be
-        // prompted for authentication again, which brings us here.
-        // XXX this isn't right if there are multiple logins on a page (eg,
-        // 2 images from different http realms). That seems like an edge case
-        // that we're probably not handling right anyway.
-        var notifyBox = this._getNotifyBox();
-        if (notifyBox)
-            this._removeSaveLoginNotification(notifyBox);
+            this.log("===== promptAuth called =====");
 
-        var hostname, httpRealm;
-        [hostname, httpRealm] = this._GetAuthKey(aChannel, aAuthInfo);
+            // If the user submits a login but it fails, we need to remove the
+            // notification bar that was displayed. Conveniently, the user will
+            // be prompted for authentication again, which brings us here.
+            // XXX this isn't right if there are multiple logins on a page (eg,
+            // 2 images from different http realms). That seems like an edge
+            // case that we're probably not handling right anyway.
+            var notifyBox = this._getNotifyBox();
+            if (notifyBox)
+                this._removeSaveLoginNotification(notifyBox);
+
+            var hostname, httpRealm;
+            [hostname, httpRealm] = this._GetAuthKey(aChannel, aAuthInfo);
 
 
-        // Looks for existing logins to prefill the prompt with.
-        var foundLogins = this._pwmgr.findLogins({},
+            // Looks for existing logins to prefill the prompt with.
+            var foundLogins = this._pwmgr.findLogins({},
                                         hostname, null, httpRealm);
 
-        // XXX Like the original code, we can't deal with multiple
-        // account selection. (bug 227632)
-        if (foundLogins.length > 0) {
-            selectedLogin = foundLogins[0];
-            this._SetAuthInfo(aAuthInfo, selectedLogin.username,
-                                         selectedLogin.password);
-            checkbox.value = true;
-        }
+            // XXX Like the original code, we can't deal with multiple
+            // account selection. (bug 227632)
+            if (foundLogins.length > 0) {
+                selectedLogin = foundLogins[0];
+                this._SetAuthInfo(aAuthInfo, selectedLogin.username,
+                                             selectedLogin.password);
+                checkbox.value = true;
+            }
 
-        var canRememberLogin = this._pwmgr.getLoginSavingEnabled(hostname);
+            var canRememberLogin = this._pwmgr.getLoginSavingEnabled(hostname);
         
-        // if checkboxLabel is null, the checkbox won't be shown at all.
-        if (canRememberLogin && !notifyBox)
-            checkboxLabel = this._getLocalizedString("rememberPassword");
+            // if checkboxLabel is null, the checkbox won't be shown at all.
+            if (canRememberLogin && !notifyBox)
+                checkboxLabel = this._getLocalizedString("rememberPassword");
+        } catch (e) {
+            // Ignore any errors and display the prompt anyway.
+            epicfail = true;
+            Components.utils.reportError("LoginManagerPrompter: " +
+                "Epic fail in promptAuth: " + e + "\n");
+        }
 
         var ok = this._promptService.promptAuth(this._window, aChannel,
                                 aLevel, aAuthInfo, checkboxLabel, checkbox);
+        if (epicfail)
+            return ok;
 
-        // If there's a notification box, use it to allow the user to
-        // determine if the login should be saved. If there isn't a
-        // notification box, only save the login if the user set the checkbox
-        // to do so.
-        var rememberLogin = notifyBox ? canRememberLogin : checkbox.value;
+        try {
+            // If there's a notification box, use it to allow the user to
+            // determine if the login should be saved. If there isn't a
+            // notification box, only save the login if the user set the
+            // checkbox to do so.
+            var rememberLogin = notifyBox ? canRememberLogin : checkbox.value;
 
-        if (ok && rememberLogin) {
-            var newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"]
-                                .createInstance(Ci.nsILoginInfo);
-            newLogin.init(hostname, null, httpRealm,
-                            aAuthInfo.username, aAuthInfo.password,
-                            "", "");
+            if (ok && rememberLogin) {
+                var newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                               createInstance(Ci.nsILoginInfo);
+                newLogin.init(hostname, null, httpRealm,
+                              aAuthInfo.username, aAuthInfo.password,
+                              "", "");
 
-            // If we didn't find an existing login, or if the username
-            // changed, save as a new login.
-            if (!selectedLogin ||
-                aAuthInfo.username != selectedLogin.username) {
+                // If we didn't find an existing login, or if the username
+                // changed, save as a new login.
+                if (!selectedLogin ||
+                    aAuthInfo.username != selectedLogin.username) {
 
-                // add as new
-                this.log("New login seen for " + aAuthInfo.username +
-                         " @ " + hostname + " (" + httpRealm + ")");
-                if (notifyBox)
-                    this._showSaveLoginNotification(notifyBox, newLogin);
-                else
-                    this._pwmgr.addLogin(newLogin);
+                    // add as new
+                    this.log("New login seen for " + aAuthInfo.username +
+                             " @ " + hostname + " (" + httpRealm + ")");
+                    if (notifyBox)
+                        this._showSaveLoginNotification(notifyBox, newLogin);
+                    else
+                        this._pwmgr.addLogin(newLogin);
 
-            } else if (selectedLogin &&
-                       aAuthInfo.password != selectedLogin.password) {
+                } else if (selectedLogin &&
+                           aAuthInfo.password != selectedLogin.password) {
 
-                this.log("Updating password for " + aAuthInfo.username +
-                         " @ " + hostname + " (" + httpRealm + ")");
-                // update password
-                this._pwmgr.modifyLogin(foundLogins[0], newLogin);
+                    this.log("Updating password for " + aAuthInfo.username +
+                             " @ " + hostname + " (" + httpRealm + ")");
+                    // update password
+                    this._pwmgr.modifyLogin(foundLogins[0], newLogin);
 
-            } else {
-                this.log("Login unchanged, no further action needed.");
-                return ok;
+                } else {
+                    this.log("Login unchanged, no further action needed.");
+                    return ok;
+                }
             }
+        } catch (e) {
+            Components.utils.reportError("LoginManagerPrompter: " +
+                "Fail2 in promptAuth: " + e + "\n");
         }
 
         return ok;
