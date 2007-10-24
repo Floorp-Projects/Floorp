@@ -120,6 +120,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 !insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
+!insertmacro SetBrandNameVars
 !insertmacro UnloadUAC
 !insertmacro WriteRegStr2
 !insertmacro WriteRegDWORD2
@@ -787,6 +788,9 @@ FunctionEnd
 # Initialization Functions
 
 Function .onInit
+  StrCpy $LANGUAGE 0
+  ${SetBrandNameVars} "$EXEDIR\localized\distribution\setup.ini"
+
   ${InstallOnInitCommon} "$(WARN_UNSUPPORTED_MSG)"
 
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
@@ -796,8 +800,6 @@ Function .onInit
   !insertmacro createBasicCustomOptionsINI
   !insertmacro createComponentsINI
   !insertmacro createShortcutsINI
-
-  StrCpy $LANGUAGE 0
 
   ; There must always be nonlocalized and localized directories.
   ${GetSize} "$EXEDIR\nonlocalized\" "/S=0K" $R5 $R7 $R8
