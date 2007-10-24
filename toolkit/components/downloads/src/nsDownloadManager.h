@@ -156,6 +156,13 @@ protected:
   nsDownload *FindDownload(PRUint32 aID);
 
   /**
+   * First try to resume the download, and if that fails, retry it.
+   *
+   * @param aDl The download to resume and/or retry.
+   */
+  nsresult ResumeRetry(nsDownload *aDl);
+
+  /**
    * Pause all active downloads and remember if they should try to auto-resume
    * when the download manager starts again.
    *
@@ -163,6 +170,15 @@ protected:
    *                   as auto-resume.
    */
   nsresult PauseAllDownloads(PRBool aSetResume);
+
+  /**
+   * Resume all paused downloads unless we're only supposed to do the automatic
+   * ones; in that case, try to retry them as well if resuming doesn't work.
+   *
+   * @param aResumeAll If true, all downloads will be resumed; otherwise, only
+   *                   those that are marked as auto-resume will resume.
+   */
+  nsresult ResumeAllDownloads(PRBool aResumeAll);
 
   /**
    * Stop tracking the active downloads. Only use this when we're about to quit
