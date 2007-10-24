@@ -1403,7 +1403,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 
                 /* Flag duplicate argument if atom is bound in fun->object. */
                 dupflag = SCOPE_GET_PROPERTY(OBJ_SCOPE(fun->object),
-                                             ATOM_TO_JSID(propAtom))
+                                             JSID_HIDE_NAME(
+                                                 ATOM_TO_JSID(propAtom)))
                           ? SPROP_IS_DUPLICATE
                           : 0;
 
