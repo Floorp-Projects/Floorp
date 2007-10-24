@@ -661,46 +661,18 @@ nsDownloadManager::ImportDownloadHistory()
 nsresult
 nsDownloadManager::RestoreDatabaseState()
 {
-  // First, we get all the downloads that are supposedly active, but are not
-  // really because we crashed.
+  // Convert supposedly-active downloads into downloads that should auto-resume
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id "
-    "FROM moz_downloads "
-    "WHERE state = ?1 "
-      "OR state = ?2 "
-      "OR state = ?3"), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 i = 0;
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_NOTSTARTED);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_QUEUED);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Next, we iterate through them storing them in an array
-  nsTArray<PRUint32> ids;
-  PRBool hasResults;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResults)) && hasResults)
-    (void)ids.AppendElement(stmt->AsInt32(0));
-
-  rv = stmt->Reset();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Third, change all of those downloads to a failed state so we will be able
-  // to retry them.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
-    "SET state = ?1 "
+    "SET autoResume = ?1 "
     "WHERE state = ?2 "
       "OR state = ?3 "
       "OR state = ?4"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  i = 0;
-  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_FAILED);
+  PRInt32 i = 0;
+  rv = stmt->BindInt32Parameter(i++, nsDownload::AUTO_RESUME);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -711,10 +683,6 @@ nsDownloadManager::RestoreDatabaseState()
 
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Finally, let's retry all of those downloads
-  for (nsTArray<PRUint32>::size_type i = 0; i < ids.Length(); i++)
-    (void)RetryDownload(ids[i]);
 
   return NS_OK;
 }
