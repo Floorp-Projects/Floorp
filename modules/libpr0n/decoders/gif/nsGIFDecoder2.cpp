@@ -965,6 +965,12 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
       }
 
       BeginImageFrame();
+      
+      // handle allocation error
+      if (!mImageFrame) {
+        mGIFStruct.state = gif_error;
+        break;
+      }
 
       if (q[8] & 0x40) {
         mGIFStruct.interlaced = PR_TRUE;
@@ -1055,9 +1061,13 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
       break;
 
     case gif_done:
-    case gif_error:
       EndGIF();
       return NS_OK;
+      break;
+
+    case gif_error:
+      EndGIF();
+      return NS_ERROR_FAILURE;
       break;
 
     // Handle out of memory errors
@@ -1070,6 +1080,12 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
     }
   }
 
+  // if an error state is set but no data remains, code flow reaches here
+  if (mGIFStruct.state == gif_error) {
+      EndGIF();
+      return NS_ERROR_FAILURE;
+  }
+  
   // Copy the leftover into mGIFStruct.hold
   mGIFStruct.bytes_in_hold = len;
   if (len) {
