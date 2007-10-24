@@ -444,8 +444,9 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     }
 
     PRUint32 num;
-    PRUnichar **emailAddr = NULL;
-    if (NS_SUCCEEDED(GetEmailAddresses(&num, &emailAddr)) && num > 0) {
+    PRUnichar **emailArray = NULL;
+    if (NS_SUCCEEDED(GetEmailAddresses(&num, &emailArray)) && num > 0) {
+      PRUnichar **emailAddr = emailArray;
       details.AppendLiteral("  ");
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoEmail", info))) {
         details.Append(info);
@@ -478,8 +479,8 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       details.Append(PRUnichar('\n'));
       nsMemory::Free(firstEmail);
     }
-    nsMemory::Free(emailAddr);
-    emailAddr = nsnull;
+    nsMemory::Free(emailArray);
+    emailArray = nsnull;
 
     if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoIssuedBy", info))) {
       details.Append(info);
