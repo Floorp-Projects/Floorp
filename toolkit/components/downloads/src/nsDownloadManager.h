@@ -102,7 +102,8 @@ protected:
 
   /**
    * Fix up the database after a crash such as dealing with previously-active
-   * downloads.
+   * downloads. Call this before RestoreActiveDownloads to get the downloads
+   * fixed here to be auto-resumed.
    */
   nsresult RestoreDatabaseState();
 
