@@ -121,6 +121,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 !insertmacro un.RegCleanUninstall
 !insertmacro un.RegCleanProtocolHandler
 !insertmacro un.RemoveQuotesFromPath
+!insertmacro un.SetBrandNameVars
 
 !include shared.nsh
 
@@ -466,7 +467,9 @@ Function un.onInit
   ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
     Abort
   ${EndUnless}
+
   StrCpy $LANGUAGE 0
+  ${un.SetBrandNameVars} "$INSTDIR\distribution\setup.ini"
 
   ; Initialize $hHeaderBitmap to prevent redundant changing of the bitmap if
   ; the user clicks the back button
