@@ -227,6 +227,7 @@
                                                  "splitter");
               uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "splitter" + uniqueId;
+              newItem.className = "toolbar-splitter";
             } else if (this.parentNode.localName == "toolbox") {
               // Attempt to locate an item with a matching id within palette.
               var paletteItem = this.parentNode.palette.firstChild;
