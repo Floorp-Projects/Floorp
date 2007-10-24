@@ -324,47 +324,24 @@
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Top    "5"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Bottom "15"
 
-  StrCpy $R1 2
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(DOMI_TITLE)"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "15"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "20"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Bottom "30"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" State  "1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Flags  "GROUP"
-    IntOp $R1 $R1 + 1
-  ${EndIf}
-
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(QFA_TITLE)"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "15"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "55"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Bottom "65"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" State  "1"
-    IntOp $R1 $R1 + 1
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Type   "checkbox"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Text   "$(DOMI_TITLE)"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Left   "15"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Top    "20"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Bottom "30"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" State  "1"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Flags  "GROUP"
   ${EndIf}
 
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "label"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(DOMI_TEXT)"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "30"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "32"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Bottom "52"
-    IntOp $R1 $R1 + 1
-  ${EndIf}
-
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "label"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(QFA_TEXT)"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "30"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "67"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Bottom "87"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Type   "label"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Text   "$(DOMI_TEXT)"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Left   "30"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Top    "32"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Bottom "52"
   ${EndIf}
 !macroend
 
@@ -1377,6 +1354,7 @@
       StrCmp "$R5" "" +2 +1
       WriteRegStr SHCTX "$R4\shell\open\command" "" "$R5"      
 
+!ifdef DDEApplication
       StrCmp "$R9" "true" +1 +11
       WriteRegStr SHCTX "$R4\shell\open\ddeexec" "" "$\"%1$\",,0,0,,,,"
       WriteRegStr SHCTX "$R4\shell\open\ddeexec" "NoActivateHandler" ""
@@ -1388,6 +1366,7 @@
       ; default handler and if this key exists IE's shell integration breaks.
       DeleteRegKey HKLM "$R4\shell\open\ddeexec\ifexec"
       DeleteRegKey HKCU "$R4\shell\open\ddeexec\ifexec"
+!endif
 
       ClearErrors
 
@@ -3661,6 +3640,113 @@
 
 ################################################################################
 # Macros for custom branding
+
+/**
+ * Sets BrandFullName and / or BrandShortName to values provided in the specified
+ * ini file and defaults to BrandShortName and BrandFullName as defined in
+ * branding.nsi when the associated ini file entry is not specified.
+ *
+ * ini file format:
+ * [Branding]
+ * BrandFullName=Custom Full Name
+ * BrandShortName=Custom Short Name
+ *
+ * @param   _PATH_TO_INI
+ *          Path to the ini file.
+ *
+ * $R6 = return value from ReadINIStr
+ * $R7 = stores BrandShortName
+ * $R8 = stores BrandFullName
+ * $R9 = _PATH_TO_INI
+ */
+!macro SetBrandNameVars
+
+  !ifndef ${_MOZFUNC_UN}SetBrandNameVars
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}WordReplace
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    ; Prevent declaring vars twice when the SetBrandNameVars macro is
+    ; inserted into both the installer and uninstaller.
+    !ifndef SetBrandNameVars
+      Var BrandFullName
+      Var BrandFullNameDA
+      Var BrandShortName
+    !endif
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}SetBrandNameVars "!insertmacro ${_MOZFUNC_UN}SetBrandNameVarsCall"
+
+    Function ${_MOZFUNC_UN}SetBrandNameVars
+      Exch $R9
+      Push $R8
+      Push $R7
+      Push $R6
+
+      StrCpy $R8 "${BrandFullName}"
+      StrCpy $R7 "${BrandShortName}"
+
+      IfFileExists "$R9" +1 finish
+
+      ClearErrors
+      ReadINIStr $R6 $R9 "Branding" "BrandFullName"
+      IfErrors +2 +1
+      StrCpy $R8 "$R6"
+
+      ClearErrors
+      ReadINIStr $R6 $R9 "Branding" "BrandShortName"
+      IfErrors +2 +1
+      StrCpy $R7 "$R6"
+
+      finish:
+      StrCpy $BrandFullName "$R8"
+      ${${_MOZFUNC_UN}WordReplace} "$R8" "&" "&&" "+" $R8
+      StrCpy $BrandFullNameDA "$R8"
+      StrCpy $BrandShortName "$R7"
+
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro SetBrandNameVarsCall _PATH_TO_INI
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_INI}"
+  Call SetBrandNameVars
+  !verbose pop
+!macroend
+
+!macro un.SetBrandNameVarsCall _PATH_TO_INI
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_INI}"
+  Call un.SetBrandNameVars
+  !verbose pop
+!macroend
+
+!macro un.SetBrandNameVars
+  !ifndef un.SetBrandNameVars
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro SetBrandNameVars
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
 
 /**
  * Replaces the wizard's header image with the one specified.
