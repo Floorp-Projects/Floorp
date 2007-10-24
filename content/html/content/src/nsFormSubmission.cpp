@@ -764,16 +764,13 @@ nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
   // XXX: name parameter should be encoded per RFC 2231
   // RFC 2388 specifies that RFC 2047 be used, but I think it's not 
   // consistent with MIME standard.
-  // NOTE: The ordering of these headers, and in particular which comes first
-  // and which comes last, is important.  See comments in
-  // nsFSMultipartFormData::AddNameFilePair
   mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
                  + NS_LITERAL_CSTRING(CRLF)
-                 + NS_LITERAL_CSTRING("Content-Disposition: form-data; name=\"")
-                 + nameStr + NS_LITERAL_CSTRING("\"" CRLF)
                  + NS_LITERAL_CSTRING("Content-Type: text/plain; charset=")
                  + mCharset
-                 + NS_LITERAL_CSTRING(CRLF CRLF)
+                 + NS_LITERAL_CSTRING(CRLF)
+                 + NS_LITERAL_CSTRING("Content-Disposition: form-data; name=\"")
+                 + nameStr + NS_LITERAL_CSTRING("\"" CRLF CRLF)
                  + valueStr + NS_LITERAL_CSTRING(CRLF);
 
   return NS_OK;
@@ -800,23 +797,12 @@ nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
                  + NS_LITERAL_CSTRING(CRLF);
   if (!mBackwardsCompatibleSubmit) {
     // XXX Is there any way to tell when "8bit" or "7bit" etc may be
-    // XXXbz See bug 58189 for why we try to send it and bug 83065 for why we
-    // don't just always do it.  It seems like a better solution would be to
-    // just make sure we send this header before the Content-Type header (to
-    // deal with the PHP brain-deadness described in bug 83065), but to send it
-    // anyway.  However, we need to make sure it comes after the
-    // Content-Disposition header, because other server-side packages make the
-    // equally brain-dead assumption that Content-Disposition is the first
-    // header in every part.  See bug 116346 for that fun.
     mPostDataChunk +=
           NS_LITERAL_CSTRING("Content-Transfer-Encoding: binary" CRLF);
   }
   // XXX: name/filename parameter should be encoded per RFC 2231
   // RFC 2388 specifies that RFC 2047 be used, but I think it's not 
   // consistent with the MIME standard.
-  // NOTE: The Content-Disposition MUST come first and the Content-Type last to
-  // satisfy non-MIME-compliant server-side parsers.  See comment above on
-  // Content-Transfer-Encoding.
   mPostDataChunk +=
          NS_LITERAL_CSTRING("Content-Disposition: form-data; name=\"")
        + nameStr + NS_LITERAL_CSTRING("\"; filename=\"")
