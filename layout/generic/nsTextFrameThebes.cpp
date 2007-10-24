@@ -633,7 +633,6 @@ public:
     // ancestor of mStartFrame and the previous text frame, or null if there
     // was no previous text frame on this line.
     nsIFrame*    mAncestorControllingInitialBreak;
-    PRUint32     mTransformedTextOffset; // Only used inside BuildTextRunForFrames
     
     PRInt32 GetContentEnd() {
       return mEndFrame ? mEndFrame->GetContentOffset()
@@ -1145,8 +1144,6 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
 
     mappedFlow->mStartFrame = frame;
     mappedFlow->mAncestorControllingInitialBreak = mCommonAncestorWithLastFrame;
-    // This is temporary: it's overwritten in BuildTextRunForFrames
-    mappedFlow->mTransformedTextOffset = 0;
 
     AccumulateRunInfo(frame);
     if (mMappedFlows.Length() == 1) {
@@ -1338,8 +1335,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     MappedFlow* mappedFlow = &mMappedFlows[i];
     nsTextFrame* f = mappedFlow->mStartFrame;
 
-    mappedFlow->mTransformedTextOffset = currentTransformedTextOffset;
-
     lastStyleContext = f->GetStyleContext();
     // Detect use of text-transform or font-variant anywhere in the run
     textStyle = f->GetStyleText();
@@ -1464,29 +1459,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     return;
   }
 
-  // Setup factory chain
-  nsAutoPtr<nsTransformingTextRunFactory> transformingFactory;
-  if (anySmallcapsStyle) {
-    transformingFactory = new nsFontVariantTextRunFactory();
-  }
-  if (anyTextTransformStyle) {
-    transformingFactory =
-      new nsCaseTransformTextRunFactory(transformingFactory.forget());
-  }
-  nsTArray<nsStyleContext*> styles;
-  if (transformingFactory) {
-    for (i = 0; i < mMappedFlows.Length(); ++i) {
-      MappedFlow* mappedFlow = &mMappedFlows[i];
-      PRUint32 end = i == mMappedFlows.Length() - 1 ? transformedLength :
-          mMappedFlows[i + 1].mTransformedTextOffset;
-      nsStyleContext* sc = mappedFlow->mStartFrame->GetStyleContext();
-      PRUint32 j;
-      for (j = mappedFlow->mTransformedTextOffset; j < end; ++j) {
-        styles.AppendElement(sc);
-      }
-    }
-  }
-
   if (textFlags & nsTextFrameUtils::TEXT_HAS_TAB) {
     textFlags |= gfxTextRunFactory::TEXT_ENABLE_SPACING;
   }
@@ -1522,6 +1494,32 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   }
   if (mStartOfLine) {
     AppendLineBreakOffset(&textBreakPointsAfterTransform, transformedLength);
+  }
+
+  // Setup factory chain
+  nsAutoPtr<nsTransformingTextRunFactory> transformingFactory;
+  if (anySmallcapsStyle) {
+    transformingFactory = new nsFontVariantTextRunFactory();
+  }
+  if (anyTextTransformStyle) {
+    transformingFactory =
+      new nsCaseTransformTextRunFactory(transformingFactory.forget());
+  }
+  nsTArray<nsStyleContext*> styles;
+  if (transformingFactory) {
+    iter.SetOriginalOffset(0);
+    for (i = 0; i < mMappedFlows.Length(); ++i) {
+      MappedFlow* mappedFlow = &mMappedFlows[i];
+      PRUint32 offset = iter.GetSkippedOffset();
+      iter.AdvanceOriginal(mappedFlow->GetContentEnd() -
+              mappedFlow->mStartFrame->GetContentOffset());
+      PRUint32 end = iter.GetSkippedOffset();
+      nsStyleContext* sc = mappedFlow->mStartFrame->GetStyleContext();
+      PRUint32 j;
+      for (j = offset; j < end; ++j) {
+        styles.AppendElement(sc);
+      }
+    }
   }
 
   gfxTextRun* textRun;
@@ -1617,18 +1615,17 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
   PRUint32 i;
   for (i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
+    PRUint32 offset = iter.GetSkippedOffset();
+    gfxSkipCharsIterator iterNext = iter;
+    iterNext.AdvanceOriginal(mappedFlow->GetContentEnd() -
+            mappedFlow->mStartFrame->GetContentOffset());
+
     nsAutoPtr<BreakSink>* breakSink = mBreakSinks.AppendElement(
-      new BreakSink(aTextRun, mContext,
-                    mappedFlow->mTransformedTextOffset, aIsExistingTextRun));
+      new BreakSink(aTextRun, mContext, offset, aIsExistingTextRun));
     if (!breakSink || !*breakSink)
       return;
-    PRUint32 offset = mappedFlow->mTransformedTextOffset;
 
-    PRUint32 length =
-      (i == mMappedFlows.Length() - 1 ? aTextRun->GetLength()
-       : mMappedFlows[i + 1].mTransformedTextOffset)
-      - offset;
-
+    PRUint32 length = iterNext.GetSkippedOffset() - offset;
     PRUint32 flags = 0;
     nsIFrame* initialBreakController = mappedFlow->mAncestorControllingInitialBreak;
     if (!initialBreakController) {
@@ -1661,8 +1658,7 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
       }
     }
     
-    iter.AdvanceOriginal(mappedFlow->GetContentEnd() -
-            mappedFlow->mStartFrame->GetContentOffset());
+    iter = iterNext;
   }
 }
 
