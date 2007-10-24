@@ -281,6 +281,11 @@ protected:
   PRBool IsRealPaused();
 
   /**
+   * Indicates if the download should try to automatically resume or not.
+   */
+  PRBool ShouldAutoResume();
+
+  /**
    * Download is in a state to stop and complete the download?
    */
   PRBool IsFinishable();
@@ -347,6 +352,16 @@ private:
   PRTime mLastUpdate;
   PRInt64 mResumedAt;
   double mSpeed;
+
+  /**
+   * Track various states of the download trying to auto-resume when starting
+   * the download manager or restoring from a crash.
+   *
+   * DONT_RESUME: Don't automatically resume the download
+   * AUTO_RESUME: Automaically resume the download
+   */
+  enum AutoResume { DONT_RESUME, AUTO_RESUME };
+  AutoResume mAutoResume;
 
   friend class nsDownloadManager;
 };
