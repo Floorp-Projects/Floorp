@@ -1003,8 +1003,15 @@ PlacesTreeView.prototype = {
       return false;
     }
 
-    return this._visibleElements[aRow].indentLevel ==
-           this._visibleElements[aRow + 1].indentLevel;
+    var thisLevel = this._visibleElements[aRow].indentLevel;
+    for (var i = aAfterIndex + 1; i < this._visibleElements.length; ++i) {
+      var nextLevel = this._visibleElements[i].indentLevel;
+      if (nextLevel == thisLevel)
+        return true;
+      if (nextLevel < thisLevel)
+        break;
+    }
+    return false;
   },
 
   getLevel: function PTV_getLevel(aRow) {
