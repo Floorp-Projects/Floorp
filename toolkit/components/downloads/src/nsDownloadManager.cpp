@@ -132,6 +132,28 @@ nsDownloadManager::~nsDownloadManager()
 }
 
 nsresult
+nsDownloadManager::ResumeRetry(nsDownload *aDl)
+{
+  // Keep a reference in case we need to cancel the download
+  nsRefPtr<nsDownload> dl = aDl;
+
+  // Try to resume the active download
+  nsresult rv = dl->Resume();
+
+  // If not, try to retry the download
+  if (NS_FAILED(rv)) {
+    // First cancel the download so it's no longer active
+    rv = CancelDownload(dl->mID);
+
+    // Then retry it
+    if (NS_SUCCEEDED(rv))
+      rv = RetryDownload(dl->mID);
+  }
+
+  return rv;
+}
+
+nsresult
 nsDownloadManager::PauseAllDownloads(PRBool aSetResume)
 {
   nsresult retVal = NS_OK;
@@ -146,6 +168,32 @@ nsDownloadManager::PauseAllDownloads(PRBool aSetResume)
 
       // Try to pause the download but don't bail now if we fail
       nsresult rv = dl->Pause();
+      if (NS_FAILED(rv))
+        retVal = rv;
+    }
+  }
+
+  return retVal;
+}
+
+nsresult
+nsDownloadManager::ResumeAllDownloads(PRBool aResumeAll)
+{
+  nsresult retVal = NS_OK;
+  for (PRInt32 i = mCurrentDownloads.Count() - 1; i >= 0; --i) {
+    nsRefPtr<nsDownload> dl = mCurrentDownloads[i];
+
+    // If aResumeAll is true, then resume everything; otherwise, check if the
+    // download should auto-resume
+    if (aResumeAll || dl->ShouldAutoResume()) {
+      // Reset auto-resume before retrying so that it gets into the DB through
+      // ResumeRetry's eventual call to SetState. We clear the value now so we
+      // don't accidentally query completed downloads that were previously
+      // auto-resumed (and try to resume them).
+      dl->mAutoResume = nsDownload::DONT_RESUME;
+
+      // Try to resume/retry the download but don't bail now if we fail
+      nsresult rv = ResumeRetry(dl);
       if (NS_FAILED(rv))
         retVal = rv;
     }
@@ -678,13 +726,16 @@ nsDownloadManager::RestoreActiveDownloads()
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id "
     "FROM moz_downloads "
-    "WHERE state = ?1 "
-      "AND LENGTH(entityID) > 0"), getter_AddRefs(stmt));
+    "WHERE (state = ?1 AND LENGTH(entityID) > 0) "
+      "OR autoResume != ?2"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->BindInt32Parameter(0, nsIDownloadManager::DOWNLOAD_PAUSED);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32Parameter(1, nsDownload::DONT_RESUME);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  nsresult retVal = NS_OK;
   PRBool hasResults;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResults)) && hasResults) {
     nsRefPtr<nsDownload> dl;
@@ -693,9 +744,14 @@ nsDownloadManager::RestoreActiveDownloads()
     // database because we're iterating over a live statement.
     if (NS_FAILED(GetDownloadFromDB(stmt->AsInt32(0), getter_AddRefs(dl))) ||
         NS_FAILED(AddToCurrentDownloads(dl)))
-      rv = NS_ERROR_FAILURE;
+      retVal = NS_ERROR_FAILURE;
   }
-  return rv;
+
+  // Try to resume only the downloads that should auto-resume
+  rv = ResumeAllDownloads(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return retVal;
 }
 
 PRInt64
