@@ -114,6 +114,7 @@
   </hbox>
 
   <tree id="historyTree"
+        class="sidebar-placesTree"
         flex="1"
         type="places"
         context="placesContext"
@@ -123,6 +124,6 @@
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
     </treecols>
-    <treechildren flex="1"/>
+    <treechildren class="sidebar-placesTreechildren" flex="1"/>
   </tree>
 </page>
