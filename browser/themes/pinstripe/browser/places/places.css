@@ -1,3 +1,26 @@
+/* Sidebars */
+
+.sidebar-placesTree {
+  -moz-appearance: none;
+  border: 0;
+  margin: 0;
+  border-top: 1px solid ThreeDShadow;
+}
+
+.sidebar-placesTreechildren::-moz-tree-cell(leaf) ,
+.sidebar-placesTreechildren::-moz-tree-image(leaf) {
+  cursor: pointer;
+}
+
+.sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.sidebar-placesTreechildren::-moz-tree-cell(separator) {
+  cursor: default;
+}
+
 /* Toolbar */
 #placesToolbar {
   border-bottom: none;
