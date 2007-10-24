@@ -1358,8 +1358,15 @@ public:
      * be treated as invisible and zero-width.
      */
     static PRBool IsInvalidChar(PRUnichar ch) {
-        return ch == '\t' || ch == '\r' || ch == '\n' || ch == '\f' ||
-           ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/;
+        if (ch >= 32) {
+            return ch == 0x0085/*NEL*/ ||
+               ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/;
+        }
+        // We could just blacklist all control characters, but it seems better
+        // to only blacklist the ones we know cause problems for native font
+        // engines.
+        return ch == 0x0B || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\f' ||
+            (ch >= 0x1c && ch <= 0x1f);
     }
 
     /**
