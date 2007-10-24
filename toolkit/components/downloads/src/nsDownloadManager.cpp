@@ -1158,9 +1158,10 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
   // Have the download cancel its connection
   (void)dl->Cancel();
 
-  // Dump the temp file.  This should really be done when the transfer
-  // is cancelled, but there are other cancellation causes that shouldn't
-  // remove this. We need to improve those bits.
+  // Dump the temp file because we know we don't need the file anymore. The
+  // underlying transfer creating the file doesn't delete the file because it
+  // can't distinguish between a pause that cancels the transfer or a real
+  // cancel.
   if (dl->mTempFile) {
     PRBool exists;
     dl->mTempFile->Exists(&exists);
