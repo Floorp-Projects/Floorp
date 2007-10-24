@@ -7836,17 +7836,22 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
           NS_ASSERTION(docElementFrame->GetParent() == mDocElementContainingBlock,
                        "Unexpected doc element parent frame");
 
+          // Notify self that we will destroy the entire frame tree, this blocks
+          // RemoveMappingsForFrameSubtree() which would otherwise lead to a
+          // crash since we cleared the placeholder map above (bug 398982).
+          PRBool wasDestroyingFrameTree = mIsDestroyingFrameTree;
+          WillDestroyFrameTree();
           // Remove the old document element hieararchy
           rv = state.mFrameManager->RemoveFrame(mDocElementContainingBlock,
                                                 nsnull, docElementFrame);
+          mIsDestroyingFrameTree = wasDestroyingFrameTree;
           if (NS_FAILED(rv)) {
             return rv;
           }
-
         }
 
         // Create the new document element hierarchy
-        nsIFrame*                 newChild;
+        nsIFrame* newChild;
         rv = ConstructDocElementFrame(state, rootContent,
                                       mDocElementContainingBlock, &newChild);
 
@@ -11273,8 +11278,8 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
     PRUint32 event;
     if (frame) {
       nsIFrame *newFrame = mPresShell->GetPrimaryFrameFor(aContent);
-      event = newFrame ? nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE :
-                         nsIAccessibleEvent::EVENT_ASYNCH_HIDE;
+      event = newFrame ? PRUint32(nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE) :
+                         PRUint32(nsIAccessibleEvent::EVENT_ASYNCH_HIDE);
     }
     else {
       event = nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
