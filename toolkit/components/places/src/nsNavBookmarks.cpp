@@ -1431,7 +1431,7 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
   if (aIndex < -1)
     return NS_ERROR_INVALID_ARG;
 
-  // Disallow making a folder it's own parent.
+  // Disallow making an item its own parent.
   if (aItemId == aNewParent)
     return NS_ERROR_INVALID_ARG;
 
@@ -2170,7 +2170,12 @@ nsNavBookmarks::GetFolderIdForItem(PRInt64 aItemId, PRInt64 *aFolderId)
   if (!results)
     return NS_ERROR_INVALID_ARG; // invalid item id
 
-  return mDBGetItemProperties->GetInt64(kGetItemPropertiesIndex_Parent, aFolderId);
+  rv = mDBGetItemProperties->GetInt64(kGetItemPropertiesIndex_Parent, aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // this should not happen, but see bug #400448 for details
+  NS_ENSURE_TRUE(aItemId != *aFolderId, NS_ERROR_UNEXPECTED);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
