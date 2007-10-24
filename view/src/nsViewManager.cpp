@@ -728,6 +728,8 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegio
   // in which case we don't need to worry about invalidating the clipped-out part.
   nsRect damageRect = aView->GetDimensions();
   if (damageRect.IsEmpty()) {
+    // Don't forget to undo mScrollCnt!
+    --RootViewManager()->mScrollCnt;
     return;
   }
   nsPoint offset = ComputeViewOffset(aView);
@@ -736,6 +738,8 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView, const nsRegion& aUpdateRegio
   // if this is a floating view, it isn't covered by any widgets other than
   // its children, which are handled by the widget scroller.
   if (aView->GetFloating()) {
+    // Don't forget to undo mScrollCnt!
+    --RootViewManager()->mScrollCnt;
     return;
   }
 
