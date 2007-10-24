@@ -50,6 +50,7 @@
 #include "gfxRect.h"
 #include "nsExpirationTracker.h"
 #include "nsMathUtils.h"
+#include "nsBidiUtils.h"
 
 class gfxContext;
 class gfxTextRun;
@@ -1360,7 +1361,9 @@ public:
     static PRBool IsInvalidChar(PRUnichar ch) {
         if (ch >= 32) {
             return ch == 0x0085/*NEL*/ ||
-               ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/;
+                ((ch & 0xFF00) == 0x2000 /* Unicode control character */ &&
+                 (ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/ ||
+                  IS_BIDI_CONTROL_CHAR(ch)));
         }
         // We could just blacklist all control characters, but it seems better
         // to only blacklist the ones we know cause problems for native font
