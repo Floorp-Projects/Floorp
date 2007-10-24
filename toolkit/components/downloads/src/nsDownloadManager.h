@@ -156,6 +156,15 @@ protected:
   nsDownload *FindDownload(PRUint32 aID);
 
   /**
+   * Pause all active downloads and remember if they should try to auto-resume
+   * when the download manager starts again.
+   *
+   * @param aSetResume Indicate if the downloads that get paused should be set
+   *                   as auto-resume.
+   */
+  nsresult PauseAllDownloads(PRBool aSetResume);
+
+  /**
    * Stop tracking the active downloads. Only use this when we're about to quit
    * the download manager because we destroy our list of active downloads to
    * break the dlmgr<->dl cycle. Active downloads that aren't real-paused will

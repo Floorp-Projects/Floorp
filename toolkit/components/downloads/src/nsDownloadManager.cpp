@@ -83,8 +83,6 @@
 #include "nsDownloadScanner.h"
 #endif
 
-static PRBool gStoppingDownloads = PR_FALSE;
-
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
 #define DOWNLOAD_MANAGER_ALERT_ICON "chrome://mozapps/skin/downloads/downloadIcon.png"
 #define PREF_BDM_SHOWALERTONCOMPLETE "browser.download.manager.showAlertOnComplete"
@@ -131,6 +129,29 @@ nsDownloadManager::~nsDownloadManager()
   delete mScanner;
 #endif
   gDownloadManagerService = nsnull;
+}
+
+nsresult
+nsDownloadManager::PauseAllDownloads(PRBool aSetResume)
+{
+  nsresult retVal = NS_OK;
+  for (PRInt32 i = mCurrentDownloads.Count() - 1; i >= 0; --i) {
+    nsRefPtr<nsDownload> dl = mCurrentDownloads[i];
+
+    // Only pause things that need to be paused
+    if (!dl->IsPaused()) {
+      // Set auto-resume before pausing so that it gets into the DB
+      dl->mAutoResume = aSetResume ? nsDownload::AUTO_RESUME :
+                                     nsDownload::DONT_RESUME;
+
+      // Try to pause the download but don't bail now if we fail
+      nsresult rv = dl->Pause();
+      if (NS_FAILED(rv))
+        retVal = rv;
+    }
+  }
+
+  return retVal;
 }
 
 nsresult
@@ -1562,10 +1583,11 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     if (dl2)
       return CancelDownload(id);
   } else if (strcmp(aTopic, "quit-application") == 0) {
-    gStoppingDownloads = PR_TRUE;
+    // Try to pause all downloads and mark them as auto-resume
+    (void)PauseAllDownloads(PR_TRUE);
 
-    if (currDownloadCount)
-      (void)RemoveAllDownloads();
+    // Remove downloads to break cycles and cancel downloads
+    (void)RemoveAllDownloads();
 
     // Now that active downloads have been canceled, remove all downloads if
     // the user's retention policy specifies it.
