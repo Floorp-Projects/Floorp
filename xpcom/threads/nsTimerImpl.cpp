@@ -285,6 +285,8 @@ NS_IMETHODIMP nsTimerImpl::Cancel()
   if (gThread)
     gThread->RemoveTimer(this);
 
+  ReleaseCallback();
+
   return NS_OK;
 }
 
@@ -378,20 +380,43 @@ void nsTimerImpl::Fire()
     gThread->UpdateFilter(mDelay, timeout, now);
 
   mFiring = PR_TRUE;
+  
+  // Handle callbacks that re-init the timer, but avoid leaking.
+  // See bug 330128.
+  CallbackUnion callback = mCallback;
+  PRUintn callbackType = mCallbackType;
+  if (callbackType == CALLBACK_TYPE_INTERFACE)
+    NS_ADDREF(callback.i);
+  else if (callbackType == CALLBACK_TYPE_OBSERVER)
+    NS_ADDREF(callback.o);
+  ReleaseCallback();
 
-  switch (mCallbackType) {
+  switch (callbackType) {
     case CALLBACK_TYPE_FUNC:
-      mCallback.c(this, mClosure);
+      callback.c(this, mClosure);
       break;
     case CALLBACK_TYPE_INTERFACE:
-      mCallback.i->Notify(this);
+      callback.i->Notify(this);
       break;
     case CALLBACK_TYPE_OBSERVER:
-      mCallback.o->Observe(static_cast<nsITimer*>(this),
-                           NS_TIMER_CALLBACK_TOPIC,
-                           nsnull);
+      callback.o->Observe(static_cast<nsITimer*>(this),
+                          NS_TIMER_CALLBACK_TOPIC,
+                          nsnull);
       break;
     default:;
+  }
+
+  // If the callback didn't re-init the timer, and it's not a one-shot timer,
+  // restore the callback state.
+  if (mCallbackType == CALLBACK_TYPE_UNKNOWN && callbackType != TYPE_ONE_SHOT) {
+    mCallback = callback;
+    mCallbackType = callbackType;
+  } else {
+    // The timer was a one-shot, or the callback was reinitialized.
+    if (callbackType == CALLBACK_TYPE_INTERFACE)
+      NS_RELEASE(callback.i);
+    else if (callbackType == CALLBACK_TYPE_OBSERVER)
+      NS_RELEASE(callback.o);
   }
 
   mFiring = PR_FALSE;
