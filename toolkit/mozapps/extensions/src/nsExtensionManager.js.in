@@ -7023,16 +7023,6 @@ ExtensionsDataSource.prototype = {
   {
     // Update the Extensions datasource
     this.setTargetApplicationInfo(id, targetAppID, minVersion, maxVersion, null);
-
-    var installLocation = InstallLocations.get(this.getInstallLocationKey(id));
-    if (installLocation.name != KEY_APP_PROFILE)
-      return;
-
-    var installManifestFile = installLocation.getItemFile(id, FILE_INSTALL_MANIFEST);
-    // Only update if the item exists and we can write to the location
-    if (installManifestFile.exists() && installLocation.canAccess)
-      this.setTargetApplicationInfo(id, targetAppID, minVersion, maxVersion,
-                                    getInstallManifest(installManifestFile));
   },
 
   /**
