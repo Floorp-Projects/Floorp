@@ -343,6 +343,7 @@ function buildPalette()
   templateNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                           "splitter");
   templateNode.id = "splitter";
+  templateNode.className = "toolbar-splitter";
   wrapPaletteItem(templateNode, currentRow, null);
 
   var rowSlot = 3;
