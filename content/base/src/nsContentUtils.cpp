@@ -3704,7 +3704,10 @@ nsContentUtils::IsNativeAnonymous(nsIContent* aContent)
     // will get "wrong" style data, but it's just asking for that sort of thing
     // anyway.
     NS_ASSERTION(!aContent->IsNativeAnonymous() ||
-                 !aContent->GetCurrentDoc(),
+                 !aContent->GetCurrentDoc() ||
+                 (aContent->GetParent() &&
+                  aContent->GetParent()->NodeInfo()->
+                    Equals(nsGkAtoms::use, kNameSpaceID_SVG)),
                  "Native anonymous node with wrong binding parent");
     aContent = bindingParent;
   }
