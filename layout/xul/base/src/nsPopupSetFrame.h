@@ -91,6 +91,7 @@ public:
   virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
       return MakeFrameName(NS_LITERAL_STRING("PopupSet"), aResult);
@@ -102,7 +103,6 @@ protected:
   nsresult AddPopupFrameList(nsIFrame* aPopupFrameList);
   nsresult AddPopupFrame(nsIFrame* aPopup);
   nsresult RemovePopupFrame(nsIFrame* aPopup);
-  void DestroyPopupFrame(nsCSSFrameConstructor* aFc, nsIFrame* aPopup);
   
   nsPopupFrameList* mPopupList;
 
