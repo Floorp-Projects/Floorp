@@ -133,7 +133,10 @@ protected:
                           const nsAString &aTempPath,
                           PRInt64 aStartTime,
                           PRInt64 aEndTime,
-                          PRInt32 aState);
+                          PRInt32 aState,
+                          const nsACString &aMimeType,
+                          const nsACString &aPreferredApp,
+                          nsHandlerInfoAction aPreferredAction);
 
   void NotifyListenersOnDownloadStateChange(PRInt16 aOldState,
                                             nsIDownload *aDownload);
@@ -299,6 +302,18 @@ protected:
    * message or use a generic download failure message if nsnull.
    */
   nsresult FailDownload(nsresult aStatus, const PRUnichar *aMessage);
+
+  /**
+   * Opens the downloaded file with the appropriate application, which is
+   * either the OS default, MIME type default, or the one selected by the user.
+   *
+   * This also adds the temporary file to the "To be deleted on Exit" list, if
+   * the corresponding user preference is set (except on OS X).
+   *
+   * This function was adopted from nsExternalAppHandler::OpenWithApplication
+   * (uriloader/exthandler/nsExternalHelperAppService.cpp).
+   */
+  nsresult OpenWithApplication();
 
   nsDownloadManager *mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;
