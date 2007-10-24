@@ -66,6 +66,7 @@ REQUIRES  = xpcom \
             alerts \
             storage \
             xulapp \
+            exthandler \
             $(NULL)
 
 CPPSRCS   = \
