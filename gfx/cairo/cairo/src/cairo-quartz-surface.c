@@ -39,6 +39,7 @@
 #include "cairo-quartz-private.h"
 
 #include <Carbon/Carbon.h>
+#include <limits.h>
 
 #undef QUARTZ_DEBUG
 
@@ -96,6 +97,26 @@ CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
 
 static void quartz_surface_to_png (cairo_quartz_surface_t *nq, char *dest);
 static void quartz_image_to_png (CGImageRef, char *dest);
+
+/* CoreGraphics limitation with flipped CTM surfaces: height must be less than signed 16-bit max */
+
+#define CG_MAX_HEIGHT   SHRT_MAX
+#define CG_MAX_WIDTH    USHRT_MAX
+
+/* is the desired size of the surface within bounds? */
+static cairo_bool_t verify_surface_size(int width, int height)
+{
+    /* hmmm, allow width, height == 0 ? */
+    if (width < 0 || height < 0) {
+	return FALSE;
+    }
+
+    if (width > CG_MAX_WIDTH || height > CG_MAX_HEIGHT) {
+	return FALSE;
+    }
+
+    return TRUE;
+}
 
 /*
  * Cairo path -> Quartz path conversion helpers
@@ -981,6 +1002,12 @@ _cairo_quartz_surface_create_similar (void *abstract_surface,
 	format = CAIRO_FORMAT_A8;
     else
 	return NULL;
+	
+    // verify width and height of surface
+    if (!verify_surface_size(width, height)) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
 
     return cairo_quartz_surface_create (format, width, height);
 }
@@ -996,6 +1023,13 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 {
     cairo_quartz_surface_t *new_surface = NULL;
     cairo_format_t new_format;
+    
+    *clone_out = NULL;
+
+    // verify width and height of surface
+    if (!verify_surface_size(width, height)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     CGImageRef quartz_image = NULL;
 
@@ -1032,6 +1066,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 
 	new_format = isurf->format;
 
+        
 	dataProvider = CGDataProviderCreateWithData (NULL,
 						     isurf->data,
 						     isurf->height * isurf->stride,
@@ -1680,6 +1715,12 @@ cairo_quartz_surface_create (cairo_format_t format,
     void *imageData;
     int stride;
     int bitsPerComponent;
+
+    // verify width and height of surface
+    if (!verify_surface_size(width, height)) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     if (format == CAIRO_FORMAT_ARGB32) {
 	cgColorspace = CGColorSpaceCreateDeviceRGB();
