@@ -100,8 +100,11 @@ enum {
 
   NODE_IS_INSERTION_PARENT =     0x00001000U,
 
+  // Keep track of whether this node is in the middle of binding teardown
+  NODE_IS_IN_BINDING_TEARDOWN =  0x00002000U,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               13,
+  NODE_SCRIPT_TYPE_OFFSET =               14,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
