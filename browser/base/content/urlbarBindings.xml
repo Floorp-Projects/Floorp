@@ -231,24 +231,23 @@
               subdomain = "[";
               port = "]" + port;
             }
-            else if (0 && !/^[.0-9]+$/.test(host)) {
+            else if (0) {
               //XXX subdomain detection disabled (bug 386727)
               //XXX subdomain detection disabled for IP addresses (bug 364129)
 
-              // getEffectiveTLDLength might convert our host and return a misleading length.
-              // To avoid this, pass the ASCII host, count the dots of its effective TLD
-              // and use that number to operate on our actual host.
-
-              var asciiHost = this._uri.asciiHost;
-              var domainSegments = host.split(".");
-              var cSubdomain = domainSegments.length -
-                               asciiHost.slice(asciiHost.length -
-                                               this.tldService.getEffectiveTLDLength(asciiHost))
-                                        .split(".").length - 1;
-              if (cSubdomain > 0) {
-                host = domainSegments;
-                subdomain = host.splice(0, cSubdomain).join(".") + ".";
-                host = host.join(".");
+              try {
+                var domainSegments = host.split(".");
+                var cSubdomain = domainSegments.length -
+                                 this.tldService.getBaseDomain(this._uri)
+                                                .split(".").length;
+                if (cSubdomain > 0) {
+                  host = domainSegments;
+                  subdomain = host.splice(0, cSubdomain).join(".") + ".";
+                  host = host.join(".");
+                }
+              } catch (e) {
+                // ip address, or other failure
+                subdomain = "";
               }
             } else {
               subdomain = "";

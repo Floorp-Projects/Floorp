@@ -49,6 +49,7 @@
 #include "nsIFile.h"
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
+#include "prnetdb.h"
 
 // The file name of the list of TLD-like names.  A file with this name in the
 // system "res" directory will always be used.  In addition, if a file with
@@ -96,6 +97,10 @@ nsEffectiveTLDService::Init()
   if (!mHash.Init())
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsresult rv;
+  mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   return LoadEffectiveTLDFiles();
 }
 
@@ -112,26 +117,93 @@ nsEffectiveTLDService::~nsEffectiveTLDService()
   gArena = nsnull;
 }
 
-// nsEffectiveTLDService::getEffectiveTLDLength
-//
-// The main external function: finds the length in bytes of the effective TLD
-// for the given hostname.  This will fail, generating an error, if the 
-// hostname is not UTF-8 or includes characters that are not valid in a URL.
+// External function for dealing with URI's correctly.
+// Pulls out the host portion from an nsIURI, and calls through to
+// GetPublicSuffixFromHost().
 NS_IMETHODIMP
-nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
-                                             PRUint32 *effTLDLength)
+nsEffectiveTLDService::GetPublicSuffix(nsIURI     *aURI,
+                                       nsACString &aPublicSuffix)
 {
-  // Create a mutable copy of the hostname and normalize it.  This will fail
-  // if the hostname includes invalid characters.
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
+  NS_ENSURE_ARG_POINTER(innerURI);
+
+  nsCAutoString host;
+  innerURI->GetHost(host);
+
+  return GetBaseDomainInternal(host, 0, aPublicSuffix);
+}
+
+// External function for dealing with URI's correctly.
+// Pulls out the host portion from an nsIURI, and calls through to
+// GetBaseDomainFromHost().
+NS_IMETHODIMP
+nsEffectiveTLDService::GetBaseDomain(nsIURI     *aURI,
+                                     PRUint32    aAdditionalParts,
+                                     nsACString &aBaseDomain)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
+  NS_ENSURE_ARG_POINTER(innerURI);
+
+  nsCAutoString host;
+  innerURI->GetHost(host);
+
+  return GetBaseDomainInternal(host, aAdditionalParts + 1, aBaseDomain);
+}
+
+// External function for dealing with a host string directly: finds the public
+// suffix (e.g. co.uk) for the given hostname. See GetBaseDomainInternal().
+NS_IMETHODIMP
+nsEffectiveTLDService::GetPublicSuffixFromHost(const nsACString &aHostname,
+                                               nsACString       &aPublicSuffix)
+{
+  return GetBaseDomainInternal(aHostname, 0, aPublicSuffix);
+}
+
+// External function for dealing with a host string directly: finds the base
+// domain (e.g. www.co.uk) for the given hostname and number of subdomain parts
+// requested. See GetBaseDomainInternal().
+NS_IMETHODIMP
+nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString &aHostname,
+                                             PRUint32          aAdditionalParts,
+                                             nsACString       &aBaseDomain)
+{
+  return GetBaseDomainInternal(aHostname, aAdditionalParts + 1, aBaseDomain);
+}
+
+// Finds the base domain for a host, with requested number of additional parts.
+// This will fail, generating an error, if the host is an IPv4/IPv6 address,
+// if more subdomain parts are requested than are available, or if the hostname
+// includes characters that are not valid in a URL. Normalization is performed
+// on the host string and the result will be in UTF8.
+nsresult
+nsEffectiveTLDService::GetBaseDomainInternal(const nsACString &aHostname,
+                                             PRUint32          aAdditionalParts,
+                                             nsACString       &aBaseDomain)
+{
+  if (aHostname.IsEmpty())
+    return NS_ERROR_INVALID_ARG;
+
+  // Create a mutable copy of the hostname and normalize it to UTF8.
+  // This will fail if the hostname includes invalid characters.
   nsCAutoString normHostname(aHostname);
   nsresult rv = NormalizeHostname(normHostname);
   if (NS_FAILED(rv))
     return rv;
 
-  // chomp any trailing dot, and remember to add it back later
-  PRUint32 trailingDot = normHostname.Last() == '.';
+  // chomp any trailing dot, and keep track of it for later
+  PRBool trailingDot = normHostname.Last() == '.';
   if (trailingDot)
     normHostname.Truncate(normHostname.Length() - 1);
+
+  // Check if we're dealing with an IPv4/IPv6 hostname, and return
+  PRNetAddr addr;
+  PRStatus result = PR_StringToNetAddr(normHostname.get(), &addr);
+  if (result == PR_SUCCESS)
+    return NS_ERROR_HOST_IS_IP_ADDRESS;
 
   // walk up the domain tree, most specific to least specific,
   // looking for matches at each level. note that a given level may
@@ -140,29 +212,30 @@ nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
   const char *currDomain = normHostname.get();
   const char *nextDot = strchr(currDomain, '.');
   const char *end = currDomain + normHostname.Length();
+  const char *eTLD = currDomain;
   while (1) {
     nsDomainEntry *entry = mHash.GetEntry(currDomain);
     if (entry) {
       if (entry->IsWild() && prevDomain) {
         // wildcard rules imply an eTLD one level inferior to the match.
-        *effTLDLength = end - prevDomain;
+        eTLD = prevDomain;
         break;
 
       } else if (entry->IsNormal() || !nextDot) {
         // specific match, or we've hit the top domain level
-        *effTLDLength = end - currDomain;
+        eTLD = currDomain;
         break;
 
       } else if (entry->IsException()) {
         // exception rules imply an eTLD one level superior to the match.
-        *effTLDLength = end - nextDot - 1;
+        eTLD = nextDot + 1;
         break;
       }
     }
 
     if (!nextDot) {
-      // we've hit the top domain level; return it by default.
-      *effTLDLength = end - currDomain;
+      // we've hit the top domain level; use it by default.
+      eTLD = currDomain;
       break;
     }
 
@@ -171,38 +244,52 @@ nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
     nextDot = strchr(currDomain, '.');
   }
 
+  // count off the number of requested domains.
+  const char *begin = normHostname.get();
+  const char *iter = eTLD;
+  while (1) {
+    if (iter == begin)
+      break;
+
+    if (*(--iter) == '.' && aAdditionalParts-- == 0) {
+      ++iter;
+      ++aAdditionalParts;
+      break;
+    }
+  }
+
+  if (aAdditionalParts != 0)
+    return NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS;
+
+  aBaseDomain = Substring(iter, end);
   // add on the trailing dot, if applicable
-  *effTLDLength += trailingDot;
+  if (trailingDot)
+    aBaseDomain.Append('.');
 
   return NS_OK;
 }
 
-// NormalizeHostname
-//
-// Normalizes characters of hostname. ASCII names are lower-cased, and names
-// using other characters are normalized with nsIIDNService::Normalize, which
-// follows RFC 3454.
+// Normalizes characters of hostname. ASCII names are lower-cased, UTF8 names
+// are normalized with nsIIDNService::Normalize which follows RFC 3454, and
+// ACE names are converted to UTF8 and normalized as above.
 nsresult
 nsEffectiveTLDService::NormalizeHostname(nsCString &aHostname)
 {
   if (IsASCII(aHostname)) {
-    ToLowerCase(aHostname);
-    return NS_OK;
-  }
+    PRBool isACE;
+    if (NS_FAILED(mIDNService->IsACE(aHostname, &isACE)) || !isACE) {
+      ToLowerCase(aHostname);
+      return NS_OK;
+    }
 
-  if (!mIDNService) {
-    nsresult rv;
-    mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = mIDNService->ConvertACEtoUTF8(aHostname, aHostname);
+    if (NS_FAILED(rv)) return rv;
   }
 
   return mIDNService->Normalize(aHostname, aHostname);
 }
 
-// AddEffectiveTLDEntry
-//
 // Adds the given domain name rule to the effective-TLD hash.
-//
 // CAUTION: As a side effect, the domain name rule will be normalized.
 // see NormalizeHostname().
 nsresult
@@ -253,8 +340,6 @@ nsEffectiveTLDService::AddEffectiveTLDEntry(nsCString &aDomainName)
   return NS_OK;
 }
 
-// LocateEffectiveTLDFile
-//
 // Locates the effective-TLD file.  If aUseProfile is true, uses the file from
 // the user's profile directory; otherwise uses the one from the system "res"
 // directory.  Places nsnull in foundFile if the desired file was not found.
@@ -314,8 +399,6 @@ TruncateAtWhitespace(nsCString &aString)
   }
 }
 
-// LoadOneEffectiveTLDFile
-//
 // Loads the contents of the given effective-TLD file, building the tree as it
 // goes.
 nsresult
@@ -350,8 +433,6 @@ nsEffectiveTLDService::LoadOneEffectiveTLDFile(nsCOMPtr<nsIFile>& effTLDFile)
   return NS_OK;
 }
 
-// LoadEffectiveTLDFiles
-//
 // Loads the contents of the system and user effective-TLD files.
 nsresult
 nsEffectiveTLDService::LoadEffectiveTLDFiles()

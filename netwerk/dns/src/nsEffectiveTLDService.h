@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pamela Greene <pamg.bugs@gmail.com> (original author)
+ *   Daniel Witte <dwitte@stanford.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -111,6 +112,7 @@ public:
   nsresult Init();
 
 private:
+  nsresult GetBaseDomainInternal(const nsACString &aHostname, PRUint32 aAdditionalParts, nsACString &aBaseDomain);
   nsresult NormalizeHostname(nsCString &aHostname);
   nsresult AddEffectiveTLDEntry(nsCString &aDomainName);
   nsresult LoadEffectiveTLDFiles();
