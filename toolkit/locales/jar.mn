@@ -109,3 +109,5 @@
   locale/@AB_CD@/help/help.dtd                            (%chrome/mozapps/help/help.dtd)
   locale/@AB_CD@/help/help-toc.rdf                        (%chrome/mozapps/help/help-toc.rdf)
   locale/@AB_CD@/help/welcome.xhtml                       (%chrome/mozapps/help/welcome.xhtml)
+% locale places @AB_CD@ %locale/@AB_CD@/places/
+  locale/@AB_CD@/places/places.properties                 (%chrome/places/places.properties)
