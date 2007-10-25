@@ -94,8 +94,9 @@
     <command id="Help:Forward" oncommand="goForward();" observes="canGoForward"/>
     <command id="Help:ToggleSidebar" oncommand="toggleSidebar();"/>
     <command id="cmd_closeWindow" oncommand="close();"/>
-    <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
-    <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+    <command id="cmd_fullZoomReduce" oncommand="ZoomManager.reduce();"/>
+    <command id="cmd_fullZoomEnlarge" oncommand="ZoomManager.enlarge();"/>
+    <command id="cmd_fullZoomReset" oncommand="ZoomManager.reset();"/>
     <command id="cmd_find"
              oncommand="document.getElementById('FindToolbar').onFindCommand();"/>
     <command id="cmd_findAgain"
@@ -131,14 +132,14 @@
          command="cmd_closeWindow" modifiers="accel"/>
     <key id="key_closeSearchSidebar" keycode="VK_ESCAPE"
          oncommand="hideSearchSidebar(event)"/>
-    <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"
-         command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key id="key_textZoomEnlarge2" key="&textZoomEnlargeCmd.commandkey2;"
-         command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;"
-         command="cmd_textZoomReduce" modifiers="accel"/>
-    <key id="key_textZoomReset" key="&textZoomResetCmd.commandkey;"
-         oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
+    <key id="key_fullZoomEnlarge" key="&fullZoomEnlargeCmd.commandkey;"
+         command="cmd_fullZoomEnlarge" modifiers="accel"/>
+    <key id="key_fullZoomEnlarge2" key="&fullZoomEnlargeCmd.commandkey2;"
+         command="cmd_fullZoomEnlarge" modifiers="accel"/>
+    <key id="key_fullZoomReduce" key="&fullZoomReduceCmd.commandkey;"
+         command="cmd_fullZoomReduce" modifiers="accel"/>
+    <key id="key_fullZoomReset" key="&fullZoomResetCmd.commandkey;"
+         command="cmd_fullZoomReset" modifiers="accel"/>
     <key id="key_focusSearch" key="&helpSearch.commandkey;"
          oncommand="focusSearch()" modifiers="accel"/>
 
