@@ -154,7 +154,7 @@ LoginManagerStorage_legacy.prototype = {
         }
 
         // Read in the stored login data.
-        this._readFile()
+        this._readFile();
 
         // If we were importing, write back to the normal file.
         if (importFile) {
@@ -810,14 +810,28 @@ LoginManagerStorage_legacy.prototype = {
             login.username = username;
             login.password = password;
 
-            // Force any old mime64-obscured entries to be reencrypted.
+            // Old mime64-obscured entries need to be reencrypted in the new
+            // format.
             if (login.wrappedJSObject.encryptedUsername &&
-                login.wrappedJSObject.encryptedUsername.charAt(0) == '~')
-                login.wrappedJSObject.encryptedUsername = null;
+                login.wrappedJSObject.encryptedUsername.charAt(0) == '~') {
+                  [username, userCanceled] = this._encrypt(login.username);
+
+                  if (userCanceled)
+                    break;
+
+                  login.wrappedJSObject.encryptedUsername = username;
+            }
 
             if (login.wrappedJSObject.encryptedPassword &&
-                login.wrappedJSObject.encryptedPassword.charAt(0) == '~')
-                login.wrappedJSObject.encryptedPassword = null;
+                login.wrappedJSObject.encryptedPassword.charAt(0) == '~') {
+
+                  [password, userCanceled] = this._encrypt(login.password);
+
+                  if (userCanceled)
+                    break;
+
+                  login.wrappedJSObject.encryptedPassword = password;
+            }
 
             result.push(login);
         }
