@@ -56,6 +56,13 @@ function resetPassword()
   var token = pk11db.findTokenByName(tokenName);
   token.reset();
 
+  try {
+    var loginManager = Components.classes["@mozilla.org/login-manager;1"].
+                       getService(Components.interfaces.nsILoginManager);
+    loginManger.removeAllLogins();
+  } catch (e) {
+  }
+
   var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService);
   if (pref) {
     pref = pref.getBranch(null);
