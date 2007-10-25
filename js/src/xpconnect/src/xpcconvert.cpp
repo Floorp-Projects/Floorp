@@ -1479,14 +1479,14 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
         }
         else
         {
-                number = *(JSVAL_TO_DOUBLE(s));
-                if(number > 0.0 &&
-                   number < (double)0xffffffff &&
-                   0.0 == fmod(number,1))
-                {
-                    rv = (nsresult) number;
-                    if(NS_FAILED(rv))
-                        isResult = JS_TRUE;
+            number = *(JSVAL_TO_DOUBLE(s));
+            if(number > 0.0 &&
+               number < (double)0xffffffff &&
+               0.0 == fmod(number,1))
+            {
+                rv = (nsresult) number;
+                if(NS_FAILED(rv))
+                    isResult = JS_TRUE;
             }
         }
 
