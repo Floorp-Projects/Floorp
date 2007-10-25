@@ -1332,10 +1332,8 @@ _cairo_win32_transform_FIXED_to_fixed (cairo_matrix_t *matrix,
                                        FIXED Fx, FIXED Fy,
                                        cairo_fixed_t *fx, cairo_fixed_t *fy)
 {
-    double x, y;
-
-    x = _cairo_fixed_to_double (*((cairo_fixed_t *)&Fx));
-    y = _cairo_fixed_to_double (*((cairo_fixed_t *)&Fy));
+    double x = Fx.value + Fx.fract / 65536.0;
+    double y = Fy.value + Fy.fract / 65536.0;
     cairo_matrix_transform_point (matrix, &x, &y);
     *fx =  _cairo_fixed_from_double (x);
     *fy =  _cairo_fixed_from_double (y);
