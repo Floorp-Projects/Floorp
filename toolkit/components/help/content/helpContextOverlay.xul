@@ -68,13 +68,13 @@
                 command="cmd_selectAll"/>
       <menuseparator/>
       <menuitem id="zoom-in"
-      		label="&textZoomEnlargeBtn.label;"
-      		accesskey="&textZoomEnlargeBtn.accesskey;"
-      		oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+      	        label="&fullZoomEnlargeBtn.label;"
+      	        accesskey="&fullZoomEnlargeBtn.accesskey;"
+      	        oncommand="ZoomManager.enlarge();"/>
       <menuitem id="zoom-out"
-      		label="&textZoomReduceBtn.label;"
-      		accesskey="&textZoomReduceBtn.accesskey;"
-      		oncommand="ZoomManager.prototype.getInstance().reduce();"/>
+      		label="&fullZoomReduceBtn.label;"
+      		accesskey="&fullZoomReduceBtn.accesskey;"
+      		oncommand="ZoomManager.reduce();"/>
 #ifdef XP_MACOSX
 #define HELP_ALWAYS_RAISED_TOGGLE
 #endif

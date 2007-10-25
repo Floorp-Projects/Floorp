@@ -215,7 +215,7 @@ enum {
  MOUSE_SCROLL_N_LINES,
  MOUSE_SCROLL_PAGE,
  MOUSE_SCROLL_HISTORY,
- MOUSE_SCROLL_TEXTSIZE,
+ MOUSE_SCROLL_FULLZOOM,
  MOUSE_SCROLL_PIXELS
 };
 
@@ -1938,7 +1938,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 } // GenerateDragGesture
 
 nsresult
-nsEventStateManager::ChangeTextSize(PRInt32 change)
+nsEventStateManager::ChangeFullZoom(PRInt32 change)
 {
   if(!gLastFocusedDocument) return NS_ERROR_FAILURE;
 
@@ -1973,11 +1973,16 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   nsCOMPtr<nsIMarkupDocumentViewer> mv(do_QueryInterface(cv));
   if(!mv) return NS_ERROR_FAILURE;
 
-  float textzoom;
-  mv->GetTextZoom(&textzoom);
-  textzoom += ((float)change) / 10;
-  if (textzoom > 0 && textzoom <= 20)
-    mv->SetTextZoom(textzoom);
+  float fullzoom;
+  float zoomMin = ((float)nsContentUtils::GetIntPref("fullZoom.minPercent", 50)) / 100;
+  float zoomMax = ((float)nsContentUtils::GetIntPref("fullZoom.maxPercent", 300)) / 100;
+  mv->GetFullZoom(&fullzoom);
+  fullzoom += ((float)change) / 10;
+  if (fullzoom < zoomMin)
+    fullzoom = zoomMin;
+  else if (fullzoom > zoomMax)
+    fullzoom = zoomMax;
+  mv->SetFullZoom(fullzoom);
 
   return NS_OK;
 }
@@ -1999,7 +2004,7 @@ nsEventStateManager::DoScrollHistory(PRInt32 direction)
 }
 
 void
-nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
+nsEventStateManager::DoScrollFullZoom(nsIFrame *aTargetFrame,
                                       PRInt32 adjustment)
 {
   // Exclude form controls and XUL content.
@@ -2009,7 +2014,7 @@ nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
       !content->IsNodeOfType(nsINode::eXUL))
     {
       // negative adjustment to increase text size, positive to decrease
-      ChangeTextSize((adjustment > 0) ? -1 : 1);
+      ChangeFullZoom((adjustment > 0) ? -1 : 1);
     }
 }
 
@@ -2390,9 +2395,9 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
         break;
 
-      case MOUSE_SCROLL_TEXTSIZE:
+      case MOUSE_SCROLL_FULLZOOM:
         {
-          DoScrollTextsize(aTargetFrame, msEvent->delta);
+          DoScrollFullZoom(aTargetFrame, msEvent->delta);
         }
         break;
 

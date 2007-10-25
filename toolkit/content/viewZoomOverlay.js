@@ -24,6 +24,7 @@
 #   Peter Annema <disttsc@bart.nl> (Original Author)
 #   Jonas Sicking <sicking@bigfoot.com>
 #   Jason Barnabe <jason_barnabe@fastmail.fm>
+#   Dão Gottwald <dao@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,152 +43,75 @@
 /** Document Zoom Management Code
  *
  * To use this, you'll need to have a getBrowser() function.
- *
  **/
 
-
-function ZoomManager() {
-}
-
-ZoomManager.prototype = {
-  instance : null,
-
-  getInstance : function() {
-    if (!ZoomManager.prototype.instance)
-      ZoomManager.prototype.instance = new ZoomManager();
-
-    return ZoomManager.prototype.instance;
+var ZoomManager = {
+  get _prefBranch() {
+    return Components.classes["@mozilla.org/preferences-service;1"]
+                     .getService(Components.interfaces.nsIPrefBranch);
   },
 
-  MIN : 1,
-  MAX : 2000,
-  factorOther : 300,
-  factorAnchor : 300,
-    zoomFactors: [50, 75, 90, 100, 120, 150, 200],
-  steps : 0,
-
-  get textZoom() {
-    var currentZoom;
-    try {
-      currentZoom = Math.round(this.markupDocumentViewer.textZoom * 100);
-      if (this.indexOf(currentZoom) == -1) {
-        if (currentZoom != this.factorOther) {
-          this.factorOther = currentZoom;
-          this.factorAnchor = this.factorOther;
-        }
-      }
-    } catch (e) {
-      currentZoom = 100;
-    }
-    return currentZoom;
+  get MIN() {
+    delete this.MIN;
+    return this.MIN = this._prefBranch.getIntPref("fullZoom.minPercent") / 100;
   },
 
-  set textZoom(aZoom) {
-    if (aZoom < this.MIN || aZoom > this.MAX)
+  get MAX() {
+    delete this.MAX;
+    return this.MAX = this._prefBranch.getIntPref("fullZoom.maxPercent") / 100;
+  },
+
+  get fullZoom() {
+    return getBrowser().markupDocumentViewer.fullZoom;
+  },
+
+  set fullZoom(aVal) {
+    if (aVal < this.MIN || aVal > this.MAX)
       throw Components.results.NS_ERROR_INVALID_ARG;
 
-    this.markupDocumentViewer.textZoom = aZoom / 100;
+    return (getBrowser().markupDocumentViewer.fullZoom = aVal);
   },
 
-  enlarge : function() {
-    this.jump(1);
+  get fullZoomValues() {
+    var fullZoomValues = this._prefBranch.getCharPref("toolkit.zoomManager.fullZoomValues")
+                                         .split(",").map(parseFloat);
+    fullZoomValues.sort();
+
+    while (fullZoomValues[0] < this.MIN)
+      fullZoomValues.shift();
+
+    while (fullZoomValues[fullZoomValues.length - 1] > this.MAX)
+      fullZoomValues.pop();
+
+    delete this.fullZoomValues;
+    return this.fullZoomValues = fullZoomValues;
   },
 
-  reduce : function() {
-    this.jump(-1);
-  },
-  reset : function() {
-    this.textZoom = 100;
-  },
-  indexOf : function(aZoom) {
-    var index = -1;
-    if (this.isZoomInRange(aZoom)) {
-      index = this.zoomFactors.length - 1;
-      while (index >= 0 && this.zoomFactors[index] != aZoom)
-        --index;
-    }
-
-    return index;
+  enlarge: function () {
+    var i = this.fullZoomValues.indexOf(this.snap(this.fullZoom)) + 1;
+    if (i < this.fullZoomValues.length)
+      this.fullZoom = this.fullZoomValues[i];
   },
 
-  /***** internal helper functions below here *****/
-
-  isZoomInRange : function(aZoom) {
-    return (aZoom >= this.zoomFactors[0] && aZoom <= this.zoomFactors[this.zoomFactors.length - 1]);
+  reduce: function () {
+    var i = this.fullZoomValues.indexOf(this.snap(this.fullZoom)) - 1;
+    if (i >= 0)
+      this.fullZoom = this.fullZoomValues[i];
   },
 
-  jump : function(aDirection) {
-    if (aDirection != -1 && aDirection != 1)
-      throw Components.results.NS_ERROR_INVALID_ARG;
+  reset: function () {
+    this.fullZoom = 1;
+  },
 
-    var currentZoom = this.textZoom;
-    var insertIndex = -1;
-    const stepFactor = 1.5;
-
-    // temporarily add factorOther to list
-    if (this.isZoomInRange(this.factorOther)) {
-      insertIndex = 0;
-      while (this.zoomFactors[insertIndex] < this.factorOther)
-        ++insertIndex;
-
-      if (this.zoomFactors[insertIndex] != this.factorOther)
-        this.zoomFactors.splice(insertIndex, 0, this.factorOther);
-    }
-
-    var factor;
-    var done = false;
-
-    if (this.isZoomInRange(currentZoom)) {
-      var index = this.indexOf(currentZoom);
-      if (aDirection == -1 && index == 0 ||
-          aDirection ==  1 && index == this.zoomFactors.length - 1) {
-        this.steps = 0;
-        this.factorAnchor = this.zoomFactors[index];
-      } else {
-        factor = this.zoomFactors[index + aDirection];
-        done = true;
+  snap: function (aVal) {
+    var values = this.fullZoomValues;
+    for (var i = 0; i < values.length; i++) {
+      if (values[i] >= aVal) {
+        if (i > 0 && aVal - values[i - 1] < values[i] - aVal)
+          i--;
+        return values[i];
       }
     }
-
-    if (!done) {
-      this.steps += aDirection;
-      factor = this.factorAnchor * Math.pow(stepFactor, this.steps);
-      if (factor < this.MIN || factor > this.MAX) {
-        this.steps -= aDirection;
-        factor = this.factorAnchor * Math.pow(stepFactor, this.steps);
-      }
-      factor = Math.round(factor);
-      if (this.isZoomInRange(factor))
-        factor = this.snap(factor);
-      else
-        this.factorOther = factor;
-    }
-
-    if (insertIndex != -1)
-      this.zoomFactors.splice(insertIndex, 1);
-
-    this.textZoom = factor;
-  },
-
-  snap : function(aZoom) {
-    if (this.isZoomInRange(aZoom)) {
-      var level = 0;
-      while (this.zoomFactors[level + 1] < aZoom)
-        ++level;
-
-      // if aZoom closer to [level + 1] than [level], snap to [level + 1]
-      if ((this.zoomFactors[level + 1] - aZoom) < (aZoom - this.zoomFactors[level]))
-        ++level;
-
-      aZoom = this.zoomFactors[level];
-    }
-
-    return aZoom;
-  },
-
-  get markupDocumentViewer() {
-    return getBrowser().markupDocumentViewer;
+    return values[i - 1];
   }
 }
-
-

@@ -1166,7 +1166,7 @@ function delayedStartup()
   // apply text zoom settings to tabs restored by the session restore service.
   try {
     ContentPrefSink.init();
-    TextZoom.init();
+    FullZoom.init();
   }
   catch(ex) {
     Components.utils.reportError("Failed to init content pref service:\n" + ex);
@@ -1209,7 +1209,7 @@ function delayedStartup()
 function BrowserShutdown()
 {
   try {
-    TextZoom.destroy();
+    FullZoom.destroy();
     ContentPrefSink.destroy();
   }
   catch(ex) {
@@ -1286,7 +1286,7 @@ function nonBrowserWindowStartup()
   var disabledItems = ['cmd_newNavigatorTab', 'Browser:SavePage', 'Browser:SendLink',
                        'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain', 'viewToolbarsMenu',
                        'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'Browser:ReloadSkipCache',
-                       'viewTextZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
+                       'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
                        'viewHistorySidebar', 'Browser:AddBookmarkAs', 'View:PageInfo', 'Tasks:InspectPage'];
   var element;
 
