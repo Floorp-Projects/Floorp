@@ -151,6 +151,21 @@ nsNavHistoryResultNode::GetParent(nsINavHistoryContainerResultNode** aParent)
 }
 
 NS_IMETHODIMP
+nsNavHistoryResultNode::GetParentResult(nsINavHistoryResult** aResult)
+{
+  *aResult = nsnull;
+  if (IsContainer() && GetAsContainer()->mResult) {
+    NS_ADDREF(*aResult = GetAsContainer()->mResult);
+  } else if (mParent && mParent->mResult) {
+    NS_ADDREF(*aResult = mParent->mResult);
+  } else {
+   return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNavHistoryResultNode::GetPropertyBag(nsIWritablePropertyBag** aBag)
 {
   nsNavHistoryResult* result = GetResult();
@@ -869,32 +884,44 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_CountLess(
   PRUint32 count1 = 0;
   PRUint32 count2 = 0;
 
+  nsresult rv;
+
   if (a->IsContainer()) {
     nsNavHistoryResult* result = a->GetResult();
-    if (result && result->GetView())
-      result->GetView()->SetIgnoreInvalidateContainer(PR_TRUE);
-    nsresult rv = a->GetAsContainer()->SetContainerOpen(PR_TRUE);
+    nsCOMPtr<nsINavHistoryResultViewer> viewer;
+    if (result) {
+      rv = result->GetViewer(getter_AddRefs(viewer));
+      if (NS_SUCCEEDED(rv))
+        result->SetViewer(nsnull);
+    }
+
+    rv = a->GetAsContainer()->SetContainerOpen(PR_TRUE);
     if (NS_SUCCEEDED(rv))
       rv = a->GetAsContainer()->GetChildCount(&count1);
     if (NS_FAILED(rv))
       count1 = 0;
     (void)a->GetAsContainer()->SetContainerOpen(PR_FALSE);
-    if (result && result->GetView())
-      result->GetView()->SetIgnoreInvalidateContainer(PR_FALSE);
+    if (result && viewer)
+      result->SetViewer(viewer);
   }
 
   if (b->IsContainer()) {
-    nsNavHistoryResult* result = b->GetResult();
-    if (result && result->GetView())
-      result->GetView()->SetIgnoreInvalidateContainer(PR_TRUE);
-    nsresult rv = b->GetAsContainer()->SetContainerOpen(PR_TRUE);
+    nsNavHistoryResult* result = a->GetResult();
+    nsCOMPtr<nsINavHistoryResultViewer> viewer;
+    if (result) {
+      rv = result->GetViewer(getter_AddRefs(viewer));
+      if (NS_SUCCEEDED(rv))
+        result->SetViewer(nsnull);
+    }
+
+    rv = b->GetAsContainer()->SetContainerOpen(PR_TRUE);
     if (NS_SUCCEEDED(rv))
       rv = b->GetAsContainer()->GetChildCount(&count2);
     if (NS_FAILED(rv))
       count2 = 0;
     (void)b->GetAsContainer()->SetContainerOpen(PR_FALSE);
-    if (result && result->GetView())
-      result->GetView()->SetIgnoreInvalidateContainer(PR_FALSE);
+    if (result && viewer)
+      result->SetViewer(viewer);
   }
 
   PRInt32 value = CompareIntegers(count1, count2);

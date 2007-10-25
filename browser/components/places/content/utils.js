@@ -210,16 +210,13 @@ var PlacesUtils = {
   /**
    * String bundle helpers
    */
-  __bundle: null,
   get _bundle() {
-    if (!this.__bundle) {
-      const PLACES_STRING_BUNDLE_URI =
+    const PLACES_STRING_BUNDLE_URI =
         "chrome://browser/locale/places/places.properties";
-      this.__bundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                      getService(Ci.nsIStringBundleService).
-                      createBundle(PLACES_STRING_BUNDLE_URI);
-    }
-    return this.__bundle;
+    delete this._bundle;
+    return this._bundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                          getService(Ci.nsIStringBundleService).
+                          createBundle(PLACES_STRING_BUNDLE_URI);
   },
 
   getFormattedString: function PU_getFormattedString(key, params) {
@@ -286,14 +283,12 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a URL item, false otherwise
    */
+  uriTypes: [Ci.nsINavHistoryResultNode.RESULT_TYPE_URI,
+             Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT,
+             Ci.nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT],
   nodeIsURI: function PU_nodeIsURI(aNode) {
     NS_ASSERT(aNode, "null node");
-
-    const NHRN = Ci.nsINavHistoryResultNode;
-    var type = aNode.type;
-    return type == NHRN.RESULT_TYPE_URI ||
-           type == NHRN.RESULT_TYPE_VISIT ||
-           type == NHRN.RESULT_TYPE_FULL_VISIT;
+    return this.uriTypes.indexOf(aNode.type) != -1;
   },
 
   /**
@@ -304,7 +299,6 @@ var PlacesUtils = {
    */
   nodeIsQuery: function PU_nodeIsQuery(aNode) {
     NS_ASSERT(aNode, "null node");
-
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
 
@@ -333,7 +327,6 @@ var PlacesUtils = {
    */
   nodeIsHost: function PU_nodeIsHost(aNode) {
     NS_ASSERT(aNode, "null node");
-
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST;
   },
 
@@ -343,16 +336,14 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a container item, false otherwise
    */
+  containerTypes: [Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_DYNAMIC_CONTAINER],
   nodeIsContainer: function PU_nodeIsContainer(aNode) {
     NS_ASSERT(aNode, "null node");
-
-    const NHRN = Ci.nsINavHistoryResultNode;
-    var type = aNode.type;
-    return type == NHRN.RESULT_TYPE_HOST ||
-           type == NHRN.RESULT_TYPE_QUERY ||
-           type == NHRN.RESULT_TYPE_FOLDER ||
-           type == NHRN.RESULT_TYPE_DAY ||
-           type == NHRN.RESULT_TYPE_DYNAMIC_CONTAINER;
+    return this.containerTypes.indexOf(aNode.type) != -1;
   },
 
   /**
@@ -419,14 +410,22 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     var parent = aNode.parent;
-    if (!parent || !PlacesUtils.nodeIsContainer(parent))
+    if (!parent)
       return -1;
     var wasOpen = parent.containerOpen;
-    parent.containerOpen = true;
+    var result, oldViewer;
+    if (!wasOpen) {
+      result = parent.parentResult;
+      oldViewer = result.viewer;
+      result.viewer = null;
+      parent.containerOpen = true;
+    }
     var cc = parent.childCount;
-    asContainer(parent);
     for (var i = 0; i < cc && parent.getChild(i) != aNode; ++i);
-    parent.containerOpen = wasOpen;
+    if (!wasOpen) {
+      parent.containerOpen = false;
+      result.viewer = oldViewer;
+    }
     return i < cc ? i : -1;
   },
 
@@ -863,7 +862,6 @@ var PlacesUtils = {
 
     var result = this.history.executeQuery(query, options);
     result.root.containerOpen = true;
-    asContainer(result.root);
     return result;
   },
 
@@ -1528,15 +1526,27 @@ var PlacesUtils = {
       }
     }
     else {
-      let wasOpen = aNode.containerOpen;
-      if (!wasOpen)
-        aNode.containerOpen = true;
-      for (let i = 0; i < aNode.childCount; ++i) {
-        let child = aNode.getChild(i);
-        if (this.nodeIsURI(child))
-          urls.push(child.uri);
+      let result, oldViewer;
+      try {
+        let wasOpen = aNode.containerOpen;
+        if (!wasOpen) {
+          result = aNode.parentResult;
+          oldViewer = result.viewer;
+          result.viewer = null;
+          aNode.containerOpen = true;
+        }
+        for (let i = 0; i < aNode.childCount; ++i) {
+          let child = aNode.getChild(i);
+          if (this.nodeIsURI(child))
+            urls.push(child.uri);
+        }
+        if (!wasOpen)
+          aNode.containerOpen = false;
       }
-      aNode.containerOpen = wasOpen;
+      finally {
+        if (oldViewer)
+          result.viewer = oldViewer;
+      }
     }
 
     return urls;
@@ -1631,6 +1641,56 @@ var PlacesUtils = {
       this.placesFlavors.AppendElement(cstring);
     }
     return this.placesFlavors;
+  },
+
+  /**
+   * Helper for the toolbar and menu views
+   */
+  createMenuItemForNode: function(aNode, aContainersMap) {
+    var element;
+    var type = aNode.type;
+    if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
+      element = document.createElement("menuseparator");
+    else {
+      var iconURI = aNode.icon;
+      var iconURISpec = "";
+      if (iconURI)
+        iconURISpec = iconURI.spec;
+
+      if (this.uriTypes.indexOf(type) != -1) {
+        element = document.createElement("menuitem");
+        element.setAttribute("statustext", aNode.uri);
+        element.className = "menuitem-iconic bookmark-item";
+      }
+      else if (this.containerTypes.indexOf(type) != -1) {
+        element = document.createElement("menu");
+        element.setAttribute("container", "true");
+        
+        if (iconURISpec == "chrome://browser/skin/places/livemarkItem.png")
+          element.setAttribute("livemark", "true");
+
+        var popup = document.createElement("menupopup");
+        popup._resultNode = asContainer(aNode);
+#ifndef XP_MACOSX
+        // no context menu on mac
+        popup.setAttribute("context", "placesContext");
+#endif
+        element.appendChild(popup);
+        if (aContainersMap)
+          aContainersMap.push({ resultNode: aNode, domNode: popup });
+        element.className = "menu-iconic bookmark-item";
+      }
+      else
+        throw "Unexpected node";
+
+      element.setAttribute("label", aNode.title);
+      if (iconURISpec)
+        element.setAttribute("image", iconURISpec);
+    }
+    element.node = aNode;
+    element.node.viewIndex = 0;
+
+    return element;
   }
 };
 

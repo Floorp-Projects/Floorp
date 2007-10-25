@@ -253,6 +253,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
     { return nsNavHistoryResultNode::GetIcon(aIcon); } \
   NS_IMETHOD GetParent(nsINavHistoryContainerResultNode** aParent) \
     { return nsNavHistoryResultNode::GetParent(aParent); } \
+  NS_IMETHOD GetParentResult(nsINavHistoryResult** aResult) \
+    { return nsNavHistoryResultNode::GetParentResult(aResult); } \
   NS_IMETHOD GetPropertyBag(nsIWritablePropertyBag** aBag) \
     { return nsNavHistoryResultNode::GetPropertyBag(aBag); }
 
@@ -272,6 +274,7 @@ public:
   NS_IMPLEMENT_SIMPLE_RESULTNODE
   NS_IMETHOD GetIcon(nsIURI** aIcon);
   NS_IMETHOD GetParent(nsINavHistoryContainerResultNode** aParent);
+  NS_IMETHOD GetParentResult(nsINavHistoryResult** aResult);
   NS_IMETHOD GetPropertyBag(nsIWritablePropertyBag** aBag);
   NS_IMETHOD GetType(PRUint32* type)
     { *type = nsNavHistoryResultNode::RESULT_TYPE_URI; return NS_OK; }
