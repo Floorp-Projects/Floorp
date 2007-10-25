@@ -821,18 +821,18 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
     for (i = 0; i < aGlyphCount; ++i) {
         ATSLayoutRecord *glyph = &aGlyphs[i];
         if (glyph->glyphID != ATSUI_SPECIAL_GLYPH_ID) {
-            if (detailedGlyphs.Length() > 0) {
-                detailedGlyphs[detailedGlyphs.Length() - 1].mAdvance =
-                    GetAdvanceAppUnits(advanceStart, glyph - advanceStart, aAppUnitsPerDevUnit);
-                advanceStart = glyph;
-            }
-
             gfxTextRun::DetailedGlyph *details = detailedGlyphs.AppendElement();
             if (!details)
                 return;
+            details->mAdvance = 0;
             details->mIsLastGlyph = PR_FALSE;
             details->mGlyphID = glyph->glyphID;
             details->mXOffset = 0;
+            if (detailedGlyphs.Length() > 1) {
+                details->mXOffset +=
+                    GetAdvanceAppUnits(advanceStart, glyph - advanceStart,
+                                       aAppUnitsPerDevUnit);
+            }
             details->mYOffset = !aBaselineDeltas ? 0.0f
                 : FixedToFloat(aBaselineDeltas[i])*aAppUnitsPerDevUnit;
         }
@@ -843,9 +843,13 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
         return;
     }
 
+    // The advance width for the whole cluster
+    PRInt32 clusterAdvance = GetAdvanceAppUnits(aGlyphs, aGlyphCount, aAppUnitsPerDevUnit);
     detailedGlyphs[detailedGlyphs.Length() - 1].mIsLastGlyph = PR_TRUE;
-    detailedGlyphs[detailedGlyphs.Length() - 1].mAdvance =
-        GetAdvanceAppUnits(advanceStart, aGlyphs + aGlyphCount - advanceStart, aAppUnitsPerDevUnit);
+    if (aRun->IsRightToLeft())
+        detailedGlyphs[0].mAdvance = clusterAdvance;
+    else
+        detailedGlyphs[detailedGlyphs.Length() - 1].mAdvance = clusterAdvance;
     aRun->SetDetailedGlyphs(aSegmentStart + index, detailedGlyphs.Elements(), detailedGlyphs.Length());    
 }
 
