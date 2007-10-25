@@ -101,6 +101,7 @@
 #include "nsITheme.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
+#include "nsIScriptError.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsObjectFrame.h"
@@ -459,6 +460,43 @@ static PRBool
 IsInlineFrame(const nsIFrame* aFrame)
 {
   return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
+}
+
+/**
+ * If any children require a block parent, return the first such child.
+ * Otherwise return null.
+ */
+static nsIContent*
+AnyKidsNeedBlockParent(nsIFrame *aFrameList)
+{
+  for (nsIFrame *k = aFrameList; k; k = k->GetNextSibling()) {
+    // Line participants, such as text and inline frames, can't be
+    // directly inside a XUL box; they must be wrapped in an
+    // intermediate block.
+    if (k->IsFrameOfType(nsIFrame::eLineParticipant)) {
+      return k->GetContent();
+    }
+  }
+  return nsnull;
+}
+
+// Reparent a frame into a wrapper frame that is a child of its old parent.
+static void
+ReparentFrame(nsFrameManager* aFrameManager,
+              nsIFrame* aNewParentFrame,
+              nsIFrame* aFrame)
+{
+  aFrame->SetParent(aNewParentFrame);
+  aFrameManager->ReParentStyleContext(aFrame);
+  if (aFrame->GetStateBits() &
+      (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
+    // No need to walk up the tree, since the bits are already set
+    // right on the parent of aNewParentFrame.
+    NS_ASSERTION(aNewParentFrame->GetParent()->GetStateBits() &
+                   NS_FRAME_HAS_CHILD_WITH_VIEW,
+                 "aNewParentFrame's parent should have this bit set!");
+    aNewParentFrame->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -6187,9 +6225,48 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       if (mDocument->BindingManager()->ShouldBuildChildFrames(aContent)) {
         rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE,
                              childItems, PR_FALSE);
+        nsIContent *badKid;
+        if (newFrame->IsBoxFrame() &&
+            (badKid = AnyKidsNeedBlockParent(childItems.childList))) {
+          nsAutoString parentTag, kidTag;
+          aContent->Tag()->ToString(parentTag);
+          badKid->Tag()->ToString(kidTag);
+          const PRUnichar* params[] = { parentTag.get(), kidTag.get() };
+          nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
+                                          "NeededToWrapXUL",
+                                          params, NS_ARRAY_LENGTH(params),
+                                          mDocument->GetDocumentURI(),
+                                          EmptyString(), 0, 0, // not useful
+                                          nsIScriptError::warningFlag,
+                                          "FrameConstructor");
+
+          nsRefPtr<nsStyleContext> blockSC = mPresShell->StyleSet()->
+            ResolvePseudoStyleFor(aContent,
+                                  nsCSSAnonBoxes::mozXULAnonymousBlock,
+                                  aStyleContext);
+          nsIFrame *blockFrame = NS_NewBlockFrame(mPresShell, blockSC);
+          // We might, in theory, want to set NS_BLOCK_SPACE_MGR and
+          // NS_BLOCK_MARGIN_ROOT, but I think it's a bad idea given that
+          // a real block placed here wouldn't get those set on it.
+
+          InitAndRestoreFrame(aState, aContent, newFrame, nsnull,
+                              blockFrame, PR_FALSE);
+
+          NS_ASSERTION(!blockFrame->HasView(), "need to do view reparenting");
+          for (nsIFrame *f = childItems.childList; f; f = f->GetNextSibling()) {
+            ReparentFrame(aState.mFrameManager, blockFrame, f);
+          }
+
+          blockFrame->AppendFrames(nsnull, childItems.childList);
+          childItems = nsFrameItems();
+          childItems.AddChild(blockFrame);
+
+          newFrame->AddStateBits(NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK);
+        }
       }
     }
       
+    // XXX These should go after the wrapper!
     CreateAnonymousFrames(aTag, aState, aContent, newFrame, PR_FALSE,
                           childItems);
 
@@ -6741,24 +6818,6 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*         aParentFrame,
                  "comments and processing instructions");
 
     return styleSet->ResolveStyleForNonElement(parentStyleContext);
-  }
-}
-
-static void
-ReparentFrame(nsFrameManager* aFrameManager,
-              nsIFrame* aNewParentFrame,
-              nsIFrame* aFrame)
-{
-  aFrame->SetParent(aNewParentFrame);
-  aFrameManager->ReParentStyleContext(aFrame);
-  if (aFrame->GetStateBits() &
-      (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    // No need to walk up the tree, since the bits are already set
-    // right on the parent of aNewParentFrame.
-    NS_ASSERTION(aNewParentFrame->GetParent()->GetStateBits() &
-                   NS_FRAME_HAS_CHILD_WITH_VIEW,
-                 "aNewParentFrame's parent should have this bit set!");
-    aNewParentFrame->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
   }
 }
 
@@ -7475,8 +7534,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       // absolute containing block.
       nsFrameConstructorSaveState saveState;
       aState.PushFloatContainingBlock(nsnull, saveState, PR_FALSE, PR_FALSE);
-      const nsStyleDisplay* disp = innerPseudoStyle->GetStyleDisplay();
-      rv = ConstructBlock(aState, disp, aContent,
+      rv = ConstructBlock(aState, innerPseudoStyle->GetStyleDisplay(), aContent,
                           newFrame, newFrame, innerPseudoStyle,
                           &blockFrame, childItems, PR_TRUE);
       // Give the blockFrame a view so that GetOffsetTo works for descendants
@@ -9579,6 +9637,18 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     if (possibleMathMLAncestor->IsFrameOfType(nsIFrame::eMathML))
       return RecreateFramesForContent(possibleMathMLAncestor->GetContent());
 #endif
+
+    // Undo XUL wrapping if it's no longer needed.
+    // (If we're in the XUL block-wrapping situation, parentFrame is the
+    // wrapper frame.)
+    nsIFrame* grandparentFrame = parentFrame->GetParent();
+    if (grandparentFrame && grandparentFrame->IsBoxFrame() &&
+        (grandparentFrame->GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK) &&
+        // check if this frame is the only one needing wrapping
+        aChild == AnyKidsNeedBlockParent(parentFrame->GetFirstChild(nsnull)) &&
+        !AnyKidsNeedBlockParent(childFrame->GetNextSibling())) {
+      return RecreateFramesForContent(grandparentFrame->GetContent());
+    }
     
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
@@ -12508,8 +12578,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   return rv;
 }
 
-PRBool
-nsCSSFrameConstructor::AreAllKidsInline(nsIFrame* aFrameList)
+static PRBool
+AreAllKidsInline(nsIFrame* aFrameList)
 {
   nsIFrame* kid = aFrameList;
   while (kid) {
@@ -12835,6 +12905,55 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsFrameConstructorState& aState,
   return rv;
 }
 
+static void
+DestroyNewlyCreatedFrames(nsFrameConstructorState& aState,
+                          nsIFrame* aParentFrame,
+                          const nsFrameItems& aFrameList)
+{
+  // Ok, reverse tracks: wipe out the frames we just created
+  nsFrameManager *frameManager = aState.mFrameManager;
+
+  // Destroy the frames. As we do make sure any content to frame mappings
+  // or entries in the undisplayed content map are removed
+  frameManager->ClearAllUndisplayedContentIn(aParentFrame->GetContent());
+
+  CleanupFrameReferences(frameManager, aFrameList.childList);
+  if (aState.mAbsoluteItems.childList) {
+    CleanupFrameReferences(frameManager, aState.mAbsoluteItems.childList);
+  }
+  if (aState.mFixedItems.childList) {
+    CleanupFrameReferences(frameManager, aState.mFixedItems.childList);
+  }
+  if (aState.mFloatedItems.childList) {
+    CleanupFrameReferences(frameManager, aState.mFloatedItems.childList);
+  }
+#ifdef MOZ_XUL
+  if (aState.mPopupItems.childList) {
+    CleanupFrameReferences(frameManager, aState.mPopupItems.childList);
+  }
+#endif
+  nsFrameList tmp(aFrameList.childList);
+  tmp.DestroyFrames();
+
+  tmp.SetFrames(aState.mAbsoluteItems.childList);
+  tmp.DestroyFrames();
+  aState.mAbsoluteItems.childList = nsnull;
+
+  tmp.SetFrames(aState.mFixedItems.childList);
+  tmp.DestroyFrames();
+  aState.mFixedItems.childList = nsnull;
+
+  tmp.SetFrames(aState.mFloatedItems.childList);
+  tmp.DestroyFrames();
+  aState.mFloatedItems.childList = nsnull;
+
+#ifdef MOZ_XUL
+  tmp.SetFrames(aState.mPopupItems.childList);
+  tmp.DestroyFrames();
+  aState.mPopupItems.childList = nsnull;
+#endif
+}
+
 PRBool
 nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
                                            nsIFrame* aContainingBlock,
@@ -12847,8 +12966,20 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     return PR_FALSE;
   }
   
-  // Before we go and append the frames, check for a special
-  // situation: an inline frame that will now contain block
+  // Before we go and append the frames, we must check for two
+  // special situations.
+
+  // Situation #1 is a XUL frame that contains frames that are required
+  // to be wrapped in blocks.
+  if (aFrame->IsBoxFrame() &&
+      !(aFrame->GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK) &&
+      AnyKidsNeedBlockParent(aFrameList.childList)) {
+    DestroyNewlyCreatedFrames(aState, aFrame, aFrameList);
+    RecreateFramesForContent(aFrame->GetContent());
+    return PR_TRUE;
+  }
+
+  // Situation #2 is an inline frame that will now contain block
   // frames. This is a no-no and the frame construction logic knows
   // how to fix this.  See defition of IsInlineFrame() for what "an
   // inline" is.  Whether we have "a block" is tested for by
@@ -12910,48 +13041,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     }
   }
 
-  // Ok, reverse tracks: wipe out the frames we just created
-  nsFrameManager *frameManager = aState.mFrameManager;
-
-  // Destroy the frames. As we do make sure any content to frame mappings
-  // or entries in the undisplayed content map are removed
-  frameManager->ClearAllUndisplayedContentIn(aFrame->GetContent());
-
-  CleanupFrameReferences(frameManager, aFrameList.childList);
-  if (aState.mAbsoluteItems.childList) {
-    CleanupFrameReferences(frameManager, aState.mAbsoluteItems.childList);
-  }
-  if (aState.mFixedItems.childList) {
-    CleanupFrameReferences(frameManager, aState.mFixedItems.childList);
-  }
-  if (aState.mFloatedItems.childList) {
-    CleanupFrameReferences(frameManager, aState.mFloatedItems.childList);
-  }
-#ifdef MOZ_XUL
-  if (aState.mPopupItems.childList) {
-    CleanupFrameReferences(frameManager, aState.mPopupItems.childList);
-  }
-#endif
-  nsFrameList tmp(aFrameList.childList);
-  tmp.DestroyFrames();
-
-  tmp.SetFrames(aState.mAbsoluteItems.childList);
-  tmp.DestroyFrames();
-  aState.mAbsoluteItems.childList = nsnull;
-
-  tmp.SetFrames(aState.mFixedItems.childList);
-  tmp.DestroyFrames();
-  aState.mFixedItems.childList = nsnull;
-
-  tmp.SetFrames(aState.mFloatedItems.childList);
-  tmp.DestroyFrames();
-  aState.mFloatedItems.childList = nsnull;
-
-#ifdef MOZ_XUL
-  tmp.SetFrames(aState.mPopupItems.childList);
-  tmp.DestroyFrames();
-  aState.mPopupItems.childList = nsnull;
-#endif
+  DestroyNewlyCreatedFrames(aState, aFrame, aFrameList);
 
   // If we don't have a containing block, start with aFrame and look for one.
   if (!aContainingBlock) {
