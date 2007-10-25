@@ -975,7 +975,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
     // case NS_THEME_TEXTFIELD_CARET:
-    // case NS_THEME_DROPDOWN_BUTTON:
   case NS_THEME_DROPDOWN_TEXTFIELD:
   case NS_THEME_SCALE_HORIZONTAL:
   case NS_THEME_SCALE_THUMB_HORIZONTAL:
@@ -998,6 +997,13 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_DROPDOWN:
   case NS_THEME_DROPDOWN_TEXT:
     return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+
+  case NS_THEME_DROPDOWN_BUTTON:
+    // "Native" dropdown buttons cause padding and margin problems, but only
+    // in HTML so allow them in XUL.
+    return (!aFrame || aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) &&
+           !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+
   }
 
   return PR_FALSE;
