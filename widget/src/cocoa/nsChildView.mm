@@ -2258,9 +2258,12 @@ NSEvent* gLastDragEvent = nil;
 {
   unsigned int numSubviews = [[self subviews] count];
   for (unsigned int i = 0; i < numSubviews; i++) {
-    NSRect subviewFrame = [[[self subviews] objectAtIndex:i] frame];
-    if (NSContainsRect(subviewFrame, inRect))
-      return YES;
+    NSView* view = (NSView*)[[self subviews] objectAtIndex:i];
+    if (![view isHidden]) {
+      NSRect subviewFrame = [view frame];
+      if (NSContainsRect(subviewFrame, inRect))
+        return YES;
+    }
   }
   
   return NO;
