@@ -3161,7 +3161,7 @@ enum
   kControlKeyCode     = 0x3B,
   kOptionkeyCode      = 0x3A, // both left and right option keys
   kClearKeyCode       = 0x47,
-  
+
   // function keys
   kF1KeyCode          = 0x7A,
   kF2KeyCode          = 0x78,
@@ -3234,11 +3234,23 @@ enum
 };
 
 
+static PRBool IsPrintableChar(PRUnichar aChar)
+{
+  return (aChar >= 0x20 && aChar <= 0x7E) || aChar >= 0xA0;
+}
+
 static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
 {
   // We don't support the key code for non-ASCII characters
-  if (aChar > 0x7F)
+  if (aChar > 0x7E)
     return 0;
+
+  if (aChar >= 'a' && aChar <= 'z') // lowercase
+    return PRUint32(toupper(aChar));
+  else if (aChar >= 'A' && aChar <= 'Z') // uppercase
+    return PRUint32(aChar);
+  else if (aChar >= '0' && aChar <= '9')
+    return PRUint32(aChar - '0' + NS_VK_0);
 
   switch (aChar)
   {
@@ -3265,15 +3277,14 @@ static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
     case '/':                   return NS_VK_SLASH;
     case '`':                   return NS_VK_BACK_QUOTE;
     case '\t':                  return NS_VK_TAB;
+    case '-':                   return NS_VK_SUBTRACT;
+    case '+':                   return NS_VK_ADD;
 
     default:
-      if (aChar >= 'a' && aChar <= 'z') // lowercase
-        return PRUint32(toupper(aChar));
-      else if (aChar >= 'A' && aChar <= 'Z') // uppercase
-        return PRUint32(aChar);
-  }
-  NS_WARNING("GetGeckoKeyCodeFromChar has failed.");
-  return 0;
+      if (!IsPrintableChar(aChar))
+        NS_WARNING("GetGeckoKeyCodeFromChar has failed.");
+      return 0;
+    }
 }
 
 
@@ -3593,6 +3604,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
     geckoEvent.time      = PR_IntervalNow();
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
+    geckoEvent.keyCode   = 0;
     geckoEvent.isChar    = PR_TRUE;
     if (mKeyHandled)
       geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
@@ -3606,12 +3618,18 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
       geckoEvent.isShift   = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
-      geckoEvent.keyCode   =
-        ConvertMacToGeckoKeyCode([mCurKeyEvent keyCode], &geckoEvent,
-                                 [mCurKeyEvent charactersIgnoringModifiers]);
+      if (!IsPrintableChar(geckoEvent.charCode)) {
+        geckoEvent.keyCode = 
+          ConvertMacToGeckoKeyCode([mCurKeyEvent keyCode], &geckoEvent,
+                                   [mCurKeyEvent charactersIgnoringModifiers]);
+        geckoEvent.charCode = 0;
+      }
     } else {
       // Note that insertText is not called only at key pressing.
-      geckoEvent.keyCode = GetGeckoKeyCodeFromChar(geckoEvent.charCode);
+      if (!IsPrintableChar(geckoEvent.charCode)) {
+        geckoEvent.keyCode = GetGeckoKeyCodeFromChar(geckoEvent.charCode);
+        geckoEvent.charCode = 0;
+      }
     }
 
     mGeckoChild->DispatchWindowEvent(geckoEvent);
