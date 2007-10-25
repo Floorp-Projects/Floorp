@@ -29,3 +29,4 @@ win32-glyph-metrics.patch: GetGlyphOutline only works on Truetype fonts,
 so for non-Truetype fonts, assume no left or right bearing and use the
 font ascent and descent for the glyph extents.
 
+endian.patch: include cairo-platform.h for endian macros
