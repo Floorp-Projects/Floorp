@@ -470,6 +470,13 @@ _cairo_quartz_surface_to_quartz (cairo_surface_t *target, cairo_surface_t *pat_s
 	    cairo_surface_destroy(ref_type);
 
 	quartz_surf = (cairo_quartz_surface_t *) new_surf;
+
+	if (new_surf &&
+	    cairo_surface_get_type (new_surf) != CAIRO_SURFACE_TYPE_QUARTZ) {
+	    ND((stderr, "got a non-quartz surface, format=%d width=%u height=%u type=%d\n", cairo_surface_get_type (pat_surf), rect.width, rect.height, cairo_surface_get_type (new_surf)));
+	    cairo_surface_destroy (new_surf);
+	    quartz_surf = NULL;
+	}
     } else {
 	/* If it's a quartz surface, we can try to see if it's a CGBitmapContext;
 	 * we do this when we call CGBitmapContextCreateImage below.
@@ -490,6 +497,9 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
     cairo_surface_t *pat_surf = spat->surface;
 
     cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz (NULL, pat_surf);
+    if (!quartz_surf)
+	return;
+
     CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
     CGRect imageBounds;
 
@@ -694,6 +704,9 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	    cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) source;
 	    cairo_surface_t *pat_surf = spat->surface;
 	    cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz ((cairo_surface_t *) surface, pat_surf);
+	    if (!quartz_surf)
+		return DO_UNSUPPORTED;
+
 	    CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
 	    cairo_matrix_t m = spat->base.matrix;
 	    cairo_rectangle_int_t extents;
@@ -1095,8 +1108,10 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 	cairo_quartz_surface_create (new_format,
 				     CGImageGetWidth (quartz_image),
 				     CGImageGetHeight (quartz_image));
-    if (!new_surface || new_surface->base.status)
+    if (!new_surface || new_surface->base.status) {
+	CGImageRelease (quartz_image);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     CGContextSetCompositeOperation (new_surface->cgContext,
 				    kPrivateCGCompositeCopy);
@@ -1599,6 +1614,9 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
 #endif /* CAIRO_HAS_ATSUI_FONT */
 
     NULL, /* snapshot */
+    NULL, /* is_similar */
+    NULL, /* reset */
+    NULL  /* fill_stroke */
 };
 
 static cairo_quartz_surface_t *
@@ -1770,6 +1788,7 @@ cairo_quartz_surface_create (cairo_format_t format,
 
     if (!cgc) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	free (imageData);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
