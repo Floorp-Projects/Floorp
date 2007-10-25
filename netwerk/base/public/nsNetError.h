@@ -330,4 +330,21 @@
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 70)
 
 
+/******************************************************************************
+ * Effective TLD Service specific error codes:
+ */
+
+/**
+ * The requested number of domain levels exceeds those present in the host string.
+ */
+#define NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 80)
+
+/**
+ * The host string is an IP address.
+ */
+#define NS_ERROR_HOST_IS_IP_ADDRESS \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 81)
+
+
 #endif // !nsNetError_h__
