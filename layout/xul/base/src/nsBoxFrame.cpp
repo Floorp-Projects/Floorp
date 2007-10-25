@@ -1086,7 +1086,13 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
    return NS_OK;
 }
 
-
+/* virtual */ nsIFrame*
+nsBoxFrame::GetContentInsertionFrame()
+{
+  if (GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)
+    return GetFirstChild(nsnull)->GetContentInsertionFrame();
+  return nsContainerFrame::GetContentInsertionFrame();
+}
 
 NS_IMETHODIMP
 nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
