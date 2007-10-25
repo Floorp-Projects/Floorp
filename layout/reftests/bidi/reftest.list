@@ -7,7 +7,7 @@
 fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004.html bidi-004-ref.html # Bug 386567 (Linux), bug 386573 (Mac)
 fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004-j.html bidi-004-ref.html
 == bidi-005.html bidi-005-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == bidi-006.html bidi-006-ref.html # Bug 386573
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == bidi-006-j.html bidi-006-ref.html # Bug 386573
+== bidi-006.html bidi-006-ref.html
+== bidi-006-j.html bidi-006-ref.html
 == 386339.html 386339-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT!="gtk2") == 387653.html 387653-ref.html # Linux-specific bug
