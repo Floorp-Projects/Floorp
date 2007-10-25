@@ -303,8 +303,8 @@ protected:
                         ScrollQuantity aScrollQuantity);
   void ForceViewUpdate(nsIView* aView);
   void DoScrollHistory(PRInt32 direction);
-  void DoScrollTextsize(nsIFrame *aTargetFrame, PRInt32 adjustment);
-  nsresult ChangeTextSize(PRInt32 change);
+  void DoScrollFullZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
+  nsresult ChangeFullZoom(PRInt32 change);
   // end mousewheel functions
 
   // routines for the d&d gesture tracking state machine
