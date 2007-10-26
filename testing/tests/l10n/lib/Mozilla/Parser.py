@@ -88,7 +88,22 @@ def getParser(path):
 
 class DTDParser(Parser):
   def __init__(self):
-    self.key = re.compile('<!ENTITY\s+([\w\.]+)\s+(\"(?:[^\"]*\")|(?:\'[^\']*)\')\s*>', re.S)
+    # http://www.w3.org/TR/2006/REC-xml11-20060816/#NT-NameStartChar
+    #":" | [A-Z] | "_" | [a-z] |
+    # [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF]
+    # | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] |
+    # [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] |
+    # [#x10000-#xEFFFF]
+    NameStartChar = u':A-Z_a-z\xC0-\xD6\xD8-\xF6\xF8-\u02FF' + \
+        u'\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF'+\
+        u'\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD'
+    # + \U00010000-\U000EFFFF seems to be unsupported in python
+    
+    # NameChar ::= NameStartChar | "-" | "." | [0-9] | #xB7 |
+    #   [#x0300-#x036F] | [#x203F-#x2040]
+    NameChar = NameStartChar + ur'\-\.0-9' + u'\xB7\u0300-\u036F\u203F-\u2040'
+    Name = '[' + NameStartChar + '][' + NameChar + ']*'
+    self.key = re.compile('<!ENTITY\s+(' + Name + ')\s+(\"(?:[^\"]*\")|(?:\'[^\']*)\')\s*>', re.S)
     self.comment = re.compile('<!--.*?-->', re.S)
     Parser.__init__(self)
 
