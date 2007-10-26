@@ -589,10 +589,6 @@ nsXPCWrappedJS::SystemIsBeingShutDown(JSRuntime* rt)
     // work (and avoid crashing some platforms).
     mJSObj = nsnull;
 
-    // There is no reason to keep this root any longer. Since we've cleared
-    // mJSObj our dtor will not remove the root later. So, we do it now.
-    JS_RemoveRootRT(rt, &mJSObj);
-
     // Notify other wrappers in the chain.
     if(mNext)
         mNext->SystemIsBeingShutDown(rt);

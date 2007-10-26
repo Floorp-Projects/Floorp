@@ -251,6 +251,42 @@ ContextCallback(JSContext *cx, uintN operation)
            : JS_TRUE;
 }
 
+struct ObjectHolder : public JSDHashEntryHdr
+{
+    void *holder;
+    nsScriptObjectTracer* tracer;
+};
+
+nsresult
+XPCJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
+{
+    if(!mJSHolders.ops)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    ObjectHolder *entry =
+        reinterpret_cast<ObjectHolder*>(JS_DHashTableOperate(&mJSHolders,
+                                                             aHolder,
+                                                             JS_DHASH_ADD));
+    if(!entry)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    entry->holder = aHolder;
+    entry->tracer = aTracer;
+
+    return NS_OK;
+}
+
+nsresult
+XPCJSRuntime::RemoveJSHolder(void* aHolder)
+{
+    if(!mJSHolders.ops)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    JS_DHashTableOperate(&mJSHolders, aHolder, JS_DHASH_REMOVE);
+
+    return NS_OK;
+}
+
 // static
 void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
 {
@@ -277,16 +313,48 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
         }
     }
 
-    XPCWrappedNativeScope::TraceJS(trc, self);
+    // XPCJSObjectHolders don't participate in cycle collection, so always trace
+    // them here.
+    for(XPCRootSetElem *e = self->mObjectHolderRoots; e ; e = e->GetNextRoot())
+        static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
+        
+    self->TraceXPConnectRoots(trc);
+}
 
-    for (XPCRootSetElem *e = self->mVariantRoots; e ; e = e->GetNextRoot())
+PR_STATIC_CALLBACK(void)
+TraceJSObject(PRUint32 aLangID, void *aScriptThing, void *aClosure)
+{
+    if(aLangID == nsIProgrammingLanguage::JAVASCRIPT)
+    {
+        JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
+                       nsXPConnect::GetXPConnect()->GetTraceKind(aScriptThing),
+                       "JSObjectHolder");
+    }
+}
+
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+TraceJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
+              void *arg)
+{
+    ObjectHolder* entry = reinterpret_cast<ObjectHolder*>(hdr);
+
+    entry->tracer->Trace(entry->holder, TraceJSObject, arg);
+
+    return JS_DHASH_NEXT;
+}
+
+void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
+{
+    XPCWrappedNativeScope::TraceJS(trc, this);
+
+    for(XPCRootSetElem *e = mVariantRoots; e ; e = e->GetNextRoot())
         static_cast<XPCTraceableVariant*>(e)->TraceJS(trc);
 
-    for (XPCRootSetElem *e = self->mWrappedJSRoots; e ; e = e->GetNextRoot())
+    for(XPCRootSetElem *e = mWrappedJSRoots; e ; e = e->GetNextRoot())
         static_cast<nsXPCWrappedJS*>(e)->TraceJS(trc);
 
-    for (XPCRootSetElem *e = self->mObjectHolderRoots; e ; e = e->GetNextRoot())
-        static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
+    if(mJSHolders.ops)
+        JS_DHashTableEnumerate(&mJSHolders, TraceJSHolder, trc);
 }
 
 // static
@@ -809,6 +877,12 @@ XPCJSRuntime::~XPCJSRuntime()
 
     gOldJSGCCallback = NULL;
     gOldJSContextCallback = NULL;
+
+    if(mJSHolders.ops)
+    {
+        JS_DHashTableFinish(&mJSHolders);
+        mJSHolders.ops = nsnull;
+    }
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
@@ -861,6 +935,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
         gOldJSGCCallback = JS_SetGCCallbackRT(mJSRuntime, GCCallback);
         JS_SetExtraGCRoots(mJSRuntime, TraceJS, this);
     }
+
+    if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
+                          sizeof(ObjectHolder), 512))
+        mJSHolders.ops = nsnull;
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
