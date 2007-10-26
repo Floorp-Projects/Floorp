@@ -1845,9 +1845,15 @@ nsXULMenuCommandEvent::Run()
     // need to be hidden.
     nsIFrame* popupFrame = menuFrame->GetParent();
     while (popupFrame) {
-      if (popupFrame->GetType() == nsGkAtoms::menuPopupFrame) {
-        popup = popupFrame->GetContent();
+      // If the menu is a descendant of a menubar, clear the recently closed
+      // state. Break out afterwards, as the menubar is the top level of a
+      // menu hierarchy.
+      if (popupFrame->GetType() == nsGkAtoms::menuBarFrame) {
+        (static_cast<nsMenuBarFrame *>(popupFrame))->SetRecentlyClosed(nsnull);
         break;
+      }
+      else if (!popup && popupFrame->GetType() == nsGkAtoms::menuPopupFrame) {
+        popup = popupFrame->GetContent();
       }
       popupFrame = popupFrame->GetParent();
     }
