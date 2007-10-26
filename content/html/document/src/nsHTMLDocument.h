@@ -212,6 +212,17 @@ public:
     mDisableCookieAccess = PR_TRUE;
   }
 
+  /**
+   * Returns whether the document should be editable. This can be different from
+   * IsEditingOn() (for example if we're delaying turning the editor on/off).
+   */
+  PRBool EditingShouldBeOn()
+  {
+    return HasFlag(NODE_IS_EDITABLE) || mContentEditableCount > 0;
+  }
+
+  void EndUpdate(nsUpdateType aUpdateType);
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLDocument, nsDocument)
 
 protected:

@@ -3732,6 +3732,16 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
   return NS_OK;
 }
 
+void
+nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
+{
+  nsDocument::EndUpdate(aUpdateType);
+
+  if (mUpdateNestLevel == 0 && EditingShouldBeOn() != IsEditingOn()) {
+    EditingStateChanged();
+  }
+}
+
 nsresult
 nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
                                            PRInt32 aChange)
@@ -3741,7 +3751,8 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
 
   mContentEditableCount += aChange;
 
-  if (mParser) {
+  if (mParser ||
+      (mUpdateNestLevel > 0 && EditingShouldBeOn() != IsEditingOn())) {
     return NS_OK;
   }
 
