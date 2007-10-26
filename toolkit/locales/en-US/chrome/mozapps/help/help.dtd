@@ -38,7 +38,7 @@
 <!ENTITY zLevel.label                   "Always on Top">
 <!ENTITY zLevel.accesskey               "T">
 
-<!ENTITY fullZoomReduceBtn.label        "Zoom In">
-<!ENTITY fullZoomReduceBtn.accesskey    "I">
-<!ENTITY fullZoomEnlargeBtn.label       "Zoom Out">
-<!ENTITY fullZoomEnlargeBtn.accesskey   "O">
+<!ENTITY fullZoomReduceBtn.label        "Zoom Out">
+<!ENTITY fullZoomReduceBtn.accesskey    "O">
+<!ENTITY fullZoomEnlargeBtn.label       "Zoom In">
+<!ENTITY fullZoomEnlargeBtn.accesskey   "I">
