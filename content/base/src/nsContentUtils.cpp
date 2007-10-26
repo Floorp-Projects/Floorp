@@ -2157,6 +2157,9 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
 
   nsIURI *documentURI = aLoadingDocument->GetDocumentURI();
 
+  // Make the URI immutable so people won't change it under us
+  NS_TryToSetImmutable(aURI);
+
   // We don't use aLoadingPrincipal for anything here yet... but we
   // will.  See bug 377092.
 
