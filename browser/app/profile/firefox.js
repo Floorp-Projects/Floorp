@@ -200,8 +200,6 @@ pref("browser.urlbar.doubleClickSelectsAll", false);
 #endif
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.matchOnlyTyped", false);
-pref("browser.urlbar.hideProtocols", "");
-pref("browser.urlbar.animateBlend", true);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
