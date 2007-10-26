@@ -41,6 +41,8 @@
 #include "nsISupports.idl"
 #include "nsIXPConnect.idl"
 
+[ptr] native JSTracerPtr(JSTracer);
+
 %{ C++
 #define NS_SUCCESS_I_DID_SOMETHING \
    (NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCONNECT,1))
