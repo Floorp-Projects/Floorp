@@ -868,33 +868,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   border-width: 1px;
 }
 
-.formatted-url {
-  -moz-box-align: center;
-  margin: 0 3px;
-  /*XXX Gecko 1.9 quirk*/
-  -moz-padding-start: 1px;
-  color: -moz-fieldtext;
-}
-
-#urlbar[level="high"] .formatted-url ,
-#urlbar[level="low"] .formatted-url {
-  color: black;
-}
-
-.formatted-url * {
-  margin: 0;
-  padding: 0;
-  cursor: text;
-}
-
-.formatted-url-ellipsis {
-  -moz-margin-start: 1px;
-}
-
-.formatted-url-prePath {
-  -moz-box-pack: center;
-}
-
 #urlbar-container {
   -moz-box-orient: horizontal;
   -moz-box-align: stretch;
