@@ -64,7 +64,7 @@
       native JSVal(jsval);
       native JSID(jsid);
 [ptr] native voidPtrPtr(void*);
-[ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
+[ptr] native JSTracerPtr(JSTracer);
 
 /***************************************************************************/
 
@@ -150,7 +150,7 @@ interface nsIXPCSecurityManager;
 interface nsIPrincipal;
 
 %{C++
-class nsScriptObjectTracer;
+class nsCycleCollectionTraversalCallback;
 %}
 
 /***************************************************************************/
@@ -727,18 +727,4 @@ interface nsIXPConnect : nsISupports
     [noscript] JSVal getCrossOriginWrapperForObject(in JSContextPtr aJSContext,
                                                     in JSObjectPtr aParent,
                                                     in JSObjectPtr aWrappedObj);
-
-    /**
-     * Root JS objects held by aHolder.
-     * @param aHolder The object that hold the JS objects that should be rooted.
-     * @param aTrace The tracer for aHolder.
-     */
-    [noscript] void addJSHolder(in voidPtr aHolder,
-                                in nsScriptObjectTracerPtr aTracer);
-
-    /**
-     * Stop rooting the JS objects held by aHolder.
-     * @param aHolder The object that hold the rooted JS objects.
-     */
-    [noscript] void removeJSHolder(in voidPtr aHolder);
 };
