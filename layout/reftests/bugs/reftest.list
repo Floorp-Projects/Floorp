@@ -132,8 +132,10 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 != 315620-2b.xhtml 315620-2-ref.xhtml
 != 321402-1.html about:blank
 != 321402-2.html about:blank
-== 321402-3.xul 321402-3-ref.xul
+random == 321402-3.xul 321402-3-ref.xul
 == 321402-4.xul 321402-4-ref.xul
+== 321402-5.xul 321402-5-ref.xul
+== 321402-6.xul 321402-6-ref.xul
 == 322461-1.xml 322461-1-ref.html
 == 323656-1.html 323656-1-ref.html
 == 323656-2.html 323656-2-ref.html
