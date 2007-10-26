@@ -44,8 +44,8 @@
 <dialog id="handling"
         ondialogaccept="return dialog.onAccept();"
         onload="dialog.initialize();"
-        width="&window.width;" height="&window.height;"
-        persist="width height screenX screenY sizemode"
+        style="min-width: &window.emWidth;; min-height: &window.emHeight;;"
+        persist="width height screenX screenY"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mozapps/content/handling/dialog.js" type="application/javascript"/>
