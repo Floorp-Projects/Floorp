@@ -3209,7 +3209,7 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
                 NS_ERROR("XUL cache gave me an incorrect script language");
                 return NS_ERROR_UNEXPECTED;
             }
-            aScriptProto->Set(newScriptObject);
+            aScriptProto->mScriptObject.set(newScriptObject);
         }
 
         if (aScriptProto->mScriptObject.mObject) {
