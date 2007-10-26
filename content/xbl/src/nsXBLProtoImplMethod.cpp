@@ -72,6 +72,8 @@ nsXBLProtoImplMethod::Destroy(PRBool aIsCompiled)
   NS_PRECONDITION(aIsCompiled == mIsCompiled,
                   "Incorrect aIsCompiled in nsXBLProtoImplMethod::Destroy");
   if (aIsCompiled) {
+    if (mJSMethodObject)
+      nsContentUtils::RemoveJSGCRoot(&mJSMethodObject);
     mJSMethodObject = nsnull;
   }
   else {
@@ -261,6 +263,8 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 
   if (methodObject) {
     // Root the compiled prototype script object.
+    rv = nsContentUtils::AddJSGCRoot(&mJSMethodObject,
+                                     "nsXBLProtoImplMethod::mJSMethodObject");
     if (NS_FAILED(rv)) {
       mJSMethodObject = nsnull;
     }
@@ -273,13 +277,11 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 }
 
 void
-nsXBLProtoImplMethod::Trace(TraceCallback aCallback, void *aClosure) const
+nsXBLProtoImplMethod::Traverse(nsCycleCollectionTraversalCallback &cb) const
 {
   NS_ASSERTION(mIsCompiled, "Shouldn't traverse uncompiled method");
 
-  if (mJSMethodObject) {
-    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSMethodObject, aClosure);
-  }
+  cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mJSMethodObject);
 }
 
 nsresult

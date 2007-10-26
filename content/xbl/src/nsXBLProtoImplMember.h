@@ -47,11 +47,11 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
-#include "nsCycleCollectionParticipant.h"
 
 class nsIScriptContext;
 struct JSRuntime;
 class nsIJSRuntimeService;
+class nsCycleCollectionTraversalCallback;
 
 struct nsXBLTextWithLineNumber
 {
@@ -114,7 +114,7 @@ public:
                                  const nsCString& aClassStr,
                                  void* aClassObject)=0;
 
-  virtual void Trace(TraceCallback aCallback, void *aClosure) const = 0;
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const = 0;
 
 protected:
   friend class nsAutoGCRoot;

@@ -198,7 +198,6 @@ public:
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
   void Unlink();
-  void Trace(TraceCallback aCallback, void *aClosure) const;
 
 // Static members
   static PRUint32 gRefCnt;
