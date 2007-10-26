@@ -557,6 +557,8 @@ public:
                              PRInt16* aImageBlockingStatus = nsnull);
   /**
    * Method to start an image load.  This does not do any security checks.
+   * This method will attempt to make aURI immutable; a caller that wants to
+   * keep a mutable version around should pass in a clone.
    *
    * @param aURI uri of the image to be loaded
    * @param aLoadingDocument the document we belong to
