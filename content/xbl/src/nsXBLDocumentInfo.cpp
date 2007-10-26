@@ -452,21 +452,6 @@ UnlinkProtos(nsHashKey *aKey, void *aData, void* aClosure)
   return kHashEnumerateNext;
 }
 
-struct ProtoTracer
-{
-  TraceCallback mCallback;
-  void *mClosure;
-};
-
-static PRIntn PR_CALLBACK
-TraceProtos(nsHashKey *aKey, void *aData, void* aClosure)
-{
-  ProtoTracer* closure = static_cast<ProtoTracer*>(aClosure);
-  nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
-  proto->Trace(closure->mCallback, closure->mClosure);
-  return kHashEnumerateNext;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
@@ -481,14 +466,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
     tmp->mBindingTable->Enumerate(TraverseProtos, &cb);
   }
   cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObject*>(tmp->mGlobalObject));
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
-  if (tmp->mBindingTable) {
-    ProtoTracer closure = { aCallback, aClosure };
-    tmp->mBindingTable->Enumerate(TraceProtos, &closure);
-  }
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXBLDocumentInfo)
   NS_INTERFACE_MAP_ENTRY(nsIXBLDocumentInfo)
@@ -529,10 +507,7 @@ nsXBLDocumentInfo::~nsXBLDocumentInfo()
     mGlobalObject->SetScriptContext(nsIProgrammingLanguage::JAVASCRIPT, nsnull);
     mGlobalObject->ClearGlobalObjectOwner(); // just in case
   }
-  if (mBindingTable) {
-    NS_DROP_JS_OBJECTS(this, nsXBLDocumentInfo);
-    delete mBindingTable;
-  }
+  delete mBindingTable;
 }
 
 NS_IMETHODIMP
@@ -566,13 +541,8 @@ DeletePrototypeBinding(nsHashKey* aKey, void* aData, void* aClosure)
 NS_IMETHODIMP
 nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)
 {
-  if (!mBindingTable) {
+  if (!mBindingTable)
     mBindingTable = new nsObjectHashtable(nsnull, nsnull, DeletePrototypeBinding, nsnull);
-    if (!mBindingTable)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_HOLD_JS_OBJECTS(this, nsXBLDocumentInfo);
-  }
 
   const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
   nsCStringKey key(flat.get());

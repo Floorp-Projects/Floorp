@@ -961,7 +961,7 @@ NS_IMPL_THREADSAFE_RELEASE(XPCWrappedNative)
  */
 
 void
-XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
+XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx, JSObject *obj)
 {
     if(!IsValid())
         return;
