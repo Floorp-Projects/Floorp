@@ -7503,9 +7503,10 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (id == sDocumentURIObject_id && IsPrivilegedScript()) {
-    // Is there a better error we could use here?  We don't want privileged
-    // script that can read this property to set it, but _do_ want to allow
-    // everyone else to.
+    // We don't want privileged script that can read this property to set it,
+    // but _do_ want to allow everyone else to set a value they can then read.
+    //
+    // XXXbz Is there a better error we could use here?
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
   
