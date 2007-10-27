@@ -1150,7 +1150,8 @@ IsSameOrigin(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
   rv = aChannel->GetURI(getter_AddRefs(channelURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsContentUtils::GetSecurityManager()->CheckSameOriginURI(codebase, channelURI);
+  rv = nsContentUtils::GetSecurityManager()->
+    CheckSameOriginURI(codebase, channelURI, PR_FALSE);
   return NS_SUCCEEDED(rv);
 }
 

@@ -676,12 +676,15 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
-                                            nsIURI* aTargetURI)
+                                            nsIURI* aTargetURI,
+                                            PRBool reportError)
 {
     if (!SecurityCompareURIs(aSourceURI, aTargetURI))
     {
-         ReportError(nsnull, NS_LITERAL_STRING("CheckSameOriginError"), 
+         if (reportError) {
+            ReportError(nsnull, NS_LITERAL_STRING("CheckSameOriginError"),
                      aSourceURI, aTargetURI);
+         }
          return NS_ERROR_DOM_BAD_URI;
     }
     return NS_OK;

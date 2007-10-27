@@ -284,9 +284,12 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     /**
      * Returns OK if aSourceURI and target have the same "origin"
      * (scheme, host, and port).
+     * ReportError flag suppresses error reports for functions that
+     * don't need reporting.
      */
     void checkSameOriginURI(in nsIURI aSourceURI,
-                            in nsIURI aTargetURI);
+                            in nsIURI aTargetURI,
+                            in boolean reportError);
 
     /**
      * Returns OK if aSourcePrincipal and aTargetPrincipal

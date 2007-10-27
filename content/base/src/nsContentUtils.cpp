@@ -3643,7 +3643,7 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
   nsCOMPtr<nsIURI> loadingURI;
   rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
   NS_ENSURE_SUCCESS(rv, rv);
-  return sSecurityManager->CheckSameOriginURI(loadingURI, aURIToLoad);
+  return sSecurityManager->CheckSameOriginURI(loadingURI, aURIToLoad, PR_TRUE);
 }
 
 /* static */

@@ -1111,7 +1111,7 @@ nsSameOriginChecker::OnChannelRedirect(nsIChannel *aOldChannel,
     NS_ENSURE_SUCCESS(rv, rv);
 
     return nsContentUtils::GetSecurityManager()->
-      CheckSameOriginURI(oldURI, newURI);
+      CheckSameOriginURI(oldURI, newURI, PR_TRUE);
 }
 
 NS_IMETHODIMP

@@ -427,7 +427,7 @@ NS_ScriptErrorReporter(JSContext *cx,
                 // URIs. See bug 387476.
                 sameOrigin =
                   NS_SUCCEEDED(sSecurityManager->
-                               CheckSameOriginURI(errorURI, codebase));
+                               CheckSameOriginURI(errorURI, codebase, PR_TRUE));
               }
             }
 
