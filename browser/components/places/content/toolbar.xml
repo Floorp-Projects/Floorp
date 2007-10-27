@@ -942,6 +942,9 @@
           // remove previous menu items
           while (aPopup.hasChildNodes())
             aPopup.removeChild(aPopup.firstChild);
+          // restore the empty-menu item if has been created already
+          if (aPopup._emptyMenuItem)
+            aPopup.appendChild(aPopup._emptyMenuItem);
 
           var resultNode = aPopup._resultNode;
           if (!resultNode.containerOpen)
