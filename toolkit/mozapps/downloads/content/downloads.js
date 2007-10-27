@@ -340,13 +340,7 @@ function openDownload(aDownload)
 
 function openReferrer(aDownload)
 {
-  var uriString;
-  if (aDownload.hasAttribute("referrer"))
-    uriString = aDownload.getAttribute("referrer");
-  else
-    uriString = aDownload.getAttribute("uri");
-
-  openURL(uriString);
+  openURL(getReferrerOrSource(aDownload));
 }
 
 function showDownloadInfo(aDownload)
@@ -371,11 +365,7 @@ function showDownloadInfo(aDownload)
                                    dateStarted.getMinutes(), 0);
   popupTitle.setAttribute("value", dateStarted);
   // Add proper uri and path
-  var uri = "beltzner";
-  if (aDownload.hasAttribute("referrer"))
-    uri = aDownload.getAttribute("referrer");
-  else
-    uri = aDownload.getAttribute("uri");
+  let uri = getReferrerOrSource(aDownload);
   uriLabel.label = uri;
   uriLabel.setAttribute("tooltiptext", uri);
   var path = aDownload.getAttribute("path");
@@ -477,8 +467,8 @@ function Startup()
   if (!autoRemoveAndClose())
     gDownloadsView.focus();
 
-  var obs = Components.classes["@mozilla.org/observer-service;1"].
-            getService(Components.interfaces.nsIObserverService);
+  let obs = Cc["@mozilla.org/observer-service;1"].
+            getService(Ci.nsIObserverService);
   obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
 }
 
@@ -486,8 +476,8 @@ function Shutdown()
 {
   gDownloadManager.removeListener(gDownloadListener);
 
-  var obs = Components.classes["@mozilla.org/observer-service;1"].
-            getService(Components.interfaces.nsIObserverService);
+  let obs = Cc["@mozilla.org/observer-service;1"].
+            getService(Ci.nsIObserverService);
   obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
 }
 
@@ -853,6 +843,16 @@ function removeFromView(aDownload)
   let index = gDownloadsView.selectedIndex;
   gDownloadsView.removeChild(aDownload);
   gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
+}
+
+function getReferrerOrSource(aDownload)
+{
+  // Give the referrer if we have it set
+  if (aDownload.hasAttribute("referrer"))
+    return aDownload.getAttribute("referrer");
+
+  // Otherwise, provide the source
+  return aDownload.getAttribute("uri");
 }
 
 /**
