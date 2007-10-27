@@ -22,25 +22,6 @@
 
 //\\// GLOBAL DATA
 NPNetscapeFuncs* g_pNavigatorFuncs = 0;
-JRIGlobalRef Private_GetJavaClass(void);
-
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
-// Private_GetJavaClass (global function)
-//
-//	Given a Java class reference (thru NPP_GetJavaClass) inform JRT
-//	of this class existence
-//
-JRIGlobalRef
-Private_GetJavaClass(void)
-{
-    jref clazz = NPP_GetJavaClass();
-    if (clazz) {
-		JRIEnv* env = NPN_GetJavaEnv();
-		return JRI_NewGlobalRef(env, clazz);
-    }
-    return NULL;
-}
 
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
@@ -121,14 +102,6 @@ NP_Initialize(NPNetscapeFuncs* pFuncs)
 		g_pluginFuncs->urlnotify = NPP_URLNotify;
 	}
 	
-#ifdef WIN32 // An ugly hack, because Win16 lags behind in Java
-	if( navMinorVers >= NPVERS_HAS_LIVECONNECT ) {
-#else
-	if( navMinorVers >= NPVERS_WIN16_HAS_LIVECONNECT )
-#endif // WIN32
-		g_pluginFuncs->javaClass = Private_GetJavaClass();
-	}
-
 	// NPP_Initialize is a standard (cross-platform) initialize function.
     return NPP_Initialize();
 }
@@ -311,16 +284,6 @@ void NPN_MemFree(void* ptr)
 void NPN_ReloadPlugins(NPBool reloadPages)
 {
     g_pNavigatorFuncs->reloadplugins(reloadPages);
-}
-
-JRIEnv* NPN_GetJavaEnv(void)
-{
-	return g_pNavigatorFuncs->getJavaEnv();
-}
-
-jref NPN_GetJavaPeer(NPP instance)
-{
-	return g_pNavigatorFuncs->getJavaPeer(instance);
 }
 
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *result)
