@@ -48,9 +48,4 @@
 <!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">
 
 <!ENTITY showFolder.label                 "Show this Folder">
-
-<!ENTITY activeDownloads.label            "Active">
-<!ENTITY completedDownloads.label         "Completed">
-<!ENTITY searchResults.label              "Search Results">
-
 <!ENTITY searchBox.label                  "Search...">
