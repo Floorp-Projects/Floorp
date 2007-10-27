@@ -144,7 +144,6 @@
               collapsed="true"
               onselect="gEditItemOverlay.onFolderTreeSelect();"
               showRoot="true"
-              place="place:folder=2&amp;excludeItems=1&amp;excludeQueries=1&amp;excludeReadOnlyFolders=1"
               hidecolumnpicker="true"
               observes="paneElementsBroadcaster">
           <treecols>
