@@ -60,9 +60,8 @@ var gDownloadManager  = Cc["@mozilla.org/download-manager;1"].
                         getService(Ci.nsIDownloadManager);
 var gDownloadListener     = null;
 var gDownloadsView        = null;
-var gDownloadsActiveTitle = null;
-var gDownloadsOtherLabel  = null;
-var gDownloadsOtherTitle  = null;
+var gDownloadsActiveArea  = null;
+var gDownloadsDoneArea    = null;
 var gDownloadInfoPopup    = null;
 var gUserInterfered       = false;
 var gSearching            = false;
@@ -163,7 +162,7 @@ function downloadCompleted(aDownload)
     // If we are displaying search results, we do not want to add it to the list
     // of completed downloads
     if (!gSearching)
-      gDownloadsView.insertBefore(dl, gDownloadsOtherTitle.nextSibling);
+      gDownloadsView.insertBefore(dl, gDownloadsDoneArea.nextSibling);
     else
       removeFromView(dl);
 
@@ -182,10 +181,8 @@ function downloadCompleted(aDownload)
       listItem.setAttribute("image", oldImage + "&contentType=" + contentType);
     } catch (e) { }
 
-    if (gDownloadManager.activeDownloadCount == 0) {
-      gDownloadsActiveTitle.hidden = true;
+    if (gDownloadManager.activeDownloadCount == 0)
       document.title = document.documentElement.getAttribute("statictitle");
-    }
   }
   catch (e) { }
 }
@@ -440,9 +437,8 @@ function onUpdateProgress()
 function Startup() 
 {
   gDownloadsView        = document.getElementById("downloadView");
-  gDownloadsActiveTitle = document.getElementById("active-downloads-title");
-  gDownloadsOtherLabel  = document.getElementById("other-downloads");
-  gDownloadsOtherTitle  = document.getElementById("other-downloads-title");
+  gDownloadsActiveArea  = document.getElementById("active-downloads-area");
+  gDownloadsDoneArea    = document.getElementById("done-downloads-area");
   gDownloadInfoPopup    = document.getElementById("information");
 
   // convert strings to those in the string bundle
@@ -936,9 +932,6 @@ function buildActiveDownloadsList()
   if (gDownloadManager.activeDownloadCount == 0)
     return;
 
-  // unhide the label
-  gDownloadsActiveTitle.hidden = false;
-
   // repopulate the list
   var db = gDownloadManager.DBConnection;
   var stmt = gActiveDownloadsQuery;
@@ -954,7 +947,7 @@ function buildActiveDownloadsList()
     stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
     stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
     stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
-    buildDownloadList(stmt, gDownloadsActiveTitle);
+    buildDownloadList(stmt, gDownloadsActiveArea);
   } finally {
     stmt.reset();
   }
@@ -984,7 +977,7 @@ function buildDownloadListWithTime(aTime)
     stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_FAILED);
     stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_CANCELED);
     stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED);
-    buildDownloadList(stmt, gDownloadsOtherTitle);
+    buildDownloadList(stmt, gDownloadsDoneArea);
   } finally {
     stmt.reset();
   }
@@ -1003,13 +996,11 @@ function buildDownloadListWithTime(aTime)
 function buildDownloadListWithSearch(aTerms)
 {
   gSearching = true;
-  gDownloadsOtherLabel.value = gDownloadsOtherLabel.getAttribute("searchlabel");
 
   // remove and trailing or leading whitespace first
   aTerms = aTerms.replace(/^\s+|\s+$/, "");
   if (aTerms.length == 0) {
     gSearching = false;
-    gDownloadsOtherLabel.value = gDownloadsOtherLabel.getAttribute("completedlabel");
     buildDefaultView();
     return;
   }
@@ -1023,7 +1014,7 @@ function buildDownloadListWithSearch(aTerms)
     stmt.bindStringParameter(0, "%" + paramForLike + "%");
     stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
     stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
-    buildDownloadList(stmt, gDownloadsOtherTitle);
+    buildDownloadList(stmt, gDownloadsDoneArea);
   } finally {
     stmt.reset();
   }
