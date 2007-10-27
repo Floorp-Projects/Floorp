@@ -78,11 +78,13 @@
           var resultview = this.getResultView();
           if (resultview)
             resultview.removeViewObserver(this._viewObserver);
+
           this.treeBoxObject.view = val;
           if (val) {
             val.QueryInterface(Ci.nsINavHistoryResultViewer)
                .addViewObserver(this._viewObserver, false);
           }
+          return val;
         ]]></setter>
       </property>
 
@@ -109,11 +111,11 @@
           if (optionsFilter)
             options = optionsFilter.filter(queryNode.getQueries({}), options, 
                                            optionsFilter.historyHandler);
-          
+
           var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
           query.onlyBookmarked = onlyBookmarks;
-          
+
           // Remove "group by folder" from the options list, because
           // nsNavHistory::RecursiveGroup doesn't support it.
           function isFolderGrouping(grouping, index, ary) {
@@ -274,7 +276,7 @@
         <getter><![CDATA[
           return this.getAttribute("place");
         ]]></getter>
-        <setter><![CDATA[ 
+        <setter><![CDATA[
           this.setAttribute("place", val);
 
           var queriesRef = { };
