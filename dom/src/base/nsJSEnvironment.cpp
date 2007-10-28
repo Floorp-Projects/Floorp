@@ -3729,8 +3729,7 @@ public:
   ~nsJSArgArray();
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSArgArray,
-                                                         nsIJSArgArray)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsJSArgArray, nsIJSArgArray)
 
   // nsIArray
   NS_DECL_NSIARRAY
@@ -3760,14 +3759,16 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, PRUint32 argc, jsval *argv,
     return;
   }
 
-  // Callers are allowed to pass in a null argv even for argc > 0. They can
-  // then use GetArgs to initialize the values.
-  if (argv) {
-    for (PRUint32 i = 0; i < argc; ++i)
+  JSAutoRequest ar(aContext);
+  for (PRUint32 i = 0; i < argc; ++i) {
+    if (argv)
       mArgv[i] = argv[i];
+    if (!::JS_AddNamedRoot(aContext, &mArgv[i], "nsJSArgArray.mArgv[i]")) {
+      *prv = NS_ERROR_UNEXPECTED;
+      return;
+    }
   }
-  if (argc > 0)
-    *prv = NS_HOLD_JS_OBJECTS(this, nsJSArgArray);
+  *prv = NS_OK;
 }
 
 nsJSArgArray::~nsJSArgArray()
@@ -3778,9 +3779,13 @@ nsJSArgArray::~nsJSArgArray()
 void
 nsJSArgArray::ReleaseJSObjects()
 {
-  if (mArgc > 0)
-    NS_DROP_JS_OBJECTS(this, nsJSArgArray);
   if (mArgv) {
+    NS_ASSERTION(nsJSRuntime::sRuntime, "Where's the runtime gone?");
+    if (nsJSRuntime::sRuntime) {
+      for (PRUint32 i = 0; i < mArgc; ++i) {
+        ::JS_RemoveRootRT(nsJSRuntime::sRuntime, &mArgv[i]);
+      }
+    }
     PR_DELETE(mArgv);
   }
   mArgc = 0;
@@ -3792,20 +3797,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSArgArray)
   tmp->ReleaseJSObjects();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSArgArray)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSArgArray)
-  jsval *argv = tmp->mArgv;
-  if (argv) {
-    jsval *end;
-    for (end = argv + tmp->mArgc; argv < end; ++argv) {
-	    if (JSVAL_IS_GCTHING(*argv))
-        NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(JAVASCRIPT,
-                                                JSVAL_TO_GCTHING(*argv))
+  {
+    jsval *argv = tmp->mArgv;
+    if (argv) {
+      jsval *end;
+      for (end = argv + tmp->mArgc; argv < end; ++argv) {
+        if (JSVAL_IS_OBJECT(*argv))
+          cb.NoteScriptChild(JAVASCRIPT, JSVAL_TO_OBJECT(*argv));
+      }
     }
   }
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSArgArray)
   NS_INTERFACE_MAP_ENTRY(nsIArray)

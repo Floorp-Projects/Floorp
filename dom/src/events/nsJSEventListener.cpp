@@ -81,13 +81,12 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
   // until we are done with it.
   NS_ASSERTION(aScopeObject && aContext,
                "EventListener with no context or scope?");
-  NS_HOLD_JS_OBJECTS(this, nsJSEventListener);
+  aContext->HoldScriptObject(aScopeObject);
 }
 
 nsJSEventListener::~nsJSEventListener() 
 {
-  if (mContext)
-    NS_DROP_JS_OBJECTS(this, nsJSEventListener);
+  mContext->DropScriptObject(mScopeObject);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
@@ -97,13 +96,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSEventListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, tmp->mScopeObject);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSEventListener)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_MEMBER_CALLBACK(tmp->mContext->GetScriptTypeID(),
-                                                 mScopeObject)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)

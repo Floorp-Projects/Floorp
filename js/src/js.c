@@ -766,47 +766,6 @@ GC(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-GCParameter(JSContext *cx, uintN argc, jsval *vp)
-{
-    jsval *argv;
-    JSString *str;
-    const char *paramName;
-    JSGCParamKey param;
-    uint32 value;
-
-    argv = JS_ARGV(cx, vp);
-    str = JS_ValueToString(cx, argv[0]);
-    if (!str)
-        return JS_FALSE;
-    argv[0] = STRING_TO_JSVAL(str);
-    paramName = JS_GetStringBytes(str);
-    if (!paramName)
-        return JS_FALSE;
-    if (strcmp(paramName, "maxBytes") == 0) {
-        param = JSGC_MAX_BYTES;
-    } else if (strcmp(paramName, "maxMallocBytes") == 0) {
-        param = JSGC_MAX_MALLOC_BYTES;
-    } else {
-        JS_ReportError(cx,
-                       "the first argument argument must be either maxBytes "
-                       "or maxMallocBytes");
-        return JS_FALSE;
-    }
-
-    if (!JS_ValueToECMAUint32(cx, argv[1], &value))
-        return JS_FALSE;
-    if (value == 0) {
-        JS_ReportError(cx,
-                       "the second argument must be convertable to uint32 with "
-                       "non-zero value");
-        return JS_FALSE;
-    }
-    JS_SetGCParameter(cx->runtime, param, value);
-    *vp = JSVAL_VOID;
-    return JS_TRUE;
-}
-
 #ifdef JS_GC_ZEAL
 static JSBool
 GCZeal(JSContext *cx, uintN argc, jsval *vp)
@@ -913,9 +872,9 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
             startThing = JSVAL_TO_TRACEABLE(v);
             startTraceKind = JSVAL_TRACE_KIND(v);
         } else if (v != JSVAL_NULL) {
-            JS_ReportError(cx,
-                           "the first argument is not null or a heap-allocated "
-                           "thing");
+            fprintf(gErrFile,
+                    "countHeap: argument 1 is not null or a heap-allocated "
+                    "thing\n");
             return JS_FALSE;
         }
     }
@@ -934,7 +893,9 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
                 break;
             }
             if (++i == JS_ARRAY_LENGTH(traceKindNames)) {
-                JS_ReportError(cx, "trace kind name '%s' is unknown", bytes);
+                fprintf(gErrFile,
+                        "countHeap: trace kind name '%s' is unknown\n",
+                        bytes);
                 return JS_FALSE;
             }
         }
@@ -1651,7 +1612,8 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     } else {
         dumpFile = fopen(fileName, "w");
         if (!dumpFile) {
-            JS_ReportError(cx, "can't open %s: %s", fileName, strerror(errno));
+            fprintf(gErrFile, "dumpHeap: can't open %s: %s\n",
+                    fileName, strerror(errno));
             return JS_FALSE;
         }
     }
@@ -1663,8 +1625,9 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 
   not_traceable_arg:
-    JS_ReportError(cx, "argument '%s' is not null or a heap-allocated thing",
-                   badTraceArg);
+    fprintf(gErrFile,
+            "dumpHeap: argument '%s' is not null or a heap-allocated thing\n",
+            badTraceArg);
     return JS_FALSE;
 }
 
@@ -2470,7 +2433,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("gc",             GC,             0,0,0),
-    JS_FN("gcparam",        GCParameter,    2,2,0),
     JS_FN("countHeap",      CountHeap,      0,0,0),
 #ifdef JS_GC_ZEAL
     JS_FN("gczeal",         GCZeal,         1,1,0),
@@ -2522,9 +2484,6 @@ static const char *const shell_help_messages[] = {
 "help([name ...])         Display usage and help messages",
 "quit()                   Quit the shell",
 "gc()                     Run the garbage collector",
-"gcparam(name, value)\n"
-"  Wrapper for JS_SetGCParameter. The name must be either 'maxBytes' or\n"
-"  'maxMallocBytes' and the value must be convertable to a positive uint32",
 "countHeap([start[, kind]])\n"
 "  Count the number of live GC things in the heap or things reachable from\n"
 "  start when it is given and is not null. kind is either 'all' (default) to\n"

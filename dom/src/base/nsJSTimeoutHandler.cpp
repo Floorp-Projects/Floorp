@@ -59,7 +59,7 @@ class nsJSScriptTimeoutHandler: public nsIScriptTimeoutHandler
 public:
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsJSScriptTimeoutHandler)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsJSScriptTimeoutHandler)
 
   nsJSScriptTimeoutHandler();
   ~nsJSScriptTimeoutHandler();
@@ -118,13 +118,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSScriptTimeoutHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArgv)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, tmp->mFunObj);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSScriptTimeoutHandler)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mExpr)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mFunObj)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSScriptTimeoutHandler)
   NS_INTERFACE_MAP_ENTRY(nsIScriptTimeoutHandler)
@@ -151,11 +146,49 @@ void
 nsJSScriptTimeoutHandler::ReleaseJSObjects()
 {
   if (mExpr || mFunObj) {
+    nsCOMPtr<nsIScriptContext> scx = mContext;
+    JSRuntime *rt = nsnull;
+
+    if (scx) {
+      JSContext *cx;
+      cx = (JSContext *)scx->GetNativeContext();
+      rt = ::JS_GetRuntime(cx);
+      mContext = nsnull;
+    } else {
+      // XXX The timeout *must* be unrooted, even if !scx. This can be
+      // done without a JS context using the JSRuntime. This is safe
+      // enough, but it would be better to drop all a window's
+      // timeouts before its context is cleared. Bug 50705 describes a
+      // situation where we're not. In that case, at the time the
+      // context is cleared, a timeout (actually an Interval) is still
+      // active, but temporarily removed from the window's list of
+      // timers (placed instead on the timer manager's list). This
+      // makes the nearly handy ClearAllTimeouts routine useless, so
+      // we settled on using the JSRuntime rather than relying on the
+      // window having a context. It would be good to remedy this
+      // workable but clumsy situation someday.
+
+      nsCOMPtr<nsIJSRuntimeService> rtsvc =
+        do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+
+      if (rtsvc) {
+        rtsvc->GetRuntime(&rt);
+      }
+    }
+
+    if (!rt) {
+      // most unexpected. not much choice but to bail.
+
+      NS_ERROR("nsTimeout::Release() with no JSRuntime. eek!");
+
+      return;
+    }
+
     if (mExpr) {
-      NS_DROP_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
+      ::JS_RemoveRootRT(rt, &mExpr);
       mExpr = nsnull;
     } else if (mFunObj) {
-      NS_DROP_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
+      ::JS_RemoveRootRT(rt, &mFunObj);
       mFunObj = nsnull;
     } else {
       NS_WARNING("No func and no expr - roots may not have been removed");
@@ -247,8 +280,9 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
   }
 
   if (expr) {
-    rv = NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!::JS_AddNamedRoot(cx, &mExpr, "timeout.mExpr")) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     mExpr = expr;
 
@@ -258,8 +292,9 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
       mFileName.Assign(filename);
     }
   } else if (funobj) {
-    rv = NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!::JS_AddNamedRoot(cx, &mFunObj, "timeout.mFunObj")) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     mFunObj = funobj;
 
