@@ -851,6 +851,16 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
 #endif
 }
 
+void
+XPCWrappedNativeScope::Traverse(nsCycleCollectionTraversalCallback &cb)
+{
+    // See TraceScopeJSObjects.
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mGlobalJSObject);
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mPrototypeJSObject);
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                       mPrototypeJSFunction);
+}
+
 #ifndef XPCONNECT_STANDALONE
 // static
 void

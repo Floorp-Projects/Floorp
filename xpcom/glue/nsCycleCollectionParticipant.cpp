@@ -38,21 +38,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
-PR_STATIC_CALLBACK(void)
-NoteChild(PRUint32 aLangID, void *aScriptThing, void *aClosure)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-  cb->NoteScriptChild(aLangID, aScriptThing);
-}
-
-void
-nsScriptObjectTracer::TraverseScriptObjects(void *p,
-                                        nsCycleCollectionTraversalCallback &cb)
-{
-  Trace(p, NoteChild, &cb);
-}
-
 nsresult
 nsXPCOMCycleCollectionParticipant::Root(void *p)
 {
@@ -84,12 +69,6 @@ nsXPCOMCycleCollectionParticipant::Traverse
 
 void
 nsXPCOMCycleCollectionParticipant::UnmarkPurple(nsISupports *n)
-{
-}
-
-NS_IMETHODIMP_(void)
-nsXPCOMCycleCollectionParticipant::Trace(void *p, TraceCallback cb,
-                                         void *closure)
 {
 }
 

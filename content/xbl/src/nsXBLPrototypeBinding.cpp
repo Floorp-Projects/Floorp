@@ -244,7 +244,7 @@ private:
 PRUint32 nsXBLInsertionPointEntry::gRefCnt = 0;
 nsFixedSizeAllocator* nsXBLInsertionPointEntry::kPool;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLInsertionPointEntry)
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPointEntry)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPointEntry)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInsertionParent)
   if (tmp->mDefaultContent) {
@@ -355,6 +355,8 @@ void
 nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
 {
   cb.NoteXPCOMChild(mBinding);
+  if (mImplementation)
+    mImplementation->Traverse(cb);
   if (mResources)
     cb.NoteXPCOMChild(mResources->mLoader);
   if (mInsertionPointTable)
@@ -368,13 +370,6 @@ nsXBLPrototypeBinding::Unlink()
 {
   if (mImplementation)
     mImplementation->Unlink();
-}
-
-void
-nsXBLPrototypeBinding::Trace(TraceCallback aCallback, void *aClosure) const
-{
-  if (mImplementation)
-    mImplementation->Trace(aCallback, aClosure);
 }
 
 void
