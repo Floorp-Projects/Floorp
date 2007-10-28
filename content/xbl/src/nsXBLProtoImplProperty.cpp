@@ -87,14 +87,14 @@ nsXBLProtoImplProperty::Destroy(PRBool aIsCompiled)
                   "Incorrect aIsCompiled in nsXBLProtoImplProperty::Destroy");
 
   if ((mJSAttributes & JSPROP_GETTER) && mJSGetterObject) {
-    nsContentUtils::RemoveJSGCRoot(&mJSGetterObject);
+    mJSGetterObject = nsnull;
   }
   else {
     delete mGetterText;
   }
 
   if ((mJSAttributes & JSPROP_SETTER) && mJSSetterObject) {
-    nsContentUtils::RemoveJSGCRoot(&mJSSetterObject);
+    mJSSetterObject = nsnull;
   }
   else {
     delete mSetterText;
@@ -268,9 +268,6 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
     
       if (mJSGetterObject && NS_SUCCEEDED(rv)) {
         mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
-        // Root the compiled prototype script object.
-        rv = nsContentUtils::AddJSGCRoot(&mJSGetterObject,
-                                         "nsXBLProtoImplProperty::mJSGetterObject");
       }
       if (NS_FAILED(rv)) {
         mJSGetterObject = nsnull;
@@ -320,9 +317,6 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
 
       if (mJSSetterObject && NS_SUCCEEDED(rv)) {
         mJSAttributes |= JSPROP_SETTER | JSPROP_SHARED;
-        // Root the compiled prototype script object.
-        rv = nsContentUtils::AddJSGCRoot(&mJSSetterObject,
-                                         "nsXBLProtoImplProperty::mJSSetterObject");
       }
       if (NS_FAILED(rv)) {
         mJSSetterObject = nsnull;
@@ -345,15 +339,15 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
 }
 
 void
-nsXBLProtoImplProperty::Traverse(nsCycleCollectionTraversalCallback &cb) const
+nsXBLProtoImplProperty::Trace(TraceCallback aCallback, void *aClosure) const
 {
   NS_ASSERTION(mIsCompiled, "Shouldn't traverse uncompiled method");
 
-  if (mJSAttributes & JSPROP_GETTER) {
-    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mJSGetterObject);
+  if ((mJSAttributes & JSPROP_GETTER) && mJSGetterObject) {
+    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSGetterObject, aClosure);
   }
 
-  if (mJSAttributes & JSPROP_SETTER) {
-    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mJSSetterObject);
+  if ((mJSAttributes & JSPROP_SETTER) && mJSSetterObject) {
+    aCallback(nsIProgrammingLanguage::JAVASCRIPT, mJSSetterObject, aClosure);
   }
 }
