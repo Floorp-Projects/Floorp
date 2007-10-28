@@ -90,7 +90,7 @@ public:
     mFields = aFieldList;
   }
 
-  void Trace(TraceCallback aCallback, void *aClosure) const;
+  void Traverse(nsCycleCollectionTraversalCallback &cb) const;
   void Unlink();
 
   nsXBLProtoImplField* FindField(const nsString& aFieldName) const;

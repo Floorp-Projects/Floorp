@@ -129,7 +129,7 @@ public:
                                  const nsCString& aClassStr,
                                  void* aClassObject);
 
-  virtual void Trace(TraceCallback aCallback, void *aClosure) const;
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const;
 
 protected:
   union {

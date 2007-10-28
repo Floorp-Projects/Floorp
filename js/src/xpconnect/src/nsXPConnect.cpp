@@ -695,30 +695,15 @@ NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
 
 static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
     JSTRACE_OBJECT,     /* GCX_OBJECT */
-    JSTRACE_STRING,     /* GCX_STRING */
-    JSTRACE_DOUBLE,     /* GCX_DOUBLE */
-    JSTRACE_FUNCTION,   /* GCX_FUNCTION */
+    JSTRACE_STRING,     /* GCX_STRING (unused) */
+    JSTRACE_DOUBLE,     /* GCX_DOUBLE (unused) */
+    JSTRACE_STRING,     /* GCX_MUTABLE_STRING (unused) */
+    JSTRACE_FUNCTION,   /* GCX_FUNCTION (unused) */
     JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
     JSTRACE_QNAME,      /* GCX_QNAME */
-    JSTRACE_XML,        /* GCX_XML */
-    (uint8)-1,         /* unused */
-    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 0 */
-    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 1 */
-    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 2 */
-    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 3 */
-    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 4 */
-    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 5 */
-    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 6 */
-    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 7 */
+    JSTRACE_XML         /* GCX_XML */
+    // We don't care about JSTRACE_STRING, so stop here
 };
-
-// static
-uint8
-nsXPConnect::GetTraceKind(void *thing)
-{
-    uint8 type = *js_GetGCThingFlags(thing) & GCF_TYPEMASK;
-    return GCTypeToTraceKindMap[type];
-}
 
 NS_IMETHODIMP
 nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
@@ -731,7 +716,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     PRUint32 refcount = mObjRefcounts->Get(p);
     NS_ASSERTION(refcount > 0, "JS object but unknown to the JS GC?");
 
-    uint8 ty = GetTraceKind(p);
+    uint8 ty = *js_GetGCThingFlags(p) & GCF_TYPEMASK;
     if(ty != GCX_OBJECT && ty != GCX_NAMESPACE && ty != GCX_QNAME &&
        ty != GCX_XML)
         return NS_OK;
@@ -2110,18 +2095,6 @@ nsXPConnect::OnDispatchedEvent(nsIThreadInternal* aThread)
 {
     NS_NOTREACHED("Why tell us?");
     return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsXPConnect::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
-{
-    return mRuntime->AddJSHolder(aHolder, aTracer);
-}
-
-NS_IMETHODIMP
-nsXPConnect::RemoveJSHolder(void* aHolder)
-{
-    return mRuntime->RemoveJSHolder(aHolder);
 }
 
 #ifdef DEBUG

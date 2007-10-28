@@ -647,7 +647,7 @@ XPC_WN_NoHelper_Finalize(JSContext *cx, JSObject *obj)
     XPCWrappedNative* p = (XPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(!p)
         return;
-    p->FlatJSObjectFinalized(cx);
+    p->FlatJSObjectFinalized(cx, obj);
 }
 
 static void
@@ -658,7 +658,7 @@ TraceScopeJSObjects(JSTracer *trc, XPCWrappedNativeScope* scope)
     JSObject* obj;
 
     obj = scope->GetGlobalJSObject();
-    NS_ASSERTION(obj, "bad scope JSObject");
+    NS_ASSERTION(scope, "bad scope JSObject");
     JS_CALL_OBJECT_TRACER(trc, obj, "XPCWrappedNativeScope::mGlobalJSObject");
 
     obj = scope->GetPrototypeJSObject();
@@ -1035,7 +1035,7 @@ XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
     if(!wrapper)
         return;
     wrapper->GetScriptableCallback()->Finalize(wrapper, cx, obj);
-    wrapper->FlatJSObjectFinalized(cx);
+    wrapper->FlatJSObjectFinalized(cx, obj);
 }
 
 JS_STATIC_DLL_CALLBACK(void)
