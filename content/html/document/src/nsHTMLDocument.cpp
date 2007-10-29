@@ -3737,7 +3737,7 @@ nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
 {
   nsDocument::EndUpdate(aUpdateType);
 
-  if (mUpdateNestLevel == 0 && EditingShouldBeOn() != IsEditingOn()) {
+  if (mUpdateNestLevel == 0 && mContentEditableCount > 0 != IsEditingOn()) {
     EditingStateChanged();
   }
 }
@@ -3752,7 +3752,7 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
   mContentEditableCount += aChange;
 
   if (mParser ||
-      (mUpdateNestLevel > 0 && EditingShouldBeOn() != IsEditingOn())) {
+      (mUpdateNestLevel > 0 && mContentEditableCount > 0 != IsEditingOn())) {
     return NS_OK;
   }
 
