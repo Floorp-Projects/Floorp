@@ -603,7 +603,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
                                      nsPopupType aPopupType,
                                      PRBool aDeselectMenu)
 {
-  if (mCloseTimer) {
+  if (mCloseTimer && mTimerMenu == aPopupFrame) {
     mCloseTimer->Cancel();
     mCloseTimer = nsnull;
     mTimerMenu = nsnull;
