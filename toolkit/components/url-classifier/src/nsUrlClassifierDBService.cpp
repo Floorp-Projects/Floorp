@@ -2107,6 +2107,13 @@ nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
   tables.EndReading(end);
   if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), begin, end)) {
     response = NS_ERROR_MALWARE_URI;
+  } else {
+    // Reset begin before checking phishing table
+    tables.BeginReading(begin);
+  
+    if (FindInReadable(NS_LITERAL_CSTRING("-phish-"), begin, end)) {
+      response = NS_ERROR_PHISHING_URI;
+    }
   }
 
   mCallback->OnClassifyComplete(response);

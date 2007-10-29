@@ -539,6 +539,10 @@ pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phis
 
 // FAQ URL
 pref("browser.safebrowsing.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/phishing-protection/");
+
+// Name of the about: page contributed by safebrowsing to handle display of error
+// pages on phishing/malware hits.  (bug 399233)
+pref("urlclassifier.alternate_error_page", "blocked");
 #endif
 
 // defaults to true
