@@ -2231,6 +2231,16 @@ function PageProxyClickHandler(aEvent)
   return true;
 }
 
+function URLBarOnInput(evt)
+{
+  gBrowser.userTypedValue = gURLBar.value;
+  
+  // If the user is interacting with the url bar, get rid of the identity popup
+  var ih = getIdentityHandler();
+  if(ih._identityPopup)
+    ih._identityPopup.hidePopup();
+}
+
 function URLBarOnDragOver(evt)
 {
   nsDragAndDrop.dragOver(evt, urlbarObserver);
