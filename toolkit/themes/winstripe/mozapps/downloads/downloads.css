@@ -16,6 +16,10 @@ richlistitem[type="download"] {
   min-height: 46px;
 }
 
+richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
+  background-color: ThreeDLightShadow;
+}
+
 richlistitem[type="download"] .name {
   font-size: larger;
 }
