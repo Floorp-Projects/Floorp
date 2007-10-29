@@ -180,15 +180,15 @@ nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsICaseConversion *nsContentUtils::sCaseConv;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
-nsIJSRuntimeService *nsContentUtils::sJSRuntimeService;
-JSRuntime *nsContentUtils::sJSScriptRuntime;
-PRInt32 nsContentUtils::sJSScriptRootCount = 0;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
 PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
+PRUint32 nsContentUtils::sJSGCThingRootCount;
 #ifdef IBMBIDI
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nsnull;
 #endif
 
+nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
+JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
@@ -671,7 +671,8 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sStringBundleService);
   NS_IF_RELEASE(sConsoleService);
   NS_IF_RELEASE(sDOMScriptObjectFactory);
-  NS_IF_RELEASE(sXPConnect);
+  if (sJSGCThingRootCount == 0 && sXPConnect)
+    NS_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecurityManager);
   NS_IF_RELEASE(sThreadJSContextStack);
   NS_IF_RELEASE(sNameSpaceManager);
@@ -721,6 +722,8 @@ nsContentUtils::Shutdown()
       sEventListenerManagersHash.ops = nsnull;
     }
   }
+
+  nsAutoGCRoot::Shutdown();
 }
 
 static PRBool IsCallerTrustedForCapability(const char* aCapability)
@@ -2672,7 +2675,7 @@ nsContentUtils::GetContentPolicy()
 
 // static
 nsresult
-nsContentUtils::AddJSGCRoot(void* aPtr, const char* aName)
+nsAutoGCRoot::AddJSGCRoot(void* aPtr, const char* aName)
 {
   if (!sJSScriptRuntime) {
     nsresult rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
@@ -2690,25 +2693,16 @@ nsContentUtils::AddJSGCRoot(void* aPtr, const char* aName)
   PRBool ok;
   ok = ::JS_AddNamedRootRT(sJSScriptRuntime, aPtr, aName);
   if (!ok) {
-    if (sJSScriptRootCount == 0) {
-      // We just got the runtime... Just null things out, since no
-      // one's expecting us to have a runtime yet
-      NS_RELEASE(sJSRuntimeService);
-      sJSScriptRuntime = nsnull;
-    }
     NS_WARNING("JS_AddNamedRootRT failed");
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  // We now have one more root we added to the runtime
-  ++sJSScriptRootCount;
 
   return NS_OK;
 }
 
 /* static */
 nsresult
-nsContentUtils::RemoveJSGCRoot(void* aPtr)
+nsAutoGCRoot::RemoveJSGCRoot(void* aPtr)
 {
   if (!sJSScriptRuntime) {
     NS_NOTREACHED("Trying to remove a JS GC root when none were added");
@@ -2716,11 +2710,6 @@ nsContentUtils::RemoveJSGCRoot(void* aPtr)
   }
 
   ::JS_RemoveRootRT(sJSScriptRuntime, aPtr);
-
-  if (--sJSScriptRootCount == 0) {
-    NS_RELEASE(sJSRuntimeService);
-    sJSScriptRuntime = nsnull;
-  }
 
   return NS_OK;
 }
@@ -3525,6 +3514,8 @@ nsresult
 nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
 {
   NS_ASSERTION(aObject, "unexpected null object");
+  NS_ASSERTION(aLangID != nsIProgrammingLanguage::JAVASCRIPT,
+               "Should use HoldJSObjects.");
   nsresult rv;
 
   PRUint32 langIndex = NS_STID_INDEX(aLangID);
@@ -3551,16 +3542,46 @@ nsContentUtils::HoldScriptObject(PRUint32 aLangID, void *aObject)
 }
 
 /* static */
-nsresult
-nsContentUtils::DropScriptObject(PRUint32 aLangID, void *aObject)
+void
+nsContentUtils::DropScriptObject(PRUint32 aLangID, void *aObject,
+                                 void *aClosure)
 {
   NS_ASSERTION(aObject, "unexpected null object");
+  NS_ASSERTION(aLangID != nsIProgrammingLanguage::JAVASCRIPT,
+               "Should use DropJSObjects.");
   PRUint32 langIndex = NS_STID_INDEX(aLangID);
   NS_LOG_RELEASE(sScriptRuntimes[langIndex], sScriptRootCount[langIndex] - 1,
                  "HoldScriptObject");
-  nsresult rv = sScriptRuntimes[langIndex]->DropScriptObject(aObject);
+  sScriptRuntimes[langIndex]->DropScriptObject(aObject);
   if (--sScriptRootCount[langIndex] == 0) {
     NS_RELEASE(sScriptRuntimes[langIndex]);
+  }
+}
+
+/* static */
+nsresult
+nsContentUtils::HoldJSObjects(void* aScriptObjectHolder,
+                              nsScriptObjectTracer* aTracer)
+{
+  PRBool newHolder;
+  nsresult rv = sXPConnect->AddJSHolder(aScriptObjectHolder, aTracer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ++sJSGCThingRootCount;
+  NS_LOG_ADDREF(sXPConnect, sJSGCThingRootCount, "HoldJSObjects",
+                sizeof(void*));
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
+{
+  NS_LOG_RELEASE(sXPConnect, sJSGCThingRootCount - 1, "HoldJSObjects");
+  nsresult rv = sXPConnect->RemoveJSHolder(aScriptObjectHolder);
+  if (--sJSGCThingRootCount == 0 && !sInitialized) {
+    NS_RELEASE(sXPConnect);
   }
   return rv;
 }
@@ -3716,4 +3737,11 @@ nsContentUtils::IsNativeAnonymous(nsIContent* aContent)
   }
 
   return PR_FALSE;
+}
+
+/* static */
+void
+nsAutoGCRoot::Shutdown()
+{
+  NS_IF_RELEASE(sJSRuntimeService);
 }
