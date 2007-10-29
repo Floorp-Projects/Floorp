@@ -493,7 +493,7 @@ nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
 }
 
 
-/* Clamp r to (0,0) (16384,16384);
+/* Clamp r to (0,0) (2^23,2^23)
  * these are to be device coordinates.
  *
  * Returns PR_FALSE if the rectangle is completely out of bounds,
@@ -520,7 +520,7 @@ nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
  * the width and height are clamped such x+width or y+height are equal
  * to CAIRO_COORD_MAX, and PR_TRUE is returned.
  */
-#define CAIRO_COORD_MAX (16384.0)
+#define CAIRO_COORD_MAX (8388608.0)
 
 static PRBool
 ConditionRect(gfxRect& r) {
