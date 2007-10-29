@@ -532,26 +532,7 @@ PROT_PhishMsgDisplayerCanvas.inherits(PROT_PhishMsgDisplayerBase);
  * Displays the warning message.  First we make sure the overlay is loaded
  * then call showMessageAfterOverlay_.
  */
-PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() {
-  G_Debug(this, "Showing message.");
-
-  // Load the overlay if we haven't already.
-  var dimmer = this.doc_.getElementById('safebrowsing-dim-area-canvas');
-  if (!dimmer) {
-    var onOverlayMerged = BindToObject(this.showMessageAfterOverlay_,
-                                       this);
-    var observer = new G_ObserverWrapper("xul-overlay-merged",
-                                         onOverlayMerged);
-
-    this.doc_.loadOverlay(
-        "chrome://browser/content/safebrowsing/warning-overlay.xul",
-        observer);
-  } else {
-    // The overlay is already loaded so we go ahead and call
-    // showMessageAfterOverlay_.
-    this.showMessageAfterOverlay_();
-  }
-}
+PROT_PhishMsgDisplayerCanvas.prototype.showMessage_ = function() { }
 
 /**
  * This does the actual work of showing the warning message.
@@ -678,34 +659,7 @@ PROT_PhishMsgDisplayerCanvas.prototype.isVisibleElement_ = function(elt) {
 /**
  * Hide the warning message from the user.
  */
-PROT_PhishMsgDisplayerCanvas.prototype.hideMessage_ = function() {
-  G_Debug(this, "Hiding phishing warning.");
-  G_Assert(this, this.messageShowing_, "Hide message called but not showing?");
-
-  this.messageShowing_ = false;
-  this.repainter_.cancel();
-  this.repainter_ = null;
-
-  // Hide the warning popup.
-  var message = this.doc_.getElementById(this.messageId_);
-  message.hidden = true;
-  message.style.display = "none";
-  var content = this.doc_.getElementById(this.messageContentId_);
-  content.style.height = "";
-  content.style.overflow = "";
-
-  var tail = this.doc_.getElementById(this.messageTailId_);
-  tail.hidden = true;
-  tail.style.display = "none";
-
-  // Remove the canvas element from the chrome document.
-  var pageCanvas = this.doc_.getElementById(this.pageCanvasId_);
-  pageCanvas.parentNode.removeChild(pageCanvas);
-
-  // Hide the dimmer.
-  var dimarea = this.doc_.getElementById(this.dimAreaId_);
-  dimarea.hidden = true;
-}
+PROT_PhishMsgDisplayerCanvas.prototype.hideMessage_ = function() { }
 
 
 /**
