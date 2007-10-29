@@ -37,6 +37,7 @@
 #ifdef MOZ_SAFE_BROWSING
     locale/browser/safebrowsing/phishing-afterload-warning-message.dtd (%chrome/browser/safebrowsing/phishing-afterload-warning-message.dtd)
     locale/browser/safebrowsing/report-phishing.dtd                    (%chrome/browser/safebrowsing/report-phishing.dtd)
+    locale/browser/safebrowsing/blockedSite.properties                 (%chrome/browser/safebrowsing/blockedSite.properties)
 #endif
     locale/browser/feeds/subscribe.dtd              (%chrome/browser/feeds/subscribe.dtd)
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)

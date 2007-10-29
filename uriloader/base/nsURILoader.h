@@ -93,9 +93,10 @@ protected:
 };
 
 /**
- * The load has been cancelled because it was found on a malware blacklist.
+ * The load has been cancelled because it was found on a malware or phishing blacklist.
  * XXX: this belongs in an nsDocShellErrors.h file of some sort.
  */
 #define NS_ERROR_MALWARE_URI   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_URILOADER, 30)
+#define NS_ERROR_PHISHING_URI  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_URILOADER, 31)
 
 #endif /* nsURILoader_h__ */
