@@ -731,7 +731,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else
 #endif
   if (eventType.EqualsLiteral("focus")) {
-    if (aTargetNode == mDOMNode) {
+    if (aTargetNode == mDOMNode && mDOMNode != gLastFocusedNode) {
       // Got focus event for the window, we will make sure that an accessible
       // focus event for initial focus is fired. We do this on a short timer
       // because the initial focus may not have been set yet.
