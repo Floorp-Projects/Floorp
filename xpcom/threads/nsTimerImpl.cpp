@@ -338,6 +338,8 @@ NS_IMETHODIMP nsTimerImpl::GetCallback(nsITimerCallback **aCallback)
 {
   if (mCallbackType == CALLBACK_TYPE_INTERFACE)
     NS_IF_ADDREF(*aCallback = mCallback.i);
+  else if (mTimerCallbackWhileFiring)
+    NS_ADDREF(*aCallback = mTimerCallbackWhileFiring);
   else
     *aCallback = nsnull;
 
@@ -379,6 +381,8 @@ void nsTimerImpl::Fire()
   if (gThread)
     gThread->UpdateFilter(mDelay, timeout, now);
 
+  if (mCallbackType == CALLBACK_TYPE_INTERFACE)
+    mTimerCallbackWhileFiring = mCallback.i;
   mFiring = PR_TRUE;
   
   // Handle callbacks that re-init the timer, but avoid leaking.
@@ -420,6 +424,7 @@ void nsTimerImpl::Fire()
   }
 
   mFiring = PR_FALSE;
+  mTimerCallbackWhileFiring = nsnull;
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
