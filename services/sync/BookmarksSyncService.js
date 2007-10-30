@@ -1401,7 +1401,7 @@ BookmarksSyncService.prototype = {
       if (locked)
         this._log.info("Lock acquired");
       else {
-        this._log.warn("Could not acquire lock, aborting sync");
+        this._log.warn("Could not acquire lock, aborting server reset");
         return;
       }
 
