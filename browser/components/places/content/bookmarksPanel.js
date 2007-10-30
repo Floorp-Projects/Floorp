@@ -44,6 +44,6 @@ function searchBookmarks(aSearchString) {
   if (!aSearchString)
     tree.place = tree.place;
   else
-    tree.applyFilter(aSearchString, true);
+    tree.applyFilter(aSearchString, true,
+                     [PlacesUtils.bookmarksRootId, PlacesUtils.unfiledRootId]);
 }
-
