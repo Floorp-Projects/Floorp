@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
+ *   Colin Barrett <cbarrett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -70,6 +71,11 @@ class nsChildView;
 // original value.
 - (void)_setWindowNumber:(int)aNumber;
 
+// If we set the window's stylemask to be textured, the corners on the bottom of
+// the window are rounded by default. We use this private method to make
+// the corners square again, a la Safari.
+- (void)setBottomCornerRounded:(BOOL)rounded;
+
 @end
 
 
@@ -107,10 +113,42 @@ class nsChildView;
 - (nsCocoaWindow*)geckoWidget;
 @end
 
-// Class that allows us to show the toolbar pill button
+
+// NSColor subclass that allows us to draw separate colors both in the titlebar 
+// and for background of the window.
+@interface TitlebarAndBackgroundColor : NSColor
+{
+  NSColor *mTitlebarColor;
+  NSColor *mBackgroundColor;
+  NSWindow *mWindow; // [WEAK] (we are owned by the window)
+  float mTitlebarHeight;
+}
+
+- (id)initWithTitlebarColor:(NSColor*)aTitlebarColor 
+         andBackgroundColor:(NSColor*)aBackgroundColor
+                  forWindow:(NSWindow*)aWindow;
+
+// Pass nil here to get the default appearance.
+- (void)setTitlebarColor:(NSColor*)aColor;
+- (NSColor*)titlebarColor;
+
+- (void)setBackgroundColor:(NSColor*)aColor;
+- (NSColor*)backgroundColor;
+
+- (NSWindow*)window;
+- (float)titlebarHeight;
+@end
+
+// NSWindow subclass for handling windows with toolbars.
 @interface ToolbarWindow : NSWindow
 {
+  TitlebarAndBackgroundColor *mColor;
 }
+- (void)setTitlebarColor:(NSColor*)aColor;
+- (NSColor*)titlebarColor;
+// This method is also available on NSWindows (via a category), and is the 
+// preferred way to check the background color of a window.
+- (NSColor*)windowBackgroundColor;
 @end
 
 class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
@@ -199,6 +237,7 @@ public:
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
+    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor);
 
     virtual gfxASurface* GetThebesSurface();
 
