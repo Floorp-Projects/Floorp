@@ -4352,7 +4352,9 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
   }
 
   for (PRInt32 nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex ++) {
-    if (excludeQueries && IsQueryURI(aSet[nodeIndex]->mURI))
+    // exclude-queries is implicit when searching, we're only looking at
+    // plan URI nodes
+    if (!aSet[nodeIndex]->IsURI())
       continue;
 
     PRInt64 parentId = -1;
@@ -4425,8 +4427,7 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
         // title and URL
         if (CaseInsensitiveFindInReadable(*terms[queryIndex]->StringAt(termIndex),
                                           NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mTitle)) ||
-            (aSet[nodeIndex]->IsURI() &&
-              CaseInsensitiveFindInReadable(*terms[queryIndex]->StringAt(termIndex),
+            (CaseInsensitiveFindInReadable(*terms[queryIndex]->StringAt(termIndex),
                                             NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mURI))))
           termFound = PR_TRUE;
 
