@@ -713,6 +713,8 @@ protected:
 
     nsresult HideWindowChrome(PRBool aShouldHide);
 
+    void SetTitlebarColor(nscolor aColor);
+
     const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
 protected:

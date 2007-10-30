@@ -63,6 +63,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
+#include "nsIBaseWindow.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -1055,8 +1056,20 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             HideWindowChrome(aValue && NS_LITERAL_STRING("true").Equals(*aValue));
         }
 
-        // handle :read-only/:read-write
+        // titlebarcolor is settable on any root node (windows, dialogs, etc)
         nsIDocument *document = GetCurrentDoc();
+        if (aName == nsGkAtoms::titlebarcolor &&
+            document && document->GetRootContent() == this) {
+
+            nscolor color = NS_RGBA(0, 0, 0, 0);
+            nsAttrValue attrValue;
+            attrValue.ParseColor(*aValue, document);
+            attrValue.GetColorValue(color);
+
+            SetTitlebarColor(color);
+        }
+
+        // handle :read-only/:read-write
         if (aName == nsGkAtoms::readonly && document) {
             mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
             document->ContentStatesChanged(this, nsnull,
@@ -1296,6 +1309,12 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         if (aName == nsGkAtoms::hidechrome &&
             mNodeInfo->Equals(nsGkAtoms::window)) {
             HideWindowChrome(PR_FALSE);
+        }
+
+        if (aName == nsGkAtoms::titlebarcolor &&
+            doc && doc->GetRootContent() == this) {
+            // Use 0, 0, 0, 0 as the "none" color.
+            SetTitlebarColor(NS_RGBA(0, 0, 0, 0));
         }
 
         // If the accesskey attribute is removed, unregister it here
@@ -2289,6 +2308,28 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
     }
 
     return NS_OK;
+}
+
+void
+nsXULElement::SetTitlebarColor(nscolor aColor)
+{
+    nsIDocument* doc = GetCurrentDoc();
+    if (!doc || doc->GetRootContent() != this) {
+        return;
+    }
+
+    // only top level chrome documents can set the titlebar color
+    if (!doc->GetParentDocument()) {
+        nsCOMPtr<nsISupports> container = doc->GetContainer();
+        nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
+        if (baseWindow) {
+            nsCOMPtr<nsIWidget> mainWidget;
+            baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+            if (mainWidget) {
+                mainWidget->SetWindowTitlebarColor(aColor);
+            }
+        }
+    }
 }
 
 PRBool
