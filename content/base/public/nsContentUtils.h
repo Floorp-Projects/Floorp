@@ -916,7 +916,7 @@ public:
                                      PRBool aTryReuse);
 
   /**
-   * Get the textual contents of a node. This is a concatination of all
+   * Get the textual contents of a node. This is a concatenation of all
    * textnodes that are direct or (depending on aDeep) indirect children
    * of the node.
    *
