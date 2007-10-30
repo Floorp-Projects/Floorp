@@ -718,6 +718,14 @@ var feedHandlerInfo = {
       this.element(PREF_FEED_SELECTED_ACTION).value = "reader";
   },
 
+  // Whether or not we are currently storing the action selected by the user.
+  // We use this to suppress notification-triggered updates to the list when
+  // we make changes that may spawn such updates, specifically when we change
+  // the action for the feed type, which results in feed preference updates,
+  // which spawn "pref changed" notifications that would otherwise cause us
+  // to rebuild the view unnecessarily.
+  _storingAction: false,
+
 
   //**************************************************************************//
   // nsIMIMEInfo
@@ -881,7 +889,7 @@ var gApplicationsPane = {
   observe: function (aSubject, aTopic, aData) {
     // Rebuild the list when there are changes to preferences that influence
     // whether or not to show certain entries in the list.
-    if (aTopic == "nsPref:changed") {
+    if (aTopic == "nsPref:changed" && !this._storingAction) {
       // These two prefs alter the list of visible types, so we have to rebuild
       // that list when they change.
       if (aData == PREF_SHOW_PLUGINS_IN_LIST ||
@@ -1450,6 +1458,17 @@ var gApplicationsPane = {
   // Changes
 
   onSelectAction: function(aActionItem) {
+    this._storingAction = true;
+
+    try {
+      this._storeAction(aActionItem);
+    }
+    finally {
+      this._storingAction = false;
+    }
+  },
+
+  _storeAction: function(aActionItem) {
     var typeItem = this._list.selectedItem;
     var handlerInfo = this._handledTypes[typeItem.type];
 
