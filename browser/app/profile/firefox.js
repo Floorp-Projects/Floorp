@@ -378,7 +378,7 @@ pref("mousewheel.withmetakey.action",0);
 pref("mousewheel.withmetakey.sysnumlines",true);
 pref("mousewheel.withmetakey.numlines",1);
 #endif
-pref("mousewheel.withcontrolkey.action",3);
+pref("mousewheel.withcontrolkey.action",5);
 pref("mousewheel.withcontrolkey.sysnumlines",false);
 pref("mousewheel.withcontrolkey.numlines",1);
 
