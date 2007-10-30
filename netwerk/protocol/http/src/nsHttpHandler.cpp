@@ -85,6 +85,10 @@
 #include <windows.h>
 #endif
 
+#if defined(XP_MACOSX)
+#include <Carbon/Carbon.h>
+#endif
+
 #if defined(XP_OS2)
 #define INCL_DOSMISC
 #include <os2.h>
@@ -688,10 +692,17 @@ nsHttpHandler::InitUserAgentComponents()
             }
         }
     }
-#elif defined (XP_MACOSX) && defined(__ppc__)
+#elif defined (XP_MACOSX)
+#if defined(__ppc__)
     mOscpu.AssignLiteral("PPC Mac OS X Mach-O");
-#elif defined (XP_MACOSX) && defined(__i386__)
+#elif defined(__i386__)
     mOscpu.AssignLiteral("Intel Mac OS X");
+#endif
+    long majorVersion, minorVersion;
+    if ((::Gestalt(gestaltSystemVersionMajor, &majorVersion) == noErr) &&
+        (::Gestalt(gestaltSystemVersionMinor, &minorVersion) == noErr)) {
+        mOscpu += nsPrintfCString(" %ld.%ld", majorVersion, minorVersion);
+    }
 #elif defined (XP_UNIX) || defined (XP_BEOS)
     struct utsname name;
     
