@@ -1828,7 +1828,9 @@ nsDownload::SetState(DownloadState aState)
           nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
           nsCOMPtr<nsIFile> file;
           nsAutoString path;
-          if (fileURL && fileURL->GetFile(getter_AddRefs(file)) && file && 
+          if (fileURL &&
+              NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(file))) &&
+              file &&
               NS_SUCCEEDED(file->GetPath(path))) {
             PRUnichar *filePath = ToNewUnicode(path);
             LPITEMIDLIST lpItemIDList = NULL;
