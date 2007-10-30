@@ -44,7 +44,7 @@ const MOUSE_SCROLL_IS_HORIZONTAL = 1 << 2;
 
 // One of the possible values for the mousewheel.* preferences.
 // From nsEventStateManager.cpp.
-const MOUSE_SCROLL_FULLZOOM = 3;
+const MOUSE_SCROLL_FULLZOOM = 5;
 
 /**
  * Controls the "full zoom" setting and its site-specific preferences.

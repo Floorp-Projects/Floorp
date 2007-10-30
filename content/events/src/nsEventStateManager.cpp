@@ -215,8 +215,9 @@ enum {
  MOUSE_SCROLL_N_LINES,
  MOUSE_SCROLL_PAGE,
  MOUSE_SCROLL_HISTORY,
- MOUSE_SCROLL_FULLZOOM,
- MOUSE_SCROLL_PIXELS
+ MOUSE_SCROLL_TEXTSIZE,
+ MOUSE_SCROLL_PIXELS,
+ MOUSE_SCROLL_FULLZOOM
 };
 
 struct AccessKeyInfo {
@@ -1938,8 +1939,10 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 } // GenerateDragGesture
 
 nsresult
-nsEventStateManager::ChangeFullZoom(PRInt32 change)
+nsEventStateManager::GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv)
 {
+  *aMv = nsnull;
+
   if(!gLastFocusedDocument) return NS_ERROR_FAILURE;
 
   nsPIDOMWindow* ourWindow = gLastFocusedDocument->GetWindow();
@@ -1973,6 +1976,35 @@ nsEventStateManager::ChangeFullZoom(PRInt32 change)
   nsCOMPtr<nsIMarkupDocumentViewer> mv(do_QueryInterface(cv));
   if(!mv) return NS_ERROR_FAILURE;
 
+  *aMv = mv;
+  NS_IF_ADDREF(*aMv);
+
+  return NS_OK;
+}
+
+nsresult
+nsEventStateManager::ChangeTextSize(PRInt32 change)
+{
+  nsCOMPtr<nsIMarkupDocumentViewer> mv;
+  nsresult rv = GetMarkupDocumentViewer(getter_AddRefs(mv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  float textzoom;
+  mv->GetTextZoom(&textzoom);
+  textzoom += ((float)change) / 10;
+  if (textzoom > 0 && textzoom <= 20)
+    mv->SetTextZoom(textzoom);
+
+  return NS_OK;
+}
+
+nsresult
+nsEventStateManager::ChangeFullZoom(PRInt32 change)
+{
+  nsCOMPtr<nsIMarkupDocumentViewer> mv;
+  nsresult rv = GetMarkupDocumentViewer(getter_AddRefs(mv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   float fullzoom;
   float zoomMin = ((float)nsContentUtils::GetIntPref("fullZoom.minPercent", 50)) / 100;
   float zoomMax = ((float)nsContentUtils::GetIntPref("fullZoom.maxPercent", 300)) / 100;
@@ -2004,7 +2036,7 @@ nsEventStateManager::DoScrollHistory(PRInt32 direction)
 }
 
 void
-nsEventStateManager::DoScrollFullZoom(nsIFrame *aTargetFrame,
+nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
                                       PRInt32 adjustment)
 {
   // Exclude form controls and XUL content.
@@ -2014,6 +2046,21 @@ nsEventStateManager::DoScrollFullZoom(nsIFrame *aTargetFrame,
       !content->IsNodeOfType(nsINode::eXUL))
     {
       // negative adjustment to increase text size, positive to decrease
+      ChangeTextSize((adjustment > 0) ? -1 : 1);
+    }
+}
+
+void
+nsEventStateManager::DoScrollFullZoom(nsIFrame *aTargetFrame,
+                                      PRInt32 adjustment)
+{
+  // Exclude form controls and XUL content.
+  nsIContent *content = aTargetFrame->GetContent();
+  if (content &&
+      !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
+      !content->IsNodeOfType(nsINode::eXUL))
+    {
+      // negative adjustment to increase zoom, positive to decrease
       ChangeFullZoom((adjustment > 0) ? -1 : 1);
     }
 }
@@ -2392,6 +2439,12 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       case MOUSE_SCROLL_HISTORY:
         {
           DoScrollHistory(msEvent->delta);
+        }
+        break;
+
+      case MOUSE_SCROLL_TEXTSIZE:
+        {
+          DoScrollTextsize(aTargetFrame, msEvent->delta);
         }
         break;
 
