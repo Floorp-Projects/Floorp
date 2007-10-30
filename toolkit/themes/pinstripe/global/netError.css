@@ -68,6 +68,7 @@ body[dir="rtl"] #errorPageContainer {
   border-bottom: 1px solid ThreeDLightShadow;
   padding-bottom: 1em;
   font-size: 130%;
+  white-space: -moz-pre-wrap;
 }
 
 #errorLongDesc {

@@ -2931,6 +2931,15 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         error.AssignLiteral("netTimeout");
     }
     else if (NS_ERROR_GET_MODULE(aError) == NS_ERROR_MODULE_SECURITY) {
+        nsCOMPtr<nsINSSErrorsService> nsserr =
+            do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
+
+        PRUint32 errorClass;
+        if (!nsserr ||
+            NS_FAILED(nsserr->GetErrorClass(aError, &errorClass))) {
+          errorClass = nsINSSErrorsService::ERROR_CLASS_SSL_PROTOCOL;
+        }
+
         nsCOMPtr<nsISupports> securityInfo;
         nsCOMPtr<nsITransportSecurityInfo> tsi;
         if (aFailedChannel)
@@ -2942,20 +2951,23 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         }
         else {
             // No channel, let's obtain the generic error message
-            nsCOMPtr<nsINSSErrorsService> nsserr =
-                do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
             if (nsserr) {
                 nsserr->GetErrorMessage(aError, messageStr);
             }
         }
-        if (!messageStr.IsEmpty())
-            error.AssignLiteral("nssFailure2");
+        if (!messageStr.IsEmpty()) {
+            if (errorClass == nsINSSErrorsService::ERROR_CLASS_BAD_CERT) {
+                error.AssignLiteral("nssBadCert");
+            } else {
+                error.AssignLiteral("nssFailure2");
+            }
+        }
     } else if (NS_ERROR_PHISHING_URI == aError || NS_ERROR_MALWARE_URI == aError) {
         nsCAutoString host;
         aURI->GetHost(host);
         CopyUTF8toUTF16(host, formatStrs[0]);
         formatStrCount = 1;
-        
+
         // Malware and phishing detectors may want to use an alternate error
         // page, but if the pref's not set, we'll fall back on the standard page
         nsXPIDLCString alternateErrorPage;
