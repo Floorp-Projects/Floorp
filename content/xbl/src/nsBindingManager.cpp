@@ -915,7 +915,10 @@ nsBindingManager::DoProcessAttachedQueue()
   mProcessAttachedQueueEvent = nsnull;
 
   if (mDocument) {
-    mDocument->UnblockOnload(PR_TRUE);
+    // Hold a strong reference while calling UnblockOnload since that might
+    // run script.
+    nsCOMPtr<nsIDocument> doc = mDocument;
+    doc->UnblockOnload(PR_TRUE);
   }
 }
 
