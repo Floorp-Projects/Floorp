@@ -642,7 +642,7 @@ function ParenExpression(t, x) {
 var opPrecedence = {
     SEMICOLON: 0,
     COMMA: 1,
-    ASSIGN: 2, HOOK: 2, COLON: 2, CONDITIONAL: 2,
+    ASSIGN: 2, HOOK: 2, COLON: 2,
     // The above all have to have the same precedence, see bug 330975.
     OR: 4,
     AND: 5,
@@ -668,7 +668,7 @@ for (i in opPrecedence)
 var opArity = {
     COMMA: -2,
     ASSIGN: 2,
-    CONDITIONAL: 3,
+    HOOK: 3,
     OR: 2,
     AND: 2,
     BITWISE_OR: 2,
@@ -751,7 +751,6 @@ loop:
                 n = operators.top();
                 if (n.type != HOOK)
                     throw t.newSyntaxError("Invalid label");
-                n.type = CONDITIONAL;
                 --x.hookLevel;
             } else {
                 operators.push(new Node(t));
