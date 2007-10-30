@@ -221,6 +221,19 @@ nsNSSCertificate::GetCertType(PRUint32 *aCertType)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSSCertificate::GetIsSelfSigned(PRBool *aIsSelfSigned)
+{
+  NS_ENSURE_ARG(aIsSelfSigned);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  *aIsSelfSigned = mCert->isRoot;
+  return NS_OK;
+}
+
 nsresult
 nsNSSCertificate::MarkForPermDeletion()
 {
