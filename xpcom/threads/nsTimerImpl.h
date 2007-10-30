@@ -127,6 +127,10 @@ private:
     nsIObserver *       o;
   } mCallback;
 
+  // Some callers expect to be able to access the callback while the
+  // timer is firing.
+  nsCOMPtr<nsITimerCallback> mTimerCallbackWhileFiring;
+
   // These members are set by Init (called from NS_NewTimer) and never reset.
   PRUint8               mCallbackType;
 
