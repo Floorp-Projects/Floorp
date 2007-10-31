@@ -446,13 +446,8 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
     // OK, get the principal from the URI.  Make sure this does the same thing
     // as nsDocument::Reset and nsXULDocument::StartDocumentLoad.
     nsCOMPtr<nsIURI> uri;
-    nsLoadFlags loadFlags = 0;
-    nsresult rv = aChannel->GetLoadFlags(&loadFlags);
-    if (NS_SUCCEEDED(rv) && (loadFlags & nsIChannel::LOAD_REPLACE)) {
-      aChannel->GetURI(getter_AddRefs(uri));
-    } else {
-      aChannel->GetOriginalURI(getter_AddRefs(uri));
-    }
+    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return GetCodebasePrincipal(uri, aPrincipal);
 }
@@ -681,12 +676,15 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
-                                            nsIURI* aTargetURI)
+                                            nsIURI* aTargetURI,
+                                            PRBool reportError)
 {
     if (!SecurityCompareURIs(aSourceURI, aTargetURI))
     {
-         ReportError(nsnull, NS_LITERAL_STRING("CheckSameOriginError"), 
+         if (reportError) {
+            ReportError(nsnull, NS_LITERAL_STRING("CheckSameOriginError"),
                      aSourceURI, aTargetURI);
+         }
          return NS_ERROR_DOM_BAD_URI;
     }
     return NS_OK;

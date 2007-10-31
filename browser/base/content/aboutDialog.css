@@ -1,5 +1,8 @@
 #aboutDialog {
-  padding: 0px 0px 10px 0px;
+  padding-top: 0;
+  -moz-padding-end: 0;
+  padding-bottom: 10px;
+  -moz-padding-start: 0;
   width: 299px;
 }
 
@@ -20,53 +23,71 @@
 } 
 
 #userAgent {
-  margin: 11px 20px 0px 13px;
+  margin-top: 11px;
+  -moz-margin-end: 20px;
+  margin-bottom: 0;
+  -moz-margin-start: 13px;
   background-color: #FFFFFF;
   color: #000000;
-  padding: 1px 0px 0px 3px;
+  padding-top: 1px;
+  -moz-padding-end: 0;
+  padding-bottom: 0;
+  -moz-padding-start: 3px;
   -moz-appearance: none;
   overflow: hidden;
-  border: 0px;
+  border: 0;
 }
 
 #groove {
-  margin-top: 0px;
+  margin-top: 0;
 }
 
 #creditsIframe {
   cursor: default;
   -moz-user-select: none;
-  border: 0px;
+  border: 0;
 }
 
 #version {
   font-weight: bold;
   color: #909090;
-  margin: 1em 0px 10px 17px;
+  margin-top: 1em;
+  -moz-margin-end: 0;
+  margin-bottom: 10px;
+  -moz-margin-start: 17px;
 }
 
 #distribution {
   font-weight: bold;
   color: #909090;
   display: none;
-  margin: 0em 0px 0px 17px;
+  margin-top: 0;
+  -moz-margin-end: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 17px;
 }
 
 #distributionId {
   font-weight: bold;
   color: #909090;
   display: none;
-  margin: 0em 0px 10px 17px;
+  margin-top: 0;
+  -moz-margin-end: 0;
+  margin-bottom: 10px;
+  -moz-margin-start: 17px;
 }
 
 #copyright {
-  margin: 0px 0px 3px 16px;
+  margin-top: 0;
+  -moz-margin-end: 0;
+  margin-bottom: 3px;
+  -moz-margin-start: 16px;
 }
 
 button[dlgtype="extra2"] {
-  margin-left: 13px;
+  -moz-margin-start: 13px;
 }
 
 button[dlgtype="accept"] {
-  margin-right: 13px;
+  -moz-margin-end: 13px;
 }

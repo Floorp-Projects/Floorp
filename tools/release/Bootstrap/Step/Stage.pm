@@ -13,7 +13,7 @@ use Cwd;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile SyncToStaging);
 
 use MozBuild::Util qw(MkdirWithPath);
 
@@ -414,7 +414,9 @@ sub Execute {
     }
 
     $this->GroomFiles(catfile($batch1Dir, 'mar'));
+    SyncToStaging();
 }
+
 
 sub Verify {
     my $this = shift;

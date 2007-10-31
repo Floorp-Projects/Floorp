@@ -50,7 +50,7 @@ interface nsINavHistoryBatchCallback;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
-[scriptable, uuid(ff6f0168-f3f6-4f3a-9dfb-810a8eb4e545)]
+[scriptable, uuid(62c517f4-046e-474d-adba-975bf8924703)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
@@ -58,6 +58,11 @@ interface nsINavHistoryResultNode : nsISupports
    * top level nodes.
    */
   readonly attribute nsINavHistoryContainerResultNode parent;
+
+  /**
+   * The history-result to which this node belongs.
+   */
+  readonly attribute nsINavHistoryResult parentResult;
 
   /**
    * URI of the resource in question. For visits and URLs, this is the URL of
@@ -474,7 +479,7 @@ interface nsINavHistoryResultViewObserver : nsISupports
  *
  * @see nsINavHistoryResult for where this fits in
  */
-[scriptable, uuid(39c6b2d5-c061-4f2f-a068-235d02dadc91)]
+[scriptable, uuid(f208e54c-834f-4a6c-bd4d-a476015bc139)]
 interface nsINavHistoryResultViewer : nsISupports
 {
   /**
@@ -525,11 +530,6 @@ interface nsINavHistoryResultViewer : nsISupports
    * child containers have closed as well.
    */
   void containerClosed(in nsINavHistoryContainerResultNode item);
-
-  /**
-   * When this attribute is true, we will ignore calls to invalidateContainer()
-   */
-  attribute boolean ignoreInvalidateContainer;
 
   /**
    * Called when something significant has happened within the container. The

@@ -134,7 +134,7 @@ nsNavBookmarks::Init()
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = bundleService->CreateBundle(
-      "chrome://global/content/places/places.properties",
+      "chrome://places/locale/places.properties",
       getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1431,7 +1431,7 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
   if (aIndex < -1)
     return NS_ERROR_INVALID_ARG;
 
-  // Disallow making a folder it's own parent.
+  // Disallow making an item its own parent.
   if (aItemId == aNewParent)
     return NS_ERROR_INVALID_ARG;
 
@@ -1968,7 +1968,7 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
 
     PRInt32 itemType = mDBGetChildren->AsInt32(kGetChildrenIndex_Type);
     PRInt64 id = mDBGetChildren->AsInt64(nsNavHistory::kGetInfoIndex_ItemId);
-    nsCOMPtr<nsNavHistoryResultNode> node;
+    nsRefPtr<nsNavHistoryResultNode> node;
     if (itemType == TYPE_FOLDER || itemType == TYPE_DYNAMIC_CONTAINER) {
       if (itemType == TYPE_DYNAMIC_CONTAINER ||
           (itemType == TYPE_FOLDER && options->ExcludeReadOnlyFolders())) {
@@ -2170,7 +2170,12 @@ nsNavBookmarks::GetFolderIdForItem(PRInt64 aItemId, PRInt64 *aFolderId)
   if (!results)
     return NS_ERROR_INVALID_ARG; // invalid item id
 
-  return mDBGetItemProperties->GetInt64(kGetItemPropertiesIndex_Parent, aFolderId);
+  rv = mDBGetItemProperties->GetInt64(kGetItemPropertiesIndex_Parent, aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // this should not happen, but see bug #400448 for details
+  NS_ENSURE_TRUE(aItemId != *aFolderId, NS_ERROR_UNEXPECTED);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

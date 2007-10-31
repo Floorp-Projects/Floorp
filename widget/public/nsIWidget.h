@@ -95,11 +95,11 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 15800FBD-650A-4F67-81FB-186E73F45BE1
+// d9d02313-6a10-4b6d-9f15-18177e94047a
 
 #define NS_IWIDGET_IID \
-{ 0x15800FBD, 0x650A, 0x4F67, \
-  { 0x81, 0xFB, 0x18, 0x6E, 0x73, 0xF4, 0x5B, 0xE1 } }
+{ 0xd9d02313, 0x6a10, 0x4b6d, \
+  { 0x9f, 0x15, 0x18, 0x17, 0x7e, 0x94, 0x04, 0x7a } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary
@@ -1031,9 +1031,25 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD EndSecureKeyboardInput() = 0;
 
     /**
+     * Set the background color of the window titlebar for this widget. On Mac,
+     * for example, this will remove the grey gradient and bottom border and
+     * instead show a single, solid color.
+     *
+     * Ignored on any platform that does not support it. Ignored by widgets that
+     * do not represent windows.
+     *
+     * @param aColor The color to set the title bar background to. Alpha values 
+     *               other than fully transparent (0) are respected if possible  
+     *               on the platform. An alpha of 0 will cause the window to 
+     *               draw with the default style for the platform.
+     */
+    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor) = 0;
+
+    /**
      * Get the Thebes surface associated with this widget.
      */
     virtual gfxASurface *GetThebesSurface() = 0;
+
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

@@ -476,3 +476,8 @@ nsMIMEInfoImpl::LaunchDefaultWithFile(nsIFile* aFile)
   return LaunchWithIProcess(mDefaultApplication, nativePath);
 }
 
+NS_IMETHODIMP
+nsMIMEInfoBase::GetPossibleLocalHandlers(nsIArray **_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

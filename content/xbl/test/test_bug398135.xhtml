@@ -1,0 +1,136 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=398135
+-->
+<head>
+  <title>Test for Bug 398135</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript">window.log = ""</script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="ancestor">
+      <implementation>
+        <constructor>
+          window.log += "ancestorConstructor:";
+        </constructor>
+        <destructor>
+          window.log += "ancestorDestructor:";
+        </destructor>
+        <field name="ancestorField">"ancestorField"</field>
+        <property name="ancestorProp" onget="return 'ancestorProp'"/>
+        <method name="ancestorMethod">
+          <body>
+            return "ancestorMethod";
+          </body>
+        </method>
+      </implementation>
+    </binding>
+    <binding id="test" extends="#ancestor">
+      <implementation>
+        <constructor>
+          window.log += "descendantConstructor:";
+        </constructor>
+        <destructor>
+          window.log += "descendantDestructor:";
+        </destructor>
+        <field name="descendantField">"descendantField"</field>
+        <field name="contentField">
+          document.getAnonymousNodes(this)[0];
+        </field>
+        <property name="descendantProp" onget="return 'descendantProp'"/>
+        <method name="descendantMethod">
+          <body>
+            return "descendantMethod";
+          </body>
+        </method>
+      </implementation>
+      <content>
+        <span/>
+        <children/>
+      </content>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=398135">Mozilla Bug 398135</a>
+<p id="display" style="-moz-binding: url(#test)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for Bug 398135 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var d;
+  d = $("display");
+
+  function testInTree(type) {
+    is(d.ancestorField, "ancestorField", "Wrong ancestor field " + type);
+    is(d.descendantField, "descendantField", "Wrong descendant field " + type);
+    is(d.ancestorProp, "ancestorProp", "Wrong ancestor prop " + type);
+    is(d.descendantProp, "descendantProp", "Wrong descendant prop " + type);
+    is(d.ancestorMethod(), "ancestorMethod", "Wrong ancestor method " + type);
+    is(d.descendantMethod(), "descendantMethod",
+       "Wrong descendant method " + type);
+    is(d.contentField, document.getAnonymousNodes(d)[0],
+       "Unexpected content field " + type);
+  }
+
+  function testNotInTree(type) {
+    is(typeof(d.ancestorField), "undefined", "Wrong ancestor field " + type);
+    is(typeof(d.descendantField), "undefined",
+       "Wrong descendant field " + type);
+    is(typeof(d.ancestorProp), "undefined", "Wrong ancestor prop " + type);
+    is(typeof(d.descendantProp), "undefined", "Wrong descendant prop " + type);
+    is(typeof(d.ancestorMethod), "undefined", "Wrong ancestor method " + type);
+    is(typeof(d.descendantMethod), "undefined",
+       "Wrong descendant method " + type);
+    is(typeof(d.contentField), "undefined",
+       "Unexpected content field " + type);
+  }
+
+  is(window.log, "ancestorConstructor:descendantConstructor:",
+     "Constructors did not fire?");
+  window.log = "";
+  testInTree("before removal");
+
+  var parent = d.parentNode;
+  var nextSibling = d.nextSibling;
+  parent.removeChild(d);
+  testNotInTree("after first removal");
+
+  todo(window.log == "descendantDestructor:ancestorDestructor:",
+     "Destructors did not fire");
+  window.log = "";
+  
+  parent.insertBefore(d, nextSibling);
+  is(window.log, "ancestorConstructor:descendantConstructor:",
+     "Constructors did not fire a second time?");
+  window.log = "";
+  testInTree("after reinsertion");
+
+  // Now munge the proto chain to test the robustness of the proto-unhooking
+  // code
+  var origProto = d.__proto__;
+  var origProtoProto = origProto.__proto__;
+  var newProto = new Object();
+  origProto.__proto__ = newProto;
+  newProto.__proto__ = origProtoProto;
+
+  parent.removeChild(d);
+  todo(window.log == "descendantDestructor:ancestorDestructor:",
+     "Destructors did not fire a second time?");
+
+  testNotInTree("after second removal");
+});
+addLoadEvent(SimpleTest.finish);
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

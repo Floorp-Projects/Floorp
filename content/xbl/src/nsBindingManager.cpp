@@ -915,7 +915,10 @@ nsBindingManager::DoProcessAttachedQueue()
   mProcessAttachedQueueEvent = nsnull;
 
   if (mDocument) {
-    mDocument->UnblockOnload(PR_TRUE);
+    // Hold a strong reference while calling UnblockOnload since that might
+    // run script.
+    nsCOMPtr<nsIDocument> doc = mDocument;
+    doc->UnblockOnload(PR_TRUE);
   }
 }
 
@@ -933,6 +936,11 @@ nsBindingManager::ProcessAttachedQueue()
     mAttachedStack.RemoveElementAt(lastItem);
 
     NS_ASSERTION(binding, "null item in attached stack?");
+    nsresult rv = binding->EnsureScriptAPI();
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
     binding->ExecuteAttachedHandler();
   }
 

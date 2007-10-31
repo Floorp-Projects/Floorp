@@ -16,6 +16,10 @@ richlistitem[type="download"] {
   min-height: 46px;
 }
 
+richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
+  background-color: ThreeDLightShadow;
+}
+
 richlistitem[type="download"] .name {
   font-size: larger;
 }
@@ -82,13 +86,6 @@ richlistitem[type="download"] .name {
 .downloadTypeIcon {
   min-height: 32px;
   min-width: 32px;
-}
-
-.title-line {
-  height: 1px;
-  background-color: ThreeDDarkShadow;
-  -moz-margin-end: 15px;
-  -moz-margin-start: 5px;
 }
 
 #searchbox[empty] {

@@ -831,39 +831,12 @@ toolbar[iconsize="small"] #paste-button:hover:active {
 #urlbar {
   margin-top: 5px;
   margin-bottom: 5px;
-  -moz-margin-start: 4px;
+  -moz-margin-start: 0px;
   -moz-margin-end: 0px;
   width: 7em;
   min-width: 7em;
   padding: 0px;
   font: icon !important;
-}
-
-.formatted-url {
-  -moz-box-align: center;
-  margin: 0 3px;
-  /*XXX Gecko 1.9 quirk*/
-  -moz-padding-start: 1px;
-  color: -moz-fieldtext;
-}
-
-#urlbar[level="high"] .formatted-url ,
-#urlbar[level="low"] .formatted-url {
-  color: black;
-}
-
-.formatted-url * {
-  margin: 0;
-  padding: 0;
-  cursor: text;
-}
-
-.formatted-url-ellipsis {
-  -moz-margin-start: 1px;
-}
-
-.formatted-url-prePath {
-  -moz-box-pack: center;
 }
 
 #urlbar[level="high"] > .autocomplete-textbox-container,
@@ -881,46 +854,6 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   margin: -2px;
   padding: 2px 6px;
   background: url("chrome://browser/skin/Secure-background.gif") #FFFED8 repeat-x;
-}
-
-#urlbar #lock-icon {
-  height: 18px;
-  margin: -1px;
-}
-
-#urlbar[level="high"] #lock-icon {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
-}
-#urlbar[level="high"] #lock-icon:hover {
-  -moz-image-region: rect(18px, 18px, 36px, 0px);
-}
-#urlbar[level="high"] #lock-icon:active {
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
-}
-
-#urlbar[level="low"] #lock-icon {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
-}
-#urlbar[level="low"] #lock-icon:hover {
-  -moz-image-region: rect(18px, 18px, 36px, 0px);
-}
-#urlbar[level="low"] #lock-icon:active {
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
-}
-
-#urlbar[level="broken"] #lock-icon {
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
-}
-
-#urlbar[level="broken"] #lock-icon:hover {
-  -moz-image-region: rect(18px, 18px, 36px, 0px);
-}
-
-#urlbar[level="broken"] #lock-icon:active {
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
 }
 
 #urlbar-container {
@@ -1707,3 +1640,116 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight !important;
 }
 
+/* ::::: Identity Indicator Styling ::::: */
+/* Location bar visuals*/
+#identity-box {
+  /* Extend our margins out so that our highlight/separator bar covers the
+    location bar properly */
+  margin: -1px 0 -2px;
+  padding: 1px 2px 2px 0;
+  border-right: 1px solid #888;
+  background-color: white;
+  opacity: 0.9;
+}
+
+#identity-box:hover {
+  opacity: 1.0;
+}
+
+#identity-box.verifiedIdentity {
+  background-color: #BFA;
+}
+
+#urlbar[level="high"] > #identity-box,
+#urlbar[level="low"] > #identity-box {
+  /* urlbar adds padding when security level is set, which we need to
+  counteract here so that we still fill the background.  */
+  margin: -2px;
+  padding: 1px 2px 2px;
+}
+
+#identity-icon-label {
+    padding: 2px 2px 0;
+    margin: 0;
+    color: black;
+    vertical-align: middle;
+}
+
+.unknownIdentity > #identity-icon-label {
+    display: none;
+}
+
+/* Popup Icons */
+#identity-popup-icon {
+    height: 64px;
+    width: 64px;
+    padding: 0;
+    margin: 10px 0 0;
+    list-style-image: url("chrome://browser/skin/identity.png");
+    -moz-image-region: rect(0px, 64px, 64px, 0px);
+}
+
+.verifiedDomain > #identity-popup-container > #identity-popup-icon {
+    -moz-image-region: rect(64px, 64px, 128px, 0px);
+}
+
+.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
+    -moz-image-region: rect(128px, 64px, 192px, 0px);
+}
+
+/* Popup Title */
+#identity-popup-title {
+    font-size: 120%;
+    font-weight: bold;
+}
+
+.verifiedIdentity > #identity-popup-title {
+    color: #6A6;
+}
+
+.unknownIdentity > #identity-popup-title {
+    color: #999;
+}
+
+.verifiedDomain > #identity-popup-title {
+    color: black;
+}
+
+/* Popup Body Text */
+#identity-popup-content-box > description,
+#identity-popup-encryption-label {
+    white-space: -moz-pre-wrap;
+    color: black;
+    padding-left: 10px;
+}
+
+#identity-popup-content {
+    padding-top: 5px;
+    margin-bottom: 0;
+    max-width: 200px;
+}
+
+.verifiedIdentity > #identity-popup-content,
+.verifiedDomain > #identity-popup-content {
+   font-size: 140%;
+   font-weight: bold;
+   max-width: 300px;
+}
+
+#identity-popup-encryption {
+  margin: 10px 0;
+}
+
+.verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,
+.verifiedDomain > #identity-popup-encryption > * >#identity-popup-encryption-icon {
+  list-style-image: url("chrome://browser/skin/Secure.png");
+  -moz-image-region: rect(0px, 18px, 18px, 0px);
+}
+
+/* Popup Bounding Box */
+#identity-popup-container {
+    background-image: none;
+    background-color: white;
+    min-width: 280px;
+    padding: 10px;
+}

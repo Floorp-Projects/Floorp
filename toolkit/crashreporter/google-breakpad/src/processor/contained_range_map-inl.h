@@ -70,7 +70,7 @@ bool ContainedRangeMap<AddressType, EntryType>::StoreRange(
 
   MapIterator iterator_base = map_->lower_bound(base);
   MapIterator iterator_high = map_->lower_bound(high);
-  MapConstIterator iterator_end = map_->end();
+  MapIterator iterator_end = map_->end();
 
   if (iterator_base == iterator_high && iterator_base != iterator_end &&
       base >= iterator_base->second->base_) {

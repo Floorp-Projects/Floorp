@@ -53,6 +53,7 @@
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIParser.h"
+#include "nsCycleCollector.h"
 
 #ifdef MOZ_ENABLE_GTK2
 #include <gdk/gdkx.h>
@@ -327,3 +328,21 @@ nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GarbageCollect()
+{
+  // NOTE: Only do this in NON debug builds, as this function can useful
+  // during debugging.
+#ifndef DEBUG
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->
+                  IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+      || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+#endif
+
+  nsCycleCollector_collect();
+  nsCycleCollector_collect();
+
+  return NS_OK;
+}

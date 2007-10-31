@@ -291,6 +291,10 @@ nsNSSComponent::nsNSSComponent()
   mCrlTimerLock = nsnull;
   mObserversRegistered = PR_FALSE;
 
+  // In order to keep startup time lower, we delay loading and 
+  // registering all identity data until first needed.
+  memset(&mIdentityInfoCallOnce, 0, sizeof(PRCallOnceType));
+
   nsSSLIOLayerHelpers::Init();
   
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
@@ -1678,6 +1682,8 @@ nsNSSComponent::ShutdownNSS()
     else {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS shutdown =====>> OK <<=====\n"));
     }
+
+    CleanupIdentityInfo();
   }
 
   return rv;
@@ -2219,6 +2225,38 @@ nsNSSComponent::GetXPCOMFromNSSError(PRInt32 aNSPRCode, nsresult *aXPCOMErrorCod
   *aXPCOMErrorCode =
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY,
                               -1 * aNSPRCode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::GetErrorClass(nsresult aXPCOMErrorCode, PRUint32 *aErrorClass)
+{
+  NS_ENSURE_ARG(aErrorClass);
+
+  if (NS_ERROR_GET_MODULE(aXPCOMErrorCode) != NS_ERROR_MODULE_SECURITY
+      || NS_ERROR_GET_SEVERITY(aXPCOMErrorCode) != NS_ERROR_SEVERITY_ERROR)
+    return NS_ERROR_FAILURE;
+  
+  PRInt32 aNSPRCode = -1 * NS_ERROR_GET_CODE(aXPCOMErrorCode);
+
+  if (!IS_SEC_ERROR(aNSPRCode) && !IS_SSL_ERROR(aNSPRCode))
+    return NS_ERROR_FAILURE;
+
+  switch (aNSPRCode)
+  {
+    case SEC_ERROR_UNKNOWN_ISSUER:
+    case SEC_ERROR_CA_CERT_INVALID:
+    case SEC_ERROR_UNTRUSTED_ISSUER:
+    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+    case SEC_ERROR_UNTRUSTED_CERT:
+    case SSL_ERROR_BAD_CERT_DOMAIN:
+    case SEC_ERROR_EXPIRED_CERTIFICATE:
+      *aErrorClass = ERROR_CLASS_BAD_CERT;
+      break;
+    default:
+      *aErrorClass = ERROR_CLASS_SSL_PROTOCOL;
+      break;
+  }
   return NS_OK;
 }
 

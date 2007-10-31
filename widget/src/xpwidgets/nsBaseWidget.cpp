@@ -858,6 +858,13 @@ nsBaseWidget::EndSecureKeyboardInput()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBaseWidget::SetWindowTitlebarColor(nscolor aColor)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 /**
  * Modifies aFile to point at an icon file with the given name and suffix.  The
  * suffix may correspond to a file extension with leading '.' if appropriate.

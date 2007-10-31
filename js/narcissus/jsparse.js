@@ -153,7 +153,7 @@ Tokenizer.prototype = {
         } else if ((match = /^0[xX][\da-fA-F]+|^0[0-7]*|^\d+/(input))) {
             token.type = NUMBER;
             token.value = parseInt(match[0]);
-        } else if ((match = /^\w+/(input))) {
+        } else if ((match = /^[$_\w]+/(input))) {       // FIXME no ES3 unicode
             var id = match[0];
             token.type = keywords[id] || IDENTIFIER;
             token.value = id;
@@ -272,7 +272,7 @@ function tokenstr(tt) {
 Np.toString = function () {
     var a = [];
     for (var i in this) {
-        if (this.hasOwnProperty(i) && i != 'type')
+        if (this.hasOwnProperty(i) && i != 'type' && i != 'target')
             a.push({id: i, value: this[i]});
     }
     a.sort(function (a,b) { return (a.id < b.id) ? -1 : 1; });
@@ -642,7 +642,7 @@ function ParenExpression(t, x) {
 var opPrecedence = {
     SEMICOLON: 0,
     COMMA: 1,
-    ASSIGN: 2, HOOK: 2, COLON: 2, CONDITIONAL: 2,
+    ASSIGN: 2, HOOK: 2, COLON: 2,
     // The above all have to have the same precedence, see bug 330975.
     OR: 4,
     AND: 5,
@@ -668,7 +668,7 @@ for (i in opPrecedence)
 var opArity = {
     COMMA: -2,
     ASSIGN: 2,
-    CONDITIONAL: 3,
+    HOOK: 3,
     OR: 2,
     AND: 2,
     BITWISE_OR: 2,
@@ -751,7 +751,6 @@ loop:
                 n = operators.top();
                 if (n.type != HOOK)
                     throw t.newSyntaxError("Invalid label");
-                n.type = CONDITIONAL;
                 --x.hookLevel;
             } else {
                 operators.push(new Node(t));

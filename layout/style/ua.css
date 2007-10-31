@@ -128,6 +128,12 @@
   position: static !important;
 }
 
+*|*::-moz-xul-anonymous-block {
+  display: block ! important;
+  position: static ! important;
+  float: none ! important;
+}
+
 *|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,
 *|*::-moz-scrolled-page-sequence {
   /* e.g., text inputs, select boxes */

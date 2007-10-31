@@ -424,18 +424,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     mChannel = aChannel;
 
     // Get the URI.  Note that this should match nsDocShell::OnLoadingSite
-    // XXXbz this code is repeated from nsDocument::Reset and
-    // nsScriptSecurityManager::GetChannelPrincipal; we really need to refactor
-    // this part better.
-    nsLoadFlags loadFlags = 0;
-    nsresult rv = aChannel->GetLoadFlags(&loadFlags);
-    if (NS_SUCCEEDED(rv)) {
-        if (loadFlags & nsIChannel::LOAD_REPLACE) {
-            rv = aChannel->GetURI(getter_AddRefs(mDocumentURI));
-        } else {
-            rv = aChannel->GetOriginalURI(getter_AddRefs(mDocumentURI));
-        }
-    }
+    nsresult rv =
+        NS_GetFinalChannelURI(aChannel, getter_AddRefs(mDocumentURI));
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = ResetStylesheetsToURI(mDocumentURI);
@@ -2618,7 +2608,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     PRBool overlayIsChrome = IsChromeURI(aURI);
     if (!IsChromeURI(mDocumentURI) && !overlayIsChrome) {
         // Make sure we're allowed to load this overlay.
-        rv = secMan->CheckSameOriginURI(mDocumentURI, aURI);
+        rv = secMan->CheckSameOriginURI(mDocumentURI, aURI, PR_TRUE);
         if (NS_FAILED(rv)) {
             *aFailureFromContent = PR_TRUE;
             return rv;
@@ -3219,7 +3209,7 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
                 NS_ERROR("XUL cache gave me an incorrect script language");
                 return NS_ERROR_UNEXPECTED;
             }
-            aScriptProto->mScriptObject.set(newScriptObject);
+            aScriptProto->Set(newScriptObject);
         }
 
         if (aScriptProto->mScriptObject.mObject) {
@@ -4064,6 +4054,10 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
         // broadcaster element, and an 'attribute' element, which
         // specifies the name of the attribute to observe.
         nsIContent* parent = aElement->GetParent();
+        if (!parent) {
+             // <observes> is the root element
+            return NS_FINDBROADCASTER_NOT_FOUND;
+        }
 
         // If we're still parented by an 'overlay' tag, then we haven't
         // made it into the real document yet. Defer hookup.

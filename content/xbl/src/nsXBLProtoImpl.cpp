@@ -200,7 +200,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
 }
 
 void
-nsXBLProtoImpl::Traverse(nsCycleCollectionTraversalCallback &cb) const
+nsXBLProtoImpl::Trace(TraceCallback aCallback, void *aClosure) const
 {
   // If we don't have a class object then we either didn't compile members
   // or we only have fields, in both cases there are no cycles through our
@@ -211,7 +211,7 @@ nsXBLProtoImpl::Traverse(nsCycleCollectionTraversalCallback &cb) const
 
   nsXBLProtoImplMember *member;
   for (member = mMembers; member; member = member->GetNext()) {
-    member->Traverse(cb);
+    member->Trace(aCallback, aClosure);
   }
 }
 
@@ -252,6 +252,19 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
   }
 
   return PR_TRUE;
+}
+
+void
+nsXBLProtoImpl::UndefineFields(JSContext *cx, JSObject *obj) const
+{
+  JSAutoRequest ar(cx);
+  for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
+    nsDependentString name(f->GetName());
+    jsval dummy;
+    ::JS_DeleteUCProperty2(cx, obj,
+                           reinterpret_cast<const jschar*>(name.get()),
+                           name.Length(), &dummy);
+  }
 }
 
 void

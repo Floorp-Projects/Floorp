@@ -56,10 +56,6 @@
  
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-#ifndef INET6_ADDRSTRLEN
-#define INET6_ADDRSTRLEN 46
-#endif
-
 /* Object Identifier constants */
 #define CONST_OID static const unsigned char
 #define MICROSOFT_OID 0x2b, 0x6, 0x1, 0x4, 0x1, 0x82, 0x37
@@ -1328,6 +1324,7 @@ ProcessUserNotice(SECItem *der_notice,
 static nsresult
 ProcessCertificatePolicies(SECItem  *extData, 
 			   nsAString &text,
+                           SECOidTag ev_oid_tag, // SEC_OID_UNKNOWN means: not EV
 			   nsINSSComponent *nssComponent)
 {
   CERTCertificatePolicies *policies;
@@ -1352,10 +1349,28 @@ ProcessCertificatePolicies(SECItem  *extData,
       GetDefaultOIDFormat(&policyInfo->policyID, local, '.');
       text.Append(local);
     }
+
+    PRBool needColon = PR_TRUE;
+    if (ev_oid_tag != SEC_OID_UNKNOWN) {
+      // This is an EV cert. Let's see if this oid is the EV oid,
+      // because we want to display the EV information string
+      // next to the correct OID.
+
+      SECOidTag oid_tag = SECOID_FindOIDTag(&policyInfo->policyID);
+      if (oid_tag == ev_oid_tag) {
+        text.Append(NS_LITERAL_STRING(":"));
+        text.Append(NS_LITERAL_STRING(SEPARATOR));
+        needColon = PR_FALSE;
+        nssComponent->GetPIPNSSBundleString("CertDumpPolicyOidEV", local);
+        text.Append(local);
+      }
+    }
+
     if (policyInfo->policyQualifiers) {
       /* Add all qualifiers on separate lines, indented */
       policyQualifiers = policyInfo->policyQualifiers;
-      text.Append(NS_LITERAL_STRING(":"));
+      if (needColon)
+        text.Append(NS_LITERAL_STRING(":"));
       text.Append(NS_LITERAL_STRING(SEPARATOR));
       while (*policyQualifiers != NULL) {
 	text.Append(NS_LITERAL_STRING("  "));
@@ -1568,7 +1583,9 @@ ProcessMSCAVersion(SECItem  *extData,
 
 static nsresult
 ProcessExtensionData(SECOidTag oidTag, SECItem *extData, 
-                     nsAString &text, nsINSSComponent *nssComponent)
+                     nsAString &text, 
+                     SECOidTag ev_oid_tag, // SEC_OID_UNKNOWN means: not EV
+                     nsINSSComponent *nssComponent)
 {
   nsresult rv;
   switch (oidTag) {
@@ -1595,7 +1612,7 @@ ProcessExtensionData(SECOidTag oidTag, SECItem *extData,
     rv = ProcessAuthKeyId(extData, text, nssComponent);
     break;
   case SEC_OID_X509_CERTIFICATE_POLICIES:
-    rv = ProcessCertificatePolicies(extData, text, nssComponent);
+    rv = ProcessCertificatePolicies(extData, text, ev_oid_tag, nssComponent);
     break;
   case SEC_OID_X509_CRL_DIST_POINTS:
     rv = ProcessCrlDistPoints(extData, text, nssComponent);
@@ -1632,6 +1649,7 @@ ProcessExtensionData(SECOidTag oidTag, SECItem *extData,
 
 static nsresult
 ProcessSingleExtension(CERTCertExtension *extension,
+                       SECOidTag ev_oid_tag, // SEC_OID_UNKNOWN means: not EV
                        nsINSSComponent *nssComponent,
                        nsIASN1PrintableItem **retExtension)
 {
@@ -1655,7 +1673,7 @@ ProcessSingleExtension(CERTCertExtension *extension,
   }
   text.Append(NS_LITERAL_STRING(SEPARATOR).get());
   nsresult rv = ProcessExtensionData(oidTag, &extension->value, extvalue, 
-                                     nssComponent);
+                                     ev_oid_tag, nssComponent);
   if (NS_FAILED(rv)) {
     extvalue.Truncate();
     rv = ProcessRawBytes(nssComponent, &extension->value, extvalue, PR_FALSE);
@@ -1851,7 +1869,8 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
 
 static nsresult
 ProcessExtensions(CERTCertExtension **extensions, 
-                  nsIASN1Sequence *parentSequence, 
+                  nsIASN1Sequence *parentSequence,
+                  SECOidTag ev_oid_tag, // SEC_OID_UNKNOWN means: not EV
                   nsINSSComponent *nssComponent)
 {
   nsCOMPtr<nsIASN1Sequence> extensionSequence = new nsNSSASN1Sequence;
@@ -1867,7 +1886,9 @@ ProcessExtensions(CERTCertExtension **extensions,
   nsCOMPtr<nsIMutableArray> asn1Objects;
   extensionSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
   for (i=0; extensions[i] != nsnull; i++) {
-    rv = ProcessSingleExtension(extensions[i], nssComponent,
+    rv = ProcessSingleExtension(extensions[i], 
+                                ev_oid_tag,
+                                nssComponent,
                                 getter_AddRefs(newExtension));
     if (NS_FAILED(rv))
       return rv;
@@ -2057,7 +2078,16 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
 
   }
   if (mCert->extensions) {
-    rv = ProcessExtensions(mCert->extensions, sequence, nssComponent);
+    SECOidTag ev_oid_tag;
+    PRBool validEV;
+    rv = hasValidEVOidTag(ev_oid_tag, validEV);
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (!validEV)
+      ev_oid_tag = SEC_OID_UNKNOWN;
+
+    rv = ProcessExtensions(mCert->extensions, sequence, ev_oid_tag, nssComponent);
     if (NS_FAILED(rv))
       return rv;
   }

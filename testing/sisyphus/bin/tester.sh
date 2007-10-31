@@ -48,7 +48,7 @@ TEST_LOG=/dev/null
 #
 # options processing
 #
-options="p:b:e:T:t:"
+options="p:b:e:T:t:v"
 function usage()
 {
     cat<<EOF
@@ -58,6 +58,7 @@ $SCRIPT -t testscript datalist1 [datalist2 [datalist3 [datalist4]]]
 variable            description
 ===============     ===========================================================
 -t testscript       required. quoted test script with required arguments.
+-v                  optional. verbose - copies log file output to stdout.
 
 executes the testscript using the input data files in 
 $TEST_DIR/data constructed from each combination of the input parameters:
@@ -70,15 +71,22 @@ EOF
 
 unset testscript testargs
 
+# remove script name from args
+shiftargs=1
+
 while getopts $options optname ; 
   do 
   case $optname in
       t) 
+          let shiftargs=$shiftargs+1
           testscript="$OPTARG"
           if echo $testscript | grep -iq ' ' ; then
               testargs=`echo $testscript   | sed 's|^\([^ ]*\)[ ]*\(.*\)|\2|'`
               testscript=`echo $testscript | sed 's|^\([^ ]*\)[ ]*.*|\1|'`
           fi
+          ;;
+      v) verbose=1
+          let shiftargs=$shiftargs+1
           ;;
   esac
 done
@@ -87,7 +95,7 @@ if [[ -z "$testscript" ]]; then
     usage
 fi
 
-shift 2
+shift $shiftargs
 
 datalist=`combo.sh "$@"`
 
@@ -98,9 +106,14 @@ for data in $datalist; do
     TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$data,$OSID,${TEST_MACHINE},$TEST_SUITE.log"
 
     # tell caller what the log files are
-    echo "$TEST_LOG "
+    echo "log: $TEST_LOG "
 
-    test-setup.sh -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
+    if [[ "$verbose" == "1" ]]; then
+        test-setup.sh -d $TEST_DIR/data/$data.data 2>&1 | tee -a $TEST_LOG
+        $testscript $testargs -d $TEST_DIR/data/$data.data 2>&1 | tee -a $TEST_LOG
+    else
+        test-setup.sh -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
+        $testscript $testargs -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
+    fi
 
-    $testscript $testargs -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
 done

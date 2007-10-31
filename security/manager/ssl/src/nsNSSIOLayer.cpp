@@ -60,6 +60,7 @@
 #include "nsIClientAuthDialogs.h"
 #include "nsICertOverrideService.h"
 #include "nsIBadCertListener2.h"
+#include "nsRecentBadCerts.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -598,7 +599,10 @@ void nsSSLIOLayerHelpers::Cleanup()
 }
 
 static nsresult
-getErrorMessage(PRInt32 err, const nsString &host,
+getErrorMessage(PRInt32 err, 
+                const nsString &host,
+                PRInt32 port,
+                PRBool externalErrorReporting,
                 nsINSSComponent *component,
                 nsString &returnedMessage)
 {
@@ -609,7 +613,24 @@ getErrorMessage(PRInt32 err, const nsString &host,
 
   if (host.Length())
   {
-    params[0] = host.get();
+    nsString hostWithPort;
+
+    // For now, hide port when it's 443 and we're reporting the error using
+    // external reporting. In the future a better mechanism should be used
+    // to make a decision about showing the port number, possibly by requiring
+    // the context object to implement a specific interface.
+    // The motivation is that Mozilla browser would like to hide the port number
+    // in error pages in the common case.
+
+    if (externalErrorReporting && port == 443) {
+      params[0] = host.get();
+    }
+    else {
+      hostWithPort = host;
+      hostWithPort.AppendLiteral(":");
+      hostWithPort.AppendInt(port);
+      params[0] = hostWithPort.get();
+    }
 
     nsString formattedString;
     rv = component->PIPBundleFormatStringFromName("SSLConnectionErrorPrefix", 
@@ -618,7 +639,7 @@ getErrorMessage(PRInt32 err, const nsString &host,
     if (NS_SUCCEEDED(rv))
     {
       returnedMessage.Append(formattedString);
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+      returnedMessage.Append(NS_LITERAL_STRING("\n\n"));
     }
   }
 
@@ -632,10 +653,15 @@ getErrorMessage(PRInt32 err, const nsString &host,
 
 static nsresult
 getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors, 
-                           PRInt32 errorCodeToReport, 
+                           PRErrorCode errorCodeToReport, 
+                           PRErrorCode errTrust, 
+                           PRErrorCode errMismatch, 
+                           PRErrorCode errExpired,
                            const nsString &host,
                            const nsString &hostWithPort,
+                           PRInt32 port,
                            nsIX509Cert* ix509,
+                           PRBool externalErrorReporting,
                            nsINSSComponent *component,
                            nsString &returnedMessage)
 {
@@ -644,27 +670,65 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
   const PRUnichar *params[1];
   nsresult rv;
 
-  if (hostWithPort.Length())
-  {
+  // For now, hide port when it's 443 and we're reporting the error using
+  // external reporting. In the future a better mechanism should be used
+  // to make a decision about showing the port number, possibly by requiring
+  // the context object to implement a specific interface.
+  // The motivation is that Mozilla browser would like to hide the port number
+  // in error pages in the common case.
+  
+  if (externalErrorReporting && port == 443)
+    params[0] = host.get();
+  else
     params[0] = hostWithPort.get();
 
-    nsString formattedString;
-    rv = component->PIPBundleFormatStringFromName("certErrorIntro", 
-                                                  params, 1, 
-                                                  formattedString);
-    if (NS_SUCCEEDED(rv))
-    {
-      returnedMessage.Append(formattedString);
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
-    }
+  nsString formattedString;
+  rv = component->PIPBundleFormatStringFromName("certErrorIntro", 
+                                                params, 1, 
+                                                formattedString);
+  if (NS_SUCCEEDED(rv))
+  {
+    returnedMessage.Append(formattedString);
+    returnedMessage.Append(NS_LITERAL_STRING("\n\n"));
   }
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_UNTRUSTED)
   {
     params[0] = host.get();
 
+    const char *errorID = nsnull;
+    nsCOMPtr<nsIX509Cert3> cert3 = do_QueryInterface(ix509);
+    if (cert3) {
+      PRBool isSelfSigned;
+      if (NS_SUCCEEDED(cert3->GetIsSelfSigned(&isSelfSigned))
+          && isSelfSigned) {
+        errorID = "certErrorTrust_SelfSigned";
+      }
+    }
+
+    if (!errorID) {
+      switch (errTrust) {
+        case SEC_ERROR_UNKNOWN_ISSUER:
+          errorID = "certErrorTrust_UnknownIssuer";
+          break;
+        case SEC_ERROR_CA_CERT_INVALID:
+          errorID = "certErrorTrust_CaInvalid";
+          break;
+        case SEC_ERROR_UNTRUSTED_ISSUER:
+          errorID = "certErrorTrust_Issuer";
+          break;
+        case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+          errorID = "certErrorTrust_ExpiredIssuer";
+          break;
+        case SEC_ERROR_UNTRUSTED_CERT:
+        default:
+          errorID = "certErrorTrust_Untrusted";
+          break;
+      }
+    }
+
     nsString formattedString;
-    rv = component->GetPIPNSSBundleString("certErrorUntrusted", 
+    rv = component->GetPIPNSSBundleString(errorID, 
                                           formattedString);
     if (NS_SUCCEEDED(rv))
     {
@@ -675,16 +739,125 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_MISMATCH)
   {
-    params[0] = host.get();
+    PRBool useSAN = PR_TRUE; // subject alt name extension
+    PRBool multipleNames = PR_FALSE;
+    nsString allNames;
 
-    nsString formattedString;
-    rv = component->PIPBundleFormatStringFromName("certErrorMismatch", 
-                                                  params, 1, 
-                                                  formattedString);
-    if (NS_SUCCEEDED(rv))
-    {
-      returnedMessage.Append(formattedString);
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    CERTCertificate *nssCert = NULL;
+    CERTCertificateCleaner nssCertCleaner(nssCert);
+    nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(ix509, &rv);
+    if (cert2)
+      nssCert = cert2->GetCert();
+    if (!nssCert)
+      useSAN = PR_FALSE;
+
+    PRArenaPool *san_arena = nsnull;
+    SECItem altNameExtension = {siBuffer, NULL, 0 };
+    CERTGeneralName *sanNameList = nsnull;
+
+    if (useSAN) {
+      rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
+                                  &altNameExtension);
+      if (rv != SECSuccess)
+        useSAN = PR_FALSE;
+    }
+
+    if (useSAN) {
+      san_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+      if (!san_arena)
+        useSAN = PR_FALSE;
+    }
+
+    if (useSAN) {
+      sanNameList = CERT_DecodeAltNameExtension(san_arena, &altNameExtension);
+      if (!sanNameList)
+        useSAN = PR_FALSE;
+    }
+
+    SECITEM_FreeItem(&altNameExtension, PR_FALSE);
+
+    if (useSAN) {
+      CERTGeneralName *current = sanNameList;
+      do {
+        nsAutoString name;
+        switch (current->type) {
+          case certDNSName:
+            name.AssignASCII((char*)current->name.other.data, current->name.other.len);
+            if (!allNames.IsEmpty()) {
+              multipleNames = PR_TRUE;
+              allNames.Append(NS_LITERAL_STRING(" , "));
+            }
+            allNames.Append(name);
+            break;
+  
+          case certIPAddress:
+            {
+              char buf[INET6_ADDRSTRLEN];
+              PRNetAddr addr;
+              if (current->name.other.len == 4) {
+                addr.inet.family = PR_AF_INET;
+                memcpy(&addr.inet.ip, current->name.other.data, current->name.other.len);
+                PR_NetAddrToString(&addr, buf, sizeof(buf));
+                name.AssignASCII(buf);
+              } else if (current->name.other.len == 16) {
+                addr.ipv6.family = PR_AF_INET6;
+                memcpy(&addr.ipv6.ip, current->name.other.data, current->name.other.len);
+                PR_NetAddrToString(&addr, buf, sizeof(buf));
+                name.AssignASCII(buf);
+              } else {
+                /* invalid IP address */
+              }
+              if (!name.IsEmpty()) {
+                if (!allNames.IsEmpty()) {
+                  multipleNames = PR_TRUE;
+                  allNames.Append(NS_LITERAL_STRING(" , "));
+                }
+                allNames.Append(name);
+              }
+              break;
+            }
+
+          default: // all other types of names are ignored
+            break;
+        }
+        current = CERT_GetNextGeneralName(current);
+      } while (current != sanNameList); // double linked
+    }
+    if (san_arena)
+      PORT_FreeArena(san_arena, PR_FALSE);
+
+    if (!useSAN) {
+      char *certName = nsnull;
+      // certName = CERT_FindNSStringExtension(nssCert, SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME);
+      if (!certName) {
+        certName = CERT_GetCommonName(&nssCert->subject);
+      }
+      allNames.AssignASCII(certName);
+      PORT_Free(certName);
+    }
+
+    if (multipleNames) {
+      nsString message;
+      rv = component->GetPIPNSSBundleString("certErrorMismatchMultiple", 
+                                            message);
+      if (NS_SUCCEEDED(rv)) {
+        returnedMessage.Append(message);
+        returnedMessage.Append(NS_LITERAL_STRING("\n  "));
+        returnedMessage.Append(allNames);
+        returnedMessage.Append(NS_LITERAL_STRING("  \n"));
+      }
+    }
+    else { // !multipleNames
+      params[0] = allNames.get();
+
+      nsString formattedString;
+      rv = component->PIPBundleFormatStringFromName("certErrorMismatchSingle", 
+                                                    params, 1, 
+                                                    formattedString);
+      if (NS_SUCCEEDED(rv)) {
+        returnedMessage.Append(formattedString);
+        returnedMessage.Append(NS_LITERAL_STRING("\n"));
+      }
     }
   }
 
@@ -744,9 +917,22 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
     ToLowerCase(error_id);
     NS_ConvertASCIItoUTF16 idU(error_id);
 
-    returnedMessage.Append(NS_LITERAL_STRING(" ("));
-    returnedMessage.Append(idU);
-    returnedMessage.Append(NS_LITERAL_STRING(")"));
+    params[0] = idU.get();
+
+    nsString formattedString;
+    rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix", 
+                                                  params, 1, 
+                                                  formattedString);
+    if (NS_SUCCEEDED(rv)) {
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+      returnedMessage.Append(formattedString);
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    }
+    else {
+      returnedMessage.Append(NS_LITERAL_STRING(" ("));
+      returnedMessage.Append(idU);
+      returnedMessage.Append(NS_LITERAL_STRING(")"));
+    }
   }
 
   return NS_OK;
@@ -802,12 +988,15 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   socketInfo->GetHostName(getter_Copies(hostName));
   NS_ConvertASCIItoUTF16 hostNameU(hostName);
 
-  nsString formattedString;
-  rv = getErrorMessage(err, hostNameU, nssComponent, formattedString);
+  PRInt32 port;
+  socketInfo->GetPort(&port);
 
   PRBool external = PR_FALSE;
   socketInfo->GetExternalErrorReporting(&external);
   
+  nsString formattedString;
+  rv = getErrorMessage(err, hostNameU, port, external, nssComponent, formattedString);
+
   if (external)
   {
     socketInfo->SetErrorMessage(formattedString.get());
@@ -829,8 +1018,12 @@ static nsresult
 nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo, 
                          PRUint32 multipleCollectedErrors, 
                          const nsACString &host, 
-                         const nsACString &hostWithPort, 
-                         PRInt32 err,
+                         const nsACString &hostWithPort,
+                         PRInt32 port,
+                         PRErrorCode errorCodeToReport,
+                         PRErrorCode errTrust, 
+                         PRErrorCode errMismatch, 
+                         PRErrorCode errExpired,
                          nsIX509Cert* ix509)
 {
   nsresult rv;
@@ -842,10 +1035,6 @@ nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo,
   NS_ConvertASCIItoUTF16 hostU(host);
   NS_ConvertASCIItoUTF16 hostWithPortU(hostWithPort);
 
-  nsString formattedString;
-  rv = getInvalidCertErrorMessage(multipleCollectedErrors, err, hostU, hostWithPortU, 
-                                  ix509, nssComponent, formattedString);
-
   // What mechanism is used to inform the user?
   // The highest priority has the "external error reporting" feature,
   // if set, we'll provide the strings to be used by the nsINSSErrorsService
@@ -853,6 +1042,12 @@ nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo,
   PRBool external = PR_FALSE;
   socketInfo->GetExternalErrorReporting(&external);
   
+  nsString formattedString;
+  rv = getInvalidCertErrorMessage(multipleCollectedErrors, errorCodeToReport,
++                                 errTrust, errMismatch, errExpired,
+                                  hostU, hostWithPortU, port, 
+                                  ix509, external, nssComponent, formattedString);
+
   if (external)
   {
     socketInfo->SetErrorMessage(formattedString.get());
@@ -2326,11 +2521,9 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   PRUint32 collected_errors = 0;
   PRUint32 remaining_display_errors = 0;
 
-  // There may be multiple problems with a cert, but we can only report 
-  // a single error code to the caller. We'll use the first code we see.
-  // However, in our error string we'll use a string that mentions
-  // all of expired/not-yet-valid/domain-mismatch/untrusted.
-  PRErrorCode errorCodeToReport = SECSuccess;
+  PRErrorCode errorCodeTrust = SECSuccess;
+  PRErrorCode errorCodeMismatch = SECSuccess;
+  PRErrorCode errorCodeExpired = SECSuccess;
   
   char *hostname = SSL_RevealURL(sslSocket);
   charCleaner hostnameCleaner(hostname); 
@@ -2342,13 +2535,14 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   nsCString hostWithPortString = hostString;
   hostWithPortString.AppendLiteral(":");
   hostWithPortString.AppendInt(port);
-  
+
+  NS_ConvertUTF8toUTF16 hostWithPortStringUTF16(hostWithPortString);
 
   // Check the name field against the desired hostname.
   if (hostname && hostname[0] &&
       CERT_VerifyCertName(peerCert, hostname) != SECSuccess) {
     collected_errors |= nsICertOverrideService::ERROR_MISMATCH;
-    errorCodeToReport = SSL_ERROR_BAD_CERT_DOMAIN;
+    errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
   }
 
   {
@@ -2380,10 +2574,6 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     CERTVerifyLogNode *i_node;
     for (i_node = verify_log->head; i_node; i_node = i_node->next)
     {
-      if (errorCodeToReport == SECSuccess) {
-        errorCodeToReport = i_node->error;
-      }
-
       switch (i_node->error)
       {
         case SEC_ERROR_UNKNOWN_ISSUER:
@@ -2393,12 +2583,21 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
         case SEC_ERROR_UNTRUSTED_CERT:
           // We group all these errors as "cert not trusted"
           collected_errors |= nsICertOverrideService::ERROR_UNTRUSTED;
+          if (errorCodeTrust == SECSuccess) {
+            errorCodeTrust = i_node->error;
+          }
           break;
         case SSL_ERROR_BAD_CERT_DOMAIN:
           collected_errors |= nsICertOverrideService::ERROR_MISMATCH;
+          if (errorCodeMismatch == SECSuccess) {
+            errorCodeMismatch = i_node->error;
+          }
           break;
         case SEC_ERROR_EXPIRED_CERTIFICATE:
           collected_errors |= nsICertOverrideService::ERROR_TIME;
+          if (errorCodeExpired == SECSuccess) {
+            errorCodeExpired = i_node->error;
+          }
           break;
         default:
           // we are not willing to continue on any other error
@@ -2444,7 +2643,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   {
     PRBool haveStoredOverride;
   
-    nsrv = overrideService->HasMatchingOverride(NS_ConvertUTF8toUTF16(hostWithPortString), 
+    nsrv = overrideService->HasMatchingOverride(hostWithPortStringUTF16,
                                                 ix509, 
                                                 &storedOverrideBits, 
                                                 &haveStoredOverride);
@@ -2487,15 +2686,36 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     }
   }
 
+  nsCOMPtr<nsIRecentBadCertsService> recentBadCertsService = 
+    do_GetService(NS_RECENTBADCERTS_CONTRACTID);
+
+  if (recentBadCertsService) {
+    recentBadCertsService->AddBadCert(hostWithPortStringUTF16, status);
+  }
+
+  // pick the error code to report by priority
+  PRErrorCode errorCodeToReport = SECSuccess;
+  if (remaining_display_errors & nsICertOverrideService::ERROR_UNTRUSTED)
+    errorCodeToReport = errorCodeTrust;
+  else if (remaining_display_errors & nsICertOverrideService::ERROR_MISMATCH)
+    errorCodeToReport = errorCodeMismatch;
+  else if (remaining_display_errors & nsICertOverrideService::ERROR_TIME)
+    errorCodeToReport = errorCodeExpired;
+
   PR_SetError(errorCodeToReport, 0);
   if (!suppressMessage) {
     nsHandleInvalidCertError(infoObject,
                              remaining_display_errors,
                              hostString,
-                             hostWithPortString, 
-                             errorCodeToReport, 
+                             hostWithPortString,
+                             port,
+                             errorCodeToReport,
+                             errorCodeTrust,
+                             errorCodeMismatch,
+                             errorCodeExpired,
                              ix509);
   }
+
   return cancel_and_failure(infoObject);
 }
 

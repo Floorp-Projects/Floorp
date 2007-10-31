@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Andrew Smith
+ *   Federico Mena-Quintero <federico@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,7 +73,8 @@ static void PNGAPI error_callback(png_structp png_ptr, png_const_charp error_msg
 static void PNGAPI warning_callback(png_structp png_ptr, png_const_charp warning_msg);
 
 #ifdef PR_LOGGING
-PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
+static PRLogModuleInfo *gPNGLog = PR_NewLogModule("PNGDecoder");
+static PRLogModuleInfo *gPNGDecoderAccountingLog = PR_NewLogModule("PNGDecoderAccounting");
 #endif
 
 NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
@@ -120,6 +122,12 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
   if (mObserver)
     mObserver->OnStartFrame(nsnull, mFrame);
 
+ 
+  PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+         ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created image frame with %dx%d pixels in container %p",
+          width, height,
+          mImage.get ()));
+
   mFrameHasNoAlpha = PR_TRUE;
 }
 
@@ -128,13 +136,13 @@ void nsPNGDecoder::SetAnimFrameInfo()
 {
   png_uint_16 delay_num, delay_den; /* in seconds */
   png_byte dispose_op;
+  png_byte blend_op;
   PRInt32 timeout; /* in milliseconds */
   
   delay_num = png_get_next_frame_delay_num(mPNG, mInfo);
   delay_den = png_get_next_frame_delay_den(mPNG, mInfo);
   dispose_op = png_get_next_frame_dispose_op(mPNG, mInfo);
-
-  // XXX need to handle blend_op here!
+  blend_op = png_get_next_frame_blend_op(mPNG, mInfo);
 
   if (delay_num == 0) {
     timeout = 0; // gfxImageFrame::SetTimeout() will set to a minimum
@@ -155,6 +163,11 @@ void nsPNGDecoder::SetAnimFrameInfo()
       mFrame->SetFrameDisposalMethod(imgIContainer::kDisposeClear);
   else
       mFrame->SetFrameDisposalMethod(imgIContainer::kDisposeKeep);
+  
+  if (blend_op == PNG_BLEND_OP_SOURCE)
+      mFrame->SetBlendMethod(imgIContainer::kBlendSource);
+  /*else // 'over' is the default for a gfxImageFrame
+      mFrame->SetBlendMethod(imgIContainer::kBlendOver); */
 }
 
 
@@ -209,6 +222,25 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
   png_set_progressive_read_fn(mPNG, static_cast<png_voidp>(this),
                               info_callback, row_callback, end_callback);
 
+
+  /* The image container may already exist if it is reloading itself from us.
+   * Check that it has the same width/height; otherwise create a new container.
+   */
+  mImageLoad->GetImage(getter_AddRefs(mImage));
+  if (!mImage) {
+    mImage = do_CreateInstance("@mozilla.org/image/container;1");
+    if (!mImage)
+      return NS_ERROR_OUT_OF_MEMORY;
+      
+    mImageLoad->SetImage(mImage);
+    if (NS_FAILED(mImage->SetDiscardable("image/png"))) {
+      PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("PNGDecoderAccounting: info_callback(): failed to set image container %p as discardable",
+              mImage.get()));
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -218,13 +250,28 @@ NS_IMETHODIMP nsPNGDecoder::Close()
   if (mPNG)
     png_destroy_read_struct(&mPNG, mInfo ? &mInfo : NULL, NULL);
 
+  if (mImage) { // mImage could be null in the case of an error
+    nsresult result = mImage->RestoreDataDone();
+    if (NS_FAILED(result)) {
+        PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+            ("PNGDecoderAccounting: nsPNGDecoder::Close(): failure in RestoreDataDone() for image container %p",
+                mImage.get()));
+
+        mError = PR_TRUE;
+        return result;
+    }
+
+    PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+            ("PNGDecoderAccounting: nsPNGDecoder::Close(): image container %p is now with RestoreDataDone",
+            mImage.get()));
+  }
   return NS_OK;
 }
 
 /* void flush (); */
 NS_IMETHODIMP nsPNGDecoder::Flush()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 
@@ -250,9 +297,23 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
     *writeCount = 0;
     return NS_ERROR_FAILURE;
   }
-
   png_process_data(decoder->mPNG, decoder->mInfo,
                    reinterpret_cast<unsigned char *>(const_cast<char *>(fromRawSegment)), count);
+
+  nsresult result = decoder->mImage->AddRestoreData((char *) fromRawSegment, count);
+  if (NS_FAILED (result)) {
+    PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+           ("PNGDecoderAccounting: ReadDataOut(): failed to add restore data to image container %p",
+            decoder->mImage.get()));
+
+    decoder->mError = PR_TRUE;
+    *writeCount = 0;
+    return result;
+  }
+
+  PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+         ("PNGDecoderAccounting: ReadDataOut(): Added restore data to image container %p",
+          decoder->mImage.get()));
 
   *writeCount = count;
   return NS_OK;
@@ -513,13 +574,18 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (decoder->mObserver)
     decoder->mObserver->OnStartDecode(nsnull);
 
-  decoder->mImage = do_CreateInstance("@mozilla.org/image/container;1");
-  if (!decoder->mImage)
-    longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
-
-  decoder->mImageLoad->SetImage(decoder->mImage);
-
-  decoder->mImage->Init(width, height, decoder->mObserver);
+  /* The image container may already exist if it is reloading itself from us.
+   * Check that it has the same width/height; otherwise create a new container.
+   */
+  PRInt32 containerWidth, containerHeight;
+  decoder->mImage->GetWidth(&containerWidth);
+  decoder->mImage->GetHeight(&containerHeight);
+  if (containerWidth == 0 && containerHeight == 0) {
+    // the image hasn't been inited yet
+    decoder->mImage->Init(width, height, decoder->mObserver);
+  } else if (containerWidth != width || containerHeight != height) {
+    longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_UNEXPECTED
+  }
 
   if (decoder->mObserver)
     decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
@@ -761,7 +827,7 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
   }
   
   decoder->mImage->DecodingComplete();
-  
+
   if (decoder->mObserver) {
     if (!(decoder->apngFlags & FRAME_HIDDEN))
       decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);

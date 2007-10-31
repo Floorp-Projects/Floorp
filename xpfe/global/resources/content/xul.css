@@ -218,13 +218,11 @@ toolbarseparator {
 
 toolbarspacer {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
-  display: inline;
 }
 
 toolbarspring {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
   -moz-box-flex: 1000;
-  display: inline;
 }
 
 toolbarpaletteitem {
@@ -597,10 +595,6 @@ progressmeter {
 }
 
 /********** label **********/
-
-spacer {
-  display: inline;
-}
 
 description {
   -moz-binding: url("chrome://global/content/bindings/text.xml#text-base");

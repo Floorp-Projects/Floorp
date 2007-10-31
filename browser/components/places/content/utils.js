@@ -95,119 +95,92 @@ var PlacesUtils = {
   /**
    * The Bookmarks Service.
    */
-  _bookmarks: null,
   get bookmarks() {
-    if (!this._bookmarks) {
-      this._bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                        getService(Ci.nsINavBookmarksService);
-    }
-    return this._bookmarks;
+    delete this.bookmarks;
+    return this.bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                            getService(Ci.nsINavBookmarksService);
   },
 
   /**
    * The Nav History Service.
    */
-  _history: null,
   get history() {
-    if (!this._history) {
-      this._history = Cc["@mozilla.org/browser/nav-history-service;1"].
-                      getService(Ci.nsINavHistoryService);
-    }
-    return this._history;
+    delete this.history;
+    return this.history = Cc["@mozilla.org/browser/nav-history-service;1"].
+                          getService(Ci.nsINavHistoryService);
   },
 
   /**
    * The Live Bookmark Service.
    */
-  _livemarks: null,
   get livemarks() {
-    if (!this._livemarks) {
-      this._livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
-                        getService(Ci.nsILivemarkService);
-    }
-    return this._livemarks;
+    delete this.livemarks;
+    return this.livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
+                            getService(Ci.nsILivemarkService);
   },
 
   /**
    * The Annotations Service.
    */
-  _annotations: null,
   get annotations() {
-    if (!this._annotations) {
-      this._annotations = Cc["@mozilla.org/browser/annotation-service;1"].
-                          getService(Ci.nsIAnnotationService);
-    }
-    return this._annotations;
+    delete this.annotations;
+    return this.annotations = Cc["@mozilla.org/browser/annotation-service;1"].
+                              getService(Ci.nsIAnnotationService);
   },
 
   /**
    * The Favicons Service
    */
-  _favicons: null,
   get favicons() {
-    if (!this._favicons) {
-      this._favicons = Cc["@mozilla.org/browser/favicon-service;1"].
-                       getService(Ci.nsIFaviconService);
-    }
-    return this._favicons;
+    delete this.favicons;
+    return this.favicons = Cc["@mozilla.org/browser/favicon-service;1"].
+                           getService(Ci.nsIFaviconService);
   },
 
   /**
    * The Microsummary Service
    */
-  _microsummaries: null,
   get microsummaries() {
-    if (!this._microsummaries)
-      this._microsummaries = Cc["@mozilla.org/microsummary/service;1"].
-                             getService(Ci.nsIMicrosummaryService);
-    return this._microsummaries;
+    delete this.microsummaries;
+    return this.microsummaries = Cc["@mozilla.org/microsummary/service;1"].
+                                 getService(Ci.nsIMicrosummaryService);
   },
 
   /**
    * The Places Tagging Service
    */
   get tagging() {
-    if (!this._tagging)
-      this._tagging = Cc["@mozilla.org/browser/tagging-service;1"].
-                      getService(Ci.nsITaggingService);
-    return this._tagging;
+    delete this.tagging;
+    return this.tagging = Cc["@mozilla.org/browser/tagging-service;1"].
+                          getService(Ci.nsITaggingService);
   },
 
-  _RDF: null,
   get RDF() {
-    if (!this._RDF)
-      this._RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
-                  getService(Ci.nsIRDFService);
-    return this._RDF;
+    delete this.RDF;
+    return this.RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+                      getService(Ci.nsIRDFService);
   },
 
-  _localStore: null,
   get localStore() {
-    if (!this._localStore)
-      this._localStore = this.RDF.GetDataSource("rdf:local-store");
-    return this._localStore;
+    delete this.localStore;
+    return this.localStore = this.RDF.GetDataSource("rdf:local-store");
   },
 
   get tm() {
-    return this.ptm.transactionManager;
+    delete this.tm;
+    return this.tm = this.ptm.transactionManager;
   },
 
-  _ptm: null,
   get ptm() {
-    if (!this._ptm) {
-      this._ptm = Cc["@mozilla.org/browser/placesTransactionsService;1"].
-                  getService(Components.interfaces.nsIPlacesTransactionsService);
-    }
-    return this._ptm;
+    delete this.ptm;
+    return this.ptm = Cc["@mozilla.org/browser/placesTransactionsService;1"].
+                      getService(Ci.nsIPlacesTransactionsService);
   },
 
-  _clipboard: null,
   get clipboard() {
-    if (!this._clipboard) {
-      this._clipboard = Cc["@mozilla.org/widget/clipboard;1"].
-                        getService(Ci.nsIClipboard);
-    }
-    return this._clipboard;
+    delete this.clipboard;
+    return this.clipboard = Cc["@mozilla.org/widget/clipboard;1"].
+                            getService(Ci.nsIClipboard);
   },
 
   /**
@@ -218,9 +191,7 @@ var PlacesUtils = {
    */
   _uri: function PU__uri(aSpec) {
     NS_ASSERT(aSpec, "empty URL spec");
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-    return ios.newURI(aSpec, null, null);
+    return IO.newURI(aSpec);
   },
 
   /**
@@ -239,16 +210,13 @@ var PlacesUtils = {
   /**
    * String bundle helpers
    */
-  __bundle: null,
   get _bundle() {
-    if (!this.__bundle) {
-      const PLACES_STRING_BUNDLE_URI =
+    const PLACES_STRING_BUNDLE_URI =
         "chrome://browser/locale/places/places.properties";
-      this.__bundle = Cc["@mozilla.org/intl/stringbundle;1"].
-                      getService(Ci.nsIStringBundleService).
-                      createBundle(PLACES_STRING_BUNDLE_URI);
-    }
-    return this.__bundle;
+    delete this._bundle;
+    return this._bundle = Cc["@mozilla.org/intl/stringbundle;1"].
+                          getService(Ci.nsIStringBundleService).
+                          createBundle(PLACES_STRING_BUNDLE_URI);
   },
 
   getFormattedString: function PU_getFormattedString(key, params) {
@@ -315,14 +283,12 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a URL item, false otherwise
    */
+  uriTypes: [Ci.nsINavHistoryResultNode.RESULT_TYPE_URI,
+             Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT,
+             Ci.nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT],
   nodeIsURI: function PU_nodeIsURI(aNode) {
     NS_ASSERT(aNode, "null node");
-
-    const NHRN = Ci.nsINavHistoryResultNode;
-    var type = aNode.type;
-    return type == NHRN.RESULT_TYPE_URI ||
-           type == NHRN.RESULT_TYPE_VISIT ||
-           type == NHRN.RESULT_TYPE_FULL_VISIT;
+    return this.uriTypes.indexOf(aNode.type) != -1;
   },
 
   /**
@@ -333,7 +299,6 @@ var PlacesUtils = {
    */
   nodeIsQuery: function PU_nodeIsQuery(aNode) {
     NS_ASSERT(aNode, "null node");
-
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
 
@@ -362,7 +327,6 @@ var PlacesUtils = {
    */
   nodeIsHost: function PU_nodeIsHost(aNode) {
     NS_ASSERT(aNode, "null node");
-
     return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST;
   },
 
@@ -372,16 +336,14 @@ var PlacesUtils = {
    *          A result node
    * @returns true if the node is a container item, false otherwise
    */
+  containerTypes: [Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_DYNAMIC_CONTAINER],
   nodeIsContainer: function PU_nodeIsContainer(aNode) {
     NS_ASSERT(aNode, "null node");
-
-    const NHRN = Ci.nsINavHistoryResultNode;
-    var type = aNode.type;
-    return type == NHRN.RESULT_TYPE_HOST ||
-           type == NHRN.RESULT_TYPE_QUERY ||
-           type == NHRN.RESULT_TYPE_FOLDER ||
-           type == NHRN.RESULT_TYPE_DAY ||
-           type == NHRN.RESULT_TYPE_DYNAMIC_CONTAINER;
+    return this.containerTypes.indexOf(aNode.type) != -1;
   },
 
   /**
@@ -448,14 +410,22 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     var parent = aNode.parent;
-    if (!parent || !PlacesUtils.nodeIsContainer(parent))
+    if (!parent)
       return -1;
     var wasOpen = parent.containerOpen;
-    parent.containerOpen = true;
+    var result, oldViewer;
+    if (!wasOpen) {
+      result = parent.parentResult;
+      oldViewer = result.viewer;
+      result.viewer = null;
+      parent.containerOpen = true;
+    }
     var cc = parent.childCount;
-    asContainer(parent);
     for (var i = 0; i < cc && parent.getChild(i) != aNode; ++i);
-    parent.containerOpen = wasOpen;
+    if (!wasOpen) {
+      parent.containerOpen = false;
+      result.viewer = oldViewer;
+    }
     return i < cc ? i : -1;
   },
 
@@ -650,7 +620,7 @@ var PlacesUtils = {
    * @returns A nsITransaction object that performs the copy.
    */
   _getURIItemCopyTransaction: function (aData, aContainer, aIndex) {
-    return this.ptm.createItem(this._uri(aData.uri), aContainer, aIndex,
+    return this.ptm.createItem(IO.newURI(aData.uri), aContainer, aIndex,
                                aData.title, "");
   },
 
@@ -671,7 +641,7 @@ var PlacesUtils = {
   _getBookmarkItemCopyTransaction:
   function PU__getBookmarkItemCopyTransaction(aData, aContainer, aIndex,
                                               aExcludeAnnotations) {
-    var itemURL = this._uri(aData.uri);
+    var itemURL = IO.newURI(aData.uri);
     var itemTitle = aData.title;
     var keyword = aData.keyword;
     var annos = aData.annos;
@@ -724,8 +694,8 @@ var PlacesUtils = {
                                         folderItemsTransactions);
           }
           else { // node is a livemark
-            var feedURI = self._uri(node.uri.feed);
-            var siteURI = self._uri(node.uri.site);
+            var feedURI = IO.newURI(node.uri.feed);
+            var siteURI = IO.newURI(node.uri.site);
             txn = self.ptm.createLivemark(feedURI, siteURI, node.title,
                                           aContainer, index, node.annos);
           }
@@ -776,8 +746,8 @@ var PlacesUtils = {
         for (var i = 0; i < parts.length; i=i+2) {
           var uriString = parts[i];
           var titleString = parts[i+1];
-          // note:  this._uri() will throw if uriString is not a valid URI
-          if (this._uri(uriString)) {
+          // note:  IO.newURI() will throw if uriString is not a valid URI
+          if (IO.newURI(uriString)) {
             nodes.push({ uri: uriString,
                          title: titleString ? titleString : uriString });
           }
@@ -787,8 +757,8 @@ var PlacesUtils = {
         var parts = blob.split("\n");
         for (var i = 0; i < parts.length; i++) {
           var uriString = parts[i];
-          // note: this._uri() will throw if uriString is not a valid URI
-          if (uriString != "" && this._uri(uriString))
+          // note: IO.newURI() will throw if uriString is not a valid URI
+          if (uriString != "" && IO.newURI(uriString))
             nodes.push({ uri: uriString, title: uriString });
         }
         break;
@@ -826,8 +796,8 @@ var PlacesUtils = {
       }
       else if (copy) {
         // Place is a Livemark Container, should be reinstantiated
-        var feedURI = this._uri(data.uri.feed);
-        var siteURI = this._uri(data.uri.site);
+        var feedURI = IO.newURI(data.uri.feed);
+        var siteURI = IO.newURI(data.uri.site);
         return this.ptm.createLivemark(feedURI, siteURI, data.title, container,
                                        index, data.annos);
       }
@@ -855,7 +825,7 @@ var PlacesUtils = {
     default:
       if (type == this.TYPE_X_MOZ_URL || type == this.TYPE_UNICODE) {
         var title = (type == this.TYPE_X_MOZ_URL) ? data.title : data.uri;
-        return this.ptm.createItem(this._uri(data.uri), container, index,
+        return this.ptm.createItem(IO.newURI(data.uri), container, index,
                                    title);
       }
       return null;
@@ -892,7 +862,6 @@ var PlacesUtils = {
 
     var result = this.history.executeQuery(query, options);
     result.root.containerOpen = true;
-    asContainer(result.root);
     return result;
   },
 
@@ -1270,7 +1239,7 @@ var PlacesUtils = {
    */
   checkURLSecurity: function PU_checkURLSecurity(aURINode) {
     if (!this.nodeIsBookmark(aURINode)) {
-      var uri = this._uri(aURINode.uri);
+      var uri = IO.newURI(aURINode.uri);
       if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
         const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
         var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
@@ -1557,15 +1526,27 @@ var PlacesUtils = {
       }
     }
     else {
-      let wasOpen = aNode.containerOpen;
-      if (!wasOpen)
-        aNode.containerOpen = true;
-      for (let i = 0; i < aNode.childCount; ++i) {
-        let child = aNode.getChild(i);
-        if (this.nodeIsURI(child))
-          urls.push(child.uri);
+      let result, oldViewer;
+      try {
+        let wasOpen = aNode.containerOpen;
+        if (!wasOpen) {
+          result = aNode.parentResult;
+          oldViewer = result.viewer;
+          result.viewer = null;
+          aNode.containerOpen = true;
+        }
+        for (let i = 0; i < aNode.childCount; ++i) {
+          let child = aNode.getChild(i);
+          if (this.nodeIsURI(child))
+            urls.push(child.uri);
+        }
+        if (!wasOpen)
+          aNode.containerOpen = false;
       }
-      aNode.containerOpen = wasOpen;
+      finally {
+        if (oldViewer)
+          result.viewer = oldViewer;
+      }
     }
 
     return urls;
@@ -1646,22 +1627,70 @@ var PlacesUtils = {
     this._openTabset(urlsToOpen, aEvent);
   },
 
-  _placesFlavors: null,
   get placesFlavors() {
-    if (!this._placesFlavors) {
-      var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-                        PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-                        PlacesUtils.TYPE_X_MOZ_PLACE];
-      this._placesFlavors = Cc["@mozilla.org/supports-array;1"].
-                            createInstance(Ci.nsISupportsArray);
-      for (var i = 0; i < placeTypes.length; ++i) {
-        var cstring = Cc["@mozilla.org/supports-cstring;1"].
-                        createInstance(Ci.nsISupportsCString);
-        cstring.data = placeTypes[i];
-        this._placesFlavors.AppendElement(cstring);
-      }
+    delete this.placesFlavors;
+    var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
+                      PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
+                      PlacesUtils.TYPE_X_MOZ_PLACE];
+    this.placesFlavors = Cc["@mozilla.org/supports-array;1"].
+                         createInstance(Ci.nsISupportsArray);
+    for (var i = 0; i < placeTypes.length; ++i) {
+      var cstring = Cc["@mozilla.org/supports-cstring;1"].
+                    createInstance(Ci.nsISupportsCString);
+      cstring.data = placeTypes[i];
+      this.placesFlavors.AppendElement(cstring);
     }
-    return this._placesFlavors;
+    return this.placesFlavors;
+  },
+
+  /**
+   * Helper for the toolbar and menu views
+   */
+  createMenuItemForNode: function(aNode, aContainersMap) {
+    var element;
+    var type = aNode.type;
+    if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
+      element = document.createElement("menuseparator");
+    else {
+      var iconURI = aNode.icon;
+      var iconURISpec = "";
+      if (iconURI)
+        iconURISpec = iconURI.spec;
+
+      if (this.uriTypes.indexOf(type) != -1) {
+        element = document.createElement("menuitem");
+        element.setAttribute("statustext", aNode.uri);
+        element.className = "menuitem-iconic bookmark-item";
+      }
+      else if (this.containerTypes.indexOf(type) != -1) {
+        element = document.createElement("menu");
+        element.setAttribute("container", "true");
+        
+        if (iconURISpec == "chrome://browser/skin/places/livemarkItem.png")
+          element.setAttribute("livemark", "true");
+
+        var popup = document.createElement("menupopup");
+        popup._resultNode = asContainer(aNode);
+#ifndef XP_MACOSX
+        // no context menu on mac
+        popup.setAttribute("context", "placesContext");
+#endif
+        element.appendChild(popup);
+        if (aContainersMap)
+          aContainersMap.push({ resultNode: aNode, domNode: popup });
+        element.className = "menu-iconic bookmark-item";
+      }
+      else
+        throw "Unexpected node";
+
+      element.setAttribute("label", aNode.title);
+      if (iconURISpec)
+        element.setAttribute("image", iconURISpec);
+    }
+    element.node = aNode;
+    element.node.viewIndex = 0;
+
+    return element;
   }
 };
 

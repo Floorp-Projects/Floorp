@@ -364,16 +364,30 @@ nsNSSErrors::getErrorMessageFromCode(PRInt32 err,
     if (NS_SUCCEEDED(rv))
     {
       returnedMessage.Append(defMsg);
-      returnedMessage.Append(NS_LITERAL_STRING(" "));
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
     }
 
     nsCString error_id(nss_error_id_str);
     ToLowerCase(error_id);
     NS_ConvertASCIItoUTF16 idU(error_id);
 
-    returnedMessage.Append(NS_LITERAL_STRING("("));
-    returnedMessage.Append(idU);
-    returnedMessage.Append(NS_LITERAL_STRING(")"));
+    const PRUnichar *params[1];
+    params[0] = idU.get();
+
+    nsString formattedString;
+    rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix", 
+                                                  params, 1, 
+                                                  formattedString);
+    if (NS_SUCCEEDED(rv)) {
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+      returnedMessage.Append(formattedString);
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    }
+    else {
+      returnedMessage.Append(NS_LITERAL_STRING("("));
+      returnedMessage.Append(idU);
+      returnedMessage.Append(NS_LITERAL_STRING(")"));
+    }
   }
 
   return NS_OK;

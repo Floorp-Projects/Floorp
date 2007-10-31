@@ -42,7 +42,7 @@
 
 nsLineBreaker::nsLineBreaker()
   : mCurrentWordContainsComplexChar(PR_FALSE),
-    mAfterSpace(PR_FALSE)
+    mAfterBreakableSpace(PR_FALSE), mBreakHere(PR_FALSE)
 {
 }
 
@@ -72,10 +72,10 @@ nsLineBreaker::FlushCurrentWord()
     TextItem* ti = &mTextItems[i];
     NS_ASSERTION(ti->mLength > 0, "Zero length word contribution?");
 
-    if (!(ti->mFlags & BREAK_ALLOW_INITIAL) && ti->mSinkOffset == 0) {
+    if ((ti->mFlags & BREAK_SUPPRESS_INITIAL) && ti->mSinkOffset == 0) {
       breakState[offset] = PR_FALSE;
     }
-    if (!(ti->mFlags & BREAK_ALLOW_INSIDE)) {
+    if (ti->mFlags & BREAK_SUPPRESS_INSIDE) {
       PRUint32 exclude = ti->mSinkOffset == 0 ? 1 : 0;
       memset(breakState.Elements() + offset + exclude, PR_FALSE, ti->mLength - exclude);
     }
@@ -107,7 +107,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
 
   // Continue the current word
   if (mCurrentWord.Length() > 0) {
-    NS_ASSERTION(!mAfterSpace, "These should not be set");
+    NS_ASSERTION(!mAfterBreakableSpace && !mBreakHere, "These should not be set");
 
     while (offset < aLength && !IsSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
@@ -137,8 +137,14 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   }
 
   PRUint32 start = offset;
-  if (!aSink && !aFlags) {
-    // Skip to the space before the last word, since we don't need the breaks
+  PRBool noBreaksNeeded = !aSink ||
+    ((aFlags & BREAK_SUPPRESS_INITIAL) && (aFlags & BREAK_SUPPRESS_INSIDE) &&
+     !mBreakHere && !mAfterBreakableSpace && (aFlags & BREAK_SKIP_SETTING_NO_BREAKS));
+  if (noBreaksNeeded) {
+    // Skip to the space before the last word, since either the break data
+    // here is not needed, or no breaks are set in the sink and there cannot
+    // be any breaks in this chunk; all we need is the context for the next
+    // chunk (if any)
     offset = aLength;
     while (offset > start) {
       --offset;
@@ -152,16 +158,17 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   for (;;) {
     PRUnichar ch = aText[offset];
     PRBool isSpace = IsSpace(ch);
+    PRBool isBreakableSpace = isSpace && !(aFlags & BREAK_SUPPRESS_INSIDE);
 
     if (aSink) {
-      breakState[offset] = mAfterSpace && !isSpace &&
-        (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
+      breakState[offset] = mBreakHere || (mAfterBreakableSpace && !isBreakableSpace);
     }
-    mAfterSpace = isSpace;
+    mBreakHere = PR_FALSE;
+    mAfterBreakableSpace = isBreakableSpace;
 
     if (isSpace) {
       if (offset > wordStart && wordHasComplexChar) {
-        if (aSink && (aFlags & BREAK_ALLOW_INSIDE)) {
+        if (aSink && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
           // Save current start-of-word state because GetJISx4051Breaks will
           // set it to false
           PRPackedBool currentStart = breakState[wordStart];
@@ -198,7 +205,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
     }
   }
 
-  if (aSink) {
+  if (!noBreaksNeeded) {
     aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
   }
   return NS_OK;
@@ -214,7 +221,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
 
   // Continue the current word
   if (mCurrentWord.Length() > 0) {
-    NS_ASSERTION(!mAfterSpace, "These should not be set");
+    NS_ASSERTION(!mAfterBreakableSpace && !mBreakHere, "These should not be set");
 
     while (offset < aLength && !IsSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
@@ -247,8 +254,14 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
   }
 
   PRUint32 start = offset;
-  if (!aSink && !aFlags) {
-    // Skip to the space before the last word, since we don't need the breaks
+  PRBool noBreaksNeeded = !aSink ||
+    ((aFlags & BREAK_SUPPRESS_INITIAL) && (aFlags & BREAK_SUPPRESS_INSIDE) &&
+     !mBreakHere && !mAfterBreakableSpace && (aFlags & BREAK_SKIP_SETTING_NO_BREAKS));
+  if (noBreaksNeeded) {
+    // Skip to the space before the last word, since either the break data
+    // here is not needed, or no breaks are set in the sink and there cannot
+    // be any breaks in this chunk; all we need is the context for the next
+    // chunk (if any)
     offset = aLength;
     while (offset > start) {
       --offset;
@@ -262,16 +275,17 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
   for (;;) {
     PRUint8 ch = aText[offset];
     PRBool isSpace = IsSpace(ch);
+    PRBool isBreakableSpace = isSpace && !(aFlags & BREAK_SUPPRESS_INSIDE);
 
     if (aSink) {
-      breakState[offset] = mAfterSpace && !isSpace &&
-        (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
+      breakState[offset] = mBreakHere || (mAfterBreakableSpace && !isBreakableSpace);
     }
-    mAfterSpace = isSpace;
+    mBreakHere = PR_FALSE;
+    mAfterBreakableSpace = isBreakableSpace;
 
     if (isSpace) {
       if (offset > wordStart && wordHasComplexChar) {
-        if (aSink && (aFlags & BREAK_ALLOW_INSIDE)) {
+        if (aSink && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
           // Save current start-of-word state because GetJISx4051Breaks will
           // set it to false
           PRPackedBool currentStart = breakState[wordStart];
@@ -311,18 +325,22 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
     }
   }
 
-  if (aSink) {
+  if (!noBreaksNeeded) {
     aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
   }
   return NS_OK;
 }
 
 nsresult
-nsLineBreaker::AppendInvisibleWhitespace() {
-  // Treat as "invisible whitespace"
+nsLineBreaker::AppendInvisibleWhitespace(PRUint32 aFlags) {
   nsresult rv = FlushCurrentWord();
   if (NS_FAILED(rv))
     return rv;
-  mAfterSpace = PR_TRUE;
+
+  PRBool isBreakableSpace = !(aFlags & BREAK_SUPPRESS_INSIDE);
+  if (mAfterBreakableSpace && !isBreakableSpace) {
+    mBreakHere = PR_TRUE;
+  }
+  mAfterBreakableSpace = isBreakableSpace;
   return NS_OK;  
 }

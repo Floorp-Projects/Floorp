@@ -121,12 +121,26 @@ NS_METHOD nsXBMDecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                              PRUint32 aCount, PRUint32 *aWriteCount) {
     nsXBMDecoder *decoder = reinterpret_cast<nsXBMDecoder*>(aClosure);
     *aWriteCount = aCount;
-    return decoder->ProcessData(aFromRawSegment, aCount);
+
+    nsresult rv = decoder->ProcessData(aFromRawSegment, aCount);
+
+    if (NS_FAILED(rv)) {
+        *aWriteCount = 0;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP nsXBMDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, PRUint32 *aRetval)
 {
-    return aInStr->ReadSegments(ReadSegCb, this, aCount, aRetval);
+    nsresult rv = aInStr->ReadSegments(ReadSegCb, this, aCount, aRetval);
+    
+    if (aCount != *aRetval) { 
+        *aRetval = aCount; 
+        return NS_ERROR_FAILURE; 
+    }
+    
+    return rv;    
 }
 
 nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {

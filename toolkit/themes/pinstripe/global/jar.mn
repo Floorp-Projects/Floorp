@@ -30,6 +30,7 @@ classic.jar:
 +  skin/classic/global/netError.css
 +  skin/classic/global/numberbox.css
    skin/classic/global/plugins.css         (/toolkit/empty-file)
++  skin/classic/global/passwordmgr.css
 +  skin/classic/global/popup.css
 +  skin/classic/global/preferences.css
 +  skin/classic/global/progressmeter.css

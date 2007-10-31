@@ -885,8 +885,6 @@ private:
                                  nsFrameItems&            aFrameItems,
                                  PRBool*                  aKidsAllInline);
 
-  PRBool AreAllKidsInline(nsIFrame* aFrameList);
-
   // Determine whether we need to wipe out what we just did and start over
   // because we're doing something like adding block kids to an inline frame
   // (and therefore need an {ib} split).  If aIsAppend is true, aPrevSibling is

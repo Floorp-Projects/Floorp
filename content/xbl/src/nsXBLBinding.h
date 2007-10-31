@@ -120,15 +120,13 @@ public:
 
   void GenerateAnonymousContent();
   void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
-  void InstallEventHandlers();
-  nsresult InstallImplementation();
+  nsresult EnsureScriptAPI();
 
   void ExecuteAttachedHandler();
   void ExecuteDetachedHandler();
   void UnhookEventHandlers();
 
   nsIAtom* GetBaseTag(PRInt32* aNameSpaceID);
-  nsXBLBinding* GetFirstBindingWithConstructor();
   nsXBLBinding* RootBinding();
   nsXBLBinding* GetFirstStyleBinding();
 
@@ -169,6 +167,12 @@ public:
 
 // MEMBER VARIABLES
 protected:
+  // These two functions recursively install the event handlers
+  // and implementation on this binding and its base class bindings.
+  // External callers should call EnsureScriptAPI instead.
+  void InstallEventHandlers();
+  nsresult InstallImplementation();
+
   nsAutoRefCnt mRefCnt;
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
@@ -181,6 +185,7 @@ protected:
 
   PRPackedBool mIsStyleBinding;
   PRPackedBool mMarkedForDeath;
+  PRPackedBool mInstalledAPI;
 };
 
 #endif // nsXBLBinding_h_

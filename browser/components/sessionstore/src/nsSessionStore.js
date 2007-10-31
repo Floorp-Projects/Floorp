@@ -1979,7 +1979,11 @@ SessionStoreService.prototype = {
       var cr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsICrashReporter);
       cr.annotateCrashReport("URL", currentUrl);
     }
-    catch (ex) { debug(ex); }
+    catch (ex) {
+      // don't make noise when crashreporter is built but not enabled
+      if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED)
+        debug(ex);
+    }
   },
 
   /**

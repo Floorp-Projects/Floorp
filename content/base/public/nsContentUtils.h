@@ -557,6 +557,8 @@ public:
                              PRInt16* aImageBlockingStatus = nsnull);
   /**
    * Method to start an image load.  This does not do any security checks.
+   * This method will attempt to make aURI immutable; a caller that wants to
+   * keep a mutable version around should pass in a clone.
    *
    * @param aURI uri of the image to be loaded
    * @param aLoadingDocument the document we belong to
@@ -751,42 +753,6 @@ public:
   static nsIContentPolicy *GetContentPolicy();
 
   /**
-   * Make sure that whatever value *aPtr contains at any given moment is
-   * protected from JS GC until we remove the GC root.  A call to this that
-   * succeeds MUST be matched by a call to RemoveJSGCRoot to avoid leaking.
-   */
-  static nsresult AddJSGCRoot(jsval* aPtr, const char* aName) {
-    return AddJSGCRoot((void*)aPtr, aName);
-  }
-
-  /**
-   * Make sure that whatever object *aPtr is pointing to at any given moment is
-   * protected from JS GC until we remove the GC root.  A call to this that
-   * succeeds MUST be matched by a call to RemoveJSGCRoot to avoid leaking.
-   */
-  static nsresult AddJSGCRoot(JSObject** aPtr, const char* aName) {
-    return AddJSGCRoot((void*)aPtr, aName);
-  }
-
-  /**
-   * Make sure that whatever object *aPtr is pointing to at any given moment is
-   * protected from JS GC until we remove the GC root.  A call to this that
-   * succeeds MUST be matched by a call to RemoveJSGCRoot to avoid leaking.
-   */
-  static nsresult AddJSGCRoot(void* aPtr, const char* aName);  
-
-  /**
-   * Remove aPtr as a JS GC root
-   */
-  static nsresult RemoveJSGCRoot(jsval* aPtr) {
-    return RemoveJSGCRoot((void*)aPtr);
-  }
-  static nsresult RemoveJSGCRoot(JSObject** aPtr) {
-    return RemoveJSGCRoot((void*)aPtr);
-  }
-  static nsresult RemoveJSGCRoot(void* aPtr);
-
-  /**
    * Quick helper to determine whether there are any mutation listeners
    * of a given type that apply to this content or any of its ancestors.
    * The method has the side effect to call document's MayDispatchMutationEvent
@@ -950,7 +916,7 @@ public:
                                      PRBool aTryReuse);
 
   /**
-   * Get the textual contents of a node. This is a concatination of all
+   * Get the textual contents of a node. This is a concatenation of all
    * textnodes that are direct or (depending on aDeep) indirect children
    * of the node.
    *
@@ -1000,40 +966,73 @@ public:
    */
   static void DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent);
 
-  static nsresult HoldScriptObject(PRUint32 aLangID, void *aObject);
-  static nsresult DropScriptObject(PRUint32 aLangID, void *aObject);
-
-  class ScriptObjectHolder
+  /**
+   * Keep script object aNewObject, held by aScriptObjectHolder, alive.
+   *
+   * NOTE: This currently only supports objects that hold script objects of one
+   *       scripting language.
+   *
+   * @param aLangID script language ID of aNewObject
+   * @param aScriptObjectHolder the object that holds aNewObject
+   * @param aTracer the tracer for aScriptObject
+   * @param aNewObject the script object to hold
+   * @param aWasHoldingObjects whether aScriptObjectHolder was already holding
+   *                           script objects (ie. HoldScriptObject was called
+   *                           on it before, without a corresponding call to
+   *                           DropScriptObjects)
+   */
+  static nsresult HoldScriptObject(PRUint32 aLangID, void* aScriptObjectHolder,
+                                   nsScriptObjectTracer* aTracer,
+                                   void* aNewObject, PRBool aWasHoldingObjects)
   {
-  public:
-    ScriptObjectHolder(PRUint32 aLangID) : mLangID(aLangID),
-                                           mObject(nsnull)
-    {
-      MOZ_COUNT_CTOR(ScriptObjectHolder);
+    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
+      return aWasHoldingObjects ? NS_OK :
+                                  HoldJSObjects(aScriptObjectHolder, aTracer);
     }
-    ~ScriptObjectHolder()
-    {
-      MOZ_COUNT_DTOR(ScriptObjectHolder);
-      if (mObject)
-        DropScriptObject(mLangID, mObject);
+
+    return HoldScriptObject(aLangID, aNewObject);
+  }
+
+  /**
+   * Drop any script objects that aScriptObjectHolder is holding.
+   *
+   * NOTE: This currently only supports objects that hold script objects of one
+   *       scripting language.
+   *
+   * @param aLangID script language ID of the objects that 
+   * @param aScriptObjectHolder the object that holds script object that we want
+   *                            to drop
+   * @param aTracer the tracer for aScriptObject
+   */
+  static nsresult DropScriptObjects(PRUint32 aLangID, void* aScriptObjectHolder,
+                                    nsScriptObjectTracer* aTracer)
+  {
+    if (aLangID == nsIProgrammingLanguage::JAVASCRIPT) {
+      return DropJSObjects(aScriptObjectHolder);
     }
-    nsresult set(void *aObject)
-    {
-      NS_ASSERTION(aObject, "unexpected null object");
-      NS_ASSERTION(!mObject, "already have an object");
-      nsresult rv = HoldScriptObject(mLangID, aObject);
-      if (NS_SUCCEEDED(rv)) {
-        mObject = aObject;
-      }
-      return rv;
-    }
-    void traverse(nsCycleCollectionTraversalCallback &cb)
-    {
-      cb.NoteScriptChild(mLangID, mObject);
-    }
-    PRUint32 mLangID;
-    void *mObject;
-  };
+
+    aTracer->Trace(aScriptObjectHolder, DropScriptObject, nsnull);
+
+    return NS_OK;
+  }
+
+  /**
+   * Keep the JS objects held by aScriptObjectHolder alive.
+   *
+   * @param aScriptObjectHolder the object that holds JS objects that we want to
+   *                            keep alive
+   * @param aTracer the tracer for aScriptObject
+   */
+  static nsresult HoldJSObjects(void* aScriptObjectHolder,
+                                nsScriptObjectTracer* aTracer);
+
+  /**
+   * Drop the JS objects held by aScriptObjectHolder.
+   *
+   * @param aScriptObjectHolder the object that holds JS objects that we want to
+   *                            drop
+   */
+  static nsresult DropJSObjects(void* aScriptObjectHolder);
 
   /**
    * Convert nsIContent::IME_STATUS_* to nsIKBStateControll::IME_STATUS_*
@@ -1120,6 +1119,10 @@ private:
 
   static nsIDOMScriptObjectFactory *GetDOMScriptObjectFactory();
 
+  static nsresult HoldScriptObject(PRUint32 aLangID, void* aObject);
+  PR_STATIC_CALLBACK(void) DropScriptObject(PRUint32 aLangID, void *aObject,
+                                            void *aClosure);
+
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
   static nsIXPConnect *sXPConnect;
@@ -1161,14 +1164,9 @@ private:
   // Holds pointers to nsISupports* that should be released at shutdown
   static nsVoidArray* sPtrsToPtrsToRelease;
 
-  // For now, we don't want to automatically clean this up in Shutdown(), since
-  // consumers might unfortunately end up wanting to use it after that
-  static nsIJSRuntimeService* sJSRuntimeService;
-  static JSRuntime* sJSScriptRuntime;
-  static PRInt32 sJSScriptRootCount;
-
   static nsIScriptRuntime* sScriptRuntimes[NS_STID_ARRAY_UBOUND];
   static PRInt32 sScriptRootCount[NS_STID_ARRAY_UBOUND];
+  static PRUint32 sJSGCThingRootCount;
 
 #ifdef IBMBIDI
   static nsIBidiKeyboard* sBidiKeyboard;
@@ -1176,6 +1174,14 @@ private:
 
   static PRBool sInitialized;
 };
+
+
+#define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \
+  nsContentUtils::HoldJSObjects(NS_CYCLE_COLLECTION_UPCAST(obj, clazz),        \
+                                &NS_CYCLE_COLLECTION_NAME(clazz))
+
+#define NS_DROP_JS_OBJECTS(obj, clazz)                                         \
+  nsContentUtils::DropJSObjects(NS_CYCLE_COLLECTION_UPCAST(obj, clazz))
 
 
 class nsCxPusher
@@ -1200,33 +1206,38 @@ public:
   nsAutoGCRoot(jsval* aPtr, nsresult* aResult) :
     mPtr(aPtr)
   {
-    mResult = *aResult =
-      nsContentUtils::AddJSGCRoot(aPtr, "nsAutoGCRoot");
+    mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
   }
 
   // aPtr should be the pointer to the JSObject* we want to protect
   nsAutoGCRoot(JSObject** aPtr, nsresult* aResult) :
     mPtr(aPtr)
   {
-    mResult = *aResult =
-      nsContentUtils::AddJSGCRoot(aPtr, "nsAutoGCRoot");
+    mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
   }
 
   // aPtr should be the pointer to the thing we want to protect
   nsAutoGCRoot(void* aPtr, nsresult* aResult) :
     mPtr(aPtr)
   {
-    mResult = *aResult =
-      nsContentUtils::AddJSGCRoot(aPtr, "nsAutoGCRoot");
+    mResult = *aResult = AddJSGCRoot(aPtr, "nsAutoGCRoot");
   }
 
   ~nsAutoGCRoot() {
     if (NS_SUCCEEDED(mResult)) {
-      nsContentUtils::RemoveJSGCRoot(mPtr);
+      RemoveJSGCRoot(mPtr);
     }
   }
 
+  static void Shutdown();
+
 private:
+  static nsresult AddJSGCRoot(void *aPtr, const char* aName);
+  static nsresult RemoveJSGCRoot(void *aPtr);
+
+  static nsIJSRuntimeService* sJSRuntimeService;
+  static JSRuntime* sJSScriptRuntime;
+
   void* mPtr;
   nsresult mResult;
 };

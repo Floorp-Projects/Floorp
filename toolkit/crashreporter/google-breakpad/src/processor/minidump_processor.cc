@@ -280,6 +280,11 @@ bool MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
       break;
     }
 
+    case MD_CPU_ARCHITECTURE_SPARC: {
+      info->cpu = "sparc";
+      break;
+    }
+
     default: {
       // Assign the numeric architecture ID into the CPU string.
       char cpu_string[7];
@@ -329,6 +334,11 @@ bool MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
 
     case MD_OS_LINUX: {
       info->os = "Linux";
+      break;
+    }
+
+    case MD_OS_SOLARIS: {
+      info->os = "Solaris";
       break;
     }
 
@@ -731,8 +741,9 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
           break;
       }
       break;
+    }
 
-    case MD_OS_LINUX:
+    case MD_OS_LINUX: {
       switch (exception_code) {
         case MD_EXCEPTION_CODE_LIN_SIGHUP:
           reason = "SIGHUP";
@@ -827,6 +838,135 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
         case MD_EXCEPTION_CODE_LIN_SIGSYS:
           reason = "SIGSYS";
           break;
+        default:
+          BPLOG(INFO) << "Unknown exception reason " << reason;
+          break;
+      }
+      break;
+    }
+
+    case MD_OS_SOLARIS: {
+      switch (exception_code) {
+        case MD_EXCEPTION_CODE_SOL_SIGHUP:
+          reason = "SIGHUP";
+          break;
+        case MD_EXCEPTION_CODE_SOL_SIGINT:
+          reason = "SIGINT";
+          break;
+        case MD_EXCEPTION_CODE_SOL_SIGQUIT:
+          reason = "SIGQUIT";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGILL:
+          reason = "SIGILL";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGTRAP:
+          reason = "SIGTRAP";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGIOT:
+          reason = "SIGIOT | SIGABRT";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGEMT:
+          reason = "SIGEMT";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGFPE:
+          reason = "SIGFPE";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGKILL:
+          reason = "SIGKILL";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGBUS:
+          reason = "SIGBUS";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGSEGV:
+          reason = "SIGSEGV";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGSYS:
+          reason = "SIGSYS";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGPIPE:
+          reason = "SIGPIPE";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGALRM:
+          reason = "SIGALRM";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGTERM:
+          reason = "SIGTERM";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGUSR1:
+          reason = "SIGUSR1";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGUSR2:
+          reason = "SIGUSR2";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGCLD:
+          reason = "SIGCLD | SIGCHLD";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGPWR:
+          reason = "SIGPWR";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGWINCH:
+          reason = "SIGWINCH";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGURG:
+          reason = "SIGURG";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGPOLL:
+          reason = "SIGPOLL | SIGIO";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGSTOP:
+          reason = "SIGSTOP";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGTSTP:
+          reason = "SIGTSTP";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGCONT:
+          reason = "SIGCONT";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGTTIN:
+          reason = "SIGTTIN";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGTTOU:
+          reason = "SIGTTOU";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGVTALRM:
+          reason = "SIGVTALRM";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGPROF:
+          reason = "SIGPROF";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGXCPU:
+          reason = "SIGXCPU";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGXFSZ:
+          reason = "SIGXFSZ";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGWAITING:
+          reason = "SIGWAITING";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGLWP:
+          reason = "SIGLWP";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGFREEZE:
+          reason = "SIGFREEZE";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGTHAW:
+          reason = "SIGTHAW";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGCANCEL:
+          reason = "SIGCANCEL";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGLOST:
+          reason = "SIGLOST";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGXRES:
+          reason = "SIGXRES";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGJVM1:
+          reason = "SIGJVM1";
+          break;  
+        case MD_EXCEPTION_CODE_SOL_SIGJVM2:
+          reason = "SIGJVM2";
+          break;  
         default:
           BPLOG(INFO) << "Unknown exception reason " << reason;
           break;

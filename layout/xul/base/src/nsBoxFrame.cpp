@@ -1032,6 +1032,8 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
 {
    NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                 "inserting after sibling frame with different parent");
+   NS_ASSERTION(!aPrevFrame || mFrames.ContainsFrame(aPrevFrame),
+                "inserting after sibling frame not in our child list");
    NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
    nsBoxLayoutState state(PresContext());
 
@@ -1084,7 +1086,13 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
    return NS_OK;
 }
 
-
+/* virtual */ nsIFrame*
+nsBoxFrame::GetContentInsertionFrame()
+{
+  if (GetStateBits() & NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK)
+    return GetFirstChild(nsnull)->GetContentInsertionFrame();
+  return nsContainerFrame::GetContentInsertionFrame();
+}
 
 NS_IMETHODIMP
 nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,

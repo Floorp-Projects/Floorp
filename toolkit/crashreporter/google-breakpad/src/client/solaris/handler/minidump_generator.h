@@ -32,6 +32,14 @@
 #ifndef CLIENT_SOLARIS_HANDLER_MINIDUMP_GENERATOR_H__
 #define CLIENT_SOLARIS_HANDLER_MINIDUMP_GENERATOR_H__
 
+#if defined(sparc) || defined(__sparc__)
+#define TARGET_CPU_SPARC 1
+#elif defined(i386) || defined(__i386__)
+#define TARGET_CPU_X86 1
+#else
+#error "cannot determine cpu type"
+#endif
+
 #include "client/minidump_file_writer.h"
 #include "client/solaris/handler/solaris_lwp.h"
 #include "google_breakpad/common/breakpad_types.h"
@@ -69,8 +77,13 @@ class MinidumpGenerator {
                      MDMemoryDescriptor *loc);
 
   // Write CPU context based on provided registers.
+#if TARGET_CPU_SPARC
+  bool WriteContext(MDRawContextSPARC *context, prgregset_t regs,
+                    prfpregset_t *fp_regs);
+#elif TARGET_CPU_X86
   bool WriteContext(MDRawContextX86 *context, prgregset_t regs,
                     prfpregset_t *fp_regs);
+#endif /* TARGET_CPU_XXX */
 
   // Write information about a lwp.
   // Only processes lwp running normally at the crash.

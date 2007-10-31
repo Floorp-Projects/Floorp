@@ -8,7 +8,7 @@ use Bootstrap::Config;
 use File::Copy qw(move);
 use File::Find qw(find);
 use MozBuild::Util qw(MkdirWithPath);
-use Bootstrap::Util qw(SyncNightlyDirToStaging);
+use Bootstrap::Util qw(SyncToStaging);
 @ISA = ("Bootstrap::Step");
 
 sub Execute {
@@ -116,7 +116,7 @@ sub Push {
       dir => catfile($stageDir),
     );
 
-    SyncNightlyDirToStaging();
+    SyncToStaging();
 }
 
 sub Announce {

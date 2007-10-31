@@ -124,7 +124,7 @@
          oncommand="close();"/>
 
     <key id="placesKey_show:debug"
-         key="d" modifiers="accel,shift"
+         key="e" modifiers="accel,shift"
          oncommand="PlacesOrganizer.toggleDebugPanel();"/>
          
     <!-- Command Keys -->

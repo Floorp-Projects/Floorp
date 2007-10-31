@@ -47,10 +47,6 @@
   color: -moz-FieldText;
 }
 
-.hide {
-  display: none;
-}
-
 wizard[description=""] .wizard-header-description { 
   display: none;
 }

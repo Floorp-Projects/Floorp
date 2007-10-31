@@ -2164,21 +2164,15 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     if (pathEnd == leaf)
         return NS_OK;
 
-    // get the extension, including the dot, max. of 4 chars for comparison
-    // (copy the extension so that the original filename stays untouched)
-    char ext[5];
-    strncpy(ext, (char*) _mbsrchr((const unsigned char*)leaf, '.'), 4);
-    ext[4] = '\0'; // ensure trailing nullbyte
+    // get the extension, including the dot
+    char* ext = (char*) _mbsrchr((const unsigned char*)leaf, '.');
+    if (!ext)
+        return NS_OK;
 
-    // upper-case the extension, then see if it claims to be an executable
-    // WinUpper() cannot be used because it crashes with high memory.
-    // strupr() does not take into account non-ASCII characters but this is
-    // irrelevant for the possible extensions below
-    strupr(ext);
-    if (strcmp(ext, ".EXE") == 0 ||
-        strcmp(ext, ".CMD") == 0 ||
-        strcmp(ext, ".COM") == 0 ||
-        strcmp(ext, ".BAT") == 0)
+    if (stricmp(ext, ".exe") == 0 ||
+        stricmp(ext, ".cmd") == 0 ||
+        stricmp(ext, ".com") == 0 ||
+        stricmp(ext, ".bat") == 0)
         *_retval = PR_TRUE;
 
     return NS_OK;

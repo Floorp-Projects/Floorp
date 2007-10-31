@@ -114,17 +114,22 @@ private:
       NS_RELEASE(mCallback.i);
     else if (mCallbackType == CALLBACK_TYPE_OBSERVER)
       NS_RELEASE(mCallback.o);
+    mCallbackType = CALLBACK_TYPE_UNKNOWN;
   }
 
   nsCOMPtr<nsIThread>   mCallingThread;
 
   void *                mClosure;
 
-  union {
+  union CallbackUnion {
     nsTimerCallbackFunc c;
     nsITimerCallback *  i;
     nsIObserver *       o;
   } mCallback;
+
+  // Some callers expect to be able to access the callback while the
+  // timer is firing.
+  nsCOMPtr<nsITimerCallback> mTimerCallbackWhileFiring;
 
   // These members are set by Init (called from NS_NewTimer) and never reset.
   PRUint8               mCallbackType;

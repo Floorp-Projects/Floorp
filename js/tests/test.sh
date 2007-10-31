@@ -70,7 +70,7 @@ source ${TEST_BIN}/library.sh
 #
 # options processing
 #
-options=":d:"
+options="d:"
 usage()
 {
     cat <<EOF

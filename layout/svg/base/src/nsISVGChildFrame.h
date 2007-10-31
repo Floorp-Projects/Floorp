@@ -76,7 +76,13 @@ public:
 
   NS_IMETHOD_(nsRect) GetCoveredRegion()=0;
   NS_IMETHOD UpdateCoveredRegion()=0;
+
+  // Called once on all SVG child frames, either when their nsSVGOuterSVGFrame
+  // receives its initial reflow (i.e. once the SVG viewport dimensions are
+  // known), or else when they're inserted into the frame tree (if they're
+  // inserted after the initial reflow).
   NS_IMETHOD InitialUpdate()=0;
+
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation)=0;
   NS_IMETHOD NotifyRedrawSuspended()=0;
   NS_IMETHOD NotifyRedrawUnsuspended()=0;

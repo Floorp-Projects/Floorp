@@ -49,14 +49,9 @@
         this._controller = new PlacesController(this);
         this.controllers.appendController(this._controller);
 
-        // Force an initial build. 
-        // but do it on setTimeout() for bugs #373719 and bug #373721
-        // caused by a change for bug #267833
-        // note the corresponding setTimeout() in PO_init()
-        if (this.place) {
-          var self = this;
-          setTimeout(function() { self.place = self.place; }, 0);
-        }
+        // Force an initial build.
+        if (this.place)
+          this.place = this.place;
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -83,11 +78,13 @@
           var resultview = this.getResultView();
           if (resultview)
             resultview.removeViewObserver(this._viewObserver);
+
           this.treeBoxObject.view = val;
           if (val) {
             val.QueryInterface(Ci.nsINavHistoryResultViewer)
                .addViewObserver(this._viewObserver, false);
           }
+          return val;
         ]]></setter>
       </property>
 
@@ -114,11 +111,11 @@
           if (optionsFilter)
             options = optionsFilter.filter(queryNode.getQueries({}), options, 
                                            optionsFilter.historyHandler);
-          
+
           var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
           query.onlyBookmarked = onlyBookmarks;
-          
+
           // Remove "group by folder" from the options list, because
           // nsNavHistory::RecursiveGroup doesn't support it.
           function isFolderGrouping(grouping, index, ary) {
@@ -156,7 +153,8 @@
           if (this.showRoot != val) {
             this.setAttribute("showRoot", val);
             // reload with the last place set
-            this.place = this.place;
+            if (this.place)
+              this.place = this.place;
           }
           return val;
         ]]></setter>
@@ -278,7 +276,7 @@
         <getter><![CDATA[
           return this.getAttribute("place");
         ]]></getter>
-        <setter><![CDATA[ 
+        <setter><![CDATA[
           this.setAttribute("place", val);
 
           var queriesRef = { };

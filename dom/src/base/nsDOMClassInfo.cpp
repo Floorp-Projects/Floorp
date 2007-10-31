@@ -6586,9 +6586,10 @@ nsNodeSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
   if ((id == sBaseURIObject_id || id == sNodePrincipal_id) &&
       IsPrivilegedScript()) {
-    // Is there a better error we could use here?  We don't want privileged
-    // script that can read these properties to set them, but _do_ want to
-    // allow everyone else to.
+    // We don't want privileged script that can read this property to set it,
+    // but _do_ want to allow everyone else to set a value they can then read.
+    //
+    // XXXbz Is there a better error we could use here?
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
@@ -6953,6 +6954,25 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
+  // We must ensure that the XBL Binding is installed before we hand
+  // back this object.
+
+  nsRefPtr<nsXBLBinding> binding;
+  if (content->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) &&
+      (binding = doc->BindingManager()->GetBinding(content))) {
+    // There's already a binding for this element, make sure that
+    // the script API has been installed.
+    // Note that this could end up recusing into code that calls
+    // WrapNative. So don't do anything important beyond this point
+    // as that will not be done to the wrapper returned from that
+    // WrapNative call.
+    // In theory we could also call ExecuteAttachedHandler here if
+    // we also removed the binding from the PAQ queue, but that seems
+    // like a scary change that would mosly just add more inconsistencies.
+
+    return binding->EnsureScriptAPI();
+  }
+
   // See if we have a frame.
   nsIPresShell *shell = doc->GetPrimaryShell();
 
@@ -6968,23 +6988,12 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  // We must ensure that the XBL Binding is installed before we hand
-  // back this object.
-
-  if (doc->BindingManager()->GetBinding(content)) {
-    // There's already a binding for this element so nothing left to
-    // be done here.
-
-    return NS_OK;
-  }
-
   // Get the computed -moz-binding directly from the style context
   nsPresContext *pctx = shell->GetPresContext();
   NS_ENSURE_TRUE(pctx, NS_ERROR_UNEXPECTED);
 
   // Make sure the style context goes away _before_ we execute the binding
   // constructor, since the constructor can destroy the relevant presshell.
-  nsRefPtr<nsXBLBinding> binding;
   {
     // Scope for the nsRefPtr
     nsRefPtr<nsStyleContext> sc = pctx->StyleSet()->ResolveStyleFor(content,
@@ -7009,6 +7018,16 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
   
   if (binding) {
+
+#ifdef DEBUG
+    PRBool safeToRunScript = PR_FALSE;
+    pctx->PresShell()->IsSafeToFlush(safeToRunScript);
+    NS_ASSERTION(safeToRunScript, "Wrapping when it's not safe to flush");
+#endif
+
+    rv = binding->EnsureScriptAPI();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     binding->ExecuteAttachedHandler();
   }
 
@@ -7484,9 +7503,10 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (id == sDocumentURIObject_id && IsPrivilegedScript()) {
-    // Is there a better error we could use here?  We don't want privileged
-    // script that can read this property to set it, but _do_ want to allow
-    // everyone else to.
+    // We don't want privileged script that can read this property to set it,
+    // but _do_ want to allow everyone else to set a value they can then read.
+    //
+    // XXXbz Is there a better error we could use here?
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
   

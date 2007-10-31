@@ -97,7 +97,7 @@ LoginTest.checkStorageData(storage, ["http://www.disabled.com"], []);
 
 /* ========== 7 ========== */
 testnum++;
-testdesc = "Initialize with signons-06.txt (1 disabled, 0 logins, extra '.')";
+testdesc = "Initialize with signons-04.txt (1 disabled, 0 logins, extra '.')";
 
 // Mozilla code should never have generated the extra ".", but it's possible
 // someone writing an external utility might have generated it, since it

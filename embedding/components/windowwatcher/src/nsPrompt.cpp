@@ -128,16 +128,19 @@ NS_NewAuthPrompter(nsIAuthPrompt **result, nsIDOMWindow *aParent)
 nsresult
 NS_NewAuthPrompter2(nsIAuthPrompt2 **result, nsIDOMWindow *aParent)
 {
+  nsresult rv;
+
   nsCOMPtr<nsIPromptFactory> factory =
     do_GetService(NS_PWMGR_AUTHPROMPTFACTORY);
   if (factory) {
     // We just delegate everything to the pw mgr.
-    return factory->GetPrompt(aParent,
+    rv = factory->GetPrompt(aParent,
                               NS_GET_IID(nsIAuthPrompt2),
                               reinterpret_cast<void**>(result));
+    if (NS_SUCCEEDED(rv))
+        return rv;
   }
 
-  nsresult rv;
   *result = 0;
 
   nsPrompt *prompter = new nsPrompt(aParent);

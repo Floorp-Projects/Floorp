@@ -672,6 +672,12 @@ nsresult UnsetExceptionHandler()
     delete crashReporterAPIData_Hash;
     crashReporterAPIData_Hash = nsnull;
   }
+
+  if (crashReporterAPIData) {
+    delete crashReporterAPIData;
+    crashReporterAPIData = nsnull;
+  }
+
   if (crashReporterPath) {
     NS_Free(crashReporterPath);
     crashReporterPath = nsnull;

@@ -1,7 +1,7 @@
 // Copyright 2007 Google Inc. All Rights Reserved.
 // Author: liuli@google.com (Liu Li)
-#ifndef COMMON_LINUX_MD5_H__
-#define COMMON_LINUX_MD5_H__
+#ifndef COMMON_MD5_H__
+#define COMMON_MD5_H__
 
 #include <stdint.h>
 
@@ -28,4 +28,4 @@ void MD5Final(unsigned char digest[16], struct MD5Context *ctx);
 }
 #endif
 
-#endif  // COMMON_LINUX_MD5_H__
+#endif  // COMMON_MD5_H__

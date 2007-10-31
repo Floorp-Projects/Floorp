@@ -59,6 +59,7 @@
 #include "prthread.h"
 #include "plhash.h"
 #include "nsPlaceholderFrame.h"
+#include "nsBlockFrame.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
@@ -1126,6 +1127,12 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           newContext->AddRef();
         }
       } else {
+        if (pseudoTag == nsCSSPseudoElements::firstLetter) {
+          NS_ASSERTION(aFrame->GetType() == nsGkAtoms::letterFrame, 
+                       "firstLetter pseudoTag without a nsFirstLetterFrame");
+          nsBlockFrame* block = nsBlockFrame::GetNearestAncestorBlock(aFrame);
+          pseudoContent = block->GetContent();
+        }       
         newContext = styleSet->ResolvePseudoStyleFor(pseudoContent,
                                                      pseudoTag,
                                                      parentContext).get();

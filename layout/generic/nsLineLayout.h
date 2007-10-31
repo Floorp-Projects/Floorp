@@ -143,10 +143,9 @@ protected:
 #define LL_LASTFLOATWASLETTERFRAME     0x00000080
 #define LL_CANPLACEFLOAT               0x00000100
 #define LL_LINEENDSINBR                0x00000200
-#define LL_HASTRAILINGTEXTFRAME        0x00000400
-#define LL_NEEDBACKUP                  0x00000800
-#define LL_INFIRSTLINE                 0x00002000
-#define LL_GOTLINEBOX                  0x00004000
+#define LL_NEEDBACKUP                  0x00000400
+#define LL_INFIRSTLINE                 0x00000800
+#define LL_GOTLINEBOX                  0x00001000
 #define LL_LASTFLAG                    LL_GOTLINEBOX
 
   PRUint16 mFlags;
@@ -203,17 +202,8 @@ public:
     return mBlockRS->AddFloat(*this, aFrame, PR_FALSE, aReflowStatus);
   }
 
-  /**
-   * If the last content placed on the line (not counting inline containers)
-   * was text, and can form a contiguous text flow with the next content to be
-   * placed, and is not just a frame of all-skipped whitespace, this flag is
-   * true.
-   */
-  PRBool HasTrailingTextFrame() const {
-    return GetFlag(LL_HASTRAILINGTEXTFRAME);
-  }
-  void SetHasTrailingTextFrame(PRBool aHasTrailingTextFrame) { 
-    SetFlag(LL_HASTRAILINGTEXTFRAME, aHasTrailingTextFrame);
+  void SetTrimmableWidth(nscoord aTrimmableWidth) {
+    mTrimmableWidth = aTrimmableWidth;
   }
 
   //----------------------------------------
@@ -377,6 +367,9 @@ protected:
   // Final computed line-height value after VerticalAlignFrames for
   // the block has been called.
   nscoord mFinalLineHeight;
+  
+  // Amount of trimmable whitespace width for the trailing text frame, if any
+  nscoord mTrimmableWidth;
 
   // Per-frame data recorded by the line-layout reflow logic. This
   // state is the state needed to post-process the line after reflow

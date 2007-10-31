@@ -356,13 +356,9 @@ input[type="file"] {
   border-style: none !important;
 }
 
-input[type="file"] > input[type="text"][disabled] {
+input[type="file"] > input[type="text"] {
   border-color: inherit;
   background-color: inherit;
-  -moz-user-focus: ignore !important;
-  /* enable user input so that clicking on the control can bring up the
-     file dialog. It's still read-only. */
-  -moz-user-input: enabled;
   color: inherit;
   font-size: inherit;
   height: inherit;

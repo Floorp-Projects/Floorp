@@ -1161,13 +1161,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     // Note: this code is duplicated in nsXULDocument::StartDocumentLoad and
     // nsScriptSecurityManager::GetChannelPrincipal.    
     // Note: this should match nsDocShell::OnLoadingSite
-    nsLoadFlags loadFlags = 0;
-    nsresult rv = aChannel->GetLoadFlags(&loadFlags);
-    if (NS_SUCCEEDED(rv) && (loadFlags & nsIChannel::LOAD_REPLACE)) {
-      aChannel->GetURI(getter_AddRefs(uri));
-    } else {
-      aChannel->GetOriginalURI(getter_AddRefs(uri));
-    }
+    NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
 
     nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();

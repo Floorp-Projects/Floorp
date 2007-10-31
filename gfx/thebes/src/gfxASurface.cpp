@@ -55,6 +55,7 @@
 #endif
 
 #include <stdio.h>
+#include <limits.h>
 
 static cairo_user_data_key_t gfxasurface_pointer_key;
 
@@ -280,6 +281,14 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
         NS_WARNING("Surface width or height < 0!");
         return PR_FALSE;
     }
+
+#if defined(XP_MACOSX)
+    // CoreGraphics is limited to images < 32K in *height*, so clamp all surfaces on the Mac to that height
+    if (sz.height > SHRT_MAX) {
+        NS_WARNING("Surface size too large (would overflow)!");
+        return PR_FALSE;
+    }
+#endif
 
     // check to make sure we don't overflow a 32-bit
     PRInt32 tmp = sz.width * sz.height;

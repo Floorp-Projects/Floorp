@@ -124,6 +124,10 @@ public:
   cmsHTRANSFORM mTransform;
 
   PRPackedBool mReading;
+
+private:
+
+  nsresult AddToTmpAccumulateBuffer(JOCTET *src, PRUint32 len);
 };
 
 #endif // nsJPEGDecoder_h__

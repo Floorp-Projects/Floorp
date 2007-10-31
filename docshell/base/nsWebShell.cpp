@@ -1195,6 +1195,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
              aStatus == NS_ERROR_NET_INTERRUPT ||
              aStatus == NS_ERROR_NET_RESET ||
              aStatus == NS_ERROR_MALWARE_URI ||
+             aStatus == NS_ERROR_PHISHING_URI ||
              NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
       DisplayLoadError(aStatus, url, nsnull, channel);
     }

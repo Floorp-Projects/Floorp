@@ -80,4 +80,5 @@ private:
   PRInt32      mTimeout; // -1 means display forever
   nsIntPoint   mOffset;
   PRInt32      mDisposalMethod;
+  PRInt8       mBlendMethod;
 };
