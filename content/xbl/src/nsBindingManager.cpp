@@ -404,7 +404,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBindingManager)
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(nsIDocument* aDocument)
   : mProcessingAttachedStack(PR_FALSE),
-    mProcessOnEndUpdate(PR_FALSE),
+    mAttachedStackSizeOnOutermost(0),
     mDocument(aDocument)
 {
   mContentListTable.ops = nsnull;
@@ -510,7 +510,12 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
         aContent->UnsetFlags(NODE_IS_INSERTION_PARENT);
       }
     }
-    mAttachedStack.RemoveElement(oldBinding);
+    // Don't remove items here as that could mess up an executing
+    // ProcessAttachedQueue
+    PRUint32 index = mAttachedStack.IndexOf(oldBinding);
+    if (index != mAttachedStack.NoIndex) {
+      mAttachedStack[index] = nsnull;
+    }
   }
   
   PRBool result = PR_TRUE;
@@ -923,30 +928,46 @@ nsBindingManager::DoProcessAttachedQueue()
 }
 
 void
-nsBindingManager::ProcessAttachedQueue()
+nsBindingManager::ProcessAttachedQueue(PRUint32 aSkipSize)
 {
-  if (mProcessingAttachedStack || mAttachedStack.Length() == 0)
+  if (mProcessingAttachedStack || mAttachedStack.Length() <= aSkipSize)
     return;
 
   mProcessingAttachedStack = PR_TRUE;
 
-  PRInt32 lastItem;
-  while ((lastItem = mAttachedStack.Length() - 1) >= 0) {
-    nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(lastItem);
-    mAttachedStack.RemoveElementAt(lastItem);
-
-    NS_ASSERTION(binding, "null item in attached stack?");
-    nsresult rv = binding->EnsureScriptAPI();
-    if (NS_FAILED(rv)) {
-      return;
+  PRUint32 currentIndex = aSkipSize;
+  while (mAttachedStack.Length() > aSkipSize) {
+    // First install all implementations. Do this from low index to high
+    // since that way we'll automatically get any new bindings added in the
+    // process.
+    for (; currentIndex < mAttachedStack.Length(); ++currentIndex) {
+      nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(currentIndex);
+      if (binding) {
+        nsresult rv = binding->EnsureScriptAPI();
+        if (NS_FAILED(rv)) {
+          mAttachedStack[currentIndex] = nsnull;
+        }
+      }
     }
 
-    binding->ExecuteAttachedHandler();
+    // Then excute constructors. Do this from high index to low
+    while (currentIndex > aSkipSize && currentIndex == mAttachedStack.Length()) {
+      --currentIndex;
+      nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(currentIndex);
+      mAttachedStack.RemoveElementAt(currentIndex);
+      if (binding) {
+        binding->ExecuteAttachedHandler();
+      }
+    }
   }
 
-  mProcessingAttachedStack = PR_FALSE;
+  // If NodeWillBeDestroyed has run we don't want to clobber
+  // mProcessingAttachedStack set there.
+  if (mDocument) {
+    mProcessingAttachedStack = PR_FALSE;
+  }
 
-  NS_ASSERTION(mAttachedStack.Length() == 0, "How did we get here?");
+  NS_ASSERTION(mAttachedStack.Length() == aSkipSize, "How did we get here?");
   
   mAttachedStack.Compact();
 }
@@ -1534,14 +1555,24 @@ nsBindingManager::Traverse(nsIContent *aContent,
 void
 nsBindingManager::BeginOutermostUpdate()
 {
-  mProcessOnEndUpdate = (mAttachedStack.Length() == 0);
+  mAttachedStackSizeOnOutermost = mAttachedStack.Length();
 }
 
 void
 nsBindingManager::EndOutermostUpdate()
 {
-  if (mProcessOnEndUpdate) {
-    mProcessOnEndUpdate = PR_FALSE;
-    ProcessAttachedQueue();
+  if (!mProcessingAttachedStack) {
+    ProcessAttachedQueue(mAttachedStackSizeOnOutermost);
+    mAttachedStackSizeOnOutermost = 0;
+  }
+  else {
+    PRUint32 i = mAttachedStackSizeOnOutermost;
+    for (; i < mAttachedStack.Length(); ++i) {
+      nsRefPtr<nsXBLBinding> binding = mAttachedStack[i];
+      nsresult rv = binding->EnsureScriptAPI();
+      if (NS_FAILED(rv)) {
+        mAttachedStack[i] = nsnull;
+      }
+    }
   }
 }

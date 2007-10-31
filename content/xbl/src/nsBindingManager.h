@@ -162,7 +162,7 @@ public:
                                nsIPrincipal* aOriginPrincipal);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
-  void ProcessAttachedQueue();
+  void ProcessAttachedQueue(PRUint32 aSkipSize = 0);
 
   void ExecuteDetachedHandlers();
 
@@ -287,7 +287,7 @@ protected:
   // A queue of binding attached event handlers that are awaiting execution.
   nsBindingList mAttachedStack;
   PRPackedBool mProcessingAttachedStack;
-  PRPackedBool mProcessOnEndUpdate;
+  PRUint32 mAttachedStackSizeOnOutermost;
 
   // Our posted event to process the attached queue, if any
   friend class nsRunnableMethod<nsBindingManager>;
