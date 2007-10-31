@@ -5252,10 +5252,10 @@ nsGlobalWindow::IsInModalState()
                                 (top.get()))->mModalStateDepth != 0;
 }
 
-#ifdef OJI
 void
 nsGlobalWindow::InitJavaProperties()
 {
+#ifdef OJI
   nsIScriptContext *scx = GetContextInternal();
 
   if (mDidInitJavaProperties || IsOuterWindow() || !scx || !mJSObject) {
@@ -5325,8 +5325,8 @@ nsGlobalWindow::InitJavaProperties()
 
     manager->InitLiveConnectClasses(cx, mJSObject);
   }
-}
 #endif
+}
 
 NS_IMETHODIMP
 nsGlobalWindow::GetFrameElement(nsIDOMElement** aFrameElement)
