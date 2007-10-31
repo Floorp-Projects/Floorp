@@ -313,8 +313,11 @@
           }
 
           var iconURI = aNode.icon;
-          if (iconURI && menuitem.getAttribute("image") != iconURI.spec)
-            menuitem.setAttribute("image", iconURI.spec);
+          if (iconURI) {
+            var spec = iconURI.spec;
+            if (menuitem.getAttribute("image") != spec)
+              menuitem.setAttribute("image", spec);
+          }
           else
             menuitem.removeAttribute("image");
 
