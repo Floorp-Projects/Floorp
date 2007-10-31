@@ -635,13 +635,11 @@ nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
 // nsNavHistoryExpire::ExpireHistoryParanoid
 //
 //    Deletes any dangling history entries that aren't associated with any
-//    visits or bookmarks. Also, special case "place:" URIs.
+//    visits, bookmarks, EXPIRE_NEVER annotations or "place:" URIs.
 
 nsresult
 nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection)
 {
-  // delete history entries with no visits that are not bookmarked
-  // also never delete any "place:" URIs (see function header comment)
   nsresult rv = aConnection->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("DELETE FROM moz_places "
       "WHERE id IN (SELECT h.id FROM moz_places h "
@@ -650,9 +648,9 @@ nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection)
       "LEFT OUTER JOIN moz_annos a ON h.id = a.place_id "
       "WHERE v.id IS NULL "
       "AND b.id IS NULL "
-      "AND a.expiration = ") +
+      "AND (a.expiration != ") +
       nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-      NS_LITERAL_CSTRING(" AND a.id IS NULL "
+      NS_LITERAL_CSTRING(" OR a.id IS NULL) "
       "AND SUBSTR(h.url,0,6) <> 'place:')"));
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
