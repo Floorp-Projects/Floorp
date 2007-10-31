@@ -3766,8 +3766,8 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, PRUint32 argc, jsval *argv,
     for (PRUint32 i = 0; i < argc; ++i)
       mArgv[i] = argv[i];
   }
-  if (argc > 0)
-    *prv = NS_HOLD_JS_OBJECTS(this, nsJSArgArray);
+
+  *prv = argc > 0 ? NS_HOLD_JS_OBJECTS(this, nsJSArgArray) : NS_OK;
 }
 
 nsJSArgArray::~nsJSArgArray()
