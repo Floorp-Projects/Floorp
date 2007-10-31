@@ -108,7 +108,6 @@
 #include "nsDisplayList.h"
 #include "nsAttrName.h"
 #include "nsDataHashtable.h"
-#include "nsGlobalWindow.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -1404,21 +1403,6 @@ nsObjectFrame::PrepareInstanceOwner()
 
   NS_ADDREF(mInstanceOwner);
   mInstanceOwner->Init(PresContext(), this, GetContent());
-
-#ifdef OJI
-  if (mContent->Tag() == nsGkAtoms::applet) {
-    nsGlobalWindow *win =
-      (nsGlobalWindow *)mContent->GetOwnerDoc()->GetScriptGlobalObject();
-
-    if (win) {
-      // Initialize Java properties on the window object to make sure
-      // LiveConnect gets initialized if needed. This can be removed
-      // for Mozilla2 once there is no more LiveConnect.
-
-      win->InitJavaProperties();
-    }
-  }
-#endif
 
   return NS_OK;
 }
