@@ -3890,7 +3890,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    
 			    tl = x1_out|y1_out ? 0 : fetch((pixman_image_t *)pict, b, x_off, indexed);
 			    tr = x2_out|y1_out ? 0 : fetch((pixman_image_t *)pict, b, x_off + 1, indexed);
-			    b += stride;
+			    b  =  bits + (y2)*stride;
 			    bl = x1_out|y2_out ? 0 : fetch((pixman_image_t *)pict, b, x_off, indexed);
 			    br = x2_out|y2_out ? 0 : fetch((pixman_image_t *)pict, b, x_off + 1, indexed);
 			    
@@ -3953,7 +3953,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				? fetch((pixman_image_t *)pict, b, x_off, indexed) : 0;
 			    tr = pixman_region_contains_point(pict->common.src_clip, x2, y1, &box)
 				? fetch((pixman_image_t *)pict, b, x_off + 1, indexed) : 0;
-			    b += stride;
+			    b  =  bits + (y2)*stride;
 			    bl = pixman_region_contains_point(pict->common.src_clip, x1, y2, &box)
 				? fetch((pixman_image_t *)pict, b, x_off, indexed) : 0;
 			    br = pixman_region_contains_point(pict->common.src_clip, x2, y2, &box)
