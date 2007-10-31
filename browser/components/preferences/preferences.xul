@@ -85,7 +85,7 @@
             style="&prefWin.styleWin;">
 #else
 #ifdef XP_MACOSX
-            style="&prefWindow.styleMac;">
+            style="&prefWin.styleMac;">
 #else
             style="&prefWin.styleGNOME;">
 #endif

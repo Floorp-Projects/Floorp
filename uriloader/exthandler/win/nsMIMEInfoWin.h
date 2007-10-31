@@ -39,6 +39,8 @@
 
 #include "nsMIMEInfoImpl.h"
 #include "nsIPropertyBag.h"
+#include "nsIMutableArray.h"
+#include "nsTArray.h"
 
 class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
   public:
@@ -48,7 +50,9 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
       nsMIMEInfoBase(aType, aClass) {}
     virtual ~nsMIMEInfoWin();
 
+    NS_IMETHOD LaunchWithFile(nsIFile* aFile);
     NS_IMETHOD GetHasDefaultHandler(PRBool * _retval);
+    NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval); 
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPROPERTYBAG
@@ -61,9 +65,38 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
   protected:
     virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
     virtual nsresult LaunchDefaultWithFile(nsIFile* aFile);
-  
+
   private:
     nsCOMPtr<nsIFile>      mDefaultApplication;
+    
+    // Given a path to a local handler, return its 
+    // nsILocalHandlerApp instance.
+    PRBool GetLocalHandlerApp(const nsAString& aCommandHandler,
+                              nsCOMPtr<nsILocalHandlerApp>& aApp);
+
+    // Return the cleaned up file path associated 
+    // with a command verb located in root/Applications.
+    PRBool GetAppsVerbCommandHandler(const nsAString& appExeName,
+                                     nsAString& applicationPath,
+                                     PRBool bEdit);
+
+    // Return the cleaned up file path associated 
+    // with a progid command verb located in root.
+    PRBool GetProgIDVerbCommandHandler(const nsAString& appProgIDName,
+                                       nsAString& applicationPath,
+                                       PRBool bEdit);
+
+    // Lookup a rundll command handler and return
+    // a populated command template for use with rundll32.exe.
+    PRBool GetDllLaunchInfo(nsIFile * aDll,
+                            nsILocalFile * aFile,
+                            nsAString& args, PRBool bEdit);
+
+    // Helper routine used in tracking app lists
+    void ProcessPath(nsCOMPtr<nsIMutableArray>& appList,
+                     nsTArray<nsCAutoString>& trackList,
+                     const nsAString& appFilesystemCommand);
+
 };
 
 #endif

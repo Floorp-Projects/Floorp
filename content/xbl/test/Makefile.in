@@ -48,11 +48,15 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	\
 		test_bug296375.xul \
+		test_bug310107.html \
 		test_bug366770.html \
 		test_bug371724.xhtml \
 		test_bug372769.xhtml \
 		test_bug378866.xhtml \
 		test_bug397934.xhtml \
+		test_bug398135.xhtml \
+		test_bug400705.xhtml \
+		bug310107-resource.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

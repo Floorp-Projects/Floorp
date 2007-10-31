@@ -50,22 +50,7 @@
 
 #include <signal.h>
 
-#include <gtk/gtkhbbox.h>
-#include <gtk/gtkcheckbutton.h>
-#include <gtk/gtkcontainer.h>
-#include <gtk/gtkdialog.h>
-#include <gtk/gtkentry.h>
-#include <gtk/gtkexpander.h>
-#include <gtk/gtkhbox.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkmain.h>
-#include <gtk/gtkmessagedialog.h>
-#include <gtk/gtkscrolledwindow.h>
-#include <gtk/gtktextview.h>
-#include <gtk/gtktextbuffer.h>
-#include <gtk/gtktogglebutton.h>
-#include <gtk/gtkvbox.h>
-#include <gtk/gtkwindow.h>
+#include <gtk/gtk.h>
 
 #include "common/linux/http_upload.h"
 

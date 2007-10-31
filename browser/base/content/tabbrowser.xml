@@ -1699,22 +1699,26 @@
         <body>
           <![CDATA[
             var tabStrip = this.mTabContainer.mTabstrip;
+            var ltr = (window.getComputedStyle(this.parentNode, null).direction
+                       == "ltr");
 
             // autoscroll the tab strip if we drag over the scroll
             // buttons, even if we aren't dragging a tab, but then
             // return to avoid drawing the drop indicator
             var pixelsToScroll = 0;
-
-            var targetAnonid = aEvent.originalTarget.getAttribute("anonid");
-            if (targetAnonid == "scrollbutton-up") {
-              pixelsToScroll = tabStrip.scrollIncrement * -1;
-              tabStrip.scrollByPixels(pixelsToScroll);
-            }
-            else if (targetAnonid == "scrollbutton-down" || 
-                     (targetAnonid == "alltabs-button" && 
-                      this.mTabContainer.getAttribute("overflow") == "true")) {
-              pixelsToScroll = tabStrip.scrollIncrement;
-              tabStrip.scrollByPixels(pixelsToScroll);
+            if (this.mTabContainer.getAttribute("overflow") == "true") {
+              var targetAnonid = aEvent.originalTarget.getAttribute("anonid");
+              switch (targetAnonid) {
+                case "scrollbutton-up":
+                  pixelsToScroll = tabStrip.scrollIncrement * -1;
+                  break;
+                case "scrollbutton-down":
+                case "alltabs-button":
+                  pixelsToScroll = tabStrip.scrollIncrement;
+                  break;
+              }
+              if (pixelsToScroll)
+                tabStrip.scrollByPixels((ltr ? 1 : -1) * pixelsToScroll);
             }
 
             var isTabDrag = (aDragSession.sourceNode && 
@@ -1742,9 +1746,10 @@
             var maxMargin = Math.min(minMargin + tabStripBoxObject.width, 
                                      ib.boxObject.x + ib.boxObject.width -
                                      ind.boxObject.width);
+            if (!ltr)
+              [minMargin, maxMargin] = [this.boxObject.width - maxMargin,
+                                        this.boxObject.width - minMargin];
             var newMargin, tabBoxObject;
-            var ltr = (window.getComputedStyle(this.parentNode, null).direction
-                       == "ltr");
             if (pixelsToScroll) {
               // if we are scrolling, put the drop indicator at the edge
               // so that it doesn't jump while scrolling
@@ -1775,10 +1780,7 @@
                 newMargin = maxMargin;
             }
 
-            if (ltr)
-              ind.style.marginLeft = newMargin + 'px';
-            else
-              ind.style.marginRight = newMargin + 'px';
+            ind.style.MozMarginStart = newMargin + 'px';
 
             ib.collapsed = !aDragSession.canDrop;
           ]]>

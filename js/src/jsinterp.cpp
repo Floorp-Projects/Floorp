@@ -69,6 +69,10 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#ifdef INCLUDE_MOZILLA_DTRACE
+#include "jsdtracef.h"
+#endif
+
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
@@ -1533,6 +1537,11 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSObject *obj, *tmp;
     JSBool ok;
 
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_EXECUTE_START_ENABLED())
+        jsdtrace_execute_start(script);
+#endif
+
     hook = cx->debugHooks->executeHook;
     hookData = mark = NULL;
     oldfp = cx->fp;
@@ -1569,8 +1578,10 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
             frame.nvars += JS_SCRIPT_REGEXPS(script)->length;
         if (frame.nvars != 0) {
             frame.vars = js_AllocRawStack(cx, frame.nvars, &mark);
-            if (!frame.vars)
-                return JS_FALSE;
+            if (!frame.vars) {
+                ok = JS_FALSE;
+                goto out;
+            }
             memset(frame.vars, 0, frame.nvars * sizeof(jsval));
         } else {
             frame.vars = NULL;
@@ -1637,6 +1648,11 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         oldfp->dormantNext = NULL;
     }
 
+out:
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
+        jsdtrace_execute_done(script);
+#endif
     return ok;
 }
 
@@ -2613,6 +2629,14 @@ interrupt:
                     SAVE_SP_AND_PC(fp);
                     ok &= js_PutArgsObject(cx, fp);
                 }
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+                /* DTrace function return, inlines */
+                if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
+                    jsdtrace_function_rval(cx, fp, fp->fun);
+                if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
+                    jsdtrace_function_return(cx, fp, fp->fun);
+#endif
 
                 /* Restore context version only if callee hasn't set version. */
                 if (JS_LIKELY(cx->version == currentVersion)) {
@@ -4038,6 +4062,16 @@ interrupt:
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
 
+#ifdef INCLUDE_MOZILLA_DTRACE
+                    /* DTrace function entry, inlines */
+                    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
+                        jsdtrace_function_entry(cx, fp, fun);
+                    if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
+                        jsdtrace_function_info(cx, fp, fp->down, fun);
+                    if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
+                        jsdtrace_function_args(cx, fp, fun);
+#endif
+
                     /* Load first op and dispatch it (safe since JSOP_STOP). */
                     op = (JSOp) *pc;
                     DO_OP();
@@ -4052,6 +4086,18 @@ interrupt:
                     ok = JS_FALSE;
                     goto out;
                 }
+
+#ifdef INCLUDE_MOZILLA_DTRACE
+                /* DTrace function entry, non-inlines */
+                if (VALUE_IS_FUNCTION(cx, lval)) {
+                    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
+                        jsdtrace_function_entry(cx, fp, fun);
+                    if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
+                        jsdtrace_function_info(cx, fp, fp, fun);
+                    if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
+                        jsdtrace_function_args(cx, fp, fun);
+                }
+#endif
 
                 if (fun->flags & JSFUN_FAST_NATIVE) {
                     JS_ASSERT(fun->u.n.extra == 0);
@@ -4080,6 +4126,14 @@ interrupt:
                               PRIMITIVE_THIS_TEST(fun, vp[1]));
 
                     ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
+#ifdef INCLUDE_MOZILLA_DTRACE
+                    if (VALUE_IS_FUNCTION(cx, lval)) {
+                        if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
+                            jsdtrace_function_rval(cx, fp, fun);
+                        if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
+                            jsdtrace_function_return(cx, fp, fun);
+                    }
+#endif
                     if (!ok)
                         goto out;
                     sp = vp + 1;
@@ -4090,6 +4144,15 @@ interrupt:
 
           do_invoke:
             ok = js_Invoke(cx, argc, vp, 0);
+#ifdef INCLUDE_MOZILLA_DTRACE
+            /* DTrace function return, non-inlines */
+            if (VALUE_IS_FUNCTION(cx, lval)) {
+                if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
+                    jsdtrace_function_rval(cx, fp, fun);
+                if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
+                    jsdtrace_function_return(cx, fp, fun);
+            }
+#endif
             sp = vp + 1;
             vp[-depth] = (jsval)pc;
             LOAD_INTERRUPT_HANDLER(cx);

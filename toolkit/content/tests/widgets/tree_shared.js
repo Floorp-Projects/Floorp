@@ -125,9 +125,9 @@ function testtag_tree_columns(tree, expectedColumns, testid)
     if (expectedColumn.key)
       key = column;
 
-    // XXXndeakin on Windows and Linux, the last column is one pixel to the
-    // left of where is should be. Could just be a rounding issue.
-    var adj = (c == expectedColumns.length - 1) ? 1 : 0;
+    // XXXndeakin on Windows and Linux, some columns are one pixel to the
+    // left of where they should be. Could just be a rounding issue.
+    var adj = 1;
     is(column.x + adj >= x, true, adjtestid + "position is after last column " +
        column.x + "," + column.width + "," + x);
     is(column.width > 0, true, adjtestid + "width is greater than 0");

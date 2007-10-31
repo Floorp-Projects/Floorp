@@ -1030,39 +1030,48 @@ PlacesController.prototype = {
    *          elsewhere.
    */
   getTransferData: function PC_getTransferData(dragAction) {
-    var nodes = null;
-    if (dragAction == Ci.nsIDragService.DRAGDROP_ACTION_COPY)
-      nodes = this._view.getCopyableSelection();
-    else
-      nodes = this._view.getDragableSelection();
-    var dataSet = new TransferDataSet();
-    for (var i = 0; i < nodes.length; ++i) {
-      var node = nodes[i];
+    var result = this._view.getResult();
+    var oldViewer = result.viewer;
+    try {
+      result.viewer = null;
+      var nodes = null;
+      if (dragAction == Ci.nsIDragService.DRAGDROP_ACTION_COPY)
+        nodes = this._view.getCopyableSelection();
+      else
+        nodes = this._view.getDragableSelection();
+      var dataSet = new TransferDataSet();
+      for (var i = 0; i < nodes.length; ++i) {
+        var node = nodes[i];
 
-      var data = new TransferData();
-      function addData(type, overrideURI) {
-        data.addDataForFlavour(type, PlacesUtils._wrapString(
-                               PlacesUtils.wrapNode(node, type, overrideURI)));
+        var data = new TransferData();
+        function addData(type, overrideURI) {
+          data.addDataForFlavour(type, PlacesUtils._wrapString(
+                                 PlacesUtils.wrapNode(node, type, overrideURI)));
+        }
+
+        function addURIData(overrideURI) {
+          addData(PlacesUtils.TYPE_X_MOZ_URL, overrideURI);
+          addData(PlacesUtils.TYPE_UNICODE, overrideURI);
+          addData(PlacesUtils.TYPE_HTML, overrideURI);
+        }
+
+        // This order is _important_! It controls how this and other 
+        // applications select data to be inserted based on type.
+        addData(PlacesUtils.TYPE_X_MOZ_PLACE);
+      
+        var uri;
+      
+        // Allow dropping the feed uri of live-bookmark folders
+        if (PlacesUtils.nodeIsLivemarkContainer(node))
+          uri = PlacesUtils.livemarks.getFeedURI(node.itemId).spec;
+      
+        addURIData(uri);
+        dataSet.push(data);
       }
-
-      function addURIData(overrideURI) {
-        addData(PlacesUtils.TYPE_X_MOZ_URL, overrideURI);
-        addData(PlacesUtils.TYPE_UNICODE, overrideURI);
-        addData(PlacesUtils.TYPE_HTML, overrideURI);
-      }
-
-      // This order is _important_! It controls how this and other 
-      // applications select data to be inserted based on type.
-      addData(PlacesUtils.TYPE_X_MOZ_PLACE);
-      
-      var uri;
-      
-      // Allow dropping the feed uri of live-bookmark folders
-      if (PlacesUtils.nodeIsLivemarkContainer(node))
-        uri = PlacesUtils.livemarks.getFeedURI(node.itemId).spec;
-      
-      addURIData(uri);
-      dataSet.push(data);
+    }
+    finally {
+      if (oldViewer)
+        result.viewer = oldViewer;
     }
     return dataSet;
   },
@@ -1071,63 +1080,69 @@ PlacesController.prototype = {
    * Copy Bookmarks and Folders to the clipboard
    */
   copy: function PC_copy() {
-    var nodes = this._view.getCopyableSelection();
+    var result = this._view.getResult();
+    var oldViewer = result.viewer;
+    try {
+      result.viewer = null;
+      var nodes = this._view.getCopyableSelection();
 
-    var xferable = 
-        Cc["@mozilla.org/widget/transferable;1"].
-        createInstance(Ci.nsITransferable);
-    var foundFolder = false, foundLink = false;
-    var copiedFolders = [];
-    var placeString = mozURLString = htmlString = unicodeString = "";
+      var xferable =  Cc["@mozilla.org/widget/transferable;1"].
+                      createInstance(Ci.nsITransferable);
+      var foundFolder = false, foundLink = false;
+      var copiedFolders = [];
+      var placeString = mozURLString = htmlString = unicodeString = "";
     
-    for (var i = 0; i < nodes.length; ++i) {
-      var node = nodes[i];
-      if (this._shouldSkipNode(node, copiedFolders))
-        continue;
-      if (PlacesUtils.nodeIsFolder(node))
-        copiedFolders.push(node);
+      for (var i = 0; i < nodes.length; ++i) {
+        var node = nodes[i];
+        if (this._shouldSkipNode(node, copiedFolders))
+          continue;
+        if (PlacesUtils.nodeIsFolder(node))
+          copiedFolders.push(node);
         
-      function generateChunk(type, overrideURI) {
-        var suffix = i < (nodes.length - 1) ? NEWLINE : "";
-        var uri = overrideURI;
+        function generateChunk(type, overrideURI) {
+          var suffix = i < (nodes.length - 1) ? NEWLINE : "";
+          var uri = overrideURI;
         
-        if (PlacesUtils.nodeIsLivemarkContainer(node))
-          uri = PlacesUtils.livemarks.getFeedURI(node.itemId).spec
-          
-        mozURLString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_X_MOZ_URL,
-                                               uri) + suffix);
-        unicodeString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_UNICODE,
-                                               uri) + suffix);
-        htmlString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_HTML,
-                                               uri) + suffix);
+          if (PlacesUtils.nodeIsLivemarkContainer(node))
+            uri = PlacesUtils.livemarks.getFeedURI(node.itemId).spec
+
+          mozURLString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_X_MOZ_URL,
+                                                 uri) + suffix);
+          unicodeString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_UNICODE,
+                                                 uri) + suffix);
+          htmlString += (PlacesUtils.wrapNode(node, PlacesUtils.TYPE_HTML,
+                                                 uri) + suffix);
         
-        var placeSuffix = i < (nodes.length - 1) ? "," : "";
-        return PlacesUtils.wrapNode(node, type, overrideURI) + placeSuffix;
+          var placeSuffix = i < (nodes.length - 1) ? "," : "";
+          return PlacesUtils.wrapNode(node, type, overrideURI) + placeSuffix;
+        }
+
+        // all items wrapped as TYPE_X_MOZ_PLACE
+        placeString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE);
       }
 
-      // all items wrapped as TYPE_X_MOZ_PLACE
-      placeString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE);
-    }
+      function addData(type, data) {
+        xferable.addDataFlavor(type);
+        xferable.setTransferData(type, PlacesUtils._wrapString(data), data.length * 2);
+      }
+      // This order is _important_! It controls how this and other applications 
+      // select data to be inserted based on type.
+      if (placeString)
+        addData(PlacesUtils.TYPE_X_MOZ_PLACE, placeString);
+      if (mozURLString)
+        addData(PlacesUtils.TYPE_X_MOZ_URL, mozURLString);
+      if (unicodeString)
+        addData(PlacesUtils.TYPE_UNICODE, unicodeString);
+      if (htmlString)
+        addData(PlacesUtils.TYPE_HTML, htmlString);
 
-    function addData(type, data) {
-      xferable.addDataFlavor(type);
-      xferable.setTransferData(type, PlacesUtils._wrapString(data), data.length * 2);
+      if (placeString || unicodeString || htmlString || mozURLString) {
+        PlacesUtils.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
+      }
     }
-    // This order is _important_! It controls how this and other applications 
-    // select data to be inserted based on type.
-    if (placeString)
-      addData(PlacesUtils.TYPE_X_MOZ_PLACE, placeString);
-    if (mozURLString)
-      addData(PlacesUtils.TYPE_X_MOZ_URL, mozURLString);
-    if (unicodeString)
-      addData(PlacesUtils.TYPE_UNICODE, unicodeString);
-    if (htmlString)
-      addData(PlacesUtils.TYPE_HTML, htmlString);
-
-    if (placeString || unicodeString || htmlString || mozURLString) {
-      var clipboard = 
-          Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-      clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
+    finally {
+      if (oldViewer)
+        result.viewer = oldViewer;
     }
   },
 
@@ -1166,8 +1181,7 @@ PlacesController.prototype = {
       return xferable;
     }
 
-    var clipboard = Cc["@mozilla.org/widget/clipboard;1"].
-                    getService(Ci.nsIClipboard);
+    var clipboard = PlacesUtils.clipboard;
 
     var ip = this._view.insertionPoint;
     if (!ip)
@@ -1221,6 +1235,285 @@ PlacesController.prototype = {
   }
 };
 
+function PlacesMenuDNDObserver(aView, aPopup) {
+  this._view = aView;
+  this._popup = aPopup;
+  this._popup.addEventListener("draggesture", this, false);
+  this._popup.addEventListener("dragover", this, false);
+  this._popup.addEventListener("dragdrop", this, false);
+  this._popup.addEventListener("dragexit", this, false);
+}
+
+/**
+ * XXXmano-please-rewrite-me: This code was ported over from menu.xul in bug 399729.
+ * Unsurprisngly it's still mostly broken due to bug 337761, thus I didn't bother
+ * trying to cleaning up this extremely buggy  over-folder detection code yet.
+ */
+PlacesMenuDNDObserver.prototype = {
+  _view: null,
+  _popup: null,
+
+  // Sub-menus should be opened when the mouse drags over them, and closed
+  // when the mouse drags off.  The overFolder object manages opening and closing
+  // of folders when the mouse hovers.
+  _overFolder: {node: null, openTimer: null, hoverTime: 350, closeTimer: null},
+
+  // If this menu's parent auto-opened it because it was dragged over, but didn't
+  // close it because the mouse dragged into it, the menu should close itself
+  // onDragExit.  This timer is set in dragExit to close the menu.
+  _closeMenuTimer: null,
+
+  _setTimer: function TBV_DO_setTimer(time) {
+    var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(this, time, timer.TYPE_ONE_SHOT);
+    return timer;
+  },
+
+  // Function to process all timer notifications.
+  notify: function TBV_DO_notify(timer) {
+    // Timer to open a submenu that's being dragged over.
+    if (timer == this._overFolder.openTimer) {
+      this._overFolder.node.lastChild.setAttribute("autoopened", "true");
+      this._overFolder.node.lastChild.showPopup(this._overFolder.node);
+      this._overFolder.openTimer = null;
+    }
+
+    // Timer to close a submenu that's been dragged off of.
+    if (timer == this._overFolder.closeTimer) {
+      // Only close the submenu if the mouse isn't being dragged over any
+      // of its child menus.
+      var draggingOverChild =
+        PlacesControllerDragHelper.draggingOverChildNode(this._overFolder.node);
+      if (draggingOverChild)
+        this._overFolder.node = null;
+      this._clearOverFolder();
+
+      // Close any parent folders which aren't being dragged over.
+      // (This is necessary because of the above code that keeps a folder
+      // open while its children are being dragged over.)
+      if (!draggingOverChild)
+        this._closeParentMenus();
+    }
+
+    // Timer to close this menu after the drag exit.
+    if (timer == this._closeMenuTimer) {
+      if (!PlacesControllerDragHelper.draggingOverChildNode(this._popup)) {
+        this._popup.hidePopup();
+        // Close any parent menus that aren't being dragged over;
+        // otherwise they'll stay open because they couldn't close
+        // while this menu was being dragged over.
+        this._closeParentMenus();
+      }
+    }
+  },
+
+  // Helper function to close all parent menus of this menu,
+  // as long as none of the parent's children are currently being
+  // dragged over.
+  _closeParentMenus: function TBV_DO_closeParentMenus() {
+    var parent = this._popup.parentNode;
+    while (parent) {
+      if (parent.nodeName == "menupopup" && parent._resultNode) {
+        if (PlacesControllerDragHelper.draggingOverChildNode(parent.parentNode))
+          break;
+        parent.hidePopup();
+      }
+      parent = parent.parentNode;
+    }
+  },
+
+  // The mouse is no longer dragging over the stored menubutton.
+  // Close the menubutton, clear out drag styles, and clear all
+  // timers for opening/closing it.
+  _clearOverFolder: function TBV_DO_clearOverFolder() {
+    if (this._overFolder.node && this._overFolder.node.lastChild) {
+      if (!this._overFolder.node.lastChild.hasAttribute("dragover"))
+        this._overFolder.node.lastChild.hidePopup();
+      this._overFolder.node = null;
+    }
+    if (this._overFolder.openTimer) {
+      this._overFolder.openTimer.cancel();
+      this._overFolder.openTimer = null;
+    }
+    if (this._overFolder.closeTimer) {
+      this._overFolder.closeTimer.cancel();
+      this._overFolder.closeTimer = null;
+    }
+  },
+
+  // This function returns information about where to drop when
+  // dragging over this menu--insertion point, child index to drop
+  // before, and folder to drop into.
+  _getDropPoint: function TBV_DO_getDropPoint(event) {
+    // Can't drop if the menu isn't a folder
+    var resultNode = this._popup._resultNode;
+    if (!PlacesUtils.nodeIsFolder(resultNode))
+      return null;
+
+    var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
+    // Loop through all the nodes to see which one this should
+    // get dropped in/above/below.
+    var start = 0;
+    var end = this._popup.childNodes.length;
+    if (this._popup == this._view && this._view.localName == "menupopup") {
+      // Ignore static content at the top and bottom of the menu.
+      start = this._view._startMarker + 1;
+      if (this._view._endMarker != -1)
+        end = this._view._endMarker;
+    }
+
+    for (var i = start; i < end; i++) {
+      var xulNode = this._popup.childNodes[i];
+      var nodeY = xulNode.boxObject.y - this._popup.boxObject.y;
+      var nodeHeight = xulNode.boxObject.height;
+      if (xulNode.node &&
+          PlacesUtils.nodeIsFolder(xulNode.node) &&
+          !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
+        // This is a folder. If the mouse is in the top 25% of the
+        // node, drop above the folder.  If it's in the middle
+        // 50%, drop into the folder.  If it's past that, drop below.
+        if (event.clientY < nodeY + (nodeHeight * 0.25)) {
+          // Drop above this folder.
+          dropPoint.ip = new InsertionPoint(resultNode.itemId, i - start,
+                                            -1);
+          dropPoint.beforeIndex = i;
+          return dropPoint;
+        }
+        else if (event.clientY < nodeY + (nodeHeight * 0.75)) {
+          // Drop inside this folder.
+          dropPoint.ip = new InsertionPoint(xulNode.node.itemId, -1, 1);
+          dropPoint.beforeIndex = i;
+          dropPoint.folderNode = xulNode;
+          return dropPoint;
+        }
+      } else {
+        // This is a non-folder node. If the mouse is above the middle,
+        // drop above the folder.  Otherwise, drop below.
+        if (event.clientY < nodeY + (nodeHeight / 2)) {
+          // Drop above this bookmark.
+          dropPoint.ip = new InsertionPoint(resultNode.itemId, i - start, -1);
+          dropPoint.beforeIndex = i;
+          return dropPoint;
+        }
+      }
+    }
+    // Should drop below the last node.
+    dropPoint.ip = new InsertionPoint(resultNode.itemId, -1, 1);
+    dropPoint.beforeIndex = -1;
+    return dropPoint;
+  },
+
+  // This function clears all of the dragover styles that were set when
+  // a menuitem was dragged over.
+  _clearStyles: function TBV_DO_clearStyles() {
+    this._popup.removeAttribute("dragover");
+    for (var i = 0; i < this._popup.childNodes.length; i++) {
+      this._popup.childNodes[i].removeAttribute("dragover-top");
+      this._popup.childNodes[i].removeAttribute("dragover-bottom");
+      this._popup.childNodes[i].removeAttribute("dragover-into");
+    }
+  },
+
+  onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
+    this._view._selection = event.target.node;
+    this._view._cachedInsertionPoint = undefined;
+    if (event.ctrlKey)
+      dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+    xferData.data = this._view.controller.getTransferData(dragAction.action);
+  },
+
+  canDrop: function TBV_DO_canDrop(event, session) {
+    return PlacesControllerDragHelper.canDrop(this._view, -1);
+  },
+
+  onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
+    PlacesControllerDragHelper.currentDropTarget = event.target;
+    var dropPoint = this._getDropPoint(event);
+    if (dropPoint == null)
+      return;
+
+    this._clearStyles();
+    if (dropPoint.folderNode) {
+      // Dragging over a folder; set the appropriate styles.
+      if (this._overFolder.node != dropPoint.folderNode) {
+        this._clearOverFolder();
+        this._overFolder.node = dropPoint.folderNode;
+        this._overFolder.openTimer = this._setTimer(this._overFolder.hoverTime);
+      }
+      dropPoint.folderNode.setAttribute("dragover-into", "true");
+    }
+    else {
+      // Dragging over a menuitem, set dragover-top/bottom to show where
+      // the item will be dropped and clear out any old folder info.
+      if (dropPoint.beforeIndex == -1) {
+        if (this._popup == this._view && this._view.localName == "menupopup" &&
+            this._popup._endMarker != -1) {
+          this._popup.childNodes[this._popup._endMarker]
+                     .setAttribute("dragover-top", "true");
+        }
+        else
+          this._popup.lastChild.setAttribute("dragover-bottom", "true");
+      }
+      else {
+        this._popup.childNodes[dropPoint.beforeIndex]
+            .setAttribute("dragover-top", "true");
+      }
+
+      // Clear out old folder information
+      this._clearOverFolder();
+    }
+    this._popup.setAttribute("dragover", "true");
+  },
+
+  onDrop: function TBV_DO_onDrop(event, dropData, session) {
+    var dropPoint = this._getDropPoint(event);
+    if (!dropPoint)
+      return;
+
+    PlacesControllerDragHelper.onDrop(null, this._view, dropPoint.ip);
+  },
+
+  onDragExit: function TBV_DO_onDragExit(event, session) {
+    PlacesControllerDragHelper.currentDropTarget = null;
+    this._clearStyles();
+    // Close any folder being hovered over
+    if (this._overFolder.node)
+      this._overFolder.closeTimer = this._setTimer(this._overFolder.hoverTime);
+    // The autoopened attribute is set when this folder was automatically
+    // opened after the user dragged over it.  If this attribute is set,
+    // auto-close the folder on drag exit.
+    if (this._popup.hasAttribute("autoopened"))
+      this._closeMenuTimer = this._setTimer(this._overFolder.hoverTime);
+  },
+
+  getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
+    var flavorSet = new FlavourSet();
+    for (var i = 0; i < this._view.peerDropTypes.length; ++i)
+      flavorSet.appendFlavour(this._view.peerDropTypes[i]);
+    return flavorSet;
+  },
+
+  handleEvent: function(aEvent) {
+    switch (aEvent.type) {
+    case "draggesture":
+      if (aEvent.target.localName != "menu" && aEvent.target.node) {
+        // TODO--allow menu drag if shift (or alt??) key is down
+        nsDragAndDrop.startDrag(aEvent, this);
+      }
+      break;
+    case "dragover":
+      nsDragAndDrop.dragOver(aEvent, this);
+      break;
+    case "dragdrop":
+      nsDragAndDrop.drop(aEvent, this);
+      break;
+    case "dragexit":
+      nsDragAndDrop.dragExit(aEvent, this);
+      break;
+    }
+  }
+}
+
 /**
  * Handles drag and drop operations for views. Note that this is view agnostic!
  * You should not use PlacesController._view within these methods, since
@@ -1273,9 +1566,9 @@ var PlacesControllerDragHelper = {
    *          it is being dragged over, false otherwise. 
    */
   canDrop: function PCDH_canDrop(view, orientation) {
-    var parent = view.getResult().root;
-    if (PlacesUtils.nodeIsReadOnly(parent) || 
-        !PlacesUtils.nodeIsFolder(parent))
+    var root = view.getResult().root;
+    if (PlacesUtils.nodeIsReadOnly(root) || 
+        !PlacesUtils.nodeIsFolder(root))
       return false;
 
     var session = this.getSession();
@@ -1335,21 +1628,21 @@ var PlacesControllerDragHelper = {
     var xferable = this._initTransferable(session, targetView, 
                                           insertionPoint.orientation);
     var dropCount = session.numDropItems;
-    
+
     var movedCount = 0;
-    
+
     for (var i = 0; i < dropCount; ++i) {
       session.getData(xferable, i);
-    
+
       var data = { }, flavor = { };
       xferable.getAnyTransferData(flavor, data, { });
       data.value.QueryInterface(Ci.nsISupportsString);
-      
+
       // There's only ever one in the D&D case. 
       var unwrapped = PlacesUtils.unwrapNodes(data.value.data, 
                                               flavor.value)[0];
       var index = insertionPoint.index;
-      
+
       // Adjust insertion index to prevent reversal of dragged items. When you
       // drag multiple elts upward: need to increment index or each successive
       // elt will be inserted at the same index, each above the previous.
@@ -1358,7 +1651,7 @@ var PlacesControllerDragHelper = {
         index = index + movedCount;
         movedCount++;
       }
-        
+
       transactions.push(PlacesUtils.makeTransaction(unwrapped,
                         flavor.value, insertionPoint.itemId,
                         index, copy));

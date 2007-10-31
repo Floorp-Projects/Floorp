@@ -170,6 +170,27 @@ public:
   static void LoadStart();
   static void LoadEnd();
 
+  // CC does always call cycle collector and it also updates the counters
+  // that MaybeCC uses.
+  static void CC();
+
+  // MaybeCC calls cycle collector if certain conditions are fulfilled.
+  // The conditions are:
+  // - The timer related to page load (sGCTimer) must not be active.
+  // - At least NS_MIN_CC_INTERVAL milliseconds must have elapsed since the
+  //   previous cycle collector call.
+  // - Certain number of MaybeCC calls have occurred.
+  //   The number of needed MaybeCC calls depends on the aHigherProbability
+  //   parameter. If the parameter is true, probability for calling cycle
+  //   collector rises increasingly. If the parameter is all the time false,
+  //   at least NS_MAX_DELAYED_CCOLLECT MaybeCC calls are needed.
+  //   If the previous call to cycle collector did collect something,
+  //   MaybeCC works effectively as if aHigherProbability was true.
+  // @return PR_TRUE if cycle collector was called.
+  static PRBool MaybeCC(PRBool aHigherProbability);
+
+  // Calls CC() if user is currently inactive, otherwise MaybeCC(PR_TRUE)
+  static void CCIfUserInactive();
 protected:
   nsresult InitializeExternalClasses();
   // aHolder should be holding our global object

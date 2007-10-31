@@ -70,7 +70,7 @@ source ${TEST_BIN}/library.sh
 usage()
 {
     cat <<EOF
-usage: runtests.sh -p products -b branches -T  buildtypes -B buildcommands  [-e extra]
+usage: runtests.sh -p products -b branches -T  buildtypes -B buildcommands  [-e extra] [-v]
 usage: runtests.sh -p "$products" -b "$branches" -T  "$buildtypes" -B "$buildcommands" -e "$extra"
 
 variable            description
@@ -84,13 +84,16 @@ variable            description
                     'clean checkout build'. 
                     If you wish to skip any build steps, simply specify a value
                     not containing any of the build commands, e.g. 'none'.
+-v                  optional. verbose - copies log file output to stdout.
 
 if an argument contains more than one value, it must be quoted.
 EOF
     exit 2
 }
 
-while getopts "p:b:T:B:e:" optname; 
+verbose=0
+
+while getopts "p:b:T:B:e:v" optname;
   do
   case $optname in
       p) products=$OPTARG;;
@@ -99,6 +102,8 @@ while getopts "p:b:T:B:e:" optname;
       e) extra="$OPTARG"
           extraflag="-e $OPTARG";;
       B) buildcommands=$OPTARG;;
+      v) verbose=1
+          verboseflag="-v";;
   esac
 done
 
@@ -116,7 +121,7 @@ case $buildtypes in
         ;;
     opt|debug|opt*debug)
         if [[ -n "$buildcommands" ]]; then
-            builder.sh -p "$products" -b "$branches" $extraflag -B "$buildcommands" -T "$buildtypes"
+            builder.sh -p "$products" -b "$branches" $extraflag -B "$buildcommands" -T "$buildtypes" "$verboseflag"
         fi
         ;;
 esac
@@ -127,12 +132,12 @@ export testlogfiles
 export testlogfile
 
 if [[ -z "$extra" ]]; then
-    if tester.sh -t $TEST_JSDIR/test.sh "$products" "$branches" "$buildtypes" | tee -a $testlogfilelist; then
-        testlogfiles="`cat $testlogfilelist`"
+    if tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$buildtypes"| tee -a $testlogfilelist; then
+        testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
     fi
 else
-    if tester.sh -t $TEST_JSDIR/test.sh "$products" "$branches" "$extra" "$buildtypes" | tee -a $testlogfilelist; then
-        testlogfiles="`cat $testlogfilelist`"
+    if tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$extra" "$buildtypes"| tee -a $testlogfilelist; then
+        testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
     fi
 fi
 

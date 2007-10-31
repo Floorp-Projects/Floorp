@@ -2465,6 +2465,13 @@ nsCanvasRenderingContext2D::GetImageData()
             PRUint8 g = *row++;
             PRUint8 b = *row++;
 #endif
+            // Convert to non-premultiplied color
+            if (a != 0) {
+                r = (r * 255) / a;
+                g = (g * 255) / a;
+                b = (b * 255) / a;
+            }
+
             *dest++ = INT_TO_JSVAL(r);
             *dest++ = INT_TO_JSVAL(g);
             *dest++ = INT_TO_JSVAL(b);
@@ -2587,6 +2594,11 @@ nsCanvasRenderingContext2D::PutImageData()
             if (JSVAL_IS_INT(va))         ia = (PRUint8) JSVAL_TO_INT(va);
             else if (JSVAL_IS_DOUBLE(va)) ia = (PRUint8) (*JSVAL_TO_DOUBLE(va));
             else return NS_ERROR_DOM_SYNTAX_ERR;
+
+            // Convert to premultiplied color (losslessly if the input came from getImageData)
+            ir = (ir*ia + 254) / 255;
+            ig = (ig*ia + 254) / 255;
+            ib = (ib*ia + 254) / 255;
 
 #ifdef IS_LITTLE_ENDIAN
             *imgPtr++ = ib;

@@ -53,7 +53,7 @@
       <!-- text -->
       <description id="info.header" class="header"/>
       <vbox id="info.box">
-        <description context="contentAreaContextMenu"/>
+        <description context="contentAreaContextMenu" tabindex="-1"/>
       </vbox>
 
       <!-- textboxes -->

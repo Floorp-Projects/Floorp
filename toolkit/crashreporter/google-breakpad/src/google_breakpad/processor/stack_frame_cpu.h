@@ -98,6 +98,30 @@ struct StackFramePPC : public StackFrame {
   int context_validity;
 };
 
+struct StackFrameSPARC : public StackFrame {
+  // to be confirmed
+  enum ContextValidity {
+    CONTEXT_VALID_NONE = 0,
+    CONTEXT_VALID_PC   = 0 << 0,
+    CONTEXT_VALID_SP   = 0 << 1,
+    CONTEXT_VALID_FP   = 0 << 2,
+    CONTEXT_VALID_ALL  = -1
+  };
+
+  StackFrameSPARC() : context(), context_validity(CONTEXT_VALID_NONE) {}
+
+  // Register state.  This is only fully valid for the topmost frame in a
+  // stack.  In other frames, the values of nonvolatile registers may be
+  // present, given sufficient debugging information.  Refer to
+  // context_validity.
+  MDRawContextSPARC context;
+
+  // context_validity is actually ContextValidity, but int is used because
+  // the OR operator doesn't work well with enumerated types.  This indicates
+  // which fields in context are valid.
+  int context_validity;
+};
+
 }  // namespace google_breakpad
 
 #endif  // GOOGLE_BREAKPAD_PROCESSOR_STACK_FRAME_CPU_H__

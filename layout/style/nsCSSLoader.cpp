@@ -777,19 +777,18 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     return NS_OK;
   }
   
-  nsCOMPtr<nsIURI> channelURI;
+  nsCOMPtr<nsIURI> originalURI;
+  channel->GetOriginalURI(getter_AddRefs(originalURI));
+
   // If the channel's original URI is "chrome:", we want that, since
   // the observer code in nsXULPrototypeCache depends on chrome stylesheets
   // having a chrome URI.  (Whether or not chrome stylesheets come through
   // this codepath seems nondeterministic.)
   // Otherwise we want the potentially-HTTP-redirected URI.
-  channel->GetOriginalURI(getter_AddRefs(channelURI));
-  PRBool isChrome;
-  if (NS_FAILED(channelURI->SchemeIs("chrome", &isChrome)) || !isChrome) {
-    channel->GetURI(getter_AddRefs(channelURI));
-  }
+  nsCOMPtr<nsIURI> channelURI;
+  NS_GetFinalChannelURI(channel, getter_AddRefs(channelURI));
 
-  if (!channelURI) {
+  if (!channelURI || !originalURI) {
     NS_ERROR("Someone just violated the nsIRequest contract");
     LOG_WARN(("  Channel without a URI.  Bad!"));
     mLoader->SheetComplete(this, NS_ERROR_UNEXPECTED);
@@ -875,9 +874,9 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     return NS_OK;
   }    
 
-  // Enough to set the URI on mSheet, since any sibling datas we have share
+  // Enough to set the URIs on mSheet, since any sibling datas we have share
   // the same mInner as mSheet and will thus get the same URI.
-  mSheet->SetURIs(channelURI, channelURI);
+  mSheet->SetURIs(channelURI, originalURI, channelURI);
   
   PRBool completed;
   return mLoader->ParseSheet(aDataStream, this, completed);
@@ -1082,19 +1081,25 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
 
   if (!*aSheet) {
     aSheetState = eSheetNeedsParser;
-    nsIURI *sheetURI = aURI;
-    nsCOMPtr<nsIURI> baseURI = aURI;
+    nsIURI *sheetURI;
+    nsCOMPtr<nsIURI> baseURI;
+    nsIURI* originalURI;
     if (!aURI) {
       // Inline style.  Use the document's base URL so that @import in
       // the inline sheet picks up the right base.
       NS_ASSERTION(aLinkingContent, "Inline stylesheet without linking content?");
       baseURI = aLinkingContent->GetBaseURI();
       sheetURI = aLinkingContent->GetDocument()->GetDocumentURI();
+      originalURI = nsnull;
+    } else {
+      baseURI = aURI;
+      sheetURI = aURI;
+      originalURI = aURI;
     }
 
     rv = NS_NewCSSStyleSheet(aSheet);
     NS_ENSURE_SUCCESS(rv, rv);
-    (*aSheet)->SetURIs(sheetURI, baseURI);
+    (*aSheet)->SetURIs(sheetURI, originalURI, baseURI);
   }
 
   NS_ASSERTION(*aSheet, "We should have a sheet by now!");

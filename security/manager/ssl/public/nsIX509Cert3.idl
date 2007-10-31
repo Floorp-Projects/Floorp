@@ -42,7 +42,7 @@ interface nsICertVerificationListener;
 /**
  * Extending nsIX509Cert
  */
-[scriptable, uuid(1362ffab-a683-4504-8038-25ce63b45370)]
+[scriptable, uuid(aa67eb02-ccc8-4f55-84da-bcafff9265ae)]
 interface nsIX509Cert3 : nsIX509Cert2 {
 
   /**
@@ -72,6 +72,8 @@ interface nsIX509Cert3 : nsIX509Cert2 {
   void exportAsCMS(in unsigned long chainMode,
                    out unsigned long length,
                    [retval, array, size_is(length)] out octet data);
+
+  readonly attribute boolean isSelfSigned;
 };
 
 [scriptable, uuid(2fd0a785-9f2d-4327-8871-8c3e0783891d)]

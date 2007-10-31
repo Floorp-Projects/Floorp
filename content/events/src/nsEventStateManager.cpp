@@ -136,6 +136,9 @@
 #include "nsEventDispatcher.h"
 #include "nsPresShellIterator.h"
 
+#include "nsServiceManagerUtils.h"
+#include "nsITimer.h"
+
 #ifdef XP_MACOSX
 #include <Events.h>
 #endif
@@ -143,6 +146,8 @@
 #if defined(DEBUG_rods) || defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
 #endif
+
+#define NS_USER_INTERACTION_INTERVAL 5000 // ms
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
@@ -171,12 +176,48 @@ static PRUint32 sESMInstanceCount = 0;
 static PRInt32 sChromeAccessModifier = 0, sContentAccessModifier = 0;
 PRInt32 nsEventStateManager::sUserInputEventDepth = 0;
 
+static PRUint32 gMouseOrKeyboardEventCounter = 0;
+static nsITimer* gUserInteractionTimer = nsnull;
+static nsITimerCallback* gUserInteractionTimerCallback = nsnull;
+
+class nsUITimerCallback : public nsITimerCallback
+{
+public:
+  nsUITimerCallback() : mPreviousCount(0) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
+private:
+  PRUint32 mPreviousCount;
+};
+
+NS_IMPL_ISUPPORTS1(nsUITimerCallback, nsITimerCallback)
+
+// If aTimer is nsnull, this method always sends "user-interaction-inactive"
+// notification.
+NS_IMETHODIMP
+nsUITimerCallback::Notify(nsITimer* aTimer)
+{
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> obs =
+      do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if ((gMouseOrKeyboardEventCounter == mPreviousCount) || !aTimer) {
+    gMouseOrKeyboardEventCounter = 0;
+    obs->NotifyObservers(nsnull, "user-interaction-inactive", nsnull);
+  } else {
+    obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
+  }
+  mPreviousCount = gMouseOrKeyboardEventCounter;
+  return NS_OK;
+}
+
 enum {
  MOUSE_SCROLL_N_LINES,
  MOUSE_SCROLL_PAGE,
  MOUSE_SCROLL_HISTORY,
  MOUSE_SCROLL_TEXTSIZE,
- MOUSE_SCROLL_PIXELS
+ MOUSE_SCROLL_PIXELS,
+ MOUSE_SCROLL_FULLZOOM
 };
 
 struct AccessKeyInfo {
@@ -431,6 +472,18 @@ nsEventStateManager::nsEventStateManager()
     mTabbedThroughDocument(PR_FALSE),
     mAccessKeys(nsnull)
 {
+  if (sESMInstanceCount == 0) {
+    gUserInteractionTimerCallback = new nsUITimerCallback();
+    if (gUserInteractionTimerCallback) {
+      NS_ADDREF(gUserInteractionTimerCallback);
+      CallCreateInstance("@mozilla.org/timer;1", &gUserInteractionTimer);
+      if (gUserInteractionTimer) {
+        gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
+                                                NS_USER_INTERACTION_INTERVAL,
+                                                nsITimer::TYPE_REPEATING_SLACK);
+      }
+    }
+  }
   ++sESMInstanceCount;
 }
 
@@ -509,6 +562,14 @@ nsEventStateManager::~nsEventStateManager()
   if(sESMInstanceCount == 0) {
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
+    if (gUserInteractionTimerCallback) {
+      gUserInteractionTimerCallback->Notify(nsnull);
+      NS_RELEASE(gUserInteractionTimerCallback);
+    }
+    if (gUserInteractionTimer) {
+      gUserInteractionTimer->Cancel();
+      NS_RELEASE(gUserInteractionTimer);
+    }
   }
 
   delete mAccessKeys;
@@ -722,6 +783,25 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   if (NS_EVENT_NEEDS_FRAME(aEvent)) {
     NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null.  this should not happen.  see bug #13007");
     if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
+  }
+
+  // Do not take account NS_MOUSE_ENTER/EXIT so that loading a page
+  // when user is not active doesn't change the state to active.
+  if (NS_IS_TRUSTED_EVENT(aEvent) &&
+      ((aEvent->eventStructType == NS_MOUSE_EVENT  &&
+        static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal &&
+        aEvent->message != NS_MOUSE_ENTER &&
+        aEvent->message != NS_MOUSE_EXIT) ||
+       aEvent->eventStructType == NS_MOUSE_SCROLL_EVENT ||
+       aEvent->eventStructType == NS_KEY_EVENT)) {
+    if (gMouseOrKeyboardEventCounter == 0) {
+      nsCOMPtr<nsIObserverService> obs =
+        do_GetService("@mozilla.org/observer-service;1");
+      if (obs) {
+        obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
+      }
+    }
+    ++gMouseOrKeyboardEventCounter;
   }
 
   *aStatus = nsEventStatus_eIgnore;
@@ -1859,8 +1939,10 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 } // GenerateDragGesture
 
 nsresult
-nsEventStateManager::ChangeTextSize(PRInt32 change)
+nsEventStateManager::GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv)
 {
+  *aMv = nsnull;
+
   if(!gLastFocusedDocument) return NS_ERROR_FAILURE;
 
   nsPIDOMWindow* ourWindow = gLastFocusedDocument->GetWindow();
@@ -1894,11 +1976,45 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   nsCOMPtr<nsIMarkupDocumentViewer> mv(do_QueryInterface(cv));
   if(!mv) return NS_ERROR_FAILURE;
 
+  *aMv = mv;
+  NS_IF_ADDREF(*aMv);
+
+  return NS_OK;
+}
+
+nsresult
+nsEventStateManager::ChangeTextSize(PRInt32 change)
+{
+  nsCOMPtr<nsIMarkupDocumentViewer> mv;
+  nsresult rv = GetMarkupDocumentViewer(getter_AddRefs(mv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   float textzoom;
   mv->GetTextZoom(&textzoom);
   textzoom += ((float)change) / 10;
   if (textzoom > 0 && textzoom <= 20)
     mv->SetTextZoom(textzoom);
+
+  return NS_OK;
+}
+
+nsresult
+nsEventStateManager::ChangeFullZoom(PRInt32 change)
+{
+  nsCOMPtr<nsIMarkupDocumentViewer> mv;
+  nsresult rv = GetMarkupDocumentViewer(getter_AddRefs(mv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  float fullzoom;
+  float zoomMin = ((float)nsContentUtils::GetIntPref("fullZoom.minPercent", 50)) / 100;
+  float zoomMax = ((float)nsContentUtils::GetIntPref("fullZoom.maxPercent", 300)) / 100;
+  mv->GetFullZoom(&fullzoom);
+  fullzoom += ((float)change) / 10;
+  if (fullzoom < zoomMin)
+    fullzoom = zoomMin;
+  else if (fullzoom > zoomMax)
+    fullzoom = zoomMax;
+  mv->SetFullZoom(fullzoom);
 
   return NS_OK;
 }
@@ -1931,6 +2047,21 @@ nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
     {
       // negative adjustment to increase text size, positive to decrease
       ChangeTextSize((adjustment > 0) ? -1 : 1);
+    }
+}
+
+void
+nsEventStateManager::DoScrollFullZoom(nsIFrame *aTargetFrame,
+                                      PRInt32 adjustment)
+{
+  // Exclude form controls and XUL content.
+  nsIContent *content = aTargetFrame->GetContent();
+  if (content &&
+      !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
+      !content->IsNodeOfType(nsINode::eXUL))
+    {
+      // negative adjustment to increase zoom, positive to decrease
+      ChangeFullZoom((adjustment > 0) ? -1 : 1);
     }
 }
 
@@ -2314,6 +2445,12 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       case MOUSE_SCROLL_TEXTSIZE:
         {
           DoScrollTextsize(aTargetFrame, msEvent->delta);
+        }
+        break;
+
+      case MOUSE_SCROLL_FULLZOOM:
+        {
+          DoScrollFullZoom(aTargetFrame, msEvent->delta);
         }
         break;
 

@@ -48,6 +48,7 @@
 #include "nsStringStream.h"
 #include "nsDragService.h"
 #include "nsEscape.h"
+#include "nsPrintfCString.h"
 
 // Screenshots use the (undocumented) png pasteboard type.
 #define IMAGE_PASTEBOARD_TYPES NSTIFFPboardType, @"Apple PNG pasteboard type", nil
@@ -73,6 +74,23 @@ nsClipboard::~nsClipboard()
 }
 
 
+// We separate this into its own function because after an @try, all local
+// variables within that function get marked as volatile, and our C++ type 
+// system doesn't like volatile things.
+static NSData* 
+GetDataFromPasteboard(NSPasteboard* aPasteboard, NSString* aType)
+{
+  NSData *data = nil;
+  @try {
+    data = [aPasteboard dataForType:aType];
+  } @catch (NSException* e) {
+    NS_WARNING(nsPrintfCString(256, "Exception raised while getting data from the pasteboard: \"%s - %s\"", 
+                               [[e name] UTF8String], [[e reason] UTF8String]).get());
+  }
+  return data;
+}
+
+
 NS_IMETHODIMP
 nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 {
@@ -93,7 +111,10 @@ nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   for (unsigned int i = 0; i < outputCount; i++) {
     NSString* currentKey = [outputKeys objectAtIndex:i];
     id currentValue = [pasteboardOutputDict valueForKey:currentKey];
-    if (currentKey == NSStringPboardType)
+    if (currentKey == NSStringPboardType ||
+        currentKey == kCorePboardType_url ||
+        currentKey == kCorePboardType_urld ||
+        currentKey == kCorePboardType_urln)
       [generalPBoard setString:currentValue forType:currentKey];
     else
       [generalPBoard setData:currentValue forType:currentKey];
@@ -210,14 +231,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
       if (!type)
         continue;
 
-      // Read data off the clipboard, make sure to catch any exceptions (timeouts)
-      // XXX should convert to @try/@catch someday?
-      NSData *pasteboardData = nil;
-      NS_DURING
-        pasteboardData = [cocoaPasteboard dataForType:type];
-      NS_HANDLER
-        NS_ASSERTION(0, "Exception raised while getting data from the pasteboard.");
-      NS_ENDHANDLER
+      // Read data off the clipboard
+      NSData *pasteboardData = GetDataFromPasteboard(cocoaPasteboard, type);
       if (!pasteboardData)
         continue;
 

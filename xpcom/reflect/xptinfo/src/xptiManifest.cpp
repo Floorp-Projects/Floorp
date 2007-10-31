@@ -102,14 +102,14 @@ xpti_InterfaceWriter(PLDHashTable *table, PLDHashEntryHdr *hdr,
 
     const xptiTypelib& typelib = entry->GetTypelibRecord();
 
-    PRBool success =  PR_fprintf(fd, "%d,%s,%s,%d,%d,%d\n",
-                                 (int) number,
-                                 entry->GetTheName(),
-                                 iidStr,
-                                 (int) typelib.GetFileIndex(),
-                                 (int) (typelib.IsZip() ? 
-                                 typelib.GetZipItemIndex() : -1),
-                                 (int) entry->GetScriptableFlag());
+    PRBool success =  !!PR_fprintf(fd, "%d,%s,%s,%d,%d,%d\n",
+                                   (int) number,
+                                   entry->GetTheName(),
+                                   iidStr,
+                                   (int) typelib.GetFileIndex(),
+                                   (int) (typelib.IsZip() ? 
+                                   typelib.GetZipItemIndex() : -1),
+                                   (int) entry->GetScriptableFlag());
 
     nsCRT::free(iidStr);
 

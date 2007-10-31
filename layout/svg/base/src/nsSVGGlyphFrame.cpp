@@ -299,12 +299,11 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
     return NS_OK;
   }
 
-  void *closure;
-  if (HasFill() && SetupCairoFill(gfx, &closure)) {
+  if (HasFill() && SetupCairoFill(gfx)) {
     LoopCharacters(gfx, text, cp, FILL);
   }
 
-  if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
+  if (HasStroke() && SetupCairoStroke(gfx)) {
     gfx->NewPath();
     LoopCharacters(gfx, text, cp, STROKE);
     gfx->Stroke();
@@ -461,6 +460,10 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
 NS_IMETHODIMP
 nsSVGGlyphFrame::InitialUpdate()
 {
+  NS_ASSERTION(GetStateBits() & NS_FRAME_FIRST_REFLOW,
+               "Yikes! We've been called already! Hopefully we weren't called "
+               "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
+
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
                "We don't actually participate in reflow");
   

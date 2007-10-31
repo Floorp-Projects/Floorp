@@ -293,6 +293,11 @@ public:
 
   static PRBool BlockIsMarginRoot(nsIFrame* aBlock);
   static PRBool BlockNeedsSpaceManager(nsIFrame* aBlock);
+  /**
+   * Walks up the frame tree, starting with aCandidate, and returns the first
+   * block frame that it encounters.
+   */
+  static nsBlockFrame* GetNearestAncestorBlock(nsIFrame* aCandidate);
   
 protected:
   nsBlockFrame(nsStyleContext* aContext)

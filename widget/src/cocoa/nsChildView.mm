@@ -2258,9 +2258,12 @@ NSEvent* gLastDragEvent = nil;
 {
   unsigned int numSubviews = [[self subviews] count];
   for (unsigned int i = 0; i < numSubviews; i++) {
-    NSRect subviewFrame = [[[self subviews] objectAtIndex:i] frame];
-    if (NSContainsRect(subviewFrame, inRect))
-      return YES;
+    NSView* view = (NSView*)[[self subviews] objectAtIndex:i];
+    if (![view isHidden]) {
+      NSRect subviewFrame = [view frame];
+      if (NSContainsRect(subviewFrame, inRect))
+        return YES;
+    }
   }
   
   return NO;
@@ -3161,7 +3164,7 @@ enum
   kControlKeyCode     = 0x3B,
   kOptionkeyCode      = 0x3A, // both left and right option keys
   kClearKeyCode       = 0x47,
-  
+
   // function keys
   kF1KeyCode          = 0x7A,
   kF2KeyCode          = 0x78,
@@ -3234,11 +3237,23 @@ enum
 };
 
 
+static PRBool IsPrintableChar(PRUnichar aChar)
+{
+  return (aChar >= 0x20 && aChar <= 0x7E) || aChar >= 0xA0;
+}
+
 static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
 {
   // We don't support the key code for non-ASCII characters
-  if (aChar > 0x7F)
+  if (aChar > 0x7E)
     return 0;
+
+  if (aChar >= 'a' && aChar <= 'z') // lowercase
+    return PRUint32(toupper(aChar));
+  else if (aChar >= 'A' && aChar <= 'Z') // uppercase
+    return PRUint32(aChar);
+  else if (aChar >= '0' && aChar <= '9')
+    return PRUint32(aChar - '0' + NS_VK_0);
 
   switch (aChar)
   {
@@ -3265,15 +3280,14 @@ static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
     case '/':                   return NS_VK_SLASH;
     case '`':                   return NS_VK_BACK_QUOTE;
     case '\t':                  return NS_VK_TAB;
+    case '-':                   return NS_VK_SUBTRACT;
+    case '+':                   return NS_VK_ADD;
 
     default:
-      if (aChar >= 'a' && aChar <= 'z') // lowercase
-        return PRUint32(toupper(aChar));
-      else if (aChar >= 'A' && aChar <= 'Z') // uppercase
-        return PRUint32(aChar);
-  }
-  NS_WARNING("GetGeckoKeyCodeFromChar has failed.");
-  return 0;
+      if (!IsPrintableChar(aChar))
+        NS_WARNING("GetGeckoKeyCodeFromChar has failed.");
+      return 0;
+    }
 }
 
 
@@ -3593,6 +3607,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
     geckoEvent.time      = PR_IntervalNow();
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
+    geckoEvent.keyCode   = 0;
     geckoEvent.isChar    = PR_TRUE;
     if (mKeyHandled)
       geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
@@ -3606,12 +3621,18 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
       geckoEvent.isShift   = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
-      geckoEvent.keyCode   =
-        ConvertMacToGeckoKeyCode([mCurKeyEvent keyCode], &geckoEvent,
-                                 [mCurKeyEvent charactersIgnoringModifiers]);
+      if (!IsPrintableChar(geckoEvent.charCode)) {
+        geckoEvent.keyCode = 
+          ConvertMacToGeckoKeyCode([mCurKeyEvent keyCode], &geckoEvent,
+                                   [mCurKeyEvent charactersIgnoringModifiers]);
+        geckoEvent.charCode = 0;
+      }
     } else {
       // Note that insertText is not called only at key pressing.
-      geckoEvent.keyCode = GetGeckoKeyCodeFromChar(geckoEvent.charCode);
+      if (!IsPrintableChar(geckoEvent.charCode)) {
+        geckoEvent.keyCode = GetGeckoKeyCodeFromChar(geckoEvent.charCode);
+        geckoEvent.charCode = 0;
+      }
     }
 
     mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3855,6 +3876,22 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 #pragma mark -
 
 
++ (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent
+{
+  NSEvent* newEvent = [NSEvent keyEventWithType:type
+                                       location:[theEvent locationInWindow] 
+                                  modifierFlags:[theEvent modifierFlags]
+                                      timestamp:[theEvent timestamp]
+                                   windowNumber:[theEvent windowNumber]
+                                        context:[theEvent context]
+                                     characters:[theEvent characters]
+                    charactersIgnoringModifiers:[theEvent charactersIgnoringModifiers]
+                                      isARepeat:[theEvent isARepeat]
+                                        keyCode:[theEvent keyCode]];
+  return newEvent;
+}
+
+
 // Handle matching cocoa IME with gecko key events. Sends a key down and key press
 // event to gecko.
 - (void)keyDown:(NSEvent*)theEvent
@@ -3879,6 +3916,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;
     mKeyHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+    if (!mGeckoChild)
+      return;
   }
 
   // Check to see if we are still the first responder.
@@ -3910,6 +3949,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       geckoEvent.nativeMsg = &macEvent;
 
       mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      if (!mGeckoChild)
+        return;
       dispatchedKeyPress = PR_TRUE;
     }
   }
@@ -3928,6 +3969,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   mKeyHandled = PR_FALSE;
 }
 
+static BOOL keyUpAlreadySentKeyDown = NO;
 
 - (void)keyUp:(NSEvent*)theEvent
 {
@@ -3935,7 +3977,57 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild || [[theEvent characters] length] == 0)
     return;
 
-  // Fire a key up.
+  // Cocoa doesn't send an NSKeyDown event for control-tab, so if this
+  // is an NSKeyUp event for control-tab, send a down event to gecko first.
+  if (!keyUpAlreadySentKeyDown && [theEvent modifierFlags] & NSControlKeyMask && [theEvent keyCode] == kTabKeyCode) {
+    // We'll need an NSKeyDown copy of our native event so we convert to a gecko event correctly.
+    NSEvent* nativeKeyDownEvent = [ChildView makeNewCocoaEventWithType:NSKeyDown fromEvent:theEvent];
+
+    // send a key down event if we should
+    PRBool keyDownHandled = PR_FALSE;
+    if (![nativeKeyDownEvent isARepeat]) {
+      nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
+      [self convertCocoaKeyEvent:nativeKeyDownEvent toGeckoEvent:&geckoEvent];
+
+      // create native EventRecord for use by plugins
+      EventRecord macEvent;
+      ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
+      geckoEvent.nativeMsg = &macEvent;
+      keyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      if (!mGeckoChild)
+        return;
+    }
+
+    // Check to see if we are still the first responder.
+    // The key down event may have shifted the focus, in which
+    // case we should not fire the key press.
+    NSResponder* resp = [[self window] firstResponder];
+    if (resp != (NSResponder*)self) {
+      keyUpAlreadySentKeyDown = YES;
+      [resp keyUp:theEvent];      
+      keyUpAlreadySentKeyDown = NO;
+      return;
+    }
+
+    // now send a key press event if we should
+    if (!nsTSMManager::IsComposing()) {
+      nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
+      [self convertCocoaKeyEvent:nativeKeyDownEvent toGeckoEvent:&geckoEvent];
+
+      if (keyDownHandled)
+        geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+
+      // create native EventRecord for use by plugins
+      EventRecord macEvent;
+      ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
+      geckoEvent.nativeMsg = &macEvent;
+
+      mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      if (!mGeckoChild)
+        return;
+    }
+  }
+
   nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_UP, nsnull);
   [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
@@ -3954,16 +4046,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild || nsTSMManager::IsComposing())
     return NO;
 
-  // Retain and release our native window to avoid crashes when it's closed
-  // as a result of processing a key equivalent (e.g. Command+w or Command+q).
-  NSWindow *ourNativeWindow = [self nativeWindow];
-  if (ourNativeWindow)
-    ourNativeWindow = [ourNativeWindow retain];
   // see if the menu system will handle the event
-  BOOL menuRetval = [[NSApp mainMenu] performKeyEquivalent:theEvent];
-  if (ourNativeWindow)
-    [ourNativeWindow release];
-  if (menuRetval)
+  if ([[NSApp mainMenu] performKeyEquivalent:theEvent])
     return YES;
 
   // don't handle this if certain modifiers are down - those should

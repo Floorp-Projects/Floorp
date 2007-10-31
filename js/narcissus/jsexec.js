@@ -499,7 +499,7 @@ function execute(n, x) {
         putValue(r, v, n[0]);
         break;
 
-      case CONDITIONAL:
+      case HOOK:
         v = getValue(execute(n[0], x)) ? getValue(execute(n[1], x))
                                        : getValue(execute(n[2], x));
         break;

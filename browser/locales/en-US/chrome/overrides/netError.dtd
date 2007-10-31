@@ -123,6 +123,17 @@
 </ul>
 ">
 
+<!ENTITY nssBadCert.title "Secure Connection Failed">
+<!ENTITY nssBadCert.longDesc "
+<ul>
+  <li>This could be a problem with the server's configuration, or it could be
+someone trying to impersonate the server.</li>
+  <li>If you have connected to this server successfully in the past, the error may
+be temporary, and you can try again later.</li>
+  <li>You can see and change your current list of servers with known security problems
+  in your advanced encryption settings.</li>
+</ul>
+">
 
 <!ENTITY sharedLongDesc "
 <ul>
@@ -139,4 +150,10 @@
 <!ENTITY malwareBlocked.longDesc "
 <p>Attack sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p>
 <p>Web site owners who believe their site has been reported as an attack site in error may <a href='http://www.stopbadware.org/home/reviewinfo' >request a review</a>.</p>
+">
+
+<!ENTITY phishingBlocked.title "Suspected Web Forgery!">
+<!ENTITY phishingBlocked.longDesc "
+<p>Entering any personal information on this page may result in identity theft or other fraud.</p>
+<p>These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust.</p>
 ">

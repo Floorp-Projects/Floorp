@@ -404,7 +404,8 @@ protected:
                                 const PRUnichar *aURL,
                                 nsIChannel* aFailedChannel = nsnull);
     NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
-                             const PRUnichar *aPage,
+                             const char *aErrorPage,
+                             const PRUnichar *aErrorType,
                              const PRUnichar *aDescription,
                              const char *aCSSClass,
                              nsIChannel* aFailedChannel);

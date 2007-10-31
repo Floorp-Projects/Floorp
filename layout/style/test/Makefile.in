@@ -83,6 +83,7 @@ _TEST_FILES =	test_bug74880.html \
 		test_bug389464.html \
 		test_bug391034.html \
 		test_bug391221.html \
+		test_bug397427.html \
 		test_compute_data_with_start_struct.html \
 		test_dont_use_document_colors.html \
 		test_inherit_storage.html \
@@ -101,6 +102,15 @@ _TEST_FILES =	test_bug74880.html \
 		unstyled.css \
 		unstyled-frame.xml \
 		unstyled-frame.css \
+		redirect-1.css \
+		post-redirect-1.css \
+		redirect-1.css^headers^ \
+		redirect-2.css \
+		post-redirect-2.css \
+		redirect-2.css^headers^ \
+		redirect-3.css \
+		redirect-3.css^headers^ \
+		post-redirect-3.css \
 		$(NULL)
 
 

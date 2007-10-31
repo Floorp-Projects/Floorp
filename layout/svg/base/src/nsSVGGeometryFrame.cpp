@@ -332,8 +332,7 @@ nsSVGGeometryFrame::MaybeOptimizeOpacity(float aOpacity)
 }
 
 PRBool
-nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext,
-                                   void **aClosure)
+nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext)
 {
   if (GetStyleSVG()->mFillRule == NS_STYLE_FILL_RULE_EVENODD)
     aContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
@@ -345,7 +344,7 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext,
   if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
     nsSVGPaintServerFrame *ps = static_cast<nsSVGPaintServerFrame*>
                                            (GetProperty(nsGkAtoms::fill));
-    return ps->SetupPaintServer(aContext, this, opacity, aClosure);
+    return ps->SetupPaintServer(aContext, this, opacity);
   } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server) {
     SetupCairoColor(aContext,
                     GetStyleSVG()->mFill.mFallbackColor,
@@ -405,8 +404,7 @@ nsSVGGeometryFrame::SetupCairoStrokeHitGeometry(gfxContext *aContext)
 }
 
 PRBool
-nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext,
-                                     void **aClosure)
+nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
 {
   SetupCairoStrokeHitGeometry(aContext);
 
@@ -415,7 +413,7 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext,
   if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
     nsSVGPaintServerFrame *ps = static_cast<nsSVGPaintServerFrame*>
                                            (GetProperty(nsGkAtoms::stroke));
-    return ps->SetupPaintServer(aContext, this, opacity, aClosure);
+    return ps->SetupPaintServer(aContext, this, opacity);
   } else if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server) {
     SetupCairoColor(aContext,
                     GetStyleSVG()->mStroke.mFallbackColor,

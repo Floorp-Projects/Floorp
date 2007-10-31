@@ -121,11 +121,13 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_MICSUM_GEN_URI_LOWER "micsum_gen_uri"
 #define KEY_DATE_ADDED_LOWER "add_date"
 #define KEY_LAST_MODIFIED_LOWER "last_modified"
+#define KEY_GENERATED_TITLE_LOWER "generated_title"
 
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
 #define POST_DATA_ANNO NS_LITERAL_CSTRING("URIProperties/POSTData")
 #define LAST_CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
+#define STATIC_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/staticTitle")
 
 #define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
 
@@ -207,6 +209,13 @@ public:
   // contains the URL of the previous livemark, so that when the link ends,
   // and the livemark title is known, we can create it.
   nsCOMPtr<nsIURI> mPreviousFeed;
+
+  // contains the text content of the previous microsummary, so that when the
+  // link ends, we can replace the bookmark's title with it and store the user's
+  // title in the staticTitle annotation.
+  nsString mPreviousMicrosummaryText;
+
+  nsCOMPtr<nsIMicrosummary> mPreviousMicrosummary;
 
   void ConsumeHeading(nsAString* aHeading, ContainerType* aContainerType)
   {
@@ -791,6 +800,10 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 
   // mPreviousText will hold our link text, clear it so that can be appended to
   frame.mPreviousText.Truncate();
+
+  // Empty our microsummary items from the previous frame.
+  frame.mPreviousMicrosummary = nsnull;
+  frame.mPreviousMicrosummaryText.Truncate();
   
   // get the attributes we care about
   nsAutoString href;
@@ -803,6 +816,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   nsAutoString webPanel;
   nsAutoString itemId;
   nsAutoString micsumGenURI;
+  nsAutoString generatedTitle;
   nsAutoString dateAdded;
   nsAutoString lastModified;
 
@@ -827,6 +841,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       webPanel = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_MICSUM_GEN_URI_LOWER)) {
       micsumGenURI = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_GENERATED_TITLE_LOWER)) {
+      generatedTitle = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_DATE_ADDED_LOWER)) {
       dateAdded = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_LAST_MODIFIED_LOWER)) {
@@ -843,6 +859,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   webPanel.Trim(kWhitespace);
   itemId.Trim(kWhitespace);
   micsumGenURI.Trim(kWhitespace);
+  generatedTitle.Trim(kWhitespace);
   dateAdded.Trim(kWhitespace);
   lastModified.Trim(kWhitespace);
 
@@ -946,15 +963,12 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   }
 
   // import microsummary
-  // Note: expiration and generated title are ignored, and will be recalculated
-  // by the microsummary service
   if (!micsumGenURI.IsEmpty()) {
     nsCOMPtr<nsIURI> micsumGenURIObject;
     if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(micsumGenURIObject), micsumGenURI))) {
-      nsCOMPtr<nsIMicrosummary> microsummary;
       mMicrosummaryService->CreateMicrosummary(frame.mPreviousLink, micsumGenURIObject,
-                                               getter_AddRefs(microsummary));
-      mMicrosummaryService->SetMicrosummary(frame.mPreviousId, microsummary);
+                                               getter_AddRefs(frame.mPreviousMicrosummary));
+      frame.mPreviousMicrosummaryText = generatedTitle;
     }
   }
 
@@ -1048,7 +1062,17 @@ BookmarkContentSink::HandleLinkEnd()
     printf("Creating bookmark '%s' %lld\n",
            NS_ConvertUTF16toUTF8(frame.mPreviousText).get(), frame.mPreviousId);
 #endif
-    mBookmarksService->SetItemTitle(frame.mPreviousId, frame.mPreviousText);
+    if (frame.mPreviousMicrosummary) {
+      rv = mAnnotationService->SetItemAnnotationString(frame.mPreviousId, STATIC_TITLE_ANNO,
+                                                       frame.mPreviousText, 0,
+                                                       nsIAnnotationService::EXPIRE_NEVER);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Could not store user's bookmark title!");
+
+      mBookmarksService->SetItemTitle(frame.mPreviousId, frame.mPreviousMicrosummaryText);
+      mMicrosummaryService->SetMicrosummary(frame.mPreviousId, frame.mPreviousMicrosummary);
+    }
+    else
+      mBookmarksService->SetItemTitle(frame.mPreviousId, frame.mPreviousText);
   }
 
   // Set last-modified-date for bookmarks and livemarks here so that the

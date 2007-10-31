@@ -571,11 +571,28 @@ var gEditItemOverlay = {
       expander.className = "expander-up"
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
-      if (!this._folderTree.treeBoxObject.view.isContainerOpen(0))
-        this._folderTree.treeBoxObject.view.toggleOpenState(0);
-      this._folderTree.selectFolders([this._getFolderIdFromMenuList()]);
       this._folderTree.collapsed = false;
-      this._folderTree.focus();
+      if (!this._folderTree.place) {
+        const FOLDER_TREE_PLACE_URI =
+          "place:folder=2&excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1";
+        this._folderTree.place = FOLDER_TREE_PLACE_URI;
+      }
+
+      var currentFolder = this._getFolderIdFromMenuList();
+      // Don't select anything in the tree if the item is "unfiled"
+      if (currentFolder == PlacesUtils.unfiledRootId)
+        this._folderTree.selectFolders([]);
+      else {
+        this._folderTree.selectFolders([currentFolder]);
+        this._folderTree.focus();
+      }
+
+      if ((currentFolder == PlacesUtils.bookmarksRootId ||
+           currentFolder == PlacesUtils.unfiledRootId) &&
+          !this._folderTree.treeBoxObject.view.isContainerOpen(0)) {
+        // Expand the root node if selectFolder didn't
+        this._folderTree.treeBoxObject.view.toggleOpenState(0);
+      }
     }
   },
 

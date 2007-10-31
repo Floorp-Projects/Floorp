@@ -849,7 +849,10 @@ nsHTMLTableAccessible::GetTableLayout(nsITableLayout **aLayoutObject)
   nsCOMPtr<nsIContent> content(do_QueryInterface(tableNode));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  nsIPresShell *presShell = content->GetDocument()->GetPrimaryShell();
+  nsIDocument *doc = content->GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsIPresShell *presShell = doc->GetPrimaryShell();
 
   nsCOMPtr<nsISupports> layoutObject;
   rv = presShell->GetLayoutObjectFor(content, getter_AddRefs(layoutObject));

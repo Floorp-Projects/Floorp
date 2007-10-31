@@ -38,54 +38,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl"
-          xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-          xmlns:xbl="http://www.mozilla.org/xbl">
+<bindings id="urlbarBindings" xmlns="http://www.mozilla.org/xbl">
 
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
-    <content sizetopopup="pref">
-      <xul:hbox class="autocomplete-textbox-container" flex="1">
-        <children includes="image|deck|stack">
-          <xul:image class="autocomplete-icon" allowevents="true"/>
-        </children>
-
-        <xul:stack flex="1" class="textbox-stack">
-          <xul:hbox anonid="textbox-input-box" class="textbox-input-box"
-                    flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
-            <children/>
-            <html:input anonid="input" class="autocomplete-textbox textbox-input"
-                        flex="1" allowevents="true"
-                        xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
-          </xul:hbox>
-          <xul:hbox anonid="presentation-box" class="formatted-url" flex="1"
-                    onmousedown="focus();" hidden="true">
-            <xul:scrollbox anonid="presentation" class="formatted-url-contents" flex="1"
-                           onoverflow="_contentIsCropped = true;"
-                           onunderflow="_contentIsCropped = false;">
-              <xul:hbox anonid="prePath" class="formatted-url-prePath">
-                <xul:label anonid="protocol" class="formatted-url-protocol"/>
-                <xul:label anonid="subdomain" class="formatted-url-subdomain"/>
-                <xul:label anonid="domain" class="formatted-url-domain"/>
-                <xul:label anonid="port" class="formatted-url-port"/>
-              </xul:hbox>
-              <xul:label anonid="path" class="formatted-url-path"/>
-            </xul:scrollbox>
-            <xul:label anonid="overflow-ellipsis" class="formatted-url-ellipsis"
-                       value="&#8230;" hidden="true"/>
-          </xul:hbox>
-        </xul:stack>
-
-        <children includes="hbox"/>
-      </xul:hbox>
-
-      <xul:dropmarker anonid="historydropmarker" class="autocomplete-history-dropmarker"
-                      allowevents="true"
-                      xbl:inherits="open,enablehistory"/>
-
-      <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
-    </content>
-
     <implementation implements="nsIObserver, nsIDOMEventListener">
       <constructor><![CDATA[
         this._ioService = Components.classes["@mozilla.org/network/io-service;1"]
@@ -96,91 +51,49 @@
                                 .QueryInterface(Components.interfaces.nsIPrefBranch2);
 
         this._prefs.addObserver("", this, false);
-        this._hideProtocols = this._prefs.getCharPref("hideProtocols").split(" ");
-        this._animateBlend = this._prefs.getBoolPref("animateBlend");
         this.clickSelectsAll = this._prefs.getBoolPref("clickSelectsAll");
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
 
-        this._inputBox = document.getAnonymousElementByAttribute(this, "anonid", "textbox-input-box");
-        this._presentationBox = document.getAnonymousElementByAttribute(this, "anonid", "presentation-box");
-        this._overflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "overflow-ellipsis");
-        this._prePath = document.getAnonymousElementByAttribute(this, "anonid", "prePath");
-        this._protocol = document.getAnonymousElementByAttribute(this, "anonid", "protocol");
-        this._subDomain = document.getAnonymousElementByAttribute(this, "anonid", "subdomain");
-        this._domain = document.getAnonymousElementByAttribute(this, "anonid", "domain");
-        this._port = document.getAnonymousElementByAttribute(this, "anonid", "port");
-        this._path = document.getAnonymousElementByAttribute(this, "anonid", "path");
         this._urlTooltip = document.getElementById("urlTooltip");
 
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
         this.inputField.addEventListener("mousedown", this, false);
-
-        this._blendingTimers = [];
+        this.inputField.addEventListener("mousemove", this, false);
+        this.inputField.addEventListener("mouseout", this, false);
       ]]></constructor>
 
       <destructor><![CDATA[
         this._prefs.removeObserver("", this);
         this._prefs = null;
         this._ioService = null;
-        this._tldService = null;
         this.inputField.controllers.removeController(this._copyCutController);
         this.inputField.removeEventListener("mousedown", this, false);
+        this.inputField.removeEventListener("mousemove", this, false);
+        this.inputField.removeEventListener("mouseout", this, false);
       ]]></destructor>
-
-      <!-- initially empty fields:
-        <field name="_uri"/>
-        <field name="_protocolHidden"/>
-        <field name="_focused"/>
-        <field name="_mouseover"/>
-        <field name="_tooltipTimer"/>
-        <field name="_tldService"/>
-        <field name="_formatted"/>
-      -->
-
-      <property name="plain" onget="return !this._formatted">
-        <setter><![CDATA[
-          this._formatted = !val;
-          while (this._blendingTimers.length)
-            clearTimeout(this._blendingTimers.pop());
-          if (val) {
-            this._inputBox.style.removeProperty("opacity");
-            this._presentationBox.hidden = true;
-          } else {
-            this._inputBox.style.setProperty("opacity", "0", "important");
-          }
-          this._presentationBox.style.removeProperty("opacity");
-          this._hideURLTooltip();
-          return val;
-        ]]></setter>
-      </property>
-
-      <property name="tldService" readonly="true">
-        <getter><![CDATA[
-          if (!this._tldService) {
-            this._tldService =
-              Components.classes["@mozilla.org/network/effective-tld-service;1"]
-                        .getService(Components.interfaces.nsIEffectiveTLDService);
-          }
-
-          return this._tldService;
-        ]]></getter>
-      </property>
-
-      <property name="_contentIsCropped"
-                onget="return !this._overflowEllipsis.hidden;"
-                onset="this._overflowEllipsis.hidden = !val; return val;"/>
 
       <property name="value"
                 onget="return this.inputField.value;">
         <setter><![CDATA[
           this.mIgnoreInput = true;
-          this._syncValue(val);
+
+          if (val != "") {
+            var uri;
+            try {
+              uri = this._ioService.newURI(val, null, null);
+            } catch(e) {}
+            if (uri) {
+              val = uri.spec;
+              try {
+                // try to decode as UTF-8
+                val = decodeURI(val);
+              } catch(e) {}
+            }
+          }
+          this.inputField.value = val;
+
           this.mIgnoreInput = false;
-          if (this._focused)
-            this.plain = true;
-          else if (!this._mouseover || !this.plain)
-            this._prettyView(false);
           var event = document.createEvent("Events");
           event.initEvent("ValueChange", true, true);
           this.inputField.dispatchEvent(event);
@@ -188,165 +101,20 @@
         ]]></setter>
       </property>
 
-      <method name="_syncValue">
-        <parameter name="aValue"/>
-        <body><![CDATA[
-          var value = aValue != null ? aValue : this.value;
-          if (value == "") {
-            this._uri = null;
-          } else {
-            try {
-              this._uri = this._ioService.newURI(value, null, null);
-              // next line throws if .host is not defined
-              this._uri.host;
-            } catch(e) {
-              this._uri = null;
-            }
-          }
-          if (!this._uri) {
-            this._contentIsCropped = false;
-            if (aValue != null)
-              this.inputField.value = aValue;
-            return;
-          }
-
-          if (!this._focused || aValue != null) {
-            value = this._uri.spec;
-            try {
-              // try to decode as UTF-8
-              value = decodeURI(value);
-            } catch(e) {}
-            this.inputField.value = value;
-          }
-
-          this._protocol.setAttribute("value", this._uri.scheme + "://");
-          this._protocolHidden = this._hideProtocols.indexOf(this._uri.scheme) > -1;
-
-          var host = this._uri.host;
-          if (host) {
-            var subdomain;
-            var port = (this._uri.port > -1) ? ":" + this._uri.port : "";
-            if (this._uri.hostPort[0] == "[") {
-              // IPv6 address
-              subdomain = "[";
-              port = "]" + port;
-            }
-            else if (0 && !/^[.0-9]+$/.test(host)) {
-              //XXX subdomain detection disabled (bug 386727)
-              //XXX subdomain detection disabled for IP addresses (bug 364129)
-
-              // getEffectiveTLDLength might convert our host and return a misleading length.
-              // To avoid this, pass the ASCII host, count the dots of its effective TLD
-              // and use that number to operate on our actual host.
-
-              var asciiHost = this._uri.asciiHost;
-              var domainSegments = host.split(".");
-              var cSubdomain = domainSegments.length -
-                               asciiHost.slice(asciiHost.length -
-                                               this.tldService.getEffectiveTLDLength(asciiHost))
-                                        .split(".").length - 1;
-              if (cSubdomain > 0) {
-                host = domainSegments;
-                subdomain = host.splice(0, cSubdomain).join(".") + ".";
-                host = host.join(".");
-              }
-            } else {
-              subdomain = "";
-            }
-            this._subDomain.setAttribute("value", subdomain);
-            this._domain.setAttribute("value", host);
-            this._port.setAttribute("value", port);
-          } else {
-            this._subDomain.removeAttribute("value");
-            this._domain.removeAttribute("value");
-            this._port.removeAttribute("value");
-          }
-
-          var path = this._uri.path;
-          try {
-            // try to decode as UTF-8
-            path = decodeURI(path);
-          } catch(e) {}
-          this._path.setAttribute("value", path);
-        ]]></body>
-      </method>
-
-      <method name="_initPrettyView">
-        <body><![CDATA[
-          this._plain = false;
-          this._protocol.hidden = false;
-          this._presentationBox.hidden = false;
-          this._prePath.width = "";
-          if (this._protocolHidden) {
-            this._prePath.width = this._prePath.boxObject.width;
-            this._protocol.hidden = true;
-          }
-        ]]></body>
-      </method>
-
-      <method name="_prettyView">
-        <parameter name="aAnimateBlend"/>
-        <body><![CDATA[
-          if (!this._uri) {
-            this.plain = true;
-            return;
-          }
-
-          if (!aAnimateBlend || !this._animateBlend) {
-            this._initPrettyView();
-            this.plain = false;
-            return;
-          }
-
-          const INITIAL_DELAY = 150;
-          const FRAME_LENGTH = 60;
-          const DECLINATION_REL = .2;
-          const DECLINATION_ABS = .15;
-
-          var inputBox = this._inputBox;
-          var presentationBox = this._presentationBox;
-          var self = this;
-          var opacity = parseFloat(document.defaultView.getComputedStyle(inputBox, null).opacity);
-          var delay = INITIAL_DELAY;
-
-          function processFrame(opacity, init) {
-            inputBox.style.setProperty("opacity", opacity, "important");
-            presentationBox.style.setProperty("opacity", 1-opacity, "important");
-            if (init)
-              self._initPrettyView();
-            if (!opacity)
-              self.plain = false;
-          }
-
-          while (opacity > 0) {
-            opacity -= opacity * DECLINATION_REL + DECLINATION_ABS;
-            if (opacity < 0)
-              opacity = 0;
-            this._blendingTimers.push(setTimeout(processFrame, delay, opacity, delay == INITIAL_DELAY));
-            delay += FRAME_LENGTH;
-          }
-        ]]></body>
-      </method>
-
       <method name="_initURLTooltip">
-        <parameter name="aCallback"/>
-        <parameter name="aObject"/>
-        <parameter name="aCrop"/>
         <body><![CDATA[
+          if (this.focused)
+            return;
           if (this._tooltipTimer)
             clearTimeout(this._tooltipTimer);
-          this._tooltipTimer = setTimeout(function(self) {
+          this._tooltipTimer = setTimeout(function (self) {
             self._tooltipTimer = 0;
-            var tooltipText = aCallback.apply(aObject);
-            if (tooltipText) {
-              var label = self._urlTooltip.firstChild;
-              label.value = tooltipText;
-              label.crop = aCrop || "center";
-              var bO = self.boxObject;
-              self._urlTooltip.maxWidth = bO.width;
-              self._urlTooltip.showPopup(self, bO.screenX, bO.screenY + bO.height, "tooltip");
-            }
-          }, 400, this);
+            var label = self._urlTooltip.firstChild;
+            label.value = self.value;
+            var bO = self.boxObject;
+            self._urlTooltip.maxWidth = bO.width;
+            self._urlTooltip.showPopup(self, bO.screenX, bO.screenY + bO.height, "tooltip");
+          }, 700, this);
         ]]></body>
       </method>
 
@@ -411,21 +179,12 @@
         <body><![CDATA[
           if (aTopic == "nsPref:changed") {
             switch(aData) {
-              case "hideProtocols":
-                this._hideProtocols = this._prefs.getCharPref(aData).split(" ");
-                this._syncValue();
-                if (!this.plain)
-                  this._prettyView(false);
-                break;
               case "clickSelectsAll":
               case "doubleClickSelectsAll":
                 this[aData] = this._prefs.getBoolPref(aData);
                 break;
               case "autoFill":
                 this.completeDefaultIndex = this._prefs.getBoolPref(aData);
-                break;
-              case "animateBlend":
-                this._animateBlend = this._prefs.getBoolPref(aData);
                 break;
             }
           }
@@ -435,71 +194,27 @@
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.type == "mousedown" &&
-              aEvent.button == 0 && aEvent.detail == 2 &&
-              this.doubleClickSelectsAll) {
-            this.editor.selectAll();
-            aEvent.preventDefault();
+          switch (aEvent.type) {
+            case "mousedown":
+              if (this.doubleClickSelectsAll &&
+                  aEvent.button == 0 && aEvent.detail == 2) {
+                this.editor.selectAll();
+                aEvent.preventDefault();
+              }
+              break;
+            case "mousemove":
+              this._initURLTooltip();
+              break;
+            case "mouseout":
+              this._hideURLTooltip();
+              break;
           }
         ]]></body>
       </method>
     </implementation>
 
     <handlers>
-      <handler event="input"
-               action="this._syncValue();"/>
-
-      <handler event="mousemove"><![CDATA[
-        if (!this._focused && this._contentIsCropped)
-          this._initURLTooltip(function() {
-            return this.plain ? this.value : null;
-          }, this, "start");
-      ]]></handler>
-
-      <handler event="mouseover"><![CDATA[
-        if (this._mouseover)
-          return;
-        if (!this.plain) {
-          // do nothing if we're over the favicon, history dropmarker et al
-          var pBO = this._presentationBox.boxObject;
-          if (event.screenX < pBO.screenX || event.screenX > pBO.screenX + pBO.width)
-            return;
-        }
-        this._mouseover = true;
-        setTimeout(function(self) {
-          if (self._mouseover) {
-            self.plain = true;
-            if (!self._focused && self._contentIsCropped)
-              self._initURLTooltip(function() {
-                return this.plain ? this.value : null;
-              }, self, "start");
-          }
-        }, 60, this);
-      ]]></handler>
-
-      <handler event="mouseout" phase="target"><![CDATA[
-        this._mouseover = false;
-        if (!this._focused && this.plain)
-          this._prettyView(true);
-        else
-          this._hideURLTooltip();
-      ]]></handler>
-
-      <handler event="focus" phase="capturing"><![CDATA[
-        if (!this._focused) {
-          this._focused = true;
-          this.plain = true;
-        }
-      ]]></handler>
-
-      <handler event="blur" phase="capturing"><![CDATA[
-        if (this._focused && !this._dontBlur) {
-          this._focused = false;
-          this._syncValue();
-          if (!this._mouseover)
-            this._prettyView(true);
-        }
-      ]]></handler>
+      <handler event="focus" phase="capturing" action="this._hideURLTooltip();"/>
     </handlers>
 
   </binding>

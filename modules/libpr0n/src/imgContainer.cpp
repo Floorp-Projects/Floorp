@@ -25,6 +25,7 @@
  *   Asko Tontti <atontti@cc.hut.fi>
  *   Arron Mogge <paper@animecity.nu>
  *   Andrew Smith
+ *   Federico Mena-Quintero <federico@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,23 +43,47 @@
 
 #include "nsComponentManagerUtils.h"
 #include "imgIContainerObserver.h"
+#include "ImageErrors.h"
 #include "nsIImage.h"
+#include "imgILoad.h"
+#include "imgIDecoder.h"
+#include "imgIDecoderObserver.h"
 #include "imgContainer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoPtr.h"
+#include "nsStringStream.h"
+#include "prmem.h"
+#include "prlog.h"
+#include "prenv.h"
 
 #include "gfxContext.h"
+
+/* Accounting for compressed data */
+#if defined(PR_LOGGING)
+static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("CompressedImageAccounting");
+#else
+#define gCompressedImageAccountingLog
+#endif
+
+static int num_containers_with_discardable_data;
+static PRInt64 num_compressed_image_bytes;
+
 
 NS_IMPL_ISUPPORTS3(imgContainer, imgIContainer, nsITimerCallback, nsIProperties)
 
 //******************************************************************************
 imgContainer::imgContainer() :
   mSize(0,0),
+  mNumFrames(0),
   mAnim(nsnull),
   mAnimationMode(kNormalAnimMode),
   mLoopCount(-1),
-  mObserver(nsnull)
+  mObserver(nsnull),
+  mDiscardable(PR_FALSE),
+  mDiscarded(PR_FALSE),
+  mRestoreDataDone(PR_FALSE),
+  mDiscardTimer(nsnull)
 {
 }
 
@@ -67,6 +92,23 @@ imgContainer::~imgContainer()
 {
   if (mAnim)
     delete mAnim;
+
+  if (!mRestoreData.IsEmpty()) {
+    num_containers_with_discardable_data--;
+    num_compressed_image_bytes -= mRestoreData.Length();
+
+    PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
+            ("CompressedImageAccounting: destroying imgContainer %p.  "
+             "Compressed containers: %d, Compressed data bytes: %lld",
+             this,
+             num_containers_with_discardable_data,
+             num_compressed_image_bytes));
+  }
+
+  if (mDiscardTimer) {
+    mDiscardTimer->Cancel ();
+    mDiscardTimer = nsnull;
+  }
 }
 
 //******************************************************************************
@@ -124,15 +166,53 @@ NS_IMETHODIMP imgContainer::GetHeight(PRInt32 *aHeight)
   return NS_OK;
 }
 
+nsresult imgContainer::GetCurrentFrameNoRef(gfxIImageFrame **aFrame)
+{
+  nsresult result;
+
+  result = RestoreDiscardedData();
+  if (NS_FAILED (result)) {
+    PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
+            ("CompressedImageAccounting: imgContainer::GetCurrentFrameNoRef(): error %d in RestoreDiscardedData(); "
+             "returning a null frame from imgContainer %p",
+             result,
+             this));
+
+    *aFrame = nsnull;
+    return result;
+  }
+
+  if (!mAnim)
+    *aFrame = mFrames.SafeObjectAt(0);
+  else if (mAnim->lastCompositedFrameIndex == mAnim->currentAnimationFrameIndex)
+    *aFrame = mAnim->compositingFrame;
+  else
+    *aFrame = mFrames.SafeObjectAt(mAnim->currentAnimationFrameIndex);
+
+  if (!*aFrame)
+    PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
+            ("CompressedImageAccounting: imgContainer::GetCurrentFrameNoRef(): returning null frame from imgContainer %p "
+             "(no errors when restoring data)",
+              this));
+
+  return NS_OK;
+}
+
 //******************************************************************************
 /* readonly attribute gfxIImageFrame currentFrame; */
 NS_IMETHODIMP imgContainer::GetCurrentFrame(gfxIImageFrame **aCurrentFrame)
 {
+  nsresult result;
+
   NS_ASSERTION(aCurrentFrame, "imgContainer::GetCurrentFrame; Invalid Arg");
   if (!aCurrentFrame)
     return NS_ERROR_INVALID_POINTER;
   
-  if (!(*aCurrentFrame = inlinedGetCurrentFrame()))
+  result = GetCurrentFrameNoRef (aCurrentFrame);
+  if (NS_FAILED (result))
+    return result;
+
+  if (!*aCurrentFrame)
     return NS_ERROR_FAILURE;
 
   NS_ADDREF(*aCurrentFrame);
@@ -148,7 +228,7 @@ NS_IMETHODIMP imgContainer::GetNumFrames(PRUint32 *aNumFrames)
   if (!aNumFrames)
     return NS_ERROR_INVALID_ARG;
 
-  *aNumFrames = mFrames.Count();
+  *aNumFrames = mNumFrames;
   
   return NS_OK;
 }
@@ -157,16 +237,24 @@ NS_IMETHODIMP imgContainer::GetNumFrames(PRUint32 *aNumFrames)
 /* gfxIImageFrame getFrameAt (in unsigned long index); */
 NS_IMETHODIMP imgContainer::GetFrameAt(PRUint32 index, gfxIImageFrame **_retval)
 {
+  nsresult result;
+
   NS_ASSERTION(_retval, "imgContainer::GetFrameAt; Invalid Arg");
   if (!_retval)
     return NS_ERROR_INVALID_POINTER;
 
-  if (!mFrames.Count()) {
+  if (mNumFrames == 0) {
     *_retval = nsnull;
     return NS_OK;
   }
 
-  NS_ENSURE_ARG(index < static_cast<PRUint32>(mFrames.Count()));
+  NS_ENSURE_ARG((int) index < mNumFrames);
+
+  result = RestoreDiscardedData ();
+  if (NS_FAILED (result)) {
+    *_retval = nsnull;
+    return result;
+  }
   
   if (!(*_retval = mFrames[index]))
     return NS_ERROR_FAILURE;
@@ -183,17 +271,18 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
   NS_ASSERTION(item, "imgContainer::AppendFrame; Invalid Arg");
   if (!item)
     return NS_ERROR_INVALID_ARG;
-  
-  PRInt32 numFrames = mFrames.Count();
-  
-  if (numFrames == 0) {
+
+  if (mFrames.Count() == 0) {
     // This may not be an animated image, don't do all the animation stuff.
     mFrames.AppendObject(item);
+
+    mNumFrames++;
+
     return NS_OK;
   }
   
-  if (numFrames == 1) {
-    // Now that we got a second frame, initialize animation stuff.
+  if (mFrames.Count() == 1) {
+    // Since we're about to add our second frame, initialize animation stuff
     if (!ensureAnimExists())
       return NS_ERROR_OUT_OF_MEMORY;
     
@@ -216,11 +305,13 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
                                          itemRect);
   
   mFrames.AppendObject(item);
+
+  mNumFrames++;
   
-  // If this is our second frame, start the animation.
-  // Must be called after AppendObject because StartAnimation checks for > 1
-  // frame
-  if (numFrames == 1)
+  // If this is our second frame (We've just added our second frame above),
+  // count should now be 2.  This must be called after we AppendObject 
+  // because StartAnimation checks for > 1 frames
+  if (mFrames.Count() == 2)
     StartAnimation();
   
   return NS_OK;
@@ -230,6 +321,7 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
 /* void removeFrame (in gfxIImageFrame item); */
 NS_IMETHODIMP imgContainer::RemoveFrame(gfxIImageFrame *item)
 {
+  /* Remember to decrement mNumFrames if you implement this */
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -253,7 +345,7 @@ NS_IMETHODIMP imgContainer::DecodingComplete(void)
     mAnim->doneDecoding = PR_TRUE;
   // If there's only 1 frame, optimize it.
   // Optimizing animated images is not supported
-  if (mFrames.Count() == 1)
+  if (mNumFrames == 1)
     mFrames[0]->SetMutable(PR_FALSE);
   return NS_OK;
 }
@@ -292,11 +384,11 @@ NS_IMETHODIMP imgContainer::SetAnimationMode(PRUint16 aAnimationMode)
       break;
     case kNormalAnimMode:
       if (mLoopCount != 0 || 
-          (mAnim && (mAnim->currentAnimationFrameIndex + 1 < mFrames.Count())))
+          (mAnim && (mAnim->currentAnimationFrameIndex + 1 < mNumFrames)))
         StartAnimation();
       break;
     case kLoopOnceAnimMode:
-      if (mAnim && (mAnim->currentAnimationFrameIndex + 1 < mFrames.Count()))
+      if (mAnim && (mAnim->currentAnimationFrameIndex + 1 < mNumFrames))
         StartAnimation();
       break;
   }
@@ -312,12 +404,18 @@ NS_IMETHODIMP imgContainer::StartAnimation()
       (mAnim && (mAnim->timer || mAnim->animating)))
     return NS_OK;
   
-  if (mFrames.Count() > 1) {
+  if (mNumFrames > 1) {
     if (!ensureAnimExists())
       return NS_ERROR_OUT_OF_MEMORY;
     
     PRInt32 timeout;
-    gfxIImageFrame *currentFrame = inlinedGetCurrentFrame();
+    nsresult result;
+    gfxIImageFrame *currentFrame;
+
+    result = GetCurrentFrameNoRef (&currentFrame);
+    if (NS_FAILED (result))
+      return result;
+
     if (currentFrame) {
       currentFrame->GetTimeout(&timeout);
       if (timeout <= 0) // -1 means display this frame forever
@@ -376,8 +474,15 @@ NS_IMETHODIMP imgContainer::ResetAnimation()
   mAnim->currentAnimationFrameIndex = 0;
   // Update display
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
-  if (observer)
+  if (observer) {
+    nsresult result;
+
+    result = RestoreDiscardedData ();
+    if (NS_FAILED (result))
+      return result;
+
     observer->FrameChanged(this, mFrames[0], &(mAnim->firstFrameRefreshArea));
+  }
 
   if (oldAnimating)
     return StartAnimation();
@@ -411,10 +516,150 @@ NS_IMETHODIMP imgContainer::SetLoopCount(PRInt32 aLoopCount)
   return NS_OK;
 }
 
+static PRBool
+DiscardingEnabled(void)
+{
+  static PRBool inited;
+  static PRBool enabled;
+
+  if (!inited) {
+    inited = PR_TRUE;
+
+    enabled = (PR_GetEnv("MOZ_DISABLE_IMAGE_DISCARD") == nsnull);
+  }
+
+  return enabled;
+}
+
+//******************************************************************************
+/* void setDiscardable(in string mime_type); */
+NS_IMETHODIMP imgContainer::SetDiscardable(const char* aMimeType)
+{
+  NS_ASSERTION(aMimeType, "imgContainer::SetDiscardable() called with null aMimeType");
+
+  if (!DiscardingEnabled())
+    return NS_OK;
+
+  if (mDiscardable) {
+    NS_WARNING ("imgContainer::SetDiscardable(): cannot change an imgContainer which is already discardable");
+    return NS_ERROR_FAILURE;
+  }
+
+  mDiscardableMimeType.Assign(aMimeType);
+  mDiscardable = PR_TRUE;
+
+  num_containers_with_discardable_data++;
+  PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
+          ("CompressedImageAccounting: Making imgContainer %p (%s) discardable.  "
+           "Compressed containers: %d, Compressed data bytes: %lld",
+           this,
+           aMimeType,
+           num_containers_with_discardable_data,
+           num_compressed_image_bytes));
+
+  return NS_OK;
+}
+
+//******************************************************************************
+/* void addRestoreData(in nsIInputStream aInputStream, in unsigned long aCount); */
+NS_IMETHODIMP imgContainer::AddRestoreData(const char *aBuffer, PRUint32 aCount)
+{
+  NS_ASSERTION(aBuffer, "imgContainer::AddRestoreData() called with null aBuffer");
+
+  if (!DiscardingEnabled ())
+    return NS_OK;
+
+  if (!mDiscardable) {
+    NS_WARNING ("imgContainer::AddRestoreData() can only be called if SetDiscardable is called first");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mRestoreDataDone) {
+    /* We are being called from the decoder while the data is being restored
+     * (i.e. we were fully loaded once, then we discarded the image data, then
+     * we are being restored).  We don't want to save the compressed data again,
+     * since we already have it.
+     */
+    return NS_OK;
+  }
+
+  if (!mRestoreData.AppendElements(aBuffer, aCount))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  num_compressed_image_bytes += aCount;
+
+  PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
+          ("CompressedImageAccounting: Added compressed data to imgContainer %p (%s).  "
+           "Compressed containers: %d, Compressed data bytes: %lld",
+           this,
+           mDiscardableMimeType.get(),
+           num_containers_with_discardable_data,
+           num_compressed_image_bytes));
+
+  return NS_OK;
+}
+
+/* Note!  buf must be declared as char buf[9]; */
+// just used for logging and hashing the header
+static void
+get_header_str (char *buf, char *data, PRSize data_len)
+{
+  int i;
+  int n;
+  static char hex[] = "0123456789abcdef";
+
+  n = data_len < 4 ? data_len : 4;
+
+  for (i = 0; i < n; i++) {
+    buf[i * 2]     = hex[(data[i] >> 4) & 0x0f];
+    buf[i * 2 + 1] = hex[data[i] & 0x0f];
+  }
+
+  buf[i * 2] = 0;
+}
+
+//******************************************************************************
+/* void restoreDataDone(); */
+NS_IMETHODIMP imgContainer::RestoreDataDone (void)
+{
+
+  if (!DiscardingEnabled ())
+    return NS_OK;
+
+  if (mRestoreDataDone)
+    return NS_OK;
+
+  mRestoreData.Compact();
+
+  mRestoreDataDone = PR_TRUE;
+
+  if (PR_LOG_TEST(gCompressedImageAccountingLog, PR_LOG_DEBUG)) {
+    char buf[9];
+    get_header_str(buf, mRestoreData.Elements(), mRestoreData.Length());
+    PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
+            ("CompressedImageAccounting: imgContainer::RestoreDataDone() - data is done for container %p (%s), %d real frames (cached as %d frames) - header %p is 0x%s (length %d)",
+             this,
+             mDiscardableMimeType.get(),
+             mFrames.Count (),
+             mNumFrames,
+             mRestoreData.Elements(),
+             buf,
+             mRestoreData.Length()));
+  }
+
+  return ResetDiscardTimer();
+}
+
 //******************************************************************************
 /* void notify(in nsITimer timer); */
 NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
 {
+  nsresult result;
+
+  result = RestoreDiscardedData();
+  if (NS_FAILED (result))
+    return result;
+
   // This should never happen since the timer is only set up in StartAnimation()
   // after mAnim is checked to exist.
   NS_ASSERTION(mAnim, "imgContainer::Notify() called but mAnim is null");
@@ -433,8 +678,7 @@ NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
     return NS_OK;
   }
 
-  PRInt32 numFrames = mFrames.Count();
-  if (!numFrames)
+  if (mNumFrames == 0)
     return NS_OK;
   
   gfxIImageFrame *nextFrame = nsnull;
@@ -448,7 +692,7 @@ NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
   // finished decoding (see EndFrameDecode)
   if (mAnim->doneDecoding || 
       (nextFrameIndex < mAnim->currentDecodingFrameIndex)) {
-    if (numFrames == nextFrameIndex) {
+    if (mNumFrames == nextFrameIndex) {
       // End of Animation
 
       // If animation mode is "loop once", it's time to stop animating
@@ -699,7 +943,7 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
   }
 
   // Check if the frame we are composing wants the previous image restored afer
-  // it is done. Don't store it (again) if last frame wanted it's image restored
+  // it is done. Don't store it (again) if last frame wanted its image restored
   // too
   if ((nextFrameDisposalMethod == imgIContainer::kDisposeRestorePrevious) &&
       (prevFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious)) {
@@ -845,7 +1089,19 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
   dstImg->GetSurface(getter_AddRefs(dstSurf));
 
   gfxContext dst(dstSurf);
+  
+  // first clear the surface if the blend flag says so
+  PRInt32 blendMethod;
+  aSrc->GetBlendMethod(&blendMethod);
+  gfxContext::GraphicsOperator defaultOperator = dst.CurrentOperator();
+  if (blendMethod == imgIContainer::kBlendSource) {
+    dst.SetOperator(gfxContext::OPERATOR_CLEAR);
+    dst.Rectangle(gfxRect(aDstRect.x, aDstRect.y, aDstRect.width, aDstRect.height));
+    dst.Fill();
+  }
+  
   dst.NewPath();
+  dst.SetOperator(defaultOperator);
   // We don't use PixelSnappedRectangleAndSetPattern because if
   // these coords aren't already pixel aligned, we've lost
   // before we've even begun.
@@ -905,4 +1161,309 @@ NS_IMETHODIMP imgContainer::GetKeys(PRUint32 *count, char ***keys)
     return NS_OK;
   }
   return mProperties->GetKeys(count, keys);
+}
+
+static int
+get_discard_timer_ms (void)
+{
+  /* FIXME: don't hardcode this */
+  return 45000; /* 45 seconds */
+}
+
+void
+imgContainer::sDiscardTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  imgContainer *self = (imgContainer *) aClosure;
+  int old_frame_count;
+
+  NS_ASSERTION(aTimer == self->mDiscardTimer,
+               "imgContainer::DiscardTimerCallback() got a callback for an unknown timer");
+
+  self->mDiscardTimer = nsnull;
+
+  old_frame_count = self->mFrames.Count();
+
+  if (self->mAnim) {
+    delete self->mAnim;
+    self->mAnim = nsnull;
+  }
+
+  self->mFrames.Clear();
+
+  self->mDiscarded = PR_TRUE;
+
+  PR_LOG(gCompressedImageAccountingLog, PR_LOG_DEBUG,
+         ("CompressedImageAccounting: discarded uncompressed image data from imgContainer %p (%s) - %d frames (cached count: %d); "
+          "Compressed containers: %d, Compressed data bytes: %lld",
+          self,
+          self->mDiscardableMimeType.get(),
+          old_frame_count,
+          self->mNumFrames,
+          num_containers_with_discardable_data,
+          num_compressed_image_bytes));
+}
+
+nsresult
+imgContainer::ResetDiscardTimer (void)
+{
+  if (!DiscardingEnabled())
+    return NS_OK;
+
+  if (!mDiscardTimer) {
+    mDiscardTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+    if (!mDiscardTimer)
+      return NS_ERROR_OUT_OF_MEMORY;
+  } else {
+    if (NS_FAILED(mDiscardTimer->Cancel()))
+      return NS_ERROR_FAILURE;
+  }
+
+  return mDiscardTimer->InitWithFuncCallback(sDiscardTimerCallback,
+                                             (void *) this,
+                                             get_discard_timer_ms (),
+                                             nsITimer::TYPE_ONE_SHOT);
+}
+
+nsresult
+imgContainer::RestoreDiscardedData(void)
+{
+  nsresult result;
+  int num_expected_frames;
+
+  if (!mDiscardable)
+    return NS_OK;
+
+  result = ResetDiscardTimer();
+  if (NS_FAILED (result))
+    return result;
+
+  if (!mDiscarded)
+    return NS_OK;
+
+  num_expected_frames = mNumFrames;
+
+  result = ReloadImages ();
+  if (NS_FAILED (result)) {
+    PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
+            ("CompressedImageAccounting: imgContainer::RestoreDiscardedData() for container %p failed to ReloadImages()",
+             this));
+    return result;
+  }
+
+  mDiscarded = PR_FALSE;
+
+  NS_ASSERTION (mNumFrames == mFrames.Count(),
+                "number of restored image frames doesn't match");
+  NS_ASSERTION (num_expected_frames == mNumFrames,
+                "number of restored image frames doesn't match the original number of frames!");
+  
+  PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
+          ("CompressedImageAccounting: imgContainer::RestoreDiscardedData() restored discarded data "
+           "for imgContainer %p (%s) - %d image frames.  "
+           "Compressed containers: %d, Compressed data bytes: %lld",
+           this,
+           mDiscardableMimeType.get(),
+           mNumFrames,
+           num_containers_with_discardable_data,
+           num_compressed_image_bytes));
+
+  return NS_OK;
+}
+
+class ContainerLoader : public imgILoad,
+                        public imgIDecoderObserver,
+                        public nsSupportsWeakReference
+{
+public:
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGILOAD
+  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGICONTAINEROBSERVER
+
+  ContainerLoader(void);
+
+private:
+
+  imgIContainer *mContainer;
+};
+
+NS_IMPL_ISUPPORTS4 (ContainerLoader, imgILoad, imgIDecoderObserver, imgIContainerObserver, nsISupportsWeakReference)
+
+ContainerLoader::ContainerLoader (void)
+{
+}
+
+/* Implement imgILoad::image getter */
+NS_IMETHODIMP
+ContainerLoader::GetImage(imgIContainer **aImage)
+{
+  *aImage = mContainer;
+  NS_IF_ADDREF (*aImage);
+  return NS_OK;
+}
+
+/* Implement imgILoad::image setter */
+NS_IMETHODIMP
+ContainerLoader::SetImage(imgIContainer *aImage)
+{
+  mContainer = aImage;
+  return NS_OK;
+}
+
+/* Implement imgILoad::isMultiPartChannel getter */
+NS_IMETHODIMP
+ContainerLoader::GetIsMultiPartChannel(PRBool *aIsMultiPartChannel)
+{
+  *aIsMultiPartChannel = PR_FALSE; /* FIXME: is this always right? */
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onStartRequest() */
+NS_IMETHODIMP
+ContainerLoader::OnStartRequest(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onStartDecode() */
+NS_IMETHODIMP
+ContainerLoader::OnStartDecode(imgIRequest *aRequest)
+{
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onStartContainer() */
+NS_IMETHODIMP
+ContainerLoader::OnStartContainer(imgIRequest *aRequest, imgIContainer *aContainer)
+{
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onStartFrame() */
+NS_IMETHODIMP
+ContainerLoader::OnStartFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame)
+{
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onDataAvailable() */
+NS_IMETHODIMP
+ContainerLoader::OnDataAvailable(imgIRequest *aRequest, gfxIImageFrame *aFrame, const nsIntRect * aRect)
+{
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onStopFrame() */
+NS_IMETHODIMP
+ContainerLoader::OnStopFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame)
+{
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onStopContainer() */
+NS_IMETHODIMP
+ContainerLoader::OnStopContainer(imgIRequest *aRequest, imgIContainer *aContainer)
+{
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onStopDecode() */
+NS_IMETHODIMP
+ContainerLoader::OnStopDecode(imgIRequest *aRequest, nsresult status, const PRUnichar *statusArg)
+{
+  return NS_OK;
+}
+
+/* Implement imgIDecoderObserver::onStopRequest() */
+NS_IMETHODIMP
+ContainerLoader::OnStopRequest(imgIRequest *aRequest, PRBool aIsLastPart)
+{
+  return NS_OK;
+}
+
+/* implement imgIContainerObserver::frameChanged() */
+NS_IMETHODIMP
+ContainerLoader::FrameChanged(imgIContainer *aContainer, gfxIImageFrame *aFrame, nsIntRect * aDirtyRect)
+{
+  return NS_OK;
+}
+
+nsresult
+imgContainer::ReloadImages(void)
+{
+  nsresult result = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIInputStream> stream;
+
+  NS_ASSERTION(!mRestoreData.IsEmpty(),
+               "imgContainer::ReloadImages(): mRestoreData should not be empty");
+  NS_ASSERTION(mRestoreDataDone,
+               "imgContainer::ReloadImages(): mRestoreDataDone shoudl be true!");
+
+  mNumFrames = 0;
+  NS_ASSERTION(mFrames.Count() == 0,
+               "imgContainer::ReloadImages(): mFrames should be empty");
+
+  nsCAutoString decoderCID(NS_LITERAL_CSTRING("@mozilla.org/image/decoder;2?type=") + mDiscardableMimeType);
+
+  nsCOMPtr<imgIDecoder> decoder = do_CreateInstance(decoderCID.get());
+  if (!decoder) {
+    PR_LOG(gCompressedImageAccountingLog, PR_LOG_WARNING,
+           ("CompressedImageAccounting: imgContainer::ReloadImages() could not create decoder for %s",
+            mDiscardableMimeType.get()));
+    return NS_IMAGELIB_ERROR_NO_DECODER;
+  }
+
+  nsCOMPtr<imgILoad> loader = new ContainerLoader();
+  if (!loader) {
+    PR_LOG(gCompressedImageAccountingLog, PR_LOG_WARNING,
+           ("CompressedImageAccounting: imgContainer::ReloadImages() could not allocate ContainerLoader "
+            "when reloading the images for container %p",
+            this));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  loader->SetImage(this);
+
+  result = decoder->Init(loader);
+  if (NS_FAILED(result)) {
+    PR_LOG(gCompressedImageAccountingLog, PR_LOG_WARNING,
+           ("CompressedImageAccounting: imgContainer::ReloadImages() image container %p "
+            "failed to initialize the decoder (%s)",
+            this,
+            mDiscardableMimeType.get()));
+    return result;
+  }
+
+  result = NS_NewByteInputStream(getter_AddRefs(stream), mRestoreData.Elements(), mRestoreData.Length(), NS_ASSIGNMENT_DEPEND);
+  NS_ENSURE_SUCCESS(result, result);
+
+  if (PR_LOG_TEST(gCompressedImageAccountingLog, PR_LOG_DEBUG)) {
+    char buf[9];
+    get_header_str(buf, mRestoreData.Elements(), mRestoreData.Length());
+    PR_LOG(gCompressedImageAccountingLog, PR_LOG_WARNING,
+           ("CompressedImageAccounting: imgContainer::ReloadImages() starting to restore images for container %p (%s) - "
+            "header %p is 0x%s (length %d)",
+            this,
+            mDiscardableMimeType.get(),
+            mRestoreData.Elements(),
+            buf,
+            mRestoreData.Length()));
+  }
+
+  PRUint32 written;
+  result = decoder->WriteFrom(stream, mRestoreData.Length(), &written);
+  NS_ENSURE_SUCCESS(result, result);
+
+  if (NS_FAILED(decoder->Flush()))
+    return result;
+
+  result = decoder->Close();
+  NS_ENSURE_SUCCESS(result, result);
+
+  NS_ASSERTION(mFrames.Count() == mNumFrames,
+               "imgContainer::ReloadImages(): the restored mFrames.Count() doesn't match mNumFrames!");
+
+  return result;
 }

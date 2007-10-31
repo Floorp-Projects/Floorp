@@ -680,6 +680,7 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier identifier)
   jsval id = (jsval)identifier;
   JSBool found, ok = JS_FALSE;
 
+  AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
 
   if (JSVAL_IS_STRING(id)) {

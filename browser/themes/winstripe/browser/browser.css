@@ -856,7 +856,7 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   margin-bottom: 2px;
   margin-top: 2px;
   -moz-margin-end: 0px;
-  -moz-margin-start: 3px;
+  -moz-margin-start: 0px;
   width: 7em;
   min-width: 7em;
 
@@ -866,33 +866,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   -moz-border-right-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow;
   border-width: 1px;
-}
-
-.formatted-url {
-  -moz-box-align: center;
-  margin: 0 3px;
-  /*XXX Gecko 1.9 quirk*/
-  -moz-padding-start: 1px;
-  color: -moz-fieldtext;
-}
-
-#urlbar[level="high"] .formatted-url ,
-#urlbar[level="low"] .formatted-url {
-  color: black;
-}
-
-.formatted-url * {
-  margin: 0;
-  padding: 0;
-  cursor: text;
-}
-
-.formatted-url-ellipsis {
-  -moz-margin-start: 1px;
-}
-
-.formatted-url-prePath {
-  -moz-box-pack: center;
 }
 
 #urlbar-container {
@@ -1746,43 +1719,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   color: #000000;
 }
 
-#urlbar[level="high"] #lock-icon {
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-#urlbar[level="high"] #lock-icon:hover {
-  -moz-image-region: rect(18px, 18px, 36px, 0px);
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-#urlbar[level="high"] #lock-icon:active {
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-#urlbar[level="low"] #lock-icon {
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-#urlbar[level="low"] #lock-icon:hover {
-  -moz-image-region: rect(18px, 18px, 36px, 0px);
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-#urlbar[level="low"] #lock-icon:active {
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
-  list-style-image: url("chrome://browser/skin/Secure.png");
-}
-#urlbar[level="broken"] #lock-icon {
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-#urlbar[level="broken"] #lock-icon:hover {
-  -moz-image-region: rect(18px, 18px, 36px, 0px);
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-#urlbar[level="broken"] #lock-icon:active {
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
-  list-style-image: url("chrome://browser/skin/Security-broken.png");
-}
-
 %ifdef MOZ_WIDGET_GTK2
 #urlbar > .autocomplete-textbox-container {
   -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
@@ -1894,4 +1830,118 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 .bookmark-item[dragover-bottom="true"] {
   -moz-border-bottom-colors: #000000;
+}
+
+/* ::::: Identity Indicator Styling ::::: */
+/* Location bar visuals*/
+#identity-box {
+  cursor: help;
+  background-color: ThreeDFace;
+%ifdef MOZ_WIDGET_GTK2
+  -moz-border-end: 1px solid ThreeDShadow;
+%else
+  -moz-appearance: toolbox;
+  outline: 1px solid ThreeDShadow;
+%endif
+}
+
+#identity-box.verifiedIdentity {
+%ifdef MOZ_WIDGET_GTK2
+  border-color: highlight;
+%else
+  outline-color: highlight;
+%endif
+}
+
+#identity-box:hover {
+%ifdef MOZ_WIDGET_GTK2
+  border-color: ThreeDDarkShadow;
+%else
+  outline-color: ThreeDDarkShadow;
+%endif
+}
+
+#identity-icon-label {
+  padding: 0 2px;
+  margin: 0;
+  cursor: inherit;
+}
+
+.unknownIdentity > #identity-icon-label {
+  display: none;
+}
+
+/* Popup Icons */
+#identity-popup-icon {
+    height: 64px;
+    width: 64px;
+    padding: 0;
+    margin: 10px 0 0;
+    list-style-image: url("chrome://browser/skin/identity.png");
+    -moz-image-region: rect(0px, 64px, 64px, 0px);
+}
+
+.verifiedDomain > #identity-popup-container > #identity-popup-icon {
+    -moz-image-region: rect(64px, 64px, 128px, 0px);
+}
+
+.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
+    -moz-image-region: rect(128px, 64px, 192px, 0px);
+}
+
+/* Popup Title */
+#identity-popup-title {
+    font-size: 120%;
+    font-weight: bold;
+}
+
+.verifiedIdentity > #identity-popup-title {
+    color: #6A6;
+}
+
+.unknownIdentity > #identity-popup-title {
+    color: #999;
+}
+
+.verifiedDomain > #identity-popup-title {
+    color: black;
+}
+
+/* Popup Body Text */
+#identity-popup-content-box > description,
+#identity-popup-encryption-label {
+    white-space: -moz-pre-wrap;
+    color: black;
+    padding-left: 10px;
+}
+
+#identity-popup-content {
+    padding-top: 5px;
+    margin-bottom: 0;
+    max-width: 200px;
+}
+
+.verifiedIdentity > #identity-popup-content,
+.verifiedDomain > #identity-popup-content {
+   font-size: 140%;
+   font-weight: bold;
+   max-width: 300px;
+}
+
+#identity-popup-encryption {
+  margin: 10px 0;
+}
+
+.verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,
+.verifiedDomain > #identity-popup-encryption > * >#identity-popup-encryption-icon {
+  list-style-image: url("chrome://browser/skin/Secure.png");
+  -moz-image-region: rect(0px, 18px, 18px, 0px);
+}
+
+/* Popup Bounding Box */
+#identity-popup-container {
+    background-image: none;
+    background-color: white;
+    min-width: 280px;
+    padding: 10px;
 }

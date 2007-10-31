@@ -6,7 +6,7 @@ package Bootstrap::Step::Updates;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging GetLocaleManifest);
+use Bootstrap::Util qw(CvsCatfile SyncToStaging GetLocaleManifest);
 
 use File::Find qw(find);
 use POSIX qw(strftime);
@@ -224,6 +224,7 @@ sub BumpVerifyConfig {
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
+    my $oldRc = $config->Get(var => 'oldRc');
     my $appName = $config->Get(var => 'appName');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
@@ -239,7 +240,7 @@ sub BumpVerifyConfig {
     my $channel = 'betatest';
 
     # grab os-specific buildID file on FTP
-    my $candidateDir = CvsCatfile($config->GetFtpNightlyDir(), $oldVersion . '-candidates', 'rc' . $rc ) . '/';
+    my $candidateDir = CvsCatfile($config->GetFtpNightlyDir(), $oldVersion . '-candidates', 'rc' . $oldRc ) . '/';
 
     my $buildID = $this->GetBuildIDFromFTP(os => $osname, releaseDir => $candidateDir);
 
@@ -396,7 +397,7 @@ sub Push {
       );
     }
 
-    SyncNightlyDirToStaging();
+    SyncToStaging();
 
     # Push test channels live
     $this->Shell(

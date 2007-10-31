@@ -1125,9 +1125,6 @@ NS_METHOD nsWindow::Destroy()
       CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
     }
 
-    // Destroy thebes surface now, XXX do we need this at all??
-    mThebesSurface = nsnull;
-
     if (mWnd) {
       HWND hwndBeingDestroyed = mFrameWnd ? mFrameWnd : mWnd;
       DEBUGFOCUS(Destroy);
@@ -3165,16 +3162,7 @@ PRBool nsWindow::OnPaint()
                              (PRInt32)mWnd);
 #endif // NS_DEBUG
 
-        // Thebes code version, adapted from windows/nsWindow.cpp
-        // XXX as a preliminary solution for repaint problems of cairo-os2
-        //     builds, repaint the whole window for each paint event
-        //     see Bug 371505
-        SWP swp;
-        WinQueryWindowPos(mWnd, &swp);
-        nsRefPtr<gfxASurface> targetSurface =
-          new gfxOS2Surface(hPS, gfxIntSize(swp.cx, swp.cy));
-        //new gfxOS2Surface(hPS, gfxIntSize(rect.width, rect.height));
-        nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
+        nsRefPtr<gfxContext> thebesContext = new gfxContext(mThebesSurface);
 
         nsCOMPtr<nsIRenderingContext> context;
         nsresult rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(context));
@@ -3190,7 +3178,15 @@ PRBool nsWindow::OnPaint()
         }
 
         event.renderingContext = context;
-        rc = DispatchWindowEvent(&event, eventStatus);
+        // try to dispatch a few times, 10 should be more than enough, in tests
+        // we get something at the second try at the latest
+        for (int i = 0; i < 10; i++) {
+          rc = DispatchWindowEvent(&event, eventStatus);
+          if (rc) {
+            // this was handled, so we can stop trying
+            break;
+          }
+        }
         event.renderingContext = nsnull;
 
         if (rc) {
@@ -3200,7 +3196,9 @@ PRBool nsWindow::OnPaint()
           thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
           thebesContext->Paint();
         }
+        NS_RELEASE(event.widget);
       } // if (mEventCallback)
+      mThebesSurface->Refresh(&rcl, hPS);
     } // if (!WinIsRectEmpty(0, &rcl))
 
     WinEndPaint(hPS);
@@ -3243,6 +3241,16 @@ PRBool nsWindow::OnResize(PRInt32 aX, PRInt32 aY)
 {
    mBounds.width = aX;
    mBounds.height = aY;
+
+   // resize the thebes surface to the new size
+   if (!mThebesSurface) {
+     // So we need to create a thebes surface for this window.
+     // (This is necessary for the first resize of a window.)
+     mThebesSurface = new gfxOS2Surface(mWnd);
+   }
+
+   mThebesSurface->Resize(gfxIntSize(aX, aY));
+
    return DispatchResizeEvent( aX, aY);
 }
 

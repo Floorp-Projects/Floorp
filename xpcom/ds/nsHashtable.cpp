@@ -795,7 +795,7 @@ nsObjectHashtable::RemoveAndDelete(nsHashKey *aKey)
 {
     void *value = Remove(aKey);
     if (value && mDestroyElementFun)
-        return (*mDestroyElementFun)(aKey, value, mDestroyElementClosure);
+        return !!(*mDestroyElementFun)(aKey, value, mDestroyElementClosure);
     return PR_FALSE;
 }
 

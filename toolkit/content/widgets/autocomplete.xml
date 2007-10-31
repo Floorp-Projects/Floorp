@@ -55,7 +55,7 @@
 
     <content sizetopopup="pref">
       <xul:hbox class="autocomplete-textbox-container" flex="1">
-        <children includes="image|deck|stack">
+        <children includes="image|deck|stack|box">
           <xul:image class="autocomplete-icon" allowevents="true"/>
         </children>
 

@@ -65,9 +65,15 @@ function test() {
  
   webHandler.launchWithURI(uri, windowContext); 
 
-  // if we get this far without an exception, we've passed
-  ok(true, "webHandler launchWithURI test");
+  // if we get this far without an exception, we've at least partly passed
+  // (remaining check in handlerApp.xhtml)
+  ok(true, "webHandler launchWithURI (existing window/tab) started");
 
+  // make the web browser launch in its own window/tab
+  webHandler.launchWithURI(uri);
+  
+  // if we get this far without an exception, we've passed
+  ok(true, "webHandler launchWithURI (new window/tab) test started");
 
   // set up the local handler object
   var localHandler = 

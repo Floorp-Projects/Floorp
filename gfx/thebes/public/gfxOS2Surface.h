@@ -47,8 +47,6 @@
 class THEBES_API gfxOS2Surface : public gfxASurface {
 
 public:
-    // constructor to create a cairo surface using an existing PS
-    gfxOS2Surface(HPS aPS, const gfxIntSize& aSize);
     // constructor used to create a memory surface of given size
     gfxOS2Surface(const gfxIntSize& aSize,
                   gfxASurface::gfxImageFormat aImageFormat);
@@ -56,11 +54,20 @@ public:
     gfxOS2Surface(HWND aWnd);
     virtual ~gfxOS2Surface();
 
+    // Special functions that only make sense for the OS/2 port of cairo:
+
+    // Update the cairo surface.
+    // While gfxOS2Surface keeps track of the presentation handle itself,
+    // use the one from WinBeginPaint() here.
+    void Refresh(RECTL *aRect, HPS aPS);
+
+    // Reset the cairo surface to the given size.
+    int Resize(const gfxIntSize& aSize);
+
     HPS GetPS() { return mPS; }
     gfxIntSize GetSize() { return mSize; }
 
 private:
-    PRBool mOwnsPS;
     PRBool mHasWnd; // indicates if created through the HWND constructor
     HDC mDC; // memory device context
     HPS mPS; // presentation space connected to window or memory device

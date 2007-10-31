@@ -54,6 +54,8 @@ MODULE_NAME	= nsCanvas3DModule
 GRE_MODULE	= 1
 BUILD_STATIC_LIBS =
 
+USE_STATIC_LIBS = 1
+
 REQUIRES	= \
 		xpcom \
 		string \

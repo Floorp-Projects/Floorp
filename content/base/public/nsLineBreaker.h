@@ -73,9 +73,9 @@ public:
  * into AppendText calls.
  * 
  * The current strategy is that we break the overall text into
- * whitespace-delimited "words". Then for words that contain a "complex" 
- * character (currently CJK or Thai), we break within the word using complex
- * rules (JISx4051 or Pango).
+ * whitespace-delimited "words". Then those words are passed to the nsILineBreaker
+ * service for deeper analysis if they contain a "complex" character as described
+ * below.
  */
 class nsLineBreaker {
 public:
@@ -102,9 +102,9 @@ public:
            (0xff00 <= u && u <= 0xffef);   // Halfwidth and Fullwidth Forms
   }
 
-  // Normally, break opportunities exist at the end of each run of whitespace
-  // (see IsSpace above). Break opportunities can also exist inside runs of
-  // non-whitespace, as determined by nsILineBreaker. We pass a whitespace-
+  // Break opportunities exist at the end of each run of breakable whitespace
+  // (see IsSpace above). Break opportunities can also exist between pairs of
+  // non-whitespace characters, as determined by nsILineBreaker. We pass a whitespace-
   // delimited word to nsILineBreaker if it contains at least one character
   // matching IsComplexChar.
   // We provide flags to control on a per-chunk basis where breaks are allowed.
@@ -114,22 +114,38 @@ public:
   // We operate on text after whitespace processing has been applied, so
   // other characters (e.g. tabs and newlines) may have been converted to
   // spaces.
+
+  /**
+   * Flags passed with each chunk of text.
+   */
   enum {
-    /**
-     * Allow a break opportunity at the start of this chunk of text.
+    /*
+     * Do not introduce a break opportunity at the start of this chunk of text.
      */
-    BREAK_ALLOW_INITIAL = 0x01,
+    BREAK_SUPPRESS_INITIAL = 0x01,
     /**
-     * Allow a break opportunity in the interior of this chunk of text.
+     * Do not introduce a break opportunity in the interior of this chunk of text.
+     * Also, whitespace in this chunk is treated as non-breakable.
      */
-    BREAK_ALLOW_INSIDE = 0x02
+    BREAK_SUPPRESS_INSIDE = 0x02,
+    /**
+     * The sink currently is already set up to have no breaks in it;
+     * if no breaks are possible, nsLineBreaker does not need to call
+     * SetBreaks on it. This is useful when handling large quantities of
+     * preformatted text; the textruns will never have any breaks set on them,
+     * and there is no need to ever actually scan the text for breaks, except
+     * at the end of textruns in case context is needed for following breakable
+     * text.
+     */
+    BREAK_SKIP_SETTING_NO_BREAKS = 0x04
   };
 
   /**
    * Append "invisible whitespace". This acts like whitespace, but there is
-   * no actual text associated with it.
+   * no actual text associated with it. Only the BREAK_SUPPRESS_INSIDE flag
+   * is relevant here.
    */
-  nsresult AppendInvisibleWhitespace();
+  nsresult AppendInvisibleWhitespace(PRUint32 aFlags);
 
   /**
    * Feed Unicode text into the linebreaker for analysis. aLength must be
@@ -184,8 +200,11 @@ private:
   nsAutoTArray<TextItem,2>    mTextItems;
   PRPackedBool                mCurrentWordContainsComplexChar;
 
-  // True if the previous character was whitespace
-  PRPackedBool                mAfterSpace;
+  // True if the previous character was breakable whitespace
+  PRPackedBool                mAfterBreakableSpace;
+  // True if a break must be allowed at the current position because
+  // a run of breakable whitespace ends here
+  PRPackedBool                mBreakHere;
 };
 
 #endif /*NSLINEBREAKER_H_*/

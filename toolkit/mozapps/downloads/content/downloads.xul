@@ -100,6 +100,8 @@
              oncommand="gDownloadViewController.doCommand('cmd_showInfo');"/>
     <command id="cmd_copyLocation"
              oncommand="gDownloadViewController.doCommand('cmd_copyLocation');"/>
+    <command id="cmd_clearList"
+             oncommand="gDownloadViewController.doCommand('cmd_clearList');"/>
   </commandset>
     
   <keyset id="downloadKeys">
@@ -156,6 +158,11 @@
               label="&cmd.copyLocation.label;"
               accesskey="&cmd.copyLocation.accesskey;"
               command="cmd_copyLocation"/>
+
+    <menuitem id="menuitem_clearList"
+              label="&cmd.clearList.label;"
+              accesskey="&cmd.clearList.accesskey;"
+              command="cmd_clearList"/>
   </vbox>
   
   <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
@@ -171,16 +178,8 @@
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
                ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
-    <hbox id="active-downloads-title" align="center" hidden="true">
-      <label id="active-downloads" value="&activeDownloads.label;"/>
-      <hbox class="title-line" flex="1"/>
-    </hbox>
-    <hbox id="other-downloads-title" align="center">
-      <label id="other-downloads" value="&completedDownloads.label;"
-             completedlabel="&completedDownloads.label;"
-             searchlabel="&searchResults.label;"/>
-      <hbox class="title-line" flex="1"/>
-    </hbox>
+    <hbox id="active-downloads-area" hidden="true"/>
+    <hbox id="done-downloads-area" hidden="true"/>
   </richlistbox>
 
   <hbox id="search">

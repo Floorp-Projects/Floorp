@@ -57,7 +57,7 @@ native nsRectRef(nsIntRect &);
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  */
-[scriptable, uuid(2502c898-73bd-4da5-8fae-21cf7a492f64)]
+[scriptable, uuid(7292afa2-3b94-424d-97d5-51ce2f04c0fe)]
 interface gfxIImageFrame : nsISupports
 {
   /**
@@ -156,4 +156,8 @@ interface gfxIImageFrame : nsISupports
    * moment
    */
   attribute long frameDisposalMethod;
+
+  /* PNG specific methods */
+
+  attribute long blendMethod;
 };

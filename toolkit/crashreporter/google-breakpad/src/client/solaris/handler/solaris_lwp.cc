@@ -217,7 +217,7 @@ int SolarisLwp::Lwp_iter_all(int pid,
   lwpsinfo_t *Lpsp;
   long nstat;
   long ninfo;
-  int rv;
+  int rv = 0;
 
   /*
    * The /proc/pid/lstatus file has the array of lwpstatus_t's and the
@@ -240,8 +240,9 @@ int SolarisLwp::Lwp_iter_all(int pid,
       sp = NULL;
     }
     if (callback_param &&
-        !(rv = (callback_param->call_back)(sp, callback_param->context)))
+        !(callback_param->call_back)(sp, callback_param->context))
       break;
+    ++rv;
     Lpsp = (lwpsinfo_t *)((uintptr_t)Lpsp + Lphp->pr_entsize);
   }
 
@@ -279,16 +280,14 @@ int SolarisLwp::ListModules(
     return -1;
 
   /*
-   * Determine number of mappings.
+   * Determine number of mappings, this value must be 
+   * larger than the actual module count
    */
   size = status.st_size;
   if ((num = (int)(size / sizeof (prmap_t))) > MAP_MAX) {
     print_message1(2, "map size overflow\n");
     return -1;
   }
-
-  if (!callback_param)
-    return num;           // return the Module count
 
   if (read(fd, (void *)maps, size) < 0) {
     print_message2(2, "failed to read %d\n", fd);
@@ -297,7 +296,8 @@ int SolarisLwp::ListModules(
 
   prmap_t *_maps;
   int _num;
-
+  int module_count = 0;
+  
   /*
    * Scan each mapping - note it is assummed that the mappings are
    * presented in order.  We fill holes between mappings.  On intel
@@ -313,15 +313,17 @@ int SolarisLwp::ListModules(
     memset(&module, 0, sizeof (module));
     module.start_addr = _maps->pr_vaddr;
     module.size = _maps->pr_size;
-    if (name && (strcmp(name, "a.out") != 0))
+    if ((strlen(name) > 0) && (strcmp(name, "a.out") != 0)) {
       strncpy(module.name, name, sizeof (module.name) - 1);
+      ++module_count;
+    }
     if (callback_param &&
         (!callback_param->call_back(module, callback_param->context))) {
       break;
     }
   }
 
-  return num;
+  return module_count;
 }
 
 }  // namespace google_breakpad

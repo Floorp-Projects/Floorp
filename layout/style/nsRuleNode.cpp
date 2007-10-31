@@ -4335,19 +4335,19 @@ SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
             nsStyleSVGPaint& aResult, nsStyleSVGPaintType aInitialPaintType,
             PRBool& aInherited)
 {
-  aResult.~nsStyleSVGPaint();
-  new (&aResult) nsStyleSVGPaint();
+  nscolor color;
+
   if (aValue.mXValue.GetUnit() == eCSSUnit_Inherit) {
     aResult = parentPaint;
     aInherited = PR_TRUE;
   } else if (aValue.mXValue.GetUnit() == eCSSUnit_None) {
-    aResult.mType = eStyleSVGPaintType_None;
+    aResult.SetType(eStyleSVGPaintType_None);
   } else if (aValue.mXValue.GetUnit() == eCSSUnit_Initial) {
-    aResult.mType = aInitialPaintType;
+    aResult.SetType(aInitialPaintType);
     aResult.mPaint.mColor = NS_RGB(0, 0, 0);
     aResult.mFallbackColor = NS_RGB(0, 0, 0);
   } else if (aValue.mXValue.GetUnit() == eCSSUnit_URL) {
-    aResult.mType = eStyleSVGPaintType_Server;
+    aResult.SetType(eStyleSVGPaintType_Server);
     aResult.mPaint.mPaintServer = aValue.mXValue.GetURLValue();
     NS_IF_ADDREF(aResult.mPaint.mPaintServer);
     if (aValue.mYValue.GetUnit() == eCSSUnit_None) {
@@ -4356,8 +4356,9 @@ SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
       NS_ASSERTION(aValue.mYValue.GetUnit() != eCSSUnit_Inherit, "cannot inherit fallback colour");
       SetColor(aValue.mYValue, NS_RGB(0, 0, 0), aPresContext, aContext, aResult.mFallbackColor, aInherited);
     }
-  } else if (SetColor(aValue.mXValue, parentPaint.mPaint.mColor, aPresContext, aContext, aResult.mPaint.mColor, aInherited)) {
-    aResult.mType = eStyleSVGPaintType_Color;
+  } else if (SetColor(aValue.mXValue, parentPaint.mPaint.mColor, aPresContext, aContext, color, aInherited)) {
+    aResult.SetType(eStyleSVGPaintType_Color);
+    aResult.mPaint.mColor = color;
   }
 }
 

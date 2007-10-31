@@ -147,7 +147,7 @@ public:
   PRBool IsBackgroundOnly() { return mIsBackgroundOnly; }
   /**
    * @return PR_TRUE if the currently active BuildDisplayList call is being
-   * applied to a frame at the root of a pseudo stacking context. A psuedo
+   * applied to a frame at the root of a pseudo stacking context. A pseudo
    * stacking context is either a real stacking context or basically what
    * CSS2.1 appendix E refers to with "treat the element as if it created
    * a new stacking context

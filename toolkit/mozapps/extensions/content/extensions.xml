@@ -230,7 +230,7 @@
             <xul:button class="uninstallHide themeButton useThemeButton" label="&cmd.useTheme.label;"
                         accesskey="&cmd.useTheme.accesskey;" tooltiptext="&cmd.useTheme.tooltip;"
                         command="cmd_useTheme"/>
-            <spacer flex="1"/>
+            <xul:spacer flex="1"/>
             <xul:button class="disableShow enableHide uninstallHide enableButton" label="&cmd.enable.label;"
                         accesskey="&cmd.enable.accesskey;" tooltiptext="&cmd.enable.tooltip;"
                         command="cmd_enable"/>

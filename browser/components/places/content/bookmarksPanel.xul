@@ -67,7 +67,7 @@
              oncommand="searchBookmarks(this.value);"/>
   </hbox>
 
-  <tree id="bookmarks-view" class="placesTree" type="places"
+  <tree id="bookmarks-view" class="sidebar-placesTree" type="places"
         flex="1"
         hidecolumnpicker="true"
         place="place:folder=2&amp;queryType=1"
@@ -77,6 +77,6 @@
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
     </treecols>
-    <treechildren id="bookmarks-view-children" view="bookmarks-view" flex="1"/>
+    <treechildren id="bookmarks-view-children" view="bookmarks-view" class="sidebar-placesTreechildren" flex="1"/>
   </tree>
 </page>

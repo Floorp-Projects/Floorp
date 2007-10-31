@@ -48,6 +48,7 @@
 #include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsNavHistory;
 class nsIDateTimeFormat;
@@ -140,9 +141,10 @@ public:
   nsresult PropertyBagFor(nsISupports* aObject,
                           nsIWritablePropertyBag** aBag);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_BOOKMARK_HISTORY_OBSERVER
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNavHistoryResult, nsINavHistoryResult)
 
   void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
@@ -251,6 +253,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
     { return nsNavHistoryResultNode::GetIcon(aIcon); } \
   NS_IMETHOD GetParent(nsINavHistoryContainerResultNode** aParent) \
     { return nsNavHistoryResultNode::GetParent(aParent); } \
+  NS_IMETHOD GetParentResult(nsINavHistoryResult** aResult) \
+    { return nsNavHistoryResultNode::GetParentResult(aResult); } \
   NS_IMETHOD GetPropertyBag(nsIWritablePropertyBag** aBag) \
     { return nsNavHistoryResultNode::GetPropertyBag(aBag); }
 
@@ -264,10 +268,13 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULTNODE_IID)
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsNavHistoryResultNode)
+
   NS_IMPLEMENT_SIMPLE_RESULTNODE
   NS_IMETHOD GetIcon(nsIURI** aIcon);
   NS_IMETHOD GetParent(nsINavHistoryContainerResultNode** aParent);
+  NS_IMETHOD GetParentResult(nsINavHistoryResult** aResult);
   NS_IMETHOD GetPropertyBag(nsIWritablePropertyBag** aBag);
   NS_IMETHOD GetType(PRUint32* type)
     { *type = nsNavHistoryResultNode::RESULT_TYPE_URI; return NS_OK; }
@@ -517,6 +524,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYCONTAINERRESULTNODE_IID)
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsNavHistoryContainerResultNode, nsNavHistoryResultNode)
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE
   NS_IMETHOD GetType(PRUint32* type)
     { *type = mContainerType; return NS_OK; }
@@ -538,7 +546,7 @@ public:
   // their result pointer set so we can quickly get to the result without having
   // to walk the tree. Yet, this also saves us from storing a million pointers
   // for every leaf node to the result.
-  nsNavHistoryResult* mResult;
+  nsRefPtr<nsNavHistoryResult> mResult;
 
   // for example, RESULT_TYPE_HOST. Query and Folder results override GetType
   // so this is not used, but is still kept in sync.

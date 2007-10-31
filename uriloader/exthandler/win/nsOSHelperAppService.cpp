@@ -329,61 +329,11 @@ nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aTypeName,
   if (NS_FAILED(rv))
     return NS_OK;
 
-  nsAutoString handlerFilePath;
-  // First look to see if we're invoking a Windows shell service, such as 
-  // the Picture & Fax Viewer, which are invoked through rundll32.exe, and
-  // so we need to extract the DLL path because that's where the version
-  // info is held - not in rundll32.exe
-  //
-  // The format of rundll32.exe calls is:
-  //
-  // rundll32.exe c:\path\to.dll,Function %args
-  //
-  // What we want is the DLL - since that's where the real application name
-  // is stored, e.g. zipfldr.dll, shimgvw.dll, etc. 
-  // 
-  // Working from the end of the registry value, the path begins at the last
-  // comma in the string (stripping off Function and args) to the position
-  // just after the first space (the space after rundll32.exe).
-  // 
-  NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
-  if (StringBeginsWith(handlerCommand, rundllSegment)) {
-    PRInt32 lastCommaPos = handlerCommand.RFindChar(',');
-    PRUint32 rundllSegmentLength = rundllSegment.Length();
-    PRUint32 len;
-    if (lastCommaPos != kNotFound)
-      len = lastCommaPos - rundllSegmentLength;
-    else
-      len = handlerCommand.Length() - rundllSegmentLength;
-    handlerFilePath = Substring(handlerCommand, rundllSegmentLength, len);
-  }
-  else
-    handlerFilePath = handlerCommand;
-
-  // Trim any command parameters so that we have a native path we can 
-  // initialize a local file with...
-  RemoveParameters(handlerFilePath);
-
-  // Similarly replace embedded environment variables... (this must be done
-  // AFTER |RemoveParameters| since it may introduce spaces into the path
-  // string)
-
-  DWORD required = ::ExpandEnvironmentStringsW(handlerFilePath.get(),
-                                               L"", 0);
-  if (!required) 
+  if (!CleanupCmdHandlerPath(handlerCommand))
     return NS_ERROR_FAILURE;
-
-  nsAutoArrayPtr<WCHAR> destination(new WCHAR[required]); 
-  if (!destination)
-    return NS_ERROR_OUT_OF_MEMORY;
-  if (!::ExpandEnvironmentStringsW(handlerFilePath.get(), destination,
-                                   required))
-    return NS_ERROR_FAILURE;
-
-  handlerFilePath = destination;
 
   nsCOMPtr<nsILocalFile> lf;
-  NS_NewLocalFile(handlerFilePath, PR_TRUE, getter_AddRefs(lf));
+  NS_NewLocalFile(handlerCommand, PR_TRUE, getter_AddRefs(lf));
   if (!lf)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -397,6 +347,83 @@ nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aTypeName,
   }
 
   return NS_OK;
+}
+
+// Returns the dll path of a rundll command handler. 
+/* static */ PRBool nsOSHelperAppService::CleanupCmdHandlerPath(nsAString& aCommandHandler)
+{
+  nsAutoString handlerFilePath;
+  nsAutoString handlerCommand(aCommandHandler);
+
+  // %SystemRoot%\system32\NOTEPAD.EXE %1
+  //
+  // rundll32.exe "%ProgramFiles%\Windows Photo Gallery\
+  //   PhotoViewer.dll", ImageView_Fullscreen %1
+  //
+  // rundll32.exe "%ProgramFiles%\Windows Photo Gallery\PhotoViewer.dll"
+  //
+  // %SystemRoot%\System32\rundll32.exe "%ProgramFiles%\
+  //   Windows Photo Gallery\PhotoViewer.dll", ImageView_Fullscreen %1
+
+  // Replace embedded environment variables.
+  PRUint32 bufLength = ::ExpandEnvironmentStringsW(handlerCommand.get(),
+                                                   L"", 0);
+  if (bufLength == 0) // Error
+    return PR_FALSE;
+
+  nsAutoArrayPtr<PRUnichar> destination(new PRUnichar[bufLength]);
+  if (!destination)
+    return PR_FALSE;
+  if (!::ExpandEnvironmentStringsW(handlerCommand.get(), destination,
+                                   bufLength))
+    return PR_FALSE;
+
+  handlerCommand = destination;
+
+  // Look to see if we're invoking a Windows shell service, such as 
+  // the Picture & Fax Viewer, which are invoked through rundll32.exe.
+  //
+  // What we want is the DLL - since that's where the real application name
+  // is stored, e.g. zipfldr.dll, shimgvw.dll, etc. 
+  // 
+  // Working from the end of the registry value, the path begins at the last
+  // comma in the string (stripping off Function and args) to the position
+  // just after the first space (the space after rundll32.exe).
+
+  NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
+
+  PRInt32 index = handlerCommand.Find(rundllSegment);
+  if (index != kNotFound) {
+    // Strip off the rundll command handler
+    PRInt32 lastCommaPos = handlerCommand.RFindChar(',');
+    PRUint32 rundllSegmentLength = index + rundllSegment.Length();
+    PRUint32 len;
+
+    if (lastCommaPos == kNotFound) {
+      // C:\Windows\System32\rundll32.exe "C:\Program Files\
+      //   Windows Photo Gallery\PhotoViewer.dll"
+      // rundll32.exe "C:\Program Files\Windows Photo Gallery\PhotoViewer.dll"
+      len = handlerCommand.Length() - rundllSegmentLength;
+    } else {
+      // C:\Windows\System32\rundll32.exe "C:\Program Files\
+      //   Windows Photo Gallery\PhotoViewer.dll", ImageView_Fullscreen %1
+      // rundll32.exe "C:\Program Files\Windows Photo Gallery\
+      //   PhotoViewer.dll", ImageView_Fullscreen %1
+      len = lastCommaPos - rundllSegmentLength;
+    }
+
+    // Clip off 'C:\Windows\System32\rundll32.exe ' or 'rundll32.exe '
+    handlerFilePath = Substring(handlerCommand, rundllSegmentLength, len);
+  } else {
+    handlerFilePath = handlerCommand;
+  }
+
+  // Trim any command parameters so that we have a native path we can
+  // initialize a local file with.
+  RemoveParameters(handlerFilePath);
+
+  aCommandHandler = handlerFilePath;
+  return PR_TRUE;
 }
 
 already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint)
@@ -430,7 +457,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   }
   else {
     nsAutoString temp;
-    if (NS_FAILED(regKey->ReadStringValue(NS_LITERAL_STRING("Content Type"), 
+    if (NS_FAILED(regKey->ReadStringValue(NS_LITERAL_STRING("Content Type"),
                   temp))) {
       return nsnull; 
     }
@@ -443,14 +470,21 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
     return nsnull; // out of memory
 
   NS_ADDREF(mimeInfo);
+
   // don't append the '.'
   mimeInfo->AppendExtension(NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1)));
 
   mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
   nsAutoString description;
-  PRBool found = NS_SUCCEEDED(regKey->ReadStringValue(EmptyString(), 
+  PRBool found = NS_SUCCEEDED(regKey->ReadStringValue(EmptyString(),
                                                       description));
+
+  // Bug 358297 - ignore the default handler, force the user to choose app
+  if (description.EqualsLiteral("XPSViewer.Document")) {
+    NS_IF_RELEASE(mimeInfo);
+    return nsnull;
+  }
 
   nsAutoString defaultDescription;
   nsCOMPtr<nsIFile> defaultApplication;

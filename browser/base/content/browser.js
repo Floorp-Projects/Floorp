@@ -362,7 +362,7 @@ function initPlacesDefaultQueries() {
       var recentlyCreatedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-            "&sort=" + 
+            "&sort=" +
             Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
             "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
             "&maxResults=" + maxResults +
@@ -372,15 +372,17 @@ function initPlacesDefaultQueries() {
       var recentlyVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING + 
+            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING +
+            "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
             "&minVisits=1&maxResults=" + maxResults),
             defaultIndex, recentlyVisitedBookmarksTitle);
 
       var mostVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-            "&sort=" + 
-            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING + 
+            "&sort=" +
+            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
+            "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
             "&minVisits=1&maxResults=" + maxResults),
             defaultIndex, mostVisitedBookmarksTitle);
 
@@ -388,28 +390,28 @@ function initPlacesDefaultQueries() {
         IO.newURI("place:folder=" + tagRoot +
             "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-            "&applyOptionsToContainers=1" +  
-            "&sort=" + 
-            Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING + 
+            "&applyOptionsToContainers=1" +
+            "&sort=" +
+            Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
             "&resolveNullBookmarkTitles=1" +
             "&maxResults=" + maxResults),
             defaultIndex, recentlyUsedTagsTitle);
 
       var mostUsedTagsItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + tagRoot + 
+        IO.newURI("place:folder=" + tagRoot +
             "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&applyOptionsToContainers=1" +
-            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_COUNT_DESCENDING + 
+            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_COUNT_DESCENDING +
             "&resolveNullBookmarkTitles=1" +
             "&maxResults=" + maxResults),
             defaultIndex, mostUsedTagsTitle);
 
       var mostVisitedSitesItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:queryType=" + 
+        IO.newURI("place:queryType=" +
             Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
-            "&sort=" + 
-            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING + 
+            "&sort=" +
+            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
             "&maxResults=" + maxResults),
             defaultIndex, mostVisitedSitesTitle);
     }
@@ -1164,7 +1166,7 @@ function delayedStartup()
   // apply text zoom settings to tabs restored by the session restore service.
   try {
     ContentPrefSink.init();
-    TextZoom.init();
+    FullZoom.init();
   }
   catch(ex) {
     Components.utils.reportError("Failed to init content pref service:\n" + ex);
@@ -1202,16 +1204,12 @@ function delayedStartup()
 
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler = new BookmarkAllTabsHandler();
-  
-  // Prevent chrome-spoofing popups from forging our chrome, by adding a
-  // notification box entry in cases of chromeless popups.
-  checkForChromelessWindow();
 }
 
 function BrowserShutdown()
 {
   try {
-    TextZoom.destroy();
+    FullZoom.destroy();
     ContentPrefSink.destroy();
   }
   catch(ex) {
@@ -1288,7 +1286,7 @@ function nonBrowserWindowStartup()
   var disabledItems = ['cmd_newNavigatorTab', 'Browser:SavePage', 'Browser:SendLink',
                        'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain', 'viewToolbarsMenu',
                        'cmd_toggleTaskbar', 'viewSidebarMenuMenu', 'Browser:Reload', 'Browser:ReloadSkipCache',
-                       'viewTextZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
+                       'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
                        'viewHistorySidebar', 'Browser:AddBookmarkAs', 'View:PageInfo', 'Tasks:InspectPage'];
   var element;
 
@@ -2231,6 +2229,16 @@ function PageProxyClickHandler(aEvent)
       break;
   }
   return true;
+}
+
+function URLBarOnInput(evt)
+{
+  gBrowser.userTypedValue = gURLBar.value;
+  
+  // If the user is interacting with the url bar, get rid of the identity popup
+  var ih = getIdentityHandler();
+  if(ih._identityPopup)
+    ih._identityPopup.hidePopup();
 }
 
 function URLBarOnDragOver(evt)
@@ -3848,6 +3856,7 @@ nsBrowserStatusHandler.prototype =
       this.securityButton.removeAttribute("label");
 
     this.securityButton.setAttribute("tooltiptext", this._tooltipText);
+    getIdentityHandler().checkIdentity(this._state, this._host);
   },
 
   // simulate all change notifications after switching tabs
@@ -3942,6 +3951,10 @@ nsBrowserAccess.prototype =
       return null;
     }
 
+    if (!gPrefService)
+      gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefBranch2);
+
     var loadflags = isExternal ?
                        Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                        Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -3977,6 +3990,8 @@ nsBrowserAccess.prototype =
           newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIWebNavigation)
                    .loadURI(url, loadflags, referrer, null, null);
+          if (!loadInBackground && isExternal)
+            newWindow.focus();
         } catch(e) {
         }
         break;
@@ -5576,87 +5591,6 @@ BookmarkAllTabsHandler.prototype = {
   }
 };
 
-
-/**
- * Check the chromehidden attribute to see if the toolbar is hidden.  If so,
- * and if they haven't disabled the security.warn_chromeless_window.infobar
- * pref, show an infobar notification informing them of what's going on.  This
- * helps fight chrome spoofing on popups.  See bug 337344
- */
-function checkForChromelessWindow() {
-
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-  
-  // true by default
-  if (!prefs.getBoolPref("browser.warn_chromeless_window.infobar"))
-    return;
-
-  if (document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1 ||
-      document.documentElement.getAttribute("chromehidden").indexOf("location") != -1) {
-    
-    var bundle_browser = document.getElementById("bundle_browser");
-    
-    // It's possible that something in the window.content.opener.location.path
-    // chain might be null.  Rather than chaining a ton of 99% pass null checks,
-    // though, let's try/catch in order to fail gracefully
-    try {
-      var messageString = bundle_browser.getFormattedString("chromelessWindow.warningMessage",
-                                                            [window.content.opener.location.host]);
-    } catch (ex) {
-        
-      // An exception here is not worth breaking our security warning, but is worth
-      // logging, since it shouldn't happen.
-      Components.utils.reportError(ex);
-      messageString = bundle_browser.getString("chromelessWindow.warningNoLocation");
-      
-    }
-
-    var notificationBox = gBrowser.getNotificationBox();
-    var notificationName = "chromeless-info";
-    if (notificationBox.getNotificationWithValue(notificationName)) {
-      Components.utils.reportError("Already have a chromeless-info notification!")
-      return;
-    }
-    
-    var buttons = [{
-      label: bundle_browser.getString("chromelessWindow.showToolbarsButton"),
-      accessKey: bundle_browser.getString("chromelessWindow.accessKey"),
-      popup: null,
-      callback: function() { return showToolbars(); }
-    }];
-
-    notificationBox.appendNotification(messageString,
-                                       notificationName,
-                                       "chrome://browser/skin/Info.png",
-                                       notificationBox.PRIORITY_INFO_HIGH,
-                                       buttons);
-  }
-}
-
-/**
- * Callback for "Show Toolbars" button in chromeless window notification box.
- * Resets visibility of the go button stack and url bar, and wipes the
- * chromehidden document attribute.
- */
-function showToolbars() {
-
-  // Unhide the chrome elements
-  document.documentElement.removeAttribute("chromehidden");
-  
-  // Undo the URLBar tweaks performed when the url bar was chromehidden
-  if (gURLBar) {
-    gURLBar.removeAttribute("readonly");
-    gURLBar.setAttribute("enablehistory", "true");
-  }
-  
-  var goButtonStack = document.getElementById("go-button-stack");
-  if (goButtonStack)
-    goButtonStack.removeAttribute("hidden");
-  
-  return false; // Dismiss the notification message
-}
-
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
  */
@@ -5696,7 +5630,7 @@ IdentityHandler.prototype = {
 
   // Cache the most recently seen SSLStatus and URI to prevent unnecessary updates
   _lastStatus : null,
-  _lastURI : null,
+  _lastHost : null,
 
   /**
    * Handler for mouseclicks on the "Tell me more about this website" link text
@@ -5744,27 +5678,17 @@ IdentityHandler.prototype = {
   /**
    * Determine the identity of the page being displayed by examining its SSL cert
    * (if available) and, if necessary, update the UI to reflect this.  Intended to
-   * be called by an nsIWebProgressListener.
-   *
-   * @param nsIWebProgress webProgress
-   * @param nsIRequest request
+   * be called by onSecurityChange
+   * 
    * @param PRUint32 state
+   * @param AUTF8String host
    */
-  checkIdentity : function(state) {
-    var currentURI = gBrowser.currentURI;
-    if (currentURI.schemeIs("http") && this._lastURI.schemeIs("http"))
-      return;
-
+  checkIdentity : function(state, host) {
     var currentStatus = gBrowser.securityUI
                                 .QueryInterface(Components.interfaces.nsISSLStatusProvider)
                                 .SSLStatus;
-    if (currentStatus == this._lastStatus && currentURI == this._lastURI) {
-      // No need to update, this is a no-op check
-      return;
-    }
-
     this._lastStatus = currentStatus;
-    this._lastURI = currentURI;
+    this._lastHost = host;
     
     if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
@@ -5802,7 +5726,7 @@ IdentityHandler.prototype = {
       // it's not the only place you have to check, there can be more than one domain,
       // et cetera, ad nauseum.  We know the cert is valid for location.host, so
       // let's just use that, it's what the status bar does too.
-      var icon_label = this._lastURI.host; 
+      var icon_label = this._lastHost; 
       var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                           [iData.caOrg]);
     }
@@ -5850,7 +5774,7 @@ IdentityHandler.prototype = {
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
 
-      var body = this._lastURI.host;     
+      var body = this._lastHost;     
       verifier = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                        [iData.caOrg]);
       supplemental = this._stringBundle.getString("identity.domainverified.supplemental");
@@ -5896,6 +5820,10 @@ IdentityHandler.prototype = {
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
     this._identityPopup.hidden = false;
+    
+    // Tell the popup to consume dismiss clicks, to avoid bug 395314
+    this._identityPopup.popupBoxObject
+        .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
     
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);

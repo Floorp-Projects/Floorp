@@ -55,12 +55,12 @@ class nsBoxLayoutState;
 #define NS_STATE_STACK_NOT_POSITIONED    0x00200000
 //#define NS_STATE_IS_HORIZONTAL           0x00400000  moved to nsIFrame.h
 #define NS_STATE_AUTO_STRETCH            0x00800000
-//#define NS_STATE_IS_ROOT                 0x01000000  moved to nsIFrame.h
+//#define NS_STATE_IS_ROOT                 0x01000000  moved to nsBox.h
 #define NS_STATE_CURRENTLY_IN_DEBUG      0x02000000
-//#define NS_STATE_SET_TO_DEBUG            0x04000000  moved to nsIFrame.h
-//#define NS_STATE_DEBUG_WAS_SET           0x08000000  moved to nsIFrame.h
+//#define NS_STATE_SET_TO_DEBUG            0x04000000  moved to nsBox.h
+//#define NS_STATE_DEBUG_WAS_SET           0x08000000  moved to nsBox.h
 #define NS_STATE_IS_COLLAPSED            0x10000000
-//#define NS_STATE_STYLE_CHANGE            0x20000000  moved to nsIFrame.h
+#define NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK 0x20000000
 #define NS_STATE_EQUAL_SIZE              0x40000000
 //#define NS_STATE_IS_DIRECTION_NORMAL     0x80000000  moved to nsIFrame.h
 
@@ -133,6 +133,8 @@ public:
 
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
+
+  virtual nsIFrame* GetContentInsertionFrame();
 
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList);

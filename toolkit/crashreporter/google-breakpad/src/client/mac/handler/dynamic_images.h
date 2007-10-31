@@ -153,7 +153,7 @@ class DynamicImage {
   friend class DynamicImages;
 
   // Sanity checking
-  bool IsValid() {return GetVMAddr() != 0;}
+  bool IsValid() {return GetVMSize() != 0;}
 
   // Makes local copy of file path to mach-o binary
   void InitializeFilePath(char *inFilePath) {

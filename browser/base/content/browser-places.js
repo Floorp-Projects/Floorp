@@ -50,7 +50,11 @@ var PlacesCommandHook = {
 
   // Edit-bookmark panel
   get panel() {
-    return document.getElementById("editBookmarkPanel");
+    delete this.panel;
+    var element = document.getElementById("editBookmarkPanel");
+    element.addEventListener("popuphiding", this, false);
+    element.addEventListener("keypress", this, true);
+    return this.panel = element;
   },
 
   // list of command elements (by id) to disable when the panel is opened
@@ -129,13 +133,15 @@ var PlacesCommandHook = {
     this._overlayLoading = true;
     document.loadOverlay("chrome://browser/content/places/editBookmarkOverlay.xul",
                          loadObserver);
-    this.panel.addEventListener("popuphiding", this, false);
   },
 
   _doShowEditBookmarkPanel:
   function PCH__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
-    this.panel.addEventListener("keypress", this, true);
     this._blockCommands(); // un-done in the popuphiding handler
+
+    // Consume dismiss clicks, see bug 400924
+    this.panel.popupBoxObject
+        .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
     this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
 
     gEditItemOverlay.initPanel(aItemId,
@@ -405,7 +411,7 @@ var BookmarksEventHandler = {
               node.localName == "menupopup")) {
         if (node.localName == "menupopup")
           node.hidePopup();
-        
+
         node = node.parentNode;
       }
     }
@@ -415,9 +421,9 @@ var BookmarksEventHandler = {
     // separately.
     var bookmarksBar = document.getElementById("bookmarksBarContent");
     if (bookmarksBar._chevron.getAttribute("open") == "true")
-      bookmarksBar._chevron.firstChild.hidePopupAndChildPopups();
+      bookmarksBar._chevron.firstChild.hidePopup();
   },
-  
+
   /**
    * Handler for command event for an item in the bookmarks toolbar.
    * Menus and submenus from the folder buttons bubble up to this handler.
@@ -426,17 +432,12 @@ var BookmarksEventHandler = {
    *        DOMEvent for the command
    */
   onCommand: function BM_onCommand(aEvent) {
-    // If this is the special "Open All in Tabs" menuitem,
-    // load all the menuitems in tabs.
-
     var target = aEvent.originalTarget;
-    if (target.hasAttribute("siteURI"))
-      openUILink(target.getAttribute("siteURI"), aEvent);
-    // If this is a normal bookmark, just load the bookmark's URI.
-    else if (!target.hasAttribute("openInTabs"))
+    if (target.node) {
       PlacesUtils.getViewForNode(target)
                  .controller
                  .openSelectedNodeWithEvent(aEvent);
+    }
   },
 
   /**
@@ -456,7 +457,6 @@ var BookmarksEventHandler = {
       // Add the "Open (Feed Name)" menuitem if it's a livemark with a siteURI.
       var numNodes = 0;
       var hasMultipleEntries = false;
-      var hasFeedHomePage = false;
       var currentChild = target.firstChild;
       while (currentChild) {
         if (currentChild.localName == "menuitem" && currentChild.node)
@@ -473,32 +473,35 @@ var BookmarksEventHandler = {
       if (numNodes > 1)
         hasMultipleEntries = true;
 
-      var button = target.parentNode;
-      if (button.getAttribute("livemark") == "true" &&
-          button.hasAttribute("siteURI"))
-        hasFeedHomePage = true;
+      var itemId = target._resultNode.itemId;
+      var siteURIString = "";
+      if (itemId != -1 && PlacesUtils.livemarks.isLivemark(itemId)) {
+        var siteURI = PlacesUtils.livemarks.getSiteURI(itemId);
+        if (siteURI)
+          siteURIString = siteURI.spec;
+      }
 
-      if (hasMultipleEntries || hasFeedHomePage) {
+      if (hasMultipleEntries || siteURIString) {
         var separator = document.createElement("menuseparator");
         target.appendChild(separator);
 
-        if (hasFeedHomePage) {
+        if (siteURIString) {
           var openHomePage = document.createElement("menuitem");
-          openHomePage.setAttribute(
-            "siteURI", button.getAttribute("siteURI"));
+          openHomePage.setAttribute("siteURI", siteURIString);
+          openHomePage.setAttribute("oncommand",
+                                    "openUILink(this.getAttribute('siteURI'), event);");
           openHomePage.setAttribute(
             "label",
             PlacesUtils.getFormattedString("menuOpenLivemarkOrigin.label",
-                                           [button.getAttribute("label")]));
+                                           [target.parentNode.getAttribute("label")]));
           target.appendChild(openHomePage);
         }
 
         if (hasMultipleEntries) {
           var openInTabs = document.createElement("menuitem");
           openInTabs.setAttribute("openInTabs", "true");
-          openInTabs.setAttribute("onclick", "checkForMiddleClick(this, event)");
           openInTabs.setAttribute("oncommand",
-                                  "PlacesUtils.openContainerNodeInTabs(this.parentNode.getResultNode(), event);");
+                                  "PlacesUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
           openInTabs.setAttribute("label",
                      gNavigatorBundle.getString("menuOpenAllInTabs.label"));
           target.appendChild(openInTabs);
@@ -703,19 +706,19 @@ var PlacesMenuDNDController = {
     
     // Close the bookmarks menu
     var bookmarksMenu = document.getElementById("bookmarksMenu");
-    bookmarksMenu.firstChild.hidePopupAndChildPopups();
+    bookmarksMenu.firstChild.hidePopup();
 
     var bookmarksBar = document.getElementById("bookmarksBarContent");
     if (bookmarksBar) {
       // Close the overflow chevron menu and all its children
-      bookmarksBar._chevron.firstChild.hidePopupAndChildPopups();
+      bookmarksBar._chevron.firstChild.hidePopup();
 
       // Close all popups on the bookmarks toolbar
       var toolbarItems = bookmarksBar.childNodes;
       for (var i = 0; i < toolbarItems.length; ++i) {
         var item = toolbarItems[i]
         if (this._isContainer(item))
-          item.firstChild.hidePopupAndChildPopups();
+          item.firstChild.hidePopup();
       }
     }
   },

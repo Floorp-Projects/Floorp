@@ -43,17 +43,23 @@
  *   or a reporter.mozilla.org Admin!
  *******************************************************/
 
-const gURL = window.arguments[0];
-const gLanguage = window.navigator.language;
-const gRMOvers = "0.2"; // Do not touch without contacting reporter admin!
+const gParamLanguage = window.navigator.language;
+const gRMOvers = "0.3"; // Do not touch without contacting reporter admin!
+const gParamURL = window.arguments[0];
+const gParamUserAgent = navigator.userAgent;
+const gParamOSCPU = navigator.oscpu;
+const gParamPlatform = navigator.platform;
 
 // Globals
-var gReportID;
-var gSysID;
-var gFaultCode;
-var gFaultMessage;
-var gSOAPerror = false;
+var gParamDescription;
+var gParamProblemType;
+var gParamBehindLogin;
+var gParamEmail;
+var gParamBuildConfig;
+var gParamGecko;
+
 var gPrefBranch;
+var gStatusIndicator;
 
 function getReporterPrefBranch() {
   if (!gPrefBranch) {
@@ -119,7 +125,7 @@ function initForm() {
   var reportWizard = document.getElementById('reportWizard');
 
   reportWizard.canRewind = false;
-  document.getElementById('url').value = gURL;
+  document.getElementById('url').value = gParamURL;
 
   // Change next button to "submit report"
   reportWizard.getButton('next').label = strbundle.getString("submitReport");
@@ -144,31 +150,51 @@ function validateForm() {
   document.getElementById('reportWizard').canAdvance = canAdvance;
 }
 
-function registerSysID(){
-  var param = new Array();;
-  param[0] = new SOAPParameter(gLanguage, "language");
+function registerSysID() {
+  var param = {
+    'method':             'submitRegister',
+    'language':           gParamLanguage
+  };
 
-  // get sysID
-  callReporter("register", param, setValSysID);
+  // go get sysID
+  sendReporterServerData(param, onRegisterSysIDLoad);
+}
 
-  // saving
-  if (gSysID != undefined){
-    var prefs = getReporterPrefBranch();
-    prefs.setCharPref("sysid", gSysID);
-    return gSysID;
+function onRegisterSysIDLoad(req) {
+  if (req.status == 200) {
+    var paramSysID = req.responseXML.getElementsByTagName('result').item(0);
+
+    // saving
+    if (paramSysID) {
+      var prefs = getReporterPrefBranch();
+      prefs.setCharPref("sysid", paramSysID.textContent);
+
+      // Finally send report
+      sendReport();
+      return;
+    }
+    
+    // Invalid Response Error
+    var strbundle = document.getElementById("strings");
+    showError(strbundle.getString("invalidResponse"));
+
+    return;
   }
-  return "";
+
+  // On error
+  var errorStr = extractError(req);
+  showError(errorStr);
 }
 
-function getSysID() {
-  var sysId = getCharPref("sysid", "");
-  if (sysId == "")
-    sysId = registerSysID();
-  
-  return sysId;
-}
 
 function sendReport() {
+  // Check for a sysid, if we don't have one, get one it will call sendReport on success.
+  var sysId = getCharPref("sysid", "");
+  if (sysId == ""){
+    registerSysID();
+    return;
+  }
+
   // we control the user path from here.
   var reportWizard = document.getElementById('reportWizard');
 
@@ -179,89 +205,157 @@ function sendReport() {
 
   var strbundle=document.getElementById("strings");
   var statusDescription = document.getElementById('sendReportProgressDescription');
-  var statusIndicator = document.getElementById('sendReportProgressIndicator');
+  gStatusIndicator = document.getElementById('sendReportProgressIndicator');
 
   // Data from form we need
-  var descriptionStri = document.getElementById('description').value;
-  var problemTypeStri = document.getElementById('problem_type').value;
-  var behindLoginStri = document.getElementById('behind_login').checked;
-  var emailStri = document.getElementById('email').value;
+  gParamDescription = document.getElementById('description').value;
+  gParamProblemType = document.getElementById('problem_type').value;
+  gParamBehindLogin = document.getElementById('behind_login').checked;
+  gParamEmail = document.getElementById('email').value;
 
-  var buildConfig = getBuildConfig();
-  var userAgent = navigator.userAgent;
+  gParamBuildConfig = getBuildConfig();
+  gParamGecko = getGecko();
 
   // SOAP params
-  var param = new Array();
-  param[0] = new SOAPParameter(gRMOvers,            "rmoVers");
-  param[1] = new SOAPParameter(gURL,                "url");
-  param[2] = new SOAPParameter(problemTypeStri,     "problem_type");
-  param[3] = new SOAPParameter(descriptionStri,     "description");
-  param[4] = new SOAPParameter(behindLoginStri,     "behind_login");
-  param[5] = new SOAPParameter(navigator.platform,  "platform");
-  param[6] = new SOAPParameter(navigator.oscpu,     "oscpu");
-  param[7] = new SOAPParameter(getGecko(),          "gecko");
-  param[8] = new SOAPParameter(getProduct(),        "product");
-  param[9] = new SOAPParameter(navigator.userAgent, "useragent");
-  param[10] = new SOAPParameter(buildConfig,        "buildconfig");
-  param[11] = new SOAPParameter(gLanguage,          "language");
-  param[12] = new SOAPParameter(emailStri,          "email");
-  param[13] = new SOAPParameter(getSysID(),         "sysid");
+  var param = {
+    'method':           'submitReport',
+    'rmoVers':          gRMOvers,
+    'url':              gParamURL,
+    'problem_type':     gParamProblemType,
+    'description':      gParamDescription,
+    'behind_login':     gParamBehindLogin,
+    'platform':         gParamPlatform,
+    'oscpu':            gParamOSCPU,
+    'gecko':            gParamGecko,
+    'product':          getProduct(),
+    'useragent':        gParamUserAgent,
+    'buildconfig':      gParamBuildConfig,
+    'language':         gParamLanguage,
+    'email':            gParamEmail,
+    'sysid':            sysId
+  };
 
-  statusIndicator.setAttribute("value", "5%");
-  statusDescription.setAttribute("value", strbundle.getString("sendingReport"));
-  callReporter("submitReport", param, setValReportID);
+  gStatusIndicator.value = "5%";
+  statusDescription.value = strbundle.getString("sendingReport");
+
+  sendReporterServerData(param, onSendReportDataLoad);
+}
+
+function onSendReportDataProgress(e) {
+  gStatusIndicator.value = (e.position / e.totalSize)*100;
+}
+
+function sendReporterServerData(params, callback) {
+  var serviceURL = getCharPref("serviceURL", "http://reporter.mozilla.org/service/0.3/");
+
+  params = serializeParams(params);
+
+  var request = new XMLHttpRequest();
+  request.onprogress = onSendReportDataProgress;
+  request.open("POST", serviceURL, true);
+
+  request.onreadystatechange = function () {
+    if (request.readyState == 4)
+      callback(request);
+  };
+
+  request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  request.setRequestHeader("Content-length", params.length);
+  request.setRequestHeader("Connection", "close");
+  request.send(params);
+}
+
+function serializeParams(params) {
+  var str = '';
+  for (var key in params) {
+    str += key + '=' + encodeURIComponent(params[key]) + '&';
+  }
+  return str.substr(0, str.length-1);
+}
+
+function onSendReportDataLoad(req) {
+  if (req.status != 200) {
+    var errorStr = extractError(req);
+    showError(errorStr);
+    return;
+  }
+
+  var reportWizard = document.getElementById('reportWizard');
 
   var finishSummary = document.getElementById('finishSummary');
   var finishExtendedFailed = document.getElementById('finishExtendedFailed');
   var finishExtendedSuccess = document.getElementById('finishExtendedSuccess');
-  if (!gSOAPerror) {
-    // If successful
-    finishExtendedFailed.setAttribute("class", "hide");
+  var statusDescription = document.getElementById('sendReportProgressDescription');
 
-    statusIndicator.setAttribute("value", "95%");
-    statusDescription.setAttribute("value", strbundle.getString("reportSent"));
+  var strbundle = document.getElementById("strings");
 
-    reportWizard.canAdvance = true;
-    statusIndicator.setAttribute("value", "100%");
+  // If successful
+  finishExtendedFailed.hidden = true;
 
-    // Send to the finish page
-    reportWizard.advance();
+  statusDescription.value = strbundle.getString("reportSent");
 
-    // report ID returned from the web service
-    finishSummary.setAttribute("value", strbundle.getString("successfullyCreatedReport") + " " + gReportID);
+  reportWizard.canAdvance = true;
+  gStatusIndicator.value = "100%";
 
-    finishExtendedDoc = finishExtendedSuccess.contentDocument;
-    finishExtendedDoc.getElementById('urlStri').textContent         = gURL;
-    finishExtendedDoc.getElementById('problemTypeStri').textContent = document.getElementById('problem_type').label;
-    finishExtendedDoc.getElementById('descriptionStri').textContent = descriptionStri;
-    finishExtendedDoc.getElementById('platformStri').textContent    = navigator.platform;
-    finishExtendedDoc.getElementById('oscpuStri').textContent       = navigator.oscpu;
-    finishExtendedDoc.getElementById('productStri').textContent     = getProduct();
-    finishExtendedDoc.getElementById('geckoStri').textContent       = getGecko();
-    finishExtendedDoc.getElementById('buildConfigStri').textContent = buildConfig;
-    finishExtendedDoc.getElementById('userAgentStri').textContent   = navigator.userAgent;
-    finishExtendedDoc.getElementById('langStri').textContent        = gLanguage;
-    finishExtendedDoc.getElementById('emailStri').textContent       = emailStri;
+  // Send to the finish page
+  reportWizard.advance();
 
-    reportWizard.canRewind = false;
+  // report ID returned from the web service
+  var reportId = req.responseXML.getElementsByTagName('reportId').item(0).firstChild.data;
+  finishSummary.value = strbundle.getString("successfullyCreatedReport") + " " + reportId;
 
-  } else {
-    // If there was an error from the server
-    finishExtendedSuccess.setAttribute("class", "hide");
+  finishExtendedDoc = finishExtendedSuccess.contentDocument;
+  finishExtendedDoc.getElementById('urlStri').textContent         = gParamURL;
+  finishExtendedDoc.getElementById('problemTypeStri').textContent = document.getElementById('problem_type').label;
+  finishExtendedDoc.getElementById('descriptionStri').textContent = gParamDescription;
+  finishExtendedDoc.getElementById('platformStri').textContent    = gParamPlatform;
+  finishExtendedDoc.getElementById('oscpuStri').textContent       = gParamOSCPU;
+  finishExtendedDoc.getElementById('productStri').textContent     = getProduct();
+  finishExtendedDoc.getElementById('geckoStri').textContent       = gParamGecko;
+  finishExtendedDoc.getElementById('buildConfigStri').textContent = gParamBuildConfig;
+  finishExtendedDoc.getElementById('userAgentStri').textContent   = gParamUserAgent;
+  finishExtendedDoc.getElementById('langStri').textContent        = gParamLanguage;
+  finishExtendedDoc.getElementById('emailStri').textContent       = gParamEmail;
 
-    // Change the label on the page so users know we have an error
-    var finishPage = document.getElementById('finish');
-    finishPage.setAttribute("label",strbundle.getString("finishError"));
+  reportWizard.canRewind = false;
 
-    reportWizard.canAdvance = true;
-    reportWizard.advance();
+  document.getElementById('finishExtendedFrame').collapsed = true;
+  reportWizard.getButton("cancel").disabled = true;
+  return;
+}
 
-    finishSummary.setAttribute("value",strbundle.getString("failedCreatingReport"));
-
-    finishExtendedDoc = finishExtendedFailed.contentDocument;
-    //finishExtendedDoc.getElementById('faultCode').textContent = gFaultCode;
-    finishExtendedDoc.getElementById('faultMessage').textContent = gFaultMessage;
+function extractError(req){
+  var error = req.responseXML.getElementsByTagName('errorString').item(0)
+  if (error) {
+    return error.textContent;
   }
+
+  // Default error
+  var strbundle = document.getElementById("strings");
+  return strbundle.getString("defaultError");
+}
+
+function showError(errorStr){
+  var strbundle = document.getElementById("strings");
+  var finishSummary = document.getElementById('finishSummary');
+  var finishExtendedSuccess = document.getElementById('finishExtendedSuccess');
+  var finishExtendedFailed = document.getElementById('finishExtendedFailed');
+
+  // If there was an error from the server
+  finishExtendedSuccess.hidden = true;
+
+  // Change the label on the page so users know we have an error
+  var finishPage = document.getElementById('finish');
+  finishPage.setAttribute("label",strbundle.getString("finishError"));
+
+  var reportWizard = document.getElementById('reportWizard');
+  reportWizard.canAdvance = true;
+  reportWizard.advance();
+
+  finishSummary.value = strbundle.getString("failedCreatingReport");
+
+  finishExtendedDoc = finishExtendedFailed.contentDocument;
+  finishExtendedDoc.getElementById('faultMessage').textContent = errorStr;
 
   document.getElementById('finishExtendedFrame').collapsed = true;
   reportWizard.getButton("cancel").disabled = true;
@@ -302,51 +396,6 @@ function getBuildConfig() {
   } catch(ex) {
     dump(ex);
     return "Unknown";
-  }
-}
-
-/*  NEW WEB SERVICE MODULE */
-/*  Based on Apple's example implementation of SOAP at: developer.apple.com/internet/webservices/mozgoogle_source.html */
-function callReporter(method, params, callback) {
-  var serviceURL = getCharPref("serviceURL", "http://reporter.mozilla.org/service/");
-
-  var soapCall = new SOAPCall();
-  soapCall.transportURI = serviceURL;
-  soapCall.encode(0, method, "urn:MozillaReporter", 0, null, params.length, params);
-
-  var response = soapCall.invoke();
-  var error = handleSOAPResponse(response);
-  if (!error)
-    callback(response);
-}
-
-function handleSOAPResponse (response) {
-  var fault = response.fault;
-  if (fault != null) {
-    gSOAPerror = true;
-    gFaultCode = fault.faultCode;
-    gFaultMessage = fault.faultString;
-    return true;
-  }
-
-  return false;
-}
-
-function setValSysID(results) {
-  if (results) {
-    var params = results.getParameters(false,{});
-    for (var i = 0; i < params.length; i++){
-      gSysID = params[i].value;
-    }
-  }
-}
-
-function setValReportID(results) {
-  if (results) {
-    var params = results.getParameters(false,{});
-    for (var i = 0; i < params.length; i++){
-      gReportID = params[i].value;
-    }
   }
 }
 

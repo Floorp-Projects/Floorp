@@ -56,6 +56,13 @@ splitter {
   background-color: ThreeDFace;
 }
 
+.toolbar-splitter {
+  min-width: 3px;
+  margin: 3px 0;
+  border: none;
+  -moz-border-start: 2px dotted ThreeDShadow;
+}
+
 /* ::::: splitter (horizontal) ::::: */
 
 splitter[orient="vertical"] {

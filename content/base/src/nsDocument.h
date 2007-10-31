@@ -792,6 +792,9 @@ protected:
 
   nsString mBaseTarget;
 
+  // Our update nesting level
+  PRUint32 mUpdateNestLevel;
+
 private:
   friend class nsUnblockOnloadEvent;
 
@@ -833,9 +836,6 @@ private:
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;
-
-  // Our update nesting level
-  PRUint32 mUpdateNestLevel;
 };
 
 
