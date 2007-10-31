@@ -128,7 +128,7 @@ public:
    * Check whether the table has been initialized. This can be useful for static hashtables.
    * @return the initialization state of the class.
    */
-  PRBool IsInitialized() const { return mTable.entrySize; }
+  PRBool IsInitialized() const { return !!mTable.entrySize; }
 
   /**
    * KeyType is typedef'ed for ease of use.

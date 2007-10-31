@@ -53,10 +53,10 @@ class nsICSSImportRule;
 class nsIPrincipal;
 
 // IID for the nsICSSStyleSheet interface
-// 36541c18-e735-48ef-8622-3a481275b757
+// 74fa10f3-fab7-425a-a7dd-e2afd1ba7a07
 #define NS_ICSS_STYLE_SHEET_IID     \
-{ 0x36541c18, 0xe735, 0x48ef, \
- { 0x86, 0x22, 0x3a, 0x48, 0x12, 0x75, 0xb7, 0x57 } }
+{ 0x74fa10f3, 0xfab7, 0x425a, \
+ { 0xa7, 0xdd, 0xe2, 0xaf, 0xd1, 0xba, 0x7a, 0x07 } }
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
@@ -87,7 +87,8 @@ public:
    * SetURIs may only be called while the sheet is 1) incomplete and 2)
    * has no rules in it
    */
-  NS_IMETHOD  SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI) = 0;
+  NS_IMETHOD  SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
+                      nsIURI* aBaseURI) = 0;
 
   /**
    * SetPrincipal should be called on all sheets before parsing into them.

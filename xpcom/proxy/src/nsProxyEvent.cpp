@@ -293,7 +293,7 @@ nsProxyObjectCallInfo::CopyStrings(PRBool copy)
 PRBool                
 nsProxyObjectCallInfo::GetCompleted()
 {
-    return (PRBool)mCompleted;
+    return !!mCompleted;
 }
 
 void

@@ -106,6 +106,14 @@ public:
     return !mImplementation || mImplementation->ResolveAllFields(cx, obj);
   }
 
+  // Undefine all our fields from object |obj| (which should be a
+  // JSObject for a bound element).
+  void UndefineFields(JSContext* cx, JSObject* obj) const {
+    if (mImplementation) {
+      mImplementation->UndefineFields(cx, obj);
+    }
+  }
+
   const nsCString& ClassName() const {
     return mImplementation ? mImplementation->mClassName : EmptyCString();
   }
@@ -118,6 +126,7 @@ public:
   
   void SetImplementation(nsXBLProtoImpl* aImpl) { mImplementation = aImpl; }
   nsresult InstallImplementation(nsIContent* aBoundElement);
+  PRBool HasImplementation() const { return mImplementation != nsnull; }
 
   void AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
                         PRBool aRemoveFlag, nsIContent* aChangedElement,
@@ -189,6 +198,7 @@ public:
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
   void Unlink();
+  void Trace(TraceCallback aCallback, void *aClosure) const;
 
 // Static members
   static PRUint32 gRefCnt;

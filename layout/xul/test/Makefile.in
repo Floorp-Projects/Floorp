@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	test_bug372685.xul \
+		test_bug386386.html \
+		test_bug394800.xhtml \
+		test_bug398982-1.xul \
+		test_bug398982-2.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

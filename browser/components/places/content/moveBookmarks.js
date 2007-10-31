@@ -52,12 +52,9 @@ var gMoveBookmarksDialog = {
     this._nodes = window.arguments[0];
     this._tm = window.arguments[1];
 
-    // setTimeout until bug 373944 is fixed
-    setTimeout(function(aSelf) {
-        // select and expand the root node
-        aSelf.foldersTree.selectFolders([PlacesUtils.bookmarksRootId]);
-        aSelf.foldersTree.selectedNode.containerOpen = true;
-      }, 0, this);
+    // select and expand the root node
+    this.foldersTree.selectFolders([PlacesUtils.bookmarksRootId]);
+    this.foldersTree.selectedNode.containerOpen = true;
   },
 
   onOK: function MBD_onOK(aEvent) {

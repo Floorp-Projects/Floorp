@@ -393,7 +393,7 @@ txStylesheetSink::OnChannelRedirect(nsIChannel *aOldChannel,
     rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return secMan->CheckSameOriginURI(oldURI, newURI);
+    return secMan->CheckSameOriginURI(oldURI, newURI, PR_TRUE);
 }
 
 NS_IMETHODIMP

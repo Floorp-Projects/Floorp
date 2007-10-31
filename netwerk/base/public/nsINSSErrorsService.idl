@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(c6ac6e5d-9db1-4cad-bedc-e2d226913c21)]
+[scriptable, uuid(3a5c7a0f-f5da-4a8b-a748-d7c5a528f33b)]
 interface nsINSSErrorsService : nsISupports
 {
     /**
@@ -61,4 +61,14 @@ interface nsINSSErrorsService : nsISupports
      *  return A localized human readable error explanation.
      */
     AString getErrorMessage(in nsresult aXPCOMErrorCode);
+
+    /**
+     *  Function will fail if aXPCOMErrorCode is not an NSS error code.
+     *  @param aXPCOMErrorCode An error code obtain using getXPCOMFromNSSError
+     *  return the 
+     */
+    PRUint32 getErrorClass(in nsresult aXPCOMErrorCode);
+
+    const unsigned long ERROR_CLASS_SSL_PROTOCOL = 1;
+    const unsigned long ERROR_CLASS_BAD_CERT     = 2;
 };

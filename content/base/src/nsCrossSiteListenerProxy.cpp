@@ -134,7 +134,7 @@ nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
   nsCOMPtr<nsIURI> finalURI;
   channel->GetURI(getter_AddRefs(finalURI));
   rv = nsContentUtils::GetSecurityManager()->
-    CheckSameOriginURI(mRequestingURI, finalURI);
+    CheckSameOriginURI(mRequestingURI, finalURI, PR_FALSE);
   if (NS_SUCCEEDED(rv)) {
     mAcceptState = eAccept;
     return ForwardRequest(PR_FALSE);

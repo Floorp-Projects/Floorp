@@ -56,7 +56,7 @@ import ffprocess
 
 if platform.system() == "Linux":
     from ffprofile_unix import *
-elif platform.system() == "Windows":
+elif platform.system() in ("Windows", "Microsoft"):
     from ffprofile_win32 import *
 elif platform.system() == "Darwin":
     from ffprofile_unix import *

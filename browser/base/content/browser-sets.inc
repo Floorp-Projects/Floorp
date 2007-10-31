@@ -101,9 +101,9 @@
     <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
     <command id="Browser:Reload"  oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload()" disabled="true"/>
     <command id="Browser:ReloadSkipCache"  oncommand="BrowserReloadSkipCache()" disabled="true"/>
-    <command id="cmd_textZoomReduce"  oncommand="TextZoom.reduce()"/>
-    <command id="cmd_textZoomEnlarge" oncommand="TextZoom.enlarge()"/>
-    <command id="cmd_textZoomReset" oncommand="TextZoom.reset()"/>
+    <command id="cmd_fullZoomReduce"  oncommand="FullZoom.reduce()"/>
+    <command id="cmd_fullZoomEnlarge" oncommand="FullZoom.enlarge()"/>
+    <command id="cmd_fullZoomReset"   oncommand="FullZoom.reset()"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
 
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>    
@@ -286,10 +286,10 @@
 #endif
          command="viewHistorySidebar"/>
 
-    <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
-    <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
-    <key id="key_textZoomReset"   key="&textZoomResetCmd.commandkey;"    command="cmd_textZoomReset"   modifiers="accel"/>
+    <key id="key_fullZoomReduce"  key="&fullZoomReduceCmd.commandkey;"   command="cmd_fullZoomReduce"  modifiers="accel"/>
+    <key id="key_fullZoomEnlarge" key="&fullZoomEnlargeCmd.commandkey;"  command="cmd_fullZoomEnlarge" modifiers="accel"/>
+    <key                          key="&fullZoomEnlargeCmd.commandkey2;" command="cmd_fullZoomEnlarge" modifiers="accel"/>
+    <key id="key_fullZoomReset"   key="&fullZoomResetCmd.commandkey;"    command="cmd_fullZoomReset"   modifiers="accel"/>
     
     <key id="key_switchTextDirection" key="&bidiSwitchTextDirectionItem.commandkey;" command="cmd_switchTextDirection" modifiers="accel,shift" />
 

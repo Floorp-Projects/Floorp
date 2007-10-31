@@ -185,9 +185,16 @@
   [req setHTTPBody:postBody];
   [req setHTTPMethod:@"POST"];
 
-  return [NSURLConnection sendSynchronousRequest:req
+  [response_ release];
+  response_ = nil;
+  
+  NSData *data =  [NSURLConnection sendSynchronousRequest:req
                                returningResponse:&response_
                                            error:error];
+
+  [response_ retain];
+  
+  return data;
 }
 
 //=============================================================================

@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
+ *   Federico Mena-Quintero <federico@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,8 +64,10 @@ NS_IMPL_ISUPPORTS1(nsJPEGDecoder, imgIDecoder)
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gJPEGlog = PR_NewLogModule("JPEGDecoder");
+static PRLogModuleInfo *gJPEGDecoderAccountingLog = PR_NewLogModule("JPEGDecoderAccounting");
 #else
 #define gJPEGlog
+#define gJPEGDecoderAccountingLog
 #endif
 
 
@@ -96,6 +99,10 @@ nsJPEGDecoder::nsJPEGDecoder()
 
   mInProfile = nsnull;
   mTransform = nsnull;
+
+  PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+         ("nsJPEGDecoder::nsJPEGDecoder: Creating JPEG decoder %p",
+          this));
 }
 
 nsJPEGDecoder::~nsJPEGDecoder()
@@ -106,6 +113,10 @@ nsJPEGDecoder::~nsJPEGDecoder()
     cmsDeleteTransform(mTransform);
   if (mInProfile)
     cmsCloseProfile(mInProfile);
+
+  PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+         ("nsJPEGDecoder::~nsJPEGDecoder: Destroying JPEG decoder %p",
+          this));
 }
 
 
@@ -147,6 +158,34 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
   for (PRUint32 m = 0; m < 16; m++)
     jpeg_save_markers(&mInfo, JPEG_APP0 + m, 0xFFFF);
 
+
+
+  /* Check if the request already has an image container.
+   * this is the case when multipart/x-mixed-replace is being downloaded
+   * if we already have one and it has the same width and height, reuse it.
+   * This is also the case when an existing container is reloading itself from
+   * us.
+   *
+   * If we have a mismatch in width/height for the container later on we will
+   * generate an error.
+   */
+  mImageLoad->GetImage(getter_AddRefs(mImage));
+
+  if (!mImage) {
+    mImage = do_CreateInstance("@mozilla.org/image/container;1");
+    if (!mImage)
+      return NS_ERROR_OUT_OF_MEMORY;
+      
+    mImageLoad->SetImage(mImage);
+    nsresult result = mImage->SetDiscardable("image/jpeg");
+    if (NS_FAILED(result)) {
+      mState = JPEG_ERROR;
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             (" (could not set image container to discardable)"));
+      return result;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -185,11 +224,20 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 {
   LOG_SCOPE_WITH_PARAM(gJPEGlog, "nsJPEGDecoder::WriteFrom", "count", count);
 
+  PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+         ("nsJPEGDecoder::WriteFrom(decoder = %p) {\n"
+          "        image container %s; %u bytes to be added",
+          this,
+          mImage ? "exists" : "does not exist",
+          count));
+
   if (inStr) {
     if (!mBuffer) {
       mBuffer = (JOCTET *)PR_Malloc(count);
       if (!mBuffer) {
         mState = JPEG_ERROR;
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (out of memory allocating buffer)"));
         return NS_ERROR_OUT_OF_MEMORY;
       }
       mBufferSize = count;
@@ -197,6 +245,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       JOCTET *buf = (JOCTET *)PR_Realloc(mBuffer, count);
       if (!buf) {
         mState = JPEG_ERROR;
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (out of memory resizing buffer)"));
         return NS_ERROR_OUT_OF_MEMORY;
       }
       mBuffer = buf;
@@ -204,9 +254,29 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     }
 
     nsresult rv = inStr->Read((char*)mBuffer, count, &mBufferLen);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsJPEGDecoder::WriteFrom -- inStr->Read failed");
+
+    PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+           ("nsJPEGDecoder::WriteFrom(): decoder %p got %u bytes, read %u from the stream (buffer size %u)",
+            this,
+            count,
+            mBufferLen,
+            mBufferSize));
+    
     *_retval = mBufferLen;
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "nsJPEGDecoder::WriteFrom -- inStr->Read failed");
+    nsresult result = mImage->AddRestoreData((char *) mBuffer, count);
+
+    if (NS_FAILED(result)) {
+      mState = JPEG_ERROR;
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("} (could not add restore data)"));
+      return result;
+    }
+
+    PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+           ("        added %u bytes to restore data",
+            count));
   }
   // else no input stream.. Flush() ?
 
@@ -217,11 +287,15 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     if (error_code == NS_ERROR_FAILURE) {
       /* Error due to corrupt stream - return NS_OK so that libpr0n
          doesn't throw away a partial image load */
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("} (setjmp returned NS_ERROR_FAILURE)"));
       return NS_OK;
     } else {
       /* Error due to reasons external to the stream (probably out of
          memory) - let libpr0n attempt to clean up, even though
          mozilla is seconds away from falling flat on its face. */
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("} (setjmp returned an error)"));
       return error_code;
     }
   }
@@ -235,8 +309,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_HEADER case");
 
     /* Step 3: read file parameters with jpeg_read_header() */
-    if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED)
+    if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED) {
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("} (JPEG_SUSPENDED)"));
       return NS_OK; /* I/O suspension */
+    }
 
     JOCTET  *profile;
     PRUint32 profileLength;
@@ -278,6 +355,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
         break;
       default:
         mState = JPEG_ERROR;
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (unknown colorpsace (1))"));
         return NS_ERROR_UNEXPECTED;
       }
 
@@ -301,6 +380,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
           break;
         default:
           mState = JPEG_ERROR;
+          PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+                 ("} (unknown colorpsace (2))"));
           return NS_ERROR_UNEXPECTED;
         }
 
@@ -336,6 +417,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
         break;
       default:
         mState = JPEG_ERROR;
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (unknown colorpsace (3))"));
         return NS_ERROR_UNEXPECTED;
         break;
       }
@@ -352,30 +435,21 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
     mObserver->OnStartDecode(nsnull);
 
-    /* Check if the request already has an image container.
-       this is the case when multipart/x-mixed-replace is being downloaded
-       if we already have one and it has the same width and height, reuse it.
+    /* verify that the width and height of the image are the same as
+     * the container we're about to put things in to.
+     * XXX it might not matter maybe we should just resize the image.
      */
-    mImageLoad->GetImage(getter_AddRefs(mImage));
-    if (mImage) {
-      PRInt32 width, height;
-      mImage->GetWidth(&width);
-      mImage->GetHeight(&height);
-      if ((width != (PRInt32)mInfo.image_width) ||
-          (height != (PRInt32)mInfo.image_height)) {
-        mImage = nsnull;
-      }
+    PRInt32 width, height;
+    mImage->GetWidth(&width);
+    mImage->GetHeight(&height);
+    if (width == 0 && height == 0) {
+      mImage->Init(mInfo.image_width, mInfo.image_height, mObserver);
+    } else if ((width != (PRInt32)mInfo.image_width) || (height != (PRInt32)mInfo.image_height)) {
+      mState = JPEG_ERROR;
+      return NS_ERROR_UNEXPECTED;
     }
 
-    if (!mImage) {
-      mImage = do_CreateInstance("@mozilla.org/image/container;1");
-      if (!mImage) {
-        mState = JPEG_ERROR;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      mImageLoad->SetImage(mImage);
-      mImage->Init(mInfo.image_width, mInfo.image_height, mObserver);
-    }
+    mImage->Init(mInfo.image_width, mInfo.image_height, mObserver);
 
     mObserver->OnStartContainer(nsnull, mImage);
 
@@ -400,6 +474,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
       if (!mFrame) {
         mState = JPEG_ERROR;
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (could not create image frame)"));
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
@@ -410,11 +486,17 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
       if (NS_FAILED(mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, format, 24))) {
         mState = JPEG_ERROR;
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (could not initialize image frame)"));
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
       mImage->AppendFrame(mFrame);
-    }      
+
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("        JPEGDecoderAccounting: nsJPEGDecoder::WriteFrom -- created image frame with %ux%u pixels",
+              mInfo.image_width, mInfo.image_height));
+    }
 
     mObserver->OnStartFrame(nsnull, mFrame);
     mState = JPEG_START_DECOMPRESS;
@@ -435,8 +517,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mInfo.do_block_smoothing = TRUE;
 
     /* Step 5: Start decompressor */
-    if (jpeg_start_decompress(&mInfo) == FALSE)
+    if (jpeg_start_decompress(&mInfo) == FALSE) {
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("} (I/O suspension after jpeg_start_decompress())"));
       return NS_OK; /* I/O suspension */
+    }
 
     /* If this is a progressive JPEG ... */
     if (mInfo.buffered_image) {
@@ -452,8 +537,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     {
       LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_SEQUENTIAL case");
       
-      if (!OutputScanlines())
+      if (!OutputScanlines()) {
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (I/O suspension after OutputScanlines() - SEQUENTIAL)"));
         return NS_OK; /* I/O suspension */
+      }
       
       /* If we've completed image output ... */
       NS_ASSERTION(mInfo.output_scanline == mInfo.output_height, "We didn't process all of the data!");
@@ -485,8 +573,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
               (status != JPEG_REACHED_EOI))
             scan--;
 
-          if (!jpeg_start_output(&mInfo, scan))
+          if (!jpeg_start_output(&mInfo, scan)) {
+            PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+                   ("} (I/O suspension after jpeg_start_output() - PROGRESSIVE)"));
             return NS_OK; /* I/O suspension */
+          }
         }
 
         if (mInfo.output_scanline == 0xffffff)
@@ -498,13 +589,18 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                jpeg_start_output() multiple times for the same scan */
             mInfo.output_scanline = 0xffffff;
           }
+          PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+                 ("} (I/O suspension after OutputScanlines() - PROGRESSIVE)"));
           return NS_OK; /* I/O suspension */
         }
 
         if (mInfo.output_scanline == mInfo.output_height)
         {
-          if (!jpeg_finish_output(&mInfo))
+          if (!jpeg_finish_output(&mInfo)) {
+            PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+                   ("} (I/O suspension after jpeg_finish_output() - PROGRESSIVE)"));
             return NS_OK; /* I/O suspension */
+          }
 
           if (jpeg_input_complete(&mInfo) &&
               (mInfo.input_scan_number == mInfo.output_scan_number))
@@ -520,14 +616,27 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
   case JPEG_DONE:
   {
+    nsresult result;
+
     LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_DONE case");
 
     /* Step 7: Finish decompression */
 
-    if (jpeg_finish_decompress(&mInfo) == FALSE)
+    if (jpeg_finish_decompress(&mInfo) == FALSE) {
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("} (I/O suspension after jpeg_finish_decompress() - DONE)"));
       return NS_OK; /* I/O suspension */
+    }
 
     mState = JPEG_SINK_NON_JPEG_TRAILER;
+
+    result = mImage->RestoreDataDone();
+    if (NS_FAILED (result)) {
+      mState = JPEG_ERROR;
+      PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+             ("} (could not mark image container with RestoreDataDone)"));
+      return result;
+    }
 
     /* we're done dude */
     break;
@@ -545,6 +654,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     break;
   }
 
+  PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+         ("} (end of function)"));
   return NS_OK;
 }
 

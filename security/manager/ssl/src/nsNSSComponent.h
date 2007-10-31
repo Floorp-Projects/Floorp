@@ -167,6 +167,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token) = 0;
   
+  NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
@@ -240,6 +241,7 @@ public:
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule *module);
   NS_IMETHOD PostEvent(const nsAString &eventType, const nsAString &token);
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token);
+  NS_IMETHOD EnsureIdentityInfoLoaded();
 
 private:
 
@@ -262,6 +264,7 @@ private:
   void UnloadLoadableRoots();
   void LaunchSmartCardThreads();
   void ShutdownSmartCardThreads();
+  void CleanupIdentityInfo();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterPSMContentListener();
@@ -303,6 +306,9 @@ private:
   nsSSLThread *mSSLThread;
   nsCertVerificationThread *mCertVerificationThread;
   nsNSSHttpInterface mHttpForNSS;
+
+  static PRStatus PR_CALLBACK IdentityInfoInit(void);
+  PRCallOnceType mIdentityInfoCallOnce;
 };
 
 class PSMContentListener : public nsIURIContentListener,

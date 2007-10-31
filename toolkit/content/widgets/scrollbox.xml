@@ -30,7 +30,7 @@
                             anonid="scrollbutton-up"
                             collapsed="true"
                             xbl:inherits="orient"
-                            oncommand="scrollByPixels(this.parentNode.scrollIncrement * -1); event.stopPropagation();"/>
+                            oncommand="_autorepeatbuttonScroll(event);"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
       </xul:scrollbox>
@@ -38,7 +38,7 @@
                             anonid="scrollbutton-down"
                             collapsed="true"
                             xbl:inherits="orient"
-                            oncommand="scrollByPixels(this.parentNode.scrollIncrement); event.stopPropagation();"/>
+                            oncommand="_autorepeatbuttonScroll(event);"/>
     </content>
 
     <implementation>
@@ -195,8 +195,6 @@
             this.scrollBoxObject.scrollByIndex(index);
             return;
           }
-          if (!this._isLTRScrollbox)
-            index *= -1;
 
           var scrollBox = this.scrollBoxObject;
           var edge = scrollBox.screenX;
@@ -209,6 +207,8 @@
             return;
 
           var targetElement;
+          if (!this._isLTRScrollbox)
+            index *= -1;
 
           while (index < 0 && nextElement) {
             targetElement = nextElement;
@@ -231,6 +231,10 @@
           var elements = this.hasChildNodes() ?
                          this.childNodes :
                          document.getBindingParent(this).childNodes;
+          if (!this._isLTRScrollbox) {
+            elements = Array.slice(elements);
+            elements.reverse();
+          }
           var low = 0;
           var high = elements.length - 1;
 
@@ -251,14 +255,24 @@
         ]]></body>
       </method>
 
+      <method name="_autorepeatbuttonScroll">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var dir = event.originalTarget == this._scrollButtonUp ? -1 : 1;
+          if (this.getAttribute("orient") == "horizontal" && !this._isLTRScrollbox)
+            dir *= -1;
+
+          this.scrollByPixels(this.scrollIncrement * dir);
+
+          event.stopPropagation();
+        ]]></body>
+      </method>
+
       <method name="scrollByPixels">
         <parameter name="px"/>
         <body><![CDATA[
-          if (this.getAttribute("orient") == "horizontal") {
-            // if not ltr, we want to scroll the other direction
-            var actualPx = this._isLTRScrollbox ? px : (-1 * px);
-            this.scrollBoxObject.scrollBy(actualPx, 0);
-          }
+          if (this.getAttribute("orient") == "horizontal")
+            this.scrollBoxObject.scrollBy(px, 0);
           else
             this.scrollBoxObject.scrollBy(0, px);
         ]]></body>
@@ -478,6 +492,8 @@
       <method name="_startScroll">
         <parameter name="index"/>
         <body><![CDATA[
+          if (this.getAttribute("orient") == "horizontal" && !this._isLTRScrollbox)
+            index *= -1;
           this._scrollIndex = index;
           var scrollDelay = this.smoothScroll ? 60 : this._scrollDelay;
           if (!this._scrollTimer)
@@ -485,11 +501,10 @@
               Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
           else
-             this._scrollTimer.cancel();
+            this._scrollTimer.cancel();
 
-          this._scrollTimer.initWithCallback(this,
-                        scrollDelay,
-                        Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+          this._scrollTimer.initWithCallback(this, scrollDelay,
+                                             this._scrollTimer.TYPE_REPEATING_SLACK);
           this.notify(this._scrollTimer);
           this._mousedown = true;
         ]]>
@@ -572,7 +587,9 @@
           if (!targetElement) {
             // scroll to the first resp. last element
             var container = this.hasChildNodes() ? this : document.getBindingParent(this);
-            targetElement = scrollLeft ? container.firstChild : container.lastChild;
+            targetElement = (this._isLTRScrollbox ? scrollLeft : !scrollLeft) ?
+                            container.firstChild :
+                            container.lastChild;
           }
 
           this.ensureElementIsVisible(targetElement);

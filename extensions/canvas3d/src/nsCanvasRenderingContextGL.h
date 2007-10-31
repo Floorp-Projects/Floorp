@@ -143,6 +143,8 @@ protected:
     PRInt32 mWidth, mHeight;
     nsICanvasElement* mCanvasElement;
 
+    PRPackedBool mPrefWireframe;
+
     static inline PRBool JSValToFloatArray (JSContext *ctx, jsval val,
                                             jsuint cnt, float *array)
     {
@@ -152,6 +154,7 @@ protected:
         jsdouble dv;
 
         if (!::JS_ValueToObject(ctx, val, &arrayObj) ||
+            arrayObj == NULL ||
             !::JS_IsArrayObject(ctx, arrayObj) ||
             !::JS_GetArrayLength(ctx, arrayObj, &arrayLen) ||
             (arrayLen < cnt))
@@ -176,6 +179,7 @@ protected:
         jsdouble dv;
 
         if (!::JS_ValueToObject(ctx, val, &arrayObj) ||
+            arrayObj == NULL ||
             !::JS_IsArrayObject(ctx, arrayObj) ||
             !::JS_GetArrayLength(ctx, arrayObj, &arrayLen) ||
             (arrayLen < cnt))
@@ -197,6 +201,7 @@ protected:
         JSObject *obj = nsnull;
         jsuint len;
         if (!::JS_ValueToObject(ctx, val, &obj) ||
+            obj == NULL ||
             !::JS_IsArrayObject(ctx, obj) ||
             !::JS_GetArrayLength(ctx, obj, &len))
         {
@@ -259,7 +264,8 @@ protected:
 
     void LogMessage (const nsCString& errorString) {
         nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-        console->LogStringMessage(NS_ConvertUTF8toUTF16(errorString).get());
+        if (console)
+            console->LogStringMessage(NS_ConvertUTF8toUTF16(errorString).get());
     }
 };
 
@@ -605,6 +611,16 @@ protected:
 
     SimpleBuffer mSimpleBuffer;
     GLuint mBufferID;
+};
+
+class CanvasGLThebes {
+public:
+    static gfxImageSurface *CreateImageSurface (const gfxIntSize &isize,
+                                                gfxASurface::gfxImageFormat fmt);
+
+    static gfxContext *CreateContext (gfxASurface *surf);
+
+    static gfxPattern *CreatePattern (gfxASurface *surf);
 };
 
 /* Helper macros for when we're just wrapping a gl method, so that

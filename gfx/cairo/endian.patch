@@ -1,0 +1,43 @@
+--- a/libpixman/src/Makefile.in	Fri Oct 19 14:57:40 2007
++++ b/libpixman/src/Makefile.in	Fri Oct 19 14:52:04 2007
+@@ -88,7 +88,7 @@
+ 
+ EXPORTS		= pixman.h pixman-remap.h
+ 
+-LOCAL_INCLUDES	+= -I$(srcdir)
++LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
+ 
+ FORCE_STATIC_LIB = 1
+ # This library is used by other shared libs in a static build
+--- a/libpixman/src/pixman-private.h	Fri Oct 19 14:55:56 2007
++++ b/libpixman/src/pixman-private.h	Fri Oct 19 14:56:45 2007
+@@ -5,6 +5,8 @@
+ #ifndef PIXMAN_PRIVATE_H
+ #define PIXMAN_PRIVATE_H
+ 
++#include "cairo-platform.h"
++
+ #include "pixman.h"
+ #include <time.h>
+ 
+--- a/glitz/src/Makefile.in	Fri Oct 19 14:55:50 2007
++++ b/glitz/src/Makefile.in	Fri Oct 19 14:57:19 2007
+@@ -91,6 +91,6 @@
+ FORCE_STATIC_LIB = 1
+ FORCE_USE_PIC = 1
+ 
+-LOCAL_INCLUDES  += -I$(srcdir)
++LOCAL_INCLUDES  += -I$(srcdir) -I$(srcdir)/../../cairo/src
+ 
+ include $(topsrcdir)/config/rules.mk
+--- a/glitz/src/glitzint.h	Fri Oct 19 14:55:50 2007
++++ b/glitz/src/glitzint.h	Fri Oct 19 14:57:19 2007
+@@ -26,6 +26,8 @@
+ #ifndef GLITZINT_H_INCLUDED
+ #define GLITZINT_H_INCLUDED
+ 
++#include "cairo-platform.h"
++
+ #ifdef _MSC_VER
+ #define _USE_MATH_DEFINES
+ #endif

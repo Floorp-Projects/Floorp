@@ -1849,7 +1849,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
     result = NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nsnull);
     if (NS_SUCCEEDED(result)) {
       NS_ASSERTION(uri, "null but no error");
-      result = mPrefStyleSheet->SetURIs(uri, uri);
+      result = mPrefStyleSheet->SetURIs(uri, nsnull, uri);
       if (NS_SUCCEEDED(result)) {
         mPrefStyleSheet->SetComplete();
         nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet));
@@ -3332,7 +3332,11 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   nsStyleChangeList changeList;
   changeList.AppendChange(nsnull, aContent, nsChangeHint_ReconstructFrame);
 
+  // Mark ourselves as not safe to flush while we're doing frame construction.
+  ++mChangeNestCount;
   nsresult rv = mFrameConstructor->ProcessRestyledFrames(changeList);
+  --mChangeNestCount;
+  
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 #ifdef ACCESSIBILITY
   InvalidateAccessibleSubtree(aContent);
@@ -6031,6 +6035,10 @@ PresShell::DidCauseReflow()
   if (--mChangeNestCount == 0) {
     // We may have had more reflow commands appended to the queue during
     // our reflow.  Make sure these get processed at some point.
+
+    // XXXbz why is this really needed?  ProcessReflowCommands handles posting
+    // reflow events if there are reflow roots remaining, and FrameNeedsReflow
+    // posts events as needed as well.  I think we should remove this.
     PostReflowEvent();
   }
 
@@ -6375,7 +6383,11 @@ PresShell::Observe(nsISupports* aSubject,
       nsStyleChangeList changeList;
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
                                     ReframeImageBoxes, &changeList);
+      // Mark ourselves as not safe to flush while we're doing frame
+      // construction.
+      ++mChangeNestCount;
       mFrameConstructor->ProcessRestyledFrames(changeList);
+      --mChangeNestCount;
 
       mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 #ifdef ACCESSIBILITY

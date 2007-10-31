@@ -1147,10 +1147,11 @@ nsCanvasRenderingContextGLES11::TexImage2DHTML(PRUint32 target, nsIDOMHTMLElemen
     }
 
     if (!image_data) {
-        nsRefPtr<gfxImageSurface> tmpImageSurface = new gfxImageSurface(gfxIntSize(width, height),
-                                                                        gfxASurface::ImageFormatARGB32);
-
-        nsRefPtr<gfxContext> cx = new gfxContext(tmpImageSurface);
+        nsRefPtr<gfxImageSurface> tmpImageSurface =
+            CanvasGLThebes::CreateImageSurface(gfxIntSize(width, height),
+                                               gfxASurface::ImageFormatARGB32);
+        nsRefPtr<gfxContext> cx =
+            CanvasGLThebes::CreateContext(tmpImageSurface);
         cx->SetSource(surf);
         cx->SetOperator(gfxContext::OPERATOR_SOURCE);
         cx->Paint();
@@ -1872,6 +1873,7 @@ nsCanvasRenderingContextGLES11::BufferData()
     jsuint type;
     jsuint usage;
     if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "uouu", &target, &arrayObj, &type, &usage) ||
+        arrayObj == NULL ||
         !::JS_IsArrayObject(js.ctx, arrayObj) ||
         !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
     {
@@ -1905,6 +1907,7 @@ nsCanvasRenderingContextGLES11::BufferSubData()
     jsuint offset;
     jsuint type;
     if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "uuou", &target, &offset, &arrayObj, &type) ||
+        arrayObj == NULL ||
         !::JS_IsArrayObject(js.ctx, arrayObj) ||
         !::JS_GetArrayLength(js.ctx, arrayObj, &arrayLen))
     {

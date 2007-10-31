@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
+ *   Colin Barrett <cbarrett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -276,6 +277,14 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
         NS_ERROR("Unhandled window type!");
         return NS_ERROR_FAILURE;
     }
+
+    /* Apple's docs on NSWindow styles say that "a window's style mask should
+     * include NSTitledWindowMask if it includes any of the others [besides
+     * NSBorderlessWindowMask]".  This implies that a borderless window
+     * shouldn't have any other styles than NSBorderlessWindowMask.
+     */
+    if (!(features & NSTitledWindowMask))
+      features = NSBorderlessWindowMask;
     
     /* 
      * We pass a content area rect to initialize the native Cocoa window. The
@@ -309,15 +318,22 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     // NSLog(@"Top-level window being created at Cocoa rect: %f, %f, %f, %f\n",
     //       rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 
-    // Create the window
     Class windowClass = [NSWindow class];
-    // If we're a top level window, we want to be able to have the toolbar
-    // pill button, so use the special ToolbarWindow class.
-    if (mWindowType == eWindowType_toplevel)
+    // If we have a titlebar, we want to be able to control the titlebar color
+    // (for unified), so use the special ToolbarWindow class. Note that we need
+    // to check the window type because we mark sheets sheets as having titlebars.
+    if ((mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) &&
+        (features & NSTitledWindowMask))
       windowClass = [ToolbarWindow class];
     // If we're a popup window we need to use the PopupWindow class.
     else if (mWindowType == eWindowType_popup)
       windowClass = [PopupWindow class];
+    // If we're a non-popup borderless window we need to use the
+    // BorderlessWindow class.
+    else if (features == NSBorderlessWindowMask)
+      windowClass = [BorderlessWindow class];
+
+    // Create the window
     mWindow = [[windowClass alloc] initWithContentRect:rect styleMask:features 
                                    backing:NSBackingStoreBuffered defer:NO];
     
@@ -346,7 +362,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     [mWindow setBackgroundColor:[NSColor whiteColor]];
     [mWindow setContentMinSize:NSMakeSize(60, 60)];
     [mWindow setReleasedWhenClosed:NO];
-    
+
     // setup our notification delegate. Note that setDelegate: does NOT retain.
     mDelegate = [[WindowDelegate alloc] initWithGeckoWindow:this];
     [mWindow setDelegate:mDelegate];
@@ -1067,6 +1083,27 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
+{
+  if (![mWindow isKindOfClass:[ToolbarWindow class]]) {
+    NS_WARNING("Calling SetWindowTitlebarColor on window that isn't of the ToolbarWindow class.");
+    return NS_ERROR_FAILURE;
+  }
+
+  // If they pass a color with a complete transparent alpha component, use the
+  // native titlebar appearance.
+  if (NS_GET_A(aColor) == 0) {
+    [(ToolbarWindow*)mWindow setTitlebarColor:nil]; 
+  } else {
+    [(ToolbarWindow*)mWindow setTitlebarColor:[NSColor colorWithDeviceRed:NS_GET_R(aColor)/255.0
+                                                                    green:NS_GET_G(aColor)/255.0
+                                                                     blue:NS_GET_B(aColor)/255.0
+                                                                    alpha:NS_GET_A(aColor)/255.0]];
+  }
+  return NS_OK;
+}
+
+
 gfxASurface* nsCocoaWindow::GetThebesSurface()
 {
   if (mPopupContentView)
@@ -1282,18 +1319,96 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
 @end
 
+
+// Category on NSWindow so callers can use the same method on both ToolbarWindows
+// and NSWindows for accessing the background color.
+@implementation NSWindow(ToolbarWindowCompat)
+
+- (NSColor*)windowBackgroundColor
+{
+  return [self backgroundColor];
+}
+
+@end
+
+
+// This class allows us to have a "unified toolbar" style window. It works like this:
+// 1) We set the window's style to textured.
+// 2) Because of this, the background color applies to the entire window, including
+//     the titlebar area. For normal textured windows, the default pattern is a 
+//    "brushed metal" image.
+// 3) We set the background color to a custom NSColor subclass that knows how tall the window is.
+//    When -set is called on it, it sets a pattern (with a draw callback) as the fill. In that callback,
+//    it paints the the titlebar and background colrs in the correct areas of the context its given,
+//    which will fill the entire window (CG will tile it horizontally for us).
+//
+// This class also provides us with a pill button to show/hide the toolbar.
 @implementation ToolbarWindow
 
-// The carbon widget code was saying we want a toolbar for all top level
-// windows, and since we're only using this class for top level windows, we
-// always want to return yes from here.
+- (id)initWithContentRect:(NSRect)aContentRect styleMask:(unsigned int)aStyle backing:(NSBackingStoreType)aBufferingType defer:(BOOL)aFlag
+{
+  aStyle = aStyle | NSTexturedBackgroundWindowMask;
+  if ((self = [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag])) {
+    mColor = [[TitlebarAndBackgroundColor alloc] initWithTitlebarColor:nil
+                                                    andBackgroundColor:[NSColor whiteColor]
+                                                             forWindow:self];
+    // Call the superclass's implementation, to avoid our guard method below.
+    [super setBackgroundColor:mColor];
+
+    // setBottomCornerRounded: is a private API call, so we check to make sure
+    // we respond to it just in case.
+    if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
+      [self setBottomCornerRounded:NO];
+  }
+  return self;
+}
+
+
+- (void)dealloc
+{
+  [mColor release];
+  [super dealloc];
+}
+
+
+// We don't provide our own implementation of -backgroundColor because NSWindow
+// looks at it, apparently. This is here to keep someone from messing with our
+// custom NSColor subclass.
+- (void)setBackgroundColor:(NSColor*)aColor
+{
+  [mColor setBackgroundColor:aColor];
+}
+
+
+// If you need to get at the background color of the window (in the traditional
+// sense) use this method instead.
+- (NSColor*)windowBackgroundColor
+{
+  return [mColor backgroundColor];
+}
+
+
+// Pass nil here to get the default appearance.
+- (void)setTitlebarColor:(NSColor*)aColor
+{
+  [mColor setTitlebarColor:aColor];
+}
+
+
+- (NSColor*)titlebarColor
+{
+  return [mColor titlebarColor];
+}
+
+
+// Always show the toolbar pill button.
 - (BOOL)_hasToolbar
 {
   return YES;
 }
 
 
-// Dispatch a toolbar pill button clicked message to Gecko
+// Dispatch a toolbar pill button clicked message to Gecko.
 - (void)_toolbarPillButtonClicked:(id)sender
 {
   nsCocoaWindow *geckoWindow = [[self delegate] geckoWidget];
@@ -1303,7 +1418,209 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   geckoWindow->DispatchEvent(&guiEvent, status);
 }
 
+// Retain and release "self" to avoid crashes when our widget (and its native
+// window) is closed as a result of processing a key equivalent (e.g.
+// Command+w or Command+q).  This workaround is only needed for a window
+// that can become key.
+- (BOOL)performKeyEquivalent:(NSEvent*)theEvent
+{
+  NSWindow *nativeWindow = [self retain];
+  BOOL retval = [super performKeyEquivalent:theEvent];
+  [nativeWindow release];
+  return retval;
+}
+
 @end
+
+
+// Custom NSColor subclass where most of the work takes place for drawing in
+// the titlebar area.
+@implementation TitlebarAndBackgroundColor
+
+- (id)initWithTitlebarColor:(NSColor*)aTitlebarColor 
+         andBackgroundColor:(NSColor*)aBackgroundColor
+                  forWindow:(NSWindow*)aWindow
+{
+  if ((self = [super init])) {
+    mTitlebarColor = [aTitlebarColor retain];
+    mBackgroundColor = [aBackgroundColor retain];
+    mWindow = aWindow; // weak ref
+    NSRect frameRect = [aWindow frame];
+    mTitlebarHeight = frameRect.size.height - [aWindow contentRectForFrameRect:frameRect].size.height;
+  }
+  return self;
+}
+
+
+- (void)dealloc
+{
+  [mTitlebarColor release];
+  [mBackgroundColor release];
+  [super dealloc];
+}
+
+// Our pattern width is 1 pixel. CoreGraphics can cache and tile for us.
+static const float sPatternWidth = 1.0f;
+
+// These are the start and end greys for the default titlebar gradient.
+static const float sHeaderStartGrey = 196/255.0f;
+static const float sHeaderEndGrey = 149/255.0f;
+
+// This is the grey for the border at the bottom of the titlebar.
+static const float sTitlebarBorderGrey = 64/255.0f;
+
+// Callback used by the default titlebar shading.
+static void headerShading(void* aInfo, const float* aIn, float* aOut)
+{
+  float result = (*aIn) * sHeaderStartGrey + (1.0f - *aIn) * sHeaderEndGrey;
+  aOut[0] = result;
+  aOut[1] = result;
+  aOut[2] = result;
+  aOut[3] = 1.0f;
+}
+
+
+// Callback where all of the drawing for this color takes place.
+void patternDraw(void* aInfo, CGContextRef aContext)
+{
+  TitlebarAndBackgroundColor *color = (TitlebarAndBackgroundColor*)aInfo;
+  NSColor *titlebarColor = [color titlebarColor];
+  NSColor *backgroundColor = [color backgroundColor];
+  NSWindow *window = [color window];
+
+  // Remember: this context is NOT flipped, so the origin is in the bottom left.
+  float titlebarHeight = [color titlebarHeight];
+  float titlebarOrigin = [window frame].size.height - titlebarHeight;
+
+  [NSGraphicsContext saveGraphicsState];
+  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
+
+  // If the titlebar color is nil, draw the default titlebar shading.
+  if (!titlebarColor) {
+    //Create and draw a CGShading that uses headerShading() as its callback.
+    CGFunctionCallbacks callbacks = {0, headerShading, NULL};
+    CGFunctionRef function = CGFunctionCreate(NULL, 1, NULL, 4, NULL, &callbacks);
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGShadingRef shading = CGShadingCreateAxial(colorSpace, CGPointMake(0.0f, titlebarOrigin),
+                                                CGPointMake(0.0f, titlebarOrigin + titlebarHeight),
+                                                function, NO, NO);
+    CGColorSpaceRelease(colorSpace);
+    CGFunctionRelease(function);
+    CGContextDrawShading(aContext, shading);
+
+    // Draw the one pixel border at the bottom of the titlebar.
+    [[NSColor colorWithDeviceWhite:sTitlebarBorderGrey alpha:1.0f] set];
+    NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
+  } else {
+    // if the titlebar color is not nil, just set and draw it normally.
+    [titlebarColor set];
+    NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, titlebarHeight));
+  }
+
+  // Draw the background color of the window everywhere but where the titlebar is.
+  [backgroundColor set];
+  NSRectFill(NSMakeRect(0.0f, 0.0f, 1.0f, titlebarOrigin));
+
+  [NSGraphicsContext restoreGraphicsState];
+}
+
+
+- (void)setFill
+{
+  CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+
+  // Set up the pattern to be as tall as our window, and one pixel wide.
+  // CoreGraphics can cache and tile us quickly.
+  CGPatternCallbacks callbacks = {0, &patternDraw, NULL};
+  CGPatternRef pattern = CGPatternCreate(self, CGRectMake(0.0f, 0.0f, sPatternWidth, [mWindow frame].size.height), 
+                                         CGAffineTransformIdentity, 1, [mWindow frame].size.height,
+                                         kCGPatternTilingConstantSpacing, true, &callbacks);
+
+  // Set the pattern as the fill, which is what we were asked to do. All our
+  // drawing will take place in the patternDraw callback.
+  CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
+  CGContextSetFillColorSpace(context, patternSpace);
+  CGColorSpaceRelease(patternSpace);
+  float component = 1.0f;
+  CGContextSetFillPattern(context, pattern, &component);
+  CGPatternRelease(pattern);
+}
+
+
+// Pass nil here to get the default appearance.
+- (void)setTitlebarColor:(NSColor*)aColor
+{
+  [mTitlebarColor autorelease];
+  mTitlebarColor = [aColor retain];
+}
+
+
+- (NSColor*)titlebarColor
+{
+  return mTitlebarColor;
+}
+
+
+- (void)setBackgroundColor:(NSColor*)aColor
+{
+  [mBackgroundColor autorelease];
+  mBackgroundColor = [aColor retain];
+}
+
+
+- (NSColor*)backgroundColor
+{
+  return mBackgroundColor;
+}
+
+
+- (NSWindow*)window
+{
+  return mWindow;
+}
+
+
+- (NSString*)colorSpaceName
+{
+  return NSDeviceRGBColorSpace;
+}
+
+
+- (void)set
+{
+  [self setFill];
+}
+
+- (float)titlebarHeight
+{
+  return mTitlebarHeight;
+}
+
+@end
+
+
+// This is an internal Apple class, which we need to work around a bug in. It is
+// the class responsible for drawing the titlebar for metal windows. It actually
+// is a few levels deep in the inhertiance graph, but we don't need to know about
+// all its superclasses.
+@interface NSGrayFrame : NSObject
++ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top;
++ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top bottomCornerRounded:(BOOL)bottom;
+@end
+
+@implementation NSGrayFrame(DrawingBugWorkaround)
+
+// Work around a bug in this method -- it draws a strange 1px border on the left and
+// right edges of a window. We don't want that, so call the similar method defined
+// in the superclass.
++ (void)drawBevel:(NSRect)bevel inFrame:(NSRect)frame topCornerRounded:(BOOL)top bottomCornerRounded:(BOOL)bottom
+{
+  if ([self respondsToSelector:@selector(drawBevel:inFrame:topCornerRounded:)])
+    [self drawBevel:bevel inFrame:frame topCornerRounded:top];
+}
+
+@end
+
 
 @implementation PopupWindow
 
@@ -1454,6 +1771,44 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 - (void)setIsContextMenu:(BOOL)flag
 {
   mIsContextMenu = flag;
+}
+
+@end
+
+// According to Apple's docs on [NSWindow canBecomeKeyWindow] and [NSWindow
+// canBecomeMainWindow], windows without a title bar or resize bar can't (by
+// default) become key or main.  But if a window can't become key, it can't
+// accept keyboard input (bmo bug 393250).  And it should also be possible for
+// an otherwise "ordinary" window to become main.  We need to override these
+// two methods to make this happen.
+@implementation BorderlessWindow
+
+- (BOOL)canBecomeKeyWindow
+{
+  return YES;
+}
+
+// Apple's doc on this method says that the NSWindow class's default is not to
+// become main if the window isn't "visible" -- so we should replicate that
+// behavior here.  As best I can tell, the [NSWindow isVisible] method is an
+// accurate test of what Apple means by "visibility".
+- (BOOL)canBecomeMainWindow
+{
+  if (![self isVisible])
+    return NO;
+  return YES;
+}
+
+// Retain and release "self" to avoid crashes when our widget (and its native
+// window) is closed as a result of processing a key equivalent (e.g.
+// Command+w or Command+q).  This workaround is only needed for a window
+// that can become key.
+- (BOOL)performKeyEquivalent:(NSEvent*)theEvent
+{
+  NSWindow *nativeWindow = [self retain];
+  BOOL retval = [super performKeyEquivalent:theEvent];
+  [nativeWindow release];
+  return retval;
 }
 
 @end

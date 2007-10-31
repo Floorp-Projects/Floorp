@@ -533,6 +533,22 @@ nsObjectFrame::Destroy()
   nsObjectFrameSuper::Destroy();
 }
 
+NS_IMETHODIMP
+nsObjectFrame::DidSetStyleContext()
+{
+  if (HasView()) {
+    nsIView* view = GetView();
+    nsIViewManager* vm = view->GetViewManager();
+    if (vm) {
+      nsViewVisibility visibility = 
+        IsHidden() ? nsViewVisibility_kHide : nsViewVisibility_kShow;
+      vm->SetViewVisibility(view, visibility);
+    }
+  }
+
+  return nsObjectFrameSuper::DidSetStyleContext();
+}
+
 nsIAtom*
 nsObjectFrame::GetType() const
 {
@@ -608,7 +624,9 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
 
   }
 
-  viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
+  if (!IsHidden()) {
+    viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
+  }
 
   return NS_OK;
 }

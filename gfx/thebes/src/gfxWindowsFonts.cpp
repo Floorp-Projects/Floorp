@@ -1443,6 +1443,8 @@ private:
         if (mAlternativeString)
             free(mAlternativeString);
         mAlternativeString = (PRUnichar *)malloc(mRangeLength * sizeof(PRUnichar));
+        if (!mAlternativeString)
+            return;
         memcpy((void *)mAlternativeString, (const void *)mRangeString,
                mRangeLength * sizeof(PRUnichar));
         for (PRUint32 i = 0; i < mRangeLength; i++) {

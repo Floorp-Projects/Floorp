@@ -491,6 +491,34 @@ var popupTests = [
   }
 },
 {
+  // this test ensures that the menu can still be opened by clicking after selecting
+  // a menuitem from the menu. See bug 399350.
+  testname: "press on menu after menuitem selected",
+  events: [ "popupshowing editpopup", "DOMMenuBarActive menubar",
+            "DOMMenuItemActive editmenu", "popupshown editpopup" ],
+  test: function() { synthesizeMouse(document.getElementById("editmenu"), 8, 8, { }); },
+  result: function (testname) {
+    checkActive(document.getElementById("editpopup"), "", testname);
+    checkOpen("editmenu", testname);
+  }
+},
+{  // try selecting a different command
+  testname: "press on menuitem again",
+  events: [ "DOMMenuInactive editpopup",
+            "DOMMenuBarInactive menubar",
+            "DOMMenuItemInactive editmenu",
+            "DOMMenuItemInactive editmenu",
+            "command paste", "popuphiding editpopup", "popuphidden editpopup",
+            "DOMMenuItemInactive paste",
+           ],
+  test: function() {
+    synthesizeMouse(document.getElementById("paste"), 8, 8, { });
+  },
+  result: function (testname) {
+    checkClosed("editmenu", testname);
+  }
+},
+{
   testname: "F10 to activate menubar for tab deactivation",
   events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
   test: function() { synthesizeKey("VK_F10", { }); },

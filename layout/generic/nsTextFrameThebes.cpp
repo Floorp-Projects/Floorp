@@ -633,7 +633,6 @@ public:
     // ancestor of mStartFrame and the previous text frame, or null if there
     // was no previous text frame on this line.
     nsIFrame*    mAncestorControllingInitialBreak;
-    PRUint32     mTransformedTextOffset; // Only used inside BuildTextRunForFrames
     
     PRInt32 GetContentEnd() {
       return mEndFrame ? mEndFrame->GetContentOffset()
@@ -654,6 +653,8 @@ public:
       if (mTextRun->SetPotentialLineBreaks(aOffset + mOffsetIntoTextRun, aLength,
                                            aBreakBefore, mContext)) {
         mChangedBreaks = PR_TRUE;
+        // Be conservative and assume that some breaks have been set
+        mTextRun->ClearFlagBits(nsTextFrameUtils::TEXT_NO_BREAKS);
       }
     }
 
@@ -1078,6 +1079,17 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   if (textStyle1->WhiteSpaceIsSignificant() && HasTerminalNewline(aFrame1))
     return PR_FALSE;
 
+  if (aFrame1->GetContent() == aFrame2->GetContent() &&
+      aFrame1->GetNextInFlow() != aFrame2) {
+    // aFrame2 must be a non-fluid continuation of aFrame1. This can happen
+    // sometimes when the unicode-bidi property is used; the bidi resolver
+    // breaks text into different frames even though the text has the same
+    // direction. We can't allow these two frames to share the same textrun
+    // because that would violate our invariant that two flows in the same
+    // textrun have different content elements.
+    return PR_FALSE;
+  }
+
   nsStyleContext* sc2 = aFrame2->GetStyleContext();
   if (sc1 == sc2)
     return PR_TRUE;
@@ -1132,8 +1144,6 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
 
     mappedFlow->mStartFrame = frame;
     mappedFlow->mAncestorControllingInitialBreak = mCommonAncestorWithLastFrame;
-    // This is temporary: it's overwritten in BuildTextRunForFrames
-    mappedFlow->mTransformedTextOffset = 0;
 
     AccumulateRunInfo(frame);
     if (mMappedFlows.Length() == 1) {
@@ -1325,8 +1335,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     MappedFlow* mappedFlow = &mMappedFlows[i];
     nsTextFrame* f = mappedFlow->mStartFrame;
 
-    mappedFlow->mTransformedTextOffset = currentTransformedTextOffset;
-
     lastStyleContext = f->GetStyleContext();
     // Detect use of text-transform or font-variant anywhere in the run
     textStyle = f->GetStyleText();
@@ -1451,29 +1459,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     return;
   }
 
-  // Setup factory chain
-  nsAutoPtr<nsTransformingTextRunFactory> transformingFactory;
-  if (anySmallcapsStyle) {
-    transformingFactory = new nsFontVariantTextRunFactory();
-  }
-  if (anyTextTransformStyle) {
-    transformingFactory =
-      new nsCaseTransformTextRunFactory(transformingFactory.forget());
-  }
-  nsTArray<nsStyleContext*> styles;
-  if (transformingFactory) {
-    for (i = 0; i < mMappedFlows.Length(); ++i) {
-      MappedFlow* mappedFlow = &mMappedFlows[i];
-      PRUint32 end = i == mMappedFlows.Length() - 1 ? transformedLength :
-          mMappedFlows[i + 1].mTransformedTextOffset;
-      nsStyleContext* sc = mappedFlow->mStartFrame->GetStyleContext();
-      PRUint32 j;
-      for (j = mappedFlow->mTransformedTextOffset; j < end; ++j) {
-        styles.AppendElement(sc);
-      }
-    }
-  }
-
   if (textFlags & nsTextFrameUtils::TEXT_HAS_TAB) {
     textFlags |= gfxTextRunFactory::TEXT_ENABLE_SPACING;
   }
@@ -1509,6 +1494,32 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   }
   if (mStartOfLine) {
     AppendLineBreakOffset(&textBreakPointsAfterTransform, transformedLength);
+  }
+
+  // Setup factory chain
+  nsAutoPtr<nsTransformingTextRunFactory> transformingFactory;
+  if (anySmallcapsStyle) {
+    transformingFactory = new nsFontVariantTextRunFactory();
+  }
+  if (anyTextTransformStyle) {
+    transformingFactory =
+      new nsCaseTransformTextRunFactory(transformingFactory.forget());
+  }
+  nsTArray<nsStyleContext*> styles;
+  if (transformingFactory) {
+    iter.SetOriginalOffset(0);
+    for (i = 0; i < mMappedFlows.Length(); ++i) {
+      MappedFlow* mappedFlow = &mMappedFlows[i];
+      PRUint32 offset = iter.GetSkippedOffset();
+      iter.AdvanceOriginal(mappedFlow->GetContentEnd() -
+              mappedFlow->mStartFrame->GetContentOffset());
+      PRUint32 end = iter.GetSkippedOffset();
+      nsStyleContext* sc = mappedFlow->mStartFrame->GetStyleContext();
+      PRUint32 j;
+      for (j = offset; j < end; ++j) {
+        styles.AppendElement(sc);
+      }
+    }
   }
 
   gfxTextRun* textRun;
@@ -1604,50 +1615,40 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
   PRUint32 i;
   for (i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
+    PRUint32 offset = iter.GetSkippedOffset();
+    gfxSkipCharsIterator iterNext = iter;
+    iterNext.AdvanceOriginal(mappedFlow->GetContentEnd() -
+            mappedFlow->mStartFrame->GetContentOffset());
+
     nsAutoPtr<BreakSink>* breakSink = mBreakSinks.AppendElement(
-      new BreakSink(aTextRun, mContext,
-                    mappedFlow->mTransformedTextOffset, aIsExistingTextRun));
+      new BreakSink(aTextRun, mContext, offset, aIsExistingTextRun));
     if (!breakSink || !*breakSink)
       return;
-    PRUint32 offset = mappedFlow->mTransformedTextOffset;
 
-    PRUint32 length =
-      (i == mMappedFlows.Length() - 1 ? aTextRun->GetLength()
-       : mMappedFlows[i + 1].mTransformedTextOffset)
-      - offset;
-
+    PRUint32 length = iterNext.GetSkippedOffset() - offset;
+    PRUint32 flags = 0;
+    nsIFrame* initialBreakController = mappedFlow->mAncestorControllingInitialBreak;
+    if (!initialBreakController) {
+      initialBreakController = mLineContainer;
+    }
+    if (!initialBreakController->GetStyleText()->WhiteSpaceCanWrap()) {
+      flags |= nsLineBreaker::BREAK_SUPPRESS_INITIAL;
+    }
     nsTextFrame* startFrame = mappedFlow->mStartFrame;
+    const nsStyleText* textStyle = startFrame->GetStyleText();
+    if (!textStyle->WhiteSpaceCanWrap()) {
+      flags |= nsLineBreaker::BREAK_SUPPRESS_INSIDE;
+    }
+    if (aTextRun->GetFlags() & nsTextFrameUtils::TEXT_NO_BREAKS) {
+      flags |= nsLineBreaker::BREAK_SKIP_SETTING_NO_BREAKS;
+    }
+
     if (HasCompressedLeadingWhitespace(startFrame, mappedFlow->GetContentEnd(), iter)) {
-      mLineBreaker.AppendInvisibleWhitespace();
+      mLineBreaker.AppendInvisibleWhitespace(flags);
     }
 
     if (length > 0) {
-      PRUint32 flags = 0;
-      nsIFrame* initialBreakController = mappedFlow->mAncestorControllingInitialBreak;
-      if (!initialBreakController) {
-        initialBreakController = mLineContainer;
-      }
-      if (initialBreakController->GetStyleText()->WhiteSpaceCanWrap()) {
-        flags |= nsLineBreaker::BREAK_ALLOW_INITIAL;
-      }
-      const nsStyleText* textStyle = startFrame->GetStyleText();
-      if (textStyle->WhiteSpaceCanWrap()) {
-        // If white-space is preserved, then the only break opportunity is at
-        // the end of whitespace runs; otherwise there is a break opportunity before
-        // and after each whitespace character
-        flags |= nsLineBreaker::BREAK_ALLOW_INSIDE;
-      }
-      
-      BreakSink* sink = *breakSink;
-      if (aSuppressSink) {
-        sink = nsnull;
-      } else if (flags) {
-        aTextRun->ClearFlagBits(nsTextFrameUtils::TEXT_NO_BREAKS);
-      } else if (aTextRun->GetFlags() & nsTextFrameUtils::TEXT_NO_BREAKS) {
-        // Don't bother setting breaks on a textrun that can't be broken
-        // and currently has no breaks set...
-        sink = nsnull;
-      }
+      BreakSink* sink = aSuppressSink ? nsnull : (*breakSink).get();
       if (aTextRun->GetFlags() & gfxFontGroup::TEXT_IS_8BIT) {
         mLineBreaker.AppendText(lang, aTextRun->GetText8Bit() + offset,
                                 length, flags, sink);
@@ -1657,8 +1658,7 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
       }
     }
     
-    iter.AdvanceOriginal(mappedFlow->GetContentEnd() -
-            mappedFlow->mStartFrame->GetContentOffset());
+    iter = iterNext;
   }
 }
 
@@ -1744,10 +1744,8 @@ nsTextFrame::EnsureTextRun(gfxContext* aReferenceContext, nsIFrame* aLineContain
     for (i = startAt; 0 <= i && i < userData->mMappedFlowCount; i += direction) {
       TextRunMappedFlow* flow = &userData->mMappedFlows[i];
       if (flow->mStartFrame->GetContent() == mContent) {
-        // This may not actually be the flow that we're in. But BuildTextRuns
-        // promises that this will work ... flows for the same content in the same
-        // textrun have to be consecutive, they can't skip characters in the middle.
-        // See assertion "Gap in textframes mapping content?!" above.
+        // Since textruns can only contain one flow for a given content element,
+        // this must be our flow.
         userData->mLastFlowIndex = i;
         gfxSkipCharsIterator iter(mTextRun->GetSkipChars(),
                                   flow->mDOMOffsetToBeforeTransformOffset, mContentOffset);
@@ -1803,8 +1801,7 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
     offsets.mLength -= whitespaceCount;
   }
 
-  if (aTrimAfter && (GetStateBits() & TEXT_END_OF_LINE) &&
-      textStyle->WhiteSpaceCanWrap()) {
+  if (aTrimAfter && (GetStateBits() & TEXT_END_OF_LINE)) {
     PRInt32 whitespaceCount =
       GetTrimmableWhitespaceCount(aFrag, offsets.GetEnd() - 1,
                                   offsets.mLength, -1);
@@ -5222,8 +5219,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(!(NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags),
                "We shouldn't be passed NS_REFLOW_CALC_BOUNDING_METRICS anymore");
 #endif
-  PRBool suppressInitialBreak = !lineLayout.LineIsBreakable() ||
-    !lineLayout.HasTrailingTextFrame();
 
   PRInt32 limitLength = length;
   PRInt32 forceBreak = lineLayout.GetForcedBreakPosition(mContent);
@@ -5255,13 +5250,12 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   PRBool usedHyphenation;
   gfxFloat trimmedWidth = 0;
   gfxFloat availWidth = aReflowState.availableWidth;
-  PRBool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() &&
-    textStyle->WhiteSpaceCanWrap();
+  PRBool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant();
   PRUint32 transformedCharsFit =
     mTextRun->BreakAndMeasureText(transformedOffset, transformedLength,
                                   (GetStateBits() & TEXT_START_OF_LINE) != 0,
                                   availWidth,
-                                  &provider, suppressInitialBreak,
+                                  &provider, !lineLayout.LineIsBreakable(),
                                   canTrimTrailingWhitespace ? &trimmedWidth : nsnull,
                                   &textMetrics, needTightBoundingBox, ctx,
                                   &usedHyphenation, &transformedLastBreak);
@@ -5299,26 +5293,38 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     AddStateBits(TEXT_HYPHEN_BREAK);
   }
 
-  // If everything fits including trimmed whitespace, then we should add the
-  // trimmed whitespace to our metrics now because it probably won't be trimmed
-  // and we need to position subsequent frames correctly...
-  if (forceBreak < 0 && textMetrics.mAdvanceWidth + trimmedWidth <= availWidth) {
-    textMetrics.mAdvanceWidth += trimmedWidth;
-    if (mTextRun->IsRightToLeft()) {
-      // Space comes before text, so the bounding box is moved to the
-      // right by trimmdWidth
-      textMetrics.mBoundingBox.MoveBy(gfxPoint(trimmedWidth, 0));
+  gfxFloat trimmableWidth = 0;
+  if (canTrimTrailingWhitespace) {
+    // Optimization: if we trimmed trailing whitespace, and we can be sure
+    // this frame will be at the end of the line, then leave it trimmed off.
+    // Otherwise we have to undo the trimming, in case we're not at the end of
+    // the line. (If we actually do end up at the end of the line, we'll have
+    // to trim it off again in TrimTrailingWhiteSpace, and we'd like to avoid
+    // having to re-do it.)
+    if (forceBreak >= 0 || transformedCharsFit < transformedLength) {
+      // We're definitely going to break so our trailing whitespace should
+      // definitely be timmed. Record that we've already done it.
+      AddStateBits(TEXT_TRIMMED_TRAILING_WHITESPACE);
+    } else {
+      // We might not be at the end of the line. (Note that even if this frame
+      // ends in breakable whitespace, it might not be at the end of the line
+      // because it might be followed by breakable, but preformatted, whitespace.)
+      // Undo the trimming.
+      textMetrics.mAdvanceWidth += trimmedWidth;
+      trimmableWidth = trimmedWidth;
+      if (mTextRun->IsRightToLeft()) {
+        // Space comes before text, so the bounding box is moved to the
+        // right by trimmdWidth
+        textMetrics.mBoundingBox.MoveBy(gfxPoint(trimmedWidth, 0));
+      }
+
+      // Since everything fit and no break was forced,
+      // record the last break opportunity
+      if (lastBreak >= 0) {
+        lineLayout.NotifyOptionalBreakPosition(mContent, lastBreak,
+            textMetrics.mAdvanceWidth <= aReflowState.availableWidth);
+      }
     }
-    
-    if (lastBreak >= 0) {
-      lineLayout.NotifyOptionalBreakPosition(mContent, lastBreak,
-          textMetrics.mAdvanceWidth <= aReflowState.availableWidth);
-    }
-  } else {
-    // We're definitely going to break and our whitespace will definitely
-    // be trimmed.
-    // Record that whitespace has already been trimmed.
-    AddStateBits(TEXT_TRIMMED_TRAILING_WHITESPACE);
   }
   PRInt32 contentLength = offset + charsFit - GetContentOffset();
   
@@ -5353,25 +5359,19 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // Clean up, update state
   /////////////////////////////////////////////////////////////////////
 
-  if (charsFit > 0) {
-    lineLayout.SetHasTrailingTextFrame(PR_TRUE);
-    if (charsFit == length) {
-      if (textStyle->WhiteSpaceCanWrap() &&
-          IsTrimmableSpace(frag, offset + charsFit - 1)) {
-        // Record a potential break after final breakable whitespace
-        lineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
-            textMetrics.mAdvanceWidth <= aReflowState.availableWidth);
-      } else if (HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
-        // Record a potential break after final soft hyphen
-        lineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
-            textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth);
-      }
-    }
-  } else {
-    // Don't allow subsequent text frame to break-before. All our text is       
-    // being skipped (usually whitespace, could be discarded Unicode control    
-    // characters).
-    lineLayout.SetHasTrailingTextFrame(PR_FALSE);
+  // If all our characters are discarded or collapsed, then trimmable width
+  // from the last textframe should be preserved. Otherwise the trimmable width
+  // from this textframe overrides. (Currently in CSS trimmable width can be
+  // at most one space so there's no way for trimmable width from a previous
+  // frame to accumulate with trimmable width from this frame.)
+  if (transformedCharsFit > 0) {
+    lineLayout.SetTrimmableWidth(NSToCoordFloor(trimmableWidth));
+  }
+  if (charsFit > 0 && charsFit == length &&
+      HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
+    // Record a potential break after final soft hyphen
+    lineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
+        textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth);
   }
   if (completedFirstLetter) {
     lineLayout.SetFirstLetterStyleOK(PR_FALSE);

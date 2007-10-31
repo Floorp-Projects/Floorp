@@ -106,7 +106,7 @@ static inline void Swap(u_int32_t* value) {
 }
 
 
-static void Swap(u_int64_t* value) {
+static inline void Swap(u_int64_t* value) {
   u_int32_t* value32 = reinterpret_cast<u_int32_t*>(value);
   Swap(&value32[0]);
   Swap(&value32[1]);
@@ -450,6 +450,62 @@ bool MinidumpContext::Read(u_int32_t expected_size) {
       break;
     }
 
+    case MD_CONTEXT_SPARC: {
+      if (expected_size != sizeof(MDRawContextSPARC)) {
+        BPLOG(ERROR) << "MinidumpContext sparc size mismatch, " <<
+                        expected_size << " != " << sizeof(MDRawContextSPARC);
+        return false;
+      }
+
+      scoped_ptr<MDRawContextSPARC> context_sparc(new MDRawContextSPARC());
+
+      // Set the context_flags member, which has already been read, and
+      // read the rest of the structure beginning with the first member
+      // after context_flags.
+      context_sparc->context_flags = context_flags;
+
+      size_t flags_size = sizeof(context_sparc->context_flags);
+      u_int8_t* context_after_flags =
+          reinterpret_cast<u_int8_t*>(context_sparc.get()) + flags_size;
+      if (!minidump_->ReadBytes(context_after_flags,
+                                sizeof(MDRawContextSPARC) - flags_size)) {
+        BPLOG(ERROR) << "MinidumpContext could not read sparc context";
+        return false;
+      }
+
+      // Do this after reading the entire MDRawContext structure because
+      // GetSystemInfo may seek minidump to a new position.
+      if (!CheckAgainstSystemInfo(cpu_type)) {
+        BPLOG(ERROR) << "MinidumpContext sparc does not match system info";
+        return false;
+      }
+
+      if (minidump_->swap()) {
+        // context_sparc->context_flags was already swapped.
+        for (unsigned int gpr_index = 0;
+             gpr_index < MD_CONTEXT_SPARC_GPR_COUNT;
+             ++gpr_index) {
+          Swap(&context_sparc->g_r[gpr_index]);
+        }
+        Swap(&context_sparc->ccr);
+        Swap(&context_sparc->pc);
+        Swap(&context_sparc->npc);
+        Swap(&context_sparc->y);
+        Swap(&context_sparc->asi);
+        Swap(&context_sparc->fprs);
+        for (unsigned int fpr_index = 0;
+             fpr_index < MD_FLOATINGSAVEAREA_SPARC_FPR_COUNT;
+             ++fpr_index) {
+          Swap(&context_sparc->float_save.regs[fpr_index]);
+        }
+        Swap(&context_sparc->float_save.filler);
+        Swap(&context_sparc->float_save.fsr);
+      }
+      context_.ctx_sparc = context_sparc.release();
+
+      break;
+    }
+
     default: {
       // Unknown context type
       BPLOG(ERROR) << "MinidumpContext unknown context type " <<
@@ -494,6 +550,14 @@ const MDRawContextPPC* MinidumpContext::GetContextPPC() const {
   return context_.ppc;
 }
 
+const MDRawContextSPARC* MinidumpContext::GetContextSPARC() const {
+  if (GetContextCPU() != MD_CONTEXT_SPARC) {
+    BPLOG(ERROR) << "MinidumpContext cannot get sparc context";
+    return NULL;
+  }
+
+  return context_.ctx_sparc;
+}
 
 void MinidumpContext::FreeContext() {
   switch (GetContextCPU()) {
@@ -503,6 +567,10 @@ void MinidumpContext::FreeContext() {
 
     case MD_CONTEXT_PPC:
       delete context_.ppc;
+      break;
+
+    case MD_CONTEXT_SPARC:
+      delete context_.ctx_sparc;
       break;
 
     default:
@@ -550,6 +618,11 @@ bool MinidumpContext::CheckAgainstSystemInfo(u_int32_t context_cpu_type) {
 
     case MD_CONTEXT_PPC:
       if (system_info_cpu_type == MD_CPU_ARCHITECTURE_PPC)
+        return_value = true;
+      break;
+
+    case MD_CONTEXT_SPARC:
+      if (system_info_cpu_type == MD_CPU_ARCHITECTURE_SPARC)
         return_value = true;
       break;
   }
@@ -669,6 +742,37 @@ void MinidumpContext::Print() {
              context_ppc->vector_save.save_vrvalid);
       printf("\n");
 
+      break;
+    }
+
+    case MD_CONTEXT_SPARC: {
+      const MDRawContextSPARC* context_sparc = GetContextSPARC();
+      printf("MDRawContextSPARC\n");
+      printf("  context_flags       = 0x%x\n",
+             context_sparc->context_flags);
+      for (unsigned int g_r_index = 0;
+           g_r_index < MD_CONTEXT_SPARC_GPR_COUNT;
+           ++g_r_index) {
+        printf("  g_r[%2d]             = 0x%llx\n",
+               g_r_index, context_sparc->g_r[g_r_index]);
+      }
+      printf("  ccr                 = 0x%llx\n", context_sparc->ccr);
+      printf("  pc                  = 0x%llx\n", context_sparc->pc);
+      printf("  npc                 = 0x%llx\n", context_sparc->npc);
+      printf("  y                   = 0x%llx\n", context_sparc->y);
+      printf("  asi                 = 0x%llx\n", context_sparc->asi);
+      printf("  fprs                = 0x%llx\n", context_sparc->fprs);
+
+      for (unsigned int fpr_index = 0;
+           fpr_index < MD_FLOATINGSAVEAREA_SPARC_FPR_COUNT;
+           ++fpr_index) {
+        printf("  float_save.regs[%2d] = 0x%llx\n",
+               fpr_index, context_sparc->float_save.regs[fpr_index]);
+      }
+      printf("  float_save.filler   = 0x%llx\n",
+             context_sparc->float_save.filler);
+      printf("  float_save.fsr      = 0x%llx\n",
+             context_sparc->float_save.fsr);
       break;
     }
 
@@ -1068,12 +1172,23 @@ bool MinidumpThreadList::Read(u_int32_t expected_size) {
 
   if (expected_size != sizeof(thread_count) +
                        thread_count * sizeof(MDRawThread)) {
-    BPLOG(ERROR) << "MinidumpThreadList size mismatch, " << expected_size <<
-                    " != " <<
-                    sizeof(thread_count) + thread_count * sizeof(MDRawThread);
-    return false;
+    // may be padded with 4 bytes on 64bit ABIs for alignment
+    if (expected_size == sizeof(thread_count) + 4 +
+                         thread_count * sizeof(MDRawThread)) {
+      u_int32_t useless;
+      if (!minidump_->ReadBytes(&useless, 4)) {
+        BPLOG(ERROR) << "MinidumpThreadList cannot read threadlist padded bytes";
+        return false;
+      }
+    } else {
+      BPLOG(ERROR) << "MinidumpThreadList size mismatch, " << expected_size <<
+                    " != " << sizeof(thread_count) +
+                    thread_count * sizeof(MDRawThread);
+      return false;
+    }
   }
 
+  
   if (thread_count > max_threads_) {
     BPLOG(ERROR) << "MinidumpThreadList count " << thread_count <<
                     " exceeds maximum " << max_threads_;
@@ -1328,6 +1443,7 @@ string MinidumpModule::code_identifier() const {
     }
 
     case MD_OS_MAC_OS_X:
+    case MD_OS_SOLARIS:
     case MD_OS_LINUX: {
       // TODO(mmentovai): support uuid extension if present, otherwise fall
       // back to version (from LC_ID_DYLIB?), otherwise fall back to something
@@ -1924,10 +2040,20 @@ bool MinidumpModuleList::Read(u_int32_t expected_size) {
 
   if (expected_size != sizeof(module_count) +
                        module_count * MD_MODULE_SIZE) {
-    BPLOG(ERROR) << "MinidumpModuleList size mismatch, " << expected_size <<
-                    " != " <<
-                    sizeof(module_count) + module_count * MD_MODULE_SIZE;
-    return false;
+    // may be padded with 4 bytes on 64bit ABIs for alignment
+    if (expected_size == sizeof(module_count) + 4 +
+                         module_count * MD_MODULE_SIZE) {
+      u_int32_t useless;
+      if (!minidump_->ReadBytes(&useless, 4)) {
+        BPLOG(ERROR) << "MinidumpModuleList cannot read modulelist padded bytes";
+        return false;
+      }
+    } else {
+      BPLOG(ERROR) << "MinidumpModuleList size mismatch, " << expected_size <<
+                      " != " << sizeof(module_count) +
+                      module_count * MD_MODULE_SIZE;
+      return false;
+    }
   }
 
   if (module_count > max_modules_) {
@@ -2155,9 +2281,20 @@ bool MinidumpMemoryList::Read(u_int32_t expected_size) {
 
   if (expected_size != sizeof(region_count) +
                        region_count * sizeof(MDMemoryDescriptor)) {
-    BPLOG(ERROR) << "MinidumpMemoryList size mismatch, " << expected_size <<
-                    " != " << region_count * sizeof(MDMemoryDescriptor);
-    return false;
+    // may be padded with 4 bytes on 64bit ABIs for alignment
+    if (expected_size == sizeof(region_count) + 4 +
+                         region_count * sizeof(MDMemoryDescriptor)) {
+      u_int32_t useless;
+      if (!minidump_->ReadBytes(&useless, 4)) {
+        BPLOG(ERROR) << "MinidumpMemoryList cannot read memorylist padded bytes";
+        return false;
+      }
+    } else {
+      BPLOG(ERROR) << "MinidumpMemoryList size mismatch, " << expected_size <<
+                      " != " << sizeof(region_count) + 
+                      region_count * sizeof(MDMemoryDescriptor);
+      return false;
+    }
   }
 
   if (region_count > max_regions_) {
@@ -2524,6 +2661,10 @@ string MinidumpSystemInfo::GetOS() {
 
     case MD_OS_LINUX:
       os = "linux";
+      break;
+
+    case MD_OS_SOLARIS:
+      os = "solaris";
       break;
 
     default:

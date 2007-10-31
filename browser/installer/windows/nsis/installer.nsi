@@ -35,9 +35,9 @@
 # ***** END LICENSE BLOCK *****
 
 # Required Plugins:
-# SetVistaDefaultApp http://nsis.sourceforge.net/SetVistaDefaultApp_plug-in
-# ShellLink          http://nsis.sourceforge.net/ShellLink_plug-in
-# UAC                http://nsis.sourceforge.net/UAC_plug-in
+# AppAssocReg http://nsis.sourceforge.net/Application_Association_Registration_plug-in
+# ShellLink   http://nsis.sourceforge.net/ShellLink_plug-in
+# UAC         http://nsis.sourceforge.net/UAC_plug-in
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
@@ -110,14 +110,18 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 !insertmacro _LoggingCommon
 
 !insertmacro AddDDEHandlerValues
+!insertmacro ChangeMUIHeaderImage
 !insertmacro CloseApp
 !insertmacro CreateRegKey
 !insertmacro GetPathFromString
+!insertmacro GetParent
 !insertmacro IsHandlerForInstallDir
 !insertmacro ManualCloseAppPrompt
 !insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
+!insertmacro SetBrandNameVars
+!insertmacro UnloadUAC
 !insertmacro WriteRegStr2
 !insertmacro WriteRegDWORD2
 
@@ -129,6 +133,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 !insertmacro InstallOnInitCommon
 !insertmacro InstallStartCleanupCommon
 !insertmacro LeaveDirectoryCommon
+!insertmacro OnEndCommon
 !insertmacro PreDirectoryCommon
 
 Name "${BrandFullName}"
@@ -164,9 +169,11 @@ ReserveFile summary.ini
  * Installation Pages
  */
 ; Welcome Page
+!define MUI_PAGE_CUSTOMFUNCTION_PRE preWelcome
 !insertmacro MUI_PAGE_WELCOME
 
 ; License Page
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW showLicense
 !define MUI_LICENSEPAGE_CHECKBOX
 !insertmacro MUI_PAGE_LICENSE license.rtf
 
@@ -217,7 +224,7 @@ Section "-InstallStartCleanup"
   DetailPrint $(STATUS_CLEANUP)
   SetDetailsPrint none
 
-  SetOutPath $INSTDIR
+  SetOutPath "$INSTDIR"
   ${StartInstallLog} "${BrandFullName}" "${AB_CD}" "${AppVersion}" "${GREVersion}"
 
   ; Try to delete the app's main executable and if we can't delete it try to
@@ -229,8 +236,8 @@ Section "-InstallStartCleanup"
 
   ; Create a temporary backup directory.
   GetTempFileName $TmpVal "$TEMP"
-  ${DeleteFile} $TmpVal
-  SetOutPath $TmpVal
+  ${DeleteFile} "$TmpVal"
+  SetOutPath "$TmpVal"
 
   ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
     ClearErrors
@@ -266,7 +273,7 @@ Section "-InstallStartCleanup"
   StrCpy $R1 "xpicleanup.exe"
   Call CheckInUse
 
-  SetOutPath $INSTDIR
+  SetOutPath "$INSTDIR"
   RmDir /r "$TmpVal"
   ClearErrors
 
@@ -389,6 +396,11 @@ Section "-Application" APP_IDX
     StrCpy $TmpVal "HKLM" ; used primarily for logging
     ${RegCleanMain} "Software\Mozilla"
     ${RegCleanUninstall}
+
+    ReadRegStr $0 HKLM "Software\mozilla.org\Mozilla" "CurrentVersion"
+    ${If} "$0" != "${GREVersion}"
+      WriteRegStr HKLM "Software\mozilla.org\Mozilla" "CurrentVersion" "${GREVersion}"
+    ${EndIf}
   ${EndIf}
 
   ${RemoveDeprecatedKeys}
@@ -533,8 +545,9 @@ Function CheckInUse
       MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
       Delete "$TmpVal\$R1"
       CopyFiles /SILENT "$TmpVal\*" "$INSTDIR\"
-      SetOutPath $INSTDIR
+      SetOutPath "$INSTDIR"
       RmDir /r "$TmpVal"
+      ${OnEndCommon}
       Quit
     ${EndIf}
   ${EndIf}
@@ -612,19 +625,16 @@ Function CopyFile
 FunctionEnd
 
 Function LaunchApp
+  ClearErrors
   ${GetParameters} $0
-  ${If} $0 != ""
-    ClearErrors
-    ${GetOptions} "$0" "/UAC:" $1
-    ${Unless} ${Errors}
-      GetFunctionAddress $0 LaunchAppFromElevatedProcess
-      UAC::ExecCodeSegment $0
-      Quit
-    ${EndUnless}
+  ${GetOptions} "$0" "/UAC:" $1
+  ${If} ${Errors}
+    ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+    Exec "$INSTDIR\${FileMainEXE}"
+  ${Else}
+    GetFunctionAddress $0 LaunchAppFromElevatedProcess
+    UAC::ExecCodeSegment $0
   ${EndIf}
-
-  ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-  Exec "$INSTDIR\${FileMainEXE}"
 FunctionEnd
 
 Function LaunchAppFromElevatedProcess
@@ -635,6 +645,10 @@ Function LaunchAppFromElevatedProcess
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
   ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${GetPathFromString} "$0" $0
+  ${GetParent} "$0" $1
+  ; Set our current working directory to the application's install directory
+  ; otherwise the 7-Zip temp directory will be in use and won't be deleted.
+  SetOutPath "$1"
   Exec "$0"
 FunctionEnd
 
@@ -653,7 +667,23 @@ FunctionEnd
 BrandingText " "
 
 ################################################################################
-# Page pre and leave functions
+# Page pre, show, and leave functions
+
+Function preWelcome
+  ${If} ${FileExists} "$EXEDIR\localized\distribution\modern-wizard.bmp"
+    Delete "$PLUGINSDIR\modern-wizard.bmp"
+    CopyFiles /SILENT "$EXEDIR\localized\distribution\modern-wizard.bmp" "$PLUGINSDIR\modern-wizard.bmp"
+  ${EndIf}
+FunctionEnd
+
+Function showLicense
+  ${If} ${FileExists} "$EXEDIR\localized\distribution\modern-header.bmp"
+  ${AndIf} $hHeaderBitmap == ""
+    Delete "$PLUGINSDIR\modern-header.bmp"
+    CopyFiles /SILENT "$EXEDIR\localized\distribution\modern-header.bmp" "$PLUGINSDIR\modern-header.bmp"
+    ${ChangeMUIHeaderImage} "$PLUGINSDIR\modern-header.bmp"
+  ${EndIf}
+FunctionEnd
 
 Function preOptions
   !insertmacro MUI_HEADER_TEXT "$(OPTIONS_PAGE_TITLE)" "$(OPTIONS_PAGE_SUBTITLE)"
@@ -758,6 +788,9 @@ FunctionEnd
 # Initialization Functions
 
 Function .onInit
+  StrCpy $LANGUAGE 0
+  ${SetBrandNameVars} "$EXEDIR\localized\distribution\setup.ini"
+
   ${InstallOnInitCommon} "$(WARN_UNSUPPORTED_MSG)"
 
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
@@ -767,8 +800,6 @@ Function .onInit
   !insertmacro createBasicCustomOptionsINI
   !insertmacro createComponentsINI
   !insertmacro createShortcutsINI
-
-  StrCpy $LANGUAGE 0
 
   ; There must always be nonlocalized and localized directories.
   ${GetSize} "$EXEDIR\nonlocalized\" "/S=0K" $R5 $R7 $R8
@@ -784,12 +815,12 @@ Function .onInit
     ; Hide DOMi in the components page if it isn't available.
     SectionSetText ${DOMI_IDX} ""
   ${EndIf}
+
+  ; Initialize $hHeaderBitmap to prevent redundant changing of the bitmap if
+  ; the user clicks the back button
+  StrCpy $hHeaderBitmap ""
 FunctionEnd
 
-Function .OnInstFailed
-  UAC::Unload
-FunctionEnd
-
-Function .OnInstSuccess
-  UAC::Unload
+Function .onGUIEnd
+  ${OnEndCommon}
 FunctionEnd

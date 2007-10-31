@@ -173,10 +173,6 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
 
     mNeedsShutdown = PR_TRUE;
 
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    if (os)
-        os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
-
     for (PRUint32 i = 0; i < aURLCount; ++i) 
     {
         nsXPITriggerItem* item = new nsXPITriggerItem(0, aURLs[i], nsnull,
@@ -340,10 +336,6 @@ nsXPInstallManager::InitManagerInternal()
 
         if (OKtoInstall)
         {
-            nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-            if (os)
-                os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
-
             //-----------------------------------------------------
             // Open the progress dialog
             //-----------------------------------------------------
@@ -576,7 +568,8 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
     if ( !aTopic || !aData )
         return rv;
 
-    if ( nsDependentCString( aTopic ).Equals( XPI_PROGRESS_TOPIC ) )
+    nsDependentCString topic( aTopic );
+    if ( topic.Equals( XPI_PROGRESS_TOPIC ) )
     {
         //------------------------------------------------------
         // Communication from the XPInstall Progress Dialog
@@ -592,6 +585,13 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
 
             mDialogOpen = PR_TRUE;
             rv = NS_OK;
+
+            nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+            if (os)
+            {
+                os->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_TRUE);
+                os->AddObserver(this, "quit-application", PR_TRUE);
+            }
 
             nsCOMPtr<nsIXPIProgressDialog> dlg( do_QueryInterface(aSubject) );
             if (dlg)
@@ -620,6 +620,12 @@ NS_IMETHODIMP nsXPInstallManager::Observe( nsISupports *aSubject,
             }
             rv = NS_OK;
         }
+    }
+    else if ( topic.Equals( NS_IOSERVICE_GOING_OFFLINE_TOPIC ) ||
+              topic.Equals( "quit-application" ) )
+    {
+        mCancelled = PR_TRUE;
+        rv = NS_OK;
     }
 
     return rv;
@@ -912,7 +918,10 @@ void nsXPInstallManager::Shutdown()
                                        NS_PROXY_SYNC | NS_PROXY_ALWAYS,
                                        getter_AddRefs(pos) );
             if (NS_SUCCEEDED(rv))
-                pos->RemoveObserver(this, XPI_PROGRESS_TOPIC);
+            {
+                pos->RemoveObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC);
+                pos->RemoveObserver(this, "quit-application");
+            }
         }
 
         if (mTriggers)

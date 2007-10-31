@@ -444,6 +444,10 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::InitialUpdate()
 {
+  NS_ASSERTION(GetStateBits() & NS_FRAME_FIRST_REFLOW,
+               "Yikes! We've been called already! Hopefully we weren't called "
+               "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
+
   UpdateGraphic();
 
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
@@ -638,12 +642,11 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
     break;
   }
 
-  void *closure;
-  if (HasFill() && SetupCairoFill(gfx, &closure)) {
+  if (HasFill() && SetupCairoFill(gfx)) {
     gfx->Fill();
   }
 
-  if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
+  if (HasStroke() && SetupCairoStroke(gfx)) {
     gfx->Stroke();
   }
 

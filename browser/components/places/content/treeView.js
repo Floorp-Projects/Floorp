@@ -215,6 +215,7 @@ PlacesTreeView.prototype = {
     var cc = aContainer.childCount;
     for (var i=0; i < cc; i++) {
       var curChild = aContainer.getChild(i);
+      var curChildType = curChild.type;
 
       // collapse all duplicates starting from here
       if (this._collapseDuplicates) {
@@ -226,6 +227,7 @@ PlacesTreeView.prototype = {
             // collapse the first and use the second
             curChild.viewIndex = -1;
             curChild = aContainer.getChild(i+1);
+            curChildType = curChild.type;
           }
           else {
             // collapse the second and use the first
@@ -236,7 +238,7 @@ PlacesTreeView.prototype = {
       }
 
       // don't display separators when sorted
-      if (PlacesUtils.nodeIsSeparator(curChild)) {
+      if (curChildType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
         if (this._result.sortingMode !=
             Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
           curChild.viewIndex = -1;
@@ -249,11 +251,13 @@ PlacesTreeView.prototype = {
       aVisible.push(curChild);
 
       // recursively do containers
-      if (PlacesUtils.nodeIsContainer(curChild)) {
+      if (PlacesUtils.containerTypes.indexOf(curChildType) != -1) {
+        asContainer(curChild);
+
         var resource = this._getResourceForNode(curChild);
         var isopen = resource != null &&
-                     PlacesUtils.localStore.HasAssertion(resource, openLiteral, trueLiteral, true);
-        asContainer(curChild);
+                     PlacesUtils.localStore.HasAssertion(resource, openLiteral,
+                                                         trueLiteral, true);
         if (isopen != curChild.containerOpen)
           aToOpen.push(curChild);
         else if (curChild.containerOpen && curChild.childCount > 0)
@@ -371,7 +375,7 @@ PlacesTreeView.prototype = {
 
     // now, open any containers that were persisted
     for (var i = 0; i < toOpenElements.length; i++) {
-      var item = asContainer(toOpenElements[i]);
+      var item = toOpenElements[i];
       var parent = item.parent;
       // avoid recursively opening containers
       while (parent) {
@@ -736,18 +740,7 @@ PlacesTreeView.prototype = {
     this.invalidateContainer(aItem);
   },
 
-  get ignoreInvalidateContainer() {
-    return this._ignoreInvalidateContainer;
-  },
-
-  set ignoreInvalidateContainer(val) {
-    return this._ignoreInvalidateContainer = val;
-  },
-
   invalidateContainer: function PTV_invalidateContainer(aItem) {
-    if (this._ignoreInvalidateContainer)
-      return;
-
     NS_ASSERT(this._result, "Got a notification but have no result!");
     if (!this._tree)
       return; // nothing to do, container is not visible
@@ -808,8 +801,10 @@ PlacesTreeView.prototype = {
   },
 
   set result(val) {
-    this._result = val;
-    this._finishInit();
+    if (this._result != val) {
+      this._result = val;
+      this._finishInit();
+    }
     return val;
   },
 
@@ -875,7 +870,7 @@ PlacesTreeView.prototype = {
     return viewIndex;
   },
 
-  _getResourceForNode : function PTV_getResourceForNode(aNode)
+  _getResourceForNode: function PTV_getResourceForNode(aNode)
   {
     var uri = aNode.uri;
     NS_ASSERT(uri, "if there is no uri, we can't persist the open state");
@@ -916,7 +911,7 @@ PlacesTreeView.prototype = {
   },
 
   getCellProperties: function PTV_getCellProperties(aRow, aColumn, aProperties) {
-    var columnType = aColumn.id || aColumn.element.getAttribute("anonid") ;
+    var columnType = aColumn.id || aColumn.element.getAttribute("anonid");
     if (columnType != "title")
       return;
 
@@ -933,16 +928,14 @@ PlacesTreeView.prototype = {
     this._ensureValidRow(aRow);
     var node = this._visibleElements[aRow];
     if (PlacesUtils.nodeIsContainer(node)) {
+      // the root node is always expandable
+      if (!node.parent)
+        return true;
+
       // treat non-expandable queries as non-containers
       if (PlacesUtils.nodeIsQuery(node)) {
         asQuery(node);
-        if (node.queryOptions.expandQueries)
-          return true;
-        // the root node is always expandable
-        if (!node.parent)
-          return true;
-
-        return false;
+        return node.queryOptions.expandQueries;
       }
       return true;
     }
@@ -954,7 +947,7 @@ PlacesTreeView.prototype = {
     if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow]))
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    return asContainer(this._visibleElements[aRow]).containerOpen;
+    return this._visibleElements[aRow].containerOpen;
   },
 
   isContainerEmpty: function PTV_isContainerEmpty(aRow) {
@@ -962,7 +955,7 @@ PlacesTreeView.prototype = {
     if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow]))
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    return !asContainer(this._visibleElements[aRow]).hasChildren;
+    return !this._visibleElements[aRow].hasChildren;
   },
 
   isSeparator: function PTV_isSeparator(aRow) {
@@ -1003,8 +996,15 @@ PlacesTreeView.prototype = {
       return false;
     }
 
-    return this._visibleElements[aRow].indentLevel ==
-           this._visibleElements[aRow + 1].indentLevel;
+    var thisLevel = this._visibleElements[aRow].indentLevel;
+    for (var i = aAfterIndex + 1; i < this._visibleElements.length; ++i) {
+      var nextLevel = this._visibleElements[i].indentLevel;
+      if (nextLevel == thisLevel)
+        return true;
+      if (nextLevel < thisLevel)
+        break;
+    }
+    return false;
   },
 
   getLevel: function PTV_getLevel(aRow) {
@@ -1133,7 +1133,6 @@ PlacesTreeView.prototype = {
     if (!PlacesUtils.nodeIsContainer(node))
       return; // not a container, nothing to do
 
-    asContainer(node);
     var resource = this._getResourceForNode(node);
     if (resource) {
       const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
@@ -1304,5 +1303,4 @@ function PlacesTreeView(aShowRoot) {
   this._visibleElements = [];
   this._observers = [];
   this._showRoot = aShowRoot;
-  this._ignoreInvalidateContainer = false;
 }

@@ -61,6 +61,13 @@ SafebrowsingApplicationMod.prototype.registerSelf = function(compMgr, fileSpec, 
                                   fileSpec,
                                   loc,
                                   type);
+  
+  compMgr.registerFactoryLocation(this.cid,
+                                  "UrlClassifier Blocked Error Page",
+                                  "@mozilla.org/network/protocol/about;1?what=blocked",
+                                  fileSpec,
+                                  loc,
+                                  type);
 };
 
 SafebrowsingApplicationMod.prototype.getClassObject = function(compMgr, cid, iid) {  

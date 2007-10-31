@@ -102,7 +102,8 @@ protected:
 
   /**
    * Fix up the database after a crash such as dealing with previously-active
-   * downloads.
+   * downloads. Call this before RestoreActiveDownloads to get the downloads
+   * fixed here to be auto-resumed.
    */
   nsresult RestoreDatabaseState();
 
@@ -133,7 +134,10 @@ protected:
                           const nsAString &aTempPath,
                           PRInt64 aStartTime,
                           PRInt64 aEndTime,
-                          PRInt32 aState);
+                          PRInt32 aState,
+                          const nsACString &aMimeType,
+                          const nsACString &aPreferredApp,
+                          nsHandlerInfoAction aPreferredAction);
 
   void NotifyListenersOnDownloadStateChange(PRInt16 aOldState,
                                             nsIDownload *aDownload);
@@ -151,6 +155,31 @@ protected:
                                     nsIDownload *aDownload);
 
   nsDownload *FindDownload(PRUint32 aID);
+
+  /**
+   * First try to resume the download, and if that fails, retry it.
+   *
+   * @param aDl The download to resume and/or retry.
+   */
+  nsresult ResumeRetry(nsDownload *aDl);
+
+  /**
+   * Pause all active downloads and remember if they should try to auto-resume
+   * when the download manager starts again.
+   *
+   * @param aSetResume Indicate if the downloads that get paused should be set
+   *                   as auto-resume.
+   */
+  nsresult PauseAllDownloads(PRBool aSetResume);
+
+  /**
+   * Resume all paused downloads unless we're only supposed to do the automatic
+   * ones; in that case, try to retry them as well if resuming doesn't work.
+   *
+   * @param aResumeAll If true, all downloads will be resumed; otherwise, only
+   *                   those that are marked as auto-resume will resume.
+   */
+  nsresult ResumeAllDownloads(PRBool aResumeAll);
 
   /**
    * Stop tracking the active downloads. Only use this when we're about to quit
@@ -278,6 +307,11 @@ protected:
   PRBool IsRealPaused();
 
   /**
+   * Indicates if the download should try to automatically resume or not.
+   */
+  PRBool ShouldAutoResume();
+
+  /**
    * Download is in a state to stop and complete the download?
    */
   PRBool IsFinishable();
@@ -299,6 +333,18 @@ protected:
    * message or use a generic download failure message if nsnull.
    */
   nsresult FailDownload(nsresult aStatus, const PRUnichar *aMessage);
+
+  /**
+   * Opens the downloaded file with the appropriate application, which is
+   * either the OS default, MIME type default, or the one selected by the user.
+   *
+   * This also adds the temporary file to the "To be deleted on Exit" list, if
+   * the corresponding user preference is set (except on OS X).
+   *
+   * This function was adopted from nsExternalAppHandler::OpenWithApplication
+   * (uriloader/exthandler/nsExternalHelperAppService.cpp).
+   */
+  nsresult OpenWithApplication();
 
   nsDownloadManager *mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;
@@ -332,6 +378,16 @@ private:
   PRTime mLastUpdate;
   PRInt64 mResumedAt;
   double mSpeed;
+
+  /**
+   * Track various states of the download trying to auto-resume when starting
+   * the download manager or restoring from a crash.
+   *
+   * DONT_RESUME: Don't automatically resume the download
+   * AUTO_RESUME: Automaically resume the download
+   */
+  enum AutoResume { DONT_RESUME, AUTO_RESUME };
+  AutoResume mAutoResume;
 
   friend class nsDownloadManager;
 };

@@ -95,6 +95,10 @@
   !include LogicLib.nsh
 !endif
 
+!ifndef WINMESSAGES_INCLUDED
+  !include WinMessages.nsh
+!endif
+
 !ifndef MUI_VERBOSE
   !include MUI.nsh
 !endif
@@ -320,47 +324,24 @@
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Top    "5"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 1" Bottom "15"
 
-  StrCpy $R1 2
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(DOMI_TITLE)"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "15"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "20"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Bottom "30"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" State  "1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Flags  "GROUP"
-    IntOp $R1 $R1 + 1
-  ${EndIf}
-
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(QFA_TITLE)"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "15"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "55"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Bottom "65"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" State  "1"
-    IntOp $R1 $R1 + 1
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Type   "checkbox"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Text   "$(DOMI_TITLE)"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Left   "15"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Top    "20"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Bottom "30"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" State  "1"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Flags  "GROUP"
   ${EndIf}
 
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "label"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(DOMI_TEXT)"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "30"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "32"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Bottom "52"
-    IntOp $R1 $R1 + 1
-  ${EndIf}
-
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Type   "label"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Text   "$(QFA_TEXT)"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Left   "30"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Top    "67"
-    WriteINIStr "$PLUGINSDIR\components.ini" "Field $R1" Bottom "87"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Type   "label"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Text   "$(DOMI_TEXT)"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Left   "30"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Top    "32"
+    WriteINIStr "$PLUGINSDIR\components.ini" "Field 3" Bottom "52"
   ${EndIf}
 !macroend
 
@@ -528,6 +509,54 @@
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Right  "-1"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Top    "130"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Bottom "150"
+!macroend
+
+!macro un.createUnConfirmINI
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Settings" NumFields "5"
+
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Type   "label"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Text   "$(UN_CONFIRM_UNINSTALLED_FROM)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Top    "5"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Bottom "15"
+
+  ; XXXrstrong - a side affect of using a READONLY textbox is if the path is
+  ; longer than the visible area of the textbox it will display the characters
+  ; at the end and the beginning of the path will be hidden. Since the path has
+  ; to be greater than 74 characters in length I'm not going to spend any
+  ; cycles trying to come up with a workaround.
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Type   "text"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" State  "$INSTDIR"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Top    "17"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Bottom "30"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" flags  "READONLY"
+
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Type   "checkbox"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Text   "$(UN_REMOVE_PROFILES)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Top    "40"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Bottom "50"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" State  "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" flags  "NOTIFY"
+
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Type   "text"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" State   "$(UN_REMOVE_PROFILES_DESC)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Top    "52"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Bottom "120"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" flags  "MULTILINE|READONLY"
+
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Type   "label"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Text   "$(UN_CONFIRM_CLICK)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Left   "0"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Top    "130"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Bottom "150"
 !macroend
 
 /**
@@ -1325,6 +1354,7 @@
       StrCmp "$R5" "" +2 +1
       WriteRegStr SHCTX "$R4\shell\open\command" "" "$R5"      
 
+!ifdef DDEApplication
       StrCmp "$R9" "true" +1 +11
       WriteRegStr SHCTX "$R4\shell\open\ddeexec" "" "$\"%1$\",,0,0,,,,"
       WriteRegStr SHCTX "$R4\shell\open\ddeexec" "NoActivateHandler" ""
@@ -1336,6 +1366,7 @@
       ; default handler and if this key exists IE's shell integration breaks.
       DeleteRegKey HKLM "$R4\shell\open\ddeexec\ifexec"
       DeleteRegKey HKCU "$R4\shell\open\ddeexec\ifexec"
+!endif
 
       ClearErrors
 
@@ -3038,6 +3069,108 @@
   !endif
 !macroend
 
+/**
+ * Deletes all relative profiles specified in an application's profiles.ini and
+ * performs various other cleanup.
+ *
+ * @param   _REL_PROFILE_PATH
+ *          The relative path to the profile directory.
+ *
+ * $R6 = value of IsRelative read from profiles.ini
+ * $R7 = value of Path to profile read from profiles.ini
+ * $R8 = counter for reading profiles (e.g. Profile0, Profile1, etc.)
+ * $R9 = _REL_PROFILE_PATH
+ */
+!macro DeleteRelativeProfiles
+
+  !ifndef ${_MOZFUNC_UN}DeleteRelativeProfiles
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}WordReplace
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}DeleteRelativeProfiles "!insertmacro ${_MOZFUNC_UN}DeleteRelativeProfilesCall"
+
+    Function ${_MOZFUNC_UN}DeleteRelativeProfiles
+      Exch $R9
+      Push $R8
+      Push $R7
+      Push $R6
+
+      SetShellVarContext current
+      StrCpy $R8 -1
+
+      loop:
+      IntOp $R8 $R8 + 1  ; Increment the counter.
+      ReadINIStr $R7 "$APPDATA\$R9\profiles.ini" "Profile$R8" "Path"
+      IfErrors end +1
+
+      ; Only remove relative profiles
+      ReadINIStr $R6 "$APPDATA\$R9\profiles.ini" "Profile$R8" "IsRelative"
+      StrCmp "$R6" "1" +1 loop
+
+      ; Relative paths in profiles.ini use / as a separator
+      ${${_MOZFUNC_UN}WordReplace} "$R7" "/" "\" "+" $R7
+
+      IfFileExists "$LOCALAPPDATA\$R9\$R7" +1 +2
+      RmDir /r "$LOCALAPPDATA\$R9\$R7"
+      IfFileExists "$APPDATA\$R9\$R7" +1 +2
+      RmDir /r "$APPDATA\$R9\$R7"
+      GoTo loop
+
+      end:
+      ; Remove profiles directory under LOCALAPPDATA (e.g. cache, etc.) since
+      ; they are at times abandoned.
+      RmDir /r "$LOCALAPPDATA\$R9\Profiles"
+      RmDir /r "$APPDATA\$R9\Crash Reports"
+      Delete "$APPDATA\$R9\profiles.ini"
+      Delete "$APPDATA\$R9\console.log"
+      Delete "$APPDATA\$R9\pluginreg.dat"
+
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro DeleteRelativeProfilesCall _REL_PROFILE_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_REL_PROFILE_PATH}"
+  Call DeleteRelativeProfiles
+  !verbose pop
+!macroend
+
+!macro un.DeleteRelativeProfilesCall _REL_PROFILE_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_REL_PROFILE_PATH}"
+  Call un.DeleteRelativeProfiles
+  !verbose pop
+!macroend
+
+!macro un.DeleteRelativeProfiles
+  !ifndef un.DeleteRelativeProfiles
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro DeleteRelativeProfiles
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
 
 ################################################################################
 # Macros for parsing and updating the uninstall.log and removed-files.log
@@ -3506,6 +3639,187 @@
 
 
 ################################################################################
+# Macros for custom branding
+
+/**
+ * Sets BrandFullName and / or BrandShortName to values provided in the specified
+ * ini file and defaults to BrandShortName and BrandFullName as defined in
+ * branding.nsi when the associated ini file entry is not specified.
+ *
+ * ini file format:
+ * [Branding]
+ * BrandFullName=Custom Full Name
+ * BrandShortName=Custom Short Name
+ *
+ * @param   _PATH_TO_INI
+ *          Path to the ini file.
+ *
+ * $R6 = return value from ReadINIStr
+ * $R7 = stores BrandShortName
+ * $R8 = stores BrandFullName
+ * $R9 = _PATH_TO_INI
+ */
+!macro SetBrandNameVars
+
+  !ifndef ${_MOZFUNC_UN}SetBrandNameVars
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}WordReplace
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    ; Prevent declaring vars twice when the SetBrandNameVars macro is
+    ; inserted into both the installer and uninstaller.
+    !ifndef SetBrandNameVars
+      Var BrandFullName
+      Var BrandFullNameDA
+      Var BrandShortName
+    !endif
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}SetBrandNameVars "!insertmacro ${_MOZFUNC_UN}SetBrandNameVarsCall"
+
+    Function ${_MOZFUNC_UN}SetBrandNameVars
+      Exch $R9
+      Push $R8
+      Push $R7
+      Push $R6
+
+      StrCpy $R8 "${BrandFullName}"
+      StrCpy $R7 "${BrandShortName}"
+
+      IfFileExists "$R9" +1 finish
+
+      ClearErrors
+      ReadINIStr $R6 $R9 "Branding" "BrandFullName"
+      IfErrors +2 +1
+      StrCpy $R8 "$R6"
+
+      ClearErrors
+      ReadINIStr $R6 $R9 "Branding" "BrandShortName"
+      IfErrors +2 +1
+      StrCpy $R7 "$R6"
+
+      finish:
+      StrCpy $BrandFullName "$R8"
+      ${${_MOZFUNC_UN}WordReplace} "$R8" "&" "&&" "+" $R8
+      StrCpy $BrandFullNameDA "$R8"
+      StrCpy $BrandShortName "$R7"
+
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro SetBrandNameVarsCall _PATH_TO_INI
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_INI}"
+  Call SetBrandNameVars
+  !verbose pop
+!macroend
+
+!macro un.SetBrandNameVarsCall _PATH_TO_INI
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_INI}"
+  Call un.SetBrandNameVars
+  !verbose pop
+!macroend
+
+!macro un.SetBrandNameVars
+  !ifndef un.SetBrandNameVars
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro SetBrandNameVars
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Replaces the wizard's header image with the one specified.
+ *
+ * @param   _PATH_TO_IMAGE
+ *          Fully qualified path to the bitmap to use for the header image.
+ *
+ * $R8 = hwnd for the control returned from GetDlgItem.
+ * $R9 = _PATH_TO_IMAGE
+ */
+!macro ChangeMUIHeaderImage
+
+  !ifndef ${_MOZFUNC_UN}ChangeMUIHeaderImage
+    Var hHeaderBitmap
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}ChangeMUIHeaderImage "!insertmacro ${_MOZFUNC_UN}ChangeMUIHeaderImageCall"
+
+    Function ${_MOZFUNC_UN}ChangeMUIHeaderImage
+      Exch $R9
+      Push $R8
+
+      GetDlgItem $R8 $HWNDPARENT 1046
+      System::Call 'user32::LoadImage(i 0, t "$R9", i 0, i 0, i 0, i 0x0010|0x2000) i.s'
+      Pop $hHeaderBitmap
+      SendMessage $R8 ${STM_SETIMAGE} 0 $hHeaderBitmap
+      ; There is no way to specify a show function for a custom page so hide
+      ; and then show the control to force the bitmap to redraw.
+      ShowWindow $R8 ${SW_HIDE}
+      ShowWindow $R8 ${SW_SHOW}
+
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro ChangeMUIHeaderImageCall _PATH_TO_IMAGE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_IMAGE}"
+  Call ChangeMUIHeaderImage
+  !verbose pop
+!macroend
+
+!macro un.ChangeMUIHeaderImageCall _PATH_TO_IMAGE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_IMAGE}"
+  Call un.ChangeMUIHeaderImage
+  !verbose pop
+!macroend
+
+!macro un.ChangeMUIHeaderImage
+  !ifndef un.ChangeMUIHeaderImage
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro ChangeMUIHeaderImage
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+
+################################################################################
 # User interface callback helper defines and macros
 
 /* Install type defines */
@@ -3552,6 +3866,67 @@
 !macroend
 
 /**
+ * Unloads dll's and releases references when the installer and uninstaller
+ * exit.
+ */
+!macro OnEndCommon
+
+  !ifndef ${_MOZFUNC_UN}OnEndCommon
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}UnloadUAC
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}OnEndCommon "!insertmacro ${_MOZFUNC_UN}OnEndCommonCall"
+
+    Function ${_MOZFUNC_UN}OnEndCommon
+
+      ${${_MOZFUNC_UN}UnloadUAC}
+      StrCmp $hHeaderBitmap "" +3 +1
+      System::Call "gdi32::DeleteObject(i s)" $hHeaderBitmap
+      StrCpy $hHeaderBitmap ""
+
+      System::Free 0
+
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro OnEndCommonCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call OnEndCommon
+  !verbose pop
+!macroend
+
+!macro un.OnEndCommonCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.OnEndCommon
+  !verbose pop
+!macroend
+
+!macro un.OnEndCommon
+  !ifndef un.OnEndCommon
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro OnEndCommon
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
  * Called from the installer's .onInit function not to be confused with the
  * uninstaller's .onInit or the uninstaller's un.onInit functions.
  *
@@ -3569,10 +3944,10 @@
 
   !ifndef InstallOnInitCommon
     !insertmacro CloseApp
+    !insertmacro ElevateUAC
     !insertmacro GetOptions
     !insertmacro GetParameters
     !insertmacro GetSize
-    !insertmacro ElevateUAC
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -3588,6 +3963,7 @@
       !ifdef ___WINVER__NSH___
         ${Unless} ${AtLeastWin2000}
           MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
+          ; Nothing initialized so no need to call OnEndCommon
           Quit
         ${EndUnless}
       !endif
@@ -3645,11 +4021,13 @@
                 FileClose $R5
                 Delete $R6
                 ${If} ${Errors}
+                  ; Nothing initialized so no need to call OnEndCommon
                   Quit
                 ${EndIf}
               ${Else}
                 CreateDirectory "$INSTDIR"
                 ${If} ${Errors}
+                  ; Nothing initialized so no need to call OnEndCommon
                   Quit
                 ${EndIf}
               ${EndIf}
@@ -3673,6 +4051,7 @@
                     ClearErrors
                     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
                     ${If} ${Errors}
+                      ; Nothing initialized so no need to call OnEndCommon
                       Quit
                     ${EndIf}
                   ${EndIf}
@@ -3740,11 +4119,12 @@
 !macro UninstallOnInitCommon
 
   !ifndef UninstallOnInitCommon
+    !insertmacro ElevateUAC
     !insertmacro GetLongPath
     !insertmacro GetOptions
     !insertmacro GetParameters
+    !insertmacro UnloadUAC
     !insertmacro UpdateUninstallLog
-    !insertmacro ElevateUAC
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -3767,8 +4147,7 @@
       IfErrors showshortcuts +1
       ${ElevateUAC}
       ${HideShortcuts}
-      StrCpy $R1 "true"
-      StrCmp "$R1" "true" continue
+      GoTo finish
 
       ; Require elevation if the user can elevate
       showshortcuts:
@@ -3777,8 +4156,7 @@
       IfErrors defaultappuser +1
       ${ElevateUAC}
       ${ShowShortcuts}
-      StrCpy $R1 "true"
-      GoTo continue
+      GoTo finish
 
       ; Require elevation if the the StartMenuInternet registry keys require
       ; updating and the user can elevate
@@ -3787,8 +4165,7 @@
       ${GetOptions} "$R0" "/SetAsDefaultAppUser" $R2
       IfErrors defaultappglobal +1
       ${SetAsDefaultAppUser}
-      StrCpy $R1 "true"
-      GoTo continue
+      GoTo finish
 
       ; Require elevation if the user can elevate
       defaultappglobal:
@@ -3797,8 +4174,7 @@
       IfErrors postupdate +1
       ${ElevateUAC}
       ${SetAsDefaultAppGlobal}
-      StrCpy $R1 "true"
-      GoTo continue
+      GoTo finish
 
       ; Do not attempt to elevate. The application launching this executable is
       ; responsible for elevation if it is required.
@@ -3806,40 +4182,40 @@
       ${WordReplace} "$R0" "$\"" "" "+" $R0
       ClearErrors
       ${GetOptions} "$R0" "/PostUpdate" $R2
-      StrCpy $R1 "true"
       IfErrors continue +1
       ; If the uninstall.log does not exist don't perform post update
       ; operations. This prevents updating the registry for zip builds.
-      IfFileExists "$EXEDIR\uninstall.log" +1 continue
+      IfFileExists "$EXEDIR\uninstall.log" +1 finish
       ${PostUpdate}
       ClearErrors
       ${GetOptions} "$R0" "/UninstallLog=" $R2
       IfErrors updateuninstalllog +1
-      StrCmp "$R2" "" continue +1
+      StrCmp "$R2" "" finish +1
       GetFullPathName $R3 "$R2"
-      IfFileExists "$R3" +1 continue
+      IfFileExists "$R3" +1 finish
       Delete "$INSTDIR\uninstall\*wizard*"
       Delete "$INSTDIR\uninstall\uninstall.log"
       CopyFiles /SILENT /FILESONLY "$R3" "$INSTDIR\uninstall\"
       ${GetParent} "$R3" $R4
       Delete "$R3"
       RmDir "$R4"
-      GoTo continue
+      GoTo finish
 
       ; Do not attempt to elevate. The application launching this executable is
       ; responsible for elevation if it is required.
       updateuninstalllog:
       ${UpdateUninstallLog}
-      StrCpy $R1 "true"
-      
-      continue:
-      StrCmp $R1 "true" +1 +3
+
+      finish:
+      ${UnloadUAC}
       System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
       Quit
 
+      continue:
+
       ; If the uninstall.log does not exist don't perform uninstall
       ; operations. This prevents running the uninstaller for zip builds.
-      IfFileExists "$EXEDIR\uninstall.log" +2 +1
+      IfFileExists "$INSTDIR\uninstall\uninstall.log" +2 +1
       Quit
 
       ; Require elevation if the user can elevate
@@ -3856,6 +4232,7 @@
       ; so it won't be in use so it can delete itself.
       ExecWait $R1
       ${DeleteFile} "$EXEDIR\uninstaller.exe"
+      ${UnloadUAC}
       SetErrorLevel 0
       Quit
 
@@ -4111,50 +4488,63 @@
 !macro ElevateUAC
 
   !ifndef ${_MOZFUNC_UN}ElevateUAC
+    !ifdef USE_UAC_PLUGIN
+      !ifdef ___WINVER__NSH___
+        !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+        !insertmacro ${_MOZFUNC_UN_TMP}GetOptions
+        !insertmacro ${_MOZFUNC_UN_TMP}GetParameters
+        !undef _MOZFUNC_UN
+        !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+        !undef _MOZFUNC_UN_TMP
+      !endif
+    !endif
+
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
     !define ${_MOZFUNC_UN}ElevateUAC "!insertmacro ${_MOZFUNC_UN}ElevateUACCall"
 
     Function ${_MOZFUNC_UN}ElevateUAC
-      Push $R9
-      Push $0
+      ; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
+      !ifdef USE_UAC_PLUGIN
+        !ifdef ___WINVER__NSH___
+          Push $R9
+          Push $0
 
-; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
-!ifdef USE_UAC_PLUGIN
-      !ifdef ___WINVER__NSH___
-        ${If} ${AtLeastWinVista}
-          UAC::IsAdmin
-          ; If the user is not an admin already
-          ${If} "$0" != "1"
-            UAC::SupportsUAC
-            ; If the system supports UAC
-            ${If} "$0" == "1"
-              UAC::GetElevationType
-              ; If the user account has a split token
-              ${If} "$0" == "3"
-                UAC::RunElevated 
-                Quit
+          ${If} ${AtLeastWinVista}
+            UAC::IsAdmin
+            ; If the user is not an admin already
+            ${If} "$0" != "1"
+              UAC::SupportsUAC
+              ; If the system supports UAC
+              ${If} "$0" == "1"
+                UAC::GetElevationType
+                ; If the user account has a split token
+                ${If} "$0" == "3"
+                  UAC::RunElevated
+                  UAC::Unload
+                  ; Nothing besides UAC initialized so no need to call OnEndCommon
+                  Quit
+                ${EndIf}
+              ${EndIf}
+            ${Else}
+              ${GetParameters} $R9
+              ${If} $R9 != ""
+                ClearErrors
+                ${GetOptions} "$R9" "/UAC:" $0
+                ; If the command line contains /UAC then we need to initialize
+                ; the UAC plugin to use UAC::ExecCodeSegment to execute code in
+                ; the non-elevated context.
+                ${Unless} ${Errors}
+                  UAC::RunElevated 
+                ${EndUnless}
               ${EndIf}
             ${EndIf}
-          ${Else}
-            ${GetParameters} $R9
-            ${If} $R9 != ""
-              ClearErrors
-              ${GetOptions} "$R9" "/UAC:" $0
-              ; If the command line contains /UAC then we need to initialize
-              ; the UAC plugin to use UAC::ExecCodeSegment to execute code in
-              ; the non-elevated context.
-              ${Unless} ${Errors}
-                UAC::RunElevated 
-              ${EndUnless}
-            ${EndIf}
           ${EndIf}
-        ${EndIf}
-      !endif
-!endif
 
-      Pop $0
-      Pop $R9
+          Pop $0
+          Pop $R9
+        !endif
+      !endif
     FunctionEnd
 
     !verbose pop
@@ -4183,6 +4573,86 @@
     !define _MOZFUNC_UN "un."
 
     !insertmacro ElevateUAC
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Unloads the UAC plugin so the NSIS plugins can be removed when the installer
+ * and uninstaller exit.
+ *
+ * $R9 = return values from GetParameters and GetOptions macros
+ */
+!macro UnloadUAC
+
+  !ifndef ${_MOZFUNC_UN}UnloadUAC
+    !ifdef USE_UAC_PLUGIN
+      !ifdef ___WINVER__NSH___
+        !define _MOZFUNC_UN_TMP_UnloadUAC ${_MOZFUNC_UN}
+        !insertmacro ${_MOZFUNC_UN_TMP_UnloadUAC}GetOptions
+        !insertmacro ${_MOZFUNC_UN_TMP_UnloadUAC}GetParameters
+        !undef _MOZFUNC_UN
+        !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP_UnloadUAC}
+        !undef _MOZFUNC_UN_TMP_UnloadUAC
+      !endif
+    !endif
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}UnloadUAC "!insertmacro ${_MOZFUNC_UN}UnloadUACCall"
+
+    Function ${_MOZFUNC_UN}UnloadUAC
+      !ifdef USE_UAC_PLUGIN
+        !ifdef ___WINVER__NSH___
+          Push $R9
+
+          ${Unless} ${AtLeastWinVista}
+            Return
+          ${EndUnless}
+
+          ClearErrors
+          ${${_MOZFUNC_UN}GetParameters} $R9
+          ${${_MOZFUNC_UN}GetOptions} "$R9" "/UAC:" $R9
+          ; If the command line contains /UAC then we need to unload the UAC plugin
+          IfErrors +2 +1
+          UAC::Unload
+
+          ClearErrors
+
+          Pop $R9
+        !endif
+      !endif
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro UnloadUACCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call UnloadUAC
+  !verbose pop
+!macroend
+
+!macro un.UnloadUACCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.UnloadUAC
+  !verbose pop
+!macroend
+
+!macro un.UnloadUAC
+  !ifndef un.UnloadUAC
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro UnloadUAC
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN

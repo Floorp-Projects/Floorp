@@ -302,11 +302,14 @@ static const int kTextSection = 1;
     NSString *fn = [NSString stringWithUTF8String:&table[n_strx]];
     NSRange range = [fn rangeOfString:@":" options:NSBackwardsSearch];
 
-    if (![fn length] || !range.length)
+    if (![fn length])
       return NO;
 
-    // The function has a ":" followed by some stuff
-    fn = [fn substringToIndex:range.location];
+    if (range.length > 0) {
+      // The function has a ":" followed by some stuff, so strip it off
+      fn = [fn substringToIndex:range.location];
+    }
+    
     [self addFunction:fn line:line address:list->n_value section:list->n_sect ];
 
     result = YES;

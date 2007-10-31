@@ -3,6 +3,7 @@
 @AB_CD@.jar:
 % locale global @AB_CD@ %locale/@AB_CD@/global/
   locale/@AB_CD@/global/about.dtd                       (%chrome/global/about.dtd)
+  locale/@AB_CD@/global/appPicker.dtd                   (%chrome/global/appPicker.dtd)
   locale/@AB_CD@/global/brand.dtd                       (generic/chrome/global/brand.dtd)
 + locale/@AB_CD@/global/browser.properties              (%chrome/global/browser.properties)
 + locale/@AB_CD@/global/charsetOverlay.dtd              (%chrome/global/charsetOverlay.dtd)
@@ -108,3 +109,5 @@
   locale/@AB_CD@/help/help.dtd                            (%chrome/mozapps/help/help.dtd)
   locale/@AB_CD@/help/help-toc.rdf                        (%chrome/mozapps/help/help-toc.rdf)
   locale/@AB_CD@/help/welcome.xhtml                       (%chrome/mozapps/help/welcome.xhtml)
+% locale places @AB_CD@ %locale/@AB_CD@/places/
+  locale/@AB_CD@/places/places.properties                 (%chrome/places/places.properties)

@@ -39,6 +39,7 @@
 #include "cairo-quartz-private.h"
 
 #include <Carbon/Carbon.h>
+#include <limits.h>
 
 #undef QUARTZ_DEBUG
 
@@ -96,6 +97,26 @@ CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
 
 static void quartz_surface_to_png (cairo_quartz_surface_t *nq, char *dest);
 static void quartz_image_to_png (CGImageRef, char *dest);
+
+/* CoreGraphics limitation with flipped CTM surfaces: height must be less than signed 16-bit max */
+
+#define CG_MAX_HEIGHT   SHRT_MAX
+#define CG_MAX_WIDTH    USHRT_MAX
+
+/* is the desired size of the surface within bounds? */
+static cairo_bool_t verify_surface_size(int width, int height)
+{
+    /* hmmm, allow width, height == 0 ? */
+    if (width < 0 || height < 0) {
+	return FALSE;
+    }
+
+    if (width > CG_MAX_WIDTH || height > CG_MAX_HEIGHT) {
+	return FALSE;
+    }
+
+    return TRUE;
+}
 
 /*
  * Cairo path -> Quartz path conversion helpers
@@ -449,6 +470,13 @@ _cairo_quartz_surface_to_quartz (cairo_surface_t *target, cairo_surface_t *pat_s
 	    cairo_surface_destroy(ref_type);
 
 	quartz_surf = (cairo_quartz_surface_t *) new_surf;
+
+	if (new_surf &&
+	    cairo_surface_get_type (new_surf) != CAIRO_SURFACE_TYPE_QUARTZ) {
+	    ND((stderr, "got a non-quartz surface, format=%d width=%u height=%u type=%d\n", cairo_surface_get_type (pat_surf), rect.width, rect.height, cairo_surface_get_type (new_surf)));
+	    cairo_surface_destroy (new_surf);
+	    quartz_surf = NULL;
+	}
     } else {
 	/* If it's a quartz surface, we can try to see if it's a CGBitmapContext;
 	 * we do this when we call CGBitmapContextCreateImage below.
@@ -469,6 +497,9 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
     cairo_surface_t *pat_surf = spat->surface;
 
     cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz (NULL, pat_surf);
+    if (!quartz_surf)
+	return;
+
     CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
     CGRect imageBounds;
 
@@ -673,6 +704,9 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	    cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) source;
 	    cairo_surface_t *pat_surf = spat->surface;
 	    cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz ((cairo_surface_t *) surface, pat_surf);
+	    if (!quartz_surf)
+		return DO_UNSUPPORTED;
+
 	    CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
 	    cairo_matrix_t m = spat->base.matrix;
 	    cairo_rectangle_int_t extents;
@@ -981,6 +1015,12 @@ _cairo_quartz_surface_create_similar (void *abstract_surface,
 	format = CAIRO_FORMAT_A8;
     else
 	return NULL;
+	
+    // verify width and height of surface
+    if (!verify_surface_size(width, height)) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
 
     return cairo_quartz_surface_create (format, width, height);
 }
@@ -996,6 +1036,13 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 {
     cairo_quartz_surface_t *new_surface = NULL;
     cairo_format_t new_format;
+    
+    *clone_out = NULL;
+
+    // verify width and height of surface
+    if (!verify_surface_size(width, height)) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     CGImageRef quartz_image = NULL;
 
@@ -1032,6 +1079,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 
 	new_format = isurf->format;
 
+        
 	dataProvider = CGDataProviderCreateWithData (NULL,
 						     isurf->data,
 						     isurf->height * isurf->stride,
@@ -1060,8 +1108,10 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 	cairo_quartz_surface_create (new_format,
 				     CGImageGetWidth (quartz_image),
 				     CGImageGetHeight (quartz_image));
-    if (!new_surface || new_surface->base.status)
+    if (!new_surface || new_surface->base.status) {
+	CGImageRelease (quartz_image);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     CGContextSetCompositeOperation (new_surface->cgContext,
 				    kPrivateCGCompositeCopy);
@@ -1564,6 +1614,9 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
 #endif /* CAIRO_HAS_ATSUI_FONT */
 
     NULL, /* snapshot */
+    NULL, /* is_similar */
+    NULL, /* reset */
+    NULL  /* fill_stroke */
 };
 
 static cairo_quartz_surface_t *
@@ -1681,6 +1734,12 @@ cairo_quartz_surface_create (cairo_format_t format,
     int stride;
     int bitsPerComponent;
 
+    // verify width and height of surface
+    if (!verify_surface_size(width, height)) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t*) &_cairo_surface_nil;
+    }
+
     if (format == CAIRO_FORMAT_ARGB32) {
 	cgColorspace = CGColorSpaceCreateDeviceRGB();
 	stride = width * 4;
@@ -1729,6 +1788,7 @@ cairo_quartz_surface_create (cairo_format_t format,
 
     if (!cgc) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	free (imageData);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 

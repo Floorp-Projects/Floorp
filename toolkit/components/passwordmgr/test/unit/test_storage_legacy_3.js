@@ -146,6 +146,38 @@ logins = storage.getAllLogins({});
 LoginTest.checkStorageData(storage, [], [dummyuser4]);
 
 
+/*
+ * ---------------------- Bug 400751 ----------------------
+ * Migrating from existing mime64 encoded format causes
+ * errors in storage legacy's code
+ */
+
+
+/* ========== 8 ========== */
+testnum++;
+
+testdesc = "checking double reading of mime64-obscured entries";
+LoginTest.initStorage(storage, INDIR, "signons-380961-1.txt");
+LoginTest.checkStorageData(storage, [], [dummyuser1]);
+
+testdesc = "checking double reading of mime64-obscured entries part 2";
+LoginTest.checkStorageData(storage, [], [dummyuser1]);
+
+/* ========== 9 ========== */
+testnum++;
+
+testdesc = "checking correct storage of mime64 converted entries";
+LoginTest.initStorage(storage, INDIR, "signons-380961-1.txt",
+                               OUTDIR, "output-400751-1.txt");
+LoginTest.checkStorageData(storage, [], [dummyuser1]);
+LoginTest.checkStorageData(storage, [], [dummyuser1]);
+storage.addLogin(dummyuser2); // trigger a write
+LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2]);
+
+testdesc = "[flush and reload for verification]";
+LoginTest.initStorage(storage, OUTDIR, "output-400751-1.txt");
+LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2]);
+
 } catch (e) {
     throw ("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);
 }

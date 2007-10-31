@@ -4,7 +4,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>canvas3d@mozilla.com</em:id>
-    <em:version>0.1</em:version>
+    <em:version>0.1.18</em:version>
 
     <em:type>2</em:type>
 
@@ -17,7 +17,7 @@
 	     to internal interfaces.
 	  -->
         <em:minVersion>3.0a8pre</em:minVersion>
-        <em:maxVersion>3.0a8pre</em:maxVersion>
+        <em:maxVersion>3.0</em:maxVersion>
       </Description>
     </em:targetApplication>
 

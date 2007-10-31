@@ -5143,20 +5143,25 @@ nsWindow::IMEReleaseData(void)
 }
 
 // Work around gtk bug http://bugzilla.gnome.org/show_bug.cgi?id=483223:
-// The gtk xim module registers closed signal handlers on the display, but
-// there are two problems:
+// (and the similar issue of GTK+ IIIM)
+// The GTK+ XIM and IIIM modules register handlers for the "closed" signal
+// on the display, but:
 //  * The signal handlers are not disconnected when the module is unloaded.
+// 
+// The GTK+ XIM module has another problem: 
 //  * When the signal handler is run (with the module loaded) it tries
 //    XFree (and fails) on a pointer that did not come from Xmalloc.
 //
-// To prevent the signal handler from being run, find the signal handlers
-// and remove them.
-//
+// To prevent these modules from being unloaded, use static variables to
+// hold ref of GtkIMContext class.
+// For GTK+ XIM module, to prevent the signal handler from being run,
+// find the signal handlers and remove them.
+//  
 // GtkIMContextXIMs share XOpenIM connections and display closed signal
 // handlers (where possible).
 
-static void disconnect_gtk_xim_display_closed(GtkWidget *aGtkWidget,
-                                              GtkIMContext *aContext)
+static void workaround_gtk_im_display_closed(GtkWidget *aGtkWidget,
+                                             GtkIMContext *aContext)
 {
     GtkIMMulticontext *multicontext = GTK_IM_MULTICONTEXT (aContext);
     GtkIMContext *slave = multicontext->slave;
@@ -5164,30 +5169,36 @@ static void disconnect_gtk_xim_display_closed(GtkWidget *aGtkWidget,
         return;
 
     GType slaveType = G_TYPE_FROM_INSTANCE(slave);
-    if (strcmp(g_type_name(slaveType), "GtkIMContextXIM") != 0)
-        return; // not problem xim module
+    const gchar *im_type_name = g_type_name(slaveType);
+    if (strcmp(im_type_name, "GtkIMContextXIM") == 0) {
+        if (gtk_check_version(2, 12, 1) == NULL) // gtk bug has been fixed
+            return;
 
-    struct GtkIMContextXIM
-    {
-        GtkIMContext parent;
-        gpointer private_data;
-        // ... other fields
-    };
-    gpointer signal_data =
-        reinterpret_cast<GtkIMContextXIM*>(slave)->private_data;
-    if (!signal_data)
-        return; // no corresponding handler
+        struct GtkIMContextXIM
+        {
+            GtkIMContext parent;
+            gpointer private_data;
+            // ... other fields
+        };
+        gpointer signal_data =
+            reinterpret_cast<GtkIMContextXIM*>(slave)->private_data;
+        if (!signal_data)
+            return; // no corresponding handler
 
-    guint disconnected =
         g_signal_handlers_disconnect_matched(gtk_widget_get_display(aGtkWidget),
                                              G_SIGNAL_MATCH_DATA, 0, 0, NULL,
                                              NULL, signal_data);
 
-    if (disconnected) {
-        // Add a reference to prevent the xim module being unloaded
+        // Add a reference to prevent the XIM module from being unloaded
         // and reloaded: each time the module is loaded and used, it
         // opens (and doesn't close) new XOpenIM connections.
-        g_type_class_ref(slaveType);
+        static gpointer gtk_xim_context_class =
+            g_type_class_ref(slaveType);
+    }
+    else if (strcmp(im_type_name, "GtkIMContextIIIM") == 0) {
+        // Add a reference to prevent the IIIM module from being unloaded
+        static gpointer gtk_iiim_context_class =
+            g_type_class_ref(slaveType);
     }
 }
 
@@ -5224,10 +5235,8 @@ nsWindow::IMEDestroyContext(void)
     mIMEData->mEnabled = nsIKBStateControl::IME_STATUS_DISABLED;
 
     if (mIMEData->mContext) {
-        if (gtk_check_version(2,12,1) != NULL) { // need gtk bug workaround
-            disconnect_gtk_xim_display_closed(GTK_WIDGET(mContainer),
-                                              mIMEData->mContext);
-        }
+        workaround_gtk_im_display_closed(GTK_WIDGET(mContainer),
+                                         mIMEData->mContext);
         gtk_im_context_set_client_window(mIMEData->mContext, nsnull);
         g_object_unref(G_OBJECT(mIMEData->mContext));
         mIMEData->mContext = nsnull;
@@ -5236,7 +5245,7 @@ nsWindow::IMEDestroyContext(void)
     if (mIMEData->mDummyContext) {
         // mIMEData->mContext and mIMEData->mDummyContext have the same
         // slaveType and signal_data so no need for another
-        // disconnect_gtk_xim_display_closed.
+        // workaround_gtk_im_display_closed.
         gtk_im_context_set_client_window(mIMEData->mDummyContext, nsnull);
         g_object_unref(G_OBJECT(mIMEData->mDummyContext));
         mIMEData->mDummyContext = nsnull;

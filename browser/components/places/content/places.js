@@ -54,13 +54,6 @@ var PlacesOrganizer = {
   _content: null,
 
   init: function PO_init() {
-    var self = this;
-    // on timeout because of the corresponding setTimeout()
-    // in the places tree binding's constructor
-    setTimeout(function() { self._init(); }, 0);
-  },
-
-  _init: function PO__init() {
     this._places = document.getElementById("placesList");
     this._content = document.getElementById("placeContent");
 
@@ -576,7 +569,8 @@ var PlacesOrganizer = {
     // are saved
     if (gEditItemOverlay.itemId != -1) {
       var focusedElement = document.commandDispatcher.focusedElement;
-      if (focusedElement instanceof HTMLInputElement &&
+      if ((focusedElement instanceof HTMLInputElement ||
+           focusedElement instanceof HTMLTextAreaElement) &&
           /^editBMPanel.*/.test(focusedElement.parentNode.parentNode.id))
         focusedElement.blur();
     }

@@ -51,6 +51,7 @@
 #include "nsCOMArray.h"
 #include "nsIFrame.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIMarkupDocumentViewer.h"
 
 class nsIScrollableView;
 class nsIPresShell;
@@ -304,7 +305,10 @@ protected:
   void ForceViewUpdate(nsIView* aView);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollTextsize(nsIFrame *aTargetFrame, PRInt32 adjustment);
+  void DoScrollFullZoom(nsIFrame *aTargetFrame, PRInt32 adjustment);
+  nsresult GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv);
   nsresult ChangeTextSize(PRInt32 change);
+  nsresult ChangeFullZoom(PRInt32 change);
   // end mousewheel functions
 
   // routines for the d&d gesture tracking state machine

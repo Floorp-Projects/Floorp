@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pamela Greene <pamg.bugs@gmail.com> (original author)
+ *   Daniel Witte <dwitte@stanford.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,36 +39,84 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(4b8cdd85-e186-46e5-9ec0-9488ae7f0b92)]
+interface nsIURI;
+
+[scriptable, uuid(b07cb0f0-3394-572e-6260-dbaed0a292ba)]
 interface nsIEffectiveTLDService : nsISupports
 {
     /**
-     * getEffectiveTLDLength
+     * Returns the public suffix of a URI. A public suffix is the highest-level domain
+     * under which individual domains may be registered; it may therefore contain one
+     * or more dots. For example, the public suffix for "www.bbc.co.uk" is "co.uk",
+     * because the .uk TLD does not allow the registration of domains at the
+     * second level ("bbc.uk" is forbidden).
      *
-     * Finds the length of the effective TLD of a hostname.  An effective TLD
-     * is the highest-level domain under which individual domains may be
-     * registered; it may therefore contain one or more dots.  For example,
-     * the effective TLD for "www.bbc.co.uk" is "co.uk", because the .uk TLD
-     * does not allow the registration of domains at the second level ("bbc.uk"
-     * is forbidden).  Similarly, the effective TLD of "developer.mozilla.com"
-     * is "com".
+     * The public suffix will be returned encoded in UTF8 and will be normalized using
+     * nsIIDNService::normalize, which follows RFC 3454.
      *
-     * The hostname will be normalized using nsIIDNService::normalize, which
-     * follows RFC 3454.  getEffectiveTLDLength() will fail, generating an
-     * error, if the hostname contains characters that are invalid in URIs.
+     * @param   aURI               The URI to be analyzed
      *
-     * @param   aHostname   The hostname to be analyzed, in UTF-8
-     *
-     * @returns the number of bytes that the longest identified effective TLD
-     *          (TLD or TLD-like higher-level subdomain) occupies, not including
-     *          the leading dot:
-     *              bugzilla.mozilla.org -> org -> 3
-     *              theregister.co.uk -> co.uk -> 5
-     *              mysite.us -> us -> 2
+     * @returns the public suffix
      *
      * @throws NS_ERROR_UNEXPECTED 
      *         or other error returned by nsIIDNService::normalize when 
-     *         aHostname is not UTF-8 or contains characters disallowed in URIs
+     *         the hostname contains characters disallowed in URIs
+     * @throws NS_ERROR_HOST_IS_IP_ADDRESS
+     *         if the host is a numeric IPv4 or IPv6 address (as determined by
+     *         the success of a call to PR_StringToNetAddr()).
      */
-    PRUint32 getEffectiveTLDLength(in AUTF8String aHostname);
+    AUTF8String getPublicSuffix(in nsIURI aURI);
+
+    /**
+     * Returns the base domain of a URI; that is, the public suffix with a given
+     * number of additional domain name parts. For example, the result of this method
+     * for "www.bbc.co.uk", depending on the value of aAdditionalParts parameter, will
+     * be:
+     *
+     *    0 (default) -> bbc.co.uk
+     *    1           -> news.bbc.co.uk
+     *
+     * Similarly, the public suffix for "developer.mozilla.org" is "org", and the base
+     * domain will be:
+     *
+     *    0 (default) -> mozilla.org
+     *    1           -> developer.mozilla.org
+     *
+     * The base domain will be returned encoded in UTF8 and will be normalized using
+     * nsIIDNService::normalize, which follows RFC 3454.
+     *
+     * @param   aURI               The URI to be analyzed
+     * @param   aAdditionalParts   Number of domain name parts to be
+     *                             returned in addition to the public suffix
+     *
+     * @returns the base domain (public suffix plus the requested number of additional parts)
+     *
+     * @throws NS_ERROR_UNEXPECTED 
+     *         or other error returned by nsIIDNService::normalize when 
+     *         the hostname contains characters disallowed in URIs
+     * @throws NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
+     *         when there are insufficient subdomain levels in the hostname to satisfy the
+     *         requested aAdditionalParts value.
+     * @throws NS_ERROR_HOST_IS_IP_ADDRESS
+     *         if aHost is a numeric IPv4 or IPv6 address (as determined by
+     *         the success of a call to PR_StringToNetAddr()).
+     *
+     * @see    getPublicSuffix()
+     */
+    AUTF8String getBaseDomain(in nsIURI aURI, [optional] in PRUint32 aAdditionalParts);
+
+    /**
+     * Returns the public suffix of a host string. Otherwise identical to getPublicSuffix().
+     *
+     * @see     getPublicSuffix()
+     */
+    AUTF8String getPublicSuffixFromHost(in AUTF8String aHost);
+
+    /**
+     * Returns the base domain of a host string. Otherwise identical to getBaseDomain().
+     *
+     * @see     getBaseDomain()
+     */
+    AUTF8String getBaseDomainFromHost(in AUTF8String aHost, [optional] in PRUint32 aAdditionalParts);
 };
+

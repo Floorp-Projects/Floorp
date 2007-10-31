@@ -200,8 +200,6 @@ pref("browser.urlbar.doubleClickSelectsAll", false);
 #endif
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.matchOnlyTyped", false);
-pref("browser.urlbar.hideProtocols", "");
-pref("browser.urlbar.animateBlend", true);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
@@ -380,7 +378,7 @@ pref("mousewheel.withmetakey.action",0);
 pref("mousewheel.withmetakey.sysnumlines",true);
 pref("mousewheel.withmetakey.numlines",1);
 #endif
-pref("mousewheel.withcontrolkey.action",3);
+pref("mousewheel.withcontrolkey.action",5);
 pref("mousewheel.withcontrolkey.sysnumlines",false);
 pref("mousewheel.withcontrolkey.numlines",1);
 
@@ -443,11 +441,7 @@ pref("browser.preferences.instantApply", false);
 #else
 pref("browser.preferences.instantApply", true);
 #endif
-#ifdef XP_MACOSX
-pref("browser.preferences.animateFadeIn", true);
-#else
 pref("browser.preferences.animateFadeIn", false);
-#endif
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
@@ -545,6 +539,10 @@ pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phis
 
 // FAQ URL
 pref("browser.safebrowsing.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/phishing-protection/");
+
+// Name of the about: page contributed by safebrowsing to handle display of error
+// pages on phishing/malware hits.  (bug 399233)
+pref("urlclassifier.alternate_error_page", "blocked");
 #endif
 
 // defaults to true
@@ -573,9 +571,6 @@ pref("accessibility.blockautorefresh", false);
 
 // import bookmarks.html into Places bookmarks
 pref("browser.places.importBookmarksHTML", true);
-
-// Show infobar on chromeless windows
-pref("browser.warn_chromeless_window.infobar", false);
 
 // if false, will add the "Places" folder to the personal toolbar
 pref("browser.places.createdDefaultQueries", false);

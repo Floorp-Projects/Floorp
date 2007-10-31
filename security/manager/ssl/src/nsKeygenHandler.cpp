@@ -478,7 +478,7 @@ GetSlotWithMechanism(PRUint32 aMechanism,
         rv = NS_ERROR_NOT_AVAILABLE;
       }
       else {
-    		rv = dialogs->ChooseToken(nsnull, (const PRUnichar**)tokenNameList, numSlots, &unicodeTokenChosen, &canceled);
+        rv = dialogs->ChooseToken(m_ctx, (const PRUnichar**)tokenNameList, numSlots, &unicodeTokenChosen, &canceled);
       }
     }
 		NS_RELEASE(dialogs);

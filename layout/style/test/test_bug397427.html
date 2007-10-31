@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=397427
+-->
+<head>
+  <title>Test for Bug 397427</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style id="a">
+    @import url("redirect-1.css");
+    @import url("redirect-2.css");
+    .test { color: red }
+  </style>
+  <link id="b" rel="stylesheet" href="http://example.com">
+  <link id="c" rel="stylesheet" href="redirect-2.css">
+  <link id="d" rel="stylesheet" href="redirect-3.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=397427">Mozilla Bug 397427</a>
+<p id="display">
+<span id="one" class="test"></span>
+<span id="two" class="test"></span>
+<span id="three" class="test"></span>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 397427 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  is($("a").sheet.href, null, "href should be null");
+  is(typeof($("a").sheet.href), "object", "should be actual null");
+
+  // Make sure the redirected sheets are loaded and have the right base URI
+  is(document.defaultView.getComputedStyle($("one"), "").color,
+     "rgb(0, 128, 0)", "Redirect 1 did not work");
+  is(document.defaultView.getComputedStyle($("one"), "").backgroundImage,
+     "url(http://example.org/tests/layout/style/test/post-redirect-1.css#)",
+      "Redirect 1 did not get right base URI");
+  is(document.defaultView.getComputedStyle($("two"), "").color,
+     "rgb(0, 128, 0)", "Redirect 2 did not work");
+  is(document.defaultView.getComputedStyle($("two"), "").backgroundImage,
+     "url(http://example.org/tests/layout/style/test/post-redirect-2.css#)",
+      "Redirect 2 did not get right base URI");
+  is(document.defaultView.getComputedStyle($("three"), "").color,
+     "rgb(0, 128, 0)", "Redirect 3 did not work");
+  is(document.defaultView.getComputedStyle($("three"), "").backgroundImage,
+     "url(http://example.org/tests/layout/style/test/post-redirect-3.css#)",
+      "Redirect 3 did not get right base URI");
+
+  var ruleList = $("a").sheet.cssRules;
+  
+  is(ruleList[0].styleSheet.href,
+     window.location.href.replace(/test_bug397427.html$/, "redirect-1.css"),
+     "Unexpected href for imported sheet");
+  todo(ruleList[0].href == window.location.href.replace(/test_bug397427.html$/, "redirect-1.css"),
+       "Rule href should be absolute");
+  is(ruleList[1].styleSheet.href,
+     window.location.href.replace(/test_bug397427.html$/, "redirect-2.css"),
+     "Unexpected href for imported sheet");
+  todo(ruleList[1].href == window.location.href.replace(/test_bug397427.html$/, "redirect-2.css"),
+       "Rule href should be absolute");
+
+  is($("b").href, "http://example.com/", "Unexpected href one");
+  is($("b").href, $("b").sheet.href,
+     "Should have the same href when not redirecing");
+
+  is($("c").href,
+     window.location.href.replace(/test_bug397427.html$/, "redirect-2.css"),
+     "Unexpected href two");
+  is($("c").href, $("c").sheet.href,
+     "Should have the same href when redirecting");
+     
+  is($("d").href,
+     window.location.href.replace(/test_bug397427.html$/, "redirect-3.css"),
+     "Unexpected href three");
+  is($("d").href, $("d").sheet.href,
+     "Should have the same href when redirecting again");
+})
+
+addLoadEvent(SimpleTest.finish);
+</script>
+</pre>
+</body>
+</html>
+

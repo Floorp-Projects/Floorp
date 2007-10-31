@@ -215,6 +215,87 @@ typedef struct {
 
 #define MD_CONTEXT_CPU_MASK 0xffffffc0
 
+/*
+ * SPARC support, see (solaris)sys/procfs_isa.h also
+ */
+
+#define MD_FLOATINGSAVEAREA_SPARC_FPR_COUNT 32
+
+typedef struct {
+
+  /* FPU floating point regs */
+  u_int64_t	regs[MD_FLOATINGSAVEAREA_SPARC_FPR_COUNT];
+
+  u_int64_t	filler;
+  u_int64_t	fsr;        /* FPU status register */
+} MDFloatingSaveAreaSPARC;  /* FLOATING_SAVE_AREA */
+
+#define MD_CONTEXT_SPARC_GPR_COUNT 32
+
+typedef struct {
+  /* The next field determines the layout of the structure, and which parts
+   * of it are populated
+   */
+  u_int32_t	context_flags;
+  u_int32_t	flag_pad;
+  /*
+   * General register access (SPARC).
+   * Don't confuse definitions here with definitions in <sys/regset.h>.
+   * Registers are 32 bits for ILP32, 64 bits for LP64.
+   * SPARC V7/V8 is for 32bit, SPARC V9 is for 64bit
+   */
+
+  /* 32 Integer working registers */
+
+  /* g_r[0-7]   global registers(g0-g7)
+   * g_r[8-15]  out registers(o0-o7)
+   * g_r[16-23] local registers(l0-l7)
+   * g_r[24-31] in registers(i0-i7)
+   */
+  u_int64_t     g_r[MD_CONTEXT_SPARC_GPR_COUNT];
+
+  /* several control registers */
+
+  /* Processor State register(PSR) for SPARC V7/V8
+   * Condition Code register (CCR) for SPARC V9
+   */
+  u_int64_t     ccr;
+
+  u_int64_t     pc;     /* Program Counter register (PC) */
+  u_int64_t     npc;    /* Next Program Counter register (nPC) */
+  u_int64_t     y;      /* Y register (Y) */
+
+  /* Address Space Identifier register (ASI) for SPARC V9
+   * WIM for SPARC V7/V8
+   */
+  u_int64_t     asi;
+
+  /* Floating-Point Registers State register (FPRS) for SPARC V9
+   * TBR for for SPARC V7/V8
+   */
+  u_int64_t     fprs;
+
+  /* The next field is included with MD_CONTEXT_SPARC_FLOATING_POINT */
+  MDFloatingSaveAreaSPARC float_save;
+
+} MDRawContextSPARC;  /* CONTEXT_SPARC */
+
+/* For (MDRawContextSPARC).context_flags.  These values indicate the type of
+ * context stored in the structure.  MD_CONTEXT_SPARC is Breakpad-defined.  Its
+ * value was chosen to avoid likely conflicts with MD_CONTEXT_* for other
+ * CPUs. */
+#define MD_CONTEXT_SPARC                 0x10000000
+#define MD_CONTEXT_SPARC_CONTROL         (MD_CONTEXT_SPARC | 0x00000001)
+#define MD_CONTEXT_SPARC_INTEGER         (MD_CONTEXT_SPARC | 0x00000002)
+#define MD_CONTEXT_SAPARC_FLOATING_POINT (MD_CONTEXT_SPARC | 0x00000004)
+#define MD_CONTEXT_SAPARC_EXTRA          (MD_CONTEXT_SPARC | 0x00000008)
+
+#define MD_CONTEXT_SPARC_FULL            (MD_CONTEXT_SPARC_CONTROL | \
+                                          MD_CONTEXT_SPARC_INTEGER)
+
+#define MD_CONTEXT_SPARC_ALL             (MD_CONTEXT_SPARC_FULL | \
+                                          MD_CONTEXT_SAPARC_FLOATING_POINT | \
+                                          MD_CONTEXT_SAPARC_EXTRA)
 
 /*
  * Breakpad minidump extension for PowerPC support.  Based on Darwin/Mac OS X'
@@ -928,6 +1009,54 @@ typedef enum {
   MD_EXCEPTION_CODE_LIN_SIGPWR = 30,     /* Power failure restart (System V) */
   MD_EXCEPTION_CODE_LIN_SIGSYS = 31      /* Bad system call */
 } MDExceptionCodeLinux;
+
+/* For (MDException).exception_code.  These values come from sys/iso/signal_iso.h
+ */
+typedef enum {
+  MD_EXCEPTION_CODE_SOL_SIGHUP = 1,      /* Hangup */
+  MD_EXCEPTION_CODE_SOL_SIGINT = 2,      /* interrupt (rubout) */
+  MD_EXCEPTION_CODE_SOL_SIGQUIT = 3,     /* quit (ASCII FS) */
+  MD_EXCEPTION_CODE_SOL_SIGILL = 4,      /* illegal instruction (not reset when caught) */
+  MD_EXCEPTION_CODE_SOL_SIGTRAP = 5,     /* trace trap (not reset when caught) */
+  MD_EXCEPTION_CODE_SOL_SIGIOT = 6,      /* IOT instruction */
+  MD_EXCEPTION_CODE_SOL_SIGABRT = 6,     /* used by abort, replace SIGIOT in the future */
+  MD_EXCEPTION_CODE_SOL_SIGEMT = 7,      /* EMT instruction */
+  MD_EXCEPTION_CODE_SOL_SIGFPE = 8,      /* floating point exception */
+  MD_EXCEPTION_CODE_SOL_SIGKILL = 9,     /* kill (cannot be caught or ignored) */
+  MD_EXCEPTION_CODE_SOL_SIGBUS = 10,     /* bus error */
+  MD_EXCEPTION_CODE_SOL_SIGSEGV = 11,    /* segmentation violation */
+  MD_EXCEPTION_CODE_SOL_SIGSYS = 12,     /* bad argument to system call */
+  MD_EXCEPTION_CODE_SOL_SIGPIPE = 13,    /* write on a pipe with no one to read it */
+  MD_EXCEPTION_CODE_SOL_SIGALRM = 14,    /* alarm clock */
+  MD_EXCEPTION_CODE_SOL_SIGTERM = 15,    /* software termination signal from kill */
+  MD_EXCEPTION_CODE_SOL_SIGUSR1 = 16,    /* user defined signal 1 */
+  MD_EXCEPTION_CODE_SOL_SIGUSR2 = 17,    /* user defined signal 2 */
+  MD_EXCEPTION_CODE_SOL_SIGCLD = 18,     /* child status change */
+  MD_EXCEPTION_CODE_SOL_SIGCHLD = 18,    /* child status change alias (POSIX) */
+  MD_EXCEPTION_CODE_SOL_SIGPWR = 19,     /* power-fail restart */
+  MD_EXCEPTION_CODE_SOL_SIGWINCH = 20,   /* window size change */
+  MD_EXCEPTION_CODE_SOL_SIGURG = 21,     /* urgent socket condition */
+  MD_EXCEPTION_CODE_SOL_SIGPOLL = 22,    /* pollable event occured */
+  MD_EXCEPTION_CODE_SOL_SIGIO = 22,      /* socket I/O possible (SIGPOLL alias) */
+  MD_EXCEPTION_CODE_SOL_SIGSTOP = 23,    /* stop (cannot be caught or ignored) */
+  MD_EXCEPTION_CODE_SOL_SIGTSTP = 24,    /* user stop requested from tty */
+  MD_EXCEPTION_CODE_SOL_SIGCONT = 25,    /* stopped process has been continued */
+  MD_EXCEPTION_CODE_SOL_SIGTTIN = 26,    /* background tty read attempted */
+  MD_EXCEPTION_CODE_SOL_SIGTTOU = 27,    /* background tty write attempted */
+  MD_EXCEPTION_CODE_SOL_SIGVTALRM = 28,  /* virtual timer expired */
+  MD_EXCEPTION_CODE_SOL_SIGPROF = 29,    /* profiling timer expired */
+  MD_EXCEPTION_CODE_SOL_SIGXCPU = 30,    /* exceeded cpu limit */
+  MD_EXCEPTION_CODE_SOL_SIGXFSZ = 31,    /* exceeded file size limit */
+  MD_EXCEPTION_CODE_SOL_SIGWAITING = 32, /* reserved signal no longer used by threading code */
+  MD_EXCEPTION_CODE_SOL_SIGLWP = 33,     /* reserved signal no longer used by threading code */
+  MD_EXCEPTION_CODE_SOL_SIGFREEZE = 34,  /* special signal used by CPR */
+  MD_EXCEPTION_CODE_SOL_SIGTHAW = 35,    /* special signal used by CPR */
+  MD_EXCEPTION_CODE_SOL_SIGCANCEL = 36,  /* reserved signal for thread cancellation */
+  MD_EXCEPTION_CODE_SOL_SIGLOST = 37,    /* resource lost (eg, record-lock lost) */
+  MD_EXCEPTION_CODE_SOL_SIGXRES = 38,    /* resource control exceeded */
+  MD_EXCEPTION_CODE_SOL_SIGJVM1 = 39,    /* reserved signal for Java Virtual Machine */
+  MD_EXCEPTION_CODE_SOL_SIGJVM2 = 40     /* reserved signal for Java Virtual Machine */
+} MDExceptionCodeSolaris;
 
 typedef struct {
   u_int32_t            thread_id;         /* Thread in which the exception

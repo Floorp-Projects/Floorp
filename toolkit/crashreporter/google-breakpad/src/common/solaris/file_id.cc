@@ -36,8 +36,6 @@
 #include <elf.h>
 #include <fcntl.h>
 #include <gelf.h>
-#include <gnutls/openssl.h>
-#include <link.h>
 #include <sys/mman.h>
 #include <sys/ksyms.h>
 #include <stdio.h>
@@ -47,6 +45,7 @@
 #include <cassert>
 #include <cstdio>
 
+#include "common/md5.h"
 #include "common/solaris/file_id.h"
 #include "common/solaris/message_output.h"
 #include "google_breakpad/common/minidump_format.h"
@@ -130,7 +129,7 @@ static bool FindElfTextSection(int fd, const void *elf_base,
 }
 
 FileID::FileID(const char *path) {
-  strncpy(path_, path, strlen(path));
+  strcpy(path_, path);
 }
 
 class AutoCloser {
@@ -160,10 +159,10 @@ bool FileID::ElfFileIdentifier(unsigned char identifier[16]) {
   int text_size = 0;
 
   if (FindElfTextSection(fd, base, &text_section, &text_size)) {
-    MD5_CTX md5;
-    MD5_Init(&md5);
-    MD5_Update(&md5, text_section, text_size);
-    MD5_Final(identifier, &md5);
+    MD5Context md5;
+    MD5Init(&md5);
+    MD5Update(&md5, (const unsigned char *)text_section, text_size);
+    MD5Final(identifier, &md5);
     success = true;
   }
 

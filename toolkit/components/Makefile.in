@@ -58,6 +58,7 @@ DIRS += \
 
 ifdef MOZ_XUL_APP
 DIRS += \
+	apppicker \
 	filepicker \
 	console \
 	viewconfig \

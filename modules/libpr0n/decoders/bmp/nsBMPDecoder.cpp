@@ -122,17 +122,32 @@ NS_IMETHODIMP nsBMPDecoder::Flush()
 
 NS_METHOD nsBMPDecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
                              const char* aFromRawSegment, PRUint32 aToOffset,
-                             PRUint32 aCount, PRUint32 *aWriteCount) {
+                             PRUint32 aCount, PRUint32 *aWriteCount) 
+{
     nsBMPDecoder *decoder = reinterpret_cast<nsBMPDecoder*>(aClosure);
     *aWriteCount = aCount;
-    return decoder->ProcessData(aFromRawSegment, aCount);
+    
+    nsresult rv = decoder->ProcessData(aFromRawSegment, aCount);
+
+    if (NS_FAILED(rv)) {
+        *aWriteCount = 0;
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, PRUint32 *aRetval)
 {
     PR_LOG(gBMPLog, PR_LOG_DEBUG, ("nsBMPDecoder::WriteFrom(%p, %lu, %p)\n", aInStr, aCount, aRetval));
 
-    return aInStr->ReadSegments(ReadSegCb, this, aCount, aRetval);
+    nsresult rv = aInStr->ReadSegments(ReadSegCb, this, aCount, aRetval);
+    
+    if (aCount != *aRetval) { 
+        *aRetval = aCount; 
+        return NS_ERROR_FAILURE; 
+    }
+    
+    return rv;    
 }
 
 // ----------------------------------------

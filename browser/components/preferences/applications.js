@@ -718,6 +718,14 @@ var feedHandlerInfo = {
       this.element(PREF_FEED_SELECTED_ACTION).value = "reader";
   },
 
+  // Whether or not we are currently storing the action selected by the user.
+  // We use this to suppress notification-triggered updates to the list when
+  // we make changes that may spawn such updates, specifically when we change
+  // the action for the feed type, which results in feed preference updates,
+  // which spawn "pref changed" notifications that would otherwise cause us
+  // to rebuild the view unnecessarily.
+  _storingAction: false,
+
 
   //**************************************************************************//
   // nsIMIMEInfo
@@ -881,7 +889,7 @@ var gApplicationsPane = {
   observe: function (aSubject, aTopic, aData) {
     // Rebuild the list when there are changes to preferences that influence
     // whether or not to show certain entries in the list.
-    if (aTopic == "nsPref:changed") {
+    if (aTopic == "nsPref:changed" && !this._storingAction) {
       // These two prefs alter the list of visible types, so we have to rebuild
       // that list when they change.
       if (aData == PREF_SHOW_PLUGINS_IN_LIST ||
@@ -1450,6 +1458,17 @@ var gApplicationsPane = {
   // Changes
 
   onSelectAction: function(aActionItem) {
+    this._storingAction = true;
+
+    try {
+      this._storeAction(aActionItem);
+    }
+    finally {
+      this._storingAction = false;
+    }
+  },
+
+  _storeAction: function(aActionItem) {
     var typeItem = this._list.selectedItem;
     var handlerInfo = this._handledTypes[typeItem.type];
 
@@ -1499,12 +1518,42 @@ var gApplicationsPane = {
     // as we handle it specially ourselves.
     aEvent.stopPropagation();
 
+    var handlerApp;
+
+#ifdef XP_WIN
+    var params = {};
+    var handlerInfo = this._handledTypes[this._list.selectedItem.type];
+
+    if (handlerInfo.type == TYPE_MAYBE_FEED) {
+      // MIME info will be null, create a temp object.
+      params.mimeInfo = this._mimeSvc.getFromTypeAndExtension(handlerInfo.type, 
+                                                 handlerInfo.primaryExtension);
+    } else {
+      params.mimeInfo = handlerInfo.wrappedHandlerInfo;
+    }
+
+    params.title         = this._prefsBundle.getString("fpTitleChooseApp");
+    params.description   = handlerInfo.description;
+    params.filename      = null;
+    params.handlerApp    = null;
+
+    window.openDialog("chrome://global/content/appPicker.xul", null,
+                      "chrome,modal,centerscreen,titlebar,dialog=yes",
+                      params);
+
+    if (params.handlerApp && 
+        params.handlerApp.executable && 
+        params.handlerApp.executable.isFile()) {
+      handlerApp = params.handlerApp;
+
+      // Add the app to the type's list of possible handlers.
+      handlerInfo.possibleApplicationHandlers.appendElement(handlerApp, false);
+    }
+#else
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     var winTitle = this._prefsBundle.getString("fpTitleChooseApp");
     fp.init(window, winTitle, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
-
-    var handlerApp;
 
     // Prompt the user to pick an app.  If they pick one, and it's a valid
     // selection, then add it to the list of possible handlers.
@@ -1519,6 +1568,7 @@ var gApplicationsPane = {
       let handlerInfo = this._handledTypes[this._list.selectedItem.type];
       handlerInfo.possibleApplicationHandlers.appendElement(handlerApp, false);
     }
+#endif
 
     // Rebuild the actions menu whether the user picked an app or canceled.
     // If they picked an app, we want to add the app to the menu and select it.

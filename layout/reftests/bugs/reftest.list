@@ -30,6 +30,8 @@
 == 18217-zorder-3.html 18217-zorder-ref-inline.html
 == 18217-zorder-4.html 18217-zorder-ref-inline-table.html
 == 18217-zorder-5.html 18217-zorder-ref-inline-table.html
+== 23604-1.html 23604-1-ref.html
+== 23604-2.html 23604-2-ref.html
 fails == 25888-1l.html 25888-1l-ref.html # bug 25888
 fails != 25888-1l.html 25888-1l-notref.html # bug 25888
 fails == 25888-1r.html 25888-1r-ref.html # bug 25888
@@ -101,6 +103,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
 == 244135-1.html 244135-1-ref.html
+== 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
 == 249982-1.html 249982-1-ref.html
 == 253701-1.html 253701-1-ref.html
@@ -127,6 +130,12 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 != 315620-1b.html 315620-1-ref.html
 == 315620-2a.xhtml 315620-2-ref.xhtml
 != 315620-2b.xhtml 315620-2-ref.xhtml
+!= 321402-1.html about:blank
+!= 321402-2.html about:blank
+== 321402-3.xul 321402-3-ref.xul
+== 321402-4.xul 321402-4-ref.xul
+== 321402-5.xul 321402-5-ref.xul
+== 321402-6.xul 321402-6-ref.xul
 == 322461-1.xml 322461-1-ref.html
 == 323656-1.html 323656-1-ref.html
 == 323656-2.html 323656-2-ref.html
@@ -149,7 +158,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 335628-1.html 335628-1-ref.html
 != 335628-2.xul 335628-2-ref.xul
 == 336147-1.html 336147-1-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 336736-1.html 336736-1-ref.html # something wrong with subpixel horizontal alignment (tracked in bug 336736)
+== 336736-1a.html 336736-1-ref.html
+== 336736-1b.html 336736-1-ref.html
 == 339289-1.html 339289-1-ref.html
 == 341043-1a.html 341043-1-ref.html
 != 341043-1b.html 341043-1-ref.html
@@ -313,8 +323,9 @@ fails == 368504-2.html 368504-2-ref.html # bug 368504
 == 372768-1.html 372768-1-ref.html
 == 373383-1.html 373383-1-ref.html
 == 374038-1.xul 374038-1-ref.xul
-== 374038-2.xul 374038-2-ref.xul
+random == 374038-2.xul 374038-2-ref.xul # bug 401176
 == 374193-1.xhtml about:blank
+fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
 == 375716-1.html 375716-1-ref.html
 == 375827-1.html 375827-1-ref.html
 == 376484-1.html 376484-1-ref.html
@@ -379,6 +390,7 @@ fails == 386310-1d.html 386310-1-ref.html
 == 387876-2.html 387876-2-ref.html
 == 387876-3a.html 387876-3-ref.html
 == 387876-3b.html 387876-3-ref.html
+== 389468-1.html 389468-1-ref.html
 == 389636-1.html about:blank  # assertion test
 == 389924-1a.html 389924-1-ref.html
 == 389924-1b.html 389924-1-ref.html
@@ -387,6 +399,8 @@ fails == 386310-1d.html 386310-1-ref.html
 == 390318-1b.html 390318-1-ref.html
 == 391045.html 391045-ref.html # windows-specific bug, appears to pass on other platforms because of missing fonts
 == 391140-1.html 391140-1-ref.html
+== 391412-1a.html 391412-1-ref.html
+== 391412-1b.html 391412-1-ref.html
 == 391909-1.html 391909-1-ref.html
 == 391994-1.html 391994-1-ref.html
 == 392435-1.html 392435-1-ref.html
@@ -403,3 +417,5 @@ fails == 386310-1d.html 386310-1-ref.html
 == 395331-1.xml 395331-1-ref.xml
 == 396286-1.html about:blank  # crash test
 == 398289-1.html 398289-1-ref.html
+== 399384-1.html 399384-1-ref.html
+== 400421-1.html 400421-1-ref.html

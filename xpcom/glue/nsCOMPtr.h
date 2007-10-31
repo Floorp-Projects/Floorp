@@ -393,7 +393,7 @@ inline
 void
 do_QueryInterface( already_AddRefed<T>& )
   {
-    // This signature exists soley to _stop_ you from doing the bad thing.
+    // This signature exists solely to _stop_ you from doing the bad thing.
     //  Saying |do_QueryInterface()| on a pointer that is not otherwise owned by
     //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
   }
@@ -403,7 +403,7 @@ inline
 void
 do_QueryInterface( already_AddRefed<T>&, nsresult* )
   {
-    // This signature exists soley to _stop_ you from doing the bad thing.
+    // This signature exists solely to _stop_ you from doing the bad thing.
     //  Saying |do_QueryInterface()| on a pointer that is not otherwise owned by
     //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
   }

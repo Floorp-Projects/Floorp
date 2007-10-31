@@ -209,6 +209,16 @@ STDMETHODIMP nsDataObj::CStream::Seek(LARGE_INTEGER nMove,
                                       DWORD dwOrigin,
                                       ULARGE_INTEGER* nNewPos)
 {
+  if (nNewPos == NULL)
+    return STG_E_INVALIDPOINTER;
+
+  if (nMove.LowPart == 0 && nMove.HighPart == 0 &&
+      (dwOrigin == STREAM_SEEK_SET || dwOrigin == STREAM_SEEK_CUR)) { 
+    nNewPos->LowPart = 0;
+    nNewPos->HighPart = 0;
+    return S_OK;
+  }
+
   return E_NOTIMPL;
 }
 
@@ -221,7 +231,63 @@ STDMETHODIMP nsDataObj::CStream::SetSize(ULARGE_INTEGER nNewSize)
 //-----------------------------------------------------------------------------
 STDMETHODIMP nsDataObj::CStream::Stat(STATSTG* statstg, DWORD dwFlags)
 {
-  return E_NOTIMPL;
+  if (statstg == NULL)
+    return STG_E_INVALIDPOINTER;
+
+  if (!mChannel)
+    return E_FAIL;
+
+  memset((void*)statstg, 0, sizeof(STATSTG));
+
+  if (dwFlags != STATFLAG_NONAME) 
+  {
+    nsCOMPtr<nsIURI> sourceURI;
+    if (NS_FAILED(mChannel->GetURI(getter_AddRefs(sourceURI)))) {
+      return E_FAIL;
+    }
+
+    nsCAutoString strFileName;
+    nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(sourceURI);
+    sourceURL->GetFileName(strFileName);
+
+    if (strFileName.IsEmpty())
+      return E_FAIL;
+
+    NS_UnescapeURL(strFileName);
+    NS_ConvertUTF8toUTF16 wideFileName(strFileName);
+
+    PRUint32 nMaxNameLength = (wideFileName.Length()*2) + 2;
+    void * retBuf = CoTaskMemAlloc(nMaxNameLength); // freed by caller
+    if (!retBuf) 
+      return STG_E_INSUFFICIENTMEMORY;
+
+    ZeroMemory(retBuf, nMaxNameLength);
+    memcpy(retBuf, wideFileName.get(), wideFileName.Length()*2);
+    statstg->pwcsName = (LPOLESTR)retBuf;
+  }
+
+  SYSTEMTIME st;
+  FILETIME ft;
+
+  statstg->type = STGTY_STREAM;
+
+  GetSystemTime(&st);
+  SystemTimeToFileTime((const SYSTEMTIME*)&st, (LPFILETIME)&statstg->mtime);
+  statstg->ctime = statstg->atime = statstg->mtime;
+
+  PRInt32 nLength = 0;
+  if (mChannel)
+    mChannel->GetContentLength(&nLength);
+
+  if (nLength < 0) 
+    nLength = 0;
+
+  statstg->cbSize.LowPart = (DWORD)nLength;
+  statstg->grfMode = STGM_READ;
+  statstg->grfLocksSupported = LOCK_ONLYONCE;
+  statstg->clsid = CLSID_NULL;
+
+  return S_OK;
 }
 
 //-----------------------------------------------------------------------------

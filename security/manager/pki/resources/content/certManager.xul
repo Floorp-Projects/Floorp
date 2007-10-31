@@ -64,11 +64,11 @@
     <tabbox id="certmanagertabs" flex="1" style="margin:5px" persist="selectedIndex">
       <tabs id="certMgrTabbox">
         <tab id="mine_tab" label="&certmgr.tab.mine;"/>
-        <tab id="others_tab" label="&certmgr.tab.others;"/>
+        <tab id="others_tab" label="&certmgr.tab.others2;"/>
         <tab id="websites_tab" label="&certmgr.tab.websites3;"/>
         <!-- FIXME Add selected="true" to ca_tab when 373525 gets fixed. -->
         <tab id="ca_tab" label="&certmgr.tab.ca;"/>
-        <tab id="orphan_tab" label="&certmgr.tab.orphan;"/>
+        <tab id="orphan_tab" label="&certmgr.tab.orphan2;"/>
       </tabs>
       <tabpanels flex="1">
         <vbox id="myCerts" flex="1"/>

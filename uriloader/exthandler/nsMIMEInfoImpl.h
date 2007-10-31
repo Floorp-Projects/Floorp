@@ -95,6 +95,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction);
     NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling);
     NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling); 
+    NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval); 
 
     enum HandlerClass {
       eMIMEInfo,

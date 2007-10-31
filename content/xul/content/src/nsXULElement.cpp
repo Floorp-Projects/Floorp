@@ -55,7 +55,6 @@
  *                               use in OS2
  */
 
-#include "jsapi.h"      // for JS_AddNamedRoot and JS_RemoveRootRT
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
@@ -64,6 +63,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
+#include "nsIBaseWindow.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -702,7 +702,8 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mElement->GetOwnerDoc());
 
     nsIScriptContext *context;
-    if (mElement->mPrototype && xuldoc) {
+    nsXULPrototypeElement *elem = mElement->mPrototype;
+    if (elem && xuldoc) {
         // It'll be shared among the instances of the prototype.
 
         // Use the prototype document's special context.  Because
@@ -755,9 +756,16 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheFills);
         // take a copy of the event handler, and tell the language about it.
         if (aHandler) {
+            NS_ASSERTION(!attr->mEventHandler, "Leaking handler.");
+
             rv = nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(),
-                                                  aHandler);
+                                                  elem,
+                                                  &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode),
+                                                  aHandler,
+                                                  elem->mHoldsScriptObject);
             if (NS_FAILED(rv)) return rv;
+
+            elem->mHoldsScriptObject = PR_TRUE;
         }
         attr->mEventHandler = (void *)aHandler;
     }
@@ -1048,8 +1056,20 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             HideWindowChrome(aValue && NS_LITERAL_STRING("true").Equals(*aValue));
         }
 
-        // handle :read-only/:read-write
+        // titlebarcolor is settable on any root node (windows, dialogs, etc)
         nsIDocument *document = GetCurrentDoc();
+        if (aName == nsGkAtoms::titlebarcolor &&
+            document && document->GetRootContent() == this) {
+
+            nscolor color = NS_RGBA(0, 0, 0, 0);
+            nsAttrValue attrValue;
+            attrValue.ParseColor(*aValue, document);
+            attrValue.GetColorValue(color);
+
+            SetTitlebarColor(color);
+        }
+
+        // handle :read-only/:read-write
         if (aName == nsGkAtoms::readonly && document) {
             mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
             document->ContentStatesChanged(this, nsnull,
@@ -1289,6 +1309,12 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         if (aName == nsGkAtoms::hidechrome &&
             mNodeInfo->Equals(nsGkAtoms::window)) {
             HideWindowChrome(PR_FALSE);
+        }
+
+        if (aName == nsGkAtoms::titlebarcolor &&
+            doc && doc->GetRootContent() == this) {
+            // Use 0, 0, 0, 0 as the "none" color.
+            SetTitlebarColor(NS_RGBA(0, 0, 0, 0));
         }
 
         // If the accesskey attribute is removed, unregister it here
@@ -2284,6 +2310,28 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
     return NS_OK;
 }
 
+void
+nsXULElement::SetTitlebarColor(nscolor aColor)
+{
+    nsIDocument* doc = GetCurrentDoc();
+    if (!doc || doc->GetRootContent() != this) {
+        return;
+    }
+
+    // only top level chrome documents can set the titlebar color
+    if (!doc->GetParentDocument()) {
+        nsCOMPtr<nsISupports> container = doc->GetContainer();
+        nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
+        if (baseWindow) {
+            nsCOMPtr<nsIWidget> mainWidget;
+            baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+            if (mainWidget) {
+                mainWidget->SetWindowTitlebarColor(aColor);
+            }
+        }
+    }
+}
+
 PRBool
 nsXULElement::BoolAttrIsTrue(nsIAtom* aName)
 {
@@ -2351,26 +2399,40 @@ nsXULElement::RecompileScriptEventListeners()
     }
 }
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXULPrototypeNode)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsXULPrototypeNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
         nsXULPrototypeElement *elem =
             static_cast<nsXULPrototypeElement*>(tmp);
         PRUint32 i;
-        for (i = 0; i < elem->mNumAttributes; ++i) {
-            cb.NoteScriptChild(elem->mScriptTypeID,
-                               elem->mAttributes[i].mEventHandler);
-        }
         for (i = 0; i < elem->mNumChildren; ++i) {
             NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i],
                                                          nsXULPrototypeNode)
         }
     }
-    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
-        static_cast<nsXULPrototypeScript*>(tmp)->mScriptObject.traverse(cb);
-    }
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_NATIVE_BEGIN(nsXULPrototypeNode)
+    if (tmp->mType == nsXULPrototypeNode::eType_Element) {
+        nsXULPrototypeElement *elem =
+            static_cast<nsXULPrototypeElement*>(tmp);
+        if (elem->mHoldsScriptObject) {
+            PRUint32 i;
+            for (i = 0; i < elem->mNumAttributes; ++i) {
+                void *handler = elem->mAttributes[i].mEventHandler;
+                NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(elem->mScriptTypeID,
+                                                        handler)
+            }
+        }
+    }
+    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+        nsXULPrototypeScript *script =
+            static_cast<nsXULPrototypeScript*>(tmp);
+        NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(script->mScriptObject.mLangID,
+                                                script->mScriptObject.mObject)
+    }
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXULPrototypeNode, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXULPrototypeNode, Release)
 
@@ -2382,17 +2444,6 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXULPrototypeNode, Release)
 nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 {
     MOZ_COUNT_DTOR(nsXULPrototypeAttribute);
-    NS_ASSERTION(!mEventHandler, "Finalize not called - language object leak!");
-}
-
-void
-nsXULPrototypeAttribute::Finalize(PRUint32 aLangID)
-{
-    if (mEventHandler) {
-        if (NS_FAILED(nsContentUtils::DropScriptObject(aLangID, mEventHandler)))
-            NS_ERROR("Failed to drop script object");
-        mEventHandler = nsnull;
-    }
 }
 
 
@@ -2679,6 +2730,19 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
     return NS_OK;
 }
 
+void
+nsXULPrototypeElement::Unlink()
+{
+    if (mHoldsScriptObject) {
+        nsContentUtils::DropScriptObjects(mScriptTypeID, this,
+                                          &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        mHoldsScriptObject = PR_FALSE;
+    }
+    mNumAttributes = 0;
+    delete[] mAttributes;
+    mAttributes = nsnull;
+}
+
 //----------------------------------------------------------------------
 //
 // nsXULPrototypeScript
@@ -2701,6 +2765,7 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLangID, PRUint32 aLineNo, P
 
 nsXULPrototypeScript::~nsXULPrototypeScript()
 {
+    Unlink();
 }
 
 nsresult
@@ -2818,7 +2883,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
         NS_WARNING("Language deseralization failed");
         return rv;
     }
-    mScriptObject.set(newScriptObject);
+    Set(newScriptObject);
     return NS_OK;
 }
 
@@ -2871,7 +2936,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
                         NS_ERROR("XUL cache gave different language?");
                         return NS_ERROR_UNEXPECTED;
                     }
-                    mScriptObject.set(newScriptObject);
+                    Set(newScriptObject);
                 }
             }
         }
@@ -2997,7 +3062,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     if (NS_FAILED(rv))
         return rv;
 
-    mScriptObject.set(newScriptObject);
+    Set(newScriptObject);
     return rv;
 }
 

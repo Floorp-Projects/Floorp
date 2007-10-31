@@ -43,6 +43,8 @@
 		9BE650B50B52FE3000611104 /* macho_id.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9BE650AF0B52FE3000611104 /* macho_id.h */; };
 		9BE650B60B52FE3000611104 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BE650B00B52FE3000611104 /* macho_walker.cc */; };
 		9BE650B70B52FE3000611104 /* macho_walker.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9BE650B10B52FE3000611104 /* macho_walker.h */; };
+		FD8EDEAE0CADDAD400A5EDF1 /* stackwalker_sparc.cc in Sources */ = {isa = PBXBuildFile; fileRef = FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */; };
+		FD8EDEAF0CADDAD400A5EDF1 /* stackwalker_sparc.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -69,6 +71,7 @@
 				9BE650B70B52FE3000611104 /* macho_walker.h in CopyFiles */,
 				9B44619E0B66C66B00BBB817 /* system_info.h in CopyFiles */,
 				557800410BE1F28500EC23E0 /* macho_utilities.h in CopyFiles */,
+				FD8EDEAF0CADDAD400A5EDF1 /* stackwalker_sparc.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -123,6 +126,8 @@
 		9BE650AF0B52FE3000611104 /* macho_id.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_id.h; path = ../../../common/mac/macho_id.h; sourceTree = SOURCE_ROOT; };
 		9BE650B00B52FE3000611104 /* macho_walker.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_walker.cc; path = ../../../common/mac/macho_walker.cc; sourceTree = SOURCE_ROOT; };
 		9BE650B10B52FE3000611104 /* macho_walker.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_walker.h; path = ../../../common/mac/macho_walker.h; sourceTree = SOURCE_ROOT; };
+		FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = stackwalker_sparc.cc; path = ../../../processor/stackwalker_sparc.cc; sourceTree = SOURCE_ROOT; };
+		FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = stackwalker_sparc.h; path = ../../../processor/stackwalker_sparc.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,6 +245,8 @@
 				9BDF17530B1B8BF900F8391B /* stackwalker.cc */,
 				9BDF17510B1B8BF900F8391B /* stackwalker_ppc.cc */,
 				9BDF17520B1B8BF900F8391B /* stackwalker_x86.cc */,
+				FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */,
+				FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */,
 			);
 			name = processor;
 			sourceTree = "<group>";
@@ -316,6 +323,7 @@
 				9BE650B60B52FE3000611104 /* macho_walker.cc in Sources */,
 				557800400BE1F28500EC23E0 /* macho_utilities.cc in Sources */,
 				8B40BDC00C0638E4009535AF /* logging.cc in Sources */,
+				FD8EDEAE0CADDAD400A5EDF1 /* stackwalker_sparc.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,6 +341,12 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+					_GLIBCXX_DEBUG_PEDANTIC,
+					_GLIBCXX_DEBUG,
+					_GLIBCPP_CONCEPT_CHECKS,
+				);
 				INSTALL_PATH = "$(HOME)/bin";
 				OTHER_LDFLAGS = "-lcrypto";
 				PRODUCT_NAME = crash_report;
@@ -350,7 +364,7 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				INSTALL_PATH = "$(HOME)/bin";

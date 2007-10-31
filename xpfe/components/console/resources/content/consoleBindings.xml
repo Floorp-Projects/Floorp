@@ -304,7 +304,7 @@
           <xul:box class="console-row-file" xbl:inherits="hidden=hideSource">
             <xul:label class="label" value="&errFile.label;"/>
             <xul:box class="console-error-source" xbl:inherits="url,line"/>
-            <spacer flex="1"/>
+            <xul:spacer flex="1"/>
             <xul:hbox class="lineNumberRow" xbl:inherits="line">
               <xul:label class="label" value="&errLine.label;"/>
               <xul:label class="label" xbl:inherits="value=line"/>

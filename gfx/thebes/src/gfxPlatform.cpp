@@ -155,7 +155,11 @@ gfxPlatform::~gfxPlatform()
     // but we're generally in the habit of trying to shut down as
     // cleanly as possible even in production code, so call this
     // cairo_debug_* function unconditionally.
+    //
+    // because cairo can assert and thus crash on shutdown, don't do this in release builds
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(NS_TRACE_MALLOC)
     cairo_debug_reset_static_data();
+#endif
 
 #if 0
     // It would be nice to do this (although it might need to be after

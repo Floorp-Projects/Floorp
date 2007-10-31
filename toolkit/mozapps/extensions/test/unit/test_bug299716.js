@@ -303,10 +303,13 @@ var next_test = function() {};
 
 function do_check_item(aItem, aVersion, aAddonsEntry) {
   if (aAddonsEntry.installed) {
-    do_check_neq(aItem, null);
-    do_check_eq(aItem.version, aVersion);
+    if (aItem == null)
+      do_throw("Addon " + aAddonsEntry.id + " wasn't detected");
+    if (aItem.version != aVersion)
+      do_throw("Addon " + aAddonsEntry.id + " was version " + aItem.version + " instead of " + aVersion);
   } else {
-    do_check_eq(aItem, null);
+    if (aItem != null)
+      do_throw("Addon " + aAddonsEntry.id + " was detected");
   }
 }
 
@@ -415,7 +418,7 @@ function run_test_pt3() {
 
   // Here, we have some bad items that try to update.  Pepto-Bismol time.
   try {
-    gEM.addDownloads(addonsArray, addonsArray.length, true);
+    gEM.addDownloads(addonsArray, addonsArray.length, null);
     do_throw("Shouldn't reach here!");
   } catch (e if (e instanceof Components.interfaces.nsIException &&
                  e.result == Components.results.NS_ERROR_ILLEGAL_VALUE)) {
@@ -429,7 +432,7 @@ function run_test_pt3() {
   }
 
   do_check_true(addonsArray.length > 0);
-  gEM.addDownloads(addonsArray, addonsArray.length, true);
+  gEM.addDownloads(addonsArray, addonsArray.length, null);
 }
 
 /**

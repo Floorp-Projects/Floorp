@@ -1703,30 +1703,21 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   nsAutoString current;
   if (NS_FAILED(GetDomain(current)))
     return NS_ERROR_FAILURE;
-  PRBool ok = PR_FALSE;
-  if (current.Equals(aDomain)) {
-    ok = PR_TRUE;
-  } else if (aDomain.Length() < current.Length()) {
-    nsAutoString suffix;
-    current.Right(suffix, aDomain.Length());
-    PRUnichar c = current.CharAt(current.Length() - aDomain.Length() - 1);
-    if (suffix.Equals(aDomain, nsCaseInsensitiveStringComparator()) &&
-        (c == '.')) {
-      // Using only a TLD is forbidden (bug 368700)
-      nsCOMPtr<nsIEffectiveTLDService> tldService =
-        do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-      if (!tldService)
-        return NS_ERROR_NOT_AVAILABLE;
+  PRBool ok = current.Equals(aDomain);
+  if (current.Length() > aDomain.Length() &&
+      StringEndsWith(current, aDomain, nsCaseInsensitiveStringComparator()) &&
+      current.CharAt(current.Length() - aDomain.Length() - 1) == '.') {
+    // Using only a TLD is forbidden (bug 368700)
+    nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+    if (!tldService)
+      return NS_ERROR_NOT_AVAILABLE;
 
-      NS_ConvertUTF16toUTF8 str(aDomain);
-      PRUint32 tldLength;
-      nsresult rv = tldService->GetEffectiveTLDLength(str, &tldLength);
-      if (NS_FAILED(rv))
-        return rv;
-
-      if (tldLength < str.Length())
-        ok = PR_TRUE;
-    }
+    // try to get the base domain; if this works, we're ok
+    NS_ConvertUTF16toUTF8 str(aDomain);
+    nsCAutoString etld;
+    nsresult rv = tldService->GetBaseDomainFromHost(str, 0, etld);
+    ok = NS_SUCCEEDED(rv);
   }
   if (!ok) {
     // Error: illegal domain
@@ -2219,6 +2210,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   if (root) {
     // Tear down the frames for the root element.
+    MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, PR_TRUE);
     nsNodeUtils::ContentRemoved(this, root, 0);
 
     // Put the root element back into the document, we don't notify
@@ -3740,6 +3732,16 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
   return NS_OK;
 }
 
+void
+nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
+{
+  nsDocument::EndUpdate(aUpdateType);
+
+  if (mUpdateNestLevel == 0 && mContentEditableCount > 0 != IsEditingOn()) {
+    EditingStateChanged();
+  }
+}
+
 nsresult
 nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
                                            PRInt32 aChange)
@@ -3749,7 +3751,8 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
 
   mContentEditableCount += aChange;
 
-  if (mParser) {
+  if (mParser ||
+      (mUpdateNestLevel > 0 && mContentEditableCount > 0 != IsEditingOn())) {
     return NS_OK;
   }
 

@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Federico Mena-Quintero <federico@novell.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -66,6 +67,16 @@ interface imgIContainer : nsISupports
   const long kDisposeKeep             =  1; // Leave frame, let new frame draw on top
   const long kDisposeClear            =  2; // Clear the frame's area, revealing bg
   const long kDisposeRestorePrevious  =  3; // Restore the previous (composited) frame
+  
+  /*
+   * "Blend" method indicates how the current image is combined with the
+   * previous image.
+   */
+  const long kBlendSource             =  0; // All color components of the frame, including alpha, 
+                                            // overwrite the current contents of the frame's 
+                                            // output buffer region
+  const long kBlendOver               =  1; // The frame should be composited onto the output buffer 
+                                            // based on its alpha, using a simple OVER operation
   
   /**
    * Create a new \a aWidth x \a aHeight sized image container.
@@ -144,4 +155,10 @@ interface imgIContainer : nsISupports
    * @note -1 means forever.
    */
   attribute long loopCount;
+
+  /* Methods to discard uncompressed images and restore them again */
+  [noscript] void setDiscardable(in string aMimeType);
+  [noscript] void addRestoreData([array, size_is(aCount), const] in char data,
+                                 in unsigned long aCount);
+  [noscript] void restoreDataDone();
 };

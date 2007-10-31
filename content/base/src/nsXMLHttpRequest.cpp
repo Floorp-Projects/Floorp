@@ -56,6 +56,7 @@
 #include "prprf.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSContextStack.h"
+#include "nsJSEnvironment.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsWeakPtr.h"
 #include "nsICharsetAlias.h"
@@ -1149,7 +1150,8 @@ IsSameOrigin(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
   rv = aChannel->GetURI(getter_AddRefs(channelURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsContentUtils::GetSecurityManager()->CheckSameOriginURI(codebase, channelURI);
+  rv = nsContentUtils::GetSecurityManager()->
+    CheckSameOriginURI(codebase, channelURI, PR_FALSE);
   return NS_SUCCEEDED(rv);
 }
 
@@ -1778,6 +1780,7 @@ nsXMLHttpRequest::RequestCompleted()
     ChangeState(XML_HTTP_REQUEST_OPENED);
   }
 
+  nsJSContext::MaybeCC(PR_FALSE);
   return rv;
 }
 
@@ -2320,6 +2323,7 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
     NotifyEventListeners(errorEventListeners, event);
   }
 
+  nsJSContext::MaybeCC(PR_FALSE);
   return NS_OK;
 }
 

@@ -1218,7 +1218,7 @@ struct nsStyleColumn : public nsStyleStruct {
 
 #ifdef MOZ_SVG
 enum nsStyleSVGPaintType {
-  eStyleSVGPaintType_None = 0,
+  eStyleSVGPaintType_None = 1,
   eStyleSVGPaintType_Color,
   eStyleSVGPaintType_Server
 };
@@ -1232,9 +1232,9 @@ struct nsStyleSVGPaint
   } mPaint;
   nscolor mFallbackColor;
 
-  // empty constructor to keep Sun compiler happy
-  nsStyleSVGPaint() {}
-  ~nsStyleSVGPaint(); 
+  nsStyleSVGPaint() : mType(nsStyleSVGPaintType(0)) { mPaint.mPaintServer = nsnull; }
+  ~nsStyleSVGPaint();
+  void SetType(nsStyleSVGPaintType aType);
   nsStyleSVGPaint& operator=(const nsStyleSVGPaint& aOther);
   PRBool operator==(const nsStyleSVGPaint& aOther) const; 
 
