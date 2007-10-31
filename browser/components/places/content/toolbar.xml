@@ -534,8 +534,11 @@
           }
 
           var iconURI = aNode.icon;
-          if (iconURI && element.getAttribute("image") != iconURI.spec)
-            element.setAttribute("image", iconURI.spec);
+          if (iconURI) {
+            var spec = iconURI.spec;
+            if (element.getAttribute("image") != spec)
+              element.setAttribute("image", spec);
+          }
           else
             element.removeAttribute("image");
 
