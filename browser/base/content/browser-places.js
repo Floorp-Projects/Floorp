@@ -50,7 +50,11 @@ var PlacesCommandHook = {
 
   // Edit-bookmark panel
   get panel() {
-    return document.getElementById("editBookmarkPanel");
+    delete this.panel;
+    var element = document.getElementById("editBookmarkPanel");
+    element.addEventListener("popuphiding", this, false);
+    element.addEventListener("keypress", this, true);
+    return this.panel = element;
   },
 
   // list of command elements (by id) to disable when the panel is opened
@@ -129,13 +133,15 @@ var PlacesCommandHook = {
     this._overlayLoading = true;
     document.loadOverlay("chrome://browser/content/places/editBookmarkOverlay.xul",
                          loadObserver);
-    this.panel.addEventListener("popuphiding", this, false);
   },
 
   _doShowEditBookmarkPanel:
   function PCH__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
-    this.panel.addEventListener("keypress", this, true);
     this._blockCommands(); // un-done in the popuphiding handler
+
+    // Consume dismiss clicks, see bug 400924
+    this.panel.popupBoxObject
+        .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
     this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
 
     gEditItemOverlay.initPanel(aItemId,
