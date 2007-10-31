@@ -500,7 +500,6 @@ var BookmarksEventHandler = {
         if (hasMultipleEntries) {
           var openInTabs = document.createElement("menuitem");
           openInTabs.setAttribute("openInTabs", "true");
-          openInTabs.setAttribute("onclick", "checkForMiddleClick(this, event)");
           openInTabs.setAttribute("oncommand",
                                   "PlacesUtils.openContainerNodeInTabs(this.parentNode._resultNode, event);");
           openInTabs.setAttribute("label",
