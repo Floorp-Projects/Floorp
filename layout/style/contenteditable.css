@@ -233,7 +233,7 @@ span[\_moz_anonclass="mozGrabber"] {
   position: absolute;
   width: 12px;
   height: 12px;
-  background-image: url("resource:/res/grabber.gif");
+  background-image: url("resource://gre/res/grabber.gif");
   background-repeat: no-repeat;
   background-position: center center;
   -moz-user-select: none;
@@ -249,7 +249,7 @@ a[\_moz_anonclass="mozTableAddColumnBefore"] {
   border: none 0px !important;
   width: 4px;
   height: 8px;
-  background-image: url("resource:/res/table-add-column-before.gif");
+  background-image: url("resource://gre/res/table-add-column-before.gif");
   background-repeat: no-repeat;
   background-position: center center;
   -moz-user-select: none !important;
@@ -257,11 +257,11 @@ a[\_moz_anonclass="mozTableAddColumnBefore"] {
 }
 
 a[\_moz_anonclass="mozTableAddColumnBefore"]:hover {
-  background-image: url("resource:/res/table-add-column-before-hover.gif");
+  background-image: url("resource://gre/res/table-add-column-before-hover.gif");
 }
 
 a[\_moz_anonclass="mozTableAddColumnBefore"]:active {
-  background-image: url("resource:/res/table-add-column-before-active.gif");
+  background-image: url("resource://gre/res/table-add-column-before-active.gif");
 }
 
 a[\_moz_anonclass="mozTableAddColumnAfter"] {
@@ -271,7 +271,7 @@ a[\_moz_anonclass="mozTableAddColumnAfter"] {
   border: none 0px !important;
   width: 4px;
   height: 8px;
-  background-image: url("resource:/res/table-add-column-after.gif");
+  background-image: url("resource://gre/res/table-add-column-after.gif");
   background-repeat: no-repeat;
   background-position: center center;
   -moz-user-select: none !important;
@@ -279,11 +279,11 @@ a[\_moz_anonclass="mozTableAddColumnAfter"] {
 }
 
 a[\_moz_anonclass="mozTableAddColumnAfter"]:hover {
-  background-image: url("resource:/res/table-add-column-after-hover.gif");
+  background-image: url("resource://gre/res/table-add-column-after-hover.gif");
 }
 
 a[\_moz_anonclass="mozTableAddColumnAfter"]:active {
-  background-image: url("resource:/res/table-add-column-after-active.gif");
+  background-image: url("resource://gre/res/table-add-column-after-active.gif");
 }
 
 a[\_moz_anonclass="mozTableRemoveColumn"] {
@@ -293,7 +293,7 @@ a[\_moz_anonclass="mozTableRemoveColumn"] {
   border: none 0px !important;
   width: 8px;
   height: 8px;
-  background-image: url("resource:/res/table-remove-column.gif");
+  background-image: url("resource://gre/res/table-remove-column.gif");
   background-repeat: no-repeat;
   background-position: center center;
   -moz-user-select: none !important;
@@ -301,11 +301,11 @@ a[\_moz_anonclass="mozTableRemoveColumn"] {
 }
 
 a[\_moz_anonclass="mozTableRemoveColumn"]:hover {
-  background-image: url("resource:/res/table-remove-column-hover.gif");
+  background-image: url("resource://gre/res/table-remove-column-hover.gif");
 }
 
 a[\_moz_anonclass="mozTableRemoveColumn"]:active {
-  background-image: url("resource:/res/table-remove-column-active.gif");
+  background-image: url("resource://gre/res/table-remove-column-active.gif");
 }
 
 a[\_moz_anonclass="mozTableAddRowBefore"] {
@@ -315,7 +315,7 @@ a[\_moz_anonclass="mozTableAddRowBefore"] {
   border: none 0px !important;
   width: 8px;
   height: 4px;
-  background-image: url("resource:/res/table-add-row-before.gif");
+  background-image: url("resource://gre/res/table-add-row-before.gif");
   background-repeat: no-repeat;
   background-position: center center;
   -moz-user-select: none !important;
@@ -323,11 +323,11 @@ a[\_moz_anonclass="mozTableAddRowBefore"] {
 }
 
 a[\_moz_anonclass="mozTableAddRowBefore"]:hover {
-  background-image: url("resource:/res/table-add-row-before-hover.gif");
+  background-image: url("resource://gre/res/table-add-row-before-hover.gif");
 }
 
 a[\_moz_anonclass="mozTableAddRowBefore"]:active {
-  background-image: url("resource:/res/table-add-row-before-active.gif");
+  background-image: url("resource://gre/res/table-add-row-before-active.gif");
 }
 
 a[\_moz_anonclass="mozTableAddRowAfter"] {
@@ -337,7 +337,7 @@ a[\_moz_anonclass="mozTableAddRowAfter"] {
   border: none 0px !important;
   width: 8px;
   height: 4px;
-  background-image: url("resource:/res/table-add-row-after.gif");
+  background-image: url("resource://gre/res/table-add-row-after.gif");
   background-repeat: no-repeat;
   background-position: center center;
   -moz-user-select: none !important;
@@ -345,11 +345,11 @@ a[\_moz_anonclass="mozTableAddRowAfter"] {
 }
 
 a[\_moz_anonclass="mozTableAddRowAfter"]:hover {
-  background-image: url("resource:/res/table-add-row-after-hover.gif");
+  background-image: url("resource://gre/res/table-add-row-after-hover.gif");
 }
 
 a[\_moz_anonclass="mozTableAddRowAfter"]:active {
-  background-image: url("resource:/res/table-add-row-after-active.gif");
+  background-image: url("resource://gre/res/table-add-row-after-active.gif");
 }
 
 a[\_moz_anonclass="mozTableRemoveRow"] {
@@ -359,7 +359,7 @@ a[\_moz_anonclass="mozTableRemoveRow"] {
   border: none 0px !important;
   width: 8px;
   height: 8px;
-  background-image: url("resource:/res/table-remove-row.gif");
+  background-image: url("resource://gre/res/table-remove-row.gif");
   background-repeat: no-repeat;
   background-position: center center;
   -moz-user-select: none !important;
@@ -367,9 +367,9 @@ a[\_moz_anonclass="mozTableRemoveRow"] {
 }
 
 a[\_moz_anonclass="mozTableRemoveRow"]:hover {
-  background-image: url("resource:/res/table-remove-row-hover.gif");
+  background-image: url("resource://gre/res/table-remove-row-hover.gif");
 }
 
 a[\_moz_anonclass="mozTableRemoveRow"]:active {
-  background-image: url("resource:/res/table-remove-row-active.gif");
+  background-image: url("resource://gre/res/table-remove-row-active.gif");
 }
