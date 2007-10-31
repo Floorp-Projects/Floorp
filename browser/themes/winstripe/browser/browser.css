@@ -1834,6 +1834,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* ::::: Identity Indicator Styling ::::: */
 /* Location bar visuals*/
+
+#urlbar .autocomplete-textbox-container {
+  -moz-box-align: stretch;
+}
+
 #identity-box {
   cursor: help;
   background-color: ThreeDFace;
