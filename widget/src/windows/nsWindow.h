@@ -470,6 +470,7 @@ protected:
 
   static BOOL   sIsRegistered;
   static BOOL   sIsPopupClassRegistered;
+  static BOOL   sIsOleInitialized; // OLE is needed for clipboard and drag & drop support
 
   HDWP mDeferredPositioner;
   static UINT   uWM_MSIME_MOUSE;     // mouse message for MSIME
