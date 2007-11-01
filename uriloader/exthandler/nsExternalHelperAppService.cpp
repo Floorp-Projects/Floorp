@@ -1030,6 +1030,17 @@ NS_IMETHODIMP nsExternalAppHandler::GetTargetFile(nsIFile** aTarget)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExternalAppHandler::GetTargetFileIsExecutable(PRBool *aExec)
+{
+  // Use the real target if it's been set
+  if (mFinalFileDestination)
+    return mFinalFileDestination->IsExecutable(aExec);
+
+  // Otherwise, use the stored executable-ness of the temporary
+  *aExec = mTempFileIsExecutable;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExternalAppHandler::GetTimeDownloadStarted(PRTime* aTime)
 {
   *aTime = mTimeDownloadStarted;
@@ -1173,6 +1184,23 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     tempLeafName.Append(ext);
   }
 
+#ifdef XP_WIN
+  // On windows, we need to temporarily create a dummy file with the correct
+  // file extension to determine the executable-ness, so do this before adding
+  // the extra .part extension.
+  nsCOMPtr<nsIFile> dummyFile;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dummyFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the file name without .part
+  dummyFile->Append(NS_ConvertUTF8toUTF16(tempLeafName));
+  dummyFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+
+  // Store executable-ness then delete
+  dummyFile->IsExecutable(&mTempFileIsExecutable);
+  dummyFile->Remove(PR_FALSE);
+#endif
+
   // Add an additional .part to prevent the OS from running this file in the
   // default application.
   tempLeafName.Append(NS_LITERAL_CSTRING(".part"));
@@ -1180,6 +1208,12 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   mTempFile->Append(NS_ConvertUTF8toUTF16(tempLeafName));
   // make this file unique!!!
   mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+
+#ifndef XP_WIN
+  // On other platforms, the file permission bits are used, so we can just call
+  // IsExecutable
+  mTempFile->IsExecutable(&mTempFileIsExecutable);
+#endif
 
 #ifdef XP_MACOSX
   // Now that the file exists set Mac type if the file has no extension
