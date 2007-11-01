@@ -212,6 +212,8 @@ protected:
                                  JSObject **aRet);
 
 private:
+  void Unlink();
+
   JSContext *mContext;
   PRUint32 mNumEvaluations;
 

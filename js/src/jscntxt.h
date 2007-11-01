@@ -742,6 +742,8 @@ struct JSContext {
 #ifdef JS_THREADSAFE
     JSThread            *thread;
     jsrefcount          requestDepth;
+    /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
+    jsrefcount          outstandingRequests;
     JSScope             *scopeToShare;      /* weak reference, see jslock.c */
     JSScope             *lockedSealedScope; /* weak ref, for low-cost sealed
                                                scope locking */

@@ -2400,7 +2400,14 @@ nsXULElement::RecompileScriptEventListeners()
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeNode)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsXULPrototypeNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXULPrototypeNode)
+    if (tmp->mType == nsXULPrototypeNode::eType_Element) {
+        static_cast<nsXULPrototypeElement*>(tmp)->Unlink();
+    }
+    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+        static_cast<nsXULPrototypeScript*>(tmp)->Unlink();
+    }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
         nsXULPrototypeElement *elem =
