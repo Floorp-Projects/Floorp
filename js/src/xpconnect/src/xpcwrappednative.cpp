@@ -67,9 +67,10 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
     else
         JS_snprintf(name, sizeof(name), "XPCWrappedNative");
 
-    cb.DescribeNode(tmp->mRefCnt.get(), sizeof(XPCWrappedNative), name);
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(XPCWrappedNative),
+                    name);
 #else
-    cb.DescribeNode(tmp->mRefCnt.get());
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get());
 #endif
 
     if (tmp->mRefCnt.get() > 1) {
@@ -93,20 +94,39 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
     // XPCWrappedNative keeps its native object alive.
     cb.NoteXPCOMChild(tmp->GetIdentityObject());
 
+    tmp->NoteTearoffs(cb);
+
     return NS_OK;
 }
 
-NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
+void
+XPCWrappedNative::NoteTearoffs(nsCycleCollectionTraversalCallback& cb)
 {
-    // NB: We might unlink our outgoing references in the future; for
-    // now we do nothing. This is a harmless conservative behavior; it
-    // just means that we rely on the cycle being broken by some of
-    // the external XPCOM objects' unlink() methods, not our
-    // own. Typically *any* unlinking will break the cycle.
-    return NS_OK;
+    // Tearoffs hold their native object alive. If their JS object hasn't been
+    // finalized yet we'll note the edge between the JS object and the native
+    // (see nsXPConnect::Traverse), but if their JS object has been finalized
+    // then the tearoff is only reachable through the XPCWrappedNative, so we
+    // record an edge here.
+    XPCWrappedNativeTearOffChunk* chunk;
+    for(chunk = &mFirstChunk; chunk; chunk = chunk->mNextChunk)
+    {
+        XPCWrappedNativeTearOff* to = chunk->mTearOffs;
+        for(int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK-1; i >= 0; i--, to++)
+        {
+            JSObject* jso = to->GetJSObject();
+            if(!jso)
+            {
+                cb.NoteXPCOMChild(to->GetNative());
+            }
+        }
+    }
 }
 
+// No need to unlink the JS objects, if the XPCWrappedNative will be cycle
+// collected then its mFlatJSObject will be cycle collected too and finalization
+// of the mFlatJSObject will unlink the js objects (see
+// XPC_WN_NoHelper_Finalize and FlatJSObjectFinalized).
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(XPCWrappedNative)
 
 #ifdef XPC_CHECK_CLASSINFO_CLAIMS
 static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper);

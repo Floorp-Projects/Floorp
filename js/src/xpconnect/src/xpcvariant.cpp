@@ -97,11 +97,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
     nsVariant::Traverse(tmp->mData, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-// NB: We might unlink our outgoing references in the future; for now we do
-// nothing. This is a harmless conservative behavior; it just means that we rely
-// on the cycle being broken by some of the external XPCOM objects' unlink()
-// methods, not our own. Typically *any* unlinking will break the cycle.
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(XPCVariant)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
+    if(!JSVAL_IS_STRING(tmp->mJSVal))
+        nsVariant::Cleanup(&tmp->mData);
+    if(JSVAL_IS_TRACEABLE(tmp->mJSVal))
+    {
+        XPCTraceableVariant *v = static_cast<XPCTraceableVariant*>(tmp);
+        v->RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+    }
+    tmp->mJSVal = JSVAL_NULL;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 // static 
 XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)

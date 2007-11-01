@@ -86,9 +86,9 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     char name[72];
     JS_snprintf(name, sizeof(name), "nsXPCWrappedJS (%s)",
                 tmp->GetClass()->GetInterfaceName());
-    cb.DescribeNode(refcnt, sizeof(nsXPCWrappedJS), name);
+    cb.DescribeNode(RefCounted, refcnt, sizeof(nsXPCWrappedJS), name);
 #else
-    cb.DescribeNode(refcnt);
+    cb.DescribeNode(RefCounted, refcnt);
 #endif
 
     // nsXPCWrappedJS keeps its own refcount artificially at or above 1, see the
@@ -112,16 +112,19 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
     return NS_OK;
 }
 
-NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Unlink(void *p)
-{
-    // NB: We might unlink our outgoing references in the future; for
-    // now we do nothing. This is a harmless conservative behavior; it
-    // just means that we rely on the cycle being broken by some of
-    // the external XPCOM objects' unlink() methods, not our
-    // own. Typically *any* unlinking will break the cycle.
-    return NS_OK;
-}
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXPCWrappedJS)
+    if(tmp->mRoot && !tmp->mRoot->HasWeakReferences())
+    {
+        tmp->Unlink();
+        if(tmp->IsValid())
+        {
+            XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+            if(tmp->mRefCnt > 1)
+                tmp->RemoveFromRootSet(rt->GetJSRuntime());
+            tmp->mJSObj = nsnull;
+        }
+    }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMETHODIMP
 nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -211,7 +214,6 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsrefcnt
 nsXPCWrappedJS::AddRef(void)
 {
-    NS_PRECONDITION(mRoot, "bad root");
     nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
@@ -227,12 +229,7 @@ nsXPCWrappedJS::AddRef(void)
 nsrefcnt
 nsXPCWrappedJS::Release(void)
 {
-    NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-
-#ifdef DEBUG_jband
-    NS_ASSERTION(IsValid(), "post xpconnect shutdown call of nsXPCWrappedJS::Release");
-#endif
 
 do_decrement:
 
@@ -452,8 +449,18 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
 
-    XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+    if(mRoot == this)
+    {
+        // Let the nsWeakReference object (if present) know of our demise.
+        ClearWeakReferences();
+    }
+    Unlink();
+}
 
+void
+nsXPCWrappedJS::Unlink()
+{
+    XPCJSRuntime* rt = nsXPConnect::GetRuntime();
     if(mRoot != this)
     {
         // unlink this wrapper
@@ -473,11 +480,6 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
     }
     else
     {
-        NS_ASSERTION(!mNext, "root wrapper with non-empty chain being deleted");
-
-        // Let the nsWeakReference object (if present) know of our demise.
-        ClearWeakReferences();
-
         // remove this root wrapper from the map
         if(rt)
         {

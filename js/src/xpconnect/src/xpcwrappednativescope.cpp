@@ -309,17 +309,33 @@ XPCWrappedNativeScope::TraceJS(JSTracer* trc, XPCJSRuntime* rt)
     }
 }
 
+struct SuspectClosure
+{
+    JSContext* cx;
+    nsCycleCollectionTraversalCallback& cb;
+};
+
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
                        uint32 number, void *arg)
 {
+    SuspectClosure* closure = static_cast<SuspectClosure*>(arg);
     XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
     XPCWrappedNativeProto* proto = wrapper->GetProto();
-    if(proto && proto->ClassIsMainThreadOnly()) 
+    if(proto && proto->ClassIsMainThreadOnly() && wrapper->IsValid())
     {
         NS_ASSERTION(NS_IsMainThread(), 
                      "Suspecting wrapped natives from non-main thread");
-        nsCycleCollector_suspectCurrent(wrapper);
+
+#ifndef DEBUG_CC
+        // Only record objects that might be part of a cycle as roots.
+        if(!JS_IsAboutToBeFinalized(closure->cx, wrapper->GetFlatJSObject()))
+            return JS_DHASH_NEXT;
+#endif
+
+        closure->cb.NoteRoot(nsIProgrammingLanguage::JAVASCRIPT,
+                             wrapper->GetFlatJSObject(),
+                             nsXPConnect::GetXPConnect());
     }
 
     return JS_DHASH_NEXT;
@@ -327,14 +343,15 @@ WrappedNativeSuspecter(JSDHashTable *table, JSDHashEntryHdr *hdr,
 
 // static
 void
-XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt)
+XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt, JSContext* cx,
+                                          nsCycleCollectionTraversalCallback& cb)
 {
     XPCAutoLock lock(rt->GetMapLock());
 
-    // Do nsCycleCollector_suspectCurrent for all wrapped natives.
+    SuspectClosure closure = { cx, cb };
     for(XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
     {
-        cur->mWrappedNativeMap->Enumerate(WrappedNativeSuspecter, nsnull);
+        cur->mWrappedNativeMap->Enumerate(WrappedNativeSuspecter, &closure);
     }
 }
 
