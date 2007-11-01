@@ -108,4 +108,4 @@ CXXFLAGS += -DPHOTON_DND
 endif
 
 export::
-	$(INSTALL) nsClipboard.h $(DIST)/include/widget
+	$(INSTALL) $(srcdir)/nsClipboard.h $(DIST)/include/widget
