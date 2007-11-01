@@ -35,9 +35,9 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY relationType.label "Relation Type">
-<!ENTITY role.label "Role">
-<!ENTITY nodeName.label "Node Name">
-<!ENTITY relations.label "Relations: ">
-<!ENTITY relationTargets.label "Relation Targets: ">
+<!ENTITY relationType.label "Beziehungstyp">
+<!ENTITY role.label "Rolle">
+<!ENTITY nodeName.label "Knoten-Name">
+<!ENTITY relations.label "Beziehungen:">
+<!ENTITY relationTargets.label "Beziehungs-Ziele:">
 
