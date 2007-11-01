@@ -88,6 +88,7 @@ protected:
 
   nsresult ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing);
   nsresult ExpireAnnotations(mozIStorageConnection* aConnection);
+  nsresult ExpireEmbeddedLinks(mozIStorageConnection* aConnection);
 
   // parts of ExpireItems
   nsresult FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
