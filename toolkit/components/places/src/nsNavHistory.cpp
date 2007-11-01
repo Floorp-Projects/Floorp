@@ -117,11 +117,12 @@
 // should not normally be required.
 #define DEFAULT_DB_CACHE_PERCENTAGE 6
 
-// The default page size the database should use. This must be a power of 2.
-// Larger pages may mean less paging, but when something is changed, the
-// entire page is written to the journal and then the main file, meaning a
-// lot more data has to be handled.
-#define DEFAULT_DB_PAGE_SIZE 1024
+// We set the default database page size to be larger. sqlite's default is 1K.
+// This gives good performance when many small parts of the file have to be
+// loaded for each statement. Because we try to keep large chunks of the file
+// in memory, a larger page size should give better I/O performance. 32K is
+// sqlite's default max page size.
+#define DEFAULT_DB_PAGE_SIZE 4096
 
 // the value of mLastNow expires every 3 seconds
 #define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
@@ -508,6 +509,17 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   PRBool tableExists;
   *aDoImport = PR_FALSE;
 
+  // IMPORTANT NOTE:
+  // setting page_size must happen first, see bug #401985 for details
+  //
+  // Set the database page size. This will only have any effect on empty files,
+  // so must be done before anything else. If the file already exists, we'll
+  // get that file's page size and this will have no effect.
+  nsCAutoString pageSizePragma("PRAGMA page_size=");
+  pageSizePragma.AppendInt(DEFAULT_DB_PAGE_SIZE);
+  rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Set the database up for incremental vacuuming.
   // if the database was created before we started doing 
   // incremental vacuuming, this will have no effect.
@@ -523,14 +535,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
                                             nsITimer::TYPE_REPEATING_SLACK);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // Set the database page size. This will only have any effect on empty files,
-  // so must be done before anything else. If the file already exists, we'll
-  // get that file's page size and this will have no effect.
-  nsCAutoString pageSizePragma("PRAGMA page_size=");
-  pageSizePragma.AppendInt(DEFAULT_DB_PAGE_SIZE);
-  rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
