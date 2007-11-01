@@ -418,4 +418,10 @@ fails == 386310-1d.html 386310-1-ref.html
 == 396286-1.html about:blank  # crash test
 == 398289-1.html 398289-1-ref.html
 == 399384-1.html 399384-1-ref.html
+fails == 400171-1a.html 400171-1-ref.html # Remove 'fails' when 400171 lands
+== 400171-1b.html 400171-1-ref.html
+== 400171-1c.html 400171-1-ref.html
+fails == 400171-2a.html 400171-2-ref.html # Remove 'fails' when 400171 lands
+== 400171-2b.html 400171-2-ref.html
+fails == 400171-2c.html 400171-2-ref.html # Remove 'fails' when 400171 lands
 == 400421-1.html 400421-1-ref.html
