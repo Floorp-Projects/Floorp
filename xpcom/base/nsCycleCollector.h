@@ -44,31 +44,41 @@
 
 class nsISupports;
 class nsCycleCollectionParticipant;
+class nsCycleCollectionTraversalCallback;
 
 // An nsCycleCollectionLanguageRuntime is a per-language object that
 // implements language-specific aspects of the cycle collection task.
 
 struct nsCycleCollectionLanguageRuntime
 {
-    virtual nsresult BeginCycleCollection() = 0;
+    virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb) = 0;
     virtual nsresult FinishCycleCollection() = 0;
     virtual nsCycleCollectionParticipant *ToParticipant(void *p) = 0;
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p) = 0;
-
-    // Call suspectCurrent on any extra pointers that will help build a
-    // larger object graph for debugging.
-    virtual void SuspectExtraPointers() = 0;
 #endif
 };
 
-// PRBool nsCycleCollector_suspect(nsISupports *n);
-NS_COM void nsCycleCollector_suspectCurrent(nsISupports *n);
-// NS_COM PRBool nsCycleCollector_forget(nsISupports *n);
 nsresult nsCycleCollector_startup();
 // Returns PR_TRUE if some nodes were collected.
 NS_COM PRBool nsCycleCollector_collect();
 void nsCycleCollector_shutdown();
+
+// The JS runtime is special, it needs to call cycle collection during its GC.
+// If the JS runtime is registered nsCycleCollector_collect will call
+// nsCycleCollectionJSRuntime::Collect which will call
+// nsCycleCollector_doCollect, else nsCycleCollector_collect will call
+// nsCycleCollector_doCollect directly.
+struct nsCycleCollectionJSRuntime : public nsCycleCollectionLanguageRuntime
+{
+    /**
+     * Runs cycle collection and returns the number of collections that have
+     * collected nodes.
+     */
+    virtual PRUint32 Collect() = 0;
+};
+// Returns PR_TRUE if some nodes were collected.
+NS_COM PRBool nsCycleCollector_doCollect();
 
 #ifdef DEBUG
 NS_COM void nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n);
