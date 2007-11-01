@@ -126,9 +126,6 @@ BookmarksSyncService.prototype = {
   // Logger object
   _log: null,
 
-  // Timer object for yielding to the main loop
-  _timer: null,
-
   // Timer object for automagically syncing
   _scheduleTimer: null,
 
@@ -224,14 +221,14 @@ BookmarksSyncService.prototype = {
 
     let formatter = logSvc.newFormatter("basic");
     let root = logSvc.rootLogger;
-    root.level = root.LEVEL_ALL;
+    root.level = root.LEVEL_DEBUG;
 
     let capp = logSvc.newAppender("console", formatter);
     capp.level = root.LEVEL_WARN;
     root.addAppender(capp);
 
     let dapp = logSvc.newAppender("dump", formatter);
-    dapp.level = root.LEVEL_WARN;
+    dapp.level = root.LEVEL_ALL;
     root.addAppender(dapp);
 
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
@@ -247,7 +244,7 @@ BookmarksSyncService.prototype = {
     fapp.level = root.LEVEL_INFO;
     root.addAppender(fapp);
     let vapp = logSvc.newFileAppender("rotating", verboseFile, formatter);
-    vapp.level = root.LEVEL_ALL;
+    vapp.level = root.LEVEL_DEBUG;
     root.addAppender(vapp);
   },
 
@@ -392,45 +389,69 @@ BookmarksSyncService.prototype = {
     return this._nodeParentsInt(tree[GUID].parentGUID, tree, parents);
   },
 
-  _detectUpdates: function BSS__detectUpdates(a, b) {
+  _detectUpdates: function BSS__detectUpdates(onComplete, a, b) {
+    let cont = yield;
+    let listener = new EventListener(cont);
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
     let cmds = [];
-    for (let GUID in a) {
-      if (GUID in b) {
-        let edits = this._getEdits(a[GUID], b[GUID]);
-        if (edits == -1) // something went very wrong -- FIXME
-          continue;
-        if (edits.numProps == 0) // no changes - skip
+
+    try {
+      for (let GUID in a) {
+
+        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        yield; // Yield to main loop
+
+        if (GUID in b) {
+          let edits = this._getEdits(a[GUID], b[GUID]);
+          if (edits == -1) // something went very wrong -- FIXME
+            continue;
+          if (edits.numProps == 0) // no changes - skip
+            continue;
+          let parents = this._nodeParents(GUID, b);
+          cmds.push({action: "edit", GUID: GUID,
+                     depth: parents.length, parents: parents,
+                     data: edits.props});
+        } else {
+          let parents = this._nodeParents(GUID, a); // ???
+          cmds.push({action: "remove", GUID: GUID,
+                     depth: parents.length, parents: parents});
+        }
+      }
+      for (let GUID in b) {
+
+        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        yield; // Yield to main loop
+
+        if (GUID in a)
           continue;
         let parents = this._nodeParents(GUID, b);
-        cmds.push({action: "edit", GUID: GUID,
+        cmds.push({action: "create", GUID: GUID,
                    depth: parents.length, parents: parents,
-                   data: edits.props});
-      } else {
-        let parents = this._nodeParents(GUID, a); // ???
-        cmds.push({action: "remove", GUID: GUID,
-                   depth: parents.length, parents: parents});
+                   data: b[GUID]});
       }
+      cmds.sort(function(a, b) {
+        if (a.depth > b.depth)
+          return 1;
+        if (a.depth < b.depth)
+          return -1;
+        if (a.index > b.index)
+          return -1;
+        if (a.index < b.index)
+          return 1;
+        return 0; // should never happen, but not a big deal if it does
+      });
+
+    } catch (e) {
+      if (e != 'close generator')
+        this._log.error("Exception caught: " + e.message);
+
+    } finally {
+      timer = null;
+      generatorDone(this, onComplete, cmds);
+      yield; // onComplete is responsible for closing the generator
     }
-    for (let GUID in b) {
-      if (GUID in a)
-        continue;
-      let parents = this._nodeParents(GUID, b);
-      cmds.push({action: "create", GUID: GUID,
-                 depth: parents.length, parents: parents,
-                 data: b[GUID]});
-    }
-    cmds.sort(function(a, b) {
-      if (a.depth > b.depth)
-        return 1;
-      if (a.depth < b.depth)
-        return -1;
-      if (a.index > b.index)
-        return -1;
-      if (a.index < b.index)
-        return 1;
-      return 0; // should never happen, but not a big deal if it does
-    });
-    return cmds;
+    this._log.warn("generator not properly closed");
   },
 
   // Bookmarks are allowed to be in a different index as long as they
@@ -459,6 +480,11 @@ BookmarksSyncService.prototype = {
 
     switch (a.data.type) {
     case "bookmark":
+      if (a.data.URI == b.data.URI &&
+          a.data.title == b.data.title)
+        return true;
+      return false;
+    case "query":
       if (a.data.URI == b.data.URI &&
           a.data.title == b.data.title)
         return true;
@@ -549,20 +575,21 @@ BookmarksSyncService.prototype = {
   },
 
   _reconcile: function BSS__reconcile(onComplete, listA, listB) {
+    let cont = yield;
+    let listener = new EventListener(cont);
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
     let propagations = [[], []];
     let conflicts = [[], []];
     let ret = {propagations: propagations, conflicts: conflicts};
 
     try {
-      let cont = yield;
-      let listener = new EventListener(cont);
-      this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  
       for (let i = 0; i < listA.length; i++) {
-        this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
-        yield; // Yield to main loop
-  
         for (let j = 0; j < listB.length; j++) {
+
+          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+          yield; // Yield to main loop
+  
           if (this._deepEquals(listA[i], listB[j])) {
             delete listA[i];
             delete listB[j];
@@ -588,10 +615,11 @@ BookmarksSyncService.prototype = {
       listB = listB.filter(function(elt) { return elt });
   
       for (let i = 0; i < listA.length; i++) {
-        this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
-        yield; // Yield to main loop
-  
         for (let j = 0; j < listB.length; j++) {
+
+          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+          yield; // Yield to main loop
+  
           if (this._conflicts(listA[i], listB[j]) ||
               this._conflicts(listB[j], listA[i])) {
             if (!conflicts[0].some(
@@ -606,7 +634,7 @@ BookmarksSyncService.prototype = {
   
       this._getPropagations(listA, conflicts[0], propagations[1]);
   
-      this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
+      timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
       yield; // Yield to main loop
   
       this._getPropagations(listB, conflicts[1], propagations[0]);
@@ -617,7 +645,7 @@ BookmarksSyncService.prototype = {
         this._log.error("Exception caught: " + e.message);
 
     } finally {
-      this._timer = null;
+      timer = null;
       generatorDone(this, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
@@ -946,7 +974,10 @@ BookmarksSyncService.prototype = {
       // 2) Generate local deltas from snapshot -> current client status
 
       let localJson = this._getBookmarks();
-      let localUpdates = this._detectUpdates(this._snapshot, localJson);
+      gen = this._detectUpdates.async(this, cont, this._snapshot, localJson);
+      let localUpdates = yield;
+      gen.close();
+
       this._log.debug("local json:\n" + this._mungeNodes(localJson));
       this._log.debug("Local updates: " + this._mungeCommands(localUpdates));
       this._log.debug("Server updates: " + this._mungeCommands(server.updates));
@@ -1008,9 +1039,11 @@ BookmarksSyncService.prototype = {
         this._applyCommands(clientChanges);
         newSnapshot = this._getBookmarks();
 
-        let diff = this._detectUpdates(this._snapshot, newSnapshot);
+        gen = this._detectUpdates.async(this, cont, this._snapshot, newSnapshot);
+        let diff = yield;
+        gen.close();
         if (diff.length != 0) {
-          this._log.error("Commands did not apply correctly");
+          this._log.warn("Commands did not apply correctly");
           this._log.debug("Diff from snapshot+commands -> " +
                           "new snapshot after commands:\n" +
                           this._mungeCommands(diff));
@@ -1029,7 +1062,9 @@ BookmarksSyncService.prototype = {
       // conflicts, it should be the same as what the resolver returned
 
       newSnapshot = this._getBookmarks();
-      let serverDelta = this._detectUpdates(server.snapshot, newSnapshot);
+      gen = this._detectUpdates.async(this, cont, server.snapshot, newSnapshot);
+      let serverDelta = yield;
+      gen.close();
 
       // Log an error if not the same
       if (!(serverConflicts.length ||
@@ -1267,7 +1302,9 @@ BookmarksSyncService.prototype = {
         ret.snapVersion = status.snapVersion;
         ret.snapshot = snap;
         ret.deltas = allDeltas;
-        ret.updates = this._detectUpdates(this._snapshot, snap);
+        gen = this._detectUpdates.async(this, cont, this._snapshot, snap);
+        ret.updates = yield;
+        gen.close();
         break;
   
       case 404:
@@ -1761,7 +1798,15 @@ DAVCollection.prototype = {
       request.addEventListener("error", new EventListener(cont, "error"), false);
       request = request.QueryInterface(Ci.nsIXMLHttpRequest);
       request.open(op, this._userURL + path, true);
-    
+
+
+      // Force cache validation
+      let channel = request.channel;
+      channel = channel.QueryInterface(Ci.nsIRequest);
+      let loadFlags = channel.loadFlags;
+      loadFlags |= Ci.nsIRequest.VALIDATE_ALWAYS;
+      channel.loadFlags = loadFlags;
+
       let key;
       for (key in headers) {
         this._log.debug("HTTP Header " + key + ": " + headers[key]);
