@@ -3979,7 +3979,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   // Cocoa doesn't send an NSKeyDown event for control-tab, so if this
   // is an NSKeyUp event for control-tab, send a down event to gecko first.
-  if (!keyUpAlreadySentKeyDown && [theEvent modifierFlags] & NSControlKeyMask && [theEvent keyCode] == kTabKeyCode) {
+  if (!nsToolkit::OnLeopardOrLater() && !keyUpAlreadySentKeyDown &&
+      [theEvent modifierFlags] & NSControlKeyMask && [theEvent keyCode] == kTabKeyCode) {
     // We'll need an NSKeyDown copy of our native event so we convert to a gecko event correctly.
     NSEvent* nativeKeyDownEvent = [ChildView makeNewCocoaEventWithType:NSKeyDown fromEvent:theEvent];
 
