@@ -1286,7 +1286,7 @@ public:
 
 private:
 
-  imgIContainer *mContainer;
+  nsCOMPtr<imgIContainer> mContainer;
 };
 
 NS_IMPL_ISUPPORTS4 (ContainerLoader, imgILoad, imgIDecoderObserver, imgIContainerObserver, nsISupportsWeakReference)
