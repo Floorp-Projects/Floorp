@@ -3977,7 +3977,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild || [[theEvent characters] length] == 0)
     return;
 
-  // Cocoa doesn't send an NSKeyDown event for control-tab, so if this
+  // Cocoa doesn't send an NSKeyDown event for control-tab on 10.4, so if this
   // is an NSKeyUp event for control-tab, send a down event to gecko first.
   if (!nsToolkit::OnLeopardOrLater() && !keyUpAlreadySentKeyDown &&
       [theEvent modifierFlags] & NSControlKeyMask && [theEvent keyCode] == kTabKeyCode) {
