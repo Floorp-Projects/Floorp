@@ -420,7 +420,7 @@ nsUnknownContentTypeDialog.prototype = {
       var mimeType = this.mLauncher.MIMEInfo.MIMEType;
       var shouldntRememberChoice = (mimeType == "application/octet-stream" || 
                                     mimeType == "application/x-msdownload" ||
-                                    this.mLauncher.targetFile.isExecutable());
+                                    this.mLauncher.targetFileIsExecutable);
       if (shouldntRememberChoice && !this.openWithDefaultOK()) {
         // hide featured choice 
         this.mDialog.document.getElementById("normalBox").collapsed = "true";
@@ -595,8 +595,6 @@ nsUnknownContentTypeDialog.prototype = {
 
     // Returns true if opening the default application makes sense.
     openWithDefaultOK: function() {
-        var result;
-
         // The checking is different on Windows...
 #ifdef XP_WIN
         // Windows presents some special cases.
@@ -606,11 +604,8 @@ nsUnknownContentTypeDialog.prototype = {
         // executable (because we will prompt the user for the default app
         // in that case).
         
-        // Need to get temporary file and check for executable-ness.
-        var tmpFile = this.mLauncher.targetFile;
-        
         //  Default is Ok if the file isn't executable (and vice-versa).
-        return !tmpFile.isExecutable();
+        return !this.mLauncher.targetFileIsExecutable;
 #else
             // On other platforms, default is Ok if there is a default app.
             // Note that nsIMIMEInfo providers need to ensure that this holds true
@@ -652,7 +647,7 @@ nsUnknownContentTypeDialog.prototype = {
       // from the browser at the moment because of security concerns. 
       var openWithDefaultOK = this.openWithDefaultOK();
       var mimeType = this.mLauncher.MIMEInfo.MIMEType;
-      if (this.mLauncher.targetFile.isExecutable() || (
+      if (this.mLauncher.targetFileIsExecutable || (
           (mimeType == "application/octet-stream" ||
            mimeType == "application/x-msdownload") && 
            !openWithDefaultOK)) {
