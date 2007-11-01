@@ -446,7 +446,7 @@ gfxPangoFont::GetMetrics()
     mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / lineHeight;
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
-    // XXX should we move this down, get max-advance from FT_Face?
+    // we're going to overwrite this below if we have a FT_Face (which we should...)
     mMetrics.maxAdvance = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
 
     gfxSize isz, lsz;
@@ -473,6 +473,8 @@ gfxPangoFont::GetMetrics()
         face = pango_fc_font_lock_face (PANGO_FC_FONT (font));
 
     if (face) {
+        mMetrics.maxAdvance = face->size->metrics.max_advance / 64.0; // 26.6
+
         float val;
 
         TT_OS2 *os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
