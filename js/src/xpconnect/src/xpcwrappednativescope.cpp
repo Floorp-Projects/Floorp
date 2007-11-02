@@ -311,6 +311,11 @@ XPCWrappedNativeScope::TraceJS(JSTracer* trc, XPCJSRuntime* rt)
 
 struct SuspectClosure
 {
+    SuspectClosure(JSContext *aCx, nsCycleCollectionTraversalCallback& aCb)
+        : cx(aCx), cb(aCb)
+    {
+    }
+
     JSContext* cx;
     nsCycleCollectionTraversalCallback& cb;
 };
@@ -348,7 +353,7 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt, JSContext* cx,
 {
     XPCAutoLock lock(rt->GetMapLock());
 
-    SuspectClosure closure = { cx, cb };
+    SuspectClosure closure(cx, cb);
     for(XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
     {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeSuspecter, &closure);
