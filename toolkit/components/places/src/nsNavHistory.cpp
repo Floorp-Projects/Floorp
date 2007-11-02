@@ -3412,10 +3412,8 @@ nsNavHistory::OnIdle()
   // perform a vacuum.
   if (idleTime > VACUUM_IDLE_TIME_IN_MSECS) {
 #if 0
-    // Currently commented out because compression is very slow
-    // see bug #390244 for more details
-    // if our database was created before incremental vacuuming
-    // do a full vacuum on idle
+    // Currently commented out because vacuum is very slow
+    // see bug #390244 for more details.
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
