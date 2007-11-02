@@ -610,9 +610,9 @@ protected:
   // updating during import.
   nsresult CreateLookupIndexes();
 
-  nsresult PerformVacuumIfIdle();
-  nsCOMPtr<nsITimer> mVacuumTimer;
-  static void VacuumTimerCallback(nsITimer* aTimer, void* aClosure);
+  nsCOMPtr<nsITimer> mIdleTimer;
+  static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
+  nsresult OnIdle();
 
   PRInt64 mTagRoot;
   PRInt64 GetTagRoot();

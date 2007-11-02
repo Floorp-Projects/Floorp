@@ -151,10 +151,12 @@
 
 #endif // LAZY_ADD
 
+// check idle timer every 5 minutes
+#define IDLE_TIMER_TIMEOUT (300 * PR_MSEC_PER_SEC)
+
+// perform vacuum every 15 mins *** CURRENTLY DISABLED ***
 // 15 minutes = 900 seconds = 900000 milliseconds
 #define VACUUM_IDLE_TIME_IN_MSECS (900000)
-// check every 5 minutes
-#define VACUUM_TIMER_TIMEOUT (300 * PR_MSEC_PER_SEC)
 
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
@@ -520,18 +522,12 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Set the database up for incremental vacuuming.
-  // if the database was created before we started doing 
-  // incremental vacuuming, this will have no effect.
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA auto_vacuum=2"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mVacuumTimer) {
-    mVacuumTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  if (!mIdleTimer) {
+    mIdleTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mVacuumTimer->InitWithFuncCallback(VacuumTimerCallback, this,
-                                            VACUUM_TIMER_TIMEOUT,
+    rv = mIdleTimer->InitWithFuncCallback(IdleTimerCallback, this,
+                                            IDLE_TIMER_TIMEOUT,
                                             nsITimer::TYPE_REPEATING_SLACK);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -3401,7 +3397,7 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
 }
 
 nsresult 
-nsNavHistory::PerformVacuumIfIdle()
+nsNavHistory::OnIdle()
 {
   nsresult rv;
   nsCOMPtr<nsIIdleService> idleService =
@@ -3412,47 +3408,26 @@ nsNavHistory::PerformVacuumIfIdle()
   rv = idleService->GetIdleTime(&idleTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if we've been idle for more than VACUUM_IDLE_TIME_IN_MSECS
-  // incrementally vacuum
+  // If we've been idle for more than VACUUM_IDLE_TIME_IN_MSECS
+  // perform a vacuum.
   if (idleTime > VACUUM_IDLE_TIME_IN_MSECS) {
-    PRInt32 vacuum;
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA auto_vacuum"),
-                                  getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasResult;
-    rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
-    vacuum = statement->AsInt32(0);
-
-    // if our database was created with incremental_vacuum, 
-    // do incremental vacuuming
-    if (vacuum == 2) {
-      rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("PRAGMA incremental_vacuum;"));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
 #if 0
-      // Currently commented out because compression is very slow
-      // see bug #390244 for more details
-      // if our database was created before incremental vacuuming
-      // do a full vacuum on idle
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
-      NS_ENSURE_SUCCESS(rv, rv);
+    // Currently commented out because compression is very slow
+    // see bug #390244 for more details
+    // if our database was created before incremental vacuuming
+    // do a full vacuum on idle
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif
-    }
   }
   return NS_OK;
 }
 
 void // static
-nsNavHistory::VacuumTimerCallback(nsITimer* aTimer, void* aClosure)
+nsNavHistory::IdleTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   nsNavHistory* history = static_cast<nsNavHistory*>(aClosure);
-  (void)history->PerformVacuumIfIdle();
+  (void)history->OnIdle();
 }
 
 // nsIObserver *****************************************************************
@@ -3462,9 +3437,9 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
                     const PRUnichar *aData)
 {
   if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
-    if (mVacuumTimer) {
-      mVacuumTimer->Cancel();
-      mVacuumTimer = nsnull;
+    if (mIdleTimer) {
+      mIdleTimer->Cancel();
+      mIdleTimer = nsnull;
     }
     if (mAutoCompleteTimer) {
       mAutoCompleteTimer->Cancel();
