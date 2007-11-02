@@ -215,7 +215,9 @@ HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
 
 ifdef HAVE_DTRACE
+ifneq ($(OS_ARCH),Darwin)
 DTRACE_PROBE_OBJ = $(LIBRARY_NAME)-dtrace.$(OBJ_SUFFIX)
+endif
 MOZILLA_DTRACE_SRC = $(srcdir)/javascript-trace.d
 endif
 
