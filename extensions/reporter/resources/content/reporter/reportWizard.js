@@ -270,7 +270,7 @@ function serializeParams(params) {
   for (var key in params) {
     str += key + '=' + encodeURIComponent(params[key]) + '&';
   }
-  return str.substr(0, str.length-1);
+  return str.slice(0, -1);
 }
 
 function onSendReportDataLoad(req) {
