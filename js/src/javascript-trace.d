@@ -55,8 +55,10 @@ provider javascript {
  probe function__return(char *, char *, char *);
  probe object__create__start(char *, char *);
  probe object__create__done(char *, char *);
- probe object__create(char *, char *, uintptr_t, int);
- probe object__finalize(char *, char *, uintptr_t);
+ /* XXX must use unsigned longs here instead of uintptr_t for OS X 
+    (Apple radar: 5194316 & 5565198) */
+ probe object__create(char *, char *, unsigned long, int);
+ probe object__finalize(char *, char *, unsigned long);
  probe execute__start(char *, int);
  probe execute__done(char *, int);
 };
