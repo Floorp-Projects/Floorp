@@ -3943,6 +3943,16 @@ nsHTMLDocument::TurnEditingOff()
   return NS_OK;
 }
 
+static PRBool HasPresShell(nsPIDOMWindow *aWindow)
+{
+  nsIDocShell *docShell = aWindow->GetDocShell();
+  if (!docShell)
+    return PR_FALSE;
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  return presShell != nsnull;
+}
+
 nsresult
 nsHTMLDocument::EditingStateChanged()
 {
@@ -3977,21 +3987,25 @@ nsHTMLDocument::EditingStateChanged()
   nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool makeWindowEditable = (mEditingState == eOff);
-  if (makeWindowEditable) {
-    // Editing is being turned on (through designMode or contentEditable)
-    // Turn on editor.
-    // XXX This can cause flushing which can change the editing state, so make
-    //     sure to avoid recursing.
-    EditingState oldState = mEditingState;
-    mEditingState = eSettingUp;
-
-    rv = editSession->MakeWindowEditable(window, "html", PR_FALSE, PR_FALSE,
-                                         PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mEditingState = oldState;
+  PRBool makeWindowEditable = (mEditingState == eOff) && HasPresShell(window);
+  if (!makeWindowEditable) {
+    // We should not make the window editable or setup its editor.
+    // It's probably style=display:none.
+    return NS_OK;
   }
+
+  // Editing is being turned on (through designMode or contentEditable)
+  // Turn on editor.
+  // XXX This can cause flushing which can change the editing state, so make
+  //     sure to avoid recursing.
+  EditingState oldState = mEditingState;
+  mEditingState = eSettingUp;
+
+  rv = editSession->MakeWindowEditable(window, "html", PR_FALSE, PR_FALSE,
+                                       PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mEditingState = oldState;
 
   // XXX Need to call TearDownEditorOnWindow for all failures.
   nsCOMPtr<nsIEditorDocShell> editorDocShell =
@@ -4058,22 +4072,20 @@ nsHTMLDocument::EditingStateChanged()
 
   mEditingState = newState;
 
-  if (makeWindowEditable) {
-    // Set the editor to not insert br's on return when in p
-    // elements by default.
-    // XXX Do we only want to do this for designMode?
-    PRBool unused;
-    rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
-                     NS_LITERAL_STRING("false"), &unused);
+  // Set the editor to not insert br's on return when in p
+  // elements by default.
+  // XXX Do we only want to do this for designMode?
+  PRBool unused;
+  rv = ExecCommand(NS_LITERAL_STRING("insertBrOnReturn"), PR_FALSE,
+                   NS_LITERAL_STRING("false"), &unused);
 
-    if (NS_FAILED(rv)) {
-      // Editor setup failed. Editing is not on after all.
-      // XXX Should we reset the editable flag on nodes?
-      editSession->TearDownEditorOnWindow(window, PR_TRUE);
-      mEditingState = eOff;
+  if (NS_FAILED(rv)) {
+    // Editor setup failed. Editing is not on after all.
+    // XXX Should we reset the editable flag on nodes?
+    editSession->TearDownEditorOnWindow(window, PR_TRUE);
+    mEditingState = eOff;
 
-      return rv;
-    }
+    return rv;
   }
 
   if (updateState) {
