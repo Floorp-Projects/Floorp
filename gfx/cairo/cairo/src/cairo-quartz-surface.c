@@ -1369,9 +1369,6 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				    int num_glyphs,
 				    cairo_scaled_font_t *scaled_font)
 {
-    ATSUFontID fid;
-    ATSFontRef atsfref;
-    CGFontRef cgfref;
     CGAffineTransform cairoTextTransform, textTransform, ctm;
     // XXXtodo/perf: stack storage for glyphs/sizes
 #define STATIC_BUF_SIZE 64
@@ -1410,12 +1407,9 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 
     CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
-    fid = _cairo_atsui_scaled_font_get_atsu_font_id (scaled_font);
-    atsfref = FMGetATSFontRefFromFont (fid);
-    cgfref = CGFontCreateWithPlatformFont (&atsfref);
-
+    /* this doesn't addref */
+    CGFontRef cgfref = _cairo_atsui_scaled_font_get_cg_font_ref (scaled_font);
     CGContextSetFont (surface->cgContext, cgfref);
-    CGFontRelease (cgfref);
 
     /* So this should include the size; I don't know if I need to extract the
      * size from this and call CGContextSetFontSize.. will I get crappy hinting
