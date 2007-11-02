@@ -1,0 +1,35 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=389350
+-->
+<head>
+<title>Test for Bug 389350</title>
+<script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+function runTest() {
+  var e = document.getElementById("edit");
+  e.contentDocument.designMode='on';
+  e.style.display='block';
+  e.focus();
+  sendChar('a', e.contentDocument);
+  sendChar('b', e.contentDocument);
+  sendChar('c', e.contentDocument);
+  var frame_html = "<head><title></title></head><body>abc</body>";
+  ok(frame_html == e.contentDocument.documentElement.innerHTML);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+</script>
+
+</head>
+<body id="body">
+<iframe id="edit" width="200" height="100" style="display: none;" src="">
+</body>
+</html>
