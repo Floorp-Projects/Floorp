@@ -2051,7 +2051,9 @@ removeExpiredCallback(nsCookieEntry *aEntry,
 void
 nsCookieService::RemoveExpiredCookies(PRInt64 aCurrentTime)
 {
+#ifdef PR_LOGGING
   PRUint32 initialCookieCount = mCookieCount;
+#endif
   mHostTable.EnumerateEntries(removeExpiredCallback, &aCurrentTime);
   COOKIE_LOGSTRING(PR_LOG_DEBUG, ("RemoveExpiredCookies(): %ld purged; %ld remain", initialCookieCount - mCookieCount, mCookieCount));
 }
