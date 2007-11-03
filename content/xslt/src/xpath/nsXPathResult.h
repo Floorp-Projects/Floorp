@@ -66,30 +66,6 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPathResult, NS_IXPATHRESULT_IID)
 
 /**
- * Helper class to keep Mozilla node objects alive as long as the nodeset is
- * alive.
- */
-class txResultHolder
-{
-public:
-    ~txResultHolder()
-    {
-      releaseNodeSet();
-    }
-
-    txAExprResult *get()
-    {
-        return mResult;
-    }
-    void set(txAExprResult *aResult);
-
-private:
-    void releaseNodeSet();
-
-    nsRefPtr<txAExprResult> mResult;
-};
-
-/**
  * A class for evaluating an XPath expression string
  */
 class nsXPathResult : public nsIDOMXPathResult,
@@ -98,6 +74,7 @@ class nsXPathResult : public nsIDOMXPathResult,
 {
 public:
     nsXPathResult();
+    nsXPathResult(const nsXPathResult &aResult);
     ~nsXPathResult();
 
     // nsISupports interface
@@ -140,7 +117,8 @@ private:
 
     void Invalidate(const nsIContent* aChangeRoot);
 
-    txResultHolder mResult;
+    nsRefPtr<txAExprResult> mResult;
+    nsCOMArray<nsIDOMNode> mResultNodes;
     nsCOMPtr<nsIDocument> mDocument;
     PRUint32 mCurrentPos;
     PRUint16 mResultType;
