@@ -1175,6 +1175,10 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   PR_Free(b64);
   b64 = nsnull;
 
+  // Base64 characters are alphanumeric (a-zA-Z0-9) and '+' and '/', so we need
+  // to replace illegal characters -- notably '/'
+  tempLeafName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
+
   // now append our extension.
   nsCAutoString ext;
   mMimeInfo->GetPrimaryExtension(ext);
