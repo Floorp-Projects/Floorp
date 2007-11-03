@@ -138,7 +138,10 @@ EXTRA_PP_COMPONENTS = nsDefaultCLH.js
 endif # MOZ_XUL_APP
 
 ifeq ($(MOZ_BUILD_APP),camino)
-DIRS += autocomplete/public
+DIRS += \
+	autocomplete/public \
+	downloads/public \
+	$(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
