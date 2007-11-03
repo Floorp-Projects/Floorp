@@ -87,10 +87,8 @@ ifndef MOZ_XULRUNNER
 DIRS += \
         related \
         autocomplete \
+        download-manager \
         $(NULL)
-ifneq ($(MOZ_BUILD_APP),camino)
-DIRS += download-manager
-endif
 ifndef MOZ_XUL_APP
 DIRS += \
         console \
