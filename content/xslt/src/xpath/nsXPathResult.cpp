@@ -56,6 +56,20 @@ nsXPathResult::nsXPathResult() : mDocument(nsnull),
 {
 }
 
+nsXPathResult::nsXPathResult(const nsXPathResult &aResult)
+    : mResult(aResult.mResult),
+      mResultNodes(aResult.mResultNodes),
+      mDocument(aResult.mDocument),
+      mCurrentPos(0),
+      mResultType(aResult.mResultType),
+      mContextNode(aResult.mContextNode),
+      mInvalidIteratorState(aResult.mInvalidIteratorState)
+{
+    if (mDocument) {
+        mDocument->AddMutationObserver(this);
+    }
+}
+
 nsXPathResult::~nsXPathResult()
 {
     RemoveObserver();
@@ -70,20 +84,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXPathResult)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXPathResult)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
-    {
-        txAExprResult *result = tmp->mResult.get();
-        if (result && result->getResultType() == txAExprResult::NODESET) {
-            txNodeSet *nodeSet = static_cast<txNodeSet*>(result);
-            nsCOMPtr<nsIDOMNode> node;
-            PRInt32 count = nodeSet->size();
-            PRInt32 i;
-            for (i = 0; i < count; ++i) {
-                txXPathNativeNode::getNode(nodeSet->get(i),
-                                           getter_AddRefs(node));
-                cb.NoteXPCOMChild(node);
-            }
-        }
-    }
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mResultNodes)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXPathResult, nsIDOMXPathResult)
@@ -119,7 +120,7 @@ nsXPathResult::GetNumberValue(double *aNumberValue)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    *aNumberValue = mResult.get()->numberValue();
+    *aNumberValue = mResult->numberValue();
 
     return NS_OK;
 }
@@ -132,7 +133,7 @@ nsXPathResult::GetStringValue(nsAString &aStringValue)
     }
 
     nsAutoString stringValue;
-    mResult.get()->stringValue(stringValue);
+    mResult->stringValue(stringValue);
 
     aStringValue.Assign(stringValue);
 
@@ -146,7 +147,7 @@ nsXPathResult::GetBooleanValue(PRBool *aBooleanValue)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    *aBooleanValue = mResult.get()->booleanValue();
+    *aBooleanValue = mResult->booleanValue();
 
     return NS_OK;
 }
@@ -158,12 +159,12 @@ nsXPathResult::GetSingleNodeValue(nsIDOMNode **aSingleNodeValue)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    txNodeSet *nodeSet = static_cast<txNodeSet*>(mResult.get());
-    if (nodeSet->size() > 0) {
-        return txXPathNativeNode::getNode(nodeSet->get(0), aSingleNodeValue);
+    if (mResultNodes.Count() > 0) {
+        NS_ADDREF(*aSingleNodeValue = mResultNodes[0]);
     }
-
-    *aSingleNodeValue = nsnull;
+    else {
+        *aSingleNodeValue = nsnull;
+    }
 
     return NS_OK;
 }
@@ -183,8 +184,7 @@ nsXPathResult::GetSnapshotLength(PRUint32 *aSnapshotLength)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    txNodeSet *nodeSet = static_cast<txNodeSet*>(mResult.get());
-    *aSnapshotLength = (PRUint32)nodeSet->size();
+    *aSnapshotLength = (PRUint32)mResultNodes.Count();
 
     return NS_OK;
 }
@@ -204,13 +204,12 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    txNodeSet *nodeSet = static_cast<txNodeSet*>(mResult.get());
-    if (mCurrentPos < (PRUint32)nodeSet->size()) {
-        return txXPathNativeNode::getNode(nodeSet->get(mCurrentPos++),
-                                          aResult);
+    if (mCurrentPos < (PRUint32)mResultNodes.Count()) {
+        NS_ADDREF(*aResult = mResultNodes[mCurrentPos++]);
     }
-
-    *aResult = nsnull;
+    else {
+        *aResult = nsnull;
+    }
 
     return NS_OK;
 }
@@ -222,12 +221,7 @@ nsXPathResult::SnapshotItem(PRUint32 aIndex, nsIDOMNode **aResult)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    txNodeSet *nodeSet = static_cast<txNodeSet*>(mResult.get());
-    if (aIndex < (PRUint32)nodeSet->size()) {
-        return txXPathNativeNode::getNode(nodeSet->get(aIndex), aResult);
-    }
-
-    *aResult = nsnull;
+    NS_IF_ADDREF(*aResult = mResultNodes.SafeObjectAt(aIndex));
 
     return NS_OK;
 }
@@ -303,7 +297,26 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
         mDocument = nsnull;
     }
  
-    mResult.set(aExprResult);
+    mResultNodes.Clear();
+
+    // XXX This will keep the recycler alive, should we clear it?
+    mResult = aExprResult;
+
+    if (aExprResult && aExprResult->getResultType() == txAExprResult::NODESET) {
+        txNodeSet *nodeSet = static_cast<txNodeSet*>(aExprResult);
+        nsCOMPtr<nsIDOMNode> node;
+        PRInt32 i, count = nodeSet->size();
+        for (i = 0; i < count; ++i) {
+            txXPathNativeNode::getNode(nodeSet->get(i), getter_AddRefs(node));
+            if (node) {
+                mResultNodes.AppendObject(node);
+            }
+        }
+
+        if (count > 0) {
+            mResult = nsnull;
+        }
+    }
 
     if (!isIterator()) {
         return NS_OK;
@@ -311,22 +324,16 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
 
     mInvalidIteratorState = PR_FALSE;
 
-    txNodeSet* nodeSet = static_cast<txNodeSet*>(aExprResult);
-    nsCOMPtr<nsIDOMNode> node;
-    if (nodeSet->size() > 0) {
-        nsresult rv = txXPathNativeNode::getNode(nodeSet->get(0),
-                                                 getter_AddRefs(node));
-        NS_ENSURE_SUCCESS(rv, rv);
-
+    if (mResultNodes.Count() > 0) {
         // If we support the document() function in DOM-XPath we need to
         // observe all documents that we have resultnodes in.
         nsCOMPtr<nsIDOMDocument> document;
-        node->GetOwnerDocument(getter_AddRefs(document));
+        mResultNodes[0]->GetOwnerDocument(getter_AddRefs(document));
         if (document) {
             mDocument = do_QueryInterface(document);
         }
         else {
-            mDocument = do_QueryInterface(node);
+            mDocument = do_QueryInterface(mResultNodes[0]);
         }
 
         NS_ASSERTION(mDocument, "We need a document!");
@@ -378,12 +385,32 @@ nsXPathResult::GetExprResult(txAExprResult** aExprResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    *aExprResult = mResult.get();
-    if (!*aExprResult) {
+    if (mResult) {
+        NS_ADDREF(*aExprResult = mResult);
+
+        return NS_OK;
+    }
+
+    if (mResultNodes.Count() == 0) {
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    NS_ADDREF(*aExprResult);
+    nsRefPtr<txNodeSet> nodeSet = new txNodeSet(nsnull);
+    if (!nodeSet) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    PRUint32 i, count = mResultNodes.Count();
+    for (i = 0; i < count; ++i) {
+        nsAutoPtr<txXPathNode> node(txXPathNativeNode::createXPathNode(mResultNodes[i]));
+        if (!node) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        nodeSet->append(*node);
+    }
+
+    NS_ADDREF(*aExprResult = nodeSet);
 
     return NS_OK;
 }
@@ -397,50 +424,12 @@ nsXPathResult::Clone(nsIXPathResult **aResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    nsCOMPtr<nsIXPathResult> result = new nsXPathResult();
+    nsCOMPtr<nsIXPathResult> result = new nsXPathResult(*this);
     if (!result) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsINode> contextNode = do_QueryReferent(mContextNode);
-    nsresult rv = result->SetExprResult(mResult.get(), mResultType,
-                                        contextNode);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     result.swap(*aResult);
 
     return NS_OK;
-}
-
-void
-txResultHolder::set(txAExprResult *aResult)
-{
-    releaseNodeSet();
-
-    // XXX This will keep the recycler alive, should we clear it?
-    mResult = aResult;
-
-    if (mResult && mResult->getResultType() == txAExprResult::NODESET) {
-        txNodeSet *nodeSet =
-            static_cast<txNodeSet*>
-                       (static_cast<txAExprResult*>(mResult));
-        PRInt32 i, count = nodeSet->size();
-        for (i = 0; i < count; ++i) {
-            txXPathNativeNode::addRef(nodeSet->get(i));
-        }
-    }
-}
-
-void
-txResultHolder::releaseNodeSet()
-{
-    if (mResult && mResult->getResultType() == txAExprResult::NODESET) {
-        txNodeSet *nodeSet =
-            static_cast<txNodeSet*>
-                       (static_cast<txAExprResult*>(mResult));
-        PRInt32 i, count = nodeSet->size();
-        for (i = 0; i < count; ++i) {
-            txXPathNativeNode::release(nodeSet->get(i));
-        }
-    }
 }
