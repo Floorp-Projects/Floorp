@@ -55,10 +55,9 @@
 <!ENTITY nssFailure2.longDesc "<p>The page you are trying to view can not be shown because the authenticity of the received data could not be verified.</p><ul><li>Please contact the web site owners to inform them of this problem.</li></ul>">
 
 <!ENTITY nssBadCert.title "Secure Connection Failed">
-<!ENTITY nssBadCert.longDesc "<ul>
+<!ENTITY nssBadCert.longDesc2 "<ul>
 <li>This could be a problem with the server's configuration, or it could be someone trying to impersonate the server.</li>
 <li>If you have connected to this server successfully in the past, the error may be temporary, and you can try again later.</li>
-<li>You can see and change your current list of servers with known security problems in your advanced encryption settings.</li>
 </ul>
 ">
 
@@ -72,4 +71,10 @@
 <!ENTITY phishingBlocked.longDesc "
 <p>Entering any personal information on this page may result in identity theft or other fraud.</p>
 <p>These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust.</p>
+">
+
+<!ENTITY securityOverride.linkText "Or you can add an exception...">
+<!ENTITY securityOverride.warningText "
+<p>You should not add an exception if you are using an internet connection that you do not trust completely, or if you are not used to seeing a warning for this server.</p>
+<p>If you still wish to add an exception for this site, you can do so in your advanced encryption settings.</p>
 ">

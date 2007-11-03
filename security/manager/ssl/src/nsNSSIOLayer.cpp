@@ -851,7 +851,7 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
       params[0] = allNames.get();
 
       nsString formattedString;
-      rv = component->PIPBundleFormatStringFromName("certErrorMismatchSingle", 
+      rv = component->PIPBundleFormatStringFromName("certErrorMismatchSingle2", 
                                                     params, 1, 
                                                     formattedString);
       if (NS_SUCCEEDED(rv)) {

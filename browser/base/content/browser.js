@@ -1204,6 +1204,12 @@ function delayedStartup()
 
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler = new BookmarkAllTabsHandler();
+
+  // Attach a listener to watch for "command" events bubbling up from error
+  // pages.  This lets us fix bugs like 401575 which require error page UI to
+  // do privileged things, without letting error pages have any privilege
+  // themselves.
+  gBrowser.addEventListener("command", BrowserOnCommand, false);
 }
 
 function BrowserShutdown()
@@ -2304,6 +2310,50 @@ function BrowserImport()
                     "migration", "modal,centerscreen,chrome,resizable=no");
 #endif
 }
+
+/**
+ * Handle command events bubbling up from error page content
+ */
+function BrowserOnCommand(event) {
+    
+    // Don't trust synthetic events
+    if (!event.isTrusted)
+      return;
+    
+    // If the event came from an ssl error page, it is probably either the "Add
+    // Exception" or "Get Me Out Of Here" button
+    if (/^about:neterror\?e=nssBadCert/.test(event.originalTarget.ownerDocument.documentURI)) {
+      var ot = event.originalTarget;
+      var errorDoc = ot.ownerDocument;
+      
+      if (ot == errorDoc.getElementById('exceptionDialogButton')) {
+        var params = { location : content.location.href,
+                       exceptionAdded : false };
+        window.openDialog('chrome://pippki/content/exceptionDialog.xul',
+                          '','chrome,centerscreen,modal', params);
+        
+        // If the user added the exception cert, attempt to reload the page
+        if (params.exceptionAdded)
+          content.location.reload();
+      }
+      else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
+        // Redirect them to a known-functioning page, default start page
+        var prefs = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefService).getDefaultBranch(null);
+        var url = "about:blank";
+        try {
+          url = prefs.getComplexValue("browser.startup.homepage",
+                                      Ci.nsIPrefLocalizedString).data;
+          // If url is a pipe-delimited set of pages, just take the first one.
+          if (url.indexOf("|") != -1)
+            url = url.split("|")[0];
+        } catch(e) {
+          Components.utils.reportError("Couldn't get homepage pref: " + e);
+        }
+        content.location = url;
+      }
+    }
+  }
 
 function BrowserFullScreen()
 {
