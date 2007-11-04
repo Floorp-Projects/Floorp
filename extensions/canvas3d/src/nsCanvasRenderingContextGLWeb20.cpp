@@ -271,15 +271,15 @@ nsCanvasRenderingContextGLWeb20::BufferSubData()
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(Clear, Clear, PRUint32);
+GL_SAME_METHOD_1(Clear, Clear, PRUint32)
 
-GL_SAME_METHOD_4(ClearColor, ClearColor, float, float, float, float);
+GL_SAME_METHOD_4(ClearColor, ClearColor, float, float, float, float)
 
-GL_SAME_METHOD_1(ClearDepth, ClearDepth, float);
+GL_SAME_METHOD_1(ClearDepth, ClearDepth, float)
 
-GL_SAME_METHOD_1(ClearStencil, ClearStencil, PRInt32);
+GL_SAME_METHOD_1(ClearStencil, ClearStencil, PRInt32)
 
-GL_SAME_METHOD_4(ColorMask, ColorMask, PRBool, PRBool, PRBool, PRBool);
+GL_SAME_METHOD_4(ColorMask, ColorMask, PRBool, PRBool, PRBool, PRBool)
 
 NS_IMETHODIMP
 nsCanvasRenderingContextGLWeb20::CreateProgram(PRUint32 *retval)
@@ -297,7 +297,7 @@ nsCanvasRenderingContextGLWeb20::CreateShader(PRUint32 type, PRUint32 *retval)
     return NS_OK;
 }
 
-GL_SAME_METHOD_1(CullFace, CullFace, PRUint32);
+GL_SAME_METHOD_1(CullFace, CullFace, PRUint32)
 
 NS_IMETHODIMP
 nsCanvasRenderingContextGLWeb20::DeleteBuffers()
@@ -425,16 +425,16 @@ nsCanvasRenderingContextGLWeb20::GetActiveAttrib(PRUint32 program, PRUint32 inde
 
     MakeContextCurrent();
 
-    int len;
+    GLint len;
     glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &len);
     if (len == 0)
         return NS_ERROR_FAILURE;
 
-    nsAutoArrayPtr<char> name = new char[len+1];
+    nsAutoArrayPtr<char> name(new char[len+1]);
     PRInt32 attrsize;
     PRUint32 attrtype;
 
-    glGetActiveAttrib(program, index, len+1, &len, &attrsize, &attrtype, name);
+    glGetActiveAttrib(program, index, len+1, &len, (GLint*) &attrsize, (GLuint*) &attrtype, name);
 
     JSObjectHelper retobj(&js);
     retobj.DefineProperty("size", attrsize);
@@ -455,16 +455,16 @@ nsCanvasRenderingContextGLWeb20::GetActiveUniform(PRUint32 program, PRUint32 ind
 
     MakeContextCurrent();
 
-    int len;
+    GLint len;
     glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &len);
     if (len == 0)
         return NS_ERROR_FAILURE;
 
-    nsAutoArrayPtr<char> name = new char[len+1];
+    nsAutoArrayPtr<char> name(new char[len+1]);
     PRInt32 attrsize;
     PRUint32 attrtype;
 
-    glGetActiveUniform(program, index, len+1, &len, &attrsize, &attrtype, name);
+    glGetActiveUniform(program, index, len+1, &len, (GLint*) &attrsize, (GLenum*) &attrtype, name);
 
     JSObjectHelper retobj(&js);
     retobj.DefineProperty("size", attrsize);
@@ -485,12 +485,12 @@ nsCanvasRenderingContextGLWeb20::GetAttachedShaders(PRUint32 program)
 
     MakeContextCurrent();
 
-    int count;
+    GLint count;
     glGetProgramiv(program, GL_ATTACHED_SHADERS, &count);
 
-    nsAutoArrayPtr<PRUint32> shaders = new PRUint32[count];
+    nsAutoArrayPtr<PRUint32> shaders(new PRUint32[count]);
 
-    glGetAttachedShaders(program, count, NULL, shaders);
+    glGetAttachedShaders(program, count, NULL, (GLuint*) shaders.get());
 
     JSObject *obj = ArrayToJSArray(js.ctx, shaders, count);
 
@@ -604,7 +604,7 @@ nsCanvasRenderingContextGLWeb20::GetParameter(PRUint32 pname)
         ////case GL_FRAMEBUFFER_BINDING:
         {
             PRInt32 iv;
-            glGetIntegerv(pname, &iv);
+            glGetIntegerv(pname, (GLint*) &iv);
             js.SetRetVal(iv);
         }
             break;
@@ -657,7 +657,7 @@ nsCanvasRenderingContextGLWeb20::GetParameter(PRUint32 pname)
         case GL_MAX_VIEWPORT_DIMS: // 2 ints
         {
             PRInt32 iv[2];
-            glGetIntegerv(pname, &iv[0]);
+            glGetIntegerv(pname, (GLint*) &iv[0]);
             js.SetRetVal(iv, 2);
         }
             break;
@@ -666,7 +666,7 @@ nsCanvasRenderingContextGLWeb20::GetParameter(PRUint32 pname)
         case GL_VIEWPORT: // 4 ints
         {
             PRInt32 iv[4];
-            glGetIntegerv(pname, &iv[0]);
+            glGetIntegerv(pname, (GLint*) &iv[0]);
             js.SetRetVal(iv, 4);
         }
             break;
@@ -694,7 +694,7 @@ nsCanvasRenderingContextGLWeb20::GetBufferParameter(PRUint32 target, PRUint32 pn
         case GL_BUFFER_MAPPED:
         {
             PRInt32 iv;
-            glGetBufferParameteriv(target, pname, &iv);
+            glGetBufferParameteriv(target, pname, (GLint*) &iv);
             js.SetRetVal(iv);
         }
             break;
@@ -719,7 +719,7 @@ nsCanvasRenderingContextGLWeb20::GenBuffers(PRUint32 n)
     MakeContextCurrent();
 
     nsAutoArrayPtr<PRUint32> buffers(new PRUint32[n]);
-    glGenBuffers(n, buffers.get());
+    glGenBuffers(n, (GLuint*) buffers.get());
 
     nsAutoArrayPtr<jsval> jsvector(new jsval[n]);
     for (PRUint32 i = 0; i < n; i++)
@@ -747,7 +747,7 @@ nsCanvasRenderingContextGLWeb20::GenTextures(PRUint32 n)
     MakeContextCurrent();
 
     nsAutoArrayPtr<PRUint32> textures(new PRUint32[n]);
-    glGenTextures(n, textures.get());
+    glGenTextures(n, (GLuint*) textures.get());
 
     nsAutoArrayPtr<jsval> jsvector(new jsval[n]);
     for (PRUint32 i = 0; i < n; i++)
@@ -792,7 +792,7 @@ nsCanvasRenderingContextGLWeb20::GetProgramParameter(PRUint32 program, PRUint32 
         case GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
         {
             PRInt32 iv;
-            glGetProgramiv(program, pname, &iv);
+            glGetProgramiv(program, pname, (GLint*) &iv);
             js.SetRetVal(iv);
         }
             break;
@@ -811,7 +811,7 @@ nsCanvasRenderingContextGLWeb20::GetProgramInfoLog(PRUint32 program, char **retv
 
     MakeContextCurrent();
 
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &k);
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, (GLint*) &k);
     if (k == 0) {
         *retval = nsnull;
         return NS_OK;
@@ -819,7 +819,7 @@ nsCanvasRenderingContextGLWeb20::GetProgramInfoLog(PRUint32 program, char **retv
 
     char *s = (char *) PR_Malloc(k);
 
-    glGetProgramInfoLog(program, k, &k, s);
+    glGetProgramInfoLog(program, k, (GLint*) &k, s);
 
     *retval = s;
     return NS_OK;
@@ -930,7 +930,7 @@ nsCanvasRenderingContextGLWeb20::GetTexParameter(PRUint32 target, PRUint32 pname
         case GL_TEXTURE_WRAP_T:
         {
             PRInt32 iv;
-            glGetTexParameteriv(target, pname, &iv);
+            glGetTexParameteriv(target, pname, (GLint*) &iv);
             js.SetRetVal(iv);
         }
             break;
@@ -1061,7 +1061,7 @@ nsCanvasRenderingContextGLWeb20::TexImage2DHTML(PRUint32 target, nsIDOMHTMLEleme
     }
 
     if (!image_data) {
-        nsRefPtr<gfxImageSurface> tmpImageSurface =
+        tmpImageSurface =
             CanvasGLThebes::CreateImageSurface(gfxIntSize(width, height),
                                                gfxASurface::ImageFormatARGB32);
         nsRefPtr<gfxContext> cx =
@@ -1325,7 +1325,7 @@ nsCanvasRenderingContextGLWeb20::GetShaderParameter(PRUint32 shader, PRUint32 pn
         case GL_SHADER_SOURCE_LENGTH:
         {
             PRInt32 iv;
-            glGetShaderiv(shader, pname, &iv);
+            glGetShaderiv(shader, pname, (GLint*) &iv);
             js.SetRetVal(iv);
         }
             break;
@@ -1344,11 +1344,11 @@ nsCanvasRenderingContextGLWeb20::GetShaderInfoLog(PRUint32 shader, char **retval
 
     MakeContextCurrent();
 
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &k);
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, (GLint*) &k);
 
     char *s = (char *) PR_Malloc(k);
 
-    glGetShaderInfoLog(shader, k, &k, s);
+    glGetShaderInfoLog(shader, k, (GLint*) &k, s);
 
     *retval = s;
     return NS_OK;
@@ -1461,11 +1461,8 @@ nsCanvasRenderingContextGLWeb20::ValidateGL()
 
     GLint val;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &val);
+    fprintf (stderr, "-- %d vertex buffers\n", val);
     mAttribBuffers.SetLength(val);
-
-    MakeContextCurrent();
-    if (mPrefWireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     return PR_TRUE;
 }

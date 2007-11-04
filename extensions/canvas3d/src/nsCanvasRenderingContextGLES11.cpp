@@ -161,7 +161,6 @@ NS_NewCanvasRenderingContextGLES11(nsICanvasRenderingContextGLES11** aResult)
     if (!ctx)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    fprintf (stderr, "VVVVV NS_New called\n"); fflush(stderr);
     NS_ADDREF(*aResult = ctx);
     return NS_OK;
 }
@@ -193,9 +192,6 @@ nsCanvasRenderingContextGLES11::~nsCanvasRenderingContextGLES11()
     mColorBuffer = nsnull;
     for (int i = 0; i < MAX_TEXTURE_UNITS; i++)
         mTexCoordBuffer[i] = nsnull;
-
-    fprintf (stderr, "VVVVV ~nsCanvasRenderingContextGLES11\n");
-    fflush (stderr);
 }
 
 //
@@ -465,11 +461,6 @@ nsCanvasRenderingContextGLES11::VertexPointer()
                     newBuffer->GetSimpleBuffer().data);
 
 }
-    (mVertexBuffer.get())->AddRef();
-    nsrefcnt kk = (mVertexBuffer.get())->Release();
-    fprintf (stderr, "VVVVV After VertexPointer: mVertexBuffer: %p refcount: %d\n", mVertexBuffer, kk);
-    fflush(stderr);
-
     return NS_OK;
 }
 
@@ -710,7 +701,7 @@ nsCanvasRenderingContextGLES11::DrawElements()
 
     // verify that the indices are valid; we should skip this step
     // if the caller is trusted
-    PRUint32 vLen, nLen, cLen;
+    PRUint32 vLen = 0, nLen = 0, cLen = 0;
 
     if (mVertexBuffer)
         vLen = mVertexBuffer->mLength / mVertexBuffer->mSize;
@@ -1147,7 +1138,7 @@ nsCanvasRenderingContextGLES11::TexImage2DHTML(PRUint32 target, nsIDOMHTMLElemen
     }
 
     if (!image_data) {
-        nsRefPtr<gfxImageSurface> tmpImageSurface =
+        tmpImageSurface =
             CanvasGLThebes::CreateImageSurface(gfxIntSize(width, height),
                                                gfxASurface::ImageFormatARGB32);
         nsRefPtr<gfxContext> cx =
@@ -1345,7 +1336,7 @@ nsCanvasRenderingContextGLES11::GenTextures(PRUint32 n)
 
     MakeContextCurrent();
 
-    nsAutoArrayPtr<PRUint32> textures(new PRUint32[n]);
+    nsAutoArrayPtr<GLuint> textures(new GLuint[n]);
     glGenTextures(n, textures.get());
 
     nsAutoArrayPtr<jsval> jsvector(new jsval[n]);
@@ -1810,7 +1801,7 @@ nsCanvasRenderingContextGLES11::GenBuffers(PRUint32 n)
 
     MakeContextCurrent();
 
-    nsAutoArrayPtr<PRUint32> buffers(new PRUint32[n]);
+    nsAutoArrayPtr<GLuint> buffers(new GLuint[n]);
     glGenBuffers(n, buffers.get());
 
     nsAutoArrayPtr<jsval> jsvector(new jsval[n]);
@@ -1836,8 +1827,8 @@ nsCanvasRenderingContextGLES11::DeleteBuffers()
     if (js.argc != 1)
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    JSObject *arrayObj;
-    jsuint arrayLen;
+    JSObject *arrayObj = nsnull;
+    jsuint arrayLen = 0;
     if (JSValToJSArrayAndLength(js.ctx, js.argv[0], &arrayObj, &arrayLen)) {
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
