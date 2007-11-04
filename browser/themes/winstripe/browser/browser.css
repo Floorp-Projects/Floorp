@@ -1843,7 +1843,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   cursor: help;
   background-color: ThreeDFace;
 %ifdef MOZ_WIDGET_GTK2
-  -moz-border-end: 1px solid ThreeDShadow;
+  /*-moz-border-end: 1px solid ThreeDShadow;*/
 %else
   -moz-appearance: toolbox;
   outline: 1px solid ThreeDShadow;
@@ -1860,7 +1860,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #identity-box:hover {
 %ifdef MOZ_WIDGET_GTK2
-  /*border-color: ThreeDDarkShadow;*/
+  border-color: ThreeDDarkShadow;
 %else
   outline-color: ThreeDDarkShadow;
 %endif
