@@ -225,8 +225,8 @@ function Script(t, x) {
 // Node extends Array, which we extend slightly with a top-of-stack method.
 Array.prototype.__defineProperty__(
     'top',
-    function () { 
-        return this.length && this[this.length-1]; 
+    function () {
+        return this.length && this[this.length-1];
     },
     false, false, true
 );
@@ -812,6 +812,12 @@ loop:
             if (t.scanOperand) {
                 operators.push(new Node(t));  // prefix increment or decrement
             } else {
+                // Don't cross a line boundary for postfix {in,de}crement.
+                if (t.tokens[(t.tokenIndex + t.lookahead - 1) & 3].lineno !=
+                    t.lineno) {
+                    break loop;
+                }
+
                 // Use >, not >=, so postfix has higher precedence than prefix.
                 while (opPrecedence[operators.top().type] > opPrecedence[tt])
                     reduce();
