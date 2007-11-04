@@ -55,6 +55,8 @@ function testpass(source)
   // Should be stored
   do_check_eq(entry.compression, ZIP_METHOD_STORE);
 
+  print("*** time = " + time);
+  print("*** entry.lastModifiedTime / PR_USEC_PER_MSEC = " + (entry.lastModifiedTime / PR_USEC_PER_MSEC));
   var diff = Math.abs((entry.lastModifiedTime / PR_USEC_PER_MSEC) - time);
   if (diff > TIME_RESOLUTION)
     do_throw(diff);
@@ -70,6 +72,8 @@ function testpass(source)
 
 function run_test()
 {
+  if (tmpFile.exists())
+    print("*** SOMEHOW THE TEMP FILE STILL EXISTS EVEN THOUGH IT SHOULD BE DELETED!");
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   // Shouldn't be there to start with.
