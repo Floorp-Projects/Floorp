@@ -702,7 +702,10 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
     paths.AppendCString(path);
   }
 
-  numComponents = 0;
+  // Check an empty path (for whole-domain blacklist entries)
+  paths.AppendCString(EmptyCString());
+
+  numComponents = 1;
   path.BeginReading(begin);
   path.EndReading(end);
   iter = begin;
