@@ -2313,7 +2313,7 @@ function BrowserOnCommand(event) {
       return;
     
     // If the event came from an ssl error page, it is probably either the "Add
-    // Exception" or "Get Me Out Of Here" button
+    // Exception…" or "Get me out of here!" button
     if (/^about:neterror\?e=nssBadCert/.test(event.originalTarget.ownerDocument.documentURI)) {
       var ot = event.originalTarget;
       var errorDoc = ot.ownerDocument;
