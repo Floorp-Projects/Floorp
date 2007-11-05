@@ -105,6 +105,7 @@
 // preference ID strings
 #define PREF_BRANCH_BASE                        "browser."
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
+#define PREF_BROWSER_HISTORY_EXPIRE_VISITS      "history_expire_visits"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
@@ -154,9 +155,17 @@
 // check idle timer every 5 minutes
 #define IDLE_TIMER_TIMEOUT (300 * PR_MSEC_PER_SEC)
 
-// perform vacuum every 15 mins *** CURRENTLY DISABLED ***
+// *** CURRENTLY DISABLED ***
+// Perform vacuum after 15 minutes of idle time, repeating.
 // 15 minutes = 900 seconds = 900000 milliseconds
 #define VACUUM_IDLE_TIME_IN_MSECS (900000)
+
+// Perform expiration after 5 minutes of idle time, repeating.
+// 5 minutes = 300 seconds = 300000 milliseconds
+#define EXPIRE_IDLE_TIME_IN_MSECS (300000)
+
+// Amount of items to expire at idle time.
+#define MAX_EXPIRE_RECORDS_ON_IDLE 200
 
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
@@ -256,6 +265,7 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
                                mExpireDays(0),
+                               mExpireVisits(0),
                                mAutoCompleteOnlyTyped(PR_FALSE),
                                mBatchLevel(0),
                                mLock(nsnull),
@@ -398,6 +408,7 @@ nsNavHistory::Init()
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_VISITS, this, PR_FALSE);
   }
 
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
@@ -1369,6 +1380,7 @@ nsNavHistory::LoadPrefs()
     return NS_OK;
 
   mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_VISITS, &mExpireVisits);
   PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
@@ -3408,6 +3420,15 @@ nsNavHistory::OnIdle()
   rv = idleService->GetIdleTime(&idleTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // If we've been idle for more than EXPIRE_IDLE_TIME_IN_MSECS
+  // keep the expiration engine chugging along.
+  // Note: This is done prior to a possible vacuum, to optimize space reduction
+  // in the vacuum.
+  if (idleTime > EXPIRE_IDLE_TIME_IN_MSECS) {
+    PRBool dummy;
+    (void)mExpire.ExpireItems(MAX_EXPIRE_RECORDS_ON_IDLE, &dummy);
+  }
+
   // If we've been idle for more than VACUUM_IDLE_TIME_IN_MSECS
   // perform a vacuum.
   if (idleTime > VACUUM_IDLE_TIME_IN_MSECS) {
@@ -3474,8 +3495,9 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gQuitApplicationMessage);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     PRInt32 oldDays = mExpireDays;
+    PRInt32 oldVisits = mExpireVisits;
     LoadPrefs();
-    if (oldDays != mExpireDays)
+    if (oldDays != mExpireDays || oldVisits != mExpireVisits)
       mExpire.OnExpirationChanged();
   }
 
