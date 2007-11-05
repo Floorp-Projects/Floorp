@@ -2225,16 +2225,8 @@ function PageProxyDragGesture(aEvent)
 
 function PageProxyClickHandler(aEvent)
 {
-  switch (aEvent.button) {
-    case 0:
-      gURLBar.select();
-      break;
-    case 1:
-      if (gPrefService.getBoolPref("middlemouse.paste"))
-        middleMousePaste(aEvent);
-      break;
-  }
-  return true;
+  if (aEvent.button == 1 && gPrefService.getBoolPref("middlemouse.paste"))
+    middleMousePaste(aEvent);
 }
 
 function URLBarOnInput(evt)
