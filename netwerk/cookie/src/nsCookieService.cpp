@@ -206,9 +206,11 @@ static PRLogModuleInfo *sCookieLog = PR_NewLogModule("cookie");
 #define COOKIE_LOGFAILURE(a, b, c, d)    LogFailure(a, b, c, d)
 #define COOKIE_LOGSUCCESS(a, b, c, d, e) LogSuccess(a, b, c, d, e)
 #define COOKIE_LOGEVICTED(a)             LogEvicted(a)
-#define COOKIE_LOGSTRING(lvl, fmt) \
-  PR_LOG(sCookieLog, lvl, fmt);    \
-  PR_LOG(sCookieLog, lvl, ("\n"))
+#define COOKIE_LOGSTRING(lvl, fmt)   \
+  PR_BEGIN_MACRO                     \
+    PR_LOG(sCookieLog, lvl, fmt);    \
+    PR_LOG(sCookieLog, lvl, ("\n")); \
+  PR_END_MACRO
 
 static void
 LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const char *aReason)
@@ -322,10 +324,10 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStr
 }
 
 #else
-#define COOKIE_LOGFAILURE(a, b, c, d)    /* nothing */
-#define COOKIE_LOGSUCCESS(a, b, c, d, e) /* nothing */
-#define COOKIE_LOGEVICTED(a)             /* nothing */
-#define COOKIE_LOGSTRING(a, b)           /* nothing */
+#define COOKIE_LOGFAILURE(a, b, c, d)    PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define COOKIE_LOGSUCCESS(a, b, c, d, e) PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define COOKIE_LOGEVICTED(a)             PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define COOKIE_LOGSTRING(a, b)           PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 #endif
 
 /******************************************************************************
