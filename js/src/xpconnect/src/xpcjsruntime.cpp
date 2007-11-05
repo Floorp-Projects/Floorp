@@ -454,15 +454,19 @@ void XPCJSRuntime::UnsetContextGlobals()
         if(nsXPConnect::GetXPConnect()->GetRequestDepth(acx) == 0)
         {
             JS_ClearNewbornRoots(acx);
-            JSDHashEntryHdr* entry =
-                JS_DHashTableOperate(&mClearedGlobalObjects, acx, JS_DHASH_ADD);
-            ClearedGlobalObject* clearedGlobal =
-                reinterpret_cast<ClearedGlobalObject*>(entry);
-            if(clearedGlobal)
+            if(acx->globalObject)
             {
-                clearedGlobal->mContext = acx;
-                clearedGlobal->mGlobalObject = acx->globalObject;
-                acx->globalObject = nsnull;
+                JSDHashEntryHdr* entry =
+                    JS_DHashTableOperate(&mClearedGlobalObjects, acx,
+                                         JS_DHASH_ADD);
+                ClearedGlobalObject* clearedGlobal =
+                    reinterpret_cast<ClearedGlobalObject*>(entry);
+                if(clearedGlobal)
+                {
+                    clearedGlobal->mContext = acx;
+                    clearedGlobal->mGlobalObject = acx->globalObject;
+                    acx->globalObject = nsnull;
+                }
             }
         }
     }
