@@ -1,10 +1,11 @@
 body {
-     font: message-box;
+  font: message-box;
 }
 
 th {
-   width:  100px;
-   text-align: left;
+  width:  100px;
+  text-align: left;
+  vertical-align: top;
 }
 
 table {
