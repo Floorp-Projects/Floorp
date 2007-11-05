@@ -57,6 +57,7 @@ public:
   void OnQuit();
   nsresult ClearHistory();
   void OnExpirationChanged();
+  nsresult ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing);
 
 protected:
 
@@ -86,7 +87,6 @@ protected:
 
   nsresult DoPartialExpiration();
 
-  nsresult ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing);
   nsresult ExpireAnnotations(mozIStorageConnection* aConnection);
   nsresult ExpireEmbeddedLinks(mozIStorageConnection* aConnection);
 

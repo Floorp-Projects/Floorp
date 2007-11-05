@@ -68,6 +68,9 @@ struct nsNavHistoryExpireRecord {
 // running the query.
 #define EXPIRATION_COUNT_PER_RUN 6
 
+// Larger expiration chunk for idle time and shutdown.
+#define EXPIRATION_COUNT_PER_RUN_LARGE 50
+
 // The time in ms to wait after AddURI to try expiration of pages. Short is
 // actually better. If expiration takes an unusually long period of time, it
 // will interfere with video playback in the browser, for example. Such a blip
@@ -92,6 +95,10 @@ const PRTime EXPIRATION_POLICY_MONTHS = ((PRTime)180 * 86400 * PR_USEC_PER_SEC);
 
 // Expiration policy for embedded links (bug #401722)
 const PRTime EMBEDDED_LINK_LIFETIME = ((PRTime)10 * 86400 * PR_USEC_PER_SEC);
+
+// History preferences
+#define PREF_BRANCH_BASE                        "browser."
+#define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
 
 // nsNavHistoryExpire::nsNavHistoryExpire
 //
@@ -254,6 +261,8 @@ void
 nsNavHistoryExpire::OnExpirationChanged()
 {
   mNextExpirationTime = 0;
+  // kick off expiration
+  (void)OnAddURI(PR_Now());
 }
 
 
@@ -393,6 +402,9 @@ nsNavHistoryExpireRecord::nsNavHistoryExpireRecord(
 
 // nsNavHistoryExpire::FindVisits
 //
+//    Find visits to expire, up to the cap in browser.history_expire_visits
+//    then the age in browser.history_expire_days.
+//
 //    aExpireThreshold is the time at which we will delete visits before.
 //    If it is zero, we will not use a threshold and will match everything.
 //
@@ -404,33 +416,74 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
                                mozIStorageConnection* aConnection,
                                nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
+  // get default browser.history_expire_days value
   nsresult rv;
+  nsCOMPtr<nsIPrefService> prefService =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrefBranch> defaultPrefBranch;
+  rv = prefService->GetDefaultBranch(PREF_BRANCH_BASE,
+    getter_AddRefs(defaultPrefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 defaultExpireDays;
+  rv = defaultPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &defaultExpireDays);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // get info for expiring visits, special case no threshold so there is no
-  // SQL parameter
-  nsCOMPtr<mozIStorageStatement> selectStatement;
-  nsCString sql;
-  sql.AssignLiteral("SELECT "
-      "v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, b.fk "
-      "FROM moz_historyvisits v LEFT JOIN moz_places h ON v.place_id = h.id "
-      "LEFT OUTER JOIN moz_bookmarks b on v.place_id = b.fk AND b.type = ?1 ");
-  if (aExpireThreshold != 0)
-    sql.AppendLiteral(" WHERE visit_date < ?2");
-  rv = aConnection->CreateStatement(sql, getter_AddRefs(selectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = selectStatement->BindInt32Parameter(0, nsINavBookmarksService::TYPE_BOOKMARK);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (aExpireThreshold != 0) {
-    rv = selectStatement->BindInt64Parameter(1, aExpireThreshold);
+  // base sql
+  nsCAutoString sqlBase;
+  sqlBase.AssignLiteral(
+    "SELECT v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, b.fk "
+    "FROM moz_historyvisits v LEFT JOIN moz_places h ON v.place_id = h.id "
+    "LEFT OUTER JOIN moz_bookmarks b on v.place_id = b.fk ");
+
+  // If history_expire_days is the default then go ahead and expire up to the
+  // visit cap, else we respect the user's value, or if we're clearing history.
+  if (defaultExpireDays == mHistory->mExpireDays || !aNumToExpire) {
+    // build capped query
+    nsCOMPtr<mozIStorageStatement> visitsStatement;
+    nsCAutoString sqlVisits;
+    sqlVisits.Assign(sqlBase);
+    if (aNumToExpire) {
+      // Setting the visit cap as the OFFSET value selects the next aNumToExpire
+      // records above the cap.
+      sqlVisits.AppendLiteral("ORDER BY v.visit_date DESC LIMIT ?1 OFFSET ?2 ");
+    }
+    rv = aConnection->CreateStatement(sqlVisits, getter_AddRefs(visitsStatement));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (aNumToExpire) {
+      rv = visitsStatement->BindInt64Parameter(0, aNumToExpire);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = visitsStatement->BindInt32Parameter(1, mHistory->mExpireVisits);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    PRBool hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(visitsStatement->ExecuteStep(&hasMore)) && hasMore) {
+      nsNavHistoryExpireRecord record(visitsStatement);
+      aRecords.AppendElement(record);
+    }
   }
 
-  PRBool hasMore = PR_FALSE;
-  while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore &&
-         (aNumToExpire == 0 || aRecords.Length() < aNumToExpire)) {
-    nsNavHistoryExpireRecord record(selectStatement);
-    aRecords.AppendElement(record);
+  if (aExpireThreshold && aRecords.Length() < aNumToExpire) {
+    nsCOMPtr<mozIStorageStatement> selectStatement;
+    nsCAutoString sqlDate;
+    sqlDate.Assign(sqlBase);
+    sqlDate.AppendLiteral("AND visit_date < ?1 LIMIT ?2");
+    rv = aConnection->CreateStatement(sqlDate, getter_AddRefs(selectStatement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = selectStatement->BindInt64Parameter(0, aExpireThreshold);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = selectStatement->BindInt32Parameter(1, aNumToExpire - aRecords.Length());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore) {
+      nsNavHistoryExpireRecord record(selectStatement);
+      aRecords.AppendElement(record);
+    }
   }
+
   return NS_OK;
 }
 
@@ -770,15 +823,9 @@ nsNavHistoryExpire::ExpireForDegenerateRuns()
   if (mAnyEmptyRuns)
     return PR_FALSE;
 
-  // If very few URIs were added this run, or we expired more items than we
-  // added, don't worry about it
-  if (mAddCount < 10 || mAddCount < mExpiredItems)
-    return PR_FALSE;
-
-  // This run looks suspicious, try to expire up to the number of items
-  // we may have missed this session.
+  // Expire a larger chunk of runs to catch up.
   PRBool keepGoing;
-  nsresult rv = ExpireItems(mAddCount - mExpiredItems, &keepGoing);
+  nsresult rv = ExpireItems(EXPIRATION_COUNT_PER_RUN_LARGE, &keepGoing);
   if (NS_FAILED(rv))
     NS_WARNING("ExpireItems failed.");
   return PR_TRUE;
