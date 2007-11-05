@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings SYSTEM "chrome://global/locale/preferences.dtd">
+
+<bindings id="globalBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xhtml="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+  <binding id="unifiedWindow">
+    <content titlebarcolor="#EBEBEB"/>
+  </binding>
+
+  <binding id="unifiedDialog"
+           extends="chrome://global/content/bindings/dialog.xml#dialog">
+    <content titlebarcolor="#EBEBEB">
+      <xul:vbox class="box-inherit dialog-content-box" flex="1">
+        <children/>
+      </xul:vbox>
+          
+      <xul:hbox class="dialog-button-box" anonid="buttons"
+                xbl:inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
+        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true"/>
+        <xul:spacer anonid="spacer" flex="1"/>
+        <xul:button dlgtype="cancel" class="dialog-button"/>
+        <xul:button dlgtype="accept" class="dialog-button" xbl:inherits="disabled=buttondisabledaccept"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="unifiedWizard"
+           extends="chrome://global/content/bindings/wizard.xml#wizard">
+    <content titlebarcolor="#EBEBEB">
+      <xul:hbox class="wizard-header" anonid="Header"/>
+      <xul:deck class="wizard-page-box" flex="1" anonid="Deck">
+        <children includes="wizardpage"/>
+      </xul:deck>
+      <children/>
+      <xul:hbox class="wizard-buttons" anonid="Buttons" xbl:inherits="pagestep,firstpage,lastpage"/>
+    </content>
+  </binding>
+
+  <binding id="unifiedPrefwindow"
+           extends="chrome://global/content/bindings/preferences.xml#prefwindow">
+    <content dlgbuttons="accept,cancel"
+             persist="lastSelected screenX screenY"
+             closebuttonlabel="&preferencesCloseButton.label;"
+             closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+             xhtml:role="dialog"
+             title="&preferencesDefaultTitleMac.title;"
+             titlebarcolor="#EBEBEB">
+      <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
+                      xhtml:role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
+      <xul:hbox flex="1" class="paneDeckContainer">
+        <xul:deck anonid="paneDeck" flex="1">
+          <children includes="prefpane"/>
+        </xul:deck>
+      </xul:hbox>
+      <xul:hbox anonid="dlg-buttons" class="prefWindow-dlgbuttons">
+        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="help" class="dialog-button" hidden="true" icon="help"/>
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true"/>
+        <xul:spacer anonid="spacer" flex="1"/>
+        <xul:button dlgtype="cancel" class="dialog-button" icon="cancel"/>
+        <xul:button dlgtype="accept" class="dialog-button" icon="accept"/>
+      </xul:hbox>
+      <xul:hbox>
+        <children/>
+      </xul:hbox>
+    </content>
+  </binding>
+</bindings>
