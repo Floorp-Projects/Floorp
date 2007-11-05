@@ -52,7 +52,9 @@
 nsXPathResult::nsXPathResult() : mDocument(nsnull),
                                  mCurrentPos(0),
                                  mResultType(ANY_TYPE),
-                                 mInvalidIteratorState(PR_TRUE)
+                                 mInvalidIteratorState(PR_TRUE),
+                                 mBooleanResult(PR_FALSE),
+                                 mNumberResult(0)
 {
 }
 
@@ -120,7 +122,7 @@ nsXPathResult::GetNumberValue(double *aNumberValue)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    *aNumberValue = mResult->numberValue();
+    *aNumberValue = mNumberResult;
 
     return NS_OK;
 }
@@ -132,10 +134,7 @@ nsXPathResult::GetStringValue(nsAString &aStringValue)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    nsAutoString stringValue;
-    mResult->stringValue(stringValue);
-
-    aStringValue.Assign(stringValue);
+    aStringValue = mStringResult;
 
     return NS_OK;
 }
@@ -147,7 +146,7 @@ nsXPathResult::GetBooleanValue(PRBool *aBooleanValue)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    *aBooleanValue = mResult->booleanValue();
+    *aBooleanValue = mBooleanResult;
 
     return NS_OK;
 }
@@ -284,13 +283,17 @@ nsresult
 nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
                              nsINode* aContextNode)
 {
-    mResultType = aResultType;
-    mContextNode = do_GetWeakReference(aContextNode);
-
-    if ((isSnapshot() || isIterator() || isNode()) &&
+    if ((isSnapshot(aResultType) || isIterator(aResultType) ||
+         isNode(aResultType)) &&
         aExprResult->getResultType() != txAExprResult::NODESET) {
+        // The DOM spec doesn't really say what should happen when reusing an
+        // XPathResult and an error is thrown. Let's not touch the XPathResult
+        // in that case.
         return NS_ERROR_DOM_TYPE_ERR;
     }
+
+    mResultType = aResultType;
+    mContextNode = do_GetWeakReference(aContextNode);
 
     if (mDocument) {
         mDocument->RemoveMutationObserver(this);
@@ -301,6 +304,9 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
 
     // XXX This will keep the recycler alive, should we clear it?
     mResult = aExprResult;
+    mBooleanResult = mResult->booleanValue();
+    mNumberResult = mResult->numberValue();
+    mResult->stringValue(mStringResult);
 
     if (aExprResult && aExprResult->getResultType() == txAExprResult::NODESET) {
         txNodeSet *nodeSet = static_cast<txNodeSet*>(aExprResult);
