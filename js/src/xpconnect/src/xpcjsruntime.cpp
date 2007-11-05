@@ -443,12 +443,10 @@ void XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
 
 void XPCJSRuntime::UnsetContextGlobals()
 {
-    if(!JS_DHashTableInit(&mClearedGlobalObjects, JS_DHashGetStubOps(), nsnull,
-                          sizeof(ClearedGlobalObject), JS_DHASH_MIN_SIZE))
-    {
-        mClearedGlobalObjects.ops = nsnull;
+    if(!mClearedGlobalObjects.ops)
         return;
-    }
+
+    RestoreContextGlobals();
 
     JSContext *iter = nsnull, *acx;
     while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
@@ -470,9 +468,16 @@ void XPCJSRuntime::UnsetContextGlobals()
     }
 }
 
+JSDHashOperator
+RemoveContextGlobal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
+                    void *arg)
+{
+  return JS_DHASH_REMOVE;
+}
+
 void XPCJSRuntime::RestoreContextGlobals()
 {
-    if(!mClearedGlobalObjects.ops)
+    if(!mClearedGlobalObjects.ops || mClearedGlobalObjects.entryCount == 0)
         return;
 
     JSContext *iter = nsnull, *acx;
@@ -487,8 +492,7 @@ void XPCJSRuntime::RestoreContextGlobals()
             acx->globalObject = clearedGlobal->mGlobalObject;
         }
     }
-    JS_DHashTableFinish(&mClearedGlobalObjects);
-    mClearedGlobalObjects.ops = nsnull;
+    JS_DHashTableEnumerate(&mClearedGlobalObjects, RemoveContextGlobal, nsnull);
 }
 
 JSObject* XPCJSRuntime::GetUnsetContextGlobal(JSContext* cx)
@@ -1032,6 +1036,11 @@ XPCJSRuntime::~XPCJSRuntime()
         JS_DHashTableFinish(&mJSHolders);
         mJSHolders.ops = nsnull;
     }
+    if(mClearedGlobalObjects.ops)
+    {
+        JS_DHashTableFinish(&mClearedGlobalObjects);
+        mClearedGlobalObjects.ops = nsnull;
+    }
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
@@ -1088,7 +1097,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
                           sizeof(ObjectHolder), 512))
         mJSHolders.ops = nsnull;
-    mClearedGlobalObjects.ops = nsnull;
+    if(!JS_DHashTableInit(&mClearedGlobalObjects, JS_DHashGetStubOps(), nsnull,
+                          sizeof(ClearedGlobalObject), JS_DHASH_MIN_SIZE))
+        mClearedGlobalObjects.ops = nsnull;
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG

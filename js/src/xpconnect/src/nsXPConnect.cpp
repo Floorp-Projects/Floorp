@@ -434,8 +434,15 @@ XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
         nsXPConnect::GetRuntime()->
             TraceXPConnectRoots(cx->runtime->gcMarkingTracer);
     }
+    else if(status == JSGC_END)
+        nsXPConnect::GetRuntime()->RestoreContextGlobals();
 
-    return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+    PRBool ok = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+
+    if(status == JSGC_BEGIN)
+        nsXPConnect::GetRuntime()->UnsetContextGlobals();
+
+    return ok;
 }
 
 PRUint32
@@ -500,9 +507,7 @@ nsXPConnect::Collect()
 
     JSContext *cx = mCycleCollectionContext->GetJSContext();
     gOldJSGCCallback = JS_SetGCCallback(cx, XPCCycleCollectGCCallback);
-    GetRuntime()->UnsetContextGlobals();
     JS_GC(cx);
-    GetRuntime()->RestoreContextGlobals();
     JS_SetGCCallback(cx, gOldJSGCCallback);
     gOldJSGCCallback = nsnull;
 
