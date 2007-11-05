@@ -156,9 +156,9 @@ be temporary, and you can try again later.</li>
 <p>These types of web forgeries are used in scams known as phishing attacks, in which fraudulent web pages and emails are used to imitate sources you may trust.</p>
 ">
 
-<!ENTITY securityOverride.linkText "Or you can add an exception...">
-<!ENTITY securityOverride.getMeOutOfHereButton "Get Me Out of Here">
-<!ENTITY securityOverride.exceptionButtonLabel "Add Exception">
+<!ENTITY securityOverride.linkText "Or you can add an exception…">
+<!ENTITY securityOverride.getMeOutOfHereButton "Get me out of here!">
+<!ENTITY securityOverride.exceptionButtonLabel "Add Exception…">
 
 <!-- LOCALIZATION NOTE (securityOverride.warningText) - Do not translate the
 contents of the <xul:button> tags.  The only language content is the label= field,
@@ -166,7 +166,7 @@ which uses strings already defined above. The button is included here (instead o
 netError.xhtml) because it exposes functionality specific to firefox. -->
 
 <!ENTITY securityOverride.warningText "
-<p>You should not add an exception if you are using an internet connection that you do not trust completely, or if you are not used to seeing a warning for this server.</p>
+<p>You should not add an exception if you are using an internet connection that you do not trust completely or if you are not used to seeing a warning for this server.</p>
 
 <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' id='getMeOutOfHereButton' label='&securityOverride.getMeOutOfHereButton;'/>
 <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' id='exceptionDialogButton' label='&securityOverride.exceptionButtonLabel;'/>
