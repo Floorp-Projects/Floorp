@@ -44,6 +44,11 @@ for (var i = 0; i < chunk1Urls.length; i++) {
   phishUnexpected[chunk1Urls[i]] = true;
 }
 
+// Check that the entries hit based on sub-parts
+phishExpected["baz.com/foo/bar"] = true;
+phishExpected["foo.bar.baz.com/foo"] = true;
+phishExpected["bar.baz.com/"] = true;
+
 var numExpecting;
 
 function testFailure(arg) {
