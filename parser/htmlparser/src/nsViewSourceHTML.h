@@ -57,6 +57,24 @@ class nsParser;
 class nsITokenizer;
 class nsCParserNode;
 
+class CIndirectTextToken : public CTextToken {
+public:
+  CIndirectTextToken() : CTextToken() {
+    mIndirectString=0;
+  }
+  
+  void SetIndirectString(const nsSubstring& aString) {
+    mIndirectString=&aString;
+  }
+
+  virtual const nsSubstring& GetStringValue(void){
+    return (const nsSubstring&)*mIndirectString;
+  }
+
+  const nsSubstring* mIndirectString;
+};
+
+
 class CViewSourceHTML: public nsIDTD
 {
 public:
@@ -110,6 +128,13 @@ protected:
     nsString            mFilename;
 
     PRUint32            mTokenCount;
+
+    nsCParserNode       mEndNode;
+    nsCParserStartNode  mStartNode;
+    nsCParserStartNode  mTokenNode;
+    CIndirectTextToken  mITextToken;
+    nsCParserStartNode  mErrorNode;
+    nsCParserNode       mEndErrorNode;
 };
 
 #endif 
