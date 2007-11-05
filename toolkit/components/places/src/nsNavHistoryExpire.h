@@ -104,7 +104,7 @@ protected:
                             const nsTArray<nsNavHistoryExpireRecord>& aRecords);
 
   // paranoid checks
-  nsresult ExpireHistoryParanoid(mozIStorageConnection* aConnection);
+  nsresult ExpireHistoryParanoid(mozIStorageConnection* aConnection, PRInt32 aMaxRecords);
   nsresult ExpireFaviconsParanoid(mozIStorageConnection* aConnection);
   nsresult ExpireAnnotationsParanoid(mozIStorageConnection* aConnection);
 
