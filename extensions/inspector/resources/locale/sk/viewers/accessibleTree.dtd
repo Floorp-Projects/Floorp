@@ -15,11 +15,12 @@
    - The Original Code is DOM Inspector.
    -
    - The Initial Developer of the Original Code is
-   - Netscape Communications Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2003
+   - Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2007
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Alexander Surkov <surkov.alexander@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,21 +37,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY miFindCSSRules.label "Hľadať pravidlá CSS...">
-<!ENTITY miFindCSSRules.accesskey "H">
+<!ENTITY role.label "Úloha">
+<!ENTITY name.label "Názov">
+<!ENTITY nodeName.label "Názov uzla">
 
-<!ENTITY newRules.label "Nové">
-<!ENTITY deleteSelectedRules.label "Odstrániť">
-<!ENTITY disableSelectedRules.label "Zakázať">
-<!ENTITY openSelectedFileInEditor.label "Otvoriť súbor v editore">
-
-<!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
-<!ENTITY toggleSelectedImportant.label "Prepnúť !important">
-
-<!ENTITY styleRule.label "Pravidlo">
-<!ENTITY styleRuleURI.label "Súbor">
-<!ENTITY styleRuleLineNumber.label "Riadok">
-
-<!ENTITY styleRulePropPriority.label "Priorita">
-<!ENTITY styleRulePropName.label "Vlastnosť">
-<!ENTITY styleRulePropValue.label "Hodnota">
