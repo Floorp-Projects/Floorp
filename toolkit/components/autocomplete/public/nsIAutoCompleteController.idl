@@ -41,7 +41,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(bb4d04f6-997b-437a-9216-7a3dbbd848d0)]
+[scriptable, uuid(b8883380-8cb3-444b-b929-0872b1cb7e73)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -148,7 +148,7 @@ interface nsIAutoCompleteController : nsISupports
   AString getImageAt(in long index);
 
   /*
-   * Set the current search string, but don't start searching
+   * Get / set the current search string.  Note, setting will not start searching
    */
-  void setSearchString(in AString aSearchString);
+  attribute AString searchString;
 };

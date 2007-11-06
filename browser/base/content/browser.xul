@@ -99,7 +99,11 @@
            onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
+    <!-- for search and content formfill/pw manager -->
     <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true"/>
+
+    <!-- for url bar autocomplete -->
+    <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true"/>
 
     <panel id="editBookmarkPanel" orient="vertical">
       <vbox id="editBookmarkPanelContent" flex="1"/>
@@ -250,12 +254,10 @@
           <textbox id="urlbar" flex="1"
                    chromedir="&locale.dir;"
                    type="autocomplete"
-                   autocompletesearch="history"
-                   autocompletepopup="PopupAutoComplete"
+                   autocompletesearch="history" 
+                   autocompletepopup="PopupAutoCompleteRichResult"
                    completeselectedindex="true"
                    tabscrolling="true"
-                   showcommentcolumn="true"
-                   showimagecolumn="true"
                    enablehistory="true"
                    maxrows="10"
                    newlines="stripsurroundingwhitespace"
