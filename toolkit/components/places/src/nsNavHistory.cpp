@@ -2137,9 +2137,6 @@ PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHi
   if (aOptions->ExcludeReadOnlyFolders())
     return PR_FALSE;
 
-  if (aOptions->ExpandQueries())
-    return PR_FALSE;
-
   if (aOptions->IncludeHidden())
     return PR_FALSE;
 
