@@ -2302,6 +2302,9 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
           case JSTVU_PARSE_CONTEXT:
             js_TraceParseContext(trc, tvr->u.parseContext);
             break;
+          case JSTVU_SCRIPT:
+            js_TraceScript(trc, tvr->u.script);
+            break;
           default:
             JS_ASSERT(tvr->count >= 0);
             TRACE_JSVALS(trc, tvr->count, tvr->u.array, "tvr->u.array");
