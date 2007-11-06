@@ -4501,17 +4501,19 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
 JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script)
 {
+    JSTempValueRooter tvr;
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
-    if (!obj)
-        return NULL;
+    if (!script)
+        return js_NewObject(cx, &js_ScriptClass, NULL, NULL);
 
-    if (script) {
-        if (!JS_SetPrivate(cx, obj, script))
-            return NULL;
+    JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
+    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+    if (obj) {
+        JS_SetPrivate(cx, obj, script);
         script->object = obj;
     }
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
 }
 
