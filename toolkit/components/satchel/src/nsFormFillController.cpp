@@ -314,19 +314,6 @@ nsFormFillController::SetMaxRows(PRUint32 aMaxRows)
 }
 
 NS_IMETHODIMP
-nsFormFillController::GetShowImageColumn(PRBool *aShowImageColumn)
-{
-  *aShowImageColumn = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFormFillController::SetShowImageColumn(PRBool aShowImageColumn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
 nsFormFillController::GetShowCommentColumn(PRBool *aShowCommentColumn)
 {
   *aShowCommentColumn = PR_FALSE;
