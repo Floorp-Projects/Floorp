@@ -474,10 +474,6 @@ BookmarksSyncService.prototype = {
        a.GUID == b.GUID)
       return false;
 
-    this._log.debug("deciding on likeness of " + a.GUID + " vs " + b.GUID);
-    this._log.debug("they have the same action, type, and parent");
-    this._log.debug("parent is " + a.data.parentGUID);
-
     switch (a.data.type) {
     case "bookmark":
       if (a.data.URI == b.data.URI &&
@@ -1139,6 +1135,7 @@ BookmarksSyncService.prototype = {
   _onSyncFinished: function BSS__onSyncFinished() {
     this._syncGen.close();
     this._syncGen = null;
+    this._syncing = false;
   },
 
   _getFolderNodes: function BSS__getFolderNodes(folder) {
@@ -1405,6 +1402,7 @@ BookmarksSyncService.prototype = {
     } else {
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
     }
+    this._loggingIn = false;
   },
 
   _onResetLock: function BSS__resetLock(success) {
@@ -1417,11 +1415,7 @@ BookmarksSyncService.prototype = {
       this._log.warn("Lock reset error");
       this._os.notifyObservers(null, "bookmarks-sync:lock-reset-error", "");
     }
-  },
-
-  _onResetServer: function BSS__resetServer(success) {
-    this._resetServerGen.close();
-    this._resetServerGen = null;
+    this._resettingLock = false;
   },
 
   _resetServer: function BSS__resetServer(onComplete) {
@@ -1456,9 +1450,16 @@ BookmarksSyncService.prototype = {
       let unlocked = yield;
       gen.close();
 
-      if (!(statusResp.status == 200 || statusResp.status == 404 ||
-            snapshotResp.status == 200 || snapshotResp.status == 404 ||
-            deltasResp.status == 200 || deltasResp.status == 404)) {
+      function ok(code) {
+        if (code >= 200 && code < 300)
+          return true;
+        if (code == 404)
+          return true;
+        return false;
+      }
+
+      if (!(ok(statusResp.status) && ok(snapshotResp.status) &&
+            ok(deltasResp.status))) {
         this._log.error("Could delete server data, response codes " +
                         statusResp.status + ", " + snapshotResp.status + ", " +
                         deltasResp.status);
@@ -1486,6 +1487,12 @@ BookmarksSyncService.prototype = {
     this._log.warn("generator not properly closed");
   },
 
+  _onResetServer: function BSS__resetServer(success) {
+    this._resetServerGen.close();
+    this._resetServerGen = null;
+    this._resettingServer = false;
+  },
+
   _resetClient: function BSS__resetClient(onComplete) {
     let cont = yield;
     let done = false;
@@ -1506,6 +1513,12 @@ BookmarksSyncService.prototype = {
     } finally {
       generatorDone(this, onComplete, done);
     }
+  },
+
+  _onResetClient: function BSS__resetClient(success) {
+    this._resetClientGen.close();
+    this._resetClientGen = null;
+    this._resettingClient = false;
   },
 
   // XPCOM registration
@@ -1557,12 +1570,22 @@ BookmarksSyncService.prototype = {
   // IBookmarksSyncService
 
   sync: function BSS_sync() {
+    if (this._syncing) {
+      this._log.warn("Sync requested, but already syncing");
+      return;
+    }
+    this._syncing = true;
     this._log.info("Beginning sync");
     let callback = bind2(this, this._onSyncFinished);
     this._syncGen = this._doSync.async(this, callback);
   },
 
   login: function BSS_login() {
+    if (this._loggingIn) {
+      this._log.warn("Login requested, but already logging in");
+      return;
+    }
+    this._loggingIn = true;
     this._log.info("Logging in");
     let callback = bind2(this, this._onLogin);
     this._loginGen = this._dav.login.async(this._dav, callback);
@@ -1575,18 +1598,33 @@ BookmarksSyncService.prototype = {
   },
 
   resetLock: function BSS_resetLock() {
+    if (this._resettingLock) {
+      this._log.warn("Reset lock requested, but already resetting lock");
+      return;
+    }
+    this._resettingLock = true;
     this._log.info("Resetting lock");
     let callback = bind2(this, this._onResetLock);
     this._forceUnlockGen = this._dav.forceUnlock.async(this._dav, callback);
   },
 
   resetServer: function BSS_resetServer() {
+    if (this._resettingServer) {
+      this._log.warn("Reset server requested, but already resetting server");
+      return;
+    }
+    this._resettingServer = true;
     this._log.info("Resetting server data");
     let callback = bind2(this, this._onResetServer);
     this._resetServerGen = this._resetServer.async(this, callback);
   },
 
   resetClient: function BSS_resetClient() {
+    if (this._resettingClient) {
+      this._log.warn("Reset client requested, but already resetting client");
+      return;
+    }
+    this._resettingClient = true;
     this._log.info("Resetting client data");
     let callback = bind2(this, this._onResetClient);
     this._resetClientGen = this._resetClient.async(this, callback);
