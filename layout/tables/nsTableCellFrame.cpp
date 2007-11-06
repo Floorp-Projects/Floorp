@@ -835,10 +835,16 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize);
-  // mIPercentHeightObserver is for children of cells in quirks mode,
-  // but only those than are tables in standards mode.  NeedsToObserve
-  // will determine how far this is propagated to descendants.
-  kidReflowState.mPercentHeightObserver = this;
+
+  // Don't be a percent height observer if we're in the middle of
+  // special-height reflow, in case we get an accidental NotifyPercentHeight()
+  // call (which we shouldn't honor during special-height reflow)
+  if (!aReflowState.mFlags.mSpecialHeightReflow) {
+    // mPercentHeightObserver is for children of cells in quirks mode,
+    // but only those than are tables in standards mode.  NeedsToObserve
+    // will determine how far this is propagated to descendants.
+    kidReflowState.mPercentHeightObserver = this;
+  }
   // Don't propagate special height reflow state to our kids
   kidReflowState.mFlags.mSpecialHeightReflow = PR_FALSE;
   
