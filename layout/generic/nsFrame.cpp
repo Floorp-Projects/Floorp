@@ -3160,14 +3160,11 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
                 NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
-  // Notify the percent height observer if there is a percent height
-  // but no computed height. The observer may be able to initiate
-  // another reflow with a computed height. This happens in the case
-  // where a table cell has no computed height but can fabricate one
-  // when the cell height is known.
+  // Notify the percent height observer if there is a percent height.
+  // The observer may be able to initiate another reflow with a computed
+  // height. This happens in the case where a table cell has no computed
+  // height but can fabricate one when the cell height is known.
   if (aReflowState && aReflowState->mPercentHeightObserver &&
-      ((NS_UNCONSTRAINEDSIZE == aReflowState->ComputedHeight()) ||         // no computed height 
-       (0                    == aReflowState->ComputedHeight()))        && 
       (eStyleUnit_Percent == aReflowState->mStylePosition->mHeight.GetUnit())) {
 
     nsIFrame* prevInFlow = GetPrevInFlow();
