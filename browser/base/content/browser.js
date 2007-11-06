@@ -5856,6 +5856,8 @@ IdentityHandler.prototype = {
    * Click handler for the identity-box element in primary chrome.  
    */
   handleIdentityClick : function(event) {
+    event.stopPropagation();
+
     if (event.button != 0)
       return; // We only want left-clicks
         
