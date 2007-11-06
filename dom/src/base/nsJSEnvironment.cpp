@@ -281,6 +281,27 @@ nsUserActivityObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+// nsCCMemoryPressureObserver observes the memory-pressure notifications
+// and forces a cycle collection when it happens.
+
+class nsCCMemoryPressureObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(nsCCMemoryPressureObserver, nsIObserver)
+
+NS_IMETHODIMP
+nsCCMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                                    const PRUnichar* aData)
+{
+  nsJSContext::CC();
+  return NS_OK;
+}
+
+
 /****************************************************************
  ************************** AutoFree ****************************
  ****************************************************************/
@@ -3619,6 +3640,10 @@ nsJSRuntime::Init()
   obs->AddObserver(activityObserver, "user-interaction-inactive", PR_FALSE);
   obs->AddObserver(activityObserver, "user-interaction-active", PR_FALSE);
   obs->AddObserver(activityObserver, "xpcom-shutdown", PR_FALSE);
+
+  nsIObserver* ccMemPressureObserver = new nsCCMemoryPressureObserver();
+  NS_ENSURE_TRUE(ccMemPressureObserver, NS_ERROR_OUT_OF_MEMORY);
+  obs->AddObserver(ccMemPressureObserver, "memory-pressure", PR_FALSE);
 
   rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
 
