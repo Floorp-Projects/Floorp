@@ -11,10 +11,6 @@ searchbar {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-result-popup");
 }
 
-#PopupAutoCompleteRichResult {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
-}
-
 /* ::::: print preview toolbar ::::: */
 toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");

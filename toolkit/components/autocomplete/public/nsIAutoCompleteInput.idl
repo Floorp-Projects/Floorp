@@ -40,7 +40,7 @@
 
 interface nsIAutoCompletePopup;
 
-[scriptable, uuid(916aa9a0-e049-4ef9-a6dc-ff2f9f0f210b)]
+[scriptable, uuid(8a5918dc-89ba-4bd0-934c-90e9c21568b8)]
 interface nsIAutoCompleteInput : nsISupports
 {  
   /*
@@ -97,6 +97,12 @@ interface nsIAutoCompleteInput : nsISupports
    * the comment for each autocomplete result
    */
   attribute boolean showCommentColumn;
+
+  /*
+   * Option to show a third column in the popup which contains
+   * an additional image for each autocomplete result
+   */
+  attribute boolean showImageColumn;
 
   /* 
    * Number of milliseconds after a keystroke before a search begins
