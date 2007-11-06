@@ -869,12 +869,6 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   display: none;
 }
 
-/* Keep the URL bar LTR */
-
-#PopupAutoCompleteRichResult {
-  direction: ltr !important;
-}
-
 /* ----- PAGE PROXY ICON ----- */
 
 #page-proxy-deck,
@@ -920,15 +914,19 @@ statusbarpanel#statusbar-display {
   height: 16px;
 }
 
-.ac-result-type-tag {
-  list-style-image: url("chrome://browser/skin/places/tag.png");
-  width: 16px; 
+#treecolAutoCompleteImage {
+ max-width : 36px; 
+}
+
+.autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
+  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
+  width: 16px;
   height: 16px;
 }
 
-.ac-result-type-bookmark {
-  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
-  width: 16px; 
+.autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteImage) {
+  list-style-image: url("chrome://browser/skin/places/tag.png");
+  width: 16px;
   height: 16px;
 }
 
