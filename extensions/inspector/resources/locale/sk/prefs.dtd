@@ -1,14 +1,14 @@
-<!ENTITY blinkSelectedElement.label "Zvýrazniť vybratý prvok">
-<!ENTITY installHowTo.label "Bočný panel DOM Inspektora nie je nainštalovaný. Na pridanie bočného panela kliknite na tlačidlo 'Inštalovať'">
-<!ENTITY install.label "Inštalovať">
+<!ENTITY Inspector.label "DOM Inspector">
 <!ENTITY Sidebar.label "Bočný panel">
-<!ENTITY blinkSpeed.label "Rýchlosť zvýraznenia">
-<!ENTITY px.label "(px)">
-<!ENTITY borderColor.label "Farba rámčeka">
-<!ENTITY invertColors.label "Otočiť farby">
 <!ENTITY elementBlinking.label "Zvýraznenie prvkov">
+<!ENTITY blinkSelectedElement.label "Zvýrazniť vybraný prvok">
+<!ENTITY borderColor.label "Farba orámovania">
+<!ENTITY borderWidth.label "Šírka orámovania">
+<!ENTITY px.label "(px)">
 <!ENTITY blinkDuration.label "Doba zvýraznenia">
-<!ENTITY Inspector.label "DOM Inspektor">
-<!ENTITY addNavigatorHooks.label "Pridať do kontextovej ponuky v Prehliadači">
 <!ENTITY ms.label "(ms)">
-<!ENTITY borderWidth.label "Šírka rámčeka">
+<!ENTITY blinkSpeed.label "Rýchlosť zvýraznenia">
+<!ENTITY invertColors.label "Prevrátiť farby">
+<!ENTITY installHowTo.label "Bočný panel aplikácie DOM Inspector nie je nainštalovaný. Bočný panel pridáte kliknutím na tlačidlo 'Inštalovať'.">
+<!ENTITY install.label "Inštalovať">
+<!ENTITY addNavigatorHooks.label "Pridať do kontextových ponúk prehliadača">
