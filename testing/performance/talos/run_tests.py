@@ -278,7 +278,8 @@ def test_file(filename):
                     'init_url'     : yaml_config['init_url']}
   #normalize paths to work accross platforms
   browser_config['firefox'] = os.path.normpath(browser_config['firefox'])
-  browser_config['profile_path'] = os.path.normpath(browser_config['profile_path'])
+  if browser_config['profile_path'] != {}:
+    browser_config['profile_path'] = os.path.normpath(browser_config['profile_path'])
   for dir in browser_config['dirs']:
     browser_config['dirs'][dir] = os.path.normpath(browser_config['dirs'][dir])
   tests = yaml_config['tests']
