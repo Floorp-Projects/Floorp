@@ -53,7 +53,7 @@
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIParser.h"
-#include "nsCycleCollector.h"
+#include "nsJSEnvironment.h"
 
 #ifdef MOZ_ENABLE_GTK2
 #include <gdk/gdkx.h>
@@ -341,8 +341,8 @@ nsDOMWindowUtils::GarbageCollect()
     return NS_ERROR_DOM_SECURITY_ERR;
 #endif
 
-  nsCycleCollector_collect();
-  nsCycleCollector_collect();
+  nsJSContext::CC();
+  nsJSContext::CC();
 
   return NS_OK;
 }
