@@ -195,8 +195,12 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
         mSeparatorsChar[i].SetData(aPresContext, sepChar);
         ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSeparatorsChar[i], isMutable);
       }
+      mSeparatorsCount = sepCount;
+    } else {
+      // No separators.  Note that sepCount can be -1 here, so don't
+      // set mSeparatorsCount to it.
+      mSeparatorsCount = 0;
     }
-    mSeparatorsCount = sepCount;
   }
   return NS_OK;
 }
