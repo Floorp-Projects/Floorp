@@ -710,6 +710,18 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   margin: 2px 3px;
 }
 
+/* This needs to be at least as large as the maximum possible width
+   of the container that holds the icons in the right side of the urlbar.
+   This is a spacer so that the urlbar/searchbar boundary doesn't shift
+   (due to flex calculations) when the urlbar icons appear and disappear. */
+#urlbar-icons-spacer {
+  width: 100px;
+}
+
+#urlbar-spacer {
+  visibility: hidden;
+}
+
 /* ::::: page proxy icon ::::: */
 
 #page-proxy-deck,
