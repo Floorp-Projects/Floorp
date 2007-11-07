@@ -63,7 +63,7 @@
   -moz-margin-start: 3px;
 }
 
-#searchbar .menu-iconic-icon {
+#searchbar .searchbar-popup .menu-iconic-icon {
   min-width: 16px;
   min-height: 16px;
 }
