@@ -1838,12 +1838,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #urlbar .autocomplete-textbox-container {
   -moz-box-align: stretch;
 }
-/*
+
 #identity-box {
   cursor: help;
   background-color: ThreeDFace;
 %ifdef MOZ_WIDGET_GTK2
-  -moz-border-end: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDShadow;
 %else
   -moz-appearance: toolbox;
   outline: 1px solid ThreeDShadow;
@@ -1875,7 +1875,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .unknownIdentity > #identity-icon-label {
   display: none;
 }
-*/
+
 /* Popup Icons */
 #identity-popup-icon {
     height: 64px;
