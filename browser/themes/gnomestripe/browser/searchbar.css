@@ -44,6 +44,7 @@
   border: none;
   border-right: 2px solid ThreeDFace;
   -moz-appearance: none;
+  min-width: 0px !important;
 }
 
 .search-go-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
