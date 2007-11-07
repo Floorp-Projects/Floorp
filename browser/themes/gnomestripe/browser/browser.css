@@ -1271,6 +1271,10 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
   font-weight: bold;
 }
 
+.tabbrowser-tab[selected="true"] > * {
+  background-color: -moz-dialog;
+}
+
 .tabbrowser-tab[selected="true"] > .tab-image-middle > .tab-icon {
   cursor: -moz-grab;
 }
@@ -1278,62 +1282,55 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 .tabbrowser-tab > .tab-image-left {
   width: 8px;
   height: 24px;
-  background: url("chrome://browser/skin/tabbrowser/tab-left.png") no-repeat;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-left.png");
+  background-repeat: no-repeat;
   -moz-border-radius-topleft: 4px;
 }
 
 .tabbrowser-tab[chromedir="rtl"] > .tab-image-left {
-  background: url("chrome://browser/skin/tabbrowser/tab-right.png") no-repeat;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-right.png");
   -moz-border-radius-topleft: 0px;
   -moz-border-radius-topright: 4px;
 }
 
 .tabbrowser-tab:not([selected="true"]):not(:hover) > .tab-image-left {
-  background: url("chrome://browser/skin/tabbrowser/tab-left-bkgnd.png") no-repeat;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-left-bkgnd.png");
 }
 
 .tabbrowser-tab[chromedir="rtl"]:not([selected="true"]):not(:hover) > .tab-image-left {
-  background: url("chrome://browser/skin/tabbrowser/tab-right-bkgnd.png") no-repeat;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-right-bkgnd.png");
 }
 
 .tabbrowser-tab > .tab-image-middle {
   height: 24px;
-  background: url("chrome://browser/skin/tabbrowser/tab-middle.png") repeat-x;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-middle.png");
+  background-repeat: repeat-x;
 }
 
 .tabbrowser-tab:not([selected="true"]):not(:hover) > .tab-image-middle {
-  background: url("chrome://browser/skin/tabbrowser/tab-middle-bkgnd.png") repeat-x;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-middle-bkgnd.png");
 }
 
 .tabbrowser-tab > .tab-image-right {
   width: 8px;
   height: 24px;
-  background: url("chrome://browser/skin/tabbrowser/tab-right.png") no-repeat;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-right.png");
+  background-repeat: no-repeat;
   -moz-border-radius-topright: 4px;
 }
 
 .tabbrowser-tab[chromedir="rtl"] > .tab-image-right {
-  background: url("chrome://browser/skin/tabbrowser/tab-left.png") no-repeat;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-left.png");
   -moz-border-radius-topleft: 4px;
   -moz-border-radius-topright: 0px;
 }
 
 .tabbrowser-tab:not([selected="true"]):not(:hover) > .tab-image-right {
-  background: url("chrome://browser/skin/tabbrowser/tab-right-bkgnd.png") no-repeat;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-right-bkgnd.png");
 }
 
 .tabbrowser-tab[chromedir="rtl"]:not([selected="true"]):not(:hover) > .tab-image-right {
-  background: url("chrome://browser/skin/tabbrowser/tab-left-bkgnd.png") no-repeat;
-  background-color: -moz-dialog;
+  background-image: url("chrome://browser/skin/tabbrowser/tab-left-bkgnd.png");
 }
 
 .tabbrowser-tab:not([selected="true"]) > .tab-image-left,
@@ -1441,7 +1438,6 @@ tabpanels {
 
 .tabbrowser-tab > .tab-close-button {
   background-image: url("chrome://browser/skin/tabbrowser/tab-middle-bkgnd.png");
-  background-color: -moz-dialog;
 }
 
 .tabbrowser-tab:hover > .tab-close-button {
@@ -1500,7 +1496,6 @@ tabpanels {
   -moz-image-region: rect(0, 11px, 14px, 0);
   background-repeat: no-repeat;
   background-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start-bkgnd-enabled.png");
-  background-color: -moz-dialog;
   -moz-border-radius-topright: 4px;
 }
 
@@ -1548,8 +1543,7 @@ tabpanels {
   border: none !important;
   width: 18px;
   background-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end-bkgnd-enabled.png");
-  background-repeat: no-repeat;	
-  background-color: -moz-dialog;
+  background-repeat: no-repeat;
   -moz-border-radius-topleft: 4px;
 }
 
@@ -1625,7 +1619,6 @@ tabpanels {
   height: 23px !important;
   background-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end-bkgnd-enabled.png");
   background-repeat: no-repeat;
-  background-color: -moz-dialog; 
   -moz-border-radius-topleft: 4px;
 }
 
