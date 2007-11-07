@@ -2,6 +2,8 @@ classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 *       skin/classic/browser/browser.css                        (browser.css)
         skin/classic/browser/browser.xml
+        skin/classic/browser/endcap-bkgnd.png
+        skin/classic/browser/endcap-bkgnd-hover.png
 *       skin/classic/browser/engineManager.css                  (engineManager.css)
         skin/classic/browser/Info.png
         skin/classic/browser/pageInfo.css
@@ -20,21 +22,9 @@ classic.jar:
         skin/classic/browser/Toolbar-small.png
         skin/classic/browser/Go-arrow.png
         skin/classic/browser/Go-arrow-rtl.png
-        skin/classic/browser/Go-bkgnd.png
-        skin/classic/browser/Go-bkgnd-rtl.png
-        skin/classic/browser/Go-mid-top.png
-        skin/classic/browser/Go-mid-top-rtl.png
-        skin/classic/browser/Go-mid-bottom.png
-        skin/classic/browser/Go-mid-bottom-rtl.png
 *       skin/classic/browser/searchbar.css                      (searchbar.css)
         skin/classic/browser/Search-glass.png
         skin/classic/browser/Search-glass-rtl.png
-        skin/classic/browser/Search-bkgnd.png
-        skin/classic/browser/Search-bkgnd-rtl.png
-        skin/classic/browser/Search-mid-top.png
-        skin/classic/browser/Search-mid-top-rtl.png
-        skin/classic/browser/Search-mid-bottom.png
-        skin/classic/browser/Search-mid-bottom-rtl.png
         skin/classic/browser/Search-provider-bkgnd.png
         skin/classic/browser/Search-provider-mid-top.png
         skin/classic/browser/Search-provider-mid-bottom.png
