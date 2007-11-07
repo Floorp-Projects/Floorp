@@ -970,6 +970,23 @@ statusbarpanel#statusbar-display {
   height: 16px;
 }
 
+#treecolAutoCompleteImage {
+ max-width : 36px; 
+ padding-end: 18px;
+}
+
+.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteImage) {
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
+  width: 16px;
+  height: 16px;
+}
+
+.autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
+  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
+  width: 16px;
+  height: 16px;
+}
+
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: #555566;
 }
