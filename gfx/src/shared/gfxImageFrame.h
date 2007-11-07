@@ -71,14 +71,24 @@ protected:
   nsIntSize mSize;
 
 private:
-  nsCOMPtr<nsIImage> mImage;
+  PRUint32 PaletteDataLength() const {
+    return ((1 << mDepth) * sizeof(gfx_color));
+  }
 
-  PRPackedBool mInitialized;
-  PRPackedBool mMutable;
-  gfx_format   mFormat;
+  PRUint32 ImageDataLength() const {
+    return (mImage ? mImage->GetLineStride() : mSize.width) * mSize.height;
+  }
+
+  nsCOMPtr<nsIImage> mImage;
+  PRUint8*     mImageData;
 
   PRInt32      mTimeout; // -1 means display forever
   nsIntPoint   mOffset;
   PRInt32      mDisposalMethod;
+
+  gfx_format   mFormat;
+  gfx_depth    mDepth;
   PRInt8       mBlendMethod;
+  PRPackedBool mInitialized;
+  PRPackedBool mMutable;
 };
