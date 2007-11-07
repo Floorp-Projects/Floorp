@@ -1373,3 +1373,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-border-bottom-colors: #000000;
 }
 %endif
+
+/* ::::: Tooltips (multi-line) from content ::::: */
+.htmltooltip-label {
+  max-width: 40em;
+  margin: 0;
+  white-space: -moz-pre-wrap;
+}
