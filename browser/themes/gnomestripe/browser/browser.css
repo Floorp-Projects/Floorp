@@ -55,6 +55,17 @@
   min-height: 26px;
 }
 
+/* These next two rules remove the lighter of the two groove lines below the
+   last toolbar, but only when there are no tabs showing. This gives the best
+   compromise on visual appearance. */
+#navigator-toolbox {
+  margin-bottom: -1px;
+}
+
+.tabbrowser-strip {
+  margin-top: 1px;
+}
+
 /* ..... fix searchbar "add engine" padding issue ..... */
 
 #searchbar .searchbar-dropmarker menuseparator + menuitem { 
