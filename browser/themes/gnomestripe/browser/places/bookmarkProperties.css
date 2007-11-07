@@ -51,6 +51,27 @@
   -moz-image-region: rect(0px, 32px, 16px, 16px) !important;
 }
 
+/**** expander ****/
+#expander {
+  min-width: 0;
+}
+
+.up {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.up:hover {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
+}
+
+.down {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.down:hover {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
+}
+
 /**** name picker ****/
 
 /* Make the microsummary picker look like a regular textbox instead of 
