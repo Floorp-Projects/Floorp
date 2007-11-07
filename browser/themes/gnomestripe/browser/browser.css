@@ -1213,6 +1213,13 @@ toolbarpaletteitem:not([place="toolbar"]) .search-go-button {
   opacity: 0.5;
 }
 
+/* the default settings for the throbber hbox is too tall for vista menus */
+#navigator-throbber > hbox {
+  border-top: 0px;
+  border-bottom: 0px;
+  padding-bottom: 1px;
+}
+
 toolbar[iconsize="small"] #navigator-throbber,
 toolbar[mode="text"] #navigator-throbber {
   list-style-image: url("chrome://browser/skin/Throbber-small.png");
