@@ -911,6 +911,8 @@ nsCanvasRenderingContext2D::SetGlobalAlpha(float aGlobalAlpha)
         return NS_OK;
 
     CurrentState().globalAlpha = aGlobalAlpha;
+    DirtyAllStyles();
+
     return NS_OK;
 }
 
