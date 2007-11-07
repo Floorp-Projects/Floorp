@@ -35,7 +35,7 @@ treechildren::-moz-tree-image {
   margin: 0px 2px;
 }
 
-treechildren::-moz-tree-image(title, container) {
+treechildren::-moz-tree-image(title) {
   list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
@@ -44,18 +44,22 @@ treechildren::-moz-tree-image(title, container) {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
+treechildren::-moz-tree-image(title, livemark\/bookmarkFeedURI) {
+  list-style-image: url("chrome://browser/skin/livemark-item.png") !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
 treechildren::-moz-tree-image(title, open) {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
 treechildren::-moz-tree-row(session-start) {
   border-top:1px dotted ThreeDShadow;
+  font-weight: bold;
 }
 
-/* FIXME this should make the date field invisible, but only does it for
-         unselected items and maybe won't work for different color schemes. */
 treechildren::-moz-tree-cell-text(date, session-continue) {
-  color:white;
+  color: -moz-Field;
 }
 
 treechildren::-moz-tree-image(title, separator) {
@@ -113,6 +117,34 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 /* Search Bar */
 #searchbar {
   margin: 6px -4px 0px 2px;
+}
+
+.textbox-input-closebutton {
+  -moz-appearance: none;
+  margin: 1px 2px 1px 1px;
+  min-width: 0;
+  background-color: transparent;
+  border: none;
+  padding: 0 !important;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  width: 16px;
+  height: 16px;
+  cursor: default;
+}
+
+.textbox-input-closebutton > .button-box {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.textbox-input-closebutton:hover {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+.textbox-input-closebutton:hover:active {
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .small, .small[disabled="true"] {
@@ -233,3 +265,10 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 #searchModifiers {
   padding-right: 3px;
 }
+
+#debugPanel {
+  background-color: ThreeDFace;
+  border-top: 2px solid; 
+  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
+}
+
