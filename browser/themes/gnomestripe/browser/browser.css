@@ -55,16 +55,30 @@
   min-height: 26px;
 }
 
-/* These next two rules remove the lighter of the two groove lines below the
-   last toolbar, but only when there are no tabs showing. This gives the best
-   compromise on visual appearance. */
-#navigator-toolbox {
-  margin-bottom: -1px;
-}
+%ifdef XP_WIN
+/* Need to override most of the Windows XP Classic look here, as the browser
+ * wants only the dark shadow above the content area, and we can't use -1px
+ * margin hacks becuase they'd compromise the native appearance as well.
+ */
 
-.tabbrowser-strip {
-  margin-top: 1px;
+/* Basic etched borders first. */
+#navigator-toolbox > toolbar {
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  -moz-border-top-colors: ThreeDHighlight;
+  -moz-border-bottom-colors: ThreeDShadow;
 }
+/* Don't put a border above the first toolbar, or the 2nd one (nav bar) if the
+ * first is hidden (fullscreen only). */
+#navigator-toolbox > toolbar:first-child,
+#navigator-toolbox > toolbar[moz-collapsed="true"]:first-child + toolbar {
+  border-top: none;
+}
+/* Finally, give the sidebar a full set of etching or it looks silly. */
+#sidebar-box > sidebarheader {
+  border-top: 1px solid ThreeDHighlight;
+}
+%endif
 
 /* ..... fix searchbar "add engine" padding issue ..... */
 
