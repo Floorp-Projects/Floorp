@@ -1,0 +1,67 @@
+#bookmarkproperties {
+  background-color: yellow;
+}
+
+.tag{
+  padding: 2px;
+  margin: 0px;
+  cursor: pointer;
+}
+
+#places-info-options {
+  font-size: 9pt;
+}
+
+#places-info-grid {
+}
+
+#tagbox {
+  padding: 5px;
+}
+
+.tag{
+  padding: 2px;
+  margin: 0px;
+  cursor: pointer;
+}
+
+.tag[selected="true"] {
+  background-color: red;
+}
+
+.tag[isparent="true"] {
+  font-weight: bold;
+}
+
+.tag:hover {
+  background-color: orange;
+}
+
+.l0 {
+  margin-left: 0px;
+}
+
+.l1 {
+  margin-left: 10px;
+}
+
+.l2 {
+  margin-left: 20px;
+}
+
+.l3 {
+  margin-left: 30px;
+}
+
+.l4 {
+  margin-left: 40px;
+}
+
+.l5 {
+  margin-left: 50px;
+}
+
+.l6 {
+  margin-left: 60px;
+}
+

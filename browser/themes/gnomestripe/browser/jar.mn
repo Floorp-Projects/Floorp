@@ -20,11 +20,24 @@ classic.jar:
         skin/classic/browser/Throbber-small.png
         skin/classic/browser/Toolbar.png
         skin/classic/browser/Toolbar-small.png
+#ifdef MOZ_PLACES
+        skin/classic/browser/places/places.css                  (places/places.css)
+        skin/classic/browser/places/defaultFavicon.png          (places/defaultFavicon.png)
+        skin/classic/browser/places/query.png                   (places/query.png)
+        skin/classic/browser/places/bookmarksMenu.png           (places/bookmarksMenu.png)
+        skin/classic/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
+        skin/classic/browser/places/livemarkItem.png            (places/livemarkItem.png)
+        skin/classic/browser/places/placesIcon.png              (places/placesIcon.png)
+        skin/classic/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
+        skin/classic/browser/places/folderDragOver.png          (places/folderDragOver.png)
+        skin/classic/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
+#else
         skin/classic/browser/Bookmarks-folder.png
         skin/classic/browser/bookmarks/addBookmark.css          (bookmarks/addBookmark.css)
         skin/classic/browser/bookmarks/bookmarksManager.css     (bookmarks/bookmarksManager.css)
         skin/classic/browser/bookmarks/Bookmarks-toolbar.png    (bookmarks/Bookmarks-toolbar.png)
         skin/classic/browser/preferences/Options.png            (preferences/Options.png)
         skin/classic/browser/preferences/preferences.css        (preferences/preferences.css)
+#endif
         icon.png
         preview.png
