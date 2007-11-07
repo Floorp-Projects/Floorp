@@ -279,3 +279,26 @@ treechildren::-moz-tree-cell-text(date, session-continue) {
   border-top: 2px solid; 
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
 }
+
+/**** expanders ****/
+
+.expander-up,
+.expander-down {
+  min-width: 0;
+}
+
+.expander-up {
+	list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.expander-down {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.expander-down:hover:active {
+	list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
+}
+
+.expander-up:hover:active {
+	list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
+}
