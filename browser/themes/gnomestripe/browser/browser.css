@@ -914,15 +914,15 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   direction: ltr;
 }
 
-#UrlbarAutoComplete {
+#PopupAutoComplete {
   direction: ltr !important;
 }
 
-#UrlbarAutoComplete[chromedir="rtl"] > tree > treerows {
+#PopupAutoComplete[chromedir="rtl"] > tree > treerows {
   direction: rtl;
 }
 
-#UrlbarAutoComplete .autocomplete-treebody {
+#PopupAutoComplete .autocomplete-treebody {
   direction: ltr;
 }
 
