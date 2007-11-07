@@ -40,15 +40,17 @@
 #include "gfxImageFrame.h"
 #include "nsIServiceManager.h"
 #include <limits.h>
+#include "prmem.h"
 
 NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
 
 gfxImageFrame::gfxImageFrame() :
-  mInitialized(PR_FALSE),
-  mMutable(PR_TRUE),
+  mImageData(nsnull),
   mTimeout(100),
   mDisposalMethod(0), /* imgIContainer::kDisposeNotSpecified */
-  mBlendMethod(1) /* imgIContainer::kBlendOver */
+  mBlendMethod(1), /* imgIContainer::kBlendOver */
+  mInitialized(PR_FALSE),
+  mMutable(PR_TRUE)
 {
   /* member initializers and constructor code */
 }
@@ -56,6 +58,8 @@ gfxImageFrame::gfxImageFrame() :
 gfxImageFrame::~gfxImageFrame()
 {
   /* destructor code */
+  PR_FREEIF(mImageData);
+  mInitialized = PR_FALSE;
 }
 
 /* void init (in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfx_format aFormat); */
@@ -83,11 +87,6 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
     return NS_ERROR_FAILURE;
   }
 
-  if ( (aDepth != 8) && (aDepth != 24) ){
-    NS_ERROR("This Depth is not supported");
-    return NS_ERROR_FAILURE;
-  }
-
   /* reject over-wide or over-tall images */
   const PRInt32 k64KLimit = 0x0000FFFF;
   if ( aWidth > k64KLimit || aHeight > k64KLimit ){
@@ -103,17 +102,13 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   }
 #endif
 
-  nsresult rv;
-
   mOffset.MoveTo(aX, aY);
   mSize.SizeTo(aWidth, aHeight);
 
   mFormat = aFormat;
+  mDepth = aDepth;
 
-  mImage = do_CreateInstance("@mozilla.org/gfx/image;1", &rv);
-  NS_ASSERTION(mImage, "creation of image failed");
-  if (NS_FAILED(rv)) return rv;
-
+  PRBool needImage = PR_TRUE;
   nsMaskRequirements maskReq;
 
   switch (aFormat) {
@@ -137,15 +132,37 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
     maskReq = nsMaskRequirements_kNeeds8Bit;
     break;
 
-  default:
-#ifdef DEBUG
-    printf("unsupported gfx_format\n");
-#endif
+  case gfxIFormats::PAL:
+  case gfxIFormats::PAL_A1:
+    needImage = PR_FALSE;
     break;
+
+  default:
+    NS_ERROR("unsupported gfx_format\n");
+    return NS_ERROR_FAILURE;
   }
 
-  rv = mImage->Init(aWidth, aHeight, aDepth, maskReq);
-  if (NS_FAILED(rv)) return rv;
+  if (needImage) {
+    if (aDepth != 24) {
+      NS_ERROR("This Depth is not supported");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsresult rv;
+    mImage = do_CreateInstance("@mozilla.org/gfx/image;1", &rv);
+    NS_ASSERTION(mImage, "creation of image failed");
+    if (NS_FAILED(rv)) return rv;
+  
+    rv = mImage->Init(aWidth, aHeight, aDepth, maskReq);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    if ((aDepth < 1) || (aDepth > 8)) {
+      NS_ERROR("This Depth is not supported\n");
+      return NS_ERROR_FAILURE;
+    }
+    mImageData = (PRUint8*)PR_MALLOC(PaletteDataLength() + ImageDataLength());
+    NS_ENSURE_TRUE(mImageData, NS_ERROR_OUT_OF_MEMORY);
+  }
 
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -170,7 +187,7 @@ NS_IMETHODIMP gfxImageFrame::SetMutable(PRBool aMutable)
 
   mMutable = aMutable;
 
-  if (!aMutable)
+  if (!aMutable && mImage)
     mImage->Optimize(nsnull);
 
   return NS_OK;
@@ -245,6 +262,7 @@ NS_IMETHODIMP gfxImageFrame::GetNeedsBackground(PRBool *aNeedsBackground)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aNeedsBackground = (mFormat != gfxIFormats::RGB && 
+                       mFormat != gfxIFormats::PAL &&
                        mFormat != gfxIFormats::BGR) ||
                       !mImage->GetIsImageComplete();
   return NS_OK;
@@ -257,7 +275,7 @@ NS_IMETHODIMP gfxImageFrame::GetImageBytesPerRow(PRUint32 *aBytesPerRow)
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBytesPerRow = mImage->GetLineStride();
+  *aBytesPerRow = mImage ? mImage->GetLineStride(): mSize.width;
   return NS_OK;
 }
 
@@ -267,7 +285,7 @@ NS_IMETHODIMP gfxImageFrame::GetImageDataLength(PRUint32 *aBitsLength)
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBitsLength = mImage->GetLineStride() * mSize.height;
+  *aBitsLength = ImageDataLength();
   return NS_OK;
 }
 
@@ -277,8 +295,25 @@ NS_IMETHODIMP gfxImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aData = mImage->GetBits();
-  *length = mImage->GetLineStride() * mSize.height;
+  NS_ASSERTION(mMutable, "trying to get data on an immutable frame");
+
+  *aData = mImage ? mImage->GetBits() : (mImageData + PaletteDataLength());
+  *length = ImageDataLength();
+
+  return NS_OK;
+}
+
+/* void getPaletteData ([array, size_is (length)] out PRUint32 palette, out unsigned long length); */
+NS_IMETHODIMP gfxImageFrame::GetPaletteData(gfx_color **aPalette, PRUint32 *length)
+{
+  if (!mInitialized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  if (!mImageData)
+    return NS_ERROR_FAILURE;
+
+  *aPalette = (gfx_color*)mImageData;
+  *length = PaletteDataLength();
 
   return NS_OK;
 }
@@ -289,6 +324,8 @@ NS_IMETHODIMP gfxImageFrame::LockImageData()
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
+  if (!mImage)
+    return NS_OK;
   return mImage->LockImagePixels(PR_FALSE);
 }
 
@@ -298,6 +335,8 @@ NS_IMETHODIMP gfxImageFrame::UnlockImageData()
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
+  if (!mImage)
+    return NS_OK;
   return mImage->UnlockImagePixels(PR_FALSE);
 }
 

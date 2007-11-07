@@ -791,28 +791,17 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
   if (prevFrameDisposalMethod == imgIContainer::kDisposeRestorePrevious &&
       !mAnim->compositingPrevFrame)
     prevFrameDisposalMethod = imgIContainer::kDisposeClear;
-
-  // Optimization: Skip compositing if the previous frame wants to clear the
-  //               whole image
-  if (prevFrameDisposalMethod == imgIContainer::kDisposeClearAll) {
-    aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
-    *aFrameToUse = aNextFrame;
-    return NS_OK;
-  }
-
   nsIntRect prevFrameRect;
   aPrevFrame->GetRect(prevFrameRect);
   PRBool isFullPrevFrame = (prevFrameRect.x == 0 && prevFrameRect.y == 0 &&
                             prevFrameRect.width == mSize.width &&
                             prevFrameRect.height == mSize.height);
 
-  // Optimization: Skip compositing if the previous frame is the same size as
+  // Optimization: DisposeClearAll if the previous frame is the same size as
   //               container and it's clearing itself
-  if (isFullPrevFrame && prevFrameDisposalMethod == imgIContainer::kDisposeClear) {
-    aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
-    *aFrameToUse = aNextFrame;
-    return NS_OK;
-  }
+  if (isFullPrevFrame && 
+      (prevFrameDisposalMethod == imgIContainer::kDisposeClear))
+    prevFrameDisposalMethod = imgIContainer::kDisposeClearAll;
 
   PRInt32 nextFrameDisposalMethod;
   nsIntRect nextFrameRect;
@@ -824,18 +813,24 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
 
   gfx_format nextFormat;
   aNextFrame->GetFormat(&nextFormat);
-  PRBool nextFrameHasAlpha = (nextFormat != gfxIFormats::RGB) &&
-                             (nextFormat != gfxIFormats::BGR);
-
-  // Optimization: Skip compositing if this frame is the same size as the
-  //               container and it's fully drawing over prev frame (no alpha)
-  if (isFullNextFrame &&
-      (nextFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious) &&
-      !nextFrameHasAlpha) {
-
-    aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
-    *aFrameToUse = aNextFrame;
-    return NS_OK;
+  if (nextFormat != gfxIFormats::PAL && nextFormat != gfxIFormats::PAL_A1) {
+    // Optimization: Skip compositing if the previous frame wants to clear the
+    //               whole image
+    if (prevFrameDisposalMethod == imgIContainer::kDisposeClearAll) {
+      aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
+      *aFrameToUse = aNextFrame;
+      return NS_OK;
+    }
+  
+    // Optimization: Skip compositing if this frame is the same size as the
+    //               container and it's fully drawing over prev frame (no alpha)
+    if (isFullNextFrame &&
+        (nextFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious) &&
+        (nextFormat == gfxIFormats::RGB)) {
+      aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
+      *aFrameToUse = aNextFrame;
+      return NS_OK;
+    }
   }
 
   // Calculate area that needs updating
@@ -844,6 +839,11 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
     case imgIContainer::kDisposeNotSpecified:
     case imgIContainer::kDisposeKeep:
       *aDirtyRect = nextFrameRect;
+      break;
+
+    case imgIContainer::kDisposeClearAll:
+      // Whole image container is cleared
+      aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
       break;
 
     case imgIContainer::kDisposeClear:
@@ -891,55 +891,89 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
     needToBlankComposite = PR_TRUE;
   }
 
-  // Copy previous frame into compositingFrame before we put the new frame on top
-  // Assumes that the previous frame represents a full frame (it could be
-  // smaller in size than the container, as long as the frame before it erased
-  // itself)
-  // Note: Frame 1 never gets into DoComposite(), so (aNextFrameIndex - 1) will
-  // always be a valid frame number.
-  if (mAnim->lastCompositedFrameIndex != aNextFrameIndex - 1 &&
-      prevFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious) {
-
-    // XXX If we had a method of drawing a section of a frame into another, we
-    //     could optimize further:
-    //     if aPrevFrameIndex == 1 && lastCompositedFrameIndex <> -1,
-    //     only firstFrameRefreshArea needs to be drawn back to composite
-    if (isFullPrevFrame) {
-      CopyFrameImage(aPrevFrame, mAnim->compositingFrame);
-    } else {
-      ClearFrame(mAnim->compositingFrame);
-      DrawFrameTo(aPrevFrame, mAnim->compositingFrame, prevFrameRect);
+  // More optimizations possible when next frame is not transparent
+  PRBool doDisposal = PR_TRUE;
+  if ((nextFormat == gfxIFormats::RGB)||(nextFormat == gfxIFormats::PAL)) {
+    if (isFullNextFrame) {
+      // Optimization: No need to dispose prev.frame when 
+      // next frame is full frame and not transparent.
+      doDisposal = PR_FALSE;
+      // No need to blank the composite frame
       needToBlankComposite = PR_FALSE;
-    }
+    } else {
+      if ((prevFrameRect.x >= nextFrameRect.x) &&
+          (prevFrameRect.y >= nextFrameRect.y) &&
+          (prevFrameRect.x + prevFrameRect.width <= nextFrameRect.x + nextFrameRect.width) &&
+          (prevFrameRect.y + prevFrameRect.height <= nextFrameRect.y + nextFrameRect.height)) {
+        // Optimization: No need to dispose prev.frame when 
+        // next frame fully overlaps previous frame.
+        doDisposal = PR_FALSE;  
+      }
+    }      
   }
 
-  // Dispose of previous
-  switch (prevFrameDisposalMethod) {
-    case imgIContainer::kDisposeClear:
-      if (needToBlankComposite) {
-        // If we just created the composite, it could have anything in it's
-        // buffers. Clear them
+  if (doDisposal) {
+    // Dispose of previous: clear, restore, or keep (copy)
+    switch (prevFrameDisposalMethod) {
+      case imgIContainer::kDisposeClear:
+        if (needToBlankComposite) {
+          // If we just created the composite, it could have anything in it's
+          // buffer. Clear whole frame
+          ClearFrame(mAnim->compositingFrame);
+        } else {
+          // Only blank out previous frame area (both color & Mask/Alpha)
+          ClearFrame(mAnim->compositingFrame, prevFrameRect);
+        }
+        break;
+  
+      case imgIContainer::kDisposeClearAll:
         ClearFrame(mAnim->compositingFrame);
-        needToBlankComposite = PR_FALSE;
-      } else {
-        // Blank out previous frame area (both color & Mask/Alpha)
-        ClearFrame(mAnim->compositingFrame, prevFrameRect);
-      }
-      break;
-
-    case imgIContainer::kDisposeRestorePrevious:
-      // It would be better to copy only the area changed back to
-      // compositingFrame.
-      if (mAnim->compositingPrevFrame) {
-        CopyFrameImage(mAnim->compositingPrevFrame, mAnim->compositingFrame);
-
-        // destroy only if we don't need it for this frame's disposal
-        if (nextFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious)
-          mAnim->compositingPrevFrame = nsnull;
-      } else {
-        ClearFrame(mAnim->compositingFrame);
-      }
-      break;
+        break;
+  
+      case imgIContainer::kDisposeRestorePrevious:
+        // It would be better to copy only the area changed back to
+        // compositingFrame.
+        if (mAnim->compositingPrevFrame) {
+          CopyFrameImage(mAnim->compositingPrevFrame, mAnim->compositingFrame);
+  
+          // destroy only if we don't need it for this frame's disposal
+          if (nextFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious)
+            mAnim->compositingPrevFrame = nsnull;
+        } else {
+          ClearFrame(mAnim->compositingFrame);
+        }
+        break;
+      
+      default:
+        // Copy previous frame into compositingFrame before we put the new frame on top
+        // Assumes that the previous frame represents a full frame (it could be
+        // smaller in size than the container, as long as the frame before it erased
+        // itself)
+        // Note: Frame 1 never gets into DoComposite(), so (aNextFrameIndex - 1) will
+        // always be a valid frame number.
+        if (mAnim->lastCompositedFrameIndex != aNextFrameIndex - 1) {
+          gfx_format prevFormat;
+          aPrevFrame->GetFormat(&prevFormat);
+          if (isFullPrevFrame && 
+              prevFormat != gfxIFormats::PAL && prevFormat != gfxIFormats::PAL_A1) {
+            // Just copy the bits
+            CopyFrameImage(aPrevFrame, mAnim->compositingFrame);
+          } else {
+            if (needToBlankComposite) {
+              // Only blank composite when prev is transparent or not full.
+              if (!isFullPrevFrame ||
+                  (prevFormat != gfxIFormats::RGB && prevFormat != gfxIFormats::PAL)) {
+                ClearFrame(mAnim->compositingFrame);
+              }
+            }
+            DrawFrameTo(aPrevFrame, mAnim->compositingFrame, prevFrameRect);
+          }
+        }
+    }
+  } else if (needToBlankComposite) {
+    // If we just created the composite, it could have anything in it's
+    // buffers. Clear them
+    ClearFrame(mAnim->compositingFrame);
   }
 
   // Check if the frame we are composing wants the previous image restored afer
@@ -972,7 +1006,15 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
   aNextFrame->GetTimeout(&timeout);
   mAnim->compositingFrame->SetTimeout(timeout);
 
-  if (isFullNextFrame && mAnimationMode == kNormalAnimMode && mLoopCount != 0) {
+  // Tell the image that it is fully 'downloaded'.
+  nsIntRect r;
+  mAnim->compositingFrame->GetRect(r);
+  nsCOMPtr<nsIImage> img = do_GetInterface(mAnim->compositingFrame);
+  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+
+  // We don't want to keep composite images for 8bit frames...
+  if (isFullNextFrame && mAnimationMode == kNormalAnimMode && mLoopCount != 0 &&
+      nextFormat != gfxIFormats::PAL && nextFormat != gfxIFormats::PAL_A1) {
     // We have a composited full frame
     // Store the composited frame into the mFrames[..] so we don't have to
     // continuously re-build it
@@ -1007,10 +1049,6 @@ void imgContainer::ClearFrame(gfxIImageFrame *aFrame)
   gfxContext ctx(surf);
   ctx.SetOperator(gfxContext::OPERATOR_CLEAR);
   ctx.Paint();
-
-  nsIntRect r;
-  aFrame->GetRect(r);
-  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 }
 
 //******************************************************************************
@@ -1029,8 +1067,6 @@ void imgContainer::ClearFrame(gfxIImageFrame *aFrame, nsIntRect &aRect)
   ctx.SetOperator(gfxContext::OPERATOR_CLEAR);
   ctx.Rectangle(gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
   ctx.Fill();
-
-  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &aRect);
 }
 
 
@@ -1061,14 +1097,6 @@ PRBool imgContainer::CopyFrameImage(gfxIImageFrame *aSrcFrame,
   memcpy(aDataDest, aDataSrc, aDataLengthSrc);
   aDstFrame->UnlockImageData();
 
-  // Tell the image that it's data has been updated
-  nsCOMPtr<nsIImage> img(do_GetInterface(aDstFrame));
-  if (!img)
-    return PR_FALSE;
-  nsIntRect r;
-  aDstFrame->GetRect(r);
-  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-
   return PR_TRUE;
 }
 
@@ -1079,6 +1107,65 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
 {
   if (!aSrc || !aDst)
     return NS_ERROR_NOT_INITIALIZED;
+
+  nsIntRect srcRect, dstRect;
+  aSrc->GetRect(srcRect);
+  aDst->GetRect(dstRect);
+
+  gfx_format format;
+  aSrc->GetFormat(&format);
+  if (format == gfxIFormats::PAL || format == gfxIFormats::PAL_A1) {
+    // dstRect must fully fit within destination image 
+    NS_ASSERTION((aDstRect.x >= 0) && (aDstRect.y >= 0) &&
+                 (aDstRect.x + aDstRect.width <= dstRect.width) &&
+                 (aDstRect.y + aDstRect.height <= dstRect.height),
+                "imgContainer::DrawFrameTo: Invalid aDstRect");
+    // dstRect size may be smaller than source, but not larger
+    NS_ASSERTION((aDstRect.width <= srcRect.width) &&
+                 (aDstRect.height <= srcRect.height),
+                 "imgContainer::DrawFrameTo: source and dest size must be equal");
+
+    if (NS_FAILED(aDst->LockImageData()))
+      return NS_ERROR_FAILURE;
+    // Get pointers to image data
+    PRUint32 size;
+    PRUint8 *srcPixels;
+    gfx_color *colormap;
+    gfx_color *dstPixels;
+
+    aSrc->GetImageData(&srcPixels, &size);
+    aDst->GetImageData((PRUint8**)&dstPixels, &size);
+    aSrc->GetPaletteData(&colormap, &size);
+    if (!srcPixels || !dstPixels || !colormap) {
+      aDst->UnlockImageData();
+      return NS_ERROR_FAILURE;
+    }
+
+    // Skip to the right offset
+    dstPixels += aDstRect.x + (aDstRect.y * dstRect.width);
+    const PRUint32 width = (PRUint32)aDstRect.width;
+    if (format == gfxIFormats::PAL) {
+      for (PRUint32 r = aDstRect.height; r > 0; --r) {
+        for (PRUint32 c = width; c > 0; --c) {
+          *dstPixels++ = colormap[*srcPixels++];
+        }
+        dstPixels += dstRect.width - width;
+      }
+    } else {
+      // With transparent source, skip transparent pixels
+      for (PRUint32 r = aDstRect.height; r > 0; --r) {
+        for (PRUint32 c = width; c > 0; --c) {
+          const PRUint32 color = colormap[*srcPixels++];
+          if (color)
+            *dstPixels = color;
+          dstPixels ++;
+        }
+        dstPixels += dstRect.width - width;
+      }
+    }
+    aDst->UnlockImageData();
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIImage> srcImg(do_GetInterface(aSrc));
   nsRefPtr<gfxASurface> srcSurf;
@@ -1107,9 +1194,6 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
   // before we've even begun.
   dst.Translate(gfxPoint(aDstRect.x, aDstRect.y));
   dst.Rectangle(gfxRect(0, 0, aDstRect.width, aDstRect.height), PR_TRUE);
-
-  nsIntRect srcRect;
-  aSrc->GetRect(srcRect);
   dst.Scale(double(aDstRect.width) / srcRect.width, 
             double(aDstRect.height) / srcRect.height);
   dst.SetSource(srcSurf);
