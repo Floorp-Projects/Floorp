@@ -2939,6 +2939,19 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 }
 
 
+// Invalidates a window if it's not one of ours, for example
+// a window created by a plugin.
+BOOL CALLBACK nsWindow::InvalidateForeignChildWindows(HWND aWnd, LPARAM aMsg)
+{
+  LONG proc = ::GetWindowLongW(aWnd, GWL_WNDPROC);
+  if (proc != (LONG)&nsWindow::WindowProc) {
+    // This window is not one of our windows so invalidate it.
+    VERIFY(::InvalidateRect(aWnd, NULL, FALSE));    
+  }
+  return TRUE;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // Scroll the bits of a window
@@ -2959,6 +2972,10 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   ::ScrollWindowEx(mWnd, aDx, aDy, NULL, (nsnull != aClipRect) ? &trect : NULL,
                    NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
+  // Invalidate all child windows that aren't ours; we're moving them, and we
+  // expect them to be painted at the new location even if they're outside the
+  // region we're bit-blit scrolling. See bug 387701.
+  ::EnumChildWindows(GetWindowHandle(), nsWindow::InvalidateForeignChildWindows, NULL);
   ::UpdateWindow(mWnd);
   return NS_OK;
 }
