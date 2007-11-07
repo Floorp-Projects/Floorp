@@ -47,7 +47,6 @@ classic.jar:
         skin/classic/browser/feeds/subscribe.css                (feeds/subscribe.css)
 #ifdef MOZ_PLACES
         skin/classic/browser/places/places.css                  (places/places.css)
-        skin/classic/browser/places/defaultFavicon.png          (places/defaultFavicon.png)
         skin/classic/browser/places/query.png                   (places/query.png)
         skin/classic/browser/places/livemarkItem.png            (places/livemarkItem.png)
 #endif
