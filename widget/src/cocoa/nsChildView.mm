@@ -804,66 +804,74 @@ NS_IMETHODIMP nsChildView::ConstrainPosition(PRBool aAllowSlop,
 // Move this component, aX and aY are in the parent widget coordinate system
 NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
 {
-  return MoveWithRepaintOption(aX, aY, PR_TRUE);
-}
+  if (!mView || (mBounds.x == aX && mBounds.y == aY))
+    return NS_OK;
 
+  mBounds.x = aX;
+  mBounds.y = aY;
 
-NS_IMETHODIMP nsChildView::MoveWithRepaintOption(PRInt32 aX, PRInt32 aY, PRBool aRepaint)
-{
-  if ((mBounds.x != aX) || (mBounds.y != aY)) {
-    // Invalidate the current location
-    if (mVisible && aRepaint)
-      [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
-        
-    // Set the bounds
-    mBounds.x = aX;
-    mBounds.y = aY;
-   
-    NSRect r;
-    GeckoRectToNSRect(mBounds, r);
-    [mView setFrame:r];
+  NSRect r;
+  GeckoRectToNSRect(mBounds, r);
+  [mView setFrame:r];
 
-    if (mVisible && aRepaint)
-      [mView setNeedsDisplay:YES];
+  if (mVisible)
+    [mView setNeedsDisplay:YES];
 
-    // Report the event
-    ReportMoveEvent();
-  }
+  ReportMoveEvent();
+
   return NS_OK;
 }
 
 
-// Resize this component
 NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  if ((mBounds.width != aWidth) || (mBounds.height != aHeight)) {
-    // Set the bounds
-    mBounds.width  = aWidth;
-    mBounds.height = aHeight;
+  if (!mView || (mBounds.width == aWidth && mBounds.height == aHeight))
+    return NS_OK;
 
-    if (mVisible && aRepaint)
-      [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
-    
-    NSRect r;
-    GeckoRectToNSRect(mBounds, r);
-    [mView setFrame:r];
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
 
-    if (mVisible && aRepaint)
-      [mView setNeedsDisplay:YES];
+  NSRect r;
+  GeckoRectToNSRect(mBounds, r);
+  [mView setFrame:r];
 
-    // Report the event
-    ReportSizeEvent();
-  }
- 
+  if (mVisible && aRepaint)
+    [mView setNeedsDisplay:YES];
+
+  ReportSizeEvent();
+
   return NS_OK;
 }
 
 
-// Resize this component
 NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  MoveWithRepaintOption(aX, aY, aRepaint);
-  Resize(aWidth, aHeight, aRepaint);
+  BOOL isMoving = (mBounds.x != aX || mBounds.y != aY);
+  BOOL isResizing = (mBounds.width != aWidth || mBounds.height != aHeight);
+  if (!mView || (!isMoving && !isResizing))
+    return NS_OK;
+
+  if (isMoving) {
+    mBounds.x = aX;
+    mBounds.y = aY;
+  }
+  if (isResizing) {
+    mBounds.width  = aWidth;
+    mBounds.height = aHeight;
+  }
+
+  NSRect r;
+  GeckoRectToNSRect(mBounds, r);
+  [mView setFrame:r];
+
+  if (mVisible && aRepaint)
+    [mView setNeedsDisplay:YES];
+
+  if (isMoving)
+    ReportMoveEvent();
+  if (isResizing)
+    ReportSizeEvent();
+
   return NS_OK;
 }
 
