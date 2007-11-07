@@ -20,6 +20,9 @@ classic.jar:
         skin/classic/browser/Throbber-small.png
         skin/classic/browser/Toolbar.png
         skin/classic/browser/Toolbar-small.png
+#ifdef MOZ_FEEDS
+        skin/classic/browser/feeds/feedhandler.css              (feeds/feedhandler.css)
+#endif
 #ifdef MOZ_PLACES
         skin/classic/browser/places/places.css                  (places/places.css)
         skin/classic/browser/places/defaultFavicon.png          (places/defaultFavicon.png)
