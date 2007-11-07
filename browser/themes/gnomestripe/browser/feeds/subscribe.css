@@ -36,7 +36,7 @@ html {
 
 #feedIntroText {
   display: none;
-  margin-left: 2em;
+  -moz-margin-start: 2em;
 }
 
 #feedHeader[firstrun="true"] #feedIntroText {
@@ -49,7 +49,7 @@ html {
 }
 
 #feedHeader[firstrun="true"] #feedSubscribeLine {
-  margin-left: 1.7em;
+  -moz-margin-start: 1.7em;
   background: -moz-Field;
 }
 
@@ -66,7 +66,7 @@ html {
 
 #feedSubscribeLink {
   background: url("chrome://browser/skin/places/livemarkItem.png") left 0 no-repeat;
-  padding-left: 18px;
+  -moz-padding-start: 18px;
   font-weight: bold;
   -moz-margin-end: .4em;
 }
@@ -128,7 +128,10 @@ h2 {
 
 #feedTitleLink {
   float: right;
-  margin: 0 0 0 .6em;
+  -moz-margin-start: .6em;
+  -moz-margin-end: 0;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 a[href] img {
@@ -136,11 +139,17 @@ a[href] img {
 }
 
 #feedTitleContainer {
-  margin: 0 .6em 0 0;
+  -moz-margin-start: 0;
+  -moz-margin-end: .6em;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 #feedTitleImage {
-  margin: 0 0 0 .6em;
+  -moz-margin-start: .6em;
+  -moz-margin-end: 0;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .feedEntryContent {
