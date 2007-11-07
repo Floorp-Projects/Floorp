@@ -972,7 +972,6 @@ statusbarpanel#statusbar-display {
 
 #treecolAutoCompleteImage {
  max-width : 36px; 
- padding-end: 18px;
 }
 
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
