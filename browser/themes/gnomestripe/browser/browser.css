@@ -1263,7 +1263,6 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
  */
 
 .tabbrowser-tabs {
-  -moz-binding: url("chrome://browser/skin/tabbrowser/tabbrowserBindings.xml#tabbrowser-tabs") !important;
   padding-top: 0px;
   background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") !important;
   -moz-padding-start: 0px;
@@ -1279,7 +1278,6 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 .tabbrowser-tab {
   -moz-appearance: none !important;
-  -moz-binding: url("chrome://browser/skin/tabbrowser/tabbrowserBindings.xml#tabbrowser-tab") !important;
   background: transparent !important;
   margin: 0px 0px 1px !important;
   padding: 0px !important;
