@@ -1,0 +1,10 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+#monitorImage {
+  list-style-image: url("chrome://browser/skin/monitor.png");
+}
+
+#noPreviewAvailable {
+  background-color: white !important;
+  font-size: 12px !important;
+}
