@@ -69,14 +69,6 @@
 PRInt32 gfxPlatformGtk::sDPI = -1;
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
-static cairo_user_data_key_t cairo_gdk_window_key;
-static cairo_user_data_key_t cairo_gdk_pixmap_key;
-static void do_gdk_pixmap_unref (void *data)
-{
-    GdkPixmap *pmap = (GdkPixmap*)data;
-    gdk_pixmap_unref (pmap);
-}
-
 gfxPlatformGtk::gfxPlatformGtk()
 {
 #ifdef MOZ_ENABLE_GLITZ
@@ -174,14 +166,6 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                             size);
         }
 
-        if (pixmap && newSurface) {
-            // set up the surface to auto-unref the gdk pixmap when the surface
-            // is released
-            newSurface->SetData(&cairo_gdk_pixmap_key,
-                                pixmap,
-                                do_gdk_pixmap_unref);
-        }
-
     } else {
 #ifdef MOZ_ENABLE_GLITZ
         glitz_drawable_format_t *gdformat = glitz_glx_find_pbuffer_format
@@ -213,31 +197,6 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
 
     NS_IF_ADDREF(newSurface);
     return newSurface;
-}
-
-GdkDrawable*
-gfxPlatformGtk::GetSurfaceGdkDrawable(gfxASurface *aSurf)
-{
-    GdkDrawable *gd;
-    gd = (GdkDrawable*) cairo_surface_get_user_data(aSurf->CairoSurface(), &cairo_gdk_pixmap_key);
-    if (gd)
-        return gd;
-
-    gd = (GdkDrawable*) cairo_surface_get_user_data(aSurf->CairoSurface(), &cairo_gdk_window_key);
-    if (gd)
-        return gd;
-
-    return nsnull;
-}
-
-void
-gfxPlatformGtk::SetSurfaceGdkWindow(gfxASurface *aSurf,
-                                    GdkWindow *win)
-{
-    cairo_surface_set_user_data(aSurf->CairoSurface(),
-                                &cairo_gdk_window_key,
-                                win,
-                                nsnull);
 }
 
 nsresult
