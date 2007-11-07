@@ -1443,6 +1443,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 /* star icon */
 #star-icon {
   list-style-image: url("chrome://browser/skin/places/starPage.png");
+  width: 16px;
+  height: 16px;
 }
 
 #star-icon[starred="true"] {
