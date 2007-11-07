@@ -6,10 +6,6 @@
 }
 %endif
 
-#searchbar .search-go-button {
-  border: 0px !important;
-}
-
 .searchbar-textbox {
   min-height: 22px;
   width: 4em;
@@ -137,9 +133,9 @@ toolbar[mode="text"] .searchbar-box {
 
 toolbar:not([mode="text"]) .search-go-button {
   list-style-image: url("chrome://browser/skin/Search-glass.png");
+  border: 0px !important;
   padding: 0px;
   -moz-appearance: none;
-  -moz-image-region: rect(0px 25px 22px 0px);
 }
 
 toolbar:not([mode="text"]) .search-go-button[chromedir="rtl"] {
@@ -243,6 +239,10 @@ toolbar[mode="text"] .search-go-button-stack .search-go-button-bkgnd {
   -moz-image-region: rect(12px, 100px, 22px, 75px);
 }
 
+
+.search-go-button {
+  -moz-image-region: rect(0px 25px 22px 0px);
+}
 
 .search-go-button:hover {
   -moz-image-region: rect(0px 50px 22px 25px);
