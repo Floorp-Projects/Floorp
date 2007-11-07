@@ -23,4 +23,13 @@
     </content>
   </binding>
 
+  <binding id="autocomplete-security-wrapper" extends="xul:hbox">
+    <content>
+      <xul:hbox id="autocomplete-security-wrapper" flex="1">
+        <children/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+
 </bindings>
