@@ -691,39 +691,31 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRBool aAllowSlop,
 
 
 NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
-{  
-  if (mWindow) {  
-    // if we're a popup, we have to convert from our parent widget's coord
-    // system to the global coord system first because the (x,y) we're given
-    // is in its coordinate system.
-    if (mWindowType == eWindowType_popup) {
-      nsRect localRect, globalRect; 
-      localRect.x = aX;
-      localRect.y = aY;  
-      if (mParent) {
-        mParent->WidgetToScreen(localRect,globalRect);
-        aX=globalRect.x;
-        aY=globalRect.y;
-      }
-    }
-    
-    // the point we have is in Gecko coordinates (origin top-left). Convert
-    // it to Cocoa ones (origin bottom-left).
-    NSPoint coord = {aX, FlippedScreenY(aY)};
+{
+  if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
+    return NS_OK;
 
-    //printf("final coords %f %f\n", coord.x, coord.y);
-    //printf("- window coords before %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
-    [mWindow setFrameTopLeftPoint:coord];
-    //printf("- window coords after %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
+  // if we're a popup, we have to convert from our parent widget's coord
+  // system to the global coord system first because the (x,y) we're given
+  // is in its coordinate system.
+  if (mParent && mWindowType == eWindowType_popup) {
+    nsRect globalRect;
+    nsRect localRect(aX, aY, 0, 0);
+    mParent->WidgetToScreen(localRect, globalRect);
+    aX = globalRect.x;
+    aY = globalRect.y;
   }
-  
+
+  // The point we have is in Gecko coordinates (origin top-left). Convert
+  // it to Cocoa ones (origin bottom-left).
+  NSPoint coord = {aX, FlippedScreenY(aY)};
+  [mWindow setFrameTopLeftPoint:coord];
+
   return NS_OK;
 }
 
 
-//
 // Position the window behind the given window
-//
 NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                      nsIWidget *aWidget, PRBool aActivate)
 {
@@ -762,32 +754,41 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  Resize(aWidth, aHeight, aRepaint);
-  Move(aX, aY);
+  BOOL isMoving = (mBounds.x != aX || mBounds.y != aY);
+  BOOL isResizing = (mBounds.width != aWidth || mBounds.height != aHeight);
+
+  if (IsResizing() || !mWindow || (!isMoving && !isResizing))
+    return NS_OK;
+
+  nsRect geckoRect(aX, aY, aWidth, aHeight);
+  NSRect newFrame = geckoRectToCocoaRect(geckoRect);
+
+  StartResizing();
+  [mWindow setFrame:newFrame display:NO];
+  StopResizing();
+
+  if (isResizing)
+    ReportSizeEvent();
+
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  if (IsResizing())
+  if (IsResizing() || !mWindow || (mBounds.width == aWidth && mBounds.height == aHeight))
     return NS_OK;
 
-  if (mWindow) {
-    NSRect newFrame = [mWindow frame];
+  NSRect newFrame = [mWindow frame];
+  newFrame.size.width = aWidth;
+  // We need to adjust for the fact that gecko wants the top of the window
+  // to remain in the same place.
+  newFrame.origin.y += newFrame.size.height - aHeight;
+  newFrame.size.height = aHeight;
 
-    // width is easy, no adjusting necessary
-    newFrame.size.width = aWidth;
-
-    // We need to adjust for the fact that gecko wants the top of the window
-    // to remain in the same place.
-    newFrame.origin.y += newFrame.size.height - aHeight;
-    newFrame.size.height = aHeight;
-
-    StartResizing();
-    [mWindow setFrame:newFrame display:NO];
-    StopResizing();
-  }
+  StartResizing();
+  [mWindow setFrame:newFrame display:NO];
+  StopResizing();
 
   ReportSizeEvent();
 
