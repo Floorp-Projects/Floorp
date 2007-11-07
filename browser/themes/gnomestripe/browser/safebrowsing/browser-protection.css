@@ -35,12 +35,6 @@
   max-height: 24px;
 }
 
-.safebrowsing-palm-link { 
-  color: blue; 
-  cursor: pointer; 
-  text-decoration: underline 
-}
-
 .safebrowsing-palm-paragraph {
   padding-bottom: 2em;
 }
@@ -81,8 +75,8 @@
 }
 
 #safebrowsing-palm-message-actionbox { 
-  padding-top: 10px;
-  padding-bottom: 15px;
+  padding: 10px 10px 15px;
+  text-align: center;
 }
 
 .safebrowsing-palm-bigtext { 
