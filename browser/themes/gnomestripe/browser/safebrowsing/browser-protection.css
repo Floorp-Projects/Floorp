@@ -94,18 +94,13 @@
   width: 78px;
 }
 
-#safebrowsing-dim-area-canvas {
-  background-image: url("chrome://browser/skin/safebrowsing/dim.png");
-  height: 0px;
+#safebrowsing-page-canvas {
+  position: fixed;
 }
 
-#safebrowsing-dim-area-transp {
+#safebrowsing-dim-area-canvas {
   background-image: url("chrome://browser/skin/safebrowsing/dim.png");
-  height: 0px;
-  left: 0px;
-  top: 0px;
   position: fixed;
-  display: none;
 }
 
 #safebrowsing-pref-caption { 
