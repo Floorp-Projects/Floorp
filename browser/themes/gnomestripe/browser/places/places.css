@@ -107,6 +107,7 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 #contentTitle {
   margin: 5px 8px 5px 0px;
   font-weight: bold;
+  width: 0px;
 }
 
 /* Search Bar */
@@ -232,4 +233,3 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 #searchModifiers {
   padding-right: 3px;
 }
-
