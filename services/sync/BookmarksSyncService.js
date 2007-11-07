@@ -517,6 +517,11 @@ BookmarksSyncService.prototype = {
     if (!a || !b)
       return false;
 
+    if (typeof(a) != "object" && typeof(b) != "object")
+      return a == b;
+    if (typeof(a) != "object" || typeof(b) != "object")
+      return false;
+
     for (let key in a) {
       if (typeof(a[key]) == "object") {
         if (!typeof(b[key]) == "object")
