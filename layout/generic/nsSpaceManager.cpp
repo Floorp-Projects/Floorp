@@ -872,7 +872,10 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
     return NS_OK;
 
   // Allocate a band rect
-  BandRect* bandRect = new BandRect(rect.x, rect.y, rect.XMost(), rect.YMost(), aFrame);
+  BandRect* bandRect = new BandRect(rect.x, rect.y, 
+                                    PR_MIN(rect.XMost(), nscoord_MAX),
+                                    PR_MIN(rect.YMost(), nscoord_MAX),
+                                    aFrame);
   if (nsnull == bandRect) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
