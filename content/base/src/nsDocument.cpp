@@ -1738,6 +1738,8 @@ nsDocument::GetElementsByClassNameHelper(nsINode* aRootNode,
     elements = new nsContentList(aRootNode, MatchClassNames,
                                  DestroyClassNameArray, classes);
   } else {
+    delete classes;
+    classes = nsnull;
     elements = new nsBaseContentList();
   }
   if (!elements) {
