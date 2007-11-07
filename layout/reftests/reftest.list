@@ -39,6 +39,9 @@ include counters/reftest.list
 # first-letter/
 include first-letter/reftest.list
 
+# first-line/
+include first-line/reftest.list
+
 # svg/
 include svg/reftest.list
 

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><head>
+<style>
+body > span::first-line { }
+span::before { content:"before text"; border:3px solid black;}
+</style>
+</head>
+<body>
+
+<span style=" float: left; -moz-column-count: 2;">
+  <span style="float: right;">
+    <span style=" float: right;-moz-column-count: 2;"></span>
+  </span>
+</span>
+
+</body>
+</html>
