@@ -57,7 +57,7 @@ native nsRectRef(nsIntRect &);
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  */
-[scriptable, uuid(7292afa2-3b94-424d-97d5-51ce2f04c0fe)]
+[scriptable, uuid(9c37930b-cadd-453c-89e1-9ed456715b9c)]
 interface gfxIImageFrame : nsISupports
 {
   /**
@@ -131,6 +131,11 @@ interface gfxIImageFrame : nsISupports
 
   // XXX do we copy here?  lets not...
   void getImageData([array, size_is(length)] out PRUint8 bits, out unsigned long length);
+
+  /**
+   * Get Palette data pointer
+   */
+  void getPaletteData([array, size_is(length)] out gfx_color palette, out unsigned long length);
 
   /**
    * Lock image pixels before addressing the data directly
