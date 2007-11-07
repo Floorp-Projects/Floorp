@@ -139,9 +139,11 @@ toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
   visibility: hidden;
 }
 
+%ifdef MOZ_PLACES
 toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   display: none;
 }
+%endif
 
 /* ::::: bookmark menus ::::: */
 
@@ -992,6 +994,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }
 
+%ifdef MOZ_PLACES
 #places-bookmark {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
@@ -1051,3 +1054,4 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .bookmark-item[dragover-bottom="true"] {
   -moz-border-bottom-colors: #000000;
 }
+%endif
