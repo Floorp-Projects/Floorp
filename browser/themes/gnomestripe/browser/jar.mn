@@ -50,6 +50,9 @@ classic.jar:
         skin/classic/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
         skin/classic/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
         skin/classic/browser/places/folderDragOver.png          (places/folderDragOver.png)
+        skin/classic/browser/places/editBookmarkOverlay.css     (places/editBookmarkOverlay.css)
+        skin/classic/browser/places/starPage.png                (places/starPage.png)
+        skin/classic/browser/places/pageStarred.png             (places/pageStarred.png)
         skin/classic/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
         skin/classic/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
 #ifdef MOZ_SAFE_BROWSING
