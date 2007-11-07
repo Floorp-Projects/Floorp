@@ -14,6 +14,20 @@
   min-width: 100px;
 }
 
+.searchbar-engine-button {
+  min-width: 22px;
+  margin: 0px 3px 0px 0px;
+}
+
+.searchbar-engine-button[addengines="true"] {
+  list-style-image: url("chrome://browser/skin/Search-add-engines.png");
+}
+
+.searchbar-dropmarker-image {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  padding: 8px 0px 7px 20px;
+}
+
 .search-go-button-container {
   border-left: 1px solid ThreeDShadow;
 }
@@ -45,33 +59,8 @@
   border-bottom: 1px solid ThreeDShadow;
 }
 
-.search-go-button > .toolbarbutton-menubutton-button {
-  padding: 1px !important;
-  border: none;
-  border-right: 2px solid ThreeDFace;
-  -moz-appearance: none;
-  min-width: 0px !important;
-}
-
-.search-go-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  margin-right: 0px !important;
-}
-
-.search-go-button > .toolbarbutton-menubutton-button > .toolbarbutton-text {
-  display: none;
-}
-
 .search-go-button-container {
   background-color: ThreeDFace;
-}
-
-.search-go-button > .toolbarbutton-menubutton-dropmarker {
-  padding-top: 0px;
-  padding-bottom: 0px;
-}
-
-.search-go-button[addengines="true"] {
-  list-style-image: url("chrome://browser/skin/Search-add-engines.png");
 }
 
 .search-go-button:hover {
