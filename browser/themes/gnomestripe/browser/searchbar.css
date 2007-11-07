@@ -131,14 +131,14 @@ toolbar[mode="text"] .searchbar-box {
   -moz-box-align: center;
 }
 
-toolbar:not([mode="text"]) .search-go-button {
+.search-go-button {
   list-style-image: url("chrome://browser/skin/Search-glass.png");
   border: 0px !important;
   padding: 0px;
   -moz-appearance: none;
 }
 
-toolbar:not([mode="text"]) .search-go-button[chromedir="rtl"] {
+.search-go-button[chromedir="rtl"] {
   list-style-image: url("chrome://browser/skin/Search-glass-rtl.png");
 }
 
@@ -149,6 +149,8 @@ toolbar:not([mode="text"]) .search-go-button[chromedir="rtl"] {
 
 toolbar[mode="text"] .search-go-button {
   -moz-margin-start: 5px;
+  padding: 3px;
+  -moz-appearance: toolbarbutton;
 }
 
 toolbar[mode="text"] .search-go-button-stack {
