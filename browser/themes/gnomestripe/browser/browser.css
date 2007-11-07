@@ -42,6 +42,7 @@
 @import url("chrome://global/skin/");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -90,6 +91,10 @@
   color: GrayText;
 }
 
+#wrapper-search-container #searchbar html|*.textbox-input {
+  visibility: hidden;
+}
+
 /* ::::: bookmark buttons ::::: */
 
 toolbarbutton.bookmark-item {
@@ -129,11 +134,6 @@ toolbarbutton.bookmark-item[open="true"] {
   width: 16px;
   height: 16px;
   background: url("chrome://browser/skin/Bookmarks-folder.png") no-repeat !important;
-}
-
-#wrapper-search-container .searchbar-textbox {
-  -moz-user-input: disabled;
-  -moz-user-focus: normal;
 }
 
 .bookmarks-toolbar-customize {
