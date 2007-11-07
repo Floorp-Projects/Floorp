@@ -1007,30 +1007,52 @@ private:
 
   nsresult RemoveFixedItems(const nsFrameConstructorState& aState);
 
+  // Find the right frame to use for aContent when looking for sibling
+  // frames for aTargetContent.  If aPrevSibling is true, this
+  // will look for last continuations, etc, as necessary.  This calls
+  // IsValidSibling as needed; if that returns false it returns null.
+  //
+  // @param aTargetContentDisplay the CSS display enum for aTargetContent if
+  // already known, UNSET_DISPLAY otherwise.
+  nsIFrame* FindFrameForContentSibling(nsIContent* aContent,
+                                       nsIContent* aTargetContent,
+                                       PRUint8& aTargetContentDisplay,
+                                       PRBool aPrevSibling);
+
   // Find the ``rightmost'' frame for the content immediately preceding
-  // aIndexInContainer, following continuations if necessary. If aChild is
-  // not null, make sure it passes the call to IsValidSibling
-  nsIFrame* FindPreviousSibling(nsIContent*       aContainer,
-                                nsIFrame*         aContainerFrame,
-                                PRInt32           aIndexInContainer,
-                                const nsIContent* aChild = nsnull);
+  // aIndexInContainer, following continuations if necessary.
+  nsIFrame* FindPreviousSibling(nsIContent* aContainer,
+                                PRInt32     aIndexInContainer,
+                                nsIContent* aChild);
 
   // Find the frame for the content node immediately following aIndexInContainer.
-  // If aChild is not null, make sure it passes the call to IsValidSibling
-  nsIFrame* FindNextSibling(nsIContent*       aContainer,
-                            nsIFrame*         aContainerFrame,
-                            PRInt32           aIndexInContainer,
-                            const nsIContent* aChild = nsnull);
+  nsIFrame* FindNextSibling(nsIContent* aContainer,
+                            PRInt32     aIndexInContainer,
+                            nsIContent* aChild);
 
   // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns
   // XXXbz this code is generally wrong, since the frame for aContent
   // may be constructed based on tag, not based on aDisplay!
-  PRBool IsValidSibling(nsIFrame*              aParentFrame,
-                        nsIFrame*              aSibling,
-                        PRUint8                aSiblingDisplay,
-                        nsIContent&            aContent,
+  PRBool IsValidSibling(nsIFrame*              aSibling,
+                        nsIContent*            aContent,
                         PRUint8&               aDisplay);
+  
+  /**
+   * Find the ``rightmost'' frame for the anonymous content immediately
+   * preceding aChild, following continuation if necessary.
+   */
+  nsIFrame*
+  FindPreviousAnonymousSibling(nsIContent*   aContainer,
+                               nsIContent*   aChild);
+
+  /**
+   * Find the frame for the anonymous content immediately following
+   * aChild.
+   */
+  nsIFrame*
+  FindNextAnonymousSibling(nsIContent*   aContainer,
+                           nsIContent*   aChild);
 
   void QuotesDirty() {
     NS_PRECONDITION(mUpdateCount != 0, "Instant quote updates are bad news");
