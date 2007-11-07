@@ -67,11 +67,11 @@ radio[pane=paneContent][selected="true"]  {
 	-moz-image-region: rect(32px, 96px,  64px, 64px)
 }
 
-radio[pane=paneFeeds] {
+radio[pane=paneApplications] {
 	-moz-image-region: rect(0px, 128px,  32px, 96px)
 }
-radio[pane=paneFeeds]:hover, 
-radio[pane=paneFeeds][selected="true"]  {
+radio[pane=paneApplications]:hover, 
+radio[pane=paneApplications][selected="true"]  {
 	-moz-image-region: rect(32px, 128px,  64px, 96px)
 }
 
@@ -189,80 +189,6 @@ filefield[disabled="true"] .fileFieldIcon {
 
 #cookieInfoGrid {
   background-color: #E9E7E3; 
-}
-
-/* Download Actions Manager */
-#fileExtension {
-  width: 5em; 
-}
-
-#extensionChildren::-moz-tree-image(fileExtension) {
-  margin: 0px 5px 0px 0px;
-}
-
-#typeField {
-  font-weight: bold; 
-}
-
-/* Change Action Dialog */
-#typeIcon {
-  width: 32px;
-  height: 32px;
-  -moz-margin-end: 3px;
-}
-
-#typeField {
-  background-color: transparent;
-  margin-top: 1px !important;
-  margin-bottom: 2px !important;
-  -moz-margin-start: 6px !important;
-  -moz-margin-end: 5px !important;
-}
-
-#extensionField {
-  color: GrayText;
-  font-weight: bold;
-}
-#ChangeActionDialog {
-  padding: 0px;
-}
-
-#ChangeActionDialog .dialog-button-box {
-  padding-top: 8px;
-  padding-bottom: 10px;
-  -moz-padding-start: 8px;
-  -moz-padding-end: 10px;  
-}
-
-#changeActionHeader {
-  border-bottom: 2px groove ThreeDFace;
-  margin: 0px;
-  padding: 10px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;  
-}
-
-#changeActionContent {
-  padding-top: 8px;
-  padding-bottom: 10px;
-  -moz-padding-start: 9px;
-  -moz-padding-end: 10px;
-}
-
-#defaultAppIcon {
-  width: 16px;
-  height: 16px;
-  -moz-margin-start: 2px;
-}
-
-#defaultAppName {
-  -moz-margin-start: 6px !important; 
-  font-weight: bold;
-}
-
-/* Feeds pane */
-#chooseClientAppCell {
-  -moz-padding-end: 12px;
 }
 
 /* bottom-most box containing a groupbox in a prefpane. Prevents the bottom
