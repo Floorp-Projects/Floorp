@@ -492,6 +492,7 @@ protected:
   static BOOL CALLBACK BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg);
   static BOOL CALLBACK BroadcastMsg(HWND aTopWindow, LPARAM aMsg);
   static BOOL CALLBACK DispatchStarvedPaints(HWND aTopWindow, LPARAM aMsg);
+  static BOOL CALLBACK InvalidateForeignChildWindows(HWND aWnd, LPARAM aMsg);
 
 public:
   static void GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
