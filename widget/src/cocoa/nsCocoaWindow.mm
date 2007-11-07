@@ -52,6 +52,7 @@
 #include "nsIXULWindow.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsToolkit.h"
 
 PRInt32 gXULModalLevel = 0;
 
@@ -1463,16 +1464,28 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 static const float sPatternWidth = 1.0f;
 
 // These are the start and end greys for the default titlebar gradient.
-static const float sHeaderStartGrey = 196/255.0f;
-static const float sHeaderEndGrey = 149/255.0f;
+static const float sLeopardHeaderStartGrey = 196/255.0f;
+static const float sLeopardHeaderEndGrey = 149/255.0f;
+static const float sTigerHeaderStartGrey = 249/255.0f;
+static const float sTigerHeaderEndGrey = 202/255.0f;
 
 // This is the grey for the border at the bottom of the titlebar.
-static const float sTitlebarBorderGrey = 64/255.0f;
+static const float sLeopardTitlebarBorderGrey = 64/255.0f;
+static const float sTigerTitlebarBorderGrey = 140/255.0f;
 
 // Callback used by the default titlebar shading.
 static void headerShading(void* aInfo, const float* aIn, float* aOut)
 {
-  float result = (*aIn) * sHeaderStartGrey + (1.0f - *aIn) * sHeaderEndGrey;
+  float startGrey, endGrey;
+  if (nsToolkit::OnLeopardOrLater()) {
+    startGrey = sLeopardHeaderStartGrey;
+    endGrey = sLeopardHeaderEndGrey;
+  }
+  else {
+    startGrey = sTigerHeaderStartGrey;
+    endGrey = sTigerHeaderEndGrey;
+  }
+  float result = (*aIn) * startGrey + (1.0f - *aIn) * endGrey;
   aOut[0] = result;
   aOut[1] = result;
   aOut[2] = result;
@@ -1509,7 +1522,10 @@ void patternDraw(void* aInfo, CGContextRef aContext)
     CGContextDrawShading(aContext, shading);
 
     // Draw the one pixel border at the bottom of the titlebar.
-    [[NSColor colorWithDeviceWhite:sTitlebarBorderGrey alpha:1.0f] set];
+    if (nsToolkit::OnLeopardOrLater())
+      [[NSColor colorWithDeviceWhite:sLeopardTitlebarBorderGrey alpha:1.0f] set];
+    else
+      [[NSColor colorWithDeviceWhite:sTigerTitlebarBorderGrey alpha:1.0f] set];
     NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
   } else {
     // if the titlebar color is not nil, just set and draw it normally.
