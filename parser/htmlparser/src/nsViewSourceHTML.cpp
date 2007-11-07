@@ -399,6 +399,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
           
           mSink->AddLeaf(theNode);
         }
+        IF_FREE(theToken, theAllocator);
       }
 
       result = mSink->CloseContainer(eHTMLTag_head);
@@ -428,6 +429,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
           result = mSink->OpenContainer(bodyNode);
           if(NS_SUCCEEDED(result)) mHasOpenBody=PR_TRUE;
         }
+        IF_FREE(bodyToken, theAllocator);
         
         if (NS_SUCCEEDED(result)) {
           CStartToken* preToken =
@@ -444,6 +446,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
           } else {
             result = NS_ERROR_OUT_OF_MEMORY;
           }
+          IF_FREE(preToken, theAllocator);
         }
       }
     }
@@ -502,6 +505,7 @@ void CViewSourceHTML::StartNewPreBlock(void){
                 NS_LITERAL_STRING("id"),
                 NS_ConvertASCIItoUTF16(nsPrintfCString("line%d", mLineNumber)));
   mSink->OpenContainer(startNode);
+  IF_FREE(theToken, theAllocator);
   
 #ifdef DUMP_TO_FILE
   if (gDumpFile) {
@@ -531,6 +535,10 @@ void CViewSourceHTML::AddAttrToNode(nsCParserStartNode& aNode,
 
   theAttr->SetKey(aAttrName);
   aNode.AddAttribute(theAttr);
+
+  // Parser nodes assume that they are being handed a ref when AddAttribute is
+  // called, unlike Init() and construction, when they actually addref the
+  // incoming token.  Do NOT release here unless this setup changes.
 }
 
 /**
@@ -747,6 +755,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
                   NS_LITERAL_STRING("class"),
                   NS_LITERAL_STRING("error"));
     mSink->OpenContainer(mErrorNode);
+    IF_FREE(theTagToken, theAllocator);
 #ifdef DUMP_TO_FILE
     if (gDumpFile) {
       fprintf(gDumpFile, "<span class=\"error\">");
@@ -777,6 +786,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
                   NS_LITERAL_STRING("class"),
                   NS_ConvertASCIItoUTF16(kElementClasses[aTagType]));
     mSink->OpenContainer(mStartNode);  //emit <starttag>...
+    IF_FREE(theTagToken, theAllocator);
 #ifdef DUMP_TO_FILE
     if (gDumpFile) {
       fprintf(gDumpFile, "<span class=\"");
@@ -800,8 +810,6 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
 
   if (mSyntaxHighlight && aTagType != kText) {
     mStartNode.ReleaseAll(); 
-    CEndToken theEndToken(eHTMLTag_span);
-    mEndNode.Init(&theEndToken, 0/*stack token*/);
     mSink->CloseContainer(eHTMLTag_span);  //emit </endtag>...
 #ifdef DUMP_TO_FILE
     if (gDumpFile)
@@ -828,8 +836,6 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsSubstring & aText,PR
 
   if (mSyntaxHighlight && aTagInError) {
     mErrorNode.ReleaseAll(); 
-    CEndToken theEndToken(eHTMLTag_span);
-    mEndErrorNode.Init(&theEndToken, 0/*stack token*/);
     mSink->CloseContainer(eHTMLTag_span);  //emit </endtag>...
 #ifdef DUMP_TO_FILE
     if (gDumpFile)

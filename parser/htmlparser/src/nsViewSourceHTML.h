@@ -129,12 +129,10 @@ protected:
 
     PRUint32            mTokenCount;
 
-    nsCParserNode       mEndNode;
     nsCParserStartNode  mStartNode;
     nsCParserStartNode  mTokenNode;
     CIndirectTextToken  mITextToken;
     nsCParserStartNode  mErrorNode;
-    nsCParserNode       mEndErrorNode;
 };
 
 #endif 
