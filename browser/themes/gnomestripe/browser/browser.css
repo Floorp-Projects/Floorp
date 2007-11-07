@@ -1334,17 +1334,8 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   visibility: collapse;
 }
 
-/* ::::: Help menu items ::::: */
 #checkForUpdates[loading="true"] {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
-}
-
-#helpMenu[phishLevel="safe"] #menu_HelpPopup_reportPhishingErrortoolmenu {
-  display: none;
-}
-
-#helpMenu[phishLevel="warn"] #menu_HelpPopup_reportPhishingtoolmenu {
-  display: none;
 }
 
 %ifdef MOZ_PLACES_BOOKMARKS
