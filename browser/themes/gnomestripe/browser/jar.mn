@@ -36,8 +36,8 @@ classic.jar:
         skin/classic/browser/bookmarks/addBookmark.css          (bookmarks/addBookmark.css)
         skin/classic/browser/bookmarks/bookmarksManager.css     (bookmarks/bookmarksManager.css)
         skin/classic/browser/bookmarks/Bookmarks-toolbar.png    (bookmarks/Bookmarks-toolbar.png)
+#endif
         skin/classic/browser/preferences/Options.png            (preferences/Options.png)
         skin/classic/browser/preferences/preferences.css        (preferences/preferences.css)
-#endif
         icon.png
         preview.png
