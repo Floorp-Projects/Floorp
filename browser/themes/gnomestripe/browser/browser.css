@@ -921,3 +921,8 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #urlbar[level="broken"] > .autocomplete-textbox-container > .info-icon {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
 }
+
+/* ::::: About Popup Blocking dialog ::::: */
+#pageReportFirstTime statusbarpanel.statusbar-resizerpanel {
+  visibility: collapse;
+}
