@@ -111,12 +111,6 @@
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
 
-// If this flag is set on an nsGenericHTMLFormElement, that means that we have
-// added ourselves to our mForm.  It's possible to have a non-null mForm, but
-// not have this flag set.  That happens when the form is set via the content
-// sink.
-#define ADDED_TO_FORM (1 << NODE_TYPE_SPECIFIC_BITS_OFFSET)
-
 class nsINodeInfo;
 class nsIDOMNodeList;
 class nsRuleWalker;
@@ -2712,6 +2706,8 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm(mForm);
       if (!form) {
         SetForm(nsnull, PR_TRUE, PR_TRUE);
+      } else {
+        UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       }
     }
   }
