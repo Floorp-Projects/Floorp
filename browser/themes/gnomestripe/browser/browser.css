@@ -986,6 +986,12 @@ statusbarpanel#statusbar-display {
 
 /* ::::: autocomplete ::::: */
 
+.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteValue) {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  width: 16px;
+  height: 16px;
+}
+
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: #555566;
 }
