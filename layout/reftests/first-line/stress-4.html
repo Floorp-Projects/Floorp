@@ -7,12 +7,12 @@ body { visibility: hidden; }
 </style>
 <script>
   function runTest() {
-    document.getElementById("test").removeAttribute('style');
+    document.getElementById("a").removeAttribute('style');
     document.body.offsetWidth;
     document.documentElement.className = "";  
   }
 </script>
-</head><body>
+</head><body onload="runTest()">
 
 <div style="position:absolute;">
   <span id="a" style="position:fixed;">
