@@ -177,6 +177,9 @@ void nsPNGDecoder::SetAnimFrameInfo()
 NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 {
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
+  static png_byte color_chunks[]=
+       { 99,  72,  82,  77, '\0',   /* cHRM */
+        105,  67,  67,  80, '\0'};  /* iCCP */
   static png_byte unused_chunks[]=
        { 98,  75,  71,  68, '\0',   /* bKGD */
         104,  73,  83,  84, '\0',   /* hIST */
@@ -214,6 +217,9 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
   /* Ignore unused chunks */
+  if (!gfxPlatform::IsCMSEnabled()) {
+    png_set_keep_unknown_chunks(mPNG, 1, color_chunks, 2);
+  }
   png_set_keep_unknown_chunks(mPNG, 1, unused_chunks,
      (int)sizeof(unused_chunks)/5);   
 #endif
