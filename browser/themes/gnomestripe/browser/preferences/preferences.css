@@ -93,7 +93,7 @@ radio[pane=paneAdvanced]:hover, radio[pane=paneAdvanced][selected="true"] {
 }
 
 /* General Pane */
-#browserHomePage {
+#browserStartupHomepage {
   padding-top: 2px;
   padding-bottom: 3px;
   -moz-padding-start: 4px;
