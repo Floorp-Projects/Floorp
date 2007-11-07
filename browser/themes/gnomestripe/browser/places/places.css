@@ -48,17 +48,17 @@
 
 /* organize button */
 #organizeButton {
-  list-style-image: url("chrome://browser/skin/wrench.png");
+  list-style-image: url("chrome://browser/skin/places/wrench.png");
 }
 
 /* view button */
 #viewMenu {
-  list-style-image: url("chrome://browser/skin/wrench.png");
+  list-style-image: url("chrome://browser/skin/places/wrench.png");
 }
 
 /* maintenance button */
 #maintenanceButton {
-  list-style-image: url("chrome://browser/skin/wrench.png");
+  list-style-image: url("chrome://browser/skin/places/wrench.png");
 }
 
 /* Root View */
@@ -105,7 +105,7 @@ treechildren::-moz-tree-image(title, separator) {
 }
 
 treechildren::-moz-tree-image(title, livemark\/bookmarkFeedURI) {
-  list-style-image: url("chrome://browser/skin/livemark-item.png") !important;
+  list-style-image: url("chrome://browser/skin/places/livemark-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
