@@ -69,6 +69,7 @@ CSRCS		= \
 		pngwtran.c \
 		pngrtran.c \
 		pngwutil.c \
+		pngvcrd.c \
 		$(NULL)
 
 EXPORTS		= png.h pngconf.h mozpngconf.h

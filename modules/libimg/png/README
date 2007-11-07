@@ -1,4 +1,4 @@
-README for libpng version 1.2.12 - June 27, 2006 (shared library 12.0)
+README for libpng version 1.2.22 - October 13, 2007 (shared library 12.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
@@ -140,6 +140,7 @@ Files in this distribution:
       TODO          =>  Things not implemented in the current library
       Y2KINFO       =>  Statement of Y2K compliance
       example.c     =>  Example code for using libpng functions
+      libpng-*-*-diff.txt => Diff from previous release
       libpng.3      =>  manual page for libpng (includes libpng.txt)
       libpng.txt    =>  Description of libpng and its functions
       libpngpf.3    =>  manual page for libpng's private functions
@@ -147,7 +148,6 @@ Files in this distribution:
       png.c         =>  Basic interface functions common to library
       png.h         =>  Library function and interface declarations
       pngconf.h     =>  System specific library configuration
-      pngasmrd.h    =>  Header file for assembler-coded functions
       pngerror.c    =>  Error/warning message I/O functions
       pngget.c      =>  Functions for retrieving info from struct
       pngmem.c      =>  Memory handling functions
@@ -190,11 +190,11 @@ Files in this distribution:
        descrip.mms      =>  VMS makefile for MMS or MMK
        makefile.std     =>  Generic UNIX makefile (cc, creates static libpng.a)
        makefile.elf     =>  Linux/ELF makefile symbol versioning,
-                            gcc, creates libpng12.so.0.1.2.12)
+                            gcc, creates libpng12.so.0.1.2.22)
        makefile.linux   =>  Linux/ELF makefile
-                            (gcc, creates libpng12.so.0.1.2.12)
+                            (gcc, creates libpng12.so.0.1.2.22)
        makefile.gcmmx   =>  Linux/ELF makefile
-                            (gcc, creates libpng12.so.0.1.2.12,
+                            (gcc, creates libpng12.so.0.1.2.22,
                             uses assembler code tuned for Intel MMX platform)
        makefile.gcc     =>  Generic makefile (gcc, creates static libpng.a)
        makefile.knr     =>  Archaic UNIX Makefile that converts files with
@@ -216,12 +216,12 @@ Files in this distribution:
        makefile.openbsd =>  OpenBSD makefile
        makefile.sgi     =>  Silicon Graphics IRIX (cc, creates static lib)
        makefile.sggcc   =>  Silicon Graphics
-                            (gcc, creates libpng12.so.0.1.2.12)
+                            (gcc, creates libpng12.so.0.1.2.22)
        makefile.sunos   =>  Sun makefile
        makefile.solaris =>  Solaris 2.X makefile
-                            (gcc, creates libpng12.so.0.1.2.12)
+                            (gcc, creates libpng12.so.0.1.2.22)
        makefile.so9     =>  Solaris 9 makefile
-                            (gcc, creates libpng12.so.0.1.2.12)
+                            (gcc, creates libpng12.so.0.1.2.22)
        makefile.32sunu  =>  Sun Ultra 32-bit makefile
        makefile.64sunu  =>  Sun Ultra 64-bit makefile
        makefile.sco     =>  For SCO OSr5  ELF and Unixware 7 with Native cc
