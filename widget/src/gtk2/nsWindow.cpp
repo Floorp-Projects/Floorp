@@ -5931,12 +5931,11 @@ nsWindow::GetThebesSurface()
                  GDK_WINDOW_XWINDOW(d),
                  GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(d)),
                  gfxIntSize(width, height));
-            if (mThebesSurface && !mThebesSurface->CairoStatus()) {
-                gfxPlatformGtk::GetPlatform()->SetSurfaceGdkWindow(mThebesSurface, GDK_WINDOW(d));
-            }
-            else {
+
+            // if the surface creation is reporting an error, then
+            // we don't have a surface to give back
+            if (mThebesSurface && mThebesSurface->CairoStatus() != 0)
                 mThebesSurface = nsnull;
-            }
         } else {
 #ifdef MOZ_ENABLE_GLITZ
             glitz_surface_t *gsurf;

@@ -57,11 +57,6 @@ public:
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxImageFormat imageFormat);
 
-    GdkDrawable *GetSurfaceGdkDrawable(gfxASurface *aSurf);
-
-    void SetSurfaceGdkWindow(gfxASurface *aSurf,
-                             GdkWindow *win);
-
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
