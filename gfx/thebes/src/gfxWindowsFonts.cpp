@@ -879,6 +879,8 @@ static const char *sCJKLangGroup[] = {
 
 #define STATIC_STRING_LENGTH 100
 
+#define ESTIMATE_MAX_GLYPHS(L) (((3 * (L)) >> 1) + 16)
+
 class UniscribeItem
 {
 public:
@@ -890,9 +892,10 @@ public:
         mItemString(aString), mItemLength(aLength), 
         mAlternativeString(nsnull), mScriptItem(aItem),
         mScript(aItem->a.eScript), mGroup(aGroup),
-        mNumGlyphs(0), mMaxGlyphs((int)(1.5 * aLength) + 16),
+        mNumGlyphs(0), mMaxGlyphs(ESTIMATE_MAX_GLYPHS(aLength)),
         mFontSelected(PR_FALSE)
     {
+        NS_ASSERTION(mMaxGlyphs < 65535, "UniscribeItem is too big, ScriptShape() will fail!");
         mGlyphs.SetLength(mMaxGlyphs);
         mClusters.SetLength(mItemLength + 1);
         mAttr.SetLength(mMaxGlyphs);
@@ -1479,9 +1482,9 @@ private:
 
 #define AVERAGE_ITEM_LENGTH 40
 
-    nsAutoTArray<WORD, PRUint32(1.5 * AVERAGE_ITEM_LENGTH) + 16> mGlyphs;
+    nsAutoTArray<WORD, PRUint32(ESTIMATE_MAX_GLYPHS(AVERAGE_ITEM_LENGTH))> mGlyphs;
     nsAutoTArray<WORD, AVERAGE_ITEM_LENGTH + 1> mClusters;
-    nsAutoTArray<SCRIPT_VISATTR, PRUint32(1.5 * AVERAGE_ITEM_LENGTH) + 16> mAttr;
+    nsAutoTArray<SCRIPT_VISATTR, PRUint32(ESTIMATE_MAX_GLYPHS(AVERAGE_ITEM_LENGTH))> mAttr;
  
     nsAutoTArray<GOFFSET, 2 * AVERAGE_ITEM_LENGTH> mOffsets;
     nsAutoTArray<int, 2 * AVERAGE_ITEM_LENGTH> mAdvances;
@@ -1498,6 +1501,46 @@ private:
     nsTArray<TextRange> mRanges;
 };
 
+
+#define MAX_ITEM_LENGTH 32768
+
+
+
+static PRUint32 FindNextItemStart(int aOffset, int aLimit,
+                                  nsTArray<SCRIPT_LOGATTR> &aLogAttr,
+                                  const PRUnichar *aString)
+{
+    if (aOffset + MAX_ITEM_LENGTH >= aLimit) {
+        // The item starting at aOffset can't be longer than the max length,
+        // so starting the next item at aLimit won't cause ScriptShape() to fail.
+        return aLimit;
+    }
+
+    // Try to start the next item before or after a space, since spaces
+    // don't kern or ligate.
+    PRUint32 off;
+    int boundary = -1;
+    for (off = MAX_ITEM_LENGTH; off > 1; --off) {
+      if (aLogAttr[off].fCharStop) {
+          if (off > boundary) {
+              boundary = off;
+          }
+          if (aString[aOffset+off] == ' ' || aString[aOffset+off - 1] == ' ')
+            return aOffset+off;
+      }
+    }
+
+    // Try to start the next item at the last cluster boundary in the range.
+    if (boundary > 0) {
+      return aOffset+boundary;
+    }
+
+    // No nice cluster boundaries inside MAX_ITEM_LENGTH characters, break
+    // on the size limit. It won't be visually plesaing, but at least it
+    // won't cause ScriptShape() to fail.
+    return aOffset + MAX_ITEM_LENGTH;
+}
+
 class Uniscribe
 {
 public:
@@ -1506,8 +1549,6 @@ public:
         mItems(nsnull) {
     }
     ~Uniscribe() {
-        if (mItems)
-            free(mItems);
     }
 
     void Init() {
@@ -1519,22 +1560,78 @@ public:
         mState.fOverrideDirection = PR_TRUE;
     }
 
+private:
+
+    // Append mItems[aIndex] to aDest, adding extra items to aDest to ensure
+    // that no item is too long for ScriptShape() to handle. See bug 366643.
+    nsresult CopyItemSplitOversize(int aIndex, nsTArray<SCRIPT_ITEM> &aDest) {
+        aDest.AppendElement(mItems[aIndex]);
+        const int itemLength = mItems[aIndex+1].iCharPos - mItems[aIndex].iCharPos;
+        if (ESTIMATE_MAX_GLYPHS(itemLength) > 65535) {
+            // This items length would cause ScriptShape() to fail. We need to
+            // add extra items here so that no item's length could cause the fail.
+
+            // Get cluster boundaries, so we can break cleanly if possible.
+            nsTArray<SCRIPT_LOGATTR> logAttr;
+            if (!logAttr.SetLength(itemLength))
+                return NS_ERROR_FAILURE;
+            HRESULT rv= ScriptBreak(mString+mItems[aIndex].iCharPos, itemLength,
+                                    &mItems[aIndex].a, logAttr.Elements());
+            if (FAILED(rv))
+                return NS_ERROR_FAILURE;
+
+            const int nextItemStart = mItems[aIndex+1].iCharPos;
+            int start = FindNextItemStart(mItems[aIndex].iCharPos,
+                                          nextItemStart, logAttr, mString);
+
+            while (start < nextItemStart) {
+                SCRIPT_ITEM item = mItems[aIndex];
+                item.iCharPos = start;
+                aDest.AppendElement(item);
+                start = FindNextItemStart(start, nextItemStart, logAttr, mString);
+            }
+        } 
+        return NS_OK;
+    }
+
+public:
+
     int Itemize() {
         HRESULT rv;
 
         int maxItems = 5;
 
         Init();
+
         // Allocate space for one more item than expected, to handle a rare
         // overflow in ScriptItemize (pre XP SP2). See bug 366643.
-        mItems = (SCRIPT_ITEM *)malloc((maxItems + 1) * sizeof(SCRIPT_ITEM));
+        if (!mItems.SetLength(maxItems + 1)) {
+            return 0;
+        }
         while ((rv = ScriptItemize(mString, mLength, maxItems, &mControl, &mState,
-                                   mItems, &mNumItems)) == E_OUTOFMEMORY) {
+                                   mItems.Elements(), &mNumItems)) == E_OUTOFMEMORY) {
             maxItems *= 2;
-            mItems = (SCRIPT_ITEM *)realloc(mItems, (maxItems + 1) * sizeof(SCRIPT_ITEM));
+            if (!mItems.SetLength(maxItems + 1)) {
+                return 0;
+            }
             Init();
         }
 
+        if (ESTIMATE_MAX_GLYPHS(mLength) > 65535) {
+            // Any item of length > 43680 will cause ScriptShape() to fail, as its
+            // mMaxGlyphs value will be greater than 65535 (43680*1.5+16>65535). So we
+            // need to break up items which are longer than that upon cluster boundaries.
+            // See bug 394751 for details.
+            nsTArray<SCRIPT_ITEM> items;
+            for (int i=0; i<mNumItems; i++) {
+                nsresult nrs = CopyItemSplitOversize(i, items);
+                NS_ASSERTION(NS_SUCCEEDED(nrs), "CopyItemSplitOversize() failed");
+            }
+            items.AppendElement(mItems[mNumItems]); // copy terminator.
+
+            mItems = items;
+            mNumItems = items.Length() - 1; // Don't count the terminator.
+        }
         return mNumItems;
     }
 
@@ -1565,7 +1662,7 @@ private:
 
     SCRIPT_CONTROL mControl;
     SCRIPT_STATE   mState;
-    SCRIPT_ITEM   *mItems;
+    nsTArray<SCRIPT_ITEM> mItems;
     int mNumItems;
 };
 
@@ -1598,12 +1695,14 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
             if (!item->ShapingEnabled())
                 item->EnableShaping();
 
-            while (FAILED(item->Shape())) {
+            rv = item->Shape();
+            if (FAILED(rv)) {
                 PR_LOG(gFontLog, PR_LOG_DEBUG, ("shaping failed"));
                 // we know we have the glyphs to display this font already
                 // so Uniscribe just doesn't know how to shape the script.
                 // Render the glyphs without shaping.
                 item->DisableShaping();
+                rv = item->Shape();
             }
 
             NS_ASSERTION(SUCCEEDED(rv), "Failed to shape -- we should never hit this");
