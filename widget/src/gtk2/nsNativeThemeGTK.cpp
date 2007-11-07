@@ -365,8 +365,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
   case NS_THEME_DROPDOWN_TEXTFIELD:
-  case NS_THEME_LISTBOX:
     aGtkWidgetType = MOZ_GTK_ENTRY;
+    break;
+  case NS_THEME_LISTBOX:
+  case NS_THEME_TREEVIEW:
+    aGtkWidgetType = MOZ_GTK_TREEVIEW;
+    break;
+  case NS_THEME_TREEVIEW_HEADER_CELL:
+    aGtkWidgetType = MOZ_GTK_TREE_HEADER_CELL;
     break;
   case NS_THEME_DROPDOWN:
     aGtkWidgetType = MOZ_GTK_DROPDOWN;
@@ -829,6 +835,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_RADIO_LABEL:
   case NS_THEME_BUTTON:
   case NS_THEME_TOOLBAR_BUTTON:
+  case NS_THEME_TREEVIEW_HEADER_CELL:
     {
       // Just include our border, and let the box code augment the size.
 
@@ -939,12 +946,12 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // case NS_THEME_RESIZER:  (n/a for gtk)
   case NS_THEME_LISTBOX:
     // case NS_THEME_LISTBOX_LISTITEM:
-    // case NS_THEME_TREEVIEW:
+  case NS_THEME_TREEVIEW:
     // case NS_THEME_TREEVIEW_TREEITEM:
     // case NS_THEME_TREEVIEW_TWISTY:
     // case NS_THEME_TREEVIEW_LINE:
     // case NS_THEME_TREEVIEW_HEADER:
-    // case NS_THEME_TREEVIEW_HEADER_CELL:
+  case NS_THEME_TREEVIEW_HEADER_CELL:
     // case NS_THEME_TREEVIEW_HEADER_SORTARROW:
     // case NS_THEME_TREEVIEW_TWISTY_OPEN:
     case NS_THEME_PROGRESSBAR:
@@ -1024,7 +1031,8 @@ PRBool
 nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
    if (aWidgetType == NS_THEME_DROPDOWN ||
-      aWidgetType == NS_THEME_BUTTON)
+      aWidgetType == NS_THEME_BUTTON || 
+      aWidgetType == NS_THEME_TREEVIEW_HEADER_CELL)
     return PR_TRUE;
   
   return PR_FALSE;
