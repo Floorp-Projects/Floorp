@@ -45,7 +45,6 @@ const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const kELEMENT_NODE                   = Ci.nsIDOMNode.ELEMENT_NODE;
 const TOOLKIT_ID                      = "toolkit@mozilla.org"
 const KEY_PROFILEDIR                  = "ProfD";
 const FILE_BLOCKLIST                  = "blocklist.xml";
@@ -496,8 +495,8 @@ Blocklist.prototype = {
     var itemNodes;
     var containerName = prefix + "Items";
     for (var i = 0; i < deChildNodes.length; ++i) {
-      var emItemsElement = deChildNodes[i];
-      if (emItemsElement.nodeType == kELEMENT_NODE &&
+      var emItemsElement = deChildNodes.item(i);
+      if (emItemsElement instanceof Ci.nsIDOMElement &&
           emItemsElement.localName == containerName) {
         itemNodes = emItemsElement.childNodes;
         break;
@@ -508,12 +507,11 @@ Blocklist.prototype = {
 
     var itemName = prefix + "Item";
     for (var i = 0; i < itemNodes.length; ++i) {
-      var blocklistElement = itemNodes[i];
-      if (blocklistElement.nodeType != kELEMENT_NODE ||
+      var blocklistElement = itemNodes.item(i);
+      if (!(blocklistElement instanceof Ci.nsIDOMElement) ||
           blocklistElement.localName != itemName)
         continue;
 
-      blocklistElement.QueryInterface(Ci.nsIDOMElement);
       handler(blocklistElement, result);
     }
     return result;
@@ -527,8 +525,8 @@ Blocklist.prototype = {
     var id = blocklistElement.getAttribute("id");
     result[id] = [];
     for (var x = 0; x < versionNodes.length; ++x) {
-      var versionRangeElement = versionNodes[x];
-      if (versionRangeElement.nodeType != kELEMENT_NODE ||
+      var versionRangeElement = versionNodes.item(x);
+      if (!(versionRangeElement instanceof Ci.nsIDOMElement) ||
           versionRangeElement.localName != "versionRange")
         continue;
 
@@ -547,8 +545,8 @@ Blocklist.prototype = {
     var matchNodes = blocklistElement.childNodes;
     var matchList;
     for (var x = 0; x < matchNodes.length; ++x) {
-      var matchElement = matchNodes[x];
-      if (matchElement.nodeType != kELEMENT_NODE ||
+      var matchElement = matchNodes.item(x);
+      if (!(matchElement instanceof Ci.nsIDOMElement) ||
           matchElement.localName != "match")
         continue;
 
@@ -613,8 +611,8 @@ function BlocklistItemData(versionRangeElement) {
 
   if (versionRangeElement) {
     for (var i = 0; i < versionRangeElement.childNodes.length; ++i) {
-      var targetAppElement = versionRangeElement.childNodes[i];
-      if (targetAppElement.nodeType != Ci.nsIDOMNode.ELEMENT_NODE ||
+      var targetAppElement = versionRangeElement.childNodes.item(i);
+      if (!(targetAppElement instanceof Ci.nsIDOMElement) ||
           targetAppElement.localName != "targetApplication")
         continue;
       found = true;
@@ -645,8 +643,8 @@ BlocklistItemData.prototype = {
 
     if (targetAppElement) {
       for (var i = 0; i < targetAppElement.childNodes.length; ++i) {
-        var versionRangeElement = targetAppElement.childNodes[i];
-        if (versionRangeElement.nodeType != Ci.nsIDOMNode.ELEMENT_NODE ||
+        var versionRangeElement = targetAppElement.childNodes.item(i);
+        if (!(versionRangeElement instanceof Ci.nsIDOMElement) ||
             versionRangeElement.localName != "versionRange")
           continue;
         found = true;
