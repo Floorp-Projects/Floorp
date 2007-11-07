@@ -64,11 +64,6 @@
   -moz-margin-start: 3px;
 }
 
-#searchbar .searchbar-popup .menu-iconic-icon {
-  min-width: 16px;
-  min-height: 16px;
-}
-
 .searchbar-popup .open-engine-manager { 
   -moz-padding-start: 4px; 
 }
@@ -173,8 +168,6 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
-  width: 16px;
-  height: 16px;
   -moz-padding-start: 0px;
 }
 
