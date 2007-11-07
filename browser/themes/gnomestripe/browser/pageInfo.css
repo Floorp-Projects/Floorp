@@ -1,0 +1,32 @@
+@import "chrome://global/skin/";
+
+tree {
+  margin: .5em;
+}
+
+textbox,
+textbox > .textbox-internal-box,
+textbox > .textarea-internal-box {
+  background: transparent !important;
+  border: none;
+  padding: 0px;
+  -moz-appearance: none;
+}
+
+textbox.header {
+  margin-left: 0;
+}
+
+.iframe {
+  margin: .5em;
+  background: white;
+  overflow: auto;
+}
+
+#thepreviewimage {
+  margin: 1em;
+}
+
+.fixedsize {
+  height: 8.5em;
+}
