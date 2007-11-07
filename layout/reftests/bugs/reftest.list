@@ -423,10 +423,10 @@ fails == 393655-2.html 393655-2-ref.html # Remove 'fails' when 393655 lands
 == 395331-1.xml 395331-1-ref.xml
 == 396286-1.html about:blank  # crash test
 == 398289-1.html 398289-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 398797-1a.html 398797-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 398797-1b.html 398797-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 398797-1c.html 398797-1-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 398797-1d.html 398797-1-ref.html
+== 398797-1a.html 398797-1-ref.html
+== 398797-1b.html 398797-1-ref.html
+== 398797-1c.html 398797-1-ref.html
+== 398797-1d.html 398797-1-ref.html
 == 399384-1.html 399384-1-ref.html
 == 400171-1a.html 400171-1-ref.html
 == 400171-1b.html 400171-1-ref.html
