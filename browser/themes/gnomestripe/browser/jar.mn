@@ -43,25 +43,15 @@ classic.jar:
         skin/classic/browser/feeds/feedIcon.png                 (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png               (feeds/feedIcon16.png)
         skin/classic/browser/feeds/subscribe.css                (feeds/subscribe.css)
-#ifdef MOZ_PLACES
         skin/classic/browser/places/places.css                  (places/places.css)
         skin/classic/browser/places/query.png                   (places/query.png)
         skin/classic/browser/places/livemarkItem.png            (places/livemarkItem.png)
-#endif
-#ifdef MOZ_PLACES_BOOKMARKS
         skin/classic/browser/places/bookmarksMenu.png           (places/bookmarksMenu.png)
         skin/classic/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
         skin/classic/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
         skin/classic/browser/places/folderDragOver.png          (places/folderDragOver.png)
         skin/classic/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
         skin/classic/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
-#else
-        skin/classic/browser/Bookmarks-folder.png
-        skin/classic/browser/bookmarks/addBookmark.css          (bookmarks/addBookmark.css)
-        skin/classic/browser/bookmarks/bookmarksProperties.css  (bookmarks/bookmarksProperties.css)
-        skin/classic/browser/bookmarks/bookmarksManager.css     (bookmarks/bookmarksManager.css)
-        skin/classic/browser/bookmarks/Bookmarks-toolbar.png    (bookmarks/Bookmarks-toolbar.png)
-#endif
 #ifdef MOZ_SAFE_BROWSING
         skin/classic/browser/safebrowsing/browser-protection.css      (safebrowsing/browser-protection.css)
         skin/classic/browser/safebrowsing/close16x16.png              (safebrowsing/close16x16.png)
