@@ -4,6 +4,8 @@
 
 .searchbar-engine-image {
   margin: 0px 0px 0px 2px;
+  height: 16px;
+  width: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
