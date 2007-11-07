@@ -1618,9 +1618,14 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
 
   // Check the damage region recorded in the float damage.
   if (spaceManager->HasFloatDamage()) {
+    // Need to check mBounds *and* mCombinedArea to find intersections 
+    // with aLine's floats
     nscoord lineYA = aLine->mBounds.y + aDeltaY;
     nscoord lineYB = lineYA + aLine->mBounds.height;
-    if (spaceManager->IntersectsDamage(lineYA, lineYB)) {
+    nscoord lineYCombinedA = aLine->GetCombinedArea().y + aDeltaY;
+    nscoord lineYCombinedB = lineYCombinedA + aLine->GetCombinedArea().height;
+    if (spaceManager->IntersectsDamage(lineYA, lineYB) ||
+        spaceManager->IntersectsDamage(lineYCombinedA, lineYCombinedB)) {
       aLine->MarkDirty();
       return;
     }
