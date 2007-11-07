@@ -144,6 +144,11 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     // store the default font weight
     fe->mDefaultWeight = metrics.tmWeight;
 
+    if (metrics.ntmFlags & NTM_TYPE1) {
+        fe->mSymbolFont = PR_TRUE;
+        fe->mUnicodeFont = PR_FALSE;
+    }
+
     fe->mFamily = logFont.lfPitchAndFamily & 0xF0;
     fe->mPitch = logFont.lfPitchAndFamily & 0x0F;
 
@@ -309,7 +314,8 @@ ReadCMAP(HDC hdc, FontEntry *aFontEntry)
     const PRUint32 kCMAP = (('c') | ('m' << 8) | ('a' << 16) | ('p' << 24));
 
     DWORD len = GetFontData(hdc, kCMAP, 0, nsnull, 0);
-    NS_ENSURE_TRUE(len != GDI_ERROR && len != 0, NS_ERROR_FAILURE);
+    if (len == GDI_ERROR || len == 0) // not a truetype font --
+        return NS_ERROR_FAILURE;      // we'll treat it as a symbol font
 
     nsAutoTArray<PRUint8,16384> buffer;
     if (!buffer.AppendElements(len))
@@ -391,19 +397,6 @@ gfxWindowsPlatform::FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
                                         nsRefPtr<FontEntry>& aFontEntry,
                                         void* userArg)
 {
-    if (aFontEntry->mFontType != TRUETYPE_FONTTYPE) {
-        /* bitmap fonts suck -- just claim they support everything
-           between 0x20 and 0xFF.  All the ones on my system do...
-           If we really wanted to test which characters in this
-           range were supported we could just generate a string with
-           each codepoint and do GetGlyphIndicies or similar to determine
-           what is there.
-        */
-        for (PRUint16 ch = 0x20; ch <= 0xFF; ch++)
-            aFontEntry->mCharacterMap.set(ch);
-        return PL_DHASH_NEXT;
-    }
-
     HDC hdc = GetDC(nsnull);
 
     LOGFONTW logFont;
@@ -433,6 +426,18 @@ gfxWindowsPlatform::FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
     }
 
     ReleaseDC(nsnull, hdc);
+
+    if (!aFontEntry->mUnicodeFont) {
+        /* non-unicode fonts.. boy lets just set all code points
+           between 0x20 and 0xFF.  All the ones on my system do...
+           If we really wanted to test which characters in this
+           range were supported we could just generate a string with
+           each codepoint and do GetGlyphIndicies or similar to determine
+           what is there.
+        */
+        aFontEntry->mCharacterMap.SetRange(0x20, 0xFF);
+        return PL_DHASH_NEXT;
+    }
 
     return PL_DHASH_NEXT;
 }
