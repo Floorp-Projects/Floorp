@@ -85,7 +85,6 @@ classic.jar:
         skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd-disabled.png (tabbrowser/tab-arrow-start-bkgnd-disabled.png)
         skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd-enabled.png  (tabbrowser/tab-arrow-start-bkgnd-enabled.png)
         skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd-hover.png    (tabbrowser/tab-arrow-start-bkgnd-hover.png)
-        skin/classic/browser/tabbrowser/tabbrowserBindings.xml             (tabbrowser/tabbrowserBindings.xml)
         skin/classic/browser/tabbrowser/tabbrowser-tabs-bkgnd.png          (tabbrowser/tabbrowser-tabs-bkgnd.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
         skin/classic/browser/tabbrowser/tab-left.png                       (tabbrowser/tab-left.png)
