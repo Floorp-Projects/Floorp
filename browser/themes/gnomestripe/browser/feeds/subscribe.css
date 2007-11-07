@@ -30,7 +30,7 @@ html {
 }
 
 #feedHeader[firstrun="true"] {
-  background: url("chrome://browser/content/feeds/light.gif") .5em 6em no-repeat InfoBackground;
+  background: url("chrome://browser/skin/feeds/light.gif") .5em 6em no-repeat InfoBackground;
   padding: 5em 3em 3em 3em;
 }
 
@@ -147,9 +147,28 @@ a[href] img {
   color: #0000FF;
   text-decoration: underline;
   cursor: pointer;
+  margin-top: -2px;
 }
 
 .link:hover:active {
   color: #FF0000;
 }
 
+.plain {
+  -moz-appearance: none;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+  background: none;
+}
+
+.plain > .button-box {
+  border: 1px solid transparent;
+  margin: 0px;
+  padding: 0px;
+  background: none;
+}
+
+.plain:focus > .button-box {
+  border: 1px dotted ThreeDDarkShadow;
+}
