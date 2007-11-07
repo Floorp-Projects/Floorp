@@ -1222,6 +1222,11 @@ public:
         // check the list of fonts
         selectedFont = WhichFontSupportsChar(mGroup->GetFontList(), ch);
 
+        // don't look in other fonts if the character is in a Private Use Area
+        if ((ch >= 0xE000  && ch <= 0xF8FF) || 
+            (ch >= 0xF0000 && ch <= 0x10FFFD))
+            return selectedFont;
+
         // otherwise search prefs
         if (!selectedFont) {
             /* first check with the script properties to see what they think */
