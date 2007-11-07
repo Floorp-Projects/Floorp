@@ -1,92 +1,66 @@
 classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
-*       skin/classic/browser/browser.css                        (browser.css)
-        skin/classic/browser/browser.xml
-        skin/classic/browser/endcap-bkgnd.png
-        skin/classic/browser/endcap-bkgnd-hover.png
-*       skin/classic/browser/engineManager.css                  (engineManager.css)
-        skin/classic/browser/Info.png
-        skin/classic/browser/identity.png
-        skin/classic/browser/pageInfo.css
-        skin/classic/browser/pageInfo.png
-        skin/classic/browser/page-livemarks.png
-        skin/classic/browser/livemark-item.png
-        skin/classic/browser/livemark-item-rtl.png
-        skin/classic/browser/livemark-folder.png
-        skin/classic/browser/livemark-folder-rtl.png
-        skin/classic/browser/Secure.png
-        skin/classic/browser/Security-broken.png
-        skin/classic/browser/Throbber.gif
-        skin/classic/browser/Throbber.png
-        skin/classic/browser/Throbber-small.png
-        skin/classic/browser/Toolbar.png
-        skin/classic/browser/Toolbar-small.png
-        skin/classic/browser/Go-arrow.png
-        skin/classic/browser/Go-arrow-rtl.png
-*       skin/classic/browser/searchbar.css                      (searchbar.css)
-        skin/classic/browser/Search-glass.png
-        skin/classic/browser/Search-glass-rtl.png
-        skin/classic/browser/Search-provider-bkgnd.png
-        skin/classic/browser/Search-provider-mid-top.png
-        skin/classic/browser/Search-provider-mid-bottom.png
-        skin/classic/browser/setDesktopBackground.css
-        skin/classic/browser/monitor.png
-        skin/classic/browser/monitor_16-10.png
-        skin/classic/browser/wrench.png
-        skin/classic/browser/feeds/feedIcon.png                 (feeds/feedIcon.png)
-        skin/classic/browser/feeds/feedIcon16.png               (feeds/feedIcon16.png)
-        skin/classic/browser/feeds/subscribe.css                (feeds/subscribe.css)
-        skin/classic/browser/places/places.css                  (places/places.css)
-        skin/classic/browser/places/query.png                   (places/query.png)
-        skin/classic/browser/places/livemarkItem.png            (places/livemarkItem.png)
-        skin/classic/browser/places/bookmarksMenu.png           (places/bookmarksMenu.png)
-        skin/classic/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
-        skin/classic/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
-        skin/classic/browser/places/folderDragOver.png          (places/folderDragOver.png)
-        skin/classic/browser/places/editBookmarkOverlay.css     (places/editBookmarkOverlay.css)
-        skin/classic/browser/places/starPage.png                (places/starPage.png)
-        skin/classic/browser/places/pageStarred.png             (places/pageStarred.png)
-        skin/classic/browser/places/tag.png                     (places/tag.png)
-        skin/classic/browser/places/bookmarkProperties.css      (places/bookmarkProperties.css)
-        skin/classic/browser/places/organizer-toolbar.png       (bookmarks/Bookmarks-toolbar.png)
+* skin/classic/browser/browser.css                    (browser.css)
+  skin/classic/browser/browser.xml
+  skin/classic/browser/endcap-bkgnd.png
+  skin/classic/browser/endcap-bkgnd-hover.png
+* skin/classic/browser/engineManager.css              (engineManager.css)
+  skin/classic/browser/Go-arrow.png
+  skin/classic/browser/Go-arrow-rtl.png
+  skin/classic/browser/identity.png
+  skin/classic/browser/Info.png
+  skin/classic/browser/monitor.png
+  skin/classic/browser/monitor_16-10.png
+  skin/classic/browser/pageInfo.css
+  skin/classic/browser/pageInfo.png
+  skin/classic/browser/page-livemarks.png
+* skin/classic/browser/searchbar.css                  (searchbar.css)
+  skin/classic/browser/Search-glass.png
+  skin/classic/browser/Search-glass-rtl.png
+  skin/classic/browser/Search-provider-bkgnd.png
+  skin/classic/browser/Search-provider-mid-bottom.png
+  skin/classic/browser/Search-provider-mid-top.png
+  skin/classic/browser/Secure.png
+  skin/classic/browser/Security-broken.png
+  skin/classic/browser/setDesktopBackground.css
+  skin/classic/browser/Throbber.gif
+  skin/classic/browser/Throbber.png
+  skin/classic/browser/Throbber-small.png
+  skin/classic/browser/Toolbar.png
+  skin/classic/browser/Toolbar-small.png
+  skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
+  skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
+  skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
+  skin/classic/browser/places/bookmarkProperties.css  (places/bookmarkProperties.css)
+  skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
+  skin/classic/browser/places/editBookmarkOverlay.css (places/editBookmarkOverlay.css)
+  skin/classic/browser/places/folderDragOver.png      (places/folderDragOver.png)
+  skin/classic/browser/places/livemark-folder.png     (places/livemark-folder.png)
+  skin/classic/browser/places/livemark-folder-rtl.png (places/livemark-folder-rtl.png)
+  skin/classic/browser/places/livemarkItem.png        (places/livemarkItem.png)
+  skin/classic/browser/places/livemark-item.png       (places/livemark-item.png)
+  skin/classic/browser/places/livemark-item-rtl.png   (places/livemark-item-rtl.png)
+  skin/classic/browser/places/pageStarred.png         (places/pageStarred.png)
+  skin/classic/browser/places/places.css              (places/places.css)
+  skin/classic/browser/places/query.png               (places/query.png)
+  skin/classic/browser/places/starPage.png            (places/starPage.png)
+  skin/classic/browser/places/tag.png                 (places/tag.png)
+  skin/classic/browser/places/toolbarDropMarker.png   (places/toolbarDropMarker.png)
+  skin/classic/browser/places/wrench.png              (places/wrench.png)
+  skin/classic/browser/preferences/application.png    (preferences/application.png)
+  skin/classic/browser/preferences/Options.png        (preferences/Options.png)
+  skin/classic/browser/preferences/plugin.png         (preferences/plugin.png)
+  skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
 #ifdef MOZ_SAFE_BROWSING
-        skin/classic/browser/safebrowsing/browser-protection.css      (safebrowsing/browser-protection.css)
-        skin/classic/browser/safebrowsing/close16x16.png              (safebrowsing/close16x16.png)
-        skin/classic/browser/safebrowsing/dim.png                     (safebrowsing/dim.png)
-        skin/classic/browser/safebrowsing/tail.png                    (safebrowsing/tail.png)
-        skin/classic/browser/safebrowsing/warning16x16.png            (safebrowsing/warning16x16.png)
-        skin/classic/browser/safebrowsing/warning24x24.png            (safebrowsing/warning24x24.png)
+  skin/classic/browser/safebrowsing/browser-protection.css (safebrowsing/browser-protection.css)
+  skin/classic/browser/safebrowsing/close16x16.png         (safebrowsing/close16x16.png)
+  skin/classic/browser/safebrowsing/dim.png                (safebrowsing/dim.png)
+  skin/classic/browser/safebrowsing/tail.png               (safebrowsing/tail.png)
+  skin/classic/browser/safebrowsing/warning16x16.png       (safebrowsing/warning16x16.png)
+  skin/classic/browser/safebrowsing/warning24x24.png       (safebrowsing/warning24x24.png)
 #endif
-        skin/classic/browser/preferences/application.png        (preferences/application.png)
-        skin/classic/browser/preferences/Options.png            (preferences/Options.png)
-        skin/classic/browser/preferences/plugin.png             (preferences/plugin.png)
-        skin/classic/browser/preferences/preferences.css        (preferences/preferences.css)
-        skin/classic/browser/tabbrowser/alltabs-box-overflow-end-bkgnd.png           (tabbrowser/alltabs-box-overflow-end-bkgnd.png)
-        skin/classic/browser/tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png   (tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png)
-        skin/classic/browser/tabbrowser/alltabs-box-overflow-end-bkgnd-hover.png     (tabbrowser/alltabs-box-overflow-end-bkgnd-hover.png)
-        skin/classic/browser/tabbrowser/alltabs-box-overflow-start-bkgnd.png         (tabbrowser/alltabs-box-overflow-start-bkgnd.png)
-        skin/classic/browser/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png)        
-        skin/classic/browser/tabbrowser/alltabs-box-overflow-start-bkgnd-hover.png   (tabbrowser/alltabs-box-overflow-start-bkgnd-hover.png)
-        skin/classic/browser/tabbrowser/close-bkgnd.png                    (tabbrowser/close-bkgnd.png)
-        skin/classic/browser/tabbrowser/close-bkgnd-rtl.png                (tabbrowser/close-bkgnd-rtl.png)
-        skin/classic/browser/tabbrowser/tab-arrow-end.png                  (tabbrowser/tab-arrow-end.png)
-        skin/classic/browser/tabbrowser/tab-arrow-end-bkgnd-animate.png    (tabbrowser/tab-arrow-end-bkgnd-animate.png)
-        skin/classic/browser/tabbrowser/tab-arrow-end-bkgnd-disabled.png   (tabbrowser/tab-arrow-end-bkgnd-disabled.png)
-        skin/classic/browser/tabbrowser/tab-arrow-end-bkgnd-enabled.png    (tabbrowser/tab-arrow-end-bkgnd-enabled.png)
-        skin/classic/browser/tabbrowser/tab-arrow-end-bkgnd-hover.png      (tabbrowser/tab-arrow-end-bkgnd-hover.png)
-        skin/classic/browser/tabbrowser/tab-arrow-start.png                (tabbrowser/tab-arrow-start.png)
-        skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd-animate.png  (tabbrowser/tab-arrow-start-bkgnd-animate.png)
-        skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd-disabled.png (tabbrowser/tab-arrow-start-bkgnd-disabled.png)
-        skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd-enabled.png  (tabbrowser/tab-arrow-start-bkgnd-enabled.png)
-        skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd-hover.png    (tabbrowser/tab-arrow-start-bkgnd-hover.png)
-        skin/classic/browser/tabbrowser/tabbrowser-tabs-bkgnd.png          (tabbrowser/tabbrowser-tabs-bkgnd.png)
-        skin/classic/browser/tabbrowser/tabDragIndicator.png               (tabbrowser/tabDragIndicator.png)
-        skin/classic/browser/tabbrowser/tab-left.png                       (tabbrowser/tab-left.png)
-        skin/classic/browser/tabbrowser/tab-left-bkgnd.png                 (tabbrowser/tab-left-bkgnd.png)
-        skin/classic/browser/tabbrowser/tab-middle.png                     (tabbrowser/tab-middle.png)
-        skin/classic/browser/tabbrowser/tab-middle-bkgnd.png               (tabbrowser/tab-middle-bkgnd.png)
-        skin/classic/browser/tabbrowser/tab-right.png                      (tabbrowser/tab-right.png)
-        skin/classic/browser/tabbrowser/tab-right-bkgnd.png                (tabbrowser/tab-right-bkgnd.png)
-        skin/classic/browser/tabbrowser/tabstrip-bottom.png                (tabbrowser/tabstrip-bottom.png)
-        icon.png
-        preview.png
+  skin/classic/browser/tabbrowser/tab-arrow-end.png    (tabbrowser/tab-arrow-end.png)
+  skin/classic/browser/tabbrowser/tab-arrow-start.png  (tabbrowser/tab-arrow-start.png)
+  skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
+  icon.png
+  preview.png
