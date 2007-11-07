@@ -1185,11 +1185,6 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
   padding: 0px 2px 0px 2px !important;
 }
 
-#FindToolbar > .tabs-closebutton {
-  border: 1px solid transparent;
-  padding: 3px 2px 4px 2px !important;
-}
-
 toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
 }
