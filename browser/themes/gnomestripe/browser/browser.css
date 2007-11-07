@@ -839,14 +839,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   -moz-margin-end: 5px;
 }
 
-/* This needs to be at least as large as the maximum possible width
-   of the container that holds the icons in the right side of the urlbar.
-   This is a spacer so that the urlbar/searchbar boundary doesn't shift
-   (due to flex calculations) when the urlbar icons appear and disappear. */
-#urlbar-icons-spacer {
-  width: 100px;
-}
-
 #urlbar-icons {
   height: 18px;
 }
