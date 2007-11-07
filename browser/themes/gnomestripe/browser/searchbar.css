@@ -1,8 +1,3 @@
-%ifdef MOZ_WIDGET_GTK2
-#searchbar {
-  -moz-margin-start: 3px;
-}
-%endif
 
 .searchbar-box {
   -moz-padding-end: 5px;
@@ -15,7 +10,6 @@
   margin-right: 0px;
   margin-left: 0px;
   background-color: -moz-field;
-
   -moz-appearance: none;
   -moz-border-top-colors: ThreeDShadow;
   -moz-border-bottom-colors: ThreeDShadow;
@@ -29,8 +23,11 @@
   margin: 0px !important;
 }
 
-/* ::::: searchbar-engine-button ::::: */
+.searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
+  font-weight: bold;
+}
 
+/* Engine button */
 .searchbar-engine-button-stack {
   padding: 2px 0px 2px 0px;
 }
@@ -120,8 +117,7 @@
   -moz-margin-start: 3px;
 }
 
-/* ::::: search-go-button ::::: */
-
+/* Searchbar endcap */
 /* In text icon mode, the Search Go button scales independently of the field,
  * and the button can be much taller, so we have to center align the elements
  * (instead of stretching them) to prevent the field from stretching vertically
@@ -175,8 +171,4 @@ toolbar[mode="text"] .search-go-button {
 
 .search-go-button > .toolbarbutton-icon {
   margin: 0px;
-}
-
-.searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
-  font-weight: bold;
 }

@@ -1,3 +1,4 @@
+%if 0
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+%endif
 /**** folder menulist ****/
 .folder-icon > .menulist-label-box > .menulist-icon {
   width: 16px;
@@ -103,7 +104,6 @@
 
 
 /* Hide the drop marker and the popup. */
-
 #editBMPanel_namePicker[droppable="false"] > .menulist-dropmarker,
 #editBMPanel_namePicker[droppable="false"] > menupopup {
   display: none;
