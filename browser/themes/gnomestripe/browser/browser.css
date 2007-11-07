@@ -68,8 +68,8 @@
 
 /* ..... fix searchbar "add engine" padding issue ..... */
 
-#searchbar .searchbar-dropmarker menuseparator + menuitem { 
--moz-padding-start: 4px; 
+#searchbar .searchbar-popup .open-engine-manager {
+  -moz-padding-start: 4px; 
 }
 
 #searchbar[empty="true"] .searchbar-textbox {
