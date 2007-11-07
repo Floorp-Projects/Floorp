@@ -3166,11 +3166,15 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 enum
 {
   kEscapeKeyCode      = 0x35,
+  kRCommandKeyCode    = 0x36, // right command key
   kCommandKeyCode     = 0x37,
   kShiftKeyCode       = 0x38,
   kCapsLockKeyCode    = 0x39,
+  kOptionkeyCode      = 0x3A,
   kControlKeyCode     = 0x3B,
-  kOptionkeyCode      = 0x3A, // both left and right option keys
+  kRShiftKeyCode      = 0x3C, // right shift key
+  kROptionKeyCode     = 0x3D, // right option key
+  kRControlKeyCode    = 0x3E, // right control key
   kClearKeyCode       = 0x47,
 
   // function keys
@@ -3310,10 +3314,14 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
   {
     // modifiers. We don't get separate events for these
     case kEscapeKeyCode:        geckoKeyCode = NS_VK_ESCAPE;         break;
+    case kRCommandKeyCode:
     case kCommandKeyCode:       geckoKeyCode = NS_VK_META;           break;
+    case kRShiftKeyCode:
     case kShiftKeyCode:         geckoKeyCode = NS_VK_SHIFT;          break;
     case kCapsLockKeyCode:      geckoKeyCode = NS_VK_CAPS_LOCK;      break;
+    case kRControlKeyCode:
     case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
+    case kROptionKeyCode:
     case kOptionkeyCode:        geckoKeyCode = NS_VK_ALT;            break;
     case kClearKeyCode:         geckoKeyCode = NS_VK_CLEAR;          break;
 
@@ -3399,10 +3407,14 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     // modifiers - we don't get separate events for these yet
     case kEscapeKeyCode:
     case kShiftKeyCode:
+    case kRShiftKeyCode:
     case kCommandKeyCode:
+    case kRCommandKeyCode:
     case kCapsLockKeyCode:
     case kControlKeyCode:
+    case kRControlKeyCode:
     case kOptionkeyCode:
+    case kROptionKeyCode:
     case kClearKeyCode:
       
       // function keys
