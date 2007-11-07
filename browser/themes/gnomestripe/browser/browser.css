@@ -855,11 +855,11 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   min-width: 7em;
 
   -moz-appearance: none;
-  -moz-border-top-colors: #96969D;
-  -moz-border-bottom-colors: #96969D;
-  -moz-border-right-colors: #96969D;
-  -moz-border-left-colors: #96969D;
-  border: 1px solid;
+  -moz-border-top-colors: ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDShadow;
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow;
+  border-width: 1px;
 }
 
 .formatted-url {
@@ -1008,12 +1008,9 @@ statusbarpanel#statusbar-display {
 }
 
 .endcap-box {
-  -moz-border-top-colors: #96969D;
-  -moz-border-right-colors: #96969D;
-  -moz-border-bottom-colors: #96969D;
   -moz-border-radius: 0 4px 4px 0;
-  border: 1px solid;
-  border-left: none;
+  border: 1px solid ThreeDShadow;
+  border-left-width: 0;
   background-image: url("chrome://browser/skin/endcap-bkgnd.png");
   background-repeat: repeat-x;
   background-position: 50% 50%;
@@ -1025,9 +1022,8 @@ toolbar:not([mode="text"]) .endcap:hover > .endcap-box {
 
 .endcap-box[chromedir="rtl"] {
   -moz-border-radius: 4px 0 0 4px;
-  -moz-border-left-colors: #96969D;
-  border-left: 1px solid;
-  border-right: none;
+  border-left-width: 1px;
+  border-right-width: 0;
 }
 
 toolbar[mode="text"] .endcap-box {
