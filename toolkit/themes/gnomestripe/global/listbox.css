@@ -1,0 +1,183 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== listbox.css =======================================================
+  == Styles used by XUL listbox-related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: listbox ::::: */
+
+listbox {
+  -moz-appearance: listbox;
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+listbox[disabled="true"] {
+  color: GrayText;
+}
+
+/* ::::: listitem ::::: */
+
+listitem {
+  border: 1px solid transparent;
+}
+
+listbox:focus > listitem[selected="true"][current="true"] {
+  outline: 1px dotted #F3D982;
+}
+
+listbox:focus > listitem[current="true"] {
+  outline: 1px dotted Highlight;
+  -moz-outline-offset: -1px;
+}
+
+listitem[selected="true"] {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+listbox:focus > listitem[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+/* ::::: listheader ::::: */
+
+listheader { 
+  -moz-appearance: treeheadercell;
+  -moz-box-align: center;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  padding: 0 2px;
+}
+
+listheader[sortable="true"]:hover:active {
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDShadow transparent;
+  -moz-border-bottom-colors: ThreeDShadow transparent;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 1px;
+}
+
+.listheader-icon {
+  -moz-margin-end: 2px;
+}
+
+.listheader-icon[sortable="true"]:hover:active {
+  -moz-margin-end: 1px;
+}
+
+.listheader-label {
+  margin: 0px !important;
+}
+
+/* ..... sort direction icon ..... */
+
+.listheader-sortdirection {
+  list-style-image: none;
+}
+
+.listheader-sortdirection[sortDirection="ascending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
+}
+
+.listheader-sortdirection[sortDirection="descending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
+}
+
+/* ::::: listcell ::::: */
+
+.listcell-label {
+  margin: 0px !important;
+  padding-top: 0px;
+  padding-bottom: 1px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 0px;
+  white-space: nowrap;
+}
+
+.listcell-icon {
+  -moz-margin-end: 2px;
+}
+
+.listcell-label[disabled="true"] {
+  color: GrayText;
+}
+
+/* ::::: listcell checkbox ::::: */
+
+.listcell-check {
+  -moz-appearance: checkbox;
+  -moz-box-align: center;
+  margin: 0px 2px;
+  border: 1px solid -moz-DialogText;
+  min-width: 13px;
+  min-height: 13px;
+  background: -moz-Field no-repeat 50% 50%;
+}
+
+.listcell-check[checked="true"] {
+  background-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+.listcell-check[disabled="true"] {
+  border-color: GrayText;
+  background-image: url("chrome://global/skin/checkbox/cbox-dis.gif");
+}
+
+.listcell-check[disabled="true"][checked="true"] {
+  background-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
+}

@@ -1,0 +1,414 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== tree.css ===================================================
+  == Styles used by the XUL outline element.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: tree ::::: */
+
+tree {
+  margin: 0px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-appearance: listbox;
+}
+
+/* ::::: tree focusring ::::: */
+
+.focusring > .tree-stack > .tree-rows > .tree-bodybox {
+  border: 1px solid transparent;  
+}
+
+.focusring:focus > .tree-stack > .tree-rows > .tree-bodybox {
+  border: 1px solid #000000;
+}
+
+
+/* ::::: tree rows ::::: */
+
+treechildren::-moz-tree-row {
+  border: 1px solid transparent;
+  min-height: 18px;
+  height: 1.3em;
+}
+
+treechildren::-moz-tree-row(selected) {
+  background-color: -moz-Dialog;
+}
+
+treechildren::-moz-tree-row(selected, focus) {
+  background-color: Highlight;
+}
+
+treechildren::-moz-tree-row(current, focus) {
+  border: 1px dotted Highlight;
+}
+
+treechildren::-moz-tree-row(selected, current, focus) {
+  border: 1px dotted #F3D982;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-row,
+tree[seltype="text"] > treechildren::-moz-tree-row {
+  border: none;
+  background-color: transparent;
+}
+
+/* ::::: tree cells ::::: */
+
+treechildren::-moz-tree-cell {
+  padding: 0px 2px 0px 2px;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-cell-text,
+tree[seltype="text"] > treechildren::-moz-tree-cell-text,
+treechildren::-moz-tree-cell-text {
+  color: inherit;
+}
+
+treechildren::-moz-tree-cell-text(selected) {
+  color: -moz-DialogText;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-cell {
+  border: 1px solid transparent;
+  padding: 0px 1px 0px 1px;
+}
+
+tree[seltype="text"] > treechildren::-moz-tree-cell-text {
+  border: 1px solid transparent;
+  padding: 0px 1px 1px 1px;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected) {
+  background-color: -moz-Dialog;
+}
+tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected) {
+  color: -moz-DialogText;
+}
+
+tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected) {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+treechildren::-moz-tree-cell-text(selected, focus) {
+  color: HighlightText;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected, focus) {
+  background-color: Highlight;
+}
+
+tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
+  background-color: Highlight;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
+  color: HighlightText;
+}
+
+tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, focus) {
+  color: HighlightText;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-cell(active, current, focus) {
+  border: 1px dotted #000000;
+}
+
+tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, current, focus) {
+  border: 1px dotted #000000;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected, current, focus) {
+  border: 1px dotted #C0C0C0;
+}
+
+tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, current, focus) {
+  border: 1px dotted #C0C0C0;
+}
+
+/* ::::: lines connecting cells ::::: */
+
+tree[seltype="cell"] > treechildren::-moz-tree-line,
+tree[seltype="text"] > treechildren::-moz-tree-line,
+treechildren::-moz-tree-line {
+  border: 1px dotted ThreeDShadow;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-line(active, selected, focus),
+treechildren::-moz-tree-line(selected, focus) {
+  border: 1px dotted HighlightText;
+}
+
+
+/* ::::: tree separator ::::: */
+
+treechildren::-moz-tree-separator {
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
+}
+
+
+/* ::::: drop feedback ::::: */
+
+tree[seltype="cell"] > treechildren::-moz-tree-cell-text(primary, dropOn),
+tree[seltype="text"] > treechildren::-moz-tree-cell-text(primary, dropOn),
+treechildren::-moz-tree-cell-text(primary, dropOn) {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+treechildren::-moz-tree-drop-feedback {
+  background-color: Highlight;
+  width: 50px;
+  height: 2px;
+  margin-left: 5px;
+}
+
+/* ::::: tree progress meter ::::: */
+
+treechildren::-moz-tree-progressmeter {
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  background-color: -moz-Dialog;
+  color: ThreeDShadow;
+}
+
+treechildren::-moz-tree-progressmeter(progressUndetermined) {
+  list-style-image: url("chrome://global/skin/progressmeter/progressmeter-busy.gif");
+}
+
+treechildren::-moz-tree-cell-text(progressmeter) {
+  margin: 2px 4px;
+}
+
+/* ::::: tree columns ::::: */
+
+treecol,
+treecolpicker {
+  -moz-appearance: treeheadercell;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  padding: 0px 2px;
+}
+
+.treecol-image {
+  padding: 0px 1px;
+}
+
+.treecol-text {
+  margin: 0px !important;
+}
+
+treecol[hideheader="true"] {
+  -moz-appearance: none;
+  border: none;
+  padding: 0;
+}
+
+/* ..... internal box ..... */
+
+treecol:hover:active,
+treecolpicker:hover:active {
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDShadow transparent;
+  -moz-border-bottom-colors: ThreeDShadow transparent;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  padding: 0px 1px 0px 3px;
+}
+
+.treecol-image:hover:active {
+  padding: 0px 0px 0px 2px;
+}
+
+treecol:hover:active .treecol-text {
+  margin: 1px 0px -1px 0px !important;
+}
+
+/* ::::: column drag and drop styles ::::: */
+
+treecol[dragging="true"] {
+  -moz-border-top-colors: ThreeDDarkShadow transparent !important;
+  -moz-border-right-colors: ThreeDDarkShadow transparent!important;
+  -moz-border-bottom-colors: ThreeDDarkShadow transparent !important;
+  -moz-border-left-colors: ThreeDDarkShadow transparent !important;
+  background-color: ThreeDShadow !important;
+  color: ThreeDHighlight !important;
+}
+
+treecol[insertafter="true"] {
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+}
+
+treecol[insertbefore="true"] {
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+}
+
+treechildren::-moz-tree-column(insertbefore) {
+  border-left: 1px solid ThreeDShadow;
+}
+
+treechildren::-moz-tree-column(insertafter) {
+  border-right: 1px solid ThreeDShadow;
+}
+
+/* ::::: sort direction indicator :::::  */
+
+.treecol-sortdirection {
+  list-style-image: none;
+}
+
+treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
+}
+
+treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
+}
+
+/* ::::: column picker :::::  */
+
+.tree-columnpicker-icon {
+  list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
+}
+
+/* ::::: twisty :::::  */
+
+treechildren::-moz-tree-twisty {
+  padding-right: 4px;
+  padding-top: 1px;
+  width: 9px; /* The image's width is 9 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
+}
+
+treechildren::-moz-tree-twisty(open) {
+  width: 9px; /* The image's width is 9 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-open.png");
+}
+
+treechildren::-moz-tree-indentation {
+  width: 18px;
+}
+
+/* ::::: gridline style ::::: */
+
+treechildren.gridlines::-moz-tree-cell {
+  border-right: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+}
+
+treechildren.gridlines::-moz-tree-row {
+  border: none;
+}
+
+treechildren::-moz-tree-image(Name) {
+  padding-right: 2px;
+}
+
+treechildren::-moz-tree-image(Name) {
+  margin: 0px 2px;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+treechildren::-moz-tree-image(Name, container) {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+treechildren::-moz-tree-image(Name, open) {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+
+treechildren::-moz-tree-image(Name, separator) {
+  list-style-image: none;
+  width: 0px !important;
+  height: 0px !important;
+  margin: 0px 0px;
+}
+
+treechildren::-moz-tree-cell-text(Name, separator) {
+  color: ThreeDShadow;
+  margin: 0px 5px 0px 5px;
+}
+
+treechildren::-moz-tree-cell-text(Name, separator, selected, focus) {
+  color: HighlightText;
+}
+
+/* ::::: editable tree ::::: */
+
+treechildren::-moz-tree-row(selected, editing) {
+  background-color: transparent;
+  border: none;
+}
+
+treechildren::-moz-tree-cell-text(selected, editing) {
+  color: inherit;
+}
+
+.tree-input {
+  -moz-appearance: none;
+  border: 1px solid Highlight;
+  -moz-border-top-colors: Highlight;
+  -moz-border-bottom-colors: Highlight;
+  -moz-border-left-colors: Highlight;
+  -moz-border-right-colors: Highlight;
+  margin: 0 0 0 -4px;
+  padding: 1px;
+}

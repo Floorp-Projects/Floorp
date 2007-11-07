@@ -151,6 +151,10 @@ typedef enum {
   MOZ_GTK_TAB,
   /* Paints the background and border of a GtkNotebook. */
   MOZ_GTK_TABPANELS,
+  /* Paints the background and border of a GtkTreeView */
+  MOZ_GTK_TREEVIEW,
+  /* Paints treeheader cells */
+  MOZ_GTK_TREE_HEADER_CELL,
   /* Paints the background of the menu bar. */
   MOZ_GTK_MENUBAR,
   /* Paints the background of menus, context menus. */
@@ -241,7 +245,8 @@ moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing);
 gint
 moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
-/** Get the focus metrics for a button, checkbox, or radio button.
+/** Get the focus metrics for a treeheadercell, button, checkbox, or radio button.
+ * widget:             [IN]  the widget to get the focus metrics for    
  * interior_focus:     [OUT] whether the focus is drawn around the
  *                           label (TRUE) or around the whole container (FALSE)
  * focus_width:        [OUT] the width of the focus line
@@ -250,14 +255,8 @@ moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint
-moz_gtk_button_get_focus(gboolean* interior_focus,
+moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
                          gint* focus_width, gint* focus_pad);
-gint
-moz_gtk_checkbox_get_focus(gboolean* interior_focus,
-                           gint* focus_width, gint* focus_pad);
-gint
-moz_gtk_radio_get_focus(gboolean* interior_focus,
-                        gint* focus_width, gint* focus_pad);
 
 /**
  * Get the desired size of a GtkScale thumb
