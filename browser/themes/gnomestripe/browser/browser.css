@@ -1843,7 +1843,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   cursor: help;
   background-color: ThreeDFace;
 %ifdef MOZ_WIDGET_GTK2
-  -moz-border-end: 1px solid red;
+  border: 1px solid ThreeDShadow;
+  -moz-border-start: none;
+  border-top: none;
+  border-bottom: none;
 %else
   -moz-appearance: toolbox;
   outline: 1px solid ThreeDShadow;
