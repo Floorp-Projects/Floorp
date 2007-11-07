@@ -10,102 +10,73 @@ html {
 
 #feedBody, #feedError {
   border: 1px solid THreeDShadow;
-  -moz-border-radius: 10px;
   padding: 3em;
   -moz-padding-start: 30px;
   margin: 2em auto;
   background: -moz-Field;
 }
 
-#feedHeader {
+#feedHeaderContainer {
   border: 1px solid ThreeDShadow;
   -moz-border-radius: 10px;
-  padding-top: 4em;
-  padding-bottom: .3em;
-  -moz-padding-start: .3em;
-  -moz-padding-end: .3em;
   margin: -4em auto 0 auto;
-  font-size: 110%;
   background-color: InfoBackground;
 }
 
-#feedHeader[firstrun="true"] {
-  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat InfoBackground;
-  padding: 5em 3em 3em 3em;
+#feedHeader {  
+  margin-top: 4.9em;
+  margin-bottom: 1em;
+  -moz-margin-start: 1.4em;
+  -moz-margin-end: 1em;
+  -moz-padding-start: 2.9em;
+  font-size: 110%;
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 0% 10% no-repeat InfoBackground;
+}
+
+#feedHeader[dir="rtl"] {
+  background-position: 100% 10%;
 }
 
 #feedIntroText {
   display: none;
-  -moz-margin-start: 2em;
 }
 
 #feedHeader[firstrun="true"] #feedIntroText {
+  padding-top: 0.1em;
+  -moz-padding-start: 0.6em;
   display: block;
 }
 
+#feedHeader[firstrun="true"] > #feedSubscribeLine {
+  -moz-padding-start: 1.8em;
+}
+
 #feedSubscribeLine {
-  padding: 1em;
-  -moz-border-radius: 3px;
+  padding-top: 0.2em;
 }
 
-#feedHeader[firstrun="true"] #feedSubscribeLine {
-  -moz-margin-start: 1.7em;
-  background: -moz-Field;
+#alwaysUse {
+  padding: 5px;
 }
 
-#feedSubscribeHandler {
-  border: 1px solid ThreeDLightShadow;
-  -moz-border-radius: 3px;
-  padding: 3px;
+
+#handlersMenuList > menupopup > menuitem {
+  -moz-padding-start: 23px;
 }
 
-#feedSubscribeHandleText {
-  -moz-padding-start: 20px;
-  background: url("chrome://browser/skin/feeds/feedIcon16.png") left 0 no-repeat;
+#handlersMenuList > menupopup > menuitem.menuitem-iconic {
+  -moz-padding-start: 2px;
 }
 
-.feedSubscribeLink {
-  font-weight: bold;
-  -moz-margin-end: .4em;
-  padding: .2em .1em .2em .1em;
+#handlersMenuList > menupopup > .menuitem-iconic  > .menu-iconic-left {
+  display: -moz-box;
+  min-width: 16px;
+  -moz-padding-end: 2px;
 }
 
-.feedSubscribeLinkBox {
-  background: url("chrome://browser/skin/feeds/feedIcon16.png") left 0 no-repeat;
-  -moz-padding-start: 19px;
-  -moz-margin-end: 0px;
+#feedHeader[dir="rtl"] #handlersMenuList > menupopup {
+  direction: rtl;
 }
-
-#feedSubscribeOptionsGroup {
-  -moz-border-radius: 4px;
-  border: 2px solid ThreeDLightShadow;
-  margin-bottom: .3em;
-}
-
-#feedSubscribeOptionsGroupTitle {
-  -moz-padding-start: .3em;
-  -moz-padding-end: .3em;
-}
-
-.styleLessBorderLess {
-  -moz-appearance: none;
-  border: none;
-}
-
-#feedSubscribeOptions {
-  -moz-margin-start: 5em;
-  -moz-margin-end: 5em;
-  margin-top: 2em;
-}
-
-#feedChangeSubscribeOptions {
-  -moz-margin-start: .4em;
-}
-
-#feedSubscribeDoneChangingOptions {
-  font-weight: bold;
-}
-
 
 body {
   margin: 0;
@@ -158,77 +129,13 @@ a[href] img {
 .feedEntryContent {
   font-size: 110%;
 }
-
+ 
 .link {
   color: #0000FF;
   text-decoration: underline;
   cursor: pointer;
-  margin-top: -2px;
 }
 
 .link:hover:active {
   color: #FF0000;
-}
-
-.plain {
-  -moz-appearance: none;
-  border: 0px;
-  margin: 0px;
-  padding: 0px;
-  background: none;
-}
-
-.plain > .button-box {
-  border: 1px solid transparent;
-  margin: 0px;
-  padding: 0px;
-  background: none;
-}
-
-.plain:focus > .button-box {
-  border: 1px dotted ThreeDDarkShadow;
-}
-
-#readerContainer {
-  -moz-appearance: listbox;
-}
-
-#readers {
-  -moz-appearance: none;
-  border: none;
-  margin: 0px;
-}
-
-#readers > listitem {
-  -moz-padding-start: 4px;
-}
-
-#chooseClientApp {
-  font-size: 80%;
-}
-
-#application {
-  border-bottom: 1px solid ThreeDShadow;
-}
-
-#readerGroup {
-  -moz-padding-end: 14px;
-}
-
-#handlersMenuList > menupopup > menuitem {
-  -moz-padding-start: 23px;
-}
-
-#handlersMenuList > menupopup > menuitem.menuitem-iconic {
-  -moz-padding-start: 2px;
-}
-
-#handlersMenuList > menupopup > .menuitem-iconic  > .menu-iconic-left {
-  display: -moz-box;
-  min-width: 16px;
-  -moz-padding-end: 2px;
-}
-
-#feedHeader[dir="rtl"] #handlersMenuList > menupopup {
-  direction: rtl;
 }

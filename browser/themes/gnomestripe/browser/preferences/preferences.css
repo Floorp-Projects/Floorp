@@ -46,53 +46,60 @@
 radio[pane=paneMain] {
 	-moz-image-region: rect(0px, 32px,  32px, 0px)
 }
-radio[pane=paneMain]:hover, radio[pane=paneMain][selected="true"]  {
+radio[pane=paneMain]:hover, 
+radio[pane=paneMain][selected="true"]  {
 	-moz-image-region: rect(32px, 32px,  64px, 0px)
 }
 
-radio[pane=panePrivacy] {
-	-moz-image-region: rect(0px, 64px,  32px, 32px)
+radio[pane=paneTabs] {
+	-moz-image-region: rect(0px, 64px, 32px, 32px)
 }
-radio[pane=panePrivacy]:hover, radio[pane=panePrivacy][selected="true"]  {
-	-moz-image-region: rect(32px, 64px,  64px, 32px)
+radio[pane=paneTabs]:hover, 
+radio[pane=paneTabs][selected="true"] {
+	-moz-image-region: rect(32px, 64px, 64px, 32px)
 }
 
 radio[pane=paneContent] {
 	-moz-image-region: rect(0px, 96px,  32px, 64px)
 }
-radio[pane=paneContent]:hover, radio[pane=paneContent][selected="true"]  {
+radio[pane=paneContent]:hover, 
+radio[pane=paneContent][selected="true"]  {
 	-moz-image-region: rect(32px, 96px,  64px, 64px)
 }
 
 radio[pane=paneFeeds] {
-	-moz-image-region: rect(0px, 96px,  32px, 64px)
+	-moz-image-region: rect(0px, 128px,  32px, 96px)
 }
-radio[pane=paneFeeds]:hover, radio[pane=paneFeeds][selected="true"]  {
-	-moz-image-region: rect(32px, 96px,  64px, 64px)
+radio[pane=paneFeeds]:hover, 
+radio[pane=paneFeeds][selected="true"]  {
+	-moz-image-region: rect(32px, 128px,  64px, 96px)
+}
+
+radio[pane=panePrivacy] {
+	-moz-image-region: rect(0px, 160px,  32px, 128px)
+}
+radio[pane=panePrivacy]:hover, 
+radio[pane=panePrivacy][selected="true"]  {
+	-moz-image-region: rect(32px, 160px,  64px, 128px)
 }
 
 radio[pane=paneSecurity] {
-	-moz-image-region: rect(0px, 128px, 32px, 96px)
+	-moz-image-region: rect(0px, 192px,  32px, 160px)
 }
-radio[pane=paneSecurity]:hover, radio[pane=paneSecurity][selected="true"] {
-	-moz-image-region: rect(32px, 128px, 64px, 96px)
-}
-
-radio[pane=paneTabs] {
-	-moz-image-region: rect(0px, 192px, 32px, 160px)
-}
-radio[pane=paneTabs]:hover, radio[pane=paneTabs][selected="true"] {
-	-moz-image-region: rect(32px, 192px, 64px, 160px)
+radio[pane=paneSecurity]:hover, 
+radio[pane=paneSecurity][selected="true"]  {
+	-moz-image-region: rect(32px, 192px,  64px, 160px)
 }
 
 radio[pane=paneAdvanced] {
-	-moz-image-region: rect(0px, 160px, 32px, 128px)
+	-moz-image-region: rect(0px, 224px, 32px, 192px)
 }
-radio[pane=paneAdvanced]:hover, radio[pane=paneAdvanced][selected="true"] {
-	-moz-image-region: rect(32px, 160px, 64px, 128px)
+radio[pane=paneAdvanced]:hover, 
+radio[pane=paneAdvanced][selected="true"] {
+	-moz-image-region: rect(32px, 224px, 64px, 192px)
 }
 
-/* Main Pane */
+/* General Pane */
 #browserHomePage {
   padding-top: 2px;
   padding-bottom: 3px;
