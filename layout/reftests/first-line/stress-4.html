@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+#a:first-child::first-line { }
+body { visibility: hidden; }
+</style>
+<script>
+  function runTest() {
+    document.getElementById("test").removeAttribute('style');
+    document.body.offsetWidth;
+    document.documentElement.className = "";  
+  }
+</script>
+</head><body>
+
+<div style="position:absolute;">
+  <span id="a" style="position:fixed;">
+    <span>
+      <span style="display:table;position:absolute;">
+      </span>
+    </span>
+    Loading this should not crash Mozilla
+  </span>
+</div>
+
+
+</body></html>
