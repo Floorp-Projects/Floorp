@@ -35,9 +35,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**** folder tree ****/
-#folderTree {
-  margin: 4px;
+/**** folder menulist ****/
+.folder-icon > .menulist-label-box > .menulist-icon,
+.folder-icon > .menu-iconic-left > .menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.folder-icon > .menu-iconic-left {
+  display: -moz-box;
+}
+
+.folder-icon {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  -moz-image-region: rect(0px, 32px, 16px, 16px) !important;
 }
 
 /**** name picker ****/
