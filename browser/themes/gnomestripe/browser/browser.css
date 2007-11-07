@@ -820,21 +820,6 @@ statusbarpanel#statusbar-display {
   display: -moz-box;
 }
 
-#livemark-button {
-  list-style-image: none;
-  width: 20px;
-  display: none;
-}
-
-#livemark-button[livemarks] {
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
-  display: -moz-box;
-}
-
-#livemark-button[livemarks][chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/page-livemarks-rtl.png");
-}
-
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
@@ -936,14 +921,41 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   color: #000000;
 }
 
-#urlbar[level="high"] > .autocomplete-textbox-container > .info-icon {
+#urlbar[level="high"] #lock-icon {
   list-style-image: url("chrome://browser/skin/Secure.png");
 }
-#urlbar[level="low"] > .autocomplete-textbox-container > .info-icon {
+#urlbar[level="low"] #lock-icon {
   list-style-image: url("chrome://browser/skin/Secure.png");
 }
-#urlbar[level="broken"] > .autocomplete-textbox-container > .info-icon {
+#urlbar[level="broken"] #lock-icon {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
+}
+
+#feed-button, #feed-button > .button-box,
+#feed-button:hover:active > .button-box {
+  padding: 0px;
+  margin: 0px;
+  border: 0px; 
+  background-color: transparent;
+}
+
+#feed-button .button-menu-dropmarker,
+#feed-button .button-text {
+  display: none;
+}
+
+#feed-button {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
+  -moz-appearance: none; 
+  min-width: 0px; 
+  margin-right: 1px !important;
+}
+
+#feed-button[feeds] {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+}
+#feed-button[chromedir="rtl"][feeds] {
+  list-style-image: url("chrome://browser/skin/page-livemarks-rtl.png");
 }
 
 /* ::::: About Popup Blocking dialog ::::: */
