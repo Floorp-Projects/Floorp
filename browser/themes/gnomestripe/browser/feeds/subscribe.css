@@ -1,3 +1,4 @@
+
 *[hidden] {
   display: none;
 }
@@ -44,12 +45,12 @@ html {
 
 #feedSubscribeLine {
   padding: 1em;
-  background: -moz-Field;
   -moz-border-radius: 3px;
 }
 
 #feedHeader[firstrun="true"] #feedSubscribeLine {
   margin-left: 1.7em;
+  background: -moz-Field;
 }
 
 #feedSubscribeHandler {
@@ -140,5 +141,15 @@ a[href] img {
 
 #feedTitleImage {
   margin: 0 0 0 .6em;
+}
+
+.link {
+  color: #0000FF;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link:hover:active {
+  color: #FF0000;
 }
 
