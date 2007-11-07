@@ -958,20 +958,20 @@ toolbar[mode="text"] #go-button-stack {
   padding: 2px 0px 2px 0px;
 }
 
-toolbar:not([mode="text"]) #go-button {
+toolbar:not([mode="text"]) #go-button,
+#palette-box #go-button {
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
   -moz-image-region: rect(0px 25px 22px 0px);
-  border: 0px;
-  padding: 0px;
-  margin: 0px;
+  border: none;
+  padding: 0;
 }
 
-toolbar:not([mode="text"]) #go-button[chromedir="rtl"] {
+#go-button[chromedir="rtl"] {
   list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
 }
 
-toolbar:not([mode="text"]) #go-button-top {
+#go-button-top {
   list-style-image: url("chrome://browser/skin/Go-bkgnd.png");
   -moz-image-region: rect(0px, 25px, 10px, 0px);
   height: 10px;
@@ -979,33 +979,32 @@ toolbar:not([mode="text"]) #go-button-top {
 
 /* GTK does not stretch image regions properly, so use background
    images instead.  See bugs 351764 and 254659. */
-toolbar:not([mode="text"]) #go-button-mid-top {
+#go-button-mid-top {
   background-image: url("chrome://browser/skin/Go-mid-top.png");
 }
 
-toolbar:not([mode="text"]) #go-button-mid-bottom {
+#go-button-mid-bottom {
   background-image: url("chrome://browser/skin/Go-mid-bottom.png");
 }
 
-toolbar:not([mode="text"]) #go-button-bottom {
+#go-button-bottom {
   list-style-image: url("chrome://browser/skin/Go-bkgnd.png");
   -moz-image-region: rect(12px, 25px, 22px, 0px);
   height: 10px;
 }
 
-toolbar:not([mode="text"]) #go-button-top[chromedir="rtl"],
-toolbar:not([mode="text"]) #go-button-bottom[chromedir="rtl"] {
+#go-button-top[chromedir="rtl"],
+#go-button-bottom[chromedir="rtl"] {
   list-style-image: url("chrome://browser/skin/Go-bkgnd-rtl.png");
 }
 
-toolbar:not([mode="text"]) #go-button-mid-top[chromedir="rtl"] {
+#go-button-mid-top[chromedir="rtl"] {
   background-image: url("chrome://browser/skin/Go-mid-top-rtl.png");
 }
 
-toolbar:not([mode="text"]) #go-button-mid-bottom[chromedir="rtl"] {
+#go-button-mid-bottom[chromedir="rtl"] {
   background-image: url("chrome://browser/skin/Go-mid-bottom-rtl.png");
 }
-
 
 #go-button-stack:hover #go-button-top {
   -moz-image-region: rect(0px, 50px, 10px, 25px);
@@ -1019,7 +1018,6 @@ toolbar:not([mode="text"]) #go-button-mid-bottom[chromedir="rtl"] {
 #go-button-stack:hover #go-button-bottom {
   -moz-image-region: rect(12px, 50px, 22px, 25px);
 }
-
 
 /* Disabled images are not used. */
 #go-button-stack[disabled="true"] #go-button-top {
@@ -1049,6 +1047,13 @@ toolbar:not([mode="text"]) #go-button-mid-bottom[chromedir="rtl"] {
   -moz-image-region: rect(12px, 100px, 22px, 75px);
 }
 
+
+toolbar[mode="text"] #go-button-top,
+toolbar[mode="text"] #go-button-mid-top,
+toolbar[mode="text"] #go-button-mid-bottom,
+toolbar[mode="text"] #go-button-bottom {
+  display: none;
+}
 
 toolbar[mode="text"] #go-button > .toolbarbutton-text {
   display: -moz-box !important;
