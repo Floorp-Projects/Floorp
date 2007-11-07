@@ -1,5 +1,4 @@
 classic.jar:
-        skin/classic/browser/aboutDialog.css
         skin/classic/browser/browser.css
         skin/classic/browser/browser.xml
         skin/classic/browser/contents.rdf
