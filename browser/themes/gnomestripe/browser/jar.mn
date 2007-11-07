@@ -21,7 +21,7 @@ classic.jar:
         skin/classic/browser/Toolbar.png
         skin/classic/browser/Toolbar-small.png
 #ifdef MOZ_FEEDS
-        skin/classic/browser/feeds/light.gif                    (feeds/light.gif)
+        skin/classic/browser/feeds/feedIcon.png                 (feeds/feedIcon.png)
         skin/classic/browser/feeds/subscribe.css                (feeds/subscribe.css)
 #endif
 #ifdef MOZ_PLACES
