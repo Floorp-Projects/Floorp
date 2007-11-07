@@ -1014,13 +1014,21 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     switch (newType) {
       case eType_Image:
         // Don't notify, because we will take care of that ourselves.
-        rv = LoadImage(aURI, aForceLoad, PR_FALSE);
+        if (aURI) {
+          rv = LoadImage(aURI, aForceLoad, PR_FALSE);
+        } else {
+          rv = NS_ERROR_NOT_AVAILABLE;
+        }
         break;
       case eType_Plugin:
         rv = TryInstantiate(mContentType, mURI);
         break;
       case eType_Document:
-        rv = mFrameLoader->LoadURI(aURI);
+        if (aURI) {
+          rv = mFrameLoader->LoadURI(aURI);
+        } else {
+          rv = NS_ERROR_NOT_AVAILABLE;
+        }
         break;
       case eType_Loading:
         NS_NOTREACHED("Should not have a loading type here!");
