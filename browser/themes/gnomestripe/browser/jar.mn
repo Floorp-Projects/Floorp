@@ -41,6 +41,7 @@ classic.jar:
 #else
         skin/classic/browser/Bookmarks-folder.png
         skin/classic/browser/bookmarks/addBookmark.css          (bookmarks/addBookmark.css)
+        skin/classic/browser/bookmarks/bookmarksProperties.css  (bookmarks/bookmarksProperties.css)
         skin/classic/browser/bookmarks/bookmarksManager.css     (bookmarks/bookmarksManager.css)
         skin/classic/browser/bookmarks/Bookmarks-toolbar.png    (bookmarks/Bookmarks-toolbar.png)
 #endif
