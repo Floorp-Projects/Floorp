@@ -78,6 +78,13 @@ html {
   direction: rtl;
 }
 
+/* Don't print subscription UI */
+@media print {
+  #feedHeaderContainer {
+    display: none;
+  }
+}
+
 body {
   margin: 0;
   padding: 0 3em;
