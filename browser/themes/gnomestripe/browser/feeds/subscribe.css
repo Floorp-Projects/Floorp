@@ -87,10 +87,6 @@ html {
   -moz-padding-end: .3em;
 }
 
-.field {
-  -moz-appearance: textbox;
-}
-
 .styleLessBorderLess {
   -moz-appearance: none;
   border: none;
