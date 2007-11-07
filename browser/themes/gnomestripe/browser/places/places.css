@@ -35,6 +35,16 @@ treechildren::-moz-tree-image {
   margin: 0px 2px;
 }
 
+treechildren::-moz-tree-image(title) {
+  width: 16px;
+  height: 16px;
+}
+
+treechildren::-moz-tree-image(title, separator) {
+  width: 0;
+  height: 0;
+}
+
 treechildren::-moz-tree-image(title, livemark\/bookmarkFeedURI) {
   list-style-image: url("chrome://browser/skin/livemark-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
