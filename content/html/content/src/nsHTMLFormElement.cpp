@@ -851,10 +851,10 @@ nsHTMLFormElement::DoReset()
 nsresult
 nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
 {
-  NS_ASSERTION(!mIsSubmitting, "Either two people are trying to submit or the "
-               "previous submit was not properly cancelled by the DocShell");
   NS_ASSERTION(GetCurrentDoc(), "Should never get here without a current doc");
+
   if (mIsSubmitting) {
+    NS_WARNING("Preventing double form submission");
     // XXX Should this return an error?
     return NS_OK;
   }
