@@ -1,5 +1,5 @@
 .searchbar-textbox {
-  width: 12em;
+  width: 15em;
 }
 
 .searchbar-dropmarker {
@@ -8,7 +8,7 @@
 }
 
 .searchbar-engine-image {
-  margin: 0px;
+  margin: 0px 0px 0px 3px;
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 
@@ -17,3 +17,50 @@
   margin-top: 8px;
   list-style-image: url("chrome://browser/skin/search-arrow.gif");
 }
+
+.search-go-button {
+  list-style-image: url("chrome://browser/skin/Search.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  padding: 0px;
+  -moz-appearance: none;
+  border: none;
+  border-left: 1px solid ThreeDShadow;
+}
+.search-go-button:hover {
+  -moz-appearance: toolbarbutton;
+}
+
+.search-go-button > .toolbarbutton-menubutton-button {
+  padding: 0px 0px 0px 2px!important;
+  border: none !important;
+}
+
+.search-go-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  margin-end-value: 0px;
+}
+
+.search-go-button > .toolbarbutton-menubutton-button > .toolbarbutton-text {
+  display: none;
+}
+
+.search-go-button-container {
+  background-color: ThreeDFace;
+}
+
+.search-go-button > .toolbarbutton-menubutton-dropmarker {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+.search-go-button:hover {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+.search-go-button:hover:active {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+.search-go-button[disabled="true"]{
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
