@@ -389,7 +389,10 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
       break;
     }
 
-    if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+    if (flavorStr.EqualsLiteral(kUnicodeMime) ||
+        flavorStr.EqualsLiteral(kURLMime) ||
+        flavorStr.EqualsLiteral(kURLDataMime) ||
+        flavorStr.EqualsLiteral(kURLDescriptionMime)) {
       NSString* pString = [globalDragPboard stringForType:NSStringPboardType];
       if (!pString)
         continue;
