@@ -51,9 +51,11 @@ classic.jar:
         skin/classic/browser/places/places.css                  (places/places.css)
         skin/classic/browser/places/defaultFavicon.png          (places/defaultFavicon.png)
         skin/classic/browser/places/query.png                   (places/query.png)
+        skin/classic/browser/places/livemarkItem.png            (places/livemarkItem.png)
+#endif
+#ifdef MOZ_PLACES_BOOKMARKS
         skin/classic/browser/places/bookmarksMenu.png           (places/bookmarksMenu.png)
         skin/classic/browser/places/bookmarksToolbar.png        (places/bookmarksToolbar.png)
-        skin/classic/browser/places/livemarkItem.png            (places/livemarkItem.png)
         skin/classic/browser/places/placesIcon.png              (places/placesIcon.png)
         skin/classic/browser/places/toolbarDropMarker.png       (places/toolbarDropMarker.png)
         skin/classic/browser/places/folderDragOver.png          (places/folderDragOver.png)
