@@ -1797,6 +1797,11 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
                "should not have bothered calling Compute*Data");              \
                                                                               \
   nsStyleContext* parentContext = aContext->GetParent();                      \
+  if (parentContext &&                                                        \
+      parentContext->GetPseudoType() == nsCSSPseudoElements::firstLine) {     \
+    /* Reset structs don't inherit from first-line */                         \
+    parentContext = parentContext->GetParent();                               \
+  }                                                                           \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
     static_cast<const nsRuleData##rdtype_&>(aData);                           \
