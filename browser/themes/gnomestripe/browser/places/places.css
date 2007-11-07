@@ -1,3 +1,15 @@
+/* Sidebars */
+
+page > .placesTree > treechildren::-moz-tree-cell(leaf) ,
+page > .placesTree > treechildren::-moz-tree-image(leaf) {
+  cursor: pointer;
+}
+
+page > .placesTree > treechildren::-moz-tree-cell-text(leaf, hover) {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 /* Toolbar */
 #placesToolbar {
   border: none;
