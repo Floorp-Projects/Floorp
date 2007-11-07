@@ -1025,6 +1025,20 @@ toolbar:not([mode="text"]) #go-button,
   padding: 0;
 }
 
+/* star button */
+toolbar:not([mode="text"]) #star-button,
+#palette-box #star-button {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
+  padding: 0;
+  border: none;
+}
+
+toolbar:not([mode="text"]) #star-button[starred="true"],
+#palette-box #star-button[starred="true"] {
+  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
+}
+
 #go-button[chromedir="rtl"] {
   list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
 }
@@ -1927,15 +1941,4 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 .bookmark-item[dragover-bottom="true"] {
   -moz-border-bottom-colors: #000000;
-}
-
-/* star icon */
-#star-icon {
-  list-style-image: url("chrome://browser/skin/places/starPage.png");
-  width: 16px;
-  height: 16px;
-}
-
-#star-icon[starred="true"] {
-  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
 }
