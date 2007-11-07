@@ -41,6 +41,14 @@ classic.jar:
         skin/classic/browser/bookmarks/bookmarksManager.css     (bookmarks/bookmarksManager.css)
         skin/classic/browser/bookmarks/Bookmarks-toolbar.png    (bookmarks/Bookmarks-toolbar.png)
 #endif
+#ifdef MOZ_SAFE_BROWSING
+  skin/classic/browser/safebrowsing/browser-protection.css      (safebrowsing/browser-protection.css)
+  skin/classic/browser/safebrowsing/close16x16.png              (safebrowsing/close16x16.png)
+  skin/classic/browser/safebrowsing/dim.png                     (safebrowsing/dim.png)
+  skin/classic/browser/safebrowsing/tail.png                    (safebrowsing/tail.png)
+  skin/classic/browser/safebrowsing/warning16x16.png            (safebrowsing/warning16x16.png)
+  skin/classic/browser/safebrowsing/warning24x24.png            (safebrowsing/warning24x24.png)
+#endif
         skin/classic/browser/preferences/Options.png            (preferences/Options.png)
         skin/classic/browser/preferences/preferences.css        (preferences/preferences.css)
         icon.png
