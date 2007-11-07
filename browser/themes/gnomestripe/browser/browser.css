@@ -1004,7 +1004,10 @@ statusbarpanel#statusbar-display {
 /* ::::: endcaps ::::: */
 
 .endcap {
-  margin: 2px 0px 2px 0px;
+  padding: 2px 0px 2px 0px;
+}
+
+.endcap-box {
   -moz-border-radius: 0 4px 4px 0;
   border: 1px solid ThreeDShadow;
   border-left-width: 0;
@@ -1013,18 +1016,17 @@ statusbarpanel#statusbar-display {
   background-position: 50% 50%;
 }
 
-.endcap[chromedir="rtl"] {
+toolbar:not([mode="text"]) .endcap:hover > .endcap-box {
+  background-image: url("chrome://browser/skin/endcap-bkgnd-hover.png");
+}
+
+.endcap-box[chromedir="rtl"] {
   -moz-border-radius: 4px 0 0 4px;
   border-left-width: 1px;
   border-right-width: 0;
 }
 
-toolbar:not([mode="text"]) .endcap:hover {
-  background-image: url("chrome://browser/skin/endcap-bkgnd-hover.png");
-}
-
-toolbar[mode="text"] .endcap {
-  margin: 0;
+toolbar[mode="text"] .endcap-box {
   border: none;
   background-image: none;
 }
@@ -1058,6 +1060,10 @@ toolbar[mode="text"] #go-button {
   -moz-appearance: toolbarbutton;
   -moz-margin-start: 5px;
   padding: 3px;
+}
+
+toolbar[mode="text"] #go-button-stack {
+  padding: 0;
 }
 
 #go-button > .toolbarbutton-icon {
@@ -1098,7 +1104,8 @@ toolbar:not([mode="text"]) #star-button[starred="true"],
 }
 
 #star-button > .toolbarbutton-icon {
-  margin: 3px;
+  margin-left: 3px;
+  margin-right: 3px;
 }
 
 /* ::::: content area ::::: */
