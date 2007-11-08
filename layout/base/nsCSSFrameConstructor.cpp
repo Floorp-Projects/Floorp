@@ -9332,17 +9332,20 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 }
 
 nsresult
-nsCSSFrameConstructor::ReinsertContent(nsIContent*     aContainer,
-                                       nsIContent*     aChild)
+nsCSSFrameConstructor::ReinsertContent(nsIContent* aContainer,
+                                       nsIContent* aChild)
 {
   PRInt32 ix = aContainer->IndexOf(aChild);
   // XXX For now, do a brute force remove and insert.
   // XXXbz this probably doesn't work so well with anonymous content
   // XXXbz doesn't this need to do the state-saving stuff that
   // RecreateFramesForContent does?
-  nsresult res = ContentRemoved(aContainer, aChild, ix, PR_TRUE);
+  PRBool didReconstruct;
+  nsresult res = ContentRemoved(aContainer, aChild, ix, &didReconstruct);
 
-  if (NS_SUCCEEDED(res)) {
+  if (NS_SUCCEEDED(res) && !didReconstruct) {
+    // If ContentRemoved just reconstructed everything, there is no need to
+    // reinsert the content here
     res = ContentInserted(aContainer, aChild, ix, nsnull);
   }
 
@@ -9519,15 +9522,17 @@ static void UnregisterPlaceholderChain(nsFrameManager* frameManager,
 }
 
 nsresult
-nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
-                                      nsIContent*     aChild,
-                                      PRInt32         aIndexInContainer,
-                                      PRBool          aInReinsertContent)
+nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
+                                      nsIContent* aChild,
+                                      PRInt32     aIndexInContainer,
+                                      PRBool*     aDidReconstruct)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   NS_PRECONDITION(mUpdateCount != 0,
                   "Should be in an update while destroying frames");
 
+  *aDidReconstruct = PR_FALSE;
+  
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
 
@@ -9570,8 +9575,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     // frames.
     // NOTE: if we are in ReinsertContent, 
     //       then do not reframe as we are already doing just that!
-    if (!aInReinsertContent &&
-        MaybeRecreateContainerForIBSplitterFrame(childFrame, &rv)) {
+    if (MaybeRecreateContainerForIBSplitterFrame(childFrame, &rv)) {
+      *aDidReconstruct = PR_TRUE;
       return rv;
     }
 
@@ -9582,6 +9587,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     if (parentType == nsGkAtoms::frameSetFrame &&
         IsSpecialFramesetChild(aChild)) {
       // Just reframe the parent, since framesets are weird like that.
+      *aDidReconstruct = PR_TRUE;
       return RecreateFramesForContent(parentFrame->GetContent());
     }
 
@@ -9591,8 +9597,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     // check our grandparent in that case.
     nsIFrame* possibleMathMLAncestor = parentType == nsGkAtoms::blockFrame ? 
          parentFrame->GetParent() : parentFrame;
-    if (possibleMathMLAncestor->IsFrameOfType(nsIFrame::eMathML))
+    if (possibleMathMLAncestor->IsFrameOfType(nsIFrame::eMathML)) {
+      *aDidReconstruct = PR_TRUE;
       return RecreateFramesForContent(possibleMathMLAncestor->GetContent());
+    }
 #endif
 
     // Undo XUL wrapping if it's no longer needed.
@@ -9604,6 +9612,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
         // check if this frame is the only one needing wrapping
         aChild == AnyKidsNeedBlockParent(parentFrame->GetFirstChild(nsnull)) &&
         !AnyKidsNeedBlockParent(childFrame->GetNextSibling())) {
+      *aDidReconstruct = PR_TRUE;
       return RecreateFramesForContent(grandparentFrame->GetContent());
     }
     
@@ -11287,11 +11296,13 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
 
     // Remove the frames associated with the content object on which
     // the attribute change occurred.
-    rv = ContentRemoved(container, aContent, indexInContainer,
-                        PR_FALSE);
+    PRBool didReconstruct;
+    rv = ContentRemoved(container, aContent, indexInContainer, &didReconstruct);
 
-    if (NS_SUCCEEDED(rv)) {
-      // Now, recreate the frames associated with this content object.
+    if (NS_SUCCEEDED(rv) && !didReconstruct) {
+      // Now, recreate the frames associated with this content object. If
+      // ContentRemoved triggered reconstruction, then we don't need to do this
+      // because the frames will already have been built.
       rv = ContentInserted(container, aContent,
                            indexInContainer, mTempFrameTreeState);
     }
