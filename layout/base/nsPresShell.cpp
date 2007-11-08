@@ -4625,8 +4625,9 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   mPresContext->EventStateManager()->ContentRemoved(aChild);
 
   WillCauseReflow();
+  PRBool didReconstruct;
   mFrameConstructor->ContentRemoved(aContainer, aChild,
-                                    aIndexInContainer, PR_FALSE);
+                                    aIndexInContainer, &didReconstruct);
 
   VERIFY_STYLE_TREE;
   DidCauseReflow();
