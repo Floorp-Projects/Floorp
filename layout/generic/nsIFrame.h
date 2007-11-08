@@ -2140,6 +2140,9 @@ protected:
     PRPackedBool mSawBeforeType;
     // true when the last character encountered was punctuation
     PRPackedBool mLastCharWasPunctuation;
+    // text that's *before* the current frame when aForward is true, *after*
+    // the current frame when aForward is false.
+    nsAutoString mContext;
 
     PeekWordState() : mAtStart(PR_TRUE), mSawBeforeType(PR_FALSE),
         mLastCharWasPunctuation(PR_FALSE) {}
