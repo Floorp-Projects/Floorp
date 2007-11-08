@@ -539,43 +539,35 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     mLegendSpace = 0;
   } // else mLegendSpace and mLegendRect haven't changed... 
 
-  nsRect contentRect;
-
   // reflow the content frame only if needed
   if (reflowContent) {
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mContentFrame,
                                      availSize);
+    // Our child is "height:100%" but we actually want its height to be reduced
+    // by the amount of content-height the legend is eating up, unless our
+    // height is unconstrained (in which case the child's will be too).
+    if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE) {
+      kidReflowState.SetComputedHeight(PR_MAX(0, aReflowState.ComputedHeight() - mLegendSpace));
+    }
 
     nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
     // Reflow the frame
+    NS_ASSERTION(kidReflowState.mComputedMargin == nsMargin(0,0,0,0),
+                 "Margins on anonymous fieldset child not supported!");
+    nsPoint pt(borderPadding.left, borderPadding.top + mLegendSpace);
     ReflowChild(mContentFrame, aPresContext, kidDesiredSize, kidReflowState,
-                borderPadding.left + kidReflowState.mComputedMargin.left,
-                borderPadding.top + mLegendSpace + kidReflowState.mComputedMargin.top,
-                0, aStatus);
-
-    // set the rect. make sure we add the margin back in.
-    contentRect.SetRect(borderPadding.left,borderPadding.top + mLegendSpace,kidDesiredSize.width ,kidDesiredSize.height);
-    if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE &&
-        borderPadding.top + mLegendSpace+kidDesiredSize.height > aReflowState.ComputedHeight()) {
-      kidDesiredSize.height = aReflowState.ComputedHeight()-(borderPadding.top + mLegendSpace);
-    }
+                pt.x, pt.y, 0, aStatus);
 
     FinishReflowChild(mContentFrame, aPresContext, &kidReflowState, 
-                      kidDesiredSize, contentRect.x, contentRect.y, 0);
+                      kidDesiredSize, pt.x, pt.y, 0);
     NS_FRAME_TRACE_REFLOW_OUT("FieldSet::Reflow", aStatus);
+  }
 
-  } else if (mContentFrame) {
-    // if we don't need to reflow just get the old size
-    // XXXbz what about auto or percent margins?  Those wouldn't be in
-    // the style!
+  nsRect contentRect(0,0,0,0);
+  if (mContentFrame) {
+    // We don't support margins on mContentFrame, so our "content rect" is jut
+    // its rect.
     contentRect = mContentFrame->GetRect();
-    const nsStyleMargin* marginStyle = mContentFrame->GetStyleMargin();
-
-    nsMargin m(0,0,0,0);
-    marginStyle->GetMargin(m);
-    contentRect.Inflate(m);
-  } else {
-    contentRect.Empty();
   }
 
   // use the computed width if the inner content does not fill it
