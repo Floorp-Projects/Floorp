@@ -4420,7 +4420,8 @@ nsTextFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
  */
 class ClusterIterator {
 public:
-  ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition, PRInt32 aDirection);
+  ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition, PRInt32 aDirection,
+                  nsString& aContext);
 
   PRBool NextCluster();
   PRBool IsWhitespace();
@@ -4562,7 +4563,7 @@ ClusterIterator::NextCluster()
 }
 
 ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition,
-                                 PRInt32 aDirection)
+                                 PRInt32 aDirection, nsString& aContext)
   : mTextFrame(aTextFrame), mDirection(aDirection), mCharIndex(-1)
 {
   mIterator = aTextFrame->EnsureTextRun();
@@ -4584,21 +4585,32 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition,
     return;
   }
   memset(mWordBreaks.Elements(), PR_FALSE, textLen + 1);
-  nsAutoString text;
-  mFrag->AppendTo(text, textOffset, textLen);
-  nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
-  PRInt32 i = 0;
-  while ((i = wordBreaker->NextWord(text.get(), textLen, i)) >= 0) {
-    mWordBreaks[i] = PR_TRUE;
+  PRInt32 textStart;
+  if (aDirection > 0) {
+    if (aContext.IsEmpty()) {
+      // No previous context, so it must be the start of a line or text run
+      mWordBreaks[0] = PR_TRUE;
+    }
+    textStart = aContext.Length();
+    mFrag->AppendTo(aContext, textOffset, textLen);
+  } else {
+    if (aContext.IsEmpty()) {
+      // No following context, so it must be the end of a line or text run
+      mWordBreaks[textLen] = PR_TRUE;
+    }
+    textStart = 0;
+    nsAutoString str;
+    mFrag->AppendTo(str, textOffset, textLen);
+    aContext.Insert(str, 0);
   }
-  // XXX this never allows word breaks at the start or end of the frame, but to fix
-  // this we would need to rewrite word-break detection to use the text from
-  // textruns or something. Not a regression, at least. For now we can make things
-  // a little better by noting a word break opportunity when the frame starts
-  // or ends with white-space.
-  if (textLen > 0) {
-    mWordBreaks[0] = IsSelectionSpace(mFrag, textOffset);
-    mWordBreaks[textLen] = IsSelectionSpace(mFrag, textOffset + textLen - 1);
+  nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
+  PRInt32 i;
+  for (i = 0; i <= textLen; ++i) {
+    PRInt32 indexInText = i + textStart;
+    mWordBreaks[i] |=
+      wordBreaker->BreakInBetween(aContext.get(), indexInText,
+                                  aContext.get() + indexInText,
+                                  aContext.Length() - indexInText);
   }
 }
 
@@ -4616,7 +4628,7 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
     return PR_FALSE;
 
   PRInt32 offset = GetContentOffset() + (*aOffset < 0 ? contentLength : *aOffset);
-  ClusterIterator cIter(this, offset, aForward ? 1 : -1);
+  ClusterIterator cIter(this, offset, aForward ? 1 : -1, aState->mContext);
 
   if (!cIter.NextCluster())
     return PR_FALSE;
