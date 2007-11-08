@@ -5,7 +5,19 @@
 #   "Except where otherwise noted, recipes in the Python Cookbook are published under the Python license ."
 #   This recipe is covered under the Python license: http://www.python.org/license
 
-import httplib, mimetypes
+import httplib, mimetypes, urllib2
+
+def link_exists(host, selector):
+    """
+    Check to see if the given host exists and is reachable
+    """
+    try:
+      site = urllib2.urlopen("http://" + host + selector)
+      meta = site.info()
+    except urllib2.URLError:
+      print "FAIL: http://" + host + selector + " raises URLError (check if link exists)"
+      return 0
+    return 1
 
 def post_multipart(host, selector, fields, files):
     """
