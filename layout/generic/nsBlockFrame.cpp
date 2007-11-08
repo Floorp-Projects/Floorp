@@ -2574,6 +2574,12 @@ IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 /* virtual */ PRBool
 nsBlockFrame::IsSelfEmpty()
 {
+  // Blocks which are margin-roots (including inline-blocks) cannot be treated
+  // as empty for margin-collapsing and other purposes. They're more like
+  // replaced elements.
+  if (GetStateBits() & NS_BLOCK_MARGIN_ROOT)
+    return PR_FALSE;
+
   const nsStylePosition* position = GetStylePosition();
 
   switch (position->mMinHeight.GetUnit()) {
