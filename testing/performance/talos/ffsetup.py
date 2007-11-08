@@ -102,8 +102,8 @@ def CreateTempProfileDir(source_profile, prefs, extensions):
 
   # Create a temporary directory for the profile, and copy the
   # source profile to it.
-  profile_dir = tempfile.mkdtemp()
-  profile_dir = os.path.join(profile_dir, 'profile')
+  temp_dir = tempfile.mkdtemp()
+  profile_dir = os.path.join(temp_dir, 'profile')
   shutil.copytree(source_profile, profile_dir)
   MakeDirectoryContentsWritable(profile_dir)
 
@@ -123,7 +123,7 @@ def CreateTempProfileDir(source_profile, prefs, extensions):
     link_file.write(extensions[extension])
     link_file.close()
 
-  return profile_dir
+  return temp_dir, profile_dir
 
 def InstallInBrowser(firefox_path, dir_path):
   """
