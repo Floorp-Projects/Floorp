@@ -435,4 +435,3 @@ fails == 393655-2.html 393655-2-ref.html # Remove 'fails' when 393655 lands
 == 400171-2b.html 400171-2-ref.html
 == 400171-2c.html 400171-2-ref.html
 == 400421-1.html 400421-1-ref.html
-random == 401361-1.xul 401361-1-ref.xul
