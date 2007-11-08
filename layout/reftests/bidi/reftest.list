@@ -13,8 +13,8 @@ fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004-j.html bidi-004-ref.html
 == mixedChartype-00-j.html mixedChartype-00-ref.html
 == mixedChartype-01.html mixedChartype-01-ref.html
 == mixedChartype-01-j.html mixedChartype-01-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02.html mixedChartype-02-ref.html # Bug 402427
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02-j.html mixedChartype-02-ref.html # Bug 402427
+== mixedChartype-02.html mixedChartype-02-ref.html
+== mixedChartype-02-j.html mixedChartype-02-ref.html
 == mixedChartype-03.html mixedChartype-03-ref.html
 == mixedChartype-03-j.html mixedChartype-03-ref.html
 == 386339.html 386339-ref.html
