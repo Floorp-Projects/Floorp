@@ -4709,6 +4709,9 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
               jumpedLine && !wordSelectEatSpace && state.mSawBeforeType) {
             done = PR_TRUE;
           } else {
+            if (jumpedLine) {
+              state.mContext.Truncate();
+            }
             current = nextFrame;
             offset = nextFrameOffset;
             // Jumping a line is equivalent to encountering whitespace
@@ -4923,6 +4926,8 @@ nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   PRInt32 startOffset = *aOffset;
+  // This isn't text, so truncate the context
+  aState->mContext.Truncate();
   if (startOffset < 0)
     startOffset = 1;
   if (aForward == (startOffset == 0)) {
