@@ -4799,6 +4799,12 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
 {
   NS_ENSURE_TRUE(!aUntrusted, NS_ERROR_NOT_IMPLEMENTED);
 
+  gfxRect r(0, 0,
+            nsPresContext::AppUnitsToFloatCSSPixels(aRect.width),
+            nsPresContext::AppUnitsToFloatCSSPixels(aRect.height));
+  aThebesContext->Save();
+  aThebesContext->Clip(r);
+
   aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
                             gfxASurface::CONTENT_COLOR :
                             gfxASurface::CONTENT_COLOR_ALPHA);
@@ -4839,10 +4845,13 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
     if (NS_SUCCEEDED(rv)) {
       // Ensure that r.x,r.y gets drawn at (0,0)
       aThebesContext->Save();
-      aThebesContext->Translate(gfxPoint(-mPresContext->AppUnitsToGfxUnits(rect.x),
-                                         -mPresContext->AppUnitsToGfxUnits(rect.y)));
+      aThebesContext->Translate(gfxPoint(-nsPresContext::AppUnitsToFloatCSSPixels(rect.x),
+                                         -nsPresContext::AppUnitsToFloatCSSPixels(rect.y)));
 
       nsIDeviceContext* devCtx = mPresContext->DeviceContext();
+      gfxFloat scale = gfxFloat(devCtx->AppUnitsPerDevPixel())/nsPresContext::AppUnitsPerCSSPixel();
+      aThebesContext->Scale(scale, scale);
+      
       nsCOMPtr<nsIRenderingContext> rc;
       devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
       rc->Init(devCtx, aThebesContext);
@@ -4860,6 +4869,8 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
   aThebesContext->Restore();
   aThebesContext->PopGroupToSource();
   aThebesContext->Paint();
+
+  aThebesContext->Restore();
 
   return NS_OK;
 }
