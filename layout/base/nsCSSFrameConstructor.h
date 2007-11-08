@@ -113,10 +113,10 @@ public:
                            PRInt32                aIndexInContainer,
                            nsILayoutHistoryState* aFrameState);
 
-  nsresult ContentRemoved(nsIContent*     aContainer,
-                          nsIContent*     aChild,
-                          PRInt32         aIndexInContainer,
-                          PRBool          aInReinsertContent);
+  nsresult ContentRemoved(nsIContent* aContainer,
+                          nsIContent* aChild,
+                          PRInt32     aIndexInContainer,
+                          PRBool*     aDidReconstruct);
 
   nsresult CharacterDataChanged(nsIContent*     aContent,
                                 PRBool          aAppend);
