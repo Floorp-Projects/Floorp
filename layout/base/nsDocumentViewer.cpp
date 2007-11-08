@@ -2199,19 +2199,18 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
       // OK, so the container is not already hooked up into a foreign view manager hierarchy.
       // That means we can choose not to hook ourselves up.
       //
-      // If the parent container is a chrome shell then we won't hook into its view
+      // If the parent container is a chrome shell and we are a content shell
+      // then we won't hook into its view
       // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
       // but is really just for peace of mind. This check can be removed if we want to support fancy
       // chrome effects like transparent controls floating over content, transparent Web browsers, and
       // things like that, and the perf bugs are fixed.
       nsCOMPtr<nsIDocShellTreeItem> container(do_QueryReferent(mContainer));
-      nsCOMPtr<nsIDocShellTreeItem> parentContainer;
-      PRInt32 itemType;
-      if (nsnull == container
-          || NS_FAILED(container->GetParent(getter_AddRefs(parentContainer)))
-          || nsnull == parentContainer
-          || NS_FAILED(parentContainer->GetItemType(&itemType))
-          || itemType != nsIDocShellTreeItem::typeContent) {
+      nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+      if (container) {
+        container->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+      }
+      if (!sameTypeParent) {
         containerView = nsnull;
       }
     }
