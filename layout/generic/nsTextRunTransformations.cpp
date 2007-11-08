@@ -180,14 +180,6 @@ nsTransformingTextRunFactory::MakeTextRun(const PRUint8* aString, PRUint32 aLeng
                      aStyles, aOwnsFactory);
 }
 
-static PRUint32
-CountGlyphs(const gfxTextRun::DetailedGlyph* aDetails) {
-  PRUint32 glyphCount;
-  for (glyphCount = 0; !aDetails[glyphCount].mIsLastGlyph; ++glyphCount) {
-  }
-  return glyphCount + 1;
-}
-
 /**
  * Copy a given textrun, but merge certain characters into a single logical
  * character. Glyphs for a character are added to the glyph list for the previous
@@ -201,6 +193,9 @@ CountGlyphs(const gfxTextRun::DetailedGlyph* aDetails) {
  * glyph runs. It's hard to see how this could happen, but if it does, we just
  * discard the characters-to-merge.
  * 
+ * For simplicity, this produces a textrun containing all DetailedGlyphs,
+ * no simple glyphs. So don't call it unless you really have merging to do.
+ * 
  * @param aCharsToMerge when aCharsToMerge[i] is true, this character is
  * merged into the previous character
  */
@@ -210,68 +205,66 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 {
   aDest->ResetGlyphRuns();
 
-  PRUint32 numGlyphRuns;
-  const gfxTextRun::GlyphRun* glyphRuns = aSrc->GetGlyphRuns(&numGlyphRuns);
+  gfxTextRun::GlyphRunIterator iter(aSrc, 0, aSrc->GetLength());
   PRUint32 offset = 0;
-  PRUint32 j;
-  for (j = 0; j < numGlyphRuns; ++j) {
-    PRUint32 runOffset = glyphRuns[j].mCharacterOffset;
-    PRUint32 len =
-      (j + 1 < numGlyphRuns ? glyphRuns[j + 1].mCharacterOffset : aSrc->GetLength()) -
-      runOffset;
-    nsresult rv = aDest->AddGlyphRun(glyphRuns[j].mFont, offset);
+  nsAutoTArray<gfxTextRun::DetailedGlyph,2> glyphs;
+  while (iter.NextRun()) {
+    gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
+    nsresult rv = aDest->AddGlyphRun(run->mFont, offset);
     if (NS_FAILED(rv))
       return;
 
+    PRBool anyMissing = PR_FALSE;
+    PRUint32 mergeRunStart = iter.GetStringStart();
     PRUint32 k;
-    for (k = 0; k < len; ++k) {
-      if (aCharsToMerge[runOffset + k])
-        continue;
-
-      gfxTextRun::CompressedGlyph g = aSrc->GetCharacterGlyphs()[runOffset + k];
-      if (g.IsSimpleGlyph() || g.IsComplexCluster()) {
-        PRUint32 mergedCount = 1;
-        PRBool multipleGlyphs = PR_FALSE;
-        while (k + mergedCount < len) {
-          gfxTextRun::CompressedGlyph h = aSrc->GetCharacterGlyphs()[runOffset + k + mergedCount];
-          if (!aCharsToMerge[runOffset + k + mergedCount] &&
-              !h.IsClusterContinuation() && !h.IsLigatureContinuation())
-            break;
-          if (h.IsComplexCluster() || h.IsSimpleGlyph()) {
-            multipleGlyphs = PR_TRUE;
-          }
-          ++mergedCount;
-        }
-        if (g.IsSimpleGlyph() && !multipleGlyphs) {
-          aDest->SetCharacterGlyph(offset, g);
-        } else {
-          // We have something complex to do.
-          nsAutoTArray<gfxTextRun::DetailedGlyph,2> detailedGlyphs;
-          PRUint32 m;
-          for (m = 0; m < mergedCount; ++m) {
-            gfxTextRun::CompressedGlyph h = aSrc->GetCharacterGlyphs()[runOffset + k + m];
-            if (h.IsSimpleGlyph()) {
-              gfxTextRun::DetailedGlyph* details = detailedGlyphs.AppendElement();
-              if (!details)
-                return;
-              details->mGlyphID = h.GetSimpleGlyph();
-              details->mAdvance = h.GetSimpleAdvance();
-              details->mXOffset = 0;
-              details->mYOffset = 0;
-            } else if (h.IsComplexCluster()) {
-              const gfxTextRun::DetailedGlyph* srcDetails = aSrc->GetDetailedGlyphs(runOffset + k + m);
-              detailedGlyphs.AppendElements(srcDetails, CountGlyphs(srcDetails));
-            }
-            detailedGlyphs[detailedGlyphs.Length() - 1].mIsLastGlyph = PR_FALSE;
-          }
-          detailedGlyphs[detailedGlyphs.Length() - 1].mIsLastGlyph = PR_TRUE;
-          aDest->SetDetailedGlyphs(offset, detailedGlyphs.Elements(), detailedGlyphs.Length());
+    for (k = iter.GetStringStart(); k < iter.GetStringEnd(); ++k) {
+      gfxTextRun::CompressedGlyph g = aSrc->GetCharacterGlyphs()[k];
+      if (g.IsSimpleGlyph()) {
+        if (!anyMissing) {
+          gfxTextRun::DetailedGlyph details;
+          details.mGlyphID = g.GetSimpleGlyph();
+          details.mAdvance = g.GetSimpleAdvance();
+          details.mXOffset = 0;
+          details.mYOffset = 0;
+          glyphs.AppendElement(details);
         }
       } else {
-        aDest->SetCharacterGlyph(offset, g);
+        if (g.IsMissing()) {
+          anyMissing = PR_TRUE;
+          glyphs.Clear();
+        }
+        glyphs.AppendElements(aSrc->GetDetailedGlyphs(k), g.GetGlyphCount());
       }
+
+      // We could teach this method to handle merging of characters that aren't
+      // cluster starts or ligature group starts, but this is really only used
+      // to merge S's (uppercase &szlig;), so it's not worth it.
+
+      if (k + 1 < iter.GetStringEnd() && aCharsToMerge[k + 1]) {
+        NS_ASSERTION(g.IsClusterStart() && g.IsLigatureGroupStart() &&
+                     !g.IsLowSurrogate(),
+                     "Don't know how to merge this stuff");
+        continue;
+      }
+
+      NS_ASSERTION(mergeRunStart == k ||
+                   (g.IsClusterStart() && g.IsLigatureGroupStart() &&
+                    !g.IsLowSurrogate()),
+                   "Don't know how to merge this stuff");
+
+      if (anyMissing) {
+        g.SetMissing(glyphs.Length());
+      } else {
+        g.SetComplex(PR_TRUE, PR_TRUE, glyphs.Length());
+      }
+      aDest->SetGlyphs(offset, g, glyphs.Elements());
       ++offset;
+      glyphs.Clear();
+      anyMissing = PR_FALSE;
+      mergeRunStart = k + 1;
     }
+    NS_ASSERTION(glyphs.Length() == 0,
+                 "Leftover glyphs, don't request merging of the last character with its next!");  
   }
   NS_ASSERTION(offset == aDest->GetLength(), "Bad offset calculations");
 }
@@ -510,6 +503,15 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
                "Dropped characters or break-before values somewhere!");
   child->SetPotentialLineBreaks(0, canBreakBeforeArray.Length(),
       canBreakBeforeArray.Elements(), aRefContext);
-  // Now merge multiple characters into one multi-glyph character as required
-  MergeCharactersInTextRun(aTextRun, child, charsToMergeArray.Elements());
+
+  if (extraCharsCount > 0) {
+    // Now merge multiple characters into one multi-glyph character as required
+    MergeCharactersInTextRun(aTextRun, child, charsToMergeArray.Elements());
+  } else {
+    // No merging to do, so just copy; this produces a more optimized textrun.
+    // We can't steal the data because the child may be cached and stealing
+    // the data would break the cache.
+    aTextRun->ResetGlyphRuns();
+    aTextRun->CopyGlyphDataFrom(child, 0, child->GetLength(), 0, PR_FALSE);
+  }
 }
