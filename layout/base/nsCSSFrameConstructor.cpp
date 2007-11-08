@@ -1291,15 +1291,15 @@ nsFrameConstructorState::~nsFrameConstructorState()
 }
 
 static nsIFrame*
-AdjustAbsoluteContainingBlock(nsPresContext* aPresContext,
-                              nsIFrame*       aContainingBlockIn)
+AdjustAbsoluteContainingBlock(nsIFrame* aContainingBlockIn)
 {
   if (!aContainingBlockIn) {
     return nsnull;
   }
   
-  // Always use the container's first in flow.
-  return aContainingBlockIn->GetFirstInFlow();
+  // Always use the container's first continuation. (Inline frames can have
+  // non-fluid bidi continuations...)
+  return aContainingBlockIn->GetFirstContinuation();
 }
 
 void
@@ -1311,8 +1311,7 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
   aSaveState.mChildListName = nsGkAtoms::absoluteList;
   aSaveState.mState = this;
   mAbsoluteItems = 
-    nsAbsoluteItems(AdjustAbsoluteContainingBlock(mPresContext,
-                                                  aNewAbsoluteContainingBlock));
+    nsAbsoluteItems(AdjustAbsoluteContainingBlock(aNewAbsoluteContainingBlock));
 }
 
 void
@@ -7991,10 +7990,10 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
     }
   }
 
-  // If we found an absolutely positioned containing block, then use the first-in-flow.
+  // If we found an absolutely positioned containing block, then use the
+  // first-continuation.
   if (containingBlock)
-    return AdjustAbsoluteContainingBlock(mPresShell->GetPresContext(),
-                                         containingBlock);
+    return AdjustAbsoluteContainingBlock(containingBlock);
 
   // If we didn't find it, then use the initial containing block if it
   // supports abs pos kids.
