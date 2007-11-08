@@ -2082,7 +2082,7 @@ CanAddSpacingAfter(gfxTextRun* aTextRun, PRUint32 aOffset)
   if (aOffset + 1 >= aTextRun->GetLength())
     return PR_TRUE;
   return aTextRun->IsClusterStart(aOffset + 1) &&
-    aTextRun->IsLigatureGroupStart(aOffset + 1);
+    !aTextRun->IsLigatureContinuation(aOffset + 1);
 }
 
 void
