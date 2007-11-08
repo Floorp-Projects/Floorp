@@ -68,6 +68,7 @@
 #include "nsISelectionController.h"
 #include "nsDisplayList.h"
 #include "nsCaret.h"
+#include "nsTextFrame.h"
 
 // The bidi indicator hangs off the caret to one side, to show which
 // direction the typing is in. It needs to be at least 2x2 to avoid looking like 
@@ -608,6 +609,54 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   return PR_TRUE;
 }
 
+/**
+ * Find the first frame in an in-order traversal of the frame subtree rooted
+ * at aFrame which is either a text frame logically at the end of a line,
+ * or which is aStopAtFrame. Return null if no such frame is found. We don't
+ * descend into the children of non-eLineParticipant frames.
+ */
+static nsIFrame*
+CheckForTrailingTextFrameRecursive(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
+{
+  if (aFrame == aStopAtFrame ||
+      ((aFrame->GetType() == nsGkAtoms::textFrame &&
+       (static_cast<nsTextFrame*>(aFrame))->IsAtEndOfLine())))
+    return aFrame;
+  if (!aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
+    return nsnull;
+
+  for (nsIFrame* f = aFrame->GetFirstChild(nsnull); f; f = f->GetNextSibling())
+  {
+    nsIFrame* r = CheckForTrailingTextFrameRecursive(f, aStopAtFrame);
+    if (r)
+      return r;
+  }
+  return nsnull;
+}
+
+static void
+AdjustCaretFrameForLineEnd(nsIFrame** aFrame, PRInt32* aOffset)
+{
+  nsBlockFrame* block = nsLayoutUtils::FindNearestBlockAncestor(*aFrame);
+  if (!block)
+    return;
+  nsLineBox* line = block->FindLineFor(nsLayoutUtils::FindChildContainingDescendant(block, *aFrame));
+  PRInt32 count = line->GetChildCount();
+  for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
+  {
+    nsIFrame* r = CheckForTrailingTextFrameRecursive(f, *aFrame);
+    if (r == *aFrame)
+      return;
+    if (r)
+    {
+      *aFrame = r;
+      NS_ASSERTION(r->GetType() == nsGkAtoms::textFrame, "Expected text frame");
+      *aOffset = (static_cast<nsTextFrame*>(r))->GetContentEnd();
+      return;
+    }
+  }
+}
+
 NS_IMETHODIMP 
 nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                                     PRInt32                 aOffset,
@@ -634,6 +683,12 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   if (!theFrame)
     return NS_ERROR_FAILURE;
 
+  // if theFrame is after a text frame that's logically at the end of the line
+  // (e.g. if theFrame is a <br> frame), then put the caret at the end of
+  // that text frame instead. This way, the caret will be positioned as if
+  // trailing whitespace was not trimmed.
+  AdjustCaretFrameForLineEnd(&theFrame, &theFrameOffset);
+  
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
   //
   // Direction Style from this->GetStyleData()
