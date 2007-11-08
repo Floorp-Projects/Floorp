@@ -105,7 +105,7 @@ def runTest(browser_config, test_config):
   
   if browser_config["profile_path"] != {}:
       # Create the new profile
-      profile_dir = ffsetup.CreateTempProfileDir(browser_config['profile_path'],
+      temp_dir, profile_dir = ffsetup.CreateTempProfileDir(browser_config['profile_path'],
                                                  browser_config['preferences'],
                                                  browser_config['extensions'])
       utils.debug("created profile") 
@@ -200,8 +200,8 @@ def runTest(browser_config, test_config):
   # because every once in a while Firefox seems to drop a read-only
   # file into it.
   ffprocess.Sleep()
-  ffsetup.MakeDirectoryContentsWritable(profile_dir)
-  shutil.rmtree(profile_dir)
+  ffsetup.MakeDirectoryContentsWritable(temp_dir)
+  shutil.rmtree(temp_dir)
     
   utils.restoreEnvironmentVars()
     
