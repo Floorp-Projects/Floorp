@@ -4457,7 +4457,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
   if (!mTextRun)
     return PR_FALSE;
 
-  TrimmedOffsets trimmed = GetTrimmedOffsets(mContent->GetText(), PR_TRUE);
+  TrimmedOffsets trimmed = GetTrimmedOffsets(mContent->GetText(), PR_FALSE);
 
   // A negative offset means "end of frame".
   PRInt32 startOffset = GetContentOffset() + (*aOffset < 0 ? contentLength : *aOffset);
@@ -5888,4 +5888,10 @@ PRBool
 nsTextFrame::HasTerminalNewline() const
 {
   return ::HasTerminalNewline(this);
+}
+
+PRBool
+nsTextFrame::IsAtEndOfLine() const
+{
+  return (GetStateBits() & TEXT_END_OF_LINE) != 0;
 }
