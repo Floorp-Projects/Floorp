@@ -574,6 +574,11 @@ public:
          */
         TEXT_ENABLE_NEGATIVE_SPACING = 0x0010,
         /**
+         * When set, mAfter spacing for a character already includes the character
+         * width. Otherwise, it does not include the character width.
+         */
+        TEXT_ABSOLUTE_SPACING        = 0x0020,
+        /**
          * When set, GetHyphenationBreaks may return true for some character
          * positions, otherwise it will always return false for all characters.
          */
@@ -680,9 +685,9 @@ public:
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].IsClusterStart();
     }
-    PRBool IsLigatureGroupStart(PRUint32 aPos) {
+    PRBool IsLigatureContinuation(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
-        return mCharacterGlyphs[aPos].IsLigatureGroupStart();
+        return mCharacterGlyphs[aPos].IsLigatureContinuation();
     }
     PRBool CanBreakLineBefore(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
@@ -967,27 +972,18 @@ public:
      * This class records the information associated with a character in the
      * input string. It's optimized for the case where there is one glyph
      * representing that character alone.
-     * 
-     * A character can have zero or more associated glyphs. Each glyph
-     * has an advance width and an x and y offset.
-     * A character may be the start of a cluster.
-     * A character may be the start of a ligature group.
-     * A character can be "missing", indicating that the system is unable
-     * to render the character.
-     * 
-     * All characters in a ligature group conceptually share all the glyphs
-     * associated with the characters in a group.
      */
     class CompressedGlyph {
     public:
         CompressedGlyph() { mValue = 0; }
 
         enum {
-            // Indicates that a cluster and ligature group starts at this
-            // character; this character has a single glyph with a reasonable
-            // advance and zero offsets. A "reasonable" advance
-            // is one that fits in the available bits (currently 14) (specified
-            // in appunits).
+            // Indicates that a cluster starts at this character and can be
+            // rendered using a single glyph with a reasonable advance offset
+            // and no special glyph offset. A "reasonable" advance offset is
+            // one that is a) a multiple of a pixel and b) fits in the available
+            // bits (currently 14). We should revisit this, especially a),
+            // if we want to support subpixel-aligned text.
             FLAG_IS_SIMPLE_GLYPH  = 0x80000000U,
             // Indicates that a linebreak is allowed before this character
             FLAG_CAN_BREAK_BEFORE = 0x40000000U,
@@ -998,22 +994,33 @@ public:
 
             GLYPH_MASK = 0x0000FFFFU,
 
-            // Non-simple glyphs may or may not have glyph data in the
-            // corresponding mDetailedGlyphs entry. They have the following
-            // flag bits:
-
-            // When NOT set, indicates that this character corresponds to a
-            // missing glyph and should be skipped (or possibly, render the character
-            // Unicode value in some special way). If there are glyphs,
-            // the mGlyphID is actually the UTF16 character code. The bit is
-            // inverted so we can memset the array to zero to indicate all missing.
-            FLAG_NOT_MISSING              = 0x01,
-            FLAG_NOT_CLUSTER_START        = 0x02,
-            FLAG_NOT_LIGATURE_GROUP_START = 0x04,
-            FLAG_LOW_SURROGATE            = 0x08,
+            // Non-simple glyphs have the following tags
             
-            GLYPH_COUNT_MASK = 0x00FFFF00U,
-            GLYPH_COUNT_SHIFT = 8
+            TAG_MASK                  = 0x000000FFU,
+            // Indicates that this character corresponds to a missing glyph
+            // and should be skipped (or possibly, render the character
+            // Unicode value in some special way)
+            TAG_MISSING               = 0x00U,
+            // Indicates that a cluster starts at this character and is rendered
+            // using one or more glyphs which cannot be represented here.
+            // Look up the DetailedGlyph table instead.
+            TAG_COMPLEX_CLUSTER       = 0x01U,
+            // Indicates that a cluster starts at this character but is rendered
+            // as part of a ligature starting in a previous cluster.
+            // NOTE: we divide up the ligature's width by the number of clusters
+            // to get the width assigned to each cluster.
+            TAG_LIGATURE_CONTINUATION = 0x21U,
+            
+            // Values where the upper 28 bits equal 0x80 are reserved for
+            // non-cluster-start characters (see IsClusterStart below)
+            
+            // Indicates that a cluster does not start at this character, this is
+            // a low UTF16 surrogate
+            TAG_LOW_SURROGATE         = 0x80U,
+            // Indicates that a cluster does not start at this character, this is
+            // part of a cluster starting with an earlier character (but not
+            // a low surrogate).
+            TAG_CLUSTER_CONTINUATION  = 0x81U
         };
 
         // "Simple glyphs" have a simple glyph ID, simple advance and their
@@ -1032,19 +1039,21 @@ public:
         }
 
         PRBool IsSimpleGlyph() const { return (mValue & FLAG_IS_SIMPLE_GLYPH) != 0; }
+        PRBool IsComplex(PRUint32 aTag) const { return (mValue & (FLAG_IS_SIMPLE_GLYPH|TAG_MASK))  == aTag; }
+        PRBool IsMissing() const { return IsComplex(TAG_MISSING); }
+        PRBool IsComplexCluster() const { return IsComplex(TAG_COMPLEX_CLUSTER); }
+        PRBool IsComplexOrMissing() const {
+            return IsComplex(TAG_COMPLEX_CLUSTER) || IsComplex(TAG_MISSING);
+        }
+        PRBool IsLigatureContinuation() const { return IsComplex(TAG_LIGATURE_CONTINUATION); }
+        PRBool IsClusterContinuation() const { return IsComplex(TAG_CLUSTER_CONTINUATION); }
+        PRBool IsLowSurrogate() const { return IsComplex(TAG_LOW_SURROGATE); }
+        PRBool IsClusterStart() const { return (mValue & (FLAG_IS_SIMPLE_GLYPH|0x80U)) != 0x80U; }
+
         PRUint32 GetSimpleAdvance() const { return (mValue & ADVANCE_MASK) >> ADVANCE_SHIFT; }
         PRUint32 GetSimpleGlyph() const { return mValue & GLYPH_MASK; }
 
-        PRBool IsMissing() const { return (mValue & (FLAG_NOT_MISSING|FLAG_IS_SIMPLE_GLYPH)) == 0; }
-        PRBool IsLowSurrogate() const {
-            return (mValue & (FLAG_LOW_SURROGATE|FLAG_IS_SIMPLE_GLYPH)) == FLAG_LOW_SURROGATE;
-        }
-        PRBool IsClusterStart() const {
-            return (mValue & FLAG_IS_SIMPLE_GLYPH) || !(mValue & FLAG_NOT_CLUSTER_START);
-        }
-        PRBool IsLigatureGroupStart() const {
-            return (mValue & FLAG_IS_SIMPLE_GLYPH) || !(mValue & FLAG_NOT_LIGATURE_GROUP_START);
-        }
+        PRUint32 GetComplexTag() const { return mValue & TAG_MASK; }
 
         PRBool CanBreakBefore() const { return (mValue & FLAG_CAN_BREAK_BEFORE) != 0; }
         // Returns FLAG_CAN_BREAK_BEFORE if the setting changed, 0 otherwise
@@ -1064,36 +1073,15 @@ public:
                 (aAdvanceAppUnits << ADVANCE_SHIFT) | aGlyph;
             return *this;
         }
-        CompressedGlyph& SetComplex(PRBool aClusterStart, PRBool aLigatureStart,
-                PRUint32 aGlyphCount) {
-            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_NOT_MISSING |
-                (aClusterStart ? 0 : FLAG_NOT_CLUSTER_START) |
-                (aLigatureStart ? 0 : FLAG_NOT_LIGATURE_GROUP_START) |
-                (aGlyphCount << GLYPH_COUNT_SHIFT);
+        CompressedGlyph& SetComplex(PRUint32 aTag) {
+            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | aTag;
             return *this;
         }
-        /**
-         * Missing glyphs are treated as cluster and ligature group starts.
-         */
-        CompressedGlyph& SetMissing(PRUint32 aGlyphCount) {
-            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) |
-                (aGlyphCount << GLYPH_COUNT_SHIFT);
-            return *this;
-        }
-        /**
-         * Low surrogates don't have any glyphs and are not the start of
-         * a cluster or ligature group.
-         */
-        CompressedGlyph& SetLowSurrogate() {
-            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_NOT_MISSING |
-                FLAG_LOW_SURROGATE;
-            return *this;
-        }
-        PRUint32 GetGlyphCount() const {
-            NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
-            return (mValue & GLYPH_COUNT_MASK) >> GLYPH_COUNT_SHIFT;
-        }
-
+        CompressedGlyph& SetMissing() { return SetComplex(TAG_MISSING); }
+        CompressedGlyph& SetComplexCluster() { return SetComplex(TAG_COMPLEX_CLUSTER); }
+        CompressedGlyph& SetLowSurrogate() { return SetComplex(TAG_LOW_SURROGATE); }
+        CompressedGlyph& SetLigatureContinuation() { return SetComplex(TAG_LIGATURE_CONTINUATION); }
+        CompressedGlyph& SetClusterContinuation() { return SetComplex(TAG_CLUSTER_CONTINUATION); }
     private:
         PRUint32 mValue;
     };
@@ -1103,9 +1091,12 @@ public:
      * in SimpleGlyph format, we use an array of DetailedGlyphs instead.
      */
     struct DetailedGlyph {
-        /** The glyphID, or the Unicode character
-         * if this is a missing glyph */
-        PRUint32 mGlyphID;
+        /** This is true for the last DetailedGlyph in the array. This lets
+         * us track the length of the array. */
+        PRUint32 mIsLastGlyph:1;
+        /** The glyphID if this is a ComplexCluster, or the Unicode character
+         * if this is a Missing glyph */
+        PRUint32 mGlyphID:31;
         /** The advance, x-offset and y-offset of the glyph, in appunits
          *  mAdvance is in the text direction (RTL or LTR)
          *  mXOffset is always from left to right
@@ -1120,7 +1111,7 @@ public:
         PRUint32          mCharacterOffset; // into original UTF16 string
     };
 
-    class THEBES_API GlyphRunIterator {
+    class GlyphRunIterator {
     public:
         GlyphRunIterator(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aLength)
           : mTextRun(aTextRun), mStartOffset(aStart), mEndOffset(aStart + aLength) {
@@ -1185,12 +1176,13 @@ public:
     // Call the following glyph-setters during initialization or during reshaping
     // only. It is OK to overwrite existing data for a character.
     /**
-     * Set the glyph data for a character. aGlyphs may be null if aGlyph is a
-     * simple glyph or has no associated glyphs. If non-null the data is copied,
-     * the caller retains ownership.
+     * Set the glyph for a character. Also allows you to set low surrogates,
+     * cluster and ligature continuations.
      */
-    void SetSimpleGlyph(PRUint32 aCharIndex, CompressedGlyph aGlyph) {
-        NS_ASSERTION(aGlyph.IsSimpleGlyph(), "Should be a simple glyph here");
+    void SetCharacterGlyph(PRUint32 aCharIndex, CompressedGlyph aGlyph) {
+        NS_ASSERTION(aCharIndex > 0 ||
+                     (aGlyph.IsClusterStart() && !aGlyph.IsLigatureContinuation()),
+                     "First character must be the start of a cluster and can't be a ligature continuation!");
         if (mCharacterGlyphs) {
             mCharacterGlyphs[aCharIndex] = aGlyph;
         }
@@ -1198,9 +1190,13 @@ public:
             mDetailedGlyphs[aCharIndex] = nsnull;
         }
     }
-    void SetGlyphs(PRUint32 aCharIndex, CompressedGlyph aGlyph,
-                   const DetailedGlyph *aGlyphs);
-    void SetMissingGlyph(PRUint32 aCharIndex, PRUint32 aUnicodeChar);
+    /**
+     * Set some detailed glyphs for a character. The data is copied from aGlyphs,
+     * the caller retains ownership.
+     */
+    void SetDetailedGlyphs(PRUint32 aCharIndex, const DetailedGlyph *aGlyphs,
+                           PRUint32 aNumGlyphs);
+    void SetMissingGlyph(PRUint32 aCharIndex, PRUint32 aChar);
     void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIndex);
     
     void FetchGlyphExtents(gfxContext *aRefContext);
@@ -1209,6 +1205,8 @@ public:
     // and gfxFont::GetBoundingBox
     const CompressedGlyph *GetCharacterGlyphs() { return mCharacterGlyphs; }
     const DetailedGlyph *GetDetailedGlyphs(PRUint32 aCharIndex) {
+        // Although mDetailedGlyphs should be non-NULL when ComplexCluster,
+        // Missing glyphs need not have details.
         return mDetailedGlyphs ? mDetailedGlyphs[aCharIndex].get() : nsnull;
     }
     PRBool HasDetailedGlyphs() { return mDetailedGlyphs.get() != nsnull; }
@@ -1256,7 +1254,12 @@ private:
 
     // Allocate aCount DetailedGlyphs for the given index
     DetailedGlyph *AllocateDetailedGlyphs(PRUint32 aCharIndex, PRUint32 aCount);
+    // Computes the x-advance for a given cluster starting at aClusterOffset. Does
+    // not include any spacing. Result is in appunits.
+    PRInt32 ComputeClusterAdvance(PRUint32 aClusterOffset);
 
+    void GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
+                            PropertyProvider *aProvider, PropertyProvider::Spacing *aSpacing);
     // Spacing for characters outside the range aSpacingStart/aSpacingEnd
     // is assumed to be zero; such characters are not passed to aProvider.
     // This is useful to protect aProvider from being passed character indices

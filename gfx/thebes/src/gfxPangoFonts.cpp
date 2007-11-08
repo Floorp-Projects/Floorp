@@ -740,7 +740,7 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
 
         while (p < end) {
             if (!attr->is_cursor_position) {
-                aTextRun->SetGlyphs(aUTF16Offset, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
+                aTextRun->SetCharacterGlyph(aUTF16Offset, g.SetClusterContinuation());
             }
             ++aUTF16Offset;
         
@@ -799,15 +799,14 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
     PRInt32 advance = ConvertPangoToAppUnits(width, appUnitsPerDevUnit);
 
     gfxTextRun::CompressedGlyph g;
-    PRBool atClusterStart = aTextRun->IsClusterStart(utf16Offset);
     // See if we fit in the compressed area.
-    if (aGlyphCount == 1 && advance >= 0 && atClusterStart &&
+    if (aGlyphCount == 1 && advance >= 0 &&
         aGlyphs[0].geometry.x_offset == 0 &&
         aGlyphs[0].geometry.y_offset == 0 &&
         gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
         gfxTextRun::CompressedGlyph::IsSimpleGlyphID(aGlyphs[0].glyph)) {
-        aTextRun->SetSimpleGlyph(utf16Offset,
-                                 g.SetSimpleGlyph(advance, aGlyphs[0].glyph));
+        aTextRun->SetCharacterGlyph(utf16Offset,
+                                    g.SetSimpleGlyph(advance, aGlyphs[0].glyph));
     } else {
         nsAutoTArray<gfxTextRun::DetailedGlyph,10> detailedGlyphs;
         if (!detailedGlyphs.AppendElements(aGlyphCount))
@@ -818,6 +817,7 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
             gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
             PRUint32 j = (aTextRun->IsRightToLeft()) ? aGlyphCount - 1 - i : i; 
             const PangoGlyphInfo &glyph = aGlyphs[j];
+            details->mIsLastGlyph = i == aGlyphCount - 1;
             details->mGlyphID = glyph.glyph;
             NS_ASSERTION(details->mGlyphID == glyph.glyph,
                          "Seriously weird glyph ID detected!");
@@ -829,8 +829,7 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
             details->mYOffset =
                 float(glyph.geometry.y_offset)*appUnitsPerDevUnit/PANGO_SCALE;
         }
-        g.SetComplex(atClusterStart, PR_TRUE, aGlyphCount);
-        aTextRun->SetGlyphs(utf16Offset, g, detailedGlyphs.Elements());
+        aTextRun->SetDetailedGlyphs(utf16Offset, detailedGlyphs.Elements(), aGlyphCount);
     }
 
     // Check for ligatures and set *aUTF16Offset.
@@ -860,8 +859,12 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
             return NS_ERROR_FAILURE;
         }
 
-        g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_FALSE, 0);
-        aTextRun->SetGlyphs(utf16Offset, g, nsnull);
+        if (! charGlyphs[utf16Offset].IsClusterContinuation()) {
+            // This is a separate grapheme cluster but it has no glyphs.
+            // It must be represented by a ligature with the previous
+            // grapheme cluster.
+            aTextRun->SetCharacterGlyph(utf16Offset, g.SetLigatureContinuation());
+        }
     }
     *aUTF16Offset = utf16Offset;
     return NS_OK;
@@ -1047,18 +1050,18 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
             if (advance >= 0 &&
                 gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
                 gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
-                aTextRun->SetSimpleGlyph(utf16Offset,
-                                         g.SetSimpleGlyph(advance, glyph));
+                aTextRun->SetCharacterGlyph(utf16Offset,
+                                            g.SetSimpleGlyph(advance, glyph));
             } else {
                 gfxTextRun::DetailedGlyph details;
+                details.mIsLastGlyph = PR_TRUE;
                 details.mGlyphID = glyph;
                 NS_ASSERTION(details.mGlyphID == glyph,
                              "Seriously weird glyph ID detected!");
                 details.mAdvance = advance;
                 details.mXOffset = 0;
                 details.mYOffset = 0;
-                g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_TRUE, 1);
-                aTextRun->SetGlyphs(utf16Offset, g, &details);
+                aTextRun->SetDetailedGlyphs(utf16Offset, &details, 1);
             }
 
             NS_ASSERTION(!IS_SURROGATE(ch), "Surrogates shouldn't appear in UTF8");

@@ -158,21 +158,21 @@ protected:
     class AutoTextRun {
     public:
         AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
-                    const char* aString, PRInt32 aLength) {
+                    const char* aString, PRInt32 aLength, PRBool aEnableSpacing) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 reinterpret_cast<const PRUint8*>(aString), aLength,
                 aMetrics->mFontGroup,
                 static_cast<gfxContext*>(aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
                 aMetrics->mP2A,
-                ComputeFlags(aMetrics));
+                ComputeFlags(aMetrics, aEnableSpacing));
         }
         AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
-                    const PRUnichar* aString, PRInt32 aLength) {
+                    const PRUnichar* aString, PRInt32 aLength, PRBool aEnableSpacing) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 aString, aLength, aMetrics->mFontGroup,
                 static_cast<gfxContext*>(aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
                 aMetrics->mP2A,
-                ComputeFlags(aMetrics));
+                ComputeFlags(aMetrics, aEnableSpacing));
         }
         gfxTextRun* operator->() { return mTextRun.get(); }
         gfxTextRun* get() { return mTextRun.get(); }
@@ -180,10 +180,16 @@ protected:
     private:
         gfxTextRunCache::AutoTextRun mTextRun;
         
-        static PRUint32 ComputeFlags(nsThebesFontMetrics* aMetrics) {
+        static PRUint32 ComputeFlags(nsThebesFontMetrics* aMetrics,
+                                     PRBool aEnableSpacing) {
             PRUint32 flags = 0;
             if (aMetrics->GetRightToLeftTextRunMode()) {
                 flags |= gfxTextRunFactory::TEXT_IS_RTL;
+            }
+            if (aEnableSpacing) {
+                flags |= gfxTextRunFactory::TEXT_ENABLE_SPACING |
+                         gfxTextRunFactory::TEXT_ABSOLUTE_SPACING |
+                         gfxTextRunFactory::TEXT_ENABLE_NEGATIVE_SPACING;
             }
             return flags;
         }
