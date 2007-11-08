@@ -1512,7 +1512,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       MappedFlow* mappedFlow = &mMappedFlows[i];
       nsTextFrame* f;
       for (f = mappedFlow->mStartFrame; f != mappedFlow->mEndFrame;
-           f = static_cast<nsTextFrame*>(f->GetNextInFlow())) {
+           f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
         PRUint32 offset = iter.GetSkippedOffset();
         iter.AdvanceOriginal(f->GetContentLength());
         PRUint32 end = iter.GetSkippedOffset();
