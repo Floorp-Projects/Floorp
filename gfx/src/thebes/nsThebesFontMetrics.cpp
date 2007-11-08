@@ -271,37 +271,19 @@ nsThebesFontMetrics::GetMaxStringLength()
 
 class StubPropertyProvider : public gfxTextRun::PropertyProvider {
 public:
-    StubPropertyProvider(const nscoord* aSpacing = nsnull)
-      : mSpacing(aSpacing) {}
-
     virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
                                       PRPackedBool* aBreakBefore) {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
     }
     virtual gfxFloat GetHyphenWidth() {
-        NS_ERROR("This shouldn't be called because we never specify hyphen breaks");
+        NS_ERROR("This shouldn't be called because we never enable hyphens");
         return 0;
     }
     virtual void GetSpacing(PRUint32 aStart, PRUint32 aLength,
-                            Spacing* aSpacing);
-
-private:
-    const nscoord* mSpacing;
-};
-
-void
-StubPropertyProvider::GetSpacing(PRUint32 aStart, PRUint32 aLength,
-                                 Spacing* aSpacing)
-{
-    PRUint32 i;
-    for (i = 0; i < aLength; ++i) {
-        aSpacing[i].mBefore = 0;
-        // mSpacing is absolute (already includes the character width). This is OK
-        // because gfxTextRunCache sets TEXT_ABSOLUTE_SPACING when it creates
-        // the textrun.
-        aSpacing[i].mAfter = mSpacing ? mSpacing[aStart + i] : 0;
+                            Spacing* aSpacing) {
+        NS_ERROR("This shouldn't be called because we never enable spacing");
     }
-}
+};
 
 nsresult 
 nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
@@ -317,7 +299,7 @@ nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aW
         return GetSpaceWidth(aWidth);
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength, PR_FALSE);
+    AutoTextRun textRun(this, aContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
 
@@ -341,7 +323,7 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
         return GetSpaceWidth(aWidth);
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength, PR_FALSE);
+    AutoTextRun textRun(this, aContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
 
@@ -397,8 +379,9 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
     if (aLength == 0)
         return NS_OK;
 
-    StubPropertyProvider provider(aSpacing);
-    AutoTextRun textRun(this, aContext, aString, aLength, aSpacing != nsnull);
+    NS_ASSERTION(!aSpacing, "Spacing not supported here");
+    StubPropertyProvider provider;
+    AutoTextRun textRun(this, aContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
     gfxPoint pt(aX, aY);
@@ -421,8 +404,9 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
     if (aLength == 0)
         return NS_OK;
 
-    StubPropertyProvider provider(aSpacing);
-    AutoTextRun textRun(this, aContext, aString, aLength, aSpacing != nsnull);
+    NS_ASSERTION(!aSpacing, "Spacing not supported here");
+    StubPropertyProvider provider;
+    AutoTextRun textRun(this, aContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
     gfxPoint pt(aX, aY);
