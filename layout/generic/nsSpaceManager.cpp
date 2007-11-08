@@ -849,12 +849,6 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
 {
   NS_PRECONDITION(nsnull != aFrame, "null frame");
 
-#ifdef DEBUG
-  // See if there is already a region associated with aFrame
-  NS_ASSERTION(!GetFrameInfoFor(aFrame),
-               "aFrame is already associated with a region");
-#endif
-  
   // Convert the frame to world coordinates
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
                aUnavailableSpace.width, aUnavailableSpace.height);
@@ -868,7 +862,7 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (aUnavailableSpace.height <= 0)
+  if (aUnavailableSpace.IsEmpty())
     return NS_OK;
 
   // Allocate a band rect
@@ -922,7 +916,7 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (frameInfo->mRect.height > 0) {
+  if (!frameInfo->mRect.IsEmpty()) {
     NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
     BandRect* band = mBandList.Head();
     BandRect* prevBand = nsnull;
