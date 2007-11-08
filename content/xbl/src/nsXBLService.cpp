@@ -262,8 +262,9 @@ public:
   NS_IMETHOD Error(nsIDOMEvent* aEvent) { return NS_OK; }
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
-  nsXBLStreamListener(nsXBLService* aXBLService, nsIStreamListener* aInner, nsIDocument* aDocument, nsIDocument* aBindingDocument);
-  
+  nsXBLStreamListener(nsXBLService* aXBLService, nsIStreamListener* aInner, nsIDocument* aDocument);
+  ~nsXBLStreamListener();
+
   void AddRequest(nsXBLBindingRequest* aRequest) { mBindingRequests.AppendElement(aRequest); }
   PRBool HasRequest(nsIURI* aURI, nsIContent* aBoundElement);
 
@@ -274,21 +275,26 @@ private:
   nsAutoVoidArray mBindingRequests;
   
   nsCOMPtr<nsIWeakReference> mDocument;
-  nsCOMPtr<nsIDocument> mBindingDocument;
 };
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS4(nsXBLStreamListener, nsIStreamListener, nsIRequestObserver, nsIDOMLoadListener, nsIDOMEventListener)
 
 nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
-                                         nsIStreamListener* aInner, nsIDocument* aDocument,
-                                         nsIDocument* aBindingDocument)
+                                         nsIStreamListener* aInner, nsIDocument* aDocument)
 {
   /* member initializers and constructor code */
   mXBLService = aXBLService;
   mInner = aInner;
   mDocument = do_GetWeakReference(aDocument);
-  mBindingDocument = aBindingDocument;
+}
+
+nsXBLStreamListener::~nsXBLStreamListener()
+{
+  for (PRInt32 i = 0; i < mBindingRequests.Count(); i++) {
+    nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
+    nsXBLBindingRequest::Destroy(mXBLService->mPool, req);
+  }
 }
 
 NS_IMETHODIMP
@@ -317,28 +323,9 @@ nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt, nsre
      rv = mInner->OnStopRequest(request, aCtxt, aStatus);
   }
 
-  if (NS_FAILED(rv) || NS_FAILED(aStatus))
-  {
-    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-    if (aChannel)
-  	{
-      nsCOMPtr<nsIURI> channelURI;
-      aChannel->GetURI(getter_AddRefs(channelURI));
-      nsCAutoString str;
-      channelURI->GetAsciiSpec(str);
-      printf("Failed to load XBL document %s\n", str.get());
-  	}
-
-    PRUint32 count = mBindingRequests.Count();
-    for (PRUint32 i = 0; i < count; i++) {
-      nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
-      nsXBLBindingRequest::Destroy(mXBLService->mPool, req);
-    }
-
-    mBindingRequests.Clear();
-    mDocument = nsnull;
-    mBindingDocument = nsnull;
-  }
+  // Don't hold onto the inner listener; holding onto it can create a cycle
+  // with the document
+  mInner = nsnull;
 
   return rv;
 }
@@ -365,7 +352,14 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
   nsresult rv = NS_OK;
   PRUint32 i;
   PRUint32 count = mBindingRequests.Count();
-  
+
+  // Get the binding document; note that we don't hold onto it in this object
+  // to avoid creating a cycle
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetCurrentTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDocument> bindingDocument = do_QueryInterface(target);
+  NS_ASSERTION(bindingDocument, "Event not targeted at document?!");
+
   // See if we're still alive.
   nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
   if (!doc) {
@@ -387,16 +381,16 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 
     // Remove ourselves from the set of pending docs.
     nsBindingManager *bindingManager = doc->BindingManager();
-    nsIURI* documentURI = mBindingDocument->GetDocumentURI();
+    nsIURI* documentURI = bindingDocument->GetDocumentURI();
     bindingManager->RemoveLoadingDocListener(documentURI);
 
-    if (!mBindingDocument->GetRootContent()) {
+    if (!bindingDocument->GetRootContent()) {
       NS_WARNING("*** XBL doc with no root element! Something went horribly wrong! ***");
       return NS_ERROR_FAILURE;
     }
 
     // Put our doc info in the doc table.
-    nsBindingManager *xblDocBindingManager = mBindingDocument->BindingManager();
+    nsBindingManager *xblDocBindingManager = bindingDocument->BindingManager();
     nsCOMPtr<nsIXBLDocumentInfo> info =
       xblDocBindingManager->GetXBLDocumentInfo(documentURI);
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
@@ -420,21 +414,11 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     // ready and can be installed.
     for (i = 0; i < count; i++) {
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
-      req->DocumentLoaded(mBindingDocument);
+      req->DocumentLoaded(bindingDocument);
     }
   }
-  
-  for (i = 0; i < count; i++) {
-    nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
-    nsXBLBindingRequest::Destroy(mXBLService->mPool, req);
-  }
 
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mBindingDocument));
   target->RemoveEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)this, PR_FALSE);
-
-  mBindingRequests.Clear();
-  mDocument = nsnull;
-  mBindingDocument = nsnull;
 
   return rv;
 }
@@ -1171,7 +1155,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   if (!aForceSyncLoad) {
     // We can be asynchronous
-    nsXBLStreamListener* xblListener = new nsXBLStreamListener(this, listener, aBoundDocument, doc);
+    nsXBLStreamListener* xblListener = new nsXBLStreamListener(this, listener, aBoundDocument);
     NS_ENSURE_TRUE(xblListener,NS_ERROR_OUT_OF_MEMORY);
 
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(doc));
