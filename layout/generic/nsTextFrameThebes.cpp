@@ -1510,16 +1510,21 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     iter.SetOriginalOffset(0);
     for (i = 0; i < mMappedFlows.Length(); ++i) {
       MappedFlow* mappedFlow = &mMappedFlows[i];
-      PRUint32 offset = iter.GetSkippedOffset();
-      iter.AdvanceOriginal(mappedFlow->GetContentEnd() -
-              mappedFlow->mStartFrame->GetContentOffset());
-      PRUint32 end = iter.GetSkippedOffset();
-      nsStyleContext* sc = mappedFlow->mStartFrame->GetStyleContext();
-      PRUint32 j;
-      for (j = offset; j < end; ++j) {
-        styles.AppendElement(sc);
+      nsTextFrame* f;
+      for (f = mappedFlow->mStartFrame; f != mappedFlow->mEndFrame;
+           f = static_cast<nsTextFrame*>(f->GetNextInFlow())) {
+        PRUint32 offset = iter.GetSkippedOffset();
+        iter.AdvanceOriginal(f->GetContentLength());
+        PRUint32 end = iter.GetSkippedOffset();
+        nsStyleContext* sc = f->GetStyleContext();
+        PRUint32 j;
+        for (j = offset; j < end; ++j) {
+          styles.AppendElement(sc);
+        }
       }
     }
+    NS_ASSERTION(iter.GetSkippedOffset() == transformedLength,
+                 "We didn't cover all the characters in the text run!");
   }
 
   gfxTextRun* textRun;
