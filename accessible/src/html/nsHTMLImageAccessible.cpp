@@ -84,7 +84,7 @@ nsLinkableAccessible(aDOMNode, aShell), mAccessNodeCache(nsnull)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsLinkableAccessible, nsIAccessibleImage)
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsAccessible, nsIAccessibleImage)
 
 NS_IMETHODIMP
 nsHTMLImageAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
