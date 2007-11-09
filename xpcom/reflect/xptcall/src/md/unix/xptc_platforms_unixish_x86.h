@@ -129,7 +129,13 @@
 #endif
 
 #elif defined(NTO) 
+#if (__GNUC__ == 2) && (__GNUC_MINOR__ <= 7)
+/* Old gcc 2.7.x.x.  What does gcc 2.8.x do?? */
 #define CFRONT_STYLE_THIS_ADJUST
+#else
+/* egcs and later */
+#define THUNK_BASED_THIS_ADJUST
+#endif
 
 #elif defined(__BEOS__) 
 #define CFRONT_STYLE_THIS_ADJUST
@@ -162,4 +168,10 @@
 
 #if defined(THUNK_BASED_THIS_ADJUST) && defined(CFRONT_STYLE_THIS_ADJUST)
 #error "need to define only ONE 'this' adjust scheme"    
+#endif
+
+#if defined(__QNXNTO__)
+/* Define KEEP_STACK_16_BYTE_ALIGNED if the stack needs to maintain alignment
+ * in a CALL for some good reason (like ABI compliance). */
+#define KEEP_STACK_16_BYTE_ALIGNED
 #endif
