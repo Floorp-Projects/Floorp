@@ -40,8 +40,6 @@
 
 #include "nsISupports.h"
 #include "nsColor.h"
-#include "nsIMouseListener.h"
-#include "nsIMenuListener.h"
 #include "nsCoord.h"
 
 #include "prthread.h"
@@ -64,6 +62,7 @@ class   nsGUIEvent;
 struct  nsColorMap;
 class   imgIContainer;
 class   gfxASurface;
+class   nsIMouseListener;
 
 /**
  * Callback function that processes events.
@@ -95,11 +94,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// d9d02313-6a10-4b6d-9f15-18177e94047a
-
+// 3B4E560A-11E6-4EBD-B987-35385624970D
 #define NS_IWIDGET_IID \
-{ 0xd9d02313, 0x6a10, 0x4b6d, \
-  { 0x9f, 0x15, 0x18, 0x17, 0x7e, 0x94, 0x04, 0x7a } }
+{ 0x3B4E560A, 0x11E6, 0x4EBD, \
+  { 0xB9, 0x87, 0x35, 0x38, 0x56, 0x24, 0x97, 0x0D } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary
@@ -765,15 +763,6 @@ class nsIWidget : public nsISupports {
 
     NS_IMETHOD AddEventListener(nsIEventListener * aListener) = 0;
 
-    /**
-     * Adds a menu listener to this widget
-     * Any existing menu listener is replaced
-     *
-     * @param aListener menu listener to add to this widget.
-     */
-
-    NS_IMETHOD AddMenuListener(nsIMenuListener * aListener) = 0;
-    
     /**
      * Return the widget's toolkit
      *

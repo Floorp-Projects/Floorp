@@ -41,7 +41,6 @@
 
 #include "nsIMenuItem.h"
 #include "nsString.h"
-#include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
 #include "nsWeakReference.h"
 #include "nsIWidget.h"
@@ -57,7 +56,6 @@ class nsMenuItemIconX;
  */
 
 class nsMenuItemX : public nsIMenuItem,
-                    public nsIMenuListener,
                     public nsIChangeObserver,
                     public nsSupportsWeakReference
 {
@@ -80,8 +78,6 @@ public:
   NS_IMETHOD GetChecked(PRBool *aIsEnabled);
   NS_IMETHOD GetMenuItemType(EMenuItemType *aIsCheckbox);
   NS_IMETHOD GetNativeData(void*& aData);
-  NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
-  NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
 
   NS_IMETHOD DoCommand();
@@ -90,16 +86,6 @@ public:
   NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
   NS_IMETHOD SetupIcon();
   NS_IMETHOD GetMenuItemContent(nsIContent ** aMenuItemContent);
-    
-  // nsIMenuListener interface
-  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                              void * aMenuNode);
-  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
-  nsEventStatus CheckRebuild(PRBool & aMenuEvent);
-  nsEventStatus SetRebuild(PRBool aMenuEvent);
 
 protected:
 
@@ -112,8 +98,6 @@ protected:
 
   nsIMenu*                  mMenuParent;          // weak, parent owns us
   nsIChangeManager*         mManager;             // weak
-
-  nsCOMPtr<nsIMenuListener> mXULCommandListener;
   
   nsCOMPtr<nsIContent>      mContent;
   nsCOMPtr<nsIContent>      mCommandContent;
