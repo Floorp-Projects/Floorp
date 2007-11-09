@@ -177,8 +177,15 @@ public:
                                     nsIDOMDocument *aDocument);
     nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
 
-    static nsOfflineCacheUpdateService *GetInstance();
+    /**
+     * Returns the singleton nsOfflineCacheUpdateService without an addref, or
+     * nsnull if the service couldn't be created.
+     */
+    static nsOfflineCacheUpdateService *EnsureService();
 
+    /** Addrefs and returns the singleton nsOfflineCacheUpdateService. */
+    static nsOfflineCacheUpdateService *GetInstance();
+    
 private:
     nsresult ProcessNextUpdate();
 
