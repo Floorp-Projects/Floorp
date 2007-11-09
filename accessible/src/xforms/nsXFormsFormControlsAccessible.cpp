@@ -150,6 +150,8 @@ nsXFormsInputAccessible::
 {
 }
 
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputAccessible, nsAccessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+
 NS_IMETHODIMP
 nsXFormsInputAccessible::GetRole(PRUint32 *aRole)
 {

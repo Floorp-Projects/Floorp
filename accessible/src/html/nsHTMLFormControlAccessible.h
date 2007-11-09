@@ -104,6 +104,8 @@ public:
 
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
+  NS_DECL_ISUPPORTS_INHERITED
+
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetName(nsAString& aName); 
   NS_IMETHOD GetValue(nsAString& _retval); 
