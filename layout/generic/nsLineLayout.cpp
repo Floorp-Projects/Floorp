@@ -2515,13 +2515,15 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
   PRBool isRTL = ( (NS_STYLE_DIRECTION_RTL == psd->mDirection)
                 && (!psd->mChangedFrameDirection) );
   if (dx || isRTL) {
-    PerFrameData* bulletPfd = nsnull;
     nscoord maxX = aLineBounds.XMost() + dx;
     PRBool isVisualRTL = PR_FALSE;
 
     if (isRTL) {
-      if (psd->mLastFrame->GetFlag(PFD_ISBULLET) )
-        bulletPfd = psd->mLastFrame;
+      if (psd->mLastFrame->GetFlag(PFD_ISBULLET) ) {
+        PerFrameData* bulletPfd = psd->mLastFrame;
+        bulletPfd->mBounds.x -= remainingWidth;
+        bulletPfd->mFrame->SetRect(bulletPfd->mBounds);
+      }
   
       psd->mChangedFrameDirection = PR_TRUE;
 
@@ -2532,11 +2534,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
     if (0 != dx)
 #endif
     {
-      for (PerFrameData* pfd = psd->mFirstFrame; pfd
-#ifdef IBMBIDI
-           && bulletPfd != pfd
-#endif
-           ; pfd = pfd->mNext) {
+      for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
 #ifdef IBMBIDI
         if (isVisualRTL) {
           // XXXldb Ugh.  Could we handle this earlier so we don't get here?
