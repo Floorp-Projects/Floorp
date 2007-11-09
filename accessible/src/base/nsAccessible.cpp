@@ -2931,7 +2931,8 @@ nsAccessible::GetNextWithState(nsIAccessible *aStart, PRUint32 matchState)
       current->GetNextSibling(getter_AddRefs(look));
       if (!look) {
         current->GetParent(getter_AddRefs(look));
-        current.swap(look);
+        current = look;
+        look = nsnull;
         continue;
       }
     }
