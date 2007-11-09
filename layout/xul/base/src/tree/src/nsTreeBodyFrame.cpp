@@ -376,7 +376,8 @@ nsTreeBodyFrame::EnsureBoxObject()
         nsCOMPtr<nsITreeBoxObject> realTreeBoxObject = do_QueryInterface(pBox);
         if (realTreeBoxObject) {
           nsITreeBoxObject* innerTreeBoxObject =
-            static_cast<nsTreeBoxObject*>(realTreeBoxObject.get())->GetTreeBody();
+            static_cast<nsTreeBoxObject*>(realTreeBoxObject.get())
+              ->GetCachedTreeBody();
           ENSURE_TRUE(!innerTreeBoxObject || innerTreeBoxObject ==
                       static_cast<nsITreeBoxObject*>(this));
           mTreeBoxObject = realTreeBoxObject;
