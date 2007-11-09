@@ -5772,13 +5772,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     // bug 329430
     aEvent->target = nsnull;
 
-    nsWeakFrame viewownerframe =
-      aView ? static_cast<nsIFrame*>(aView->GetClientData()) : nsnull;
-    NS_ASSERTION(!aView || viewownerframe.GetFrame(),
-                 "View doesn't have a frame.");
-    NS_ASSERTION(!viewownerframe.GetFrame() ||
-                 viewownerframe->GetView() == aView,
-                 "View owner frame doesn't have the right view?");
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame,
@@ -5813,8 +5806,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       if (NS_SUCCEEDED (rv) &&
           (GetCurrentEventFrame() || !NS_EVENT_NEEDS_FRAME(aEvent))) {
         rv = manager->PostHandleEvent(mPresContext, aEvent, mCurrentEventFrame,
-                                      aStatus, viewownerframe.IsAlive() ?
-                                      viewownerframe->GetView() : nsnull);
+                                      aStatus, aView);
       }
     }
   }
