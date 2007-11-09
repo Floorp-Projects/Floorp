@@ -1,5 +1,5 @@
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa"&&TARGET_CPU=="powerpc") != button-html-not-blank.html about:blank # bug 382048
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa"&&TARGET_CPU=="powerpc") != button-not-blank.html about:blank # bug 382048
+!= button-html-not-blank.html about:blank
+!= button-not-blank.html about:blank
 != checkbox-not-blank.html about:blank
 != combobox-not-blank.html about:blank
 != fieldset-not-blank.html about:blank
