@@ -11531,7 +11531,10 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   }
 
   // Create line frame
-  nsStyleContext* parentStyle = aBlockFrame->GetStyleContext();
+  nsStyleContext* parentStyle =
+    nsFrame::CorrectStyleParentFrame(aBlockFrame,
+                                     nsCSSPseudoElements::firstLine)->
+      GetStyleContext();
   nsRefPtr<nsStyleContext> firstLineStyle = GetFirstLineStyle(aBlockContent,
                                                               parentStyle);
 
@@ -11709,7 +11712,10 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
 
         if (NS_SUCCEEDED(rv)) {
           // Lookup first-line style context
-          nsStyleContext* parentStyle = aBlockFrame->GetStyleContext();
+          nsStyleContext* parentStyle =
+            nsFrame::CorrectStyleParentFrame(aBlockFrame,
+                                             nsCSSPseudoElements::firstLine)->
+              GetStyleContext();
           nsRefPtr<nsStyleContext> firstLineStyle =
             GetFirstLineStyle(aContent, parentStyle);
 
@@ -11983,54 +11989,56 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
 #endif
 
   // Get style context for the first-letter-frame
-  nsStyleContext* parentStyleContext = aParentFrame->GetStyleContext();
-  if (parentStyleContext) {
-    // Use content from containing block so that we can actually
-    // find a matching style rule.
-    nsIContent* blockContent = aState.mFloatedItems.containingBlock->GetContent();
+  nsStyleContext* parentStyleContext =
+    nsFrame::CorrectStyleParentFrame(aParentFrame,
+                                     nsCSSPseudoElements::firstLetter)->
+      GetStyleContext();
+  // Use content from containing block so that we can actually
+  // find a matching style rule.
+  nsIContent* blockContent =
+    aState.mFloatedItems.containingBlock->GetContent();
 
-    NS_ASSERTION(blockContent == aBlockFrame->GetContent(),
-                 "Unexpected block content");
+  NS_ASSERTION(blockContent == aBlockFrame->GetContent(),
+               "Unexpected block content");
 
-    // Create first-letter style rule
-    nsRefPtr<nsStyleContext> sc = GetFirstLetterStyle(blockContent,
-                                                      parentStyleContext);
-    if (sc) {
-      nsRefPtr<nsStyleContext> textSC;
-          textSC = mPresShell->StyleSet()->ResolveStyleForNonElement(sc);
+  // Create first-letter style rule
+  nsRefPtr<nsStyleContext> sc = GetFirstLetterStyle(blockContent,
+                                                    parentStyleContext);
+  if (sc) {
+    nsRefPtr<nsStyleContext> textSC;
+    textSC = mPresShell->StyleSet()->ResolveStyleForNonElement(sc);
     
-      // Create a new text frame (the original one will be discarded)
-      // pass a temporary stylecontext, the correct one will be set later
-      nsIFrame* textFrame = NS_NewTextFrame(mPresShell, textSC);
+    // Create a new text frame (the original one will be discarded)
+    // pass a temporary stylecontext, the correct one will be set later
+    nsIFrame* textFrame = NS_NewTextFrame(mPresShell, textSC);
 
-      // Create the right type of first-letter frame
-      const nsStyleDisplay* display = sc->GetStyleDisplay();
-      if (display->IsFloating()) {
-        // Make a floating first-letter frame
-        CreateFloatingLetterFrame(aState, aBlockFrame, aTextContent, textFrame,
-                                  blockContent, aParentFrame,
-                                  sc, aResult);
-      }
-      else {
-        // Make an inflow first-letter frame
-        nsIFrame* letterFrame = NS_NewFirstLetterFrame(mPresShell, sc);
+    // Create the right type of first-letter frame
+    const nsStyleDisplay* display = sc->GetStyleDisplay();
+    if (display->IsFloating()) {
+      // Make a floating first-letter frame
+      CreateFloatingLetterFrame(aState, aBlockFrame, aTextContent, textFrame,
+                                blockContent, aParentFrame,
+                                sc, aResult);
+    }
+    else {
+      // Make an inflow first-letter frame
+      nsIFrame* letterFrame = NS_NewFirstLetterFrame(mPresShell, sc);
 
-        if (letterFrame) {
-          // Initialize the first-letter-frame.  We don't want to use a text
-          // content for a non-text frame (because we want its primary frame to
-          // be a text frame).  So use its parent for the first-letter.
-          nsIContent* letterContent = aTextContent->GetParent();
-          NS_ASSERTION(letterContent->GetBindingParent() != letterContent,
-                       "Reframes of this letter frame will mess with the root "
-                       "of a native anonymous content subtree!");
-          letterFrame->Init(letterContent, aParentFrame, nsnull);
+      if (letterFrame) {
+        // Initialize the first-letter-frame.  We don't want to use a text
+        // content for a non-text frame (because we want its primary frame to
+        // be a text frame).  So use its parent for the first-letter.
+        nsIContent* letterContent = aTextContent->GetParent();
+        NS_ASSERTION(letterContent->GetBindingParent() != letterContent,
+                     "Reframes of this letter frame will mess with the root "
+                     "of a native anonymous content subtree!");
+        letterFrame->Init(letterContent, aParentFrame, nsnull);
 
-          InitAndRestoreFrame(aState, aTextContent, letterFrame, nsnull,
-                              textFrame);
+        InitAndRestoreFrame(aState, aTextContent, letterFrame, nsnull,
+                            textFrame);
 
-          letterFrame->SetInitialChildList(nsnull, textFrame);
-          aResult.childList = aResult.lastChild = letterFrame;
-        }
+        letterFrame->SetInitialChildList(nsnull, textFrame);
+        aResult.childList = aResult.lastChild = letterFrame;
       }
     }
   }
