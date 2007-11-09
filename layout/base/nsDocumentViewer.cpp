@@ -186,6 +186,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIWebNavigation.h"
 #include "nsWeakPtr.h"
 #include "nsEventDispatcher.h"
+#include "nsPresShellIterator.h"
 
 //paint forcing
 #include "prenv.h"
@@ -385,6 +386,11 @@ private:
 #endif // NS_PRINTING
 
 protected:
+  // These return the current shell/prescontext etc.
+  nsIPresShell* GetPresShell();
+  nsPresContext* GetPresContext();
+  nsIViewManager* GetViewManager();
+
   // IMPORTANT: The ownership implicit in the following member
   // variables has been explicitly checked and set using nsCOMPtr
   // for owning pointers and raw COM interface pointers for weak
@@ -412,6 +418,7 @@ protected:
 
   nsIWidget* mParentWidget;          // purposely won't be ref counted
 
+  // Print preview doesn't use these.
   float mTextZoom;      // Text zoom, defaults to 1.0
   float mPageZoom;
 
@@ -1672,19 +1679,55 @@ DocumentViewerImpl::GetDocument(nsIDocument** aResult)
   return NS_OK;
 }
 
+nsIPresShell*
+DocumentViewerImpl::GetPresShell()
+{
+  if (!GetIsPrintPreview()) {
+    return mPresShell;
+  }
+  NS_ENSURE_TRUE(mDocument, nsnull);
+  nsCOMPtr<nsIPresShell> shell;
+  nsCOMPtr<nsIPresShell> currentShell;
+  nsPresShellIterator iter(mDocument);
+  while ((shell = iter.GetNextShell())) {
+    currentShell.swap(shell);
+  }
+  return currentShell.get();
+}
+
+nsPresContext*
+DocumentViewerImpl::GetPresContext()
+{
+  if (!GetIsPrintPreview()) {
+    return mPresContext;
+  }
+  nsIPresShell* shell = GetPresShell();
+  return shell ? shell->GetPresContext() : nsnull;
+}
+
+nsIViewManager*
+DocumentViewerImpl::GetViewManager()
+{
+  if (!GetIsPrintPreview()) {
+    return mViewManager;
+  }
+  nsIPresShell* shell = GetPresShell();
+  return shell ? shell->GetViewManager() : nsnull;
+}
+
 NS_IMETHODIMP
 DocumentViewerImpl::GetPresShell(nsIPresShell** aResult)
 {
-  NS_IF_ADDREF(*aResult = mPresShell);
-
+  nsIPresShell* shell = GetPresShell();
+  NS_IF_ADDREF(*aResult = shell);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 DocumentViewerImpl::GetPresContext(nsPresContext** aResult)
 {
-  NS_IF_ADDREF(*aResult = mPresContext);
-
+  nsPresContext* pc = GetPresContext();
+  NS_IF_ADDREF(*aResult = pc);
   return NS_OK;
 }
 
@@ -2634,10 +2677,12 @@ SetChildFullZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
 NS_IMETHODIMP
 DocumentViewerImpl::SetTextZoom(float aTextZoom)
 {
-  mTextZoom = aTextZoom;
-
-  if (mViewManager) {
-    mViewManager->BeginUpdateViewBatch();
+  if (!GetIsPrintPreview()) {
+    mTextZoom = aTextZoom;
+  }
+  nsCOMPtr<nsIViewManager> vm = GetViewManager();
+  if (vm) {
+    vm->BeginUpdateViewBatch();
   }
       
   // Set the text zoom on all children of mContainer (even if our zoom didn't
@@ -2648,12 +2693,13 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
   CallChildren(SetChildTextZoom, &ZoomInfo);
 
   // Now change our own zoom
-  if (mPresContext && aTextZoom != mPresContext->TextZoom()) {
-      mPresContext->SetTextZoom(aTextZoom);
+  nsPresContext* pc = GetPresContext();
+  if (pc && aTextZoom != mPresContext->TextZoom()) {
+      pc->SetTextZoom(aTextZoom);
   }
 
-  if (mViewManager) {
-    mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  if (vm) {
+    vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   }
   
   return NS_OK;
@@ -2663,21 +2709,33 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetTextZoom(float* aTextZoom)
 {
   NS_ENSURE_ARG_POINTER(aTextZoom);
-  NS_ASSERTION(!mPresContext || mPresContext->TextZoom() == mTextZoom, 
-               "mPresContext->TextZoom() != mTextZoom");
-
-  *aTextZoom = mTextZoom;
+  nsPresContext* pc = GetPresContext();
+  *aTextZoom = pc ? pc->TextZoom() : 1.0f;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 DocumentViewerImpl::SetFullZoom(float aFullZoom)
 {
-  mPageZoom = aFullZoom;
+  if (!GetIsPrintPreview()) {
+    mPageZoom = aFullZoom;
+  }
+
+  nsCOMPtr<nsIViewManager> vm = GetViewManager();
+  if (vm) {
+    vm->BeginUpdateViewBatch();
+  }
+
   struct ZoomInfo ZoomInfo = { aFullZoom };
   CallChildren(SetChildFullZoom, &ZoomInfo);
-  if (mPresContext) {
-      mPresContext->SetFullZoom(aFullZoom);
+
+  nsPresContext* pc = GetPresContext();
+  if (pc) {
+    pc->SetFullZoom(aFullZoom);
+  }
+
+  if (vm) {
+    vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   }
 
   return NS_OK;
@@ -2687,9 +2745,8 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetFullZoom(float* aFullZoom)
 {
   NS_ENSURE_ARG_POINTER(aFullZoom);
-  NS_ASSERTION(!mPresContext || mPresContext->GetFullZoom() == mPageZoom, 
-               "mPresContext->GetFullZoom() != mPageZoom");
-  *aFullZoom = mPresContext ? mPresContext->GetFullZoom() : 1.0f;
+  nsPresContext* pc = GetPresContext();
+  *aFullZoom = pc ? pc->GetFullZoom() : 1.0f;
   return NS_OK;
 }
 
@@ -3934,6 +3991,8 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   ResetFocusState(docShell);
 
+  SetTextZoom(mTextZoom);
+  SetFullZoom(mPageZoom);
   Show();
 
 #endif // NS_PRINTING && NS_PRINT_PREVIEW

@@ -98,6 +98,7 @@ var appCore = null;
 var gBrowser = null;
 var gNavToolbox = null;
 var gSidebarCommand = "";
+var gInPrintPreviewMode = false;
 
 // Global variable that holds the nsContextMenu instance.
 var gContextMenu = null;
@@ -2446,12 +2447,15 @@ function toggleAffectedChrome(aHide)
 
 function onEnterPrintPreview()
 {
+  gInPrintPreviewMode = true;
   toggleAffectedChrome(true);
 }
 
 function onExitPrintPreview()
 {
   // restore chrome to original state
+  gInPrintPreviewMode = false;
+  FullZoom.setSettingValue();
   toggleAffectedChrome(false);
 }
 
