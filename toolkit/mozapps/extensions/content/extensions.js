@@ -528,6 +528,13 @@ function setRestartMessage(aItem)
 
 function initPluginsDS()
 {
+  gPluginsDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
+                         .createInstance(Components.interfaces.nsIRDFDataSource);
+  rebuildPluginsDS();
+}
+
+function rebuildPluginsDS()
+{
   var phs = Components.classes["@mozilla.org/plugin/host;1"]
                       .getService(Components.interfaces.nsIPluginHost);
   var plugins = phs.getPluginTags({ });
@@ -535,10 +542,19 @@ function initPluginsDS()
                       .getService(Components.interfaces.nsIRDFService);
   var rdfCU = Components.classes["@mozilla.org/rdf/container-utils;1"]
                         .getService(Components.interfaces.nsIRDFContainerUtils);
-  gPluginsDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
-                         .createInstance(Components.interfaces.nsIRDFDataSource);
   var rootctr = rdfCU.MakeSeq(gPluginsDS, rdf.GetResource(RDFURI_ITEM_ROOT));
   gPlugins = { };
+  
+  // Running in a batch stops the template builder from running
+  gPluginsDS.beginUpdateBatch();
+
+  // Remove old entries from the list
+  var nodes = rootctr.GetElements();
+  while (nodes.hasMoreElements()) {
+    var node = nodes.getNext()
+                    .QueryInterface(Components.interfaces.nsIRDFResource);
+    rootctr.RemoveElement(node, false);
+  }
 
   // Case insensitive sort
   function compare(a, b) {
@@ -615,6 +631,8 @@ function initPluginsDS()
                         true);
     }
   }
+  
+  gPluginsDS.endUpdateBatch();
 }
 
 function togglePluginDisabled(aName, aDesc)
@@ -688,6 +706,7 @@ function Startup()
                      .getService(Components.interfaces.nsIObserverService);
   os.addObserver(gDownloadManager, "xpinstall-download-started", false);
   os.addObserver(gAddonsMsgObserver, "addons-message-notification", false);
+  os.addObserver(gPluginObserver, "plugins-list-updated", false);
 
   gObserverIndex = gExtensionManager.addUpdateListener(gDownloadManager);
 
@@ -777,6 +796,7 @@ function Shutdown()
                      .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(gAddonsMsgObserver, "addons-message-notification");
   os.removeObserver(gDownloadManager, "xpinstall-download-started");
+  os.removeObserver(gPluginObserver, "plugins-list-updated");
   var currentNotification = document.getElementById("addonsMsg").currentNotification;
   if (currentNotification && currentNotification.value == "addons-no-updates")
     window.removeEventListener("select", noUpdatesDismiss, true);
@@ -1536,6 +1556,13 @@ const gAddonsMsgObserver = {
     }
     if (gExtensionsView.selectedItem)
       gExtensionsView.selectedItem.focus();
+  }
+};
+
+const gPluginObserver = {
+  observe: function (aSubject, aTopic, aData)
+  {
+    rebuildPluginsDS();
   }
 };
 
