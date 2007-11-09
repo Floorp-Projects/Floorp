@@ -454,7 +454,7 @@ nsSubDocumentFrame::ReflowFinished()
 
     if (!weakFrame.IsAlive()) {
       // GetPositionAndSize() killed us
-      return;
+      return PR_FALSE;
     }
 
     // GetPositionAndSize might have resized us.  So now is the time to
