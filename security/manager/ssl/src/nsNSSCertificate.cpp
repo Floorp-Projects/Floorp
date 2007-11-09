@@ -456,44 +456,47 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       details.Append(PRUnichar('\n'));
     }
 
-    PRUint32 num;
-    PRUnichar **emailArray = NULL;
-    if (NS_SUCCEEDED(GetEmailAddresses(&num, &emailArray)) && num > 0) {
-      PRUnichar **emailAddr = emailArray;
-      details.AppendLiteral("  ");
-      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoEmail", info))) {
-        details.Append(info);
-        details.AppendLiteral(": ");
-      }
-      details.Append(*emailAddr);
+    nsAutoString firstEmail;
+    const char *aWalkAddr;
+    for (aWalkAddr = CERT_GetFirstEmailAddress(mCert)
+         ;
+         aWalkAddr
+         ;
+         aWalkAddr = CERT_GetNextEmailAddress(mCert, aWalkAddr))
+    {
+      NS_ConvertUTF8toUTF16 email(aWalkAddr);
+      if (email.IsEmpty())
+        continue;
 
-      /*
-       * If the first email address from the subject DN is also present
-       * in the subjectAltName extension, GetEmailAddresses() will return
-       * it twice (as received from NSS). Remember the first address so that
-       * we can filter out duplicates later on.
-       */
-      PRUnichar *firstEmail = *emailAddr;
-      emailAddr++;
-      num--;
+      if (firstEmail.IsEmpty()) {
+        /*
+         * If the first email address from the subject DN is also present
+         * in the subjectAltName extension, GetEmailAddresses() will return
+         * it twice (as received from NSS). Remember the first address so that
+         * we can filter out duplicates later on.
+         */
+        firstEmail = email;
 
-      /* append remaining addresses */
-      while (num > 0) {
-        if (!nsDependentString(firstEmail).Equals(nsDependentString(*emailAddr))) {
-          details.AppendLiteral(", ");
-          details.Append(*emailAddr);
+        details.AppendLiteral("  ");
+        if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoEmail", info))) {
+          details.Append(info);
+          details.AppendLiteral(": ");
         }
-        nsMemory::Free(*emailAddr);
-        *emailAddr = nsnull;
-        emailAddr++;
-        num--;
+        details.Append(email);
       }
-
-      details.Append(PRUnichar('\n'));
-      nsMemory::Free(firstEmail);
+      else {
+        // Append current address if it's different from the first one.
+        if (!firstEmail.Equals(email)) {
+          details.AppendLiteral(", ");
+          details.Append(email);
+        }
+      }
     }
-    nsMemory::Free(emailArray);
-    emailArray = nsnull;
+
+    if (!firstEmail.IsEmpty()) {
+      // We got at least one email address, so we want a newline
+      details.Append(PRUnichar('\n'));
+    }
 
     if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoIssuedBy", info))) {
       details.Append(info);
