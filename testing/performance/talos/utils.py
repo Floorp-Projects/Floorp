@@ -38,11 +38,23 @@
 
 import os
 DEBUG = 0
+NOISY = 0
 saved_environment = {}
 
 def setdebug(val):
   global DEBUG
   DEBUG = val
+
+def setnoisy(val):
+  global NOISY
+  NOISY = val
+
+def noisy(message):
+  """Prints messages from the browser/application that are generated, otherwise
+     these are ignored.  Controlled through command line switch (-n or --noisy)
+  """
+  if NOISY == 1:
+    print "NOISE: " + message
 
 def debug(message):
   """Prints a debug message to the console if the DEBUG switch is turned on 
@@ -51,7 +63,7 @@ def debug(message):
        message: string containing a debugging statement
      """
   if DEBUG == 1:
-    print message
+    print "DEBUG: " + message
 
 def setEnvironmentVars(newVars): 
    """Sets environment variables as specified by env, an array of variables 

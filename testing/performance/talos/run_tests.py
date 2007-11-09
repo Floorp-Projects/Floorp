@@ -314,11 +314,13 @@ def test_file(filename):
     send_to_csv(csv_dir, results)
   
 if __name__=='__main__':
-  optlist, args = getopt.getopt(sys.argv[1:], 'd', ['debug'])
+  optlist, args = getopt.getopt(sys.argv[1:], 'dn', ['debug', 'noisy'])
   for o, a in optlist:
     if o in ('-d', "--debug"):
       print 'setting debug'
       utils.setdebug(1)
+    if o in ('-n', "--noisy"):
+      utils.setnoisy(1)
   # Read in each config file and run the tests on it.
   for arg in args:
     utils.debug("running test file " + arg)
