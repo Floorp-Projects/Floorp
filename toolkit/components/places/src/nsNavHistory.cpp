@@ -345,9 +345,9 @@ nsNavHistory::Init()
   {
     nsCOMPtr<mozIStorageStatement> selectSession;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT MAX(session) FROM "
-        "(SELECT MAX(visit_date) AS visit_date FROM moz_historyvisits) maxvd "
-        "JOIN moz_historyvisits v ON maxvd.visit_date = v.visit_date"),
+        "SELECT MAX(session) FROM moz_historyvisits "
+        "WHERE visit_date = "
+        "(SELECT MAX(visit_date) from moz_historyvisits)"),
       getter_AddRefs(selectSession));
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool hasSession;
