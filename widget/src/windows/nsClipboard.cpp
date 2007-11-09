@@ -121,6 +121,8 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
 #endif
   else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
     format = CF_HTML;
+  else if (strcmp(aMimeStr, kURLMime) == 0)
+    format = ::RegisterClipboardFormat(CFSTR_INETURLW);
   else
     format = ::RegisterClipboardFormat(aMimeStr);
 
