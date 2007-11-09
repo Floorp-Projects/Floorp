@@ -399,42 +399,32 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
             return rv;
         }
 
-        // If the pref for this protocol was explicitly set to false, we want
-        // to use our special "blocked protocol" handler.  That will ensure we
-        // don't open any channels for this protocol.
-        if (listedProtocol) {
-            rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default-blocked",
-                                result);
-            if (NS_FAILED(rv))
-                return NS_ERROR_UNKNOWN_PROTOCOL;
-        }
-    }
-    
 #ifdef MOZ_X11
-    // check to see whether GnomeVFS can handle this URI scheme.  if it can
-    // create a nsIURI for the "scheme:", then we assume it has support for
-    // the requested protocol.  otherwise, we failover to using the default
-    // protocol handler.
+        // check to see whether GnomeVFS can handle this URI scheme.  if it can
+        // create a nsIURI for the "scheme:", then we assume it has support for
+        // the requested protocol.  otherwise, we failover to using the default
+        // protocol handler.
 
-    // XXX should this be generalized into something that searches a
-    // category?  (see bug 234714)
+        // XXX should this be generalized into something that searches a
+        // category?  (see bug 234714)
 
-    rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gnomevfs",
-                        result);
-    if (NS_SUCCEEDED(rv)) {
-        nsCAutoString spec(scheme);
-        spec.Append(':');
-
-        nsIURI *uri;
-        rv = (*result)->NewURI(spec, nsnull, nsnull, &uri);
+        rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gnomevfs",
+                            result);
         if (NS_SUCCEEDED(rv)) {
-            NS_RELEASE(uri);
-            return rv;
-        }
+            nsCAutoString spec(scheme);
+            spec.Append(':');
 
-        NS_RELEASE(*result);
-    }
+            nsIURI *uri;
+            rv = (*result)->NewURI(spec, nsnull, nsnull, &uri);
+            if (NS_SUCCEEDED(rv)) {
+                NS_RELEASE(uri);
+                return rv;
+            }
+
+            NS_RELEASE(*result);
+        }
 #endif
+    }
 
     // Okay we don't have a protocol handler to handle this url type, so use
     // the default protocol handler.  This will cause urls to get dispatched

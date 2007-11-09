@@ -103,7 +103,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDocLoader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsOSHelperAppService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalProtocolHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlockedExternalProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefetchService, Init)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsOfflineCacheUpdateService,
                                          nsOfflineCacheUpdateService::GetInstance)
@@ -209,8 +208,6 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
      nsOSHelperAppServiceConstructor, },
   { "Netscape Default Protocol Handler", NS_EXTERNALPROTOCOLHANDLER_CID, NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default", 
      nsExternalProtocolHandlerConstructor, },
-  { "Netscape Default Blocked Protocol Handler", NS_BLOCKEDEXTERNALPROTOCOLHANDLER_CID, NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default-blocked", 
-     nsBlockedExternalProtocolHandlerConstructor, },
   {  NS_PREFETCHSERVICE_CLASSNAME, NS_PREFETCHSERVICE_CID, NS_PREFETCHSERVICE_CONTRACTID,
      nsPrefetchServiceConstructor, },
   { NS_OFFLINECACHEUPDATESERVICE_CLASSNAME, NS_OFFLINECACHEUPDATESERVICE_CID, NS_OFFLINECACHEUPDATESERVICE_CONTRACTID,
