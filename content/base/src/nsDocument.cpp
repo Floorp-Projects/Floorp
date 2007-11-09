@@ -46,6 +46,7 @@
  */
 
 #include "plstr.h"
+#include "prprf.h"
 
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -5332,10 +5333,11 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     PRExplodedTime prtime;
     PR_ExplodeTime(modDate, PR_LocalTimeParameters, &prtime);
     // "MM/DD/YYYY hh:mm:ss"
-    char formatedTime[20];
-    if (sprintf(formatedTime, "%02d/%02d/%04d %02d:%02d:%02d",
-                prtime.tm_month + 1, prtime.tm_mday, prtime.tm_year,
-                prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
+    char formatedTime[24];
+    if (PR_snprintf(formatedTime, sizeof(formatedTime),
+                    "%02ld/%02ld/%04hd %02ld:%02ld:%02ld",
+                    prtime.tm_month + 1, prtime.tm_mday, prtime.tm_year,
+                    prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
       CopyASCIItoUTF16(nsDependentCString(formatedTime), mLastModified);
     }
   }
