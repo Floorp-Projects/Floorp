@@ -2578,7 +2578,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleBelow(nsIAccessible **_retval)
 
 nsIDOMNode* nsAccessible::GetAtomicRegion()
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
   nsIContent *loopContent = content;
   nsAutoString atomic;
   PRUint32 ariaPropTypes = nsAccUtils::GetAriaPropTypes(content, mWeakShell);
