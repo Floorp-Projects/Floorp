@@ -278,7 +278,6 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 WriteEntryCallback(nsCertOverrideEntry *aEntry,
                    void *aArg)
 {
-  static const char kNew[] = "\n";
   static const char kTab[] = "\t";
 
   nsIOutputStream *rawStreamPtr = (nsIOutputStream *)aArg;
@@ -305,7 +304,7 @@ WriteEntryCallback(nsCertOverrideEntry *aEntry,
                         bits_string.Length(), &rv);
     rawStreamPtr->Write(kTab, sizeof(kTab) - 1, &rv);
     rawStreamPtr->Write(settings.mDBKey.get(), settings.mDBKey.Length(), &rv);
-    rawStreamPtr->Write(kNew, sizeof(kNew) - 1, &rv);
+    rawStreamPtr->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &rv);
   }
 
   return PL_DHASH_NEXT;
@@ -339,8 +338,8 @@ nsCertOverrideService::Write()
   }
 
   static const char kHeader[] =
-      "# PSM Certificate Override Settings file\n"
-      "# This is a generated file!  Do not edit.\n";
+      "# PSM Certificate Override Settings file" NS_LINEBREAK
+      "# This is a generated file!  Do not edit." NS_LINEBREAK;
 
   /* see ::Read for file format */
 
