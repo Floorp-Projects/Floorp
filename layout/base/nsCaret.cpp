@@ -634,13 +634,29 @@ CheckForTrailingTextFrameRecursive(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
   return nsnull;
 }
 
+static nsLineBox*
+FindContainingLine(nsIFrame* aFrame)
+{
+  while (aFrame && aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
+  {
+    nsIFrame* parent = aFrame->GetParent();
+    nsBlockFrame* blockParent;
+    if (NS_SUCCEEDED(parent->QueryInterface(kBlockFrameCID, (void**)&blockParent)))
+    {
+      nsBlockFrame::line_iterator line = blockParent->FindLineFor(aFrame);
+      return line != blockParent->end_lines() ? line.get() : nsnull;
+    }
+    aFrame = parent;
+  }
+  return nsnull;
+}
+
 static void
 AdjustCaretFrameForLineEnd(nsIFrame** aFrame, PRInt32* aOffset)
 {
-  nsBlockFrame* block = nsLayoutUtils::FindNearestBlockAncestor(*aFrame);
-  if (!block)
+  nsLineBox* line = FindContainingLine(*aFrame);
+  if (!line)
     return;
-  nsLineBox* line = block->FindLineFor(nsLayoutUtils::FindChildContainingDescendant(block, *aFrame));
   PRInt32 count = line->GetChildCount();
   for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
   {
