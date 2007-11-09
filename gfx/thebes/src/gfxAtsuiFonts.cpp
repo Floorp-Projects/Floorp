@@ -483,7 +483,10 @@ SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString)
         PRUint32 i;
         for (i = breakOffset + 1; i < next; ++i) {
             gfxTextRun::CompressedGlyph g;
-            aTextRun->SetCharacterGlyph(i, g.SetClusterContinuation());
+            // Remember that this character is not the start of a cluster by
+            // setting its glyph data to "not a cluster start", "is a
+            // ligature start", with no glyphs.
+            aTextRun->SetGlyphs(i, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
         }
         breakOffset = next;
     }
@@ -736,7 +739,7 @@ GetAdvanceAppUnits(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
  * Given a run of ATSUI glyphs that should be treated as a single cluster/ligature,
  * store them in the textrun at the appropriate character and set the
  * other characters involved to be ligature/cluster continuations as appropriate.
- */ 
+ */
 static void
 SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
                            Fixed *aBaselineDeltas, PRUint32 aAppUnitsPerDevUnit,
@@ -792,26 +795,26 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
 
     gfxTextRun::CompressedGlyph g;
     PRUint32 offset;
+    // Make all but the first character in the group NOT be a ligature boundary,
+    // i.e. fuse the group into a ligature.
+    // Also make them not be cluster boundaries, i.e., fuse them into a cluster,
+    // if the glyphs are out of character order.
     for (offset = firstOffset + 2; offset <= lastOffset; offset += 2) {
-        PRUint32 index = offset/2;
-        if (!inOrder) {
-            // Because the characters in this group were not in the textrun's
-            // required order, we must make the entire group an indivisible cluster
-            aRun->SetCharacterGlyph(aSegmentStart + index, g.SetClusterContinuation());
-        } else if (!aRun->GetCharacterGlyphs()[index].IsClusterContinuation()) {
-            aRun->SetCharacterGlyph(aSegmentStart + index, g.SetLigatureContinuation());
-        }
+        PRUint32 index = offset/2;        
+        PRBool makeClusterStart = inOrder && aRun->IsClusterStart(index);
+        g.SetComplex(makeClusterStart, PR_FALSE, 0);
+        aRun->SetGlyphs(aSegmentStart + index, g, nsnull);
     }
 
     // Grab total advance for all glyphs
     PRInt32 advance = GetAdvanceAppUnits(aGlyphs, aGlyphCount, aAppUnitsPerDevUnit);
-    PRUint32 index = firstOffset/2;
+    PRUint32 charIndex = aSegmentStart + firstOffset/2;
     if (regularGlyphCount == 1) {
         if (advance >= 0 &&
             (!aBaselineDeltas || aBaselineDeltas[displayGlyph - aGlyphs] == 0) &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(displayGlyph->glyphID)) {
-            aRun->SetCharacterGlyph(aSegmentStart + index, g.SetSimpleGlyph(advance, displayGlyph->glyphID));
+            aRun->SetSimpleGlyph(charIndex, g.SetSimpleGlyph(advance, displayGlyph->glyphID));
             return;
         }
     }
@@ -821,11 +824,37 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
     for (i = 0; i < aGlyphCount; ++i) {
         ATSLayoutRecord *glyph = &aGlyphs[i];
         if (glyph->glyphID != ATSUI_SPECIAL_GLYPH_ID) {
+            if (glyph->originalOffset > firstOffset) {
+                PRUint32 glyphCharIndex = aSegmentStart + glyph->originalOffset/2;
+                PRUint32 glyphRunIndex = aRun->FindFirstGlyphRunContaining(glyphCharIndex);
+                PRUint32 numGlyphRuns;
+                const gfxTextRun::GlyphRun *glyphRun = aRun->GetGlyphRuns(&numGlyphRuns) + glyphRunIndex;
+
+                if (glyphRun->mCharacterOffset > charIndex) {
+                    // The font has changed inside the character group. This might
+                    // happen in some weird situations, e.g. if
+                    // ATSUI decides in LTR text to put the glyph for character
+                    // 1 before the glyph for character 0, AND decides to
+                    // give character 1's glyph a different font from character
+                    // 0. This sucks because we can't then safely move this
+                    // glyph to be associated with our first character.
+                    // To handle this we'd have to do some funky hacking with
+                    // glyph advances and offsets so that the glyphs stay
+                    // associated with the right characters but they are
+                    // displayed out of order. Let's not do this for now,
+                    // in the hope that it doesn't come up. If it does come up,
+                    // at least we can fix it right here without changing
+                    // any other code.
+                    NS_ERROR("Font change inside character group!");
+                    // Be safe, just throw out this glyph
+                    continue;
+                }
+            }
+
             gfxTextRun::DetailedGlyph *details = detailedGlyphs.AppendElement();
             if (!details)
                 return;
             details->mAdvance = 0;
-            details->mIsLastGlyph = PR_FALSE;
             details->mGlyphID = glyph->glyphID;
             details->mXOffset = 0;
             if (detailedGlyphs.Length() > 1) {
@@ -839,18 +868,18 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
     }
     if (detailedGlyphs.Length() == 0) {
         NS_WARNING("No glyphs visible at all!");
-        aRun->SetCharacterGlyph(aSegmentStart + index, g.SetMissing());
+        aRun->SetGlyphs(aSegmentStart + charIndex, g.SetMissing(0), nsnull);
         return;
     }
 
     // The advance width for the whole cluster
     PRInt32 clusterAdvance = GetAdvanceAppUnits(aGlyphs, aGlyphCount, aAppUnitsPerDevUnit);
-    detailedGlyphs[detailedGlyphs.Length() - 1].mIsLastGlyph = PR_TRUE;
     if (aRun->IsRightToLeft())
         detailedGlyphs[0].mAdvance = clusterAdvance;
     else
         detailedGlyphs[detailedGlyphs.Length() - 1].mAdvance = clusterAdvance;
-    aRun->SetDetailedGlyphs(aSegmentStart + index, detailedGlyphs.Elements(), detailedGlyphs.Length());    
+    g.SetComplex(aRun->IsClusterStart(charIndex), PR_TRUE, detailedGlyphs.Length());
+    aRun->SetGlyphs(charIndex, g, detailedGlyphs.Elements());
 }
 
 /**
@@ -910,26 +939,21 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
         PRUint32 glyphIndex = isRTL ? numGlyphs - 1 : 0;
         PRUint32 lastOffset = glyphRecords[glyphIndex].originalOffset;
         PRUint32 glyphCount = 1;
-        // Determine the glyphs for this group
+        // Determine the glyphs for this ligature group
         while (glyphCount < numGlyphs) {
             ATSLayoutRecord *glyph = &glyphRecords[glyphIndex + direction*glyphCount];
             PRUint32 glyphOffset = glyph->originalOffset;
             allFlags |= glyph->flags;
-            // Always add the current glyph to the group if it's for the same
-            // character as a character whose glyph is already in the group,
-            // or an earlier character. The latter can happen because ATSUI
-            // sometimes visually reorders glyphs; e.g. DEVANAGARI VOWEL I
-            // can have its glyph displayed before the glyph for the consonant that's
-            // it's logically after (even though this is all left-to-right text).
-            // In this case we need to make sure the glyph for the consonant
-            // is added to the group containing the vowel.
-            if (lastOffset < glyphOffset) {
-                if (!aRun->IsClusterStart(aSegmentStart + glyphOffset/2)) {
-                    // next character is a cluster continuation,
-                    // add it to the current group
-                    lastOffset = glyphOffset;
-                    continue;
-                }
+            if (glyphOffset <= lastOffset) {
+                // Always add the current glyph to the ligature group if it's for the same
+                // character as a character whose glyph is already in the group,
+                // or an earlier character. The latter can happen because ATSUI
+                // sometimes visually reorders glyphs; e.g. DEVANAGARI VOWEL I
+                // can have its glyph displayed before the glyph for the consonant that's
+                // it's logically after (even though this is all left-to-right text).
+                // In this case we need to make sure the glyph for the consonant
+                // is added to the group containing the vowel.
+            } else {
                 // We could be at the end of a character group
                 if (glyph->glyphID != ATSUI_SPECIAL_GLYPH_ID) {
                     // Next character is a normal character, stop the group here
@@ -1248,22 +1272,6 @@ AppendCJKPrefFonts(nsTArray<nsRefPtr<gfxFont> > *aFonts,
 }
 
 static void
-AddGlyphRun(gfxTextRun *aRun, gfxAtsuiFont *aFont, PRUint32 aOffset)
-{
-    //fprintf (stderr, "+ AddGlyphRun: %d %s\n", aOffset, NS_ConvertUTF16toUTF8(aFont->GetUniqueName()).get());
-    aRun->AddGlyphRun(aFont, aOffset, PR_TRUE);
-    if (!aRun->IsClusterStart(aOffset)) {
-        // Glyph runs must start at cluster boundaries. However, sometimes
-        // ATSUI matches different fonts for characters in the same cluster.
-        // If this happens, break up the cluster. It's not clear what else
-        // we can do.
-        NS_WARNING("Font mismatch inside cluster");
-        gfxTextRun::CompressedGlyph g;
-        aRun->SetCharacterGlyph(aOffset, g.SetMissing());
-    }
-}
-
-static void
 DisableOptionalLigaturesInStyle(ATSUStyle aStyle)
 {
     static ATSUFontFeatureType selectors[] = {
@@ -1526,7 +1534,7 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                 }
             
                 // add a glyph run for the entire substring
-                AddGlyphRun(aRun, firstFont, aSegmentStart + runStart - headerChars);
+                aRun->AddGlyphRun(firstFont, aSegmentStart + runStart - headerChars, PR_TRUE);
 
                 // do we have any more work to do?
                 if (status == noErr)
@@ -1572,7 +1580,7 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                                         changedLength);
                     }
                 
-                    AddGlyphRun(aRun, font, aSegmentStart + changedOffset - headerChars);
+                    aRun->AddGlyphRun(font, aSegmentStart + changedOffset - headerChars, PR_TRUE);
                 } else {
                     // We could hit this case if we decided to ignore the
                     // font when enumerating at startup; pretend that these are
@@ -1597,7 +1605,7 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                     missingOffsetsAndLengths.AppendElement(changedOffset);
                     missingOffsetsAndLengths.AppendElement(changedLength);
                 } else {
-                    AddGlyphRun(aRun, firstFont, aSegmentStart + changedOffset - headerChars);
+                    aRun->AddGlyphRun(firstFont, aSegmentStart + changedOffset - headerChars, PR_TRUE);
 
                     if (!closure.mUnmatchedChars) {
                         closure.mUnmatchedChars = new PRPackedBool[aLength];

@@ -578,20 +578,20 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                 gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
                 gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gid))
             {
-                aTextRun->SetCharacterGlyph(utf16Offset,
-                                            g.SetSimpleGlyph(advance, gid));
+                aTextRun->SetSimpleGlyph(utf16Offset,
+                                         g.SetSimpleGlyph(advance, gid));
             } else if (gid == 0) {
                 // gid = 0 only happens when the glyph is missing from the font
                 aTextRun->SetMissingGlyph(utf16Offset, ch);
             } else {
                 gfxTextRun::DetailedGlyph details;
-                details.mIsLastGlyph = PR_TRUE;
                 details.mGlyphID = gid;
                 NS_ASSERTION(details.mGlyphID == gid, "Seriously weird glyph ID detected!");
                 details.mAdvance = advance;
                 details.mXOffset = 0;
                 details.mYOffset = 0;
-                aTextRun->SetDetailedGlyphs(utf16Offset, &details, 1);
+                g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_TRUE, 1);
+                aTextRun->SetGlyphs(utf16Offset, g, &details);
             }
 
             NS_ASSERTION(!IS_SURROGATE(ch), "Surrogates shouldn't appear in UTF8");

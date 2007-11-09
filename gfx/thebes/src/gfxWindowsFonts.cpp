@@ -687,15 +687,14 @@ SetupTextRunFromGlyphs(gfxTextRun *aRun, WCHAR *aGlyphs, HDC aDC,
         if (advanceAppUnits >= 0 &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advanceAppUnits) &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
-            aRun->SetCharacterGlyph(i, g.SetSimpleGlyph(advanceAppUnits, glyph));
+            aRun->SetSimpleGlyph(i, g.SetSimpleGlyph(advanceAppUnits, glyph));
         } else {
             gfxTextRun::DetailedGlyph details;
-            details.mIsLastGlyph = PR_TRUE;
             details.mGlyphID = glyph;
             details.mAdvance = advanceAppUnits;
             details.mXOffset = 0;
             details.mYOffset = 0;
-            aRun->SetDetailedGlyphs(i, &details, 1);
+            aRun->SetGlyphs(i, g.SetComplex(PR_TRUE, PR_TRUE, 1), &details);
         }
     }
     return PR_TRUE;
@@ -1064,7 +1063,7 @@ public:
         // it with so we just can't cluster it. So skip it here.
         for (PRUint32 i = 1; i < mRangeLength; ++i) {
             if (!logAttr[i].fCharStop) {
-                aRun->SetCharacterGlyph(i + aOffsetInRun, g.SetClusterContinuation());
+                aRun->SetGlyphs(i + aOffsetInRun, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
             }
         }
     }
@@ -1086,10 +1085,8 @@ public:
         while (offset < mRangeLength) {
             PRUint32 runOffset = offsetInRun + offset;
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
-                if (!aRun->GetCharacterGlyphs()[runOffset].IsClusterContinuation()) {
-                    // No glyphs for character 'index', it must be a ligature continuation
-                    aRun->SetCharacterGlyph(runOffset, g.SetLigatureContinuation());
-                }
+                g.SetComplex(aRun->IsClusterStart(runOffset), PR_FALSE, 0);
+                aRun->SetGlyphs(runOffset, g, nsnull);
             } else {
                 // Count glyphs for this character
                 PRUint32 k = mClusters[offset];
@@ -1126,7 +1123,7 @@ public:
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
                     gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
                     gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
-                    aRun->SetCharacterGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
+                    aRun->SetSimpleGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
                 } else {
                     if (detailedGlyphs.Length() < glyphCount) {
                         if (!detailedGlyphs.AppendElements(glyphCount - detailedGlyphs.Length()))
@@ -1135,13 +1132,13 @@ public:
                     PRUint32 i;
                     for (i = 0; i < glyphCount; ++i) {
                         gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
-                        details->mIsLastGlyph = i == glyphCount - 1;
                         details->mGlyphID = mGlyphs[k + i];
                         details->mAdvance = mAdvances[k + i]*appUnitsPerDevUnit;
                         details->mXOffset = float(mOffsets[k + i].du)*appUnitsPerDevUnit*aRun->GetDirection();
                         details->mYOffset = float(mOffsets[k + i].dv)*appUnitsPerDevUnit;
                     }
-                    aRun->SetDetailedGlyphs(runOffset, detailedGlyphs.Elements(), glyphCount);
+                    aRun->SetGlyphs(runOffset,
+                        g.SetComplex(PR_TRUE, PR_TRUE, glyphCount), detailedGlyphs.Elements());
                 }
             }
             ++offset;
