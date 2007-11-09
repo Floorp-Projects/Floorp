@@ -12,8 +12,8 @@
 <div id="content" style="display: block">
 <div contentEditable id="editor"></div>
 </div>
-<pre id="test">
-<script class="testbody" type="text/javascript;version=1.7">
+<p id="catch">Catch-all
+<pre id="test"><script class="testbody" type="text/javascript;version=1.7">
 
 /** Test for Bug 384147 **/
 
@@ -21,6 +21,8 @@ SimpleTest.waitForExplicitFinish();
 
 // This seems to be necessary because the selection is not set up properly otherwise
 setTimeout(test, 0);
+
+var eatSpace;
 
 function getPrefs() {
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
@@ -31,6 +33,7 @@ function getPrefs() {
 
 function setEatSpace(newValue) {
   getPrefs().setBoolPref("eat_space_to_next_word", newValue);
+  eatSpace = newValue;
 }
 
 function restoreEatSpace() {
@@ -42,28 +45,29 @@ function restoreEatSpace() {
 function test() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  // Disable tests on Windows and Linux for now
-  if (navigator.platform.indexOf("Mac") < 0) {
-    SimpleTest.finish();
-    return;
-  }
-
   var wordModifiers =
       (navigator.platform.indexOf("Mac") >= 0) ? {altKey:true} : {ctrlKey:true};
   var sel = window.getSelection();
   var editor = document.getElementById("editor");
 
+  function errString(dir) {
+    return dir + " movement broken with eatSpace=" + eatSpace + " in \"" + editor.innerHTML +
+      "\"; sel.anchorNode.parentNode=" + sel.anchorNode.parentNode;
+  }
+
   function testRight(node, offset) {
     synthesizeKey("VK_RIGHT", wordModifiers);
-    is(sel.anchorNode, node, "Right movement broken in " + editor.innerHTML);
-    is(sel.anchorOffset, offset, "Right movement broken in " + editor.innerHTML);
+    is(sel.anchorNode, node, errString("Right"));
+    is(sel.anchorOffset, offset, errString("Right"));
   }
 
   function testLeft(node, offset) {
     synthesizeKey("VK_LEFT", wordModifiers);
-    is(sel.anchorNode, node, "Left movement broken in " + editor.innerHTML);
-    is(sel.anchorOffset, offset, "Left movement broken in " + editor.innerHTML);
+    is(sel.anchorNode, node, errString("Left"));
+    is(sel.anchorOffset, offset, errString("Left"));
   }
+
+  var afterEditorNode = document.getElementById("catch").firstChild;
 
   setEatSpace(false);
 
@@ -99,13 +103,46 @@ function test() {
   testLeft(editor.firstChild.firstChild, 4);
   testLeft(editor.firstChild.firstChild, 0);
 
+  setEatSpace(true);
+
+  // test basic word movement with eat_space_next_to_word true.
+
+  editor.innerHTML = "Hello Kitty";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello</b> Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 1);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello </b>Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild.firstChild, 6);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Log out</b>  roc";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 4);
+  testRight(editor.firstChild.nextSibling, 2);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 4);
+  testLeft(editor.firstChild.firstChild, 0);
+
   restoreEatSpace();
 
   SimpleTest.finish();
 }
 
 
-</script>
-</pre>
+</script></pre>
 </body>
 </html>
