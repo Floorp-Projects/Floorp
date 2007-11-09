@@ -57,7 +57,7 @@
 #include "nsGUIEvent.h"
 
 
-NS_IMPL_ISUPPORTS3(nsMenuItemX, nsIMenuItem, nsIChangeObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS2(nsMenuItemX, nsIMenuItem, nsIChangeObserver)
 
 
 nsMenuItemX::nsMenuItemX()

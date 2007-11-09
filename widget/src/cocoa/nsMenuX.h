@@ -43,7 +43,6 @@
 #include "nsAutoPtr.h"
 #include "nsIMenu.h"
 #include "nsIChangeManager.h"
-#include "nsWeakReference.h"
 #include "nsMenuBarX.h"
 
 #import <Carbon/Carbon.h>
@@ -68,8 +67,7 @@ class nsMenuItemIconX;
 
 
 class nsMenuX : public nsIMenu,
-                public nsIChangeObserver,
-                public nsSupportsWeakReference
+                public nsIChangeObserver
 {
 
 public:
