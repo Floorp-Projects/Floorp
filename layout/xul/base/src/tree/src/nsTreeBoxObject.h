@@ -55,6 +55,7 @@ public:
   ~nsTreeBoxObject();
 
   nsITreeBoxObject* GetTreeBody();
+  nsITreeBoxObject* GetCachedTreeBody() { return mTreeBody; }
 
   //NS_PIBOXOBJECT interfaces
   virtual void Clear();
