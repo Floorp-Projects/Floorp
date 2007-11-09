@@ -418,7 +418,8 @@ protected:
 
   nsIWidget* mParentWidget;          // purposely won't be ref counted
 
-  // Print preview doesn't use these.
+  // mTextZoom/mPageZoom record the textzoom/pagezoom of the first (galley)
+  // presshell only.
   float mTextZoom;      // Text zoom, defaults to 1.0
   float mPageZoom;
 
