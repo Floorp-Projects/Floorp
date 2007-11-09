@@ -44,14 +44,13 @@
 
 #include "nsIDOMElement.h"
 
-// 7DF81BE2-51F4-4CAA-9FD7-3F974A7AEA51
+// CC986E81-9F46-4AA2-B809-C544789E6F06
 #define NS_IMENUITEM_IID \
-{ 0x7DF81BE2, 0x51F4, 0x4CAA, \
-  { 0x9F, 0xD7, 0x3F, 0x97, 0x4A, 0x7A, 0xEA, 0x51 } }
+{ 0xCC986E81, 0x9F46, 0x4AA2, \
+  { 0xB8, 0x09, 0xC5, 0x44, 0x78, 0x9E, 0x6F, 0x06 } }
 
 class nsIMenu;
 class nsIWidget;
-class nsIMenuListener;
 class nsIChangeManager;
 class nsIContent;
 
@@ -127,18 +126,6 @@ class nsIMenuItem : public nsISupports {
     *
     */
     NS_IMETHOD GetNativeData(void*& aData) = 0;
-
-   /**
-    * Adds menu listener
-    *
-    */
-    NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener) = 0;
-
-   /**
-    * Removes menu listener
-    *
-    */
-    NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
 
    /**
     * Indicates whether it is a separator
