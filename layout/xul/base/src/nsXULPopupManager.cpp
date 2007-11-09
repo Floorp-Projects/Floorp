@@ -201,8 +201,9 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsISupportsArray **_retval)
     // In the case when a menulist inside a panel is open, clicking in the
     // panel should still roll up the menu, so if a different type is found,
     // stop scanning.
-    nsMenuChainItem* parent= item->GetParent();
-    if (parent && item->Frame()->PopupType() != parent->Frame()->PopupType())
+    nsMenuChainItem* parent = item->GetParent();
+    if (!parent || item->Frame()->PopupType() != parent->Frame()->PopupType() ||
+                   item->IsContextMenu() != parent->IsContextMenu())
       break;
     item = parent;
   }
