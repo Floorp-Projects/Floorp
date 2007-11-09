@@ -460,7 +460,9 @@ protected:
 
   /**
    * Mark |aLine| dirty, and, if necessary because of possible
-   * pull-up, mark the previous line dirty as well.
+   * pull-up, mark the previous line dirty as well. Also invalidates textruns
+   * on those lines because the text in the lines might have changed due to
+   * addition/removal of frames.
    */
   nsresult MarkLineDirty(line_iterator aLine);
 

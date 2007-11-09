@@ -1432,6 +1432,7 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine)
 {
   // Mark aLine dirty
   aLine->MarkDirty();
+  aLine->SetInvalidateTextRuns(PR_TRUE);
 #ifdef DEBUG
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
@@ -1447,6 +1448,7 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine)
       aLine->IsInline() &&
       aLine.prev()->IsInline()) {
     aLine.prev()->MarkDirty();
+    aLine.prev()->SetInvalidateTextRuns(PR_TRUE);
 #ifdef DEBUG
     if (gNoisyReflow) {
       IndentBy(stdout, gNoiseIndent);
@@ -4857,13 +4859,13 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
       }
       mLines.after_insert(prevSibLine, line);
       prevSibLine->SetChildCount(prevSibLine->GetChildCount() - rem);
-      prevSibLine->MarkDirty();
-    }
-    // Force the lines next to where we're inserting content to regenerate
-    // their textruns
-    prevSibLine->SetInvalidateTextRuns(PR_TRUE);
-    if (prevSibLine.next() != end_lines()) {
-      prevSibLine.next()->SetInvalidateTextRuns(PR_TRUE);
+      // Mark prevSibLine dirty and as needing textrun invalidation, since
+      // we may be breaking up text in the line. Its previous line may also
+      // need to be invalidated because it may be able to pull some text up.
+      MarkLineDirty(prevSibLine);
+      // The new line will also need its textruns recomputed because of the
+      // frame changes.
+      line->SetInvalidateTextRuns(PR_TRUE);
     }
 
     // Now (partially) join the sibling lists together
@@ -4911,7 +4913,10 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
     }
     else {
       prevSibLine->SetChildCount(prevSibLine->GetChildCount() + 1);
-      prevSibLine->MarkDirty();
+      // We're adding inline content to prevSibLine, so we need to mark it
+      // dirty, ensure its textruns are recomputed, and possibly do the same
+      // to its previous line since that line may be able to pull content up.
+      MarkLineDirty(prevSibLine);
     }
 
     aPrevSibling = newFrame;
@@ -6208,9 +6213,6 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
     // child is being dirtied.
     line_iterator fline = FindLineFor(aChild);
     if (fline != end_lines()) {
-      // An inline descendant might have been added or removed, so we should
-      // reconstruct textruns.
-      fline->SetInvalidateTextRuns(PR_TRUE);
       MarkLineDirty(fline);
     }
   }
