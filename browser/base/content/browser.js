@@ -1374,7 +1374,6 @@ AutoHideTabbarPrefListener.prototype =
       catch (e) {
       }
       gBrowser.setStripVisibilityTo(aVisible);
-      gPrefService.setBoolPref("browser.tabs.forceHide", false);
     }
   }
 }
@@ -1747,17 +1746,8 @@ function BrowserCloseTabOrWindow()
   }
 #endif
 
-  if (gBrowser.tabContainer.childNodes.length > 1 ||
-      window.toolbar.visible && !gPrefService.getBoolPref("browser.tabs.autoHide")) {
-    // Just close the tab (and focus the address bar if it was the last one).
-    var isLastTab = gBrowser.tabContainer.childNodes.length == 1;
-    gBrowser.removeCurrentTab();
-    if (isLastTab && gURLBar)
-      setTimeout(function() { gURLBar.focus(); }, 0);
-    return;
-  }
-
-  closeWindow(true);
+  // If the current tab is the last one, this will close the window.
+  gBrowser.removeCurrentTab();
 }
 
 function BrowserTryToCloseWindow()
