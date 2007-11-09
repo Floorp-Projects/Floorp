@@ -2866,12 +2866,12 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
     if (floats_cur > floats_done)
       floats_done = floats_cur;
 
-    currentLine += floats_done;
+    currentLine = NSCoordSaturatingAdd(currentLine, floats_done);
 
     floats.Clear();
   }
 
-  currentLine -= trailingWhitespace;
+  currentLine = NSCoordSaturatingSubtract(currentLine, trailingWhitespace, nscoord_MAX);
   prevLines = PR_MAX(prevLines, currentLine);
   currentLine = trailingWhitespace = 0;
 }
