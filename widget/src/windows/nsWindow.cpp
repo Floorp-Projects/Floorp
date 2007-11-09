@@ -92,7 +92,6 @@
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
 
-//#include <winuser.h>
 #include <zmouse.h>
 //#include "sysmets.h"
 #include "nsGfxCIID.h"
@@ -105,7 +104,10 @@
 
 #ifdef ACCESSIBILITY
 #include "OLEIDL.H"
-#include "winable.h"
+#include <winuser.h>
+#ifndef WINABLEAPI
+#include <winable.h>
+#endif
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessNode.h"
