@@ -43,9 +43,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <sstream>
 
 using std::string;
 using std::vector;
+using std::ostringstream;
 
 using namespace CrashReporter;
 
@@ -379,8 +381,17 @@ static bool RestartApplication()
   if (!data || !response || [response statusCode] != 200) {
     success = false;
     reply = "";
+
+    // if data is nil, we probably logged an error in uploadThread
+    if (data != nil && response != nil) {
+      ostringstream message;
+      message << "Crash report submission failed: server returned status "
+              << [response statusCode];
+      LogMessage(message.str());
+    }
   } else {
     success = true;
+    LogMessage("Crash report submitted successfully");
 
     NSString* encodingName = [response textEncodingName];
     NSStringEncoding encoding;
@@ -408,8 +419,12 @@ static bool RestartApplication()
   NSAutoreleasePool* autoreleasepool = [[NSAutoreleasePool alloc] init];
   NSError* error = nil;
   NSData* data = [post send: &error];
-  if (error)
+  if (error) {
     data = nil;
+    NSString* errorDesc = [error localizedDescription];
+    string message = [errorDesc UTF8String];
+    LogMessage("Crash report submission failed: " + message);
+  }
 
   [self performSelectorOnMainThread: @selector(uploadComplete:)
         withObject: data
@@ -542,7 +557,9 @@ std::ifstream* UIOpenRead(const string& filename)
   return new std::ifstream(filename.c_str(), std::ios::in);
 }
 
-std::ofstream* UIOpenWrite(const string& filename)
+std::ofstream* UIOpenWrite(const string& filename, bool append) // append=false
 {
-  return new std::ofstream(filename.c_str(), std::ios::out);
+  return new std::ofstream(filename.c_str(),
+                           append ? std::ios::out | std::ios::app
+                                  : std::ios::out);
 }
