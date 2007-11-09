@@ -452,7 +452,24 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
     SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT,
                        EM_SETTARGETDEVICE, (WPARAM)NULL, 0);
 
-    SetDlgItemText(hwndDlg, IDC_VIEWREPORTCHECK, Str(ST_VIEWREPORT).c_str());
+    // resize the "View Report" button based on the string length
+    RECT viewRect;
+    HWND hwndView = GetDlgItem(hwndDlg, IDC_VIEWREPORTCHECK);
+    GetRelativeRect(hwndView, hwndDlg, &viewRect);
+    HDC hdc = GetDC(hwndView);
+    const wstring viewButtonText = Str(ST_VIEWREPORT);
+    SIZE size;
+    if (GetTextExtentPoint32(hdc, viewButtonText.c_str(),
+                             viewButtonText.length(), &size)) {
+      // shift right by the amount the button should grow
+      int sizeDiff = size.cx - (viewRect.right - viewRect.left);
+      viewRect.right += sizeDiff;
+      MoveWindow(hwndView, viewRect.left, viewRect.top,
+                 viewRect.right - viewRect.left,
+                 viewRect.bottom - viewRect.top,
+                 TRUE);
+    }
+    SetDlgItemText(hwndDlg, IDC_VIEWREPORTCHECK, viewButtonText.c_str());
     SendDlgItemMessage(hwndDlg, IDC_VIEWREPORTTEXT,
                        EM_SETTARGETDEVICE, (WPARAM)NULL, 0);
 
@@ -484,30 +501,47 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
 
     SetDlgItemText(hwndDlg, IDC_CLOSEBUTTON, Str(ST_CLOSE).c_str());
 
+    RECT closeRect;
+    HWND hwndClose = GetDlgItem(hwndDlg, IDC_CLOSEBUTTON);
+    GetRelativeRect(hwndClose, hwndDlg, &closeRect);
+
+    RECT restartRect;
+    HWND hwndRestart = GetDlgItem(hwndDlg, IDC_RESTARTBUTTON);
+    GetRelativeRect(hwndRestart, hwndDlg, &restartRect);
+
     if (gRestartArgs.size() > 0) {
-      SetDlgItemText(hwndDlg, IDC_RESTARTBUTTON, Str(ST_RESTART).c_str());
+      // set the restart button text and shift the buttons around
+      // since the size may need to change
+      hdc = GetDC(hwndRestart);
+      const wstring restartButtonText = Str(ST_RESTART);
+      if (GetTextExtentPoint32(hdc, restartButtonText.c_str(),
+                               restartButtonText.length(), &size)) {
+        // shift left by the amount the button should grow
+        int sizeDiff = size.cx - (restartRect.right - restartRect.left);
+        restartRect.left -= sizeDiff;
+        closeRect.left -= sizeDiff;
+        closeRect.right -= sizeDiff;
+        MoveWindow(hwndRestart, restartRect.left, restartRect.top,
+                   restartRect.right - restartRect.left,
+                   restartRect.bottom - restartRect.top,
+                   TRUE);
+      }
+      SetDlgItemText(hwndDlg, IDC_RESTARTBUTTON, restartButtonText.c_str());
     } else {
       // No restart arguments, move the close button over to the side
       // and hide the restart button
       SetDlgItemVisible(hwndDlg, IDC_RESTARTBUTTON, false);
 
-      RECT closeRect;
-      HWND hwndClose = GetDlgItem(hwndDlg, IDC_CLOSEBUTTON);
-      GetRelativeRect(hwndClose, hwndDlg, &closeRect);
-
-      RECT restartRect;
-      HWND hwndRestart = GetDlgItem(hwndDlg, IDC_RESTARTBUTTON);
-      GetRelativeRect(hwndRestart, hwndDlg, &restartRect);
-
       int size = closeRect.right - closeRect.left;
       closeRect.right = restartRect.right;
       closeRect.left = closeRect.right - size;
-
-      MoveWindow(hwndClose, closeRect.left, closeRect.top,
-                 closeRect.right - closeRect.left,
-                 closeRect.bottom - closeRect.top,
-                 TRUE);
     }
+    // need to move the close button regardless
+    MoveWindow(hwndClose, closeRect.left, closeRect.top,
+               closeRect.right - closeRect.left,
+               closeRect.bottom - closeRect.top,
+               TRUE);
+
     UpdateEmail(hwndDlg);
     ShowReportInfo(hwndDlg);
 
