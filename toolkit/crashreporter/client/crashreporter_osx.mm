@@ -123,16 +123,26 @@ static bool RestartApplication()
   [viewReportScrollView retain];
   [viewReportScrollView removeFromSuperview];
 
+  NSRect restartFrame = [restartButton frame];
+  NSRect closeFrame = [closeButton frame];
   if (gRestartArgs.size() == 0) {
-    NSRect restartFrame = [restartButton frame];
     [restartButton removeFromSuperview];
-    NSRect closeFrame = [closeButton frame];
     closeFrame.origin.x = restartFrame.origin.x +
       (restartFrame.size.width - closeFrame.size.width);
     [closeButton setFrame: closeFrame];
     [closeButton setKeyEquivalent:@"\r"];
   } else {
     [restartButton setTitle:Str(ST_RESTART)];
+    // shuffle buttons around to fit, since the strings could be
+    // a different width
+    int oldRestartWidth = restartFrame.size.width;
+    [restartButton sizeToFit];
+    restartFrame = [restartButton frame];
+    // move left by the amount that the button grew
+    restartFrame.origin.x -= restartFrame.size.width - oldRestartWidth;
+    closeFrame.origin.x -= restartFrame.size.width - oldRestartWidth;
+    [restartButton setFrame: restartFrame];
+    [closeButton setFrame: closeFrame];
     [restartButton setKeyEquivalent:@"\r"];
   }
 
