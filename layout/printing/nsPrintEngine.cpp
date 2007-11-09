@@ -474,6 +474,12 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
   if (aIsPrintPreview) {
     SetIsCreatingPrintPreview(PR_TRUE);
     SetIsPrintPreview(PR_TRUE);
+    nsCOMPtr<nsIMarkupDocumentViewer> viewer =
+      do_QueryInterface(mDocViewerPrint);
+    if (viewer) {
+      viewer->SetTextZoom(1.0f);
+      viewer->SetFullZoom(1.0f);
+    }
   } else {
     SetIsPrinting(PR_TRUE);
   }
