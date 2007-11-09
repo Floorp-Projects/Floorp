@@ -1203,7 +1203,7 @@ int main(int argc, char **argv)
   if (exefile)
     CloseHandle(exefile);
 
-  if (gSucceeded)
+  if (gSucceeded && argc > 4)
     LaunchWinPostProcess(argv[4]);
 #endif
 
