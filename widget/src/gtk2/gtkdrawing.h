@@ -143,6 +143,8 @@ typedef enum {
   MOZ_GTK_TOOLTIP,
   /* Paints a GtkFrame (e.g. a status bar panel). */
   MOZ_GTK_FRAME,
+  /* Paints a resize grip for a GtkWindow */
+  MOZ_GTK_RESIZER,
   /* Paints a GtkProgressBar. */
   MOZ_GTK_PROGRESSBAR,
   /* Paints a progress chunk of a GtkProgressBar. */
