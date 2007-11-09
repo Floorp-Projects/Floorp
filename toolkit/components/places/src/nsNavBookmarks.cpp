@@ -211,6 +211,36 @@ nsNavBookmarks::Init()
     getter_AddRefs(mDBGetRedirectDestinations));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBInsertBookmark
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks "
+                               "(fk, type, parent, position, title, dateAdded) "
+                               "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
+                               getter_AddRefs(mDBInsertBookmark));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBIsBookmarkedInDatabase
+  // Just select position since it's just an int32 and may be faster.
+  // We don't actually care about the data, just whether there is any.
+  rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT position FROM moz_bookmarks WHERE fk = ?1 AND type = ?2"),
+    getter_AddRefs(mDBIsBookmarkedInDatabase));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBSetItemDateAdded
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET dateAdded = ?1 WHERE id = ?2"),
+    getter_AddRefs(mDBSetItemDateAdded));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBSetItemLastModified
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET lastModified = ?1 WHERE id = ?2"),
+                               getter_AddRefs(mDBSetItemLastModified));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBSetItemIndex
+  rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET position = ?2 WHERE id = ?1"),
+                               getter_AddRefs(mDBSetItemIndex));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   FillBookmarksHash();
 
   // must be last: This may cause bookmarks to be imported, which will exercise
@@ -734,21 +764,14 @@ nsresult
 nsNavBookmarks::IsBookmarkedInDatabase(PRInt64 aPlaceId,
                                        PRBool *aIsBookmarked)
 {
-  // we'll just select position since it's just an int32 and may be faster.
-  // We don't actually care about the data, just whether there is any.
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT position FROM moz_bookmarks WHERE fk = ?1 AND type = ?2"),
-    getter_AddRefs(statement));
+  mozStorageStatementScoper scope(mDBIsBookmarkedInDatabase);
+  nsresult rv = mDBIsBookmarkedInDatabase->BindInt64Parameter(0, aPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->BindInt64Parameter(0, aPlaceId);
+  rv = mDBIsBookmarkedInDatabase->BindInt32Parameter(1, TYPE_BOOKMARK);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->BindInt32Parameter(1, TYPE_BOOKMARK);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return statement->ExecuteStep(aIsBookmarked);
+  return mDBIsBookmarkedInDatabase->ExecuteStep(aIsBookmarked);
 }
 
 
@@ -917,32 +940,26 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks "
-                               "(fk, type, parent, position, title, dateAdded) "
-                               "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
-                               getter_AddRefs(statement));
+  mozStorageStatementScoper scope(mDBInsertBookmark);
+  rv = mDBInsertBookmark->BindInt64Parameter(0, childID);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->BindInt64Parameter(0, childID);
+  rv = mDBInsertBookmark->BindInt32Parameter(1, TYPE_BOOKMARK);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(1, TYPE_BOOKMARK);
+  rv = mDBInsertBookmark->BindInt64Parameter(2, aFolder);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(2, aFolder);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(3, index);
+  rv = mDBInsertBookmark->BindInt32Parameter(3, index);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aTitle.IsVoid())
-    rv = statement->BindNullParameter(4);
+    rv = mDBInsertBookmark->BindNullParameter(4);
   else
-    rv = statement->BindStringParameter(4, aTitle);
+    rv = mDBInsertBookmark->BindStringParameter(4, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->BindInt64Parameter(5, PR_Now());
+  rv = mDBInsertBookmark->BindInt64Parameter(5, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->Execute();
+  rv = mDBInsertBookmark->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get row id of the new bookmark
@@ -1625,16 +1642,13 @@ nsNavBookmarks::SetItemDateAdded(PRInt64 aItemId, PRTime aDateAdded)
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET dateAdded = ?1 WHERE id = ?2"),
-                               getter_AddRefs(statement));
+  mozStorageStatementScoper scope(mDBSetItemDateAdded);
+  nsresult rv = mDBSetItemDateAdded->BindInt64Parameter(0, aDateAdded);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(0, aDateAdded);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(1, aItemId);
+  rv = mDBSetItemDateAdded->BindInt64Parameter(1, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->Execute();
+  rv = mDBSetItemDateAdded->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -1671,16 +1685,13 @@ nsNavBookmarks::SetItemLastModified(PRInt64 aItemId, PRTime aLastModified)
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET lastModified = ?1 WHERE id = ?2"),
-                               getter_AddRefs(statement));
+  mozStorageStatementScoper scope(mDBSetItemLastModified);
+  nsresult rv = mDBSetItemLastModified->BindInt64Parameter(0, aLastModified);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(0, aLastModified);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt64Parameter(1, aItemId);
+  rv = mDBSetItemLastModified->BindInt64Parameter(1, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->Execute();
+  rv = mDBSetItemLastModified->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -2266,17 +2277,13 @@ nsNavBookmarks::SetItemIndex(PRInt64 aItemId, PRInt32 aNewIndex)
     parent = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
   }
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET position = ?2 WHERE id = ?1"),
-                               getter_AddRefs(statement));
+  mozStorageStatementScoper scoper(mDBSetItemIndex);
+  rv = mDBSetItemIndex->BindInt64Parameter(0, aItemId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBSetItemIndex->BindInt32Parameter(1, aNewIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->BindInt64Parameter(0, aItemId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindInt32Parameter(1, aNewIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
+  rv = mDBSetItemIndex->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,

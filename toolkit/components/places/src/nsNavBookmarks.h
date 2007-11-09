@@ -199,8 +199,12 @@ private:
   static const PRInt32 kGetItemPropertiesIndex_LastModified;
 
   nsCOMPtr<mozIStorageStatement> mDBGetItemIdForGUID;
-
   nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
+  nsCOMPtr<mozIStorageStatement> mDBInsertBookmark;
+  nsCOMPtr<mozIStorageStatement> mDBIsBookmarkedInDatabase;
+  nsCOMPtr<mozIStorageStatement> mDBSetItemDateAdded;
+  nsCOMPtr<mozIStorageStatement> mDBSetItemLastModified;
+  nsCOMPtr<mozIStorageStatement> mDBSetItemIndex;
 
   // keywords
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForURI;
