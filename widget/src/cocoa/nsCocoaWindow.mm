@@ -1521,6 +1521,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
     CGColorSpaceRelease(colorSpace);
     CGFunctionRelease(function);
     CGContextDrawShading(aContext, shading);
+    CGShadingRelease(shading);
 
     // Draw the one pixel border at the bottom of the titlebar.
     if (nsToolkit::OnLeopardOrLater())
