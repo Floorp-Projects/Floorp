@@ -7,6 +7,9 @@
 == out-of-flow-1c.html out-of-flow-1-ref.html
 fails == out-of-flow-1d.html out-of-flow-1-ref.html # bug 396645
 
+# parent style context correct
+== parent-style-1.html parent-style-1-ref.html
+
 # stress-tests
 == stress-1.html about:blank # assertion test
 == stress-2.html stress-2-ref.html # assertion + rendering test
