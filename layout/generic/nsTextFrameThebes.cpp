@@ -602,6 +602,9 @@ public:
     mMaxTextLength = 0;
     mDoubleByteText = PR_FALSE;
   }
+  void ResetLineBreaker() {
+    mLineBreaker.Reset();
+  }
   void AccumulateRunInfo(nsTextFrame* aFrame);
   void BuildTextRunForFrames(void* aTextBuffer);
   void AssignTextRun(gfxTextRun* aTextRun);
@@ -963,7 +966,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
         // Note that we must already have finished the textrun for aForFrame,
         // because we've seen the end of a textrun in a line after the line
         // containing aForFrame.
-        mLineBreaker.Reset();
+        scanner.ResetLineBreaker();
         return;
       }
     }
