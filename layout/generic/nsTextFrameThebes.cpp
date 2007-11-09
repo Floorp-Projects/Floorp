@@ -1293,6 +1293,8 @@ GetHyphenTextRun(gfxTextRun* aTextRun, gfxContext* aContext, nsTextFrame* aTextF
   if (textRun && textRun->CountMissingGlyphs() == 0)
     return textRun;
 
+  gfxTextRunCache::ReleaseTextRun(textRun);
+
   static const PRUint8 dash = '-';
   return gfxTextRunCache::MakeTextRun(&dash, 1, fontGroup, ctx,
                                       aTextRun->GetAppUnitsPerDevUnit(),
