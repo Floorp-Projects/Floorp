@@ -909,6 +909,9 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
   // The STATE_INVISIBLE flag is for elements which are programmatically hidden
   
   *aIsOffscreen = PR_TRUE;
+  if (!mDOMNode) {
+    return PR_FALSE; // Defunct object
+  }
 
   const PRUint16 kMinPixels  = 12;
    // Set up the variables we need, return false if we can't get at them all
@@ -978,8 +981,11 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
     }
   }
 
-  if (rectVisibility == nsRectVisibility_kZeroAreaRect || !mDOMNode) {
-    return PR_FALSE;   // Hidden element
+  if (rectVisibility == nsRectVisibility_kZeroAreaRect && frame && 
+      0 == (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+    // Consider zero area objects hidden unless they are absoultely positioned
+    // or floating and may have descendants that have a non-zero size
+    return PR_FALSE;
   }
   
   // Currently one of:
