@@ -35,7 +35,7 @@
 # ***** END LICENSE BLOCK ***** 
 
 <vbox id="advancedSearch">
-  <hbox>
+  <hbox align="center">
     <label value="&advancedSearch.match.label;" control="advancedSearchType"/> 
     <menulist id="advancedSearchType"
               oncommand="PlacesQueryBuilder.doSearch();">
