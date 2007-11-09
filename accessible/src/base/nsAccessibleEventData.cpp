@@ -49,6 +49,7 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsXULTreeAccessible.h"
 #endif
+#include "nsIAccessibleText.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
