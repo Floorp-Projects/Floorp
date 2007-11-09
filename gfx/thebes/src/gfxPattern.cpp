@@ -38,8 +38,10 @@
 #include "gfxTypes.h"
 #include "gfxPattern.h"
 #include "gfxASurface.h"
+#include "gfxPlatform.h"
 
 #include "cairo.h"
+#include "lcms.h"
 
 gfxPattern::gfxPattern(cairo_pattern_t *aPattern)
 {
@@ -85,6 +87,27 @@ gfxPattern::CairoPattern()
 void
 gfxPattern::AddColorStop(gfxFloat offset, const gfxRGBA& c)
 {
+    if (gfxPlatform::IsCMSEnabled()) {
+        cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
+        if (transform) {
+#ifdef IS_LITTLE_ENDIAN
+            PRUint32 packed = c.Packed(gfxRGBA::PACKED_ABGR);
+            cmsDoTransform(transform,
+                           (PRUint8 *)&packed, (PRUint8 *)&packed,
+                           1);
+            gfxRGBA cms(packed, gfxRGBA::PACKED_ABGR);
+#else
+            PRUint32 packed = c.Packed(gfxRGBA::PACKED_ARGB);
+            cmsDoTransform(transform,
+                           (PRUint8 *)&packed + 1, (PRUint8 *)&packed + 1,
+                           1);
+            gfxRGBA cms(packed, gfxRGBA::PACKED_ARGB);
+#endif
+            cairo_pattern_add_color_stop_rgba(mPattern, offset,
+                                              cms.r, cms.g, cms.b, cms.a);
+            return;
+        }
+    }
     cairo_pattern_add_color_stop_rgba(mPattern, offset, c.r, c.g, c.b, c.a);
 }
 
