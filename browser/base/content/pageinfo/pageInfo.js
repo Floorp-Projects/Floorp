@@ -439,6 +439,9 @@ function makeGeneralTab()
   var referrer = ("referrer" in gDocument && gDocument.referrer);
   setItemValue("refertext", referrer);
 
+  var mode = ("compatMode" in gDocument && gDocument.compatMode == "BackCompat") ? "generalQuirksMode" : "generalStrictMode";
+  document.getElementById("modetext").value = gBundle.getString(mode);
+
   // find out the mime type
   var mimeType = gDocument.contentType;
   setItemValue("typetext", mimeType);
