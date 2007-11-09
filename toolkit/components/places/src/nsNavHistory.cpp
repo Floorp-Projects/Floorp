@@ -2131,34 +2131,7 @@ PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHi
   if (aOptions->ExcludeItems())
     return PR_FALSE;
 
-  if (aOptions->ExcludeQueries())
-    return PR_FALSE;
-
-  if (aOptions->ExcludeReadOnlyFolders())
-    return PR_FALSE;
-
   if (aOptions->IncludeHidden())
-    return PR_FALSE;
-
-  if (aOptions->ShowSessions())
-    return PR_FALSE;
-
-  if (aOptions->ResolveNullBookmarkTitles())
-    return PR_FALSE;
-
-  if (aOptions->ApplyOptionsToContainers())
-    return PR_FALSE;
-
-  nsCString sortingAnnotation;
-  nsresult rv = aOptions->GetSortingAnnotation(sortingAnnotation);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  if (!sortingAnnotation.IsEmpty())
-    return PR_FALSE;
-
-  nsCString parentAnnotationToExclude;
-  rv = aOptions->GetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  if (!parentAnnotationToExclude.IsEmpty()) 
     return PR_FALSE;
 
   if (aQuery->MinVisits() != -1 || aQuery->MaxVisits() != -1)
