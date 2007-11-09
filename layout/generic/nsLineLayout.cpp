@@ -2635,11 +2635,13 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       RelativePositionFrames(pfd->mSpan, r);
     } else {
       r = pfd->mCombinedArea;
-      if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW)) {
-        nsTextFrame* f = static_cast<nsTextFrame*>(frame);
-        r = f->RecomputeOverflowRect();
+      if (pfd->GetFlag(PFD_ISTEXTFRAME)) {
+        if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW)) {
+          nsTextFrame* f = static_cast<nsTextFrame*>(frame);
+          r = f->RecomputeOverflowRect();
+        }
+        frame->FinishAndStoreOverflow(&r, frame->GetSize());
       }
-      frame->FinishAndStoreOverflow(&r, frame->GetSize());
 
       // If we have something that's not an inline but with a complex frame
       // hierarchy inside that contains views, they need to be
