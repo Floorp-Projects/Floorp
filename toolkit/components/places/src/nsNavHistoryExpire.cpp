@@ -487,7 +487,7 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
     nsCOMPtr<mozIStorageStatement> selectStatement;
     nsCAutoString sqlDate;
     sqlDate.Assign(sqlBase);
-    sqlDate.AppendLiteral("AND visit_date < ?1 LIMIT ?2");
+    sqlDate.AppendLiteral("WHERE v.visit_date < ?1 LIMIT ?2");
     rv = aConnection->CreateStatement(sqlDate, getter_AddRefs(selectStatement));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = selectStatement->BindInt64Parameter(0, aExpireThreshold);
