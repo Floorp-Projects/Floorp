@@ -3527,12 +3527,8 @@ nsPluginInstanceOwner::Destroy()
 void
 nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 {
-  if (!mWidget) {
-    return;
-  }
-
 #ifdef XP_WIN
-  if (aDelayedStop) {
+  if (aDelayedStop && mWidget) {
     // To delay stopping a plugin we need to reparent the plugin
     // so that we can safely tear down the
     // plugin after its frame (and view) is gone.
