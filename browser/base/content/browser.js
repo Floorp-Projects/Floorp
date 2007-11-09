@@ -2278,9 +2278,12 @@ var urlbarObserver = {
     {
       var flavourSet = new FlavourSet();
 
-      // Plain text drops are often misidentified as "text/x-moz-url", so favor plain text.
-      flavourSet.appendFlavour("text/unicode");
+      // Favor text/x-moz-url since text/unicode coming from Win32 1.8 branch
+      // drops contains URL\ntext.  The previous comment here said that
+      // plain text drops often come with text/x-moz-url flavor, but I
+      // haven't seen that, so hopefully that behavior has changed.
       flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("text/unicode");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
     }
