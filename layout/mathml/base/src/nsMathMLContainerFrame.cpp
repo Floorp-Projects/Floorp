@@ -1046,7 +1046,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*          aPresContext,
   // Asking each child to cache its bounding metrics
 
   nsReflowStatus childStatus;
-  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
+  nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mFlags);
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
