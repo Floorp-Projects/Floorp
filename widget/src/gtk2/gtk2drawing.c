@@ -1284,6 +1284,24 @@ moz_gtk_tooltip_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_resizer_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                      GdkRectangle* cliprect, GtkWidgetState* state)
+{
+    GtkStyle* style;
+    GtkStateType state_type = ConvertGtkState(state);
+
+    ensure_window_widget();
+    style = gProtoWindow->style;
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+
+    gtk_paint_resize_grip(style, drawable, state_type, cliprect, gProtoWindow,
+                          NULL, GDK_WINDOW_EDGE_SOUTH_EAST, rect->x, rect->y,
+                          rect->width, rect->height);
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_frame_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     GdkRectangle* cliprect)
 {
@@ -1773,6 +1791,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     /* These widgets have no borders.*/
     case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_WINDOW:
+    case MOZ_GTK_RESIZER:
         *left = *top = *right = *bottom = 0;
         return MOZ_GTK_SUCCESS;
     default:
@@ -1920,6 +1939,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_FRAME:
         return moz_gtk_frame_paint(drawable, rect, cliprect);
+        break;
+    case MOZ_GTK_RESIZER:
+        return moz_gtk_resizer_paint(drawable, rect, cliprect, state);
         break;
     case MOZ_GTK_PROGRESSBAR:
         return moz_gtk_progressbar_paint(drawable, rect, cliprect);

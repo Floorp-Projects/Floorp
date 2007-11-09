@@ -362,6 +362,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_TOOLBAR_GRIPPER:
     aGtkWidgetType = MOZ_GTK_GRIPPER;
     break;
+  case NS_THEME_RESIZER:
+    aGtkWidgetType = MOZ_GTK_RESIZER;
+    break;
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
   case NS_THEME_DROPDOWN_TEXTFIELD:
@@ -854,6 +857,10 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     aResult->width = 14;
     aResult->height = 13;
     break;
+  case NS_THEME_RESIZER:
+    // same as Windows to make our lives easier
+    aResult->width = aResult->height = 15;
+    break;
   }
 
   return NS_OK;
@@ -943,7 +950,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBAR_PANEL:
-    // case NS_THEME_RESIZER:  (n/a for gtk)
+  case NS_THEME_RESIZER:
   case NS_THEME_LISTBOX:
     // case NS_THEME_LISTBOX_LISTITEM:
   case NS_THEME_TREEVIEW:
