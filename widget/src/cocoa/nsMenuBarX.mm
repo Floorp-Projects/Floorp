@@ -64,7 +64,7 @@
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 
-NS_IMPL_ISUPPORTS6(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIMutationObserver, 
+NS_IMPL_ISUPPORTS5(nsMenuBarX, nsIMenuBar, nsIMutationObserver, 
                    nsIChangeManager, nsIMenuCommandDispatcher, nsISupportsWeakReference)
 
 EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
@@ -130,42 +130,6 @@ nsMenuBarX::~nsMenuBarX()
     mDocument->RemoveMutationObserver(this);
   
   [mRootMenu release];
-}
-
-
-nsEventStatus 
-nsMenuBarX::MenuItemSelected(const nsMenuEvent &aMenuEvent)
-{
-  return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus 
-nsMenuBarX::MenuSelected(const nsMenuEvent &aMenuEvent)
-{
-  return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus 
-nsMenuBarX::MenuDeselected(const nsMenuEvent & aMenuEvent)
-{
-  return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus 
-nsMenuBarX::CheckRebuild(PRBool & aNeedsRebuild)
-{
-  aNeedsRebuild = PR_TRUE;
-  return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus
-nsMenuBarX::SetRebuild(PRBool aNeedsRebuild)
-{
-  return nsEventStatus_eIgnore;
 }
 
 
@@ -332,29 +296,28 @@ nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent**
 }
 
 
-nsEventStatus
-nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
-                          void * aMenubarNode)
+NS_IMETHODIMP
+nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, void * aMenubarNode)
 {
   nsIDOMNode* domNode  = static_cast<nsIDOMNode*>(aMenubarNode);
   mMenuBarContent = do_QueryInterface(domNode); // strong ref
   NS_ASSERTION(mMenuBarContent, "No content specified for this menubar");
   if (!mMenuBarContent)
-    return nsEventStatus_eIgnore;
-  
+    return NS_ERROR_FAILURE;
+
   SetParent(aParentWindow);
-  
+
   AquifyMenuBar();
-  
+
   OSStatus err = InstallCommandEventHandler();
   if (err)
-    return nsEventStatus_eIgnore;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   domNode->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   if (!doc)
-    return nsEventStatus_eIgnore;
+    return NS_ERROR_FAILURE;
   doc->AddMutationObserver(this);
   mDocument = doc;
 
@@ -384,14 +347,7 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
   // The parent takes ownership.
   aParentWindow->SetMenuBar(this);
   
-  return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus 
-nsMenuBarX::MenuDestruct(const nsMenuEvent & aMenuEvent)
-{
-  return nsEventStatus_eIgnore;
+  return NS_OK;
 }
 
 

@@ -55,7 +55,6 @@ EXPORTS		= \
 		nsEvent.h \
 		nsIMouseListener.h \
 		nsIEventListener.h \
-		nsIMenuListener.h \
 		nsWidgetsCID.h \
 		nsILookAndFeel.h \
 		nsIPluginWidget.h \
