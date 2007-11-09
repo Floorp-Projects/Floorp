@@ -13218,6 +13218,8 @@ nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
   }
 }
 
+#define RESTYLE_ARRAY_STACKSIZE 128
+
 void
 nsCSSFrameConstructor::ProcessPendingRestyles()
 {
@@ -13229,17 +13231,18 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   
   NS_PRECONDITION(mDocument, "No document?  Pshaw!\n");
 
-  nsCSSFrameConstructor::RestyleEnumerateData* restylesToProcess =
-    new nsCSSFrameConstructor::RestyleEnumerateData[count];
+  // Use the stack if we can, otherwise fall back on heap-allocation.
+  nsAutoTArray<RestyleEnumerateData, RESTYLE_ARRAY_STACKSIZE> restyleArr;
+  RestyleEnumerateData* restylesToProcess = restyleArr.AppendElements(count);
+  
   if (!restylesToProcess) {
     return;
   }
 
-  nsCSSFrameConstructor::RestyleEnumerateData* lastRestyle = restylesToProcess;
+  RestyleEnumerateData* lastRestyle = restylesToProcess;
   mPendingRestyles.Enumerate(CollectRestyles, &lastRestyle);
 
-  NS_ASSERTION(lastRestyle - restylesToProcess ==
-               PRInt32(count),
+  NS_ASSERTION(lastRestyle - restylesToProcess == PRInt32(count),
                "Enumeration screwed up somehow");
 
   // Clear the hashtable so we don't end up trying to process a restyle we're
@@ -13250,16 +13253,13 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // processing restyles
   BeginUpdate();
 
-  for (nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
-         restylesToProcess;
+  for (RestyleEnumerateData* currentRestyle = restylesToProcess;
        currentRestyle != lastRestyle;
        ++currentRestyle) {
     ProcessOneRestyle(currentRestyle->mContent,
                       currentRestyle->mRestyleHint,
                       currentRestyle->mChangeHint);
   }
-
-  delete [] restylesToProcess;
 
   EndUpdate();
 
