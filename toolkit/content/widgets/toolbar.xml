@@ -70,6 +70,11 @@
   </binding>
   
   <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
+    <content>
+      <xul:hbox flex="1">
+        <children/>
+      </xul:hbox>
+    </content>
     <implementation implements="nsIAccessibleProvider">
       <property name="accessibleType" readonly="true">
         <getter>
