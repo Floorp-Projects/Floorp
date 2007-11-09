@@ -42,7 +42,6 @@
 #include "nsIMenuItem.h"
 #include "nsString.h"
 #include "nsIChangeManager.h"
-#include "nsWeakReference.h"
 #include "nsIWidget.h"
 #include "nsAutoPtr.h"
 
@@ -56,8 +55,7 @@ class nsMenuItemIconX;
  */
 
 class nsMenuItemX : public nsIMenuItem,
-                    public nsIChangeObserver,
-                    public nsSupportsWeakReference
+                    public nsIChangeObserver
 {
 public:
   nsMenuItemX();

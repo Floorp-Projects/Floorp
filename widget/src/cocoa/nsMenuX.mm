@@ -83,7 +83,7 @@ static PRBool gConstructingMenu = PR_FALSE;
 static NS_DEFINE_CID(kMenuCID,     NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
-NS_IMPL_ISUPPORTS3(nsMenuX, nsIMenu, nsIChangeObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS2(nsMenuX, nsIMenu, nsIChangeObserver)
 
 
 nsMenuX::nsMenuX()
