@@ -492,10 +492,14 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       PRUint32 naturalRole; // The natural role is the role that this type of element normally has
       finalFocusAccessible->GetRole(&naturalRole);
       if (role != naturalRole) { // Must be a DHTML menuitem
-        mCurrentARIAMenubar =
+        nsCOMPtr<nsIAccessible> menuBarAccessible =
           nsAccUtils::GetAncestorWithRole(finalFocusAccessible, nsIAccessibleRole::ROLE_MENUBAR);
-        if (mCurrentARIAMenubar) {
-          nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START, mCurrentARIAMenubar);
+        nsCOMPtr<nsIAccessNode> menuBarAccessNode = do_QueryInterface(menuBarAccessible);
+        if (menuBarAccessNode) {
+          menuBarAccessNode->GetDOMNode(getter_AddRefs(mCurrentARIAMenubar));
+          if (mCurrentARIAMenubar) {
+            nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START, menuBarAccessible);
+          }
         }
       }
     }
