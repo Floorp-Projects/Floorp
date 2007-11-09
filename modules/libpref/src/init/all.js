@@ -172,9 +172,28 @@ pref("browser.frames.enabled", true);
 // form submission
 pref("browser.forms.submit.backwards_compatible", true);
 
+// xxxbsmedberg more toolkit prefs?
+// Tab browser preferences.
+pref("browser.tabs.autoHide", true);
+pref("browser.tabs.forceHide", false);
+pref("browser.tabs.warnOnClose", true);
+pref("browser.tabs.warnOnCloseOther", true);
+pref("browser.tabs.warnOnOpen", true);
+pref("browser.tabs.maxOpenBeforeWarn", 15);
+// 0 = append, 1 = replace
+pref("browser.tabs.loadGroup", 1);
+
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
+
+// lets new tab/window load something different than first window
+// -1 - use navigator startup preference
+//  0 - loads blank page
+//  1 - loads home page
+//  2 - loads last page visited
+pref("browser.tabs.loadOnNewTab", 0);
+pref("browser.windows.loadOnNewWindow", 1);
 
 // view source
 pref("view_source.syntax_highlight", true);
