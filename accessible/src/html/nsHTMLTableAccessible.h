@@ -54,10 +54,10 @@ public:
 
 class nsITableLayout;
 
-// XXX For now debugging descriptions are always on via SHOW_LAYOUT_HEURISTIC
-// This will allow release trunk builds to be used by testers to refine the algorithm
-// Change to |#define SHOW_LAYOUT_HEURISTIC DEBUG| before final release
-#define SHOW_LAYOUT_HEURISTIC
+// To turn on table debugging descriptions define SHOW_LAYOUT_HEURISTIC
+// This allow release trunk builds to be used by testers to refine the
+// data vs. layout heuristic
+// #define SHOW_LAYOUT_HEURISTIC
 
 class nsHTMLTableAccessible : public nsAccessibleWrap,
                               public nsIAccessibleTable
