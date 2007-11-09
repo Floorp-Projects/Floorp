@@ -4261,7 +4261,10 @@
     !insertmacro CanWriteToInstallDir
     !insertmacro CheckDiskSpace
     !insertmacro GetLongPath
+
+!ifndef NO_INSTDIR_FROM_REG
     !insertmacro GetSingleInstallPath
+!endif
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -4270,6 +4273,7 @@
     Function PreDirectoryCommon
       Push $R9
 
+!ifndef NO_INSTDIR_FROM_REG
       SetShellVarContext all      ; Set SHCTX to HKLM
       ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
@@ -4281,6 +4285,7 @@
       fix_install_dir:
       StrCmp "$R9" "false" +2 +1
       StrCpy $INSTDIR "$R9"
+!endif
 
       IfFileExists "$INSTDIR" +1 check_install_dir
 
