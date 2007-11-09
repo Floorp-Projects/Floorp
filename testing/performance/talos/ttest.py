@@ -78,6 +78,7 @@ RESULTS_REGEX = re.compile('__start_report(.*)__end_report',
 # Regular expression to get stats for page load test (Tp) - should go away once data passing is standardized
 RESULTS_TP_REGEX = re.compile('__start_tp_report(.*)__end_tp_report',
                       re.DOTALL | re.MULTILINE)
+RESULTS_GENERIC = re.compile('(.*)', re.DOTALL | re.MULTILINE)
 RESULTS_REGEX_FAIL = re.compile('__FAIL(.*)__FAIL', re.DOTALL|re.MULTILINE)
 
 
@@ -184,6 +185,10 @@ def runTest(browser_config, test_config):
         browser_results += match.group(1)
         print "FAIL: " + match.group(1)
         break
+      match = RESULTS_GENERIC.search(current_output)
+      if match:
+        if match.group(1) != '':
+          utils.noisy(match.group(1))
 
     if total_time > timeout:
       print "FAIL: timeout from test"
