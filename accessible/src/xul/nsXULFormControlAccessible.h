@@ -163,6 +163,8 @@ public:
 
   nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
+  NS_DECL_ISUPPORTS_INHERITED
+
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetRole(PRUint32 *aRole);

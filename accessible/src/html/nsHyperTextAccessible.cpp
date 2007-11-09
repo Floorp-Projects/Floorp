@@ -91,10 +91,10 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
       return NS_OK;
     }
 
-    PRUint32 role = Role(this);
-    if (role == nsIAccessibleRole::ROLE_GRAPHIC ||
-        role == nsIAccessibleRole::ROLE_IMAGE_MAP ||
-        role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
+    if (mRoleMapEntry &&
+        (mRoleMapEntry->role == nsIAccessibleRole::ROLE_GRAPHIC ||
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_IMAGE_MAP)) {
+      // ARIA roles that these interfaces are not appropriate for
       return nsAccessible::QueryInterface(aIID, aInstancePtr);
     }
 
@@ -105,15 +105,6 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     }
 
     if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperText))) {
-      if (role == nsIAccessibleRole::ROLE_ENTRY ||
-          role == nsIAccessibleRole::ROLE_PASSWORD_TEXT) {
-        nsCOMPtr<nsIEditor> editor;
-        GetAssociatedEditor(getter_AddRefs(editor));
-        nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
-        if (peditor) {
-          return NS_ERROR_NO_INTERFACE; // No embedded objects ever in plain text
-        }
-      }
       *aInstancePtr = static_cast<nsIAccessibleHyperText*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
