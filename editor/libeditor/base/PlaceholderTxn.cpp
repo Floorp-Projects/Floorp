@@ -150,7 +150,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
         mIMETextTxn->Merge(otherTxn, &didMerge);
         if (!didMerge)
         {
-          // it wouldn't merge.  Earlier IME txn is already commited and will 
+          // it wouldn't merge.  Earlier IME txn is already committed and will
           // not absorb further IME txns.  So just stack this one after it
           // and remember it as a candidate for further merges.
           mIMETextTxn =otherTxn;
