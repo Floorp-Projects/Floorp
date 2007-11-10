@@ -89,7 +89,7 @@ loop. The data which was left at the time of interruption will be processed
 the next time OnDataAvailable is called. If the parser has received its final
 chunk of data then OnDataAvailable will no longer be called by the networking
 module, so the parser will schedule a nsParserContinueEvent which will call
-the parser to process the  remaining data after returning to the event loop.
+the parser to process the remaining data after returning to the event loop.
 If the parser is interrupted while processing the remaining data it will
 schedule another ParseContinueEvent. The processing of data followed by
 scheduling of the continue events will proceed until either:
