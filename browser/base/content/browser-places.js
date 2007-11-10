@@ -52,6 +52,9 @@ var PlacesCommandHook = {
   get panel() {
     delete this.panel;
     var element = document.getElementById("editBookmarkPanel");
+    // initially the panel is hidden
+    // to avoid impacting startup / new window performance
+    element.hidden = false;
     element.addEventListener("popuphiding", this, false);
     element.addEventListener("keypress", this, true);
     return this.panel = element;
