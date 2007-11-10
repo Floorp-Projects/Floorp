@@ -1612,6 +1612,9 @@ public:
    * need to be repainted.
    *
    * @param aDamageRect is in the frame's local coordinate space
+   * @param aImmediate repaint now if true, repaint later if false.
+   *   In case it's true, pending notifications will be flushed which
+   *   could cause frames to be deleted (including |this|).
    */
   void Invalidate(const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE);
 
@@ -1629,6 +1632,9 @@ public:
    * 
    * @param aForChild if the invalidation is coming from a child frame, this
    * is the frame; otherwise, this is null.
+   * @param aImmediate repaint now if true, repaint later if false.
+   *   In case it's true, pending notifications will be flushed which
+   *   could cause frames to be deleted (including |this|).
    */  
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,
