@@ -426,7 +426,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
           contentOffset += runLength;
         } // if (runLength < fragmentLength)
         else {
-          frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
           PRInt32 newIndex = 0;
           mContentToFrameIndex.Get(content, &newIndex);
           if (newIndex > frameIndex) {
@@ -443,6 +442,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
             lineOffset += temp;
             frameIndex = newIndex;
           }
+          frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
         }
       } // isTextFrame
       else {
