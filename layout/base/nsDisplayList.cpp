@@ -250,7 +250,7 @@ nsDisplayItem::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayList::FlattenTo(nsVoidArray* aElements) {
+nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
   nsDisplayItem* item;
   while ((item = RemoveBottom()) != nsnull) {
     if (item->GetType() == nsDisplayItem::TYPE_WRAPLIST) {
@@ -265,17 +265,16 @@ nsDisplayList::FlattenTo(nsVoidArray* aElements) {
 void
 nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
                                   nsRegion* aVisibleRegion) {
-  nsVoidArray elements;
+  nsAutoTArray<nsDisplayItem*, 512> elements;
   FlattenTo(&elements);
-  
-  for (PRInt32 i = elements.Count() - 1; i >= 0; --i) {
-    nsDisplayItem* item = static_cast<nsDisplayItem*>(elements.ElementAt(i));
-    nsDisplayItem* belowItem = i < 1 ? nsnull :
-      static_cast<nsDisplayItem*>(elements.ElementAt(i - 1));
+
+  for (PRInt32 i = elements.Length() - 1; i >= 0; --i) {
+    nsDisplayItem* item = elements[i];
+    nsDisplayItem* belowItem = i < 1 ? nsnull : elements[i - 1];
 
     if (belowItem && item->TryMerge(aBuilder, belowItem)) {
       belowItem->~nsDisplayItem();
-      elements.ReplaceElementAt(item, i - 1);
+      elements.ReplaceElementsAt(i - 1, 1, item);
       continue;
     }
     
