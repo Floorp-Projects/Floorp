@@ -9927,8 +9927,14 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
   }
 
   if (ancestor != aFrame) {
+    // Wrap this in a DEFERRED view update batch so we don't try to
+    // flush out layout here
+
+    nsIViewManager* viewManager = presContext->GetViewManager();
+    viewManager->BeginUpdateViewBatch();  
     ApplyRenderingChangeToTree(presContext, ancestor,
                                nsChangeHint_RepaintFrame);
+    viewManager->EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
   }
 }
 
