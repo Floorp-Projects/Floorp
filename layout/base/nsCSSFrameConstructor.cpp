@@ -1189,7 +1189,7 @@ public:
    * @param aFrameItems the list to add in-flow frames to
    * @param aStyleDisplay the display struct for aNewFrame
    * @param aContent the content pointer for aNewFrame
-   * @param aStyleContext the style context of aNewFrame
+   * @param aStyleContext the style context resolved for aContent
    * @param aParentFrame the parent frame for the content if it were in-flow
    * @param aCanBePositioned pass false if the frame isn't allowed to be
    *        positioned
@@ -1394,6 +1394,9 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                   PRBool aInsertAfter,
                                   nsIFrame* aInsertAfterFrame)
 {
+  NS_PRECONDITION(aStyleDisplay == aNewFrame->GetStyleDisplay(),
+                  "Wrong display struct?");
+  
   // The comments in GetGeometricParent regarding root table frames
   // all apply here, unfortunately.
 
@@ -3659,7 +3662,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     aNewOuterFrame->SetInitialChildList(nsnull, aNewInnerFrame);
 
     rv = aState.AddChild(aNewOuterFrame, *frameItems, disp, aContent,
-                         outerStyleContext, parentFrame, aAllowOutOfFlow,
+                         aStyleContext, parentFrame, aAllowOutOfFlow,
                          aAllowOutOfFlow);
     if (NS_FAILED(rv)) {
       return rv;
