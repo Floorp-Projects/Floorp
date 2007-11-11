@@ -998,7 +998,10 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
 static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
 static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
-static const char js_relimit_option_str[] = JS_OPTIONS_DOT_STR "relimit";
+static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
+#ifdef JS_GC_ZEAL
+static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
+#endif
 
 int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -1046,6 +1049,13 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     // Save the new defaults for the next page load (InitContext).
     context->mDefaultJSOptions = newDefaultJSOptions;
   }
+
+#ifdef JS_GC_ZEAL
+  PRInt32 zeal = nsContentUtils::GetIntPref(js_zeal_option_str, -1);
+  if (zeal >= 0)
+    ::JS_SetGCZeal(context->mContext, (PRUint8)zeal);
+#endif
+
   return 0;
 }
 
