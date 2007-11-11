@@ -104,6 +104,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFocusController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPopupNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPopupEvent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP
@@ -613,3 +614,20 @@ nsFocusController::SetPopupNode(nsIDOMNode* aNode)
   mPopupNode = aNode;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsFocusController::GetPopupEvent(nsIDOMEvent** aEvent)
+{
+  *aEvent = mPopupEvent;
+  NS_IF_ADDREF(*aEvent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFocusController::SetPopupEvent(nsIDOMEvent* aEvent)
+{
+  mPopupEvent = aEvent;
+  return NS_OK;
+}
+
+  
