@@ -277,7 +277,8 @@ function isTest(filename, pattern)
 
   return filename.indexOf("test_") > -1 &&
          filename.indexOf(".js") == -1 &&
-         filename.indexOf(".css") == -1;
+         filename.indexOf(".css") == -1 &&
+         filename.substring(filename.length - 9) != "^headers^";
 }
 
 /**
