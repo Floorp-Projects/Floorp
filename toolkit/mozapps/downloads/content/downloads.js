@@ -98,7 +98,7 @@ let gStr = {
 
 // base query used to display download items, use replaceInsert to set WHERE
 let gBaseQuery = "SELECT id, target, name, source, state, startTime, " +
-                        "referrer, currBytes, maxBytes " +
+                        "endTime, referrer, currBytes, maxBytes " +
                  "FROM moz_downloads " +
                  "WHERE #1 " +
                  "ORDER BY endTime ASC, startTime ASC";
@@ -115,7 +115,8 @@ function fireEventForElement(aElement, aEventType)
 }
 
 function createDownloadItem(aID, aFile, aTarget, aURI, aState, aProgress,
-                            aStartTime, aReferrer, aCurrBytes, aMaxBytes)
+                            aStartTime, aEndTime, aReferrer, aCurrBytes,
+                            aMaxBytes)
 {
   var dl = document.createElement("richlistitem");
   dl.setAttribute("type", "download");
@@ -128,6 +129,7 @@ function createDownloadItem(aID, aFile, aTarget, aURI, aState, aProgress,
   dl.setAttribute("state", aState);
   dl.setAttribute("progress", aProgress);
   dl.setAttribute("startTime", aStartTime);
+  dl.setAttribute("endTime", aEndTime);
   if (aReferrer)
     dl.setAttribute("referrer", aReferrer);
   dl.setAttribute("currBytes", aCurrBytes);
@@ -166,6 +168,7 @@ function downloadCompleted(aDownload)
 
     // Update attributes now that we've finished
     dl.setAttribute("startTime", Math.round(aDownload.startTime / 1000));
+    dl.setAttribute("endTime", Date.now());
     dl.setAttribute("currBytes", aDownload.amountTransferred);
     dl.setAttribute("maxBytes", aDownload.size);
 
@@ -970,8 +973,8 @@ function evenOddCellAttribution()
  * @param aStmt
  *        The compiled SQL statement to build with.  This needs to have the
  *        following columns in this order to work properly:
- *        id, target, name, source, state, startTime, referrer, currBytes, and
- *        maxBytes
+ *        id, target, name, source, state, startTime, endTime, referrer,
+ *        currBytes, and maxBytes
  *        This statement should be ordered on the endTime ASC so that the end
  *        result is a list of downloads with their end time's descending.
  * @param aRef
@@ -1003,9 +1006,10 @@ function buildDownloadList(aStmt, aRef)
                                 state,
                                 percentComplete,
                                 Math.round(aStmt.getInt64(5) / 1000),
-                                aStmt.getString(6),
-                                aStmt.getInt64(7),
-                                aStmt.getInt64(8));
+                                Math.round(aStmt.getInt64(6) / 1000),
+                                aStmt.getString(7),
+                                aStmt.getInt64(8),
+                                aStmt.getInt64(9));
     if (dl)
       gDownloadsView.insertBefore(dl, aRef.nextSibling);
   }
