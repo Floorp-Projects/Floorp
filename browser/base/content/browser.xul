@@ -99,9 +99,9 @@
            onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true"/>
+    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
 
-    <panel id="editBookmarkPanel" orient="vertical">
+    <panel id="editBookmarkPanel" orient="vertical" hidden="true">
       <vbox id="editBookmarkPanelContent" flex="1"/>
       <hbox flex="1">
         <spacer flex="1"/>
