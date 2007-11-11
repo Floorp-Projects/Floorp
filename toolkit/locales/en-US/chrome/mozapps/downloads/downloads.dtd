@@ -1,13 +1,7 @@
 <!ENTITY window.width                     "400">
 <!ENTITY window.height                    "300"> 
 
-<!ENTITY canceled.label                   "Canceled">
-
 <!ENTITY starting.label                   "Starting...">
-<!ENTITY failed.label                     "Failed">
-
-<!-- 'Parental Controls' label should be capitalized -->
-<!ENTITY blocked.label                    "Blocked by Parental Controls">
 <!ENTITY scanning.label                   "Scanning for viruses...">
 
 <!ENTITY downloads.title                  "Downloads">

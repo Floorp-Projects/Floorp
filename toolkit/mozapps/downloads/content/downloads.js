@@ -86,6 +86,9 @@ let gStr = {
   doneStatus: "doneStatus",
   doneSize: "doneSize",
   doneSizeUnknown: "doneSizeUnknown",
+  stateFailed: "stateFailed",
+  stateCanceled: "stateCanceled",
+  stateBlocked: "stateBlocked",
 
   units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
 
@@ -817,6 +820,9 @@ function updateStatus(aItem, aDownload) {
 
       break;
     case nsIDM.DOWNLOAD_FINISHED:
+    case nsIDM.DOWNLOAD_FAILED:
+    case nsIDM.DOWNLOAD_CANCELED:
+    case nsIDM.DOWNLOAD_BLOCKED:
       let (stateSize = {}) {
         stateSize[nsIDM.DOWNLOAD_FINISHED] = function() {
           // Display the file size, but show "Unknown" for negative sizes
@@ -829,6 +835,9 @@ function updateStatus(aItem, aDownload) {
           }
           return sizeText;
         };
+        stateSize[nsIDM.DOWNLOAD_FAILED] = function() gStr.stateFailed;
+        stateSize[nsIDM.DOWNLOAD_CANCELED] = function() gStr.stateCanceled;
+        stateSize[nsIDM.DOWNLOAD_BLOCKED] = function() gStr.stateBlocked;
 
         // Insert 1 is the download size or download state
         status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
