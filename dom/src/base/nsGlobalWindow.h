@@ -847,7 +847,6 @@ protected:
   nsresult SetHrefWithContext(JSContext* cx, const nsAString& aHref,
                               PRBool aReplace);
 
-  nsresult GetSourceURL(JSContext* cx, nsIURI** sourceURL);
   nsresult GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL);
   nsresult GetSourceDocument(JSContext* cx, nsIDocument** aDocument);
 
