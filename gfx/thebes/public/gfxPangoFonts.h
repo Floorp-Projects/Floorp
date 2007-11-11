@@ -142,7 +142,8 @@ protected:
      * but stored in UTF16 format)
      */
     void InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
-                     PRUint32 aUTF8Length, PRBool aTake8BitPath);
+                     PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
+                     PRBool aTake8BitPath);
 
     // Returns NS_ERROR_FAILURE if there's a missing glyph
     nsresult SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
@@ -154,7 +155,8 @@ protected:
                               const gchar *aUTF8, PRUint32 aUTF8Length,
                               PRUint32 *aUTF16Offset);
     void CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
-                                  const gchar *aUTF8, PRUint32 aUTF8Length);
+                                  const gchar *aUTF8, PRUint32 aUTF8Length,
+                                  PRUint32 aUTF8HeaderLength);
 #if defined(ENABLE_FAST_PATH_8BIT) || defined(ENABLE_FAST_PATH_ALWAYS)
     PRBool CanTakeFastPath(PRUint32 aFlags);
     nsresult CreateGlyphRunsFast(gfxTextRun *aTextRun,
