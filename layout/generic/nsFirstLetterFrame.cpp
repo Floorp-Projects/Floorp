@@ -307,6 +307,9 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   // Create a continuation or remove existing continuations based on
   // the reflow completion status.
   if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
+    if (aReflowState.mLineLayout) {
+      aReflowState.mLineLayout->SetFirstLetterStyleOK(PR_FALSE);
+    }
     nsIFrame* kidNextInFlow = kid->GetNextInFlow();
     if (kidNextInFlow) {
       // Remove all of the childs next-in-flows
