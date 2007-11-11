@@ -199,7 +199,8 @@
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                      crop="center" class="name"/>
           <xul:spacer flex="1"/>
-          <xul:label value="&done.label;" class="status"/>
+          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
+                     crop="right" class="status"/>
         </xul:vbox>
         <xul:vbox pack="center">
           <xul:hbox>

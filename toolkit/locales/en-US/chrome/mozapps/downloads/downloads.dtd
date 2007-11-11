@@ -1,7 +1,6 @@
 <!ENTITY window.width                     "400">
 <!ENTITY window.height                    "300"> 
 
-<!ENTITY done.label                       "Done">
 <!ENTITY canceled.label                   "Canceled">
 
 <!ENTITY starting.label                   "Starting...">

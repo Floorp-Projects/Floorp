@@ -83,6 +83,10 @@ let gStr = {
   timeSecondsLeft: "timeSecondsLeft",
   timeFewSeconds: "timeFewSeconds",
   timeUnknown: "timeUnknown",
+  doneStatus: "doneStatus",
+  doneSize: "doneSize",
+  doneSizeUnknown: "doneSizeUnknown",
+
   units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
 
   fileExecutableSecurityWarningTitle: "fileExecutableSecurityWarningTitle",
@@ -159,6 +163,8 @@ function downloadCompleted(aDownload)
 
     // Update attributes now that we've finished
     dl.setAttribute("startTime", Math.round(aDownload.startTime / 1000));
+    dl.setAttribute("currBytes", aDownload.amountTransferred);
+    dl.setAttribute("maxBytes", aDownload.size);
 
     // If we are displaying search results, we do not want to add it to the list
     // of completed downloads
@@ -807,6 +813,53 @@ function updateStatus(aItem, aDownload) {
 
         // Insert 4 is the time remaining
         status = replaceInsert(status, 4, remain);
+      }
+
+      break;
+    case nsIDM.DOWNLOAD_FINISHED:
+      let (stateSize = {}) {
+        stateSize[nsIDM.DOWNLOAD_FINISHED] = function() {
+          // Display the file size, but show "Unknown" for negative sizes
+          let fileSize = Number(aItem.getAttribute("maxBytes"));
+          let sizeText = gStr.doneSizeUnknown;
+          if (fileSize >= 0) {
+            let [size, unit] = convertByteUnits(fileSize);
+            sizeText = replaceInsert(gStr.doneSize, 1, size);
+            sizeText = replaceInsert(sizeText, 2, unit);
+          }
+          return sizeText;
+        };
+
+        // Insert 1 is the download size or download state
+        status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
+      }
+
+      let (displayHost,
+           ioService = Cc["@mozilla.org/network/io-service;1"].
+                       getService(Ci.nsIIOService),
+           eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
+                         getService(Ci.nsIEffectiveTLDService)) {
+        // Get a URI that knows about its components
+        let uri = ioService.newURI(getReferrerOrSource(aItem), null, null);
+
+        try {
+          // This might fail if it's an IP address or doesn't have >1 parts
+          displayHost = eTLDService.getBaseDomain(uri);
+        } catch (e) {
+          // Default to the host name
+          displayHost = uri.host;
+        }
+
+        // Ahh! we have nothing :( Let's give the full spec (e.g., about:blank)
+        if (displayHost.length == 0)
+          displayHost = uri.spec;
+
+        // Tack on the port if it's not the default port
+        else if (uri.port != -1)
+          displayHost += ":" + uri.port;
+
+        // Insert 2 is the eTLD + 1 or other variations of the host
+        status = replaceInsert(status, 2, displayHost);
       }
 
       break;
