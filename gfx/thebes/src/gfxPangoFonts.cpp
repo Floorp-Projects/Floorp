@@ -556,6 +556,19 @@ gfxPangoFont::GetUniqueName()
  * 
  **/
 
+/**
+ * We use this to append an LTR or RTL Override character to the start of the
+ * string. This forces Pango to honour our direction even if there are neutral characters
+ * in the string.
+ */
+static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString)
+{
+    static const PRUnichar overrides[2][2] =
+      { { 0x202d, 0 }, { 0x202e, 0 }}; // LRO, RLO
+    AppendUTF16toUTF8(overrides[aIsRTL], aString);
+    return 3; // both overrides map to 3 bytes in UTF8
+}
+	
 gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
@@ -567,14 +580,17 @@ gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
 
     PRBool isRTL = run->IsRightToLeft();
     if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
+        // We don't need to send an override character here, the characters must be all LTR
         const gchar *utf8Chars = reinterpret_cast<const gchar*>(aString);
-        InitTextRun(run, utf8Chars, aLength, PR_TRUE);
+        InitTextRun(run, utf8Chars, aLength, 0, PR_TRUE);
     } else {
         // this is really gross...
         const char *chars = reinterpret_cast<const char*>(aString);
         NS_ConvertASCIItoUTF16 unicodeString(chars, aLength);
-        NS_ConvertUTF16toUTF8 utf8String(unicodeString);
-        InitTextRun(run, utf8String.get(), utf8String.Length(), PR_TRUE);
+        nsCAutoString utf8;
+        PRInt32 headerLen = AppendDirectionalIndicatorUTF8(isRTL, utf8);
+        AppendUTF16toUTF8(unicodeString, utf8);
+        InitTextRun(run, utf8.get(), utf8.Length(), headerLen, PR_TRUE);
     }
     run->FetchGlyphExtents(aParams->mContext);
     return run;
@@ -605,7 +621,9 @@ gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
 
     run->RecordSurrogates(aString);
 
-    NS_ConvertUTF16toUTF8 utf8(aString, aLength);
+    nsCAutoString utf8;
+    PRInt32 headerLen = AppendDirectionalIndicatorUTF8(run->IsRightToLeft(), utf8);
+    AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
     PRBool is8Bit = PR_FALSE;
 
 #if defined(ENABLE_FAST_PATH_8BIT)
@@ -618,21 +636,22 @@ gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
         is8Bit = (allBits & 0xFF00) == 0;
     }
 #endif
-    InitTextRun(run, utf8.get(), utf8.Length(), is8Bit);
+    InitTextRun(run, utf8.get(), utf8.Length(), headerLen, is8Bit);
     run->FetchGlyphExtents(aParams->mContext);
     return run;
 }
 
 void
 gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
-                               PRUint32 aUTF8Length, PRBool aTake8BitPath)
+                               PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
+                               PRBool aTake8BitPath)
 {
 #if defined(ENABLE_FAST_PATH_ALWAYS)
-    CreateGlyphRunsFast(aTextRun, aUTF8Text, aUTF8Length);
+    CreateGlyphRunsFast(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
 #else
 #if defined(ENABLE_FAST_PATH_8BIT)
     if (aTake8BitPath && CanTakeFastPath(aTextRun->GetFlags())) {
-        nsresult rv = CreateGlyphRunsFast(aTextRun, aUTF8Text, aUTF8Length);
+        nsresult rv = CreateGlyphRunsFast(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
         if (NS_SUCCEEDED(rv))
             return;
     }
@@ -642,7 +661,7 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
                                (aTextRun->IsRightToLeft()
                                   ? PANGO_DIRECTION_RTL : PANGO_DIRECTION_LTR));
 
-    CreateGlyphRunsItemizing(aTextRun, aUTF8Text, aUTF8Length);
+    CreateGlyphRunsItemizing(aTextRun, aUTF8Text, aUTF8Length, aUTF8HeaderLength);
 #endif
 }
 
@@ -1076,7 +1095,8 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
 
 void 
 gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
-                                            const gchar *aUTF8, PRUint32 aUTF8Length)
+                                            const gchar *aUTF8, PRUint32 aUTF8Length,
+                                            PRUint32 aUTF8HeaderLen)
 {
 
     PangoContext *context = gdk_pango_context_get ();
@@ -1116,6 +1136,14 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
 
         PRUint32 offset = item->offset;
         PRUint32 length = item->length;
+        if (offset < aUTF8HeaderLen) {
+            if (offset + length <= aUTF8HeaderLen) {
+                pango_item_free(item);
+                continue;
+            }
+            length -= aUTF8HeaderLen - offset;
+            offset = aUTF8HeaderLen;
+        }
 
         // need to append glyph runs here.
         PangoGlyphString *glyphString = pango_glyph_string_new();
