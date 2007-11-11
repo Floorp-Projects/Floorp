@@ -1292,7 +1292,7 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
     return 0;
   }
 
-  nsAutoTPtrArray<nsINode, 30> parents1, parents2;
+  nsAutoTPtrArray<nsINode, 32> parents1, parents2;
 
   // Check if either node is an attribute
   nsIAttribute* attr1 = nsnull;
@@ -1405,7 +1405,7 @@ nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
            0;
   }
 
-  nsTArray<nsINode*> parents1, parents2;
+  nsAutoTArray<nsINode*, 32> parents1, parents2;
   nsINode* node1 = aParent1;
   nsINode* node2 = aParent2;
   do {
