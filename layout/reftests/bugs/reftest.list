@@ -423,6 +423,7 @@ fails == 393655-2.html 393655-2-ref.html # Remove 'fails' when 393655 lands
 == 395130-2.html 395130-2-ref.html
 == 395331-1.xml 395331-1-ref.xml
 == 396286-1.html about:blank  # crash test
+== 397428-1.html 397428-1-ref.html
 == 398289-1.html 398289-1-ref.html
 == 398144-1.html 398144-1-ref.html
 == 398797-1a.html 398797-1-ref.html

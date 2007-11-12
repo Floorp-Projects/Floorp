@@ -1136,6 +1136,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
 
       nsTableRowFrame* lastRowThisPage = rowFrame;
       if (!rowIsOnPage) {
+        NS_ASSERTION(!contRow, "We should not have created a continuation if none of this row fits");
         if (prevRowFrame) {
           availHeight -= prevRowFrame->GetRect().YMost();
           lastRowThisPage = prevRowFrame;
@@ -1145,6 +1146,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
         else {
           // We can't push children, so let our parent reflow us again with more space
           aDesiredSize.height = rowRect.YMost();
+          aStatus = NS_FRAME_COMPLETE;
           break;
         }
       }
