@@ -9874,7 +9874,7 @@ nsDOMConstructorSH::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIDOMConstructor> is_constructor =
+    nsCOMPtr<nsIDOMDOMConstructor> is_constructor =
       do_QueryWrappedNative(wrapper);
     NS_ASSERTION(is_constructor, "How did we not get a constructor?");
   }
