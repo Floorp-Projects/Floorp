@@ -94,4 +94,52 @@ protected:
   PRPackedBool                            mAllUppercase;
 };
 
+/**
+ * So that we can reshape as necessary, we store enough information
+ * to fully rebuild the textrun contents.
+ */
+class nsTransformedTextRun : public gfxTextRun {
+public:
+  nsTransformedTextRun(const gfxTextRunFactory::Parameters* aParams,
+                       nsTransformingTextRunFactory* aFactory,
+                       gfxFontGroup* aFontGroup,
+                       const PRUnichar* aString, PRUint32 aLength,
+                       const PRUint32 aFlags, nsStyleContext** aStyles,
+                       PRBool aOwnsFactory)
+    : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags),
+      mFactory(aFactory), mOwnsFactory(aOwnsFactory)
+  {
+    PRUint32 i;
+    for (i = 0; i < aLength; ++i) {
+      mStyles.AppendElement(aStyles[i]);
+    }
+    for (i = 0; i < aParams->mInitialBreakCount; ++i) {
+      mLineBreaks.AppendElement(aParams->mInitialBreaks[i]);
+    }
+  }
+  
+  ~nsTransformedTextRun() {
+    if (mOwnsFactory) {
+      delete mFactory;
+    }
+  }
+  
+  virtual void SetCapitalization(PRUint32 aStart, PRUint32 aLength,
+                                 PRPackedBool* aCapitalization,
+                                 gfxContext* aRefContext);
+  virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                                        PRPackedBool* aBreakBefore,
+                                        gfxContext* aRefContext);
+  virtual PRBool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                               PRBool aLineBreakBefore, PRBool aLineBreakAfter,
+                               gfxFloat* aAdvanceWidthDelta,
+                               gfxContext* aRefContext);
+
+  nsTransformingTextRunFactory       *mFactory;
+  nsTArray<PRUint32>                  mLineBreaks;
+  nsTArray<nsRefPtr<nsStyleContext> > mStyles;
+  nsTArray<PRPackedBool>              mCapitalize;
+  PRPackedBool                        mOwnsFactory;
+};
+
 #endif /*NSTEXTRUNTRANSFORMATIONS_H_*/

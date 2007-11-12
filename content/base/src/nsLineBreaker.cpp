@@ -51,19 +51,41 @@ nsLineBreaker::~nsLineBreaker()
   NS_ASSERTION(mCurrentWord.Length() == 0, "Should have Reset() before destruction!");
 }
 
+static void
+SetupCapitalization(const PRUnichar* aWord, PRUint32 aLength,
+                    PRPackedBool* aCapitalization)
+{
+  // Capitalize the first non-punctuation character after a space or start
+  // of the word.
+  // The only space character a word can contain is NBSP.
+  PRBool capitalizeNextChar = PR_TRUE;
+  for (PRUint32 i = 0; i < aLength; ++i) {
+    if (capitalizeNextChar && !nsContentUtils::IsPunctuationMark(aWord[i])) {
+      aCapitalization[i] = PR_TRUE;
+      capitalizeNextChar = PR_FALSE;
+    }
+    if (aWord[i] == 0xA0 /*NBSP*/) {
+      capitalizeNextChar = PR_TRUE;
+    }
+  }
+}
+
 nsresult
 nsLineBreaker::FlushCurrentWord()
 {
+  PRUint32 length = mCurrentWord.Length();
   nsAutoTArray<PRPackedBool,4000> breakState;
-  if (!breakState.AppendElements(mCurrentWord.Length()))
+  if (!breakState.AppendElements(length))
     return NS_ERROR_OUT_OF_MEMORY;
+  
+  nsTArray<PRPackedBool> capitalizationState;
 
   if (!mCurrentWordContainsComplexChar) {
     // Just set everything internal to "no break"!
-    memset(breakState.Elements(), PR_FALSE, mCurrentWord.Length());
+    memset(breakState.Elements(), PR_FALSE, length*sizeof(PRPackedBool));
   } else {
     nsContentUtils::LineBreaker()->
-      GetJISx4051Breaks(mCurrentWord.Elements(), mCurrentWord.Length(), breakState.Elements());
+      GetJISx4051Breaks(mCurrentWord.Elements(), length, breakState.Elements());
   }
 
   PRUint32 i;
@@ -77,7 +99,8 @@ nsLineBreaker::FlushCurrentWord()
     }
     if (ti->mFlags & BREAK_SUPPRESS_INSIDE) {
       PRUint32 exclude = ti->mSinkOffset == 0 ? 1 : 0;
-      memset(breakState.Elements() + offset + exclude, PR_FALSE, ti->mLength - exclude);
+      memset(breakState.Elements() + offset + exclude, PR_FALSE,
+             (ti->mLength - exclude)*sizeof(PRPackedBool));
     }
 
     // Don't set the break state for the first character of the word, because
@@ -87,7 +110,20 @@ nsLineBreaker::FlushCurrentWord()
     if (ti->mSink) {
       ti->mSink->SetBreaks(ti->mSinkOffset + skipSet, ti->mLength - skipSet,
                            breakState.Elements() + offset + skipSet);
+
+      if (ti->mFlags & BREAK_NEED_CAPITALIZATION) {
+        if (capitalizationState.Length() == 0) {
+          if (!capitalizationState.AppendElements(length))
+            return NS_ERROR_OUT_OF_MEMORY;
+          memset(capitalizationState.Elements(), PR_FALSE, length*sizeof(PRPackedBool));
+          SetupCapitalization(mCurrentWord.Elements(), length,
+                              capitalizationState.Elements());
+        }
+        ti->mSink->SetCapitalization(ti->mSinkOffset, ti->mLength,
+                                     capitalizationState.Elements() + offset);
+      }
     }
+    
     offset += ti->mLength;
   }
 
@@ -135,11 +171,18 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
     if (!breakState.AppendElements(aLength))
       return NS_ERROR_OUT_OF_MEMORY;
   }
+  
+  nsTArray<PRPackedBool> capitalizationState;
+  if (aSink && (aFlags & BREAK_NEED_CAPITALIZATION)) {
+    if (!capitalizationState.AppendElements(aLength))
+      return NS_ERROR_OUT_OF_MEMORY;
+    memset(capitalizationState.Elements(), PR_FALSE, aLength);
+  }
 
   PRUint32 start = offset;
   PRBool noBreaksNeeded = !aSink ||
-    ((aFlags & BREAK_SUPPRESS_INITIAL) && (aFlags & BREAK_SUPPRESS_INSIDE) &&
-     !mBreakHere && !mAfterBreakableSpace && (aFlags & BREAK_SKIP_SETTING_NO_BREAKS));
+    (aFlags == (BREAK_SUPPRESS_INITIAL | BREAK_SUPPRESS_INSIDE | BREAK_SKIP_SETTING_NO_BREAKS) &&
+     !mBreakHere && !mAfterBreakableSpace);
   if (noBreaksNeeded) {
     // Skip to the space before the last word, since either the break data
     // here is not needed, or no breaks are set in the sink and there cannot
@@ -167,8 +210,8 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
     mAfterBreakableSpace = isBreakableSpace;
 
     if (isSpace) {
-      if (offset > wordStart && wordHasComplexChar) {
-        if (aSink && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
+      if (offset > wordStart && aSink) {
+        if (wordHasComplexChar && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
           // Save current start-of-word state because GetJISx4051Breaks will
           // set it to false
           PRPackedBool currentStart = breakState[wordStart];
@@ -177,9 +220,12 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
                               breakState.Elements() + wordStart);
           breakState[wordStart] = currentStart;
         }
-        wordHasComplexChar = PR_FALSE;
+        if (aFlags & BREAK_NEED_CAPITALIZATION) {
+          SetupCapitalization(aText + wordStart, offset - wordStart,
+                              capitalizationState.Elements() + wordStart);
+        }
       }
-
+      wordHasComplexChar = PR_FALSE;
       ++offset;
       if (offset >= aLength)
         break;
@@ -206,7 +252,12 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   }
 
   if (!noBreaksNeeded) {
+    // aSink must not be null
     aSink->SetBreaks(start, offset - start, breakState.Elements() + start);
+    if (aFlags & BREAK_NEED_CAPITALIZATION) {
+      aSink->SetCapitalization(start, offset - start,
+                               capitalizationState.Elements() + start);
+    }
   }
   return NS_OK;
 }
@@ -216,6 +267,14 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
                           PRUint32 aFlags, nsILineBreakSink* aSink)
 {
   NS_ASSERTION(aLength > 0, "Appending empty text...");
+
+  if (aFlags & BREAK_NEED_CAPITALIZATION) {
+    // Defer to the Unicode path if capitalization is required
+    nsAutoString str;
+    CopyASCIItoUTF16(nsDependentCString(reinterpret_cast<const char*>(aText), aLength),
+                     str);
+    return AppendText(aLangGroup, str.get(), aLength, aFlags, aSink);
+  }
 
   PRUint32 offset = 0;
 
@@ -255,8 +314,8 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
 
   PRUint32 start = offset;
   PRBool noBreaksNeeded = !aSink ||
-    ((aFlags & BREAK_SUPPRESS_INITIAL) && (aFlags & BREAK_SUPPRESS_INSIDE) &&
-     !mBreakHere && !mAfterBreakableSpace && (aFlags & BREAK_SKIP_SETTING_NO_BREAKS));
+    (aFlags == (BREAK_SUPPRESS_INITIAL | BREAK_SUPPRESS_INSIDE | BREAK_SKIP_SETTING_NO_BREAKS) &&
+     !mBreakHere && !mAfterBreakableSpace);
   if (noBreaksNeeded) {
     // Skip to the space before the last word, since either the break data
     // here is not needed, or no breaks are set in the sink and there cannot
