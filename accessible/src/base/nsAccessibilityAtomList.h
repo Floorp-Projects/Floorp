@@ -126,6 +126,7 @@ ACCESSIBILITY_ATOM(select, "select")
 ACCESSIBILITY_ATOM(select1, "select1") // XForms
 ACCESSIBILITY_ATOM(svg, "svg")
 ACCESSIBILITY_ATOM(table, "table")
+ACCESSIBILITY_ATOM(tabpanels, "tabpanels") // XUL
 ACCESSIBILITY_ATOM(tbody, "tbody")
 ACCESSIBILITY_ATOM(td, "td")
 ACCESSIBILITY_ATOM(th, "th")
@@ -158,6 +159,7 @@ ACCESSIBILITY_ATOM(hidden, "hidden")   // XUL tree columns
 ACCESSIBILITY_ATOM(href, "href")
 ACCESSIBILITY_ATOM(increment, "increment") // XUL
 ACCESSIBILITY_ATOM(lang, "lang")
+ACCESSIBILITY_ATOM(linkedPanel, "linkedpanel") // XUL
 ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL
 ACCESSIBILITY_ATOM(minpos, "minpos") // XUL
 ACCESSIBILITY_ATOM(name, "name")
