@@ -782,12 +782,8 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
   // The issue here is that for a 'height' of 'auto' the reflow state
   // code won't know how to calculate the containing block height
   // because it's calculated bottom up. So we use our own computed
-  // size as the dimensions. We don't really want to do this for the
-  // initial containing block
+  // size as the dimensions.
   nsIFrame* frame = aReflowState.frame;
-  if (nsLayoutUtils::IsInitialContainingBlock(frame)) {
-    return nsSize(-1, -1);
-  }
 
   nsSize cbSize(aFrameSize);
     // Containing block is relative to the padding edge
@@ -823,13 +819,9 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
         nsBoxLayoutState dummyState(aLastRS->frame->PresContext(),
                                     aLastRS->rendContext);
         scrollbars = scrollFrame->GetDesiredScrollbarSizes(&dummyState);
-        // XXX We should account for the horizontal scrollbar too --- but currently
-        // nsGfxScrollFrame assumes nothing depends on the presence (or absence) of
-        // a horizontal scrollbar, so accounting for it would create incremental
-        // reflow bugs.
-        //if (!lastButOneRS->mFlags.mAssumingHScrollbar) {
+        if (!lastButOneRS->mFlags.mAssumingHScrollbar) {
           scrollbars.top = scrollbars.bottom = 0;
-        //}
+        }
         if (!lastButOneRS->mFlags.mAssumingVScrollbar) {
           scrollbars.left = scrollbars.right = 0;
         }
