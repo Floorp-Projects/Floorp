@@ -183,12 +183,12 @@ public:
 
     PRBool IsDOMClass()
     {
-        return GetFlags() & nsIClassInfo::DOM_OBJECT;
+        return !!(GetFlags() & nsIClassInfo::DOM_OBJECT);
     }
 
     PRBool IsContentNode()
     {
-        return GetFlags() & nsIClassInfo::CONTENT_NODE;
+        return !!(GetFlags() & nsIClassInfo::CONTENT_NODE);
     }
 
     const char* GetName()
@@ -327,7 +327,7 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     if (NS_SUCCEEDED(rv) && !result &&
         (sourcePort == -1 || targetPort == -1))
     {
-        NS_ENSURE_STATE(sIOService);
+        NS_ENSURE_TRUE(sIOService, PR_FALSE);
 
         PRInt32 defaultPort;
         nsCOMPtr<nsIProtocolHandler> protocolHandler;
