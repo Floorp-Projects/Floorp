@@ -1644,8 +1644,10 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
     if (bodyElement) {
       *aElement = bodyElement;
       NS_ADDREF(*aElement);
-      return NS_OK;
     }
+    // Because of IE compatibility, return null when html document doesn't have
+    // a body.
+    return NS_OK;
   }
 
   // If we couldn't get a BODY, return the root element.
