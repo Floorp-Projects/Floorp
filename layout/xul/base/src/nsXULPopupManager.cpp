@@ -435,15 +435,15 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   if (!item)
     return;
 
-  // install keyboard event listeners for navigating menus, but only if
-  // another menu isn't already open.
-  // The ignorekeys attribute may be used to disable adding these event listeners
-  // for menus that want to handle their own keyboard events.
-  if (ismenu) {
-    if (aPopup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ignorekeys,
-                             nsGkAtoms::_true, eCaseMatters))
-      item->SetIgnoreKeys(PR_TRUE);
+  // install keyboard event listeners for navigating menus. For panels, the
+  // escape key may be used to close the panel. However, the ignorekeys
+  // attribute may be used to disable adding these event listeners for popups
+  // that want to handle their own keyboard events.
+  if (aPopup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ignorekeys,
+                           nsGkAtoms::_true, eCaseMatters))
+    item->SetIgnoreKeys(PR_TRUE);
 
+  if (ismenu) {
     // if the menu is on a menubar, use the menubar's listener instead
     nsIFrame* parent = aPopupFrame->GetParent();
     if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
@@ -1648,7 +1648,8 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
 nsresult
 nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  if (mCurrentMenu) {
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  if (item && item->PopupType() == ePopupTypeMenu) {
     aKeyEvent->StopPropagation();
     aKeyEvent->PreventDefault();
   }
@@ -1660,7 +1661,8 @@ nsresult
 nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   // don't do anything if a menu isn't open
-  if (!mCurrentMenu)
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  if (!item || item->PopupType() != ePopupTypeMenu)
     return NS_OK;
 
   PRInt32 menuAccessKey = -1;
@@ -1724,6 +1726,17 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
   PRUint32 theChar;
   keyEvent->GetKeyCode(&theChar);
 
+  // Escape should close panels, but the other keys should have no effect.
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  if (item && item->PopupType() != ePopupTypeMenu) {
+    if (theChar == NS_VK_ESCAPE) {
+      HidePopup(item->Content(), PR_FALSE, PR_FALSE, PR_FALSE);
+      aKeyEvent->StopPropagation();
+      aKeyEvent->PreventDefault();
+    }
+    return NS_OK;
+  }
+
   if (theChar == NS_VK_LEFT ||
       theChar == NS_VK_RIGHT ||
       theChar == NS_VK_UP ||
@@ -1737,7 +1750,6 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     // check if a menubar is active and inform it that a menu closed. Even
     // though in this latter case, a menu didn't actually close, the effect
     // ends up being the same. Similar for the tab key below.
-    nsMenuChainItem* item = GetTopVisibleMenu();
     if (item)
       HidePopup(item->Content(), PR_FALSE, PR_FALSE, PR_FALSE);
     else if (mActiveMenuBar)
