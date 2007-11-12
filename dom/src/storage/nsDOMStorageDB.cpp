@@ -253,7 +253,7 @@ nsDOMStorageDB::GetKeyValue(const nsAString& aDomain,
     rv = NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  *aSecure = (PRBool)secureInt;
+  *aSecure = !!secureInt;
 
   return rv;
 }
