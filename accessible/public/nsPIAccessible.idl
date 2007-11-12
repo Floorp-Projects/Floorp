@@ -40,8 +40,12 @@
 
 interface nsIAccessible;
 interface nsIAccessibleEvent;
+%{C++
+   struct nsRoleMapEntry;
+%}
+[ptr] native nsRoleMapEntryPtr(nsRoleMapEntry);
 
-[uuid(af05f83c-6fd2-48c1-b1c3-811857472421)]
+[uuid(2d552ed0-3f38-4c7f-94c1-419de4d693ed)]
 interface nsPIAccessible : nsISupports
 {
   /**
@@ -107,5 +111,13 @@ interface nsPIAccessible : nsISupports
    */
   void appendTextTo(out AString aString, in unsigned long aStartOffset,
                     in unsigned long aLength);
+                    
+  /**
+   * Set the ARIA role map entry for a new accessible.
+   * For a newly created accessible, specify which role map entry should be used.
+   * @param aRoleMapEntry The ARIA nsRoleMapEntry* for the accessible, or 
+   *                      nsnull if none.
+   */
+   void setRoleMapEntry(in nsRoleMapEntryPtr aRoleMapEntry);
 };
 

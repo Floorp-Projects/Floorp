@@ -85,6 +85,7 @@
 #include "nsIMutableArray.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+#include "nsWhitespaceTokenizer.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -270,6 +271,12 @@ nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAcces
 //-----------------------------------------------------
 nsAccessible::~nsAccessible()
 {
+}
+
+NS_IMETHODIMP nsAccessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
+{
+  mRoleMapEntry = aRoleMapEntry;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::GetName(nsAString& aName)
@@ -485,27 +492,6 @@ NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
 {
   mNextSibling = aNextSibling? aNextSibling: DEAD_END_ACCESSIBLE;
   return NS_OK;
-}
-
-NS_IMETHODIMP nsAccessible::Init()
-{
-  nsIContent *content = GetRoleContent(mDOMNode);
-  nsAutoString roleString;
-  if (content && GetARIARole(content, roleString)) {
-    nsCString utf8Role = NS_ConvertUTF16toUTF8(roleString); // For easy comparison
-    ToLowerCase(utf8Role);
-    PRUint32 index;
-    for (index = 0; nsARIAMap::gWAIRoleMap[index].roleString; index ++) {
-      if (utf8Role.Equals(nsARIAMap::gWAIRoleMap[index].roleString)) {
-        break; // The dynamic role attribute maps to an entry in our table
-      }
-    }
-    // Always use some entry if there is a role string
-    // If no match, we use the last entry which maps to ROLE_NOTHING
-    mRoleMapEntry = &nsARIAMap::gWAIRoleMap[index];
-  }
-
-  return nsAccessNodeWrap::Init();
 }
 
 nsIContent *nsAccessible::GetRoleContent(nsIDOMNode *aDOMNode)
@@ -2042,7 +2028,23 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   // through this attribute
   nsAutoString xmlRole;
   if (GetARIARole(content, xmlRole)) {
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRole, oldValueUnused);          
+    nsWhitespaceTokenizer tokenizer(xmlRole);
+    nsAutoString trimmedRoles;
+    while (tokenizer.hasMoreTokens()) {
+      // Trim off prefixes for WAI roles so they are easier for ATs to recognize --
+      // they will always appear the same, and the AT need not understand prefixes
+      const char *rawRole = NS_LossyConvertUTF16toASCII(tokenizer.nextToken()).get();
+      const char *trimmedRole = nsAccUtils::TrimmedRole(rawRole, content);
+      if (*trimmedRole) {
+        if (!trimmedRoles.IsEmpty()) {
+          trimmedRoles.AppendLiteral(" ");
+        }
+        trimmedRoles.Append(NS_ConvertASCIItoUTF16(trimmedRole));
+      }
+    } 
+    if (!trimmedRoles.IsEmpty()) {
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"),  trimmedRoles, oldValueUnused);          
+    }
   }
 
   // Make sure to keep these two arrays in sync
