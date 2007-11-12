@@ -1695,34 +1695,8 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
 NS_IMETHODIMP
 nsHTMLDocument::SetDomain(const nsAString& aDomain)
 {
-  // Check new domain - must be a superdomain of the current host
-  // For example, a page from foo.bar.com may set domain to bar.com,
-  // but not to ar.com, baz.com, or fi.foo.bar.com.
   if (aDomain.IsEmpty())
     return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
-  nsAutoString current;
-  if (NS_FAILED(GetDomain(current)))
-    return NS_ERROR_FAILURE;
-  PRBool ok = current.Equals(aDomain);
-  if (current.Length() > aDomain.Length() &&
-      StringEndsWith(current, aDomain, nsCaseInsensitiveStringComparator()) &&
-      current.CharAt(current.Length() - aDomain.Length() - 1) == '.') {
-    // Using only a TLD is forbidden (bug 368700)
-    nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-    if (!tldService)
-      return NS_ERROR_NOT_AVAILABLE;
-
-    // try to get the base domain; if this works, we're ok
-    NS_ConvertUTF16toUTF8 str(aDomain);
-    nsCAutoString etld;
-    nsresult rv = tldService->GetBaseDomainFromHost(str, 0, etld);
-    ok = NS_SUCCEEDED(rv);
-  }
-  if (!ok) {
-    // Error: illegal domain
-    return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
-  }
 
   // Create new URI
   nsCOMPtr<nsIURI> uri;
@@ -1745,6 +1719,36 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   nsCOMPtr<nsIURI> newURI;
   if (NS_FAILED(NS_NewURI(getter_AddRefs(newURI), newURIString)))
     return NS_ERROR_FAILURE;
+
+  // Check new domain - must be a superdomain of the current host
+  // For example, a page from foo.bar.com may set domain to bar.com,
+  // but not to ar.com, baz.com, or fi.foo.bar.com.
+  nsCAutoString current, domain;
+  if (NS_FAILED(uri->GetHost(current)))
+    current.Truncate();
+  if (NS_FAILED(newURI->GetHost(domain)))
+    domain.Truncate();
+
+  PRBool ok = current.Equals(domain);
+  if (current.Length() > domain.Length() &&
+      StringEndsWith(current, domain) &&
+      current.CharAt(current.Length() - domain.Length() - 1) == '.') {
+    // Using only a TLD is forbidden (bug 368700)
+    nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+    if (!tldService)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    // try to get the base domain; if this works, we're ok.
+    // if we're dealing with an IP address, getting the base domain
+    // will fail, as required.
+    nsCAutoString baseDomain;
+    ok = NS_SUCCEEDED(tldService->GetBaseDomain(newURI, 0, baseDomain));
+  }
+  if (!ok) {
+    // Error: illegal domain
+    return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
+  }
 
   return NodePrincipal()->SetDomain(newURI);
 }
