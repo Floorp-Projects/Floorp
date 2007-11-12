@@ -31,7 +31,8 @@
                       xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
-        <xul:panel type="autocomplete" anonid="popup" noautofocus="true"
+        <xul:panel type="autocomplete" anonid="popup"
+                   ignorekeys="true" noautofocus="true"
                    xbl:inherits="for=id,nomatch"/>
       </xul:popupset>
       
