@@ -273,6 +273,23 @@ public:
                                 PRUint32 aCheckFlags = 0);
 
   /**
+   * Given a role string, return the role with any WAI role prefix trimmed off
+   * @param aRole  The role to start with
+   * @param aContent  What content nodes the role is set on
+   * @return          The entire role if there is no prefix that is a WAI role prefix,
+   *                  or the role without the prefix, if it was mapped to WAI roles
+   */
+  static const char *TrimmedRole(const char *aRole, nsIContent *aContent);  
+
+  /**
+   * Get the role map entry for a given DOM node. This will use the first
+   * ARIA role if the role attribute provides a space delimited list of roles.
+   * @param aNode  The DOM node to get the role map entry for
+   * @return       A pointer to the role map entry for the ARIA role, or nsnull if none
+   */
+   static nsRoleMapEntry* GetRoleMapEntry(nsIDOMNode *aNode);
+
+  /**
    * Search element in neighborhood of the given element by tag name and
    * attribute value that equals to ID attribute of the given element.
    * ID attribute can be either 'id' attribute or 'anonid' if the element is

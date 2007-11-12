@@ -1,4 +1,4 @@
- /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -114,7 +114,6 @@ public:
   NS_DECL_NSIACCESSIBLEVALUE
 
   // nsIAccessNode
-  NS_IMETHOD Init();
   NS_IMETHOD Shutdown();
 
   /**
@@ -161,6 +160,15 @@ public:
     return parent;
   }
   
+  /**
+   *  Return the nsIContent* to check for ARIA attributes on -- this may not always
+   *  be the DOM node for the accessible. Specifically, for doc accessibles, it is not
+   *  the document node, but either the root element or <body> in HTML.
+   *  @param aDOMNode   The DOM node for the accessible that may be affected by ARIA
+   *  @return The nsIContent which may have ARIA markup
+   */
+  static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
+
 protected:
   PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();
@@ -181,7 +189,6 @@ protected:
 
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
   static nsIContent *GetLabelContent(nsIContent *aForNode);
-  static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
 
   // Name helpers
   nsresult GetHTMLName(nsAString& _retval, PRBool aCanAggregateSubtree = PR_TRUE);
