@@ -614,7 +614,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
           // considers 'c' to be a valid numeric char (even if radix=10)
           // but then gets confused if it sees it next to the number
           // when the radix specified was 10, and returns an error code.
-          PRInt32 semiOffset = style.Find("ch", widthOffset+6);
+          PRInt32 semiOffset = style.Find("ch", PR_FALSE, widthOffset+6);
           PRInt32 length = (semiOffset > 0 ? semiOffset - widthOffset - 6
                             : style.Length() - widthOffset);
           nsAutoString widthstr;
