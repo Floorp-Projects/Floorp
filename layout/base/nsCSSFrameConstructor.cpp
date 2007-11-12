@@ -8414,8 +8414,9 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
     sibling = placeholderFrame;
   }
 
-  // The frame we have now should never be a continuation
-  NS_ASSERTION(!sibling->GetPrevContinuation(), "How did that happen?");
+  // GetPrimaryFrameFor can unfortunately return a non-primary frame
+  // for a textnode if we have a floating first-letter.
+  sibling = sibling->GetFirstContinuation();
 
   if (aPrevSibling) {
     // The frame may be a special frame (a split inline frame that
