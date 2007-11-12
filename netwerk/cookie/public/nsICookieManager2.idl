@@ -38,12 +38,13 @@
 #include "nsICookieManager.idl"
 
 interface nsICookie2;
+interface nsIFile;
 
 /** 
  * Additions to the frozen nsICookieManager
  */
 
-[scriptable, uuid(fdbce92e-254c-436c-a0ba-04504d1434d0)]
+[scriptable, uuid(5047cab4-9cb2-4927-a4ab-77422bc3bc67)]
 interface nsICookieManager2 : nsICookieManager
 {
   /**
@@ -108,4 +109,11 @@ interface nsICookieManager2 : nsICookieManager
    * @return the number of cookies found.
    */
   unsigned long countCookiesFromHost(in ACString aHost);
+
+  /**
+   * Import an old-style cookie file
+   *
+   * @param aCookieFile the file to import, usually cookies.txt
+   */
+  void importCookies(in nsIFile aCookieFile);
 };
