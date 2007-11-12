@@ -238,7 +238,7 @@
                          label="&highlight.label;"
                          accesskey="&highlight.accesskey;"
                          tooltiptext="&highlight.tooltiptext;"
-                         oncommand="toggleHighlight(!this.checked);"
+                         oncommand="toggleHighlight(this.checked);"
                          type="checkbox"
                          disabled="true"
                          xbl:inherits="accesskey=highlightaccesskey"/>
