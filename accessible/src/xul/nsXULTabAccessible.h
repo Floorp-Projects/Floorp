@@ -43,18 +43,26 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsXULSelectAccessible.h"
 
-/** An individual tab */
+/**
+ * An individual tab, xul:tab element
+ */
 class nsXULTabAccessible : public nsLeafAccessible
 {
 public:
   enum { eAction_Switch = 0 };
 
   nsXULTabAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
+                                  nsIAccessible **aRelatedAccessible);
+
+  // nsAccessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 };
 
@@ -72,7 +80,9 @@ public:
   //NS_IMETHOD GetChildCount(PRInt32 *_retval); // aaronl remove this?
 };
 
-/** merely a container of tab obejcts */
+/**
+ * A container of tab obejcts, xul:tabs element.
+ */
 class nsXULTabsAccessible : public nsXULSelectableAccessible
 {
 public:
@@ -84,4 +94,22 @@ public:
   NS_IMETHOD GetName(nsAString& _retval);
 };
 
+/**
+ * A tabpanel object, child elements of xul:tabpanels element. Note,the object
+ * is created from nsAccessibilityService::GetAccessibleForDeckChildren()
+ * method and we do not use nsIAccessibleProvider interface here because
+ * all children of xul:tabpanels element acts as xul:tabpanel element.
+ */
+class nsXULTabpanelAccessible : public nsAccessibleWrap
+{
+public:
+  nsXULTabpanelAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
+
+  // nsIAccessible
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
+                                  nsIAccessible **aRelatedAccessible);
+};
+
 #endif
+
