@@ -139,6 +139,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIFrameDebug.h"
@@ -970,6 +971,21 @@ nsPrintEngine::ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify)
     if (printPromptService) {
       nsPIDOMWindow *domWin = mDocument->GetWindow(); 
       if (!domWin) return;
+
+      nsCOMPtr<nsIDocShellTreeItem> docShellItem =
+        do_QueryInterface(domWin->GetDocShell());
+      if (!docShellItem) return;
+      nsCOMPtr<nsIDocShellTreeOwner> owner;
+      docShellItem->GetTreeOwner(getter_AddRefs(owner));
+      nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(owner);
+      if (!browserChrome) return;
+      PRBool isModal = PR_TRUE;
+      browserChrome->IsWindowModal(&isModal);
+      if (isModal) {
+        // Showing a print progress dialog when printing a modal window
+        // isn't supported. See bug 301560.
+        return;
+      }
 
       nsCOMPtr<nsIWebProgressListener> printProgressListener;
 
