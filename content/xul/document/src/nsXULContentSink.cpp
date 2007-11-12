@@ -201,6 +201,33 @@ XULContentSinkImpl::ContextStack::GetTopNodeScriptType(PRUint32 *aScriptType)
     return rv;
 }
 
+void
+XULContentSinkImpl::ContextStack::Clear()
+{
+  Entry *cur = mTop;
+  while (cur) {
+    // Release all children (with their descendants) that haven't been added to
+    // their parents.
+    for (PRInt32 i = cur->mChildren.Count() - 1; i >= 0; --i) {
+      nsXULPrototypeNode* child =
+          reinterpret_cast<nsXULPrototypeNode*>(cur->mChildren.ElementAt(i));
+
+      child->ReleaseSubtree();
+    }
+
+    // Release the root element (and its descendants).
+    Entry *next = cur->mNext;
+    if (!next)
+      cur->mNode->ReleaseSubtree();
+
+    delete cur;
+    cur = next;
+  }
+
+  mTop = nsnull;
+  mDepth = 0;
+}
+
 //----------------------------------------------------------------------
 
 
@@ -224,31 +251,9 @@ XULContentSinkImpl::~XULContentSinkImpl()
 {
     NS_IF_RELEASE(mParser); // XXX should've been released by now, unless error.
 
-    // Pop all of the elements off of the context stack, and delete
-    // any remaining content elements. The context stack _should_ be
-    // empty, unless something has gone wrong.
-    while (mContextStack.Depth()) {
-        nsresult rv;
-
-        nsVoidArray* children;
-        rv = mContextStack.GetTopChildren(&children);
-        if (NS_SUCCEEDED(rv)) {
-            for (PRInt32 i = children->Count() - 1; i >= 0; --i) {
-                nsXULPrototypeNode* child =
-                    reinterpret_cast<nsXULPrototypeNode*>(children->ElementAt(i));
-
-                child->Release();
-            }
-        }
-
-        nsXULPrototypeNode* node;
-        rv = mContextStack.GetTopNode(&node);
-        if (NS_SUCCEEDED(rv))
-            node->Release();
-
-        State state;
-        mContextStack.Pop(&state);
-    }
+    // The context stack _should_ be empty, unless something has gone wrong.
+    NS_ASSERTION(mContextStack.Depth() == 0, "Context stack not empty?");
+    mContextStack.Clear();
 
     PR_FREEIF(mText);
 }
@@ -751,21 +756,7 @@ XULContentSinkImpl::ReportError(const PRUnichar* aErrorText,
 
   // make sure to empty the context stack so that
   // <parsererror> could become the root element.
-  while (mContextStack.Depth()) {
-    nsVoidArray* children;
-    rv = mContextStack.GetTopChildren(&children);
-    if (NS_SUCCEEDED(rv)) {
-      for (PRInt32 i = children->Count() - 1; i >= 0; --i) {
-        nsXULPrototypeNode* child =
-            reinterpret_cast<nsXULPrototypeNode*>(children->ElementAt(i));
-
-        child->Release();
-      }
-    }
-
-    State state;
-    mContextStack.Pop(&state);
-  }
+  mContextStack.Clear();
 
   mState = eInProlog;
 

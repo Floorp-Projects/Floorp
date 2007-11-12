@@ -159,6 +159,8 @@ protected:
         nsresult GetTopNode(nsXULPrototypeNode** aNode);
         nsresult GetTopChildren(nsVoidArray** aChildren);
         nsresult GetTopNodeScriptType(PRUint32 *aScriptType);
+
+        void Clear();
     };
 
     friend class ContextStack;
