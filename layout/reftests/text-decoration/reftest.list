@@ -15,4 +15,4 @@ fails == underline-block-propagation-quirks.html underline-block-propagation-qui
 != underline-table-caption-standards.html underline-table-caption-standards-notref.html
 == underline-table-cell-standards.html underline-table-cell-standards-ref.html
 != underline-table-cell-standards.html underline-table-cell-standards-notref.html
-fails == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html # bug that we propagate to floats
+fails == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html # bug that we propagate to floats (bug 403526)
