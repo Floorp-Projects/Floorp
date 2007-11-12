@@ -574,11 +574,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Screen, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(Prototype, nsDOMConstructorSH,
+  NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
-  NS_DEFINE_CLASSINFO_DATA(Constructor, nsDOMConstructorSH,
+  NS_DEFINE_CLASSINFO_DATA(DOMConstructor, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::WANT_CALL |
@@ -1931,12 +1931,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Prototype, nsIDOMConstructor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMConstructor)
+  DOM_CLASSINFO_MAP_BEGIN(DOMPrototype, nsIDOMDOMConstructor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Constructor, nsIDOMConstructor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMConstructor)
+  DOM_CLASSINFO_MAP_BEGIN(DOMConstructor, nsIDOMDOMConstructor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
@@ -4840,7 +4840,7 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
   return NS_OK;
 }
 
-class nsDOMConstructor : public nsIDOMConstructor
+class nsDOMConstructor : public nsIDOMDOMConstructor
 {
 public:
   nsDOMConstructor(const PRUnichar *aName,
@@ -4851,7 +4851,7 @@ public:
   }
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMCONSTRUCTOR
+  NS_DECL_NSIDOMDOMCONSTRUCTOR
 
   nsresult Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                      JSObject *obj, PRUint32 argc, jsval *argv,
@@ -4932,7 +4932,7 @@ private:
 NS_IMPL_ADDREF(nsDOMConstructor)
 NS_IMPL_RELEASE(nsDOMConstructor)
 NS_INTERFACE_MAP_BEGIN(nsDOMConstructor)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMConstructor)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMConstructor)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
 #ifdef DEBUG
@@ -4945,8 +4945,8 @@ NS_INTERFACE_MAP_BEGIN(nsDOMConstructor)
 #endif
     foundInterface =
       NS_GetDOMClassInfoInstance(mConstructable ?
-                                 eDOMClassInfo_Constructor_id :
-                                 eDOMClassInfo_Prototype_id);
+                                 eDOMClassInfo_DOMConstructor_id :
+                                 eDOMClassInfo_DOMPrototype_id);
     if (!foundInterface) {
       *aInstancePtr = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
@@ -5191,7 +5191,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     jsval v;
 
-    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMConstructor), &v,
+    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMDOMConstructor), &v,
                     getter_AddRefs(holder));
 
     sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
@@ -5253,7 +5253,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     jsval v;
 
-    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMConstructor), &v,
+    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMDOMConstructor), &v,
                     getter_AddRefs(holder));
 
     sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
@@ -5470,8 +5470,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     jsval val;
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMConstructor), &val,
-                    getter_AddRefs(holder));
+    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMDOMConstructor),
+                    &val, getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = constructor->Install(cx, obj, val);
@@ -9855,7 +9855,8 @@ nsDOMConstructorSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIDOMConstructor> is_constructor(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIDOMDOMConstructor> is_constructor =
+      do_QueryWrappedNative(wrapper);
     NS_ASSERTION(is_constructor, "How did we not get a constructor?");
   }
 #endif
@@ -9873,7 +9874,8 @@ nsDOMConstructorSH::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIDOMConstructor> is_constructor(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIDOMConstructor> is_constructor =
+      do_QueryWrappedNative(wrapper);
     NS_ASSERTION(is_constructor, "How did we not get a constructor?");
   }
 #endif
@@ -9891,7 +9893,8 @@ nsDOMConstructorSH::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIDOMConstructor> is_constructor(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIDOMDOMConstructor> is_constructor =
+      do_QueryWrappedNative(wrapper);
     NS_ASSERTION(is_constructor, "How did we not get a constructor?");
   }
 #endif
