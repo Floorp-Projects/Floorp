@@ -6,7 +6,7 @@
 != underline-table-caption-quirks.html underline-table-caption-quirks-notref.html
 == underline-table-cell-quirks.html underline-table-cell-quirks-ref.html
 != underline-table-cell-quirks.html underline-table-cell-quirks-notref.html
-fails == underline-block-propagation-quirks.html underline-block-propagation-quirks-ref.html # currently too quirky
+fails == underline-block-propagation-quirks.html underline-block-propagation-quirks-ref.html # currently too quirky (bug 403524)
 == underline-block-standards.html underline-block-standards-ref.html
 != underline-block-standards.html underline-block-standards-notref.html
 == underline-inline-block-standards.html underline-inline-block-standards-ref.html
