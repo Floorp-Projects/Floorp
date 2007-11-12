@@ -378,8 +378,6 @@ protected:
 
   PRUint32 mContentEditableCount;
   EditingState mEditingState;
-  PRPackedBool mScriptsEnabled;
-  PRPackedBool mPluginsEnabled;
 
   nsresult   DoClipboardSecurityCheck(PRBool aPaste);
   static jsval       sCutCopyInternal_id;
