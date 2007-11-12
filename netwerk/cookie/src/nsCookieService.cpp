@@ -553,10 +553,19 @@ nsCookieService::InitDB()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // check whether to import or just read in the db
-  if (!tableExists)
-    return ImportCookies();
+  if (tableExists)
+    return Read();
 
-  return Read();
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  cookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
+  rv = ImportCookies(cookieFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // we're done importing - delete the old cookie file
+  cookieFile->Remove(PR_FALSE);
+  return NS_OK;
 }
 
 // sets the schema version and creates the moz_cookies table.
@@ -929,17 +938,12 @@ nsCookieService::Read()
   return NS_OK;
 }
 
-nsresult
-nsCookieService::ImportCookies()
+NS_IMETHODIMP
+nsCookieService::ImportCookies(nsIFile *aCookieFile)
 {
-  nsCOMPtr<nsIFile> cookieFile;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
-  if (cookieFile)
-    cookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
-
   nsresult rv;
   nsCOMPtr<nsIInputStream> fileInputStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), cookieFile);
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), aCookieFile);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
@@ -958,7 +962,7 @@ nsCookieService::ImportCookies()
   PRInt32 numInts;
   PRInt64 expires;
   PRBool isDomain, isHttpOnly = PR_FALSE;
-  nsCookie *newCookie;
+  PRUint32 originalCookieCount = mCookieCount;
 
   // generate a creation id for all the cookies we're going to read in, by
   // using the current time and successively decrementing it, to keep
@@ -1031,7 +1035,7 @@ nsCookieService::ImportCookies()
     }
 
     // create a new nsCookie and assign the data.
-    newCookie =
+    nsRefPtr<nsCookie> newCookie =
       nsCookie::Create(Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
                        Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
                        host,
@@ -1050,20 +1054,11 @@ nsCookieService::ImportCookies()
     // known unique one here.
     newCookie->SetCreationID(--creationIDCounter);
 
-    if (!AddCookieToList(newCookie)) {
-      // It is purpose that created us; purpose that connects us;
-      // purpose that pulls us; that guides us; that drives us.
-      // It is purpose that defines us; purpose that binds us.
-      // When a cookie no longer has purpose, it has a choice:
-      // it can return to the source to be deleted, or it can go
-      // into exile, and stay hidden inside the Matrix.
-      // Let's choose deletion.
-      delete newCookie;
-    }
+    if (originalCookieCount == 0)
+      AddCookieToList(newCookie);
+    else
+      AddInternal(newCookie, currentTime, nsnull, nsnull, PR_TRUE);
   }
-
-  // we're done importing - delete the old cookie file
-  cookieFile->Remove(PR_FALSE);
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported", mCookieCount));
 
