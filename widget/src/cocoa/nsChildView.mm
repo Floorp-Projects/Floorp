@@ -3993,10 +3993,12 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   // Otherwise, we need to suppress IME composition. We can do it by
   // not sending this event to the superclass. But in that case,
   // we need to call insertText ourselves.
-  if (nsTSMManager::IsIMEEnabled())
-    [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
-  else if (nonDeadKeyPress && !dispatchedKeyPress)
-    [self insertText:[theEvent characters]];
+  if (!dispatchedKeyPress) {
+    if (nsTSMManager::IsIMEEnabled())
+      [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+    else if (nonDeadKeyPress)
+      [self insertText:[theEvent characters]];
+  }
 
   mIgnoreDoCommand = NO;
   mCurKeyEvent = nil;
