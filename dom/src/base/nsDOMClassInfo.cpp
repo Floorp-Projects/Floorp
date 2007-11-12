@@ -4550,7 +4550,7 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     nsCOMPtr<nsIDOMLocation> location;
     nsresult rv = window->GetLocation(getter_AddRefs(location));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && location, rv);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp,
