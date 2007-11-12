@@ -1036,13 +1036,12 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     if (type == NORMAL_FILE_TYPE)
     {
         PRFileDesc* file;
-        OpenFile(mResolvedPath,
-                 PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, attributes,
-                 &file);
-        if (!file) return NS_ERROR_FILE_ALREADY_EXISTS;
-
-        PR_Close(file);
-        return NS_OK;
+        rv = OpenFile(mResolvedPath,
+                      PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, attributes,
+                      &file);
+        if (file)
+            PR_Close(file);
+        return rv;
     }
 
     if (type == DIRECTORY_TYPE)
