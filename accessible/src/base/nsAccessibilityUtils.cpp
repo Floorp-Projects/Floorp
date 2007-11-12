@@ -48,6 +48,7 @@
 #include "nsARIAMap.h"
 #include "nsIDocument.h"
 #include "nsIDOMAbstractView.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocumentXBL.h"
@@ -67,6 +68,7 @@
 #include "nsContentCID.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsWhitespaceTokenizer.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
@@ -194,7 +196,7 @@ nsAccUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
     if (!itemAcc ||
         nsAccessible::State(itemAcc) & nsIAccessibleStates::STATE_INVISIBLE) {
       setSize--;
-      if (index < indexOf)
+      if (index < static_cast<PRUint32>(indexOf))
         posInSet--;
     }
   }
@@ -753,5 +755,79 @@ nsAccUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
     }
   }
   return nsnull;
+}
+
+const char *
+nsAccUtils::TrimmedRole(const char *aRole, nsIContent *aContent)
+{  
+  const char kWaiRolePrefix[] = "wairole:";
+  const PRUint32 kWaiRolePrefixLen = NS_ARRAY_LENGTH(kWaiRolePrefix) - 1;
+
+  if (!PL_strncmp(aRole, kWaiRolePrefix, kWaiRolePrefixLen)) {
+    return aRole + kWaiRolePrefixLen;
+  }
+//#ifdef ALLOW_PREFIX_LOOKUP
+  // Check if prefix was mapped via xmlns:[prefix] to the official WAI role namespace
+  char *colon = PL_strchr(aRole, ':');
+  if (colon) {
+    nsCOMPtr<nsIDOM3Node> dom3Node = do_QueryInterface(aContent);
+    if (dom3Node) {
+      // Look up exact prefix name for WAI Roles
+      nsAutoString prefix;
+      NS_NAMED_LITERAL_STRING(kWAIRoles_Namespace, "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#");
+      dom3Node->LookupPrefix(kWAIRoles_Namespace, prefix);
+      prefix += ':';
+      PRUint32 prefixLength = colon - aRole + 1;
+
+      if (!PL_strncmp(aRole, NS_LossyConvertUTF16toASCII(prefix).get(), prefixLength)) {
+        // Is a QName (role="prefix:rolename"), and prefix is mapped to WAI Role namespace
+        // Trim the prefix off
+        return aRole + prefixLength;
+      }
+    }
+  }
+
+  return aRole;
+}
+
+nsRoleMapEntry*
+nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
+{
+  nsIContent *content = nsAccessible::GetRoleContent(aNode);
+  if (!content) {
+    return nsnull;
+  }
+  nsAutoString roleString;
+  if (!nsAccessNode::GetARIARole(content, roleString)) {
+    return nsnull;
+  }
+
+  nsWhitespaceTokenizer tokenizer(roleString);
+  while (tokenizer.hasMoreTokens()) {
+    // Do a binary search through table for the next role in role list
+    const char *rawRole = NS_LossyConvertUTF16toASCII(tokenizer.nextToken()).get();
+    const char *trimmedRole = TrimmedRole(rawRole, content);
+//#endif
+    PRInt32 low = 0;
+    PRInt32 high = nsARIAMap::gWAIRoleMapLength;
+    while (low <= high) {
+      PRInt32 index = low + ((high - low) / 2);
+      PRInt32 compare = PL_strcmp(trimmedRole, nsARIAMap::gWAIRoleMap[index].roleString);
+      if (compare == 0) {
+        // The  role attribute maps to an entry in the role table
+        return &nsARIAMap::gWAIRoleMap[index];
+      }
+      if (compare < 0) {
+        high = index - 1;
+      }
+      else {
+        low = index + 1;
+      }
+    }
+  }
+
+  // Always use some entry if there is a role string
+  // To ensure an accessible object is created
+  return &nsARIAMap::gLandmarkRoleMap;
 }
 
