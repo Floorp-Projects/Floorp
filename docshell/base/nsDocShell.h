@@ -651,6 +651,10 @@ protected:
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
     nsPIDOMEventTarget *       mChromeEventHandler; //Weak Reference
 
+#ifdef DEBUG
+    PRBool mInEnsureScriptEnv;
+#endif
+
     static nsIURIFixup *sURIFixup;
 
 
