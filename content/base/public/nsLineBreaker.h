@@ -57,6 +57,12 @@ public:
    * @param aBreakBefore the break-before states for the characters in the substring.
    */
   virtual void SetBreaks(PRUint32 aStart, PRUint32 aLength, PRPackedBool* aBreakBefore) = 0;
+  
+  /**
+   * Indicates which characters should be capitalized. Only called if
+   * BREAK_NEED_CAPITALIZATION was requested.
+   */
+  virtual void SetCapitalization(PRUint32 aStart, PRUint32 aLength, PRPackedBool* aCapitalize) = 0;
 };
 
 /**
@@ -76,6 +82,10 @@ public:
  * whitespace-delimited "words". Then those words are passed to the nsILineBreaker
  * service for deeper analysis if they contain a "complex" character as described
  * below.
+ * 
+ * This class also handles detection of which characters should be capitalized
+ * for text-transform:capitalize. This is a good place to handle that because
+ * we have all the context we need.
  */
 class nsLineBreaker {
 public:
@@ -137,7 +147,12 @@ public:
      * at the end of textruns in case context is needed for following breakable
      * text.
      */
-    BREAK_SKIP_SETTING_NO_BREAKS = 0x04
+    BREAK_SKIP_SETTING_NO_BREAKS = 0x04,
+    /**
+     * We need to be notified of characters that should be capitalized
+     * (as in text-transform:capitalize) in this chunk of text.
+     */
+    BREAK_NEED_CAPITALIZATION = 0x08
   };
 
   /**

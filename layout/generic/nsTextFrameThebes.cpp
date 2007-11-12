@@ -664,6 +664,16 @@ public:
         mTextRun->ClearFlagBits(nsTextFrameUtils::TEXT_NO_BREAKS);
       }
     }
+    
+    virtual void SetCapitalization(PRUint32 aOffset, PRUint32 aLength,
+                                   PRPackedBool* aCapitalize) {
+      NS_ASSERTION(mTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_TRANSFORMED,
+                   "Text run should be transformed!");
+      nsTransformedTextRun* transformedTextRun =
+        static_cast<nsTransformedTextRun*>(mTextRun);
+      transformedTextRun->SetCapitalization(aOffset + mOffsetIntoTextRun, aLength,
+                                            aCapitalize, mContext);
+    }
 
     gfxTextRun*  mTextRun;
     gfxContext*  mContext;
@@ -1556,6 +1566,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         }
       }
     }
+    textFlags |= nsTextFrameUtils::TEXT_IS_TRANSFORMED;
     NS_ASSERTION(iter.GetSkippedOffset() == transformedLength,
                  "We didn't cover all the characters in the text run!");
   }
@@ -1679,6 +1690,9 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     }
     if (aTextRun->GetFlags() & nsTextFrameUtils::TEXT_NO_BREAKS) {
       flags |= nsLineBreaker::BREAK_SKIP_SETTING_NO_BREAKS;
+    }
+    if (textStyle->mTextTransform == NS_STYLE_TEXT_TRANSFORM_CAPITALIZE) {
+      flags |= nsLineBreaker::BREAK_NEED_CAPITALIZATION;
     }
 
     if (HasCompressedLeadingWhitespace(startFrame, mappedFlow->GetContentEnd(), iter)) {
@@ -4747,7 +4761,7 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   PRInt32 length = *aLength;
   for (i = 0; i < length; ++i) {
     if (!IsTrimmableSpace(aFrag, aOffset + i) &&
-        !nsTextFrameUtils::IsPunctuationMark(aFrag->CharAt(aOffset + i)))
+        !nsContentUtils::IsPunctuationMark(aFrag->CharAt(aOffset + i)))
       break;
   }
 

@@ -48,55 +48,30 @@
 
 #define SZLIG 0x00DF
 
-/**
- * So that we can reshape as necessary, we store enough information
- * to fully rebuild the textrun contents.
- */
-class nsTransformedTextRun : public gfxTextRun {
-public:
-  nsTransformedTextRun(const gfxTextRunFactory::Parameters* aParams,
-                       nsTransformingTextRunFactory* aFactory,
-                       gfxFontGroup* aFontGroup,
-                       const PRUnichar* aString, PRUint32 aLength,
-                       const PRUint32 aFlags, nsStyleContext** aStyles,
-                       PRBool aOwnsFactory)
-    : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags),
-      mFactory(aFactory), mOwnsFactory(aOwnsFactory)
-  {
-    PRUint32 i;
-    for (i = 0; i < aLength; ++i) {
-      mStyles.AppendElement(aStyles[i]);
-    }
-    for (i = 0; i < aParams->mInitialBreakCount; ++i) {
-      mLineBreaks.AppendElement(aParams->mInitialBreaks[i]);
-    }
-  }
-  
-  ~nsTransformedTextRun() {
-    if (mOwnsFactory) {
-      delete mFactory;
-    }
-  }
-
-  virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                        PRPackedBool* aBreakBefore,
+void
+nsTransformedTextRun::SetCapitalization(PRUint32 aStart, PRUint32 aLength,
+                                        PRPackedBool* aCapitalization,
                                         gfxContext* aRefContext)
-  {
-    PRBool changed = gfxTextRun::SetPotentialLineBreaks(aStart, aLength,
-        aBreakBefore, aRefContext);
-    mFactory->RebuildTextRun(this, aRefContext);
-    return changed;
+{
+  if (mCapitalize.IsEmpty()) {
+    if (!mCapitalize.AppendElements(GetLength()))
+      return;
+    memset(mCapitalize.Elements(), 0, GetLength()*sizeof(PRPackedBool));
   }
-  virtual PRBool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                               PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                               gfxFloat* aAdvanceWidthDelta,
-                               gfxContext* aRefContext);
+  memcpy(mCapitalize.Elements() + aStart, aCapitalization, aLength*sizeof(PRPackedBool));
+  mFactory->RebuildTextRun(this, aRefContext);
+}
 
-  nsTransformingTextRunFactory       *mFactory;
-  nsTArray<PRUint32>                  mLineBreaks;
-  nsTArray<nsRefPtr<nsStyleContext> > mStyles;
-  PRPackedBool                        mOwnsFactory;
-};
+PRBool
+nsTransformedTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                                             PRPackedBool* aBreakBefore,
+                                             gfxContext* aRefContext)
+{
+  PRBool changed = gfxTextRun::SetPotentialLineBreaks(aStart, aLength,
+      aBreakBefore, aRefContext);
+  mFactory->RebuildTextRun(this, aRefContext);
+  return changed;
+}
 
 PRBool
 nsTransformedTextRun::SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
@@ -443,7 +418,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       }
       break;
     case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
-      if (aTextRun->CanBreakLineBefore(i)) {
+      if (i < aTextRun->mCapitalize.Length() && aTextRun->mCapitalize[i]) {
         if (ch == SZLIG) {
           convertedString.Append('S');
           extraChar = PR_TRUE;
