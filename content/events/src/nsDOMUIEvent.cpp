@@ -154,7 +154,11 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
   }
 
   nsPoint pt(0, 0);
-  nsIFrame* rootFrame = mPresContext->PresShell()->GetRootFrame();
+  nsIPresShell* shell = mPresContext->PresShell();
+  if (!shell) {
+    return pt;
+  }
+  nsIFrame* rootFrame = shell->GetRootFrame();
   if (rootFrame)
     pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, rootFrame);
 
@@ -196,11 +200,15 @@ nsDOMUIEvent::GetPagePoint()
   if (((nsGUIEvent*)mEvent)->widget) {
     // Native event; calculate using presentation
     nsPoint pt(0, 0);
-    nsIScrollableFrame* scrollframe =
-            mPresContext->PresShell()->GetRootScrollFrameAsScrollable();
+    nsIPresShell* shell = mPresContext->PresShell();
+    if (!shell) {
+      return pt;
+    }
+    nsIScrollableFrame* scrollframe = shell->GetRootScrollFrameAsScrollable();
+
     if (scrollframe)
       pt += scrollframe->GetScrollPosition();
-    nsIFrame* rootFrame = mPresContext->PresShell()->GetRootFrame();
+    nsIFrame* rootFrame = shell->GetRootFrame();
     if (rootFrame)
       pt += nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, rootFrame);
     return nsPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
