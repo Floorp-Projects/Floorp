@@ -97,6 +97,7 @@ nsEditingSession::nsEditingSession()
 , mCanCreateEditor(PR_FALSE)
 , mInteractive(PR_FALSE)
 , mMakeWholeDocumentEditable(PR_TRUE)
+, mDisabledJSAndPlugins(PR_FALSE)
 , mScriptsEnabled(PR_TRUE)
 , mPluginsEnabled(PR_TRUE)
 , mProgressListenerRegistered(PR_FALSE)
@@ -156,28 +157,12 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
 
   nsresult rv;
   if (!mInteractive) {
-    // Disable JavaScript in this document:
-    PRBool tmp;
-    rv = docShell->GetAllowJavascript(&tmp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mScriptsEnabled = tmp;
-
-    rv = docShell->SetAllowJavascript(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Disable plugins in this document:
-    rv = docShell->GetAllowPlugins(&tmp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mPluginsEnabled = tmp;
-
-    rv = docShell->SetAllowPlugins(PR_FALSE);
+    rv = DisableJSAndPlugins(aWindow);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Always remove existing editor
-  TearDownEditorOnWindow(aWindow, PR_FALSE);
+  TearDownEditorOnWindow(aWindow);
   
   // Tells embedder that startup is in progress
   mEditorStatus = eEditorCreationInProgress;
@@ -226,9 +211,53 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
     // Since this is used only when editing an existing page,
     //  it IS ok to destroy current editor
     if (NS_FAILED(rv))
-      TearDownEditorOnWindow(aWindow, PR_FALSE);
+      TearDownEditorOnWindow(aWindow);
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsEditingSession::DisableJSAndPlugins(nsIDOMWindow *aWindow)
+{
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+  if (!docShell) return NS_ERROR_FAILURE;
+
+  PRBool tmp;
+  nsresult rv = docShell->GetAllowJavascript(&tmp);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mScriptsEnabled = tmp;
+
+  rv = docShell->SetAllowJavascript(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Disable plugins in this document:
+  rv = docShell->GetAllowPlugins(&tmp);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mPluginsEnabled = tmp;
+
+  rv = docShell->SetAllowPlugins(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mDisabledJSAndPlugins = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditingSession::RestoreJSAndPlugins(nsIDOMWindow *aWindow)
+{
+  mDisabledJSAndPlugins = PR_FALSE;
+
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+  if (!docShell) return NS_ERROR_FAILURE;
+
+  nsresult rv = docShell->SetAllowJavascript(mScriptsEnabled);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Disable plugins in this document:
+  return docShell->SetAllowPlugins(mPluginsEnabled);
 }
 
 /*---------------------------------------------------------------------------
@@ -500,12 +529,10 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 
   TearDownEditorOnWindow
 
-  void tearDownEditorOnWindow (in nsIDOMWindow aWindow,
-                               in boolean aStopEditing);
+  void tearDownEditorOnWindow (in nsIDOMWindow aWindow);
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
-                                         PRBool aStopEditing)
+nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
   if (!mDoneSetup)
     return NS_OK;
@@ -523,7 +550,12 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
 
   mDoneSetup = PR_FALSE;
 
-  if (aStopEditing) {
+  // Check if we're turning off editing (from contentEditable or designMode).
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aWindow->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(domDoc);
+  PRBool stopEditing = htmlDoc && htmlDoc->IsEditingOn();
+  if (stopEditing) {
     nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
     if (webProgress) {
       webProgress->RemoveProgressListener(this);
@@ -628,27 +660,19 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow,
     mHTMLCommandControllerId = 0;
   }
 
-  if (aStopEditing) {
-    if (!mInteractive) {
+  if (stopEditing) {
+    if (mDisabledJSAndPlugins) {
       // Make things the way they were before we started editing.
-      if (mScriptsEnabled) {
-        docShell->SetAllowJavascript(PR_TRUE);
-      }
+      RestoreJSAndPlugins(aWindow);
+    }
 
-      if (mPluginsEnabled) {
-        docShell->SetAllowPlugins(PR_TRUE);
-      }
-
+    if (!mInteractive) {
       nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
       if (utils)
         utils->SetImageAnimationMode(mImageAnimationMode);
     }
 
     if (mMakeWholeDocumentEditable) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      rv = aWindow->GetDocument(getter_AddRefs(domDoc));
-      NS_ENSURE_SUCCESS(rv, rv);
-
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -991,7 +1015,7 @@ nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress,
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
   if (domWindow)
   {
-    TearDownEditorOnWindow(domWindow, PR_FALSE);
+    TearDownEditorOnWindow(domWindow);
   }
     
   if (aIsToBeMadeEditable)

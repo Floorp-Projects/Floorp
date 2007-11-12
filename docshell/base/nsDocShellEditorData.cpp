@@ -73,7 +73,7 @@ nsDocShellEditorData::~nsDocShellEditorData()
     nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(mDocShell);
     // This will eventually call nsDocShellEditorData::SetEditor(nsnull)
     //   which will call mEditorPreDestroy() and delete the editor
-    mEditingSession->TearDownEditorOnWindow(domWindow, PR_TRUE);
+    mEditingSession->TearDownEditorOnWindow(domWindow);
   }
   else if (mEditor) // Should never have this w/o nsEditingSession!
   {
