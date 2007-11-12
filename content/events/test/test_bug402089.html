@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402089
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=402089">Mozilla Bug 402089</a>
 <p id="display"></p>
-<div id="content" style="display: none">
+<div id="content">
   <pre id="result1"></pre>
   <pre id="result2"></pre>
 </div>
@@ -52,8 +52,12 @@ function clickHandler(e) {
 
 function doTest() {
   window.addEventListener("click", clickHandler, true);
-  document.body.boxObject = document.getBoxObjectFor(document.body);
-  synthesizeMouse(document.body, 1, 1, { });
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+  utils.sendMouseEvent("mousedown", 1, 1, 0, 1, 0);
+  utils.sendMouseEvent("mouseup", 1, 1, 0, 1, 0);
+
 }
 
 SimpleTest.waitForExplicitFinish();
