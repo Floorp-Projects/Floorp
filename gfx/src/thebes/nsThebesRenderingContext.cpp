@@ -973,7 +973,7 @@ nsThebesRenderingContext::GetBoundingMetricsInternal(const char*        aString,
                                                      PRUint32           aLength,
                                                      nsBoundingMetrics& aBoundingMetrics)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return mFontMetrics->GetBoundingMetrics(aString, aLength, this, aBoundingMetrics);
 }
 
 NS_IMETHODIMP
@@ -982,7 +982,7 @@ nsThebesRenderingContext::GetBoundingMetricsInternal(const PRUnichar*   aString,
                                                      nsBoundingMetrics& aBoundingMetrics,
                                                      PRInt32*           aFontID)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mFontMetrics->GetBoundingMetrics(aString, aLength, this, aBoundingMetrics);
 }
 #endif // MOZ_MATHML
 
