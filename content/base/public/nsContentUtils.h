@@ -338,6 +338,12 @@ public:
   static const nsDependentSubstring TrimWhitespace(const nsAString& aStr,
                                                    PRBool aTrimTrailing = PR_TRUE);
 
+  /**
+   * Returns true if aChar is of class Ps, Pi, Po, Pf, or Pe. (Does not
+   * currently handle non-BMP characters.)
+   */
+  static PRBool IsPunctuationMark(PRUnichar aChar);
+
   static void Shutdown();
 
   /**

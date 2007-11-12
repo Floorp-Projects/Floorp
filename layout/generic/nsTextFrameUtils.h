@@ -72,11 +72,9 @@ public:
     TEXT_INCOMING_WHITESPACE = 0x200000,
     TEXT_TRAILING_WHITESPACE = 0x400000,
     TEXT_COMPRESSED_LEADING_WHITESPACE = 0x800000,
-    TEXT_NO_BREAKS           = 0x1000000
+    TEXT_NO_BREAKS           = 0x1000000,
+    TEXT_IS_TRANSFORMED      = 0x2000000
   };
-
-  static PRBool
-  IsPunctuationMark(PRUnichar aChar);
 
   /**
    * Returns PR_TRUE if aChars/aLength are something that make a space
