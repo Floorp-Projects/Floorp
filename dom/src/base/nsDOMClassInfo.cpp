@@ -4259,7 +4259,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsresult rv = WrapNative(cx, obj, result, NS_GET_IID(nsISupports), &v,
                              getter_AddRefs(holder));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, JS_FALSE);
 
     if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(jsstr),
                                ::JS_GetStringLength(jsstr), v, nsnull, nsnull,
