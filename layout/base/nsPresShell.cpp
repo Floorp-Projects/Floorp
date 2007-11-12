@@ -2828,8 +2828,12 @@ nsresult
 PresShell::CompleteMoveInner(PRBool aForward, PRBool aExtend, PRBool aScrollIntoView)
 {
   nsIContent* root = mSelection->GetAncestorLimiter();
-  if (root) {
-    // make the caret be either at the very beginning (0) or the very end
+  nsIDocument* doc;
+  if (root && (doc = root->GetOwnerDoc()) && doc->GetRootContent() != root) {
+    // Make the caret be either at the very beginning (0) or the very end of
+    // root. Only do this when not moving to the beginning or end of the
+    // document (root is null or root is the documentElement), that's handled
+    // below by moving to beginning or end of the scrollable view.
     nsIContent* node = root;
     PRInt32 offset = 0;
     nsFrameSelection::HINT hint = nsFrameSelection::HINTLEFT;
