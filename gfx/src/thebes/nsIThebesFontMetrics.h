@@ -99,12 +99,13 @@ public:
     // caller will have to update them to twips before passing it
     // back.
     virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                        nsThebesRenderingContext *aContext,
                                         nsBoundingMetrics &aBoundingMetrics) = 0;
     // aCachedOffset will be updated with a new offset.
     virtual nsresult GetBoundingMetrics(const PRUnichar *aString,
                                         PRUint32 aLength,
-                                        nsBoundingMetrics &aBoundingMetrics,
-                                        PRInt32 *aFontID) = 0;
+                                        nsThebesRenderingContext *aContext,
+                                        nsBoundingMetrics &aBoundingMetrics) = 0;
 #endif /* MOZ_MATHML */
 
     // Set the direction of the text rendering
