@@ -978,6 +978,13 @@ extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);
 
 /*
+ * Report an attempt to access the property of a null or undefined value (v).
+ */
+extern JSBool
+js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
+                           JSString *fallback);
+
+/*
  * Report error using js_DecompileValueGenerator(cx, spindex, v, fallback) as
  * the first argument for the error message. If the error message has less
  * then 3 arguments, use null for arg1 or arg2.
