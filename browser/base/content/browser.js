@@ -1963,11 +1963,12 @@ function BrowserViewSourceOfDocument(aDocument)
 
 function ViewSourceOfURL(aURL, aPageDescriptor, aDocument)
 {
+  var utils = window.top.gViewSourceUtils;
   if (getBoolPref("view_source.editor.external", false)) {
-    gViewSourceUtils.openInExternalEditor(aURL, aPageDescriptor, aDocument);
+    utils.openInExternalEditor(aURL, aPageDescriptor, aDocument);
   }
   else {
-    gViewSourceUtils.openInInternalViewer(aURL, aPageDescriptor, aDocument);
+    utils.openInInternalViewer(aURL, aPageDescriptor, aDocument);
   }
 }
 
