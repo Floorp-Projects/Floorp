@@ -119,11 +119,15 @@
 
   <!ENTITY insertNode.title "Insert Node">
   <!ENTITY nodeType.label "Node Type:">
+  <!ENTITY nodeType.accesskey "T">
   <!ENTITY nodeType.element.label "Element">
   <!ENTITY nodeType.text.label "Text">
   <!ENTITY namespaceURI.label "Namespace URI:">
+  <!ENTITY namespaceURI.accesskey "U">
   <!ENTITY tagName.label "Tag Name:">
+  <!ENTITY tagName.accesskey "N">
   <!ENTITY nodeValue.label "Node Value:">
+  <!ENTITY nodeValue.accesskey "V">
 
   <!ENTITY namespaceTitle.null.label "null">
   <!ENTITY namespaceTitle.default.label "Document Default">
