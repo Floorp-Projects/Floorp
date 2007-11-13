@@ -162,18 +162,29 @@ nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsPresContext* aPresContext
 }
 
 void
+nsSimplePageSequenceFrame::GetEdgePaperMarginCoord(const char* aPrefName,
+                                                   nscoord& aCoord)
+{
+  nsresult rv = mPageData->mPrintOptions->
+    GetPrinterPrefInt(mPageData->mPrintSettings, 
+                      NS_ConvertASCIItoUTF16(aPrefName).get(),
+                      &aCoord);
+
+  if (NS_SUCCEEDED(rv)) {
+    nscoord inchInTwips = NS_INCHES_TO_TWIPS(1.0);
+    aCoord = PR_MAX(NS_INCHES_TO_TWIPS(float(aCoord)/100.0f), 0);
+    aCoord = PR_MIN(aCoord, inchInTwips); // an inch is still probably excessive
+  }
+}
+
+void
 nsSimplePageSequenceFrame::GetEdgePaperMargin(nsMargin& aMargin)
 {
-  if (NS_SUCCEEDED(mPageData->mPrintSettings->GetEdgeInTwips(aMargin))) {
-    nscoord inchInTwips = NS_INCHES_TO_TWIPS(1.0);
-    // sanity check the values. an inch is still probably excessive
-    aMargin.top = PR_MIN(PR_MAX(aMargin.top, 0), inchInTwips);
-    aMargin.bottom = PR_MIN(PR_MAX(aMargin.bottom, 0), inchInTwips);
-    aMargin.left = PR_MIN(PR_MAX(aMargin.left, 0), inchInTwips);
-    aMargin.right = PR_MIN(PR_MAX(aMargin.right, 0), inchInTwips);
-  } else {
-    aMargin.SizeTo(0, 0, 0, 0);
-  }
+  aMargin.SizeTo(0,0,0,0);
+  GetEdgePaperMarginCoord("print_edge_top",    aMargin.top);
+  GetEdgePaperMarginCoord("print_edge_left",   aMargin.left);
+  GetEdgePaperMarginCoord("print_edge_bottom", aMargin.bottom);
+  GetEdgePaperMarginCoord("print_edge_right",  aMargin.right);
 }
 
 NS_IMETHODIMP
