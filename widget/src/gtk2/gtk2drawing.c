@@ -80,6 +80,7 @@ static GtkWidget* gMenuItemWidget;
 static GtkWidget* gCheckMenuItemWidget;
 static GtkWidget* gTreeViewWidget;
 static GtkWidget* gTreeHeaderCellWidget;
+static GtkWidget* gTreeHeaderSortArrowWidget;
 
 static GtkShadowType gMenuBarShadowType;
 static GtkShadowType gToolbarShadowType;
@@ -379,6 +380,8 @@ ensure_tree_header_cell_widget()
 
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), treeViewColumn);
         gTreeHeaderCellWidget = treeViewColumn->button;
+        gtk_tree_view_column_set_sort_indicator(treeViewColumn, TRUE);
+        gTreeHeaderSortArrowWidget = treeViewColumn->arrow;
     }
     return MOZ_GTK_SUCCESS;
 } 
@@ -1028,7 +1031,7 @@ moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
     /* only handle disabled and normal states, otherwise the whole background
      * area will be painted differently with other states */
     state_type = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
-    
+ 
     style = gTreeViewWidget->style;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
@@ -1046,6 +1049,36 @@ moz_gtk_tree_header_cell_paint(GdkDrawable* drawable, GdkRectangle* rect,
 {
     moz_gtk_button_paint(drawable, rect, cliprect, state, GTK_RELIEF_NORMAL,
                          gTreeHeaderCellWidget);
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_tree_header_sort_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                                     GdkRectangle* cliprect, GtkWidgetState* state,
+                                     GtkArrowType flags)
+{
+    GdkRectangle arrow_rect;
+    GtkStateType state_type = ConvertGtkState(state);
+    GtkShadowType shadow_type = GTK_SHADOW_IN;
+    GtkArrowType arrow_type = flags;
+    GtkStyle* style;
+
+    ensure_tree_header_cell_widget();
+
+    /* hard code these values */
+    arrow_rect.width = 11;
+    arrow_rect.height = 11;
+    arrow_rect.x = rect->x + (rect->width - arrow_rect.width) / 2;
+    arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2;
+
+    style = gTreeHeaderSortArrowWidget->style;
+    TSOffsetStyleGCs(style, arrow_rect.x, arrow_rect.y);
+
+    gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
+                    gTreeHeaderSortArrowWidget, "arrow",  arrow_type, TRUE,
+                    arrow_rect.x, arrow_rect.y,
+                    arrow_rect.width, arrow_rect.height);
+
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1149,7 +1182,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     real_arrow_rect.y = floor (arrow_rect.y + ((arrow_rect.height - real_arrow_rect.height) / 2) + 0.5);
 
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    gHorizScrollbarWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                    gDropdownButtonWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
                     real_arrow_rect.x, real_arrow_rect.y,
                     real_arrow_rect.width, real_arrow_rect.height);
 
@@ -1650,6 +1683,10 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             *bottom += gTreeHeaderCellWidget->style->ythickness;
             return MOZ_GTK_SUCCESS;
         }
+    case MOZ_GTK_TREE_HEADER_SORTARROW:
+        ensure_tree_header_cell_widget();
+        w = gTreeHeaderSortArrowWidget;
+        break;
     case MOZ_GTK_DROPDOWN_ARROW:
         ensure_arrow_widget();
         w = gDropdownButtonWidget;
@@ -1912,6 +1949,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
     case MOZ_GTK_TREE_HEADER_CELL:
         return moz_gtk_tree_header_cell_paint(drawable, rect, cliprect, state);
         break;
+    case MOZ_GTK_TREE_HEADER_SORTARROW:
+        return moz_gtk_tree_header_sort_arrow_paint(drawable, rect, cliprect, state, (GtkArrowType) flags);
+        break;
     case MOZ_GTK_ENTRY:
         return moz_gtk_entry_paint(drawable, rect, cliprect, state);
         break;
@@ -2021,6 +2061,7 @@ moz_gtk_shutdown()
     gCheckMenuItemWidget = NULL;
     gTreeViewWidget = NULL;
     gTreeHeaderCellWidget = NULL;
+    gTreeHeaderSortArrowWidget = NULL;
 
     is_initialized = FALSE;
 

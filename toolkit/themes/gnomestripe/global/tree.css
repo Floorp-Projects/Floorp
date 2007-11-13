@@ -311,15 +311,7 @@ treechildren::-moz-tree-column(insertafter) {
 /* ::::: sort direction indicator :::::  */
 
 .treecol-sortdirection {
-  list-style-image: none;
-}
-
-treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
-  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
-}
-
-treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
-  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
+  -moz-appearance: treeheadersortarrow;
 }
 
 /* ::::: column picker :::::  */
