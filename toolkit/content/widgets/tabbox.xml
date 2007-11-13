@@ -306,8 +306,9 @@
         <setter>
         <![CDATA[
           const tabs = this.childNodes;
-          if (0 <= val && val < tabs.length && !tabs[val].selected) {
-
+          if (0 <= val && val < tabs.length) {
+            var alreadySelected = tabs[val].selected;
+ 
             for (var i = 0; i < tabs.length; i++)
               if (i != val && tabs[i].selected)
                 tabs[i]._selected = false;
@@ -333,10 +334,12 @@
               }
             }
 
-            // Fire an onselect event for the tabs element.
-            var event = document.createEvent('Events');
-            event.initEvent('select', true, true);
-            this.dispatchEvent(event);
+            if (!alreadySelected) {
+              // Fire an onselect event for the tabs element.
+              var event = document.createEvent('Events');
+              event.initEvent('select', true, true);
+              this.dispatchEvent(event);
+            }
           }
           return val;
         ]]>
