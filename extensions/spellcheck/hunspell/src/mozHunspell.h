@@ -70,7 +70,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsWeakReference.h"
 
-#define MOZ_HUNSPELL_CONTRACTID "@mozilla.org/spellchecker/hunspell;1"
+#define MOZ_HUNSPELL_CONTRACTID "@mozilla.org/spellchecker/engine;1"
 #define MOZ_HUNSPELL_CID         \
 /* 56c778e4-1bee-45f3-a689-886692a97fe7 */   \
 { 0x56c778e4, 0x1bee, 0x45f3, \
