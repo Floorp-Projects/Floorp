@@ -1579,6 +1579,10 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
                  const char *alias);
 
 extern JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name,
+                         JSBool *foundp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
@@ -1658,6 +1662,10 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
                               uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj, const jschar *name,
+                           size_t namelen, JSBool *foundp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_HasUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen,
                  JSBool *vp);
@@ -1703,6 +1711,10 @@ JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
 
 extern JS_PUBLIC_API(JSBool)
 JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, jsint index,
+                        JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp);
