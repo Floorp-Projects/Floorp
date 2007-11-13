@@ -132,6 +132,18 @@ BookmarksSyncService.prototype = {
   // DAVCollection object
   _dav: null,
 
+  __encrypter: {},
+  __encrypterLoaded: false,
+  get _encrypter() {
+    if (!this.__encrypterLoaded) {
+      let jsLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+        getService(Ci.mozIJSSubScriptLoader);
+      jsLoader.loadSubScript("chrome://sync/content/encrypt.js", this.__encrypter);
+      this.__encrypterLoaded = true;
+    }
+    return this.__encrypter;
+  },
+
   // Last synced tree, version, and GUID (to detect if the store has
   // been completely replaced and invalidate the snapshot)
   _snapshot: {},
@@ -150,21 +162,74 @@ BookmarksSyncService.prototype = {
     this.__snapshotGUID = GUID;
   },
 
+  get username() {
+    let branch = Cc["@mozilla.org/preferences-service;1"]
+      .getService(Ci.nsIPrefBranch);
+    return branch.getCharPref("browser.places.sync.username");
+  },
+  set username(value) {
+    let branch = Cc["@mozilla.org/preferences-service;1"]
+      .getService(Ci.nsIPrefBranch);
+    return branch.setCharPref("browser.places.sync.username", value);
+  },
+
+  get password() {
+    // fixme: make a request and get the realm
+    let password;
+    let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, makeURI(this._serverURL).hostPort, null,
+                               'services.mozilla.com - proxy');
+
+    for (let i = 0; i < logins.length; i++) {
+      if (logins[i].username == this.username) {
+        password = logins[i].password;
+        break;
+      }
+    }
+    return password;
+  },
+
+  get userPath() {
+    this._log.info("Hashing username " + this.username);
+
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+      createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+      .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA1);
+
+    let data = converter.convertToByteArray(this.username, {});
+    hasher.update(data, data.length);
+    let rawHash = hasher.finish(false);
+
+    // return the two-digit hexadecimal code for a byte
+    function toHexString(charCode) {
+      return ("0" + charCode.toString(16)).slice(-2);
+    }
+
+    let hash = [toHexString(rawHash.charCodeAt(i)) for (i in rawHash)].join("");
+    this._log.debug("Username hashes to " + hash);
+    return hash;
+  },
+
   get currentUser() {
-    return this._dav.currentUser;
+    return this.username;
   },
 
   _init: function BSS__init() {
     this._initLogs();
     this._log.info("Bookmarks Sync Service Initializing");
 
-    let serverURL = 'https://services.mozilla.com/';
+    this._serverURL = 'https://services.mozilla.com/';
+    this._user = '';
     let enabled = false;
     let schedule = 0;
     try {
       let branch = Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
-      serverURL = branch.getCharPref("browser.places.sync.serverURL");
+      this._serverURL = branch.getCharPref("browser.places.sync.serverURL");
       enabled = branch.getBoolPref("browser.places.sync.enabled");
       schedule = branch.getIntPref("browser.places.sync.schedule");
 
@@ -172,8 +237,7 @@ BookmarksSyncService.prototype = {
     }
     catch (ex) { /* use defaults */ }
 
-    this._log.info("Bookmarks login server: " + serverURL);
-    this._dav = new DAVCollection(serverURL);
+    this._dav = new DAVCollection();
     this._readSnapshot();
 
     if (!enabled) {
@@ -1383,26 +1447,10 @@ BookmarksSyncService.prototype = {
     this._log.warn("generator not properly closed");
   },
 
-  _encrypt: function BSS__encrypt(string, passphrase) {
-    let koFactory = Cc["@mozilla.org/security/keyobjectfactory;1"].
-      getService(Ci.nsIKeyObjectFactory);
-    let ko = koFactory.keyFromString(2, passphrase); // 2 is AES
-    let streamCipher = Cc["@mozilla.org/security/streamcipher;1"].
-      getService(Ci.nsIStreamCipher);
-    streamCipher.init(ko);
-    streamCipher.updateFromString(string);
-    return streamCipher.finish(true);
-  },
-
-  _decrypt: function BSS__decrypt(string, passphrase) {
-    // FIXME
-  },
-
   _onLogin: function BSS__onLogin(success) {
     this._loginGen.close();
     this._loginGen = null;
     if (success) {
-      this._log.info("Bookmarks sync server: " + this._dav.userURL);
       this._os.notifyObservers(null, "bookmarks-sync:login", "");
     } else {
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
@@ -1590,10 +1638,27 @@ BookmarksSyncService.prototype = {
       this._log.warn("Login requested, but already logging in");
       return;
     }
-    this._loggingIn = true;
+
     this._log.info("Logging in");
+
+    if (!this.username) {
+      this._log.warn("No username set, login failed");
+      this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+      return;
+    }
+    if (!this.password) {
+      this._log.warn("No password found in password manager");
+      this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+      return;
+    }
+
+    this._loggingIn = true;
+
+    this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
+    this._log.info("Using server URL: " + this._dav.baseURL);
     let callback = bind2(this, this._onLogin);
-    this._loginGen = this._dav.login.async(this._dav, callback);
+    this._loginGen = this._dav.login.async(this._dav, callback,
+                                           this.username, this.password);
   },
 
   logout: function BSS_logout() {
@@ -1677,7 +1742,7 @@ function continueGenerator(generator, data) {
     if (e instanceof StopIteration)
       dump("continueGenerator warning: generator stopped unexpectedly");
     else
-      this._log.error("Exception caught: " + e.message);
+      dump("Exception caught: " + e.message);
   }
 }
 
@@ -1735,7 +1800,6 @@ function xpath(xmlDoc, xpathString) {
 
 function DAVCollection(baseURL) {
   this._baseURL = baseURL;
-  this._userURL = baseURL;
   this._authProvider = new DummyAuthProvider();
   let logSvc = Cc["@mozilla.org/log4moz/service;1"].
     getService(Ci.ILog4MozService);
@@ -1752,7 +1816,7 @@ DAVCollection.prototype = {
   },
 
   __base64: {},
-  __vase64loaded: false,
+  __base64loaded: false,
   get _base64() {
     if (!this.__base64loaded) {
       let jsLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
@@ -1763,76 +1827,23 @@ DAVCollection.prototype = {
     return this.__base64;
   },
 
-  // FIXME: should we regen this each time to prevent it from staying in memory?
-  __auth: null,
-  get _auth() {
-    if (this.__auth)
-      return this.__auth;
-
-    try {
-      this._log.debug("Generating new authentication header");
-
-      this.__authURI = this._userURL;
-      let URI = makeURI(this._userURL);
-      let username = 'nobody@mozilla.com';
-      let password;
-
-      let branch = Cc["@mozilla.org/preferences-service;1"].
-        getService(Ci.nsIPrefBranch);
-      username = branch.getCharPref("browser.places.sync.username");
-
-      if (!username) {
-        this._log.info("No username found in password mgr, can't generate auth header");
-        return null;
-      }
-
-      // fixme: make a request and get the realm
-      let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-      let logins = lm.findLogins({}, URI.hostPort, null,
-                                 'services.mozilla.com');
-
-      for (let i = 0; i < logins.length; i++) {
-        if (logins[i].username == username) {
-          password = logins[i].password;
-          break;
-        }
-      }
-
-      if (!password) {
-        this._log.info("No password found in password mgr, can't generate auth header");
-        return null;
-      }
-
-      this.__auth = "Basic " +
-        this._base64.Base64.encode(username + ":" + password);
-
-    } catch (e) {}
-
-    return this.__auth;
-  },
+  _auth: null,
 
   get baseURL() {
     return this._baseURL;
   },
-
-  get userURL() {
-    return this._userURL;
+  set baseURL(value) {
+    this._baseURL = value;
   },
 
   _loggedIn: false,
-  _currentUserPath: "nobody",
-
-  _currentUser: "nobody@mozilla.com",
-  get currentUser() {
-    return this._currentUser;
-  },
 
   _makeRequest: function DC__makeRequest(onComplete, op, path, headers, data) {
     let cont = yield;
     let ret;
 
     try {
-      this._log.debug("Creating " + op + " request for " + this._userURL + path);
+      this._log.debug("Creating " + op + " request for " + this._baseURL + path);
   
       let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
       request = request.QueryInterface(Ci.nsIDOMEventTarget);
@@ -1840,7 +1851,7 @@ DAVCollection.prototype = {
       request.addEventListener("load", new EventListener(cont, "load"), false);
       request.addEventListener("error", new EventListener(cont, "error"), false);
       request = request.QueryInterface(Ci.nsIXMLHttpRequest);
-      request.open(op, this._userURL + path, true);
+      request.open(op, this._baseURL + path, true);
 
 
       // Force cache validation
@@ -1883,7 +1894,7 @@ DAVCollection.prototype = {
     return {'Authorization': this._auth? this._auth : '',
             'Content-type': 'text/plain',
             'If': this._token?
-              "<" + this._userURL + "> (<" + this._token + ">)" : ''};
+              "<" + this._baseURL + "> (<" + this._token + ">)" : ''};
   },
 
   GET: function DC_GET(path, onComplete) {
@@ -1925,7 +1936,7 @@ DAVCollection.prototype = {
 
   // Login / Logout
 
-  login: function DC_login(onComplete) {
+  login: function DC_login(onComplete, username, password) {
     let cont = yield;
 
     try {
@@ -1936,25 +1947,18 @@ DAVCollection.prototype = {
    
       this._log.info("Logging in");
 
-      this._userURL = this._baseURL; // for createAcct.php
+      let URI = makeURI(this._baseURL);
+      this._auth = "Basic " +
+        this._base64.Base64.encode(username + ":" + password);
 
-      // This ensures the auth header is correct, and it doubles as an
-      // account creation request
-      let gen = this.GET("createAcct.php", cont);
+      // Make a call to make sure it's working
+      let gen = this.GET("", cont);
       let resp = yield;
       gen.close();
 
       if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
         throw 'close generator';
   
-      let branch = Cc["@mozilla.org/preferences-service;1"].
-        getService(Ci.nsIPrefBranch);
-      this._currentUser = branch.getCharPref("browser.places.sync.username");
-  
-      // FIXME: hack
-      let path = this._currentUser.split("@");
-      this._currentUserPath = path[0];
-      this._userURL = this._baseURL + "user/" + this._currentUserPath + "/";
       this._loggedIn = true;
 
     } catch (e) {
