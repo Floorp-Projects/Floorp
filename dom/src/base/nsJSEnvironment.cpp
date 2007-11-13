@@ -72,7 +72,6 @@
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsGUIEvent.h"
-#include "nsScriptNameSpaceManager.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
 #include "nsIAtom.h"
@@ -2315,16 +2314,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
-
-  if (!gNameSpaceManager) {
-    gNameSpaceManager = new nsScriptNameSpaceManager;
-    NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
-
-    rv = gNameSpaceManager->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
   if (!aGlobalObject) {
@@ -2341,6 +2330,8 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   // If there's already a global object in mContext we won't tell
   // XPConnect to wrap aGlobalObject since it's already wrapped.
+
+  nsresult rv;
 
   if (!global) {
     nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
@@ -2413,9 +2404,10 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 nsresult
 nsJSContext::InitializeExternalClasses()
 {
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  return gNameSpaceManager->InitForContext(this);
+  return nameSpaceManager->InitForContext(this);
 }
 
 nsresult
@@ -3660,6 +3652,24 @@ nsJSRuntime::Init()
   sIsInitialized = NS_SUCCEEDED(rv);
 
   return rv;
+}
+
+//static
+nsScriptNameSpaceManager*
+nsJSRuntime::GetNameSpaceManager()
+{
+  if (sDidShutdown)
+    return nsnull;
+
+  if (!gNameSpaceManager) {
+    gNameSpaceManager = new nsScriptNameSpaceManager;
+    NS_ENSURE_TRUE(gNameSpaceManager, nsnull);
+
+    nsresult rv = gNameSpaceManager->Init();
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+
+  return gNameSpaceManager;
 }
 
 void nsJSRuntime::ShutDown()
