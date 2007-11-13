@@ -1130,11 +1130,14 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
                              getter_AddRefs(selection));
 
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-        if (presShell && selection) {
+        if (presShell) {
           nsCOMPtr<nsICaret> caret;
           presShell->GetCaret(getter_AddRefs(caret));
           if (caret) {
-            caret->SetCaretDOMSelection(selection);
+            caret->SetIgnoreUserModify(PR_FALSE);
+            if (selection) {
+              caret->SetCaretDOMSelection(selection);
+            }
           }
         }
 
@@ -1197,6 +1200,15 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
           do_QueryInterface(selection);
         if (selectionPrivate) {
           selectionPrivate->SetAncestorLimiter(nsnull);
+        }
+
+        nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+        if (presShell) {
+          nsCOMPtr<nsICaret> caret;
+          presShell->GetCaret(getter_AddRefs(caret));
+          if (caret) {
+            caret->SetIgnoreUserModify(PR_TRUE);
+          }
         }
 
         selCon->SetCaretEnabled(PR_FALSE);

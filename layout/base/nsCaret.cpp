@@ -91,7 +91,7 @@ nsCaret::nsCaret()
 , mShowDuringSelection(PR_FALSE)
 , mLastContentOffset(0)
 , mLastHint(nsFrameSelection::HINTLEFT)
-, mIgnoreUserModify(PR_FALSE)
+, mIgnoreUserModify(PR_TRUE)
 #ifdef IBMBIDI
 , mLastBidiLevel(0)
 , mKeyboardRTL(PR_FALSE)
