@@ -715,7 +715,7 @@ var BookmarkPropertiesPanel = {
     try {
       var value = this._element(aTextboxID).value;
       if (value) {
-        var uri = PlacesUtils._uri(value);
+        var uri = PlacesUtils.createFixedURI(value);
         return true;
       }
     } catch (e) { }
@@ -822,7 +822,7 @@ var BookmarkPropertiesPanel = {
 
     if (this._itemType == BOOKMARK_ITEM) {
       // location
-      var url = PlacesUtils._uri(this._element("editURLBar").value);
+      var url = PlacesUtils.createFixedURI(this._element("editURLBar").value);
       if (!this._bookmarkURI.equals(url))
         transactions.push(PlacesUtils.ptm.editBookmarkURI(itemId, url));
 
@@ -858,7 +858,7 @@ var BookmarkPropertiesPanel = {
     }
     else if (this._itemType == LIVEMARK_CONTAINER) {
       var feedURIString = this._element("feedLocationTextfield").value;
-      var feedURI = PlacesUtils._uri(feedURIString);
+      var feedURI = PlacesUtils.createFixedURI(feedURIString);
       if (!this._feedURI.equals(feedURI)) {
         transactions.push(
           PlacesUtils.ptm.editLivemarkFeedURI(this._folderId, feedURI));
@@ -868,7 +868,7 @@ var BookmarkPropertiesPanel = {
       var newSiteURIString = this._element("feedSiteLocationTextfield").value;
       var newSiteURI = null;
       if (newSiteURIString)
-        newSiteURI = PlacesUtils._uri(newSiteURIString);
+        newSiteURI = PlacesUtils.createFixedURI(newSiteURIString);
 
       if ((!newSiteURI && this._siteURI)  ||
           (newSiteURI && (!this._siteURI || !this._siteURI.equals(newSiteURI)))) {
@@ -912,7 +912,7 @@ var BookmarkPropertiesPanel = {
    */
   _getCreateNewBookmarkTransaction:
   function BPP__getCreateNewBookmarkTransaction(aContainer, aIndex) {
-    var uri = PlacesUtils._uri(this._element("editURLBar").value);
+    var uri = PlacesUtils.createFixedURI(this._element("editURLBar").value);
     var title = this._element("userEnteredName").label;
     var keyword = this._element("keywordTextfield").value;
     var annotations = [];
@@ -984,12 +984,12 @@ var BookmarkPropertiesPanel = {
   _getCreateNewLivemarkTransaction:
   function BPP__getCreateNewLivemarkTransaction(aContainer, aIndex) {
     var feedURIString = this._element("feedLocationTextfield").value;
-    var feedURI = PlacesUtils._uri(feedURIString);
+    var feedURI = PlacesUtils.createFixedURI(feedURIString);
 
     var siteURIString = this._element("feedSiteLocationTextfield").value;
     var siteURI = null;
     if (siteURIString)
-      siteURI = PlacesUtils._uri(siteURIString);
+      siteURI = PlacesUtils.createFixedURI(siteURIString);
 
     var name = this._element("namePicker").value;
     return PlacesUtils.ptm.createLivemark(feedURI, siteURI, name,
