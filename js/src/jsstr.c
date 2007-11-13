@@ -1158,8 +1158,7 @@ match_or_replace(JSContext *cx,
         } else {
             opt = NULL;
         }
-        re = js_NewRegExpOpt(cx, NULL, src, opt,
-                             (data->flags & FORCE_FLAT) != 0);
+        re = js_NewRegExpOpt(cx, src, opt, (data->flags & FORCE_FLAT) != 0);
         if (!re)
             return JS_FALSE;
         reobj = NULL;
