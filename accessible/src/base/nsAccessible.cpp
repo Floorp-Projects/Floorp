@@ -2206,7 +2206,7 @@ nsAccessible::GroupPosition(PRInt32 *aGroupLevel,
   *aGroupLevel = level;
 
   *aPositionInGroup = posInSet;
-  *aSimilarItemsInGroup = setSize - 1;
+  *aSimilarItemsInGroup = setSize;
 
   return NS_OK;
 }
