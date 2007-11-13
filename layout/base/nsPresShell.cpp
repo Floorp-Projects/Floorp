@@ -5776,26 +5776,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     // bug 329430
     aEvent->target = nsnull;
 
-    nsCOMPtr<nsIViewManager> rootViewVM;
-    void* clientData = nsnull;
-    if (aView) {
-      clientData = aView->GetClientData();
-      rootViewVM = aView->GetViewManager();
-    }
-    nsWeakFrame viewownerframe = static_cast<nsIFrame*>(clientData);
-
-#ifdef DEBUG
-    if (aView && !clientData) {
-      nsIView* rootView = nsnull;
-      rootViewVM->GetRootView(rootView);
-      // If view isn't the root view, it should have a frame here.
-      NS_ASSERTION(rootView == aView, "View doesn't have a frame!");
-    }
-#endif
-    NS_ASSERTION(!viewownerframe.GetFrame() ||
-                 viewownerframe->GetView() == aView,
-                 "View owner frame doesn't have the right view?");
-
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame,
@@ -5828,17 +5808,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       // 3. Give event to event manager for post event state changes and
       //    generation of synthetic events.
       if (NS_SUCCEEDED(rv)) {
-        nsIView* safeView = nsnull;
-        if (viewownerframe.IsAlive()) {
-          safeView = viewownerframe->GetView();
-        } else if (rootViewVM) {
-          rootViewVM->GetRootView(safeView);
-        }
-        NS_WARN_IF_FALSE(!aView || safeView == aView,
-                         "View changed while dispatching an event!");
         rv = manager->PostHandleEvent(mPresContext, aEvent,
-                                      GetCurrentEventFrame(), aStatus,
-                                      safeView);
+                                      GetCurrentEventFrame(), aStatus, aView);
       }
     }
   }
