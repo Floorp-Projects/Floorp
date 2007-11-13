@@ -3265,6 +3265,9 @@ PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIVie
       nsIContent* content = parentDoc->FindContentForSubDocument(document);
       if (content != nsnull) {
         nsIPresShell* shell = parentDoc->GetPrimaryShell();
+        if (!shell) {
+          return PR_FALSE;
+        }
         nsIFrame* frame = shell->GetPrimaryFrameFor(content);
         while (frame != nsnull && !frame->HasView()) {
           frame = frame->GetParent();
