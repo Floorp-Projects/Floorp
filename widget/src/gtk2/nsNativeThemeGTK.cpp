@@ -61,6 +61,7 @@
 
 #include <gdk/gdkprivate.h>
 #include <gdk/gdkx.h>
+#include <gtk/gtk.h>
 
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
@@ -376,6 +377,31 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_TREEVIEW_HEADER_CELL:
     aGtkWidgetType = MOZ_GTK_TREE_HEADER_CELL;
+    break;
+  case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+    if (aWidgetFlags) {
+      switch (GetTreeSortDirection(aFrame)) {
+        case eTreeSortDirection_Ascending:
+          *aWidgetFlags = GTK_ARROW_DOWN;
+          break;
+        case eTreeSortDirection_Descending:
+          *aWidgetFlags = GTK_ARROW_UP;
+          break;
+        case eTreeSortDirection_Natural:
+        default:
+          /* GTK_ARROW_NONE is implemented since GTK 2.10
+           * This prevents the treecolums from getting smaller
+           * and wider when switching sort direction off and on
+           * */
+#if GTK_CHECK_VERSION(2,10,0)
+          *aWidgetFlags = GTK_ARROW_NONE;
+#else
+          return PR_FALSE; // Don't draw when we shouldn't
+#endif // GTK_CHECK_VERSION(2,10,0)
+          break;
+      }
+    }
+    aGtkWidgetType = MOZ_GTK_TREE_HEADER_SORTARROW;
     break;
   case NS_THEME_DROPDOWN:
     aGtkWidgetType = MOZ_GTK_DROPDOWN;
@@ -851,6 +877,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       aResult->height = border.top + border.bottom;
     }
     break;
+  case NS_THEME_TREEVIEW_HEADER_SORTARROW:
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
     // hard code these sizes
@@ -862,7 +889,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     aResult->width = aResult->height = 15;
     break;
   }
-
   return NS_OK;
 }
 
@@ -883,6 +909,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_MENUBAR ||
       aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_TOOLTIP ||
+      aWidgetType == NS_THEME_TREEVIEW_HEADER_SORTARROW ||
       aWidgetType == NS_THEME_WINDOW ||
       aWidgetType == NS_THEME_DIALOG) {
     *aShouldRepaint = PR_FALSE;
@@ -959,7 +986,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // case NS_THEME_TREEVIEW_LINE:
     // case NS_THEME_TREEVIEW_HEADER:
   case NS_THEME_TREEVIEW_HEADER_CELL:
-    // case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+  case NS_THEME_TREEVIEW_HEADER_SORTARROW:
     // case NS_THEME_TREEVIEW_TWISTY_OPEN:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_CHUNK:

@@ -157,6 +157,8 @@ typedef enum {
   MOZ_GTK_TREEVIEW,
   /* Paints treeheader cells */
   MOZ_GTK_TREE_HEADER_CELL,
+  /* Paints sort arrows in treeheader cells */
+  MOZ_GTK_TREE_HEADER_SORTARROW,
   /* Paints the background of the menu bar. */
   MOZ_GTK_MENUBAR,
   /* Paints the background of menus, context menus. */
