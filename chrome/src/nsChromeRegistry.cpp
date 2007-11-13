@@ -1920,6 +1920,7 @@ enum TriState {
 /**
  * Check for a modifier flag of the following form:
  *   "flag=string"
+ *   "flag!=string"
  * @param aFlag The flag to compare.
  * @param aData The tokenized data to check; this is lowercased
  *              before being passed in.
@@ -1938,15 +1939,22 @@ CheckStringFlag(const nsSubstring& aFlag, const nsSubstring& aData,
   if (!StringBeginsWith(aData, aFlag))
     return PR_FALSE;
 
-  if (aData[aFlag.Length()] != '=')
-    return PR_FALSE;
+  PRBool comparison = PR_TRUE;
+  if (aData[aFlag.Length()] != '=') {
+    if (aData[aFlag.Length()] == '!' &&
+        aData.Length() >= aFlag.Length() + 2 &&
+        aData[aFlag.Length() + 1] == '=')
+      comparison = PR_FALSE;
+    else
+      return PR_FALSE;
+  }
 
   if (aResult != eOK) {
-    nsDependentSubstring testdata = Substring(aData, aFlag.Length() + 1);
+    nsDependentSubstring testdata = Substring(aData, aFlag.Length() + (comparison ? 1 : 2));
     if (testdata.Equals(aValue))
-      aResult = eOK;
+      aResult = comparison ? eOK : eBad;
     else
-      aResult = eBad;
+      aResult = comparison ? eBad : eOK;
   }
 
   return PR_TRUE;
