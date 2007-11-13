@@ -3577,12 +3577,6 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
     *aHandled = PR_TRUE;
     return res;
   }
-  // Next we detect all the transitions in the array, where a transition
-  // means that adjacent nodes in the array don't have the same parent.
-  
-  nsVoidArray transitionList;
-  res = MakeTransitionList(arrayOfNodes, transitionList);
-  if (NS_FAILED(res)) return res;                                 
   
   // Ok, now go through all the nodes and put them in a blockquote, 
   // or whatever is appropriate.  Wohoo!
@@ -3590,6 +3584,7 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curQuote;
   nsCOMPtr<nsIDOMNode> curList;
+  nsCOMPtr<nsIDOMNode> sibling;
   PRInt32 listCount = arrayOfNodes.Count();
   for (i=0; i<listCount; i++)
   {
@@ -3606,7 +3601,48 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
     // some logic for putting list items into nested lists...
     if (nsHTMLEditUtils::IsList(curParent))
     {
-      if (!curList || transitionList[i])
+      sibling = nsnull;
+
+      // Check for whether we should join a list that follows curNode.
+      // We do this if the next element is a list, and the list is of the
+      // same type (li/ol) as curNode was a part it.
+      mHTMLEditor->GetNextHTMLSibling(curNode, address_of(sibling));
+      if (sibling && nsHTMLEditUtils::IsList(sibling))
+      {
+        nsAutoString curListTag, siblingListTag;
+        nsEditor::GetTagString(curParent, curListTag);
+        nsEditor::GetTagString(sibling, siblingListTag);
+        if (curListTag == siblingListTag)
+        {
+          res = mHTMLEditor->MoveNode(curNode, sibling, 0);
+          if (NS_FAILED(res)) return res;
+          continue;
+        }
+      }
+      // Check for whether we should join a list that preceeds curNode.
+      // We do this if the previous element is a list, and the list is of
+      // the same type (li/ol) as curNode was a part of.
+      mHTMLEditor->GetPriorHTMLSibling(curNode, address_of(sibling));
+      if (sibling && nsHTMLEditUtils::IsList(sibling))
+      {
+        nsAutoString curListTag, siblingListTag;
+        nsEditor::GetTagString(curParent, curListTag);
+        nsEditor::GetTagString(sibling, siblingListTag);
+        if (curListTag == siblingListTag)
+        {
+          res = mHTMLEditor->MoveNode(curNode, sibling, -1);
+          if (NS_FAILED(res)) return res;
+          continue;
+        }
+      }
+      sibling = nsnull;
+      
+      // check to see if curList is still appropriate.  Which it is if
+      // curNode is still right after it in the same list.
+      if (curList)
+        mHTMLEditor->GetPriorHTMLSibling(curNode, address_of(sibling));
+
+      if (!curList || (sibling && sibling != curList))
       {
         nsAutoString listTag;
         nsEditor::GetTagString(curParent,listTag);
@@ -3635,7 +3671,7 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
         curQuote = nsnull;
       }
       else {
-        if (!curQuote) // || transitionList[i])
+        if (!curQuote)
         {
           NS_NAMED_LITERAL_STRING(divquoteType, "div");
           res = SplitAsNeeded(&divquoteType, address_of(curParent), &offset);
