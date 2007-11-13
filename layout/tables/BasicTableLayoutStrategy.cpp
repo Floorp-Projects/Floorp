@@ -375,7 +375,9 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 if (mTableFrame->GetNumCellsOriginatingInCol(scol) &&
                     scol != col) {
                     info.minCoord -= spacing;
-                    info.prefCoord -= spacing;
+                    info.prefCoord = NSCoordSaturatingSubtract(info.prefCoord,
+                                                               spacing,
+                                                               nscoord_MAX);
                 }
 
                 totalSPref += scolFrame->GetPrefCoord();
@@ -391,7 +393,10 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                     info.prefPercent -= scolPct;
                 }
                 info.minCoord -= scolFrame->GetMinCoord();
-                info.prefCoord -= scolFrame->GetPrefCoord();
+                info.prefCoord = 
+                    NSCoordSaturatingSubtract(info.prefCoord,
+                                              scolFrame->GetPrefCoord(),
+                                              nscoord_MAX);
             }
 
             if (info.minCoord < 0)
@@ -496,7 +501,9 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                      NSToCoordRound(float(info.prefCoord) * coordRatio));
                 nscoord spanMin = scolFrame->GetMinCoord() +
                         allocatedMinWithinPref + allocatedMinOutsidePref;
-                nscoord spanPref = scolFrame->GetPrefCoord() + allocatedPref;
+                nscoord spanPref = 
+                    NSCoordSaturatingAdd(scolFrame->GetPrefCoord(),
+                                         allocatedPref);
                 scolFrame->AddSpanCoords(spanMin, spanPref,
                                          info.hasSpecifiedWidth);
 
