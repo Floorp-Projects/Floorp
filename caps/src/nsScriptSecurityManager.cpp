@@ -2789,11 +2789,6 @@ nsScriptSecurityManager::SetCanEnableCapability(const nsACString& certFingerprin
         rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile),
                               getter_AddRefs(systemCertFile));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-#ifdef XP_MAC
-        // On Mac, this file will be located in the Essential Files folder
-        systemCertFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-#endif
         systemCertFile->AppendNative(NS_LITERAL_CSTRING("systemSignature.jar"));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         nsCOMPtr<nsIZipReader> systemCertZip = do_CreateInstance(kZipReaderCID, &rv);
