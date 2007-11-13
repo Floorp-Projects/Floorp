@@ -82,6 +82,7 @@ protected:
   nsWeakPtr     mSession; // Should never be touched by Clone or Assign
  
   nsMargin      mMargin;
+  nsMargin      mEdge;
   PRInt32       mPrintOptions;
 
   // scriptable data members
