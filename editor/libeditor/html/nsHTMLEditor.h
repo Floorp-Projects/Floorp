@@ -72,6 +72,7 @@
 #include "nsIDocumentObserver.h"
 
 #include "nsPoint.h"
+#include "nsTArray.h"
 
 class nsIDOMKeyEvent;
 class nsITransferable;
@@ -633,7 +634,7 @@ protected:
                                         nsCOMPtr<nsIDOMNode> *outEndNode,
                                         PRInt32 *outStartOffset,
                                         PRInt32 *outEndOffset);
-  nsresult   ParseFragment(const nsAString & aStr, nsVoidArray &aTagStack,
+  nsresult   ParseFragment(const nsAString & aStr, nsTArray<nsAutoString> &aTagStack,
                            nsIDocument* aTargetDoc,
                            nsCOMPtr<nsIDOMNode> *outNode);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
@@ -642,8 +643,8 @@ protected:
                                       PRInt32 aStartOffset,
                                       nsIDOMNode *aEndNode,
                                       PRInt32 aEndOffset);
-  nsresult CreateTagStack(nsVoidArray &aTagStack, nsIDOMNode *aNode);
-  void     FreeTagStackStrings(nsVoidArray &tagStack);
+  nsresult CreateTagStack(nsTArray<nsAutoString> &aTagStack,
+                          nsIDOMNode *aNode);
   nsresult GetListAndTableParents( PRBool aEnd, 
                                    nsCOMArray<nsIDOMNode>& aListOfNodes,
                                    nsCOMArray<nsIDOMNode>& outArray);
