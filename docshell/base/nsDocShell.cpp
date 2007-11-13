@@ -9201,25 +9201,12 @@ nsClassifierCallback::Run()
     nsresult rv = channel->GetURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Don't bother checking certain types of URIs.
-    PRBool hasFlags;
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
-                             &hasFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
-
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_IS_LOCAL_FILE,
-                             &hasFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
-
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                             &hasFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
+    // XXX: we need to audit other channels to make sure they can handle
+    // being suspended directly after AsyncOpen()
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    if (!httpChannel) {
+        return NS_OK;
+    }
 
     nsCOMPtr<nsIURIClassifier> uriClassifier =
         do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
@@ -9233,13 +9220,7 @@ nsClassifierCallback::Run()
         // Suspend the channel, it will be resumed when we get the classifier
         // callback.
         rv = channel->Suspend();
-        if (NS_FAILED(rv)) {
-            // Some channels (including nsJSChannel) fail on Suspend.  This
-            // shouldn't be fatal, but will prevent malware from being
-            // blocked on these channels.
-            return NS_OK;
-        }
-
+        NS_ENSURE_SUCCESS(rv, rv);
         mSuspendedChannel = channel;
 #ifdef DEBUG
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
