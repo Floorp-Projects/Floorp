@@ -44,7 +44,7 @@
 #include "nsProfileLock.h"
 #include "nsCOMPtr.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #include <Processes.h>
 #include <CFBundle.h>
 #endif
