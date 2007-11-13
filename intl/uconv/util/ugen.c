@@ -625,7 +625,7 @@ PRIVATE PRBool uCheckAndGenJohabHangul(
     {
     /*
     See Table 4-45 (page 183) of CJKV Information Processing
-    for detail explaination of the following table
+    for detail explanation of the following table.
         */
         /*
         static const PRUint8 lMap[LCount] = {
