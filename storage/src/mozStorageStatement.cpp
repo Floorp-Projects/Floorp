@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Shawn Wilsher <me@shawnwilsher.com>
+ *   John Zhang <jzhang@aptana.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -803,5 +804,22 @@ mozStorageStatement::EscapeStringForLIKE(const nsAString & aValue,
             aEscapedString += aEscapeChar;
         aEscapedString += aValue[i];
     }
+    return NS_OK;
+}
+
+/* AString getColumnDecltype(in unsigned long aParamIndex); */
+NS_IMETHODIMP
+mozStorageStatement::GetColumnDecltype(PRUint32 aParamIndex,
+                                       nsACString& aDeclType)
+{
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+    
+    if (aParamIndex < 0 || aParamIndex >= mResultColumnCount)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    const char *declType = sqlite3_column_decltype(mDBStatement, aParamIndex);
+    aDeclType.Assign(declType);
+    
     return NS_OK;
 }
