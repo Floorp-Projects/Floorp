@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prprf.h"
+
 #include "nsIDOMNodeList.h"
 #include "nsUnicharUtils.h"
 
