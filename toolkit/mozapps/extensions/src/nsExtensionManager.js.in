@@ -4486,7 +4486,7 @@ ExtensionManager.prototype = {
         needsRestart = internalName == gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
       return needsRestart;
     }
-    return ((type & nsIUpdateItem.TYPE_ANY) > 0);
+    return ((type & Ci.nsIUpdateItem.TYPE_ANY) > 0);
   },
 
   /**
