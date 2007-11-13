@@ -43,7 +43,7 @@
   <!ENTITY cmdShowFindDialog.accelkey "f">
 
   <!ENTITY cmdFindNext.label "Find Next">
-  <!ENTITY cmdFindNext.accesskey "n">
+  <!ENTITY cmdFindNext.accesskey "N">
 
   <!ENTITY cmdToggleAnonContent.label "Show Anonymous Content">
   <!ENTITY cmdToggleAnonContent.accesskey "a">
@@ -58,6 +58,7 @@
   <!ENTITY cmdToggleProcessingInstructions.accesskey "P">
 
   <!ENTITY cmdFlashSelected.label "Blink Selected Element">
+  <!ENTITY cmdFlashSelected.accesskey "S">
 
   <!ENTITY cmdToggleAttributes.label "Show Attributes">
   <!ENTITY cmdToggleAttributes.accesskey "r">
