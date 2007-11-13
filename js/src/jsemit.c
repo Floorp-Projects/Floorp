@@ -75,6 +75,8 @@
 #define SRCNOTE_SIZE(n)         ((n) * sizeof(jssrcnote))
 #define TRYNOTE_SIZE(n)         ((n) * sizeof(JSTryNote))
 
+#define CG_TS(cg) TS((cg)->treeContext.parseContext)
+
 static JSBool
 NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
            uintN stackDepth, size_t start, size_t end);
@@ -3587,8 +3589,7 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
     depth = limit = (uintN) cg->stackDepth;
     for (pn = rhs->pn_head; pn; pn = pn->pn_next) {
         if (limit == JS_BIT(16)) {
-            js_ReportCompileErrorNumber(cx, rhs,
-                                        JSREPORT_PN | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, CG_TS(cg), rhs, JSREPORT_ERROR,
                                         JSMSG_ARRAY_INIT_TOO_BIG);
             return JS_FALSE;
         }
@@ -5187,7 +5188,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #if JS_HAS_GENERATORS
       case TOK_YIELD:
         if (!(cg->treeContext.flags & TCF_IN_FUNCTION)) {
-            js_ReportCompileErrorNumber(cx, pn, JSREPORT_PN | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR,
                                         JSMSG_BAD_RETURN_OR_YIELD,
                                         js_yield_str);
             return JS_FALSE;
@@ -5280,8 +5281,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  cg->treeContext.topStmt->type != STMT_LABEL ||
                  cg->treeContext.topStmt->update < CG_OFFSET(cg))) {
                 CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
-                if (!js_ReportCompileErrorNumber(cx, pn2,
-                                                 JSREPORT_PN |
+                if (!js_ReportCompileErrorNumber(cx, CG_TS(cg), pn2,
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_USELESS_EXPR)) {

@@ -419,6 +419,25 @@ typedef struct {
     size_t parenIndex;
 } REOpData;
 
+static JSBool
+ReportRegExpErrorHelper(CompilerState *state, uintN flags, uintN errorNumber,
+                        const jschar *arg)
+{
+    if (state->tokenStream) {
+        return js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                           NULL, JSREPORT_UC | flags,
+                                           errorNumber, arg);
+    }
+    return JS_ReportErrorFlagsAndNumberUC(state->context, flags,
+                                          js_GetErrorMessage, NULL,
+                                          errorNumber, arg);
+}
+
+static JSBool
+ReportRegExpError(CompilerState *state, uintN flags, uintN errorNumber)
+{
+    return ReportRegExpErrorHelper(state, flags, errorNumber, NULL);
+}
 
 /*
  * Process the op against the two top operands, reducing them to a single
@@ -440,9 +459,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
         operandStack[operandSP - 2] = result;
 
         if (state->treeDepth == TREE_DEPTH_MAX) {
-            js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        JSREPORT_TS | JSREPORT_ERROR,
-                                        JSMSG_REGEXP_TOO_COMPLEX);
+            ReportRegExpError(state, JSREPORT_ERROR, JSMSG_REGEXP_TOO_COMPLEX);
             return JS_FALSE;
         }
         ++state->treeDepth;
@@ -504,9 +521,8 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
       case REOP_LPARENNON:
       case REOP_LPAREN:
         /* These should have been processed by a close paren. */
-        js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
-                                      JSREPORT_TS | JSREPORT_ERROR,
-                                      JSMSG_MISSING_PAREN, opData->errPos);
+        ReportRegExpErrorHelper(state, JSREPORT_ERROR, JSMSG_MISSING_PAREN,
+                                opData->errPos);
         return JS_FALSE;
 
       default:;
@@ -605,11 +621,8 @@ ParseRegExp(CompilerState *state)
                         += 2 * (1 + GetCompactIndexWidth(parenIndex));
                     state->parenCount++;
                     if (state->parenCount == 65535) {
-                        js_ReportCompileErrorNumber(state->context,
-                                                    state->tokenStream,
-                                                    JSREPORT_TS |
-                                                    JSREPORT_ERROR,
-                                                    JSMSG_TOO_MANY_PARENS);
+                        ReportRegExpError(state, JSREPORT_ERROR,
+                                          JSMSG_TOO_MANY_PARENS);
                         goto out;
                     }
                 }
@@ -621,11 +634,8 @@ ParseRegExp(CompilerState *state)
                  */
                 for (i = operatorSP - 1; ; i--) {
                     if (i < 0) {
-                        js_ReportCompileErrorNumber(state->context,
-                                                    state->tokenStream,
-                                                    JSREPORT_TS |
-                                                    JSREPORT_ERROR,
-                                                    JSMSG_UNMATCHED_RIGHT_PAREN);
+                        ReportRegExpError(state, JSREPORT_ERROR,
+                                          JSMSG_UNMATCHED_RIGHT_PAREN);
                         goto out;
                     }
                     if (operatorStack[i].op == REOP_ASSERT ||
@@ -702,10 +712,8 @@ restartOperator:
              */
             for (i = operatorSP - 1; ; i--) {
                 if (i < 0) {
-                    js_ReportCompileErrorNumber(state->context,
-                                                state->tokenStream,
-                                                JSREPORT_TS | JSREPORT_ERROR,
-                                                JSMSG_UNMATCHED_RIGHT_PAREN);
+                    ReportRegExpError(state, JSREPORT_ERROR,
+                                      JSMSG_UNMATCHED_RIGHT_PAREN);
                     goto out;
                 }
                 if (operatorStack[i].op == REOP_ASSERT ||
@@ -734,11 +742,8 @@ restartOperator:
                     operand->kid = operandStack[operandSP - 1];
                     operandStack[operandSP - 1] = operand;
                     if (state->treeDepth == TREE_DEPTH_MAX) {
-                        js_ReportCompileErrorNumber(state->context,
-                                                    state->tokenStream,
-                                                    JSREPORT_TS |
-                                                    JSREPORT_ERROR,
-                                                    JSMSG_REGEXP_TOO_COMPLEX);
+                        ReportRegExpError(state, JSREPORT_ERROR,
+                                          JSMSG_REGEXP_TOO_COMPLEX);
                         goto out;
                     }
                     ++state->treeDepth;
@@ -780,9 +785,8 @@ restartOperator:
           case '+':
           case '*':
           case '?':
-            js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
-                                          JSREPORT_TS | JSREPORT_ERROR,
-                                          JSMSG_BAD_QUANTIFIER, state->cp);
+            ReportRegExpErrorHelper(state, JSREPORT_ERROR, JSMSG_BAD_QUANTIFIER,
+                                    state->cp);
             result = JS_FALSE;
             goto out;
 
@@ -1144,9 +1148,7 @@ ParseTerm(CompilerState *state)
       case '\\':
         if (state->cp >= state->cpend) {
             /* a trailing '\' is an error */
-            js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        JSREPORT_TS | JSREPORT_ERROR,
-                                        JSMSG_TRAILING_SLASH);
+            ReportRegExpError(state, JSREPORT_ERROR, JSMSG_TRAILING_SLASH);
             return JS_FALSE;
         }
         c = *state->cp++;
@@ -1167,12 +1169,8 @@ ParseTerm(CompilerState *state)
           /* Decimal escape */
           case '0':
             /* Give a strict warning. See also the note below. */
-            if (!js_ReportCompileErrorNumber(state->context,
-                                             state->tokenStream,
-                                             JSREPORT_TS |
-                                             JSREPORT_WARNING |
-                                             JSREPORT_STRICT,
-                                             JSMSG_INVALID_BACKREF)) {
+            if (!ReportRegExpError(state, JSREPORT_WARNING | JSREPORT_STRICT,
+                                   JSMSG_INVALID_BACKREF)) {
                 return JS_FALSE;
             }
      doOctal:
@@ -1211,14 +1209,11 @@ ParseTerm(CompilerState *state)
                 return JS_FALSE;
             if (num == OVERFLOW_VALUE) {
                 /* Give a strict mode warning. */
-                if (!js_ReportCompileErrorNumber(state->context,
-                                                 state->tokenStream,
-                                                 JSREPORT_TS |
-                                                 JSREPORT_WARNING |
-                                                 JSREPORT_STRICT,
-                                                 (c >= '8')
-                                                 ? JSMSG_INVALID_BACKREF
-                                                 : JSMSG_BAD_BACKREF)) {
+                if (!ReportRegExpError(state,
+                                       JSREPORT_WARNING | JSREPORT_STRICT,
+                                       (c >= '8')
+                                       ? JSMSG_INVALID_BACKREF
+                                       : JSMSG_BAD_BACKREF)) {
                     return JS_FALSE;
                 }
 
@@ -1340,9 +1335,8 @@ doSimple:
         state->result->u.ucclass.startIndex = termStart - state->cpbegin;
         for (;;) {
             if (state->cp == state->cpend) {
-                js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
-                                              JSREPORT_TS | JSREPORT_ERROR,
-                                              JSMSG_UNTERM_CLASS, termStart);
+                ReportRegExpErrorHelper(state, JSREPORT_ERROR,
+                                        JSMSG_UNTERM_CLASS, termStart);
 
                 return JS_FALSE;
             }
@@ -1394,9 +1388,7 @@ doSimple:
          */
         n = (state->result->u.ucclass.bmsize >> 3) + 1;
         if (n > CLASS_BITMAPS_MEM_LIMIT - state->classBitmapsMem) {
-            js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        JSREPORT_TS | JSREPORT_ERROR,
-                                        JSMSG_REGEXP_TOO_COMPLEX);
+            ReportRegExpError(state, JSREPORT_ERROR, JSMSG_REGEXP_TOO_COMPLEX);
             return JS_FALSE;
         }
         state->classBitmapsMem += n;
@@ -1425,9 +1417,8 @@ doSimple:
       case '*':
       case '+':
       case '?':
-        js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
-                                      JSREPORT_TS | JSREPORT_ERROR,
-                                      JSMSG_BAD_QUANTIFIER, state->cp - 1);
+        ReportRegExpErrorHelper(state, JSREPORT_ERROR,
+                                JSMSG_BAD_QUANTIFIER, state->cp - 1);
         return JS_FALSE;
       default:
 asFlat:
@@ -1488,10 +1479,7 @@ ParseQuantifier(CompilerState *state)
             if (err == -1)
                 return JS_TRUE;
 
-            js_ReportCompileErrorNumberUC(state->context,
-                                          state->tokenStream,
-                                          JSREPORT_TS | JSREPORT_ERROR,
-                                          err, errp);
+            ReportRegExpErrorHelper(state, JSREPORT_ERROR, err, errp);
             return JS_FALSE;
           }
           default:;
@@ -1501,9 +1489,7 @@ ParseQuantifier(CompilerState *state)
 
 quantifier:
     if (state->treeDepth == TREE_DEPTH_MAX) {
-        js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                    JSREPORT_TS | JSREPORT_ERROR,
-                                    JSMSG_REGEXP_TOO_COMPLEX);
+        ReportRegExpError(state, JSREPORT_ERROR, JSMSG_REGEXP_TOO_COMPLEX);
         return JS_FALSE;
     }
 
@@ -1917,9 +1903,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
     return pc;
 
   jump_too_big:
-    js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                JSREPORT_TS | JSREPORT_ERROR,
-                                JSMSG_REGEXP_TOO_COMPLEX);
+    ReportRegExpError(state, JSREPORT_ERROR, JSMSG_REGEXP_TOO_COMPLEX);
     pc = NULL;
     goto cleanup;
 }
@@ -2023,8 +2007,7 @@ out:
 }
 
 JSRegExp *
-js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
-                JSString *str, JSString *opt, JSBool flat)
+js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat)
 {
     uintN flags;
     jschar *s;
@@ -2051,14 +2034,14 @@ js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
               default:
                 charBuf[0] = (char)s[i];
                 charBuf[1] = '\0';
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
-                                            JSMSG_BAD_FLAG, charBuf);
+                JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                             js_GetErrorMessage, NULL,
+                                             JSMSG_BAD_FLAG, charBuf);
                 return NULL;
             }
         }
     }
-    return js_NewRegExp(cx, ts, str, flags, flat);
+    return js_NewRegExp(cx, NULL, str, flags, flat);
 }
 
 /*
@@ -4061,7 +4044,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
     }
 
-    re = js_NewRegExpOpt(cx, NULL, str, opt, JS_FALSE);
+    re = js_NewRegExpOpt(cx, str, opt, JS_FALSE);
 created:
     if (!re)
         return JS_FALSE;
