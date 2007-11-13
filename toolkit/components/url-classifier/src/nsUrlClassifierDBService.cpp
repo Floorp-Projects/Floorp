@@ -489,6 +489,10 @@ private:
   nsresult GetLookupFragments(const nsCSubstring& spec,
                               nsTArray<nsUrlClassifierHash>& fragments);
 
+  // Split a hostname
+  void SplitHost(const nsCSubstring& host,
+                 nsTArray<nsCAutoString> &components);
+
   // Check for a canonicalized IP address.
   PRBool IsCanonicalizedIP(const nsACString& host);
 
@@ -662,8 +666,8 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
    *    successivly removing the leading component.  The top-level component
    *    can be skipped.
    */
-  nsCStringArray hosts;
-  hosts.AppendCString(host);
+  nsAutoTArray<nsCAutoString, 5> hosts;
+  hosts.AppendElement(host);
 
   host.BeginReading(begin);
   host.EndReading(end);
@@ -673,7 +677,7 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
     // don't bother checking toplevel domains
     if (++numComponents >= 2) {
       host.EndReading(iter);
-      hosts.AppendCString(Substring(end, iter));
+      hosts.AppendElement(Substring(end, iter));
     }
     end = begin;
     host.BeginReading(begin);
@@ -691,19 +695,19 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
    *    path component, that is, a trailing slash should never be
    *    appended that was not present in the original url.
    */
-  nsCStringArray paths;
-  paths.AppendCString(path);
+  nsAutoTArray<nsCAutoString, 6> paths;
+  paths.AppendElement(path);
 
   path.BeginReading(iter);
   path.EndReading(end);
   if (FindCharInReadable('?', iter, end)) {
     path.BeginReading(begin);
     path = Substring(begin, iter);
-    paths.AppendCString(path);
+    paths.AppendElement(path);
   }
 
   // Check an empty path (for whole-domain blacklist entries)
-  paths.AppendCString(EmptyCString());
+  paths.AppendElement(EmptyCString());
 
   numComponents = 1;
   path.BeginReading(begin);
@@ -712,16 +716,16 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
   while (FindCharInReadable('/', iter, end) &&
          numComponents < MAX_PATH_COMPONENTS) {
     iter++;
-    paths.AppendCString(Substring(begin, iter));
+    paths.AppendElement(Substring(begin, iter));
     numComponents++;
   }
 
-  for (int hostIndex = 0; hostIndex < hosts.Count(); hostIndex++) {
-    for (int pathIndex = 0; pathIndex < paths.Count(); pathIndex++) {
+  for (PRUint32 hostIndex = 0; hostIndex < hosts.Length(); hostIndex++) {
+    for (PRUint32 pathIndex = 0; pathIndex < paths.Length(); pathIndex++) {
       nsCAutoString key;
-      key.Assign(*hosts[hostIndex]);
+      key.Assign(hosts[hostIndex]);
       key.Append('/');
-      key.Append(*paths[pathIndex]);
+      key.Append(paths[pathIndex]);
       LOG(("Chking %s", key.get()));
 
       nsUrlClassifierHash* hash = fragments.AppendElement();
@@ -827,21 +831,21 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     hash.FromPlaintext(host, mCryptoHash);
     CheckKey(spec, hash, resultTables);
   } else {
-    nsCStringArray hostComponents;
-    hostComponents.ParseString(PromiseFlatCString(host).get(), ".");
+    nsAutoTArray<nsCAutoString, 5> hostComponents;
+    SplitHost(host, hostComponents);
 
-    if (hostComponents.Count() < 2) {
+    if (hostComponents.Length() < 2) {
       // no host or toplevel host, this won't match anything in the db
       c->HandleEvent(EmptyCString());
       return NS_OK;
     }
 
     // First check with two domain components
-    PRInt32 last = hostComponents.Count() - 1;
+    PRInt32 last = hostComponents.Length() - 1;
     nsCAutoString lookupHost;
-    lookupHost.Assign(*hostComponents[last - 1]);
+    lookupHost.Assign(hostComponents[last - 1]);
     lookupHost.Append(".");
-    lookupHost.Append(*hostComponents[last]);
+    lookupHost.Append(hostComponents[last]);
     lookupHost.Append("/");
     hash.FromPlaintext(lookupHost, mCryptoHash);
 
@@ -850,9 +854,9 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     CheckKey(spec, hash, resultTables);
 
     // Now check with three domain components
-    if (hostComponents.Count() > 2) {
+    if (hostComponents.Length() > 2) {
       nsCAutoString lookupHost2;
-      lookupHost2.Assign(*hostComponents[last - 2]);
+      lookupHost2.Assign(hostComponents[last - 2]);
       lookupHost2.Append(".");
       lookupHost2.Append(lookupHost);
       hash.FromPlaintext(lookupHost2, mCryptoHash);
@@ -1170,6 +1174,26 @@ nsUrlClassifierDBServiceWorker::WriteEntry(nsUrlClassifierEntry& entry)
   return NS_OK;
 }
 
+void
+nsUrlClassifierDBServiceWorker::SplitHost(const nsACString& host,
+                                          nsTArray<nsCAutoString> &components)
+{
+  nsACString::const_iterator begin, end, iter;
+  host.BeginReading(begin);
+  host.EndReading(end);
+  iter = begin;
+
+  PRBool done;
+  do {
+    done = !FindCharInReadable('.', iter, end);
+    components.AppendElement(Substring(begin, iter));
+    if (!done) {
+      iter++;
+      begin = iter;
+    }
+  } while (!done);
+}
+
 PRBool
 nsUrlClassifierDBServiceWorker::IsCanonicalizedIP(const nsACString& host)
 {
@@ -1204,23 +1228,23 @@ nsUrlClassifierDBServiceWorker::GetKey(const nsACString& spec,
     return hash.FromPlaintext(host, mCryptoHash);
   }
 
-  nsCStringArray hostComponents;
-  hostComponents.ParseString(PromiseFlatCString(host).get(), ".");
+  nsAutoTArray<nsCAutoString, 5> hostComponents;
+  SplitHost(host, hostComponents);
 
-  if (hostComponents.Count() < 2)
+  if (hostComponents.Length() < 2)
     return NS_ERROR_FAILURE;
 
-  PRInt32 last = hostComponents.Count() - 1;
+  PRUint32 last = hostComponents.Length() - 1;
   nsCAutoString lookupHost;
 
-  if (hostComponents.Count() > 2) {
-    lookupHost.Append(*hostComponents[last - 2]);
+  if (hostComponents.Length() > 2) {
+    lookupHost.Append(hostComponents[last - 2]);
     lookupHost.Append(".");
   }
 
-  lookupHost.Append(*hostComponents[last - 1]);
+  lookupHost.Append(hostComponents[last - 1]);
   lookupHost.Append(".");
-  lookupHost.Append(*hostComponents[last]);
+  lookupHost.Append(hostComponents[last]);
   lookupHost.Append("/");
 
   return hash.FromPlaintext(lookupHost, mCryptoHash);
@@ -1273,22 +1297,31 @@ nsUrlClassifierDBServiceWorker::GetChunkEntries(const nsACString& table,
       }
     }
   } else {
-    nsCStringArray lines;
-    lines.ParseString(PromiseFlatCString(chunk).get(), "\n");
+    nsACString::const_iterator begin, end, iter;
+    chunk.BeginReading(begin);
+    chunk.EndReading(end);
+    iter = begin;
 
-    // non-hashed tables need to be hashed
-    for (PRInt32 i = 0; i < lines.Count(); i++) {
+    PRBool done;
+    do {
+      done = !FindCharInReadable('\n', iter, end);
+      const nsDependentCSubstring &line = Substring(begin, iter);
+      if (!done) {
+        iter++;
+        begin = iter;
+      }
+
       nsUrlClassifierEntry* entry = entries.AppendElement();
       if (!entry) return NS_ERROR_OUT_OF_MEMORY;
 
-      rv = GetKey(*lines[i], entry->mKey);
+      rv = GetKey(line, entry->mKey);
       NS_ENSURE_SUCCESS(rv, rv);
 
       entry->mTableId = tableId;
       nsUrlClassifierHash hash;
-      hash.FromPlaintext(*lines[i], mCryptoHash);
+      hash.FromPlaintext(line, mCryptoHash);
       entry->AddFragment(hash, mChunkNum);
-    }
+    } while (!done);
   }
 
   return NS_OK;
@@ -1300,11 +1333,23 @@ nsUrlClassifierDBServiceWorker::ParseChunkList(const nsACString& chunkStr,
 {
   LOG(("Parsing %s", PromiseFlatCString(chunkStr).get()));
 
-  nsCStringArray elements;
-  elements.ParseString(PromiseFlatCString(chunkStr).get() , ",");
+  nsACString::const_iterator begin, end, iter;
 
-  for (PRInt32 i = 0; i < elements.Count(); i++) {
-    nsCString& element = *elements[i];
+  chunkStr.BeginReading(begin);
+  chunkStr.EndReading(end);
+  iter = begin;
+
+  PRBool done;
+  do {
+    done = !FindCharInReadable(',', iter, end);
+    nsCAutoString element(Substring(begin, iter));
+    if (!done) {
+      iter++;
+      begin = iter;
+    }
+
+    if (element.IsEmpty())
+      continue;
 
     PRUint32 first;
     PRUint32 last;
@@ -1320,7 +1365,7 @@ nsUrlClassifierDBServiceWorker::ParseChunkList(const nsACString& chunkStr,
     } else if (PR_sscanf(element.get(), "%u", &first) == 1) {
       chunks.AppendElement(first);
     }
-  }
+  } while (!done);
 
   LOG(("Got %d elements.", chunks.Length()));
 
