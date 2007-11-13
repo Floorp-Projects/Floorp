@@ -3206,146 +3206,107 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsIDOMDocument> domDocument;
-
-  aContextNode->GetOwnerDocument(getter_AddRefs(domDocument));
-  document = do_QueryInterface(domDocument);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aContextNode);
+  NS_ENSURE_TRUE(content, NS_ERROR_NOT_AVAILABLE);
 
   // If we don't have a document here, we can't get the right security context
   // for compiling event handlers... so just bail out.
+  nsCOMPtr<nsIDocument> document = content->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
 
-  nsVoidArray tagStack;
-  nsCOMPtr<nsIDOMNode> parent = aContextNode;
-  while (parent && (parent != domDocument)) {
-    PRUint16 nodeType;
-    parent->GetNodeType(&nodeType);
-    if (nsIDOMNode::ELEMENT_NODE == nodeType) {
-      nsAutoString tagName, uriStr;
-      parent->GetNodeName(tagName);
+  nsAutoTArray<nsAutoString, 32> tagStack;
+  nsAutoString uriStr, nameStr;
 
-      // see if we need to add xmlns declarations
-      nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
-      if (!content) {
-        rv = NS_ERROR_FAILURE;
-        break;
-      }
+  while (content && content->IsNodeOfType(nsINode::eELEMENT)) {
+    nsAutoString& tagName = *tagStack.AppendElement();
+    NS_ENSURE_TRUE(&tagName, NS_ERROR_OUT_OF_MEMORY);
 
-      PRUint32 count = content->GetAttrCount();
-      PRBool setDefaultNamespace = PR_FALSE;
-      if (count > 0) {
-        PRUint32 index;
-        nsAutoString nameStr, prefixStr, valueStr;
+    content->NodeInfo()->GetQualifiedName(tagName);
 
-        for (index = 0; index < count; index++) {
-          const nsAttrName* name = content->GetAttrNameAt(index);
-          if (name->NamespaceEquals(kNameSpaceID_XMLNS)) {
-            content->GetAttr(kNameSpaceID_XMLNS, name->LocalName(), uriStr);
+    // see if we need to add xmlns declarations
+    PRUint32 count = content->GetAttrCount();
+    PRBool setDefaultNamespace = PR_FALSE;
+    if (count > 0) {
+      PRUint32 index;
 
-            // really want something like nsXMLContentSerializer::SerializeAttr
-            tagName.Append(NS_LITERAL_STRING(" xmlns")); // space important
-            if (name->GetPrefix()) {
-              tagName.Append(PRUnichar(':'));
-              name->LocalName()->ToString(nameStr);
-              tagName.Append(nameStr);
-            } else {
-              setDefaultNamespace = PR_TRUE;
-            }
-            tagName.Append(NS_LITERAL_STRING("=\"") + uriStr +
-              NS_LITERAL_STRING("\""));
+      for (index = 0; index < count; index++) {
+        const nsAttrName* name = content->GetAttrNameAt(index);
+        if (name->NamespaceEquals(kNameSpaceID_XMLNS)) {
+          content->GetAttr(kNameSpaceID_XMLNS, name->LocalName(), uriStr);
+
+          // really want something like nsXMLContentSerializer::SerializeAttr
+          tagName.Append(NS_LITERAL_STRING(" xmlns")); // space important
+          if (name->GetPrefix()) {
+            tagName.Append(PRUnichar(':'));
+            name->LocalName()->ToString(nameStr);
+            tagName.Append(nameStr);
+          } else {
+            setDefaultNamespace = PR_TRUE;
           }
+          tagName.Append(NS_LITERAL_STRING("=\"") + uriStr +
+            NS_LITERAL_STRING("\""));
         }
-      }
-
-      if (!setDefaultNamespace) {
-        nsINodeInfo* info = content->NodeInfo();
-        if (!info->GetPrefixAtom() &&
-            info->NamespaceID() != kNameSpaceID_None) {
-          // We have no namespace prefix, but have a namespace ID.  Push
-          // default namespace attr in, so that our kids will be in our
-          // namespace.
-          nsAutoString uri;
-          info->GetNamespaceURI(uri);
-          tagName.Append(NS_LITERAL_STRING(" xmlns=\"") + uri +
-                         NS_LITERAL_STRING("\""));
-        }
-      }
-
-      // XXX Wish we didn't have to allocate here
-      PRUnichar* name = ToNewUnicode(tagName);
-      if (name) {
-        tagStack.AppendElement(name);
-        nsCOMPtr<nsIDOMNode> temp = parent;
-        rv = temp->GetParentNode(getter_AddRefs(parent));
-        if (NS_FAILED(rv)) {
-          break;
-        }
-      } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        break;
-      }
-    } else {
-      nsCOMPtr<nsIDOMNode> temp = parent;
-      rv = temp->GetParentNode(getter_AddRefs(parent));
-      if (NS_FAILED(rv)) {
-        break;
       }
     }
+
+    if (!setDefaultNamespace) {
+      nsINodeInfo* info = content->NodeInfo();
+      if (!info->GetPrefixAtom() &&
+          info->NamespaceID() != kNameSpaceID_None) {
+        // We have no namespace prefix, but have a namespace ID.  Push
+        // default namespace attr in, so that our kids will be in our
+        // namespace.
+        info->GetNamespaceURI(uriStr);
+        tagName.Append(NS_LITERAL_STRING(" xmlns=\"") + uriStr +
+                       NS_LITERAL_STRING("\""));
+      }
+    }
+
+    content = content->GetParent();
   }
 
+  nsCAutoString contentType;
+  PRBool bCaseSensitive = PR_TRUE;
+  nsAutoString buf;
+  document->GetContentType(buf);
+  LossyCopyUTF16toASCII(buf, contentType);
+  bCaseSensitive = document->IsCaseSensitive();
+
+  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
+  PRBool bHTML = htmlDoc && !bCaseSensitive;
+  nsCOMPtr<nsIFragmentContentSink> sink;
+  if (bHTML) {
+    rv = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
+  } else {
+    rv = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sink->SetTargetDocument(document);
+  nsCOMPtr<nsIContentSink> contentsink(do_QueryInterface(sink));
+  parser->SetContentSink(contentsink);
+
+  nsDTDMode mode = eDTDMode_autodetect;
+  switch (document->GetCompatibilityMode()) {
+    case eCompatibility_NavQuirks:
+      mode = eDTDMode_quirks;
+      break;
+    case eCompatibility_AlmostStandards:
+      mode = eDTDMode_almost_standards;
+      break;
+    case eCompatibility_FullStandards:
+      mode = eDTDMode_full_standards;
+      break;
+    default:
+      NS_NOTREACHED("unknown mode");
+      break;
+  }
+
+  // XXX Shouldn't we be returning rv if it's a failure code?
+  rv = parser->ParseFragment(aFragment, nsnull, tagStack,
+                             !bHTML, contentType, mode);
   if (NS_SUCCEEDED(rv)) {
-    nsCAutoString contentType;
-    PRBool bCaseSensitive = PR_TRUE;
-    nsAutoString buf;
-    document->GetContentType(buf);
-    LossyCopyUTF16toASCII(buf, contentType);
-    bCaseSensitive = document->IsCaseSensitive();
-
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
-    PRBool bHTML = htmlDoc && !bCaseSensitive;
-    nsCOMPtr<nsIFragmentContentSink> sink;
-    if (bHTML) {
-      rv = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
-    } else {
-      rv = NS_NewXMLFragmentContentSink(getter_AddRefs(sink));
-    }
-    if (NS_SUCCEEDED(rv)) {
-      sink->SetTargetDocument(document);
-      nsCOMPtr<nsIContentSink> contentsink(do_QueryInterface(sink));
-      parser->SetContentSink(contentsink);
-
-      nsDTDMode mode = eDTDMode_autodetect;
-      switch (document->GetCompatibilityMode()) {
-        case eCompatibility_NavQuirks:
-          mode = eDTDMode_quirks;
-          break;
-        case eCompatibility_AlmostStandards:
-          mode = eDTDMode_almost_standards;
-          break;
-        case eCompatibility_FullStandards:
-          mode = eDTDMode_full_standards;
-          break;
-        default:
-          NS_NOTREACHED("unknown mode");
-          break;
-      }
-      rv = parser->ParseFragment(aFragment, nsnull, tagStack,
-                                 !bHTML, contentType, mode);
-
-      if (NS_SUCCEEDED(rv)) {
-        rv = sink->GetFragment(aReturn);
-      }
-    }
-  }
-
-  // XXX Ick! Delete strings we allocated above.
-  PRInt32 count = tagStack.Count();
-  for (PRInt32 i = 0; i < count; i++) {
-    PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
-    if (str) {
-      NS_Free(str);
-    }
+    rv = sink->GetFragment(aReturn);
   }
 
   return NS_OK;
