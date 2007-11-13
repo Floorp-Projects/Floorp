@@ -127,15 +127,7 @@ listheader[sortable="true"]:hover:active {
 /* ..... sort direction icon ..... */
 
 .listheader-sortdirection {
-  list-style-image: none;
-}
-
-.listheader-sortdirection[sortDirection="ascending"] {
-  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
-}
-
-.listheader-sortdirection[sortDirection="descending"] {
-  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
+  -moz-appearance: treeheadersortarrow;
 }
 
 /* ::::: listcell ::::: */
