@@ -58,18 +58,6 @@ xpidl_malloc(size_t nbytes)
     return p;
 }
 
-#ifdef XP_MAC
-static char *strdup(const char *c)
-{
-	char	*newStr = malloc(strlen(c) + 1);
-	if (newStr)
-	{
-		strcpy(newStr, c);
-	}
-	return newStr;
-}
-#endif
-
 char *
 xpidl_strdup(const char *s)
 {
