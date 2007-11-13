@@ -1,3 +1,5 @@
+Components.utils.import("resource://gre/modules/ISO8601DateUtils.jsm");
+
 var EXPORTED_SYMBOLS = ["Microformats", "adr", "tag", "hCard", "hCalendar", "geo"];
 
 var Microformats = {
@@ -808,65 +810,6 @@ var Microformats = {
     }
   },
   /**
-   * Converts an ISO8601 date into a JavaScript date object, honoring the TZ
-   * offset and Z if present to convert the date to local time
-   * NOTE: I'm using an extra parameter on the date object for this function.
-   * I set date.time to true if there is a date, otherwise date.time is false.
-   * 
-   * @param  string ISO8601 formatted date
-   * @return JavaScript date object that represents the ISO date. 
-   */
-  dateFromISO8601: function dateFromISO8601(string) {
-    var dateArray = string.match(/(\d\d\d\d)(?:-?(\d\d)(?:-?(\d\d)(?:[T ](\d\d)(?::?(\d\d)(?::?(\d\d)(?:\.(\d+))?)?)?(?:([-+Z])(?:(\d\d)(?::?(\d\d))?)?)?)?)?)?/);
-  
-    var date = new Date(dateArray[1], 0, 1);
-    date.time = false;
-
-    if (dateArray[2]) {
-      date.setMonth(dateArray[2] - 1);
-    }
-    if (dateArray[3]) {
-      date.setDate(dateArray[3]);
-    }
-    if (dateArray[4]) {
-      date.setHours(dateArray[4]);
-      date.time = true;
-      if (dateArray[5]) {
-        date.setMinutes(dateArray[5]);
-        if (dateArray[6]) {
-          date.setSeconds(dateArray[6]);
-          if (dateArray[7]) {
-            date.setMilliseconds(Number("0." + dateArray[7]) * 1000);
-          }
-        }
-      }
-    }
-    if (dateArray[8]) {
-      if (dateArray[8] == "-") {
-        if (dateArray[9] && dateArray[10]) {
-          date.setHours(date.getHours() + parseInt(dateArray[9], 10));
-          date.setMinutes(date.getMinutes() + parseInt(dateArray[10], 10));
-        }
-      } else if (dateArray[8] == "+") {
-        if (dateArray[9] && dateArray[10]) {
-          date.setHours(date.getHours() - parseInt(dateArray[9], 10));
-          date.setMinutes(date.getMinutes() - parseInt(dateArray[10], 10));
-        }
-      }
-      /* at this point we have the time in gmt */
-      /* convert to local if we had a Z - or + */
-      if (dateArray[8]) {
-        var tzOffset = date.getTimezoneOffset();
-        if (tzOffset < 0) {
-          date.setMinutes(date.getMinutes() + tzOffset); 
-        } else if (tzOffset > 0) {
-          date.setMinutes(date.getMinutes() - tzOffset); 
-        }
-      }
-    }
-    return date;
-  },
-  /**
    * Converts a Javascript date object into an ISO 8601 formatted date
    * NOTE: I'm using an extra parameter on the date object for this function.
    * If date.time is NOT true, this function only outputs the date.
@@ -1307,7 +1250,7 @@ hCalendar.prototype.toString = function() {
     if (summaries.length === 0) {
       if (this.summary) {
         if (this.dtstart) {
-          return this.summary + " (" + Microformats.dateFromISO8601(this.dtstart).toLocaleString() + ")";
+          return this.summary + " (" + ISO8601DateUtils.parse(this.dtstart).toLocaleString() + ")";
         }
       }
     }
