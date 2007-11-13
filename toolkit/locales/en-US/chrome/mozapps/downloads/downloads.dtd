@@ -24,8 +24,8 @@
 <!ENTITY cmd.retry.accesskey              "R">
 <!ENTITY cmd.copyLocation.label           "Copy Source Location">
 <!ENTITY cmd.copyLocation.accesskey       "L">
-<!ENTITY cmd.remove.label                 "Remove">
-<!ENTITY cmd.remove.accesskey             "e">
+<!ENTITY cmd.removeFromList.label         "Remove From List">
+<!ENTITY cmd.removeFromList.accesskey     "e">
 <!ENTITY cmd.info.label                   "Information">
 <!ENTITY cmd.info.accesskey               "i">
 <!ENTITY cmd.info.commandKey              "i">
