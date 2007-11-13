@@ -42,14 +42,21 @@
 interface IBookmarksSyncService : nsISupports
 {
   /**
-   * The currently logged-in user
+   * The stored username and password
+   */
+  attribute AString username;
+  attribute AString password;
+
+  /**
+   * The currently logged-in user.  Null if not logged in.
    */
   readonly attribute AString currentUser;
 
   /**
    * Log into the server.  Pre-requisite for sync().
+   * password is optional when the password is saved in the password manager
    */
-  void login();
+  void login(in AString password);
 
   /**
    * Log out of the server.
