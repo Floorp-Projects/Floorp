@@ -186,7 +186,8 @@ interface nsIAccessible : nsISupports
    * labels, radio buttons, etc. Also used for collectons of non-text objects.
    *
    * @param groupLevel - 1-based, similar to ARIA 'level' property
-   * @param similarItemsInGroup - 1-based, similar to ARIA 'setsize' property
+   * @param similarItemsInGroup - 1-based, similar to ARIA 'setsize' property,
+   *                              inclusive of the current item
    * @param positionInGroup - 1-based, similar to ARIA 'posinset' property
    */
   void groupPosition(out long aGroupLevel, out long aSimilarItemsInGroup,
