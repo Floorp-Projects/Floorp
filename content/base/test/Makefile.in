@@ -111,6 +111,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug326337_multipart.txt^headers^ \
 		test_bug402150.html \
 		test_bug402150.html^headers^ \
+		test_bug401662.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

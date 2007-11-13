@@ -1070,8 +1070,10 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
     // Read more in bug 31994.
     return NS_OK;
   }
-  else if (mTagStackIndex > 0 && mTagStack[mTagStackIndex-1] == eHTMLTag_script) {
-    // Don't output the contents of <script> tags;
+  else if (mTagStackIndex > 0 &&
+           (mTagStack[mTagStackIndex-1] == eHTMLTag_script ||
+            mTagStack[mTagStackIndex-1] == eHTMLTag_style)) {
+    // Don't output the contents of <script> or <style> tags;
     return NS_OK;
   }
   else if (type == eHTMLTag_text) {
