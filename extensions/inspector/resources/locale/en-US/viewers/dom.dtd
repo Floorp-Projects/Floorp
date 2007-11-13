@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Shawn Wilsher <me@shawnwilsher.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -83,13 +84,22 @@
 
   <!ENTITY findNodes.title "Find Nodes">
   <!ENTITY findNodesById.label "Id">
+  <!ENTITY findNodesById.accesskey "I">
+  <!ENTITY findNodesById.accesskey2 "d">
   <!ENTITY findNodesByTag.label "Tag">
+  <!ENTITY findNodesByTag.accesskey "T">
+  <!ENTITY findNodesByTag.accesskey2 "g">
   <!ENTITY findNodesByAttr.label "Attr">
+  <!ENTITY findNodesByAttr.accesskey "A">
+  <!ENTITY findNodesByAttr.accesskey2 "r">
   <!ENTITY findNodesByAttrValue.label "Value">
+  <!ENTITY findNodesByAttrValue.accesskey "V">
   <!ENTITY findNodesSearchBy.label "Search By">
   <!ENTITY findNodesDirection.label "Direction">
   <!ENTITY findNodesDirectionUp.label "Up">
+  <!ENTITY findNodesDirectionUp.accesskey "U">
   <!ENTITY findNodesDirectionDown.label "Down">
+  <!ENTITY findNodesDirectionDown.accesskey "w">
   <!ENTITY findNodesFind.label "Find">
   <!ENTITY findNodesCancel.label "Cancel">
 
