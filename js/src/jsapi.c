@@ -2513,9 +2513,10 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    JS_ASSERT(GCX_EXTERNAL_STRING <= type && type < (intN) GCX_NTYPES);
+    JS_ASSERT((uintN) type < (uintN) (GCX_NTYPES - GCX_EXTERNAL_STRING));
 
-    str = (JSString *) js_NewGCThing(cx, (uintN) type, sizeof(JSString));
+    str = (JSString *) js_NewGCThing(cx, (uintN) type + GCX_EXTERNAL_STRING,
+                                     sizeof(JSString));
     if (!str)
         return NULL;
     JSSTRING_INIT(str, chars, length);
@@ -2525,12 +2526,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
 JS_PUBLIC_API(intN)
 JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
 {
-    uint8 type = (uint8) (*js_GetGCThingFlags(str) & GCF_TYPEMASK);
-
-    if (type >= GCX_EXTERNAL_STRING)
-        return (intN)type;
-    JS_ASSERT(type == GCX_STRING);
-    return -1;
+    return js_GetExternalStringGCType(str);
 }
 
 JS_PUBLIC_API(void)
