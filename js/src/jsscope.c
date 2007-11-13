@@ -388,7 +388,7 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
  * the GC, or we are searching for a property that has not yet been flagged as
  * a duplicate when making a duplicate formal parameter.
  */
-#define SPROP_FLAGS_NOT_MATCHED (SPROP_MARK | SPROP_ALLOW_DUPLICATE)
+#define SPROP_FLAGS_NOT_MATCHED (SPROP_MARK | SPROP_IS_DUPLICATE)
 
 JS_STATIC_DLL_CALLBACK(JSDHashNumber)
 js_HashScopeProperty(JSDHashTable *table, const void *key)
@@ -955,7 +955,7 @@ CheckAncestorLine(JSScope *scope, JSBool sparse)
     for (sprop = ancestorLine; sprop; sprop = sprop->parent) {
         if (SCOPE_HAD_MIDDLE_DELETE(scope) &&
             !SCOPE_HAS_PROPERTY(scope, sprop)) {
-            JS_ASSERT(sparse || (sprop->flags & SPROP_ALLOW_DUPLICATE));
+            JS_ASSERT(sparse || (sprop->flags & SPROP_IS_DUPLICATE));
             continue;
         }
         ancestorCount++;
@@ -1066,12 +1066,12 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * Duplicate formal parameters require us to leave the old property
          * on the ancestor line, so the decompiler can find it, even though
          * its entry in scope->table is overwritten to point at a new property
-         * descending from the old one.  The SPROP_ALLOW_DUPLICATE flag helps
-         * us cope with the consequent disparity between ancestor line height
-         * and scope->entryCount.
+         * descending from the old one.  The SPROP_IS_DUPLICATE flag helps us
+         * cope with the consequent disparity between ancestor line height and
+         * scope->entryCount.
          */
-        if (flags & SPROP_ALLOW_DUPLICATE) {
-            sprop->flags |= SPROP_ALLOW_DUPLICATE;
+        if (flags & SPROP_IS_DUPLICATE) {
+            sprop->flags |= SPROP_IS_DUPLICATE;
         } else {
             /*
              * If we are clearing sprop to force an existing property to be
@@ -1131,7 +1131,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * all deleted properties out of scope's ancestor line.  Otherwise we
          * risk adding a node with the same id as a "middle" node, violating
          * the rule that properties along an ancestor line have distinct ids
-         * (unless flagged SPROP_ALLOW_DUPLICATE).
+         * (unless flagged SPROP_IS_DUPLICATE).
          */
         if (SCOPE_HAD_MIDDLE_DELETE(scope)) {
             JS_ASSERT(scope->table);
@@ -1274,7 +1274,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
         child.setter = setter;
         child.slot = slot;
         child.attrs = attrs;
-        child.flags = flags & ~SPROP_ALLOW_DUPLICATE;
+        child.flags = flags;
         child.shortid = shortid;
         sprop = GetPropertyTreeChild(cx, scope->lastProp, &child);
         if (!sprop)

@@ -563,7 +563,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 closure = (JSObject *) wp->closure;
                 clasp = OBJ_GET_CLASS(cx, closure);
                 if (clasp == &js_FunctionClass) {
-                    fun = GET_FUNCTION_PRIVATE(cx, closure);
+                    fun = (JSFunction *) OBJ_GET_PRIVATE(cx, closure);
                     script = FUN_SCRIPT(fun);
                 } else if (clasp == &js_ScriptClass) {
                     fun = NULL;
@@ -653,7 +653,7 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     funobj = JSVAL_TO_OBJECT(argv[-2]);
     JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
-    wrapper = GET_FUNCTION_PRIVATE(cx, funobj);
+    wrapper = (JSFunction *) OBJ_GET_PRIVATE(cx, funobj);
     userid = ATOM_KEY(wrapper->atom);
     *rval = argv[0];
     return js_watch_set(cx, obj, userid, rval);
@@ -1326,12 +1326,9 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     pd->flags |= ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
               | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
               | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0)
-              | ((getter == js_GetCallVariable)    ? JSPD_VARIABLE  : 0);
-    if (JSID_IS_HIDDEN(sprop->id)) {
-        pd->flags |= (getter == JS_HIDDEN_ARG_GETTER)
-                     ? JSPD_ARGUMENT
-                     : JSPD_VARIABLE;
-    }
+              | ((getter == js_GetCallVariable)    ? JSPD_VARIABLE  : 0)
+              | ((getter == js_GetArgument)        ? JSPD_ARGUMENT  : 0)
+              | ((getter == js_GetLocalVariable)   ? JSPD_VARIABLE  : 0);
 
     /* for Call Object 'real' getter isn't passed in to us */
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
