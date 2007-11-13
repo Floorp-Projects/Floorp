@@ -44,6 +44,11 @@
 
 #include "prio.h"
 #include "prprf.h"
+#if defined(XP_WIN)
+#include <windows.h>
+#elif defined(XP_MACOSX)
+#include <Carbon/Carbon.h>
+#endif
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayEnumerator.h"
@@ -63,6 +68,7 @@
 #include "nsWidgetsCID.h"
 #include "nsXPIDLString.h"
 #include "nsXULAppAPI.h"
+#include "nsTextFormatter.h"
 
 #include "nsIAtom.h"
 #include "nsICommandLine.h"
@@ -1970,7 +1976,8 @@ CheckStringFlag(const nsSubstring& aFlag, const nsSubstring& aData,
  * @param aFlag The flag to compare.
  * @param aData The tokenized data to check; this is lowercased
  *              before being passed in.
- * @param aValue The value that is expected.
+ * @param aValue The value that is expected. If this is empty then no
+ *               comparison will match.
  * @param aChecker the version checker to use. If null, aResult will always
  *                 be eBad.
  * @param aResult If this is eOK when passed in, this is left alone.
@@ -1992,6 +1999,12 @@ CheckVersionFlag(const nsSubstring& aFlag, const nsSubstring& aData,
 
   if (!StringBeginsWith(aData, aFlag))
     return PR_FALSE;
+
+  if (aValue.Length() == 0) {
+    if (aResult != eOK)
+      aResult = eBad;
+    return PR_TRUE;
+  }
 
   PRUint32 comparison;
   nsAutoString testdata;
@@ -2077,6 +2090,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
   NS_NAMED_LITERAL_STRING(kXPCNativeWrappers, "xpcnativewrappers");
   NS_NAMED_LITERAL_STRING(kApplication, "application");
   NS_NAMED_LITERAL_STRING(kAppVersion, "appversion");
+  NS_NAMED_LITERAL_STRING(kOs, "os");
+  NS_NAMED_LITERAL_STRING(kOsVersion, "osversion");
 
   nsCOMPtr<nsIIOService> io (do_GetIOService());
   if (!io) return NS_ERROR_FAILURE;
@@ -2090,6 +2105,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
   nsAutoString appID;
   nsAutoString appVersion;
+  nsAutoString osTarget;
   nsCOMPtr<nsIXULAppInfo> xapp (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
   if (xapp) {
     nsCAutoString s;
@@ -2100,7 +2116,34 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
     rv = xapp->GetVersion(s);
     if (NS_SUCCEEDED(rv))
       CopyUTF8toUTF16(s, appVersion);
+    
+    nsCOMPtr<nsIXULRuntime> xruntime (do_QueryInterface(xapp));
+    if (xruntime) {
+      rv = xruntime->GetOS(s);
+      if (NS_SUCCEEDED(rv)) {
+        CopyUTF8toUTF16(s, osTarget);
+        ToLowerCase(osTarget);
+      }
+    }
   }
+  
+  nsAutoString osVersion;
+#if defined(XP_WIN)
+  OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
+  if (GetVersionEx(&info)) {
+    nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
+                                         info.dwMajorVersion,
+                                         info.dwMinorVersion);
+  }
+#elif defined(XP_MACOSX)
+  long majorVersion, minorVersion;
+  if ((Gestalt(gestaltSystemVersionMajor, &majorVersion) == noErr) &&
+      (Gestalt(gestaltSystemVersionMinor, &minorVersion) == noErr)) {
+    nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
+                                         majorVersion,
+                                         minorVersion);
+  }
+#endif
 
   char *token;
   char *newline = buf;
@@ -2140,6 +2183,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
       PRBool xpcNativeWrappers = PR_TRUE;
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
+      TriState stOsVersion = eUnspecified;
+      TriState stOs = eUnspecified;
 
       PRBool badFlag = PR_FALSE;
 
@@ -2151,6 +2196,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         if (CheckFlag(kPlatform, wtoken, platform) ||
             CheckFlag(kXPCNativeWrappers, wtoken, xpcNativeWrappers) ||
             CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
             CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
           continue;
 
@@ -2160,7 +2207,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         badFlag = PR_TRUE;
       }
 
-      if (badFlag || stApp == eBad || stAppVersion == eBad)
+      if (badFlag || stApp == eBad || stAppVersion == eBad || 
+          stOs == eBad || stOsVersion == eBad)
         continue;
 
       nsCOMPtr<nsIURI> resolved;
@@ -2211,6 +2259,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
+      TriState stOs = eUnspecified;
+      TriState stOsVersion = eUnspecified;
 
       PRBool badFlag = PR_FALSE;
 
@@ -2220,6 +2270,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         ToLowerCase(wtoken);
 
         if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
             CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
           continue;
 
@@ -2229,7 +2281,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         badFlag = PR_TRUE;
       }
 
-      if (badFlag || stApp == eBad || stAppVersion == eBad)
+      if (badFlag || stApp == eBad || stAppVersion == eBad ||
+          stOs == eBad || stOsVersion == eBad)
         continue;
 
       nsCOMPtr<nsIURI> resolved;
@@ -2261,6 +2314,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
+      TriState stOs = eUnspecified;
+      TriState stOsVersion = eUnspecified;
 
       PRBool badFlag = PR_FALSE;
 
@@ -2270,6 +2325,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         ToLowerCase(wtoken);
 
         if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
             CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
           continue;
 
@@ -2279,7 +2336,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         badFlag = PR_TRUE;
       }
 
-      if (badFlag || stApp == eBad || stAppVersion == eBad)
+      if (badFlag || stApp == eBad || stAppVersion == eBad ||
+          stOs == eBad || stOsVersion == eBad)
         continue;
 
       nsCOMPtr<nsIURI> resolved;
@@ -2313,6 +2371,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
+      TriState stOs = eUnspecified;
+      TriState stOsVersion = eUnspecified;
 
       PRBool badFlag = PR_FALSE;
 
@@ -2322,6 +2382,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         ToLowerCase(wtoken);
 
         if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
             CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
           continue;
 
@@ -2331,7 +2393,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         badFlag = PR_TRUE;
       }
 
-      if (badFlag || stApp == eBad || stAppVersion == eBad)
+      if (badFlag || stApp == eBad || stAppVersion == eBad ||
+          stOs == eBad || stOsVersion == eBad)
         continue;
 
       nsCOMPtr<nsIURI> baseuri, overlayuri;
@@ -2357,6 +2420,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
+      TriState stOs = eUnspecified;
+      TriState stOsVersion = eUnspecified;
 
       PRBool badFlag = PR_FALSE;
 
@@ -2366,6 +2431,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         ToLowerCase(wtoken);
 
         if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
             CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
           continue;
 
@@ -2375,7 +2442,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         badFlag = PR_TRUE;
       }
 
-      if (badFlag || stApp == eBad || stAppVersion == eBad)
+      if (badFlag || stApp == eBad || stAppVersion == eBad ||
+          stOs == eBad || stOsVersion == eBad)
         continue;
 
       nsCOMPtr<nsIURI> baseuri, overlayuri;
@@ -2405,6 +2473,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
+      TriState stOs = eUnspecified;
+      TriState stOsVersion = eUnspecified;
 
       PRBool badFlag = PR_FALSE;
 
@@ -2414,6 +2484,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         ToLowerCase(wtoken);
 
         if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
             CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
           continue;
 
@@ -2423,7 +2495,8 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         badFlag = PR_TRUE;
       }
 
-      if (badFlag || stApp == eBad || stAppVersion == eBad)
+      if (badFlag || stApp == eBad || stAppVersion == eBad ||
+          stOs == eBad || stOsVersion == eBad)
         continue;
 
       nsCOMPtr<nsIURI> chromeuri, resolveduri;
