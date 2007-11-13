@@ -3295,6 +3295,43 @@ JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                                  attrs, foundp);
 }
 
+static JSBool
+AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
+                            JSBool *foundp)
+{
+    JSScope *scope;
+
+    if (!OBJ_IS_NATIVE(obj)) {
+        JSObject *obj2;
+        JSProperty *prop;
+
+        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+            return JS_FALSE;
+        *foundp = (obj == obj2);
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+        return JS_TRUE;
+    }
+
+    JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
+    *foundp = (scope->object == obj && SCOPE_GET_PROPERTY(scope, id));
+    JS_UNLOCK_SCOPE(cx, scope);
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name,
+                         JSBool *foundp)
+{
+    JSAtom *atom;
+
+    atom = js_Atomize(cx, name, strlen(name), 0);
+    if (!atom)
+        return JS_FALSE;
+    return AlreadyHasOwnPropertyHelper(cx, obj, ATOM_TO_JSID(atom), foundp);
+}
+
 JS_PUBLIC_API(JSBool)
 JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp)
 {
@@ -3490,6 +3527,19 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
 }
 
 JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj,
+                           const jschar *name, size_t namelen,
+                           JSBool *foundp)
+{
+    JSAtom *atom;
+
+    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    if (!atom)
+        return JS_FALSE;
+    return AlreadyHasOwnPropertyHelper(cx, obj, ATOM_TO_JSID(atom), foundp);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_HasUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen,
                  JSBool *vp)
@@ -3641,6 +3691,13 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
           != NULL);
     OBJ_DROP_PROPERTY(cx, obj, prop);
     return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, jsint index,
+                        JSBool *foundp)
+{
+    return AlreadyHasOwnPropertyHelper(cx, obj, INT_TO_JSID(index), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
