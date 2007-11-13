@@ -188,6 +188,26 @@ BookmarksSyncService.prototype = {
     }
     return password;
   },
+  set password(value) {
+    // cleanup any existing passwords
+    let uri = makeURI(this._serverURL);
+    let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, uri.hostPort, null,
+                               'services.mozilla.com - proxy');
+    for(let i = 0; i < logins.length; i++) {
+      lm.removeLogin(logins[i]);
+    }
+
+    if (!value)
+      return;
+
+    // save the new one
+    let nsLoginInfo = new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+    let login = new nsLoginInfo(uri.hostPort, null, 'services.mozilla.com - proxy',
+                                this.username, value, null, null);
+    lm.addLogin(login);
+  },
 
   get userPath() {
     this._log.info("Hashing username " + this.username);
@@ -215,7 +235,9 @@ BookmarksSyncService.prototype = {
   },
 
   get currentUser() {
-    return this.username;
+    if (this._dav.loggedIn)
+      return this.username;
+    return null;
   },
 
   _init: function BSS__init() {
@@ -1633,7 +1655,7 @@ BookmarksSyncService.prototype = {
     this._syncGen = this._doSync.async(this, callback);
   },
 
-  login: function BSS_login() {
+  login: function BSS_login(password) {
     if (this._loggingIn) {
       this._log.warn("Login requested, but already logging in");
       return;
@@ -1646,19 +1668,20 @@ BookmarksSyncService.prototype = {
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
       return;
     }
-    if (!this.password) {
-      this._log.warn("No password found in password manager");
+    if (!password)
+      password = this.password;
+    if (!password) {
+      this._log.warn("No password given or found in password manager");
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
       return;
     }
-
     this._loggingIn = true;
 
     this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
     this._log.info("Using server URL: " + this._dav.baseURL);
     let callback = bind2(this, this._onLogin);
     this._loginGen = this._dav.login.async(this._dav, callback,
-                                           this.username, this.password);
+                                           this.username, password);
   },
 
   logout: function BSS_logout() {
@@ -1837,6 +1860,9 @@ DAVCollection.prototype = {
   },
 
   _loggedIn: false,
+  get loggedIn() {
+    return this._loggedIn;
+  },
 
   _makeRequest: function DC__makeRequest(onComplete, op, path, headers, data) {
     let cont = yield;
