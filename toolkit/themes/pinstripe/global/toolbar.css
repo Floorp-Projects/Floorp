@@ -142,11 +142,6 @@ toolbarpaletteitem[type="spacer"] {
   height: 50px;
 }
 
-.toolbarpaletteitem-box[type="splitter"][place="palette"] {
-  width: 8px;
-  height: 50px;
-}
-
 .toolbarpaletteitem-box[type="spacer"][place="palette"],
 .toolbarpaletteitem-box[type="spring"][place="palette"] {
   margin-bottom: 2px;
