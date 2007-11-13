@@ -3332,17 +3332,6 @@ nsWindow::EnsureGrabs(void)
         GrabKeyboard();
 }
 
-#ifndef MOZ_XUL
-void
-nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
-{
-}
-
-void
-nsWindow::ApplyTransparencyBitmap()
-{
-}
-#else
 NS_IMETHODIMP
 nsWindow::SetWindowTranslucency(PRBool aTranslucent)
 {
@@ -3563,7 +3552,6 @@ nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
 {
     return UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aRect.width);
 }
-#endif
 
 void
 nsWindow::GrabPointer(void)
