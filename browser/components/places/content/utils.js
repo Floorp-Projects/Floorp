@@ -183,6 +183,12 @@ var PlacesUtils = {
                             getService(Ci.nsIClipboard);
   },
 
+  get URIFixup() {
+    delete this.URIFixup;
+    return this.URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].
+                           getService(Ci.nsIURIFixup);
+  },
+
   /**
    * Makes a URI from a spec.
    * @param   aSpec
@@ -192,6 +198,16 @@ var PlacesUtils = {
   _uri: function PU__uri(aSpec) {
     NS_ASSERT(aSpec, "empty URL spec");
     return IO.newURI(aSpec);
+  },
+
+  /**
+   * Makes a URI from a spec, and do fixup
+   * @param   aSpec
+   *          The string spec of the URI
+   * @returns A URI object for the spec.
+   */
+  createFixedURI: function PU_createFixedURI(aSpec) {
+    return this.URIFixup.createFixupURI(aSpec, 0);
   },
 
   /**
