@@ -60,6 +60,7 @@
   style="width: 30em;"
   onload="startup();"
   ondialogaccept="return acceptDialog()"
+  ondialogcancel="return exitDialog()"
   buttonlabelaccept="&start.label;"
   buttonlabelcancel="&exit.label;">
 
