@@ -1200,6 +1200,11 @@ interface nsINavHistoryService : nsISupports
   const unsigned long TRANSITION_REDIRECT_TEMPORARY = 6;
 
   /**
+   * Set when the transition is a download.
+   */
+  const unsigned long TRANSITION_DOWNLOAD = 7;
+
+  /**
    * True if there is any history. This can be used in UI to determine whether
    * the "clear history" button should be enabled or not. This is much better
    * than using BrowserHistory.count since that can be very slow if there is
