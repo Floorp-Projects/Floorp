@@ -1,11 +1,15 @@
 
 Changes made to pristine png source by mozilla.org developers.
 
-2007/10/13  -- Sync with libpng-1.2.22 (removes MMX support) (bug #386585)
+2007/11/10  -- Synced with libpng-1.2.23; Removed pnggccrd.c and pngvcrd.c;
+               Reduced footprint by removing error and warning text
+               (bug #403239)
 
-2007/07/27  -- Enable cHRM and iCCP chunks for color management (bug #16769)
+2007/10/13  -- Synced with libpng-1.2.22 (removes MMX support) (bug #386585)
 
-2007/05/05  -- Zero png_ptr->num_trans on CRC error (bug #374810)
+2007/07/27  -- Enabled cHRM and iCCP chunks for color management (bug #16769)
+
+2007/05/05  -- Zeroed png_ptr->num_trans on CRC error (bug #374810)
 
 2007/04/19  -- Synced with libpng-1.2.16 tree (bug #373249)
 
@@ -15,4 +19,4 @@ Changes made to pristine png source by mozilla.org developers.
 
 2004/10/07  -- Synced with libpng-1.2.7 tree (bug #261922)
 
-2004/10/07  -- add mozpngconf.h (bug #208607)
+2004/10/07  -- Added mozpngconf.h (bug #208607)
