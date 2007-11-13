@@ -39,10 +39,17 @@ const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function ContentPrefService() {
-  this._init();
+  // If this throws an exception, it causes the getService call to fail,
+  // but the next time a consumer tries to retrieve the service, we'll try
+  // to initialize the database again, which might work if the failure
+  // was due to a temporary condition (like being out of disk space).
+  this._dbInit();
+
+  // Observe shutdown so we can shut down the database connection.
+  this._observerSvc.addObserver(this, "xpcom-shutdown", false);
 }
 
 ContentPrefService.prototype = {
@@ -78,18 +85,7 @@ ContentPrefService.prototype = {
 
 
   //**************************************************************************//
-  // Initialization & Destruction
-
-  _init: function ContentPrefService__init() {
-    // If this throws an exception, it causes the getService call to fail,
-    // but the next time a consumer tries to retrieve the service, we'll try
-    // to initialize the database again, which might work if the failure
-    // was due to a temporary condition (like being out of disk space).
-    this._dbInit();
-
-    // Observe shutdown so we can shut down the database connection.
-    this._observerSvc.addObserver(this, "xpcom-shutdown", false);
-  },
+  // Destruction
 
   _destroy: function ContentPrefService__destroy() {
     this._observerSvc.removeObserver(this, "xpcom-shutdown");
@@ -113,8 +109,6 @@ ContentPrefService.prototype = {
     switch (topic) {
       case "xpcom-shutdown":
         this._destroy();
-        break;
-      default:
         break;
     }
   },
