@@ -890,19 +890,23 @@ l10n-checkout:
 	$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)
 	@cd $(ROOTDIR) && $(MAKE) -f mozilla/client.mk real_l10n-checkout
 
-EN_US_CO_DIRS := $(sort $(foreach dir,$(LOCALE_DIRS),mozilla/$(dir)/locales)) \
-  $(foreach mod,$(MOZ_PROJECT_LIST),mozilla/$(mod)/config) \
+FULL_EN_US_DIRS := toolkit \
+	extensions \
+	$(MOZ_PROJECT_LIST) \
+	$(NULL)
+
+EN_US_LOCALE_DIRS := $(foreach dir, \
+	$(filter-out toolkit extensions/% $(MOZ_PROJECT_LIST), $(LOCALE_DIRS)), \
+	mozilla/$(dir)/locales)
+
+EN_US_CO_DIRS := $(EN_US_LOCALE_DIRS) \
+  $(foreach mod,$(FULL_EN_US_DIRS),mozilla/$(mod)) \
   mozilla/client.mk        \
-  $(MOZCONFIG_MODULES)     \
   mozilla/configure        \
   mozilla/configure.in     \
   mozilla/allmakefiles.sh  \
   mozilla/build            \
   mozilla/config           \
-  $(NULL)
-
-EN_US_CO_FILES_NS :=          \
-  mozilla/toolkit/mozapps/installer \
   $(NULL)
 
 #	Start the checkout. Split the output to the tty and a log file.
@@ -911,7 +915,6 @@ real_l10n-checkout:
 	cvs_co() { set -e; echo "$$@" ; \
 	  "$$@" 2>&1 | tee -a $(CVSCO_LOGFILE_L10N); }; \
 	cvs_co $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(EN_US_CO_DIRS); \
-	cvs_co $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) -l $(EN_US_CO_FILES_NS); \
 	cvs_co $(CVSCO_LOCALES)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE_L10N)
 #	@: Check the log for conflicts. ;
