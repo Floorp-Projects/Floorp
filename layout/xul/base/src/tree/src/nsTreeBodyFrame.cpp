@@ -2887,6 +2887,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
   }
   
   // Adjust the rect for its border and padding.
+  nsRect originalRowRect = rowRect;
   AdjustForBorderPadding(rowContext, rowRect);
 
   PRBool isSeparator = PR_FALSE;
@@ -2908,7 +2909,9 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
       if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
         cellRect.x += aPt.x;
         nsRect dirtyRect;
-        if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
+        nsRect checkRect(cellRect.x, originalRowRect.y,
+                         cellRect.width, originalRowRect.height);
+        if (dirtyRect.IntersectRect(aDirtyRect, checkRect))
           PaintCell(aRowIndex, primaryCol, cellRect, aPresContext,
                     aRenderingContext, aDirtyRect, primaryX, aPt);
       }
@@ -2961,10 +2964,17 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
 
       if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
         cellRect.x += aPt.x;
-        
+
+        // for primary columns, use the row's vertical size so that the
+        // lines get drawn properly
+        nsRect checkRect = cellRect;
+        if (currCol->IsPrimary())
+          checkRect = nsRect(cellRect.x, originalRowRect.y,
+                             cellRect.width, originalRowRect.height);
+
         nsRect dirtyRect;
         nscoord dummy;
-        if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
+        if (dirtyRect.IntersectRect(aDirtyRect, checkRect))
           PaintCell(aRowIndex, currCol, cellRect, aPresContext,
                     aRenderingContext, aDirtyRect, dummy, aPt);
       }
