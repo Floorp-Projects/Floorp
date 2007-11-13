@@ -227,12 +227,11 @@ nsDOMScriptObjectFactory::GetClassInfoInstance(nsDOMClassInfoID aID)
 NS_IMETHODIMP_(nsISupports *)
 nsDOMScriptObjectFactory::GetExternalClassInfoInstance(const nsAString& aName)
 {
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-
-  NS_ENSURE_TRUE(gNameSpaceManager, nsnull);
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, nsnull);
 
   const nsGlobalNameStruct *globalStruct;
-  gNameSpaceManager->LookupName(aName, &globalStruct);
+  nameSpaceManager->LookupName(aName, &globalStruct);
   if (globalStruct) {
     if (globalStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfoCreator) {
       nsresult rv;
@@ -242,7 +241,7 @@ nsDOMScriptObjectFactory::GetExternalClassInfoInstance(const nsAString& aName)
       rv = creator->RegisterDOMCI(NS_ConvertUTF16toUTF8(aName).get(), this);
       NS_ENSURE_SUCCESS(rv, nsnull);
 
-      rv = gNameSpaceManager->LookupName(aName, &globalStruct);
+      rv = nameSpaceManager->LookupName(aName, &globalStruct);
       NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && globalStruct, nsnull);
 
       NS_ASSERTION(globalStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfo,
@@ -367,17 +366,16 @@ nsDOMScriptObjectFactory::RegisterDOMClassInfo(const char *aName,
 					       PRBool aHasClassInterface,
 					       const nsCID *aConstructorCID)
 {
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
-
-  return gNameSpaceManager->RegisterDOMCIData(aName,
-                                              aConstructorFptr,
-                                              aProtoChainInterface,
-                                              aInterfaces,
-                                              aScriptableFlags,
-                                              aHasClassInterface,
-                                              aConstructorCID);
+  return nameSpaceManager->RegisterDOMCIData(aName,
+                                             aConstructorFptr,
+                                             aProtoChainInterface,
+                                             aInterfaces,
+                                             aScriptableFlags,
+                                             aHasClassInterface,
+                                             aConstructorCID);
 }
 
 /* static */ nsresult

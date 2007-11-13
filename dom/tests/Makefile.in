@@ -42,8 +42,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = test_dom
+
 ifdef MOZ_MOCHITEST
 DIRS		+= mochitest
+endif
+
+ifdef ENABLE_TESTS
+XPCSHELL_TESTS = unit
 endif
 
 include $(topsrcdir)/config/rules.mk
