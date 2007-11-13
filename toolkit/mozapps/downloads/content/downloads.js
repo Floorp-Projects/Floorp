@@ -520,13 +520,13 @@ var gContextMenus = [
   ["menuitem_pause", "menuitem_cancel", "menuseparator_copy_location",
    "menuitem_copyLocation"],
   // DOWNLOAD_FINISHED
-  ["menuitem_open", "menuitem_show", "menuitem_remove", "menuitem_clearList",
+  ["menuitem_open", "menuitem_show", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_FAILED
-  ["menuitem_retry", "menuitem_remove", "menuitem_clearList",
+  ["menuitem_retry", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_CANCELED
-  ["menuitem_retry", "menuitem_remove", "menuitem_clearList",
+  ["menuitem_retry", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_PAUSED
   ["menuitem_resume", "menuitem_cancel", "menuseparator_copy_location",
@@ -535,7 +535,7 @@ var gContextMenus = [
   ["menuitem_cancel", "menuseparator_copy_location",
    "menuitem_copyLocation"],
   // DOWNLOAD_BLOCKED
-  ["menuitem_retry", "menuitem_remove", "menuitem_clearList",
+  ["menuitem_retry", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_SCANNING
   ["menuitem_copyLocation"]
@@ -636,7 +636,7 @@ var gDownloadViewController = {
       case "cmd_resume":
         return dl.paused;
       case "cmd_openReferrer":
-      case "cmd_remove":
+      case "cmd_removeFromList":
       case "cmd_retry":
         return dl.removable;
       case "cmd_showInfo":
@@ -686,7 +686,7 @@ var gDownloadViewController = {
       else
         this.commands.cmd_resume(aSelectedItem);
     },
-    cmd_remove: function(aSelectedItem) {
+    cmd_removeFromList: function(aSelectedItem) {
       removeDownload(aSelectedItem);
     },
     cmd_resume: function(aSelectedItem) {
