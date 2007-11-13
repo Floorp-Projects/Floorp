@@ -5852,8 +5852,7 @@ interrupt:
                     i = JSProto_Boolean;
                 } else {
                     JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
-                    js_ReportValueError(cx, JSMSG_NO_PROPERTIES, -2, lval,
-                                        NULL);
+                    js_ReportIsNullOrUndefined(cx, -2, lval, NULL);
                     ok = JS_FALSE;
                     goto out;
                 }
