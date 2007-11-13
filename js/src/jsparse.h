@@ -323,7 +323,6 @@ struct JSParseNode {
         jsdouble        dval;           /* aligned numeric literal value */
     } pn_u;
     JSParseNode         *pn_next;       /* to align dval and pn_u on RISCs */
-    JSTokenStream       *pn_ts;         /* token stream for error reports */
 };
 
 #define pn_funpob       pn_u.func.funpob
