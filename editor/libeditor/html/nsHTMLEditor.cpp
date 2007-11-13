@@ -285,8 +285,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
     if (NS_FAILED(result)) { return result; }
 
-    // the HTML Editor is CSS-aware only in the case of Composer
-    mCSSAware = (0 == aFlags);
+    UpdateForFlags(aFlags);
 
     // disable Composer-only features
     if (aFlags & eEditorMailMask)
@@ -417,12 +416,12 @@ nsHTMLEditor::GetFlags(PRUint32 *aFlags)
   return mRules->GetFlags(aFlags);
 }
 
-
 NS_IMETHODIMP 
 nsHTMLEditor::SetFlags(PRUint32 aFlags)
 {
   if (!mRules) { return NS_ERROR_NULL_POINTER; }
-  mCSSAware = ((aFlags & (eEditorNoCSSMask | eEditorMailMask)) == 0);
+
+  UpdateForFlags(aFlags);
 
   return mRules->SetFlags(aFlags);
 }
@@ -5443,6 +5442,25 @@ nsHTMLEditor::SetIsCSSEnabled(PRBool aIsCSSPrefChecked)
   if (mHTMLCSSUtils)
   {
     err = mHTMLCSSUtils->SetCSSEnabled(aIsCSSPrefChecked);
+  }
+  // Disable the eEditorNoCSSMask flag if we're enabling StyleWithCSS.
+  if (NS_SUCCEEDED(err)) {
+    PRUint32 flags = 0;
+    err = GetFlags(&flags);
+    NS_ENSURE_SUCCESS(err, err);
+
+    if (aIsCSSPrefChecked) {
+      // Turn off NoCSS as we're enabling CSS
+      if (flags & eEditorNoCSSMask) {
+        flags -= eEditorNoCSSMask;
+      }
+    } else if (!(flags & eEditorNoCSSMask)) {
+      // Turn on NoCSS, as we're disabling CSS.
+      flags += eEditorNoCSSMask;
+    }
+
+    err = SetFlags(flags);
+    NS_ENSURE_SUCCESS(err, err);
   }
   return err;
 }
