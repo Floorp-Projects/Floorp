@@ -413,6 +413,7 @@ DEFINES += \
 		-D_IMPL_NS_WIDGET \
 		-DIMPL_XREAPI \
 		-DIMPL_NS_NET \
+		-DIMPL_THEBES \
 		$(NULL)
 
 ifndef MOZ_NATIVE_ZLIB
@@ -433,6 +434,7 @@ DEFINES += \
 		-D_IMPL_NS_WIDGET \
 		-DIMPL_XREAPI \
 		-DIMPL_NS_NET \
+		-DIMPL_THEBES \
 		$(NULL)
 endif
 
