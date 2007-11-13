@@ -873,23 +873,13 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 
 /* Identity indicator */
 #identity-box {
-  cursor: help;
-  background-color: ThreeDFace;
+  background-color: -moz-dialog;
   -moz-border-end: 1px solid ThreeDShadow;
-}
-
-#identity-box.verifiedIdentity {
-  border-color: highlight;
-}
-
-#identity-box:hover {
-  border-color: ThreeDDarkShadow;
 }
 
 #identity-icon-label {
   padding: 0 2px;
   margin: 0;
-  cursor: inherit;
 }
 
 .unknownIdentity > #identity-icon-label {
