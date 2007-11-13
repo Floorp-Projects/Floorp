@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.2.22 [October 13, 2007]
+ * Last changed in libpng 1.2.22 [November 6, 2007]
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2007 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -2390,9 +2390,10 @@ png_handle_unknown(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
            length = (png_uint_32)65535L;
        }
 #endif
-       png_strncpy((png_charp)png_ptr->unknown_chunk.name,
-	 (png_charp)png_ptr->chunk_name, 4);
-       png_ptr->unknown_chunk.name[4] = '\0';
+       png_memcpy((png_charp)png_ptr->unknown_chunk.name,
+                  (png_charp)png_ptr->chunk_name, 
+                  png_sizeof(png_ptr->unknown_chunk.name));
+       png_ptr->unknown_chunk.name[png_sizeof(png_ptr->unknown_chunk.name)-1] = '\0';
        png_ptr->unknown_chunk.data = (png_bytep)png_malloc(png_ptr, length);
        png_ptr->unknown_chunk.size = (png_size_t)length;
        png_crc_read(png_ptr, (png_bytep)png_ptr->unknown_chunk.data, length);

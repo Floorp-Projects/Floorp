@@ -1,7 +1,7 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.2.22 - October 13, 2007
+ * libpng version 1.2.23 - November 6, 2007
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2007 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -1442,8 +1442,6 @@ typedef z_stream FAR *  png_zstreamp;
 #  define CVT_PTR(ptr) (png_far_to_near(png_ptr,ptr,CHECK))
 #  define CVT_PTR_NOCHECK(ptr) (png_far_to_near(png_ptr,ptr,NOCHECK))
 #  define png_snprintf _fsnprintf   /* Added to v 1.2.19 */
-#  define png_strcpy  _fstrcpy
-#  define png_strncpy _fstrncpy   /* Added to v 1.2.6 */
 #  define png_strlen  _fstrlen
 #  define png_memcmp  _fmemcmp    /* SJT: added */
 #  define png_memcpy  _fmemcpy
@@ -1472,8 +1470,6 @@ typedef z_stream FAR *  png_zstreamp;
 #    define png_snprintf6(s1,n,fmt,x1,x2,x3,x4,x5,x6) \
         sprintf(s1,fmt,x1,x2,x3,x4,x5,x6)
 #  endif
-#  define png_strcpy  strcpy
-#  define png_strncpy strncpy     /* Added to v 1.2.6 */
 #  define png_strlen  strlen
 #  define png_memcmp  memcmp      /* SJT: added */
 #  define png_memcpy  memcpy
