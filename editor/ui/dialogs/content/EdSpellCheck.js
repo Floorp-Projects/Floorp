@@ -586,7 +586,7 @@ function ExitSpellChecker()
       var curLang = gSpellChecker.GetCurrentDictionary();
       gSpellChecker.UninitSpellChecker();
       if ("@mozilla.org/spellchecker;1" in Components.classes) {
-        var spellChecker = Components.classes["@mozilla.org/spellchecker/hunspell;1"]
+        var spellChecker = Components.classes["@mozilla.org/spellchecker/engine;1"]
                                      .getService(Components.interfaces.mozISpellCheckingEngine);
         spellChecker.dictionary = curLang;
       }
