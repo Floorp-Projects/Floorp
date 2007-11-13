@@ -853,6 +853,7 @@ nsWindow::~nsWindow()
     NS_IF_RELEASE(gCursorImgContainer);
 
     if (sIsOleInitialized) {
+      ::OleFlushClipboard();
       ::OleUninitialize();
       sIsOleInitialized = FALSE;
     }
