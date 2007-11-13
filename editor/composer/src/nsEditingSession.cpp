@@ -353,7 +353,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
         mEditorType.AssignLiteral("text");
         mimeCType = "text/plain";
       }
-      else if (!mimeCType.EqualsLiteral("text/html"))
+      else if (!mimeCType.EqualsLiteral("text/html") &&
+               !mimeCType.EqualsLiteral("application/xhtml+xml"))
       {
         // Neither an acceptable text or html type.
         mEditorStatus = eEditorErrorCantEditMimeType;
