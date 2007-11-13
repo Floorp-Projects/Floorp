@@ -355,14 +355,6 @@ ensure_tree_view_widget()
 {
     if (!gTreeViewWidget) {
         gTreeViewWidget = gtk_tree_view_new();
-        /* In GTK the treeview sets the background of the window 
-         * which contains the cells to the treeview base color.
-         * If we don't set it here the background color will not be correct.
-         * */ 
-        gtk_widget_modify_bg(gTreeViewWidget, GTK_STATE_INSENSITIVE, 
-                             &gTreeViewWidget->style->base[GTK_STATE_INSENSITIVE]);
-        gtk_widget_modify_bg(gTreeViewWidget, GTK_STATE_NORMAL, 
-                             &gTreeViewWidget->style->base[GTK_STATE_NORMAL]);
         setup_widget_prototype(gTreeViewWidget);
     }
     return MOZ_GTK_SUCCESS;
@@ -1031,7 +1023,13 @@ moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
     /* only handle disabled and normal states, otherwise the whole background
      * area will be painted differently with other states */
     state_type = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
- 
+
+    /* In GTK the treeview sets the background of the window
+     * which contains the cells to the treeview base color.
+     * If we don't set it here the background color will not be correct.*/
+    gtk_widget_modify_bg(gTreeViewWidget, state_type,
+                         &gTreeViewWidget->style->base[state_type]);
+
     style = gTreeViewWidget->style;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
