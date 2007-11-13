@@ -1960,9 +1960,10 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
     mDBGetPageVisitStats->Reset();
     scoper.Abandon();
 
-    // hide embedded links and redirects, everything else is visible,
+    // Hide only embedded links, redirects, and downloads
     // See the hidden computation code above for a little more explanation.
-    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect);
+    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect ||
+              aTransitionType == TRANSITION_DOWNLOAD);
 
     typed = (aTransitionType == TRANSITION_TYPED);
 
