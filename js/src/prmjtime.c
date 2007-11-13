@@ -261,7 +261,7 @@ static PRCallOnceType calibrationOnce = { 0 };
 #endif
 
 
-#endif // XP_WIN
+#endif /* XP_WIN */
 
 /*
 
@@ -448,7 +448,7 @@ PRMJ_Now(void)
                doing some kind of file I/O. The symptoms are a negative diff
                followed by an equally large positive diff. */
             if (fabs(diff) > 2*skewThreshold) {
-                //fprintf(stderr,"Clock skew detected (diff = %f)!\n", diff);
+                /*fprintf(stderr,"Clock skew detected (diff = %f)!\n", diff);*/
 
                 if (calibrated) {
                     /* If we already calibrated once this instance, and the
@@ -560,8 +560,10 @@ PRMJ_DSTOffset(JSInt64 local_time)
 size_t
 PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
 {
+    size_t result = 0;
 #if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
     struct tm a;
+    int fake_tm_year = 0;
 
     /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int
      * tm_gmtoff, char *tm_zone; when tm_zone is garbage, strftime gets
@@ -584,15 +586,33 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     a.tm_mday = prtm->tm_mday;
     a.tm_mon = prtm->tm_mon;
     a.tm_wday = prtm->tm_wday;
-    a.tm_year = prtm->tm_year - 1900;
+
+    /* 
+     * Years before 1900 and after 9999 cause strftime() to abort on Windows.
+     * To avoid that we replace it with FAKE_YEAR_BASE + year % 100 and then
+     * replace matching substrings in the strftime() result with the real year.
+     * Note that FAKE_YEAR_BASE should be a multiple of 100 to make 2-digit
+     * year formats (%y) work correctly (since we won't find the fake year
+     * in that case).
+     * e.g. new Date(1873, 0).toLocaleFormat('%Y %y') => "1873 73"
+     * See bug 327869.
+     */
+#define FAKE_YEAR_BASE 9900
+    if (prtm->tm_year < 1900 || prtm->tm_year > 9999) {
+        fake_tm_year = FAKE_YEAR_BASE + prtm->tm_year % 100;
+        a.tm_year = fake_tm_year - 1900;
+    }
+    else {
+        a.tm_year = prtm->tm_year - 1900;
+    }
     a.tm_yday = prtm->tm_yday;
     a.tm_isdst = prtm->tm_isdst;
 
-    /* Even with the above, SunOS 4 seems to detonate if tm_zone and tm_gmtoff
+    /*
+     * Even with the above, SunOS 4 seems to detonate if tm_zone and tm_gmtoff
      * are null.  This doesn't quite work, though - the timezone is off by
      * tzoff + dst.  (And mktime seems to return -1 for the exact dst
      * changeover time.)
-
      */
 
 #if defined(SUNOS4)
@@ -607,8 +627,34 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     }
 #endif
 
-    return strftime(buf, buflen, fmt, &a);
+    result = strftime(buf, buflen, fmt, &a);
+
+    if (fake_tm_year && result) {
+        char real_year[16];
+        char fake_year[16];
+        size_t real_year_len;
+        size_t fake_year_len;
+        char* p;
+
+        sprintf(real_year, "%d", prtm->tm_year);
+        real_year_len = strlen(real_year);
+        sprintf(fake_year, "%d", fake_tm_year);
+        fake_year_len = strlen(fake_year);
+
+        /* Replace the fake year in the result with the real year. */
+        for (p = buf; (p = strstr(p, fake_year)); p += real_year_len) {
+            size_t new_result = result + real_year_len - fake_year_len;
+            if ((int)new_result >= buflen) {
+                return 0;
+            }
+            memmove(p + real_year_len, p + fake_year_len, strlen(p + fake_year_len));
+            memcpy(p, real_year, real_year_len);
+            result = new_result;
+            *(buf + result) = '\0';
+        }
+    }
 #endif
+    return result;
 }
 
 /* table for number of days in a month */
