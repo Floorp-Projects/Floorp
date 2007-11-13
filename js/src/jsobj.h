@@ -174,7 +174,7 @@ struct JSObject {
 
 #define STOBJ_SET_SYSTEM(obj)   ((void)((obj)->fslots[JSSLOT_CLASS] |= 2))
 
-#define STOBJ_GET_PRIVATE(obj)                                                \
+#define STOBJ_GET_PRIVATE(obj)                                          \
     (JS_ASSERT(JSVAL_IS_INT(STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE))),            \
      JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE)))
 
@@ -444,6 +444,21 @@ extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
 /*
+ * Native property add and lookup variants that hide id in the hidden atom
+ * subspace, so as to avoid collisions between internal properties such as
+ * formal arguments and local variables in function objects, and externally
+ * set properties with the same ids.
+ */
+extern JSScopeProperty *
+js_AddHiddenProperty(JSContext *cx, JSObject *obj, jsid id,
+                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                     uintN attrs, uintN flags, intN shortid);
+
+extern JSBool
+js_LookupHiddenProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                        JSProperty **propp);
+
+/*
  * Find or create a property named by id in obj's scope, with the given getter
  * and setter, slot, attributes, and other members.
  */
@@ -492,10 +507,14 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 
 /*
  * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
+ * JSRESOLVE_HIDDEN flags hidden function param/local name lookups, just for
+ * internal use by fun_resolve and similar built-ins.
  */
 extern JSBool
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
+
+#define JSRESOLVE_HIDDEN        0x8000
 
 extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
@@ -625,7 +644,6 @@ js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller
 extern JSBool
 js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
                          JSPrincipals *principals, JSAtom *caller);
-
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */

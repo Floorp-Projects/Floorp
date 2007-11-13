@@ -1637,7 +1637,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
         pc += js_CodeSpec[*pc].length;
     if (*pc == JSOP_DEFFUN) {
         GET_FUNCTION_FROM_BYTECODE(script, pc, 0, obj);
-        fun = GET_FUNCTION_PRIVATE(cx, obj);
+        fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
         JS_ASSERT(FUN_INTERPRETED(fun));
         return fun->u.i.script->lineno;
     }

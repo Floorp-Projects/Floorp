@@ -288,9 +288,11 @@ struct JSScopeProperty {
 
 /* Bits stored in sprop->flags. */
 #define SPROP_MARK                      0x01
-#define SPROP_ALLOW_DUPLICATE           0x02
+#define SPROP_IS_DUPLICATE              0x02
 #define SPROP_IS_ALIAS                  0x04
 #define SPROP_HAS_SHORTID               0x08
+#define SPROP_IS_HIDDEN                 0x10    /* a normally-hidden property,
+                                                   e.g., function arg or var */
 
 /*
  * If SPROP_HAS_SHORTID is set in sprop->flags, we use sprop->shortid rather
