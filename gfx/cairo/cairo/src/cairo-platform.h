@@ -59,8 +59,6 @@
 #else
 # if defined(XP_WIN) || defined(XP_BEOS)
 #  define cairo_public extern __declspec(dllexport)
-# elif defined(XP_MAC)
-#  define cairo_public extern __declspec(export)
 # elif defined(XP_OS2)
 #  ifdef __declspec
 #   define cairo_public extern __declspec(dllexport)
