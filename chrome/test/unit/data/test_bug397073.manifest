@@ -1,0 +1,6 @@
+# Success cases
+content  test1  test/  os=xpcshell
+content  test2  test/  os=XPCshell
+
+# Failure cases
+content  test3  test/  os=FOOshell
