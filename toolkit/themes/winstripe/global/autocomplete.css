@@ -169,7 +169,9 @@ textbox[chromedir="rtl"] .autocomplete-history-dropmarker {
 
 panel[type="autocomplete"],
 .autocomplete-history-popup {
+%ifndef MOZ_WIDGET_GTK2
   -moz-appearance: none;
+%endif
   border-width: 1px;
   -moz-border-top-colors: ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDDarkShadow;
