@@ -200,7 +200,7 @@
                         aaa:labelledby="useCacheBefore cacheSize useCacheAfter"/>
                <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
                <button id="clearCacheButton" icon="clear"
-                       label="&clearDataNow.label2;"
+                       label="&clearCacheNow.label;"
                        oncommand="gAdvancedPane.clearCache();"/>
              </hbox>
            </groupbox>
