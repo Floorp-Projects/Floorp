@@ -457,32 +457,23 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
 
 NS_IMETHODIMP nsAccessible::SetParent(nsIAccessible *aParent)
 {
-#ifdef DEBUG
-  if (aParent && aParent != mParent) {
-    nsCOMPtr<nsPIAccessible> privParent = do_QueryInterface(mParent);
-    if (privParent) {
-      nsCOMPtr<nsIAccessible> firstChild;
-      privParent->GetCachedFirstChild(getter_AddRefs(firstChild));
-      NS_ASSERTION(firstChild != this, "Reparenting other node's first child!");
+  if (mParent != aParent) {
+    // Adopt a child -- we allow this now. the new parent
+    // may be a dom node which wasn't previously accessible but now is.
+    // The old parent's children now need to be invalidated, since 
+    // it no longer owns the child, the new parent does
+    nsCOMPtr<nsPIAccessible> privOldParent = do_QueryInterface(mParent);
+    if (privOldParent) {
+      privOldParent->InvalidateChildren();
     }
   }
-#endif
+
   mParent = aParent;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::SetFirstChild(nsIAccessible *aFirstChild)
 {
-#ifdef DEBUG
-  // If there's parent of this child already, make sure it's us!
-  nsCOMPtr<nsPIAccessible> privChild = do_QueryInterface(aFirstChild);
-  if (privChild) {
-    nsCOMPtr<nsIAccessible> parent;
-    privChild->GetCachedParent(getter_AddRefs(parent));
-    NS_ASSERTION(!parent || parent == this, "Stealing child!");
-  }
-#endif
-
   mFirstChild = aFirstChild;
 
   return NS_OK;
@@ -555,7 +546,11 @@ NS_IMETHODIMP nsAccessible::InvalidateChildren()
   // Note: we don't want to start creating accessibles at this point,
   // so don't use GetNextSibling() here. (bug 387252)
   nsAccessible* child = static_cast<nsAccessible*>(mFirstChild);
-  while (child && child->mNextSibling != DEAD_END_ACCESSIBLE) {
+  while (child) {
+    child->mParent = nsnull;
+    if (child->mNextSibling == DEAD_END_ACCESSIBLE) {
+      break;
+    }
     nsIAccessible *next = child->mNextSibling;
     child->mNextSibling = nsnull;
     child = static_cast<nsAccessible*>(next);
