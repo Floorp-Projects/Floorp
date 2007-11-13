@@ -2702,7 +2702,6 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   else if (remaining_display_errors & nsICertOverrideService::ERROR_TIME)
     errorCodeToReport = errorCodeExpired;
 
-  PR_SetError(errorCodeToReport, 0);
   if (!suppressMessage) {
     nsHandleInvalidCertError(infoObject,
                              remaining_display_errors,
@@ -2716,6 +2715,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
                              ix509);
   }
 
+  PR_SetError(errorCodeToReport, 0);
   return cancel_and_failure(infoObject);
 }
 
