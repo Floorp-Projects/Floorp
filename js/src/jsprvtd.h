@@ -89,6 +89,11 @@
     (JS_ASSERT(JSID_IS_HIDDEN(id)),                                           \
      (jsid)((jsval)(id) ^ (JSVAL_BOOLEAN ^ JSVAL_STRING)))
 
+/*
+ * Convenience constants.
+ */
+#define JS_BITS_PER_UINT32 (sizeof(uint32) * JS_BITS_PER_BYTE)
+
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;
 typedef uint8  jssrcnote;

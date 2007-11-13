@@ -98,6 +98,14 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
     (!JSVAL_IS_PRIMITIVE(v) &&                                                \
      OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass)
 
+/*
+ * Macro to access the private slot of the function object after the slot is
+ * initialized.
+ */
+#define GET_FUNCTION_PRIVATE(cx, funobj)                                      \
+    (JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass),               \
+     (JSFunction *) OBJ_GET_PRIVATE(cx, funobj))
+
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
@@ -171,6 +179,49 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
 js_XDRFunction(JSXDRState *xdr, JSObject **objp);
+
+typedef enum JSLocalKind {
+    JSLOCAL_NONE,
+    JSLOCAL_ARG,
+    JSLOCAL_VAR,
+    JSLOCAL_CONST
+} JSLocalKind;
+
+extern JSBool
+js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind);
+
+/*
+ * Look up an argument or variable name returning its kind when found or
+ * JSLOCAL_NONE when no such name exists. When indexp is not null and the name
+ * exists, *indexp will receive the index of the corresponding argument or
+ * variable.
+ */
+extern JSLocalKind
+js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
+
+/*
+ * Get names of arguments and variables for the interpreted function.
+ *
+ * The result is an array allocated from the given pool with
+ *   fun->nargs + fun->u.i.nvars
+ * elements with the names of the arguments coming first. The argument
+ * name is null when it corresponds to a destructive pattern.
+ *
+ * When bitmap is not null, on successful return it will contain a bit array
+ * where for each index below fun->nargs the bit is set when the corresponding
+ * argument name is not null. For indexes greater or equal fun->nargs the bit
+ * is set when the corresponding var is really a const.
+ */
+extern JSAtom **
+js_GetLocalNames(JSContext *cx, JSFunction *fun, JSArenaPool *pool,
+                 uint32 **bitmap);
+
+/*
+ * Pseudo-getter function pointers to distinguish the kind of the hidden
+ * property.
+ */
+#define JS_HIDDEN_ARG_GETTER    ((JSPropertyOp) sizeof(jsuword))
+#define JS_HIDDEN_VAR_GETTER    ((JSPropertyOp) (2 * sizeof(jsuword)))
 
 JS_END_EXTERN_C
 

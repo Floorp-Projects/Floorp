@@ -814,6 +814,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
     uintN oldflags, firstLine;
     JSParseNode *pn;
 
+    JS_ASSERT(FUN_INTERPRETED(fun));
     fp = cx->fp;
     funobj = fun->object;
     if (!fp || fp->fun != fun || fp->varobj != funobj ||
@@ -827,12 +828,6 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
             frame.flags = fp->flags & JSFRAME_COMPILE_N_GO;
         cx->fp = &frame;
     }
-
-    /*
-     * Set interpreted early so js_EmitTree can test it to decide whether to
-     * eliminate useless expressions.
-     */
-    fun->flags |= JSFUN_INTERPRETED;
 
     js_PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
@@ -996,9 +991,7 @@ struct BindData {
         struct {
             JSFunction      *fun;               /* this overlays u.arg.fun */
             JSClass         *clasp;
-            JSPropertyOp    getter;
-            JSPropertyOp    setter;
-            uintN           attrs;
+            JSLocalKind     kind;
         } var;
         struct {
             jsuint          index;
@@ -1017,82 +1010,39 @@ struct BindData {
     ((data)->pn ? JSREPORT_PN : JSREPORT_TS) | (flags)
 
 static JSBool
-BumpFormalCount(JSContext *cx, JSFunction *fun)
-{
-    if (fun->nargs == JS_BITMASK(16)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_TOO_MANY_FUN_ARGS);
-        return JS_FALSE;
-    }
-    fun->nargs++;
-    return JS_TRUE;
-}
-
-static JSBool
 BindArg(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
-    JSObject *obj, *pobj;
-    JSProperty *prop;
-    JSBool ok;
-    uintN dupflag;
-    JSFunction *fun;
     const char *name;
 
-    obj = data->obj;
-    ok = js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop);
-    if (!ok)
-        return JS_FALSE;
-
-    dupflag = 0;
-    if (prop) {
-        JS_ASSERT(pobj == obj);
+    /*
+     * Check for a duplicate parameter name, a "feature" required by ECMA-262.
+     */
+    if (js_LookupLocal(cx, data->u.arg.fun, atom, NULL) != JSLOCAL_NONE) {
         name = js_AtomToPrintableString(cx, atom);
-
-        /*
-         * A duplicate parameter name, a "feature" required by ECMA-262.
-         * We force a duplicate node on the SCOPE_LAST_PROP(scope) list
-         * with the same id, distinguished by the SPROP_IS_DUPLICATE flag,
-         * and not mapped by an entry in scope.
-         */
-        ok = name &&
-             js_ReportCompileErrorNumber(cx,
+        if (!name ||
+            !js_ReportCompileErrorNumber(cx,
                                          BIND_DATA_REPORT_ARGS(data,
                                              JSREPORT_WARNING |
                                              JSREPORT_STRICT),
                                          JSMSG_DUPLICATE_FORMAL,
-                                         name);
-
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
-        if (!ok)
+                                         name)) {
             return JS_FALSE;
-
-        dupflag = SPROP_IS_DUPLICATE;
+        }
     }
 
-    fun = data->u.arg.fun;
-    if (!js_AddHiddenProperty(cx, data->obj, ATOM_TO_JSID(atom),
-                              js_GetArgument, js_SetArgument,
-                              SPROP_INVALID_SLOT,
-                              JSPROP_PERMANENT | JSPROP_SHARED,
-                              dupflag | SPROP_HAS_SHORTID,
-                              fun->nargs)) {
-        return JS_FALSE;
-    }
-
-    return BumpFormalCount(cx, fun);
+    return js_AddLocal(cx, data->u.arg.fun, atom, JSLOCAL_ARG);
 }
 
 static JSBool
 BindLocalVariable(JSContext *cx, BindData *data, JSAtom *atom)
 {
-    JSFunction *fun;
-
     /*
-     * Can't increase fun->nvars in an active frame, so insist that getter is
-     * js_GetLocalVariable, not js_GetCallVariable or anything else.
+     * Can't increase fun->nvars in an active frame when kind is JSFL_NONE.
      */
-    if (data->u.var.getter != js_GetLocalVariable)
+    if (data->u.var.kind == JSLOCAL_NONE)
         return JS_TRUE;
+    JS_ASSERT(data->u.var.kind == JSLOCAL_VAR ||
+              data->u.var.kind == JSLOCAL_CONST);
 
     /*
      * Don't bind a variable with the hidden name 'arguments', per ECMA-262.
@@ -1103,21 +1053,7 @@ BindLocalVariable(JSContext *cx, BindData *data, JSAtom *atom)
     if (atom == cx->runtime->atomState.argumentsAtom)
         return JS_TRUE;
 
-    fun = data->u.var.fun;
-    if (!js_AddHiddenProperty(cx, data->obj, ATOM_TO_JSID(atom),
-                              data->u.var.getter, data->u.var.setter,
-                              SPROP_INVALID_SLOT,
-                              data->u.var.attrs | JSPROP_SHARED,
-                              SPROP_HAS_SHORTID, fun->u.i.nvars)) {
-        return JS_FALSE;
-    }
-    if (fun->u.i.nvars == JS_BITMASK(16)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_TOO_MANY_FUN_VARS);
-        return JS_FALSE;
-    }
-    fun->u.i.nvars++;
-    return JS_TRUE;
+    return js_AddLocal(cx, data->u.var.fun, atom, data->u.var.kind);
 }
 
 #if JS_HAS_DESTRUCTURING
@@ -1133,9 +1069,6 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
                      JSTreeContext *tc)
 {
     JSAtomListElement *ale;
-    JSFunction *fun;
-    JSObject *obj, *pobj;
-    JSProperty *prop;
     const char *name;
 
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
@@ -1146,13 +1079,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
         ALE_SET_JSOP(ale, data->op);
     }
 
-    fun = data->u.var.fun;
-    obj = data->obj;
-    if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
-        return JS_FALSE;
-
-    if (prop) {
-        JS_ASSERT(pobj == obj && OBJ_IS_NATIVE(pobj));
+    if (js_LookupLocal(cx, data->u.var.fun, atom, NULL) != JSLOCAL_NONE) {
         name = js_AtomToPrintableString(cx, atom);
         if (!name ||
             !js_ReportCompileErrorNumber(cx,
@@ -1163,7 +1090,6 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
                                          name)) {
             return JS_FALSE;
         }
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
     } else {
         if (!BindLocalVariable(cx, data, atom))
             return JS_FALSE;
@@ -1182,9 +1108,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSAtom *funAtom;
     JSParsedObjectBox *funpob;
     JSStackFrame *fp;
-    JSObject *varobj, *pobj;
+    JSObject *varobj;
     JSAtomListElement *ale;
-    JSProperty *prop;
     JSFunction *fun;
     JSTreeContext funtc;
 #if JS_HAS_DESTRUCTURING
@@ -1265,56 +1190,31 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * JSOP_GETVAR bytecode).
          */
         if (AT_TOP_LEVEL(tc) && (tc->flags & TCF_IN_FUNCTION)) {
-            JSScopeProperty *sprop;
+            JSLocalKind localKind;
 
             /*
              * Define a property on the outer function so that BindNameToSlot
-             * can properly optimize accesses.
+             * can properly optimize accesses. Note that we need a variable,
+             * not an argument, for the function statement. Thus we add a
+             * variable even if the parameter with the given name already
+             * exists.
              */
             JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
-            JS_ASSERT(fp->fun == (JSFunction *) OBJ_GET_PRIVATE(cx, varobj));
-            if (!js_LookupHiddenProperty(cx, varobj, ATOM_TO_JSID(funAtom),
-                                         &pobj, &prop)) {
-                return NULL;
-            }
-            if (prop)
-                OBJ_DROP_PROPERTY(cx, pobj, prop);
-            sprop = NULL;
-            if (!prop ||
-                pobj != varobj ||
-                (sprop = (JSScopeProperty *)prop,
-                 sprop->getter != js_GetLocalVariable)) {
-                uintN sflags;
-
-                /*
-                 * Use SPROP_IS_DUPLICATE if there is a formal argument of the
-                 * same name, so the decompiler can find the parameter name.
-                 */
-                sflags = (sprop && sprop->getter == js_GetArgument)
-                         ? SPROP_IS_DUPLICATE | SPROP_HAS_SHORTID
-                         : SPROP_HAS_SHORTID;
-                if (!js_AddHiddenProperty(cx, varobj, ATOM_TO_JSID(funAtom),
-                                          js_GetLocalVariable,
-                                          js_SetLocalVariable,
-                                          SPROP_INVALID_SLOT,
-                                          JSPROP_PERMANENT | JSPROP_SHARED,
-                                          sflags, fp->fun->u.i.nvars)) {
+            JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, varobj));
+            localKind = js_LookupLocal(cx, fp->fun, funAtom, NULL);
+            if (localKind == JSLOCAL_NONE || localKind == JSLOCAL_ARG) {
+                if (!js_AddLocal(cx, fp->fun, funAtom, JSLOCAL_VAR))
                     return NULL;
-                }
-                if (fp->fun->u.i.nvars == JS_BITMASK(16)) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_TOO_MANY_FUN_VARS);
-                    return NULL;
-                }
-                fp->fun->u.i.nvars++;
             }
         }
     }
 
-    fun = js_NewFunction(cx, NULL, NULL, 0, lambda ? JSFUN_LAMBDA : 0, varobj,
-                         funAtom);
+    fun = js_NewFunction(cx, NULL, NULL, 0,
+                         JSFUN_INTERPRETED | (lambda ? JSFUN_LAMBDA : 0),
+                         varobj, funAtom);
     if (!fun)
         return NULL;
+
 #if JS_HAS_GETTER_SETTER
     if (op != JSOP_NOP)
         fun->flags |= (op == JSOP_GETTER) ? JSPROP_GETTER : JSPROP_SETTER;
@@ -1322,7 +1222,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     /*
      * Create wrapping box for fun->object early to protect against a
-     * last-ditch GC under js_LookupHiddenProperty.
+     * last-ditch GC.
      */
     funpob = js_NewParsedObjectBox(cx, tc->parseContext, fun->object);
     if (!funpob)
@@ -1362,10 +1262,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 data.op = JSOP_DEFVAR;
                 data.binder = BindDestructuringArg;
                 data.u.var.clasp = &js_FunctionClass;
-                data.u.var.getter = js_GetLocalVariable;
-                data.u.var.setter = js_SetLocalVariable;
-                data.u.var.attrs = JSPROP_PERMANENT;
-
+                data.u.var.kind = JSLOCAL_VAR;
                 lhs = DestructuringExpr(cx, &data, &funtc, tt);
                 if (!lhs)
                     return NULL;
@@ -1381,7 +1278,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                  * parameter that is to be destructured.
                  */
                 slot = fun->nargs;
-                if (!BumpFormalCount(cx, fun))
+                if (!js_AddLocal(cx, fun, NULL, JSLOCAL_ARG))
                     return NULL;
 
                 /*
@@ -1839,11 +1736,8 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JSOp op, prevop;
     const char *name;
     JSFunction *fun;
-    JSObject *obj, *pobj;
-    JSProperty *prop;
-    JSBool ok;
-    JSPropertyOp getter, setter;
-    JSScopeProperty *sprop;
+    JSObject *obj;
+    JSLocalKind localKind;
 
     stmt = js_LexicalLookup(tc, atom, NULL, 0);
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
@@ -1885,84 +1779,16 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 
     fun = data->u.var.fun;
     obj = data->obj;
-    if (!fun) {
-        /* Don't lookup global variables at compile time. */
-        prop = NULL;
-    } else {
-        JS_ASSERT(OBJ_IS_NATIVE(obj));
-        if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom),
-                                     &pobj, &prop)) {
-            return JS_FALSE;
-        }
+    if (!fun || OBJ_GET_CLASS(cx, obj) != &js_FunctionClass) {
+        /*
+         * Don't lookup global variables or variables in an active frame at
+         * compile time.
+         */
+        return JS_TRUE;
     }
 
-    ok = JS_TRUE;
-    getter = data->u.var.getter;
-    setter = data->u.var.setter;
-
-    if (prop && pobj == obj && OBJ_IS_NATIVE(pobj)) {
-        sprop = (JSScopeProperty *)prop;
-        if (sprop->getter == js_GetArgument) {
-            name  = js_AtomToPrintableString(cx, atom);
-            if (!name) {
-                ok = JS_FALSE;
-            } else if (op == JSOP_DEFCONST) {
-                js_ReportCompileErrorNumber(cx,
-                                            BIND_DATA_REPORT_ARGS(data,
-                                                JSREPORT_ERROR),
-                                            JSMSG_REDECLARED_PARAM,
-                                            name);
-                ok = JS_FALSE;
-            } else {
-                getter = js_GetArgument;
-                setter = js_SetArgument;
-                ok = js_ReportCompileErrorNumber(cx,
-                                                 BIND_DATA_REPORT_ARGS(data,
-                                                     JSREPORT_WARNING |
-                                                     JSREPORT_STRICT),
-                                                 JSMSG_VAR_HIDES_ARG,
-                                                 name);
-            }
-        } else {
-            JS_ASSERT(getter == js_GetLocalVariable);
-
-            if (fun) {
-                /* Not an argument, must be a redeclared local var. */
-                if (data->u.var.clasp == &js_FunctionClass) {
-                    JS_ASSERT(sprop->getter == js_GetLocalVariable);
-                    JS_ASSERT((sprop->flags & SPROP_HAS_SHORTID) &&
-                              (uint16) sprop->shortid < fun->u.i.nvars);
-                } else if (data->u.var.clasp == &js_CallClass) {
-                    if (sprop->getter == js_GetCallVariable) {
-                        /*
-                         * Referencing a name introduced by a var statement in
-                         * the enclosing function.  Check that the slot number
-                         * we have is in range.
-                         */
-                        JS_ASSERT((sprop->flags & SPROP_HAS_SHORTID) &&
-                                  (uint16) sprop->shortid < fun->u.i.nvars);
-                    } else {
-                        /*
-                         * A variable introduced through another eval: don't
-                         * use the special getters and setters since we can't
-                         * allocate a slot in the frame.
-                         */
-                        getter = sprop->getter;
-                        setter = sprop->setter;
-                    }
-                }
-
-                /* Override the old getter and setter, to handle eval. */
-                sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop,
-                                                     0, sprop->attrs,
-                                                     getter, setter);
-                if (!sprop)
-                    ok = JS_FALSE;
-            }
-        }
-        if (prop)
-            OBJ_DROP_PROPERTY(cx, pobj, prop);
-    } else {
+    localKind = js_LookupLocal(cx, fun, atom, NULL);
+    if (localKind == JSLOCAL_NONE) {
         /*
          * Property not found in current variable scope: we have not seen this
          * variable before.  Define a new local variable by adding a property
@@ -1971,19 +1797,37 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
          * bodies are handled at runtime, by script prolog JSOP_DEFVAR opcodes
          * generated for slot-less vars.
          */
-        sprop = NULL;
-        if (prop) {
-            OBJ_DROP_PROPERTY(cx, pobj, prop);
-            prop = NULL;
-        }
-
         if (cx->fp->scopeChain == obj &&
             !js_InWithStatement(tc) &&
             !BindLocalVariable(cx, data, atom)) {
             return JS_FALSE;
         }
+    } else if (localKind == JSLOCAL_ARG) {
+        name = js_AtomToPrintableString(cx, atom);
+        if (!name)
+            return JS_FALSE;
+
+        if (op == JSOP_DEFCONST) {
+            js_ReportCompileErrorNumber(cx,
+                                        BIND_DATA_REPORT_ARGS(data,
+                                                              JSREPORT_ERROR),
+                                        JSMSG_REDECLARED_PARAM,
+                                        name);
+            return JS_FALSE;
+        }
+        if (!js_ReportCompileErrorNumber(cx,
+                                         BIND_DATA_REPORT_ARGS(data,
+                                             JSREPORT_WARNING |
+                                             JSREPORT_STRICT),
+                                         JSMSG_VAR_HIDES_ARG,
+                                         name)) {
+            return JS_FALSE;
+        }
+    } else {
+        /* Not an argument, must be a redeclared local var. */
+        JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
     }
-    return ok;
+    return JS_TRUE;
 }
 
 #if JS_HAS_DESTRUCTURING
@@ -2018,7 +1862,7 @@ BindDestructuringVar(JSContext *cx, BindData *data, JSParseNode *pn,
     pn->pn_op = (data->op == JSOP_DEFCONST)
                 ? JSOP_SETCONST
                 : JSOP_SETNAME;
-    pn->pn_attrs = data->u.var.attrs;
+    pn->pn_const = (data->u.var.kind == JSLOCAL_CONST);
     return JS_TRUE;
 }
 
@@ -3768,20 +3612,16 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         data.u.var.clasp = OBJ_GET_CLASS(cx, data.obj);
         if (data.u.var.fun && data.u.var.clasp == &js_FunctionClass) {
             /* We are compiling code inside a function */
-            data.u.var.getter = js_GetLocalVariable;
-            data.u.var.setter = js_SetLocalVariable;
-        } else if (data.u.var.fun && data.u.var.clasp == &js_CallClass) {
-            /* We are compiling code from an eval inside a function */
-            data.u.var.getter = js_GetCallVariable;
-            data.u.var.setter = js_SetCallVariable;
+            data.u.var.kind = (data.op == JSOP_DEFCONST)
+                              ? JSLOCAL_CONST
+                              : JSLOCAL_VAR;
         } else {
-            data.u.var.getter = data.u.var.clasp->getProperty;
-            data.u.var.setter = data.u.var.clasp->setProperty;
+            /*
+             * We are compiling global code or code from an eval inside a
+             * function
+             */
+            data.u.var.kind = JSLOCAL_NONE;
         }
-
-        data.u.var.attrs = (data.op == JSOP_DEFCONST)
-                           ? JSPROP_PERMANENT | JSPROP_READONLY
-                           : JSPROP_PERMANENT;
     }
 
     do {
@@ -3834,7 +3674,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn2->pn_atom = atom;
         pn2->pn_slot = -1;
         if (!let)
-            pn2->pn_attrs = data.u.var.attrs;
+            pn2->pn_const = (data.u.var.kind == JSLOCAL_CONST);
         PN_APPEND(pn, pn2);
 
         if (js_MatchToken(cx, ts, TOK_ASSIGN)) {
@@ -4545,11 +4385,10 @@ GeneratorExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      * Make the generator function and flag it as interpreted ASAP (see the
      * comment in FunctionBody).
      */
-    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA, cx->fp->varobj,
-                         NULL);
+    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
+                         cx->fp->varobj, NULL);
     if (!fun)
         return NULL;
-    fun->flags |= JSFUN_INTERPRETED;
 
     /*
      * This generator function is referenced by an anonymous function object
