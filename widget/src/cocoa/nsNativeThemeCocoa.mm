@@ -599,7 +599,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   }
 
   if (thebesSurface->GetType() != gfxASurface::SurfaceTypeQuartz) {
-    NS_WARNING("Expected surface of type Quartz, got somthing else");
+    NS_WARNING("Expected surface of type Quartz, got something else");
     return NS_ERROR_FAILURE;
   }
 
