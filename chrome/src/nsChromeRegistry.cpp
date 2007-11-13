@@ -715,7 +715,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
     if (!mInitialized)
       return NS_ERROR_NOT_INITIALIZED;
 
-    LogMessage("No chrome package registered for chrome://%s/%s/%s .",
+    LogMessage("No chrome package registered for chrome://%s/%s/%s",
                package.get(), provider.get(), path.get());
 
     return NS_ERROR_FAILURE;
@@ -743,7 +743,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
   }
 
   if (!baseURI) {
-    LogMessage("No chrome package registered for chrome://%s/%s/%s .",
+    LogMessage("No chrome package registered for chrome://%s/%s/%s",
                package.get(), provider.get(), path.get());
     return NS_ERROR_FAILURE;
   }
