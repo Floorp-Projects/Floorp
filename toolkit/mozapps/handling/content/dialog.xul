@@ -63,6 +63,7 @@
   <vbox flex="1">
     <description id="item-action-text"/>
     <richlistbox id="items" flex="1"
+                 ondblclick="dialog.onDblClick();"
                  onselect="dialog.updateOKButton();">
       <richlistitem id="item-choose" orient="horizontal" selected="true">
         <label value="&ChooseApp.description;" flex="1"/>

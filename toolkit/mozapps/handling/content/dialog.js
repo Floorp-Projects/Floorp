@@ -233,6 +233,17 @@ var dialog = {
       document.getElementById("remember-text").removeAttribute("visible");
   },
 
+  /**
+   * Function called when the user double clicks on an item of the list
+   */
+  onDblClick: function onDblClick()
+  {
+    if (this.selectedItem == this._itemChoose)
+      this.chooseApplication();
+    else
+      document.documentElement.acceptDialog();
+  },
+
   /////////////////////////////////////////////////////////////////////////////
   //// Getters / Setters
 
