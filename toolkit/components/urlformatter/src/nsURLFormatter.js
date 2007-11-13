@@ -159,7 +159,7 @@ var nsURLFormatterModule = {
   },
 
   unregisterSelf: function(aCompMgr, aLocation, aType) {
-    aCompMgr = aCompMgr.QueryInterface(Cinterfaces.nsIComponentRegistrar);
+    aCompMgr = aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CID, aLocation);        
   },
   
