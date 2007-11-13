@@ -264,8 +264,7 @@ function BookmarkThisTab()
     tab = getBrowser().mCurrentTab;
 
   PlacesCommandHook.bookmarkPage(tab.linkedBrowser,
-                                 PlacesUtils.bookmarksRootId,
-                                 true, getBrowser(), "overlap");
+                                 PlacesUtils.bookmarksRootId, true);
 }
 
 /**

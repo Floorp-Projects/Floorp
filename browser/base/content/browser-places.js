@@ -167,13 +167,8 @@ var PlacesCommandHook = {
    *        aBrowser isn't bookmarked yet, defaults to the unfiled root.
    * @param [optional] aShowEditUI
    *        whether or not to show the edit-bookmark UI for the bookmark item
-   * @param [optional] aAnchorElement
-   *        required if aShowEditUI is set, see popup's openPopup.
-   * @param [optional] aPosition
-   *        required if aShowEditUI is set, see popup's openPopup.
    */  
-  bookmarkPage: function PCH_bookmarkPage(aBrowser, aParent, aShowEditUI,
-                                          aAnchorElement, aPosition) {
+  bookmarkPage: function PCH_bookmarkPage(aBrowser, aParent, aShowEditUI) {
     var uri = aBrowser.currentURI;
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     if (itemId == -1) {
@@ -202,25 +197,25 @@ var PlacesCommandHook = {
         itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
 
-    if (aShowEditUI)
-      this.showEditBookmarkPopup(itemId, aAnchorElement, aPosition);
+    if (aShowEditUI) {
+      // dock the panel to the star icon when possible, otherwise dock
+      // it to the content area
+      if (aBrowser.contentWindow == window.content) {
+        var starIcon = aBrowser.ownerDocument.getElementById("star-button");
+        if (starIcon && isElementVisible(starIcon)) {
+          this.showEditBookmarkPopup(itemId, starIcon, "after_start");
+          return;
+        }
+      }
+      this.showEditBookmarkPopup(itemId, aBrowser, "overlap");
+    }
   },
 
   /**
    * Adds a bookmark to the page loaded in the current tab. 
    */
   bookmarkCurrentPage: function PCH_bookmarkCurrentPage(aShowEditUI, aParent) {
-    // dock the panel to the star icon if it is visible, otherwise dock
-    // it to the content area
-    var starIcon = document.getElementById("star-button");
-    if (starIcon && isElementVisible(starIcon)) {
-      this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI,
-                        starIcon, "after_start");
-    }
-    else {
-      this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI,
-                        getBrowser(), "overlap");
-    }
+    this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI);
   },
 
   /**
@@ -242,7 +237,7 @@ var PlacesCommandHook = {
       itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     }
 
-    PlacesCommandHook.showEditBookmarkPopup(itemId, getBrowser(), "overlap");
+    this.showEditBookmarkPopup(itemId, getBrowser(), "overlap");
   },
 
   /**
