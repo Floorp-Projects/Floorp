@@ -682,15 +682,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
   switch (aWidgetType) {
     case NS_THEME_DIALOG: {
-      // XXXvlad -- I don't think we can just pass macRect here,
-      // due to pattern phase, but it seems like it works correctly
-      HIThemeBackgroundDrawInfo bdi = {
-        version: 0,
-        state: kThemeStateActive,
-        kind: kThemeBackgroundPlacard
-      };
-
-      HIThemeApplyBackground(&macRect, &bdi, cgContext, HITHEME_ORIENTATION);
+      HIThemeSetFill(kThemeBrushDialogBackgroundActive, NULL, cgContext, HITHEME_ORIENTATION);
       CGContextFillRect(cgContext, macRect);
     }
       break;
