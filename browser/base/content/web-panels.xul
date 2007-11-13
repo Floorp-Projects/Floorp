@@ -63,6 +63,10 @@
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
   </stringbundleset>
 
+  <broadcasterset id="mainBroadcasterSet">
+    <broadcaster id="isFrameImage"/>
+  </broadcasterset>
+
   <commandset id="mainCommandset">
     <command id="Browser:Back"
              oncommand="getPanelBrowser().webNavigation.goBack();"
