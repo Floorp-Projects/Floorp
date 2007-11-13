@@ -138,8 +138,7 @@
                   node.localName == "toolbarbutton" ||
                   node.localName == "toolbarseparator" ||
                   node.localName == "toolbarspring" ||
-                  node.localName == "toolbarspacer" ||
-                  node.localName == "splitter")
+                  node.localName == "toolbarspacer")
               {
                 if (currentSet)
                   currentSet += ",";
@@ -150,8 +149,6 @@
                   currentSet += "spring";
                 else if (node.localName == "toolbarspacer")
                   currentSet += "spacer";
-                else if (node.localName == "splitter")
-                  currentSet += "splitter";
                 else
                   currentSet += node.id;
               }
@@ -230,12 +227,6 @@
               uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "spacer" + uniqueId;
               newItem.className = "chromeclass-toolbar-additional";
-            } else if (aId == "splitter") {
-              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                 "splitter");
-              uniqueId = (new Date()).getTime()+this.childNodes.length;
-              newItem.id = "splitter" + uniqueId;
-              newItem.className = "toolbar-splitter chromeclass-toolbar-additional";
             } else if (this.parentNode.localName == "toolbox") {
               // Attempt to locate an item with a matching id within palette.
               var paletteItem = this.parentNode.palette.firstChild;
