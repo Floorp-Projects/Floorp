@@ -282,7 +282,6 @@ function onLoadPageInfo()
   gStrings.notSet = gBundle.getString("notset");
   gStrings.mediaImg = gBundle.getString("mediaImg");
   gStrings.mediaBGImg = gBundle.getString("mediaBGImg");
-  gStrings.mediaApplet = gBundle.getString("mediaApplet");
   gStrings.mediaObject = gBundle.getString("mediaObject");
   gStrings.mediaEmbed = gBundle.getString("mediaEmbed");
   gStrings.mediaLink = gBundle.getString("mediaLink");
@@ -618,14 +617,6 @@ function grabAll(elem)
     if (elem.type.toLowerCase() == "image")
       addImage(elem.src, gStrings.mediaInput,
                (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
-  }
-  else if (elem instanceof HTMLAppletElement) {
-    //XXX When Java is enabled, the DOM model for <APPLET> is broken. Bug #59686.
-    // Also, some reports of a crash with Java in Media tab (bug 136535), and mixed
-    // content from two hosts (bug 136539) so just drop applets from Page Info when
-    // Java is on. For the 1.0.1 branch; get a real fix on the trunk.
-    if (!navigator.javaEnabled())
-      addImage(elem.code || elem.object, gStrings.mediaApplet, "", elem, false);
   }
   else if (elem instanceof HTMLObjectElement)
     addImage(elem.data, gStrings.mediaObject, getValueText(elem), elem, false);
