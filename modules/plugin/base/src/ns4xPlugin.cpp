@@ -2117,7 +2117,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     }
       
 #ifdef XP_MACOSX
-    case NPNVpluginDrawingModel: {
+    case NPPVpluginDrawingModel: {
       if (inst) {
         int dModelValue = (int)result;
         inst->SetDrawingModel((NPDrawingModel)dModelValue);
