@@ -39,7 +39,6 @@
 #define nsClipboard_h__
 
 #include "nsBaseClipboard.h"
-#include "nsIObserver.h"
 #include "nsIURI.h"
 #include <windows.h>
 
@@ -53,18 +52,12 @@ struct IDataObject;
  * Native Win32 Clipboard wrapper
  */
 
-class nsClipboard : public nsBaseClipboard,
-                    public nsIObserver
+class nsClipboard : public nsBaseClipboard
 {
 
 public:
   nsClipboard();
   virtual ~nsClipboard();
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIObserver
-  NS_DECL_NSIOBSERVER
 
   // nsIClipboard
   NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard, PRBool *_retval); 
