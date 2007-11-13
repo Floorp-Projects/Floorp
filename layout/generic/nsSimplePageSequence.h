@@ -149,6 +149,7 @@ protected:
   void SetDateTimeStr(PRUnichar * aDateTimeStr);
   void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
 
+  void GetEdgePaperMarginCoord(const char* aPrefName, nscoord& aCoord);
   void GetEdgePaperMargin(nsMargin& aMargin);
 
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}

@@ -67,14 +67,10 @@
 NS_IMPL_ISUPPORTS2(nsPrintOptions, nsIPrintOptions, nsIPrintSettingsService)
 
 // Pref Constants
-static const char kMarginTop[]       = "print_margin_top";
+    static const char kMarginTop[]       = "print_margin_top";
 static const char kMarginLeft[]      = "print_margin_left";
 static const char kMarginBottom[]    = "print_margin_bottom";
 static const char kMarginRight[]     = "print_margin_right";
-static const char kEdgeTop[]         = "print_edge_top";
-static const char kEdgeLeft[]        = "print_edge_left";
-static const char kEdgeBottom[]      = "print_edge_bottom";
-static const char kEdgeRight[]       = "print_edge_right";
 
 // Prefs for Print Options
 static const char kPrintEvenPages[]       = "print_evenpages";
@@ -265,24 +261,6 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
                           kMarginRight);
     DUMP_INT(kReadStr, kMarginRight, margin.right);
     aPS->SetMarginInTwips(margin);
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSaveEdges) {
-    nsMargin margin;
-    margin.SizeTo(0,0,0,0);
-    ReadInchesIntToTwipsPref(GetPrefName(kEdgeTop, aPrinterName), margin.top,
-                             kEdgeTop);
-    DUMP_INT(kReadStr, kEdgeTop, margin.top);
-    ReadInchesIntToTwipsPref(GetPrefName(kEdgeLeft, aPrinterName), margin.left,
-                             kEdgeLeft);
-    DUMP_INT(kReadStr, kEdgeLeft, margin.left);
-    ReadInchesIntToTwipsPref(GetPrefName(kEdgeBottom, aPrinterName),
-                             margin.bottom, kEdgeBottom);
-    DUMP_INT(kReadStr, kEdgeBottom, margin.bottom);
-    ReadInchesIntToTwipsPref(GetPrefName(kEdgeRight, aPrinterName), margin.right,
-                             kEdgeRight);
-    DUMP_INT(kReadStr, kEdgeRight, margin.right);
-    aPS->SetEdgeInTwips(margin);
   }
 
   PRBool   b;
@@ -552,24 +530,6 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
       WriteInchesFromTwipsPref(GetPrefName(kMarginRight, aPrinterName),
                                margin.right);
       DUMP_INT(kWriteStr, kMarginRight, margin.top);
-    }
-  }
-
-  nsMargin edge;
-  if (aFlags & nsIPrintSettings::kInitSaveEdges) {
-    if (NS_SUCCEEDED(aPS->GetEdgeInTwips(edge))) {
-      WriteInchesIntFromTwipsPref(GetPrefName(kEdgeTop, aPrinterName),
-                                  edge.top);
-      DUMP_INT(kWriteStr, kEdgeTop, edge.top);
-      WriteInchesIntFromTwipsPref(GetPrefName(kEdgeLeft, aPrinterName),
-                                  edge.left);
-      DUMP_INT(kWriteStr, kEdgeLeft, edge.top);
-      WriteInchesIntFromTwipsPref(GetPrefName(kEdgeBottom, aPrinterName),
-                                  edge.bottom);
-      DUMP_INT(kWriteStr, kEdgeBottom, edge.top);
-      WriteInchesIntFromTwipsPref(GetPrefName(kEdgeRight, aPrinterName),
-                                  edge.right);
-      DUMP_INT(kWriteStr, kEdgeRight, edge.top);
     }
   }
 
@@ -1168,36 +1128,6 @@ nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, nscoord aTwips)
   inchesStr.AppendFloat(inches);
 
   mPrefBranch->SetCharPref(aPrefId, inchesStr.get());
-}
-
-void
-nsPrintOptions::ReadInchesIntToTwipsPref(const char * aPrefId, nscoord& aTwips,
-                                         const char * aMarginPref)
-{
-  if (!mPrefBranch) {
-    return;
-  }
-
-  PRInt32 value;
-  nsresult rv = mPrefBranch->GetIntPref(aPrefId, &value);
-  if (NS_FAILED(rv)) {
-    rv = mPrefBranch->GetIntPref(aMarginPref, &value);
-  }
-  if (NS_SUCCEEDED(rv)) {
-    aTwips = NS_INCHES_TO_TWIPS(float(value)/100.0f);
-  } else {
-    aTwips = 0;
-  }
-}
-
-void
-nsPrintOptions::WriteInchesIntFromTwipsPref(const char * aPrefId, nscoord aTwips)
-{
-  if (!mPrefBranch) {
-    return;
-  }
-
-  mPrefBranch->SetIntPref(aPrefId, PRInt32(NS_TWIPS_TO_INCHES(aTwips)*100.0f + 0.5f));
 }
 
 void
