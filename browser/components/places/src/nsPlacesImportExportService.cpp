@@ -103,6 +103,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "prprf.h"
+#include "nsVoidArray.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
