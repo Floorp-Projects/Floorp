@@ -106,15 +106,12 @@ XPCWrappedNativeProto::Init(
 
     JSObject *parent = mScope->GetGlobalJSObject();
 
-    mJSProtoObject = JS_NewObject(ccx, jsclazz,
-                                  mScope->GetPrototypeJSObject(),
-                                  parent);
+    mJSProtoObject =
+        xpc_NewSystemInheritingJSObject(ccx, jsclazz,
+                                        mScope->GetPrototypeJSObject(),
+                                        parent);
 
     JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
-
-    // Propagate the system flag from parent to child.
-    if(ok && JS_IsSystemObject(ccx, parent))
-        JS_FlagSystemObject(ccx, mJSProtoObject);
 
     DEBUG_ReportShadowedMembers(mSet, nsnull, this);
 
