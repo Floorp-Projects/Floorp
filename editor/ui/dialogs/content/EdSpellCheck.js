@@ -568,7 +568,7 @@ function SetReplaceEnable()
 function doDefault()
 {
   if (gDialog.ReplaceButton.getAttribute("default") == "true")
-    Replace();
+    Replace(gDialog.ReplaceWordInput.value);
   else if (gDialog.IgnoreButton.getAttribute("default") == "true")
     Ignore();
   else if (gDialog.CloseButton.getAttribute("default") == "true")
