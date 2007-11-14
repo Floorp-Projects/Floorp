@@ -441,3 +441,8 @@ fails == 393655-2.html 393655-2-ref.html # Remove 'fails' when 393655 lands
 == 400421-1.html 400421-1-ref.html
 == 400826-1.html 400826-1-ref.html
 == 403519-1.html 403519-1-ref.html
+== 403656-1.html 403656-1-ref.html
+== 403656-2.html 403656-2-ref.html
+== 403656-3.html 403656-3-ref.html
+== 403656-4.html 403656-4-ref.html
+== 403656-5.html 403656-5-ref.html
