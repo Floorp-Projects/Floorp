@@ -1646,18 +1646,16 @@ JS_IsSystemObject(JSContext *cx, JSObject *obj)
     return STOBJ_IS_SYSTEM(obj);
 }
 
-JS_PUBLIC_API(void)
-JS_FlagSystemObject(JSContext *cx, JSObject *obj)
+JS_PUBLIC_API(JSObject *)
+JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
+                   JSObject *parent, JSBool system)
 {
-    /*
-     * We do not need to lock the object here. This method is the only API
-     * that modifies JSSLOT_CLASS after the object is created and the slot is
-     * initialized with the object's class. Since we just set the system flag
-     * here and access to jsval is atomic, any thread that calls the method
-     * will end up writing the same (jsval)class_pointer | 3 value into the
-     * slot.
-     */
-    STOBJ_SET_SYSTEM(obj);
+    JSObject *obj;
+
+    obj = js_NewObject(cx, clasp, proto, parent);
+    if (obj && system)
+        STOBJ_SET_SYSTEM(obj);
+    return obj;
 }
 
 /************************************************************************/
