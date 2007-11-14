@@ -5,6 +5,9 @@
 # verify the tests work
 include reftest-sanity/reftest.list
 
+#images
+include ../../modules/libpr0n/test/reftest/reftest.list
+
 # printing
 include printing/reftest.list
 include pagination/reftest.list
