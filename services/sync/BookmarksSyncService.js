@@ -48,7 +48,7 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
-const STORAGE_FORMAT_VERSION = 0;
+const STORAGE_FORMAT_VERSION = 1;
 
 const ONE_BYTE = 1;
 const ONE_KILOBYTE = 1024 * ONE_BYTE;
@@ -173,12 +173,11 @@ BookmarksSyncService.prototype = {
     return branch.setCharPref("browser.places.sync.username", value);
   },
 
-  get password() {
+  _lmGet: function BSS__lmGet(realm) {
     // fixme: make a request and get the realm
     let password;
     let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-    let logins = lm.findLogins({}, makeURI(this._serverURL).hostPort, null,
-                               'services.mozilla.com - proxy');
+    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
 
     for (let i = 0; i < logins.length; i++) {
       if (logins[i].username == this.username) {
@@ -188,25 +187,41 @@ BookmarksSyncService.prototype = {
     }
     return password;
   },
-  set password(value) {
+
+  _lmSet: function BSS__lmSet(realm, password) {
     // cleanup any existing passwords
-    let uri = makeURI(this._serverURL);
     let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-    let logins = lm.findLogins({}, uri.hostPort, null,
-                               'services.mozilla.com - proxy');
+    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
     for(let i = 0; i < logins.length; i++) {
       lm.removeLogin(logins[i]);
     }
 
-    if (!value)
+    if (!password)
       return;
 
     // save the new one
     let nsLoginInfo = new Components.Constructor(
       "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
-    let login = new nsLoginInfo(uri.hostPort, null, 'services.mozilla.com - proxy',
-                                this.username, value, null, null);
+    let login = new nsLoginInfo('chrome://sync', null, realm,
+                                this.username, password, null, null);
     lm.addLogin(login);
+  },
+
+  get password() {
+    return this._lmGet('Mozilla Services Password');
+  },
+  set password(value) {
+    this._lmSet('Mozilla Services Password', value);
+  },
+
+  _passphrase: null,
+  get passphrase() {
+    if (this._passphrase === null)
+      return this._lmGet('Mozilla Services Encryption Passphrase');
+    return this._passphrase;
+  },
+  set passphrase(value) {
+    this._lmSet('Mozilla Services Encryption Passphrase', value);
   },
 
   get userPath() {
@@ -238,6 +253,29 @@ BookmarksSyncService.prototype = {
     if (this._dav.loggedIn)
       return this.username;
     return null;
+  },
+
+  _encryptionChanged: false,
+  get encryption() {
+    let branch = Cc["@mozilla.org/preferences-service;1"]
+      .getService(Ci.nsIPrefBranch);
+    return branch.getCharPref("browser.places.sync.encryption");
+  },
+  set encryption(value) {
+    switch (value) {
+    case "XXXTEA":
+    case "none":
+      let branch = Cc["@mozilla.org/preferences-service;1"]
+        .getService(Ci.nsIPrefBranch);
+      let cur = branch.getCharPref("browser.places.sync.encryption");
+      if (value != cur) {
+        this._encryptionChanged = true;
+        branch.setCharPref("browser.places.sync.encryption", value);
+      }
+      break;
+    default:
+      throw "Invalid encryption value: " + value;
+    }
   },
 
   _init: function BSS__init() {
@@ -1171,29 +1209,49 @@ BookmarksSyncService.prototype = {
 
         server.deltas.push(serverDelta);
 
-        gen = this._dav.PUT("bookmarks-deltas.json",
-                            this._mungeCommands(server.deltas), cont);
-        let deltasPut = yield;
-        gen.close();
+        if (server.formatVersion != STORAGE_FORMAT_VERSION ||
+            this._encryptionChanged) {
+          gen = this._fullUpload.async(this, cont);
+          let status = yield;
+          gen.close();
+          if (!status)
+            this._log.error("Could not upload files to server"); // eep?
 
-        // FIXME: need to watch out for the storage format version changing,
-        // in that case we'll have to re-upload all the files, not just these
-        gen = this._dav.PUT("bookmarks-status.json",
-                            uneval({GUID: this._snapshotGUID,
-                                    formatVersion: STORAGE_FORMAT_VERSION,
-                                    snapVersion: server.snapVersion,
-                                    maxVersion: this._snapshotVersion}), cont);
-        let statusPut = yield;
-        gen.close();
-
-        if (deltasPut.status >= 200 && deltasPut.status < 300 &&
-            statusPut.status >= 200 && statusPut.status < 300) {
-          this._log.info("Successfully updated deltas and status on server");
-          this._saveSnapshot();
         } else {
-          // FIXME: revert snapshot here? - can't, we already applied
-          // updates locally! - need to save and retry
-          this._log.error("Could not update deltas on server");
+          let data;
+          if (this.encryption == "none") {
+            data = this._mungeCommands(server.deltas);
+          } else if (this.encryption == "XXXTEA") {
+            this._log.debug("Encrypting snapshot");
+            data = this._encrypter.encrypt(uneval(server.deltas), this.passphrase);
+            this._log.debug("Done encrypting snapshot");
+          } else {
+            this._log.error("Unknown encryption scheme: " + this.encryption);
+            throw 'close generator';
+          }
+          gen = this._dav.PUT("bookmarks-deltas.json", data, cont);
+          let deltasPut = yield;
+          gen.close();
+
+          gen = this._dav.PUT("bookmarks-status.json",
+                              uneval({GUID: this._snapshotGUID,
+                                      formatVersion: STORAGE_FORMAT_VERSION,
+                                      snapVersion: server.snapVersion,
+                                      maxVersion: this._snapshotVersion,
+                                      snapEncryption: server.snapEncryption,
+                                      deltasEncryption: this.encryption}), cont);
+          let statusPut = yield;
+          gen.close();
+
+          if (deltasPut.status >= 200 && deltasPut.status < 300 &&
+              statusPut.status >= 200 && statusPut.status < 300) {
+            this._log.info("Successfully updated deltas and status on server");
+            this._saveSnapshot();
+          } else {
+            // FIXME: revert snapshot here? - can't, we already applied
+            // updates locally! - need to save and retry
+            this._log.error("Could not update deltas on server");
+          }
         }
       }
 
@@ -1254,6 +1312,38 @@ BookmarksSyncService.prototype = {
     }
   },
 
+  // NOTE: this method can throw 'close generator'
+  _checkStatus: function BSS__checkStatus(code, msg) {
+    if (code >= 200 && code < 300)
+      return;
+    this._log.error(msg + " Error code: " + code);
+    throw 'close generator';
+  },
+
+  // NOTE: this method can throw 'close generator'
+  _decrypt: function BSS__decrypt(alg, data) {
+    let out;
+    switch (alg) {
+    case "XXXTEA":
+      try {
+        this._log.debug("Decrypting data");
+        out = eval(this._encrypter.decrypt(data, this.passphrase));
+        this._log.debug("Done decrypting data");
+      } catch (e) {
+        this._log.error("Could not decrypt server snapshot");
+        throw 'close generator';
+      }
+      break;
+    case "none":
+      out = eval(data);
+      break;
+    default:
+      this._log.error("Unknown encryption algorithm: " + alg);
+      throw 'close generator';
+    }
+    return out;
+  },
+
   /* Get the deltas/combined updates from the server
    * Returns:
    *   status:
@@ -1266,6 +1356,10 @@ BookmarksSyncService.prototype = {
    *     the latest version on the server
    *   snapVersion:
    *     the version of the current snapshot on the server (deltas not applied)
+   *   snapEncryption:
+   *     encryption algorithm currently used on the server-stored snapshot
+   *   deltasEncryption:
+   *     encryption algorithm currently used on the server-stored deltas
    *   snapshot:
    *     full snapshot of the latest server version (deltas applied)
    *   deltas:
@@ -1278,6 +1372,7 @@ BookmarksSyncService.prototype = {
     let cont = yield;
     let ret = {status: -1,
                formatVersion: null, maxVersion: null, snapVersion: null,
+               snapEncryption: null, deltasEncryption: null,
                snapshot: null, deltas: null, updates: null};
 
     try {
@@ -1301,6 +1396,11 @@ BookmarksSyncService.prototype = {
           generatorDone(this, onComplete, ret)
           throw 'close generator';
         }
+
+        if (status.formatVersion == 0) {
+          ret.snapEncryption = status.snapEncryption = "none";
+          ret.deltasEncryption = status.deltasEncryption = "none";
+        }
   
         if (status.GUID != this._snapshotGUID) {
           this._log.info("Remote/local sync GUIDs do not match.  " +
@@ -1319,25 +1419,15 @@ BookmarksSyncService.prototype = {
           gen = this._dav.GET("bookmarks-snapshot.json", cont);
           resp = yield;
           gen.close()
+          this._checkStatus(resp.status, "Could not download snapshot.");
+          snap = this._decrypt(status.snapEncryption, resp.responseText);
 
-          if (resp.status < 200 || resp.status >= 300) {
-            this._log.error("Could not download server snapshot");
-            generatorDone(this, onComplete, ret)
-            throw 'close generator';
-          }
-          snap = eval(resp.responseText);
-  
           this._log.info("Downloading server deltas");
           gen = this._dav.GET("bookmarks-deltas.json", cont);
           resp = yield;
           gen.close();
-
-          if (resp.status < 200 || resp.status >= 300) {
-            this._log.error("Could not download server deltas");
-            generatorDone(this, onComplete, ret)
-            throw 'close generator';
-          }
-          allDeltas = eval(resp.responseText);
+          this._checkStatus(resp.status, "Could not download deltas.");
+          allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
           deltas = eval(uneval(allDeltas));
   
         } else if (this._snapshotVersion >= status.snapVersion &&
@@ -1348,13 +1438,8 @@ BookmarksSyncService.prototype = {
           gen = this._dav.GET("bookmarks-deltas.json", cont);
           resp = yield;
           gen.close();
-
-          if (resp.status < 200 || resp.status >= 300) {
-            this._log.error("Could not download server deltas");
-            generatorDone(this, onComplete, ret)
-            throw 'close generator';
-          }
-          allDeltas = eval(resp.responseText);
+          this._checkStatus(resp.status, "Could not download deltas.");
+          allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
           deltas = allDeltas.slice(this._snapshotVersion - status.snapVersion);
   
         } else if (this._snapshotVersion == status.maxVersion) {
@@ -1365,18 +1450,12 @@ BookmarksSyncService.prototype = {
           gen = this._dav.GET("bookmarks-deltas.json", cont);
           resp = yield;
           gen.close();
-
-          if (resp.status < 200 || resp.status >= 300) {
-            this._log.error("Could not download server deltas");
-            generatorDone(this, onComplete, ret)
-            throw 'close generator';
-          }
-          allDeltas = eval(resp.responseText);
+          this._checkStatus(resp.status, "Could not download deltas.");
+          allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
           deltas = [];
   
         } else { // this._snapshotVersion > status.maxVersion
           this._log.error("Server snapshot is older than local snapshot");
-          generatorDone(this, onComplete, ret)
           throw 'close generator';
         }
   
@@ -1388,6 +1467,8 @@ BookmarksSyncService.prototype = {
         ret.formatVersion = status.formatVersion;
         ret.maxVersion = status.maxVersion;
         ret.snapVersion = status.snapVersion;
+        ret.snapEncryption = status.snapEncryption;
+        ret.deltasEncryption = status.deltasEncryption;
         ret.snapshot = snap;
         ret.deltas = allDeltas;
         gen = this._detectUpdates.async(this, cont, this._snapshot, snap);
@@ -1401,44 +1482,12 @@ BookmarksSyncService.prototype = {
         this._snapshot = this._getBookmarks();
         this._snapshotVersion = 0;
         this._snapshotGUID = null; // in case there are other snapshots out there
-  
-        gen = this._dav.PUT("bookmarks-snapshot.json",
-                            this._mungeNodes(this._snapshot), cont);
-        resp = yield;
-        gen.close();
 
-        if (resp.status < 200 || resp.status >= 300) {
-          this._log.error("Could not upload snapshot to server, error code: " +
-                          resp.status);
-          generatorDone(this, onComplete, ret)
-          throw 'close generator';
-        }
-  
-        gen = this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
-        resp = yield;
+        gen = this._fullUpload.async(this, cont);
+        let uploadStatus = yield;
         gen.close();
-
-        if (resp.status < 200 || resp.status >= 300) {
-          this._log.error("Could not upload deltas to server, error code: " +
-                          resp.status);
-          generatorDone(this, onComplete, ret)
+        if (!uploadStatus)
           throw 'close generator';
-        }
-  
-        gen = this._dav.PUT("bookmarks-status.json",
-                            uneval({GUID: this._snapshotGUID,
-                                    formatVersion: STORAGE_FORMAT_VERSION,
-                                    snapVersion: this._snapshotVersion,
-                                    maxVersion: this._snapshotVersion}), cont);
-        resp = yield;
-        gen.close();
-
-        if (resp.status < 200 || resp.status >= 300) {
-          this._log.error("Could not upload status file to server, error code: " +
-                          resp.status);
-          generatorDone(this, onComplete, ret)
-          throw 'close generator';
-        }
   
         this._log.info("Initial upload to server successful");
         this._saveSnapshot();
@@ -1447,6 +1496,8 @@ BookmarksSyncService.prototype = {
         ret.formatVersion = STORAGE_FORMAT_VERSION;
         ret.maxVersion = this._snapshotVersion;
         ret.snapVersion = this._snapshotVersion;
+        ret.snapEncryption = this.encryption;
+        ret.deltasEncryption = this.encryption;
         ret.snapshot = eval(uneval(this._snapshot));
         ret.deltas = [];
         ret.updates = [];
@@ -1469,6 +1520,57 @@ BookmarksSyncService.prototype = {
     this._log.warn("generator not properly closed");
   },
 
+  _fullUpload: function BSS__fullUpload(onComplete) {
+    let cont = yield;
+    let ret = false;
+
+    try {
+      let data;
+      if (this.encryption == "none") {
+        data = this._mungeNodes(this._snapshot);
+      } else if (this.encryption == "XXXTEA") {
+        this._log.debug("Encrypting snapshot");
+        data = this._encrypter.encrypt(uneval(this._snapshot), this.passphrase);
+        this._log.debug("Done encrypting snapshot");
+      } else {
+        this._log.error("Unknown encryption scheme: " + this.encryption);
+        throw 'close generator';
+      }
+      let gen = this._dav.PUT("bookmarks-snapshot.json", data, cont);
+      resp = yield;
+      gen.close();
+      this._checkStatus(resp.status, "Could not upload snapshot.");
+
+      gen = this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
+      resp = yield;
+      gen.close();
+      this._checkStatus(resp.status, "Could not upload deltas.");
+
+      gen = this._dav.PUT("bookmarks-status.json",
+                          uneval({GUID: this._snapshotGUID,
+                                  formatVersion: STORAGE_FORMAT_VERSION,
+                                  snapVersion: this._snapshotVersion,
+                                  maxVersion: this._snapshotVersion,
+                                  snapEncryption: this.encryption,
+                                  deltasEncryption: "none"}), cont);
+      resp = yield;
+      gen.close();
+      this._checkStatus(resp.status, "Could not upload status file.");
+
+      this._log.info("Full upload to server successful");
+      ret = true;
+
+    } catch (e) {
+      if (e != 'close generator')
+        this._log.error("Exception caught: " + e.message);
+
+    } finally {
+      generatorDone(this, onComplete, ret)
+      yield; // onComplete is responsible for closing the generator
+    }
+    this._log.warn("generator not properly closed");
+  },
+
   _onLogin: function BSS__onLogin(success) {
     this._loginGen.close();
     this._loginGen = null;
@@ -1477,6 +1579,7 @@ BookmarksSyncService.prototype = {
     } else {
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
     }
+    this._passphrase = null;
     this._loggingIn = false;
   },
 
@@ -1655,7 +1758,7 @@ BookmarksSyncService.prototype = {
     this._syncGen = this._doSync.async(this, callback);
   },
 
-  login: function BSS_login(password) {
+  login: function BSS_login(password, passphrase) {
     if (this._loggingIn) {
       this._log.warn("Login requested, but already logging in");
       return;
@@ -1675,10 +1778,14 @@ BookmarksSyncService.prototype = {
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
       return;
     }
-    this._loggingIn = true;
+
+    // cache passphrase.  if null, we'll try to get it from the pw manager
+    this._passphrase = passphrase;
 
     this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
     this._log.info("Using server URL: " + this._dav.baseURL);
+
+    this._loggingIn = true;
     let callback = bind2(this, this._onLogin);
     this._loginGen = this._dav.login.async(this._dav, callback,
                                            this.username, password);
@@ -1687,6 +1794,7 @@ BookmarksSyncService.prototype = {
   logout: function BSS_logout() {
     this._log.info("Logging out");
     this._dav.logout();
+    this._passphrase = null;
     this._os.notifyObservers(null, "bookmarks-sync:logout", "");
   },
 

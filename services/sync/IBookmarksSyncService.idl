@@ -53,10 +53,22 @@ interface IBookmarksSyncService : nsISupports
   readonly attribute AString currentUser;
 
   /**
-   * Log into the server.  Pre-requisite for sync().
-   * password is optional when the password is saved in the password manager
+   * Encryption algorithm to use.  May be 'xxxtea' or 'none'.
    */
-  void login(in AString password);
+  attribute AString enryption;
+
+  /**
+   * The stored encryption passphrase
+   */
+  attribute AString passphrase;
+
+  /**
+   * Log into the server.  Pre-requisite for sync().
+   * password and/or passphrase may be null, and then they will be
+   * fetched from the password manager.  If they are not given or
+   * found, login will fail.
+   */
+  void login(in AString password, in AString passphrase);
 
   /**
    * Log out of the server.
