@@ -145,7 +145,7 @@ public:
   void AddListener(nsPresContext* aPresContext);
   void RemoveListener();
 
-  enum ResizeType { Closest, Farthest, Flex, Grow };
+  enum ResizeType { Closest, Farthest, Grow };
   enum State { Open, CollapsedBefore, CollapsedAfter, Dragging };
   enum CollapseDirection { Before, After };
 
@@ -185,14 +185,10 @@ NS_IMPL_ISUPPORTS2(nsSplitterFrameInner, nsIDOMMouseListener, nsIDOMMouseMotionL
 nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeBefore()
 {
-  static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::farthest, &nsGkAtoms::flex, nsnull};
-  switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsGkAtoms::resizebefore,
-                                                strings, eCaseMatters)) {
-    case 0: return Farthest;
-    case 1: return Flex;
-  }
+  if (mOuter->GetContent()->
+        AttrValueIs(kNameSpaceID_None, nsGkAtoms::resizebefore,
+                    NS_LITERAL_STRING("farthest"), eCaseMatters))
+    return Farthest;
   return Closest;
 }
 
@@ -206,13 +202,12 @@ nsSplitterFrameInner::ResizeType
 nsSplitterFrameInner::GetResizeAfter()
 {
   static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::farthest, &nsGkAtoms::flex, &nsGkAtoms::grow, nsnull};
+    {&nsGkAtoms::farthest, &nsGkAtoms::grow, nsnull};
   switch (mOuter->GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::resizeafter,
                                                 strings, eCaseMatters)) {
     case 0: return Farthest;
-    case 1: return Flex;
-    case 2: return Grow;
+    case 1: return Grow;
   }
   return Closest;
 }
@@ -812,7 +807,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
                                   nsGkAtoms::_true, eCaseMatters) &&
             !content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                                   nsGkAtoms::_true, eCaseMatters)) {
-            if (count < childIndex && (resizeBefore != Flex || flex > 0)) {
+            if (count < childIndex) {
                 mChildInfosBefore[mChildInfosBeforeCount].childElem = content;
                 mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
                 mChildInfosBefore[mChildInfosBeforeCount].max     = isHorizontal ? maxSize.width : maxSize.height;
@@ -821,7 +816,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
                 mChildInfosBefore[mChildInfosBeforeCount].index   = count;
                 mChildInfosBefore[mChildInfosBeforeCount].changed = mChildInfosBefore[mChildInfosBeforeCount].current;
                 mChildInfosBeforeCount++;
-            } else if (count > childIndex && (resizeAfter != Flex || flex > 0)) {
+            } else if (count > childIndex) {
                 mChildInfosAfter[mChildInfosAfterCount].childElem = content;
                 mChildInfosAfter[mChildInfosAfterCount].min     = isHorizontal ? minSize.width : minSize.height;
                 mChildInfosAfter[mChildInfosAfterCount].max     = isHorizontal ? maxSize.width : maxSize.height;
@@ -853,9 +848,9 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     mChildInfosBefore = temp;
   }
 
-  // if resizebefore is not Farthest, reverse the list because the first child
-  // in the list is the farthest, and we want the first child to be the closest.
-  if (resizeBefore != Farthest)
+  // if the resizebefore is closest we must reverse the list because the first child in the list
+  // is the Farthest we want the first child to be the closest.
+  if (resizeBefore == Closest)
      Reverse(mChildInfosBefore, mChildInfosBeforeCount);
 
   // if the resizeafter is the Farthest we must reverse the list because the first child in the list

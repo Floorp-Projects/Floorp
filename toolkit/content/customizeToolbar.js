@@ -339,6 +339,13 @@ function buildPalette()
   templateNode.flex = 1;
   wrapPaletteItem(templateNode, currentRow, null);
 
+  // Add the splitter item.
+  templateNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                          "splitter");
+  templateNode.id = "splitter";
+  templateNode.className = "toolbar-splitter";
+  wrapPaletteItem(templateNode, currentRow, null);
+
   var rowSlot = 3;
 
   var currentItems = getCurrentItemIds();
@@ -480,6 +487,8 @@ function setWrapperType(aItem, aWrapper)
     aWrapper.setAttribute("type", "spring");
   } else if (aItem.localName == "toolbarspacer") {
     aWrapper.setAttribute("type", "spacer");
+  } else if (aItem.localName == "splitter") {
+    aWrapper.setAttribute("type", "splitter");
   } else if (aItem.localName == "toolbaritem" && aItem.firstChild) {
     aWrapper.setAttribute("type", aItem.firstChild.localName);
   }
@@ -698,7 +707,8 @@ function isSpecialItem(aElt)
 {
   return aElt.localName == "toolbarseparator" ||
          aElt.localName == "toolbarspring" ||
-         aElt.localName == "toolbarspacer";
+         aElt.localName == "toolbarspacer" ||
+         aElt.localName == "splitter";
 }
 
 function isToolbarItem(aElt)
@@ -707,7 +717,8 @@ function isToolbarItem(aElt)
          aElt.localName == "toolbaritem" ||
          aElt.localName == "toolbarseparator" ||
          aElt.localName == "toolbarspring" ||
-         aElt.localName == "toolbarspacer";
+         aElt.localName == "toolbarspacer" ||
+         aElt.localName == "splitter";
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -866,7 +877,8 @@ var toolbarDNDObserver =
       var currentRow = draggedPaletteWrapper.parentNode;
       if (draggedItemId != "separator" &&
           draggedItemId != "spring" &&
-          draggedItemId != "spacer")
+          draggedItemId != "spacer" &&
+          draggedItemId != "splitter")
       {
         currentRow.removeChild(draggedPaletteWrapper);
 
@@ -950,7 +962,8 @@ var paletteDNDObserver =
       var wrapperType = wrapper.getAttribute("type");
       if (wrapperType != "separator" &&
           wrapperType != "spacer" &&
-          wrapperType != "spring") {
+          wrapperType != "spring" &&
+          wrapperType != "splitter") {
         // Find the template node in the toolbox palette
         var templateNode = gToolbox.palette.firstChild;
         while (templateNode) {
