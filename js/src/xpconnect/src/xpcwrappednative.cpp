@@ -876,8 +876,8 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
                                 GetProto()->GetJSProtoObject() :
                                 GetScope()->GetPrototypeJSObject();
 
-    mFlatJSObject = JS_NewObject(ccx, jsclazz, protoJSObject, parent);
-
+    mFlatJSObject = xpc_NewSystemInheritingJSObject(ccx, jsclazz, protoJSObject,
+                                                    parent);
     if(!mFlatJSObject)
         return JS_FALSE;
 
@@ -890,10 +890,6 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
         mFlatJSObject = nsnull;
         return JS_FALSE;
     }
-
-    // Propagate the system flag from parent to child.
-    if(JS_IsSystemObject(ccx, parent))
-        JS_FlagSystemObject(ccx, mFlatJSObject);
 
     // This reference will be released when mFlatJSObject is finalized.
     // Since this reference will push the refcount to 2 it will also root
@@ -1734,16 +1730,13 @@ XPCWrappedNative::InitTearOffJSObject(XPCCallContext& ccx,
 {
     // This is only called while locked (during XPCWrappedNative::FindTearOff).
 
-    JSObject* obj = JS_NewObject(ccx, &XPC_WN_Tearoff_JSClass,
-                                 GetScope()->GetPrototypeJSObject(),
-                                 mFlatJSObject);
+    JSObject* obj =
+        xpc_NewSystemInheritingJSObject(ccx, &XPC_WN_Tearoff_JSClass,
+                                        GetScope()->GetPrototypeJSObject(),
+                                        mFlatJSObject);
 
     if(!obj || !JS_SetPrivate(ccx, obj, to))
         return JS_FALSE;
-
-    // Propagate the system flag from parent to child.
-    if(JS_IsSystemObject(ccx, mFlatJSObject))
-        JS_FlagSystemObject(ccx, obj);
 
     to->SetJSObject(obj);
     return JS_TRUE;

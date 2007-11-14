@@ -1066,16 +1066,14 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
 
-    JSObject* tempGlobal = JS_NewObject(aJSContext, &xpcTempGlobalClass,
-                                        nsnull, nsnull);
+    PRBool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
+    JSObject* tempGlobal = JS_NewSystemObject(aJSContext, &xpcTempGlobalClass,
+                                              nsnull, nsnull, system);
 
     if(!tempGlobal ||
        !JS_SetParent(aJSContext, tempGlobal, nsnull) ||
        !JS_SetPrototype(aJSContext, tempGlobal, nsnull))
         return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    if(aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT)
-        JS_FlagSystemObject(aJSContext, tempGlobal);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     {
