@@ -111,7 +111,9 @@ interface nsICookieManager2 : nsICookieManager
   unsigned long countCookiesFromHost(in ACString aHost);
 
   /**
-   * Import an old-style cookie file
+   * Import an old-style cookie file. Imported cookies will be added to the
+   * existing database. If the database contains any cookies the same as those
+   * being imported (i.e. domain, name, and path match), they will be replaced.
    *
    * @param aCookieFile the file to import, usually cookies.txt
    */
