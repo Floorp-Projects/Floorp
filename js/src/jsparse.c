@@ -5830,9 +5830,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn = pn2;
         } else {
             pn->pn_type = TOK_RP;
-            pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
             pn->pn_kid = pn2;
         }
+        pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
         break;
       }
 
