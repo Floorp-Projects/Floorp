@@ -1115,8 +1115,6 @@ public:
    */
   static PRBool IsNativeAnonymous(nsIContent* aContent);
 
-  static const nsAdoptingString& GetLocalizedEllipsis();
-
 
 private:
 
