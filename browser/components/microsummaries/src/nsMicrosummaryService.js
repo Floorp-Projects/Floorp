@@ -68,7 +68,18 @@ const MAX_SUMMARY_LENGTH = 4096;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function MicrosummaryService() { this._init() }
+function MicrosummaryService() {
+  this._obs.addObserver(this, "xpcom-shutdown", true);
+
+  Cc["@mozilla.org/preferences-service;1"].
+    getService(Ci.nsIPrefService).
+    getBranch("browser.microsummary.").
+    QueryInterface(Ci.nsIPrefBranch2).
+    addObserver("", this, true);
+
+  this._initTimers();
+  this._cacheLocalGenerators();
+}
 
 MicrosummaryService.prototype = {
   // Bookmarks Service
@@ -122,7 +133,7 @@ MicrosummaryService.prototype = {
   get _dirs() {
     if (!this.__dirs)
       this.__dirs = Cc["@mozilla.org/file/directory_service;1"].
-                   getService(Ci.nsIProperties);
+                    getService(Ci.nsIProperties);
     return this.__dirs;
   },
 
@@ -132,17 +143,6 @@ MicrosummaryService.prototype = {
       getPref("browser.microsummary.updateInterval", 30);
     // the minimum update interval is 1 minute
     return Math.max(updateInterval, 1) * 60 * 1000;
-  },
-
-  __branch: null,
-  get _branch() {
-    if (!this.__branch) {
-      var prefs = Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefService);
-      this.__branch = prefs.getBranch("browser.microsummary.");
-      this.__branch.QueryInterface(Ci.nsIPrefBranch2);
-    }
-    return this.__branch;
   },
 
   // A cache of local microsummary generators.  This gets built on startup
@@ -171,13 +171,6 @@ MicrosummaryService.prototype = {
           this._initTimers();
         break;
     }
-  },
-
-  _init: function MSS__init() {
-    this._obs.addObserver(this, "xpcom-shutdown", true);
-    this._branch.addObserver("", this, true);
-    this._initTimers();
-    this._cacheLocalGenerators();
   },
 
   _initTimers: function MSS__initTimers() {
@@ -1646,24 +1639,26 @@ MicrosummarySet.prototype = {
  * @constructor
  */
 function ArrayEnumerator(aItems) {
-  this._index = 0;
-  this._contents = [];
   if (aItems) {
     for (var i = 0; i < aItems.length; ++i) {
       if (!aItems[i])
-        aItems.splice(i, 1);      
+        aItems.splice(i--, 1);
     }
+    this._contents = aItems;
+  } else {
+    this._contents = [];
   }
-  this._contents = aItems;
 }
 
 ArrayEnumerator.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
-  
+
+  _index: 0,
+
   hasMoreElements: function() {
     return this._index < this._contents.length;
   },
-  
+
   getNext: function() {
     return this._contents[this._index++];      
   }
@@ -1681,7 +1676,10 @@ ArrayEnumerator.prototype = {
  *        the text to log
  */
 function LOG(aText) {
-  if (getPref("browser.microsummary.log", false)) {
+  var f = arguments.callee;
+  if (!("_enabled" in f))
+    f._enabled = getPref("browser.microsummary.log", false);
+  if (f._enabled) {
     dump("*** Microsummaries: " +  aText + "\n");
     var consoleService = Cc["@mozilla.org/consoleservice;1"].
                          getService(Ci.nsIConsoleService);
@@ -1708,10 +1706,10 @@ function MicrosummaryResource(uri) {
   // Make sure we're not loading javascript: or data: URLs, which could
   // take advantage of the load to run code with chrome: privileges.
   // XXX Perhaps use nsIScriptSecurityManager.checkLoadURI instead.
-  if (uri.scheme != "http" && uri.scheme != "https" && uri.scheme != "file")
+  if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file")))
     throw NS_ERROR_DOM_BAD_URI;
 
-  this._uri = uri || null;
+  this._uri = uri;
   this._content = null;
   this._contentType = null;
   this._isXML = false;
@@ -2230,11 +2228,12 @@ function getPref(prefName, defaultValue) {
   try {
     var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                      getService(Ci.nsIPrefBranch);
-    switch (prefBranch.getPrefType(prefName)) {
-    case prefBranch.PREF_BOOL:
-      return prefBranch.getBoolPref(prefName);
-    case prefBranch.PREF_INT:
-      return prefBranch.getIntPref(prefName);
+    var type = prefBranch.getPrefType(prefName);
+    switch (type) {
+      case prefBranch.PREF_BOOL:
+        return prefBranch.getBoolPref(prefName);
+      case prefBranch.PREF_INT:
+        return prefBranch.getIntPref(prefName);
     }
   }
   catch (ex) { /* return the default value */ }
