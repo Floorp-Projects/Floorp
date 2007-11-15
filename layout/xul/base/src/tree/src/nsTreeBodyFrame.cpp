@@ -1614,12 +1614,8 @@ nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow,
       continue;
     }
 
-    if (!OffsetForHorzScroll(cellRect, PR_TRUE))
+    if (!OffsetForHorzScroll(cellRect, PR_FALSE))
       continue;
-
-    PRInt32 overflow = cellRect.x+cellRect.width-(mInnerBox.x+mInnerBox.width);
-    if (overflow > 0)
-      cellRect.width -= overflow;
 
     if (aX >= cellRect.x && aX < cellRect.x + cellRect.width) {
       // We know the column hit now.
