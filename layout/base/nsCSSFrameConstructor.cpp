@@ -8335,7 +8335,17 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
                                       nsIContent*            aContent,
                                       PRUint8&               aDisplay)
 {
-  nsIAtom* parentType = aSibling->GetParent()->GetType();
+  nsIFrame* parentFrame = aSibling->GetParent();
+  nsIAtom* parentType = nsnull;
+  nsIAtom* grandparentType = nsnull;
+  if (parentFrame) {
+    parentType = parentFrame->GetType();
+    nsIFrame* grandparentFrame = parentFrame->GetParent();
+    if (grandparentFrame) {
+      grandparentType = grandparentFrame->GetType();
+    }
+  }
+    
   PRUint8 siblingDisplay = aSibling->GetStyleDisplay()->mDisplay;
   if ((NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == siblingDisplay) ||
       (NS_STYLE_DISPLAY_TABLE_COLUMN       == siblingDisplay) ||
@@ -8381,7 +8391,9 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
              (NS_STYLE_DISPLAY_TABLE_CAPTION      == aDisplay);
     }
   }
-  else if (nsGkAtoms::fieldSetFrame == parentType) {
+  else if (nsGkAtoms::fieldSetFrame == parentType ||
+           (nsGkAtoms::fieldSetFrame == grandparentType &&
+            nsGkAtoms::areaFrame == parentType)) {
     // Legends can be sibling of legends but not of other content in the fieldset
     nsIAtom* sibType = aSibling->GetType();
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(aContent));
