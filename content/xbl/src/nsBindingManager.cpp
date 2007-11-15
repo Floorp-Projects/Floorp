@@ -848,6 +848,8 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
   NS_ASSERTION(doc, "No owner document?");
   
   // Finally remove the binding...
+  // XXXbz this doesn't remove the implementation!  Should fix!  Until
+  // then we need the explicit UnhookEventHandlers here.
   binding->UnhookEventHandlers();
   binding->ChangeDocument(doc, nsnull);
   SetBinding(aContent, nsnull);
