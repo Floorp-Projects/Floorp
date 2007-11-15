@@ -53,10 +53,10 @@ include $(DEPTH)/config/autoconf.mk
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = pinstripe
 else
+DIRS = winstripe
+endif
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = gnomestripe
-else
-DIRS = winstripe
 endif
 
 include $(topsrcdir)/config/rules.mk
