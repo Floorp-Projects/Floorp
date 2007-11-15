@@ -1991,7 +1991,22 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
         }
       }
     }
-  
+    else if (*aRole == nsIAccessibleRole::ROLE_LISTBOX) {
+      // A listbox inside of a combo box needs a special role because of ATK mapping to menu
+      nsCOMPtr<nsIAccessible> parent;
+      GetParent(getter_AddRefs(parent));
+      if (parent && Role(parent) == nsIAccessibleRole::ROLE_COMBOBOX) {
+        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+      }
+    }
+    else if (*aRole == nsIAccessibleRole::ROLE_OPTION) {
+      nsCOMPtr<nsIAccessible> parent;
+      GetParent(getter_AddRefs(parent));
+      if (parent && Role(parent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
+        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
+      }
+    }
+
     if (*aRole != nsIAccessibleRole::ROLE_NOTHING) {
       return NS_OK;
     }
@@ -3311,6 +3326,8 @@ PRBool nsAccessible::MustPrune(nsIAccessible *aAccessible)
 { 
   PRUint32 role = Role(aAccessible);
   return role == nsIAccessibleRole::ROLE_MENUITEM || 
+         role == nsIAccessibleRole::ROLE_COMBOBOX_OPTION ||
+         role == nsIAccessibleRole::ROLE_OPTION ||
          role == nsIAccessibleRole::ROLE_ENTRY ||
          role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
          role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
