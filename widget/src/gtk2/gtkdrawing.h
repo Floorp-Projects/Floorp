@@ -159,8 +159,6 @@ typedef enum {
   MOZ_GTK_TREE_HEADER_CELL,
   /* Paints sort arrows in treeheader cells */
   MOZ_GTK_TREE_HEADER_SORTARROW,
-  /* Paints a GtkExpander for treeviews */
-  MOZ_GTK_EXPANDER,
   /* Paints the background of the menu bar. */
   MOZ_GTK_MENUBAR,
   /* Paints the background of menus, context menus. */
@@ -292,14 +290,6 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics* metrics);
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_dropdown_arrow_size(gint* width, gint* height);
-
-/**
- * Get the size of a treeview's expander (we call them twisties)
- * size:    [OUT] the size of the GTK expander, size = width = height.
- *
- * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
- */
-gint moz_gtk_get_expander_size(gint* size);
 
 /**
  * Retrieve an actual GTK scrollbar widget for style analysis. It will not
