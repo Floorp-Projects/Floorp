@@ -49,28 +49,60 @@
 
 JS_BEGIN_EXTERN_C
 
-/* GC thing type indexes. */
-#define GCX_OBJECT              0               /* JSObject */
-#define GCX_STRING              1               /* JSString */
-#define GCX_DOUBLE              2               /* jsdouble */
-#define GCX_FUNCTION            3               /* JSFunction */
-#define GCX_NAMESPACE           4               /* JSXMLNamespace */
-#define GCX_QNAME               5               /* JSXMLQName */
-#define GCX_XML                 6               /* JSXML */
-#define GCX_EXTERNAL_STRING     8               /* JSString w/ external chars */
+JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 
-#define GCX_NTYPES_LOG2         4               /* type index bits */
-#define GCX_NTYPES              JS_BIT(GCX_NTYPES_LOG2)
+#define JSTRACE_FUNCTION    3
+#define JSTRACE_NAMESPACE   4
+#define JSTRACE_QNAME       5
+#define JSTRACE_XML         6
+
+/*
+ * One past the maximum trace kind.
+ */
+#define JSTRACE_LIMIT       7
+
+/*
+ * We use the trace kinds as the types for all GC things except external
+ * strings.
+ */
+#define GCX_OBJECT              JSTRACE_OBJECT      /* JSObject */
+#define GCX_DOUBLE              JSTRACE_DOUBLE      /* jsdouble */
+#define GCX_STRING              JSTRACE_STRING      /* JSString */
+#define GCX_FUNCTION            JSTRACE_FUNCTION    /* JSFunction */
+#define GCX_NAMESPACE           JSTRACE_NAMESPACE   /* JSXMLNamespace */
+#define GCX_QNAME               JSTRACE_QNAME       /* JSXMLQName */
+#define GCX_XML                 JSTRACE_XML         /* JSXML */
+#define GCX_EXTERNAL_STRING     JSTRACE_LIMIT       /* JSString with external
+                                                       chars */
+/*
+ * The number of defined GC types.
+ */
+#define GCX_NTYPES              (GCX_EXTERNAL_STRING + 8)
+
+/*
+ * The maximum limit for the number of GC types.
+ */
+#define GCX_LIMIT_LOG2         4           /* type index bits */
+#define GCX_LIMIT              JS_BIT(GCX_LIMIT_LOG2)
+
+JS_STATIC_ASSERT(GCX_NTYPES <= GCX_LIMIT);
 
 /* GC flag definitions, must fit in 8 bits (type index goes in the low bits). */
-#define GCF_TYPEMASK    JS_BITMASK(GCX_NTYPES_LOG2)
-#define GCF_MARK        JS_BIT(GCX_NTYPES_LOG2)
-#define GCF_FINAL       JS_BIT(GCX_NTYPES_LOG2 + 1)
-#define GCF_LOCKSHIFT   (GCX_NTYPES_LOG2 + 2)   /* lock bit shift */
+#define GCF_TYPEMASK    JS_BITMASK(GCX_LIMIT_LOG2)
+#define GCF_MARK        JS_BIT(GCX_LIMIT_LOG2)
+#define GCF_FINAL       JS_BIT(GCX_LIMIT_LOG2 + 1)
+#define GCF_LOCKSHIFT   (GCX_LIMIT_LOG2 + 2)   /* lock bit shift */
 #define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
 
-extern JS_FRIEND_API(uint8 *)
-js_GetGCThingFlags(void *thing);
+/*
+ * Get the type of the external string or -1 if the string was not created
+ * with JS_NewExternalString.
+ */
+extern intN
+js_GetExternalStringGCType(JSString *str);
+
+extern JS_FRIEND_API(uint32)
+js_GetGCThingTraceKind(void *thing);
 
 /*
  * The sole purpose of the function is to preserve public API compatibility
@@ -168,13 +200,6 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
  */
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
 
-JS_STATIC_ASSERT(JSTRACE_STRING == 2);
-
-#define JSTRACE_FUNCTION    3
-#define JSTRACE_NAMESPACE   4
-#define JSTRACE_QNAME       5
-#define JSTRACE_XML         6
-
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_XML)
 #else
@@ -189,8 +214,8 @@ JS_STATIC_ASSERT(JSTRACE_FUNCTION + 1 == JSTRACE_NAMESPACE);
 
 /*
  * Trace jsval when JSVAL_IS_OBJECT(v) can be an arbitrary GC thing casted as
- * JSVAL_OBJECT and js_GetGCThingFlags has to be used to find the real type
- * behind v.
+ * JSVAL_OBJECT and js_GetGCThingTraceKind has to be used to find the real
+ * type behind v.
  */
 extern void
 js_CallValueTracerIfGCThing(JSTracer *trc, jsval v);

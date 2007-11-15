@@ -2633,7 +2633,7 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
     for (i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
         if (str_finalizers[i] == oldop) {
             str_finalizers[i] = newop;
-            return (intN) i + GCX_EXTERNAL_STRING;
+            return (intN) i;
         }
     }
     return -1;
@@ -2644,15 +2644,15 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
  * finalization of the permanently interned strings.
  */
 void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str, uintN gctype, JSContext *cx)
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
 {
     JSBool valid;
     JSStringFinalizeOp finalizer;
 
     JS_RUNTIME_UNMETER(rt, liveStrings);
     if (JSSTRING_IS_DEPENDENT(str)) {
-        JS_ASSERT(gctype == GCX_STRING);
-        /* If JSSTRFLAG_DEPENDENT is set, this string must be valid. */
+        /* A dependent string can not be external and must be valid. */
+        JS_ASSERT(type < 0);
         JS_ASSERT(JSSTRDEP_BASE(str));
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
         valid = JS_TRUE;
@@ -2662,14 +2662,13 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str, uintN gctype, JSContext *cx)
         if (valid) {
             if (IN_UNIT_STRING_SPACE_RT(rt, str->u.chars)) {
                 JS_ASSERT(rt->unitStrings[*str->u.chars] == str);
-                JS_ASSERT(gctype == GCX_STRING);
+                JS_ASSERT(type < 0);
                 rt->unitStrings[*str->u.chars] = NULL;
-            } else if (gctype == GCX_STRING) {
+            } else if (type < 0) {
                 free(str->u.chars);
             } else {
-                JS_ASSERT(gctype - GCX_EXTERNAL_STRING <
-                          JS_ARRAY_LENGTH(str_finalizers));
-                finalizer = str_finalizers[gctype - GCX_EXTERNAL_STRING];
+                JS_ASSERT((uintN) type < JS_ARRAY_LENGTH(str_finalizers));
+                finalizer = str_finalizers[type];
                 if (finalizer) {
                     /*
                      * Assume that the finalizer for the permanently interned
