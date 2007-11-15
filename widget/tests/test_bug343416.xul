@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=343416
+-->
+<window title="Mozilla Bug 343416"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 343416</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=343416">Mozilla Bug 343416</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 343416 **/
+SimpleTest.waitForExplicitFinish();
+
+// Observer:
+var idleObserver =
+{
+    QueryInterface: function _qi(iid)
+    {
+        if (iid.equals(Components.interfaces.nsISupports) ||
+            iid.equals(Components.interfaces.nsIObserver))
+        {
+            return this;
+        }
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+    },
+    observe: function _observe(subject, topic, data)
+    {
+        if (topic != "idle")
+            return;
+        
+        var diff = Math.abs(data - newIdleSeconds * 1000);
+        ok (diff < 5000, "The idle time should have increased by roughly 6 seconds," +
+                         " as that's where we told this listener to fire.");
+        if (diff >= 5000)
+            alert(data + "  " + newIdleSeconds);
+
+        // Attempt to get to the nsIIdleService        
+        var subjectOK = false;
+        try {
+            var idleService = subject.QueryInterface(nsIIdleService);
+            subjectOK = true;
+        }
+        catch (ex)
+        {}
+        ok(subjectOK, "The subject of the notification should be the " +
+                      "nsIIdleService.");
+
+        // Attempt to remove ourselves.
+        var removedObserver = false;
+        try {
+            idleService.removeIdleObserver(this, newIdleSeconds);
+            removedObserver = true;
+        }
+        catch (ex)
+        {}
+        ok(removedObserver, "We should be able to remove our observer here.");
+        finishedListenerOK = true;
+        if (finishedTimeoutOK)
+        {
+            clearTimeout(testBailout);
+            finishThisTest();
+        }
+    }
+};
+
+
+const nsIIdleService = Components.interfaces.nsIIdleService;
+const nsIISCID = "@mozilla.org/widget/idleservice;1";
+var idleService = null;
+try
+{
+    idleService = Components.classes[nsIISCID].getService(nsIIdleService);
+}
+catch (ex)
+{}
+
+ok(idleService, "nsIIdleService should exist and be implemented on all tier 1 platforms.");
+
+var idleTime = null;
+try
+{
+    idleTime = idleService.idleTime;
+}
+catch (ex)
+{}
+
+ok (idleTime, "Getting the idle Time should not fail " +
+              "in normal circumstances on any tier 1 platform.");
+
+// Now we set up a timeout to sanity-test the idleTime after 5 seconds
+setTimeout(testIdleTime, 5000);
+var startTimeStamp = Date.now();
+
+// Now we add the listener:
+var newIdleSeconds = Math.floor(idleTime / 1000) + 6;
+var addedObserver = false;
+try
+{
+    idleService.addIdleObserver(idleObserver, newIdleSeconds);
+    addedObserver = true;
+}
+catch (ex)
+{}
+
+ok(addedObserver, "The nsIIdleService should allow us to add an observer.");
+
+addedObserver = false;
+try
+{
+    idleService.addIdleObserver(idleObserver, newIdleSeconds);
+    addedObserver = true;
+}
+catch (ex)
+{}
+
+ok(addedObserver, "The nsIIdleService should allow us to add the same observer again.");
+
+var removedObserver = false;
+try
+{
+    idleService.removeIdleObserver(idleObserver, newIdleSeconds);
+    removedObserver = true;
+}
+catch (ex)
+{}
+
+ok(removedObserver, "The nsIIdleService should allow us to remove the observer just once.");
+
+function testIdleTime()
+{
+    try
+    {
+        var newIdleTime = idleService.idleTime;
+    }
+    catch (ex)
+    {}
+    ok(newIdleTime, "Getting the idle time should not fail in normal" +
+                    "circumstances on any tier 1 platform.");
+    // Get the time difference, remove the approx. 5 seconds that we've waited,
+    // should be very close to 0 left.
+    var timeDiff = Math.abs((newIdleTime - idleTime) -
+                            (Date.now() - startTimeStamp));
+    // 0.5 second leniency.
+    ok(timeDiff < 500, "The idle time should have increased by roughly the " +
+                       "amount of time it took for the timeout to fire.");
+    finishedTimeoutOK = true;
+}
+
+// make sure we still exit when the listener and/or setTimeout don't fire:
+var testBailout = setTimeout(finishThisTest, 12000);
+var finishedTimeoutOK = false, finishedListenerOK = false;
+function finishThisTest()
+{
+    ok(finishedTimeoutOK, "We set a timeout and it should have fired by now.");
+    ok(finishedListenerOK, "We added a listener and it should have been called by now.");
+    if (!finishedListenerOK)
+    {
+        var removedListener = false;
+        try
+        {
+            idleService.removeIdleObserver(idleObserver, newIdleSeconds);
+            removedListener = true;
+        }
+        catch (ex)
+        {}
+    
+        ok(removedListener, "We added a listener and we should be able to remove it.");
+    }
+    // Done:
+    SimpleTest.finish();
+}
+
+]]>
+</script>
+
+</window>
