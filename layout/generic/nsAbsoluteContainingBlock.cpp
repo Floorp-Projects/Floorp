@@ -231,8 +231,8 @@ static inline PRBool IsFixedWidth(const nsStyleCoord& aCoord)
   return aCoord.GetUnit() == eStyleUnit_Coord ||
          aCoord.GetUnit() == eStyleUnit_Chars ||
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-          (aCoord.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
-           aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC));
+          (aCoord.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
+           aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT));
 }
 
 static inline PRBool IsFixedMaxWidth(const nsStyleCoord& aCoord)
@@ -276,7 +276,7 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // width, min-width, and max-width are all lengths, 'none', or enumerated,
     // then our frame width does not depend on the parent width.
     // Note that borders never depend on the parent width
-    // XXX All of the enumerated values except -moz-fill are ok too.
+    // XXX All of the enumerated values except -moz-available are ok too.
     if (!IsFixedWidth(pos->mWidth) ||
         !IsFixedWidth(pos->mMinWidth) ||
         !IsFixedMaxWidth(pos->mMaxWidth) ||

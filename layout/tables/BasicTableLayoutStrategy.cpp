@@ -142,15 +142,15 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         prefPercent = aStylePos->mWidth.GetPercentValue();
     } else if (unit == eStyleUnit_Enumerated && aIsCell) {
         switch (aStylePos->mWidth.GetIntValue()) {
-            case NS_STYLE_WIDTH_INTRINSIC:
+            case NS_STYLE_WIDTH_MAX_CONTENT:
                 // 'width' only affects pref width, not min
                 // width, so don't change anything
                 break;
-            case NS_STYLE_WIDTH_MIN_INTRINSIC:
+            case NS_STYLE_WIDTH_MIN_CONTENT:
                 prefCoord = minCoord;
                 break;
-            case NS_STYLE_WIDTH_SHRINK_WRAP:
-            case NS_STYLE_WIDTH_FILL:
+            case NS_STYLE_WIDTH_FIT_CONTENT:
+            case NS_STYLE_WIDTH_AVAILABLE:
                 // act just like 'width: auto'
                 break;
             default:
@@ -160,12 +160,12 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
 
     nsStyleCoord maxWidth(aStylePos->mMaxWidth);
     if (maxWidth.GetUnit() == eStyleUnit_Enumerated) {
-        if (!aIsCell || maxWidth.GetIntValue() == NS_STYLE_WIDTH_FILL)
+        if (!aIsCell || maxWidth.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE)
             maxWidth.SetNoneValue();
-        else if (maxWidth.GetIntValue() == NS_STYLE_WIDTH_SHRINK_WRAP)
-            // for 'max-width', '-moz-shrink-wrap' is like
-            // '-moz-intrinsic'
-            maxWidth.SetIntValue(NS_STYLE_WIDTH_INTRINSIC,
+        else if (maxWidth.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT)
+            // for 'max-width', '-moz-fit-content' is like
+            // '-moz-max-content'
+            maxWidth.SetIntValue(NS_STYLE_WIDTH_MAX_CONTENT,
                                  eStyleUnit_Enumerated);
     }
     unit = maxWidth.GetUnit();
@@ -188,12 +188,12 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
 
     nsStyleCoord minWidth(aStylePos->mMinWidth);
     if (minWidth.GetUnit() == eStyleUnit_Enumerated) {
-        if (!aIsCell || minWidth.GetIntValue() == NS_STYLE_WIDTH_FILL)
+        if (!aIsCell || minWidth.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE)
             minWidth.SetCoordValue(0);
-        else if (minWidth.GetIntValue() == NS_STYLE_WIDTH_SHRINK_WRAP)
-            // for 'min-width', '-moz-shrink-wrap' is like
-            // '-moz-min-intrinsic'
-            minWidth.SetIntValue(NS_STYLE_WIDTH_MIN_INTRINSIC,
+        else if (minWidth.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT)
+            // for 'min-width', '-moz-fit-content' is like
+            // '-moz-min-content'
+            minWidth.SetIntValue(NS_STYLE_WIDTH_MIN_CONTENT,
                                  eStyleUnit_Enumerated);
     }
     unit = minWidth.GetUnit();

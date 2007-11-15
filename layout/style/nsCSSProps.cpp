@@ -955,10 +955,10 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kWidthKTable[] = {
-  eCSSKeyword__moz_intrinsic, NS_STYLE_WIDTH_INTRINSIC,
-  eCSSKeyword__moz_min_intrinsic, NS_STYLE_WIDTH_MIN_INTRINSIC,
-  eCSSKeyword__moz_shrink_wrap, NS_STYLE_WIDTH_SHRINK_WRAP,
-  eCSSKeyword__moz_fill, NS_STYLE_WIDTH_FILL,
+  eCSSKeyword__moz_max_content, NS_STYLE_WIDTH_MAX_CONTENT,
+  eCSSKeyword__moz_min_content, NS_STYLE_WIDTH_MIN_CONTENT,
+  eCSSKeyword__moz_fit_content, NS_STYLE_WIDTH_FIT_CONTENT,
+  eCSSKeyword__moz_available, NS_STYLE_WIDTH_AVAILABLE,
   eCSSKeyword_UNKNOWN,-1
 };
 

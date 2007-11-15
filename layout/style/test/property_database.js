@@ -956,7 +956,7 @@ var gCSSProperties = {
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
 		other_values: [ "15px", "3em", "15%" ],
-		invalid_values: [ "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
+		invalid_values: [ "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"ime-mode": {
 		domProp: "imeMode",
@@ -1104,14 +1104,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "30px", "50%", "0" ],
-		invalid_values: [ "auto", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
+		invalid_values: [ "auto", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"max-width": {
 		domProp: "maxWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "30px", "50%", "0", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
+		other_values: [ "30px", "50%", "0", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
 		invalid_values: [ "auto" ]
 	},
 	"min-height": {
@@ -1120,14 +1120,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "30px", "50%" ],
-		invalid_values: [ "auto", "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
+		invalid_values: [ "auto", "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"min-width": {
 		domProp: "minWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
-		other_values: [ "30px", "50%", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
+		other_values: [ "30px", "50%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
 		invalid_values: [ "auto", "none" ]
 	},
 	"opacity": {
@@ -1586,7 +1586,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
-		other_values: [ "15px", "3em", "15%", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
+		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
 		invalid_values: [ "none" ]
 	},
 	"word-spacing": {
