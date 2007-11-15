@@ -1956,18 +1956,6 @@ DAVCollection.prototype = {
     return this.__dp;
   },
 
-  __base64: {},
-  __base64loaded: false,
-  get _base64() {
-    if (!this.__base64loaded) {
-      let jsLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-        getService(Ci.mozIJSSubScriptLoader);
-      jsLoader.loadSubScript("chrome://sync/content/base64.js", this.__base64);
-      this.__base64loaded = true;
-    }
-    return this.__base64;
-  },
-
   _auth: null,
 
   get baseURL() {
@@ -2092,8 +2080,7 @@ DAVCollection.prototype = {
       this._log.info("Logging in");
 
       let URI = makeURI(this._baseURL);
-      this._auth = "Basic " +
-        this._base64.Base64.encode(username + ":" + password);
+      this._auth = "Basic " + btoa(username + ":" + password);
 
       // Make a call to make sure it's working
       let gen = this.GET("", cont);
