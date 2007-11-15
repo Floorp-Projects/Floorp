@@ -63,7 +63,6 @@ class nsHTMLHRAccessible : public nsLeafAccessible
 public:
   nsHTMLHRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *aRole); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsHTMLBRAccessible : public nsLeafAccessible

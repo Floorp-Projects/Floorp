@@ -49,7 +49,6 @@ public:
 
   nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *aResult); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsITableLayout;

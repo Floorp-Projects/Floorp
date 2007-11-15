@@ -104,7 +104,6 @@ class nsXULProgressMeterAccessible : public nsFormControlAccessible
 public:
   nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *aRole); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetValue(nsAString &aValue);
 };
 
@@ -145,7 +144,6 @@ class nsXULToolbarAccessible : public nsAccessibleWrap
 public:
   nsXULToolbarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsXULToolbarSeparatorAccessible : public nsLeafAccessible
