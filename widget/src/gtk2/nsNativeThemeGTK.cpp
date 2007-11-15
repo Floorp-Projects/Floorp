@@ -440,6 +440,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_TOOLTIP;
     break;
   case NS_THEME_STATUSBAR_PANEL:
+  case NS_THEME_STATUSBAR_RESIZER_PANEL:
     aGtkWidgetType = MOZ_GTK_FRAME;
     break;
   case NS_THEME_PROGRESSBAR:
@@ -997,6 +998,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBAR_PANEL:
+  case NS_THEME_STATUSBAR_RESIZER_PANEL:
   case NS_THEME_RESIZER:
   case NS_THEME_LISTBOX:
     // case NS_THEME_LISTBOX_LISTITEM:
