@@ -153,7 +153,8 @@ def runTest(browser_config, test_config):
     counter_results = {}
     for counter in counters:
       counter_results[counter] = []
-    
+   
+    busted = False 
     while total_time < timeout:
       # Sleep for [resolution] seconds
       time.sleep(resolution)
@@ -192,12 +193,16 @@ def runTest(browser_config, test_config):
 
       #ensure that the browser is still running
       #check at intervals of 60 - this is just to cut down on load 
+      #use the busted check to ensure that we aren't catching a bad time slice where the browser has
+      # completed the test and closed but we haven't picked up the result yet
+      if busted:
+        ffprocess.TerminateAllProcesses("firefox")
+        ffprocess.TerminateAllProcesses("crashreporter")
+        print "FAIL: browser crash"
+        break
       if (total_time % 60 == 0): 
         if ffprocess.ProcessesWithNameExist("crashreporter") or not ffprocess.ProcessesWithNameExist("firefox"):
-          ffprocess.TerminateAllProcesses("firefox")
-          ffprocess.TerminateAllProcesses("crashreporter")
-          print "FAIL: browser crash"
-          break
+          busted = True
 
     if total_time > timeout:
       print "FAIL: timeout from test"

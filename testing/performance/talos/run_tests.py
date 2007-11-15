@@ -297,14 +297,17 @@ def test_file(filename):
   utils.debug("using testdate: %d" % date)
   utils.debug("actual date: %d" % int(time.time()))
 
+  utils.stamped_msg(title, "Started")
   for test in tests:
-    print "Running test: " + test
+    utils.stamped_msg("Running test " + test, "Started")
     res, browser_dump, counter_dump = ttest.runTest(browser_config, tests[test])
     if not res:
+      utils.stamped_msg("Failed " + test, "Stopped")
       print 'FAIL: failure to complete test: ' + test
       sys.exit(0)
     results[test] = [browser_dump, counter_dump]
-    print "Completed test: " + test
+    utils.stamped_msg("Completed test " + test, "Stopped")
+  utils.stamped_msg(title, "Stopped")
 
   #process the results
   if (results_server != '') and (results_link != ''):
