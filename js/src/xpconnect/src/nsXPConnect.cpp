@@ -699,6 +699,33 @@ NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
     }
 }
 
+static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
+    JSTRACE_OBJECT,     /* GCX_OBJECT */
+    JSTRACE_STRING,     /* GCX_STRING */
+    JSTRACE_DOUBLE,     /* GCX_DOUBLE */
+    JSTRACE_FUNCTION,   /* GCX_FUNCTION */
+    JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
+    JSTRACE_QNAME,      /* GCX_QNAME */
+    JSTRACE_XML,        /* GCX_XML */
+    (uint8)-1,          /* unused */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 0 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 1 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 2 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 3 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 4 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 5 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 6 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 7 */
+};
+
+// static
+uint8
+nsXPConnect::GetTraceKind(void *thing)
+{
+    uint8 type = *js_GetGCThingFlags(thing) & GCF_TYPEMASK;
+    return GCTypeToTraceKindMap[type];
+}
+
 NS_IMETHODIMP
 nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
@@ -707,7 +734,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
     JSContext *cx = mCycleCollectionContext->GetJSContext();
 
-    uint32 traceKind = js_GetGCThingTraceKind(p);
+    uint8 ty = GetTraceKind(p);
 
     CCNodeType type;
 
@@ -723,7 +750,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         type = JS_IsAboutToBeFinalized(cx, p) ? GCUnmarked : GCMarked;
     }
 
-    if(traceKind == JSTRACE_OBJECT)
+    if(ty == GCX_OBJECT)
     {
         JSObject *obj = static_cast<JSObject*>(p);
         JSClass *clazz = OBJ_GET_CLASS(cx, obj);
@@ -830,10 +857,8 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     cb.DescribeNode(type, 0);
 #endif
 
-    if(traceKind != JSTRACE_OBJECT &&
-       traceKind != JSTRACE_NAMESPACE &&
-       traceKind != JSTRACE_QNAME &&
-       traceKind != JSTRACE_XML)
+    if(ty != GCX_OBJECT && ty != GCX_NAMESPACE && ty != GCX_QNAME &&
+       ty != GCX_XML)
         return NS_OK;
 
 #ifndef DEBUG_CC
@@ -848,9 +873,9 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     TraversalTracer trc(cb);
 
     JS_TRACER_INIT(&trc, cx, NoteJSChild);
-    JS_TraceChildren(&trc, p, traceKind);
+    JS_TraceChildren(&trc, p, GCTypeToTraceKindMap[ty]);
 
-    if(traceKind != JSTRACE_OBJECT)
+    if(ty != GCX_OBJECT)
         return NS_OK;
     
     JSObject *obj = static_cast<JSObject*>(p);
