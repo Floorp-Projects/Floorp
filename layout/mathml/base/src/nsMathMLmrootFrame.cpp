@@ -223,6 +223,10 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
+  // For radical glyphs from TeX fonts and some of the radical glyphs from
+  // Mathematica fonts, the thickness of the overline can be obtained from the
+  // ascent of the glyph.  Most fonts however have radical glyphs above the
+  // baseline so no assumption can be made about the meaning of the ascent.
   nscoord ruleThickness, leading, em;
   GetRuleThickness(renderingContext, fm, ruleThickness);
 
@@ -230,7 +234,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   renderingContext.GetBoundingMetrics(NS_LITERAL_STRING("1").get(), 1, bmOne);
 
   // get the leading to be left at the top of the resulting frame
-  // this seems more reliable than using fm->GetLeading() on suspicious fonts               
+  // this seems more reliable than using fm->GetLeading() on suspicious fonts
   GetEmHeight(fm, em);
   leading = nscoord(0.2f * em); 
 
@@ -247,6 +251,18 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   if (bmOne.ascent > bmBase.ascent)
     psi += bmOne.ascent - bmBase.ascent;
 
+  // make sure that the rule appears on on screen
+  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
+  if (ruleThickness < onePixel) {
+    ruleThickness = onePixel;
+  }
+
+  // adjust clearance psi to get an exact number of pixels -- this
+  // gives a nicer & uniform look on stacked radicals (bug 130282)
+  nscoord delta = psi % onePixel;
+  if (delta)
+    psi += onePixel - delta; // round up
+
   // Stretch the radical symbol to the appropriate height if it is not big enough.
   nsBoundingMetrics contSize = bmBase;
   contSize.descent = bmBase.ascent + bmBase.descent + psi;
@@ -262,26 +278,12 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   // the bounding metrics of the char
   mSqrChar.GetBoundingMetrics(bmSqr);
 
-  // According to TeX, the ascent of the returned radical should be
-  // the thickness of the overline
-  ruleThickness = bmSqr.ascent;
-  // make sure that the rule appears on on screen
-  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-  if (ruleThickness < onePixel) {
-    ruleThickness = onePixel;
-  }
-
-  // adjust clearance psi to get an exact number of pixels -- this
-  // gives a nicer & uniform look on stacked radicals (bug 130282)
-  nscoord delta = psi % onePixel;
-  if (delta)
-    psi += onePixel - delta; // round up
-
   // Update the desired size for the container (like msqrt, index is not yet included)
   // the baseline will be that of the base.
   mBoundingMetrics.ascent = bmBase.ascent + psi + ruleThickness;
   mBoundingMetrics.descent = 
-    PR_MAX(bmBase.descent, (bmSqr.descent - (bmBase.ascent + psi)));
+    PR_MAX(bmBase.descent,
+           (bmSqr.ascent + bmSqr.descent - mBoundingMetrics.ascent));
   mBoundingMetrics.width = bmSqr.width + bmBase.width;
   mBoundingMetrics.leftBearing = bmSqr.leftBearing;
   mBoundingMetrics.rightBearing = bmSqr.width + 
