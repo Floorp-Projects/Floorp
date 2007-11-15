@@ -163,6 +163,12 @@ public:
   static PRBool   IsCallerTrustedForWrite();
 
   /**
+   * Check whether a caller is trusted to have aCapability.  This also
+   * checks for UniversalXPConnect in addition to aCapability.
+   */
+  static PRBool   IsCallerTrustedForCapability(const char* aCapability);
+
+  /**
    * Do not ever pass null pointers to this method.  If one of your
    * nsIContents is null, you have to decide for yourself what
    * "IsDescendantOf" really means.
