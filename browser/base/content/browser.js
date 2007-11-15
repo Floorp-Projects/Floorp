@@ -1072,6 +1072,8 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
 
+  UpdateUrlbarSearchSplitterState();
+
   initPlacesDefaultQueries();
   initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
@@ -2161,6 +2163,32 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef) {
   gBrowser.userTypedValue = gURLBar.value;
 }
 
+function UpdateUrlbarSearchSplitterState()
+{
+  var splitter = document.getElementById("urlbar-search-splitter");
+
+  var urlbar = document.getElementById("urlbar-container");
+  var searchbar = document.getElementById("search-container");
+  var ibefore = null;
+  if (urlbar.nextSibling == searchbar)
+    ibefore = searchbar;
+  else if (searchbar.nextSibling == urlbar)
+    ibefore = urlbar;
+  else if (splitter)
+    splitter.parentNode.removeChild(splitter);
+
+  if (ibefore) {
+    if (!splitter) {
+      splitter = document.createElement("splitter");
+      splitter.id = "urlbar-search-splitter";
+      splitter.setAttribute("resizebefore", "flex");
+      splitter.setAttribute("resizeafter", "flex");
+      splitter.className = "chromeclass-toolbar-additional";
+    }
+    urlbar.parentNode.insertBefore(splitter, ibefore);
+  }
+}
+
 function UpdatePageProxyState()
 {
   if (gURLBar && gURLBar.value != gLastValidURLStr)
@@ -3213,6 +3241,10 @@ function BrowserCustomizeToolbar()
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.setAttribute("disabled", "true");
 
+  var splitter = document.getElementById("urlbar-search-splitter");
+  if (splitter)
+    splitter.parentNode.removeChild(splitter);
+
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
   var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
   sheetFrame.hidden = false;
@@ -3245,6 +3277,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     gHomeButton.updateTooltip();
     window.XULBrowserWindow.init();
   }
+
+  UpdateUrlbarSearchSplitterState();
 
   // Update the urlbar
   var url = getWebNavigation().currentURI.spec;
