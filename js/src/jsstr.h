@@ -407,14 +407,12 @@ extern JSString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s);
 
 /*
- * Free the chars held by str when it is finalized by the GC. When type is
- * less then zero, it denotes an internal string. Otherwise it denotes the
- * type of the external string allocated with JS_NewExternalString.
+ * Free the chars held by str when it is finalized by the GC.
  *
  * This function always needs rt but can live with null cx.
  */
 extern void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx);
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, uintN gctype, JSContext *cx);
 
 /*
  * Convert a value to a printable C string.
