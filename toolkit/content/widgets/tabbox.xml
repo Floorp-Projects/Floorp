@@ -18,7 +18,7 @@
 
   <binding id="tabbox"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation implements="nsIAccessibleProvider">
+    <implementation implements="nsIDOMEventListener, nsIAccessibleProvider">
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
@@ -124,10 +124,10 @@
         </setter>
       </property>
 
-      <field name="_keyEventHandler" readonly="true">
-      <![CDATA[({
-        tabbox: this,
-        handleEvent: function handleEvent(event) {
+      <method name="handleEvent">
+        <parameter name="event"/>
+        <body>
+        <![CDATA[
           if (!event.isTrusted) {
             // Don't let untrusted events mess with tabs.
             return;
@@ -136,24 +136,24 @@
           switch (event.keyCode) {
             case event.DOM_VK_TAB:
               if (event.ctrlKey && !event.altKey && !event.metaKey)
-                if (this.tabbox.tabs && this.tabbox.handleCtrlTab) {
-                  this.tabbox.tabs.advanceSelectedTab(event.shiftKey ? -1 : 1, true);
+                if (this.tabs && this.handleCtrlTab) {
+                  this.tabs.advanceSelectedTab(event.shiftKey ? -1 : 1, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
               break;
             case event.DOM_VK_PAGE_UP:
               if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
-                if (this.tabbox.tabs && this.tabbox.handleCtrlPageUpDown) {
-                  this.tabbox.tabs.advanceSelectedTab(-1, true);
+                if (this.tabs && this.handleCtrlPageUpDown) {
+                  this.tabs.advanceSelectedTab(-1, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
               break;
             case event.DOM_VK_PAGE_DOWN:
               if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
-                if (this.tabbox.tabs && this.tabbox.handleCtrlPageUpDown) {
-                  this.tabbox.tabs.advanceSelectedTab(1, true);
+                if (this.tabs && this.handleCtrlPageUpDown) {
+                  this.tabs.advanceSelectedTab(1, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
@@ -179,9 +179,9 @@
                 }
               break;
           }
-        }
-      })]]>
-      </field>
+        ]]>
+        </body>
+      </method>
 
       <field name="_eventNode">this</field>
 
@@ -189,8 +189,8 @@
         <setter>
           <![CDATA[
             if (val != this._eventNode) {
-              val.addEventListener("keypress", this._keyEventHandler, false);
-              this._eventNode.removeEventListener("keypress", this._keyEventHandler, false);
+              val.addEventListener("keypress", this, false);
+              this._eventNode.removeEventListener("keypress", this, false);
               this._eventNode = val;
             }
             return val;
@@ -204,11 +204,11 @@
           case "window": this._eventNode = window; break;
           case "document": this._eventNode = document; break;
         }
-        this._eventNode.addEventListener("keypress", this._keyEventHandler, false);
+        this._eventNode.addEventListener("keypress", this, false);
       </constructor>
 
       <destructor>
-        this._eventNode.removeEventListener("keypress", this._keyEventHandler, false);
+        this._eventNode.removeEventListener("keypress", this, false);
       </destructor>
     </implementation>
   </binding>
