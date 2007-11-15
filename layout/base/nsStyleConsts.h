@@ -429,10 +429,10 @@
 #define NS_STYLE_FONT_FIELD											16
 
 // See nsStylePosition::mWidth, mMinWidth, mMaxWidth
-#define NS_STYLE_WIDTH_INTRINSIC                0
-#define NS_STYLE_WIDTH_MIN_INTRINSIC            1
-#define NS_STYLE_WIDTH_SHRINK_WRAP              2
-#define NS_STYLE_WIDTH_FILL                     3
+#define NS_STYLE_WIDTH_MAX_CONTENT              0
+#define NS_STYLE_WIDTH_MIN_CONTENT              1
+#define NS_STYLE_WIDTH_FIT_CONTENT              2
+#define NS_STYLE_WIDTH_AVAILABLE                3
 
 // See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_STATIC                0

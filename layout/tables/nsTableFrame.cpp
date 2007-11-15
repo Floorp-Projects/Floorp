@@ -3485,7 +3485,7 @@ nsTableFrame::IsAutoWidth(PRBool* aIsPctWidth)
     // seems silly.
     *aIsPctWidth = width.GetUnit() == eStyleUnit_Percent &&
                    width.GetPercentValue() > 0.0f;
-    // Should this handle -moz-fill and -moz-shrink-wrap?
+    // Should this handle -moz-available and -moz-fit-content?
   }
   return width.GetUnit() == eStyleUnit_Auto;
 }
@@ -3534,13 +3534,13 @@ nsTableFrame::IsAutoLayout()
   if (GetStyleTable()->mLayoutStrategy == NS_STYLE_TABLE_LAYOUT_AUTO)
     return PR_TRUE;
   // a fixed-layout inline-table must have a width
-  // and tables with 'width: -moz-intrinsic' must be auto-layout
+  // and tables with 'width: -moz-max-content' must be auto-layout
   // (at least as long as FixedTableLayoutStrategy::GetPrefWidth returns
   // nscoord_MAX)
   const nsStyleCoord &width = GetStylePosition()->mWidth;
   return (width.GetUnit() == eStyleUnit_Auto) ||
          (width.GetUnit() == eStyleUnit_Enumerated &&
-          width.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC);
+          width.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT);
 }
 
 #ifdef DEBUG
