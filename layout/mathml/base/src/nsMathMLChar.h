@@ -60,9 +60,17 @@ struct nsGlyphCode {
   PRUnichar code; 
   PRInt32   font;
 
-  // conversion operator to just return the code point that we generally want
-  operator PRUnichar () {
-    return code;
+  PRBool Exists() const
+  {
+    return (code != 0);
+  }
+  PRBool operator==(const nsGlyphCode& other) const
+  {
+    return other.code == code && other.font == font;
+  }
+  PRBool operator!=(const nsGlyphCode& other) const
+  {
+    return ! operator==(other);
   }
 };
 
