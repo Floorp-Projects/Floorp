@@ -75,7 +75,7 @@ def GetPidsByName(process_name):
 
   matchingPids = []
   
-  command = ['ps -Axc']
+  command = ['ps -ac']
   handle = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True, shell=True)
   
   # wait for the process to terminate
