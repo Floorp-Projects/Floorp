@@ -1844,7 +1844,7 @@ nsMathMLChar::Stretch(nsPresContext*      aPresContext,
         if (rbearing < bm.rightBearing) rbearing = bm.rightBearing;
       }
       bestbm.width = width;
-      bestbm.ascent = bmdata[0].ascent; // Yes top, so that it works with TeX sqrt!
+      bestbm.ascent = bmdata[0].ascent; // not used except with descent for height
       bestbm.descent = computedSize - bestbm.ascent;
       bestbm.leftBearing = lbearing;
       bestbm.rightBearing = rbearing;
