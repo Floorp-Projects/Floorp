@@ -385,6 +385,9 @@ fails == 385823-2b.html 385823-2-ref.html
 fails == 386310-1b.html 386310-1-ref.html
 == 386310-1c.html 386310-1-ref.html
 fails == 386310-1d.html 386310-1-ref.html
+== 386401-1.html 386401-1-ref.html
+== 386401-2.html 386401-2-ref.html
+== 386401-3.html 386401-3-ref.html
 == 386470-1a.html 386470-1-ref.html
 == 386470-1b.html 386470-1-ref.html
 == 386470-1c.html 386470-1-ref.html
