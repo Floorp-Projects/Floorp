@@ -1586,7 +1586,7 @@ var PlacesControllerDragHelper = {
   },
 
   /** 
-   * Creates a Transeferable object that can be filled with data of types
+   * Creates a Transferable object that can be filled with data of types
    * supported by a view. 
    * @param   session
    *          The active drag session
@@ -1606,7 +1606,7 @@ var PlacesControllerDragHelper = {
     else
       types = view.childDropTypes;    
     for (var i = 0; i < types.length; ++i) {
-      if (session.isDataFlavorSupported(types[i]));
+      if (session.isDataFlavorSupported(types[i]))
         xferable.addDataFlavor(types[i]);
     }
     return xferable;
