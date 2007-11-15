@@ -744,18 +744,20 @@ nsContentUtils::Shutdown()
   nsAutoGCRoot::Shutdown();
 }
 
-static PRBool IsCallerTrustedForCapability(const char* aCapability)
+// static
+PRBool
+nsContentUtils::IsCallerTrustedForCapability(const char* aCapability)
 {
   // The secman really should handle UniversalXPConnect case, since that
   // should include UniversalBrowserRead... doesn't right now, though.
   PRBool hasCap;
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  if (NS_FAILED(ssm->IsCapabilityEnabled(aCapability, &hasCap)))
+  if (NS_FAILED(sSecurityManager->IsCapabilityEnabled(aCapability, &hasCap)))
     return PR_FALSE;
   if (hasCap)
     return PR_TRUE;
     
-  if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)))
+  if (NS_FAILED(sSecurityManager->IsCapabilityEnabled("UniversalXPConnect",
+                                                      &hasCap)))
     return PR_FALSE;
   return hasCap;
 }
