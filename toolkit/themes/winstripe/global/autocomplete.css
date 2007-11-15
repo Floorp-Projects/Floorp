@@ -200,6 +200,11 @@ panel[type="autocomplete"],
   padding: 0 !important;
 }
 
+/* GTK calculates space for a sort arrow */
+.autocomplete-treecol > .treecol-sortdirection {
+  -moz-appearance: none !important;
+}
+
 .autocomplete-treebody::-moz-tree-cell-text {
   -moz-padding-start: 8px;
 }
