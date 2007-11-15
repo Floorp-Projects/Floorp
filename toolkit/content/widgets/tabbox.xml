@@ -71,10 +71,9 @@
       <property name="tabs" readonly="true">
         <getter>
         <![CDATA[
-          var tabs = this.getElementsByTagNameNS(
+          return this.getElementsByTagNameNS(
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-              "tabs");
-          return tabs.length ? tabs[0] : null;
+              "tabs").item(0);
         ]]>
         </getter>
       </property>
@@ -82,43 +81,67 @@
       <property name="tabpanels" readonly="true">
         <getter>
         <![CDATA[
-          var tabpanels = this.getElementsByTagNameNS(
+          return this.getElementsByTagNameNS(
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-              "tabpanels");
-          return tabpanels.length ? tabpanels[0] : null;
+              "tabpanels").item(0);
         ]]>
         </getter>
       </property>
       
-      <property name="selectedIndex"
-                onget="return this.tabs ? this.tabs.selectedIndex : -1;">
+      <property name="selectedIndex">
+        <getter>
+        <![CDATA[
+          var tabs = this.tabs;
+          return tabs ? tabs.selectedIndex : -1;
+        ]]>
+        </getter>
+
         <setter>
         <![CDATA[
-          if (this.tabs)
-            this.tabs.selectedIndex = val;
+          var tabs = this.tabs;
+          if (tabs)
+            tabs.selectedIndex = val;
           this.setAttribute("selectedIndex", val);
           return val;
         ]]>
         </setter>
       </property>
 
-      <property name="selectedTab"
-                onget="return this.tabs ? this.tabs.selectedItem : null;">
+      <property name="selectedTab">
+        <getter>
+        <![CDATA[
+          var tabs = this.tabs;
+          return tabs && tabs.selectedItem;
+        ]]>
+        </getter>
+
         <setter>
         <![CDATA[
-          if (val && this.tabs)
-            this.tabs.selectedItem = val;
+          if (val) {
+            var tabs = this.tabs;
+            if (tabs)
+              tabs.selectedItem = val;
+          }
           return val;
         ]]>
         </setter>
       </property>
 
-      <property name="selectedPanel"
-                onget="return this.tabpanels ? this.tabpanels.selectedPanel : null;">
+      <property name="selectedPanel">
+        <getter>
+        <![CDATA[
+          var tabpanels = this.tabpanels;
+          return tabpanels && tabpanels.selectedPanel;
+        ]]>
+        </getter>
+
         <setter>
         <![CDATA[
-          if (val && this.tabpanels)
-            this.tabpanels.selectedPanel = val;
+          if (val) {
+            var tabpanels = this.tabpanels;
+            if (tabpanels)
+              tabpanels.selectedPanel = val;
+          }
           return val;
         ]]>
         </setter>
@@ -305,16 +328,17 @@
         
         <setter>
         <![CDATA[
-          const tabs = this.childNodes;
-          if (0 <= val && val < tabs.length) {
-            var alreadySelected = tabs[val].selected;
- 
-            for (var i = 0; i < tabs.length; i++)
-              if (i != val && tabs[i].selected)
-                tabs[i]._selected = false;
+          var tab = this.getItemAtIndex(val);
+          if (tab) {
+            var alreadySelected = tab.selected;
 
-            tabs[val]._selected = true;
-            this.setAttribute("value", tabs[val].value);
+            Array.forEach(this.childNodes, function (aTab) {
+              if (aTab.selected && aTab != tab)
+                aTab._selected = false;
+            });
+            tab._selected = true;
+
+            this.setAttribute("value", tab.value);
 
             for (var parent = this.parentNode; parent; parent = parent.parentNode) {
               if (parent.localName == 'tabbox') {
@@ -323,7 +347,7 @@
                 // This will cause an onselect event to fire for the tabpanel element.
                 if (tabpanels) {
                   // find an id 
-                  var linkedPanelId = tabs[val].linkedPanel;
+                  var linkedPanelId = tab.linkedPanel;
                   var linkedPanel = linkedPanelId ? document.getElementById(linkedPanelId) : null;
                   if (linkedPanel)
                     tabpanels.selectedPanel = linkedPanel;
@@ -360,12 +384,10 @@
 
         <setter>
         <![CDATA[
-          if (val && !val.selected) {
-            const tabs = this.childNodes;
-            for (var i = 0; i < tabs.length; i++)
-              if (tabs[i] == val)
-                this.selectedIndex = i;
-          }
+          if (val && !val.selected)
+            // The selectedIndex setter ignores invalid values
+            // such as -1 if |val| isn't one of our child nodes.
+            this.selectedIndex = this.getIndexOfItem(val);
           return val;
         ]]>
         </setter>
@@ -375,12 +397,7 @@
         <parameter name="item"/>
         <body>
         <![CDATA[
-          var children = this.childNodes;
-          var i = children.length;
-          while (i--)
-            if (children[i] == item)
-              return i;
-          return -1;
+          return Array.indexOf(this.childNodes, item);
         ]]>
         </body>
       </method>
@@ -389,10 +406,7 @@
         <parameter name="index"/>
         <body>
         <![CDATA[
-          var children = this.childNodes;
-          if (index >= 0 && index < children.length)
-            return children[index];
-          return null;
+          return this.childNodes.item(index);
         ]]>
         </body>
       </method>
@@ -716,7 +730,8 @@
 
       <handler event="keypress" keycode="VK_END">
       <![CDATA[
-        this.parentNode._selectNewTab(this.parentNode.childNodes[this.parentNode.childNodes.length - 1], -1);
+        var tabs = this.parentNode.childNodes;
+        this.parentNode._selectNewTab(tabs[tabs.length - 1], -1);
       ]]>
       </handler>
     </handlers>
