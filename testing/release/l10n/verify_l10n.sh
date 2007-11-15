@@ -23,7 +23,7 @@ do
   do
     # strip the directory portion
     package=`basename $package`
-    locale=`echo $package | sed -e 's/\.$platform.*//' -e 's/.*\.//'`
+    locale=`echo $package | sed -e "s/\.${platform}.*//" -e 's/.*\.//'`
     rm -rf target/*
     unpack_build $platform target $release/$package
     # check for read-only files
