@@ -225,6 +225,13 @@ protected:
 
   nsIContent* GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild);
 
+  // Called by ContentAppended and ContentInserted to handle a single child
+  // insertion.  aChild must not be null.  aContainer may be null.
+  // aIndexInContainer is the index of the child in the parent.  aAppend is
+  // true if this child is being appended, not inserted.
+  void HandleChildInsertion(nsIContent* aContainer, nsIContent* aChild,
+                            PRUint32 aIndexInContainer, PRBool aAppend);
+
 #define NS_BINDINGMANAGER_NOTIFY_OBSERVERS(func_, params_) \
   NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIMutationObserver, \
                                      func_, params_);
