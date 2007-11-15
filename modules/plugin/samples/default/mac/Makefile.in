@@ -51,7 +51,7 @@ else
 BUILDSTYLE	= Deployment
 endif
 
-PROJECT=DefaultPlugin.xcode
+PROJECT=DefaultPlugin.xcodeproj
 PROJECT_ARG=-project $(PROJECT)
 PBBUILD_ARG=$(PBBUILD_SETTINGS)
 
