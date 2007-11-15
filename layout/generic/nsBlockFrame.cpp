@@ -664,7 +664,8 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
                         line->mFirstChild, nsLayoutUtils::MIN_WIDTH);
         data.ForceBreak(aRenderingContext);
       } else {
-        if (line == begin_lines()) {
+        if (!curFrame->GetPrevContinuation() &&
+            line == curFrame->begin_lines()) {
           const nsStyleCoord &indent = GetStyleText()->mTextIndent;
           if (indent.GetUnit() == eStyleUnit_Coord)
             data.currentLine += indent.GetCoordValue();
@@ -737,7 +738,8 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
                         line->mFirstChild, nsLayoutUtils::PREF_WIDTH);
         data.ForceBreak(aRenderingContext);
       } else {
-        if (line == begin_lines()) {
+        if (!curFrame->GetPrevContinuation() &&
+            line == curFrame->begin_lines()) {
           const nsStyleCoord &indent = GetStyleText()->mTextIndent;
           if (indent.GetUnit() == eStyleUnit_Coord)
             data.currentLine += indent.GetCoordValue();
@@ -5852,7 +5854,7 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
   nscoord start = aLine->mBounds.x;
   nscoord width = aLine->mBounds.width;
 
-  if (aLine == begin_lines().get()) {
+  if (!GetPrevContinuation() && aLine == begin_lines().get()) {
     // Adjust for the text-indent.  See similar code in
     // nsLineLayout::BeginLineReflow.
     nscoord indent = 0;
