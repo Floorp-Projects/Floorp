@@ -1901,7 +1901,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // it wasn't empty before, any adjacency and clearance changes are irrelevant
       // to the result of nextLine->ShouldApplyTopMargin.
       if (line.next() != end_lines()) {
-        PRBool maybeWasEmpty = oldY == oldYMost;
+        PRBool maybeWasEmpty = oldY == line.next()->mBounds.y;
         PRBool isEmpty = line->mBounds.height == 0 && line->CachedIsEmpty();
         if (maybeReflowingForFirstTime /*1*/ ||
             (isEmpty || maybeWasEmpty) /*2/3/4*/) {
