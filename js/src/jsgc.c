@@ -359,6 +359,25 @@ JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(jsdouble));
 /* We want to use all the available GC thing space for object's slots. */
 JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(JSGCThing) == 0);
 
+static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
+    JSTRACE_OBJECT,     /* GCX_OBJECT */
+    JSTRACE_STRING,     /* GCX_STRING */
+    JSTRACE_DOUBLE,     /* GCX_DOUBLE */
+    JSTRACE_FUNCTION,   /* GCX_FUNCTION */
+    JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
+    JSTRACE_QNAME,      /* GCX_QNAME */
+    JSTRACE_XML,        /* GCX_XML */
+    (uint8)-1,         /* unused */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 0 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 1 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 2 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 3 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 4 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 5 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 6 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 7 */
+};
+
 /*
  * Ensure that JSObject is allocated from a different GC-list rather than
  * jsdouble and JSString so we can easily finalize JSObject before these 2
@@ -765,8 +784,8 @@ FinishGCArenaLists(JSRuntime *rt)
     JS_ASSERT(rt->gcChunkList == 0);
 }
 
-static uint8 *
-GetGCThingFlags(void *thing)
+JS_FRIEND_API(uint8 *)
+js_GetGCThingFlags(void *thing)
 {
     JSGCArenaInfo *a;
     uint32 index;
@@ -774,32 +793,6 @@ GetGCThingFlags(void *thing)
     a = THING_TO_ARENA(thing);
     index = THING_TO_INDEX(thing, a->list->thingSize);
     return THING_FLAGP(a, index);
-}
-
-intN
-js_GetExternalStringGCType(JSString *str)
-{
-    uintN type;
-
-    type = (uintN) *GetGCThingFlags(str) & GCF_TYPEMASK;
-    JS_ASSERT(type == GCX_STRING || type >= GCX_EXTERNAL_STRING);
-    return (type == GCX_STRING) ? -1 : (intN) (type - GCX_EXTERNAL_STRING);
-}
-
-static uint32
-MapGCFlagsToTraceKind(uintN flags)
-{
-    uint32 type;
-
-    type = flags & GCF_TYPEMASK;
-    JS_ASSERT(type < GCX_NTYPES);
-    return (type < GCX_EXTERNAL_STRING) ? type : JSTRACE_STRING;
-}
-
-JS_FRIEND_API(uint32)
-js_GetGCThingTraceKind(void *thing)
-{
-    return MapGCFlagsToTraceKind(*GetGCThingFlags(thing));
 }
 
 JSRuntime*
@@ -818,10 +811,33 @@ js_GetGCStringRuntime(JSString *str)
 JSBool
 js_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
-    uint8 flags = *GetGCThingFlags(thing);
+    uint8 flags = *js_GetGCThingFlags(thing);
 
     return !(flags & (GCF_MARK | GCF_LOCK | GCF_FINAL));
 }
+
+#ifdef DEBUG
+static const char newborn_external_string[] = "newborn external string";
+
+static const char *gc_typenames[GCX_NTYPES] = {
+    "newborn object",
+    "newborn string",
+    "newborn double",
+    "newborn mutable string",
+    "newborn function",
+    "newborn Namespace",
+    "newborn QName",
+    "newborn XML",
+    newborn_external_string,
+    newborn_external_string,
+    newborn_external_string,
+    newborn_external_string,
+    newborn_external_string,
+    newborn_external_string,
+    newborn_external_string,
+    newborn_external_string
+};
+#endif
 
 /* This is compatible with JSDHashEntryStub. */
 typedef struct JSGCRootHashEntry {
@@ -1579,7 +1595,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
     if (!thing)
         return ok;
 
-    flagp = GetGCThingFlags(thing);
+    flagp = js_GetGCThingFlags(thing);
 
     JS_LOCK_GC(rt);
     flags = *flagp;
@@ -1642,7 +1658,7 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
     if (!thing)
         return JS_TRUE;
 
-    flagp = GetGCThingFlags(thing);
+    flagp = js_GetGCThingFlags(thing);
     JS_LOCK_GC(rt);
     flags = *flagp;
 
@@ -1860,7 +1876,8 @@ TraceDelayedChildren(JSTracer *trc)
                 --rt->gcTraceLaterCount;
 #endif
                 thing = FLAGP_TO_THING(flagp, thingSize);
-                JS_TraceChildren(trc, thing, MapGCFlagsToTraceKind(*flagp));
+                JS_TraceChildren(trc, thing,
+                                 GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK]);
             } while (++thingIndex != endIndex);
         }
 
@@ -1915,9 +1932,6 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
     JS_ASSERT(rt->gcMarkingTracer == trc);
     JS_ASSERT(rt->gcLevel > 0);
 
-    if (rt->gcThingCallback)
-        rt->gcThingCallback(thing, kind, rt->gcThingCallbackClosure);
-
     /*
      * Optimize for string and double as their size is known and their tracing
      * is not recursive.
@@ -1926,7 +1940,10 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
       case JSTRACE_DOUBLE:
         flagp = THING_TO_FLAGP(thing, sizeof(JSGCThing));
         JS_ASSERT((*flagp & GCF_FINAL) == 0);
-        JS_ASSERT(kind == MapGCFlagsToTraceKind(*flagp));
+        JS_ASSERT(GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK] == kind);
+        if (rt->gcThingCallback)
+            rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
+
         *flagp |= GCF_MARK;
         goto out;
 
@@ -1934,7 +1951,10 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
         for (;;) {
             flagp = THING_TO_FLAGP(thing, sizeof(JSGCThing));
             JS_ASSERT((*flagp & GCF_FINAL) == 0);
-            JS_ASSERT(kind == MapGCFlagsToTraceKind(*flagp));
+            JS_ASSERT(GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK] == kind);
+            if (rt->gcThingCallback)
+                rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
+
             if (!JSSTRING_IS_DEPENDENT((JSString *) thing)) {
                 *flagp |= GCF_MARK;
                 goto out;
@@ -1943,14 +1963,16 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
                 goto out;
             *flagp |= GCF_MARK;
             thing = JSSTRDEP_BASE((JSString *) thing);
-            if (rt->gcThingCallback)
-                rt->gcThingCallback(thing, kind, rt->gcThingCallbackClosure);
         }
         /* NOTREACHED */
     }
 
-    flagp = GetGCThingFlags(thing);
-    JS_ASSERT(kind == MapGCFlagsToTraceKind(*flagp));
+    flagp = js_GetGCThingFlags(thing);
+    JS_ASSERT(GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK] == kind);
+
+    if (rt->gcThingCallback)
+        rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
+
     if (*flagp & GCF_MARK)
         goto out;
 
@@ -2015,11 +2037,10 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
     if (JSVAL_IS_DOUBLE(v) || JSVAL_IS_STRING(v)) {
         thing = JSVAL_TO_TRACEABLE(v);
         kind = JSVAL_TRACE_KIND(v);
-        JS_ASSERT(kind == js_GetGCThingTraceKind(JSVAL_TO_GCTHING(v)));
     } else if (JSVAL_IS_OBJECT(v) && v != JSVAL_NULL) {
         /* v can be an arbitrary GC thing reinterpreted as an object. */
         thing = JSVAL_TO_OBJECT(v);
-        kind = js_GetGCThingTraceKind(thing);
+        kind = GCTypeToTraceKindMap[*js_GetGCThingFlags(thing) & GCF_TYPEMASK];
     } else {
         return;
     }
@@ -2081,12 +2102,14 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)hdr;
     void *thing = (void *)lhe->thing;
     JSTracer *trc = (JSTracer *)arg;
+    uint8 flags;
     uint32 traceKind;
     JSRuntime *rt;
     uint32 n;
 
     JS_ASSERT(lhe->count >= 1);
-    traceKind = js_GetGCThingTraceKind(thing);
+    flags = *js_GetGCThingFlags(thing);
+    traceKind = GCTypeToTraceKindMap[flags & GCF_TYPEMASK];
     JS_CALL_TRACER(trc, thing, traceKind, "locked object");
 
     /*
@@ -2100,7 +2123,7 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
             rt = trc->context->runtime;
             if (rt->gcThingCallback) {
                 do {
-                    rt->gcThingCallback(thing, traceKind,
+                    rt->gcThingCallback(thing, flags,
                                         rt->gcThingCallbackClosure);
                 } while (--n != 0);
             }
@@ -2191,36 +2214,16 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 static void
 TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
 {
-    uint32 i;
+    uintN i;
     void *thing;
 
-#ifdef DEBUG
-    static const char *weakRootNames[JSTRACE_LIMIT] = {
-        "newborn object",
-        "newborn double",
-        "newborn string",
-        "newborn function",
-        "newborn namespace",
-        "newborn qname",
-        "newborn xml"
-    };
-#endif
-
-    for (i = 0; i != JSTRACE_LIMIT; i++) {
-        thing = wr->newborn[i];
-        if (thing)
-            JS_CALL_TRACER(trc, thing, i, weakRootNames[i]);
-    }
-    JS_ASSERT(i == GCX_EXTERNAL_STRING);
-    for (; i != GCX_NTYPES; ++i) {
+    for (i = 0; i < GCX_NTYPES; i++) {
         thing = wr->newborn[i];
         if (thing) {
-            JS_SET_TRACING_INDEX(trc, "newborn external string",
-                                 i - GCX_EXTERNAL_STRING);
-            JS_CallTracer(trc, thing, JSTRACE_STRING);
+            JS_CALL_TRACER(trc, thing, GCTypeToTraceKindMap[i],
+                           gc_typenames[i]);
         }
     }
-
     JS_CALL_VALUE_TRACER(trc, wr->lastAtom, "lastAtom");
     JS_SET_TRACING_NAME(trc, "lastInternalResult");
     js_CallValueTracerIfGCThing(trc, wr->lastInternalResult);
@@ -2661,9 +2664,7 @@ restart:
                         JS_ASSERT(type == GCX_STRING ||
                                   type - GCX_EXTERNAL_STRING <
                                   GCX_NTYPES - GCX_EXTERNAL_STRING);
-                        js_FinalizeStringRT(rt, (JSString *) thing,
-                                            (intN) (type - GCX_EXTERNAL_STRING),
-                                            cx);
+                        js_FinalizeStringRT(rt, (JSString *) thing, type, cx);
                         break;
                     }
                     thing->flagp = flagp;

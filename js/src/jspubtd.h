@@ -637,8 +637,7 @@ typedef JSBool
 (* JS_DLL_CALLBACK JSGCCallback)(JSContext *cx, JSGCStatus status);
 
 typedef void
-(* JS_DLL_CALLBACK JSGCThingCallback)(void *thing, uint32 traceKind,
-                                      void *closure);
+(* JS_DLL_CALLBACK JSGCThingCallback)(void *thing, uint8 flags, void *closure);
 
 /*
  * Generic trace operation that calls JS_CallTracer on each traceable thing
