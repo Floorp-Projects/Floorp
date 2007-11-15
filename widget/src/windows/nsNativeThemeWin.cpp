@@ -1539,13 +1539,20 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   if (!hdc)
     return NS_ERROR_FAILURE;
 
-  PRInt32 sizeReq = 1; // Best-fit size.
+  PRInt32 sizeReq = 1; // Best-fit size. (TS_TRUE)
   if (aWidgetType == NS_THEME_PROGRESSBAR ||
       aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL)
     sizeReq = 0; // Best-fit size for progress meters is too large for most 
                  // themes.
                  // In our app, we want these widgets to be able to really shrink down,
                  // so use the min-size request value (of 0).
+
+  // We should let HTML buttons shrink to their min size.
+  // FIXME: We should probably really separate GetPreferredWidgetSize
+  // from GetMinimumWidgetSize, so callers can use the one they want.
+  if (aWidgetType == NS_THEME_BUTTON &&
+      aFrame->GetContent()->IsNodeOfType(nsINode::eHTML))
+    sizeReq = 0; /* TS_MIN */
 
   SIZE sz;
   getThemePartSize(theme, hdc, part, state, NULL, sizeReq, &sz);
