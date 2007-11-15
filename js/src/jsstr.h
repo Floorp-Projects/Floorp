@@ -354,6 +354,9 @@ typedef enum JSCharType {
 extern JSBool
 js_InitRuntimeStringState(JSContext *cx);
 
+extern JSBool
+js_InitDeflatedStringCache(JSRuntime *rt);
+
 /*
  * Maximum character code for which we will create a pinned unit string on
  * demand -- see JSRuntime.unitStrings in jscntxt.h.

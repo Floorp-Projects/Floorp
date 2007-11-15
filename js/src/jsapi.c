@@ -703,6 +703,8 @@ JS_NewRuntime(uint32 maxbytes)
         goto bad;
     if (!js_InitAtomState(rt))
         goto bad;
+    if (!js_InitDeflatedStringCache(rt))
+        goto bad;
 #ifdef JS_THREADSAFE
     if (!js_InitThreadPrivateIndex(js_ThreadDestructorCB))
         goto bad;
