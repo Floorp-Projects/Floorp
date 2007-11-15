@@ -257,7 +257,7 @@ static const char kRoleNames[][20] = {
   "parent menuitem",     //ROLE_PARENT_MENUITEM
   "calendar",            //ROLE_CALENDAR
   "combobox list",       //ROLE_COMBOBOX_LIST
-  "combobox listitem",   //ROLE_COMBOBOX_LISTITEM
+  "combobox option",     //ROLE_COMBOBOX_OPTION
   "image map"            //ROLE_IMAGE_MAP
 };
 

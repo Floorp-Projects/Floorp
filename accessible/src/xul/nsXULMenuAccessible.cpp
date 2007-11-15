@@ -318,7 +318,7 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   }
 
   // Combo box listitem
-  if (Role(this) == nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM) {
+  if (Role(this) == nsIAccessibleRole::ROLE_COMBOBOX_OPTION) {
     // Is selected?
     PRBool isSelected = PR_FALSE;
     nsCOMPtr<nsIDOMXULSelectControlItemElement>
@@ -363,7 +363,7 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
         }
       } // isCollapsed
     } // isSelected
-  } // ROLE_COMBOBOX_LISTITEM
+  } // ROLE_COMBOBOX_OPTION
 
   return NS_OK;
 }
@@ -461,7 +461,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
 {
   *aRole = nsIAccessibleRole::ROLE_MENUITEM;
   if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
     return NS_OK;
   }
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));

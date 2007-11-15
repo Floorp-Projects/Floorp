@@ -250,7 +250,7 @@ NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *aRole)
   if (mIsCheckbox)
     *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
   else
-    *aRole = nsIAccessibleRole::ROLE_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_RICH_OPTION;
   return NS_OK;
 }
 
