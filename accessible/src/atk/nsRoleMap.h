@@ -161,8 +161,11 @@ static const PRUint32 atkRoleMap[] = {
     ATK_ROLE_MENU,                // nsIAccessibleRole::ROLE_PARENT_MENUITEM      112
     ATK_ROLE_CALENDAR,            // nsIAccessibleRole::ROLE_CALENDAR             113
     ATK_ROLE_MENU,                // nsIAccessibleRole::ROLE_COMBOBOX_LIST        114
-    ATK_ROLE_MENU_ITEM,           // nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM    115
+    ATK_ROLE_MENU_ITEM,           // nsIAccessibleRole::ROLE_COMBOBOX_OPTION      115
     ATK_ROLE_IMAGE,               // nsIAccessibleRole::ROLE_IMAGE_MAP            116
+    ATK_ROLE_LIST_ITEM,           // nsIAccessibleRole::ROLE_OPTION               117
+    ATK_ROLE_LIST_ITEM,           // nsIAccessibleRole::ROLE_RICH_OPTION          118
+    ATK_ROLE_LIST,                // nsIAccessibleRole::ROLE_LISTBOX              119
     kROLE_ATK_LAST_ENTRY          // nsIAccessibleRole::ROLE_LAST_ENTRY
 };
 

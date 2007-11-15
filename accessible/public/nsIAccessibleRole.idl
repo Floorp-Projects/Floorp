@@ -741,7 +741,7 @@ interface nsIAccessibleRole : nsISupports
   /**
    * A item of list that is shown by combobox;
    */
-  const unsigned long ROLE_COMBOBOX_LISTITEM = 115;
+  const unsigned long ROLE_COMBOBOX_OPTION = 115;
 
   /**
    * An image map -- has child links representing the areas
@@ -749,9 +749,24 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_IMAGE_MAP = 116;
   
   /**
+   * An option in a listbox
+   */
+  const unsigned long ROLE_OPTION = 117;
+  
+  /**
+   * A rich option in a listbox, it can have other widgets as children
+   */
+  const unsigned long ROLE_RICH_OPTION = 118;
+  
+  /**
+   * A list of options
+   */
+  const unsigned long ROLE_LISTBOX = 119;
+
+  /**
    * It's not role actually. This contanst is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 117;
+  const unsigned long ROLE_LAST_ENTRY = 120;
 };
 
