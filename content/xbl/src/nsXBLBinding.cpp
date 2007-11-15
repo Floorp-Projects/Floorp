@@ -972,42 +972,47 @@ nsXBLBinding::UnhookEventHandlers()
   nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
   if (handlerChain) {
-    nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mBoundElement);
-    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
+    nsCOMPtr<nsIEventListenerManager> manager;
+    mBoundElement->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    if (!manager) {
+      return;
+    }
+                                      
     nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
-
     nsXBLPrototypeHandler* curr;
     for (curr = handlerChain; curr; curr = curr->GetNextHandler()) {
       nsXBLEventHandler* handler = curr->GetCachedEventHandler();
-      if (handler) {
-        nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
-        if (!eventAtom ||
-            eventAtom == nsGkAtoms::keyup ||
-            eventAtom == nsGkAtoms::keydown ||
-            eventAtom == nsGkAtoms::keypress)
-          continue;
-
-        nsAutoString type;
-        eventAtom->ToString(type);
-
-        // Figure out if we're using capturing or not.
-        PRBool useCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
-
-        // If this is a command, remove it from the system event group, otherwise 
-        // remove it from the standard event group.
-
-        // This is a weak ref. systemEventGroup above is already a
-        // strong ref, so we are guaranteed it will not go away.
-        nsIDOMEventGroup* eventGroup = nsnull;
-        if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
-          if (!systemEventGroup)
-            piTarget->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
-          eventGroup = systemEventGroup;
-        }
-
-        target->RemoveGroupedEventListener(type, handler, useCapture,
-                                           eventGroup);
+      if (!handler) {
+        continue;
       }
+      
+      nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
+      if (!eventAtom ||
+          eventAtom == nsGkAtoms::keyup ||
+          eventAtom == nsGkAtoms::keydown ||
+          eventAtom == nsGkAtoms::keypress)
+        continue;
+
+      nsAutoString type;
+      eventAtom->ToString(type);
+
+      // Figure out if we're using capturing or not.
+      PRInt32 flags = (curr->GetPhase() == NS_PHASE_CAPTURING) ?
+        NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+      // If this is a command, remove it from the system event group,
+      // otherwise remove it from the standard event group.
+
+      // This is a weak ref. systemEventGroup above is already a
+      // strong ref, so we are guaranteed it will not go away.
+      nsIDOMEventGroup* eventGroup = nsnull;
+      if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
+        if (!systemEventGroup)
+          manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
+        eventGroup = systemEventGroup;
+      }
+
+      manager->RemoveEventListenerByType(handler, type, flags, eventGroup);
     }
 
     const nsCOMArray<nsXBLKeyEventHandler>* keyHandlers =
@@ -1020,7 +1025,8 @@ nsXBLBinding::UnhookEventHandlers()
       handler->GetEventName(type);
 
       // Figure out if we're using capturing or not.
-      PRBool useCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
+      PRInt32 flags = (handler->GetPhase() == NS_PHASE_CAPTURING) ?
+        NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
       // If this is a command, remove it from the system event group, otherwise 
       // remove it from the standard event group.
@@ -1030,12 +1036,11 @@ nsXBLBinding::UnhookEventHandlers()
       nsIDOMEventGroup* eventGroup = nsnull;
       if (handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
         if (!systemEventGroup)
-          piTarget->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+          manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
         eventGroup = systemEventGroup;
       }
 
-      target->RemoveGroupedEventListener(type, handler, useCapture,
-                                         eventGroup);
+      manager->RemoveEventListenerByType(handler, type, flags, eventGroup);
     }
   }
 }
@@ -1126,6 +1131,9 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
           }
         }
       }
+
+      // Remove our event handlers
+      UnhookEventHandlers();
     }
 
     // Then do our ancestors.  This reverses the construction order, so that at
