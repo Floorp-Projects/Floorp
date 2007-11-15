@@ -70,6 +70,7 @@ static GtkWidget* gDropdownButtonWidget;
 static GtkWidget* gHandleBoxWidget;
 static GtkWidget* gToolbarWidget;
 static GtkWidget* gFrameWidget;
+static GtkWidget* gStatusbarWidget;
 static GtkWidget* gProgressWidget;
 static GtkWidget* gTabWidget;
 static GtkWidget* gTooltipWidget;
@@ -278,11 +279,23 @@ ensure_progress_widget()
 }
 
 static gint
+ensure_statusbar_widget()
+{
+    if (!gStatusbarWidget) {
+      gStatusbarWidget = gtk_statusbar_new();
+      setup_widget_prototype(gStatusbarWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 ensure_frame_widget()
 {
     if (!gFrameWidget) {
+        ensure_statusbar_widget();
         gFrameWidget = gtk_frame_new(NULL);
-        setup_widget_prototype(gFrameWidget);
+        gtk_container_add(GTK_CONTAINER(gStatusbarWidget), gFrameWidget);
+        gtk_widget_realize(gFrameWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -1369,18 +1382,16 @@ static gint
 moz_gtk_frame_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     GdkRectangle* cliprect)
 {
-    GtkStyle* style = gProtoWindow->style;
-
-    TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
-                       NULL, gProtoWindow, "base", rect->x, rect->y,
-                       rect->width, rect->height);
+    GtkStyle* style;
+    GtkShadowType shadow_type;
 
     ensure_frame_widget();
     style = gFrameWidget->style;
 
+    gtk_widget_style_get(gStatusbarWidget, "shadow-type", &shadow_type, NULL);
+
     TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
+    gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, shadow_type,
                      cliprect, gFrameWidget, "frame", rect->x, rect->y,
                      rect->width, rect->height);
 
@@ -2096,6 +2107,7 @@ moz_gtk_shutdown()
     gDropdownButtonWidget = NULL;
     gHandleBoxWidget = NULL;
     gToolbarWidget = NULL;
+    gStatusbarWidget = NULL;
     gFrameWidget = NULL;
     gProgressWidget = NULL;
     gTabWidget = NULL;
