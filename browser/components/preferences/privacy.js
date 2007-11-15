@@ -160,6 +160,7 @@ var gPrivacyPane = {
    *     1   means allow cookies from the "originating" server only; see
    *         netwerk/cookie/src/nsCookieService.cpp for a hairier definition
    *     2   means disable all cookies
+   *     3   means use P3P policy to decide, which is probably broken
    * network.cookie.lifetimePolicy
    * - determines how long cookies are stored:
    *     0   means keep cookies until they expire
@@ -193,7 +194,7 @@ var gPrivacyPane = {
   writeAcceptCookies: function ()
   {
     var checkbox = document.getElementById("acceptCookies");
-    return checkbox.checked ? 1 : 2;
+    return checkbox.checked ? 0 : 2;
   },
 
   /**
