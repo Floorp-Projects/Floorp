@@ -171,6 +171,19 @@ tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, curre
   border: 1px dotted #C0C0C0;
 }
 
+/* ::::: lines connecting cells ::::: */
+
+tree[seltype="cell"] > treechildren::-moz-tree-line,
+tree[seltype="text"] > treechildren::-moz-tree-line,
+treechildren::-moz-tree-line {
+  border: 1px dotted ThreeDShadow;
+}
+
+tree[seltype="cell"] > treechildren::-moz-tree-line(active, selected, focus),
+treechildren::-moz-tree-line(selected, focus) {
+  border: 1px dotted HighlightText;
+}
+
 
 /* ::::: tree separator ::::: */
 
@@ -310,7 +323,6 @@ treechildren::-moz-tree-column(insertafter) {
 /* ::::: twisty :::::  */
 
 treechildren::-moz-tree-twisty {
-  -moz-appearance: treetwisty;
   padding-right: 4px;
   padding-top: 1px;
   width: 9px; /* The image's width is 9 pixels */
@@ -318,7 +330,6 @@ treechildren::-moz-tree-twisty {
 }
 
 treechildren::-moz-tree-twisty(open) {
-  -moz-appearance: treetwistyopen;
   width: 9px; /* The image's width is 9 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-open.png");
 }
