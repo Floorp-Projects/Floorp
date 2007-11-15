@@ -1549,9 +1549,13 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
     }
     if (aContent->TextLength() > 0) {
       nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
-      NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-      nsresult rv = frame->GetRenderedText(aFlatString);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (frame) {
+        nsresult rv = frame->GetRenderedText(aFlatString);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        //if aContent is an object that is display: none, we have no a frame
+        aContent->AppendTextTo(*aFlatString);
+      }
       if (isHTMLBlock && !aFlatString->IsEmpty()) {
         aFlatString->Append(PRUnichar(' '));
       }
