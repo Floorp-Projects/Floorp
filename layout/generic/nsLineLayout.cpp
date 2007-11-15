@@ -702,8 +702,8 @@ WidthDependsOnContainer(const nsStyleCoord& aCoord)
 {
   return aCoord.GetUnit() == eStyleUnit_Percent ||
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-          (aCoord.GetIntValue() == NS_STYLE_WIDTH_FILL ||
-           aCoord.GetIntValue() == NS_STYLE_WIDTH_SHRINK_WRAP));
+          (aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE ||
+           aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT));
 
 }
 
