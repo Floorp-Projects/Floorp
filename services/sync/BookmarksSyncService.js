@@ -1233,13 +1233,18 @@ BookmarksSyncService.prototype = {
           let deltasPut = yield;
           gen.close();
 
+          let c = 0;
+          for (GUID in this._snapshot)
+            c++;
+
           gen = this._dav.PUT("bookmarks-status.json",
                               uneval({GUID: this._snapshotGUID,
                                       formatVersion: STORAGE_FORMAT_VERSION,
                                       snapVersion: server.snapVersion,
                                       maxVersion: this._snapshotVersion,
                                       snapEncryption: server.snapEncryption,
-                                      deltasEncryption: this.encryption}), cont);
+                                      deltasEncryption: this.encryption,
+                                      bookmarksCount: c}), cont);
           let statusPut = yield;
           gen.close();
 
@@ -1546,13 +1551,18 @@ BookmarksSyncService.prototype = {
       gen.close();
       this._checkStatus(resp.status, "Could not upload deltas.");
 
+      let c = 0;
+      for (GUID in this._snapshot)
+        c++;
+
       gen = this._dav.PUT("bookmarks-status.json",
                           uneval({GUID: this._snapshotGUID,
                                   formatVersion: STORAGE_FORMAT_VERSION,
                                   snapVersion: this._snapshotVersion,
                                   maxVersion: this._snapshotVersion,
                                   snapEncryption: this.encryption,
-                                  deltasEncryption: "none"}), cont);
+                                  deltasEncryption: "none",
+                                  bookmarksCount: c}), cont);
       resp = yield;
       gen.close();
       this._checkStatus(resp.status, "Could not upload status file.");
