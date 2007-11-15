@@ -166,8 +166,7 @@ nsHyperTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!aExtraState)
+  if (!mDOMNode || !aExtraState)
     return NS_OK;
 
   nsCOMPtr<nsIEditor> editor;

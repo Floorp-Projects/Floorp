@@ -101,6 +101,9 @@ nsXULTabAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // get focus and disable status from base class
   nsresult rv = nsLeafAccessible::GetState(aState, aExtraState);
+  if (!mDOMNode) {
+    return NS_OK;
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // In the past, tabs have been focusable in classic theme
@@ -254,17 +257,6 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-/** Possible states: normal */
-NS_IMETHODIMP
-nsXULTabBoxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
-{
-  nsresult rv = nsAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
-  return NS_OK;
-}
-
 #ifdef NEVER
 /** 2 children, tabs, tabpanels */
 NS_IMETHODIMP nsXULTabBoxAccessible::GetChildCount(PRInt32 *_retval)
@@ -296,13 +288,6 @@ NS_IMETHODIMP nsXULTabsAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = 0;
   return NS_OK;
-}
-
-/** no state -- normal */
-NS_IMETHODIMP
-nsXULTabsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
-{
-  return nsAccessible::GetState(aState, aExtraState);
 }
 
 /** no value */

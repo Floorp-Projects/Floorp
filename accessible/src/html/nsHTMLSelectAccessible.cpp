@@ -330,6 +330,8 @@ nsHTMLSelectListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsHTMLSelectableAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMHTMLSelectElement> select (do_QueryInterface(mDOMNode));
   if (select) {
@@ -614,9 +616,9 @@ nsHTMLSelectOptionAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Upcall to nsAccessible, but skip nsHyperTextAccessible impl
   // because we don't want EXT_STATE_EDITABLE or EXT_STATE_SELECTABLE_TEXT
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  NS_ENSURE_TRUE(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   PRUint32 selectState, selectExtState;
   nsCOMPtr<nsIContent> selectContent = GetSelectState(&selectState,
@@ -1075,6 +1077,8 @@ nsHTMLComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Get focus status from base class
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   nsIFrame *frame = GetBoundsFrame();
   nsIComboboxControlFrame *comboFrame = nsnull;
@@ -1393,6 +1397,8 @@ nsHTMLComboboxButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState
   // Get focus status from base class
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame = nsnull;
@@ -1450,6 +1456,8 @@ nsHTMLComboboxListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Get focus status from base class
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame = nsnull;

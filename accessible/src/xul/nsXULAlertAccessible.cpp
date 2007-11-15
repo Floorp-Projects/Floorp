@@ -58,9 +58,9 @@ nsXULAlertAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
-  *aState |= nsIAccessibleStates::STATE_ALERT_MEDIUM; // XUL has no markup for low, medium or high
+  if (mDOMNode) {
+    *aState |= nsIAccessibleStates::STATE_ALERT_MEDIUM; // XUL has no markup for low, medium or high
+  }
   return NS_OK;
 }
 

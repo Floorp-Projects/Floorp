@@ -235,6 +235,8 @@ nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // nsAccessible::GetState() always fail for document accessible.
   nsAccessible::GetState(aState, aExtraState);
+  if (!mDOMNode)
+    return NS_OK;
 
 #ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));

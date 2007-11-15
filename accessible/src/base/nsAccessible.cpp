@@ -995,13 +995,15 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = 0;
 
-  if (aExtraState)
-    *aExtraState = 0;
-
-  if (!mDOMNode && aExtraState) {
-    *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+  if (!mDOMNode) {
+    if (aExtraState) {
+      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+    }
     return NS_OK; // Node shut down
   }
+
+  if (aExtraState)
+    *aExtraState = 0;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content) {
