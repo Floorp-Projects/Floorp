@@ -332,7 +332,7 @@ TraceJSObject(PRUint32 aLangID, void *aScriptThing, void *aClosure)
     if(aLangID == nsIProgrammingLanguage::JAVASCRIPT)
     {
         JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
-                       nsXPConnect::GetXPConnect()->GetTraceKind(aScriptThing),
+                       js_GetGCThingTraceKind(aScriptThing),
                        "JSObjectHolder");
     }
 }
