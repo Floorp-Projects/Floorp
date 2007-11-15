@@ -1365,18 +1365,17 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
   if (!mSentry || aOverflowCont != mSentry->GetNextInFlow()) {
     // Not in our list, so we need to add it
     nsPresContext* presContext = aOverflowCont->PresContext();
-    if ((aOverflowCont->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
-        && mParent != aOverflowCont->GetParent()) {
-      // aOverflowCont is in some other frame's overflow container list,
+    if (aOverflowCont->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+      // aOverflowCont is in some other overflow container list,
       // steal it first
+      NS_ASSERTION(!(mOverflowContList &&
+                     mOverflowContList->ContainsFrame(aOverflowCont)),
+                   "overflow containers out of order");
       rv = static_cast<nsContainerFrame*>(aOverflowCont->GetParent())
              ->StealFrame(presContext, aOverflowCont);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-      NS_ASSERTION(!(aOverflowCont->GetStateBits()
-                     & NS_FRAME_IS_OVERFLOW_CONTAINER),
-                   "overflow containers out of order or bad parent");
       aOverflowCont->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
     }
     if (!mOverflowContList) {
