@@ -374,18 +374,16 @@ NS_IMETHODIMP nsMenuBarX::SetParent(nsIWidget *aParent)
 
 NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
 {
-  // if no menus have been added yet, add a menu item as a placeholder for
-  // the application menu (the NSMenu of which gets swapped in on Paint())
-  if (mMenusArray.Count() == 0) {
-    [mRootMenu insertItem:[[[NSMenuItem alloc] initWithTitle:@"AppMenu" action:NULL keyEquivalent:@""] autorelease] atIndex:0];
-    
-    // if we haven't generated an application menu yet, then we can use this
-    // nsIMenu to create one
-    if (!sApplicationMenu) {
-      nsresult rv = NS_OK; // avoid warning about rv being unused
-      rv = CreateApplicationMenu(aMenu);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create Application menu");
-    }
+  // If we haven't created a global Application menu yet, do it.
+  if (!sApplicationMenu) {
+    nsresult rv = NS_OK; // avoid warning about rv being unused
+    rv = CreateApplicationMenu(aMenu);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create Application menu");
+
+    // Hook the new Application menu up to the menu bar.
+    NSMenu* mainMenu = [NSApp mainMenu];
+    NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
+    [[mainMenu itemAtIndex:0] setSubmenu:sApplicationMenu];
   }
 
   // keep track of all added menus
@@ -684,27 +682,22 @@ NS_IMETHODIMP nsMenuBarX::SetNativeData(void* aData)
 
 NS_IMETHODIMP nsMenuBarX::Paint()
 {
-  // swap in the shared Application menu
-  // if application menu hasn't been created, create it.
-  if (sApplicationMenu) {
-    // an NSMenu can't have multiple supermenus, so when we paint a menu bar we unhook the
-    // application menu from its current supermenu and hook it up to this menu bar's
-    // application menu item. This way all changes to the application menu perist across
-    // all instances of nsMenuBarX. We could assume 0 for indexOfItemWithSubmenu, but lets
-    // be safe... If the algorithm for that starts looking at 0 it will still be fast.
-    NSMenu* supermenu = [sApplicationMenu supermenu];
-    if (supermenu) {
-      int supermenuItemIndex = [supermenu indexOfItemWithSubmenu:sApplicationMenu];
-      [[supermenu itemAtIndex:supermenuItemIndex] setSubmenu:nil];
-    }
-    [[mRootMenu itemAtIndex:0] setSubmenu:sApplicationMenu];
-  }
-  
+  NSMenu* mainMenu = [NSApp mainMenu];
+  NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
+
+  // Swap out first item into incoming menu bar. We have to keep the same menu item for the
+  // Application menu and its submenu is global so we keep passing it along.
+  NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];
+  [mainMenu removeItemAtIndex:0];
+  [mRootMenu insertItem:firstMenuItem atIndex:0];
+  [firstMenuItem release];
+
+  // Set menu bar and event target.
   [NSApp setMainMenu:mRootMenu];
   nsMenuBarX::sEventTargetWindow = (NSWindow*)mParent->GetNativeData(NS_NATIVE_WINDOW);
 
   gSomeMenuBarPainted = YES;
-  
+
   return NS_OK;
 }
 
