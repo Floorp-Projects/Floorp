@@ -646,8 +646,10 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
             // nested tables!)
         }
     } else {
-        nscoord large_pct_pref = nscoord(float(nonpct_pref_total) /
-                                         (1.0f - pct_total));
+        nscoord large_pct_pref =
+            (nonpct_pref_total == nscoord_MAX ?
+             nscoord_MAX :
+             nscoord(float(nonpct_pref_total) / (1.0f - pct_total)));
         if (large_pct_pref > pref_pct_expand)
             pref_pct_expand = large_pct_pref;
     }
@@ -782,7 +784,7 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             if (val < min_width)
                 val = min_width;
             guess_min_pct += val;
-            guess_pref += val;
+            guess_pref = NSCoordSaturatingAdd(guess_pref, val);
         } else {
             nscoord pref_width = colFrame->GetPrefCoord();
             if (pref_width == nscoord_MAX) {
