@@ -58,6 +58,8 @@ static const char kSelectPromptURL[] = "chrome://global/content/selectDialog.xul
 static const char kQuestionIconClass[] = "question-icon";
 static const char kAlertIconClass[] = "alert-icon";
 static const char kWarningIconClass[] = "message-icon";
+// We include question-icon for backwards compatibility
+static const char kAuthenticationIconClass[] = "authentication-icon question-icon";
 
 #define kCommonDialogsProperties "chrome://global/locale/commonDialogs.properties"
 
@@ -585,7 +587,7 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
 
   block->SetString(eDialogTitle, dialogTitle);
 
-  NS_ConvertASCIItoUTF16 styleClass(kQuestionIconClass);
+  NS_ConvertASCIItoUTF16 styleClass(kAuthenticationIconClass);
   block->SetString(eIconClass, styleClass.get());
   block->SetInt( eNumberEditfields, 2 );
   if (*username)
@@ -665,7 +667,7 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
   block->SetString(eDialogTitle, dialogTitle);
 
   nsString url;
-  NS_ConvertASCIItoUTF16 styleClass(kQuestionIconClass);
+  NS_ConvertASCIItoUTF16 styleClass(kAuthenticationIconClass);
   block->SetString(eIconClass, styleClass.get());
   block->SetInt(eNumberEditfields, 1);
   block->SetInt(eEditField1Password, 1);
