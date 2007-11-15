@@ -403,16 +403,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     }
     aGtkWidgetType = MOZ_GTK_TREE_HEADER_SORTARROW;
     break;
-  case NS_THEME_TREEVIEW_TWISTY:
-    aGtkWidgetType = MOZ_GTK_EXPANDER;
-    if (aWidgetFlags)
-      *aWidgetFlags = GTK_EXPANDER_COLLAPSED;
-    break;
-  case NS_THEME_TREEVIEW_TWISTY_OPEN:
-    aGtkWidgetType = MOZ_GTK_EXPANDER;
-    if (aWidgetFlags)
-      *aWidgetFlags = GTK_EXPANDER_EXPANDED;
-    break;
   case NS_THEME_DROPDOWN:
     aGtkWidgetType = MOZ_GTK_DROPDOWN;
     break;
@@ -898,16 +888,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     // same as Windows to make our lives easier
     aResult->width = aResult->height = 15;
     break;
-  case NS_THEME_TREEVIEW_TWISTY:
-  case NS_THEME_TREEVIEW_TWISTY_OPEN:
-    {
-      gint expander_size;
-
-      moz_gtk_get_expander_size(&expander_size);
-      aResult->width = aResult->height = expander_size;
-      *aIsOverridable = PR_FALSE;
-    }
-    break;
   }
   return NS_OK;
 }
@@ -1002,12 +982,12 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // case NS_THEME_LISTBOX_LISTITEM:
   case NS_THEME_TREEVIEW:
     // case NS_THEME_TREEVIEW_TREEITEM:
-  case NS_THEME_TREEVIEW_TWISTY:
+    // case NS_THEME_TREEVIEW_TWISTY:
     // case NS_THEME_TREEVIEW_LINE:
     // case NS_THEME_TREEVIEW_HEADER:
   case NS_THEME_TREEVIEW_HEADER_CELL:
   case NS_THEME_TREEVIEW_HEADER_SORTARROW:
-  case NS_THEME_TREEVIEW_TWISTY_OPEN:
+    // case NS_THEME_TREEVIEW_TWISTY_OPEN:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_VERTICAL:

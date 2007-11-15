@@ -81,7 +81,6 @@ static GtkWidget* gCheckMenuItemWidget;
 static GtkWidget* gTreeViewWidget;
 static GtkWidget* gTreeHeaderCellWidget;
 static GtkWidget* gTreeHeaderSortArrowWidget;
-static GtkWidget* gExpanderWidget;
 
 static GtkShadowType gMenuBarShadowType;
 static GtkShadowType gToolbarShadowType;
@@ -377,17 +376,7 @@ ensure_tree_header_cell_widget()
         gTreeHeaderSortArrowWidget = treeViewColumn->arrow;
     }
     return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_expander_widget()
-{
-    if (!gExpanderWidget) {
-        gExpanderWidget = gtk_expander_new("M");
-        setup_widget_prototype(gExpanderWidget);
-    }
-    return MOZ_GTK_SUCCESS;
-}
+} 
 
 static GtkStateType
 ConvertGtkState(GtkWidgetState* state)
@@ -1087,28 +1076,6 @@ moz_gtk_tree_header_sort_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     gTreeHeaderSortArrowWidget, "arrow",  arrow_type, TRUE,
                     arrow_rect.x, arrow_rect.y,
                     arrow_rect.width, arrow_rect.height);
-
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-moz_gtk_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                       GdkRectangle* cliprect, GtkWidgetState* state,
-                       GtkExpanderStyle expander_state)
-{
-    GtkStyle *style;
-    GtkStateType state_type;
-
-    ensure_expander_widget();
-    style = gExpanderWidget->style;
-
-    /* Because the frame we get is of the entire treeview, we can't get the precise
-     * event state of one expander, thus rendering hover and active feedback useless. */
-    state_type = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
-
-    TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_expander(style, drawable, state_type, cliprect, gExpanderWidget, "expander",
-                       rect->x + rect->width / 2, rect->y + rect->height / 2, expander_state);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1856,7 +1823,6 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_GRIPPER:
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_TAB:
-    case MOZ_GTK_EXPANDER:
     /* These widgets have no borders.*/
     case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_WINDOW:
@@ -1890,17 +1856,6 @@ moz_gtk_get_dropdown_arrow_size(gint* width, gint* height)
 
     *height = 2 * (1 + YTHICKNESS(gDropdownButtonWidget->style));
     *height += 11 + GTK_MISC(gArrowWidget)->ypad * 2;
-
-    return MOZ_GTK_SUCCESS;
-}
-
-gint
-moz_gtk_get_expander_size(gint* size)
-{
-    ensure_expander_widget();
-    gtk_widget_style_get(gExpanderWidget,
-                         "expander-size", size,
-                         NULL);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1994,9 +1949,6 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_TREE_HEADER_SORTARROW:
         return moz_gtk_tree_header_sort_arrow_paint(drawable, rect, cliprect, state, (GtkArrowType) flags);
-        break;
-    case MOZ_GTK_EXPANDER:
-        return moz_gtk_expander_paint(drawable, rect, cliprect, state, (GtkExpanderStyle) flags);
         break;
     case MOZ_GTK_ENTRY:
         return moz_gtk_entry_paint(drawable, rect, cliprect, state);
@@ -2108,7 +2060,6 @@ moz_gtk_shutdown()
     gTreeViewWidget = NULL;
     gTreeHeaderCellWidget = NULL;
     gTreeHeaderSortArrowWidget = NULL;
-    gExpanderWidget = NULL;
 
     is_initialized = FALSE;
 
