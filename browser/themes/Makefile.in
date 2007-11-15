@@ -45,12 +45,16 @@ include $(DEPTH)/config/autoconf.mk
 #
 # Theme Selection
 #
-# Windows, GNOME/Linux    Winstripe
+# Windows                 Winstripe
+# GNOME/Linux             Gnomestripe
 # MacOS X                 Pinstripe
 #
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = pinstripe
+endif
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+DIRS = gnomestripe
 else
 DIRS = winstripe
 endif
