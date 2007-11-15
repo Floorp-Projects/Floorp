@@ -3721,6 +3721,19 @@ nsContentUtils::IsNativeAnonymous(nsIContent* aContent)
 }
 
 /* static */
+const nsAdoptingString&
+nsContentUtils::GetLocalizedEllipsis()
+{
+  static nsAdoptingString sEllipsis;
+  if (sEllipsis.IsEmpty()) {
+    sEllipsis = GetLocalizedStringPref("intl.ellipsis");
+    if (sEllipsis.IsEmpty())
+      sEllipsis.Assign(PRUnichar(0x2026));
+  }
+  return sEllipsis;
+}
+
+/* static */
 void
 nsAutoGCRoot::Shutdown()
 {
