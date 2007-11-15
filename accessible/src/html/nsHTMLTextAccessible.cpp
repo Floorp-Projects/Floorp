@@ -77,6 +77,8 @@ nsHTMLTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsTextAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   nsCOMPtr<nsIAccessible> docAccessible = 
     do_QueryInterface(nsCOMPtr<nsIAccessibleDocument>(GetDocAccessible()));
@@ -120,16 +122,6 @@ NS_IMETHODIMP nsHTMLHRAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLHRAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
-{
-  nsresult rv = nsLeafAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
-  return NS_OK;
-}
-
 nsHTMLBRAccessible::nsHTMLBRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsLeafAccessible(aDomNode, aShell)
 { 
@@ -145,6 +137,9 @@ NS_IMETHODIMP
 nsHTMLBRAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = nsIAccessibleStates::STATE_READONLY;
+  if (aExtraState) {
+    *aExtraState = mDOMNode ? 0 : nsIAccessibleStates::EXT_STATE_DEFUNCT;
+  }
   return NS_OK;
 }
 
@@ -188,9 +183,10 @@ nsHTMLLabelAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsTextAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *aState &= (nsIAccessibleStates::STATE_LINKED |
-              nsIAccessibleStates::STATE_TRAVERSED);  // Only use link states
+  if (mDOMNode) {
+    *aState &= (nsIAccessibleStates::STATE_LINKED |
+                nsIAccessibleStates::STATE_TRAVERSED); // Only use link states
+  }
   return NS_OK;
 }
 
