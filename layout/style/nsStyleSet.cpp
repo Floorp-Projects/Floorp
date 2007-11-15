@@ -858,13 +858,15 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
     return;
 
   NS_ASSERTION(mRuleWalker->AtRoot(), "Rule walker should be at root");
-  
-  if (mOldRuleTree)
-    return;
 
+  // Remove style contexts from mRoots even if mOldRuleTree is non-null.  This
+  // could be a style context from the new ruletree!
   if (!aStyleContext->GetParent()) {
     mRoots.RemoveElement(aStyleContext);
   }
+
+  if (mOldRuleTree)
+    return;
 
   if (++mDestroyedCount == kGCInterval) {
     mDestroyedCount = 0;
