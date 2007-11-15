@@ -1,0 +1,328 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4D1684A00830226300080847 /* DefaultPluginPrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = 0F64AF2C0433C8A200A96652 /* DefaultPluginPrefix.h */; };
+		4D1684A20830226300080847 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
+		4D1684A40830226300080847 /* NullPlugin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5E0C34F036A130901A96660 /* NullPlugin.cpp */; };
+		4D1684A50830226300080847 /* npmac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5E0C351036A130E01A96660 /* npmac.cpp */; };
+		4D1684A70830226300080847 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */; };
+		4D1684A80830226300080847 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5A7D3AB036E359F01A96660 /* CoreFoundation.framework */; };
+		4D1684AA0830226300080847 /* NullPlugin.rsrc in Rez */ = {isa = PBXBuildFile; fileRef = F5E0C34D036A12DF01A96660 /* NullPlugin.rsrc */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4D1684AB0830226300080847 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		0F64AF2C0433C8A200A96652 /* DefaultPluginPrefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultPluginPrefix.h; sourceTree = "<group>"; };
+		4D1684AC0830226300080847 /* Info-DefaultPlugin.plist */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Info-DefaultPlugin.plist"; sourceTree = "<group>"; };
+		4D1684AD0830226300080847 /* Default Plugin.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Default Plugin.plugin"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5A7D3AB036E359F01A96660 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		F5E0C34D036A12DF01A96660 /* NullPlugin.rsrc */ = {isa = PBXFileReference; lastKnownFileType = archive.rsrc; path = NullPlugin.rsrc; sourceTree = SOURCE_ROOT; };
+		F5E0C34F036A130901A96660 /* NullPlugin.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = NullPlugin.cpp; sourceTree = SOURCE_ROOT; };
+		F5E0C351036A130E01A96660 /* npmac.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = npmac.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4D1684A60830226300080847 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D1684A70830226300080847 /* Carbon.framework in Frameworks */,
+				4D1684A80830226300080847 /* CoreFoundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		089C166AFE841209C02AAC07 /* MRJPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				08FB77ADFE841716C02AAC07 /* Source */,
+				089C167CFE841241C02AAC07 /* Resources */,
+				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
+				19C28FB4FE9D528D11CA2CBB /* Products */,
+				4D1684AC0830226300080847 /* Info-DefaultPlugin.plist */,
+			);
+			name = MRJPlugin;
+			sourceTree = "<group>";
+		};
+		089C1671FE841209C02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				F5A7D3AB036E359F01A96660 /* CoreFoundation.framework */,
+				08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C167CFE841241C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				089C167DFE841241C02AAC07 /* InfoPlist.strings */,
+				F5E0C34D036A12DF01A96660 /* NullPlugin.rsrc */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77ADFE841716C02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				0F64AF2C0433C8A200A96652 /* DefaultPluginPrefix.h */,
+				F5E0C34F036A130901A96660 /* NullPlugin.cpp */,
+				F5E0C351036A130E01A96660 /* npmac.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		19C28FB4FE9D528D11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4D1684AD0830226300080847 /* Default Plugin.plugin */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		4D16849F0830226300080847 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D1684A00830226300080847 /* DefaultPluginPrefix.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		4D16849D0830226300080847 /* Default Plugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0335A32F0CDD0E2C00E37285 /* Build configuration list for PBXNativeTarget "Default Plugin" */;
+			buildPhases = (
+				4D16849F0830226300080847 /* Headers */,
+				4D1684A10830226300080847 /* Resources */,
+				4D1684A30830226300080847 /* Sources */,
+				4D1684A60830226300080847 /* Frameworks */,
+				4D1684A90830226300080847 /* Rez */,
+				4D1684AB0830226300080847 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Default Plugin";
+			productName = MRJPlugin;
+			productReference = 4D1684AD0830226300080847 /* Default Plugin.plugin */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		089C1669FE841209C02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 0335A3340CDD0E2C00E37285 /* Build configuration list for PBXProject "DefaultPlugin" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 089C166AFE841209C02AAC07 /* MRJPlugin */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4D16849D0830226300080847 /* Default Plugin */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4D1684A10830226300080847 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D1684A20830226300080847 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXRezBuildPhase section */
+		4D1684A90830226300080847 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D1684AA0830226300080847 /* NullPlugin.rsrc in Rez */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4D1684A30830226300080847 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D1684A40830226300080847 /* NullPlugin.cpp in Sources */,
+				4D1684A50830226300080847 /* npmac.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		089C167DFE841241C02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C167EFE841241C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0335A3300CDD0E2C00E37285 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/CoreFoundation.framework\"";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREFIX_HEADER = DefaultPluginPrefix.h;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"XP_MACOSX=1",
+					"NO_X11=1",
+					"USE_SYSTEM_CONSOLE=1",
+				);
+				HEADER_SEARCH_PATHS = (
+					../../../../../dist/sdk/xpcom/include,
+					../../../../../dist/include/caps,
+					../../../../../dist/include/java,
+					../../../../../dist/include/js,
+					../../../../../dist/include/nspr,
+					../../../../../dist/include/nspr/obsolete,
+					../../../../../dist/include/oji,
+					../../../../../dist/include/plugin,
+					../../../../../dist/include/xpcom,
+					../../../../../dist/include/xpconnect,
+					../../../../../dist/include,
+					/Developer/Headers/FlatCarbon,
+				);
+				INFOPLIST_FILE = "Info-DefaultPlugin.plist";
+				LIBRARY_SEARCH_PATHS = /usr/lib;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = "Default Plugin";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = plugin;
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		0335A3310CDD0E2C00E37285 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/CoreFoundation.framework\"";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PREFIX_HEADER = DefaultPluginPrefix.h;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"XP_MACOSX=1",
+					"NO_X11=1",
+					"USE_SYSTEM_CONSOLE=1",
+				);
+				HEADER_SEARCH_PATHS = (
+					../../../../../dist/sdk/xpcom/include,
+					../../../../../dist/include/caps,
+					../../../../../dist/include/java,
+					../../../../../dist/include/js,
+					../../../../../dist/include/nspr,
+					../../../../../dist/include/nspr/obsolete,
+					../../../../../dist/include/oji,
+					../../../../../dist/include/plugin,
+					../../../../../dist/include/xpcom,
+					../../../../../dist/include/xpconnect,
+					../../../../../dist/include,
+					/Developer/Headers/FlatCarbon,
+				);
+				INFOPLIST_FILE = "Info-DefaultPlugin.plist";
+				LIBRARY_SEARCH_PATHS = /usr/lib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = "Default Plugin";
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				WRAPPER_EXTENSION = plugin;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		0335A3350CDD0E2C00E37285 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Development;
+		};
+		0335A3360CDD0E2C00E37285 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Deployment;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0335A32F0CDD0E2C00E37285 /* Build configuration list for PBXNativeTarget "Default Plugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0335A3300CDD0E2C00E37285 /* Development */,
+				0335A3310CDD0E2C00E37285 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		0335A3340CDD0E2C00E37285 /* Build configuration list for PBXProject "DefaultPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0335A3350CDD0E2C00E37285 /* Development */,
+				0335A3360CDD0E2C00E37285 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 089C1669FE841209C02AAC07 /* Project object */;
+}
