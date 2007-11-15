@@ -279,98 +279,39 @@ toolbar:not([iconsize="small"]) .toolbarbutton-1 .toolbarbutton-icon {
 }
 
 #back-button {
-  -moz-image-region: rect(0px 24px 24px 0px); 
-}
-#back-button[buttonover="true"],
-#back-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 24px 48px 0px);
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=toolbar");
 }
 #back-button[disabled="true"] {
-  -moz-image-region: rect(48px 24px 72px 0px);
-}
-#back-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 24px 120px 0px);
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=toolbar&state=disabled");
 }
 
-#back-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px 48px 24px 24px);
-}
-#back-button[chromedir="rtl"][buttonover="true"],
-#back-button[chromedir="rtl"]:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 48px 48px 24px);
-}
-#back-button[chromedir="rtl"][disabled="true"] {
-  -moz-image-region: rect(48px 48px 72px 24px);
-}
-#back-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 48px 120px 24px);
-}
-
+/* GTK takes care of the RTL for us. Yay for libraries! */
 #forward-button {
-  -moz-image-region: rect(0px 48px 24px 24px);
-}
-#forward-button[buttonover="true"],
-#forward-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 48px 48px 24px);
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar");
 }
 #forward-button[disabled="true"] {
-  -moz-image-region: rect(48px 48px 72px 24px);
-}
-#forward-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 48px 120px 24px);
-}
-
-#forward-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px 24px 24px 0px); 
-}
-#forward-button[chromedir="rtl"]:not([disabled="true"]):hover,
-#forward-button[chromedir="rtl"][buttonover="true"] {
-  -moz-image-region: rect(24px 24px 48px 0px);
-}
-#forward-button[chromedir="rtl"][disabled="true"] {
-  -moz-image-region: rect(48px 24px 72px 0px);
-}
-#forward-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 24px 120px 0px);
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar&state=disabled");
 }
 
 #reload-button {
-  -moz-image-region: rect(0px 96px 24px 72px);
-}
-#reload-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 96px 48px 72px);
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=toolbar");
 }
 #reload-button[disabled="true"] {
-  -moz-image-region: rect(48px 96px 72px 72px);
-}
-#reload-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 96px 120px 72px);
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=toolbar&state=disabled");
 }
 
 #stop-button {
-  -moz-image-region: rect(0px 72px 24px 48px);
-}
-#stop-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 72px 48px 48px);
+  list-style-image: url("moz-icon://stock/gtk-stop?size=toolbar");
 }
 #stop-button[disabled="true"] {
-  -moz-image-region: rect(48px 72px 72px 48px);
-}
-#stop-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 72px 120px 48px);
+  list-style-image: url("moz-icon://stock/gtk-stop?size=toolbar&state=disabled");
 }
 
 #home-button {
-  -moz-image-region: rect(0px 120px 24px 96px);
-}
-#home-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 120px 48px 96px);
+  list-style-image: url("moz-icon://stock/gtk-home?size=toolbar");
 }
 #home-button[disabled="true"] {
-  -moz-image-region: rect(48px 120px 72px 96px);
-}
-#home-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 120px 120px 96px);
+  list-style-image: url("moz-icon://stock/gtk-home?size=toolbar&state=disabled");
 }
 
 #downloads-button {
@@ -419,16 +360,10 @@ toolbar:not([iconsize="small"]) .toolbarbutton-1 .toolbarbutton-icon {
 }
 
 #print-button {
-  -moz-image-region: rect(0px 216px 24px 192px);
-}
-#print-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 216px 48px 192px);
+  list-style-image: url("moz-icon://stock/gtk-print?size=toolbar");
 }
 #print-button[disabled="true"] {
-  -moz-image-region: rect(48px 216px 72px 192px);
-}
-#print-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 216px 120px 192px);
+  list-style-image: url("moz-icon://stock/gtk-print?size=toolbar&state=disabled");
 }
 
 toolbar:not([iconsize="small"]) #new-tab-button .toolbarbutton-icon {
@@ -464,42 +399,24 @@ toolbar:not([iconsize="small"]) #new-window-button .toolbarbutton-icon {
 }
 
 #cut-button {
-  -moz-image-region: rect(0px 288px 24px 264px);
-}
-#cut-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 288px 48px 264px);
+  list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar");
 }
 #cut-button[disabled="true"] {
-  -moz-image-region: rect(48px 288px 72px 264px);
-}
-#cut-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 288px 120px 264px);
+  list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar&state=disabled");
 }
 
 #copy-button {
-  -moz-image-region: rect(0px 312px 24px 288px);
-}
-#copy-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 312px 48px 288px);
+  list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar");
 }
 #copy-button[disabled="true"] {
-  -moz-image-region: rect(48px 312px 72px 288px);
-}
-#copy-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 312px 120px 288px);
+  list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar&state=disabled");
 }
 
 #paste-button {
-  -moz-image-region: rect(0px 336px 24px 312px);
-}
-#paste-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px 336px 48px 312px);
+  list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar");
 }
 #paste-button[disabled="true"] {
-  -moz-image-region: rect(48px 336px 72px 312px);
-}
-#paste-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 336px 120px 312px);
+  list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled");
 }
 
 /* 16px primary toolbar buttons */
@@ -521,110 +438,50 @@ toolbar[iconsize="small"] #back-button .toolbarbutton-icon {
   padding-right: 1px;
 }
 toolbar[iconsize="small"] #back-button {
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-toolbar[iconsize="small"] #back-button[buttonover="true"],
-toolbar[iconsize="small"] #back-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 16px 32px 0px);
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=menu");
 }
 toolbar[iconsize="small"] #back-button[disabled="true"] {
-  -moz-image-region: rect(32px 16px 48px 0px);
-}
-toolbar[iconsize="small"] #back-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 16px 80px 0px);
-}
-
-toolbar[iconsize="small"] #back-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-toolbar[iconsize="small"] #back-button[chromedir="rtl"][buttonover="true"],
-toolbar[iconsize="small"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 32px 32px 16px);
-}
-toolbar[iconsize="small"] #back-button[chromedir="rtl"][disabled="true"] {
-  -moz-image-region: rect(32px 32px 48px 16px);
-}
-toolbar[iconsize="small"] #back-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 32px 80px 16px);
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #forward-button .toolbarbutton-icon {
   padding-right: 1px;
 }
 toolbar[iconsize="small"] #forward-button {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-toolbar[iconsize="small"] #forward-button[buttonover="true"],
-toolbar[iconsize="small"] #forward-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 32px 32px 16px);
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=menu");
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"] {
-  -moz-image-region: rect(32px 32px 48px 16px);
-}
-toolbar[iconsize="small"] #forward-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 32px 80px 16px);
-}
-
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"] {
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"][buttonover="true"],
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 16px 32px 0px);
-}
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"][disabled="true"] {
-  -moz-image-region: rect(32px 16px 48px 0px);
-}
-toolbar[iconsize="small"] #forward-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 16px 80px 0px);
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #stop-button .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #stop-button {
-  -moz-image-region: rect(0px 48px 16px 32px);
-}
-toolbar[iconsize="small"] #stop-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 48px 32px 32px);
+  list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
 }
 toolbar[iconsize="small"] #stop-button[disabled="true"] {
-  -moz-image-region: rect(32px 48px 48px 32px);
-}
-toolbar[iconsize="small"] #stop-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 48px 80px 32px);
+  list-style-image: url("moz-icon://stock/gtk-stop?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #reload-button .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #reload-button {
-  -moz-image-region: rect(0px 64px 16px 48px);
-}
-toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 64px 32px 48px);
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 toolbar[iconsize="small"] #reload-button[disabled="true"] {
-  -moz-image-region: rect(32px 64px 48px 48px);
-}
-toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 64px 80px 48px);
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #home-button .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #home-button {
-  -moz-image-region: rect(0px 80px 16px 64px);
-}
-toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 80px 32px 64px);
+  list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
 toolbar[iconsize="small"] #home-button[disabled="true"] {
-  -moz-image-region: rect(32px 80px 48px 64px);
-}
-toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 80px 80px 64px);
+  list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #downloads-button .toolbarbutton-icon {
@@ -685,16 +542,10 @@ toolbar[iconsize="small"] #print-button .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #print-button {
-  -moz-image-region: rect(0px 144px 16px 128px);
-}
-toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 144px 32px 128px);
+  list-style-image: url("moz-icon://stock/gtk-print?size=menu");
 }
 toolbar[iconsize="small"] #print-button[disabled="true"] {
-  -moz-image-region: rect(32px 144px 48px 128px);
-}
-toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 144px 80px 128px);
+  list-style-image: url("moz-icon://stock/gtk-print?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #new-tab-button .toolbarbutton-icon {
@@ -730,48 +581,30 @@ toolbar[iconsize="small"] #cut-button .toolbarbutton-icon {
   padding-right: 1px;
 }
 toolbar[iconsize="small"] #cut-button {
-  -moz-image-region: rect(0px 192px 16px 176px);
-}
-toolbar[iconsize="small"] #cut-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 192px 32px 176px);
+  list-style-image: url("moz-icon://stock/gtk-cut?size=menu");
 }
 toolbar[iconsize="small"] #cut-button[disabled="true"] {
-  -moz-image-region: rect(32px 192px 48px 176px);
-}
-toolbar[iconsize="small"] #cut-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 192px 80px 176px);
+  list-style-image: url("moz-icon://stock/gtk-cut?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #copy-button .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #copy-button {
-  -moz-image-region: rect(0px 208px 16px 192px);
-}
-toolbar[iconsize="small"] #copy-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 208px 32px 192px);
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
 }
 toolbar[iconsize="small"] #copy-button[disabled="true"] {
-  -moz-image-region: rect(32px 208px 48px 192px);
-}
-toolbar[iconsize="small"] #copy-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 208px 80px 192px);
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #paste-button .toolbarbutton-icon {
   padding-left: 1px;
 }
 toolbar[iconsize="small"] #paste-button {
-  -moz-image-region: rect(0px 224px 16px 208px);
-}
-toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(16px 224px 32px 208px);
+  list-style-image: url("moz-icon://stock/gtk-paste?size=menu");
 }
 toolbar[iconsize="small"] #paste-button[disabled="true"] {
-  -moz-image-region: rect(32px 224px 48px 208px);
-}
-toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 224px 80px 208px);
+  list-style-image: url("moz-icon://stock/gtk-paste?size=menu&state=disabled");
 }
 
 /* Fullscreen window controls */
