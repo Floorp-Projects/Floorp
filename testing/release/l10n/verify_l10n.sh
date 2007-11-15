@@ -17,15 +17,19 @@ do
   unpack_build $platform source $release/*.en-US.${platform}.*
   # check for read-only files
   find "./source" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
-  locales=`ls $release/*.${platform}.* | grep -v en-US | cut -d\. -f8`
-  for l in $locales
+
+  for package in `find $release -maxdepth 1 -iname "*.$platform.*" | \
+                  grep -v 'en-US'`
   do
+    # strip the directory portion
+    package=`basename $package`
+    locale=`echo $package | sed -e 's/\.$platform.*//' -e 's/.*\.//'`
     rm -rf target/*
-    unpack_build ${platform} target $release/*.${l}.${platform}.*
+    unpack_build $platform target $release/$package
     # check for read-only files
     find "./target" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
     mkdir -p $release/diffs
-    diff -r source target > $release/diffs/${platform}.${l}.diff
+    diff -r source target > $release/diffs/$platform.$locale.diff
   done
 done
 
