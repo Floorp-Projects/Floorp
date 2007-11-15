@@ -611,8 +611,10 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
         // intrinsic widths.
         float p = colFrame->GetPrefPercent();
         if (p > 0.0f) {
-            nscoord new_small_pct_expand =
-                nscoord(float(colFrame->GetPrefCoord()) / p);
+            nscoord colPref = colFrame->GetPrefCoord();
+            nscoord new_small_pct_expand = 
+                (colPref == nscoord_MAX ?
+                 nscoord_MAX : nscoord(float(colPref) / p));
             if (new_small_pct_expand > max_small_pct_pref) {
                 max_small_pct_pref = new_small_pct_expand;
             }
