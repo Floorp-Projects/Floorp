@@ -740,11 +740,20 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
   }
 
   if (mType == NS_FORM_INPUT_FILE) {
-    if (mFileName) {
-      aValue = *mFileName;
-    }
-    else {
-      aValue.Truncate();
+    if (nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
+      if (mFileName) {
+        aValue = *mFileName;
+      }
+      else {
+        aValue.Truncate();
+      }
+    } else {
+      // Just return the leaf name
+      nsCOMPtr<nsIFile> file;
+      GetFile(getter_AddRefs(file));
+      if (!file || NS_FAILED(file->GetLeafName(aValue))) {
+        aValue.Truncate();
+      }
     }
     
     return NS_OK;
@@ -771,15 +780,7 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
   // OK and gives pages a way to clear a file input if necessary.
   if (mType == NS_FORM_INPUT_FILE) {
     if (!aValue.IsEmpty()) {
-      nsIScriptSecurityManager *securityManager =
-        nsContentUtils::GetSecurityManager();
-
-      PRBool enabled;
-      nsresult rv =
-        securityManager->IsCapabilityEnabled("UniversalFileRead", &enabled);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!enabled) {
+      if (!nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
         // setting the value of a "FILE" input widget requires the
         // UniversalFileRead privilege
         return NS_ERROR_DOM_SECURITY_ERR;
