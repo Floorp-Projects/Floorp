@@ -1716,23 +1716,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   color: #000000;
 }
 
-%ifdef MOZ_WIDGET_GTK2
-#urlbar > .autocomplete-textbox-container {
-  -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
-}
-
-#autocomplete-security-wrapper {
-  -moz-box-align: center;
-}
-
-#urlbar[level="high"] #autocomplete-security-wrapper,
-#urlbar[level="low"] #autocomplete-security-wrapper,
-#urlbar[level="broken"] #autocomplete-security-wrapper {
-  background-color: #F5F6BE; /* #F7F898; */
-  color: #000000;
-}
-%endif
-
 #feed-button, #feed-button > .button-box,
 #feed-button:hover:active > .button-box {
   padding: 0px;
@@ -1838,9 +1821,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #identity-box {
   background-color: -moz-dialog;
-%ifdef MOZ_WIDGET_GTK2
-  -moz-border-end: 1px solid ThreeDShadow;
-%else
   -moz-appearance: toolbox;
   outline: 1px solid ThreeDShadow;
 }
@@ -1851,7 +1831,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #identity-box:hover {
   outline-color: ThreeDDarkShadow;
-%endif
 }
 
 #identity-icon-label {
