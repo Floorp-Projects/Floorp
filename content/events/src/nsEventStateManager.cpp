@@ -2265,10 +2265,12 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nsnull;
 
-  // Most of the events we handle below require a frame.
-  // Add special cases here.
-  if (!mCurrentTarget &&
-      aEvent->message != NS_MOUSE_BUTTON_UP) {
+  // All the events we handle below require a frame.
+  if (!mCurrentTarget) {
+    if (NS_EVENT_NEEDS_FRAME(aEvent)) {
+      NS_ERROR("Null frame for an event that requires a frame");
+      return NS_ERROR_NULL_POINTER;
+    }
     return NS_OK;
   }
 
@@ -2370,22 +2372,9 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       if (!mCurrentTarget) {
         nsIFrame* targ;
         GetEventTarget(&targ);
+        if (!targ) return NS_ERROR_FAILURE;
       }
-      if (mCurrentTarget) {
-        ret = CheckForAndDispatchClick(presContext, (nsMouseEvent*)aEvent, aStatus);
-      }
-      if (aView) {
-        // Make sure viewmanager doesn't continue capturing mouse events.
-        nsIViewManager* viewMan = aView->GetViewManager();
-        if (viewMan) {
-          nsIView* grabbingView;
-          viewMan->GetMouseEventGrabber(grabbingView);
-          if (grabbingView == aView) {
-            PRBool result;
-            viewMan->GrabMouseEvents(nsnull, result);
-          }
-        }
-      }
+      ret = CheckForAndDispatchClick(presContext, (nsMouseEvent*)aEvent, aStatus);
       nsIPresShell *shell = presContext->GetPresShell();
       if (shell) {
         shell->FrameSelection()->SetMouseDownState(PR_FALSE);
