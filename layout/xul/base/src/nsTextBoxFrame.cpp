@@ -77,6 +77,9 @@
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
 
+// horizontal ellipsis (U+2026)
+#define ELLIPSIS PRUnichar(0x2026)
+
 #define CROP_LEFT   "left"
 #define CROP_RIGHT  "right"
 #define CROP_CENTER "center"
@@ -624,15 +627,14 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
         return;  // fits, done.
     }
 
-    const nsAdoptingString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
     // start with an ellipsis
-    mCroppedTitle.Assign(kEllipsis);
+    mCroppedTitle.Assign(ELLIPSIS);
 
     // see if the width is even smaller than the ellipsis
     // if so, clear the text (XXX set as many '.' as we can?).
     nscoord ellipsisWidth;
     aRenderingContext.SetTextRunRTL(PR_FALSE);
-    aRenderingContext.GetWidth(kEllipsis, ellipsisWidth);
+    aRenderingContext.GetWidth(ELLIPSIS, ellipsisWidth);
 
     if (ellipsisWidth > aWidth) {
         mCroppedTitle.SetLength(0);
@@ -771,7 +773,11 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                 rightPos--;
             }
 
-            mCroppedTitle = leftString + kEllipsis + rightString;
+            // form the new cropped string
+            nsAutoString ellipsisString;
+            ellipsisString.Assign(ELLIPSIS);
+
+            mCroppedTitle = leftString + ellipsisString + rightString;
         }
         break;
     }
@@ -779,8 +785,6 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     mTitleWidth = nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
                                                 mCroppedTitle.get(), mCroppedTitle.Length());
 }
-
-#define OLD_ELLIPSIS NS_LITERAL_STRING("...")
 
 // the following block is to append the accesskey to mTitle if there is an accesskey
 // but the mTitle doesn't have the character
@@ -815,19 +819,7 @@ nsTextBoxFrame::UpdateAccessTitle()
         return;
     }
 
-    const nsAdoptingString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
-    PRInt32 offset = mTitle.RFind(kEllipsis);
-    if (offset == kNotFound) {
-        // Try to check with our old ellipsis (for old addons)
-        if (!kEllipsis.Equals(OLD_ELLIPSIS))
-            offset = mTitle.RFind(OLD_ELLIPSIS);
-        if (offset == kNotFound) {
-            // Try to check with our default ellipsis (for non-localized addons)
-            nsAutoString defaultEllipsis(PRUnichar(0x2026));
-            if (!kEllipsis.Equals(defaultEllipsis))
-                offset = mTitle.RFind(defaultEllipsis);
-        }
-    }
+    PRInt32 offset = mTitle.RFind("...");
     if (offset == kNotFound) {
         offset = (PRInt32)mTitle.Length();
         if (mTitle.Last() == PRUnichar(':'))
