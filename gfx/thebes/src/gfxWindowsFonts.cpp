@@ -551,7 +551,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     //    NS_ASSERTION(!(mFlags & TEXT_NEED_BOUNDING_BOX),
     //                 "Glyph extents not yet supported");
 
-    gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
     NS_ASSERTION(aParams->mContext, "MakeTextRun called without a gfxContext");
@@ -580,7 +580,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
 {
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
  
-    gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
     NS_ASSERTION(aParams->mContext, "MakeTextRun called without a gfxContext");
