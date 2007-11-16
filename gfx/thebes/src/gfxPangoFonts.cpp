@@ -574,7 +574,7 @@ gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
-    gfxTextRun *run = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!run)
         return nsnull;
 
@@ -615,7 +615,7 @@ gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
-    gfxTextRun *run = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!run)
         return nsnull;
 
