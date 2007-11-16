@@ -4489,6 +4489,19 @@ private:
   PRPackedBool                mHaveWordBreak;
 };
 
+static PRBool
+IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter, gfxTextRun* aTextRun,
+                          nsIFrame* aFrame)
+{
+  if (aIter.IsOriginalCharSkipped())
+    return PR_FALSE;
+  PRUint32 index = aIter.GetSkippedOffset();
+  if (!aTextRun->IsClusterStart(index))
+    return PR_FALSE;
+  return !(aFrame->GetStyleText()->WhiteSpaceIsSignificant() &&
+           aTextRun->GetChar(index) == '\n');
+}
+
 PRBool
 nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
 {
@@ -4515,8 +4528,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
     for (i = PR_MIN(trimmed.GetEnd(), startOffset) - 1;
          i >= trimmed.mStart; --i) {
       iter.SetOriginalOffset(i);
-      if (!iter.IsOriginalCharSkipped() &&
-          mTextRun->IsClusterStart(iter.GetSkippedOffset())) {
+      if (IsAcceptableCaretPosition(iter, mTextRun, this)) {
         *aOffset = i - mContentOffset;
         return PR_TRUE;
       }
@@ -4530,8 +4542,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
       // but we really have no choice right now. We need to do a deeper
       // fix/restructuring of PeekOffsetCharacter
       if (i == trimmed.GetEnd() ||
-          (!iter.IsOriginalCharSkipped() &&
-           mTextRun->IsClusterStart(iter.GetSkippedOffset()))) {
+          IsAcceptableCaretPosition(iter, mTextRun, this)) {
         *aOffset = i - mContentOffset;
         return PR_TRUE;
       }
