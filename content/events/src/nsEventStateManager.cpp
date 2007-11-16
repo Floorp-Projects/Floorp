@@ -2951,6 +2951,13 @@ nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto)
     return;
 
   if (mLastMouseOverFrame) {
+    if (nsContentUtils::GetTopLevelWidget(aEvent->widget) !=
+        nsContentUtils::GetTopLevelWidget(mLastMouseOverFrame->GetWindow())) {
+      // the MouseOut event widget doesn't have same top widget with
+      // mLastMouseOverFrame, it's a spurious event for mLastMouseOverFrame
+      return;
+    }
+
     // if the frame is associated with a subdocument,
     // tell the subdocument that we're moving out of it
     nsIFrameFrame* subdocFrame;
