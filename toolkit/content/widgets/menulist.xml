@@ -36,9 +36,18 @@
         ]]>
       </handler>
 
-      <handler event="keypress">
+      <handler event="keypress" modifiers="shift any">
         <![CDATA[
-          if (event.originalTarget == this) {
+          if (event.originalTarget == this && 
+              (event.keyCode == KeyEvent.DOM_VK_UP ||
+               event.keyCode == KeyEvent.DOM_VK_DOWN ||
+               event.keyCode == KeyEvent.DOM_VK_PAGE_UP ||
+               event.keyCode == KeyEvent.DOM_VK_PAGE_DOWN ||
+               event.keyCode == KeyEvent.DOM_VK_HOME ||
+               event.keyCode == KeyEvent.DOM_VK_END ||
+               event.keyCode == KeyEvent.DOM_VK_BACK_SPACE ||
+               event.charCode > 0)) {
+            // Moving relative to an item: start from the currently selected item
             this.menuBoxObject.activeChild = this.mSelectedInternal;
             if (this.menuBoxObject.handleKeyPress(event))
               this.menuBoxObject.activeChild.doCommand();
