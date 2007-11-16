@@ -50,7 +50,7 @@ interface imgIEncoder : nsIInputStream
   //
   // PNG:
   // ----
-  // usetransparency=[yes|no|none]  --  default: "yes"
+  // transparency=[yes|no|none]  --  default: "yes"
   //     Overrides default from input format. "no" and "none" are equivalent.
   //
   //
@@ -58,7 +58,7 @@ interface imgIEncoder : nsIInputStream
   // -----
   // The following options can be used with startImageEncode():
   //
-  // usetransparency=[yes|no|none]  --  default: "yes"
+  // transparency=[yes|no|none]  --  default: "yes"
   //     Overrides default from input format. "no" and "none" are equivalent.
   // skipfirstframe=[yes|no]  --  default: "no"
   //     Controls display of the first frame in animations. PNG-only clients always
@@ -72,7 +72,7 @@ interface imgIEncoder : nsIInputStream
   //
   // The following options can be used for each frame, with addImageFrame():
   //
-  // usetransparency=[yes|no|none]  --  default: "yes"
+  // transparency=[yes|no|none]  --  default: "yes"
   //     Overrides default from input format. "no" and "none" are equivalent.
   // delay=#  --  default: "500"
   //     Number of milliseconds to display the frame, before moving to the next frame.
