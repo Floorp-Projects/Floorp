@@ -81,7 +81,6 @@ nsScrollPortView::nsScrollPortView(nsViewManager* aViewManager)
   : nsView(aViewManager)
 {
   mOffsetX = mOffsetY = 0;
-  mOffsetXpx = mOffsetYpx = 0;
   nsCOMPtr<nsIDeviceContext> dev;
   mViewManager->GetDeviceContext(*getter_AddRefs(dev));
   mLineHeight = dev->AppUnitsPerInch() / 6; // 12 pt
@@ -617,12 +616,11 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aU
     return rv;
   }
   
-  // convert aX and aY in pixels
-  nscoord aXpx = NSAppUnitsToIntPixels(aX, p2a);
-  nscoord aYpx = NSAppUnitsToIntPixels(aY, p2a);
+  PRInt32 xPixels = NSAppUnitsToIntPixels(aX, p2a);
+  PRInt32 yPixels = NSAppUnitsToIntPixels(aY, p2a);
   
-  aX = NSIntPixelsToAppUnits(aXpx, p2a);
-  aY = NSIntPixelsToAppUnits(aYpx, p2a);
+  aX = NSIntPixelsToAppUnits(xPixels, p2a);
+  aY = NSIntPixelsToAppUnits(yPixels, p2a);
   
   // do nothing if the we aren't scrolling.
   // this needs to be rechecked because of the clamping and
@@ -632,8 +630,8 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aU
   }
 
   // figure out the diff by comparing old pos to new
-  dxPx = mOffsetXpx - aXpx;
-  dyPx = mOffsetYpx - aYpx;
+  dxPx = NSAppUnitsToIntPixels(mOffsetX, p2a) - xPixels;
+  dyPx = NSAppUnitsToIntPixels(mOffsetY, p2a) - yPixels;
 
   // notify the listeners.
   PRUint32 listenerCount;
@@ -657,11 +655,6 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aU
   // Note that child widgets may be scrolled by the native widget scrolling,
   // so don't update their positions
   scrolledView->SetPositionIgnoringChildWidgets(-aX, -aY);
-      
-  // store old position in pixels. We need to do this to make sure there is no
-  // round off errors. This could cause weird scrolling.
-  mOffsetXpx = aXpx;
-  mOffsetYpx = aYpx;
       
   nsPoint twipsDelta(aX - mOffsetX, aY - mOffsetY);
 
