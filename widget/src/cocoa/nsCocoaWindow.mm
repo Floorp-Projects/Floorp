@@ -1158,21 +1158,17 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
     if (!sApplicationMenu)
       return;
 
-    // create a new menu bar with one item
-    NSMenu* newMenuBar = [[NSMenu alloc] init];
-    NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    [newMenuBar addItem:newMenuItem];
-    [newMenuItem release];
+    NSMenu* mainMenu = [NSApp mainMenu];
+    NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
 
-    // Attach application menu as submenu for our one menu item. If the application
-    // menu has a supermenu, we need to disconnect it from its parent before hooking
-    // it up to the new menu bar
-    NSMenu* appMenuSupermenu = [sApplicationMenu supermenu];
-    if (appMenuSupermenu) {
-      int appMenuItemIndex = [appMenuSupermenu indexOfItemWithSubmenu:sApplicationMenu];
-      [[appMenuSupermenu itemAtIndex:appMenuItemIndex] setSubmenu:nil];
-    }
-    [newMenuItem setSubmenu:sApplicationMenu];
+    // create a new menu bar
+    NSMenu* newMenuBar = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
+
+    // move the application menu from the existing menu bar to the new one
+    NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];
+    [mainMenu removeItemAtIndex:0];
+    [newMenuBar insertItem:firstMenuItem atIndex:0];
+    [firstMenuItem release];
 
     // set our new menu bar as the main menu
     [NSApp setMainMenu:newMenuBar];
