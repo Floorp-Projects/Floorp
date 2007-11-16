@@ -92,6 +92,7 @@ class nsIPref;
 class nsVoidArray;
 struct JSRuntime;
 class nsICaseConversion;
+class nsIWidget;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -1115,6 +1116,10 @@ public:
    */
   static PRBool IsNativeAnonymous(nsIContent* aContent);
 
+  /**
+   * Return top-level widget in the parent chain.
+   */
+  static nsIWidget* GetTopLevelWidget(nsIWidget* aWidget);
 
 private:
 
