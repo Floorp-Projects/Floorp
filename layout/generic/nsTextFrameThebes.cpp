@@ -5358,6 +5358,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   gfxFloat trimmableWidth = 0;
+  PRBool brokeText = forceBreak >= 0 || transformedCharsFit < transformedLength;
   if (canTrimTrailingWhitespace) {
     // Optimization: if we trimmed trailing whitespace, and we can be sure
     // this frame will be at the end of the line, then leave it trimmed off.
@@ -5365,7 +5366,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     // the line. (If we actually do end up at the end of the line, we'll have
     // to trim it off again in TrimTrailingWhiteSpace, and we'd like to avoid
     // having to re-do it.)
-    if (forceBreak >= 0 || transformedCharsFit < transformedLength) {
+    if (brokeText) {
       // We're definitely going to break so our trailing whitespace should
       // definitely be timmed. Record that we've already done it.
       AddStateBits(TEXT_TRIMMED_TRAILING_WHITESPACE);
@@ -5381,17 +5382,19 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
         // right by trimmdWidth
         textMetrics.mBoundingBox.MoveBy(gfxPoint(trimmedWidth, 0));
       }
-
-      // Since everything fit and no break was forced,
-      // record the last break opportunity
-      if (lastBreak >= 0) {
-        lineLayout.NotifyOptionalBreakPosition(mContent, lastBreak,
-            textMetrics.mAdvanceWidth <= aReflowState.availableWidth);
-      }
     }
   }
+
+  if (!brokeText && lastBreak >= 0) {
+    // Since everything fit and no break was forced,
+    // record the last break opportunity
+    NS_ASSERTION(textMetrics.mAdvanceWidth - trimmableWidth <= aReflowState.availableWidth,
+                 "If the text doesn't fit, and we have a break opportunity, why didn't MeasureText use it?");
+    lineLayout.NotifyOptionalBreakPosition(mContent, lastBreak, PR_TRUE);
+  }
+
   PRInt32 contentLength = offset + charsFit - GetContentOffset();
-  
+
   /////////////////////////////////////////////////////////////////////
   // Compute output metrics
   /////////////////////////////////////////////////////////////////////
