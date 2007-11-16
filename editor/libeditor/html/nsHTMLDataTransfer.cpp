@@ -2636,7 +2636,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
                                      nsCOMPtr<nsIDOMNode> *outNode)
 {
   // figure out if we are parsing full context or not
-  PRBool bContext = !aTagStack.IsEmpty();
+  PRBool bContext = aTagStack.IsEmpty();
 
   // create the parser to do the conversion.
   nsresult res;
