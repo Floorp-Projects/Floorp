@@ -161,15 +161,14 @@ nsSHEntry::~nsSHEntry()
     viewer->Destroy();
   }
 
+#ifdef DEBUG
+  // This is not happening as far as I can tell from breakpad as of early November 2007
   nsExpirationTracker<nsSHEntry,3>::Iterator iterator(gHistoryTracker);
   nsSHEntry* elem;
   while ((elem = iterator.Next()) != nsnull) {
     NS_ASSERTION(elem != this, "Found dead entry still in the tracker!");
-    if (elem == this) {
-      // CRASH NOW (not later)
-      *(int*)0 = 0;
-    }
   }
+#endif
 }
 
 //*****************************************************************************
@@ -228,19 +227,14 @@ nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
 {
   NS_PRECONDITION(!aViewer || !mContentViewer, "SHEntry already contains viewer");
 
-  if (!aViewer) {
+  if (mContentViewer || !aViewer) {
     DropPresentationState();
   }
 
   mContentViewer = aViewer;
 
   if (mContentViewer) {
-    if (mExpirationState.IsTracked()) {
-      NS_ERROR("This object should not already be in the tracker!!!");
-      *(int*)0 = 0; // CRASH, take this out before we release for real!
-    } else {
-      gHistoryTracker->AddObject(this);
-    }
+    gHistoryTracker->AddObject(this);
 
     nsCOMPtr<nsIDOMDocument> domDoc;
     mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
