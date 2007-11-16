@@ -1215,7 +1215,7 @@ nsPresContext::SetContainer(nsISupports* aHandler)
 }
 
 already_AddRefed<nsISupports>
-nsPresContext::GetContainerInternal()
+nsPresContext::GetContainerInternal() const
 {
   nsISupports *result = nsnull;
   if (mContainer)
@@ -1225,7 +1225,7 @@ nsPresContext::GetContainerInternal()
 }
 
 already_AddRefed<nsISupports>
-nsPresContext::GetContainerExternal()
+nsPresContext::GetContainerExternal() const
 {
   return GetContainerInternal();
 }
@@ -1462,7 +1462,7 @@ nsPresContext::CountReflows(const char * aName, nsIFrame * aFrame)
 #endif
 
 PRBool
-nsPresContext::IsChrome()
+nsPresContext::IsChrome() const
 {
   PRBool isChrome = PR_FALSE;
   nsCOMPtr<nsISupports> container = GetContainer();
