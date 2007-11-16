@@ -216,7 +216,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null &&
-        aData->mPresContext->UseDocumentColors) {
+        aData->mPresContext->UseDocumentColors()) {
       // color: color
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
       nscolor color;
