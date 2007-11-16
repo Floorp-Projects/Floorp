@@ -603,13 +603,8 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsFileControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
-  // Accessible object exists just to hold onto its children, for later shutdown
-  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
-  if (accService) {
-    return accService->CreateHTMLGenericAccessible(static_cast<nsIFrame*>(this), aAccessible);
-  }
-
+  // No accessible object for file control, only for child text frame and button
+  *aAccessible = nsnull;
   return NS_ERROR_FAILURE;
 }
 #endif

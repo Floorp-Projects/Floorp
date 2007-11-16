@@ -175,29 +175,12 @@ NS_IMETHODIMP nsAccessNode::Init()
       return NS_ERROR_FAILURE;
     }
   }
-
   void* uniqueID;
   GetUniqueID(&uniqueID);
   nsCOMPtr<nsPIAccessibleDocument> privateDocAccessible =
     do_QueryInterface(docAccessible);
   NS_ASSERTION(privateDocAccessible, "No private docaccessible for docaccessible");
   privateDocAccessible->CacheAccessNode(uniqueID, this);
-
-  // Make sure an ancestor in real content is cached
-  // so that nsDocAccessible::RefreshNodes() can find the anonymous subtree to release when
-  // the root node goes away
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  if (content && (content->IsNativeAnonymous() ||
-                  content->GetBindingParent())) {
-    // Specific examples of where this is used: <input type="file"> and <xul:findbar>
-    nsCOMPtr<nsIAccessible> parentAccessible;
-    docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, getter_AddRefs(parentAccessible));
-    if (parentAccessible) {
-      PRInt32 childCountUnused;
-      parentAccessible->GetChildCount(&childCountUnused);
-    }
-  }
-
 #ifdef DEBUG_A11Y
   mIsInitialized = PR_TRUE;
 #endif
