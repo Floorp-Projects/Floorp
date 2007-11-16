@@ -56,6 +56,9 @@ var start_time;
 var cycle;
 var report;
 var renderReport;
+var noisy = false;
+var timeout = -1;
+var timeoutEvent = -1;
 var running = false;
 
 var content;
@@ -88,6 +91,8 @@ function plInit() {
     if (args.width) winWidth = parseInt(args.width);
     if (args.height) winHeight = parseInt(args.height);
     if (args.filter) pageFilterRegexp = new RegExp(args.filter);
+    if (args.noisy) noisy = true;
+    if (args.timeout) timeout = parseInt(args.timeout);
     doRenderTest = args.doRender;
 
     gIOS = Cc["@mozilla.org/network/io-service;1"]
@@ -199,8 +204,17 @@ function plLoadPage() {
     };
   }
 
+  if (timeout > 0) {
+    timeoutEvent = setTimeout('loadFail()', timeout);
+  } 
   start_time = Date.now();
   content.loadURI(pageName);
+}
+
+function loadFail() {
+  var pageName = pages[pageIndex].url.spec;
+  dumpLine("__FAILTimeout exceeded on " + pageName + "__FAIL")
+  plStop(true);
 }
 
 function plNextPage() {
@@ -216,6 +230,9 @@ function plNextPage() {
 function plRecordTime(time) {
   var pageName = pages[pageIndex].url.spec;
   report.recordTime(pageIndex, time);
+  if (noisy) {
+    dumpLine("Cycle " + (cycle+1) + ": loaded " + pageName);
+  }
 }
 
 function plLoadHandlerCapturing(evt) {
@@ -223,6 +240,9 @@ function plLoadHandlerCapturing(evt) {
   if (evt.type != 'load' ||
        evt.originalTarget.defaultView.frameElement)
       return;
+  if (timeout > 0) { 
+    clearTimeout(timeoutEvent);
+  }
 
   if (!(plPageFlags() & TEST_DOES_OWN_TIMING)) {
     dumpLine("tp: Capturing onload handler used with page that doesn't do its own timing?");
@@ -242,7 +262,9 @@ function plLoadHandler(evt) {
   if (evt.type != 'load' ||
        evt.originalTarget.defaultView.frameElement)
       return;
-
+  if (timeout > 0) { 
+    clearTimeout(timeoutEvent);
+  }
   var end_time = Date.now();
   var time = (end_time - start_time);
 
