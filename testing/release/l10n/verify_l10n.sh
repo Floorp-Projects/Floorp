@@ -24,7 +24,7 @@ do
     # strip the directory portion
     package=`basename $package`
     # this cannot be named $locale, because unpack_build will overwrite it
-    $l=`echo $package | sed -e "s/\.${platform}.*//" -e 's/.*\.//'`
+    l=`echo $package | sed -e "s/\.${platform}.*//" -e 's/.*\.//'`
     rm -rf target/*
     unpack_build $platform target $release/$package
     # check for read-only files
