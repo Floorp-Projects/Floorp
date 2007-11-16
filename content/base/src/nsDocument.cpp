@@ -2624,6 +2624,14 @@ nsDocument::GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const
 
   nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
     do_QueryReferent(mScriptObject);
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(scriptHandlingObject);
+  if (win) {
+    nsPIDOMWindow* outer = win->GetOuterWindow();
+    if (!outer || outer->GetCurrentInnerWindow() != win) {
+      NS_WARNING("Wrong inner/outer window combination!");
+      return nsnull;
+    }
+  }
   return scriptHandlingObject;
 }
 void
