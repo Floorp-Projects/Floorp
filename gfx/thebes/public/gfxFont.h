@@ -670,6 +670,8 @@ public:
  */
 class THEBES_API gfxTextRun {
 public:
+    // Override operator delete because we used custom allocation
+    void operator delete(void* aPtr);
     virtual ~gfxTextRun();
 
     typedef gfxFont::RunMetrics Metrics;
@@ -947,12 +949,10 @@ public:
     PRUint32 GetHashCode() const { return mHashCode; }
     void SetHashCode(PRUint32 aHash) { mHashCode = aHash; }
 
-    // The caller is responsible for initializing our glyphs after construction.
-    // Initially all glyphs are such that GetCharacterGlyphs()[i].IsMissing() is true.
-    // If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
-    // textrun will copy it.
-    gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-    		       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
+    // Call this, don't call "new gfxTextRun" directly. This does custom
+    // allocation and initialization
+    static gfxTextRun *Create(const gfxTextRunFactory::Parameters *aParams,
+        const void *aText, PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
     // Clone this textrun, according to the given parameters. This textrun's
     // glyph data is copied, so the text and length must be the same as this
@@ -1251,6 +1251,20 @@ public:
     PRUint32 mCachedWords;
 #endif
 
+protected:
+    // Allocates extra space for the CompressedGlyph array and the text
+    // (if needed)
+    void *operator new(size_t aSize, PRUint32 aLength, PRUint32 aFlags);
+
+    /**
+     * Initializes the textrun to blank.
+     * @param aObjectSize the size of the object; this lets us fine
+     * where our CompressedGlyph array and string have been allocated
+     */
+    gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+               PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags,
+               PRUint32 aObjectSize);
+
 private:
     // **** general helpers **** 
 
@@ -1303,15 +1317,19 @@ private:
                     PropertyProvider *aProvider,
                     PRUint32 aSpacingStart, PRUint32 aSpacingEnd);
 
-    // All our glyph data is in logical order, not visual
-    nsAutoArrayPtr<CompressedGlyph>                mCharacterGlyphs;
+    // All our glyph data is in logical order, not visual.
+    // mCharacterGlyphs is allocated fused with this object. We need a pointer
+    // to it because gfxTextRun subclasses exist with extra fields, so we don't
+    // know where it starts without a virtual method call or an explicit pointer.
+    CompressedGlyph*                               mCharacterGlyphs;
     nsAutoArrayPtr<nsAutoArrayPtr<DetailedGlyph> > mDetailedGlyphs; // only non-null if needed
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case
     nsAutoTArray<GlyphRun,1>                       mGlyphRuns;
     // When TEXT_IS_8BIT is set, we use mSingle, otherwise we use mDouble.
     // When TEXT_IS_PERSISTENT is set, we don't own the text, otherwise we
-    // own the text and should delete it when we go away.
+    // own the text. When we own the text, it's allocated fused with this
+    // object, so it need not be deleted.
     // This text is not null-terminated.
     union {
         const PRUint8   *mSingle;

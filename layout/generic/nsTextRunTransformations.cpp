@@ -48,6 +48,19 @@
 
 #define SZLIG 0x00DF
 
+nsTransformedTextRun *
+nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
+                             nsTransformingTextRunFactory* aFactory,
+                             gfxFontGroup* aFontGroup,
+                             const PRUnichar* aString, PRUint32 aLength,
+                             const PRUint32 aFlags, nsStyleContext** aStyles,
+                             PRBool aOwnsFactory)
+{
+  return new (aLength, aFlags)
+    nsTransformedTextRun(aParams, aFactory, aFontGroup, aString, aLength,
+                         aFlags, aStyles, aOwnsFactory);
+}
+
 void
 nsTransformedTextRun::SetCapitalization(PRUint32 aStart, PRUint32 aLength,
                                         PRPackedBool* aCapitalization,
@@ -132,8 +145,8 @@ nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, PRUint32 aLe
                                           nsStyleContext** aStyles, PRBool aOwnsFactory)
 {
   nsTransformedTextRun* textRun =
-    new nsTransformedTextRun(aParams, this, aFontGroup,
-                             aString, aLength, aFlags, aStyles, aOwnsFactory);
+    nsTransformedTextRun::Create(aParams, this, aFontGroup,
+                                 aString, aLength, aFlags, aStyles, aOwnsFactory);
   if (!textRun)
     return nsnull;
 

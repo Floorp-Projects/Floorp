@@ -580,7 +580,7 @@ gfxTextRun *
 gfxAtsuiFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
-    gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
 
@@ -621,7 +621,7 @@ gfxAtsuiFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
-    gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
 
