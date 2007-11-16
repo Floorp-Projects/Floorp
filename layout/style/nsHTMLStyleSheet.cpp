@@ -76,8 +76,9 @@ NS_IMETHODIMP
 nsHTMLStyleSheet::HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
-    if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null)
-      aRuleData->mColorData->mColor = nsCSSValue(mColor);
+    if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null &&
+        aRuleData->mPresContext->UseDocumentColors())
+      aRuleData->mColorData->mColor.SetColorValue(mColor);
   }
   return NS_OK;
 }
