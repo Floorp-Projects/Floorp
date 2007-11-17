@@ -221,7 +221,7 @@ fails == 352980-1h.html 352980-1-ref.html
 == 352980-3d.html 352980-3-ref.html
 == 352980-3e.html 352980-3-ref.html
 == 352980-3f.html 352980-3-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 359903-1.html 359903-1-ref.html # bug 381835
+== 359903-1.html 359903-1-ref.html
 == 359869-1.html 359869-1-ref.html
 == 359903-2.html 359903-2-ref.html
 == 360065-1.html 360065-1-ref.html
