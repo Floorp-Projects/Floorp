@@ -89,7 +89,6 @@ nsCookie::Create(const nsACString &aName,
                  const nsACString &aHost,
                  const nsACString &aPath,
                  PRInt64           aExpiry,
-                 PRInt64           aLastAccessed,
                  PRInt64           aCreationID,
                  PRBool            aIsSession,
                  PRBool            aIsSecure,
@@ -120,7 +119,7 @@ nsCookie::Create(const nsACString &aName,
 
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
-                              aExpiry, aLastAccessed, aCreationID,
+                              aExpiry, aCreationID,
                               aIsSession, aIsSecure, aIsHttpOnly);
 }
 
