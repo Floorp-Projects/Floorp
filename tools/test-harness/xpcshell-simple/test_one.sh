@@ -45,7 +45,7 @@
 ulimit -c 20480 2> /dev/null
 
 # Make assertions fatal
-export XPCOM_DEBUG_BREAK=abort
+export XPCOM_DEBUG_BREAK=stack-and-abort
 
 exit_status=0
 
@@ -118,7 +118,9 @@ done
 echo "NATIVE_TOPSRCDIR='$native_topsrcdir' TOPSRCDIR='$topsrcdir' $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles 2>&1"
 echo -n "$target_js: "
 NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles -i 2>&1
-if [ `grep -c '\*\*\* PASS' $testdir/unit/$target_js.log` = 0 ]
+rv="$?"
+if [ ! "$rv" = "0"  -o \
+     `grep -c '\*\*\* PASS' $testdir/unit/$target_js.log` = 0 ]
 then
     echo "FAIL"
     echo "$target_js.log:"
