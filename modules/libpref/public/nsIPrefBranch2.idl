@@ -93,6 +93,21 @@ interface nsIPrefBranch2 : nsIPrefBranch
    *    registered. This insures that shorter lived objects (say one tied to an
    *    open window) will not fall into the cyclical reference trap.
    *
+   * @note
+   * The list of registered observers may be changed during the dispatch of
+   * nsPref:changed notification. However, the observers are not guaranteed
+   * to be notified in any particular order, so you can't be sure whether the
+   * added/removed observer will be called during the notification when it
+   * is added/removed.
+   *
+   * @note
+   * It is possible to change preferences during the notification.
+   *
+   * @note
+   * It is not safe to change observers during this callback in Gecko 
+   * releases before 1.9. If you want a safe way to remove a pref observer,
+   * please use an nsITimer.
+   *
    * @see nsIObserver
    * @see removeObserver
    */
