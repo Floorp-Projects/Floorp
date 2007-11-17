@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>bug335238_1@tests.mozilla.org</em:id>
+    <em:version>1.3.4</em:version>
+    
+    <em:targetApplication>
+      <Description>
+        <em:id>xpcshell@tests.mozilla.org</em:id>
+        <em:minVersion>1</em:minVersion>
+        <em:maxVersion>5</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <em:name>Bug 335238</em:name>
+    <em:updateURL>http://localhost:4444/0?id=%ITEM_ID%&amp;version=%ITEM_VERSION%&amp;maxAppVersion=%ITEM_MAXAPPVERSION%&amp;status=%ITEM_STATUS%&amp;appId=%APP_ID%&amp;appVersion=%APP_VERSION%&amp;appOs=%APP_OS%&amp;appAbi=%APP_ABI%&amp;locale=%APP_LOCALE%&amp;reqVersion=%REQ_VERSION%</em:updateURL>
+    
+  </Description>      
+</RDF>
