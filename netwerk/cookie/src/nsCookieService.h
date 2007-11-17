@@ -173,7 +173,6 @@ class nsCookieService : public nsICookieService
     void                          AddInternal(nsCookie *aCookie, PRInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
     void                          RemoveCookieFromList(nsListIter &aIter);
     PRBool                        AddCookieToList(nsCookie *aCookie, PRBool aWriteToDB = PR_TRUE);
-    void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     static PRBool                 IsIPAddress(const nsAFlatCString &aHost);
@@ -196,7 +195,6 @@ class nsCookieService : public nsICookieService
     nsCOMPtr<mozIStorageConnection> mDBConn;
     nsCOMPtr<mozIStorageStatement> mStmtInsert;
     nsCOMPtr<mozIStorageStatement> mStmtDelete;
-    nsCOMPtr<mozIStorageStatement> mStmtUpdate;
     nsCOMPtr<nsIObserverService>  mObserverService;
     nsCOMPtr<nsICookiePermission> mPermissionService;
 
