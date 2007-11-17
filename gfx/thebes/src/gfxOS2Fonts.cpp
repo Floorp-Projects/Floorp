@@ -513,12 +513,12 @@ PRUint32 getUTF8CharAndNext(const PRUint8 *aString, PRUint8 *aLength)
     }
     if ((aString[0] >> 4) == 14) { // three leading ones -> three bytes
         *aLength = 3;
-        return ((aString[0] & 0x1F) << 12) + ((aString[1] & 0x3F) << 6) +
+        return ((aString[0] & 0x0F) << 12) + ((aString[1] & 0x3F) << 6) +
                (aString[2] & 0x3F);
     }
     if ((aString[0] >> 4) == 15) { // four leading ones -> four bytes
         *aLength = 4;
-        return ((aString[0] & 0x1F) << 18) + ((aString[1] & 0x3F) << 12) +
+        return ((aString[0] & 0x07) << 18) + ((aString[1] & 0x3F) << 12) +
                ((aString[2] & 0x3F) <<  6) + (aString[3] & 0x3F);
     }
     return aString[0];
