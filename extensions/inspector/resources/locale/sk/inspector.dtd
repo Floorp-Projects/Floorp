@@ -3,6 +3,7 @@
 
 <!ENTITY thDOMNodes.label "Uzly DOM">
 <!ENTITY btnInspect.label "Preskúmať">
+<!ENTITY btnInspect.accesskey "P">
 <!ENTITY bxDocPanel.title "Dokument">
 <!ENTITY bxObjectPanel.title "Objekt">
 <!ENTITY btnSelecting.tooltip "Vyhľadať kliknutím uzol na preskúmanie">
@@ -46,6 +47,7 @@
 <!ENTITY mnView.label "Zobraziť">
 <!ENTITY mnView.accesskey "Z">
   <!ENTITY cmdToggleBrowser.label "Prehliadač">
+  <!ENTITY cmdToggleBrowser.accesskey "P">
   <!ENTITY cmdToggleSearch.label "Výsledky hľadania">
   
 <!ENTITY browserPanel.label "Prehliadač">
