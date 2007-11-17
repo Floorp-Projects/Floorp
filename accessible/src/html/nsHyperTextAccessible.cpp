@@ -456,8 +456,15 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
       else {
         if (endOffset > 0) {
           if (aText) {
-            *aText += (frame->GetType() == nsAccessibilityAtoms::brFrame) ?
-                      kForcedNewLineChar : kEmbeddedObjectChar;
+            if (frame->GetType() == nsAccessibilityAtoms::brFrame) {
+              *aText += kForcedNewLineChar;
+            } else if (MustPrune(this)) {
+              *aText += kImaginaryEmbeddedObjectChar;
+              // Expose imaginary embedded object character if the accessible
+              // hans't children.
+            } else {
+              *aText += kEmbeddedObjectChar;
+            }
           }
           if (aBoundsRect) {
             aBoundsRect->UnionRect(*aBoundsRect,
