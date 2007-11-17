@@ -394,14 +394,55 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
     mFontCache.Init(15);
     ForEachFont(FontCallback, &familyArray);
     FindGenericFontFromStyle(FontCallback, &familyArray);
+
+    // To be able to easily search for glyphs in other fonts, append a few good
+    // replacement candidates to the list. The best ones are the Unicode fonts that
+    // are set up, and if the user was so clever to set up the User Defined fonts,
+    // then these are probable candidates, too.
+    nsString fontString;
+    gfxPlatform::GetPlatform()->GetPrefFonts("x-unicode", fontString, PR_FALSE);
+    ForEachFont(fontString, NS_LITERAL_CSTRING("x-unicode"), FontCallback, &familyArray);
+    gfxPlatform::GetPlatform()->GetPrefFonts("x-user-def", fontString, PR_FALSE);
+    ForEachFont(fontString, NS_LITERAL_CSTRING("x-user-def"), FontCallback, &familyArray);
+
     if (familyArray.Count() == 0) {
         // Should append default GUI font if there are no available fonts.
         // We use WarpSans as in the default case in nsSystemFontsOS2.
         familyArray.AppendString(NS_LITERAL_STRING("WarpSans"));
     }
+
     for (int i = 0; i < familyArray.Count(); i++) {
         mFonts.AppendElement(new gfxOS2Font(*familyArray[i], &mStyle));
     }
+
+#ifdef REALLY_DESPERATE_FONT_MATCHING
+    // just continue to append all fonts known to the system
+    nsStringArray fontList;
+    nsCAutoString generic;
+    if (!gfxPlatform::GetPlatform()->GetFontList(mStyle.langGroup, generic, fontList)) {
+        // we don't want MARKSYM in the list (which always matches every glyph)
+        // nor MT Extra or the Math1* fonts which seem to have the same problem
+        fontList.RemoveString(NS_LITERAL_STRING("MARKSYM"));
+        fontList.RemoveString(NS_LITERAL_STRING("MT Extra"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math1"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math2"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math3"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math4"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math5"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math1Mono"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math2Mono"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math3Mono"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math4Mono"));
+        fontList.RemoveString(NS_LITERAL_STRING("Math5Mono"));
+        // start at 3 to ignore the generic entries
+        for (int i = 3; i < fontList.Count(); i++) {
+            // check for duplicates that we already found through the familyArray
+            if (familyArray.IndexOf(*fontList[i]) == -1) {
+                mFonts.AppendElement(new gfxOS2Font(*fontList[i], &mStyle));
+            }
+        }
+    }
+#endif
 }
 
 gfxOS2FontGroup::~gfxOS2FontGroup()
@@ -536,73 +577,113 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                font->GetStyle()->size);
     }
 #endif
+    PRUint32 fontlistLast = FontListLength()-1;
+    gfxOS2Font *font0 = GetFontAt(0);
     const PRUint8 *p = aUTF8;
-    gfxOS2Font *font = GetFontAt(0);
     PRUint32 utf16Offset = 0;
     gfxTextRun::CompressedGlyph g;
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
-    aTextRun->AddGlyphRun(font, 0);
-    // a textRun should have the same font, so we can lock it before the loop
-    FT_Face face = cairo_ft_scaled_font_lock_face(font->CairoScaledFont());
+    aTextRun->AddGlyphRun(font0, 0);
+    // a textRun likely has the same font for most of the characters, so we can
+    // lock it before the loop for efficiency
+    FT_Face face0 = cairo_ft_scaled_font_lock_face(font0->CairoScaledFont());
     while (p < aUTF8 + aUTF8Length) {
+        PRBool glyphFound = PR_FALSE;
         // convert UTF-8 character and step to the next one in line
         PRUint8 chLen;
         PRUint32 ch = getUTF8CharAndNext(p, &chLen);
         p += chLen; // move to next char
 #ifdef DEBUG_thebes_2
-        printf("\'%c\' (%d, %#x, %s):", (char)ch, ch, ch, ch >=0x10000 ? "non-BMP!" : "BMP");
+        printf("\'%c\' (%d, %#x, %s) [%#x %#x]:", (char)ch, ch, ch, ch >=0x10000 ? "non-BMP!" : "BMP", ch >=0x10000 ? H_SURROGATE(ch) : 0, ch >=0x10000 ? L_SURROGATE(ch) : 0);
 #endif
 
         if (ch == 0) {
             // treat this null byte as a missing glyph, don't create a glyph for it
             aTextRun->SetMissingGlyph(utf16Offset, 0);
         } else {
-            NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
-            FT_UInt gid = FT_Get_Char_Index(face, ch); // find the glyph id
-            PRInt32 advance = 0;
-            if (gid == font->GetSpaceGlyph()) {
-                advance = (int)(font->GetMetrics().spaceWidth * appUnitsPerDevUnit);
-            } else if (gid == 0) {
-                advance = -1; // trigger the missing glyphs case below
-            } else {
-                FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load glyph into the slot
-                advance = (face->glyph->advance.x >> 6) * appUnitsPerDevUnit;
-            }
+            // Try to get a glyph from all fonts available to us.
+            // Once we found it in one of the fonts we quit the loop early.
+            // If we don't find the glyph, we set the missing glyph symbol after
+            // trying the last font.
+            for (PRUint32 i = 0; i <= fontlistLast; i++) {
+                gfxOS2Font *font = font0;
+                FT_Face face = face0;
+                if (i > 0) {
+                    font = GetFontAt(i);
+                    face = cairo_ft_scaled_font_lock_face(font->CairoScaledFont());
 #ifdef DEBUG_thebes_2
-            printf(" gid=%d, advance=%d (%s)\n", gid, advance,
-                   NS_LossyConvertUTF16toASCII(font->GetName()).get());
+                    if (i == fontlistLast) {
+                        printf("Last font %d (%s) for ch=%#x (pos=%d)",
+                               i, NS_LossyConvertUTF16toASCII(font->GetName()).get(), ch, utf16Offset);
+                    }
+#endif
+                }
+                // select the current font into the text run
+                aTextRun->AddGlyphRun(font, utf16Offset);
+
+                NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
+                FT_UInt gid = FT_Get_Char_Index(face, ch); // find the glyph id
+                PRInt32 advance = 0;
+                if (gid == font->GetSpaceGlyph()) {
+                    advance = (int)(font->GetMetrics().spaceWidth * appUnitsPerDevUnit);
+                } else if (gid == 0) {
+                    advance = -1; // trigger the missing glyphs case below
+                } else {
+                    FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load glyph into the slot
+                    advance = (face->glyph->advance.x >> 6) * appUnitsPerDevUnit;
+                }
+#ifdef DEBUG_thebes_2
+                printf(" gid=%d, advance=%d (%s)\n", gid, advance,
+                       NS_LossyConvertUTF16toASCII(font->GetName()).get());
 #endif
 
-            if (advance >= 0 &&
-                gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-                gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gid))
-            {
-                aTextRun->SetSimpleGlyph(utf16Offset,
-                                         g.SetSimpleGlyph(advance, gid));
-            } else if (gid == 0) {
-                // gid = 0 only happens when the glyph is missing from the font
-                aTextRun->SetMissingGlyph(utf16Offset, ch);
-            } else {
-                gfxTextRun::DetailedGlyph details;
-                details.mGlyphID = gid;
-                NS_ASSERTION(details.mGlyphID == gid, "Seriously weird glyph ID detected!");
-                details.mAdvance = advance;
-                details.mXOffset = 0;
-                details.mYOffset = 0;
-                g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_TRUE, 1);
-                aTextRun->SetGlyphs(utf16Offset, g, &details);
-            }
+                if (advance >= 0 &&
+                    gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
+                    gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gid))
+                {
+                    aTextRun->SetSimpleGlyph(utf16Offset,
+                                             g.SetSimpleGlyph(advance, gid));
+                    glyphFound = PR_TRUE;
+                } else if (gid == 0) {
+                    // gid = 0 only happens when the glyph is missing from the font
+                    if (i == fontlistLast) {
+                        // set the missing glyph only when it's missing from the very
+                        // last font
+                        aTextRun->SetMissingGlyph(utf16Offset, ch);
+                    }
+                    glyphFound = PR_FALSE;
+                } else {
+                    gfxTextRun::DetailedGlyph details;
+                    details.mGlyphID = gid;
+                    NS_ASSERTION(details.mGlyphID == gid, "Seriously weird glyph ID detected!");
+                    details.mAdvance = advance;
+                    details.mXOffset = 0;
+                    details.mYOffset = 0;
+                    g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_TRUE, 1);
+                    aTextRun->SetGlyphs(utf16Offset, g, &details);
+                    glyphFound = PR_TRUE;
+                }
 
-            NS_ASSERTION(!IS_SURROGATE(ch), "Surrogates shouldn't appear in UTF8");
-            if (ch >= 0x10000) {
-                // This character is a surrogate pair in UTF16
-                ++utf16Offset;
+                if (i > 0) {
+                    cairo_ft_scaled_font_unlock_face(font->CairoScaledFont());
+                }
+
+                if (glyphFound) {
+                    break;
+                }
             }
+        } // for all fonts
+
+        NS_ASSERTION(!IS_SURROGATE(ch), "Surrogates shouldn't appear in UTF8");
+        if (ch >= 0x10000) {
+            // This character is a surrogate pair in UTF16
+            ++utf16Offset;
         }
+
         ++utf16Offset;
     }
-    cairo_ft_scaled_font_unlock_face(font->CairoScaledFont());
+    cairo_ft_scaled_font_unlock_face(font0->CairoScaledFont());
 }
 
 PRBool gfxOS2FontGroup::FontCallback(const nsAString& aFontName,
