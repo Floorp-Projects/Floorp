@@ -85,6 +85,7 @@ protected:
   
   static PRBool IsInternetShortcut ( const nsAString& inFileName ) ;
   static PRBool FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
+  static PRBool FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
   static PRBool FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen ) ;
   static PRBool FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen );
   static void ResolveShortcut ( nsILocalFile* inFileName, nsACString& outURL ) ;
