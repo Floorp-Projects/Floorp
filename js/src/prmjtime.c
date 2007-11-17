@@ -63,6 +63,13 @@
 #include <winbase.h>
 #include <math.h>     /* for fabs */
 #include <mmsystem.h> /* for timeBegin/EndPeriod */
+#if _MSC_VER >= 1400 /* VC++ 8.0 or later */
+#define NS_HAVE_INVALID_PARAMETER_HANDLER 1
+#endif
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
+#include <stdlib.h>   /* for _set_invalid_parameter_handler */
+#include <crtdbg.h>   /* for _CrtSetReportMode */
+#endif
 
 #ifdef JS_THREADSAFE
 #include <prinit.h>
@@ -556,6 +563,18 @@ PRMJ_DSTOffset(JSInt64 local_time)
     return(local_time);
 }
 
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
+JS_STATIC_DLL_CALLBACK(void)
+PRMJ_InvalidParameterHandler(const wchar_t *expression,
+                             const wchar_t *function, 
+                             const wchar_t *file, 
+                             unsigned int   line, 
+                             uintptr_t      pReserved)
+{
+    /* empty */
+}
+#endif
+
 /* Format a time value into a buffer. Same semantics as strftime() */
 size_t
 PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
@@ -564,6 +583,10 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
 #if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
     struct tm a;
     int fake_tm_year = 0;
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
+    _invalid_parameter_handler oldHandler;
+    int oldReportMode;
+#endif
 
     /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int
      * tm_gmtoff, char *tm_zone; when tm_zone is garbage, strftime gets
@@ -627,7 +650,17 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     }
 #endif
 
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
+    oldHandler = _set_invalid_parameter_handler(PRMJ_InvalidParameterHandler);
+    oldReportMode = _CrtSetReportMode(_CRT_ASSERT, 0);
+#endif
+
     result = strftime(buf, buflen, fmt, &a);
+
+#ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
+    _set_invalid_parameter_handler(oldHandler);
+    _CrtSetReportMode(_CRT_ASSERT, oldReportMode);
+#endif
 
     if (fake_tm_year && result) {
         char real_year[16];
