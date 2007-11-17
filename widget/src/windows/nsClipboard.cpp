@@ -111,8 +111,6 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
 #endif
   else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
     format = CF_HTML;
-  else if (strcmp(aMimeStr, kURLMime) == 0)
-    format = ::RegisterClipboardFormat(CFSTR_INETURLW);
   else
     format = ::RegisterClipboardFormat(aMimeStr);
 
@@ -616,8 +614,13 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       if ( !dataFound ) {
         if ( strcmp(flavorStr, kUnicodeMime) == 0 )
           dataFound = FindUnicodeFromPlainText ( aDataObject, anIndex, &data, &dataLen );
-        else if ( strcmp(flavorStr, kURLMime) == 0 )
-          dataFound = FindURLFromLocalFile ( aDataObject, anIndex, &data, &dataLen );
+        else if ( strcmp(flavorStr, kURLMime) == 0 ) {
+          // drags from other windows apps expose the native
+          // CFSTR_INETURL{A,W} flavor
+          dataFound = FindURLFromNativeURL ( aDataObject, anIndex, &data, &dataLen );
+          if ( !dataFound )
+            dataFound = FindURLFromLocalFile ( aDataObject, anIndex, &data, &dataLen );
+        }
       } // if we try one last ditch effort to find our data
 
       // Hopefully by this point we've found it and can go about our business
@@ -706,7 +709,7 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
 
 
 //
-// FindURLFromLocalFile
+// FindUnicodeFromPlainText
 //
 // we are looking for text/unicode and we failed to find it on the clipboard first,
 // try again with text/plain. If that is present, convert it to unicode.
@@ -789,6 +792,34 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
   return dataFound;
 } // FindURLFromLocalFile
 
+//
+// FindURLFromNativeURL
+//
+// we are looking for a URL and couldn't find it using our internal
+// URL flavor, so look for it using the native URL flavor,
+// CF_INETURLSTRW (We don't handle CF_INETURLSTRA currently)
+//
+PRBool
+nsClipboard :: FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen )
+{
+  PRBool dataFound = PR_FALSE;
+
+  void* tempOutData = nsnull;
+  PRUint32 tempDataLen = 0;
+  nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, ::RegisterClipboardFormat(CFSTR_INETURLW), &tempOutData, &tempDataLen);
+  if ( NS_SUCCEEDED(loadResult) && tempOutData ) {
+    nsDependentString urlString(static_cast<PRUnichar*>(tempOutData));
+    // the internal mozilla URL format, text/x-moz-url, contains
+    // URL\ntitle.  Since we don't actually have a title here,
+    // just repeat the URL to fake it.
+    *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + urlString);
+    *outDataLen = nsCRT::strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
+    nsMemory::Free(tempOutData);
+    dataFound = PR_TRUE;
+  }
+
+  return dataFound;
+} // FindURLFromNativeURL
 
 //
 // ResolveShortcut
