@@ -795,7 +795,31 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
     }
     endIndex = PR_MIN(mLength, aFromIndex + gHistoryMaxViewers + 1);
   }
-  
+
+#ifdef DEBUG
+  nsCOMPtr<nsISHTransaction> trans;
+  GetTransactionAtIndex(0, getter_AddRefs(trans));
+
+  // Walk the full session history and check that entries outside the window
+  // around aFromIndex have no content viewers
+  for (PRInt32 i = 0; i < mLength; ++i) {
+    if (i < aFromIndex - gHistoryMaxViewers || 
+        i > aFromIndex + gHistoryMaxViewers) {
+      nsCOMPtr<nsISHEntry> entry;
+      trans->GetSHEntry(getter_AddRefs(entry));
+      nsCOMPtr<nsIContentViewer> viewer;
+      nsCOMPtr<nsISHEntry> ownerEntry;
+      entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
+                                 getter_AddRefs(viewer));
+      NS_ASSERTION(!viewer,
+                   "ContentViewer exists outside gHistoryMaxViewer range");
+    }
+
+    nsISHTransaction *temp = trans;
+    temp->GetNext(getter_AddRefs(trans));
+  }
+#endif
+
   EvictContentViewersInRange(startIndex, endIndex);
 }
 
