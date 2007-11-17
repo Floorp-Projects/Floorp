@@ -77,6 +77,8 @@
   z-index: inherit;
   page-break-before: inherit;
   page-break-after: inherit;
+  vertical-align: inherit; /* needed for inline-table */
+  line-height: inherit; /* needed for vertical-align on inline-table */
 }
 
 *|*::-moz-table-row {
