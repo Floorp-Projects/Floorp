@@ -84,7 +84,7 @@ NS_NewStringEnumerator(nsIStringEnumerator** aResult,
 
 // Adopting string enumerators assume ownership of the array and will
 // call |operator delete| on the array when the enumerator is destroyed
-// this is useful when the provider creates an array soley for the
+// this is useful when the provider creates an array solely for the
 // purpose of creating the enumerator.
 // For example:
 //

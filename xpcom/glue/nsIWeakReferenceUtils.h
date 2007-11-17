@@ -114,7 +114,7 @@ inline
 void
 do_GetWeakReference( nsIWeakReference* aRawPtr, nsresult* error = 0 )
   {
-    // This signature exists soley to _stop_ you from doing a bad thing.
+    // This signature exists solely to _stop_ you from doing a bad thing.
     //  Saying |do_GetWeakReference()| on a weak reference itself,
     //  is very likely to be a programmer error.
   }
@@ -124,7 +124,7 @@ inline
 void
 do_GetWeakReference( already_AddRefed<T>& )
   {
-    // This signature exists soley to _stop_ you from doing the bad thing.
+    // This signature exists solely to _stop_ you from doing the bad thing.
     //  Saying |do_GetWeakReference()| on a pointer that is not otherwise owned by
     //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
   }
@@ -134,7 +134,7 @@ inline
 void
 do_GetWeakReference( already_AddRefed<T>&, nsresult* )
   {
-    // This signature exists soley to _stop_ you from doing the bad thing.
+    // This signature exists solely to _stop_ you from doing the bad thing.
     //  Saying |do_GetWeakReference()| on a pointer that is not otherwise owned by
     //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
   }

@@ -4486,7 +4486,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
         //
         // we have to manually keep the logical offset of the stream up-to-date.
-        // we cannot depend soley on the offset provided, since we may have 
+        // we cannot depend solely on the offset provided, since we may have 
         // already streamed some data from another source (see, for example,
         // OnDoneReadingPartialCacheEntry).
         //
