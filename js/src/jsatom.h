@@ -74,7 +74,7 @@ JS_STATIC_ASSERT(sizeof(JSAtom *) == JS_BYTES_PER_WORD);
 #if JS_BYTES_PER_WORD == 4
 # define ATOM_HASH(atom)          ((JSHashNumber)(atom) >> 2)
 #elif JS_BYTES_PER_WORD == 8
-# define ATOM_HASH(atom)          (((JSHashNumber)(atom) >> 3) ^              \
+# define ATOM_HASH(atom)          (((JSHashNumber)(jsuword)(atom) >> 3) ^     \
                                    (JSHashNumber)((jsuword)(atom) >> 32))
 #else
 # error "Unsupported configuration"
