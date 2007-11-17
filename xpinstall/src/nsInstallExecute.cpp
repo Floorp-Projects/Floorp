@@ -42,6 +42,7 @@
 
 #include "nsCRT.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "VerReg.h"
 #include "nsInstallExecute.h"
 #include "nsInstallResources.h"
