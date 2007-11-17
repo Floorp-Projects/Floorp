@@ -150,11 +150,13 @@ var PlacesCommandHook = {
     gEditItemOverlay.initPanel(aItemId,
                                { hiddenRows: ["description", "location",
                                               "loadInSidebar", "keyword"] });
-    setTimeout(function() {
-                 var namePicker = document.getElementById("editBMPanel_namePicker");
-                 namePicker.focus();
-                 namePicker.editor.selectAll();
-              }, 0);
+  },
+
+  editBookmarkPanelShown:
+  function PCH__doShowEditBookmarkPanel() {
+    var namePicker = document.getElementById("editBMPanel_namePicker");
+    namePicker.focus();
+    namePicker.editor.selectAll();
   },
 
   /**
