@@ -786,7 +786,7 @@ main(PRInt32 argc, char *argv[])
 
       // test that cookies are
       // a) returned by order of creation time (oldest first, newest last)
-      // b) evicted by order of creation time, if the limit on cookies per host (50) is reached
+      // b) evicted by order of lastAccessed time, if the limit on cookies per host (50) is reached
       nsCAutoString name;
       nsCAutoString expected;
       for (PRInt32 i = 0; i < 60; ++i) {
@@ -804,7 +804,7 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://creation.ordering.tests/", nsnull, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, expected.get());
 
-      // test that cookies are evicted by order of creation time, if the limit on total cookies
+      // test that cookies are evicted by order of lastAccessed time, if the limit on total cookies
       // (1000) is reached
       nsCAutoString host;
       for (PRInt32 i = 0; i < 1010; ++i) {
