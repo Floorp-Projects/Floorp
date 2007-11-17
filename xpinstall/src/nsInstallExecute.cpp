@@ -273,7 +273,7 @@ char* nsInstallExecute::toString()
 
         if (rsrcVal)
         {
-            sprintf( buffer, rsrcVal, tempString);
+            PR_snprintf(buffer, sizeof(buffer), rsrcVal, tempString);
             nsCRT::free(rsrcVal);
         }
         
@@ -288,7 +288,7 @@ char* nsInstallExecute::toString()
         {
             nsCAutoString temp;
             mExecutableFile->GetNativePath(temp);
-            sprintf( buffer, rsrcVal, temp.get());
+            PR_snprintf(buffer, sizeof(buffer), rsrcVal, temp.get());
             nsCRT::free(rsrcVal);
         }
     }
