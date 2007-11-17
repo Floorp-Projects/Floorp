@@ -2650,7 +2650,7 @@ ExtensionManager.prototype = {
 
     var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
 
-    var updater = new ExtensionItemUpdater(gApp.ID, gApp.version, this);
+    var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length,
                             Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
                             new BackgroundUpdateCheckListener(this.datasource));
@@ -5152,13 +5152,10 @@ ExtensionManager.prototype = {
         throw Cr.NS_ERROR_ILLEGAL_VALUE;
     }
 
-    var appID = gApp.ID;
-    var appVersion = gApp.version;
-
     if (items.length == 0)
       items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
 
-    var updater = new ExtensionItemUpdater(appID, appVersion, this);
+    var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length, updateCheckType, listener);
   },
 
@@ -5796,10 +5793,8 @@ AddonUpdateCheckListener.prototype = {
 //
 // ExtensionItemUpdater
 //
-function ExtensionItemUpdater(aTargetAppID, aTargetAppVersion, aEM)
+function ExtensionItemUpdater(aEM)
 {
-  this._appID = aTargetAppID;
-  this._appVersion = aTargetAppVersion;
   this._emDS = aEM._ds;
   this._em = aEM;
 
@@ -5807,8 +5802,6 @@ function ExtensionItemUpdater(aTargetAppID, aTargetAppVersion, aEM)
 }
 
 ExtensionItemUpdater.prototype = {
-  _appID              : "",
-  _appVersion         : "",
   _emDS               : null,
   _em                 : null,
   _updateCheckType    : 0,
@@ -5961,6 +5954,69 @@ ExtensionItemUpdater.prototype = {
   },
 };
 
+/**
+ * Replaces %...% strings in an addon url (update and updateInfo) with
+ * appropriate values.
+ * @param   aItem
+ *          The nsIUpdateItem representing the item
+ * @param   aURI
+ *          The uri to escape
+ * @param   aDS
+ *          The extensions datasource
+ *
+ * @returns the appropriately escaped uri.
+ */
+function escapeAddonURI(aItem, aURI, aDS)
+{
+  var itemStatus;
+  if (aDS.getItemProperty(aItem.id, "userDisabled") == "true" ||
+      aDS.getItemProperty(aItem.id, "userDisabled") == OP_NEEDS_ENABLE)
+    itemStatus = "userDisabled";
+  else
+    itemStatus = "userEnabled";
+
+  if (aDS.getItemProperty(aItem.id, "compatible") == "false")
+    itemStatus += ",incompatible";
+  if (aDS.getItemProperty(aItem.id, "blocklisted") == "true")
+    itemStatus += ",blocklisted";
+  if (aDS.getItemProperty(aItem.id, "satisfiesDependencies") == "false")
+    itemStatus += ",needsDependencies";
+
+  aURI = aURI.replace(/%ITEM_ID%/g, aItem.id);
+  aURI = aURI.replace(/%ITEM_VERSION%/g, aItem.version);
+  aURI = aURI.replace(/%ITEM_MAXAPPVERSION%/g, aItem.maxAppVersion);
+  aURI = aURI.replace(/%ITEM_STATUS%/g, itemStatus);
+  aURI = aURI.replace(/%APP_ID%/g, gApp.ID);
+  aURI = aURI.replace(/%APP_VERSION%/g, gApp.version);
+  aURI = aURI.replace(/%REQ_VERSION%/g, 1);
+  aURI = aURI.replace(/%APP_OS%/g, gOSTarget);
+  aURI = aURI.replace(/%APP_ABI%/g, gXPCOMABI);
+  aURI = aURI.replace(/%APP_LOCALE%/g, gLocale);
+
+  // Replace custom parameters (names of custom parameters must have at
+  // least 3 characters to prevent lookups for something like %D0%C8)
+  var catMan = null;
+  aURI = aURI.replace(/%(\w{3,})%/g, function(match, param) {
+    if (!catMan) {
+      catMan = Cc["@mozilla.org/categorymanager;1"].
+               getService(Ci.nsICategoryManager);
+    }
+
+    try {
+      var contractID = catMan.getCategoryEntry(CATEGORY_UPDATE_PARAMS, param);
+      var paramHandler = Cc[contractID].
+                         getService(Ci.nsIPropertyBag2);
+      return paramHandler.getPropertyAsAString(param);
+    }
+    catch(e) {
+      return match;
+    }
+  });
+
+  // escape() does not properly encode + symbols in any embedded FVF strings.
+  return aURI.replace(/\+/g, "%2B");
+}
+
 function RDFItemUpdater(aUpdater) {
   this._updater = aUpdater;
 }
@@ -6020,20 +6076,6 @@ RDFItemUpdater.prototype = {
     this._updateCheckType = aUpdateCheckType;
     this._item = aItem;
 
-    var itemStatus;
-    if (emDS.getItemProperty(aItem.id, "userDisabled") == "true" ||
-        emDS.getItemProperty(aItem.id, "userDisabled") == OP_NEEDS_ENABLE)
-      itemStatus = "userDisabled";
-    else
-      itemStatus = "userEnabled";
-
-    if (emDS.getItemProperty(aItem.id, "compatible") == "false")
-      itemStatus += ",incompatible";
-    if (emDS.getItemProperty(aItem.id, "blocklisted") == "true")
-      itemStatus += ",blocklisted";
-    if (emDS.getItemProperty(aItem.id, "satisfiesDependencies") == "false")
-      itemStatus += ",needsDependencies";
-
     // Look for a custom update URI: 1) supplied by a pref, 2) supplied by the
     // install manifest, 3) the default configuration
     try {
@@ -6047,38 +6089,8 @@ RDFItemUpdater.prototype = {
       dsURI = gPref.getComplexValue(PREF_UPDATE_DEFAULT_URL,
                                     Ci.nsIPrefLocalizedString).data;
     }
-    dsURI = dsURI.replace(/%ITEM_ID%/g, aItem.id);
-    dsURI = dsURI.replace(/%ITEM_VERSION%/g, aItem.version);
-    dsURI = dsURI.replace(/%ITEM_MAXAPPVERSION%/g, aItem.maxAppVersion);
-    dsURI = dsURI.replace(/%ITEM_STATUS%/g, itemStatus);
-    dsURI = dsURI.replace(/%APP_ID%/g, this._updater._appID);
-    dsURI = dsURI.replace(/%APP_VERSION%/g, this._updater._appVersion);
-    dsURI = dsURI.replace(/%REQ_VERSION%/g, 1);
-    dsURI = dsURI.replace(/%APP_OS%/g, gOSTarget);
-    dsURI = dsURI.replace(/%APP_ABI%/g, gXPCOMABI);
 
-    // Replace custom parameters (names of custom parameters must have at
-    // least 3 characters to prevent lookups for something like %D0%C8)
-    var catMan = null;
-    dsURI = dsURI.replace(/%(\w{3,})%/g, function(match, param) {
-      if (!catMan) {
-        catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-      }
-
-      try {
-        var contractID = catMan.getCategoryEntry(CATEGORY_UPDATE_PARAMS, param);
-        var paramHandler = Cc[contractID].
-                           getService(Ci.nsIPropertyBag2);
-        return paramHandler.getPropertyAsAString(param);
-      }
-      catch(e) {
-        return match;
-      }
-    });
-
-    // escape() does not properly encode + symbols in any embedded FVF strings.
-    dsURI = dsURI.replace(/\+/g, "%2B");
+    dsURI = escapeAddonURI(aItem, dsURI, emDS);
 
     // Verify that the URI provided is valid
     try {
@@ -6450,7 +6462,7 @@ RDFItemUpdater.prototype = {
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext().QueryInterface(Ci.nsIRDFResource);
       var appID = this._getPropertyFromResource(aDataSource, targetApp, "id", aLocalItem);
-      if (appID != this._updater._appID && appID != TOOLKIT_ID)
+      if (appID != gApp.ID && appID != TOOLKIT_ID)
         continue;
 
       var updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
@@ -6497,7 +6509,7 @@ RDFItemUpdater.prototype = {
                                               EM_R("availableUpdateInfo"),
                                               infourl);
         }
-        if (appID == this._updater._appID) {
+        if (appID == gApp.ID) {
           // App takes precedence over toolkit.  If we found the app, bail out.
           return updatedItem;
         }
@@ -8190,6 +8202,16 @@ ExtensionsDataSource.prototype = {
    */
   _rdfGet_homepageURL: function(item, property) {
     return this._getLocalizablePropertyValue(item, property);
+  },
+  
+  _rdfGet_availableUpdateInfo: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    var uri = stringData(this._inner.GetTarget(item, EM_R("availableUpdateInfo"), true));
+    if (uri) {
+      uri = escapeAddonURI(this.getItemForID(id), uri, this);
+      return EM_L(uri);
+    }
+    return null;
   },
 
   /**
