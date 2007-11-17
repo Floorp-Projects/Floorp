@@ -41,6 +41,10 @@
 #include "nsCOMPtr.h"
 #include "nsIDragSession.h"
 #include <ole2.h>
+#include <shlobj.h>
+#ifndef IDropTargetHelper
+#include <shobjidl.h> // Vista drag image interfaces
+#endif
 
 class nsIDragService;
 class nsIWidget;
@@ -108,6 +112,10 @@ protected:
   // Gecko Stuff
   nsIWidget      * mWindow;
   nsIDragService * mDragService;
+
+  // Drag target helper 
+  IDropTargetHelper * mDropTargetHelper;
+
 };
 
 #endif // _nsNativeDragTarget_h_
