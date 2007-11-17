@@ -87,6 +87,9 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_popup_tree.xul \
 		test_popup_keys.xul \
 		test_popuphidden.xul \
+		test_popupremoving.xul \
+		test_popupremoving_frame.xul \
+		frame_popupremoving_frame.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

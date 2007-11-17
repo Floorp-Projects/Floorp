@@ -121,7 +121,9 @@ interface nsIPopupBoxObject : nsISupports
    * if position is empty.
    *
    * For an anchored popup, the x and y arguments may be used to offset the 
-   * popup from its anchored position by some number, measured in CSS pixels.
+   * popup from its anchored position by some distance, measured in CSS pixels.
+   * x increases to the right and y increases down. Negative values may also
+   * be used to move to the left and upwards respectively.
    *
    * Unanchored popups may be created by supplying null as the anchor node.
    * An unanchored popup appears at the position specified by x and y,

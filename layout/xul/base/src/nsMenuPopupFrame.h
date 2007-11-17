@@ -203,9 +203,11 @@ public:
   void SetGeneratedChildren() { mGeneratedChildren = PR_TRUE; }
 
   // called when the Enter key is pressed while the popup is open. This will
-  // just pass the call down to the current menu, if any. Also, calling Enter
-  // will reset the current incremental search string, calculated in
-  // FindMenuWithShortcut
+  // just pass the call down to the current menu, if any. If a current menu
+  // should be opened as a result, this method should return the frame for
+  // that menu, or null if no menu should be opened. Also, calling Enter will
+  // reset the current incremental search string, calculated in
+  // FindMenuWithShortcut.
   nsMenuFrame* Enter();
 
   nsPopupType PopupType() const { return mPopupType; }

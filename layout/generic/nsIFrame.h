@@ -2192,6 +2192,8 @@ private:
 
 class nsWeakFrame {
 public:
+  nsWeakFrame() : mPrev(nsnull), mFrame(nsnull) { }
+
   nsWeakFrame(nsIFrame* aFrame) : mPrev(nsnull), mFrame(nsnull)
   {
     Init(aFrame);

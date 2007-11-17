@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="Popup Removing Frame Tests"
+        onload="setTimeout(init, 0)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<hbox>
+
+<menu id="separatemenu1" label="Menu">
+    <menupopup id="separatepopup1" onpopupshown="document.getElementById('separatemenu2').open = true">
+        <menuitem label="L1 One"/>
+        <menuitem label="L1 Two"/>
+        <menuitem label="L1 Three"/>
+    </menupopup>
+</menu>
+
+<menu id="separatemenu2" label="Menu">
+    <menupopup id="separatepopup2" onpopupshown="document.getElementById('separatemenu3').open = true">
+        <menuitem label="L2 One"/>
+        <menuitem label="L2 Two"/>
+        <menuitem label="L2 Three"/>
+    </menupopup>
+</menu>
+
+<menu id="separatemenu3" label="Menu" onpopupshown="document.getElementById('separatemenu4').open = true">
+    <menupopup id="separatepopup3">
+        <menuitem label="L3 One"/>
+        <menuitem label="L3 Two"/>
+        <menuitem label="L3 Three"/>
+    </menupopup>
+</menu>
+
+<menu id="separatemenu4" label="Menu" onpopupshown="document.getElementById('nestedmenu1').open = true">
+    <menupopup id="separatepopup3">
+        <menuitem label="L4 One"/>
+        <menuitem label="L4 Two"/>
+        <menuitem label="L4 Three"/>
+    </menupopup>
+</menu>
+
+</hbox>
+
+<menu id="nestedmenu1" label="Menu">
+    <menupopup id="nestedpopup1" onpopupshown="if (event.target == this) this.firstChild.open = true">
+      <menu id="nestedmenu2" label="Menu">
+        <menupopup id="nestedpopup2" onpopupshown="if (event.target == this) this.firstChild.open = true">
+          <menu id="nestedmenu3" label="Menu">
+            <menupopup id="nestedpopup3" onpopupshown="if (event.target == this) this.firstChild.open = true">
+              <menu id="nestedmenu4" label="Menu" onpopupshown="parent.popupsOpened()">
+                <menupopup id="nestedpopup4">
+                  <menuitem label="Nested One"/>
+                  <menuitem label="Nested Two"/>
+                  <menuitem label="Nested Three"/>
+                </menupopup>
+              </menu>
+            </menupopup>
+          </menu>
+        </menupopup>
+      </menu>
+    </menupopup>
+</menu>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function init()
+{
+  document.getElementById("separatemenu1").open = true;
+}
+
+]]>
+</script>
+
+</window>
