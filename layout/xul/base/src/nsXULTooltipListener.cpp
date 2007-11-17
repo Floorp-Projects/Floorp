@@ -512,7 +512,7 @@ nsXULTooltipListener::LaunchTooltip()
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
-    pm->ShowPopupAtScreen(mCurrentTooltip, mMouseClientX, mMouseClientY, PR_FALSE);
+    pm->ShowPopupAtScreen(mCurrentTooltip, mMouseClientX, mMouseClientY, PR_FALSE, nsnull);
     // Clear the current tooltip if the popup was not opened successfully.
     if (!pm->IsPopupOpen(mCurrentTooltip))
       mCurrentTooltip = nsnull;

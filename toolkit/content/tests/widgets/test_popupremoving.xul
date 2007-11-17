@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Popup Removing Tests"
+        onload="setTimeout(nextTest, 0)"
+        onDOMAttrModified="modified(event)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!--
+  This test checks that popup elements can be removed in various ways without
+  crashing. It tests two situations, one with menus that are 'separate', and
+  one with menus that are 'nested'. In each case, there are four levels of menu.
+
+  The nextTest function starts the process by opening the first menu. A set of
+  popupshown event listeners are used to open the next menu until all four are
+  showing. This last one calls removePopup to remove the menu node from the
+  tree. This should hide the popups as they are no longer in a document.
+
+  A mutation listener is triggered when the fourth menu closes by having its
+  open attribute cleared. This listener hides the third popup which causes
+  its frame to be removed. Naturally, we want to ensure that this doesn't
+  crash when the third menu is removed.
+  -->
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<hbox>
+
+<menu id="nestedmenu1" label="1">
+    <menupopup id="nestedpopup1" onpopupshown="if (event.target == this) this.firstChild.open = true">
+      <menu id="nestedmenu2" label="2">
+        <menupopup id="nestedpopup2" onpopupshown="if (event.target == this) this.firstChild.open = true">
+          <menu id="nestedmenu3" label="3">
+            <menupopup id="nestedpopup3" onpopupshown="if (event.target == this) this.firstChild.open = true">
+              <menu id="nestedmenu4" label="4" onpopupshown="removePopups()">
+                <menupopup id="nestedpopup4">
+                  <menuitem label="Nested 1"/>
+                  <menuitem label="Nested 2"/>
+                  <menuitem label="Nested 3"/>
+                </menupopup>
+              </menu>
+            </menupopup>
+          </menu>
+        </menupopup>
+      </menu>
+    </menupopup>
+</menu>
+
+<menu id="separatemenu1" label="1">
+    <menupopup id="separatepopup1" onpopupshown="$('separatemenu2').open = true">
+        <menuitem label="L1 One"/>
+        <menuitem label="L1 Two"/>
+        <menuitem label="L1 Three"/>
+    </menupopup>
+</menu>
+
+<menu id="separatemenu2" label="2">
+    <menupopup id="separatepopup2" onpopupshown="$('separatemenu3').open = true"
+                                   onpopuphidden="popup2Hidden()">
+        <menuitem label="L2 One"/>
+        <menuitem label="L2 Two"/>
+        <menuitem label="L2 Three"/>
+    </menupopup>
+</menu>
+
+<menu id="separatemenu3" label="3" onpopupshown="$('separatemenu4').open = true">
+    <menupopup id="separatepopup3">
+        <menuitem label="L3 One"/>
+        <menuitem label="L3 Two"/>
+        <menuitem label="L3 Three"/>
+    </menupopup>
+</menu>
+
+<menu id="separatemenu4" label="4" onpopupshown="removePopups()"
+                                   onpopuphidden="$('separatemenu2').open = false">
+    <menupopup id="separatepopup3">
+        <menuitem label="L4 One"/>
+        <menuitem label="L4 Two"/>
+        <menuitem label="L4 Three"/>
+    </menupopup>
+</menu>
+
+</hbox>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gKey = "";
+gTriggerMutation = null;
+gChangeMutation = null;
+
+function nextTest()
+{
+  if (gKey == "") {
+    gKey = "separate";
+  }
+  else if (gKey == "separate") {
+    gKey = "nested";
+  }
+  else {
+    SimpleTest.finish();
+    return;
+  }
+
+  $(gKey + "menu1").open = true;
+}
+
+function modified(event)
+{
+  // use this mutation listener to hide the third popup, destroying its frame.
+  // It gets triggered when the open attribute is cleared on the fourth menu.
+
+  if (event.target == gTriggerMutation &&
+      event.attrName == "open") {
+    gChangeMutation.hidden = true;
+    // force a layout flush
+    document.documentElement.boxObject.width;
+    gTriggerMutation = null;
+    gChangeMutation = null;
+  }
+}
+
+function removePopups()
+{
+  var menu2 = $(gKey + "menu2");
+  var menu3 = $(gKey + "menu3");
+  is(menu2.getAttribute("open"), "true", gKey + " menu 2 open before");
+  is(menu3.getAttribute("open"), "true", gKey + " menu 3 open before");
+
+  gTriggerMutation = menu3;
+  gChangeMutation = $(gKey + "menu4");
+  var menu = $(gKey + "menu1");
+  menu.parentNode.removeChild(menu);
+
+  if (gKey == "nested") {
+    // the 'separate' test checks this during the popup2 hidden event handler
+    is(menu2.hasAttribute("open"), false, gKey + " menu 2 open after");
+    is(menu3.hasAttribute("open"), false, gKey + " menu 3 open after");
+    nextTest();
+  }
+}
+
+function popup2Hidden()
+{
+  is($(gKey + "menu2").hasAttribute("open"), false, gKey + " menu 2 open after");
+  nextTest();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

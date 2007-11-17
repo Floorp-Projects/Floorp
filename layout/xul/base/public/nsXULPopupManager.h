@@ -349,16 +349,18 @@ public:
   // menu. If aIsPopup is false, the navigation is on a menubar, so navigate
   // between menus on the menubar. This is used for left/right cursor navigation.
   //
-  // Items that not valid, such as non-menu or menuitem elements are skipped,
-  // and the next or previous item after that is checked.
+  // Items that are not valid, such as non-menu or non-menuitem elements are
+  // skipped, and the next or previous item after that is checked.
   //
-  // If aStart is null, the first valid item is retrieved for GetNextMenuItem
-  // or the last valid item for GetPreviousMenuItem is used.
+  // If aStart is null, the first valid item is retrieved by GetNextMenuItem
+  // and the last valid item is retrieved by GetPreviousMenuItem.
+  //
+  // Both methods will loop around the beginning or end if needed.
   //
   // aParent - the parent menubar or menupopup
   // aStart - the menu/menuitem to start navigation from. GetPreviousMenuItem
   //          returns the item before it, while GetNextMenuItem returns the
-  //          next item.
+  //          item after it.
   // aIsPopup - true for menupopups, false for menubars
   static nsMenuFrame* GetPreviousMenuItem(nsIFrame* aParent,
                                           nsMenuFrame* aStart,
@@ -385,13 +387,10 @@ public:
 
   // retrieve the node and offset of the last mouse event used to open a
   // context menu. This information is determined from the rangeParent and
-  // the rangeOffset of the event supplied from the last call to SetMouseLocation.
+  // the rangeOffset of the event supplied to ShowPopup or ShowPopupAtScreen.
   // This is used by the implementation of nsIDOMXULDocument::GetPopupRangeParent
   // and nsIDOMXULDocument::GetPopupRangeOffset.
   void GetMouseLocation(nsIDOMNode** aNode, PRInt32* aOffset);
-  // set the mouse event that was used to activate the next popup, specified by
-  // aPopup, to be opened.
-  void SetMouseLocation(nsIDOMEvent* aEvent, nsIContent* aPopup);
 
   /**
    * Open a <menu> given its content node. If aSelectFirstItem is
@@ -406,6 +405,11 @@ public:
    * true, then the first item in the menu is selected. The arguments are
    * similar to those for nsIPopupBoxObject::OpenPopup.
    *
+   * aTriggerEvent should be the event that triggered the event. This is used
+   * to determine the coordinates for the popupshowing event. This may be null
+   * if the popup was not triggered by an event, or the coordinates are not
+   * important. Note that this may be reworked in bug 383930.
+   *
    * This fires the popupshowing event synchronously.
    */
   void ShowPopup(nsIContent* aPopup,
@@ -414,7 +418,8 @@ public:
                  PRInt32 aXPos, PRInt32 aYPos,
                  PRBool aIsContextMenu,
                  PRBool aAttributesOverride,
-                 PRBool aSelectFirstItem);
+                 PRBool aSelectFirstItem,
+                 nsIDOMEvent* aTriggerEvent);
 
   /**
    * Open a popup at a specific screen position specified by aXPos and aYPos,
@@ -424,7 +429,8 @@ public:
    */
   void ShowPopupAtScreen(nsIContent* aPopup,
                          PRInt32 aXPos, PRInt32 aYPos,
-                         PRBool aIsContextMenu);
+                         PRBool aIsContextMenu,
+                         nsIDOMEvent* aTriggerEvent);
 
   /**
    * This method is provided only for compatibility with an older popup API.
@@ -565,7 +571,7 @@ public:
 
   /**
    * Handle keyboard navigation within a menu popup specified by aFrame.
-   * Returns true if the key was handled and that other default handling
+   * Returns true if the key was handled and other default handling
    * should not occur.
    */
   PRBool HandleKeyboardNavigationInPopup(nsMenuPopupFrame* aFrame,
@@ -592,6 +598,17 @@ protected:
 
   // return the topmost menu, skipping over invisible popups
   nsMenuChainItem* GetTopVisibleMenu();
+
+  // Hide all of the visible popups from the given list. aDeselectMenu
+  // indicates whether to deselect the menu of popups when hiding; this
+  // flag is passed as the first argument to HidePopup. This function
+  // can cause style changes and frame destruction.
+  void HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames,
+                        PRBool aDeselectMenu);
+
+  // set the event that was used to trigger the popup, or null to
+  // clear the event details.
+  void SetTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup);
 
   // callbacks for ShowPopup and HidePopup as events may be done asynchronously
   void ShowPopupCallback(nsIContent* aPopup,
@@ -665,7 +682,7 @@ private:
    * supplied, then it is expected to have a frame equal to aFrame.
    * If aItem is non-null, then the navigation may be redirected to
    * an open submenu if one exists. Returns true if the key was
-   * handled and that other default handling should not occur.
+   * handled and other default handling should not occur.
    */
   PRBool HandleKeyboardNavigationInPopup(nsMenuChainItem* aItem,
                                          nsMenuPopupFrame* aFrame,
@@ -699,7 +716,7 @@ protected:
   // widget that is currently listening to rollup events
   nsCOMPtr<nsIWidget> mWidget;
 
-  // range parent and offset set in SetMouseLocation
+  // range parent and offset set in SetTriggerEvent
   nsCOMPtr<nsIDOMNode> mRangeParent;
   PRInt32 mRangeOffset;
   nsPoint mCachedMousePoint;
