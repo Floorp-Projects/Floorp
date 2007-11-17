@@ -36,6 +36,8 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -161,7 +163,9 @@ ServiceInfo.prototype = {
   }
 };
 
-var WebContentConverterRegistrar = {
+function WebContentConverterRegistrar() {}
+
+WebContentConverterRegistrar.prototype = {
   _stringBundle: null,
 
   get stringBundle() {
@@ -835,14 +839,11 @@ var WebContentConverterRegistrar = {
     switch (topic) {
     case "app-startup":
       os.addObserver(this, "profile-after-change", false);
-      os.addObserver(this, "xpcom-shutdown", false);
       break;
     case "profile-after-change":
       os.removeObserver(this, "profile-after-change");
       this._init();
       break;
-    case "xpcom-shutdown":
-      this.classID = null;
     }
   },
   
@@ -877,59 +878,22 @@ var WebContentConverterRegistrar = {
   /**
    * See nsISupports
    */
-  QueryInterface: function WCCR_QueryInterface(iid) {
-    if (iid.equals(Ci.nsIWebContentConverterService) || 
-        iid.equals(Ci.nsIWebContentHandlerRegistrar) ||
-        iid.equals(Ci.nsIObserver) ||
-        iid.equals(Ci.nsIClassInfo) ||
-        iid.equals(Ci.nsIFactory) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-};
+  QueryInterface: XPCOMUtils.generateQI(
+     [Ci.nsIWebContentConverterService, 
+      Ci.nsIWebContentHandlerRegistrar,
+      Ci.nsIObserver,
+      Ci.nsIClassInfo,
+      Ci.nsIFactory,
+      Ci.nsISupports]),
 
-var Module = {
-  QueryInterface: function M_QueryInterface(iid) {
-    if (iid.equals(Ci.nsIModule) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  
-  getClassObject: function M_getClassObject(cm, cid, iid) {
-    if (!iid.equals(Ci.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    
-    if (cid.equals(WCCR_CLASSID))
-      return WebContentConverterRegistrar;
-      
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  
-  registerSelf: function M_registerSelf(cm, file, location, type) {
-    var cr = cm.QueryInterface(Ci.nsIComponentRegistrar);
-    cr.registerFactoryLocation(WCCR_CLASSID, WCCR_CLASSNAME, WCCR_CONTRACTID,
-                               file, location, type);
-
-    var catman = 
-        Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-    catman.addCategoryEntry("app-startup", WCCR_CLASSNAME, 
-                            "service," + WCCR_CONTRACTID, true, true);
-  },
-  
-  unregisterSelf: function M_unregisterSelf(cm, location, type) {
-    var cr = cm.QueryInterface(Ci.nsIComponentRegistrar);
-    cr.unregisterFactoryLocation(WCCR_CLASSID, location);
-  },
-  
-  canUnload: function M_canUnload(cm) {
-    return true;
-  }
+  _xpcom_categories: [{
+    category: "app-startup",
+    service: true
+  }]
 };
 
 function NSGetModule(cm, file) {
-  return Module;
+  return XPCOMUtils.generateModule([WebContentConverterRegistrar]);
 }
 
 #include ../../../../toolkit/content/debug.js
