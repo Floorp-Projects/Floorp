@@ -975,7 +975,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
       // Top has a single pixel line, bottom has a single pixel line plus a single
-      // pixel shadow. We say 2 for the sides so that text doesn't hit the border.
+      // pixel shadow.
       aResult->SizeTo(6, 1, 6, 3);
       break;
 
