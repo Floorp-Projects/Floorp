@@ -103,6 +103,9 @@ public:
                              PRBool aNotify);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  PRPackedBool mInSetFocus;
 };
 
 
@@ -111,6 +114,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
 
 nsHTMLLegendElement::nsHTMLLegendElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
+  , mInSetFocus(PR_FALSE)
 {
 }
 
@@ -252,10 +256,11 @@ void
 nsHTMLLegendElement::SetFocus(nsPresContext* aPresContext)
 {
   nsIDocument *document = GetCurrentDoc();
-  if (!aPresContext || !document) {
+  if (!aPresContext || !document || mInSetFocus) {
     return;
   }
 
+  mInSetFocus = PR_TRUE;
   if (IsFocusable()) {
     nsGenericHTMLFormElement::SetFocus(aPresContext);
   } else {
@@ -272,6 +277,7 @@ nsHTMLLegendElement::SetFocus(nsPresContext* aPresContext)
       }
     }
   }
+  mInSetFocus = PR_FALSE;
 }
 
 NS_IMETHODIMP

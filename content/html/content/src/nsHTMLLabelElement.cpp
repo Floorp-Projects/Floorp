@@ -111,7 +111,8 @@ protected:
   already_AddRefed<nsIContent> GetFirstFormControl(nsIContent *current);
 
   // XXX It would be nice if we could use an event flag instead.
-  PRBool mHandlingEvent;
+  PRPackedBool mHandlingEvent;
+  PRPackedBool mInSetFocus;
 };
 
 // construction, destruction
@@ -121,8 +122,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
 
 
 nsHTMLLabelElement::nsHTMLLabelElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLFormElement(aNodeInfo),
-    mHandlingEvent(PR_FALSE)
+  : nsGenericHTMLFormElement(aNodeInfo)
+  , mHandlingEvent(PR_FALSE)
+  , mInSetFocus(PR_FALSE)
 {
 }
 
@@ -269,11 +271,13 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 void
 nsHTMLLabelElement::SetFocus(nsPresContext* aContext)
 {
-  // Since we don't have '-moz-user-focus: normal', the only time
-  // |SetFocus| will be called is when the accesskey is activated.
+  if (mInSetFocus)
+    return;
+  mInSetFocus = PR_TRUE;
   nsCOMPtr<nsIContent> content = GetForContent();
   if (content)
     content->SetFocus(aContext);
+  mInSetFocus = PR_FALSE;
 }
 
 nsresult
