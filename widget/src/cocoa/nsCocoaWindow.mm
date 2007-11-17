@@ -320,10 +320,11 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     //       rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 
     Class windowClass = [NSWindow class];
-    // If we have a titlebar, we want to be able to control the titlebar color
-    // (for unified), so use the special ToolbarWindow class. Note that we need
-    // to check the window type because we mark sheets sheets as having titlebars.
-    if ((mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) &&
+    // If we have a titlebar on a top-level window, we want to be able to control the 
+    // titlebar color (for unified windows), so use the special ToolbarWindow class. 
+    // Note that we need to check the window type because we mark sheets sheets as 
+    // having titlebars.
+    if (mWindowType == eWindowType_toplevel &&
         (features & NSTitledWindowMask))
       windowClass = [ToolbarWindow class];
     // If we're a popup window we need to use the PopupWindow class.
