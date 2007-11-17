@@ -838,7 +838,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     {
         PRFileDesc* file = PR_Open(mWorkingPath.get(), PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, attributes);
         if (!file)
-            return NS_ErrorAccordingToNSPR();
+            return NS_ERROR_FILE_ALREADY_EXISTS;
 
         PR_Close(file);
         return NS_OK;
