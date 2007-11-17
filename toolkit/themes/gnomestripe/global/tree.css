@@ -171,6 +171,11 @@ tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected, curre
   border: 1px dotted #C0C0C0;
 }
 
+/* ::::: lines connecting cells ::::: */
+
+treechildren::-moz-tree-line {
+  visibility: hidden;
+}
 
 /* ::::: tree separator ::::: */
 
