@@ -1115,15 +1115,28 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
   gfx_format format;
   aSrc->GetFormat(&format);
   if (format == gfxIFormats::PAL || format == gfxIFormats::PAL_A1) {
+    // Outside the destination frame, skip it
+    if ((aDstRect.x > dstRect.width) || (aDstRect.y > dstRect.height)) {
+      return NS_OK;
+    }
+    // Larger than the destination frame, clip it
+    PRUint32 width = (PRUint32)aDstRect.width;
+    PRUint32 height = (PRUint32)aDstRect.height;
+    if (aDstRect.x + aDstRect.width > dstRect.width) {
+      width = dstRect.width - aDstRect.x;
+    }
+    if (aDstRect.y + aDstRect.height > dstRect.height) {
+      height = dstRect.height - aDstRect.y;
+    }
     // dstRect must fully fit within destination image 
     NS_ASSERTION((aDstRect.x >= 0) && (aDstRect.y >= 0) &&
-                 (aDstRect.x + aDstRect.width <= dstRect.width) &&
-                 (aDstRect.y + aDstRect.height <= dstRect.height),
+                 (aDstRect.x + width <= dstRect.width) &&
+                 (aDstRect.y + height <= dstRect.height),
                 "imgContainer::DrawFrameTo: Invalid aDstRect");
+
     // dstRect size may be smaller than source, but not larger
-    NS_ASSERTION((aDstRect.width <= srcRect.width) &&
-                 (aDstRect.height <= srcRect.height),
-                 "imgContainer::DrawFrameTo: source and dest size must be equal");
+    NS_ASSERTION((width <= srcRect.width) && (height <= srcRect.height),
+                 "imgContainer::DrawFrameTo: source must be smaller than dest");
 
     if (NS_FAILED(aDst->LockImageData()))
       return NS_ERROR_FAILURE;
@@ -1143,9 +1156,8 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
 
     // Skip to the right offset
     dstPixels += aDstRect.x + (aDstRect.y * dstRect.width);
-    const PRUint32 width = (PRUint32)aDstRect.width;
     if (format == gfxIFormats::PAL) {
-      for (PRUint32 r = aDstRect.height; r > 0; --r) {
+      for (PRUint32 r = height; r > 0; --r) {
         for (PRUint32 c = width; c > 0; --c) {
           *dstPixels++ = colormap[*srcPixels++];
         }
@@ -1153,7 +1165,7 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
       }
     } else {
       // With transparent source, skip transparent pixels
-      for (PRUint32 r = aDstRect.height; r > 0; --r) {
+      for (PRUint32 r = height; r > 0; --r) {
         for (PRUint32 c = width; c > 0; --c) {
           const PRUint32 color = colormap[*srcPixels++];
           if (color)
