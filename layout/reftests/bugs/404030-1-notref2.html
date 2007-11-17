@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+    <title>Testcase, bug 404030</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <style type="text/css">
+
+    span { display: inline-table; height: 2em; border: thin solid; }
+
+    </style>
+</head>
+<body>
+
+<!-- vary only the last test, to make sure line-height works -->
+
+<p>Test: <span style="vertical-align: top">inline-table</span>.</p>
+<p>Test: <span style="vertical-align: text-top">inline-table</span>.</p>
+<p>Test: <span style="vertical-align: middle">inline-table</span>.</p>
+<p>Test: <span style="vertical-align: text-bottom">inline-table</span>.</p>
+<p>Test: <span style="vertical-align: bottom">inline-table</span>.</p>
+<p>Test: <span style="vertical-align: baseline">inline-table</span>.</p>
+<p>Test: <span style="vertical-align: 4px">inline-table</span>.</p>
+<p>Test: <span style="vertical-align: 50%">inline-table</span>.</p>
+<p>Test: <span style="vertical-align: 50%"><i style="display:block; line-height: normal">inline-table</i></span>.</p>
+
+</body>
+</html>
