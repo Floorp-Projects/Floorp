@@ -976,7 +976,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
     case NS_THEME_BUTTON:
       // Top has a single pixel line, bottom has a single pixel line plus a single
       // pixel shadow. We say 2 for the sides so that text doesn't hit the border.
-      aResult->SizeTo(2, 1, 2, 3);
+      aResult->SizeTo(6, 1, 6, 3);
       break;
 
     case NS_THEME_DROPDOWN:
@@ -1050,6 +1050,12 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
                                      PRUint8 aWidgetType,
                                      nsMargin* aResult)
 {
+  // We don't want CSS padding being used for certain widgets.
+  // See bug 381639 for an example of why.
+  if (aWidgetType == NS_THEME_BUTTON) {
+    aResult->SizeTo(0, 0, 0, 0);
+    return PR_TRUE;
+  }
   return PR_FALSE;
 }
 
