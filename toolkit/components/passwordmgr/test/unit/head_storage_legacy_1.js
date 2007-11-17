@@ -154,9 +154,8 @@ var INDIR = do_get_file("toolkit/components/passwordmgr/test/unit/data/" +
 // replace it to ensure we have the key we need.
 var keydb = do_get_file("toolkit/components/passwordmgr/test/unit/key3.db");
 try {
-    var oldfile = Cc["@mozilla.org/file/local;1"].
-                  createInstance(Ci.nsILocalFile);
-    oldfile.initWithPath(profileDir.path + "/key3.db");
+    var oldfile = profileDir.clone();
+    oldfile.append("key3.db");
     if (oldfile.exists())
         oldfile.remove(false);
 } catch(e) { }
