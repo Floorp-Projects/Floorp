@@ -101,7 +101,8 @@
 
     <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
 
-    <panel id="editBookmarkPanel" orient="vertical" hidden="true">
+    <panel id="editBookmarkPanel" orient="vertical" hidden="true"
+           onpopupshown="PlacesCommandHook.editBookmarkPanelShown();">
       <vbox id="editBookmarkPanelContent" flex="1"/>
       <hbox flex="1">
         <spacer flex="1"/>
