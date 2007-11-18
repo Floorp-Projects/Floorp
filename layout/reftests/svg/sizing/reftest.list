@@ -257,13 +257,13 @@
 # We could certainly expand on these tests, but they provide reasonable base
 # coverage.
 
-== inline--display-block--01.xhtml         inline--display-block--01-ref.xhtml
-== inline--display-inline--01.xhtml        inline--display-inline--01-ref.xhtml
-== inline--display-inline-block--01.xhtml  inline--display-inline-block--01-ref.xhtml
-== inline--float-left--01.xhtml            inline--float-left--01-ref.xhtml
-== inline--float-right--01.xhtml           inline--float-right--01-ref.xhtml
-== inline--position-absolute--01.xhtml     inline--position-absolute--01-ref.xhtml
-== inline--position-relative--01.xhtml     inline--position-relative--01-ref.xhtml
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--display-block--01.xhtml         inline--display-block--01-ref.xhtml
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--display-inline--01.xhtml        inline--display-inline--01-ref.xhtml
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--display-inline-block--01.xhtml  inline--display-inline-block--01-ref.xhtml
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--float-left--01.xhtml            inline--float-left--01-ref.xhtml
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--float-right--01.xhtml           inline--float-right--01-ref.xhtml
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--position-absolute--01.xhtml     inline--position-absolute--01-ref.xhtml
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--position-relative--01.xhtml     inline--position-relative--01-ref.xhtml
 
 
 # Embedded by reference tests
@@ -282,12 +282,12 @@
 # be sized purely by the embedded SVG's intrinsic size.
 
 == object--auto-auto--0-0.html          pass-empty.svg # XXX add border
-== object--auto-auto--0-pct.html        object--auto-auto--0-pct--ref.html
-== object--auto-auto--0-px.html         object--auto-auto--0-px--ref.html
-== object--auto-auto--pct-0.html        object--auto-auto--pct-0--ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == object--auto-auto--0-pct.html        object--auto-auto--0-pct--ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == object--auto-auto--0-px.html         object--auto-auto--0-px--ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == object--auto-auto--pct-0.html        object--auto-auto--pct-0--ref.html
 == object--auto-auto--pct-pct.html      object--auto-auto--pct-pct--ref.html
 == object--auto-auto--pct-px.html       object--auto-auto--pct-px--ref.html
-== object--auto-auto--px-0.html         object--auto-auto--px-0--ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == object--auto-auto--px-0.html         object--auto-auto--px-0--ref.html
 == object--auto-auto--px-pct.html       object--auto-auto--px-pct--ref.html
 == object--auto-auto--px-px.html        object--auto-auto--px-px--ref.html
 
