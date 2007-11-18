@@ -517,6 +517,14 @@ nsXPConnect::Collect()
     return gCollections;
 }
 
+// JSTRACE_FUNCTION can hold on to a lot of objects, adding it to the cycle
+// collector reduces the number of edges to those objects.
+// JSTRACE_XML can recursively hold on to more JSTRACE_XML objects, adding it to
+// the cycle collector avoids stack overflow.
+#define ADD_TO_CC(_kind) \
+    ((_kind) == JSTRACE_OBJECT || (_kind) == JSTRACE_FUNCTION || \
+     (_kind) == JSTRACE_XML)
+
 #ifdef DEBUG_CC
 struct NoteJSRootTracer : public JSTracer
 {
@@ -533,8 +541,7 @@ struct NoteJSRootTracer : public JSTracer
 JS_STATIC_DLL_CALLBACK(void)
 NoteJSRoot(JSTracer *trc, void *thing, uint32 kind)
 {
-    if(kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
-       kind == JSTRACE_QNAME || kind == JSTRACE_XML)
+    if(ADD_TO_CC(kind))
     {
         NoteJSRootTracer *tracer = static_cast<NoteJSRootTracer*>(trc);
         PLDHashEntryHdr *entry = PL_DHashTableOperate(tracer->mObjects, thing,
@@ -545,6 +552,10 @@ NoteJSRoot(JSTracer *trc, void *thing, uint32 kind)
             tracer->mCb.NoteRoot(nsIProgrammingLanguage::JAVASCRIPT, thing,
                                  nsXPConnect::GetXPConnect());
         }
+    }
+    else if(kind != JSTRACE_DOUBLE && kind != JSTRACE_STRING)
+    {
+        JS_TraceChildren(trc, thing, kind);
     }
 }
 #endif
@@ -691,11 +702,14 @@ struct TraversalTracer : public JSTracer
 JS_STATIC_DLL_CALLBACK(void)
 NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
 {
-    if(kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
-       kind == JSTRACE_QNAME || kind == JSTRACE_XML)
+    if(ADD_TO_CC(kind))
     {
         TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
         tracer->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
+    }
+    else if(kind != JSTRACE_DOUBLE && kind != JSTRACE_STRING)
+    {
+        JS_TraceChildren(trc, thing, kind);
     }
 }
 
@@ -708,6 +722,9 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     JSContext *cx = mCycleCollectionContext->GetJSContext();
 
     uint32 traceKind = js_GetGCThingTraceKind(p);
+    NS_ASSERTION(traceKind != JSTRACE_NAMESPACE &&
+                 traceKind != JSTRACE_QNAME,
+                 "Somebody holds one of these objects directly?");
 
     CCNodeType type;
 
@@ -830,10 +847,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     cb.DescribeNode(type, 0);
 #endif
 
-    if(traceKind != JSTRACE_OBJECT &&
-       traceKind != JSTRACE_NAMESPACE &&
-       traceKind != JSTRACE_QNAME &&
-       traceKind != JSTRACE_XML)
+    if(!ADD_TO_CC(traceKind))
         return NS_OK;
 
 #ifndef DEBUG_CC
