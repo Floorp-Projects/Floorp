@@ -112,12 +112,17 @@ nsHTMLCanvasFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                                PRBool aShrinkWrap)
 {
   nsSize size = GetCanvasSize();
-  nsSize canvasSize(nsPresContext::CSSPixelsToAppUnits(size.width),
-                    nsPresContext::CSSPixelsToAppUnits(size.height));
+
+  IntrinsicSize intrinsicSize;
+  intrinsicSize.width.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(size.width));
+  intrinsicSize.height.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(size.height));
+
+  nsSize& intrinsicRatio = size; // won't actually be used
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
-                            aRenderingContext, this, canvasSize,
-                            aCBSize, aMargin, aBorder, aPadding);
+                            aRenderingContext, this,
+                            intrinsicSize, intrinsicRatio, aCBSize,
+                            aMargin, aBorder, aPadding);
 }
 
 NS_IMETHODIMP

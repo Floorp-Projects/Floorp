@@ -45,6 +45,14 @@
 #include "nsStubMutationObserver.h"
 #include "gfxContext.h"
 #include "nsPresShellIterator.h"
+#include "nsIDOMSVGAnimatedRect.h"
+#include "nsIContentViewer.h"
+#include "nsIDocShell.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
+#include "nsIObjectLoadingContent.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
 #include "nsIDeviceContext.h"
@@ -193,80 +201,164 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 //----------------------------------------------------------------------
 // reflowing
 
+/* virtual */ nscoord
+nsSVGOuterSVGFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+
+  result = nscoord(0);
+
+  return result;
+}
+
+/* virtual */ nscoord
+nsSVGOuterSVGFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+
+  nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(mContent);
+  nsSVGLength2 &width = svg->mLengthAttributes[nsSVGSVGElement::WIDTH];
+
+  if (width.GetSpecifiedUnitType() == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+    result = nscoord(0);
+  } else {
+    result = nsPresContext::CSSPixelsToAppUnits(width.GetAnimValue(svg));
+  }
+
+  return result;
+}
+
+/* virtual */ nsIFrame::IntrinsicSize
+nsSVGOuterSVGFrame::GetIntrinsicSize()
+{
+  // XXXjwatt Note that here we want to return the CSS width/height if they're
+  // specified and we're embedded inside an nsIObjectLoadingContent.
+
+  IntrinsicSize intrinsicSize;
+
+  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+  nsSVGLength2 &width  = content->mLengthAttributes[nsSVGSVGElement::WIDTH];
+  nsSVGLength2 &height = content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
+
+  if (width.GetSpecifiedUnitType() == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+    float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
+    if (val < 0.0f) val = 0.0f;
+    intrinsicSize.width.SetPercentValue(val);
+  } else {
+    nscoord val = nsPresContext::CSSPixelsToAppUnits(width.GetAnimValue(content));
+    if (val < 0) val = 0;
+    intrinsicSize.width.SetCoordValue(val);
+  }
+
+  if (height.GetSpecifiedUnitType() == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+    float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
+    if (val < 0.0f) val = 0.0f;
+    intrinsicSize.height.SetPercentValue(val);
+  } else {
+    nscoord val = nsPresContext::CSSPixelsToAppUnits(height.GetAnimValue(content));
+    if (val < 0) val = 0;
+    intrinsicSize.height.SetCoordValue(val);
+  }
+
+  return intrinsicSize;
+}
+
+/* virtual */ nsSize
+nsSVGOuterSVGFrame::GetIntrinsicRatio()
+{
+  // We only have an intrinsic size/ratio if our width and height attributes
+  // are both specified and set to non-percentage values, or we have a viewBox
+  // rect: http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
+
+  nsSVGSVGElement *content = static_cast<nsSVGSVGElement*>(mContent);
+  nsSVGLength2 &width  = content->mLengthAttributes[nsSVGSVGElement::WIDTH];
+  nsSVGLength2 &height = content->mLengthAttributes[nsSVGSVGElement::HEIGHT];
+
+  if (width.GetSpecifiedUnitType()  != nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE &&
+      height.GetSpecifiedUnitType() != nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+    return nsSize(width.GetAnimValue(content), height.GetAnimValue(content));
+  }
+
+  if (content->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+    // XXXjwatt we need to fix our viewBox code so that we can tell whether the
+    // viewBox attribute specifies a valid rect or not.
+    float viewBoxWidth, viewBoxHeight;
+    nsCOMPtr<nsIDOMSVGRect> viewBox;
+    content->mViewBox->GetAnimVal(getter_AddRefs(viewBox));
+    viewBox->GetWidth(&viewBoxWidth);
+    viewBox->GetHeight(&viewBoxHeight);
+    return nsSize(viewBoxWidth, viewBoxHeight);
+  }
+
+  return nsSVGOuterSVGFrameBase::GetIntrinsicRatio();
+}
+
+/* virtual */ nsSize
+nsSVGOuterSVGFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+                                nsSize aCBSize, nscoord aAvailableWidth,
+                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                                PRBool aShrinkWrap)
+{
+  if (EmbeddedByReference()) {
+    // The embedding element has done the replaced element sizing, using our
+    // intrinsic dimensions as necessary. We just need to fill the viewport.
+    return aCBSize;
+  }
+
+  return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+                            aRenderingContext, this,
+                            GetIntrinsicSize(), GetIntrinsicRatio(), aCBSize,
+                            aMargin, aBorder, aPadding);
+}
+
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
+nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  if (!aReflowState.ShouldReflowAllKids()) {
-    // We're not the target of the incremental reflow, so just bail. We get
-    // here when our containing block has changed size (e.g. when the browser
-    // window is resized). We could in principal also get here if something
-    // happened to one of our descendants, but since nsSVGForeignObjectFrame is
-    // a reflow root, and since no other SVG elements participate in CSS
-    // layout, that currently should never happen.
-    aDesiredSize.width = mRect.width;
-    aDesiredSize.height = mRect.height;
-    aDesiredSize.mOverflowArea.SetRect(0, 0, mRect.width, mRect.height);
-    FinishAndStoreOverflow(&aDesiredSize);
-    aStatus = NS_FRAME_COMPLETE;
-    return NS_OK;
-  }
+  DO_GLOBAL_REFLOW_COUNT("nsSVGOuterSVGFrame");
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                  ("enter nsSVGOuterSVGFrame::Reflow: availSize=%d,%d",
+                  aReflowState.availableWidth, aReflowState.availableHeight));
 
-  // http://www.w3.org/TR/SVG11/coords.html#ViewportSpace specifies our behavior
+  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
-  SuspendRedraw();
+  aStatus = NS_FRAME_COMPLETE;
 
-  // Take a note of the current viewport dimensions.
-  //
-  // XXX note: "viewport" is kinda ambiguous here. We have the viewport into
-  // which we're being rendered and we also have the viewport established by
-  // our width and height attributes. The mViewportWidth/Height below are the
-  // dimensions of the viewport established _by_ our width and height
-  // attributes. These can be thought of as our "computed" width/height in CSS
-  // terms (and maybe we should call them that).
+  aDesiredSize.width  = aReflowState.ComputedWidth() +
+                          aReflowState.mComputedBorderPadding.LeftRight();
+  aDesiredSize.height = aReflowState.ComputedHeight() +
+                          aReflowState.mComputedBorderPadding.TopBottom();
 
-  nsSVGSVGElement *svgElem = static_cast<nsSVGSVGElement*>(mContent);
-  float oldViewportWidth  = svgElem->mViewportWidth;
-  float oldViewportHeight = svgElem->mViewportHeight;
-
-  // Tell our element the dimensions of the viewport into which it is rendering
-  // so that it can calculate its computed width/height (mViewportWidth/Height)
-
-  nsRect maxRect, preferredRect;
-  CalculateAvailableSpace(&maxRect, &preferredRect, aPresContext, aReflowState);
-  float preferredWidth = nsPresContext::AppUnitsToFloatCSSPixels(preferredRect.width);
-  float preferredHeight = nsPresContext::AppUnitsToFloatCSSPixels(preferredRect.height);
-
-  nsCOMPtr<nsIDOMSVGRect> r;
-  NS_NewSVGRect(getter_AddRefs(r), 0, 0, preferredWidth, preferredHeight);
-  svgElem->SetCoordCtxRect(r);
-
-  // Now we can get the computed width/height in app units
-
-  aDesiredSize.width =
-    nsPresContext::CSSPixelsToAppUnits(svgElem->mViewportWidth);
-  aDesiredSize.height =
-    nsPresContext::CSSPixelsToAppUnits(svgElem->mViewportHeight);
-
-  // XXX add in CSS borders ??
+  NS_ASSERTION(!GetPrevInFlow(), "SVG can't currently be broken across pages.");
 
   // Make sure we scroll if we're too big:
   // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
   aDesiredSize.mOverflowArea.SetRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   FinishAndStoreOverflow(&aDesiredSize);
 
-  aStatus = NS_FRAME_COMPLETE;
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  // If our SVG viewport has changed, update our content and notify.
+  // http://www.w3.org/TR/SVG11/coords.html#ViewportSpace
 
-  if (svgElem->mViewportWidth != oldViewportWidth ||
-      svgElem->mViewportHeight != oldViewportHeight) {
+  svgFloatSize newViewportSize(
+    nsPresContext::AppUnitsToFloatCSSPixels(aReflowState.ComputedWidth()),
+    nsPresContext::AppUnitsToFloatCSSPixels(aReflowState.ComputedHeight()));
+
+  nsSVGSVGElement *svgElem = static_cast<nsSVGSVGElement*>(mContent);
+
+  if (newViewportSize != svgElem->GetViewportSize()) {
+    svgElem->SetViewportSize(newViewportSize);
     NotifyViewportChange();
   }
 
-  UnsuspendRedraw();
-  
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                  ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
+                  aDesiredSize.width, aDesiredSize.height));
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 
@@ -333,16 +425,44 @@ nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
     Paint(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
+// helper
+static inline PRBool
+DependsOnIntrinsicSize(const nsIFrame* aEmbeddingFrame)
+{
+  const nsStylePosition *pos = aEmbeddingFrame->GetStylePosition();
+  nsStyleUnit widthUnit  = pos->mWidth.GetUnit();
+  nsStyleUnit heightUnit = pos->mHeight.GetUnit();
+
+  // XXX it would be nice to know if the size of aEmbeddingFrame's containing
+  // block depends on aEmbeddingFrame, then we'd know if we can return false
+  // for eStyleUnit_Percent too.
+  return (widthUnit != eStyleUnit_Coord) || (heightUnit != eStyleUnit_Coord);
+}
+
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
-                                     PRInt32         aModType)
+nsSVGOuterSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                     nsIAtom* aAttribute,
+                                     PRInt32  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       !(GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
       (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
-    PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+    nsIFrame* embeddingFrame;
+    EmbeddedByReference(&embeddingFrame);
+    if (embeddingFrame) {
+      if (DependsOnIntrinsicSize(embeddingFrame)) {
+        // Tell embeddingFrame's presShell it needs to be reflowed (which takes
+        // care of reflowing us too).
+        embeddingFrame->PresContext()->PresShell()->
+          FrameNeedsReflow(embeddingFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+      }
+      // else our width and height is overridden - don't reflow anything
+    } else {
+      // We are not embedded by reference, so our 'width' and 'height'
+      // attributes are not overridden - we need to reflow.
+      PresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+    }
   }
 
   return NS_OK;
@@ -377,8 +497,9 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
-  // XXX Not sure why this nsSVGOuterSVGFrame::Paint doesn't paint its
-  // background or respect CSS visiblity
+  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return aLists.Content()->AppendNewToTop(new (aBuilder) nsDisplaySVG(this));
 }
 
@@ -414,12 +535,19 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   
   // initialize Mozilla rendering context
   aRenderingContext.PushState();
-  
+
+  nsMargin bp = GetUsedBorderAndPadding();
+  ApplySkipSides(bp);
+
+  nsRect viewportRect = GetContentRect();
+  nsPoint viewportOffset = aPt + nsPoint(bp.left, bp.top);
+  viewportRect.MoveTo(viewportOffset);
+
   nsRect clipRect;
-  clipRect.IntersectRect(aDirtyRect, nsRect(aPt, GetSize()));
+  clipRect.IntersectRect(aDirtyRect, viewportRect);
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
-  aRenderingContext.Translate(aPt.x, aPt.y);
-  nsRect dirtyRect = clipRect - aPt;
+  aRenderingContext.Translate(viewportRect.x, viewportRect.y);
+  nsRect dirtyRect = clipRect - viewportOffset;
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime start = PR_Now();
@@ -595,33 +723,31 @@ nsSVGOuterSVGFrame::GetCanvasTM()
 //----------------------------------------------------------------------
 // Implementation helpers
 
-void
-nsSVGOuterSVGFrame::CalculateAvailableSpace(nsRect *maxRect,
-                                            nsRect *preferredRect,
-                                            nsPresContext* aPresContext,
-                                            const nsHTMLReflowState& aReflowState)
+PRBool
+nsSVGOuterSVGFrame::EmbeddedByReference(nsIFrame **aEmbeddingFrame)
 {
-  *preferredRect = aPresContext->GetVisibleArea();
-  
-  // XXXldb What about margin?
-  if (aReflowState.availableWidth != NS_INTRINSICSIZE)
-    maxRect->width = aReflowState.availableWidth;
-  else if (aReflowState.parentReflowState &&
-           aReflowState.parentReflowState->ComputedWidth() != NS_INTRINSICSIZE)
-    maxRect->width = aReflowState.parentReflowState->ComputedWidth();
-  else
-    maxRect->width = NS_MAXSIZE;
-  
-  if (aReflowState.availableHeight != NS_INTRINSICSIZE)
-    maxRect->height = aReflowState.availableHeight;    
-  else if (aReflowState.parentReflowState &&
-           aReflowState.parentReflowState->ComputedHeight() != NS_INTRINSICSIZE)
-    maxRect->height = aReflowState.parentReflowState->ComputedHeight();
-  else
-    maxRect->height = NS_MAXSIZE;
-
-  if (preferredRect->width > maxRect->width)
-    preferredRect->width = maxRect->width;
-  if (preferredRect->height > maxRect->height)
-    preferredRect->height = maxRect->height;
-}  
+  if (mContent->GetParent() == nsnull) {
+    // Our content is the document element
+    nsCOMPtr<nsISupports> container = PresContext()->GetContainer();
+    nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
+    if (window) {
+      nsCOMPtr<nsIDOMElement> frameElement;
+      window->GetFrameElement(getter_AddRefs(frameElement));
+      nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(frameElement);
+      if (olc) {
+        // Our document is inside an HTML 'object', 'embed' or 'applet' element
+        if (aEmbeddingFrame) {
+          nsCOMPtr<nsIContent> element = do_QueryInterface(frameElement);
+          *aEmbeddingFrame =
+            static_cast<nsGenericElement*>(element.get())->GetPrimaryFrame();
+          NS_ASSERTION(*aEmbeddingFrame, "Yikes, no embedding frame!");
+        }
+        return PR_TRUE;
+      }
+    }
+  }
+  if (aEmbeddingFrame) {
+    *aEmbeddingFrame = nsnull;
+  }
+  return PR_FALSE;
+}

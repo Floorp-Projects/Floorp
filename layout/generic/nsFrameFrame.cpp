@@ -90,6 +90,9 @@
 #include "nsDisplayList.h"
 #include "nsUnicharUtils.h"
 #include "nsIReflowCallback.h"
+#include "nsIScrollableFrame.h"
+#include "nsIObjectLoadingContent.h"
+#include "nsLayoutUtils.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -133,6 +136,16 @@ public:
 
   virtual void Destroy();
 
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+
+  virtual nsSize  GetIntrinsicRatio();
+
+  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+                             nsSize aCBSize, nscoord aAvailableWidth,
+                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                             PRBool aShrinkWrap);
+
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -174,6 +187,16 @@ protected:
   virtual nscoord GetIntrinsicHeight();
 
   virtual PRIntn GetSkipSides() const;
+
+  /* Obtains the frame we should use for intrinsic size information if we are
+   * an HTML <object>, <embed> or <applet> (a replaced element - not <iframe>)
+   * and our sub-document has an intrinsic size. The frame returned is the
+   * frame for the document element of the document we're embedding.
+   *
+   * Called "Obtain*" and not "Get*" because of comment on GetDocShell that
+   * says it should be called ObtainDocShell because of it's side effects.
+   */
+  nsIFrame* ObtainIntrinsicSizeFrame();
 
   nsCOMPtr<nsIFrameLoader> mFrameLoader;
   nsIView* mInnerView;
@@ -324,12 +347,15 @@ nscoord
 nsSubDocumentFrame::GetIntrinsicWidth()
 {
   if (!IsInline()) {
-    return 0;  // <frame> has no useful intrinsic width
+    return 0;  // HTML <frame> has no useful intrinsic width
   }
 
   if (mContent->IsNodeOfType(nsINode::eXUL)) {
-    return 0;  // <xul:iframe> also has no useful intrinsic width
+    return 0;  // XUL <iframe> and <browser> have no useful intrinsic width
   }
+
+  NS_ASSERTION(ObtainIntrinsicSizeFrame() == nsnull,
+               "Intrinsic width should come from the embedded document.");
 
   // We must be an HTML <iframe>.  Default to a width of 300, for IE
   // compat (and per CSS2.1 draft).
@@ -346,6 +372,9 @@ nsSubDocumentFrame::GetIntrinsicHeight()
     return 0;
   }
 
+  NS_ASSERTION(ObtainIntrinsicSizeFrame() == nsnull,
+               "Intrinsic height should come from the embedded document.");
+
   // Use 150px, for compatibility with IE, and per CSS2.1 draft.
   return nsPresContext::CSSPixelsToAppUnits(150);
 }
@@ -361,6 +390,66 @@ nsIAtom*
 nsSubDocumentFrame::GetType() const
 {
   return nsGkAtoms::subDocumentFrame;
+}
+
+/* virtual */ nscoord
+nsSubDocumentFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+
+  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
+  if (subDocRoot) {
+    result = subDocRoot->GetMinWidth(aRenderingContext);
+  } else {
+    result = GetIntrinsicWidth();
+  }
+
+  return result;
+}
+
+/* virtual */ nscoord
+nsSubDocumentFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+
+  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
+  if (subDocRoot) {
+    result = subDocRoot->GetPrefWidth(aRenderingContext);
+  } else {
+    result = GetIntrinsicWidth();
+  }
+
+  return result;
+}
+
+/* virtual */ nsSize
+nsSubDocumentFrame::GetIntrinsicRatio()
+{
+  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
+  if (subDocRoot) {
+    return subDocRoot->GetIntrinsicRatio();
+  }
+  return nsLeafFrame::GetIntrinsicRatio();
+}
+
+/* virtual */ nsSize
+nsSubDocumentFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+                                nsSize aCBSize, nscoord aAvailableWidth,
+                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                                PRBool aShrinkWrap)
+{
+  nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
+  if (subDocRoot) {
+    return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
+                            aRenderingContext, this,
+                            subDocRoot->GetIntrinsicSize(),
+                            subDocRoot->GetIntrinsicRatio(),
+                            aCBSize, aMargin, aBorder, aPadding);
+  }
+  return nsLeafFrame::ComputeSize(aRenderingContext, aCBSize, aAvailableWidth,
+                                  aMargin, aBorder, aPadding, aShrinkWrap);
 }
 
 NS_IMETHODIMP
@@ -386,7 +475,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
   nsPoint offset(0, 0);
   
   if (IsInline()) {
-    // IFRAME
+    // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
     nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
                                       aStatus);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -394,7 +483,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
     offset = nsPoint(aReflowState.mComputedBorderPadding.left,
                      aReflowState.mComputedBorderPadding.top);
   } else {
-    // FRAME
+    // HTML <frame>
     SizeToAvailSize(aReflowState, aDesiredSize);
   }
 
@@ -823,4 +912,38 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
 
   return innerView->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE,
                                  aContentType);
+}
+
+nsIFrame*
+nsSubDocumentFrame::ObtainIntrinsicSizeFrame()
+{
+  nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(GetContent());
+  if (olc) {
+    // We are an HTML <object>, <embed> or <applet> (a replaced element).
+
+    // Try to get an nsIFrame for our sub-document's document element
+    nsIFrame* subDocRoot = nsnull;
+
+    nsCOMPtr<nsIDocShell> docShell;
+    GetDocShell(getter_AddRefs(docShell));
+    if (docShell) {
+      nsCOMPtr<nsIPresShell> presShell;
+      docShell->GetPresShell(getter_AddRefs(presShell));
+      if (presShell) {
+        nsIScrollableFrame* scrollable = presShell->GetRootScrollFrameAsScrollable();
+        if (scrollable) {
+          nsIFrame* scrolled = scrollable->GetScrolledFrame();
+          if (scrolled) {
+            subDocRoot = scrolled->GetFirstChild(nsnull);
+          }
+        }
+      }
+    }
+
+    if (subDocRoot && subDocRoot->GetContent() &&
+        subDocRoot->GetContent()->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
+      return subDocRoot; // SVG documents have an intrinsic size
+    }
+  }
+  return nsnull;
 }

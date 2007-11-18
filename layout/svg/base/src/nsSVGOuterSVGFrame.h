@@ -65,8 +65,16 @@ private:
 
 public:
   // nsIFrame:
-  // XXX Should this implement intrinsic width methods (esp.
-  // GetIntrinsicRatio)?
+  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+
+  virtual IntrinsicSize GetIntrinsicSize();
+  virtual nsSize  GetIntrinsicRatio();
+
+  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+                             nsSize aCBSize, nscoord aAvailableWidth,
+                             nsSize aMargin, nsSize aBorder, nsSize aPadding,
+                             PRBool aShrinkWrap);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -124,9 +132,11 @@ public:
 
 protected:
 
-  void CalculateAvailableSpace(nsRect *maxRect, nsRect *preferredRect,
-                               nsPresContext* aPresContext,
-                               const nsHTMLReflowState& aReflowState);
+  /* Returns true if our content is the document element and our document is
+   * embedded in an HTML 'object', 'embed' or 'applet' element. Set
+   * aEmbeddingFrame to obtain the nsIFrame for the embedding HTML element.
+   */
+  PRBool EmbeddedByReference(nsIFrame **aEmbeddingFrame = nsnull);
 
   PRUint32 mRedrawSuspendCount;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
