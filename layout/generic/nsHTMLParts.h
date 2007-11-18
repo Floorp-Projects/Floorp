@@ -56,6 +56,7 @@ class nsIURI;
 class nsString;
 class nsIPresShell;
 class nsIChannel;
+class nsTableColFrame;
 
 /**
  * Additional frame-state bits used by nsBlockFrame
@@ -228,7 +229,7 @@ nsIFrame*
 NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
+nsTableColFrame*
 NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
