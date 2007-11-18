@@ -402,6 +402,21 @@ FocusElementButNotDocument(nsIDocument* aDocument, nsIContent* aContent)
   esm->SetFocusedContent(nsnull);
 }
 
+static PRBool
+IsInNativeAnonymousSubtree(nsIContent* aContent)
+{
+    while (aContent) {
+        nsIContent* bindingParent = aContent->GetBindingParent();
+        if (bindingParent == aContent) {
+            return PR_TRUE;
+        }
+
+        aContent = bindingParent;
+    }
+
+    return PR_FALSE;
+}
+
 void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
                                              nsIDOMRange*  aRange)
 {
@@ -413,27 +428,30 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
   nsIPresShell* presShell = doc->GetPrimaryShell();
   if (!presShell) return;
 
-  // since the match could be an anonymous textnode inside a
-  // <textarea> or text <input>, we need to get the outer frame
-  nsIFrame *frame = nsnull;
-  nsITextControlFrame *tcFrame = nsnull;
   nsCOMPtr<nsIDOMNode> node;
   aRange->GetStartContainer(getter_AddRefs(node));
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  if (!frame)
+      return;
+  nsCOMPtr<nsISelectionController> selCon;
+  frame->GetSelectionController(presShell->GetPresContext(),
+                                getter_AddRefs(selCon));
+  
+  // since the match could be an anonymous textnode inside a
+  // <textarea> or text <input>, we need to get the outer frame
+  nsITextControlFrame *tcFrame = nsnull;
   for ( ; content; content = content->GetParent()) {
-    if (!content->IsNativeAnonymous()) {
-      frame = presShell->GetPrimaryFrameFor(content);
-      if (!frame)
+    if (!IsInNativeAnonymousSubtree(content)) {
+      nsIFrame* f = presShell->GetPrimaryFrameFor(content);
+      if (!f)
         return;
-      CallQueryInterface(frame, &tcFrame);
+      CallQueryInterface(f, &tcFrame);
       break;
     }
   }
 
   nsCOMPtr<nsISelection> selection;
-  nsCOMPtr<nsISelectionController> selCon;
-  frame->GetSelectionController(presShell->GetPresContext(),
-                                getter_AddRefs(selCon));
 
   selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
