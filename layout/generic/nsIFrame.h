@@ -1252,6 +1252,29 @@ public:
     IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext) = 0;
 
   /*
+   * For replaced elements only. Gets the intrinsic dimensions of this element.
+   * The dimensions may only be one of the following three types:
+   *
+   *   eStyleUnit_Coord   - a length in app units
+   *   eStyleUnit_Percent - a percentage of the available space
+   *   eStyleUnit_None    - the element has no intrinsic size in this dimension
+   */
+  struct IntrinsicSize {
+    nsStyleCoord width, height;
+
+    IntrinsicSize()
+      : width(eStyleUnit_None), height(eStyleUnit_None)
+    {}
+    IntrinsicSize(const IntrinsicSize& rhs)
+      : width(rhs.width), height(rhs.height)
+    {}
+    IntrinsicSize& operator=(const IntrinsicSize& rhs) {
+      width = rhs.width; height = rhs.height; return *this;
+    }
+  };
+  virtual IntrinsicSize GetIntrinsicSize() = 0;
+
+  /*
    * Get the intrinsic ratio of this element, or nsSize(0,0) if it has
    * no intrinsic ratio.  The intrinsic ratio is the ratio of the
    * height/width of a box with an intrinsic size or the intrinsic

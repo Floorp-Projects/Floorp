@@ -425,7 +425,8 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
     mStylePosition->mMaxHeight.GetUnit() == eStyleUnit_Percent ||
     mStylePosition->mOffset.GetTopUnit() == eStyleUnit_Percent ||
     mStylePosition->mOffset.GetBottomUnit() == eStyleUnit_Percent ||
-    frame->IsBoxFrame();
+    frame->IsBoxFrame() ||
+    frame->GetIntrinsicSize().height.GetUnit() == eStyleUnit_Percent;
 
   // If we're the child of a table cell that performs special height
   // reflows and we could be the child that requires them, always set

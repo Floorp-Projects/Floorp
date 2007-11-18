@@ -2943,6 +2943,12 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
   return result;
 }
 
+/* virtual */ nsIFrame::IntrinsicSize
+nsFrame::GetIntrinsicSize()
+{
+  return IntrinsicSize(); // default is width/height set to eStyleUnit_None
+}
+
 /* virtual */ nsSize
 nsFrame::GetIntrinsicRatio()
 {

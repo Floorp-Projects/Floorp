@@ -55,6 +55,19 @@
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
+class svgFloatSize {
+public:
+  svgFloatSize(float aWidth, float aHeight)
+    : width(aWidth)
+    , height(aHeight)
+  {}
+  PRBool operator!=(const svgFloatSize& rhs) {
+    return width != rhs.width || height != rhs.height;
+  }
+  float width;
+  float height;
+};
+
 class nsSVGSVGElement : public nsSVGSVGElementBase,
                         public nsIDOMSVGSVGElement,
                         public nsIDOMSVGFitToViewBox,
@@ -71,9 +84,6 @@ protected:
   virtual ~nsSVGSVGElement();
   nsresult Init();
   
-  // nsSVGSVGElement methods:
-  void SetCoordCtxRect(nsIDOMSVGRect* aCtxRect);
-
 public:
 
   // interfaces:
@@ -147,6 +157,15 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  svgFloatSize GetViewportSize() {
+    return svgFloatSize(mViewportWidth, mViewportHeight);
+  }
+
+  void SetViewportSize(svgFloatSize& aSize) {
+    mViewportWidth  = aSize.width;
+    mViewportHeight = aSize.height;
+  }
+
 protected:
   // nsSVGElement overrides
   PRBool IsEventName(nsIAtom* aName);
@@ -174,7 +193,16 @@ protected:
   nsCOMPtr<nsIDOMSVGAnimatedRect>   mViewBox;
   nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
 
-  float mViewportWidth, mViewportHeight;  // valid only for outersvg
+  // The size of the rectangular SVG viewport into which we render. This is
+  // not (necessarily) the same as the content area. See:
+  //
+  //   http://www.w3.org/TR/SVG11/coords.html#ViewportSpace
+  //
+  // XXXjwatt Currently only used for outer <svg>, but maybe we could use -1 to
+  // flag this as an inner <svg> to save the overhead of GetCtx calls?
+  // XXXjwatt our frame should probably reset these when it's destroyed.
+  float mViewportWidth, mViewportHeight;
+
   float mCoordCtxMmPerPx;
 
   // zoom and pan

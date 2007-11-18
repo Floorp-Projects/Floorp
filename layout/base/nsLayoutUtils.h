@@ -619,9 +619,15 @@ public:
                    nscoord              aContainingBlockHeight,
                    const nsStyleCoord&  aCoord);
 
+  /*
+   * Calculate the used values for 'width' and 'height' for a replaced element.
+   *
+   *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
+   */
   static nsSize ComputeSizeWithIntrinsicDimensions(
-                    nsIRenderingContext* aRenderingContext,
-                    nsIFrame* aFrame, nsSize aIntrinsicSize, nsSize aCBSize,
+                    nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
+                    nsIFrame::IntrinsicSize& aIntrinsicSize,
+                    nsSize aIntrinsicRatio, nsSize aCBSize,
                     nsSize aMargin, nsSize aBorder, nsSize aPadding);
 
   // Implement nsIFrame::GetPrefWidth in terms of nsIFrame::AddInlinePrefWidth
