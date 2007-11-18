@@ -67,7 +67,8 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext*  aContext);
+  friend nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
+                                              nsStyleContext*  aContext);
 
   PRInt32 GetColIndex() const;
   
@@ -102,8 +103,8 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  /** return the number of the columns the col represents.  always >= 0 */
-  virtual PRInt32 GetSpan ();
+  /** return the number of the columns the col represents.  always >= 1 */
+  PRInt32 GetSpan();
 
   /** convenience method, calls into cellmap */
   nsVoidArray * GetCells();

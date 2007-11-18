@@ -3957,32 +3957,29 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsFrameConstructorState& aState,
     }
   }
 
-  aNewFrame = NS_NewTableColFrame(mPresShell, aStyleContext);
+  nsTableColFrame* colFrame = NS_NewTableColFrame(mPresShell, aStyleContext);
+  aNewFrame = colFrame;
   if (NS_UNLIKELY(!aNewFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, aNewFrame);
 
   // construct additional col frames if the col frame has a span > 1
-  PRInt32 span = 1;
-  nsCOMPtr<nsIDOMHTMLTableColElement> cgContent(do_QueryInterface(aContent));
-  if (cgContent) { 
-    cgContent->GetSpan(&span);
-    nsIFrame* lastCol = aNewFrame;
-    nsStyleContext* styleContext = nsnull;
-    for (PRInt32 spanX = 1; spanX < span; spanX++) {
-      // The same content node should always resolve to the same style context.
-      if (1 == spanX)
-        styleContext = aNewFrame->GetStyleContext();
-      nsIFrame* newCol = NS_NewTableColFrame(mPresShell, styleContext);
-      if (NS_UNLIKELY(!newCol)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, newCol, PR_FALSE);
-      ((nsTableColFrame*)newCol)->SetColType(eColAnonymousCol);
-      lastCol->SetNextSibling(newCol);
-      lastCol = newCol;
+  PRInt32 span = colFrame->GetSpan();
+  nsIFrame* lastCol = aNewFrame;
+  nsStyleContext* styleContext = nsnull;
+  for (PRInt32 spanX = 1; spanX < span; spanX++) {
+    // The same content node should always resolve to the same style context.
+    if (1 == spanX)
+      styleContext = aNewFrame->GetStyleContext();
+    nsTableColFrame* newCol = NS_NewTableColFrame(mPresShell, styleContext);
+    if (NS_UNLIKELY(!newCol)) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+    InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, newCol, PR_FALSE);
+    newCol->SetColType(eColAnonymousCol);
+    lastCol->SetNextSibling(newCol);
+    lastCol = newCol;
   }
 
   if (!aIsPseudo && aIsPseudoParent) {
