@@ -443,8 +443,7 @@ nsSubDocumentFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
   if (subDocRoot) {
     return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
-                            aRenderingContext,
-                            const_cast<nsSubDocumentFrame*>(this),
+                            aRenderingContext, this,
                             subDocRoot->GetIntrinsicSize(),
                             subDocRoot->GetIntrinsicRatio(),
                             aCBSize, aMargin, aBorder, aPadding);
