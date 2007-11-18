@@ -758,6 +758,14 @@ IsPercentageAware(const nsIFrame* aFrame)
         fType == nsGkAtoms::comboboxDisplayFrame) {
       return PR_TRUE;
     }
+
+    // Handle SVG, which doesn't map width/height into style
+    if ((fType == nsGkAtoms::svgOuterSVGFrame ||
+         fType == nsGkAtoms::subDocumentFrame) &&
+        const_cast<nsIFrame*>(aFrame)->GetIntrinsicSize().width.GetUnit() ==
+        eStyleUnit_Percent) {
+      return PR_TRUE;
+    }
   }
 
   return PR_FALSE;

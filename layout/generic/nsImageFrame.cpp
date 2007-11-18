@@ -704,10 +704,16 @@ nsImageFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   nsPresContext *presContext = PresContext();
   EnsureIntrinsicSize(presContext);
 
+  IntrinsicSize intrinsicSize;
+  intrinsicSize.width.SetCoordValue(mIntrinsicSize.width);
+  intrinsicSize.height.SetCoordValue(mIntrinsicSize.height);
+
+  nsSize& intrinsicRatio = mIntrinsicSize; // won't actually be used
+
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
-                            mIntrinsicSize,
-                            aCBSize, aMargin, aBorder, aPadding);
+                            intrinsicSize, intrinsicRatio, aCBSize,
+                            aMargin, aBorder, aPadding);
 }
 
 nsRect 

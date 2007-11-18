@@ -1331,28 +1331,6 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
 //----------------------------------------------------------------------
 // nsSVGSVGElement
 
-void
-nsSVGSVGElement::SetCoordCtxRect(nsIDOMSVGRect* aCtxRect)
-{
-  if (mLengthAttributes[WIDTH].GetSpecifiedUnitType() ==
-      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-    aCtxRect->GetWidth(&mViewportWidth);
-    mViewportWidth *=
-      mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() / 100.0f;
-  } else {
-    mViewportWidth = mLengthAttributes[WIDTH].GetAnimValue(this);
-  }
-
-  if (mLengthAttributes[HEIGHT].GetSpecifiedUnitType() ==
-      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-    aCtxRect->GetHeight(&mViewportHeight);
-    mViewportHeight *=
-      mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() / 100.0f;
-  } else {
-    mViewportHeight = mLengthAttributes[HEIGHT].GetAnimValue(this);
-  }
-}
-
 already_AddRefed<nsIDOMSVGRect>
 nsSVGSVGElement::GetCtxRect()
 {

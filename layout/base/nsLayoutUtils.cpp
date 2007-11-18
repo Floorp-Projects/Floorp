@@ -1734,8 +1734,9 @@ IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
 
 /* static */ nsSize
 nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
-                   nsIRenderingContext* aRenderingContext,
-                   nsIFrame* aFrame, nsSize aIntrinsicSize, nsSize aCBSize,
+                   nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
+                   nsIFrame::IntrinsicSize& aIntrinsicSize,
+                   nsSize aIntrinsicRatio, nsSize aCBSize,
                    nsSize aMargin, nsSize aBorder, nsSize aPadding)
 {
   const nsStylePosition *stylePos = aFrame->GetStylePosition();
@@ -1812,10 +1813,74 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
     minHeight = 0;
   }
 
+  // Resolve percentage intrinsic width/height as necessary:
+
+  NS_ASSERTION(aCBSize.width != NS_UNCONSTRAINEDSIZE,
+               "Our containing block must not have unconstrained width!");
+
+  PRBool hasIntrinsicWidth, hasIntrinsicHeight;
+  nscoord intrinsicWidth, intrinsicHeight;
+
+  if (aIntrinsicSize.width.GetUnit() == eStyleUnit_Coord ||
+      aIntrinsicSize.width.GetUnit() == eStyleUnit_Percent) {
+    hasIntrinsicWidth = PR_TRUE;
+    intrinsicWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
+                           aFrame, aCBSize.width, 0, boxSizingAdjust.width +
+                           boxSizingToMarginEdgeWidth, aIntrinsicSize.width);
+  } else {
+    hasIntrinsicWidth = PR_FALSE;
+    intrinsicWidth = 0;
+  }
+
+  if (aIntrinsicSize.height.GetUnit() == eStyleUnit_Coord ||
+      (aIntrinsicSize.height.GetUnit() == eStyleUnit_Percent &&
+       aCBSize.height != NS_AUTOHEIGHT)) {
+    hasIntrinsicHeight = PR_TRUE;
+    intrinsicHeight = nsLayoutUtils::ComputeHeightDependentValue(
+                              aRenderingContext, aFrame, aCBSize.height,
+                              aIntrinsicSize.height);
+    if (intrinsicHeight < 0)
+      intrinsicHeight = 0;
+  } else {
+    hasIntrinsicHeight = PR_FALSE;
+    intrinsicHeight = 0;
+  }
+
+  NS_ASSERTION(aIntrinsicRatio.width >= 0 && aIntrinsicRatio.height >= 0,
+               "Intrinsic ratio has a negative component!");
+
+  // Now calculate the used values for width and height:
+
   if (isAutoWidth) {
     if (isAutoHeight) {
 
       // 'auto' width, 'auto' height
+
+      // Get tentative values - CSS 2.1 sections 10.3.2 and 10.6.2:
+
+      nscoord tentWidth, tentHeight;
+
+      if (hasIntrinsicWidth) {
+        tentWidth = intrinsicWidth;
+      } else if (hasIntrinsicHeight && aIntrinsicRatio.height > 0) {
+        tentWidth = MULDIV(intrinsicHeight, aIntrinsicRatio.width, aIntrinsicRatio.height);
+      } else if (aIntrinsicRatio.width > 0) {
+        tentWidth = aCBSize.width - boxSizingToMarginEdgeWidth; // XXX scrollbar?
+        if (tentWidth < 0) tentWidth = 0;
+      } else {
+        tentWidth = nsPresContext::CSSPixelsToAppUnits(300);
+      }
+
+      if (hasIntrinsicHeight) {
+        tentHeight = intrinsicHeight;
+      } else if (aIntrinsicRatio.width > 0) {
+        tentHeight = MULDIV(tentWidth, aIntrinsicRatio.height, aIntrinsicRatio.width);
+      } else {
+        tentHeight = nsPresContext::CSSPixelsToAppUnits(150);
+      }
+
+      // Now apply min/max-width/height - CSS 2.1 sections 10.4 and 10.7:
+
       if (minWidth > maxWidth)
         maxWidth = minWidth;
       if (minHeight > maxHeight)
@@ -1823,68 +1888,77 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
       nscoord heightAtMaxWidth, heightAtMinWidth,
               widthAtMaxHeight, widthAtMinHeight;
-      if (aIntrinsicSize.width > 0) {
-        heightAtMaxWidth = MULDIV(maxWidth, aIntrinsicSize.height, aIntrinsicSize.width);
+
+      if (tentWidth > 0) {
+        heightAtMaxWidth = MULDIV(maxWidth, tentHeight, tentWidth);
         if (heightAtMaxWidth < minHeight)
           heightAtMaxWidth = minHeight;
-        heightAtMinWidth = MULDIV(minWidth, aIntrinsicSize.height, aIntrinsicSize.width);
+        heightAtMinWidth = MULDIV(minWidth, tentHeight, tentWidth);
         if (heightAtMinWidth > maxHeight)
           heightAtMinWidth = maxHeight;
       } else {
-        heightAtMaxWidth = aIntrinsicSize.height;
-        heightAtMinWidth = aIntrinsicSize.height;
+        heightAtMaxWidth = tentHeight;
+        heightAtMinWidth = tentHeight;
       }
 
-      if (aIntrinsicSize.height > 0) {
-        widthAtMaxHeight = MULDIV(maxHeight, aIntrinsicSize.width, aIntrinsicSize.height);
+      if (tentHeight > 0) {
+        widthAtMaxHeight = MULDIV(maxHeight, tentWidth, tentHeight);
         if (widthAtMaxHeight < minWidth)
           widthAtMaxHeight = minWidth;
-        widthAtMinHeight = MULDIV(minHeight, aIntrinsicSize.width, aIntrinsicSize.height);
+        widthAtMinHeight = MULDIV(minHeight, tentWidth, tentHeight);
         if (widthAtMinHeight > maxWidth)
           widthAtMinHeight = maxWidth;
       } else {
-        widthAtMaxHeight = aIntrinsicSize.width;
-        widthAtMinHeight = aIntrinsicSize.width;
+        widthAtMaxHeight = tentWidth;
+        widthAtMinHeight = tentWidth;
       }
 
-      if (aIntrinsicSize.width > maxWidth) {
-        if (aIntrinsicSize.height > maxHeight) {
-          if (PRInt64(maxWidth) * PRInt64(aIntrinsicSize.height) <=
-              PRInt64(maxHeight) * PRInt64(aIntrinsicSize.width)) {
+      // The table at http://www.w3.org/TR/CSS21/visudet.html#min-max-widths :
+
+      if (tentWidth > maxWidth) {
+        if (tentHeight > maxHeight) {
+          if (PRInt64(maxWidth) * PRInt64(tentHeight) <=
+              PRInt64(maxHeight) * PRInt64(tentWidth)) {
             width = maxWidth;
             height = heightAtMaxWidth;
           } else {
-            height = maxHeight;
             width = widthAtMaxHeight;
+            height = maxHeight;
           }
         } else {
+          // This also covers "(w > max-width) and (h < min-height)" since in
+          // that case (max-width/w < 1), and with (h < min-height):
+          //   max(max-width * h/w, min-height) == min-height
           width = maxWidth;
           height = heightAtMaxWidth;
         }
-      } else if (aIntrinsicSize.width < minWidth) {
-        if (aIntrinsicSize.height < minHeight) {
-          if (PRInt64(minWidth) * PRInt64(aIntrinsicSize.height) <= 
-              PRInt64(minHeight) * PRInt64(aIntrinsicSize.width)) {
-            height = minHeight;
+      } else if (tentWidth < minWidth) {
+        if (tentHeight < minHeight) {
+          if (PRInt64(minWidth) * PRInt64(tentHeight) <= 
+              PRInt64(minHeight) * PRInt64(tentWidth)) {
             width = widthAtMinHeight;
+            height = minHeight;
           } else {
             width = minWidth;
             height = heightAtMinWidth;
           }
         } else {
+          // This also covers "(w < min-width) and (h > max-height)" since in
+          // that case (min-width/w > 1), and with (h > max-height):
+          //   min(min-width * h/w, max-height) == max-height
           width = minWidth;
           height = heightAtMinWidth;
         }
       } else {
-        if (aIntrinsicSize.height > maxHeight) {
-          height = maxHeight;
+        if (tentHeight > maxHeight) {
           width = widthAtMaxHeight;
-        } else if (aIntrinsicSize.height < minHeight) {
-          height = minHeight;
+          height = maxHeight;
+        } else if (tentHeight < minHeight) {
           width = widthAtMinHeight;
+          height = minHeight;
         } else {
-          width = aIntrinsicSize.width;
-          height = aIntrinsicSize.height;
+          width = tentWidth;
+          height = tentHeight;
         }
       }
 
@@ -1892,10 +1966,12 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
       // 'auto' width, non-'auto' height
       height = NS_CSS_MINMAX(height, minHeight, maxHeight);
-      if (aIntrinsicSize.height != 0) {
-        width = MULDIV(aIntrinsicSize.width, height, aIntrinsicSize.height);
+      if (aIntrinsicRatio.height > 0) {
+        width = MULDIV(height, aIntrinsicRatio.width, aIntrinsicRatio.height);
+      } else if (hasIntrinsicWidth) {
+        width = intrinsicWidth;
       } else {
-        width = aIntrinsicSize.width;
+        width = nsPresContext::CSSPixelsToAppUnits(300);
       }
       width = NS_CSS_MINMAX(width, minWidth, maxWidth);
 
@@ -1905,18 +1981,20 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
       // non-'auto' width, 'auto' height
       width = NS_CSS_MINMAX(width, minWidth, maxWidth);
-      if (aIntrinsicSize.width != 0) {
-        height = MULDIV(aIntrinsicSize.height, width, aIntrinsicSize.width);
+      if (aIntrinsicRatio.width > 0) {
+        height = MULDIV(width, aIntrinsicRatio.height, aIntrinsicRatio.width);
+      } else if (hasIntrinsicHeight) {
+        height = intrinsicHeight;
       } else {
-        height = aIntrinsicSize.height;
+        height = nsPresContext::CSSPixelsToAppUnits(150);
       }
       height = NS_CSS_MINMAX(height, minHeight, maxHeight);
 
     } else {
 
       // non-'auto' width, non-'auto' height
-      height = NS_CSS_MINMAX(height, minHeight, maxHeight);
       width = NS_CSS_MINMAX(width, minWidth, maxWidth);
+      height = NS_CSS_MINMAX(height, minHeight, maxHeight);
 
     }
   }
