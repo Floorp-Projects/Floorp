@@ -1735,7 +1735,7 @@ IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
 /* static */ nsSize
 nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                    nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                   nsIFrame::IntrinsicSize aIntrinsicSize,
+                   const nsIFrame::IntrinsicSize& aIntrinsicSize,
                    nsSize aIntrinsicRatio, nsSize aCBSize,
                    nsSize aMargin, nsSize aBorder, nsSize aPadding)
 {
