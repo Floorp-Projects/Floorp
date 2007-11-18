@@ -1267,21 +1267,29 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
  }
 
   if (aFrameCanContinueTextRun) {
-    // Let it fit, but we reserve the right to roll back
-    // to before the text run! Note that we usually won't get here because
-    // a text frame will break itself to avoid exceeding the available width.
+    // Let it fit, but we reserve the right to roll back.
+    // Note that we usually won't get here because a text frame will break
+    // itself to avoid exceeding the available width.
     // We'll only get here for text frames that couldn't break early enough.
 #ifdef NOISY_CAN_PLACE_FRAME
     printf("   ==> placing overflowing textrun, requesting backup\n");
 #endif
+
+    // We will want to try backup.
+    SetFlag(LL_NEEDBACKUP, PR_TRUE);
+
     if (!aCanRollBackBeforeFrame) {
       // Nowhere to roll back to, so make this fit
       return PR_TRUE;
     }
-
-    // We have something to roll back to. So, signal that we will to roll back,
-    // and fall through to not place this frame.
-    SetFlag(LL_NEEDBACKUP, PR_TRUE);
+    if (pfd->mSpan) {
+      // Allow spans to fit here. We don't want a span to fail to fit just
+      // because one of its children didn't fit; there may be a break opportunity
+      // we can roll back to inside the span.
+      return PR_TRUE;
+    }
+    // There is a break opportunity before the frame, so we can stop line
+    // reflow now.
   }
 
 #ifdef NOISY_CAN_PLACE_FRAME
