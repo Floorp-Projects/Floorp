@@ -1481,15 +1481,8 @@ fun_trace(JSTracer *trc, JSObject *obj)
     JSFunction *fun;
 
     fun = (JSFunction *) JS_GetPrivate(trc->context, obj);
-    if (fun) {
+    if (fun)
         JS_CALL_TRACER(trc, fun, JSTRACE_FUNCTION, "private");
-        if (fun->object != obj)
-            JS_CALL_TRACER(trc, fun->object, JSTRACE_OBJECT, "object");
-        if (fun->atom)
-            JS_CALL_STRING_TRACER(trc, ATOM_TO_STRING(fun->atom), "atom");
-        if (FUN_INTERPRETED(fun) && fun->u.i.script)
-            js_TraceScript(trc, fun->u.i.script);
-    }
 }
 
 static uint32
@@ -2153,6 +2146,17 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
     return fun;
+}
+
+void
+js_TraceFunction(JSTracer *trc, JSFunction *fun)
+{
+    if (fun->object)
+        JS_CALL_OBJECT_TRACER(trc, fun->object, "object");
+    if (fun->atom)
+        JS_CALL_STRING_TRACER(trc, ATOM_TO_STRING(fun->atom), "atom");
+    if (FUN_INTERPRETED(fun) && fun->u.i.script)
+        js_TraceScript(trc, fun->u.i.script);
 }
 
 void
