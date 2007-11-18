@@ -626,7 +626,7 @@ public:
    */
   static nsSize ComputeSizeWithIntrinsicDimensions(
                     nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                    nsIFrame::IntrinsicSize aIntrinsicSize,
+                    const nsIFrame::IntrinsicSize& aIntrinsicSize,
                     nsSize aIntrinsicRatio, nsSize aCBSize,
                     nsSize aMargin, nsSize aBorder, nsSize aPadding);
 
