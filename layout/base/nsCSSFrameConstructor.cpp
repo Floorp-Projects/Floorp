@@ -9193,6 +9193,25 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     }
   }
 
+  if (!prevSibling) {
+    // We're inserting the new frame as the first child. See if the
+    // parent has a :before pseudo-element
+    nsIFrame* firstChild = parentFrame->GetFirstChild(nsnull);
+
+    if (firstChild &&
+        nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
+                                             nsCSSPseudoElements::before)) {
+      // Insert the new frames after the last continuation of the :before
+      prevSibling = firstChild->GetLastContinuation();
+      parentFrame = prevSibling->GetParent();
+      // We perhaps could leave this true and take the AppendFrames path
+      // below, but we'd have to update appendAfterFrame and it seems safer
+      // to force all insert-after-:before cases to take these to take the
+      // InsertFrames path
+      isAppend = PR_FALSE;
+    }
+  }
+
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
   
@@ -9258,31 +9277,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   nsIFrame* const newFrame = frameItems.childList;
   if (NS_SUCCEEDED(rv) && newFrame) {
     NS_ASSERTION(!captionItems.childList, "leaking caption frames");
-    if (!prevSibling) {
-      // We're inserting the new frame as the first child. See if the
-      // parent has a :before pseudo-element
-      nsIFrame* firstChild = parentFrame->GetFirstChild(nsnull);
-
-      if (firstChild &&
-          nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
-                                               nsCSSPseudoElements::before)) {
-        // Insert the new frames after the last continuation of the :before
-        prevSibling = firstChild->GetLastContinuation();
-        nsIFrame* newParent = prevSibling->GetParent();
-        if (newParent != parentFrame) {
-          nsHTMLContainerFrame::ReparentFrameViewList(state.mPresContext,
-                                                      newFrame, parentFrame,
-                                                      newParent);
-          parentFrame = newParent;
-        }
-        // We perhaps could leave this true and take the AppendFrames path
-        // below, but we'd have to update appendAfterFrame and it seems safer
-        // to force all insert-after-:before cases to take these to take the
-        // InsertFrames path
-        isAppend = PR_FALSE;
-      }
-    }
-
     // Notify the parent frame
     if (isAppend) {
       AppendFrames(state, aContainer, parentFrame, frameItems,
