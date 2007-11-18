@@ -961,13 +961,12 @@ nsStyleTable::nsStyleTable(const nsStyleTable& aSource)
 nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
 {
   // Changes in mRules may require reframing (if border-collapse stuff changes, for example).
-  if (mRules != aOther.mRules)
+  if (mRules != aOther.mRules || mSpan != aOther.mSpan)
     return NS_STYLE_HINT_FRAMECHANGE;
 
   if ((mLayoutStrategy == aOther.mLayoutStrategy) &&
       (mFrame == aOther.mFrame) &&
-      (mCols == aOther.mCols) &&
-      (mSpan == aOther.mSpan))
+      (mCols == aOther.mCols))
     return NS_STYLE_HINT_NONE;
   return NS_STYLE_HINT_REFLOW;
 }

@@ -195,9 +195,13 @@ void ColMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       aData->mTableData->mSpan.GetUnit() == eCSSUnit_Null) {
     // span: int
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::span);
-    if (value && value->Type() == nsAttrValue::eInteger)
-      aData->mTableData->mSpan.SetIntValue(value->GetIntegerValue(),
-                                           eCSSUnit_Integer);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      PRInt32 val = value->GetIntegerValue();
+      if (val >= 1) {
+        aData->mTableData->mSpan.SetIntValue(value->GetIntegerValue(),
+                                             eCSSUnit_Integer);
+      }
+    }
   }
 
   MapAttributesIntoRule(aAttributes, aData);

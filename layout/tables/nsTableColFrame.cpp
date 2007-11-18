@@ -160,7 +160,7 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
 #endif
 /* ----- global methods ----- */
 
-nsIFrame* 
+nsTableColFrame* 
 NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableColFrame(aContext);
