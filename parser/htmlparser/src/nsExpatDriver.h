@@ -124,7 +124,7 @@ private:
                    PRUint32 *aConsumed);
   nsresult HandleError();
 
-  void MaybeStopParser();
+  void MaybeStopParser(nsresult aState);
 
   PRBool BlockedOrInterrupted()
   {
