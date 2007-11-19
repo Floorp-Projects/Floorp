@@ -1094,9 +1094,6 @@ JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
 extern JS_PUBLIC_API(JSBool)
 JS_IsGCMarkingTracer(JSTracer *trc);
 
-extern JS_PUBLIC_API(void)
-JS_SetGCThingCallback(JSContext *cx, JSGCThingCallback cb, void *closure);
-
 extern JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing);
 
