@@ -3738,6 +3738,21 @@ nsContentUtils::GetTopLevelWidget(nsIWidget* aWidget)
 }
 
 /* static */
+const nsDependentString
+nsContentUtils::GetLocalizedEllipsis()
+{
+  static PRUnichar sBuf[4] = { 0, 0, 0, 0 };
+  if (!sBuf[0]) {
+    nsAutoString tmp(GetLocalizedStringPref("intl.ellipsis"));
+    PRUint32 len = PR_MIN(tmp.Length(), NS_ARRAY_LENGTH(sBuf) - 1);
+    CopyUnicodeTo(tmp, 0, sBuf, len);
+    if (!sBuf[0])
+      sBuf[0] = PRUnichar(0x2026);
+  }
+  return nsDependentString(sBuf);
+}
+
+/* static */
 void
 nsAutoGCRoot::Shutdown()
 {
