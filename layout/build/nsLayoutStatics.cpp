@@ -80,6 +80,7 @@
 #include "nsTextFrameTextRunCache.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
+#include "nsCSSRuleProcessor.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -245,6 +246,7 @@ nsLayoutStatics::Shutdown()
   nsContentList::Shutdown();
   nsComputedDOMStyle::Shutdown();
   CSSLoaderImpl::Shutdown();
+  nsCSSRuleProcessor::Shutdown();
   nsTextFrameTextRunCache::Shutdown();
   nsCSSRendering::Shutdown();
 #ifdef DEBUG

@@ -74,6 +74,13 @@
 #include "nsQuickSort.h"
 #include "nsAttrValue.h"
 #include "nsAttrName.h"
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsTArray.h"
+
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
 
 struct RuleValue {
   /**
@@ -738,6 +745,48 @@ nsCSSRuleProcessor::~nsCSSRuleProcessor()
 
 NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
+static PRBool
+InitSystemMetrics()
+{
+  NS_ASSERTION(!sSystemMetrics, "already initialized");
+
+  sSystemMetrics = new nsTArray< nsCOMPtr<nsIAtom> >;
+  NS_ENSURE_TRUE(sSystemMetrics, PR_FALSE);
+
+  nsresult rv;
+  nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID, &rv));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  PRInt32 metricResult;
+  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollArrowStyle, metricResult);
+  if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartBackward) {
+    sSystemMetrics->AppendElement(do_GetAtom("scrollbar-start-backward"));
+  }
+  if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartForward) {
+    sSystemMetrics->AppendElement(do_GetAtom("scrollbar-start-forward"));
+  }
+  if (metricResult & nsILookAndFeel::eMetric_ScrollArrowEndBackward) {
+    sSystemMetrics->AppendElement(do_GetAtom("scrollbar-end-backward"));
+  }
+  if (metricResult & nsILookAndFeel::eMetric_ScrollArrowEndForward) {
+    sSystemMetrics->AppendElement(do_GetAtom("scrollbar-end-forward"));
+  }
+
+  lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollSliderStyle, metricResult);
+  if (metricResult != nsILookAndFeel::eMetric_ScrollThumbStyleNormal) {
+    sSystemMetrics->AppendElement(do_GetAtom("scrollbar-thumb-proportional"));
+  }
+
+  return PR_TRUE;
+}
+
+/* static */ void
+nsCSSRuleProcessor::Shutdown()
+{
+  delete sSystemMetrics;
+  sSystemMetrics = nsnull;
+}
+
 RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
                                      nsIContent* aContent, 
                                      nsRuleWalker* aRuleWalker,
@@ -1104,6 +1153,15 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                 (child->GetNameSpaceID() == element->GetNameSpaceID() &&
                  child->Tag()->Equals(nsDependentString(pseudoClass->mString)))));
       result = (child == nsnull);
+    }
+    else if (nsCSSPseudoClasses::mozSystemMetric == pseudoClass->mAtom) {
+      if (!sSystemMetrics && !InitSystemMetrics()) {
+        return PR_FALSE;
+      }
+      NS_ASSERTION(pseudoClass->mString, "Must have string!");
+      nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->mString);
+      result = sSystemMetrics->IndexOf(metric) !=
+               sSystemMetrics->NoIndex;
     }
     else if (nsCSSPseudoClasses::mozHasHandlerRef == pseudoClass->mAtom) {
       nsIContent *child = nsnull;

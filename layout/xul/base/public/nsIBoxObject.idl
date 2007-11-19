@@ -40,7 +40,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(21f723fd-7fb9-4e19-bfa8-0a53a26dc242)]
+[scriptable, uuid(ce572460-b0f2-4650-a9e7-c53a99d3b6ad)]
 interface nsIBoxObject : nsISupports
 {
   readonly attribute nsIDOMElement element;
@@ -64,8 +64,6 @@ interface nsIBoxObject : nsISupports
   readonly attribute nsIDOMElement lastChild;
   readonly attribute nsIDOMElement nextSibling;
   readonly attribute nsIDOMElement previousSibling;
-
-  wstring getLookAndFeelMetric(in wstring propertyName);
 };
 
 %{C++
