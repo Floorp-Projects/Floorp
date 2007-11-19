@@ -120,6 +120,18 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp);
 extern JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark);
 
+extern JSBool
+js_GetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+extern JSBool
+js_SetArgument(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+extern JSBool
+js_GetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+extern JSBool
+js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
 #ifdef DUMP_CALL_TABLE
 # define JSOPTION_LOGCALL_TOSOURCE JS_BIT(15)
 

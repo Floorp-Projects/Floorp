@@ -2996,6 +2996,26 @@ CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
 }
 
 JSScopeProperty *
+js_AddHiddenProperty(JSContext *cx, JSObject *obj, jsid id,
+                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
+                     uintN attrs, uintN flags, intN shortid)
+{
+    id = JSID_HIDE_NAME(id);
+    flags |= SPROP_IS_HIDDEN;
+    return js_AddNativeProperty(cx, obj, id, getter, setter, slot, attrs,
+                                flags, shortid);
+}
+
+JSBool
+js_LookupHiddenProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                        JSProperty **propp)
+{
+    id = JSID_HIDE_NAME(id);
+    return js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_HIDDEN,
+                                      objp, propp);
+}
+
+JSScopeProperty *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
                      JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
                      uintN attrs, uintN flags, intN shortid)
