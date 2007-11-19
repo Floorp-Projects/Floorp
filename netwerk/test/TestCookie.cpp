@@ -511,7 +511,7 @@ main(PRInt32 argc, char *argv[])
 
       allTestsPassed = PrintResult(rv, 9) && allTestsPassed;
 
-/*
+
       // *** foreign cookie tests
       printf("*** Beginning foreign cookie tests...\n");
 
@@ -560,7 +560,7 @@ main(PRInt32 argc, char *argv[])
       rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       allTestsPassed = PrintResult(rv, 14) && allTestsPassed;
-*/
+
 
       // *** parser tests
       printf("*** Beginning parser tests...\n");
@@ -598,7 +598,7 @@ main(PRInt32 argc, char *argv[])
 
       allTestsPassed = PrintResult(rv, 10) && allTestsPassed;
 
-/*
+
       // *** mailnews tests
       printf("*** Beginning mailnews tests...\n");
 
@@ -628,7 +628,7 @@ main(PRInt32 argc, char *argv[])
       rv[6] = CheckResult(cookie.get(), MUST_BE_NULL);
 
       allTestsPassed = PrintResult(rv, 7) && allTestsPassed;
-*/
+
 
       // *** path ordering tests
       printf("*** Beginning path ordering tests...\n");
