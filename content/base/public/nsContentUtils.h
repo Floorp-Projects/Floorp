@@ -1121,6 +1121,11 @@ public:
    */
   static nsIWidget* GetTopLevelWidget(nsIWidget* aWidget);
 
+  /**
+   * Return the localized ellipsis for UI.
+   */
+  static const nsDependentString GetLocalizedEllipsis();
+
 private:
 
   static PRBool InitializeEventTable();
