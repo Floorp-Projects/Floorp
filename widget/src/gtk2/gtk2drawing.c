@@ -1058,9 +1058,12 @@ moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
-    gtk_paint_box(style, drawable, state_type, GTK_SHADOW_IN,
-                  cliprect, gTreeViewWidget, "treeview", rect->x,
-                  rect->y, rect->width, rect->height);
+    gtk_paint_flat_box(style, drawable, state_type, GTK_SHADOW_NONE,
+                       cliprect, gTreeViewWidget, "treeview", rect->x + 1,
+                       rect->y + 1, rect->width - 1, rect->height - 1);
+
+    gdk_draw_rectangle(drawable, style->dark_gc[state_type], FALSE, rect->x,
+                       rect->y, rect->width - 1, rect->height - 1);
 
     return MOZ_GTK_SUCCESS;
 }
