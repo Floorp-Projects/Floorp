@@ -1686,11 +1686,15 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
 nsresult
 nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  nsMenuChainItem* item = GetTopVisibleMenu();
-  if (item && item->PopupType() == ePopupTypeMenu) {
-    aKeyEvent->StopPropagation();
-    aKeyEvent->PreventDefault();
+  // don't do anything if a menu isn't open or a menubar isn't active
+  if (!mActiveMenuBar) {
+    nsMenuChainItem* item = GetTopVisibleMenu();
+    if (!item || item->PopupType() != ePopupTypeMenu)
+      return NS_OK;
   }
+
+  aKeyEvent->StopPropagation();
+  aKeyEvent->PreventDefault();
 
   return NS_OK; // I am consuming event
 }
@@ -1698,10 +1702,12 @@ nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  // don't do anything if a menu isn't open
-  nsMenuChainItem* item = GetTopVisibleMenu();
-  if (!item || item->PopupType() != ePopupTypeMenu)
-    return NS_OK;
+  // don't do anything if a menu isn't open or a menubar isn't active
+  if (!mActiveMenuBar) {
+    nsMenuChainItem* item = GetTopVisibleMenu();
+    if (!item || item->PopupType() != ePopupTypeMenu)
+      return NS_OK;
+  }
 
   PRInt32 menuAccessKey = -1;
 
@@ -1826,8 +1832,8 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     HandleShortcutNavigation(keyEvent, nsnull);
   }
 
-  if (mCurrentMenu) {
-    // if a menu is open, it consumes the key event
+  if (mCurrentMenu || mActiveMenuBar) {
+    // if a menu is open or a menubar is active, it consumes the key event
     aKeyEvent->StopPropagation();
     aKeyEvent->PreventDefault();
   }
