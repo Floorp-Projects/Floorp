@@ -98,7 +98,7 @@
             oncommand="UpdateCRL();"/>
     <button id="importCRL" class="push"
             label="&certmgr.restore2.label;"
-            accesskey="&certmgr.restore.accesskey;"
+            accesskey="&certmgr.restore2.accesskey;"
             oncommand="ImportCRL();"/>
     <spacer flex="2"/>
     <button dlgtype="accept"/>
