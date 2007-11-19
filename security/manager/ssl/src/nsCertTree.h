@@ -100,6 +100,7 @@ public:
   } mTypeOfEntry;
   nsString mHostWithPort;
   nsCertOverride::OverrideBits mOverrideBits;
+  PRBool mIsTemporary;
 };
 
 class nsCertTree : public nsICertTree

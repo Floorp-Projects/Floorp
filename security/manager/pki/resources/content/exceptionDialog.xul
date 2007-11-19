@@ -108,5 +108,8 @@
                  style="font-weight: bold; padding-bottom: 1em;"/>
     <description id="status3LongDescription" style="white-space: -moz-pre-wrap;"/>
     <spacer flex="1"/>
+    <checkbox id="permanent" checked="true" disabled="true"
+              label="&exceptionMgr.permanent.label;"
+              accesskey="&exceptionMgr.permanent.accesskey;"/>
   </groupbox>
 </dialog>
