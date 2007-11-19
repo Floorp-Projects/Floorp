@@ -111,7 +111,7 @@ extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom);
 
-extern JS_FRIEND_API(void)
+extern void
 js_TraceFunction(JSTracer *trc, JSFunction *fun);
 
 extern void
