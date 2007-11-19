@@ -2166,16 +2166,16 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef) {
 function UpdateUrlbarSearchSplitterState()
 {
   var splitter = document.getElementById("urlbar-search-splitter");
-
   var urlbar = document.getElementById("urlbar-container");
   var searchbar = document.getElementById("search-container");
+
   var ibefore = null;
-  if (urlbar.nextSibling == searchbar)
-    ibefore = searchbar;
-  else if (searchbar.nextSibling == urlbar)
-    ibefore = urlbar;
-  else if (splitter)
-    splitter.parentNode.removeChild(splitter);
+  if (urlbar && searchbar) {
+    if (urlbar.nextSibling == searchbar)
+      ibefore = searchbar;
+    else if (searchbar.nextSibling == urlbar)
+      ibefore = urlbar;
+  }
 
   if (ibefore) {
     if (!splitter) {
@@ -2186,7 +2186,8 @@ function UpdateUrlbarSearchSplitterState()
       splitter.className = "chromeclass-toolbar-additional";
     }
     urlbar.parentNode.insertBefore(splitter, ibefore);
-  }
+  } else if (splitter)
+    splitter.parentNode.removeChild(splitter);
 }
 
 function UpdatePageProxyState()
