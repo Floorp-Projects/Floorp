@@ -1235,7 +1235,8 @@ js_IsGlobalReference(JSTreeContext *tc, JSAtom *atom, JSBool *loopyp)
             continue;
         }
         if (stmt->flags & SIF_SCOPE) {
-            JS_ASSERT(STOBJ_GET_CLASS(stmt->u.blockObj) == &js_BlockClass);
+            JS_ASSERT(LOCKED_OBJ_GET_CLASS(stmt->u.blockObj) ==
+                      &js_BlockClass);
             scope = OBJ_SCOPE(stmt->u.blockObj);
             if (SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom)))
                 return JS_FALSE;
@@ -1647,10 +1648,26 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * with object or catch variable; nor can prop's value be changed,
              * nor can prop be deleted.
              */
+            prop = NULL;
             if (OBJ_GET_CLASS(cx, obj) == &js_FunctionClass) {
-                JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, obj));
-                if (js_LookupLocal(cx, fp->fun, atom, NULL) != JSLOCAL_NONE)
+                ok = js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom),
+                                             &pobj, &prop);
+                if (!ok)
                     break;
+                if (prop) {
+#ifdef DEBUG
+                    JSScopeProperty *sprop = (JSScopeProperty *)prop;
+
+                    /*
+                     * Any hidden property must be a formal arg or local var,
+                     * which will shadow a global const of the same name.
+                     */
+                    JS_ASSERT(sprop->getter == js_GetArgument ||
+                              sprop->getter == js_GetLocalVariable);
+#endif
+                    OBJ_DROP_PROPERTY(cx, pobj, prop);
+                    break;
+                }
             }
 
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop);
@@ -1820,7 +1837,7 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
  * pn->pn_op.  If pn->pn_slot is still -1 on return, pn->pn_op nevertheless
  * may have been optimized, e.g., from JSOP_NAME to JSOP_ARGUMENTS.  Whether
  * or not pn->pn_op was modified, if this function finds an argument or local
- * variable name, pn->pn_const will be true for const properties after a
+ * variable name, pn->pn_attrs will contain the property's attributes after a
  * successful return.
  *
  * NB: if you add more opcodes specialized from JSOP_NAME, etc., don't forget
@@ -1836,10 +1853,14 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
     jsint slot;
     JSOp op;
     JSStackFrame *fp;
+    JSObject *obj, *pobj;
     JSClass *clasp;
-    JSLocalKind localKind;
-    uintN index;
+    JSBool optimizeGlobals;
+    JSPropertyOp getter;
+    uintN attrs;
     JSAtomListElement *ale;
+    JSProperty *prop;
+    JSScopeProperty *sprop;
 
     JS_ASSERT(pn->pn_type == TOK_NAME);
     if (pn->pn_slot >= 0 || pn->pn_op == JSOP_ARGUMENTS)
@@ -1903,32 +1924,42 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         return JS_TRUE;
 
     /*
-     * We can't optimize if we are in an eval called inside a with statement.
+     * We can't optimize if we're not compiling a function body, whether via
+     * eval, or directly when compiling a function statement or expression.
      */
-    if (fp->scopeChain != fp->varobj)
-        return JS_TRUE;
-
-    clasp = OBJ_GET_CLASS(cx, fp->varobj);
+    obj = fp->varobj;
+    clasp = OBJ_GET_CLASS(cx, obj);
     if (clasp != &js_FunctionClass && clasp != &js_CallClass) {
-        /*
-         * We cannot optimize the name access when compiling with an eval or
-         * debugger frame.
-         */
+        /* Check for an eval or debugger frame. */
         if (fp->flags & JSFRAME_SPECIAL)
             return JS_TRUE;
 
         /*
-         * We are compiling a top-level script. Optimize global variable
-         * accesses if there are at least 100 uses in unambiguous contexts,
-         * or failing that, if least half of all the uses of global
-         * vars/consts/functions are in loops.
+         * Optimize global variable accesses if there are at least 100 uses
+         * in unambiguous contexts, or failing that, if least half of all the
+         * uses of global vars/consts/functions are in loops.
          */
-        if (!(tc->globalUses >= 100 ||
-              (tc->loopyGlobalUses &&
-               tc->loopyGlobalUses >= tc->globalUses / 2))) {
+        optimizeGlobals = (tc->globalUses >= 100 ||
+                           (tc->loopyGlobalUses &&
+                            tc->loopyGlobalUses >= tc->globalUses / 2));
+        if (!optimizeGlobals)
             return JS_TRUE;
-        }
+    } else {
+        optimizeGlobals = JS_FALSE;
+    }
 
+    /*
+     * We can't optimize if we are in an eval called inside a with statement.
+     */
+    if (fp->scopeChain != obj)
+        return JS_TRUE;
+
+    op = PN_OP(pn);
+    getter = NULL;
+#ifdef __GNUC__
+    attrs = slot = 0;   /* quell GCC overwarning */
+#endif
+    if (optimizeGlobals) {
         /*
          * We are optimizing global variables, and there is no pre-existing
          * global property named atom.  If atom was declared via const or var,
@@ -1939,6 +1970,10 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
             /* Use precedes declaration, or name is never declared. */
             return JS_TRUE;
         }
+
+        attrs = (ALE_JSOP(ale) == JSOP_DEFCONST)
+                ? JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT
+                : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
         /* Index atom so we can map fast global number to name. */
         JS_ASSERT(tc->flags & TCF_COMPILING);
@@ -1953,90 +1988,93 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
 
         if ((uint16)(slot + 1) > tc->ngvars)
             tc->ngvars = (uint16)(slot + 1);
-
-        op = PN_OP(pn);
-        switch (op) {
-          case JSOP_NAME:     op = JSOP_GETGVAR; break;
-          case JSOP_SETNAME:  op = JSOP_SETGVAR; break;
-          case JSOP_SETCONST: /* NB: no change */ break;
-          case JSOP_INCNAME:  op = JSOP_INCGVAR; break;
-          case JSOP_NAMEINC:  op = JSOP_GVARINC; break;
-          case JSOP_DECNAME:  op = JSOP_DECGVAR; break;
-          case JSOP_NAMEDEC:  op = JSOP_GVARDEC; break;
-          case JSOP_FORNAME:  /* NB: no change */ break;
-          case JSOP_DELNAME:  /* NB: no change */ break;
-          default: JS_ASSERT(0);
+    } else {
+        /*
+         * We may be able to optimize name to stack slot. Look for an argument
+         * or variable property in the function, or its call object, not found
+         * in any prototype object.  Rewrite pn_op and update pn accordingly.
+         * NB: We know that JSOP_DELNAME on an argument or variable evaluates
+         * to false, due to JSPROP_PERMANENT.
+         */
+        if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
+            return JS_FALSE;
+        sprop = (JSScopeProperty *) prop;
+        if (sprop) {
+            if (pobj == obj) {
+                getter = sprop->getter;
+                attrs = sprop->attrs;
+                slot = (sprop->flags & SPROP_HAS_SHORTID) ? sprop->shortid : -1;
+            }
+            OBJ_DROP_PROPERTY(cx, pobj, prop);
         }
-        pn->pn_const = (ALE_JSOP(ale) == JSOP_DEFCONST);
+    }
+
+    if (optimizeGlobals || getter) {
+        if (optimizeGlobals) {
+            switch (op) {
+              case JSOP_NAME:     op = JSOP_GETGVAR; break;
+              case JSOP_SETNAME:  op = JSOP_SETGVAR; break;
+              case JSOP_SETCONST: /* NB: no change */ break;
+              case JSOP_INCNAME:  op = JSOP_INCGVAR; break;
+              case JSOP_NAMEINC:  op = JSOP_GVARINC; break;
+              case JSOP_DECNAME:  op = JSOP_DECGVAR; break;
+              case JSOP_NAMEDEC:  op = JSOP_GVARDEC; break;
+              case JSOP_FORNAME:  /* NB: no change */ break;
+              case JSOP_DELNAME:  /* NB: no change */ break;
+              default: JS_ASSERT(0);
+            }
+        } else if (getter == js_GetLocalVariable ||
+                   getter == js_GetCallVariable) {
+            switch (op) {
+              case JSOP_NAME:     op = JSOP_GETVAR; break;
+              case JSOP_SETNAME:  op = JSOP_SETVAR; break;
+              case JSOP_SETCONST: op = JSOP_SETVAR; break;
+              case JSOP_INCNAME:  op = JSOP_INCVAR; break;
+              case JSOP_NAMEINC:  op = JSOP_VARINC; break;
+              case JSOP_DECNAME:  op = JSOP_DECVAR; break;
+              case JSOP_NAMEDEC:  op = JSOP_VARDEC; break;
+              case JSOP_FORNAME:  op = JSOP_FORVAR; break;
+              case JSOP_DELNAME:  op = JSOP_FALSE; break;
+              default: JS_ASSERT(0);
+            }
+        } else if (getter == js_GetArgument ||
+                   (getter == js_CallClass.getProperty &&
+                    fp->fun && (uintN) slot < fp->fun->nargs)) {
+            switch (op) {
+              case JSOP_NAME:     op = JSOP_GETARG; break;
+              case JSOP_SETNAME:  op = JSOP_SETARG; break;
+              case JSOP_INCNAME:  op = JSOP_INCARG; break;
+              case JSOP_NAMEINC:  op = JSOP_ARGINC; break;
+              case JSOP_DECNAME:  op = JSOP_DECARG; break;
+              case JSOP_NAMEDEC:  op = JSOP_ARGDEC; break;
+              case JSOP_FORNAME:  op = JSOP_FORARG; break;
+              case JSOP_DELNAME:  op = JSOP_FALSE; break;
+              default: JS_ASSERT(0);
+            }
+        }
         if (op != pn->pn_op) {
             pn->pn_op = op;
             pn->pn_slot = slot;
         }
-        return JS_TRUE;
+        pn->pn_attrs = attrs;
     }
 
-    if (clasp == &js_FunctionClass) {
+    if (pn->pn_slot < 0) {
         /*
-         * We are compiling a function body and may be able to optimize name
-         * to stack slot. Look for an argument or variable in the function and
-         * rewrite pn_op and update pn accordingly.
+         * We couldn't optimize pn, so it's not a global or local slot name.
+         * Now we must check for the predefined arguments variable.  It may be
+         * overridden by assignment, in which case the function is heavyweight
+         * and the interpreter will look up 'arguments' in the function's call
+         * object.
          */
-        JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, fp->varobj));
-        localKind = js_LookupLocal(cx, fp->fun, atom, &index);
-        if (localKind != JSLOCAL_NONE) {
-            op = PN_OP(pn);
-            if (localKind == JSLOCAL_ARG) {
-                switch (op) {
-                  case JSOP_NAME:     op = JSOP_GETARG; break;
-                  case JSOP_SETNAME:  op = JSOP_SETARG; break;
-                  case JSOP_INCNAME:  op = JSOP_INCARG; break;
-                  case JSOP_NAMEINC:  op = JSOP_ARGINC; break;
-                  case JSOP_DECNAME:  op = JSOP_DECARG; break;
-                  case JSOP_NAMEDEC:  op = JSOP_ARGDEC; break;
-                  case JSOP_FORNAME:  op = JSOP_FORARG; break;
-                  case JSOP_DELNAME:  op = JSOP_FALSE; break;
-                  default: JS_ASSERT(0);
-                }
-                pn->pn_const = JS_FALSE;
-            } else {
-                JS_ASSERT(localKind == JSLOCAL_VAR ||
-                          localKind == JSLOCAL_CONST);
-                switch (op) {
-                  case JSOP_NAME:     op = JSOP_GETVAR; break;
-                  case JSOP_SETNAME:  op = JSOP_SETVAR; break;
-                  case JSOP_SETCONST: op = JSOP_SETVAR; break;
-                  case JSOP_INCNAME:  op = JSOP_INCVAR; break;
-                  case JSOP_NAMEINC:  op = JSOP_VARINC; break;
-                  case JSOP_DECNAME:  op = JSOP_DECVAR; break;
-                  case JSOP_NAMEDEC:  op = JSOP_VARDEC; break;
-                  case JSOP_FORNAME:  op = JSOP_FORVAR; break;
-                  case JSOP_DELNAME:  op = JSOP_FALSE; break;
-                  default: JS_ASSERT(0);
-                }
-                pn->pn_const = (localKind == JSLOCAL_CONST);
-            }
-            pn->pn_op = op;
-            pn->pn_slot = index;
+        if (pn->pn_op == JSOP_NAME &&
+            atom == cx->runtime->atomState.argumentsAtom) {
+            pn->pn_op = JSOP_ARGUMENTS;
             return JS_TRUE;
         }
-    }
 
-    /*
-     * Here we either compiling a function body or an eval script inside a
-     * function and couldn't optimize pn, so it's not a global or local slot
-     * name.
-     *
-     * Now we must check for the predefined arguments variable.  It may be
-     * overridden by assignment, in which case the function is heavyweight
-     * and the interpreter will look up 'arguments' in the function's call
-     * object.
-     */
-    if (pn->pn_op == JSOP_NAME &&
-        atom == cx->runtime->atomState.argumentsAtom) {
-        pn->pn_op = JSOP_ARGUMENTS;
-        return JS_TRUE;
+        tc->flags |= TCF_FUN_USES_NONLOCALS;
     }
-    tc->flags |= TCF_FUN_USES_NONLOCALS;
     return JS_TRUE;
 }
 
@@ -2073,7 +2111,7 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
          * name in that scope object.  See comments at case JSOP_NAMEDFUNOBJ:
          * in jsinterp.c.
          */
-        fun = GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object);
+        fun = (JSFunction *) OBJ_GET_PRIVATE(cx, pn->pn_funpob->object);
         if (fun->atom)
             *answer = JS_TRUE;
         break;
@@ -2134,7 +2172,7 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
                 if (!*answer &&
                     (pn->pn_op != JSOP_NOP ||
                      pn2->pn_slot < 0 ||
-                     !pn2->pn_const)) {
+                     !(pn2->pn_attrs & JSPROP_READONLY))) {
                     *answer = JS_TRUE;
                 }
             }
@@ -3997,7 +4035,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                              pn->pn_pos.begin.lineno);
         cg2->treeContext.flags = (uint16) (pn->pn_flags | TCF_IN_FUNCTION);
         cg2->parent = cg;
-        fun = GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object);
+        fun = (JSFunction *) OBJ_GET_PRIVATE(cx, pn->pn_funpob->object);
         if (!js_EmitFunctionBody(cx, cg2, pn->pn_body, fun))
             return JS_FALSE;
 
@@ -4050,22 +4088,31 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         if ((cg->treeContext.flags & TCF_IN_FUNCTION) ||
             ((cx->fp->flags & JSFRAME_SPECIAL) && cx->fp->fun)) {
-            JSFunction *parentFun;
-            JSLocalKind localKind;
+            JSObject *obj, *pobj;
+            JSProperty *prop;
+            JSScopeProperty *sprop;
 
-            if (cg->treeContext.flags & TCF_IN_FUNCTION) {
-                JS_ASSERT(OBJ_GET_CLASS(cx, OBJ_GET_PARENT(cx, fun->object)) ==
-                          &js_FunctionClass);
-                parentFun =
-                    GET_FUNCTION_PRIVATE(cx, OBJ_GET_PARENT(cx, fun->object));
-            } else {
-                parentFun = cx->fp->fun;
+            obj = (cg->treeContext.flags & TCF_IN_FUNCTION)
+                  ? OBJ_GET_PARENT(cx, fun->object)
+                  : cx->fp->fun->object;
+            if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(fun->atom),
+                                         &pobj, &prop)) {
+                return JS_FALSE;
             }
-            localKind = js_LookupLocal(cx, parentFun, fun->atom, &slot);
-            if (localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST)
-                op = JSOP_DEFLOCALFUN;
-            else
-                JS_ASSERT(!(cg->treeContext.flags & TCF_IN_FUNCTION));
+
+            if (prop) {
+                if (pobj == obj) {
+                    sprop = (JSScopeProperty *) prop;
+                    if (sprop->getter == js_GetLocalVariable) {
+                        slot = sprop->shortid;
+                        op = JSOP_DEFLOCALFUN;
+                    }
+                }
+                OBJ_DROP_PROPERTY(cx, pobj, prop);
+            }
+
+            JS_ASSERT(op == JSOP_DEFLOCALFUN ||
+                      !(cg->treeContext.flags & TCF_IN_FUNCTION));
 
             /*
              * If this local function is declared in a body block induced
@@ -4077,9 +4124,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (stmt && stmt->type == STMT_BLOCK &&
                 stmt->down && stmt->down->type == STMT_BLOCK &&
                 (stmt->down->flags & SIF_SCOPE)) {
-                JS_ASSERT(STOBJ_GET_CLASS(stmt->down->u.blockObj) ==
-                          &js_BlockClass);
-                OBJ_SET_PARENT(cx, fun->object, stmt->down->u.blockObj);
+                obj = stmt->down->u.blockObj;
+                JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
+                OBJ_SET_PARENT(cx, fun->object, obj);
             }
         }
 
@@ -4437,7 +4484,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     op = PN_OP(pn3);
                 }
                 if (pn3->pn_slot >= 0) {
-                    if (pn3->pn_const) {
+                    if (pn3->pn_attrs & JSPROP_READONLY) {
                         JS_ASSERT(op == JSOP_FORVAR);
                         op = JSOP_FORCONST;
                     }
@@ -5439,12 +5486,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /*
              * Take care to avoid SRC_ASSIGNOP if the left-hand side is a
              * const declared in a function (i.e., with non-negative pn_slot
-             * and when pn_const is true), as in this case (just a bit further
-             * below) we will avoid emitting the assignment op.
+             * and JSPROP_READONLY in pn_attrs), as in this case (just a bit
+             * further below) we will avoid emitting the assignment op.
              */
             if (pn2->pn_type != TOK_NAME ||
                 pn2->pn_slot < 0 ||
-                !pn2->pn_const) {
+                !(pn2->pn_attrs & JSPROP_READONLY)) {
                 if (js_NewSrcNote(cx, cg, SRC_ASSIGNOP) < 0)
                     return JS_FALSE;
             }
@@ -5465,7 +5512,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /* Finally, emit the specialized assignment bytecode. */
         switch (pn2->pn_type) {
           case TOK_NAME:
-            if (pn2->pn_slot < 0 || !pn2->pn_const) {
+            if (pn2->pn_slot < 0 || !(pn2->pn_attrs & JSPROP_READONLY)) {
                 if (pn2->pn_slot >= 0) {
                     EMIT_UINT16_IMM_OP(PN_OP(pn2), atomIndex);
                 } else {
@@ -5710,7 +5757,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             op = PN_OP(pn2);
             if (pn2->pn_slot >= 0) {
-                if (pn2->pn_const) {
+                if (pn2->pn_attrs & JSPROP_READONLY) {
                     /* Incrementing a declared const: just get its value. */
                     op = ((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_ATOM)
                          ? JSOP_GETGVAR

@@ -186,7 +186,7 @@ JS_BEGIN_EXTERN_C
  * TOK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
  *                                 JSOP_REGEXP
  * TOK_REGEXP               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
- *                          with pn_slot >= 0 and pn_const telling const-ness
+ *                          with pn_slot >= 0 and pn_attrs telling const-ness
  * TOK_NUMBER   dval        pn_dval: double value of numeric literal
  * TOK_PRIMARY  nullary     pn_op: JSOp bytecode
  *
@@ -306,7 +306,7 @@ struct JSParseNode {
             JSAtom      *atom;          /* name or label atom, null if slot */
             JSParseNode *expr;          /* object or initializer */
             jsint       slot;           /* -1 or arg or local var slot */
-            JSBool      constslot;      /* true for const names */
+            uintN       attrs;          /* attributes if local var or const */
         } name;
         struct {                        /* lexical scope. */
             JSParsedObjectBox *pob;     /* block object */
@@ -344,7 +344,7 @@ struct JSParseNode {
 #define pn_atom         pn_u.name.atom
 #define pn_expr         pn_u.name.expr
 #define pn_slot         pn_u.name.slot
-#define pn_const        pn_u.name.constslot
+#define pn_attrs        pn_u.name.attrs
 #define pn_dval         pn_u.dval
 #define pn_atom2        pn_u.apair.atom2
 #define pn_pob          pn_u.object.pob
