@@ -56,7 +56,7 @@
         <treecol id="certcol" label="&certmgr.certname;" primary="true" 
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
-        <treecol id="sitecol" label="&certmgr.certsite;" 
+        <treecol id="sitecol" label="&certmgr.certserver;" 
                  persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
 <!-- this is too geeky, leave out for now

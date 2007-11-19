@@ -835,12 +835,14 @@ var Module = {
   },
     
   registerSelf: function mod_regself(compMgr, fileSpec, location, type) {
-    // Don't register these if Firefox is launching a XULRunner application
-    const FIREFOX_UID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
-    var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
-                            .getService(Components.interfaces.nsIXULAppInfo);
-    if (appInfo.ID != FIREFOX_UID)
-      return;
+    if (Components.classes["@mozilla.org/xre/app-info;1"]) {
+      // Don't register these if Firefox is launching a XULRunner application
+      const FIREFOX_UID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+      var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                              .getService(Components.interfaces.nsIXULAppInfo);
+      if (appInfo.ID != FIREFOX_UID)
+        return;
+    }
 
     var compReg =
       compMgr.QueryInterface( Components.interfaces.nsIComponentRegistrar );

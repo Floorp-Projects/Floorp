@@ -177,7 +177,9 @@ nsXULTreeAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Get focus status from base class
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  if (!mDOMNode)
+    return NS_OK;
+  
   // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
   if (element) {
@@ -600,7 +602,11 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
   mTreeView->GetCellText(mRow, mColumn, aName);
   
-  // if still no name try cell value
+  // If there is still no name try the cell value:
+  // This is for graphical cells. We need tree/table view implementors to implement
+  // FooView::GetCellValue to return a meaningful string for cases where there is
+  // something shown in the cell (non-text) such as a star icon; in which case
+  // GetCellValue for that cell would return "starred" or "flagged" for example.
   if (aName.IsEmpty()) {
     mTreeView->GetCellValue(mRow, mColumn, aName);
   }

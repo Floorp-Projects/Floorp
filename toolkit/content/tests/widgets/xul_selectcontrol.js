@@ -140,6 +140,8 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix)
   // radio buttons don't handle removing quite right due to XBL issues,
   // so disable testing some of these remove tests for now - bug 367400
   var isnotradio = (element.localName != "radiogroup");
+  // XXXndeakin disable these tests for all widgets for now. They require bug 331513.
+  isnotradio = false;
   if (isnotradio)
     test_nsIDOMXULSelectControlElement_States(element, testid + "removeItemAt 2", 3, fourthitem, 1, fourthvalue);
 

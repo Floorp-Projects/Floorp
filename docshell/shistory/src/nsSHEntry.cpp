@@ -162,6 +162,7 @@ nsSHEntry::~nsSHEntry()
   }
 
 #ifdef DEBUG
+  // This is not happening as far as I can tell from breakpad as of early November 2007
   nsExpirationTracker<nsSHEntry,3>::Iterator iterator(gHistoryTracker);
   nsSHEntry* elem;
   while ((elem = iterator.Next()) != nsnull) {
@@ -226,13 +227,15 @@ nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
 {
   NS_PRECONDITION(!aViewer || !mContentViewer, "SHEntry already contains viewer");
 
-  if (!aViewer) {
+  if (mContentViewer || !aViewer) {
     DropPresentationState();
   }
 
   mContentViewer = aViewer;
 
   if (mContentViewer) {
+    gHistoryTracker->AddObject(this);
+
     nsCOMPtr<nsIDOMDocument> domDoc;
     mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
     // Store observed document in strong pointer in case it is removed from
@@ -242,8 +245,6 @@ nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
       mDocument->SetShellsHidden(PR_TRUE);
       mDocument->AddMutationObserver(this);
     }
-    
-    gHistoryTracker->AddObject(this);
   }
 
   return NS_OK;

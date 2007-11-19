@@ -105,7 +105,6 @@ include $(topsrcdir)/config/rules.mk
 
 OS_LIBS = \
   kernel32.lib \
-  rpcndr.lib \
   rpcns4.lib \
   rpcrt4.lib \
   ole32.lib \

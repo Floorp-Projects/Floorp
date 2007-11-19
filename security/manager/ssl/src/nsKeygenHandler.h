@@ -42,11 +42,6 @@
 // Form Processor 
 #include "nsIFormProcessor.h" 
 
-typedef struct SECKeySizeChoiceInfoStr {
-    PRUnichar *name;
-    int size;
-} SECKeySizeChoiceInfo;
-
 nsresult GetSlotWithMechanism(PRUint32 mechanism,
                               nsIInterfaceRequestor *ctx,
                               PK11SlotInfo **retSlot);
@@ -81,6 +76,14 @@ protected:
 private:
   nsCOMPtr<nsIInterfaceRequestor> m_ctx;
 
-}; 
+  typedef struct SECKeySizeChoiceInfoStr {
+      nsString name;
+      int size;
+  } SECKeySizeChoiceInfo;
+
+  enum { number_of_key_size_choices = 2 };
+
+  SECKeySizeChoiceInfo mSECKeySizeChoiceList[number_of_key_size_choices];
+};
 
 #endif //_NSKEYGENHANDLER_H_

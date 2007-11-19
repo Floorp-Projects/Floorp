@@ -118,7 +118,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {"list", nsIAccessibleRole::ROLE_LIST, eNameLabelOrTitle, eNoValue, kNoReqStates,
             {eAria_readonly, kBoolState, nsIAccessibleStates::STATE_READONLY},
             {eAria_multiselectable, kBoolState, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, kEndEntry},
-  {"listbox", nsIAccessibleRole::ROLE_LIST, eNameLabelOrTitle, eNoValue, kNoReqStates,
+  {"listbox", nsIAccessibleRole::ROLE_LISTBOX, eNameLabelOrTitle, eNoValue, kNoReqStates,
             {eAria_disabled, kBoolState, nsIAccessibleStates::STATE_UNAVAILABLE},
             {eAria_readonly, kBoolState, nsIAccessibleStates::STATE_READONLY},
             {eAria_multiselectable, kBoolState, nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE}, kEndEntry},
@@ -144,13 +144,14 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {"menuitemradio", nsIAccessibleRole::ROLE_RADIO_MENU_ITEM, eNameOkFromChildren, eNoValue, nsIAccessibleStates::STATE_CHECKABLE,
             {eAria_disabled, kBoolState, nsIAccessibleStates::STATE_UNAVAILABLE},
             {eAria_checked, kBoolState, nsIAccessibleStates::STATE_CHECKED }, kEndEntry},
-  {"option", nsIAccessibleRole::ROLE_LISTITEM, eNameOkFromChildren, eNoValue, kNoReqStates,
+  {"option", nsIAccessibleRole::ROLE_OPTION, eNameOkFromChildren, eNoValue, kNoReqStates,
             {eAria_disabled, kBoolState, nsIAccessibleStates::STATE_UNAVAILABLE},
             {eAria_selected, kBoolState, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
             {eAria_selected, "false", nsIAccessibleStates::STATE_SELECTABLE},
             {eAria_checked, kBoolState, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
             {eAria_checked, "mixed", nsIAccessibleStates::STATE_MIXED | nsIAccessibleStates::STATE_CHECKABLE},
             {eAria_checked, "false", nsIAccessibleStates::STATE_CHECKABLE}, kEndEntry},
+  {"presentation", nsIAccessibleRole::ROLE_NOTHING, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"progressbar", nsIAccessibleRole::ROLE_PROGRESSBAR, eNameLabelOrTitle, eHasValueMinMax, nsIAccessibleStates::STATE_READONLY,
             {eAria_disabled, kBoolState, nsIAccessibleStates::STATE_UNAVAILABLE}, kEndEntry},
   {"radio", nsIAccessibleRole::ROLE_RADIOBUTTON, eNameOkFromChildren, eNoValue, kNoReqStates,
@@ -211,7 +212,17 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
             {eAria_checked, kBoolState, nsIAccessibleStates::STATE_CHECKED | nsIAccessibleStates::STATE_CHECKABLE},
             {eAria_checked, "mixed", nsIAccessibleStates::STATE_MIXED | nsIAccessibleStates::STATE_CHECKABLE},
             {eAria_checked, "false", nsIAccessibleStates::STATE_CHECKABLE},},
-  {nsnull, nsIAccessibleRole::ROLE_NOTHING, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry} // Last item
+};
+
+PRUint32 nsARIAMap::gWAIRoleMapLength = NS_ARRAY_LENGTH(nsARIAMap::gWAIRoleMap);
+
+nsRoleMapEntry nsARIAMap::gLandmarkRoleMap = {
+  "",
+  nsIAccessibleRole::ROLE_NOTHING,
+  eNameLabelOrTitle,
+  eNoValue,
+  kNoReqStates,
+  kEndEntry
 };
 
 /**

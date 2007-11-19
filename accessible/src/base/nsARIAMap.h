@@ -134,6 +134,8 @@ struct nsARIAMap
   static nsIAtom** gAriaAtomPtrsNS[eAria_none];
   static nsIAtom** gAriaAtomPtrsHyphenated[eAria_none];
   static nsRoleMapEntry gWAIRoleMap[];
+  static PRUint32 gWAIRoleMapLength;
+  static nsRoleMapEntry gLandmarkRoleMap;
   static nsStateMapEntry gWAIUnivStateMap[];
 };
 

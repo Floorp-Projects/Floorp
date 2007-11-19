@@ -251,6 +251,7 @@ pref("browser.history.grouping", "day");
 pref("browser.history.showSessions", false);
 pref("browser.sessionhistory.max_entries", 50);
 pref("browser.history_expire_days", 180);
+pref("browser.history_expire_visits", 20000);
 
 // handle external links
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
@@ -291,6 +292,10 @@ pref("browser.tabs.selectOwnerOnClose", true);
 // Default bookmark sorting
 pref("browser.bookmarks.sort.direction", "descending");
 pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
+
+// By default, do not overwrite bookmarks.html in the profile directory
+// See bug #381216 for details
+pref("browser.bookmarks.overwrite",               false);
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);

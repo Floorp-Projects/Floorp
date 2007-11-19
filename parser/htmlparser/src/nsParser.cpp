@@ -89,7 +89,7 @@ loop. The data which was left at the time of interruption will be processed
 the next time OnDataAvailable is called. If the parser has received its final
 chunk of data then OnDataAvailable will no longer be called by the networking
 module, so the parser will schedule a nsParserContinueEvent which will call
-the parser to process the  remaining data after returning to the event loop.
+the parser to process the remaining data after returning to the event loop.
 If the parser is interrupted while processing the remaining data it will
 schedule another ParseContinueEvent. The processing of data followed by
 scheduling of the continue events will proceed until either:
@@ -1423,14 +1423,14 @@ nsParser::Parse(const nsAString& aSourceBuffer,
 NS_IMETHODIMP
 nsParser::ParseFragment(const nsAString& aSourceBuffer,
                         void* aKey,
-                        nsVoidArray& aTagStack,
+                        nsTArray<nsAutoString>& aTagStack,
                         PRBool aXMLMode,
                         const nsACString& aMimeType,
                         nsDTDMode aMode)
 {
   nsresult result = NS_OK;
   nsAutoString  theContext;
-  PRUint32 theCount = aTagStack.Count();
+  PRUint32 theCount = aTagStack.Length();
   PRUint32 theIndex = 0;
 
   // Disable observers for fragments
@@ -1438,7 +1438,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
   for (theIndex = 0; theIndex < theCount; theIndex++) {
     theContext.AppendLiteral("<");
-    theContext.Append((PRUnichar*)aTagStack.ElementAt(theCount - theIndex - 1));
+    theContext.Append(aTagStack[theCount - theIndex - 1]);
     theContext.AppendLiteral(">");
   }
 
@@ -1515,7 +1515,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
           endContext.AppendLiteral("</");
         }
 
-        nsAutoString thisTag( (PRUnichar*)aTagStack.ElementAt(theIndex) );
+        nsAutoString& thisTag = aTagStack[theIndex];
         // was there an xmlns=?
         PRInt32 endOfTag = thisTag.FindChar(PRUnichar(' '));
         if (endOfTag == -1) {

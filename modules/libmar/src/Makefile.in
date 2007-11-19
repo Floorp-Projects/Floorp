@@ -71,3 +71,7 @@ ifdef HOST_NSPR_MDCPUCFG
 HOST_CFLAGS     += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
 endif
+
+# The intermediate (.ii/.s) files for host and target can have the same name...
+# disable parallel builds
+.NOTPARALLEL:

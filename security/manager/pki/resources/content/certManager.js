@@ -318,7 +318,7 @@ function websites_enableButtons()
   var enableEditButton=document.getElementById('websites_editButton');
   enableEditButton.setAttribute("disabled", !enable_edit);
   var enableExportButton=document.getElementById('websites_exportButton');
-  enableExportButton.setAttribute("disabled", !enable_edit);
+  enableExportButton.setAttribute("disabled", !enable_view);
   var enableDeleteButton=document.getElementById('websites_deleteButton');
   enableDeleteButton.setAttribute("disabled", !enable_delete);
 }

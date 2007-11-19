@@ -162,7 +162,7 @@ public:
                                nsIPrincipal* aOriginPrincipal);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
-  void ProcessAttachedQueue();
+  void ProcessAttachedQueue(PRUint32 aSkipSize = 0);
 
   void ExecuteDetachedHandlers();
 
@@ -224,6 +224,13 @@ protected:
                                      PRBool* aIsAnonymousContentList);
 
   nsIContent* GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild);
+
+  // Called by ContentAppended and ContentInserted to handle a single child
+  // insertion.  aChild must not be null.  aContainer may be null.
+  // aIndexInContainer is the index of the child in the parent.  aAppend is
+  // true if this child is being appended, not inserted.
+  void HandleChildInsertion(nsIContent* aContainer, nsIContent* aChild,
+                            PRUint32 aIndexInContainer, PRBool aAppend);
 
 #define NS_BINDINGMANAGER_NOTIFY_OBSERVERS(func_, params_) \
   NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIMutationObserver, \
@@ -287,7 +294,7 @@ protected:
   // A queue of binding attached event handlers that are awaiting execution.
   nsBindingList mAttachedStack;
   PRPackedBool mProcessingAttachedStack;
-  PRPackedBool mProcessOnEndUpdate;
+  PRUint32 mAttachedStackSizeOnOutermost;
 
   // Our posted event to process the attached queue, if any
   friend class nsRunnableMethod<nsBindingManager>;

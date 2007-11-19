@@ -70,6 +70,7 @@ static GtkWidget* gDropdownButtonWidget;
 static GtkWidget* gHandleBoxWidget;
 static GtkWidget* gToolbarWidget;
 static GtkWidget* gFrameWidget;
+static GtkWidget* gStatusbarWidget;
 static GtkWidget* gProgressWidget;
 static GtkWidget* gTabWidget;
 static GtkWidget* gTooltipWidget;
@@ -78,6 +79,10 @@ static GtkWidget* gMenuBarItemWidget;
 static GtkWidget* gMenuPopupWidget;
 static GtkWidget* gMenuItemWidget;
 static GtkWidget* gCheckMenuItemWidget;
+static GtkWidget* gTreeViewWidget;
+static GtkWidget* gTreeHeaderCellWidget;
+static GtkWidget* gTreeHeaderSortArrowWidget;
+static GtkWidget* gExpanderWidget;
 
 static GtkShadowType gMenuBarShadowType;
 static GtkShadowType gToolbarShadowType;
@@ -274,11 +279,23 @@ ensure_progress_widget()
 }
 
 static gint
+ensure_statusbar_widget()
+{
+    if (!gStatusbarWidget) {
+      gStatusbarWidget = gtk_statusbar_new();
+      setup_widget_prototype(gStatusbarWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 ensure_frame_widget()
 {
     if (!gFrameWidget) {
+        ensure_statusbar_widget();
         gFrameWidget = gtk_frame_new(NULL);
-        setup_widget_prototype(gFrameWidget);
+        gtk_container_add(GTK_CONTAINER(gStatusbarWidget), gFrameWidget);
+        gtk_widget_realize(gFrameWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -347,6 +364,44 @@ ensure_check_menu_item_widget()
     return MOZ_GTK_SUCCESS;
 }
 
+static gint
+ensure_tree_view_widget()
+{
+    if (!gTreeViewWidget) {
+        gTreeViewWidget = gtk_tree_view_new();
+        setup_widget_prototype(gTreeViewWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_tree_header_cell_widget()
+{
+    if(!gTreeHeaderCellWidget) {
+        GtkTreeViewColumn* treeViewColumn;
+        ensure_tree_view_widget();
+
+        treeViewColumn = gtk_tree_view_column_new();
+        gtk_tree_view_column_set_title(treeViewColumn, "M");
+
+        gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), treeViewColumn);
+        gTreeHeaderCellWidget = treeViewColumn->button;
+        gtk_tree_view_column_set_sort_indicator(treeViewColumn, TRUE);
+        gTreeHeaderSortArrowWidget = treeViewColumn->arrow;
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_expander_widget()
+{
+    if (!gExpanderWidget) {
+        gExpanderWidget = gtk_expander_new("M");
+        setup_widget_prototype(gExpanderWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
 static GtkStateType
 ConvertGtkState(GtkWidgetState* state)
 {
@@ -396,7 +451,7 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     gboolean interior_focus;
     gint focus_width, focus_pad;
 
-    moz_gtk_button_get_focus(&interior_focus, &focus_width, &focus_pad);
+    moz_gtk_widget_get_focus(widget, &interior_focus, &focus_width, &focus_pad);
 
     if (WINDOW_IS_MAPPED(drawable)) {
         gdk_window_set_back_pixmap(drawable, NULL, TRUE);
@@ -488,42 +543,10 @@ moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing)
 }
 
 gint
-moz_gtk_checkbox_get_focus(gboolean* interior_focus,
-                           gint* focus_width, gint* focus_pad)
+moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
+                         gint* focus_width, gint* focus_pad) 
 {
-    ensure_checkbox_widget();
-
-    gtk_widget_style_get (gCheckboxWidget,
-                          "interior-focus", interior_focus,
-                          "focus-line-width", focus_width,
-                          "focus-padding", focus_pad,
-                          NULL);
-
-    return MOZ_GTK_SUCCESS;
-}
-
-gint
-moz_gtk_radio_get_focus(gboolean* interior_focus,
-                        gint* focus_width, gint* focus_pad)
-{
-    ensure_radiobutton_widget();
-
-    gtk_widget_style_get (gRadiobuttonWidget,
-                          "interior-focus", interior_focus,
-                          "focus-line-width", focus_width,
-                          "focus-padding", focus_pad,
-                          NULL);
-
-    return MOZ_GTK_SUCCESS;
-}
-
-gint
-moz_gtk_button_get_focus(gboolean* interior_focus,
-                         gint* focus_width, gint* focus_pad)
-{
-    ensure_button_widget();
-
-    gtk_widget_style_get (gButtonWidget,
+    gtk_widget_style_get (widget,
                           "interior-focus", interior_focus,
                           "focus-line-width", focus_width,
                           "focus-padding", focus_pad,
@@ -1012,6 +1035,97 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+static gint 
+moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                       GdkRectangle* cliprect, GtkWidgetState* state)
+{
+    GtkStyle *style;
+    GtkStateType state_type;
+
+    ensure_tree_view_widget();
+
+    /* only handle disabled and normal states, otherwise the whole background
+     * area will be painted differently with other states */
+    state_type = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
+
+    /* In GTK the treeview sets the background of the window
+     * which contains the cells to the treeview base color.
+     * If we don't set it here the background color will not be correct.*/
+    gtk_widget_modify_bg(gTreeViewWidget, state_type,
+                         &gTreeViewWidget->style->base[state_type]);
+
+    style = gTreeViewWidget->style;
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+
+    gtk_paint_box(style, drawable, state_type, GTK_SHADOW_IN,
+                  cliprect, gTreeViewWidget, "treeview", rect->x,
+                  rect->y, rect->width, rect->height);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_tree_header_cell_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                               GdkRectangle* cliprect, GtkWidgetState* state)
+{
+    moz_gtk_button_paint(drawable, rect, cliprect, state, GTK_RELIEF_NORMAL,
+                         gTreeHeaderCellWidget);
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_tree_header_sort_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                                     GdkRectangle* cliprect, GtkWidgetState* state,
+                                     GtkArrowType flags)
+{
+    GdkRectangle arrow_rect;
+    GtkStateType state_type = ConvertGtkState(state);
+    GtkShadowType shadow_type = GTK_SHADOW_IN;
+    GtkArrowType arrow_type = flags;
+    GtkStyle* style;
+
+    ensure_tree_header_cell_widget();
+
+    /* hard code these values */
+    arrow_rect.width = 11;
+    arrow_rect.height = 11;
+    arrow_rect.x = rect->x + (rect->width - arrow_rect.width) / 2;
+    arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2;
+
+    style = gTreeHeaderSortArrowWidget->style;
+    TSOffsetStyleGCs(style, arrow_rect.x, arrow_rect.y);
+
+    gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
+                    gTreeHeaderSortArrowWidget, "arrow",  arrow_type, TRUE,
+                    arrow_rect.x, arrow_rect.y,
+                    arrow_rect.width, arrow_rect.height);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                       GdkRectangle* cliprect, GtkWidgetState* state,
+                       GtkExpanderStyle expander_state)
+{
+    GtkStyle *style;
+    GtkStateType state_type;
+
+    ensure_expander_widget();
+    style = gExpanderWidget->style;
+
+    /* Because the frame we get is of the entire treeview, we can't get the precise
+     * event state of one expander, thus rendering hover and active feedback useless. */
+    state_type = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+    gtk_paint_expander(style, drawable, state_type, cliprect, gExpanderWidget, "expander",
+                       rect->x + rect->width / 2, rect->y + rect->height / 2, expander_state);
+
+    return MOZ_GTK_SUCCESS;
+}
+
 static gint
 moz_gtk_option_menu_paint(GdkDrawable* drawable, GdkRectangle* rect,
                           GdkRectangle* cliprect, GtkWidgetState* state)
@@ -1112,7 +1226,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     real_arrow_rect.y = floor (arrow_rect.y + ((arrow_rect.height - real_arrow_rect.height) / 2) + 0.5);
 
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    gHorizScrollbarWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                    gDropdownButtonWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
                     real_arrow_rect.x, real_arrow_rect.y,
                     real_arrow_rect.width, real_arrow_rect.height);
 
@@ -1132,11 +1246,11 @@ moz_gtk_container_paint(GdkDrawable* drawable, GdkRectangle* rect,
     if (isradio) {
         ensure_radiobutton_widget();
         style = gRadiobuttonWidget->style;  
-        moz_gtk_radio_get_focus(&interior_focus, &focus_width, &focus_pad);
+        moz_gtk_widget_get_focus(gRadiobuttonWidget, &interior_focus, &focus_width, &focus_pad);
     } else {
         ensure_checkbox_widget();
         style = gCheckboxWidget->style;
-        moz_gtk_checkbox_get_focus(&interior_focus, &focus_width, &focus_pad);
+        moz_gtk_widget_get_focus(gCheckboxWidget, &interior_focus, &focus_width, &focus_pad);
     }
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
@@ -1247,21 +1361,37 @@ moz_gtk_tooltip_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_resizer_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                      GdkRectangle* cliprect, GtkWidgetState* state)
+{
+    GtkStyle* style;
+    GtkStateType state_type = ConvertGtkState(state);
+
+    ensure_window_widget();
+    style = gProtoWindow->style;
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+
+    gtk_paint_resize_grip(style, drawable, state_type, cliprect, gProtoWindow,
+                          NULL, GDK_WINDOW_EDGE_SOUTH_EAST, rect->x, rect->y,
+                          rect->width, rect->height);
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_frame_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     GdkRectangle* cliprect)
 {
-    GtkStyle* style = gProtoWindow->style;
-
-    TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
-                       NULL, gProtoWindow, "base", rect->x, rect->y,
-                       rect->width, rect->height);
+    GtkStyle* style;
+    GtkShadowType shadow_type;
 
     ensure_frame_widget();
     style = gFrameWidget->style;
 
+    gtk_widget_style_get(gStatusbarWidget, "shadow-type", &shadow_type, NULL);
+
     TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
+    gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, shadow_type,
                      cliprect, gFrameWidget, "frame", rect->x, rect->y,
                      rect->width, rect->height);
 
@@ -1541,7 +1671,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             /* Don't add this padding in HTML, otherwise the buttons will
                become too big and stuff the layout. */
             if (!inhtml) {
-                moz_gtk_button_get_focus(&interior_focus, &focus_width, &focus_pad);
+                moz_gtk_widget_get_focus(gButtonWidget, &interior_focus, &focus_width, &focus_pad);
                 *left += focus_width + focus_pad + child_spacing;
                 *right += focus_width + focus_pad + child_spacing;
                 *top += focus_width + focus_pad + child_spacing;
@@ -1562,6 +1692,42 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_ENTRY:
         ensure_entry_widget();
         w = gEntryWidget;
+        break;
+    case MOZ_GTK_TREEVIEW:
+        ensure_tree_view_widget();
+        w = gTreeViewWidget;
+        break;
+    case MOZ_GTK_TREE_HEADER_CELL:
+        {
+            /* A Tree Header in GTK is just a different styled button 
+             * It must be placed in a TreeView for getting the correct style
+             * assigned.
+             * That is why the following code is the same as for MOZ_GTK_BUTTON.  
+             * */
+
+            /* Constant in gtkbutton.c */
+            static const gint child_spacing = 1;
+            gboolean interior_focus;
+            gint focus_width, focus_pad;
+
+            ensure_tree_header_cell_widget();
+            *left = *top = *right = *bottom = GTK_CONTAINER(gTreeHeaderCellWidget)->border_width;
+
+            moz_gtk_widget_get_focus(gTreeHeaderCellWidget, &interior_focus, &focus_width, &focus_pad);     
+            *left += focus_width + focus_pad;
+            *right += focus_width + focus_pad;
+            *top += focus_width + focus_pad + child_spacing;
+            *bottom += focus_width + focus_pad + child_spacing;
+            
+            *left += gTreeHeaderCellWidget->style->xthickness;
+            *right += gTreeHeaderCellWidget->style->xthickness;
+            *top += gTreeHeaderCellWidget->style->ythickness;
+            *bottom += gTreeHeaderCellWidget->style->ythickness;
+            return MOZ_GTK_SUCCESS;
+        }
+    case MOZ_GTK_TREE_HEADER_SORTARROW:
+        ensure_tree_header_cell_widget();
+        w = gTreeHeaderSortArrowWidget;
         break;
     case MOZ_GTK_DROPDOWN_ARROW:
         ensure_arrow_widget();
@@ -1621,12 +1787,16 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
 
             /* If the focus is interior, then the label has a border of
                (focus_width + focus_pad). */
-            if (widget == MOZ_GTK_CHECKBUTTON_LABEL)
-                moz_gtk_checkbox_get_focus(&interior_focus,
+            if (widget == MOZ_GTK_CHECKBUTTON_LABEL) {
+                ensure_checkbox_widget();
+                moz_gtk_widget_get_focus(gCheckboxWidget, &interior_focus,
                                            &focus_width, &focus_pad);
-            else
-                moz_gtk_radio_get_focus(&interior_focus,
+            }
+            else {
+                ensure_radiobutton_widget();
+                moz_gtk_widget_get_focus(gRadiobuttonWidget, &interior_focus,
                                         &focus_width, &focus_pad);
+            }
 
             if (interior_focus)
                 *left = *top = *right = *bottom = (focus_width + focus_pad);
@@ -1645,11 +1815,13 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             /* If the focus is _not_ interior, then the container has a border
                of (focus_width + focus_pad). */
             if (widget == MOZ_GTK_CHECKBUTTON_CONTAINER) {
-                moz_gtk_checkbox_get_focus(&interior_focus,
+                ensure_checkbox_widget();
+                moz_gtk_widget_get_focus(gCheckboxWidget, &interior_focus,
                                            &focus_width, &focus_pad);
                 w = gCheckboxWidget;
             } else {
-                moz_gtk_radio_get_focus(&interior_focus,
+                ensure_radiobutton_widget();
+                moz_gtk_widget_get_focus(gRadiobuttonWidget, &interior_focus,
                                         &focus_width, &focus_pad);
                 w = gRadiobuttonWidget;
             }
@@ -1695,9 +1867,11 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_GRIPPER:
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_TAB:
+    case MOZ_GTK_EXPANDER:
     /* These widgets have no borders.*/
     case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_WINDOW:
+    case MOZ_GTK_RESIZER:
         *left = *top = *right = *bottom = 0;
         return MOZ_GTK_SUCCESS;
     default:
@@ -1727,6 +1901,17 @@ moz_gtk_get_dropdown_arrow_size(gint* width, gint* height)
 
     *height = 2 * (1 + YTHICKNESS(gDropdownButtonWidget->style));
     *height += 11 + GTK_MISC(gArrowWidget)->ypad * 2;
+
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
+moz_gtk_get_expander_size(gint* size)
+{
+    ensure_expander_widget();
+    gtk_widget_style_get(gExpanderWidget,
+                         "expander-size", size,
+                         NULL);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1812,6 +1997,18 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
     case MOZ_GTK_GRIPPER:
         return moz_gtk_gripper_paint(drawable, rect, cliprect, state);
         break;
+    case MOZ_GTK_TREEVIEW:
+        return moz_gtk_treeview_paint(drawable, rect, cliprect, state);
+        break;
+    case MOZ_GTK_TREE_HEADER_CELL:
+        return moz_gtk_tree_header_cell_paint(drawable, rect, cliprect, state);
+        break;
+    case MOZ_GTK_TREE_HEADER_SORTARROW:
+        return moz_gtk_tree_header_sort_arrow_paint(drawable, rect, cliprect, state, (GtkArrowType) flags);
+        break;
+    case MOZ_GTK_EXPANDER:
+        return moz_gtk_expander_paint(drawable, rect, cliprect, state, (GtkExpanderStyle) flags);
+        break;
     case MOZ_GTK_ENTRY:
         return moz_gtk_entry_paint(drawable, rect, cliprect, state);
         break;
@@ -1839,6 +2036,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_FRAME:
         return moz_gtk_frame_paint(drawable, rect, cliprect);
+        break;
+    case MOZ_GTK_RESIZER:
+        return moz_gtk_resizer_paint(drawable, rect, cliprect, state);
         break;
     case MOZ_GTK_PROGRESSBAR:
         return moz_gtk_progressbar_paint(drawable, rect, cliprect);
@@ -1907,6 +2107,7 @@ moz_gtk_shutdown()
     gDropdownButtonWidget = NULL;
     gHandleBoxWidget = NULL;
     gToolbarWidget = NULL;
+    gStatusbarWidget = NULL;
     gFrameWidget = NULL;
     gProgressWidget = NULL;
     gTabWidget = NULL;
@@ -1916,6 +2117,10 @@ moz_gtk_shutdown()
     gMenuPopupWidget = NULL;
     gMenuItemWidget = NULL;
     gCheckMenuItemWidget = NULL;
+    gTreeViewWidget = NULL;
+    gTreeHeaderCellWidget = NULL;
+    gTreeHeaderSortArrowWidget = NULL;
+    gExpanderWidget = NULL;
 
     is_initialized = FALSE;
 

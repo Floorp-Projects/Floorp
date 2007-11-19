@@ -38,10 +38,29 @@
           <p id="feedSubscriptionInfo2">&feedSubscriptionInfo2;</p>
         </div>
 
-<!-- XXXmano this has to be in one line. Otherwise you would see
+<!-- XXXmano this can't have any whitespace in it.  Otherwise you would see
      how much XUL-in-XHTML sucks, see bug 348830 -->
-<div id="feedSubscribeLine"><xul:vbox><xul:hbox align="center"><xul:description id="subscribeUsingDescription">&subscribeUsing;</xul:description><xul:menulist id="handlersMenuList" aaa:labelledby="subscribeUsingDescription"><xul:menupopup menugenerated="true" id="handlersMenuPopup"><xul:menuitem id="liveBookmarksMenuItem" label="&feedLiveBookmarks;" class="menuitem-iconic" image="chrome://browser/skin/page-livemarks.png" selected="true"/><xul:menuseparator/></xul:menupopup></xul:menulist></xul:hbox><xul:hbox><xul:checkbox id="alwaysUse" checked="false"/></xul:hbox><xul:hbox align="center"><xul:spacer flex="1"/><span><xul:button label="&feedSubscribeNow;" id="subscribeButton"/></span></xul:hbox></xul:vbox></div></div>
-
+        <div id="feedSubscribeLine"
+          ><xul:vbox
+            ><xul:hbox align="center" 
+              ><xul:description id="subscribeUsingDescription">&subscribeUsing;</xul:description
+              ><xul:menulist id="handlersMenuList" aaa:labelledby="subscribeUsingDescription"
+                ><xul:menupopup menugenerated="true" id="handlersMenuPopup"
+                  ><xul:menuitem id="liveBookmarksMenuItem" label="&feedLiveBookmarks;" class="menuitem-iconic" image="chrome://browser/skin/page-livemarks.png" selected="true"
+                  /><xul:menuseparator
+                /></xul:menupopup
+              ></xul:menulist
+            ></xul:hbox
+            ><xul:hbox
+              ><xul:checkbox id="alwaysUse" checked="false"
+            /></xul:hbox
+            ><xul:hbox align="center"
+              ><xul:spacer flex="1"
+              /><xul:button label="&feedSubscribeNow;" id="subscribeButton"
+            /></xul:hbox
+          ></xul:vbox
+        ></div
+      ></div>
     </div>
 
     <script type="application/x-javascript">

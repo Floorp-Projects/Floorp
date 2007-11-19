@@ -114,20 +114,31 @@
         ]]>
         </body>
       </method>
+
+      <method name="_handleClick">
+        <body>
+        <![CDATA[
+          if (!this.disabled &&
+              (this.autoCheck || !this.hasAttribute("autoCheck"))) {
+
+            if (this.type == "checkbox") {
+              this.checked = !this.checked;
+            } else if (this.type == "radio") {
+              this.checked = true;
+            }
+          }
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
-      <handler event="command">
-      <![CDATA[
-        if (this.autoCheck || !this.hasAttribute("autoCheck")) {
-          if (this.type == "checkbox") {
-            this.checked = !this.checked;
-          } else if (this.type == "radio") {
-            this.checked = true;
-          }
-        }
-      ]]>
-      </handler>
+      <!-- While it would seem we could do this by handling oncommand, we can't
+           because any external oncommand handlers might get called before ours,
+           and then they would see the incorrect value of checked. Additionally
+           a command attribute would redirect the command events anyway.-->
+      <handler event="click" button="0" action="this._handleClick();"/>
+      <handler event="keypress" key=" " action="this._handleClick();"/>
 
       <handler event="keypress">
       <![CDATA[
@@ -211,8 +222,11 @@
       <xul:hbox class="box-inherit button-box" xbl:inherits="align,dir,pack,orient"
                 align="center" pack="center" flex="1">
         <children>
-          <xul:image class="button-icon" xbl:inherits="src=image"/>
-          <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop" flex="1"/>
+          <xul:hbox class="box-inherit" xbl:inherits="align,dir,pack,orient"
+                    align="center" pack="center" flex="1">
+            <xul:image class="button-icon" xbl:inherits="src=image"/>
+            <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop"/>
+          </xul:hbox>
           <xul:dropmarker class="button-menu-dropmarker" xbl:inherits="open,disabled,label"/>
         </children>
       </xul:hbox>
@@ -226,7 +240,7 @@
 
   <binding id="menu-button-base"
            extends="chrome://global/content/bindings/button.xml#button-base">
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
       <constructor>
         this.init();
       </constructor>
@@ -238,18 +252,18 @@
           if (!btn)
             throw "XBL binding for <button type=\"menu-button\"/> binding must contain an element with anonid=\"button\"";
           
-          btn._menubuttonParent = this;
+          var menubuttonParent = this;
           btn.addEventListener("mouseover", function() { 
             if (!this.disabled)
-              this._menubuttonParent.buttonover = true; 
+              menubuttonParent.buttonover = true;
           }, true);
           btn.addEventListener("mouseout", function() {
-            this._menubuttonParent.buttonover = false;
-           }, true);
+            menubuttonParent.buttonover = false;
+          }, true);
           btn.addEventListener("mousedown", function() {
             if (!this.disabled) {
-              this._menubuttonParent.buttondown = true;
-              this._menubuttonParent._captureMouseUp();
+              menubuttonParent.buttondown = true;
+              document.addEventListener("mouseup", menubuttonParent, true);
             }
           }, true);
         ]]>
@@ -294,31 +308,13 @@
       
       <field name="_pendingActive">false</field>
 
-      <method name="_captureMouseUp">
-        <body>
-        <![CDATA[
-          document.__ButtonMenuMouseDown__ = this;
-          document.addEventListener("mouseup", this._onGlobalMouseUp, true);
-        ]]>
-        </body>
-      </method>
-
-      <method name="_onGlobalMouseUp" readonly="true">
-        <body>
-        <![CDATA[
-          var btn = document.__ButtonMenuMouseDown__;
-          btn._onMouseReallyUp();
-          document.removeEventListener("mouseup", btn._onGlobalMouseUp, true);
-          delete document.__ButtonMenuMouseDown__;
-        ]]>
-        </body>
-      </method>
-
-      <method name="_onMouseReallyUp">
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
         <body>
         <![CDATA[
           this._pendingActive = false;
           this.buttondown = false;
+          document.removeEventListener("mouseup", this, true);
         ]]>
         </body>
       </method>

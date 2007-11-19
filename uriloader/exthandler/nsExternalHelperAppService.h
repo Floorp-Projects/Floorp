@@ -320,6 +320,11 @@ protected:
    */
   PRUint32 mReason;
 
+  /**
+   * Track the executable-ness of the temporary file.
+   */
+  PRBool mTempFileIsExecutable;
+
   PRTime mTimeDownloadStarted;
   nsInt64 mContentLength;
   nsInt64 mProgress; /**< Number of bytes received (for sending progress notifications). */

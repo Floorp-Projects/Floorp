@@ -72,6 +72,7 @@
 #include "nsIDocumentObserver.h"
 
 #include "nsPoint.h"
+#include "nsTArray.h"
 
 class nsIDOMKeyEvent;
 class nsITransferable;
@@ -450,6 +451,13 @@ protected:
 
   virtual void RemoveEventListeners();
 
+  // Sets mCSSAware to correspond to aFlags. This toggles whether CSS is
+  // used to style elements in the editor. Note that the editor is only CSS
+  // aware by default in Composer and in the mail editor.
+  void UpdateForFlags(PRUint32 aFlags) {
+    mCSSAware = ((aFlags & (eEditorNoCSSMask | eEditorMailMask)) == 0);
+  }
+
   /** returns the layout object (nsIFrame in the real world) for aNode
     * @param aNode          the content to get a frame for
     * @param aLayoutObject  the "primary frame" for aNode, if one exists.  May be null
@@ -633,7 +641,7 @@ protected:
                                         nsCOMPtr<nsIDOMNode> *outEndNode,
                                         PRInt32 *outStartOffset,
                                         PRInt32 *outEndOffset);
-  nsresult   ParseFragment(const nsAString & aStr, nsVoidArray &aTagStack,
+  nsresult   ParseFragment(const nsAString & aStr, nsTArray<nsAutoString> &aTagStack,
                            nsIDocument* aTargetDoc,
                            nsCOMPtr<nsIDOMNode> *outNode);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
@@ -642,8 +650,8 @@ protected:
                                       PRInt32 aStartOffset,
                                       nsIDOMNode *aEndNode,
                                       PRInt32 aEndOffset);
-  nsresult CreateTagStack(nsVoidArray &aTagStack, nsIDOMNode *aNode);
-  void     FreeTagStackStrings(nsVoidArray &tagStack);
+  nsresult CreateTagStack(nsTArray<nsAutoString> &aTagStack,
+                          nsIDOMNode *aNode);
   nsresult GetListAndTableParents( PRBool aEnd, 
                                    nsCOMArray<nsIDOMNode>& aListOfNodes,
                                    nsCOMArray<nsIDOMNode>& outArray);

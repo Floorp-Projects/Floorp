@@ -1,4 +1,4 @@
-<!ENTITY inspectorTaskCmd.label "DOM Inspektor">
+<!ENTITY inspectorTaskCmd.label "DOM Inspector">
 <!ENTITY inspectorTaskCmd.commandkey "d">
 <!ENTITY inspectorTaskCmd.accesskey.ff "n">
 <!ENTITY inspectorTaskCmd.accesskey "D">

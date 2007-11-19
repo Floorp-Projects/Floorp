@@ -408,6 +408,7 @@ function onAccept()
   if (saveToPrefs && printService != null) {
     var flags = gPrintSetInterface.kInitSavePaperSize      | 
                 gPrintSetInterface.kInitSaveColorSpace     |
+                gPrintSetInterface.kInitSaveEdges          |
                 gPrintSetInterface.kInitSaveInColor        |
                 gPrintSetInterface.kInitSaveResolutionName |
                 gPrintSetInterface.kInitSaveDownloadFonts  |

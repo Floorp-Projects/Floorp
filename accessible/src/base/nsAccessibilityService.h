@@ -51,6 +51,7 @@ class nsObjectFrame;
 class nsIDocShell;
 class nsIPresShell;
 class nsIContent;
+struct nsRoleMapEntry;
 
 class nsAccessibilityService : public nsIAccessibilityService,
                                public nsIObserver,
@@ -99,8 +100,13 @@ private:
    * every created accessible.
    *
    * @param aAccessibleIn - accessible to initialize.
+   * @param aAcccessibleOut - set to the same thing as aAccessibleIn, unless there was
+   *                          an error initializing the accessible, in which case
+   *                          it is set to nsnull
+   * @param aRoleMapEntry - The role map entry role the ARIA role or nsnull if none
    */
-  nsresult InitAccessible(nsIAccessible *aAccessibleIn, nsIAccessible **aAccessibleOut);
+  nsresult InitAccessible(nsIAccessible *aAccessibleIn, nsIAccessible **aAccessibleOut,
+                          nsRoleMapEntry *aRoleMapEntry = nsnull);
 
   /**
    * Return accessible object for elements implementing nsIAccessibleProvider
@@ -251,7 +257,7 @@ static const char kRoleNames[][20] = {
   "parent menuitem",     //ROLE_PARENT_MENUITEM
   "calendar",            //ROLE_CALENDAR
   "combobox list",       //ROLE_COMBOBOX_LIST
-  "combobox listitem",   //ROLE_COMBOBOX_LISTITEM
+  "combobox option",     //ROLE_COMBOBOX_OPTION
   "image map"            //ROLE_IMAGE_MAP
 };
 

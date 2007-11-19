@@ -200,7 +200,7 @@
                         aaa:labelledby="useCacheBefore cacheSize useCacheAfter"/>
                <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
                <button id="clearCacheButton" icon="clear"
-                       label="&clearDataNow.label2;"
+                       label="&clearCacheNow.label;"
                        oncommand="gAdvancedPane.clearCache();"/>
              </hbox>
            </groupbox>
@@ -285,9 +285,9 @@
 
           <!-- Certificates -->
           <groupbox id="certificatesGroup">
-            <caption label="&certificates.label;"/>
+            <caption id="CertGroupCaption" label="&certificates.label;"/>
 
-            <description control="certselection">&certselect.description;</description>
+            <description id="CertSelectionDesc" control="certSelection">&certselect.description;</description>
 
             <!--
               The values on these radio buttons may look like l12y issues, but
@@ -295,7 +295,7 @@
               I KID YOU NOT.
             -->
             <radiogroup id="certSelection" orient="horizontal" preftype="string" 
-	                      preference="security.default_personal_cert">
+	                      preference="security.default_personal_cert" aaa:labelledby="CertGroupCaption CertSelectionDesc">
               <radio label="&certs.auto;" accesskey="&certs.auto.accesskey;" 
                      value="Select Automatically"/>
               <radio label="&certs.ask;" accesskey="&certs.ask.accesskey;" 

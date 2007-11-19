@@ -59,6 +59,7 @@
 #include "prthread.h"
 #include "plhash.h"
 #include "nsPlaceholderFrame.h"
+#include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
@@ -669,7 +670,9 @@ nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
                              nsIFrame*       aPrevFrame,
                              nsIFrame*       aFrameList)
 {
-  NS_PRECONDITION(!aPrevFrame || !aPrevFrame->GetNextContinuation(),
+  NS_PRECONDITION(!aPrevFrame || (!aPrevFrame->GetNextContinuation()
+                  || IS_TRUE_OVERFLOW_CONTAINER(aPrevFrame->GetNextContinuation()))
+                  && !IS_TRUE_OVERFLOW_CONTAINER(aPrevFrame),
                   "aPrevFrame must be the last continuation in its chain!");
 
   return aParentFrame->InsertFrames(aListName, aPrevFrame, aFrameList);
@@ -853,7 +856,7 @@ VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
     while (child) {
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
           || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
-        // only do frames that are in flow
+        // only do frames that don't have placeholders
         if (nsGkAtoms::placeholderFrame == child->GetType()) { 
           // placeholder: first recurse and verify the out of flow frame,
           // then verify the placeholder's context
@@ -905,6 +908,15 @@ nsFrameManager::DebugVerifyStyleTree(nsIFrame* aFrame)
 nsresult
 nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
 {
+  if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
+    // Also reparent the out-of-flow
+    nsIFrame* outOfFlow =
+      nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
+    NS_ASSERTION(outOfFlow, "no out-of-flow frame");
+
+    ReParentStyleContext(outOfFlow);
+  }
+
   // DO NOT verify the style tree before reparenting.  The frame
   // tree has already been changed, so this check would just fail.
   nsStyleContext* oldContext = aFrame->GetStyleContext();
@@ -938,6 +950,16 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
                                                  newParentContext);
     if (newContext) {
       if (newContext != oldContext) {
+        // Make sure to call CalcStyleDifference so that the new context ends
+        // up resolving all the structs the old context resolved.
+        nsChangeHint styleChange = oldContext->CalcStyleDifference(newContext);
+        // The style change is always 0 because we have the same rulenode and
+        // CalcStyleDifference optimizes us away.  That's OK, though:
+        // reparenting should never trigger a frame reconstruct, and whenever
+        // it's happening we already plan to reflow and repaint the frames.
+        NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
+                     "Our frame tree is likely to be bogus!");
+        
         PRInt32 listIndex = 0;
         nsIAtom* childList = nsnull;
         nsIFrame* child;
@@ -947,27 +969,22 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
         do {
           child = aFrame->GetFirstChild(childList);
           while (child) {
-            // only do frames that are in flow
-            if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
-                 || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+            // only do frames that don't have placeholders
+            if ((!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) ||
+                 (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) &&
+                child != providerChild) {
+#ifdef DEBUG
               if (nsGkAtoms::placeholderFrame == child->GetType()) {
-                // get out of flow frame and recurse there
                 nsIFrame* outOfFlowFrame =
                   nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
                 NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
                 NS_ASSERTION(outOfFlowFrame != providerChild,
                              "Out of flow provider?");
-
-                ReParentStyleContext(outOfFlowFrame);
-
-                // reparent placeholder too
-                ReParentStyleContext(child);
               }
-              else if (child != providerChild) {
-                // regular frame, not reparented yet
-                ReParentStyleContext(child);
-              }
+#endif
+
+              ReParentStyleContext(child);
             }
 
             child = child->GetNextSibling();
@@ -1001,6 +1018,21 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
                                                               oldExtraContext,
                                                               newContext);
             if (newExtraContext) {
+              if (newExtraContext != oldExtraContext) {
+                // Make sure to call CalcStyleDifference so that the new
+                // context ends up resolving all the structs the old context
+                // resolved.
+                styleChange =
+                  oldExtraContext->CalcStyleDifference(newExtraContext);
+                // The style change is always 0 because we have the same
+                // rulenode and CalcStyleDifference optimizes us away.  That's
+                // OK, though: reparenting should never trigger a frame
+                // reconstruct, and whenever it's happening we already plan to
+                // reflow and repaint the frames.
+                NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
+                             "Our frame tree is likely to be bogus!");
+              }
+              
               aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
             }
           }

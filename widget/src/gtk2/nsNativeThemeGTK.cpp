@@ -61,6 +61,7 @@
 
 #include <gdk/gdkprivate.h>
 #include <gdk/gdkx.h>
+#include <gtk/gtk.h>
 
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
@@ -362,11 +363,55 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_TOOLBAR_GRIPPER:
     aGtkWidgetType = MOZ_GTK_GRIPPER;
     break;
+  case NS_THEME_RESIZER:
+    aGtkWidgetType = MOZ_GTK_RESIZER;
+    break;
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
   case NS_THEME_DROPDOWN_TEXTFIELD:
-  case NS_THEME_LISTBOX:
     aGtkWidgetType = MOZ_GTK_ENTRY;
+    break;
+  case NS_THEME_LISTBOX:
+  case NS_THEME_TREEVIEW:
+    aGtkWidgetType = MOZ_GTK_TREEVIEW;
+    break;
+  case NS_THEME_TREEVIEW_HEADER_CELL:
+    aGtkWidgetType = MOZ_GTK_TREE_HEADER_CELL;
+    break;
+  case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+    if (aWidgetFlags) {
+      switch (GetTreeSortDirection(aFrame)) {
+        case eTreeSortDirection_Ascending:
+          *aWidgetFlags = GTK_ARROW_DOWN;
+          break;
+        case eTreeSortDirection_Descending:
+          *aWidgetFlags = GTK_ARROW_UP;
+          break;
+        case eTreeSortDirection_Natural:
+        default:
+          /* GTK_ARROW_NONE is implemented since GTK 2.10
+           * This prevents the treecolums from getting smaller
+           * and wider when switching sort direction off and on
+           * */
+#if GTK_CHECK_VERSION(2,10,0)
+          *aWidgetFlags = GTK_ARROW_NONE;
+#else
+          return PR_FALSE; // Don't draw when we shouldn't
+#endif // GTK_CHECK_VERSION(2,10,0)
+          break;
+      }
+    }
+    aGtkWidgetType = MOZ_GTK_TREE_HEADER_SORTARROW;
+    break;
+  case NS_THEME_TREEVIEW_TWISTY:
+    aGtkWidgetType = MOZ_GTK_EXPANDER;
+    if (aWidgetFlags)
+      *aWidgetFlags = GTK_EXPANDER_COLLAPSED;
+    break;
+  case NS_THEME_TREEVIEW_TWISTY_OPEN:
+    aGtkWidgetType = MOZ_GTK_EXPANDER;
+    if (aWidgetFlags)
+      *aWidgetFlags = GTK_EXPANDER_EXPANDED;
     break;
   case NS_THEME_DROPDOWN:
     aGtkWidgetType = MOZ_GTK_DROPDOWN;
@@ -395,6 +440,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_TOOLTIP;
     break;
   case NS_THEME_STATUSBAR_PANEL:
+  case NS_THEME_STATUSBAR_RESIZER_PANEL:
     aGtkWidgetType = MOZ_GTK_FRAME;
     break;
   case NS_THEME_PROGRESSBAR:
@@ -829,6 +875,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_RADIO_LABEL:
   case NS_THEME_BUTTON:
   case NS_THEME_TOOLBAR_BUTTON:
+  case NS_THEME_TREEVIEW_HEADER_CELL:
     {
       // Just include our border, and let the box code augment the size.
 
@@ -841,14 +888,28 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       aResult->height = border.top + border.bottom;
     }
     break;
+  case NS_THEME_TREEVIEW_HEADER_SORTARROW:
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
     // hard code these sizes
     aResult->width = 14;
     aResult->height = 13;
     break;
-  }
+  case NS_THEME_RESIZER:
+    // same as Windows to make our lives easier
+    aResult->width = aResult->height = 15;
+    break;
+  case NS_THEME_TREEVIEW_TWISTY:
+  case NS_THEME_TREEVIEW_TWISTY_OPEN:
+    {
+      gint expander_size;
 
+      moz_gtk_get_expander_size(&expander_size);
+      aResult->width = aResult->height = expander_size;
+      *aIsOverridable = PR_FALSE;
+    }
+    break;
+  }
   return NS_OK;
 }
 
@@ -869,6 +930,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_MENUBAR ||
       aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_TOOLTIP ||
+      aWidgetType == NS_THEME_TREEVIEW_HEADER_SORTARROW ||
       aWidgetType == NS_THEME_WINDOW ||
       aWidgetType == NS_THEME_DIALOG) {
     *aShouldRepaint = PR_FALSE;
@@ -936,17 +998,18 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBAR_PANEL:
-    // case NS_THEME_RESIZER:  (n/a for gtk)
+  case NS_THEME_STATUSBAR_RESIZER_PANEL:
+  case NS_THEME_RESIZER:
   case NS_THEME_LISTBOX:
     // case NS_THEME_LISTBOX_LISTITEM:
-    // case NS_THEME_TREEVIEW:
+  case NS_THEME_TREEVIEW:
     // case NS_THEME_TREEVIEW_TREEITEM:
-    // case NS_THEME_TREEVIEW_TWISTY:
+  case NS_THEME_TREEVIEW_TWISTY:
     // case NS_THEME_TREEVIEW_LINE:
     // case NS_THEME_TREEVIEW_HEADER:
-    // case NS_THEME_TREEVIEW_HEADER_CELL:
-    // case NS_THEME_TREEVIEW_HEADER_SORTARROW:
-    // case NS_THEME_TREEVIEW_TWISTY_OPEN:
+  case NS_THEME_TREEVIEW_HEADER_CELL:
+  case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+  case NS_THEME_TREEVIEW_TWISTY_OPEN:
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_VERTICAL:
@@ -1024,7 +1087,8 @@ PRBool
 nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
    if (aWidgetType == NS_THEME_DROPDOWN ||
-      aWidgetType == NS_THEME_BUTTON)
+      aWidgetType == NS_THEME_BUTTON || 
+      aWidgetType == NS_THEME_TREEVIEW_HEADER_CELL)
     return PR_TRUE;
   
   return PR_FALSE;

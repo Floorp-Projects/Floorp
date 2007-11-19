@@ -166,18 +166,6 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     PRBool isSchemeGopher = PR_FALSE;
     if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)) && isScheme) {
 
-        // ftp urls don't always end in a /
-        // make sure they do
-        // but look out for /%2F as path
-        nsCAutoString path;
-        rv = uri->GetPath(path);
-        if (NS_FAILED(rv)) return rv;
-        if (baseUri.Last() != '/' && !path.LowerCaseEqualsLiteral("/%2f")) {
-            baseUri.Append('/');
-            path.Append('/');
-            uri->SetPath(path);
-        }
-
         // strip out the password here, so it doesn't show in the page title
         // This is done by the 300: line generation in ftp, but we don't use
         // that - see above
@@ -193,9 +181,11 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
              if (NS_FAILED(rv)) return rv;
              rv = newUri->GetAsciiSpec(titleUri);
              if (NS_FAILED(rv)) return rv;
-             if (titleUri.Last() != '/' && !path.LowerCaseEqualsLiteral("/%2f"))
-                 titleUri.Append('/');
         }
+
+        nsCAutoString path;
+        rv = uri->GetPath(path);
+        if (NS_FAILED(rv)) return rv;
 
         if (!path.EqualsLiteral("//") && !path.LowerCaseEqualsLiteral("/%2f")) {
             rv = uri->Resolve(NS_LITERAL_CSTRING(".."),parentStr);

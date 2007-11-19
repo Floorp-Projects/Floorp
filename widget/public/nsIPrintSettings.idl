@@ -58,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(b1b5e3cc-a52c-4325-a7f6-e1ac6fac19a5)]
+[scriptable, uuid(81b8dfee-25cc-479c-ad2c-a5e3875650cb)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -80,7 +80,7 @@ interface nsIPrintSettings : nsISupports
   /* Flag 0x00001000 is unused */
   const unsigned long kInitSavePaperData      = 0x00002000;
   /* Flag 0x00004000 is unused */
-  /* Flag 0x00008000 is unused */
+  const unsigned long kInitSaveEdges          = 0x00008000;
 
   const unsigned long kInitSaveReversed       = 0x00010000;
   const unsigned long kInitSaveInColor        = 0x00020000;
@@ -201,6 +201,21 @@ interface nsIPrintSettings : nsISupports
   attribute long    startPageRange;    
   attribute long    endPageRange;    
 
+  /**
+   * The edge defines the area at the border of the paper
+   * outside of which the printer cannot print. The headers and footers
+   * will be placed inside.
+   */
+  attribute double  edgeTop;     /*  these are in inches */
+  attribute double  edgeLeft;
+  attribute double  edgeBottom;
+  attribute double  edgeRight;
+
+  /**
+   * The margins define the area of the paper to print the content to.
+   * The headers and footers are placed outside, but still inside the border
+   * defined by the edge attributes above.
+   */
   attribute double  marginTop;     /*  these are in inches */
   attribute double  marginLeft;
   attribute double  marginBottom;
@@ -282,7 +297,8 @@ interface nsIPrintSettings : nsISupports
 
   /* C++ Helper Functions */
   [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
+  [noscript] void SetEdgeInTwips(in nsNativeMarginRef aEdge);
   /* Purposely made this an "in" arg */
   [noscript] void GetMarginInTwips(in nsNativeMarginRef aMargin);
-
+  [noscript] void GetEdgeInTwips(in nsNativeMarginRef aEdge);
 };

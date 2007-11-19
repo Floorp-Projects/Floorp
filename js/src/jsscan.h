@@ -341,21 +341,19 @@ extern JSBool
 js_IsIdentifier(JSString *str);
 
 /*
- * Report a compile-time error by its number, using ts or cg to show context.
- * Return true for a warning, false for an error.
+ * Report a compile-time error by its number. Return true for a warning, false
+ * for an error. When pn is not null, use it to report error's location.
+ * Otherwise use ts, which must not be null.
  */
-extern JSBool
-js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
-                            uintN errorNumber, ...);
+JSBool
+js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
+                            uintN flags, uintN errorNumber, ...);
 
-extern JSBool
-js_ReportCompileErrorNumberUC(JSContext *cx, void *handle, uintN flags,
-                              uintN errorNumber, ...);
-
-/* Steal one JSREPORT_* bit (see jsapi.h) to tell handle's type. */
-#define JSREPORT_HANDLE 0x100
-#define JSREPORT_TS     0x000
-#define JSREPORT_PN     0x100
+/*
+ * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error
+ * message have const jschar* type, not const char*.
+ */
+#define JSREPORT_UC 0x100
 
 /*
  * Look ahead one token and return its type.

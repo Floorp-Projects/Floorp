@@ -125,8 +125,8 @@ NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContex
 // This type of AreaFrame doesn't use its own space manager and
 // doesn't shrink wrap.
 inline nsIFrame*
-NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewAreaFrame(aPresShell, aContext, 0);
+NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags) {
+  return NS_NewAreaFrame(aPresShell, aContext, aFlags);
 }
 
 nsIFrame*

@@ -1,0 +1,116 @@
+#safebrowsing-palm-message { 
+  display: none;
+  position: fixed;
+  top: 0px; 
+  left: 0px;
+  z-index: 2;
+}
+
+#safebrowsing-palm-message-content {
+  background-color: white;
+  color: black;
+  -moz-box-sizing: border-box;
+  -moz-border-radius: 10px;
+  padding: 10px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  z-index: 1;
+  margin: 0;
+  font-size: 120%;
+}
+
+.safebrowsing-palm-fixed-width { 
+  width: 400px; 
+  max-width: 400px;
+}
+
+.safebrowsing-palm-paragraph {
+  padding-bottom: 2em;
+}
+
+#safebrowsing-palm-close-container {
+  height: 16px;
+  margin: 0;
+  padding: 0;
+}
+
+#safebrowsing-palm-close { 
+  cursor: pointer;
+  height: 16px; 
+  width: 16px; 
+  list-style-image: url("chrome://browser/skin/safebrowsing/close16x16.png");
+  z-index: 10;
+}
+
+#safebrowsing-palm-message-tail-container { 
+  display: none;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  border-right: 2px solid;
+  z-index: 3;
+  height: 67px;
+  margin: 0;
+  padding: 0;
+}
+
+#safebrowsing-palm-message-tail { 
+  height: 67px;
+  width: 24px;
+  max-width: 24px;
+  z-index: 3;
+}
+
+#safebrowsing-palm-message-titlebox { 
+  background-image: url("chrome://browser/skin/safebrowsing/warning24x24.png");
+  background-repeat: no-repeat;
+  background-position: top left;
+  text-indent: 30px;
+  padding: 0 0 5px;
+  margin-top: -16px;
+  font-size: 120%;
+  font-weight: bold;
+  min-height: 26px;
+}
+
+#safebrowsing-palm-message-actionbox { 
+  padding: 10px 10px 15px;
+  text-align: center;
+}
+
+.safebrowsing-palm-bigtext { 
+  font-weight: bold;
+}
+
+.safebrowsing-palm-smalltext { 
+  font-size: 80%;
+}
+
+#safebrowsing-palm-google-logo { 
+  height: 32px;
+  max-height: 32px;
+  width: 78px;
+}
+
+#safebrowsing-page-canvas {
+  position: fixed;
+}
+
+#safebrowsing-dim-area-canvas {
+  background-image: url("chrome://browser/skin/safebrowsing/dim.png");
+  position: fixed;
+}
+
+#safebrowsing-urlbar-icon {
+  padding: 1px 2px 1px 0;
+}
+
+#safebrowsing-urlbar-icon[level="safe"] {
+  list-style-image: none;
+}
+
+#safebrowsing-urlbar-icon[level="warn"] {
+  list-style-image: url("chrome://browser/skin/safebrowsing/warning16x16.png");
+}

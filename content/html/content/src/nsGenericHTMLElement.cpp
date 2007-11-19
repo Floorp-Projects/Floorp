@@ -111,12 +111,6 @@
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
 
-// If this flag is set on an nsGenericHTMLFormElement, that means that we have
-// added ourselves to our mForm.  It's possible to have a non-null mForm, but
-// not have this flag set.  That happens when the form is set via the content
-// sink.
-#define ADDED_TO_FORM (1 << NODE_TYPE_SPECIFIC_BITS_OFFSET)
-
 class nsINodeInfo;
 class nsIDOMNodeList;
 class nsRuleWalker;
@@ -2187,7 +2181,9 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
   if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null) {
+  nsPresContext* presContext = aData->mPresContext;
+  if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null &&
+      presContext->UseDocumentColors()) {
     // background
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::background);
     if (value && value->Type() == nsAttrValue::eString) {
@@ -2199,7 +2195,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
         // as well as elements with _baseHref set. We need to be able
         // to get to the element somehow, or store the base URI in the
         // attributes.
-        nsIDocument* doc = aData->mPresContext->Document();
+        nsIDocument* doc = presContext->Document();
         nsCOMPtr<nsIURI> uri;
         nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
             getter_AddRefs(uri), spec, doc, doc->GetBaseURI());
@@ -2222,8 +2218,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
           }
         }
       }
-      else if (aData->mPresContext->CompatibilityMode() ==
-               eCompatibility_NavQuirks) {
+      else if (presContext->CompatibilityMode() == eCompatibility_NavQuirks) {
         // in NavQuirks mode, allow the empty string to set the
         // background to empty
         aData->mColorData->mBackImage.SetNoneValue();
@@ -2239,7 +2234,8 @@ nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
   if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null) {
+  if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null &&
+      aData->mPresContext->UseDocumentColors()) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bgcolor);
     nscolor color;
     if (value && value->GetColorValue(color)) {
@@ -2712,6 +2708,8 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm(mForm);
       if (!form) {
         SetForm(nsnull, PR_TRUE, PR_TRUE);
+      } else {
+        UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       }
     }
   }

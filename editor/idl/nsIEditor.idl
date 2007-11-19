@@ -59,10 +59,9 @@ class nsIPresShell;
 typedef short EDirection;
 %}
 
-
 [ptr] native nsIPresShellPtr(nsIPresShell);
 
-[scriptable, uuid(dc81f464-89dd-47bf-bf21-10df3b65b956)]
+[scriptable, uuid(2f76d0bb-d90d-4454-905e-9b0cc39a701c)]
 
 interface nsIEditor  : nsISupports
 {
@@ -529,7 +528,10 @@ interface nsIEditor  : nsISupports
                       in unsigned long flags);
 
 
-  /* ------------ Various listeners methods -------------- */
+  /* ------------ Various listeners methods --------------
+   * nsIEditor holds strong references to the editor observers, action listeners
+   * and document state listeners.
+   */
 
   /** add an EditorObserver to the editors list of observers. */
   void addEditorObserver(in nsIEditorObserver observer);

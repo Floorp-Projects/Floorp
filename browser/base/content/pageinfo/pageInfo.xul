@@ -154,6 +154,11 @@
             <textbox readonly="true" id="typetext"/>
           </row>
           <row>
+            <label control="modetext" value="&generalMode;"/>
+            <separator/>
+            <textbox readonly="true" crop="end" id="modetext"/>
+          </row>
+          <row>
             <label control="encodingtext" value="&generalEncoding;"/>
             <separator/>
             <textbox readonly="true" id="encodingtext"/>

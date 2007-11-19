@@ -437,15 +437,6 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
 PRBool
 nsSubDocumentFrame::ReflowFinished()
 {
-  mPostedReflowCallback = PR_FALSE;
-  
-  nsSize innerSize(GetSize());
-  if (IsInline()) {
-    nsMargin usedBorderPadding = GetUsedBorderAndPadding();
-    innerSize.width  -= usedBorderPadding.LeftRight();
-    innerSize.height -= usedBorderPadding.TopBottom();
-  }
-  
   nsCOMPtr<nsIDocShell> docShell;
   GetDocShell(getter_AddRefs(docShell));
 
@@ -456,11 +447,33 @@ nsSubDocumentFrame::ReflowFinished()
     PRInt32 x = 0;
     PRInt32 y = 0;
 
+    nsWeakFrame weakFrame(this);
+    
     nsPresContext* presContext = PresContext();
     baseWindow->GetPositionAndSize(&x, &y, nsnull, nsnull);
+
+    if (!weakFrame.IsAlive()) {
+      // GetPositionAndSize() killed us
+      return PR_FALSE;
+    }
+
+    // GetPositionAndSize might have resized us.  So now is the time to
+    // get our size.
+    mPostedReflowCallback = PR_FALSE;
+  
+    nsSize innerSize(GetSize());
+    if (IsInline()) {
+      nsMargin usedBorderPadding = GetUsedBorderAndPadding();
+      innerSize.width  -= usedBorderPadding.LeftRight();
+      innerSize.height -= usedBorderPadding.TopBottom();
+    }  
+
     PRInt32 cx = presContext->AppUnitsToDevPixels(innerSize.width);
     PRInt32 cy = presContext->AppUnitsToDevPixels(innerSize.height);
     baseWindow->SetPositionAndSize(x, y, cx, cy, PR_FALSE);
+  } else {
+    // Make sure that we can post a reflow callback in the future.
+    mPostedReflowCallback = PR_FALSE;
   }
 
   return PR_FALSE;

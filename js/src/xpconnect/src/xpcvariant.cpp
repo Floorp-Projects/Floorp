@@ -63,19 +63,20 @@ XPCVariant::XPCVariant(jsval aJSVal)
 
 XPCTraceableVariant::~XPCTraceableVariant()
 {
-    NS_ASSERTION(JSVAL_IS_TRACEABLE(mJSVal), "Must be tracaeble");
+    NS_ASSERTION(JSVAL_IS_GCTHING(mJSVal), "Must be traceable or unlinked");
 
     // If mJSVal is JSVAL_STRING, we don't need to clean anything up;
     // simply removing the string from the root set is good.
     if(!JSVAL_IS_STRING(mJSVal))
         nsVariant::Cleanup(&mData);
 
-    RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+    if(!JSVAL_IS_NULL(mJSVal))
+        RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
 }
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
 {
-    NS_ASSERTION(JSVAL_IS_TRACEABLE(mJSVal), "Must be tracaeble");
+    NS_ASSERTION(JSVAL_IS_TRACEABLE(mJSVal), "Must be traceable");
     JS_SET_TRACING_DETAILS(trc, PrintTraceName, this, 0);
     JS_CallTracer(trc, JSVAL_TO_TRACEABLE(mJSVal), JSVAL_TRACE_KIND(mJSVal));
 }
@@ -97,11 +98,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
     nsVariant::Traverse(tmp->mData, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-// NB: We might unlink our outgoing references in the future; for now we do
-// nothing. This is a harmless conservative behavior; it just means that we rely
-// on the cycle being broken by some of the external XPCOM objects' unlink()
-// methods, not our own. Typically *any* unlinking will break the cycle.
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(XPCVariant)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
+    if(!JSVAL_IS_STRING(tmp->mJSVal))
+        nsVariant::Cleanup(&tmp->mData);
+    if(JSVAL_IS_TRACEABLE(tmp->mJSVal))
+    {
+        XPCTraceableVariant *v = static_cast<XPCTraceableVariant*>(tmp);
+        v->RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+    }
+    tmp->mJSVal = JSVAL_NULL;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 // static 
 XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)

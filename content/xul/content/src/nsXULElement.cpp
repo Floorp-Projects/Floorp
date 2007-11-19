@@ -631,19 +631,23 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
         return;
 
     nsCOMPtr<nsIDOMXULElement> elm(do_QueryInterface(content));
-
-    // Define behavior for each type of XUL element.
-    nsIAtom *tag = content->Tag();
-    if (tag == nsGkAtoms::textbox || tag == nsGkAtoms::menulist) {
-        // if it's a text box or menulist, give it focus
-        elm->Focus();
-    } else if (tag == nsGkAtoms::toolbarbutton) {
-        // if it's a toolbar button, just click
-        elm->Click();
-    } else {
-        // otherwise, focus and click in it
-        elm->Focus();
-        elm->Click();
+    if (elm) {
+        // Define behavior for each type of XUL element.
+        nsIAtom *tag = content->Tag();
+        if (tag == nsGkAtoms::textbox || tag == nsGkAtoms::menulist) {
+            // if it's a text box or menulist, give it focus
+            elm->Focus();
+        } else if (tag == nsGkAtoms::toolbarbutton) {
+            // if it's a toolbar button, just click
+            elm->Click();
+        } else {
+            // otherwise, focus and click in it
+            elm->Focus();
+            elm->Click();
+        }
+    }
+    else {
+        content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
     }
 }
 
@@ -2400,7 +2404,14 @@ nsXULElement::RecompileScriptEventListeners()
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeNode)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsXULPrototypeNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXULPrototypeNode)
+    if (tmp->mType == nsXULPrototypeNode::eType_Element) {
+        static_cast<nsXULPrototypeElement*>(tmp)->Unlink();
+    }
+    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+        static_cast<nsXULPrototypeScript*>(tmp)->Unlink();
+    }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
         nsXULPrototypeElement *elem =

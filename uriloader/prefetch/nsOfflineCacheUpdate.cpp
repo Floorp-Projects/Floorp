@@ -419,9 +419,10 @@ nsOfflineCacheUpdate::Init(PRBool aPartialUpdate,
     nsresult rv;
 
     // Make sure the service has been initialized
-    if (!nsOfflineCacheUpdateService::GetInstance()) {
+    nsOfflineCacheUpdateService* service =
+        nsOfflineCacheUpdateService::EnsureService();
+    if (!service)
         return NS_ERROR_FAILURE;
-    }
 
     LOG(("nsOfflineCacheUpdate::Init [%p]", this));
 
@@ -649,8 +650,8 @@ nsOfflineCacheUpdate::Finish()
 
     mState = STATE_FINISHED;
 
-    nsOfflineCacheUpdateService *service =
-        nsOfflineCacheUpdateService::GetInstance();
+    nsOfflineCacheUpdateService* service =
+        nsOfflineCacheUpdateService::EnsureService();
 
     if (!mPartialUpdate) {
         if (mSucceeded) {
@@ -822,8 +823,8 @@ nsOfflineCacheUpdate::Schedule()
 {
     LOG(("nsOfflineCacheUpdate::Schedule [%p]", this));
 
-    nsOfflineCacheUpdateService *service =
-        nsOfflineCacheUpdateService::GetInstance();
+    nsOfflineCacheUpdateService* service =
+        nsOfflineCacheUpdateService::EnsureService();
 
     if (!service) {
         return NS_ERROR_FAILURE;
@@ -837,8 +838,8 @@ nsOfflineCacheUpdate::ScheduleOnDocumentStop(nsIDOMDocument *aDocument)
 {
     LOG(("nsOfflineCacheUpdate::ScheduleOnDocumentStop [%p]", this));
 
-    nsOfflineCacheUpdateService *service =
-        nsOfflineCacheUpdateService::GetInstance();
+    nsOfflineCacheUpdateService* service =
+        nsOfflineCacheUpdateService::EnsureService();
 
     if (!service) {
         return NS_ERROR_FAILURE;
@@ -926,6 +927,18 @@ nsOfflineCacheUpdateService::GetInstance()
     }
 
     NS_ADDREF(gOfflineCacheUpdateService);
+
+    return gOfflineCacheUpdateService;
+}
+
+nsOfflineCacheUpdateService *
+nsOfflineCacheUpdateService::EnsureService()
+{
+    if (!gOfflineCacheUpdateService) {
+        // Make the service manager hold a long-lived reference to the service
+        nsCOMPtr<nsIOfflineCacheUpdateService> service =
+            do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+    }
 
     return gOfflineCacheUpdateService;
 }

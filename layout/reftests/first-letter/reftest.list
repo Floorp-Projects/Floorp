@@ -1,5 +1,11 @@
+# basic functionality
 == basic-1.html basic-ref.html
 == basic-2.html basic-ref.html
+
+# parent style context correct
+== parent-style-1.html parent-style-1-ref.html
+
+# others
 == nested-1a.html nested-1-ref.html
 == nested-1b.html nested-1-ref.html
 == nested-1c.html nested-1-ref.html

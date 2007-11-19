@@ -76,7 +76,7 @@ private:
 
   void      BeginGIF();
   void      EndGIF();
-  void      BeginImageFrame();
+  void      BeginImageFrame(gfx_depth aDepth);
   void      EndImageFrame();
   void      FlushImageData();
   void      FlushImageData(PRUint32 fromRow, PRUint32 rows);
@@ -93,7 +93,7 @@ private:
   PRInt32 mCurrentRow;
   PRInt32 mLastFlushedRow;
 
-  PRUint32 *mImageData;      // Pointer to image data in Cairo format
+  PRUint8 *mImageData;       // Pointer to image data in either Cairo or 8bit format
   PRUint32 *mColormap;       // Current colormap to be used in Cairo format
   PRUint32 mOldColor;        // The old value of the transparent pixel
   PRUint8 mCurrentPass;

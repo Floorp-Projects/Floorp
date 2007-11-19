@@ -88,8 +88,8 @@
              oncommand="gDownloadViewController.doCommand('cmd_pause');"/>
     <command id="cmd_pauseResume"
              oncommand="gDownloadViewController.doCommand('cmd_pauseResume');"/>
-    <command id="cmd_remove"
-             oncommand="gDownloadViewController.doCommand('cmd_remove');"/>
+    <command id="cmd_removeFromList"
+             oncommand="gDownloadViewController.doCommand('cmd_removeFromList');"/>
     <command id="cmd_resume"
              oncommand="gDownloadViewController.doCommand('cmd_resume');"/>
     <command id="cmd_retry"
@@ -106,9 +106,9 @@
     
   <keyset id="downloadKeys">
     <key id="key_pauseResume" key=" " command="cmd_pauseResume"/>
-    <key id="key_remove"  keycode="VK_DELETE" command="cmd_remove"/>
+    <key id="key_removeFromList"  keycode="VK_DELETE" command="cmd_removeFromList"/>
 #ifdef XP_MACOSX
-    <key id="key_remove2" keycode="VK_BACK" command="cmd_remove"/>
+    <key id="key_removeFromList2" keycode="VK_BACK" command="cmd_removeFromList"/>
 #endif
     <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
 #ifdef XP_GNOME
@@ -148,9 +148,9 @@
               label="&cmd.retry.label;" accesskey="&cmd.retry.accesskey;"
               command="cmd_retry"/>
 
-    <menuitem id="menuitem_remove"
-              label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
-              command="cmd_remove"/>
+    <menuitem id="menuitem_removeFromList"
+              label="&cmd.removeFromList.label;" accesskey="&cmd.removeFromList.accesskey;"
+              command="cmd_removeFromList"/>
               
     <menuseparator id="menuseparator_copy_location"/>
               
@@ -195,4 +195,3 @@
   </hbox>
 
 </window>
-

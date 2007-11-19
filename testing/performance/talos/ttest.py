@@ -78,6 +78,7 @@ RESULTS_REGEX = re.compile('__start_report(.*)__end_report',
 # Regular expression to get stats for page load test (Tp) - should go away once data passing is standardized
 RESULTS_TP_REGEX = re.compile('__start_tp_report(.*)__end_tp_report',
                       re.DOTALL | re.MULTILINE)
+RESULTS_GENERIC = re.compile('(.*)', re.DOTALL | re.MULTILINE)
 RESULTS_REGEX_FAIL = re.compile('__FAIL(.*)__FAIL', re.DOTALL|re.MULTILINE)
 
 
@@ -102,19 +103,25 @@ def runTest(browser_config, test_config):
   # add any provided directories to the installed firefox
   for dir in browser_config['dirs']:
     ffsetup.InstallInBrowser(browser_config['firefox'], browser_config['dirs'][dir])
-  # Create the new profile
-  profile_dir = ffsetup.CreateTempProfileDir(browser_config['profile_path'],
-                                               browser_config['preferences'],
-                                               browser_config['extensions'])
-  utils.debug("created profile") 
-  # Run Firefox once with new profile so initializing it doesn't cause
-  # a performance hit, and the second Firefox that gets created is properly
-  # terminated.
-  res = ffsetup.InitializeNewProfile(browser_config['firefox'], profile_dir, browser_config['init_url'])
-  if not res:
-    print "FAIL: couldn't initialize firefox"
-    return (res, all_browser_results, all_counter_results)
-  res = 0
+  
+  if browser_config["profile_path"] != {}:
+      # Create the new profile
+      temp_dir, profile_dir = ffsetup.CreateTempProfileDir(browser_config['profile_path'],
+                                                 browser_config['preferences'],
+                                                 browser_config['extensions'])
+      utils.debug("created profile") 
+      # Run Firefox once with new profile so initializing it doesn't cause
+      # a performance hit, and the second Firefox that gets created is properly
+      # terminated.
+      
+      res = ffsetup.InitializeNewProfile(browser_config['firefox'], profile_dir, browser_config['init_url'])
+      if not res:
+          print "FAIL: couldn't initialize firefox"
+          return (res, all_browser_results, all_counter_results)
+      res = 0
+  else:
+      # no profile path was set in the config, set the profile_dir to an empty string.
+      profile_dir = ""
 
   utils.debug("initialized firefox")
   sys.stdout.flush()
@@ -130,6 +137,9 @@ def runTest(browser_config, test_config):
     if 'url_mod' in test_config:
       url += eval(test_config['url_mod']) 
     command_line = ffprocess.GenerateFirefoxCommandLine(browser_config['firefox'], profile_dir, url)
+
+    utils.debug("command line: " + command_line)
+
     process = subprocess.Popen(command_line, stdout=subprocess.PIPE, universal_newlines=True, shell=True, bufsize=0, env=os.environ)
     handle = process.stdout
 
@@ -143,7 +153,8 @@ def runTest(browser_config, test_config):
     counter_results = {}
     for counter in counters:
       counter_results[counter] = []
-    
+   
+    busted = False 
     while total_time < timeout:
       # Sleep for [resolution] seconds
       time.sleep(resolution)
@@ -175,6 +186,23 @@ def runTest(browser_config, test_config):
         browser_results += match.group(1)
         print "FAIL: " + match.group(1)
         break
+      match = RESULTS_GENERIC.search(current_output)
+      if match:
+        if match.group(1) != '':
+          utils.noisy(match.group(1))
+
+      #ensure that the browser is still running
+      #check at intervals of 60 - this is just to cut down on load 
+      #use the busted check to ensure that we aren't catching a bad time slice where the browser has
+      # completed the test and closed but we haven't picked up the result yet
+      if busted:
+        ffprocess.TerminateAllProcesses("firefox")
+        ffprocess.TerminateAllProcesses("crashreporter")
+        print "FAIL: browser crash"
+        break
+      if (total_time % 60 == 0): 
+        if ffprocess.ProcessesWithNameExist("crashreporter") or not ffprocess.ProcessesWithNameExist("firefox"):
+          busted = True
 
     if total_time > timeout:
       print "FAIL: timeout from test"
@@ -191,8 +219,8 @@ def runTest(browser_config, test_config):
   # because every once in a while Firefox seems to drop a read-only
   # file into it.
   ffprocess.Sleep()
-  ffsetup.MakeDirectoryContentsWritable(profile_dir)
-  shutil.rmtree(profile_dir)
+  ffsetup.MakeDirectoryContentsWritable(temp_dir)
+  shutil.rmtree(temp_dir)
     
   utils.restoreEnvironmentVars()
     

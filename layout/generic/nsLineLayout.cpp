@@ -702,8 +702,8 @@ WidthDependsOnContainer(const nsStyleCoord& aCoord)
 {
   return aCoord.GetUnit() == eStyleUnit_Percent ||
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-          (aCoord.GetIntValue() == NS_STYLE_WIDTH_FILL ||
-           aCoord.GetIntValue() == NS_STYLE_WIDTH_SHRINK_WRAP));
+          (aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE ||
+           aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT));
 
 }
 
@@ -2515,13 +2515,15 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
   PRBool isRTL = ( (NS_STYLE_DIRECTION_RTL == psd->mDirection)
                 && (!psd->mChangedFrameDirection) );
   if (dx || isRTL) {
-    PerFrameData* bulletPfd = nsnull;
     nscoord maxX = aLineBounds.XMost() + dx;
     PRBool isVisualRTL = PR_FALSE;
 
     if (isRTL) {
-      if (psd->mLastFrame->GetFlag(PFD_ISBULLET) )
-        bulletPfd = psd->mLastFrame;
+      if (psd->mLastFrame->GetFlag(PFD_ISBULLET) ) {
+        PerFrameData* bulletPfd = psd->mLastFrame;
+        bulletPfd->mBounds.x -= remainingWidth;
+        bulletPfd->mFrame->SetRect(bulletPfd->mBounds);
+      }
   
       psd->mChangedFrameDirection = PR_TRUE;
 
@@ -2532,11 +2534,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
     if (0 != dx)
 #endif
     {
-      for (PerFrameData* pfd = psd->mFirstFrame; pfd
-#ifdef IBMBIDI
-           && bulletPfd != pfd
-#endif
-           ; pfd = pfd->mNext) {
+      for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
 #ifdef IBMBIDI
         if (isVisualRTL) {
           // XXXldb Ugh.  Could we handle this earlier so we don't get here?
@@ -2635,11 +2633,13 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       RelativePositionFrames(pfd->mSpan, r);
     } else {
       r = pfd->mCombinedArea;
-      if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW)) {
-        nsTextFrame* f = static_cast<nsTextFrame*>(frame);
-        r = f->RecomputeOverflowRect();
+      if (pfd->GetFlag(PFD_ISTEXTFRAME)) {
+        if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW)) {
+          nsTextFrame* f = static_cast<nsTextFrame*>(frame);
+          r = f->RecomputeOverflowRect();
+        }
+        frame->FinishAndStoreOverflow(&r, frame->GetSize());
       }
-      frame->FinishAndStoreOverflow(&r, frame->GetSize());
 
       // If we have something that's not an inline but with a complex frame
       // hierarchy inside that contains views, they need to be

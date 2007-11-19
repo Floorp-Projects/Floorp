@@ -41,9 +41,6 @@ browser/app/Makefile
 browser/app/profile/extensions/Makefile
 browser/base/Makefile
 browser/components/Makefile
-browser/components/bookmarks/Makefile
-browser/components/bookmarks/public/Makefile
-browser/components/bookmarks/src/Makefile
 browser/components/build/Makefile
 browser/components/dirprovider/Makefile
 browser/components/history/Makefile

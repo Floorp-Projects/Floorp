@@ -694,7 +694,7 @@ public:
    * @param aRect is the region to capture into the offscreen buffer, in the
    * root frame's coordinate system (if aIgnoreViewportScrolling is false)
    * or in the root scrolled frame's coordinate system
-   * (if aIgnoreViewportScrolling is true)
+   * (if aIgnoreViewportScrolling is true). The coordinates are in appunits.
    * @param aUntrusted set to PR_TRUE if the contents may be passed to malicious
    * agents. E.g. we might choose not to paint the contents of sensitive widgets
    * such as the file name in a file upload widget, and we might choose not
@@ -702,7 +702,9 @@ public:
    * @param aIgnoreViewportScrolling ignore clipping/scrolling/scrollbar painting
    * due to scrolling in the viewport
    * @param aBackgroundColor a background color to render onto
-   * @param aRenderedContext the gfxContext to render to
+   * @param aRenderedContext the gfxContext to render to. We render so that
+   * one CSS pixel in the source document is rendered to one unit in the current
+   * transform.
    */
   NS_IMETHOD RenderDocument(const nsRect& aRect, PRBool aUntrusted,
                             PRBool aIgnoreViewportScrolling,

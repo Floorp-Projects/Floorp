@@ -1140,13 +1140,12 @@ nsContextMenu.prototype = {
   },
 
   bookmarkThisPage: function CM_bookmarkThisPage() {
-    PlacesCommandHook.bookmarkPage(this.browser, PlacesUtils.bookmarksRootId,
-                                   true, this.browser, "overlap");
+    window.top.PlacesCommandHook.bookmarkPage(this.browser, PlacesUtils.bookmarksRootId, true);
   },
 
   bookmarkLink: function CM_bookmarkLink() {
-    PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksRootId, this.linkURL,
-                                   this.linkText());
+    window.top.PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksRootId, this.linkURL,
+                                              this.linkText());
   },
 
   addBookmarkForFrame: function CM_addBookmarkForFrame() {
@@ -1165,7 +1164,7 @@ nsContextMenu.prototype = {
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
 
-    PlacesCommandHook.showEditBookmarkPopup(itemId, this.browser, "overlap");
+    window.top.PlacesCommandHook.showEditBookmarkPopup(itemId, this.browser, "overlap");
   },
 
   savePageAs: function CM_savePageAs() {

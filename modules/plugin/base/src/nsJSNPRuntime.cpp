@@ -78,6 +78,28 @@ static JSRuntime *sJSRuntime;
 // while executing JS on the context.
 static nsIJSContextStack *sContextStack;
 
+
+// Helper class that reports any JS exceptions that were thrown while
+// the plugin executed JS.
+
+class AutoJSExceptionReporter
+{
+public:
+  AutoJSExceptionReporter(JSContext *cx)
+    : mCx(cx)
+  {
+  }
+
+  ~AutoJSExceptionReporter()
+  {
+    JS_ReportPendingException(mCx);
+  }
+
+protected:
+  JSContext *mCx;
+};
+
+
 NPClass nsJSObjWrapper::sJSObjWrapperNPClass =
   {
     NP_CLASS_STRUCT_VERSION,
@@ -501,8 +523,6 @@ GetProperty(JSContext *cx, JSObject *obj, NPIdentifier identifier, jsval *rval)
 {
   jsval id = (jsval)identifier;
 
-  AutoCXPusher pusher(cx);
-
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
 
@@ -535,8 +555,12 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier identifier)
   }
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
-  jsval v;
+
+  AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
+  AutoJSExceptionReporter reporter(cx);
+
+  jsval v;
   JSBool ok = GetProperty(cx, npjsobj->mJSObj, identifier, &v);
 
   return ok && !JSVAL_IS_PRIMITIVE(v) &&
@@ -561,8 +585,6 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
     return PR_FALSE;
   }
 
-  JSAutoRequest ar(cx);
-
   // Initialize *result
   VOID_TO_NPVARIANT(*result);
 
@@ -570,6 +592,8 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
   jsval fv;
 
   AutoCXPusher pusher(cx);
+  JSAutoRequest ar(cx);
+  AutoJSExceptionReporter reporter(cx);
 
   if ((jsval)method != JSVAL_VOID) {
     if (!GetProperty(cx, npjsobj->mJSObj, method, &fv) ||
@@ -682,6 +706,7 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier identifier)
 
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
+  AutoJSExceptionReporter reporter(cx);
 
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
@@ -720,9 +745,10 @@ nsJSObjWrapper::NP_GetProperty(NPObject *npobj, NPIdentifier identifier,
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
 
   AutoCXPusher pusher(cx);
+  JSAutoRequest ar(cx);
+  AutoJSExceptionReporter reporter(cx);
 
   jsval v;
-  JSAutoRequest ar(cx);
   return (GetProperty(cx, npjsobj->mJSObj, identifier, &v) &&
           JSValToNPVariant(npp, cx, v, result));
 }
@@ -753,6 +779,7 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier identifier,
 
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
+  AutoJSExceptionReporter reporter(cx);
 
   jsval v = NPVariantToJSVal(npp, cx, value);
   JSAutoTempValueRooter tvr(cx, v);
@@ -798,6 +825,7 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier identifier)
 
   AutoCXPusher pusher(cx);
   JSAutoRequest ar(cx);
+  AutoJSExceptionReporter reporter(cx);
 
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
@@ -842,8 +870,8 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **identifier,
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
 
   AutoCXPusher pusher(cx);
-
   JSAutoRequest ar(cx);
+  AutoJSExceptionReporter reporter(cx);
 
   JSIdArray *ida = ::JS_Enumerate(cx, npjsobj->mJSObj);
   if (!ida) {

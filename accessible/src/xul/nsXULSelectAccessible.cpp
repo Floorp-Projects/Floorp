@@ -70,11 +70,10 @@ NS_IMETHODIMP
 nsXULColumnsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
-
-  if (aExtraState)
-    *aExtraState = 0;
-
   *aState = nsIAccessibleStates::STATE_READONLY;
+  if (aExtraState) {
+    *aExtraState = mDOMNode ? 0 : nsIAccessibleStates::EXT_STATE_DEFUNCT ;
+  }
   return NS_OK;
 }
 
@@ -100,11 +99,10 @@ NS_IMETHODIMP
 nsXULColumnItemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
-
-  if (aExtraState)
-    *aExtraState = 0;
-
   *aState = nsIAccessibleStates::STATE_READONLY;
+  if (aExtraState) {
+    *aExtraState = mDOMNode ? 0 : nsIAccessibleStates::EXT_STATE_DEFUNCT ;
+  }
   return NS_OK;
 }
 
@@ -163,6 +161,9 @@ nsXULListboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Get focus status from base class
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode) {
+    return NS_OK;
+  }
 
 // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
@@ -250,7 +251,7 @@ NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *aRole)
   if (mIsCheckbox)
     *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
   else
-    *aRole = nsIAccessibleRole::ROLE_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_RICH_OPTION;
   return NS_OK;
 }
 
@@ -261,9 +262,18 @@ NS_IMETHODIMP
 nsXULListitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   if (mIsCheckbox) {
-    nsXULMenuitemAccessible::GetState(aState, aExtraState);
+    return nsXULMenuitemAccessible::GetState(aState, aExtraState);
+  }
+
+  *aState = 0;
+  if (!mDOMNode) {
+    if (aExtraState) {
+      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+    }
     return NS_OK;
   }
+  if (aExtraState)
+    *aExtraState = 0;
 
   *aState = nsIAccessibleStates::STATE_FOCUSABLE |
             nsIAccessibleStates::STATE_SELECTABLE;
@@ -357,6 +367,9 @@ nsXULComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Get focus status from base class
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
   if (menuList) {

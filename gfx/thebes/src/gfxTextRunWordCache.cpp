@@ -369,7 +369,7 @@ MakeBlankTextRun(const void* aText, PRUint32 aLength,
                          PRUint32 aFlags)
 {
     nsAutoPtr<gfxTextRun> textRun;
-    textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
+    textRun = gfxTextRun::Create(aParams, aText, aLength, aFontGroup, aFlags);
     if (!textRun || !textRun->GetCharacterGlyphs())
         return nsnull;
     gfxFont *font = aFontGroup->GetFontAt(0);
@@ -391,7 +391,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
     }
 
     nsAutoPtr<gfxTextRun> textRun;
-    textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
+    textRun = gfxTextRun::Create(aParams, aText, aLength, aFontGroup, aFlags);
     if (!textRun || !textRun->GetCharacterGlyphs())
         return nsnull;
 #ifdef DEBUG
@@ -474,7 +474,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
 
     aFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
     nsAutoPtr<gfxTextRun> textRun;
-    textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
+    textRun = gfxTextRun::Create(aParams, aText, aLength, aFontGroup, aFlags);
     if (!textRun || !textRun->GetCharacterGlyphs())
         return nsnull;
 #ifdef DEBUG

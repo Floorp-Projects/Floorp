@@ -105,6 +105,16 @@ body[dir="rtl"] #brand {
   display: none;
 }
 
+#securityOverrideDiv {
+  padding-top: 10px;
+}
+
+#securityOverrideContent {
+  background-color: #FFF090; /* Pale yellow */
+  padding: 10px;
+  -moz-border-radius: 10px;
+}
+
 /* Custom styling for 'blacklist' error class */
 :root.blacklist #errorTitle, :root.blacklist #errorLongContent,
 :root.blacklist #errorShortDesc, :root.blacklist #errorLongDesc,
@@ -125,4 +135,3 @@ body[dir="rtl"] #brand {
 :root.blacklist #errorTryAgain {
   display: none;
 }
-

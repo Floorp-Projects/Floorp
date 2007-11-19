@@ -57,6 +57,7 @@ public:
   void OnQuit();
   nsresult ClearHistory();
   void OnExpirationChanged();
+  nsresult ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing);
 
 protected:
 
@@ -86,8 +87,8 @@ protected:
 
   nsresult DoPartialExpiration();
 
-  nsresult ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing);
   nsresult ExpireAnnotations(mozIStorageConnection* aConnection);
+  nsresult ExpireEmbeddedLinks(mozIStorageConnection* aConnection);
 
   // parts of ExpireItems
   nsresult FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
@@ -103,7 +104,7 @@ protected:
                             const nsTArray<nsNavHistoryExpireRecord>& aRecords);
 
   // paranoid checks
-  nsresult ExpireHistoryParanoid(mozIStorageConnection* aConnection);
+  nsresult ExpireHistoryParanoid(mozIStorageConnection* aConnection, PRInt32 aMaxRecords);
   nsresult ExpireFaviconsParanoid(mozIStorageConnection* aConnection);
   nsresult ExpireAnnotationsParanoid(mozIStorageConnection* aConnection);
 

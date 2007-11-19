@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Shawn Wilsher <me@shawnwilsher.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +43,7 @@
   <!ENTITY cmdShowFindDialog.accelkey "f">
 
   <!ENTITY cmdFindNext.label "Find Next">
-  <!ENTITY cmdFindNext.accesskey "n">
+  <!ENTITY cmdFindNext.accesskey "N">
 
   <!ENTITY cmdToggleAnonContent.label "Show Anonymous Content">
   <!ENTITY cmdToggleAnonContent.accesskey "a">
@@ -57,6 +58,7 @@
   <!ENTITY cmdToggleProcessingInstructions.accesskey "P">
 
   <!ENTITY cmdFlashSelected.label "Blink Selected Element">
+  <!ENTITY cmdFlashSelected.accesskey "S">
 
   <!ENTITY cmdToggleAttributes.label "Show Attributes">
   <!ENTITY cmdToggleAttributes.accesskey "r">
@@ -83,13 +85,22 @@
 
   <!ENTITY findNodes.title "Find Nodes">
   <!ENTITY findNodesById.label "Id">
+  <!ENTITY findNodesById.accesskey "I">
+  <!ENTITY findNodesById.accesskey2 "d">
   <!ENTITY findNodesByTag.label "Tag">
+  <!ENTITY findNodesByTag.accesskey "T">
+  <!ENTITY findNodesByTag.accesskey2 "g">
   <!ENTITY findNodesByAttr.label "Attr">
+  <!ENTITY findNodesByAttr.accesskey "A">
+  <!ENTITY findNodesByAttr.accesskey2 "r">
   <!ENTITY findNodesByAttrValue.label "Value">
+  <!ENTITY findNodesByAttrValue.accesskey "V">
   <!ENTITY findNodesSearchBy.label "Search By">
   <!ENTITY findNodesDirection.label "Direction">
   <!ENTITY findNodesDirectionUp.label "Up">
+  <!ENTITY findNodesDirectionUp.accesskey "U">
   <!ENTITY findNodesDirectionDown.label "Down">
+  <!ENTITY findNodesDirectionDown.accesskey "w">
   <!ENTITY findNodesFind.label "Find">
   <!ENTITY findNodesCancel.label "Cancel">
 
@@ -109,11 +120,15 @@
 
   <!ENTITY insertNode.title "Insert Node">
   <!ENTITY nodeType.label "Node Type:">
+  <!ENTITY nodeType.accesskey "T">
   <!ENTITY nodeType.element.label "Element">
   <!ENTITY nodeType.text.label "Text">
   <!ENTITY namespaceURI.label "Namespace URI:">
+  <!ENTITY namespaceURI.accesskey "U">
   <!ENTITY tagName.label "Tag Name:">
+  <!ENTITY tagName.accesskey "N">
   <!ENTITY nodeValue.label "Node Value:">
+  <!ENTITY nodeValue.accesskey "V">
 
   <!ENTITY namespaceTitle.null.label "null">
   <!ENTITY namespaceTitle.default.label "Document Default">

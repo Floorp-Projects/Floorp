@@ -72,13 +72,13 @@ NS_IMPL_ISUPPORTS3(ns4xPluginStreamListener, nsIPluginStreamListener,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst, 
+ns4xPluginStreamListener::ns4xPluginStreamListener(ns4xPluginInstance* inst, 
                                                    void* notifyData,
                                                    const char* aURL)
   : mNotifyData(notifyData),
     mStreamBuffer(nsnull),
     mNotifyURL(aURL ? PL_strdup(aURL) : nsnull),
-    mInst((ns4xPluginInstance *)inst),
+    mInst(inst),
     mStreamBufferSize(0),
     mStreamBufferByteCount(0),
     mStreamType(nsPluginStreamType_Normal),
@@ -86,6 +86,9 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
     mStreamCleanedUp(PR_FALSE),
     mCallNotify(PR_FALSE),
     mIsSuspended(PR_FALSE),
+    mIsPluginInitJSStream(mInst->mInPluginInitCall &&
+                          aURL && strncmp(aURL, "javascript:",
+                                          sizeof("javascript:") - 1) == 0),
     mResponseHeaderBuf(nsnull)
 {
   // Initialize the 4.x interface structure
@@ -355,6 +358,21 @@ ns4xPluginStreamListener::StopDataPump()
   }
 }
 
+// Return true if a javascript: load that was started while the plugin
+// was being initialized is still in progress.
+PRBool
+ns4xPluginStreamListener::PluginInitJSLoadInProgress()
+{
+  for (nsInstanceStream *is = mInst->mStreams; is; is = is->mNext) {
+    if (is->mPluginStreamListener->mIsPluginInitJSStream) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // This method is called when there's more data available off the
@@ -511,7 +529,18 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
         // if WriteReady returned 0, the plugin is not ready to handle
         // the data, suspend the stream (if it isn't already
         // suspended).
-        if (numtowrite <= 0) {
+        //
+        // Also suspend the stream if the stream we're loading is not
+        // a javascript: URL load that was initiated during plugin
+        // initialization and there currently is such a stream
+        // loading. This is done to work around a Windows Media Player
+        // plugin bug where it can't deal with being fed data for
+        // other streams while it's waiting for data from the
+        // javascript: URL loads it requests during
+        // initialization. See bug 386493 for more details.
+
+        if (numtowrite <= 0 ||
+            (!mIsPluginInitJSStream && PluginInitJSLoadInProgress())) {
           if (!mIsSuspended) {
             rv = SuspendRequest();
           }
@@ -781,7 +810,21 @@ NS_IMPL_ISUPPORTS3(ns4xPluginInstance, nsIPluginInstance, nsIScriptablePlugin,
 
 ns4xPluginInstance::ns4xPluginInstance(NPPluginFuncs* callbacks,
                                        PRLibrary* aLibrary)
-  : fCallbacks(callbacks)
+  : fCallbacks(callbacks),
+#ifdef XP_MACOSX
+#ifdef NP_NO_QUICKDRAW
+    mDrawingModel(NPDrawingModelCoreGraphics),
+#else
+    mDrawingModel(NPDrawingModelQuickDraw),
+#endif
+#endif
+    mWindowless(PR_FALSE),
+    mTransparent(PR_FALSE),
+    mStarted(PR_FALSE),
+    mCached(PR_FALSE),
+    mInPluginInitCall(PR_FALSE),
+    fLibrary(aLibrary),
+    mStreams(nsnull)
 {
   NS_ASSERTION(fCallbacks != NULL, "null callbacks");
 
@@ -789,21 +832,6 @@ ns4xPluginInstance::ns4xPluginInstance(NPPluginFuncs* callbacks,
 
   fNPP.pdata = NULL;
   fNPP.ndata = this;
-
-  fLibrary = aLibrary;
-  mWindowless = PR_FALSE;
-  mTransparent = PR_FALSE;
-  mStarted = PR_FALSE;
-  mStreams = nsnull;
-  mCached = PR_FALSE;
-
-#ifdef XP_MACOSX
-#ifdef NP_NO_QUICKDRAW
-  mDrawingModel = NPDrawingModelCoreGraphics;
-#else
-  mDrawingModel = NPDrawingModelQuickDraw;
-#endif
-#endif
 
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("ns4xPluginInstance ctor: this=%p\n",this));
 }
@@ -1052,6 +1080,9 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   mPeer = peer;
   mStarted = PR_TRUE;
 
+  PRBool oldVal = mInPluginInitCall;
+  mInPluginInitCall = PR_TRUE;
+
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewProc(fCallbacks->newp,
                                           (char *)mimetype,
                                           &fNPP,
@@ -1060,6 +1091,8 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
                                           (char**)names,
                                           (char**)values,
                                           NULL), fLibrary,this);
+
+  mInPluginInitCall = oldVal;
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP New called: this=%p, npp=%p, mime=%s, mode=%d, argc=%d, return=%d\n",
@@ -1110,10 +1143,14 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("ns4xPluginInstance::SetWindow (about to call it) this=%p\n",this));
 
+    PRBool oldVal = mInPluginInitCall;
+    mInPluginInitCall = PR_TRUE;
+
     NS_TRY_SAFE_CALL_RETURN(error, CallNPP_SetWindowProc(fCallbacks->setwindow,
                                   &fNPP,
                                   (NPWindow*) window), fLibrary, this);
 
+    mInPluginInitCall = oldVal;
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP SetWindow called: this=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d], return=%d\n",

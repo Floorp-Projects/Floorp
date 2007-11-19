@@ -113,7 +113,6 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(nsresult)
 IconDecoderModuleCtor(nsIModule* aSelf)
 {
-  nsMozIconURI::InitAtoms();
   return NS_OK;
 }
 

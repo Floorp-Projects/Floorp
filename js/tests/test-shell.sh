@@ -130,7 +130,7 @@ case "$branch" in
         ;;
 esac
 
-TEST_HTML_LOG="${TEST_DIR}/results/mozilla.org/js/${TEST_DATE},js,$branch,$buildtype,$OSID,${TEST_MACHINE},$TEST_SUITE-shell.html"
+TEST_HTML_LOG="/dev/null"
 
 # clock skew causes failures. clean first
 make clean

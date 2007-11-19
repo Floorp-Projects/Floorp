@@ -78,7 +78,7 @@ REQUIRES	= \
 		$(NULL)
 
 ifdef MOZ_X11
-EXTRA_DSO_LIBS += GL
+EXTRA_DSO_LIBS += GL GLU X11
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -101,10 +101,14 @@ CPPSRCS		= nsCanvas3DModule.cpp \
 
 DEFINES += -DXPCOM_GLUE -DXPCOM_GLUE_USE_NSPR -DGLEW_MX -DGLEW_STATIC
 
+EXTRA_DSO_LIBS += xpcom
+
 ifdef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS += js3250 xpcom xul
+ ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+ EXTRA_DSO_LIBS += xul
+ endif
 else
-EXTRA_DSO_LIBS += js3250 xpcom thebes
+EXTRA_DSO_LIBS += thebes
 endif
 
 # Hack for getting an extension built against static vs. dynamic versions of firefox
@@ -113,6 +117,8 @@ endif
 #endif
 
 include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES	+= -I$(srcdir)
 
 CFLAGS += $(RTL_FLAGS)
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
@@ -126,7 +132,11 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXTRA_DSO_LDOPTS += opengl32.lib glu32.lib usp10.lib
 endif
 
-ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+EXTRA_DSO_LDOPTS += -framework AGL -framework OpenGL
+ ifdef MOZ_ENABLE_LIBXUL
+ EXTRA_DSO_LDOPTS += $(DIST)/bin/XUL
+ endif
 endif
 
-EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS) $(XPCOM_GLUE_LDOPTS)
+EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS) $(MOZ_JS_LIBS) $(XPCOM_GLUE_LDOPTS)

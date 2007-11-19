@@ -105,6 +105,7 @@
 // preference ID strings
 #define PREF_BRANCH_BASE                        "browser."
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
+#define PREF_BROWSER_HISTORY_EXPIRE_VISITS      "history_expire_visits"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
@@ -117,11 +118,12 @@
 // should not normally be required.
 #define DEFAULT_DB_CACHE_PERCENTAGE 6
 
-// The default page size the database should use. This must be a power of 2.
-// Larger pages may mean less paging, but when something is changed, the
-// entire page is written to the journal and then the main file, meaning a
-// lot more data has to be handled.
-#define DEFAULT_DB_PAGE_SIZE 1024
+// We set the default database page size to be larger. sqlite's default is 1K.
+// This gives good performance when many small parts of the file have to be
+// loaded for each statement. Because we try to keep large chunks of the file
+// in memory, a larger page size should give better I/O performance. 32K is
+// sqlite's default max page size.
+#define DEFAULT_DB_PAGE_SIZE 4096
 
 // the value of mLastNow expires every 3 seconds
 #define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
@@ -150,10 +152,20 @@
 
 #endif // LAZY_ADD
 
+// check idle timer every 5 minutes
+#define IDLE_TIMER_TIMEOUT (300 * PR_MSEC_PER_SEC)
+
+// *** CURRENTLY DISABLED ***
+// Perform vacuum after 15 minutes of idle time, repeating.
 // 15 minutes = 900 seconds = 900000 milliseconds
 #define VACUUM_IDLE_TIME_IN_MSECS (900000)
-// check every 5 minutes
-#define VACUUM_TIMER_TIMEOUT (300 * PR_MSEC_PER_SEC)
+
+// Perform expiration after 5 minutes of idle time, repeating.
+// 5 minutes = 300 seconds = 300000 milliseconds
+#define EXPIRE_IDLE_TIME_IN_MSECS (300000)
+
+// Amount of items to expire at idle time.
+#define MAX_EXPIRE_RECORDS_ON_IDLE 200
 
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
@@ -253,6 +265,7 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
                                mExpireDays(0),
+                               mExpireVisits(0),
                                mAutoCompleteOnlyTyped(PR_FALSE),
                                mBatchLevel(0),
                                mLock(nsnull),
@@ -332,9 +345,9 @@ nsNavHistory::Init()
   {
     nsCOMPtr<mozIStorageStatement> selectSession;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT MAX(session) FROM "
-        "(SELECT MAX(visit_date) AS visit_date FROM moz_historyvisits) maxvd "
-        "JOIN moz_historyvisits v ON maxvd.visit_date = v.visit_date"),
+        "SELECT MAX(session) FROM moz_historyvisits "
+        "WHERE visit_date = "
+        "(SELECT MAX(visit_date) from moz_historyvisits)"),
       getter_AddRefs(selectSession));
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool hasSession;
@@ -395,6 +408,7 @@ nsNavHistory::Init()
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_VISITS, this, PR_FALSE);
   }
 
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
@@ -508,22 +522,9 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   PRBool tableExists;
   *aDoImport = PR_FALSE;
 
-  // Set the database up for incremental vacuuming.
-  // if the database was created before we started doing 
-  // incremental vacuuming, this will have no effect.
-  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA auto_vacuum=2"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mVacuumTimer) {
-    mVacuumTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mVacuumTimer->InitWithFuncCallback(VacuumTimerCallback, this,
-                                            VACUUM_TIMER_TIMEOUT,
-                                            nsITimer::TYPE_REPEATING_SLACK);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
+  // IMPORTANT NOTE:
+  // setting page_size must happen first, see bug #401985 for details
+  //
   // Set the database page size. This will only have any effect on empty files,
   // so must be done before anything else. If the file already exists, we'll
   // get that file's page size and this will have no effect.
@@ -531,6 +532,16 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   pageSizePragma.AppendInt(DEFAULT_DB_PAGE_SIZE);
   rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mIdleTimer) {
+    mIdleTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mIdleTimer->InitWithFuncCallback(IdleTimerCallback, this,
+                                            IDLE_TIMER_TIMEOUT,
+                                            nsITimer::TYPE_REPEATING_SLACK);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
@@ -672,10 +683,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
     rv = mDBConn->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("CREATE INDEX moz_places_urlindex ON moz_places (url)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_places_titleindex ON moz_places (title)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1065,7 +1072,7 @@ nsNavHistory::CleanUpOnQuit()
         NS_LITERAL_CSTRING("CREATE INDEX moz_places_hostindex ON moz_places (rev_host)"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE INDEX moz_places_visitcount ON moz_places (rev_host)"));
+        NS_LITERAL_CSTRING("CREATE INDEX moz_places_visitcount ON moz_places (visit_count)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // 5. copy all data into moz_places
@@ -1081,6 +1088,15 @@ nsNavHistory::CleanUpOnQuit()
     NS_ENSURE_SUCCESS(rv, rv);
     transaction.Commit();
   }
+
+  // bug #381795 - remove unused indexes
+  mozStorageTransaction idxTransaction(mDBConn, PR_FALSE);
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_titleindex"));
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_annos_item_idindex"));
+  idxTransaction.Commit();
+
   return NS_OK;
 }
 
@@ -1364,6 +1380,7 @@ nsNavHistory::LoadPrefs()
     return NS_OK;
 
   mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_VISITS, &mExpireVisits);
   PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
@@ -1943,9 +1960,10 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
     mDBGetPageVisitStats->Reset();
     scoper.Abandon();
 
-    // hide embedded links and redirects, everything else is visible,
+    // Hide only embedded links, redirects, and downloads
     // See the hidden computation code above for a little more explanation.
-    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect);
+    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect ||
+              aTransitionType == TRANSITION_DOWNLOAD);
 
     typed = (aTransitionType == TRANSITION_TYPED);
 
@@ -2114,37 +2132,7 @@ PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHi
   if (aOptions->ExcludeItems())
     return PR_FALSE;
 
-  if (aOptions->ExcludeQueries())
-    return PR_FALSE;
-
-  if (aOptions->ExcludeReadOnlyFolders())
-    return PR_FALSE;
-
-  if (aOptions->ExpandQueries())
-    return PR_FALSE;
-
   if (aOptions->IncludeHidden())
-    return PR_FALSE;
-
-  if (aOptions->ShowSessions())
-    return PR_FALSE;
-
-  if (aOptions->ResolveNullBookmarkTitles())
-    return PR_FALSE;
-
-  if (aOptions->ApplyOptionsToContainers())
-    return PR_FALSE;
-
-  nsCString sortingAnnotation;
-  nsresult rv = aOptions->GetSortingAnnotation(sortingAnnotation);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  if (!sortingAnnotation.IsEmpty())
-    return PR_FALSE;
-
-  nsCString parentAnnotationToExclude;
-  rv = aOptions->GetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  if (!parentAnnotationToExclude.IsEmpty()) 
     return PR_FALSE;
 
   if (aQuery->MinVisits() != -1 || aQuery->MaxVisits() != -1)
@@ -3392,7 +3380,7 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
 }
 
 nsresult 
-nsNavHistory::PerformVacuumIfIdle()
+nsNavHistory::OnIdle()
 {
   nsresult rv;
   nsCOMPtr<nsIIdleService> idleService =
@@ -3403,47 +3391,33 @@ nsNavHistory::PerformVacuumIfIdle()
   rv = idleService->GetIdleTime(&idleTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if we've been idle for more than VACUUM_IDLE_TIME_IN_MSECS
-  // incrementally vacuum
+  // If we've been idle for more than EXPIRE_IDLE_TIME_IN_MSECS
+  // keep the expiration engine chugging along.
+  // Note: This is done prior to a possible vacuum, to optimize space reduction
+  // in the vacuum.
+  if (idleTime > EXPIRE_IDLE_TIME_IN_MSECS) {
+    PRBool dummy;
+    (void)mExpire.ExpireItems(MAX_EXPIRE_RECORDS_ON_IDLE, &dummy);
+  }
+
+  // If we've been idle for more than VACUUM_IDLE_TIME_IN_MSECS
+  // perform a vacuum.
   if (idleTime > VACUUM_IDLE_TIME_IN_MSECS) {
-    PRInt32 vacuum;
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA auto_vacuum"),
-                                  getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasResult;
-    rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
-    vacuum = statement->AsInt32(0);
-
-    // if our database was created with incremental_vacuum, 
-    // do incremental vacuuming
-    if (vacuum == 2) {
-      rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("PRAGMA incremental_vacuum;"));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
 #if 0
-      // Currently commented out because compression is very slow
-      // see bug #390244 for more details
-      // if our database was created before incremental vacuuming
-      // do a full vacuum on idle
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
-      NS_ENSURE_SUCCESS(rv, rv);
+    // Currently commented out because vacuum is very slow
+    // see bug #390244 for more details.
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif
-    }
   }
   return NS_OK;
 }
 
 void // static
-nsNavHistory::VacuumTimerCallback(nsITimer* aTimer, void* aClosure)
+nsNavHistory::IdleTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   nsNavHistory* history = static_cast<nsNavHistory*>(aClosure);
-  (void)history->PerformVacuumIfIdle();
+  (void)history->OnIdle();
 }
 
 // nsIObserver *****************************************************************
@@ -3453,9 +3427,9 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
                     const PRUnichar *aData)
 {
   if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
-    if (mVacuumTimer) {
-      mVacuumTimer->Cancel();
-      mVacuumTimer = nsnull;
+    if (mIdleTimer) {
+      mIdleTimer->Cancel();
+      mIdleTimer = nsnull;
     }
     if (mAutoCompleteTimer) {
       mAutoCompleteTimer->Cancel();
@@ -3492,8 +3466,9 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gQuitApplicationMessage);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     PRInt32 oldDays = mExpireDays;
+    PRInt32 oldVisits = mExpireVisits;
     LoadPrefs();
-    if (oldDays != mExpireDays)
+    if (oldDays != mExpireDays || oldVisits != mExpireVisits)
       mExpire.OnExpirationChanged();
   }
 
@@ -4954,8 +4929,6 @@ nsNavHistory::CreateLookupIndexes()
   rv = mDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE INDEX moz_places_visitcount ON moz_places (visit_count)"));
   //NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_places_titleindex ON moz_places (title)"));
 
   // Visit table indexes
   rv = mDBConn->ExecuteSimpleSQL(

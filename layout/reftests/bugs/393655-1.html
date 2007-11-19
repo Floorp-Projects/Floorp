@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+<head>
+  <script>
+    function tweak() {
+      var editMe = document.getElementById('editMe');
+      editMe.innerHTML="a";
+      document.documentElement.className = "";
+    }
+  </script>
+</head>
+<body onload="tweak()">
+  <span id="editMe" style="margin-bottom: 1px;">
+  </span>
+  <div>
+    b
+  </div>
+</body>
+</html>

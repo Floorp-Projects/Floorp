@@ -446,7 +446,7 @@ gfxPangoFont::GetMetrics()
     mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / lineHeight;
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
-    // XXX should we move this down, get max-advance from FT_Face?
+    // we're going to overwrite this below if we have a FT_Face (which we should...)
     mMetrics.maxAdvance = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
 
     gfxSize isz, lsz;
@@ -473,6 +473,8 @@ gfxPangoFont::GetMetrics()
         face = pango_fc_font_lock_face (PANGO_FC_FONT (font));
 
     if (face) {
+        mMetrics.maxAdvance = face->size->metrics.max_advance / 64.0; // 26.6
+
         float val;
 
         TT_OS2 *os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
@@ -554,25 +556,41 @@ gfxPangoFont::GetUniqueName()
  * 
  **/
 
+/**
+ * We use this to append an LTR or RTL Override character to the start of the
+ * string. This forces Pango to honour our direction even if there are neutral characters
+ * in the string.
+ */
+static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString)
+{
+    static const PRUnichar overrides[2][2] =
+      { { 0x202d, 0 }, { 0x202e, 0 }}; // LRO, RLO
+    AppendUTF16toUTF8(overrides[aIsRTL], aString);
+    return 3; // both overrides map to 3 bytes in UTF8
+}
+	
 gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
-    gfxTextRun *run = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!run)
         return nsnull;
 
     PRBool isRTL = run->IsRightToLeft();
     if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
+        // We don't need to send an override character here, the characters must be all LTR
         const gchar *utf8Chars = reinterpret_cast<const gchar*>(aString);
-        InitTextRun(run, utf8Chars, aLength, PR_TRUE);
+        InitTextRun(run, utf8Chars, aLength, 0, PR_TRUE);
     } else {
         // this is really gross...
         const char *chars = reinterpret_cast<const char*>(aString);
         NS_ConvertASCIItoUTF16 unicodeString(chars, aLength);
-        NS_ConvertUTF16toUTF8 utf8String(unicodeString);
-        InitTextRun(run, utf8String.get(), utf8String.Length(), PR_TRUE);
+        nsCAutoString utf8;
+        PRInt32 headerLen = AppendDirectionalIndicatorUTF8(isRTL, utf8);
+        AppendUTF16toUTF8(unicodeString, utf8);
+        InitTextRun(run, utf8.get(), utf8.Length(), headerLen, PR_TRUE);
     }
     run->FetchGlyphExtents(aParams->mContext);
     return run;
@@ -597,13 +615,15 @@ gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
-    gfxTextRun *run = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *run = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!run)
         return nsnull;
 
     run->RecordSurrogates(aString);
 
-    NS_ConvertUTF16toUTF8 utf8(aString, aLength);
+    nsCAutoString utf8;
+    PRInt32 headerLen = AppendDirectionalIndicatorUTF8(run->IsRightToLeft(), utf8);
+    AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
     PRBool is8Bit = PR_FALSE;
 
 #if defined(ENABLE_FAST_PATH_8BIT)
@@ -616,21 +636,22 @@ gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
         is8Bit = (allBits & 0xFF00) == 0;
     }
 #endif
-    InitTextRun(run, utf8.get(), utf8.Length(), is8Bit);
+    InitTextRun(run, utf8.get(), utf8.Length(), headerLen, is8Bit);
     run->FetchGlyphExtents(aParams->mContext);
     return run;
 }
 
 void
 gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
-                               PRUint32 aUTF8Length, PRBool aTake8BitPath)
+                               PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
+                               PRBool aTake8BitPath)
 {
 #if defined(ENABLE_FAST_PATH_ALWAYS)
-    CreateGlyphRunsFast(aTextRun, aUTF8Text, aUTF8Length);
+    CreateGlyphRunsFast(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
 #else
 #if defined(ENABLE_FAST_PATH_8BIT)
     if (aTake8BitPath && CanTakeFastPath(aTextRun->GetFlags())) {
-        nsresult rv = CreateGlyphRunsFast(aTextRun, aUTF8Text, aUTF8Length);
+        nsresult rv = CreateGlyphRunsFast(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
         if (NS_SUCCEEDED(rv))
             return;
     }
@@ -640,7 +661,7 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
                                (aTextRun->IsRightToLeft()
                                   ? PANGO_DIRECTION_RTL : PANGO_DIRECTION_LTR));
 
-    CreateGlyphRunsItemizing(aTextRun, aUTF8Text, aUTF8Length);
+    CreateGlyphRunsItemizing(aTextRun, aUTF8Text, aUTF8Length, aUTF8HeaderLength);
 #endif
 }
 
@@ -738,7 +759,7 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
 
         while (p < end) {
             if (!attr->is_cursor_position) {
-                aTextRun->SetCharacterGlyph(aUTF16Offset, g.SetClusterContinuation());
+                aTextRun->SetGlyphs(aUTF16Offset, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
             }
             ++aUTF16Offset;
         
@@ -797,14 +818,15 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
     PRInt32 advance = ConvertPangoToAppUnits(width, appUnitsPerDevUnit);
 
     gfxTextRun::CompressedGlyph g;
+    PRBool atClusterStart = aTextRun->IsClusterStart(utf16Offset);
     // See if we fit in the compressed area.
-    if (aGlyphCount == 1 && advance >= 0 &&
+    if (aGlyphCount == 1 && advance >= 0 && atClusterStart &&
         aGlyphs[0].geometry.x_offset == 0 &&
         aGlyphs[0].geometry.y_offset == 0 &&
         gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
         gfxTextRun::CompressedGlyph::IsSimpleGlyphID(aGlyphs[0].glyph)) {
-        aTextRun->SetCharacterGlyph(utf16Offset,
-                                    g.SetSimpleGlyph(advance, aGlyphs[0].glyph));
+        aTextRun->SetSimpleGlyph(utf16Offset,
+                                 g.SetSimpleGlyph(advance, aGlyphs[0].glyph));
     } else {
         nsAutoTArray<gfxTextRun::DetailedGlyph,10> detailedGlyphs;
         if (!detailedGlyphs.AppendElements(aGlyphCount))
@@ -815,7 +837,6 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
             gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
             PRUint32 j = (aTextRun->IsRightToLeft()) ? aGlyphCount - 1 - i : i; 
             const PangoGlyphInfo &glyph = aGlyphs[j];
-            details->mIsLastGlyph = i == aGlyphCount - 1;
             details->mGlyphID = glyph.glyph;
             NS_ASSERTION(details->mGlyphID == glyph.glyph,
                          "Seriously weird glyph ID detected!");
@@ -827,7 +848,8 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
             details->mYOffset =
                 float(glyph.geometry.y_offset)*appUnitsPerDevUnit/PANGO_SCALE;
         }
-        aTextRun->SetDetailedGlyphs(utf16Offset, detailedGlyphs.Elements(), aGlyphCount);
+        g.SetComplex(atClusterStart, PR_TRUE, aGlyphCount);
+        aTextRun->SetGlyphs(utf16Offset, g, detailedGlyphs.Elements());
     }
 
     // Check for ligatures and set *aUTF16Offset.
@@ -857,12 +879,8 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
             return NS_ERROR_FAILURE;
         }
 
-        if (! charGlyphs[utf16Offset].IsClusterContinuation()) {
-            // This is a separate grapheme cluster but it has no glyphs.
-            // It must be represented by a ligature with the previous
-            // grapheme cluster.
-            aTextRun->SetCharacterGlyph(utf16Offset, g.SetLigatureContinuation());
-        }
+        g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_FALSE, 0);
+        aTextRun->SetGlyphs(utf16Offset, g, nsnull);
     }
     *aUTF16Offset = utf16Offset;
     return NS_OK;
@@ -1048,18 +1066,18 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
             if (advance >= 0 &&
                 gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
                 gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
-                aTextRun->SetCharacterGlyph(utf16Offset,
-                                            g.SetSimpleGlyph(advance, glyph));
+                aTextRun->SetSimpleGlyph(utf16Offset,
+                                         g.SetSimpleGlyph(advance, glyph));
             } else {
                 gfxTextRun::DetailedGlyph details;
-                details.mIsLastGlyph = PR_TRUE;
                 details.mGlyphID = glyph;
                 NS_ASSERTION(details.mGlyphID == glyph,
                              "Seriously weird glyph ID detected!");
                 details.mAdvance = advance;
                 details.mXOffset = 0;
                 details.mYOffset = 0;
-                aTextRun->SetDetailedGlyphs(utf16Offset, &details, 1);
+                g.SetComplex(aTextRun->IsClusterStart(utf16Offset), PR_TRUE, 1);
+                aTextRun->SetGlyphs(utf16Offset, g, &details);
             }
 
             NS_ASSERTION(!IS_SURROGATE(ch), "Surrogates shouldn't appear in UTF8");
@@ -1077,7 +1095,8 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
 
 void 
 gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
-                                            const gchar *aUTF8, PRUint32 aUTF8Length)
+                                            const gchar *aUTF8, PRUint32 aUTF8Length,
+                                            PRUint32 aUTF8HeaderLen)
 {
 
     PangoContext *context = gdk_pango_context_get ();
@@ -1117,6 +1136,14 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
 
         PRUint32 offset = item->offset;
         PRUint32 length = item->length;
+        if (offset < aUTF8HeaderLen) {
+            if (offset + length <= aUTF8HeaderLen) {
+                pango_item_free(item);
+                continue;
+            }
+            length -= aUTF8HeaderLen - offset;
+            offset = aUTF8HeaderLen;
+        }
 
         // need to append glyph runs here.
         PangoGlyphString *glyphString = pango_glyph_string_new();

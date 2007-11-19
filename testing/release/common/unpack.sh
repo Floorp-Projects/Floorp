@@ -34,7 +34,16 @@ unpack_build () {
             fi
             ;;
         linux-i686|linux|Linux_x86-gcc|Linux_x86-gcc3)
-            tar xfz ../"$pkg_file" > /dev/null
+            if `echo $pkg_file | grep -q "tar.gz"`
+            then
+                tar xfz ../"$pkg_file" > /dev/null
+            elif `echo $pkg_file | grep -q "tar.bz2"`
+            then
+                tar xfj ../"$pkg_file" > /dev/null
+            else
+                echo "Unknown package type for file: $pkg_file"
+                exit 1
+            fi
             ;;
     esac
 

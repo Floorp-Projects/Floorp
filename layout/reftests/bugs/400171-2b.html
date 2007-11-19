@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+  <style>
+    body   { width:  100px; line-height: 15px; }
+    div    { width:  100px; float: left }
+    div.a  { height:  80px; background: lightblue;  }
+    div.b  { height:  10px; background: lightgreen; }
+    div.c  { height:  10px; background: black;      }
+  </style>
+  <script>
+  function tweak() {
+    document.getElementById('changeMe').style.height = '100px';
+    document.documentElement.className = "";
+  }
+  </script>
+</head>
+<body onload="tweak()">
+  <div class="a"></div>
+  <div class="b" id="changeMe"></div>
+  <div class="c"></div>
+</body>
+</html>

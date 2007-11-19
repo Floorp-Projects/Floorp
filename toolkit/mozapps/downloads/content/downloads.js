@@ -42,8 +42,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-///////////////////////////////////////////////////////////////////////////////
-// Globals
+////////////////////////////////////////////////////////////////////////////////
+//// Globals
 
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
@@ -56,8 +56,9 @@ const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-var gDownloadManager  = Cc["@mozilla.org/download-manager;1"].
-                        getService(Ci.nsIDownloadManager);
+const nsIDM = Ci.nsIDownloadManager;
+
+let gDownloadManager = Cc["@mozilla.org/download-manager;1"].getService(nsIDM);
 var gDownloadListener     = null;
 var gDownloadsView        = null;
 var gDownloadsActiveArea  = null;
@@ -82,6 +83,13 @@ let gStr = {
   timeSecondsLeft: "timeSecondsLeft",
   timeFewSeconds: "timeFewSeconds",
   timeUnknown: "timeUnknown",
+  doneStatus: "doneStatus",
+  doneSize: "doneSize",
+  doneSizeUnknown: "doneSizeUnknown",
+  stateFailed: "stateFailed",
+  stateCanceled: "stateCanceled",
+  stateBlocked: "stateBlocked",
+
   units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
 
   fileExecutableSecurityWarningTitle: "fileExecutableSecurityWarningTitle",
@@ -90,24 +98,25 @@ let gStr = {
 
 // base query used to display download items, use replaceInsert to set WHERE
 let gBaseQuery = "SELECT id, target, name, source, state, startTime, " +
-                        "referrer, currBytes, maxBytes " +
+                        "endTime, referrer, currBytes, maxBytes " +
                  "FROM moz_downloads " +
                  "WHERE #1 " +
                  "ORDER BY endTime ASC, startTime ASC";
 
-///////////////////////////////////////////////////////////////////////////////
-// Utility Functions 
+////////////////////////////////////////////////////////////////////////////////
+//// Utility Functions
 
 function fireEventForElement(aElement, aEventType)
 {
   var e = document.createEvent("Events");
   e.initEvent("download-" + aEventType, true, true);
-  
+
   aElement.dispatchEvent(e);
 }
 
 function createDownloadItem(aID, aFile, aTarget, aURI, aState, aProgress,
-                            aStartTime, aReferrer, aCurrBytes, aMaxBytes)
+                            aStartTime, aEndTime, aReferrer, aCurrBytes,
+                            aMaxBytes)
 {
   var dl = document.createElement("richlistitem");
   dl.setAttribute("type", "download");
@@ -120,6 +129,7 @@ function createDownloadItem(aID, aFile, aTarget, aURI, aState, aProgress,
   dl.setAttribute("state", aState);
   dl.setAttribute("progress", aProgress);
   dl.setAttribute("startTime", aStartTime);
+  dl.setAttribute("endTime", aEndTime);
   if (aReferrer)
     dl.setAttribute("referrer", aReferrer);
   dl.setAttribute("currBytes", aCurrBytes);
@@ -145,12 +155,12 @@ function getDownload(aID)
   return document.getElementById("dl" + aID);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Start/Stop Observers
+////////////////////////////////////////////////////////////////////////////////
+//// Start/Stop Observers
 
-function downloadCompleted(aDownload) 
+function downloadCompleted(aDownload)
 {
-  // Wrap this in try...catch since this can be called while shutting down... 
+  // Wrap this in try...catch since this can be called while shutting down...
   // it doesn't really matter if it fails then since well.. we're shutting down
   // and there's no UI to update!
   try {
@@ -158,6 +168,9 @@ function downloadCompleted(aDownload)
 
     // Update attributes now that we've finished
     dl.setAttribute("startTime", Math.round(aDownload.startTime / 1000));
+    dl.setAttribute("endTime", Date.now());
+    dl.setAttribute("currBytes", aDownload.amountTransferred);
+    dl.setAttribute("maxBytes", aDownload.size);
 
     // If we are displaying search results, we do not want to add it to the list
     // of completed downloads
@@ -206,33 +219,33 @@ function autoRemoveAndClose(aDownload)
       return true;
     }
   }
-  
+
   return false;
 }
 
 // This function can be overwritten by extensions that wish to place the
-// Download Window in another part of the UI. 
+// Download Window in another part of the UI.
 function gCloseDownloadManager()
 {
   window.close();
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //// Download Event Handlers
 
 function cancelDownload(aDownload)
 {
   gDownloadManager.cancelDownload(aDownload.getAttribute("dlid"));
 
-  // XXXben - 
+  // XXXben -
   // If we got here because we resumed the download, we weren't using a temp file
   // because we used saveURL instead. (this is because the proper download mechanism
   // employed by the helper app service isn't fully accessible yet... should be fixed...
   // talk to bz...)
-  // the upshot is we have to delete the file if it exists. 
+  // the upshot is we have to delete the file if it exists.
   var f = getLocalFileFromNativePathOrUrl(aDownload.getAttribute("file"));
 
-  if (f.exists()) 
+  if (f.exists())
     f.remove(false);
 }
 
@@ -266,7 +279,7 @@ function showDownload(aDownload)
     f.reveal();
   } catch (ex) {
     // if reveal failed for some reason (eg on unix it's not currently
-    // implemented), send the file: URL window rooted at the parent to 
+    // implemented), send the file: URL window rooted at the parent to
     // the OS handler for that protocol
     var parent = f.parent;
     if (parent)
@@ -280,18 +293,18 @@ function onDownloadDblClick(aEvent)
   if (item.getAttribute("type") == "download" && aEvent.button == 0) {
     var state = parseInt(item.getAttribute("state"));
     switch (state) {
-      case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
+      case nsIDM.DOWNLOAD_FINISHED:
         gDownloadViewController.doCommand("cmd_open");
         break;
-      case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:  
+      case nsIDM.DOWNLOAD_DOWNLOADING:
         gDownloadViewController.doCommand("cmd_pause");
         break;
-      case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
+      case nsIDM.DOWNLOAD_PAUSED:
         gDownloadViewController.doCommand("cmd_resume");
         break;
-      case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
-      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED:
-      case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
+      case nsIDM.DOWNLOAD_CANCELED:
+      case nsIDM.DOWNLOAD_BLOCKED:
+      case nsIDM.DOWNLOAD_FAILED:
         gDownloadViewController.doCommand("cmd_retry");
         break;
     }
@@ -322,10 +335,10 @@ function openDownload(aDownload)
       var checkbox = { value: false };
       var open = promptSvc.confirmCheck(window, title, message, dontAsk, checkbox);
 
-      if (!open) 
+      if (!open)
         return;
       pref.setBoolPref(PREF_BDM_ALERTONEXEOPEN, !checkbox.value);
-    }       
+    }
   }
   try {
     f.launch();
@@ -351,7 +364,7 @@ function showDownloadInfo(aDownload)
 
   // Generate the proper title (the start time of the download)
   var dts = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-            getService(Ci.nsIScriptableDateFormat);  
+            getService(Ci.nsIScriptableDateFormat);
   var dateStarted = new Date(parseInt(aDownload.getAttribute("startTime")));
   dateStarted = dts.FormatDateTime("",
                                    dts.dateFormatLong,
@@ -384,7 +397,7 @@ function copySourceLocation(aDownload)
 }
 
 // This is called by the progress listener. We don't actually use the event
-// system here to minimize time wastage. 
+// system here to minimize time wastage.
 var gLastComputedMean = -1;
 var gLastActiveDownloads = 0;
 function onUpdateProgress()
@@ -433,9 +446,10 @@ function onUpdateProgress()
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //// Startup, Shutdown
-function Startup() 
+
+function Startup()
 {
   gDownloadsView        = document.getElementById("downloadView");
   gDownloadsActiveArea  = document.getElementById("active-downloads-area");
@@ -455,7 +469,7 @@ function Startup()
   gDownloadsView.addEventListener("dblclick", onDownloadDblClick, false);
 
   // The DownloadProgressListener (DownloadProgressListener.js) handles progress
-  // notifications. 
+  // notifications.
   gDownloadListener = new DownloadProgressListener();
   gDownloadManager.addListener(gDownloadListener);
 
@@ -469,7 +483,7 @@ function Startup()
   obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
 }
 
-function Shutdown() 
+function Shutdown()
 {
   gDownloadManager.removeListener(gDownloadListener);
 
@@ -498,20 +512,21 @@ let gDownloadObserver = {
   }
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// View Context Menus
+////////////////////////////////////////////////////////////////////////////////
+//// View Context Menus
+
 var gContextMenus = [
   // DOWNLOAD_DOWNLOADING
   ["menuitem_pause", "menuitem_cancel", "menuseparator_copy_location",
    "menuitem_copyLocation"],
   // DOWNLOAD_FINISHED
-  ["menuitem_open", "menuitem_show", "menuitem_remove", "menuitem_clearList",
+  ["menuitem_open", "menuitem_show", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_FAILED
-  ["menuitem_retry", "menuitem_remove", "menuitem_clearList",
+  ["menuitem_retry", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_CANCELED
-  ["menuitem_retry", "menuitem_remove", "menuitem_clearList",
+  ["menuitem_retry", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_PAUSED
   ["menuitem_resume", "menuitem_cancel", "menuseparator_copy_location",
@@ -520,7 +535,7 @@ var gContextMenus = [
   ["menuitem_cancel", "menuseparator_copy_location",
    "menuitem_copyLocation"],
   // DOWNLOAD_BLOCKED
-  ["menuitem_retry", "menuitem_remove", "menuitem_clearList",
+  ["menuitem_retry", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_SCANNING
   ["menuitem_copyLocation"]
@@ -530,27 +545,27 @@ function buildContextMenu(aEvent)
 {
   if (aEvent.target.id != "downloadContextMenu")
     return false;
-    
+
   var popup = document.getElementById("downloadContextMenu");
   while (popup.hasChildNodes())
     popup.removeChild(popup.firstChild);
-  
+
   if (gDownloadsView.selectedItem) {
     var idx = parseInt(gDownloadsView.selectedItem.getAttribute("state"));
     if (idx < 0)
       idx = 0;
-    
+
     var menus = gContextMenus[idx];
     for (var i = 0; i < menus.length; ++i)
       popup.appendChild(document.getElementById(menus[i]).cloneNode(true));
-    
+
     return true;
   }
-  
+
   return false;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //// Drag and Drop
 
 var gDownloadDNDObserver =
@@ -559,7 +574,7 @@ var gDownloadDNDObserver =
   {
     aDragSession.canDrop = true;
   },
-  
+
   onDrop: function(aEvent, aXferData, aDragSession)
   {
     var split = aXferData.data.split("\n");
@@ -569,7 +584,7 @@ var gDownloadDNDObserver =
       saveURL(url, name, null, true, true);
     }
   },
-  _flavourSet: null,  
+  _flavourSet: null,
   getSupportedFlavours: function ()
   {
     if (!this._flavourSet) {
@@ -581,7 +596,7 @@ var gDownloadDNDObserver =
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //// Command Updating and Command Handlers
 
 var gDownloadViewController = {
@@ -591,12 +606,12 @@ var gDownloadViewController = {
     return commandNode && commandNode.parentNode ==
                             document.getElementById("downloadsCommands");
   },
-  
+
   isCommandEnabled: function(aCommand)
   {
     if (!window.gDownloadsView)
       return false;
-    
+
     // This switch statement is for commands that do not need a download object
     switch (aCommand) {
       case "cmd_clearList":
@@ -621,7 +636,7 @@ var gDownloadViewController = {
       case "cmd_resume":
         return dl.paused;
       case "cmd_openReferrer":
-      case "cmd_remove":
+      case "cmd_removeFromList":
       case "cmd_retry":
         return dl.removable;
       case "cmd_showInfo":
@@ -630,28 +645,28 @@ var gDownloadViewController = {
     }
     return false;
   },
-  
+
   doCommand: function(aCommand)
   {
     if (this.isCommandEnabled(aCommand))
       this.commands[aCommand](gDownloadsView.selectedItem);
-  },  
-  
+  },
+
   onCommandUpdate: function ()
   {
     var downloadsCommands = document.getElementById("downloadsCommands");
     for (var i = 0; i < downloadsCommands.childNodes.length; ++i)
       this.updateCommand(downloadsCommands.childNodes[i]);
   },
-  
-  updateCommand: function (command) 
+
+  updateCommand: function (command)
   {
     if (this.isCommandEnabled(command.id))
       command.removeAttribute("disabled");
     else
       command.setAttribute("disabled", "true");
   },
-  
+
   commands: {
     cmd_cancel: function(aSelectedItem) {
       cancelDownload(aSelectedItem);
@@ -671,7 +686,7 @@ var gDownloadViewController = {
       else
         this.commands.cmd_resume(aSelectedItem);
     },
-    cmd_remove: function(aSelectedItem) {
+    cmd_removeFromList: function(aSelectedItem) {
       removeDownload(aSelectedItem);
     },
     cmd_resume: function(aSelectedItem) {
@@ -713,7 +728,7 @@ function openExternal(aFile)
   return;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //// Utility functions
 
 /**
@@ -730,8 +745,8 @@ function updateStatus(aItem, aDownload) {
 
   let state = Number(aItem.getAttribute("state"));
   switch (state) {
-    case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
-    case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:
+    case nsIDM.DOWNLOAD_PAUSED:
+    case nsIDM.DOWNLOAD_DOWNLOADING:
       let currBytes = Number(aItem.getAttribute("currBytes"));
       let maxBytes = Number(aItem.getAttribute("maxBytes"));
 
@@ -751,7 +766,7 @@ function updateStatus(aItem, aDownload) {
         transfer = replaceInsert(transfer, 3, total);
         transfer = replaceInsert(transfer, 4, totalUnits);
 
-        if (state == Ci.nsIDownloadManager.DOWNLOAD_PAUSED) {
+        if (state == nsIDM.DOWNLOAD_PAUSED) {
           status = replaceInsert(gStr.paused, 1, transfer);
 
           // don't need to process any more for PAUSED
@@ -804,6 +819,59 @@ function updateStatus(aItem, aDownload) {
 
         // Insert 4 is the time remaining
         status = replaceInsert(status, 4, remain);
+      }
+
+      break;
+    case nsIDM.DOWNLOAD_FINISHED:
+    case nsIDM.DOWNLOAD_FAILED:
+    case nsIDM.DOWNLOAD_CANCELED:
+    case nsIDM.DOWNLOAD_BLOCKED:
+      let (stateSize = {}) {
+        stateSize[nsIDM.DOWNLOAD_FINISHED] = function() {
+          // Display the file size, but show "Unknown" for negative sizes
+          let fileSize = Number(aItem.getAttribute("maxBytes"));
+          let sizeText = gStr.doneSizeUnknown;
+          if (fileSize >= 0) {
+            let [size, unit] = convertByteUnits(fileSize);
+            sizeText = replaceInsert(gStr.doneSize, 1, size);
+            sizeText = replaceInsert(sizeText, 2, unit);
+          }
+          return sizeText;
+        };
+        stateSize[nsIDM.DOWNLOAD_FAILED] = function() gStr.stateFailed;
+        stateSize[nsIDM.DOWNLOAD_CANCELED] = function() gStr.stateCanceled;
+        stateSize[nsIDM.DOWNLOAD_BLOCKED] = function() gStr.stateBlocked;
+
+        // Insert 1 is the download size or download state
+        status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
+      }
+
+      let (displayHost,
+           ioService = Cc["@mozilla.org/network/io-service;1"].
+                       getService(Ci.nsIIOService),
+           eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
+                         getService(Ci.nsIEffectiveTLDService)) {
+        // Get a URI that knows about its components
+        let uri = ioService.newURI(getReferrerOrSource(aItem), null, null);
+
+        try {
+          // This might fail if it's an IP address or doesn't have >1 parts
+          displayHost = eTLDService.getBaseDomain(uri);
+        } catch (e) {
+          // Default to the host name
+          displayHost = uri.host;
+        }
+
+        // Ahh! we have nothing :( Let's give the full spec (e.g., about:blank)
+        if (displayHost.length == 0)
+          displayHost = uri.spec;
+
+        // Tack on the port if it's not the default port
+        else if (uri.port != -1)
+          displayHost += ":" + uri.port;
+
+        // Insert 2 is the eTLD + 1 or other variations of the host
+        status = replaceInsert(status, 2, displayHost);
       }
 
       break;
@@ -905,8 +973,8 @@ function evenOddCellAttribution()
  * @param aStmt
  *        The compiled SQL statement to build with.  This needs to have the
  *        following columns in this order to work properly:
- *        id, target, name, source, state, startTime, referrer, currBytes, and
- *        maxBytes
+ *        id, target, name, source, state, startTime, endTime, referrer,
+ *        currBytes, and maxBytes
  *        This statement should be ordered on the endTime ASC so that the end
  *        result is a list of downloads with their end time's descending.
  * @param aRef
@@ -922,9 +990,9 @@ function buildDownloadList(aStmt, aRef)
     let id = aStmt.getInt64(0);
     let state = aStmt.getInt32(4);
     let percentComplete = 100;
-    if (state == Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED ||
-        state == Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING ||
-        state == Ci.nsIDownloadManager.DOWNLOAD_PAUSED) {
+    if (state == nsIDM.DOWNLOAD_NOTSTARTED ||
+        state == nsIDM.DOWNLOAD_DOWNLOADING ||
+        state == nsIDM.DOWNLOAD_PAUSED) {
       // so we have an in-progress download that we need to determine the
       // proper percentage complete for.  This download will actually be in
       // the active downloads array internally, so calling getDownload is cheap.
@@ -938,9 +1006,10 @@ function buildDownloadList(aStmt, aRef)
                                 state,
                                 percentComplete,
                                 Math.round(aStmt.getInt64(5) / 1000),
-                                aStmt.getString(6),
-                                aStmt.getInt64(7),
-                                aStmt.getInt64(8));
+                                Math.round(aStmt.getInt64(6) / 1000),
+                                aStmt.getString(7),
+                                aStmt.getInt64(8),
+                                aStmt.getInt64(9));
     if (dl)
       gDownloadsView.insertBefore(dl, aRef.nextSibling);
   }
@@ -964,11 +1033,11 @@ function buildActiveDownloadsList()
   }
 
   try {
-    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
-    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
-    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
-    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
+    stmt.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
+    stmt.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
+    stmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
+    stmt.bindInt32Parameter(3, nsIDM.DOWNLOAD_QUEUED);
+    stmt.bindInt32Parameter(4, nsIDM.DOWNLOAD_SCANNING);
     buildDownloadList(stmt, gDownloadsActiveArea);
   } finally {
     stmt.reset();
@@ -995,10 +1064,10 @@ function buildDownloadListWithTime(aTime)
 
   try {
     stmt.bindInt64Parameter(0, aTime * 1000);
-    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
-    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_FAILED);
-    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_CANCELED);
-    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED);
+    stmt.bindInt32Parameter(1, nsIDM.DOWNLOAD_FINISHED);
+    stmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_FAILED);
+    stmt.bindInt32Parameter(3, nsIDM.DOWNLOAD_CANCELED);
+    stmt.bindInt32Parameter(4, nsIDM.DOWNLOAD_BLOCKED);
     buildDownloadList(stmt, gDownloadsDoneArea);
   } finally {
     stmt.reset();
@@ -1034,8 +1103,8 @@ function buildDownloadListWithSearch(aTerms)
   try {
     var paramForLike = stmt.escapeStringForLIKE(aTerms, '/');
     stmt.bindStringParameter(0, "%" + paramForLike + "%");
-    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
+    stmt.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
+    stmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
     buildDownloadList(stmt, gDownloadsDoneArea);
   } finally {
     stmt.reset();
@@ -1062,7 +1131,7 @@ function onSearchboxFocus() {
   }
 }
 
-// we should be using real URLs all the time, but until 
+// we should be using real URLs all the time, but until
 // bug 239948 is fully fixed, this will do...
 //
 // note, this will thrown an exception if the native path
@@ -1086,4 +1155,3 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
     return f;
   }
 }
-

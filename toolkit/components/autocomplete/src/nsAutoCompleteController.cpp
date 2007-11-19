@@ -49,12 +49,6 @@
 #include "nsIIOService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsIPresShell.h"
 #include "nsIAtomService.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -1461,35 +1455,6 @@ nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIn
   }
 
   return NS_OK;
-}
-
-nsIWidget*
-nsAutoCompleteController::GetPopupWidget()
-{
-  NS_ENSURE_TRUE(mInput, nsnull);
-
-  nsCOMPtr<nsIAutoCompletePopup> autoCompletePopup;
-  mInput->GetPopup(getter_AddRefs(autoCompletePopup));
-  NS_ENSURE_TRUE(autoCompletePopup, nsnull);
-
-  nsCOMPtr<nsIDOMNode> popup = do_QueryInterface(autoCompletePopup);
-  NS_ENSURE_TRUE(popup, nsnull);
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  popup->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, nsnull);
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(doc, nsnull);
-
-  nsIPresShell* presShell = doc->GetPrimaryShell();
-  NS_ENSURE_TRUE(presShell, nsnull);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(popup);
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-  NS_ENSURE_TRUE(frame, nsnull);
-
-  return frame->GetWindow();
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)

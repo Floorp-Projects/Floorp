@@ -55,6 +55,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug276037-2.xhtml \
 		test_bug308484.html \
 		test_bug311681.xml \
+		test_bug322317.html \
 		test_bug337631.html \
 		test_bug338541.xhtml \
 		test_bug338679.html \
@@ -109,6 +110,9 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug326337.xml \
 		file_bug326337_multipart.txt \
 		file_bug326337_multipart.txt^headers^ \
+		test_bug402150.html \
+		test_bug402150.html^headers^ \
+		test_bug401662.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

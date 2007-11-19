@@ -651,6 +651,314 @@ getErrorMessage(PRInt32 err,
   return NS_OK;
 }
 
+static void
+AppendErrorTextUntrusted(PRErrorCode errTrust,
+                         const nsString &host,
+                         nsIX509Cert* ix509,
+                         nsINSSComponent *component,
+                         nsString &returnedMessage)
+{
+  const char *errorID = nsnull;
+  nsCOMPtr<nsIX509Cert3> cert3 = do_QueryInterface(ix509);
+  if (cert3) {
+    PRBool isSelfSigned;
+    if (NS_SUCCEEDED(cert3->GetIsSelfSigned(&isSelfSigned))
+        && isSelfSigned) {
+      errorID = "certErrorTrust_SelfSigned";
+    }
+  }
+
+  if (!errorID) {
+    switch (errTrust) {
+      case SEC_ERROR_UNKNOWN_ISSUER:
+        errorID = "certErrorTrust_UnknownIssuer";
+        break;
+      case SEC_ERROR_CA_CERT_INVALID:
+        errorID = "certErrorTrust_CaInvalid";
+        break;
+      case SEC_ERROR_UNTRUSTED_ISSUER:
+        errorID = "certErrorTrust_Issuer";
+        break;
+      case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
+        errorID = "certErrorTrust_ExpiredIssuer";
+        break;
+      case SEC_ERROR_UNTRUSTED_CERT:
+      default:
+        errorID = "certErrorTrust_Untrusted";
+        break;
+    }
+  }
+
+  nsString formattedString;
+  nsresult rv = component->GetPIPNSSBundleString(errorID, 
+                                                 formattedString);
+  if (NS_SUCCEEDED(rv))
+  {
+    returnedMessage.Append(formattedString);
+    returnedMessage.Append(NS_LITERAL_STRING("\n"));
+  }
+}
+
+// returns TRUE if SAN was used to produce names
+// return FALSE if nothing was produced
+// names => a single name or a list of names
+// multipleNames => whether multiple names were delivered
+static PRBool
+GetSubjectAltNames(CERTCertificate *nssCert,
+                   nsINSSComponent *component,
+                   nsString &allNames,
+                   PRBool &multipleNames)
+{
+  allNames.Truncate();
+  multipleNames = PR_FALSE;
+
+  PRArenaPool *san_arena = nsnull;
+  SECItem altNameExtension = {siBuffer, NULL, 0 };
+  CERTGeneralName *sanNameList = nsnull;
+
+  nsresult rv;
+  rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
+                              &altNameExtension);
+  if (rv != SECSuccess)
+    return PR_FALSE;
+
+  san_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if (!san_arena)
+    return PR_FALSE;
+
+  sanNameList = CERT_DecodeAltNameExtension(san_arena, &altNameExtension);
+  if (!sanNameList)
+    return PR_FALSE;
+
+  SECITEM_FreeItem(&altNameExtension, PR_FALSE);
+
+  CERTGeneralName *current = sanNameList;
+  do {
+    nsAutoString name;
+    switch (current->type) {
+      case certDNSName:
+        name.AssignASCII((char*)current->name.other.data, current->name.other.len);
+        if (!allNames.IsEmpty()) {
+          multipleNames = PR_TRUE;
+          allNames.Append(NS_LITERAL_STRING(" , "));
+        }
+        allNames.Append(name);
+        break;
+
+      case certIPAddress:
+        {
+          char buf[INET6_ADDRSTRLEN];
+          PRNetAddr addr;
+          if (current->name.other.len == 4) {
+            addr.inet.family = PR_AF_INET;
+            memcpy(&addr.inet.ip, current->name.other.data, current->name.other.len);
+            PR_NetAddrToString(&addr, buf, sizeof(buf));
+            name.AssignASCII(buf);
+          } else if (current->name.other.len == 16) {
+            addr.ipv6.family = PR_AF_INET6;
+            memcpy(&addr.ipv6.ip, current->name.other.data, current->name.other.len);
+            PR_NetAddrToString(&addr, buf, sizeof(buf));
+            name.AssignASCII(buf);
+          } else {
+            /* invalid IP address */
+          }
+          if (!name.IsEmpty()) {
+            if (!allNames.IsEmpty()) {
+              multipleNames = PR_TRUE;
+              allNames.Append(NS_LITERAL_STRING(" , "));
+            }
+            allNames.Append(name);
+          }
+          break;
+        }
+
+      default: // all other types of names are ignored
+        break;
+    }
+    current = CERT_GetNextGeneralName(current);
+  } while (current != sanNameList); // double linked
+
+  PORT_FreeArena(san_arena, PR_FALSE);
+  return PR_TRUE;
+}
+
+static void
+AppendErrorTextMismatch(const nsString &host,
+                        nsIX509Cert* ix509,
+                        nsINSSComponent *component,
+                        nsString &returnedMessage)
+{
+  const PRUnichar *params[1];
+  nsresult rv;
+
+  CERTCertificate *nssCert = NULL;
+  CERTCertificateCleaner nssCertCleaner(nssCert);
+
+  nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(ix509, &rv);
+  if (cert2)
+    nssCert = cert2->GetCert();
+
+  if (!nssCert) {
+    // We are unable to extract the valid names, say "not valid for name".
+    params[0] = host.get();
+    nsString formattedString;
+    rv = component->PIPBundleFormatStringFromName("certErrorMismatch", 
+                                                  params, 1, 
+                                                  formattedString);
+    if (NS_SUCCEEDED(rv)) {
+      returnedMessage.Append(formattedString);
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    }
+    return;
+  }
+
+  nsString allNames;
+  PRBool multipleNames = PR_FALSE;
+  PRBool useSAN = PR_FALSE;
+
+  if (nssCert)
+    useSAN = GetSubjectAltNames(nssCert, component, allNames, multipleNames);
+
+  if (!useSAN) {
+    char *certName = nsnull;
+    // currently CERT_FindNSStringExtension is not being exported by NSS.
+    // If it gets exported, enable the following line.
+    //   certName = CERT_FindNSStringExtension(nssCert, SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME);
+    // However, it has been discussed to treat the extension as obsolete and ignore it.
+    if (!certName)
+      certName = CERT_GetCommonName(&nssCert->subject);
+    if (certName) {
+      allNames.AssignASCII(certName);
+      PORT_Free(certName);
+    }
+  }
+
+  if (multipleNames) {
+    nsString message;
+    rv = component->GetPIPNSSBundleString("certErrorMismatchMultiple", 
+                                          message);
+    if (NS_SUCCEEDED(rv)) {
+      returnedMessage.Append(message);
+      returnedMessage.Append(NS_LITERAL_STRING("\n  "));
+      returnedMessage.Append(allNames);
+      returnedMessage.Append(NS_LITERAL_STRING("  \n"));
+    }
+  }
+  else { // !multipleNames
+    const PRUnichar *params[1];
+    params[0] = allNames.get();
+
+    nsString formattedString;
+    rv = component->PIPBundleFormatStringFromName("certErrorMismatchSingle2", 
+                                                  params, 1, 
+                                                  formattedString);
+    if (NS_SUCCEEDED(rv)) {
+      returnedMessage.Append(formattedString);
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    }
+  }
+}
+
+static void
+GetDateBoundary(nsIX509Cert* ix509,
+                nsString &formattedDate,
+                PRBool trueExpired_falseNotYetValid)
+{
+  trueExpired_falseNotYetValid = PR_TRUE;
+  formattedDate.Truncate();
+
+  PRTime notAfter, notBefore, timeToUse;
+  nsCOMPtr<nsIX509CertValidity> validity;
+  nsresult rv;
+
+  rv = ix509->GetValidity(getter_AddRefs(validity));
+  if (NS_FAILED(rv))
+    return;
+
+  rv = validity->GetNotAfter(&notAfter);
+  if (NS_FAILED(rv))
+    return;
+
+  rv = validity->GetNotBefore(&notBefore);
+  if (NS_FAILED(rv))
+    return;
+
+  if (LL_CMP(PR_Now(), >, notAfter)) {
+    timeToUse = notAfter;
+  } else {
+    timeToUse = notBefore;
+    trueExpired_falseNotYetValid = PR_FALSE;
+  }
+
+  nsIDateTimeFormat* aDateTimeFormat;
+  rv = CallCreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &aDateTimeFormat);
+  if (NS_FAILED(rv))
+    return;
+
+  aDateTimeFormat->FormatPRTime(nsnull, kDateFormatShort, 
+                                kTimeFormatNoSeconds, timeToUse, 
+                                formattedDate);
+  NS_IF_RELEASE(aDateTimeFormat);
+}
+
+static void
+AppendErrorTextTime(nsIX509Cert* ix509,
+                    nsINSSComponent *component,
+                    nsString &returnedMessage)
+{
+  nsAutoString formattedDate;
+  PRBool trueExpired_falseNotYetValid;
+  GetDateBoundary(ix509, formattedDate, trueExpired_falseNotYetValid);
+
+  const PRUnichar *params[1];
+  params[0] = formattedDate.get(); // might be empty, if helper function had a problem 
+
+  const char *key = trueExpired_falseNotYetValid ? 
+                    "certErrorExpired" : "certErrorNotYetValid";
+  nsresult rv;
+  nsString formattedString;
+  rv = component->PIPBundleFormatStringFromName(key, params, 
+                                                1, formattedString);
+  if (NS_SUCCEEDED(rv))
+  {
+    returnedMessage.Append(formattedString);
+    returnedMessage.Append(NS_LITERAL_STRING("\n"));
+  }
+}
+
+static void
+AppendErrorTextCode(PRErrorCode errorCodeToReport,
+                    nsINSSComponent *component,
+                    nsString &returnedMessage)
+{
+  const char *codeName = nsNSSErrors::getDefaultErrorStringName(errorCodeToReport);
+  if (codeName)
+  {
+    nsCString error_id(codeName);
+    ToLowerCase(error_id);
+    NS_ConvertASCIItoUTF16 idU(error_id);
+
+    const PRUnichar *params[1];
+    params[0] = idU.get();
+
+    nsString formattedString;
+    nsresult rv;
+    rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix", 
+                                                  params, 1, 
+                                                  formattedString);
+    if (NS_SUCCEEDED(rv)) {
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+      returnedMessage.Append(formattedString);
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    }
+    else {
+      returnedMessage.Append(NS_LITERAL_STRING(" ("));
+      returnedMessage.Append(idU);
+      returnedMessage.Append(NS_LITERAL_STRING(")"));
+    }
+  }
+}
+
 static nsresult
 getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors, 
                            PRErrorCode errorCodeToReport, 
@@ -694,246 +1002,21 @@ getInvalidCertErrorMessage(PRUint32 multipleCollectedErrors,
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_UNTRUSTED)
   {
-    params[0] = host.get();
-
-    const char *errorID = nsnull;
-    nsCOMPtr<nsIX509Cert3> cert3 = do_QueryInterface(ix509);
-    if (cert3) {
-      PRBool isSelfSigned;
-      if (NS_SUCCEEDED(cert3->GetIsSelfSigned(&isSelfSigned))
-          && isSelfSigned) {
-        errorID = "certErrorTrust_SelfSigned";
-      }
-    }
-
-    if (!errorID) {
-      switch (errTrust) {
-        case SEC_ERROR_UNKNOWN_ISSUER:
-          errorID = "certErrorTrust_UnknownIssuer";
-          break;
-        case SEC_ERROR_CA_CERT_INVALID:
-          errorID = "certErrorTrust_CaInvalid";
-          break;
-        case SEC_ERROR_UNTRUSTED_ISSUER:
-          errorID = "certErrorTrust_Issuer";
-          break;
-        case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-          errorID = "certErrorTrust_ExpiredIssuer";
-          break;
-        case SEC_ERROR_UNTRUSTED_CERT:
-        default:
-          errorID = "certErrorTrust_Untrusted";
-          break;
-      }
-    }
-
-    nsString formattedString;
-    rv = component->GetPIPNSSBundleString(errorID, 
-                                          formattedString);
-    if (NS_SUCCEEDED(rv))
-    {
-      returnedMessage.Append(formattedString);
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
-    }
+    AppendErrorTextUntrusted(errTrust, host, ix509, 
+                             component, returnedMessage);
   }
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_MISMATCH)
   {
-    PRBool useSAN = PR_TRUE; // subject alt name extension
-    PRBool multipleNames = PR_FALSE;
-    nsString allNames;
-
-    CERTCertificate *nssCert = NULL;
-    CERTCertificateCleaner nssCertCleaner(nssCert);
-    nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(ix509, &rv);
-    if (cert2)
-      nssCert = cert2->GetCert();
-    if (!nssCert)
-      useSAN = PR_FALSE;
-
-    PRArenaPool *san_arena = nsnull;
-    SECItem altNameExtension = {siBuffer, NULL, 0 };
-    CERTGeneralName *sanNameList = nsnull;
-
-    if (useSAN) {
-      rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
-                                  &altNameExtension);
-      if (rv != SECSuccess)
-        useSAN = PR_FALSE;
-    }
-
-    if (useSAN) {
-      san_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-      if (!san_arena)
-        useSAN = PR_FALSE;
-    }
-
-    if (useSAN) {
-      sanNameList = CERT_DecodeAltNameExtension(san_arena, &altNameExtension);
-      if (!sanNameList)
-        useSAN = PR_FALSE;
-    }
-
-    SECITEM_FreeItem(&altNameExtension, PR_FALSE);
-
-    if (useSAN) {
-      CERTGeneralName *current = sanNameList;
-      do {
-        nsAutoString name;
-        switch (current->type) {
-          case certDNSName:
-            name.AssignASCII((char*)current->name.other.data, current->name.other.len);
-            if (!allNames.IsEmpty()) {
-              multipleNames = PR_TRUE;
-              allNames.Append(NS_LITERAL_STRING(" , "));
-            }
-            allNames.Append(name);
-            break;
-  
-          case certIPAddress:
-            {
-              char buf[INET6_ADDRSTRLEN];
-              PRNetAddr addr;
-              if (current->name.other.len == 4) {
-                addr.inet.family = PR_AF_INET;
-                memcpy(&addr.inet.ip, current->name.other.data, current->name.other.len);
-                PR_NetAddrToString(&addr, buf, sizeof(buf));
-                name.AssignASCII(buf);
-              } else if (current->name.other.len == 16) {
-                addr.ipv6.family = PR_AF_INET6;
-                memcpy(&addr.ipv6.ip, current->name.other.data, current->name.other.len);
-                PR_NetAddrToString(&addr, buf, sizeof(buf));
-                name.AssignASCII(buf);
-              } else {
-                /* invalid IP address */
-              }
-              if (!name.IsEmpty()) {
-                if (!allNames.IsEmpty()) {
-                  multipleNames = PR_TRUE;
-                  allNames.Append(NS_LITERAL_STRING(" , "));
-                }
-                allNames.Append(name);
-              }
-              break;
-            }
-
-          default: // all other types of names are ignored
-            break;
-        }
-        current = CERT_GetNextGeneralName(current);
-      } while (current != sanNameList); // double linked
-    }
-    if (san_arena)
-      PORT_FreeArena(san_arena, PR_FALSE);
-
-    if (!useSAN) {
-      char *certName = nsnull;
-      // certName = CERT_FindNSStringExtension(nssCert, SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME);
-      if (!certName) {
-        certName = CERT_GetCommonName(&nssCert->subject);
-      }
-      allNames.AssignASCII(certName);
-      PORT_Free(certName);
-    }
-
-    if (multipleNames) {
-      nsString message;
-      rv = component->GetPIPNSSBundleString("certErrorMismatchMultiple", 
-                                            message);
-      if (NS_SUCCEEDED(rv)) {
-        returnedMessage.Append(message);
-        returnedMessage.Append(NS_LITERAL_STRING("\n  "));
-        returnedMessage.Append(allNames);
-        returnedMessage.Append(NS_LITERAL_STRING("  \n"));
-      }
-    }
-    else { // !multipleNames
-      params[0] = allNames.get();
-
-      nsString formattedString;
-      rv = component->PIPBundleFormatStringFromName("certErrorMismatchSingle", 
-                                                    params, 1, 
-                                                    formattedString);
-      if (NS_SUCCEEDED(rv)) {
-        returnedMessage.Append(formattedString);
-        returnedMessage.Append(NS_LITERAL_STRING("\n"));
-      }
-    }
+    AppendErrorTextMismatch(host, ix509, component, returnedMessage);
   }
 
   if (multipleCollectedErrors & nsICertOverrideService::ERROR_TIME)
   {
-    PRTime now = PR_Now();
-    PRTime notAfter, notBefore, timeToUse;
-    nsCOMPtr<nsIX509CertValidity> validity;
-    const char *key;
-  
-    rv = ix509->GetValidity(getter_AddRefs(validity));
-    if (NS_FAILED(rv))
-      return rv;
-  
-    rv = validity->GetNotAfter(&notAfter);
-    if (NS_FAILED(rv))
-      return rv;
-  
-    rv = validity->GetNotBefore(&notBefore);
-    if (NS_FAILED(rv))
-      return rv;
-  
-    if (LL_CMP(now, >, notAfter)) {
-      key       = "certErrorExpired"; 
-      timeToUse = notAfter; 
-    } else {
-      key       = "certErrorNotYetValid";
-      timeToUse = notBefore;
-    }
-  
-    nsAutoString formattedDate;
-    nsIDateTimeFormat* aDateTimeFormat;
-    rv = CallCreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &aDateTimeFormat);
-    if (NS_FAILED(rv))
-      return rv;
-  
-    aDateTimeFormat->FormatPRTime(nsnull, kDateFormatShort, 
-                                  kTimeFormatNoSeconds, timeToUse, 
-                                  formattedDate);
-    NS_IF_RELEASE(aDateTimeFormat);
-    params[0] = formattedDate.get(); 
-
-    nsString formattedString;
-    rv = component->PIPBundleFormatStringFromName(key, params, 
-                                                  1, formattedString);
-    if (NS_SUCCEEDED(rv))
-    {
-      returnedMessage.Append(formattedString);
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
-    }
+    AppendErrorTextTime(ix509, component, returnedMessage);
   }
 
-  const char *codeName = nsNSSErrors::getDefaultErrorStringName(errorCodeToReport);
-  if (codeName)
-  {
-    nsCString error_id(codeName);
-    ToLowerCase(error_id);
-    NS_ConvertASCIItoUTF16 idU(error_id);
-
-    params[0] = idU.get();
-
-    nsString formattedString;
-    rv = component->PIPBundleFormatStringFromName("certErrorCodePrefix", 
-                                                  params, 1, 
-                                                  formattedString);
-    if (NS_SUCCEEDED(rv)) {
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
-      returnedMessage.Append(formattedString);
-      returnedMessage.Append(NS_LITERAL_STRING("\n"));
-    }
-    else {
-      returnedMessage.Append(NS_LITERAL_STRING(" ("));
-      returnedMessage.Append(idU);
-      returnedMessage.Append(NS_LITERAL_STRING(")"));
-    }
-  }
+  AppendErrorTextCode(errorCodeToReport, component, returnedMessage);
 
   return NS_OK;
 }
@@ -2702,7 +2785,6 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   else if (remaining_display_errors & nsICertOverrideService::ERROR_TIME)
     errorCodeToReport = errorCodeExpired;
 
-  PR_SetError(errorCodeToReport, 0);
   if (!suppressMessage) {
     nsHandleInvalidCertError(infoObject,
                              remaining_display_errors,
@@ -2716,6 +2798,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
                              ix509);
   }
 
+  PR_SetError(errorCodeToReport, 0);
   return cancel_and_failure(infoObject);
 }
 

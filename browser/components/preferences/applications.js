@@ -259,18 +259,21 @@ HandlerInfoWrapper.prototype = {
     this.wrappedHandlerInfo.preferredApplicationHandler = aNewValue;
 
     // Make sure the preferred handler is in the set of possible handlers.
-    if (aNewValue) {
-      var found = false;
-      var possibleApps = this.possibleApplicationHandlers.enumerate();
-      while (possibleApps.hasMoreElements() && !found)
-        found = possibleApps.getNext().equals(aNewValue);
-      if (!found)
-        this.possibleApplicationHandlers.appendElement(aNewValue, false);
-    }
+    if (aNewValue)
+      this.addPossibleApplicationHandler(aNewValue)
   },
 
   get possibleApplicationHandlers() {
     return this.wrappedHandlerInfo.possibleApplicationHandlers;
+  },
+
+  addPossibleApplicationHandler: function(aNewHandler) {
+    var possibleApps = this.possibleApplicationHandlers.enumerate();
+    while (possibleApps.hasMoreElements()) {
+      if (possibleApps.getNext().equals(aNewHandler))
+        return;
+    }
+    this.possibleApplicationHandlers.appendElement(aNewHandler, false);
   },
 
   get hasDefaultHandler() {
@@ -1547,7 +1550,7 @@ var gApplicationsPane = {
       handlerApp = params.handlerApp;
 
       // Add the app to the type's list of possible handlers.
-      handlerInfo.possibleApplicationHandlers.appendElement(handlerApp, false);
+      handlerInfo.addPossibleApplicationHandler(handlerApp);
     }
 #else
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
@@ -1566,7 +1569,7 @@ var gApplicationsPane = {
 
       // Add the app to the type's list of possible handlers.
       let handlerInfo = this._handledTypes[this._list.selectedItem.type];
-      handlerInfo.possibleApplicationHandlers.appendElement(handlerApp, false);
+      handlerInfo.addPossibleApplicationHandler(handlerApp);
     }
 #endif
 

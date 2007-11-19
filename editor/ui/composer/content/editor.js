@@ -54,7 +54,7 @@ const kDisplayModeTabIDS = ["NormalModeButton", "TagModeButton", "SourceModeButt
 const kNormalStyleSheet = "chrome://editor/content/EditorContent.css";
 const kAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
 const kParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
-const kContentEditableStyleSheet = "resource:/res/contenteditable.css";
+const kContentEditableStyleSheet = "resource://gre/res/contenteditable.css";
 
 const kTextMimeType = "text/plain";
 const kHTMLMimeType = "text/html";

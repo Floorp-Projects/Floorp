@@ -46,6 +46,8 @@
 
 #include <fstream>
 #include <sstream>
+#include <memory>
+#include <time.h>
 
 using std::string;
 using std::istream;
@@ -55,6 +57,7 @@ using std::ostringstream;
 using std::ostream;
 using std::ofstream;
 using std::vector;
+using std::auto_ptr;
 
 namespace CrashReporter {
 
@@ -63,8 +66,9 @@ string       gSettingsPath;
 int          gArgc;
 char**       gArgv;
 
-static string       gDumpFile;
-static string       gExtraFile;
+static auto_ptr<ofstream> gLogStream(NULL);
+static string             gDumpFile;
+static string             gExtraFile;
 
 static string kExtraDataExtension = ".extra";
 
@@ -197,6 +201,24 @@ bool WriteStringsToFile(const string& path,
 
   delete f;
   return success;
+}
+
+void LogMessage(const std::string& message)
+{
+  if (gLogStream.get()) {
+    char date[64];
+    time_t tm;
+    time(&tm);
+    if (strftime(date, sizeof(date) - 1, "%c", localtime(&tm)) == 0)
+        date[0] = '\0';
+    (*gLogStream) << "[" << date << "] " << message << std::endl;
+  }
+}
+
+static void OpenLogFile()
+{
+  string logPath = gSettingsPath + UI_DIR_SEPARATOR + "submit.log";
+  gLogStream.reset(UIOpenWrite(logPath.c_str(), true));
 }
 
 static bool ReadConfig()
@@ -432,6 +454,8 @@ int main(int argc, char** argv)
       UIError(gStrings[ST_ERROR_NOSETTINGSPATH]);
       return 0;
     }
+
+    OpenLogFile();
 
     if (!UIFileExists(gDumpFile)) {
       UIError(gStrings[ST_ERROR_DUMPFILEEXISTS]);

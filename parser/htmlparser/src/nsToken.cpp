@@ -56,11 +56,6 @@ int CToken::GetTokenCount() {
  *  @update gess 7/21/98
  */
 CToken::CToken(PRInt32 aTag) {
-  // Tokens are allocated through the arena ( not heap allocated..yay ).
-  // We, therefore, don't need this macro anymore..
-#ifdef MATCH_CTOR_DTOR 
-  MOZ_COUNT_CTOR(CToken);
-#endif 
   mAttrCount=0;
   mNewlineCount=0;
   mLineNumber = 0;
@@ -72,6 +67,7 @@ CToken::CToken(PRInt32 aTag) {
   // rather IF_HOLD. This, also, will make sure that tokens created 
   // on the stack do not accidently hit the arena recycler.
   mUseCount=1;
+  NS_LOG_ADDREF(this, 1, "CToken", sizeof(*this));
 
 #ifdef NS_DEBUG
   ++TokenCount;
@@ -84,12 +80,13 @@ CToken::CToken(PRInt32 aTag) {
  *  @update gess 3/25/98
  */
 CToken::~CToken() {
-  // Tokens are allocated through the arena ( not heap allocated..yay ).
-  // We, therefore, don't need this macro anymore..
-#ifdef MATCH_CTOR_DTOR 
-  MOZ_COUNT_DTOR(CToken);
-#endif
   ++DelTokenCount;
+#ifdef NS_BUILD_REFCNT_LOGGING
+  if (mUseCount == 1) {
+    // Stack token
+    NS_LOG_RELEASE(this, 0, "CToken");
+  }
+#endif
   mUseCount=0;
 }
 

@@ -12,12 +12,14 @@
 }
 
 #resizerBox {
-margin-top: -12px;
+  margin-top: -12px;
+  visibility: hidden;
 }
 
-#resizerBox resizer {
+#resizerBox > resizer {
   height: 10px;
   max-height: 10px;
+  visibility: visible;
 }
 
 /* Command Bar */

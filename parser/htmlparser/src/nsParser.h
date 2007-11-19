@@ -219,7 +219,7 @@ class nsParser : public nsIParser,
      */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              void* aKey,
-                             nsVoidArray& aTagStack,
+                             nsTArray<nsAutoString>& aTagStack,
                              PRBool aXMLMode,
                              const nsACString& aContentType,
                              nsDTDMode aMode = eDTDMode_autodetect);

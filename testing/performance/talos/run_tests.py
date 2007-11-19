@@ -85,11 +85,11 @@ def process_Request(post):
         str += line.split(":")[3] + ":" + shortNames(line.split(":")[1]) + ":" + line.split(":")[2] + '\n'
   return str
 
-def send_to_csv(csv_file, results):
+def send_to_csv(csv_dir, results):
   import csv
   for res in results:
     browser_dump, counter_dump = results[res]
-    writer = csv.writer(open(csv_file + '_' +  res + '.csv', "wb"))
+    writer = csv.writer(open(os.path.join(csv_dir, res + '.csv'), "wb"))
     if res in ('ts', 'twinopen'):
       i = 0
       writer.writerow(['i', 'val'])
@@ -118,7 +118,7 @@ def send_to_csv(csv_file, results):
           i += 1
     for cd in counter_dump:
       for count_type in cd:
-        writer = csv.writer(open(csv_file + '_' + res + '_' + count_type + '.csv', "wb"))
+        writer = csv.writer(open(os.path.join(csv_dir, res + '_' + count_type + '.csv'), "wb"))
         writer.writerow(['i', 'value'])
         i = 0
         for val in cd[count_type]:
@@ -247,7 +247,7 @@ def test_file(filename):
   tests = []
   title = ''
   testdate = ''
-  csv_file = ''
+  csv_dir = ''
   results_server = ''
   results_link = ''
   results = {}
@@ -261,12 +261,18 @@ def test_file(filename):
       title = yaml_config[item]
     elif item == 'testdate':
       testdate = yaml_config[item]
-    elif item == 'csv_file':
-       csv_file = os.path.normpath(yaml_config[item])
+    elif item == 'csv_dir':
+       csv_dir = os.path.normpath(yaml_config[item])
+       if not os.path.exists(csv_dir):
+         print "FAIL: path \"" + csv_dir + "\" does not exist"
+         sys.exit(0)
     elif item == 'results_server':
        results_server = yaml_config[item]
     elif item == 'results_link' :
        results_link = yaml_config[item]
+  if (results_link != results_server != ''):
+    if not post_file.link_exists(results_server, results_link):
+      exit(0)
   browser_config = {'preferences'  : yaml_config['preferences'],
                     'extensions'   : yaml_config['extensions'],
                     'firefox'      : yaml_config['firefox'],
@@ -278,7 +284,8 @@ def test_file(filename):
                     'init_url'     : yaml_config['init_url']}
   #normalize paths to work accross platforms
   browser_config['firefox'] = os.path.normpath(browser_config['firefox'])
-  browser_config['profile_path'] = os.path.normpath(browser_config['profile_path'])
+  if browser_config['profile_path'] != {}:
+    browser_config['profile_path'] = os.path.normpath(browser_config['profile_path'])
   for dir in browser_config['dirs']:
     browser_config['dirs'][dir] = os.path.normpath(browser_config['dirs'][dir])
   tests = yaml_config['tests']
@@ -290,28 +297,33 @@ def test_file(filename):
   utils.debug("using testdate: %d" % date)
   utils.debug("actual date: %d" % int(time.time()))
 
+  utils.stamped_msg(title, "Started")
   for test in tests:
-    print "Running test: " + test
+    utils.stamped_msg("Running test " + test, "Started")
     res, browser_dump, counter_dump = ttest.runTest(browser_config, tests[test])
     if not res:
+      utils.stamped_msg("Failed " + test, "Stopped")
       print 'FAIL: failure to complete test: ' + test
       sys.exit(0)
     results[test] = [browser_dump, counter_dump]
-    print "Completed test: " + test
+    utils.stamped_msg("Completed test " + test, "Stopped")
+  utils.stamped_msg(title, "Stopped")
 
   #process the results
   if (results_server != '') and (results_link != ''):
     #send results to the graph server
     send_to_graph(results_server, results_link, title, date, browser_config, results)
-  if csv_file != '':
-    send_to_csv(csv_file, results)
+  if csv_dir != '':
+    send_to_csv(csv_dir, results)
   
 if __name__=='__main__':
-  optlist, args = getopt.getopt(sys.argv[1:], 'd', ['debug'])
+  optlist, args = getopt.getopt(sys.argv[1:], 'dn', ['debug', 'noisy'])
   for o, a in optlist:
     if o in ('-d', "--debug"):
       print 'setting debug'
       utils.setdebug(1)
+    if o in ('-n', "--noisy"):
+      utils.setnoisy(1)
   # Read in each config file and run the tests on it.
   for arg in args:
     utils.debug("running test file " + arg)

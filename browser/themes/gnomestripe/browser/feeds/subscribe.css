@@ -1,0 +1,154 @@
+
+*[hidden] {
+  display: none;
+}
+
+html {
+  background: -moz-Dialog;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+}
+
+#feedBody {
+  border: 1px solid THreeDShadow;
+  padding: 3em;
+  -moz-padding-start: 30px;
+  margin: 2em auto;
+  background: -moz-Field;
+}
+
+#feedHeaderContainer {
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 10px;
+  margin: -4em auto 0 auto;
+  background-color: InfoBackground;
+}
+
+#feedHeader {  
+  margin-top: 4.9em;
+  margin-bottom: 1em;
+  -moz-margin-start: 1.4em;
+  -moz-margin-end: 1em;
+  -moz-padding-start: 2.9em;
+  font-size: 110%;
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 0% 10% no-repeat InfoBackground;
+  color: InfoText;
+}
+
+#feedHeader[dir="rtl"] {
+  background-position: 100% 10%;
+}
+
+#feedIntroText {
+  display: none;
+}
+
+#feedHeader[firstrun="true"] #feedIntroText {
+  padding-top: 0.1em;
+  -moz-padding-start: 0.6em;
+  display: block;
+}
+
+#feedHeader[firstrun="true"] > #feedSubscribeLine {
+  -moz-padding-start: 1.8em;
+}
+
+#feedSubscribeLine {
+  padding-top: 0.2em;
+}
+
+#alwaysUse {
+  padding: 5px;
+}
+
+
+#handlersMenuList > menupopup > menuitem {
+  -moz-padding-start: 23px;
+}
+
+#handlersMenuList > menupopup > menuitem.menuitem-iconic {
+  -moz-padding-start: 2px;
+}
+
+#handlersMenuList > menupopup > .menuitem-iconic  > .menu-iconic-left {
+  display: -moz-box;
+  min-width: 16px;
+  -moz-padding-end: 2px;
+}
+
+#feedHeader[dir="rtl"] #handlersMenuList > menupopup {
+  direction: rtl;
+}
+
+/* Don't print subscription UI */
+@media print {
+  #feedHeaderContainer {
+    display: none;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0 3em;
+  color: -moz-fieldText;
+  font: message-box;
+}
+
+h1 {
+  font-size: 160%;
+  border-bottom: 2px solid ThreeDLightShadow;
+  margin: 0 0 .2em 0;
+}
+
+h2 {
+  color: ThreeDDarkShadow;
+  font-size: 110%;
+  font-weight: normal;
+  margin: 0 0 .6em 0;
+}
+
+#feedTitleLink {
+  float: right;
+  -moz-margin-start: .6em;
+  -moz-margin-end: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+a[href] img {
+  border: none;
+}
+
+#feedTitleContainer {
+  -moz-margin-start: 0;
+  -moz-margin-end: .6em;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#feedTitleImage {
+  -moz-margin-start: .6em;
+  -moz-margin-end: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  max-width: 300px;
+  max-height: 150px;
+}
+
+.feedEntryContent {
+  font-size: 110%;
+}
+ 
+.link {
+  color: #0000FF;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link:hover:active {
+  color: #FF0000;
+}
+
+.lastUpdated {
+  font-size: 85%;
+  font-weight: normal;
+}

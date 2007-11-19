@@ -1227,18 +1227,11 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   nsCOMPtr<nsIURI> uri;
   PRBool authp = PR_FALSE;
 
-  if (mState & XML_HTTP_REQUEST_ABORTED) {
-    // Something caused this request to abort (e.g the current request
-    // was caceled, channels closed etc), most likely the abort()
-    // function was called by script. Unset our aborted state, and
-    // proceed as normal
-
-    mState &= ~XML_HTTP_REQUEST_ABORTED;
-  } else if (mState & (XML_HTTP_REQUEST_OPENED |
-                       XML_HTTP_REQUEST_LOADED |
-                       XML_HTTP_REQUEST_INTERACTIVE |
-                       XML_HTTP_REQUEST_SENT |
-                       XML_HTTP_REQUEST_STOPPED)) {
+  if (mState & (XML_HTTP_REQUEST_OPENED |
+                XML_HTTP_REQUEST_LOADED |
+                XML_HTTP_REQUEST_INTERACTIVE |
+                XML_HTTP_REQUEST_SENT |
+                XML_HTTP_REQUEST_STOPPED)) {
     // IE aborts as well
     Abort();
 
@@ -1247,8 +1240,15 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
     //     since this looks like a situation that could happen
     //     by accident and you could spend a lot of time wondering
     //     why things didn't work.
+  }
 
-    return NS_OK;
+  if (mState & XML_HTTP_REQUEST_ABORTED) {
+    // Something caused this request to abort (e.g the current request
+    // was caceled, channels closed etc), most likely the abort()
+    // function was called by script. Unset our aborted state, and
+    // proceed as normal
+
+    mState &= ~XML_HTTP_REQUEST_ABORTED;
   }
 
   if (async) {

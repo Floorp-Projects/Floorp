@@ -92,7 +92,6 @@
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
 
-//#include <winuser.h>
 #include <zmouse.h>
 //#include "sysmets.h"
 #include "nsGfxCIID.h"
@@ -105,7 +104,10 @@
 
 #ifdef ACCESSIBILITY
 #include "OLEIDL.H"
-#include "winable.h"
+#include <winuser.h>
+#ifndef WINABLEAPI
+#include <winable.h>
+#endif
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessNode.h"
@@ -368,41 +370,6 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
 ////////////////////////////////////////////////////
-// Manager for Registering and unregistering OLE
-// This is needed for drag & drop & Clipboard support
-////////////////////////////////////////////////////
-class OleRegisterMgr {
-public:
-  ~OleRegisterMgr();
-protected:
-  OleRegisterMgr();
-
-  static OleRegisterMgr mSingleton;
-};
-OleRegisterMgr OleRegisterMgr::mSingleton;
-
-OleRegisterMgr::OleRegisterMgr()
-{
-  //DWORD dwVer = ::OleBuildVersion();
-
-  if (FAILED(::OleInitialize(NULL))) {
-    NS_ASSERTION(0, "***** OLE has not been initialized!\n");
-  } else {
-#ifdef DEBUG
-    //printf("***** OLE has been initialized!\n");
-#endif
-  }
-}
-
-OleRegisterMgr::~OleRegisterMgr()
-{
-#ifdef DEBUG
-  //printf("***** OLE has been Uninitialized!\n");
-#endif
-  ::OleUninitialize();
-}
-
-////////////////////////////////////////////////////
 // nsWindow Class static variable definitions
 ////////////////////////////////////////////////////
 PRUint32   nsWindow::sInstanceCount            = 0;
@@ -428,6 +395,7 @@ PRBool nsWindow::sIsInEndSession = PR_FALSE;
 
 BOOL nsWindow::sIsRegistered       = FALSE;
 BOOL nsWindow::sIsPopupClassRegistered = FALSE;
+BOOL nsWindow::sIsOleInitialized = FALSE;
 UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse message for MSIME
 UINT nsWindow::uWM_HEAP_DUMP       = 0; // Heap Dump to a file
 
@@ -811,6 +779,11 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsTopWidgetWindow = PR_FALSE;
   mLastKeyboardLayout = 0;
 
+  if (!sInstanceCount && SUCCEEDED(::OleInitialize(NULL))) {
+    sIsOleInitialized = TRUE;
+  }
+  NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
+
   sInstanceCount++;
 
 #ifdef WINCE
@@ -878,6 +851,12 @@ nsWindow::~nsWindow()
       nsMemory::Free(sIMEReconvertUnicode);
 
     NS_IF_RELEASE(gCursorImgContainer);
+
+    if (sIsOleInitialized) {
+      ::OleFlushClipboard();
+      ::OleUninitialize();
+      sIsOleInitialized = FALSE;
+    }
   }
 
   NS_IF_RELEASE(mNativeDragTarget);
@@ -2963,6 +2942,19 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 }
 
 
+// Invalidates a window if it's not one of ours, for example
+// a window created by a plugin.
+BOOL CALLBACK nsWindow::InvalidateForeignChildWindows(HWND aWnd, LPARAM aMsg)
+{
+  LONG proc = ::GetWindowLongW(aWnd, GWL_WNDPROC);
+  if (proc != (LONG)&nsWindow::WindowProc) {
+    // This window is not one of our windows so invalidate it.
+    VERIFY(::InvalidateRect(aWnd, NULL, FALSE));    
+  }
+  return TRUE;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // Scroll the bits of a window
@@ -2983,6 +2975,10 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   ::ScrollWindowEx(mWnd, aDx, aDy, NULL, (nsnull != aClipRect) ? &trect : NULL,
                    NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
+  // Invalidate all child windows that aren't ours; we're moving them, and we
+  // expect them to be painted at the new location even if they're outside the
+  // region we're bit-blit scrolling. See bug 387701.
+  ::EnumChildWindows(GetWindowHandle(), nsWindow::InvalidateForeignChildWindows, NULL);
   ::UpdateWindow(mWnd);
   return NS_OK;
 }
