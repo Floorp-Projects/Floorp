@@ -76,7 +76,7 @@ gTestfile = '15.9.1.1-1.js';
 var FOUR_HUNDRED_YEARS = 1.26227808e+13;
 var SECTION         =  "15.9.1.1-1";
 
-writeHeaderToLog("15.8.1.1 Time Range");
+writeHeaderToLog("15.9.1.1 Time Range");
 
 var M_SECS;
 var CURRENT_YEAR;
