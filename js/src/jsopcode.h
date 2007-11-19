@@ -273,15 +273,16 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
  */
 
 #ifdef JS_ARENAMETER
-# define JS_NEW_PRINTER(cx, name, indent, pretty)                              \
-    js_NewPrinter(cx, name, indent, pretty)
+# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
+    js_NewPrinter(cx, name, fun, indent, pretty)
 #else
-# define JS_NEW_PRINTER(cx, name, indent, pretty)                              \
-    js_NewPrinter(cx, indent, pretty)
+# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
+    js_NewPrinter(cx, fun, indent, pretty)
 #endif
 
 extern JSPrinter *
-JS_NEW_PRINTER(JSContext *cx, const char *name, uintN indent, JSBool pretty);
+JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
+               uintN indent, JSBool pretty);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);
@@ -355,10 +356,10 @@ extern JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script);
 
 extern JSBool
-js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun);
+js_DecompileFunctionBody(JSPrinter *jp);
 
 extern JSBool
-js_DecompileFunction(JSPrinter *jp, JSFunction *fun);
+js_DecompileFunction(JSPrinter *jp);
 
 /*
  * Find the source expression that resulted in v, and return a newly allocated
