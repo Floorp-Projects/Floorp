@@ -35,6 +35,10 @@ confidential-failures.txt:
 	touch confidential-failures.txt
 
 failures.txt: public-failures.txt confidential-failures.txt
+	sort < public-failures.txt | uniq | ./create-patterns.pl > public-failures.$$
+	mv public-failures.$$ public-failures.txt
+	sort < confidential-failures.txt | uniq | ./create-patterns.pl > confidential-failures.$$
+	mv confidential-failures.$$ confidential-failures.txt
 	cat public-failures.txt confidential-failures.txt | sort | uniq > failures.txt
 
 ecma_3/RegExp/re_tests:
