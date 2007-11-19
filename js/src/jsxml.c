@@ -5585,7 +5585,6 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
 {
     JSXML *xml;
     JSFunction *fun;
-    char numBuf[12];
 
     JS_ASSERT(VALUE_IS_FUNCTION(cx, *vp));
 
@@ -5605,11 +5604,14 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
         }
     }
 
-    fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(*vp));
-    JS_snprintf(numBuf, sizeof numBuf, "%u", xml->xml_kids.length);
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_NON_LIST_XML_METHOD,
-                         JS_GetFunctionName(fun), numBuf);
+    fun = (JSFunction *) OBJ_GET_PRIVATE(cx, JSVAL_TO_OBJECT(*vp));
+    if (fun) {
+        char numBuf[12];
+        JS_snprintf(numBuf, sizeof numBuf, "%u", xml->xml_kids.length);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_NON_LIST_XML_METHOD,
+                             JS_GetFunctionName(fun), numBuf);
+    }
     return NULL;
 }
 
