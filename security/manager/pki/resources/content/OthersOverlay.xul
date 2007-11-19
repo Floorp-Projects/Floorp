@@ -74,15 +74,15 @@
     <hbox>
       <button id="email_viewButton"
               label="&certmgr.view2.label;"
-              accesskey="&certmgr.view.accesskey;"
+              accesskey="&certmgr.view2.accesskey;"
               disabled="true" oncommand="viewCerts();"/>
       <button id="email_editButton"
               label="&certmgr.edit2.label;"
-              accesskey="&certmgr.edit.accesskey;"
+              accesskey="&certmgr.edit2.accesskey;"
               disabled="true" oncommand="editCerts();"/>
       <button id="email_addButton"
               label="&certmgr.restore2.label;"
-              accesskey="&certmgr.restore.accesskey;"
+              accesskey="&certmgr.restore2.accesskey;"
               oncommand="addEmailCert();"/>
       <button id="email_exportButton"
               label="&certmgr.export.label;"
@@ -90,7 +90,7 @@
               disabled="true" oncommand="exportCerts();"/>
       <button id="email_deleteButton"
               label="&certmgr.delete2.label;"
-              accesskey="&certmgr.delete.accesskey;"
+              accesskey="&certmgr.delete2.accesskey;"
               disabled="true" oncommand="deleteCerts();"/>
     </hbox>
   </vbox>
