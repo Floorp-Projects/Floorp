@@ -1756,8 +1756,6 @@ PRBool
 nsCookieService::IsForeign(nsIURI *aHostURI,
                            nsIURI *aFirstURI)
 {
-  return PR_FALSE;
-/*
   // if aFirstURI is null, default to not foreign
   if (!aFirstURI) {
     return PR_FALSE;
@@ -1814,7 +1812,6 @@ nsCookieService::IsForeign(nsIURI *aHostURI,
   // don't have enough dots to chop firstHost, or the subdomain levels differ;
   // so we just do the plain old check, IsInDomain(firstHost, currentHost).
   return !IsInDomain(NS_LITERAL_CSTRING(".") + firstHost, currentHost);
-*/
 }
 
 PRUint32
