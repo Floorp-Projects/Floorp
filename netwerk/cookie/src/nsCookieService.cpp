@@ -1788,9 +1788,11 @@ nsCookieService::IsForeign(nsIURI *aHostURI,
   // first ensure we're not dealing with IP addresses; if we are, require an
   // exact match. we can't avoid this, otherwise the algo below will allow two
   // IP's such as 128.12.96.5 and 213.12.96.5 to match.
+/*
   if (IsIPAddress(firstHost)) {
     return !IsInDomain(firstHost, currentHost, PR_FALSE);
   }
+*/
 
   // next, allow a one-subdomain-level "fuzz" in the comparison. first, we need
   // to find how many subdomain levels each host has; we only do the looser
