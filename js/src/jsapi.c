@@ -2470,13 +2470,6 @@ JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb)
     return oldcb;
 }
 
-JS_PUBLIC_API(void)
-JS_SetGCThingCallback(JSContext *cx, JSGCThingCallback cb, void *closure)
-{
-    cx->runtime->gcThingCallback = cb;
-    cx->runtime->gcThingCallbackClosure = closure;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {

@@ -1913,9 +1913,6 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
     JS_ASSERT(rt->gcMarkingTracer == trc);
     JS_ASSERT(rt->gcLevel > 0);
 
-    if (rt->gcThingCallback)
-        rt->gcThingCallback(thing, kind, rt->gcThingCallbackClosure);
-
     /*
      * Optimize for string and double as their size is known and their tracing
      * is not recursive.
@@ -1941,8 +1938,6 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
                 goto out;
             *flagp |= GCF_MARK;
             thing = JSSTRDEP_BASE((JSString *) thing);
-            if (rt->gcThingCallback)
-                rt->gcThingCallback(thing, kind, rt->gcThingCallbackClosure);
         }
         /* NOTREACHED */
     }
@@ -2080,34 +2075,10 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     void *thing = (void *)lhe->thing;
     JSTracer *trc = (JSTracer *)arg;
     uint32 traceKind;
-    JSRuntime *rt;
-    uint32 n;
 
     JS_ASSERT(lhe->count >= 1);
     traceKind = js_GetGCThingTraceKind(thing);
     JS_CALL_TRACER(trc, thing, traceKind, "locked object");
-
-    /*
-     * Bug 379455: we called the tracer once, but to communicate the value of
-     * thing's lock count to the tracer, or to gcThingCallback when the tracer
-     * is the GC marking phase, we need to call an extra lhe->count - 1 times.
-     */
-    n = lhe->count - 1;
-    if (n != 0) {
-        if (IS_GC_MARKING_TRACER(trc)) {
-            rt = trc->context->runtime;
-            if (rt->gcThingCallback) {
-                do {
-                    rt->gcThingCallback(thing, traceKind,
-                                        rt->gcThingCallbackClosure);
-                } while (--n != 0);
-            }
-        } else {
-            do {
-                JS_CALL_TRACER(trc, thing, traceKind, "locked object");
-            } while (--n != 0);
-        }
-    }
     return JS_DHASH_NEXT;
 }
 
