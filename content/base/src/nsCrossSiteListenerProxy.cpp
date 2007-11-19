@@ -315,9 +315,9 @@ nsCrossSiteListenerProxy::HandleStartElement(const PRUnichar *aName,
   // We're done processing the prolog.
   ForwardRequest(PR_FALSE);
 
-  // Block the parser since we don't want to spend more cycles on parsing
+  // Stop the parser since we don't want to spend more cycles on parsing
   // stuff.
-  return NS_ERROR_HTMLPARSER_BLOCK;
+  return NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
 NS_IMETHODIMP
@@ -480,9 +480,9 @@ nsCrossSiteListenerProxy::WillBuildModel()
   if (dtd && !(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
     ForwardRequest(PR_FALSE);
     
-    // Block the parser since we don't want to spend more cycles on parsing
+    // Stop the parser since we don't want to spend more cycles on parsing
     // stuff.
-    return NS_ERROR_HTMLPARSER_BLOCK;
+    return NS_ERROR_HTMLPARSER_STOPPARSING;
   }
 
   return NS_OK;
