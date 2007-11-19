@@ -68,6 +68,7 @@ public:
   nsCertOverride &operator=(const nsCertOverride &other)
   {
     mHostWithPortUTF8 = other.mHostWithPortUTF8;
+    mIsTemporary = other.mIsTemporary;
     mFingerprintAlgOID = other.mFingerprintAlgOID;
     mFingerprint = other.mFingerprint;
     mOverrideBits = other.mOverrideBits;
@@ -76,6 +77,7 @@ public:
   }
 
   nsCString mHostWithPortUTF8;
+  PRBool mIsTemporary; // true: session only, false: stored on disk
   nsCString mFingerprint;
   nsCString mFingerprintAlgOID;
   OverrideBits mOverrideBits;
@@ -182,7 +184,8 @@ protected:
     void RemoveAllFromMemory();
     nsresult Read();
     nsresult Write();
-    nsresult AddEntryToList(const nsACString &hostWithPortUTF8, 
+    nsresult AddEntryToList(const nsACString &hostWithPortUTF8,
+                            const PRBool aIsTemporary,
                             const nsACString &algo_oid, 
                             const nsACString &fingerprint,
                             nsCertOverride::OverrideBits ob,

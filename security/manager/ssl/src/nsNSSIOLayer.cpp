@@ -2720,20 +2720,22 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     do_GetService(NS_CERTOVERRIDE_CONTRACTID);
   // it is fine to continue without the nsICertOverrideService
 
-  PRUint32 storedOverrideBits = 0; 
+  PRUint32 overrideBits = 0; 
 
   if (overrideService)
   {
-    PRBool haveStoredOverride;
+    PRBool haveOverride;
+    PRBool isTemporaryOverride; // we don't care
   
-    nsrv = overrideService->HasMatchingOverride(hostWithPortStringUTF16,
+    nsrv = overrideService->HasMatchingOverride(hostWithPortStringUTF16, 
                                                 ix509, 
-                                                &storedOverrideBits, 
-                                                &haveStoredOverride);
-    if (NS_SUCCEEDED(nsrv) && haveStoredOverride) 
+                                                &overrideBits,
+                                                &isTemporaryOverride, 
+                                                &haveOverride);
+    if (NS_SUCCEEDED(nsrv) && haveOverride) 
     {
       // remove the errors that are already overriden
-      remaining_display_errors -= storedOverrideBits;
+      remaining_display_errors -= overrideBits;
     }
   }
 

@@ -51,7 +51,7 @@ interface nsIX509Cert;
  *   {host:port, cert-fingerprint, allowed-overrides} 
  * that the user wants to accept without further warnings. 
  */
-[scriptable, uuid(7e646227-485d-49c6-8e37-e2c62cb204e1)]
+[scriptable, uuid(13ca097a-935c-4a62-9c91-7a9d803ae701)]
 interface nsICertOverrideService : nsISupports {
 
   /**
@@ -82,7 +82,8 @@ interface nsICertOverrideService : nsISupports {
    */
   void rememberValidityOverride(in AString aHostNameWithPort, 
                                 in nsIX509Cert aCert,
-                                in PRUint32 aOverrideBits);
+                                in PRUint32 aOverrideBits,
+                                in boolean aTemporary);
 
   /**
    *  The given cert should always be accepted for the given hostname:port,
@@ -99,7 +100,8 @@ interface nsICertOverrideService : nsISupports {
    */
   boolean hasMatchingOverride(in AString aHostNameWithPort, 
                               in nsIX509Cert aCert,
-                              out PRUint32 aOverrideBits);
+                              out PRUint32 aOverrideBits,
+                              out boolean aIsTemporary);
 
   /**
    *  Retrieve the stored override for the given hostname:port.
@@ -115,17 +117,18 @@ interface nsICertOverrideService : nsISupports {
   boolean getValidityOverride(in AString aHostNameWithPort, 
                               out ACString aHashAlg,
                               out ACString aFingerprint,
-                              out PRUint32 aOverrideBits);
+                              out PRUint32 aOverrideBits,
+                              out boolean aIsTemporary);
 
   /**
-   *  Remove a stored override for the given hostname:port.
+   *  Remove a override for the given hostname:port.
    *
    *  @param aHostNameWithPort The host:port whose entry should be cleared.
    */
   void clearValidityOverride(in AString aHostNameWithPort);
 
   /**
-   *  Obtain the full list of hostname:port for which overrides are stored.
+   *  Obtain the full list of hostname:port for which overrides are known.
    *
    *  @param aCount The number of host:port entries returned
    *  @param aHostsWithPortsArray The array of host:port entries returned
@@ -140,5 +143,7 @@ interface nsICertOverrideService : nsISupports {
    *  @return how many override entries are currently on file
    *          for the given certificate
    */
-  PRUint32 isCertUsedForOverrides(in nsIX509Cert aCert);
+  PRUint32 isCertUsedForOverrides(in nsIX509Cert aCert,
+                                  in boolean aCheckTemporaries,
+                                  in boolean aCheckPermanents);
 };

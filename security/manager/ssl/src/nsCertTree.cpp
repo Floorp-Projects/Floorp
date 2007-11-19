@@ -144,6 +144,7 @@ nsCertTreeDispInfo::nsCertTreeDispInfo()
 :mAddonInfo(nsnull)
 ,mTypeOfEntry(direct_db)
 ,mOverrideBits(nsCertOverride::ob_None)
+,mIsTemporary(PR_TRUE)
 {
 }
 
@@ -153,6 +154,7 @@ nsCertTreeDispInfo::nsCertTreeDispInfo(nsCertTreeDispInfo &other)
   mTypeOfEntry = other.mTypeOfEntry;
   mHostWithPort = other.mHostWithPort;
   mOverrideBits = other.mOverrideBits;
+  mIsTemporary = other.mIsTemporary;
 }
 
 nsCertTreeDispInfo::~nsCertTreeDispInfo()
@@ -389,6 +391,7 @@ MatchingCertOverridesCallback(const nsCertOverride &aSettings,
     certdi->mTypeOfEntry = nsCertTreeDispInfo::host_port_override;
     certdi->mHostWithPort = NS_ConvertUTF8toUTF16(aSettings.mHostWithPortUTF8);
     certdi->mOverrideBits = aSettings.mOverrideBits;
+    certdi->mIsTemporary = aSettings.mIsTemporary;
     NS_IF_ADDREF(certdi);
     cap->array->InsertElementAt(cap->position, certdi);
     cap->position++;
@@ -445,6 +448,7 @@ AddRemaningHostPortOverridesCallback(const nsCertOverride &aSettings,
     certdi->mTypeOfEntry = nsCertTreeDispInfo::host_port_override;
     certdi->mHostWithPort = NS_ConvertUTF8toUTF16(aSettings.mHostWithPortUTF8);
     certdi->mOverrideBits = aSettings.mOverrideBits;
+    certdi->mIsTemporary = aSettings.mIsTemporary;
     NS_IF_ADDREF(certdi);
     cap->array->InsertElementAt(cap->position, certdi);
     cap->position++;
@@ -560,8 +564,11 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
 
     if (wantThisCertIfNoOverrides || wantThisCertIfHaveOverrides) {
       PRUint32 ocount = 0;
-      nsresult rv = mOverrideService->IsCertUsedForOverrides(pipCert, &ocount);
-
+      nsresult rv = 
+        mOverrideService->IsCertUsedForOverrides(pipCert, 
+                                                 PR_TRUE, // we want temporaries
+                                                 PR_TRUE, // we want permanents
+                                                 &ocount);
       if (wantThisCertIfNoOverrides) {
         if (NS_FAILED(rv) || ocount == 0) {
           // no overrides for this cert
@@ -606,6 +613,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
         certdi->mTypeOfEntry = nsCertTreeDispInfo::direct_db;
         // not necessary: certdi->mHostWithPort.Clear();
         certdi->mOverrideBits = nsCertOverride::ob_None;
+        certdi->mIsTemporary = PR_FALSE;
         mDispInfo.InsertElementAt(InsertPosition, certdi);
         ++count;
         ++InsertPosition;
@@ -1237,6 +1245,10 @@ nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col,
     else {
       _retval = NS_LITERAL_STRING("*");
     }
+  } else if (NS_LITERAL_STRING("lifetimecol").Equals(colID)) {
+    const char *stringID = 
+      (certdi->mIsTemporary) ? "CertExceptionTemporary" : "CertExceptionPermanent";
+    rv = mNSSComponent->GetPIPNSSBundleString(stringID, _retval);
   } else if (NS_LITERAL_STRING("typecol").Equals(colID) && cert) {
     nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
     PRUint32 type = nsIX509Cert::UNKNOWN_CERT;
