@@ -4654,24 +4654,18 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
             goto out;
         }
     }
-    fun = js_NewFunction(cx, NULL, NULL, nargs, 0, obj, funAtom);
+    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
     if (!fun)
         goto out;
-    if (nargs) {
-        for (i = 0; i < nargs; i++) {
-            argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
-            if (!argAtom) {
-                fun = NULL;
-                goto out;
-            }
-            if (!js_AddHiddenProperty(cx, fun->object, ATOM_TO_JSID(argAtom),
-                                      js_GetArgument, js_SetArgument,
-                                      SPROP_INVALID_SLOT,
-                                      JSPROP_PERMANENT | JSPROP_SHARED,
-                                      SPROP_HAS_SHORTID, i)) {
-                fun = NULL;
-                goto out;
-            }
+    for (i = 0; i < nargs; i++) {
+        argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
+        if (!argAtom) {
+            fun = NULL;
+            goto out;
+        }
+        if (!js_AddLocal(cx, fun, argAtom, JSLOCAL_ARG)) {
+            fun = NULL;
+            goto out;
         }
     }
 
@@ -4707,7 +4701,7 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, name,
+    jp = JS_NEW_PRINTER(cx, name, NULL,
                         indent & ~JS_DONT_PRETTY_PRINT,
                         !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
@@ -4727,12 +4721,12 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunction",
+    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunction", fun,
                         indent & ~JS_DONT_PRETTY_PRINT,
                         !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
         return NULL;
-    if (js_DecompileFunction(jp, fun))
+    if (js_DecompileFunction(jp))
         str = js_GetPrinterOutput(jp);
     else
         str = NULL;
@@ -4747,12 +4741,12 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunctionBody",
+    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunctionBody", fun,
                         indent & ~JS_DONT_PRETTY_PRINT,
                         !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
         return NULL;
-    if (js_DecompileFunctionBody(jp, fun))
+    if (js_DecompileFunctionBody(jp))
         str = js_GetPrinterOutput(jp);
     else
         str = NULL;

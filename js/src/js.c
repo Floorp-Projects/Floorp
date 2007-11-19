@@ -1239,7 +1239,7 @@ SrcNotes(JSContext *cx, JSScript *script)
 
             index = js_GetSrcNoteOffset(sn, 0);
             JS_GET_SCRIPT_OBJECT(script, index, obj);
-            fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
+            fun = (JSFunction *) JS_GetPrivate(cx, obj);
             str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             bytes = str ? JS_GetStringBytes(str) : "N/A";
             fprintf(gOutFile, " function %u (%s)", index, bytes);
