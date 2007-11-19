@@ -44,7 +44,6 @@
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIWidget.h"
-#include "nsIMenuListener.h"
 #include "nsINameSpaceManager.h"
 #include "nsWidgetAtoms.h"
 #include "nsIServiceManager.h"
@@ -58,7 +57,7 @@
 #include "nsGUIEvent.h"
 
 
-NS_IMPL_ISUPPORTS4(nsMenuItemX, nsIMenuItem, nsIMenuListener, nsIChangeObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS2(nsMenuItemX, nsIMenuItem, nsIChangeObserver)
 
 
 nsMenuItemX::nsMenuItemX()
@@ -226,81 +225,10 @@ NS_METHOD nsMenuItemX::GetNativeData(void *& aData)
 }
 
 
-NS_METHOD nsMenuItemX::AddMenuListener(nsIMenuListener * aMenuListener)
-{
-  mXULCommandListener = aMenuListener;    // addref
-  return NS_OK;
-}
-
-
-NS_METHOD nsMenuItemX::RemoveMenuListener(nsIMenuListener * aMenuListener)
-{
-  if (mXULCommandListener.get() == aMenuListener)
-    mXULCommandListener = nsnull;
-  return NS_OK;
-}
-
-
 NS_METHOD nsMenuItemX::IsSeparator(PRBool & aIsSep)
 {
   aIsSep = (mType == nsIMenuItem::eSeparator);
   return NS_OK;
-}
-
-
-//
-// nsIMenuListener interface
-//
-
-
-nsEventStatus nsMenuItemX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
-{
-  return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus nsMenuItemX::MenuSelected(const nsMenuEvent & aMenuEvent)
-{
-  return nsEventStatus_eIgnore;
-}
-
-
-//
-// nsIMenuListener interface
-//
-
-
-nsEventStatus nsMenuItemX::MenuDeselected(const nsMenuEvent & aMenuEvent)
-{
-    return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus nsMenuItemX::MenuConstruct(
-    const nsMenuEvent & aMenuEvent,
-    nsIWidget         * aParentWindow, 
-    void              * aMenuNode)
-{
-    return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus nsMenuItemX::MenuDestruct(const nsMenuEvent & aMenuEvent)
-{
-    return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus nsMenuItemX::CheckRebuild(PRBool & aNeedsRebuild)
-{
-  aNeedsRebuild = PR_TRUE; 
-  return nsEventStatus_eIgnore;
-}
-
-
-nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
-{
-  return nsEventStatus_eIgnore;
 }
 
 
@@ -459,14 +387,12 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIC
                                   nsWidgetAtoms::_true, eCaseMatters))
           UncheckRadioSiblings(mContent);
       }
-      nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
-      listener->SetRebuild(PR_TRUE);
+      mMenuParent->SetRebuild(PR_TRUE);
     }
     else if (aAttribute == nsWidgetAtoms::hidden ||
              aAttribute == nsWidgetAtoms::collapsed ||
              aAttribute == nsWidgetAtoms::label) {
-      nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
-      listener->SetRebuild(PR_TRUE);
+      mMenuParent->SetRebuild(PR_TRUE);
     }
     else if (aAttribute == nsWidgetAtoms::image) {
       SetupIcon();
@@ -513,9 +439,8 @@ nsMenuItemX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 
     mManager->Unregister(mCommandContent);
     mCommandContent = nsnull;
   }
-  
-  nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
-  listener->SetRebuild(PR_TRUE);
+
+  mMenuParent->SetRebuild(PR_TRUE);
   return NS_OK;
 }
 
@@ -523,8 +448,7 @@ nsMenuItemX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 
 NS_IMETHODIMP
 nsMenuItemX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
-  nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
-  listener->SetRebuild(PR_TRUE);
+  mMenuParent->SetRebuild(PR_TRUE);
   return NS_OK;
 }
 

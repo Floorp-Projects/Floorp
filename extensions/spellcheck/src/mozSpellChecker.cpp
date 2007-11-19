@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,8 +13,7 @@
  *
  * The Original Code is Mozilla Spellchecker Component.
  *
- * The Initial Developer of the Original Code is
- * David Einstein.
+ * The Initial Developer of the Original Code is David Einstein.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -45,7 +43,7 @@
 
 #define UNREASONABLE_WORD_LENGTH 64
 
-#define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/hunspell;1"
+#define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
 
 NS_IMPL_ISUPPORTS1(mozSpellChecker, nsISpellChecker)
 

@@ -95,25 +95,30 @@ window.dialog {
 .message-icon,
 .alert-icon,
 .error-icon,
-.question-icon {
-  width: 32px;
-  height: 32px;
+.question-icon,
+.authentication-icon {
+  width: 40px;
+  height: 40px;
 }
 
 .message-icon {
-  list-style-image: url("chrome://global/skin/icons/Message.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=dialog");
 }
 
 .alert-icon {
-  list-style-image: url("chrome://global/skin/icons/Warning.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=dialog");
 }
 
 .error-icon {
-  list-style-image: url("chrome://global/skin/icons/Error.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=dialog");
 }
 
 .question-icon {
-  list-style-image: url("chrome://global/skin/icons/Question.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-question?size=dialog");
+}
+
+.authentication-icon {
+  list-style-image: url("moz-icon://stock/gtk-dialog-authentication?size=dialog");
 }
 
 /* ::::: iframe ::::: */

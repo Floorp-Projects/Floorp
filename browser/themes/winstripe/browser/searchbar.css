@@ -1,9 +1,3 @@
-%ifdef MOZ_WIDGET_GTK2
-#searchbar {
-  -moz-margin-start: 3px;
-}
-%endif
-
 .searchbar-box {
   -moz-padding-end: 5px;
 }

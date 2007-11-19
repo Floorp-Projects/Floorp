@@ -2857,6 +2857,12 @@ case $target in
         AC_DEFINE(HAVE_LIBDL)))
     ;;
 esac
+
+_SAVE_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
+AC_CHECK_FUNCS(dladdr)
+CFLAGS="$_SAVE_CFLAGS"
+
 if test ! "$GNU_CXX"; then
 
     case $target in
@@ -5519,19 +5525,6 @@ MOZ_ARG_ENABLE_STRING(image-decoders,
 done],
     MOZ_IMG_DECODERS="$MOZ_IMG_DECODERS_DEFAULT")
 
-if test `echo "$MOZ_IMG_DECODERS" | grep -c png` -ne 0; then
-    MOZ_PNG_CFLAGS="$MOZ_PNG_CFLAGS -DMOZ_PNG_READ"
-    AC_MSG_CHECKING([if pnggccrd.c can be compiled without PNG_NO_MMX_CODE])
-    AC_TRY_COMPILE([#define MOZ_PNG_READ 1
-                    #include "$_topsrcdir/modules/libimg/png/pnggccrd.c"],,
-                    _results=yes,
-                    _results=no)
-    AC_MSG_RESULT([$_results])
-    if test "$_results" = "no"; then
-        MOZ_PNG_CFLAGS="$MOZ_PNG_CFLAGS -DPNG_NO_MMX_CODE"
-    fi
-fi
-
 dnl Dupes are removed in the encoder section because it will also add decoders
 
 dnl ========================================================
@@ -5557,10 +5550,6 @@ MOZ_ARG_ENABLE_STRING(image-encoders,
     MOZ_IMG_ENCODERS="$MOZ_IMG_ENCODERS $addencoder"
 done],
     MOZ_IMG_ENCODERS="$MOZ_IMG_ENCODERS_DEFAULT")
-
-if test `echo "$MOZ_IMG_ENCODERS" | grep -c png` -ne 0; then
-    MOZ_PNG_CFLAGS="$MOZ_PNG_CFLAGS -DMOZ_PNG_WRITE"
-fi
 
 dnl Remove dupes
 MOZ_IMG_DECODERS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_DECODERS}`
@@ -6332,6 +6321,12 @@ if test "$HAVE_DEMANGLE" -a "$HAVE_GCC3_ABI" && test "$MOZ_DEBUG" -o "$NS_TRACE_
 fi
 AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
 
+dnl ========================================================
+dnl = Support for gcc stack unwinding (from gcc 3.3)
+dnl ========================================================
+if test "$HAVE_GCC3_ABI" && test -z "$SKIP_LIBRARY_CHECKS"; then
+    AC_CHECK_FUNCS(_Unwind_Backtrace)
+fi
 
 dnl ========================================================
 dnl =

@@ -61,7 +61,6 @@
 #include "nsIMIMEInfo.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
-#include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsAutoPtr.h"

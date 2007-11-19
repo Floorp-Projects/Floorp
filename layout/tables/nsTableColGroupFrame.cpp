@@ -316,6 +316,20 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
 
   if (nsGkAtoms::tableColFrame == aOldFrame->GetType()) {
     nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
+    if (colFrame->GetColType() == eColContent) {
+      // Remove any anonymous column frames this <col> produced via a colspan
+      nsTableColFrame* col = colFrame->GetNextCol();
+      nsTableColFrame* nextCol;
+      while (col && col->GetColType() == eColAnonymousCol) {
+        NS_ASSERTION(col->GetStyleContext() == colFrame->GetStyleContext() &&
+                     col->GetContent() == colFrame->GetContent(),
+                     "How did that happen??");
+        nextCol = col->GetNextCol();
+        RemoveFrame(nsnull, col);
+        col = nextCol;
+      }
+    }
+    
     PRInt32 colIndex = colFrame->GetColIndex();
     RemoveChild(*colFrame, PR_TRUE);
     

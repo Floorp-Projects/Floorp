@@ -260,10 +260,14 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JSObject *obj) const
   JSAutoRequest ar(cx);
   for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
     nsDependentString name(f->GetName());
-    jsval dummy;
-    ::JS_DeleteUCProperty2(cx, obj,
-                           reinterpret_cast<const jschar*>(name.get()),
-                           name.Length(), &dummy);
+
+    const jschar* s = reinterpret_cast<const jschar*>(name.get());
+    JSBool hasProp;
+    if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
+        hasProp) {
+      jsval dummy;
+      ::JS_DeleteUCProperty2(cx, obj, s, name.Length(), &dummy);
+    }
   }
 }
 

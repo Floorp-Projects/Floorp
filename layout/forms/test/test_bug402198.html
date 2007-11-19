@@ -1,0 +1,79 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=402198
+-->
+<head>
+  <title>Test for Bug 402198</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=402198">Mozilla Bug 402198</a>
+<p id="display">
+  <select></select>
+  <select><optgroup></optgroup></select>
+  <legend style="overflow: scroll;">
+    <select></select>
+  </legend>
+  <span></span>
+  <span style="display: -moz-box;">
+    <select></select>
+  </span>
+  <legend style=" ">
+    <label style="overflow: scroll; display: -moz-box;">
+      <select></select>
+    </label>
+  </legend>
+  <legend>
+    <label style=" display: table;">
+      <select id="a">
+        <option>High Grade</option>
+        <option>Medium Grade</option>
+      </select>
+    </label>
+  </legend>
+
+  <input>
+  <select multiple="multiple"></select>
+  <select style="overflow: scroll; display: -moz-box;">
+    <optgroup></optgroup>
+    <optgroup style="display: table-cell;"></optgroup>
+  </select>
+</p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function doe3() {
+  document.documentElement.style.display = 'none';
+  document.body.offsetHeight;
+  document.documentElement.style.display = '';
+  document.body.offsetHeight;
+
+  document.getElementById('a').focus();
+  document.body.style.display = 'none';
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  wu.sendKeyEvent('keypress',  9, 0, 4);
+
+  is(0, 0, "this is a crash/assertion test, so we're ok if we survived this far");
+  SimpleTest.finish();
+}
+
+function do_test() {
+  setTimeout(doe3,300);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(do_test);
+</script>
+</pre>
+
+<style>
+* {quotes: "quote" "quote" !important;}
+</style>
+
+</body>
+</html>

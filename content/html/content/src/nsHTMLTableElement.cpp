@@ -1128,7 +1128,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   // which *element* it's matching (style rules should not stop matching
   // when the display type is changed).
 
-  nsCompatibility mode = aData->mPresContext->CompatibilityMode();
+  nsPresContext* presContext = aData->mPresContext;
+  nsCompatibility mode = presContext->CompatibilityMode();
 
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TableBorder)) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
@@ -1331,7 +1332,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // bordercolor
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bordercolor);
       nscolor color;
-      if (value && value->GetColorValue(color)) {
+      if (value && presContext->UseDocumentColors() &&
+          value->GetColorValue(color)) {
         if (aData->mMarginData->mBorderColor.mLeft.GetUnit() == eCSSUnit_Null)
           aData->mMarginData->mBorderColor.mLeft.SetColorValue(color);
         if (aData->mMarginData->mBorderColor.mRight.GetUnit() == eCSSUnit_Null)

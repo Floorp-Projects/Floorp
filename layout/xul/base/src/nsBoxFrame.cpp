@@ -201,6 +201,13 @@ nsBoxFrame::Init(nsIContent*      aContent,
   nsresult  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // record that children that are ignorable whitespace should be excluded 
+  // (When content was loaded via the XUL content sink, it's already
+  // been excluded, but we need this for when the XUL namespace is used
+  // in other MIME types or when the XUL CSS display types are used with
+  // non-XUL elements.)
+  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
+
   MarkIntrinsicWidthsDirty();
 
   // see if we need a widget

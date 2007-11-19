@@ -37,6 +37,10 @@
 # ***** END LICENSE BLOCK *****
 
 import subprocess
+#HACK - http://www.gossamer-threads.com/lists/python/bugs/593800
+#To stop non-threadsafe popen nonsense, should be removed when we upgrade to 
+#python 2.5 or later
+subprocess._cleanup = lambda: None 
 import signal
 import os
 import time
@@ -75,7 +79,7 @@ def GetPidsByName(process_name):
 
   matchingPids = []
   
-  command = ['ps -Axc']
+  command = ['ps -ac']
   handle = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True, shell=True)
   
   # wait for the process to terminate

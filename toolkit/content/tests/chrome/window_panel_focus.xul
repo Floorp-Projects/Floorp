@@ -84,7 +84,7 @@ function panelShown()
 
   is(gButtonBlur, 3, "blur events fired within popup");
 
-  $("panel").hidePopup();
+  synthesizeKey("VK_ESCAPE", { });
 }
 
 function ok(condition, message) {

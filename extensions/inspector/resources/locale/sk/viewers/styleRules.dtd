@@ -36,16 +36,21 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY disableSelectedRules.label "deaktivovaný">
-<!ENTITY styleRulePropPriority.label "Priorita">
-<!ENTITY styleRulePropName.label "Vlastnosť">
-<!ENTITY newRules.label "Nový">
-<!ENTITY miFindCSSRules.label "Hľadaťt pravidlo CSS...">
-<!ENTITY openSelectedFileInEditor.label "Otvoriť v editore">
-<!ENTITY toggleSelectedImportant.label "Prepnúť !important">
+<!ENTITY miFindCSSRules.label "Hľadať pravidlá CSS...">
+<!ENTITY miFindCSSRules.accesskey "H">
+
+<!ENTITY newRules.label "Nové">
 <!ENTITY deleteSelectedRules.label "Odstrániť">
-<!ENTITY styleRulePropValue.label "Hodnota">
-<!ENTITY miFindCSSRules.accesskey "N">
-<!ENTITY styleRuleLineNumber.label "Riadok">
+<!ENTITY disableSelectedRules.label "Zakázať">
+<!ENTITY openSelectedFileInEditor.label "Otvoriť súbor v editore">
+
+<!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->
+<!ENTITY toggleSelectedImportant.label "Prepnúť !important">
+
 <!ENTITY styleRule.label "Pravidlo">
 <!ENTITY styleRuleURI.label "Súbor">
+<!ENTITY styleRuleLineNumber.label "Riadok">
+
+<!ENTITY styleRulePropPriority.label "Priorita">
+<!ENTITY styleRulePropName.label "Vlastnosť">
+<!ENTITY styleRulePropValue.label "Hodnota">

@@ -42,9 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIMenu.h"
-#include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
-#include "nsWeakReference.h"
 #include "nsMenuBarX.h"
 
 #import <Carbon/Carbon.h>
@@ -52,7 +50,6 @@
 
 
 class nsIMenuBar;
-class nsIMenuListener;
 class nsMenuX;
 class nsMenuItemIconX;
 
@@ -70,9 +67,7 @@ class nsMenuItemIconX;
 
 
 class nsMenuX : public nsIMenu,
-                public nsIMenuListener,
-                public nsIChangeObserver,
-                public nsSupportsWeakReference
+                public nsIChangeObserver
 {
 
 public:
@@ -83,16 +78,6 @@ public:
     NS_DECL_NSICHANGEOBSERVER
 
     id GetNativeMenuItem();
-
-    // nsIMenuListener methods
-    nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent); 
-    nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
-    nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
-    nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                void * aMenuNode);
-    nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
-    nsEventStatus CheckRebuild(PRBool & aMenuEvent);
-    nsEventStatus SetRebuild(PRBool aMenuEvent);
 
     // nsIMenu Methods
     NS_IMETHOD Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
@@ -112,8 +97,6 @@ public:
     NS_IMETHOD RemoveAll();
     NS_IMETHOD GetNativeData(void** aData);
     NS_IMETHOD SetNativeData(void* aData);
-    NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
-    NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
     NS_IMETHOD GetMenuContent(nsIContent ** aMenuNode);
     NS_IMETHOD SetEnabled(PRBool aIsEnabled);
     NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
@@ -123,7 +106,12 @@ public:
                                                  void**       aMenuRef,
                                                  PRUint16*    aMenuItemIndex);
     NS_IMETHOD SetupIcon();
-    
+    nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
+    void MenuDeselected(const nsMenuEvent & aMenuEvent); 
+    void MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, void * aMenuNode);
+    void MenuDestruct(const nsMenuEvent & aMenuEvent);
+    void SetRebuild(PRBool aMenuEvent);
+
 protected:
     // Determines how many menus are visible among the siblings that are before me.
     // It doesn't matter if I am visible.
@@ -154,7 +142,6 @@ protected:
     nsISupports*                mParent;                // weak, my parent owns me
     nsIChangeManager*           mManager;               // weak ref, it will outlive us [menubar]
     nsCOMPtr<nsIContent>        mMenuContent;           // the |menu| tag, strong ref
-    nsCOMPtr<nsIMenuListener>   mListener;              // strong ref
     nsRefPtr<nsMenuItemIconX>   mIcon;
 
     // Mac specific

@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for radio buttons
+  -->
+<window title="Radio Buttons" width="500" height="600"
+        onload="setTimeout(test_tabbox, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="application/javascript" src="xul_selectcontrol.js"/>
+
+<tabbox id="tabbox">
+  <tabs id="tabs">
+    <tab id="tab1" label="Tab 1"/>
+    <tab id="tab2" label="Tab 2"/>
+  </tabs>
+  <tabpanels id="tabpanels">
+    <button id="panel1" label="Panel 1"/>
+    <button id="panel2" label="Panel 2"/>
+  </tabpanels>
+</tabbox>
+
+<tabbox id="tabbox-initwithvalue">
+  <tabs id="tabs-initwithvalue" value="two">
+    <tab label="Tab 1" value="one"/>
+    <tab label="Tab 2" value="two"/>
+    <tab label="Tab 3" value="three"/>
+  </tabs>
+  <tabpanels id="tabpanels-initwithvalue">
+    <button label="Panel 1"/>
+    <button label="Panel 2"/>
+    <button label="Panel 3"/>
+  </tabpanels>
+</tabbox>
+
+<tabbox id="tabbox-initwithselected">
+  <tabs id="tabs-initwithselected" value="two">
+    <tab label="Tab 1" value="one"/>
+    <tab label="Tab 2" value="two"/>
+    <tab label="Tab 3" value="three" selected="true"/>
+  </tabs>
+  <tabpanels id="tabpanels-initwithselected">
+    <button label="Panel 1"/>
+    <button label="Panel 2"/>
+    <button label="Panel 3"/>
+  </tabpanels>
+</tabbox>
+
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function test_tabbox()
+{
+  var tabbox = document.getElementById("tabbox");
+  var tabs = document.getElementById("tabs");
+  var tabpanels = document.getElementById("tabpanels");
+
+  test_tabbox_State(tabbox, "tabbox initial", 0, tabs.firstChild, tabpanels.firstChild);
+
+  // check the selectedIndex property
+  tabbox.selectedIndex = 1;
+  test_tabbox_State(tabbox, "tabbox selectedIndex 1", 1, tabs.lastChild, tabpanels.lastChild);
+
+  tabbox.selectedIndex = 2;
+  test_tabbox_State(tabbox, "tabbox selectedIndex 2", 1, tabs.lastChild, tabpanels.lastChild);
+
+  // tabbox must have a selection, so setting to -1 should do nothing
+  tabbox.selectedIndex = -1;
+  test_tabbox_State(tabbox, "tabbox selectedIndex -1", 1, tabs.lastChild, tabpanels.lastChild);
+
+  // check the selectedTab property
+  tabbox.selectedTab = tabs.firstChild;
+  test_tabbox_State(tabbox, "tabbox selected", 0, tabs.firstChild, tabpanels.firstChild);
+
+  // setting selectedTab to null should not do anything
+  tabbox.selectedTab = null;
+  test_tabbox_State(tabbox, "tabbox selectedTab null", 0, tabs.firstChild, tabpanels.firstChild);
+
+  // check the selectedPanel property
+  tabbox.selectedPanel = tabpanels.lastChild;
+  test_tabbox_State(tabbox, "tabbox selectedPanel", 0, tabs.firstChild, tabpanels.lastChild);
+
+  // setting selectedPanel to null should not do anything
+  tabbox.selectedPanel = null;
+  test_tabbox_State(tabbox, "tabbox selectedPanel null", 0, tabs.firstChild, tabpanels.lastChild);
+
+  tabbox.selectedIndex = 0;
+  test_tabpanels(tabpanels, tabbox);
+
+  tabs.removeChild(tabs.firstChild);
+  tabs.removeChild(tabs.firstChild);
+
+  test_tabs(tabs);
+
+  SimpleTest.finish();
+}
+
+function test_tabpanels(tabpanels, tabbox)
+{
+  var tab = tabbox.selectedTab;
+
+  // changing the selection on the tabpanels should not affect the tabbox
+  // or tabs within
+  // check the selectedIndex property
+  tabpanels.selectedIndex = 1;
+  test_tabbox_State(tabbox, "tabpanels tabbox selectedIndex 1", 0, tab, tabpanels.lastChild);
+  test_tabpanels_State(tabpanels, "tabpanels selectedIndex 1", 1, tabpanels.lastChild);
+
+  tabpanels.selectedIndex = 0;
+  test_tabbox_State(tabbox, "tabpanels tabbox selectedIndex 2", 0, tab, tabpanels.firstChild);
+  test_tabpanels_State(tabpanels, "tabpanels selectedIndex 2", 0, tabpanels.firstChild);
+
+  // setting selectedIndex to -1 should do nothing
+  tabpanels.selectedIndex = 1;
+  tabpanels.selectedIndex = -1;
+  test_tabbox_State(tabbox, "tabpanels tabbox selectedIndex -1", 0, tab, tabpanels.lastChild);
+  test_tabpanels_State(tabpanels, "tabpanels selectedIndex -1", 1, tabpanels.lastChild);
+
+  // check the tabpanels.selectedPanel property
+  tabpanels.selectedPanel = tabpanels.lastChild;
+  test_tabbox_State(tabbox, "tabpanels tabbox selectedPanel", 0, tab, tabpanels.lastChild);
+  test_tabpanels_State(tabpanels, "tabpanels selectedPanel", 1, tabpanels.lastChild);
+
+  // check setting the tabpanels.selectedPanel property to null
+  tabpanels.selectedPanel = null;
+  test_tabbox_State(tabbox, "tabpanels selectedPanel null", 0, tab, tabpanels.lastChild);
+}
+
+function test_tabs(tabs)
+{
+  test_nsIDOMXULSelectControlElement(tabs, "tab", "tabs");
+  // XXXndeakin would test the UI aspect of tabs, but the mouse
+  // events on tabs are fired in a timeout causing the generic
+  // test_nsIDOMXULSelectControlElement_UI method not to work
+  // test_nsIDOMXULSelectControlElement_UI(tabs, null);
+}
+
+function test_tabbox_State(tabbox, testid, index, tab, panel)
+{
+  is(tabbox.selectedIndex, index, testid + " selectedIndex");
+  is(tabbox.selectedTab, tab, testid + " selectedTab");
+  is(tabbox.selectedPanel, panel, testid + " selectedPanel");
+}
+
+function test_tabpanels_State(tabpanels, testid, index, panel)
+{
+  is(tabpanels.selectedIndex, index, testid + " selectedIndex");
+  is(tabpanels.selectedPanel, panel, testid + " selectedPanel");
+}
+
+]]>
+</script>
+
+</window>

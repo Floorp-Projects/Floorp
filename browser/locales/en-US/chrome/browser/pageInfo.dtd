@@ -52,6 +52,7 @@
 <!ENTITY  generalTab.accesskey  "G">
 <!ENTITY  generalURL            "Address:">
 <!ENTITY  generalType           "Type:">
+<!ENTITY  generalMode           "Render Mode:">
 <!ENTITY  generalSize           "Size:">
 <!ENTITY  generalReferrer       "Referring URL:">
 <!ENTITY  generalSource         "Cache Source:">

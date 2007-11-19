@@ -88,7 +88,7 @@ namespace CrashReporter {
                           const std::string& header,
                           StringTable& strings,
                           bool escape);
-
+  void LogMessage(const std::string& message);
 }
 
 //=============================================================================
@@ -118,7 +118,7 @@ bool UIFileExists(const std::string& path);
 bool UIMoveFile(const std::string& oldfile, const std::string& newfile);
 bool UIDeleteFile(const std::string& oldfile);
 std::ifstream* UIOpenRead(const std::string& filename);
-std::ofstream* UIOpenWrite(const std::string& filename);
+std::ofstream* UIOpenWrite(const std::string& filename, bool append=false);
 
 #ifdef _MSC_VER
 # pragma warning( pop )

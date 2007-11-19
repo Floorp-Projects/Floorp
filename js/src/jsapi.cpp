@@ -703,6 +703,8 @@ JS_NewRuntime(uint32 maxbytes)
         goto bad;
     if (!js_InitAtomState(rt))
         goto bad;
+    if (!js_InitDeflatedStringCache(rt))
+        goto bad;
 #ifdef JS_THREADSAFE
     if (!js_InitThreadPrivateIndex(js_ThreadDestructorCB))
         goto bad;
@@ -848,10 +850,12 @@ JS_BeginRequest(JSContext *cx)
         /* Indicate that a request is running. */
         rt->requestCount++;
         cx->requestDepth = 1;
+        cx->outstandingRequests++;
         JS_UNLOCK_GC(rt);
         return;
     }
     cx->requestDepth++;
+    cx->outstandingRequests++;
 }
 
 JS_PUBLIC_API(void)
@@ -863,11 +867,13 @@ JS_EndRequest(JSContext *cx)
 
     CHECK_REQUEST(cx);
     JS_ASSERT(cx->requestDepth > 0);
+    JS_ASSERT(cx->outstandingRequests > 0);
     if (cx->requestDepth == 1) {
         /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
         rt = cx->runtime;
         JS_LOCK_GC(rt);
         cx->requestDepth = 0;
+        cx->outstandingRequests--;
 
         /* See whether cx has any single-threaded scopes to start sharing. */
         todop = &rt->scopeSharingTodo;
@@ -908,6 +914,7 @@ JS_EndRequest(JSContext *cx)
     }
 
     cx->requestDepth--;
+    cx->outstandingRequests--;
 }
 
 /* Yield to pending GC operations, regardless of request depth */
@@ -2508,9 +2515,10 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    JS_ASSERT(GCX_EXTERNAL_STRING <= type && type < (intN) GCX_NTYPES);
+    JS_ASSERT((uintN) type < (uintN) (GCX_NTYPES - GCX_EXTERNAL_STRING));
 
-    str = (JSString *) js_NewGCThing(cx, (uintN) type, sizeof(JSString));
+    str = (JSString *) js_NewGCThing(cx, (uintN) type + GCX_EXTERNAL_STRING,
+                                     sizeof(JSString));
     if (!str)
         return NULL;
     JSSTRING_INIT(str, chars, length);
@@ -2520,12 +2528,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
 JS_PUBLIC_API(intN)
 JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
 {
-    uint8 type = (uint8) (*js_GetGCThingFlags(str) & GCF_TYPEMASK);
-
-    if (type >= GCX_EXTERNAL_STRING)
-        return (intN)type;
-    JS_ASSERT(type == GCX_STRING);
-    return -1;
+    return js_GetExternalStringGCType(str);
 }
 
 JS_PUBLIC_API(void)
@@ -3290,6 +3293,43 @@ JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                                  attrs, foundp);
 }
 
+static JSBool
+AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
+                            JSBool *foundp)
+{
+    JSScope *scope;
+
+    if (!OBJ_IS_NATIVE(obj)) {
+        JSObject *obj2;
+        JSProperty *prop;
+
+        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+            return JS_FALSE;
+        *foundp = (obj == obj2);
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+        return JS_TRUE;
+    }
+
+    JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
+    *foundp = (scope->object == obj && SCOPE_GET_PROPERTY(scope, id));
+    JS_UNLOCK_SCOPE(cx, scope);
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name,
+                         JSBool *foundp)
+{
+    JSAtom *atom;
+
+    atom = js_Atomize(cx, name, strlen(name), 0);
+    if (!atom)
+        return JS_FALSE;
+    return AlreadyHasOwnPropertyHelper(cx, obj, ATOM_TO_JSID(atom), foundp);
+}
+
 JS_PUBLIC_API(JSBool)
 JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp)
 {
@@ -3485,6 +3525,19 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
 }
 
 JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj,
+                           const jschar *name, size_t namelen,
+                           JSBool *foundp)
+{
+    JSAtom *atom;
+
+    atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
+    if (!atom)
+        return JS_FALSE;
+    return AlreadyHasOwnPropertyHelper(cx, obj, ATOM_TO_JSID(atom), foundp);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_HasUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen,
                  JSBool *vp)
@@ -3636,6 +3689,13 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
           != NULL);
     OBJ_DROP_PROPERTY(cx, obj, prop);
     return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, jsint index,
+                        JSBool *foundp)
+{
+    return AlreadyHasOwnPropertyHelper(cx, obj, INT_TO_JSID(index), foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4496,17 +4556,19 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
 JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script)
 {
+    JSTempValueRooter tvr;
     JSObject *obj;
 
-    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
-    if (!obj)
-        return NULL;
+    if (!script)
+        return js_NewObject(cx, &js_ScriptClass, NULL, NULL);
 
-    if (script) {
-        if (!JS_SetPrivate(cx, obj, script))
-            return NULL;
+    JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
+    obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+    if (obj) {
+        JS_SetPrivate(cx, obj, script);
         script->object = obj;
     }
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
 }
 

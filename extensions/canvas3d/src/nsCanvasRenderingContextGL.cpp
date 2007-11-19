@@ -471,9 +471,7 @@ nsCanvasRenderingContextGLPrivate::MakeContextCurrent()
 void
 nsCanvasRenderingContextGLPrivate::LostCurrentContext(void *closure)
 {
-    nsCanvasRenderingContextGLPrivate* self = (nsCanvasRenderingContextGLPrivate*) closure;
-    //fprintf (stderr, "[this:%p] Lost context\n", closure);
-    fflush (stderr);
+    //nsCanvasRenderingContextGLPrivate* self = (nsCanvasRenderingContextGLPrivate*) closure;
 }
 
 //

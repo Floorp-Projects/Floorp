@@ -72,7 +72,6 @@
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsGUIEvent.h"
-#include "nsScriptNameSpaceManager.h"
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
 #include "nsIAtom.h"
@@ -280,6 +279,27 @@ nsUserActivityObserver::Observe(nsISupports* aSubject, const char* aTopic,
   nsJSContext::MaybeCC(higherProbability);
   return NS_OK;
 }
+
+// nsCCMemoryPressureObserver observes the memory-pressure notifications
+// and forces a cycle collection when it happens.
+
+class nsCCMemoryPressureObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(nsCCMemoryPressureObserver, nsIObserver)
+
+NS_IMETHODIMP
+nsCCMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                                    const PRUnichar* aData)
+{
+  nsJSContext::CC();
+  return NS_OK;
+}
+
 
 /****************************************************************
  ************************** AutoFree ****************************
@@ -977,7 +997,10 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
 static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
 static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
-static const char js_relimit_option_str[] = JS_OPTIONS_DOT_STR "relimit";
+static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
+#ifdef JS_GC_ZEAL
+static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
+#endif
 
 int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -1025,6 +1048,13 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     // Save the new defaults for the next page load (InitContext).
     context->mDefaultJSOptions = newDefaultJSOptions;
   }
+
+#ifdef JS_GC_ZEAL
+  PRInt32 zeal = nsContentUtils::GetIntPref(js_zeal_option_str, -1);
+  if (zeal >= 0)
+    ::JS_SetGCZeal(context->mContext, (PRUint8)zeal);
+#endif
+
   return 0;
 }
 
@@ -1082,8 +1112,26 @@ nsJSContext::~nsJSContext()
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptContext*>(this));
 #endif
   NS_PRECONDITION(!mTerminations, "Shouldn't have termination funcs by now");
-                  
-  // Cope with JS_NewContext failure in ctor (XXXbe move NewContext to Init?)
+
+  Unlink();
+
+  --sContextCount;
+
+  if (!sContextCount && sDidShutdown) {
+    // The last context is being deleted, and we're already in the
+    // process of shutting down, release the JS runtime service, and
+    // the security manager.
+
+    NS_IF_RELEASE(sRuntimeService);
+    NS_IF_RELEASE(sSecurityManager);
+    NS_IF_RELEASE(gCollation);
+    NS_IF_RELEASE(gDecoder);
+  }
+}
+
+void
+nsJSContext::Unlink()
+{
   if (!mContext)
     return;
 
@@ -1110,49 +1158,19 @@ nsJSContext::~nsJSContext()
   } else {
     ::JS_DestroyContext(mContext);
   }
-
-  --sContextCount;
-
-  if (!sContextCount && sDidShutdown) {
-    // The last context is being deleted, and we're already in the
-    // process of shutting down, release the JS runtime service, and
-    // the security manager.
-
-    NS_IF_RELEASE(sRuntimeService);
-    NS_IF_RELEASE(sSecurityManager);
-    NS_IF_RELEASE(gCollation);
-    NS_IF_RELEASE(gDecoder);
-  }
-}
-
-struct ContextCallbackItem : public JSTracer
-{
-  nsCycleCollectionTraversalCallback *cb;
-};
-
-void
-NoteContextChild(JSTracer *trc, void *thing, uint32 kind)
-{
-  if (kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
-      kind == JSTRACE_QNAME || kind == JSTRACE_XML) {
-    ContextCallbackItem *item = static_cast<ContextCallbackItem*>(trc);
-    item->cb->NoteScriptChild(JAVASCRIPT, thing);
-  }
+  mContext = nsnull;
 }
 
 // QueryInterface implementation for nsJSContext
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
-// XXX Should we call ClearScope here?
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSContext)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalWrapperRef)
+  tmp->Unlink();
+  tmp->mIsInitialized = PR_FALSE;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalWrapperRef)
-  {
-    ContextCallbackItem trc;
-    trc.cb = &cb;
-
-    JS_TRACER_INIT(&trc, tmp->mContext, NoteContextChild);
-    js_TraceContext(&trc, tmp->mContext);
-  }
+  nsContentUtils::XPConnect()->NoteJSContext(tmp->mContext, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
@@ -2296,16 +2314,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
-
-  if (!gNameSpaceManager) {
-    gNameSpaceManager = new nsScriptNameSpaceManager;
-    NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
-
-    rv = gNameSpaceManager->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
   if (!aGlobalObject) {
@@ -2323,14 +2331,16 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   // If there's already a global object in mContext we won't tell
   // XPConnect to wrap aGlobalObject since it's already wrapped.
 
+  nsresult rv;
+
   if (!global) {
     nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
     PRUint32 flags = 0;
     
     if (chromeWindow) {
-      // Flag this object and scripts compiled against it as "system", for
-      // optional automated XPCNativeWrapper construction when chrome views
-      // a content DOM.
+      // Flag this window's global object and objects under it as "system",
+      // for optional automated XPCNativeWrapper construction when chrome JS
+      // views a content DOM.
       flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
 
       // Always enable E4X for XUL and other chrome content -- there is no
@@ -2394,9 +2404,10 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 nsresult
 nsJSContext::InitializeExternalClasses()
 {
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  return gNameSpaceManager->InitForContext(this);
+  return nameSpaceManager->InitForContext(this);
 }
 
 nsresult
@@ -3632,11 +3643,33 @@ nsJSRuntime::Init()
   obs->AddObserver(activityObserver, "user-interaction-active", PR_FALSE);
   obs->AddObserver(activityObserver, "xpcom-shutdown", PR_FALSE);
 
+  nsIObserver* ccMemPressureObserver = new nsCCMemoryPressureObserver();
+  NS_ENSURE_TRUE(ccMemPressureObserver, NS_ERROR_OUT_OF_MEMORY);
+  obs->AddObserver(ccMemPressureObserver, "memory-pressure", PR_FALSE);
+
   rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
 
   sIsInitialized = NS_SUCCEEDED(rv);
 
   return rv;
+}
+
+//static
+nsScriptNameSpaceManager*
+nsJSRuntime::GetNameSpaceManager()
+{
+  if (sDidShutdown)
+    return nsnull;
+
+  if (!gNameSpaceManager) {
+    gNameSpaceManager = new nsScriptNameSpaceManager;
+    NS_ENSURE_TRUE(gNameSpaceManager, nsnull);
+
+    nsresult rv = gNameSpaceManager->Init();
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+
+  return gNameSpaceManager;
 }
 
 void nsJSRuntime::ShutDown()

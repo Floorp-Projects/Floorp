@@ -3270,20 +3270,23 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   // accumulate the correct divisor. This will be the total of all unstyled rows inside 
   // unstyled row groups, unless there are none, in which case, it will be all rows
   nscoord divisor = 0;
+  PRUint32 rowCount = 0;
   for (rgX = 0; rgX < rowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
     if (!firstUnStyledRG || !rgFrame->HasStyleHeight()) {
       nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
       while (rowFrame) {
         if (!firstUnStyledRG || !rowFrame->HasStyleHeight()) {
+          NS_ASSERTION(rowFrame->GetSize().height >= 0, "negative height");
           divisor += rowFrame->GetSize().height;
+          ++rowCount;
           lastElligibleRow = rowFrame;
         }
         rowFrame = rowFrame->GetNextRow();
       }
     }
   }
-  if (divisor <= 0) {
+  if (divisor < 0) {
     NS_ERROR("invalid divisor");
     return;
   }
@@ -3305,7 +3308,12 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
         // see if there is an eligible row
         if (!firstUnStyledRow || !rowFrame->HasStyleHeight()) {
           // The amount of additional space each row gets is proportional to its height
-          float percent = rowRect.height / ((float)divisor);
+          float percent;
+          if (divisor != 0) {
+            percent = float(rowRect.height) / float(divisor);
+          } else {
+            percent = 1.0f / float(rowCount);
+          }
           // give rows their percentage, except for the last row which gets the remainder
           nscoord amountForRow = (rowFrame == lastElligibleRow) 
                                  ? aAmount - amountUsed : NSToCoordRound(((float)(pctBasis)) * percent);
@@ -3477,7 +3485,7 @@ nsTableFrame::IsAutoWidth(PRBool* aIsPctWidth)
     // seems silly.
     *aIsPctWidth = width.GetUnit() == eStyleUnit_Percent &&
                    width.GetPercentValue() > 0.0f;
-    // Should this handle -moz-fill and -moz-shrink-wrap?
+    // Should this handle -moz-available and -moz-fit-content?
   }
   return width.GetUnit() == eStyleUnit_Auto;
 }
@@ -3526,13 +3534,13 @@ nsTableFrame::IsAutoLayout()
   if (GetStyleTable()->mLayoutStrategy == NS_STYLE_TABLE_LAYOUT_AUTO)
     return PR_TRUE;
   // a fixed-layout inline-table must have a width
-  // and tables with 'width: -moz-intrinsic' must be auto-layout
+  // and tables with 'width: -moz-max-content' must be auto-layout
   // (at least as long as FixedTableLayoutStrategy::GetPrefWidth returns
   // nscoord_MAX)
   const nsStyleCoord &width = GetStylePosition()->mWidth;
   return (width.GetUnit() == eStyleUnit_Auto) ||
          (width.GetUnit() == eStyleUnit_Enumerated &&
-          width.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC);
+          width.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT);
 }
 
 #ifdef DEBUG

@@ -59,7 +59,7 @@ function startTextureLoad() {
 
 function doload() {
     var cvs = document.getElementById('canvas');
-    gl = cvs.getContext('gles11');
+    gl = cvs.getContext('moz-gles11');
 
     gl.clearColor(.2,.2,.4,1);
     gl.clear(gl.COLOR_BUFFER_BIT);

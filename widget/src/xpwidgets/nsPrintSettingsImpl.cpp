@@ -82,6 +82,7 @@ nsPrintSettings::nsPrintSettings() :
   /* member initializers and constructor code */
   nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
   mMargin.SizeTo(halfInch, halfInch, halfInch, halfInch);
+  mEdge.SizeTo(0, 0, 0, 0);
 
   mPrintOptions = kPrintOddPages | kPrintEvenPages;
 
@@ -441,6 +442,58 @@ NS_IMETHODIMP nsPrintSettings::GetMarginRight(double *aMarginRight)
 NS_IMETHODIMP nsPrintSettings::SetMarginRight(double aMarginRight)
 {
   mMargin.right = NS_INCHES_TO_TWIPS(float(aMarginRight));
+  return NS_OK;
+}
+
+/* attribute double edgeTop; */
+NS_IMETHODIMP nsPrintSettings::GetEdgeTop(double *aEdgeTop)
+{
+  NS_ENSURE_ARG_POINTER(aEdgeTop);
+  *aEdgeTop = NS_TWIPS_TO_INCHES(mEdge.top);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetEdgeTop(double aEdgeTop)
+{
+  mEdge.top = NS_INCHES_TO_TWIPS(float(aEdgeTop));
+  return NS_OK;
+}
+
+/* attribute double edgeLeft; */
+NS_IMETHODIMP nsPrintSettings::GetEdgeLeft(double *aEdgeLeft)
+{
+  NS_ENSURE_ARG_POINTER(aEdgeLeft);
+  *aEdgeLeft = NS_TWIPS_TO_INCHES(mEdge.left);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetEdgeLeft(double aEdgeLeft)
+{
+  mEdge.left = NS_INCHES_TO_TWIPS(float(aEdgeLeft));
+  return NS_OK;
+}
+
+/* attribute double edgeBottom; */
+NS_IMETHODIMP nsPrintSettings::GetEdgeBottom(double *aEdgeBottom)
+{
+  NS_ENSURE_ARG_POINTER(aEdgeBottom);
+  *aEdgeBottom = NS_TWIPS_TO_INCHES(mEdge.bottom);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetEdgeBottom(double aEdgeBottom)
+{
+  mEdge.bottom = NS_INCHES_TO_TWIPS(float(aEdgeBottom));
+  return NS_OK;
+}
+
+/* attribute double edgeRight; */
+NS_IMETHODIMP nsPrintSettings::GetEdgeRight(double *aEdgeRight)
+{
+  NS_ENSURE_ARG_POINTER(aEdgeRight);
+  *aEdgeRight = NS_TWIPS_TO_INCHES(mEdge.right);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintSettings::SetEdgeRight(double aEdgeRight)
+{
+  mEdge.right = NS_INCHES_TO_TWIPS(float(aEdgeRight));
   return NS_OK;
 }
 
@@ -894,6 +947,13 @@ nsPrintSettings::SetMarginInTwips(nsMargin& aMargin)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsPrintSettings::SetEdgeInTwips(nsMargin& aEdge)
+{
+  mEdge = aEdge;
+  return NS_OK;
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsPrintOptionsImpl.h
  *	@update 6/21/00 dwc
@@ -902,6 +962,13 @@ NS_IMETHODIMP
 nsPrintSettings::GetMarginInTwips(nsMargin& aMargin)
 {
   aMargin = mMargin;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsPrintSettings::GetEdgeInTwips(nsMargin& aEdge)
+{
+  aEdge = mEdge;
   return NS_OK;
 }
 
@@ -968,6 +1035,7 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs)
   mStartPageNum        = rhs.mStartPageNum;
   mEndPageNum          = rhs.mEndPageNum;
   mMargin              = rhs.mMargin;
+  mEdge                = rhs.mEdge;
   mScaling             = rhs.mScaling;
   mPrintBGColors       = rhs.mPrintBGColors;
   mPrintBGImages       = rhs.mPrintBGImages;

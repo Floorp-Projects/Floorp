@@ -359,17 +359,20 @@ BrowserGlue.prototype = {
         prefBranch.setBoolPref("browser.places.importBookmarksHTML", false);
       }
 
-      // backup pre-places bookmarks.html
-      // XXXtodo remove this before betas, after import/export is solid
-      var profDir = dirService.get("ProfD", Ci.nsILocalFile);
-      var bookmarksBackup = profDir.clone();
-      bookmarksBackup.append("bookmarks.preplaces.html");
-      if (!bookmarksBackup.exists()) {
-        // save old bookmarks.html file as bookmarks.preplaces.html
-        try {
-          bookmarksFile.copyTo(profDir, "bookmarks.preplaces.html");
-        } catch(ex) {
-          dump("nsBrowserGlue::_initPlaces(): copy of bookmarks.html to bookmarks.preplaces.html failed: " + ex + "\n");
+      // only back up pre-places bookmarks.html if we plan on overwriting it
+      if (prefBranch.getBoolPref("browser.bookmarks.overwrite")) {
+        // backup pre-places bookmarks.html
+        // XXXtodo remove this before betas, after import/export is solid
+        var profDir = dirService.get("ProfD", Ci.nsILocalFile);
+        var bookmarksBackup = profDir.clone();
+        bookmarksBackup.append("bookmarks.preplaces.html");
+        if (!bookmarksBackup.exists()) {
+          // save old bookmarks.html file as bookmarks.preplaces.html
+          try {
+            bookmarksFile.copyTo(profDir, "bookmarks.preplaces.html");
+          } catch(ex) {
+            dump("nsBrowserGlue::_initPlaces(): copy of bookmarks.html to bookmarks.preplaces.html failed: " + ex + "\n");
+          }
         }
       }
     }

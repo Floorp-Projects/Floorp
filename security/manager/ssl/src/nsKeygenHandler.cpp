@@ -70,14 +70,6 @@ extern "C" {
 #define CKM_DH_PKCS_KEY_PAIR_GEN      0x00000020
 #define CKM_DSA_KEY_PAIR_GEN          0x00000010
 
-//All possible key size choices.
-static SECKeySizeChoiceInfo SECKeySizeChoiceList[] = {
-    { nsnull, 2048 },
-    { nsnull, 1024 },
-    { nsnull, 0 }, 
-};
-
-
 DERTemplate CERTSubjectPublicKeyInfoTemplate[] = {
     { DER_SEQUENCE,
           0, nsnull, sizeof(CERTSubjectPublicKeyInfo) },
@@ -338,25 +330,18 @@ nsresult
 nsKeygenFormProcessor::Init()
 {
   nsresult rv;
-  nsAutoString str;
 
-  if (SECKeySizeChoiceList[0].name != NULL)
-    return NS_OK;
-
-  // Get the key strings //
   nsCOMPtr<nsINSSComponent> nssComponent;
   nssComponent = do_GetService(kNSSComponentCID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
-  // XXXbz this leaks the strings through shutdown.  There's got to be
-  // a better way to do this!  Of course that would involve having SOME
-  // shutdown code somewhere here.
-  nssComponent->GetPIPNSSBundleString("HighGrade", str);
-  SECKeySizeChoiceList[0].name = ToNewUnicode(str);
+  // Init possible key size choices.
+  nssComponent->GetPIPNSSBundleString("HighGrade", mSECKeySizeChoiceList[0].name);
+  mSECKeySizeChoiceList[0].size = 2048;
 
-  nssComponent->GetPIPNSSBundleString("MediumGrade", str);
-  SECKeySizeChoiceList[1].name = ToNewUnicode(str);
+  nssComponent->GetPIPNSSBundleString("MediumGrade", mSECKeySizeChoiceList[1].name);
+  mSECKeySizeChoiceList[1].size = 1024;
 
   return NS_OK;
 }
@@ -542,18 +527,16 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     SECItem signedItem;
     CERTPublicKeyAndChallenge pkac;
     pkac.challenge.data = nsnull;
-    SECKeySizeChoiceInfo *choice = SECKeySizeChoiceList;
     nsIGeneratingKeypairInfoDialogs * dialogs;
     nsKeygenThread *KeygenRunnable = 0;
     nsCOMPtr<nsIKeygenThread> runnable;
 
     // Get the key size //
-    while (choice->name) {
-        if (aValue.Equals(choice->name)) {
-            keysize = choice->size;
+    for (size_t i = 0; i < number_of_key_size_choices; ++i) {
+        if (aValue.Equals(mSECKeySizeChoiceList[i].name)) {
+            keysize = mSECKeySizeChoiceList[i].size;
             break;
         }
-        choice++;
     }
     if (!keysize) {
         goto loser;
@@ -586,7 +569,7 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
             if (end != nsnull)
                 *end = '\0';
             primeBits = pqg_prime_bits(str);
-            if (choice->size == primeBits)
+            if (keysize == primeBits)
                 goto found_match;
             str = end + 1;
         } while (end != nsnull);
@@ -865,8 +848,9 @@ NS_METHOD nsKeygenFormProcessor::ProvideContent(const nsAString& aFormType,
 { 
   if (Compare(aFormType, NS_LITERAL_STRING("SELECT"), 
     nsCaseInsensitiveStringComparator()) == 0) {
-    for (SECKeySizeChoiceInfo* choice = SECKeySizeChoiceList; choice && choice->name; ++choice) {
-      aContent.AppendString(nsDependentString(choice->name));
+
+    for (size_t i = 0; i < number_of_key_size_choices; ++i) {
+      aContent.AppendString(mSECKeySizeChoiceList[i].name);
     }
     aAttribute.AssignLiteral("-mozilla-keygen");
   }

@@ -105,7 +105,7 @@ function animStep() {
 
 function doload() {
     var cvs = document.getElementById('canvas');
-    gl = cvs.getContext('gles11');
+    gl = cvs.getContext('moz-gles11');
 
     // (optionally) set up lighting
     if (0) {

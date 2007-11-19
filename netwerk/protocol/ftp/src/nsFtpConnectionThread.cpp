@@ -1044,6 +1044,20 @@ nsFtpState::R_mdtm() {
 nsresult 
 nsFtpState::SetContentType()
 {
+    // FTP directory URLs don't always end in a slash.  Make sure they do.
+    // This check needs to be here rather than a more obvious place
+    // (e.g. LIST command processing) so that it ensures the terminating
+    // slash is appended for the new request case, as well as the case
+    // where the URL is being loaded from the cache.
+
+    if (!mPath.IsEmpty() && mPath.Last() != '/') {
+        nsCOMPtr<nsIURL> url = (do_QueryInterface(mChannel->URI()));
+        nsCAutoString filePath;
+        if(NS_SUCCEEDED(url->GetFilePath(filePath))) {
+            filePath.Append('/');
+            url->SetFilePath(filePath);
+        }
+    }
     return mChannel->SetContentType(
         NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT));
 }

@@ -1,14 +1,7 @@
 <!ENTITY window.width                     "400">
 <!ENTITY window.height                    "300"> 
 
-<!ENTITY done.label                       "Done">
-<!ENTITY canceled.label                   "Canceled">
-
 <!ENTITY starting.label                   "Starting...">
-<!ENTITY failed.label                     "Failed">
-
-<!-- 'Parental Controls' label should be capitalized -->
-<!ENTITY blocked.label                    "Blocked by Parental Controls">
 <!ENTITY scanning.label                   "Scanning for viruses...">
 
 <!ENTITY downloads.title                  "Downloads">
@@ -31,8 +24,8 @@
 <!ENTITY cmd.retry.accesskey              "R">
 <!ENTITY cmd.copyLocation.label           "Copy Source Location">
 <!ENTITY cmd.copyLocation.accesskey       "L">
-<!ENTITY cmd.remove.label                 "Remove">
-<!ENTITY cmd.remove.accesskey             "e">
+<!ENTITY cmd.removeFromList.label         "Remove From List">
+<!ENTITY cmd.removeFromList.accesskey     "e">
 <!ENTITY cmd.info.label                   "Information">
 <!ENTITY cmd.info.accesskey               "i">
 <!ENTITY cmd.info.commandKey              "i">

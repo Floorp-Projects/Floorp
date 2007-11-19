@@ -93,6 +93,8 @@ class nsXFormsInputAccessible : public nsXFormsEditableAccessible
 public:
   nsXFormsInputAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
 
+  NS_DECL_ISUPPORTS_INHERITED
+
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetNumActions(PRUint8 *aCount);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);

@@ -192,11 +192,9 @@ struct JSRuntime {
      */
     JSPackedBool        gcPoke;
     JSPackedBool        gcRunning;
-#ifdef JS_GC_ZEAL
-    uint8               gcZeal;
-    uint8               gcPadding;
-#else
     uint16              gcPadding;
+#ifdef JS_GC_ZEAL
+    jsrefcount          gcZeal;
 #endif
 
     JSGCCallback        gcCallback;
@@ -511,6 +509,7 @@ typedef struct JSLocalRootStack {
  * JSTVU_SPROP          u.sprop points to the property tree node to mark.
  * JSTVU_WEAK_ROOTS     u.weakRoots points to saved weak roots.
  * JSTVU_PARSE_CONTEXT  u.parseContext roots things generated during parsing.
+ * JSTVU_SCRIPT         u.script roots a pointer to JSScript.
  *   >= 0               u.array points to a stack-allocated vector of jsvals.
  */
 #define JSTVU_SINGLE        (-1)
@@ -518,6 +517,7 @@ typedef struct JSLocalRootStack {
 #define JSTVU_SPROP         (-3)
 #define JSTVU_WEAK_ROOTS    (-4)
 #define JSTVU_PARSE_CONTEXT (-5)
+#define JSTVU_SCRIPT        (-6)
 
 /*
  * To root a single GC-thing pointer, which need not be tagged and stored as a
@@ -625,6 +625,13 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(JSObject *));
     JS_BEGIN_MACRO                                                            \
         (tvr)->count = JSTVU_PARSE_CONTEXT;                                   \
         (tvr)->u.parseContext = (pc);                                         \
+        JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
+    JS_END_MACRO
+
+#define JS_PUSH_TEMP_ROOT_SCRIPT(cx,script_,tvr)                              \
+    JS_BEGIN_MACRO                                                            \
+        (tvr)->count = JSTVU_SCRIPT;                                          \
+        (tvr)->u.script = (script_);                                          \
         JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
     JS_END_MACRO
 
@@ -742,6 +749,8 @@ struct JSContext {
 #ifdef JS_THREADSAFE
     JSThread            *thread;
     jsrefcount          requestDepth;
+    /* Same as requestDepth but ignoring JS_SuspendRequest/JS_ResumeRequest */
+    jsrefcount          outstandingRequests;
     JSScope             *scopeToShare;      /* weak reference, see jslock.c */
     JSScope             *lockedSealedScope; /* weak ref, for low-cost sealed
                                                scope locking */
@@ -965,6 +974,13 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *report);
 
 extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);
+
+/*
+ * Report an attempt to access the property of a null or undefined value (v).
+ */
+extern JSBool
+js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
+                           JSString *fallback);
 
 /*
  * Report error using js_DecompileValueGenerator(cx, spindex, v, fallback) as

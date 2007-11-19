@@ -2915,10 +2915,11 @@ nsGlobalWindow::GetInnerWidth(PRInt32* aInnerWidth)
 
   nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  *aInnerWidth = nsPresContext::AppUnitsToIntCSSPixels(
-                                  presContext->DevPixelsToAppUnits(width));
+  if (presContext) {
+    *aInnerWidth = nsPresContext::
+      AppUnitsToIntCSSPixels(presContext->DevPixelsToAppUnits(width));
+  }
 
   return NS_OK;
 }
@@ -2951,18 +2952,20 @@ nsGlobalWindow::SetInnerWidth(PRInt32 aInnerWidth)
 
   nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  PRInt32 width;
-  width = presContext->AppUnitsToDevPixels(
-                         nsPresContext::CSSPixelsToAppUnits(aInnerWidth));
+  if (presContext) {
+    PRInt32 width;
+    width = presContext->AppUnitsToDevPixels(
+                           nsPresContext::CSSPixelsToAppUnits(aInnerWidth));
 
-  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  PRInt32 notused, height = 0;
-  docShellAsWin->GetSize(&notused, &height);
+    nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
+    PRInt32 notused, height = 0;
+    docShellAsWin->GetSize(&notused, &height);
 
-  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, width, height),
-                    NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, width, height),
+                      NS_ERROR_FAILURE);
+  }
+
   return NS_OK;
 }
 
@@ -2985,10 +2988,11 @@ nsGlobalWindow::GetInnerHeight(PRInt32* aInnerHeight)
 
   nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  *aInnerHeight = nsPresContext::AppUnitsToIntCSSPixels(
-                                   presContext->DevPixelsToAppUnits(height));
+  if (presContext) {
+    *aInnerHeight = nsPresContext::
+      AppUnitsToIntCSSPixels(presContext->DevPixelsToAppUnits(height));
+  }
 
   return NS_OK;
 }
@@ -3021,18 +3025,20 @@ nsGlobalWindow::SetInnerHeight(PRInt32 aInnerHeight)
 
   nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  PRInt32 height;
-  height = presContext->AppUnitsToDevPixels(
-                          nsPresContext::CSSPixelsToAppUnits(aInnerHeight));
+  if (presContext) {
+    PRInt32 height;
+    height = presContext->AppUnitsToDevPixels(
+                            nsPresContext::CSSPixelsToAppUnits(aInnerHeight));
 
-  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  PRInt32 width = 0, notused;
-  docShellAsWin->GetSize(&width, &notused);
-  NS_ENSURE_SUCCESS(treeOwner->
-                    SizeShellTo(docShellAsItem, width, height),
-                    NS_ERROR_FAILURE);
+    nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
+    PRInt32 width = 0, notused;
+    docShellAsWin->GetSize(&width, &notused);
+    NS_ENSURE_SUCCESS(treeOwner->
+                      SizeShellTo(docShellAsItem, width, height),
+                      NS_ERROR_FAILURE);
+  }
+
   return NS_OK;
 }
 
@@ -5252,10 +5258,10 @@ nsGlobalWindow::IsInModalState()
                                 (top.get()))->mModalStateDepth != 0;
 }
 
-#ifdef OJI
 void
 nsGlobalWindow::InitJavaProperties()
 {
+#ifdef OJI
   nsIScriptContext *scx = GetContextInternal();
 
   if (mDidInitJavaProperties || IsOuterWindow() || !scx || !mJSObject) {
@@ -5325,8 +5331,8 @@ nsGlobalWindow::InitJavaProperties()
 
     manager->InitLiveConnectClasses(cx, mJSObject);
   }
-}
 #endif
+}
 
 NS_IMETHODIMP
 nsGlobalWindow::GetFrameElement(nsIDOMElement** aFrameElement)

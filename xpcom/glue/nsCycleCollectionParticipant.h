@@ -89,18 +89,26 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionISupports,
 
 class nsCycleCollectionParticipant;
 
+enum CCNodeType { RefCounted, GCMarked, GCUnmarked };
+
 class NS_NO_VTABLE nsCycleCollectionTraversalCallback
 {
 public:
-    // You must call DescribeNode() with an accurate refcount,
-    // otherwise cycle collection will fail, and probably crash.
+    // If type is RefCounted you must call DescribeNode() with an accurate
+    // refcount, otherwise cycle collection will fail, and probably crash.
+    // If type is not refcounted then the refcount will be ignored.
 #ifdef DEBUG_CC
-    NS_IMETHOD_(void) DescribeNode(nsrefcnt refcount,
+    NS_IMETHOD_(void) DescribeNode(CCNodeType type,
+                                   nsrefcnt refcount,
                                    size_t objsz,
                                    const char *objname) = 0;
 #else
-    NS_IMETHOD_(void) DescribeNode(nsrefcnt refcount) = 0;
+    NS_IMETHOD_(void) DescribeNode(CCNodeType type,
+                                   nsrefcnt refcount) = 0;
 #endif
+    NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports *root) = 0;
+    NS_IMETHOD_(void) NoteRoot(PRUint32 langID, void *root,
+                               nsCycleCollectionParticipant* helper) = 0;
     NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child) = 0;
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) = 0;
     NS_IMETHOD_(void) NoteNativeChild(void *child,
@@ -285,10 +293,10 @@ public:
 
 #ifdef DEBUG_CC
 #define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)                              \
-    cb.DescribeNode(tmp->mRefCnt.get(), sizeof(_class), #_class);
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get(), sizeof(_class), #_class);
 #else
 #define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)                              \
-    cb.DescribeNode(tmp->mRefCnt.get());
+    cb.DescribeNode(RefCounted, tmp->mRefCnt.get());
 #endif
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                        \

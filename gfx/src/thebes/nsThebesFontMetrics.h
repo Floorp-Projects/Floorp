@@ -85,7 +85,6 @@ public:
 
     virtual nsresult GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
                               nsThebesRenderingContext *aContext);
-    // aCachedOffset will be updated with a new offset.
     virtual nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
                               nscoord& aWidth, PRInt32 *aFontID,
                               nsThebesRenderingContext *aContext);
@@ -119,7 +118,6 @@ public:
                                 nscoord aX, nscoord aY,
                                 const nscoord* aSpacing,
                                 nsThebesRenderingContext *aContext);
-    // aCachedOffset will be updated with a new offset.
     virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 PRInt32 aFontID,
@@ -128,16 +126,14 @@ public:
 
 #ifdef MOZ_MATHML
     // These two functions get the bounding metrics for this handle,
-    // updating the aBoundingMetrics in Points.  This means that the
-    // caller will have to update them to twips before passing it
-    // back.
+    // updating the aBoundingMetrics in app units.
     virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                        nsThebesRenderingContext *aContext,
                                         nsBoundingMetrics &aBoundingMetrics);
-    // aCachedOffset will be updated with a new offset.
     virtual nsresult GetBoundingMetrics(const PRUnichar *aString,
                                         PRUint32 aLength,
-                                        nsBoundingMetrics &aBoundingMetrics,
-                                        PRInt32 *aFontID);
+                                        nsThebesRenderingContext *aContext,
+                                        nsBoundingMetrics &aBoundingMetrics);
 #endif /* MOZ_MATHML */
 
     // Set the direction of the text rendering
@@ -158,21 +154,21 @@ protected:
     class AutoTextRun {
     public:
         AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
-                    const char* aString, PRInt32 aLength, PRBool aEnableSpacing) {
+                    const char* aString, PRInt32 aLength) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 reinterpret_cast<const PRUint8*>(aString), aLength,
                 aMetrics->mFontGroup,
                 static_cast<gfxContext*>(aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
                 aMetrics->mP2A,
-                ComputeFlags(aMetrics, aEnableSpacing));
+                ComputeFlags(aMetrics));
         }
         AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
-                    const PRUnichar* aString, PRInt32 aLength, PRBool aEnableSpacing) {
+                    const PRUnichar* aString, PRInt32 aLength) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 aString, aLength, aMetrics->mFontGroup,
                 static_cast<gfxContext*>(aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
                 aMetrics->mP2A,
-                ComputeFlags(aMetrics, aEnableSpacing));
+                ComputeFlags(aMetrics));
         }
         gfxTextRun* operator->() { return mTextRun.get(); }
         gfxTextRun* get() { return mTextRun.get(); }
@@ -180,16 +176,10 @@ protected:
     private:
         gfxTextRunCache::AutoTextRun mTextRun;
         
-        static PRUint32 ComputeFlags(nsThebesFontMetrics* aMetrics,
-                                     PRBool aEnableSpacing) {
+        static PRUint32 ComputeFlags(nsThebesFontMetrics* aMetrics) {
             PRUint32 flags = 0;
             if (aMetrics->GetRightToLeftTextRunMode()) {
                 flags |= gfxTextRunFactory::TEXT_IS_RTL;
-            }
-            if (aEnableSpacing) {
-                flags |= gfxTextRunFactory::TEXT_ENABLE_SPACING |
-                         gfxTextRunFactory::TEXT_ABSOLUTE_SPACING |
-                         gfxTextRunFactory::TEXT_ENABLE_NEGATIVE_SPACING;
             }
             return flags;
         }

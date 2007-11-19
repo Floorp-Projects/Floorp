@@ -377,8 +377,8 @@
             </deck>
           </hbox>
           <vbox id="searchModifiers" hidden="true">
-            <toolbar id="organizerScopeBar" class="chromeclass-toolbar">
-              <toolbarbutton id="scopeBarTitle" label="&search.label;"/>
+            <toolbar id="organizerScopeBar" class="chromeclass-toolbar" align="center">
+              <label id="scopeBarTitle" value="&search.label;"/>
               <toolbarbutton id="scopeBarFolder" type="radio" group="scopeBar" 
                              oncommand="PlacesQueryBuilder.onScopeSelected(this);"
                              label="&search.scopeFolder.label;"/>

@@ -5,6 +5,9 @@
 # verify the tests work
 include reftest-sanity/reftest.list
 
+#images
+include ../../modules/libpr0n/test/reftest/reftest.list
+
 # printing
 include printing/reftest.list
 include pagination/reftest.list
@@ -39,8 +42,14 @@ include counters/reftest.list
 # first-letter/
 include first-letter/reftest.list
 
+# first-line/
+include first-line/reftest.list
+
 # svg/
 include svg/reftest.list
+
+# text-decoration/
+include text-decoration/reftest.list
 
 # text-indent/
 include text-indent/reftest.list

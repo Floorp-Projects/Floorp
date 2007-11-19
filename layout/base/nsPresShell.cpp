@@ -2828,8 +2828,12 @@ nsresult
 PresShell::CompleteMoveInner(PRBool aForward, PRBool aExtend, PRBool aScrollIntoView)
 {
   nsIContent* root = mSelection->GetAncestorLimiter();
-  if (root) {
-    // make the caret be either at the very beginning (0) or the very end
+  nsIDocument* doc;
+  if (root && (doc = root->GetOwnerDoc()) && doc->GetRootContent() != root) {
+    // Make the caret be either at the very beginning (0) or the very end of
+    // root. Only do this when not moving to the beginning or end of the
+    // document (root is null or root is the documentElement), that's handled
+    // below by moving to beginning or end of the scrollable view.
     nsIContent* node = root;
     PRInt32 offset = 0;
     nsFrameSelection::HINT hint = nsFrameSelection::HINTLEFT;
@@ -4625,8 +4629,9 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   mPresContext->EventStateManager()->ContentRemoved(aChild);
 
   WillCauseReflow();
+  PRBool didReconstruct;
   mFrameConstructor->ContentRemoved(aContainer, aChild,
-                                    aIndexInContainer, PR_FALSE);
+                                    aIndexInContainer, &didReconstruct);
 
   VERIFY_STYLE_TREE;
   DidCauseReflow();
@@ -4798,6 +4803,12 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
 {
   NS_ENSURE_TRUE(!aUntrusted, NS_ERROR_NOT_IMPLEMENTED);
 
+  gfxRect r(0, 0,
+            nsPresContext::AppUnitsToFloatCSSPixels(aRect.width),
+            nsPresContext::AppUnitsToFloatCSSPixels(aRect.height));
+  aThebesContext->Save();
+  aThebesContext->Clip(r);
+
   aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
                             gfxASurface::CONTENT_COLOR :
                             gfxASurface::CONTENT_COLOR_ALPHA);
@@ -4838,10 +4849,13 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
     if (NS_SUCCEEDED(rv)) {
       // Ensure that r.x,r.y gets drawn at (0,0)
       aThebesContext->Save();
-      aThebesContext->Translate(gfxPoint(-mPresContext->AppUnitsToGfxUnits(rect.x),
-                                         -mPresContext->AppUnitsToGfxUnits(rect.y)));
+      aThebesContext->Translate(gfxPoint(-nsPresContext::AppUnitsToFloatCSSPixels(rect.x),
+                                         -nsPresContext::AppUnitsToFloatCSSPixels(rect.y)));
 
       nsIDeviceContext* devCtx = mPresContext->DeviceContext();
+      gfxFloat scale = gfxFloat(devCtx->AppUnitsPerDevPixel())/nsPresContext::AppUnitsPerCSSPixel();
+      aThebesContext->Scale(scale, scale);
+      
       nsCOMPtr<nsIRenderingContext> rc;
       devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
       rc->Init(devCtx, aThebesContext);
@@ -4859,6 +4873,8 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
   aThebesContext->Restore();
   aThebesContext->PopGroupToSource();
   aThebesContext->Paint();
+
+  aThebesContext->Restore();
 
   return NS_OK;
 }

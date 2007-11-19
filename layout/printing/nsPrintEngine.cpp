@@ -139,6 +139,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIFrameDebug.h"
@@ -474,6 +475,12 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
   if (aIsPrintPreview) {
     SetIsCreatingPrintPreview(PR_TRUE);
     SetIsPrintPreview(PR_TRUE);
+    nsCOMPtr<nsIMarkupDocumentViewer> viewer =
+      do_QueryInterface(mDocViewerPrint);
+    if (viewer) {
+      viewer->SetTextZoom(1.0f);
+      viewer->SetFullZoom(1.0f);
+    }
   } else {
     SetIsPrinting(PR_TRUE);
   }
@@ -964,6 +971,21 @@ nsPrintEngine::ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify)
     if (printPromptService) {
       nsPIDOMWindow *domWin = mDocument->GetWindow(); 
       if (!domWin) return;
+
+      nsCOMPtr<nsIDocShellTreeItem> docShellItem =
+        do_QueryInterface(domWin->GetDocShell());
+      if (!docShellItem) return;
+      nsCOMPtr<nsIDocShellTreeOwner> owner;
+      docShellItem->GetTreeOwner(getter_AddRefs(owner));
+      nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_GetInterface(owner);
+      if (!browserChrome) return;
+      PRBool isModal = PR_TRUE;
+      browserChrome->IsWindowModal(&isModal);
+      if (isModal) {
+        // Showing a print progress dialog when printing a modal window
+        // isn't supported. See bug 301560.
+        return;
+      }
 
       nsCOMPtr<nsIWebProgressListener> printProgressListener;
 
@@ -3023,7 +3045,7 @@ nsPrintEngine::FinishPrintPreview()
     mPrt->OnEndPrinting();
     TurnScriptingOn(PR_TRUE);
 
-    return CleanupOnFailure(rv, PR_FALSE); // ignore return value here
+    return rv;
   }
 
   // At this point we are done preparing everything
@@ -3088,6 +3110,9 @@ nsPrintEngine::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
     }
   } else {
     rv = FinishPrintPreview();
+    if (NS_FAILED(rv)) {
+      CleanupOnFailure(rv, PR_FALSE);
+    }
     if (mPrtPreview) {
       mPrtPreview->OnEndPrinting();
     }

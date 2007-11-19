@@ -1049,10 +1049,12 @@ SUB_SHLOBJS = $(SUB_LOBJS)
 endif
 
 ifdef HAVE_DTRACE
+ifndef XP_MACOSX
 ifdef DTRACE_PROBE_OBJ
 ifndef DTRACE_LIB_DEPENDENT
 $(DTRACE_PROBE_OBJ): $(OBJS)
 	dtrace -G -C -32 -s $(MOZILLA_DTRACE_SRC) -o $(DTRACE_PROBE_OBJ) $(OBJS)
+endif
 endif
 endif
 endif
@@ -1090,7 +1092,9 @@ endif # NO_LD_ARCHIVE_FLAGS
 ifdef DTRACE_LIB_DEPENDENT
 	@rm -f $(PROBE_LOBJS)
 	@for lib in $(MOZILLA_PROBE_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
+ifndef XP_MACOSX
 	dtrace -G -C -32 -s $(MOZILLA_DTRACE_SRC) -o  $(DTRACE_PROBE_OBJ) $(PROBE_LOBJS)
+endif
 	@for lib in $(MOZILLA_PROBE_LIBS); do \
 		ofiles=`$(AR_LIST) $${lib}`; \
 		$(AR_DELETE) $${lib} $$ofiles; \

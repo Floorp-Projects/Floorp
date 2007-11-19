@@ -41,7 +41,6 @@
 #include "nsIWidget.h"
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
-#include "nsIMenuListener.h"
 #include "nsIToolkit.h"
 #include "nsIAppShell.h"
 #include "nsILocalFile.h"
@@ -119,7 +118,6 @@ public:
   NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
   NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
   NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
-  NS_IMETHOD              AddMenuListener(nsIMenuListener * aListener);
   NS_IMETHOD              SetBounds(const nsRect &aRect);
   NS_IMETHOD              GetBounds(nsRect &aRect);
   NS_IMETHOD              GetClientBounds(nsRect &aRect);
@@ -158,7 +156,6 @@ protected:
   nsIToolkit        *mToolkit;
   nsIMouseListener  *mMouseListener;
   nsIEventListener  *mEventListener;
-  nsIMenuListener   *mMenuListener;
   nscolor           mBackground;
   nscolor           mForeground;
   nsCursor          mCursor;

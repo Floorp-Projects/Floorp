@@ -877,6 +877,21 @@ protected:
   nsIForm* mForm;
 };
 
+// If this flag is set on an nsGenericHTMLFormElement, that means that we have
+// added ourselves to our mForm.  It's possible to have a non-null mForm, but
+// not have this flag set.  That happens when the form is set via the content
+// sink.
+#define ADDED_TO_FORM (1 << NODE_TYPE_SPECIFIC_BITS_OFFSET)
+
+// If this flag is set on an nsGenericHTMLFormElement, that means that its form
+// is in the process of being unbound from the tree, and this form element
+// hasn't re-found its form in nsGenericHTMLFormElement::UnbindFromTree yet.
+#define MAYBE_ORPHAN_FORM_ELEMENT (1 << (NODE_TYPE_SPECIFIC_BITS_OFFSET+1))
+
+// NOTE: I don't think it's possible to have the above two flags set at the
+// same time, so if it becomes an issue we can probably merge them into the
+// same bit.  --bz
+
 //----------------------------------------------------------------------
 
 /**

@@ -4651,10 +4651,8 @@ js_ValueToNonNullObject(JSContext *cx, jsval v)
 
     if (!js_ValueToObject(cx, v, &obj))
         return NULL;
-    if (!obj) {
-        js_ReportValueError(cx, JSMSG_NO_PROPERTIES,
-                            JSDVG_SEARCH_STACK, v, NULL);
-    }
+    if (!obj)
+        js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, v, NULL);
     return obj;
 }
 

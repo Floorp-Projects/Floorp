@@ -44,6 +44,11 @@ for (var i = 0; i < chunk1Urls.length; i++) {
   phishUnexpected[chunk1Urls[i]] = true;
 }
 
+// Check that the entries hit based on sub-parts
+phishExpected["baz.com/foo/bar"] = true;
+phishExpected["foo.bar.baz.com/foo"] = true;
+phishExpected["bar.baz.com/"] = true;
+
 var numExpecting;
 
 function testFailure(arg) {
@@ -57,7 +62,7 @@ function tablesCallback(tables)
   // there's a leading \n here because splitting left an empty string
   // after the trailing newline, which will sort first
   do_check_eq(parts.join("\n"),
-              "\ntesting-malware-simple;a:1\ntesting-phish-simple;a:2s:3");
+              "\ntesting-malware-simple;a:1\ntesting-phish-simple;a:2:s:3");
   do_test_finished();
 }
 

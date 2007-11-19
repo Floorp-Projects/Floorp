@@ -180,6 +180,12 @@ public:
    * should return PR_FALSE if this is not a text frame.
    */
   virtual PRBool HasTerminalNewline() const;
+
+  /**
+   * Returns true if this text frame is logically adjacent to the end of the
+   * line.
+   */
+  PRBool IsAtEndOfLine() const;
   
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);

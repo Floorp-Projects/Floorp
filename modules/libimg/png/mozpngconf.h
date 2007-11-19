@@ -42,9 +42,8 @@
 #ifndef MOZ_PNG_READ
 #define PNG_NO_READ_SUPPORTED
 #endif
-#if defined(XP_MACOSX) && !defined(PNG_NO_MMX_CODE)
-#define PNG_NO_MMX_CODE
-#endif
+#define PNG_NO_ASSEMBLER_CODE
+#define PNG_NO_WARN_UNINITIALIZED_ROW
 #define PNG_NO_READ_BACKGROUND
 #define PNG_NO_READ_DITHER
 #define PNG_NO_READ_INVERT
@@ -71,6 +70,7 @@
 #define PNG_NO_READ_OPT_PLTE
 #define PNG_NO_READ_STRIP_ALPHA
 #define PNG_NO_READ_oFFs
+#define PNG_NO_SEQUENTIAL_READ_SUPPORTED
 
 #ifndef MOZ_PNG_WRITE
 #define PNG_NO_WRITE_SUPPORTED
@@ -104,6 +104,7 @@
 #define PNG_NO_WRITE_USER_CHUNKS
 #define PNG_NO_WRITE_EMPTY_PLTE
 #define PNG_NO_WRITE_OPT_PLTE
+#define PNG_NO_WRITE_FILTER
 #define PNG_NO_WRITE_WEIGHTED_FILTER
 #define PNG_NO_WRITE_INTERLACING_SUPPORTED  /* effective libpng-1.3.0 */
 #endif
@@ -118,7 +119,6 @@
 #define PNG_NO_ZALLOC_ZERO
 #define PNG_NO_ERROR_NUMBERS
 #define PNG_NO_EASY_ACCESS
-#define PNG_NO_SEQUENTIAL_READ_SUPPORTED
 
 
 /* Mangle names of exported libpng functions so different libpng versions
@@ -474,4 +474,18 @@
 #define png_save_uint_16                MOZ_PNG_save_uint_16
 #define png_save_uint_32                MOZ_PNG_save_uint_32
 
+/* libpng-1.2.22 addition */
+#define png_err                         MOZ_PNG_err
+
+#ifndef PR_LOGGING
+  #define MOZ_PNG_warning(s1,s2) ""
+  #define MOZ_PNG_chunk_warn(s1,s2) ""
+  #if PNG_LIBPNG_VER > 10221
+    #define PNG_NO_WARNINGS
+    #define PNG_NO_ERROR_TEXT
+    #define MOZ_PNG_error(s1,s2) MOZ_PNG_err(s1)
+    #define MOZ_PNG_chunk_err(s1,s2) MOZ_PNG_err(s1)
+  #endif
 #endif
+
+#endif /* MOZPNGCONF_H */

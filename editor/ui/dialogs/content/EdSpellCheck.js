@@ -568,7 +568,7 @@ function SetReplaceEnable()
 function doDefault()
 {
   if (gDialog.ReplaceButton.getAttribute("default") == "true")
-    Replace();
+    Replace(gDialog.ReplaceWordInput.value);
   else if (gDialog.IgnoreButton.getAttribute("default") == "true")
     Ignore();
   else if (gDialog.CloseButton.getAttribute("default") == "true")
@@ -586,7 +586,7 @@ function ExitSpellChecker()
       var curLang = gSpellChecker.GetCurrentDictionary();
       gSpellChecker.UninitSpellChecker();
       if ("@mozilla.org/spellchecker;1" in Components.classes) {
-        var spellChecker = Components.classes["@mozilla.org/spellchecker/hunspell;1"]
+        var spellChecker = Components.classes["@mozilla.org/spellchecker/engine;1"]
                                      .getService(Components.interfaces.mozISpellCheckingEngine);
         spellChecker.dictionary = curLang;
       }

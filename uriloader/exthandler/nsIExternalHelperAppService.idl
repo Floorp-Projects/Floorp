@@ -101,7 +101,7 @@ interface nsPIExternalAppLauncher : nsISupports
  * Note that cancelling the load via the nsICancelable interface will release
  * the reference to the launcher dialog.
  */
-[scriptable, uuid(99a0882d-2ff9-4659-9952-9ac531ba5592)]
+[scriptable, uuid(cc75c21a-0a79-4f68-90e1-563253d0c555)]
 interface nsIHelperAppLauncher : nsICancelable
 {
   /**
@@ -153,6 +153,12 @@ interface nsIHelperAppLauncher : nsICancelable
    * The file we are saving to
    */
   readonly attribute nsIFile targetFile;
+
+  /**
+   * The executable-ness of the target file
+   */
+  readonly attribute boolean targetFileIsExecutable;
+
   /**
    * Time when the download started
    */

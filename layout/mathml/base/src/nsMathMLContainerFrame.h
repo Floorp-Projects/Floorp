@@ -333,6 +333,7 @@ public:
   SetInitialChildList(nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
+    NS_ASSERTION(!aListName, "unexpected frame list");
     nsresult rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected data
     nsMathMLContainerFrame::MapCommonAttributesIntoCSS(PresContext(), this);
@@ -341,7 +342,7 @@ public:
   }
 
   NS_IMETHOD
-  Reflow(nsPresContext*          aPresContext,
+  Reflow(nsPresContext*           aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus)
@@ -357,10 +358,12 @@ public:
   AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList)
   {
-    NS_ASSERTION(!aListName, "internal error");
+    NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
+                 "unexpected frame list");
     nsresult rv = nsBlockFrame::AppendFrames(aListName, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this,
-                                             NS_FRAME_HAS_DIRTY_CHILDREN);
+    if (NS_LIKELY(!aListName))
+      nsMathMLContainerFrame::ReLayoutChildren(this,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -369,10 +372,12 @@ public:
                nsIFrame*       aPrevFrame,
                nsIFrame*       aFrameList)
   {
-    NS_ASSERTION(!aListName, "internal error");
+    NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
+                 "unexpected frame list");
     nsresult rv = nsBlockFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this,
-                                             NS_FRAME_HAS_DIRTY_CHILDREN);
+    if (NS_LIKELY(!aListName))
+      nsMathMLContainerFrame::ReLayoutChildren(this,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -380,10 +385,12 @@ public:
   RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
-    NS_ASSERTION(!aListName, "internal error");
+    NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
+                 "unexpected frame list");
     nsresult rv = nsBlockFrame::RemoveFrame(aListName, aOldFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(this,
-                                             NS_FRAME_HAS_DIRTY_CHILDREN);
+    if (NS_LIKELY(!aListName))
+      nsMathMLContainerFrame::ReLayoutChildren(this,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -419,6 +426,7 @@ public:
   SetInitialChildList(nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
+    NS_ASSERTION(!aListName, "unexpected frame list");
     nsresult rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected data
     nsMathMLContainerFrame::MapCommonAttributesIntoCSS(PresContext(), this);
@@ -427,7 +435,7 @@ public:
   }
 
   NS_IMETHOD
-  Reflow(nsPresContext*          aPresContext,
+  Reflow(nsPresContext*           aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus)
@@ -443,10 +451,12 @@ public:
   AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList)
   {
-    NS_ASSERTION(!aListName, "internal error");
+    NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
+                 "unexpected frame list");
     nsresult rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this,
-                                             NS_FRAME_HAS_DIRTY_CHILDREN);
+    if (NS_LIKELY(!aListName))
+      nsMathMLContainerFrame::ReLayoutChildren(this,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -455,10 +465,12 @@ public:
                nsIFrame*       aPrevFrame,
                nsIFrame*       aFrameList)
   {
-    NS_ASSERTION(!aListName, "internal error");
+    NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
+                 "unexpected frame list");
     nsresult rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
-    nsMathMLContainerFrame::ReLayoutChildren(this,
-                                             NS_FRAME_HAS_DIRTY_CHILDREN);
+    if (NS_LIKELY(!aListName))
+      nsMathMLContainerFrame::ReLayoutChildren(this,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 
@@ -466,10 +478,12 @@ public:
   RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
-    NS_ASSERTION(!aListName, "internal error");
+    NS_ASSERTION(!aListName || nsGkAtoms::nextBidi == aListName,
+                 "unexpected frame list");
     nsresult rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
-    nsMathMLContainerFrame::ReLayoutChildren(this,
-                                             NS_FRAME_HAS_DIRTY_CHILDREN);
+    if (NS_LIKELY(!aListName))
+      nsMathMLContainerFrame::ReLayoutChildren(this,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
     return rv;
   }
 

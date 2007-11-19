@@ -108,7 +108,7 @@ public:
 
     virtual PRBool ValidateGL() { return PR_TRUE; }
 
-    inline void MakeContextCurrent();
+    void MakeContextCurrent();
     static void LostCurrentContext(void *closure);
 
     inline GLEWContext *glewGetContext() {
@@ -333,7 +333,7 @@ public:
     }
 
     void SetRetVal (PRInt32 *vp, PRUint32 len) {
-        nsAutoArrayPtr<jsval> jsvector = new jsval[len];
+        nsAutoArrayPtr<jsval> jsvector(new jsval[len]);
         for (PRUint32 i = 0; i < len; i++)
             jsvector[i] = INT_TO_JSVAL(vp[i]);
         JSObject *jsarr = JS_NewArrayObject(ctx, len, jsvector.get());
@@ -341,7 +341,7 @@ public:
     }
 
     void SetRetVal (float *fp, PRUint32 len) {
-        nsAutoArrayPtr<jsval> jsvector = new jsval[len];
+        nsAutoArrayPtr<jsval> jsvector(new jsval[len]);
 
         if (!JS_EnterLocalRootScope(ctx))
             return; // XXX ???

@@ -596,12 +596,12 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
     
     const PRUint32 rows = mOldLine - mCurLine;
     if (rows) {
-        nsIntRect r(0, LINE(mCurLine), mBIH.width, rows);
+        nsIntRect r(0, mBIH.height < 0 ? -mBIH.height - mOldLine : mCurLine,
+                    mBIH.width, rows);
 
         // Tell the image that it's data has been updated
-        nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
-        if (!img)
-            return PR_FALSE;
+        nsCOMPtr<nsIImage> img(do_GetInterface(mFrame, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
         img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
         mObserver->OnDataAvailable(nsnull, mFrame, &r);

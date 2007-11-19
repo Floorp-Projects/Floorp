@@ -40,20 +40,21 @@
 
 #include "nsISupports.h"
 #include "nsStringFwd.h"
+#include "nsEvent.h"
 
 class nsIMenuBar;
 class nsIMenu;
 class nsIMenuItem;
-class nsIMenuListener;
 class nsIChangeManager;
 class nsIContent;
 class nsIMenuCommandDispatcher;
+class nsIWidget;
 
 
-// 9188038F-D392-43BD-AEE7-730C3723643F
+// 9225136B-3F56-4CA3-92E0-623D5FB8356B
 #define NS_IMENU_IID \
-{ 0x9188038F, 0xD392, 0x43BD, \
-  { 0xAE, 0xE7, 0x73, 0x0C, 0x37, 0x23, 0x64, 0x3F } }
+{ 0x9225136B, 0x3F56, 0x4CA3, \
+  { 0x92, 0xE0, 0x62, 0x3D, 0x5F, 0xB8, 0x35, 0x6B } }
 
 /**
  * Menu widget
@@ -176,21 +177,9 @@ class nsIMenu : public nsISupports {
     *
     */
     NS_IMETHOD  SetNativeData(void* aData) = 0;
-    
-   /**
-    * Adds menu listener for dynamic construction
-    *
-    */
-    NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener) = 0;
 
    /**
-    * Removes menu listener for dynamic construction
-    *
-    */
-    NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
-
-   /**
-    * Get GetMenuContent
+    * Get menu content
     *
     */
     NS_IMETHOD GetMenuContent(nsIContent ** aMenuContent) = 0;
@@ -212,8 +201,39 @@ class nsIMenu : public nsISupports {
 
    /**
     * Sets an appropriate icon for the menu.
+    *
     */
     NS_IMETHOD SetupIcon() = 0;
+    
+   /**
+    * Menu has been selected
+    *
+    */
+    virtual nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent) = 0;
+    
+   /**
+    * Menu has been deselected
+    *
+    */
+    virtual void MenuDeselected(const nsMenuEvent & aMenuEvent) = 0;
+
+   /**
+    * Construct menu
+    *
+    */
+    virtual void MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, void * aMenuNode) = 0;
+
+   /**
+    * Destruct menu
+    *
+    */
+    virtual void MenuDestruct(const nsMenuEvent & aMenuEvent) = 0;
+    
+   /**
+    * Set rebuild
+    *
+    */
+    virtual void SetRebuild(PRBool aMenuEvent) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenu, NS_IMENU_IID)

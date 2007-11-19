@@ -56,6 +56,14 @@ REQUIRES	= xpcom \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
+ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))
+DEFINES		+= -DMOZ_PNG_WRITE
+endif
+
+ifneq (,$(filter png,$(MOZ_IMG_DECODERS)))
+DEFINES		+= -DMOZ_PNG_READ
+endif
+
 CPPSRCS		= nsPNGEncoder.cpp
 
 include $(topsrcdir)/config/rules.mk

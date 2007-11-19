@@ -126,6 +126,18 @@
       function initPage()
       {
         var err = getErrorCode();
+        
+        if (err == "nssBadCert") {
+          // Remove the "Try again" button for security exceptions, since it's
+          // almost certainly useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+        }
+        else {
+          // Remove the override block for non-certificate errors.  CSS-hiding
+          // isn't good enough here, because of bug 39098
+          var secOverride = document.getElementById("securityOverrideDiv");
+          secOverride.parentNode.removeChild(secOverride);
+        }
 
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
@@ -177,6 +189,12 @@
           faviconParent.appendChild(favicon);
         }
       }
+      
+      function showSecuritySection() {
+        // Swap link out, content in
+        document.getElementById('securityOverrideContent').style.display = '';
+        document.getElementById('securityOverrideLink').style.display = 'none';
+      }
     ]]></script>
   </head>
 
@@ -223,7 +241,7 @@
         <div id="ed_proxyConnectFailure">&proxyConnectFailure.longDesc;</div>
         <div id="ed_contentEncodingError">&contentEncodingError.longDesc;</div>
         <div id="ed_nssFailure2">&nssFailure2.longDesc;</div>
-        <div id="ed_nssBadCert">&nssBadCert.longDesc;</div>
+        <div id="ed_nssBadCert">&nssBadCert.longDesc2;</div>
         <div id="ed_malwareBlocked">&malwareBlocked.longDesc;</div>
       </div>
     </div>
@@ -247,6 +265,12 @@
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
         <div id="errorLongDesc" />
 
+        <!-- Override section - For ssl errors only.  Removed on init for other
+             error types.  -->
+        <div id="securityOverrideDiv">
+          <a id="securityOverrideLink" href="javascript:showSecuritySection();" >&securityOverride.linkText;</a>
+          <div id="securityOverrideContent" style="display: none;">&securityOverride.warningText;</div>
+        </div>
       </div>
 
       <!-- Retry Button -->

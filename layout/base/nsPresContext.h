@@ -377,13 +377,13 @@ public:
 
   NS_HIDDEN_(void) SetContainer(nsISupports* aContainer);
 
-  virtual NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerExternal();
-  NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerInternal();
+  virtual NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerExternal() const;
+  NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerInternal() const;
 #ifdef _IMPL_NS_LAYOUT
-  already_AddRefed<nsISupports> GetContainer()
+  already_AddRefed<nsISupports> GetContainer() const
   { return GetContainerInternal(); }
 #else
-  already_AddRefed<nsISupports> GetContainer()
+  already_AddRefed<nsISupports> GetContainer() const
   { return GetContainerExternal(); }
 #endif
 
@@ -727,10 +727,15 @@ public:
                               mType == eContext_PrintPreview); }
 
   // Is this presentation in a chrome docshell?
-  PRBool IsChrome();
+  PRBool IsChrome() const;
 
   // Public API for native theme code to get style internals.
   virtual PRBool HasAuthorSpecifiedBorderOrBackground(nsIFrame *aFrame) const;
+
+  // Is it OK to let the page specify colors and backgrounds?
+  PRBool UseDocumentColors() const {
+    return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome();
+  }
 
 protected:
   friend class nsRunnableMethod<nsPresContext>;

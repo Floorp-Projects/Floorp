@@ -57,10 +57,7 @@ toolbarpalette {
   min-height: 20px !important;
   color: #000000;
   border-bottom: 1px solid #a3a3a3;
-  background-color: rgb(235, 235, 235);
-  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
-  background-repeat: repeat-x;
-  background-position: top right;
+  background-color: #EBEBEB;
 }
 
 menubar {
@@ -142,11 +139,6 @@ toolbarpaletteitem[type="spacer"] {
 
 .toolbarpaletteitem-box[type="separator"][place="palette"] {
   width: 2px;
-  height: 50px;
-}
-
-.toolbarpaletteitem-box[type="splitter"][place="palette"] {
-  width: 8px;
   height: 50px;
 }
 

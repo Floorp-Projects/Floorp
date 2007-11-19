@@ -1992,16 +1992,25 @@ void nsXULWindow::SetContentScrollbarVisibility(PRBool aVisible)
 
 PRBool nsXULWindow::GetContentScrollbarVisibility()
 {
-  PRBool visible = PR_TRUE;
+  // This code already exists in dom/src/base/nsBarProp.cpp, but we
+  // can't safely get to that from here as this function is called
+  // while the DOM window is being set up, and we need the DOM window
+  // to get to that code.
+  nsCOMPtr<nsIScrollable> scroller(do_QueryInterface(mPrimaryContentShell));
 
-  nsCOMPtr<nsIDOMWindow> contentWin(do_GetInterface(mPrimaryContentShell));
-  if (contentWin) {
-    nsCOMPtr<nsIDOMBarProp> scrollbars;
-    contentWin->GetScrollbars(getter_AddRefs(scrollbars));
-    if (scrollbars)
-      scrollbars->GetVisible(&visible);
+  if (scroller) {
+    PRInt32 prefValue;
+    scroller->GetDefaultScrollbarPreferences(
+                  nsIScrollable::ScrollOrientation_Y, &prefValue);
+    if (prefValue == nsIScrollable::Scrollbar_Never) // try the other way
+      scroller->GetDefaultScrollbarPreferences(
+                  nsIScrollable::ScrollOrientation_X, &prefValue);
+
+    if (prefValue == nsIScrollable::Scrollbar_Never)
+      return PR_FALSE;
   }
-  return visible;
+
+  return PR_TRUE;
 }
 
 // during spinup, attributes that haven't been loaded yet can't be dirty

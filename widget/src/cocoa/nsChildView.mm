@@ -153,7 +153,7 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 - (void)processPendingRedraws;
 
-- (BOOL)maybeRerouteMouseEventToRollupWidget:(NSEvent *)anEvent;
+- (BOOL)ensureCorrectMouseEventTarget:(NSEvent *)anEvent;
 
 + (BOOL)mouseEventIsOverRollupWidget:(NSEvent *)anEvent;
 
@@ -804,66 +804,74 @@ NS_IMETHODIMP nsChildView::ConstrainPosition(PRBool aAllowSlop,
 // Move this component, aX and aY are in the parent widget coordinate system
 NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
 {
-  return MoveWithRepaintOption(aX, aY, PR_TRUE);
-}
+  if (!mView || (mBounds.x == aX && mBounds.y == aY))
+    return NS_OK;
 
+  mBounds.x = aX;
+  mBounds.y = aY;
 
-NS_IMETHODIMP nsChildView::MoveWithRepaintOption(PRInt32 aX, PRInt32 aY, PRBool aRepaint)
-{
-  if ((mBounds.x != aX) || (mBounds.y != aY)) {
-    // Invalidate the current location
-    if (mVisible && aRepaint)
-      [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
-        
-    // Set the bounds
-    mBounds.x = aX;
-    mBounds.y = aY;
-   
-    NSRect r;
-    GeckoRectToNSRect(mBounds, r);
-    [mView setFrame:r];
+  NSRect r;
+  GeckoRectToNSRect(mBounds, r);
+  [mView setFrame:r];
 
-    if (mVisible && aRepaint)
-      [mView setNeedsDisplay:YES];
+  if (mVisible)
+    [mView setNeedsDisplay:YES];
 
-    // Report the event
-    ReportMoveEvent();
-  }
+  ReportMoveEvent();
+
   return NS_OK;
 }
 
 
-// Resize this component
 NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  if ((mBounds.width != aWidth) || (mBounds.height != aHeight)) {
-    // Set the bounds
-    mBounds.width  = aWidth;
-    mBounds.height = aHeight;
+  if (!mView || (mBounds.width == aWidth && mBounds.height == aHeight))
+    return NS_OK;
 
-    if (mVisible && aRepaint)
-      [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
-    
-    NSRect r;
-    GeckoRectToNSRect(mBounds, r);
-    [mView setFrame:r];
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
 
-    if (mVisible && aRepaint)
-      [mView setNeedsDisplay:YES];
+  NSRect r;
+  GeckoRectToNSRect(mBounds, r);
+  [mView setFrame:r];
 
-    // Report the event
-    ReportSizeEvent();
-  }
- 
+  if (mVisible && aRepaint)
+    [mView setNeedsDisplay:YES];
+
+  ReportSizeEvent();
+
   return NS_OK;
 }
 
 
-// Resize this component
 NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  MoveWithRepaintOption(aX, aY, aRepaint);
-  Resize(aWidth, aHeight, aRepaint);
+  BOOL isMoving = (mBounds.x != aX || mBounds.y != aY);
+  BOOL isResizing = (mBounds.width != aWidth || mBounds.height != aHeight);
+  if (!mView || (!isMoving && !isResizing))
+    return NS_OK;
+
+  if (isMoving) {
+    mBounds.x = aX;
+    mBounds.y = aY;
+  }
+  if (isResizing) {
+    mBounds.width  = aWidth;
+    mBounds.height = aHeight;
+  }
+
+  NSRect r;
+  GeckoRectToNSRect(mBounds, r);
+  [mView setFrame:r];
+
+  if (mVisible && aRepaint)
+    [mView setNeedsDisplay:YES];
+
+  if (isMoving)
+    ReportMoveEvent();
+  if (isResizing)
+    ReportSizeEvent();
+
   return NS_OK;
 }
 
@@ -2311,44 +2319,46 @@ NSEvent* gLastDragEvent = nil;
 #endif
 
 
-// If gRollupWidget exists, mouse events (except for mouseDown events) that
-// happen over it should be rerouted to it if they've been sent elsewhere.
-// Returns 'true' if the event was rerouted, 'false' otherwise.  This is
-// needed when the user tries to navigate a context menu while keeping the
-// mouse-button down (left or right mouse button) -- the OS thinks this is a
-// dragging operation, so it sends events (mouseMoved and mouseUp) to the
+// If gRollupWidget exists, mouse events that happen over it should be rerouted
+// to it if they've been sent elsewhere. Returns NO if the event was rerouted,
+// YES otherwise. The return value indicates whether or not the event already had
+// the correct target.
+// This is needed when the user tries to navigate a context menu while keeping
+// the mouse-button down (left or right mouse button) -- the OS thinks this is
+// a dragging operation, so it sends events (mouseMoved and mouseUp) to the
 // window where the dragging operation started (the parent of the context
-// menu window).  It's also needed to work around a bizarre Apple bug -- if
-// (while a context menu is open) you move the mouse over another app's window
-// and then back over the context menu, mouseMoved events will be sent to the
-// window underneath the context menu.
-- (BOOL)maybeRerouteMouseEventToRollupWidget:(NSEvent *)anEvent
+// menu window).  It also works around a bizarre Apple bug - if (while a context
+// menu is open) you move the mouse over another app's window and then back over
+// the context menu, mouseMoved events will be sent to the window underneath the
+// context menu.
+- (BOOL)ensureCorrectMouseEventTarget:(NSEvent *)anEvent
 {
   if (!gRollupWidget)
-    return PR_FALSE;
+    return YES;
 
-  // Return PR_FALSE if we can't get ctxMenuWindow or if our window is already
-  // a context menu.
-  NSWindow *ctxMenuWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (!ctxMenuWindow || (mWindow == ctxMenuWindow))
-    return PR_FALSE;
+  // Return YES if we can't get a native window for the rollup widget or if our window
+  // is the popup window.
+  NSWindow *popupWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!popupWindow || (mWindow == popupWindow))
+    return YES;
 
+  // Don't bother retargeting if the event is not over the popup window.
   NSPoint windowEventLocation = [anEvent locationInWindow];
   NSPoint screenEventLocation = [mWindow convertBaseToScreen:windowEventLocation];
-  if (!NSPointInRect(screenEventLocation, [ctxMenuWindow frame]))
-    return PR_FALSE;
+  if (!NSPointInRect(screenEventLocation, [popupWindow frame]))
+    return YES;
 
   NSEventType type = [anEvent type];
-  NSPoint locationInCtxMenuWindow = [ctxMenuWindow convertScreenToBase:screenEventLocation];
+  NSPoint locationInPopupWindow = [popupWindow convertScreenToBase:screenEventLocation];
   NSEvent *newEvent = nil;
 
   // If anEvent is a mouseUp event, send an extra mouseDown event before
   // sending a mouseUp event -- this is needed to support selection by
   // dragging the mouse to a menu item and then releasing it.  We retain
-  // ctxMenuWindow in case it gets destroyed as a result of the extra
+  // popupWindow in case it gets destroyed as a result of the extra
   // mouseDown (and release it below).
   if ((type == NSLeftMouseUp) || (type == NSRightMouseUp)) {
-    [ctxMenuWindow retain];
+    [popupWindow retain];
     NSEventType extraEventType;
     switch (type) {
       case NSLeftMouseUp:
@@ -2362,32 +2372,32 @@ NSEvent* gLastDragEvent = nil;
         break;
     }
     newEvent = [NSEvent mouseEventWithType:extraEventType
-                                  location:locationInCtxMenuWindow
+                                  location:locationInPopupWindow
                              modifierFlags:[anEvent modifierFlags]
                                  timestamp:GetCurrentEventTime()
-                              windowNumber:[ctxMenuWindow windowNumber]
+                              windowNumber:[popupWindow windowNumber]
                                    context:nil
                                eventNumber:0
                                 clickCount:1
                                   pressure:0.0];
-    [ctxMenuWindow sendEvent:newEvent];
+    [popupWindow sendEvent:newEvent];
   }
 
   newEvent = [NSEvent mouseEventWithType:type
-                                location:locationInCtxMenuWindow
+                                location:locationInPopupWindow
                            modifierFlags:[anEvent modifierFlags]
                                timestamp:GetCurrentEventTime()
-                            windowNumber:[ctxMenuWindow windowNumber]
+                            windowNumber:[popupWindow windowNumber]
                                  context:nil
                              eventNumber:0
                               clickCount:1
                                 pressure:0.0];
-  [ctxMenuWindow sendEvent:newEvent];
+  [popupWindow sendEvent:newEvent];
 
   if ((type == NSLeftMouseUp) || (type == NSRightMouseUp))
-    [ctxMenuWindow release];
+    [popupWindow release];
 
-  return PR_TRUE;
+  return NO;
 }
 
 
@@ -2395,12 +2405,12 @@ NSEvent* gLastDragEvent = nil;
 {
   if (!gRollupWidget)
     return PR_FALSE;
-  NSWindow *ctxMenuWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (!ctxMenuWindow)
+  NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!popupWindow)
     return PR_FALSE;
   NSPoint windowEventLocation = [anEvent locationInWindow];
   NSPoint screenEventLocation = [[anEvent window] convertBaseToScreen:windowEventLocation];
-  return NSPointInRect(screenEventLocation, [ctxMenuWindow frame]);
+  return NSPointInRect(screenEventLocation, [popupWindow frame]);
 }
 
 
@@ -2413,14 +2423,14 @@ NSEvent* gLastDragEvent = nil;
 {
   if (!gRollupWidget)
     return;
-  NSWindow *ctxMenuWindow = (NSWindow*)
-    gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (!ctxMenuWindow || ![ctxMenuWindow isKindOfClass:[PopupWindow class]])
+  NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!popupWindow || ![popupWindow isKindOfClass:[PopupWindow class]])
     return;
+
   [[NSDistributedNotificationCenter defaultCenter]
     postNotificationName:@"com.apple.HIToolbox.beginMenuTrackingNotification"
                   object:@"org.mozilla.gecko.PopupWindow"];
-  [(PopupWindow*) ctxMenuWindow setIsContextMenu:YES];
+  [(PopupWindow*)popupWindow setIsContextMenu:YES];
 }
 
 
@@ -2472,15 +2482,18 @@ class nsNonNativeContextMenuEvent : public nsRunnable {
 
 - (void)mouseDown:(NSEvent *)theEvent
 {
+  if (![self ensureCorrectMouseEventTarget:theEvent])
+    return;
+
   // Make sure this view is not in the rollup widget. The fastest way to do this
   // is by comparing native window pointers. Also don't roll up if we just put
   // the popup up in an earlier menuForEvent: event.
-  if (mLastMenuForEventEvent != theEvent && gRollupWidget != nsnull) {
+  if (gRollupWidget && mLastMenuForEventEvent != theEvent) {
     NSWindow *ourNativeWindow = [self nativeWindow];
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if (ourNativeWindow != rollupNativeWindow) {
       // roll up any popups
-      if (gRollupListener != nsnull) {
+      if (gRollupListener) {
         gRollupListener->Rollup();
         // If we rolled up a popup, we don't want to pass the click down to gecko.
         // This happens e.g. when you click a popupmenubutton (the menu opens), then click 
@@ -2541,7 +2554,7 @@ class nsNonNativeContextMenuEvent : public nsRunnable {
     return;
   }
 
-  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+  if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
   if (!mGeckoChild)
@@ -2612,7 +2625,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
     return;
   }
 
-  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+  if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
   // If this is a popup window and the event is not over it, then we may want
@@ -2736,7 +2749,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 - (void)mouseDragged:(NSEvent*)theEvent
 {
-  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+  if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
   if (!mGeckoChild)
@@ -2772,16 +2785,20 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 
 - (void)rightMouseDown:(NSEvent *)theEvent
-{  
+{
+  if (![self ensureCorrectMouseEventTarget:theEvent])
+    return;
+
   // Make sure this view is not in the rollup widget. The fastest way to do this
   // is by comparing native window pointers. Also don't roll up if we just put
   // the popup up in an earlier menuForEvent: event.
-  if (mLastMenuForEventEvent != theEvent && gRollupWidget != nsnull) {
+  if (gRollupWidget && mLastMenuForEventEvent != theEvent) {
     NSWindow *ourNativeWindow = [self nativeWindow];
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if (ourNativeWindow != rollupNativeWindow) {
-      // roll up any popups
-      if (gRollupListener != nsnull)
+      // Roll up any popups. Note that we do not return after rolling up because
+      // unlike regular mouse down events, right mouse down events must pass through.
+      if (gRollupListener)
         gRollupListener->Rollup();
     }
   }
@@ -2812,7 +2829,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
-  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+  if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
   if (!mGeckoChild)
@@ -2840,7 +2857,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 - (void)rightMouseDragged:(NSEvent*)theEvent
 {
-  if ([self maybeRerouteMouseEventToRollupWidget:theEvent])
+  if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
   if (!mGeckoChild)
@@ -2858,14 +2875,19 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 - (void)otherMouseDown:(NSEvent *)theEvent
 {
+  if (![self ensureCorrectMouseEventTarget:theEvent])
+    return;
+
   // If our view isn't the rollup widget, roll up any context menu that may
   // currently be open -- otherwise a disfunctional context menu will appear
   // alongside the autoscroll popup (if autoscroll is enabled).
   if (gRollupWidget && gRollupListener) {
     NSWindow *ourNativeWindow = [self nativeWindow];
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-    if (ourNativeWindow != rollupNativeWindow)
+    if (ourNativeWindow != rollupNativeWindow) {
       gRollupListener->Rollup();
+      return;
+    }
   }
 
   if (!mGeckoChild)
@@ -3029,7 +3051,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if (ourNativeWindow != rollupNativeWindow) {
       // roll up any popups
-      if (gRollupListener != nsnull)
+      if (gRollupListener)
         gRollupListener->Rollup();
     }
   }
@@ -3158,11 +3180,15 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 enum
 {
   kEscapeKeyCode      = 0x35,
+  kRCommandKeyCode    = 0x36, // right command key
   kCommandKeyCode     = 0x37,
   kShiftKeyCode       = 0x38,
   kCapsLockKeyCode    = 0x39,
+  kOptionkeyCode      = 0x3A,
   kControlKeyCode     = 0x3B,
-  kOptionkeyCode      = 0x3A, // both left and right option keys
+  kRShiftKeyCode      = 0x3C, // right shift key
+  kROptionKeyCode     = 0x3D, // right option key
+  kRControlKeyCode    = 0x3E, // right control key
   kClearKeyCode       = 0x47,
 
   // function keys
@@ -3302,10 +3328,14 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
   {
     // modifiers. We don't get separate events for these
     case kEscapeKeyCode:        geckoKeyCode = NS_VK_ESCAPE;         break;
+    case kRCommandKeyCode:
     case kCommandKeyCode:       geckoKeyCode = NS_VK_META;           break;
+    case kRShiftKeyCode:
     case kShiftKeyCode:         geckoKeyCode = NS_VK_SHIFT;          break;
     case kCapsLockKeyCode:      geckoKeyCode = NS_VK_CAPS_LOCK;      break;
+    case kRControlKeyCode:
     case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
+    case kROptionKeyCode:
     case kOptionkeyCode:        geckoKeyCode = NS_VK_ALT;            break;
     case kClearKeyCode:         geckoKeyCode = NS_VK_CLEAR;          break;
 
@@ -3391,10 +3421,14 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     // modifiers - we don't get separate events for these yet
     case kEscapeKeyCode:
     case kShiftKeyCode:
+    case kRShiftKeyCode:
     case kCommandKeyCode:
+    case kRCommandKeyCode:
     case kCapsLockKeyCode:
     case kControlKeyCode:
+    case kRControlKeyCode:
     case kOptionkeyCode:
+    case kROptionKeyCode:
     case kClearKeyCode:
       
       // function keys
@@ -3959,10 +3993,12 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   // Otherwise, we need to suppress IME composition. We can do it by
   // not sending this event to the superclass. But in that case,
   // we need to call insertText ourselves.
-  if (nsTSMManager::IsIMEEnabled())
-    [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
-  else if (nonDeadKeyPress && !dispatchedKeyPress)
-    [self insertText:[theEvent characters]];
+  if (!dispatchedKeyPress) {
+    if (nsTSMManager::IsIMEEnabled())
+      [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+    else if (nonDeadKeyPress)
+      [self insertText:[theEvent characters]];
+  }
 
   mIgnoreDoCommand = NO;
   mCurKeyEvent = nil;
@@ -3977,9 +4013,10 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild || [[theEvent characters] length] == 0)
     return;
 
-  // Cocoa doesn't send an NSKeyDown event for control-tab, so if this
+  // Cocoa doesn't send an NSKeyDown event for control-tab on 10.4, so if this
   // is an NSKeyUp event for control-tab, send a down event to gecko first.
-  if (!keyUpAlreadySentKeyDown && [theEvent modifierFlags] & NSControlKeyMask && [theEvent keyCode] == kTabKeyCode) {
+  if (!nsToolkit::OnLeopardOrLater() && !keyUpAlreadySentKeyDown &&
+      [theEvent modifierFlags] & NSControlKeyMask && [theEvent keyCode] == kTabKeyCode) {
     // We'll need an NSKeyDown copy of our native event so we convert to a gecko event correctly.
     NSEvent* nativeKeyDownEvent = [ChildView makeNewCocoaEventWithType:NSKeyDown fromEvent:theEvent];
 

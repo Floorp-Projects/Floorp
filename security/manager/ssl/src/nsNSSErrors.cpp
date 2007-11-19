@@ -310,6 +310,8 @@ nsNSSErrors::getDefaultErrorStringName(PRInt32 err)
     case SEC_ERROR_CRL_ALREADY_EXISTS: id_str = "SEC_ERROR_CRL_ALREADY_EXISTS"; break;
     case SEC_ERROR_NOT_INITIALIZED: id_str = "SEC_ERROR_NOT_INITIALIZED"; break;
     case SEC_ERROR_TOKEN_NOT_LOGGED_IN: id_str = "SEC_ERROR_TOKEN_NOT_LOGGED_IN"; break;
+    case SEC_ERROR_OCSP_RESPONDER_CERT_INVALID: id_str = "SEC_ERROR_OCSP_RESPONDER_CERT_INVALID"; break;
+    case SEC_ERROR_OCSP_BAD_SIGNATURE: id_str = "SEC_ERROR_OCSP_BAD_SIGNATURE"; break;
   }
 
   return id_str;

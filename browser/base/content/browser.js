@@ -98,6 +98,7 @@ var appCore = null;
 var gBrowser = null;
 var gNavToolbox = null;
 var gSidebarCommand = "";
+var gInPrintPreviewMode = false;
 
 // Global variable that holds the nsContextMenu instance.
 var gContextMenu = null;
@@ -263,8 +264,7 @@ function BookmarkThisTab()
     tab = getBrowser().mCurrentTab;
 
   PlacesCommandHook.bookmarkPage(tab.linkedBrowser,
-                                 PlacesUtils.bookmarksRootId,
-                                 true, getBrowser(), "overlap");
+                                 PlacesUtils.bookmarksRootId, true);
 }
 
 /**
@@ -1072,6 +1072,8 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
 
+  UpdateUrlbarSearchSplitterState();
+
   initPlacesDefaultQueries();
   initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
@@ -1204,6 +1206,12 @@ function delayedStartup()
 
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler = new BookmarkAllTabsHandler();
+
+  // Attach a listener to watch for "command" events bubbling up from error
+  // pages.  This lets us fix bugs like 401575 which require error page UI to
+  // do privileged things, without letting error pages have any privilege
+  // themselves.
+  gBrowser.addEventListener("command", BrowserOnCommand, false);
 }
 
 function BrowserShutdown()
@@ -1956,11 +1964,12 @@ function BrowserViewSourceOfDocument(aDocument)
 
 function ViewSourceOfURL(aURL, aPageDescriptor, aDocument)
 {
+  var utils = window.top.gViewSourceUtils;
   if (getBoolPref("view_source.editor.external", false)) {
-    gViewSourceUtils.openInExternalEditor(aURL, aPageDescriptor, aDocument);
+    utils.openInExternalEditor(aURL, aPageDescriptor, aDocument);
   }
   else {
-    gViewSourceUtils.openInInternalViewer(aURL, aPageDescriptor, aDocument);
+    utils.openInInternalViewer(aURL, aPageDescriptor, aDocument);
   }
 }
 
@@ -2154,6 +2163,32 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef) {
   gBrowser.userTypedValue = gURLBar.value;
 }
 
+function UpdateUrlbarSearchSplitterState()
+{
+  var splitter = document.getElementById("urlbar-search-splitter");
+
+  var urlbar = document.getElementById("urlbar-container");
+  var searchbar = document.getElementById("search-container");
+  var ibefore = null;
+  if (urlbar.nextSibling == searchbar)
+    ibefore = searchbar;
+  else if (searchbar.nextSibling == urlbar)
+    ibefore = urlbar;
+  else if (splitter)
+    splitter.parentNode.removeChild(splitter);
+
+  if (ibefore) {
+    if (!splitter) {
+      splitter = document.createElement("splitter");
+      splitter.id = "urlbar-search-splitter";
+      splitter.setAttribute("resizebefore", "flex");
+      splitter.setAttribute("resizeafter", "flex");
+      splitter.className = "chromeclass-toolbar-additional";
+    }
+    urlbar.parentNode.insertBefore(splitter, ibefore);
+  }
+}
+
 function UpdatePageProxyState()
 {
   if (gURLBar && gURLBar.value != gLastValidURLStr)
@@ -2219,16 +2254,8 @@ function PageProxyDragGesture(aEvent)
 
 function PageProxyClickHandler(aEvent)
 {
-  switch (aEvent.button) {
-    case 0:
-      gURLBar.select();
-      break;
-    case 1:
-      if (gPrefService.getBoolPref("middlemouse.paste"))
-        middleMousePaste(aEvent);
-      break;
-  }
-  return true;
+  if (aEvent.button == 1 && gPrefService.getBoolPref("middlemouse.paste"))
+    middleMousePaste(aEvent);
 }
 
 function URLBarOnInput(evt)
@@ -2279,9 +2306,12 @@ var urlbarObserver = {
     {
       var flavourSet = new FlavourSet();
 
-      // Plain text drops are often misidentified as "text/x-moz-url", so favor plain text.
-      flavourSet.appendFlavour("text/unicode");
+      // Favor text/x-moz-url since text/unicode coming from Win32 1.8 branch
+      // drops contains URL\ntext.  The previous comment here said that
+      // plain text drops often come with text/x-moz-url flavor, but I
+      // haven't seen that, so hopefully that behavior has changed.
       flavourSet.appendFlavour("text/x-moz-url");
+      flavourSet.appendFlavour("text/unicode");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
     }
@@ -2304,6 +2334,50 @@ function BrowserImport()
                     "migration", "modal,centerscreen,chrome,resizable=no");
 #endif
 }
+
+/**
+ * Handle command events bubbling up from error page content
+ */
+function BrowserOnCommand(event) {
+    
+    // Don't trust synthetic events
+    if (!event.isTrusted)
+      return;
+    
+    // If the event came from an ssl error page, it is probably either the "Add
+    // Exception…" or "Get me out of here!" button
+    if (/^about:neterror\?e=nssBadCert/.test(event.originalTarget.ownerDocument.documentURI)) {
+      var ot = event.originalTarget;
+      var errorDoc = ot.ownerDocument;
+      
+      if (ot == errorDoc.getElementById('exceptionDialogButton')) {
+        var params = { location : content.location.href,
+                       exceptionAdded : false };
+        window.openDialog('chrome://pippki/content/exceptionDialog.xul',
+                          '','chrome,centerscreen,modal', params);
+        
+        // If the user added the exception cert, attempt to reload the page
+        if (params.exceptionAdded)
+          content.location.reload();
+      }
+      else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
+        // Redirect them to a known-functioning page, default start page
+        var prefs = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefService).getDefaultBranch(null);
+        var url = "about:blank";
+        try {
+          url = prefs.getComplexValue("browser.startup.homepage",
+                                      Ci.nsIPrefLocalizedString).data;
+          // If url is a pipe-delimited set of pages, just take the first one.
+          if (url.indexOf("|") != -1)
+            url = url.split("|")[0];
+        } catch(e) {
+          Components.utils.reportError("Couldn't get homepage pref: " + e);
+        }
+        content.location = url;
+      }
+    }
+  }
 
 function BrowserFullScreen()
 {
@@ -2404,12 +2478,15 @@ function toggleAffectedChrome(aHide)
 
 function onEnterPrintPreview()
 {
+  gInPrintPreviewMode = true;
   toggleAffectedChrome(true);
 }
 
 function onExitPrintPreview()
 {
   // restore chrome to original state
+  gInPrintPreviewMode = false;
+  FullZoom.setSettingValue();
   toggleAffectedChrome(false);
 }
 
@@ -3164,6 +3241,10 @@ function BrowserCustomizeToolbar()
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.setAttribute("disabled", "true");
 
+  var splitter = document.getElementById("urlbar-search-splitter");
+  if (splitter)
+    splitter.parentNode.removeChild(splitter);
+
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
   var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
   sheetFrame.hidden = false;
@@ -3196,6 +3277,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     gHomeButton.updateTooltip();
     window.XULBrowserWindow.init();
   }
+
+  UpdateUrlbarSearchSplitterState();
 
   // Update the urlbar
   var url = getWebNavigation().currentURI.spec;
@@ -5814,6 +5897,8 @@ IdentityHandler.prototype = {
    * Click handler for the identity-box element in primary chrome.  
    */
   handleIdentityClick : function(event) {
+    event.stopPropagation();
+
     if (event.button != 0)
       return; // We only want left-clicks
         

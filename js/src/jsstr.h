@@ -354,6 +354,9 @@ typedef enum JSCharType {
 extern JSBool
 js_InitRuntimeStringState(JSContext *cx);
 
+extern JSBool
+js_InitDeflatedStringCache(JSRuntime *rt);
+
 /*
  * Maximum character code for which we will create a pinned unit string on
  * demand -- see JSRuntime.unitStrings in jscntxt.h.
@@ -407,12 +410,14 @@ extern JSString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s);
 
 /*
- * Free the chars held by str when it is finalized by the GC.
+ * Free the chars held by str when it is finalized by the GC. When type is
+ * less then zero, it denotes an internal string. Otherwise it denotes the
+ * type of the external string allocated with JS_NewExternalString.
  *
  * This function always needs rt but can live with null cx.
  */
 extern void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str, uintN gctype, JSContext *cx);
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx);
 
 /*
  * Convert a value to a printable C string.

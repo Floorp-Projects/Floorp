@@ -217,7 +217,7 @@ JS_BEGIN_EXTERN_C
  * comment in jstypes.h regarding safe int64 usage.
  */
 extern JS_PUBLIC_API(int64)
-JS_Now();
+JS_Now(void);
 
 /* Don't want to export data, so provide accessors for non-inline jsvals. */
 extern JS_PUBLIC_API(jsval)
@@ -1215,10 +1215,10 @@ struct JSExtendedClass {
     JSObjectOp          outerObject;
     JSObjectOp          innerObject;
     JSIteratorOp        iteratorObject;
-    void                (*reserved0)();
-    void                (*reserved1)();
-    void                (*reserved2)();
-    void                (*reserved3)();
+    void                (*reserved0)(void);
+    void                (*reserved1)(void);
+    void                (*reserved2)(void);
+    void                (*reserved3)(void);
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  /* objects have private slot */
@@ -1579,6 +1579,10 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
                  const char *alias);
 
 extern JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name,
+                         JSBool *foundp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_HasProperty(JSContext *cx, JSObject *obj, const char *name, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
@@ -1658,6 +1662,10 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
                               uintN attrs);
 
 extern JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj, const jschar *name,
+                           size_t namelen, JSBool *foundp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_HasUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen,
                  JSBool *vp);
@@ -1703,6 +1711,10 @@ JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
 
 extern JS_PUBLIC_API(JSBool)
 JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, jsint index,
+                        JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_HasElement(JSContext *cx, JSObject *obj, jsint index, JSBool *foundp);
@@ -2235,7 +2247,7 @@ JS_MakeStringImmutable(JSContext *cx, JSString *str);
  * to get UTF-8 support.
  */
 JS_PUBLIC_API(JSBool)
-JS_CStringsAreUTF8();
+JS_CStringsAreUTF8(void);
 
 /*
  * Character encoding support.

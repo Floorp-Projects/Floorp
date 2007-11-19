@@ -2866,12 +2866,12 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
     if (floats_cur > floats_done)
       floats_done = floats_cur;
 
-    currentLine += floats_done;
+    currentLine = NSCoordSaturatingAdd(currentLine, floats_done);
 
     floats.Clear();
   }
 
-  currentLine -= trailingWhitespace;
+  currentLine = NSCoordSaturatingSubtract(currentLine, trailingWhitespace, nscoord_MAX);
   prevLines = PR_MAX(prevLines, currentLine);
   currentLine = trailingWhitespace = 0;
 }
@@ -3160,14 +3160,11 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
                 NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 
-  // Notify the percent height observer if there is a percent height
-  // but no computed height. The observer may be able to initiate
-  // another reflow with a computed height. This happens in the case
-  // where a table cell has no computed height but can fabricate one
-  // when the cell height is known.
+  // Notify the percent height observer if there is a percent height.
+  // The observer may be able to initiate another reflow with a computed
+  // height. This happens in the case where a table cell has no computed
+  // height but can fabricate one when the cell height is known.
   if (aReflowState && aReflowState->mPercentHeightObserver &&
-      ((NS_UNCONSTRAINEDSIZE == aReflowState->ComputedHeight()) ||         // no computed height 
-       (0                    == aReflowState->ComputedHeight()))        && 
       (eStyleUnit_Percent == aReflowState->mStylePosition->mHeight.GetUnit())) {
 
     nsIFrame* prevInFlow = GetPrevInFlow();
@@ -4712,6 +4709,9 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
               jumpedLine && !wordSelectEatSpace && state.mSawBeforeType) {
             done = PR_TRUE;
           } else {
+            if (jumpedLine) {
+              state.mContext.Truncate();
+            }
             current = nextFrame;
             offset = nextFrameOffset;
             // Jumping a line is equivalent to encountering whitespace
@@ -4926,6 +4926,8 @@ nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   PRInt32 startOffset = *aOffset;
+  // This isn't text, so truncate the context
+  aState->mContext.Truncate();
   if (startOffset < 0)
     startOffset = 1;
   if (aForward == (startOffset == 0)) {
@@ -6166,32 +6168,41 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       // This kinda sucks. We should be able to handle the case
       // where there's overflow above or to the left of the
       // origin. But for now just chop that stuff off.
+      // (note: For RTL mode, replace "to the left of the origin" 
+      // with "to the right of the range [0, aDesiredSize.width]")
 
       //printf("OutsideChildren width=%d, height=%d\n", aDesiredSize.mOverflowArea.width, aDesiredSize.mOverflowArea.height);
-      aDesiredSize.width = aDesiredSize.mOverflowArea.XMost();
-      if (aDesiredSize.width <= aWidth)
-        aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
-      else {
-        if (aDesiredSize.width > aWidth)
-        {
-          nscoord computedWidth = aDesiredSize.width -
-            reflowState.mComputedBorderPadding.LeftRight();
-          computedWidth = PR_MAX(computedWidth, 0);
-          reflowState.SetComputedWidth(computedWidth);
-          reflowState.availableWidth = aDesiredSize.width;
-          DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
-          #ifdef DEBUG_REFLOW
-           nsAdaptorAddIndents();
-           nsAdaptorPrintReason(reflowState);
-           printf("\n");
-          #endif
-          AddStateBits(NS_FRAME_IS_DIRTY);
-          WillReflow(aPresContext);
-          Reflow(aPresContext, aDesiredSize, reflowState, status);
-          if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
-            aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
 
-        }
+      if (NS_STYLE_DIRECTION_LTR == GetStyleVisibility()->mDirection) {
+        // LTR mode -- extend for overflow on right side.
+        aDesiredSize.width = PR_MAX(aDesiredSize.width, 
+                                    aDesiredSize.mOverflowArea.XMost());
+      } else {
+        // RTL mode -- extend for overflow on left side.
+        nscoord leftmostValue = PR_MIN(0, aDesiredSize.mOverflowArea.x);
+        // Note: If anything, this increases aDesiredSize.width, because
+        // leftmostValue is non-positive.
+        aDesiredSize.width = aDesiredSize.width - leftmostValue;
+      }
+      if (aDesiredSize.width <= aWidth) {
+        aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
+      } else {
+        nscoord computedWidth = aDesiredSize.width -
+          reflowState.mComputedBorderPadding.LeftRight();
+        computedWidth = PR_MAX(computedWidth, 0);
+        reflowState.SetComputedWidth(computedWidth);
+        reflowState.availableWidth = aDesiredSize.width;
+        DidReflow(aPresContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
+        #ifdef DEBUG_REFLOW
+        nsAdaptorAddIndents();
+        nsAdaptorPrintReason(reflowState);
+        printf("\n");
+        #endif
+        AddStateBits(NS_FRAME_IS_DIRTY);
+        WillReflow(aPresContext);
+        Reflow(aPresContext, aDesiredSize, reflowState, status);
+        if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)
+          aDesiredSize.height = aDesiredSize.mOverflowArea.YMost();
       }
     }
 
@@ -6202,11 +6213,6 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
        Redraw(aState, &r);
     }
 
-    PRBool changedSize = PR_FALSE;
-
-    if (metrics->mLastSize.width != aDesiredSize.width || metrics->mLastSize.height != aDesiredSize.height)
-       changedSize = PR_TRUE;
-  
     PRUint32 layoutFlags = aState.LayoutFlags();
     nsContainerFrame::FinishReflowChild(this, aPresContext, &reflowState,
                                         aDesiredSize, aX, aY, layoutFlags | NS_FRAME_NO_MOVE_FRAME);

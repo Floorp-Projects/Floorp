@@ -93,6 +93,7 @@
 #include "nsScriptNameSpaceManager.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsJSEnvironment.h"
 
 // DOM base includes
 #include "nsIDOMPluginArray.h"
@@ -574,11 +575,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Screen, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(Prototype, nsDOMConstructorSH,
+  NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
-  NS_DEFINE_CLASSINFO_DATA(Constructor, nsDOMConstructorSH,
+  NS_DEFINE_CLASSINFO_DATA(DOMConstructor, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::WANT_CALL |
@@ -1665,11 +1666,11 @@ CutPrefix(const char *aName) {
 nsresult
 nsDOMClassInfo::RegisterClassName(PRInt32 aClassInfoID)
 {
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  gNameSpaceManager->RegisterClassName(sClassInfoData[aClassInfoID].mName,
-                                       aClassInfoID);
+  nameSpaceManager->RegisterClassName(sClassInfoData[aClassInfoID].mName,
+                                      aClassInfoID);
 
   return NS_OK;
 }
@@ -1678,8 +1679,8 @@ nsDOMClassInfo::RegisterClassName(PRInt32 aClassInfoID)
 nsresult
 nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
 {
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
   PRBool found_old;
 
   const nsIID *primary_iid = sClassInfoData[aClassInfoID].mProtoChainInterface;
@@ -1712,7 +1713,7 @@ nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
     nsXPIDLCString name;
     if_info->GetName(getter_Copies(name));
 
-    gNameSpaceManager->RegisterClassProto(CutPrefix(name), iid, &found_old);
+    nameSpaceManager->RegisterClassProto(CutPrefix(name), iid, &found_old);
 
     nsMemory::Free(iid);
 
@@ -1733,12 +1734,11 @@ nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
 nsresult
 nsDOMClassInfo::RegisterExternalClasses()
 {
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
   nsCOMPtr<nsIComponentRegistrar> registrar;
-  rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+  nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICategoryManager> cm =
@@ -1774,12 +1774,12 @@ nsDOMClassInfo::RegisterExternalClasses()
       continue;
     }
 
-    rv = gNameSpaceManager->RegisterExternalClassName(categoryEntry.get(), *cid);
+    rv = nameSpaceManager->RegisterExternalClassName(categoryEntry.get(), *cid);
     nsMemory::Free(cid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return gNameSpaceManager->RegisterExternalInterfaces(PR_TRUE);
+  return nameSpaceManager->RegisterExternalInterfaces(PR_TRUE);
 }
 
 #define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if)               \
@@ -1846,8 +1846,8 @@ nsDOMClassInfo::Init()
 
   NS_ENSURE_TRUE(!sIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1931,12 +1931,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Prototype, nsIDOMConstructor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMConstructor)
+  DOM_CLASSINFO_MAP_BEGIN(DOMPrototype, nsIDOMDOMConstructor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Constructor, nsIDOMConstructor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMConstructor)
+  DOM_CLASSINFO_MAP_BEGIN(DOMConstructor, nsIDOMDOMConstructor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
@@ -4259,7 +4259,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsresult rv = WrapNative(cx, obj, result, NS_GET_IID(nsISupports), &v,
                              getter_AddRefs(holder));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, JS_FALSE);
 
     if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(jsstr),
                                ::JS_GetStringLength(jsstr), v, nsnull, nsnull,
@@ -4550,7 +4550,7 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     nsCOMPtr<nsIDOMLocation> location;
     nsresult rv = window->GetLocation(getter_AddRefs(location));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && location, rv);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp,
@@ -4840,7 +4840,7 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
   return NS_OK;
 }
 
-class nsDOMConstructor : public nsIDOMConstructor
+class nsDOMConstructor : public nsIDOMDOMConstructor
 {
 public:
   nsDOMConstructor(const PRUnichar *aName,
@@ -4851,7 +4851,7 @@ public:
   }
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMCONSTRUCTOR
+  NS_DECL_NSIDOMDOMCONSTRUCTOR
 
   nsresult Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                      JSObject *obj, PRUint32 argc, jsval *argv,
@@ -4902,13 +4902,13 @@ private:
   {
     *aNameStruct = nsnull;
 
-    extern nsScriptNameSpaceManager *gNameSpaceManager;
-    if (!gNameSpaceManager) {
+    nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+    if (!nameSpaceManager) {
       NS_ERROR("Can't get namespace manager.");
       return NS_ERROR_UNEXPECTED;
     }
 
-    gNameSpaceManager->LookupName(aName, aNameStruct);
+    nameSpaceManager->LookupName(aName, aNameStruct);
 
     // Return NS_OK here, aName just isn't a DOM class but nothing failed.
     return NS_OK;
@@ -4932,7 +4932,7 @@ private:
 NS_IMPL_ADDREF(nsDOMConstructor)
 NS_IMPL_RELEASE(nsDOMConstructor)
 NS_INTERFACE_MAP_BEGIN(nsDOMConstructor)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMConstructor)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMConstructor)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
 #ifdef DEBUG
@@ -4945,8 +4945,8 @@ NS_INTERFACE_MAP_BEGIN(nsDOMConstructor)
 #endif
     foundInterface =
       NS_GetDOMClassInfoInstance(mConstructable ?
-                                 eDOMClassInfo_Constructor_id :
-                                 eDOMClassInfo_Prototype_id);
+                                 eDOMClassInfo_DOMConstructor_id :
+                                 eDOMClassInfo_DOMPrototype_id);
     if (!foundInterface) {
       *aInstancePtr = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
@@ -5029,8 +5029,8 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-  NS_ASSERTION(gNameSpaceManager, "Can't get namespace manager?");
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ASSERTION(nameSpaceManager, "Can't get namespace manager?");
 
   const nsIID *class_iid;
   if (class_name_struct->mType == nsGlobalNameStruct::eTypeInterface ||
@@ -5043,7 +5043,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     class_iid = class_name_struct->mData->mProtoChainInterface;
   } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
     const nsGlobalNameStruct* alias_struct =
-      gNameSpaceManager->GetConstructorProto(class_name_struct);
+      nameSpaceManager->GetConstructorProto(class_name_struct);
     if (!alias_struct) {
       NS_ERROR("Couldn't get constructor prototype.");
       return NS_ERROR_UNEXPECTED;
@@ -5065,7 +5065,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
-    name_struct = gNameSpaceManager->GetConstructorProto(name_struct);
+    name_struct = nameSpaceManager->GetConstructorProto(name_struct);
     if (!name_struct) {
       NS_ERROR("Couldn't get constructor prototype.");
       return NS_ERROR_UNEXPECTED;
@@ -5135,16 +5135,15 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 {
   *did_resolve = PR_FALSE;
 
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   nsDependentJSString name(str);
 
   const nsGlobalNameStruct *name_struct = nsnull;
   const PRUnichar *class_name = nsnull;
 
-  gNameSpaceManager->LookupName(name, &name_struct, &class_name);
+  nameSpaceManager->LookupName(name, &name_struct, &class_name);
 
   if (!name_struct) {
     return NS_OK;
@@ -5164,7 +5163,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     rv = creator->RegisterDOMCI(NS_ConvertUTF16toUTF8(name).get(), sof);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = gNameSpaceManager->LookupName(name, &name_struct);
+    rv = nameSpaceManager->LookupName(name, &name_struct);
     if (NS_FAILED(rv) || !name_struct ||
         name_struct->mType != nsGlobalNameStruct::eTypeExternalClassInfo) {
       NS_ERROR("Couldn't get the DOM ClassInfo data.");
@@ -5191,7 +5190,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     jsval v;
 
-    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMConstructor), &v,
+    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMDOMConstructor), &v,
                     getter_AddRefs(holder));
 
     sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
@@ -5229,7 +5228,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
       ci_data = name_struct->mData;
     } else if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias) {
-      alias_struct = gNameSpaceManager->GetConstructorProto(name_struct);
+      alias_struct = nameSpaceManager->GetConstructorProto(name_struct);
       NS_ENSURE_TRUE(alias_struct, NS_ERROR_UNEXPECTED);
 
       if (alias_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
@@ -5253,7 +5252,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     jsval v;
 
-    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMConstructor), &v,
+    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMDOMConstructor), &v,
                     getter_AddRefs(holder));
 
     sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
@@ -5470,8 +5469,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     jsval val;
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMConstructor), &val,
-                    getter_AddRefs(holder));
+    rv = WrapNative(cx, obj, constructor, NS_GET_IID(nsIDOMDOMConstructor),
+                    &val, getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = constructor->Install(cx, obj, val);
@@ -9855,7 +9854,8 @@ nsDOMConstructorSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIDOMConstructor> is_constructor(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIDOMDOMConstructor> is_constructor =
+      do_QueryWrappedNative(wrapper);
     NS_ASSERTION(is_constructor, "How did we not get a constructor?");
   }
 #endif
@@ -9873,7 +9873,8 @@ nsDOMConstructorSH::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIDOMConstructor> is_constructor(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIDOMDOMConstructor> is_constructor =
+      do_QueryWrappedNative(wrapper);
     NS_ASSERTION(is_constructor, "How did we not get a constructor?");
   }
 #endif
@@ -9891,7 +9892,8 @@ nsDOMConstructorSH::HasInstance(nsIXPConnectWrappedNative *wrapper,
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIDOMConstructor> is_constructor(do_QueryWrappedNative(wrapper));
+    nsCOMPtr<nsIDOMDOMConstructor> is_constructor =
+      do_QueryWrappedNative(wrapper);
     NS_ASSERTION(is_constructor, "How did we not get a constructor?");
   }
 #endif

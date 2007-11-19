@@ -43,7 +43,7 @@
 
 interface nsIEditor;
 
-[scriptable, uuid(aee80d50-2065-4411-834d-0cadfb649a19)]
+[scriptable, uuid(274cd32e-3675-47e1-9d8a-fc6504ded9ce)]
 
 interface nsIEditingSession : nsISupports
 {
@@ -101,10 +101,20 @@ interface nsIEditingSession : nsISupports
   /** 
    *   Destroy editor and related support objects
    */
-  void tearDownEditorOnWindow(in nsIDOMWindow window, in boolean aStopEditing);
+  void tearDownEditorOnWindow(in nsIDOMWindow window);
 
   void setEditorOnControllers(in nsIDOMWindow aWindow,
                               in nsIEditor aEditor);
 
+  /**
+   * Disable scripts and plugins in aWindow.
+   */
+  void disableJSAndPlugins(in nsIDOMWindow aWindow);
+
+  /**
+   * Restore JS and plugins (enable/disable them) according to the state they
+   * were before the last call to disableJSAndPlugins.
+   */
+  void restoreJSAndPlugins(in nsIDOMWindow aWindow);
 };
 

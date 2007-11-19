@@ -72,8 +72,8 @@ class nsPresContext;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x42764ad5, 0xa196, 0x408c, \
-  { 0xa4, 0x87, 0x97, 0xf4, 0xc6, 0x31, 0x57, 0x21 } }
+{ 0x51316cbc, 0x595e, 0x40b1, \
+  { 0xab, 0x07, 0x21, 0xbf, 0xe0, 0x92, 0x62, 0xa9 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -370,6 +370,12 @@ public:
   {
     return mIsModalContentWindow;
   }
+
+  /**
+   * Initialize window.java and window.Packages, and start LiveConnect
+   * if we're running with a non-NPRuntime enabled Java plugin.
+   */
+  virtual void InitJavaProperties() = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

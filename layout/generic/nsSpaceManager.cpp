@@ -229,10 +229,16 @@ nsSpaceManager::YMost(nscoord& aYMost) const
  * Internal function that returns the list of available and unavailable space
  * within the band
  *
+ * Note: If the clip rectangle has 0 width and is aligned exactly at
+ * aBand->mLeft or aBand->mRight, we count it as intersecting the band, and we
+ * return an unavailable-space trapezoid for the band.  (The alternative would
+ * be to return a zero-width available-space trapezoid, which would make no
+ * sense.  See bug 403129)
+ *
  * @param aBand the first rect in the band
  * @param aY the y-offset in world coordinates
  * @param aMaxSize the size to use to constrain the band data
- * @param aAvailableBand
+ * @param aBandData the object to populate with available and unavailable space
  */
 nsresult
 nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
@@ -251,7 +257,8 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
 
   // Skip any rectangles that are to the left of the local coordinate space
   while (aBand->mTop == topOfBand) {
-    if (aBand->mRight > mX) {
+    if (aBand->mRight > mX ||
+        (aMaxSize.width == 0 && aBand->mRight == mX)) {
       break;
     }
 
@@ -264,7 +271,9 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
   nscoord   left = mX;
 
   // Process the remaining rectangles that are within the clip width
-  while ((aBand->mTop == topOfBand) && (aBand->mLeft < rightEdge)) {
+  while ((aBand->mTop == topOfBand) && 
+         (aBand->mLeft < rightEdge || 
+          (aMaxSize.width == 0 && aBand->mLeft == mX))) {
     // Compare the left edge of the occupied space with the current left
     // coordinate
     if (aBand->mLeft > left) {
@@ -849,12 +858,6 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
 {
   NS_PRECONDITION(nsnull != aFrame, "null frame");
 
-#ifdef DEBUG
-  // See if there is already a region associated with aFrame
-  NS_ASSERTION(!GetFrameInfoFor(aFrame),
-               "aFrame is already associated with a region");
-#endif
-  
   // Convert the frame to world coordinates
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
                aUnavailableSpace.width, aUnavailableSpace.height);
@@ -868,11 +871,14 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (aUnavailableSpace.height <= 0)
+  if (aUnavailableSpace.IsEmpty())
     return NS_OK;
 
   // Allocate a band rect
-  BandRect* bandRect = new BandRect(rect.x, rect.y, rect.XMost(), rect.YMost(), aFrame);
+  BandRect* bandRect = new BandRect(rect.x, rect.y, 
+                                    PR_MIN(rect.XMost(), nscoord_MAX),
+                                    PR_MIN(rect.YMost(), nscoord_MAX),
+                                    aFrame);
   if (nsnull == bandRect) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -919,7 +925,7 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (frameInfo->mRect.height > 0) {
+  if (!frameInfo->mRect.IsEmpty()) {
     NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
     BandRect* band = mBandList.Head();
     BandRect* prevBand = nsnull;

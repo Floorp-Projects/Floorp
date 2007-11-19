@@ -492,7 +492,7 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, PRUint32 streamLen, nsres
                 break;
 
             case GZIP_COMMENT:
-                if (mFlags & GZIP_COMMENT)
+                if (mFlags & COMMENT)
                 {
                     iStr->Read(&c, 1, &rv);
                     streamLen--;

@@ -150,6 +150,8 @@ nsXFormsInputAccessible::
 {
 }
 
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputAccessible, nsAccessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+
 NS_IMETHODIMP
 nsXFormsInputAccessible::GetRole(PRUint32 *aRole)
 {
@@ -209,6 +211,8 @@ nsXFormsInputBooleanAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState
 {
   nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   nsAutoString value;
   rv = sXFormsService->GetValue(mDOMNode, value);
@@ -295,6 +299,8 @@ nsXFormsSecretAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsXFormsInputAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   *aState |= nsIAccessibleStates::STATE_PROTECTED;
   return NS_OK;
@@ -329,6 +335,8 @@ nsXFormsRangeAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   PRUint32 isInRange = nsIXFormsUtilityService::STATE_NOT_A_RANGE;
   rv = sXFormsService->IsInRange(mDOMNode, &isInRange);
@@ -410,6 +418,8 @@ nsXFormsSelectAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsXFormsContainerAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   PRUint32 isInRange = nsIXFormsUtilityService::STATE_NOT_A_RANGE;
   rv = sXFormsService->IsInRange(mDOMNode, &isInRange);
@@ -501,6 +511,8 @@ nsXFormsItemCheckgroupAccessible::GetState(PRUint32 *aState,
 {
   nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   if (IsItemSelected())
     *aState |= nsIAccessibleStates::STATE_CHECKED;
@@ -546,6 +558,8 @@ nsXFormsItemRadiogroupAccessible::GetState(PRUint32 *aState,
 {
   nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   if (IsItemSelected())
     *aState |= nsIAccessibleStates::STATE_CHECKED;
@@ -587,6 +601,8 @@ nsXFormsSelectComboboxAccessible::GetState(PRUint32 *aState,
 {
   nsresult rv = nsXFormsSelectableAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   PRBool isOpen = PR_FALSE;
   rv = sXFormsService->IsDropmarkerOpen(mDOMNode, &isOpen);
@@ -635,8 +651,7 @@ nsXFormsItemComboboxAccessible::GetState(PRUint32 *aState,
 {
   nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (*aState & nsIAccessibleStates::STATE_UNAVAILABLE)
+  if (!mDOMNode || (*aState & nsIAccessibleStates::STATE_UNAVAILABLE))
     return NS_OK;
 
   *aState |= nsIAccessibleStates::STATE_SELECTABLE;

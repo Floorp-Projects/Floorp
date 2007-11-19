@@ -40,6 +40,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
 #include "nsAccessibilityUtils.h"
+#include "nsARIAMap.h"
 #include "nsCURILoader.h"
 #include "nsDocAccessible.h"
 #include "nsHTMLImageAccessibleWrap.h"
@@ -1175,7 +1176,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode
 }
 
 nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
-                                                nsIAccessible **aAccessibleOut)
+                                                nsIAccessible **aAccessibleOut,
+                                                nsRoleMapEntry *aRoleMapEntry)
 {
   if (!aAccessibleIn) {
     return NS_ERROR_FAILURE; // No accessible to init
@@ -1186,6 +1188,9 @@ nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
   NS_ASSERTION(privateAccessNode, "All accessibles must support nsPIAccessNode");
   nsresult rv = privateAccessNode->Init(); // Add to cache, etc.
   if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsPIAccessible> privateAccessible =
+      do_QueryInterface(privateAccessNode);
+    privateAccessible->SetRoleMapEntry(aRoleMapEntry);
     NS_ADDREF(*aAccessibleOut = aAccessibleIn);
   }
   return rv;
@@ -1350,12 +1355,13 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       return NS_OK;
     }
     frame->GetAccessible(getter_AddRefs(newAcc));
-    return InitAccessible(newAcc, aAccessible);
+    return InitAccessible(newAcc, aAccessible, nsnull);
   }
 
-  nsAutoString role;
-  if (nsAccessNode::GetARIARole(content, role) && role.EqualsLiteral("presentation") && !content->IsFocusable()) {
-    // Only create accessible for role=":presentation" if it is focusable --
+  nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(aNode);
+  if (roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation") &&
+      !content->IsFocusable()) { // For presentation only
+    // Only create accessible for role of "presentation" if it is focusable --
     // in that case we need an accessible in case it gets focused, we
     // don't want focus ever to be 'lost'
     return NS_OK;
@@ -1449,7 +1455,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       (content->IsFocusable() ||
       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
-       HasUniversalAriaProperty(content, aWeakShell) || !role.IsEmpty())) {
+       HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry)) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.
@@ -1463,7 +1469,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
   }
 
-  return InitAccessible(newAcc, aAccessible);
+  return InitAccessible(newAcc, aAccessible, roleMapEntry);
 }
 
 PRBool
@@ -1919,7 +1925,20 @@ nsAccessibilityService::GetAccessibleForDeckChildren(nsIDOMNode *aNode, nsIAcces
                 frame->GetType() == nsAccessibilityAtoms::scrollFrame)) { 
     parentFrame = frame->GetParent();
     if (parentFrame && parentFrame->GetType() == nsAccessibilityAtoms::deckFrame) {
-      *aAccessible = new nsEnumRoleAccessible(aNode, weakShell, nsIAccessibleRole::ROLE_PROPERTYPAGE);
+      // If deck frame is for xul:tabpanels element then the given node has
+      // tabpanel accessible.
+      nsCOMPtr<nsIContent> parentContent = parentFrame->GetContent();
+      if (parentContent->NodeInfo()->Equals(nsAccessibilityAtoms::tabpanels,
+                                            kNameSpaceID_XUL)) {
+        *aAccessible = new nsXULTabpanelAccessible(aNode, weakShell);
+      } else {
+        *aAccessible =
+          new nsEnumRoleAccessible(aNode, weakShell,
+                                   nsIAccessibleRole::ROLE_PROPERTYPAGE);
+      }
+
+      NS_ENSURE_TRUE(*aAccessible, NS_ERROR_OUT_OF_MEMORY);
+
       NS_ADDREF(*aAccessible);
     }
   }

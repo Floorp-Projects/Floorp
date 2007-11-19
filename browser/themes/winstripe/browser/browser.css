@@ -939,11 +939,8 @@ statusbarpanel#statusbar-display {
 
 /* ::::: autocomplete ::::: */
 
-.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteValue) {
-  width: 16px;
-  height: 16px;
-}
-
+.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteValue),
+.autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteValue),
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteValue) {
   width: 16px;
   height: 16px;
@@ -1719,23 +1716,6 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   color: #000000;
 }
 
-%ifdef MOZ_WIDGET_GTK2
-#urlbar > .autocomplete-textbox-container {
-  -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
-}
-
-#autocomplete-security-wrapper {
-  -moz-box-align: center;
-}
-
-#urlbar[level="high"] #autocomplete-security-wrapper,
-#urlbar[level="low"] #autocomplete-security-wrapper,
-#urlbar[level="broken"] #autocomplete-security-wrapper {
-  background-color: #F5F6BE; /* #F7F898; */
-  color: #000000;
-}
-%endif
-
 #feed-button, #feed-button > .button-box,
 #feed-button:hover:active > .button-box {
   padding: 0px;
@@ -1834,37 +1814,28 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* ::::: Identity Indicator Styling ::::: */
 /* Location bar visuals*/
+
+#urlbar .autocomplete-textbox-container {
+  -moz-box-align: stretch;
+}
+
 #identity-box {
-  cursor: help;
-  background-color: ThreeDFace;
-%ifdef MOZ_WIDGET_GTK2
-  -moz-border-end: 1px solid ThreeDShadow;
-%else
+  background-color: -moz-dialog;
   -moz-appearance: toolbox;
   outline: 1px solid ThreeDShadow;
-%endif
 }
 
 #identity-box.verifiedIdentity {
-%ifdef MOZ_WIDGET_GTK2
-  border-color: highlight;
-%else
   outline-color: highlight;
-%endif
 }
 
 #identity-box:hover {
-%ifdef MOZ_WIDGET_GTK2
-  border-color: ThreeDDarkShadow;
-%else
   outline-color: ThreeDDarkShadow;
-%endif
 }
 
 #identity-icon-label {
   padding: 0 2px;
   margin: 0;
-  cursor: inherit;
 }
 
 .unknownIdentity > #identity-icon-label {
