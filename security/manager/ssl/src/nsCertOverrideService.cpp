@@ -268,7 +268,9 @@ nsCertOverrideService::Read()
     nsCertOverride::OverrideBits bits;
     nsCertOverride::convertStringToBits(bits_string, bits);
 
-    AddEntryToList(host, algo_string, fingerprint, bits, db_key);
+    AddEntryToList(host, 
+                   PR_FALSE, // not temporary
+                   algo_string, fingerprint, bits, db_key);
   }
 
   return NS_OK;
@@ -287,6 +289,8 @@ WriteEntryCallback(nsCertOverrideEntry *aEntry,
   if (rawStreamPtr && aEntry)
   {
     const nsCertOverride &settings = aEntry->mSettings;
+    if (settings.mIsTemporary)
+      return PL_DHASH_NEXT;
 
     nsCAutoString bits_string;
     nsCertOverride::convertBitsToString(settings.mOverrideBits, 
@@ -401,107 +405,6 @@ GetCertFingerprintByOidTag(nsIX509Cert *aCert,
   return GetCertFingerprintByOidTag(nsscert, aOidTag, fp);
 }
 
-#include <string.h>
-#include "secitem.h"
-#include "secport.h"
-#include "secerr.h"
-
-// FIXME: This is a temporary copy of NSS function SEC_StringToOID,
-//        already available on NSS trunk, but not yet delivered to
-//        the client application. Remove this function and the include
-//        statements after a new tag landed with bug 397296.
-static SECStatus
-_psm_copy_SEC_StringToOID(PLArenaPool *pool, SECItem *to, const char *from, PRUint32 len)
-{
-    PRUint32 decimal_numbers = 0;
-    PRUint32 result_bytes = 0;
-    SECStatus rv;
-    PRUint8 result[1024];
-
-    static const PRUint32 max_decimal = (0xffffffff / 10);
-    static const char OIDstring[] = {"OID."};
-
-    if (!from || !to) {
-    	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
-    }
-    if (!len) {
-    	len = PL_strlen(from);
-    }
-    if (len >= 4 && !PL_strncasecmp(from, OIDstring, 4)) {
-    	from += 4; /* skip leading "OID." if present */
-	len  -= 4;
-    }
-    if (!len) {
-bad_data:
-    	PORT_SetError(SEC_ERROR_BAD_DATA);
-	return SECFailure;
-    }
-    do {
-	PRUint32 decimal = 0;
-        while (len > 0 && isdigit(*from)) {
-	    PRUint32 addend = (*from++ - '0');
-	    --len;
-	    if (decimal > max_decimal)  /* overflow */
-		goto bad_data;
-	    decimal = (decimal * 10) + addend;
-	    if (decimal < addend)	/* overflow */
-		goto bad_data;
-	}
-	if (len != 0 && *from != '.') {
-	    goto bad_data;
-	}
-	if (decimal_numbers == 0) {
-	    if (decimal > 2)
-	    	goto bad_data;
-	    result[0] = decimal * 40;
-	    result_bytes = 1;
-	} else if (decimal_numbers == 1) {
-	    if (decimal > 40)
-	    	goto bad_data;
-	    result[0] += decimal;
-	} else {
-	    /* encode the decimal number,  */
-	    PRUint8 * rp;
-	    PRUint32 num_bytes = 0;
-	    PRUint32 tmp = decimal;
-	    while (tmp) {
-	        num_bytes++;
-		tmp >>= 7;
-	    }
-	    if (!num_bytes )
-	    	++num_bytes;  /* use one byte for a zero value */
-	    if (num_bytes + result_bytes > sizeof result)
-	    	goto bad_data;
-	    tmp = num_bytes;
-	    rp = result + result_bytes - 1;
-	    rp[tmp] = (PRUint8)(decimal & 0x7f);
-	    decimal >>= 7;
-	    while (--tmp > 0) {
-		rp[tmp] = (PRUint8)(decimal | 0x80);
-		decimal >>= 7;
-	    }
-	    result_bytes += num_bytes;
-	}
-	++decimal_numbers;
-	if (len > 0) { /* skip trailing '.' */
-	    ++from;
-	    --len;
-	}
-    } while (len > 0);
-    /* now result contains result_bytes of data */
-    if (to->data && to->len >= result_bytes) {
-    	PORT_Memcpy(to->data, result, to->len = result_bytes);
-	rv = SECSuccess;
-    } else {
-    	SECItem result_item = {siBuffer, NULL, 0 };
-	result_item.data = result;
-	result_item.len  = result_bytes;
-	rv = SECITEM_CopyItem(pool, to, &result_item);
-    }
-    return rv;
-}
-
 static nsresult
 GetCertFingerprintByDottedOidString(CERTCertificate* nsscert,
                                     const nsCString &dottedOid, 
@@ -510,7 +413,7 @@ GetCertFingerprintByDottedOidString(CERTCertificate* nsscert,
   SECItem oid;
   oid.data = nsnull;
   oid.len = 0;
-  SECStatus srv = _psm_copy_SEC_StringToOID(nsnull, &oid, 
+  SECStatus srv = SEC_StringToOID(nsnull, &oid, 
                     dottedOid.get(), dottedOid.Length());
   if (srv != SECSuccess)
     return NS_ERROR_FAILURE;
@@ -544,7 +447,8 @@ GetCertFingerprintByDottedOidString(nsIX509Cert *aCert,
 NS_IMETHODIMP
 nsCertOverrideService::RememberValidityOverride(const nsAString & aHostNameWithPort, 
                                                 nsIX509Cert *aCert,
-                                                PRUint32 aOverrideBits)
+                                                PRUint32 aOverrideBits, 
+                                                PRBool aTemporary)
 {
   NS_ENSURE_ARG_POINTER(aCert);
   if (aHostNameWithPort.IsEmpty())
@@ -607,7 +511,9 @@ nsCertOverrideService::RememberValidityOverride(const nsAString & aHostNameWithP
 
   {
     nsAutoMonitor lock(monitor);
-    AddEntryToList(myHostPort, mDottedOidForStoringNewHashes, fpStr, 
+    AddEntryToList(myHostPort,
+                   aTemporary, 
+                   mDottedOidForStoringNewHashes, fpStr, 
                    (nsCertOverride::OverrideBits)aOverrideBits, 
                    nsDependentCString(dbkey));
     Write();
@@ -621,6 +527,7 @@ NS_IMETHODIMP
 nsCertOverrideService::HasMatchingOverride(const nsAString & aHostNameWithPort, 
                                            nsIX509Cert *aCert, 
                                            PRUint32 *aOverrideBits,
+                                           PRBool *aIsTemporary,
                                            PRBool *_retval)
 {
   if (aHostNameWithPort.IsEmpty())
@@ -628,6 +535,7 @@ nsCertOverrideService::HasMatchingOverride(const nsAString & aHostNameWithPort,
 
   NS_ENSURE_ARG_POINTER(aCert);
   NS_ENSURE_ARG_POINTER(aOverrideBits);
+  NS_ENSURE_ARG_POINTER(aIsTemporary);
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
   *aOverrideBits = nsCertOverride::ob_None;
@@ -646,6 +554,7 @@ nsCertOverrideService::HasMatchingOverride(const nsAString & aHostNameWithPort,
   }
 
   *aOverrideBits = settings.mOverrideBits;
+  *aIsTemporary = settings.mIsTemporary;
 
   nsCAutoString fpStr;
   nsresult rv;
@@ -668,9 +577,11 @@ nsCertOverrideService::GetValidityOverride(const nsAString & aHostNameWithPort,
                                            nsACString & aHashAlg, 
                                            nsACString & aFingerprint, 
                                            PRUint32 *aOverrideBits,
+                                           PRBool *aIsTemporary,
                                            PRBool *_found)
 {
   NS_ENSURE_ARG_POINTER(_found);
+  NS_ENSURE_ARG_POINTER(aIsTemporary);
   NS_ENSURE_ARG_POINTER(aOverrideBits);
   *_found = PR_FALSE;
   *aOverrideBits = nsCertOverride::ob_None;
@@ -690,6 +601,7 @@ nsCertOverrideService::GetValidityOverride(const nsAString & aHostNameWithPort,
 
   if (*_found) {
     *aOverrideBits = settings.mOverrideBits;
+    *aIsTemporary = settings.mIsTemporary;
     aFingerprint = settings.mFingerprint;
     aHashAlg = settings.mFingerprintAlgOID;
   }
@@ -699,6 +611,7 @@ nsCertOverrideService::GetValidityOverride(const nsAString & aHostNameWithPort,
 
 nsresult
 nsCertOverrideService::AddEntryToList(const nsACString &hostWithPortUTF8, 
+                                      const PRBool aIsTemporary,
                                       const nsACString &fingerprintAlgOID, 
                                       const nsACString &fingerprint,
                                       nsCertOverride::OverrideBits ob,
@@ -717,6 +630,7 @@ nsCertOverrideService::AddEntryToList(const nsACString &hostWithPortUTF8,
 
     nsCertOverride &settings = entry->mSettings;
     settings.mHostWithPortUTF8 = hostWithPortUTF8;
+    settings.mIsTemporary = aIsTemporary;
     settings.mFingerprintAlgOID = fingerprintAlgOID;
     settings.mFingerprint = fingerprint;
     settings.mOverrideBits = ob;
@@ -793,9 +707,11 @@ matchesDBKey(nsIX509Cert *cert, const char *match_dbkey)
   return !found_mismatch;
 }
 
-struct nsCertAndInt
+struct nsCertAndBoolsAndInt
 {
   nsIX509Cert *cert;
+  PRBool aCheckTemporaries;
+  PRBool aCheckPermanents;
   PRUint32 counter;
 
   SECOidTag mOidTagForStoringNewHashes;
@@ -806,12 +722,20 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
                          void *aArg)
 {
-  nsCertAndInt *cai = (nsCertAndInt *)aArg;
+  nsCertAndBoolsAndInt *cai = (nsCertAndBoolsAndInt *)aArg;
 
   if (cai && aEntry)
   {
     const nsCertOverride &settings = aEntry->mSettings;
-    if (matchesDBKey(cai->cert, settings.mDBKey.get())) {
+    PRBool still_ok = PR_TRUE;
+
+    if ((settings.mIsTemporary && !cai->aCheckTemporaries)
+        ||
+        (!settings.mIsTemporary && !cai->aCheckPermanents)) {
+      still_ok = PR_FALSE;
+    }
+
+    if (still_ok && matchesDBKey(cai->cert, settings.mDBKey.get())) {
       nsCAutoString cert_fingerprint;
       nsresult rv;
       if (settings.mFingerprintAlgOID.Equals(cai->mDottedOidForStoringNewHashes)) {
@@ -834,13 +758,17 @@ FindMatchingCertCallback(nsCertOverrideEntry *aEntry,
 
 NS_IMETHODIMP
 nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert *aCert, 
+                                              PRBool aCheckTemporaries,
+                                              PRBool aCheckPermanents,
                                               PRUint32 *_retval)
 {
   NS_ENSURE_ARG(aCert);
   NS_ENSURE_ARG(_retval);
 
-  nsCertAndInt cai;
+  nsCertAndBoolsAndInt cai;
   cai.cert = aCert;
+  cai.aCheckTemporaries = aCheckTemporaries;
+  cai.aCheckPermanents = aCheckPermanents;
   cai.counter = 0;
   cai.mOidTagForStoringNewHashes = mOidTagForStoringNewHashes;
   cai.mDottedOidForStoringNewHashes = mDottedOidForStoringNewHashes;

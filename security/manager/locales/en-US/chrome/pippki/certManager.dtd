@@ -95,6 +95,7 @@
 <!ENTITY certmgr.certname                     "Certificate Name">
 <!ENTITY certmgr.certserver                   "Server">
 <!ENTITY certmgr.typesofoverrides             "Exceptions">
+<!ENTITY certmgr.override_lifetime            "Lifetime">
 <!ENTITY certmgr.tokenname                    "Security Device">
 <!ENTITY certmgr.purpose                      "Purposes">
 <!ENTITY certmgr.issued                       "Issued On">
@@ -142,3 +143,5 @@
 <!ENTITY exceptionMgr.certstatus.caption      "Certificate Status">
 <!ENTITY exceptionMgr.certstatus.viewCert     "View…">
 <!ENTITY exceptionMgr.certstatus.accesskey    "V">
+<!ENTITY exceptionMgr.permanent.label         "Permanently store this exception">
+<!ENTITY exceptionMgr.permanent.accesskey     "P">

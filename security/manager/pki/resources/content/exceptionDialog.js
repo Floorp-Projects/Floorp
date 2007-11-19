@@ -189,6 +189,7 @@ function getURI() {
 
 function resetDialog() {
   document.getElementById("viewCertButton").disabled = true;
+  document.getElementById("permanent").disabled = true;
   gDialog.getButton("extra1").disabled = true;
   setText("headerDescription", "");
   setText("statusDescription", "");
@@ -263,12 +264,14 @@ function updateCertStatus() {
       
       // In these cases, we do want to enable the "Add Exception" button
       gDialog.getButton("extra1").disabled = false;
+      document.getElementById("permanent").disabled = false;
       setText("headerDescription", gPKIBundle.GetStringFromName("addExceptionInvalidHeader"));
     }
     else {
       shortDesc = "addExceptionValidShort";
       longDesc  = "addExceptionValidLong";
       gDialog.getButton("extra1").disabled = true;
+      document.getElementById("permanent").disabled = true;
     }
     
     document.getElementById("viewCertButton").disabled = false;
@@ -278,12 +281,14 @@ function updateCertStatus() {
     longDesc  = "addExceptionCheckingLong";
     document.getElementById("viewCertButton").disabled = true;
     gDialog.getButton("extra1").disabled = true;
+    document.getElementById("permanent").disabled = true;
   }
   else {
     shortDesc = "addExceptionNoCertShort";
     longDesc  = "addExceptionNoCertLong";
     document.getElementById("viewCertButton").disabled = true;
     gDialog.getButton("extra1").disabled = true;
+    document.getElementById("permanent").disabled = true;
   }
   
   setText("statusDescription", gPKIBundle.GetStringFromName(shortDesc));
@@ -328,10 +333,13 @@ function addException() {
   if(gSSLStatus.isNotValidAtThisTime)
     flags |= overrideService.ERROR_TIME;
   
+  var permanentCheckbox = document.getElementById("permanent");
+
   overrideService.rememberValidityOverride(
     getURI().hostPort,
     gCert,
-    flags);
+    flags,
+    !permanentCheckbox.checked);
   
   window.arguments[0].exceptionAdded = true;
   gDialog.acceptDialog();
