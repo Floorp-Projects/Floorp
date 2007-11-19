@@ -22,6 +22,7 @@ ecma_2/extensions/instanceof-004-n.js
 ecma_2/extensions/instanceof-005-n.js
 ecma_2/extensions/instanceof-006.js
 ecma_3/extensions/10.1.3-2.js
+ecma_3/extensions/7.9.1.js
 ecma_3/extensions/regress-103087.js
 ecma_3/extensions/regress-188206-01.js
 ecma_3/extensions/regress-188206-02.js
