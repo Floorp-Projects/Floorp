@@ -198,8 +198,6 @@ struct JSRuntime {
 #endif
 
     JSGCCallback        gcCallback;
-    JSGCThingCallback   gcThingCallback;
-    void                *gcThingCallbackClosure;
     uint32              gcMallocBytes;
     JSGCArenaInfo       *gcUntracedArenaStackTop;
 #ifdef DEBUG
