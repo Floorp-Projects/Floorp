@@ -39,7 +39,7 @@
 #include "domstubs.idl"
 
 [scriptable, uuid(0ccbcf19-d1b4-489e-984c-cd8c43672bb9)]
-interface nsIDOMConstructor : nsISupports
+interface nsIDOMDOMConstructor : nsISupports
 {
   AString toString();
 };

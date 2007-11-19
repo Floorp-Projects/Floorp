@@ -49,6 +49,7 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsXULTreeAccessible.h"
 #endif
+#include "nsIAccessibleText.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -124,6 +125,10 @@ void nsAccEvent::PrepareForEvent(nsIAccessibleEvent *aEvent)
 void nsAccEvent::PrepareForEvent(nsIDOMNode *aEventNode,
                                  PRBool aForceIsFromUserInput)
 {
+  if (!aEventNode) {
+    return;
+  }
+
   gLastEventNodeWeak = aEventNode;
   if (aForceIsFromUserInput) {
     gLastEventFromUserInput = PR_TRUE;

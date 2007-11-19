@@ -203,8 +203,14 @@ struct nsEnumerationData
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sCookieLog = PR_NewLogModule("cookie");
 
-#define COOKIE_LOGFAILURE(a, b, c, d) LogFailure(a, b, c, d)
-#define COOKIE_LOGSUCCESS(a, b, c, d) LogSuccess(a, b, c, d)
+#define COOKIE_LOGFAILURE(a, b, c, d)    LogFailure(a, b, c, d)
+#define COOKIE_LOGSUCCESS(a, b, c, d, e) LogSuccess(a, b, c, d, e)
+#define COOKIE_LOGEVICTED(a)             LogEvicted(a)
+#define COOKIE_LOGSTRING(lvl, fmt)   \
+  PR_BEGIN_MACRO                     \
+    PR_LOG(sCookieLog, lvl, fmt);    \
+    PR_LOG(sCookieLog, lvl, ("\n")); \
+  PR_END_MACRO
 
 static void
 LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const char *aReason)
@@ -234,22 +240,8 @@ LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const
 }
 
 static void
-LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCookie *aCookie)
+LogCookie(nsCookie *aCookie)
 {
-  // if logging isn't enabled, return now to save cycles
-  if (!PR_LOG_TEST(sCookieLog, PR_LOG_DEBUG)) {
-    return;
-  }
-
-  nsCAutoString spec;
-  if (aHostURI)
-    aHostURI->GetAsciiSpec(spec);
-
-  PR_LOG(sCookieLog, PR_LOG_DEBUG,
-    ("===== %s =====\n", aSetCookie ? "COOKIE ACCEPTED" : "COOKIE SENT"));
-  PR_LOG(sCookieLog, PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
-  PR_LOG(sCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", aCookieString));
-
   PRExplodedTime explodedTime;
   PR_ExplodeTime(PR_Now(), PR_GMTParameters, &explodedTime);
   char timeString[40];
@@ -257,7 +249,7 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCoo
 
   PR_LOG(sCookieLog, PR_LOG_DEBUG,("current time: %s", timeString));
 
-  if (aSetCookie) {
+  if (aCookie) {
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("----------------\n"));
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("name: %s\n", aCookie->Name().get()));
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("value: %s\n", aCookie->Value().get()));
@@ -277,6 +269,44 @@ LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCoo
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
     PR_LOG(sCookieLog, PR_LOG_DEBUG,("is httpOnly: %s\n", aCookie->IsHttpOnly() ? "true" : "false"));
   }
+}
+
+static void
+LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCookie *aCookie, PRBool aReplacing)
+{
+  // if logging isn't enabled, return now to save cycles
+  if (!PR_LOG_TEST(sCookieLog, PR_LOG_DEBUG)) {
+    return;
+  }
+
+  nsCAutoString spec;
+  if (aHostURI)
+    aHostURI->GetAsciiSpec(spec);
+
+  PR_LOG(sCookieLog, PR_LOG_DEBUG,
+    ("===== %s =====\n", aSetCookie ? "COOKIE ACCEPTED" : "COOKIE SENT"));
+  PR_LOG(sCookieLog, PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
+  PR_LOG(sCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", aCookieString));
+  if (aSetCookie)
+    PR_LOG(sCookieLog, PR_LOG_DEBUG,("replaces existing cookie: %s\n", aReplacing ? "true" : "false"));
+
+  LogCookie(aCookie);
+
+  PR_LOG(sCookieLog, PR_LOG_DEBUG,("\n"));
+}
+
+static void
+LogEvicted(nsCookie *aCookie)
+{
+  // if logging isn't enabled, return now to save cycles
+  if (!PR_LOG_TEST(sCookieLog, PR_LOG_DEBUG)) {
+    return;
+  }
+
+  PR_LOG(sCookieLog, PR_LOG_DEBUG,("===== COOKIE EVICTED =====\n"));
+
+  LogCookie(aCookie);
+
   PR_LOG(sCookieLog, PR_LOG_DEBUG,("\n"));
 }
 
@@ -288,14 +318,16 @@ LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStr
 }
 
 static inline void
-LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, nsCookie *aCookie)
+LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, nsCookie *aCookie, PRBool aReplacing)
 {
-  LogSuccess(aSetCookie, aHostURI, aCookieString.get(), aCookie);
+  LogSuccess(aSetCookie, aHostURI, aCookieString.get(), aCookie, aReplacing);
 }
 
 #else
-#define COOKIE_LOGFAILURE(a, b, c, d) /* nothing */
-#define COOKIE_LOGSUCCESS(a, b, c, d) /* nothing */
+#define COOKIE_LOGFAILURE(a, b, c, d)    PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define COOKIE_LOGSUCCESS(a, b, c, d, e) PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define COOKIE_LOGEVICTED(a)             PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define COOKIE_LOGSTRING(a, b)           PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 #endif
 
 /******************************************************************************
@@ -401,7 +433,9 @@ nsCookieService::Init()
 
   // ignore failure here, since it's non-fatal (we can run fine without
   // persistent storage - e.g. if there's no profile)
-  InitDB();
+  nsresult rv = InitDB();
+  if (NS_FAILED(rv))
+    COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): InitDB() gave error %x", rv));
 
   mObserverService = do_GetService("@mozilla.org/observer-service;1");
   if (mObserverService) {
@@ -519,10 +553,19 @@ nsCookieService::InitDB()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // check whether to import or just read in the db
-  if (!tableExists)
-    return ImportCookies();
+  if (tableExists)
+    return Read();
 
-  return Read();
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  cookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
+  rv = ImportCookies(cookieFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // we're done importing - delete the old cookie file
+  cookieFile->Remove(PR_FALSE);
+  return NS_OK;
 }
 
 // sets the schema version and creates the moz_cookies table.
@@ -890,20 +933,17 @@ nsCookieService::Read()
       delete newCookie;
   }
 
+  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("Read(): %ld cookies read", mCookieCount));
+
   return NS_OK;
 }
 
-nsresult
-nsCookieService::ImportCookies()
+NS_IMETHODIMP
+nsCookieService::ImportCookies(nsIFile *aCookieFile)
 {
-  nsCOMPtr<nsIFile> cookieFile;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
-  if (cookieFile)
-    cookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
-
   nsresult rv;
   nsCOMPtr<nsIInputStream> fileInputStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), cookieFile);
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), aCookieFile);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
@@ -922,7 +962,7 @@ nsCookieService::ImportCookies()
   PRInt32 numInts;
   PRInt64 expires;
   PRBool isDomain, isHttpOnly = PR_FALSE;
-  nsCookie *newCookie;
+  PRUint32 originalCookieCount = mCookieCount;
 
   // generate a creation id for all the cookies we're going to read in, by
   // using the current time and successively decrementing it, to keep
@@ -995,7 +1035,7 @@ nsCookieService::ImportCookies()
     }
 
     // create a new nsCookie and assign the data.
-    newCookie =
+    nsRefPtr<nsCookie> newCookie =
       nsCookie::Create(Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
                        Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
                        host,
@@ -1014,20 +1054,13 @@ nsCookieService::ImportCookies()
     // known unique one here.
     newCookie->SetCreationID(--creationIDCounter);
 
-    if (!AddCookieToList(newCookie)) {
-      // It is purpose that created us; purpose that connects us;
-      // purpose that pulls us; that guides us; that drives us.
-      // It is purpose that defines us; purpose that binds us.
-      // When a cookie no longer has purpose, it has a choice:
-      // it can return to the source to be deleted, or it can go
-      // into exile, and stay hidden inside the Matrix.
-      // Let's choose deletion.
-      delete newCookie;
-    }
+    if (originalCookieCount == 0)
+      AddCookieToList(newCookie);
+    else
+      AddInternal(newCookie, currentTime, nsnull, nsnull, PR_TRUE);
   }
 
-  // we're done importing - delete the old cookie file
-  cookieFile->Remove(PR_FALSE);
+  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported", mCookieCount));
 
   return NS_OK;
 }
@@ -1180,7 +1213,7 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   // it's wasteful to alloc a new string; but we have no other choice, until we
   // fix the callers to use nsACStrings.
   if (!cookieData.IsEmpty()) {
-    COOKIE_LOGSUCCESS(GET_COOKIE, aHostURI, cookieData, nsnull);
+    COOKIE_LOGSUCCESS(GET_COOKIE, aHostURI, cookieData, nsnull, nsnull);
     *aCookie = ToNewCString(cookieData);
   }
 }
@@ -1356,8 +1389,10 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
     }
 
     // if we deleted an old cookie, notify consumers
-    if (oldCookie)
+    if (oldCookie) {
+      COOKIE_LOGEVICTED(oldCookie);
       NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+    }
   }
 
   // add the cookie to head of list
@@ -1365,7 +1400,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
   NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
                                      : NS_LITERAL_STRING("added").get());
 
-  COOKIE_LOGSUCCESS(SET_COOKIE, aHostURI, aCookieHeader, aCookie);
+  COOKIE_LOGSUCCESS(SET_COOKIE, aHostURI, aCookieHeader, aCookie, foundCookie != nsnull);
 }
 
 /******************************************************************************
@@ -2013,7 +2048,11 @@ removeExpiredCallback(nsCookieEntry *aEntry,
 void
 nsCookieService::RemoveExpiredCookies(PRInt64 aCurrentTime)
 {
+#ifdef PR_LOGGING
+  PRUint32 initialCookieCount = mCookieCount;
+#endif
   mHostTable.EnumerateEntries(removeExpiredCallback, &aCurrentTime);
+  COOKIE_LOGSTRING(PR_LOG_DEBUG, ("RemoveExpiredCookies(): %ld purged; %ld remain", initialCookieCount - mCookieCount, mCookieCount));
 }
 
 // find whether a given cookie has been previously set. this is provided by the
@@ -2109,11 +2148,14 @@ nsCookieService::RemoveCookieFromList(nsListIter &aIter)
     mozStorageStatementScoper scoper(mStmtDelete);
 
     nsresult rv = mStmtDelete->BindInt64Parameter(0, aIter.current->CreationID());
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "binding parameter failed");
     if (NS_SUCCEEDED(rv)) {
       PRBool hasResult;
       rv = mStmtDelete->ExecuteStep(&hasResult);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "db remove failed!");
+    }
+
+    if (NS_FAILED(rv)) {
+      NS_WARNING("db remove failed!");
+      COOKIE_LOGSTRING(PR_LOG_WARNING, ("RemoveCookieFromList(): removing from db gave error %x", rv));
     }
   }
 
@@ -2192,11 +2234,15 @@ nsCookieService::AddCookieToList(nsCookie *aCookie, PRBool aWriteToDB)
     mozStorageStatementScoper scoper(mStmtInsert);
 
     nsresult rv = bindCookieParameters(mStmtInsert, aCookie);
-    NS_ENSURE_SUCCESS(rv, PR_TRUE);
+    if (NS_SUCCEEDED(rv)) {
+      PRBool hasResult;
+      rv = mStmtInsert->ExecuteStep(&hasResult);
+    }
 
-    PRBool hasResult;
-    rv = mStmtInsert->ExecuteStep(&hasResult);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "db insert failed!");
+    if (NS_FAILED(rv)) {
+      NS_WARNING("db insert failed!");
+      COOKIE_LOGSTRING(PR_LOG_WARNING, ("AddCookieToList(): adding to db gave error %x", rv));
+    }
   }
 
   return PR_TRUE;

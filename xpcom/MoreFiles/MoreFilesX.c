@@ -2316,11 +2316,12 @@ BadParameter:
 
 /*****************************************************************************/
 
-// This function exists in Mac OS X 10.5, we cannot re-define it here.
-// We don't use this function, so just don't compile it.
-#if 0
+/* Renamed from FSVolumeMount to MFX_FSVolumeMount to avoid a conflict with
+ * the FSVolumeMount function present in the system library since Mac OS X
+ * 10.5. */
+
 OSErr
-FSVolumeMount(
+MFX_FSVolumeMount(
 	const void *volMountInfo,
 	FSVolumeRefNum *volRefNum)
 {
@@ -2342,7 +2343,6 @@ BadParameter:
 
 	return ( result );
 }
-#endif
 
 /*****************************************************************************/
 

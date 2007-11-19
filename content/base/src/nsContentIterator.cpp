@@ -253,11 +253,11 @@ protected:
   // instead of the mre robust array of indicies (which is what the basic content iterator uses)?
   // The reason is that subtree iterators do not do much transitioning between parents and children.
   // They tend to stay at the same level.  In fact, you can prove (though I won't attempt it here)
-  // that they change levels at most n+m times, where n is the height of the parent heirarchy from the 
-  // range start to the common ancestor, and m is the the height of the parent heirarchy from the 
+  // that they change levels at most n+m times, where n is the height of the parent hierarchy from the 
+  // range start to the common ancestor, and m is the the height of the parent hierarchy from the 
   // range end to the common ancestor.  If we used the index array, we would pay the price up front
   // for n, and then pay the cost for m on the fly later on.  With the simple cache, we only "pay
-  // as we go".  Either way, we call IndexOf() once for each change of level in the heirarchy.
+  // as we go".  Either way, we call IndexOf() once for each change of level in the hierarchy.
   // Since a trivial index is much simpler, we use it for the subtree iterator.
   
   PRBool mIsDone;

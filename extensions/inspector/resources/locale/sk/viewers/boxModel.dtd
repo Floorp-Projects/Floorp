@@ -36,9 +36,10 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
    
-<!ENTITY boxPadding.label "Vnútorný okraj">
-<!ENTITY boxBorder.label "Rámček">
-<!ENTITY boxDimension.label "Rozmery">
-<!ENTITY boxMargin.label "Vonkajší okraj">
 <!ENTITY boxPosition.label "Umiestnenie">
+<!ENTITY boxDimension.label "Rozmery">
+<!ENTITY boxBorder.label "Okraj">
+<!ENTITY boxMargin.label "Orámovanie">
+<!ENTITY boxPadding.label "Vyplnenie">
+
 

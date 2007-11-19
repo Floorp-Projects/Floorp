@@ -271,37 +271,19 @@ nsThebesFontMetrics::GetMaxStringLength()
 
 class StubPropertyProvider : public gfxTextRun::PropertyProvider {
 public:
-    StubPropertyProvider(const nscoord* aSpacing = nsnull)
-      : mSpacing(aSpacing) {}
-
     virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
                                       PRPackedBool* aBreakBefore) {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
     }
     virtual gfxFloat GetHyphenWidth() {
-        NS_ERROR("This shouldn't be called because we never specify hyphen breaks");
+        NS_ERROR("This shouldn't be called because we never enable hyphens");
         return 0;
     }
     virtual void GetSpacing(PRUint32 aStart, PRUint32 aLength,
-                            Spacing* aSpacing);
-
-private:
-    const nscoord* mSpacing;
-};
-
-void
-StubPropertyProvider::GetSpacing(PRUint32 aStart, PRUint32 aLength,
-                                 Spacing* aSpacing)
-{
-    PRUint32 i;
-    for (i = 0; i < aLength; ++i) {
-        aSpacing[i].mBefore = 0;
-        // mSpacing is absolute (already includes the character width). This is OK
-        // because gfxTextRunCache sets TEXT_ABSOLUTE_SPACING when it creates
-        // the textrun.
-        aSpacing[i].mAfter = mSpacing ? mSpacing[aStart + i] : 0;
+                            Spacing* aSpacing) {
+        NS_ERROR("This shouldn't be called because we never enable spacing");
     }
-}
+};
 
 nsresult 
 nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
@@ -317,7 +299,7 @@ nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aW
         return GetSpaceWidth(aWidth);
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength, PR_FALSE);
+    AutoTextRun textRun(this, aContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
 
@@ -341,7 +323,7 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
         return GetSpaceWidth(aWidth);
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength, PR_FALSE);
+    AutoTextRun textRun(this, aContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
 
@@ -397,8 +379,9 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
     if (aLength == 0)
         return NS_OK;
 
-    StubPropertyProvider provider(aSpacing);
-    AutoTextRun textRun(this, aContext, aString, aLength, aSpacing != nsnull);
+    NS_ASSERTION(!aSpacing, "Spacing not supported here");
+    StubPropertyProvider provider;
+    AutoTextRun textRun(this, aContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
     gfxPoint pt(aX, aY);
@@ -410,7 +393,6 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
     return NS_OK;
 }
 
-// aCachedOffset will be updated with a new offset.
 nsresult
 nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
@@ -421,8 +403,9 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
     if (aLength == 0)
         return NS_OK;
 
-    StubPropertyProvider provider(aSpacing);
-    AutoTextRun textRun(this, aContext, aString, aLength, aSpacing != nsnull);
+    NS_ASSERTION(!aSpacing, "Spacing not supported here");
+    StubPropertyProvider provider;
+    AutoTextRun textRun(this, aContext, aString, aLength);
     if (!textRun.get())
         return NS_ERROR_FAILURE;
     gfxPoint pt(aX, aY);
@@ -435,25 +418,57 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 }
 
 #ifdef MOZ_MATHML
-// These two functions get the bounding metrics for this handle,
-// updating the aBoundingMetrics in Points.  This means that the
-// caller will have to update them to twips before passing it
-// back.
-nsresult
-nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
-                                        nsBoundingMetrics &aBoundingMetrics)
+
+static void
+GetTextRunBoundingMetrics(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aLength,
+                          nsThebesRenderingContext *aContext,
+                          nsBoundingMetrics &aBoundingMetrics)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    StubPropertyProvider provider;
+    gfxTextRun::Metrics theMetrics =
+        aTextRun->MeasureText(aStart, aLength, PR_TRUE, aContext->Thebes(), &provider);
+
+    aBoundingMetrics.leftBearing = NSToCoordFloor(theMetrics.mBoundingBox.X());
+    aBoundingMetrics.rightBearing = NSToCoordCeil(theMetrics.mBoundingBox.XMost());
+    aBoundingMetrics.width = NSToCoordRound(theMetrics.mAdvanceWidth);
+    aBoundingMetrics.ascent = NSToCoordCeil(- theMetrics.mBoundingBox.Y());
+    aBoundingMetrics.descent = NSToCoordCeil(theMetrics.mBoundingBox.YMost());
 }
 
-// aCachedOffset will be updated with a new offset.
 nsresult
-nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString,
-                                        PRUint32 aLength,
-                                        nsBoundingMetrics &aBoundingMetrics,
-                                        PRInt32 *aFontID)
+nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                        nsThebesRenderingContext *aContext,
+                                        nsBoundingMetrics &aBoundingMetrics)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (aLength == 0) {
+        aBoundingMetrics.Clear();
+        return NS_OK;
+    }
+
+    AutoTextRun textRun(this, aContext, aString, aLength);
+    if (!textRun.get())
+        return NS_ERROR_FAILURE;
+
+    GetTextRunBoundingMetrics(textRun.get(), 0, aLength, aContext, aBoundingMetrics);
+    return NS_OK;
+}
+
+nsresult
+nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
+                                        nsThebesRenderingContext *aContext,
+                                        nsBoundingMetrics &aBoundingMetrics)
+{
+    if (aLength == 0) {
+        aBoundingMetrics.Clear();
+        return NS_OK;
+    }
+
+    AutoTextRun textRun(this, aContext, aString, aLength);
+    if (!textRun.get())
+        return NS_ERROR_FAILURE;
+
+    GetTextRunBoundingMetrics(textRun.get(), 0, aLength, aContext, aBoundingMetrics);
+    return NS_OK;
 }
 
 #endif /* MOZ_MATHML */

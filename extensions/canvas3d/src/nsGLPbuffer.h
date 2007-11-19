@@ -49,6 +49,14 @@
 #include "wglew.h"
 #endif
 
+#if defined(XP_UNIX) && defined(MOZ_X11)
+#include "GL/glx.h"
+#endif
+
+#ifdef XP_MACOSX
+#include <AGL/agl.h>
+#endif
+
 class nsCanvasRenderingContextGLPrivate;
 
 class nsGLPbuffer {
@@ -104,6 +112,18 @@ protected:
     WGLEWContext mWGlewContext;
 #endif
 
+#if defined(XP_UNIX) && defined(MOZ_X11)
+    Display     *mDisplay;
+    GLXFBConfig mFBConfig;
+    GLXPbuffer mPbuffer;
+    GLXContext mPbufferContext;
+#endif
+
+#ifdef XP_MACOSX
+    AGLPixelFormat mPixelFormat;
+    AGLContext mContext;
+    AGLPbuffer mPbuffer;
+#endif
 };
 
 #endif /* NSGLPBUFFER_H_ */

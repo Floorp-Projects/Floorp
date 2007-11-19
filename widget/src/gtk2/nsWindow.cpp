@@ -3332,17 +3332,6 @@ nsWindow::EnsureGrabs(void)
         GrabKeyboard();
 }
 
-#ifndef MOZ_XUL
-void
-nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
-{
-}
-
-void
-nsWindow::ApplyTransparencyBitmap()
-{
-}
-#else
 NS_IMETHODIMP
 nsWindow::SetWindowTranslucency(PRBool aTranslucent)
 {
@@ -3563,7 +3552,6 @@ nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
 {
     return UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aRect.width);
 }
-#endif
 
 void
 nsWindow::GrabPointer(void)
@@ -5931,12 +5919,11 @@ nsWindow::GetThebesSurface()
                  GDK_WINDOW_XWINDOW(d),
                  GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(d)),
                  gfxIntSize(width, height));
-            if (mThebesSurface && !mThebesSurface->CairoStatus()) {
-                gfxPlatformGtk::GetPlatform()->SetSurfaceGdkWindow(mThebesSurface, GDK_WINDOW(d));
-            }
-            else {
+
+            // if the surface creation is reporting an error, then
+            // we don't have a surface to give back
+            if (mThebesSurface && mThebesSurface->CairoStatus() != 0)
                 mThebesSurface = nsnull;
-            }
         } else {
 #ifdef MOZ_ENABLE_GLITZ
             glitz_surface_t *gsurf;

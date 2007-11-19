@@ -20,6 +20,9 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Shawn Wilsher <me@shawnwilsher.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+   -   Marek Stepien <mstepien@aviary.pl> (Polish localization)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +41,7 @@
 
   <!ENTITY cmdShowFindDialog.label "Znajdź węzły...">
   <!ENTITY cmdShowFindDialog.accesskey "Z">
-  <!ENTITY cmdShowFindDialog.accelkey "Z">
+  <!ENTITY cmdShowFindDialog.accelkey "f">
 
   <!ENTITY cmdFindNext.label "Znajdź następny">
   <!ENTITY cmdFindNext.accesskey "n">
@@ -47,16 +50,16 @@
   <!ENTITY cmdToggleAnonContent.accesskey "a">
 
   <!ENTITY cmdToggleWhitespaceNodes.label "Wyświetl węzły zawierające niewidoczne znaki">
-  <!ENTITY cmdToggleWhitespaceNodes.accesskey "W">
+  <!ENTITY cmdToggleWhitespaceNodes.accesskey "n">
 
   <!ENTITY cmdToggleAccessibleNodes.label "Wyświetl węzły dostępności">
-  <!ENTITY cmdToggleAccessibleNodes.accesskey "z">
+  <!ENTITY cmdToggleAccessibleNodes.accesskey "d">
 
   <!ENTITY cmdToggleProcessingInstructions.label "Wyświetl instrukcje przetwarzania">
-  <!ENTITY cmdToggleProcessingInstructions.accesskey "p">
+  <!ENTITY cmdToggleProcessingInstructions.accesskey "s">
 
   <!ENTITY cmdFlashSelected.label "Wyróżnij wybrany element">
-
+  <!ENTITY cmdFlashSelected.accesskey "m">
   <!ENTITY cmdToggleAttributes.label "Wyświetl atrybuty">
   <!ENTITY cmdToggleAttributes.accesskey "r">
 
@@ -75,20 +78,29 @@
   <!ENTITY cmdInspectBrowser.label "Przeprowadź inspekcję wewnętrznego dokumentu">
   <!ENTITY cmdInspectInNewWindow.label "Przeprowadź inspekcję w nowym oknie">
   
-  <!ENTITY cmdShowPseudoClasses.label "Ustaw pseudo klasy...">
+  <!ENTITY cmdShowPseudoClasses.label "Ustaw pseudoklasy...">
   <!ENTITY cmdShowPseudoClasses.accesskey "p">
   
-  <!ENTITY pseudoClasses.title "Pseudo klasy">
+  <!ENTITY pseudoClasses.title "Pseudoklasy">
 
   <!ENTITY findNodes.title "Znajdź węzły">
   <!ENTITY findNodesById.label "Id">
-  <!ENTITY findNodesByTag.label "Tag">
+  <!ENTITY findNodesById.accesskey "d">
+  <!ENTITY findNodesById.accesskey2 "I">
+  <!ENTITY findNodesByTag.label "Znacznik">
+  <!ENTITY findNodesByTag.accesskey "k">
+  <!ENTITY findNodesByTag.accesskey2 "Z">
   <!ENTITY findNodesByAttr.label "Atrybut">
+  <!ENTITY findNodesByAttr.accesskey "u">
+  <!ENTITY findNodesByAttr.accesskey2 "A">
   <!ENTITY findNodesByAttrValue.label "Wartość">
+  <!ENTITY findNodesByAttrValue.accesskey "o">
   <!ENTITY findNodesSearchBy.label "Szukaj po">
   <!ENTITY findNodesDirection.label "Kierunek">
-  <!ENTITY findNodesDirectionUp.label "Góra">
-  <!ENTITY findNodesDirectionDown.label "Dół">
+  <!ENTITY findNodesDirectionUp.label "Do góry">
+  <!ENTITY findNodesDirectionUp.accesskey "g">
+  <!ENTITY findNodesDirectionDown.label "W dół">
+  <!ENTITY findNodesDirectionDown.accesskey "w">
   <!ENTITY findNodesFind.label "Znajdź">
   <!ENTITY findNodesCancel.label "Anuluj">
 
@@ -108,11 +120,15 @@
   
   <!ENTITY insertNode.title "Wstaw węzeł">
   <!ENTITY nodeType.label "Typ węzła:">
+  <!ENTITY nodeType.accesskey "T">
   <!ENTITY nodeType.element.label "Element">
   <!ENTITY nodeType.text.label "Tekst">
   <!ENTITY namespaceURI.label "URI przestrzeni nazw:">
+  <!ENTITY namespaceURI.accesskey "U">
   <!ENTITY tagName.label "Nazwa znacznika:">
+  <!ENTITY tagName.accesskey "N">
   <!ENTITY nodeValue.label "Wartość węzła:">
+  <!ENTITY nodeValue.accesskey "W">
 
   <!ENTITY namespaceTitle.null.label "null">
   <!ENTITY namespaceTitle.default.label "Domyślna dokumentu">

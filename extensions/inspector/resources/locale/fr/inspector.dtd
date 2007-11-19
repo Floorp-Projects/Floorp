@@ -3,6 +3,7 @@
 
 <!ENTITY thDOMNodes.label "Nœuds DOM">
 <!ENTITY btnInspect.label "Examiner">
+<!ENTITY btnInspect.accesskey "x">
 <!ENTITY bxDocPanel.title "Document">
 <!ENTITY bxObjectPanel.title "Objet">
 <!ENTITY btnSelecting.tooltip "Choisir un nœud à examiner en cliquant sur celui-ci ">
@@ -46,6 +47,7 @@
 <!ENTITY mnView.label "Affichage">
 <!ENTITY mnView.accesskey "A">
 <!ENTITY cmdToggleBrowser.label "Navigateur">
+<!ENTITY cmdToggleBrowser.accesskey "N">
 <!ENTITY cmdToggleSearch.label "Résultats de la recherche">
 
 <!ENTITY browserPanel.label "Navigateur">

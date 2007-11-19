@@ -248,6 +248,7 @@ typedef union JSTempValueUnion {
     JSScopeProperty     *sprop;
     JSWeakRoots         *weakRoots;
     JSParseContext      *parseContext;
+    JSScript            *script;
     jsval               *array;
 } JSTempValueUnion;
 

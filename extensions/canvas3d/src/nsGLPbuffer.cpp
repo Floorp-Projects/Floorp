@@ -49,10 +49,14 @@ void *nsGLPbuffer::sCurrentContextToken = nsnull;
 static PRUint32 gActiveBuffers = 0;
 
 nsGLPbuffer::nsGLPbuffer()
-    : mWidth(0), mHeight(0),
+    : mWidth(0), mHeight(0)
 #ifdef XP_WIN
-    mGlewWindow(nsnull), mGlewDC(nsnull), mGlewWglContext(nsnull),
+    , mGlewWindow(nsnull), mGlewDC(nsnull), mGlewWglContext(nsnull),
     mPbuffer(nsnull), mPbufferDC(nsnull), mPbufferContext(nsnull)
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+    , mDisplay(nsnull), mFBConfig(0), mPbuffer(0), mPbufferContext(0)
+#elif defined(XP_MACOSX)
+    , mContext(nsnull), mPbuffer(nsnull)
 #endif
 {
     gActiveBuffers++;
@@ -130,6 +134,71 @@ nsGLPbuffer::Init(nsCanvasRenderingContextGLPrivate *priv)
     PRInt64 t2 = PR_Now();
 
     fprintf (stderr, "nsGLPbuffer::Init!\n");
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+    mDisplay = XOpenDisplay(NULL);
+    if (!mDisplay) {
+        mPriv->LogMessage(NS_LITERAL_CSTRING("Canvas 3D: XOpenDisplay failed"));
+        return PR_FALSE;
+    }
+
+    int attrib[] = { GLX_DRAWABLE_TYPE, GLX_PBUFFER_BIT,
+                     GLX_RENDER_TYPE,   GLX_RGBA_BIT,
+                     GLX_RED_SIZE, 1,
+                     GLX_GREEN_SIZE, 1,
+                     GLX_BLUE_SIZE, 1,
+                     GLX_DEPTH_SIZE, 1,
+                     None };
+
+    int num;
+    GLXFBConfig *configs = glXChooseFBConfig(mDisplay, DefaultScreen(mDisplay),
+                                             attrib, &num);
+    fprintf(stderr, "CANVAS3D FBCONFIG: %d %p\n", num, configs);
+    if (!configs) {
+        mPriv->LogMessage(NS_LITERAL_CSTRING("Canvas 3D: No GLXFBConfig found"));
+        return PR_FALSE;
+    }
+
+    // choose first matching config;
+    mFBConfig = *configs;
+
+    XFree(configs);
+
+    // create dummy pbuffer so glewInit will be happy
+
+    mPbufferContext = glXCreateNewContext(mDisplay, mFBConfig, GLX_RGBA_TYPE,
+                                          nsnull, True);
+
+    PRInt64 t1 = PR_Now();
+
+    Resize(2, 2);
+    MakeContextCurrent();
+
+    PRInt64 t2 = PR_Now();
+
+    fprintf (stderr, "nsGLPbuffer::Init!\n");
+
+#elif defined(XP_MACOSX)
+    PRInt64 t1 = PR_Now();
+    PRInt64 t2 = t1;
+
+    GLint attrib[] = {
+        AGL_RGBA,
+        AGL_PBUFFER,
+        AGL_RED_SIZE, 8,
+        AGL_GREEN_SIZE, 8,
+        AGL_BLUE_SIZE, 8,
+        AGL_ALPHA_SIZE, 8,
+        AGL_DEPTH_SIZE, 1,
+        0
+    };
+
+    mPixelFormat = aglChoosePixelFormat(NULL, 0, &attrib[0]);
+    if (!mPixelFormat)
+        return PR_FALSE;
+
+    // we need a context for glewInit
+    Resize(2, 2);
+    MakeContextCurrent();
 #else
     return PR_FALSE;
 #endif
@@ -282,11 +351,34 @@ nsGLPbuffer::Resize(PRInt32 width, PRInt32 height)
 
     mPbufferDC = wglGetPbufferDCARB(mPbuffer);
     mPbufferContext = wglCreateContext(mPbufferDC);
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+    int attrib[] = { GLX_PBUFFER_WIDTH, width,
+                     GLX_PBUFFER_HEIGHT, height,
+                     None };
+
+    mPbuffer = glXCreatePbuffer(mDisplay, mFBConfig, attrib);
+#elif defined(XP_MACOSX)
+    mContext = aglCreateContext(mPixelFormat, NULL);
+    if (!mContext)
+        return PR_FALSE;
+
+    GLint screen = aglGetVirtualScreen(mContext);
+
+    if (screen == -1
+        || !aglCreatePBuffer(width, height, GL_TEXTURE_RECTANGLE_EXT,
+                             GL_RGBA, 0, &mPbuffer)
+        || !aglSetPBuffer (mContext, mPbuffer, 0, 0, screen))
+    {
+        return PR_FALSE;
+    }
+
+    MakeContextCurrent();
 #endif
 
     mWidth = width;
     mHeight = height;
 
+    fprintf (stderr, "Resize: %d %d\n", width, height);
     return PR_TRUE;
 }
 
@@ -302,17 +394,45 @@ nsGLPbuffer::Destroy()
         wglDestroyPbufferARB(mPbuffer);
         mPbuffer = nsnull;
     }
-#endif 
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+    if (mPbuffer) {
+        glXDestroyPbuffer(mDisplay, mPbuffer);
+        mPbuffer = nsnull;
+    }
+#else defined(XP_MACOSX)
+    if (mContext) {
+        aglDestroyContext(mContext);
+        mContext = nsnull;
+    }
+    if (mPbuffer) {
+        aglDestroyPBuffer(mPbuffer);
+        mPbuffer = nsnull;
+    }
+#endif
 }
 
 nsGLPbuffer::~nsGLPbuffer()
 {
+    Destroy();
+
 #ifdef XP_WIN
     if (mGlewWindow) {
         wglDeleteContext(mGlewWglContext);
         DestroyWindow(mGlewWindow);
         mGlewWindow = nsnull;
     }
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+    if (mPbuffer)
+        glXDestroyPbuffer(mDisplay, mPbuffer);
+    if (mPbufferContext)
+        glXDestroyContext(mDisplay, mPbufferContext);
+    if (mDisplay)
+        XCloseDisplay(mDisplay);
+#else defined(XP_MACOSX)
+    if (mPbuffer)
+        aglDestroyPBuffer(mPbuffer);
+    if (mContext)
+        aglDestroyContext(mContext);
 #endif
 
     gActiveBuffers--;
@@ -329,6 +449,10 @@ nsGLPbuffer::MakeContextCurrent()
 
     wglMakeCurrent (mPbufferDC, mPbufferContext);
     sCurrentContextToken = mPbufferContext;
+#elif defined(XP_UNIX) && defined(MOZ_X11)
+    glXMakeContextCurrent(mDisplay, mPbuffer, mPbuffer, mPbufferContext);
+#elif defined(XP_MACOSX)
+    aglSetCurrentContext(mContext);
 #endif
 }
 

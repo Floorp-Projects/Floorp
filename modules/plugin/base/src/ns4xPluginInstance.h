@@ -191,6 +191,9 @@ protected:
     PRPackedBool  mCached;
 
 public:
+    // True while creating the plugin, or calling NPP_SetWindow() on
+    // it.
+    PRPackedBool  mInPluginInitCall;
     PRLibrary* fLibrary;
     nsInstanceStream *mStreams;
 

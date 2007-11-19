@@ -3,6 +3,7 @@
 
 <!ENTITY thDOMNodes.label "DOM Nodes">
 <!ENTITY btnInspect.label "Inspect">
+<!ENTITY btnInspect.accesskey "I">
 <!ENTITY bxDocPanel.title "Document">
 <!ENTITY bxObjectPanel.title "Object">
 <!ENTITY btnSelecting.tooltip "Find a node to inspect by clicking on it">
@@ -46,6 +47,7 @@
 <!ENTITY mnView.label "View">
 <!ENTITY mnView.accesskey "v">
   <!ENTITY cmdToggleBrowser.label "Browser">
+  <!ENTITY cmdToggleBrowser.accesskey "B">
   <!ENTITY cmdToggleSearch.label "Search Results">
 
 <!ENTITY browserPanel.label "Browser">

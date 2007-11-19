@@ -273,44 +273,38 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                 x += advance;
             }
             glyphs.Flush(cr, aDrawToPath);
-        } else if (glyphData->IsComplexCluster()) {
+        } else {
+            PRUint32 j;
+            PRUint32 glyphCount = glyphData->GetGlyphCount();
             const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
-            for (;;) {
-                glyph = glyphs.AppendGlyph();
-                glyph->index = details->mGlyphID;
-                glyph->x = ToDeviceUnits(x + details->mXOffset, devUnitsPerAppUnit);
-                glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
+            for (j = 0; j < glyphCount; ++j, ++details) {
                 double advance = details->mAdvance;
-                if (isRTL) {
-                    glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
-                }
-                x += direction*advance;
-
-                glyphs.Flush(cr, aDrawToPath);
-
-                if (details->mIsLastGlyph)
-                    break;
-                ++details;
-            }
-        } else if (glyphData->IsMissing()) {
-            const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
-            if (details) {
-                double advance = details->mAdvance;
-                if (!aDrawToPath) {
-                    gfxPoint pt(ToDeviceUnits(x, devUnitsPerAppUnit),
-                                ToDeviceUnits(y, devUnitsPerAppUnit));
-                    gfxFloat advanceDevUnits = ToDeviceUnits(advance, devUnitsPerAppUnit);
-                    if (isRTL) {
-                        pt.x -= advanceDevUnits;
+                if (glyphData->IsMissing()) {
+                    if (!aDrawToPath) {
+                        gfxPoint pt(ToDeviceUnits(x, devUnitsPerAppUnit),
+                                    ToDeviceUnits(y, devUnitsPerAppUnit));
+                        gfxFloat advanceDevUnits = ToDeviceUnits(advance, devUnitsPerAppUnit);
+                        if (isRTL) {
+                            pt.x -= advanceDevUnits;
+                        }
+                        gfxFloat height = GetMetrics().maxAscent;
+                        gfxRect glyphRect(pt.x, pt.y - height, advanceDevUnits, height);
+                        gfxFontMissingGlyphs::DrawMissingGlyph(aContext, glyphRect, details->mGlyphID);
                     }
-                    gfxFloat height = GetMetrics().maxAscent;
-                    gfxRect glyphRect(pt.x, pt.y - height, advanceDevUnits, height);
-                    gfxFontMissingGlyphs::DrawMissingGlyph(aContext, glyphRect, details->mGlyphID);
+                } else {
+                    glyph = glyphs.AppendGlyph();
+                    glyph->index = details->mGlyphID;
+                    glyph->x = ToDeviceUnits(x + details->mXOffset, devUnitsPerAppUnit);
+                    glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
+                    if (isRTL) {
+                        glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
+                    }
+                    glyphs.Flush(cr, aDrawToPath);
                 }
                 x += direction*advance;
             }
         }
-        // Every other glyph type is ignored
+
         if (aSpacing) {
             double space = aSpacing[i - aStart].mAfter;
             if (i + 1 < aEnd) {
@@ -333,6 +327,27 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     glyphs.Flush(cr, aDrawToPath, PR_TRUE);
 
     *aPt = gfxPoint(x, y);
+}
+
+static PRInt32
+GetAdvanceForGlyphs(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd)
+{
+    const gfxTextRun::CompressedGlyph *glyphData = aTextRun->GetCharacterGlyphs() + aStart;
+    PRInt32 advance = 0;
+    PRUint32 i;
+    for (i = aStart; i < aEnd; ++i, ++glyphData) {
+        if (glyphData->IsSimpleGlyph()) {
+            advance += glyphData->GetSimpleAdvance();   
+        } else {
+            PRUint32 glyphCount = glyphData->GetGlyphCount();
+            const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
+            PRUint32 j;
+            for (j = 0; j < glyphCount; ++j, ++details) {
+                advance += details->mAdvance;
+            }
+        }
+    }
+    return advance;
 }
 
 static void
@@ -405,9 +420,11 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                 }
             }
             x += direction*advance;
-        } else if (glyphData->IsComplexCluster()) {
+        } else {
+            PRUint32 glyphCount = glyphData->GetGlyphCount();
             const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
-            for (;;) {
+            PRUint32 j;
+            for (j = 0; j < glyphCount; ++j, ++details) {
                 PRUint32 glyphIndex = details->mGlyphID;
                 gfxPoint glyphPt(x + details->mXOffset, details->mYOffset);
                 double advance = details->mAdvance;
@@ -417,20 +434,6 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                     glyphRect.pos.x -= advance;
                 }
                 glyphRect.pos.x += x;
-                metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
-                x += direction*advance;
-                if (details->mIsLastGlyph)
-                    break;
-                ++details;
-            }
-        } else if (glyphData->IsMissing()) {
-            const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
-            if (details) {
-                double advance = details->mAdvance;
-                gfxRect glyphRect(x, -metrics.mAscent, advance, metrics.mAscent);
-                if (isRTL) {
-                    glyphRect.pos.x -= advance;
-                }
                 metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                 x += direction*advance;
             }
@@ -824,7 +827,7 @@ gfxTextRun *
 gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags)
 {
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
-    return new gfxTextRun(aParams, nsnull, 0, this, aFlags);
+    return gfxTextRun::Create(aParams, nsnull, 0, this, aFlags);
 }
 
 gfxTextRun *
@@ -834,8 +837,8 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
     static const PRUint8 space = ' ';
 
     nsAutoPtr<gfxTextRun> textRun;
-    textRun = new gfxTextRun(aParams, &space, 1, this, aFlags);
-    if (!textRun || !textRun->GetCharacterGlyphs())
+    textRun = gfxTextRun::Create(aParams, &space, 1, this, aFlags);
+    if (!textRun)
         return nsnull;
 
     gfxFont *font = GetFontAt(0);
@@ -935,8 +938,35 @@ AccountStorageForTextRun(gfxTextRun *aTextRun, PRInt32 aSign)
 }
 #endif
 
+gfxTextRun *
+gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+                   PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
+{
+    return new (aLength, aFlags)
+        gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags, sizeof(gfxTextRun));
+}
+
+void *
+gfxTextRun::operator new(size_t aSize, PRUint32 aLength, PRUint32 aFlags)
+{
+    NS_ASSERTION(aSize % sizeof(CompressedGlyph) == 0, "Alignment broken!");
+    aSize += sizeof(CompressedGlyph)*aLength;
+    if (!(aFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
+        NS_ASSERTION(aSize % 2 == 0, "Alignment broken!");
+        aSize += ((aFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? 1 : 2)*aLength;
+    }
+
+    return new PRUint8[aSize];
+}
+
+void gfxTextRun::operator delete(void *p)
+{
+    delete[] static_cast<PRUint8*>(p);
+}
+
 gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-                       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
+                       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags,
+                       PRUint32 aObjectSize)
   : mUserData(aParams->mUserData),
     mFontGroup(aFontGroup),
     mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
@@ -948,34 +978,23 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
     if (aParams->mSkipChars) {
         mSkipChars.TakeFrom(aParams->mSkipChars);
     }
-    if (aLength > 0) {
-        mCharacterGlyphs = new CompressedGlyph[aLength];
-        if (mCharacterGlyphs) {
-            memset(mCharacterGlyphs, 0, sizeof(CompressedGlyph)*aLength);
-        }
-    }
+    
+    mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>
+        (reinterpret_cast<PRUint8*>(this) + aObjectSize);
+    memset(mCharacterGlyphs, 0, sizeof(CompressedGlyph)*aLength);
+    
     if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
         mText.mSingle = static_cast<const PRUint8 *>(aText);
         if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
-            PRUint8 *newText = new PRUint8[aLength];
-            if (!newText) {
-                // indicate textrun failure
-                mCharacterGlyphs = nsnull;
-            } else {
-                memcpy(newText, aText, aLength);
-            }
+            PRUint8 *newText = reinterpret_cast<PRUint8*>(mCharacterGlyphs + aLength);
+            memcpy(newText, aText, aLength);
             mText.mSingle = newText;    
         }
     } else {
         mText.mDouble = static_cast<const PRUnichar *>(aText);
         if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
-            PRUnichar *newText = new PRUnichar[aLength];
-            if (!newText) {
-                // indicate textrun failure
-                mCharacterGlyphs = nsnull;
-            } else {
-                memcpy(newText, aText, aLength*sizeof(PRUnichar));
-            }
+            PRUnichar *newText = reinterpret_cast<PRUnichar*>(mCharacterGlyphs + aLength);
+            memcpy(newText, aText, aLength*sizeof(PRUnichar));
             mText.mDouble = newText;    
         }
     }
@@ -989,13 +1008,6 @@ gfxTextRun::~gfxTextRun()
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     AccountStorageForTextRun(this, -1);
 #endif
-    if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
-        if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
-            delete[] mText.mSingle;
-        } else {
-            delete[] mText.mDouble;
-        }
-    }
     NS_RELEASE(mFontGroup);
     MOZ_COUNT_DTOR(gfxTextRun);
 }
@@ -1008,8 +1020,8 @@ gfxTextRun::Clone(const gfxTextRunFactory::Parameters *aParams, const void *aTex
         return nsnull;
 
     nsAutoPtr<gfxTextRun> textRun;
-    textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
-    if (!textRun || !textRun->mCharacterGlyphs)
+    textRun = gfxTextRun::Create(aParams, aText, aLength, aFontGroup, aFlags);
+    if (!textRun)
         return nsnull;
 
     textRun->CopyGlyphDataFrom(this, 0, mCharacterCount, 0, PR_FALSE);
@@ -1040,32 +1052,6 @@ gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
     return changed != 0;
 }
 
-PRInt32
-gfxTextRun::ComputeClusterAdvance(PRUint32 aClusterOffset)
-{
-    CompressedGlyph *glyphData = &mCharacterGlyphs[aClusterOffset];
-    if (glyphData->IsSimpleGlyph())
-        return glyphData->GetSimpleAdvance();
-
-    const DetailedGlyph *details = GetDetailedGlyphs(aClusterOffset);
-    if (!details)
-        return 0;
-
-    PRInt32 advance = 0;
-    while (1) {
-        advance += details->mAdvance;
-        if (details->mIsLastGlyph)
-            return advance;
-        ++details;
-    }
-}
-
-static PRBool
-IsLigatureStart(gfxTextRun::CompressedGlyph aGlyph)
-{
-    return aGlyph.IsClusterStart() && !aGlyph.IsLigatureContinuation();
-}
-
 gfxTextRun::LigatureData
 gfxTextRun::ComputeLigatureData(PRUint32 aPartStart, PRUint32 aPartEnd,
                                 PropertyProvider *aProvider)
@@ -1077,15 +1063,16 @@ gfxTextRun::ComputeLigatureData(PRUint32 aPartStart, PRUint32 aPartEnd,
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
     PRUint32 i;
-    for (i = aPartStart; !IsLigatureStart(charGlyphs[i]); --i) {
+    for (i = aPartStart; !charGlyphs[i].IsLigatureGroupStart(); --i) {
         NS_ASSERTION(i > 0, "Ligature at the start of the run??");
     }
     result.mLigatureStart = i;
-    for (i = aPartStart + 1; i < mCharacterCount && !IsLigatureStart(charGlyphs[i]); ++i) {
+    for (i = aPartStart + 1; i < mCharacterCount && !charGlyphs[i].IsLigatureGroupStart(); ++i) {
     }
     result.mLigatureEnd = i;
 
-    PRInt32 ligatureWidth = ComputeClusterAdvance(result.mLigatureStart);
+    PRInt32 ligatureWidth =
+        GetAdvanceForGlyphs(this, result.mLigatureStart, result.mLigatureEnd);
     // Count the number of started clusters we have seen
     PRUint32 totalClusterCount = 0;
     PRUint32 partClusterIndex = 0;
@@ -1130,58 +1117,24 @@ gfxTextRun::ComputePartialLigatureWidth(PRUint32 aPartStart, PRUint32 aPartEnd,
     return data.mPartWidth;
 }
 
-void
-gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
-                               PropertyProvider *aProvider,
-                               PropertyProvider::Spacing *aSpacing)
+static void
+GetAdjustedSpacing(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
+                   gfxTextRun::PropertyProvider *aProvider,
+                   gfxTextRun::PropertyProvider::Spacing *aSpacing)
 {
     if (aStart >= aEnd)
         return;
 
     aProvider->GetSpacing(aStart, aEnd - aStart, aSpacing);
 
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
-    PRUint32 i;
-
-    if (mFlags & gfxTextRunFactory::TEXT_ABSOLUTE_SPACING) {
-        // Subtract character widths from mAfter at the end of clusters/ligatures to
-        // relativize spacing. This is a bit sad since we're going to add
-        // them in again below when we actually use the spacing, but this
-        // produces simpler code and absolute spacing is rarely required.
-        
-        // The width of the last nonligature cluster, in appunits
-        PRInt32 clusterWidth = 0;
-        for (i = aStart; i < aEnd; ++i) {
-            CompressedGlyph *glyphData = &charGlyphs[i];
-            
-            if (glyphData->IsSimpleGlyph()) {
-                if (i > aStart) {
-                    aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
-                }
-                clusterWidth = glyphData->GetSimpleAdvance();
-            } else if (glyphData->IsComplexOrMissing()) {
-                if (i > aStart) {
-                    aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
-                }
-                clusterWidth = 0;
-                const DetailedGlyph *details = GetDetailedGlyphs(i);
-                if (details) {
-                    while (1) {
-                        clusterWidth += details->mAdvance;
-                        if (details->mIsLastGlyph)
-                            break;
-                        ++details;
-                    }
-                }
-            }
-        }
-        aSpacing[aEnd - 1 - aStart].mAfter -= clusterWidth;
-    }
-
 #ifdef DEBUG
     // Check to see if we have spacing inside ligatures
+
+    const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
+    PRUint32 i;
+
     for (i = aStart; i < aEnd; ++i) {
-        if (charGlyphs[i].IsLigatureContinuation()) {
+        if (!charGlyphs[i].IsLigatureGroupStart()) {
             NS_ASSERTION(i == aStart || aSpacing[i - aStart].mBefore == 0,
                          "Before-spacing inside a ligature!");
             NS_ASSERTION(i - 1 <= aStart || aSpacing[i - 1 - aStart].mAfter == 0,
@@ -1202,7 +1155,7 @@ gfxTextRun::GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
     if (!aSpacing->AppendElements(aEnd - aStart))
         return PR_FALSE;
     memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing)*(aSpacingStart - aStart));
-    GetAdjustedSpacing(aSpacingStart, aSpacingEnd, aProvider,
+    GetAdjustedSpacing(this, aSpacingStart, aSpacingEnd, aProvider,
                        aSpacing->Elements() + aSpacingStart - aStart);
     memset(aSpacing->Elements() + aSpacingEnd - aStart, 0, sizeof(gfxFont::Spacing)*(aEnd - aSpacingEnd));
     return PR_TRUE;
@@ -1216,11 +1169,11 @@ gfxTextRun::ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd)
   
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
-    while (*aStart < *aEnd && !IsLigatureStart(charGlyphs[*aStart])) {
+    while (*aStart < *aEnd && !charGlyphs[*aStart].IsLigatureGroupStart()) {
         ++(*aStart);
     }
     if (*aEnd < mCharacterCount) {
-        while (*aEnd > *aStart && !IsLigatureStart(charGlyphs[*aEnd])) {
+        while (*aEnd > *aStart && !charGlyphs[*aEnd].IsLigatureGroupStart()) {
             --(*aEnd);
         }
     }
@@ -1477,8 +1430,6 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                 PRBool *aUsedHyphenation,
                                 PRUint32 *aLastBreak)
 {
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
-
     aMaxLength = PR_MIN(aMaxLength, mCharacterCount - aStart);
 
     NS_ASSERTION(aStart + aMaxLength <= mCharacterCount, "Substring out of range");
@@ -1488,7 +1439,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     PropertyProvider::Spacing spacingBuffer[MEASUREMENT_BUFFER_SIZE];
     PRBool haveSpacing = aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING) != 0;
     if (haveSpacing) {
-        GetAdjustedSpacing(bufferStart, bufferStart + bufferLength, aProvider,
+        GetAdjustedSpacing(this, bufferStart, bufferStart + bufferLength, aProvider,
                            spacingBuffer);
     }
     PRPackedBool hyphenBuffer[MEASUREMENT_BUFFER_SIZE];
@@ -1522,7 +1473,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             bufferStart = i;
             bufferLength = PR_MIN(aStart + aMaxLength, i + MEASUREMENT_BUFFER_SIZE) - i;
             if (haveSpacing) {
-                GetAdjustedSpacing(bufferStart, bufferStart + bufferLength, aProvider,
+                GetAdjustedSpacing(this, bufferStart, bufferStart + bufferLength, aProvider,
                                    spacingBuffer);
             }
             if (haveHyphenation) {
@@ -1557,28 +1508,15 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             }
         }
         
-        gfxFloat charAdvance = 0;
+        gfxFloat charAdvance;
         if (i >= ligatureRunStart && i < ligatureRunEnd) {
-            CompressedGlyph *glyphData = &charGlyphs[i];
-            if (glyphData->IsSimpleGlyph()) {
-                charAdvance = glyphData->GetSimpleAdvance();
-            } else if (glyphData->IsComplexOrMissing()) {
-                const DetailedGlyph *details = GetDetailedGlyphs(i);
-                if (details) {
-                    while (1) {
-                        charAdvance += details->mAdvance;
-                        if (details->mIsLastGlyph)
-                            break;
-                        ++details;
-                    }
-                }
-            }
+            charAdvance = GetAdvanceForGlyphs(this, i, i + 1);
             if (haveSpacing) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i - bufferStart];
                 charAdvance += space->mBefore + space->mAfter;
             }
         } else {
-            charAdvance += ComputePartialLigatureWidth(i, i + 1, aProvider);
+            charAdvance = ComputePartialLigatureWidth(i, i + 1, aProvider);
         }
         
         advance += charAdvance;
@@ -1639,8 +1577,6 @@ gfxFloat
 gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
                             PropertyProvider *aProvider)
 {
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
-
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
 
     PRUint32 ligatureRunStart = aStart;
@@ -1656,7 +1592,7 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
         PRUint32 i;
         nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
         if (spacingBuffer.AppendElements(aLength)) {
-            GetAdjustedSpacing(ligatureRunStart, ligatureRunEnd, aProvider,
+            GetAdjustedSpacing(this, ligatureRunStart, ligatureRunEnd, aProvider,
                                spacingBuffer.Elements());
             for (i = 0; i < ligatureRunEnd - ligatureRunStart; ++i) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i];
@@ -1665,25 +1601,7 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
         }
     }
 
-    PRUint32 i;
-    for (i = ligatureRunStart; i < ligatureRunEnd; ++i) {
-        CompressedGlyph *glyphData = &charGlyphs[i];
-        if (glyphData->IsSimpleGlyph()) {
-            result += glyphData->GetSimpleAdvance();
-        } else if (glyphData->IsComplexOrMissing()) {
-            const DetailedGlyph *details = GetDetailedGlyphs(i);
-            if (details) {
-                while (1) {
-                    result += details->mAdvance;
-                    if (details->mIsLastGlyph)
-                        break;
-                    ++details;
-                }
-            }
-        }
-    }
-
-    return result;
+    return result + GetAdvanceForGlyphs(this, ligatureRunStart, ligatureRunEnd);
 }
 
 PRBool
@@ -1797,13 +1715,13 @@ gfxTextRun::AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount)
     if (!mDetailedGlyphs) {
         mDetailedGlyphs = new nsAutoArrayPtr<DetailedGlyph>[mCharacterCount];
         if (!mDetailedGlyphs) {
-            mCharacterGlyphs[aIndex].SetMissing();
+            mCharacterGlyphs[aIndex].SetMissing(0);
             return nsnull;
         }
     }
     DetailedGlyph *details = new DetailedGlyph[aCount];
     if (!details) {
-        mCharacterGlyphs[aIndex].SetMissing();
+        mCharacterGlyphs[aIndex].SetMissing(0);
         return nsnull;
     }
     mDetailedGlyphs[aIndex] = details;
@@ -1811,20 +1729,24 @@ gfxTextRun::AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount)
 }
 
 void
-gfxTextRun::SetDetailedGlyphs(PRUint32 aIndex, const DetailedGlyph *aGlyphs,
-                              PRUint32 aCount)
+gfxTextRun::SetGlyphs(PRUint32 aIndex, CompressedGlyph aGlyph,
+                      const DetailedGlyph *aGlyphs)
 {
-    NS_ASSERTION(aCount > 0, "Can't set zero detailed glyphs");
-    NS_ASSERTION(aGlyphs[aCount - 1].mIsLastGlyph, "Failed to set last glyph flag");
+    NS_ASSERTION(!aGlyph.IsSimpleGlyph(), "Simple glyphs not handled here");
+    NS_ASSERTION(aIndex > 0 ||
+                 (aGlyph.IsClusterStart() && aGlyph.IsLigatureGroupStart()),
+                 "First character must be the start of a cluster and can't be a ligature continuation!");
 
-    DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, aCount);
-    if (!details)
-        return;
-
-    memcpy(details, aGlyphs, sizeof(DetailedGlyph)*aCount);
-    mCharacterGlyphs[aIndex].SetComplexCluster();
+    PRUint32 glyphCount = aGlyph.GetGlyphCount();
+    if (glyphCount > 0) {
+        DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, glyphCount);
+        if (!details)
+            return;
+        memcpy(details, aGlyphs, sizeof(DetailedGlyph)*glyphCount);
+    }
+    mCharacterGlyphs[aIndex] = aGlyph;
 }
-  
+
 void
 gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
 {
@@ -1832,7 +1754,6 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
     if (!details)
         return;
 
-    details->mIsLastGlyph = PR_TRUE;
     details->mGlyphID = aChar;
     GlyphRun *glyphRun = &mGlyphRuns[FindFirstGlyphRunContaining(aIndex)];
     gfxFloat width = PR_MAX(glyphRun->mFont->GetMetrics().aveCharWidth,
@@ -1840,7 +1761,7 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
     details->mAdvance = PRUint32(width*GetAppUnitsPerDevUnit());
     details->mXOffset = 0;
     details->mYOffset = 0;
-    mCharacterGlyphs[aIndex].SetMissing();
+    mCharacterGlyphs[aIndex].SetMissing(1);
 }
 
 void
@@ -1855,30 +1776,15 @@ gfxTextRun::RecordSurrogates(const PRUnichar *aString)
     gfxTextRun::CompressedGlyph g;
     for (i = 0; i < mCharacterCount; ++i) {
         if (NS_IS_LOW_SURROGATE(aString[i])) {
-            SetCharacterGlyph(i, g.SetLowSurrogate());
+            SetGlyphs(i, g.SetLowSurrogate(), nsnull);
         }
     }
-}
-
-static PRUint32
-CountDetailedGlyphs(gfxTextRun::DetailedGlyph *aGlyphs)
-{
-    PRUint32 i = 0;
-    while (!aGlyphs[i].mIsLastGlyph) {
-        ++i;
-    }
-    return i + 1;
 }
 
 static void
 ClearCharacters(gfxTextRun::CompressedGlyph *aGlyphs, PRUint32 aLength)
 {
-    gfxTextRun::CompressedGlyph g;
-    g.SetMissing();
-    PRUint32 i;
-    for (i = 0; i < aLength; ++i) {
-        aGlyphs[i] = g;
-    }
+    memset(aGlyphs, 0, sizeof(gfxTextRun::CompressedGlyph)*aLength);
 }
 
 void
@@ -1892,15 +1798,17 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
                  "Destination substring out of range");
 
     PRUint32 i;
+    // Copy base character data
     for (i = 0; i < aLength; ++i) {
         CompressedGlyph g = aSource->mCharacterGlyphs[i + aStart];
         g.SetCanBreakBefore(mCharacterGlyphs[i + aDest].CanBreakBefore());
         mCharacterGlyphs[i + aDest] = g;
         if (aStealData) {
-            aSource->mCharacterGlyphs[i + aStart].SetMissing();
+            aSource->mCharacterGlyphs[i + aStart].SetMissing(0);
         }
     }
 
+    // Copy detailed glyphs
     if (aSource->mDetailedGlyphs) {
         for (i = 0; i < aLength; ++i) {
             DetailedGlyph *details = aSource->mDetailedGlyphs[i + aStart];
@@ -1916,7 +1824,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
                     mDetailedGlyphs[i + aDest] = details;
                     aSource->mDetailedGlyphs[i + aStart].forget();
                 } else {
-                    PRUint32 glyphCount = CountDetailedGlyphs(details);
+                    PRUint32 glyphCount = mCharacterGlyphs[i + aDest].GetGlyphCount();
                     DetailedGlyph *dest = AllocateDetailedGlyphs(i + aDest, glyphCount);
                     if (!dest) {
                         ClearCharacters(&mCharacterGlyphs[aDest], aLength);
@@ -1934,6 +1842,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
         }
     }
 
+    // Copy glyph runs
     GlyphRunIterator iter(aSource, aStart, aLength);
 #ifdef DEBUG
     gfxFont *lastFont = nsnull;
@@ -1983,7 +1892,7 @@ gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIn
     AddGlyphRun(aFont, aCharIndex);
     CompressedGlyph g;
     g.SetSimpleGlyph(spaceWidthAppUnits, spaceGlyph);
-    SetCharacterGlyph(aCharIndex, g);
+    SetSimpleGlyph(aCharIndex, g);
 }
 
 void
@@ -2013,7 +1922,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                     if (!extents->IsGlyphKnown(glyphIndex)) {
                         if (!fontIsSetup) {
                             font->SetupCairoFont(aRefContext);
-                            fontIsSetup = PR_TRUE;
+                             fontIsSetup = PR_TRUE;
                         }
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerSimple;
@@ -2021,9 +1930,11 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                         font->SetupGlyphExtents(aRefContext, glyphIndex, PR_FALSE, extents);
                     }
                 }
-            } else if (glyphData->IsComplexCluster()) {
+            } else {
+                PRUint32 k;
+                PRUint32 glyphCount = glyphData->GetGlyphCount();
                 const gfxTextRun::DetailedGlyph *details = GetDetailedGlyphs(j);
-                for (;;) {
+                for (k = 0; k < glyphCount; ++k, ++details) {
                     PRUint32 glyphIndex = details->mGlyphID;
                     if (!extents->IsGlyphKnownWithTightExtents(glyphIndex)) {
                         if (!fontIsSetup) {
@@ -2035,9 +1946,6 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
 #endif
                         font->SetupGlyphExtents(aRefContext, glyphIndex, PR_TRUE, extents);
                     }
-                    if (details->mIsLastGlyph)
-                        break;
-                    ++details;
                 }
             }
         }

@@ -139,6 +139,7 @@ endif # MOZ_XUL_APP
 
 ifeq ($(MOZ_BUILD_APP),camino)
 DIRS += autocomplete/public
+DIRS += downloads/public
 endif
 
 include $(topsrcdir)/config/rules.mk

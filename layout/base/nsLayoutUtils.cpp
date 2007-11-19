@@ -305,7 +305,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   NS_PRECONDITION(aContent1, "aContent1 must not be null");
   NS_PRECONDITION(aContent2, "aContent2 must not be null");
 
-  nsAutoVoidArray content1Ancestors;
+  nsAutoTArray<nsINode*, 32> content1Ancestors;
   nsINode* c1;
   for (c1 = aContent1; c1 && c1 != aCommonAncestor; c1 = c1->GetNodeParent()) {
     content1Ancestors.AppendElement(c1);
@@ -316,7 +316,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
     aCommonAncestor = nsnull;
   }
 
-  nsAutoVoidArray content2Ancestors;
+  nsAutoTArray<nsINode*, 32> content2Ancestors;
   nsINode* c2;
   for (c2 = aContent2; c2 && c2 != aCommonAncestor; c2 = c2->GetNodeParent()) {
     content2Ancestors.AppendElement(c2);
@@ -328,13 +328,13 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
                                  aIf1Ancestor, aIf2Ancestor, nsnull);
   }
   
-  int last1 = content1Ancestors.Count() - 1;
-  int last2 = content2Ancestors.Count() - 1;
+  int last1 = content1Ancestors.Length() - 1;
+  int last2 = content2Ancestors.Length() - 1;
   nsINode* content1Ancestor = nsnull;
   nsINode* content2Ancestor = nsnull;
   while (last1 >= 0 && last2 >= 0
-         && ((content1Ancestor = static_cast<nsINode*>(content1Ancestors.ElementAt(last1)))
-             == (content2Ancestor = static_cast<nsINode*>(content2Ancestors.ElementAt(last2))))) {
+         && ((content1Ancestor = content1Ancestors.ElementAt(last1)) ==
+             (content2Ancestor = content2Ancestors.ElementAt(last2)))) {
     last1--;
     last2--;
   }
@@ -1335,9 +1335,9 @@ GetPercentHeight(const nsStyleCoord& aStyle,
   return PR_TRUE;
 }
 
-// Handles only -moz-intrinsic and -moz-min-intrinsic, and
-// -moz-shrink-wrap for min-width and max-width, since the others
-// (-moz-shrink-wrap for width, and -moz-fill) have no effect on
+// Handles only -moz-max-content and -moz-min-content, and
+// -moz-fit-content for min-width and max-width, since the others
+// (-moz-fit-content for width, and -moz-available) have no effect on
 // intrinsic widths.
 enum eWidthProperty { PROP_WIDTH, PROP_MAX_WIDTH, PROP_MIN_WIDTH };
 static PRBool
@@ -1352,28 +1352,28 @@ GetIntrinsicCoord(const nsStyleCoord& aStyle,
   if (aStyle.GetUnit() != eStyleUnit_Enumerated)
     return PR_FALSE;
   PRInt32 val = aStyle.GetIntValue();
-  NS_ASSERTION(val == NS_STYLE_WIDTH_INTRINSIC ||
-               val == NS_STYLE_WIDTH_MIN_INTRINSIC ||
-               val == NS_STYLE_WIDTH_SHRINK_WRAP ||
-               val == NS_STYLE_WIDTH_FILL,
+  NS_ASSERTION(val == NS_STYLE_WIDTH_MAX_CONTENT ||
+               val == NS_STYLE_WIDTH_MIN_CONTENT ||
+               val == NS_STYLE_WIDTH_FIT_CONTENT ||
+               val == NS_STYLE_WIDTH_AVAILABLE,
                "unexpected enumerated value for width property");
-  if (val == NS_STYLE_WIDTH_FILL)
+  if (val == NS_STYLE_WIDTH_AVAILABLE)
     return PR_FALSE;
-  if (val == NS_STYLE_WIDTH_SHRINK_WRAP) {
+  if (val == NS_STYLE_WIDTH_FIT_CONTENT) {
     if (aProperty == PROP_WIDTH)
       return PR_FALSE; // handle like 'width: auto'
     if (aProperty == PROP_MAX_WIDTH)
-      // constrain large 'width' values down to -moz-intrinsic
-      val = NS_STYLE_WIDTH_INTRINSIC;
+      // constrain large 'width' values down to -moz-max-content
+      val = NS_STYLE_WIDTH_MAX_CONTENT;
     else
-      // constrain small 'width' or 'max-width' values up to -moz-min-intrinsic
-      val = NS_STYLE_WIDTH_MIN_INTRINSIC;
+      // constrain small 'width' or 'max-width' values up to -moz-min-content
+      val = NS_STYLE_WIDTH_MIN_CONTENT;
   }
 
-  NS_ASSERTION(val == NS_STYLE_WIDTH_INTRINSIC ||
-               val == NS_STYLE_WIDTH_MIN_INTRINSIC,
+  NS_ASSERTION(val == NS_STYLE_WIDTH_MAX_CONTENT ||
+               val == NS_STYLE_WIDTH_MIN_CONTENT,
                "should have reduced everything remaining to one of these");
-  if (val == NS_STYLE_WIDTH_INTRINSIC)
+  if (val == NS_STYLE_WIDTH_MAX_CONTENT)
     aResult = aFrame->GetPrefWidth(aRenderingContext);
   else
     aResult = aFrame->GetMinWidth(aRenderingContext);
@@ -1426,11 +1426,11 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   // than the specified 'max-width', which works out to the same thing),
   // don't even bother getting the frame's intrinsic width.
   if (styleWidth.GetUnit() == eStyleUnit_Enumerated &&
-      (styleWidth.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
-       styleWidth.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC)) {
-    // -moz-shrink-wrap and -moz-fill enumerated widths compute intrinsic
+      (styleWidth.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
+       styleWidth.GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT)) {
+    // -moz-fit-content and -moz-available enumerated widths compute intrinsic
     // widths just like auto.
-    // For -moz-intrinsic and -moz-min-intrinsic, we handle them like
+    // For -moz-max-content and -moz-min-content, we handle them like
     // specified widths, but ignore -moz-box-sizing.
     boxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   } else if (styleWidth.GetUnit() != eStyleUnit_Coord &&
@@ -1653,15 +1653,15 @@ nsLayoutUtils::ComputeWidthValue(
   } else if (eStyleUnit_Enumerated == aCoord.GetUnit()) {
     PRInt32 val = aCoord.GetIntValue();
     switch (val) {
-      case NS_STYLE_WIDTH_INTRINSIC:
+      case NS_STYLE_WIDTH_MAX_CONTENT:
         result = aFrame->GetPrefWidth(aRenderingContext);
         NS_ASSERTION(result >= 0, "width less than zero");
         break;
-      case NS_STYLE_WIDTH_MIN_INTRINSIC:
+      case NS_STYLE_WIDTH_MIN_CONTENT:
         result = aFrame->GetMinWidth(aRenderingContext);
         NS_ASSERTION(result >= 0, "width less than zero");
         break;
-      case NS_STYLE_WIDTH_SHRINK_WRAP:
+      case NS_STYLE_WIDTH_FIT_CONTENT:
         {
           nscoord pref = aFrame->GetPrefWidth(aRenderingContext),
                    min = aFrame->GetMinWidth(aRenderingContext),
@@ -1671,7 +1671,7 @@ nsLayoutUtils::ComputeWidthValue(
           NS_ASSERTION(result >= 0, "width less than zero");
         }
         break;
-      case NS_STYLE_WIDTH_FILL:
+      case NS_STYLE_WIDTH_AVAILABLE:
         result = aContainingBlockWidth -
                  (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
     }

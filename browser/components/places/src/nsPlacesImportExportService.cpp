@@ -103,6 +103,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "prprf.h"
+#include "nsVoidArray.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -2475,16 +2476,32 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
   return rv;
 }
 
+#define BROWSER_BOOKMARKS_OVERWRITE_PREF    "browser.bookmarks.overwrite"
+#define BROWSER_BOOKMARKS_MAX_BACKUPS_PREF  "browser.bookmarks.max_backups"
+#define POSTPLACES_BOOKMARKS_FILE           "bookmarks.postplaces.html"
+
 NS_IMETHODIMP
 nsPlacesImportExportService::BackupBookmarksFile()
 {
   nsresult rv = EnsureServiceState();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // get bookmarks file
   nsCOMPtr<nsIFile> bookmarksFileDir;
   rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
                               getter_AddRefs(bookmarksFileDir));
+
+  PRBool overwriteBookmarks;
+  rv = prefs->GetBoolPref(BROWSER_BOOKMARKS_OVERWRITE_PREF, &overwriteBookmarks);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!overwriteBookmarks) {
+    rv = bookmarksFileDir->SetLeafName(NS_LITERAL_STRING(POSTPLACES_BOOKMARKS_FILE));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsILocalFile> bookmarksFile(do_QueryInterface(bookmarksFileDir));
@@ -2503,14 +2520,8 @@ nsPlacesImportExportService::BackupBookmarksFile()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // archive if needed
-  nsCOMPtr<nsIPrefService> prefServ(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIPrefBranch> bookmarksPrefs;
-  rv = prefServ->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRInt32 numberOfBackups;
-  rv = bookmarksPrefs->GetIntPref("max_backups", &numberOfBackups);
+  rv = prefs->GetIntPref(BROWSER_BOOKMARKS_MAX_BACKUPS_PREF, &numberOfBackups);
   if (NS_FAILED(rv))
     numberOfBackups = 5;
 
@@ -2633,6 +2644,18 @@ nsPlacesImportExportService::ArchiveBookmarksFile(PRInt32 numberOfBackups,
   rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
                               getter_AddRefs(bookmarksFile));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool overwriteBookmarks;
+  rv = prefs->GetBoolPref(BROWSER_BOOKMARKS_OVERWRITE_PREF, &overwriteBookmarks);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!overwriteBookmarks) {
+    rv = bookmarksFile->SetLeafName(NS_LITERAL_STRING(POSTPLACES_BOOKMARKS_FILE));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   
   rv = bookmarksFile->CopyTo(bookmarksBackupDir, backupFilenameString);
   // at least dump something out in case this fails in a debug build

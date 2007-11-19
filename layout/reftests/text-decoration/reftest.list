@@ -1,0 +1,18 @@
+== underline-block-quirks.html underline-block-quirks-ref.html
+!= underline-block-quirks.html underline-block-quirks-notref.html
+== underline-inline-block-quirks.html underline-inline-block-quirks-ref.html
+!= underline-inline-block-quirks.html underline-inline-block-quirks-notref.html
+== underline-table-caption-quirks.html underline-table-caption-quirks-ref.html
+!= underline-table-caption-quirks.html underline-table-caption-quirks-notref.html
+== underline-table-cell-quirks.html underline-table-cell-quirks-ref.html
+!= underline-table-cell-quirks.html underline-table-cell-quirks-notref.html
+fails == underline-block-propagation-quirks.html underline-block-propagation-quirks-ref.html # currently too quirky (bug 403524)
+== underline-block-standards.html underline-block-standards-ref.html
+!= underline-block-standards.html underline-block-standards-notref.html
+== underline-inline-block-standards.html underline-inline-block-standards-ref.html
+!= underline-inline-block-standards.html underline-inline-block-standards-notref.html
+== underline-table-caption-standards.html underline-table-caption-standards-ref.html
+!= underline-table-caption-standards.html underline-table-caption-standards-notref.html
+== underline-table-cell-standards.html underline-table-cell-standards-ref.html
+!= underline-table-cell-standards.html underline-table-cell-standards-notref.html
+fails == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html # bug that we propagate to floats (bug 403526)

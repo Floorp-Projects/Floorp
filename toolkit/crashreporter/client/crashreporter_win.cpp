@@ -225,6 +225,38 @@ static void SetStringKey(const wchar_t* key,
   }
 }
 
+static string FormatLastError()
+{
+  DWORD err = GetLastError();
+  LPWSTR s;
+  string message = "Crash report submision failed: ";
+  // odds are it's a WinInet error
+  HANDLE hInetModule = GetModuleHandle(L"WinInet.dll");
+  if(FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                   FORMAT_MESSAGE_FROM_SYSTEM |
+                   FORMAT_MESSAGE_FROM_HMODULE,
+                   hInetModule,
+                   err,
+                   0,
+                   (LPWSTR)&s,
+                   0,
+                   NULL) != 0) {
+    message += WideToUTF8(s, NULL);
+    LocalFree(s);
+    // strip off any trailing newlines
+    string::size_type n = message.find_last_not_of("\r\n");
+    if (n < message.size() - 1) {
+      message.erase(n+1);
+    }
+  }
+  else {
+    char buf[64];
+    sprintf(buf, "Unknown error, error code: 0x%08x", err);
+    message += buf;
+  }
+  return message;
+}
+
 // Gets the position of a window relative to another window's client area
 static void GetRelativeRect(HWND hwnd, HWND hwndParent, RECT* r)
 {
@@ -292,6 +324,7 @@ static DWORD WINAPI SendThreadProc(LPVOID param)
 
   if (td->sendURL.empty()) {
     finishedOk = false;
+    LogMessage("No server URL, not sending report");
   } else {
     google_breakpad::CrashReportSender sender(L"");
     finishedOk = (sender.SendCrashReport(td->sendURL,
@@ -299,6 +332,15 @@ static DWORD WINAPI SendThreadProc(LPVOID param)
                                          td->dumpFile,
                                          &td->serverResponse)
                   == google_breakpad::RESULT_SUCCEEDED);
+    if (finishedOk) {
+      LogMessage("Crash report submitted successfully");
+    }
+    else {
+      // get an error string and print it to the log
+      //XXX: would be nice to get the HTTP status code here, filed:
+      // http://code.google.com/p/google-breakpad/issues/detail?id=220
+      LogMessage(FormatLastError());
+    }
   }
 
   PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);
@@ -452,7 +494,24 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
     SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT,
                        EM_SETTARGETDEVICE, (WPARAM)NULL, 0);
 
-    SetDlgItemText(hwndDlg, IDC_VIEWREPORTCHECK, Str(ST_VIEWREPORT).c_str());
+    // resize the "View Report" button based on the string length
+    RECT viewRect;
+    HWND hwndView = GetDlgItem(hwndDlg, IDC_VIEWREPORTCHECK);
+    GetRelativeRect(hwndView, hwndDlg, &viewRect);
+    HDC hdc = GetDC(hwndView);
+    const wstring viewButtonText = Str(ST_VIEWREPORT);
+    SIZE size;
+    if (GetTextExtentPoint32(hdc, viewButtonText.c_str(),
+                             viewButtonText.length(), &size)) {
+      // shift right by the amount the button should grow
+      int sizeDiff = size.cx - (viewRect.right - viewRect.left);
+      viewRect.right += sizeDiff;
+      MoveWindow(hwndView, viewRect.left, viewRect.top,
+                 viewRect.right - viewRect.left,
+                 viewRect.bottom - viewRect.top,
+                 TRUE);
+    }
+    SetDlgItemText(hwndDlg, IDC_VIEWREPORTCHECK, viewButtonText.c_str());
     SendDlgItemMessage(hwndDlg, IDC_VIEWREPORTTEXT,
                        EM_SETTARGETDEVICE, (WPARAM)NULL, 0);
 
@@ -484,30 +543,47 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
 
     SetDlgItemText(hwndDlg, IDC_CLOSEBUTTON, Str(ST_CLOSE).c_str());
 
+    RECT closeRect;
+    HWND hwndClose = GetDlgItem(hwndDlg, IDC_CLOSEBUTTON);
+    GetRelativeRect(hwndClose, hwndDlg, &closeRect);
+
+    RECT restartRect;
+    HWND hwndRestart = GetDlgItem(hwndDlg, IDC_RESTARTBUTTON);
+    GetRelativeRect(hwndRestart, hwndDlg, &restartRect);
+
     if (gRestartArgs.size() > 0) {
-      SetDlgItemText(hwndDlg, IDC_RESTARTBUTTON, Str(ST_RESTART).c_str());
+      // set the restart button text and shift the buttons around
+      // since the size may need to change
+      hdc = GetDC(hwndRestart);
+      const wstring restartButtonText = Str(ST_RESTART);
+      if (GetTextExtentPoint32(hdc, restartButtonText.c_str(),
+                               restartButtonText.length(), &size)) {
+        // shift left by the amount the button should grow
+        int sizeDiff = size.cx - (restartRect.right - restartRect.left);
+        restartRect.left -= sizeDiff;
+        closeRect.left -= sizeDiff;
+        closeRect.right -= sizeDiff;
+        MoveWindow(hwndRestart, restartRect.left, restartRect.top,
+                   restartRect.right - restartRect.left,
+                   restartRect.bottom - restartRect.top,
+                   TRUE);
+      }
+      SetDlgItemText(hwndDlg, IDC_RESTARTBUTTON, restartButtonText.c_str());
     } else {
       // No restart arguments, move the close button over to the side
       // and hide the restart button
       SetDlgItemVisible(hwndDlg, IDC_RESTARTBUTTON, false);
 
-      RECT closeRect;
-      HWND hwndClose = GetDlgItem(hwndDlg, IDC_CLOSEBUTTON);
-      GetRelativeRect(hwndClose, hwndDlg, &closeRect);
-
-      RECT restartRect;
-      HWND hwndRestart = GetDlgItem(hwndDlg, IDC_RESTARTBUTTON);
-      GetRelativeRect(hwndRestart, hwndDlg, &restartRect);
-
       int size = closeRect.right - closeRect.left;
       closeRect.right = restartRect.right;
       closeRect.left = closeRect.right - size;
-
-      MoveWindow(hwndClose, closeRect.left, closeRect.top,
-                 closeRect.right - closeRect.left,
-                 closeRect.bottom - closeRect.top,
-                 TRUE);
     }
+    // need to move the close button regardless
+    MoveWindow(hwndClose, closeRect.left, closeRect.top,
+               closeRect.right - closeRect.left,
+               closeRect.bottom - closeRect.top,
+               TRUE);
+
     UpdateEmail(hwndDlg);
     ShowReportInfo(hwndDlg);
 
@@ -805,7 +881,7 @@ ifstream* UIOpenRead(const string& filename)
   return file;
 }
 
-ofstream* UIOpenWrite(const string& filename)
+ofstream* UIOpenWrite(const string& filename, bool append) // append=false
 {
   // adapted from breakpad's src/common/windows/http_upload.cc
 
@@ -815,9 +891,11 @@ ofstream* UIOpenWrite(const string& filename)
   // not exist in earlier versions, so let the ifstream open the file itself.
 #if _MSC_VER >= 1400  // MSVC 2005/8
   ofstream* file = new ofstream();
-  file->open(UTF8ToWide(filename).c_str(), ios::out);
+  file->open(UTF8ToWide(filename).c_str(), append ? ios::out | ios::app
+                                                  : ios::out);
 #else  // _MSC_VER >= 1400
-  ofstream* file = new ofstream(_wfopen(UTF8ToWide(filename).c_str(), L"w"));
+  ofstream* file = new ofstream(_wfopen(UTF8ToWide(filename).c_str(),
+                                        append ? L"a" : L"w"));
 #endif  // _MSC_VER >= 1400
 
   return file;

@@ -438,7 +438,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 #endif
     }
   }
-  int columnCount = 0;
+  int columnCount = 0; // ignores overflow container columns; they don't affect balancing
   PRBool reflowNext = PR_FALSE;
 
   while (child) {
@@ -549,7 +549,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       NS_ASSERTION(!kidNextInFlow, "next in flow should have been deleted");
       break;
     } else {
-      ++columnCount;
+      if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) // don't increment for overflow containers
+        ++columnCount;
       // Make sure that the column has a next-in-flow. If not, we must
       // create one to hold the overflowing stuff, even if we're just
       // going to put it on our overflow list and let *our*

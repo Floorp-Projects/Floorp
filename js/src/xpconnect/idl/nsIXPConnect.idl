@@ -65,6 +65,7 @@
       native JSID(jsid);
 [ptr] native voidPtrPtr(void*);
 [ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
+[ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
 
 /***************************************************************************/
 
@@ -150,6 +151,7 @@ interface nsIXPCSecurityManager;
 interface nsIPrincipal;
 
 %{C++
+class nsCycleCollectionTraversalCallback;
 class nsScriptObjectTracer;
 %}
 
@@ -443,7 +445,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(3eb7f5fc-1325-43af-aead-6033162e04af)]
+[uuid(9f45711b-bf4f-4af6-a71d-d165f042986d)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -741,4 +743,12 @@ interface nsIXPConnect : nsISupports
      * @param aHolder The object that hold the rooted JS objects.
      */
     [noscript] void removeJSHolder(in voidPtr aHolder);
+
+    /**
+     * Note aJSContext as a child to the cycle collector.
+     * @param aJSContext The JSContext to note.
+     * @param aCb The cycle collection traversal callback.
+     */
+    [noscript,notxpcom] void noteJSContext(in JSContextPtr aJSContext,
+                                           in nsCCTraversalCallbackRef aCb);
 };

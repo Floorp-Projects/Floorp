@@ -149,6 +149,14 @@ static gboolean SendReportIdle(gpointer userData)
      "upload_file_minidump",
      "", "",
      &response);
+  if (success) {
+    LogMessage("Crash report submitted successfully");
+  }
+  else {
+    //XXX: HTTPUpload::SendRequest eats the curl error code, filed
+    // http://code.google.com/p/google-breakpad/issues/detail?id=221
+    LogMessage("Crash report submission failed");
+  }
   SendCompleted(success, response);
 
   if (!success) {
@@ -534,7 +542,9 @@ std::ifstream* UIOpenRead(const string& filename)
   return new std::ifstream(filename.c_str(), std::ios::in);
 }
 
-std::ofstream* UIOpenWrite(const string& filename)
+std::ofstream* UIOpenWrite(const string& filename, bool append) // append=false
 {
-  return new std::ofstream(filename.c_str(), std::ios::out);
+  return new std::ofstream(filename.c_str(),
+                           append ? std::ios::out | std::ios::app
+                                  : std::ios::out);
 }

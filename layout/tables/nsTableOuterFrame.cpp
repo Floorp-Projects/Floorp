@@ -1278,9 +1278,12 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
       FinishReflowChild(mCaptionFrame, aPresContext, captionRS, captionMet,
                         captionOrigin.x, captionOrigin.y, 0);
       captionRS->~nsHTMLReflowState();
-    } else {
+    } else if (mCaptionFrame->GetPosition() != captionOrigin) {
+      // Invalidate both the old and new rects
+      mCaptionFrame->Invalidate(mCaptionFrame->GetOverflowRect());
       mCaptionFrame->SetPosition(captionOrigin);
       nsTableFrame::RePositionViews(mCaptionFrame);
+      mCaptionFrame->Invalidate(mCaptionFrame->GetOverflowRect());
     }
   }
   // XXX If the height is constrained then we need to check whether
@@ -1295,9 +1298,12 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     FinishReflowChild(mInnerTableFrame, aPresContext, innerRS, innerMet,
                       innerOrigin.x, innerOrigin.y, 0);
     innerRS->~nsHTMLReflowState();
-  } else {
+  } else if (mInnerTableFrame->GetPosition() != innerOrigin) {
+    // Invalidate both the old and new rects
+    mInnerTableFrame->Invalidate(mInnerTableFrame->GetOverflowRect());
     mInnerTableFrame->SetPosition(innerOrigin);
     nsTableFrame::RePositionViews(mInnerTableFrame);
+    mInnerTableFrame->Invalidate(mInnerTableFrame->GetOverflowRect());
   }
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);

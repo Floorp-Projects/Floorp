@@ -37,6 +37,7 @@
    :: kinds of windows (not JUST browser windows) with toolbars
    ::::: */
 
+window[chromehidden~="menubar"] .chromeclass-menubar,
 window[chromehidden~="directories"] .chromeclass-directories,
 window[chromehidden~="status"] .chromeclass-status,
 window[chromehidden~="extrachrome"] .chromeclass-extrachrome,
@@ -256,18 +257,6 @@ toolbarpaletteitem[place="palette"] {
 
 menubar {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#menubar");
-  -moz-box-orient: vertical;
-  -moz-box-pack: end;
-}
-
-window[chromehidden~="menubar"] .chromeclass-menubar,
-menubar[hidden="true"],
-menubar[moz-collapsed="true"],
-menubar[collapsed="true"] {
-  min-height: 0%;
-  max-height: 0px;
-  display: -moz-box;
-  visibility: visible;
 }
 
 /********* menu ***********/

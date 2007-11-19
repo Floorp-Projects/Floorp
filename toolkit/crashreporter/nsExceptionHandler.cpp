@@ -69,6 +69,7 @@
 #include <time.h>
 #include <prenv.h>
 #include <prio.h>
+#include <prmem.h>
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsILocalFile.h"
@@ -551,9 +552,12 @@ InitUserID(nsACString& aUserID)
   *reinterpret_cast<PRUint32*>(&id.m3[4]) = random();
 #endif
 
-  nsCAutoString id_str(id.ToString());
+  char* id_cstr = id.ToString();
+  NS_ENSURE_TRUE(id_cstr, NS_ERROR_OUT_OF_MEMORY);
+  nsDependentCString id_str(id_cstr);
   aUserID = Substring(id_str, 1, id_str.Length()-2);
 
+  PR_Free(id_cstr);
   return NS_OK;
 }
 

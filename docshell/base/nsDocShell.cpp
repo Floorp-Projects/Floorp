@@ -304,6 +304,9 @@ nsDocShell::nsDocShell():
     mEditorData(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
+#ifdef DEBUG
+    , mInEnsureScriptEnv(PR_FALSE)
+#endif
 {
     if (gDocShellCount++ == 0) {
         NS_ASSERTION(sURIFixup == nsnull,
@@ -4764,7 +4767,6 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
 
     // Determine if this type of load should update history
     switch (mLoadType) {
-    case LOAD_RELOAD_CHARSET_CHANGE: // don't preserve history in charset reload
     case LOAD_NORMAL_REPLACE:
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_RELOAD_BYPASS_CACHE:
@@ -8671,6 +8673,16 @@ nsDocShell::EnsureScriptEnvironment()
         return NS_ERROR_NOT_AVAILABLE;
     }
 
+#ifdef DEBUG
+    NS_ASSERTION(!mInEnsureScriptEnv,
+                 "Infinite loop! Calling EnsureScriptEnvironment() from "
+                 "within EnsureScriptEnvironment()!");
+
+    // Yeah, this isn't re-entrant safe, but that's ok since if we
+    // re-enter this method, we'll infinitely loop...
+    mInEnsureScriptEnv = PR_TRUE;
+#endif
+
     nsCOMPtr<nsIDOMScriptObjectFactory> factory =
         do_GetService(kDOMScriptObjectFactoryCID);
     NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
@@ -8701,6 +8713,11 @@ nsDocShell::EnsureScriptEnvironment()
     nsresult rv;
     rv = mScriptGlobal->EnsureScriptEnvironment(nsIProgrammingLanguage::JAVASCRIPT);
     NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef DEBUG
+    mInEnsureScriptEnv = PR_FALSE;
+#endif
+
     return NS_OK;
 }
 

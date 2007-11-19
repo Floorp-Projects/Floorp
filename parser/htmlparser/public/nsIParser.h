@@ -51,12 +51,12 @@
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
 #include "nsStringGlue.h"
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 
-// {d49b492c-1bdb-4b41-a138-9495a72fc11c}
+// {506527cc-d832-420b-ba3a-80c05aa105f4}
 #define NS_IPARSER_IID \
-{ 0xd49b492c, 0x1bdb, 0x4b41, \
-  { 0xa1, 0x38, 0x94, 0x95, 0xa7, 0x2f, 0xc1, 0x1c } }
+{ 0x506527cc, 0xd832, 0x420b, \
+  { 0xba, 0x3a, 0x80, 0xc0, 0x5a, 0xa1, 0x05, 0xf4 } }
 
 
 // {41421C60-310A-11d4-816F-000064657374}
@@ -254,7 +254,7 @@ class nsIParser : public nsISupports {
      */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              void* aKey,
-                             nsVoidArray& aTagStack,
+                             nsTArray<nsAutoString>& aTagStack,
                              PRBool aXMLMode,
                              const nsACString& aContentType,
                              nsDTDMode aMode = eDTDMode_autodetect) = 0;

@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US" class="reftest-wait">
+<head>
+  <title>Testcase, bug 386401</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <style type="text/css">
+
+  table#main { border-spacing: 2px; }
+  table#main td { border: 1px solid; padding: 2px; }
+  table#main tbody { overflow: scroll; }
+
+  </style>
+  <script type="text/javascript">
+
+  function run() {
+    setTimeout(run2, 0);
+  }
+
+  function run2() {
+    var c = document.getElementById("grow");
+    c.style.width="99%";
+    document.documentElement.className = "";
+  }
+
+  </script>
+</head>
+<body onload="run()">
+
+<table id="outer"><tr>
+<td>
+
+<table id="main">
+  <thead><tr><td>Header</td><td>Header</td><td>A really big header</td></tr></thead>
+  <tfoot><tr><td>Footer</td><td>Footer</td><td>Footer</td></tr></tfoot>
+  <tbody>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+    <tr><td>Cell</td><td>Cell</td><td>Cell</td></tr>
+  </tbody>
+</table>
+
+</td>
+<td id="grow">
+</td>
+</table>
+
+</body>
+</html>

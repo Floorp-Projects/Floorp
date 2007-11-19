@@ -102,9 +102,19 @@ endif
 #
 # Neutrino/Intel (uses the same unixish_x86 code)
 #
-ifeq ($(OS_TARGET)$(OS_TEST),NTOx86)
+ifeq ($(OS_TARGET),NTO)
+ifeq ($(OS_TEST),x86)
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
+ifeq ($(OS_TEST),arm)
+CPPSRCS		:= xptcinvoke_nto_arm.cpp xptcstubs_nto_arm.cpp
+endif
+ifeq ($(OS_TEST),sh)
+CPPSRCS		:= xptcinvoke_nto_shle.cpp xptcstubs_nto_shle.cpp
+ASFILES		:= xptcstubs_asm_shle.s
+endif
+endif
+
 
 ######################################################################
 # Solaris/Intel

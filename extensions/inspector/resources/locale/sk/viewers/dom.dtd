@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Shawn Wilsher <me@shawnwilsher.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,7 +37,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY cmdShowFindDialog.label "Hľadať uzol">
+<!ENTITY cmdShowFindDialog.label "Hľadať uzly...">
 <!ENTITY cmdShowFindDialog.accesskey "H">
 <!ENTITY cmdShowFindDialog.accelkey "f">
 
@@ -49,10 +50,13 @@
 <!ENTITY cmdToggleWhitespaceNodes.label "Zobraziť prázdne uzly">
 <!ENTITY cmdToggleWhitespaceNodes.accesskey "p">
 
-<!ENTITY cmdToggleAccessibleNodes.label "Show Accessible Nodes">
-<!ENTITY cmdToggleAccessibleNodes.accesskey "c">
+<!ENTITY cmdToggleAccessibleNodes.label "Zobraziť dostupné uzly">
+<!ENTITY cmdToggleAccessibleNodes.accesskey "b">
 
-<!ENTITY cmdFlashSelected.label "Zvýrazniť vybratý prvok">
+  <!ENTITY cmdToggleProcessingInstructions.label "Zobraziť vykonávacie inštrukcie">
+  <!ENTITY cmdToggleProcessingInstructions.accesskey "Z">
+
+<!ENTITY cmdFlashSelected.label "Zvýrazniť vybraný prvok">
 
 <!ENTITY cmdToggleAttributes.label "Zobraziť atribúty">
 <!ENTITY cmdToggleAttributes.accesskey "r">
@@ -65,7 +69,7 @@
 <!ENTITY cmdShowColumnsDialog.label "Stĺpce">
 <!ENTITY cmdShowColumnsDialog.accesskey "c">
 
-<!ENTITY cmdInsertNode.label "Pridať">
+<!ENTITY cmdInsertNode.label "Vložiť">
 <!ENTITY cmdDeleteNode.label "Odstrániť">
 <!ENTITY cmdCopyXML.label "Kopírovať XML">
 <!ENTITY cmdBlink.label "Zvýrazniť prvok">
@@ -77,8 +81,8 @@
 
 <!ENTITY pseudoClasses.title "Pseudo-triedy">
 
-<!ENTITY findNodes.title "Hľadať uzol">
-<!ENTITY findNodesById.label "Id">
+<!ENTITY findNodes.title "Hľadať uzly...">
+<!ENTITY findNodesById.label "ID">
 <!ENTITY findNodesByTag.label "Tag">
 <!ENTITY findNodesByAttr.label "Atribút">
 <!ENTITY findNodesByAttrValue.label "Hodnota">
@@ -89,3 +93,45 @@
 <!ENTITY findNodesFind.label "Hľadať">
 <!ENTITY findNodesCancel.label "Zrušiť">
 
+  <!ENTITY mnEditPasteMenu.label "Prilepiť">
+  <!ENTITY mnEditPasteBefore.label "Pred">
+  <!ENTITY mnEditPasteAfter.label "Po">
+  <!ENTITY mnEditPasteReplace.label "Na miesto (Nahradiť)">
+  <!ENTITY mnEditPasteFirstChild.label "Ako prvý potomok">
+  <!ENTITY mnEditPasteLastChild.label "Ako posledný potomok">
+  <!ENTITY mnEditPasteAsParent.label "Ako rodič">
+
+  <!ENTITY mnEditInsertMenu.label "Vložiť">
+  <!ENTITY mnEditInsertAfter.label "Po">
+  <!ENTITY mnEditInsertBefore.label "Pred">
+  <!ENTITY mnEditInsertFirstChild.label "Ako prvý potomok">
+  <!ENTITY mnEditInsertLastChild.label "Ako posledný potomok">
+
+  <!ENTITY insertNode.title "Vložiť uzol">
+  <!ENTITY nodeType.label "Typ uzla:">
+  <!ENTITY nodeType.element.label "Prvok">
+  <!ENTITY nodeType.text.label "Text">
+  <!ENTITY namespaceURI.label "Priestor názvov URI:">
+  <!ENTITY tagName.label "Názov tagu:">
+  <!ENTITY nodeValue.label "Hodnota uzla:">
+
+  <!ENTITY namespaceTitle.null.label "Nulový">
+  <!ENTITY namespaceTitle.default.label "Predvolený podľa dokumentu">
+  <!ENTITY namespaceTitle.custom.label "Vlastný">
+
+<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
+                        Please consult http://www.w3.org/Consortium/Translation/
+                        for appropriate translation or leave unchanged. -->
+  <!ENTITY namespaceTitle.XMLNS.label "XMLNS">
+  <!ENTITY namespaceTitle.XML.label "XML">
+  <!ENTITY namespaceTitle.XHTML.label "XHTML">
+  <!ENTITY namespaceTitle.XLink.label "XLink">
+  <!ENTITY namespaceTitle.XSLT.label "XSLT">
+  <!ENTITY namespaceTitle.XBL.label "XBL">
+  <!ENTITY namespaceTitle.MathML.label "MathML">
+  <!ENTITY namespaceTitle.RDF.label "RDF">
+  <!ENTITY namespaceTitle.XUL.label "XUL">
+  <!ENTITY namespaceTitle.SVG.label "SVG">
+  <!ENTITY namespaceTitle.XMLEvents.label "Udalosti XML">
+  <!ENTITY namespaceTitle.WAIRoles.label "Úlohy WAI">
+  <!ENTITY namespaceTitle.WAIProperties.label "Vlastnosti WAI">

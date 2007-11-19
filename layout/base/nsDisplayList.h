@@ -658,7 +658,7 @@ private:
   void* operator new(size_t sz) CPP_THROW_NEW;
   
   // Utility function used to massage the list during OptimizeVisibility.
-  void FlattenTo(nsVoidArray* aElements);
+  void FlattenTo(nsTArray<nsDisplayItem*>* aElements);
   // Utility function used to massage the list during sorting, to rewrite
   // any wrapper items with null GetUnderlyingFrame
   void ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder);

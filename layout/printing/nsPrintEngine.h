@@ -147,6 +147,8 @@ public:
   void CalcNumPrintablePages(PRInt32& aNumPages);
   void ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify);
   nsresult CleanupOnFailure(nsresult aResult, PRBool aIsPrinting);
+  // If FinishPrintPreview() fails, caller may need to reset the state of the
+  // object, for example by calling CleanupOnFailure().
   nsresult FinishPrintPreview();
   static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
   void SetDocAndURLIntoProgress(nsPrintObject* aPO,

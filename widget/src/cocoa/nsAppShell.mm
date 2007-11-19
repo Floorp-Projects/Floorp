@@ -108,6 +108,7 @@ nsAppShell::nsAppShell()
 , mRunningEventLoop(PR_FALSE)
 , mStarted(PR_FALSE)
 , mTerminated(PR_FALSE)
+, mNotifiedWillTerminate(PR_FALSE)
 , mSkippedNativeCallback(PR_FALSE)
 , mHadMoreEventsCount(0)
 , mRecursionDepth(0)
@@ -140,7 +141,28 @@ nsAppShell::~nsAppShell()
   }
 
   [mDelegate release];
-  [mMainPool release];
+  // When you quit Camino with at least one window open, embedding is shut
+  // down (by a call to NS_TermEmbedding()) and we (the current appshell)
+  // are destroyed as the last browser window (class BrowserWindow) is closed.
+  // (The call to NS_TermEmbedding() is ultimately made from
+  // [BrowserWindowController windowWillClose:].)  This means that some code
+  // runs _after_ the appshell is destroyed.  This code assumes that various
+  // objects which have a retain count >= 1 will remain in existence, and that
+  // an autorelease pool will still be available.  But because mMainPool sits
+  // so low on the autorelease stack, if we release it here there's a good
+  // chance that all the aforementioned objects (including the other
+  // autorelease pools) will be released, and havoc will result.
+  //
+  // So if we've been terminated using [NSApplication terminate:] (which
+  // Camino always uses), we don't release mMainPool here.  This won't cause
+  // leaks, because after [NSApplication terminate:] sends an
+  // NSApplicationWillTerminate notification it calls [NSApplication
+  // _deallocHardCore:], which (after it uses [NSArray
+  // makeObjectsPerformSelector:] to close all remaining windows) calls
+  // [NSAutoreleasePool releaseAllPools] (to release all autorelease pools
+  // on the current thread, which is the main thread).
+  if (!mNotifiedWillTerminate)
+    [mMainPool release];
 }
 
 // Init
@@ -305,13 +327,10 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
 void
 nsAppShell::WillTerminate()
 {
+  mNotifiedWillTerminate = PR_TRUE;
   if (mTerminated)
     return;
   mTerminated = PR_TRUE;
-
-  // Ugly hack to stop _NSAutoreleaseNoPool errors on shutdown from Camino --
-  // these seem to be triggered by our call here to NS_ProcessPendingEvents().
-  [[NSAutoreleasePool alloc] init];
 
   // Calling [NSApp terminate:] causes (among other things) an
   // NSApplicationWillTerminate notification to be posted and the main run

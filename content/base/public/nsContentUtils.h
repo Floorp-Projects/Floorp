@@ -92,6 +92,7 @@ class nsIPref;
 class nsVoidArray;
 struct JSRuntime;
 class nsICaseConversion;
+class nsIWidget;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -161,6 +162,12 @@ public:
   static PRBool   IsCallerTrustedForRead();
 
   static PRBool   IsCallerTrustedForWrite();
+
+  /**
+   * Check whether a caller is trusted to have aCapability.  This also
+   * checks for UniversalXPConnect in addition to aCapability.
+   */
+  static PRBool   IsCallerTrustedForCapability(const char* aCapability);
 
   /**
    * Do not ever pass null pointers to this method.  If one of your
@@ -337,6 +344,12 @@ public:
 
   static const nsDependentSubstring TrimWhitespace(const nsAString& aStr,
                                                    PRBool aTrimTrailing = PR_TRUE);
+
+  /**
+   * Returns true if aChar is of class Ps, Pi, Po, Pf, or Pe. (Does not
+   * currently handle non-BMP characters.)
+   */
+  static PRBool IsPunctuationMark(PRUnichar aChar);
 
   static void Shutdown();
 
@@ -1103,6 +1116,10 @@ public:
    */
   static PRBool IsNativeAnonymous(nsIContent* aContent);
 
+  /**
+   * Return top-level widget in the parent chain.
+   */
+  static nsIWidget* GetTopLevelWidget(nsIWidget* aWidget);
 
 private:
 

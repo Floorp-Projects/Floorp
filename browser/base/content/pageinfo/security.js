@@ -63,24 +63,19 @@ var security = {
     catch (exception) { }
 
     var ui = security._getSecurityUI();
-    var status = null;
-    var sp = null;
-    var isBroken = false;
-    if (ui) {
-      isBroken = (ui.state == Components.interfaces.nsIWebProgressListener.STATE_IS_BROKEN);
-      sp = ui.QueryInterface(nsISSLStatusProvider);
-      if (sp)
-        status = sp.SSLStatus;
-    }
-    if (status) {
-      status = status.QueryInterface(nsISSLStatus);
-    }
-    if (status) {
-      var cert = status.serverCert;
-      var issuerName;
+    if (!ui)
+      return null;
 
-      issuerName = this.mapIssuerOrganization(cert.issuerOrganization);
-      if (!issuerName) issuerName = cert.issuerName;
+    var isBroken =
+      (ui.state == Components.interfaces.nsIWebProgressListener.STATE_IS_BROKEN);
+    ui.QueryInterface(nsISSLStatusProvider);
+    var status = ui.SSLStatus;
+
+    if (status) {
+      status.QueryInterface(nsISSLStatus);
+      var cert = status.serverCert;
+      var issuerName =
+        this.mapIssuerOrganization(cert.issuerOrganization) || cert.issuerName;
 
       return {
         hostName : hName,
@@ -106,7 +101,7 @@ var security = {
 
   // Find the secureBrowserUI object (if present)
   _getSecurityUI : function() {
-    if ("gBrowser" in window.opener)
+    if (window.opener.gBrowser)
       return window.opener.gBrowser.securityUI;
     return null;
   },

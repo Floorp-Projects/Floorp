@@ -103,7 +103,7 @@
       -->
     </content>
     
-    <implementation>
+    <implementation implements="nsIDOMEventListener">
       <property name="color">
         <getter><![CDATA[
           return this.mSelectedCell ? this.mSelectedCell.getAttribute("color") : null;
@@ -342,21 +342,8 @@
           }
         ]]></body>
       </method>
-      
-      <method name="addKeyListener">
-        <body><![CDATA[
-          document._focusedPicker = this;
-          document.addEventListener("keydown", this.mPickerKeyDown, true);
-        ]]></body>
-      </method>
-      <method name="removeKeyListener">
-        <body><![CDATA[
-          document._focusedPicker = null;
-          document.removeEventListener("keydown", this.mPickerKeyDown, true);
-        ]]></body>
-      </method>
 
-      <method name="pickerKeyDown">
+      <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
           switch (aEvent.keyCode) {
@@ -403,7 +390,7 @@
       <![CDATA[
         if (!mIsPopup && this.getAttribute('focused') != 'true') {
           this.setAttribute('focused','true');
-          this.addKeyListener();
+          document.addEventListener("keydown", this, true);
           if (this.mSelectedCell)
             this.hoverCell(this.mSelectedCell);
         }
@@ -413,7 +400,7 @@
       <handler event="blur" phase="capturing">
       <![CDATA[
         if (!mIsPopup && this.getAttribute('focused') == 'true') {
-          this.removeKeyListener();
+          document.removeEventListener("keydown", this, true);
           this.removeAttribute('focused');
           this.resetHover();
         }
@@ -516,7 +503,7 @@
         <body><![CDATA[
           if ("resetHover" in this.mPicker)
             this.mPicker.resetHover();
-          this.mPicker.addKeyListener();
+          document.addEventListener("keydown", this.mPicker, true);
           this.mPicker.mIsPopup = true;
           // Initialize to current button's color
           this.mPicker.initColor(this.color);
@@ -526,7 +513,7 @@
       <method name="onPopupHiding">
         <body><![CDATA[
           // Removes the key listener
-          this.mPicker.removeKeyListener();
+          document.removeEventListener("keydown", this.mPicker, true);
           this.mPicker.mIsPopup = false;
         ]]></body>
       </method>

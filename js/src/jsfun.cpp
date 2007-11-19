@@ -1982,7 +1982,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                         JS_ASSERT(sprop->getter == js_GetArgument);
                         ok = name &&
                              js_ReportCompileErrorNumber(cx, &pc.tokenStream,
-                                                         JSREPORT_TS |
+                                                         NULL,
                                                          JSREPORT_WARNING |
                                                          JSREPORT_STRICT,
                                                          JSMSG_DUPLICATE_FORMAL,

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<bindings id="globalBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <!-- :::/ widgets \ ::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+
+  <binding id="autocomplete-security-wrapper" extends="xul:hbox">
+    <content>
+      <xul:hbox id="autocomplete-security-wrapper" flex="1">
+        <children/>
+      </xul:hbox>
+    </content>
+  </binding>
+</bindings>

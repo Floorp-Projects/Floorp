@@ -46,6 +46,7 @@
 #include "nsITimer.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsScriptNameSpaceManager.h"
 
 class nsIXPConnectJSObjectHolder;
 
@@ -212,6 +213,8 @@ protected:
                                  JSObject **aRet);
 
 private:
+  void Unlink();
+
   JSContext *mContext;
   PRUint32 mNumEvaluations;
 
@@ -324,6 +327,8 @@ public:
   static void Startup();
   // Setup all the statics etc - safe to call multiple times after Startup()
   static nsresult Init();
+  // Get the NameSpaceManager, creating if necessary
+  static nsScriptNameSpaceManager* GetNameSpaceManager();
 };
 
 // An interface for fast and native conversion to/from nsIArray. If an object

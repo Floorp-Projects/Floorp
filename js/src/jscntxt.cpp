@@ -1219,6 +1219,40 @@ js_ReportIsNotDefined(JSContext *cx, const char *name)
 }
 
 JSBool
+js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
+                           JSString *fallback)
+{
+    char *bytes;
+    JSBool ok;
+
+    bytes = js_DecompileValueGenerator(cx, spindex, v, fallback);
+    if (!bytes)
+        return JS_FALSE;
+
+    if (strcmp(bytes, js_undefined_str) == 0 ||
+        strcmp(bytes, js_null_str) == 0) {
+        ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_NO_PROPERTIES, bytes,
+                                          NULL, NULL);
+    } else if (JSVAL_IS_VOID(v)) {
+        ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_NULL_OR_UNDEFINED, bytes,
+                                          js_undefined_str, NULL);
+    } else {
+        JS_ASSERT(JSVAL_IS_NULL(v));
+        ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_NULL_OR_UNDEFINED, bytes,
+                                          js_null_str, NULL);
+    }
+
+    JS_free(cx, bytes);
+    return ok;
+}
+
+JSBool
 js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
                          intN spindex, jsval v, JSString *fallback,
                          const char *arg1, const char *arg2)

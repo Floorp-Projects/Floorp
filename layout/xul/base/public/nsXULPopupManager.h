@@ -182,7 +182,7 @@ public:
       mPopupType(aPopupType),
       mIsContext(aIsContext),
       mOnMenuBar(PR_FALSE),
-      mIgnoreKeys(aPopupType != ePopupTypeMenu), // always ignore keys on non-menus
+      mIgnoreKeys(PR_FALSE),
       mParent(nsnull),
       mChild(nsnull)
   {

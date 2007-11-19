@@ -422,9 +422,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGlobalWindow,
                                            nsIScriptGlobalObject)
 
-#ifdef OJI
   void InitJavaProperties();
-#endif
 
 protected:
   // Object Management
@@ -849,7 +847,6 @@ protected:
   nsresult SetHrefWithContext(JSContext* cx, const nsAString& aHref,
                               PRBool aReplace);
 
-  nsresult GetSourceURL(JSContext* cx, nsIURI** sourceURL);
   nsresult GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL);
   nsresult GetSourceDocument(JSContext* cx, nsIDocument** aDocument);
 

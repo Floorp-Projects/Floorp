@@ -1158,8 +1158,7 @@ match_or_replace(JSContext *cx,
         } else {
             opt = NULL;
         }
-        re = js_NewRegExpOpt(cx, NULL, src, opt,
-                             (data->flags & FORCE_FLAT) != 0);
+        re = js_NewRegExpOpt(cx, src, opt, (data->flags & FORCE_FLAT) != 0);
         if (!re)
             return JS_FALSE;
         reobj = NULL;
@@ -2337,22 +2336,42 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
+JS_STATIC_DLL_CALLBACK(JSHashNumber)
+js_hash_string_pointer(const void *key)
+{
+    return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
+}
+
 JSBool
 js_InitRuntimeStringState(JSContext *cx)
 {
     JSRuntime *rt;
 
     rt = cx->runtime;
+    rt->emptyString = ATOM_TO_STRING(rt->atomState.emptyAtom);
+    return JS_TRUE;
+}
+
+JSBool
+js_InitDeflatedStringCache(JSRuntime *rt)
+{
+    JSHashTable *cache;
 
     /* Initialize string cache */
+    JS_ASSERT(!rt->deflatedStringCache);
+    cache = JS_NewHashTable(8, js_hash_string_pointer,
+                            JS_CompareValues, JS_CompareValues,
+                            NULL, NULL);
+    if (!cache)
+        return JS_FALSE;
+    rt->deflatedStringCache = cache;
+
 #ifdef JS_THREADSAFE
     JS_ASSERT(!rt->deflatedStringCacheLock);
     rt->deflatedStringCacheLock = JS_NEW_LOCK();
     if (!rt->deflatedStringCacheLock)
         return JS_FALSE;
 #endif
-
-    rt->emptyString = ATOM_TO_STRING(rt->atomState.emptyAtom);
     return JS_TRUE;
 }
 
@@ -2592,20 +2611,11 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
     return str;
 }
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
-js_hash_string_pointer(const void *key)
-{
-    return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
-}
-
 void
 js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str)
 {
     JSHashNumber hash;
     JSHashEntry *he, **hep;
-
-    if (!rt->deflatedStringCache)
-        return;
 
     hash = js_hash_string_pointer(str);
     JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
@@ -2634,7 +2644,7 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
     for (i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
         if (str_finalizers[i] == oldop) {
             str_finalizers[i] = newop;
-            return (intN) i + GCX_EXTERNAL_STRING;
+            return (intN) i;
         }
     }
     return -1;
@@ -2645,15 +2655,15 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
  * finalization of the permanently interned strings.
  */
 void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str, uintN gctype, JSContext *cx)
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
 {
     JSBool valid;
     JSStringFinalizeOp finalizer;
 
     JS_RUNTIME_UNMETER(rt, liveStrings);
     if (JSSTRING_IS_DEPENDENT(str)) {
-        JS_ASSERT(gctype == GCX_STRING);
-        /* If JSSTRFLAG_DEPENDENT is set, this string must be valid. */
+        /* A dependent string can not be external and must be valid. */
+        JS_ASSERT(type < 0);
         JS_ASSERT(JSSTRDEP_BASE(str));
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
         valid = JS_TRUE;
@@ -2663,14 +2673,13 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str, uintN gctype, JSContext *cx)
         if (valid) {
             if (IN_UNIT_STRING_SPACE_RT(rt, str->u.chars)) {
                 JS_ASSERT(rt->unitStrings[*str->u.chars] == str);
-                JS_ASSERT(gctype == GCX_STRING);
+                JS_ASSERT(type < 0);
                 rt->unitStrings[*str->u.chars] = NULL;
-            } else if (gctype == GCX_STRING) {
+            } else if (type < 0) {
                 free(str->u.chars);
             } else {
-                JS_ASSERT(gctype - GCX_EXTERNAL_STRING <
-                          JS_ARRAY_LENGTH(str_finalizers));
-                finalizer = str_finalizers[gctype - GCX_EXTERNAL_STRING];
+                JS_ASSERT((uintN) type < JS_ARRAY_LENGTH(str_finalizers));
+                finalizer = str_finalizers[type];
                 if (finalizer) {
                     /*
                      * Assume that the finalizer for the permanently interned
@@ -3192,21 +3201,6 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
 
 #endif
 
-static JSHashTable *
-GetDeflatedStringCache(JSRuntime *rt)
-{
-    JSHashTable *cache;
-
-    cache = rt->deflatedStringCache;
-    if (!cache) {
-        cache = JS_NewHashTable(8, js_hash_string_pointer,
-                                JS_CompareValues, JS_CompareValues,
-                                NULL, NULL);
-        rt->deflatedStringCache = cache;
-    }
-    return cache;
-}
-
 JSBool
 js_SetStringBytes(JSContext *cx, JSString *str, char *bytes, size_t length)
 {
@@ -3219,20 +3213,15 @@ js_SetStringBytes(JSContext *cx, JSString *str, char *bytes, size_t length)
     rt = cx->runtime;
     JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
 
-    cache = GetDeflatedStringCache(rt);
-    if (!cache) {
-        js_ReportOutOfMemory(cx);
-        ok = JS_FALSE;
-    } else {
-        hash = js_hash_string_pointer(str);
-        hep = JS_HashTableRawLookup(cache, hash, str);
-        JS_ASSERT(*hep == NULL);
-        ok = JS_HashTableRawAdd(cache, hep, hash, str, bytes) != NULL;
+    cache = rt->deflatedStringCache;
+    hash = js_hash_string_pointer(str);
+    hep = JS_HashTableRawLookup(cache, hash, str);
+    JS_ASSERT(*hep == NULL);
+    ok = JS_HashTableRawAdd(cache, hep, hash, str, bytes) != NULL;
 #ifdef DEBUG
-        if (ok)
-            rt->deflatedStringCacheBytes += length;
+    if (ok)
+        rt->deflatedStringCacheBytes += length;
 #endif
-    }
 
     JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
     return ok;
@@ -3267,38 +3256,32 @@ js_GetStringBytes(JSContext *cx, JSString *str)
 
     JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
 
-    cache = GetDeflatedStringCache(rt);
-    if (!cache) {
-        if (cx)
-            js_ReportOutOfMemory(cx);
-        bytes = NULL;
-    } else {
-        hash = js_hash_string_pointer(str);
-        hep = JS_HashTableRawLookup(cache, hash, str);
-        he = *hep;
-        if (he) {
-            bytes = (char *) he->value;
+    cache = rt->deflatedStringCache;
+    hash = js_hash_string_pointer(str);
+    hep = JS_HashTableRawLookup(cache, hash, str);
+    he = *hep;
+    if (he) {
+        bytes = (char *) he->value;
 
 #ifndef JS_C_STRINGS_ARE_UTF8
-            /* Try to catch failure to JS_ShutDown between runtime epochs. */
-            JS_ASSERT_IF(*bytes != (char) JSSTRING_CHARS(str)[0],
-                         *bytes == '\0' && JSSTRING_LENGTH(str) == 0);
+        /* Try to catch failure to JS_ShutDown between runtime epochs. */
+        JS_ASSERT_IF(*bytes != (char) JSSTRING_CHARS(str)[0],
+                     *bytes == '\0' && JSSTRING_LENGTH(str) == 0);
 #endif
-        } else {
-            bytes = js_DeflateString(cx, JSSTRING_CHARS(str),
-                                     JSSTRING_LENGTH(str));
-            if (bytes) {
-                if (JS_HashTableRawAdd(cache, hep, hash, str, bytes)) {
+    } else {
+        bytes = js_DeflateString(cx, JSSTRING_CHARS(str),
+                                 JSSTRING_LENGTH(str));
+        if (bytes) {
+            if (JS_HashTableRawAdd(cache, hep, hash, str, bytes)) {
 #ifdef DEBUG
-                    rt->deflatedStringCacheBytes += JSSTRING_LENGTH(str);
+                rt->deflatedStringCacheBytes += JSSTRING_LENGTH(str);
 #endif
-                } else {
-                    if (cx)
-                        JS_free(cx, bytes);
-                    else
-                        free(bytes);
-                    bytes = NULL;
-                }
+            } else {
+                if (cx)
+                    JS_free(cx, bytes);
+                else
+                    free(bytes);
+                bytes = NULL;
             }
         }
     }

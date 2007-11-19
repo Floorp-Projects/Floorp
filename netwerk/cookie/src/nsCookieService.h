@@ -166,7 +166,6 @@ class nsCookieService : public nsICookieService
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
     nsresult                      InitDB();
     nsresult                      CreateTable();
-    nsresult                      ImportCookies();
     nsresult                      Read();
     void                          GetCookieInternal(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, PRBool aHttpBound, char **aCookie);
     nsresult                      SetCookieStringInternal(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, PRBool aFromHttp);

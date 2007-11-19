@@ -175,11 +175,9 @@ inline nsCSSQuotes* QuotesAtCursor(const char *aCursor) {
 static PRBool
 ShouldIgnoreColors(nsRuleData *aRuleData)
 {
-    nsPresContext *presContext = aRuleData->mPresContext;
     return aRuleData->mLevel != nsStyleSet::eAgentSheet &&
            aRuleData->mLevel != nsStyleSet::eUserSheet &&
-           !presContext->GetCachedBoolPref(kPresContext_UseDocumentColors) &&
-           !presContext->IsChrome();
+           !aRuleData->mPresContext->UseDocumentColors();
 }
 
 nsresult

@@ -52,6 +52,7 @@
 #include "nsIXULWindow.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsToolkit.h"
 
 PRInt32 gXULModalLevel = 0;
 
@@ -690,39 +691,31 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRBool aAllowSlop,
 
 
 NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
-{  
-  if (mWindow) {  
-    // if we're a popup, we have to convert from our parent widget's coord
-    // system to the global coord system first because the (x,y) we're given
-    // is in its coordinate system.
-    if (mWindowType == eWindowType_popup) {
-      nsRect localRect, globalRect; 
-      localRect.x = aX;
-      localRect.y = aY;  
-      if (mParent) {
-        mParent->WidgetToScreen(localRect,globalRect);
-        aX=globalRect.x;
-        aY=globalRect.y;
-      }
-    }
-    
-    // the point we have is in Gecko coordinates (origin top-left). Convert
-    // it to Cocoa ones (origin bottom-left).
-    NSPoint coord = {aX, FlippedScreenY(aY)};
+{
+  if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
+    return NS_OK;
 
-    //printf("final coords %f %f\n", coord.x, coord.y);
-    //printf("- window coords before %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
-    [mWindow setFrameTopLeftPoint:coord];
-    //printf("- window coords after %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
+  // if we're a popup, we have to convert from our parent widget's coord
+  // system to the global coord system first because the (x,y) we're given
+  // is in its coordinate system.
+  if (mParent && mWindowType == eWindowType_popup) {
+    nsRect globalRect;
+    nsRect localRect(aX, aY, 0, 0);
+    mParent->WidgetToScreen(localRect, globalRect);
+    aX = globalRect.x;
+    aY = globalRect.y;
   }
-  
+
+  // The point we have is in Gecko coordinates (origin top-left). Convert
+  // it to Cocoa ones (origin bottom-left).
+  NSPoint coord = {aX, FlippedScreenY(aY)};
+  [mWindow setFrameTopLeftPoint:coord];
+
   return NS_OK;
 }
 
 
-//
 // Position the window behind the given window
-//
 NS_METHOD nsCocoaWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                                      nsIWidget *aWidget, PRBool aActivate)
 {
@@ -761,32 +754,41 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  Resize(aWidth, aHeight, aRepaint);
-  Move(aX, aY);
+  BOOL isMoving = (mBounds.x != aX || mBounds.y != aY);
+  BOOL isResizing = (mBounds.width != aWidth || mBounds.height != aHeight);
+
+  if (IsResizing() || !mWindow || (!isMoving && !isResizing))
+    return NS_OK;
+
+  nsRect geckoRect(aX, aY, aWidth, aHeight);
+  NSRect newFrame = geckoRectToCocoaRect(geckoRect);
+
+  StartResizing();
+  [mWindow setFrame:newFrame display:NO];
+  StopResizing();
+
+  if (isResizing)
+    ReportSizeEvent();
+
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  if (IsResizing())
+  if (IsResizing() || !mWindow || (mBounds.width == aWidth && mBounds.height == aHeight))
     return NS_OK;
 
-  if (mWindow) {
-    NSRect newFrame = [mWindow frame];
+  NSRect newFrame = [mWindow frame];
+  newFrame.size.width = aWidth;
+  // We need to adjust for the fact that gecko wants the top of the window
+  // to remain in the same place.
+  newFrame.origin.y += newFrame.size.height - aHeight;
+  newFrame.size.height = aHeight;
 
-    // width is easy, no adjusting necessary
-    newFrame.size.width = aWidth;
-
-    // We need to adjust for the fact that gecko wants the top of the window
-    // to remain in the same place.
-    newFrame.origin.y += newFrame.size.height - aHeight;
-    newFrame.size.height = aHeight;
-
-    StartResizing();
-    [mWindow setFrame:newFrame display:NO];
-    StopResizing();
-  }
+  StartResizing();
+  [mWindow setFrame:newFrame display:NO];
+  StopResizing();
 
   ReportSizeEvent();
 
@@ -1156,21 +1158,17 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
     if (!sApplicationMenu)
       return;
 
-    // create a new menu bar with one item
-    NSMenu* newMenuBar = [[NSMenu alloc] init];
-    NSMenuItem* newMenuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    [newMenuBar addItem:newMenuItem];
-    [newMenuItem release];
+    NSMenu* mainMenu = [NSApp mainMenu];
+    NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
 
-    // Attach application menu as submenu for our one menu item. If the application
-    // menu has a supermenu, we need to disconnect it from its parent before hooking
-    // it up to the new menu bar
-    NSMenu* appMenuSupermenu = [sApplicationMenu supermenu];
-    if (appMenuSupermenu) {
-      int appMenuItemIndex = [appMenuSupermenu indexOfItemWithSubmenu:sApplicationMenu];
-      [[appMenuSupermenu itemAtIndex:appMenuItemIndex] setSubmenu:nil];
-    }
-    [newMenuItem setSubmenu:sApplicationMenu];
+    // create a new menu bar
+    NSMenu* newMenuBar = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
+
+    // move the application menu from the existing menu bar to the new one
+    NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];
+    [mainMenu removeItemAtIndex:0];
+    [newMenuBar insertItem:firstMenuItem atIndex:0];
+    [firstMenuItem release];
 
     // set our new menu bar as the main menu
     [NSApp setMainMenu:newMenuBar];
@@ -1463,16 +1461,28 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 static const float sPatternWidth = 1.0f;
 
 // These are the start and end greys for the default titlebar gradient.
-static const float sHeaderStartGrey = 196/255.0f;
-static const float sHeaderEndGrey = 149/255.0f;
+static const float sLeopardHeaderStartGrey = 196/255.0f;
+static const float sLeopardHeaderEndGrey = 149/255.0f;
+static const float sTigerHeaderStartGrey = 249/255.0f;
+static const float sTigerHeaderEndGrey = 202/255.0f;
 
 // This is the grey for the border at the bottom of the titlebar.
-static const float sTitlebarBorderGrey = 64/255.0f;
+static const float sLeopardTitlebarBorderGrey = 64/255.0f;
+static const float sTigerTitlebarBorderGrey = 140/255.0f;
 
 // Callback used by the default titlebar shading.
 static void headerShading(void* aInfo, const float* aIn, float* aOut)
 {
-  float result = (*aIn) * sHeaderStartGrey + (1.0f - *aIn) * sHeaderEndGrey;
+  float startGrey, endGrey;
+  if (nsToolkit::OnLeopardOrLater()) {
+    startGrey = sLeopardHeaderStartGrey;
+    endGrey = sLeopardHeaderEndGrey;
+  }
+  else {
+    startGrey = sTigerHeaderStartGrey;
+    endGrey = sTigerHeaderEndGrey;
+  }
+  float result = (*aIn) * startGrey + (1.0f - *aIn) * endGrey;
   aOut[0] = result;
   aOut[1] = result;
   aOut[2] = result;
@@ -1507,9 +1517,13 @@ void patternDraw(void* aInfo, CGContextRef aContext)
     CGColorSpaceRelease(colorSpace);
     CGFunctionRelease(function);
     CGContextDrawShading(aContext, shading);
+    CGShadingRelease(shading);
 
     // Draw the one pixel border at the bottom of the titlebar.
-    [[NSColor colorWithDeviceWhite:sTitlebarBorderGrey alpha:1.0f] set];
+    if (nsToolkit::OnLeopardOrLater())
+      [[NSColor colorWithDeviceWhite:sLeopardTitlebarBorderGrey alpha:1.0f] set];
+    else
+      [[NSColor colorWithDeviceWhite:sTigerTitlebarBorderGrey alpha:1.0f] set];
     NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
   } else {
     // if the titlebar color is not nil, just set and draw it normally.

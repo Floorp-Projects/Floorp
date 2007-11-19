@@ -1079,7 +1079,7 @@
     <content>
       <children>
         <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
-        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>
@@ -1090,7 +1090,7 @@
       <children>
         <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
         <xul:image class="listcell-icon" xbl:inherits="src=image"/>
-        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>

@@ -1695,34 +1695,8 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
 NS_IMETHODIMP
 nsHTMLDocument::SetDomain(const nsAString& aDomain)
 {
-  // Check new domain - must be a superdomain of the current host
-  // For example, a page from foo.bar.com may set domain to bar.com,
-  // but not to ar.com, baz.com, or fi.foo.bar.com.
   if (aDomain.IsEmpty())
     return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
-  nsAutoString current;
-  if (NS_FAILED(GetDomain(current)))
-    return NS_ERROR_FAILURE;
-  PRBool ok = current.Equals(aDomain);
-  if (current.Length() > aDomain.Length() &&
-      StringEndsWith(current, aDomain, nsCaseInsensitiveStringComparator()) &&
-      current.CharAt(current.Length() - aDomain.Length() - 1) == '.') {
-    // Using only a TLD is forbidden (bug 368700)
-    nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-    if (!tldService)
-      return NS_ERROR_NOT_AVAILABLE;
-
-    // try to get the base domain; if this works, we're ok
-    NS_ConvertUTF16toUTF8 str(aDomain);
-    nsCAutoString etld;
-    nsresult rv = tldService->GetBaseDomainFromHost(str, 0, etld);
-    ok = NS_SUCCEEDED(rv);
-  }
-  if (!ok) {
-    // Error: illegal domain
-    return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
-  }
 
   // Create new URI
   nsCOMPtr<nsIURI> uri;
@@ -1745,6 +1719,36 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   nsCOMPtr<nsIURI> newURI;
   if (NS_FAILED(NS_NewURI(getter_AddRefs(newURI), newURIString)))
     return NS_ERROR_FAILURE;
+
+  // Check new domain - must be a superdomain of the current host
+  // For example, a page from foo.bar.com may set domain to bar.com,
+  // but not to ar.com, baz.com, or fi.foo.bar.com.
+  nsCAutoString current, domain;
+  if (NS_FAILED(uri->GetHost(current)))
+    current.Truncate();
+  if (NS_FAILED(newURI->GetHost(domain)))
+    domain.Truncate();
+
+  PRBool ok = current.Equals(domain);
+  if (current.Length() > domain.Length() &&
+      StringEndsWith(current, domain) &&
+      current.CharAt(current.Length() - domain.Length() - 1) == '.') {
+    // Using only a TLD is forbidden (bug 368700)
+    nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+    if (!tldService)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    // try to get the base domain; if this works, we're ok.
+    // if we're dealing with an IP address, getting the base domain
+    // will fail, as required.
+    nsCAutoString baseDomain;
+    ok = NS_SUCCEEDED(tldService->GetBaseDomain(newURI, 0, baseDomain));
+  }
+  if (!ok) {
+    // Error: illegal domain
+    return NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN;
+  }
 
   return NodePrincipal()->SetDomain(newURI);
 }
@@ -3918,29 +3922,31 @@ nsHTMLDocument::TurnEditingOff()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // turn editing off
-  rv = editSession->TearDownEditorOnWindow(window, PR_TRUE);
+  rv = editSession->TearDownEditorOnWindow(window);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIEditor> editor;
   editorDocShell->GetEditor(getter_AddRefs(editor));
   nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor);
   if (editorss) {
-    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
     if (mEditingState == eDesignMode)
-      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
-  }
-
-  if (mEditingState == eDesignMode) {
-    rv = docshell->SetAllowJavascript(mScriptsEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = docshell->SetAllowPlugins(mPluginsEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
+      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
   }
 
   mEditingState = eOff;
 
   return NS_OK;
+}
+
+static PRBool HasPresShell(nsPIDOMWindow *aWindow)
+{
+  nsIDocShell *docShell = aWindow->GetDocShell();
+  if (!docShell)
+    return PR_FALSE;
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  return presShell != nsnull;
 }
 
 nsresult
@@ -3977,7 +3983,13 @@ nsHTMLDocument::EditingStateChanged()
   nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool makeWindowEditable = (mEditingState == eOff);
+  if (!HasPresShell(window)) {
+    // We should not make the window editable or setup its editor.
+    // It's probably style=display:none.
+    return NS_OK;
+  }
+
+  PRBool makeWindowEditable = mEditingState == eOff;
   if (makeWindowEditable) {
     // Editing is being turned on (through designMode or contentEditable)
     // Turn on editor.
@@ -4006,7 +4018,7 @@ nsHTMLDocument::EditingStateChanged()
   nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/contenteditable.css"));
+  editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
 
   // Should we update the editable state of all the nodes in the document? We
   // need to do this when the designMode value changes, as that overrides
@@ -4016,24 +4028,10 @@ nsHTMLDocument::EditingStateChanged()
   PRBool spellRecheckAll = PR_FALSE;
   if (designMode) {
     // designMode is being turned on (overrides contentEditable).
-    editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+    editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
 
-    // Store scripting and plugins state.
-    PRBool tmp;
-    rv = docshell->GetAllowJavascript(&tmp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mScriptsEnabled = tmp;
-
-    rv = docshell->SetAllowJavascript(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = docshell->GetAllowPlugins(&tmp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mPluginsEnabled = tmp;
-
-    rv = docshell->SetAllowPlugins(PR_FALSE);
+    // Disable scripting and plugins.
+    rv = editSession->DisableJSAndPlugins(window);
     NS_ENSURE_SUCCESS(rv, rv);
 
     updateState = PR_TRUE;
@@ -4041,12 +4039,9 @@ nsHTMLDocument::EditingStateChanged()
   }
   else if (mEditingState == eDesignMode) {
     // designMode is being turned off (contentEditable is still on).
-    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/designmode.css"));
+    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
 
-    rv = docshell->SetAllowJavascript(mScriptsEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = docshell->SetAllowPlugins(mPluginsEnabled);
+    rv = editSession->RestoreJSAndPlugins(window);
     NS_ENSURE_SUCCESS(rv, rv);
 
     updateState = PR_TRUE;
@@ -4069,7 +4064,7 @@ nsHTMLDocument::EditingStateChanged()
     if (NS_FAILED(rv)) {
       // Editor setup failed. Editing is not on after all.
       // XXX Should we reset the editable flag on nodes?
-      editSession->TearDownEditorOnWindow(window, PR_TRUE);
+      editSession->TearDownEditorOnWindow(window);
       mEditingState = eOff;
 
       return rv;

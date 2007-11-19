@@ -136,8 +136,7 @@ static JSParenParser   ParenExpr;
 #define MUST_MATCH_TOKEN(tt, errno)                                           \
     JS_BEGIN_MACRO                                                            \
         if (js_GetToken(cx, ts) != tt) {                                      \
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR, \
-                                        errno);                               \
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, errno); \
             return NULL;                                                      \
         }                                                                     \
     JS_END_MACRO
@@ -146,7 +145,7 @@ static JSParenParser   ParenExpr;
     JS_BEGIN_MACRO                                                            \
         int stackDummy;                                                       \
         if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {                           \
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR, \
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,         \
                                         JSMSG_OVER_RECURSED);                 \
             return NULL;                                                      \
         }                                                                     \
@@ -343,7 +342,6 @@ NewParseNode(JSContext *cx, JSTokenStream *ts, JSParseNodeArity arity,
     pn->pn_pos = tp->pos;
     pn->pn_op = JSOP_NOP;
     pn->pn_arity = arity;
-    pn->pn_ts = ts;
     return pn;
 }
 
@@ -417,7 +415,6 @@ NewBinary(JSContext *cx, JSTokenType tt,
     pn->pn_arity = PN_BINARY;
     pn->pn_left = left;
     pn->pn_right = right;
-    pn->pn_ts = left->pn_ts;
     return pn;
 }
 
@@ -443,7 +440,7 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
         return TOK_NAME;
     (void) js_GetToken(cx, ts);
     if (CURRENT_TOKEN(ts).t_op != JSOP_NOP) {
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_GETTER_OR_SETTER,
                                     (op == JSOP_GETTER)
                                     ? js_getter_str
@@ -454,10 +451,8 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
     if (JS_HAS_STRICT_OPTION(cx)) {
         name = js_AtomToPrintableString(cx, atom);
         if (!name ||
-            !js_ReportCompileErrorNumber(cx, ts,
-                                         JSREPORT_TS |
-                                         JSREPORT_WARNING |
-                                         JSREPORT_STRICT,
+            !js_ReportCompileErrorNumber(cx, ts, NULL,
+                                         JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_DEPRECATED_USAGE,
                                          name)) {
             return TOK_ERROR;
@@ -545,8 +540,7 @@ js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
     pn = Statements(cx, TS(pc), &tc);
     if (pn) {
         if (!js_MatchToken(cx, TS(pc), TOK_EOF)) {
-            js_ReportCompileErrorNumber(cx, TS(pc),
-                                        JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, TS(pc), NULL, JSREPORT_ERROR,
                                         JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else {
@@ -603,7 +597,7 @@ js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
         goto out;
     }
     if (!js_MatchToken(cx, TS(pc), TOK_EOF)) {
-        js_ReportCompileErrorNumber(cx, TS(pc), JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, TS(pc), NULL, JSREPORT_ERROR,
                                     JSMSG_SYNTAX_ERROR);
         script = NULL;
         goto out;
@@ -792,8 +786,7 @@ ReportBadReturn(JSContext *cx, JSTokenStream *ts, uintN flags, uintN errnum,
         errnum = anonerrnum;
         name = NULL;
     }
-    return js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | flags, errnum,
-                                       name);
+    return js_ReportCompileErrorNumber(cx, ts, NULL, flags, errnum, name);
 }
 
 static JSBool
@@ -953,8 +946,7 @@ js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun)
     pn = FunctionBody(cx, TS(pc), fun, &funcg.treeContext);
     if (pn) {
         if (!js_MatchToken(cx, TS(pc), TOK_EOF)) {
-            js_ReportCompileErrorNumber(cx, TS(pc),
-                                        JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, TS(pc), NULL, JSREPORT_ERROR,
                                         JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else {
@@ -985,7 +977,6 @@ typedef JSBool
 
 struct BindData {
     JSParseNode             *pn;                /* error source coordinate */
-    JSTokenStream           *ts;                /* fallback if pn is null */
     JSObject                *obj;               /* the variable object */
     JSOp                    op;                 /* prolog bytecode or nop */
     Binder                  binder;             /* binder, discriminates u */
@@ -1006,15 +997,6 @@ struct BindData {
         } let;
     } u;
 };
-
-/*
- * Given BindData *data and JSREPORT_* flags, expand to the second and third
- * actual parameters to js_ReportCompileErrorNumber.  Prefer reporting via pn
- * to reporting via ts, for better destructuring error pointers.
- */
-#define BIND_DATA_REPORT_ARGS(data, flags)                                    \
-    (data)->pn ? (void *)(data)->pn : (void *)(data)->ts,                     \
-    ((data)->pn ? JSREPORT_PN : JSREPORT_TS) | (flags)
 
 static JSBool
 BumpFormalCount(JSContext *cx, JSFunction *fun)
@@ -1055,10 +1037,8 @@ BindArg(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
          * and not mapped by an entry in scope.
          */
         ok = name &&
-             js_ReportCompileErrorNumber(cx,
-                                         BIND_DATA_REPORT_ARGS(data,
-                                             JSREPORT_WARNING |
-                                             JSREPORT_STRICT),
+             js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
+                                         JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_DUPLICATE_FORMAL,
                                          name);
 
@@ -1155,10 +1135,8 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
         JS_ASSERT(pobj == obj && OBJ_IS_NATIVE(pobj));
         name = js_AtomToPrintableString(cx, atom);
         if (!name ||
-            !js_ReportCompileErrorNumber(cx,
-                                         BIND_DATA_REPORT_ARGS(data,
-                                             JSREPORT_WARNING |
-                                             JSREPORT_STRICT),
+            !js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
+                                         JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_DUPLICATE_FORMAL,
                                          name)) {
             return JS_FALSE;
@@ -1207,7 +1185,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         funAtom = CURRENT_TOKEN(ts).t_atom;
     } else {
         if (!lambda && (cx->options & JSOPTION_ANONFUNFIX)) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_SYNTAX_ERROR);
             return NULL;
         }
@@ -1230,12 +1208,11 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (JS_HAS_STRICT_OPTION(cx) || prevop == JSOP_DEFCONST) {
                 const char *name = js_AtomToPrintableString(cx, funAtom);
                 if (!name ||
-                    !js_ReportCompileErrorNumber(cx, ts,
+                    !js_ReportCompileErrorNumber(cx, ts, NULL,
                                                  (prevop != JSOP_DEFCONST)
-                                                 ? JSREPORT_TS |
-                                                   JSREPORT_WARNING |
+                                                 ? JSREPORT_WARNING |
                                                    JSREPORT_STRICT
-                                                 : JSREPORT_TS | JSREPORT_ERROR,
+                                                 : JSREPORT_ERROR,
                                                  JSMSG_REDECLARED_VAR,
                                                  (prevop == JSOP_DEFFUN ||
                                                   prevop == JSOP_CLOSURE)
@@ -1337,7 +1314,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         BindData data;
 
         data.pn = NULL;
-        data.ts = ts;
         data.obj = fun->object;
         data.op = JSOP_NOP;
         data.binder = BindArg;
@@ -1418,8 +1394,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 break;
 
               default:
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_MISSING_FORMAL);
                 return NULL;
             }
@@ -1675,10 +1650,8 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn->pn_op == JSOP_NOP &&
         pn->pn_right->pn_type > TOK_EQOP)
     {
-        if (!js_ReportCompileErrorNumber(cx, ts,
-                                         JSREPORT_TS |
-                                         JSREPORT_WARNING |
-                                         JSREPORT_STRICT,
+        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+                                         JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_EQUAL_AS_ASSIGN,
                                          "")) {
             return NULL;
@@ -1777,8 +1750,7 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 
   bad_import:
-    js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
-                                JSMSG_BAD_IMPORT);
+    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, JSMSG_BAD_IMPORT);
     return NULL;
 }
 #endif /* JS_HAS_EXPORT_IMPORT */
@@ -1803,10 +1775,8 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 
         name = js_AtomToPrintableString(cx, atom);
         if (name) {
-            js_ReportCompileErrorNumber(cx,
-                                        BIND_DATA_REPORT_ARGS(data,
-                                                              JSREPORT_ERROR),
-                                        JSMSG_REDECLARED_VAR,
+            js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
+                                        JSREPORT_ERROR, JSMSG_REDECLARED_VAR,
                                         (ale && ALE_JSOP(ale) == JSOP_DEFCONST)
                                         ? js_const_str
                                         : "variable",
@@ -1816,9 +1786,8 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     }
 
     if (data->u.let.index == JS_BIT(16)) {
-        js_ReportCompileErrorNumber(cx,
-                                    BIND_DATA_REPORT_ARGS(data, JSREPORT_ERROR),
-                                    data->u.let.overflow);
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
+                                    JSREPORT_ERROR, data->u.let.overflow);
         return JS_FALSE;
     }
 
@@ -1855,13 +1824,12 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
             : op == JSOP_DEFCONST || prevop == JSOP_DEFCONST) {
             name = js_AtomToPrintableString(cx, atom);
             if (!name ||
-                !js_ReportCompileErrorNumber(cx,
-                                             BIND_DATA_REPORT_ARGS(data,
-                                                 (op != JSOP_DEFCONST &&
-                                                  prevop != JSOP_DEFCONST)
-                                                 ? JSREPORT_WARNING |
-                                                   JSREPORT_STRICT
-                                                 : JSREPORT_ERROR),
+                !js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
+                                             (op != JSOP_DEFCONST &&
+                                              prevop != JSOP_DEFCONST)
+                                             ? JSREPORT_WARNING |
+                                               JSREPORT_STRICT
+                                             : JSREPORT_ERROR,
                                              JSMSG_REDECLARED_VAR,
                                              (prevop == JSOP_DEFFUN ||
                                               prevop == JSOP_CLOSURE)
@@ -1907,19 +1875,18 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
             if (!name) {
                 ok = JS_FALSE;
             } else if (op == JSOP_DEFCONST) {
-                js_ReportCompileErrorNumber(cx,
-                                            BIND_DATA_REPORT_ARGS(data,
-                                                JSREPORT_ERROR),
+                js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
+                                            JSREPORT_ERROR,
                                             JSMSG_REDECLARED_PARAM,
                                             name);
                 ok = JS_FALSE;
             } else {
                 getter = js_GetArgument;
                 setter = js_SetArgument;
-                ok = js_ReportCompileErrorNumber(cx,
-                                                 BIND_DATA_REPORT_ARGS(data,
-                                                     JSREPORT_WARNING |
-                                                     JSREPORT_STRICT),
+                ok = js_ReportCompileErrorNumber(cx, TS(tc->parseContext),
+                                                 data->pn,
+                                                 JSREPORT_WARNING |
+                                                 JSREPORT_STRICT,
                                                  JSMSG_VAR_HIDES_ARG,
                                                  name);
             }
@@ -2023,7 +1990,7 @@ BindDestructuringVar(JSContext *cx, BindData *data, JSParseNode *pn,
 }
 
 static JSBool
-MakeSetCall(JSContext *cx, JSParseNode *pn, uintN msg)
+MakeSetCall(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN msg)
 {
     JSParseNode *pn2;
 
@@ -2031,7 +1998,8 @@ MakeSetCall(JSContext *cx, JSParseNode *pn, uintN msg)
     JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL);
     pn2 = pn->pn_head;
     if (pn2->pn_type == TOK_FUNCTION && (pn2->pn_flags & TCF_GENEXP_LAMBDA)) {
-        js_ReportCompileErrorNumber(cx, pn, JSREPORT_PN | JSREPORT_ERROR, msg);
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), pn,
+                                    JSREPORT_ERROR, msg);
         return JS_FALSE;
     }
     pn->pn_op = JSOP_SETCALL;
@@ -2074,7 +2042,7 @@ BindDestructuringLHS(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
 #if JS_HAS_LVALUE_RETURN
       case TOK_LP:
-        if (!MakeSetCall(cx, pn, JSMSG_BAD_LEFTSIDE_OF_ASS))
+        if (!MakeSetCall(cx, pn, tc, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return JS_FALSE;
         break;
 #endif
@@ -2089,8 +2057,8 @@ BindDestructuringLHS(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 #endif
 
       default:
-        js_ReportCompileErrorNumber(cx, pn, JSREPORT_PN | JSREPORT_ERROR,
-                                    JSMSG_BAD_LEFTSIDE_OF_ASS);
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), pn,
+                                    JSREPORT_ERROR, JSMSG_BAD_LEFTSIDE_OF_ASS);
         return JS_FALSE;
     }
 
@@ -2254,8 +2222,8 @@ CheckDestructuring(JSContext *cx, BindData *data,
     JSParseNode *lhs, *rhs, *pn, *pn2;
 
     if (left->pn_type == TOK_ARRAYCOMP) {
-        js_ReportCompileErrorNumber(cx, left, JSREPORT_PN | JSREPORT_ERROR,
-                                    JSMSG_ARRAY_COMP_LEFTSIDE);
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), left,
+                                    JSREPORT_ERROR, JSMSG_ARRAY_COMP_LEFTSIDE);
         return JS_FALSE;
     }
 
@@ -2352,7 +2320,7 @@ out:
     return ok;
 
 no_var_name:
-    js_ReportCompileErrorNumber(cx, pn, JSREPORT_PN | JSREPORT_ERROR,
+    js_ReportCompileErrorNumber(cx, TS(tc->parseContext), pn, JSREPORT_ERROR,
                                 JSMSG_NO_VARIABLE_NAME);
     ok = JS_FALSE;
     goto out;
@@ -2364,7 +2332,7 @@ DestructuringExpr(JSContext *cx, BindData *data, JSTreeContext *tc,
 {
     JSParseNode *pn;
 
-    pn = PrimaryExpr(cx, data->ts, tc, tt, JS_FALSE);
+    pn = PrimaryExpr(cx, TS(tc->parseContext), tc, tt, JS_FALSE);
     if (!pn)
         return NULL;
     if (!CheckDestructuring(cx, data, pn, NULL, tc))
@@ -2432,7 +2400,7 @@ ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     tt = CURRENT_TOKEN(ts).type;
     if (tt == TOK_RETURN && !(tc->flags & TCF_IN_FUNCTION)) {
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
         return NULL;
     }
@@ -2732,8 +2700,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             switch (tt) {
               case TOK_DEFAULT:
                 if (seenDefault) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_TOO_MANY_DEFAULTS);
                     return NULL;
                 }
@@ -2751,8 +2718,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 }
                 PN_APPEND(pn2, pn3);
                 if (pn2->pn_count == JS_BIT(16)) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_TOO_MANY_CASES);
                     return NULL;
                 }
@@ -2762,8 +2728,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return NULL;
 
               default:
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_SWITCH);
                 return NULL;
             }
@@ -2973,8 +2938,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     pn1->pn_op != JSOP_XMLNAME) &&
 #endif
                    pn1->pn_type != TOK_LB)) {
-                js_ReportCompileErrorNumber(cx, pn1,
-                                            JSREPORT_PN | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, pn1, JSREPORT_ERROR,
                                             JSMSG_BAD_FOR_LEFTSIDE);
                 return NULL;
             }
@@ -2995,7 +2959,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 pn2 = pn1;
 #if JS_HAS_LVALUE_RETURN
                 if (pn2->pn_type == TOK_LP &&
-                    !MakeSetCall(cx, pn2, JSMSG_BAD_LEFTSIDE_OF_ASS)) {
+                    !MakeSetCall(cx, pn2, tc, JSMSG_BAD_LEFTSIDE_OF_ASS)) {
                     return NULL;
                 }
 #endif
@@ -3107,8 +3071,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         return pn;
 
       bad_for_each:
-        js_ReportCompileErrorNumber(cx, pn,
-                                    JSREPORT_PN | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, pn, JSREPORT_ERROR,
                                     JSMSG_BAD_FOR_EACH_LOOP);
         return NULL;
       }
@@ -3162,8 +3125,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
                 /* Check for another catch after unconditional catch. */
                 if (lastCatch && !lastCatch->pn_kid2) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_CATCH_AFTER_GENERAL);
                     return NULL;
                 }
@@ -3196,7 +3158,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                  * an intentional change that anticipates ECMA Ed. 4.
                  */
                 data.pn = NULL;
-                data.ts = ts;
                 data.obj = tc->blockChain;
                 data.op = JSOP_NOP;
                 data.binder = BindLet;
@@ -3226,8 +3187,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     break;
 
                   default:
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_CATCH_IDENTIFIER);
                     return NULL;
                 }
@@ -3275,7 +3235,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             js_UngetToken(ts);
         }
         if (!catchList && !pn->pn_kid3) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_CATCH_OR_FINALLY);
             return NULL;
         }
@@ -3294,7 +3254,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (tt == TOK_ERROR)
             return NULL;
         if (tt == TOK_EOF || tt == TOK_EOL || tt == TOK_SEMI || tt == TOK_RC) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_SYNTAX_ERROR);
             return NULL;
         }
@@ -3309,12 +3269,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       /* TOK_CATCH and TOK_FINALLY are both handled in the TOK_TRY case */
       case TOK_CATCH:
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_CATCH_WITHOUT_TRY);
         return NULL;
 
       case TOK_FINALLY:
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_FINALLY_WITHOUT_TRY);
         return NULL;
 
@@ -3329,8 +3289,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (label) {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_LABEL_NOT_FOUND);
                     return NULL;
                 }
@@ -3340,8 +3299,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         } else {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_TOUGH_BREAK);
                     return NULL;
                 }
@@ -3364,16 +3322,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (label) {
             for (stmt2 = NULL; ; stmt = stmt->down) {
                 if (!stmt) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_LABEL_NOT_FOUND);
                     return NULL;
                 }
                 if (stmt->type == STMT_LABEL) {
                     if (stmt->u.label == label) {
                         if (!stmt2 || !STMT_IS_LOOP(stmt2)) {
-                            js_ReportCompileErrorNumber(cx, ts,
-                                                        JSREPORT_TS |
+                            js_ReportCompileErrorNumber(cx, ts, NULL,
                                                         JSREPORT_ERROR,
                                                         JSMSG_BAD_CONTINUE);
                             return NULL;
@@ -3387,8 +3343,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         } else {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_BAD_CONTINUE);
                     return NULL;
                 }
@@ -3613,7 +3568,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             CURRENT_TOKEN(ts).t_atom != cx->runtime->atomState.namespaceAtom ||
             !js_MatchToken(cx, ts, TOK_ASSIGN) ||
             CURRENT_TOKEN(ts).t_op != JSOP_NOP) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_BAD_DEFAULT_XML_NAMESPACE);
             return NULL;
         }
@@ -3641,16 +3596,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         if (js_PeekToken(cx, ts) == TOK_COLON) {
             if (pn2->pn_type != TOK_NAME) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_LABEL);
                 return NULL;
             }
             label = pn2->pn_atom;
             for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
                 if (stmt->type == STMT_LABEL && stmt->u.label == label) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_DUPLICATE_LABEL);
                     return NULL;
                 }
@@ -3696,7 +3649,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (tt == TOK_ERROR)
             return NULL;
         if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_SEMI_BEFORE_STMNT);
             return NULL;
         }
@@ -3738,7 +3691,6 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     }
 
     data.pn = NULL;
-    data.ts = ts;
     data.op = let ? JSOP_NOP : CURRENT_TOKEN(ts).t_op;
     data.binder = let ? BindLet : BindVarOrConst;
     pn = NewParseNode(cx, ts, PN_LIST, tc);
@@ -3819,7 +3771,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
 
         if (tt != TOK_NAME) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_NO_VARIABLE_NAME);
             return NULL;
         }
@@ -3856,7 +3808,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 
 bad_var_init:
-    js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                 JSMSG_BAD_VAR_INIT);
     return NULL;
 }
@@ -3878,8 +3830,7 @@ Expr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #if JS_HAS_GENERATORS
             pn2 = PN_LAST(pn);
             if (pn2->pn_type == TOK_YIELD) {
-                js_ReportCompileErrorNumber(cx, pn2,
-                                            JSREPORT_PN | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, pn2, JSREPORT_ERROR,
                                             JSMSG_BAD_GENERATOR_SYNTAX,
                                             js_yield_str);
                 return NULL;
@@ -3949,7 +3900,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_RB:
       case TOK_RC:
         if (op != JSOP_NOP) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_BAD_DESTRUCT_ASS);
             return NULL;
         }
@@ -3960,7 +3911,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
 #if JS_HAS_LVALUE_RETURN
       case TOK_LP:
-        if (!MakeSetCall(cx, pn2, JSMSG_BAD_LEFTSIDE_OF_ASS))
+        if (!MakeSetCall(cx, pn2, tc, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return NULL;
         break;
 #endif
@@ -3973,7 +3924,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         /* FALL THROUGH */
 #endif
       default:
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_LEFTSIDE_OF_ASS);
         return NULL;
     }
@@ -4190,7 +4141,7 @@ SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
         (kid->pn_type != TOK_UNARYOP || kid->pn_op != JSOP_XMLNAME) &&
 #endif
         kid->pn_type != TOK_LB) {
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_OPERAND, name);
         return NULL;
     }
@@ -4227,7 +4178,7 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
 #if JS_HAS_LVALUE_RETURN
       case TOK_LP:
-        if (!MakeSetCall(cx, kid, JSMSG_BAD_INCOP_OPERAND))
+        if (!MakeSetCall(cx, kid, tc, JSMSG_BAD_INCOP_OPERAND))
             return JS_FALSE;
         /* FALL THROUGH */
 #endif
@@ -4313,7 +4264,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         if (pn2->pn_type == TOK_LP &&
             pn2->pn_op != JSOP_SETCALL &&
-            !MakeSetCall(cx, pn2, JSMSG_BAD_DELETE_OPERAND)) {
+            !MakeSetCall(cx, pn2, tc, JSMSG_BAD_DELETE_OPERAND)) {
             return NULL;
         }
         pn->pn_kid = pn2;
@@ -4384,7 +4335,6 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pnp = &pn->pn_expr;
 
     data.pn = NULL;
-    data.ts = ts;
     data.obj = tc->blockChain;
     data.op = JSOP_NOP;
     data.binder = BindLet;
@@ -4421,9 +4371,7 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 return NULL;
 
             if (pn3->pn_type != TOK_RB || pn3->pn_count != 2) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS |
-                                            JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_FOR_LEFTSIDE);
                 return NULL;
             }
@@ -4457,8 +4405,7 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             break;
 
           default:
-            js_ReportCompileErrorNumber(cx, ts,
-                                        JSREPORT_TS|JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_NO_VARIABLE_NAME);
 
           case TOK_ERROR:
@@ -4612,8 +4559,7 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 return JS_FALSE;
 #if JS_HAS_GENERATORS
             if (argNode->pn_type == TOK_YIELD) {
-                js_ReportCompileErrorNumber(cx, argNode,
-                                            JSREPORT_PN | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, argNode, JSREPORT_ERROR,
                                             JSMSG_BAD_GENERATOR_SYNTAX,
                                             js_yield_str);
                 return JS_FALSE;
@@ -4629,8 +4575,7 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     return JS_FALSE;
                 if (listNode->pn_count > 1 ||
                     js_PeekToken(cx, ts) == TOK_COMMA) {
-                    js_ReportCompileErrorNumber(cx, argNode,
-                                                JSREPORT_PN | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, argNode, JSREPORT_ERROR,
                                                 JSMSG_BAD_GENERATOR_SYNTAX,
                                                 js_generator_str);
                     return JS_FALSE;
@@ -4641,7 +4586,7 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         } while (js_MatchToken(cx, ts, TOK_COMMA));
 
         if (js_GetToken(cx, ts) != TOK_RP) {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_PAREN_AFTER_ARGS);
             return JS_FALSE;
         }
@@ -4697,7 +4642,6 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn2->pn_op = JSOP_XMLNAME;
             pn2->pn_arity = PN_UNARY;
             pn2->pn_kid = pn;
-            pn2->pn_ts = ts;
             pn = pn2;
         }
     }
@@ -4738,8 +4682,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     /* A filtering predicate is like a with statement. */
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
                 } else {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_NAME_AFTER_DOT);
                     return NULL;
                 }
@@ -4774,8 +4717,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 pn3->pn_arity = PN_NULLARY;
                 pn3->pn_op = JSOP_QNAMEPART;
             } else if (!TOKEN_TYPE_IS_XML(tt)) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_NAME_AFTER_DOT);
                 return NULL;
             }
@@ -4982,7 +4924,7 @@ QualifiedSuffix(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
     }
 
     if (tt != TOK_LB) {
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_SYNTAX_ERROR);
         return NULL;
     }
@@ -5029,7 +4971,7 @@ AttributeIdentifier(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     } else if (tt == TOK_LB) {
         pn2 = EndBracketedExpr(cx, ts, tc);
     } else {
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_SYNTAX_ERROR);
         return NULL;
     }
@@ -5221,7 +5163,7 @@ XMLTagContent(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn2 = XMLExpr(cx, ts, JS_TRUE, tc);
             pn->pn_extra |= PNX_CANTFOLD;
         } else {
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_BAD_XML_ATTR_VALUE);
             return NULL;
         }
@@ -5238,8 +5180,7 @@ XMLTagContent(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JS_BEGIN_MACRO                                                            \
         if ((tt) <= TOK_EOF) {                                                \
             if ((tt) == TOK_EOF) {                                            \
-                js_ReportCompileErrorNumber(cx, ts,                           \
-                                            JSREPORT_TS | JSREPORT_ERROR,     \
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,     \
                                             JSMSG_END_OF_XML_SOURCE);         \
             }                                                                 \
             return result;                                                    \
@@ -5363,8 +5304,7 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         } else {
             /* We had better have a tag-close (>) at this point. */
             if (tt != TOK_XMLTAGC) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_XML_TAG_SYNTAX);
                 return NULL;
             }
@@ -5395,8 +5335,7 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             tt = js_GetToken(cx, ts);
             XML_CHECK_FOR_ERROR_AND_EOF(tt, NULL);
             if (tt != TOK_XMLNAME && tt != TOK_LC) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_XML_TAG_SYNTAX);
                 return NULL;
             }
@@ -5407,8 +5346,7 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 return NULL;
             if (pn2->pn_type == TOK_XMLETAGO) {
                 /* Oops, end tag has attributes! */
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_XML_TAG_SYNTAX);
                 return NULL;
             }
@@ -5416,10 +5354,10 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 JSString *str = ATOM_TO_STRING(startAtom);
 
                 /* End vs. start tag name mismatch: point to the tag name. */
-                js_ReportCompileErrorNumberUC(cx, pn2,
-                                              JSREPORT_PN | JSREPORT_ERROR,
-                                              JSMSG_XML_TAG_NAME_MISMATCH,
-                                              JSSTRING_CHARS(str));
+                js_ReportCompileErrorNumber(cx, ts, pn2,
+                                            JSREPORT_UC | JSREPORT_ERROR,
+                                            JSMSG_XML_TAG_NAME_MISMATCH,
+                                            JSSTRING_CHARS(str));
                 return NULL;
             }
 
@@ -5453,7 +5391,7 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
         MUST_MATCH_TOKEN(TOK_XMLTAGC, JSMSG_BAD_XML_LIST_SYNTAX);
     } else {
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_XML_NAME_SYNTAX);
         return NULL;
     }
@@ -5506,7 +5444,7 @@ js_ParseXMLText(JSContext *cx, JSObject *chain, JSParseContext *pc,
     TS(pc)->flags &= ~TSF_OPERAND;
 
     if (tt != TOK_XMLSTAGO) {
-        js_ReportCompileErrorNumber(cx, TS(pc), JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, TS(pc), NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_XML_MARKUP);
         pn = NULL;
     } else {
@@ -5598,8 +5536,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!matched) {
             for (index = 0; ; index++) {
                 if (index == ARRAY_INIT_LIMIT) {
-                    js_ReportCompileErrorNumber(cx, ts,
-                                                JSREPORT_TS | JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_ARRAY_INIT_TOO_BIG);
                     return NULL;
                 }
@@ -5778,8 +5715,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 break;
               case TOK_RC:
                 if (afterComma &&
-                    !js_ReportCompileErrorNumber(cx, ts,
-                                                 JSREPORT_TS |
+                    !js_ReportCompileErrorNumber(cx, ts, NULL,
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_TRAILING_COMMA)) {
@@ -5787,8 +5723,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 }
                 goto end_obj_init;
               default:
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_PROP_ID);
                 return NULL;
             }
@@ -5802,8 +5737,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             }
 #endif
             if (tt != TOK_COLON) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_COLON_AFTER_ID);
                 return NULL;
             }
@@ -5820,8 +5754,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (tt == TOK_RC)
                 goto end_obj_init;
             if (tt != TOK_COMMA) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_CURLY_AFTER_LIST);
                 return NULL;
             }
@@ -5897,9 +5830,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn = pn2;
         } else {
             pn->pn_type = TOK_RP;
-            pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
             pn->pn_kid = pn2;
         }
+        pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
         break;
       }
 
@@ -5971,7 +5904,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                         pn->pn_type = TOK_FUNCTION;
                     } else if (tt != TOK_EOF) {
                         js_ReportCompileErrorNumber(
-                            cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+                            cx, ts, NULL, JSREPORT_ERROR,
                             JSMSG_KEYWORD_NOT_NS);
                         return NULL;
                     }
@@ -6060,7 +5993,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         return NULL;
 
       default:
-        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                     JSMSG_SYNTAX_ERROR);
         return NULL;
     }
@@ -6069,7 +6002,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (defsharp) {
         if (notsharp) {
   badsharp:
-            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
@@ -6102,15 +6035,13 @@ ParenExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #if JS_HAS_GENERATOR_EXPRS
     if (js_MatchToken(cx, ts, TOK_FOR)) {
         if (pn->pn_type == TOK_YIELD) {
-            js_ReportCompileErrorNumber(cx, pn,
-                                        JSREPORT_PN | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, pn, JSREPORT_ERROR,
                                         JSMSG_BAD_GENERATOR_SYNTAX,
                                         js_yield_str);
             return NULL;
         }
         if (pn->pn_type == TOK_COMMA) {
-            js_ReportCompileErrorNumber(cx, PN_LAST(pn),
-                                        JSREPORT_PN | JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, PN_LAST(pn), JSREPORT_ERROR,
                                         JSMSG_BAD_GENERATOR_SYNTAX,
                                         js_generator_str);
             return NULL;
@@ -6126,8 +6057,7 @@ ParenExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             return NULL;
         if (genexp) {
             if (js_GetToken(cx, ts) != TOK_RP) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                             JSMSG_BAD_GENERATOR_SYNTAX,
                                             js_generator_str);
                 return NULL;

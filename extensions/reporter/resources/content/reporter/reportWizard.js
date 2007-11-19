@@ -49,6 +49,7 @@ const gParamURL = window.arguments[0];
 const gParamUserAgent = navigator.userAgent;
 const gParamOSCPU = navigator.oscpu;
 const gParamPlatform = navigator.platform;
+const gCharset = window.arguments[1];
 
 // Globals
 var gParamDescription;
@@ -138,7 +139,7 @@ function initForm() {
   var privacyLink = document.getElementById("privacyPolicy");
   privacyLink.setAttribute("href", url);
 
-  // We don't let the user go forward until they fufill certain requirements - see validateform()
+  // We don't let the user go forward until they fulfill certain requirements - see validateform()
   reportWizard.canAdvance = false;
 
   document.getElementById("problem_type").focus();
@@ -216,7 +217,7 @@ function sendReport() {
   gParamBuildConfig = getBuildConfig();
   gParamGecko = getGecko();
 
-  // SOAP params
+  // params
   var param = {
     'method':           'submitReport',
     'rmoVers':          gRMOvers,
@@ -232,6 +233,7 @@ function sendReport() {
     'buildconfig':      gParamBuildConfig,
     'language':         gParamLanguage,
     'email':            gParamEmail,
+    'charset':          gCharset,
     'sysid':            sysId
   };
 
@@ -270,7 +272,7 @@ function serializeParams(params) {
   for (var key in params) {
     str += key + '=' + encodeURIComponent(params[key]) + '&';
   }
-  return str.substr(0, str.length-1);
+  return str.slice(0, -1);
 }
 
 function onSendReportDataLoad(req) {
@@ -316,6 +318,7 @@ function onSendReportDataLoad(req) {
   finishExtendedDoc.getElementById('userAgentStri').textContent   = gParamUserAgent;
   finishExtendedDoc.getElementById('langStri').textContent        = gParamLanguage;
   finishExtendedDoc.getElementById('emailStri').textContent       = gParamEmail;
+  finishExtendedDoc.getElementById('charsetStri').textContent       = gCharset;
 
   reportWizard.canRewind = false;
 

@@ -102,7 +102,7 @@ typedef struct gif_struct {
     int ipass;                  /* Interlace pass; Ranges 1-4 if interlaced. */
     PRUintn rows_remaining;        /* Rows remaining to be output */
     PRUintn irow;                  /* Current output row, starting at zero */
-    PRUint32 *rowp;                 /* Current output pointer */
+    PRUint8 *rowp;                 /* Current output pointer */
 
     /* Parameters for image frame currently being decoded*/
     PRUintn x_offset, y_offset;    /* With respect to "screen" origin */
@@ -118,7 +118,7 @@ typedef struct gif_struct {
     int version;                /* Either 89 for GIF89 or 87 for GIF87 */
     PRUintn screen_width;       /* Logical screen width & height */
     PRUintn screen_height;
-    PRUint32 global_colormap_size;  /* Size of global colormap array. */
+    PRUint32 global_colormap_depth;  /* Depth of global colormap array. */
     int images_decoded;         /* Counts images for multi-part GIFs */
     int loop_count;             /* Netscape specific extension block to control
                                    the number of animation loops a GIF renders. */
