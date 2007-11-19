@@ -91,6 +91,9 @@ CSS_PSEUDO_CLASS(mozHasHandlerRef, ":-moz-has-handlerref")
 // Match nodes that are HTML but not XHTML
 CSS_PSEUDO_CLASS(mozIsHTML, ":-moz-is-html")
 
+// Matches anything when the specified look-and-feel metric is set
+CSS_PSEUDO_CLASS(mozSystemMetric, ":-moz-system-metric")
+
 // CSS 3 UI
 // http://www.w3.org/TR/2004/CR-css3-ui-20040511/#pseudo-classes
 CSS_PSEUDO_CLASS(required, ":required")
