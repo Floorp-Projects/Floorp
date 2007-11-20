@@ -1637,22 +1637,6 @@ var PlacesUtils = {
     this._openTabset(urlsToOpen, aEvent);
   },
 
-  get placesFlavors() {
-    delete this.placesFlavors;
-    var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-                      PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-                      PlacesUtils.TYPE_X_MOZ_PLACE];
-    this.placesFlavors = Cc["@mozilla.org/supports-array;1"].
-                         createInstance(Ci.nsISupportsArray);
-    for (var i = 0; i < placeTypes.length; ++i) {
-      var cstring = Cc["@mozilla.org/supports-cstring;1"].
-                    createInstance(Ci.nsISupportsCString);
-      cstring.data = placeTypes[i];
-      this.placesFlavors.AppendElement(cstring);
-    }
-    return this.placesFlavors;
-  },
-
   /**
    * Helper for the toolbar and menu views
    */
@@ -1792,6 +1776,10 @@ var PlacesUtils = {
       getIntPref("browser.places.allBookmarksFolderId");
   }
 };
+
+PlacesUtils.placesFlavors = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
+                             PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
+                             PlacesUtils.TYPE_X_MOZ_PLACE];
 
 PlacesUtils.GENERIC_VIEW_DROP_TYPES = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
                                        PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
