@@ -853,20 +853,20 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
 
       CERT_DestroyCertList(certList);
     }
-    else {
-      // The connection will be terminated, let's provide a minimal SSLStatus
-      // to the caller that contains at least the cert and its status.
-      nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
 
-      nsCOMPtr<nsSSLStatus> status;
-      infoObject->GetSSLStatus(getter_AddRefs(status));
-      if (!status) {
-        status = new nsSSLStatus();
-        infoObject->SetSSLStatus(status);
-      }
-      if (status) {
-        status->mServerCert = new nsNSSCertificate(serverCert);
-      }
+    // The connection may get terminated, for example, if the server requires
+    // a client cert. Let's provide a minimal SSLStatus
+    // to the caller that contains at least the cert and its status.
+    nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+
+    nsCOMPtr<nsSSLStatus> status;
+    infoObject->GetSSLStatus(getter_AddRefs(status));
+    if (!status) {
+      status = new nsSSLStatus();
+      infoObject->SetSSLStatus(status);
+    }
+    if (status) {
+      status->mServerCert = new nsNSSCertificate(serverCert);
     }
   }
 
