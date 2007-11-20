@@ -911,10 +911,9 @@ interface nsINavHistoryQuery : nsISupports
    * remove everything that doesn't have that annotation. Asking for things
    * that DO have a given annotation is a little different. It also includes
    * things that have never been visited. This allows place queries to be
-   * returned (which might include bookmark folders -- use the bookmark
-   * service's GetFolderURI) as well as anything else that may have been
-   * tagged with an annotation. This will only work for RESULTS_AS_URI since
-   * there will be no visits for these items.
+   * returned as well as anything else that may have been tagged with an
+   * annotation. This will only work for RESULTS_AS_URI since there will be
+   * no visits for these items.
    */
   attribute boolean annotationIsNot;
   attribute AUTF8String annotation;
@@ -939,7 +938,7 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(ed29f063-0c5f-471c-b4bc-b1e889524cd2)]
+[scriptable, uuid(ff73bf85-2755-4c1a-a48d-8c91ccca770e)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
@@ -1131,13 +1130,6 @@ interface nsINavHistoryQueryOptions : nsISupports
    * ones, and THEN sort by title.
    */
   attribute unsigned long maxResults;
-  
-  /**
-   * if a bookmark title is null (note, not empty), 
-   * attempt to use the history title.
-   * Note, this is false by default.
-   */
-  attribute boolean resolveNullBookmarkTitles;
 
   /**
    * only apply our query options to the containers

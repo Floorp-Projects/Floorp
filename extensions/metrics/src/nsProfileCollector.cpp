@@ -458,7 +458,7 @@ nsProfileCollector::LogBookmarks(nsIMetricsEventItem *profile)
   LogBookmarkLocation(bookmarksItem, NS_LITERAL_CSTRING("full-tree"),
                       &counter, root, PR_TRUE);
 
-  rv = bmSvc->GetBookmarksRoot(&root);
+  rv = bmSvc->GetBookmarksMenuFolder(&root);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LogBookmarkLocation(bookmarksItem, NS_LITERAL_CSTRING("root"),

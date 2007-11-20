@@ -52,9 +52,9 @@ var gMoveBookmarksDialog = {
     this._nodes = window.arguments[0];
     this._tm = window.arguments[1];
 
-    // select and expand the root node
-    this.foldersTree.selectFolders([PlacesUtils.bookmarksRootId]);
-    this.foldersTree.selectedNode.containerOpen = true;
+    this.foldersTree.place =
+      "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
+      PlacesUtils.allBookmarksFolderId;
   },
 
   onOK: function MBD_onOK(aEvent) {

@@ -134,14 +134,11 @@ function run_test() {
   var root = result.root;
   root.containerOpen = true;
   do_check_eq(root.childCount, 3);
-  // these containers are nsNavHistoryContainerResultNodes, 
-  // created in GroupByFolder() and not nsNavHistoryFolderResultNodes, 
-  // so they should not have an item id.
-  do_check_eq(root.getChild(0).itemId, -1);
+
+  // note these containers are nsNavHistoryContainerResultNodes, 
+  // created in GroupByFolder() and not nsNavHistoryFolderResultNodes,
   do_check_eq(root.getChild(0).title, "test folder");
-  do_check_eq(root.getChild(1).itemId, -1);
   do_check_eq(root.getChild(1).title, "subfolder 1");
-  do_check_eq(root.getChild(2).itemId, -1);
   do_check_eq(root.getChild(2).title, "subfolder 2");
 
   // check the contents of the "test folder" container

@@ -80,26 +80,12 @@ function run_test() {
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 2;
 
-  // test without the "resolveNullBookmarkTitles" option, 
-  // our tag items don't have titles.
-  var query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.tagRoot], 1);
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
-  root.containerOpen = true;
-  do_check_eq(root.childCount, 2);
-  do_check_eq(root.getChild(0).title, null);
-  do_check_eq(root.getChild(1).title, null);
-
-  // test with the "resolveNullBookmarkTitles" option, 
-  // our tag items have titles from history
   options = histsvc.getNewQueryOptions();
-  options.resolveNullBookmarkTitles = true;
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
   options.maxResults = 2;
 
   query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.tagRoot], 1);
+  query.setFolders([bmsvc.tagsFolder], 1);
   var result = histsvc.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;

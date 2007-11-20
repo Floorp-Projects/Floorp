@@ -262,7 +262,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
 
   // Create an imported bookmarks folder under the bookmarks menu.
   PRInt64 root;
-  rv = bms->GetBookmarksRoot(&root);
+  rv = bms->GetBookmarksMenuFolder(&root);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 folder;

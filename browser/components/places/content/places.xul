@@ -112,20 +112,11 @@
              oncommand="PlacesOrganizer.forward();"/>
   </commandset>
 
-  <broadcasterset id="placesGroupingBroadcasters">
-    <broadcaster id="placesBC_grouping:off"/>
-    <broadcaster id="placesBC_grouping:on"/>
-    <broadcaster id="placesBC_grouping:separator"/>
-  </broadcasterset>
 
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
     <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel" 
          oncommand="close();"/>
-
-    <key id="placesKey_show:debug"
-         key="e" modifiers="accel,shift"
-         oncommand="PlacesOrganizer.toggleDebugPanel();"/>
          
     <!-- Command Keys -->
     <key id="placesKey_find:all"
@@ -136,24 +127,6 @@
          command="OrganizerCommand_find:current" 
          key="&cmd.find.key;"
          modifiers="accel,shift"/>
-    <key id="placesKey_open"
-         command="placesCmd_open" 
-         keycode="VK_RETURN"/>
-    <key id="placesKey_open:window"
-         command="placesCmd_open:window" 
-         keycode="VK_RETURN"
-         modifiers="shift"/>
-    <key id="placesKey_open:tab"
-         command="placesCmd_open:tab" 
-         keycode="VK_RETURN"
-         modifiers="accel"/>
-    <key id="placesKey_show:info"
-         command="placesCmd_show:info" 
-         key="&cmd.show_info.key;"
-         modifiers="accel"/>
-    <key id="placesKey_rename"
-         command="placesCmd_rename" 
-         keycode="VK_F2"/>
   </keyset>
 
   <keyset id="editMenuKeys">
@@ -195,6 +168,7 @@
                     label="&cmd.new_separator.label;"
                     accesskey="&cmd.new_separator.accesskey;"/>
 
+#ifndef XP_MACOSX
           <menuseparator id="orgCutSeparator"/>
           
           <menuitem id="orgCut"
@@ -234,14 +208,18 @@
                     key="key_selectAll"
                     accesskey="&selectAllCmd.accesskey;"/>
 
+#endif
           <menuseparator id="orgMoveSeparator"/>
-
+          <menuitem id="orgMoveBookmarks"
+                    command="placesCmd_moveBookmarks"
+                    label="&cmd.moveBookmarks.label;"
+                    accesskey="cmd.moveBookmarks.accesskey"/>
           <menuitem id="orgDelete"
                     command="cmd_delete"
                     label="&deleteCmd.label;"
                     key="key_delete"
                     accesskey="&deleteCmd.accesskey;"/>
- 
+#ifndef XP_MACOSX
           <menuseparator id="orgCloseSeparator"/>
 
           <menuitem id="orgClose"
@@ -249,6 +227,7 @@
                     label="&file.close.label;"
                     accesskey="&file.close.accesskey;" 
                     oncommand="close();"/>
+#endif
         </menupopup>
       </toolbarbutton>
 
@@ -351,18 +330,16 @@
     <tree id="placesList"
           class="placesTree"
           type="places"
-          showRoot="true"
-          place="place:folder=2&amp;excludeItems=1&amp;queryType=1"
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(true);"
           onclick="PlacesOrganizer.onTreeClick(event);"
           seltype="single"
           persist="width"
-          width="160">
+          width="200">
       <treecols>
-        <treecol id="title" flex="1" primary="true" hideheader="true"/>
+        <treecol anonid="title" flex="1" primary="true" hideheader="true"/>
       </treecols>
-      <treechildren id="placesListChildren" view="placesList"  flex="1"/>
+      <treechildren flex="1"/>
     </tree>
     <splitter id="splitter" collapse="before" persist="state">
       <grippy/>
@@ -370,12 +347,6 @@
     <vbox id="contentView" flex="4">
       <deck id="contentDeck" flex="1">
         <vbox id="defaultView" flex="1">
-          <hbox id="titlebar">
-            <label id="showingPrefix"/>
-            <deck id="titleDeck" flex="1">
-              <label id="contentTitle" flex="1" crop="right"/>
-            </deck>
-          </hbox>
           <vbox id="searchModifiers" hidden="true">
             <toolbar id="organizerScopeBar" class="chromeclass-toolbar" align="center">
               <label id="scopeBarTitle" value="&search.label;"/>
@@ -418,47 +389,46 @@
           </vbox>
           <vbox flex="1">
             <tree id="placeContent" class="placesTree" context="placesContext" 
-                  flex="1" type="places" 
-                  ondblclick="PlacesOrganizer.onTreeDblClick(event);"
-                  onclick="PlacesOrganizer.onTreeClick(event);"
-                  onselect="PlacesOrganizer.onContentTreeSelect();">
+                  flex="1" type="places"
+                  flatList="true"
+                  ondblclick="PlacesOrganizer.onContentTreeDblClick(event);"
+                  onkeypress="PlacesOrganizer.onContentTreeKeypress(event);"
+                  onselect="PlacesOrganizer.onContentTreeSelect();"
+                  onclick="PlacesOrganizer.onTreeClick(event);">
               <treecols id="placeContentColumns">
-                <treecol label="&col.name.label;" id="title" flex="5" primary="true" 
+                <treecol label="&col.name.label;" anonid="title" flex="5" primary="true" 
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.tags.label;" id="tags" flex="2"
+                <treecol label="&col.tags.label;" anonid="tags" flex="2"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.url.label;" id="url" flex="5" 
+                <treecol label="&col.url.label;" anonid="url" flex="5" 
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.lastvisit.label;" id="date" flex="1" hidden="true"
+                <treecol label="&col.lastvisit.label;" anonid="date" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.visitcount.label;" id="visitCount" flex="1" hidden="true"
+                <treecol label="&col.visitcount.label;" anonid="visitCount" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.keyword.label;" id="keyword" flex="1" hidden="true"
+                <treecol label="&col.keyword.label;" anonid="keyword" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.description.label;" id="description" flex="1" hidden="true"
+                <treecol label="&col.description.label;" anonid="description" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.dateadded.label;" id="dateAdded" flex="1" hidden="true"
+                <treecol label="&col.dateadded.label;" anonid="dateAdded" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
                 <splitter class="tree-splitter"/>
-                <treecol label="&col.lastmodified.label;" id="lastModified" flex="1" hidden="true"
+                <treecol label="&col.lastmodified.label;" anonid="lastModified" flex="1" hidden="true"
                          persist="width hidden ordinal sortActive sortDirection"/>
               </treecols>
-              <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
+              <treechildren flex="1"/>
             </tree>
             <splitter id="contentSplitter" collapse="after" persist="state">
               <grippy/>
             </splitter>
             <hbox persist="height" id="infoPane">
-              <hbox id="previewBox" style="min-width: 60px; -moz-border-end: 1px solid GrayText;">
-                <html:canvas id="itemThumbnail" notavailabletext="&detailsPane.noPreviewAvailable.label;"/>
-              </hbox>
               <deck flex="1" id="detailsDeck">
                 <vbox align="center">
                   <spacer flex="3"/>
@@ -483,39 +453,6 @@
                 </scrollbox>
               </deck>
             </hbox>
-          </vbox>
-          <vbox id="debugPanel" hidden="true">
-            <grid>
-              <columns>
-                <column/>
-                <column flex="1"/>
-                <column/>
-              </columns>
-              <rows>
-                <row align="center">
-                  <label value="Debug:" control="placeURI"/>
-                  <textbox id="placeURI" flex="1" 
-                           onkeypress="PlacesOrganizer.onPlaceURIKeypress(event);"/>
-                  <button label="Load" oncommand="PlacesOrganizer.loadPlaceURI();"/>
-                </row>
-                <row>
-                  <spacer/>
-                  <hbox>
-                    <checkbox id="autoFilterResults" 
-                              label="Apply user filtering of results"
-                              checked="true"/>
-                  </hbox>
-                  <spacer/>
-                </row>
-                <separator class="thin"/>
-                <row align="center">
-                  <label value="Loaded:" control="loadedURI"/>
-                  <textbox id="loadedURI" flex="1" readonly="true"/>
-                  <spacer/>
-                </row>
-              </rows>
-            </grid>
-            <separator class="thin"/>
           </vbox>
         </vbox>
       </deck>

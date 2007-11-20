@@ -125,7 +125,6 @@ public:
                                mExpandQueries(PR_TRUE),
                                mIncludeHidden(PR_FALSE),
                                mShowSessions(PR_FALSE),
-                               mResolveNullBookmarkTitles(PR_FALSE),
                                mApplyOptionsToContainers(PR_FALSE),
                                mMaxResults(0),
                                mQueryType(nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
@@ -151,7 +150,6 @@ public:
   PRBool ExpandQueries() const { return mExpandQueries; }
   PRBool IncludeHidden() const { return mIncludeHidden; }
   PRBool ShowSessions() const { return mShowSessions; }
-  PRBool ResolveNullBookmarkTitles() const { return mResolveNullBookmarkTitles; }
   PRBool ApplyOptionsToContainers() const { return mApplyOptionsToContainers; }
   PRUint32 MaxResults() const { return mMaxResults; }
   PRUint16 QueryType() const { return mQueryType; }
@@ -181,7 +179,6 @@ private:
   PRPackedBool mExpandQueries;
   PRPackedBool mIncludeHidden;
   PRPackedBool mShowSessions;
-  PRPackedBool mResolveNullBookmarkTitles;
   PRPackedBool mApplyOptionsToContainers;
   PRUint32 mMaxResults;
   PRUint16 mQueryType;

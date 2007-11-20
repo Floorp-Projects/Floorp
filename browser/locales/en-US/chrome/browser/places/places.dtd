@@ -114,10 +114,6 @@
 
 <!ENTITY cmd.moveBookmarks.label                  "Move...">
 <!ENTITY cmd.moveBookmarks.accesskey              "M">
-<!ENTITY cmd.moveBookmarks.menuLabel              "Move Bookmark(s)...">
-<!ENTITY cmd.moveBookmarks.menuAccesskey          "M">
-<!ENTITY cmd.personalToolbarFolder.menuLabel      "Set as Bookmarks Toolbar Folder">
-<!ENTITY cmd.personalToolbarFolder.menuAccesskey  "b">
 
 <!ENTITY col.name.label          "Name">
 <!ENTITY col.tags.label          "Tags">

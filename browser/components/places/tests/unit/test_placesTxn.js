@@ -114,10 +114,10 @@ var observer = {
 bmsvc.addObserver(observer, false);
 
 // get bookmarks root index
-var root = bmsvc.bookmarksRoot;
+var root = bmsvc.bookmarksMenuFolder;
 
 // index at which items should begin
-var bmStartIndex = 1;
+var bmStartIndex = 0;
 
 // main
 function run_test() {
@@ -185,22 +185,22 @@ function run_test() {
   // Moving items between the same folder
   do_check_eq(observer._itemMovedId, bkmk1Id);
   do_check_eq(observer._itemMovedOldParent, root);
-  do_check_eq(observer._itemMovedOldIndex, 1);
+  do_check_eq(observer._itemMovedOldIndex, 0);
   do_check_eq(observer._itemMovedNewParent, root);
-  do_check_eq(observer._itemMovedNewIndex, 2);
+  do_check_eq(observer._itemMovedNewIndex, 1);
   txn3.undoTransaction();
   do_check_eq(observer._itemMovedId, bkmk1Id);
   do_check_eq(observer._itemMovedOldParent, root);
-  do_check_eq(observer._itemMovedOldIndex, 2);
+  do_check_eq(observer._itemMovedOldIndex, 1);
   do_check_eq(observer._itemMovedNewParent, root);
-  do_check_eq(observer._itemMovedNewIndex, 1);
+  do_check_eq(observer._itemMovedNewIndex, 0);
 
   // Moving items between different folders
   var txn3b = ptSvc.moveItem(bkmk1Id, fldrId, -1);
   txn3b.doTransaction();
   do_check_eq(observer._itemMovedId, bkmk1Id);
   do_check_eq(observer._itemMovedOldParent, root);
-  do_check_eq(observer._itemMovedOldIndex, 1);
+  do_check_eq(observer._itemMovedOldIndex, 0);
   do_check_eq(observer._itemMovedNewParent, fldrId);
   do_check_eq(observer._itemMovedNewIndex, 2);
   txn3.undoTransaction();
@@ -208,7 +208,7 @@ function run_test() {
   do_check_eq(observer._itemMovedOldParent, fldrId);
   do_check_eq(observer._itemMovedOldIndex, 2);
   do_check_eq(observer._itemMovedNewParent, root);
-  do_check_eq(observer._itemMovedNewIndex, 1);
+  do_check_eq(observer._itemMovedNewIndex, 0);
 
   // Test Removing a Folder
   ptSvc.commitTransaction(ptSvc.createFolder("Folder2", root, -1));
@@ -217,22 +217,22 @@ function run_test() {
   txn4.doTransaction();
   do_check_eq(observer._itemRemovedId, fldrId2);
   do_check_eq(observer._itemRemovedFolder, root);
-  do_check_eq(observer._itemRemovedIndex, 3);
+  do_check_eq(observer._itemRemovedIndex, 2);
   txn4.undoTransaction();
   do_check_eq(observer._itemAddedId, fldrId2);
   do_check_eq(observer._itemAddedParent, root);
-  do_check_eq(observer._itemAddedIndex, 3);
+  do_check_eq(observer._itemAddedIndex, 2);
 
   // Test removing an item
   var txn5 = ptSvc.removeItem(bkmk2Id);
   txn5.doTransaction();
   do_check_eq(observer._itemRemovedId, bkmk2Id);
   do_check_eq(observer._itemRemovedFolder, root);
-  do_check_eq(observer._itemRemovedIndex, 1);
+  do_check_eq(observer._itemRemovedIndex, 0);
   txn5.undoTransaction();
 
   do_check_eq(observer._itemAddedParent, root);
-  do_check_eq(observer._itemAddedIndex, 1);
+  do_check_eq(observer._itemAddedIndex, 0);
 
   // Test creating a separator
   var txn6 = ptSvc.createSeparator(root, 1);
@@ -329,15 +329,6 @@ function run_test() {
   do_check_eq(observer._itemChangedId, lvmkId);
   do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
   do_check_eq(observer._itemChangedValue, "");
-
-  // setBookmarksToolbar
-  ptSvc.commitTransaction(ptSvc.createFolder("Testing toolbar folder", root, bmStartIndex));
-  var tmpFolderId = bmsvc.getChildFolder(root, "Testing toolbar folder");
-  var txn15 = ptSvc.setBookmarksToolbar(tmpFolderId);
-  txn15.doTransaction();
-  do_check_eq(observer._itemChangedId, tmpFolderId);
-  do_check_eq(observer._itemChangedProperty, "became_toolbar_folder");
-  txn15.undoTransaction();
 
   // Test setLoadInSidebar
   var txn16 = ptSvc.setLoadInSidebar(bkmk1Id, true);

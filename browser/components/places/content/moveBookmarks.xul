@@ -67,9 +67,7 @@
             class="placesTree"
             flex="1"
             type="places"
-            showRoot="true"
             seltype="single"
-            place="place:folder=2&amp;excludeItems=1&amp;excludeReadOnlyFolders=1" 
             hidecolumnpicker="true">
         <treecols>
           <treecol id="title" flex="1" primary="true" hideheader="true"/>

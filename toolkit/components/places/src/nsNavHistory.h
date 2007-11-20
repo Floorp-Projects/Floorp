@@ -615,8 +615,8 @@ protected:
   static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
   nsresult OnIdle();
 
-  PRInt64 mTagRoot;
-  PRInt64 GetTagRoot();
+  PRInt64 mTagsFolder;
+  PRInt64 GetTagsFolder();
 };
 
 /**

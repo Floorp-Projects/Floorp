@@ -270,7 +270,7 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mBatchLevel(0),
                                mLock(nsnull),
                                mBatchHasTransaction(PR_FALSE),
-                               mTagRoot(-1)
+                               mTagsFolder(-1)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -2174,7 +2174,9 @@ PRBool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   PRUint32 groupCount;
   const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
 
-  if (groupCount != 0 || aOptions->ExcludeQueries())
+  // Always filter bookmarks queries to avoid  the inclusion of query nodes
+  if (groupCount != 0 ||
+      aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
     return PR_TRUE;
 
   nsCString parentAnnotationToExclude;
@@ -2282,16 +2284,7 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
         "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
       groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
     } else if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
-      queryString = NS_LITERAL_CSTRING("SELECT b.fk, h.url, ");
-      if (aOptions->ResolveNullBookmarkTitles()) {
-        // COALESCE, first non NULL param
-        queryString += NS_LITERAL_CSTRING(
-          "COALESCE(b.title, "
-          "(SELECT h.title FROM moz_bookmarks b2, moz_places h2 WHERE b2.fk = h2.id AND b2.id = b.id)), ");
-      }
-      else {
-        queryString += NS_LITERAL_CSTRING("b.title, ");
-      }
+      queryString = NS_LITERAL_CSTRING("SELECT b.fk, h.url, COALESCE(b.title, h.title), ");
       queryString += NS_LITERAL_CSTRING(
         "h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = b.fk), "
@@ -4125,19 +4118,19 @@ nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
 }
 
 PRInt64
-nsNavHistory::GetTagRoot()
+nsNavHistory::GetTagsFolder()
 {
-  // cache our tag root
+  // cache our tags folder
   // note, we can't do this in nsNavHistory::Init(), 
   // as getting the bookmarks service would initialize it.
-  if (mTagRoot == -1) {
+  if (mTagsFolder == -1) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, -1);
     
-    nsresult rv = bookmarks->GetTagRoot(&mTagRoot);
+    nsresult rv = bookmarks->GetTagsFolder(&mTagsFolder);
     NS_ENSURE_SUCCESS(rv, -1);
   }
-  return mTagRoot;
+  return mTagsFolder;
 }
 
 // nsNavHistory::GroupByFolder
@@ -4150,14 +4143,6 @@ nsNavHistory::GroupByFolder(nsNavHistoryQueryResultNode *aResultNode,
   nsDataHashtable<nsTrimInt64HashKey, nsNavHistoryContainerResultNode*> folders;
   if (!folders.Init(512))
     return NS_ERROR_OUT_OF_MEMORY;
-
-  nsCOMPtr<nsITaggingService> tagService =
-    do_GetService(TAGGING_SERVICE_CID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString tagContainerIconSpec;
-  rv = tagService->GetTagContainerIconSpec(tagContainerIconSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
   if (!bookmarks)
@@ -4185,22 +4170,17 @@ nsNavHistory::GroupByFolder(nsNavHistoryQueryResultNode *aResultNode,
       rv = CreatePlacesPersistURN(aResultNode, parentId, NS_ConvertUTF16toUTF8(title), urn);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      PRInt64 grandparentId;
-      rv = bookmarks->GetFolderIdForItem(parentId, &grandparentId);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       // create parent node
-      // if the grandparent is the tag root, the parent is a tag container
-      // so use the tag container icon
       folderNode = new nsNavHistoryContainerResultNode(urn, 
         NS_ConvertUTF16toUTF8(title),
-        (grandparentId == GetTagRoot()) ? tagContainerIconSpec : EmptyCString(),
+        EmptyCString(),
         nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
         PR_TRUE, EmptyCString(), aResultNode->mOptions);
 
       if (!folders.Put(parentId, folderNode))
         return NS_ERROR_OUT_OF_MEMORY;
 
+      folderNode->mItemId = parentId;
       rv = aDest->AppendObject(folderNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -4237,10 +4217,8 @@ nsNavHistory::URIHasTag(nsIURI* aURI, const nsAString& aTag)
 
   nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  PRInt64 tagRoot;
-  rv = bookmarks->GetTagRoot(&tagRoot);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBURIHasTag->BindInt64Parameter(2, tagRoot);
+  PRInt64 tagsFolder = GetTagsFolder();
+  rv = mDBURIHasTag->BindInt64Parameter(2, tagsFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasTag = PR_FALSE;
@@ -4594,7 +4572,14 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   if (IsQueryURI(url)) {
     // special case "place:" URIs: turn them into containers
     PRInt64 itemId = aRow->AsInt64(kGetInfoIndex_ItemId);
-    return QueryRowToResult(itemId, url, title, accessCount, time, favicon, aResult);
+    rv = QueryRowToResult(itemId, url, title, accessCount, time, favicon, aResult);
+
+    // If it's a simple folder node (i.e. a shortcut to another folder), apply
+    // our options for it.
+    if (*aResult && (*aResult)->IsFolder())  {
+      (*aResult)->GetAsContainer()->mOptions = aOptions;
+    }
+    return rv;
   } else if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_URI) {
     *aResult = new nsNavHistoryResultNode(url, title, accessCount, time,
                                           favicon);

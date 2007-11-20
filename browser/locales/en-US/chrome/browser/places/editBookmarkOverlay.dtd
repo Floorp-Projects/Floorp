@@ -4,9 +4,6 @@
 <!ENTITY editBookmarkOverlay.siteLocation.label              "Site Location:">
 <!ENTITY editBookmarkOverlay.liveTitlesSeparator.label       "Live Titles">
 <!ENTITY editBookmarkOverlay.folder.label                    "Folder:">
-<!ENTITY editBookmarkOverlay.allBookmarksFolderItem.label    "All Bookmarks">
-<!ENTITY editBookmarkOverlay.bookmarksMenuFolderItem.label   "Bookmarks Menu">
-<!ENTITY editBookmarkOverlay.toolbarFolderItem.label         "Bookmarks Toolbar">
 <!ENTITY editBookmarkOverlay.foldersExpanderDown.tooltip     "Show all the bookmarks folders">
 <!ENTITY editBookmarkOverlay.expanderUp.tooltip              "Hide">
 <!ENTITY editBookmarkOverlay.tags.label                      "Tags:">

@@ -67,7 +67,7 @@ function run_test() {
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
 
-  query.setFolders([bmsvc.tagRoot], 1);
+  query.setFolders([bmsvc.tagsFolder], 1);
   var result = histsvc.executeQuery(query, options);
   var tagRoot = result.root;
   tagRoot.containerOpen = true;

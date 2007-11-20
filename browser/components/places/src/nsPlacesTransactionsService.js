@@ -139,10 +139,6 @@ placesTransactionsService.prototype = {
    return new placesSortFolderByNameTransactions(aFolderId, aFolderIndex);
   },
 
-  setBookmarksToolbar: function placesSetBkmkToolbar(aFolderId) {
-    return new placesSetBookmarksToolbarTransactions(aFolderId);
-  },
-
   commitTransaction: function placesCommitTxn(txn) {
     this.mTransactionManager.doTransaction(txn);
   },
@@ -738,23 +734,6 @@ placesSortFolderByNameTransactions.prototype = {
   undoTransaction: function PSSFBN_undoTransaction() {
     for (item in this._oldOrder)
       PlacesUtils.bookmarks.setItemIndex(item, this._oldOrder[item]);
-  }
-};
-
-function placesSetBookmarksToolbarTransactions(aFolderId) {
-  this._folderId = aFolderId;
-  this.redoTransaction = this.doTransaction;
-  this._oldFolderId = PlacesUtils.bookmarks.toolbarFolder;
-}
-
-placesSetBookmarksToolbarTransactions.prototype = {
-  __proto__: placesBaseTransaction.prototype,
-  doTransaction: function PSBTT_doTransaction() {
-    PlacesUtils.bookmarks.toolbarFolder = this._folderId;
-  },
-
-  undoTransaction: function PSBTT_undoTransaction() {
-    PlacesUtils.bookmarks.toolbarFolder = this._oldFolderId;
   }
 };
 
