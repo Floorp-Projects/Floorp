@@ -77,15 +77,24 @@ var security = {
       var issuerName =
         this.mapIssuerOrganization(cert.issuerOrganization) || cert.issuerName;
 
-      return {
+      var retval = {
         hostName : hName,
         cAName : issuerName,
-        encryptionAlgorithm : status.cipherName,
-        encryptionStrength : status.secretKeyLength,
+        encryptionAlgorithm : undefined,
+        encryptionStrength : undefined,
         isBroken : isBroken,
         cert : cert,
         fullLocation : gWindow.location
       };
+
+      try {
+        retval.encryptionAlgorithm = status.cipherName;
+        retval.encryptionStrength = status.secretKeyLength;
+      }
+      catch (e) {
+      }
+
+      return retval;
     } else {
       return {
         hostName : hName,
