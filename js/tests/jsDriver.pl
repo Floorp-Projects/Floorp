@@ -314,7 +314,7 @@ sub execute_tests {
             }
 
             # watch for failures
-            if ($line =~ /^\wFAILED!/) {
+            if ($line =~ /^\s*FAILED!/) {
                 $failure_lines .= $line;
             }
 
@@ -1422,6 +1422,9 @@ sub report_failure {
 
     if ($opt_console_failures) {
         if ($opt_console_failures_line) {
+            # report_summary_result increments $failures_reported
+            # decrement here to prevent overcounting of failures
+            $failures_reported--;
             my $linemessage = $message;
             $linemessage =~ s/[\n\r]+/ /mg;
             $bug_number = "none" unless $bug_number;
