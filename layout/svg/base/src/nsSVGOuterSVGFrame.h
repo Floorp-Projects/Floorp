@@ -44,6 +44,8 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGNumber.h"
 
+class nsSVGForeignObjectFrame;
+
 ////////////////////////////////////////////////////////////////////////
 // nsSVGOuterSVGFrame class
 
@@ -64,6 +66,14 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
 public:
+
+#ifdef DEBUG
+  ~nsSVGOuterSVGFrame() {
+    NS_ASSERTION(mForeignObjectHash.Count() == 0,
+                 "foreignObject(s) still registered!");
+  }
+#endif
+
   // nsIFrame:
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
@@ -130,6 +140,14 @@ public:
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
+  /* Methods to allow descendant nsSVGForeignObjectFrame frames to register and
+   * unregister themselves with their nearest nsSVGOuterSVGFrame ancestor so
+   * they can be reflowed. The methods return PR_TRUE on success or PR_FALSE on
+   * failure.
+   */
+  void RegisterForeignObject(nsSVGForeignObjectFrame* aFrame);
+  void UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame);
+
 protected:
 
   /* Returns true if our content is the document element and our document is
@@ -137,6 +155,11 @@ protected:
    * aEmbeddingFrame to obtain the nsIFrame for the embedding HTML element.
    */
   PRBool EmbeddedByReference(nsIFrame **aEmbeddingFrame = nsnull);
+
+  // A hash-set containing our nsSVGForeignObjectFrame descendants. Note we use
+  // a hash-set to avoid the O(N^2) behavior we'd get tearing down an SVG frame
+  // subtree if we were to use a list (see bug 381285 comment 20).
+  nsTHashtable<nsVoidPtrHashKey> mForeignObjectHash;
 
   PRUint32 mRedrawSuspendCount;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;

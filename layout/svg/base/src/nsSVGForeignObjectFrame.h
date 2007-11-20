@@ -63,6 +63,9 @@ private:
 
 public:
   // nsIFrame:  
+  NS_IMETHOD  Init(nsIContent* aContent,
+                   nsIFrame*   aParent,
+                   nsIFrame*   aPrevInFlow);
   virtual void Destroy();
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -73,13 +76,6 @@ public:
   }
 
   NS_IMETHOD DidSetStyleContext();
-
-  /**
-   * We need to reflow our decendants whenever style changes requiring reflow
-   * occur on an ancestor. Most SVG doesn't participate in reflow, but we can
-   * use MarkIntrinsicWidthsDirty to detect when this happens.
-   */
-  virtual void MarkIntrinsicWidthsDirty();
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -134,7 +130,10 @@ public:
   nsPoint TransformPointFromOuter(nsPoint aPt);
 
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-  
+
+  // This method allows our nsSVGOuterSVGFrame to reflow us as necessary.
+  void MaybeReflowFromOuterSVGFrame();
+
 protected:
   // implementation helpers:
   void DoReflow();
