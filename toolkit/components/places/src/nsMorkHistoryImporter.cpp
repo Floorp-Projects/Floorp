@@ -227,6 +227,8 @@ nsNavHistory::ImportHistory(nsIFile* aFile)
   }
 
   // Now add the results to history
+  // Note: Duplicates are handled by Places internally, no need to filter them
+  // out before importing.
   mozIStorageConnection *conn = GetStorageConnection();
   NS_ENSURE_TRUE(conn, NS_ERROR_NOT_INITIALIZED);
   mozStorageTransaction transaction(conn, PR_FALSE);

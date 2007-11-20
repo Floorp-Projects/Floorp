@@ -158,7 +158,7 @@
 // *** CURRENTLY DISABLED ***
 // Perform vacuum after 15 minutes of idle time, repeating.
 // 15 minutes = 900 seconds = 900000 milliseconds
-#define VACUUM_IDLE_TIME_IN_MSECS (900000)
+#define LONG_IDLE_TIME_IN_MSECS (900000)
 
 // Perform expiration after 5 minutes of idle time, repeating.
 // 5 minutes = 300 seconds = 300000 milliseconds
@@ -1888,8 +1888,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
 
   // This will prevent corruption since we have to do a two-phase add.
   // Generally this won't do anything because AddURI has its own transaction.
-  mozStorageTransaction transaction(mDBConn, PR_FALSE,
-                                  mozIStorageConnection::TRANSACTION_EXCLUSIVE);
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   // see if this is an update (revisit) or a new page
   mozStorageStatementScoper scoper(mDBGetPageVisitStats);
@@ -3401,19 +3400,17 @@ nsNavHistory::OnIdle()
     (void)mExpire.ExpireItems(MAX_EXPIRE_RECORDS_ON_IDLE, &dummy);
   }
 
-  // If we've been idle for more than VACUUM_IDLE_TIME_IN_MSECS
+  // If we've been idle for more than LONG_IDLE_TIME_IN_MSECS
   // perform long-idle tasks.
-  if (idleTime > VACUUM_IDLE_TIME_IN_MSECS) {
+  if (idleTime > LONG_IDLE_TIME_IN_MSECS) {
     // Do a one-time re-creation of the moz_places.url index (bug 381795)
     // XXX REMOVE ME AFTER BETA2.
     PRBool oldIndexExists = PR_FALSE;
     rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_places_urlindex"), &oldIndexExists);
     if (oldIndexExists) {
-      // wrap in an exclusive transaction for safety and performance
-      mozStorageTransaction urlindexTransaction(
-          mDBConn, PR_FALSE, mozIStorageConnection::TRANSACTION_EXCLUSIVE);
+      // wrap in a transaction for safety and performance
+      mozStorageTransaction urlindexTransaction(mDBConn, PR_FALSE);
       // drop old index
-      PRTime start = PR_Now();
       rv = mDBConn->ExecuteSimpleSQL(
           NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_urlindex"));
       NS_ENSURE_SUCCESS(rv, rv);
