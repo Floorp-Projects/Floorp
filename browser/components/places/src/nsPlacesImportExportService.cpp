@@ -1224,6 +1224,7 @@ BookmarkContentSink::NewFrame()
 
   if (!mFrames.AppendElement(BookmarkImportFrame(ourID)))
     return NS_ERROR_OUT_OF_MEMORY;
+  frame.mPreviousId = ourID;
   return NS_OK;
 }
 

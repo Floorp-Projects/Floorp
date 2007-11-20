@@ -109,7 +109,7 @@ function run_test() {
   try {
     importer.importHTMLFromFile(bookmarksFileOld, true);
   } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
-  testCanonicalBookmarks(bmsvc.bookmarksMenuFolder); 
+  testCanonicalBookmarks(bmsvc.bookmarksMenuFolder);
 
   // Test exporting a Places canonical bookmarks file.
   // 1. export to bookmarks.exported.html
@@ -120,6 +120,7 @@ function run_test() {
     importer.exportHTMLToFile(bookmarksFileNew);
   } catch(ex) { do_throw("couldn't export to file: " + ex); }
   bmsvc.removeFolderChildren(bmsvc.bookmarksMenuFolder);
+  bmsvc.removeFolderChildren(bmsvc.toolbarFolder);
   try {
     importer.importHTMLFromFile(bookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
