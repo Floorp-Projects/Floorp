@@ -121,6 +121,8 @@ pref("app.update.nagTimer.restart", 1800);
 // Interval: When all registered timers should be checked (in milliseconds)
 //           default=10 minutes
 pref("app.update.timer", 600000);
+// Show the Update Checking UI when the user was idle for x seconds
+pref("app.update.idletime", 60);
 
 // Whether or not we show a dialog box informing the user that the update was
 // successfully applied. This is off in Firefox by default since we show a 

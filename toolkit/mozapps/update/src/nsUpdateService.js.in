@@ -25,6 +25,7 @@
  *  Ben Turner <bent.mozilla@gmail.com>
  *  Jeff Walden <jwalden+code@mit.edu>
  *  Alexander J. Vincent <ajvincent@gmail.com>
+ *  Dão Gottwald <dao@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +48,7 @@ const PREF_APP_UPDATE_MODE                = "app.update.mode";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
 const PREF_APP_UPDATE_TIMER               = "app.update.timer";
+const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -2801,8 +2803,8 @@ UpdatePrompt.prototype = {
    */
   showUpdateAvailable: function(update) {
     if (this._enabled) {
-      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard",
-                   "updatesavailable", update);
+      this._showUIWhenIdle(null, URI_UPDATE_PROMPT_DIALOG, null,
+                           "Update:Wizard", "updatesavailable", update);
     }
   },
 
@@ -2811,8 +2813,8 @@ UpdatePrompt.prototype = {
    */
   showUpdateDownloaded: function(update) {
     if (this._enabled) {
-      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard",
-                   "finishedBackground", update);
+      this._showUIWhenIdle(null, URI_UPDATE_PROMPT_DIALOG, null,
+                           "Update:Wizard", "finishedBackground", update);
     }
   },
 
@@ -2866,6 +2868,52 @@ UpdatePrompt.prototype = {
    */
   get _enabled() {
     return !getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false);
+  },
+
+  /**
+   * Show the Update Checking UI when the user was idle
+   * @param   parent
+   *          A parent window, can be null
+   * @param   uri
+   *          The URI string of the dialog to show
+   * @param   name
+   *          The Window Name of the dialog to show, in case it is already open
+   *          and can merely be focused
+   * @param   page
+   *          The page of the wizard to be displayed, if one is already open.
+   * @param   update
+   *          An update to pass to the UI in the window arguments.
+   *          Can be null
+   */
+  _showUIWhenIdle: function(parent, uri, features, name, page, update) {
+    var idleService =
+      Components.classes["@mozilla.org/widget/idleservice;1"]
+                .getService(Components.interfaces.nsIIdleService);
+
+    const IDLE_TIME = getPref("getIntPref", PREF_APP_UPDATE_IDLETIME, 60);
+    if (idleService.idleTime / 1000 >= IDLE_TIME) {
+      this._showUI(parent, uri, features, name, page, update);
+    } else {
+      var observerService =
+        Components.classes["@mozilla.org/observer-service;1"]
+                  .getService(Components.interfaces.nsIObserverService);
+      var observer = {
+        updatePrompt: this,
+        observe: function (aSubject, aTopic, aData) {
+          switch (aTopic) {
+            case "idle":
+              this.updatePrompt._showUI(parent, uri, features, name, page, update);
+              // fall thru
+            case "quit-application":
+              idleService.removeIdleObserver(this, IDLE_TIME);
+              observerService.removeObserver(this, "quit-application");
+              break;
+          }
+        }
+      };
+      idleService.addIdleObserver(observer, IDLE_TIME);
+      observerService.addObserver(observer, "quit-application", false);
+    }
   },
 
   /**
