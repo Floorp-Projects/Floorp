@@ -7,6 +7,7 @@ include sizing/reftest.list
 
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == clipPath-basic-01.svg pass.svg # bug 379609
 == foreignObject-01.svg pass.svg
+== foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
 == foreignObject-move-repaint-01.svg pass.svg
