@@ -346,15 +346,17 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
         "lastModified INTEGER)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // this index will make it faster to determine if a given item is
-    // bookmarked (used by history queries and vacuuming, for example)
+    // This index will make it faster to determine if a given item is
+    // bookmarked (used by history queries and vacuuming, for example).
+    // Making it compound with "type" speeds up type-differentiation
+    // queries, such as expiration and search.
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (fk)"));
+        "CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (fk,type)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // the most common operation is to find the children given a parent
+    // The most common operation is to find the children given a parent and position.
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE INDEX moz_bookmarks_parentindex ON moz_bookmarks (parent)"));
+        "CREATE INDEX moz_bookmarks_parentindex ON moz_bookmarks (parent,position)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
