@@ -215,7 +215,9 @@ nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
   nsTableColFrame* nextCol;
   while (col && col->GetColType() == eColAnonymousColGroup) {
     // this colgroup spans one or more columns but now that there is a
-    // real column below, spanned anonymous columns should be removed
+    // real column below, spanned anonymous columns should be removed,
+    // since the HTML spec says to ignore the span of a colgroup if it
+    // has content columns in it.
     nextCol = col->GetNextCol();
     RemoveFrame(nsnull, col);
     col = nextCol;
@@ -241,11 +243,23 @@ nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
   nsTableColFrame* col = GetFirstColumn();
   nsTableColFrame* nextCol;
   while (col && col->GetColType() == eColAnonymousColGroup) {
-    // this colgroup spans one or more columns but now that there is 
-    // real column below, spanned anonymous columns should be removed
+    // this colgroup spans one or more columns but now that there is a
+    // real column below, spanned anonymous columns should be removed,
+    // since the HTML spec says to ignore the span of a colgroup if it
+    // has content columns in it.
     nextCol = col->GetNextCol();
     RemoveFrame(nsnull, col);
     col = nextCol;
+  }
+
+  if (aPrevFrame) {
+    col = GetNextColumn(aPrevFrame);
+    while (col && col->GetColType() == eColAnonymousCol) {
+      // This is a column frame from a <col span="N">.  We want to
+      // insert our new frame after the end of this span
+      aPrevFrame = col;
+      col = col->GetNextCol();
+    }
   }
 
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
