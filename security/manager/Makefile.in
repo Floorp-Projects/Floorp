@@ -294,12 +294,14 @@ endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64FPU_LIB) $(DIST)/bin
 endif
 endif
+ifndef MOZ_NATIVE_NSS
 # NSS installs headers to dist/public and we want them in dist/include
 	$(NSINSTALL) -D $(DIST)/include/nss
 	(cd $(DIST)/public/nss && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/include/nss && tar -xf -)
 	(cd $(DIST)/public/nss && tar $(TAR_CREATE_FLAGS) - .) | \
 	  (cd $(DIST)/sdk/include && tar -xf -)
+endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C locales $@
