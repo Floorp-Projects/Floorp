@@ -108,58 +108,58 @@ AddToHistoryCB(const nsCSubstring &aRowID,
     if (columnIndexes[i] != -1) {
       values[i] = (*aValues)[columnIndexes[i]];
       reader->NormalizeValue(values[i]);
+      if (i == kHiddenColumn && values[i].EqualsLiteral("1"))
+        return PL_DHASH_NEXT; // Do not import hidden records.
     }
-  }
-
-  // title is really a UTF-16 string at this point
-  nsCString &titleC = values[kNameColumn];
-
-  PRUint32 titleLength;
-  const char *titleBytes;
-  if (titleC.IsEmpty()) {
-    titleBytes = "\0";
-    titleLength = 0;
-  } else {
-    titleLength = titleC.Length() / 2;
-
-    // add an extra null byte onto the end, so that the buffer ends
-    // with a complete unicode null character.
-    titleC.Append('\0');
-
-    // Swap the bytes in the unicode characters if necessary.
-    if (data->swapBytes) {
-      SwapBytes(reinterpret_cast<PRUnichar*>(titleC.BeginWriting()));
-    }
-    titleBytes = titleC.get();
-  }
-
-  const PRUnichar *title = reinterpret_cast<const PRUnichar*>(titleBytes);
-
-  PRInt32 err;
-  PRInt32 count = values[kVisitCountColumn].ToInteger(&err);
-  if (err != 0 || count == 0) {
-    count = 1;
-  }
-
-  PRTime date;
-  if (PR_sscanf(values[kLastVisitColumn].get(), "%lld", &date) != 1) {
-    date = -1;
   }
 
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), values[kURLColumn]);
 
   if (uri) {
+    // title is really a UTF-16 string at this point
+    nsCString &titleC = values[kNameColumn];
+
+    PRUint32 titleLength;
+    const char *titleBytes;
+    if (titleC.IsEmpty()) {
+      titleBytes = "\0";
+      titleLength = 0;
+    } else {
+      titleLength = titleC.Length() / 2;
+
+      // add an extra null byte onto the end, so that the buffer ends
+      // with a complete unicode null character.
+      titleC.Append('\0');
+
+      // Swap the bytes in the unicode characters if necessary.
+      if (data->swapBytes) {
+        SwapBytes(reinterpret_cast<PRUnichar*>(titleC.BeginWriting()));
+      }
+      titleBytes = titleC.get();
+    }
+
+    const PRUnichar *title = reinterpret_cast<const PRUnichar*>(titleBytes);
+
+    PRInt32 err;
+    PRInt32 count = values[kVisitCountColumn].ToInteger(&err);
+    if (err != 0 || count == 0) {
+      count = 1;
+    }
+
+    PRTime date;
+    if (PR_sscanf(values[kLastVisitColumn].get(), "%lld", &date) != 1) {
+      date = -1;
+    }
+
     PRBool isTyped = values[kTypedColumn].EqualsLiteral("1");
     PRInt32 transition = isTyped ?
         (PRInt32) nsINavHistoryService::TRANSITION_TYPED
       : (PRInt32) nsINavHistoryService::TRANSITION_LINK;
     nsNavHistory *history = data->history;
 
-    history->AddPageWithVisit(uri,
-                              nsDependentString(title, titleLength),
-                              values[kHiddenColumn].EqualsLiteral("1"),
-                              isTyped, count, transition, date);
+    history->AddPageWithVisit(uri, nsDependentString(title, titleLength),
+                              PR_FALSE, isTyped, count, transition, date);
   }
   return PL_DHASH_NEXT;
 }
@@ -236,10 +236,6 @@ nsNavHistory::ImportHistory(nsIFile* aFile)
 #endif
 
   reader.EnumerateRows(AddToHistoryCB, &data);
-
-  // Make sure we don't have any duplicate items in the database.
-  rv = RemoveDuplicateURIs();
-  NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef IN_MEMORY_LINKS
   memTransaction.Commit();
