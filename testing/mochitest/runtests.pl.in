@@ -625,7 +625,9 @@ sub executeMac {
     die "cannot fork: $!";
   } elsif ($pid == 0) {
     # run only the executable so we get a pid we can focus
-    $app .= "-bin";
+    if ($app !~ /-bin$/) {
+        $app .= "-bin";
+    }
     my @runargs = ($app, '-foreground', '-no-remote', '-profile', $profile_arg);
     push(@runargs, $test_url);
     
