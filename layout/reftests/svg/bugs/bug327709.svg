@@ -1,0 +1,17 @@
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=327709 -->
+<!-- Just checking for absence of assertion, nothing more -->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script>
+function init()
+{
+  var apsl = document.getElementById("n126").animatedPathSegList;
+  apsl.appendItem(apsl.__proto__);
+}
+window.addEventListener("load", init, false);
+</script>
+
+<path id="n126" d="M 270 60 L 320 60 L 320 110 Z"/>
+
+</svg>
+
