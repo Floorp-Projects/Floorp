@@ -278,19 +278,21 @@ nsSVGMarkerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return nsSVGMarkerElementBase::GetAttr(aNameSpaceID, aName, aResult);
 }
 
-nsresult
-nsSVGMarkerElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                            nsIAtom* aPrefix, const nsAString& aValue,
-                            PRBool aNotify)
+PRBool
+nsSVGMarkerElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
 {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::orient) {
-    mOrientType.SetBaseValue(aValue.EqualsLiteral("auto") ?
-                               SVG_MARKER_ORIENT_AUTO :
-                               SVG_MARKER_ORIENT_ANGLE);
+    if (aValue.EqualsLiteral("auto")) {
+      mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO);
+      aResult.SetTo(aValue);
+      return PR_TRUE;
+    }
+    mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
   }
-
-  return nsSVGMarkerElementBase::SetAttr(aNameSpaceID, aName,
-                                         aPrefix, aValue, aNotify);
+  return nsSVGMarkerElementBase::ParseAttribute(aNameSpaceID, aName,
+                                                aValue, aResult);
 }
 
 nsresult
