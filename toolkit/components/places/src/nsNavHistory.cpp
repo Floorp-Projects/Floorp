@@ -4965,22 +4965,119 @@ nsNavHistory::AddPageWithVisit(nsIURI *aURI,
 nsresult
 nsNavHistory::RemoveDuplicateURIs()
 {
-  // this must be in a transaction because it is made up of 2 related DELETEs
+  // this must be in a transaction because we do related queries
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  // remove all duplicates related visits from history and visit tables.
-  nsresult rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("DELETE FROM moz_historyvisits WHERE place_id IN "
-      "(SELECT id FROM moz_places GROUP BY url HAVING( COUNT(url) > 1))"));
+  // this query chooses an id for every duplicate uris
+  // this id will be retained while duplicates will be discarded
+  // total_visit_count is the sum of all duplicate uris visit_count
+  nsCOMPtr<mozIStorageStatement> selectStatement;
+  nsresult rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("SELECT "
+        "(SELECT h.id FROM moz_places h WHERE h.url=url ORDER BY h.visit_count DESC LIMIT 1), "
+        "url, SUM(visit_count) "
+        "FROM moz_places "
+        "GROUP BY url HAVING( COUNT(url) > 1)"),
+      getter_AddRefs(selectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // then remove duplicate URIs from places table
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id IN "
-      "(SELECT id FROM moz_places GROUP BY url HAVING( COUNT(url) > 1))"));
+  // this query remaps history visits to the retained place_id
+  nsCOMPtr<mozIStorageStatement> updateStatement;
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING(
+        "UPDATE moz_historyvisits "
+        "SET place_id = ?1 "
+        "WHERE place_id IN (SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
+      getter_AddRefs(updateStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return transaction.Commit();
+  // this query remaps bookmarks to the retained place_id
+  nsCOMPtr<mozIStorageStatement> bookmarkStatement;
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING(
+        "UPDATE moz_bookmarks "
+        "SET fk = ?1 "
+        "WHERE fk IN (SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
+      getter_AddRefs(bookmarkStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // this query remaps annotations to the retained place_id
+  nsCOMPtr<mozIStorageStatement> annoStatement;
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING(
+        "UPDATE moz_annos "
+        "SET place_id = ?1 "
+        "WHERE place_id IN (SELECT id FROM moz_places WHERE id <> ?1 AND url = ?2)"),
+      getter_AddRefs(annoStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // this query deletes all duplicate uris except the choosen id
+  nsCOMPtr<mozIStorageStatement> deleteStatement;
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE url = ?1 AND id <> ?2"),
+      getter_AddRefs(deleteStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // this query updates visit_count to the sum of all visits
+  nsCOMPtr<mozIStorageStatement> countStatement;
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("UPDATE moz_places SET visit_count = ?1 WHERE id = ?2"),
+      getter_AddRefs(countStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // for each duplicate uri we update historyvisit and visit_count
+  PRBool hasMore;
+  while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore) {
+    PRUint64 id = selectStatement->AsInt64(0);
+    nsCAutoString url;
+    rv = selectStatement->GetUTF8String(1, url);
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint64 visit_count = selectStatement->AsInt64(2);
+
+    // update historyvisits so they are remapped to the retained uri
+    rv = updateStatement->BindInt64Parameter(0, id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStatement->BindUTF8StringParameter(1, url);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // remap bookmarks to the retained id
+    rv = bookmarkStatement->BindInt64Parameter(0, id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = bookmarkStatement->BindUTF8StringParameter(1, url);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = bookmarkStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // remap annotations to the retained id
+    rv = annoStatement->BindInt64Parameter(0, id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = annoStatement->BindUTF8StringParameter(1, url);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = annoStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // remove duplicate uris from moz_places
+    rv = deleteStatement->BindUTF8StringParameter(0, url);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = deleteStatement->BindInt64Parameter(1, id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = deleteStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // update visit_count to the sum of all visit_count
+    rv = countStatement->BindInt64Parameter(0, visit_count);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = countStatement->BindInt64Parameter(1, id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = countStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }
 
 // Local function **************************************************************
