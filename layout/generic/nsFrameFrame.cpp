@@ -949,10 +949,12 @@ nsSubDocumentFrame::ObtainIntrinsicSizeFrame()
       }
     }
 
+#ifdef MOZ_SVG
     if (subDocRoot && subDocRoot->GetContent() &&
         subDocRoot->GetContent()->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
       return subDocRoot; // SVG documents have an intrinsic size
     }
+#endif
   }
   return nsnull;
 }
