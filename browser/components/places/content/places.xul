@@ -45,6 +45,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/organizer.css"?>
 
 <?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
 

@@ -1,0 +1,249 @@
+
+/* Toolbar */
+#placesToolbar {
+  border: none;
+}
+
+/* back button */
+
+#back-button {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-image-region: rect(0px, 24px, 24px, 0px);
+}
+#back-button[disabled="true"] {
+ -moz-image-region: rect(48px, 24px, 72px, 0px) !important;
+}
+
+/* forward button */
+
+#forward-button {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-image-region: rect(0px, 48px, 24px, 24px);
+}
+#forward-button[disabled="true"] {
+ -moz-image-region: rect(48px, 48px, 72px, 24px) !important;
+}
+
+/* organize button */
+#organizeButton {
+  list-style-image: url("chrome://browser/skin/wrench.png");
+}
+
+/* view button */
+#viewMenu {
+  list-style-image: url("chrome://browser/skin/wrench.png");
+}
+
+/* maintenance button */
+#maintenanceButton {
+  list-style-image: url("chrome://browser/skin/wrench.png");
+}
+
+/* Root View */
+#placesView {
+  border-top: 1px solid ThreeDDarkShadow;
+  background-color: Window;
+}
+
+#splitter {
+  border: 0px;
+  width: 3px;
+}
+
+/* Place List, Place Content */
+.placesTree {
+  margin: 0px;
+}
+
+#placesList {
+  -moz-appearance: none;
+  margin: 0px;
+  border: none;
+  padding: 0;
+}
+
+#placeContent {
+  -moz-appearance: none;
+  border: 0px;
+}
+
+/* Search Bar */
+#searchbar {
+  margin: 6px -4px 0px 2px;
+}
+
+.textbox-input-closebutton {
+  -moz-appearance: none;
+  margin: 1px 2px 1px 1px;
+  min-width: 0;
+  background-color: transparent;
+  border: none;
+  padding: 0 !important;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  width: 16px;
+  height: 16px;
+  cursor: default;
+}
+
+.textbox-input-closebutton > .button-box {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.textbox-input-closebutton:hover {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+.textbox-input-closebutton:hover:active {
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+.small, .small[disabled="true"] {
+  font-size: x-small;
+  min-width: 0px;
+  padding: 0px 4px 0px 4px;
+  margin: 0px;  
+  border: 0px;
+}
+
+.small .button-text,
+.small .button-box {
+  padding: 0px;
+  border: 0px;
+}
+
+#searchFilter {
+  padding: 0px;
+}
+
+#searchFilter[empty="true"] {
+  color: GrayText;
+}
+
+#searchFilter .textbox-input-box {
+  padding: 2px 2px 3px 4px;
+}
+
+.filterList {
+  -moz-appearance: none;
+  background-color: transparent;
+  border: 0px;
+  margin: 2px;
+  padding: 0px;
+  min-width: 0px;
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://browser/skin/Search-bar.png");
+  -moz-user-focus: ignore;
+  cursor: default;
+}
+
+.filterList .button-box {
+  border: 0px;
+  padding: 0px;
+}
+
+.filterList .button-menu-dropmarker {
+  margin: 9px -3px -4px 8px;
+}
+
+/* Calendar */
+.history-calendar {
+  margin: 0px 0px 7px 6px;
+}
+
+.calendar-box {
+  -moz-appearance: listbox;
+  border: 1px solid black;
+  background-color: white;
+}
+.calendar-header {
+  background-color: #EEE;
+}
+.calendar-month-jump {
+  cursor: pointer;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.calendar-month-jump:hover {
+  background-color: #DDD;
+}
+.calendar-grid {
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-bottom: 4px;
+}
+.calendar-grid label { /* everything in the calendar grid */
+  padding: 4px;
+  margin: 0px;
+  text-align: center;
+  font-size: 80%;
+}
+.calendar-month-title {
+  text-align: center;
+}
+.calendar-day-header {
+  border-bottom: 1px solid #888;
+}
+.calendar-day { /* just days (excluding the day headers) */
+  cursor: w-resize;
+  color: white;
+  background-color:white;
+}
+.calendar-day:hover {
+  background-color: #DDD;
+}
+.calendar-day[selected="true"] {
+  cursor: w-resize;
+  background-color: #8C8;
+}
+.calendar-day[selected="true"]:hover {
+  background-color: #6A6;
+}
+.calendar-day[month="this"] {
+  color: black;
+}
+.calendar-day[month="other"] {
+  color: #888;
+}
+
+#advancedSearchRows {
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
+  padding: 3px 3px 3px 0px;
+}
+
+#searchModifiers {
+  padding-right: 3px;
+}
+
+#debugPanel {
+  background-color: ThreeDFace;
+  border-top: 2px solid; 
+  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
+}
+
+/**** expanders ****/
+
+.expander-up,
+.expander-down {
+  min-width: 0;
+}
+
+.expander-up {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.expander-down {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.expander-down:hover:active {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
+}
+
+.expander-up:hover:active {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
+}
