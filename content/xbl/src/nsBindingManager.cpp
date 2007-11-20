@@ -1285,9 +1285,33 @@ nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChil
 
   PRUint32 index;
   nsIContent *insertionElement = GetInsertionPoint(aParent, aChild, &index);
-  if (insertionElement != aParent) {
+  if (insertionElement && insertionElement != aParent) {
     // See if we nest even further in.
     nsIContent* nestedPoint = GetNestedInsertionPoint(insertionElement, aChild);
+    if (nestedPoint)
+      insertionElement = nestedPoint;
+  }
+
+  return insertionElement;
+}
+
+nsIContent*
+nsBindingManager::GetNestedSingleInsertionPoint(nsIContent* aParent,
+                                                PRBool* aMultipleInsertionPoints)
+{
+  *aMultipleInsertionPoints = PR_FALSE;
+  
+  PRUint32 index;
+  nsIContent *insertionElement =
+    GetSingleInsertionPoint(aParent, &index, aMultipleInsertionPoints);
+  if (*aMultipleInsertionPoints) {
+    return nsnull;
+  }
+  if (insertionElement && insertionElement != aParent) {
+    // See if we nest even further in.
+    nsIContent* nestedPoint =
+      GetNestedSingleInsertionPoint(insertionElement,
+                                    aMultipleInsertionPoints);
     if (nestedPoint)
       insertionElement = nestedPoint;
   }
@@ -1350,10 +1374,8 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
   if (aNewIndexInContainer != -1 &&
       (mContentListTable.ops || mAnonymousNodesTable.ops)) {
     // It's not anonymous.
-    PRUint32 singleIndex;
     PRBool multiple;
-    nsIContent* ins = GetSingleInsertionPoint(aContainer, &singleIndex,
-                                              &multiple);
+    nsIContent* ins = GetNestedSingleInsertionPoint(aContainer, &multiple);
 
     if (multiple) {
       // Do each kid individually
@@ -1381,7 +1403,6 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
           nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
           PRInt32 index = point->GetInsertionIndex();
           if (index != -1) {
-            NS_ASSERTION(PRUint32(index) == singleIndex, "Unexpected index");
             // We're real. Jam all the kids in.
             PRInt32 childCount = aContainer->GetChildCount();
             for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {

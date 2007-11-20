@@ -1,0 +1,65 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <!--
+      The binding attached to #test1 and #test2 is:
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="test">
+    <content>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml"
+                style="color: red; -moz-binding: url(data:text/xml,%3Cbindings%20xmlns%3D%22http%3A%2F%2Fwww.mozilla.org%2Fxbl%22%3E%0D%0A%20%20%3Cbinding%20id%3D%22test-base%22%3E%0D%0A%20%20%20%20%3Ccontent%3E%0D%0A%20%20%20%20%20%20%3Chtml%3Adiv%20xmlns%3Ahtml%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%20style%3D%22color%3A%20green%22%3E%0D%0A%20%20%20%20%20%20%20%20%3Cchildren%20includes%3D%22span%22%2F%3E%0D%0A%20%20%20%20%20%20%3C%2Fhtml%3Adiv%3E%0D%0A%20%20%20%20%20%20%3Chtml%3Adiv%20xmlns%3Ahtml%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%20style%3D%22color%3A%20red%22%3E%0D%0A%20%20%20%20%20%20%20%20%3Cchildren%2F%3E%0D%0A%20%20%20%20%20%20%3C%2Fhtml%3Adiv%3E%0D%0A%20%20%20%20%3C%2Fcontent%3E%0D%0A%20%20%3C%2Fbinding%3E%0D%0A%3C%2Fbindings%3E%0D%0A)">
+        <children/>
+      </html:div>
+    </content>
+  </binding>
+</bindings>
+
+    where the binding attached to the content div is:
+      
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="test-base">
+    <content>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml" style="color: green">
+        <children includes="span"/>
+      </html:div>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml" style="color: red">
+        <children/>
+      </html:div>
+    </content>
+  </binding>
+</bindings>
+-->
+    <style>
+      div { color: green; }
+
+      #test1, #test2 {
+        -moz-binding: url("data:text/xml,%3Cbindings%20xmlns%3D%22http%3A%2F%2Fwww.mozilla.org%2Fxbl%22%3E%0D%0A%20%20%3Cbinding%20id%3D%22test%22%3E%0D%0A%20%20%20%20%3Ccontent%3E%0D%0A%20%20%20%20%20%20%3Chtml%3Adiv%20xmlns%3Ahtml%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20style%3D%22color%3A%20red%3B%20-moz-binding%3A%20url(data%3Atext%2Fxml%2C%253Cbindings%2520xmlns%253D%2522http%253A%252F%252Fwww.mozilla.org%252Fxbl%2522%253E%250D%250A%2520%2520%253Cbinding%2520id%253D%2522test-base%2522%253E%250D%250A%2520%2520%2520%2520%253Ccontent%253E%250D%250A%2520%2520%2520%2520%2520%2520%253Chtml%253Adiv%2520xmlns%253Ahtml%253D%2522http%253A%252F%252Fwww.w3.org%252F1999%252Fxhtml%2522%2520style%253D%2522color%253A%2520green%2522%253E%250D%250A%2520%2520%2520%2520%2520%2520%2520%2520%253Cchildren%2520includes%253D%2522span%2522%252F%253E%250D%250A%2520%2520%2520%2520%2520%2520%253C%252Fhtml%253Adiv%253E%250D%250A%2520%2520%2520%2520%2520%2520%253Chtml%253Adiv%2520xmlns%253Ahtml%253D%2522http%253A%252F%252Fwww.w3.org%252F1999%252Fxhtml%2522%2520style%253D%2522color%253A%2520red%2522%253E%250D%250A%2520%2520%2520%2520%2520%2520%2520%2520%253Cchildren%252F%253E%250D%250A%2520%2520%2520%2520%2520%2520%253C%252Fhtml%253Adiv%253E%250D%250A%2520%2520%2520%2520%253C%252Fcontent%253E%250D%250A%2520%2520%253C%252Fbinding%253E%250D%250A%253C%252Fbindings%253E%250D%250A)%22%3E%0D%0A%20%20%20%20%20%20%20%20%3Cchildren%2F%3E%0D%0A%20%20%20%20%20%20%3C%2Fhtml%3Adiv%3E%0D%0A%20%20%20%20%3C%2Fcontent%3E%0D%0A%20%20%3C%2Fbinding%3E%0D%0A%3C%2Fbindings%3E%0D%0A");
+      }
+    </style>
+  </head>
+  <body onload="runTest()">
+    <div id="test1"/>
+    <div id="test2">
+      <!-- Make the script load, so the binding loads first -->
+      <script src="data:text/javascript,document.body.offsetWidth;"/>
+      <!-- The whitespace here is important... or this comment will do
+           the trick too -->
+      <span>test</span>
+    </div>
+    <script>
+      function runTest() {
+        var n = document.getElementById("test1");
+        n.appendChild(makeSpan());
+
+        document.documentElement.className = "";
+      }
+
+      function makeSpan() {
+        var s = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                         "span");
+        s.appendChild(document.createTextNode("test"));
+        return s;
+      }      
+    </script>
+  </body>
+</html>
