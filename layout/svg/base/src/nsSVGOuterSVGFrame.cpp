@@ -40,6 +40,7 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
+#include "nsSVGForeignObjectFrame.h"
 #include "nsSVGRect.h"
 #include "nsDisplayList.h"
 #include "nsStubMutationObserver.h"
@@ -362,6 +363,14 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+ReflowForeignObject(nsVoidPtrHashKey *aEntry, void* aUserArg)
+{
+  static_cast<nsSVGForeignObjectFrame*>
+    (const_cast<void*>(aEntry->GetKey()))->MaybeReflowFromOuterSVGFrame();
+  return PL_DHASH_NEXT;
+}
+
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
                               const nsHTMLReflowState*  aReflowState,
@@ -385,6 +394,14 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
     }
     
     UnsuspendRedraw(); // For the SuspendRedraw in InitSVG
+  } else {
+    // Now that all viewport establishing descendants have their correct size,
+    // tell our foreignObject descendants to reflow their children.
+    if (mForeignObjectHash.IsInitialized()) {
+      PRUint32 count = mForeignObjectHash.EnumerateEntries(ReflowForeignObject, nsnull);
+      NS_ASSERTION(count == mForeignObjectHash.Count(),
+                   "We didn't reflow all our nsSVGForeignObjectFrames!");
+    }
   }
   
   return rv;
@@ -722,6 +739,35 @@ nsSVGOuterSVGFrame::GetCanvasTM()
 
 //----------------------------------------------------------------------
 // Implementation helpers
+
+void
+nsSVGOuterSVGFrame::RegisterForeignObject(nsSVGForeignObjectFrame* aFrame)
+{
+  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
+
+  if (!mForeignObjectHash.IsInitialized()) {
+    if (!mForeignObjectHash.Init()) {
+      NS_ERROR("Failed to initialize foreignObject hash.");
+      return;
+    }
+  }
+
+  NS_ASSERTION(!mForeignObjectHash.GetEntry(aFrame),
+               "nsSVGForeignObjectFrame already registered!");
+
+  mForeignObjectHash.PutEntry(aFrame);
+
+  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
+               "Failed to register nsSVGForeignObjectFrame!");
+}
+
+void
+nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame) {
+  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
+  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
+               "nsSVGForeignObjectFrame not in registry!");
+  return mForeignObjectHash.RemoveEntry(aFrame);
+}
 
 PRBool
 nsSVGOuterSVGFrame::EmbeddedByReference(nsIFrame **aEmbeddingFrame)
