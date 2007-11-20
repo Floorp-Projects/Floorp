@@ -353,7 +353,14 @@ WebContentConverterRegistrar.prototype = {
       // not supposed to throw according to spec
       return; 
     }
- 
+
+    // For security reasons we reject non-http(s) urls (see bug Bug 354316),
+    // we may need to revise this once we support more content types
+    // XXX this should be a "security exception" according to spec, but that
+    // isn't defined yet.
+    if (uri.scheme != "http" && uri.scheme != "https")
+      throw("Permission denied to add " + uri.spec + " as a content or protocol handler");
+
     // If the uri doesn't contain '%s', it won't be a good handler
     if (uri.spec.indexOf("%s") < 0)
       throw NS_ERROR_DOM_SYNTAX_ERR; 
@@ -476,13 +483,6 @@ WebContentConverterRegistrar.prototype = {
       return;
 
     var uri = this._checkAndGetURI(aURIString);
-            
-    // For security reasons we reject non-http(s) urls (see bug Bug 354316),
-    // we may need to revise this once we support more content types
-    // XXX this should be a "security exception" according to spec, but that
-    // isn't defined yet.
-    if (uri.scheme != "http" &&  uri.scheme != "https")
-      throw("Permission denied to add " + uri.spec + "as a content handler");
 
     var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
     var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
