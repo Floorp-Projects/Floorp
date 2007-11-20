@@ -862,7 +862,7 @@ AppendErrorTextMismatch(const nsString &host,
 static void
 GetDateBoundary(nsIX509Cert* ix509,
                 nsString &formattedDate,
-                PRBool trueExpired_falseNotYetValid)
+                PRBool &trueExpired_falseNotYetValid)
 {
   trueExpired_falseNotYetValid = PR_TRUE;
   formattedDate.Truncate();
