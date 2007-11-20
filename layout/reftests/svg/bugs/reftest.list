@@ -1,3 +1,4 @@
 
-== bug367368.xhtml bug367368.xhtml # checking for crash, so just compared to self
+load bug327709.svg # assertion test
+load bug367368.xhtml # crash test
 
