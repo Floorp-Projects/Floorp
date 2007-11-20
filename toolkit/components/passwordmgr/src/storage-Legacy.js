@@ -546,7 +546,7 @@ LoginManagerStorage_legacy.prototype = {
 
                     // Format is "http://site.com", with "(some realm)"
                     // appended if it's a HTTP-Auth login.
-                    const realmFormat = /^(.+?)( \(.*\))?$/; // XXX .* or .+?
+                    const realmFormat = /^(.+?)( \(.*\))?$/;
                     var matches = realmFormat.exec(hostrealm);
 
                     var hostname, httpRealm;
