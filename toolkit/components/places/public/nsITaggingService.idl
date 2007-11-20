@@ -41,7 +41,7 @@
 interface nsIURI;
 interface nsIVariant;
 
-[scriptable, uuid(3acd6c94-232b-4ac4-b99e-0631b7e96ed9)]
+[scriptable, uuid(6c473fa6-8c2c-406c-b31f-62f40a2841bc)]
 interface nsITaggingService : nsISupports
 {
   /**
@@ -90,11 +90,6 @@ interface nsITaggingService : nsISupports
    * Retrieves all tags used to tag URIs in the data-base (sorted by name).
    */
   readonly attribute nsIVariant allTags;
-
-  /**
-   * Retrieves the URL spec for the tag container icon
-   */
-  readonly attribute AUTF8String tagContainerIconSpec;
 };
 
 %{C++

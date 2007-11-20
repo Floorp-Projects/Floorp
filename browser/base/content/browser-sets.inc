@@ -89,7 +89,7 @@
              observes="isImage"/>
     <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs" 
-             oncommand="PlacesCommandHook.bookmarkCurrentPage(true, PlacesUtils.bookmarksRootId);"/>
+             oncommand="PlacesCommandHook.bookmarkCurrentPage(true, PlacesUtils.bookmarksMenuFolderId);"/>
     <!-- The command is disabled for the hidden window. Otherwise its enabled
          state is handled by the BookmarkAllTabsHandler object. -->
     <command id="Browser:BookmarkAllTabs"

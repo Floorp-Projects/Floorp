@@ -195,7 +195,7 @@
             if (PlacesUtils.containerTypes.indexOf(type) != -1) {
               button.setAttribute("type", "menu");
               button.setAttribute("container", "true");
-              if (iconURISpec == "chrome://browser/skin/places/livemarkItem.png")
+              if (PlacesUtils.nodeIsLivemarkContainer(aChild))
                 button.setAttribute("livemark", "true");
 
               var popup = document.createElement("menupopup");
@@ -548,6 +548,10 @@
             if (onToolbar)
               this._self.updateChevron();
           }
+
+          if (!element.hasAttribute("livemark") &&
+              PlacesUtils.nodeIsLivemarkContainer(aNode))
+            element.setAttribute("livemark", "true");
         },
 
         itemReplaced:

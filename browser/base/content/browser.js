@@ -264,43 +264,8 @@ function BookmarkThisTab()
     tab = getBrowser().mCurrentTab;
 
   PlacesCommandHook.bookmarkPage(tab.linkedBrowser,
-                                 PlacesUtils.bookmarksRootId, true);
+                                 PlacesUtils.bookmarksMenuFolderId, true);
 }
-
-/**
- * Global bookmarks observer for browser-window specific stuff
- */
-var gBookmarksObserver = {
-  QueryInterface: function G_BO_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsINavBookmarkObserver) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_NOINTERFACE;
-  },
-
-  _toolbar: null,
-  get toolbar() {
-    if (!this._toolbar)
-      this._toolbar = document.getElementById("bookmarksBarContent");
-
-    return this._toolbar;
-  },
-
-  onBeginUpdateBatch: function() { },
-  onEndUpdateBatch: function() { },
-  onItemAdded: function() { },
-  onItemRemoved: function() { },
-
-  onItemChanged:
-  function G_BO_onItemChanged(aID, aProperty, aIsAnnotationProperty, aValue) {
-    if (aProperty == "became_toolbar_folder" && this.toolbar)
-      this.toolbar.place = PlacesUtils.getQueryStringForFolder(aID);
-  },
-  
-  onItemVisited: function() { },
-  onItemMoved: function() { }
-};
 
 /**
  * Initialize the bookmarks toolbar
@@ -344,13 +309,13 @@ function initPlacesDefaultQueries() {
       var mostVisitedSitesTitle =
         PlacesUtils.getString("mostVisitedSitesTitle");
 
-      var bookmarksRoot = PlacesUtils.bookmarksRootId;
-      var unfiledRoot = PlacesUtils.unfiledRootId;
-      var tagRoot = PlacesUtils.tagRootId;
+      var bookmarksMenuFolder = PlacesUtils.bookmarksMenuFolderId;
+      var unfiledBookmarksFolder = PlacesUtils.unfiledBookmarksFolderId;
+      var tagsFolder = PlacesUtils.tagsFolderId;
       var defaultIndex = bmsvc.DEFAULT_INDEX;
 
       // index = 0, make it the first folder
-      var placesFolder = bmsvc.createFolder(bmsvc.toolbarFolder,
+      var placesFolder = bmsvc.createFolder(PlacesUtils.toolbarFolderId,
                                             placesFolderTitle,
                                             0);
 
@@ -360,7 +325,7 @@ function initPlacesDefaultQueries() {
       // exclude queries so that user created "saved searches" 
       // and these queries (added automatically) are excluded
       var recentlyCreatedBookmarksItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
+        IO.newURI("place:folder=" + bookmarksMenuFolder + "&folder=" + unfiledBookmarksFolder +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" +
             Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
@@ -370,7 +335,7 @@ function initPlacesDefaultQueries() {
             defaultIndex, recentlyCreatedBookmarksTitle);
 
       var recentlyVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
+        IO.newURI("place:folder=" + bookmarksMenuFolder + "&folder=" + unfiledBookmarksFolder +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING +
             "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
@@ -378,7 +343,7 @@ function initPlacesDefaultQueries() {
             defaultIndex, recentlyVisitedBookmarksTitle);
 
       var mostVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
+        IO.newURI("place:folder=" + bookmarksMenuFolder + "&folder=" + unfiledBookmarksFolder +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" +
             Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
@@ -387,23 +352,21 @@ function initPlacesDefaultQueries() {
             defaultIndex, mostVisitedBookmarksTitle);
 
       var recentlyUsedTagsItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + tagRoot +
+        IO.newURI("place:folder=" + tagsFolder +
             "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&applyOptionsToContainers=1" +
             "&sort=" +
             Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
-            "&resolveNullBookmarkTitles=1" +
             "&maxResults=" + maxResults),
             defaultIndex, recentlyUsedTagsTitle);
 
       var mostUsedTagsItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + tagRoot +
+        IO.newURI("place:folder=" + tagsFolder +
             "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&applyOptionsToContainers=1" +
             "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_COUNT_DESCENDING +
-            "&resolveNullBookmarkTitles=1" +
             "&maxResults=" + maxResults),
             defaultIndex, mostUsedTagsTitle);
 
@@ -419,7 +382,11 @@ function initPlacesDefaultQueries() {
   
   try {
     bmsvc.runInBatchMode(callback, null);
-  } finally {
+  }
+  catch(ex) {
+    Components.utils.reportError(ex);
+  }
+  finally {
     // We need to persist this preference change, since we want to
     // check it at next app start even if the browser exits abruptly
     gPrefService.setBoolPref("browser.places.createdDefaultQueries", true);
@@ -1076,7 +1043,6 @@ function delayedStartup()
 
   initPlacesDefaultQueries();
   initBookmarksToolbar();
-  PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
   PlacesStarButton.init();
 
   // called when we go into full screen, even if it is
@@ -1234,7 +1200,6 @@ function BrowserShutdown()
   } catch (ex) {
   }
 
-  PlacesUtils.bookmarks.removeObserver(gBookmarksObserver);
   PlacesStarButton.uninit();
 
   try {

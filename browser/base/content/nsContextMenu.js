@@ -1140,11 +1140,11 @@ nsContextMenu.prototype = {
   },
 
   bookmarkThisPage: function CM_bookmarkThisPage() {
-    window.top.PlacesCommandHook.bookmarkPage(this.browser, PlacesUtils.bookmarksRootId, true);
+    window.top.PlacesCommandHook.bookmarkPage(this.browser, PlacesUtils.bookmarksMenuFolderId, true);
   },
 
   bookmarkLink: function CM_bookmarkLink() {
-    window.top.PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksRootId, this.linkURL,
+    window.top.PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksMenuFolderId, this.linkURL,
                                               this.linkText());
   },
 

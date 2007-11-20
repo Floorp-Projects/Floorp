@@ -163,33 +163,33 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(3ba9f6ca-0003-43b9-bdfb-7014dfec5b76)]
+[scriptable, uuid(fb8dc678-681b-453b-a5fe-ab3cc19b3698)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
-   * The folder ID of the Places root.
+   * The item ID of the Places root.
    */
   readonly attribute long long placesRoot;
 
   /**
-   * The folder ID of the bookmarks root.
+   * The item ID of the bookmarks menu folder.
    */
-  readonly attribute long long bookmarksRoot;
+  readonly attribute long long bookmarksMenuFolder;
 
   /**
-   * The folder ID of the top-level folders that contain the tag "folders".
+   * The item ID of the top-level folder that contain the tag "folders".
    */
-  readonly attribute long long tagRoot;
+  readonly attribute long long tagsFolder;
 
  /**
-  * The folder ID of the unfiled-bookmarks root
+  * The item ID of the unfiled-bookmarks folder.
   */
-  readonly attribute long long unfiledRoot;
+  readonly attribute long long unfiledBookmarksFolder;
 
   /**
-   * The folder ID of the personal toolbar.
+   * The item ID of the personal toolbar folder.
    */
-  attribute long long toolbarFolder;
+  readonly attribute long long toolbarFolder;
 
   /**
    * This value should be used for APIs that allow passing in an index
@@ -423,18 +423,6 @@ interface nsINavBookmarksService : nsISupports
    *  @param aNewIndex  The new index
    */
   void setItemIndex(in long long aItemId, in long aNewIndex);
-
-  /**
-   * Get the place: url for a bookmark folder. You can use this value to
-   * get/set the icon for a folder. Its important that you use this function
-   * instead of just serializing the query/options for a given folder because
-   * you may have different options or query parameters. This function will
-   * give the canonical value.
-   * @param aFolder
-   *        The folder whose URI should be retrieved
-   * @returns The URI for the folder
-   */
-  nsIURI getFolderURI(in long long aFolder);
 
   /**
    * Get an item's type (bookmark, separator, folder).

@@ -50,8 +50,8 @@ try {
   do_throw("Could not get history service\n");
 } 
 
-// get bookmarks root id
-var testRoot = bmsvc.bookmarksRoot;
+// get bookmarks menu folder id
+var testRoot = bmsvc.bookmarksMenuFolder;
 
 // main
 function run_test() {

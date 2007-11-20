@@ -153,7 +153,7 @@ nsNavBookmarks::Init()
   // Results are kGetInfoIndex_*
 
   nsCAutoString selectChildren(
-    NS_LITERAL_CSTRING("SELECT h.id, h.url, a.title, "
+    NS_LITERAL_CSTRING("SELECT h.id, h.url, COALESCE(a.title, h.title), "
       "h.rev_host, h.visit_count, "
       "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
       "f.url, null, a.id, "
@@ -283,9 +283,6 @@ nsNavBookmarks::Init()
   PR_Free(GUIDChars);
 
   rv = InitRoots();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = InitToolbarFolder();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -433,13 +430,42 @@ nsNavBookmarks::InitRoots()
                                  getter_AddRefs(getRootStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool importDefaults = PR_FALSE;
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("places"), &mRoot, 0, &importDefaults);
+  PRBool createdPlacesRoot = PR_FALSE;
+  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("places"), &mRoot, 0, &createdPlacesRoot);
   NS_ENSURE_SUCCESS(rv, rv);
 
   getRootStatement->Reset();
   rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("menu"), &mBookmarksRoot, mRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool createdToolbarFolder;
+  getRootStatement->Reset();
+  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("toolbar"), &mToolbarFolder, mRoot, &createdToolbarFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Once toolbar was not a root, we may need to move over the items and
+  // delete the custom folder
+  if (!createdPlacesRoot && createdToolbarFolder) {
+    nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+    NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+
+    nsTArray<PRInt64> folders;
+    annosvc->GetItemsWithAnnotationTArray(BOOKMARKS_TOOLBAR_FOLDER_ANNO,
+                                          &folders);
+    if (folders.Length() > 0) {
+      nsCOMPtr<mozIStorageStatement> moveItems;
+      rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET parent = ?1 WHERE parent=?2"),
+                                     getter_AddRefs(moveItems));
+      rv = moveItems->BindInt64Parameter(0, mToolbarFolder);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = moveItems->BindInt64Parameter(1, folders[0]);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = moveItems->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = RemoveFolder(folders[0]);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   getRootStatement->Reset();
   rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"), &mTagRoot, mRoot, nsnull);
@@ -449,10 +475,22 @@ nsNavBookmarks::InitRoots()
   rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("unfiled"), &mUnfiledRoot, mRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (importDefaults) {
-    // when there is no places root, we should define the hierarchy by
-    // importing the default one.
+  // Set titles for special folders
+  // We cannot rely on createdPlacesRoot due to Fx3beta->final migration path
+  nsCOMPtr<nsIPrefService> prefService =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefService->GetBranch("", getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool importDefaults = PR_TRUE;
+  rv = prefBranch->GetBoolPref("browser.places.importDefaults", &importDefaults);
+  if (NS_FAILED(rv) || importDefaults) {
     rv = InitDefaults();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = prefBranch->SetBoolPref("browser.places.importDefaults", PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -467,45 +505,37 @@ nsNavBookmarks::InitRoots()
 nsresult
 nsNavBookmarks::InitDefaults()
 {
-  // give bookmarks root folder a title "Bookmarks"
+  // Bookmarks Menu
   nsXPIDLString bookmarksTitle;
-  nsresult rv = mBundle->GetStringFromName(NS_LITERAL_STRING("PlacesBookmarksRootTitle").get(),
+  nsresult rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksMenuFolderTitle").get(),
                                            getter_Copies(bookmarksTitle));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetItemTitle(mBookmarksRoot, bookmarksTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // create toolbar folder, parent bookmarks root, entitled "Bookmarks Toolbar Folder"
-  PRInt64 toolbarId;
+  // Bookmarks Toolbar
   nsXPIDLString toolbarTitle;
-  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("PlacesBookmarksToolbarTitle").get(),
+  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get(),
                                   getter_Copies(toolbarTitle));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = CreateFolder(mBookmarksRoot, toolbarTitle,
-                    nsINavBookmarksService::DEFAULT_INDEX, &toolbarId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetToolbarFolder(toolbarId);
+  rv = SetItemTitle(mToolbarFolder, toolbarTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
-}
+  // Unfiled Bookmarks
+  nsXPIDLString unfiledTitle;
+  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("UnfiledBookmarksFolderTitle").get(),
+                                  getter_Copies(unfiledTitle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetItemTitle(mUnfiledRoot, unfiledTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-/**
- * Initialize the toolbar folder
- */
-nsresult
-nsNavBookmarks::InitToolbarFolder()
-{
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-
-  nsTArray<PRInt64> folders;
-  nsresult rv = annosvc->GetItemsWithAnnotationTArray(BOOKMARKS_TOOLBAR_FOLDER_ANNO,
-                                                      &folders);
-  if (NS_FAILED(rv) || folders.Length() == 0)
-    mToolbarFolder = -1;
-  else
-    mToolbarFolder = folders[0];
+  // Tags
+  nsXPIDLString tagsTitle;
+  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("TagsFolderTitle").get(),
+                                  getter_Copies(tagsTitle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetItemTitle(mTagRoot, tagsTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -858,7 +888,7 @@ nsNavBookmarks::GetPlacesRoot(PRInt64 *aRoot)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetBookmarksRoot(PRInt64 *aRoot)
+nsNavBookmarks::GetBookmarksMenuFolder(PRInt64 *aRoot)
 {
   *aRoot = mBookmarksRoot;
   return NS_OK;
@@ -872,47 +902,14 @@ nsNavBookmarks::GetToolbarFolder(PRInt64 *aFolderId)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::SetToolbarFolder(PRInt64 aFolderId)
-{
-  // XXX - validate that input is a valid folder id
-  if (aFolderId < 0)
-    return NS_ERROR_INVALID_ARG;
-  if (aFolderId == mToolbarFolder)
-    return NS_OK;
-
-  nsresult rv;
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
-
-  if (mToolbarFolder != 0) {
-    rv = annosvc->RemoveItemAnnotation(mToolbarFolder,
-                                       BOOKMARKS_TOOLBAR_FOLDER_ANNO);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = annosvc->SetItemAnnotationInt32(aFolderId, BOOKMARKS_TOOLBAR_FOLDER_ANNO,
-                                       1, 0, nsIAnnotationService::EXPIRE_NEVER);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // update local
-  mToolbarFolder = aFolderId;
-
-  // notify observers
-  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnItemChanged(mToolbarFolder, NS_LITERAL_CSTRING("became_toolbar_folder"),
-                                    PR_FALSE, EmptyCString()));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::GetTagRoot(PRInt64 *aRoot)
+nsNavBookmarks::GetTagsFolder(PRInt64 *aRoot)
 {
   *aRoot = mTagRoot;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetUnfiledRoot(PRInt64 *aRoot)
+nsNavBookmarks::GetUnfiledBookmarksFolder(PRInt64 *aRoot)
 {
   *aRoot = mUnfiledRoot;
   return NS_OK;
@@ -1946,21 +1943,6 @@ nsNavBookmarks::ResultNodeForContainer(PRInt64 aID,
 
   NS_ADDREF(*aNode);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::GetFolderURI(PRInt64 aFolder, nsIURI **aURI)
-{
-  // Create a query for the folder; the URI is the querystring from that
-  // query. We could create a proper query and serialize it, which might
-  // make it less prone to breakage since we'd only have one code path.
-  // However, this gets called a lot (every time we make a folder node)
-  // and constructing fake queries and options each time just to
-  // serialize them would be a waste. Therefore, we just synthesize the
-  // correct string here.
-  nsCAutoString spec("place:folder=");
-  spec.AppendInt(aFolder);
-  return NS_NewURI(aURI, spec);
 }
 
 nsresult

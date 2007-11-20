@@ -44,28 +44,12 @@ PlacesTreeView.prototype = {
             getAtom(aString);
   },
 
-  __separatorAtom: null,
-  get _separatorAtom() {
-    if (!this.__separatorAtom)
-      this.__separatorAtom = this._makeAtom("separator");
+  _atoms: [],
+  _getAtomFor: function PTV__getAtomFor(aName) {
+    if (!this._atoms[aName])
+      this._atoms[aName] = this._makeAtom(aName);
 
-    return this.__separatorAtom;
-  },
-
-  __sessionStartAtom: null,
-  get _sessionStartAtom() {
-    if (!this.__sessionStartAtom)
-      this.__sessionStartAtom = this._makeAtom("session-start");
-
-    return this.__sessionStartAtom;
-  },
-
-  __sessionContinueAtom: null,
-  get _sessionContinueAtom() {
-    if (!this.__sessionContinueAtom)
-      this.__sessionContinueAtom = this._makeAtom("session-continue");
-
-    return this.__sessionContinueAtom;
+    return this._atoms[aName];
   },
 
   _ensureValidRow: function PTV__ensureValidRow(aRow) {
@@ -140,7 +124,6 @@ PlacesTreeView.prototype = {
   SESSION_STATUS_START: 1,
   SESSION_STATUS_CONTINUE: 2,
   _getRowSessionStatus: function PTV__getRowSessionStatus(aRow) {
-    this._ensureValidRow(aRow);
     var node = this._visibleElements[aRow];
     if (!PlacesUtils.nodeIsVisit(node) || asVisit(node).sessionId == 0)
       return this.SESSION_STATUS_NONE;
@@ -251,7 +234,7 @@ PlacesTreeView.prototype = {
       aVisible.push(curChild);
 
       // recursively do containers
-      if (PlacesUtils.containerTypes.indexOf(curChildType) != -1) {
+      if (!this._flatList && PlacesUtils.containerTypes.indexOf(curChildType) != -1) {
         asContainer(curChild);
 
         var resource = this._getResourceForNode(curChild);
@@ -371,7 +354,6 @@ PlacesTreeView.prototype = {
       this._tree.rowCountChanged(startReplacement, -replaceCount);
     if (newElements.length)
       this._tree.rowCountChanged(startReplacement, newElements.length);
-    this._tree.endUpdateBatch();
 
     // now, open any containers that were persisted
     for (var i = 0; i < toOpenElements.length; i++) {
@@ -388,6 +370,8 @@ PlacesTreeView.prototype = {
       if (!parent)
         item.containerOpen = !item.containerOpen;
     }
+
+    this._tree.endUpdateBatch();
 
     // restore selection
     if (nodesToSelect.length > 0) {
@@ -892,40 +876,67 @@ PlacesTreeView.prototype = {
 
   getRowProperties: function PTV_getRowProperties(aRow, aProperties) {
     this._ensureValidRow(aRow);
-    var node = this._visibleElements[aRow];
 
     // Handle properties for session information.
     if (!this._showSessions)
       return;
 
-    switch(this._getRowSessionStatus(aRow)) {
+    var status = this._getRowSessionStatus(aRow);
+    switch (status) {
       case this.SESSION_STATUS_NONE:
         break;
       case this.SESSION_STATUS_START:
-        aProperties.AppendElement(this._sessionStartAtom);
+        aProperties.AppendElement(this._getAtomFor("session-start"));
         break;
       case this.SESSION_STATUS_CONTINUE:
-        aProperties.AppendElement(this._sessionContinueAtom);
+        aProperties.AppendElement(this._getAtomFor("session-continue"));
         break
     }
   },
 
   getCellProperties: function PTV_getCellProperties(aRow, aColumn, aProperties) {
-    var columnType = aColumn.id || aColumn.element.getAttribute("anonid");
+    this._ensureValidRow(aRow);
+
+    // for anonid-trees, we need to add the column-type manually
+    var columnType = aColumn.element.getAttribute("anonid");
+    if (columnType)
+      aProperties.AppendElement(this._getAtomFor(columnType));
+    else
+      var columnType = aColumn.id;
+
     if (columnType != "title")
       return;
 
-    this._ensureValidRow(aRow);
     var node = this._visibleElements[aRow];
 
+    // To disable the tree gestures for containers (e.g. double-click to open)
+    // we don't mark container nodes as such in flat list mode. The container
+    // appearance is desired though, so we add the container atom manually.
+    if (this._flatList && PlacesUtils.nodeIsContainer(node))
+      aProperties.AppendElement(this._getAtomFor("container"));
+
     if (PlacesUtils.nodeIsSeparator(node))
-      aProperties.AppendElement(this._separatorAtom);
+      aProperties.AppendElement(this._getAtomFor("separator"));
+    else if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
+      aProperties.AppendElement(this._getAtomFor("query"));
+    else if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
+      if (PlacesUtils.annotations.itemHasAnnotation(node.itemId,
+                                                    LMANNO_FEEDURI))
+        aProperties.AppendElement(this._getAtomFor("livemark"));
+      else if (PlacesUtils.bookmarks.getFolderIdForItem(node.itemId) ==
+               PlacesUtils.tagsFolderId) {
+        aProperties.AppendElement(this._getAtomFor("tagContainer"));
+      }
+    }
   },
 
   getColumnProperties: function(aColumn, aProperties) { },
 
   isContainer: function PTV_isContainer(aRow) {
     this._ensureValidRow(aRow);
+    if (this._flatList)
+      return false; // but see getCellProperties
+
     var node = this._visibleElements[aRow];
     if (PlacesUtils.nodeIsContainer(node)) {
       // the root node is always expandable
@@ -943,6 +954,9 @@ PlacesTreeView.prototype = {
   },
 
   isContainerOpen: function PTV_isContainerOpen(aRow) {
+    if (this._flatList)
+      return false;
+
     this._ensureValidRow(aRow);
     if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow]))
       throw Cr.NS_ERROR_INVALID_ARG;
@@ -951,7 +965,11 @@ PlacesTreeView.prototype = {
   },
 
   isContainerEmpty: function PTV_isContainerEmpty(aRow) {
+    if (this._flatList)
+      return true;
+
     this._ensureValidRow(aRow);
+
     if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow]))
       throw Cr.NS_ERROR_INVALID_ARG;
 
@@ -1050,7 +1068,8 @@ PlacesTreeView.prototype = {
     this._ensureValidRow(aRow);
 
     var node = this._visibleElements[aRow];
-    switch (this._getColumnType(aColumn)) {
+    var columnType = this._getColumnType(aColumn);
+    switch (columnType) {
       case this.COLUMN_TYPE_TITLE:
         // normally, this is just the title, but we don't want empty items in
         // the tree view so return a special string if the title is empty.
@@ -1175,7 +1194,8 @@ PlacesTreeView.prototype = {
     var newSort;
     var newSortingAnnotation = "";
     const NHQO = Ci.nsINavHistoryQueryOptions;
-    switch (this._getColumnType(aColumn)) {
+    var columnType = this._getColumnType(aColumn);
+    switch (columnType) {
       case this.COLUMN_TYPE_TITLE:
         if (oldSort == NHQO.SORT_BY_TITLE_ASCENDING)
           newSort = NHQO.SORT_BY_TITLE_DESCENDING;
@@ -1294,7 +1314,10 @@ PlacesTreeView.prototype = {
   }
 };
 
-function PlacesTreeView(aShowRoot) {
+function PlacesTreeView(aShowRoot, aFlatList) {
+  if (aShowRoot && aFlatList)
+    throw("Flat-list mode is not supported when show-root is set");
+
   this._tree = null;
   this._result = null;
   this._collapseDuplicates = true;
@@ -1303,4 +1326,5 @@ function PlacesTreeView(aShowRoot) {
   this._visibleElements = [];
   this._observers = [];
   this._showRoot = aShowRoot;
+  this._flatList = aFlatList;
 }

@@ -187,7 +187,7 @@ function run_test() {
 
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
-  query.setFolders([bmsvc.bookmarksRoot], 1);
+  query.setFolders([bmsvc.bookmarksMenuFolder], 1);
   var result = histsvc.executeQuery(query, options);
   result.viewer = viewer;
   var root = result.root;
@@ -198,7 +198,7 @@ function run_test() {
 
   // nsINavHistoryResultViewer.itemInserted
   // add a bookmark
-  var testBookmark = bmsvc.insertBookmark(bmsvc.bookmarksRoot, testURI, bmsvc.DEFAULT_INDEX, "foo");
+  var testBookmark = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, bmsvc.DEFAULT_INDEX, "foo");
   do_check_eq("foo", viewer.insertedItem.title);
   do_check_eq(testURI.spec, viewer.insertedItem.uri);
 
@@ -211,7 +211,7 @@ function run_test() {
   do_check_eq(viewer.changedItem.title, "baz");
 
   // nsINavHistoryResultViewer.itemRemoved
-  var removedBookmark = bmsvc.insertBookmark(bmsvc.bookmarksRoot, uri("http://google.com"), bmsvc.DEFAULT_INDEX, "foo");
+  var removedBookmark = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri("http://google.com"), bmsvc.DEFAULT_INDEX, "foo");
   bmsvc.removeItem(removedBookmark);
   do_check_eq(removedBookmark, viewer.removedItem.itemId);
 

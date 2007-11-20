@@ -41,6 +41,7 @@
 ]>
 
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmarkOverlay.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
 <overlay id="editBookmarkOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -117,13 +118,10 @@
             <menupopup>
               <!-- Static item for special folders -->
               <menuitem id="editBMPanel_unfiledRootItem"
-                        label="&editBookmarkOverlay.allBookmarksFolderItem.label;"
                         class="menuitem-iconic folder-icon"/>
               <menuitem id="editBMPanel_bmRootItem"
-                        label="&editBookmarkOverlay.bookmarksMenuFolderItem.label;"
                         class="menuitem-iconic folder-icon"/>
               <menuitem id="editBMPanel_toolbarFolderItem"
-                        label="&editBookmarkOverlay.toolbarFolderItem.label;"
                         class="menuitem-iconic folder-icon"/>
               <menuseparator id="editBMPanel_foldersSeparator" hidden="true"/>
             </menupopup>
@@ -143,7 +141,6 @@
               height="150"
               collapsed="true"
               onselect="gEditItemOverlay.onFolderTreeSelect();"
-              showRoot="true"
               hidecolumnpicker="true"
               observes="paneElementsBroadcaster">
           <treecols>

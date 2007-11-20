@@ -182,6 +182,14 @@ toolbarbutton.bookmark-item .toolbarbutton-text {
   list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
 
+.bookmark-item[tagContainer] {
+  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+}
+
+.bookmark-item[query] {
+  list-style-image: url("chrome://browser/skin/places/query.png");
+}
+
 .bookmark-item[livemark] .menuitem-iconic {
   list-style-image: url("chrome://browser/skin/places/livemarkItem.png");
 }
