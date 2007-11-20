@@ -220,7 +220,7 @@
         <parameter name="aIndex"/>
         <body>
           <![CDATA[
-            return this.mTabContainer.childNodes[aIndex].linkedBrowser;
+            return this.browsers[aIndex];
           ]]>
         </body>
       </method>
@@ -229,11 +229,10 @@
         <parameter name="aDocument"/>
         <body>
           <![CDATA[
-            for (var i = 0; i < this.mPanelContainer.childNodes.length; i++) {
-              if (this.getBrowserAtIndex(i).contentDocument == aDocument) {
+	    var browsers = this.browsers;
+            for (var i = 0; i < browsers.length; i++)
+              if (browsers[i].contentDocument == aDocument)
                 return i;
-              }
-            }
             return -1;
           ]]>
         </body>
