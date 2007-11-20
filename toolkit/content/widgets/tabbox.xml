@@ -183,20 +183,20 @@
               break;
             case event.DOM_VK_LEFT:
               if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
-                if (this.tabbox.tabs && this.tabbox._handleMetaAltArrows) {
-                  var offset = window.getComputedStyle(this.tabbox, "")
+                if (this.tabs && this._handleMetaAltArrows) {
+                  var offset = window.getComputedStyle(this, "")
                                      .direction == "ltr" ? -1 : 1;
-                  this.tabbox.tabs.advanceSelectedTab(offset, true);
+                  this.tabs.advanceSelectedTab(offset, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
               break;
             case event.DOM_VK_RIGHT:
               if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
-                if (this.tabbox.tabs && this.tabbox._handleMetaAltArrows) {
-                  var offset = window.getComputedStyle(this.tabbox, "")
+                if (this.tabs && this._handleMetaAltArrows) {
+                  var offset = window.getComputedStyle(this, "")
                                      .direction == "ltr" ? 1 : -1;
-                  this.tabbox.tabs.advanceSelectedTab(offset, true);
+                  this.tabs.advanceSelectedTab(offset, true);
                   event.stopPropagation();
                   event.preventDefault();
                 }
