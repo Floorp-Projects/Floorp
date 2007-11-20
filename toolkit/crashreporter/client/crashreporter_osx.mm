@@ -433,6 +433,12 @@ static bool RestartApplication()
   [autoreleasepool release];
 }
 
+// to get auto-quit when we close the window
+-(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication
+{
+    return YES;
+}
+
 @end
 
 /* === Crashreporter UI Functions === */

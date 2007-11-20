@@ -93,6 +93,8 @@
 - (void)uploadThread:(id)post;
 - (void)uploadComplete:(id)data;
 
+-(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication;
+
 @end
 
 #endif
