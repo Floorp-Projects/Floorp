@@ -349,15 +349,13 @@ nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 }
 
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
+nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
                                     PRInt32 aWhichClipboard, PRBool *_retval)
 {
-    *_retval = PR_FALSE;
+    if (!aFlavorList || !_retval)
+        return NS_ERROR_NULL_POINTER;
 
-    PRUint32 length = 0;
-    aFlavorList->Count(&length);
-    if (!length)
-        return NS_OK;
+    *_retval = PR_FALSE;
 
     GtkSelectionData *selection_data =
         GetTargets(GetSelectionAtom(aWhichClipboard));
@@ -374,33 +372,23 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
 
     // Walk through the provided types and try to match it to a
     // provided type.
-    for (PRUint32 i = 0; i < length && !*_retval; i++) {
-        nsCOMPtr<nsISupports> genericFlavor;
-        aFlavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
-        nsCOMPtr<nsISupportsCString> flavorWrapper;
-        flavorWrapper = do_QueryInterface(genericFlavor);
+    for (PRUint32 i = 0; i < aLength && !*_retval; i++) {
+        // We special case text/unicode here.
+        if (!strcmp(aFlavorList[i], kUnicodeMime) && 
+            gtk_selection_data_targets_include_text(selection_data)) {
+            *_retval = PR_TRUE;
+            break;
+        }
 
-        if (flavorWrapper) {
-            nsXPIDLCString myStr;
-            flavorWrapper->ToString(getter_Copies(myStr));
-
-            // We special case text/unicode here.
-            if (!strcmp(myStr, kUnicodeMime) && 
-                gtk_selection_data_targets_include_text(selection_data)) {
+        for (PRInt32 j = 0; j < n_targets; j++) {
+            gchar *atom_name = gdk_atom_name(targets[j]);
+            if (!strcmp(atom_name, aFlavorList[i]))
                 *_retval = PR_TRUE;
+
+            g_free(atom_name);
+
+            if (*_retval)
                 break;
-            }
-
-            for (PRInt32 j = 0; j < n_targets; j++) {
-                gchar *atom_name = gdk_atom_name(targets[j]);
-                if (!strcmp(atom_name, (const char *)myStr))
-                    *_retval = PR_TRUE;
-
-                g_free(atom_name);
-
-                if (*_retval)
-                    break;
-            }
         }
     }
     gtk_selection_data_free(selection_data);

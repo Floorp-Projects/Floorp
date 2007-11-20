@@ -75,7 +75,6 @@
 #include "nsIContentIterator.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
-#include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsVoidArray.h"
 #include "nsIFile.h"
@@ -1801,19 +1800,12 @@ PRBool nsHTMLEditor::HavePrivateHTMLFlavor(nsIClipboard *aClipboard)
   
   if (!aClipboard) return PR_FALSE;
   PRBool bHavePrivateHTMLFlavor = PR_FALSE;
-  nsCOMPtr<nsISupportsArray> flavArray;
   
-  nsresult res = NS_NewISupportsArray(getter_AddRefs(flavArray));
-  if (NS_FAILED(res)) return PR_FALSE;
+  const char* flavArray[] = { kHTMLContext };
   
-  nsCOMPtr<nsISupportsCString> contextString = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
-  if (!contextString) return PR_FALSE;
-  
-  contextString->SetData(NS_LITERAL_CSTRING(kHTMLContext));
-  
-  flavArray->AppendElement(contextString);
-  
-  if (NS_SUCCEEDED(aClipboard->HasDataMatchingFlavors (flavArray, nsIClipboard::kGlobalClipboard, &bHavePrivateHTMLFlavor )))
+  if (NS_SUCCEEDED(aClipboard->HasDataMatchingFlavors(flavArray,
+    NS_ARRAY_LENGTH(flavArray), nsIClipboard::kGlobalClipboard,
+    &bHavePrivateHTMLFlavor )))
     return bHavePrivateHTMLFlavor;
     
   return PR_FALSE;
@@ -1952,45 +1944,25 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
-  const char* const textEditorFlavors[] = { kUnicodeMime, nsnull };
-  const char* const htmlEditorFlavors[] = { kHTMLMime, kJPEGImageMime, nsnull };
+  const char* textEditorFlavors[] = { kUnicodeMime };
+  const char* textHtmlEditorFlavors[] = { kUnicodeMime, kHTMLMime,
+                                          kJPEGImageMime };
 
-  nsCOMPtr<nsISupportsArray> flavorsList =
-                           do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
   PRUint32 editorFlags;
   GetFlags(&editorFlags);
   
-  // add the flavors for all editors
-  for (const char* const* flavor = textEditorFlavors; *flavor; flavor++)
-  {
-    nsCOMPtr<nsISupportsCString> flavorString  = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
-    if (flavorString)
-    {
-      flavorString->SetData(nsDependentCString(*flavor));
-      flavorsList->AppendElement(flavorString);
-    }
-  }
-  
-  // add the HTML-editor only flavors
-  if ((editorFlags & eEditorPlaintextMask) == 0)
-  {
-    for (const char* const* htmlFlavor = htmlEditorFlavors;
-         *htmlFlavor;
-         htmlFlavor++)
-    {
-      nsCOMPtr<nsISupportsCString> flavorString  = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
-      if (flavorString)
-      {
-        flavorString->SetData(nsDependentCString(*htmlFlavor));
-        flavorsList->AppendElement(flavorString);
-      }
-    }
-  }
-  
   PRBool haveFlavors;
-  rv = clipboard->HasDataMatchingFlavors(flavorsList, aSelectionType, &haveFlavors);
+
+  // Use the flavors depending on the current editor mask
+  if ((editorFlags & eEditorPlaintextMask))
+    rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
+                                           NS_ARRAY_LENGTH(textEditorFlavors),
+                                           aSelectionType, &haveFlavors);
+  else
+    rv = clipboard->HasDataMatchingFlavors(textHtmlEditorFlavors,
+                                           NS_ARRAY_LENGTH(textHtmlEditorFlavors),
+                                           aSelectionType, &haveFlavors);
+  
   if (NS_FAILED(rv)) return rv;
   
   *aCanPaste = haveFlavors;

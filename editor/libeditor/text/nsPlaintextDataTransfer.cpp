@@ -51,7 +51,6 @@
 
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
-#include "nsISupportsArray.h"
 #include "nsIDocumentEncoder.h"
 #include "nsISupportsPrimitives.h"
 
@@ -476,27 +475,12 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
-  const char* const textEditorFlavors[] = { kUnicodeMime, nsnull };
+  const char* textEditorFlavors[] = { kUnicodeMime };
 
-  nsCOMPtr<nsISupportsArray> flavorsList = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
-
-  PRUint32 editorFlags;
-  GetFlags(&editorFlags);
-  
-  // add the flavors for text editors
-  for (const char* const* flavor = textEditorFlavors; *flavor; flavor++)
-  {
-    nsCOMPtr<nsISupportsCString> flavorString =
-        do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
-    if (flavorString)
-    {
-      flavorString->SetData(nsDependentCString(*flavor));
-      flavorsList->AppendElement(flavorString);
-    }
-  }
-  
   PRBool haveFlavors;
-  rv = clipboard->HasDataMatchingFlavors(flavorsList, aSelectionType, &haveFlavors);
+  rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
+                                         NS_ARRAY_LENGTH(textEditorFlavors),
+                                         aSelectionType, &haveFlavors);
   if (NS_FAILED(rv)) return rv;
   
   *aCanPaste = haveFlavors;
