@@ -72,8 +72,6 @@
 #include "nsAnnotationService.h"
 #include "nsCycleCollectionParticipant.h"
 
-#define ICONURI_QUERY "chrome://browser/skin/places/query.png"
-
 // What we want is: NS_INTERFACE_MAP_ENTRY(self) for static IID accessors,
 // but some of our classes (like nsNavHistoryResult) have an ambiguous base
 // class of nsISupports which prevents this from working (the default macro
@@ -1954,9 +1952,6 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
   mContentsValid(PR_FALSE),
   mBatchInProgress(PR_FALSE)
 {
-  // queries have special icons if not otherwise set
-  if (mFaviconURI.IsEmpty())
-    mFaviconURI.AppendLiteral(ICONURI_QUERY);
 }
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
@@ -1976,26 +1971,6 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
   NS_ASSERTION(history, "History service missing");
   mLiveUpdate = history->GetUpdateRequirements(mQueries, mOptions,
                                                &mHasSearchTerms);
-
-  // queries have special icons if not otherwise set
-  if (mFaviconURI.IsEmpty()) {
-    mFaviconURI.AppendLiteral(ICONURI_QUERY);
-
-    // see if there's a favicon explicitly set on this query
-    nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
-    if (! faviconService)
-      return;
-    nsresult rv = VerifyQueriesSerialized();
-    if (NS_FAILED(rv)) return;
-
-    nsCOMPtr<nsIURI> queryURI;
-    rv = NS_NewURI(getter_AddRefs(queryURI), mURI);
-    if (NS_FAILED(rv)) return;
-    nsCOMPtr<nsIURI> favicon;
-    rv = faviconService->GetFaviconForPage(queryURI, getter_AddRefs(favicon));
-    if (NS_FAILED(rv)) return;
-    favicon->GetSpec(mFaviconURI);
-  }
 }
 
 
@@ -2761,35 +2736,6 @@ nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
   mContentsValid(PR_FALSE)
 {
   mItemId = aFolderId;
-
-  // Get the favicon, if any, for this folder. Errors aren't too important
-  // here, so just give up if anything bad happens.
-  //
-  // PERFORMANCE: This is not very efficient, we may want to pass this as
-  // a parameter and integrate it into the query that generates the
-  // bookmark results.
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  if (! bookmarks)
-    return;
-
-  // This is the folder URI used for the favicon. It IS NOT the folder URI
-  // that we will return from GetUri. That one will include the options for
-  // this specific query, while the folderURI is invariant w.r.t. options.
-  nsCOMPtr<nsIURI> folderURI;
-  nsresult rv = bookmarks->GetFolderURI(aFolderId, getter_AddRefs(folderURI));
-  if (NS_FAILED(rv))
-    return;
-
-  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
-  if (! faviconService)
-    return;
-  nsCOMPtr<nsIURI> favicon;
-  rv = faviconService->GetFaviconForPage(folderURI, getter_AddRefs(favicon));
-  if (NS_FAILED(rv))
-    return; // this will happen when there is no favicon (most common case)
-
-  // we have a favicon, save it
-  favicon->GetSpec(mFaviconURI);
 }
 
 
@@ -3944,14 +3890,11 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
   nsresult rv = bookmarkService->GetItemType(aItemId, &itemType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (itemType == nsINavBookmarksService::TYPE_FOLDER) {
-    // simple case: Just notify the folder nodes directly
-    ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aItemId,
-        OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue));
-    return NS_OK;
-  }
+  // Note: folder-nodes set their own bookmark observer only once they're
+  // opened, meaning we cannot optimize this code path for changes done to
+  // folder-nodes.
 
-  // Here we need to find the changed items under the folders list
+  // Find the changed items under the folders list
   PRInt64 folderId;
   rv = bookmarkService->GetFolderIdForItem(aItemId, &folderId);
   NS_ENSURE_SUCCESS(rv, rv);

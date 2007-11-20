@@ -112,7 +112,6 @@ private:
 
   nsresult InitRoots();
   nsresult InitDefaults();
-  nsresult InitToolbarFolder();
   nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
                       const nsCString& name, PRInt64* aID,
                       PRInt64 aParentID, PRBool* aWasCreated);
@@ -166,7 +165,8 @@ private:
 
   nsresult IsBookmarkedInDatabase(PRInt64 aBookmarkID, PRBool* aIsBookmarked);
 
-  nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
+  // kGetInfoIndex_* results + kGetChildrenIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBGetChildren;
   static const PRInt32 kGetChildrenIndex_Position;
   static const PRInt32 kGetChildrenIndex_Type;
   static const PRInt32 kGetChildrenIndex_ForeignKey;

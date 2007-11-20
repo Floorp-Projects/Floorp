@@ -205,12 +205,21 @@ var gEditItemOverlay = {
     while (menupopup.childNodes.length > 4)
       menupopup.removeChild(menupopup.lastChild);
 
-    // only show "All Bookmarks" if the url isn't bookmarked somewhere else
-    this._element("unfiledRootItem").hidden =
-      aSelectedFolder != PlacesUtils.unfiledRootId;
+    const bms = PlacesUtils.bookmarks;
+    const annos = PlacesUtils.annotations;
+
+    // Build the static list
+    var unfiledItem = this._element("unfiledRootItem");
+    unfiledItem.label = bms.getItemTitle(PlacesUtils.unfiledBookmarksFolderId);
+    // only show "Unfiled Bookmarks" if the url isn't bookmarked somewhere else
+    unfiledItem.hidden = aSelectedFolder != PlacesUtils.unfiledBookmarksFolderId;
+
+    this._element("bmRootItem").label =
+      bms.getItemTitle(PlacesUtils.bookmarksMenuFolderId);
+    this._element("toolbarFolderItem").label =
+      bms.getItemTitle(PlacesUtils.toolbarFolderId);
 
     // List of recently used folders:
-    var annos = PlacesUtils.annotations;
     var folderIds = annos.getItemsWithAnnotation(LAST_USED_ANNO, { });
 
     /**
@@ -571,25 +580,14 @@ var gEditItemOverlay = {
       this._folderTree.collapsed = false;
       if (!this._folderTree.place) {
         const FOLDER_TREE_PLACE_URI =
-          "place:folder=2&excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1";
+          "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
+          window.top.PlacesUtils.allBookmarksFolderId;
         this._folderTree.place = FOLDER_TREE_PLACE_URI;
       }
 
       var currentFolder = this._getFolderIdFromMenuList();
-      // Don't select anything in the tree if the item is "unfiled"
-      if (currentFolder == PlacesUtils.unfiledRootId)
-        this._folderTree.selectFolders([]);
-      else {
-        this._folderTree.selectFolders([currentFolder]);
-        this._folderTree.focus();
-      }
-
-      if ((currentFolder == PlacesUtils.bookmarksRootId ||
-           currentFolder == PlacesUtils.unfiledRootId) &&
-          !this._folderTree.treeBoxObject.view.isContainerOpen(0)) {
-        // Expand the root node if selectFolder didn't
-        this._folderTree.treeBoxObject.view.toggleOpenState(0);
-      }
+      this._folderTree.selectItems([currentFolder]);
+      this._folderTree.focus();
     }
   },
 
@@ -598,9 +596,9 @@ var gEditItemOverlay = {
     var selectedItem = this._folderMenuList.selectedItem
     switch (selectedItem.id) {
       case "editBMPanel_unfiledRootItem":
-        return PlacesUtils.unfiledRootId;
+        return PlacesUtils.unfiledBookmarksFolderId;
       case "editBMPanel_bmRootItem":
-        return PlacesUtils.bookmarksRootId;
+        return PlacesUtils.bookmarksMenuFolderId;
       case "editBMPanel_toolbarFolderItem":
         return PlacesUtils.toolbarFolderId;
     }
@@ -633,9 +631,9 @@ var gEditItemOverlay = {
     }
 
     if (aCheckStaticFolderItems) {
-      if (aFolderId == PlacesUtils.unfiledRootId)
+      if (aFolderId == PlacesUtils.unfiledBookmarksFolderId)
         return this._element("unfiledRootItem");
-      if (aFolderId == PlacesUtils.bookmarksRootId)
+      if (aFolderId == PlacesUtils.bookmarksMenuFolderId)
         return this._element("bmRootItem");
       if (aFolderId == PlacesUtils.toolbarFolderId)
         return this._element("toolbarFolderItem");
@@ -658,7 +656,7 @@ var gEditItemOverlay = {
 
       // Mark the containing folder as recently-used if it isn't the
       // "All Bookmarks" root
-      if (container != PlacesUtils.unfiledRootId)
+      if (container != PlacesUtils.unfiledBookmarksFolderId)
         this._markFolderAsRecentlyUsed(container);
     }
 
@@ -666,7 +664,7 @@ var gEditItemOverlay = {
     if (!this._folderTree.collapsed) {
       var selectedNode = this._folderTree.selectedNode;
       if (!selectedNode || selectedNode.itemId != container)
-        this._folderTree.selectFolders([container]);
+        this._folderTree.selectItems([container]);
     }
   },
 

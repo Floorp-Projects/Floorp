@@ -93,8 +93,6 @@
              oncommand="goDoCommand('placesCmd_sortBy:name');"/>
     <command id="placesCmd_moveBookmarks"
              oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
-    <command id="placesCmd_setAsBookmarksToolbarFolder"
-             oncommand="goDoCommand('placesCmd_setAsBookmarksToolbarFolder');"/>
   </commandset>
 
   <popup id="placesContext"
@@ -187,7 +185,7 @@
               label="&cmd.reloadLivebookmark.label;"
               accesskey="&cmd.reloadLivebookmark.accesskey;"
               closemenu="single"
-              selection="livemark/feedURI|allLivemarks"/>
+              selection="livemark/feedURI"/>
     <menuitem id="placesContext_reloadMicrosummary"
               command="placesCmd_reloadMicrosummary"
               label="&cmd.reloadMicrosummary.label;"

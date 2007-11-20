@@ -201,7 +201,7 @@ var BookmarkPropertiesPanel = {
       else {
         // default to the bookmarks root
         this._defaultInsertionPoint =
-          new InsertionPoint(PlacesUtils.bookmarks.bookmarksRoot, -1);
+          new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);
       }
 
       switch(dialogInfo.type) {
@@ -1041,12 +1041,19 @@ var BookmarkPropertiesPanel = {
                             expander.getAttribute("tooltiptextup"));
       document.documentElement.buttons = "accept,cancel,extra2";
 
-      if (!this._folderTree.treeBoxObject.view.isContainerOpen(0))
-        this._folderTree.treeBoxObject.view.toggleOpenState(0);
-      this._folderTree.selectFolders([this._getFolderIdFromMenuList()]);
+      this._folderTree.collapsed = false;
+
+      if (!this._folderTree.place) {
+        const FOLDER_TREE_PLACE_URI =
+          "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
+          PlacesUtils.allBookmarksFolderId;
+        this._folderTree.place = FOLDER_TREE_PLACE_URI;
+      }
+
+      var currentFolder = this._getFolderIdFromMenuList();
+      this._folderTree.selectItems([currentFolder]);
       this._folderTree.focus();
 
-      this._folderTree.collapsed = false;
       resizeTo(window.outerWidth, window.outerHeight + this._folderTreeHeight);
     }
   },
@@ -1056,7 +1063,7 @@ var BookmarkPropertiesPanel = {
     var selectedItem = this._folderMenuList.selectedItem
     switch (selectedItem.id) {
       case "bookmarksRootItem":
-        return PlacesUtils.bookmarksRootId;
+        return PlacesUtils.bookmarksMenuFolderId;
       case "toolbarFolderItem":
         return PlacesUtils.toolbarFolderId;
     }
@@ -1089,7 +1096,7 @@ var BookmarkPropertiesPanel = {
     }
 
     if (aCheckStaticFolderItems) {
-      if (aFolderId == PlacesUtils.bookmarksRootId)
+      if (aFolderId == PlacesUtils.bookmarksMenuFolderId)
         return this._element("bookmarksRootItem")
       if (aFolderId == PlacesUtils.toolbarFolderId)
         return this._element("toolbarFolderItem")
@@ -1106,7 +1113,7 @@ var BookmarkPropertiesPanel = {
     if (this._folderTree.hidden)
       return;
 
-    this._folderTree.selectFolders([this._getFolderIdFromMenuList()]);
+    this._folderTree.selectItems([this._getFolderIdFromMenuList()]);
   },
 
   onFolderTreeSelect: function BPP_onFolderTreeSelect() {
@@ -1119,9 +1126,9 @@ var BookmarkPropertiesPanel = {
     // already selected
     var oldSelectedItem = this._folderMenuList.selectedItem;
     if ((oldSelectedItem.id == "toolbarFolderItem" &&
-         folderId == PlacesUtils.bookmarks.toolbarFolder) ||
+         folderId == PlacesUtils.toolbarFolderId) ||
         (oldSelectedItem.id == "bookmarksRootItem" &&
-         folderId == PlacesUtils.bookmarks.bookmarksRoot))
+         folderId == PlacesUtils.bookmarksMenuFolderId))
       return;
 
     var folderItem = this._getFolderMenuItem(folderId, false);

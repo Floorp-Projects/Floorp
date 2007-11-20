@@ -52,7 +52,7 @@ interface nsITransaction;
  * the global scope of a js window.
  */
 
-[scriptable, uuid(2d176a73-a908-420b-8c5d-209a45997f45)]
+[scriptable, uuid(34cfb73e-ecd4-434d-b0f0-c17b8c7ceae9)]
 interface nsIPlacesTransactionsService : nsISupports
 {
   /**
@@ -305,15 +305,6 @@ interface nsIPlacesTransactionsService : nsISupports
    */
   nsITransaction sortFolderByName(in long long aFolderId,
                                   in long long aFolderIndex);
-
-  /**
-   * Transaction for set the bookmarks toolbar folder.
-   *
-   * @param aFolderId
-   *        id of the folder to set as toolbar folder
-   * @returns nsITransaction object
-   */
-  nsITransaction setBookmarksToolbar(in long long aFolderId);
 
   /**
    * A reference to the transaction manager

@@ -104,18 +104,28 @@ treechildren::-moz-tree-image(title, separator) {
   height: 0;
 }
 
-treechildren::-moz-tree-image(title, livemark\/bookmarkFeedURI) {
-  list-style-image: url("chrome://browser/skin/livemark-item.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
 treechildren::-moz-tree-image(title, container) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 treechildren::-moz-tree-image(title, open) {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+
+treechildren::-moz-tree-image(title, container, livemark) {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+  -moz-image-region: auto;
+}
+
+treechildren::-moz-tree-image(title, container, tagContainer) {
+  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+  -moz-image-region: auto;
+}
+
+treechildren::-moz-tree-image(title, container, query) {
+  list-style-image: url("chrome://browser/skin/places/query.png");
+  -moz-image-region: auto;
 }
 
 treechildren::-moz-tree-row(session-start) {

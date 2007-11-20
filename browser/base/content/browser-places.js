@@ -190,7 +190,8 @@ var PlacesCommandHook = {
       }
       catch (e) { }
 
-      var parent = aParent != undefined ? aParent : PlacesUtils.unfiledRootId;
+      var parent = aParent != undefined ?
+                   aParent : PlacesUtils.unfiledBookmarksFolderId;
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
       var txn = PlacesUtils.ptm.createItem(uri, parent, -1,
                                            title, null, [descAnno]);

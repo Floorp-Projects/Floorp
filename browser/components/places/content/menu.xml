@@ -324,6 +324,10 @@
           var title = aNode.title;
           if (menuitem.getAttribute("label") != title)
             menuitem.setAttribute("label", title);
+
+          if (!menuitem.hasAttribute("livemark") &&
+              PlacesUtils.nodeIsLivemarkContainer(aNode))
+            menuItem.setAttribute("livemark", "true");
         },
 
         itemReplaced:

@@ -104,20 +104,20 @@ var observer = {
 };
 bmsvc.addObserver(observer, false);
 
-// get bookmarks root id
-var root = bmsvc.bookmarksRoot;
+// get bookmarks menu folder id
+var root = bmsvc.bookmarksMenuFolder;
 
 // index at which items should begin
-var bmStartIndex = 1;
+var bmStartIndex = 0;
 
 // main
 function run_test() {
-  // test roots
+  // test special folders
   do_check_true(bmsvc.placesRoot > 0);
-  do_check_true(bmsvc.bookmarksRoot > 0);
-  do_check_true(bmsvc.tagRoot > 0);
+  do_check_true(bmsvc.bookmarksMenuFolder > 0);
+  do_check_true(bmsvc.tagsFolder > 0);
   do_check_true(bmsvc.toolbarFolder > 0);
-  do_check_true(bmsvc.unfiledRoot > 0);
+  do_check_true(bmsvc.unfiledBookmarksFolder > 0);
 
   // test getFolderIdForItem() with bogus item id will throw
   try {
@@ -132,9 +132,11 @@ function run_test() {
   } catch(ex) {}
 
   // test root parentage
-  do_check_eq(bmsvc.getFolderIdForItem(bmsvc.bookmarksRoot), bmsvc.placesRoot);
-  do_check_eq(bmsvc.getFolderIdForItem(bmsvc.tagRoot), bmsvc.placesRoot);
-  
+  do_check_eq(bmsvc.getFolderIdForItem(bmsvc.bookmarksMenuFolder), bmsvc.placesRoot);
+  do_check_eq(bmsvc.getFolderIdForItem(bmsvc.tagsFolder), bmsvc.placesRoot);
+  do_check_eq(bmsvc.getFolderIdForItem(bmsvc.toolbarFolder), bmsvc.placesRoot);
+  do_check_eq(bmsvc.getFolderIdForItem(bmsvc.unfiledBookmarksFolder), bmsvc.placesRoot);
+
   // create a folder to hold all the tests
   // this makes the tests more tolerant of changes to default_places.html
   var testRoot = bmsvc.createFolder(root, "places bookmarks xpcshell tests", bmsvc.DEFAULT_INDEX);
@@ -539,15 +541,6 @@ function run_test() {
   var bmIndex = bmsvc.getItemIndex(newId12);
   do_check_eq(1, bmIndex);
 
-  // test changing the bookmarks toolbar folder
-  var oldToolbarFolder = bmsvc.toolbarFolder;
-  var newToolbarFolderId = bmsvc.createFolder(testRoot, "new toolbar folder", -1);
-  bmsvc.toolbarFolder = newToolbarFolderId;
-  do_check_eq(bmsvc.toolbarFolder, newToolbarFolderId);
-  do_check_eq(observer._itemChangedId, newToolbarFolderId);
-  do_check_eq(observer._itemChangedProperty, "became_toolbar_folder");
-  do_check_eq(observer._itemChangedValue, "");
-
   // insert a bookmark with title ZZZXXXYYY and then search for it.
   // this test confirms that we can find bookmarks that we haven't visited
   // (which are "hidden") and that we can find by title.
@@ -556,7 +549,7 @@ function run_test() {
                                      bmsvc.DEFAULT_INDEX, "");
   do_check_eq(observer._itemAddedId, newId13);
   do_check_eq(observer._itemAddedParent, testRoot);
-  do_check_eq(observer._itemAddedIndex, 12);
+  do_check_eq(observer._itemAddedIndex, 11);
 
   // set bookmark title
   bmsvc.setItemTitle(newId13, "ZZZXXXYYY");

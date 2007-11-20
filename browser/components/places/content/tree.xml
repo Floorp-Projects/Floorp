@@ -46,9 +46,6 @@
   <binding id="places-tree" extends="chrome://global/content/bindings/tree.xml#tree">
     <implementation implements="nsINavHistoryResultViewObserver">
       <constructor><![CDATA[
-        this._controller = new PlacesController(this);
-        this.controllers.appendController(this._controller);
-
         // Force an initial build.
         if (this.place)
           this.place = this.place;
@@ -138,9 +135,13 @@
         <body><![CDATA[
           var result = PlacesUtils.history.executeQueries(queries, queries.length, 
                                                           options);
-          var treeView = new PlacesTreeView(this.showRoot);
+          var treeView = new PlacesTreeView(this.showRoot, this.flatList);
           result.viewer = treeView;
           this.view = treeView;
+          if (!this._controller) {
+            this._controller = new PlacesController(this);
+            this.controllers.appendController(this._controller);
+          }
           this._cachedInsertionPoint = undefined;
         ]]></body>
       </method>
@@ -160,6 +161,21 @@
         ]]></setter>
       </property>
 
+      <property name="flatList">
+        <getter><![CDATA[
+          return this.getAttribute("flatList") == "true";
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.flatList != val) {
+            this.setAttribute("flatList", val);
+            // reload with the last place set
+            if (this.place)
+              this.place = this.place;
+          }
+          return val;
+        ]]></setter>
+      </property>
+
       <!-- 
         Causes a particular node represented by the specified placeURI to be
         selected in the tree. All containers above the node in the hierarchy
@@ -168,22 +184,30 @@
       <method name="selectPlaceURI">
         <parameter name="placeURI"/>
         <body><![CDATA[
-          function findNode(container, placeURI) {
-            if (container.uri == placeURI)
+          function findNode(container, placeURI, nodesURIChecked) {
+            var containerURI = container.uri;
+            if (containerURI == placeURI)
               return container;
+            if (nodesURIChecked.indexOf(containerURI) != -1)
+              return null;
+
+            // never check the contents of the same query
+            nodesURIChecked.push(containerURI);
 
             container.containerOpen = true;
             for (var i = 0; i < container.childCount; ++i) {
               var child = container.getChild(i);
-              if (child.uri == placeURI)
+              var childURI = child.uri;
+              if (childURI == placeURI)
                 return child;
               else if (PlacesUtils.nodeIsContainer(child)) {
-                var nested = findNode(asContainer(child), placeURI);
+                var nested = findNode(asContainer(child), placeURI, nodesURIChecked);
                 if (nested)
                   return nested;
               }
             }
             container.containerOpen = false;
+
             return null;
           }
           
@@ -192,7 +216,7 @@
           if (!container)
             return;
 
-          var child = findNode(container, placeURI);
+          var child = findNode(container, placeURI, []);
           container.containerOpen = true;
           if (child)
             this.selectNode(child);
@@ -487,7 +511,7 @@
           if (this.hasSingleSelection && resultView.isContainer(max.value) &&
               (resultView.isContainerOpen(max.value) ||
                resultView.nodeForTreeIndex(max.value)
-                         .itemId == PlacesUtils.bookmarksRootId))
+                         .itemId == PlacesUtils.bookmarksMenuFolderId))
             orientation = NHRVO.DROP_ON;
 
           this._cachedInsertionPoint =
@@ -570,123 +594,82 @@
         ]]></body>
       </method>
 
-      <!-- This method returns the root node of the query results as
-           a container query result node.  If it is unable to do this
-           (for instance, if we have no query results), it will
-           return null.
+      <!-- This method will select the first node in the tree that matches
+           each given item id. It will open any parent nodes that it needs
+           to in order to show the selected items.
       -->
-      <method name="_getRootNode">
+      <method name="selectItems">
+        <parameter name="aIDs"/>
         <body><![CDATA[
-          var result = this.getResult();
-          if (!result)
-            return null;
-          return asContainer(result.root);
-        ]]></body>
-      </method>
+          var ids = aIDs; // don't manipulate the caller's array
 
-      <!-- This method, when given a list of folder IDs, will select all
-           the nodes that match those IDs in the current tree.
-           It will open any parent nodes that it needs to in order to
-           show the selected folders.
-      -->
-      <method name="selectFolders">
-        <parameter name="ids"/>
-        <body><![CDATA[
-          /**
-           * Returns the number of properties on the object "obj", since
-           * we're using objects as sets and dictionaries in the
-           * code below.
-           */
-          function len(obj) {
-            var count = 0;
-            for (property in obj)
-              ++count;
-            return count;
-          }
+          // Array of nodes found by findNodes which are to be selected
+          var nodes = [];
+
+          // A set of URIs of container-nodes that were previously searched,
+          // and thus shouldn't be searched again. This is empty at the initial
+          // start of the recursion and gets filled in as the recursion
+          // progresses.
+          var nodesURIChecked = [];
 
           /**
-           * Recursively search through a node's children for folders
-           * with IDs in the set "indexes".  When a matching folder
-           * is found, remove its ID from "indexes" and store the
-           * node in the dictionary "nodes".
+           * Recursively search through a node's children for items
+           * with the given IDs. When a matching item is found, remove its ID
+           * from the IDs array, and add the found node to the nodes dictionary.
            *
-           * NOTE: This method will leave open any node that had
-           *       matching folders in its subtree.
-           *
-           * @param node  The root of the subtree to search for the folders.
-           *              "node" itself will not be examined for a match.
-           * @param indexes  A set of folder IDs, expressed as an object
-           * @param nodes  A dictionary mapping folder IDs to folder
-           *               result nodes, expressed as an object.  This is
-           *               empty at the initial start of the recursion and
-           *               gets filled in as the recursion progresses.
+           * NOTE: This method will leave open any node that had matching items
+           * in its subtree.
            */
-          function findNodes(node, indexes, nodes) {
+          function findNodes(node) {
+            var foundOne = false;
             // See if node matches an ID we wanted; add to results.
-            if (node.itemId in indexes) {
-              nodes[node.itemId] = node;
-              delete indexes[node.itemId];
-              if (!len(indexes))
-                return;
+            var index = ids.indexOf(node.itemId);
+            if (index != -1) {
+              nodes.push(node);
+              foundOne = true;
+              ids.splice(index, 1);
             }
+
+            if (ids.length == 0 || !PlacesUtils.nodeIsContainer(node) ||
+                nodesURIChecked.indexOf(node.uri) != -1)
+              return foundOne;
+
+            nodesURIChecked.push(node.uri);
+            asContainer(node);
 
             // Remember the beginning state so that we can re-close
             // this node if we don't find any additional results here.
             var previousOpenness = node.containerOpen;
-            var previousMatches = len(nodes);
             node.containerOpen = true;
-
-            for (var child = 0; 
-                 (child < node.childCount) && (len(indexes) > 0);
+            for (var child = 0;  child < node.childCount && ids.length > 0;
                  child++) {
               var childNode = node.getChild(child);
-              if (!PlacesUtils.nodeIsFolder(childNode))
-                continue;
-              
-              // See if child matches an ID we wanted; add to results.
-              if (childNode.itemId in indexes) {
-                nodes[childNode.itemId] = childNode;
-                delete indexes[childNode.itemId];
-              }
-
-              // If we are still searching, search down that child's subtree.
-              if (len(indexes))
-                findNodes(childNode, indexes, nodes);
+              var found = findNodes(childNode);
+              if (!foundOne)
+                foundOne = found;
             }
 
             // If we didn't find any additional matches in this node's
             // subtree, revert the node to its previous openness.
-            if (len(nodes) == previousMatches)
+            if (!foundOne)
               node.containerOpen = previousOpenness;
+            return foundOne;
           }
 
-          var indexes = {};  // Set of folder IDs to search for.
-          var nodes = {};    // Dictionary of found IDs to found nodes.
+          findNodes(this.getResultNode());
 
-          // Initialize input set
-          for (var i = 0; i < ids.length; i++)
-            indexes[ids[i]] = true;
-
-          var root = this._getRootNode();
-          if (!root) {
-            NS_ASSERT(root, "Couldn't select folders because no root node was available.");
-            return;
-          }
-
-          findNodes(root, indexes, nodes);
-          
           // For all the nodes we've found, highlight the corresponding
           // index in the tree.
           var resultview = this.getResultView();
           var selection = this.view.selection;
           selection.clearSelection();
-          for (idx in nodes) {
-            var index = resultview.treeIndexForNode(nodes[idx]);
+          for (var i=0; i < nodes.length; i++) {
+            var index = resultview.treeIndexForNode(nodes[i]);
             selection.rangedSelect(index, index, true);
           }
         ]]></body>
       </method>
-      
+
       <!-- nsDragAndDrop -->
       <method name="onDragStart">
         <parameter name="event"/>

@@ -493,11 +493,9 @@ nsNavHistory::AutoCompleteTagsSearch()
   nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
 
-  PRInt64 tagRoot;
-  nsresult rv = bookmarks->GetTagRoot(&tagRoot);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt64 tagsFolder = GetTagsFolder();
 
-  rv = mDBTagAutoCompleteQuery->BindInt64Parameter(0, tagRoot);
+  nsresult rv = mDBTagAutoCompleteQuery->BindInt64Parameter(0, tagsFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsString escapedSearchString;

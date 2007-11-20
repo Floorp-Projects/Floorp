@@ -102,19 +102,31 @@ treechildren::-moz-tree-image(title) {
 
 treechildren::-moz-tree-image(title, container),
 treechildren::-moz-tree-image(title, open) {
-  list-style-image: url("chrome://global/skin/tree/folder.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("chrome://global/skin/tree/folder.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 treechildren::-moz-tree-image(title, separator) {
   list-style-image: none;
-  width: 0px !important;
-  height: 0px !important;
-  margin: 0px 0px;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0;
 }
 
 treechildren::-moz-tree-row(session-start) {
   border-top:1px dotted ThreeDShadow;
+}
+
+treechildren::-moz-tree-image(container, livemark) {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+}
+
+treechildren::-moz-tree-image(container, tagContainer) {
+  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+}
+
+treechildren::-moz-tree-image(container, query) {
+  list-style-image: url("chrome://browser/skin/places/query.png");
 }
 
 /* FIXME this should make the date field invisible, but only does it for

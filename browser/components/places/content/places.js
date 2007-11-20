@@ -37,35 +37,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-/**
- * Selects a place URI in the places list.
- * This function is global so it can be easily accessed by openers.
- * @param   placeURI
- *          A place: URI string to select
- */
-function selectPlaceURI(placeURI) {
-  PlacesOrganizer._places.selectPlaceURI(placeURI);
-}
-
 var PlacesOrganizer = {
   _places: null,
   _content: null,
 
+  _initFolderTree: function() {
+    var leftPaneRoot = PlacesUtils.leftPaneFolderId;
+    var allBookmarksId = PlacesUtils.allBookmarksFolderId;
+    this._places.place = "place:excludeItems=1&expandQueries=0&folder=" + leftPaneRoot;
+    this._places.selectItems([allBookmarksId]);
+    asContainer(this._places.selectedNode).containerOpen = true;
+  },
+
   init: function PO_init() {
     this._places = document.getElementById("placesList");
     this._content = document.getElementById("placeContent");
-
-    OptionsFilter.init(Groupers);
-    Groupers.init();
-
-    // Select the specified place in the places list.
-    var placeURI = "place:";
-    if ("arguments" in window)
-      placeURI = window.arguments[0];
-
-    selectPlaceURI(placeURI);
+    this._initFolderTree();
 
     var view = this._content.treeBoxObject.view;
     if (view.rowCount > 0)
@@ -140,99 +127,6 @@ var PlacesOrganizer = {
     this.location = historyEntry;
   },
 
-  HEADER_TYPE_SHOWING: 1,
-  HEADER_TYPE_SEARCH: 2,
-  HEADER_TYPE_ADVANCED_SEARCH: 3,
-
-  /**
-   * Updates the text shown in the heading banner above the content view.
-   * @param   type
-   *          The type of information being shown - normal (built-in history or
-   *          other query, bookmark folder), search results from the toolbar
-   *          search box, or advanced search.
-   * @param   text
-   *          The text (if any) to display
-   */
-  setHeaderText: function PO_setHeaderText(type, text) {
-    NS_ASSERT(type == 1 || type == 2 || type == 3, "Invalid Header Type");
-
-    var prefix = document.getElementById("showingPrefix");
-    prefix.setAttribute("value",
-                        PlacesUtils.getString("headerTextPrefix" + type));
-
-    var contentTitle = document.getElementById("contentTitle");
-    contentTitle.setAttribute("value", text);
-  },
-
-  onPlaceURIKeypress: function PO_onPlaceURIKeypress(aEvent) {
-    var keyCode = aEvent.keyCode;
-    if (keyCode == KeyEvent.DOM_VK_RETURN)
-      this.loadPlaceURI();
-    else if (keyCode == KeyEvent.DOM_VK_ESCAPE) {
-      event.target.value = "";
-      this.onPlaceSelected(true);
-    }
-  },
-
-  /**
-   * Shows or hides the debug panel.
-   */
-  toggleDebugPanel: function PO_toggleDebugPanel() {
-    var dp = document.getElementById("debugPanel");
-    dp.hidden = !dp.hidden;
-    if (!dp.hidden)
-      document.getElementById("placeURI").focus();
-  },
-
-  /**
-   * Loads the place URI entered in the debug
-   */
-  loadPlaceURI: function PO_loadPlaceURI() {
-    // clear forward history
-    this._forwardHistory.splice(0);
-
-    var placeURI = document.getElementById("placeURI");
-
-    var queriesRef = { }, optionsRef = { };
-    PlacesUtils.history.queryStringToQueries(placeURI.value,
-                                             queriesRef, { }, optionsRef);
-
-    // for debug panel
-    var autoFilterResults = document.getElementById("autoFilterResults");
-    if (autoFilterResults.checked) {
-      var options =
-        OptionsFilter.filter(queriesRef.value, optionsRef.value, null);
-    }
-    else
-      options = optionsRef.value;
-
-    this.location =
-      PlacesUtils.history.queriesToQueryString(queriesRef.value,
-                                               queriesRef.value.length,
-                                               options);
-
-    placeURI.value = this.location;
-
-    this.setHeaderText(this.HEADER_TYPE_SHOWING, "Debug results for: " + placeURI.value);
-
-    this.updateLoadedURI();
-
-    placeURI.focus();
-  },
-
-  /**
-   * Updates the URI displayed in the debug panel.
-   */
-  updateLoadedURI: function PO_updateLoadedURI() {
-    var queryNode = asQuery(this._content.getResult().root);
-    var queries = queryNode.getQueries({});
-    var options = queryNode.queryOptions;
-    var loadedURI = document.getElementById("loadedURI");
-    loadedURI.value =
-      PlacesUtils.history.queriesToQueryString(queries, queries.length,
-                                               options);
-  },
-
   /**
    * Called when a place folder is selected in the left pane.
    * @param   resetSearchBox
@@ -263,10 +157,6 @@ var PlacesOrganizer = {
       var searchFilter = document.getElementById("searchFilter");
       searchFilter.reset();
     }
-
-    this.setHeaderText(this.HEADER_TYPE_SHOWING, node.title);
-
-    this.updateLoadedURI();
 
     // Update the "Find in <current collection>" command and the gray text in
     // the search box in the toolbar if the active collection is the current
@@ -308,7 +198,22 @@ var PlacesOrganizer = {
     }
   },
 
-  onTreeDblClick: function PO_onTreeDblClick(aEvent) {
+  _openSelectedRow: function PO__openSelectedRow(aEvent) {
+    var node = this._content.selectedNode;
+    if (!node)
+      return;
+
+    if (PlacesUtils.nodeIsContainer(node)) {
+      if (node.itemId != -1)
+        this._places.selectItems([node.itemId]);
+      else if (PlacesUtils.nodeIsQuery(node))
+        this._places.selectPlaceURI(node.uri);
+    }
+    else if (PlacesUtils.nodeIsURI(this._content.selectedNode))
+      this._content.controller.openSelectedNodeWithEvent(aEvent);
+  },
+
+  onContentTreeDblClick: function PO_onContentTreeDblClick(aEvent) {
     if (aEvent.button != 0 || !this._content.hasSingleSelection ||
         aEvent.originalTarget.localName != "treechildren")
       return;
@@ -316,10 +221,15 @@ var PlacesOrganizer = {
     var row = { }, col = { }, obj = { };
     this._content.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row,
                                          col, obj);
-    if (row.value == -1  || obj.value == "twisty")
+    if (row.value == -1)
       return;
 
-    this._content.controller.openSelectedNodeWithEvent(aEvent);
+    this._openSelectedRow(aEvent);
+  },
+
+  onContentTreeKeypress: function PO_onContentTreeKeypress(aEvent) {
+    if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+      this._openSelectedRow(aEvent);
   },
 
   /**
@@ -555,6 +465,7 @@ var PlacesOrganizer = {
     }
   },
 
+  // NOT YET USED
   updateThumbnailProportions: function PO_updateThumbnailProportions() {
     var previewBox = document.getElementById("previewBox");
     var canvas = document.getElementById("itemThumbnail");
@@ -592,8 +503,6 @@ var PlacesOrganizer = {
                                      { hiddenRows: ["folderPicker"] });
 
           this._detectAndSetDetailsPaneMinimalState(selectedNode);
-          this.updateThumbnailProportions();
-          this._updateThumbnail();
           return;
         }
       }
@@ -617,9 +526,6 @@ var PlacesOrganizer = {
                                            [rowCount]);
         }
       }
-
-      this.updateThumbnailProportions();
-      this._updateThumbnail();
     }
 
     // Nothing to do if the pane was already disabled
@@ -630,6 +536,7 @@ var PlacesOrganizer = {
     }
   },
 
+  // NOT YET USED
   _updateThumbnail: function PO__updateThumbnail() {
     var bo = document.getElementById("previewBox").boxObject;
     var width  = bo.width;
@@ -711,7 +618,7 @@ var PlacesOrganizer = {
 
     // Add the place: uri as a bookmark under the bookmarks root.
     var txn = PlacesUtils.ptm.createItem(placeURI,
-                                         PlacesUtils.bookmarksRootId,
+                                         PlacesUtils.bookmarksMenuFolderId,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
                                          input.value);
     PlacesUtils.ptm.commitTransaction(txn);
@@ -736,7 +643,9 @@ var PlacesSearchBox = {
   _folders: [],
   get folders() {
     if (this._folders.length == 0)
-      this._folders.push(PlacesUtils.bookmarksRootId, PlacesUtils.unfiledRootId);
+      this._folders.push(PlacesUtils.bookmarksMenuFolderId,
+                         PlacesUtils.unfiledBookmarksFolderId,
+                         PlacesUtils.toolbarFolderId);
     return this._folders;
   },
   set folders(aFolders) {
@@ -774,8 +683,9 @@ var PlacesSearchBox = {
       break;
     case "bookmarks":
       content.applyFilter(filterString, true,
-                          [PlacesUtils.bookmarksRootId,
-                           PlacesUtils.unfiledRootId]);
+                          [PlacesUtils.bookmarksMenuFolderId,
+                           PlacesUtils.toolbarFolderId,
+                           PlacesUtils.unfiledBookmarksFolderId]);
       break;
     case "history":
       if (currentOptions.queryType != Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
@@ -794,7 +704,6 @@ var PlacesSearchBox = {
       break;
     }
 
-    PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
     PlacesSearchBox.showSearchUI();
     this.searchFilter.setAttribute("filtered", "true");
   },
@@ -1028,9 +937,6 @@ var PlacesQueryBuilder = {
     // Titlebar should show "match any/all" iff there are > 1 queries visible.
     var titleDeck = document.getElementById("titleDeck");
     titleDeck.setAttribute("selectedIndex", (this.numRows <= 1) ? 0 : 1);
-
-    const asType = PlacesOrganizer.HEADER_TYPE_ADVANCED_SEARCH;
-    PlacesOrganizer.setHeaderText(asType, "");
 
     // Update the "can add more criteria" command to make sure various +
     // buttons are disabled.
@@ -1374,7 +1280,6 @@ var PlacesQueryBuilder = {
     // XXXben - find some public way of doing this!
     PlacesOrganizer._content.load(this.queries,
                                   OptionsFilter.filter(this.queries, this.options, null));
-    PlacesOrganizer.updateLoadedURI();
   },
 
   onScopeSelected: function PQB_onScopeSelected(aButton) {
@@ -1403,7 +1308,7 @@ var PlacesQueryBuilder = {
         break;
       case "scopeBarMenu":
         PlacesSearchBox.filterCollection = "collection";
-        folders.push(PlacesUtils.bookmarksRootId);
+        folders.push(PlacesUtils.bookmarksMenuFolderId);
         break;
       case "scopeBarHistory":
         PlacesSearchBox.filterCollection = "history";
@@ -1411,8 +1316,9 @@ var PlacesQueryBuilder = {
         break;
       default: // all bookmarks
         PlacesSearchBox.filterCollection = "bookmarks";
-        folders.push(PlacesUtils.bookmarksRootId,
-                     PlacesUtils.unfiledRootId);
+        folders.push(PlacesUtils.bookmarksMenuFolderId,
+                     PlacesUtils.toolbarFolderId,
+                     PlacesUtils.unfiledBookmarksFolderId);
     }
 
     // set scope, and re-search
@@ -1505,7 +1411,7 @@ var ViewMenu = {
     var columns = content.columns;
     for (var i = 0; i < columns.count; ++i) {
       var column = columns.getColumnAt(i).element;
-      var menuitem = document.createElementNS(XUL_NS, "menuitem");
+      var menuitem = document.createElement("menuitem");
       menuitem.id = "menucol_" + column.id;
       menuitem.setAttribute("column", column.id);
       var label = column.getAttribute("label");
@@ -1688,227 +1594,5 @@ var ViewMenu = {
     result.sortingAnnotation = sortingAnnotation;
     result.sortingMode = sortingMode;
     OptionsFilter.update(result);
-  }
-};
-
-/**
- * A "Configuration" set for a class of history query results. Some results
- * will require that the grouping UI be labeled differently from the standard
- * so this object is provided to allow those results to configure the UI when
- * they are displayed.
- * @param   substr
- *          A prefix substring of an annotation that the result's query
- *          matches.
- * @param   onLabel
- *          The label for the "Grouping On" command
- * @param   onAccesskey
- *          The accesskey for the "Grouping On" command
- * @param   offLabel
- *          The label for the "Grouping Off" command
- * @param   offAccesskey
- *          The accesskey for the "Grouping Off" command
- * @param   onOncommand
- *          The "oncommand" attribute of the "Grouping On" command
- * @param   offOncommand
- *          The "oncommand" attribute of the "Grouping Off" command
- * @param   disabled
- *          Whether or not grouping is disabled for results that match this
- *          config.
- */
-function GroupingConfig(substr, onLabel, onAccesskey, offLabel, offAccesskey,
-                        onOncommand, offOncommand, disabled) {
-  this.substr = substr;
-  this.onLabel = onLabel;
-  this.onAccesskey = onAccesskey;
-  this.offLabel = offLabel;
-  this.offAccesskey = offAccesskey;
-  this.onOncommand = onOncommand;
-  this.offOncommand = offOncommand;
-  this.disabled = disabled;
-}
-
-/**
- * Handles Grouping within the Content View, and the commands that support it.
- */
-var Groupers = {
-  defaultGrouper: null,
-  annotationGroupers: [],
-
-  /**
-   * Initializes groupings for various view types.
-   */
-  init: function G_init() {
-    this.defaultGrouper =
-      new GroupingConfig(null, PlacesUtils.getString("defaultGroupOnLabel"),
-                         PlacesUtils.getString("defaultGroupOnAccesskey"),
-                         PlacesUtils.getString("defaultGroupOffLabel"),
-                         PlacesUtils.getString("defaultGroupOffAccesskey"),
-                         "Groupers.groupBySite()",
-                         "Groupers.groupByPage()", false);
-    var subscriptionConfig =
-      new GroupingConfig("livemark/", PlacesUtils.getString("livemarkGroupOnLabel"),
-                         PlacesUtils.getString("livemarkGroupOnAccesskey"),
-                         PlacesUtils.getString("livemarkGroupOffLabel"),
-                         PlacesUtils.getString("livemarkGroupOffAccesskey"),
-                         "Groupers.groupByFeed()",
-                         "Groupers.groupByPost()", false);
-    this.annotationGroupers.push(subscriptionConfig);
-  },
-
-  /**
-   * Get the most appropriate GroupingConfig for the set of queries that are
-   * about to be executed.
-   * @param   queries
-   *          An array of queries that are about to be executed.
-   * @param   handler
-   *          Optionally specify which handler to use to filter the options.
-   *          If null, the default handler for the queries will be used.
-   */
-  _getConfig: function G__getConfig(queries, handler) {
-    if (!handler)
-      handler = OptionsFilter.getHandler(queries);
-
-    // If the queries will generate a bookmarks folder, there is no "grouper
-    // config" since all of the grouping UI should be hidden (there is only one
-    // grouping mode - group by folder).
-    if (handler == OptionsFilter.bookmarksHandler)
-      return null;
-
-    var query = queries[0];
-    for (var i = 0; i < this.annotationGroupers.length; ++i) {
-      var config = this.annotationGroupers[i];
-      if (query.annotation.substr(0, config.substr.length) == config.substr &&
-          !config.disabled)
-        return config;
-    }
-
-    return this.defaultGrouper;
-  },
-
-  /**
-   * Updates the grouping broadcasters for the given result.
-   * @param   queries
-   *          An array of queries that are going to be executed.
-   * @param   options
-   *          The options that are being used to generate the forthcoming
-   *          result.
-   * @param   handler
-   *          Optionally specify which handler to use to filter the options.
-   *          If null, the default handler for the queries will be used.
-   * @param
-   */
-  updateGroupingUI: function G_updateGroupingUI(queries, options, handler) {
-    var separator = document.getElementById("placesBC_grouping:separator");
-    var groupOff = document.getElementById("placesBC_grouping:off");
-    var groupOn = document.getElementById("placesBC_grouping:on");
-    separator.removeAttribute("hidden");
-    groupOff.removeAttribute("hidden");
-    groupOn.removeAttribute("hidden");
-
-    // Walk the list of registered annotationGroupers, determining what are
-    // available and notifying the broadcaster
-    var config = this._getConfig(queries, handler);
-    if (!config) {
-      // Generic Bookmarks Folder or custom container that disables grouping.
-      separator.setAttribute("hidden", "true");
-      groupOff.setAttribute("hidden", "true");
-      groupOn.setAttribute("hidden", "true");
-    }
-    else {
-      groupOn.setAttribute("label", config.onLabel);
-      groupOn.setAttribute("accesskey", config.onAccesskey);
-      groupOn.setAttribute("oncommand", config.onOncommand);
-      groupOff.setAttribute("label", config.offLabel);
-      groupOff.setAttribute("accesskey", config.offAccesskey);
-      groupOff.setAttribute("oncommand", config.offOncommand);
-      // Update the checked state of the UI:
-      // Grouping UI is "enabled" if there is at least one set of grouping
-      // options.
-      var groupingsCountRef = { };
-      options.getGroupingMode(groupingsCountRef);
-      this._updateBroadcasters(groupingsCountRef.value > 0);
-    }
-  },
-
-  /**
-   * Update the visual state of UI that controls grouping.
-   */
-  _updateBroadcasters: function G__updateGroupingBroadcasters(on) {
-    var groupingOn = document.getElementById("placesBC_grouping:on");
-    var groupingOff = document.getElementById("placesBC_grouping:off");
-    if (on) {
-      groupingOn.setAttribute("checked", "true");
-      groupingOff.removeAttribute("checked");
-    }
-    else {
-      groupingOff.setAttribute("checked", "true");
-      groupingOn.removeAttribute("checked");
-    }
-  },
-
-  /**
-   * Shows visited pages grouped by site.
-   */
-  groupBySite: function G_groupBySite() {
-    var query = asQuery(PlacesOrganizer._content.getResult().root);
-    var queries = query.getQueries({ });
-    var options = query.queryOptions;
-    var newOptions = options.clone();
-    const NHQO = Ci.nsINavHistoryQueryOptions;
-    newOptions.setGroupingMode([NHQO.GROUP_BY_DOMAIN], 1);
-    var content = PlacesOrganizer._content;
-    content.load(queries, newOptions);
-    PlacesOrganizer.updateLoadedURI();
-    this._updateBroadcasters(true);
-    OptionsFilter.update(content.getResult());
-  },
-
-  /**
-   * Shows visited pages without grouping.
-   */
-  groupByPage: function G_groupByPage() {
-    var query = asQuery(PlacesOrganizer._content.getResult().root);
-    var queries = query.getQueries({ });
-    var options = query.queryOptions;
-    var newOptions = options.clone();
-    newOptions.setGroupingMode([], 0);
-    var content = PlacesOrganizer._content;
-    content.load(queries, newOptions);
-    PlacesOrganizer.updateLoadedURI();
-    this._updateBroadcasters(false);
-    OptionsFilter.update(content.getResult());
-  },
-
-  /**
-   * Shows all subscribed feeds (Live Bookmarks) grouped under their parent
-   * feed.
-   */
-  groupByFeed: function G_groupByFeed() {
-    var content = PlacesOrganizer._content;
-    var query = asQuery(content.getResult().root);
-    var queries = query.getQueries({ });
-    var newOptions = query.queryOptions.clone();
-    var newQuery = queries[0].clone();
-    newQuery.annotation = "livemark/feedURI";
-    content.load([newQuery], newOptions);
-    PlacesOrganizer.updateLoadedURI();
-    this._updateBroadcasters(false);
-    OptionsFilter.update(content.getResult());
-  },
-
-  /**
-   * Shows all subscribed feed (Live Bookmarks) content in a flat list
-   */
-  groupByPost: function G_groupByPost() {
-    var content = PlacesOrganizer._content;
-    var query = asQuery(content.getResult().root);
-    var queries = query.getQueries({ });
-    var newOptions = query.queryOptions.clone();
-    var newQuery = queries[0].clone();
-    newQuery.annotation = "livemark/bookmarkFeedURI";
-    content.load([newQuery], newOptions);
-    PlacesOrganizer.updateLoadedURI();
-    this._updateBroadcasters(false);
-    OptionsFilter.update(content.getResult());
   }
 };

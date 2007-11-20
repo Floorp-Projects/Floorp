@@ -109,7 +109,7 @@ function run_test() {
   try {
     importer.importHTMLFromFile(bookmarksFileOld, true);
   } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
-  testCanonicalBookmarks(bmsvc.bookmarksRoot); 
+  testCanonicalBookmarks(bmsvc.bookmarksMenuFolder); 
 
   // Test exporting a Places canonical bookmarks file.
   // 1. export to bookmarks.exported.html
@@ -119,18 +119,18 @@ function run_test() {
   try {
     importer.exportHTMLToFile(bookmarksFileNew);
   } catch(ex) { do_throw("couldn't export to file: " + ex); }
-  bmsvc.removeFolderChildren(bmsvc.bookmarksRoot);
+  bmsvc.removeFolderChildren(bmsvc.bookmarksMenuFolder);
   try {
     importer.importHTMLFromFile(bookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
-  testCanonicalBookmarks(bmsvc.bookmarksRoot); 
+  testCanonicalBookmarks(bmsvc.bookmarksMenuFolder); 
   /*
   // XXX import-to-folder tests disabled due to bug 363634
   // Test importing a pre-Places canonical bookmarks file to a specific folder.
   // 1. create a new folder
   // 2. import bookmarks.preplaces.html to that folder
   // 3. run the test-suite
-  var testFolder = bmsvc.createFolder(bmsvc.bookmarksRoot, "test-import", bmsvc.DEFAULT_INDEX);
+  var testFolder = bmsvc.createFolder(bmsvc.bookmarksMenuFolder, "test-import", bmsvc.DEFAULT_INDEX);
   try {
     importer.importHTMLFromFileToFolder(bookmarksFileOld, testFolder, false);
   } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
@@ -141,7 +141,7 @@ function run_test() {
   // 1. create a new folder
   // 2. import bookmarks.exported.html to that folder
   // 3. run the test-suite
-  var testFolder = bmsvc.createFolder(bmsvc.bookmarksRoot, "test-import", bmsvc.DEFAULT_INDEX);
+  var testFolder = bmsvc.createFolder(bmsvc.bookmarksMenuFolder, "test-import", bmsvc.DEFAULT_INDEX);
   try {
     importer.importHTMLFromFileToFolder(bookmarksFileNew, testFolder, false);
   } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
@@ -157,7 +157,7 @@ function run_test() {
   // 3. export to file
   // 3. import the exported bookmarks file
   // 4. run the test-suite
-  bmsvc.removeFolderChildren(bmsvc.bookmarksRoot);
+  bmsvc.removeFolderChildren(bmsvc.bookmarksMenuFolder);
   try {
     importer.importHTMLFromFile(bookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
@@ -167,7 +167,7 @@ function run_test() {
   try {
     importer.importHTMLFromFile(bookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
-  testCanonicalBookmarks(bmsvc.bookmarksRoot);
+  testCanonicalBookmarks(bmsvc.bookmarksMenuFolder);
   */
   /*
   XXX if there are new fields we add to the bookmarks HTML format
@@ -189,31 +189,13 @@ function testCanonicalBookmarks(aFolder) {
   var result = histsvc.executeQuery(query, histsvc.getNewQueryOptions());
   var rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, 6);
 
-  // bookmarks toolbar
-  var toolbar = rootNode.getChild(2);
-  toolbar.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-  toolbar.containerOpen = true;
-  do_check_eq(toolbar.childCount, 2);
-  
-  // livemark
-  var livemark = toolbar.getChild(1);
-  // title
-  do_check_eq("Latest Headlines", livemark.title);
-  // livemark check
-  do_check_true(livemarksvc.isLivemark(livemark.itemId));
-  // site url
-  do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
-              livemarksvc.getSiteURI(livemark.itemId).spec);
-  // feed url
-  do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
-              livemarksvc.getFeedURI(livemark.itemId).spec);
-
-  toolbar.containerOpen = false;
+  // 6-2: the toolbar contents are imported to the places-toolbar folder,
+  // the separator above it is removed.
+  do_check_eq(rootNode.childCount, 4);
 
   // get test folder
-  var testFolder = rootNode.getChild(5);
+  var testFolder = rootNode.getChild(3);
   do_check_eq(testFolder.type, testFolder.RESULT_TYPE_FOLDER);
   do_check_eq(testFolder.title, "test");
 
@@ -289,4 +271,26 @@ function testCanonicalBookmarks(aFolder) {
   // clean up
   testFolder.containerOpen = false;
   rootNode.containerOpen = false;
+
+  query.setFolders([bmsvc.toolbarFolder], 1);
+  result = histsvc.executeQuery(query, histsvc.getNewQueryOptions());
+  // bookmarks toolbar
+  var toolbar = result.root;
+  toolbar.containerOpen = true;
+  do_check_eq(toolbar.childCount, 2);
+  
+  // livemark
+  var livemark = toolbar.getChild(1);
+  // title
+  do_check_eq("Latest Headlines", livemark.title);
+  // livemark check
+  do_check_true(livemarksvc.isLivemark(livemark.itemId));
+  // site url
+  do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
+              livemarksvc.getSiteURI(livemark.itemId).spec);
+  // feed url
+  do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
+              livemarksvc.getFeedURI(livemark.itemId).spec);
+
+  toolbar.containerOpen = false;
 }

@@ -309,13 +309,9 @@ LivemarkService.prototype = {
     var livemarkID = bms.createFolder(folder, name, index);
     this._bms.setFolderReadonly(livemarkID, true);
 
-    // Add an annotation to map the folder URI to the livemark feed URI
+    // Add an annotation to map the folder id to the livemark feed URI
     this._ans.setItemAnnotation(livemarkID, LMANNO_FEEDURI, feedURI.spec, 0,
                                 this._ans.EXPIRE_NEVER);
-    // Set the favicon
-    var faviconService = Cc[FAV_CONTRACTID].getService(Ci.nsIFaviconService);
-    var livemarkURI = bms.getFolderURI(livemarkID);
-    faviconService.setFaviconUrlForPage(livemarkURI, this._iconURI);
 
     if (siteURI) {
       // Add an annotation to map the folder URI to the livemark site URI
