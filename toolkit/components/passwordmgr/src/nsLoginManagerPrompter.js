@@ -91,7 +91,7 @@ LoginManagerPrompter.prototype = {
                         [Ci.nsIAuthPrompt2, Ci.nsILoginManagerPrompter]),
 
     _window        : null,
-    _debug         : false,
+    _debug         : false, // mirrors signon.debug
 
     __pwmgr : null, // Password Manager service
     get _pwmgr() {
@@ -192,9 +192,6 @@ LoginManagerPrompter.prototype = {
             // If the user submits a login but it fails, we need to remove the
             // notification bar that was displayed. Conveniently, the user will
             // be prompted for authentication again, which brings us here.
-            // XXX this isn't right if there are multiple logins on a page (eg,
-            // 2 images from different http realms). That seems like an edge
-            // case that we're probably not handling right anyway.
             var notifyBox = this._getNotifyBox();
             if (notifyBox)
                 this._removeSaveLoginNotification(notifyBox);
@@ -207,8 +204,7 @@ LoginManagerPrompter.prototype = {
             var foundLogins = this._pwmgr.findLogins({},
                                         hostname, null, httpRealm);
 
-            // XXX Like the original code, we can't deal with multiple
-            // account selection. (bug 227632)
+            // XXX Can't select from multiple accounts yet. (bug 227632)
             if (foundLogins.length > 0) {
                 selectedLogin = foundLogins[0];
                 this._SetAuthInfo(aAuthInfo, selectedLogin.username,
@@ -299,6 +295,10 @@ LoginManagerPrompter.prototype = {
      */
     init : function (aWindow) {
         this._window = aWindow;
+
+        var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                         getService(Ci.nsIPrefService).getBranch("signon.");
+        this._debug = prefBranch.getBoolPref("debug");
         this.log("===== initialized =====");
     },
 
