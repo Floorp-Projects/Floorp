@@ -960,7 +960,7 @@ Bookmark.prototype = {
 function BookmarkFolder(aId, aParent) {
   this._id = aId;
   if (this._id == null)
-    this._id = Utilities.bookmarks.bookmarksRoot;
+    this._id = Utilities.bookmarks.bookmarksMenuFolder;
 
   this._parent = aParent;
 
