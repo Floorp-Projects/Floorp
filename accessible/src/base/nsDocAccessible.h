@@ -204,14 +204,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRUint32 aEventType,
                                 PRBool aDelay, PRBool aForceIsFromUserInput);
 
-    /**
-     * For a new accessible that is created because of a DOM mutation,
-     * make sure that any children it has, which were already children
-     * of the parent should be assigned to it
-     * @param aAccessible The new accessible
-     */
-    void AdoptChildren(nsIAccessible *aAccessible);
-
     nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
