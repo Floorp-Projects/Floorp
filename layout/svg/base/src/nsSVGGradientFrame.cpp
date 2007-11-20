@@ -148,8 +148,8 @@ nsSVGGradientFrame::RemoveFrame(nsIAtom*        aListName,
                                 nsIFrame*       aOldFrame)
 {
   WillModify();
-  PRBool result = mFrames.DestroyFrame(aOldFrame);
   DidModify();
+  PRBool result = mFrames.DestroyFrame(aOldFrame);
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
