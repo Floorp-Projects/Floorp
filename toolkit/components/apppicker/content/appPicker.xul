@@ -52,9 +52,9 @@
     <vbox>
       <hbox id="file-info" align="left">
         <image id="content-icon" src="" />
-        <vbox>
-          <label id="content-description" value=""/>
-          <label id="suggested-filename" value=""/>
+        <vbox flex="1">
+          <label id="content-description" crop="center" value=""/>
+          <label id="suggested-filename" crop="center" value=""/>
         </vbox>
       </hbox>
       <spacer height="10px"/>
@@ -70,5 +70,4 @@
         <button id="browse-button" onclick="g_dialog.appPickerBrowse();" label="&BrowseButton.label;" align="center"/>
       </hbox>
     </vbox>
-    <separator id="groove" class="groove"/>
   </dialog>
