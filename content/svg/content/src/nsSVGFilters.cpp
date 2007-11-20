@@ -2977,10 +2977,10 @@ protected:
   nsSVGInteger mIntegerAttributes[1];
   static IntegerInfo sIntegerInfo[1];
 
-  enum { STITCHTILES, TYPE };
+  enum { TYPE, STITCHTILES };
   nsSVGEnum mEnumAttributes[2];
-  static nsSVGEnumMapping sStitchTilesMap[];
   static nsSVGEnumMapping sTypeMap[];
+  static nsSVGEnumMapping sStitchTilesMap[];
   static EnumInfo sEnumInfo[2];
 
 private:
