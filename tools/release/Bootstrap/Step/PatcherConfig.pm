@@ -287,9 +287,7 @@ sub BumpPatcherConfig {
         }
     }
 
-    if (! $patcherConfigObj->save_file($checkedOutPatcherConfig)) {
-        die("save_file() failed\n");
-    }
+    $patcherConfigObj->save_file($checkedOutPatcherConfig);
 }
 
 sub Verify {
