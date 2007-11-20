@@ -42,7 +42,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
-
 nsBaseClipboard::nsBaseClipboard()
 {
   mClipboardOwner          = nsnull;
@@ -133,7 +132,8 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 }
 
 NS_IMETHODIMP
-nsBaseClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
+nsBaseClipboard::HasDataMatchingFlavors(const char** aFlavorList,
+                                        PRUint32 aLength,
                                         PRInt32 aWhichClipboard,
                                         PRBool* outResult) 
 {
