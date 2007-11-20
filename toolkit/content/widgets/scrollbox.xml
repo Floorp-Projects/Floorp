@@ -162,7 +162,7 @@
             round = Math.ceil;
           }
 
-          function processFrame(self) {
+          function processFrame(self, scrollAmounts) {
             self.scrollBoxObject.scrollBy(scrollAmounts.shift(), 0);
             if (!scrollAmounts.length)
               self._stopSmoothScroll();
@@ -181,8 +181,8 @@
             amountToScroll -= (scrollAmount = round(amountToScroll * 0.5));
             scrollAmounts.push(scrollAmount);
           }
-          this._smoothScrollTimer = setInterval(processFrame, 60, this);
-          processFrame(this);
+          this._smoothScrollTimer = setInterval(processFrame, 60, this, scrollAmounts);
+          processFrame(this, scrollAmounts);
         ]]></body>
       </method>
 
