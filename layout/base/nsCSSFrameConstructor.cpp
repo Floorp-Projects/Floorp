@@ -1187,7 +1187,6 @@ public:
    * initialized.
    * @param aNewFrame the frame to add
    * @param aFrameItems the list to add in-flow frames to
-   * @param aStyleDisplay the display struct for aNewFrame
    * @param aContent the content pointer for aNewFrame
    * @param aStyleContext the style context resolved for aContent
    * @param aParentFrame the parent frame for the content if it were in-flow
@@ -1205,7 +1204,6 @@ public:
    */
   nsresult AddChild(nsIFrame* aNewFrame,
                     nsFrameItems& aFrameItems,
-                    const nsStyleDisplay* aStyleDisplay,
                     nsIContent* aContent,
                     nsStyleContext* aStyleContext,
                     nsIFrame* aParentFrame,
@@ -1384,7 +1382,6 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
 nsresult
 nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                   nsFrameItems& aFrameItems,
-                                  const nsStyleDisplay* aStyleDisplay,
                                   nsIContent* aContent,
                                   nsStyleContext* aStyleContext,
                                   nsIFrame* aParentFrame,
@@ -1394,8 +1391,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                   PRBool aInsertAfter,
                                   nsIFrame* aInsertAfterFrame)
 {
-  NS_PRECONDITION(aStyleDisplay == aNewFrame->GetStyleDisplay(),
-                  "Wrong display struct?");
+  const nsStyleDisplay* disp = aNewFrame->GetStyleDisplay();
   
   // The comments in GetGeometricParent regarding root table frames
   // all apply here, unfortunately.
@@ -1412,7 +1408,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
   }
   else
 #endif // MOZ_XUL
-  if (aCanBeFloated && aStyleDisplay->IsFloating() &&
+  if (aCanBeFloated && disp->IsFloating() &&
       mFloatedItems.containingBlock) {
     NS_ASSERTION(aNewFrame->GetParent() == mFloatedItems.containingBlock,
                  "Float whose parent is not the float containing block?");
@@ -1420,14 +1416,14 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     frameItems = &mFloatedItems;
   }
   else if (aCanBePositioned) {
-    if (aStyleDisplay->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
+    if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
         mAbsoluteItems.containingBlock) {
       NS_ASSERTION(aNewFrame->GetParent() == mAbsoluteItems.containingBlock,
                    "Abs pos whose parent is not the abs pos containing block?");
       needPlaceholder = PR_TRUE;
       frameItems = &mAbsoluteItems;
     }
-    if (aStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED &&
+    if (disp->mPosition == NS_STYLE_POSITION_FIXED &&
         mFixedItems.containingBlock) {
       NS_ASSERTION(aNewFrame->GetParent() == mFixedItems.containingBlock,
                    "Fixed pos whose parent is not the fixed pos containing block?");
@@ -3632,13 +3628,14 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     }
   }
 
-  const nsStyleDisplay* disp = outerStyleContext->GetStyleDisplay();
   // We need the aAllowOutOfFlow thing for MathML.  See bug 355993.
   // Once bug 348577 is fixed, we should remove this code.  At that
   // point, the aAllowOutOfFlow arg can go away.
   nsIFrame* geometricParent =
-    aAllowOutOfFlow ? aState.GetGeometricParent(disp, parentFrame) :
-                      parentFrame;
+    aAllowOutOfFlow ?
+      aState.GetGeometricParent(outerStyleContext->GetStyleDisplay(),
+                                parentFrame) :
+      parentFrame;
 
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned  
@@ -3661,7 +3658,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     // Put the newly created frames into the right child list
     aNewOuterFrame->SetInitialChildList(nsnull, aNewInnerFrame);
 
-    rv = aState.AddChild(aNewOuterFrame, *frameItems, disp, aContent,
+    rv = aState.AddChild(aNewOuterFrame, *frameItems, aContent,
                          aStyleContext, parentFrame, aAllowOutOfFlow,
                          aAllowOutOfFlow);
     if (NS_FAILED(rv)) {
@@ -4879,8 +4876,8 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
     return rv;
   }
 
-  rv = aState.AddChild(buttonFrame, aFrameItems, aStyleDisplay, aContent,
-                                aStyleContext, aParentFrame);
+  rv = aState.AddChild(buttonFrame, aFrameItems, aContent, aStyleContext,
+                       aParentFrame);
   if (NS_FAILED(rv)) {
     areaFrame->Destroy();
     buttonFrame->Destroy();
@@ -4976,8 +4973,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
       nsHTMLContainerFrame::CreateViewForFrame(comboboxFrame, aParentFrame, PR_FALSE);
 
-      rv = aState.AddChild(comboboxFrame, aFrameItems, aStyleDisplay,
-                           aContent, aStyleContext, aParentFrame);
+      rv = aState.AddChild(comboboxFrame, aFrameItems, aContent, aStyleContext,
+                           aParentFrame);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -5109,8 +5106,8 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   scrollFrame->Init(aContent, geometricParent, nsnull);
 
   if (!aBuildCombobox) {
-    nsresult rv = aState.AddChild(scrollFrame, aFrameItems, display,
-                                  aContent, aStyleContext, aParentFrame);
+    nsresult rv = aState.AddChild(scrollFrame, aFrameItems, aContent,
+                                  aStyleContext, aParentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -5210,8 +5207,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                      NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
   InitAndRestoreFrame(aState, aContent, newFrame, nsnull, areaFrame);
 
-  nsresult rv = aState.AddChild(newFrame, aFrameItems, aStyleDisplay, aContent,
-                                aStyleContext, aParentFrame);
+  nsresult rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
+                                aParentFrame);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -5593,8 +5590,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     // positioned
     nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
 
-    rv = aState.AddChild(newFrame, aFrameItems, display, aContent,
-                         aStyleContext, aParentFrame);
+    rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
+                         aParentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -5636,8 +5633,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     // Gotta do it here.  Note that things like absolutely positioned replaced
     // elements and the like will end up in this code.   So use the AddChild
     // on the state.
-    rv = aState.AddChild(newFrame, aFrameItems, display, aContent,
-                         aStyleContext, aParentFrame);
+    rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
+                         aParentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -6189,9 +6186,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
     // Add the new frame to our list of frame items.  Note that we
     // don't support floating or positioning of XUL frames.
-    rv = aState.AddChild(topFrame, aFrameItems, display, aContent,
-                         aStyleContext, origParentFrame, PR_FALSE, PR_FALSE,
-                         isPopup);
+    rv = aState.AddChild(topFrame, aFrameItems, aContent, aStyleContext,
+                         origParentFrame, PR_FALSE, PR_FALSE, isPopup);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -6508,8 +6504,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
                  "Scrollframe's frameItems should be exactly the scrolled frame");
     FinishBuildingScrollFrame(newFrame, scrolledFrame);
 
-    rv = aState.AddChild(newFrame, aFrameItems, aDisplay, aContent,
-                         aStyleContext, aParentFrame);
+    rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
+                         aParentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -6739,8 +6735,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
                  "Things that could be out-of-flow need to handle adding "
                  "to the frame list themselves");
     
-    rv = aState.AddChild(newFrame, aFrameItems, aDisplay, aContent,
-                         aStyleContext, aParentFrame);
+    rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
+                         aParentFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "Cases where AddChild() can fail must handle it themselves");
   }
@@ -7061,7 +7057,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     // See if we need to create a view, e.g. the frame is absolutely positioned
     nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
 
-    rv = aState.AddChild(newFrame, aFrameItems, disp, aContent, aStyleContext,
+    rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
                          aParentFrame, isMath, isMath);
     if (NS_FAILED(rv)) {
       return rv;
@@ -7508,7 +7504,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     InitAndRestoreFrame(aState, aContent, geometricParent, nsnull, newFrame);
     nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, forceView);
 
-    rv = aState.AddChild(newFrame, aFrameItems, disp, aContent, aStyleContext,
+    rv = aState.AddChild(newFrame, aFrameItems, aContent, aStyleContext,
                          aParentFrame, isOuterSVGNode, isOuterSVGNode);
     if (NS_FAILED(rv)) {
       return rv;
@@ -11964,9 +11960,9 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     insertAfter = f;
   }
 
-  rv = aState.AddChild(letterFrame, aResult, letterFrame->GetStyleDisplay(),
-                       letterContent, aStyleContext, aParentFrame, PR_FALSE,
-                       PR_TRUE, PR_FALSE, PR_TRUE, insertAfter);
+  rv = aState.AddChild(letterFrame, aResult, letterContent, aStyleContext,
+                       aParentFrame, PR_FALSE, PR_TRUE, PR_FALSE, PR_TRUE,
+                       insertAfter);
 
   if (nextTextFrame) {
     if (NS_FAILED(rv)) {
@@ -12520,8 +12516,8 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   blockFrame->SetStyleContextWithoutNotification(blockStyle);
   InitAndRestoreFrame(aState, aContent, parent, nsnull, blockFrame);
 
-  nsresult rv = aState.AddChild(*aNewFrame, aFrameItems, aDisplay,
-                                aContent, aStyleContext,
+  nsresult rv = aState.AddChild(*aNewFrame, aFrameItems, aContent,
+                                aStyleContext,
                                 aContentParentFrame ? aContentParentFrame :
                                                       aParentFrame);
   if (NS_FAILED(rv)) {
