@@ -5807,10 +5807,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 
       // 3. Give event to event manager for post event state changes and
       //    generation of synthetic events.
-      if (NS_SUCCEEDED (rv) &&
-          (GetCurrentEventFrame() || !NS_EVENT_NEEDS_FRAME(aEvent))) {
-        rv = manager->PostHandleEvent(mPresContext, aEvent, mCurrentEventFrame,
-                                      aStatus, aView);
+      if (NS_SUCCEEDED(rv)) {
+        rv = manager->PostHandleEvent(mPresContext, aEvent,
+                                      GetCurrentEventFrame(), aStatus, aView);
       }
     }
   }
