@@ -323,6 +323,12 @@ public:
   // It is an error to call this method if aURI might already be in history.
   // The given aVisitCount should include the given last-visit date.
   // aLastVisitDate can be -1 if there is no last visit date to record.
+  //
+  // NOTE: This will *replace* existing records for a given URI, creating a
+  // new place id, and breaking all existing relationships with for that
+  // id, eg: bookmarks, annotations, tags, etc. This is only for use by
+  // the import of history.dat on first-run of Places, which currently occurs
+  // if no places.sqlite file previously exists.
   nsresult AddPageWithVisit(nsIURI *aURI,
                             const nsString &aTitle,
                             PRBool aHidden, PRBool aTyped,
@@ -606,10 +612,6 @@ protected:
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
                            nsCOMArray<nsNavHistoryQuery>* aQueries,
                            nsNavHistoryQueryOptions* aOptions);
-
-  // creates supplemental indexes that we'd like to not bother with
-  // updating during import.
-  nsresult CreateLookupIndexes();
 
   nsCOMPtr<nsITimer> mIdleTimer;
   static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
