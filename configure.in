@@ -6986,10 +6986,10 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
    MOZ_TREE_CAIRO=,
    MOZ_TREE_CAIRO=1 )
 
-   if test "$MOZ_TREE_CAIRO"; then
-       # Check for headers defining standard int types.
-       AC_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+   # Check for headers defining standard int types.
+   AC_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
 
+   if test "$MOZ_TREE_CAIRO"; then
        # For now we assume that we will have a uint64_t available through
        # one of the above headers or mozstdint.h.
        AC_DEFINE(HAVE_UINT64_T)
