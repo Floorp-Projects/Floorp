@@ -128,17 +128,6 @@ function pageShowEventHandlers(event)
     
     XULBrowserWindow.asyncUpdateUI();
   }
-
-  // some event handlers want to be told what the original browser/listener is
-  var targetBrowser = null;
-  if (gBrowser.mTabbedMode) {
-    var targetBrowserIndex = gBrowser.getBrowserIndexForDocument(event.originalTarget);
-    if (targetBrowserIndex == -1)
-      return;
-    targetBrowser = gBrowser.getBrowserAtIndex(targetBrowserIndex);
-  } else {
-    targetBrowser = gBrowser.mCurrentBrowser;
-  }
 }
 
 /**
@@ -998,8 +987,6 @@ function prepareForStartup()
 
   // setup our common DOMLinkAdded listener
   gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
-
-  gBrowser.addEventListener("pagehide", FeedHandler.onPageHide, false);
 }
 
 function delayedStartup()
@@ -5295,12 +5282,6 @@ function convertFromUnicode(charset, str)
  * and shows UI when they are discovered. 
  */
 var FeedHandler = {
-  onPageHide: function(event) {
-    var theBrowser = gBrowser.getBrowserForDocument(event.target);
-    if (theBrowser)
-      theBrowser.feeds = null;
-  },
-  
   /**
    * The click handler for the Feed icon in the location bar. Opens the
    * subscription page if user is not given a choice of feeds.

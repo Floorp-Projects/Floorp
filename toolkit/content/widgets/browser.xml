@@ -455,6 +455,8 @@
               this.pageReport = null;
               this.updatePageReport();
             }
+	    if (this.feeds)
+	      this.feeds = null;
             if (!this.docShell || !this.fastFind)
               return;
             var tabBrowser = this.getTabBrowser();
