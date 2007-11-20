@@ -45,6 +45,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDocument.h"
 #include "nsIBoxObject.h"
+#include "nsTreeBoxObject.h"
 #include "nsIDOMElement.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
@@ -99,7 +100,7 @@ nsTreeColFrame::Init(nsIContent*      aContent,
 void                                                                
 nsTreeColFrame::Destroy()                          
 {
-  InvalidateColumns();
+  InvalidateColumns(PR_FALSE);
   nsBoxFrame::Destroy();
 }
 
@@ -220,12 +221,21 @@ nsTreeColFrame::GetTreeBoxObject()
 }
 
 void
-nsTreeColFrame::InvalidateColumns()
+nsTreeColFrame::InvalidateColumns(PRBool aCanWalkFrameTree)
 {
   nsITreeBoxObject* treeBoxObject = GetTreeBoxObject();
   if (treeBoxObject) {
     nsCOMPtr<nsITreeColumns> columns;
-    treeBoxObject->GetColumns(getter_AddRefs(columns));
+
+    if (aCanWalkFrameTree) {
+      treeBoxObject->GetColumns(getter_AddRefs(columns));
+    } else {
+      nsITreeBoxObject* body =
+        static_cast<nsTreeBoxObject*>(treeBoxObject)->GetCachedTreeBody();
+      if (body) {
+        body->GetColumns(getter_AddRefs(columns));
+      }
+    }
 
     if (columns)
       columns->InvalidateColumns();
