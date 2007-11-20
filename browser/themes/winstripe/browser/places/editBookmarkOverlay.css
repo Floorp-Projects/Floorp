@@ -59,7 +59,7 @@
 }
 
 .expander-up {
-	list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
 .expander-down {
@@ -67,11 +67,11 @@
 }
 
 .expander-down:hover:active {
-	list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
 }
 
 .expander-up:hover:active {
-	list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
 }
 
 /**** name picker ****/
