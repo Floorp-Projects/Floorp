@@ -79,9 +79,6 @@ public:
 
   virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                          nsAString& aResult) const;
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
@@ -97,6 +94,10 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
+
+  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
 
   void SetParentCoordCtxProvider(nsSVGSVGElement *aContext);
 
