@@ -1803,7 +1803,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     documentIsTopLevel = PR_FALSE;
     // presshell exists because parent is printable
   } else {
-    PRInt32 pageWidth, pageHeight;
+    nscoord pageWidth, pageHeight;
     mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
     adjSize = nsSize(pageWidth, pageHeight);
     documentIsTopLevel = PR_TRUE;
@@ -1921,11 +1921,11 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   aPO->mPresContext->SetIsRootPaginatedDocument(documentIsTopLevel);
   aPO->mPresContext->SetPageScale(aPO->mZoomRatio);
   // Calculate scale factor from printer to screen
-  PRInt32 printDPI = mPrt->mPrintDC->AppUnitsPerInch() /
-                     mPrt->mPrintDC->AppUnitsPerDevPixel();
-  PRInt32 screenDPI = mDeviceContext->AppUnitsPerInch() /
-                      mDeviceContext->AppUnitsPerDevPixel();
-  aPO->mPresContext->SetPrintPreviewScale(float(screenDPI) / float(printDPI));
+  float printDPI = float(mPrt->mPrintDC->AppUnitsPerInch()) /
+                   float(mPrt->mPrintDC->AppUnitsPerDevPixel());
+  float screenDPI = float(mDeviceContext->AppUnitsPerInch()) /
+                    float(mDeviceContext->AppUnitsPerDevPixel());
+  aPO->mPresContext->SetPrintPreviewScale(screenDPI / printDPI);
 
   rv = aPO->mPresShell->InitialReflow(adjSize.width, adjSize.height);
 
@@ -2160,24 +2160,27 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
           if (NS_SUCCEEDED(rv)) {
             mPrt->mPrintSettings->SetStartPageRange(startPageNum);
             mPrt->mPrintSettings->SetEndPageRange(endPageNum);
-            nsMargin margin(0,0,0,0);
-            mPrt->mPrintSettings->GetMarginInTwips(margin);
+            nsMargin marginTwips(0,0,0,0);
+            mPrt->mPrintSettings->GetMarginInTwips(marginTwips);
+            nsMargin margin(poPresContext->TwipsToAppUnits(marginTwips.left),
+                            poPresContext->TwipsToAppUnits(marginTwips.top),
+                            poPresContext->TwipsToAppUnits(marginTwips.right),
+                            poPresContext->TwipsToAppUnits(marginTwips.bottom));
 
             if (startPageNum == endPageNum) {
               {
-                nsPresContext* presContext = poPresShell->GetPresContext();
-                startRect.y -= presContext->TwipsToAppUnits(margin.top);
-                endRect.y   -= presContext->TwipsToAppUnits(margin.top);
+                startRect.y -= margin.top;
+                endRect.y   -= margin.top;
                 // XXX This is temporary fix for printing more than one page of a selection
                 pageSequence->SetSelectionHeight(startRect.y, endRect.y+endRect.height-startRect.y);
 
                 // calc total pages by getting calculating the selection's height
                 // and then dividing it by how page content frames will fit.
                 nscoord selectionHgt = endRect.y + endRect.height - startRect.y;
-                PRInt32 pageWidth, pageHeight;
+                nscoord pageWidth, pageHeight;
                 mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
                 pageHeight -= margin.top + margin.bottom;
-                PRInt32 totalPages = PRInt32((float(selectionHgt) / float(pageHeight))+0.99);
+                PRInt32 totalPages = NSToIntCeil(float(selectionHgt) / float(pageHeight));
                 pageSequence->SetTotalNumPages(totalPages);
               }
             }
