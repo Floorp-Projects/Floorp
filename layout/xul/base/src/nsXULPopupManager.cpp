@@ -1686,11 +1686,15 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
 nsresult
 nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  nsMenuChainItem* item = GetTopVisibleMenu();
-  if (item && item->PopupType() == ePopupTypeMenu) {
-    aKeyEvent->StopPropagation();
-    aKeyEvent->PreventDefault();
+  // don't do anything if a menu isn't open or a menubar isn't active
+  if (!mActiveMenuBar) {
+    nsMenuChainItem* item = GetTopVisibleMenu();
+    if (!item || item->PopupType() != ePopupTypeMenu)
+      return NS_OK;
   }
+
+  aKeyEvent->StopPropagation();
+  aKeyEvent->PreventDefault();
 
   return NS_OK; // I am consuming event
 }
@@ -1698,10 +1702,12 @@ nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  // don't do anything if a menu isn't open
-  nsMenuChainItem* item = GetTopVisibleMenu();
-  if (!item || item->PopupType() != ePopupTypeMenu)
-    return NS_OK;
+  // don't do anything if a menu isn't open or a menubar isn't active
+  if (!mActiveMenuBar) {
+    nsMenuChainItem* item = GetTopVisibleMenu();
+    if (!item || item->PopupType() != ePopupTypeMenu)
+      return NS_OK;
+  }
 
   PRInt32 menuAccessKey = -1;
 
@@ -1730,7 +1736,10 @@ nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
       if (!(ctrl || alt || shift || meta)) {
         // The access key just went down and no other
         // modifiers are already down.
-        Rollup();
+        if (mCurrentMenu)
+          Rollup();
+        else if (mActiveMenuBar)
+          mActiveMenuBar->MenuClosed();
       }
     }
   }
@@ -1775,6 +1784,9 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
+  // if a menu is open or a menubar is active, it consumes the key event
+  PRBool consume = (mCurrentMenu || mActiveMenuBar);
+
   if (theChar == NS_VK_LEFT ||
       theChar == NS_VK_RIGHT ||
       theChar == NS_VK_UP ||
@@ -1793,8 +1805,13 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     else if (mActiveMenuBar)
       mActiveMenuBar->MenuClosed();
   }
-  else if (theChar == NS_VK_TAB) {
-    if (mCurrentMenu)
+  else if (theChar == NS_VK_TAB
+#ifndef XP_MACOSX
+           || theChar == NS_VK_F10
+#endif
+  ) {
+    // close popups or deactivate menubar when Tab or F10 are pressed
+    if (item)
       Rollup();
     else if (mActiveMenuBar)
       mActiveMenuBar->MenuClosed();
@@ -1815,19 +1832,11 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
       ShowMenu(content, PR_TRUE, PR_FALSE);
     }
   }
-#ifndef XP_MACOSX
-  else if (theChar == NS_VK_F10) {
-    // doesn't matter what modifier keys are down in Non-Mac platform
-    // if the menu bar is active and F10 is pressed - deactivate it
-    Rollup();
-  }
-#endif // !XP_MACOSX
   else {
     HandleShortcutNavigation(keyEvent, nsnull);
   }
 
-  if (mCurrentMenu) {
-    // if a menu is open, it consumes the key event
+  if (consume) {
     aKeyEvent->StopPropagation();
     aKeyEvent->PreventDefault();
   }
