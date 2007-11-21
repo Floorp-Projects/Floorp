@@ -269,7 +269,7 @@ public:
   PRInt16 GetSelectionStatus(PRInt16* aSelectionFlags);
 
 #ifdef DEBUG
-  void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
+  void ToCString(nsCString& aBuf, PRInt32* aTotalContentLength) const;
 #endif
 
   PRInt32 GetContentOffset() const { return mContentOffset; }
