@@ -862,8 +862,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         mPresContext->GetPrintSettings()->GetEffectivePageSize(&pageWidth,
                                                                &pageHeight);
         mPresContext->SetPageSize(
-          nsSize(mPresContext->TwipsToAppUnits(pageWidth),
-                 mPresContext->TwipsToAppUnits(pageHeight)));
+          nsSize(mPresContext->TwipsToAppUnits(NSToIntFloor(pageWidth)),
+                 mPresContext->TwipsToAppUnits(NSToIntFloor(pageHeight))));
         mPresContext->SetIsRootPaginatedDocument(PR_TRUE);
         mPresContext->SetPageScale(1.0f);
       }
@@ -3131,7 +3131,7 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
    docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
    NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
-   /* presContext's size was calculated in twips and has already been
+   /* presContext's size was calculated in app units and has already been
       rounded to the equivalent pixels (so the width/height calculation
       we just performed was probably exact, though it was based on
       values already rounded during ResizeReflow). In a surprising
@@ -3668,11 +3668,12 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   }
 
   if (fndPageFrame && scrollableView) {
-    nscoord deadSpaceGap = 0;
+    nscoord deadSpaceGapTwips = 0;
     nsIPageSequenceFrame * sqf;
     if (NS_SUCCEEDED(CallQueryInterface(seqFrame, &sqf))) {
-      sqf->GetDeadSpaceValue(&deadSpaceGap);
+      sqf->GetDeadSpaceValue(&deadSpaceGapTwips);
     }
+    nscoord deadSpaceGap = mPresContext->TwipsToAppUnits(deadSpaceGapTwips);
 
     // scroll so that top of page (plus the gray area) is at the top of the scroll area
     scrollableView->ScrollTo(0, fndPageFrame->GetPosition().y-deadSpaceGap, PR_TRUE);
