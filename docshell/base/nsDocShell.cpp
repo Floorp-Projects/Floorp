@@ -987,11 +987,17 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
 
         mContentViewer->PageHide(aIsUnload);
 
+        nsAutoTArray<nsCOMPtr<nsIDocShell>, 8> kids;
         PRInt32 i, n = mChildList.Count();
+        kids.SetCapacity(n);
         for (i = 0; i < n; i++) {
-            nsCOMPtr<nsIDocShell> shell(do_QueryInterface(ChildAt(i)));
-            if (shell) {
-                shell->FirePageHideNotification(aIsUnload);
+            kids.AppendElement(do_QueryInterface(ChildAt(i)));
+        }
+
+        n = kids.Length();
+        for (i = 0; i < n; ++i) {
+            if (kids[i]) {
+                kids[i]->FirePageHideNotification(aIsUnload);
             }
         }
     }
