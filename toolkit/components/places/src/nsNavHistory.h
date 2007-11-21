@@ -447,6 +447,7 @@ protected:
     // setting other elements manually depending on type.
     nsresult Init(MessageType aType, nsIURI* aURI)
     {
+      NS_ENSURE_ARG_POINTER(aURI);
       type = aType;
       nsresult rv = aURI->Clone(getter_AddRefs(uri));
       NS_ENSURE_SUCCESS(rv, rv);
