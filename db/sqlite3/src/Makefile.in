@@ -72,7 +72,7 @@ CSRCS = \
 	sqlite3.c \
 	$(NULL)
 
-# REFEF_IO allows us to override IO functions, which is used in the AsyncIO
+# REDEF_IO allows us to override IO functions, which is used in the AsyncIO
 # -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
 # don't have to vacuum to make sure the data is not visible in the file.
 DEFINES = -DSQLITE_ENABLE_REDEF_IO -DSQLITE_SECURE_DELETE=1 -DTHREADSAFE=1
