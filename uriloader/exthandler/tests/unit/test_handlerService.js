@@ -42,7 +42,7 @@ function run_test() {
   const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].
                      getService(Ci.nsIHandlerService);
 
-  const mimeSvc = Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
+  const mimeSvc = Cc["@mozilla.org/mime;1"].
                   getService(Ci.nsIMIMEService);
 
   const prefSvc = Cc["@mozilla.org/preferences-service;1"].
