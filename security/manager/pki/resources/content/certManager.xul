@@ -66,8 +66,7 @@
         <tab id="mine_tab" label="&certmgr.tab.mine;"/>
         <tab id="others_tab" label="&certmgr.tab.others2;"/>
         <tab id="websites_tab" label="&certmgr.tab.websites3;"/>
-        <!-- FIXME Add selected="true" to ca_tab when 373525 gets fixed. -->
-        <tab id="ca_tab" label="&certmgr.tab.ca;"/>
+        <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
         <tab id="orphan_tab" label="&certmgr.tab.orphan2;"/>
       </tabs>
       <tabpanels flex="1">
