@@ -991,15 +991,18 @@ BookmarksSyncService.prototype = {
   },
 
   _getBookmarks: function BSS__getBookmarks() {
-    let filed = this._getWrappedBookmarks(this._bms.bookmarksRoot);
-    let unfiled = this._getWrappedBookmarks(this._bms.unfiledRoot);
+    let filed = this._getWrappedBookmarks(this._bms.bookmarksMenuFolder);
+    let toolbar = this._getWrappedBookmarks(this._bms.toolbarFolder);
+    let unfiled = this._getWrappedBookmarks(this._bms.unfiledBookmarksFolder);
 
     for (let guid in unfiled) {
-      if (guid in filed)
-        this._log.warn("Same bookmark (guid) in both " +
-                       "filed and unfiled trees!");
-      else
+      if (!(guid in filed))
         filed[guid] = unfiled[guid];
+    }
+
+    for (let guid in toolbar) {
+      if (!(guid in filed))
+        filed[guid] = toolbar[guid];
     }
 
     return filed; // (combined)
