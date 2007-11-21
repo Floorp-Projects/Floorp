@@ -79,7 +79,7 @@ nsresult nsZipDataStream::Init(nsZipWriter *aWriter,
                               new nsDeflateConverter(aCompression);
         NS_ENSURE_TRUE(converter, NS_ERROR_OUT_OF_MEMORY);
 
-        rv = converter->AsyncConvertData("uncompressed", "deflate", mOutput,
+        rv = converter->AsyncConvertData("uncompressed", "rawdeflate", mOutput,
                                          nsnull);
         NS_ENSURE_SUCCESS(rv, rv);
 
