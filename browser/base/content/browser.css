@@ -41,20 +41,22 @@ tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
 }
 
+%ifdef XP_MACOSX
 .tabbrowser-arrowscrollbox {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-arrowscrollbox");
 }
+%endifmake 
 
 .tabs-alltabs-popup {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
 }
 
-.tabbrowser-tabs > .tabbrowser-tab {
+.tabbrowser-tab {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
 }
 
-.tabbrowser-tabs > .tabbrowser-tab > .tab-close-button,
-.tabbrowser-tabs .tabs-closebutton-box > .tabs-closebutton {
+.tabbrowser-tab > .tab-close-button,
+.tabbrowser-tabs .tabs-closebutton {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-close-tab-button");
 }
 
@@ -69,5 +71,3 @@ tabbrowser {
 .tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
   display: -moz-box;
 }
-
-
