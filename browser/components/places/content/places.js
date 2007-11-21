@@ -81,7 +81,6 @@ var PlacesOrganizer = {
   },
 
   destroy: function PO_destroy() {
-    OptionsFilter.destroy();
   },
 
   _location: null,
@@ -179,13 +178,9 @@ var PlacesOrganizer = {
     var currentView = aEvent.currentTarget;
     var controller = currentView.controller;
 
-    // If the user clicked on a tree column header, update the sorting
-    // preferences to reflect their choices.
-    // XXXmano: should be done in tree.xml
-    if (aEvent.target.localName == "treecol") {
-      OptionsFilter.update(this._content.getResult());
+    if (aEvent.target.localName != "treechildren")
       return;
-    }
+
     if (currentView.hasSingleSelection && aEvent.button == 1) {
       if (PlacesUtils.nodeIsURI(currentView.selectedNode))
         controller.openSelectedNodeWithEvent(aEvent);
@@ -676,13 +671,13 @@ var PlacesSearchBox = {
 
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
-      content.applyFilter(filterString, true, this.folders, OptionsFilter);
+      content.applyFilter(filterString, this.folders);
       // XXX changing the button text is badness
       //var scopeBtn = document.getElementById("scopeBarFolder");
       //scopeBtn.label = PlacesOrganizer._places.selectedNode.title;
       break;
     case "bookmarks":
-      content.applyFilter(filterString, true,
+      content.applyFilter(filterString,
                           [PlacesUtils.bookmarksMenuFolderId,
                            PlacesUtils.toolbarFolderId,
                            PlacesUtils.unfiledBookmarksFolderId]);
@@ -693,14 +688,13 @@ var PlacesSearchBox = {
         query.searchTerms = filterString;
         var options = currentOptions.clone();
         options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
-        content.load([query],
-                     OptionsFilter.filter([query], options, null));
+        content.load([query], options);
       }
       else
-        content.applyFilter(filterString, false, null, OptionsFilter);
+        content.applyFilter(filterString);
       break;
     case "all":
-      content.applyFilter(filterString, false, null, OptionsFilter);
+      content.applyFilter(filterString);
       break;
     }
 
@@ -885,9 +879,6 @@ var PlacesQueryBuilder = {
     var advancedSearch = document.getElementById("advancedSearch");
     // Need to collapse the advanced search box.
     advancedSearch.collapsed = true;
-
-    var titleDeck = document.getElementById("titleDeck");
-    titleDeck.setAttribute("selectedIndex", 0);
   },
 
   /**
@@ -934,10 +925,6 @@ var PlacesQueryBuilder = {
   },
 
   _updateUIForRowChange: function PQB__updateUIForRowChange() {
-    // Titlebar should show "match any/all" iff there are > 1 queries visible.
-    var titleDeck = document.getElementById("titleDeck");
-    titleDeck.setAttribute("selectedIndex", (this.numRows <= 1) ? 0 : 1);
-
     // Update the "can add more criteria" command to make sure various +
     // buttons are disabled.
     var command = document.getElementById("OrganizerCommand_search:moreCriteria");
@@ -1278,8 +1265,7 @@ var PlacesQueryBuilder = {
     this.options.resultType = this.options.RESULT_TYPE_URI;
 
     // XXXben - find some public way of doing this!
-    PlacesOrganizer._content.load(this.queries,
-                                  OptionsFilter.filter(this.queries, this.options, null));
+    PlacesOrganizer._content.load(this.queries, this.options);
   },
 
   onScopeSelected: function PQB_onScopeSelected(aButton) {
@@ -1298,10 +1284,6 @@ var PlacesQueryBuilder = {
     // update collection type and get folders
     var folders = [];
     switch (id) {
-      case "scopeBarFolder":
-        PlacesSearchBox.filterCollection = "collection";
-        folders.push(PlacesOrganizer._places.selectedNode.itemId);
-        break;
       case "scopeBarToolbar":
         PlacesSearchBox.filterCollection = "collection";
         folders.push(PlacesUtils.toolbarFolderId);
@@ -1314,6 +1296,15 @@ var PlacesQueryBuilder = {
         PlacesSearchBox.filterCollection = "history";
         folders = [];
         break;
+      case "scopeBarFolder":
+        var selectedFolder = PlacesOrganizer._places.selectedNode.itemId;
+        // note "all bookmarks" isn't the concrete parent of the top-level
+        // bookmark folders
+        if (selectedFolder != PlacesUtils.allBookmarksFolderId) {
+          PlacesSearchBox.filterCollection = "collection";
+          folders.push(PlacesOrganizer._places.selectedNode.itemId);
+          break;
+        }
       default: // all bookmarks
         PlacesSearchBox.filterCollection = "bookmarks";
         folders.push(PlacesUtils.bookmarksMenuFolderId,
@@ -1539,7 +1530,6 @@ var ViewMenu = {
     var result = document.getElementById("placeContent").getResult();
     if (!aColumnID && !aDirection) {
       result.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
-      OptionsFilter.update(result);
       return;
     }
 
@@ -1593,6 +1583,5 @@ var ViewMenu = {
     }
     result.sortingAnnotation = sortingAnnotation;
     result.sortingMode = sortingMode;
-    OptionsFilter.update(result);
   }
 };

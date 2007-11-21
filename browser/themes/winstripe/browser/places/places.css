@@ -52,7 +52,8 @@ treechildren::-moz-tree-image(title, container, tagContainer) {
   -moz-image-region: auto;
 }
 
-treechildren::-moz-tree-image(title, container, query) {
+/* query-nodes should be styled even if they're not expandable */
+treechildren::-moz-tree-image(title, query) {
   list-style-image: url("chrome://browser/skin/places/query.png");
   -moz-image-region: auto;
 }

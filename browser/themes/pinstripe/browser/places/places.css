@@ -55,7 +55,8 @@ treechildren::-moz-tree-image(container, tagContainer) {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
 }
 
-treechildren::-moz-tree-image(container, query) {
+/* query-nodes should be styled even if they're not expandable */
+treechildren::-moz-tree-image(query) {
   list-style-image: url("chrome://browser/skin/places/query.png");
 }
 
