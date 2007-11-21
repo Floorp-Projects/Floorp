@@ -994,6 +994,7 @@ typedef struct CompareArgs {
     JSContext   *context;
     jsval       fval;
     jsval       *localroot;     /* need one local root, for sort_compare */
+    jsval       *elemroot;      /* stack needed for js_Invoke */
 } CompareArgs;
 
 static JSBool
@@ -1037,16 +1038,19 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
                 ok = JS_FALSE;
         }
     } else {
+        jsval *invokevp, *sp;
         jsdouble cmp;
-        jsval argv[2];
 
-        argv[0] = av;
-        argv[1] = bv;
-        ok = js_InternalCall(cx,
-                             OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fval)),
-                             fval, 2, argv, ca->localroot);
+        invokevp = ca->elemroot;
+        sp = invokevp;
+        *sp++ = ca->fval;
+        *sp++ = JSVAL_NULL;
+        *sp++ = av;
+        *sp++ = bv;
+
+        ok = js_Invoke(cx, 2, invokevp, JSINVOKE_INTERNAL);
         if (ok) {
-            ok = js_ValueToNumber(cx, *ca->localroot, &cmp);
+            ok = js_ValueToNumber(cx, *invokevp, &cmp);
 
             /* Clamp cmp to -1, 0, 1. */
             if (ok) {
@@ -1221,13 +1225,21 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
         ok = js_MergeSort(vec, (size_t) newlen, sizeof(jsval),
                           sort_compare_strings, cx, mergesort_tmp);
     } else {
+        void *mark;
+
         ca.context = cx;
         ca.fval = fval;
         /* local GC root for temporary string */
         ca.localroot = &vec[tvr.count++];
         *ca.localroot = JSVAL_NULL;
+        ca.elemroot  = js_AllocStack(cx, 2 + 2, &mark);
+        if (!ca.elemroot) {
+            ok = JS_FALSE;
+            goto out;
+        }
         ok = js_MergeSort(vec, (size_t) newlen, sizeof(jsval),
                           sort_compare, &ca, mergesort_tmp);
+        js_FreeStack(cx, mark);
     }
     if (!ok)
         goto out;
