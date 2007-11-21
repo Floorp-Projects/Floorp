@@ -1108,7 +1108,7 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
 
     for (PRUint32 i = 0; i < mFonts.Length(); i++) {
         fontList.Append(mFonts[i]->GetName());
-        fontList.Append(NS_LITERAL_STRING(", "));
+        fontList.Append(NS_LITERAL_STRING(","));
     }
 
     PangoLanguage *lang = GetPangoLanguage(GetStyle()->langGroup);
