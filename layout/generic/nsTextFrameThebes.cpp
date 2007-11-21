@@ -5715,7 +5715,7 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
 #ifdef DEBUG
 // Translate the mapped content into a string that's printable
 void
-nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
+nsTextFrame::ToCString(nsCString& aBuf, PRInt32* aTotalContentLength) const
 {
   // Get the frames text content
   const nsTextFragment* frag = mContent->GetText();
@@ -5742,8 +5742,7 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
     } else if (ch == '\t') {
       aBuf.AppendLiteral("\\t");
     } else if ((ch < ' ') || (ch >= 127)) {
-      aBuf.AppendLiteral("\\0");
-      aBuf.AppendInt((PRInt32)ch, 8);
+      aBuf.Append(nsPrintfCString("\\u%04x", ch));
     } else {
       aBuf.Append(ch);
     }
@@ -5811,7 +5810,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   }
 
   PRInt32 totalContentLength;
-  nsAutoString tmp;
+  nsCAutoString tmp;
   ToCString(tmp, &totalContentLength);
 
   // Output the first/last content offset and prev/next in flow info
@@ -5861,7 +5860,7 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
 
   IndentBy(out, aIndent);
   fputs("\"", out);
-  fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
+  fputs(tmp.get(), out);
   fputs("\"\n", out);
 
   aIndent--;
