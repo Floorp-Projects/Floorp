@@ -958,6 +958,12 @@ nsAutoCompleteController::ClosePopup()
   if (!mInput) {
     return NS_OK;
   }
+
+  PRBool isOpen;
+  mInput->GetPopupOpen(&isOpen);
+  if (!isOpen)
+    return NS_OK;
+
   nsCOMPtr<nsIAutoCompletePopup> popup;
   mInput->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
