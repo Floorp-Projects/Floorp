@@ -52,6 +52,8 @@ _TEST_FILES = \
 		test_bug344861.html \
 		test_bug384014.html \
 		test_bug387979.html \
+		test_bug404548.html \
+		bug404548-subframe.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
