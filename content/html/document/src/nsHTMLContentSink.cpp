@@ -1391,7 +1391,7 @@ SinkContext::FlushTags()
           nsIContent* child = mStack[stackPos + 1].mContent;
           mSink->NotifyInsert(content,
                               child,
-                              mStack[stackPos].mInsertionPoint);
+                              mStack[stackPos].mInsertionPoint - 1);
         } else {
           mSink->NotifyAppend(content, mStack[stackPos].mNumFlushed);
         }
