@@ -55,7 +55,6 @@ function ArrayEnumerator(array)
 
 ArrayEnumerator.prototype = {
   pos: 0,
-  array: null,
   
   hasMoreElements: function() {
     return this.pos < this.array.length;

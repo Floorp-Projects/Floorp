@@ -909,25 +909,25 @@ function findClosestLocalizedResource(aDataSource, aResource) {
  * @constructor
  */
 function ArrayEnumerator(aItems) {
-  this._index = 0;
   if (aItems) {
     for (var i = 0; i < aItems.length; ++i) {
       if (!aItems[i])
-        aItems.splice(i, 1);
+        aItems.splice(i--, 1);
     }
+    this._contents = aItems;
+  } else {
+    this._contents = [];
   }
-  this._contents = aItems;
 }
 
 ArrayEnumerator.prototype = {
   _index: 0,
-  _contents: [],
 
-  hasMoreElements: function() {
+  hasMoreElements: function () {
     return this._index < this._contents.length;
   },
 
-  getNext: function() {
+  getNext: function () {
     return this._contents[this._index++];
   }
 };
@@ -939,19 +939,19 @@ ArrayEnumerator.prototype = {
  * @constructor
  */
 function FileEnumerator(files) {
-  this._index = 0;
   if (files) {
     for (var i = 0; i < files.length; ++i) {
       if (!files[i])
-        files.splice(i, 1);
+        files.splice(i--, 1);
     }
+    this._contents = files;
+  } else {
+    this._contents = [];
   }
-  this._contents = files;
 }
 
 FileEnumerator.prototype = {
   _index: 0,
-  _contents: [],
 
   /**
    * Gets the next file in the sequence.
@@ -966,7 +966,7 @@ FileEnumerator.prototype = {
    * Stop enumerating. Nothing to do here.
    */
   close: function() {
-  },
+  }
 };
 
 /**
