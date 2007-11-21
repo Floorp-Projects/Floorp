@@ -167,7 +167,6 @@ function ArrayEnumerator(aItems) {
 
 ArrayEnumerator.prototype = {
   _index: 0,
-  _contents: [],
 
   hasMoreElements: function() {
     return this._index < this._contents.length;
