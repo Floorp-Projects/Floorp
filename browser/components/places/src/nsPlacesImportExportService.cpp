@@ -2257,6 +2257,13 @@ nsPlacesImportExportService::RunBatched(nsISupports* aUserData)
 
     rv = mBookmarksService->RemoveFolderChildren(bookmarksMenuFolder);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt64 toolbarFolder;
+    rv = mBookmarksService->GetToolbarFolder(&toolbarFolder);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mBookmarksService->RemoveFolderChildren(toolbarFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // streams
