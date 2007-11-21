@@ -34,7 +34,7 @@
 # ***** END LICENSE BLOCK *****
 
   <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-  <?xml-stylesheet href="chrome://global/content/appPicker.css" type="text/css"?>
+  <?xml-stylesheet href="chrome://global/skin/appPicker.css" type="text/css"?>
 
   <!DOCTYPE dialog SYSTEM "chrome://global/locale/appPicker.dtd" >
 

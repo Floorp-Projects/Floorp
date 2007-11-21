@@ -6,6 +6,7 @@ classic.jar:
 +  skin/classic/global/50pct_transparent_grey.png
 +  skin/classic/global/50pct_transparent_white.png
 +  skin/classic/global/about.css                                      (../../winstripe/global/about.css)
++  skin/classic/global/appPicker.css                                  (../../winstripe/global/appPicker.css)
 +  skin/classic/global/arrow.css
 +  skin/classic/global/autocomplete.css
 +  skin/classic/global/button.css
