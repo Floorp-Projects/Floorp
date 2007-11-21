@@ -98,20 +98,14 @@
 
       <method name="applyFilter">
         <parameter name="filterString"/>
-        <parameter name="onlyBookmarks"/>
         <parameter name="folderRestrict"/>
-        <parameter name="optionsFilter"/>
         <body><![CDATA[
           // preserve grouping
           var queryNode = asQuery(this.getResultNode());
           var options = queryNode.queryOptions.clone();
-          if (optionsFilter)
-            options = optionsFilter.filter(queryNode.getQueries({}), options, 
-                                           optionsFilter.historyHandler);
 
           var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
-          query.onlyBookmarked = onlyBookmarks;
 
           // Remove "group by folder" from the options list, because
           // nsNavHistory::RecursiveGroup doesn't support it.
@@ -122,8 +116,10 @@
           var folderGroupings = groupings.filter(isFolderGrouping);
           options.setGroupingMode(folderGroupings, folderGroupings.length);
 
-          if (onlyBookmarks && folderRestrict)
+          if (folderRestrict) {
             query.setFolders(folderRestrict, folderRestrict.length);
+            options.queryType = options.QUERY_TYPE_BOOKMARKS;
+          }
 
           this.load([query], options);
         ]]></body>

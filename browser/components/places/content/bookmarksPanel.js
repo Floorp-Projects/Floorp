@@ -46,7 +46,7 @@ function searchBookmarks(aSearchString) {
   if (!aSearchString)
     tree.place = tree.place;
   else
-    tree.applyFilter(aSearchString, true,
+    tree.applyFilter(aSearchString,
                      [PlacesUtils.bookmarksMenuFolderId,
                       PlacesUtils.unfiledBookmarksFolderId,
                       PlacesUtils.toolbarFolderId]);
