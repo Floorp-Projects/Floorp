@@ -454,10 +454,9 @@ nsUnknownContentTypeDialog.prototype = {
         // data, rather, a data format that the system probably knows about, 
         // we don't want to use the content-type provided by this dialog's 
         // opener, as that's the generic application/octet-stream that the 
-        // uriloader has passed, rather we want to ask the External Helper App
-        // Service, which will ask the host OS. This is so we don't needlessly
-        // disable the "autohandle" checkbox. 
-        var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
+        // uriloader has passed, rather we want to ask the MIME Service.
+        // This is so we don't needlessly disable the "autohandle" checkbox.
+        var mimeService = Components.classes["@mozilla.org/mime;1"].getService(Components.interfaces.nsIMIMEService);
         var type = mimeService.getTypeFromURI(this.mLauncher.source);
         this.realMIMEInfo = mimeService.getFromTypeAndExtension(type, "");
 

@@ -802,7 +802,7 @@ var gApplicationsPane = {
                   getService(Ci.nsIPrefBranch).
                   QueryInterface(Ci.nsIPrefBranch2),
 
-  _mimeSvc      : Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
+  _mimeSvc      : Cc["@mozilla.org/mime;1"].
                   getService(Ci.nsIMIMEService),
 
   _helperAppSvc : Cc["@mozilla.org/uriloader/external-helper-app-service;1"].

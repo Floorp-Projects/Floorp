@@ -756,7 +756,7 @@ HandlerService.prototype = {
   get _mimeSvc() {
     if (!this.__mimeSvc)
       this.__mimeSvc =
-        Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
+        Cc["@mozilla.org/mime;1"].
         getService(Ci.nsIMIMEService);
     return this.__mimeSvc;
   },
