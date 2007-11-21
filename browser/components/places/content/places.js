@@ -1404,13 +1404,14 @@ var ViewMenu = {
       var column = columns.getColumnAt(i).element;
       var menuitem = document.createElement("menuitem");
       menuitem.id = "menucol_" + column.id;
-      menuitem.setAttribute("column", column.id);
+      menuitem.column = column;
       var label = column.getAttribute("label");
       if (propertyPrefix) {
         var menuitemPrefix = propertyPrefix;
         // for string properties, use "name" as the id, instead of "title"
         // see bug #386287 for details
-        menuitemPrefix += (column.id == "title" ? "name" : column.id);
+        var columnId = column.getAttribute("anonid");
+        menuitemPrefix += columnId == "title" ? "name" : columnId;
         label = PlacesUtils.getString(menuitemPrefix + ".label");
         var accesskey = PlacesUtils.getString(menuitemPrefix + ".accesskey");
         menuitem.setAttribute("accesskey", accesskey);
@@ -1477,11 +1478,7 @@ var ViewMenu = {
    *          The menuitem element for the column
    */
   showHideColumn: function VM_showHideColumn(element) {
-    const PREFIX = "menucol_";
-    var columnID = element.id.substr(PREFIX.length, element.id.length);
-    var column = document.getElementById(columnID);
-    NS_ASSERT(column,
-              "menu item for column that doesn't exist?! id = " + element.id);
+    var column = element.column;
 
     var splitter = column.nextSibling;
     if (splitter && splitter.localName != "splitter")
@@ -1516,35 +1513,41 @@ var ViewMenu = {
   },
 
   /**
-   * Sorts the view by the specified key.
-   * @param   aColumnID
-   *          The ID of the colum that is the sort key. Can be null - the
-   *          current sort column id or "title" will be used.
+   * Sorts the view by the specified column.
+   * @param   aColumn
+   *          The colum that is the sort key. Can be null - the
+   *          current sort column or the title column will be used.
    * @param   aDirection
    *          The direction to sort - "ascending" or "descending".
    *          Can be null - the last direction or descending will be used.
    *
    * If both aColumnID and aDirection are null, the view will be unsorted.
    */
-  setSortColumn: function VM_setSortColumn(aColumnID, aDirection) {
+  setSortColumn: function VM_setSortColumn(aColumn, aDirection) {
     var result = document.getElementById("placeContent").getResult();
-    if (!aColumnID && !aDirection) {
+    if (!aColumn && !aDirection) {
       result.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
       return;
     }
 
-    var sortColumn = this._getSortColumn();
-    if (!aDirection) {
-      aDirection = sortColumn ?
-                   sortColumn.getAttribute("sortDirection") : "descending";
+    var columnId;
+    if (aColumn) {
+      columnId = aColumn.getAttribute("anonid")
+      if (!aDirection) {
+        var sortColumn = this._getSortColumn();
+        aDirection = sortColumn ?
+                     sortColumn.getAttribute("sortDirection") : "descending";
+      }
     }
-    else if (!aColumnID)
-      aColumnID = sortColumn ? sortColumn.id : "title";
+    else {
+      var sortColumn = this._getSortColumn();
+      columnId = sortColumn ? sortColumn.getAttribute("anonid") : "title";
+    }
 
     var sortingMode;
     var sortingAnnotation = "";
     const NHQO = Ci.nsINavHistoryQueryOptions;
-    switch (aColumnID) {
+    switch (columnId) {
       case "title":
         sortingMode = aDirection == "descending" ?
           NHQO.SORT_BY_TITLE_DESCENDING : NHQO.SORT_BY_TITLE_ASCENDING;
