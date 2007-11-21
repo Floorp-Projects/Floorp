@@ -44,6 +44,11 @@
 #include "nsComponentManagerUtils.h"
 #include "nsMemory.h"
 #include "nsAutoPtr.h"
+#include "plstr.h"
+
+#define ZLIB_TYPE "deflate"
+#define GZIP_TYPE "gzip"
+#define X_GZIP_TYPE "x-gzip"
 
 /**
  * nsDeflateConverter is a stream converter applies the deflate compression
@@ -62,8 +67,18 @@ nsresult nsDeflateConverter::Init()
     mZstream.zalloc = Z_NULL;
     mZstream.zfree = Z_NULL;
     mZstream.opaque = Z_NULL;
+    
+    PRInt32 window = MAX_WBITS;
+    switch (mWrapMode) {
+        case WRAP_NONE:
+            window = -window;
+            break;
+        case WRAP_GZIP:
+            window += 16;
+            break;
+    }
 
-    zerr = deflateInit2(&mZstream, mLevel, Z_DEFLATED, -MAX_WBITS, 8,
+    zerr = deflateInit2(&mZstream, mLevel, Z_DEFLATED, window, 8,
                         Z_DEFAULT_STRATEGY);
     if (zerr != Z_OK) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -96,6 +111,14 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
         return NS_ERROR_ALREADY_INITIALIZED;
 
     NS_ENSURE_ARG_POINTER(aListener);
+
+    if (!PL_strncasecmp(aToType, ZLIB_TYPE, sizeof(ZLIB_TYPE)-1))
+        mWrapMode = WRAP_ZLIB;
+    else if (!PL_strcasecmp(aFromType, GZIP_TYPE) ||
+             !PL_strcasecmp(aFromType, X_GZIP_TYPE))
+        mWrapMode = WRAP_GZIP;
+    else
+        mWrapMode = WRAP_NONE;
 
     nsresult rv = Init();
     NS_ENSURE_SUCCESS(rv, rv);
