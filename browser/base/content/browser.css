@@ -45,7 +45,7 @@ tabbrowser {
 .tabbrowser-arrowscrollbox {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-arrowscrollbox");
 }
-%endifmake 
+%endif
 
 .tabs-alltabs-popup {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
