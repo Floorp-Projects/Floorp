@@ -461,10 +461,16 @@ sub CreateCompletePatches {
     return $i;
 } # create_complete_patches
 
-
 sub CreatePartialPatches {
     my %args = @_;
     my $config = $args{'config'};
+
+    my $useFastPatcher = defined($config->{'mPartialPatchlistFile'});
+    if ($useFastPatcher) {
+        print STDERR "fast patcher on!\n";
+        open(PARTIAL_PATCHLIST_FILE, ">$config->{'mPartialPatchlistFile'}")
+         or die "open() of $config->{'mPartialPatchlistFile'} failed: $!";
+    }
 
     my $update = $config->GetCurrentUpdate();
 
@@ -526,6 +532,15 @@ sub CreatePartialPatches {
                 if ( -f $from_path and
                      -f $to_path and
                      ! -e $partial_pathname ) {
+
+                    if ($useFastPatcher) {
+                        $partial_pathname =~ m/^(.*)\/[^\/]*$/g;
+                        print PARTIAL_PATCHLIST_FILE 
+                         getcwd() . '/' . $from_path . ',' . getcwd() . '/'
+                         . $to_path . ',' . getcwd() . '/' . 
+                         $partial_pathname . ',' . 
+                         Data::Dumper::Dumper($forcedUpdateList);
+                    } else {
                     my $start_time = time();
 
                     PrintProgress(total => $total, current => $i,
@@ -542,7 +557,7 @@ sub CreatePartialPatches {
                         die 'Partial mar creation failed (see error above?); ' .
                          'aborting.'; 
                     }
-
+                        print $partial_pathname."\n\n";
                     # rename partial.mar to the expected result
                     $partial_pathname =~ m/^(.*)\/[^\/]*$/g;
                     my $partial_pathname_parent = $1;
@@ -556,19 +571,35 @@ sub CreatePartialPatches {
 
                     printf("done (" . $total_time . "s)\n");
                 }
-
-                #last if $i > 2;
-                #$i++;
-                select(undef, undef, undef, 0.5);
             }
-            #last;
         }
-        #last;
+        }
     }
 
     #printf("%s", Data::Dumper::Dumper($u_config));
 
     chdir($startdir);
+
+    if ($useFastPatcher) {
+         close(PARTIAL_PATCHLIST_FILE);
+         # -u turns off output buffering so we get real-time updates
+
+         my $fastIncrementalUpdateBinary = 
+          catfile($config->GetToolsDir(), 'mozilla',
+          $MozAUSLib::FAST_INCREMENTAL_UPDATE_BIN);
+
+         my $args = ['-u', $fastIncrementalUpdateBinary, '-f', 
+          $config->{'mPartialPatchlistFile'}];
+
+         my $rv = RunShellCommand(command => 'python',
+                                  args => $args,
+                                  output => 1);
+
+         if ($rv->{'exitValue'} != 0) {
+             die "FAILED: make_incremental_updates.py: $rv->{'exitValue'}, " . 
+              "output: $rv->{'output'}\n";
+         }
+    }
 
     if (defined($total)) {
         printf("\n");
