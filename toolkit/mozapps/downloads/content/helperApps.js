@@ -61,34 +61,33 @@ function APP_URI(aType)
   return "urn:mimetype:externalApplication:" + aType;
 }
 
-function ArrayEnumerator(aItems)
-{
-  this._index = 0;
-  
+function ArrayEnumerator(aItems) {
   if (aItems) {
-    for (var i = 0; i < aItems.length; ++i) {    
+    for (var i = 0; i < aItems.length; ++i) {
       if (!aItems[i])
-        aItems.splice(i, 1);      
+        aItems.splice(i--, 1);
     }
+    this._contents = aItems;
+  } else {
+    this._contents = [];
   }
-  
-  this._contents = aItems || [];
+}
 
-  this.push = function (aElement) 
-  {
+ArrayEnumerator.prototype = {
+  _index: 0,
+
+  hasMoreElements: function () {
+    return this._index < this._contents.length;
+  },
+
+  getNext: function () {
+    return this._contents[this._index++];
+  },
+
+  push: function (aElement) {
     if (aElement)
       this._contents.push(aElement);
-  };
-  
-  this.hasMoreElements = function ()
-  {
-    return this._index < this._contents.length;
-  };
-  
-  this.getNext = function ()
-  {
-    return this._contents[this._index++];      
-  };
+  }
 };
 
 function HelperApps()
