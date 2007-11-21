@@ -265,7 +265,7 @@
           <menu id="viewSort" label="&view.sort.label;"
                 accesskey="&view.sort.accesskey;">
             <menupopup onpopupshowing="ViewMenu.populateSortMenu(event);"
-                       oncommand="ViewMenu.setSortColumn(event.target.getAttribute('column'), null);">
+                       oncommand="ViewMenu.setSortColumn(event.target.column, null);">
               <menuitem id="viewUnsorted" type="radio" name="columns" 
                         label="&view.unsorted.label;" accesskey="&view.unsorted.accesskey;"
                         oncommand="ViewMenu.setSortColumn(null, null);"/>
