@@ -1,6 +1,7 @@
 classic.jar:
 % skin global classic/1.0 %skin/classic/global/
         skin/classic/global/about.css
+        skin/classic/global/appPicker.css
         skin/classic/global/arrow.css
 *       skin/classic/global/autocomplete.css
         skin/classic/global/button.css
