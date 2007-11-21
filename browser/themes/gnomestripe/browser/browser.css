@@ -204,49 +204,53 @@ menuitem.bookmark-item {
 
 /* Bookmark items */
 .bookmark-item  {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px)
 }
 
-.bookmark-item[container="true"] {
-  -moz-image-region: rect(0px, 32px, 16px, 16px) !important;
+.bookmark-item[container] {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
-.bookmark-item[open="true"],
-.bookmark-item[container="true"][open="true"] {
-  -moz-image-region: rect(16px, 32px, 32px, 16px) !important;
+.bookmark-item[container][open] {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
 /* livemarks have the same layout as folder-item, but in the browser-only livemark-item.png */
 /* only the folder icon has any effect for now, item icon is unused */
-.bookmark-item[livemark="true"] { 
-  list-style-image: url("chrome://browser/skin/places/livemark-folder.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px) !important;
+.bookmark-item[container][livemark] { 
+  list-style-image: url("chrome://browser/skin/places/livemark-folder.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-.bookmark-item[livemark="true"][chromedir="rtl"] { 
-  list-style-image: url("chrome://browser/skin/places/livemark-folder-rtl.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px) !important;
+.bookmark-item[container][livemark][chromedir="rtl"] { 
+  list-style-image: url("chrome://browser/skin/places/livemark-folder-rtl.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-.bookmark-item[livemark="true"][open="true"],
-.bookmark-item[livemark="true"][open="true"][chromedir="rtl"] { 
-  -moz-image-region: rect(16px, 16px, 32px, 0px) !important;
+.bookmark-item[container][livemark][open],
+.bookmark-item[container][livemark][open][chromedir="rtl"] { 
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
-.bookmark-item[type="menu"][livemark="true"],
-.bookmark-item[type="menu"][livemark="true"][chromedir="rtl"] { 
+.bookmark-item[type="menu"][livemark],
+.bookmark-item[type="menu"][livemark][chromedir="rtl"] { 
   -moz-image-region: rect(0px, 32px, 16px, 16px) !important;
 }
 
-.bookmark-item[type="menu"][livemark="true"][open="true"],
-.bookmark-item[type="menu"][livemark="true"][open="true"][chromedir="rtl"] { 
+.bookmark-item[type="menu"][livemark][open],
+.bookmark-item[type="menu"][livemark][open][chromedir="rtl"] { 
   -moz-image-region: rect(16px, 32px, 32px, 16px) !important;
 }
 
-/* Query items */
-.query-item[container] {
+.bookmark-item[container][tagContainer] {
+  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+  -moz-image-region: auto;
+}
+
+.bookmark-item[container][query] {
   list-style-image: url("chrome://browser/skin/places/query.png");
+  -moz-image-region: auto;
 }
 
 /* Primary toolbar buttons */

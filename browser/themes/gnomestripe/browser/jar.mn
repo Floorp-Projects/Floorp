@@ -42,6 +42,7 @@ classic.jar:
   skin/classic/browser/places/livemark-item-rtl.png   (places/livemark-item-rtl.png)
   skin/classic/browser/places/pageStarred.png         (places/pageStarred.png)
   skin/classic/browser/places/places.css              (places/places.css)
+  skin/classic/browser/places/organizer.css           (places/organizer.css)
   skin/classic/browser/places/query.png               (places/query.png)
   skin/classic/browser/places/starPage.png            (places/starPage.png)
   skin/classic/browser/places/tag.png                 (places/tag.png)
