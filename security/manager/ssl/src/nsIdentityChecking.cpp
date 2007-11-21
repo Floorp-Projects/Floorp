@@ -76,6 +76,14 @@ struct nsMyTrustedEVInfo
 
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
+    "2.16.840.1.113733.1.7.23.6",
+    "Verisign EV OID",
+    SEC_OID_UNKNOWN,
+    "OU=Class 3 Public Primary Certification Authority,O=\"VeriSign, Inc.\",C=US",
+    "OU=Class 3 Public Primary Certification Authority,O=\"VeriSign, Inc.\",C=US",
+    "74:2C:31:92:E6:07:E4:24:EB:45:49:54:2B:E1:BB:C5:3E:61:74:E2"
+  },
+  {
     "0.0.0.0",
     0, // for real entries use a string like "Sample INVALID EV OID"
     SEC_OID_UNKNOWN,
@@ -540,9 +548,11 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
   cvin[0].type = cert_pi_policyOID;
   cvin[0].value.arraySize = 1; 
   cvin[0].value.array.oids = &oid_tag;
+
   cvin[1].type = cert_pi_revocationFlags;
-  cvin[1].value.scalar.ul = CERT_REV_FLAG_OCSP
-                            | CERT_REV_FLAG_CRL;
+  cvin[1].value.scalar.ul = CERT_REV_FAIL_SOFT_CRL
+                            | CERT_REV_FLAG_CRL
+                            ;
   cvin[2].type = cert_pi_end;
 
   CERTValOutParam cvout[2];
