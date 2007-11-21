@@ -66,12 +66,13 @@
       <spacer flex="1"/>
     </vbox>
     <vbox flex="1">
+      <!-- Note that because of the styling, there must be no whitespace within
+      the description tags -->
       <description id="warningText"
                    style="white-space: -moz-pre-wrap"/>
       <description id="warningSupplemental"
-                   style="font-weight: bold; white-space: -moz-pre-wrap;">
-        &exceptionMgr.supplementalWarning;
-      </description>
+                   style="font-weight: bold; white-space: -moz-pre-wrap;"
+                   >&exceptionMgr.supplementalWarning;</description>
     </vbox>
   </hbox>
 
