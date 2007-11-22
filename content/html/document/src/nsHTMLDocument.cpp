@@ -269,15 +269,36 @@ IdAndNameMapEntry::AddIdContent(nsIContent* aContent)
     return mIdContentList.ReplaceElementAt(aContent, 0);
   }
 
-  // Have to check whether it's in the list already, in case we're
-  // registering from the top when going live.
-  PRInt32 index = mIdContentList.IndexOf(aContent);
-  if (index != -1) {
-    // nothing else to do here
-    return PR_TRUE;
+  // Common case
+  if (mIdContentList.Count() == 0) {
+    return mIdContentList.AppendElement(aContent);
   }
+
+  // We seem to have multiple content nodes for the same id, or we're doing our
+  // top-down registration when the id table is going live.  Search for the
+  // right place to insert the content.
+  PRInt32 start = 0;
+  PRInt32 end = mIdContentList.Count();
+  do {
+    NS_ASSERTION(start < end, "Bogus start/end");
     
-  return mIdContentList.AppendElement(aContent);
+    PRInt32 cur = (start + end) / 2;
+    NS_ASSERTION(cur >= start && cur < end, "What happened here?");
+
+    nsIContent* curContent = static_cast<nsIContent*>(mIdContentList[cur]);
+    if (curContent == aContent) {
+      // Already in the list, so already in the right spot.  Get out of here.
+      return PR_TRUE;
+    }
+
+    if (nsContentUtils::PositionIsBefore(aContent, curContent)) {
+      end = cur;
+    } else {
+      start = cur + 1;
+    }
+  } while (start != end);
+  
+  return mIdContentList.InsertElementAt(aContent, start);
 }
 
 

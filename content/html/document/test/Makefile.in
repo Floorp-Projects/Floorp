@@ -63,6 +63,8 @@ _TEST_FILES = 	test_bug1682.html \
 		test_bug386495.html \
 		test_bug391777.html \
 		test_bug402680.html \
+		test_bug403868.html \
+		test_bug403868.xhtml \
 		test_form-parsing.html \
 		$(NULL)
 
