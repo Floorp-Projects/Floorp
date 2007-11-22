@@ -1274,7 +1274,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
             JS_ARENA_ALLOCATE_CAST(bitmap, uint32 *, &xdr->cx->tempPool,
                                    bitmapLength * sizeof *bitmap);
             if (!bitmap) {
-                JS_ReportOutOfMemory(xdr->cx);
+                js_ReportOutOfScriptQuota(xdr->cx);
                 ok = JS_FALSE;
                 goto release_mark;
             }
@@ -1822,7 +1822,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ARENA_ALLOCATE_CAST(cp, jschar *, &cx->tempPool,
                                (args_length+1) * sizeof(jschar));
         if (!cp) {
-            JS_ReportOutOfMemory(cx);
+            js_ReportOutOfScriptQuota(cx);
             return JS_FALSE;
         }
         collected_args = cp;
@@ -2333,7 +2333,7 @@ js_GetLocalNames(JSContext *cx, JSFunction *fun, JSArenaPool *pool,
         allocsize += JS_HOWMANY(n, JS_BITS_PER_UINT32) * sizeof(uint32);
     JS_ARENA_ALLOCATE_CAST(names, JSAtom **, pool, allocsize);
     if (!names) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfScriptQuota(cx);
         return NULL;
     }
 

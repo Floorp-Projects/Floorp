@@ -202,7 +202,7 @@ GrowTokenBuf(JSStringBuffer *sb, size_t newlength)
         }
     }
     if (!base) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfScriptQuota(cx);
         sb->base = STRING_BUFFER_ERROR_BASE;
         return JS_FALSE;
     }
@@ -227,7 +227,7 @@ js_InitTokenStream(JSContext *cx, JSTokenStream *ts,
          : JS_LINE_LIMIT * sizeof(jschar);
     JS_ARENA_ALLOCATE_CAST(buf, jschar *, &cx->tempPool, nb);
     if (!ts) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfScriptQuota(cx);
         return JS_FALSE;
     }
     memset(buf, 0, nb);

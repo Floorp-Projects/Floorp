@@ -430,7 +430,7 @@ SprintEnsureBuffer(Sprinter *sp, size_t len)
         JS_ARENA_GROW_CAST(base, char *, sp->pool, sp->size, nb);
     }
     if (!base) {
-        JS_ReportOutOfMemory(sp->context);
+        js_ReportOutOfScriptQuota(sp->context);
         return JS_FALSE;
     }
     sp->base = base;
@@ -1649,8 +1649,10 @@ InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
     offsetsz = depth * sizeof(ptrdiff_t);
     opcodesz = depth * sizeof(jsbytecode);
     JS_ARENA_ALLOCATE(space, &cx->tempPool, offsetsz + opcodesz);
-    if (!space)
+    if (!space) {
+        js_ReportOutOfScriptQuota(cx);
         return JS_FALSE;
+    }
     ss->offsets = (ptrdiff_t *) space;
     ss->opcodes = (jsbytecode *) ((char *)space + offsetsz);
 
@@ -1780,7 +1782,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
     cx = ss->sprinter.context;
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        js_ReportOverRecursed(cx);
         return NULL;
     }
 

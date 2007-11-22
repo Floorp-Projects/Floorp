@@ -910,6 +910,19 @@ js_ReportOutOfMemory(JSContext *cx)
         onError(cx, msg, &report);
 }
 
+void
+js_ReportOutOfScriptQuota(JSContext *cx)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_SCRIPT_STACK_QUOTA);
+}
+
+void
+js_ReportOverRecursed(JSContext *cx)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+}
+
 JSBool
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {

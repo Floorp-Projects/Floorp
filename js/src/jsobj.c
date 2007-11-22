@@ -444,7 +444,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     int stackDummy;
 
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        js_ReportOverRecursed(cx);
         return NULL;
     }
 
@@ -732,7 +732,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     int stackDummy;
 
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        js_ReportOverRecursed(cx);
         return JS_FALSE;
     }
 
@@ -4657,7 +4657,7 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
     int stackDummy;
 
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        js_ReportOverRecursed(cx);
         return JS_FALSE;
     }
 
