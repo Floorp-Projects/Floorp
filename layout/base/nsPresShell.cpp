@@ -5776,6 +5776,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
     // bug 329430
     aEvent->target = nsnull;
 
+    nsWeakView weakView(aView);
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame,
@@ -5809,7 +5810,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       //    generation of synthetic events.
       if (NS_SUCCEEDED(rv)) {
         rv = manager->PostHandleEvent(mPresContext, aEvent,
-                                      GetCurrentEventFrame(), aStatus, aView);
+                                      GetCurrentEventFrame(), aStatus,
+                                      weakView.GetView());
       }
     }
   }
