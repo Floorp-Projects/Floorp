@@ -40,6 +40,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIMutableArray.h"
+#include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMKeyEvent.h"
@@ -462,11 +463,18 @@ nsXULMenuitemAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 
 NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = nsIAccessibleRole::ROLE_MENUITEM;
+  nsCOMPtr<nsIDOMXULContainerElement> xulContainer(do_QueryInterface(mDOMNode));
+  if (xulContainer) {
+    *aRole = nsIAccessibleRole::ROLE_PARENT_MENUITEM;
+    return NS_OK;
+  }
+
   if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
     return NS_OK;
   }
+
+  *aRole = nsIAccessibleRole::ROLE_MENUITEM;
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (!element)
     return NS_ERROR_FAILURE;
@@ -476,13 +484,6 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
     *aRole = nsIAccessibleRole::ROLE_RADIO_MENU_ITEM;
   else if (menuItemType.EqualsIgnoreCase("checkbox"))
     *aRole = nsIAccessibleRole::ROLE_CHECK_MENU_ITEM;
-  else { // Fortunately, radio/checkbox menuitems don't typically have children
-    PRInt32 childCount;
-    GetChildCount(&childCount);
-    if (childCount > 0) {
-      *aRole = nsIAccessibleRole::ROLE_PARENT_MENUITEM;
-    }
-  }
 
   return NS_OK;
 }
