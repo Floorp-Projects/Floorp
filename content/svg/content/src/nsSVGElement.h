@@ -167,6 +167,8 @@ protected:
                          PRUint32 aLengthCount) :
       mLengths(aLengths), mLengthInfo(aLengthInfo), mLengthCount(aLengthCount)
       {}
+
+    void Reset(PRUint8 aAttrEnum);
   };
 
   struct NumberInfo {
@@ -184,6 +186,8 @@ protected:
                          PRUint32 aNumberCount) :
       mNumbers(aNumbers), mNumberInfo(aNumberInfo), mNumberCount(aNumberCount)
       {}
+
+    void Reset(PRUint8 aAttrEnum);
   };
 
   struct IntegerInfo {
@@ -201,6 +205,8 @@ protected:
                           PRUint32 aIntegerCount) :
       mIntegers(aIntegers), mIntegerInfo(aIntegerInfo), mIntegerCount(aIntegerCount)
       {}
+
+    void Reset(PRUint8 aAttrEnum);
   };
 
   struct AngleInfo {
@@ -219,6 +225,8 @@ protected:
                         PRUint32 aAngleCount) :
       mAngles(aAngles), mAngleInfo(aAngleInfo), mAngleCount(aAngleCount)
       {}
+
+    void Reset(PRUint8 aAttrEnum);
   };
 
   struct BooleanInfo {
@@ -236,6 +244,8 @@ protected:
                           PRUint32 aBooleanCount) :
       mBooleans(aBooleans), mBooleanInfo(aBooleanInfo), mBooleanCount(aBooleanCount)
       {}
+
+    void Reset(PRUint8 aAttrEnum);
   };
 
   friend class nsSVGEnum;
@@ -256,6 +266,8 @@ protected:
                        PRUint32 aEnumCount) :
       mEnums(aEnums), mEnumInfo(aEnumInfo), mEnumCount(aEnumCount)
       {}
+
+    void Reset(PRUint8 aAttrEnum);
   };
 
   virtual LengthAttributesInfo GetLengthInfo();
@@ -282,6 +294,9 @@ protected:
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
+
+private:
+  void ResetOldStyleBaseType(nsISVGValue *svg_value);
 
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
