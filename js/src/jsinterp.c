@@ -302,12 +302,8 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
     if (markp)
         *markp = JS_ARENA_MARK(&cx->stackPool);
     JS_ARENA_ALLOCATE_CAST(sp, jsval *, &cx->stackPool, nslots * sizeof(jsval));
-    if (!sp) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_STACK_OVERFLOW,
-                             (cx->fp && cx->fp->fun)
-                             ? JS_GetFunctionName(cx->fp->fun)
-                             : "script");
-    }
+    if (!sp)
+        js_ReportOutOfScriptQuota(cx);
     return sp;
 }
 
@@ -1470,8 +1466,7 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
      * again, see bug 355497.
      */
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_OVER_RECURSED);
+        js_ReportOverRecursed(cx);
         return JS_FALSE;
     }
 
@@ -2328,7 +2323,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     /* Check for too much js_Interpret nesting, or too deep a C stack. */
     ++cx->interpLevel;
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        js_ReportOverRecursed(cx);
         ok = JS_FALSE;
         goto out2;
     }
@@ -3935,11 +3930,7 @@ interrupt:
                         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool,
                                                nbytes);
                         if (!newsp) {
-                            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                                 JSMSG_STACK_OVERFLOW,
-                                                 (fp && fp->fun)
-                                                 ? JS_GetFunctionName(fp->fun)
-                                                 : "script");
+                            js_ReportOutOfScriptQuota(cx);
                             goto bad_inline_call;
                         }
                     }

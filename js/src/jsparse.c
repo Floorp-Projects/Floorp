@@ -145,8 +145,7 @@ static JSParenParser   ParenExpr;
     JS_BEGIN_MACRO                                                            \
         int stackDummy;                                                       \
         if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {                           \
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,         \
-                                        JSMSG_OVER_RECURSED);                 \
+            js_ReportOverRecursed(cx);                                        \
             return NULL;                                                      \
         }                                                                     \
     JS_END_MACRO
@@ -216,7 +215,7 @@ js_NewParsedObjectBox(JSContext *cx, JSParseContext *pc, JSObject *obj)
     JS_ASSERT(obj);
     JS_ARENA_ALLOCATE_TYPE(pob, JSParsedObjectBox, &cx->tempPool);
     if (!pob) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfScriptQuota(cx);
         return NULL;
     }
 #ifdef DEBUG
@@ -271,7 +270,7 @@ NewOrRecycledNode(JSContext *cx, JSTreeContext *tc)
     if (!pn) {
         JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
         if (!pn)
-            JS_ReportOutOfMemory(cx);
+            js_ReportOutOfScriptQuota(cx);
 #ifdef DEBUG
         tc->parseContext->lastAllocMark = JS_ARENA_MARK(&cx->tempPool);
 #endif
@@ -6241,7 +6240,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
     int stackDummy;
 
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        js_ReportOverRecursed(cx);
         return JS_FALSE;
     }
 

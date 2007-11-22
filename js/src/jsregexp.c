@@ -381,7 +381,7 @@ NewRENode(CompilerState *state, REOp op)
     cx = state->context;
     JS_ARENA_ALLOCATE_CAST(ren, RENode *, &cx->tempPool, sizeof *ren);
     if (!ren) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfScriptQuota(cx);
         return NULL;
     }
     ren->op = op;
@@ -2079,7 +2079,7 @@ PushBackTrackState(REGlobalData *gData, REOp op,
         JS_ARENA_GROW_CAST(gData->backTrackStack, REBackTrackData *,
                            &gData->pool, btsize, btincr);
         if (!gData->backTrackStack) {
-            JS_ReportOutOfMemory(gData->cx);
+            js_ReportOutOfScriptQuota(gData->cx);
             gData->ok = JS_FALSE;
             return NULL;
         }
@@ -2470,6 +2470,7 @@ ReallocStateStack(REGlobalData *gData)
 
     JS_ARENA_GROW_CAST(gData->stateStack, REProgState *, &gData->pool, sz, sz);
     if (!gData->stateStack) {
+        js_ReportOutOfScriptQuota(gData->cx);
         gData->ok = JS_FALSE;
         return JS_FALSE;
     }
@@ -3328,7 +3329,7 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re, size_t length)
     return result;
 
 bad:
-    JS_ReportOutOfMemory(cx);
+    js_ReportOutOfScriptQuota(cx);
     gData->ok = JS_FALSE;
     return NULL;
 }

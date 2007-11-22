@@ -525,7 +525,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
     int stackDummy;
 
     if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        js_ReportOverRecursed(cx);
         return JS_FALSE;
     }
 
