@@ -516,17 +516,9 @@ nsIContent *nsAccessible::GetRoleContent(nsIDOMNode *aDOMNode)
 NS_IMETHODIMP nsAccessible::Shutdown()
 {
   mNextSibling = nsnull;
-  // Make sure none of it's children point to this parent
-  if (mFirstChild) {
-    nsCOMPtr<nsIAccessible> current(mFirstChild), next;
-    while (current) {
-      nsCOMPtr<nsPIAccessible> privateAcc(do_QueryInterface(current));
-      current->GetNextSibling(getter_AddRefs(next));
-      privateAcc->SetParent(nsnull);
-      current = next;
-    }
-  }
-  // Now invalidate the child count and pointers to other accessibles
+
+  // Invalidate the child count and pointers to other accessibles, also make
+  // sure none of it's children point to this parent
   InvalidateChildren();
   if (mParent) {
     nsCOMPtr<nsPIAccessible> privateParent(do_QueryInterface(mParent));
