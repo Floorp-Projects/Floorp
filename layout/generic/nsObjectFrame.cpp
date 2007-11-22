@@ -1594,6 +1594,10 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   mInstanceOwner->SetOwner(nsnull);
 
   NS_RELEASE(mInstanceOwner);
+
+  // Make sure that our windowless rect has been zeroed out, so if we
+  // get reinstantiated we'll send the right messages to the plug-in.
+  mWindowlessRect.Empty();
 }
 
 void
