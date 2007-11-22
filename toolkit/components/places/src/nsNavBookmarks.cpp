@@ -934,10 +934,14 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   nsresult rv = History()->GetUrlIdFor(aItem, &childID, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 index = (aIndex == -1) ? FolderCount(aFolder) : aIndex;
-
-  rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 index;
+  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
+    index = FolderCount(aFolder);
+  } else {
+    index = aIndex;
+    rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   mozStorageStatementScoper scope(mDBInsertBookmark);
   rv = mDBInsertBookmark->BindInt64Parameter(0, childID);
@@ -1108,10 +1112,15 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId, PRInt64 aParent,
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  PRInt32 index = (*aIndex == -1) ? FolderCount(aParent) : *aIndex;
-
-  nsresult rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 index;
+  nsresult rv;
+  if (*aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
+    index = FolderCount(aParent);
+  } else {
+    index = *aIndex;
+    rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsCOMPtr<mozIStorageStatement> statement;
   if (aItemId == -1) {
@@ -1178,10 +1187,15 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex,
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  PRInt32 index = (aIndex == -1) ? FolderCount(aParent) : aIndex;
-
-  nsresult rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 index;
+  nsresult rv;
+  if (aIndex == nsINavBookmarksService::DEFAULT_INDEX) {
+    index = FolderCount(aParent);
+  } else {
+    index = aIndex;
+    rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsCOMPtr<mozIStorageStatement> statement;
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks "
