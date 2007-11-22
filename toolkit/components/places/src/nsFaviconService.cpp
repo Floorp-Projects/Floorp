@@ -383,6 +383,9 @@ NS_IMETHODIMP
 nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
                                            PRBool aForceReload)
 {
+  NS_ENSURE_ARG_POINTER(aPage);
+  NS_ENSURE_ARG_POINTER(aFavicon);
+
 #ifdef LAZY_ADD
   nsNavHistory* historyService = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(historyService, NS_ERROR_OUT_OF_MEMORY);
