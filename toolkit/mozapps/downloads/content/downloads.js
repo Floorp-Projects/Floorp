@@ -708,6 +708,11 @@ var gDownloadViewController = {
   }
 };
 
+function setSearchboxFocus()
+{
+  document.getElementById("searchbox").focus();
+}
+
 function onDownloadShowInfo()
 {
   if (gDownloadsView.selectedItem)

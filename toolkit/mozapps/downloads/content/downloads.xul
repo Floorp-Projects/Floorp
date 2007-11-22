@@ -117,6 +117,9 @@
     <key id="key_close2"  key="&cmd.close2.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
 #endif
     <key                  keycode="VK_ESCAPE"           oncommand="closeWindow(true);"/>
+    <key id="key_find"
+         key="&cmd.find.commandKey;" modifiers="accel"
+         oncommand="setSearchboxFocus()"/>
     <key id="key_info"    key="&cmd.info.commandKey;"   oncommand="onDownloadShowInfo();" modifiers="accel"/>
   </keyset>
   

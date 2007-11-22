@@ -36,6 +36,7 @@
 <!ENTITY cmd.clearList.label              "Clear List">
 <!ENTITY cmd.clearList.tooltip            "Removes completed, canceled, and failed downloads from the list">
 <!ENTITY cmd.clearList.accesskey          "C">
+<!ENTITY cmd.find.commandKey              "f">
 
 <!ENTITY closeWhenDone.label              "Close when downloads complete">
 <!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">
