@@ -964,6 +964,15 @@ extern void
 js_ReportOutOfMemory(JSContext *cx);
 
 /*
+ * Report that cx->scriptStackQuota is exhausted.
+ */
+extern void
+js_ReportOutOfScriptQuota(JSContext *cx);
+
+extern void
+js_ReportOverRecursed(JSContext *cx);
+
+/*
  * Report an exception using a previously composed JSErrorReport.
  * XXXbe remove from "friend" API
  */

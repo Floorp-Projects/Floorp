@@ -665,7 +665,7 @@ js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
     JS_ARENA_ALLOCATE_CAST(chars, jschar *, &cx->tempPool,
                            nchars * sizeof(jschar));
     if (!chars)
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfScriptQuota(cx);
     else if (XDRChars(xdr, chars, nchars))
         atom = js_AtomizeChars(cx, chars, nchars, 0);
     JS_ARENA_RELEASE(&cx->tempPool, mark);

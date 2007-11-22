@@ -861,7 +861,7 @@ js_alloc_temp_space(void *priv, size_t size)
 
     JS_ARENA_ALLOCATE(space, &cx->tempPool, size);
     if (!space)
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfScriptQuota(cx);
     return space;
 }
 
@@ -878,7 +878,7 @@ js_alloc_temp_entry(void *priv, const void *key)
 
     JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &cx->tempPool);
     if (!ale) {
-        JS_ReportOutOfMemory(cx);
+        js_ReportOutOfScriptQuota(cx);
         return NULL;
     }
     return &ale->entry;
