@@ -816,7 +816,7 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
   if (!(displaySelection & aContentType))
     return NS_OK;
 
-  nsFrameSelection* frameSelection = GetFrameSelection();
+  const nsFrameSelection* frameSelection = GetConstFrameSelection();
   PRInt16 selectionValue = frameSelection->GetDisplaySelection();
 
   if (selectionValue <= nsISelectionController::SELECTION_HIDDEN)
@@ -1516,7 +1516,7 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetDataForTableSelection(nsFrameSelection *aFrameSelection,
+nsFrame::GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
                                   nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
                                   nsIContent **aParentContent, PRInt32 *aContentOffset, PRInt32 *aTarget)
 {
@@ -1775,11 +1775,11 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   // XXX This is screwy; it really should use the selection frame, not the
   // event frame
-  nsFrameSelection* frameselection;
+  const nsFrameSelection* frameselection = nsnull;
   if (useFrameSelection)
-    frameselection = GetFrameSelection();
+    frameselection = GetConstFrameSelection();
   else
-    frameselection = shell->FrameSelection();
+    frameselection = shell->ConstFrameSelection();
 
   if (frameselection->GetDisplaySelection() == nsISelectionController::SELECTION_OFF)
     return NS_OK;//nothing to do we cannot affect selection from here
@@ -1790,11 +1790,13 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   if (me->isControl)
     return NS_OK;//short ciruit. hard coded for mac due to time restraints.
 #endif
-    
+  nsCOMPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
   if (me->clickCount >1 )
   {
-    frameselection->SetMouseDownState(PR_TRUE);
-    frameselection->SetMouseDoubleDown(PR_TRUE);
+    // These methods aren't const but can't actually delete anything,
+    // so no need for nsWeakFrame.
+    fc->SetMouseDownState(PR_TRUE);
+    fc->SetMouseDoubleDown(PR_TRUE);
     return HandleMultiplePress(aPresContext, aEvent, aEventStatus);
   }
 
@@ -1811,11 +1813,11 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   rv = GetDataForTableSelection(frameselection, shell, me, getter_AddRefs(parentContent), &contentOffset, &target);
   if (NS_SUCCEEDED(rv) && parentContent)
   {
-    frameselection->SetMouseDownState(PR_TRUE);
-    return frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+    fc->SetMouseDownState(PR_TRUE);
+    return fc->HandleTableSelection(parentContent, contentOffset, target, me);
   }
 
-  frameselection->SetDelayedCaretData(0);
+  fc->SetDelayedCaretData(0);
 
   // Check if any part of this frame is selected, and if the
   // user clicked inside the selected region. If so, we delay
@@ -1852,8 +1854,8 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
             offsets.EndOffset() <= curDetail->mEnd)
         {
           delete details;
-          frameselection->SetMouseDownState(PR_FALSE);
-          frameselection->SetDelayedCaretData(me);
+          fc->SetMouseDownState(PR_FALSE);
+          fc->SetDelayedCaretData(me);
           return NS_OK;
         }
 
@@ -1864,7 +1866,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     }
   }
 
-  frameselection->SetMouseDownState(PR_TRUE);
+  fc->SetMouseDownState(PR_TRUE);
 
 #ifdef XP_MACOSX
   PRBool control = me->isMeta;
@@ -1872,15 +1874,17 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   PRBool control = me->isControl;
 #endif
 
-  rv = frameselection->HandleClick(offsets.content, offsets.StartOffset(),
-                                   offsets.EndOffset(), me->isShift, control,
-                                   offsets.associateWithNext);
+  // Do not touch any nsFrame members after this point without adding
+  // weakFrame checks.
+  rv = fc->HandleClick(offsets.content, offsets.StartOffset(),
+                       offsets.EndOffset(), me->isShift, control,
+                       offsets.associateWithNext);
 
   if (NS_FAILED(rv))
     return rv;
 
   if (offsets.offset != offsets.secondaryOffset)
-    frameselection->MaintainSelection();
+    fc->MaintainSelection();
 
   if (isEditor && !me->isShift &&
       (offsets.EndOffset() - offsets.StartOffset()) == 1)
@@ -1890,7 +1894,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     // -moz-user-select: all or a non-text node without children).
     // Therefore, disable selection extension during mouse moves.
     // XXX This is a bit hacky; shouldn't editor be able to deal with this?
-    frameselection->SetMouseDownState(PR_FALSE);
+    fc->SetMouseDownState(PR_FALSE);
   }
 
   return rv;
@@ -1945,7 +1949,9 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   nsIFrame* theFrame;
   PRInt32 offset;
   // Maybe make this a static helper?
-  theFrame = PresContext()->GetPresShell()->FrameSelection()->
+  const nsFrameSelection* frameSelection =
+    PresContext()->GetPresShell()->ConstFrameSelection();
+  theFrame = frameSelection->
     GetFrameForNodeOffset(offsets.content, offsets.offset,
                           nsFrameSelection::HINT(offsets.associateWithNext),
                           &offset);
@@ -3972,7 +3978,17 @@ nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionControl
   return CallQueryInterface(aPresContext->GetPresShell(), aSelCon);
 }
 
-nsFrameSelection* nsIFrame::GetFrameSelection()
+already_AddRefed<nsFrameSelection>
+nsIFrame::GetFrameSelection()
+{
+  nsFrameSelection* fs =
+    const_cast<nsFrameSelection*>(GetConstFrameSelection());
+  NS_IF_ADDREF(fs);
+  return fs;
+}
+
+const nsFrameSelection*
+nsIFrame::GetConstFrameSelection()
 {
   nsIFrame *frame = this;
   while (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION)) {
@@ -3983,7 +3999,7 @@ nsFrameSelection* nsIFrame::GetFrameSelection()
     frame = frame->GetParent();
   }
 
-  return PresContext()->PresShell()->FrameSelection();
+  return PresContext()->PresShell()->ConstFrameSelection();
 }
 
 #ifdef NS_DEBUG

@@ -102,10 +102,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 4BE324F2-FB22-47CD-A653-19C70EE55E3F
+// ff2bdd39-75ed-4392-92b8-8b650c4db574
 #define NS_IPRESSHELL_IID \
-{ 0x4BE324F2, 0xFB22, 0x47CD, \
-  { 0xA6, 0x53, 0x19, 0xC7, 0x0E, 0xE5, 0x5E, 0x3F } }
+{ 0xff2bdd39, 0x75ed, 0x4392, \
+  { 0x92, 0xb8, 0x8b, 0x65, 0x0c, 0x4d, 0xb5, 0x74 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -252,7 +252,13 @@ public:
    * You cannot go back and forth anymore with QI between nsIDOM sel and
    * nsIFrame sel.
    */
-  nsFrameSelection* FrameSelection() { return mSelection; }
+  already_AddRefed<nsFrameSelection> FrameSelection();
+
+  /**
+   * ConstFrameSelection returns an object which methods are safe to use for
+   * example in nsIFrame code.
+   */
+  const nsFrameSelection* ConstFrameSelection() { return mSelection; }
 
   // Make shell be a document observer.  If called after Destroy() has
   // been called on the shell, this will be ignored.
