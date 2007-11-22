@@ -43,13 +43,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=311681
     newParent.appendChild(node);
 
     // Check what getElementById returns, no flushing
-    is(getCont(), testNode, "Should be getting orig node pre-flush 1");
+    is(getCont(), node, "Should be getting new node pre-flush 1");
     
     // Trigger a layout flush, just in case.
     var itemHeight = newParent.offsetHeight/10;
 
     // Check what getElementById returns now.
-    is(getCont(), testNode, "Should be getting orig node post-flush 1");
+    is(getCont(), node, "Should be getting new node post-flush 1");
     
     clear(newParent);
     
