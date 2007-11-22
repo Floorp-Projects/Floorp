@@ -215,7 +215,7 @@
   <vbox>
     <hbox id="commandBarBottom" align="center">
       <button id="installFileButton" label="&cmd.installLocalFile.label;"
-              accesskey="&cmd.installFile.accesskey;"
+              accesskey="&cmd.installLocalFile.accesskey;"
               tooltiptextaddons="&cmd.installFileAddon.tooltip;"
               tooltiptextthemes="&cmd.installFileTheme.tooltip;"
               command="cmd_installFile"/>

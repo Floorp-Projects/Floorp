@@ -22,7 +22,7 @@
 <!ENTITY cmd.checkUpdatesAllAddon.tooltip "Finds Updates to your Add-ons">
 <!ENTITY cmd.checkUpdatesAllTheme.tooltip "Finds Updates to your Themes">
 <!ENTITY cmd.installLocalFile.label       "Install...">
-<!ENTITY cmd.installFile.accesskey        "I">
+<!ENTITY cmd.installLocalFile.accesskey   "n">
 <!ENTITY cmd.installFileAddon.tooltip     "Install an Add-on">
 <!ENTITY cmd.installFileTheme.tooltip     "Install a Theme">
 <!ENTITY cmd.installUpdatesAll.label      "Install Updates">
