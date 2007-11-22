@@ -60,8 +60,6 @@ var noisy = false;
 var timeout = -1;
 var timeoutEvent = -1;
 var running = false;
-var forceCC = true;
-var useCCApi = false;
 
 var content;
 
@@ -95,16 +93,7 @@ function plInit() {
     if (args.filter) pageFilterRegexp = new RegExp(args.filter);
     if (args.noisy) noisy = true;
     if (args.timeout) timeout = parseInt(args.timeout);
-    forceCC = !args.noForceCC;
     doRenderTest = args.doRender;
-
-    if (forceCC) {
-      if (window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                .garbageCollect) {
-        useCCApi = true;
-      }
-    }
 
     gIOS = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService);
@@ -231,20 +220,6 @@ function loadFail() {
 function plNextPage() {
   if (pageIndex < pages.length-1) {
     pageIndex++;
-
-    if (forceCC) {
-      var tccstart = new Date();
-      if (useCCApi) {
-        window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-              .getInterface(Components.interfaces.nsIDOMWindowUtils)
-              .garbageCollect(); 
-      }
-      else {
-        Components.utils.forceGC();
-      }
-      var tccend = new Date();
-      report.recordCCTime(tccend - tccstart);
-    }
 
     setTimeout(plLoadPage, 250);
   } else {
