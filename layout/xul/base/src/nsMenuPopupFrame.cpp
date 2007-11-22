@@ -654,7 +654,7 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame)
 // the left or right edge of the parent.
 // 
 void
-nsMenuPopupFrame::AdjustPositionForAnchorAlign(PRInt32* ioXPos, PRInt32* ioYPos, const nsRect & inParentRect,
+nsMenuPopupFrame::AdjustPositionForAnchorAlign(PRInt32* ioXPos, PRInt32* ioYPos, const nsSize & inParentSize,
                                                PRBool* outFlushWithTopBottom)
 {
   PRInt8 popupAnchor(mPopupAnchor);
@@ -683,23 +683,23 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(PRInt32* ioXPos, PRInt32* ioYPos,
   }
   
   if (popupAnchor == POPUPALIGNMENT_TOPRIGHT && popupAlign == POPUPALIGNMENT_TOPLEFT) {
-    *ioXPos += inParentRect.width;
+    *ioXPos += inParentSize.width;
   }
   else if (popupAnchor == POPUPALIGNMENT_TOPLEFT && popupAlign == POPUPALIGNMENT_TOPLEFT) {
     *outFlushWithTopBottom = PR_TRUE;
   }
   else if (popupAnchor == POPUPALIGNMENT_TOPRIGHT && popupAlign == POPUPALIGNMENT_BOTTOMRIGHT) {
-    *ioXPos -= (mRect.width - inParentRect.width);
+    *ioXPos -= (mRect.width - inParentSize.width);
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
   else if (popupAnchor == POPUPALIGNMENT_BOTTOMRIGHT && popupAlign == POPUPALIGNMENT_BOTTOMLEFT) {
-    *ioXPos += inParentRect.width;
-    *ioYPos -= (mRect.height - inParentRect.height);
+    *ioXPos += inParentSize.width;
+    *ioYPos -= (mRect.height - inParentSize.height);
   }
   else if (popupAnchor == POPUPALIGNMENT_BOTTOMRIGHT && popupAlign == POPUPALIGNMENT_TOPRIGHT) {
-    *ioXPos -= (mRect.width - inParentRect.width);
-    *ioYPos += inParentRect.height;
+    *ioXPos -= (mRect.width - inParentSize.width);
+    *ioYPos += inParentSize.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
   else if (popupAnchor == POPUPALIGNMENT_TOPLEFT && popupAlign == POPUPALIGNMENT_TOPRIGHT) {
@@ -711,10 +711,10 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(PRInt32* ioXPos, PRInt32* ioYPos,
   }
   else if (popupAnchor == POPUPALIGNMENT_BOTTOMLEFT && popupAlign == POPUPALIGNMENT_BOTTOMRIGHT) {
     *ioXPos -= mRect.width;
-    *ioYPos -= (mRect.height - inParentRect.height);
+    *ioYPos -= (mRect.height - inParentSize.height);
   }
   else if (popupAnchor == POPUPALIGNMENT_BOTTOMLEFT && popupAlign == POPUPALIGNMENT_TOPLEFT) {
-    *ioYPos += inParentRect.height;
+    *ioYPos += inParentSize.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
   else
@@ -860,14 +860,24 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     sizedToPopup = nsMenuFrame::IsSizedToPopup(aAnchorFrame->GetContent(), PR_FALSE);
   }
 
-  // |parentRect|
-  //   The dimensions of the frame invoking the popup. 
-  nsRect parentRect = aAnchorFrame->GetRect();
+  // |ParentSize|
+  //   The dimensions of the anchor in its app units
+  nsSize parentSize = aAnchorFrame->GetSize();
+
+  // the anchor may be in a different document with a different scale,
+  // so adjust the size so that it is in the app units of the popup instead
+  // of the anchor. This is done by converting to device pixels by dividing
+  // by the anchor's app units per device pixel and then converting back to
+  // app units by multiplying by the popup's app units per device pixel.
+  float adj = float(presContext->AppUnitsPerDevPixel()) /
+              aAnchorFrame->PresContext()->AppUnitsPerDevPixel();
+  parentSize.width = NSToCoordCeil(parentSize.width * adj);
+  parentSize.height = NSToCoordCeil(parentSize.height * adj);
 
   // If we stick to our parent's width, set it here before we move the
   // window around, because moving is done with respect to the width...
   if (sizedToPopup) {
-    mRect.width = parentRect.width;
+    mRect.width = parentSize.width;
   }
 
   // |xpos| and |ypos| hold the x and y positions of where the popup will be moved to,
@@ -883,6 +893,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   nsRect anchorScreenRect;
   nsRect rootScreenRect = rootFrame->GetScreenRect();
 
+  nsIDeviceContext* devContext = PresContext()->DeviceContext();
   if (mScreenXPos == -1 && mScreenYPos == -1) {
     // if we are anchored to our parent, there are certain things we don't want to do
     // when repositioning the view to fit on the screen, such as end up positioned over
@@ -896,7 +907,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
       // move the popup according to the anchor and alignment. This will also tell us
       // which axis the popup is flush against in case we have to move it around later.
-      AdjustPositionForAnchorAlign(&xpos, &ypos, parentRect, &readjustAboveBelow);
+      AdjustPositionForAnchorAlign(&xpos, &ypos, parentSize, &readjustAboveBelow);
     }
     else {
       // with no anchor, the popup is positioned relative to the root frame
@@ -914,10 +925,19 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     screenViewLocY = presContext->DevPixelsToAppUnits(rootScreenRect.y) + ypos;
   }
   else {
-    // positioned on screen
+    // the popup is positioned at a screen coordinate.
+    // first convert the screen position in mScreenXPos and mScreenYPos from
+    // CSS pixels into device pixels, ignoring any scaling as mScreenXPos and
+    // mScreenYPos are unscaled screen coordinates.
+    PRInt32 factor = devContext->UnscaledAppUnitsPerDevPixel();
+    screenViewLocX = nsPresContext::CSSPixelsToAppUnits(mScreenXPos) / factor;
+    screenViewLocY = nsPresContext::CSSPixelsToAppUnits(mScreenYPos) / factor;
+
+    // next, convert back into app units accounting for the scaling,
+    // and add the margins on the popup
     GetStyleMargin()->GetMargin(margin);
-    screenViewLocX = nsPresContext::CSSPixelsToAppUnits(mScreenXPos) + margin.left;
-    screenViewLocY = nsPresContext::CSSPixelsToAppUnits(mScreenYPos) + margin.top;
+    screenViewLocX = presContext->DevPixelsToAppUnits(screenViewLocX) + margin.left;
+    screenViewLocY = presContext->DevPixelsToAppUnits(screenViewLocY) + margin.top;
 
     // determine the x and y position by subtracting the desired screen
     // position from the screen position of the root frame.
@@ -928,7 +948,6 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   // Compute info about the screen dimensions. Because of multiple monitor systems,
   // the left or top sides of the screen may be in negative space (main monitor is on the
   // right, etc). We need to be sure to do the right thing.
-  nsIDeviceContext* devContext = PresContext()->DeviceContext();
   nsRect rect;
   if ( mMenuCanOverlapOSBar ) {
     devContext->GetRect(rect);
@@ -972,7 +991,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     //              | |                        |
     //              | |                        | (screenViewLocX,screenViewLocY)
     //              - |========================|+--------------
-    //                | parentRect           > ||
+    //                | parentSize           > ||
     //                |========================||
     //                |                        || Submenu 
     //                +------------------------+|  ( = mRect )
@@ -1152,7 +1171,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
   if (sizedToPopup) {
     nsBoxLayoutState state(PresContext());
-    SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
+    SetBounds(state, nsRect(mRect.x, mRect.y, parentSize.width, mRect.height));
   }
 
   return NS_OK;
