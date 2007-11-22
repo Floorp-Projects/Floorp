@@ -436,7 +436,7 @@ static bool RestartApplication()
 // to get auto-quit when we close the window
 -(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication
 {
-    return YES;
+    return NO;
 }
 
 @end
