@@ -128,13 +128,13 @@ public:
   // Process the children of aContent and indicate that frames should be
   // created for them. This is used for lazily built content such as that
   // inside popups so that it is only created when the popup is opened.
-  // This method constructs the frames asynchronously.
+  // If aIsSynch is true, this method constructs the frames synchronously.
   // aCallback will be called with three arguments, the first is the value
   // of aContent, the second is aContent's primary frame, and the third is
   // the value of aArg.
   nsresult AddLazyChildren(nsIContent* aContent,
                            nsLazyFrameConstructionCallback* aCallback,
-                           void* aArg);
+                           void* aArg, PRBool aIsSynch = PR_FALSE);
 
   // Should be called when a frame is going to be destroyed and
   // WillDestroyFrameTree hasn't been called yet.

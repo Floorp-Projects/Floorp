@@ -6300,11 +6300,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 nsresult
 nsCSSFrameConstructor::AddLazyChildren(nsIContent* aContent,
                                        nsLazyFrameConstructionCallback* aCallback,
-                                       void* aArg)
+                                       void* aArg, PRBool aIsSynch)
 {
   nsCOMPtr<nsIRunnable> event =
     new LazyGenerateChildrenEvent(aContent, mPresShell, aCallback, aArg);
-  return NS_DispatchToCurrentThread(event);
+  return aIsSynch ? event->Run() :
+                    NS_DispatchToCurrentThread(event);
 }
 
 already_AddRefed<nsStyleContext>
