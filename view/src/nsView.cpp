@@ -183,7 +183,7 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mVFlags = 0;
   mViewManager = aViewManager;
   mDirtyRegion = nsnull;
-  mWidgetDisowned = PR_FALSE;
+  mDeletionObserver = nsnull;
 }
 
 void nsView::DropMouseGrabbing() {
@@ -251,12 +251,16 @@ nsView::~nsView()
     NS_IF_RELEASE(wrapper);
 
     mWindow->SetClientData(nsnull);
-    if (!mWidgetDisowned) {
+    if (!(mVFlags & NS_VIEW_DISOWNS_WIDGET)) {
       mWindow->Destroy();
     }
     NS_RELEASE(mWindow);
   }
   delete mDirtyRegion;
+
+  if (mDeletionObserver) {
+    mDeletionObserver->Clear();
+  }
 }
 
 nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -835,4 +839,13 @@ PRBool nsIView::IsRoot() const
 PRBool nsIView::ExternalIsRoot() const
 {
   return nsIView::IsRoot();
+}
+
+void
+nsIView::SetDeletionObserver(nsWeakView* aDeletionObserver)
+{
+  if (mDeletionObserver && aDeletionObserver) {
+    aDeletionObserver->SetPrevious(mDeletionObserver);
+  }
+  mDeletionObserver = aDeletionObserver;
 }
