@@ -68,7 +68,6 @@
 #include "nsCOMArray.h"
 
 class nsString;
-class nsISupportsArray;
 
 class nsElementMap
 {
