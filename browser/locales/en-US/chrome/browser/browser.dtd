@@ -60,9 +60,7 @@
 <!ENTITY subscribeToPageMenupopup.label "Subscribe to This Page">
 <!ENTITY subscribeToPageMenuitem.label "Subscribe to This Page...">
 <!ENTITY addCurPagesCmd.label "Bookmark All Tabs...">
-<!ENTITY addCurPagesCmd.accesskey "T">
-<!ENTITY manBookmarksCmd.label "Organize Bookmarks...">
-<!ENTITY manBookmarksCmd.accesskey "M">
+<!ENTITY showBookmarksCmd.label "Show All Bookmarks...">
 <!ENTITY bookmarkAllCmd.label "Bookmark All Tabs...">
 
 <!ENTITY backCmd.label                "Back">
