@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Popups in Scaled Content"
+        onload="setTimeout(runTests, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<!-- This test checks that the position is correct in two cases:
+      - a popup anchored at an element in a scaled document
+      - a popup opened at a screen coordinate in a scaled window
+  -->
+
+<iframe id="frame" width="60" height="140"
+        src="data:text/html,&lt;html&gt;&lt;body&gt;&lt;input id='one'&gt;&lt;input id='two'&gt;&lt;/body&gt;&lt;/html&gt;"/>
+
+<menupopup id="popup" onpopupshown="shown()" onpopuphidden="nextTest()">
+  <menuitem label="One"/>
+</menupopup>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+var screenTest = false;
+var screenx = -1, screeny = -1;
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  setScale($("frame").contentWindow, 2);
+
+  var anchor = $("frame").contentDocument.getElementById("two");
+  $("popup").openPopup(anchor, "after_start");
+}
+
+function setScale(win, scale)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var wn = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIWebNavigation);
+  var shell = wn.QueryInterface(Components.interfaces.nsIDocShell);
+  var docViewer = shell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+  docViewer.fullZoom = scale;
+}
+
+function shown()
+{
+  if (screenTest) {
+    is($("popup").boxObject.screenX, screenx, "screen left position");
+    is($("popup").boxObject.screenY, screeny, "screen top position");
+  }
+  else {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var anchor = $("frame").contentDocument.getElementById("two");
+
+    is(Math.round(anchor.getBoundingClientRect().left * 2),
+       Math.round($("popup").getBoundingClientRect().left), "anchored left position");
+    is(Math.round(anchor.getBoundingClientRect().bottom * 2),
+       Math.round($("popup").getBoundingClientRect().top), "anchored top position");
+  }
+
+  $("popup").hidePopup();
+}
+
+function nextTest()
+{
+  if (screenTest) {
+    SimpleTest.finish();
+  }
+  else {
+    screenTest = true;
+    screenx = document.documentElement.boxObject.screenX + 120;
+    screeny = document.documentElement.boxObject.screenY + 50;
+    setScale(window, 2);
+    $("popup").openPopupAtScreen(screenx, screeny);
+  }
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>
