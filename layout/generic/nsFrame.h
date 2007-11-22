@@ -579,7 +579,7 @@ protected:
   //   of the enclosing cell or table (if not inside a cell)
   //  aTarget tells us what table element to select (currently only cell and table supported)
   //  (enums for this are defined in nsIFrame.h)
-  NS_IMETHOD GetDataForTableSelection(nsFrameSelection *aFrameSelection,
+  NS_IMETHOD GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
                                       nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
                                       nsIContent **aParentContent, PRInt32 *aContentOffset, 
                                       PRInt32 *aTarget);

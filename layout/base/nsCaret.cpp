@@ -299,7 +299,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType,
   nsIFrame*       theFrame = nsnull;
   PRInt32         theFrameOffset = 0;
 
-  nsFrameSelection* frameSelection = GetFrameSelection();
+  nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return NS_ERROR_FAILURE;
   PRUint8 bidiLevel = frameSelection->GetCaretBidiLevel();
@@ -379,7 +379,7 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   NS_ENSURE_ARG(aNode);
 
   PRUint8 bidiLevel;
-  nsFrameSelection* frameSelection = GetFrameSelection();
+  nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return NS_ERROR_FAILURE;
   bidiLevel = frameSelection->GetCaretBidiLevel();
@@ -591,7 +591,7 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
 
     // If there has been a reflow, set the caret Bidi level to the level of the current frame
     if (aBidiLevel & BIDI_LEVEL_UNDEFINED) {
-      nsFrameSelection* frameSelection = GetFrameSelection();
+      nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
       if (!frameSelection)
         return PR_FALSE;
       frameSelection->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
@@ -687,7 +687,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   if (!presShell)
     return NS_ERROR_FAILURE;
 
-  nsFrameSelection* frameSelection = GetFrameSelection();
+  nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection)
     return NS_ERROR_FAILURE;
 
@@ -1009,7 +1009,7 @@ void nsCaret::DrawCaret(PRBool aInvalidate)
     if (NS_FAILED(domSelection->GetFocusOffset(&offset)))
       return;
 
-    nsFrameSelection* frameSelection = GetFrameSelection();
+    nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
     if (!frameSelection)
       return;
     bidiLevel = frameSelection->GetCaretBidiLevel();
@@ -1203,12 +1203,14 @@ void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
 
 
 //-----------------------------------------------------------------------------
-nsFrameSelection* nsCaret::GetFrameSelection() {
+already_AddRefed<nsFrameSelection>
+nsCaret::GetFrameSelection()
+{
   nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryReferent(mDomSelectionWeak));
   if (!privateSelection)
     return nsnull;
-  nsCOMPtr<nsFrameSelection> frameSelection;
-  privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+  nsFrameSelection* frameSelection = nsnull;
+  privateSelection->GetFrameSelection(&frameSelection);
   return frameSelection;
 }
 

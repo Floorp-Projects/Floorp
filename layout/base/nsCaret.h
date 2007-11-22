@@ -155,7 +155,7 @@ class nsCaret : public nsICaret,
     }
     void          ToggleDrawnStatus() { mDrawn = !mDrawn; }
 
-    nsFrameSelection* GetFrameSelection();
+    already_AddRefed<nsFrameSelection> GetFrameSelection();
 
 protected:
 

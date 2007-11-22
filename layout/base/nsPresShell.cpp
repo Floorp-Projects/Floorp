@@ -1352,6 +1352,13 @@ nsIPresShell::RemoveWeakFrame(nsWeakFrame* aWeakFrame)
   }
 }
 
+already_AddRefed<nsFrameSelection>
+nsIPresShell::FrameSelection()
+{
+  NS_IF_ADDREF(mSelection);
+  return mSelection;
+}
+
 //----------------------------------------------------------------------
 
 nsresult
@@ -1412,7 +1419,10 @@ PresShell::~PresShell()
 
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mDocument);
-  NS_IF_RELEASE(mSelection);
+  if (mSelection) {
+    mSelection->DisconnectFromPresShell();
+    NS_RELEASE(mSelection);
+  }
 }
 
 /**

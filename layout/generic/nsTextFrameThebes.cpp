@@ -3485,10 +3485,11 @@ GetGeneratedContentOwner(nsIFrame* aFrame, PRBool* aIsBefore)
 SelectionDetails*
 nsTextFrame::GetSelectionDetails()
 {
+  const nsFrameSelection* frameSelection = GetConstFrameSelection();
   if (!(GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
     SelectionDetails* details =
-      GetFrameSelection()->LookUpSelection(mContent, GetContentOffset(), 
-                                           GetContentLength(), PR_FALSE);
+      frameSelection->LookUpSelection(mContent, GetContentOffset(),
+                                      GetContentLength(), PR_FALSE);
     SelectionDetails* sd;
     for (sd = details; sd; sd = sd->mNext) {
       sd->mStart += mContentOffset;
@@ -3505,7 +3506,7 @@ nsTextFrame::GetSelectionDetails()
     return nsnull;
 
   SelectionDetails* details =
-    GetFrameSelection()->LookUpSelection(owner->GetContent(),
+    frameSelection->LookUpSelection(owner->GetContent(),
         isBefore ? 0 : owner->GetContent()->GetChildCount(), 0, PR_FALSE);
   SelectionDetails* sd;
   for (sd = details; sd; sd = sd->mNext) {

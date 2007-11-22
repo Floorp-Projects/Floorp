@@ -1209,7 +1209,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             }
 
             // disable selection mousedown state on activation
-            shell->FrameSelection()->SetMouseDownState(PR_FALSE);
+            nsCOMPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
+            frameSelection->SetMouseDownState(PR_FALSE);
           }
         }
       }
@@ -1713,7 +1714,8 @@ nsEventStateManager::FireContextClick()
         // stop selection tracking, we're in control now
         if (mCurrentTarget)
         {
-          nsFrameSelection* frameSel = mCurrentTarget->GetFrameSelection();
+          nsCOMPtr<nsFrameSelection> frameSel =
+            mCurrentTarget->GetFrameSelection();
         
           if (frameSel && frameSel->GetMouseDownState()) {
             // note that this can cause selection changed events to fire if we're in
@@ -1849,7 +1851,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     // don't interfere!
     if (mCurrentTarget)
     {
-      nsFrameSelection* frameSel = mCurrentTarget->GetFrameSelection();
+      nsCOMPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
       if (frameSel && frameSel->GetMouseDownState()) {
         StopTrackingDragGesture();
         return;
@@ -2386,7 +2388,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             viewMan->GrabMouseEvents(nsnull, result);
           }
         }
-        shell->FrameSelection()->SetMouseDownState(PR_FALSE);
+        nsCOMPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
+        frameSelection->SetMouseDownState(PR_FALSE);
       }
     }
     break;
@@ -4945,7 +4948,7 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
   nsIPresShell *shell;
   shell = mPresContext->GetPresShell();
 
-  nsFrameSelection *frameSelection = nsnull;
+  nsCOMPtr<nsFrameSelection> frameSelection;
   if (shell)
     frameSelection = shell->FrameSelection();
 
@@ -5296,7 +5299,8 @@ nsEventStateManager::MoveCaretToFocus()
       nsCOMPtr<nsIDOMDocumentRange> rangeDoc(do_QueryInterface(mDocument));
 
       if (rangeDoc) {
-        nsCOMPtr<nsISelection> domSelection = shell->FrameSelection()->
+        nsCOMPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
+        nsCOMPtr<nsISelection> domSelection = frameSelection->
           GetSelection(nsISelectionController::SELECTION_NORMAL);
         if (domSelection) {
           nsCOMPtr<nsIDOMNode> currentFocusNode(do_QueryInterface(mCurrentFocus));
@@ -5355,7 +5359,7 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
   nsCOMPtr<nsICaret> caret;
   aPresShell->GetCaret(getter_AddRefs(caret));
 
-  nsFrameSelection* frameSelection = nsnull;
+  nsCOMPtr<nsFrameSelection> frameSelection;
   if (aFocusedContent) {
     nsIFrame *focusFrame = aPresShell->GetPrimaryFrameFor(aFocusedContent);
     
@@ -5363,7 +5367,7 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
       frameSelection = focusFrame->GetFrameSelection();
   }
 
-  nsFrameSelection *docFrameSelection = aPresShell->FrameSelection();
+  nsCOMPtr<nsFrameSelection> docFrameSelection = aPresShell->FrameSelection();
 
   if (docFrameSelection && caret &&
      (frameSelection == docFrameSelection || !aFocusedContent)) {

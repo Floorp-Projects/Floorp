@@ -104,10 +104,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 39681dd7-5db6-4e38-b84c-5d9a163c987a
+// 95f75c0a-de85-437a-a195-0304df3f62ce
 #define NS_IFRAME_IID \
-{ 0x39681dd7, 0x5db6, 0x4e38, \
-  { 0xb8, 0x4c, 0x5d, 0x9a, 0x16, 0x3c, 0x98, 0x7a } }
+{ 0x95f75c0a, 0xde85, 0x437a, \
+  { 0xa1, 0x95, 0x03, 0x04, 0xdf, 0x3f, 0x62, 0xce } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1726,9 +1726,15 @@ public:
   NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon) = 0;
 
   /**
-   *  Call to get nsFrameSelection for this frame; does not addref
+   *  Call to get nsFrameSelection for this frame.
    */
-  nsFrameSelection* GetFrameSelection();
+  already_AddRefed<nsFrameSelection> GetFrameSelection();
+
+  /**
+   * GetConstFrameSelection returns an object which methods are safe to use for
+   * example in nsIFrame code.
+   */
+  const nsFrameSelection* GetConstFrameSelection();
 
   /** EndSelection related calls
    */
