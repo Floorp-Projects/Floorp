@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=403868
+-->
+<window title="Mozilla Bug 403868"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=403868"
+     target="_blank">Mozilla Bug 403868</a>
+    <div id="content" style="display: none"/>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    /** Test for Bug 403868 **/
+function createSpan(id, insertionPoint) {
+  var s = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  s.id = id;
+  $("content").insertBefore(s, insertionPoint);
+  return s;
+}
+
+var s1a = createSpan("test1", null);
+is(document.getElementById("test1"), s1a,
+   "Only one span with id=test1 in the tree; should work!");
+
+var s2a = createSpan("test1", null);
+is(document.getElementById("test1"), s1a,
+   "Appending span with id=test1 doesn't change which one comes first");
+
+var s3a = createSpan("test1", s2a);
+is(document.getElementById("test1"), s1a,
+   "Inserting span with id=test1 not at the beginning; doesn't matter");
+
+var s4a = createSpan("test1", s1a);
+todo(document.getElementById("test1") == s4a,
+   "Inserting span with id=test1 at the beginning changes which one is first");
+is(document.getElementById("test1"), s1a, "XUL is confused")
+
+s4a.parentNode.removeChild(s4a);
+is(document.getElementById("test1"), s1a,
+   "First-created span with id=test1 is first again");
+
+s1a.parentNode.removeChild(s1a);
+todo(document.getElementById("test1") == s3a,
+   "Third-created span with id=test1 is first now");
+is(document.getElementById("test1"), s2a,
+   "XUL is confused");
+
+// Start the id hashtable
+for (var i = 0; i < 256; ++i) {
+  document.getElementById("no-such-id-in-the-document" + i);
+}
+
+var s1b = createSpan("test2", null);
+is(document.getElementById("test2"), s1b,
+   "Only one span with id=test2 in the tree; should work!");
+
+var s2b = createSpan("test2", null);
+is(document.getElementById("test2"), s1b,
+   "Appending span with id=test2 doesn't change which one comes first");
+
+var s3b = createSpan("test2", s2b);
+is(document.getElementById("test2"), s1b,
+   "Inserting span with id=test2 not at the beginning; doesn't matter");
+
+var s4b = createSpan("test2", s1b);
+todo(document.getElementById("test2") == s4b,
+   "Inserting span with id=test2 at the beginning changes which one is first");
+is(document.getElementById("test2"), s1b, "XUL is confused")
+
+s4b.parentNode.removeChild(s4b);
+is(document.getElementById("test2"), s1b,
+   "First-created span with id=test2 is first again");
+
+s1b.parentNode.removeChild(s1b);
+todo(document.getElementById("test2") == s3b,
+   "Third-created span with id=test2 is first now");
+is(document.getElementById("test2"), s2b,
+   "XUL is confused");
+
+  ]]></script>
+</window>
