@@ -398,7 +398,7 @@
       </menu>
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
-      <menuitem label="&manBookmarksCmd.label;" 
+      <menuitem label="&showBookmarksCmd.label;" 
                 command="Browser:ShowBookmarks" key="manBookmarkKb"/>
       <menuseparator builder="start"/>
     </menupopup>
