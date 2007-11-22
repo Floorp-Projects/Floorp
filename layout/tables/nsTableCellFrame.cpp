@@ -296,7 +296,8 @@ nsTableCellFrame::DecorateForSelection(nsIRenderingContext& aRenderingContext,
   nsPresContext* presContext = PresContext();
   displaySelection = DisplaySelection(presContext);
   if (displaySelection) {
-    nsFrameSelection *frameSelection = presContext->PresShell()->FrameSelection();
+    nsCOMPtr<nsFrameSelection> frameSelection =
+      presContext->PresShell()->FrameSelection();
 
     if (frameSelection->GetTableCellSelection()) {
       nscolor       bordercolor;
@@ -492,7 +493,9 @@ nsTableCellFrame::SetSelected(nsPresContext* aPresContext,
   //   only this frame is considered
   nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
 
-  if (aPresContext->PresShell()->FrameSelection()->GetTableCellSelection()) {
+  nsCOMPtr<nsFrameSelection> frameSelection =
+    aPresContext->PresShell()->FrameSelection();
+  if (frameSelection->GetTableCellSelection()) {
     // Selection can affect content, border and outline
     Invalidate(GetOverflowRect(), PR_FALSE);
   }

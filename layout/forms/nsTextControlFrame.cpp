@@ -2716,9 +2716,10 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
           selPriv->StartBatchChanges();
       }
 
+      nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon;
       mSelCon->SelectAll();
       nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
-      if (!plaintextEditor) {
+      if (!plaintextEditor || !weakFrame.IsAlive()) {
         NS_WARNING("Somehow not a plaintext editor?");
         if (pushed) {
           JSContext* cx;
