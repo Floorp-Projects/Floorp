@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -40,6 +41,16 @@
 
 #define NS_GLOBALHISTORY2_CONTRACTID \
     "@mozilla.org/browser/global-history;2"
+
+/**
+ * A contract for a service that will track download history.  This can be
+ * overridden by embedders if they would like to track additional information
+ * about downloads.
+ *
+ * @implements nsIDownloadHistory
+ */
+#define NS_DOWNLOADHISTORY_CONTRACTID \
+    "@mozilla.org/browser/download-history;1"
 
 /**
  * A contract that can be used to get a service that provides

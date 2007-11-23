@@ -66,6 +66,9 @@
 #include "nsGlobalHistoryAdapter.h"
 #include "nsGlobalHistory2Adapter.h"
 
+// download history
+#include "nsDownloadHistory.h"
+
 static PRBool gInitialized = PR_FALSE;
 
 // The one time initialization for this module
@@ -118,6 +121,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHistory)
+
+// download history
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadHistory)
 
 // Currently no-one is instantiating docshell's directly because
 // nsWebShell is still our main "shell" class. nsWebShell is a subclass
@@ -240,7 +246,11 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
       nsGlobalHistoryAdapter::RegisterSelf },
     { "nsGlobalHistory2Adapter", NS_GLOBALHISTORY2ADAPTER_CID,
       nsnull, nsGlobalHistory2Adapter::Create,
-      nsGlobalHistory2Adapter::RegisterSelf }
+      nsGlobalHistory2Adapter::RegisterSelf },
+    
+    // download history
+    { "nsDownloadHistory", NS_DOWNLOADHISTORY_CID,
+      NS_DOWNLOADHISTORY_CONTRACTID, nsDownloadHistoryConstructor }
 };
 
 // "docshell provider" to illustrate that this thing really *should*

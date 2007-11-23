@@ -41,9 +41,13 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = docshell/test
 
+MODULE = test_docshell
+
 DIRS += chrome \
 	browser \
 	$(NULL)
+
+XPCSHELL_TESTS = unit
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
