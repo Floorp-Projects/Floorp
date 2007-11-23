@@ -229,7 +229,7 @@ static string FormatLastError()
 {
   DWORD err = GetLastError();
   LPWSTR s;
-  string message = "Crash report submision failed: ";
+  string message = "Crash report submission failed: ";
   // odds are it's a WinInet error
   HANDLE hInetModule = GetModuleHandle(L"WinInet.dll");
   if(FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
