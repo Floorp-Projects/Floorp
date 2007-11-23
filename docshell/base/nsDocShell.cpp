@@ -8509,16 +8509,9 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
     if (NS_FAILED(rv))
         return rv;
 
-    // Get referrer from the channel. We have to check for a property on a
-    // property bag because the referrer may be empty for security reasons (for
-    // example, when loading a http page with a https referrer).
     nsCOMPtr<nsIURI> referrer;
-    nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aChannel));
-    if (props) {
-        props->GetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"),
-                                      NS_GET_IID(nsIURI),
-                                      getter_AddRefs(referrer));
-    }
+    if (aChannel)
+        NS_GetReferrerFromChannel(aChannel, getter_AddRefs(referrer));
 
     rv = mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame(), referrer);
     if (NS_FAILED(rv))
