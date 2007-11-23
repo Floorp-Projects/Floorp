@@ -214,7 +214,7 @@
           <menuitem id="orgMoveBookmarks"
                     command="placesCmd_moveBookmarks"
                     label="&cmd.moveBookmarks.label;"
-                    accesskey="cmd.moveBookmarks.accesskey"/>
+                    accesskey="&cmd.moveBookmarks.accesskey;"/>
           <menuitem id="orgDelete"
                     command="cmd_delete"
                     label="&deleteCmd.label;"
