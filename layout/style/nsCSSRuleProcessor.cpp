@@ -1837,6 +1837,14 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
     data.change = nsReStyleHint(data.change | eReStyle_Self);
   }
   // XXX What about XLinks?
+#ifdef MOZ_SVG
+  // XXX should really check the attribute namespace is XLink
+  if (aData->mAttribute == nsGkAtoms::href &&
+      aData->mNameSpaceID == kNameSpaceID_SVG &&
+      aData->mContentTag == nsGkAtoms::a) {
+    data.change = nsReStyleHint(data.change | eReStyle_Self);
+  }
+#endif
   // XXXbz now that :link and :visited are also states, do we need a
   // similar optimization in HasStateDependentStyle?
 
