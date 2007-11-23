@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,6 +64,8 @@ var gCookiesWindow = {
     this.sort("rawHost");
     if (this._view.rowCount > 0) 
       this._tree.view.selection.select(0);
+    
+    this._saveState();
       
     document.getElementById("filter").focus();
   },
@@ -781,6 +784,17 @@ var gCookiesWindow = {
     // Just reload the list to make sure deletions are respected
     this._loadCookies();
     this._tree.treeBoxObject.view = this._view;
+    
+    // Restore sort order
+    var sortby = this._lastSortProperty;
+    if (sortby == "") {
+      this._lastSortAscending = false;
+      this.sort("rawHost");
+    }
+    else {
+      this._lastSortAscending = !this._lastSortAscending;
+      this.sort(sortby);
+    }
 
     // Restore open state
     for (var i = 0; i < this._openIndices.length; ++i)
@@ -891,7 +905,8 @@ var gCookiesWindow = {
   
   onFilterKeyPress: function (aEvent)
   {
-    if (aEvent.keyCode == 27) // ESC key
+    var filter = document.getElementById("filter").value;
+    if (aEvent.keyCode == 27 && filter != "") // ESC key
       this.clearFilter();
   },
   
