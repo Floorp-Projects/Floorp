@@ -101,7 +101,7 @@ menulist[editable="true"][open="true"] > .menulist-dropmarker {
 }
 
 .menulist-editable-box {
-  margin: -1px 1px -2px -5px;
+  margin: -1px -1px 1px 0px;
   padding: 0 2px;
   border: 1px solid #CCCCCC;
   background-color: -moz-Field;
