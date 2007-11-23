@@ -2304,8 +2304,19 @@ function BrowserOnCommand(event) {
       var errorDoc = ot.ownerDocument;
       
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
-        var params = { location : content.location.href,
-                       exceptionAdded : false };
+        var params = { exceptionAdded : false };
+        
+        try {
+          switch (gPrefService.getIntPref("browser.ssl_override_behavior")) {
+            case 2 : // Pre-fetch & pre-populate
+              params.prefetchCert = true;
+            case 1 : // Pre-populate
+              params.location = content.location.href;
+          }
+        } catch (e) {
+          Components.utils.reportError("Couldn't get ssl_override pref: " + e);
+        }
+        
         window.openDialog('chrome://pippki/content/exceptionDialog.xul',
                           '','chrome,centerscreen,modal', params);
         
