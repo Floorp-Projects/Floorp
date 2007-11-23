@@ -78,6 +78,9 @@
 #include "nsIExternalHelperAppService.h"
 #include "nsIMIMEService.h"
 
+#include "nsIDownloadHistory.h"
+#include "nsDocShellCID.h"
+
 #ifdef XP_WIN
 #include <shlobj.h>
 #include "nsDownloadScanner.h"
@@ -1904,30 +1907,16 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
     // Obtain the referrer
     nsresult rv;
     nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-    if (channel) {
-      // first by trying to get the property
-      nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(channel));
-      if (props) {
-        // We have to check for a property on a property bag because the
-        // referrer may be empty for security reasons (for example, when loading
-        // an http page with an https referrer).
-        rv = props->GetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"),
-                                           NS_GET_IID(nsIURI),
-                                           getter_AddRefs(mReferrer));
-        if (NS_FAILED(rv))
-          mReferrer = nsnull;
-      }
+    if (channel)
+      (void)NS_GetReferrerFromChannel(channel, getter_AddRefs(mReferrer));
 
-      // if that didn't work, we can still try to get the referrer from the
-      // nsIHttpChannel (if we can QI to it)
-      if (!mReferrer) {
-        nsCOMPtr<nsIHttpChannel> chan = do_QueryInterface(aRequest);
-        if (chan) {
-          rv = chan->GetReferrer(getter_AddRefs(mReferrer));
-          if (NS_FAILED(rv))
-            mReferrer = nsnull;
-        }
-      }
+    // If we have a MIME info, we know that exthandler has already added this to
+    // the history, but if we do not, we'll have to add it ourselves.
+    if (!mMIMEInfo) {
+      nsCOMPtr<nsIDownloadHistory> dh =
+        do_GetService(NS_DOWNLOADHISTORY_CONTRACTID);
+      if (dh)
+        (void)dh->AddDownload(mSource, mReferrer, mStartTime);
     }
 
     // Fetch the entityID, but if we can't get it, don't panic (non-resumable)
