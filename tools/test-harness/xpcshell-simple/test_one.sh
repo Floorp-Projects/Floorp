@@ -85,6 +85,9 @@ fi
 # The actual JS test to run.
 target_js="$5"
 
+# Says if the test should be launch in interactive mode or not
+interactive_mode="$6"
+
 ###############################
 # SETUP FOR RUNNING THE TESTS #
 ###############################
@@ -95,18 +98,22 @@ headfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/head.js"
 for h in $testdir/unit/head_*.js
 do
     if [ -f $h ]; then
-	headfiles="$headfiles -f $h"
+        headfiles="$headfiles -f $h"
     fi
 done
 
 # files matching the pattern tail_*.js are treated like teardown files
 # - they are run after tail.js
 tailfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/tail.js"
-#tailfiles="$tailfiles -f $topsrcdir/tools/test-harness/xpcshell-simple/execute_test.js"
+
+if [ ! "$interactive_mode" = "1" ]; then
+    tailfiles="$tailfiles -f $topsrcdir/tools/test-harness/xpcshell-simple/execute_test.js"
+fi
+
 for t in $testdir/unit/tail_*.js
 do
     if [ -f $t ]; then
-	tailfiles="$tailfiles -f $t"
+        tailfiles="$tailfiles -f $t"
     fi
 done
 
@@ -117,7 +124,11 @@ done
 
 echo "NATIVE_TOPSRCDIR='$native_topsrcdir' TOPSRCDIR='$topsrcdir' $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles 2>&1"
 echo -n "$target_js: "
-NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles -i 2>&1
+if [ ! "$interactive_mode" = "1" ]; then
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles  2> $testdir/unit/$target_js.log 1>&2
+else
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles -i 2>&1
+fi
 rv="$?"
 if [ ! "$rv" = "0"  -o \
      `grep -c '\*\*\* PASS' $testdir/unit/$target_js.log` = 0 ]
