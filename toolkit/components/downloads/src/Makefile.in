@@ -67,6 +67,7 @@ REQUIRES  = xpcom \
             storage \
             xulapp \
             exthandler \
+            docshell \
             $(NULL)
 
 CPPSRCS   = \
