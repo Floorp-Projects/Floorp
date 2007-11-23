@@ -291,6 +291,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == object--auto-auto--pct-0.html        ob
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == object--auto-auto--px-0.html         object--auto-auto--px-0--ref.html
 == object--auto-auto--px-pct.html       object--auto-auto--px-pct--ref.html
 == object--auto-auto--px-px.html        object--auto-auto--px-px--ref.html
+== object--pct-pct--0-0.html            pass.svg
 
 
 # Assorted tests to check that dynamic changes work correctly
