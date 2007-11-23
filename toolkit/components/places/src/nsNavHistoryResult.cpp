@@ -3159,8 +3159,8 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->BookmarkIdToResultNode(aItemId, mOptions, getter_AddRefs(node));
-    node->mItemId = aItemId;
     NS_ENSURE_SUCCESS(rv, rv);
+    node->mItemId = aItemId;
   }
   else if (itemType == nsINavBookmarksService::TYPE_FOLDER) {
     rv = bookmarks->ResultNodeForContainer(aItemId, mOptions, getter_AddRefs(node));
