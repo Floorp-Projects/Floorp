@@ -35,5 +35,5 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("chrome://communicator/skin");
+@import url("chrome://global/skin");
 @import url("chrome://inspector/content/inspector.css");
