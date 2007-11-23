@@ -6858,20 +6858,32 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     }
 
     // If we're assigning to an on* property, just resolve to null for
-    // now; the assignment will then set the right value.
+    // now; the assignment will then set the right value. Only do this
+    // in the case where the property isn't already defined on the
+    // object's prototype chain though.
     JSString* str = JSVAL_TO_STRING(id);
     JSAutoRequest ar(cx);
-    // Make sure the flags here match those in
-    // nsJSContext::BindCompiledEventHandler
-    if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                               ::JS_GetStringLength(str), JSVAL_NULL,
-                               nsnull, nsnull,
-                               JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
-      return NS_ERROR_FAILURE;
+
+    JSObject *proto = ::JS_GetPrototype(cx, obj);
+    PRBool ok = PR_TRUE, hasProp = PR_FALSE;
+    if (!proto || ((ok = ::JS_HasUCProperty(cx, proto, ::JS_GetStringChars(str),
+                                            ::JS_GetStringLength(str),
+                                            &hasProp)) &&
+                   !hasProp)) {
+      // Make sure the flags here match those in
+      // nsJSContext::BindCompiledEventHandler
+      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                 ::JS_GetStringLength(str), JSVAL_NULL,
+                                 nsnull, nsnull,
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      *objp = obj;
+      return NS_OK;
     }
 
-    *objp = obj;
-    return NS_OK;
+    return ok ? NS_OK : NS_ERROR_FAILURE;
   }
 
   if (id == sAddEventListener_id) {
