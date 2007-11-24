@@ -42,6 +42,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
@@ -287,21 +289,13 @@ loadListener.prototype = {
   _engine: null,
   _stream: null,
 
-  QueryInterface: function SRCH_loadQI(aIID) {
-    if (aIID.equals(Ci.nsISupports)           ||
-        aIID.equals(Ci.nsIRequestObserver)    ||
-        aIID.equals(Ci.nsIStreamListener)     ||
-        aIID.equals(Ci.nsIChannelEventSink)   ||
-        aIID.equals(Ci.nsIInterfaceRequestor) ||
-        // See FIXME comment below
-        aIID.equals(Ci.nsIHttpEventSink)      ||
-        aIID.equals(Ci.nsIProgressEventSink)  ||
-        false)
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
+                                         Ci.nsIStreamListener,
+                                         Ci.nsIChannelEventSink,
+                                         Ci.nsIInterfaceRequestor,
+                                         // See FIXME comment below
+                                         Ci.nsIHttpEventSink,
+                                         Ci.nsIProgressEventSink]),
   // nsIRequestObserver
   onStartRequest: function SRCH_loadStartR(aRequest, aContext) {
     LOG("loadListener: Starting request: " + aRequest.name);
@@ -2146,12 +2140,7 @@ Engine.prototype = {
   },
 
   // nsISupports
-  QueryInterface: function SRCH_ENG_QI(aIID) {
-    if (aIID.equals(Ci.nsISearchEngine) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISearchEngine]),
 
   get wrappedJSObject() {
     return this;
@@ -2171,12 +2160,7 @@ Submission.prototype = {
   get postData() {
     return this._postData;
   },
-  QueryInterface: function SRCH_SUBM_QI(aIID) {
-    if (aIID.equals(Ci.nsISearchSubmission) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISearchSubmission])
 }
 
 // nsIBrowserSearchService
@@ -2871,13 +2855,11 @@ SearchService.prototype = {
     os.removeObserver(this, QUIT_APPLICATION_TOPIC);
   },
 
-  QueryInterface: function SRCH_SVC_QI(aIID) {
-    if (aIID.equals(Ci.nsIBrowserSearchService) ||
-        aIID.equals(Ci.nsIObserver)             ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  classDescription: "Browser Search Service",
+  contractID: "@mozilla.org/browser/search-service;1",
+  classID: Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserSearchService,
+                                         Ci.nsIObserver])
 };
 
 var engineMetadataService = {
@@ -3098,49 +3080,7 @@ var engineUpdateService = {
   }
 };
 
-const kClassID    = Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}");
-const kClassName  = "Browser Search Service";
-const kContractID = "@mozilla.org/browser/search-service;1";
-
-// nsIFactory
-const kFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return (new SearchService()).QueryInterface(iid);
-  }
-};
-
-// nsIModule
-const gModule = {
-  registerSelf: function (componentManager, fileSpec, location, type) {
-    componentManager.QueryInterface(Ci.nsIComponentRegistrar);
-    componentManager.registerFactoryLocation(kClassID,
-                                             kClassName,
-                                             kContractID,
-                                             fileSpec, location, type);
-  },
-
-  unregisterSelf: function(componentManager, fileSpec, location) {
-    componentManager.QueryInterface(Ci.nsIComponentRegistrar);
-    componentManager.unregisterFactoryLocation(kClassID, fileSpec);
-  },
-
-  getClassObject: function (componentManager, cid, iid) {
-    if (!cid.equals(kClassID))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    if (!iid.equals(Ci.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    return kFactory;
-  },
-
-  canUnload: function (componentManager) {
-    return true;
-  }
-};
-
-function NSGetModule(componentManager, fileSpec) {
-  return gModule;
-}
+function NSGetModule(componentManager, fileSpec)
+  XPCOMUtils.generateModule([SearchService]);
 
 #include ../../../toolkit/content/debug.js
