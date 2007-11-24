@@ -2646,7 +2646,7 @@ Downloader.prototype = {
       var prompter =
           Components.classes["@mozilla.org/updates/update-prompt;1"].
           createInstance(Components.interfaces.nsIUpdatePrompt);
-      prompter.showUpdateDownloaded(this._update);
+      prompter.showUpdateDownloaded(this._update, true);
     }
   },
 
@@ -2811,10 +2811,14 @@ UpdatePrompt.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  showUpdateDownloaded: function(update) {
+  showUpdateDownloaded: function(update, whenIdle) {
     if (this._enabled) {
-      this._showUIWhenIdle(null, URI_UPDATE_PROMPT_DIALOG, null,
-                           "Update:Wizard", "finishedBackground", update);
+      if (whenIdle)
+        this._showUIWhenIdle(null, URI_UPDATE_PROMPT_DIALOG, null,
+                             "Update:Wizard", "finishedBackground", update);
+      else
+        this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null,
+                     "Update:Wizard", "finishedBackground", update);
     }
   },
 
