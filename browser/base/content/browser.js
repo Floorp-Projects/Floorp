@@ -1003,9 +1003,6 @@ function delayedStartup()
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
-    var goButtonStack = document.getElementById("go-button-stack");
-    if (goButtonStack)
-      goButtonStack.setAttribute("hidden", "true");
   }
 
   if (gURLBar) {
@@ -2160,6 +2157,14 @@ function SetPageProxyState(aState)
   if (!gProxyDeck)
     gProxyDeck = document.getElementById("page-proxy-deck");
 
+  if (gURLBar.getAttribute("pageproxystate") != aState) {
+    gURLBar.setAttribute("pageproxystate", aState);
+#ifdef MOZ_WIDGET_GTK2
+    // redraw gtk focus ring
+    if (gURLBar.focused)
+      gURLBar.focus();
+#endif
+  }
   gProxyButton.setAttribute("pageproxystate", aState);
 
   // the page proxy state is set to valid via OnLocationChange, which
@@ -2701,44 +2706,6 @@ var newWindowButtonObserver = {
         // allow third-party services to fixup this URL
         openNewWindowWith(url, null, postData.value, true);
       }
-    },
-  getSupportedFlavours: function ()
-    {
-      var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour("text/unicode");
-      flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-      return flavourSet;
-    }
-}
-
-var goButtonObserver = {
-  onDragOver: function(aEvent, aFlavour, aDragSession)
-    {
-      var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.label = gNavigatorBundle.getString("dropongobutton");
-      aEvent.target.setAttribute("dragover", "true");
-      return true;
-    },
-  onDragExit: function (aEvent, aDragSession)
-    {
-      var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.label = "";
-      aEvent.target.removeAttribute("dragover");
-    },
-  onDrop: function (aEvent, aXferData, aDragSession)
-    {
-      var xferData = aXferData.data.split("\n");
-      var draggedText = xferData[0] || xferData[1];
-      var postData = {};
-      var url = getShortcutOrURI(draggedText, postData);
-      try {
-        nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
-        urlSecurityCheck(url,
-                         gBrowser.contentPrincipal,
-                         Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-        loadURI(url, null, postData.value, true);
-      } catch (ex) {}
     },
   getSupportedFlavours: function ()
     {

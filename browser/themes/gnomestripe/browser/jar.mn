@@ -2,8 +2,6 @@ classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 * skin/classic/browser/browser.css                    (browser.css)
   skin/classic/browser/browser.xml
-  skin/classic/browser/endcap-bkgnd.png
-  skin/classic/browser/endcap-bkgnd-hover.png
 * skin/classic/browser/engineManager.css              (engineManager.css)
   skin/classic/browser/Go-arrow.png
   skin/classic/browser/Go-arrow-rtl.png
@@ -17,9 +15,7 @@ classic.jar:
   skin/classic/browser/searchbar.css                  (searchbar.css)
   skin/classic/browser/Search-glass.png
   skin/classic/browser/Search-glass-rtl.png
-  skin/classic/browser/Search-provider-bkgnd.png
-  skin/classic/browser/Search-provider-mid-bottom.png
-  skin/classic/browser/Search-provider-mid-top.png
+  skin/classic/browser/Search-addengines.png
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/setDesktopBackground.css
