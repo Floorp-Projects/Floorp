@@ -54,64 +54,54 @@
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="searchbar-base">
+  <binding id="searchbar">
     <resources>
       <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
     </resources>
-  </binding>
-
-  <binding id="searchbar"
-           extends="chrome://browser/content/search/search.xml#searchbar-base">
     <content>
       <xul:stringbundle src="chrome://browser/locale/search.properties"
                         anonid="searchbar-stringbundle"/>
 
-      <xul:hbox class="searchbar-box" flex="1">
-        <xul:hbox flex="1">
-          <xul:button class="searchbar-engine-button"
-                      type="menu"
-                      anonid="searchbar-engine-button"
-                      popup="_child"
-                      xbl:inherits="src">
-            <xul:menupopup class="searchbar-popup"
-                           anonid="searchbar-popup"
-                           position="after_start">
-              <xul:menuseparator/>
-              <xul:menuitem class="open-engine-manager"
-                            anonid="open-engine-manager"
-                            label="&cmd_engineManager.label;"
-                            oncommand="openManager(event);"
-                            accesskey="&cmd_engineManager.accesskey;"/>
-            </xul:menupopup>
-          </xul:button>
-
-          <xul:textbox class="searchbar-textbox"
-                       anonid="searchbar-textbox"
-                       type="autocomplete"
-                       flex="1"
-                       autocompletepopup="PopupAutoComplete"
-                       autocompletesearch="search-autocomplete"
-                       autocompletesearchparam="searchbar-history"
-                       timeout="250"
-                       maxrows="10"
-                       completeselectedindex="true"
-                       showcommentcolumn="true"
-                       tabscrolling="true"
-                       xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
-          </xul:textbox>
+      <xul:textbox class="searchbar-textbox"
+                   anonid="searchbar-textbox"
+                   type="autocomplete"
+                   flex="1"
+                   autocompletepopup="PopupAutoComplete"
+                   autocompletesearch="search-autocomplete"
+                   autocompletesearchparam="searchbar-history"
+                   timeout="250"
+                   maxrows="10"
+                   completeselectedindex="true"
+                   showcommentcolumn="true"
+                   tabscrolling="true"
+                   xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
+        <xul:button class="searchbar-engine-button"
+                    type="menu"
+                    anonid="searchbar-engine-button"
+                    popup="_child"
+                    chromedir="&locale.dir;">
+          <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
+          <xul:image class="searchbar-dropmarker-image"/>
+          <xul:menupopup class="searchbar-popup"
+                         anonid="searchbar-popup"
+                         position="after_start">
+            <xul:menuseparator/>
+            <xul:menuitem class="open-engine-manager"
+                          anonid="open-engine-manager"
+                          label="&cmd_engineManager.label;"
+                          oncommand="openManager(event);"
+                          accesskey="&cmd_engineManager.accesskey;"/>
+          </xul:menupopup>
+        </xul:button>
+        <xul:hbox class="search-go-container">
+          <xul:image class="search-go-button"
+                     anonid="search-go-button"
+                     chromedir="&locale.dir;"
+                     onclick="handleSearchCommand(event);"
+                     tooltiptext="&searchEndCap.label;" />
         </xul:hbox>
-
-        <xul:stack class="search-go-button-stack endcap">
-          <xul:box class="endcap-box" chromedir="&locale.dir;"/>
-          <xul:toolbarbutton class="search-go-button"
-                             anonid="search-go-button"
-                             chromedir="&locale.dir;"
-                             oncommand="document.getBindingParent(this).handleSearchCommand(event);"
-                             onclick="checkForMiddleClick(this, event);"
-                             label="&searchEndCap.label;" />
-        </xul:stack>
-      </xul:hbox>
+      </xul:textbox>
     </content>
 
     <implementation implements="nsIObserver">
@@ -572,7 +562,7 @@
       extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation implements="nsIObserver nsIDOMXULLabeledControlElement">
       <constructor><![CDATA[
-        if (this._getParentSearchbar().parentNode.parentNode.localName ==
+        if (document.getBindingParent(this).parentNode.parentNode.localName ==
             "toolbarpaletteitem")
           return;
         setTimeout(function(a) { a.initialize(); }, 0, this);
@@ -592,7 +582,7 @@
 
       <property name="label" readonly="true"
                 onget="return '&searchItem.title; ' + 
-                      this._getParentSearchbar().currentEngine.name;"/>
+                      document.getBindingParent(this).currentEngine.name;"/>
       <field name="_stringBundle"/>
       <field name="_formHistSvc"/>
       <field name="_prefBranch"/>
@@ -604,7 +594,7 @@
           const kXULNS =
             "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           // Initialize fields
-          this._stringBundle = this._getParentSearchbar()._stringBundle;
+          this._stringBundle = document.getBindingParent(this)._stringBundle;
           this._formHistSvc =
                    Components.classes["@mozilla.org/satchel/form-history;1"]
                              .getService(Components.interfaces.nsIFormHistory2);
@@ -657,6 +647,30 @@
         ]]></body>
       </method>
 
+      <method name="openPopup">
+        <body><![CDATA[
+          var popup = this.popup;
+          if (!popup.mPopupOpen) {
+            popup.mInput = this;
+            popup.view = this.controller.QueryInterface(Components.interfaces.nsITreeView);
+            popup.invalidate();
+            
+            popup.showCommentColumn = this.showCommentColumn;
+            popup.showImageColumn = this.showImageColumn;
+
+            document.popupNode = null;
+
+            var outerRect = this.getBoundingClientRect();
+            var innerRect = this.inputField.getBoundingClientRect();
+            var width = outerRect.right - innerRect.left;
+            popup.setAttribute("width", width > 100 ? width : 100);
+            popup.openPopup(null, "", innerRect.left, outerRect.bottom, false, false);
+
+            popup.popupBoxObject.setConsumeRollupEvent(this.consumeRollupEvent);
+          }
+        ]]></body>
+      </method>
+
       <method name="observe">
         <parameter name="aSubject"/>
         <parameter name="aTopic"/>
@@ -675,27 +689,12 @@
           <![CDATA[
             // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              this._getParentSearchbar()._popup.click();
+              document.getBindingParent(this)._popup.click();
               return false;
             }
             return true;
           ]]>
         </body>
-      </method>
-
-      <!-- Returns the closest parent that is a searchbar element.
-           If no searchbar element is found, returns null.
-      -->
-      <method name="_getParentSearchbar">
-        <body><![CDATA[
-          var searchbar = this.parentNode;
-          while (searchbar) {
-            if (searchbar.nodeName == "searchbar")
-              break;
-            searchbar = searchbar.parentNode;
-          }
-          return searchbar;
-        ]]></body>
       </method>
 
       <!-- Displays a grayed-out hint string containing the name of the
@@ -704,7 +703,7 @@
       -->
       <method name="_displayCurrentEngine">
         <body><![CDATA[
-          var searchbar = this._getParentSearchbar();
+          var searchbar = document.getBindingParent(this);
 
           // This section is a wee bit hacky; without the timeout, the CSS
           // style corresponding to the "empty" attribute doesn't kick in
@@ -725,7 +724,7 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           var evt = aEvent || this.mEnterEvent;
-          this._getParentSearchbar().handleSearchCommand(evt);
+          document.getBindingParent(this).handleSearchCommand(evt);
           this.mEnterEvent = null;
         ]]></body>
       </method>
@@ -776,7 +775,7 @@
             // Remove the search bar's empty attribute, since we're setting
             // a value without focusing the textbox. If it's not empty, this
             // won't do anything. This can be removed if bug 280635 is fixed.
-            this.mOuter._getParentSearchbar().removeAttribute("empty");
+            document.getBindingParent(this.mOuter).removeAttribute("empty");
             this.mOuter.value = data;
 
             this.mOuter.onTextEntered(aEvent);
@@ -797,11 +796,11 @@
     <handlers>
       <handler event="keypress" keycode="VK_UP" modifiers="accel"
                phase="capturing"
-               action="this._getParentSearchbar().selectEngine(event, false);"/>
+               action="document.getBindingParent(this).selectEngine(event, false);"/>
 
       <handler event="keypress" keycode="VK_DOWN" modifiers="accel"
                phase="capturing"
-               action="this._getParentSearchbar().selectEngine(event, true);"/>
+               action="document.getBindingParent(this).selectEngine(event, true);"/>
 
       <handler event="keypress" keycode="VK_DOWN" modifiers="alt"
                phase="capturing"
@@ -822,7 +821,7 @@
       </handler>
 
       <handler event="focus" phase="capturing"><![CDATA[
-        var searchbar = this._getParentSearchbar();
+        var searchbar = document.getBindingParent(this);
         if (searchbar.getAttribute("empty") == "true") {
           searchbar.removeAttribute("empty");
           this.value = "";
@@ -830,33 +829,11 @@
       ]]></handler>
 
       <handler event="blur" phase="capturing"><![CDATA[
-        var searchbar = this._getParentSearchbar();
+        var searchbar = document.getBindingParent(this);
         if (this.value == "")
           this._displayCurrentEngine();
       ]]></handler>
 
     </handlers>
-  </binding>
-
-  <binding id="searchbar-engine-button"
-           extends="chrome://browser/content/search/search.xml#searchbar-base">
-    <content>
-      <xul:stack flex="1" class="searchbar-engine-button-stack">
-        <xul:vbox>
-          <xul:image class="searchbar-engine-button-top searchbar-engine-button-bkgnd"/>
-          <xul:image flex="1"
-                     class="searchbar-engine-button-mid-top searchbar-engine-button-bkgnd"/>
-          <xul:image flex="1"
-                     class="searchbar-engine-button-mid-bottom searchbar-engine-button-bkgnd"/>
-          <xul:image class="searchbar-engine-button-bottom searchbar-engine-button-bkgnd"/>
-        </xul:vbox>
-        <xul:hbox align="center"
-                  class="searchbar-engine-image-container">
-          <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
-          <xul:image class="searchbar-dropmarker-image"/>
-        </xul:hbox>
-      </xul:stack>
-      <children/>
-    </content>
   </binding>
 </bindings>

@@ -9,7 +9,7 @@ classic.jar:
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/find.png
   skin/classic/browser/find-bar-background.png
-  skin/classic/browser/Go.png
+  skin/classic/browser/Go-arrow.png
   skin/classic/browser/identity.png
   skin/classic/browser/Info.png
   skin/classic/browser/page-livemarks.png
@@ -18,9 +18,11 @@ classic.jar:
   skin/classic/browser/pageInfo.png
   skin/classic/browser/Popup-blocked.png
   skin/classic/browser/searchbar.css
+  skin/classic/browser/Search.png
+  skin/classic/browser/Search-addengines.png
+  skin/classic/browser/search-bar-background-left.png
   skin/classic/browser/search-bar-background-mid.png
-  skin/classic/browser/Search-go.png
-  skin/classic/browser/Search-provider-bkgnd.png
+  skin/classic/browser/search-bar-background-right.png
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/Secure-statusbar.png

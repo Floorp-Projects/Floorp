@@ -1,26 +1,12 @@
-
-.searchbar-box {
-  -moz-padding-end: 5px;
-}
-
 .searchbar-textbox {
   min-height: 22px;
-  width: 4em;
-  min-width: 4em;
-  margin-right: 0px;
-  margin-left: 0px;
+  width: 6em;
+  min-width: 6em;
   background-color: -moz-field;
-  -moz-appearance: none;
-  -moz-border-top-colors: ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDShadow;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow;
-  border-width: 1px;
 }
 
-.textbox-input {
-  padding: 0px !important;
-  margin: 0px !important;
+.textbox-input-box {
+  margin: 0;
 }
 
 .searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
@@ -28,88 +14,41 @@
 }
 
 /* Engine button */
-.searchbar-engine-button-stack {
-  padding: 2px 0px 2px 0px;
-}
-
-.searchbar-engine-button-top {
-  list-style-image: url("chrome://browser/skin/Search-provider-bkgnd.png");
-  -moz-image-region: rect(0px, 32px, 10px, 0px);
-  height: 10px;
-}
-
-/* GTK does not stretch image regions properly, so use background
-   images instead.  See bugs 351764 and 254659. */
-.searchbar-engine-button-mid-top {
-  background-image: url("chrome://browser/skin/Search-provider-mid-top.png");
-}
-
-.searchbar-engine-button-mid-bottom {
-  background-image: url("chrome://browser/skin/Search-provider-mid-bottom.png");
-}
-
-.searchbar-engine-button-bottom {
-  list-style-image: url("chrome://browser/skin/Search-provider-bkgnd.png");
-  -moz-image-region: rect(12px, 32px, 22px, 0px);
-  height: 10px;
-}
-
-.searchbar-engine-button[addengines="true"] .searchbar-engine-button-top {
-  -moz-image-region: rect(0px, 128px, 10px, 96px);
-}
-
-.searchbar-engine-button[addengines="true"] .searchbar-engine-button-mid-top,
-.searchbar-engine-button[addengines="true"] .searchbar-engine-button-mid-bottom {
-  background-position: -96px 0px;
-}
-
-.searchbar-engine-button[addengines="true"] .searchbar-engine-button-bottom {
-  -moz-image-region: rect(12px, 128px, 22px, 96px);
-}
-
-.searchbar-engine-button:not([addengines="true"]):hover .searchbar-engine-button-top {
-  -moz-image-region: rect(0px, 64px, 10px, 32px);
-}
-
-.searchbar-engine-button:not([addengines="true"]):hover .searchbar-engine-button-mid-top,
-.searchbar-engine-button:not([addengines="true"]):hover .searchbar-engine-button-mid-bottom {
-  background-position: -32px 0px;
-}
-
-.searchbar-engine-button:not([addengines="true"]):hover .searchbar-engine-button-bottom {
-  -moz-image-region: rect(12px, 64px, 22px, 32px);
-}
-
-.searchbar-engine-button:not([addengines="true"])[open="true"] .searchbar-engine-button-top {
-  -moz-image-region: rect(0px, 96px, 10px, 64px);
-}
-
-.searchbar-engine-button:not([addengines="true"])[open="true"] .searchbar-engine-button-mid-top,
-.searchbar-engine-button:not([addengines="true"])[open="true"] .searchbar-engine-button-mid-bottom {
-  background-position: -64px 0px;
-}
-
-.searchbar-engine-button:not([addengines="true"])[open="true"] .searchbar-engine-button-bottom {
-  -moz-image-region: rect(12px, 96px, 22px, 64px);
-}
-
 .searchbar-engine-image {
   height: 16px;
   width: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
-  -moz-margin-start: 4px;
+  -moz-margin-start: 3px;
 }
 
 .searchbar-engine-button {
-  width: 32px;
-  margin: 0px;
-  -moz-margin-end: -1px;
-  padding: 0px;
+  -moz-appearance: none;
+  min-width: 0;
+  margin: 0;
+  -moz-margin-end: 3px;
+  padding: 2px 0;
+  border: 0;
+  -moz-box-align: center;
+  background-color: -moz-dialog;
+  -moz-border-end: 1px solid;
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow;
 }
 
-.searchbar-engine-button[open="true"] {
-  background-position: -64px 0px;
+.searchbar-engine-button > .button-box {
+  -moz-appearance: none;
+  padding: 0;
+  -moz-padding-end: 3px;
+  border: 0;
+}
+
+.searchbar-engine-button[addengines="true"] > .button-box {
+  background: transparent url(chrome://browser/skin/Search-addengines.png) no-repeat right center;
+}
+
+.searchbar-engine-button[addengines="true"][chromedir="rtl"] {
+  background-position: left center;
 }
 
 .searchbar-dropmarker-image {
@@ -117,24 +56,15 @@
   -moz-margin-start: 3px;
 }
 
-/* Searchbar endcap */
-/* In text icon mode, the Search Go button scales independently of the field,
- * and the button can be much taller, so we have to center align the elements
- * (instead of stretching them) to prevent the field from stretching vertically
- * to match the button's height and growing too tall.  We still stretch
- * the search engine dropmarker to the height of the field via a stretchy box
- * around just those two elements.
- */
-toolbar[mode="text"] .searchbar-box {
+/* Search go button */
+.search-go-container {
   -moz-box-align: center;
 }
 
 .search-go-button {
+  padding: 1px;
   list-style-image: url("chrome://browser/skin/Search-glass.png");
-  -moz-image-region: rect(0px 25px 22px 0px);
-  border: 0px;
-  padding: 0px;
-  -moz-appearance: none;
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
 
 .search-go-button[chromedir="rtl"] {
@@ -142,33 +72,13 @@ toolbar[mode="text"] .searchbar-box {
 }
 
 .search-go-button:hover {
-  -moz-image-region: rect(0px 50px 22px 25px);
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 .search-go-button[disabled="true"] {
-  -moz-image-region: rect(0px, 75px, 22px, 50px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
 
 .search-go-button:hover:active {
-  -moz-image-region: rect(0px, 100px, 22px, 75px);
-}
-
-toolbar[mode="text"] .search-go-button {
-  -moz-margin-start: 5px;
-  padding: 3px;
-  -moz-appearance: toolbarbutton;
-}
-
-toolbar[mode="text"] .search-go-button-stack {
-  padding: 0px;
-}
-
-toolbar[mode="text"] .search-go-button {
-  background-image: none;
-  list-style-image: none;
-  width: auto;
-}
-
-.search-go-button > .toolbarbutton-icon {
-  margin: 0px;
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
