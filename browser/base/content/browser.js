@@ -300,11 +300,12 @@ function initPlacesDefaultQueries() {
 
       var bookmarksMenuFolder = PlacesUtils.bookmarksMenuFolderId;
       var unfiledBookmarksFolder = PlacesUtils.unfiledBookmarksFolderId;
+      var toolbarFolder = PlacesUtils.toolbarFolderId;
       var tagsFolder = PlacesUtils.tagsFolderId;
       var defaultIndex = bmsvc.DEFAULT_INDEX;
 
       // index = 0, make it the first folder
-      var placesFolder = bmsvc.createFolder(PlacesUtils.toolbarFolderId,
+      var placesFolder = bmsvc.createFolder(toolbarFolder,
                                             placesFolderTitle,
                                             0);
 
@@ -314,7 +315,9 @@ function initPlacesDefaultQueries() {
       // exclude queries so that user created "saved searches" 
       // and these queries (added automatically) are excluded
       var recentlyCreatedBookmarksItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + bookmarksMenuFolder + "&folder=" + unfiledBookmarksFolder +
+        IO.newURI("place:folder=" + bookmarksMenuFolder + 
+            "&folder=" + unfiledBookmarksFolder +
+            "&folder=" + toolbarFolder +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" +
             Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
@@ -324,7 +327,9 @@ function initPlacesDefaultQueries() {
             defaultIndex, recentlyCreatedBookmarksTitle);
 
       var recentlyVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + bookmarksMenuFolder + "&folder=" + unfiledBookmarksFolder +
+        IO.newURI("place:folder=" + bookmarksMenuFolder + 
+            "&folder=" + unfiledBookmarksFolder +
+            "&folder=" + toolbarFolder +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING +
             "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
@@ -332,7 +337,9 @@ function initPlacesDefaultQueries() {
             defaultIndex, recentlyVisitedBookmarksTitle);
 
       var mostVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
-        IO.newURI("place:folder=" + bookmarksMenuFolder + "&folder=" + unfiledBookmarksFolder +
+        IO.newURI("place:folder=" + bookmarksMenuFolder + 
+            "&folder=" + unfiledBookmarksFolder +
+            "&folder=" + toolbarFolder +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" +
             Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
