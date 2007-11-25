@@ -4237,23 +4237,17 @@ nsNavHistory::GroupByFolder(nsNavHistoryQueryResultNode *aResultNode,
 }
 
 PRBool
-nsNavHistory::URIHasTag(nsIURI* aURI, const nsAString& aTag)
+nsNavHistory::URIHasTag(const nsACString& aURISpec, const nsAString& aTag)
 {
   mozStorageStatementScoper scoper(mDBURIHasTag);
 
-  nsCAutoString spec;
-  nsresult rv = aURI->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBURIHasTag->BindUTF8StringParameter(0, spec);
+  nsresult rv = mDBURIHasTag->BindUTF8StringParameter(0, aURISpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBURIHasTag->BindStringParameter(1, aTag);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  PRInt64 tagsFolder = GetTagsFolder();
-  rv = mDBURIHasTag->BindInt64Parameter(2, tagsFolder);
+  rv = mDBURIHasTag->BindInt64Parameter(2, GetTagsFolder());
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasTag = PR_FALSE;
@@ -4262,6 +4256,87 @@ nsNavHistory::URIHasTag(nsIURI* aURI, const nsAString& aTag)
   return hasTag;
 }
 
+void
+nsNavHistory::CreateTermsFromTokens(const nsStringArray& aTagTokens, nsStringArray &aTerms)
+{
+  PRUint32 tagTokensCount = aTagTokens.Count();
+
+  // from our tokens, build up all possible tags
+  // for example:  ("a b c") -> ("a","b","c","a b","b c","a b c")
+  for (PRUint32 numCon = 1; numCon <= tagTokensCount; numCon++) {
+    for (PRUint32 i = 0; i < tagTokensCount; i++) {
+      if (i + numCon > tagTokensCount)
+        continue;
+
+      // after certain number of tokens (30 if SQLITE_MAX_EXPR_DEPTH is the default of 1000)
+      // we'll generate a query with an expression tree that is too large. 
+      // if we exceed this limit, CreateStatement() will fail.
+      // 30 tokens == 465 terms
+      if (aTerms.Count() == 465) {
+        NS_WARNING("hitting SQLITE_MAX_EXPR_DEPTH, not generating any more terms");
+        return;
+      }
+
+      nsAutoString currentValue;
+      for (PRUint32 j = i; j < i + numCon; j++) {
+        if (!currentValue.IsEmpty())
+          currentValue += NS_LITERAL_STRING(" ");
+        currentValue += *(aTagTokens.StringAt(j));
+      }
+
+      aTerms.AppendString(currentValue);
+    }
+  }
+}
+
+PRBool
+nsNavHistory::URIHasAnyTagFromTerms(const nsACString& aURISpec, const nsStringArray& aTerms)
+{
+  PRUint32 termsCount = aTerms.Count();
+
+  if (termsCount == 1)
+    return URIHasTag(aURISpec, *(aTerms.StringAt(0)));
+
+  nsCString tagQuery = NS_LITERAL_CSTRING(
+    "SELECT b.id FROM moz_bookmarks b "
+    "JOIN moz_places p ON b.fk = p.id "
+    "WHERE p.url = ?1 "
+      "AND (SELECT b1.parent FROM moz_bookmarks b1 WHERE "
+      "b1.id = b.parent AND (");
+
+  for (PRUint32 i=0; i<termsCount; i++) {
+    if (i)
+      tagQuery += NS_LITERAL_CSTRING(" OR");
+ 
+    // +3 to skip over the "?2", which is the tag root parameter
+    tagQuery += NS_LITERAL_CSTRING(" LOWER(b1.title) = ") +
+                nsPrintfCString("LOWER(?%d)", i+3);
+  }
+
+  tagQuery += NS_LITERAL_CSTRING(")) = ?2 LIMIT 1");
+
+  nsCOMPtr<mozIStorageStatement> uriHasAnyTagQuery;
+
+  nsresult rv = mDBConn->CreateStatement(tagQuery, getter_AddRefs(uriHasAnyTagQuery));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = uriHasAnyTagQuery->BindUTF8StringParameter(0, aURISpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = uriHasAnyTagQuery->BindInt64Parameter(1, GetTagsFolder());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i=0; i<termsCount; i++) {
+    // +2 to skip over the "?2", which is the tag root parameter
+    rv = uriHasAnyTagQuery->BindStringParameter(i+2, *(aTerms.StringAt(i)));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  PRBool hasAnyTag = PR_FALSE;
+  rv = uriHasAnyTagQuery->ExecuteStep(&hasAnyTag);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return hasAnyTag;
+}
 
 // nsNavHistory::FilterResultSet
 //
@@ -4404,6 +4479,9 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
         }
       }
 
+      nsStringArray tagTerms;
+      CreateTermsFromTokens(*terms[queryIndex], tagTerms);
+
       // search terms
       // XXXmano/dietrich: when bug 331487 is fixed, bookmark queries can group
       // by folder or not regardless of specified folders or search terms.
@@ -4419,19 +4497,12 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
                                             NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mURI))))
           termFound = PR_TRUE;
 
-        // tags
-        if (!termFound) {
-          nsCOMPtr<nsIURI> itemURI;
-          rv = NS_NewURI(getter_AddRefs(itemURI), aSet[nodeIndex]->mURI);
-          NS_ENSURE_SUCCESS(rv, rv);
-          termFound = URIHasTag(itemURI, *terms[queryIndex]->StringAt(termIndex));
-        }
-
         if (!termFound)
           allTermsFound = PR_FALSE;
       }
-      if (!allTermsFound)
-        continue;
+
+      if (!allTermsFound && !URIHasAnyTagFromTerms(aSet[nodeIndex]->mURI, tagTerms))
+          continue;
 
       appendNode = PR_TRUE;
     }
