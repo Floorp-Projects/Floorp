@@ -524,7 +524,9 @@ protected:
                          const nsCOMArray<nsNavHistoryResultNode>& aSource,
                          nsCOMArray<nsNavHistoryResultNode>* aDest);
 
-  PRBool URIHasTag(nsIURI* aURI, const nsAString& aTag);
+  PRBool URIHasTag(const nsACString& aURISpec, const nsAString& aTag);
+  PRBool URIHasAnyTagFromTerms(const nsACString& aURISpec, const nsStringArray& aTerms);
+  void CreateTermsFromTokens(const nsStringArray& aTagTokens, nsStringArray& aTerms);
 
   nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
                            const nsCOMArray<nsNavHistoryResultNode>& aSet,

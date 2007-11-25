@@ -62,6 +62,7 @@
 #include "nsFaviconService.h"
 #include "nsUnicharUtils.h"
 #include "nsNavBookmarks.h"
+#include "nsPrintfCString.h"
 
 #define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
   "@mozilla.org/autocomplete/simple-result;1"
@@ -124,7 +125,7 @@ nsNavHistory::CreateAutoCompleteQueries()
     "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
     "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE "
-    "(b.parent = (SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 and t.title LIKE ?2 ESCAPE '/')) "
+    "(b.parent = (SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND LOWER(t.title) = LOWER(?2))) "
     "GROUP BY h.id ORDER BY h.visit_count DESC, MAX(v.visit_date) DESC;");
   rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBTagAutoCompleteQuery));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -384,6 +385,7 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   else if (!mCurrentSearchString.IsEmpty()) {
     // reset to mCurrentChunkEndTime 
     mCurrentChunkEndTime = PR_Now();
+    mCurrentOldestVisit = 0;
     mFirstChunk = PR_TRUE;
 
     // determine our earliest visit
@@ -400,7 +402,8 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
       rv = dbSelectStatement->GetInt64(0, &mCurrentOldestVisit);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    else {
+
+    if (!mCurrentOldestVisit) {
       // if we have no visits, use a reasonable value
       mCurrentOldestVisit = PR_Now() - USECS_PER_DAY;
     }
@@ -488,42 +491,110 @@ nsresult nsNavHistory::AutoCompleteTypedSearch()
 nsresult
 nsNavHistory::AutoCompleteTagsSearch()
 {
-  mozStorageStatementScoper scope(mDBTagAutoCompleteQuery);
-
   nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv;
 
   PRInt64 tagsFolder = GetTagsFolder();
 
-  nsresult rv = mDBTagAutoCompleteQuery->BindInt64Parameter(0, tagsFolder);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsString::const_iterator strStart, strEnd;
+  mCurrentSearchString.BeginReading(strStart);
+  mCurrentSearchString.EndReading(strEnd);
+  nsString::const_iterator start = strStart, end = strEnd;
 
-  nsString escapedSearchString;
-  rv = mDBTagAutoCompleteQuery->EscapeStringForLIKE(mCurrentSearchString, PRUnichar('/'), escapedSearchString);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsStringArray tagTokens;
 
-  rv = mDBTagAutoCompleteQuery->BindStringParameter(1, escapedSearchString);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // check if we have any delimiters
+  while (FindInReadable(NS_LITERAL_STRING(" "), start, end,
+                        nsDefaultStringComparator())) {
+    nsAutoString currentMatch(Substring(strStart, start));
+    currentMatch.Trim("\r\n\t\b");
+    if (!currentMatch.IsEmpty())
+      tagTokens.AppendString(currentMatch);
+    strStart = start = end;
+    end = strEnd;
+  }
+
+  nsCOMPtr<mozIStorageStatement> tagAutoCompleteQuery;
+
+  // we didn't find any spaces, so we only have one possible tag, which is
+  // the search string.  this is the common case, so we use 
+  // our pre-compiled query
+  if (!tagTokens.Count()) {
+    tagAutoCompleteQuery = mDBTagAutoCompleteQuery;
+
+    rv = tagAutoCompleteQuery->BindInt64Parameter(0, tagsFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = tagAutoCompleteQuery->BindStringParameter(1, mCurrentSearchString);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    // add in the last match (if it is non-empty)
+    nsAutoString lastMatch(Substring(strStart, strEnd));
+    lastMatch.Trim("\r\n\t\b");
+    if (!lastMatch.IsEmpty())
+      tagTokens.AppendString(lastMatch);
+
+    nsCString tagQuery = NS_LITERAL_CSTRING(
+      "SELECT h.url, h.title, f.url, b.id, b.parent "
+      "FROM moz_places h "
+      "JOIN moz_bookmarks b ON b.fk = h.id "
+      "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE "
+      "(b.parent in "
+      " (SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND (");
+
+    nsStringArray terms;
+    CreateTermsFromTokens(tagTokens, terms);
+
+    for (PRUint32 i=0; i<terms.Count(); i++) {
+      if (i)
+        tagQuery += NS_LITERAL_CSTRING(" OR");
+
+      // +2 to skip over the "?1", which is the tag root parameter
+      tagQuery += NS_LITERAL_CSTRING(" LOWER(t.title) = ") +
+                  nsPrintfCString("LOWER(?%d)", i+2);
+    }
+
+    tagQuery += NS_LITERAL_CSTRING("))) "
+      "GROUP BY h.id ORDER BY h.visit_count DESC, MAX(v.visit_date) DESC;");
+
+    rv = mDBConn->CreateStatement(tagQuery, getter_AddRefs(tagAutoCompleteQuery));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = tagAutoCompleteQuery->BindInt64Parameter(0, tagsFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (PRUint32 i=0; i<terms.Count(); i++) {
+      // +1 to skip over the "?1", which is the tag root parameter
+      rv = tagAutoCompleteQuery->BindStringParameter(i+1, *(terms.StringAt(i)));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
 
+  mozStorageStatementScoper scope(tagAutoCompleteQuery);
+
   PRBool hasMore = PR_FALSE;
 
   // Determine the result of the search
-  while (NS_SUCCEEDED(mDBTagAutoCompleteQuery->ExecuteStep(&hasMore)) && hasMore) {
+  while (NS_SUCCEEDED(tagAutoCompleteQuery->ExecuteStep(&hasMore)) && hasMore) {
     nsAutoString entryURL, entryTitle, entryFavicon;
-    rv = mDBTagAutoCompleteQuery->GetString(kAutoCompleteIndex_URL, entryURL);
+    rv = tagAutoCompleteQuery->GetString(kAutoCompleteIndex_URL, entryURL);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBTagAutoCompleteQuery->GetString(kAutoCompleteIndex_Title, entryTitle);
+    rv = tagAutoCompleteQuery->GetString(kAutoCompleteIndex_Title, entryTitle);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBTagAutoCompleteQuery->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
+    rv = tagAutoCompleteQuery->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
     NS_ENSURE_SUCCESS(rv, rv);
     PRInt64 itemId = 0;
-    rv = mDBTagAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
+    rv = tagAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
     NS_ENSURE_SUCCESS(rv, rv);
     PRInt64 parentId = 0;
-    rv = mDBTagAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
+    rv = tagAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool dummy;
