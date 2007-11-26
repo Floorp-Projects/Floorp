@@ -12362,6 +12362,8 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsPresContext* aPresContext,
                                           nsFrameManager* aFrameManager,
                                           nsIFrame* aBlockFrame)
 {
+  aBlockFrame = aBlockFrame->GetFirstContinuation();
+  
   PRBool stopLooking = PR_FALSE;
   nsresult rv = RemoveFloatingFirstLetterFrames(aPresContext, aPresShell,
                                                 aFrameManager,
@@ -12378,6 +12380,8 @@ nsresult
 nsCSSFrameConstructor::RecoverLetterFrames(nsFrameConstructorState& aState,
                                            nsIFrame* aBlockFrame)
 {
+  aBlockFrame = aBlockFrame->GetFirstContinuation();
+  
   nsresult rv = NS_OK;
 
   aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
