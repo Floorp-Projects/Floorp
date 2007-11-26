@@ -6312,11 +6312,11 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
     // first-letter frame are when it's the block inside a non-anonymous cell,
     // the block inside a fieldset, a scrolled content block, or a column
     // content block.  Note that this means that blocks which are the anonymous
-    // block in {ib} splits do NOT get first-letter frames.  Also, a block that
-    // has a previous continuation can't have a first letter frame.
+    // block in {ib} splits do NOT get first-letter frames.  Note that
+    // NS_BLOCK_HAS_FIRST_LETTER_STYLE gets set on all continuations of the
+    // block.
     nsIAtom *pseudo = GetStyleContext()->GetPseudoType();
     PRBool haveFirstLetterStyle =
-      !GetPrevContinuation() &&
       (!pseudo ||
        (pseudo == nsCSSAnonBoxes::cellContent &&
         mParent->GetStyleContext()->GetPseudoType() == nsnull) ||
