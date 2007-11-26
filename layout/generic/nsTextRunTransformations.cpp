@@ -106,14 +106,14 @@ nsTransformedTextRun::SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
     changed = PR_TRUE;
   }
   if (aLineBreakBefore) {
-    newBreaks.AppendElement(aStart);
+    nsTextFrameUtils::AppendLineBreakOffset(&newBreaks, aStart);
   }
   if (aLineBreakAfter != (i + 1 < mLineBreaks.Length() &&
                           mLineBreaks[i + 1] == aStart + aLength)) {
     changed = PR_TRUE;
   }
   if (aLineBreakAfter) {
-    newBreaks.AppendElement(aStart + aLength);
+    nsTextFrameUtils::AppendLineBreakOffset(&newBreaks, aStart + aLength);
   }
   for (; i < mLineBreaks.Length(); ++i) {
     if (mLineBreaks[i] > aStart + aLength)

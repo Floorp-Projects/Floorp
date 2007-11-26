@@ -1322,14 +1322,6 @@ GetFontMetrics(gfxFontGroup* aFontGroup)
   return font->GetMetrics();
 }
 
-static void
-AppendLineBreakOffset(nsTArray<PRUint32>* aArray, PRUint32 aOffset)
-{
-  if (aArray->Length() > 0 && (*aArray)[aArray->Length() - 1] == aOffset)
-    return;
-  aArray->AppendElement(aOffset);
-}
-
 void
 BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 {
@@ -1532,11 +1524,12 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   gfxSkipCharsIterator iter(skipChars);
   nsAutoTArray<PRUint32,50> textBreakPointsAfterTransform;
   for (i = 0; i < textBreakPoints.Length(); ++i) {
-    AppendLineBreakOffset(&textBreakPointsAfterTransform, 
+    nsTextFrameUtils::AppendLineBreakOffset(&textBreakPointsAfterTransform, 
             iter.ConvertOriginalToSkipped(textBreakPoints[i]));
   }
   if (mStartOfLine) {
-    AppendLineBreakOffset(&textBreakPointsAfterTransform, transformedLength);
+    nsTextFrameUtils::AppendLineBreakOffset(&textBreakPointsAfterTransform,
+                                            transformedLength);
   }
 
   // Setup factory chain
