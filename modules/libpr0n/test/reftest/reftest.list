@@ -6,7 +6,7 @@
 # http://www.libpng.org/pub/png/pngsuite.html
 #
 
-include pngsuite-basic-n/reftest.list
+#include pngsuite-basic-n/reftest.list
 #include pngsuite-basic-i/reftest.list
 #include pngsuite-ancillary/reftest.list
 #include pngsuite-background/reftest.list
