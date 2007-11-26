@@ -93,7 +93,7 @@ static const struct keyword keyword_defs[] = {
 #undef JS_KEYWORD
 };
 
-#define KEYWORD_COUNT (sizeof keyword_defs / sizeof keyword_defs[0])
+#define KEYWORD_COUNT JS_ARRAY_LENGTH(keyword_defs)
 
 static const struct keyword *
 FindKeyword(const jschar *s, size_t length)
@@ -447,7 +447,7 @@ UngetChar(JSTokenStream *ts, int32 c)
 {
     if (c == EOF)
         return;
-    JS_ASSERT(ts->ungetpos < sizeof ts->ungetbuf / sizeof ts->ungetbuf[0]);
+    JS_ASSERT(ts->ungetpos < JS_ARRAY_LENGTH(ts->ungetbuf));
     if (c == '\n')
         ts->lineno--;
     ts->ungetbuf[ts->ungetpos++] = (jschar)c;
