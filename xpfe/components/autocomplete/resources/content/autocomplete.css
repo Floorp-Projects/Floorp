@@ -13,6 +13,10 @@
   visibility: hidden;
 }
 
+.autocomplete-tree {
+  -moz-user-focus: ignore;
+}
+
 /* The following rule is here to fix bug 96899 (and now 117952).  
    Somehow trees create a situation
    in which a popupset flows itself as if its popup child is directly within it
