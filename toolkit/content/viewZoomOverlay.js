@@ -46,33 +46,33 @@
  **/
 
 var ZoomManager = {
-  get _prefBranch() {
+  get _prefBranch ZoomManager_get__prefBranch() {
     return Components.classes["@mozilla.org/preferences-service;1"]
                      .getService(Components.interfaces.nsIPrefBranch);
   },
 
-  get MIN() {
+  get MIN ZoomManager_get_MIN() {
     delete this.MIN;
     return this.MIN = this._prefBranch.getIntPref("fullZoom.minPercent") / 100;
   },
 
-  get MAX() {
+  get MAX ZoomManager_get_MAX() {
     delete this.MAX;
     return this.MAX = this._prefBranch.getIntPref("fullZoom.maxPercent") / 100;
   },
 
-  get fullZoom() {
+  get fullZoom ZoomManager_get_fullZoom() {
     return getBrowser().markupDocumentViewer.fullZoom;
   },
 
-  set fullZoom(aVal) {
+  set fullZoom ZoomManager_set_fullZoom(aVal) {
     if (aVal < this.MIN || aVal > this.MAX)
       throw Components.results.NS_ERROR_INVALID_ARG;
 
     return (getBrowser().markupDocumentViewer.fullZoom = aVal);
   },
 
-  get fullZoomValues() {
+  get fullZoomValues ZoomManager_get_fullZoomValues() {
     var fullZoomValues = this._prefBranch.getCharPref("toolkit.zoomManager.fullZoomValues")
                                          .split(",").map(parseFloat);
     fullZoomValues.sort();
@@ -87,23 +87,23 @@ var ZoomManager = {
     return this.fullZoomValues = fullZoomValues;
   },
 
-  enlarge: function () {
+  enlarge: function ZoomManager_enlarge() {
     var i = this.fullZoomValues.indexOf(this.snap(this.fullZoom)) + 1;
     if (i < this.fullZoomValues.length)
       this.fullZoom = this.fullZoomValues[i];
   },
 
-  reduce: function () {
+  reduce: function ZoomManager_reduce() {
     var i = this.fullZoomValues.indexOf(this.snap(this.fullZoom)) - 1;
     if (i >= 0)
       this.fullZoom = this.fullZoomValues[i];
   },
 
-  reset: function () {
+  reset: function ZoomManager_reset() {
     this.fullZoom = 1;
   },
 
-  snap: function (aVal) {
+  snap: function ZoomManager_snap(aVal) {
     var values = this.fullZoomValues;
     for (var i = 0; i < values.length; i++) {
       if (values[i] >= aVal) {
