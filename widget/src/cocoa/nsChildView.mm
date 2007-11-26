@@ -1765,7 +1765,7 @@ NSEvent* gLastDragEvent = nil;
     mGeckoChild = inChild;
     mIsPluginView = NO;
     mCurKeyEvent = nil;
-    mKeyHandled = PR_FALSE;
+    mKeyDownHandled = PR_FALSE;
     
     // initialization for NSTextInput
     mMarkedRange.location = NSNotFound;
@@ -3643,7 +3643,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
     geckoEvent.keyCode   = 0;
     geckoEvent.isChar    = PR_TRUE;
-    if (mKeyHandled)
+    if (mKeyDownHandled)
       geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     // don't set other modifiers from the current event, because here in
     // -insertText: they've already been taken into account in creating
@@ -3935,40 +3935,36 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   mCurKeyEvent = theEvent;
 
-  BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
-
-  // if we have a dead-key event, we won't get a character
-  // since we have no character, there isn't any point to generating
-  // a gecko event until they have dead key events
-  if (![theEvent isARepeat] && nonDeadKeyPress) {
-    // Fire a key down. We'll fire key presses via -insertText:
-    nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
-    [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
-
-    // create native EventRecord for use by plugins
-    EventRecord macEvent;
-    ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
-    geckoEvent.nativeMsg = &macEvent;
-    mKeyHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
-    if (!mGeckoChild)
-      return;
-  }
-
-  // Check to see if we are still the first responder.
-  // The key down event may have shifted the focus, in which
-  // case we should not fire the key press.
-  NSResponder* resp = [[self window] firstResponder];
-  if (resp != (NSResponder*)self) {
-    mCurKeyEvent = nil;
-    return;
-  }
-
   PRBool dispatchedKeyPress = PR_FALSE;
+  BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
   if (nonDeadKeyPress) {
+    if (![theEvent isARepeat]) {
+      NSResponder* firstResponder = [[self window] firstResponder];
+
+      nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
+      [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+
+      // create native EventRecord for use by plugins
+      EventRecord macEvent;
+      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      geckoEvent.nativeMsg = &macEvent;
+      mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      if (!mGeckoChild)
+        return;
+
+      // The key down event may have shifted the focus, in which
+      // case we should not fire the key press.
+      if (firstResponder != [[self window] firstResponder]) {
+        mCurKeyEvent = nil;
+        mKeyDownHandled = PR_FALSE;
+        return;
+      }
+    }
+
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
     [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
-    if (mKeyHandled)
+    if (mKeyDownHandled)
       geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
     // if this is a non-letter keypress, or the control key is down,
@@ -4002,8 +3998,9 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   mIgnoreDoCommand = NO;
   mCurKeyEvent = nil;
-  mKeyHandled = PR_FALSE;
+  mKeyDownHandled = PR_FALSE;
 }
+
 
 static BOOL keyUpAlreadySentKeyDown = NO;
 
@@ -4059,7 +4056,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       ConvertCocoaKeyEventToMacEvent(nativeKeyDownEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
-      mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      mGeckoChild->DispatchWindowEvent(geckoEvent);
       if (!mGeckoChild)
         return;
     }
