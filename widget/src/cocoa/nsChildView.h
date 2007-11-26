@@ -92,7 +92,7 @@ union nsPluginPort;
   BOOL mIsPluginView;
 
   NSEvent* mCurKeyEvent;   // only valid during a keyDown
-  PRBool  mKeyHandled;
+  PRBool mKeyDownHandled;
   
   // needed for NSTextInput implementation
   NSRange mMarkedRange;
