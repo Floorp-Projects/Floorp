@@ -44,6 +44,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
+#include "nsXBLPrototypeBinding.h"
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
 #include "nsStyleConsts.h"
@@ -811,6 +812,19 @@ nsSVGElement::UpdateContentStyleRule()
   
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsIURI *docURI = doc->GetDocumentURI();
+
+  nsIContent* bindingParent = GetBindingParent();
+  if (bindingParent) {
+    nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
+    if (binding) {
+      // XXX sXBL/XBL2 issue
+      // If this is an anonymous XBL element use the binding
+      // document for the base URI. 
+      // XXX Will fail with xml:base
+      baseURI = binding->PrototypeBinding()->DocURI();
+    }
+  }
+
   nsICSSLoader* cssLoader = doc->CSSLoader();
 
   nsCSSDeclaration* declaration = nsnull;

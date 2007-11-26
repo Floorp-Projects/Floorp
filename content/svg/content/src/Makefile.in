@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  xpconnect \
 		  webshell \
+		  xuldoc \
 		  unicharutil \
 		  imglib2 \
 		  docshell \
