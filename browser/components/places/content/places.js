@@ -43,16 +43,27 @@ var PlacesOrganizer = {
 
   _initFolderTree: function() {
     var leftPaneRoot = PlacesUtils.leftPaneFolderId;
-    var allBookmarksId = PlacesUtils.allBookmarksFolderId;
     this._places.place = "place:excludeItems=1&expandQueries=0&folder=" + leftPaneRoot;
-    this._places.selectItems([allBookmarksId]);
-    asContainer(this._places.selectedNode).containerOpen = true;
+  },
+
+  selectLeftPaneQuery: function PO_selectLeftPaneQuery(aQueryName) {
+    var itemId = PlacesUtils.leftPaneQueries[aQueryName];
+    this._places.selectItems([itemId]);
+    // Forcefully expand all-bookmarks
+    if (aQueryName == "AllBookmarks")
+      asContainer(this._places.selectedNode).containerOpen = true;
   },
 
   init: function PO_init() {
     this._places = document.getElementById("placesList");
     this._content = document.getElementById("placeContent");
     this._initFolderTree();
+
+    var leftPaneSelection = "AllBookmarks"; // default to all-bookmarks
+    if ("arguments" in window && window.arguments.length > 0)
+      leftPaneSelection = window.arguments[0];
+
+    this.selectLeftPaneQuery(leftPaneSelection);
 
     var view = this._content.treeBoxObject.view;
     if (view.rowCount > 0)

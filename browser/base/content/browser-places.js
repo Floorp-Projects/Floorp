@@ -313,25 +313,22 @@ var PlacesCommandHook = {
 
   /**
    * Opens the Places Organizer. 
-   * @param   aPlace
-   *          The place to select in the organizer window (a place: URI) 
-   * @param   aForcePlace
-   *          If true, aPlace will be set even if the organizer window is 
-   *          already open
+   * @param   aLeftPaneRoot
+   *          The query to select in the organizer window - options
+   *          are: History, AllBookmarks, BookmarksMenu, BookmarksToolbar,
+   *          UnfiledBookmarks and Tags.
    */
-  showPlacesOrganizer: function PCH_showPlacesOrganizer(aPlace, aForcePlace) {
+  showPlacesOrganizer: function PCH_showPlacesOrganizer(aLeftPaneRoot) {
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
              getService(Ci.nsIWindowMediator);
     var organizer = wm.getMostRecentWindow("Places:Organizer");
     if (!organizer) {
       // No currently open places window, so open one with the specified mode.
       openDialog("chrome://browser/content/places/places.xul", 
-                 "", "chrome,toolbar=yes,dialog=no,resizable", aPlace);
+                 "", "chrome,toolbar=yes,dialog=no,resizable", aLeftPaneRoot);
     }
     else {
-      if (aForcePlace)
-        organizer.selectPlaceURI(aPlace);
-
+      organizer.PlacesOrganizer.selectLeftPaneQuery(aLeftPaneRoot);
       organizer.focus();
     }
   },
