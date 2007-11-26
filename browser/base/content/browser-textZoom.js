@@ -57,17 +57,23 @@ var FullZoom = {
   // The name of the setting.  Identifies the setting in the prefs database.
   name: "browser.content.full-zoom",
 
-  // The global value (if any) for the setting.  Retrieved from the prefs
-  // database when this handler gets initialized, then updated as it changes.
+  // The global value (if any) for the setting.  Lazily loaded from the service
+  // when first requested, then updated by the pref change listener as it changes.
   // If there is no global value, then this should be undefined.
-  globalValue: undefined,
+  get globalValue FullZoom_get_globalValue() {
+    var globalValue = this._cps.getPref(null, this.name);
+    if (typeof globalValue != "undefined")
+      globalValue = this._ensureValid(globalValue);
+    delete this.globalValue;
+    return this.globalValue = globalValue;
+  },
 
 
   //**************************************************************************//
   // Convenience Getters
 
   // Content Pref Service
-  get _cps() {
+  get _cps FullZoom_get__cps() {
     delete this._cps;
     return this._cps = Cc["@mozilla.org/content-pref/service;1"].
                        getService(Ci.nsIContentPrefService);
@@ -82,7 +88,7 @@ var FullZoom = {
                Components.interfaces.nsIContentPrefObserver,
                Components.interfaces.nsISupports],
 
-  QueryInterface: function (aIID) {
+  QueryInterface: function FullZoom_QueryInterface(aIID) {
     if (!this.interfaces.some(function (v) aIID.equals(v)))
       throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
@@ -92,33 +98,18 @@ var FullZoom = {
   //**************************************************************************//
   // Initialization & Destruction
 
-  init: function () {
+  init: function FullZoom_init() {
     // Listen for scrollwheel events so we can save scrollwheel-based changes.
     window.addEventListener("DOMMouseScroll", this, false);
 
     // Register ourselves with the service so we know when our pref changes.
     this._cps.addObserver(this.name, this);
-
-    // Register ourselves with the sink so we know when the location changes.
-    var globalValue = ContentPrefSink.addObserver(this.name, this);
-    this.globalValue = this._ensureValid(globalValue);
-
-    // Set the initial value of the setting.
-    this._applyPrefToSetting();
   },
 
-  destroy: function () {
-    ContentPrefSink.removeObserver(this.name, this);
+  destroy: function FullZoom_destroy() {
     this._cps.removeObserver(this.name, this);
     window.removeEventListener("DOMMouseScroll", this, false);
-
-    // Delete references to XPCOM components to make sure we don't leak them
-    // (although we haven't observed leakage in tests).
-    for (var i in this) {
-      try { this[i] = null }
-      // Ignore "setting a property that has only a getter" exceptions.
-      catch(ex) {}
-    }
+    delete this._cps;
   },
 
 
@@ -127,7 +118,7 @@ var FullZoom = {
 
   // nsIDOMEventListener
 
-  handleEvent: function (event) {
+  handleEvent: function FullZoom_handleEvent(event) {
     switch (event.type) {
       case "DOMMouseScroll":
         this._handleMouseScrolled(event);
@@ -135,7 +126,7 @@ var FullZoom = {
     }
   },
 
-  _handleMouseScrolled: function (event) {
+  _handleMouseScrolled: function FullZoom__handleMouseScrolled(event) {
     // Construct the "mousewheel action" pref key corresponding to this event.
     // Based on nsEventStateManager::GetBasePrefKeyForMouseWheel.
     var pref = "mousewheel";
@@ -175,7 +166,7 @@ var FullZoom = {
 
   // nsIContentPrefObserver
 
-  onContentPrefSet: function (aGroup, aName, aValue) {
+  onContentPrefSet: function FullZoom_onContentPrefSet(aGroup, aName, aValue) {
     if (aGroup == this._cps.grouper.group(gBrowser.currentURI))
       this._applyPrefToSetting(aValue);
     else if (aGroup == null) {
@@ -189,7 +180,7 @@ var FullZoom = {
     }
   },
 
-  onContentPrefRemoved: function (aGroup, aName) {
+  onContentPrefRemoved: function FullZoom_onContentPrefRemoved(aGroup, aName) {
     if (aGroup == this._cps.grouper.group(gBrowser.currentURI))
       this._applyPrefToSetting();
     else if (aGroup == null) {
@@ -203,27 +194,29 @@ var FullZoom = {
     }
   },
 
-  // ContentPrefSink observer
+  // location change observer
 
-  onLocationChanged: function (aURI, aName, aValue) {
-    this._applyPrefToSetting(aValue);
+  onLocationChange: function FullZoom_onLocationChange(aURI) {
+    if (!aURI)
+      return;
+    this._applyPrefToSetting(this._cps.getPref(aURI, this.name));
   },
 
 
   //**************************************************************************//
   // Setting & Pref Manipulation
 
-  reduce: function () {
+  reduce: function FullZoom_reduce() {
     ZoomManager.reduce();
     this._applySettingToPref();
   },
 
-  enlarge: function () {
+  enlarge: function FullZoom_enlarge() {
     ZoomManager.enlarge();
     this._applySettingToPref();
   },
 
-  reset: function () {
+  reset: function FullZoom_reset() {
     if (typeof this.globalValue != "undefined")
       ZoomManager.fullZoom = this.globalValue;
     else
@@ -232,7 +225,7 @@ var FullZoom = {
     this._removePref();
   },
 
-  setSettingValue: function () {
+  setSettingValue: function FullZoom_setSettingValue() {
     var value = this._cps.getPref(gBrowser.currentURI, this.name);
     this._applyPrefToSetting(value);
   },
@@ -240,38 +233,38 @@ var FullZoom = {
   /**
    * Set the zoom level for the current tab.
    *
-   * Per DocumentViewerImpl::SetFullZoom in nsDocumentViewer.cpp, it looks
-   * like we can set the zoom to its current value without significant impact
-   * on performance, as the setting is only applied if it differs from the
-   * current setting.
-   *
-   * And perhaps we should always set the zoom even if it were to incur
-   * a performance penalty, since SetFullZoom claims that child documents
-   * may have a different zoom under unusual circumstances, and it implies
-   * that those child zooms should get updated when the parent zoom gets set.
+   * Per nsPresContext::setFullZoom, we can set the zoom to its current value
+   * without significant impact on performance, as the setting is only applied
+   * if it differs from the current setting.  In fact getting the zoom and then
+   * checking ourselves if it differs costs more.
+   * 
+   * And perhaps we should always set the zoom even if it was more expensive,
+   * since DocumentViewerImpl::SetTextZoom claims that child documents can have
+   * a different text zoom (although it would be unusual), and it implies that
+   * those child text zooms should get updated when the parent zoom gets set,
+   * and perhaps the same is true for full zoom
+   * (although DocumentViewerImpl::SetFullZoom doesn't mention it).
    *
    * So when we apply new zoom values to the browser, we simply set the zoom.
    * We don't check first to see if the new value is the same as the current
    * one.
    **/
-  _applyPrefToSetting: function (aValue) {
+  _applyPrefToSetting: function FullZoom__applyPrefToSetting(aValue) {
     if (gInPrintPreviewMode)
       return;
 
-    // Bug 375918 means this will sometimes throw, so we catch it
-    // and don't do anything in those cases.
     try {
       if (typeof aValue != "undefined")
         ZoomManager.fullZoom = this._ensureValid(aValue);
       else if (typeof this.globalValue != "undefined")
         ZoomManager.fullZoom = this.globalValue;
       else
-        ZoomManager.reset();
+        ZoomManager.fullZoom = 1;
     }
     catch(ex) {}
   },
 
-  _applySettingToPref: function () {
+  _applySettingToPref: function FullZoom__applySettingToPref() {
     if (gInPrintPreviewMode)
       return;
 
@@ -279,7 +272,7 @@ var FullZoom = {
     this._cps.setPref(gBrowser.currentURI, this.name, fullZoom);
   },
 
-  _removePref: function () {
+  _removePref: function FullZoom__removePref() {
     this._cps.removePref(gBrowser.currentURI, this.name);
   },
 
@@ -287,7 +280,7 @@ var FullZoom = {
   //**************************************************************************//
   // Utilities
 
-  _ensureValid: function (aValue) {
+  _ensureValid: function FullZoom__ensureValid(aValue) {
     if (isNaN(aValue))
       return 1;
 
