@@ -46,7 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= js
 LIBRARY_NAME	= mozjs
-LIB_IS_C_ONLY	= 1
 GRE_MODULE	= 1
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
@@ -65,42 +64,42 @@ ifndef JS_STATIC_BUILD
 FORCE_SHARED_LIB = 1
 endif
 
-CSRCS		= \
-		jsapi.c \
-		jsarena.c \
-		jsarray.c \
-		jsatom.c \
-		jsbool.c \
-		jscntxt.c \
-		jsdate.c \
-		jsdbgapi.c \
-		jsdhash.c \
-		jsdtoa.c \
-		jsemit.c \
-		jsexn.c \
-		jsfun.c \
-		jsgc.c \
-		jshash.c \
-		jsinterp.c \
-		jsiter.c \
-		jslock.c \
-		jslog2.c \
-		jslong.c \
-		jsmath.c \
-		jsnum.c \
-		jsobj.c \
-		jsopcode.c \
-		jsparse.c \
-		jsprf.c \
-		jsregexp.c \
-		jsscan.c \
-		jsscope.c \
-		jsscript.c \
-		jsstr.c \
-		jsutil.c \
-		jsxdrapi.c \
-		jsxml.c \
-		prmjtime.c \
+CPPSRCS		= \
+		jsapi.cpp \
+		jsarena.cpp \
+		jsarray.cpp \
+		jsatom.cpp \
+		jsbool.cpp \
+		jscntxt.cpp \
+		jsdate.cpp \
+		jsdbgapi.cpp \
+		jsdhash.cpp \
+		jsdtoa.cpp \
+		jsemit.cpp \
+		jsexn.cpp \
+		jsfun.cpp \
+		jsgc.cpp \
+		jshash.cpp \
+		jsinterp.cpp \
+		jsiter.cpp \
+		jslock.cpp \
+		jslog2.cpp \
+		jslong.cpp \
+		jsmath.cpp \
+		jsnum.cpp \
+		jsobj.cpp \
+		jsopcode.cpp \
+		jsparse.cpp \
+		jsprf.cpp \
+		jsregexp.cpp \
+		jsscan.cpp \
+		jsscope.cpp \
+		jsscript.cpp \
+		jsstr.cpp \
+		jsutil.cpp \
+		jsxdrapi.cpp \
+		jsxml.cpp \
+		prmjtime.cpp \
 		$(NULL)
 
 ifdef HAVE_DTRACE
@@ -182,7 +181,7 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
-# When using gcc the assembly is inlined in the C-file (see jslock.c)
+# When using gcc the assembly is inlined in the C-file (see jslock.cpp)
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
 ifndef GNU_CC
@@ -213,6 +212,7 @@ JSJAVA_CFLAGS	= \
 
 HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
+USE_HOST_CXX = 1
 
 ifdef HAVE_DTRACE
 ifneq ($(OS_ARCH),Darwin)
@@ -322,27 +322,27 @@ endif
 ifeq ($(OS_ARCH),IRIX)
 ifndef GNU_CC
 _COMPILE_CFLAGS  = $(patsubst -O%,-O1,$(COMPILE_CFLAGS))
-jsapi.o jsxdrapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.c Makefile.in
+jsapi.o jsxdrapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.cpp Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(CC) -o $@ -c $(_COMPILE_CFLAGS) $<
+	@$(MAKE_DEPS_AUTO_CXX)
+	$(CXX) -o $@ -c $(_COMPILE_CFLAGS) $<
 endif
 endif
 
 # An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.
 ifeq ($(OS_ARCH),AIX)
-jsatom.o: jsatom.c Makefile.in
+jsatom.o: jsatom.cpp Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(CC) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
-jsdtoa.o: jsdtoa.c Makefile.in
+	@$(MAKE_DEPS_AUTO_CXX)
+	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
+jsdtoa.o: jsdtoa.cpp Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CC)
-	$(CC) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
+	@$(MAKE_DEPS_AUTO_CXX)
+	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
 
-jsopcode.h jsopcode.c: jsopcode.tbl
+jsopcode.h jsopcode.cpp: jsopcode.tbl
 
 ifeq (,$(CROSS_COMPILE)$(filter-out WINNT,$(OS_ARCH)))
 jsautocfg.h:
@@ -363,8 +363,8 @@ endif
 # Needs to be built with the host compiler but needs to include
 # the mdcpucfg for the target so it needs the appropriate target defines
 ifdef HOST_NSPR_MDCPUCFG
-HOST_CC := $(HOST_CC) -DMDCPUCFG=$(TARGET_NSPR_MDCPUCFG)
-HOST_CFLAGS := $(patsubst -DXP_%,,$(HOST_CFLAGS))
+HOST_CXX := $(HOST_CXX) -DMDCPUCFG=$(TARGET_NSPR_MDCPUCFG)
+HOST_CXXFLAGS := $(patsubst -DXP_%,,$(HOST_CXXFLAGS))
 endif
 
 ifdef CROSS_COMPILE
@@ -388,19 +388,19 @@ endif
 ifeq ($(OS_ARCH),QNX)
 ifneq ($(OS_TARGET),NTO)
 # QNX's compiler apparently can't build a binary directly from a source file.
-jscpucfg.o: jscpucfg.c Makefile.in
-	$(HOST_CC) $(HOST_CFLAGS) -c $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) -o $@ $<
+jscpucfg.o: jscpucfg.cpp Makefile.in
+	$(HOST_CXX) $(HOST_CXXFLAGS) -c $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) -o $@ $<
 
 jscpucfg: jscpucfg.o
-	$(HOST_CC) $(HOST_CFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) -o $@ $<
+	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) -o $@ $<
 endif
 else
 ifeq ($(OS_ARCH),WINCE)
 jscpucfg$(HOST_BIN_SUFFIX):
 	echo no need to build jscpucfg $<
 else
-jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.c Makefile.in
-	$(HOST_CC) $(HOST_CFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
+jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
+	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
 endif
 endif
 
