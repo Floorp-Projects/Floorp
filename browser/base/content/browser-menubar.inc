@@ -362,8 +362,8 @@
                   <menupopup id="historyUndoPopup" onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
                 </menu>
                 <menuseparator id="endUndoSeparator"/>
-                <menuitem observes="viewHistorySidebar" label="&historyShowSidebarCmd.label;"
-                          key="key_gotoHistory"/>
+                <menuitem label="&showAllHistoryCmd.label;"
+                          command="Browser:ShowAllHistory"/>
               </menupopup>
             </menu>
 
@@ -398,8 +398,8 @@
       </menu>
       <menuitem label="&addCurPagesCmd.label;" 
                 command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
-      <menuitem label="&showBookmarksCmd.label;" 
-                command="Browser:ShowBookmarks" key="manBookmarkKb"/>
+      <menuitem label="&showAllBookmarksCmd.label;" 
+                command="Browser:ShowAllBookmarks" key="manBookmarkKb"/>
       <menuseparator builder="start"/>
     </menupopup>
   </menu>
