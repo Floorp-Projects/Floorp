@@ -1612,8 +1612,6 @@
         this.clearSelection();
         this.input = null;
       </handler>
-
-      <handler event="mousedown" phase="capturing" preventdefault="true"/>
     </handlers>
   </binding>
 
