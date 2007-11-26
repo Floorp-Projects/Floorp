@@ -457,7 +457,7 @@ fails == 386310-1d.html 386310-1-ref.html
 == 403129-2.html 403129-2-ref.html
 == 403129-3.html 403129-3-ref.html
 == 403129-4.html 403129-4-ref.html
-fails == 403134-1.html 403134-1-ref.html
+fails == 403134-1.html 403134-1-ref.html # bug 405377
 == 403249-1a.html 403249-1-ref.html
 == 403249-1b.html 403249-1-ref.html
 == 403455-1.html 403455-1-ref.html
