@@ -113,6 +113,15 @@ public:
                                 PRPackedBool* aIncomingWhitespace,
                                 gfxSkipCharsBuilder* aSkipChars,
                                 PRUint32* aAnalysisFlags);
+
+  static void
+  AppendLineBreakOffset(nsTArray<PRUint32>* aArray, PRUint32 aOffset)
+  {
+    if (aArray->Length() > 0 && (*aArray)[aArray->Length() - 1] == aOffset)
+      return;
+    aArray->AppendElement(aOffset);
+  }
+
 };
 
 class nsSkipCharsRunIterator {
