@@ -48,7 +48,7 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
-const STORAGE_FORMAT_VERSION = 1;
+const STORAGE_FORMAT_VERSION = 2;
 
 const ONE_BYTE = 1;
 const ONE_KILOBYTE = 1024 * ONE_BYTE;
@@ -138,7 +138,7 @@ BookmarksSyncService.prototype = {
     if (!this.__encrypterLoaded) {
       let jsLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
         getService(Ci.mozIJSSubScriptLoader);
-      jsLoader.loadSubScript("chrome://sync/content/encrypt.js", this.__encrypter);
+      jsLoader.loadSubScript("chrome://weave/content/encrypt.js", this.__encrypter);
       this.__encrypterLoaded = true;
     }
     return this.__encrypter;
@@ -840,7 +840,7 @@ BookmarksSyncService.prototype = {
 
     if (parentId < 0) {
       this._log.warn("Creating node with unknown parent -> reparenting to root");
-      parentId = this._bms.bookmarksRoot;
+      parentId = this._bms.bookmarksMenuFolder;
     }
 
     switch (command.data.type) {
@@ -1302,8 +1302,9 @@ BookmarksSyncService.prototype = {
   },
 
   _resetGUIDs: function BSS__resetGUIDs() {
-    this._resetGUIDsInt(this._getFolderNodes(this._bms.bookmarksRoot));
-    this._resetGUIDsInt(this._getFolderNodes(this._bms.unfiledRoot));
+    this._resetGUIDsInt(this._getFolderNodes(this._bms.bookmarksMenuFolder));
+    this._resetGUIDsInt(this._getFolderNodes(this._bms.toolbarFolder));
+    this._resetGUIDsInt(this._getFolderNodes(this._bms.unfiledBookmarksFolder));
   },
 
   _resetGUIDsInt: function BSS__resetGUIDsInt(node) {
