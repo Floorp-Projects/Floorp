@@ -1255,7 +1255,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         uintN bitmapLength;
         uint32 *bitmap;
         JSAtom **names, *name;
-        uint32 localKind;
+        JSLocalKind localKind;
 
         mark = JS_ARENA_MARK(&xdr->cx->tempPool);
 
