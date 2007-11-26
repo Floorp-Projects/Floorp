@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,10 +17,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Georgi Guninski
+ * Contributor(s): Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,41 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-338121-03.js';
-//-----------------------------------------------------------------------------
-var BUGNUMBER = 338121;
-var summary = 'Issues with JS_ARENA_ALLOCATE_CAST';
-var actual = 'No Crash';
-var expect = 'No Crash';
+gTestfile = 'regress-394941.js';
+
+var summary = 'Infinite recursion should throw catchable exception';
+var BUGNUMBER = 394941;
+var actual = '';
+var expect = 'InternalError: script stack space quota is exhausted';
 
 printBugNumber(BUGNUMBER);
-printStatus (summary);
+START(summary);
 
-try
+try 
 {
-  var fe="vv";
-
-  for (i=0; i<24; i++)
-    fe += fe;
-
-  var fu=new Function(
-    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-    fe, fe, fe,
-    "done"
-    );
-
-//alert("fu="+fu);
-//print("fu="+fu);
-  var fuout = 'fu=' + fu;
-}
-catch(ex)
+    function f() { var z = <x><y/></x>; f(); }
+    f();
+} 
+catch(ex) 
 {
-  expect = 'InternalError: script stack space quota is exhausted';
-  actual = ex + '';
-  print('Caught ' + ex);
+    actual = ex + '';
+    print("Caught: " + ex);
 }
-print('Done');
 
-reportCompare(expect, actual, summary);
+TEST(1, expect, actual);
+
+END();
