@@ -44,7 +44,7 @@ interface nsIURI;
 /* nsIGnomeVFSMimeApp holds information about an application that is looked up
    with nsIGnomeVFSService::GetAppForMimeType. */
 
-[scriptable, uuid(99ae024f-e869-4973-958b-54768a84295a)]
+[scriptable, uuid(57b1ef41-35cd-48e9-a248-2030c8365067)]
 interface nsIGnomeVFSMimeApp : nsISupports
 {
   const long EXPECTS_URIS  = 0;
@@ -143,6 +143,7 @@ interface nsIGnomeVFSService : nsISupports
 
   /* Open the given URI in the default application */
   void               showURI(in nsIURI uri);
+  [noscript] void    showURIForInput(in ACString uri);
 };
 
 %{C++
