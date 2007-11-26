@@ -172,7 +172,7 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 typedef enum {
   NO_SUBSTITUTION           = 0x00,
   APP_PATH_SUBSTITUTION     = 0x01,
-  EXE_NAME_SUBSTITUTION     = 0x02,
+  EXE_NAME_SUBSTITUTION     = 0x02
 } SettingFlags;
 
 typedef struct {
