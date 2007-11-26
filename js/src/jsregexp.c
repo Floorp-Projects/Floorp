@@ -3902,7 +3902,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
     JSSTRING_CHARS_AND_LENGTH(re->source, source, length);
     if (length == 0) {
         source = empty_regexp_ucstr;
-        length = sizeof(empty_regexp_ucstr) / sizeof(jschar) - 1;
+        length = JS_ARRAY_LENGTH(empty_regexp_ucstr) - 1;
     }
     length += 2;
     nflags = 0;

@@ -747,7 +747,7 @@ date_parseString(JSString *str, jsdouble *result)
             }
             if (i <= st + 1)
                 goto syntax;
-            for (k = (sizeof(wtb)/sizeof(char*)); --k >= 0;)
+            for (k = JS_ARRAY_LENGTH(wtb); --k >= 0;)
                 if (date_regionMatches(wtb[k], 0, s, st, i-st, 1)) {
                     int action = ttb[k];
                     if (action != 0) {

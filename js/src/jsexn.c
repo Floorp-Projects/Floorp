@@ -1200,7 +1200,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
 
     /* Protect the newly-created strings below from nesting GCs. */
     memset(tv, 0, sizeof tv);
-    JS_PUSH_TEMP_ROOT(cx, sizeof tv / sizeof tv[0], tv, &tvr);
+    JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(tv), tv, &tvr);
 
     /*
      * Try to get an appropriate prototype by looking up the corresponding
