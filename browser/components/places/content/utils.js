@@ -1693,6 +1693,12 @@ var PlacesUtils = {
     return element;
   },
 
+  get leftPaneQueries() {    
+    // build the map
+    this.leftPaneFolderId;
+    return this.leftPaneQueries;
+  },
+
   // get the folder id for the organizer left-pane folder
   get leftPaneFolderId() {
     var prefs = Cc["@mozilla.org/preferences-service;1"].
@@ -1701,7 +1707,15 @@ var PlacesUtils = {
     var allBookmarksId;
     try {
       leftPaneRoot = prefs.getIntPref("browser.places.leftPaneFolderId");
-      // oh, easy!
+      // Build the leftPaneQueries Map
+      delete this.leftPaneQueries;
+      this.leftPaneQueries = {};
+      var items = this.annotations.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, { });
+      for (var i=0; i < items.length; i++) {
+        var queryName = this.annotations
+                            .getItemAnnotation(items[i], ORGANIZER_QUERY_ANNO);
+        this.leftPaneQueries[queryName] = items[i];
+      }
       delete this.leftPaneFolderId;
       return this.leftPaneFolderId = leftPaneRoot;
     }
@@ -1711,6 +1725,9 @@ var PlacesUtils = {
     const EXPIRE_NEVER = this.annotations.EXPIRE_NEVER;
     var callback = {
       runBatched: function(aUserData) {
+        delete self.leftPaneQueries;
+        self.leftPaneQueries = { };
+
         // Left Pane Root Folder
         leftPaneRoot = self.bookmarks.createFolder(self.placesRootId, "", -1);
 
@@ -1720,6 +1737,7 @@ var PlacesUtils = {
         let itemId = self.bookmarks.insertBookmark(leftPaneRoot, uri, -1, title);
         self.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                            "History", 0, EXPIRE_NEVER);
+        self.leftPaneQueries["History"] = itemId;
 
         // XXX: Downloads
 
@@ -1728,6 +1746,7 @@ var PlacesUtils = {
         itemId = self.bookmarks.insertBookmark(leftPaneRoot, uri, -1, null);
         self.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                            "Tags", 0, EXPIRE_NEVER);
+        self.leftPaneQueries["Tags"] = itemId;
 
         // All Bookmarks Folder
         title = self.getString("OrganizerQueryAllBookmarks");
@@ -1735,18 +1754,21 @@ var PlacesUtils = {
         allBookmarksId = itemId;
         self.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                            "AllBookmarks", 0, EXPIRE_NEVER);
+        self.leftPaneQueries["AllBookmarks"] = itemId;
 
         // All Bookmarks->Bookmarks Toolbar Query
         uri = IO.newURI("place:folder=" + self.toolbarFolderId);
         itemId = self.bookmarks.insertBookmark(allBookmarksId, uri, -1, null);
         self.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                            "BookmarksToolbar", 0, EXPIRE_NEVER);
+        self.leftPaneQueries["BookmarksToolbar"] = itemId;
 
         // All Bookmarks->Bookmarks Menu Query
         uri = IO.newURI("place:folder=" + self.bookmarksMenuFolderId);
         itemId = self.bookmarks.insertBookmark(allBookmarksId, uri, -1, null);
         self.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                            "BookmarksMenu", 0, EXPIRE_NEVER);
+        self.leftPaneQueries["BookmarksMenu"] = itemId;
 
         // All Bookmarks->Unfiled bookmarks
         uri = IO.newURI("place:folder=" + self.unfiledBookmarksFolderId);
@@ -1754,6 +1776,7 @@ var PlacesUtils = {
         self.annotations.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO,
                                            "UnfiledBookmarks", 0,
                                            EXPIRE_NEVER);
+        self.leftPaneQueries["UnfiledBookmarks"] = itemId;
 
         // disallow manipulating this folder within the organizer UI
         self.bookmarks.setFolderReadonly(leftPaneRoot, true);
@@ -1761,7 +1784,6 @@ var PlacesUtils = {
     };
     this.bookmarks.runInBatchMode(callback, null);
     prefs.setIntPref("browser.places.leftPaneFolderId", leftPaneRoot);
-    prefs.setIntPref("browser.places.allBookmarksFolderId", allBookmarksId);
     delete this.leftPaneFolderId;
     return this.leftPaneFolderId = leftPaneRoot;
   },
@@ -1770,10 +1792,7 @@ var PlacesUtils = {
     // ensure the left-pane root is initialized;
     this.leftPaneFolderId;
     delete this.allBookmarksFolderId;
-    return this.allBookmarksFolderId =
-      Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefBranch2).
-      getIntPref("browser.places.allBookmarksFolderId");
+    return this.allBookmarksFolderId = this.leftPaneQueries["AllBookmarks"];
   }
 };
 
