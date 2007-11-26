@@ -436,10 +436,15 @@ function DocumentLoaded()
             }
             result += gURLs[0].prettyPath; // the URL being tested
             dump(result + "\n");
-            if (!test_passed && expected == EXPECTED_PASS) {
-                dump("REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n");
-                dump("REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n");
-                dump("REFTEST number of differing pixels: " + differences + "\n");
+            if (!test_passed && expected == EXPECTED_PASS ||
+                test_passed && expected == EXPECTED_FAIL) {
+                if (equal) {
+                    dump("REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n");
+                    dump("REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n");
+                    dump("REFTEST number of differing pixels: " + differences + "\n");
+                } else {
+                    dump("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
+                }
             }
 
             gURLs.shift();
