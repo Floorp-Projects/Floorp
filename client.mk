@@ -79,7 +79,8 @@
 #    clean (realclean is now the same as clean)
 #    distclean
 #
-# See http://www.mozilla.org/build/ for more information.
+# See http://developer.mozilla.org/en/docs/Build_Documentation for 
+# more information.
 #
 # Options:
 #   MOZ_BUILD_PROJECTS   - Build multiple projects in subdirectories
