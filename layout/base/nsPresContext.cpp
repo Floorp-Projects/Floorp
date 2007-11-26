@@ -1151,19 +1151,17 @@ nsPresContext::GetDefaultFontExternal(PRUint8 aFontID) const
 void
 nsPresContext::SetFullZoom(float aZoom)
 {
-  float oldWidth = mVisibleArea.width / float(mCurAppUnitsPerDevPixel);
-  float oldHeight = mVisibleArea.height / float(mCurAppUnitsPerDevPixel);
-  if (!mShell) {
+  if (!mShell || mFullZoom == aZoom) {
     return;
   }
+  float oldWidth = mVisibleArea.width / float(mCurAppUnitsPerDevPixel);
+  float oldHeight = mVisibleArea.height / float(mCurAppUnitsPerDevPixel);
   if (mDeviceContext->SetPixelScale(aZoom)) {
     mDeviceContext->FlushFontCache();
   }
-  if (mFullZoom != aZoom) {
-    mFullZoom = aZoom;
-    GetViewManager()->SetWindowDimensions(oldWidth * AppUnitsPerDevPixel(), oldHeight * AppUnitsPerDevPixel());
-    ClearStyleDataAndReflow();
-  }
+  mFullZoom = aZoom;
+  GetViewManager()->SetWindowDimensions(oldWidth * AppUnitsPerDevPixel(), oldHeight * AppUnitsPerDevPixel());
+  ClearStyleDataAndReflow();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
 

@@ -1120,11 +1120,10 @@ function delayedStartup()
     Components.utils.reportError("Failed to init microsummary service:\n" + ex);
   }
 
-  // Initialize the content pref event sink and the text zoom setting.
+  // Initialize the full zoom setting.
   // We do this before the session restore service gets initialized so we can
-  // apply text zoom settings to tabs restored by the session restore service.
+  // apply full zoom settings to tabs restored by the session restore service.
   try {
-    ContentPrefSink.init();
     FullZoom.init();
   }
   catch(ex) {
@@ -1175,7 +1174,6 @@ function BrowserShutdown()
 {
   try {
     FullZoom.destroy();
-    ContentPrefSink.destroy();
   }
   catch(ex) {
     Components.utils.reportError(ex);
@@ -3726,7 +3724,7 @@ nsBrowserStatusHandler.prototype =
     // Catch exceptions until bug 376222 gets fixed so we don't hork
     // other progress listeners if this call throws an exception.
     try {
-      ContentPrefSink.handleLocationChanged(aLocationURI);
+      FullZoom.onLocationChange(aLocationURI);
     }
     catch(ex) {
       Components.utils.reportError(ex);
@@ -5445,7 +5443,6 @@ var FeedHandler = {
 
 #include browser-places.js
 
-#include browser-contentPrefSink.js
 #include browser-textZoom.js
 
 HistoryMenu.toggleRecentlyClosedTabs = function PHM_toggleRecentlyClosedTabs() {

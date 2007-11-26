@@ -223,8 +223,10 @@
                 onget="return Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService);"
                 readonly="true"/>
 
+      <field name="_docShell">null</field>
+
       <property name="docShell"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell;"
+                onget="return this._docShell || (this._docShell = this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell);"
                 readonly="true"/>
 
       <property name="webNavigation"
