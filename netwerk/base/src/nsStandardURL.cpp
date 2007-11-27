@@ -1515,6 +1515,9 @@ nsStandardURL::SetPort(PRInt32 port)
         ShiftFromPath(buf.Length());
     }
     else if (port == -1 || port == mDefaultPort) {
+        // Don't allow mPort == mDefaultPort
+        port = -1;
+
         // need to remove the port number from the URL spec
         PRUint32 start = mHost.mPos + mHost.mLen;
         PRUint32 lengthToCut = mPath.mPos - start;
