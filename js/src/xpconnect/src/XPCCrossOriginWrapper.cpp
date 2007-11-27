@@ -588,6 +588,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_TRUE;
   }
 
+  JSObject *origObj = obj;
   obj = GetWrapper(cx, obj);
   if (!obj) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
@@ -666,17 +667,32 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_FALSE;
   }
 
-  JSObject *newProto;
-  if (checkProto &&
-      (newProto = JS_GetPrototype(cx, wrappedObj)) != proto &&
-      newProto) {
-    // __proto__ setting is a bad hack, people shouldn't do it. In the
-    // interests of sanity, only allow them to set XOW wrapped protos
-    // to null.
+  if (checkProto) {
+    JSObject *newProto = JS_GetPrototype(cx, wrappedObj);
 
-    JS_SetPrototype(cx, wrappedObj, proto);
-    JS_ReportError(cx, "invalid __proto__ value (can only be set to null)");
-    return JS_FALSE;
+    // If code is trying to set obj.__proto__ and we're on obj's
+    // prototype chain, then the OBJ_SET_PROPERTY above will do the
+    // wrong thing if wrappedObj still delegates to Object.prototype.
+    // However, it's hard to figure out if wrappedObj still does
+    // delegate to Object.prototype so check to see if proto changed as a
+    // result of setting __proto__.
+
+    if (origObj != obj) {
+      // Undo the damage.
+      if (!JS_SetPrototype(cx, wrappedObj, proto) ||
+          !JS_SetPrototype(cx, origObj, newProto)) {
+        return JS_FALSE;
+      }
+    } else if (newProto) {
+      // __proto__ setting is a bad hack, people shouldn't do it. In
+      // this case we're setting the direct prototype of a XOW object,
+      // in the interests of sanity only allow it to be set to null in
+      // this case.
+
+      JS_SetPrototype(cx, wrappedObj, proto);
+      JS_ReportError(cx, "invalid __proto__ value (can only be set to null)");
+      return JS_FALSE;
+    }
   }
 
   return WrapSameOriginProp(cx, obj, vp);
