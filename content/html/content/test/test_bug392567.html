@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=392567
 
 /** Test for Bug 392567 **/
 
-var dataUrl = "data:application/octet-stream;base64,UEsDBBQAAgAIAO1yETcAAAAAAgAAAAAAAAAKAAAAaW5kZXguaHRtbAMAUEsBAhQAFAACAAgA7XIRNwAAAAACAAAAAAAAAAoAAAAAAAAAAAAgAAAAAAAAAGluZGV4Lmh0bWxQSwUGAAAAAAEAAQA4AAAAKgAAAAAA";
+var dataUrl = "http://localhost:8888/tests/content/html/content/test/bug392567.jar";
 var jarUrl = "jar:" + dataUrl + "!/index.html";
 var httpUrl = location.href.replace(/\.html.*/, "_404");
 
