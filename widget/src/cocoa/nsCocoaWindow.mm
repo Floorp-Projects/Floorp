@@ -755,8 +755,9 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  BOOL isMoving = (mBounds.x != aX || mBounds.y != aY);
-  BOOL isResizing = (mBounds.width != aWidth || mBounds.height != aHeight);
+  nsRect windowBounds(cocoaRectToGeckoRect([mWindow frame]));
+  BOOL isMoving = (windowBounds.x != aX || windowBounds.y != aY);
+  BOOL isResizing = (windowBounds.width != aWidth || windowBounds.height != aHeight);
 
   if (IsResizing() || !mWindow || (!isMoving && !isResizing))
     return NS_OK;
@@ -764,12 +765,29 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   nsRect geckoRect(aX, aY, aWidth, aHeight);
   NSRect newFrame = geckoRectToCocoaRect(geckoRect);
 
+  // We have to report the size event -first-, to make sure that content
+  // repositions itself.  Cocoa views are anchored at the bottom left,
+  // so if we don't do this our child view will end up being stuck in the
+  // wrong place during a resize.
+  if (isResizing)
+    ReportSizeEvent(&newFrame);
+
   StartResizing();
-  [mWindow setFrame:newFrame display:NO];
+  // We ignore aRepaint -- we have to call display:YES, otherwise the
+  // title bar doesn't immediately get repainted and is displayed in
+  // the wrong place, leading to a visual jump.
+  [mWindow setFrame:newFrame display:YES];
   StopResizing();
 
-  if (isResizing)
+  // now, check whether we got the frame that we wanted
+  NSRect actualFrame = [mWindow frame];
+  if (newFrame.size.width != actualFrame.size.width || newFrame.size.height != actualFrame.size.height) {
+    // We didn't; the window must have been too big or otherwise invalid.
+    // Report -another- resize in this case, to make sure things are in
+    // the right place.  This will cause some visual jitter, but
+    // shouldn't happen often.
     ReportSizeEvent();
+  }
 
   return NS_OK;
 }
@@ -777,23 +795,8 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  if (IsResizing() || !mWindow || (mBounds.width == aWidth && mBounds.height == aHeight))
-    return NS_OK;
-
-  NSRect newFrame = [mWindow frame];
-  newFrame.size.width = aWidth;
-  // We need to adjust for the fact that gecko wants the top of the window
-  // to remain in the same place.
-  newFrame.origin.y += newFrame.size.height - aHeight;
-  newFrame.size.height = aHeight;
-
-  StartResizing();
-  [mWindow setFrame:newFrame display:NO];
-  StopResizing();
-
-  ReportSizeEvent();
-
-  return NS_OK;
+  nsRect windowBounds(cocoaRectToGeckoRect([mWindow frame]));
+  return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
 }
 
 
@@ -963,9 +966,13 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
 
 void
-nsCocoaWindow::ReportSizeEvent()
+nsCocoaWindow::ReportSizeEvent(NSRect *r)
 {
-  NSRect windowFrame = [mWindow contentRectForFrameRect:[mWindow frame]];
+  NSRect windowFrame;
+  if (r)
+    windowFrame = [mWindow contentRectForFrameRect:(*r)];
+  else
+    windowFrame = [mWindow contentRectForFrameRect:[mWindow frame]];
   mBounds.width  = nscoord(windowFrame.size.width);
   mBounds.height = nscoord(windowFrame.size.height);
 
