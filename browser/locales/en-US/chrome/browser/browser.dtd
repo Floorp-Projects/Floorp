@@ -11,19 +11,19 @@
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
-<!ENTITY openLocationCmd.label "Open Location...">
+<!ENTITY openLocationCmd.label "Open Location…">
 <!ENTITY openLocationCmd.accesskey "L">
-<!ENTITY openFileCmd.label "Open File...">
+<!ENTITY openFileCmd.label "Open File…">
 <!ENTITY openFileCmd.accesskey "O">
 <!ENTITY openFileCmd.commandkey "o">
-<!ENTITY printSetupCmd.label "Page Setup...">
+<!ENTITY printSetupCmd.label "Page Setup…">
 <!ENTITY printSetupCmd.accesskey "u">
 <!ENTITY printPreviewCmd.label "Print Preview">
 <!ENTITY printPreviewCmd.accesskey "v">
-<!ENTITY printCmd.label "Print...">
+<!ENTITY printCmd.label "Print…">
 <!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.commandkey "p">
-<!ENTITY import.label "Import...">
+<!ENTITY import.label "Import…">
 <!ENTITY import.accesskey "I">
 
 <!ENTITY goOfflineCmd.label "Work Offline">
@@ -55,13 +55,13 @@
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "B">
-<!ENTITY addCurPageAsCmd.label "Bookmark This Page...">
+<!ENTITY addCurPageAsCmd.label "Bookmark This Page…">
 <!ENTITY addCurPageAsCmd.commandkey "d">
 <!ENTITY subscribeToPageMenupopup.label "Subscribe to This Page">
-<!ENTITY subscribeToPageMenuitem.label "Subscribe to This Page...">
-<!ENTITY addCurPagesCmd.label "Bookmark All Tabs...">
-<!ENTITY showAllBookmarksCmd.label "Show All Bookmarks...">
-<!ENTITY bookmarkAllCmd.label "Bookmark All Tabs...">
+<!ENTITY subscribeToPageMenuitem.label "Subscribe to This Page…">
+<!ENTITY addCurPagesCmd.label "Bookmark All Tabs…">
+<!ENTITY showAllBookmarksCmd.label "Show All Bookmarks…">
+<!ENTITY bookmarkAllCmd.label "Bookmark All Tabs…">
 
 <!ENTITY backCmd.label                "Back">
 <!ENTITY backCmd.accesskey            "B">
@@ -104,7 +104,7 @@
 <!ENTITY toolsMenu.label              "Tools">
 <!ENTITY toolsMenu.accesskey          "T"> 
 
-<!ENTITY keywordfield.label           "Add a Keyword for this Search...">
+<!ENTITY keywordfield.label           "Add a Keyword for this Search…">
 <!ENTITY keywordfield.accesskey       "K">
 <!ENTITY search.label                 "Web Search">
 <!ENTITY search.accesskey             "S">
@@ -149,7 +149,7 @@
 <!ENTITY selectAllCmd.label         "Select All">  
 <!ENTITY selectAllCmd.key         "A">  
 <!ENTITY selectAllCmd.accesskey       "A"> 
-<!ENTITY preferencesCmd.label       "Options...">
+<!ENTITY preferencesCmd.label       "Options…">
 <!ENTITY preferencesCmd.accesskey     "O"> 
 <!ENTITY preferencesCmdUnix.label       "Preferences">
 <!ENTITY preferencesCmdUnix.accesskey     "n"> 
@@ -163,7 +163,7 @@
 <!ENTITY viewToolbarsMenu.accesskey     "T"> 
 <!ENTITY viewSidebarMenu.label "Sidebar">
 <!ENTITY viewSidebarMenu.accesskey "e">
-<!ENTITY viewCustomizeToolbar.label       "Customize..."> 
+<!ENTITY viewCustomizeToolbar.label       "Customize…"> 
 <!ENTITY viewCustomizeToolbar.accesskey     "C">
 
 <!ENTITY historyMenu.label "History">
@@ -171,7 +171,7 @@
 <!ENTITY historyUndoMenu.label "Recently Closed Tabs">
 
 <!ENTITY historyHomeCmd.label "Home">
-<!ENTITY showAllHistoryCmd.label "Show All History...">
+<!ENTITY showAllHistoryCmd.label "Show All History…">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.accesskey             "d">
@@ -229,32 +229,32 @@
 <!ENTITY viewImageCmd.accesskey       "I">
 <!ENTITY viewBGImageCmd.label         "View Background Image">
 <!ENTITY viewBGImageCmd.accesskey     "w">
-<!ENTITY setDesktopBackgroundCmd.label      "Set As Desktop Background...">
+<!ENTITY setDesktopBackgroundCmd.label      "Set As Desktop Background…">
 <!ENTITY setDesktopBackgroundCmd.accesskey  "S">
-<!ENTITY bookmarkPageCmd.label        "Bookmark This Page...">
+<!ENTITY bookmarkPageCmd.label        "Bookmark This Page…">
 <!ENTITY bookmarkPageCmd.accesskey    "m">
-<!ENTITY bookmarkLinkCmd.label        "Bookmark This Link...">
+<!ENTITY bookmarkLinkCmd.label        "Bookmark This Link…">
 <!ENTITY bookmarkLinkCmd.accesskey    "L">
-<!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame...">
+<!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame…">
 <!ENTITY bookmarkFrameCmd.accesskey   "m">
-<!ENTITY sendPageCmd.label            "Send Link...">
+<!ENTITY sendPageCmd.label            "Send Link…">
 <!ENTITY sendPageCmd.accesskey        "e">
-<!ENTITY savePageCmd.label            "Save Page As...">
+<!ENTITY savePageCmd.label            "Save Page As…">
 <!ENTITY savePageCmd.accesskey        "A">
 <!-- alternate for content area context menu -->
 <!ENTITY savePageCmd.accesskey2       "P">
 <!ENTITY savePageCmd.commandkey       "s">
-<!ENTITY saveFrameCmd.label           "Save Frame As...">
+<!ENTITY saveFrameCmd.label           "Save Frame As…">
 <!ENTITY saveFrameCmd.accesskey       "F">
-<!ENTITY printFrameCmd.label          "Print Frame...">
+<!ENTITY printFrameCmd.label          "Print Frame…">
 <!ENTITY printFrameCmd.accesskey      "P">
-<!ENTITY saveLinkCmd.label            "Save Link As...">
+<!ENTITY saveLinkCmd.label            "Save Link As…">
 <!ENTITY saveLinkCmd.accesskey        "k">
-<!ENTITY sendLinkCmd.label            "Send Link..."> 
+<!ENTITY sendLinkCmd.label            "Send Link…"> 
 <!ENTITY sendLinkCmd.accesskey        "d">
-<!ENTITY saveImageCmd.label           "Save Image As...">
+<!ENTITY saveImageCmd.label           "Save Image As…">
 <!ENTITY saveImageCmd.accesskey       "v">
-<!ENTITY sendImageCmd.label           "Send Image...">
+<!ENTITY sendImageCmd.label           "Send Image…">
 <!ENTITY sendImageCmd.accesskey       "n">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
 <!ENTITY copyLinkCmd.accesskey        "C">
@@ -318,8 +318,8 @@
 <!-- On Windows we use the term "Options" to describe settings, but
      on Linux and Mac OS X we use "Preferences" - carry that distinction
      over into this string, which is used in the "popup blocked" info bar . -->
-<!ENTITY editPopupSettingsUnix.label "Edit Popup Blocker Preferences...">
-<!ENTITY editPopupSettings.label "Edit Popup Blocker Options...">
+<!ENTITY editPopupSettingsUnix.label "Edit Popup Blocker Preferences…">
+<!ENTITY editPopupSettings.label "Edit Popup Blocker Options…">
 <!ENTITY editPopupSettings.accesskey "E">
 <!ENTITY dontShowMessage.accesskey "D">
 
@@ -329,7 +329,7 @@
 <!ENTITY bidiSwitchTextDirectionItem.accesskey    "w">
 <!ENTITY bidiSwitchTextDirectionItem.commandkey   "X">
 
-<!ENTITY findOnCmd.label     "Find in This Page...">
+<!ENTITY findOnCmd.label     "Find in This Page…">
 <!ENTITY findOnCmd.accesskey "F">
 <!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label  "Find Again">
@@ -337,10 +337,10 @@
 <!ENTITY findAgainCmd.commandkey "g">
 <!ENTITY findAgainCmd.commandkey2 "VK_F3">
 
-<!ENTITY spellAddDictionaries.label "Add dictionaries...">
+<!ENTITY spellAddDictionaries.label "Add dictionaries…">
 <!ENTITY spellAddDictionaries.accesskey "A">
 
 <!ENTITY editBookmark.done.label                      "Done">
 <!ENTITY editBookmark.delete.label                    "Delete">
 
-<!ENTITY identity.moreInfoLinkText "Tell me more about this web site...">
+<!ENTITY identity.moreInfoLinkText "Tell me more about this web site…">

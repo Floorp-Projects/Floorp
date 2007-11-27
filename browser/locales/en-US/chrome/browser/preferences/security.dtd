@@ -27,7 +27,7 @@
 <!ENTITY  askThirdParty.accesskey    "a">
 <!ENTITY  askThirdPartyAfter.label   "about each site I visit">
 
-<!ENTITY  addonExceptions.label         "Exceptions...">
+<!ENTITY  addonExceptions.label         "Exceptions…">
 <!ENTITY  addonExceptions.accesskey     "E">
 
 
@@ -35,15 +35,15 @@
 
 <!ENTITY  rememberPasswords.label       "Remember passwords for sites">
 <!ENTITY  rememberPasswords.accesskey   "R">
-<!ENTITY  passwordExceptions.label      "Exceptions...">
+<!ENTITY  passwordExceptions.label      "Exceptions…">
 <!ENTITY  passwordExceptions.accesskey  "x">
 
 <!ENTITY  useMasterPassword.label        "Use a master password">
 <!ENTITY  useMasterPassword.accesskey    "U">
-<!ENTITY  changeMasterPassword.label     "Change Master Password...">
+<!ENTITY  changeMasterPassword.label     "Change Master Password…">
 <!ENTITY  changeMasterPassword.accesskey "M">
 
-<!ENTITY  showPasswords.label            "Show Passwords...">
+<!ENTITY  showPasswords.label            "Show Passwords…">
 <!ENTITY  showPasswords.accesskey        "P">
 
 
@@ -51,5 +51,5 @@
 
 <!ENTITY  chooseWarnings.label          "Choose which warning messages you want to see while browsing the web">
 
-<!ENTITY  warningSettings.label         "Settings...">
+<!ENTITY  warningSettings.label         "Settings…">
 <!ENTITY  warningSettings.accesskey     "S">

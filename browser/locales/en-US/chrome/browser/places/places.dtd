@@ -28,21 +28,21 @@
 <!ENTITY help.advancedTips.label        "Advanced Tips &amp; Tricks">
 <!ENTITY help.advancedTips.accesskey    "T">
 
-<!ENTITY cmd.findInBookmarks.label      "Find in Bookmarks...">
+<!ENTITY cmd.findInBookmarks.label      "Find in Bookmarks…">
 <!ENTITY cmd.findInBookmarks.accesskey  "F">
-<!ENTITY cmd.findCurrent.label          "Find in Current Collection...">
+<!ENTITY cmd.findCurrent.label          "Find in Current Collection…">
 <!ENTITY cmd.findCurrent.accesskey      "i">
 
-<!ENTITY cmd.export.label      "Export...">
+<!ENTITY cmd.export.label      "Export…">
 <!ENTITY cmd.export.accesskey  "E">
-<!ENTITY cmd.import.label      "Import...">
+<!ENTITY cmd.import.label      "Import…">
 <!ENTITY cmd.import.accesskey  "I">
 
-<!ENTITY cmd.backup.label               "Backup...">
+<!ENTITY cmd.backup.label               "Backup…">
 <!ENTITY cmd.backup.accesskey           "B">
-<!ENTITY cmd.restore.label              "Restore...">
+<!ENTITY cmd.restore.label              "Restore…">
 <!ENTITY cmd.restore.accesskey          "R">
-<!ENTITY cmd.restoreFromFile.label      "Choose File...">
+<!ENTITY cmd.restoreFromFile.label      "Choose File…">
 <!ENTITY cmd.restoreFromFile.accesskey  "C">
 
 <!ENTITY cmd.select_all.label "Select All">
@@ -88,11 +88,11 @@
 <!ENTITY cmd.sortby_name.accesskey          "S">
 <!ENTITY cmd.context_sortby_name.accesskey  "r">
 
-<!ENTITY cmd.new_bookmark.label            "New Bookmark...">
+<!ENTITY cmd.new_bookmark.label            "New Bookmark…">
 <!ENTITY cmd.new_bookmark.accesskey        "B">
-<!ENTITY cmd.new_livemark.label            "New Live Bookmark...">
+<!ENTITY cmd.new_livemark.label            "New Live Bookmark…">
 <!ENTITY cmd.new_livemark.accesskey        "L">
-<!ENTITY cmd.new_folder.label              "New Folder...">
+<!ENTITY cmd.new_folder.label              "New Folder…">
 <!ENTITY cmd.new_folder.accesskey          "o">
 <!ENTITY cmd.context_new_folder.accesskey  "F">
 <!ENTITY cmd.new_separator.label           "New Separator">
@@ -112,7 +112,7 @@
 <!ENTITY cmd.groupby_post.label      "Group by Post">
 <!ENTITY cmd.groupby_post.accesskey  "P">
 
-<!ENTITY cmd.moveBookmarks.label                  "Move...">
+<!ENTITY cmd.moveBookmarks.label                  "Move…">
 <!ENTITY cmd.moveBookmarks.accesskey              "M">
 
 <!ENTITY col.name.label          "Name">

@@ -41,7 +41,7 @@
 <!ENTITY docSubdir.label       "Page subdirectory:">
 <!ENTITY otherSubdir.label     "Image subdirectory:">
 
-<!ENTITY status.label          "Publishing...">
+<!ENTITY status.label          "Publishing…">
 <!ENTITY fileList.label        "Publishing Status">
 <!ENTITY statusHeader.label    "Status">
 <!ENTITY filenameHeader.label  "Filename">

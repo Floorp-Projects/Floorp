@@ -63,7 +63,7 @@
 <!ENTITY loaddevice.modname.default             "New PKCS#11 Module">
 <!ENTITY loaddevice.filename                    "Module filename:">
 <!ENTITY loaddevice.filename.accesskey          "f">
-<!ENTITY loaddevice.browse                      "Browse...">
+<!ENTITY loaddevice.browse                      "Browse…">
 <!ENTITY loaddevice.browse.accesskey            "B">
 
 <!ENTITY loaddevice.title                       "Load PKCS#11 Device">

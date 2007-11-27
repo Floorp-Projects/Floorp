@@ -7,7 +7,7 @@
 <!ENTITY fpDialog.title "Save File">
 
 <!ENTITY fileCheck.label "Print to File">
-<!ENTITY propertiesButton.label "Properties...">
+<!ENTITY propertiesButton.label "Properties…">
 <!ENTITY descText.label "Printer Description:">
 <!ENTITY printer.label "Printer">
 <!ENTITY printerInput.label "Printer Name:">

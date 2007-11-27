@@ -14,8 +14,8 @@
                                            of these add-ons available.">
 
 <!ENTITY  checking.wizard.title           "Checking for Compatible Add-ons">
-<!ENTITY  checking.top.label              "Checking your incompatible add-ons for updates...">
-<!ENTITY  checking.status                 "This may take a few minutes...">
+<!ENTITY  checking.top.label              "Checking your incompatible add-ons for updates…">
+<!ENTITY  checking.status                 "This may take a few minutes…">
 
 <!ENTITY  found.wizard.title               "Found Compatible Add-ons">
 <!ENTITY  found.top.label                 "Select the add-ons you would like to install:">
@@ -25,7 +25,7 @@
 <!ENTITY  found.enableXPInstall.accesskey "A">
 
 <!ENTITY  installing.wizard.title         "Installing Compatible Add-ons">
-<!ENTITY  installing.top.label            "Downloading and installing updates to your add-ons...">
+<!ENTITY  installing.top.label            "Downloading and installing updates to your add-ons…">
 
 <!ENTITY  noupdates.wizard.title          "No Compatible Add-ons Found">
 <!ENTITY  noupdates.intro.desc            "&brandShortName; was unable to find updates to your
@@ -49,7 +49,7 @@
 <!ENTITY  versioninfo.wizard.title        "Checking Compatibility of Add-ons">
 <!ENTITY  versioninfo.top.label           "Checking your add-ons for compatibility with this
                                            version of &brandShortName;.">
-<!ENTITY  versioninfo.waiting             "This may take a few minutes...">
+<!ENTITY  versioninfo.waiting             "This may take a few minutes…">
 
 <!ENTITY  installerrors.wizard.title      "Problems Installing Updates">
 <!ENTITY  installerrors.intro.label       "&brandShortName; encountered problems when updating
@@ -59,5 +59,5 @@
 <!ENTITY  clickFinish.label               "Click Finish to continue starting &brandShortName;.">
 <!ENTITY  clickFinish.labelMac            "Click Done to continue starting &brandShortName;.">
 <!ENTITY  enableChecking.label            "Allow &brandShortName; to check for updates.">
-<!ENTITY  details.label                   "Details...">
+<!ENTITY  details.label                   "Details…">
 <!ENTITY  details.accesskey               "D">

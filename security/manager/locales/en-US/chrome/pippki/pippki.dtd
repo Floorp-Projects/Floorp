@@ -116,8 +116,8 @@
 
 <!-- Strings for the CreateCertInfo dialog  -->
 <!ENTITY createCertInfo.title "Generating A Private Key">
-<!ENTITY createCertInfo.msg1 "Key Generation in progress... This may take a few minutes....">
-<!ENTITY createCertInfo.msg2 "Please wait...">
+<!ENTITY createCertInfo.msg1 "Key Generation in progress… This may take a few minutes….">
+<!ENTITY createCertInfo.msg2 "Please wait…">
 
 <!-- Form Signing confirmation prompt -->
 <!ENTITY formSigning.title "Text Signing Request">

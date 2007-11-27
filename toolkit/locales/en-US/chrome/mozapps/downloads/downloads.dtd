@@ -1,8 +1,8 @@
 <!ENTITY window.width                     "400">
 <!ENTITY window.height                    "300"> 
 
-<!ENTITY starting.label                   "Starting...">
-<!ENTITY scanning.label                   "Scanning for viruses...">
+<!ENTITY starting.label                   "Starting…">
+<!ENTITY scanning.label                   "Scanning for viruses…">
 
 <!ENTITY downloads.title                  "Downloads">
 
@@ -18,7 +18,7 @@
 <!ENTITY cmd.show.accesskeyMac            "F">
 <!ENTITY cmd.open.label                   "Open">
 <!ENTITY cmd.open.accesskey               "O">
-<!ENTITY cmd.openWith.label               "Open With...">
+<!ENTITY cmd.openWith.label               "Open With…">
 <!ENTITY cmd.openWith.accesskey           "h">
 <!ENTITY cmd.retry.label                  "Retry">
 <!ENTITY cmd.retry.accesskey              "R">
@@ -42,4 +42,4 @@
 <!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">
 
 <!ENTITY showFolder.label                 "Show this Folder">
-<!ENTITY searchBox.label                  "Search...">
+<!ENTITY searchBox.label                  "Search…">

@@ -29,10 +29,10 @@
 <!ENTITY  close.label                   "I close &brandShortName;">
 <!ENTITY  askEachTime.label             "ask me every time">
 
-<!ENTITY  cookieExceptions.label        "Exceptions...">
+<!ENTITY  cookieExceptions.label        "Exceptions…">
 <!ENTITY  cookieExceptions.accesskey    "E">
 
-<!ENTITY  showCookies.label             "Show Cookies...">
+<!ENTITY  showCookies.label             "Show Cookies…">
 <!ENTITY  showCookies.accesskey         "S">
 
 
@@ -44,9 +44,9 @@
 <!ENTITY  askBeforeClear.label           "Ask me before clearing private data">
 <!ENTITY  askBeforeClear.accesskey       "A">
 
-<!ENTITY  clearDataSettings.label        "Settings...">
+<!ENTITY  clearDataSettings.label        "Settings…">
 <!ENTITY  clearDataSettings.accesskey    "t">
 
-<!ENTITY  clearDataNow.label             "Clear Now...">
+<!ENTITY  clearDataNow.label             "Clear Now…">
 <!ENTITY  clearDataNow.label2            "Clear Now">
 <!ENTITY  clearDataNow.accesskey         "N">

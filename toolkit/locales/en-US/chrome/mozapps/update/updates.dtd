@@ -4,7 +4,7 @@
 <!ENTITY  window.macWidth                 "39em">
 
 <!ENTITY  checking.title                  "Checking for Updates">
-<!ENTITY  checking.label                  "&brandShortName; is now checking for updates...">
+<!ENTITY  checking.label                  "&brandShortName; is now checking for updates…">
 
 <!ENTITY  cancel.label                    "Cancel">
 <!ENTITY  cancel.accesskey                "C">
@@ -13,7 +13,7 @@
 <!ENTITY  noupdatesfound.intro            "There are no new updates available. &brandShortName; may check 
                                            periodically for new updates.">
 
-<!ENTITY  incompatibleChecking.label      "Checking if this update will cause problems with your extensions and/or themes...">
+<!ENTITY  incompatibleChecking.label      "Checking if this update will cause problems with your extensions and/or themes…">
 <!ENTITY  clickHere.label                 "View more information about this update">
 
 <!ENTITY  incompatible.warning            "This update will cause some of your extensions and/or themes 
@@ -36,8 +36,8 @@
 <!ENTITY  license.decline.accesskey       "T">
 
 <!ENTITY  downloading.title               "Downloading Update">
-<!ENTITY  downloading.intro               "Downloading the update...">
-<!ENTITY  connecting.label                "Connecting to the update server...">
+<!ENTITY  downloading.intro               "Downloading the update…">
+<!ENTITY  connecting.label                "Connecting to the update server…">
 <!ENTITY  verificationFailedText.label    "&brandShortName; was unable to verify the integrity of the 
                                            incremental update it downloaded, so it is now downloading
                                            the complete update package.">
@@ -72,7 +72,7 @@
 
 <!ENTITY  installed.title                 "Update Installed">
 <!ENTITY  installed.intro                 "The update was successfully installed.">
-<!ENTITY  whatsnew.label                  "Read more about what's new...">
+<!ENTITY  whatsnew.label                  "Read more about what's new…">
 
 <!ENTITY  update.details.label            "Details">
 <!ENTITY  update.installedOn.label        "Installed on:">

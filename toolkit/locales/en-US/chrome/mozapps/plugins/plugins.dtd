@@ -1,7 +1,7 @@
 <!ENTITY pluginWizard.title                                  "Plugin Finder Service">
 <!ENTITY pluginWizard.firstPage.title                        "Welcome to the &pluginWizard.title;">
 
-<!ENTITY pluginWizard.checkingForPlugins.description.label   "&brandShortName; is now checking for available plugins...">
+<!ENTITY pluginWizard.checkingForPlugins.description.label   "&brandShortName; is now checking for available plugins…">
 
 <!ENTITY pluginWizard.availablePluginsPage.title             "Available Plugin Downloads">
 <!ENTITY pluginWizard.availablePluginsPage.description.label "The following plugins are available:">
@@ -13,7 +13,7 @@
 <!ENTITY pluginWizard.licensePage.deny.label                 "I do not agree (plugin will not be installed).">
 
 <!ENTITY pluginWizard.installPluginsPage.title               "Installing Plugins">
-<!ENTITY pluginWizard.installPluginsPage.description.label   "&brandShortName; is installing plugins...">
+<!ENTITY pluginWizard.installPluginsPage.description.label   "&brandShortName; is installing plugins…">
 
 <!ENTITY pluginWizard.finalPage.description.label            "&brandShortName; finished installing the missing plugins:">
 
