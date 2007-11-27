@@ -542,10 +542,14 @@ NS_IMETHODIMP nsDocAccessible::Init()
 
 NS_IMETHODIMP nsDocAccessible::Destroy()
 {
+  nsresult rv = Shutdown();
+
   if (mWeakShell) {
+    // Remove from the cache after Shutdown(), so that Shutdown() procedures
+    // can find the doc or root accessible in the cache if they need it
     gGlobalDocAccessibleCache.Remove(static_cast<void*>(mWeakShell));
   }
-  return Shutdown();
+  return rv;
 }
 
 NS_IMETHODIMP nsDocAccessible::Shutdown()
