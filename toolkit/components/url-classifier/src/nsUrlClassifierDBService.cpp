@@ -2241,8 +2241,15 @@ nsUrlClassifierDBService::Classify(nsIURI *uri,
     new nsUrlClassifierClassifyCallback(c);
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
+  nsresult rv = LookupURI(uri, callback, PR_TRUE);
+  if (rv == NS_ERROR_MALFORMED_URI) {
+    // The URI had no hostname, don't try to classify it.
+    *result = PR_FALSE;
+    return NS_OK;
+  }
+
   *result = PR_TRUE;
-  return LookupURI(uri, callback, PR_TRUE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -55,6 +55,22 @@ function testFailure(arg) {
   do_throw(arg);
 }
 
+function checkNoHost()
+{
+  // Looking up a no-host uri such as a data: uri should throw an exception.
+  var exception;
+  try {
+    dbservice.lookup("data:text/html,<b>test</b>");
+
+    exception = false;
+  } catch(e) {
+    exception = true;
+  }
+  do_check_true(exception);
+
+  do_test_finished();
+}
+
 function tablesCallback(tables)
 {
   var parts = tables.split("\n");
@@ -63,7 +79,8 @@ function tablesCallback(tables)
   // after the trailing newline, which will sort first
   do_check_eq(parts.join("\n"),
               "\ntesting-malware-simple;a:1\ntesting-phish-simple;a:2:s:3");
-  do_test_finished();
+
+  checkNoHost();
 }
 
 function checkChunks()
