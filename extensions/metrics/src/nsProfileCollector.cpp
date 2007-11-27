@@ -54,15 +54,10 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#ifdef MOZ_PLACES_BOOKMARKS
 #include "nsINavBookmarksService.h"
 #include "nsINavHistoryService.h"
 #include "nsILivemarkService.h"
 #include "nsToolkitCompsCID.h"
-#else
-#include "nsIBookmarksService.h"
-#include "nsIRDFContainer.h"
-#endif
 
 // We need to suppress inclusion of nsString.h
 #define nsString_h___
@@ -130,33 +125,13 @@ class nsProfileCollector::BookmarkCounter
 
   // Fills in |count| with the number of children of each BookmarkType.
   // If |deep| is true, then the count will include children of all subfolders.
-#ifdef MOZ_PLACES_BOOKMARKS
   void CountChildren(PRInt64 root, PRBool deep, nsTArray<PRInt32> &count);
-#else
-  void CountChildren(nsIRDFResource *root,
-                     PRBool deep, nsTArray<PRInt32> &count);
-#endif
 
  private:
-#ifdef MOZ_PLACES_BOOKMARKS
   void CountRecursive(nsINavHistoryContainerResultNode *root, PRBool deep,
                       nsTArray<PRInt32> &count);
-#else
-  void CountRecursive(nsIRDFResource *root, PRBool deep,
-                      nsTArray<PRInt32> &count);
-#endif
 
-#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsILivemarkService> mLivemarkService;
-#else
-  nsCOMPtr<nsIRDFDataSource> mDataSource;
-
-  nsCOMPtr<nsIRDFResource> mRDFType;
-  nsCOMPtr<nsIRDFResource> mNCBookmark;
-  nsCOMPtr<nsIRDFResource> mNCFolder;
-  nsCOMPtr<nsIRDFResource> mNCLivemark;
-  nsCOMPtr<nsIRDFResource> mNCSeparator;
-#endif
 };
 
 nsProfileCollector::nsProfileCollector()
@@ -442,7 +417,6 @@ nsProfileCollector::LogBookmarks(nsIMetricsEventItem *profile)
                       getter_AddRefs(bookmarksItem));
   NS_ENSURE_STATE(bookmarksItem);
 
-#ifdef MOZ_PLACES_BOOKMARKS
   nsCOMPtr<nsINavBookmarksService> bmSvc =
     do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID);
   NS_ENSURE_STATE(bmSvc);
@@ -470,41 +444,6 @@ nsProfileCollector::LogBookmarks(nsIMetricsEventItem *profile)
   LogBookmarkLocation(bookmarksItem, NS_LITERAL_CSTRING("toolbar"),
                   &counter, root, PR_FALSE);
 
-#else
-  nsCOMPtr<nsIBookmarksService> bmSvc =
-    do_GetService(NS_BOOKMARKS_SERVICE_CONTRACTID);
-  NS_ENSURE_STATE(bmSvc);
-
-  // This just ensures that the bookmarks are loaded, it doesn't
-  // read them again if they've already been read.
-  PRBool loaded;
-  bmSvc->ReadBookmarks(&loaded);
-
-  nsCOMPtr<nsIRDFService> rdfSvc =
-    do_GetService("@mozilla.org/rdf/rdf-service;1");
-  NS_ENSURE_STATE(rdfSvc);
-
-  nsCOMPtr<nsIRDFResource> root;
-  rdfSvc->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"),
-                      getter_AddRefs(root));
-  NS_ENSURE_STATE(root);
-
-  BookmarkCounter counter;
-  rv = counter.Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  LogBookmarkLocation(bookmarksItem, NS_LITERAL_CSTRING("full-tree"),
-                      &counter, root, PR_TRUE);
-  LogBookmarkLocation(bookmarksItem, NS_LITERAL_CSTRING("root"),
-                      &counter, root, PR_FALSE);
-
-  bmSvc->GetBookmarksToolbarFolder(getter_AddRefs(root));
-  if (root) {
-    LogBookmarkLocation(bookmarksItem, NS_LITERAL_CSTRING("toolbar"),
-                        &counter, root, PR_FALSE);
-  }
-#endif
-
   rv = profile->AppendChild(bookmarksItem);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -515,11 +454,7 @@ void
 nsProfileCollector::LogBookmarkLocation(nsIMetricsEventItem *bookmarksItem,
                                         const nsACString &location,
                                         BookmarkCounter *counter,
-#ifdef MOZ_PLACES_BOOKMARKS
                                         PRInt64 root,
-#else
-                                        nsIRDFResource *root,
-#endif
                                         PRBool deep)
 {
   nsTArray<PRInt32> count;
@@ -749,8 +684,6 @@ nsProfileCollector::ExtensionEnumerator::CreateExtensionItem(
   return item;
 }
 
-
-#ifdef MOZ_PLACES_BOOKMARKS
 nsresult
 nsProfileCollector::BookmarkCounter::Init()
 {
@@ -790,7 +723,7 @@ nsProfileCollector::BookmarkCounter::CountChildren(PRInt64 root, PRBool deep,
     return;
   }
 
-  const PRUint32 groupMode = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
+  const PRUint16 groupMode = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
   options->SetGroupingMode(&groupMode, 1);
 
   nsCOMPtr<nsINavHistoryResult> result;
@@ -799,7 +732,7 @@ nsProfileCollector::BookmarkCounter::CountChildren(PRInt64 root, PRBool deep,
     return;
   }
 
-  nsCOMPtr<nsINavHistoryQueryResultNode> rootNode;
+  nsCOMPtr<nsINavHistoryContainerResultNode> rootNode;
   result->GetRoot(getter_AddRefs(rootNode));
   if (!rootNode) {
     return;
@@ -827,17 +760,18 @@ nsProfileCollector::BookmarkCounter::CountRecursive(
     PRUint32 type = 0;
     child->GetType(&type);
 
-    if (type == nsINavHistoryResultNode::RESULT_TYPE_URI) {
+    if (type == nsINavHistoryResultNode::RESULT_TYPE_URI) 
+    {
       ++count[ITEM];
-    } else if (type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER) {
-      nsCOMPtr<nsINavHistoryFolderResultNode> folder =
-        do_QueryInterface(child);
-      if (!folder) {
-        continue;
-      }
+    } 
+      else if (type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER) 
+    {
+      nsCOMPtr<nsINavHistoryContainerResultNode> folder = do_QueryInterface(child);
 
-      PRInt64 folderID = 0;
-      folder->GetFolderId(&folderID);
+      if (!folder) continue;
+
+      PRInt64 folderID;
+      child->GetItemId(&folderID);  
 
       PRBool isLivemark = PR_FALSE;
       mLivemarkService->IsLivemark(folderID, &isLivemark);
@@ -856,102 +790,3 @@ nsProfileCollector::BookmarkCounter::CountRecursive(
 
   root->SetContainerOpen(PR_FALSE);
 }
-
-#else
-
-nsresult
-nsProfileCollector::BookmarkCounter::Init()
-{
-  mDataSource = do_GetService(NS_BOOKMARKS_DATASOURCE_CONTRACTID);
-  NS_ENSURE_STATE(mDataSource);
-
-  nsCOMPtr<nsIRDFService> rdfSvc =
-    do_GetService("@mozilla.org/rdf/rdf-service;1");
-  NS_ENSURE_STATE(rdfSvc);
-
-  rdfSvc->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
-                      getter_AddRefs(mRDFType));
-  NS_ENSURE_STATE(mRDFType);
-
-  rdfSvc->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Bookmark"),
-                      getter_AddRefs(mNCBookmark));
-  NS_ENSURE_STATE(mNCBookmark);
-
-  rdfSvc->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Folder"),
-                      getter_AddRefs(mNCFolder));
-  NS_ENSURE_STATE(mNCFolder);
-
-  rdfSvc->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Livemark"),
-                      getter_AddRefs(mNCLivemark));
-  NS_ENSURE_STATE(mNCLivemark);
-
-  rdfSvc->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkSeparator"),
-                      getter_AddRefs(mNCSeparator));
-  NS_ENSURE_STATE(mNCSeparator);
-
-  return NS_OK;
-}
-
-void
-nsProfileCollector::BookmarkCounter::CountChildren(nsIRDFResource *root,
-                                                   PRBool deep,
-                                                   nsTArray<PRInt32> &count)
-{
-  count.SetLength(kLastBookmarkType);
-  for (PRUint32 i = 0; i < kLastBookmarkType; ++i) {
-    count[i] = 0;
-  }
-  CountRecursive(root, deep, count);
-}
-
-void
-nsProfileCollector::BookmarkCounter::CountRecursive(nsIRDFResource *root,
-                                                    PRBool deep,
-                                                    nsTArray<PRInt32> &count)
-{
-  nsCOMPtr<nsIRDFContainer> container =
-    do_CreateInstance("@mozilla.org/rdf/container;1");
-  if (!container) {
-    return;
-  }
-
-  nsresult rv = container->Init(mDataSource, root);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> elements;
-  container->GetElements(getter_AddRefs(elements));
-  if (!elements) {
-    return;
-  }
-
-  nsCOMPtr<nsISupports> item;
-  while (NS_SUCCEEDED(elements->GetNext(getter_AddRefs(item)))) {
-    nsCOMPtr<nsIRDFResource> child = do_QueryInterface(item);
-    if (!child) {
-      continue;
-    }
-
-    // Figure out whether the child is a folder
-    nsCOMPtr<nsIRDFNode> typeNode;
-    mDataSource->GetTarget(child, mRDFType, PR_TRUE, getter_AddRefs(typeNode));
-    if (!typeNode) {
-      continue;
-    }
-
-    if (typeNode == mNCBookmark) {
-      ++count[ITEM];
-    } else if (typeNode == mNCFolder) {
-      ++count[FOLDER];
-      if (deep) {
-        CountRecursive(child, deep, count);
-      }
-    } else if (typeNode == mNCLivemark) {
-      ++count[LIVEMARK];
-    } else if (typeNode == mNCSeparator) {
-      ++count[SEPARATOR];
-    }
-  }
-}
-#endif
