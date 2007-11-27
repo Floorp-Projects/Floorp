@@ -89,6 +89,10 @@ function run_test() {
   // get places import/export service
   var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].getService(Ci.nsIPlacesImportExportService);
 
+  // avoid creating the places smart folder during tests
+  Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
+  setBoolPref("browser.places.createdDefaultQueries", true);
+
   // file pointer to legacy bookmarks file
   var bookmarksFileOld = do_get_file("browser/components/places/tests/unit/bookmarks.preplaces.html");
   // file pointer to a new places-exported bookmarks file
