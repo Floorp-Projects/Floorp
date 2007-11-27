@@ -1501,9 +1501,6 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
         } else {
             if (JSID_IS_ATOM(sprop->id)) {
                 str = JSVAL_TO_STRING(v);
-            } else if (JSID_IS_HIDDEN(sprop->id)) {
-                str = JSVAL_TO_STRING(v);
-                fputs("hidden ", fp);
             } else {
                 JS_ASSERT(JSID_IS_OBJECT(sprop->id));
                 str = js_ValueToString(cx, v);
