@@ -108,7 +108,7 @@ already_AddRefed<gfxASurface>
 gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxImageFormat imageFormat)
 {
-    gfxASurface *newSurface = nsnull;
+    nsRefPtr<gfxASurface> newSurface = nsnull;
 
     int glitzf;
     int xrenderFormatID;
@@ -222,8 +222,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
 #endif
     }
 
-    NS_IF_ADDREF(newSurface);
-    return newSurface;
+    return newSurface.forget();
 }
 
 nsresult
