@@ -99,6 +99,7 @@ private:
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
   PRPackedBool mGIFOpen;
+  PRPackedBool mSawTransparency;
 
   gif_struct mGIFStruct;
 };

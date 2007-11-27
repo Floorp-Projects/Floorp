@@ -66,6 +66,7 @@ nsThebesImage::nsThebesImage()
       mDecoded(0,0,0,0),
       mImageComplete(PR_FALSE),
       mSinglePixel(PR_FALSE),
+      mFormatChanged(PR_FALSE),
       mAlphaDepth(0)
 {
     static PRBool hasCheckedOptimize = PR_FALSE;
@@ -254,6 +255,8 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
     if (ShouldUseImageSurfaces())
         return NS_OK;
 
+    mOptSurface = nsnull;
+
 #ifdef XP_WIN
     // we need to special-case windows here, because windows has
     // a distinction between DIB and DDB and we want to use DDBs as much
@@ -288,21 +291,22 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
                 mOptSurface = wsurf;
             }
         }
-
-        if (!mOptSurface) {
-            // just use the DIB
+        if (!mOptSurface && !mFormatChanged) {
+            // just use the DIB if the format has not changed
             mOptSurface = mWinSurface;
         }
-    } else {
-        mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface);
     }
-
-    mWinSurface = nsnull;
-#else
-    mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface);
 #endif
 
-    mImageSurface = nsnull;
+    if (mOptSurface == nsnull)
+        mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface, mFormat);
+
+    if (mOptSurface) {
+        mImageSurface = nsnull;
+#ifdef XP_WIN
+        mWinSurface = nsnull;
+#endif
+    }
 
     return NS_OK;
 }
@@ -636,6 +640,8 @@ nsThebesImage::ShouldUseImageSurfaces()
 void
 nsThebesImage::SetHasNoAlpha()
 {
-    if (mFormat == gfxASurface::ImageFormatARGB32)
+    if (mFormat == gfxASurface::ImageFormatARGB32) {
         mFormat = gfxASurface::ImageFormatRGB24;
+        mFormatChanged = PR_TRUE;
+    }
 }

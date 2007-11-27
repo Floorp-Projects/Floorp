@@ -195,15 +195,13 @@ gfxPlatform::SetUseGlitz(PRBool use)
 }
 
 already_AddRefed<gfxASurface>
-gfxPlatform::OptimizeImage(gfxImageSurface *aSurface)
+gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
+                           gfxASurface::gfxImageFormat format)
 {
     const gfxIntSize& surfaceSize = aSurface->GetSize();
 
-    gfxASurface::gfxImageFormat realFormat = aSurface->Format();
-
-    nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, realFormat);
-
-    if (!optSurface)
+    nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, format);
+    if (!optSurface || optSurface->CairoStatus() != 0)
         return nsnull;
 
     nsRefPtr<gfxContext> tmpCtx(new gfxContext(optSurface));

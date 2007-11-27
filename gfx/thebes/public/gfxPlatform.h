@@ -87,15 +87,14 @@ public:
 
     /**
      * Create an offscreen surface of the given dimensions
-     * and image format.  If fastPixelAccess is TRUE,
-     * create a surface that is optimized for rapid pixel
-     * changing.
+     * and image format.
      */
     virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                                  gfxASurface::gfxImageFormat imageFormat) = 0;
 
 
-    virtual already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface);
+    virtual already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
+                                                        gfxASurface::gfxImageFormat format);
 
     /*
      * Font bits
