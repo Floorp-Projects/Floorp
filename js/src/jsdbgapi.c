@@ -1285,7 +1285,6 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
                    JSPropertyDesc *pd)
 {
-    JSPropertyOp getter;
     JSScope *scope;
     JSScopeProperty *aprop;
     jsval lastException;
@@ -1322,20 +1321,14 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
             js_RemoveRoot(cx->runtime, &lastException);
     }
 
-    getter = sprop->getter;
     pd->flags |= ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
               | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
               | ((sprop->attrs & JSPROP_PERMANENT) ? JSPD_PERMANENT : 0)
-              | ((getter == js_GetCallVariable)    ? JSPD_VARIABLE  : 0);
-    if (JSID_IS_HIDDEN(sprop->id)) {
-        pd->flags |= (getter == JS_HIDDEN_ARG_GETTER)
-                     ? JSPD_ARGUMENT
-                     : JSPD_VARIABLE;
-    }
+              | ((sprop->getter == js_GetCallVariable) ? JSPD_VARIABLE  : 0);
 
     /* for Call Object 'real' getter isn't passed in to us */
     if (OBJ_GET_CLASS(cx, obj) == &js_CallClass &&
-        getter == js_CallClass.getProperty) {
+        sprop->getter == js_CallClass.getProperty) {
         /*
          * Property of a heavyweight function's variable object having the
          * class-default getter.  It's either an argument if permanent, or a

@@ -1443,6 +1443,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
      */
     if (fun) {
         JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
+        js_FreezeLocalNames(cx, fun);
         fun->u.i.script = script;
         if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;

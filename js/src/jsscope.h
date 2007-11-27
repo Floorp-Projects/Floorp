@@ -288,9 +288,8 @@ struct JSScopeProperty {
 
 /* Bits stored in sprop->flags. */
 #define SPROP_MARK                      0x01
-#define SPROP_ALLOW_DUPLICATE           0x02
-#define SPROP_IS_ALIAS                  0x04
-#define SPROP_HAS_SHORTID               0x08
+#define SPROP_IS_ALIAS                  0x02
+#define SPROP_HAS_SHORTID               0x04
 
 /*
  * If SPROP_HAS_SHORTID is set in sprop->flags, we use sprop->shortid rather
@@ -346,8 +345,7 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
 extern void
 js_DestroyScope(JSContext *cx, JSScope *scope);
 
-#define ID_TO_VALUE(id)                                                       \
-    (JSID_IS_HIDDEN(id) ? (jsval)JSID_UNHIDE_NAME(id) : (jsval)(id))
+#define ID_TO_VALUE(id) ((jsval)(id))
 
 extern JS_FRIEND_API(JSScopeProperty **)
 js_SearchScope(JSScope *scope, jsid id, JSBool adding);

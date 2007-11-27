@@ -857,7 +857,7 @@ QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * (see below after this function).
          */
         obj = js_NewObject(cx,
-                           JS_ValueToFunction(cx, argv[-2])->clasp,
+                           JS_ValueToFunction(cx, argv[-2])->u.n.clasp,
                            NULL, NULL);
         if (!obj)
             return JS_FALSE;

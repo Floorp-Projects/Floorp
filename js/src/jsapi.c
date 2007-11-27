@@ -2693,7 +2693,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * we know to create an object of this class when we call the
          * constructor.
          */
-        fun->clasp = clasp;
+        fun->u.n.clasp = clasp;
 
         /*
          * Optionally construct the prototype object, before the class has
