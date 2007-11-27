@@ -1338,6 +1338,8 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
 
     PRUint32 renderedStartOffset, renderedEndOffset;
     nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
+    if (!frame)
+      return;
 
     rv = textAccessible->ContentToRenderedOffset(frame, start,
                                                  &renderedStartOffset);
