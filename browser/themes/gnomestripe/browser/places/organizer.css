@@ -7,36 +7,34 @@
 /* back button */
 
 #back-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px, 24px, 24px, 0px);
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=toolbar");
 }
 #back-button[disabled="true"] {
- -moz-image-region: rect(48px, 24px, 72px, 0px) !important;
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=toolbar&state=disabled");
 }
 
 /* forward button */
 
 #forward-button {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px, 48px, 24px, 24px);
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar");
 }
 #forward-button[disabled="true"] {
- -moz-image-region: rect(48px, 48px, 72px, 24px) !important;
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar&state=disabled");
 }
 
 /* organize button */
 #organizeButton {
-  list-style-image: url("chrome://browser/skin/wrench.png");
+  list-style-image: url("moz-icon://stock/gtk-properties?size=button");
 }
 
 /* view button */
 #viewMenu {
-  list-style-image: url("chrome://browser/skin/wrench.png");
+  list-style-image: url("moz-icon://stock/gtk-sort-ascending?size=button");
 }
 
 /* maintenance button */
 #maintenanceButton {
-  list-style-image: url("chrome://browser/skin/wrench.png");
+  list-style-image: url("moz-icon://stock/gtk-revert-to-saved?size=button");
 }
 
 /* Root View */
@@ -79,8 +77,7 @@
   background-color: transparent;
   border: none;
   padding: 0 !important;
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
+  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
   width: 16px;
   height: 16px;
   cursor: default;
@@ -90,14 +87,6 @@
   margin: 0;
   padding: 0;
   border: 0;
-}
-
-.textbox-input-closebutton:hover {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-.textbox-input-closebutton:hover:active {
-  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .small, .small[disabled="true"] {

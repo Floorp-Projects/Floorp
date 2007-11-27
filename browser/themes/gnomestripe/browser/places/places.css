@@ -34,12 +34,7 @@ treechildren::-moz-tree-image(title, separator) {
 }
 
 treechildren::-moz-tree-image(title, container) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-treechildren::-moz-tree-image(title, open) {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }
 
 treechildren::-moz-tree-image(title, container, livemark) {

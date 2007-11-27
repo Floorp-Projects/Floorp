@@ -199,17 +199,13 @@ menuitem.bookmark-item {
 }
 
 /* Bookmark items */
-.bookmark-item  {
+.bookmark-item:not([container])  {
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px)
 }
 
 .bookmark-item[container] {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-.bookmark-item[container][open] {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }
 
 /* livemarks have the same layout as folder-item, but in the browser-only livemark-item.png */
