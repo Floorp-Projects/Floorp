@@ -46,25 +46,26 @@ MODULE		= embedcomponents
 LIBRARY_NAME	= windowwatcher_s
 LIBXUL_LIBRARY	= 1
 
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  gfx \
-		  windowwatcher \
-		  widget \
-		  js \
-		  xpconnect \
-		  caps \
-		  content \
-		  pref \
-		  necko \
-		  docshell \
-		  webbrwsr \
-		  embed_base \
-		  intl \
-		  layout \
-		  uriloader \
-		  $(NULL)
+REQUIRES    = xpcom                             \
+              string                            \
+              dom                               \
+              gfx                               \
+              windowwatcher                     \
+              widget                            \
+              js                                \
+              xpconnect                         \
+              caps                              \
+              content                           \
+              pref                              \
+              necko                             \
+              docshell                          \
+              webbrwsr                          \
+              embed_base                        \
+              intl                              \
+              layout                            \
+              uriloader                         \
+              thebes                            \
+              $(NULL)
 
 CPPSRCS		= nsPrompt.cpp \
                   nsWWJSUtils.cpp \
