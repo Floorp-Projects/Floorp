@@ -701,15 +701,40 @@ nsJARChannel::OnDownloadComplete(nsIDownloader *downloader,
                                  nsresult       status,
                                  nsIFile       *file)
 {
+    nsresult rv;
+
     // Grab the security info from our base channel
     nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
-    if (channel)
+    if (channel) {
         channel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
-    
+
+        PRUint32 loadFlags;
+        channel->GetLoadFlags(&loadFlags);
+        if (loadFlags & LOAD_REPLACE) {
+            mLoadFlags |= LOAD_REPLACE;
+
+            if (!mOriginalURI) {
+                SetOriginalURI(mJarURI);
+            }
+
+            nsCOMPtr<nsIURI> innerURI;
+            rv = channel->GetURI(getter_AddRefs(innerURI));
+            if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIJARURI> newURI;
+                rv = mJarURI->CloneWithJARFile(innerURI,
+                                               getter_AddRefs(newURI));
+                if (NS_SUCCEEDED(rv)) {
+                    mJarURI = newURI;
+                }
+            }
+            status = rv;
+        }
+    }
+
     if (NS_SUCCEEDED(status)) {
         mJarFile = file;
     
-        nsresult rv = CreateJarInput(nsnull);
+        rv = CreateJarInput(nsnull);
         if (NS_SUCCEEDED(rv)) {
             // create input stream pump
             rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mJarInput);
