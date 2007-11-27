@@ -2,7 +2,6 @@ toolkit.jar:
 % content mozapps %content/mozapps/ xpcnativewrappers=yes
 * content/mozapps/downloads/helperApps.js                       (downloads/content/helperApps.js)
 * content/mozapps/downloads/unknownContentType.xul              (downloads/content/unknownContentType.xul)
-* content/mozapps/downloads/overrideHandler.js                  (downloads/content/overrideHandler.js)
 * content/mozapps/downloads/downloads.xul                       (downloads/content/downloads.xul)
 * content/mozapps/downloads/downloads.js                        (downloads/content/downloads.js)
 * content/mozapps/downloads/DownloadProgressListener.js         (downloads/content/DownloadProgressListener.js)
