@@ -23,9 +23,9 @@
 <!ENTITY closeWhenDone.accesskey "w">
 <!ENTITY saveTo.label "Save files to">
 <!ENTITY saveTo.accesskey "v">
-<!ENTITY chooseFolderWin.label        "Browse...">
+<!ENTITY chooseFolderWin.label        "Browse…">
 <!ENTITY chooseFolderWin.accesskey    "o">
-<!ENTITY chooseFolderMac.label        "Choose...">
+<!ENTITY chooseFolderMac.label        "Choose…">
 <!ENTITY chooseFolderMac.accesskey    "e">
 <!ENTITY alwaysAsk.label "Always ask me where to save files">
 <!ENTITY alwaysAsk.accesskey "A">
@@ -42,5 +42,5 @@
 <!ENTITY addonsMgr.label            "Add-ons">
 <!ENTITY manageAddonsDesc.label     "Change options for your add-ons.">
 <!ENTITY manageAddonsDescUnix.label "Change preferences for your add-ons.">
-<!ENTITY manageAddons.label         "Manage Add-ons...">
+<!ENTITY manageAddons.label         "Manage Add-ons…">
 <!ENTITY manageAddons.accesskey     "M">

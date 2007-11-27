@@ -75,13 +75,13 @@
 #define START_MESSAGE0 Click Next to continue.
 
 #define DL_TITLE Downloading
-#define DL_SUBTITLE Downloading required components...
+#define DL_SUBTITLE Downloading required components…
 #define DL_BLURB Setup is downloading the files required to install $ProductShortName$.
 #define DL_FILENAME Currently Downloading:
 #define DL_TIMELEFT Time Remaining:
 
 #define INSTALL_TITLE Installing
-#define INSTALL_SUBTITLE Installing $ProductShortName$...
+#define INSTALL_SUBTITLE Installing $ProductShortName$…
 #define INSTALL_BLURB Setup is installing application files.
 #define INSTALL_STATUSFILE Preparing File:
 #define INSTALL_STATUSCOMP Currently Installing:
@@ -97,7 +97,7 @@
 
 #define CLOSE_CHECK Download of $ProductShortName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 #define CLOSE_CHECK2 $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
-#define CLOSE_WAIT Shutting down $ProductNameInternal$.  Please wait...
+#define CLOSE_WAIT Shutting down $ProductNameInternal$.  Please wait…
 
 #define XPCOM_SHORT Cross-Platform COM
 #define BROWSER_SHORT $ProductShortName$ Browser
@@ -114,8 +114,8 @@
 #define RPT_SHORT Website Reporter
 #define RPT_LONG for reporting $ProductShortName$ website compatibility problems
 
-#define CORE_PREPARING Preparing Install, please wait...
-#define INST_UNINST Installing the uninstaller, please wait...
+#define CORE_PREPARING Preparing Install, please wait…
+#define INST_UNINST Installing the uninstaller, please wait…
 
 #define MSG_UNFINISHED_DL A previous session of Setup did not finish downloading all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
 #define MSG_UNFINISHED_INSTALL A previous session of Setup did not finish with installation of all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
@@ -123,13 +123,13 @@
 #define MSG_CORRUPTED_AUTO Setup has detected that at least one archive within this Setup is corrupt.  You will need to obtain another copy of the $ProductShortName$ Setup in order for installation to proceed.
 #define MSG_TOO_MANY_CRC Too many download failures.  Setup will cancel.  Any files already downloaded will not be deleted.  The next time Setup is run, these files will be taken into account during the download.
 #define MSG_TOO_MANY_NETWORK Too many network errors trying to download %s.  Setup will now Pause.  Please click Resume to retry downloading the files.
-#define MSG_VERIFYING Verifying integrity of archives, please wait...
+#define MSG_VERIFYING Verifying integrity of archives, please wait…
 #define MSG_UNDEFINED Error undefined
 #define MSG_OOM Out of memory!
 #define MSG_STATUS_DL %s at %.2f KB/sec (%u KB of %u KB downloaded)
 #define MSG_COMPLETED %d%% completed
 #define MSG_REQUIRED (Required)
-#define MSG_CANCELING Canceling Setup, please wait...
+#define MSG_CANCELING Canceling Setup, please wait…
 #define MSG_ERROR_UNCOMPRESS Error uncompressing file %s: %d
 #define MSG_USAGE Usage: %s [options]\n	[options] can be any of the following combination:\n		-h: This help.\n		-a [path]: Alternate archive search path.\n		-app [app id]: ID of application which is launching the installer (shared installs)\n		-app_path [app]: Points to (full path) representative file of application (Shared installs)\n	*	-dd [path]: Suggested install destination directory. (Shared installs)\n	*	-greLocal: Forces GRE to be installed into the application dir.\n	*	-greShared: Forces GRE to be installed into a global, shared dir (normally)\n			c:\program files\common files\mozilla.org\GRE\n		-reg_path [path]: Where to make entries in the Windows registry. (Shared installs)\n		-f: Force install of GRE installer (Shared installs), though it'll work\n			for non GRE installers too.\n		-greForce: Force 'Component GRE' to be downloaded, run, and installed.  This\n			bypasses GRE's logic of determining when to install by running its\n			installer with a '-f' flag.\n		-n [filename]: Setup's parent process filename.\n	*	-ma: Run setup in Auto mode.\n	*	-ms: Run setup in Silent mode.\n		-ira: Ignore the [RunAppX] sections\n		-ispf: Ignore the [Program FolderX] sections that show\n			the Start Menu shortcut folder at the end of installation.\n	*	-showBanner: Show the banner image in the download and install progress dialogs\n	*	-hideBanner: Hide the banner image in the download and install progress dialogs\n	*	-cleanupOnUpgrade: Tells Setup to check to see if user is upgrading (installing on top\n		of previous version of product).  If user is upgrading:\n			* NORMAL mode: prompt user on how to proceed\n			* All other modes: assume user wants to cleanup.\n	*	-noCleanupOnUpgrade: Tells Setup to not check if user is upgrading (installing on top\n		of previous version of product).  This will disable the cleanup feature.\n\n	* means it will override config.ini
 #define MSG_USE_FTP Use &FTP for downloading files
@@ -140,7 +140,7 @@
 #define MSG_NOT_ADMIN_AUTO Setup has detected that you do not have the appropriate Administrator privileges to this system.  Setup cannot continue with the installation of $ProductShortName$.
 
 #define UNINST_RUNNING $ProductNameInternal$ is detected to be currently running.  Please quit $ProductNameInternal$ before continuing.  Click OK to exit $ProductNameInternal$ automatically and proceed with uninstallation.
-#define UNINST_SHUTDOWN Shutting down $ProductNameInternal$.  Please wait...
+#define UNINST_SHUTDOWN Shutting down $ProductNameInternal$.  Please wait…
 
 #define UNINST_FONT MS Sans Serif
 #define UNINST_FONTSIZE 8
@@ -178,7 +178,7 @@
 #define ERROR_GET_SYSTEM_DIRECTORY_FAILED GetSystemDirectory() failed.
 #define ERROR_GET_WINDOWS_DIRECTORY_FAILED GetWindowsDirectory() failed.
 #define ERROR_CREATE_TEMP_DIR Uninstall was not able to create the TEMP directory: %s
-#define ERROR_SETUP_REQUIREMENT Windows95 or greater Operating System is required!  Exiting Uninstall...
+#define ERROR_SETUP_REQUIREMENT Windows95 or greater Operating System is required!  Exiting Uninstall…
 #define MB_WARNING_STR Warning
 #define ERROR_UNINSTALL_LOG_FOLDER Uninstall log folder not found:%s
 #define MB_MESSAGE_STR Message

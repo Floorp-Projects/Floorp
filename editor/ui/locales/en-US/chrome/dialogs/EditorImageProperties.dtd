@@ -80,7 +80,7 @@
 <!ENTITY imagemapBox.label "Image Map">
 <!ENTITY removeImageMapButton.label "Remove">
 <!ENTITY removeImageMapButton.accessKey "R">
-<!ENTITY editImageMapButton.label "Edit...">
+<!ENTITY editImageMapButton.label "Edit…">
 <!ENTITY editImageMapButton.tooltip "Create clickable hotspots for this image">
 
 <!-- These are the options for image alignment -->
