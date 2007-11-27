@@ -24,7 +24,7 @@ var sw;
 var child_sw = -1;
 
 function test(){
-        var t = '<div style="display: none;"><iframe src="data:text/html,<body><scr'+'ipt>try {parent.child_sw=screen.width}catch(e){}</scr'+'ipt>"></iframe></div>';
+        var t = '<div style="display: none;"><iframe onload="doChecks()" src="data:text/html,<body><scr'+'ipt>try {parent.child_sw=screen.width}catch(e){}</scr'+'ipt>"></iframe></div>';
         var div = document.createElement('div');
         div.innerHTML = t;
         document.getElementsByTagName('body')[0].appendChild(div);
@@ -36,15 +36,19 @@ try {
   sw = -1;
 }
 
-test();
-
 </script>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
+function doChecks() {
   isnot(sw, -1, "screen.width threw an exception");
   is(child_sw, sw, "iframe got wrong screen.width");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+test();
 
 </script>
 </pre>
