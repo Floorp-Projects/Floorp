@@ -142,6 +142,8 @@ cp.add_option('-w','--enable-waterfall', action="store_true",
               help='Update waterfall data')
 cp.add_option('--end-date', type='string', dest='enddate',
               help='Explicit (faked) end date')
+cp.add_option('--application', type='string',
+              help='Test only one app, by default tests browser and mail')
 opts, optlist = cp.parse_args(sys.argv[1:])
 
 #
@@ -185,8 +187,11 @@ basePath = os.path.join(opts.target, opts.date)
 if not os.path.isdir(basePath):
   os.mkdir(basePath)
 
+apps = ['browser', 'mail']
+if opts.application:
+  apps = [opts.application]
 
-tests = [Tests.CompareTest(),
+tests = [Tests.CompareTest(apps = apps),
          Tests.SearchTest(),
          Tests.RSSReaderTest(),
          Tests.BookmarksTest()]

@@ -59,13 +59,13 @@ class Base:
 import CompareLocales
 class CompareTest(Base):
   '''Test class to compare locales'''
-  def __init__(self):
+  def __init__(self, apps = ['browser', 'mail']):
     '''Initializes the test object'''
-    # nothing to be done here
+    self.apps = apps
     pass
   def run(self):
     '''Runs CompareLocales.compare()'''
-    return CompareLocales.compare(apps=['browser','mail'])
+    return CompareLocales.compare(apps=self.apps)
   def serialize(self, result, saveHandler):
     '''Serialize the CompareLocales result by locale into
       cmp-details-ab-CD
