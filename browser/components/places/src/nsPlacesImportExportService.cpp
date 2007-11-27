@@ -104,6 +104,7 @@
 #include "nsIParser.h"
 #include "prprf.h"
 #include "nsVoidArray.h"
+#include "nsIBrowserGlue.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -2263,6 +2264,13 @@ nsPlacesImportExportService::RunBatched(nsISupports* aUserData)
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = mBookmarksService->RemoveFolderChildren(toolbarFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // add the "Places" folder
+    nsCOMPtr<nsIBrowserGlue> glue(do_GetService("@mozilla.org/browser/browserglue;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = glue->EnsurePlacesDefaultQueriesInitialized();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

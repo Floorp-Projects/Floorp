@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Giorgio Maone <g.maone@informaction.com>
+ *   Asaf Romano <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,7 +57,7 @@ interface nsIDOMWindow;
  *
  */ 
 
-[scriptable, uuid(6d340848-9bc1-49a3-9073-99932bbc2a11)]
+[scriptable, uuid(01639c88-c0eb-4d75-9ee1-f325c1e04215)]
 interface nsIBrowserGlue : nsISupports
 {
   /** 
@@ -67,4 +68,9 @@ interface nsIBrowserGlue : nsISupports
    *
    */
   void sanitize(in nsIDOMWindow aParentWindow);
+
+  /**
+   * Add the special "Places" folder (with some special queries) to the personal toolbar folder.
+   */
+  void ensurePlacesDefaultQueriesInitialized();
 };
