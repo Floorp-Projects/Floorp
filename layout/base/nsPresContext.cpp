@@ -802,6 +802,8 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   mDeviceContext = aDeviceContext;
   NS_ADDREF(mDeviceContext);
 
+  if (mDeviceContext->SetPixelScale(mFullZoom))
+    mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
   if (!mImageLoaders.Init())
