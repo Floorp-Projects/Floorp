@@ -140,6 +140,8 @@ function runServer()
   if (environment["CLOSE_WHEN_DONE"])
     server.registerPathHandler("/server/shutdown", serverShutdown);
 
+  server.registerPathHandler("/redirect", redirect);
+
   server.setIndexHandler(defaultDirHandler);
   server.start(SERVER_PORT);
 
@@ -196,6 +198,12 @@ function serverShutdown(metadata, response)
   // Note: this doesn't disrupt the current request.
   server.stop();
   otherDomainServer.stop();
+}
+
+function redirect(metadata, response)
+{
+  response.setStatusLine("1.1", 301, "Moved Permanently");
+  response.setHeader("Location", metadata.queryString);
 }
 
 //
