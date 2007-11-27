@@ -2,7 +2,7 @@
 <!ENTITY printWindow.title "Printing"> 
 <!ENTITY title    "Title:"> 
 <!ENTITY progress "Progress:">
-<!ENTITY preparing "Preparing...">
+<!ENTITY preparing "Preparing…">
 <!ENTITY printComplete "Printing is Completed.">
 
 <!ENTITY dialogCancel.label "Cancel"> 

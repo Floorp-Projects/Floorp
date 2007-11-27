@@ -43,7 +43,7 @@
 
 <!ENTITY  openWith.label              "Open with">
 <!ENTITY  openWith.accesskey          "o">
-<!ENTITY  other.label                 "Other...">
+<!ENTITY  other.label                 "Other…">
 
 <!ENTITY  saveFile.label              "Save File">
 <!ENTITY  saveFile.accesskey          "s">
@@ -53,9 +53,9 @@
 
 <!ENTITY  whichIsA.label              "which is a:">
 
-<!ENTITY  chooseHandlerMac.label      "Choose...">
+<!ENTITY  chooseHandlerMac.label      "Choose…">
 <!ENTITY  chooseHandlerMac.accesskey  "C">
-<!ENTITY  chooseHandler.label         "Browse...">
+<!ENTITY  chooseHandler.label         "Browse…">
 <!ENTITY  chooseHandler.accesskey     "B">
 
 <!ENTITY  unknownPromptText.label     "Would you like to save this file?">

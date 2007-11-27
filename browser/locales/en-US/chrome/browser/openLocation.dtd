@@ -1,7 +1,7 @@
 <!-- extracted from content/openLocation.xul -->
 
 <!ENTITY enter.label "Enter the web location (URL), or specify the local file you would like to open:">  
-<!ENTITY chooseFile.label "Choose File...">
+<!ENTITY chooseFile.label "Choose File…">
 <!ENTITY newWindow.label "New Window">
 <!ENTITY newTab.label "New Tab">
 <!ENTITY topWindow.label "Current Window">

@@ -52,7 +52,7 @@
   </broadcasterset>
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportertoolmenu" 
-              label="&reporterMenu.title;..." 
+              label="&reporterMenu.title;…" 
               accesskey="&reporterMenu.accesskey;"
               insertafter="releaseNotes"
               observes="reporterItemsBroadcaster"
@@ -74,7 +74,7 @@
   <menupopup id="helpPopup">
     <menuseparator insertbefore="menu_HelpAboutSeparator"/>
     <menuitem id="helpPopup_reportertoolmenu"
-              label="&reporterMenu.title;..."
+              label="&reporterMenu.title;…"
               accesskey="&reporterMenu.accesskey;"
               insertbefore="menu_HelpAboutSeparator"
               oncommand="loadReporterWizard()"

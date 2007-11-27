@@ -26,7 +26,7 @@
 <!ENTITY connection.label                "Connection">
 
 <!ENTITY connectionDesc.label            "Configure how &brandShortName; connects to the Internet">
-<!ENTITY connectionSettings.label        "Settings...">
+<!ENTITY connectionSettings.label        "Settings…">
 <!ENTITY connectionSettings.accesskey    "e">
 
 <!ENTITY cache.label "Cache">

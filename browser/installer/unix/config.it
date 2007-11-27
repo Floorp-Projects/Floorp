@@ -444,7 +444,7 @@ Message=Download of $ProductName$ was successful. However, Netscape must be clos
 ;*** LOCALIZE ME BABY ***
 Message Full Installer=Netscape must be closed to proceed with this installation. Click OK to exit Netscape automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
-Message wait=Shutting down Netscape.  Please wait...
+Message wait=Shutting down Netscape.  Please wait…
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.

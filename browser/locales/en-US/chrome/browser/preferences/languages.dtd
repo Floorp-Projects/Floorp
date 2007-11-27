@@ -9,7 +9,7 @@
 <!ENTITY languages.customize.moveDown.accesskey         "D">
 <!ENTITY languages.customize.deleteButton.label         "Remove">
 <!ENTITY languages.customize.deleteButton.accesskey     "R">
-<!ENTITY languages.customize.selectLanguage.label       "Select a language to add...">
+<!ENTITY languages.customize.selectLanguage.label       "Select a language to add…">
 <!ENTITY languages.customize.addButton.label            "Add">
 <!ENTITY languages.customize.addButton.accesskey        "A">
 

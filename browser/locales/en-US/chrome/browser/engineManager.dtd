@@ -12,10 +12,10 @@
 <!ENTITY  dn.accesskey              "D">
 <!ENTITY  remove.label              "Remove">
 <!ENTITY  remove.accesskey          "R">
-<!ENTITY  edit.label                "Edit Keyword...">
+<!ENTITY  edit.label                "Edit Keyword…">
 <!ENTITY  edit.accesskey            "t">
 
-<!ENTITY  addEngine.label           "Get more search engines...">
+<!ENTITY  addEngine.label           "Get more search engines…">
 <!ENTITY  addEngine.accesskey       "A">
 
 <!ENTITY  enableSuggest.label       "Show search suggestions">

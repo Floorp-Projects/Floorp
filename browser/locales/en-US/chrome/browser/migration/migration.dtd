@@ -40,8 +40,8 @@
 <!ENTITY importItems.title              "Items to Import">
 <!ENTITY importItems.label              "Select which items to import:">
 
-<!ENTITY migrating.title                "Importing...">
-<!ENTITY migrating.label                "The following items are currently being imported...">
+<!ENTITY migrating.title                "Importing…">
+<!ENTITY migrating.label                "The following items are currently being imported…">
 
 <!ENTITY selectProfile.title            "Select Profile">
 <!ENTITY selectProfile.label            "The following profiles are available to import from:">

@@ -39,7 +39,7 @@
 
 <!ENTITY  validation.crl.caption                  "CRL">
 <!ENTITY  validation.crl.description              "Use the CRL Manager to manage the Certificate Revocation Lists (CRL) that are stored in your certificate database.">
-<!ENTITY  validation.managecrls.button            "Manage CRLs...">
+<!ENTITY  validation.managecrls.button            "Manage CRLs…">
 <!ENTITY  validation.managecrls.accesskey         "M">
 <!ENTITY  validation.crlmanager.label             "Manage CRLs">
 <!ENTITY  validation.crlmanager.description       "These Certificate Revocation Lists (CRL) are stored in your certificate database:">

@@ -35,10 +35,10 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY AdvancedEditButton.label "Advanced Edit...">
+<!ENTITY AdvancedEditButton.label "Advanced Edit…">
 <!ENTITY AdvancedEditButton.accessKey "E">
 <!ENTITY AdvancedEditButton.tooltip "Add or modify HTML attributes, style attributes, and JavaScript">
-<!ENTITY chooseButton.label "Choose File...">
+<!ENTITY chooseButton.label "Choose File…">
 <!ENTITY chooseFile.accessKey "F">
 <!ENTITY chooseFileLink.accessKey "o">
 <!ENTITY makeUrlRelative.label "URL is relative to page location">

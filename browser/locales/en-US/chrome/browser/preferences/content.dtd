@@ -1,16 +1,16 @@
 <!ENTITY  blockPopups.label           "Block pop-up windows">
 <!ENTITY  blockPopups.accesskey       "B">
-<!ENTITY  popupExceptions.label       "Exceptions...">
+<!ENTITY  popupExceptions.label       "Exceptions…">
 <!ENTITY  popupExceptions.accesskey   "E">
 
 <!ENTITY  loadImages.label            "Load images automatically">
 <!ENTITY  loadImages.accesskey        "I">
-<!ENTITY  exceptions.label            "Exceptions...">
+<!ENTITY  exceptions.label            "Exceptions…">
 <!ENTITY  exceptions.accesskey        "x">
 
 <!ENTITY  enableJavaScript.label      "Enable JavaScript">
 <!ENTITY  enableJavaScript.accesskey  "J">
-<!ENTITY  advancedJS.label            "Advanced...">
+<!ENTITY  advancedJS.label            "Advanced…">
 <!ENTITY  advancedJS.accesskey        "v">
 
 <!ENTITY  enableJava.label            "Enable Java">
@@ -24,14 +24,14 @@
 <!ENTITY  defaultSize.label           "Size:">
 <!ENTITY  defaultSize.accesskey       "S">
 
-<!ENTITY  advancedFonts.label         "Advanced...">
+<!ENTITY  advancedFonts.label         "Advanced…">
 <!ENTITY  advancedFonts.accesskey     "A">
 
-<!ENTITY  colors.label                "Colors...">
+<!ENTITY  colors.label                "Colors…">
 <!ENTITY  colors.accesskey            "C">
 
 
 <!ENTITY languages.label              "Languages">
 <!ENTITY chooseLanguage.label         "Choose your preferred language for displaying pages">
-<!ENTITY chooseButton.label           "Choose...">
+<!ENTITY chooseButton.label           "Choose…">
 <!ENTITY chooseButton.accesskey       "o">

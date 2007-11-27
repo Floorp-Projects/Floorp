@@ -23,6 +23,6 @@
 
 <!ENTITY backgroundImage.label      "Background image:">
 <!ENTITY backgroundImage.accesskey  "m">
-<!ENTITY chooseFile.label           "Choose File...">
+<!ENTITY chooseFile.label           "Choose File…">
 <!ENTITY chooseFile.accesskey       "o">
 
