@@ -1807,6 +1807,12 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
 nsresult nsHyperTextAccessible::ContentToRenderedOffset(nsIFrame *aFrame, PRInt32 aContentOffset,
                                                         PRUint32 *aRenderedOffset)
 {
+  if (!aFrame) {
+    // Current frame not rendered -- this can happen if text is set on
+    // something with display: none
+    *aRenderedOffset = 0;
+    return NS_OK;
+  }
   NS_ASSERTION(aFrame->GetType() == nsAccessibilityAtoms::textFrame,
                "Need text frame for offset conversion");
   NS_ASSERTION(aFrame->GetPrevContinuation() == nsnull,
@@ -1830,6 +1836,9 @@ nsresult nsHyperTextAccessible::ContentToRenderedOffset(nsIFrame *aFrame, PRInt3
 nsresult nsHyperTextAccessible::RenderedToContentOffset(nsIFrame *aFrame, PRUint32 aRenderedOffset,
                                                         PRInt32 *aContentOffset)
 {
+  *aContentOffset = 0;
+  NS_ENSURE_TRUE(aFrame, NS_ERROR_FAILURE);
+
   NS_ASSERTION(aFrame->GetType() == nsAccessibilityAtoms::textFrame,
                "Need text frame for offset conversion");
   NS_ASSERTION(aFrame->GetPrevContinuation() == nsnull,
