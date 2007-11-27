@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=369814
+-->
+<head>
+  <title>Test for Bug 369814</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=384014">Mozilla Bug 369814</a>
+
+<p>
+
+<iframe id="testFrame"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Tests for Bug 369814 **/
+
+SimpleTest.waitForExplicitFinish();
+
+// Because child scripts won't be able to run to tell us they're done,
+// we need to just wait for them.  Wait this amount of time before checking
+// the results.
+const gLoadTimeout = 3000;
+
+var Ci = Components.interfaces;
+
+var gCurrentTest;
+var gTargetWindow;
+var gNumPokes;
+var gPrefValue;
+
+var gTestFrame = document.getElementById('testFrame');
+
+/**
+ * Called by documents loaded from jar files to indicate that they can access
+ * this document.
+ */
+function poke(description) {
+  ok(false, gCurrentTest['name'] + ": got unexpected poke: " + description);
+  gNumPokes++;
+}
+
+function loadEvent(window, callback)
+{
+  var fn = function() {
+    window.removeEventListener("load", fn, false);
+    callback();
+  };
+  window.addEventListener("load", fn, false);
+}
+
+function loadTestTarget(callback)
+{
+  gTargetWindow = window.open("http://localhost:8888", "bug369814target");
+  loadEvent(gTargetWindow, callback);
+}
+
+function closeTestTarget()
+{
+  gTargetWindow.close();
+  gTargetWindow = null;
+}
+
+function loadErrorTest(test)
+{
+  gTestFrame.src = test['url'];
+
+  // Give the frame a chance to fail at loading
+  setTimeout(function() {
+      // XXX: There doesn't seem to be a reliable check for "got an error,"
+      // but reaching in to an error document will throw an exception
+      var errorPage;
+      try {
+        var item = gTestFrame.contentDocument.getElementById(gCurrentTest['data-iframe']);
+        errorPage = false;
+      } catch (e) {
+        errorPage = true;
+      }
+      ok(errorPage, gCurrentTest["name"] + ": should block a suspicious JAR load.");
+
+      finishTest();
+    }, gLoadTimeout);
+}
+
+function iframeTest(test) {
+  gTestFrame.src = test['url'];
+  loadEvent(gTestFrame, function() {
+      finishTest();
+    });
+}
+
+function refreshTest(test) {
+  gTestFrame.src = test['url'];
+  loadEvent(gTestFrame, function() {
+      // Wait for the frame to try and refresh
+      // XXX: a "blocked redirect" signal would be needed to get rid of
+      // this timeout.
+      setTimeout(function() {
+          finishTest();
+        }, gLoadTimeout);
+    });
+}
+
+function anchorTest(test) {
+  loadTestTarget(function() {
+      gTestFrame.src = test['url'];
+      loadEvent(gTestFrame, function() {
+        sendMouseEvent({type:'click'}, 'target', gTestFrame.contentWindow);
+        sendMouseEvent({type:'click'}, 'notarget', gTestFrame.contentWindow);
+
+        // Give the clicks a chance to load
+        setTimeout(function() {
+            closeTestTarget();
+            finishTest();
+          }, gLoadTimeout);
+        });
+    });
+}
+
+var gTests = [
+  { "name" : "iframes.html loaded from non-jar type, pref disabled",
+    "url" : "jar:http://localhost:8888/tests/docshell/test/bug369814.zip!/iframes.html",
+    "pref" : false,
+    "pokes" : { },
+    "func" : loadErrorTest,
+  },
+  { "name" : "refresh.html loaded from non-jar type, pref enabled",
+    "url" : "jar:http://localhost:8888/tests/docshell/test/bug369814.zip!/refresh.html",
+    "pref" : true,
+    "pokes" : { },
+    "func" : refreshTest,
+  },
+  { "name" : "iframes.html loaded from non-jar type, pref enabled",
+    "url" : "jar:http://localhost:8888/tests/docshell/test/bug369814.zip!/iframes.html",
+    "pref" : true,
+    "pokes" : { },
+    "func" : iframeTest,
+  },
+  { "name" : "anchors.html loaded from non-jar type, pref enabled",
+    "url" : "jar:http://localhost:8888/tests/docshell/test/bug369814.zip!/anchors.html",
+    "pref" : true,
+    "pokes" : { },
+    "func" : anchorTest,
+  },
+];
+
+var gNextTest = 0;
+
+function runNextTest()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefBranch);
+
+  if (gNextTest < gTests.length) {
+    gCurrentTest = gTests[gNextTest++];
+    gNumPokes = 0;
+
+    prefs.setBoolPref("network.jar.open-unsafe-types", gCurrentTest['pref']);
+
+    gCurrentTest['func'](gCurrentTest);
+  } else {
+    // Put back the pref value we had at test start
+    prefs.setBoolPref("network.jar.open-unsafe-types", gPrefValue);
+    SimpleTest.finish();
+  }
+}
+
+function finishTest()
+{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+      getService(Components.interfaces.nsIPrefBranch);
+    prefs.setBoolPref("network.jar.open-unsafe-types", false);
+
+  if (gNumPokes == 0) {
+    ok(true, gCurrentTest["name"] + ": no unexpected pokes");
+  }
+
+  runNextTest();
+}
+
+function startTests()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefBranch);
+  gPrefValue = prefs.getBoolPref("network.jar.open-unsafe-types");
+}
+
+addLoadEvent(runNextTest);
+
+</script>
+</pre>
+</body>
+</html>
+
