@@ -130,6 +130,10 @@ nsUrlClassifierUtils::GetKeyForURI(nsIURI * uri, nsACString & _retval)
   nsCAutoString host;
   innerURI->GetAsciiHost(host);
 
+  if (host.IsEmpty()) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
   nsresult rv = CanonicalizeHostname(host, _retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
