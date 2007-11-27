@@ -855,7 +855,7 @@
   </binding>
 
   <binding id="autocomplete-treerows">
-    <content onmousedown="event.preventDefault()">
+    <content>
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
       </xul:hbox>
