@@ -6343,7 +6343,7 @@ dnl ========================================================
 dnl = Support for gcc stack unwinding (from gcc 3.3)
 dnl ========================================================
 if test "$HAVE_GCC3_ABI" && test -z "$SKIP_LIBRARY_CHECKS"; then
-    AC_CHECK_FUNCS(_Unwind_Backtrace)
+    AC_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
 fi
 
 dnl ========================================================
