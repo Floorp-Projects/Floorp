@@ -73,6 +73,7 @@ void nsCaretAccessible::Shutdown()
   ClearControlSelectionListener(); // Clear the selection listener for the currently focused control
   mLastTextAccessible = nsnull;
   mLastUsedSelection = nsnull;
+  mRootAccessible = nsnull;
 }
 
 nsresult nsCaretAccessible::ClearControlSelectionListener()
@@ -161,6 +162,8 @@ nsresult nsCaretAccessible::RemoveDocSelectionListener(nsIDOMDocument *aDoc)
 
 NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, PRInt16 aReason)
 {
+  NS_ENSURE_TRUE(mRootAccessible, NS_ERROR_FAILURE);
+
   mLastUsedSelection = do_GetWeakReference(aSel);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
