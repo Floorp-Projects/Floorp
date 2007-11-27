@@ -622,19 +622,35 @@ ContentPrefService.prototype = {
   //**************************************************************************//
   // Database Creation & Access
 
-  _dbVersion: 2,
+  _dbVersion: 3,
 
   _dbSchema: {
-    groups:     "id           INTEGER PRIMARY KEY, \
-                 name         TEXT NOT NULL",
-
-    settings:   "id           INTEGER PRIMARY KEY, \
-                 name         TEXT NOT NULL",
-
-    prefs:      "id           INTEGER PRIMARY KEY, \
-                 groupID      INTEGER REFERENCES groups(id), \
-                 settingID    INTEGER NOT NULL REFERENCES settings(id), \
-                 value        BLOB"
+    tables: {
+      groups:     "id           INTEGER PRIMARY KEY, \
+                   name         TEXT NOT NULL",
+  
+      settings:   "id           INTEGER PRIMARY KEY, \
+                   name         TEXT NOT NULL",
+  
+      prefs:      "id           INTEGER PRIMARY KEY, \
+                   groupID      INTEGER REFERENCES groups(id), \
+                   settingID    INTEGER NOT NULL REFERENCES settings(id), \
+                   value        BLOB"
+    },
+    indices: {
+      groups_idx: {
+        table: "groups",
+        columns: ["name"]
+      },
+      settings_idx: {
+        table: "settings",
+        columns: ["name"]
+      },
+      prefs_idx: {
+        table: "prefs",
+        columns: ["groupID", "settingID"]
+      }
+    }
   },
 
   _dbConnection: null,
@@ -708,11 +724,21 @@ ContentPrefService.prototype = {
   },
 
   _dbCreate: function ContentPrefService__dbCreate(aDBService, aDBFile) {
-      var dbConnection = aDBService.openDatabase(aDBFile);
-      for (var table in this._dbSchema)
-        dbConnection.createTable(table, this._dbSchema[table]);
-      dbConnection.schemaVersion = this._dbVersion;
-      return dbConnection;
+    var dbConnection = aDBService.openDatabase(aDBFile);
+    for (let name in this._dbSchema.tables)
+      dbConnection.createTable(name, this._dbSchema.tables[name]);
+    this._dbCreateIndices(dbConnection);
+    dbConnection.schemaVersion = this._dbVersion;
+    return dbConnection;
+  },
+
+  _dbCreateIndices: function ContentPrefService__dbCreateIndices(aDBConnection) {
+    for (let name in this._dbSchema.indices) {
+      let index = this._dbSchema.indices[name];
+      let statement = "CREATE INDEX " + name + " ON " + index.table +
+                      "(" + index.columns.join(", ") + ")";
+      aDBConnection.executeSimpleSQL(statement);
+    }
   },
 
   _dbMigrate: function ContentPrefService__dbMigrate(aDBConnection, aOldVersion, aNewVersion) {
@@ -732,19 +758,19 @@ ContentPrefService.prototype = {
             " to v" + aNewVersion + ": no migrator function");
   },
 
-  _dbMigrate0To2: function ContentPrefService___dbMigrate0To2(aDBConnection) {
-    aDBConnection.createTable("groups", this._dbSchema.groups);
+  _dbMigrate0To3: function ContentPrefService___dbMigrate0To3(aDBConnection) {
+    aDBConnection.createTable("groups", this._dbSchema.tables.groups);
     aDBConnection.executeSimpleSQL(
       "INSERT INTO groups (id, name) SELECT id, name FROM sites"
     );
 
-    aDBConnection.createTable("settings", this._dbSchema.settings);
+    aDBConnection.createTable("settings", this._dbSchema.tables.settings);
     aDBConnection.executeSimpleSQL(
       "INSERT INTO settings (id, name) SELECT id, name FROM keys"
     );
 
     aDBConnection.executeSimpleSQL("ALTER TABLE prefs RENAME TO prefsOld");
-    aDBConnection.createTable("prefs", this._dbSchema.prefs);
+    aDBConnection.createTable("prefs", this._dbSchema.tables.prefs);
     aDBConnection.executeSimpleSQL(
       "INSERT INTO prefs (id, groupID, settingID, value) " +
       "SELECT id, site_id, key_id, value FROM prefsOld"
@@ -755,12 +781,14 @@ ContentPrefService.prototype = {
     aDBConnection.executeSimpleSQL("DROP TABLE keys");
     aDBConnection.executeSimpleSQL("DROP TABLE sites");
 
+    this._dbCreateIndices(aDBConnection);
+
     aDBConnection.schemaVersion = this._dbVersion;
   },
 
-  _dbMigrate1To2: function ContentPrefService___dbMigrate1To2(aDBConnection) {
+  _dbMigrate1To3: function ContentPrefService___dbMigrate1To3(aDBConnection) {
     aDBConnection.executeSimpleSQL("ALTER TABLE groups RENAME TO groupsOld");
-    aDBConnection.createTable("groups", this._dbSchema.groups);
+    aDBConnection.createTable("groups", this._dbSchema.tables.groups);
     aDBConnection.executeSimpleSQL(
       "INSERT INTO groups (id, name) " +
       "SELECT id, name FROM groupsOld"
@@ -769,8 +797,15 @@ ContentPrefService.prototype = {
     aDBConnection.executeSimpleSQL("DROP TABLE groupers");
     aDBConnection.executeSimpleSQL("DROP TABLE groupsOld");
 
+    this._dbCreateIndices(aDBConnection);
+
     aDBConnection.schemaVersion = this._dbVersion;
+  },
+
+  _dbMigrate2To3: function ContentPrefService__dbMigrate2To3(aDBConnection) {
+    this._dbCreateIndices(aDBConnection);
   }
+
 };
 
 
