@@ -66,6 +66,13 @@
 </ul>
 ">
 
+<!ENTITY unsafeContentType.title "Unsafe File Type">
+<!ENTITY unsafeContentType.longDesc "
+<ul>
+  <li>Please contact the website owners to inform them of this problem.</li>
+</ul>
+">
+
 <!ENTITY netReset.title "The connection was reset">
 <!ENTITY netReset.longDesc "&sharedLongDesc;">
 

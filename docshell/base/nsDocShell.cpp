@@ -168,6 +168,8 @@
 
 #include "nsITextToSubURI.h"
 
+#include "nsIJARChannel.h"
+
 #include "prlog.h"
 #include "prmem.h"
 
@@ -1301,11 +1303,36 @@ nsDocShell::SetDocumentCharsetInfo(nsIDocumentCharsetInfo *
 }
 
 NS_IMETHODIMP
+nsDocShell::GetChannelIsUnsafe(PRBool *aUnsafe)
+{
+    *aUnsafe = PR_FALSE;
+
+    nsCOMPtr<nsIChannel> channel;
+    GetCurrentDocumentChannel(getter_AddRefs(channel));
+    if (!channel) {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(channel);
+    if (!jarChannel) {
+        return NS_OK;
+    }
+
+    return jarChannel->GetIsUnsafe(aUnsafe);
+}
+
+NS_IMETHODIMP
 nsDocShell::GetAllowPlugins(PRBool * aAllowPlugins)
 {
     NS_ENSURE_ARG_POINTER(aAllowPlugins);
 
     *aAllowPlugins = mAllowPlugins;
+    if (!mAllowPlugins) {
+        return NS_OK;
+    }
+
+    PRBool unsafe;
+    *aAllowPlugins = NS_SUCCEEDED(GetChannelIsUnsafe(&unsafe)) && !unsafe;
     return NS_OK;
 }
 
@@ -1323,6 +1350,12 @@ nsDocShell::GetAllowJavascript(PRBool * aAllowJavascript)
     NS_ENSURE_ARG_POINTER(aAllowJavascript);
 
     *aAllowJavascript = mAllowJavascript;
+    if (!mAllowJavascript) {
+        return NS_OK;
+    }
+
+    PRBool unsafe;
+    *aAllowJavascript = NS_SUCCEEDED(GetChannelIsUnsafe(&unsafe)) && !unsafe;
     return NS_OK;
 }
 
@@ -1338,6 +1371,12 @@ NS_IMETHODIMP nsDocShell::GetAllowMetaRedirects(PRBool * aReturn)
     NS_ENSURE_ARG_POINTER(aReturn);
 
     *aReturn = mAllowMetaRedirects;
+    if (!mAllowMetaRedirects) {
+        return NS_OK;
+    }
+
+    PRBool unsafe;
+    *aReturn = NS_SUCCEEDED(GetChannelIsUnsafe(&unsafe)) && !unsafe;
     return NS_OK;
 }
 
@@ -3035,6 +3074,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         case NS_ERROR_INVALID_CONTENT_ENCODING:
             // Bad Content Encoding.
             error.AssignLiteral("contentEncodingError");
+            break;
+        case NS_ERROR_UNSAFE_CONTENT_TYPE:
+            // Channel refused to load from an unrecognized content type.
+            error.AssignLiteral("unsafeContentType");
             break;
         }
     }
@@ -6553,6 +6596,25 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER) &&
             NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
             inherits) {
+
+            // Don't allow loads that would inherit our security context
+            // if this document came from an unsafe channel.
+            nsCOMPtr<nsIDocShellTreeItem> treeItem = this;
+            do {
+                nsCOMPtr<nsIDocShell> itemDocShell =
+                    do_QueryInterface(treeItem);
+                PRBool isUnsafe;
+                if (itemDocShell &&
+                    NS_SUCCEEDED(itemDocShell->GetChannelIsUnsafe(&isUnsafe)) &&
+                    isUnsafe) {
+                    return NS_ERROR_DOM_SECURITY_ERR;
+                }
+
+                nsCOMPtr<nsIDocShellTreeItem> parent;
+                treeItem->GetSameTypeParent(getter_AddRefs(parent));
+                parent.swap(treeItem);
+            } while (treeItem);
+
             owner = GetInheritedPrincipal(PR_TRUE);
         }
     }
