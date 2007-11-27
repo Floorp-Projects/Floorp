@@ -75,24 +75,10 @@
 #define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
 
 /*
- * To put a property into the hidden subspace we re-tag JSString * behind
- * property's atom as JSVAL_BOOLEAN to get a different id. js_TraceId must
- * properly trace such pseudo-booleans to ensure GC safety.
- */
-#define JSID_IS_HIDDEN(id)          (JSVAL_TAG((jsval)(id)) == JSVAL_BOOLEAN)
-
-#define JSID_HIDE_NAME(id)                                                    \
-    (JS_ASSERT(JSID_IS_ATOM(id)),                                             \
-     (jsid)((jsval)(id) ^ (JSVAL_STRING ^ JSVAL_BOOLEAN)))
-
-#define JSID_UNHIDE_NAME(id)                                                  \
-    (JS_ASSERT(JSID_IS_HIDDEN(id)),                                           \
-     (jsid)((jsval)(id) ^ (JSVAL_BOOLEAN ^ JSVAL_STRING)))
-
-/*
  * Convenience constants.
  */
-#define JS_BITS_PER_UINT32 (sizeof(uint32) * JS_BITS_PER_BYTE)
+#define JS_BITS_PER_UINT32_LOG2 5
+#define JS_BITS_PER_UINT32      32
 
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;

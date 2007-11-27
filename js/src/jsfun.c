@@ -746,66 +746,64 @@ static JSBool
 call_enumerate(JSContext *cx, JSObject *obj)
 {
     JSStackFrame *fp;
-    JSObject *funobj, *pobj;
-    JSScope *scope;
-    JSScopeProperty *sprop, *cprop;
-    jsval *vec;
-    jsid id;
+    JSFunction *fun;
+    uintN n, i, slot;
+    void *mark;
+    JSAtom **names, *name;
+    JSObject *pobj;
     JSProperty *prop;
+    jsval v;
 
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (!fp)
         return JS_TRUE;
-
-    /*
-     * Do not enumerate a cloned function object at fp->callee, it may have
-     * gained its own (mutable) scope (e.g., a brutally-shared XUL script sets
-     * the clone's prototype property).  We must enumerate the function object
-     * that was decorated with parameter and local variable properties by the
-     * compiler when the compiler created fp->fun, namely fp->fun->object.
-     *
-     * Contrast with call_resolve, where we prefer fp->callee, because we'll
-     * use js_LookupProperty to find any overridden properties in that object,
-     * if it was a mutated clone; and if not, we will search its prototype,
-     * fp->fun->object, to find compiler-created params and locals.
-     */
-    funobj = fp->fun->object;
-    if (!funobj)
-        return JS_TRUE;
+    JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee) == fp->fun);
 
     /*
      * Reflect actual args from fp->argv for formal parameters, and local vars
      * and functions in fp->vars for declared variables and nested-at-top-level
      * local functions.
      */
-    scope = OBJ_SCOPE(funobj);
-    for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
-        if (!JSID_IS_HIDDEN(sprop->id))
-            continue;
-        vec = (sprop->getter == JS_HIDDEN_ARG_GETTER) ? fp->argv : fp->vars;
+    fun = fp->fun;
+    n = fun->nargs + fun->u.i.nvars;
+    if (n == 0)
+        return JS_TRUE;
 
-        /* Trigger reflection by looking up the unhidden atom for sprop->id. */
-        id = JSID_UNHIDE_NAME(sprop->id);
-        if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
-            return JS_FALSE;
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    names = js_GetLocalNames(cx, fun, &cx->tempPool, NULL);
+    if (!names)
+        goto out;
+
+    for (i = 0; i != n; ++i) {
+        name = names[i];
+        if (!name)
+            continue;
 
         /*
-         * If we found the property in a different object, don't try sticking
-         * it into wrong slots vector. This can occur because we have a mutable
-         * __proto__ slot, and cloned function objects rely on their __proto__
-         * to delegate to the object that contains the var and arg properties.
+         * Trigger reflection by looking up the name of the argument or
+         * variable.
          */
-        if (!prop || pobj != obj) {
-            if (prop)
-                OBJ_DROP_PROPERTY(cx, pobj, prop);
-            continue;
+        if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(name), &pobj, &prop)) {
+            names = NULL;
+            goto out;
         }
-        cprop = (JSScopeProperty *)prop;
-        LOCKED_OBJ_SET_SLOT(obj, cprop->slot, vec[(uint16) sprop->shortid]);
-        OBJ_DROP_PROPERTY(cx, obj, prop);
+
+        /*
+         * At this point the call object always has a property corresponding
+         * to the local name because call_resolve creates the property using
+         * JSPROP_PERMANENT.
+         */
+        JS_ASSERT(prop && pobj == obj);
+        slot = ((JSScopeProperty *) prop)->slot;
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
+
+        v = (i < fun->nargs) ? fp->argv[i] : fp->vars[i - fun->nargs];
+        LOCKED_OBJ_SET_SLOT(obj, slot, v);
     }
 
-    return JS_TRUE;
+  out:
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
+    return names != NULL;
 }
 
 static JSBool
@@ -824,13 +822,10 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (!fp)
         return JS_TRUE;
     JS_ASSERT(fp->fun);
+    JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee) == fp->fun);
 
     if (!JSVAL_IS_STRING(id))
         return JS_TRUE;
-
-    if (!fp->callee)
-        return JS_TRUE;
-    JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee) == fp->fun);
 
     str = JSVAL_TO_STRING(id);
     atom = js_AtomizeString(cx, str, 0);
@@ -1320,6 +1315,9 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         JS_ARENA_RELEASE(&xdr->cx->tempPool, mark);
         if (!ok)
             goto out;
+
+        if (xdr->mode == JSXDR_DECODE)
+            js_FreezeLocalNames(cx, fun);
     }
 
     if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
@@ -2013,13 +2011,16 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         fun->u.i.nvars = 0;
         fun->u.i.spare = 0;
         fun->u.i.script = NULL;
+#ifdef DEBUG
+        fun->u.i.names.taggedAtom = 0;
+#endif
     } else {
         fun->u.n.native = native;
         fun->u.n.extra = 0;
         fun->u.n.minargs = 0;
+        fun->u.n.clasp = NULL;
     }
     fun->atom = atom;
-    fun->clasp = NULL;
 
     /* Link fun to funobj and vice versa. */
     if (!js_LinkFunctionObject(cx, fun, funobj)) {
@@ -2032,6 +2033,9 @@ out:
     return fun;
 }
 
+static void
+TraceLocalNames(JSTracer *trc, JSFunction *fun);
+
 void
 js_TraceFunction(JSTracer *trc, JSFunction *fun)
 {
@@ -2039,9 +2043,15 @@ js_TraceFunction(JSTracer *trc, JSFunction *fun)
         JS_CALL_OBJECT_TRACER(trc, fun->object, "object");
     if (fun->atom)
         JS_CALL_STRING_TRACER(trc, ATOM_TO_STRING(fun->atom), "atom");
-    if (FUN_INTERPRETED(fun) && fun->u.i.script)
-        js_TraceScript(trc, fun->u.i.script);
+    if (FUN_INTERPRETED(fun)) {
+        if (fun->u.i.script)
+            js_TraceScript(trc, fun->u.i.script);
+        TraceLocalNames(trc, fun);
+    }
 }
+
+static void
+DestroyLocalNames(JSContext *cx, JSFunction *fun);
 
 void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun)
@@ -2050,8 +2060,11 @@ js_FinalizeFunction(JSContext *cx, JSFunction *fun)
      * Null-check of i.script is required since the parser sets interpreted
      * very early.
      */
-    if (FUN_INTERPRETED(fun) && fun->u.i.script)
-        js_DestroyScript(cx, fun->u.i.script);
+    if (FUN_INTERPRETED(fun)) {
+        if (fun->u.i.script)
+            js_DestroyScript(cx, fun->u.i.script);
+        DestroyLocalNames(cx, fun);
+    }
 }
 
 JSObject *
@@ -2209,61 +2222,201 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
                          name, source);
 }
 
+/*
+ * When a function has between 2 and MAX_ARRAY_LOCALS arguments and variables,
+ * their name are stored as the JSLocalNames.array.
+ */
+#define MAX_ARRAY_LOCALS 8
+
+JS_STATIC_ASSERT(2 <= MAX_ARRAY_LOCALS);
+JS_STATIC_ASSERT(MAX_ARRAY_LOCALS < JS_BITMASK(16));
+
+/*
+ * We use the lowest bit of the string atom to distinguish const from var
+ * name when there is only single name or when names are stored as an array.
+ */
+JS_STATIC_ASSERT((JSVAL_STRING & 1) == 0);
+
+/*
+ * When we use a hash table to store the local names, we use a singly linked
+ * list to record the indexes of duplicated parameter names to preserve the
+ * duplicates for the decompiler.
+ */
+typedef struct JSNameIndexPair JSNameIndexPair;
+
+struct JSNameIndexPair {
+    JSAtom          *name;
+    uint16          index;
+    JSNameIndexPair *link;
+};
+
+struct JSLocalNameMap {
+    JSDHashTable    names;
+    JSNameIndexPair *lastdup;
+};
+
+typedef struct JSLocalNameHashEntry {
+    JSDHashEntryHdr hdr;
+    JSAtom          *name;
+    uint16          index;
+    uint8           localKind;
+} JSLocalNameHashEntry;
+
+static void
+FreeLocalNameHash(JSContext *cx, JSLocalNameMap *map)
+{
+    JSNameIndexPair *dup, *next;
+
+    for (dup = map->lastdup; dup; dup = next) {
+        next = dup->link;
+        JS_free(cx, dup);
+    }
+    JS_DHashTableFinish(&map->names);
+    JS_free(cx, map);
+}
+
+static JSBool
+HashLocalName(JSContext *cx, JSLocalNameMap *map, JSAtom *name,
+              JSLocalKind localKind, uintN index)
+{
+    JSLocalNameHashEntry *entry;
+    JSNameIndexPair *dup;
+
+    JS_ASSERT(index <= JS_BITMASK(16));
+#if JS_HAS_DESTRUCTURING
+    if (!name) {
+        /* A destructuring pattern does not need a hash entry. */
+        JS_ASSERT(localKind == JSLOCAL_ARG);
+        return JS_TRUE;
+    }
+#endif
+    JS_ASSERT(ATOM_IS_STRING(name));
+    entry = (JSLocalNameHashEntry *)
+            JS_DHashTableOperate(&map->names, name, JS_DHASH_ADD);
+    if (!entry) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+    if (entry->name) {
+        JS_ASSERT(entry->name == name);
+        JS_ASSERT(entry->localKind == JSLOCAL_ARG);
+        dup = (JSNameIndexPair *) JS_malloc(cx, sizeof *dup);
+        if (!dup)
+            return JS_FALSE;
+        dup->name = entry->name;
+        dup->index = entry->index;
+        dup->link = map->lastdup;
+        map->lastdup = dup;
+    }
+    entry->name = name;
+    entry->index = (uint16) index;
+    entry->localKind = (uint8) localKind;
+    return JS_TRUE;
+}
+
 JSBool
 js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
 {
+    jsuword taggedAtom;
     uint16 *indexp;
-    JSPropertyOp getter;
-    uintN readonly;
+    uintN n, i;
+    jsuword *array;
+    JSLocalNameMap *map;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
-    JS_ASSERT(OBJ_IS_NATIVE(fun->object));
+    JS_ASSERT(!fun->u.i.script);
+    JS_ASSERT(((jsuword) atom & 1) == 0);
+    taggedAtom = (jsuword) atom;
     if (kind == JSLOCAL_ARG) {
-#if JS_HAS_DESTRUCTURING
-        /*
-         * Destructuring parameter does not have name so we just update the
-         * number of arguments for it without adding a property.
-         */
-        if (!atom) {
-            ++fun->nargs;
-            return JS_TRUE;
-        }
-#endif
         indexp = &fun->nargs;
-        getter = JS_HIDDEN_ARG_GETTER;
-        readonly = 0;
     } else {
-        JS_ASSERT(kind == JSLOCAL_VAR || kind == JSLOCAL_CONST);
         indexp = &fun->u.i.nvars;
-        getter = JS_HIDDEN_VAR_GETTER;
-        readonly = (kind == JSLOCAL_CONST) ? JSPROP_READONLY : 0;
+        if (kind == JSLOCAL_CONST)
+            taggedAtom |= 1;
+        else
+            JS_ASSERT(kind == JSLOCAL_VAR);
+    }
+    n = fun->nargs + fun->u.i.nvars;
+    if (n == 0) {
+        JS_ASSERT(fun->u.i.names.taggedAtom == 0);
+        fun->u.i.names.taggedAtom = taggedAtom;
+    } else if (n < MAX_ARRAY_LOCALS) {
+        if (n > 1) {
+            array = fun->u.i.names.array;
+        } else {
+            array = (jsuword *) JS_malloc(cx, MAX_ARRAY_LOCALS * sizeof *array);
+            if (!array)
+                return JS_FALSE;
+            array[0] = fun->u.i.names.taggedAtom;
+            fun->u.i.names.array = array;
+        }
+        if (kind == JSLOCAL_ARG) {
+            /*
+             * A destructuring argument pattern adds variables, not arguments,
+             * so for the following arguments nvars != 0.
+             */
+#if JS_HAS_DESTRUCTURING
+            if (fun->u.i.nvars != 0) {
+                memmove(array + fun->nargs + 1, array + fun->nargs,
+                        fun->u.i.nvars * sizeof *array);
+            }
+#else
+            JS_ASSERT(fun->u.i.nvars == 0);
+#endif
+            array[fun->nargs] = taggedAtom;
+        } else {
+            array[n] = taggedAtom;
+        }
+    } else if (n == MAX_ARRAY_LOCALS) {
+        array = fun->u.i.names.array;
+        map = (JSLocalNameMap *) JS_malloc(cx, sizeof *map);
+        if (!map)
+            return JS_FALSE;
+        if (!JS_DHashTableInit(&map->names, JS_DHashGetStubOps(),
+                               NULL, sizeof(JSLocalNameHashEntry),
+                               JS_DHASH_DEFAULT_CAPACITY(MAX_ARRAY_LOCALS
+                                                         * 2))) {
+            JS_ReportOutOfMemory(cx);
+            JS_free(cx, map);
+            return JS_FALSE;
+        }
+
+        map->lastdup = NULL;
+        for (i = 0; i != MAX_ARRAY_LOCALS; ++i) {
+            taggedAtom = array[i];
+            if (!HashLocalName(cx, map, (JSAtom *) (taggedAtom & ~1),
+                               (i < fun->nargs)
+                               ? JSLOCAL_ARG
+                               : (taggedAtom & 1) ? JSLOCAL_CONST : JSLOCAL_VAR,
+                               (i < fun->nargs) ? i : i - fun->nargs)) {
+                FreeLocalNameHash(cx, map);
+                return JS_FALSE;
+            }
+        }
+        if (!HashLocalName(cx, map, atom, kind, *indexp)) {
+            FreeLocalNameHash(cx, map);
+            return JS_FALSE;
+        }
+
+        /*
+         * At this point the entry is added and we cannot fail. It is time
+         * to replace fun->u.i.names with the built map.
+         */
+        fun->u.i.names.map = map;
+        JS_free(cx, array);
+    } else {
+        if (*indexp == JS_BITMASK(16)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 (kind == JSLOCAL_ARG)
+                                 ? JSMSG_TOO_MANY_FUN_ARGS
+                                 : JSMSG_TOO_MANY_FUN_VARS);
+            return JS_FALSE;
+        }
+        if (!HashLocalName(cx, fun->u.i.names.map, atom, kind, *indexp))
+            return JS_FALSE;
     }
 
-    if (*indexp == JS_BITMASK(16)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             (kind == JSLOCAL_ARG)
-                             ? JSMSG_TOO_MANY_FUN_ARGS
-                             :JSMSG_TOO_MANY_FUN_VARS);
-        return JS_FALSE;
-    }
-
-    /*
-     * To support duplicate parameter names we force a duplicate node on the
-     * SCOPE_LAST_PROP(scope) list with the same id, distinguished by the
-     * SPROP_ALLOW_DUPLICATE flag, and not mapped by an entry in scope. The
-     * flag is cleared when js_AddNativeProperty finds that the property is
-     * unique.
-     */
-    if (!js_AddNativeProperty(cx, fun->object,
-                              JSID_HIDE_NAME(ATOM_TO_JSID(atom)),
-                              getter, NULL, SPROP_INVALID_SLOT,
-                              JSPROP_PERMANENT | JSPROP_SHARED | readonly,
-                              SPROP_HAS_SHORTID | SPROP_ALLOW_DUPLICATE,
-                              *indexp)) {
-        return JS_FALSE;
-    }
-
-    /* Update the argument of variable counter. */
+    /* Update the argument or variable counter. */
     ++*indexp;
     return JS_TRUE;
 }
@@ -2271,58 +2424,99 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
 JSLocalKind
 js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
 {
-    jsid id;
-    JSScope *scope;
-    JSScopeProperty *sprop;
-    JSLocalKind kind;
+    uintN n, i;
+    jsuword *array;
+    JSLocalNameHashEntry *entry;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
-    JS_ASSERT(OBJ_IS_NATIVE(fun->object));
-    kind = JSLOCAL_NONE;
-    if (fun->nargs + fun->u.i.nvars != 0) {
-        id = JSID_HIDE_NAME(ATOM_TO_JSID(atom));
+    n = fun->nargs + fun->u.i.nvars;
+    if (n == 0)
+        return JSLOCAL_NONE;
+    if (n <= MAX_ARRAY_LOCALS) {
+        array = (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
 
-        /*
-         * Inline js_LookupPropertyWithFlags to avoid prototype chain search
-         * and the resolve hook invocation. The former is just an optimization
-         * while the latter is necessary to avoid early creation of lazy slots
-         * in fun->objects. See comments in fun_resolve for details.
-         */
-        JS_LOCK_OBJ(cx, fun->object);
-        scope = OBJ_SCOPE(fun->object);
-        JS_ASSERT(scope->object == fun->object);
-        sprop = SCOPE_GET_PROPERTY(scope, id);
-        if (sprop) {
-            JS_ASSERT(sprop->setter == NULL);
-            if (sprop->getter == JS_HIDDEN_ARG_GETTER) {
-                kind = JSLOCAL_ARG;
-            } else {
-                JS_ASSERT(sprop->getter == JS_HIDDEN_VAR_GETTER);
-                kind = (sprop->attrs & JSPROP_READONLY)
-                       ? JSLOCAL_CONST
-                       : JSLOCAL_VAR;
+        /* Search from the tail to pick up the last duplicated name. */
+        i = n;
+        do {
+            --i;
+            if (atom == (JSAtom *) (array[i] & ~1)) {
+                if (i < fun->nargs) {
+                    if (indexp)
+                        *indexp = i;
+                    return JSLOCAL_ARG;
+                }
+                if (indexp)
+                    *indexp = i - fun->nargs;
+                return (array[i] & 1) ? JSLOCAL_CONST : JSLOCAL_VAR;
             }
+        } while (i != 0);
+    } else {
+        entry = (JSLocalNameHashEntry *)
+                JS_DHashTableOperate(&fun->u.i.names.map->names, atom,
+                                     JS_DHASH_LOOKUP);
+        if (JS_DHASH_ENTRY_IS_BUSY(&entry->hdr)) {
+            JS_ASSERT(entry->localKind != JSLOCAL_NONE);
             if (indexp)
-                *indexp = (uint16) sprop->shortid;
+                *indexp = entry->index;
+            return (JSLocalKind) entry->localKind;
         }
-        JS_UNLOCK_OBJ(cx, fun->object);
     }
-    return kind;
+    return JSLOCAL_NONE;
+}
+
+typedef struct JSGetLocalNamesArgs {
+    JSFunction      *fun;
+    JSAtom          **names;
+    uint32          *bitmap;
+#ifdef DEBUG
+    uintN           nCopiedArgs;
+    uintN           nCopiedVars;
+#endif
+} JSGetLocalNamesArgs;
+
+#define SET_BIT32(bitmap, bit)                                                \
+    ((bitmap)[(bit) >> JS_BITS_PER_UINT32_LOG2] |=                            \
+         JS_BIT((bit) & (JS_BITS_PER_UINT32 - 1)))
+
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+get_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                           uint32 number, void *arg)
+{
+    JSLocalNameHashEntry *entry;
+    JSGetLocalNamesArgs *args;
+    uint i;
+
+    entry = (JSLocalNameHashEntry *) hdr;
+    args = (JSGetLocalNamesArgs *) arg;
+    JS_ASSERT(entry->name);
+    if (entry->localKind == JSLOCAL_ARG) {
+        JS_ASSERT(entry->index < args->fun->nargs);
+        JS_ASSERT(args->nCopiedArgs++ < args->fun->nargs);
+        i = entry->index;
+    } else {
+        JS_ASSERT(entry->localKind == JSLOCAL_VAR ||
+                  entry->localKind == JSLOCAL_CONST);
+        JS_ASSERT(entry->index < args->fun->u.i.nvars);
+        JS_ASSERT(args->nCopiedVars++ < args->fun->u.i.nvars);
+        i = args->fun->nargs + entry->index;
+    }
+    args->names[i] = entry->name;
+    if (args->bitmap && entry->localKind != JSLOCAL_VAR)
+        SET_BIT32(args->bitmap, i);
+    return JS_DHASH_NEXT;
 }
 
 JSAtom **
 js_GetLocalNames(JSContext *cx, JSFunction *fun, JSArenaPool *pool,
                  uint32 **bitmap)
 {
-    uintN n, index;
+    uintN n, i;
     size_t allocsize;
     JSAtom **names;
-    JSScopeProperty *sprop;
-    JSBool setbit;
-    uint32 bit;
-#ifdef DEBUG
-    uintN nvars = 0, nargs = 0;
-#endif
+    jsuword *array;
+    JSLocalNameMap *map;
+    JSGetLocalNamesArgs args;
+    JSNameIndexPair *dup;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
     JS_ASSERT(OBJ_IS_NATIVE(fun->object));
@@ -2345,33 +2539,124 @@ js_GetLocalNames(JSContext *cx, JSFunction *fun, JSArenaPool *pool,
         *bitmap = (uint32 *) (names + n);
         memset(*bitmap, 0, JS_HOWMANY(n, JS_BITS_PER_UINT32) * sizeof(uint32));
     }
-    for (sprop = SCOPE_LAST_PROP(OBJ_SCOPE(fun->object));
-         sprop; sprop = sprop->parent) {
-        if (!JSID_IS_HIDDEN(sprop->id))
-            continue;
-        index = (uint16) sprop->shortid;
-        if (sprop->getter == JS_HIDDEN_ARG_GETTER) {
-            JS_ASSERT(nargs++ < fun->nargs);
-            JS_ASSERT(index < fun->nargs);
-            setbit = JS_TRUE;
-        } else {
-            JS_ASSERT(sprop->getter == JS_HIDDEN_VAR_GETTER);
-            JS_ASSERT(nvars++ < fun->u.i.nvars);
-            JS_ASSERT(index < fun->u.i.nvars);
-            index += fun->nargs;
-            setbit = (sprop->attrs & JSPROP_READONLY);
-        }
-        names[index] = JSID_TO_ATOM(JSID_UNHIDE_NAME(sprop->id));
-        if (bitmap && setbit) {
-            bit = JS_BIT(index & (JS_BITS_PER_UINT32 - 1));
-            JS_ASSERT(((*bitmap)[index / JS_BITS_PER_UINT32] & bit) == 0);
-            (*bitmap)[index / JS_BITS_PER_UINT32] |= bit;
-        }
-    }
-#if !JS_HAS_DESTRUCTURING
-    JS_ASSERT(nargs == fun->nargs);
+
+    if (n <= MAX_ARRAY_LOCALS) {
+        array = (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
+
+        i = n;
+        do {
+            --i;
+            names[i] = (JSAtom *) (array[i] & ~1);
+            if (bitmap &&
+                (i < fun->nargs ? array[i] != 0 : array[i] & 1)) {
+                SET_BIT32(*bitmap, i);
+            }
+        } while (i != 0);
+    } else {
+        map = fun->u.i.names.map;
+        args.fun = fun;
+        args.names = names;
+        args.bitmap = bitmap ? *bitmap : NULL;
+#ifdef DEBUG
+        args.nCopiedArgs = 0;
+        args.nCopiedVars = 0;
 #endif
-    JS_ASSERT(nvars == fun->u.i.nvars);
+        JS_DHashTableEnumerate(&map->names, get_local_names_enumerator, &args);
+        for (dup = map->lastdup; dup; dup = dup->link) {
+            JS_ASSERT(dup->index < fun->nargs);
+            JS_ASSERT(args.nCopiedArgs++ < fun->nargs);
+            names[dup->index] = dup->name;
+            if (bitmap)
+                SET_BIT32(*bitmap, dup->index);
+        }
+#if !JS_HAS_DESTRUCTURING
+        JS_ASSERT(args.nCopiedArgs == fun->nargs);
+#endif
+        JS_ASSERT(args.nCopiedVars == fun->u.i.nvars);
+    }
+
     return names;
 }
 
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+trace_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                             uint32 number, void *arg)
+{
+    JSLocalNameHashEntry *entry;
+    JSTracer *trc;
+
+    entry = (JSLocalNameHashEntry *) hdr;
+    JS_ASSERT(entry->name);
+    trc = (JSTracer *) arg;
+    JS_SET_TRACING_INDEX(trc,
+                         entry->localKind == JSLOCAL_ARG ? "arg" : "var",
+                         entry->index);
+    JS_CallTracer(trc, ATOM_TO_STRING(entry->name), JSTRACE_STRING);
+    return JS_DHASH_NEXT;
+}
+
+static void
+TraceLocalNames(JSTracer *trc, JSFunction *fun)
+{
+    uintN n, i;
+    JSAtom *atom;
+    jsuword *array;
+
+    JS_ASSERT(FUN_INTERPRETED(fun));
+    n = fun->nargs + fun->u.i.nvars;
+    if (n == 0)
+        return;
+    if (n <= MAX_ARRAY_LOCALS) {
+        array = (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
+        i = n;
+        do {
+            --i;
+            atom = (JSAtom *) (array[i] & ~1);
+            if (atom) {
+                JS_SET_TRACING_INDEX(trc,
+                                     i < fun->nargs ? "arg" : "var",
+                                     i < fun->nargs ? i : i - fun->nargs);
+                JS_CallTracer(trc, ATOM_TO_STRING(atom), JSTRACE_STRING);
+            }
+        } while (i != 0);
+    } else {
+        JS_DHashTableEnumerate(&fun->u.i.names.map->names,
+                               trace_local_names_enumerator, trc);
+
+        /*
+         * No need to trace the list of duplicates in map->lastdup as the
+         * names there are traced when enumerating the hash table.
+         */
+    }
+}
+
+void
+DestroyLocalNames(JSContext *cx, JSFunction *fun)
+{
+    uintN n;
+
+    n = fun->nargs + fun->u.i.nvars;
+    if (n <= 1)
+        return;
+    if (n <= MAX_ARRAY_LOCALS)
+        JS_free(cx, fun->u.i.names.array);
+    else
+        FreeLocalNameHash(cx, fun->u.i.names.map);
+}
+
+void
+js_FreezeLocalNames(JSContext *cx, JSFunction *fun)
+{
+    uintN n;
+    jsuword *array;
+
+    JS_ASSERT(FUN_INTERPRETED(fun));
+    JS_ASSERT(!fun->u.i.script);
+    n = fun->nargs + fun->u.i.nvars;
+    if (2 <= n && n < MAX_ARRAY_LOCALS) {
+        /* Shrink over-allocated array ignoring realloc failures. */
+        array = JS_realloc(cx, fun->u.i.names.array, n * sizeof *array);
+        if (array)
+            fun->u.i.names.array = array;
+    }
+}

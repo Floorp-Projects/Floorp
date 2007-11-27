@@ -384,11 +384,9 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
 }
 
 /*
- * Take care to exclude the mark and duplicate bits, in case we're called from
- * the GC, or we are searching for a property that has not yet been flagged as
- * a duplicate when making a duplicate formal parameter.
+ * Take care to exclude the mark bits in case we're called from the GC.
  */
-#define SPROP_FLAGS_NOT_MATCHED (SPROP_MARK | SPROP_ALLOW_DUPLICATE)
+#define SPROP_FLAGS_NOT_MATCHED SPROP_MARK
 
 JS_STATIC_DLL_CALLBACK(JSDHashNumber)
 js_HashScopeProperty(JSDHashTable *table, const void *key)
@@ -955,7 +953,7 @@ CheckAncestorLine(JSScope *scope, JSBool sparse)
     for (sprop = ancestorLine; sprop; sprop = sprop->parent) {
         if (SCOPE_HAD_MIDDLE_DELETE(scope) &&
             !SCOPE_HAS_PROPERTY(scope, sprop)) {
-            JS_ASSERT(sparse || (sprop->flags & SPROP_ALLOW_DUPLICATE));
+            JS_ASSERT(sparse);
             continue;
         }
         ancestorCount++;
@@ -1063,51 +1061,39 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
         }
 
         /*
-         * Duplicate formal parameters require us to leave the old property
-         * on the ancestor line, so the decompiler can find it, even though
-         * its entry in scope->table is overwritten to point at a new property
-         * descending from the old one.  The SPROP_ALLOW_DUPLICATE flag helps
-         * us cope with the consequent disparity between ancestor line height
-         * and scope->entryCount.
+         * If we are clearing sprop to force an existing property to be
+         * overwritten (apart from a duplicate formal parameter), we must
+         * unlink it from the ancestor line at scope->lastProp, lazily if
+         * sprop is not lastProp.  And we must remove the entry at *spp,
+         * precisely so the lazy "middle delete" fixup code further below
+         * won't find sprop in scope->table, in spite of sprop being on
+         * the ancestor line.
+         *
+         * When we finally succeed in finding or creating a new sprop
+         * and storing its pointer at *spp, we'll use the |overwriting|
+         * local saved when we first looked up id to decide whether we're
+         * indeed creating a new entry, or merely overwriting an existing
+         * property.
          */
-        if (flags & SPROP_ALLOW_DUPLICATE) {
-            sprop->flags |= SPROP_ALLOW_DUPLICATE;
-        } else {
+        if (sprop == SCOPE_LAST_PROP(scope)) {
+            do {
+                SCOPE_REMOVE_LAST_PROP(scope);
+                if (!SCOPE_HAD_MIDDLE_DELETE(scope))
+                    break;
+                sprop = SCOPE_LAST_PROP(scope);
+            } while (sprop && !SCOPE_HAS_PROPERTY(scope, sprop));
+        } else if (!SCOPE_HAD_MIDDLE_DELETE(scope)) {
             /*
-             * If we are clearing sprop to force an existing property to be
-             * overwritten (apart from a duplicate formal parameter), we must
-             * unlink it from the ancestor line at scope->lastProp, lazily if
-             * sprop is not lastProp.  And we must remove the entry at *spp,
-             * precisely so the lazy "middle delete" fixup code further below
-             * won't find sprop in scope->table, in spite of sprop being on
-             * the ancestor line.
-             *
-             * When we finally succeed in finding or creating a new sprop
-             * and storing its pointer at *spp, we'll use the |overwriting|
-             * local saved when we first looked up id to decide whether we're
-             * indeed creating a new entry, or merely overwriting an existing
-             * property.
+             * If we have no hash table yet, we need one now.  The middle
+             * delete code is simple-minded that way!
              */
-            if (sprop == SCOPE_LAST_PROP(scope)) {
-                do {
-                    SCOPE_REMOVE_LAST_PROP(scope);
-                    if (!SCOPE_HAD_MIDDLE_DELETE(scope))
-                        break;
-                    sprop = SCOPE_LAST_PROP(scope);
-                } while (sprop && !SCOPE_HAS_PROPERTY(scope, sprop));
-            } else if (!SCOPE_HAD_MIDDLE_DELETE(scope)) {
-                /*
-                 * If we have no hash table yet, we need one now.  The middle
-                 * delete code is simple-minded that way!
-                 */
-                if (!scope->table) {
-                    if (!CreateScopeTable(cx, scope, JS_TRUE))
-                        return NULL;
-                    spp = js_SearchScope(scope, id, JS_TRUE);
-                    sprop = overwriting = SPROP_FETCH(spp);
-                }
-                SCOPE_SET_MIDDLE_DELETE(scope);
+            if (!scope->table) {
+                if (!CreateScopeTable(cx, scope, JS_TRUE))
+                    return NULL;
+                spp = js_SearchScope(scope, id, JS_TRUE);
+                sprop = overwriting = SPROP_FETCH(spp);
             }
+            SCOPE_SET_MIDDLE_DELETE(scope);
         }
 
         /*
@@ -1130,8 +1116,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * scope->lastProp, we may need to fork the property tree and squeeze
          * all deleted properties out of scope's ancestor line.  Otherwise we
          * risk adding a node with the same id as a "middle" node, violating
-         * the rule that properties along an ancestor line have distinct ids
-         * (unless flagged SPROP_ALLOW_DUPLICATE).
+         * the rule that properties along an ancestor line have distinct ids.
          */
         if (SCOPE_HAD_MIDDLE_DELETE(scope)) {
             JS_ASSERT(scope->table);
@@ -1274,7 +1259,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
         child.setter = setter;
         child.slot = slot;
         child.attrs = attrs;
-        child.flags = flags & ~SPROP_ALLOW_DUPLICATE;
+        child.flags = flags;
         child.shortid = shortid;
         sprop = GetPropertyTreeChild(cx, scope->lastProp, &child);
         if (!sprop)
@@ -1527,24 +1512,18 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
     JSScopeProperty *sprop;
     jsid id;
     size_t n;
-    const char *name, *prefix;
+    const char *name;
 
     JS_ASSERT(trc->debugPrinter == PrintPropertyGetterOrSetter);
     sprop = (JSScopeProperty *)trc->debugPrintArg;
     id = sprop->id;
     name = trc->debugPrintIndex ? js_setter_str : js_getter_str;
 
-    if (JSID_IS_ATOM(id) || JSID_IS_HIDDEN(id)) {
-        if (JSID_IS_HIDDEN(id)) {
-            id = JSID_UNHIDE_NAME(id);
-            prefix = "hidden ";
-        } else {
-            prefix = "";
-        }
+    if (JSID_IS_ATOM(id)) {
         n = js_PutEscapedString(buf, bufsize - 1,
                                 ATOM_TO_STRING(JSID_TO_ATOM(id)), 0);
         if (n < bufsize - 1)
-            JS_snprintf(buf + n, bufsize - n, " %s%s", prefix, name);
+            JS_snprintf(buf + n, bufsize - n, " %s", name);
     } else if (JSID_IS_INT(sprop->id)) {
         JS_snprintf(buf, bufsize, "%d %s", JSID_TO_INT(id), name);
     } else {
@@ -1656,9 +1635,6 @@ DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
     } else {
         if (JSID_IS_ATOM(sprop->id)) {
             str = JSVAL_TO_STRING(v);
-        } else if (JSID_IS_HIDDEN(sprop->id)) {
-            str = JSVAL_TO_STRING(v);
-            fputs("hidden ", fp);
         } else {
             JSASSERT(JSID_IS_OBJECT(sprop->id));
             str = js_ValueToString(cx, v);

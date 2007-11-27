@@ -47,26 +47,42 @@
 
 JS_BEGIN_EXTERN_C
 
+typedef struct JSLocalNameMap JSLocalNameMap;
+
+/*
+ * Depending on the number of arguments and variables in the function their
+ * names and attributes are stored either as a single atom or as an array of
+ * tagged atoms (when there are few locals) or as a hash-based map (when there
+ * are many locals). In the first 2 cases the lowest bit of the atom is used
+ * as a tag to distinguish const from var. See jsfun.c for details.
+ */
+typedef union JSLocalNames {
+    jsuword         taggedAtom;
+    jsuword         *array;
+    JSLocalNameMap  *map;
+} JSLocalNames;
+
 struct JSFunction {
-    JSObject     *object;       /* back-pointer to GC'ed object header */
-    uint16       nargs;         /* maximum number of specified arguments,
+    JSObject        *object;    /* back-pointer to GC'ed object header */
+    uint16          nargs;      /* maximum number of specified arguments,
                                    reflected as f.length/f.arity */
-    uint16       flags;         /* bound method and other flags, see jsapi.h */
+    uint16          flags;      /* bound method and other flags, see jsapi.h */
     union {
         struct {
-            uint16   extra;     /* number of arg slots for local GC roots */
-            uint16   minargs;   /* minimum number of specified arguments, used
+            uint16      extra;  /* number of arg slots for local GC roots */
+            uint16      minargs;/* minimum number of specified arguments, used
                                    only when calling fast native */
-            JSNative native;    /* native method pointer or null */
+            JSNative    native; /* native method pointer or null */
+            JSClass     *clasp; /* if non-null, constructor for this class */
         } n;
         struct {
-            uint16   nvars;     /* number of local variables */
-            uint16   spare;     /* reserved for future use */
-            JSScript *script;   /* interpreted bytecode descriptor or null */
+            uint16      nvars;  /* number of local variables */
+            uint16      spare;  /* reserved for future use */
+            JSScript    *script;/* interpreted bytecode descriptor or null */
+            JSLocalNames names; /* argument and variable names */
         } i;
     } u;
-    JSAtom       *atom;         /* name for diagnostics and decompiling */
-    JSClass      *clasp;        /* if non-null, constructor for this class */
+    JSAtom          *atom;      /* name for diagnostics and decompiling */
 };
 
 #define JSFUN_EXPR_CLOSURE   0x4000 /* expression closure: function(x)x*x */
@@ -219,12 +235,8 @@ extern JSAtom **
 js_GetLocalNames(JSContext *cx, JSFunction *fun, JSArenaPool *pool,
                  uint32 **bitmap);
 
-/*
- * Pseudo-getter function pointers to distinguish the kind of the hidden
- * property.
- */
-#define JS_HIDDEN_ARG_GETTER    ((JSPropertyOp) sizeof(jsuword))
-#define JS_HIDDEN_VAR_GETTER    ((JSPropertyOp) (2 * sizeof(jsuword)))
+extern void
+js_FreezeLocalNames(JSContext *cx, JSFunction *fun);
 
 JS_END_EXTERN_C
 

@@ -1867,10 +1867,10 @@ js_StrictlyEqual(jsval lval, jsval rval)
 JSBool
 js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
 {
-    JSFunction *fun;
+    JSFunction *fun, *fun2;
     JSObject *obj, *obj2, *proto, *parent;
     jsval lval, rval;
-    JSClass *clasp, *funclasp;
+    JSClass *clasp;
 
     fun = NULL;
     obj2 = NULL;
@@ -1908,9 +1908,9 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
         parent = OBJ_GET_PARENT(cx, obj2);
 
         if (OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) {
-            funclasp = GET_FUNCTION_PRIVATE(cx, obj2)->clasp;
-            if (funclasp)
-                clasp = funclasp;
+            fun2 = GET_FUNCTION_PRIVATE(cx, obj2);
+            if (!FUN_INTERPRETED(fun2) && fun2->u.n.clasp)
+                clasp = fun2->u.n.clasp;
         }
     }
     obj = js_NewObject(cx, clasp, proto, parent);
