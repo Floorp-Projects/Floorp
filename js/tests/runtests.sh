@@ -85,6 +85,8 @@ variable            description
                     If you wish to skip any build steps, simply specify a value
                     not containing any of the build commands, e.g. 'none'.
 -v                  optional. verbose - copies log file output to stdout.
+-S                  optional. summary - output tailered for use with
+                    Buildbot|Tinderbox
 
 if an argument contains more than one value, it must be quoted.
 EOF
@@ -93,7 +95,7 @@ EOF
 
 verbose=0
 
-while getopts "p:b:T:B:e:v" optname;
+while getopts "p:b:T:B:e:vS" optname;
   do
   case $optname in
       p) products=$OPTARG;;
@@ -104,6 +106,7 @@ while getopts "p:b:T:B:e:v" optname;
       B) buildcommands=$OPTARG;;
       v) verbose=1
           verboseflag="-v";;
+      S) summary=1;;
   esac
 done
 
@@ -196,7 +199,24 @@ for testlogfile in $testlogfiles; do
     if [[ -n "$DEBUG" ]]; then
         dumpvars branch buildtype testtype OSID testlogfile arch kernel outputprefix
     fi
+
     $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b $branch -T $buildtype -t $testtype -o "$OSID" -z `date +%z` -l $testlogfile -A "$arch" -K "$kernel" -r $TEST_JSDIR/failures.txt -O $outputprefix
+
+    if [[ -n "$summary" ]]; then
+
+        npass=`grep TEST_RESULT=PASSED ${outputprefix}-results-all.log | wc -l`
+        nfail=`wc -l ${outputprefix}-results-failures.log`
+        nfixes=`wc -l ${outputprefix}-results-possible-fixes.log`
+        nregressions=`wc -l ${outputprefix}-results-possible-regressions.log`
+        echo -e "\nJavaScript Test Failures:\n"
+        cat "${outputprefix}-results-failures.log"
+        echo -e "\nJavaScript Test Possible Fixes:\n"
+        cat "${outputprefix}-results-possible-fixes.log"
+        echo -e "\nJavaScript Test Possbile Regressions:\n"
+        cat "${outputprefix}-results-possible-regressions.log"
+        echo -e "\nTinderboxPrint: js tests $npass/$nfail<br/>F:$nfixes<br/>R:$nregressions"
+
+    fi
 done
 
 
