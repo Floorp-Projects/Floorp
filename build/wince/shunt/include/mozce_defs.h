@@ -589,9 +589,20 @@ struct color{
 	double Alpha;
 };
 
+#ifndef SEE_MASK_FLAG_DDEWAIT
+#define SEE_MASK_FLAG_DDEWAIT	0
+#endif
+
+#ifndef SEE_MASK_INVOKEIDLIST
+#define SEE_MASK_INVOKEIDLIST	0
+#endif
+
+
 
 // if using WINCE 5.0 SDK, you need these:
 #define LPRASPBDLG void*
 #define LPRASDIALDLG void*
+
+
 
 #endif
