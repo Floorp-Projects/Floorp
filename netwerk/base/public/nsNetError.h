@@ -232,6 +232,13 @@
 #define NS_ERROR_REDIRECT_LOOP \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 31)
 
+/**
+ * The request failed because the content type returned by the server was
+ * not a type expected by the channel (for nested channels such as the JAR
+ * channel).
+ */
+#define NS_ERROR_UNSAFE_CONTENT_TYPE \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 74)
 
 /******************************************************************************
  * FTP specific error codes:

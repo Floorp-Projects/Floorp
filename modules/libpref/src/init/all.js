@@ -613,6 +613,11 @@ pref("network.http.pipelining.maxrequests" , 4);
 
 // </http>
 
+// If false, remote JAR files that are served with a content type other than
+// application/java-archive or application/x-jar will not be opened
+// by the jar channel.
+pref("network.jar.open-unsafe-types", false);
+
 // This preference controls whether or not internationalized domain names (IDN)
 // are handled.  IDN requires a nsIIDNService implementation.
 pref("network.enableIDN", true);

@@ -15,20 +15,24 @@
  *
  * sendMouseEvent({type:'click'}, 'node');
  */
-function sendMouseEvent(aEvent, aTarget) {
+function sendMouseEvent(aEvent, aTarget, aWindow) {
   if (['click', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
     throw new Error("sendMouseEvent doesn't know about event type '"+aEvent.type+"'");
+  }
+
+  if (!aWindow) {
+    aWindow = window;
   }
 
   // For events to trigger the UA's default actions they need to be "trusted"
   netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserWrite');
 
-  var event = document.createEvent('MouseEvent');
+  var event = aWindow.document.createEvent('MouseEvent');
 
   var typeArg          = aEvent.type;
   var canBubbleArg     = true;
   var cancelableArg    = true;
-  var viewArg          = window;
+  var viewArg          = aWindow;
   var detailArg        = aEvent.detail        || (aEvent.type == 'click'     ||
                                                   aEvent.type == 'mousedown' ||
                                                   aEvent.type == 'mouseup' ? 1 : 0);
@@ -48,7 +52,7 @@ function sendMouseEvent(aEvent, aTarget) {
                        ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
                        buttonArg, relatedTargetArg);
 
-  document.getElementById(aTarget).dispatchEvent(event);
+  aWindow.document.getElementById(aTarget).dispatchEvent(event);
 }
 
 /**
