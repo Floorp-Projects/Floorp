@@ -121,6 +121,7 @@ nsGIFDecoder2::nsGIFDecoder2()
   , mLastFlushedPass(0)
   , mOldColor(0)
   , mGIFOpen(PR_FALSE)
+  , mSawTransparency(PR_FALSE)
 {
   // Clear out the structure, excluding the arrays
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
@@ -380,6 +381,11 @@ void nsGIFDecoder2::EndImageFrame()
 				  mGIFStruct.screen_height - realFrameHeight);
       mObserver->OnDataAvailable(nsnull, mImageFrame, &r);
     }
+    // This transparency check is only valid for first frame
+    if (mGIFStruct.is_transparent && !mSawTransparency) {
+      nsCOMPtr<nsIImage> img(do_GetInterface(mImageFrame));
+      img->SetHasNoAlpha();
+    }
   }
   mCurrentRow = mLastFlushedRow = -1;
   mCurrentPass = mLastFlushedPass = 0;
@@ -458,6 +464,17 @@ PRUint32 nsGIFDecoder2::OutputRow()
       *--to = cmap[*--from];
     }
   
+    // check for alpha (only for first frame)
+    if (mGIFStruct.is_transparent && !mSawTransparency) {
+      const PRUint32 *rgb = (PRUint32*)rowp;
+      for (PRUint32 i = mGIFStruct.width; i > 0; i--) {
+        if (*rgb++ == 0) {
+          mSawTransparency = PR_TRUE;
+          break;
+        }
+      }
+    }
+
     // Duplicate rows
     if (drow_end > drow_start) {
       // irow is the current row filled

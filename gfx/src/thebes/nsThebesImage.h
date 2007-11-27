@@ -142,6 +142,7 @@ protected:
     nsRect mDecoded;
     PRPackedBool mImageComplete;
     PRPackedBool mSinglePixel;
+    PRPackedBool mFormatChanged;
 #ifdef XP_WIN
     PRPackedBool mIsDDBSurface;
 #endif
