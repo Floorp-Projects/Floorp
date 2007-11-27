@@ -288,8 +288,12 @@ public:
      * be in device coordinates (already transformed by the CTM).  If it 
      * fails, the method will return PR_FALSE, and the rect will not be
      * changed.
+     *
+     * If ignoreScale is PR_TRUE, then snapping will take place even if
+     * the CTM has a scale applied.  Snapping never takes place if
+     * there is a rotation in the CTM.
      */
-    PRBool UserToDevicePixelSnapped(gfxRect& rect) const;
+    PRBool UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale = PR_FALSE) const;
 
     /**
      * Attempts to pixel snap the rectangle, add it to the current
