@@ -567,12 +567,12 @@ nsXBLContentSink::ConstructBinding()
       return NS_ERROR_OUT_OF_MEMORY;
       
     rv = mBinding->Init(cid, mDocInfo, binding);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) &&
+        NS_SUCCEEDED(mDocInfo->SetPrototypeBinding(cid, mBinding))) {
       if (!mFoundFirstBinding) {
         mFoundFirstBinding = PR_TRUE;
         mDocInfo->SetFirstPrototypeBinding(mBinding);
       }
-      mDocInfo->SetPrototypeBinding(cid, mBinding);
       binding->UnsetAttr(kNameSpaceID_None, nsGkAtoms::id, PR_FALSE);
     } else {
       delete mBinding;
