@@ -243,7 +243,16 @@ nsThebesRenderingContext::SetClipRect(const nsRect& aRect,
     }
 
     mThebes->NewPath();
-    mThebes->Rectangle(GFX_RECT_FROM_TWIPS_RECT(aRect), PR_TRUE);
+    gfxRect clipRect(GFX_RECT_FROM_TWIPS_RECT(aRect));
+    if (mThebes->UserToDevicePixelSnapped(clipRect, PR_TRUE)) {
+        gfxMatrix mat(mThebes->CurrentMatrix());
+        mThebes->IdentityMatrix();
+        mThebes->Rectangle(clipRect);
+        mThebes->SetMatrix(mat);
+    } else {
+        mThebes->Rectangle(clipRect);
+    }
+
     mThebes->Clip();
 
     return NS_OK;
