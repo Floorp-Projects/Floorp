@@ -7059,7 +7059,7 @@ nsElementSH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsXBLBinding* binding = doc->BindingManager()->GetBinding(content);
+  nsRefPtr<nsXBLBinding> binding = doc->BindingManager()->GetBinding(content);
   if (!binding) {
     // Nothing else to do here
     return NS_OK;
