@@ -1,0 +1,7 @@
+classic.jar:
+#ifndef MINIMO
++ skin/classic/mozapps/update/update.png            (update/update.png)
+#ifdef MOZ_PLACES
++ skin/classic/mozapps/places/tagContainerIcon.png  (places/tagContainerIcon.png)
+#endif
+#endif
