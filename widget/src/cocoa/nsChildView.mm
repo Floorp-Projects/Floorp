@@ -2757,10 +2757,18 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
       // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
       nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
       SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
+
+      // The mouse exit event we just sent may have destroyed this widget, bail if that happened.
+      if (!mGeckoChild)
+        return;
     }
 
     // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
     SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, &viewEventLocation);
+
+    // The mouse enter event we just sent may have destroyed this widget, bail if that happened.
+    if (!mGeckoChild)
+      return;
 
     // mark this view as the last view entered
     sLastViewEntered = (NSView*)self;
