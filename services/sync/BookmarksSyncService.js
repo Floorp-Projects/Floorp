@@ -56,6 +56,11 @@ const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+/*
+ * Service object
+ * Implements IBookmarksSyncService, main entry point 
+ */
+
 function BookmarksSyncService() { this._init(); }
 BookmarksSyncService.prototype = {
 
@@ -123,14 +128,25 @@ BookmarksSyncService.prototype = {
     return this.__dirSvc;
   },
 
+  __dav: null,
+  get _dav() {
+    if (!this.__dav)
+      this.__dav = new DAVCollection();
+    return this.__dav;
+  },
+
+  __se: null,
+  get _se() {
+    if (!this.__se)
+      this.__se = new BookmarksSyncEngine();
+    return this.__se;
+  },
+
   // Logger object
   _log: null,
 
   // Timer object for automagically syncing
   _scheduleTimer: null,
-
-  // DAVCollection object
-  _dav: null,
 
   __encrypter: {},
   __encrypterLoaded: false,
@@ -207,11 +223,14 @@ BookmarksSyncService.prototype = {
     lm.addLogin(login);
   },
 
+  _password: null,
   get password() {
     return this._lmGet('Mozilla Services Password');
   },
   set password(value) {
-    this._lmSet('Mozilla Services Password', value);
+    if (this._password === null)
+      return this._lmSet('Mozilla Services Password', value);
+    return this._password;
   },
 
   _passphrase: null,
@@ -255,6 +274,7 @@ BookmarksSyncService.prototype = {
     return null;
   },
 
+  // FIXME: listen for pref changes
   _encryptionChanged: false,
   get encryption() {
     let branch = Cc["@mozilla.org/preferences-service;1"]
@@ -297,7 +317,6 @@ BookmarksSyncService.prototype = {
     }
     catch (ex) { /* use defaults */ }
 
-    this._dav = new DAVCollection();
     this._readSnapshot();
 
     if (!enabled) {
@@ -481,300 +500,6 @@ BookmarksSyncService.prototype = {
     }
 
     items[GUID] = item;
-  },
-
-  // FIXME: this won't work for deep objects, or objects with optional properties
-  _getEdits: function BSS__getEdits(a, b) {
-    // check the type separately, just in case
-    if (a.type != b.type)
-      return -1;
-
-    let ret = {numProps: 0, props: {}};
-    for (prop in a) {
-      if (!this._deepEquals(a[prop], b[prop])) {
-        ret.numProps++;
-        ret.props[prop] = b[prop];
-      }
-    }
-
-    // FIXME: prune out properties we don't care about
-
-    return ret;
-  },
-
-  _nodeParents: function BSS__nodeParents(GUID, tree) {
-    return this._nodeParentsInt(GUID, tree, []);
-  },
-
-  _nodeParentsInt: function BSS__nodeParentsInt(GUID, tree, parents) {
-    if (!tree[GUID] || !tree[GUID].parentGUID)
-      return parents;
-    parents.push(tree[GUID].parentGUID);
-    return this._nodeParentsInt(tree[GUID].parentGUID, tree, parents);
-  },
-
-  _detectUpdates: function BSS__detectUpdates(onComplete, a, b) {
-    let cont = yield;
-    let listener = new EventListener(cont);
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-    let cmds = [];
-
-    try {
-      for (let GUID in a) {
-
-        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
-        yield; // Yield to main loop
-
-        if (GUID in b) {
-          let edits = this._getEdits(a[GUID], b[GUID]);
-          if (edits == -1) // something went very wrong -- FIXME
-            continue;
-          if (edits.numProps == 0) // no changes - skip
-            continue;
-          let parents = this._nodeParents(GUID, b);
-          cmds.push({action: "edit", GUID: GUID,
-                     depth: parents.length, parents: parents,
-                     data: edits.props});
-        } else {
-          let parents = this._nodeParents(GUID, a); // ???
-          cmds.push({action: "remove", GUID: GUID,
-                     depth: parents.length, parents: parents});
-        }
-      }
-      for (let GUID in b) {
-
-        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
-        yield; // Yield to main loop
-
-        if (GUID in a)
-          continue;
-        let parents = this._nodeParents(GUID, b);
-        cmds.push({action: "create", GUID: GUID,
-                   depth: parents.length, parents: parents,
-                   data: b[GUID]});
-      }
-      cmds.sort(function(a, b) {
-        if (a.depth > b.depth)
-          return 1;
-        if (a.depth < b.depth)
-          return -1;
-        if (a.index > b.index)
-          return -1;
-        if (a.index < b.index)
-          return 1;
-        return 0; // should never happen, but not a big deal if it does
-      });
-
-    } catch (e) {
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
-
-    } finally {
-      timer = null;
-      generatorDone(this, onComplete, cmds);
-      yield; // onComplete is responsible for closing the generator
-    }
-    this._log.warn("generator not properly closed");
-  },
-
-  // Bookmarks are allowed to be in a different index as long as they
-  // are in the same folder.  Folders and separators must be at the
-  // same index to qualify for 'likeness'.
-  _commandLike: function BSS__commandLike(a, b) {
-
-    // Check that neither command is null, that their actions, types,
-    // and parents are the same, and that they don't have the same
-    // GUID.
-    // Items with the same GUID do not qualify because they need to be
-    // processed for edits.
-    // The parent GUID check works because reconcile() fixes up the
-    // parent GUIDs as it runs, and the command list is sorted by
-    // depth
-    if (!a || !b ||
-       a.action != b.action ||
-       a.data.type != b.data.type ||
-       a.data.parentGUID != b.data.parentGUID ||
-       a.GUID == b.GUID)
-      return false;
-
-    switch (a.data.type) {
-    case "bookmark":
-      if (a.data.URI == b.data.URI &&
-          a.data.title == b.data.title)
-        return true;
-      return false;
-    case "query":
-      if (a.data.URI == b.data.URI &&
-          a.data.title == b.data.title)
-        return true;
-      return false;
-    case "microsummary":
-      if (a.data.URI == b.data.URI &&
-          a.data.generatorURI == b.data.generatorURI)
-        return true;
-      return false;
-    case "folder":
-      if (a.index == b.index &&
-          a.data.title == b.data.title)
-        return true;
-      return false;
-    case "livemark":
-      if (a.data.title == b.data.title &&
-          a.data.siteURI == b.data.siteURI &&
-          a.data.feedURI == b.data.feedURI)
-        return true;
-      return false;
-    case "separator":
-      if (a.index == b.index)
-        return true;
-      return false;
-    default:
-      this._log.error("_commandLike: Unknown item type: " + uneval(a));
-      return false;
-    }
-  },
-
-  _deepEquals: function BSS__commandEquals(a, b) {
-    if (!a && !b)
-      return true;
-    if (!a || !b)
-      return false;
-
-    if (typeof(a) != "object" && typeof(b) != "object")
-      return a == b;
-    if (typeof(a) != "object" || typeof(b) != "object")
-      return false;
-
-    for (let key in a) {
-      if (typeof(a[key]) == "object") {
-        if (!typeof(b[key]) == "object")
-          return false;
-        if (!this._deepEquals(a[key], b[key]))
-          return false;
-      } else {
-        if (a[key] != b[key])
-          return false;
-      }
-    }
-    return true;
-  },
-
-  // When we change the GUID of a local item (because we detect it as
-  // being the same item as a remote one), we need to fix any other
-  // local items that have it as their parent
-  _fixParents: function BSS__fixParents(list, oldGUID, newGUID) {
-    for (let i = 0; i < list.length; i++) {
-      if (!list[i])
-        continue;
-      if (list[i].data.parentGUID == oldGUID)
-        list[i].data.parentGUID = newGUID;
-      for (let j = 0; j < list[i].parents.length; j++) {
-        if (list[i].parents[j] == oldGUID)
-          list[i].parents[j] = newGUID;
-      }
-    }
-  },
-
-  _conflicts: function BSS__conflicts(a, b) {
-    if ((a.GUID == b.GUID) && !this._deepEquals(a, b))
-      return true;
-    return false;
-  },
-
-  _getPropagations: function BSS__getPropagations(commands, conflicts, propagations) {
-    for (let i = 0; i < commands.length; i++) {
-      let alsoConflicts = function(elt) {
-        return (elt.action == "create" || elt.action == "remove") &&
-          commands[i].parents.indexOf(elt.GUID) >= 0;
-      };
-      if (conflicts.some(alsoConflicts))
-        conflicts.push(commands[i]);
-
-      let cmdConflicts = function(elt) {
-        return elt.GUID == commands[i].GUID;
-      };
-      if (!conflicts.some(cmdConflicts))
-        propagations.push(commands[i]);
-    }
-  },
-
-  _reconcile: function BSS__reconcile(onComplete, listA, listB) {
-    let cont = yield;
-    let listener = new EventListener(cont);
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-    let propagations = [[], []];
-    let conflicts = [[], []];
-    let ret = {propagations: propagations, conflicts: conflicts};
-
-    try {
-      for (let i = 0; i < listA.length; i++) {
-        for (let j = 0; j < listB.length; j++) {
-
-          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
-          yield; // Yield to main loop
-  
-          if (this._deepEquals(listA[i], listB[j])) {
-            delete listA[i];
-            delete listB[j];
-          } else if (this._commandLike(listA[i], listB[j])) {
-            this._fixParents(listA, listA[i].GUID, listB[j].GUID);
-            listB[j].data = {GUID: listB[j].GUID};
-            listB[j].GUID = listA[i].GUID;
-            listB[j].action = "edit";
-            delete listA[i];
-          }
-  
-          // watch out for create commands with GUIDs that already exist
-          if (listB[j] && listB[j].action == "create" &&
-              this._bms.getItemIdForGUID(listB[j].GUID) >= 0) {
-            this._log.error("Remote command has GUID that already exists " +
-                            "locally. Dropping command.");
-            delete listB[j];
-          }
-        }
-      }
-  
-      listA = listA.filter(function(elt) { return elt });
-      listB = listB.filter(function(elt) { return elt });
-  
-      for (let i = 0; i < listA.length; i++) {
-        for (let j = 0; j < listB.length; j++) {
-
-          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
-          yield; // Yield to main loop
-  
-          if (this._conflicts(listA[i], listB[j]) ||
-              this._conflicts(listB[j], listA[i])) {
-            if (!conflicts[0].some(
-              function(elt) { return elt.GUID == listA[i].GUID }))
-              conflicts[0].push(listA[i]);
-            if (!conflicts[1].some(
-              function(elt) { return elt.GUID == listB[j].GUID }))
-              conflicts[1].push(listB[j]);
-          }
-        }
-      }
-  
-      this._getPropagations(listA, conflicts[0], propagations[1]);
-  
-      timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
-      yield; // Yield to main loop
-  
-      this._getPropagations(listB, conflicts[1], propagations[0]);
-      ret = {propagations: propagations, conflicts: conflicts};
-
-    } catch (e) {
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
-
-    } finally {
-      timer = null;
-      generatorDone(this, onComplete, ret);
-      yield; // onComplete is responsible for closing the generator
-    }
-    this._log.warn("generator not properly closed");
   },
 
   _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
@@ -982,12 +707,14 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  _getWrappedBookmarks: function BSS__getWrappedBookmarks(folder) {
+  _getFolderNodes: function BSS__getFolderNodes(folder) {
     let query = this._hsvc.getNewQuery();
     query.setFolders([folder], 1);
-    let root = this._hsvc.executeQuery(query,
-                                       this._hsvc.getNewQueryOptions()).root;
-    return this._wrapNode(root);
+    return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
+  },
+
+  _getWrappedBookmarks: function BSS__getWrappedBookmarks(folder) {
+    return this._wrapNode(this._getFolderNodes(folder));
   },
 
   _getBookmarks: function BSS__getBookmarks() {
@@ -1035,6 +762,71 @@ BookmarksSyncService.prototype = {
     return json;
   },
 
+  // IBookmarksSyncService internal implementation
+
+  _lock: function BSS__lock() {
+    if (this._locked) {
+      this._log.warn("Service lock failed: already locked");
+      return false;
+    }
+    this._locked = true;
+    this._log.debug("Service lock acquired");
+    return true;
+  },
+
+  _unlock: function BSS__unlock() {
+    this._locked = false;
+    this._log.debug("Service lock released");
+  },
+
+  _login: function BSS__login(onComplete) {
+    let [self, cont] = yield;
+    let success = false;
+    let svcLock = this._lock();
+
+    try {
+      if (!svcLock)
+        return;
+      this._log.debug("Logging in");
+      this._os.notifyObservers(null, "bookmarks-sync:login-start", "");
+
+      if (!this.username) {
+        this._log.warn("No username set, login failed");
+        this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+        return;
+      }
+      if (!this.password) {
+        this._log.warn("No password given or found in password manager");
+        this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+        return;
+      }
+
+      this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
+      this._log.info("Using server URL: " + this._dav.baseURL);
+
+      this._dav.login.async(this._dav, cont, this.username, this.password);
+      success = yield;
+
+    } catch (e) {
+      this._log.error("Exception caught: " + e.message);
+
+    } finally {
+      this._passphrase = null;
+      if (success) {
+        this._log.debug("Login successful");
+        this._os.notifyObservers(null, "bookmarks-sync:login-end", "");
+      } else {
+        this._log.debug("Login error");
+        this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+      }
+      if (svcLock)
+        this._unlock();
+      generatorDone(this, self, onComplete, success);
+      yield; // onComplete is responsible for closing the generator
+    }
+    this._log.warn("generator not properly closed");
+  },
+
   //       original
   //         / \
   //      A /   \ B
@@ -1064,29 +856,30 @@ BookmarksSyncService.prototype = {
   // 3.2) Append server delta to the delta file and upload ("C")
 
   _doSync: function BSS__doSync(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     let synced = false;
     let locked = null;
-    let gen;
+    let svcLock = this._lock();
 
     try {
+      if (!svcLock)
+        return;
+      this._log.info("Beginning sync");
       this._os.notifyObservers(null, "bookmarks-sync:sync-start", "");
 
-      gen = this._dav.lock.async(this._dav, cont);
+      this._dav.lock.async(this._dav, cont);
       locked = yield;
-      gen.close();
 
       if (locked)
         this._log.info("Lock acquired");
       else {
         this._log.warn("Could not acquire lock, aborting sync");
-        throw 'close generator';
+        return;
       }
 
       // 1) Fetch server deltas
-      gen = this._getServerData.async(this, cont);
+      this._getServerData.async(this, cont);
       let server = yield;
-      gen.close();
 
       this._log.info("Local snapshot version: " + this._snapshotVersion);
       this._log.info("Server status: " + server.status);
@@ -1096,15 +889,14 @@ BookmarksSyncService.prototype = {
       if (server.status != 0) {
         this._log.fatal("Sync error: could not get server status, " +
                         "or initial upload failed.  Aborting sync.");
-        throw 'close generator';
+        return;
       }
 
       // 2) Generate local deltas from snapshot -> current client status
 
       let localJson = this._getBookmarks();
-      gen = this._detectUpdates.async(this, cont, this._snapshot, localJson);
+      this._se.detectUpdates(cont, this._snapshot, localJson);
       let localUpdates = yield;
-      gen.close();
 
       this._log.debug("local json:\n" + this._mungeNodes(localJson));
       this._log.debug("Local updates: " + this._mungeCommands(localUpdates));
@@ -1114,15 +906,14 @@ BookmarksSyncService.prototype = {
         this._snapshotVersion = server.maxVersion;
         this._log.info("Sync complete (1): no changes needed on client or server");
         synced = true;
-        throw 'close generator';
+        return;
       }
 	  
       // 3) Reconcile client/server deltas and generate new deltas for them.
 
       this._log.info("Reconciling client/server updates");
-      gen = this._reconcile.async(this, cont, localUpdates, server.updates);
+      this._se.reconcile(cont, localUpdates, server.updates);
       let ret = yield;
-      gen.close();
 
       let clientChanges = ret.propagations[0];
       let serverChanges = ret.propagations[1];
@@ -1145,7 +936,7 @@ BookmarksSyncService.prototype = {
         this._snapshotVersion = server.maxVersion;
         this._saveSnapshot();
         synced = true;
-        throw 'close generator';
+        return;
       }
 
       if (clientConflicts.length || serverConflicts.length) {
@@ -1167,9 +958,8 @@ BookmarksSyncService.prototype = {
         this._applyCommands(clientChanges);
         newSnapshot = this._getBookmarks();
 
-        gen = this._detectUpdates.async(this, cont, this._snapshot, newSnapshot);
+        this._se.detectUpdates(cont, this._snapshot, newSnapshot);
         let diff = yield;
-        gen.close();
         if (diff.length != 0) {
           this._log.warn("Commands did not apply correctly");
           this._log.debug("Diff from snapshot+commands -> " +
@@ -1190,13 +980,12 @@ BookmarksSyncService.prototype = {
       // conflicts, it should be the same as what the resolver returned
 
       newSnapshot = this._getBookmarks();
-      gen = this._detectUpdates.async(this, cont, server.snapshot, newSnapshot);
+      this._se.detectUpdates(cont, server.snapshot, newSnapshot);
       let serverDelta = yield;
-      gen.close();
 
       // Log an error if not the same
       if (!(serverConflicts.length ||
-            this._deepEquals(serverChanges, serverDelta)))
+            deepEquals(serverChanges, serverDelta)))
         this._log.warn("Predicted server changes differ from " +
                        "actual server->client diff (can be ignored in many cases)");
 
@@ -1214,9 +1003,8 @@ BookmarksSyncService.prototype = {
 
         if (server.formatVersion != STORAGE_FORMAT_VERSION ||
             this._encryptionChanged) {
-          gen = this._fullUpload.async(this, cont);
+          this._fullUpload.async(this, cont);
           let status = yield;
-          gen.close();
           if (!status)
             this._log.error("Could not upload files to server"); // eep?
 
@@ -1230,26 +1018,24 @@ BookmarksSyncService.prototype = {
             this._log.debug("Done encrypting snapshot");
           } else {
             this._log.error("Unknown encryption scheme: " + this.encryption);
-            throw 'close generator';
+            return;
           }
-          gen = this._dav.PUT("bookmarks-deltas.json", data, cont);
+          this._dav.PUT("bookmarks-deltas.json", data, cont);
           let deltasPut = yield;
-          gen.close();
 
           let c = 0;
           for (GUID in this._snapshot)
             c++;
 
-          gen = this._dav.PUT("bookmarks-status.json",
-                              uneval({GUID: this._snapshotGUID,
-                                      formatVersion: STORAGE_FORMAT_VERSION,
-                                      snapVersion: server.snapVersion,
-                                      maxVersion: this._snapshotVersion,
-                                      snapEncryption: server.snapEncryption,
-                                      deltasEncryption: this.encryption,
-                                      bookmarksCount: c}), cont);
+          this._dav.PUT("bookmarks-status.json",
+                        uneval({GUID: this._snapshotGUID,
+                                formatVersion: STORAGE_FORMAT_VERSION,
+                                snapVersion: server.snapVersion,
+                                maxVersion: this._snapshotVersion,
+                                snapEncryption: server.snapEncryption,
+                                deltasEncryption: this.encryption,
+                                bookmarksCount: c}), cont);
           let statusPut = yield;
-          gen.close();
 
           if (deltasPut.status >= 200 && deltasPut.status < 300 &&
               statusPut.status >= 200 && statusPut.status < 300) {
@@ -1267,38 +1053,26 @@ BookmarksSyncService.prototype = {
       synced = true;
 
     } catch (e) {
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
       let ok = false;
       if (locked) {
-        gen = this._dav.unlock.async(this._dav, cont);
+        this._dav.unlock.async(this._dav, cont);
         ok = yield;
-        gen.close();
       }
       if (ok && synced) {
         this._os.notifyObservers(null, "bookmarks-sync:sync-end", "");
-        generatorDone(this, onComplete, true);
+        generatorDone(this, self, onComplete, true);
       } else {
         this._os.notifyObservers(null, "bookmarks-sync:sync-error", "");
-        generatorDone(this, onComplete, false);
+        generatorDone(this, self, onComplete, false);
       }
+      if (svcLock)
+        this._unlock();
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
-  },
-
-  _onSyncFinished: function BSS__onSyncFinished() {
-    this._syncGen.close();
-    this._syncGen = null;
-    this._syncing = false;
-  },
-
-  _getFolderNodes: function BSS__getFolderNodes(folder) {
-    let query = this._hsvc.getNewQuery();
-    query.setFolders([folder], 1);
-    return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
   },
 
   _resetGUIDs: function BSS__resetGUIDs() {
@@ -1321,15 +1095,13 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  // NOTE: this method can throw 'close generator'
   _checkStatus: function BSS__checkStatus(code, msg) {
     if (code >= 200 && code < 300)
       return;
     this._log.error(msg + " Error code: " + code);
-    throw 'close generator';
+    throw 'checkStatus failed';
   },
 
-  // NOTE: this method can throw 'close generator'
   _decrypt: function BSS__decrypt(alg, data) {
     let out;
     switch (alg) {
@@ -1340,7 +1112,7 @@ BookmarksSyncService.prototype = {
         this._log.debug("Done decrypting data");
       } catch (e) {
         this._log.error("Could not decrypt server snapshot");
-        throw 'close generator';
+        throw 'decrypt failed';
       }
       break;
     case "none":
@@ -1348,7 +1120,7 @@ BookmarksSyncService.prototype = {
       break;
     default:
       this._log.error("Unknown encryption algorithm: " + alg);
-      throw 'close generator';
+      throw 'decrypt failed';
     }
     return out;
   },
@@ -1378,7 +1150,7 @@ BookmarksSyncService.prototype = {
    *     combined into a single set.
    */
   _getServerData: function BSS__getServerData(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     let ret = {status: -1,
                formatVersion: null, maxVersion: null, snapVersion: null,
                snapEncryption: null, deltasEncryption: null,
@@ -1386,10 +1158,9 @@ BookmarksSyncService.prototype = {
 
     try {
       this._log.info("Getting bookmarks status from server");
-      let gen = this._dav.GET("bookmarks-status.json", cont);
+      this._dav.GET("bookmarks-status.json", cont);
       let resp = yield;
       let status = resp.status;
-      gen.close();
   
       switch (status) {
       case 200:
@@ -1402,8 +1173,8 @@ BookmarksSyncService.prototype = {
         if (status.formatVersion > STORAGE_FORMAT_VERSION) {
           this._log.error("Server uses storage format v" + status.formatVersion +
                     ", this client understands up to v" + STORAGE_FORMAT_VERSION);
-          generatorDone(this, onComplete, ret)
-          throw 'close generator';
+          generatorDone(this, self, onComplete, ret)
+          return;
         }
 
         if (status.formatVersion == 0) {
@@ -1425,16 +1196,14 @@ BookmarksSyncService.prototype = {
             this._log.info("Local snapshot is out of date");
   
           this._log.info("Downloading server snapshot");
-          gen = this._dav.GET("bookmarks-snapshot.json", cont);
+          this._dav.GET("bookmarks-snapshot.json", cont);
           resp = yield;
-          gen.close()
           this._checkStatus(resp.status, "Could not download snapshot.");
           snap = this._decrypt(status.snapEncryption, resp.responseText);
 
           this._log.info("Downloading server deltas");
-          gen = this._dav.GET("bookmarks-deltas.json", cont);
+          this._dav.GET("bookmarks-deltas.json", cont);
           resp = yield;
-          gen.close();
           this._checkStatus(resp.status, "Could not download deltas.");
           allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
           deltas = eval(uneval(allDeltas));
@@ -1444,9 +1213,8 @@ BookmarksSyncService.prototype = {
           snap = eval(uneval(this._snapshot));
   
           this._log.info("Downloading server deltas");
-          gen = this._dav.GET("bookmarks-deltas.json", cont);
+          this._dav.GET("bookmarks-deltas.json", cont);
           resp = yield;
-          gen.close();
           this._checkStatus(resp.status, "Could not download deltas.");
           allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
           deltas = allDeltas.slice(this._snapshotVersion - status.snapVersion);
@@ -1456,16 +1224,15 @@ BookmarksSyncService.prototype = {
   
           // FIXME: could optimize this case by caching deltas file
           this._log.info("Downloading server deltas");
-          gen = this._dav.GET("bookmarks-deltas.json", cont);
+          this._dav.GET("bookmarks-deltas.json", cont);
           resp = yield;
-          gen.close();
           this._checkStatus(resp.status, "Could not download deltas.");
           allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
           deltas = [];
   
         } else { // this._snapshotVersion > status.maxVersion
           this._log.error("Server snapshot is older than local snapshot");
-          throw 'close generator';
+          return;
         }
   
         for (var i = 0; i < deltas.length; i++) {
@@ -1480,9 +1247,8 @@ BookmarksSyncService.prototype = {
         ret.deltasEncryption = status.deltasEncryption;
         ret.snapshot = snap;
         ret.deltas = allDeltas;
-        gen = this._detectUpdates.async(this, cont, this._snapshot, snap);
+        this._se.detectUpdates(cont, this._snapshot, snap);
         ret.updates = yield;
-        gen.close();
         break;
   
       case 404:
@@ -1492,11 +1258,10 @@ BookmarksSyncService.prototype = {
         this._snapshotVersion = 0;
         this._snapshotGUID = null; // in case there are other snapshots out there
 
-        gen = this._fullUpload.async(this, cont);
+        this._fullUpload.async(this, cont);
         let uploadStatus = yield;
-        gen.close();
         if (!uploadStatus)
-          throw 'close generator';
+          return;
   
         this._log.info("Initial upload to server successful");
         this._saveSnapshot();
@@ -1519,18 +1284,19 @@ BookmarksSyncService.prototype = {
       }
 
     } catch (e) {
-      if (e != 'close generator')
+      if (e != 'checkStatus failed' &&
+          e != 'decrypt failed')
         this._log.error("Exception caught: " + e.message);
 
     } finally {
-      generatorDone(this, onComplete, ret)
+      generatorDone(this, self, onComplete, ret)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
   _fullUpload: function BSS__fullUpload(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     let ret = false;
 
     try {
@@ -1543,104 +1309,107 @@ BookmarksSyncService.prototype = {
         this._log.debug("Done encrypting snapshot");
       } else {
         this._log.error("Unknown encryption scheme: " + this.encryption);
-        throw 'close generator';
+        return;
       }
-      let gen = this._dav.PUT("bookmarks-snapshot.json", data, cont);
+      this._dav.PUT("bookmarks-snapshot.json", data, cont);
       resp = yield;
-      gen.close();
       this._checkStatus(resp.status, "Could not upload snapshot.");
 
-      gen = this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
+      this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
       resp = yield;
-      gen.close();
       this._checkStatus(resp.status, "Could not upload deltas.");
 
       let c = 0;
       for (GUID in this._snapshot)
         c++;
 
-      gen = this._dav.PUT("bookmarks-status.json",
-                          uneval({GUID: this._snapshotGUID,
-                                  formatVersion: STORAGE_FORMAT_VERSION,
-                                  snapVersion: this._snapshotVersion,
-                                  maxVersion: this._snapshotVersion,
-                                  snapEncryption: this.encryption,
-                                  deltasEncryption: "none",
-                                  bookmarksCount: c}), cont);
+      this._dav.PUT("bookmarks-status.json",
+                    uneval({GUID: this._snapshotGUID,
+                            formatVersion: STORAGE_FORMAT_VERSION,
+                            snapVersion: this._snapshotVersion,
+                            maxVersion: this._snapshotVersion,
+                            snapEncryption: this.encryption,
+                            deltasEncryption: "none",
+                            bookmarksCount: c}), cont);
       resp = yield;
-      gen.close();
       this._checkStatus(resp.status, "Could not upload status file.");
 
       this._log.info("Full upload to server successful");
       ret = true;
 
     } catch (e) {
-      if (e != 'close generator')
+      if (e != 'checkStatus failed')
         this._log.error("Exception caught: " + e.message);
 
     } finally {
-      generatorDone(this, onComplete, ret)
+      generatorDone(this, self, onComplete, ret)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
-  _onLogin: function BSS__onLogin(success) {
-    this._loginGen.close();
-    this._loginGen = null;
-    if (success) {
-      this._os.notifyObservers(null, "bookmarks-sync:login", "");
-    } else {
-      this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
-    }
-    this._passphrase = null;
-    this._loggingIn = false;
-  },
+  _resetLock: function BSS__resetLock(onComplete) {
+    let [self, cont] = yield;
+    let success = false;
+    let svcLock = this._lock();
 
-  _onResetLock: function BSS__resetLock(success) {
-    this._forceUnlockGen.close();
-    this._forceUnlockGen = null;
-    if (success) {
-      this._log.info("Lock reset");
-      this._os.notifyObservers(null, "bookmarks-sync:lock-reset", "");
-    } else {
-      this._log.warn("Lock reset error");
-      this._os.notifyObservers(null, "bookmarks-sync:lock-reset-error", "");
+    try {
+      if (!svcLock)
+        return;
+      this._log.debug("Resetting server lock");
+      this._os.notifyObservers(null, "bookmarks-sync:lock-reset-start", "");
+
+      this._dav.forceUnlock.async(this._dav, cont);
+      success = yield;
+
+    } catch (e) {
+      this._log.error("Exception caught: " + e.message);
+
+    } finally {
+      if (success) {
+        this._log.debug("Server lock reset successful");
+        this._os.notifyObservers(null, "bookmarks-sync:lock-reset-end", "");
+      } else {
+        this._log.debug("Server lock reset failed");
+        this._os.notifyObservers(null, "bookmarks-sync:lock-reset-error", "");
+      }
+      if (svcLock)
+        this._unlock();
+      generatorDone(this, self, onComplete, success);
+      yield; // onComplete is responsible for closing the generator
     }
-    this._resettingLock = false;
+    this._log.warn("generator not properly closed");
   },
 
   _resetServer: function BSS__resetServer(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     let done = false;
+    let svcLock = this._lock();
 
     try {
+      if (!svcLock)
+        return;
+      this._log.debug("Resetting server data");
       this._os.notifyObservers(null, "bookmarks-sync:reset-server-start", "");
 
-      let gen = this._dav.lock.async(this._dav, cont);
+      this._dav.lock.async(this._dav, cont);
       let locked = yield;
-      gen.close(); 
-
       if (locked)
-        this._log.info("Lock acquired");
+        this._log.debug("Lock acquired");
       else {
         this._log.warn("Could not acquire lock, aborting server reset");
-        return;
+        return;        
       }
 
-      gen = this._dav.DELETE("bookmarks-status.json", cont);
+      this._dav.DELETE("bookmarks-status.json", cont);
       let statusResp = yield;
-      gen.close();
-      gen = this._dav.DELETE("bookmarks-snapshot.json", cont);
+      this._dav.DELETE("bookmarks-snapshot.json", cont);
       let snapshotResp = yield;
-      gen.close();
-      gen = this._dav.DELETE("bookmarks-deltas.json", cont);
+      this._dav.DELETE("bookmarks-deltas.json", cont);
       let deltasResp = yield;
-      gen.close();
 
-      gen = this._dav.unlock.async(this._dav, cont);
+      this._dav.unlock.async(this._dav, cont);
       let unlocked = yield;
-      gen.close();
 
       function ok(code) {
         if (code >= 200 && code < 300)
@@ -1658,59 +1427,61 @@ BookmarksSyncService.prototype = {
         return;
       }
 
-      this._log.info("Server files deleted");
+      this._log.debug("Server files deleted");
       done = true;
         
     } catch (e) {
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (done) {
-        this._log.info("Server reset completed successfully");
+        this._log.debug("Server reset completed successfully");
         this._os.notifyObservers(null, "bookmarks-sync:reset-server-end", "");
       } else {
-        this._log.info("Server reset failed");
+        this._log.debug("Server reset failed");
         this._os.notifyObservers(null, "bookmarks-sync:reset-server-error", "");
       }
-      generatorDone(this, onComplete, done)
+      if (svcLock)
+        this._unlock();
+      generatorDone(this, self, onComplete, done)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
-  _onResetServer: function BSS__resetServer(success) {
-    this._resetServerGen.close();
-    this._resetServerGen = null;
-    this._resettingServer = false;
-  },
-
   _resetClient: function BSS__resetClient(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     let done = false;
+    let svcLock = this._lock();
 
     try {
-      this._log.info("Resetting client state");
+      if (!svcLock)
+        return;
+      this._log.debug("Resetting client state");
+      this._os.notifyObservers(null, "bookmarks-sync:reset-client-start", "");
+
       this._snapshot = {};
       this._snapshotVersion = -1;
       this._saveSnapshot();
-
-      this._log.info("Client snapshot cleared");
       done = true;
 
     } catch (e) {
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
-      generatorDone(this, onComplete, done);
+      if (done) {
+        this._log.debug("Client reset completed successfully");
+        this._os.notifyObservers(null, "bookmarks-sync:reset-client-end", "");
+      } else {
+        this._log.debug("Client reset failed");
+        this._os.notifyObservers(null, "bookmarks-sync:reset-client-error", "");
+      }
+      if (svcLock)
+        this._unlock();
+      generatorDone(this, self, onComplete, done);
+      yield; // onComplete is responsible for closing the generator
     }
-  },
-
-  _onResetClient: function BSS__resetClient(success) {
-    this._resetClientGen.close();
-    this._resetClientGen = null;
-    this._resettingClient = false;
+    this._log.warn("generator not properly closed");
   },
 
   // XPCOM registration
@@ -1720,8 +1491,6 @@ BookmarksSyncService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.IBookmarksSyncService,
                                          Ci.nsIObserver,
                                          Ci.nsISupports]),
-
-  // nsISupports
 
   // nsIObserver
 
@@ -1759,50 +1528,14 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  // IBookmarksSyncService
-
-  sync: function BSS_sync() {
-    if (this._syncing) {
-      this._log.warn("Sync requested, but already syncing");
-      return;
-    }
-    this._syncing = true;
-    this._log.info("Beginning sync");
-    let callback = bind2(this, this._onSyncFinished);
-    this._syncGen = this._doSync.async(this, callback);
-  },
+  // IBookmarksSyncService public methods
 
   login: function BSS_login(password, passphrase) {
-    if (this._loggingIn) {
-      this._log.warn("Login requested, but already logging in");
-      return;
-    }
-
-    this._log.info("Logging in");
-
-    if (!this.username) {
-      this._log.warn("No username set, login failed");
-      this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
-      return;
-    }
-    if (!password)
-      password = this.password;
-    if (!password) {
-      this._log.warn("No password given or found in password manager");
-      this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
-      return;
-    }
-
-    // cache passphrase.  if null, we'll try to get it from the pw manager
+    // cache password & passphrase
+    // if null, _login() will try to get them from the pw manager
+    this._password = password;
     this._passphrase = passphrase;
-
-    this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
-    this._log.info("Using server URL: " + this._dav.baseURL);
-
-    this._loggingIn = true;
-    let callback = bind2(this, this._onLogin);
-    this._loginGen = this._dav.login.async(this._dav, callback,
-                                           this.username, password);
+    this._login.async(this);
   },
 
   logout: function BSS_logout() {
@@ -1812,136 +1545,361 @@ BookmarksSyncService.prototype = {
     this._os.notifyObservers(null, "bookmarks-sync:logout", "");
   },
 
+  sync: function BSS_sync() {
+    this._doSync.async(this);
+  },
+
   resetLock: function BSS_resetLock() {
-    if (this._resettingLock) {
-      this._log.warn("Reset lock requested, but already resetting lock");
-      return;
-    }
-    this._resettingLock = true;
-    this._log.info("Resetting lock");
-    let callback = bind2(this, this._onResetLock);
-    this._forceUnlockGen = this._dav.forceUnlock.async(this._dav, callback);
+    this._resetLock.async(this);
   },
 
   resetServer: function BSS_resetServer() {
-    if (this._resettingServer) {
-      this._log.warn("Reset server requested, but already resetting server");
-      return;
-    }
-    this._resettingServer = true;
-    this._log.info("Resetting server data");
-    let callback = bind2(this, this._onResetServer);
-    this._resetServerGen = this._resetServer.async(this, callback);
+    this._resetServer.async(this);
   },
 
   resetClient: function BSS_resetClient() {
-    if (this._resettingClient) {
-      this._log.warn("Reset client requested, but already resetting client");
-      return;
-    }
-    this._resettingClient = true;
-    this._log.info("Resetting client data");
-    let callback = bind2(this, this._onResetClient);
-    this._resetClientGen = this._resetClient.async(this, callback);
+    this._resetClient.async(this);
   }
 };
 
-function makeFile(path) {
-  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-  file.initWithPath(path);
-  return file;
+/*
+ * SyncEngine objects
+ * Sync engines deal with diff creation and conflict resolution.
+ * Tree data structures where all nodes have GUIDs only need to be
+ * subclassed for each data type to implement commandLike and
+ * itemExists.
+ */
+
+function SyncEngine() {
+  this._init();
 }
+SyncEngine.prototype = {
+  _logName: "Sync",
 
-function makeURI(URIString) {
-  if (URIString === null || URIString == "")
-    return null;
-  let ioservice = Cc["@mozilla.org/network/io-service;1"].
-    getService(Ci.nsIIOService);
-  return ioservice.newURI(URIString, null, null);
-}
-
-function bind2(object, method) {
-  return function innerBind() { return method.apply(object, arguments); }
-}
-
-Function.prototype.async = function(self, extra_args) {
-  try {
-    let args = Array.prototype.slice.call(arguments, 1);
-    let gen = this.apply(self, args);
-    gen.next(); // must initialize before sending
-    gen.send(function(data) { continueGenerator(gen, data); });
-    return gen;
-  } catch (e) {
-    if (e instanceof StopIteration) {
-      dump("async warning: generator stopped unexpectedly");
-      return null;
-    } else {
-      this._log.error("Exception caught: " + e.message);
-    }
-  }
-}
-
-function continueGenerator(generator, data) {
-  try { generator.send(data); }
-  catch (e) {
-    if (e instanceof StopIteration)
-      dump("continueGenerator warning: generator stopped unexpectedly");
-    else
-      dump("Exception caught: " + e.message);
-  }
-}
-
-// generators called using Function.async can't simply call the
-// callback with the return value, since that would cause the calling
-// function to end up running (after the yield) from inside the
-// generator.  Instead, generators can call this method which sets up
-// a timer to call the callback from a timer (and cleans up the timer
-// to avoid leaks).
-function generatorDone(object, callback, retval) {
-  if (object._timer)
-    throw "Called generatorDone when there is a timer already set."
-
-  let cb = bind2(object, function(event) {
-    object._timer = null;
-    callback(retval);
-  });
-
-  object._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  object._timer.initWithCallback(new EventListener(cb),
-                                 0, object._timer.TYPE_ONE_SHOT);
-}
-
-function EventListener(handler, eventName) {
-  this._handler = handler;
-  this._eventName = eventName;
-  let logSvc = Cc["@mozilla.org/log4moz/service;1"].
-    getService(Ci.ILog4MozService);
-  this._log = logSvc.getLogger("Service.EventHandler");
-}
-EventListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsISupports]),
-
-  // DOM event listener
-  handleEvent: function EL_handleEvent(event) {
-    this._log.debug("Handling event " + this._eventName);
-    this._handler(event);
+  _init: function SE__init() {
+    let logSvc = Cc["@mozilla.org/log4moz/service;1"].
+      getService(Ci.ILog4MozService);
+    this._log = logSvc.getLogger("Service." + this._logName);
   },
 
-  // nsITimerCallback
-  notify: function EL_notify(timer) {
-    this._log.trace("Timer fired");
-    this._handler(timer);
+  // FIXME: this won't work for deep objects, or objects with optional properties
+  _getEdits: function SE__getEdits(a, b) {
+    let ret = {numProps: 0, props: {}};
+    for (prop in a) {
+      if (!deepEquals(a[prop], b[prop])) {
+        ret.numProps++;
+        ret.props[prop] = b[prop];
+      }
+    }
+    return ret;
+  },
+
+  _nodeParents: function SE__nodeParents(GUID, tree) {
+    return this._nodeParentsInt(GUID, tree, []);
+  },
+
+  _nodeParentsInt: function SE__nodeParentsInt(GUID, tree, parents) {
+    if (!tree[GUID] || !tree[GUID].parentGUID)
+      return parents;
+    parents.push(tree[GUID].parentGUID);
+    return this._nodeParentsInt(tree[GUID].parentGUID, tree, parents);
+  },
+
+  _detectUpdates: function SE__detectUpdates(onComplete, a, b) {
+    let [self, cont] = yield;
+    let listener = new EventListener(cont);
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+    let cmds = [];
+
+    try {
+      for (let GUID in a) {
+
+        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        yield; // Yield to main loop
+
+        if (GUID in b) {
+          let edits = this._getEdits(a[GUID], b[GUID]);
+          if (edits.numProps == 0) // no changes - skip
+            continue;
+          let parents = this._nodeParents(GUID, b);
+          cmds.push({action: "edit", GUID: GUID,
+                     depth: parents.length, parents: parents,
+                     data: edits.props});
+        } else {
+          let parents = this._nodeParents(GUID, a); // ???
+          cmds.push({action: "remove", GUID: GUID,
+                     depth: parents.length, parents: parents});
+        }
+      }
+      for (let GUID in b) {
+
+        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        yield; // Yield to main loop
+
+        if (GUID in a)
+          continue;
+        let parents = this._nodeParents(GUID, b);
+        cmds.push({action: "create", GUID: GUID,
+                   depth: parents.length, parents: parents,
+                   data: b[GUID]});
+      }
+      cmds.sort(function(a, b) {
+        if (a.depth > b.depth)
+          return 1;
+        if (a.depth < b.depth)
+          return -1;
+        if (a.index > b.index)
+          return -1;
+        if (a.index < b.index)
+          return 1;
+        return 0; // should never happen, but not a big deal if it does
+      });
+
+    } catch (e) {
+      this._log.error("Exception caught: " + e.message);
+
+    } finally {
+      timer = null;
+      generatorDone(this, self, onComplete, cmds);
+      yield; // onComplete is responsible for closing the generator
+    }
+    this._log.warn("generator not properly closed");
+  },
+
+  _commandLike: function SE__commandLike(a, b) {
+    // Check that neither command is null, and verify that the GUIDs
+    // are different (otherwise we need to check for edits)
+    if (!a || !b || a.GUID == b.GUID)
+      return false;
+
+    // Check that all other properties are the same
+    // FIXME: could be optimized...
+    for (let key in a) {
+      if (key != "GUID" && !deepEquals(a[key], b[key]))
+        return false;
+    }
+    for (let key in b) {
+      if (key != "GUID" && !deepEquals(a[key], b[key]))
+        return false;
+    }
+    return true;
+  },
+
+  // When we change the GUID of a local item (because we detect it as
+  // being the same item as a remote one), we need to fix any other
+  // local items that have it as their parent
+  _fixParents: function SE__fixParents(list, oldGUID, newGUID) {
+    for (let i = 0; i < list.length; i++) {
+      if (!list[i])
+        continue;
+      if (list[i].data.parentGUID == oldGUID)
+        list[i].data.parentGUID = newGUID;
+      for (let j = 0; j < list[i].parents.length; j++) {
+        if (list[i].parents[j] == oldGUID)
+          list[i].parents[j] = newGUID;
+      }
+    }
+  },
+
+  _conflicts: function SE__conflicts(a, b) {
+    if ((a.GUID == b.GUID) && !deepEquals(a, b))
+      return true;
+    return false;
+  },
+
+  _getPropagations: function SE__getPropagations(commands, conflicts, propagations) {
+    for (let i = 0; i < commands.length; i++) {
+      let alsoConflicts = function(elt) {
+        return (elt.action == "create" || elt.action == "remove") &&
+          commands[i].parents.indexOf(elt.GUID) >= 0;
+      };
+      if (conflicts.some(alsoConflicts))
+        conflicts.push(commands[i]);
+
+      let cmdConflicts = function(elt) {
+        return elt.GUID == commands[i].GUID;
+      };
+      if (!conflicts.some(cmdConflicts))
+        propagations.push(commands[i]);
+    }
+  },
+
+  _itemExists: function SE__itemExists(GUID) {
+    this._log.error("itemExists needs to be subclassed");
+    return false;
+  },
+
+  _reconcile: function SE__reconcile(onComplete, listA, listB) {
+    let [self, cont] = yield;
+    let listener = new EventListener(cont);
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+    let propagations = [[], []];
+    let conflicts = [[], []];
+    let ret = {propagations: propagations, conflicts: conflicts};
+
+    try {
+      for (let i = 0; i < listA.length; i++) {
+        for (let j = 0; j < listB.length; j++) {
+
+          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+          yield; // Yield to main loop
+  
+          if (deepEquals(listA[i], listB[j])) {
+            delete listA[i];
+            delete listB[j];
+          } else if (this._commandLike(listA[i], listB[j])) {
+            this._fixParents(listA, listA[i].GUID, listB[j].GUID);
+            listB[j].data = {GUID: listB[j].GUID};
+            listB[j].GUID = listA[i].GUID;
+            listB[j].action = "edit";
+            delete listA[i];
+          }
+  
+          // watch out for create commands with GUIDs that already exist
+          if (listB[j] && listB[j].action == "create" &&
+              this._itemExists(listB[j].GUID)) {
+            this._log.error("Remote command has GUID that already exists " +
+                            "locally. Dropping command.");
+            delete listB[j];
+          }
+        }
+      }
+  
+      listA = listA.filter(function(elt) { return elt });
+      listB = listB.filter(function(elt) { return elt });
+  
+      for (let i = 0; i < listA.length; i++) {
+        for (let j = 0; j < listB.length; j++) {
+
+          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+          yield; // Yield to main loop
+  
+          if (this._conflicts(listA[i], listB[j]) ||
+              this._conflicts(listB[j], listA[i])) {
+            if (!conflicts[0].some(
+              function(elt) { return elt.GUID == listA[i].GUID }))
+              conflicts[0].push(listA[i]);
+            if (!conflicts[1].some(
+              function(elt) { return elt.GUID == listB[j].GUID }))
+              conflicts[1].push(listB[j]);
+          }
+        }
+      }
+  
+      this._getPropagations(listA, conflicts[0], propagations[1]);
+  
+      timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+      yield; // Yield to main loop
+  
+      this._getPropagations(listB, conflicts[1], propagations[0]);
+      ret = {propagations: propagations, conflicts: conflicts};
+
+    } catch (e) {
+      this._log.error("Exception caught: " + e.message);
+
+    } finally {
+      timer = null;
+      generatorDone(this, self, onComplete, ret);
+      yield; // onComplete is responsible for closing the generator
+    }
+    this._log.warn("generator not properly closed");
+  },
+
+  // Public methods
+
+  detectUpdates: function SE_detectUpdates(onComplete, a, b) {
+    return this._detectUpdates.async(this, onComplete, a, b);
+  },
+
+  reconcile: function SE_reconcile(onComplete, listA, listB) {
+    return this._reconcile.async(this, onComplete, listA, listB);
   }
 };
 
-function xpath(xmlDoc, xpathString) {
-  let root = xmlDoc.ownerDocument == null ?
-    xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement
-  let nsResolver = xmlDoc.createNSResolver(root);
-
-  return xmlDoc.evaluate(xpathString, xmlDoc, nsResolver,
-                         Ci.nsIDOMXPathResult.ANY_TYPE, null);
+function BookmarksSyncEngine() {
+  this._init();
 }
+BookmarksSyncEngine.prototype = {
+  _logName: "BMSync",
+
+  __bms: null,
+  get _bms() {
+    if (!this.__bms)
+      this.__bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                   getService(Ci.nsINavBookmarksService);
+    return this.__bms;
+  },
+
+  // NOTE: Needs to be subclassed
+  _itemExists: function BSE__itemExists(GUID) {
+    return this._bms.getItemIdForGUID(GUID) >= 0;
+  },
+
+  commandLike: function BCC_commandLike(a, b) {
+    // Check that neither command is null, that their actions, types,
+    // and parents are the same, and that they don't have the same
+    // GUID.
+    // Items with the same GUID do not qualify for 'likeness' because
+    // we already consider them to be the same object, and therefore
+    // we need to process any edits.
+    // The parent GUID check works because reconcile() fixes up the
+    // parent GUIDs as it runs, and the command list is sorted by
+    // depth
+    if (!a || !b ||
+       a.action != b.action ||
+       a.data.type != b.data.type ||
+       a.data.parentGUID != b.data.parentGUID ||
+       a.GUID == b.GUID)
+      return false;
+
+    // Bookmarks are allowed to be in a different index as long as
+    // they are in the same folder.  Folders and separators must be at
+    // the same index to qualify for 'likeness'.
+    switch (a.data.type) {
+    case "bookmark":
+      if (a.data.URI == b.data.URI &&
+          a.data.title == b.data.title)
+        return true;
+      return false;
+    case "query":
+      if (a.data.URI == b.data.URI &&
+          a.data.title == b.data.title)
+        return true;
+      return false;
+    case "microsummary":
+      if (a.data.URI == b.data.URI &&
+          a.data.generatorURI == b.data.generatorURI)
+        return true;
+      return false;
+    case "folder":
+      if (a.index == b.index &&
+          a.data.title == b.data.title)
+        return true;
+      return false;
+    case "livemark":
+      if (a.data.title == b.data.title &&
+          a.data.siteURI == b.data.siteURI &&
+          a.data.feedURI == b.data.feedURI)
+        return true;
+      return false;
+    case "separator":
+      if (a.index == b.index)
+        return true;
+      return false;
+    default:
+      this._log.error("commandLike: Unknown item type: " + uneval(a));
+      return false;
+    }
+  }
+};
+BookmarksSyncEngine.prototype.__proto__ = new SyncEngine();
+
+/*
+ * DAV object
+ * Abstracts the raw DAV commands
+ */
 
 function DAVCollection(baseURL) {
   this._baseURL = baseURL;
@@ -1950,7 +1908,6 @@ function DAVCollection(baseURL) {
     getService(Ci.ILog4MozService);
   this._log = logSvc.getLogger("Service.DAV");
 }
-
 DAVCollection.prototype = {
   __dp: null,
   get _dp() {
@@ -1975,7 +1932,7 @@ DAVCollection.prototype = {
   },
 
   _makeRequest: function DC__makeRequest(onComplete, op, path, headers, data) {
-    let cont = yield;
+    let [self, cont] = yield;
     let ret;
 
     try {
@@ -2016,11 +1973,10 @@ DAVCollection.prototype = {
         this._log.warn("_makeRequest: got status " + ret.status);
 
     } catch (e) {
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
-      generatorDone(this, onComplete, ret);
+      generatorDone(this, self, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -2073,12 +2029,12 @@ DAVCollection.prototype = {
   // Login / Logout
 
   login: function DC_login(onComplete, username, password) {
-    let cont = yield;
+    let [self, cont] = yield;
 
     try {
       if (this._loggedIn) {
         this._log.debug("Login requested, but already logged in");
-        throw 'close generator';
+        return;
       }
    
       this._log.info("Logging in");
@@ -2087,25 +2043,23 @@ DAVCollection.prototype = {
       this._auth = "Basic " + btoa(username + ":" + password);
 
       // Make a call to make sure it's working
-      let gen = this.GET("", cont);
+      this.GET("", cont);
       let resp = yield;
-      gen.close();
 
       if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
-        throw 'close generator';
+        return;
   
       this._loggedIn = true;
 
     } catch (e) {
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (this._loggedIn)
         this._log.info("Logged in");
       else
         this._log.warn("Could not log in");
-      generatorDone(this, onComplete, this._loggedIn);
+      generatorDone(this, self, onComplete, this._loggedIn);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -2120,43 +2074,41 @@ DAVCollection.prototype = {
   // Locking
 
   _getActiveLock: function DC__getActiveLock(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     let ret = null;
 
     try {
       this._log.info("Getting active lock token");
-      let gen = this.PROPFIND("",
-                              "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
-                              "<D:propfind xmlns:D='DAV:'>" +
-                              "  <D:prop><D:lockdiscovery/></D:prop>" +
-                              "</D:propfind>", cont);
+      this.PROPFIND("",
+                    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
+                    "<D:propfind xmlns:D='DAV:'>" +
+                    "  <D:prop><D:lockdiscovery/></D:prop>" +
+                    "</D:propfind>", cont);
       let resp = yield;
-      gen.close();
 
       if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
-        throw 'close generator';
+        return;
 
       let tokens = xpath(resp.responseXML, '//D:locktoken/D:href');
       let token = tokens.iterateNext();
       ret = token.textContent;
 
     } catch (e) {
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (ret)
         this._log.debug("Found an active lock token");
       else
         this._log.debug("No active lock token found");
-      generatorDone(this, onComplete, ret);
+      generatorDone(this, self, onComplete, ret);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
   lock: function DC_lock(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     this._token = null;
 
     try {
@@ -2164,20 +2116,19 @@ DAVCollection.prototype = {
 
       if (this._token) {
         this._log.debug("Lock called, but we already hold a token");
-        throw 'close generator';
+        return;
       }
 
-      let gen = this.LOCK("",
-                          "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
-                          "<D:lockinfo xmlns:D=\"DAV:\">\n" +
-                          "  <D:locktype><D:write/></D:locktype>\n" +
-                          "  <D:lockscope><D:exclusive/></D:lockscope>\n" +
-                          "</D:lockinfo>", cont);
+      this.LOCK("",
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<D:lockinfo xmlns:D=\"DAV:\">\n" +
+                "  <D:locktype><D:write/></D:locktype>\n" +
+                "  <D:lockscope><D:exclusive/></D:lockscope>\n" +
+                "</D:lockinfo>", cont);
       let resp = yield;
-      gen.close();
 
       if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
-        throw 'close generator';
+        return;
 
       let tokens = xpath(resp.responseXML, '//D:locktoken/D:href');
       let token = tokens.iterateNext();
@@ -2185,50 +2136,47 @@ DAVCollection.prototype = {
         this._token = token.textContent;
 
     } catch (e){
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (this._token)
         this._log.info("Lock acquired");
       else
         this._log.warn("Could not acquire lock");
-      generatorDone(this, onComplete, this._token);
+      generatorDone(this, self, onComplete, this._token);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
   unlock: function DC_unlock(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     try {
       this._log.info("Releasing lock");
 
       if (this._token === null) {
         this._log.debug("Unlock called, but we don't hold a token right now");
-        throw 'close generator';
+        return;
       }
 
-      let gen = this.UNLOCK("", cont);
+      this.UNLOCK("", cont);
       let resp = yield;
-      gen.close();
 
       if (this._authProvider._authFailed || resp.status < 200 || resp.status >= 300)
-        throw 'close generator';
+        return;
 
       this._token = null;
 
     } catch (e){
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (this._token) {
         this._log.info("Could not release lock");
-        generatorDone(this, onComplete, false);
+        generatorDone(this, self, onComplete, false);
       } else {
         this._log.info("Lock released (or we didn't have one)");
-        generatorDone(this, onComplete, true);
+        generatorDone(this, self, onComplete, true);
       }
       yield; // onComplete is responsible for closing the generator
     }
@@ -2236,62 +2184,56 @@ DAVCollection.prototype = {
   },
 
   forceUnlock: function DC_forceUnlock(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     let unlocked = true;
 
     try {
       this._log.info("Forcibly releasing any server locks");
 
-      let gen = this._getActiveLock.async(this, cont);
+      this._getActiveLock.async(this, cont);
       this._token = yield;
-      gen.close();
 
       if (!this._token) {
         this._log.info("No server lock found");
-        throw 'close generator';
+        return;
       }
 
       this._log.info("Server lock found, unlocking");
-      gen = this.unlock.async(this, cont);
+      this.unlock.async(this, cont);
       unlocked = yield;
-      gen.close();
 
     } catch (e){
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
       if (unlocked)
         this._log.debug("Lock released");
       else
         this._log.debug("No lock released");
-      generatorDone(this, onComplete, unlocked);
+      generatorDone(this, self, onComplete, unlocked);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
   stealLock: function DC_stealLock(onComplete) {
-    let cont = yield;
+    let [self, cont] = yield;
     let stolen = null;
 
     try {
-      let gen = this.forceUnlock.async(this, cont);
+      this.forceUnlock.async(this, cont);
       let unlocked = yield;
-      gen.close();
 
       if (unlocked) {
-        gen = this.lock.async(this, cont);
+        this.lock.async(this, cont);
         stolen = yield;
-        gen.close();
       }
 
     } catch (e){
-      if (e != 'close generator')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + e.message);
 
     } finally {
-      generatorDone(this, onComplete, stolen);
+      generatorDone(this, self, onComplete, stolen);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -2299,7 +2241,11 @@ DAVCollection.prototype = {
 };
 
 
-// Taken from nsMicrosummaryService.js and massaged slightly
+/*
+ * Auth provider object
+ * Taken from nsMicrosummaryService.js and massaged slightly
+ */
+
 function DummyAuthProvider() {}
 DummyAuthProvider.prototype = {
   // Implement notification callback interfaces so we can suppress UI
@@ -2444,6 +2390,141 @@ DummyAuthProvider.prototype = {
                                   aStatus, aStatusArg) {
   }
 };
+
+/*
+ * Event listener object
+ * Used to handle XMLHttpRequest and nsITimer callbacks
+ */
+
+function EventListener(handler, eventName) {
+  this._handler = handler;
+  this._eventName = eventName;
+  let logSvc = Cc["@mozilla.org/log4moz/service;1"].
+    getService(Ci.ILog4MozService);
+  this._log = logSvc.getLogger("Service.EventHandler");
+}
+EventListener.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsISupports]),
+
+  // DOM event listener
+  handleEvent: function EL_handleEvent(event) {
+    this._log.debug("Handling event " + this._eventName);
+    this._handler(event);
+  },
+
+  // nsITimerCallback
+  notify: function EL_notify(timer) {
+    this._log.trace("Timer fired");
+    this._handler(timer);
+  }
+};
+
+/*
+ * Utility functions
+ */
+
+function deepEquals(a, b) {
+  if (!a && !b)
+    return true;
+  if (!a || !b)
+    return false;
+
+  if (typeof(a) != "object" && typeof(b) != "object")
+    return a == b;
+  if (typeof(a) != "object" || typeof(b) != "object")
+    return false;
+
+  for (let key in a) {
+    if (typeof(a[key]) == "object") {
+      if (!typeof(b[key]) == "object")
+        return false;
+      if (!deepEquals(a[key], b[key]))
+        return false;
+    } else {
+      if (a[key] != b[key])
+        return false;
+    }
+  }
+  return true;
+}
+
+function makeFile(path) {
+  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  file.initWithPath(path);
+  return file;
+}
+
+function makeURI(URIString) {
+  if (URIString === null || URIString == "")
+    return null;
+  let ioservice = Cc["@mozilla.org/network/io-service;1"].
+    getService(Ci.nsIIOService);
+  return ioservice.newURI(URIString, null, null);
+}
+
+function xpath(xmlDoc, xpathString) {
+  let root = xmlDoc.ownerDocument == null ?
+    xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement
+  let nsResolver = xmlDoc.createNSResolver(root);
+
+  return xmlDoc.evaluate(xpathString, xmlDoc, nsResolver,
+                         Ci.nsIDOMXPathResult.ANY_TYPE, null);
+}
+
+function bind2(object, method) {
+  return function innerBind() { return method.apply(object, arguments); }
+}
+
+Function.prototype.async = function(self, extra_args) {
+  try {
+    let args = Array.prototype.slice.call(arguments, 1);
+    let gen = this.apply(self, args);
+    gen.next(); // must initialize before sending
+    gen.send([gen, function(data) {continueGenerator(gen, data);}]);
+    return gen;
+  } catch (e) {
+    if (e instanceof StopIteration) {
+      dump("async warning: generator stopped unexpectedly");
+      return null;
+    } else {
+      this._log.error("Exception caught: " + e.message);
+    }
+  }
+}
+
+function continueGenerator(generator, data) {
+  try { generator.send(data); }
+  catch (e) {
+    if (e instanceof StopIteration)
+      dump("continueGenerator warning: generator stopped unexpectedly");
+    else
+      dump("Exception caught: " + e.message);
+  }
+}
+
+// generators created using Function.async can't simply call the
+// callback with the return value, since that would cause the calling
+// function to end up running (after the yield) from inside the
+// generator.  Instead, generators can call this method which sets up
+// a timer to call the callback from a timer (and cleans up the timer
+// to avoid leaks).  It also closes generators after the timeout, to
+// keep things clean.
+function generatorDone(object, generator, callback, retval) {
+  if (object._timer)
+    throw "Called generatorDone when there is a timer already set."
+
+  let cb = bind2(object, function(event) {
+    generator.close();
+    generator = null;
+    object._timer = null;
+    if (callback)
+      callback(retval);
+  });
+
+  object._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  object._timer.initWithCallback(new EventListener(cb),
+                                 0, object._timer.TYPE_ONE_SHOT);
+}
 
 function NSGetModule(compMgr, fileSpec) {
   return XPCOMUtils.generateModule([BookmarksSyncService]);
