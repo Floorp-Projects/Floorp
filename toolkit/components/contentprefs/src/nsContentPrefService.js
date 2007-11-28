@@ -735,7 +735,7 @@ ContentPrefService.prototype = {
   _dbCreateIndices: function ContentPrefService__dbCreateIndices(aDBConnection) {
     for (let name in this._dbSchema.indices) {
       let index = this._dbSchema.indices[name];
-      let statement = "CREATE INDEX " + name + " ON " + index.table +
+      let statement = "CREATE INDEX IF NOT EXISTS " + name + " ON " + index.table +
                       "(" + index.columns.join(", ") + ")";
       aDBConnection.executeSimpleSQL(statement);
     }
@@ -746,6 +746,7 @@ ContentPrefService.prototype = {
       aDBConnection.beginTransaction();
       try {
         this["_dbMigrate" + aOldVersion + "To" + aNewVersion](aDBConnection);
+        aDBConnection.schemaVersion = aNewVersion;
         aDBConnection.commitTransaction();
       }
       catch(ex) {
@@ -782,8 +783,6 @@ ContentPrefService.prototype = {
     aDBConnection.executeSimpleSQL("DROP TABLE sites");
 
     this._dbCreateIndices(aDBConnection);
-
-    aDBConnection.schemaVersion = this._dbVersion;
   },
 
   _dbMigrate1To3: function ContentPrefService___dbMigrate1To3(aDBConnection) {
@@ -798,8 +797,6 @@ ContentPrefService.prototype = {
     aDBConnection.executeSimpleSQL("DROP TABLE groupsOld");
 
     this._dbCreateIndices(aDBConnection);
-
-    aDBConnection.schemaVersion = this._dbVersion;
   },
 
   _dbMigrate2To3: function ContentPrefService__dbMigrate2To3(aDBConnection) {
