@@ -672,6 +672,10 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
     EndCrashReporterDialog(hwndDlg, success ? 1 : 0);
     return TRUE;
   }
+  case WM_CLOSE: {
+    EndCrashReporterDialog(hwndDlg, 0);
+    return FALSE;
+  }
   }
   return FALSE;
 }
