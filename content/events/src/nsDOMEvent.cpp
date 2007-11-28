@@ -85,6 +85,7 @@ static char *sPopupAllowedEvents;
 nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
 {
   mPresContext = aPresContext;
+  mPrivateDataDuplicated = PR_FALSE;
 
   if (aEvent) {
     mEvent = aEvent;
@@ -907,6 +908,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
   mEvent = newEvent;
   mPresContext = nsnull;
   mEventIsInternal = PR_TRUE;
+  mPrivateDataDuplicated = PR_TRUE;
 
   return NS_OK;
 }
