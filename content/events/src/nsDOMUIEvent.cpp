@@ -215,7 +215,9 @@ nsDOMUIEvent::GetPagePoint()
                    nsPresContext::AppUnitsToIntCSSPixels(pt.y));
   }
 
-  return mPagePoint;
+  // If event was initialized manually using InitMouseEvent(...),
+  // page coordinates must be the same as client coordinates. See bug 405632.
+  return mPrivateDataDuplicated ? mPagePoint : GetClientPoint();
 }
 
 

@@ -184,6 +184,7 @@ protected:
   nsCOMPtr<nsIDOMEventTarget> mTmpRealOriginalTarget;
   nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
   PRPackedBool                mEventIsInternal;
+  PRPackedBool                mPrivateDataDuplicated;
 };
 
 #define NS_FORWARD_TO_NSDOMEVENT \
