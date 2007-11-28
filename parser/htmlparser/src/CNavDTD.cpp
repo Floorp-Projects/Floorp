@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=2 et tw=80: */
+/* vim: set sw=2 ts=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1980,6 +1980,12 @@ CNavDTD::HandleDocTypeDeclToken(CToken* aToken)
   nsresult result = mSink ? mSink->AddDocTypeDecl(*theNode) : NS_OK;
 
   IF_FREE(theNode, &mNodeAllocator);
+
+  // Hack for bug 395846, if we failed to add the node for whatever reason,
+  // then we need to free the token ourselves.
+  if (NS_FAILED(result) && result != NS_ERROR_HTMLPARSER_BLOCK) {
+    IF_FREE(aToken, mTokenAllocator);
+  }
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   START_TIMER();
