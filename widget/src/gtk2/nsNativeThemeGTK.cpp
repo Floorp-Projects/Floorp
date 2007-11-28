@@ -272,7 +272,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
         if (aWidgetType == NS_THEME_MENUITEM ||
             aWidgetType == NS_THEME_CHECKMENUITEM ||
-            aWidgetType == NS_THEME_RADIOMENUITEM) {
+            aWidgetType == NS_THEME_RADIOMENUITEM ||
+            aWidgetType == NS_THEME_MENUARROW) {
           PRBool isTopLevel = PR_FALSE;
           nsIMenuFrame *menuFrame;
           CallQueryInterface(aFrame, &menuFrame);
@@ -483,6 +484,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_MENUITEM:
     aGtkWidgetType = MOZ_GTK_MENUITEM;
+    break;
+  case NS_THEME_MENUARROW:
+    aGtkWidgetType = MOZ_GTK_MENUARROW;
     break;
   case NS_THEME_CHECKMENUITEM:
     aGtkWidgetType = MOZ_GTK_CHECKMENUITEM;
@@ -1053,6 +1057,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_MENUBAR:
   case NS_THEME_MENUPOPUP:
   case NS_THEME_MENUITEM:
+  case NS_THEME_MENUARROW:
   case NS_THEME_CHECKMENUITEM:
   case NS_THEME_RADIOMENUITEM:
   case NS_THEME_WINDOW:

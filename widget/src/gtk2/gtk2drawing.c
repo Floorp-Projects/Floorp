@@ -1589,6 +1589,28 @@ moz_gtk_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_menu_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                         GdkRectangle* cliprect, GtkWidgetState* state)
+{
+    GtkStyle* style;
+    GtkTextDirection chromedir;
+    GtkStateType state_type = ConvertGtkState(state);
+
+    ensure_menu_item_widget();
+    style = gMenuItemWidget->style;
+    chromedir = gtk_widget_get_direction(gMenuItemWidget);
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+    gtk_paint_arrow(style, drawable, state_type,
+                    (state_type == GTK_STATE_PRELIGHT) ? GTK_SHADOW_IN : GTK_SHADOW_OUT,
+                    cliprect, gMenuItemWidget, "menuitem",
+                    (chromedir == GTK_TEXT_DIR_LTR) ? GTK_ARROW_RIGHT : GTK_ARROW_LEFT,
+                    TRUE, rect->x, rect->y, rect->width, rect->height);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
                               GdkRectangle* cliprect, GtkWidgetState* state,
                               gboolean checked, gboolean isradio)
@@ -1875,6 +1897,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_WINDOW:
     case MOZ_GTK_RESIZER:
+    case MOZ_GTK_MENUARROW:
         *left = *top = *right = *bottom = 0;
         return MOZ_GTK_SUCCESS;
     default:
@@ -2063,6 +2086,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_MENUITEM:
         return moz_gtk_menu_item_paint(drawable, rect, cliprect, state);
+        break;
+    case MOZ_GTK_MENUARROW:
+        return moz_gtk_menu_arrow_paint(drawable, rect, cliprect, state);
         break;
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
