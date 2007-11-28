@@ -45,12 +45,11 @@
 #include "nsAutoPtr.h"
 
 extern "C" {
+#include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-application-registry.h>
-#include <libgnomevfs/gnome-vfs-init.h>
 #include <libgnomevfs/gnome-vfs-mime.h>
 #include <libgnomevfs/gnome-vfs-mime-handlers.h>
 #include <libgnomevfs/gnome-vfs-mime-info.h>
-#include <libgnomevfs/gnome-vfs-utils.h>
 #include <libgnome/gnome-url.h>
 }
 
