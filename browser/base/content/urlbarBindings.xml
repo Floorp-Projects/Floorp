@@ -128,6 +128,51 @@
         ]]></body>
       </method>
 
+      <method name="onDragOver">
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <method name="onDrop">
+        <parameter name="aEvent"/>
+        <parameter name="aXferData"/>
+        <parameter name="aDragSession"/>
+        <body><![CDATA[
+          var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+
+          // The URL bar automatically handles inputs with newline characters,
+          // so we can get away with treating text/x-moz-url flavours as text/unicode.
+          if (url) {
+            nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
+
+            try {
+              gURLBar.value = url;
+              const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
+              urlSecurityCheck(gURLBar.value,
+                               gBrowser.contentPrincipal,
+                               nsIScriptSecMan.DISALLOW_INHERIT_PRINCIPAL);
+              handleURLBarCommand();
+            } catch (ex) {}
+          }
+        ]]></body>
+      </method>
+
+      <method name="getSupportedFlavours">
+        <body><![CDATA[
+          var flavourSet = new FlavourSet();
+
+          // Favor text/x-moz-url since text/unicode coming from Win32 1.8 branch
+          // drops contains URL\ntext.  The previous comment here said that
+          // plain text drops often come with text/x-moz-url flavor, but I
+          // haven't seen that, so hopefully that behavior has changed.
+          flavourSet.appendFlavour("text/x-moz-url");
+          flavourSet.appendFlavour("text/unicode");
+          flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+          return flavourSet;
+        ]]></body>
+      </method>
+
       <field name="_copyCutController"><![CDATA[
         ({
           urlbar: this,
@@ -215,6 +260,8 @@
 
     <handlers>
       <handler event="focus" phase="capturing" action="this._hideURLTooltip();"/>
+      <handler event="dragover" phase="capturing" action="nsDragAndDrop.dragOver(event, this);"/>
+      <handler event="dragdrop" phase="capturing" action="nsDragAndDrop.drop(event, this);"/>
     </handlers>
 
   </binding>
