@@ -205,5 +205,13 @@ milestone release.
   editor, EPM, and applications running in VIO windows) cannot paste more
   than this.
 
+- Firefox cannot make use of OS/2 fonts like WarpSans and others which
+  are not available in Type1 or TrueType format. It is therefore
+  recommended to install the "Workplace Sans" font from
+     http://www.cs-club.org/~alex/creative/fonts/
+  or
+     http://hobbes.nmsu.edu/cgi-bin/h-search?key=wpsu_ttf
+  which Firefox will use as a replacement of WarpSans.
+
 Other known problems can be found by following the link "Current Open Warpzilla
 Bugs" on the OS/2 Mozilla page <http://www.mozilla.org/ports/os2/>.
