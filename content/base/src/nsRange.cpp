@@ -343,6 +343,12 @@ nsRange::IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult)
 {
   PRInt16 compareResult = 0;
   nsresult rv = ComparePoint(aParent, aOffset, &compareResult);
+  // If the node isn't in the range's document, it clearly isn't in the range.
+  if (rv == NS_ERROR_DOM_WRONG_DOCUMENT_ERR) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
   *aResult = compareResult == 0;
 
   return rv;
