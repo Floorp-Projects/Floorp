@@ -1619,12 +1619,16 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkStyle* style;
     GtkShadowType shadow_type = (checked)?GTK_SHADOW_IN:GTK_SHADOW_OUT;
     gint offset;
-    gint indicator_size = 8; /* it's a fixed value in gtk 2.2 */
+    gint indicator_size;
     gint x, y;
-    
+   
     moz_gtk_menu_item_paint(drawable, rect, cliprect, state);
     
     ensure_check_menu_item_widget();
+
+    gtk_widget_style_get (gCheckMenuItemWidget,
+                          "indicator-size", &indicator_size,
+                          NULL);
 
     if (checked || GTK_CHECK_MENU_ITEM(gCheckMenuItemWidget)->always_show_toggle) {
       style = gCheckMenuItemWidget->style;
