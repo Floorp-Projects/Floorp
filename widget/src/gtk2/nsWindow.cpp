@@ -613,16 +613,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
         return NS_OK;
 
     if (mIsTopLevel) {
-        if (mParent && mWindowType == eWindowType_popup) {
-            nsRect oldrect, newrect;
-            oldrect.x = aX;
-            oldrect.y = aY;
-            mParent->WidgetToScreen(oldrect, newrect);
-            gtk_window_move(GTK_WINDOW(mShell), newrect.x, newrect.y);
-        }
-        else {
-            gtk_window_move(GTK_WINDOW(mShell), aX, aY);
-        }
+        gtk_window_move(GTK_WINDOW(mShell), aX, aY);
     }
     else if (mDrawingarea) {
         moz_drawingarea_move(mDrawingarea, aX, aY);
@@ -2842,8 +2833,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
          aInitData->mWindowType == eWindowType_invisible) ?
         nsnull : aParent;
 
-    NS_ASSERTION(aInitData->mWindowType != eWindowType_popup ||
-                 !aParent, "Popups should not be hooked into nsIWidget hierarchy");
     NS_ASSERTION(!mWindowGroup, "already have window group (leaking it)");
 
     // initialize all the common bits of this class
@@ -2982,8 +2971,16 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
             }
         }
         else if (mWindowType == eWindowType_popup) {
-            mShell = gtk_window_new(GTK_WINDOW_POPUP);
-            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+            // treat popups with a parent as top level windows
+            if (mParent) {
+                mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", cBrand.get());
+                gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
+            }
+            else {
+                mShell = gtk_window_new(GTK_WINDOW_POPUP);
+                gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", cBrand.get());
+            }
 
             if (topLevelParent) {
                 gtk_window_set_transient_for(GTK_WINDOW(mShell),
@@ -3297,26 +3294,15 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     ResizeTransparencyBitmap(aWidth, aHeight);
 
     if (mIsTopLevel) {
-        if (mParent && mWindowType == eWindowType_popup) {
-            nsRect oldrect, newrect;
-            oldrect.x = aX;
-            oldrect.y = aY;
-            mParent->WidgetToScreen(oldrect, newrect);
-            moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
-            gtk_window_move(GTK_WINDOW(mShell), newrect.x, newrect.y);
-            gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
-        }
-        else {
-            // We only move the toplevel window if someone has
-            // actually placed the window somewhere.  If no placement
-            // has taken place, we just let the window manager Do The
-            // Right Thing.
-            if (mPlaced)
-                gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+        // We only move the toplevel window if someone has
+        // actually placed the window somewhere.  If no placement
+        // has taken place, we just let the window manager Do The
+        // Right Thing.
+        if (mPlaced)
+            gtk_window_move(GTK_WINDOW(mShell), aX, aY);
 
-            gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
-            moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
-        }
+        gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
+        moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
     }
     else if (mContainer) {
         GtkAllocation allocation;

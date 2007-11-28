@@ -59,10 +59,10 @@ enum nsViewVisibility {
 };
 
 // IID for the nsIView interface
-// 1b0215f7-f5d1-4574-9ab9-abdcceddb82e
+// 1377A30E-99E6-42FA-9A2E-EEEC6B31B7B6
 #define NS_IVIEW_IID    \
-{ 0x1b0215f7, 0xf5d1, 0x4574, \
-  { 0x9a, 0xb9, 0xab, 0xdc, 0xce, 0xdd, 0xb8, 0x2e } }
+{ 0x1377ae0e, 0x99e6, 0x42fa, \
+{ 0x9a, 0x2e, 0xee, 0xec, 0x6b, 0x31, 0xb7, 0xb6 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -281,6 +281,8 @@ public:
    * @param aWindowType is either content, UI or inherit from parent window.
    *        This is used to expose what type of window this is to 
    *        assistive technology like screen readers.
+   * @param aParentWidget alternative parent to aNative used for popups. Must
+   *        be null for non-popups.
    * @return error status
    */
   nsresult CreateWidget(const nsIID &aWindowIID,
@@ -288,7 +290,8 @@ public:
                         nsNativeWidget aNative = nsnull,
                         PRBool aEnableDragDrop = PR_TRUE,
                         PRBool aResetVisibility = PR_TRUE,
-                        nsContentType aWindowType = eContentTypeInherit);
+                        nsContentType aWindowType = eContentTypeInherit,
+                        nsIWidget* aParentWidget = nsnull);
 
   /**
    * In 4.0, the "cutout" nature of a view is queryable.

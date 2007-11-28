@@ -1366,9 +1366,10 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   DWORD extendedStyle = WindowExStyle();
 
   if (mWindowType == eWindowType_popup) {
-    NS_ASSERTION(!aParent, "Popups should not be hooked into the nsIWidget hierarchy");
-    // Don't set the parent of a popup window.
-    parent = NULL;
+    // if a parent was specified, don't use WS_EX_TOPMOST so that the popup
+    // only appears above the parent, instead of all windows
+    if (aParent)
+      extendedStyle = WS_EX_TOOLWINDOW;
   } else if (nsnull != aInitData) {
     // See if the caller wants to explictly set clip children and clip siblings
     if (aInitData->clipChildren) {
@@ -1750,7 +1751,8 @@ NS_METHOD nsWindow::Show(PRBool bState)
           // activate the popup or clicks will not be sent.
           flags |= SWP_NOACTIVATE;
 #endif
-          ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
+          HWND owner = ::GetWindow(mWnd, GW_OWNER);
+          ::SetWindowPos(mWnd, owner ? 0 : HWND_TOPMOST, 0, 0, 0, 0, flags);
         } else {
           ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
         }

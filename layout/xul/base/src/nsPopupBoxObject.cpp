@@ -175,7 +175,7 @@ nsPopupBoxObject::GetAutoPosition(PRBool* aShouldAutoPosition)
 {
   nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
   if (menuPopupFrame) {
-    menuPopupFrame->GetAutoPosition(aShouldAutoPosition);
+    *aShouldAutoPosition = menuPopupFrame->GetAutoPosition();
   }
 
   return NS_OK;
