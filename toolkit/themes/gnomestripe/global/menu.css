@@ -146,31 +146,12 @@ menulist > menupopup > menu {
   margin-bottom: 0px;
   -moz-margin-start: 6px;
   -moz-margin-end: 0px;
-  width: 8px;
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow.png");
+  width: 1ex;
+  height: 1ex;
+  /* These next two rules are needed to prevent inheritance and thus ugliness */
+  list-style-image: none;
   -moz-image-region: auto;
-}
-
-.menu-right[_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-hover.png");
-  -moz-image-region: auto;
-}
-
-.menu-right[disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-disabled.png");
-  -moz-image-region: auto;
-}
-
-.menu-right[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-rtl.png");
-}
-
-.menu-right[chromedir="rtl"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-hover-rtl.png");
-}
-
-.menu-right[chromedir="rtl"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-disabled-rtl.png");
+  -moz-appearance: menuarrow;
 }
 
 .menubar-left {
