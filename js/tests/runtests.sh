@@ -205,16 +205,17 @@ for testlogfile in $testlogfiles; do
     if [[ -n "$summary" ]]; then
 
         npass=`grep TEST_RESULT=PASSED ${outputprefix}-results-all.log | wc -l`
-        nfail=`wc -l ${outputprefix}-results-failures.log`
-        nfixes=`wc -l ${outputprefix}-results-possible-fixes.log`
-        nregressions=`wc -l ${outputprefix}-results-possible-regressions.log`
-        echo -e "\nJavaScript Test Failures:\n"
+        nfail=`cat ${outputprefix}-results-failures.log | wc -l`
+        nfixes=`cat ${outputprefix}-results-possible-fixes.log | wc -l`
+        nregressions=`cat ${outputprefix}-results-possible-regressions.log | wc -l`
+        echo -e "\nJavaScript Tests $branch $buildtype $testtype\n"
+        echo -e "\nFailures:\n"
         cat "${outputprefix}-results-failures.log"
-        echo -e "\nJavaScript Test Possible Fixes:\n"
+        echo -e "\nPossible Fixes:\n"
         cat "${outputprefix}-results-possible-fixes.log"
-        echo -e "\nJavaScript Test Possbile Regressions:\n"
+        echo -e "\nPossible Regressions:\n"
         cat "${outputprefix}-results-possible-regressions.log"
-        echo -e "\nTinderboxPrint: js tests $npass/$nfail<br/>F:$nfixes<br/>R:$nregressions"
+        echo -e "\nTinderboxPrint: js tests  $branch $buildtype $testtype $npass/$nfail<br/>F:$nfixes<br/>R:$nregressions"
 
     fi
 done
