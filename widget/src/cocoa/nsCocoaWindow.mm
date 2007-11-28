@@ -547,6 +547,14 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           postNotificationName:@"com.apple.HIToolbox.beginMenuTrackingNotification"
                         object:@"org.mozilla.gecko.PopupWindow"];
       }
+
+      // if a parent was supplied, set its child window. This will cause the
+      // child window to appear above the parent and move when the parent
+      // does. Setting this needs to happen after the _setWindowNumber calls
+      // above, otherwise the window doesn't focus properly.
+      if (nativeParentWindow)
+        [nativeParentWindow addChildWindow:mWindow
+                            ordered:NSWindowAbove];
     }
     else {
       mVisible = PR_TRUE;
@@ -624,8 +632,15 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // the NSApplication class (in header files generated using class-dump).
       // This workaround was "borrowed" from the Java Embedding Plugin (which
       // uses it for a different purpose).
-      if (mWindowType == eWindowType_popup)
+      if (mWindowType == eWindowType_popup) {
+        // remove the window as a child of its parent again. This will just
+        // do nothing if the popup was never added as a child.
+        if (nativeParentWindow)
+          [nativeParentWindow removeChildWindow:mWindow];
+
         [NSApp _removeWindowFromCache:mWindow];
+      }
+
       // it's very important to turn off mouse moved events when hiding a window, otherwise
       // the windows' tracking rects will interfere with each other. (bug 356528)
       [mWindow setAcceptsMouseMovedEvents:NO];
@@ -695,17 +710,6 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   if (!mWindow || (mBounds.x == aX && mBounds.y == aY))
     return NS_OK;
-
-  // if we're a popup, we have to convert from our parent widget's coord
-  // system to the global coord system first because the (x,y) we're given
-  // is in its coordinate system.
-  if (mParent && mWindowType == eWindowType_popup) {
-    nsRect globalRect;
-    nsRect localRect(aX, aY, 0, 0);
-    mParent->WidgetToScreen(localRect, globalRect);
-    aX = globalRect.x;
-    aY = globalRect.y;
-  }
 
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
