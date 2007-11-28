@@ -661,6 +661,16 @@ MarkIBSpecialPrevSibling(nsIFrame *aAnonymousFrame,
 
 // -----------------------------------------------------------
 
+static PRBool
+IsOutOfFlowList(nsIAtom* aListName)
+{
+  return
+    aListName == nsGkAtoms::floatList ||
+    aListName == nsGkAtoms::absoluteList ||
+    aListName == nsGkAtoms::overflowOutOfFlowList ||
+    aListName == nsGkAtoms::fixedList;
+}
+
 // Helper function that recursively removes content to frame mappings and
 // undisplayed content mappings.
 // This differs from DeletingFrameSubtree() because the frames have not yet been
@@ -8420,9 +8430,8 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
     sibling = placeholderFrame;
   }
 
-  // GetPrimaryFrameFor can unfortunately return a non-primary frame
-  // for a textnode if we have a floating first-letter.
-  sibling = sibling->GetFirstContinuation();
+  // The frame we have now should never be a continuation
+  NS_ASSERTION(!sibling->GetPrevContinuation(), "How did that happen?");
 
   if (aPrevSibling) {
     // The frame may be a special frame (a split inline frame that
@@ -9438,10 +9447,7 @@ DoDeletingFrameSubtree(nsFrameManager* aFrameManager,
     // a placeholder for.
     do {
       childListName = aFrame->GetAdditionalChildListName(childListIndex++);
-    } while (childListName == nsGkAtoms::floatList    ||
-             childListName == nsGkAtoms::absoluteList ||
-             childListName == nsGkAtoms::overflowOutOfFlowList ||
-             childListName == nsGkAtoms::fixedList);
+    } while (IsOutOfFlowList(childListName));
   } while (childListName);
 
   return NS_OK;
@@ -10933,7 +10939,8 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
                    kidFrame, aParentContent);
 #endif
             nsIFrame* matchingFrame =
-                FindFrameWithContent(aFrameManager, kidFrame,
+                FindFrameWithContent(aFrameManager,
+                                     nsPlaceholderFrame::GetRealFrameFor(kidFrame),
                                      aParentContent, aContent, nsnull);
 
             if (matchingFrame) {
@@ -10964,7 +10971,9 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
         aHint = nsnull;
         searchAgain = PR_TRUE;
       } else {
-        listName = aParentFrame->GetAdditionalChildListName(listIndex++);
+        do {
+          listName = aParentFrame->GetAdditionalChildListName(listIndex++);
+        } while (IsOutOfFlowList(listName));
       }
     } while(listName || searchAgain);
 
