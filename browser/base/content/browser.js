@@ -890,11 +890,6 @@ function delayedStartup()
     gURLBar.setAttribute("enablehistory", "false");
   }
 
-  if (gURLBar) {
-    gURLBar.addEventListener("dragover", URLBarOnDragOver, true);
-    gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
-  }
-
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
   window.addEventListener("keypress", ctrlNumberTabSelection, false);
@@ -2106,55 +2101,6 @@ function URLBarOnInput(evt)
   var ih = getIdentityHandler();
   if(ih._identityPopup)
     ih._identityPopup.hidePopup();
-}
-
-function URLBarOnDragOver(evt)
-{
-  nsDragAndDrop.dragOver(evt, urlbarObserver);
-}
-
-function URLBarOnDrop(evt)
-{
-  nsDragAndDrop.drop(evt, urlbarObserver);
-}
-
-var urlbarObserver = {
-  onDragOver: function ()
-    {
-      return true;
-    },
-  onDrop: function (aEvent, aXferData, aDragSession)
-    {
-      var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
-
-      // The URL bar automatically handles inputs with newline characters,
-      // so we can get away with treating text/x-moz-url flavours as text/unicode.
-      if (url) {
-        nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
-
-        try {
-          gURLBar.value = url;
-          const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
-          urlSecurityCheck(gURLBar.value,
-                           gBrowser.contentPrincipal,
-                           nsIScriptSecMan.DISALLOW_INHERIT_PRINCIPAL);
-          handleURLBarCommand();
-        } catch (ex) {}
-      }
-    },
-  getSupportedFlavours: function ()
-    {
-      var flavourSet = new FlavourSet();
-
-      // Favor text/x-moz-url since text/unicode coming from Win32 1.8 branch
-      // drops contains URL\ntext.  The previous comment here said that
-      // plain text drops often come with text/x-moz-url flavor, but I
-      // haven't seen that, so hopefully that behavior has changed.
-      flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("text/unicode");
-      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-      return flavourSet;
-    }
 }
 
 function BrowserImport()
