@@ -99,6 +99,7 @@
 #include "nsLayoutCID.h"
 #include "nsILanguageAtomService.h"
 #include "nsStyleSheetService.h"
+#include "nsXULPopupManager.h"
 
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
@@ -506,6 +507,7 @@ MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXUL
 MAKE_CTOR(CreateXULDocument,              nsIXULDocument,              NS_NewXULDocument)
 // NS_NewXULControllers
 // NS_NewXULPrototypeCache
+MAKE_CTOR(CreateXULPopupManager,      nsISupports,      NS_NewXULPopupManager)
 #endif
 #ifdef MOZ_XTF
 MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTFService)
@@ -1175,6 +1177,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XULTREEBUILDER_CID,
     "@mozilla.org/xul/xul-tree-builder;1",
     NS_NewXULTreeBuilder },
+
+  { "XUL Popup Manager",
+    NS_XULPOPUPMANAGER_CID,
+    "@mozilla.org/xul/xul-popup-manager;1",
+    CreateXULPopupManager },
 
   { "XUL Document",
     NS_XULDOCUMENT_CID,

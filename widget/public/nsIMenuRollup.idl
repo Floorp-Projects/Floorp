@@ -41,12 +41,15 @@
 #include "nsISupportsArray.idl"
 
 
-[uuid(05c48880-0fcf-11d4-bb6f-d9f289fe803c)]
+[uuid(10C69225-2C5A-4948-8690-0BC589D145B4)]
 interface nsIMenuRollup : nsISupports
 { 
   // Walks up the menu parent chain of a submenu pulling out the widgets and
   // places them into a list. Useful for determining if a click is in a
   // parent menu.
   nsISupportsArray GetSubmenuWidgetChain ( ) ;
-  
+
+  // adjust the position of any open popups when the position or size of a
+  // window has been changed.
+  void AdjustPopupsOnWindowChange ( );
 };
