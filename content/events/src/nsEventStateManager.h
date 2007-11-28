@@ -404,8 +404,8 @@ protected:
   // Recursion guard for tabbing
   PRPackedBool mTabbedThroughDocument;
 
-  //Hashtable for accesskey support
-  nsSupportsHashtable *mAccessKeys;
+  // Array for accesskey support
+  nsCOMArray<nsIContent> mAccessKeys;
 
   nsCOMArray<nsIDocShell> mTabbingFromDocShells;
 
