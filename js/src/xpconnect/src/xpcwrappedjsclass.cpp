@@ -117,6 +117,8 @@ JSBool xpc_IsReportableErrorCode(nsresult code)
         case NS_ERROR_XPC_JS_THREW_NULL:
         case NS_ERROR_XPC_JS_THREW_JS_OBJECT:
         case NS_ERROR_XPC_JS_THREW_NATIVE_OBJECT:
+        case NS_ERROR_XPC_JS_THREW_STRING:
+        case NS_ERROR_XPC_JS_THREW_NUMBER:
         case NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS:
         case NS_ERROR_XPC_JAVASCRIPT_ERROR:
             return JS_TRUE;
