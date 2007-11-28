@@ -2944,6 +2944,8 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     JS_ASSERT(!MAP_IS_NATIVE(map) || ((JSScope *)map)->object == obj);
     LOCKED_OBJ_SET_SLOT(obj, slot, JSVAL_VOID);
     if (map->freeslot == slot + 1) {
+        map->freeslot = slot;
+
         /* When shrinking ReallocSlots always returns true. */
         ReallocSlots(cx, obj, slot, JS_FALSE);
     }
