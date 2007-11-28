@@ -4241,25 +4241,23 @@ static const struct MidasCommand gMidasCommandTable[] = {
 
 #define MidasCommandCount ((sizeof(gMidasCommandTable) / sizeof(struct MidasCommand)) - 1)
 
-struct MidasParam {
-  const char*  incomingParamString;
-  const char*  internalParamString;
+static const char* const gBlocks[] = {
+  "ADDRESS",
+  "BLOCKQUOTE",
+  "DD",
+  "DIV",
+  "DL",
+  "DT",
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "P",
+  "PRE"
 };
 
-static const struct MidasParam gMidasParamTable[] = {
-  { "<P>",                "P" },
-  { "<H1>",               "H1" },
-  { "<H2>",               "H2" },
-  { "<H3>",               "H3" },
-  { "<H4>",               "H4" },
-  { "<H5>",               "H5" },
-  { "<H6>",               "H6" },
-  { "<PRE>",              "PRE" },
-  { "<ADDRESS>",          "ADDRESS" },
-  { NULL, NULL }
-};
-
-#define MidasParamCount ((sizeof(gMidasParamTable) / sizeof(struct MidasParam)) - 1)
 
 // this function will return false if the command is not recognized
 // inCommandID will be converted as necessary for internal operations
@@ -4323,23 +4321,29 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
         outParam.Truncate();
       }
       else {
-        NS_ConvertUTF16toUTF8 convertedParam(inParam);
-
         // check to see if we need to convert the parameter
         if (outCommandID.EqualsLiteral("cmd_paragraphState")) {
+          const PRUnichar *start = inParam.BeginReading();
+          const PRUnichar *end = inParam.EndReading();
+          if (start != end && *start == '<' && *(end - 1) == '>') {
+            ++start;
+            --end;
+          }
+
+          NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
           PRUint32 j;
-          for (j = 0; j < MidasParamCount; ++j) {
-            if (convertedParam.Equals(gMidasParamTable[j].incomingParamString,
+          for (j = 0; j < NS_ARRAY_LENGTH(gBlocks); ++j) {
+            if (convertedParam.Equals(gBlocks[j],
                                       nsCaseInsensitiveCStringComparator())) {
-              outParam.Assign(gMidasParamTable[j].internalParamString);
+              outParam.Assign(gBlocks[j]);
               break;
             }
           }
 
-          return j != MidasParamCount;
+          return j != NS_ARRAY_LENGTH(gBlocks);
         }
         else {
-          outParam.Assign(convertedParam);
+          CopyUTF16toUTF8(inParam, outParam);
         }
       }
     }
