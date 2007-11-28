@@ -1625,7 +1625,8 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
   if (op < SVG_OPERATOR_OVER || op > SVG_OPERATOR_XOR) {
     return NS_ERROR_FAILURE;
   }
-  gfxContext::GraphicsOperator opMap[] = { gfxContext::OPERATOR_DEST,
+  static const gfxContext::GraphicsOperator opMap[] = {
+                                           gfxContext::OPERATOR_DEST,
                                            gfxContext::OPERATOR_OVER,
                                            gfxContext::OPERATOR_IN,
                                            gfxContext::OPERATOR_OUT,
