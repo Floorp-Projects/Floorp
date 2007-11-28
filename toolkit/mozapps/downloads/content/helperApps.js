@@ -36,7 +36,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+
 var gRDF;    
+
+const CLASS_MIMEINFO        = "mimetype";
+const CLASS_PROTOCOLINFO    = "scheme";
+
+// namespace prefix
+const NC_NS                 = "http://home.netscape.com/NC-rdf#";
+
+// type list properties
+
+const NC_MIME_TYPES         = NC_NS + "MIME-types";
+const NC_PROTOCOL_SCHEMES   = NC_NS + "Protocol-Schemes";
 
 ///////////////////////////////////////////////////////////////////////////////
 // MIME Types DataSource Wrapper
@@ -616,17 +630,10 @@ HandlerOverride.prototype = {
     var helperAppResource = gRDF.GetUnicodeResource(APP_URI(this.mimeType));
     this._DS.Assert(handlerResource, helperAppProperty, helperAppResource, true);
     // add the mime type to the MIME types seq
-    var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance();
-    if (container) {
-      container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
-      if (container) {
-        var containerRes = gRDF.GetUnicodeResource("urn:mimetypes:root");
-        container.Init(this._DS, containerRes);
-        var element = gRDF.GetUnicodeResource(MIME_URI(this.mimeType));
-        if (container.IndexOf(element) == -1)
-          container.AppendElement(element);
-      }
-    }
+    var container = this.ensureAndGetTypeList("mimetype");
+    var element = gRDF.GetUnicodeResource(MIME_URI(this.mimeType));
+    if (container.IndexOf(element) == -1)
+      container.AppendElement(element);
   }, 
   
   // Implementation helper methods
@@ -698,6 +705,43 @@ HandlerOverride.prototype = {
     var valueProperty = gRDF.GetUnicodeResource(NC_URI(aPropertyString));
     var mimeLiteral = gRDF.GetLiteral(aValueString);
     this._DS.Unassert(mimeSource, valueProperty, mimeLiteral, true);
+  },
+
+  /**
+   * Get the list of types for the given class, creating the list if it doesn't
+   * already exist. The class can be either CLASS_MIMEINFO or CLASS_PROTOCOLINFO
+   * (i.e. the result of a call to _getClass).
+   * 
+   * |urn:<class>s|
+   * |urn:<class>s:root|
+   * 
+   * @param aClass {string} the class for which to retrieve a list of types
+   *
+   * @returns {nsIRDFContainer} the list of types
+   */
+  ensureAndGetTypeList: function (aClass) {
+    var source = gRDF.GetResource("urn:" + aClass + "s");
+    var property =
+      gRDF.GetResource(aClass == CLASS_MIMEINFO ? NC_MIME_TYPES
+                                                : NC_PROTOCOL_SCHEMES);
+    var target = gRDF.GetResource("urn:" + aClass + "s:root");
+
+    // Make sure we have an arc from the source to the target.
+    if (!this._DS.HasAssertion(source, property, target, true))
+      this._DS.Assert(source, property, target, true);
+
+    // Make sure the target is a container.
+    var containerUtils = Cc["@mozilla.org/rdf/container-utils;1"]
+                            .getService(Ci.nsIRDFContainerUtils);
+    if (!containerUtils.IsContainer(this._DS, target))
+      containerUtils.MakeSeq(this._DS, target);
+
+    // Get the type list as an RDF container.
+    var typeList =
+          Cc["@mozilla.org/rdf/container;1"].createInstance(Ci.nsIRDFContainer);
+    typeList.Init(this._DS, target);
+
+    return typeList;
   }
 };
 
