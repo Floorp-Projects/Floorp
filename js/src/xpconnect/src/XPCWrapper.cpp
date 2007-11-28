@@ -637,8 +637,6 @@ XPCWrapper::NativeToString(JSContext *cx, XPCWrappedNative *wrappedNative,
         return JS_FALSE;
       }
     } else {
-      resultString.AppendLiteral("[object XPCCrossOriginWrapper ");
-
       wrapperStr = wrappedNative->ToString(ccx);
       if (!wrapperStr) {
         return JS_FALSE;
@@ -648,7 +646,9 @@ XPCWrapper::NativeToString(JSContext *cx, XPCWrappedNative *wrappedNative,
     resultString.AppendASCII(wrapperStr);
     JS_smprintf_free(wrapperStr);
 
-    resultString.Append(']');
+    if (isNativeWrapper) {
+      resultString.Append(']');
+    }
 
     str = ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>
                                                     (resultString.get()),
