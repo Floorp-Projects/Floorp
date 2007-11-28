@@ -407,8 +407,8 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc)
     SIZE itemSize;
     getThemePartSize(theme, hdc, MENU_POPUPITEM, MPI_NORMAL, NULL, TS_TRUE, &itemSize);
 
-    int width = max(itemSize.cx, checkboxSize.cx + gutterSize.cx);
-    int height = max(itemSize.cy, checkboxSize.cy);
+    int width = PR_MAX(itemSize.cx, checkboxSize.cx + gutterSize.cx);
+    int height = PR_MAX(itemSize.cy, checkboxSize.cy);
     SIZE ret;
     ret.cx = width;
     ret.cy = height;
