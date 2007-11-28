@@ -71,7 +71,6 @@ use strict;
 
 use vars qw($MAR_BIN $MBSDIFF_BIN $MAKE_BIN
             $INCREMENTAL_UPDATE_BIN $UNWRAP_FULL_UPDATE_BIN
-            $FAST_INCREMENTAL_UPDATE_BIN
             $TMPDIR_PREFIX 
             %BOUNCER_PLATFORMS %AUS2_PLATFORMS
             $DEFAULT_PARTIAL_MAR_OUTPUT_FILE
@@ -82,7 +81,6 @@ $MAR_BIN = 'dist/host/bin/mar';
 $MBSDIFF_BIN = 'dist/host/bin/mbsdiff';
 
 $INCREMENTAL_UPDATE_BIN = 'tools/update-packaging/make_incremental_update.sh';
-$FAST_INCREMENTAL_UPDATE_BIN = 'tools/update-packaging/make_incremental_updates.py';
 $UNWRAP_FULL_UPDATE_BIN = 'tools/update-packaging/unwrap_full_update.pl';
 
 $MAKE_BIN = '/usr/bin/make';
@@ -163,7 +161,6 @@ sub ValidateToolsDirectory
     return (-d $binPrefix and
             -x "$binPrefix/$MAR_BIN" and
             -x "$binPrefix/$MBSDIFF_BIN" and
-            -x "$binPrefix/$FAST_INCREMENTAL_UPDATE_BIN" and
             -x "$binPrefix/$INCREMENTAL_UPDATE_BIN" and
             -x "$binPrefix/$UNWRAP_FULL_UPDATE_BIN");
 }
