@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -407,24 +408,26 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
   if (argc > 0) {
     // The first (optional) parameter is the text of the option
     JSString* jsstr = JS_ValueToString(aContext, argv[0]);
-    if (jsstr) {
-      // Create a new text node and append it to the option
-      nsCOMPtr<nsIContent> textContent;
-      result = NS_NewTextNode(getter_AddRefs(textContent),
-                              mNodeInfo->NodeInfoManager());
-      if (NS_FAILED(result)) {
-        return result;
-      }
+    if (!jsstr) {
+      return NS_ERROR_FAILURE;
+    }
 
-      textContent->SetText(reinterpret_cast<const PRUnichar*>
-                                           (JS_GetStringChars(jsstr)),
-                           JS_GetStringLength(jsstr),
-                           PR_FALSE);
-      
-      result = AppendChildTo(textContent, PR_FALSE);
-      if (NS_FAILED(result)) {
-        return result;
-      }
+    // Create a new text node and append it to the option
+    nsCOMPtr<nsIContent> textContent;
+    result = NS_NewTextNode(getter_AddRefs(textContent),
+                            mNodeInfo->NodeInfoManager());
+    if (NS_FAILED(result)) {
+      return result;
+    }
+
+    textContent->SetText(reinterpret_cast<const PRUnichar*>
+                                         (JS_GetStringChars(jsstr)),
+                         JS_GetStringLength(jsstr),
+                         PR_FALSE);
+    
+    result = AppendChildTo(textContent, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return result;
     }
 
     if (argc > 1) {
