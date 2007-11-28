@@ -159,15 +159,8 @@
         ]]></getter>
       </property>
 
-      <property name="searchButton" readonly="true">
-        <getter><![CDATA[
-          if (!this._searchButton) {
-            this._searchButton = document.getAnonymousElementByAttribute(
-                                            this, "anonid", "searchbar-engine-button");
-          }
-          return this._searchButton;
-        ]]></getter>
-      </property>
+      <field name="searchButton">document.getAnonymousElementByAttribute(this,
+          "anonid", "searchbar-engine-button");</field>
 
       <property name="currentEngine"
                 onset="this.searchService.currentEngine = val; return val;">
