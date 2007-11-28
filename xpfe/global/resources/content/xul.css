@@ -770,6 +770,17 @@ scale {
   -moz-user-focus: normal;
 }
 
+scrollbarbutton[sbattr="scrollbar-up-top"]:not(:-moz-system-metric(scrollbar-start-backward)),
+scrollbarbutton[sbattr="scrollbar-down-top"]:not(:-moz-system-metric(scrollbar-start-forward)),
+scrollbarbutton[sbattr="scrollbar-up-bottom"]:not(:-moz-system-metric(scrollbar-end-backward)),
+scrollbarbutton[sbattr="scrollbar-down-bottom"]:not(:-moz-system-metric(scrollbar-end-forward)) {
+  display: none;
+}
+
+thumb[sbattr="scrollbar-thumb"]:-moz-system-metric(scrollbar-thumb-proportional) {
+  -moz-box-flex: 1;
+}
+
 /******** scrollbox ********/
 
 scrollbox {
