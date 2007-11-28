@@ -110,11 +110,13 @@ NSSCleanupAutoPtrClass(NSSCMSSignedData, NSS_CMSSignedData_Destroy)
 
 /* nsNSSCertificate */
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSCertificate, nsIX509Cert,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsNSSCertificate, nsIX509Cert,
                                                 nsIX509Cert2,
                                                 nsIX509Cert3,
                                                 nsIIdentityInfo,
-                                                nsISMimeCert)
+                                                nsISMimeCert,
+                                                nsISerializable,
+                                                nsIClassInfo)
 
 nsNSSCertificate*
 nsNSSCertificate::ConstructFromDER(char *certDER, int derLen)
