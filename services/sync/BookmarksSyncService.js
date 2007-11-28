@@ -72,22 +72,6 @@ BookmarksSyncService.prototype = {
     return this.__bms;
   },
 
-  __hsvc: null,
-  get _hsvc() {
-    if (!this.__hsvc)
-      this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                    getService(Ci.nsINavHistoryService);
-    return this.__hsvc;
-  },
-
-  __ans: null,
-  get _ans() {
-    if (!this.__ans)
-      this.__ans = Cc["@mozilla.org/browser/annotation-service;1"].
-                   getService(Ci.nsIAnnotationService);
-    return this.__ans;
-  },
-
   __ts: null,
   get _ts() {
     if (!this.__ts)
@@ -135,11 +119,18 @@ BookmarksSyncService.prototype = {
     return this.__dav;
   },
 
-  __se: null,
-  get _se() {
-    if (!this.__se)
-      this.__se = new BookmarksSyncEngine();
-    return this.__se;
+  __sync: null,
+  get _sync() {
+    if (!this.__sync)
+      this.__sync = new BookmarksSyncCore();
+    return this.__sync;
+  },
+
+  __store: null,
+  get _store() {
+    if (!this.__store)
+      this.__store = new BookmarksStore();
+    return this.__store;
   },
 
   // Logger object
@@ -449,59 +440,6 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  _wrapNode: function BSS__wrapNode(node) {
-    var items = {};
-    this._wrapNodeInternal(node, items, null, null);
-    return items;
-  },
-
-  _wrapNodeInternal: function BSS__wrapNodeInternal(node, items, parentGUID, index) {
-    let GUID = this._bms.getItemGUID(node.itemId);
-    let item = {parentGUID: parentGUID,
-                index: index};
-
-    if (node.type == node.RESULT_TYPE_FOLDER) {
-      if (this._ls.isLivemark(node.itemId)) {
-        item.type = "livemark";
-        let siteURI = this._ls.getSiteURI(node.itemId);
-        let feedURI = this._ls.getFeedURI(node.itemId);
-        item.siteURI = siteURI? siteURI.spec : "";
-        item.feedURI = feedURI? feedURI.spec : "";
-      } else {
-        item.type = "folder";
-        node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-        node.containerOpen = true;
-        for (var i = 0; i < node.childCount; i++) {
-          this._wrapNodeInternal(node.getChild(i), items, GUID, i);
-        }
-      }
-      item.title = node.title;
-    } else if (node.type == node.RESULT_TYPE_URI ||
-               node.type == node.RESULT_TYPE_QUERY) {
-      if (this._ms.hasMicrosummary(node.itemId)) {
-        item.type = "microsummary";
-        let micsum = this._ms.getMicrosummary(node.itemId);
-        item.generatorURI = micsum.generator.uri.spec; // breaks local generators
-      } else if (node.type == node.RESULT_TYPE_QUERY) {
-        item.type = "query";
-        item.title = node.title;
-      } else {
-        item.type = "bookmark";
-        item.title = node.title;
-      }
-      item.URI = node.uri;
-      item.tags = this._ts.getTagsForURI(makeURI(node.uri));
-      item.keyword = this._bms.getKeywordForBookmark(node.itemId);
-    } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
-      item.type = "separator";
-    } else {
-      this._log.warn("Warning: unknown item type, cannot serialize: " + node.type);
-      return;
-    }
-
-    items[GUID] = item;
-  },
-
   _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
     for (let i = 0; i < commands.length; i++) {
       this._log.debug("Applying cmd to obj: " + uneval(commands[i]));
@@ -537,204 +475,6 @@ BookmarksSyncService.prototype = {
     return obj;
   },
 
-  // Applies commands to the places db
-  _applyCommands: function BSS__applyCommands(commandList) {
-    for (var i = 0; i < commandList.length; i++) {
-      var command = commandList[i];
-      this._log.debug("Processing command: " + uneval(command));
-      switch (command["action"]) {
-      case "create":
-        this._createCommand(command);
-        break;
-      case "remove":
-        this._removeCommand(command);
-        break;
-      case "edit":
-        this._editCommand(command);
-        break;
-      default:
-        this._log.error("unknown action in command: " + command["action"]);
-        break;
-      }
-    }
-  },
-
-  _createCommand: function BSS__createCommand(command) {
-    let newId;
-    let parentId = this._bms.getItemIdForGUID(command.data.parentGUID);
-
-    if (parentId < 0) {
-      this._log.warn("Creating node with unknown parent -> reparenting to root");
-      parentId = this._bms.bookmarksMenuFolder;
-    }
-
-    switch (command.data.type) {
-    case "query":
-    case "bookmark":
-    case "microsummary":
-      this._log.info(" -> creating bookmark \"" + command.data.title + "\"");
-      let URI = makeURI(command.data.URI);
-      newId = this._bms.insertBookmark(parentId,
-                                       URI,
-                                       command.data.index,
-                                       command.data.title);
-      this._ts.untagURI(URI, null);
-      this._ts.tagURI(URI, command.data.tags);
-      this._bms.setKeywordForBookmark(newId, command.data.keyword);
-
-      if (command.data.type == "microsummary") {
-        this._log.info("   \-> is a microsummary");
-        let genURI = makeURI(command.data.generatorURI);
-        try {
-          let micsum = this._ms.createMicrosummary(URI, genURI);
-          this._ms.setMicrosummary(newId, micsum);
-        }
-        catch(ex) { /* ignore "missing local generator" exceptions */ }
-      }
-      break;
-    case "folder":
-      this._log.info(" -> creating folder \"" + command.data.title + "\"");
-      newId = this._bms.createFolder(parentId,
-                                     command.data.title,
-                                     command.data.index);
-      break;
-    case "livemark":
-      this._log.info(" -> creating livemark \"" + command.data.title + "\"");
-      newId = this._ls.createLivemark(parentId,
-                                      command.data.title,
-                                      makeURI(command.data.siteURI),
-                                      makeURI(command.data.feedURI),
-                                      command.data.index);
-      break;
-    case "separator":
-      this._log.info(" -> creating separator");
-      newId = this._bms.insertSeparator(parentId, command.data.index);
-      break;
-    default:
-      this._log.error("_createCommand: Unknown item type: " + command.data.type);
-      break;
-    }
-    if (newId)
-      this._bms.setItemGUID(newId, command.GUID);
-  },
-
-  _removeCommand: function BSS__removeCommand(command) {
-    var itemId = this._bms.getItemIdForGUID(command.GUID);
-    if (itemId < 0) {
-      this._log.warn("Attempted to remove item " + command.GUID +
-                     ", but it does not exist.  Skipping.");
-      return;
-    }
-    var type = this._bms.getItemType(itemId);
-
-    switch (type) {
-    case this._bms.TYPE_BOOKMARK:
-      this._log.info("  -> removing bookmark " + command.GUID);
-      this._bms.removeItem(itemId);
-      break;
-    case this._bms.TYPE_FOLDER:
-      this._log.info("  -> removing folder " + command.GUID);
-      this._bms.removeFolder(itemId);
-      break;
-    case this._bms.TYPE_SEPARATOR:
-      this._log.info("  -> removing separator " + command.GUID);
-      this._bms.removeItem(itemId);
-      break;
-    default:
-      this._log.error("removeCommand: Unknown item type: " + type);
-      break;
-    }
-  },
-
-  _editCommand: function BSS__editCommand(command) {
-    var itemId = this._bms.getItemIdForGUID(command.GUID);
-    if (itemId < 0) {
-      this._log.warn("Item for GUID " + command.GUID + " not found.  Skipping.");
-      return;
-    }
-
-    for (let key in command.data) {
-      switch (key) {
-      case "GUID":
-        var existing = this._bms.getItemIdForGUID(command.data.GUID);
-        if (existing < 0)
-          this._bms.setItemGUID(itemId, command.data.GUID);
-        else
-          this._log.warn("Can't change GUID " + command.GUID +
-                         " to " + command.data.GUID + ": GUID already exists.");
-        break;
-      case "title":
-        this._bms.setItemTitle(itemId, command.data.title);
-        break;
-      case "URI":
-        this._bms.changeBookmarkURI(itemId, makeURI(command.data.URI));
-        break;
-      case "index":
-        this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
-                           command.data.index);
-        break;
-      case "parentGUID":
-        let index = -1;
-        if (command.data.index && command.data.index >= 0)
-          index = command.data.index;
-        this._bms.moveItem(
-          itemId, this._bms.getItemIdForGUID(command.data.parentGUID), index);
-        break;
-      case "tags":
-        let tagsURI = this._bms.getBookmarkURI(itemId);
-        this._ts.untagURI(URI, null);
-        this._ts.tagURI(tagsURI, command.data.tags);
-        break;
-      case "keyword":
-        this._bms.setKeywordForBookmark(itemId, command.data.keyword);
-        break;
-      case "generatorURI":
-        let micsumURI = makeURI(this._bms.getBookmarkURI(itemId));
-        let genURI = makeURI(command.data.generatorURI);
-        let micsum = this._ms.createMicrosummary(micsumURI, genURI);
-        this._ms.setMicrosummary(itemId, micsum);
-        break;
-      case "siteURI":
-        this._ls.setSiteURI(itemId, makeURI(command.data.siteURI));
-        break;
-      case "feedURI":
-        this._ls.setFeedURI(itemId, makeURI(command.data.feedURI));
-        break;
-      default:
-        this._log.warn("Can't change item property: " + key);
-        break;
-      }
-    }
-  },
-
-  _getFolderNodes: function BSS__getFolderNodes(folder) {
-    let query = this._hsvc.getNewQuery();
-    query.setFolders([folder], 1);
-    return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
-  },
-
-  _getWrappedBookmarks: function BSS__getWrappedBookmarks(folder) {
-    return this._wrapNode(this._getFolderNodes(folder));
-  },
-
-  _getBookmarks: function BSS__getBookmarks() {
-    let filed = this._getWrappedBookmarks(this._bms.bookmarksMenuFolder);
-    let toolbar = this._getWrappedBookmarks(this._bms.toolbarFolder);
-    let unfiled = this._getWrappedBookmarks(this._bms.unfiledBookmarksFolder);
-
-    for (let guid in unfiled) {
-      if (!(guid in filed))
-        filed[guid] = unfiled[guid];
-    }
-
-    for (let guid in toolbar) {
-      if (!(guid in filed))
-        filed[guid] = toolbar[guid];
-    }
-
-    return filed; // (combined)
-  },
-
   _mungeNodes: function BSS__mungeNodes(nodes) {
     let json = uneval(nodes);
     json = json.replace(/:{type/g, ":\n\t{type");
@@ -762,8 +502,6 @@ BookmarksSyncService.prototype = {
     return json;
   },
 
-  // IBookmarksSyncService internal implementation
-
   _lock: function BSS__lock() {
     if (this._locked) {
       this._log.warn("Service lock failed: already locked");
@@ -778,6 +516,8 @@ BookmarksSyncService.prototype = {
     this._locked = false;
     this._log.debug("Service lock released");
   },
+
+  // IBookmarksSyncService internal implementation
 
   _login: function BSS__login(onComplete) {
     let [self, cont] = yield;
@@ -894,8 +634,8 @@ BookmarksSyncService.prototype = {
 
       // 2) Generate local deltas from snapshot -> current client status
 
-      let localJson = this._getBookmarks();
-      this._se.detectUpdates(cont, this._snapshot, localJson);
+      let localJson = this._store.wrap();
+      this._sync.detectUpdates(cont, this._snapshot, localJson);
       let localUpdates = yield;
 
       this._log.debug("local json:\n" + this._mungeNodes(localJson));
@@ -912,7 +652,7 @@ BookmarksSyncService.prototype = {
       // 3) Reconcile client/server deltas and generate new deltas for them.
 
       this._log.info("Reconciling client/server updates");
-      this._se.reconcile(cont, localUpdates, server.updates);
+      this._sync.reconcile(cont, localUpdates, server.updates);
       let ret = yield;
 
       let clientChanges = ret.propagations[0];
@@ -955,10 +695,10 @@ BookmarksSyncService.prototype = {
 
         this._snapshot = this._applyCommandsToObj(clientChanges, localJson);
         this._snapshotVersion = server.maxVersion;
-        this._applyCommands(clientChanges);
-        newSnapshot = this._getBookmarks();
+        this._store.applyCommands(clientChanges);
+        newSnapshot = this._store.wrap();
 
-        this._se.detectUpdates(cont, this._snapshot, newSnapshot);
+        this._sync.detectUpdates(cont, this._snapshot, newSnapshot);
         let diff = yield;
         if (diff.length != 0) {
           this._log.warn("Commands did not apply correctly");
@@ -979,8 +719,8 @@ BookmarksSyncService.prototype = {
       // current client snapshot.  In the case where there are no
       // conflicts, it should be the same as what the resolver returned
 
-      newSnapshot = this._getBookmarks();
-      this._se.detectUpdates(cont, server.snapshot, newSnapshot);
+      newSnapshot = this._store.wrap();
+      this._sync.detectUpdates(cont, server.snapshot, newSnapshot);
       let serverDelta = yield;
 
       // Log an error if not the same
@@ -1075,26 +815,6 @@ BookmarksSyncService.prototype = {
     this._log.warn("generator not properly closed");
   },
 
-  _resetGUIDs: function BSS__resetGUIDs() {
-    this._resetGUIDsInt(this._getFolderNodes(this._bms.bookmarksMenuFolder));
-    this._resetGUIDsInt(this._getFolderNodes(this._bms.toolbarFolder));
-    this._resetGUIDsInt(this._getFolderNodes(this._bms.unfiledBookmarksFolder));
-  },
-
-  _resetGUIDsInt: function BSS__resetGUIDsInt(node) {
-    if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
-      this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
-
-    if (node.type == node.RESULT_TYPE_FOLDER &&
-        !this._ls.isLivemark(node.itemId)) {
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      node.containerOpen = true;
-      for (var i = 0; i < node.childCount; i++) {
-        this._resetGUIDsInt(node.getChild(i));
-      }
-    }
-  },
-
   _checkStatus: function BSS__checkStatus(code, msg) {
     if (code >= 200 && code < 300)
       return;
@@ -1185,7 +905,7 @@ BookmarksSyncService.prototype = {
         if (status.GUID != this._snapshotGUID) {
           this._log.info("Remote/local sync GUIDs do not match.  " +
                       "Forcing initial sync.");
-          this._resetGUIDs();
+          this._store.resetGUIDs();
           this._snapshot = {};
           this._snapshotVersion = -1;
           this._snapshotGUID = status.GUID;
@@ -1247,14 +967,14 @@ BookmarksSyncService.prototype = {
         ret.deltasEncryption = status.deltasEncryption;
         ret.snapshot = snap;
         ret.deltas = allDeltas;
-        this._se.detectUpdates(cont, this._snapshot, snap);
+        this._sync.detectUpdates(cont, this._snapshot, snap);
         ret.updates = yield;
         break;
   
       case 404:
         this._log.info("Server has no status file, Initial upload to server");
   
-        this._snapshot = this._getBookmarks();
+        this._snapshot = this._store.wrap();
         this._snapshotVersion = 0;
         this._snapshotGUID = null; // in case there are other snapshots out there
 
@@ -1563,27 +1283,27 @@ BookmarksSyncService.prototype = {
 };
 
 /*
- * SyncEngine objects
- * Sync engines deal with diff creation and conflict resolution.
+ * SyncCore objects
+ * Sync cores deal with diff creation and conflict resolution.
  * Tree data structures where all nodes have GUIDs only need to be
  * subclassed for each data type to implement commandLike and
  * itemExists.
  */
 
-function SyncEngine() {
+function SyncCore() {
   this._init();
 }
-SyncEngine.prototype = {
+SyncCore.prototype = {
   _logName: "Sync",
 
-  _init: function SE__init() {
+  _init: function SC__init() {
     let logSvc = Cc["@mozilla.org/log4moz/service;1"].
       getService(Ci.ILog4MozService);
     this._log = logSvc.getLogger("Service." + this._logName);
   },
 
   // FIXME: this won't work for deep objects, or objects with optional properties
-  _getEdits: function SE__getEdits(a, b) {
+  _getEdits: function SC__getEdits(a, b) {
     let ret = {numProps: 0, props: {}};
     for (prop in a) {
       if (!deepEquals(a[prop], b[prop])) {
@@ -1594,18 +1314,18 @@ SyncEngine.prototype = {
     return ret;
   },
 
-  _nodeParents: function SE__nodeParents(GUID, tree) {
+  _nodeParents: function SC__nodeParents(GUID, tree) {
     return this._nodeParentsInt(GUID, tree, []);
   },
 
-  _nodeParentsInt: function SE__nodeParentsInt(GUID, tree, parents) {
+  _nodeParentsInt: function SC__nodeParentsInt(GUID, tree, parents) {
     if (!tree[GUID] || !tree[GUID].parentGUID)
       return parents;
     parents.push(tree[GUID].parentGUID);
     return this._nodeParentsInt(tree[GUID].parentGUID, tree, parents);
   },
 
-  _detectUpdates: function SE__detectUpdates(onComplete, a, b) {
+  _detectUpdates: function SC__detectUpdates(onComplete, a, b) {
     let [self, cont] = yield;
     let listener = new EventListener(cont);
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -1667,7 +1387,7 @@ SyncEngine.prototype = {
     this._log.warn("generator not properly closed");
   },
 
-  _commandLike: function SE__commandLike(a, b) {
+  _commandLike: function SC__commandLike(a, b) {
     // Check that neither command is null, and verify that the GUIDs
     // are different (otherwise we need to check for edits)
     if (!a || !b || a.GUID == b.GUID)
@@ -1689,7 +1409,7 @@ SyncEngine.prototype = {
   // When we change the GUID of a local item (because we detect it as
   // being the same item as a remote one), we need to fix any other
   // local items that have it as their parent
-  _fixParents: function SE__fixParents(list, oldGUID, newGUID) {
+  _fixParents: function SC__fixParents(list, oldGUID, newGUID) {
     for (let i = 0; i < list.length; i++) {
       if (!list[i])
         continue;
@@ -1702,13 +1422,13 @@ SyncEngine.prototype = {
     }
   },
 
-  _conflicts: function SE__conflicts(a, b) {
+  _conflicts: function SC__conflicts(a, b) {
     if ((a.GUID == b.GUID) && !deepEquals(a, b))
       return true;
     return false;
   },
 
-  _getPropagations: function SE__getPropagations(commands, conflicts, propagations) {
+  _getPropagations: function SC__getPropagations(commands, conflicts, propagations) {
     for (let i = 0; i < commands.length; i++) {
       let alsoConflicts = function(elt) {
         return (elt.action == "create" || elt.action == "remove") &&
@@ -1725,12 +1445,12 @@ SyncEngine.prototype = {
     }
   },
 
-  _itemExists: function SE__itemExists(GUID) {
+  _itemExists: function SC__itemExists(GUID) {
     this._log.error("itemExists needs to be subclassed");
     return false;
   },
 
-  _reconcile: function SE__reconcile(onComplete, listA, listB) {
+  _reconcile: function SC__reconcile(onComplete, listA, listB) {
     let [self, cont] = yield;
     let listener = new EventListener(cont);
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -1809,19 +1529,19 @@ SyncEngine.prototype = {
 
   // Public methods
 
-  detectUpdates: function SE_detectUpdates(onComplete, a, b) {
+  detectUpdates: function SC_detectUpdates(onComplete, a, b) {
     return this._detectUpdates.async(this, onComplete, a, b);
   },
 
-  reconcile: function SE_reconcile(onComplete, listA, listB) {
+  reconcile: function SC_reconcile(onComplete, listA, listB) {
     return this._reconcile.async(this, onComplete, listA, listB);
   }
 };
 
-function BookmarksSyncEngine() {
+function BookmarksSyncCore() {
   this._init();
 }
-BookmarksSyncEngine.prototype = {
+BookmarksSyncCore.prototype = {
   _logName: "BMSync",
 
   __bms: null,
@@ -1833,11 +1553,11 @@ BookmarksSyncEngine.prototype = {
   },
 
   // NOTE: Needs to be subclassed
-  _itemExists: function BSE__itemExists(GUID) {
+  _itemExists: function BSC__itemExists(GUID) {
     return this._bms.getItemIdForGUID(GUID) >= 0;
   },
 
-  commandLike: function BCC_commandLike(a, b) {
+  commandLike: function BSC_commandLike(a, b) {
     // Check that neither command is null, that their actions, types,
     // and parents are the same, and that they don't have the same
     // GUID.
@@ -1894,7 +1614,357 @@ BookmarksSyncEngine.prototype = {
     }
   }
 };
-BookmarksSyncEngine.prototype.__proto__ = new SyncEngine();
+BookmarksSyncCore.prototype.__proto__ = new SyncCore();
+
+/*
+ * Data Stores
+ * These can wrap, serialize items and apply commands
+ */
+
+function Store() {
+  this._init();
+}
+Store.prototype = {
+  _logName: "Store",
+
+  _init: function Store__init() {
+    let logSvc = Cc["@mozilla.org/log4moz/service;1"].
+      getService(Ci.ILog4MozService);
+    this._log = logSvc.getLogger("Service." + this._logName);
+  },
+
+  wrap: function Store_wrap() {
+  },
+
+  applyCommands: function Store_applyCommands(commandList) {
+  }
+};
+
+function BookmarksStore() {
+  this._init();
+}
+BookmarksStore.prototype = {
+  _logName: "BStore",
+
+  __bms: null,
+  get _bms() {
+    if (!this.__bms)
+      this.__bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                   getService(Ci.nsINavBookmarksService);
+    return this.__bms;
+  },
+
+  __hsvc: null,
+  get _hsvc() {
+    if (!this.__hsvc)
+      this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                    getService(Ci.nsINavHistoryService);
+    return this.__hsvc;
+  },
+
+  __ls: null,
+  get _ls() {
+    if (!this.__ls)
+      this.__ls = Cc["@mozilla.org/browser/livemark-service;2"].
+        getService(Ci.nsILivemarkService);
+    return this.__ls;
+  },
+
+  __ms: null,
+  get _ms() {
+    if (!this.__ms)
+      this.__ms = Cc["@mozilla.org/microsummary/service;1"].
+        getService(Ci.nsIMicrosummaryService);
+    return this.__ms;
+  },
+
+  __ts: null,
+  get _ts() {
+    if (!this.__ts)
+      this.__ts = Cc["@mozilla.org/browser/tagging-service;1"].
+                  getService(Ci.nsITaggingService);
+    return this.__ts;
+  },
+
+  __ans: null,
+  get _ans() {
+    if (!this.__ans)
+      this.__ans = Cc["@mozilla.org/browser/annotation-service;1"].
+                   getService(Ci.nsIAnnotationService);
+    return this.__ans;
+  },
+
+  _getFolderNodes: function BSS__getFolderNodes(folder) {
+    let query = this._hsvc.getNewQuery();
+    query.setFolders([folder], 1);
+    return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
+  },
+
+  _wrapNode: function BSS__wrapNode(node) {
+    var items = {};
+    this._wrapNodeInternal(node, items, null, null);
+    return items;
+  },
+
+  _wrapNodeInternal: function BSS__wrapNodeInternal(node, items, parentGUID, index) {
+    let GUID = this._bms.getItemGUID(node.itemId);
+    let item = {parentGUID: parentGUID,
+                index: index};
+
+    if (node.type == node.RESULT_TYPE_FOLDER) {
+      if (this._ls.isLivemark(node.itemId)) {
+        item.type = "livemark";
+        let siteURI = this._ls.getSiteURI(node.itemId);
+        let feedURI = this._ls.getFeedURI(node.itemId);
+        item.siteURI = siteURI? siteURI.spec : "";
+        item.feedURI = feedURI? feedURI.spec : "";
+      } else {
+        item.type = "folder";
+        node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+        node.containerOpen = true;
+        for (var i = 0; i < node.childCount; i++) {
+          this._wrapNodeInternal(node.getChild(i), items, GUID, i);
+        }
+      }
+      item.title = node.title;
+    } else if (node.type == node.RESULT_TYPE_URI ||
+               node.type == node.RESULT_TYPE_QUERY) {
+      if (this._ms.hasMicrosummary(node.itemId)) {
+        item.type = "microsummary";
+        let micsum = this._ms.getMicrosummary(node.itemId);
+        item.generatorURI = micsum.generator.uri.spec; // breaks local generators
+      } else if (node.type == node.RESULT_TYPE_QUERY) {
+        item.type = "query";
+        item.title = node.title;
+      } else {
+        item.type = "bookmark";
+        item.title = node.title;
+      }
+      item.URI = node.uri;
+      item.tags = this._ts.getTagsForURI(makeURI(node.uri));
+      item.keyword = this._bms.getKeywordForBookmark(node.itemId);
+    } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
+      item.type = "separator";
+    } else {
+      this._log.warn("Warning: unknown item type, cannot serialize: " + node.type);
+      return;
+    }
+
+    items[GUID] = item;
+  },
+
+  _getWrappedBookmarks: function BSS__getWrappedBookmarks(folder) {
+    return this._wrapNode(this._getFolderNodes(folder));
+  },
+
+  _resetGUIDsInt: function BSS__resetGUIDsInt(node) {
+    if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
+      this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
+
+    if (node.type == node.RESULT_TYPE_FOLDER &&
+        !this._ls.isLivemark(node.itemId)) {
+      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+      node.containerOpen = true;
+      for (var i = 0; i < node.childCount; i++) {
+        this._resetGUIDsInt(node.getChild(i));
+      }
+    }
+  },
+
+  _createCommand: function BStore__createCommand(command) {
+    let newId;
+    let parentId = this._bms.getItemIdForGUID(command.data.parentGUID);
+
+    if (parentId < 0) {
+      this._log.warn("Creating node with unknown parent -> reparenting to root");
+      parentId = this._bms.bookmarksMenuFolder;
+    }
+
+    switch (command.data.type) {
+    case "query":
+    case "bookmark":
+    case "microsummary":
+      this._log.info(" -> creating bookmark \"" + command.data.title + "\"");
+      let URI = makeURI(command.data.URI);
+      newId = this._bms.insertBookmark(parentId,
+                                       URI,
+                                       command.data.index,
+                                       command.data.title);
+      this._ts.untagURI(URI, null);
+      this._ts.tagURI(URI, command.data.tags);
+      this._bms.setKeywordForBookmark(newId, command.data.keyword);
+
+      if (command.data.type == "microsummary") {
+        this._log.info("   \-> is a microsummary");
+        let genURI = makeURI(command.data.generatorURI);
+        try {
+          let micsum = this._ms.createMicrosummary(URI, genURI);
+          this._ms.setMicrosummary(newId, micsum);
+        }
+        catch(ex) { /* ignore "missing local generator" exceptions */ }
+      }
+      break;
+    case "folder":
+      this._log.info(" -> creating folder \"" + command.data.title + "\"");
+      newId = this._bms.createFolder(parentId,
+                                     command.data.title,
+                                     command.data.index);
+      break;
+    case "livemark":
+      this._log.info(" -> creating livemark \"" + command.data.title + "\"");
+      newId = this._ls.createLivemark(parentId,
+                                      command.data.title,
+                                      makeURI(command.data.siteURI),
+                                      makeURI(command.data.feedURI),
+                                      command.data.index);
+      break;
+    case "separator":
+      this._log.info(" -> creating separator");
+      newId = this._bms.insertSeparator(parentId, command.data.index);
+      break;
+    default:
+      this._log.error("_createCommand: Unknown item type: " + command.data.type);
+      break;
+    }
+    if (newId)
+      this._bms.setItemGUID(newId, command.GUID);
+  },
+
+  _removeCommand: function BStore__removeCommand(command) {
+    var itemId = this._bms.getItemIdForGUID(command.GUID);
+    if (itemId < 0) {
+      this._log.warn("Attempted to remove item " + command.GUID +
+                     ", but it does not exist.  Skipping.");
+      return;
+    }
+    var type = this._bms.getItemType(itemId);
+
+    switch (type) {
+    case this._bms.TYPE_BOOKMARK:
+      this._log.info("  -> removing bookmark " + command.GUID);
+      this._bms.removeItem(itemId);
+      break;
+    case this._bms.TYPE_FOLDER:
+      this._log.info("  -> removing folder " + command.GUID);
+      this._bms.removeFolder(itemId);
+      break;
+    case this._bms.TYPE_SEPARATOR:
+      this._log.info("  -> removing separator " + command.GUID);
+      this._bms.removeItem(itemId);
+      break;
+    default:
+      this._log.error("removeCommand: Unknown item type: " + type);
+      break;
+    }
+  },
+
+  _editCommand: function BStore__editCommand(command) {
+    var itemId = this._bms.getItemIdForGUID(command.GUID);
+    if (itemId < 0) {
+      this._log.warn("Item for GUID " + command.GUID + " not found.  Skipping.");
+      return;
+    }
+
+    for (let key in command.data) {
+      switch (key) {
+      case "GUID":
+        var existing = this._bms.getItemIdForGUID(command.data.GUID);
+        if (existing < 0)
+          this._bms.setItemGUID(itemId, command.data.GUID);
+        else
+          this._log.warn("Can't change GUID " + command.GUID +
+                         " to " + command.data.GUID + ": GUID already exists.");
+        break;
+      case "title":
+        this._bms.setItemTitle(itemId, command.data.title);
+        break;
+      case "URI":
+        this._bms.changeBookmarkURI(itemId, makeURI(command.data.URI));
+        break;
+      case "index":
+        this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
+                           command.data.index);
+        break;
+      case "parentGUID":
+        let index = -1;
+        if (command.data.index && command.data.index >= 0)
+          index = command.data.index;
+        this._bms.moveItem(
+          itemId, this._bms.getItemIdForGUID(command.data.parentGUID), index);
+        break;
+      case "tags":
+        let tagsURI = this._bms.getBookmarkURI(itemId);
+        this._ts.untagURI(URI, null);
+        this._ts.tagURI(tagsURI, command.data.tags);
+        break;
+      case "keyword":
+        this._bms.setKeywordForBookmark(itemId, command.data.keyword);
+        break;
+      case "generatorURI":
+        let micsumURI = makeURI(this._bms.getBookmarkURI(itemId));
+        let genURI = makeURI(command.data.generatorURI);
+        let micsum = this._ms.createMicrosummary(micsumURI, genURI);
+        this._ms.setMicrosummary(itemId, micsum);
+        break;
+      case "siteURI":
+        this._ls.setSiteURI(itemId, makeURI(command.data.siteURI));
+        break;
+      case "feedURI":
+        this._ls.setFeedURI(itemId, makeURI(command.data.feedURI));
+        break;
+      default:
+        this._log.warn("Can't change item property: " + key);
+        break;
+      }
+    }
+  },
+
+  wrap: function BStore_wrap() {
+    let filed = this._getWrappedBookmarks(this._bms.bookmarksMenuFolder);
+    let toolbar = this._getWrappedBookmarks(this._bms.toolbarFolder);
+    let unfiled = this._getWrappedBookmarks(this._bms.unfiledBookmarksFolder);
+
+    for (let guid in unfiled) {
+      if (!(guid in filed))
+        filed[guid] = unfiled[guid];
+    }
+
+    for (let guid in toolbar) {
+      if (!(guid in filed))
+        filed[guid] = toolbar[guid];
+    }
+
+    return filed; // (combined)
+  },
+
+  resetGUIDs: function BStore_resetGUIDs() {
+    this._resetGUIDsInt(this._getFolderNodes(this._bms.bookmarksMenuFolder));
+    this._resetGUIDsInt(this._getFolderNodes(this._bms.toolbarFolder));
+    this._resetGUIDsInt(this._getFolderNodes(this._bms.unfiledBookmarksFolder));
+  },
+
+  applyCommands: function BStore_applyCommands(commandList) {
+    for (var i = 0; i < commandList.length; i++) {
+      var command = commandList[i];
+      this._log.debug("Processing command: " + uneval(command));
+      switch (command["action"]) {
+      case "create":
+        this._createCommand(command);
+        break;
+      case "remove":
+        this._removeCommand(command);
+        break;
+      case "edit":
+        this._editCommand(command);
+        break;
+      default:
+        this._log.error("unknown action in command: " + command["action"]);
+        break;
+      }
+    }
+  }
+};
+BookmarksStore.prototype.__proto__ = new Store();
 
 /*
  * DAV object
