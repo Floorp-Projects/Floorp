@@ -183,11 +183,6 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval);
 
-static JSFunctionSpec sXPC_NW_JSClass_methods[] = {
-  {"toString", XPC_NW_toString, 0, 0, 0},
-  {0, 0, 0, 0, 0}
-};
-
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval);
@@ -541,9 +536,14 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   // couldn't get at those values anyway.  Also, we always deal with
   // wrappedJSObject and toString before looking at our scriptable hooks, so no
   // need to mess with our flags yet.
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT) ||
-      id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
     return JS_TRUE;
+  }
+
+  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+    *objp = obj;
+    return JS_DefineFunction(cx, obj, "toString",
+                             XPC_NW_toString, 0, 0) != nsnull;
   }
 
   if (!EnsureLegalActivity(cx, obj)) {
@@ -1021,7 +1021,7 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
 {
   JSObject *class_obj =
     ::JS_InitClass(ccx, aGlobalObject, nsnull, &sXPC_NW_JSClass.base,
-                   XPCNativeWrapperCtor, 0, nsnull, sXPC_NW_JSClass_methods,
+                   XPCNativeWrapperCtor, 0, nsnull, nsnull,
                    nsnull, nsnull);
   if (!class_obj) {
     NS_WARNING("can't initialize the XPCNativeWrapper class");
@@ -1112,6 +1112,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
 
   if (!obj ||
       !::JS_SetPrivate(cx, obj, wrapper) ||
+      !::JS_SetPrototype(cx, obj, nsnull) ||
       !::JS_SetReservedSlot(cx, obj, 0, INT_TO_JSVAL(FLAG_DEEP))) {
     return nsnull;
   }
