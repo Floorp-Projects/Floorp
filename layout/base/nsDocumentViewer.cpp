@@ -1411,6 +1411,23 @@ DocumentViewerImpl::Destroy()
       }
     }
 
+#ifdef NS_PRINTING
+  if (mPrintEngine) {
+    // This code was moved earlier to fix a crash when a document was
+    // destroyed while it was in print preview mode, see bug 396024
+#ifdef NS_PRINT_PREVIEW
+    PRBool doingPrintPreview;
+    mPrintEngine->GetDoingPrintPreview(&doingPrintPreview);
+    if (doingPrintPreview) {
+      mPrintEngine->FinishPrintPreview();
+    }
+#endif
+
+    mPrintEngine->Destroy();
+    mPrintEngine = nsnull;
+  }
+#endif
+
     Hide();
 
     // This is after Hide() so that the user doesn't see the inputs clear.
@@ -1469,21 +1486,6 @@ DocumentViewerImpl::Destroy()
   // references.  If we do this stuff in the destructor, the
   // destructor might never be called (especially if we're being
   // used from JS.
-
-#ifdef NS_PRINTING
-  if (mPrintEngine) {
-#ifdef NS_PRINT_PREVIEW
-    PRBool doingPrintPreview;
-    mPrintEngine->GetDoingPrintPreview(&doingPrintPreview);
-    if (doingPrintPreview) {
-      mPrintEngine->FinishPrintPreview();
-    }
-#endif
-
-    mPrintEngine->Destroy();
-    mPrintEngine = nsnull;
-  }
-#endif
 
   // Avoid leaking the old viewer.
   if (mPreviousViewer) {
