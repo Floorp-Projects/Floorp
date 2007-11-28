@@ -541,8 +541,27 @@ void
 nsXTFElementWrapper::PerformAccesskey(PRBool aKeyCausesActivation,
                                       PRBool aIsTrustedEvent)
 {
-  if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY)
-    GetXTFElement()->PerformAccesskey();
+  if (mNotificationMask & nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (!doc)
+      return;
+
+    // Get presentation shell 0
+    nsIPresShell *presShell = doc->GetPrimaryShell();
+    if (!presShell)
+      return;
+
+    nsPresContext *presContext = presShell->GetPresContext();
+    if (!presContext)
+      return;
+
+    nsIEventStateManager *esm = presContext->EventStateManager();
+    if (esm)
+      esm->ChangeFocusWith(this, nsIEventStateManager::eEventFocusedByKey);
+
+    if (aKeyCausesActivation)
+      GetXTFElement()->PerformAccesskey();
+  }
 }
 
 nsresult

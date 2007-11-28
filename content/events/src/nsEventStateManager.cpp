@@ -220,27 +220,6 @@ enum {
  MOUSE_SCROLL_FULLZOOM
 };
 
-struct AccessKeyInfo {
-  PRUint32 mAccessKey;
-  nsIContent* mTarget;
-
-  AccessKeyInfo(nsIContent* aTarget) : mAccessKey(0), mTarget(aTarget) {}
-};
-
-static PRIntn PR_CALLBACK
-FindTargetForAccessKey(nsHashKey *aKey, void *aData, void* aClosure)
-{
-  AccessKeyInfo* info = static_cast<AccessKeyInfo*>(aClosure);
-  nsIContent* aTarget = static_cast<nsIContent*>(aData);
-
-  if (aTarget == info->mTarget) {
-    info->mAccessKey = aKey->HashCode();
-    return kHashEnumerateStop;
-  }
-
-  return kHashEnumerateNext;
-}
-
 // mask values for ui.key.chromeAccess and ui.key.contentAccess
 #define NS_MODIFIER_SHIFT    1
 #define NS_MODIFIER_CONTROL  2
@@ -469,8 +448,7 @@ nsEventStateManager::nsEventStateManager()
     mNormalLMouseEventInProcess(PR_FALSE),
     m_haveShutdown(PR_FALSE),
     mBrowseWithCaret(PR_FALSE),
-    mTabbedThroughDocument(PR_FALSE),
-    mAccessKeys(nsnull)
+    mTabbedThroughDocument(PR_FALSE)
 {
   if (sESMInstanceCount == 0) {
     gUserInteractionTimerCallback = new nsUITimerCallback();
@@ -571,8 +549,6 @@ nsEventStateManager::~nsEventStateManager()
       NS_RELEASE(gUserInteractionTimer);
     }
   }
-
-  delete mAccessKeys;
 
   if (!m_haveShutdown) {
     Shutdown();
@@ -732,9 +708,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOverEventElement);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOutEventElement);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument);
-  if (tmp->mAccessKeys) {
-    tmp->mAccessKeys->Enumerate(TraverseAccessKeyContent, &cb);
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mAccessKeys);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventStateManager)
@@ -757,8 +731,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOverEventElement);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOutEventElement);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument);
-  delete tmp->mAccessKeys;
-  tmp->mAccessKeys = nsnull;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mAccessKeys);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -1429,6 +1402,31 @@ GetAccessModifierMask(nsISupports* aDocShell)
   }
 }
 
+static PRBool
+IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsString& aKey)
+{
+  if (!aFrame)
+    return PR_FALSE;
+
+  if (!aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::accesskey, aKey, eIgnoreCase))
+    return PR_FALSE;
+
+  if (aFrame->IsFocusable())
+    return PR_TRUE;
+
+  if (!aFrame->GetStyleVisibility()->IsVisible())
+    return PR_FALSE;
+
+  if (!aFrame->AreAncestorViewsVisible())
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMXULControlElement> control(do_QueryInterface(aContent));
+  if (control)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
 void
 nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                      nsKeyEvent *aEvent,
@@ -1440,18 +1438,37 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
   nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
 
   // Alt or other accesskey modifier is down, we may need to do an accesskey
-  if (mAccessKeys && aModifierMask == GetAccessModifierMask(pcContainer)) {
+  PRInt32 length = mAccessKeys.Count();
+  if (length > 0 && aModifierMask == GetAccessModifierMask(pcContainer)) {
     // Someone registered an accesskey.  Find and activate it.
-    PRUint32 accKey = (IS_IN_BMP(aEvent->charCode)) ? 
-      ToLowerCase((PRUnichar)aEvent->charCode) : aEvent->charCode;
-
-    nsVoidKey key(NS_INT32_TO_PTR(accKey));
-    if (mAccessKeys->Exists(&key)) {
-      nsCOMPtr<nsIContent> content =
-        dont_AddRef(static_cast<nsIContent*>(mAccessKeys->Get(&key)));
-      content->PerformAccesskey(sKeyCausesActivation,
-                                NS_IS_TRUSTED_EVENT(aEvent));
-      *aStatus = nsEventStatus_eConsumeNoDefault;
+    nsAutoString accKey(aEvent->charCode);
+    PRInt32 count, start = -1;
+    if (mCurrentFocus) {
+      start = mAccessKeys.IndexOf(mCurrentFocus);
+      if (start == -1 && mCurrentFocus->GetBindingParent())
+        start = mAccessKeys.IndexOf(mCurrentFocus->GetBindingParent());
+    }
+    nsIContent *content;
+    nsIFrame *frame;
+    for (count = 1; count <= length; ++count) {
+      content = mAccessKeys[(start + count) % length];
+      frame = mPresContext->PresShell()->GetPrimaryFrameFor(content);
+      if (IsAccessKeyTarget(content, frame, accKey)) {
+        PRBool shouldActivate = sKeyCausesActivation;
+        while (shouldActivate && ++count <= length) {
+          nsIContent *oc = mAccessKeys[(start + count) % length];
+          nsIFrame *of = mPresContext->PresShell()->GetPrimaryFrameFor(oc);
+          if (IsAccessKeyTarget(oc, of, accKey))
+            shouldActivate = PR_FALSE;
+        }
+        if (shouldActivate)
+          content->PerformAccesskey(shouldActivate,
+                                    NS_IS_TRUSTED_EVENT(aEvent));
+        else if (frame && frame->IsFocusable())
+          ChangeFocusWith(content, eEventFocusedByKey);
+        *aStatus = nsEventStatus_eConsumeNoDefault;
+        break;
+      }
     }
   }
 
@@ -4823,26 +4840,8 @@ nsEventStateManager::EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK)
 NS_IMETHODIMP
 nsEventStateManager::RegisterAccessKey(nsIContent* aContent, PRUint32 aKey)
 {
-  if (!mAccessKeys) {
-    mAccessKeys = new nsSupportsHashtable();
-    if (!mAccessKeys) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  if (aContent) {
-    PRUint32 accKey = (IS_IN_BMP(aKey)) ? ToLowerCase((PRUnichar)aKey) : aKey;
-
-    nsVoidKey key(NS_INT32_TO_PTR(accKey));
-    NS_ASSERTION(key.HashCode() == accKey,
-                 "nsHashKey::HashCode() doesn't return an accesskey");
-
-#ifdef DEBUG_jag
-    nsCOMPtr<nsIContent> oldContent = dont_AddRef(static_cast<nsIContent*>(mAccessKeys->Get(&key)));
-    NS_ASSERTION(!oldContent, "Overwriting accesskey registration");
-#endif
-    mAccessKeys->Put(&key, aContent);
-  }
+  if (aContent && mAccessKeys.IndexOf(aContent) == -1)
+    mAccessKeys.AppendObject(aContent);
 
   return NS_OK;
 }
@@ -4850,24 +4849,9 @@ nsEventStateManager::RegisterAccessKey(nsIContent* aContent, PRUint32 aKey)
 NS_IMETHODIMP
 nsEventStateManager::UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey)
 {
-  if (!mAccessKeys) {
-    return NS_ERROR_FAILURE;
-  }
+  if (aContent)
+    mAccessKeys.RemoveObject(aContent);
 
-  if (aContent) {
-    PRUint32 accKey = (IS_IN_BMP(aKey)) ? ToLowerCase((PRUnichar)aKey) : aKey;
-
-    nsVoidKey key(NS_INT32_TO_PTR(accKey));
-
-    nsCOMPtr<nsIContent> oldContent = dont_AddRef(static_cast<nsIContent*>(mAccessKeys->Get(&key)));
-#ifdef DEBUG_jag
-    NS_ASSERTION(oldContent == aContent, "Trying to unregister wrong content");
-#endif
-    if (oldContent != aContent)
-      return NS_OK;
-
-    mAccessKeys->Remove(&key);
-  }
   return NS_OK;
 }
 
@@ -4879,13 +4863,12 @@ nsEventStateManager::GetRegisteredAccessKey(nsIContent* aContent,
   NS_ENSURE_ARG_POINTER(aKey);
   *aKey = 0;
 
-  if (!mAccessKeys)
+  if (mAccessKeys.IndexOf(aContent) == -1)
     return NS_OK;
 
-  AccessKeyInfo info(aContent);
-  mAccessKeys->Enumerate(FindTargetForAccessKey, &info);
-
-  *aKey = info.mAccessKey;
+  nsAutoString accessKey;
+  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
+  *aKey = accessKey.First();
   return NS_OK;
 }
 
@@ -5312,19 +5295,10 @@ nsEventStateManager::MoveCaretToFocus()
             if (NS_SUCCEEDED(rv)) {
               // Set the range to the start of the currently focused node
               // Make sure it's collapsed
-              newRange->SelectNodeContents(currentFocusNode);
-              nsCOMPtr<nsIDOMNode> firstChild;
-              currentFocusNode->GetFirstChild(getter_AddRefs(firstChild));
-              if (!firstChild ||
-                  mCurrentFocus->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
-                // If current focus node is a leaf, set range to before the
-                // node by using the parent as a container.
-                // This prevents it from appearing as selected.
-                newRange->SetStartBefore(currentFocusNode);
-                newRange->SetEndBefore(currentFocusNode);
-              }
+              if (NS_FAILED(newRange->SelectNode(currentFocusNode)))
+                newRange->SelectNodeContents(currentFocusNode);
+              newRange->Collapse(PR_TRUE);
               domSelection->AddRange(newRange);
-              domSelection->CollapseToStart();
             }
           }
         }
