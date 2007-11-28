@@ -634,17 +634,10 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
     if (elm) {
         // Define behavior for each type of XUL element.
         nsIAtom *tag = content->Tag();
-        if (tag == nsGkAtoms::textbox || tag == nsGkAtoms::menulist) {
-            // if it's a text box or menulist, give it focus
+        if (tag != nsGkAtoms::toolbarbutton)
             elm->Focus();
-        } else if (tag == nsGkAtoms::toolbarbutton) {
-            // if it's a toolbar button, just click
+        if (aKeyCausesActivation && tag != nsGkAtoms::textbox && tag != nsGkAtoms::menulist)
             elm->Click();
-        } else {
-            // otherwise, focus and click in it
-            elm->Focus();
-            elm->Click();
-        }
     }
     else {
         content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
