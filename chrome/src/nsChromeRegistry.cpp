@@ -48,6 +48,8 @@
 #include <windows.h>
 #elif defined(XP_MACOSX)
 #include <Carbon/Carbon.h>
+#elif defined(MOZ_WIDGET_GTK2)
+#include <gtk/gtk.h>
 #endif
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -2143,6 +2145,10 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
                                          majorVersion,
                                          minorVersion);
   }
+#elif defined(MOZ_WIDGET_GTK2)
+  nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
+                                       gtk_major_version,
+                                       gtk_minor_version);
 #endif
 
   char *token;
