@@ -1,0 +1,91 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=396024
+-->
+<head>
+  <title>Test for Bug 396024</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396024">Mozilla Bug 396024</a>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var gWbp;
+function printpreview() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+
+  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+             .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  var listener = {
+    onLocationChange: function(webProgress, request, location) { },
+    onProgressChange: function(webProgress, request, curSelfProgress, 
+                               maxSelfProgress, curTotalProgress,
+                               maxTotalProgress) { },
+    onSecurityChange: function(webProgress, request, state) { },
+    onStateChange: function(webProgress, request, stateFlags, status) { },
+    onStatusChange: function(webProgress, request, status, message) { },
+    QueryInterface: function(iid) {
+      if (iid.equals(Components.interfaces.nsIWebProgessListener) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference))
+            return this;
+      throw Components.results.NS_NOINTERFACE;
+    }
+  }
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+  prefs.setBoolPref('print.show_print_progress', false);
+  //XXX I would have thought this would work, instead I'm forced to use prefs service
+  // I'm disabling showPrintProgress dialog, because it stays as a zombie dialog, see bug 405588
+  gWbp.globalPrintSettings.showPrintProgress = false; 
+  gWbp.printPreview(gWbp.globalPrintSettings, null, listener);
+  prefs.clearUserPref('print.show_print_progress');
+}
+
+function exitprintpreview() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+   .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
+}
+
+function run()
+{
+/** Test for Bug 396024 **/
+  window.frames[0].frameElement.setAttribute('onload', 'run2()');
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  SimpleTest.waitForExplicitFinish();
+  printpreview();
+  ok(gWbp.doingPrintPreview, "Should be doing print preview");
+  exitprintpreview();
+  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore1");
+  printpreview();
+  window.frames[0].location.reload();
+}
+
+function run2() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+             .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore2");
+  window.frames[0].frameElement.removeAttribute('onload');
+  printpreview();
+  var x = window.frames[0].frameElement.parentNode.removeChild(window.frames[0].frameElement);
+  document.body.offsetHeight;
+  document.body.appendChild(x);
+  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+             .getInterface(Components.interfaces.nsIWebBrowserPrint);
+  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore3");
+
+  //XXX this shouldn't be necessary, see bug 405555
+  printpreview();
+  exitprintpreview();
+  SimpleTest.finish(); //should not have crashed after all of this
+}
+</script>
+<iframe onload="run()" src="data:text/html;charset=utf-8,"></iframe>
+</pre>
+</body>
+</html>
+
