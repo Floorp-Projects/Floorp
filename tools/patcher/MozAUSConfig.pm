@@ -113,7 +113,7 @@ sub ProcessCommandLineArgs
     Getopt::Long::GetOptions(\%args,
      'help|h|?', 'man', 'version', 'app=s', 'config=s', 'verbose',
      'dry-run', 'tools-dir=s', 'download-dir=s', 'deliverable-dir=s',
-     'tools-revision=s', 'partial-patchlist-file=s', @RUN_MODES)
+     'tools-revision=s', @RUN_MODES)
      or return 0;
 
     $this->{'mConfigFilename'} = defined($args{'config'}) ? $args{'config'} :
@@ -127,7 +127,6 @@ sub ProcessCommandLineArgs
      $args{'mDownloadDir'} : $DEFAULT_DOWNLOAD_DIR;
     $this->{'mDeliverableDir'} = defined($args{'mDeliverableDir'}) ? 
      $args{'mDeliverableDir'} : $DEFAULT_DELIVERABLE_DIR;
-    $this->{'mPartialPatchlistFile'} = defined($args{'partial-patchlist-file'})      ? $args{'partial-patchlist-file'} : undef;
 
     # Is this a dry run, and we'll just print what we *would* do?
     $this->{'dryRun'} = defined($args{'dryRun'}) ? 1 : 0;
