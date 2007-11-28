@@ -1087,6 +1087,14 @@ CNavDTD::HandleOmittedTag(CToken* aToken, eHTMLTags aChildTag,
       !nsHTMLElement::IsWhitespaceTag(aChildTag)) {
     eHTMLTags theTag = eHTMLTag_unknown;
 
+    // Don't bother saving misplaced stuff in the head. This can happen in
+    // cases like |<head><noscript><table>foo|. See bug 401169.
+    if (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) {
+      NS_ASSERTION(!(mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER),
+                   "Bad state");
+      return;
+    }
+
     // Determine the insertion point
     while (theTagCount > 0) {
       theTag = mBodyContext->TagAt(--theTagCount);
@@ -1104,7 +1112,7 @@ CNavDTD::HandleOmittedTag(CToken* aToken, eHTMLTags aChildTag,
       mFlags |= NS_DTD_FLAG_MISPLACED_CONTENT;
     }
   }
-  
+
   if (aChildTag != aParent &&
       gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced)) {
     NS_ASSERTION(!pushToken, "A strange element has both kBadContentWatch "
