@@ -3356,7 +3356,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
     PRUint32 i;
     PRUint32 kids = tmp->mAttrsAndChildren.ChildCount();
     for (i = kids; i > 0; i--) {
-      tmp->mAttrsAndChildren.ChildAt(i-1)->UnbindFromTree(PR_FALSE);
+      tmp->mAttrsAndChildren.ChildAt(i-1)->UnbindFromTree();
       tmp->mAttrsAndChildren.RemoveChildAt(i-1);    
     }
   }  
