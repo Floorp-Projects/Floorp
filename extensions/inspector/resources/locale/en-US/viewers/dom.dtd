@@ -38,7 +38,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-  <!ENTITY cmdShowFindDialog.label "Find Nodes...">
+  <!ENTITY cmdShowFindDialog.label "Find Nodes…">
   <!ENTITY cmdShowFindDialog.accesskey "f">
   <!ENTITY cmdShowFindDialog.accelkey "f">
 
@@ -68,17 +68,17 @@
 
   <!ENTITY ColumnsDialog.title "Columns">
 
-  <!ENTITY cmdShowColumnsDialog.label "Columns...">
+  <!ENTITY cmdShowColumnsDialog.label "Columns…">
   <!ENTITY cmdShowColumnsDialog.accesskey "c">
   
-  <!ENTITY cmdInsertNode.label "Insert...">
+  <!ENTITY cmdInsertNode.label "Insert…">
   <!ENTITY cmdDeleteNode.label "Delete">
   <!ENTITY cmdCopyXML.label "Copy XML">
   <!ENTITY cmdBlink.label "Blink Element">
   <!ENTITY cmdInspectBrowser.label "Inspect Contained Document">
   <!ENTITY cmdInspectInNewWindow.label "Inspect in New Window">
   
-  <!ENTITY cmdShowPseudoClasses.label "Set Pseudo-classes...">
+  <!ENTITY cmdShowPseudoClasses.label "Set Pseudo-classes…">
   <!ENTITY cmdShowPseudoClasses.accesskey "p">
   
   <!ENTITY pseudoClasses.title "Pseudo-classes">
