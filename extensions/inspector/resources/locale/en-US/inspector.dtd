@@ -17,9 +17,9 @@
   <!ENTITY mnInspectContentDocument.accesskey "O">
   <!ENTITY mnInspectChromeDocument.label "Inspect Chrome Document">
   <!ENTITY mnInspectChromeDocument.accesskey "H">
-  <!ENTITY cmdShowOpenURLDialog.label "Inspect a URL...">
+  <!ENTITY cmdShowOpenURLDialog.label "Inspect a URL…">
   <!ENTITY cmdShowOpenURLDialog.accesskey "U">
-  <!ENTITY cmdSave.label "Save DOM As...">
+  <!ENTITY cmdSave.label "Save DOM As…">
   <!ENTITY cmdSave.accesskey "S">
   <!ENTITY cmdClose.label "Close">
   <!ENTITY cmdClose.accesskey "C">
