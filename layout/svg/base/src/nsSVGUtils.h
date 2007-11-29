@@ -91,8 +91,11 @@ struct nsStyleFont;
 
 #define NS_STATE_SVG_DIRTY            0x02000000
 
+/* Do we have a paint server for fill with a valid URL? */
 #define NS_STATE_SVG_FILL_PSERVER     0x04000000
+/* Do we have a paint server for stroke with a valid URL? */
 #define NS_STATE_SVG_STROKE_PSERVER   0x08000000
+/* Do we have any paint servers with valid URLs? */
 #define NS_STATE_SVG_PSERVER_MASK     0x0c000000
 
 /* are we the child of a non-display container? */
