@@ -261,10 +261,6 @@ BrowserGlue.prototype = {
       var appName = brandBundle.GetStringFromName("brandShortName");
       var quitDialogTitle = quitBundle.formatStringFromName(aQuitType + "DialogTitle",
                                                               [appName], 1);
-      var quitTitle = quitBundle.GetStringFromName(aQuitType + "Title");
-      var cancelTitle = quitBundle.GetStringFromName("cancelTitle");
-      var saveTitle = quitBundle.GetStringFromName("saveTitle");
-      var neverAskText = quitBundle.GetStringFromName("neverAsk");
 
       var message;
       if (aQuitType == "restart")
@@ -283,15 +279,26 @@ BrowserGlue.prototype = {
       var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
                   promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
                   promptService.BUTTON_POS_0_DEFAULT;
+
       var neverAsk = {value:false};
-      if (aQuitType != "restart")
+      var button0Title, button2Title;
+      var button1Title = quitBundle.GetStringFromName("cancelTitle");
+      var neverAskText = quitBundle.GetStringFromName("neverAsk");
+
+      if (aQuitType == "restart")
+        button0Title = quitBundle.GetStringFromName("restartTitle");
+      else {
         flags += promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2;
+        button0Title = quitBundle.GetStringFromName("saveTitle");
+        button2Title = quitBundle.GetStringFromName("quitTitle");
+      }
+
       buttonChoice = promptService.confirmEx(null, quitDialogTitle, message,
-                                   flags, quitTitle, cancelTitle, saveTitle,
+                                   flags, button0Title, button1Title, button2Title,
                                    neverAskText, neverAsk);
 
       switch (buttonChoice) {
-      case 0:
+      case 2:
         if (neverAsk.value)
           prefBranch.setBoolPref("browser.warnOnQuit", false);
         break;
@@ -299,15 +306,14 @@ BrowserGlue.prototype = {
         aCancelQuit.QueryInterface(Ci.nsISupportsPRBool);
         aCancelQuit.data = true;
         break;
-      case 2:
+      case 0:
+        this._saveSession = true;
         // could also set browser.warnOnQuit to false here,
         // but not setting it is a little safer.
         if (neverAsk.value)
           prefBranch.setIntPref("browser.startup.page", 3);
         break;
       }
-
-      this._saveSession = buttonChoice == 2;
     }
   },
 
