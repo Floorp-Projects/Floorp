@@ -183,6 +183,20 @@ extern JSString *
 js_NumberToString(JSContext *cx, jsdouble d);
 
 /*
+ * Convert int to C string. The buf must be big enough for MIN_INT to fit
+ * including '-' and '\0'.
+ */
+char *
+js_IntToCString(jsint i, char *buf, size_t bufSize);
+
+/*
+ * Convert a number to C string. The buf must be at least
+ * DTOSTR_STANDARD_BUFFER_SIZE.
+ */
+char *
+js_NumberToCString(JSContext *cx, jsdouble d, char *buf, size_t bufSize);
+
+/*
  * Convert a value to a number, returning false after reporting any error,
  * otherwise returning true with *dp set.
  */
