@@ -267,9 +267,11 @@ nsSVGGeometryFrame::HasStroke()
   if (GetStrokeWidth() <= 0)
     return PR_FALSE;
 
+  // Check for eStyleSVGPaintType_Server as the NS_STATE_SVG_STROKE_PSERVER
+  // state bit is only set if we have a valid URL. If we don't, we still have
+  // to stroke although we will be using the fallback colour
   if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Color ||
-      (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server &&
-       (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER)))
+      GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server)
     return PR_TRUE;
 
   return PR_FALSE;
@@ -286,6 +288,9 @@ nsSVGGeometryFrame::HasFill()
     }
   }
 
+  // Check for eStyleSVGPaintType_Server as the NS_STATE_SVG_FILL_PSERVER
+  // state bit is only set if we have a valid URL. If we don't, we still have
+  // to fill although we will be using the fallback colour
   if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Color ||
       GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server)
     return PR_TRUE;
