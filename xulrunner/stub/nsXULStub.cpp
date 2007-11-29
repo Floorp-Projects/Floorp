@@ -50,6 +50,7 @@
 #include <io.h>
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
+#define strcasecmp stricmp
 #define PATH_SEPARATOR_CHAR '\\'
 #include "nsWindowsRestart.cpp"
 #define R_OK 04
@@ -87,7 +88,7 @@ static void Output(PRBool isError, const char *fmt, ... )
   UINT flags = MB_OK;
   if (isError)
     flags |= MB_ICONERROR;
-  else 
+  else
     flags |= MB_ICONINFORMATION;
   MessageBox(NULL, msg, "XULRunner", flags);
 #else
@@ -95,6 +96,23 @@ static void Output(PRBool isError, const char *fmt, ... )
 #endif
 
   va_end(ap);
+}
+
+static PRBool IsArg(const char* arg, const char* s)
+{
+  if (*arg == '-')
+  {
+    if (*++arg == '-')
+      ++arg;
+    return !strcasecmp(arg, s);
+  }
+
+#if defined(XP_WIN) || defined(XP_OS2)
+  if (*arg == '/')
+    return !strcasecmp(++arg, s);
+#endif
+
+  return PR_FALSE;
 }
 
 class AutoAppData
@@ -110,6 +128,11 @@ public:
       XRE_FreeAppData(mAppData);
   }
 
+  nsresult
+  Override(nsILocalFile* aINIFile) {
+    return XRE_ParseAppData(aINIFile, mAppData);
+  }
+
   operator nsXREAppData*() const { return mAppData; }
   nsXREAppData* operator -> () const { return mAppData; }
 
@@ -119,6 +142,7 @@ private:
 
 XRE_CreateAppDataType XRE_CreateAppData;
 XRE_FreeAppDataType XRE_FreeAppData;
+XRE_ParseAppDataType XRE_ParseAppData;
 XRE_mainType XRE_main;
 
 int
@@ -174,7 +198,7 @@ main(int argc, char **argv)
 #elif defined(XP_OS2)
    PPIB ppib;
    PTIB ptib;
- 
+
    DosGetInfoBlocks(&ptib, &ppib);
    DosQueryModuleName(ppib->pib_hmte, sizeof(iniPath), iniPath);
 
@@ -277,7 +301,7 @@ main(int argc, char **argv)
       // user/offer to download/?
 
       Output(PR_FALSE,
-             "Could not find compatible GRE between version %s and %s.\n", 
+             "Could not find compatible GRE between version %s and %s.\n",
              range.lower, range.upper);
       return 1;
     }
@@ -301,6 +325,7 @@ main(int argc, char **argv)
   static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_CreateAppData", (NSFuncPtr*) &XRE_CreateAppData },
     { "XRE_FreeAppData", (NSFuncPtr*) &XRE_FreeAppData },
+    { "XRE_ParseAppData", (NSFuncPtr*) &XRE_ParseAppData },
     { "XRE_main", (NSFuncPtr*) &XRE_main },
     { nsnull, nsnull }
   };
@@ -340,6 +365,25 @@ main(int argc, char **argv)
       }
       NS_NewNativeLocalFile(nsDependentCString(greDir), PR_FALSE,
                             &appData->xreDirectory);
+    }
+
+    if (argc > 1 && IsArg(argv[1], "override")) {
+      if (argc == 2) {
+        Output(PR_TRUE, "Error: missing override.ini file.\n");
+        return 1;
+      }
+
+      const char *ovrDataFile = argv[2];
+
+      nsCOMPtr<nsILocalFile> ovrDataLF;
+      nsresult rv = NS_NewNativeLocalFile(nsDependentCString(ovrDataFile), PR_FALSE,
+                               getter_AddRefs(ovrDataLF));
+      if (NS_FAILED(rv)) {
+        Output(PR_TRUE, "Error: unrecognized override.ini path.\n");
+        return 1;
+      }
+
+      appData.Override(ovrDataLF);
     }
 
     retval = XRE_main(argc, argv, appData);
