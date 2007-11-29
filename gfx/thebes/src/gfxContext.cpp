@@ -512,7 +512,7 @@ gfxContext::CurrentLineWidth() const
 void
 gfxContext::SetOperator(GraphicsOperator op)
 {
-    if (mFlags && FLAG_SIMPLIFY_OPERATORS) {
+    if (mFlags & FLAG_SIMPLIFY_OPERATORS) {
         if (op != OPERATOR_SOURCE &&
             op != OPERATOR_CLEAR &&
             op != OPERATOR_OVER)
