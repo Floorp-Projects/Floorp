@@ -7,6 +7,7 @@
   locale/@AB_CD@/global/printing.properties                    (%chrome/layout/printing.properties)
   locale/@AB_CD@/global/layout_errors.properties               (%chrome/layout/layout_errors.properties)
   locale/@AB_CD@/global/netError.dtd                           (%chrome/netError.dtd)
+  locale/@AB_CD@/global/netErrorApp.dtd                        (%chrome/netErrorApp.dtd)
   locale/@AB_CD@/global/global.dtd                             (%chrome/global.dtd)
   locale/@AB_CD@/global/appstrings.properties                  (%chrome/appstrings.properties)
   locale/@AB_CD@/global/charsetTitles.properties               (%chrome/charsetTitles.properties)
