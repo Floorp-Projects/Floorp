@@ -1,6 +1,6 @@
-diff -up8N en_US.dic
---- en_US.dic	Sat Nov 24 21:50:56 2007
-+++ en_US.dic	Wed Nov 28 19:54:52 2007
+diff -up8N en-US.dic
+--- en-US.dic	Sat Nov 24 21:50:56 2007
++++ en-US.dic	Wed Nov 28 19:54:52 2007
 @@ -2296,16 +2296,17 @@ Buddhism/SM
  Buddhist/SM
  Buddie/M
