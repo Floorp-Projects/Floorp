@@ -557,7 +557,7 @@ public:
          * However, when printing complex renderings such as SVG,
          * care should be taken to clear this flag.
          */
-        FLAG_SIMPLIFY_OPERATORS = (1 << 0),
+        FLAG_SIMPLIFY_OPERATORS = (1 << 0)
     };
 
     void SetFlag(PRInt32 aFlag) { mFlags |= aFlag; }
