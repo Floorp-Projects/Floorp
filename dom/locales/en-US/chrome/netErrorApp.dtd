@@ -1,0 +1,9 @@
+<!-- Error messages that are likely to be overridden by applications go in this
+     file, all messages that likely don't need to tie into app-specific UI
+     should go into netError.dtd -->
+
+<!ENTITY securityOverride.linkText "Or you can add an exception…">
+<!ENTITY securityOverride.warningText "
+<p>You should not add an exception if you are using an internet connection that you do not trust completely or if you are not used to seeing a warning for this server.</p>
+<p>If you still wish to add an exception for this site, you can do so in your advanced encryption settings.</p>
+">
