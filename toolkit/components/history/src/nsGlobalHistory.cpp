@@ -1595,7 +1595,7 @@ nsGlobalHistory::GetSource(nsIRDFResource* aProperty,
     // XXX We could be more forgiving here, and check for literal
     // values as well.
     nsCOMPtr<nsIRDFResource> target = do_QueryInterface(aTarget);
-    if (IsURLInHistory(target))
+    if (target && IsURLInHistory(target))
       return CallQueryInterface(aTarget, aSource);
     
   }
