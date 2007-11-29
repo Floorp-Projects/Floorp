@@ -1,0 +1,259 @@
+diff -up8N en_US.dic
+--- en_US.dic	Sat Nov 24 21:50:56 2007
++++ en_US.dic	Wed Nov 28 19:54:52 2007
+@@ -2296,16 +2296,17 @@ Buddhism/SM
+ Buddhist/SM
+ Buddie/M
+ Buddy/M
+ Budweiser/M
+ Buffalo/M
+ Buffy/M
+ Buford/M
+ Bugatti/M
++Bugzilla/M
+ Buick/M
+ Buiron/M
+ Bujumbura/M
+ Bukhara
+ Bukharin
+ Bulawayo
+ Bulfinch
+ Bulganin
+@@ -2499,16 +2500,17 @@ Cameron/M
+ Cameroon/SM
+ Cameroonian/SM
+ Camey/M
+ Cami/M
+ Camila/M
+ Camile/M
+ Camilla/M
+ Camille/M
++Camino/M
+ Cammi/M
+ Cammie/M
+ Cammy/M
+ Camoens/M
+ Campbell
+ Campinas
+ Campos
+ Camry/M
+@@ -2938,16 +2940,17 @@ Chas
+ Chase
+ Chasity/M
+ Chastity/M
+ Chateaubriand/M
+ Chattahoochee/M
+ Chattanooga/M
+ Chatterley/M
+ Chatterton
++ChatZilla/M
+ Chaucer/M
+ Chaunce/M
+ Chauncey/M
+ Chautauqua
+ Chavez/M
+ Chayefsky/M
+ Che/M
+ Chechen
+@@ -6321,16 +6324,17 @@ HP/M
+ HQ/M
+ HR
+ HRH
+ HS
+ HST
+ HT
+ HTML/M
+ HTTP
++HTTPS
+ HUD/M
+ Ha
+ Haas/M
+ Habakkuk
+ Haber/M
+ Had/M
+ Hadar/M
+ Hades/M
+@@ -6941,16 +6945,17 @@ Humfrid/M
+ Humfried/M
+ Humphrey
+ Humvee
+ Hun/SM
+ Hunfredo/M
+ Hung
+ Hungarian/SM
+ Hungary/M
++Hunspell/M
+ Hunt/R
+ Hunter/M
+ Huntington/M
+ Huntlee/M
+ Huntley/M
+ Huntsville
+ Hurlee/M
+ Hurleigh/M
+@@ -9500,16 +9505,17 @@ Manda/M
+ Mandalay/M
+ Mandarin/M
+ Mandel/M
+ Mandela
+ Mandelbrot
+ Mandi/M
+ Mandie/M
+ Mandingo
++Mandriva/M
+ Mandy/M
+ Manet
+ Manfred/M
+ Manhattan/SM
+ Mani
+ Manichean
+ Manila/SM
+ Manitoba/M
+@@ -10615,16 +10621,17 @@ Myron
+ Myrta/M
+ Myrtia/M
+ Myrtice/M
+ Myrtie/M
+ Myrtle/M
+ Myrvyn/M
+ Myrwyn/M
+ Mysore
++MySpell/M
+ Myst/M
+ N'Djamena
+ N/MD
+ NAACP
+ NAFTA
+ NASA/M
+ NASDAQ/M
+ NATO/M
+@@ -13236,16 +13243,17 @@ Scruggs/M
+ Scud
+ Sculley/M
+ Scylla/M
+ Scythia
+ Scythian
+ Se/MH
+ Seaborg
+ Seagram/M
++SeaMonkey/M
+ Seamus/M
+ Sean/M
+ Seana/M
+ Sears/M
+ Seattle/M
+ Sebastian/M
+ Sebastiano/M
+ Sebastien/M
+@@ -13975,16 +13983,17 @@ Sumatran/SM
+ Sumeria/M
+ Sumerian/SM
+ Summer/MS
+ Sumner/M
+ Sumter
+ Sun/SM
+ Sunbeam/M
+ Sunbelt/M
++Sunbird/M
+ Sundanese/M
+ Sundas
+ Sunday/MS
+ Sung
+ Sunkist/M
+ Sunni/SM
+ Sunnite/MS
+ Sunny/M
+@@ -42226,16 +42235,18 @@ philologist/MS
+ philology/M
+ philosopher/SM
+ philosophic
+ philosophical/Y
+ philosophize/ZGDRS
+ philosophizer/M
+ philosophy/SM
+ philter/MS
++phisher/M
++phishing/M
+ phlebitis/M
+ phlebotomy
+ phlegm/M
+ phlegmatic
+ phlegmatically
+ phloem/M
+ phlogiston
+ phlox/M
+@@ -49098,16 +49109,17 @@ spadeful/MS
+ spadework/M
+ spadices
+ spadix/M
+ spaghetti/M
+ spake
+ spam/S
+ spamblock/S
+ spammed
++spammer/MS
+ spamming
+ span/MS
+ spandex/M
+ spandrels
+ spangle/DSMG
+ spangly
+ spaniel/SM
+ spank/SMDRGJ
+@@ -53645,16 +53657,20 @@ uniformity/M
+ unify/AGDSN
+ unilateral/Y
+ unilateralism
+ unilateralist
+ unimportance
+ unimportant
+ unimpressive
+ uninhibited/Y
++uninstall/GSMB
++uninstalled
++uninstaller/MS
++uninstalling
+ uninsured
+ unintellectual
+ unintelligent
+ unintended
+ uninteresting
+ uninterrupted/Y
+ unintuitive
+ uninviting
+@@ -53807,16 +53823,17 @@ unspectacular
+ unsporting
+ unstable/RT
+ unstack/DG
+ unstamped
+ unsteady/PTR
+ unstinting/Y
+ unstoppably
+ unstrapping
++unsubscribe
+ unsubstantial
+ unsubtle
+ unsure/P
+ unsuspecting/Y
+ unswerving/Y
+ unsymmetrical
+ untactful
+ untenability
+@@ -54981,16 +54998,17 @@ weave/DRSMZG
+ weaver/M
+ weaving/M
+ web/SM
+ webbed
+ webbing/M
+ webfeet
+ webfoot/M
+ webmaster/S
++webmistress
+ website/SM
+ wed/AS
+ wedded/A
+ wedder
+ wedding/SM
+ wedge/DSMG
+ wedgie/MS
+ wedlock/M
