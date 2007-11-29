@@ -1059,11 +1059,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
-  // Tear down linkmap. This is a performance optimization so that we
-  // don't waste time removing links one by one as they are removed
-  // from the doc.
-  tmp->DestroyLinkMap();
-
   // Unlink the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()) - 1; 
        indx >= 0; --indx) {
