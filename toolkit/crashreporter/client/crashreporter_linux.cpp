@@ -62,6 +62,7 @@ using namespace CrashReporter;
 static GtkWidget* gWindow = 0;
 static GtkWidget* gViewReportTextView = 0;
 static GtkWidget* gSubmitReportCheck = 0;
+static GtkWidget* gIncludeURLCheck = 0;
 static GtkWidget* gEmailMeCheck = 0;
 static GtkWidget* gEmailEntry = 0;
 
@@ -70,6 +71,7 @@ static string gDumpFile;
 static StringTable gQueryParameters;
 static string gSendURL;
 static vector<string> gRestartArgs;
+static string gURLParameter;
 
 // handle from dlopen'ing libgnome
 static void* gnomeLib = NULL;
@@ -89,6 +91,11 @@ static void LoadSettings()
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gEmailMeCheck),
                                    settings["EmailMe"][0] != '0');
     }
+    if (settings.find("IncludeURL") != settings.end() &&
+        gIncludeURLCheck != 0) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck),
+                                   settings["IncludeURL"][0] != '0');
+    }
     if (settings.find("SubmitReport") != settings.end()) {
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck),
                                    settings["SubmitReport"][0] != '0');
@@ -104,7 +111,10 @@ static void SaveSettings()
   settings["Email"] = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
   settings["EmailMe"] =
     gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck)) ? "1" : "0";
-
+  if (gIncludeURLCheck != 0)
+    settings["IncludeURL"] =
+      gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck))
+      ? "1" : "0";
   settings["SubmitReport"] =
     gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))
     ? "1" : "0";
@@ -244,6 +254,21 @@ static void RestartClicked(GtkButton* button,
   }
 }
 
+static void UpdateURL()
+{
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck))) {
+    gQueryParameters["URL"] = gURLParameter;
+  } else {
+    gQueryParameters.erase("URL");
+  }
+}
+
+static void IncludeURLClicked(GtkButton* sender, gpointer userData)
+{
+  UpdateURL();
+  ShowReportInfo();
+}
+
 static void UpdateEmail()
 {
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck))) {
@@ -350,6 +375,8 @@ void UIShowCrashUI(const string& dumpfile,
   gQueryParameters = queryParameters;
   gSendURL = sendURL;
   gRestartArgs = restartArgs;
+  if (gQueryParameters.find("URL") != gQueryParameters.end())
+    gURLParameter = gQueryParameters["URL"];
 
   gWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(gWindow),
@@ -406,6 +433,15 @@ void UIShowCrashUI(const string& dumpfile,
   gSubmitReportCheck =
     gtk_check_button_new_with_label(gStrings[ST_CHECKSUBMIT].c_str());
   gtk_box_pack_start(GTK_BOX(innerVBox), gSubmitReportCheck, FALSE, FALSE, 0);
+
+  if (gQueryParameters.find("URL") != gQueryParameters.end()) {
+    gIncludeURLCheck =
+      gtk_check_button_new_with_label(gStrings[ST_CHECKURL].c_str());
+    gtk_box_pack_start(GTK_BOX(innerVBox), gIncludeURLCheck, FALSE, FALSE, 0);
+    g_signal_connect(gIncludeURLCheck, "clicked", G_CALLBACK(IncludeURLClicked), 0);
+    // on by default
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck), TRUE);
+  }
 
   gEmailMeCheck =
     gtk_check_button_new_with_label(gStrings[ST_CHECKEMAIL].c_str());
