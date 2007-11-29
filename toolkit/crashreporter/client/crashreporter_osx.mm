@@ -128,7 +128,7 @@ static bool RestartApplication()
   [viewReportScrollView removeFromSuperview];
 
   if (gQueryParameters.find("URL") != gQueryParameters.end()) {
-    // save the URL value in case the 
+    // save the URL value in case the checkbox gets unchecked
     gURLParameter = gQueryParameters["URL"];
   }
   else {
