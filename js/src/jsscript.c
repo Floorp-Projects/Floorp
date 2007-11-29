@@ -198,6 +198,7 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     const char *file;
     uintN line;
     JSPrincipals *principals;
+    uint32 tcflags;
     jsint execDepth;
 
     /* Make sure obj is a Script object. */
@@ -250,17 +251,17 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /*
      * Compile the new script using the caller's scope chain, a la eval().
-     * Unlike jsobj.c:obj_eval, however, we do not set JSFRAME_EVAL in fp's
-     * flags, because compilation is here separated from execution, and the
+     * Unlike jsobj.c:obj_eval, however, we do not pass TCF_COMPILE_N_GO in
+     * tcflags, because compilation is here separated from execution, and the
      * run-time scope chain may not match the compile-time.  JSFRAME_EVAL is
      * tested in jsemit.c and jsscan.c to optimize based on identity of run-
      * and compile-time scope.
      */
     fp->flags |= JSFRAME_SCRIPT_OBJECT;
-    script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
-                                             JSSTRING_CHARS(str),
-                                             JSSTRING_LENGTH(str),
-                                             file, line);
+    tcflags = 0;
+    script = js_CompileScript(cx, scopeobj, principals, tcflags,
+                              JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                              NULL, file, line);
     if (!script)
         return JS_FALSE;
 
@@ -1387,12 +1388,13 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
     return script;
 }
 
-JS_FRIEND_API(JSScript *)
-js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
+JSScript *
+js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 {
     uint32 mainLength, prologLength, nsrcnotes;
     JSScript *script;
     const char *filename;
+    JSFunction *fun;
 
     /* The counts of indexed things must be checked during code generation. */
     JS_ASSERT(cg->atomList.count <= INDEX_LIMIT);
@@ -1441,7 +1443,9 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
      * We initialize fun->u.script to be the script constructed above
      * so that the debugger has a valid FUN_SCRIPT(fun).
      */
-    if (fun) {
+    fun = NULL;
+    if (cg->treeContext.flags & TCF_IN_FUNCTION) {
+        fun = cg->treeContext.fun;
         JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
         js_FreezeLocalNames(cx, fun);
         fun->u.i.script = script;

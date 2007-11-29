@@ -212,8 +212,8 @@ extern JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
              uint32 nobjects, uint32 nregexps, uint32 ntrynotes);
 
-extern JS_FRIEND_API(JSScript *)
-js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun);
+extern JSScript *
+js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
 
 /*
  * New-script-hook calling is factored from js_NewScriptFromCG so that it

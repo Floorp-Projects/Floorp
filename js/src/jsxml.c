@@ -2018,7 +2018,8 @@ ParseXMLSource(JSContext *cx, JSString *src)
         }
     }
 
-    if (!js_InitParseContext(cx, &pc, chars, length, NULL, filename, lineno))
+    if (!js_InitParseContext(cx, &pc, NULL, chars, length, NULL,
+                             filename, lineno))
         goto out;
     pn = js_ParseXMLText(cx, cx->fp->scopeChain, &pc, JS_FALSE);
     if (pn && XMLArrayInit(cx, &nsarray, 1)) {
