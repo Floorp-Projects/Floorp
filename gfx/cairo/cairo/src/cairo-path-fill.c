@@ -214,7 +214,7 @@ static cairo_int_status_t
 _cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,
 				  cairo_traps_t		*traps)
 {
-    cairo_path_buf_t *buf = path->buf_head;
+    cairo_path_buf_t *buf = &path->buf_head.base;
     int final;
 
     /* Ensure the path has the operators we expect for a rectangular path.

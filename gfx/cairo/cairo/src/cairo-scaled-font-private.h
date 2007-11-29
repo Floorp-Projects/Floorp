@@ -42,6 +42,7 @@
 
 #include "cairo-types-private.h"
 #include "cairo-mutex-type-private.h"
+#include "cairo-reference-count-private.h"
 
 struct _cairo_scaled_font {
     /* For most cairo objects, the rule for multiple threads is that
@@ -79,7 +80,7 @@ struct _cairo_scaled_font {
 
     /* useful bits for _cairo_scaled_font_nil */
     cairo_status_t status;
-    unsigned int ref_count;
+    cairo_reference_count_t ref_count;
     cairo_user_data_array_t user_data;
 
     /* hash key members */

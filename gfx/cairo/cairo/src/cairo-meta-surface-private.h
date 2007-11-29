@@ -61,7 +61,7 @@ typedef enum {
 typedef enum {
     CAIRO_META_REGION_ALL,
     CAIRO_META_REGION_NATIVE,
-    CAIRO_META_REGION_IMAGE_FALLBACK,
+    CAIRO_META_REGION_IMAGE_FALLBACK
 } cairo_meta_region_type_t;
 
 typedef struct _cairo_command_header {

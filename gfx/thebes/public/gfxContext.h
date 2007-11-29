@@ -464,6 +464,10 @@ public:
      * how drawing something will modify the destination. For example, the
      * OVER operator will do alpha blending of source and destination, while
      * SOURCE will replace the destination with the source.
+     *
+     * Note that if the flag FLAG_SIMPLIFY_OPERATORS is set on this
+     * gfxContext, the actual operator set might change for optimization
+     * purposes.  Check the comments below around that flag.
      */
     void SetOperator(GraphicsOperator op);
     GraphicsOperator CurrentOperator() const;
@@ -537,9 +541,33 @@ public:
      **/
     already_AddRefed<gfxFlattenedPath> GetFlattenedPath();
 
+    /**
+     ** Flags
+     **/
+
+    enum {
+        /* If this flag is set, operators other than CLEAR, SOURCE, or
+         * OVER will be converted to OVER before being sent to cairo.
+         *
+         * This is most useful with a printing surface, where
+         * operators such as ADD are used to avoid seams for on-screen
+         * display, but where such errors aren't noticable in print.
+         * This approach is currently used in border rendering.
+         *
+         * However, when printing complex renderings such as SVG,
+         * care should be taken to clear this flag.
+         */
+        FLAG_SIMPLIFY_OPERATORS = (1 << 0),
+    };
+
+    void SetFlag(PRInt32 aFlag) { mFlags |= aFlag; }
+    void ClearFlag(PRInt32 aFlag) { mFlags &= ~aFlag; }
+    PRInt32 GetFlags() { return mFlags; }
+
 private:
     cairo_t *mCairo;
     nsRefPtr<gfxASurface> mSurface;
+    PRInt32 mFlags;
 };
 
 #endif /* GFX_CONTEXT_H */

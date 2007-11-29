@@ -1,7 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2004 Calum Robinson
- * Copyright (C) 2006,2007 Mozilla Corporation
+ * Copyright © 2007 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -28,50 +27,70 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Calum Robinson
- *
  * Contributor(s):
- *    Calum Robinson <calumr@mac.com>
- *    Vladimir Vukicevic <vladimir@mozilla.com>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
-
-#ifndef CAIRO_QUARTZ_PRIVATE_H
-#define CAIRO_QUARTZ_PRIVATE_H
 
 #include "cairoint.h"
 
-#ifdef CAIRO_HAS_QUARTZ_SURFACE
-#include <cairo-quartz.h>
+#include "cairo-atomic-private.h"
+#include "cairo-mutex-private.h"
 
-typedef struct cairo_quartz_surface {
-    cairo_surface_t base;
+#ifndef CAIRO_HAS_ATOMIC_OPS
+void
+_cairo_atomic_int_inc (int *x)
+{
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    *x += 1;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
+}
 
-    void *imageData;
+cairo_bool_t
+_cairo_atomic_int_dec_and_test (int *x)
+{
+    cairo_bool_t ret;
 
-    CGContextRef cgContext;
-    CGAffineTransform cgContextBaseCTM;
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    ret = --*x == 0;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
 
-    cairo_rectangle_int_t extents;
+    return ret;
+}
 
-    /* These are stored while drawing operations are in place, set up
-     * by quartz_setup_source() and quartz_finish_source()
-     */
-    CGImageRef sourceImage;
-    cairo_surface_t *sourceImageSurface;
-    CGAffineTransform sourceImageTransform;
-    CGRect sourceImageRect;
+int
+_cairo_atomic_int_cmpxchg (int *x, int oldv, int newv)
+{
+    int ret;
 
-    CGShadingRef sourceShading;
-    CGPatternRef sourcePattern;
-} cairo_quartz_surface_t;
-#endif /* CAIRO_HAS_QUARTZ_SURFACE */
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    ret = *x;
+    if (ret == oldv)
+	*x = newv;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
 
-#if CAIRO_HAS_ATSUI_FONT
-ATSUStyle
-_cairo_atsui_scaled_font_get_atsu_style (cairo_scaled_font_t *sfont);
+    return ret;
+}
 
-ATSUFontID
-_cairo_atsui_scaled_font_get_atsu_font_id (cairo_scaled_font_t *sfont);
-#endif /* CAIRO_HAS_ATSUI_FONT */
+#endif
 
-#endif /* CAIRO_QUARTZ_PRIVATE_H */
+#ifdef CAIRO_ATOMIC_OP_NEEDS_MEMORY_BARRIER
+int
+_cairo_atomic_int_get (int *x)
+{
+    int ret;
+
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    ret = *x;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
+
+    return ret;
+}
+
+void
+_cairo_atomic_int_set (int *x, int value)
+{
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    *x = value;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
+}
+#endif

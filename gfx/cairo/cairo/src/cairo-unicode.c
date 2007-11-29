@@ -231,18 +231,18 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
     {
 	uint32_t wc = _utf8_get_char_extended (in, str + len - in);
 	if (wc & 0x80000000 || !UNICODE_VALID (wc))
-	    return CAIRO_STATUS_INVALID_STRING;
+	    return _cairo_error (CAIRO_STATUS_INVALID_STRING);
 
 	n_chars++;
 	if (n_chars == INT_MAX)
-	    return CAIRO_STATUS_INVALID_STRING;
+	    return _cairo_error (CAIRO_STATUS_INVALID_STRING);
 
 	in = UTF8_NEXT_CHAR (in);
     }
 
     str32 = _cairo_malloc_ab (n_chars + 1, sizeof (uint32_t));
     if (!str32)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     in = str;
     for (i=0; i < n_chars; i++) {
@@ -294,7 +294,7 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
     while ((len < 0 || str + len - in > 0) && *in) {
 	uint32_t wc = _utf8_get_char_extended (in, str + len - in);
 	if (wc & 0x80000000 || !UNICODE_VALID (wc))
-	    return CAIRO_STATUS_INVALID_STRING;
+	    return _cairo_error (CAIRO_STATUS_INVALID_STRING);
 
 	if (wc < 0x10000)
 	    n16 += 1;
@@ -302,14 +302,14 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 	    n16 += 2;
 
 	if (n16 == INT_MAX - 1 || n16 == INT_MAX)
-	    return CAIRO_STATUS_INVALID_STRING;
+	    return _cairo_error (CAIRO_STATUS_INVALID_STRING);
 
 	in = UTF8_NEXT_CHAR (in);
     }
 
     str16 = _cairo_malloc_ab (n16 + 1, sizeof (uint16_t));
     if (!str16)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     in = str;
     for (i = 0; i < n16;) {

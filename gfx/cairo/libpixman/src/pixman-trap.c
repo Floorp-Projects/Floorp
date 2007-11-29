@@ -1,6 +1,4 @@
 /*
- * $Id: pixman-trap.c,v 1.9 2007/09/20 19:24:51 vladimir%pobox.com Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

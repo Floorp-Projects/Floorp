@@ -59,7 +59,7 @@
  * @n: number of elements to allocate
  * @size: size of each element
  *
- * Allocates @a*@size memory using _cairo_malloc(), taking care to not
+ * Allocates @n*@size memory using _cairo_malloc(), taking care to not
  * overflow when doing the multiplication.  Behaves much like
  * calloc(), except that the returned memory is not set to zero.
  * The memory should be freed using free().
@@ -76,12 +76,34 @@
    _cairo_malloc((unsigned) (a) * (unsigned) (size)))
 
 /**
+ * _cairo_realloc_ab:
+ * @ptr: original pointer to block of memory to be resized
+ * @n: number of elements to allocate
+ * @size: size of each element
+ *
+ * Reallocates @ptr a block of @n*@size memory using realloc(), taking
+ * care to not overflow when doing the multiplication.  The memory
+ * should be freed using free().
+ *
+ * @size should be a constant so that the compiler can optimize
+ * out a constant division.
+ *
+ * Return value: A pointer to the newly allocated memory, or %NULL in
+ * case of realloc() failure or overflow (whereupon the original block
+ * of memory * is left untouched).
+ */
+
+#define _cairo_realloc_ab(ptr, a, size) \
+  ((size) && (unsigned) (a) >= INT32_MAX / (unsigned) (size) ? NULL : \
+   realloc(ptr, (unsigned) (a) * (unsigned) (size)))
+
+/**
  * _cairo_malloc_abc:
- * @a: first factor of number of elements to allocate
+ * @n: first factor of number of elements to allocate
  * @b: second factor of number of elements to allocate
  * @size: size of each element
  *
- * Allocates @a*@b*@size memory using _cairo_malloc(), taking care to not
+ * Allocates @n*@b*@size memory using _cairo_malloc(), taking care to not
  * overflow when doing the multiplication.  Behaves like
  * _cairo_malloc_ab().  The memory should be freed using free().
  *
@@ -103,7 +125,7 @@
  * @size: size of each element
  * @k: additional size to allocate
  *
- * Allocates @a*@ksize+@k memory using _cairo_malloc(), taking care to not
+ * Allocates @n*@ksize+@k memory using _cairo_malloc(), taking care to not
  * overflow when doing the arithmetic.  Behaves like
  * _cairo_malloc_ab().  The memory should be freed using free().
  *

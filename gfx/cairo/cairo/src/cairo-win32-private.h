@@ -82,6 +82,9 @@ typedef struct _cairo_win32_surface {
 
     /* printing surface bits */
     cairo_paginated_mode_t paginated_mode;
+    cairo_content_t content;
+    cairo_bool_t has_ctm;
+    cairo_matrix_t ctm;
     int clip_saved_dc;
     HBRUSH brush, old_brush;
 } cairo_win32_surface_t;
@@ -108,11 +111,6 @@ enum {
 
     /* Whether we can use GradientFill rectangles with this surface */
     CAIRO_WIN32_SURFACE_CAN_RECT_GRADIENT = (1<<6),
-
-    /* If we should treat all operators other than CLEAR and OVER
-     * like SOURCE to avoid hitting fallback.  Ignored except
-     * for printing. */
-    CAIRO_WIN32_SURFACE_IGNORE_OPERATORS = (1<<7)
 };
 
 cairo_status_t

@@ -58,7 +58,7 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRUint32 flags) :
         mOwnsDC = PR_TRUE;
 
     if (flags & FLAG_FOR_PRINTING) {
-        Init(cairo_win32_printing_surface_create(mDC, TRUE));
+        Init(cairo_win32_printing_surface_create(mDC));
         mForPrinting = PR_TRUE;
     } else {
         Init(cairo_win32_surface_create(mDC));
@@ -234,4 +234,12 @@ nsresult gfxWindowsSurface::EndPage()
         cairo_surface_show_page(CairoSurface());
     ::EndPage(mDC);
     return NS_OK;
+}
+
+PRInt32 gfxWindowsSurface::GetDefaultContextFlags()
+{
+    if (mForPrinting)
+        return gfxContext::FLAG_SIMPLIFY_OPERATORS;
+
+    return 0;
 }

@@ -61,6 +61,7 @@ gfxContext::gfxContext(gfxASurface *surface) :
     mSurface(surface)
 {
     mCairo = cairo_create(surface->CairoSurface());
+    mFlags = surface->GetDefaultContextFlags();
 }
 gfxContext::~gfxContext()
 {
@@ -511,6 +512,13 @@ gfxContext::CurrentLineWidth() const
 void
 gfxContext::SetOperator(GraphicsOperator op)
 {
+    if (mFlags && FLAG_SIMPLIFY_OPERATORS) {
+        if (op != OPERATOR_SOURCE &&
+            op != OPERATOR_CLEAR &&
+            op != OPERATOR_OVER)
+            op = OPERATOR_OVER;
+    }
+
     cairo_set_operator(mCairo, (cairo_operator_t)op);
 }
 

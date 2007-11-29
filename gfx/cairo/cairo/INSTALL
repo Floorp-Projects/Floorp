@@ -1,9 +1,128 @@
-This package uses automake, in order to generate the Makefiles use:
+Quick-start build instructions
+------------------------------
+1) Configure the package:
 
-	$ autogen.sh
+	./configure
 
-After that, standard build procedures apply:
+2) Compile it:
 
-	$ make
-	# make install
+	make
 
+3) Install it:
+
+	make install
+
+This final step may require temporary root access (eg. with sudo) if
+you don't have write permission to the directory in which cairo will
+be installed.
+
+NOTE: If you are working with source from git/cvs rather than from a tar
+file, then you should use ./autogen.sh in place of ./configure
+anywhere it is mentioned in these instructions.
+
+More detailed build instructions
+--------------------------------
+
+1) Configure the package
+
+   The first step in building cairo is to configure the package by
+   running the configure script. The configure script attempts to
+   automatically detect as much as possible about your system. So,
+   you should primarily just accept its defaults by running:
+
+	./configure
+
+   The configure script does accept a large number of options for
+   fine-tuning its behavior. See "./configure --help" for a complete
+   list. The most commonly used options are discussed here.
+
+   --prefix=PREFIX
+
+	This option specifies the directory under which the software
+	should be installed. By default configure will choose a
+	directory such as /usr/local. If you would like to install
+	cairo to some other location, pass the director to configure
+	with the --prefix option. For example:
+
+		./configure --prefix=/opt/cairo
+
+	would install cairo into the /opt/cairo directory. You could
+	also choose a prefix directory within your home directory if
+	you don't have write access to any system-wide directory.
+
+	After installing into a custom prefix, you will need to set
+	some environment variables to allow the software to be
+	found. Assuming the /opt/cairo prefix and assuming you are
+	using the bash shell, the following environment variables
+	should be set:
+
+		PKG_CONFIG_PATH=/opt/cairo/lib/pkgconfig
+		LD_LIBRARY_PATH=/opt/cairo/lib
+		export PKG_CONFIG_PATH LD_LIBRARY_PATH
+
+	(NOTE: On mac OS X, at least, use DYLD_LIBRARY_PATH in place
+	       of LD_LIBRARY_PATH above.)
+
+    --enable-quartz
+    --enable-atsui
+    --enable-xcb
+    --enable-glitz
+    --enable-beos
+    --enable-os2
+    --enable-directfb
+
+	Some of cairo's backends are marked as experimental and will
+	not be built by default. If you would like to build and
+	experiment with these backends, you will need to pass one of
+	the above options to the configure script. You may need to
+	have certain libraries installed first as discussed in the
+	dependencies section of the README file.
+
+    --disable-xlib
+    --disable-win32
+    --disable-png
+    --disable-freetype
+    --disable-ps
+    --disable-pdf
+    --disable-svg
+
+	Cairo's configure script detects the libraries needed to build
+	each stable backend, and when it finds them, enables each
+	backend. If you would like to override this detection and
+	disable a backend, (even when it would be possible to build
+	it), use one of the options above to disable the backend.
+
+2) Compile the package:
+
+   This step is very simple. Just:
+
+	make
+
+   The Makefiles included with cairo are designed to work on as many
+   different systems as possible.
+
+   When cairo is compiled, you can also run some automated tests of
+   cairo with:
+
+	make check
+
+   NOTE: Some versions of X servers will cause the -xlib tests to
+   report failures in make check even when cairo is working just
+   fine. If you see failures in nothing but -xlib tests, please
+   examine the corresponding -xlib-out.png images and compare them to
+   the -ref.png reference images (the -xlib-diff.png images might also
+   be useful). If the results seem "close enough" please do not report
+   a bug against cairo as the "failures" you are seeing are just due
+   to subtle variations in X server implementations.
+
+3) Install the package:
+
+   The final step is to install the package with:
+
+	make install
+
+   If you are installing to a system-wide location you may need to
+   temporarily acquite root access in order to perform this
+   operation. A good way to do this is to use the sudo program:
+
+	sudo make install

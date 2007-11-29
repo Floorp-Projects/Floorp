@@ -78,10 +78,10 @@ _cairo_pen_init (cairo_pen_t	*pen,
 						    radius,
 						    ctm);
 
-    pen->vertices = _cairo_malloc_ab (pen->num_vertices, sizeof (cairo_pen_vertex_t));
-    if (pen->vertices == NULL) {
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    pen->vertices = _cairo_malloc_ab (pen->num_vertices,
+	                              sizeof (cairo_pen_vertex_t));
+    if (pen->vertices == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /*
      * Compute pen coordinates.  To generate the right ellipse, compute points around
@@ -119,10 +119,11 @@ _cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other)
     *pen = *other;
 
     if (pen->num_vertices) {
-	pen->vertices = _cairo_malloc_ab (pen->num_vertices, sizeof (cairo_pen_vertex_t));
-	if (pen->vertices == NULL) {
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	pen->vertices = _cairo_malloc_ab (pen->num_vertices,
+	       	                          sizeof (cairo_pen_vertex_t));
+	if (pen->vertices == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
 	memcpy (pen->vertices, other->vertices, pen->num_vertices * sizeof (cairo_pen_vertex_t));
     }
 
@@ -138,9 +139,10 @@ _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
     int i;
 
     num_vertices = pen->num_vertices + num_points;
-    vertices = realloc (pen->vertices, num_vertices * sizeof (cairo_pen_vertex_t));
+    vertices = _cairo_realloc_ab (pen->vertices,
+	                          num_vertices, sizeof (cairo_pen_vertex_t));
     if (vertices == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     pen->vertices = vertices;
     pen->num_vertices = num_vertices;
@@ -321,7 +323,13 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 	    break;
     }
 
-    assert (i < pen->num_vertices);
+    /* If the desired slope cannot be found between any of the pen
+     * vertices, then we must have a degenerate pen, (such as a pen
+     * that's been transformed to a line). In that case, we consider
+     * the first pen vertex as the appropriate clockwise vertex.
+     */
+    if (i == pen->num_vertices)
+	i = 0;
 
     *active = i;
 }
@@ -348,6 +356,14 @@ _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
 	    && _cairo_slope_clockwise (&pen->vertices[i].slope_cw, &slope_reverse))
 	    break;
     }
+
+    /* If the desired slope cannot be found between any of the pen
+     * vertices, then we must have a degenerate pen, (such as a pen
+     * that's been transformed to a line). In that case, we consider
+     * the last pen vertex as the appropriate counterclockwise vertex.
+     */
+    if (i < 0)
+	i = pen->num_vertices - 1;
 
     *active = i;
 }

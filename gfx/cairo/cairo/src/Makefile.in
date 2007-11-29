@@ -74,6 +74,7 @@ CSRCS   = \
         cairo-analysis-surface.c \
         cairo-arc.c \
         cairo-array.c \
+	cairo-atomic.c \
         cairo-bentley-ottmann.c \
         cairo-cache.c \
         cairo-clip.c \

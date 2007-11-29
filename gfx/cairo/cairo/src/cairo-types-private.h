@@ -54,7 +54,6 @@ typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_
 typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
-typedef enum _cairo_paginated_mode cairo_paginated_mode_t;
 typedef cairo_array_t cairo_user_data_array_t;
 
 /**
@@ -122,10 +121,10 @@ struct _cairo_cache {
     int freeze_count;
 };
 
-enum _cairo_paginated_mode {
+typedef enum _cairo_paginated_mode {
     CAIRO_PAGINATED_MODE_ANALYZE,	/* analyze page regions */
     CAIRO_PAGINATED_MODE_RENDER		/* render page contents */
-};
+} cairo_paginated_mode_t;
 
 /* Sure wish C had a real enum type so that this would be distinct
    from cairo_status_t. Oh well, without that, I'll use this bogus 1000
@@ -137,7 +136,7 @@ typedef enum _cairo_int_status {
     CAIRO_INT_STATUS_CACHE_EMPTY,
     CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY,
     CAIRO_INT_STATUS_IMAGE_FALLBACK,
-    CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN,
+    CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN
 } cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {

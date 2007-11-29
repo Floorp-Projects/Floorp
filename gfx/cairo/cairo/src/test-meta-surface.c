@@ -63,7 +63,7 @@ typedef struct _test_meta_surface {
     cairo_bool_t image_reflects_meta;
 } test_meta_surface_t;
 
-const cairo_private cairo_surface_backend_t test_meta_surface_backend;
+static const cairo_surface_backend_t test_meta_surface_backend;
 
 static cairo_int_status_t
 _test_meta_surface_show_page (void *abstract_surface);
@@ -100,7 +100,7 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
   FAIL_CLEANUP_SURFACE:
     free (surface);
   FAIL:
-    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
 
@@ -121,9 +121,13 @@ _test_meta_surface_acquire_source_image (void		  *abstract_surface,
 					 void			**image_extra)
 {
     test_meta_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
-    if (! surface->image_reflects_meta)
-	_test_meta_surface_show_page (abstract_surface);
+    if (! surface->image_reflects_meta) {
+	status = _test_meta_surface_show_page (abstract_surface);
+	if (status)
+	    return status;
+    }
 
     return _cairo_surface_acquire_source_image (surface->image,
 						image_out, image_extra);
@@ -322,7 +326,7 @@ _test_meta_surface_snapshot (void *abstract_other)
 #endif
 }
 
-const cairo_surface_backend_t test_meta_surface_backend = {
+static const cairo_surface_backend_t test_meta_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
     NULL, /* create_similar */
     _test_meta_surface_finish,

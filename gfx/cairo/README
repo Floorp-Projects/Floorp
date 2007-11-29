@@ -7,8 +7,8 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.5.x - d8b0de01d67cdf73d8266a73f54ba1ac42fee3c9)
-  pixman (0.9.x - 3be35594c99b7abd2af43b66349ca53bfa1462d6)
+  cairo (1.5.x - 1.5.2-55-g39b8ddf)
+  pixman (0.9.x - pixman-0.9.6-13-g4193b3c)
   glitz 0.5.2 (cvs - 2006-01-10)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
@@ -24,9 +24,5 @@ max-font-size.patch: Clamp freetype font size to 1000 to avoid overflow issues
 win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
 
 nonfatal-assertions.patch: Make assertions non-fatal
-
-win32-glyph-metrics.patch: GetGlyphOutline only works on Truetype fonts,
-so for non-Truetype fonts, assume no left or right bearing and use the
-font ascent and descent for the glyph extents.
 
 endian.patch: include cairo-platform.h for endian macros
