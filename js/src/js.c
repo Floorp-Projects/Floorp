@@ -269,6 +269,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             JS_DestroyScript(cx, script);
         }
 
+        if (file != stdin)
+            fclose(file);
         return;
     }
 
@@ -314,6 +316,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         }
     } while (!hitEOF && !gQuitting);
     fprintf(gOutFile, "\n");
+    if (file != stdin)
+        fclose(file);
     return;
 }
 
