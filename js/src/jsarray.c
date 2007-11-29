@@ -52,6 +52,7 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jsdtoa.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -993,7 +994,7 @@ js_MergeSort(void *src, size_t nel, size_t elsize,
 typedef struct CompareArgs {
     JSContext   *context;
     jsval       fval;
-    jsval       *localroot;     /* need one local root, for sort_compare */
+    jsval       *localroot;     /* need one local root */
     jsval       *elemroot;      /* stack needed for js_Invoke */
 } CompareArgs;
 
@@ -1003,8 +1004,8 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     jsval av = *(const jsval *)a, bv = *(const jsval *)b;
     CompareArgs *ca = (CompareArgs *) arg;
     JSContext *cx = ca->context;
-    jsval fval;
-    JSBool ok;
+    jsval *invokevp, *sp;
+    jsdouble cmp;
 
     /**
      * array_sort deals with holes and undefs on its own and they should not
@@ -1016,58 +1017,109 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
     if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP))
         return JS_FALSE;
 
+    invokevp = ca->elemroot;
+    sp = invokevp;
+    *sp++ = ca->fval;
+    *sp++ = JSVAL_NULL;
+    *sp++ = av;
+    *sp++ = bv;
+
+    if (!js_Invoke(cx, 2, invokevp, JSINVOKE_INTERNAL) ||
+        !js_ValueToNumber(cx, *invokevp, &cmp)) {
+        return JS_FALSE;
+    }
+
+    /* Clamp cmp to -1, 0, 1. */
     *result = 0;
-    ok = JS_TRUE;
-    fval = ca->fval;
-    if (fval == JSVAL_NULL) {
-        JSString *astr, *bstr;
+    if (!JSDOUBLE_IS_NaN(cmp) && cmp != 0)
+        *result = cmp > 0 ? 1 : -1;
 
-        if (av != bv) {
-            /*
-             * Set our local root to astr in case the second js_ValueToString
-             * displaces the newborn root in cx, and the GC nests under that
-             * call.  Don't bother guarding the local root store with an astr
-             * non-null test.  If we tag null as a string, the GC will untag,
-             * null-test, and avoid dereferencing null.
-             */
-            astr = js_ValueToString(cx, av);
-            *ca->localroot = STRING_TO_JSVAL(astr);
-            if (astr && (bstr = js_ValueToString(cx, bv)))
-                *result = js_CompareStrings(astr, bstr);
-            else
-                ok = JS_FALSE;
-        }
-    } else {
-        jsval *invokevp, *sp;
-        jsdouble cmp;
+    /*
+     * XXX else report some kind of error here?  ECMA talks about 'consistent
+     * compare functions' that don't return NaN, but is silent about what the
+     * result should be.  So we currently ignore it.
+     */
 
-        invokevp = ca->elemroot;
-        sp = invokevp;
-        *sp++ = ca->fval;
-        *sp++ = JSVAL_NULL;
-        *sp++ = av;
-        *sp++ = bv;
+    return JS_TRUE;
+}
 
-        ok = js_Invoke(cx, 2, invokevp, JSINVOKE_INTERNAL);
-        if (ok) {
-            ok = js_ValueToNumber(cx, *invokevp, &cmp);
+static int
+sort_compare_as_strings(void *arg, const void *a, const void *b, int *result)
+{
+    CompareArgs *ca = (CompareArgs *) arg;
+    JSContext *cx = ca->context;
+    struct {
+        jsval    val;
+        JSString *str;
+        char     *chars;
+        char     buf[DTOSTR_STANDARD_BUFFER_SIZE];
+    } conv[2], *c;
+    jsval v;
+    size_t i, n1, n2, n;
+    jschar *jschars;
+    char *chars;
 
-            /* Clamp cmp to -1, 0, 1. */
-            if (ok) {
-                if (JSDOUBLE_IS_NaN(cmp)) {
-                    /*
-                     * XXX report some kind of error here?  ECMA talks about
-                     * 'consistent compare functions' that don't return NaN,
-                     * but is silent about what the result should be.  So we
-                     * currently ignore it.
-                     */
-                } else if (cmp != 0) {
-                    *result = cmp > 0 ? 1 : -1;
-                }
+    if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP))
+        return JS_FALSE;
+
+    conv[0].val = *(const jsval *)a;
+    conv[1].val = *(const jsval *)b;
+    if (conv[0].val == conv[1].val) {
+        *result = 0;
+        return JS_TRUE;
+    }
+
+    for (c = conv; c != JS_ARRAY_END(conv); ++c) {
+        v = c->val;
+        c->str = NULL;
+        c->chars = NULL;
+        if (JSVAL_IS_STRING(v)) {
+            c->str = JSVAL_TO_STRING(v);
+        } else if (JSVAL_IS_INT(v)) {
+            c->chars = js_IntToCString(JSVAL_TO_INT(v), c->buf,
+                                       JS_ARRAY_LENGTH(c->buf));
+        } else if (JSVAL_IS_DOUBLE(v)) {
+            c->chars = js_NumberToCString(cx, *JSVAL_TO_DOUBLE(v),
+                                          c->buf, sizeof c->buf);
+            if (!c->chars)
+                return JS_FALSE;
+        } else {
+            c->str = js_ValueToString(cx, v);
+            if (!c->str)
+                return JS_FALSE;
+            if (c == conv) {
+                /* Root ToString result, as the second iteration can GC. */
+                *ca->localroot = STRING_TO_JSVAL(c->str);
             }
         }
     }
-    return ok;
+
+    if (conv[0].str && conv[1].str) {
+        *result = (int) js_CompareStrings(conv[0].str, conv[1].str);
+    } else if (conv[0].chars && conv[1].chars) {
+        *result = strcmp(conv[0].chars, conv[1].chars);
+    } else {
+        i = conv[0].str ? 0 : 1;
+        jschars = JSSTRING_CHARS(conv[i].str);
+        n1 = JSSTRING_LENGTH(conv[i].str);
+        chars = conv[1 - i].chars;
+        n2 = strlen(chars);
+        n = JS_MIN(n1, n2);
+        for (;;) {
+            if (n == 0) {
+                *result = (n1 < n2) ? -1 : (n1 > n2) ? 1 : 0;
+                break;
+            }
+            --n;
+            *result = (int)*jschars++ - (int)*chars++;
+            if (*result != 0)
+                break;
+        }
+        if (conv[1].str)
+            *result = -*result;
+    }
+
+    return JS_TRUE;
 }
 
 static int
@@ -1238,7 +1290,10 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
             goto out;
         }
         ok = js_MergeSort(vec, (size_t) newlen, sizeof(jsval),
-                          sort_compare, &ca, mergesort_tmp);
+                          (fval != JSVAL_NULL)
+                          ? sort_compare
+                          : sort_compare_as_strings,
+                          &ca, mergesort_tmp);
         js_FreeStack(cx, mark);
     }
     if (!ok)
