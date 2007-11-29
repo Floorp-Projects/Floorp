@@ -36,7 +36,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY miFindCSSRules.label "Find CSS Rules...">
+<!ENTITY miFindCSSRules.label "Find CSS Rules…">
 <!ENTITY miFindCSSRules.accesskey "F">
 
 <!ENTITY newRules.label "New">
