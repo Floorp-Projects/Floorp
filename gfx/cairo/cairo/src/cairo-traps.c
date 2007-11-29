@@ -257,21 +257,17 @@ _cairo_traps_grow (cairo_traps_t *traps)
     cairo_trapezoid_t *new_traps;
     int new_size = 2 * MAX (traps->traps_size, 16);
 
-    if (traps->status)
-	return traps->status;
-
     if (traps->traps == traps->traps_embedded) {
 	new_traps = _cairo_malloc_ab (new_size, sizeof (cairo_trapezoid_t));
 	if (new_traps)
 	    memcpy (new_traps, traps->traps, sizeof (traps->traps_embedded));
     } else {
-	new_traps = realloc (traps->traps, new_size * sizeof (cairo_trapezoid_t));
+	new_traps = _cairo_realloc_ab (traps->traps,
+	                               new_size, sizeof (cairo_trapezoid_t));
     }
 
-    if (new_traps == NULL) {
-	traps->status = CAIRO_STATUS_NO_MEMORY;
-	return traps->status;
-    }
+    if (new_traps == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     traps->traps = new_traps;
     traps->traps_size = new_size;
@@ -614,7 +610,7 @@ _cairo_traps_extract_region (cairo_traps_t  *traps,
 	boxes = _cairo_malloc_ab (traps->num_traps, sizeof(cairo_box_int_t));
 
 	if (boxes == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     box_count = 0;

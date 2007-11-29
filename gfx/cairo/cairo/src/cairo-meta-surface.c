@@ -85,7 +85,7 @@ _cairo_meta_surface_create (cairo_content_t	content,
 
     meta = malloc (sizeof (cairo_meta_surface_t));
     if (meta == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -253,7 +253,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_paint_t));
     if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_PAINT;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -294,7 +294,7 @@ _cairo_meta_surface_mask (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_mask_t));
     if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_MASK;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -340,7 +340,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_stroke_t));
     if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_STROKE;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -395,7 +395,7 @@ _cairo_meta_surface_fill (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_fill_t));
     if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_FILL;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -442,7 +442,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_show_glyphs_t));
     if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_SHOW_GLYPHS;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -454,7 +454,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
 
     command->glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
     if (command->glyphs == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_SOURCE;
     }
     memcpy (command->glyphs, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
@@ -476,7 +476,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     free (command);
-    return status;
+    return _cairo_error (status);
 }
 
 /**
@@ -500,7 +500,7 @@ _cairo_meta_surface_snapshot (void *abstract_other)
 
     meta = malloc (sizeof (cairo_meta_surface_t));
     if (meta == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -532,7 +532,7 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
 
     command = malloc (sizeof (cairo_command_intersect_clip_path_t));
     if (command == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_INTERSECT_CLIP_PATH;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -667,9 +667,13 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
     cairo_bool_t has_device_transform = _cairo_surface_has_device_transform (target);
     cairo_matrix_t *device_transform = &target->device_transform;
     cairo_path_fixed_t path_copy, *dev_path;
+    double tolerance_multiplier = _cairo_matrix_transformed_circle_major_axis (device_transform, 1.0);
 
     if (surface->status)
 	return surface->status;
+
+    if (target->status)
+	return _cairo_surface_set_error (surface, target->status);
 
     meta = (cairo_meta_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
@@ -736,7 +740,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					    &command->stroke.style,
 					    &dev_ctm,
 					    &dev_ctm_inverse,
-					    command->stroke.tolerance,
+					    command->stroke.tolerance * tolerance_multiplier,
 					    command->stroke.antialias);
 	    break;
 	}
@@ -768,7 +772,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 						     command->fill.op,
 						     &command->fill.source.base,
 						     command->fill.fill_rule,
-						     command->fill.tolerance,
+						     command->fill.tolerance * tolerance_multiplier,
 						     command->fill.antialias,
 						     dev_path,
 						     stroke_command->stroke.op,
@@ -776,7 +780,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 						     &stroke_command->stroke.style,
 						     &dev_ctm,
 						     &dev_ctm_inverse,
-						     stroke_command->stroke.tolerance,
+						     stroke_command->stroke.tolerance * tolerance_multiplier,
 						     stroke_command->stroke.antialias);
 		i++;
 	    } else
@@ -785,7 +789,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					      &command->fill.source.base,
 					      dev_path,
 					      command->fill.fill_rule,
-					      command->fill.tolerance,
+					      command->fill.tolerance * tolerance_multiplier,
 					      command->fill.antialias);
 	    break;
 	}
@@ -798,7 +802,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    if (has_device_transform) {
 		dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
 		if (dev_glyphs == NULL) {
-		    status = CAIRO_STATUS_NO_MEMORY;
+		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		    break;
 		}
 		for (i = 0; i < num_glyphs; i++) {
@@ -828,7 +832,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    else
 		status = _cairo_clip_clip (&clip, dev_path,
 					   command->intersect_clip_path.fill_rule,
-					   command->intersect_clip_path.tolerance,
+					   command->intersect_clip_path.tolerance * tolerance_multiplier,
 					   command->intersect_clip_path.antialias,
 					   target);
             assert (status == 0);
@@ -860,7 +864,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 
     _cairo_clip_reset (&clip);
 
-    return status;
+    return _cairo_surface_set_error (surface, status);
 }
 
 cairo_status_t

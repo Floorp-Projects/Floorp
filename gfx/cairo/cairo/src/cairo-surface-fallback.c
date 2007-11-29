@@ -125,7 +125,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 					 extents->width,
 					 extents->height);
     if (mask->status)
-	return CAIRO_STATUS_NO_MEMORY;
+	return mask->status;
 
     status = (*draw_func) (draw_closure, CAIRO_OPERATOR_ADD,
 			   NULL, mask,
@@ -211,7 +211,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 						 extents->width,
 						 extents->height);
     if (intermediate->status)
-	return CAIRO_STATUS_NO_MEMORY;
+	return intermediate->status;
 
     /* Initialize the intermediate surface from the destination surface
      */
@@ -1049,8 +1049,11 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     snapshot = cairo_image_surface_create (image->format,
 					   image->width,
 					   image->height);
-    if (cairo_surface_status (snapshot))
+    if (cairo_surface_status (snapshot)) {
+	_cairo_surface_release_source_image (surface,
+					     image, &image_extra);
 	return snapshot;
+    }
 
     _cairo_pattern_init_for_surface (&pattern.surface, &image->base);
 
@@ -1065,13 +1068,13 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 				       image->height);
 
     _cairo_pattern_fini (&pattern.base);
+    _cairo_surface_release_source_image (surface,
+					 image, &image_extra);
+
     if (status) {
 	cairo_surface_destroy (snapshot);
 	return (cairo_surface_t *) &_cairo_surface_nil;
     }
-
-    _cairo_surface_release_source_image (surface,
-					 image, image_extra);
 
     snapshot->device_transform = surface->device_transform;
     snapshot->device_transform_inverse = surface->device_transform_inverse;
@@ -1171,7 +1174,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
 	offset_rects = _cairo_malloc_ab (num_rects, sizeof (cairo_rectangle_int_t));
 	if (offset_rects == NULL) {
-	    status = CAIRO_STATUS_NO_MEMORY;
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}
 
@@ -1227,7 +1230,7 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
 	offset_traps = _cairo_malloc_ab (num_traps, sizeof (cairo_trapezoid_t));
 	if (!offset_traps) {
-	    status = CAIRO_STATUS_NO_MEMORY;
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}
 

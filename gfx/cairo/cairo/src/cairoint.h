@@ -66,82 +66,20 @@
 #include "cairo.h"
 #include <pixman.h>
 
+#include "cairo-compiler-private.h"
+
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #undef inline
 #define inline __inline
 #endif
 
+#ifdef __STRICT_ANSI__
+#undef inline
+#define inline __inline__
+#endif
+
 CAIRO_BEGIN_DECLS
-
-#if __GNUC__ >= 3 && defined(__ELF__) && !defined(__sun)
-# define slim_hidden_proto(name)		slim_hidden_proto1(name, slim_hidden_int_name(name)) cairo_private
-# define slim_hidden_proto_no_warn(name)	slim_hidden_proto1(name, slim_hidden_int_name(name)) cairo_private_no_warn
-# define slim_hidden_def(name)			slim_hidden_def1(name, slim_hidden_int_name(name))
-# define slim_hidden_int_name(name) INT_##name
-# define slim_hidden_proto1(name, internal)				\
-  extern __typeof (name) name						\
-	__asm__ (slim_hidden_asmname (internal))
-# define slim_hidden_def1(name, internal)				\
-  extern __typeof (name) EXT_##name __asm__(slim_hidden_asmname(name))	\
-	__attribute__((__alias__(slim_hidden_asmname(internal))))
-# define slim_hidden_ulp		slim_hidden_ulp1(__USER_LABEL_PREFIX__)
-# define slim_hidden_ulp1(x)		slim_hidden_ulp2(x)
-# define slim_hidden_ulp2(x)		#x
-# define slim_hidden_asmname(name)	slim_hidden_asmname1(name)
-# define slim_hidden_asmname1(name)	slim_hidden_ulp #name
-#else
-# define slim_hidden_proto(name)		int _cairo_dummy_prototype(void)
-# define slim_hidden_proto_no_warn(name)	int _cairo_dummy_prototype(void)
-# define slim_hidden_def(name)			int _cairo_dummy_prototype(void)
-#endif
-
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
-#define CAIRO_PRINTF_FORMAT(fmt_index, va_index) \
-	__attribute__((__format__(__printf__, fmt_index, va_index)))
-#else
-#define CAIRO_PRINTF_FORMAT(fmt_index, va_index)
-#endif
-
-/* slim_internal.h */
-#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun)
-#define cairo_private_no_warn	__attribute__((__visibility__("hidden")))
-#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
-#define cairo_private_no_warn	__hidden
-#else /* not gcc >= 3.3 and not Sun Studio >= 8 */
-#define cairo_private_no_warn
-#endif
-
-#ifndef WARN_UNUSED_RESULT
-#define WARN_UNUSED_RESULT
-#endif
-/* Add attribute(warn_unused_result) if supported */
-#define cairo_warn	    WARN_UNUSED_RESULT
-#define cairo_private	    cairo_private_no_warn cairo_warn
-
-/* This macro allow us to deprecate a function by providing an alias
-   for the old function name to the new function name. With this
-   macro, binary compatibility is preserved. The macro only works on
-   some platforms --- tough.
-
-   Meanwhile, new definitions in the public header file break the
-   source code so that it will no longer link against the old
-   symbols. Instead it will give a descriptive error message
-   indicating that the old function has been deprecated by the new
-   function.
-*/
-#if __GNUC__ >= 2 && defined(__ELF__)
-# define CAIRO_FUNCTION_ALIAS(old, new)		\
-	extern __typeof (new) old		\
-	__asm__ ("" #old)			\
-	__attribute__((__alias__("" #new)))
-#else
-# define CAIRO_FUNCTION_ALIAS(old, new)
-#endif
-
-#ifndef __GNUC__
-#define __attribute__(x)
-#endif
 
 #undef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -183,8 +121,6 @@ do {					\
     static const int NOT_REACHED = 0;	\
     assert (NOT_REACHED);		\
 } while (0)
-
-#define CAIRO_REF_COUNT_INVALID ((unsigned int) -1)
 
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
 #define CAIRO_ALPHA_SHORT_IS_OPAQUE(alpha) ((alpha) >= 0xff00)
@@ -242,6 +178,7 @@ be32_to_cpu(uint32_t v)
 #include "cairo-types-private.h"
 #include "cairo-cache-private.h"
 #include "cairo-fixed-private.h"
+#include "cairo-reference-count-private.h"
 
 typedef struct _cairo_region cairo_region_t;
 
@@ -353,8 +290,11 @@ typedef struct _cairo_polygon {
     cairo_edge_t  edges_embedded[8];
 } cairo_polygon_t;
 
-typedef struct _cairo_spline {
+typedef struct _cairo_spline_knots {
     cairo_point_t a, b, c, d;
+} cairo_spline_knots_t;
+typedef struct _cairo_spline {
+    cairo_spline_knots_t knots;
 
     cairo_slope_t initial_slope;
     cairo_slope_t final_slope;
@@ -458,9 +398,9 @@ typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
  * glyph cache.
  */
 typedef struct _cairo_unscaled_font {
-    cairo_hash_entry_t hash_entry;
-    unsigned int ref_count;
-    const cairo_unscaled_font_backend_t *backend;
+    cairo_hash_entry_t			 hash_entry;
+    cairo_reference_count_t		 ref_count;
+    const cairo_unscaled_font_backend_t	*backend;
 } cairo_unscaled_font_t;
 
 typedef struct _cairo_scaled_glyph {
@@ -484,7 +424,7 @@ struct _cairo_font_face {
     /* hash_entry must be first */
     cairo_hash_entry_t hash_entry;
     cairo_status_t status;
-    unsigned int ref_count;
+    cairo_reference_count_t ref_count;
     cairo_user_data_array_t user_data;
     const cairo_font_face_backend_t *backend;
 };
@@ -529,6 +469,7 @@ typedef struct _cairo_scaled_font_subset {
      */
     unsigned long *glyphs;
     unsigned long *to_unicode;
+    char          **glyph_names;
     unsigned int num_glyphs;
     cairo_bool_t is_composite;
 } cairo_scaled_font_subset_t;
@@ -957,14 +898,14 @@ typedef enum {
 #define CAIRO_FILTER_DEFAULT CAIRO_FILTER_BEST
 
 struct _cairo_pattern {
-    cairo_pattern_type_t    type;
-    unsigned int	    ref_count;
-    cairo_status_t          status;
-    cairo_user_data_array_t user_data;
+    cairo_pattern_type_t	type;
+    cairo_reference_count_t	ref_count;
+    cairo_status_t		status;
+    cairo_user_data_array_t	user_data;
 
-    cairo_matrix_t	    matrix;
-    cairo_filter_t	    filter;
-    cairo_extend_t	    extend;
+    cairo_matrix_t		matrix;
+    cairo_filter_t		filter;
+    cairo_extend_t		extend;
 };
 
 typedef struct _cairo_solid_pattern {
@@ -1435,7 +1376,7 @@ _cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font);
 cairo_private void
 _cairo_scaled_font_reset_cache (cairo_scaled_font_t *scaled_font);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status);
 
@@ -1445,6 +1386,10 @@ extern const cairo_private cairo_scaled_font_t _cairo_scaled_font_nil;
 cairo_private void
 _cairo_font_face_init (cairo_font_face_t               *font_face,
 		       const cairo_font_face_backend_t *backend);
+
+cairo_private cairo_status_t
+_cairo_font_face_set_error (cairo_font_face_t *font_face,
+	                    cairo_status_t     status);
 
 cairo_private cairo_font_face_t *
 _cairo_toy_font_face_create (const char           *family,
@@ -1544,7 +1489,7 @@ _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
 cairo_private cairo_status_t
 _cairo_path_fixed_close_path (cairo_path_fixed_t *path);
 
-cairo_private cairo_status_t
+cairo_private cairo_bool_t
 _cairo_path_fixed_get_current_point (cairo_path_fixed_t *path,
 				     cairo_fixed_t	*x,
 				     cairo_fixed_t	*y);
@@ -1698,7 +1643,7 @@ extern const cairo_private cairo_surface_t _cairo_surface_nil_read_error;
 extern const cairo_private cairo_surface_t _cairo_surface_nil_write_error;
 extern const cairo_private cairo_surface_t _cairo_surface_nil_file_not_found;
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_surface_set_error (cairo_surface_t	*surface,
 			  cairo_status_t	 status);
 
@@ -2151,10 +2096,10 @@ _cairo_polygon_close (cairo_polygon_t *polygon);
 /* cairo_spline.c */
 cairo_private cairo_int_status_t
 _cairo_spline_init (cairo_spline_t *spline,
-		    cairo_point_t *a,
-		    cairo_point_t *b,
-		    cairo_point_t *c,
-		    cairo_point_t *d);
+		    const cairo_point_t *a,
+		    const cairo_point_t *b,
+		    const cairo_point_t *c,
+		    const cairo_point_t *d);
 
 cairo_private cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
@@ -2174,6 +2119,9 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 				      double *x1, double *y1,
 				      double *x2, double *y2,
 				      cairo_bool_t *is_tight);
+
+cairo_private cairo_bool_t
+_cairo_matrix_is_invertible (const cairo_matrix_t *matrix);
 
 cairo_private void
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
@@ -2374,8 +2322,14 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 		      uint16_t		 **result,
 		      int		  *items_written);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_error (cairo_status_t status);
+
+/* hide compiler warnings when discarding the return value */
+#define _cairo_error_throw(status) do { \
+    cairo_status_t status__ = _cairo_error (status); \
+    (void) status__; \
+} while (0)
 
 /* Avoid unnecessary PLT entries.  */
 slim_hidden_proto (cairo_clip_preserve);

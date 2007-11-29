@@ -63,8 +63,10 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
     vertices[0].point = tmp;
 
     hull = _cairo_malloc_ab (num_vertices, sizeof (cairo_hull_t));
-    if (hull == NULL)
+    if (hull == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
     for (i = 0; i < num_vertices; i++) {
 	hull[i].point = vertices[i].point;
@@ -140,7 +142,7 @@ _cairo_hull_next_valid (cairo_hull_t *hull, int num_hull, int index)
     return index;
 }
 
-static cairo_status_t
+static void
 _cairo_hull_eliminate_concave (cairo_hull_t *hull, int num_hull)
 {
     int i, j, k;
@@ -157,7 +159,7 @@ _cairo_hull_eliminate_concave (cairo_hull_t *hull, int num_hull)
 	/* Is the angle formed by ij and jk concave? */
 	if (_cairo_slope_compare (&slope_ij, &slope_jk) >= 0) {
 	    if (i == k)
-		return CAIRO_STATUS_SUCCESS;
+		return;
 	    hull[j].discard = 1;
 	    j = i;
 	    i = _cairo_hull_prev_valid (hull, num_hull, j);
@@ -167,11 +169,9 @@ _cairo_hull_eliminate_concave (cairo_hull_t *hull, int num_hull)
 	    k = _cairo_hull_next_valid (hull, num_hull, j);
 	}
     } while (j != 0);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_hull_to_pen (cairo_hull_t *hull, cairo_pen_vertex_t *vertices, int *num_vertices)
 {
     int i, j = 0;
@@ -183,8 +183,6 @@ _cairo_hull_to_pen (cairo_hull_t *hull, cairo_pen_vertex_t *vertices, int *num_v
     }
 
     *num_vertices = j;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 /* Given a set of vertices, compute the convex hull using the Graham

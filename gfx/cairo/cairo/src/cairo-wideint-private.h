@@ -74,6 +74,8 @@
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
+#include "cairo-compiler-private.h"
+
 /*
  * 64-bit datatypes.  Two separate implementations, one using
  * built-in 64-bit signed/unsigned types another implemented

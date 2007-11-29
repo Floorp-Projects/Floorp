@@ -40,12 +40,6 @@
 #include "cairo-atsui.h"
 #include "cairo-quartz-private.h"
 
-/* 10.5 SDK includes a funky new definition of FloatToFixed, so reset to old-style definition */
-#ifdef FloatToFixed
-#undef FloatToFixed
-#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
-#endif
-
 /*
  * FixedToFloat/FloatToFixed are 10.3+ SDK items - include definitions
  * here so we can use older SDKs.
@@ -69,6 +63,9 @@
 /* Public in 10.4, present in 10.3.9 */
 CG_EXTERN CGRect CGRectApplyAffineTransform (CGRect, CGAffineTransform);
 
+/* Error code for path callbacks */
+static OSStatus CAIRO_CG_PATH_ERROR = 1001;
+
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
 typedef struct _cairo_atsui_scaled_path cairo_atsui_scaled_path_t;
@@ -90,7 +87,6 @@ struct _cairo_atsui_font {
 
     Fixed size;
     CGAffineTransform font_matrix;
-    CGFontRef cgfref;
 };
 
 struct _cairo_atsui_font_face {
@@ -115,6 +111,7 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
 					   const cairo_font_options_t *options,
 					   cairo_scaled_font_t **font)
 {
+    cairo_status_t status;
     cairo_atsui_font_face_t *font_face = abstract_face;
     OSStatus err;
     ATSUAttributeTag styleTags[] = { kATSUFontTag };
@@ -123,11 +120,22 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
     ATSUStyle style;
 
     err = ATSUCreateStyle (&style);
+    if (err != noErr)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     err = ATSUSetAttributes(style, ARRAY_LENGTH (styleTags),
                             styleTags, styleSizes, styleValues);
+    if (err != noErr) {
+        ATSUDisposeStyle (style);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
-    return _cairo_atsui_font_create_scaled (&font_face->base, font_face->font_id, style,
+    status = _cairo_atsui_font_create_scaled (&font_face->base, font_face->font_id, style,
 					    font_matrix, ctm, options, font);
+    if (status)
+        ATSUDisposeStyle (style);
+
+    return status;
 }
 
 static const cairo_font_face_backend_t _cairo_atsui_font_face_backend = {
@@ -167,29 +175,34 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
     return &font_face->base;
 }
 
-static ATSUStyle
+static OSStatus
 CreateSizedCopyOfStyle(ATSUStyle inStyle, 
 		       const Fixed *theSize, 
-		       const CGAffineTransform *theTransform)
+                      const CGAffineTransform *theTransform,
+                      ATSUStyle *style)
 {
-    ATSUStyle style;
     OSStatus err;
     const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag, 
-						  kATSUFontMatrixTag };
+                                                 kATSUFontMatrixTag };
     const ByteCount theFontStyleSizes[] = { sizeof(Fixed), 
-					    sizeof(CGAffineTransform) };
+                                           sizeof(CGAffineTransform) };
     ATSUAttributeValuePtr theFontStyleValues[] = { (Fixed *)theSize, 
-						   (CGAffineTransform *)theTransform };
+                                                  (CGAffineTransform *)theTransform };
 
-    err = ATSUCreateAndCopyStyle(inStyle, &style);
+    err = ATSUCreateAndCopyStyle (inStyle, style);
+    if (err != noErr)
+	return err;
 
-    err = ATSUSetAttributes(style,
+    err = ATSUSetAttributes(*style,
                             sizeof(theFontStyleTags) /
                             sizeof(ATSUAttributeTag), theFontStyleTags,
                             theFontStyleSizes, theFontStyleValues);
+    if (err != noErr)
+	ATSUDisposeStyle (*style);
 
-    return style;
+    return err;
 }
+
 
 static cairo_status_t
 _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
@@ -208,7 +221,7 @@ _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
 
             extents.ascent = metrics.ascent;
             extents.descent = -metrics.descent;
-            extents.height = metrics.capHeight;
+            extents.height = extents.ascent + extents.descent + metrics.leading;
             extents.max_x_advance = metrics.maxAdvanceWidth;
 
             /* The FT backend doesn't handle max_y_advance either, so we'll ignore it for now. */
@@ -220,7 +233,7 @@ _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
         }
     }
 
-    return CAIRO_STATUS_NULL_POINTER;
+    return _cairo_error (CAIRO_STATUS_NULL_POINTER);
 }
 
 static cairo_status_t
@@ -240,7 +253,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
     font = malloc(sizeof(cairo_atsui_font_t));
     if (font == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_scaled_font_init (&font->base,
 				      font_face, font_matrix, ctm, options,
@@ -257,7 +270,12 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 					       0., 0.);
     font->size = FloatToFixed (xscale);
 
-    font->style = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix);
+    err = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix, &font->style);
+    if (err != noErr) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL;
+    }
 
     {
 	Fixed theSize = FloatToFixed(1.0);
@@ -270,7 +288,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 				sizeof(ATSUAttributeTag), theFontStyleTags,
 				theFontStyleSizes, theFontStyleValues);
 	if (err != noErr) {
-	    status = CAIRO_STATUS_NO_MEMORY;
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto FAIL;
 	}
     }
@@ -282,11 +300,14 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
     status = _cairo_atsui_font_set_metrics (font);
 
-    font->cgfref = NULL;
-
   FAIL:
     if (status) {
-	cairo_scaled_font_destroy (&font->base);
+	if (font) {
+	    if (font->style)
+		ATSUDisposeStyle(font->style);
+	    free (font);
+	}
+
 	return status;
     }
 
@@ -300,6 +321,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 			     const cairo_font_options_t *options,
 			     cairo_scaled_font_t **font_out)
 {
+    cairo_status_t status;
     ATSUStyle style;
     ATSUFontID fontID;
     OSStatus err;
@@ -308,6 +330,9 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
     const char *full_name;
 
     err = ATSUCreateStyle(&style);
+    if (err != noErr) {
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     switch (toy_face->weight) {
     case CAIRO_FONT_WEIGHT_BOLD:
@@ -381,6 +406,10 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 				       kFontNoPlatformCode,
 				       kFontRomanScript,
 				       kFontNoLanguageCode, &fontID);
+	    if (err != noErr) {
+		ATSUDisposeStyle (style);
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    }
 	}
     }
 
@@ -393,10 +422,18 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 
 	err = ATSUSetAttributes(style, ARRAY_LENGTH (styleTags),
 				styleTags, styleSizes, styleValues);
+	if (err != noErr) {
+	    ATSUDisposeStyle (style);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
     }
 
-    return _cairo_atsui_font_create_scaled (&toy_face->base, fontID, style,
+    status = _cairo_atsui_font_create_scaled (&toy_face->base, fontID, style,
 					    font_matrix, ctm, options, font_out);
+    if (status)
+	ATSUDisposeStyle (style);
+
+    return status;
 }
 
 static void
@@ -411,9 +448,6 @@ _cairo_atsui_font_fini(void *abstract_font)
         ATSUDisposeStyle(font->style);
     if (font->unscaled_style)
         ATSUDisposeStyle(font->unscaled_style);
-    if (font->cgfref)
-	CGFontRelease(font->cgfref);
-
 }
 
 static GlyphID 
@@ -448,7 +482,7 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 				     1, &theGlyph, 0, false,
 				     false, &metricsH);
     if (err != noErr)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* Scale down to font units.*/
     _cairo_matrix_compute_scale_factors (&scaled_font->base.scale,
@@ -474,16 +508,22 @@ static OSStatus
 _move_to (const Float32Point *point,
 	  void *callback_data)
 {
+    cairo_status_t status;
     cairo_atsui_scaled_path_t *scaled_path = callback_data;
     double x = point->x;
     double y = point->y;
     
     cairo_matrix_transform_point (scaled_path->scale, &x, &y);
-    _cairo_path_fixed_close_path (scaled_path->path);
-    _cairo_path_fixed_move_to (scaled_path->path,
+    status = _cairo_path_fixed_close_path (scaled_path->path);
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
+
+    status = _cairo_path_fixed_move_to (scaled_path->path,
 			       _cairo_fixed_from_double (x),
 			       _cairo_fixed_from_double (y));
-
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
+    
     return noErr;
 }
 
@@ -491,15 +531,18 @@ static OSStatus
 _line_to (const Float32Point *point,
 	  void *callback_data)
 {
+    cairo_status_t status;
     cairo_atsui_scaled_path_t *scaled_path = callback_data;
     double x = point->x;
     double y = point->y;
     
     cairo_matrix_transform_point (scaled_path->scale, &x, &y);
 
-    _cairo_path_fixed_line_to (scaled_path->path,
+    status = _cairo_path_fixed_line_to (scaled_path->path,
 			       _cairo_fixed_from_double (x),
 			       _cairo_fixed_from_double (y));
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
 
     return noErr;
 }
@@ -510,6 +553,7 @@ _curve_to (const Float32Point *point1,
 	   const Float32Point *point3,
 	   void *callback_data)
 {
+    cairo_status_t status;
     cairo_atsui_scaled_path_t *scaled_path = callback_data;
     double x1 = point1->x;
     double y1 = point1->y;
@@ -522,13 +566,15 @@ _curve_to (const Float32Point *point1,
     cairo_matrix_transform_point (scaled_path->scale, &x2, &y2);
     cairo_matrix_transform_point (scaled_path->scale, &x3, &y3);
 
-    _cairo_path_fixed_curve_to (scaled_path->path,
+    status = _cairo_path_fixed_curve_to (scaled_path->path,
 				_cairo_fixed_from_double (x1),
 				_cairo_fixed_from_double (y1),
 				_cairo_fixed_from_double (x2),
 				_cairo_fixed_from_double (y2),
 				_cairo_fixed_from_double (x3),
 				_cairo_fixed_from_double (y3));
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
 
     return noErr;
 }
@@ -537,9 +583,12 @@ static OSStatus
 _close_path (void *callback_data)
 
 {
+    cairo_status_t status;
     cairo_atsui_scaled_path_t *scaled_path = callback_data;
 
-    _cairo_path_fixed_close_path (scaled_path->path);
+    status = _cairo_path_fixed_close_path (scaled_path->path);
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
 
     return noErr;
 }
@@ -562,7 +611,7 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     
     scaled_path.path = _cairo_path_fixed_create ();
     if (!scaled_path.path)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (theGlyph == kATSDeletedGlyphcode) {
 	_cairo_scaled_glyph_set_path (scaled_glyph, &scaled_font->base, 
@@ -595,6 +644,10 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
 				 lineProc,
 				 curveProc,
 				 closePathProc, (void *)&scaled_path, &err);
+    if (err != noErr) {
+	_cairo_path_fixed_destroy (scaled_path.path);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     _cairo_scaled_glyph_set_path (scaled_glyph, &scaled_font->base, 
 				  scaled_path.path);
@@ -658,6 +711,10 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     err = ATSUGlyphGetScreenMetrics (scaled_font->style,
 				     1, &theGlyph, 0, false,
 				     false, &metricsH);    
+    if (err != noErr) {
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
     left = metricsH.sideBearing.x - 1.0;
     width = metricsH.deviceAdvance.x 
 	- metricsH.sideBearing.x 
@@ -715,7 +772,7 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
 
     if (!drawingContext) {
 	cairo_surface_destroy ((cairo_surface_t *)surface);
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
     
     atsFont = FMGetATSFontRefFromFont (scaled_font->fontID);
@@ -803,29 +860,45 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 
     status = _cairo_utf8_to_utf16 ((unsigned char *)utf8, -1, &utf16, &n16);
     if (status)
-	return status;
+	goto BAIL3;
 
     err = ATSUCreateTextLayout(&textLayout);
+    if (err != noErr) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL3;
+    }
 
     err = ATSUSetTextPointerLocation(textLayout, utf16, 0, n16, n16);
+    if (err != noErr) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL2;
+    }
 
     /* Set the style for all of the text */
     err = ATSUSetRunStyle(textLayout,
 			  font->style, kATSUFromTextBeginning, kATSUToTextEnd);
+    if (err != noErr) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL2;
+    }
 
     err = ATSUDirectGetLayoutDataArrayPtrFromTextLayout(textLayout,
 							0,
 							kATSUDirectDataLayoutRecordATSLayoutRecordCurrent,
 							(void *)&layoutRecords,
 							&glyphCount);
+    if (err != noErr) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL2;
+    }
 
     *num_glyphs = glyphCount - 1;
     *glyphs =
 	(cairo_glyph_t *) _cairo_malloc_ab(*num_glyphs, sizeof (cairo_glyph_t));
     if (*glyphs == NULL) {
-	return CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL1;
     }
-
     _cairo_matrix_compute_scale_factors (&font->base.ctm, &xscale, &yscale, 1);
     device_to_user_scale = 
 	CGAffineTransformInvert (CGAffineTransformMake (xscale, 0,
@@ -841,14 +914,17 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 	(*glyphs)[i].y = y;
     }
 
-    free (utf16);
-
+  BAIL1:
+    /* TODO ignored return value. Is there anything we should do? */
     ATSUDirectReleaseLayoutDataArrayPtr(NULL,
 					kATSUDirectDataLayoutRecordATSLayoutRecordCurrent,
 					(void *) &layoutRecords);
+  BAIL2:
     ATSUDisposeTextLayout(textLayout);
+  BAIL3:
+    free (utf16);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 ATSUStyle
@@ -866,19 +942,6 @@ _cairo_atsui_scaled_font_get_atsu_font_id (cairo_scaled_font_t *sfont)
 
     return afont->fontID;
 }
-
-CGFontRef
-_cairo_atsui_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont)
-{
-    cairo_atsui_font_t *afont = (cairo_atsui_font_t *) sfont;
-
-    if (!afont->cgfref) {
-	ATSFontRef atsfref = FMGetATSFontRefFromFont (afont->fontID);
-	afont->cgfref = CGFontCreateWithPlatformFont (&atsfref);
-    }
-    return afont->cgfref;
-}
-
 
 static cairo_int_status_t
 _cairo_atsui_load_truetype_table (void	           *abstract_font,

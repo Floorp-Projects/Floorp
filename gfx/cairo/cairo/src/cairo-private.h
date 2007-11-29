@@ -36,11 +36,12 @@
 #ifndef CAIRO_PRIVATE_H
 #define CAIRO_PRIVATE_H
 
+#include "cairo-reference-count-private.h"
 #include "cairo-gstate-private.h"
 #include "cairo-path-fixed-private.h"
 
 struct _cairo {
-    unsigned int ref_count;
+    cairo_reference_count_t ref_count;
 
     cairo_status_t status;
 

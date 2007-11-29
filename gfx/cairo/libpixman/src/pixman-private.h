@@ -67,10 +67,12 @@
 #define FB_HALFUNIT (1 << (FB_SHIFT-1))
 #define FB_MASK     (FB_UNIT - 1)
 #define FB_ALLONES  ((uint32_t) -1)
-    
+
 /* Memory allocation helpers */
 void *pixman_malloc_ab (unsigned int n, unsigned int b);
 void *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
+pixman_bool_t pixman_multiply_overflows_int (unsigned int a, unsigned int b);
+pixman_bool_t pixman_addition_overflows_int (unsigned int a, unsigned int b);
 
 #if DEBUG
 
@@ -221,7 +223,7 @@ struct solid_fill
     source_image_t	common;
     uint32_t		color;		/* FIXME: shouldn't this be a pixman_color_t? */
 };
-    
+
 struct gradient
 {
     source_image_t		common;
@@ -263,7 +265,7 @@ struct conical_gradient
     gradient_t			common;
     pixman_point_fixed_t	center;
     pixman_fixed_t		angle;
-}; 
+};
 
 struct bits_image
 {
@@ -331,23 +333,23 @@ union pixman_image
     }
 
 #if IMAGE_BYTE_ORDER == MSBFirst
-#define Fetch24(a)  ((unsigned long) (a) & 1 ?			      \
-		     ((READ(a) << 16) | READ((uint16_t *) ((a)+1))) : \
-		     ((READ((uint16_t *) (a)) << 8) | READ((a)+2)))
-#define Store24(a,v) ((unsigned long) (a) & 1 ?		\
-		      (WRITE(a, (uint8_t) ((v) >> 16)),		      \
-		       WRITE((uint16_t *) ((a)+1), (uint16_t) (v))) :  \
-		      (WRITE((uint16_t *) (a), (uint16_t) ((v) >> 8)), \
-		       WRITE((a)+2, (uint8_t) (v))))
+#define Fetch24(img, a)  ((unsigned long) (a) & 1 ?	      \
+    ((READ(img, a) << 16) | READ(img, (uint16_t *) ((a)+1))) : \
+    ((READ(img, (uint16_t *) (a)) << 8) | READ(img, (a)+2)))
+#define Store24(img,a,v) ((unsigned long) (a) & 1 ? \
+    (WRITE(img, a, (uint8_t) ((v) >> 16)),		  \
+     WRITE(img, (uint16_t *) ((a)+1), (uint16_t) (v))) :  \
+    (WRITE(img, (uint16_t *) (a), (uint16_t) ((v) >> 8)), \
+     WRITE(img, (a)+2, (uint8_t) (v))))
 #else
-#define Fetch24(a)  ((unsigned long) (a) & 1 ?			     \
-		     (READ(a) | (READ((uint16_t *) ((a)+1)) << 8)) : \
-		     (READ((uint16_t *) (a)) | (READ((a)+2) << 16)))
-#define Store24(a,v) ((unsigned long) (a) & 1 ? \
-		      (WRITE(a, (uint8_t) (v)),				\
-		       WRITE((uint16_t *) ((a)+1), (uint16_t) ((v) >> 8))) : \
-		      (WRITE((uint16_t *) (a), (uint16_t) (v)),		\
-		       WRITE((a)+2, (uint8_t) ((v) >> 16))))
+#define Fetch24(img,a)  ((unsigned long) (a) & 1 ?			     \
+    (READ(img, a) | (READ(img, (uint16_t *) ((a)+1)) << 8)) : \
+    (READ(img, (uint16_t *) (a)) | (READ(img, (a)+2) << 16)))
+#define Store24(img,a,v) ((unsigned long) (a) & 1 ? \
+    (WRITE(img, a, (uint8_t) (v)),				\
+     WRITE(img, (uint16_t *) ((a)+1), (uint16_t) ((v) >> 8))) : \
+    (WRITE(img, (uint16_t *) (a), (uint16_t) (v)),		\
+     WRITE(img, (a)+2, (uint8_t) ((v) >> 16))))
 #endif
 
 #define Alpha(x) ((x) >> 24)
@@ -636,26 +638,26 @@ union pixman_image
 
 #ifdef PIXMAN_FB_ACCESSORS
 
-#define READ(ptr)							\
-    (image->common.read_func ((ptr), sizeof(*(ptr))))
-#define WRITE(ptr,val)							\
-    (image->common.write_func ((ptr), (val), sizeof (*(ptr))))
+#define READ(img, ptr)							\
+    ((img)->common.read_func ((ptr), sizeof(*(ptr))))
+#define WRITE(img, ptr,val)						\
+    ((img)->common.write_func ((ptr), (val), sizeof (*(ptr))))
 
-#define MEMCPY_WRAPPED(dst, src, size)					\
+#define MEMCPY_WRAPPED(img, dst, src, size)				\
     do {								\
 	size_t _i;							\
 	uint8_t *_dst = (uint8_t*)(dst), *_src = (uint8_t*)(src);	\
 	for(_i = 0; _i < size; _i++) {					\
-	    WRITE(_dst +_i, READ(_src + _i));				\
+	    WRITE((img), _dst +_i, READ((img), _src + _i));		\
 	}								\
     } while (0)
-	
-#define MEMSET_WRAPPED(dst, val, size)					\
+
+#define MEMSET_WRAPPED(img, dst, val, size)				\
     do {								\
 	size_t _i;							\
 	uint8_t *_dst = (uint8_t*)(dst);				\
-	for(_i = 0; _i < (size_t) size; _i++) {                          \
-	    WRITE(_dst +_i, (val));					\
+	for(_i = 0; _i < (size_t) size; _i++) {				\
+	    WRITE((img), _dst +_i, (val));				\
 	}								\
     } while (0)
 
@@ -665,11 +667,11 @@ union pixman_image
 
 #else
 
-#define READ(ptr)		(*(ptr))
-#define WRITE(ptr, val)		(*(ptr) = (val))
-#define MEMCPY_WRAPPED(dst, src, size)					\
+#define READ(img, ptr)		(*(ptr))
+#define WRITE(img, ptr, val)	(*(ptr) = (val))
+#define MEMCPY_WRAPPED(img, dst, src, size)					\
     memcpy(dst, src, size)
-#define MEMSET_WRAPPED(dst, val, size)					\
+#define MEMSET_WRAPPED(img, dst, val, size)					\
     memset(dst, val, size)
 #define fbPrepareAccess(x)
 #define fbFinishAccess(x)
@@ -692,21 +694,21 @@ union pixman_image
 	    switch (PIXMAN_FORMAT_BPP((img)->bits.format))		\
 	    {								\
 	    case 32:							\
-		(res) = READ((uint32_t *)bits__);			\
+		(res) = READ(img, (uint32_t *)bits__);			\
 		break;							\
 	    case 24:							\
-		(res) = Fetch24 ((uint8_t *) bits__);			\
+		(res) = Fetch24(img, (uint8_t *) bits__);			\
 		break;							\
 	    case 16:							\
-		(res) = READ((uint16_t *) bits__);			\
+		(res) = READ(img, (uint16_t *) bits__);			\
 		(res) = cvt0565to0888(res);				\
 		break;							\
 	    case 8:							\
-		(res) = READ((uint8_t *) bits__);			\
+		(res) = READ(img, (uint8_t *) bits__);			\
 		(res) = (res) << 24;					\
 		break;							\
 	    case 1:							\
-		(res) = READ((uint32_t *) bits__);			\
+		(res) = READ(img, (uint32_t *) bits__);			\
 		(res) = FbLeftStipBits((res),1) ? 0xff000000 : 0x00000000; \
 		break;							\
 	    default:							\
@@ -736,7 +738,7 @@ union pixman_image
 	__bits__ = pict->bits.bits;					\
 	__stride__ = pict->bits.rowstride;				\
 	__bpp__ = PIXMAN_FORMAT_BPP(pict->bits.format);			\
-	(out_stride) = __stride__ * sizeof (uint32_t) / sizeof (type);	\
+	(out_stride) = __stride__ * (int) sizeof (uint32_t) / (int) sizeof (type);	\
 	(line) = ((type *) __bits__) +					\
 	    (out_stride) * (y) + (mul) * (x);				\
     } while (0)
@@ -838,7 +840,7 @@ void pixman_timer_register (PixmanTimer *timer);
 									\
 	timer##tname.n_times++;						\
 	begin##tname = OIL_STAMP();
-	
+
 #define TIMER_END(tname)						\
         timer##tname.total += OIL_STAMP() - begin##tname;		\
     }

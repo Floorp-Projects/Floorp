@@ -46,12 +46,16 @@ cairo_private cairo_region_t *
 _cairo_analysis_surface_get_supported (cairo_surface_t *surface);
 
 cairo_private cairo_region_t *
-_cairo_analysis_surface_get_unsupported (cairo_surface_t *unsupported);
+_cairo_analysis_surface_get_unsupported (cairo_surface_t *surface);
 
 cairo_private cairo_bool_t
-_cairo_analysis_surface_has_supported (cairo_surface_t *unsupported);
+_cairo_analysis_surface_has_supported (cairo_surface_t *surface);
 
 cairo_private cairo_bool_t
-_cairo_analysis_surface_has_unsupported (cairo_surface_t *unsupported);
+_cairo_analysis_surface_has_unsupported (cairo_surface_t *surface);
+
+cairo_private void
+_cairo_analysis_surface_get_bounding_box (cairo_surface_t *surface,
+					  cairo_box_t     *bbox);
 
 #endif /* CAIRO_ANALYSIS_SURFACE_H */

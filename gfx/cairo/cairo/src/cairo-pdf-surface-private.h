@@ -83,6 +83,8 @@ struct _cairo_pdf_surface {
     cairo_pdf_resource_t next_available_resource;
     cairo_pdf_resource_t pages_resource;
 
+    cairo_bool_t compress_content;
+
     struct {
 	cairo_bool_t active;
 	cairo_pdf_resource_t self;
@@ -95,6 +97,7 @@ struct _cairo_pdf_surface {
     struct {
 	cairo_bool_t active;
 	cairo_output_stream_t *stream;
+	cairo_output_stream_t *mem_stream;
 	cairo_output_stream_t *old_output;
 	cairo_pdf_group_resources_t resources;
 	cairo_bool_t is_knockout;
@@ -104,6 +107,7 @@ struct _cairo_pdf_surface {
     struct {
 	cairo_bool_t active;
 	cairo_output_stream_t *stream;
+	cairo_output_stream_t *mem_stream;
 	cairo_output_stream_t *old_output;
 	cairo_pdf_group_resources_t resources;
     } content_stream;

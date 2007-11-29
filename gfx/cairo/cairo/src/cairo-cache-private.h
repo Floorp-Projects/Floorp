@@ -39,6 +39,7 @@
 #ifndef CAIRO_CACHE_PRIVATE_H
 #define CAIRO_CACHE_PRIVATE_H
 
+#include "cairo-compiler-private.h"
 #include "cairo-types-private.h"
 
 /**

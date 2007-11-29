@@ -40,45 +40,45 @@ static cairo_status_t
 _cairo_spline_grow (cairo_spline_t *spline);
 
 static cairo_status_t
-_cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point);
+_cairo_spline_add_point (cairo_spline_t *spline, const cairo_point_t *point);
 
 static void
-_lerp_half (cairo_point_t *a, cairo_point_t *b, cairo_point_t *result);
+_lerp_half (const cairo_point_t *a, const cairo_point_t *b, cairo_point_t *result);
 
 static void
-_de_casteljau (cairo_spline_t *spline, cairo_spline_t *s1, cairo_spline_t *s2);
+_de_casteljau (cairo_spline_knots_t *s1, cairo_spline_knots_t *s2);
 
 static double
-_cairo_spline_error_squared (cairo_spline_t *spline);
+_cairo_spline_error_squared (const cairo_spline_knots_t *spline);
 
 static cairo_status_t
-_cairo_spline_decompose_into (cairo_spline_t *spline, double tolerance_squared, cairo_spline_t *result);
+_cairo_spline_decompose_into (cairo_spline_knots_t *spline, double tolerance_squared, cairo_spline_t *result);
 
 cairo_int_status_t
 _cairo_spline_init (cairo_spline_t *spline,
-		    cairo_point_t *a, cairo_point_t *b,
-		    cairo_point_t *c, cairo_point_t *d)
+		    const cairo_point_t *a, const cairo_point_t *b,
+		    const cairo_point_t *c, const cairo_point_t *d)
 {
-    spline->a = *a;
-    spline->b = *b;
-    spline->c = *c;
-    spline->d = *d;
+    spline->knots.a = *a;
+    spline->knots.b = *b;
+    spline->knots.c = *c;
+    spline->knots.d = *d;
 
     if (a->x != b->x || a->y != b->y)
-	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->b);
+	_cairo_slope_init (&spline->initial_slope, &spline->knots.a, &spline->knots.b);
     else if (a->x != c->x || a->y != c->y)
-	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->c);
+	_cairo_slope_init (&spline->initial_slope, &spline->knots.a, &spline->knots.c);
     else if (a->x != d->x || a->y != d->y)
-	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->d);
+	_cairo_slope_init (&spline->initial_slope, &spline->knots.a, &spline->knots.d);
     else
 	return CAIRO_INT_STATUS_DEGENERATE;
 
     if (c->x != d->x || c->y != d->y)
-	_cairo_slope_init (&spline->final_slope, &spline->c, &spline->d);
+	_cairo_slope_init (&spline->final_slope, &spline->knots.c, &spline->knots.d);
     else if (b->x != d->x || b->y != d->y)
-	_cairo_slope_init (&spline->final_slope, &spline->b, &spline->d);
+	_cairo_slope_init (&spline->final_slope, &spline->knots.b, &spline->knots.d);
     else
-	_cairo_slope_init (&spline->final_slope, &spline->a, &spline->d);
+	_cairo_slope_init (&spline->final_slope, &spline->knots.a, &spline->knots.d);
 
     spline->points = spline->points_embedded;
     spline->points_size = ARRAY_LENGTH (spline->points_embedded);
@@ -113,12 +113,12 @@ _cairo_spline_grow (cairo_spline_t *spline)
 	if (new_points)
 	    memcpy (new_points, spline->points, old_size * sizeof (cairo_point_t));
     } else {
-	new_points = realloc (spline->points, new_size * sizeof (cairo_point_t));
+	new_points = _cairo_realloc_ab (spline->points,
+		                        new_size, sizeof (cairo_point_t));
     }
 
-    if (new_points == NULL) {
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (new_points == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     spline->points = new_points;
     spline->points_size = new_size;
@@ -127,7 +127,7 @@ _cairo_spline_grow (cairo_spline_t *spline)
 }
 
 static cairo_status_t
-_cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point)
+_cairo_spline_add_point (cairo_spline_t *spline, const cairo_point_t *point)
 {
     cairo_status_t status;
     cairo_point_t *prev;
@@ -151,96 +151,92 @@ _cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point)
 }
 
 static void
-_lerp_half (cairo_point_t *a, cairo_point_t *b, cairo_point_t *result)
+_lerp_half (const cairo_point_t *a, const cairo_point_t *b, cairo_point_t *result)
 {
     result->x = a->x + ((b->x - a->x) >> 1);
     result->y = a->y + ((b->y - a->y) >> 1);
 }
 
 static void
-_de_casteljau (cairo_spline_t *spline, cairo_spline_t *s1, cairo_spline_t *s2)
+_de_casteljau (cairo_spline_knots_t *s1, cairo_spline_knots_t *s2)
 {
     cairo_point_t ab, bc, cd;
     cairo_point_t abbc, bccd;
     cairo_point_t final;
 
-    _lerp_half (&spline->a, &spline->b, &ab);
-    _lerp_half (&spline->b, &spline->c, &bc);
-    _lerp_half (&spline->c, &spline->d, &cd);
+    _lerp_half (&s1->a, &s1->b, &ab);
+    _lerp_half (&s1->b, &s1->c, &bc);
+    _lerp_half (&s1->c, &s1->d, &cd);
     _lerp_half (&ab, &bc, &abbc);
     _lerp_half (&bc, &cd, &bccd);
     _lerp_half (&abbc, &bccd, &final);
 
-    s1->a = spline->a;
-    s1->b = ab;
-    s1->c = abbc;
-    s1->d = final;
-
     s2->a = final;
     s2->b = bccd;
     s2->c = cd;
-    s2->d = spline->d;
+    s2->d = s1->d;
+
+    s1->b = ab;
+    s1->c = abbc;
+    s1->d = final;
 }
 
+/* Return an upper bound on the error (squared) that could result from
+ * approximating a spline as a line segment connecting the two endpoints. */
 static double
-_PointDistanceSquaredToPoint (cairo_point_t *a, cairo_point_t *b)
+_cairo_spline_error_squared (const cairo_spline_knots_t *knots)
 {
-    double dx = _cairo_fixed_to_double (b->x - a->x);
-    double dy = _cairo_fixed_to_double (b->y - a->y);
+    double bdx, bdy, berr;
+    double cdx, cdy, cerr;
 
-    return dx*dx + dy*dy;
-}
+    /* Intersection point (px):
+     *	    px = p1 + u(p2 - p1)
+     *	    (p - px) ∙ (p2 - p1) = 0
+     * Thus:
+     *	    u = ((p - p1) ∙ (p2 - p1)) / ∥p2 - p1∥²;
+     */
+    bdx = _cairo_fixed_to_double (knots->b.x - knots->a.x);
+    bdy = _cairo_fixed_to_double (knots->b.y - knots->a.y);
 
-static double
-_PointDistanceSquaredToSegment (cairo_point_t *p, cairo_point_t *p1, cairo_point_t *p2)
-{
-    double u;
-    double dx, dy;
-    double pdx, pdy;
-    cairo_point_t px;
+    cdx = _cairo_fixed_to_double (knots->c.x - knots->a.x);
+    cdy = _cairo_fixed_to_double (knots->c.y - knots->a.y);
 
-    /* intersection point (px):
+    if (knots->a.x != knots->d.x || knots->a.y != knots->d.y) {
+	double dx, dy, u, v;
 
-       px = p1 + u(p2 - p1)
-       (p - px) . (p2 - p1) = 0
+	dx = _cairo_fixed_to_double (knots->d.x - knots->a.x);
+	dy = _cairo_fixed_to_double (knots->d.y - knots->a.y);
+	 v = dx * dx + dy * dy;
 
-       Thus:
+	u = bdx * dx + bdy * dy;
+	if (u <= 0) {
+	    /* bdx -= 0;
+	     * bdy -= 0;
+	     */
+	} else if (u >= v) {
+	    bdx -= dx;
+	    bdy -= dy;
+	} else {
+	    bdx -= u/v * dx;
+	    bdy -= u/v * dy;
+	}
 
-       u = ((p - p1) . (p2 - p1)) / (||(p2 - p1)|| ^ 2);
-    */
+	u = cdx * dx + cdy * dy;
+	if (u <= 0) {
+	    /* cdx -= 0;
+	     * cdy -= 0;
+	     */
+	} else if (u >= v) {
+	    cdx -= dx;
+	    cdy -= dy;
+	} else {
+	    cdx -= u/v * dx;
+	    cdy -= u/v * dy;
+	}
+    }
 
-    dx = _cairo_fixed_to_double (p2->x - p1->x);
-    dy = _cairo_fixed_to_double (p2->y - p1->y);
-
-    if (dx == 0 && dy == 0)
-	return _PointDistanceSquaredToPoint (p, p1);
-
-    pdx = _cairo_fixed_to_double (p->x - p1->x);
-    pdy = _cairo_fixed_to_double (p->y - p1->y);
-
-    u = (pdx * dx + pdy * dy) / (dx*dx + dy*dy);
-
-    if (u <= 0)
-	return _PointDistanceSquaredToPoint (p, p1);
-    else if (u >= 1)
-	return _PointDistanceSquaredToPoint (p, p2);
-
-    px.x = p1->x + u * (p2->x - p1->x);
-    px.y = p1->y + u * (p2->y - p1->y);
-
-    return _PointDistanceSquaredToPoint (p, &px);
-}
-
-/* Return an upper bound on the error (squared) that could result from approximating
-   a spline as a line segment connecting the two endpoints */
-static double
-_cairo_spline_error_squared (cairo_spline_t *spline)
-{
-    double berr, cerr;
-
-    berr = _PointDistanceSquaredToSegment (&spline->b, &spline->a, &spline->d);
-    cerr = _PointDistanceSquaredToSegment (&spline->c, &spline->a, &spline->d);
-
+    berr = bdx * bdx + bdy * bdy;
+    cerr = cdx * cdx + cdy * cdy;
     if (berr > cerr)
 	return berr;
     else
@@ -248,18 +244,17 @@ _cairo_spline_error_squared (cairo_spline_t *spline)
 }
 
 static cairo_status_t
-_cairo_spline_decompose_into (cairo_spline_t *spline, double tolerance_squared, cairo_spline_t *result)
+_cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared, cairo_spline_t *result)
 {
+    cairo_spline_knots_t s2;
     cairo_status_t status;
-    cairo_spline_t s1, s2;
 
-    if (_cairo_spline_error_squared (spline) < tolerance_squared) {
-	return _cairo_spline_add_point (result, &spline->a);
-    }
+    if (_cairo_spline_error_squared (s1) < tolerance_squared)
+	return _cairo_spline_add_point (result, &s1->a);
 
-    _de_casteljau (spline, &s1, &s2);
+    _de_casteljau (s1, &s2);
 
-    status = _cairo_spline_decompose_into (&s1, tolerance_squared, result);
+    status = _cairo_spline_decompose_into (s1, tolerance_squared, result);
     if (status)
 	return status;
 
@@ -274,15 +269,17 @@ cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 {
     cairo_status_t status;
+    cairo_spline_knots_t s1;
 
     /* reset the spline, but keep the buffer */
     spline->num_points = 0;
 
-    status = _cairo_spline_decompose_into (spline, tolerance * tolerance, spline);
+    s1 = spline->knots;
+    status = _cairo_spline_decompose_into (&s1, tolerance * tolerance, spline);
     if (status)
 	return status;
 
-    status = _cairo_spline_add_point (spline, &spline->d);
+    status = _cairo_spline_add_point (spline, &spline->knots.d);
     if (status)
 	return status;
 

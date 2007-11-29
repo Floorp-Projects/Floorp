@@ -86,10 +86,13 @@ _cairo_font_options_init_copy (cairo_font_options_t		*options,
 cairo_font_options_t *
 cairo_font_options_create (void)
 {
-    cairo_font_options_t *options = malloc (sizeof (cairo_font_options_t));
+    cairo_font_options_t *options;
 
-    if (!options)
+    options = malloc (sizeof (cairo_font_options_t));
+    if (!options) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_options_t *)&_cairo_font_options_nil;
+    }
 
     _cairo_font_options_init_default (options);
 
@@ -119,8 +122,10 @@ cairo_font_options_copy (const cairo_font_options_t *original)
 	return (cairo_font_options_t *)&_cairo_font_options_nil;
 
     options = malloc (sizeof (cairo_font_options_t));
-    if (!options)
+    if (!options) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_options_t *)&_cairo_font_options_nil;
+    }
 
     _cairo_font_options_init_copy (options, original);
 

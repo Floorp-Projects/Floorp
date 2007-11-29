@@ -57,10 +57,11 @@ typedef struct cairo_ps_surface {
     FILE *tmpfile;
     cairo_output_stream_t *stream;
 
+    cairo_bool_t eps;
+    cairo_content_t content;
     double width;
     double height;
-    double max_width;
-    double max_height;
+    int bbox_x1, bbox_y1, bbox_x2, bbox_y2;
 
     int num_pages;
 
@@ -75,6 +76,8 @@ typedef struct cairo_ps_surface {
     cairo_array_t dsc_page_setup_comments;
 
     cairo_array_t *dsc_comment_target;
+
+    cairo_ps_level_t ps_level;
 
     cairo_surface_t *paginated_surface;
 } cairo_ps_surface_t;

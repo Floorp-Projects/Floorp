@@ -68,7 +68,7 @@
 #define DFB_SHOW_GLYPHS 1
 
 
-D_DEBUG_DOMAIN (Cairo_DirectFB, "Cairo/DirectFB", "Cairo DirectFB backend");
+D_DEBUG_DOMAIN (Cairo_DirectFB, "Cairo/DirectFB", "Cairo DirectFB backend")
 
 /*****************************************************************************/
 
@@ -390,7 +390,7 @@ _directfb_acquire_surface (cairo_directfb_surface_t *surface,
       if( buffer != surface->dfbsurface) 
         buffer->Release(buffer);
     }
-    return CAIRO_STATUS_NO_MEMORY;
+    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 }
 
 
@@ -414,8 +414,10 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
 
     format = _cairo_format_from_content (content);             
     surface = calloc (1, sizeof(cairo_directfb_surface_t));
-    if (!surface) 
+    if (!surface) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
         return NULL;
+    }
    
     surface->dfbsurface = _directfb_buffer_surface_create (source->dfb,
                                               cairo_to_directfb_format (format),
@@ -528,12 +530,12 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
     buffer->Unlock (buffer);
 
     if (surface->dfbsurface != buffer) {
-        DFBRegion region = { x1:interest_rect->x, y1:interest_rect->y,
-                x2:interest_rect->x+interest_rect->width-1,
-                y2:interest_rect->y+interest_rect->height-1 };
+        DFBRegion region = { .x1 = interest_rect->x, .y1 = interest_rect->y,
+                .x2 = interest_rect->x+interest_rect->width-1,
+                .y2 = interest_rect->y+interest_rect->height-1 };
         surface->dfbsurface->SetClip (surface->dfbsurface, &region);
-        //surface->dfbsurface->SetBlittingFlags (surface->dfbsurface,
-         //               DSBLIT_BLEND_ALPHACHANNEL | DSBLIT_COLORIZE);
+        /* surface->dfbsurface->SetBlittingFlags (surface->dfbsurface,
+                        DSBLIT_BLEND_ALPHACHANNEL | DSBLIT_COLORIZE); */
         surface->dfbsurface->Blit (surface->dfbsurface,buffer,NULL,
                         image_rect->x,image_rect->y);
         buffer->Release (buffer);
@@ -574,14 +576,14 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
                             _cairo_content_from_format (image_src->format),
                             image_src->width, image_src->height);
         if (!clone)
-            return CAIRO_STATUS_NO_MEMORY;
+            return _cairo_error (CAIRO_STATUS_NO_MEMORY);
             
         ret = clone->dfbsurface->Lock (clone->dfbsurface, 
                                    DSLF_WRITE, (void *)&dst, &pitch);
         if (ret) {
             DirectFBError ("IDirectFBSurface::Lock()", ret);
             cairo_surface_destroy ((cairo_surface_t *)clone);
-            return CAIRO_STATUS_NO_MEMORY;
+            return _cairo_error (CAIRO_STATUS_NO_MEMORY);
         }
 
 	dst += pitch * src_y;
@@ -664,7 +666,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t   *dst,
             if (sblend == DSBF_ONE) {
                 flags |= DSBLIT_BLEND_ALPHACHANNEL;                   
                 sblend = DSBF_SRCALPHA;
-                //dblend = DSBF_INVSRCALPHA;
+                /* dblend = DSBF_INVSRCALPHA; */
             }
         }
             
@@ -685,7 +687,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t   *dst,
             dst->color = _cairo_directfb_surface_create_similar (dst,
                                                 CAIRO_CONTENT_COLOR_ALPHA, 1, 1);
             if (!dst->color)
-                return CAIRO_STATUS_NO_MEMORY;
+                return _cairo_error (CAIRO_STATUS_NO_MEMORY);
         }
         
         src = (cairo_directfb_surface_t *)dst->color;
@@ -756,7 +758,7 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
                                    unsigned int      height)
 {
     cairo_directfb_surface_t   *dst = abstract_dst;
-    cairo_directfb_surface_t   *src;
+    cairo_directfb_surface_t   *src = NULL; /* hide compiler warning */
     cairo_surface_attributes_t  src_attr;
     cairo_matrix_t             *m;
     cairo_status_t              ret;
@@ -1107,9 +1109,11 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
     if (region) {
         cairo_box_int_t *boxes;
         int n_boxes, i;
+	cairo_status_t status;
 
-        if (_cairo_region_get_boxes (region, &n_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
-            return CAIRO_STATUS_NO_MEMORY;
+        status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
+	if (status)
+	    return status;
 
         if (surface->n_clips != n_boxes) {
             if( surface->clips )
@@ -1119,7 +1123,7 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
             if (!surface->clips) {
                 _cairo_region_boxes_fini (region, boxes);
                 surface->n_clips = 0;
-                return CAIRO_STATUS_NO_MEMORY;
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
             }
         
             surface->n_clips = n_boxes;
@@ -1181,7 +1185,7 @@ _cairo_directfb_surface_mark_dirty_rectangle (void *abstract_surface,
     if( !surface->dirty_region ) 
             surface->dirty_region = malloc(sizeof(DFBRegion));
     if (!dirty_region)
-            return CAIRO_STATUS_NO_MEMORY;
+            return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 #endif 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1211,16 +1215,19 @@ _directfb_allocate_font_cache (IDirectFB *dfb, int width, int height)
     cairo_directfb_font_cache_t *cache;
 
     cache = calloc (1, sizeof(cairo_directfb_font_cache_t));
-    if (!cache)
-        return NULL;
+    if (!cache) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
 
     cache->dfbsurface = _directfb_buffer_surface_create( dfb, DSPF_A8, width, height);
     if (!cache->dfbsurface) {
         free (cache);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
         return NULL;
     }
 
-    //dfb->AddRef (dfb);
+    /* dfb->AddRef (dfb); */
     cache->dfb = dfb;
 
     cache->width  = width;
@@ -1314,7 +1321,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
             /* Remember glyph location */ 
             rect = malloc (sizeof(DFBRectangle));
             if (!rect)
-                return CAIRO_STATUS_NO_MEMORY;
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
             *rect = rects[n];
             
             scaled_glyph->surface_private = rect;
@@ -1352,7 +1359,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
             
             new_cache = _directfb_allocate_font_cache (surface->dfb, w, h);
             if (!new_cache)
-                return CAIRO_STATUS_NO_MEMORY;
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
             
             new_cache->dfbsurface->Blit (new_cache->dfbsurface,
                                      cache->dfbsurface, NULL, 0, 0);
@@ -1366,8 +1373,8 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                     "Allocating font cache (%dx%d).\n", w, h);
         
         cache = _directfb_allocate_font_cache (surface->dfb, w, h);
-        if (!cache)
-            return CAIRO_STATUS_NO_MEMORY;
+	if (!cache)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
             
         scaled_font->surface_backend = &cairo_directfb_surface_backend;
         scaled_font->surface_private = cache;
@@ -1379,7 +1386,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
     
         if (cache->dfbsurface->Lock (cache->dfbsurface, 
                                  DSLF_WRITE, (void *)&data, &pitch))
-            return CAIRO_STATUS_NO_MEMORY;
+            return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     
         for (i = 0; i < num_chars; i++) {
             cairo_image_surface_t *img  = chars[i]->surface;
@@ -1629,8 +1636,10 @@ cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
     cairo_directfb_surface_backend_init (dfb);
         
     surface = calloc (1, sizeof(cairo_directfb_surface_t));
-    if (!surface)
-        return NULL;
+    if (!surface) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
         
     dfbsurface->GetPixelFormat (dfbsurface, &format);
     _cairo_surface_init (&surface->base, &cairo_directfb_surface_backend,
