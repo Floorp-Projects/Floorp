@@ -278,7 +278,7 @@ endif
 #
 # Linux/PPC
 #
-ifeq ($(OS_ARCH)$(OS_TEST),Linuxppc)
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxpowerpc)
 CPPSRCS		:= xptcinvoke_ppc_linux.cpp xptcstubs_ppc_linux.cpp
 ASFILES		:= xptcinvoke_asm_ppc_linux.s xptcstubs_asm_ppc_linux.s
 AS		:= $(CC) -c -x assembler-with-cpp
