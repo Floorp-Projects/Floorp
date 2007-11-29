@@ -57,6 +57,7 @@
 #include "jsbool.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -64,7 +65,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscan.h"
+#include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -1431,10 +1432,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         fp->flags |= JSFRAME_EVAL;
     } while ((fp = fp->down) != caller);
 
-    script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
-                                             JSSTRING_CHARS(str),
-                                             JSSTRING_LENGTH(str),
-                                             file, line);
+    script = js_CompileScript(cx, scopeobj, principals, TCF_COMPILE_N_GO,
+                              JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                              NULL, file, line);
     if (!script) {
         ok = JS_FALSE;
         goto out;

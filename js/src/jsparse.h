@@ -451,14 +451,18 @@ struct JSParseContext {
 /*
  * Parse a top-level JS script.
  */
-extern JS_FRIEND_API(JSParseNode *)
+extern JSParseNode *
 js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc);
 
-extern JS_FRIEND_API(JSScript *)
-js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc);
+extern JSScript *
+js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
+                 uint32 tcflags, const jschar *chars, size_t length,
+                 FILE *file, const char *filename, uintN lineno);
 
 extern JSBool
-js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun);
+js_CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
+                       const jschar *chars, size_t length,
+                       const char *filename, uintN lineno);
 
 extern JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc);
@@ -477,12 +481,12 @@ js_ParseXMLText(JSContext *cx, JSObject *chain, JSParseContext *pc,
  * current JSContext.tempPool mark. This means you cannot allocate from
  * tempPool and save the pointer beyond the next js_FinishParseContext.
  */
-extern JS_FRIEND_API(JSBool)
-js_InitParseContext(JSContext *cx, JSParseContext *pc,
+extern JSBool
+js_InitParseContext(JSContext *cx, JSParseContext *pc, JSPrincipals *principals,
                     const jschar *base, size_t length, FILE *fp,
                     const char *filename, uintN lineno);
 
-extern JS_FRIEND_API(void)
+extern void
 js_FinishParseContext(JSContext *cx, JSParseContext *pc);
 
 extern void

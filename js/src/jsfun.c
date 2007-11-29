@@ -1701,7 +1701,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char *filename;
     JSBool ok;
     JSString *str, *arg;
-    JSParseContext pc;
+    JSTokenStream ts;
     JSPrincipals *principals;
     jschar *collected_args, *cp;
     void *mark;
@@ -1839,14 +1839,14 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
 
         /* Initialize a tokenstream that reads from the given string. */
-        if (!js_InitTokenStream(cx, &pc.tokenStream, collected_args,
-                                args_length, NULL, filename, lineno)) {
+        if (!js_InitTokenStream(cx, &ts, collected_args, args_length,
+                                NULL, filename, lineno)) {
             JS_ARENA_RELEASE(&cx->tempPool, mark);
             return JS_FALSE;
         }
 
         /* The argument string may be empty or contain no tokens. */
-        tt = js_GetToken(cx, &pc.tokenStream);
+        tt = js_GetToken(cx, &ts);
         if (tt != TOK_EOF) {
             for (;;) {
                 /*
@@ -1857,10 +1857,11 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     goto after_args;
 
                 /*
-                 * Get the atom corresponding to the name from the tokenstream;
-                 * we're assured at this point that it's a valid identifier.
+                 * Get the atom corresponding to the name from the token
+                 * stream; we're assured at this point that it's a valid
+                 * identifier.
                  */
-                atom = CURRENT_TOKEN(&pc.tokenStream).t_atom;
+                atom = CURRENT_TOKEN(&ts).t_atom;
 
                 /* Check for a duplicate parameter name. */
                 if (js_LookupLocal(cx, fun, atom, NULL) != JSLOCAL_NONE) {
@@ -1868,7 +1869,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
                     name = js_AtomToPrintableString(cx, atom);
                     ok = name &&
-                         js_ReportCompileErrorNumber(cx, &pc.tokenStream, NULL,
+                         js_ReportCompileErrorNumber(cx, &ts, NULL,
                                                      JSREPORT_WARNING |
                                                      JSREPORT_STRICT,
                                                      JSMSG_DUPLICATE_FORMAL,
@@ -1883,18 +1884,18 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * Get the next token.  Stop on end of stream.  Otherwise
                  * insist on a comma, get another name, and iterate.
                  */
-                tt = js_GetToken(cx, &pc.tokenStream);
+                tt = js_GetToken(cx, &ts);
                 if (tt == TOK_EOF)
                     break;
                 if (tt != TOK_COMMA)
                     goto after_args;
-                tt = js_GetToken(cx, &pc.tokenStream);
+                tt = js_GetToken(cx, &ts);
             }
         }
 
         state = OK;
       after_args:
-        if (state == BAD_FORMAL && !(pc.tokenStream.flags & TSF_ERROR)) {
+        if (state == BAD_FORMAL && !(ts.flags & TSF_ERROR)) {
             /*
              * Report "malformed formal parameter" iff no illegal char or
              * similar scanner error was already reported.
@@ -1902,7 +1903,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_FORMAL);
         }
-        js_CloseTokenStream(cx, &pc.tokenStream);
+        js_CloseTokenStream(cx, &ts);
         JS_ARENA_RELEASE(&cx->tempPool, mark);
         if (state != OK)
             return JS_FALSE;
@@ -1917,14 +1918,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         str = cx->runtime->emptyString;
     }
 
-    ok = js_InitParseContext(cx, &pc, JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
-                             NULL, filename, lineno);
-    if (ok) {
-        js_InitCompilePrincipals(cx, &pc, principals);
-        ok = js_CompileFunctionBody(cx, &pc, fun);
-        js_FinishParseContext(cx, &pc);
-    }
-    return ok;
+    return js_CompileFunctionBody(cx, fun, principals,
+                                  JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
+                                  filename, lineno);
 }
 
 JSObject *
