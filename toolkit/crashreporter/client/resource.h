@@ -12,6 +12,7 @@
 #define IDC_EMAILMECHECK                1008
 #define IDC_EMAILTEXT                   1009
 #define IDC_HEADERLABEL                 1010
+#define IDC_INCLUDEURLCHECK             1010
 #define IDC_RESTARTBUTTON               1012
 #define IDC_DESCRIPTIONLABEL            1013
 #define IDC_VIEWREPORTTEXT              1015

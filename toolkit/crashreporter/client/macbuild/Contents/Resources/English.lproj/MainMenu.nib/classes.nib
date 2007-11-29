@@ -5,6 +5,7 @@
                 closeAndSendClicked = id; 
                 closeClicked = id; 
                 emailMeClicked = id; 
+                includeURLClicked = id; 
                 restartClicked = id; 
                 viewReportClicked = id; 
             }; 
@@ -20,6 +21,7 @@
                 errorLabel = NSTextField; 
                 errorView = NSView; 
                 headerLabel = NSTextField; 
+                includeURLButton = NSButton; 
                 restartButton = NSButton; 
                 submitReportButton = NSButton; 
                 viewReportButton = NSButton; 

@@ -55,6 +55,7 @@
     IBOutlet NSScrollView* viewReportScrollView;
     IBOutlet NSTextView* viewReportTextView;
     IBOutlet NSButton* submitReportButton;
+    IBOutlet NSButton* includeURLButton;
     IBOutlet NSButton* emailMeButton;
     IBOutlet NSTextField* emailText;
     IBOutlet NSButton* closeButton;
@@ -79,6 +80,7 @@
 - (IBAction)closeClicked:(id)sender;
 - (IBAction)closeAndSendClicked:(id)sender;
 - (IBAction)restartClicked:(id)sender;
+- (IBAction)includeURLClicked:(id)sender;
 - (IBAction)emailMeClicked:(id)sender;
 
 - (void)controlTextDidChange:(NSNotification *)note;
@@ -87,6 +89,7 @@
                          string:(NSString*)str
                    resizeWindow:(BOOL)resizeWindow;
 - (void)setView:(NSView*)v animate: (BOOL) animate;
+- (void)updateURL;
 - (void)updateEmail;
 - (void)sendReport;
 - (bool)setupPost;

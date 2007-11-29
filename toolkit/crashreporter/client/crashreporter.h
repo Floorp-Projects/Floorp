@@ -43,6 +43,7 @@ typedef std::map<std::string, std::string> StringTable;
 #define ST_VIEWREPORT                "ViewReport"
 #define ST_EXTRAREPORTINFO           "ExtraReportInfo"
 #define ST_CHECKSUBMIT               "CheckSubmit"
+#define ST_CHECKURL                  "CheckURL"
 #define ST_CHECKEMAIL                "CheckEmail"
 #define ST_CLOSE                     "Close"
 #define ST_RESTART                   "Restart"

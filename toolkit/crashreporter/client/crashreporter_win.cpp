@@ -56,6 +56,7 @@
 
 #define CRASH_REPORTER_VALUE L"Enabled"
 #define SUBMIT_REPORT_VALUE  L"SubmitReport"
+#define INCLUDE_URL_VALUE    L"IncludeURL"
 #define EMAIL_ME_VALUE       L"EmailMe"
 #define EMAIL_VALUE          L"Email"
 #define MAX_EMAIL_LENGTH     1024
@@ -87,6 +88,7 @@ static SendThreadData       gSendData = { 0, };
 static vector<string>       gRestartArgs;
 static map<wstring,wstring> gQueryParameters;
 static wstring              gCrashReporterKey(L"Software\\Mozilla\\Crash Reporter");
+static wstring              gURLParameter;
 
 // When vertically resizing the dialog, these items should move down
 static set<UINT> gAttachedBottom;
@@ -96,6 +98,7 @@ static const UINT kDefaultAttachedBottom[] = {
   IDC_VIEWREPORTCHECK,
   IDC_VIEWREPORTTEXT,
   IDC_SUBMITCRASHCHECK,
+  IDC_INCLUDEURLCHECK,
   IDC_EMAILMECHECK,
   IDC_EMAILTEXT,
   IDC_CLOSEBUTTON,
@@ -355,6 +358,8 @@ static void EndCrashReporterDialog(HWND hwndDlg, int code)
   GetDlgItemText(hwndDlg, IDC_EMAILTEXT, email, sizeof(email));
   SetStringKey(gCrashReporterKey.c_str(), EMAIL_VALUE, email);
 
+  SetBoolKey(gCrashReporterKey.c_str(), INCLUDE_URL_VALUE,
+             IsDlgButtonChecked(hwndDlg, IDC_INCLUDEURLCHECK) != 0);
   SetBoolKey(gCrashReporterKey.c_str(), EMAIL_ME_VALUE,
              IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK) != 0);
   SetBoolKey(gCrashReporterKey.c_str(), SUBMIT_REPORT_VALUE,
@@ -446,6 +451,15 @@ static void ShowHideReport(HWND hwndDlg)
   gAttachedBottom.insert(IDC_VIEWREPORTTEXT);
 }
 
+static void UpdateURL(HWND hwndDlg)
+{
+  if (IsDlgButtonChecked(hwndDlg, IDC_INCLUDEURLCHECK)) {
+    gQueryParameters[L"URL"] = gURLParameter;
+  } else {
+    gQueryParameters.erase(L"URL");
+  }
+}
+
 static void UpdateEmail(HWND hwndDlg)
 {
   if (IsDlgButtonChecked(hwndDlg, IDC_EMAILMECHECK)) {
@@ -522,10 +536,20 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
                      SUBMIT_REPORT_VALUE, &enabled) &&
         !enabled) {
       CheckDlgButton(hwndDlg, IDC_SUBMITREPORTCHECK, BST_UNCHECKED);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), enabled);
       EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), enabled);
       EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), enabled);
     } else {
       CheckDlgButton(hwndDlg, IDC_SUBMITREPORTCHECK, BST_CHECKED);
+    }
+
+    SetDlgItemText(hwndDlg, IDC_INCLUDEURLCHECK, Str(ST_CHECKURL).c_str());
+    // want this on by default
+    if (CheckBoolKey(gCrashReporterKey.c_str(), INCLUDE_URL_VALUE, &enabled) &&
+        !enabled) {
+      CheckDlgButton(hwndDlg, IDC_INCLUDEURLCHECK, BST_UNCHECKED);
+    } else {
+      CheckDlgButton(hwndDlg, IDC_INCLUDEURLCHECK, BST_CHECKED);
     }
 
     SetDlgItemText(hwndDlg, IDC_EMAILMECHECK, Str(ST_CHECKEMAIL).c_str());
@@ -584,6 +608,26 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
                closeRect.bottom - closeRect.top,
                TRUE);
 
+    // if no URL was given, hide the URL checkbox
+    if (gQueryParameters.find(L"URL") == gQueryParameters.end()) {
+      RECT urlCheckRect, emailCheckRect;
+      GetWindowRect(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), &urlCheckRect);
+      GetWindowRect(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), &emailCheckRect);
+
+      SetDlgItemVisible(hwndDlg, IDC_INCLUDEURLCHECK, false);
+
+      gAttachedBottom.erase(IDC_VIEWREPORTCHECK);
+      gAttachedBottom.erase(IDC_VIEWREPORTTEXT);
+      gAttachedBottom.erase(IDC_SUBMITREPORTCHECK);
+
+      StretchDialog(hwndDlg, urlCheckRect.top - emailCheckRect.top);
+
+      gAttachedBottom.insert(IDC_VIEWREPORTCHECK);
+      gAttachedBottom.insert(IDC_VIEWREPORTTEXT);
+      gAttachedBottom.insert(IDC_SUBMITREPORTCHECK);
+    }
+
+    UpdateURL(hwndDlg);
     UpdateEmail(hwndDlg);
     ShowReportInfo(hwndDlg);
 
@@ -623,8 +667,13 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
         break;
       case IDC_SUBMITREPORTCHECK:
         enabled = (IsDlgButtonChecked(hwndDlg, IDC_SUBMITREPORTCHECK) != 0);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDEURLCHECK), enabled);
         EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILMECHECK), enabled);
         EnableWindow(GetDlgItem(hwndDlg, IDC_EMAILTEXT), enabled);
+        break;
+      case IDC_INCLUDEURLCHECK:
+        UpdateURL(hwndDlg);
+        ShowReportInfo(hwndDlg);
         break;
       case IDC_EMAILMECHECK:
         UpdateEmail(hwndDlg);
@@ -782,7 +831,10 @@ void UIShowCrashUI(const string& dumpFile,
       gCrashReporterKey += gQueryParameters[L"Vendor"] + L"\\";
     }
     gCrashReporterKey += gQueryParameters[L"Name"] + L"\\Crash Reporter";
-  }
+  }  
+
+  if (gQueryParameters.find(L"URL") != gQueryParameters.end())
+    gURLParameter = gQueryParameters[L"URL"];
 
   gRestartArgs = restartArgs;
 
