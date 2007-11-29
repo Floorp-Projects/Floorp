@@ -55,7 +55,7 @@
 NS_DECL_CLASSINFO(nsMetricsService)
 
 #define COLLECTOR_CONTRACTID(type) \
-  "@mozilla.org/metrics/collector;1?name=" type ":" NS_METRICS_NAMESPACE
+  "@mozilla.org/extensions/metrics/collector;1?name=" type ":" NS_METRICS_NAMESPACE
 
 static NS_METHOD
 nsMetricsServiceRegisterSelf(nsIComponentManager *compMgr,
