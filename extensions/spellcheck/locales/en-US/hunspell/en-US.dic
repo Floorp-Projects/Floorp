@@ -2301,6 +2301,7 @@ Buffalo/M
 Buffy/M
 Buford/M
 Bugatti/M
+Bugzilla/M
 Buick/M
 Buiron/M
 Bujumbura/M
@@ -2504,6 +2505,7 @@ Camila/M
 Camile/M
 Camilla/M
 Camille/M
+Camino/M
 Cammi/M
 Cammie/M
 Cammy/M
@@ -2943,6 +2945,7 @@ Chattahoochee/M
 Chattanooga/M
 Chatterley/M
 Chatterton
+ChatZilla/M
 Chaucer/M
 Chaunce/M
 Chauncey/M
@@ -6326,6 +6329,7 @@ HST
 HT
 HTML/M
 HTTP
+HTTPS
 HUD/M
 Ha
 Haas/M
@@ -6946,6 +6950,7 @@ Hunfredo/M
 Hung
 Hungarian/SM
 Hungary/M
+Hunspell/M
 Hunt/R
 Hunter/M
 Huntington/M
@@ -9505,6 +9510,7 @@ Mandelbrot
 Mandi/M
 Mandie/M
 Mandingo
+Mandriva/M
 Mandy/M
 Manet
 Manfred/M
@@ -10620,6 +10626,7 @@ Myrtle/M
 Myrvyn/M
 Myrwyn/M
 Mysore
+MySpell/M
 Myst/M
 N'Djamena
 N/MD
@@ -13241,6 +13248,7 @@ Scythian
 Se/MH
 Seaborg
 Seagram/M
+SeaMonkey/M
 Seamus/M
 Sean/M
 Seana/M
@@ -13980,6 +13988,7 @@ Sumter
 Sun/SM
 Sunbeam/M
 Sunbelt/M
+Sunbird/M
 Sundanese/M
 Sundas
 Sunday/MS
@@ -42231,6 +42240,8 @@ philosophize/ZGDRS
 philosophizer/M
 philosophy/SM
 philter/MS
+phisher/M
+phishing/M
 phlebitis/M
 phlebotomy
 phlegm/M
@@ -49103,6 +49114,7 @@ spake
 spam/S
 spamblock/S
 spammed
+spammer/MS
 spamming
 span/MS
 spandex/M
@@ -53650,6 +53662,10 @@ unimportance
 unimportant
 unimpressive
 uninhibited/Y
+uninstall/GSMB
+uninstalled
+uninstaller/MS
+uninstalling
 uninsured
 unintellectual
 unintelligent
@@ -53812,6 +53828,7 @@ unsteady/PTR
 unstinting/Y
 unstoppably
 unstrapping
+unsubscribe
 unsubstantial
 unsubtle
 unsure/P
@@ -54986,6 +55003,7 @@ webbing/M
 webfeet
 webfoot/M
 webmaster/S
+webmistress
 website/SM
 wed/AS
 wedded/A
