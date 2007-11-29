@@ -55,6 +55,7 @@ static NSAutoreleasePool* gMainPool;
 static CrashReporterUI* gUI = 0;
 static string gDumpFile;
 static StringTable gQueryParameters;
+static string gURLParameter;
 static string gSendURL;
 static vector<string> gRestartArgs;
 
@@ -119,11 +120,43 @@ static bool RestartApplication()
                   resizeWindow:YES];
   [viewReportLabel setStringValue:Str(ST_VIEWREPORT)];
   [submitReportButton setTitle:Str(ST_CHECKSUBMIT)];
+  [includeURLButton setTitle:Str(ST_CHECKURL)];
   [emailMeButton setTitle:Str(ST_CHECKEMAIL)];
   [closeButton setTitle:Str(ST_CLOSE)];
 
   [viewReportScrollView retain];
   [viewReportScrollView removeFromSuperview];
+
+  if (gQueryParameters.find("URL") != gQueryParameters.end()) {
+    // save the URL value in case the 
+    gURLParameter = gQueryParameters["URL"];
+  }
+  else {
+    // no URL specified, hide checkbox
+    [includeURLButton removeFromSuperview];
+    // shrink window to fit
+    NSRect frame = [window frame];
+    NSRect includeURLFrame = [includeURLButton frame];
+    NSRect emailFrame = [emailMeButton frame];
+    int buttonMask = [viewReportButton autoresizingMask];
+    int textMask = [viewReportLabel autoresizingMask];
+    int reportMask = [viewReportScrollView autoresizingMask];
+    int checkMask = [submitReportButton autoresizingMask];
+
+    [viewReportButton setAutoresizingMask:NSViewMinYMargin];
+    [viewReportLabel setAutoresizingMask:NSViewMinYMargin];
+    [viewReportScrollView setAutoresizingMask:NSViewMinYMargin];
+    [submitReportButton setAutoresizingMask:NSViewMinYMargin];
+
+    // remove all the space in between
+    frame.size.height -= includeURLFrame.origin.y - emailFrame.origin.y;
+    [window setFrame:frame display: true animate: NO];
+
+    [viewReportButton setAutoresizingMask:buttonMask];
+    [viewReportLabel setAutoresizingMask:textMask];
+    [viewReportScrollView setAutoresizingMask:reportMask];
+    [submitReportButton setAutoresizingMask:checkMask];
+  }
 
   NSRect restartFrame = [restartButton frame];
   NSRect closeFrame = [closeButton frame];
@@ -137,7 +170,7 @@ static bool RestartApplication()
     [restartButton setTitle:Str(ST_RESTART)];
     // shuffle buttons around to fit, since the strings could be
     // a different width
-    int oldRestartWidth = restartFrame.size.width;
+    float oldRestartWidth = restartFrame.size.width;
     [restartButton sizeToFit];
     restartFrame = [restartButton frame];
     // move left by the amount that the button grew
@@ -148,6 +181,7 @@ static bool RestartApplication()
     [restartButton setKeyEquivalent:@"\r"];
   }
 
+  [self updateURL];
   [self updateEmail];
   [self showReportInfo];
 
@@ -261,6 +295,12 @@ static bool RestartApplication()
   }
 }
 
+- (IBAction)includeURLClicked:(id)sender
+{
+  [self updateURL];
+  [self showReportInfo];
+}
+
 -(IBAction)emailMeClicked:(id)sender
 {
   [self updateEmail];
@@ -323,6 +363,15 @@ static bool RestartApplication()
 
   [window setContentView:v];
   [window setFrame:frame display:true animate:animate];
+}
+
+-(void)updateURL
+{
+  if ([includeURLButton state] == NSOnState) {
+    gQueryParameters["URL"] = gURLParameter;
+  } else {
+    gQueryParameters.erase("URL");
+  }
 }
 
 -(void)updateEmail
