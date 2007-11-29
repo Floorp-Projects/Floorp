@@ -158,6 +158,9 @@ case "$OSID" in
             *el5PAE)
                 kernel='.*el5PAE'
                 ;;
+            *el5)
+                kernel='.*el5'
+                ;;
             *ELsmp)
                 kernel='.*ELsmp'
                 ;;
