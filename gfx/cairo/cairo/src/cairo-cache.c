@@ -54,7 +54,7 @@ _cairo_cache_init (cairo_cache_t		*cache,
 {
     cache->hash_table = _cairo_hash_table_create (keys_equal);
     if (cache->hash_table == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     cache->entry_destroy = entry_destroy;
 
@@ -131,8 +131,10 @@ _cairo_cache_create (cairo_cache_keys_equal_func_t keys_equal,
     cairo_cache_t *cache;
 
     cache = malloc (sizeof (cairo_cache_t));
-    if (cache == NULL)
+    if (cache == NULL) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
     status = _cairo_cache_init (cache, keys_equal, entry_destroy, max_size);
     if (status) {

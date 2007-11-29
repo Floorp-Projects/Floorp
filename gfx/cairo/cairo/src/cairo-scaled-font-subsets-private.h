@@ -188,7 +188,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*font_subsets,
 				      unsigned long			 scaled_font_glyph_index,
                                       cairo_scaled_font_subsets_glyph_t *subset_glyph_ret);
 
-typedef void
+typedef cairo_status_t
 (*cairo_scaled_font_subset_callback_func_t) (cairo_scaled_font_subset_t	*font_subset,
 					     void			*closure);
 
@@ -261,6 +261,21 @@ cairo_private cairo_status_t
 _cairo_scaled_font_subsets_foreach_unscaled (cairo_scaled_font_subsets_t              *font_subsets,
                                              cairo_scaled_font_subset_callback_func_t  font_subset_callback,
 				             void				      *closure);
+
+/**
+ * _cairo_scaled_font_subset_create_glyph_names:
+ * @font_subsets: a #cairo_scaled_font_subsets_t
+ *
+ * Create an array of strings containing the glyph name for each glyph
+ * in @font_subsets. The array as store in font_subsets->glyph_names.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS if successful,
+ * CAIRO_INT_STATUS_UNSUPPORTED if the font backend does not support
+ * mapping the glyph indices to unicode characters. Possible errors
+ * include CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_int_status_t
+_cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset);
 
 typedef struct _cairo_cff_subset {
     char *base_font;

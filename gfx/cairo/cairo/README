@@ -1,60 +1,161 @@
 Cairo - Multi-platform 2D graphics library
 http://cairographics.org
 
-Compiling
----------
-See the INSTALL document for build instructions.
+What is cairo
+=============
+Cairo is a 2D graphics library with support for multiple output
+devices. Currently supported output targets include the X Window
+System, win32, and image buffers, as well as PDF, PostScript, and SVG
+file output. Experimental backends include OpenGL (through glitz),
+Quartz, XCB, BeOS, OS/2, and DirectFB.
 
-Description
------------
-Cairo is a vector graphics library with cross-device output
-support. Currently supported output targets include the X Window
-System and in-memory image buffers. PostScript and PDF file output is
-planned. Cairo is designed to produce identical output on all output
-media while taking advantage of display hardware acceleration when
-available (eg. through the X Render Extension).
+Cairo is designed to produce consistent output on all output media
+while taking advantage of display hardware acceleration when available
+(for example, through the X Render Extension).
 
-Cairo provides a stateful user-level API with capabilities similar to
-the PDF 1.4 imaging model. Cairo provides operations including
-stroking and filling Bezier cubic splines, transforming and
-compositing translucent images, and antialiased text rendering.
+The cairo API provides operations similar to the drawing operators of
+PostScript and PDF. Operations in cairo include stroking and filling
+cubic Bézier splines, transforming and compositing translucent images,
+and antialiased text rendering. All drawing operations can be
+transformed by any affine transformation (scale, rotation, shear,
+etc.).
 
-Cairo was once named Xr, (or Xr/Xc), so if you came looking for that
-software, you've found it.
+Cairo has been designed to let you draw anything you want in a modern
+2D graphical user interface.  At the same time, the cairo API has been
+designed to be as fun and easy to learn as possible. If you're not
+having fun while programming with cairo, then we have failed
+somewhere---let us know and we'll try to fix it next time around.
+
+Cairo is free software and is available to be redistributed and/or
+modified under the terms of either the GNU Lesser General Public
+License (LGPL) version 2.1 or the Mozilla Public License (MPL) version
+1.1.
+
+Where to get more information about cairo
+=========================================
+The primary source of information about cairo is:
+
+	http://cairographics.org/
+
+The latest releases of cairo can be found at:
+
+	http://cairographics.org/releases
+
+Snapshots of in-development versions of cairo:
+
+	http://cairographics.org/snapshots
+
+The programming manual for using cairo:
+
+	http://cairographics.org/manual
+
+Mailing lists for contacting cairo users and developers:
+
+	http://cairographics.org/lists
+
+Answers to some frequently asked questions about cairo:
+
+	http://cairographics.org/FAQ
 
 Dependencies
-------------
-Cairo currently requires the following supporting libraries:
+============
+The set of libraries needed to compile cairo depends on which backends
+are enabled when cairo is configured. Here are the dependencies for
+each backend:
 
-	libpixman
-	Xft2
-	fontconfig
-	freetype2
+Surface backends:
 
-Documentation
--------------
-There's not much documentation yet apart from the cairo.h header
-file. We'll be correcting that shortly.
+	image backend (required)
+	------------------------
+	pixman			http://cairographics.org/releases
+			or:	git://git.cairographics.org/git/pixman
 
-In the meantime, the cairo-demo module in CVS provides a few example
-programs using cairo. These may be helpful to a programmer just
-beginning with cairo. Also, familiarity with the PostScript imaging
-model will help in understanding cairo.
+	glitz backend
+	-------------
+	glitz >= 0.4.4 		http://freedesktop.org/Software/glitz
+
+	pdf backend
+	-----------
+	freetype >= 2.1.4	http://freetype.org
+	zlib			http://www.gzip.org/zlib
+
+	postscript backend
+	------------------
+	freetype >= 2.1.4	http://freetype.org
+	zlib			http://www.gzip.org/zlib
+
+	quartz backend
+	--------------
+	[*]
+
+	win32 backend
+	-------------
+	[*]
+
+	xcb backend
+	-----------
+	XCB			http://xcb.freedesktop.org
+
+	xlib backend
+	------------
+	Xrender >= 0.6		http://freedesktop.org/Software/xlibs
+
+	beos backend
+	------------
+	No dependencies in itself other than an installed BeOS system, but cairo
+	requires a font backend. See the freetype dependency list.
+
+	os2 backend
+	-----------
+	Cairo should run on any recent version of OS/2 or eComStation, but it
+	requires a font backend. See the freetype dependency list. Ready to use
+	packages and developer dependencies are available at Netlabs:
+				ftp://ftp.netlabs.org/pub/cairo
+
+Font backends:
+
+	freetype font backend
+	---------------------
+	freetype >= 2.1.4	http://freetype.org
+	fontconfig		http://fontconfig.org
+
+	win32 font backend
+	------------------
+	[*]
+
+	atsui font backend
+	------------------
+	[*]
+
+	[*] I don't know specifically what packages might need to be
+	    installed on a Mac OS X system to use the Quartz and ATSUI
+	    backends. As far as win32, the situation is rather complex:
+
+	    The Win32 backend should work on Windows 2000 and newer
+	    (excluding Windows Me.) Most testing has been done on
+	    Windows XP. While some portions of the code have been
+	    adapted to work on older versions of Windows, considerable
+	    work still needs to be done to get cairo running in these
+	    environments.
+
+	    Cairo can be compiled on Windows either with the GCC
+	    toolchain (see http://www.mingw.org) or with Microsoft
+	    Visual C++. Makefiles or project files for compiling with
+	    MSVC are however not provided as of this release. We have
+	    received reports that MSVC 6.0 compiles parts of cairo
+	    incorrectly, (leading to incorrect color). MSVC 7.0 is
+	    known to work.
+
+Compiling
+=========
+See the INSTALL document for build instructions.
 
 History
--------
+=======
 Cairo was originally developed by Carl Worth <cworth@cworth.org> and
 Keith Packard <keithp@keithp.com>. Many thanks are due to Lyle Ramshaw
 without whose patient help our ignorance would be much more apparent.
 
-Mailing List
-------------
-If you have trouble with cairo or you have some ideas for how it could be
-improved, please feel free to send a message to cairo@cairographics.org
-
-Cairo is still under active development and all discussion happens on
-that list. So if you want to lurk or, (even better), take part in the
-development, take a look. Subscription information and archives are
-available:
-
-	http://cairographics.org/cgi-bin/mailman/listinfo/cairo
+Since the original development, many more people have contributed to
+cairo. See the AUTHORS files for as complete a list as we've been able
+to compile so far.

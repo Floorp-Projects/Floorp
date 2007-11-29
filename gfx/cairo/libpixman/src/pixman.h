@@ -397,6 +397,8 @@ struct pixman_indexed
 #define PIXMAN_TYPE_ABGR	3
 #define PIXMAN_TYPE_COLOR	4
 #define PIXMAN_TYPE_GRAY	5
+#define PIXMAN_TYPE_YUY2	6
+#define PIXMAN_TYPE_YV12	7
 
 #define PIXMAN_FORMAT_COLOR(f)	(PIXMAN_FORMAT_TYPE(f) & 2)
 
@@ -453,6 +455,10 @@ typedef enum {
     PIXMAN_a1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_A,1,0,0,0),
     
     PIXMAN_g1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_GRAY,0,0,0,0),
+
+/* YUV formats */
+    PIXMAN_yuy2 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_YUY2,0,0,0,0),
+    PIXMAN_yv12 =	PIXMAN_FORMAT(12,PIXMAN_TYPE_YV12,0,0,0,0)
 } pixman_format_code_t;
 
 /* Constructors */
@@ -498,7 +504,7 @@ pixman_bool_t   pixman_image_set_filter              (pixman_image_t            
 void            pixman_image_set_filter_params       (pixman_image_t               *image,
 						      pixman_fixed_t               *params,
 						      int                           n_params);
-void		pixman_image_set_source_cliping      (pixman_image_t		   *image,
+void		pixman_image_set_source_clipping     (pixman_image_t		   *image,
 						      pixman_bool_t                 source_clipping);
 void            pixman_image_set_alpha_map           (pixman_image_t               *image,
 						      pixman_image_t               *alpha_map,

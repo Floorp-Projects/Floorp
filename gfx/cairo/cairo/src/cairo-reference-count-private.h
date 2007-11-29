@@ -1,7 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2004 Calum Robinson
- * Copyright (C) 2006,2007 Mozilla Corporation
+ * Copyright © 2007 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -28,50 +27,40 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Calum Robinson
+ * The Initial Developer of the Original Code is University of Southern
+ * California.
  *
  * Contributor(s):
- *    Calum Robinson <calumr@mac.com>
- *    Vladimir Vukicevic <vladimir@mozilla.com>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#ifndef CAIRO_QUARTZ_PRIVATE_H
-#define CAIRO_QUARTZ_PRIVATE_H
+#ifndef CAIRO_REFRENCE_COUNT_PRIVATE_H
+#define CAIRO_REFRENCE_COUNT_PRIVATE_H
 
-#include "cairoint.h"
+#include "cairo-atomic-private.h"
 
-#ifdef CAIRO_HAS_QUARTZ_SURFACE
-#include <cairo-quartz.h>
+CAIRO_BEGIN_DECLS
 
-typedef struct cairo_quartz_surface {
-    cairo_surface_t base;
+/* Encapsulate operations on the object's reference count */
+typedef struct {
+    cairo_atomic_int_t ref_count;
+} cairo_reference_count_t;
 
-    void *imageData;
+#define _cairo_reference_count_inc(RC) _cairo_atomic_int_inc (&(RC)->ref_count)
+#define _cairo_reference_count_dec_and_test(RC) _cairo_atomic_int_dec_and_test (&(RC)->ref_count)
 
-    CGContextRef cgContext;
-    CGAffineTransform cgContextBaseCTM;
+#define CAIRO_REFERENCE_COUNT_INIT(RC, VALUE) ((RC)->ref_count = (VALUE))
 
-    cairo_rectangle_int_t extents;
+#define CAIRO_REFERENCE_COUNT_GET_VALUE(RC) _cairo_atomic_int_get (&(RC)->ref_count)
+#define CAIRO_REFERENCE_COUNT_SET_VALUE(RC, VALUE) _cairo_atomic_int_set (&(RC)->ref_count, (VALUE))
 
-    /* These are stored while drawing operations are in place, set up
-     * by quartz_setup_source() and quartz_finish_source()
-     */
-    CGImageRef sourceImage;
-    cairo_surface_t *sourceImageSurface;
-    CGAffineTransform sourceImageTransform;
-    CGRect sourceImageRect;
+#define CAIRO_REFERENCE_COUNT_INVALID_VALUE ((cairo_atomic_int_t) -1)
+#define CAIRO_REFERENCE_COUNT_INVALID {CAIRO_REFERENCE_COUNT_INVALID_VALUE}
 
-    CGShadingRef sourceShading;
-    CGPatternRef sourcePattern;
-} cairo_quartz_surface_t;
-#endif /* CAIRO_HAS_QUARTZ_SURFACE */
+#define CAIRO_REFERENCE_COUNT_IS_INVALID(RC) (CAIRO_REFERENCE_COUNT_GET_VALUE (RC) == CAIRO_REFERENCE_COUNT_INVALID_VALUE)
 
-#if CAIRO_HAS_ATSUI_FONT
-ATSUStyle
-_cairo_atsui_scaled_font_get_atsu_style (cairo_scaled_font_t *sfont);
+#define CAIRO_REFERENCE_COUNT_HAS_REFERENCE(RC) (CAIRO_REFERENCE_COUNT_GET_VALUE (RC) > 0)
 
-ATSUFontID
-_cairo_atsui_scaled_font_get_atsu_font_id (cairo_scaled_font_t *sfont);
-#endif /* CAIRO_HAS_ATSUI_FONT */
+CAIRO_END_DECLS
 
-#endif /* CAIRO_QUARTZ_PRIVATE_H */
+#endif

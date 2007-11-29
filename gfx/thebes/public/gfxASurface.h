@@ -132,6 +132,12 @@ public:
      */
     static PRBool CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit = 0);
 
+    /* Return the default set of context flags for this surface; these are
+     * hints to the context about any special rendering considerations.  See
+     * gfxContext::SetFlag for documentation.
+     */
+    virtual PRInt32 GetDefaultContextFlags() { return 0; }
+
 protected:
     gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mSurfaceValid(PR_FALSE) { }
 

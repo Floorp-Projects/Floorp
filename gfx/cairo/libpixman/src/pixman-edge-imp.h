@@ -1,6 +1,4 @@
 /*
- * $Id: pixman-edge-imp.h,v 1.7 2007/09/20 19:24:51 vladimir%pobox.com Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -35,18 +33,18 @@ rasterizeEdges (pixman_image_t  *image,
     pixman_fixed_t  y = t;
     uint32_t  *line;
     uint32_t *buf = (image)->bits.bits;
-    int32_t stride = (image)->bits.rowstride;
-    int32_t width = (image)->bits.width;
-    
+    int stride = (image)->bits.rowstride;
+    int width = (image)->bits.width;
+
     line = buf + pixman_fixed_to_int (y) * stride;
-    
+
     for (;;)
     {
 	pixman_fixed_t	lx;
 	pixman_fixed_t      rx;
 	int	lxi;
 	int rxi;
-	
+
 	/* clip X */
 	lx = l->x;
 	if (lx < 0)
@@ -54,15 +52,15 @@ rasterizeEdges (pixman_image_t  *image,
 	rx = r->x;
 	if (pixman_fixed_to_int (rx) >= width)
 	    rx = pixman_int_to_fixed (width);
-	
+
 	/* Skip empty (or backwards) sections */
 	if (rx > lx)
 	{
-	    
+
 	    /* Find pixel bounds for span */
 	    lxi = pixman_fixed_to_int (lx);
 	    rxi = pixman_fixed_to_int (rx);
-	    
+
 #if N_BITS == 1
 	    {
 		uint32_t  *a = line;
@@ -71,30 +69,30 @@ rasterizeEdges (pixman_image_t  *image,
 		int	    nmiddle;
 		int	    width = rxi - lxi;
 		int	    x = lxi;
-		
+
 		a += x >> FB_SHIFT;
 		x &= FB_MASK;
-		
+
 		FbMaskBits (x, width, startmask, nmiddle, endmask);
 		    if (startmask) {
-			WRITE(a, READ(a) | startmask);
+			WRITE(image, a, READ(image, a) | startmask);
 			a++;
 		    }
 		    while (nmiddle--)
-			WRITE(a++, FB_ALLONES);
+			WRITE(image, a++, FB_ALLONES);
 		    if (endmask)
-			WRITE(a, READ(a) | endmask);
+			WRITE(image, a, READ(image, a) | endmask);
 	    }
 #else
 	    {
 		DefineAlpha(line,lxi);
 		int	    lxs;
 		int     rxs;
-		
+
 		/* Sample coverage for edge pixels */
 		lxs = RenderSamplesX (lx, N_BITS);
 		rxs = RenderSamplesX (rx, N_BITS);
-		
+
 		/* Add coverage across row */
 		if (lxi == rxi)
 		{
@@ -103,7 +101,7 @@ rasterizeEdges (pixman_image_t  *image,
 		else
 		{
 		    int	xi;
-		    
+
 		    AddAlpha (N_X_FRAC(N_BITS) - lxs);
 		    StepAlpha;
 		    for (xi = lxi + 1; xi < rxi; xi++)
@@ -121,10 +119,10 @@ rasterizeEdges (pixman_image_t  *image,
 	    }
 #endif
 	}
-	
+
 	if (y == b)
 	    break;
-	
+
 #if N_BITS > 1
 	if (pixman_fixed_frac (y) != Y_FRAC_LAST(N_BITS))
 	{

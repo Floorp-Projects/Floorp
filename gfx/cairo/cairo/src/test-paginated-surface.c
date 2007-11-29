@@ -69,20 +69,20 @@ _cairo_test_paginated_surface_create_for_data (unsigned char		*data,
 {
     cairo_status_t status;
     cairo_surface_t *target;
+    cairo_surface_t *paginated;
     test_paginated_surface_t *surface;
 
     target =  _cairo_image_surface_create_for_data_with_content (data, content,
 								width, height,
 								stride);
     status = cairo_surface_status (target);
-    if (status) {
-	_cairo_error (status);
+    if (status)
 	return (cairo_surface_t *) &_cairo_surface_nil;
-    }
 
     surface = malloc (sizeof (test_paginated_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	cairo_surface_destroy (target);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;
     }
 
@@ -91,8 +91,14 @@ _cairo_test_paginated_surface_create_for_data (unsigned char		*data,
 
     surface->target = target;
 
-    return _cairo_paginated_surface_create (&surface->base, content, width, height,
-					    &test_paginated_surface_paginated_backend);
+    paginated =  _cairo_paginated_surface_create (&surface->base,
+	                                          content, width, height,
+						  &test_paginated_surface_paginated_backend);
+    if (paginated->status) {
+	cairo_surface_destroy (target);
+	free (surface);
+    }
+    return paginated;
 }
 
 static cairo_status_t

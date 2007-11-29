@@ -49,7 +49,7 @@
 #include "cairo-meta-surface-private.h"
 #include "cairo-analysis-surface-private.h"
 
-const cairo_private cairo_surface_backend_t cairo_paginated_surface_backend;
+static const cairo_private cairo_surface_backend_t cairo_paginated_surface_backend;
 
 static cairo_int_status_t
 _cairo_paginated_surface_show_page (void *abstract_surface);
@@ -76,8 +76,10 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     cairo_paginated_surface_t *surface;
 
     surface = malloc (sizeof (cairo_paginated_surface_t));
-    if (surface == NULL)
+    if (surface == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
+    }
 
     _cairo_surface_init (&surface->base, &cairo_paginated_surface_backend,
 			 content);
@@ -106,7 +108,6 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
   FAIL_CLEANUP_SURFACE:
     free (surface);
   FAIL:
-    _cairo_error (CAIRO_STATUS_NO_MEMORY);
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
 
@@ -129,11 +130,12 @@ _cairo_paginated_surface_get_target (cairo_surface_t *surface)
 }
 
 cairo_status_t
-_cairo_paginated_surface_set_size (cairo_surface_t 	*surface,
+_cairo_paginated_surface_set_size (cairo_surface_t	*surface,
 				   int			 width,
 				   int			 height)
 {
     cairo_paginated_surface_t *paginated_surface;
+    cairo_status_t status;
 
     assert (_cairo_surface_is_paginated (surface));
 
@@ -145,8 +147,9 @@ _cairo_paginated_surface_set_size (cairo_surface_t 	*surface,
     cairo_surface_destroy (paginated_surface->meta);
     paginated_surface->meta = _cairo_meta_surface_create (paginated_surface->content,
 							  width, height);
-    if (cairo_surface_status (paginated_surface->meta))
-	return cairo_surface_status (paginated_surface->meta);
+    status = cairo_surface_status (paginated_surface->meta);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -284,21 +287,32 @@ _paint_page (cairo_paginated_surface_t *surface)
     cairo_status_t status;
     cairo_bool_t has_supported, has_page_fallback, has_finegrained_fallback;
 
+    if (surface->target->status)
+	return surface->target->status;
+
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
     if (analysis == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);
-    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
-
     if (status || analysis->status) {
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = analysis->status;
-	cairo_surface_destroy (analysis);
-	return status;
+	goto FAIL;
     }
+
+     if (surface->backend->set_bounding_box) {
+	 cairo_box_t bbox;
+
+	 _cairo_analysis_surface_get_bounding_box (analysis, &bbox);
+	 status = surface->backend->set_bounding_box (surface->target, &bbox);
+	 if (status)
+	     goto FAIL;
+     }
+
+    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
     /* Finer grained fallbacks are currently only supported for some
      * surface types */
@@ -328,7 +342,7 @@ _paint_page (cairo_paginated_surface_t *surface)
 						    surface->target,
 						    CAIRO_META_REGION_NATIVE);
 	if (status)
-	    return status;
+	    goto FAIL;
     }
 
     if (has_page_fallback)
@@ -341,7 +355,7 @@ _paint_page (cairo_paginated_surface_t *surface)
 	box.p2.y = surface->height;
 	status = _paint_fallback_image (surface, &box);
 	if (status)
-	    return status;
+	    goto FAIL;
     }
 
     if (has_finegrained_fallback)
@@ -357,34 +371,39 @@ _paint_page (cairo_paginated_surface_t *surface)
 						     CAIRO_GSTATE_TOLERANCE_DEFAULT,
 						     CAIRO_ANTIALIAS_DEFAULT);
 	if (status)
-	    return status;
+	    goto FAIL;
 
 	region = _cairo_analysis_surface_get_unsupported (analysis);
 	status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
 	if (status)
-	    return status;
+	    goto FAIL;
 	for (i = 0; i < num_boxes; i++) {
 	    status = _paint_fallback_image (surface, &boxes[i]);
 	    if (status) {
                 _cairo_region_boxes_fini (region, boxes);
-		return status;
+		goto FAIL;
             }
 	}
         _cairo_region_boxes_fini (region, boxes);
     }
 
+  FAIL:
     cairo_surface_destroy (analysis);
 
-    return status;
+    return _cairo_surface_set_error (surface->target, status);
 }
 
 static cairo_status_t
 _start_page (cairo_paginated_surface_t *surface)
 {
+    if (surface->target->status)
+	return surface->target->status;
+
     if (! surface->backend->start_page)
 	return CAIRO_STATUS_SUCCESS;
 
-    return (surface->backend->start_page) (surface->target);
+    return _cairo_surface_set_error (surface->target,
+	                        surface->backend->start_page (surface->target));
 }
 
 static cairo_int_status_t
@@ -431,15 +450,18 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (status)
 	return status;
 
-    if (cairo_surface_status (surface->meta))
-	return cairo_surface_status (surface->meta);
+    status = cairo_surface_status (surface->meta);
+    if (status)
+	return status;
 
     cairo_surface_destroy (surface->meta);
 
     surface->meta = _cairo_meta_surface_create (surface->content,
-						surface->width, surface->height);
-    if (cairo_surface_status (surface->meta))
-	return cairo_surface_status (surface->meta);
+						surface->width,
+						surface->height);
+    status = cairo_surface_status (surface->meta);
+    if (status)
+	return status;
 
     surface->page_num++;
     surface->page_is_blank = TRUE;
@@ -631,7 +653,7 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 #endif
 }
 
-const cairo_surface_backend_t cairo_paginated_surface_backend = {
+static const cairo_surface_backend_t cairo_paginated_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
     _cairo_paginated_surface_create_similar,
     _cairo_paginated_surface_finish,

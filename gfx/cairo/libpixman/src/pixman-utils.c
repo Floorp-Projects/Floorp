@@ -15,7 +15,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL SuSE
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Author:  Keith Packard, SuSE, Inc.
@@ -54,10 +54,10 @@ pixman_transform_point_3d (pixman_transform_t *transform,
 
 	result.vector[j] = (pixman_fixed_48_16_t) v;
     }
-    
+
     if (!result.vector[2])
 	return FALSE;
-    
+
     *vector = result;
     return TRUE;
 }
@@ -93,7 +93,7 @@ pixman_fill8 (uint32_t  *bits,
 	      int	height,
 	      uint32_t  xor)
 {
-    int byte_stride = stride * sizeof (uint32_t);
+    int byte_stride = stride * (int) sizeof (uint32_t);
     uint8_t *dst = (uint8_t *) bits;
     uint8_t v = xor & 0xff;
     int i;
@@ -118,7 +118,7 @@ pixman_fill16 (uint32_t *bits,
 	       int       height,
 	       uint32_t  xor)
 {
-    int short_stride = (stride * sizeof (uint32_t)) / sizeof (uint16_t);
+    int short_stride = (stride * (int) sizeof (uint32_t)) / (int) sizeof (uint16_t);
     uint16_t *dst = (uint16_t *)bits;
     uint16_t v = xor & 0xffff;
     int i;
@@ -144,9 +144,9 @@ pixman_fill32 (uint32_t *bits,
 	       uint32_t  xor)
 {
     int i;
-    
+
     bits = bits + y * stride + x;
-    
+
     while (height--)
     {
 	for (i = 0; i < width; ++i)
@@ -170,7 +170,7 @@ pixman_fill (uint32_t *bits,
     printf ("filling: %d %d %d %d (stride: %d, bpp: %d)   pixel: %x\n",
 	    x, y, width, height, stride, bpp, xor);
 #endif
-    
+
 #ifdef USE_MMX
     if (!pixman_have_mmx() || !pixman_fill_mmx (bits, stride, bpp, x, y, width, height, xor))
 #endif
@@ -180,11 +180,11 @@ pixman_fill (uint32_t *bits,
 	case 8:
 	    pixman_fill8 (bits, stride, x, y, width, height, xor);
 	    break;
-	    
+
 	case 16:
 	    pixman_fill16 (bits, stride, x, y, width, height, xor);
 	    break;
-	    
+
 	case 32:
 	    pixman_fill32 (bits, stride, x, y, width, height, xor);
 	    break;
@@ -194,10 +194,10 @@ pixman_fill (uint32_t *bits,
 	    break;
 	}
     }
-	
+
     return TRUE;
 }
-	    
+
 
 /*
  * Compute the smallest value no less than y which is on a
@@ -209,7 +209,7 @@ pixman_sample_ceil_y (pixman_fixed_t y, int n)
 {
     pixman_fixed_t   f = pixman_fixed_frac(y);
     pixman_fixed_t   i = pixman_fixed_floor(y);
-    
+
     f = ((f + Y_FRAC_FIRST(n)) / STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
     if (f > Y_FRAC_LAST(n))
     {
@@ -230,7 +230,7 @@ pixman_sample_floor_y (pixman_fixed_t y, int n)
 {
     pixman_fixed_t   f = pixman_fixed_frac(y);
     pixman_fixed_t   i = pixman_fixed_floor (y);
-    
+
     f = _div(f - Y_FRAC_FIRST(n), STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
     if (f < Y_FRAC_FIRST(n))
     {
@@ -249,9 +249,9 @@ pixman_edge_step (pixman_edge_t *e, int n)
     pixman_fixed_48_16_t	ne;
 
     e->x += n * e->stepx;
-    
+
     ne = e->e + n * (pixman_fixed_48_16_t) e->dx;
-    
+
     if (n >= 0)
     {
 	if (ne > 0)
@@ -281,7 +281,7 @@ _pixman_edge_tMultiInit (pixman_edge_t *e, int n, pixman_fixed_t *stepx_p, pixma
 {
     pixman_fixed_t	stepx;
     pixman_fixed_48_16_t	ne;
-    
+
     ne = n * (pixman_fixed_48_16_t) e->dx;
     stepx = n * e->stepx;
     if (ne > 0)
@@ -331,7 +331,7 @@ pixman_edge_init (pixman_edge_t	*e,
 	    e->dx = -dx % dy;
 	    e->e = 0;
 	}
-    
+
 	_pixman_edge_tMultiInit (e, STEP_Y_SMALL(n), &e->stepx_small, &e->dx_small);
 	_pixman_edge_tMultiInit (e, STEP_Y_BIG(n), &e->stepx_big, &e->dx_big);
     }
@@ -369,6 +369,20 @@ pixman_line_fixed_edge_init (pixman_edge_t *e,
 		    top->y + y_off_fixed,
 		    bot->x + x_off_fixed,
 		    bot->y + y_off_fixed);
+}
+
+pixman_bool_t
+pixman_multiply_overflows_int (unsigned int a,
+		               unsigned int b)
+{
+    return a >= INT32_MAX / b;
+}
+
+pixman_bool_t
+pixman_addition_overflows_int (unsigned int a,
+		               unsigned int b)
+{
+    return a > INT32_MAX - b;
 }
 
 void *
