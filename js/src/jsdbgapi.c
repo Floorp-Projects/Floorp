@@ -50,12 +50,14 @@
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsdbgapi.h"
+#include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsparse.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -1202,7 +1204,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
                           jsval *rval)
 {
     JSObject *scobj;
-    uint32 flags, options;
+    uint32 flags;
     JSScript *script;
     JSBool ok;
 
@@ -1212,17 +1214,14 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
 
     /*
      * XXX Hack around ancient compiler API to propagate the JSFRAME_SPECIAL
-     * flags to the code generator (see js_EmitTree's TOK_SEMI case).
+     * flags to the code generator.
      */
     flags = fp->flags;
     fp->flags |= JSFRAME_DEBUGGER | JSFRAME_EVAL;
-    options = cx->options;
-    cx->options = options | JSOPTION_COMPILE_N_GO;
-    script = JS_CompileUCScriptForPrincipals(cx, scobj,
-                                             JS_StackFramePrincipals(cx, fp),
-                                             chars, length, filename, lineno);
+    script = js_CompileScript(cx, scobj, JS_StackFramePrincipals(cx, fp),
+                              TCF_COMPILE_N_GO, chars, length, NULL,
+                              filename, lineno);
     fp->flags = flags;
-    cx->options = options;
     if (!script)
         return JS_FALSE;
 

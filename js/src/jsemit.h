@@ -171,6 +171,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        XXX combine with blockChain? */
     JSAtomList      decls;          /* function, const, and var declarations */
     JSParseContext  *parseContext;
+    JSFunction      *fun;           /* function to store argument and variable
+                                       names when flags & TCF_IN_FUNCTION */
 };
 
 #define TCF_COMPILING          0x01 /* generating bytecode; this tc is a cg */
@@ -187,6 +189,9 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_HAS_DEFXMLNS      0x200 /* default xml namespace = ...; parsed */
 #define TCF_HAS_FUNCTION_STMT 0x400 /* block contains a function statement */
 #define TCF_GENEXP_LAMBDA     0x800 /* flag lambda from generator expression */
+#define TCF_COMPILE_N_GO     0x1000 /* compiler-and-go mode of script, can
+                                       optimize name references based on scope
+                                       chain */
 
 #define TREE_CONTEXT_INIT(tc, pc)                                             \
     ((tc)->flags = (tc)->ngvars = 0,                                          \
@@ -195,7 +200,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
      (tc)->blockChain = NULL,                                                 \
      ATOM_LIST_INIT(&(tc)->decls),                                            \
      (tc)->blockNode = NULL,                                                  \
-     (tc)->parseContext = (pc))
+     (tc)->parseContext = (pc),                                               \
+     (tc)->fun = NULL)
 
 #define TREE_CONTEXT_FINISH(tc)                                               \
     ((void)0)
@@ -501,14 +507,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
  */
 extern JSBool
 js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body);
-
-/*
- * Emit code into cg for the tree rooted at body, then create a persistent
- * script for fun from cg.
- */
-extern JSBool
-js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
-                    JSFunction *fun);
 
 /*
  * Source notes generated along with bytecode for decompiling and debugging.

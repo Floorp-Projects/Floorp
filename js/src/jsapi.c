@@ -4437,15 +4437,13 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 const jschar *chars, size_t length,
                                 const char *filename, uintN lineno)
 {
-    JSParseContext pc;
+    uint32 tcflags;
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    if (!js_InitParseContext(cx, &pc, chars, length, NULL, filename, lineno))
-        return NULL;
-    js_InitCompilePrincipals(cx, &pc, principals);
-    script = js_CompileScript(cx, obj, &pc);
-    js_FinishParseContext(cx, &pc);
+    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    script = js_CompileScript(cx, obj, principals, tcflags,
+                              chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4471,7 +4469,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
      */
     result = JS_TRUE;
     exnState = JS_SaveExceptionState(cx);
-    if (js_InitParseContext(cx, &pc, chars, length, NULL, NULL, 1)) {
+    if (js_InitParseContext(cx, &pc, NULL, chars, length, NULL, NULL, 1)) {
         older = JS_SetErrorReporter(cx, NULL);
         if (!js_ParseScript(cx, obj, &pc) &&
             (pc.tokenStream.flags & TSF_UNEXPECTED_EOF)) {
@@ -4494,7 +4492,7 @@ JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
 {
     FILE *fp;
-    JSParseContext pc;
+    uint32 tcflags;
     JSScript *script;
 
     CHECK_REQUEST(cx);
@@ -4509,12 +4507,9 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
         }
     }
 
-    if (!js_InitParseContext(cx, &pc, NULL, 0, fp, filename, 1)) {
-        script = NULL;
-    } else {
-        script = js_CompileScript(cx, obj, &pc);
-        js_FinishParseContext(cx, &pc);
-    }
+    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    script = js_CompileScript(cx, obj, NULL, tcflags,
+                              NULL, 0, fp, filename, 1);
     if (fp != stdin)
         fclose(fp);
     LAST_FRAME_CHECKS(cx, script);
@@ -4533,15 +4528,13 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, FILE *file,
                                   JSPrincipals *principals)
 {
-    JSParseContext pc;
+    uint32 tcflags;
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    if (!js_InitParseContext(cx, &pc, NULL, 0, file, filename, 1))
-        return NULL;
-    js_InitCompilePrincipals(cx, &pc, principals);
-    script = js_CompileScript(cx, obj, &pc);
-    js_FinishParseContext(cx, &pc);
+    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    script = js_CompileScript(cx, obj, principals, tcflags,
+                              NULL, 0, file, filename, 1);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4641,8 +4634,6 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     JSFunction *fun;
     JSAtom *funAtom, *argAtom;
     uintN i;
-    JSParseContext pc;
-    JSBool ok;
 
     CHECK_REQUEST(cx);
     if (!name) {
@@ -4669,13 +4660,8 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         }
     }
 
-    ok = js_InitParseContext(cx, &pc, chars, length, NULL, filename, lineno);
-    if (ok) {
-        js_InitCompilePrincipals(cx, &pc, principals);
-        ok = js_CompileFunctionBody(cx, &pc, fun);
-        js_FinishParseContext(cx, &pc);
-    }
-    if (!ok) {
+    if (!js_CompileFunctionBody(cx, fun, principals, chars, length,
+                                filename, lineno)) {
         fun = NULL;
         goto out;
     }
@@ -4856,16 +4842,12 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                  const char *filename, uintN lineno,
                                  jsval *rval)
 {
-    uint32 options;
     JSScript *script;
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    options = cx->options;
-    cx->options = options | JSOPTION_COMPILE_N_GO;
-    script = JS_CompileUCScriptForPrincipals(cx, obj, principals, chars, length,
-                                             filename, lineno);
-    cx->options = options;
+    script = js_CompileScript(cx, obj, principals, TCF_COMPILE_N_GO,
+                              chars, length, NULL, filename, lineno);
     if (!script)
         return JS_FALSE;
     ok = js_Execute(cx, obj, script, NULL, 0, rval);

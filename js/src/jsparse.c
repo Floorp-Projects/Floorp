@@ -156,8 +156,8 @@ static uint32 maxparsenodes = 0;
 static uint32 recyclednodes = 0;
 #endif
 
-JS_FRIEND_API(JSBool)
-js_InitParseContext(JSContext *cx, JSParseContext *pc,
+JSBool
+js_InitParseContext(JSContext *cx, JSParseContext *pc, JSPrincipals *principals,
                     const jschar *base, size_t length,
                     FILE *fp, const char *filename, uintN lineno)
 {
@@ -166,7 +166,9 @@ js_InitParseContext(JSContext *cx, JSParseContext *pc,
         JS_ARENA_RELEASE(&cx->tempPool, pc->tempPoolMark);
         return JS_FALSE;
     }
-    pc->principals = NULL;
+    if (principals)
+        JSPRINCIPALS_HOLD(cx, principals);
+    pc->principals = principals;
     pc->nodeList = NULL;
     pc->traceListHead = NULL;
 
@@ -176,7 +178,7 @@ js_InitParseContext(JSContext *cx, JSParseContext *pc,
     return JS_TRUE;
 }
 
-JS_FRIEND_API(void)
+void
 js_FinishParseContext(JSContext *cx, JSParseContext *pc)
 {
     if (pc->principals)
@@ -492,8 +494,7 @@ MaybeSetupFrame(JSContext *cx, JSObject *chain, JSStackFrame *oldfp,
          * the real variables objects and function that our new stack frame is
          * going to use.
          */
-        newfp->flags = oldfp->flags & (JSFRAME_SPECIAL | JSFRAME_COMPILE_N_GO |
-                                       JSFRAME_SCRIPT_OBJECT);
+        newfp->flags = oldfp->flags & (JSFRAME_SPECIAL | JSFRAME_SCRIPT_OBJECT);
         while (oldfp->flags & JSFRAME_SPECIAL) {
             oldfp = oldfp->down;
             if (!oldfp)
@@ -512,7 +513,7 @@ MaybeSetupFrame(JSContext *cx, JSObject *chain, JSStackFrame *oldfp,
 /*
  * Parse a top-level JS script.
  */
-JS_FRIEND_API(JSParseNode *)
+JSParseNode *
 js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
 {
     JSStackFrame *fp, frame;
@@ -557,11 +558,13 @@ js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
 /*
  * Compile a top-level script.
  */
-JS_FRIEND_API(JSScript *)
-js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
+JSScript *
+js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
+                 uint32 tcflags, const jschar *chars, size_t length,
+                 FILE *file, const char *filename, uintN lineno)
 {
+    JSParseContext pc;
     JSStackFrame *fp, frame;
-    uint32 flags;
     JSArenaPool codePool, notePool;
     JSCodeGenerator cg;
     JSParseNode *pn;
@@ -570,33 +573,39 @@ js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
 
+    JS_ASSERT(!(tcflags & ~TCF_COMPILE_N_GO));
+
+    if (!js_InitParseContext(cx, &pc, principals, chars, length, file,
+                             filename, lineno)) {
+        return NULL;
+    }
+
     /*
+     * From this point the control must flow through the label out.
+     *
      * Push a compiler frame if we have no frames, or if the top frame is a
      * lightweight function activation, or if its scope chain doesn't match
      * the one passed to us.
      */
     fp = cx->fp;
-    MaybeSetupFrame(cx, chain, fp, &frame);
-    flags = cx->fp->flags;
-    cx->fp->flags = flags |
-                    (JS_HAS_COMPILE_N_GO_OPTION(cx)
-                     ? JSFRAME_COMPILING | JSFRAME_COMPILE_N_GO
-                     : JSFRAME_COMPILING);
+    MaybeSetupFrame(cx, obj, fp, &frame);
 
     JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode),
                        &cx->scriptStackQuota);
     JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
                        &cx->scriptStackQuota);
-    js_InitCodeGenerator(cx, &cg, pc, &codePool, &notePool, TS(pc)->lineno);
+    js_InitCodeGenerator(cx, &cg, &pc, &codePool, &notePool,
+                         pc.tokenStream.lineno);
 
     /* From this point the control must flow via the label out. */
-    pn = Statements(cx, TS(pc), &cg.treeContext);
+    cg.treeContext.flags |= tcflags;
+    pn = Statements(cx, &pc.tokenStream, &cg.treeContext);
     if (!pn) {
         script = NULL;
         goto out;
     }
-    if (!js_MatchToken(cx, TS(pc), TOK_EOF)) {
-        js_ReportCompileErrorNumber(cx, TS(pc), NULL, JSREPORT_ERROR,
+    if (!js_MatchToken(cx, &pc.tokenStream, TOK_EOF)) {
+        js_ReportCompileErrorNumber(cx, &pc.tokenStream, NULL, JSREPORT_ERROR,
                                     JSMSG_SYNTAX_ERROR);
         script = NULL;
         goto out;
@@ -632,15 +641,14 @@ js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(stdout);
 #endif
-    script = js_NewScriptFromCG(cx, &cg, NULL);
+    script = js_NewScriptFromCG(cx, &cg);
 
   out:
     js_FinishCodeGenerator(cx, &cg);
     JS_FinishArenaPool(&codePool);
     JS_FinishArenaPool(&notePool);
-
-    cx->fp->flags = flags;
     cx->fp = fp;
+    js_FinishParseContext(cx, &pc);
     return script;
 }
 
@@ -772,61 +780,44 @@ HasFinalReturn(JSParseNode *pn)
 }
 
 static JSBool
-ReportBadReturn(JSContext *cx, JSTokenStream *ts, uintN flags, uintN errnum,
+ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
                 uintN anonerrnum)
 {
-    JSFunction *fun;
     const char *name;
 
-    fun = cx->fp->fun;
-    if (fun->atom) {
-        name = js_AtomToPrintableString(cx, fun->atom);
+    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
+    if (tc->fun->atom) {
+        name = js_AtomToPrintableString(cx, tc->fun->atom);
     } else {
         errnum = anonerrnum;
         name = NULL;
     }
-    return js_ReportCompileErrorNumber(cx, ts, NULL, flags, errnum, name);
+    return js_ReportCompileErrorNumber(cx, TS(tc->parseContext), NULL, flags,
+                                       errnum, name);
 }
 
 static JSBool
-CheckFinalReturn(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
+CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
 {
+    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
-           ReportBadReturn(cx, ts, JSREPORT_WARNING | JSREPORT_STRICT,
+           ReportBadReturn(cx, tc, JSREPORT_WARNING | JSREPORT_STRICT,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
 }
 
 static JSParseNode *
-FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
-             JSTreeContext *tc)
+FunctionBody(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
-    JSStackFrame *fp, frame;
-    JSObject *funobj;
     JSStmtInfo stmtInfo;
     uintN oldflags, firstLine;
     JSParseNode *pn;
 
-    JS_ASSERT(FUN_INTERPRETED(fun));
-    fp = cx->fp;
-    funobj = fun->object;
-    if (!fp || fp->fun != fun || fp->varobj != funobj ||
-        fp->scopeChain != funobj) {
-        memset(&frame, 0, sizeof frame);
-        frame.callee = funobj;
-        frame.fun = fun;
-        frame.varobj = frame.scopeChain = funobj;
-        frame.down = fp;
-        if (fp)
-            frame.flags = fp->flags & JSFRAME_COMPILE_N_GO;
-        cx->fp = &frame;
-    }
-
+    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
     js_PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
 
     oldflags = tc->flags;
     tc->flags &= ~(TCF_RETURN_EXPR | TCF_RETURN_VOID);
-    tc->flags |= TCF_IN_FUNCTION;
 
     /*
      * Save the body's first line, and store it in pn->pn_pos.begin.lineno
@@ -845,7 +836,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
                 pn = NULL;
             } else {
                 if (tc->flags & TCF_FUN_IS_GENERATOR) {
-                    ReportBadReturn(cx, ts, JSREPORT_ERROR,
+                    ReportBadReturn(cx, tc, JSREPORT_ERROR,
                                     JSMSG_BAD_GENERATOR_RETURN,
                                     JSMSG_BAD_ANON_GENERATOR_RETURN);
                     pn = NULL;
@@ -865,28 +856,13 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
 
     /* Check for falling off the end of a function that returns a value. */
     if (pn && JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR)) {
-        if (!CheckFinalReturn(cx, ts, pn))
+        if (!CheckFinalReturn(cx, tc, pn))
             pn = NULL;
     }
 
-    /*
-     * If we have a parse tree in pn and a code generator in tc, emit this
-     * function's code.  We must do this here, not in js_CompileFunctionBody,
-     * in order to detect TCF_IN_FUNCTION among tc->flags.
-     */
-    if (pn) {
+    if (pn)
         pn->pn_pos.begin.lineno = firstLine;
-        if ((tc->flags & TCF_COMPILING)) {
-            JSCodeGenerator *cg = (JSCodeGenerator *) tc;
 
-            if (!js_FoldConstants(cx, pn, tc) ||
-                !js_EmitFunctionBytecode(cx, cg, pn)) {
-                pn = NULL;
-            }
-        }
-    }
-
-    cx->fp = fp;
     tc->flags = oldflags | (tc->flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS));
     return pn;
 }
@@ -896,34 +872,29 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
  * handler attribute in an HTML <INPUT> tag.
  */
 JSBool
-js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun)
+js_CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
+                       const jschar *chars, size_t length,
+                       const char *filename, uintN lineno)
 {
+    JSParseContext pc;
     JSArenaPool codePool, notePool;
     JSCodeGenerator funcg;
-    JSStackFrame *fp, frame;
-    JSObject *funobj;
     JSParseNode *pn;
 
+    if (!js_InitParseContext(cx, &pc, principals, chars, length, NULL,
+                             filename, lineno)) {
+        return JS_FALSE;
+    }
+
+    /* No early return from this point until js_FinishParseContext call. */
     JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode),
                        &cx->scriptStackQuota);
     JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
                        &cx->scriptStackQuota);
-    js_InitCodeGenerator(cx, &funcg, pc, &codePool, &notePool, TS(pc)->lineno);
-
-    /* Push a JSStackFrame for use by FunctionBody. */
-    fp = cx->fp;
-    funobj = fun->object;
-    JS_ASSERT(!fp || (fp->fun != fun && fp->varobj != funobj &&
-                      fp->scopeChain != funobj));
-    memset(&frame, 0, sizeof frame);
-    frame.callee = funobj;
-    frame.fun = fun;
-    frame.varobj = frame.scopeChain = funobj;
-    frame.down = fp;
-    frame.flags = JS_HAS_COMPILE_N_GO_OPTION(cx)
-                  ? JSFRAME_COMPILING | JSFRAME_COMPILE_N_GO
-                  : JSFRAME_COMPILING;
-    cx->fp = &frame;
+    js_InitCodeGenerator(cx, &funcg, &pc, &codePool, &notePool,
+                         pc.tokenStream.lineno);
+    funcg.treeContext.flags |= TCF_IN_FUNCTION;
+    funcg.treeContext.fun = fun;
 
     /*
      * Farble the body so that it looks like a block statement to js_EmitTree,
@@ -936,24 +907,27 @@ js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun)
      * Therefore we must fold constants, allocate try notes, and generate code
      * for this function, including a stop opcode at the end.
      */
-    CURRENT_TOKEN(TS(pc)).type = TOK_LC;
-    pn = FunctionBody(cx, TS(pc), fun, &funcg.treeContext);
+    CURRENT_TOKEN(&pc.tokenStream).type = TOK_LC;
+    pn = FunctionBody(cx, &pc.tokenStream, &funcg.treeContext);
     if (pn) {
-        if (!js_MatchToken(cx, TS(pc), TOK_EOF)) {
-            js_ReportCompileErrorNumber(cx, TS(pc), NULL, JSREPORT_ERROR,
-                                        JSMSG_SYNTAX_ERROR);
+        if (!js_MatchToken(cx, &pc.tokenStream, TOK_EOF)) {
+            js_ReportCompileErrorNumber(cx, &pc.tokenStream, NULL,
+                                        JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else {
-            if (!js_NewScriptFromCG(cx, &funcg, fun))
+            if (!js_FoldConstants(cx, pn, &funcg.treeContext) ||
+                !js_EmitFunctionBytecode(cx, &funcg, pn) ||
+                !js_NewScriptFromCG(cx, &funcg)) {
                 pn = NULL;
+            }
         }
     }
 
     /* Restore saved state and release code generation arenas. */
-    cx->fp = fp;
     js_FinishCodeGenerator(cx, &funcg);
     JS_FinishArenaPool(&codePool);
     JS_FinishArenaPool(&notePool);
+    js_FinishParseContext(cx, &pc);
     return pn != NULL;
 }
 
@@ -971,18 +945,9 @@ typedef JSBool
 
 struct BindData {
     JSParseNode             *pn;                /* error source coordinate */
-    JSObject                *obj;               /* the variable object */
     JSOp                    op;                 /* prolog bytecode or nop */
     Binder                  binder;             /* binder, discriminates u */
     union {
-        struct {
-            JSFunction      *fun;               /* must come first! see next */
-        } arg;
-        struct {
-            JSFunction      *fun;               /* this overlays u.arg.fun */
-            JSClass         *clasp;
-            JSLocalKind     kind;
-        } var;
         struct {
             jsuint          index;
             uintN           overflow;
@@ -991,17 +956,18 @@ struct BindData {
 };
 
 static JSBool
-BindArg(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
+BindArg(JSContext *cx, JSAtom *atom, JSTreeContext *tc)
 {
     const char *name;
 
     /*
      * Check for a duplicate parameter name, a "feature" required by ECMA-262.
      */
-    if (js_LookupLocal(cx, data->u.arg.fun, atom, NULL) != JSLOCAL_NONE) {
+    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
+    if (js_LookupLocal(cx, tc->fun, atom, NULL) != JSLOCAL_NONE) {
         name = js_AtomToPrintableString(cx, atom);
         if (!name ||
-            !js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
+            !js_ReportCompileErrorNumber(cx, TS(tc->parseContext), NULL,
                                          JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_DUPLICATE_FORMAL,
                                          name)) {
@@ -1009,19 +975,14 @@ BindArg(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         }
     }
 
-    return js_AddLocal(cx, data->u.arg.fun, atom, JSLOCAL_ARG);
+    return js_AddLocal(cx, tc->fun, atom, JSLOCAL_ARG);
 }
 
 static JSBool
-BindLocalVariable(JSContext *cx, BindData *data, JSAtom *atom)
+BindLocalVariable(JSContext *cx, JSFunction *fun, JSAtom *atom,
+                  JSLocalKind localKind)
 {
-    /*
-     * Can't increase fun->nvars in an active frame when kind is JSFL_NONE.
-     */
-    if (data->u.var.kind == JSLOCAL_NONE)
-        return JS_TRUE;
-    JS_ASSERT(data->u.var.kind == JSLOCAL_VAR ||
-              data->u.var.kind == JSLOCAL_CONST);
+    JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
 
     /*
      * Don't bind a variable with the hidden name 'arguments', per ECMA-262.
@@ -1032,7 +993,7 @@ BindLocalVariable(JSContext *cx, BindData *data, JSAtom *atom)
     if (atom == cx->runtime->atomState.argumentsAtom)
         return JS_TRUE;
 
-    return js_AddLocal(cx, data->u.var.fun, atom, data->u.var.kind);
+    return js_AddLocal(cx, fun, atom, localKind);
 }
 
 #if JS_HAS_DESTRUCTURING
@@ -1050,6 +1011,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
     JSAtomListElement *ale;
     const char *name;
 
+    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
     if (!ale) {
         ale = js_IndexAtom(cx, atom, &tc->decls);
@@ -1058,7 +1020,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
         ALE_SET_JSOP(ale, data->op);
     }
 
-    if (js_LookupLocal(cx, data->u.var.fun, atom, NULL) != JSLOCAL_NONE) {
+    if (js_LookupLocal(cx, tc->fun, atom, NULL) != JSLOCAL_NONE) {
         name = js_AtomToPrintableString(cx, atom);
         if (!name ||
             !js_ReportCompileErrorNumber(cx, TS(tc->parseContext), data->pn,
@@ -1068,12 +1030,24 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
             return JS_FALSE;
         }
     } else {
-        if (!BindLocalVariable(cx, data, atom))
+        if (!BindLocalVariable(cx, tc->fun, atom, JSLOCAL_VAR))
             return JS_FALSE;
     }
     return JS_TRUE;
 }
 #endif /* JS_HAS_DESTRUCTURING */
+
+static JSFunction *
+NewCompilerFunction(JSContext *cx, JSTreeContext *tc, JSAtom *atom,
+                    JSBool lambda)
+{
+    JSObject *parent;
+
+    parent = (tc->flags & TCF_IN_FUNCTION) ? tc->fun->object : cx->fp->varobj;
+    return js_NewFunction(cx, NULL, NULL, 0,
+                          JSFUN_INTERPRETED | (lambda ? JSFUN_LAMBDA : 0),
+                          parent, atom);
+}
 
 static JSParseNode *
 FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
@@ -1084,8 +1058,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSTokenType tt;
     JSAtom *funAtom;
     JSParsedObjectBox *funpob;
-    JSStackFrame *fp;
-    JSObject *varobj;
     JSAtomListElement *ale;
     JSFunction *fun;
     JSTreeContext funtc;
@@ -1116,10 +1088,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         funAtom = NULL;
         js_UngetToken(ts);
     }
-
-    /* Find the nearest variable-declaring scope and use it as our parent. */
-    fp = cx->fp;
-    varobj = fp->varobj;
 
     /*
      * Record names for function statements in tc->decls so we know when to
@@ -1175,19 +1143,15 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              * variable even if the parameter with the given name already
              * exists.
              */
-            JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
-            JS_ASSERT(fp->fun == GET_FUNCTION_PRIVATE(cx, varobj));
-            localKind = js_LookupLocal(cx, fp->fun, funAtom, NULL);
+            localKind = js_LookupLocal(cx, tc->fun, funAtom, NULL);
             if (localKind == JSLOCAL_NONE || localKind == JSLOCAL_ARG) {
-                if (!js_AddLocal(cx, fp->fun, funAtom, JSLOCAL_VAR))
+                if (!js_AddLocal(cx, tc->fun, funAtom, JSLOCAL_VAR))
                     return NULL;
             }
         }
     }
 
-    fun = js_NewFunction(cx, NULL, NULL, 0,
-                         JSFUN_INTERPRETED | (lambda ? JSFUN_LAMBDA : 0),
-                         varobj, funAtom);
+    fun = NewCompilerFunction(cx, tc, funAtom, lambda);
     if (!fun)
         return NULL;
 
@@ -1206,18 +1170,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     /* Initialize early for possible flags mutation via DestructuringExpr. */
     TREE_CONTEXT_INIT(&funtc, tc->parseContext);
+    funtc.flags |= TCF_IN_FUNCTION;
+    funtc.fun = fun;
 
     /* Now parse formal argument list and compute fun->nargs. */
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_FORMAL);
     if (!js_MatchToken(cx, ts, TOK_RP)) {
-        BindData data;
-
-        data.pn = NULL;
-        data.obj = fun->object;
-        data.op = JSOP_NOP;
-        data.binder = BindArg;
-        data.u.arg.fun = fun;
-
         do {
             tt = js_GetToken(cx, ts);
             switch (tt) {
@@ -1225,6 +1183,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
               case TOK_LB:
               case TOK_LC:
               {
+                BindData data;
                 JSParseNode *lhs, *rhs;
                 jsint slot;
 
@@ -1234,19 +1193,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                  * anonymous positional parameter, so here we must tweak our
                  * binder and its data.
                  */
+                data.pn = NULL;
                 data.op = JSOP_DEFVAR;
                 data.binder = BindDestructuringArg;
-                data.u.var.clasp = &js_FunctionClass;
-                data.u.var.kind = JSLOCAL_VAR;
                 lhs = DestructuringExpr(cx, &data, &funtc, tt);
                 if (!lhs)
                     return NULL;
-
-                /*
-                 * Restore the formal parameter binder in case there are more
-                 * non-destructuring formals in the parameter list.
-                 */
-                data.binder = BindArg;
 
                 /*
                  * Adjust fun->nargs to count the single anonymous positional
@@ -1285,7 +1237,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif /* JS_HAS_DESTRUCTURING */
 
               case TOK_NAME:
-                if (!data.binder(cx, &data, CURRENT_TOKEN(ts).t_atom, tc))
+                if (!BindArg(cx, CURRENT_TOKEN(ts).t_atom, &funtc))
                     return NULL;
                 break;
 
@@ -1312,7 +1264,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif
     pn->pn_pos.begin = CURRENT_TOKEN(ts).pos.begin;
 
-    body = FunctionBody(cx, ts, fun, &funtc);
+    body = FunctionBody(cx, ts, &funtc);
     if (!body)
         return NULL;
 
@@ -1381,8 +1333,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          *
          * The TCF_FUN_USES_NONLOCALS flag is set only by the code generator,
          * so it won't be set here.  Assert that it's not.  We have to check
-         * it later, in js_EmitTree, after js_EmitFunctionBody has traversed
-         * the function's body
+         * it later, in js_EmitTree, after js_EmitFunctionBytecode has
+         * traversed the function's body
          */
         JS_ASSERT(!(funtc.flags & TCF_FUN_USES_NONLOCALS));
         if (!lambda && funAtom && !AT_TOP_LEVEL(tc))
@@ -1479,16 +1431,14 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         /* If compiling top-level statements, emit as we go to save space. */
         if (!tc->topStmt && (tc->flags & TCF_COMPILING)) {
-            if (cx->fp->fun &&
-                JS_HAS_STRICT_OPTION(cx) &&
-                (tc->flags & TCF_RETURN_EXPR)) {
+            if (JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR)) {
                 /*
                  * Check pn2 for lack of a final return statement if it is the
                  * last statement in the block.
                  */
                 tt = js_PeekToken(cx, ts);
                 if ((tt == TOK_EOF || tt == TOK_RC) &&
-                    !CheckFinalReturn(cx, ts, pn2)) {
+                    !CheckFinalReturn(cx, tc, pn2)) {
                     tt = TOK_ERROR;
                     break;
                 }
@@ -1658,7 +1608,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JSScopeProperty *sprop;
     JSAtomListElement *ale;
 
-    blockObj = data->obj;
+    blockObj = tc->blockChain;
     sprop = SCOPE_GET_PROPERTY(OBJ_SCOPE(blockObj), ATOM_TO_JSID(atom));
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
     if (sprop || (ale && ALE_JSOP(ale) == JSOP_DEFCONST)) {
@@ -1703,8 +1653,6 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JSAtomListElement *ale;
     JSOp op, prevop;
     const char *name;
-    JSFunction *fun;
-    JSObject *obj;
     JSLocalKind localKind;
 
     stmt = js_LexicalLookup(tc, atom, NULL, 0);
@@ -1744,9 +1692,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     }
     ALE_SET_JSOP(ale, op);
 
-    fun = data->u.var.fun;
-    obj = data->obj;
-    if (!fun || OBJ_GET_CLASS(cx, obj) != &js_FunctionClass) {
+    if (!(tc->flags & TCF_IN_FUNCTION)) {
         /*
          * Don't lookup global variables or variables in an active frame at
          * compile time.
@@ -1754,19 +1700,19 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         return JS_TRUE;
     }
 
-    localKind = js_LookupLocal(cx, fun, atom, NULL);
+    localKind = js_LookupLocal(cx, tc->fun, atom, NULL);
     if (localKind == JSLOCAL_NONE) {
         /*
          * Property not found in current variable scope: we have not seen this
          * variable before.  Define a new local variable by adding a property
          * to the function's scope, allocating one slot in the function's vars
-         * frame.  Global variables and any locals declared in with statement
-         * bodies are handled at runtime, by script prolog JSOP_DEFVAR opcodes
-         * generated for slot-less vars.
+         * frame. Any locals declared in with statement bodies are handled at
+         * runtime, by script prolog JSOP_DEFVAR opcodes generated for
+         * slot-less vars.
          */
-        if (cx->fp->scopeChain == obj &&
-            !js_InWithStatement(tc) &&
-            !BindLocalVariable(cx, data, atom)) {
+        localKind = (data->op == JSOP_DEFCONST) ? JSLOCAL_CONST : JSLOCAL_VAR;
+        if (!js_InWithStatement(tc) &&
+            !BindLocalVariable(cx, tc->fun, atom, localKind)) {
             return JS_FALSE;
         }
     } else if (localKind == JSLOCAL_ARG) {
@@ -1821,10 +1767,13 @@ BindDestructuringVar(JSContext *cx, BindData *data, JSParseNode *pn,
      * point, we can't select the optimal final opcode, yet we must preserve
      * the CONST bit and convey "set", not "get".
      */
-    pn->pn_op = (data->op == JSOP_DEFCONST)
-                ? JSOP_SETCONST
-                : JSOP_SETNAME;
-    pn->pn_const = (data->u.var.kind == JSLOCAL_CONST);
+    if (data->op == JSOP_DEFCONST) {
+        pn->pn_op = JSOP_SETCONST;
+        pn->pn_const = JS_TRUE;
+    } else {
+        pn->pn_op = JSOP_SETNAME;
+        pn->pn_const = JS_FALSE;
+    }
     return JS_TRUE;
 }
 
@@ -2284,7 +2233,7 @@ ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     if ((~tc->flags & (TCF_RETURN_EXPR | TCF_FUN_IS_GENERATOR)) == 0) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
-        ReportBadReturn(cx, ts, JSREPORT_ERROR,
+        ReportBadReturn(cx, tc, JSREPORT_ERROR,
                         JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
         return NULL;
@@ -2292,7 +2241,7 @@ ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     if (JS_HAS_STRICT_OPTION(cx) &&
         (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0 &&
-        !ReportBadReturn(cx, ts, JSREPORT_WARNING | JSREPORT_STRICT,
+        !ReportBadReturn(cx, tc, JSREPORT_WARNING | JSREPORT_STRICT,
                          JSMSG_NO_RETURN_VALUE,
                          JSMSG_ANON_NO_RETURN_VALUE)) {
         return NULL;
@@ -2997,7 +2946,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                  * an intentional change that anticipates ECMA Ed. 4.
                  */
                 data.pn = NULL;
-                data.obj = tc->blockChain;
                 data.op = JSOP_NOP;
                 data.binder = BindLet;
                 data.u.let.index = 0;
@@ -3531,7 +3479,6 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     data.pn = NULL;
     data.op = let ? JSOP_NOP : CURRENT_TOKEN(ts).t_op;
-    data.binder = let ? BindLet : BindVarOrConst;
     pn = NewParseNode(cx, ts, PN_LIST, tc);
     if (!pn)
         return NULL;
@@ -3550,25 +3497,11 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     fp = cx->fp;
     if (let) {
         JS_ASSERT(tc->blockChain == scopeStmt->u.blockObj);
-        data.obj = tc->blockChain;
-        data.u.let.index = OBJ_BLOCK_COUNT(cx, data.obj);
+        data.binder = BindLet;
+        data.u.let.index = OBJ_BLOCK_COUNT(cx, tc->blockChain);
         data.u.let.overflow = JSMSG_TOO_MANY_FUN_VARS;
     } else {
-        data.obj = fp->varobj;
-        data.u.var.fun = fp->fun;
-        data.u.var.clasp = OBJ_GET_CLASS(cx, data.obj);
-        if (data.u.var.fun && data.u.var.clasp == &js_FunctionClass) {
-            /* We are compiling code inside a function */
-            data.u.var.kind = (data.op == JSOP_DEFCONST)
-                              ? JSLOCAL_CONST
-                              : JSLOCAL_VAR;
-        } else {
-            /*
-             * We are compiling global code or code from an eval inside a
-             * function
-             */
-            data.u.var.kind = JSLOCAL_NONE;
-        }
+        data.binder = BindVarOrConst;
     }
 
     do {
@@ -3621,7 +3554,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn2->pn_atom = atom;
         pn2->pn_slot = -1;
         if (!let)
-            pn2->pn_const = (data.u.var.kind == JSLOCAL_CONST);
+            pn2->pn_const = (data.op == JSOP_DEFCONST);
         PN_APPEND(pn, pn2);
 
         if (js_MatchToken(cx, ts, TOK_ASSIGN)) {
@@ -4170,7 +4103,6 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pnp = &pn->pn_expr;
 
     data.pn = NULL;
-    data.obj = tc->blockChain;
     data.op = JSOP_NOP;
     data.binder = BindLet;
     data.u.let.index = 0;
@@ -4327,8 +4259,7 @@ GeneratorExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      * Make the generator function and flag it as interpreted ASAP (see the
      * comment in FunctionBody).
      */
-    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                         cx->fp->varobj, NULL);
+    fun = NewCompilerFunction(cx, tc, NULL, JS_TRUE);
     if (!fun)
         return NULL;
 
@@ -5754,7 +5685,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (pn->pn_atom == cx->runtime->atomState.parentAtom ||
                 pn->pn_atom == cx->runtime->atomState.protoAtom) {
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
-            } else {
+            } else if (!(tc->flags & TCF_IN_FUNCTION)) {
                 JSAtomListElement *ale;
                 JSStackFrame *fp;
                 JSBool loopy;
