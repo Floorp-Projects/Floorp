@@ -214,8 +214,8 @@ num_toSource(JSContext *cx, uintN argc, jsval *vp)
 #endif
 
 /* The buf must be big enough for MIN_INT to fit including '-' and '\0'. */
-static char *
-IntToString(jsint i, char *buf, size_t bufSize)
+char *
+js_IntToCString(jsint i, char *buf, size_t bufSize)
 {
     char *cp;
     jsuint u;
@@ -238,6 +238,7 @@ IntToString(jsint i, char *buf, size_t bufSize)
     if (i < 0)
         *--cp = '-';
 
+    JS_ASSERT(cp >= buf);
     return cp;
 }
 
@@ -259,7 +260,7 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         if (base < 2 || base > 36) {
             char numBuf[12];
-            char *numStr = IntToString(base, numBuf, sizeof numBuf);
+            char *numStr = js_IntToCString(base, numBuf, sizeof numBuf);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
                                  numStr);
             return JS_FALSE;
@@ -677,22 +678,34 @@ js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
     return JS_TRUE;
 }
 
-JSString *
-js_NumberToString(JSContext *cx, jsdouble d)
+char *
+js_NumberToCString(JSContext *cx, jsdouble d, char *buf, size_t bufSize)
 {
     jsint i;
-    char buf[DTOSTR_STANDARD_BUFFER_SIZE];
     char *numStr;
 
+    JS_ASSERT(bufSize >= DTOSTR_STANDARD_BUFFER_SIZE);
     if (JSDOUBLE_IS_INT(d, i)) {
-        numStr = IntToString(i, buf, sizeof buf);
+        numStr = js_IntToCString(i, buf, bufSize);
     } else {
-        numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, d);
+        numStr = JS_dtostr(buf, bufSize, DTOSTR_STANDARD, 0, d);
         if (!numStr) {
             JS_ReportOutOfMemory(cx);
             return NULL;
         }
     }
+    return numStr;
+}
+
+JSString *
+js_NumberToString(JSContext *cx, jsdouble d)
+{
+    char buf[DTOSTR_STANDARD_BUFFER_SIZE];
+    char *numStr;
+
+    numStr = js_NumberToCString(cx, d, buf, sizeof buf);
+    if (!numStr)
+        return NULL;
     return JS_NewStringCopyZ(cx, numStr);
 }
 
