@@ -568,7 +568,6 @@ public:
                                PRBool aNotify);
     virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
     virtual PRUint32 GetAttrCount() const;
-    virtual void DestroyContent();
 
 #ifdef DEBUG
     virtual void List(FILE* out, PRInt32 aIndent) const;
