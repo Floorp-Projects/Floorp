@@ -1117,6 +1117,8 @@
               setTimeout(function(self) { self._adjustWidth(); }, 0, this);
             else
               this._adjustWidth();
+
+            this._adjustAcItem();
           ]]>
       </constructor>
 
