@@ -1719,6 +1719,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   PRBool keepGoing = PR_TRUE;
   PRBool repositionViews = PR_FALSE; // should we really need this?
   PRBool foundAnyClears = PR_FALSE;
+  PRBool willReflowAgain = PR_FALSE;
 
 #ifdef DEBUG
   if (gNoisyReflow) {
@@ -1844,7 +1845,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
     // Now repair the line and update |aState.mY| by calling
     // |ReflowLine| or |SlideLine|.
-    if (line->IsDirty()) {
+    if (line->IsDirty() && !willReflowAgain) {
       lastLineMovedUp = PR_TRUE;
 
       PRBool maybeReflowingForFirstTime =
@@ -1861,7 +1862,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // it to invalidate the dirty area if necessary
       rv = ReflowLine(aState, line, &keepGoing);
       NS_ENSURE_SUCCESS(rv, rv);
-      
+
+      if (aState.mReflowState.mDiscoveredClearance &&
+          *aState.mReflowState.mDiscoveredClearance) {
+        line->MarkDirty();
+        willReflowAgain = PR_TRUE;
+      }
+
       if (line->HasFloats()) {
         reflowedFloat = PR_TRUE;
       }
@@ -1989,7 +1996,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // didn't change)
   // -- my chain of next-in-flows either has no first line, or its first
   // line isn't dirty.
-  PRBool skipPull = PR_FALSE;
+  PRBool skipPull = willReflowAgain;
   if (aState.mNextInFlow &&
       (aState.mReflowState.mFlags.mNextInFlowUntouched &&
        !lastLineMovedUp && 
@@ -2828,6 +2835,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       }
       // Exactly what we do now is flexible since we'll definitely be
       // reflowed.
+      return NS_OK;
     }
   }
   if (treatWithClearance) {
@@ -6622,6 +6630,11 @@ void
 nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
 {
 #ifdef DEBUG
+  // If any line is still dirty, that must mean we're going to reflow this
+  // block again soon (e.g. because we bailed out after noticing that
+  // clearance was imposed), so don't worry if the floats are out of sync.
+  PRBool anyLineDirty = PR_FALSE;
+
   // Check that the float list is what we would have built
   nsAutoVoidArray lineFloats;
   for (line_iterator line = begin_lines(), line_end = end_lines();
@@ -6633,6 +6646,9 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
         lineFloats.AppendElement(floatFrame);
         fc = fc->Next();
       }
+    }
+    if (line->IsDirty()) {
+      anyLineDirty = PR_TRUE;
     }
   }
   
@@ -6647,7 +6663,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
     ++i;
   }
 
-  if (!equal || lineFloats.Count() != storedFloats.Count()) {
+  if ((!equal || lineFloats.Count() != storedFloats.Count()) && !anyLineDirty) {
     NS_WARNING("nsBlockFrame::CheckFloats: Explicit float list is out of sync with float cache");
 #if defined(DEBUG_roc)
     nsIFrameDebug::RootFrameList(PresContext(), stdout, 0);
