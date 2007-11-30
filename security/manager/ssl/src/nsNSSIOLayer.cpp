@@ -60,6 +60,8 @@
 #include "nsIClientAuthDialogs.h"
 #include "nsICertOverrideService.h"
 #include "nsIBadCertListener2.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsRecentBadCerts.h"
 
 #include "nsXPIDLString.h"
@@ -78,6 +80,8 @@
 #include "nsIDocShell.h"
 #include "nsISecureBrowserUI.h"
 #include "nsProxyRelease.h"
+#include "nsIClassInfoImpl.h"
+#include "nsIProgrammingLanguage.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -203,8 +207,7 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mHandshakeInProgress(PR_FALSE),
     mAllowTLSIntoleranceTimeout(PR_TRUE),
     mHandshakeStartTime(0),
-    mPort(0),
-    mCAChain(nsnull)
+    mPort(0)
 {
   mThreadData = new nsSSLSocketThreadData;
 }
@@ -217,32 +220,21 @@ nsNSSSocketInfo::~nsNSSSocketInfo()
   if (isAlreadyShutDown())
     return;
 
-  destructorSafeDestroyNSSReference();
   shutdown(calledFromObject);
 }
 
 void nsNSSSocketInfo::virtualDestroyNSSReference()
 {
-  destructorSafeDestroyNSSReference();
 }
 
-void nsNSSSocketInfo::destructorSafeDestroyNSSReference()
-{
-  if (isAlreadyShutDown())
-    return;
-
-  if (mCAChain) {
-    CERT_DestroyCertList(mCAChain);
-    mCAChain = nsnull;
-  }
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSSocketInfo,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsNSSSocketInfo,
                               nsITransportSecurityInfo,
                               nsISSLSocketControl,
                               nsIInterfaceRequestor,
                               nsISSLStatusProvider,
-                              nsIIdentityInfo)
+                              nsIIdentityInfo,
+                              nsISerializable,
+                              nsIClassInfo)
 
 nsresult
 nsNSSSocketInfo::GetHandshakePending(PRBool *aHandshakePending)
@@ -443,20 +435,6 @@ NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
   return rv;
 }
 
-NS_IMETHODIMP
-nsNSSSocketInfo::GetForceHandshake(PRBool* forceHandshake)
-{
-  *forceHandshake = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetForceHandshake(PRBool forceHandshake)
-{
-  (void)forceHandshake;
-  return NS_OK;
-}
-
 nsresult
 nsNSSSocketInfo::GetForSTARTTLS(PRBool* aForSTARTTLS)
 {
@@ -481,6 +459,95 @@ NS_IMETHODIMP
 nsNSSSocketInfo::StartTLS()
 {
   return ActivateSSL();
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::Write(nsIObjectOutputStream* stream) {
+  stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsIX509Cert*, mCert),
+                              NS_GET_IID(nsISupports), PR_TRUE);
+  stream->Write32(mSecurityState);
+  stream->WriteWStringZ(mShortDesc.get());
+  stream->WriteWStringZ(mErrorMessage.get());
+
+  stream->WriteCompoundObject(NS_ISUPPORTS_CAST(nsISSLStatus*, mSSLStatus),
+                              NS_GET_IID(nsISupports), PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::Read(nsIObjectInputStream* stream) {
+  nsCOMPtr<nsISupports> obj;
+  stream->ReadObject(PR_TRUE, getter_AddRefs(obj));
+  mCert = reinterpret_cast<nsNSSCertificate*>(obj.get());
+
+  stream->Read32(&mSecurityState);
+  stream->ReadString(mShortDesc);
+  stream->ReadString(mErrorMessage);
+
+  stream->ReadObject(PR_TRUE, getter_AddRefs(obj));
+  mSSLStatus = reinterpret_cast<nsSSLStatus*>(obj.get());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetInterfaces(PRUint32 *count, nsIID * **array)
+{
+  *count = 0;
+  *array = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetContractID(char * *aContractID)
+{
+  *aContractID = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetClassDescription(char * *aClassDescription)
+{
+  *aClassDescription = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetClassID(nsCID * *aClassID)
+{
+  *aClassID = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
+  if (!*aClassID)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return GetClassIDNoAlloc(*aClassID);
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+{
+  *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetFlags(PRUint32 *aFlags)
+{
+  *aFlags = 0;
+  return NS_OK;
+}
+
+static NS_DEFINE_CID(kNSSSocketInfoCID, NS_NSSSOCKETINFO_CID);
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+{
+  *aClassIDNoAlloc = kNSSSocketInfoCID;
+  return NS_OK;
 }
 
 nsresult nsNSSSocketInfo::ActivateSSL()
@@ -532,26 +599,13 @@ nsresult nsNSSSocketInfo::GetSSLStatus(nsISupports** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);
 
-  *_result = mSSLStatus;
+  *_result = NS_ISUPPORTS_CAST(nsISSLStatus*, mSSLStatus);
   NS_IF_ADDREF(*_result);
 
   return NS_OK;
 }
 
-nsresult nsNSSSocketInfo::RememberCAChain(CERTCertList *aCertList)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  if (mCAChain) {
-    CERT_DestroyCertList(mCAChain);
-  }
-  mCAChain = aCertList;
-  return NS_OK;
-}
-
-nsresult nsNSSSocketInfo::SetSSLStatus(nsISSLStatus *aSSLStatus)
+nsresult nsNSSSocketInfo::SetSSLStatus(nsSSLStatus *aSSLStatus)
 {
   mSSLStatus = aSSLStatus;
 
@@ -2696,8 +2750,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     return SECFailure;
   }
 
-  nsCOMPtr<nsSSLStatus> status;
-  infoObject->GetSSLStatus(getter_AddRefs(status));
+  nsRefPtr<nsSSLStatus> status = infoObject->SSLStatus();
   if (!status) {
     status = new nsSSLStatus();
     infoObject->SetSSLStatus(status);

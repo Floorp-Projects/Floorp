@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is mozilla.org networking code.
  *
  * The Initial Developer of the Original Code is
- * Red Hat, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Kai Engert <kengert@redhat.com>
+ *   Christian Biesinger <cbiesinger@web.de> (Initial author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,49 +35,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NSSSLSTATUS_H
-#define _NSSSLSTATUS_H
+/** @file
+ * Helper functions for (de)serializing objects to/from ASCII strings.
+ */
 
-#include "nsISSLStatus.h"
+#ifndef NSSERIALIZATIONHELPER_H_
+#define NSSERIALIZATIONHELPER_H_
 
-#include "nsAutoPtr.h"
-#include "nsXPIDLString.h"
-#include "nsIX509Cert.h"
-#include "nsISerializable.h"
-#include "nsIClassInfo.h"
+#include "nsStringFwd.h"
 
-class nsSSLStatus
-  : public nsISSLStatus
-  , public nsISerializable
-  , public nsIClassInfo
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISSLSTATUS
-  NS_DECL_NSISERIALIZABLE
-  NS_DECL_NSICLASSINFO
+class nsISerializable;
+class nsISupports;
 
-  nsSSLStatus();
-  virtual ~nsSSLStatus();
+/**
+ * Serialize an object to an ASCII string.
+ */
+nsresult NS_SerializeToString(nsISerializable* obj,
+                              nsCSubstring& str);
 
-  /* public for initilization in this file */
-  nsCOMPtr<nsIX509Cert> mServerCert;
-
-  PRUint32 mKeyLength;
-  PRUint32 mSecretKeyLength;
-  nsXPIDLCString mCipherName;
-
-  PRBool mIsDomainMismatch;
-  PRBool mIsNotValidAtThisTime;
-  PRBool mIsUntrusted;
-
-  PRBool mHaveKeyLengthAndCipher;
-  PRBool mHaveCertStatus;
-};
-
-// 2c3837af-8b85-4a68-b0d8-0aed88985b32
-#define NS_SSLSTATUS_CID \
-{ 0x2c3837af, 0x8b85, 0x4a68, \
-  { 0xb0, 0xd8, 0x0a, 0xed, 0x88, 0x98, 0x5b, 0x32 } }
+/**
+ * Deserialize an object.
+ */
+nsresult NS_DeserializeObject(const nsCSubstring& str,
+                              nsISupports** obj);
 
 #endif
