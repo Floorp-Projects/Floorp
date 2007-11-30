@@ -490,13 +490,11 @@
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Top    "5"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Bottom "15"
 
-  ; XXXrstrong - a side affect of using a READONLY textbox is if the path is
-  ; longer than the visible area of the textbox it will display the characters
-  ; at the end and the beginning of the path will be hidden. Since the path has
-  ; to be greater than 74 characters in length I'm not going to spend any
-  ; cycles trying to come up with a workaround.
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Type   "text"
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" state  "$INSTDIR"
+  ; The contents of this control must be set as follows in the pre function
+  ; ${MUI_INSTALLOPTIONS_READ} $1 "summary.ini" "Field 2" "HWND"
+  ; SendMessage $1 ${WM_SETTEXT} 0 "STR:$INSTDIR"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" state  ""
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Left   "0"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Right  "-1"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Top    "17"
@@ -509,6 +507,18 @@
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Right  "-1"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Top    "130"
   WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Bottom "150"
+
+  ${If} "$TmpVal" == "true"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Type   "label"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Text   "$(SUMMARY_REBOOT_REQUIRED_INSTALL)"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Left   "0"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Top    "35"
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Bottom "45"
+
+    WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "4"
+  ${EndIf}
+
 !macroend
 
 !macro un.createUnConfirmINI
@@ -521,13 +531,11 @@
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Top    "5"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Bottom "15"
 
-  ; XXXrstrong - a side affect of using a READONLY textbox is if the path is
-  ; longer than the visible area of the textbox it will display the characters
-  ; at the end and the beginning of the path will be hidden. Since the path has
-  ; to be greater than 74 characters in length I'm not going to spend any
-  ; cycles trying to come up with a workaround.
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Type   "text"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" State  "$INSTDIR"
+  ; The contents of this control must be set as follows in the pre function
+  ; ${MUI_INSTALLOPTIONS_READ} $1 "unconfirm.ini" "Field 2" "HWND"
+  ; SendMessage $1 ${WM_SETTEXT} 0 "STR:$INSTDIR"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" State  ""
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Left   "0"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Right  "-1"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Top    "17"
@@ -557,6 +565,22 @@
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Right  "-1"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Top    "130"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Bottom "150"
+
+  ${If} "$TmpVal" == "true"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Type   "label"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Text   "$(SUMMARY_REBOOT_REQUIRED_UNINSTALL)"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Left   "0"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Top    "35"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Bottom "45"
+
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Settings" NumFields "6"
+
+    ; To insert this control reset Top / Bottom for controls below this one
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Top    "55"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Bottom "65"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Top    "67"
+  ${EndIf}
 !macroend
 
 /**
@@ -629,6 +653,105 @@
 
 ################################################################################
 # Macros for handling files in use
+
+/**
+ * Checks for files in use.
+ *
+ * Example usage:
+ *
+ *  ; The first string to be pushed onto the stack MUST be "end" to indicate
+ *  ; that there are no more relative file paths to check.
+ *  Push "end"
+ *  Push "chrome\toolkit.jar"
+ *  Push "freebl3.dll"
+ *  ; The last file pushed should be the app's main exe so if it is in use this
+ *  ; macro will return after the first check.
+ *  Push "${FileMainEXE}"
+ *  ${CheckForFilesInUse} $R9
+ *
+ * !IMPORTANT - this macro uses the $R7, $R8, and $R9 registers and makes no
+ *              attempt to restore their original values.
+ *
+ * @return  _RESULT
+ *          false if all of the files popped from the stack are not in use.
+ *          True if any of the files popped from the stack are in use.
+ * $R7 = Temporary backup directory where the files will be copied to.
+ * $R8 = value popped from the stack. This will either be a relative file path
+ *       from the $INSTDIR or "end" to indicate that there are no additional
+ *       files to check.
+ * $R9 = _RESULT
+ */
+!macro CheckForFilesInUse
+
+  !ifndef ${_MOZFUNC_UN}CheckForFilesInUse
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}CheckForFilesInUse "!insertmacro ${_MOZFUNC_UN}CheckForFilesInUseCall"
+
+    Function ${_MOZFUNC_UN}CheckForFilesInUse
+      ; Create a temporary backup directory.
+      GetTempFileName $R7 "$INSTDIR"
+      Delete "$R7"
+      SetOutPath "$R7"
+      StrCpy $R9 "false"
+
+      start:
+      Pop $R8
+      StrCmp "$R8" "end" end +1
+      IfFileExists "$INSTDIR\$R8" +1 start
+
+      ClearErrors
+      CopyFiles /SILENT "$INSTDIR\$R8" "$R7\$R8"
+      IfErrors +4 +1
+      Delete "$INSTDIR\$R8"
+      IfErrors +1 start
+      Delete "$R7\$R8"
+
+      StrCpy $R9 "true"
+
+      end:
+      SetOutPath "$INSTDIR"
+      CopyFiles /SILENT "$R7\*" "$INSTDIR\"
+      RmDir /r "$R7"
+      ClearErrors
+
+      Push $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro CheckForFilesInUseCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call CheckForFilesInUse
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.CheckForFilesInUseCall _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.CheckForFilesInUse
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
+
+!macro un.CheckForFilesInUse
+  !ifndef un.CheckForFilesInUse
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro CheckForFilesInUse
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
 
 /**
  * The macros below will automatically prepend un. to the function names when
@@ -3471,6 +3594,176 @@
 !macroend
 
 /**
+ * Copies files from a source directory to a destination directory with logging
+ * to the uninstall.log. If any destination files are in use a reboot will be
+ * necessary to complete the installation and the reboot flag (see IfRebootFlag
+ * in the NSIS documentation).
+ *
+ * @param   _PATH_TO_SOURCE
+ *          Source path to copy the files from. This must not end with a \.
+ *
+ * @param   _PATH_TO_DESTINATION
+ *          Destination path to copy the files to. This must not end with a \.
+ *
+ * @param   _PREFIX_ERROR_CREATEDIR
+ *          Prefix for the directory creation error message. The directory path
+ *          will be inserted below this string.
+ *
+ * @param   _SUFFIX_ERROR_CREATEDIR
+ *          Prefix for the directory creation error message. The directory path
+ *          will be inserted above this string.
+ *
+ * $0  = destination file's parent directory used in the create_dir label
+ * $R0 = copied value from $R6 (e.g. _PATH_TO_SOURCE)
+ * $R1 = copied value from $R7 (e.g. _PATH_TO_DESTINATION)
+ * $R2 = string length of the path to source
+ * $R3 = relative path from the path to source
+ * $R4 = copied value from $R8 (e.g. _PREFIX_ERROR_CREATEDIR)
+ * $R5 = copied value from $R9 (e.g. _SUFFIX_ERROR_CREATEDIR)
+ * note: the LocateNoDetails macro uses these registers so we copy the values
+ *       to other registers.
+ * $R6 = initially _PATH_TO_SOURCE and then set to "size" ($R6="" if directory,
+ *       $R6="0" if file with /S=)"path\name" in callback
+ * $R7 = initially _PATH_TO_DESTINATION and then set to "name" in callback
+ * $R8 = initially _PREFIX_ERROR_CREATEDIR and then set to "path" in callback
+ * $R9 = initially _SUFFIX_ERROR_CREATEDIR and then set to "path\name" in
+ *       callback
+ */
+!macro CopyFilesFromDir
+
+  !ifndef CopyFilesFromDir
+    !insertmacro LocateNoDetails
+    !insertmacro OnEndCommon
+    !insertmacro WordReplace
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define CopyFilesFromDir "!insertmacro CopyFilesFromDirCall"
+
+    Function CopyFilesFromDir
+      Exch $R9
+      Exch 1
+      Exch $R8
+      Exch 2
+      Exch $R7
+      Exch 3
+      Exch $R6
+      Push $R5
+      Push $R4
+      Push $R3
+      Push $R2
+      Push $R1
+      Push $R0
+      Push $0
+
+      StrCpy $R0 "$R6"
+      StrCpy $R1 "$R7"
+      StrCpy $R4 "$R8"
+      StrCpy $R5 "$R9"
+
+      StrLen $R2 $R0
+
+      ${LocateNoDetails} "$R0" "/L=FD" "CopyFileCallback"
+
+      Pop $0
+      Pop $R0
+      Pop $R1
+      Pop $R2
+      Pop $R3
+      Pop $R4
+      Pop $R5
+      Exch $R6
+      Exch 3
+      Exch $R7
+      Exch 2
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    Function CopyFileCallback
+      StrCpy $R3 $R8 "" $R2 ; $R3 always begins with a \.
+
+      retry:
+      ClearErrors
+      StrCmp $R6 "" +1 copy_file
+      IfFileExists "$R1$R3\$R7" end +1
+      StrCpy $0 "$R1$R3\$R7"
+
+      create_dir:
+      ClearErrors
+      CreateDirectory "$0"
+      IfFileExists "$0" +1 err_create_dir  ; protect against looping.
+      ${LogMsg}  "Created Directory: $0"
+      StrCmp $R6 "" end copy_file
+
+      err_create_dir:
+      ${LogMsg}  "** ERROR Creating Directory: $0 **"
+      MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$R4$\r$\n$\r$\n$0$\r$\n$\r$\n$R5" IDRETRY retry
+      ${OnEndCommon}
+      Quit
+
+      copy_file:
+      StrCpy $0 "$R1$R3"
+      IfFileExists "$0" +1 create_dir
+
+      ClearErrors
+      ${DeleteFile} "$R1$R3\$R7"
+      IfErrors +1 dest_clear
+      ClearErrors
+      Rename "$R1$R3\$R7" "$R1$R3\$R7.moz-delete"
+      IfErrors +1 reboot_delete
+
+      ; file will replace destination file on reboot
+      Rename "$R9" "$R9.moz-upgrade"
+      CopyFiles /SILENT "$R9.moz-upgrade" "$R1$R3"
+      Rename /REBOOTOK "$R1$R3\$R7.moz-upgrade" "$R1$R3\$R7"
+      ${LogMsg} "Copied File: $R1$R3\$R7.moz-upgrade"
+      ${LogMsg} "Delayed Install File (Reboot Required): $R1$R3\$R7"
+      GoTo log_uninstall
+
+      ; file will be deleted on reboot
+      reboot_delete:
+      CopyFiles /SILENT $R9 "$R1$R3"
+      Delete /REBOOTOK "$R1$R3\$R7.moz-delete"
+      ${LogMsg} "Installed File: $R1$R3\$R7"
+      ${LogMsg} "Delayed Delete File (Reboot Required): $R1$R3\$R7.moz-delete"
+      GoTo log_uninstall
+
+      ; destination file doesn't exist - coast is clear
+      dest_clear:
+      CopyFiles /SILENT $R9 "$R1$R3"
+      ${LogMsg} "Installed File: $R1$R3\$R7"
+
+      log_uninstall:
+      ; If the file is installed into the installation directory remove the
+      ; installation directory's path from the file path when writing to the
+      ; uninstall.log so it will be a relative path. This allows the same
+      ; helper.exe to be used with zip builds if we supply an uninstall.log.
+      ${WordReplace} "$R1$R3\$R7" "$INSTDIR" "" "+" $R3
+      ${LogUninstall} "File: $R3"
+
+      end:
+      Push 0
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro CopyFilesFromDirCall _PATH_TO_SOURCE _PATH_TO_DESTINATION \
+                            _PREFIX_ERROR_CREATEDIR _SUFFIX_ERROR_CREATEDIR
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PATH_TO_SOURCE}"
+  Push "${_PATH_TO_DESTINATION}"
+  Push "${_PREFIX_ERROR_CREATEDIR}"
+  Push "${_SUFFIX_ERROR_CREATEDIR}"
+  Call CopyFilesFromDir
+  !verbose pop
+!macroend
+
+/**
  * Parses the uninstall.log to unregister dll's, remove files, and remove
  * empty directories for this installation.
  *
@@ -4132,10 +4425,24 @@
 
     Function UninstallOnInitCommon
 
+      ; Prevent launching the application when a reboot is required and this
+      ; executable is the main application executable
+      IfFileExists "$EXEDIR\${FileMainEXE}.moz-upgrade" +1 +4
+      MessageBox MB_YESNO "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
+      Reboot
+      Quit ; Nothing initialized so no need to call OnEndCommon
+
       GetFullPathName $INSTDIR "$EXEDIR\.."
       ${GetLongPath} "$INSTDIR" $INSTDIR
       IfFileExists "$INSTDIR\${FileMainEXE}" +2 +1
-      Abort
+      Quit ; Nothing initialized so no need to call OnEndCommon
+
+      ; Prevent all operations (e.g. set as default, postupdate, etc.) when a
+      ; reboot is required and the executable launched is helper.exe
+      IfFileExists "$INSTDIR\${FileMainEXE}.moz-upgrade" +1 +4
+      MessageBox MB_YESNO "$(WARN_RESTART_REQUIRED_UPGRADE)" IDNO +2
+      Reboot
+      Quit ; Nothing initialized so no need to call OnEndCommon
 
       ${GetParameters} $R0
 
@@ -4209,14 +4516,14 @@
       finish:
       ${UnloadUAC}
       System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
-      Quit
+      Quit ; Nothing initialized so no need to call OnEndCommon
 
       continue:
 
       ; If the uninstall.log does not exist don't perform uninstall
       ; operations. This prevents running the uninstaller for zip builds.
       IfFileExists "$INSTDIR\uninstall\uninstall.log" +2 +1
-      Quit
+      Quit ; Nothing initialized so no need to call OnEndCommon
 
       ; Require elevation if the user can elevate
       ${ElevateUAC}
@@ -4234,7 +4541,7 @@
       ${DeleteFile} "$EXEDIR\uninstaller.exe"
       ${UnloadUAC}
       SetErrorLevel 0
-      Quit
+      Quit ; Nothing initialized so no need to call OnEndCommon
 
     FunctionEnd
 
@@ -4328,7 +4635,6 @@
  * @param   _WARN_DISK_SPACE
  *          Message displayed when there isn't enough disk space to perform the
  *          installation.
- *          $INSTDIR.
  * @param   _WARN_WRITE_ACCESS
  *          Message displayed when the installer does not have write access to
  *          $INSTDIR.
