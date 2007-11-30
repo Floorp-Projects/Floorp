@@ -361,7 +361,9 @@ nsCacheEntryDescriptor::GetSecurityInfo(nsISupports ** result)
     nsCacheServiceAutoLock lock;
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    return mCacheEntry->GetSecurityInfo(result);
+    *result = mCacheEntry->SecurityInfo();
+    NS_IF_ADDREF(*result);
+    return NS_OK;
 }
 
 
