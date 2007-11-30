@@ -49,7 +49,7 @@
 #include "cairo-meta-surface-private.h"
 #include "cairo-analysis-surface-private.h"
 
-static const cairo_private cairo_surface_backend_t cairo_paginated_surface_backend;
+static const cairo_surface_backend_t cairo_paginated_surface_backend;
 
 static cairo_int_status_t
 _cairo_paginated_surface_show_page (void *abstract_surface);
