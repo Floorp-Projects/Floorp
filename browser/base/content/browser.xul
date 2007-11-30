@@ -99,7 +99,11 @@
            onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
+    <!-- for search and content formfill/pw manager -->
     <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true" hidden="true"/>
+
+    <!-- for url bar autocomplete -->
+    <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
     <panel id="editBookmarkPanel" orient="vertical" hidden="true"
            onpopupshown="PlacesCommandHook.editBookmarkPanelShown();">
