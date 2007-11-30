@@ -3,6 +3,7 @@
 
 <!ENTITY thDOMNodes.label "DOM-Knoten">
 <!ENTITY btnInspect.label "Inspizieren">
+<!ENTITY btnInspect.accesskey "I">
 <!ENTITY bxDocPanel.title "Dokument">
 <!ENTITY bxObjectPanel.title "Objekt">
 <!ENTITY btnSelecting.tooltip "Einen Knoten zum Inspizieren durch darauf klicken suchen">
@@ -16,9 +17,9 @@
   <!ENTITY mnInspectContentDocument.accesskey "h">
   <!ENTITY mnInspectChromeDocument.label "Chrome-Dokument inspizieren">
   <!ENTITY mnInspectChromeDocument.accesskey "C">
-  <!ENTITY cmdShowOpenURLDialog.label "URL inspizieren...">
+  <!ENTITY cmdShowOpenURLDialog.label "URL inspizieren…">
   <!ENTITY cmdShowOpenURLDialog.accesskey "U">
-  <!ENTITY cmdSave.label "DOM speichern unter...">
+  <!ENTITY cmdSave.label "DOM speichern unter…">
   <!ENTITY cmdSave.accesskey "D">
   <!ENTITY cmdClose.label "Schließen">
   <!ENTITY cmdClose.accesskey "L">
@@ -46,6 +47,7 @@
 <!ENTITY mnView.label "Ansicht">
 <!ENTITY mnView.accesskey "A">
   <!ENTITY cmdToggleBrowser.label "Browser">
+  <!ENTITY cmdToggleBrowser.accesskey "o">
   <!ENTITY cmdToggleSearch.label "Suchergebnisse">
 
 <!ENTITY browserPanel.label "Browser">
