@@ -717,6 +717,31 @@ dnl that a universal binary is being produced.
 AC_SUBST(UNIVERSAL_BINARY)
 
 dnl ========================================================
+dnl Check for MacOS deployment target version
+dnl ========================================================
+
+MOZ_ARG_ENABLE_STRING(macos-target,
+                      [  --enable-macos-target=VER (default=10.4)
+                          Set the minimum MacOS version needed at runtime],
+                      [_MACOSX_DEPLOYMENT_TARGET=$enableval])
+
+case "$target" in
+*-darwin*)
+    if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
+        dnl Use the specified value
+        export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
+    elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
+        dnl No value specified on the command line or in the environment,
+        dnl use the lesser of the application's minimum or the architecture's
+        dnl minimum.
+        export MACOSX_DEPLOYMENT_TARGET=10.4
+    fi
+    ;;
+esac
+
+AC_SUBST(MACOSX_DEPLOYMENT_TARGET)
+
+dnl ========================================================
 dnl = Mac OS X SDK support
 dnl ========================================================
 MACOS_SDK_DIR=
@@ -3110,31 +3135,6 @@ then
 	esac
     LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
 fi
-
-dnl ========================================================
-dnl Check for MacOS deployment target version
-dnl ========================================================
-
-MOZ_ARG_ENABLE_STRING(macos-target,
-                      [  --enable-macos-target=VER (default=10.4)
-                          Set the minimum MacOS version needed at runtime],
-                      [_MACOSX_DEPLOYMENT_TARGET=$enableval])
-
-case "$target" in
-*-darwin*)
-    if test -n "$_MACOSX_DEPLOYMENT_TARGET" ; then
-        dnl Use the specified value
-        export MACOSX_DEPLOYMENT_TARGET=$_MACOSX_DEPLOYMENT_TARGET
-    elif test -z "$MACOSX_DEPLOYMENT_TARGET" ; then
-        dnl No value specified on the command line or in the environment,
-        dnl use the lesser of the application's minimum or the architecture's
-        dnl minimum.
-        export MACOSX_DEPLOYMENT_TARGET=10.4
-    fi
-    ;;
-esac
-
-AC_SUBST(MACOSX_DEPLOYMENT_TARGET)
 
 dnl ========================================================
 dnl See if mmap sees writes
