@@ -899,6 +899,10 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   direction: ltr;
 }
 
+#PopupAutoCompleteRichResult {
+  direction: ltr !important;
+}
+
 /* ::::: page proxy icon ::::: */
 
 #page-proxy-deck,
@@ -941,23 +945,37 @@ statusbarpanel#statusbar-display {
 }
 
 #treecolAutoCompleteImage {
- max-width : 36px; 
+  max-width: 36px;
 }
 
+.ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/pageStarred.png");
-  width: 16px;
+  width: 16px; 
   height: 16px;
 }
 
+.ac-result-type-tag,
 .autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/tag.png");
-  width: 16px;
+  width: 16px; 
   height: 16px;
+}
+
+.ac-comment {
+  font-size: larger;
+}
+
+.ac-url-text {
+  color: #336633;
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
-  color: #555566;
+  color: GrayText;
+}
+
+.ac-comment[selected="true"], .ac-url-text[selected="true"] {
+  color: inherit !important;
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(suggesthint, treecolAutoCompleteComment), 

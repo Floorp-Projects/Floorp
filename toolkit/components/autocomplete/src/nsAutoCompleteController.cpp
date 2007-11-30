@@ -622,9 +622,16 @@ NS_IMETHODIMP
 nsAutoCompleteController::SetSearchString(const nsAString &aSearchString)
 { 
   mSearchString = aSearchString;
-  
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsAutoCompleteController::GetSearchString(nsAString &aSearchString)
+{ 
+  aSearchString = mSearchString;
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteObserver

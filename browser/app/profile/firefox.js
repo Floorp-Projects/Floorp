@@ -203,6 +203,11 @@ pref("browser.urlbar.doubleClickSelectsAll", false);
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.matchOnlyTyped", false);
 
+// if false, will use one-line-per-result for urlbar autocomplete
+pref("browser.urlbar.richResults", true);
+// the maximum number of results to show in autocomplete when doing richResults
+pref("browser.urlbar.maxRichResults", 25);
+
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
 pref("browser.download.manager.showAlertOnComplete", true);
