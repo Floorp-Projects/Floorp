@@ -64,38 +64,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 function BookmarksSyncService() { this._init(); }
 BookmarksSyncService.prototype = {
 
-  __bms: null,
-  get _bms() {
-    if (!this.__bms)
-      this.__bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                   getService(Ci.nsINavBookmarksService);
-    return this.__bms;
-  },
-
-  __ts: null,
-  get _ts() {
-    if (!this.__ts)
-      this.__ts = Cc["@mozilla.org/browser/tagging-service;1"].
-                  getService(Ci.nsITaggingService);
-    return this.__ts;
-  },
-
-  __ls: null,
-  get _ls() {
-    if (!this.__ls)
-      this.__ls = Cc["@mozilla.org/browser/livemark-service;2"].
-        getService(Ci.nsILivemarkService);
-    return this.__ls;
-  },
-
-  __ms: null,
-  get _ms() {
-    if (!this.__ms)
-      this.__ms = Cc["@mozilla.org/microsummary/service;1"].
-        getService(Ci.nsIMicrosummaryService);
-    return this.__ms;
-  },
-
   __os: null,
   get _os() {
     if (!this.__os)
@@ -133,6 +101,16 @@ BookmarksSyncService.prototype = {
     return this.__store;
   },
 
+  __snapshot: null,
+  get _snapshot() {
+    if (!this.__snapshot)
+      this.__snapshot = new SnapshotStore();
+    return this.__snapshot;
+  },
+  set _snapshot(value) {
+    this.__snapshot = value;
+  },
+
   // Logger object
   _log: null,
 
@@ -151,23 +129,6 @@ BookmarksSyncService.prototype = {
     return this.__encrypter;
   },
 
-  // Last synced tree, version, and GUID (to detect if the store has
-  // been completely replaced and invalidate the snapshot)
-  _snapshot: {},
-  _snapshotVersion: 0,
-
-  __snapshotGUID: null,
-  get _snapshotGUID() {
-    if (!this.__snapshotGUID) {
-      let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
-        getService(Ci.nsIUUIDGenerator);
-      this.__snapshotGUID = uuidgen.generateUUID().toString().replace(/[{}]/g, '');
-    }
-    return this.__snapshotGUID;
-  },
-  set _snapshotGUID(GUID) {
-    this.__snapshotGUID = GUID;
-  },
 
   get username() {
     let branch = Cc["@mozilla.org/preferences-service;1"]
@@ -365,9 +326,7 @@ BookmarksSyncService.prototype = {
     dapp.level = root.LEVEL_ALL;
     root.addAppender(dapp);
 
-    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties);
-    let logFile = dirSvc.get("ProfD", Ci.nsIFile);
+    let logFile = this._dirSvc.get("ProfD", Ci.nsIFile);
     let verboseFile = logFile.clone();
     logFile.append("bm-sync.log");
     logFile.QueryInterface(Ci.nsILocalFile);
@@ -385,10 +344,7 @@ BookmarksSyncService.prototype = {
   _saveSnapshot: function BSS__saveSnapshot() {
     this._log.info("Saving snapshot to disk");
 
-    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties);
-
-    let file = dirSvc.get("ProfD", Ci.nsIFile);
+    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
     file.append("bm-sync-snapshot.json");
     file.QueryInterface(Ci.nsILocalFile);
 
@@ -400,8 +356,8 @@ BookmarksSyncService.prototype = {
     let flags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
     fos.init(file, flags, PERMS_FILE, 0);
 
-    let out = {version: this._snapshotVersion,
-               GUID: this._snapshotGUID,
+    let out = {version: this._snapshot.version,
+               GUID: this._snapshot.GUID,
                snapshot: this._snapshot};
     out = uneval(out);
     fos.write(out, out.length);
@@ -409,10 +365,7 @@ BookmarksSyncService.prototype = {
   },
 
   _readSnapshot: function BSS__readSnapshot() {
-    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties);
-
-    let file = dirSvc.get("ProfD", Ci.nsIFile);
+    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
     file.append("bm-sync-snapshot.json");
 
     if (!file.exists())
@@ -435,44 +388,9 @@ BookmarksSyncService.prototype = {
     if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
       this._log.info("Read saved snapshot from disk");
       this._snapshot = json.snapshot;
-      this._snapshotVersion = json.version;
-      this._snapshotGUID = json.GUID;
+      this._snapshot.version = json.version;
+      this._snapshot.GUID = json.GUID;
     }
-  },
-
-  _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
-    for (let i = 0; i < commands.length; i++) {
-      this._log.debug("Applying cmd to obj: " + uneval(commands[i]));
-      switch (commands[i].action) {
-      case "create":
-        obj[commands[i].GUID] = eval(uneval(commands[i].data));
-        break;
-      case "edit":
-        if ("GUID" in commands[i].data) {
-          // special-case guid changes
-          let newGUID = commands[i].data.GUID,
-              oldGUID = commands[i].GUID;
-
-          obj[newGUID] = obj[oldGUID];
-          delete obj[oldGUID]
-
-          for (let GUID in obj) {
-            if (obj[GUID].parentGUID == oldGUID)
-              obj[GUID].parentGUID = newGUID;
-          }
-        }
-        for (let prop in commands[i].data) {
-          if (prop == "GUID")
-            continue;
-          obj[commands[i].GUID][prop] = commands[i].data[prop];
-        }
-        break;
-      case "remove":
-        delete obj[commands[i].GUID];
-        break;
-      }
-    }
-    return obj;
   },
 
   _mungeNodes: function BSS__mungeNodes(nodes) {
@@ -621,7 +539,7 @@ BookmarksSyncService.prototype = {
       this._getServerData.async(this, cont);
       let server = yield;
 
-      this._log.info("Local snapshot version: " + this._snapshotVersion);
+      this._log.info("Local snapshot version: " + this._snapshot.version);
       this._log.info("Server status: " + server.status);
       this._log.info("Server maxVersion: " + server.maxVersion);
       this._log.info("Server snapVersion: " + server.snapVersion);
@@ -634,16 +552,17 @@ BookmarksSyncService.prototype = {
 
       // 2) Generate local deltas from snapshot -> current client status
 
-      let localJson = this._store.wrap();
-      this._sync.detectUpdates(cont, this._snapshot, localJson);
+      let localJson = new SnapshotStore();
+      localJson.data = this._store.wrap();
+      this._sync.detectUpdates(cont, this._snapshot.data, localJson.data);
       let localUpdates = yield;
 
-      this._log.debug("local json:\n" + this._mungeNodes(localJson));
+      this._log.debug("local json:\n" + this._mungeNodes(localJson.data));
       this._log.debug("Local updates: " + this._mungeCommands(localUpdates));
       this._log.debug("Server updates: " + this._mungeCommands(server.updates));
 
       if (server.updates.length == 0 && localUpdates.length == 0) {
-        this._snapshotVersion = server.maxVersion;
+        this._snapshot.version = server.maxVersion;
         this._log.info("Sync complete (1): no changes needed on client or server");
         synced = true;
         return;
@@ -672,8 +591,8 @@ BookmarksSyncService.prototype = {
       if (!(clientChanges.length || serverChanges.length ||
             clientConflicts.length || serverConflicts.length)) {
         this._log.info("Sync complete (2): no changes needed on client or server");
-        this._snapshot = localJson;
-        this._snapshotVersion = server.maxVersion;
+        this._snapshot.data = localJson.data;
+        this._snapshot.version = server.maxVersion;
         this._saveSnapshot();
         synced = true;
         return;
@@ -683,8 +602,8 @@ BookmarksSyncService.prototype = {
         this._log.warn("Conflicts found!  Discarding server changes");
       }
 
-      let savedSnap = eval(uneval(this._snapshot));
-      let savedVersion = this._snapshotVersion;
+      let savedSnap = eval(uneval(this._snapshot.data));
+      let savedVersion = this._snapshot.version;
       let newSnapshot;
 
       // 3.1) Apply server changes to local store
@@ -693,12 +612,13 @@ BookmarksSyncService.prototype = {
         // Note that we need to need to apply client changes to the
         // current tree, not the saved snapshot
 
-        this._snapshot = this._applyCommandsToObj(clientChanges, localJson);
-        this._snapshotVersion = server.maxVersion;
+	localJson.applyCommands(clientChanges);
+        this._snapshot.data = localJson.data;
+        this._snapshot.version = server.maxVersion;
         this._store.applyCommands(clientChanges);
         newSnapshot = this._store.wrap();
 
-        this._sync.detectUpdates(cont, this._snapshot, newSnapshot);
+        this._sync.detectUpdates(cont, this._snapshot.data, newSnapshot);
         let diff = yield;
         if (diff.length != 0) {
           this._log.warn("Commands did not apply correctly");
@@ -706,8 +626,8 @@ BookmarksSyncService.prototype = {
                           "new snapshot after commands:\n" +
                           this._mungeCommands(diff));
           // FIXME: do we really want to revert the snapshot here?
-          this._snapshot = eval(uneval(savedSnap));
-          this._snapshotVersion = savedVersion;
+          this._snapshot.data = eval(uneval(savedSnap));
+          this._snapshot.version = savedVersion;
         }
 
         this._saveSnapshot();
@@ -736,8 +656,8 @@ BookmarksSyncService.prototype = {
       if (serverDelta.length) {
         this._log.info("Uploading changes to server");
 
-        this._snapshot = newSnapshot;
-        this._snapshotVersion = ++server.maxVersion;
+        this._snapshot.data = newSnapshot;
+        this._snapshot.version = ++server.maxVersion;
 
         server.deltas.push(serverDelta);
 
@@ -764,14 +684,14 @@ BookmarksSyncService.prototype = {
           let deltasPut = yield;
 
           let c = 0;
-          for (GUID in this._snapshot)
+          for (GUID in this._snapshot.data)
             c++;
 
           this._dav.PUT("bookmarks-status.json",
-                        uneval({GUID: this._snapshotGUID,
+                        uneval({GUID: this._snapshot.GUID,
                                 formatVersion: STORAGE_FORMAT_VERSION,
                                 snapVersion: server.snapVersion,
-                                maxVersion: this._snapshotVersion,
+                                maxVersion: this._snapshot.version,
                                 snapEncryption: server.snapEncryption,
                                 deltasEncryption: this.encryption,
                                 bookmarksCount: c}), cont);
@@ -887,7 +807,8 @@ BookmarksSyncService.prototype = {
         this._log.info("Got bookmarks status from server");
   
         let status = eval(resp.responseText);
-        let snap, deltas, allDeltas;
+        let deltas, allDeltas;
+	let snap = new SnapshotStore();
   
         // Bail out if the server has a newer format version than we can parse
         if (status.formatVersion > STORAGE_FORMAT_VERSION) {
@@ -902,24 +823,24 @@ BookmarksSyncService.prototype = {
           ret.deltasEncryption = status.deltasEncryption = "none";
         }
   
-        if (status.GUID != this._snapshotGUID) {
+        if (status.GUID != this._snapshot.GUID) {
           this._log.info("Remote/local sync GUIDs do not match.  " +
                       "Forcing initial sync.");
           this._store.resetGUIDs();
-          this._snapshot = {};
-          this._snapshotVersion = -1;
-          this._snapshotGUID = status.GUID;
+          this._snapshot.data = {};
+          this._snapshot.version = -1;
+          this._snapshot.GUID = status.GUID;
         }
   
-        if (this._snapshotVersion < status.snapVersion) {
-          if (this._snapshotVersion >= 0)
+        if (this._snapshot.version < status.snapVersion) {
+          if (this._snapshot.version >= 0)
             this._log.info("Local snapshot is out of date");
   
           this._log.info("Downloading server snapshot");
           this._dav.GET("bookmarks-snapshot.json", cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download snapshot.");
-          snap = this._decrypt(status.snapEncryption, resp.responseText);
+          snap.data = this._decrypt(status.snapEncryption, resp.responseText);
 
           this._log.info("Downloading server deltas");
           this._dav.GET("bookmarks-deltas.json", cont);
@@ -928,19 +849,19 @@ BookmarksSyncService.prototype = {
           allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
           deltas = eval(uneval(allDeltas));
   
-        } else if (this._snapshotVersion >= status.snapVersion &&
-                   this._snapshotVersion < status.maxVersion) {
-          snap = eval(uneval(this._snapshot));
+        } else if (this._snapshot.version >= status.snapVersion &&
+                   this._snapshot.version < status.maxVersion) {
+          snap.data = eval(uneval(this._snapshot.data));
   
           this._log.info("Downloading server deltas");
           this._dav.GET("bookmarks-deltas.json", cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download deltas.");
           allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
-          deltas = allDeltas.slice(this._snapshotVersion - status.snapVersion);
+          deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
   
-        } else if (this._snapshotVersion == status.maxVersion) {
-          snap = eval(uneval(this._snapshot));
+        } else if (this._snapshot.version == status.maxVersion) {
+          snap.data = eval(uneval(this._snapshot.data));
   
           // FIXME: could optimize this case by caching deltas file
           this._log.info("Downloading server deltas");
@@ -950,13 +871,13 @@ BookmarksSyncService.prototype = {
           allDeltas = this._decrypt(status.deltasEncryption, resp.responseText);
           deltas = [];
   
-        } else { // this._snapshotVersion > status.maxVersion
+        } else { // this._snapshot.version > status.maxVersion
           this._log.error("Server snapshot is older than local snapshot");
           return;
         }
   
         for (var i = 0; i < deltas.length; i++) {
-          snap = this._applyCommandsToObj(deltas[i], snap);
+	  snap.applyCommands(deltas[i]);
         }
   
         ret.status = 0;
@@ -965,18 +886,18 @@ BookmarksSyncService.prototype = {
         ret.snapVersion = status.snapVersion;
         ret.snapEncryption = status.snapEncryption;
         ret.deltasEncryption = status.deltasEncryption;
-        ret.snapshot = snap;
+        ret.snapshot = snap.data;
         ret.deltas = allDeltas;
-        this._sync.detectUpdates(cont, this._snapshot, snap);
+        this._sync.detectUpdates(cont, this._snapshot.data, snap.data);
         ret.updates = yield;
         break;
   
       case 404:
         this._log.info("Server has no status file, Initial upload to server");
   
-        this._snapshot = this._store.wrap();
-        this._snapshotVersion = 0;
-        this._snapshotGUID = null; // in case there are other snapshots out there
+        this._snapshot.data = this._store.wrap();
+        this._snapshot.version = 0;
+        this._snapshot.GUID = null; // in case there are other snapshots out there
 
         this._fullUpload.async(this, cont);
         let uploadStatus = yield;
@@ -988,11 +909,11 @@ BookmarksSyncService.prototype = {
   
         ret.status = 0;
         ret.formatVersion = STORAGE_FORMAT_VERSION;
-        ret.maxVersion = this._snapshotVersion;
-        ret.snapVersion = this._snapshotVersion;
+        ret.maxVersion = this._snapshot.version;
+        ret.snapVersion = this._snapshot.version;
         ret.snapEncryption = this.encryption;
         ret.deltasEncryption = this.encryption;
-        ret.snapshot = eval(uneval(this._snapshot));
+        ret.snapshot = eval(uneval(this._snapshot.data));
         ret.deltas = [];
         ret.updates = [];
         break;
@@ -1022,10 +943,10 @@ BookmarksSyncService.prototype = {
     try {
       let data;
       if (this.encryption == "none") {
-        data = this._mungeNodes(this._snapshot);
+        data = this._mungeNodes(this._snapshot.data);
       } else if (this.encryption == "XXXTEA") {
         this._log.debug("Encrypting snapshot");
-        data = this._encrypter.encrypt(uneval(this._snapshot), this.passphrase);
+        data = this._encrypter.encrypt(uneval(this._snapshot.data), this.passphrase);
         this._log.debug("Done encrypting snapshot");
       } else {
         this._log.error("Unknown encryption scheme: " + this.encryption);
@@ -1040,14 +961,14 @@ BookmarksSyncService.prototype = {
       this._checkStatus(resp.status, "Could not upload deltas.");
 
       let c = 0;
-      for (GUID in this._snapshot)
+      for (GUID in this._snapshot.data)
         c++;
 
       this._dav.PUT("bookmarks-status.json",
-                    uneval({GUID: this._snapshotGUID,
+                    uneval({GUID: this._snapshot.GUID,
                             formatVersion: STORAGE_FORMAT_VERSION,
-                            snapVersion: this._snapshotVersion,
-                            maxVersion: this._snapshotVersion,
+                            snapVersion: this._snapshot.version,
+                            maxVersion: this._snapshot.version,
                             snapEncryption: this.encryption,
                             deltasEncryption: "none",
                             bookmarksCount: c}), cont);
@@ -1180,8 +1101,8 @@ BookmarksSyncService.prototype = {
       this._log.debug("Resetting client state");
       this._os.notifyObservers(null, "bookmarks-sync:reset-client-start", "");
 
-      this._snapshot = {};
-      this._snapshotVersion = -1;
+      this._snapshot.data = {};
+      this._snapshot.version = -1;
       this._saveSnapshot();
       done = true;
 
@@ -1388,6 +1309,8 @@ SyncCore.prototype = {
   },
 
   _commandLike: function SC__commandLike(a, b) {
+    this._log.error("commandLike needs to be subclassed");
+
     // Check that neither command is null, and verify that the GUIDs
     // are different (otherwise we need to check for edits)
     if (!a || !b || a.GUID == b.GUID)
@@ -1458,37 +1381,51 @@ SyncCore.prototype = {
     let propagations = [[], []];
     let conflicts = [[], []];
     let ret = {propagations: propagations, conflicts: conflicts};
+    this._log.debug("Reconciling " + listA.length +
+		    " against " + listB.length + "commands");
 
     try {
+      let guidChanges = [];
       for (let i = 0; i < listA.length; i++) {
-        for (let j = 0; j < listB.length; j++) {
+	let a = listA[i];
+        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        yield; // Yield to main loop
 
-          timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
-          yield; // Yield to main loop
-  
-          if (deepEquals(listA[i], listB[j])) {
-            delete listA[i];
-            delete listB[j];
-          } else if (this._commandLike(listA[i], listB[j])) {
-            this._fixParents(listA, listA[i].GUID, listB[j].GUID);
-            listB[j].data = {GUID: listB[j].GUID};
-            listB[j].GUID = listA[i].GUID;
-            listB[j].action = "edit";
-            delete listA[i];
+	this._log.debug("comparing " + i + ", listB length: " + listB.length);
+
+	let skip = false;
+	listB = listB.filter(function(b) {
+	  // fast path for when we already found a matching command
+	  if (skip)
+	    return true;
+
+          if (deepEquals(a, b)) {
+            delete listA[i]; // a
+	    skip = true;
+	    return false; // b
+
+          } else if (this._commandLike(a, b)) {
+            this._fixParents(listA, a.GUID, b.GUID);
+	    guidChanges.push({action: "edit",
+			      GUID: a.GUID,
+			      data: {GUID: b.GUID}});
+            delete listA[i]; // a
+	    skip = true;
+	    return false; // b, but we add it back from guidChanges
           }
   
           // watch out for create commands with GUIDs that already exist
-          if (listB[j] && listB[j].action == "create" &&
-              this._itemExists(listB[j].GUID)) {
+          if (b.action == "create" && this._itemExists(b.GUID)) {
             this._log.error("Remote command has GUID that already exists " +
                             "locally. Dropping command.");
-            delete listB[j];
+	    return false; // delete b
           }
-        }
+	  return true; // keep b
+        }, this);
       }
   
       listA = listA.filter(function(elt) { return elt });
-      listB = listB.filter(function(elt) { return elt });
+      listB = listB.concat(guidChanges);
   
       for (let i = 0; i < listA.length; i++) {
         for (let j = 0; j < listB.length; j++) {
@@ -1557,7 +1494,7 @@ BookmarksSyncCore.prototype = {
     return this._bms.getItemIdForGUID(GUID) >= 0;
   },
 
-  commandLike: function BSC_commandLike(a, b) {
+  _commandLike: function BSC_commandLike(a, b) {
     // Check that neither command is null, that their actions, types,
     // and parents are the same, and that they don't have the same
     // GUID.
@@ -1639,6 +1576,84 @@ Store.prototype = {
   applyCommands: function Store_applyCommands(commandList) {
   }
 };
+
+function SnapshotStore() {
+  this._init();
+}
+SnapshotStore.prototype = {
+  _logName: "SStore",
+
+  // Last synced tree, version, and GUID (to detect if the store has
+  // been completely replaced and invalidate the snapshot)
+
+  _data: {},
+  get data() {
+    return this._data;
+  },
+  set data(value) {
+    this._data = value;
+  },
+
+  _version: 0,
+  get version() {
+    return this._version;
+  },
+  set version(value) {
+    this._version = value;
+  },
+
+  _GUID: null,
+  get GUID() {
+    if (!this._GUID) {
+      let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
+        getService(Ci.nsIUUIDGenerator);
+      this._GUID = uuidgen.generateUUID().toString().replace(/[{}]/g, '');
+    }
+    return this._GUID;
+  },
+  set GUID(GUID) {
+    this._GUID = GUID;
+  },
+
+  wrap: function SStore_wrap() {
+  },
+
+  applyCommands: function SStore_applyCommands(commands) {
+    for (let i = 0; i < commands.length; i++) {
+      this._log.debug("Applying cmd to obj: " + uneval(commands[i]));
+      switch (commands[i].action) {
+      case "create":
+        this._data[commands[i].GUID] = eval(uneval(commands[i].data));
+        break;
+      case "edit":
+        if ("GUID" in commands[i].data) {
+          // special-case guid changes
+          let newGUID = commands[i].data.GUID,
+              oldGUID = commands[i].GUID;
+
+          this._data[newGUID] = this._data[oldGUID];
+          delete this._data[oldGUID]
+
+          for (let GUID in this._data) {
+            if (this._data[GUID].parentGUID == oldGUID)
+              this._data[GUID].parentGUID = newGUID;
+          }
+        }
+        for (let prop in commands[i].data) {
+          if (prop == "GUID")
+            continue;
+          this._data[commands[i].GUID][prop] = commands[i].data[prop];
+        }
+        break;
+      case "remove":
+        delete this._data[commands[i].GUID];
+        break;
+      }
+    }
+    return this._data;
+  }
+};
+SnapshotStore.prototype.__proto__ = new Store();
 
 function BookmarksStore() {
   this._init();
