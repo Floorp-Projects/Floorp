@@ -128,7 +128,7 @@ public:
     /**
      * Security Info accessors
      */
-    nsresult GetSecurityInfo( nsISupports ** result);
+    nsISupports* SecurityInfo() { return mSecurityInfo; }
     void     SetSecurityInfo( nsISupports *  info) { mSecurityInfo = info; }
 
 
@@ -339,4 +339,3 @@ private:
 };
 
 #endif // _nsCacheEntry_h_
-

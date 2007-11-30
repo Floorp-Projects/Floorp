@@ -49,7 +49,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsISSLSocketControl.h"
-#include "nsISSLStatus.h"
+#include "nsSSLStatus.h"
 #include "nsISSLStatusProvider.h"
 #include "nsIIdentityInfo.h"
 #include "nsXPIDLString.h"
@@ -127,6 +127,8 @@ class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsIInterfaceRequestor,
                         public nsISSLStatusProvider,
                         public nsIIdentityInfo,
+                        public nsISerializable,
+                        public nsIClassInfo,
                         public nsNSSShutDownObject,
                         public nsOnPK11LogoutCancelObject
 {
@@ -140,6 +142,8 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSISSLSTATUSPROVIDER
   NS_DECL_NSIIDENTITYINFO
+  NS_DECL_NSISERIALIZABLE
+  NS_DECL_NSICLASSINFO
 
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
@@ -181,7 +185,8 @@ public:
   nsresult RememberCAChain(CERTCertList *aCertList);
 
   /* Set SSL Status values */
-  nsresult SetSSLStatus(nsISSLStatus *aSSLStatus);  
+  nsresult SetSSLStatus(nsSSLStatus *aSSLStatus);
+  nsSSLStatus* SSLStatus() { return mSSLStatus; }
   
   PRStatus CloseSocketAndDestroy();
   
@@ -205,10 +210,9 @@ protected:
   PRIntervalTime mHandshakeStartTime;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
-  CERTCertList *mCAChain;
 
   /* SSL Status */
-  nsCOMPtr<nsISSLStatus> mSSLStatus;
+  nsRefPtr<nsSSLStatus> mSSLStatus;
 
   nsresult ActivateSSL();
 
@@ -266,5 +270,11 @@ nsresult nsSSLIOLayerAddToSocket(PRInt32 family,
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
 nsresult displayUnknownCertErrorAlert(nsNSSSocketInfo *infoObject, int error);
- 
+
+// 16786594-0296-4471-8096-8f84497ca428
+#define NS_NSSSOCKETINFO_CID \
+{ 0x16786594, 0x0296, 0x4471, \
+    { 0x80, 0x96, 0x8f, 0x84, 0x49, 0x7c, 0xa4, 0x28 } }
+
+
 #endif /* _NSNSSIOLAYER_H */

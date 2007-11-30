@@ -46,6 +46,8 @@
 
 #include "nsCache.h"
 
+#include "nsISerializable.h"
+#include "nsSerializationHelper.h"
 
 /******************************************************************************
  *  nsDiskCacheEntry
@@ -80,7 +82,15 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
         delete entry;
         return nsnull;
     }
-    
+
+    // Restore security info, if present
+    const char* info = entry->GetMetaDataElement("security-info");
+    if (info) {
+        nsCOMPtr<nsISupports> infoObj;
+        NS_DeserializeObject(nsDependentCString(info), getter_AddRefs(infoObj));
+        entry->SetSecurityInfo(infoObj);
+    }
+
     return entry;                      
 }
 
@@ -95,7 +105,16 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
 {
     nsCacheEntry * entry = binding->mCacheEntry;
     if (!entry)  return nsnull;
-    
+
+    // Store security info, if it is serializable
+    nsCOMPtr<nsISerializable> serializable =
+        do_QueryInterface(entry->SecurityInfo());
+    if (serializable) {
+        nsCString info;
+        NS_SerializeToString(serializable, info);
+        entry->SetMetaDataElement("security-info", info.get());
+    }
+
     PRUint32  keySize  = entry->Key()->Length() + 1;
     PRUint32  metaSize = entry->MetaDataSize();
     PRUint32  size     = sizeof(nsDiskCacheEntry) + keySize + metaSize;
@@ -116,7 +135,7 @@ CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
     diskEntry->mMetaDataSize    = metaSize;
     
     memcpy(diskEntry->Key(), entry->Key()->get(),keySize);
-    
+
     nsresult rv = entry->FlattenMetaData(diskEntry->MetaData(), metaSize);
     if (NS_FAILED(rv)) {
         delete [] (char *)diskEntry;

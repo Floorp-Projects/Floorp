@@ -770,8 +770,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     infoObject->SetShortSecurityDescription(shortDesc.get());
 
     /* Set the SSL Status information */
-    nsCOMPtr<nsSSLStatus> status;
-    infoObject->GetSSLStatus(getter_AddRefs(status));
+    nsRefPtr<nsSSLStatus> status = infoObject->SSLStatus();
     if (!status) {
       status = new nsSSLStatus();
       infoObject->SetSSLStatus(status);
@@ -859,8 +858,7 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
     // to the caller that contains at least the cert and its status.
     nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
 
-    nsCOMPtr<nsSSLStatus> status;
-    infoObject->GetSSLStatus(getter_AddRefs(status));
+    nsRefPtr<nsSSLStatus> status = infoObject->SSLStatus();
     if (!status) {
       status = new nsSSLStatus();
       infoObject->SetSSLStatus(status);
