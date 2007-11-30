@@ -86,6 +86,8 @@ let gStr = {
   doneStatus: "doneStatus",
   doneSize: "doneSize",
   doneSizeUnknown: "doneSizeUnknown",
+  doneScheme: "doneScheme",
+  doneFileScheme: "doneFileScheme",
   stateFailed: "stateFailed",
   stateCanceled: "stateCanceled",
   stateBlocked: "stateBlocked",
@@ -857,21 +859,33 @@ function updateStatus(aItem, aDownload) {
         // Get a URI that knows about its components
         let uri = ioService.newURI(getReferrerOrSource(aItem), null, null);
 
+        // Get the inner-most uri for schemes like jar:
+        if (uri instanceof Ci.nsINestedURI)
+          uri = uri.innermostURI
+
         try {
           // This might fail if it's an IP address or doesn't have >1 parts
           displayHost = eTLDService.getBaseDomain(uri);
         } catch (e) {
-          // Default to the host name
-          displayHost = uri.host;
+          try {
+            // Default to the host name; some special URIs fail (data: jar:)
+            displayHost = uri.host;
+          } catch (e) {
+            displayHost = "";
+          }
         }
 
-        // Ahh! we have nothing :( Let's give the full spec (e.g., about:blank)
-        if (displayHost.length == 0)
-          displayHost = uri.spec;
-
-        // Tack on the port if it's not the default port
-        else if (uri.port != -1)
+        // Check if we need to show something else for the host
+        if (uri.scheme == "file") {
+          // Display special text for file protocol
+          displayHost = gStr.doneFileScheme;
+        } else if (displayHost.length == 0) {
+          // Got nothing; show the scheme (data: about: moz-icon:)
+          displayHost = replaceInsert(gStr.doneScheme, 1, uri.scheme);
+        } else if (uri.port != -1) {
+          // Tack on the port if it's not the default port
           displayHost += ":" + uri.port;
+        }
 
         // Insert 2 is the eTLD + 1 or other variations of the host
         status = replaceInsert(status, 2, displayHost);
