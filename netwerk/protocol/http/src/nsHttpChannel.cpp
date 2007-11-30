@@ -199,10 +199,6 @@ nsHttpChannel::Init(nsIURI *uri,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mConnectionInfo);
 
-    // make sure our load flags include this bit if this is a secure channel.
-    if (usingSSL && !gHttpHandler->IsPersistentHttpsCachingEnabled()) 
-        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
-
     // Set default request method
     mRequestHead.SetMethod(nsHttp::Get);
 
@@ -2013,8 +2009,12 @@ nsHttpChannel::InitCacheEntry()
     if (mResponseHead->NoStore())
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
-    // For HTTPS transactions, the storage policy will already be IN_MEMORY.
-    // We are concerned instead about load attributes which may have changed.
+    // Only cache SSL content on disk if the server sent a
+    // Cache-Control: public header, or if the user set the pref
+    if (!gHttpHandler->CanCacheAllSSLContent() &&
+        mConnectionInfo->UsingSSL() && !mResponseHead->CacheControlPublic())
+        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
+
     if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
         rv = mCacheEntry->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
         if (NS_FAILED(rv)) return rv;
@@ -3462,12 +3462,6 @@ NS_IMETHODIMP
 nsHttpChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
     mLoadFlags = aLoadFlags;
-
-    // don't let anyone overwrite this bit if we're using a secure channel.
-    if (mConnectionInfo && mConnectionInfo->UsingSSL() 
-        && !gHttpHandler->IsPersistentHttpsCachingEnabled())
-        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
-
     return NS_OK;
 }
 
