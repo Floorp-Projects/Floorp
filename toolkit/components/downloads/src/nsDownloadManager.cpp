@@ -1372,6 +1372,7 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
   // if our download is not canceled or failed, we should fail
   if (dl->mDownloadState != nsIDownloadManager::DOWNLOAD_FAILED &&
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_BLOCKED &&
+      dl->mDownloadState != nsIDownloadManager::DOWNLOAD_DIRTY &&
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_CANCELED)
     return NS_ERROR_FAILURE;
 
@@ -1445,7 +1446,8 @@ nsDownloadManager::CleanUp()
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
                              nsIDownloadManager::DOWNLOAD_FAILED,
                              nsIDownloadManager::DOWNLOAD_CANCELED,
-                             nsIDownloadManager::DOWNLOAD_BLOCKED };
+                             nsIDownloadManager::DOWNLOAD_BLOCKED,
+                             nsIDownloadManager::DOWNLOAD_DIRTY };
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1453,9 +1455,10 @@ nsDownloadManager::CleanUp()
     "WHERE state = ?1 "
       "OR state = ?2 "
       "OR state = ?3 "
-      "OR state = ?4"), getter_AddRefs(stmt));
+      "OR state = ?4 "
+      "OR state = ?5"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  for (PRUint32 i = 0; i < 4; ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(states); ++i) {
     rv = stmt->BindInt32Parameter(i, states[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1477,7 +1480,8 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
                              nsIDownloadManager::DOWNLOAD_FAILED,
                              nsIDownloadManager::DOWNLOAD_CANCELED,
-                             nsIDownloadManager::DOWNLOAD_BLOCKED };
+                             nsIDownloadManager::DOWNLOAD_BLOCKED,
+                             nsIDownloadManager::DOWNLOAD_DIRTY };
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -1486,9 +1490,10 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
     "WHERE state = ?1 "
       "OR state = ?2 "
       "OR state = ?3 "
-      "OR state = ?4"), getter_AddRefs(stmt));
+      "OR state = ?4 "
+      "OR state = ?5"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  for (PRUint32 i = 0; i < 4; ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(states); ++i) {
     rv = stmt->BindInt32Parameter(i, states[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1752,6 +1757,7 @@ nsDownload::SetState(DownloadState aState)
   // dispatch to the observers as well.
   switch (aState) {
     case nsIDownloadManager::DOWNLOAD_BLOCKED:
+    case nsIDownloadManager::DOWNLOAD_DIRTY:
     case nsIDownloadManager::DOWNLOAD_CANCELED:
     case nsIDownloadManager::DOWNLOAD_FAILED:
       // Transfers are finished, so break the reference cycle
@@ -1883,6 +1889,8 @@ nsDownload::SetState(DownloadState aState)
     case nsIDownloadManager::DOWNLOAD_BLOCKED:
       mDownloadManager->SendEvent(this, "dl-blocked");
       break;
+    case nsIDownloadManager::DOWNLOAD_DIRTY:
+      mDownloadManager->SendEvent(this, "dl-dirty");
     default:
       break;
   }
