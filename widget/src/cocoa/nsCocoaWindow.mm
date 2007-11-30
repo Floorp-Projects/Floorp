@@ -126,7 +126,7 @@ nsCocoaWindow::~nsCocoaWindow()
 }
 
 
-static nsIMenuBar* GetHiddenWindowMenuBar()
+static nsIWidget* GetHiddenWindowWidget()
 {
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
   if (!appShell) {
@@ -153,9 +153,18 @@ static nsIMenuBar* GetHiddenWindowMenuBar()
     NS_WARNING("Couldn't get nsIWidget from hidden window (nsIBaseWindow)");
     return nsnull;
   }
-  
-  nsIWidget* hiddenWindowWidgetNoCOMPtr = hiddenWindowWidget;
-  return static_cast<nsCocoaWindow*>(hiddenWindowWidgetNoCOMPtr)->GetMenuBar();  
+
+  return hiddenWindowWidget;
+}
+
+
+static nsIMenuBar* GetHiddenWindowMenuBar()
+{
+  nsIWidget* hiddenWindowWidgetNoCOMPtr = GetHiddenWindowWidget();
+  if (hiddenWindowWidgetNoCOMPtr)
+    return static_cast<nsCocoaWindow*>(hiddenWindowWidgetNoCOMPtr)->GetMenuBar();
+  else
+    return nsnull;
 }
 
 
@@ -1099,8 +1108,11 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
 {
+  // If our cocoa window isn't a ToolbarWindow, something is wrong.
   if (![mWindow isKindOfClass:[ToolbarWindow class]]) {
-    NS_WARNING("Calling SetWindowTitlebarColor on window that isn't of the ToolbarWindow class.");
+    // Don't output a warning for the hidden window.
+    NS_WARN_IF_FALSE(SameCOMIdentity(GetHiddenWindowWidget(), (nsIWidget*)this),
+                     "Calling SetWindowTitlebarColor on window that isn't of the ToolbarWindow class.");
     return NS_ERROR_FAILURE;
   }
 
