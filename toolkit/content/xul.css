@@ -735,6 +735,10 @@ panel[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup");
 }
 
+panel[type="rich-autocomplete"] {
+  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup");
+}
+
 .autocomplete-tree {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-tree");
   -moz-user-focus: ignore;
@@ -742,6 +746,15 @@ panel[type="autocomplete"] {
 
 .autocomplete-treebody {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-treebody");
+}
+
+.autocomplete-richlistbox {
+  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistbox");
+  -moz-user-focus: ignore;
+}
+
+.autocomplete-richlistitem {
+  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistitem");
 }
 
 .autocomplete-treerows {

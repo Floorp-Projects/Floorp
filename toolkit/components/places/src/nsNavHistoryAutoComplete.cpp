@@ -350,9 +350,12 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
           nsAutoString title;
           aPreviousResult->GetCommentAt(i, title);
 
-          PRBool isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, url);
+          // assuming that people learn to use the urlbar for titles (and not urls)
+          // we should search in titles first, to potentially save the second call to
+          // CaseInsensitiveFindInReadable() for the url
+          PRBool isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, title);
           if (!isMatch)
-            isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, title);
+            isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, url);
 
           if (isMatch) {
             nsAutoString image;

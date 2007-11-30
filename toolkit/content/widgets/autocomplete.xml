@@ -67,7 +67,7 @@
         </xul:hbox>
         <children includes="hbox"/>
       </xul:hbox>
-      
+
       <xul:dropmarker anonid="historydropmarker" class="autocomplete-history-dropmarker"
                       allowevents="true"
                       xbl:inherits="open,enablehistory"/>
@@ -81,7 +81,7 @@
       <field name="mIgnoreInput">false</field>
       <field name="mEnterEvent">null</field>
       <field name="mConsumeRollupEvent">false</field>
-      
+
       <field name="mInputElt">
         document.getAnonymousElementByAttribute(this, "anonid", "input");
       </field>
@@ -120,7 +120,7 @@
         popup.mInput = this;
         popup;
       ]]></field>
-      
+
       <property name="controller" onget="return this.mController;" readonly="true"/>
 
       <property name="popupOpen"
@@ -169,10 +169,10 @@
       <property name="consumeRollupEvent" readonly="true"
                 onget="return this.mConsumeRollupEvent;"/>
 
-       <!-- This is the maximum number of drop-down rows we get when we
+      <!-- This is the maximum number of drop-down rows we get when we
             hit the drop marker beside fields that have it (like the URLbar).-->
-       <field name="maxDropMarkerRows" readonly="true">14</field>
- 
+      <field name="maxDropMarkerRows" readonly="true">14</field>
+
       <method name="getSearchAt">
         <parameter name="aIndex"/>
         <body><![CDATA[
@@ -232,7 +232,7 @@
       <!-- =================== nsIDOMXULMenuListElement =================== -->
 
       <property name="editable" readonly="true"
-                onget="return true;" />  
+                onget="return true;" />
 
       <property name="crop"
                 onset="this.setAttribute('crop',val); return val;"
@@ -297,7 +297,7 @@
       <property name="ignoreBlurWhileSearching"
                 onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
                 onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
-      
+
       <!-- =================== PRIVATE MEMBERS =================== -->
 
       <!-- ::::::::::::: autocomplete controller ::::::::::::: -->
@@ -354,7 +354,7 @@
           this.mController.startSearch("");
         ]]></body>
       </method>
-      
+
       <method name="toggleHistoryPopup">
         <body><![CDATA[
           if (!this.popup.mPopupOpen)
@@ -484,7 +484,8 @@
         ]]></body>
       </method>
 
-      <method name="_focus"> <!-- doesn't reset this.mController -->
+      <method name="_focus">
+        <!-- doesn't reset this.mController -->
         <body><![CDATA[
           this._dontBlur = true;
           this.focus();
@@ -518,13 +519,13 @@
     </handlers>
   </binding>
 
-  <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+  <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-base-popup">
     <resources>
       <stylesheet src="chrome://global/skin/tree.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content>
+    <content ignorekeys="true">
       <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1">
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
@@ -532,28 +533,75 @@
         <xul:treechildren class="autocomplete-treebody"/>
       </xul:tree>
     </content>
-    
-    <implementation implements="nsIAutoCompletePopup">
-      <field name="mInput">null</field>
-      <field name="mPopupOpen">false</field>
-      <field name="mShowCommentCol">false</field>
-      <field name="mShowImageCol">false</field>
 
-      <constructor><![CDATA[
-        this.setAttribute("ignorekeys", "true");
-      ]]></constructor>
+    <implementation>
+      <field name="mShowCommentColumn">false</field>
+      <field name="mShowImageColumn">false</field>
 
-      <!-- =================== nsIAutoCompletePopup =================== -->
+      <property name="showCommentColumn"
+                   onget="return this.mShowCommentColumn;">
+        <setter>
+          <![CDATA[
+          if (!val && this.mShowCommentColumn) {
+            // reset the flex on the value column and remove the comment column
+            document.getElementById("treecolAutoCompleteValue").setAttribute("flex", 1);
+            this.removeColumn("treecolAutoCompleteComment");
+          } else if (val && !this.mShowCommentColumn) {
+            // reset the flex on the value column and add the comment column
+            document.getElementById("treecolAutoCompleteValue").setAttribute("flex", 2);
+            this.addColumn({id: "treecolAutoCompleteComment", flex: 1});
+          }
+          this.mShowCommentColumn = val;
+          return val;
+        ]]>
+        </setter>
+      </property>
 
-      <property name="input"
-                onget="return this.mInput"/>
+      <property name="showImageColumn"
+                onget="return this.mShowImageColumn;">
+        <setter>
+          <![CDATA[
+          if (!val && this.mShowImageColumn) {
+            // remove the image column
+            this.removeColumn("treecolAutoCompleteImage");
+          } else if (val && !this.mShowImageColumn) {
+            // add the image column
+            this.addColumn({id: "treecolAutoCompleteImage", flex: 1});
+          }
+          this.mShowImageColumn = val;
+          return val;
+        ]]>
+        </setter>
+      </property>
 
-      <property name="overrideValue" readonly="true"
-                onget="return null;"/>
+
+      <method name="addColumn">
+        <parameter name="aAttrs"/>
+        <body>
+          <![CDATA[
+          var col = document.createElement("treecol");
+          col.setAttribute("class", "autocomplete-treecol");
+          for (var name in aAttrs)
+            col.setAttribute(name, aAttrs[name]);
+          this.treecols.appendChild(col);
+          return col;
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeColumn">
+        <parameter name="aColId"/>
+        <body>
+          <![CDATA[
+          return this.treecols.removeChild(document.getElementById(aColId));
+        ]]>
+        </body>
+      </method>
 
       <property name="selectedIndex"
                 onget="return this.tree.currentIndex;">
-        <setter><![CDATA[
+        <setter>
+          <![CDATA[
           this.tree.view.selection.select(val);
           if (this.tree.treeBoxObject.height > 0)
             this.tree.treeBoxObject.ensureRowIsVisible(val < 0 ? 0 : val);
@@ -566,8 +614,32 @@
         ]]></setter>
       </property>
 
-      <property name="popupOpen" readonly="true"
-                onget="return this.mPopupOpen;"/>
+      <method name="adjustHeight">
+        <body>
+          <![CDATA[
+          // detect the desired height of the tree
+          var bx = this.tree.treeBoxObject;
+          var view = this.tree.view;
+          if (!view)
+            return;
+          var rows = this.maxRows;
+          if (!view.rowCount || (rows && view.rowCount < rows))
+            rows = view.rowCount;
+          
+          var height = rows * bx.rowHeight;
+          
+          if (height == 0)
+            this.tree.setAttribute("collapsed", "true");
+          else {
+            if (this.tree.hasAttribute("collapsed"))
+              this.tree.removeAttribute("collapsed");
+
+            this.tree.setAttribute("height", height);
+          }
+          this.tree.setAttribute("hidescrollbar", view.rowCount <= rows);
+        ]]>
+        </body>
+      </method>
 
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
@@ -588,7 +660,7 @@
             this.mInput = aInput;
             this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
             this.invalidate();
-            
+
             this.showCommentColumn = this.mInput.showCommentColumn;
             this.showImageColumn = this.mInput.showImageColumn;
 
@@ -600,17 +672,6 @@
             this.openPopup(aElement, "after_start", 0, 0, false, false);
 
             this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
-          }
-        ]]></body>
-      </method>
-
-      <method name="closePopup">
-        <body><![CDATA[
-          if (this.mPopupOpen) {
-            this.hidePopup();
-            document.popupNode = null;
-//            this.setAttribute("hidden", "true");
-            this.removeAttribute("width");
           }
         ]]></body>
       </method>
@@ -661,6 +722,37 @@
         ]]></setter>
       </property>
 
+    </implementation>
+  </binding>
+
+  <binding id="autocomplete-base-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+    <implementation implements="nsIAutoCompletePopup">
+      <field name="mInput">null</field>
+      <field name="mPopupOpen">false</field>
+
+      <!-- =================== nsIAutoCompletePopup =================== -->
+
+      <property name="input" readonly="true"
+                onget="return this.mInput"/>
+
+      <property name="overrideValue" readonly="true"
+                onget="return null;"/>
+
+      <property name="popupOpen" readonly="true"
+                onget="return this.mPopupOpen;"/>
+
+      <method name="closePopup">
+        <body>
+          <![CDATA[
+          if (this.mPopupOpen) {
+            this.hidePopup();
+            document.popupNode = null;
+            this.removeAttribute("width");
+          }
+        ]]>
+        </body>
+      </method>
+
       <!-- This is the default number of rows that we give the autocomplete
            popup when the textbox doesn't have a "maxrows" attribute
            for us to use. -->
@@ -678,88 +770,12 @@
       <field name="_normalMaxRows">-1</field>
 
       <property name="maxRows" readonly="true">
-        <getter><![CDATA[
-          return (this.mInput && this.mInput.maxRows) || this.defaultMaxRows;
-        ]]></getter>
-      </property>
-
-      <property name="showCommentColumn"
-                onget="return this.mShowCommentColumn;">
-        <setter><![CDATA[
-          if (!val && this.mShowCommentColumn) {
-            // reset the flex on the value column and remove the comment column
-            document.getElementById("treecolAutoCompleteValue").setAttribute("flex", 1);
-            this.removeColumn("treecolAutoCompleteComment");
-          } else if (val && !this.mShowCommentColumn) {
-            // reset the flex on the value column and add the comment column
-            document.getElementById("treecolAutoCompleteValue").setAttribute("flex", 2);
-            this.addColumn({id: "treecolAutoCompleteComment", flex: 1});
-          }
-          this.mShowCommentColumn = val;
-          return val;
-        ]]></setter>
-      </property>
-
-      <property name="showImageColumn"
-                onget="return this.mShowImageColumn;">
-        <setter>
+        <getter>
           <![CDATA[
-          if (!val && this.mShowImageColumn) {
-            // remove the image column
-            this.removeColumn("treecolAutoCompleteImage");
-          } else if (val && !this.mShowImageColumn) {
-            // add the image column
-            this.addColumn({id: "treecolAutoCompleteImage", flex: 1});
-          }
-          this.mShowImageColumn = val;
-          return val;
+          return (this.mInput && this.mInput.maxRows) || this.defaultMaxRows;
         ]]>
-        </setter>
+        </getter>
       </property>
-
-      <method name="addColumn">
-        <parameter name="aAttrs"/>
-        <body><![CDATA[
-          var col = document.createElement("treecol");
-          col.setAttribute("class", "autocomplete-treecol");
-          for (var name in aAttrs)
-            col.setAttribute(name, aAttrs[name]);
-          this.treecols.appendChild(col);
-          return col;
-        ]]></body>
-      </method>
-
-      <method name="removeColumn">
-        <parameter name="aColId"/>
-        <body><![CDATA[
-          return this.treecols.removeChild(document.getElementById(aColId));
-        ]]></body>
-      </method>
-
-      <method name="adjustHeight">
-        <body><![CDATA[
-          // detect the desired height of the tree
-          var bx = this.tree.treeBoxObject;
-          var view = this.tree.view;
-          if (!view)
-            return;
-          var rows = this.maxRows;
-          if (!view.rowCount || (rows && view.rowCount < rows))
-            rows = view.rowCount;
-          
-          var height = rows * bx.rowHeight;
-          
-          if (height == 0)
-            this.tree.setAttribute("collapsed", "true");
-          else {
-            if (this.tree.hasAttribute("collapsed"))
-              this.tree.removeAttribute("collapsed");
-
-            this.tree.setAttribute("height", height);
-          }
-          this.tree.setAttribute("hidescrollbar", view.rowCount <= rows);
-        ]]></body>
-      </method>
 
       <method name="getNextIndex">
         <parameter name="aReverse"/>
@@ -792,7 +808,6 @@
           controller.handleEnter();
         ]]></body>
       </method>
-      
     </implementation>
 
     <handlers>
@@ -820,6 +835,426 @@
     </handlers>
   </binding>
 
+  <binding id="autocomplete-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-base-popup">
+    <resources>
+      <stylesheet src="chrome://global/skin/autocomplete.css"/>
+    </resources>
+
+    <content ignorekeys="true">
+      <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox" flex="1"/>
+    </content>
+
+    <implementation implements="nsIAutoCompletePopup">
+      <field name="_currentIndex">0</field>
+      <field name="_rowHeight">0</field>
+
+      <!-- =================== nsIAutoCompletePopup =================== -->
+
+      <property name="selectedIndex"
+                onget="return this.richlistbox.selectedIndex;">
+        <setter>
+          <![CDATA[
+          this.richlistbox.selectedIndex = val;
+          this.richlistbox.ensureSelectedElementIsVisible();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <method name="openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body>
+          <![CDATA[
+          // until we have "baseBinding", (see bug #373652) this allows
+          // us to override openAutocompletePopup(), but still call
+          // the method on the base class
+          this._openAutocompletePopup(aInput, aElement);
+        ]]>
+        </body>
+      </method>
+
+      <method name="_openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body>
+          <![CDATA[
+          if (!this.mPopupOpen) {
+            this.mInput = aInput;
+            document.popupNode = null;
+
+            var rect = aElement.getBoundingClientRect();
+            var width = rect.right - rect.left;
+            this.setAttribute("width", width > 100 ? width : 100);
+            // invalidate() depends on the width attribute
+            this.invalidate();
+
+            this.openPopup(aElement, "after_start", 0, 0, false, false);
+            this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="invalidate">
+        <body>
+          <![CDATA[
+          // collapsed if no matches
+          this.richlistbox.collapsed = (this._matchCount == 0);
+
+          // make sure to collapse any existing richlistitems
+          // that aren't going to be used
+          var existingItemsCount = this.richlistbox.childNodes.length;
+          for (var i = this._matchCount; i < existingItemsCount; i++)
+            this.richlistbox.childNodes[i].collapsed = true;
+
+          var clearSelection = true;
+          var currentSelectedIndex = this.selectedIndex;
+          if (currentSelectedIndex != -1 && currentSelectedIndex < this._matchCount) {
+            var controller = this.mInput.controller;
+            var item = this.richlistbox.childNodes[currentSelectedIndex];
+            if (item.getAttribute("url") == controller.getValueAt(currentSelectedIndex) &&
+                item.getAttribute("title") == controller.getCommentAt(currentSelectedIndex)) {
+              clearSelection = false;
+            }
+          }
+          if (currentSelectedIndex != -1 && clearSelection)
+            this.selectedIndex = -1;
+
+          this._currentIndex = 0;
+          this._appendCurrentResult();
+        ]]>
+        </body>
+      </method>
+
+      <property name="maxResults" readonly="true">
+        <getter>
+          <![CDATA[
+            // this is how many richlistitems will be kept around
+            // (note, this getter may be overridden)
+            return 20;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="_matchCount" readonly="true">
+        <getter>
+          <![CDATA[
+          return Math.min(this.mInput.controller.matchCount, this.maxResults);
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_appendCurrentResult">
+        <body>
+          <![CDATA[
+          var controller = this.mInput.controller;
+
+          // detect the desired height of the tree  
+          var rows = this.maxRows;  
+          if (!this._matchCount || (rows && this._matchCount < rows))  
+            rows = this._matchCount;  
+  
+          // until we have support for "rows" on richlistbox,
+          // determine the height dynamically.  (see bug #401939)
+          if (!this._rowHeight && this.richlistbox.childNodes.length)
+            this._rowHeight = this.richlistbox.childNodes[0].boxObject.height;
+
+          var height = this._rowHeight * rows;
+          if (this._rowHeight && this.richlistbox.height != height)
+            this.richlistbox.height = height;
+
+          if (this._currentIndex < this._matchCount) {
+            var existingItemsCount = this.richlistbox.childNodes.length;
+            var item;
+
+            // trim the leading/trailing whitespace
+            var trimmedSearchString = controller.searchString.replace(/^\s+/, "").replace(/\s+$/, "");  
+
+            if (this._currentIndex < existingItemsCount) {
+              // re-use the existing item
+              item = this.richlistbox.childNodes[this._currentIndex];
+            }
+            else {
+              // need to create a new item
+              item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "richlistitem");
+            }
+
+            // set these attributes before we set the class 
+            // so that we can use them from the contructor         
+            item.setAttribute("image", controller.getImageAt(this._currentIndex));
+            item.setAttribute("url", controller.getValueAt(this._currentIndex));
+            item.setAttribute("title", controller.getCommentAt(this._currentIndex));
+            item.setAttribute("type", controller.getStyleAt(this._currentIndex));
+            item.setAttribute("text", trimmedSearchString);
+        
+            var width = this.getAttribute("width");
+
+            if (this._currentIndex < existingItemsCount) {
+              // re-use the existing item
+              item._adjustAcItem();
+              item.collapsed = false;
+
+              var current_width = item.getAttribute("current_width");
+
+              if (width && current_width != width) {
+                item.setAttribute("current_width", width);
+                item._adjustWidth();
+              }
+            }
+            else {
+              // created a new item
+              if (width)
+                item.setAttribute("current_width", width);
+
+              // set the class at the end so we can use the attributes 
+              // in the xbl constructor
+              item.className = "autocomplete-richlistitem";
+              this.richlistbox.appendChild(item);
+            }
+
+            this._currentIndex++;
+
+            // yield after creating each item so that the UI is responsive
+            // note, when browser.urlbar.maxRichResults is small, this setTimeout()
+            // is not needed, and we could call this._appendCurrentResult() directly.
+            // but the bigger browser.urlbar.maxRichResults gets, this is necessary
+            // so that typing the url bar is responsive
+            setTimeout(function (self) { self._appendCurrentResult(); }, 0, this);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="selectBy">
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
+        <body>
+          <![CDATA[
+          try {
+            var amount = aPage ? 5 : 1;
+            
+            // because we collapsed unused items, we can't use this.richlistbox.getRowCount(), we need to use the matchCount
+            this.selectedIndex = this.getNextIndex(aReverse, amount, this.selectedIndex, this._matchCount - 1);
+            if (this.selectedIndex == -1) {
+              this.input._focus();
+            }
+          } catch (ex) {
+            // do nothing - occasionally timer-related js errors happen here
+            // e.g. "this.selectedIndex has no properties", when you type fast and hit a
+            // navigation key before this popup has opened
+          }
+            ]]>
+        </body>
+      </method>
+
+      <field name="richlistbox">
+        document.getAnonymousElementByAttribute(this, "anonid", "richlistbox");
+      </field>
+
+      <property name="view" 
+                onget="return this.mInput.controller;"
+                onset="return val;"/>
+
+    </implementation>
+  </binding>
+
+  <binding id="autocomplete-richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:vbox>
+        <xul:hbox align="center">
+          <xul:image xbl:inherits="src=image" class="ac-site-icon"/>
+          <xul:scrollbox anonid="title-scrollbox" class="ac-title">
+# note, we rely on the newlines here so that we have
+# a textNode before and after the span.  see _setUpDescription()
+# for more details
+            <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected">
+              <xul:label class="ac-emphasize-text"/>
+            </xul:description>
+          </xul:scrollbox>
+          <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
+                     class="ac-ellipsis-after ac-comment"/>
+          <xul:image anonid="type-image" class="ac-type-icon"/>
+        </xul:hbox>
+        <xul:hbox align="center">
+          <xul:spacer class="ac-site-icon"/>
+          <xul:scrollbox anonid="url-scrollbox" class="ac-url">
+# note, we rely on the newlines here so that we have
+# a textNode before and after the span.  see _setUpDescription()
+# for more details
+            <xul:description anonid="url" class="ac-normal-text ac-url-text" xbl:inherits="selected">
+              <xul:label class="ac-emphasize-text"/>
+            </xul:description>
+          </xul:scrollbox>
+          <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected" 
+                     class="ac-ellipsis-after ac-url-text"/>
+          <xul:spacer class="ac-type-icon"/>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    <implementation>
+      <constructor>
+        <![CDATA[
+            this._urlOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "url-overflow-ellipsis");  
+            this._titleOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "title-overflow-ellipsis");
+
+            this._typeImage = document.getAnonymousElementByAttribute(this, "anonid", "type-image");
+
+            this._urlScrollbox = document.getAnonymousElementByAttribute(this, "anonid", "url-scrollbox");
+            this._url = document.getAnonymousElementByAttribute(this, "anonid", "url");
+
+            this._titleScrollbox = document.getAnonymousElementByAttribute(this, "anonid", "title-scrollbox");
+            this._title = document.getAnonymousElementByAttribute(this, "anonid", "title");
+
+            // XXX hack
+            // for the first richlistitem, when we call _adjustWidth()
+            // from the xbl constructor, these elements don't have widths
+            // but we rely on those widths to properly set the widths 
+            // of the scrollboxes.
+            setTimeout(function(self) { self._adjustWidth(); }, 0, this);
+            this._adjustAcItem();
+          ]]>
+      </constructor>
+
+      <field name="_ellipsis">null</field>
+
+      <property name="ellipsis" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._ellipsis) {
+              try {
+                var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                                     .getService(Components.interfaces.nsIPrefBranch);
+                this._ellipsis = pref.getComplexValue("intl.ellipsis",
+                                                 Components.interfaces.nsIPrefLocalizedString).data;
+              } catch (ex) {
+                this._ellipsis = "\u2026";
+              }
+            }
+            return this._ellipsis; 
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_setUpDescription">
+        <parameter name="aDescriptionElement"/>
+        <parameter name="aText"/>
+        <parameter name="aScrollBoxObject"/>
+        <parameter name="aEllipsis"/>
+        <parameter name="aMatchIndex"/>
+        <parameter name="aMatchLength"/>
+        <body>
+          <![CDATA[
+          if (aMatchIndex == -1) {
+            aDescriptionElement.childNodes[0].textContent = aText;
+            aDescriptionElement.childNodes[1].value = "";
+            aDescriptionElement.childNodes[2].textContent = "";
+          }
+          else {
+            aDescriptionElement.childNodes[0].textContent =
+              aText.substring(0, aMatchIndex);
+
+            aDescriptionElement.childNodes[1].value =
+              aText.substring(aMatchIndex, aMatchIndex + aMatchLength);
+
+            aDescriptionElement.childNodes[2].textContent =
+              aText.substring(aMatchIndex + aMatchLength);
+          }
+
+          // need to set up the ellipsis on a time out, 
+          // because the width of the description element may still be 0
+          // even though the aText length is non-zero
+          setTimeout(function(self) { self._setUpEllipsis(aScrollBoxObject, aDescriptionElement, aEllipsis); }, 0, this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_adjustAcItem">
+        <body>
+          <![CDATA[
+          var text = this.getAttribute("text");
+          var url = this.getAttribute("url");
+          var title = this.getAttribute("title");
+          var type = this.getAttribute("type");
+
+          var url_sbo = this._urlScrollbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+          var title_sbo = this._titleScrollbox.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+
+          this._typeImage.className = type ? ("ac-result-type-" + type) : "";
+
+          // if we aren't matching any text 
+          // (the user has clicked on the history drop down
+          // or this result is a "tag" match, don't bold any matching text
+          if (text == "" || type == "tag") {
+            this._setUpDescription(this._url, url, url_sbo, this._urlOverflowEllipsis, -1, -1);
+            this._setUpDescription(this._title, title, title_sbo, this._titleOverflowEllipsis, -1, -1); 
+            return;
+          }
+
+          // emphasize the matching text, first try title, and then try url
+          var needle = text.toLowerCase();
+          var hay = title.toLowerCase();
+          var index = hay.indexOf(needle);
+
+          this._setUpDescription(this._title, title, title_sbo, this._titleOverflowEllipsis, index, text.length); 
+          
+          // if we didn't find it in the url, check the title
+          if (index == -1) {
+            hay = url.toLowerCase();
+            index = hay.indexOf(needle);
+          }
+          else
+            index = -1;
+      
+          this._setUpDescription(this._url, url, url_sbo, this._urlOverflowEllipsis, index, text.length);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_adjustWidth">
+        <body>
+          <![CDATA[
+          // XXX hack
+          // see bug #399644 comment #39 for some details
+          // add 16px for the site image, 8 for the margin right of the site icon,
+          // 16px for the type image, and 24px for scroll bar
+          var pixelsUsedForNonText = 16 + 8 + 16 + 24;
+
+          var current_url_width = this.getAttribute("current_width") - 
+                                  pixelsUsedForNonText -
+                                  this._urlOverflowEllipsis.boxObject.width;
+
+          var current_title_width = this.getAttribute("current_width") - 
+                                    pixelsUsedForNonText -
+                                    this._titleOverflowEllipsis.boxObject.width;
+
+          this._urlScrollbox.minWidth = current_url_width;
+          this._urlScrollbox.maxWidth = current_url_width;
+
+          this._titleScrollbox.minWidth = current_title_width;
+          this._titleScrollbox.maxWidth = current_title_width;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_setUpEllipsis">
+        <parameter name="aScrollBoxObject"/>
+        <parameter name="aDescriptionElement"/>
+        <parameter name="aEllipsis"/>
+        <body>
+          <![CDATA[
+          // determine if we need to show the ellipsis
+          if ((aScrollBoxObject.x + aScrollBoxObject.width) >= (aDescriptionElement.boxObject.x + aDescriptionElement.boxObject.width))
+            aEllipsis.value = "";
+          else 
+            aEllipsis.value = this.ellipsis;
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
   <binding id="autocomplete-tree" extends="chrome://global/content/bindings/tree.xml#tree">
     <content>
       <children includes="treecols"/>
@@ -829,11 +1264,53 @@
     </content>
   </binding>
 
+  <binding id="autocomplete-richlistbox" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
+    <implementation>
+      <field name="mLastMoveTime">Date.now()</field>
+    </implementation>
+    <handlers>
+      <handler event="mouseup">
+        <![CDATA[
+        // don't call onPopupClick for the scrollbar buttons, thumb, slider, etc.
+        var item = event.originalTarget;
+
+        while (item && item.localName != "richlistitem")
+          item = item.parentNode;
+
+        if (!item)
+          return;
+        
+        this.parentNode.onPopupClick(event);
+      ]]>
+      </handler>
+
+      <handler event="mousemove">
+        <![CDATA[
+        if (Date.now() - this.mLastMoveTime > 30) {
+         var item = event.target;
+
+         while (item && item.localName != "richlistitem")
+           item = item.parentNode;
+
+         if (!item)
+           return;
+
+         var rc = this.getIndexOfItem(item);
+         if (rc != this.selectedIndex)
+            this.selectedIndex = rc;
+
+         this.mLastMoveTime = Date.now();
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
   <binding id="autocomplete-treebody">
     <implementation>
-      <field name="mLastMoveTime">new Date()</field>
+      <field name="mLastMoveTime">Date.now()</field>
     </implementation>
-    
+
     <handlers>
       <handler event="mouseup" action="this.parentNode.parentNode.onPopupClick(event);"/>
 
@@ -844,11 +1321,11 @@
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
-        if (new Date() - this.mLastMoveTime > 30) {
+        if (Date.now() - this.mLastMoveTime > 30) {
          var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
          if (rc != this.parentNode.currentIndex)
             this.parentNode.view.selection.select(rc);
-         this.mLastMoveTime = new Date();
+         this.mLastMoveTime = Date.now();
         }
       ]]></handler>
     </handlers>
@@ -872,7 +1349,7 @@
         ]]></body>
       </method>
     </implementation>
-    
+
     <handlers>
       <handler event="mousedown" button="0"><![CDATA[
         this.showPopup();

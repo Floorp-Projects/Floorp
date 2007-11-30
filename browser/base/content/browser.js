@@ -890,6 +890,14 @@ function delayedStartup()
     gURLBar.setAttribute("enablehistory", "false");
   }
 
+  if (gURLBar) {
+    try {
+      if (gPrefService.getBoolPref("browser.urlbar.richResults"))
+        gURLBar.setAttribute("autocompletepopup", "PopupAutoCompleteRichResult");
+    } catch (ex) {
+    }
+  }
+
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
   window.addEventListener("keypress", ctrlNumberTabSelection, false);

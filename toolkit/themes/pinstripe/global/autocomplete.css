@@ -75,6 +75,7 @@ textbox.padded {
 /* ::::: autocomplete popups ::::: */
 
 panel[type="autocomplete"],
+panel[type="autocomplete-richlistbox"],
 .autocomplete-history-popup {
   padding: 0px !important;
   background-color: -moz-Field !important;
@@ -115,6 +116,63 @@ treechildren.autocomplete-treebody::-moz-tree-row(selected) {
 
 treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   color: HighlightText !important;
+}
+
+/* ::::: richlistbox autocomplete ::::: */
+
+.autocomplete-richlistbox {
+  -moz-appearance: none !important;
+  margin: 0;
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.autocomplete-richlistbox > scrollbox {
+  overflow-x: hidden !important;
+}
+
+.autocomplete-richlistbox > richlistitem[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+.autocomplete-richlistitem {
+  overflow:-moz-hidden-unscrollable;
+  padding: 1px 0px 1px 2px;
+  border-bottom: 1px solid ThreeDShadow;
+}
+
+.ac-site-icon {
+  width: 16px; 
+  height: 16px;
+  margin-right: 8px;
+}
+
+.ac-type-icon {
+  width: 16px; 
+  height: 16px;
+}
+
+.ac-ellipsis-after {
+  margin: 2px 0px 0px 0px !important;
+  padding: 0; 
+  min-width: 1.1em ;
+}
+
+.ac-normal-text {
+  margin: 2px 0px 0px 0px !important;
+  padding: 0;
+}
+
+.ac-emphasize-text {
+  margin: 0 !important;
+  padding: 0;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.ac-title, .ac-url {
+  overflow: hidden;
 }
 
 /* ::::: textboxes inside toolbarpaletteitems ::::: */

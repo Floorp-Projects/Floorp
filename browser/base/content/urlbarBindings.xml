@@ -271,7 +271,8 @@
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
         <parameter name="aElement"/>
-        <body><![CDATA[
+        <body>
+          <![CDATA[
           // initially the panel is hidden
           // to avoid impacting startup / new window performance
           aInput.popup.hidden = false;
@@ -293,19 +294,9 @@
           }
           // completely ignore right-clicks
           else if (aEvent.button != 2) {
-            if (gURLBar && this.mInput == gURLBar) {
-              // handle address bar click
-              var url = controller.getValueAt(this.tree.view.selection.currentIndex);
-
-              // close the autocomplete popup and revert the entered address
-              this.closePopup();
-              controller.handleEscape();
-              // respect the usual clicking subtleties
-              openUILink(url, aEvent);
-            }
-            else if (this.mInput._getParentSearchbar) {
+            if (this.mInput._getParentSearchbar) {
               // handle search bar click
-              var search = controller.getValueAt(this.tree.view.selection.currentIndex);
+              var search = controller.getValueAt(this.selectedIndex);
               var textbox = this.mInput;
 
               // close the autocomplete popup and copy the selected value to the search box
@@ -320,7 +311,69 @@
               controller.handleEnter();
             }
           }
+          ]]></body>
+        </method>
+      </implementation>
+    </binding>
+
+    <binding id="urlbar-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
+      <implementation>
+      <field name="_maxResults">0</field>
+
+      <property name="maxResults" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._maxResults) {
+              var prefService =
+                Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+              this._maxResults = prefService.getIntPref("browser.urlbar.maxRichResults");
+            }
+            return this._maxResults;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body>
+          <![CDATA[
+          // initially the panel is hidden
+          // to avoid impacting startup / new window performance
+          aInput.popup.hidden = false;
+
+          // this method is defined on the base binding
+          this._openAutocompletePopup(aInput, aElement);
         ]]></body>
+      </method>
+
+      <method name="onPopupClick">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
+
+          // default action on unmodified left-click
+          if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
+              !aEvent.altKey && !aEvent.metaKey) {
+            controller.handleEnter();
+          }
+          // completely ignore right-clicks
+          else if (aEvent.button != 2) {
+            if (gURLBar && this.mInput == gURLBar) {
+              // handle address bar click
+              var url = controller.getValueAt(this.selectedIndex);
+
+              // close the autocomplete popup and revert the entered address
+              this.closePopup();
+              controller.handleEscape();
+              // respect the usual clicking subtleties
+              openUILink(url, aEvent);
+            }
+          }
+        ]]>
+        </body>
       </method>
     </implementation>
   </binding>
