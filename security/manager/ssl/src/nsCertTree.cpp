@@ -392,7 +392,6 @@ MatchingCertOverridesCallback(const nsCertOverride &aSettings,
     certdi->mHostWithPort = NS_ConvertUTF8toUTF16(aSettings.mHostWithPortUTF8);
     certdi->mOverrideBits = aSettings.mOverrideBits;
     certdi->mIsTemporary = aSettings.mIsTemporary;
-    NS_IF_ADDREF(certdi);
     cap->array->InsertElementAt(cap->position, certdi);
     cap->position++;
     cap->counter++;
@@ -449,7 +448,6 @@ AddRemaningHostPortOverridesCallback(const nsCertOverride &aSettings,
     certdi->mHostWithPort = NS_ConvertUTF8toUTF16(aSettings.mHostWithPortUTF8);
     certdi->mOverrideBits = aSettings.mOverrideBits;
     certdi->mIsTemporary = aSettings.mIsTemporary;
-    NS_IF_ADDREF(certdi);
     cap->array->InsertElementAt(cap->position, certdi);
     cap->position++;
     cap->counter++;
