@@ -1471,6 +1471,16 @@ nsXULElement::GetAttrCount() const
     return count;
 }
 
+void
+nsXULElement::DestroyContent()
+{
+    nsDOMSlots* slots = GetExistingDOMSlots();
+    if (slots) {
+      NS_IF_RELEASE(slots->mControllers);
+    }
+
+    nsGenericElement::DestroyContent();
+}
 
 #ifdef DEBUG
 void

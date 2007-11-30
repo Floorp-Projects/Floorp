@@ -824,6 +824,7 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+  virtual void DestroyContent();
 
   // nsIFormControl
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
@@ -933,6 +934,7 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
+  virtual void DestroyContent();
 
   // nsIDOMNSHTMLElement 
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
