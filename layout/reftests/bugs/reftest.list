@@ -460,6 +460,7 @@ fails == 386310-1d.html 386310-1-ref.html
 random == 403134-1.html 403134-1-ref.html # bug 405377
 == 403249-1a.html 403249-1-ref.html
 == 403249-1b.html 403249-1-ref.html
+== 403426-1.html 403426-1-ref.html
 == 403455-1.html 403455-1-ref.html
 == 403505-1.xml 403505-1-ref.xul
 == 403519-1.html 403519-1-ref.html
