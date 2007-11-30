@@ -1110,9 +1110,13 @@
             // for the first richlistitem, when we call _adjustWidth()
             // from the xbl constructor, these elements don't have widths
             // but we rely on those widths to properly set the widths 
-            // of the scrollboxes.
-            setTimeout(function(self) { self._adjustWidth(); }, 0, this);
-            this._adjustAcItem();
+            // of the scrollboxes.  if we don't have the widths
+            // try again on a timeout.
+            if (!this._urlOverflowEllipsis.boxObject.width ||
+                !this._titleOverflowEllipsis.boxObject.width)
+              setTimeout(function(self) { self._adjustWidth(); }, 0, this);
+            else
+              this._adjustWidth();
           ]]>
       </constructor>
 
