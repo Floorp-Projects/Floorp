@@ -521,7 +521,7 @@ nsDocAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
 NS_IMETHODIMP nsDocAccessible::Init()
 {
-  PutCacheEntry(gGlobalDocAccessibleCache, mWeakShell, this);
+  PutCacheEntry(gGlobalDocAccessibleCache, mDocument, this);
 
   AddEventListeners();
 
@@ -536,19 +536,6 @@ NS_IMETHODIMP nsDocAccessible::Init()
     mRoleMapEntry = nsnull; // role attribute is not valid for a document
   }
 
-  return rv;
-}
-
-
-NS_IMETHODIMP nsDocAccessible::Destroy()
-{
-  nsresult rv = Shutdown();
-
-  if (mWeakShell) {
-    // Remove from the cache after Shutdown(), so that Shutdown() procedures
-    // can find the doc or root accessible in the cache if they need it
-    gGlobalDocAccessibleCache.Remove(static_cast<void*>(mWeakShell));
-  }
   return rv;
 }
 

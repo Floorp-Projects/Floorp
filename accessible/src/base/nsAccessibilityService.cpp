@@ -1865,9 +1865,8 @@ NS_IMETHODIMP nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
                "Incorrect aEvent passed in");
 
   NS_ENSURE_ARG_POINTER(aShell);
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aShell));
   nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
-    nsAccessNode::GetDocAccessibleFor(weakShell);
+    nsAccessNode::GetDocAccessibleFor(aShell->GetDocument());
   nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
     do_QueryInterface(accessibleDoc);
   if (!privateAccessibleDoc) {
