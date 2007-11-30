@@ -184,11 +184,8 @@ public:
    * After this call, this linebreaker can be reused.
    * This must be called at least once between any call to AppendText() and
    * destroying the object.
-   * @param aTrailingBreak this is set to true when there is a break opportunity
-   * at the end of the text. This will normally only be declared true when there
-   * is breakable whitespace at the end.
    */
-  nsresult Reset(PRBool* aTrailingBreak);
+  nsresult Reset() { return FlushCurrentWord(); }
 
 private:
   // This is a list of text sources that make up the "current word" (i.e.,
