@@ -655,11 +655,16 @@ void nsAccessNode::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
 /***************** Hashtable of nsIAccessNode's *****************/
 
 already_AddRefed<nsIAccessibleDocument>
-nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell)
+nsAccessNode::GetDocAccessibleFor(nsIDocument *aDocument)
 {
+  if (!aDocument) {
+    return nsnull;
+  }
+
   nsIAccessibleDocument *docAccessible = nsnull;
   nsCOMPtr<nsIAccessNode> accessNode;
-  gGlobalDocAccessibleCache.Get(static_cast<void*>(aPresShell), getter_AddRefs(accessNode));
+  gGlobalDocAccessibleCache.Get(static_cast<void*>(aDocument),
+                                getter_AddRefs(accessNode));
   if (accessNode) {
     CallQueryInterface(accessNode, &docAccessible);
   }
@@ -667,15 +672,26 @@ nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell)
 }
  
 already_AddRefed<nsIAccessibleDocument>
-nsAccessNode::GetDocAccessibleFor(nsISupports *aContainer, PRBool aCanCreate)
+nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aWeakShell)
+{
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(aWeakShell));
+  if (!presShell) {
+    return nsnull;
+  }
+
+  return nsAccessNode::GetDocAccessibleFor(presShell->GetDocument());
+}
+
+already_AddRefed<nsIAccessibleDocument>
+nsAccessNode::GetDocAccessibleFor(nsIDocShellTreeItem *aContainer,
+                                  PRBool aCanCreate)
 {
   if (!aCanCreate) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
     NS_ASSERTION(docShell, "This method currently only supports docshells");
     nsCOMPtr<nsIPresShell> presShell;
     docShell->GetPresShell(getter_AddRefs(presShell));
-    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-    return weakShell ? GetDocAccessibleFor(weakShell) : nsnull;
+    return presShell ? GetDocAccessibleFor(presShell->GetDocument()) : nsnull;
   }
 
   nsCOMPtr<nsIDOMNode> node = GetDOMNodeForContainer(aContainer);
@@ -696,8 +712,16 @@ already_AddRefed<nsIAccessibleDocument>
 nsAccessNode::GetDocAccessibleFor(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIPresShell> eventShell = GetPresShellFor(aNode);
-  nsCOMPtr<nsIWeakReference> weakEventShell(do_GetWeakReference(eventShell));
-  return weakEventShell? GetDocAccessibleFor(weakEventShell) : nsnull;
+  if (eventShell) {
+    return GetDocAccessibleFor(eventShell->GetDocument());
+  }
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
+  if (doc) {
+    return GetDocAccessibleFor(doc);
+  }
+
+  return nsnull;
 }
 
 already_AddRefed<nsIPresShell>
