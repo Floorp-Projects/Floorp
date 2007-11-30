@@ -109,6 +109,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 !insertmacro WriteRegStr2
 
 !insertmacro un.ChangeMUIHeaderImage
+!insertmacro un.CheckForFilesInUse
 !insertmacro un.CleanVirtualStore
 !insertmacro un.DeleteRelativeProfiles
 !insertmacro un.GetLongPath
@@ -160,6 +161,7 @@ ShowUnInstDetails nevershow
  */
 ; Welcome Page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE un.preWelcome
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.leaveWelcome
 !insertmacro MUI_UNPAGE_WELCOME
 
 ; Uninstall Confirm Page
@@ -181,6 +183,9 @@ UninstPage custom un.preConfirm un.leaveConfirm
 !endif
 
 !insertmacro MUI_UNPAGE_FINISH
+
+; Use the default dialog for IDD_VERIFY for a simple Banner
+ChangeUI IDD_VERIFY "${NSISDIR}\Contrib\UIs\default.exe"
 
 ################################################################################
 # Install Sections
@@ -375,6 +380,28 @@ Function un.preWelcome
   ${EndIf}
 FunctionEnd
 
+Function un.leaveWelcome
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    Banner::show /NOUNLOAD "$(BANNER_CHECK_EXISTING)"
+
+    ${If} "$TmpVal" == "FoundMessageWindow"
+      Sleep 5000
+    ${EndIf}
+
+    ${PushFilesToCheck}
+
+    ${un.CheckForFilesInUse} $TmpVal
+
+    Banner::destroy
+
+    ${If} "$TmpVal" == "true"
+      StrCpy $TmpVal "FoundMessageWindow"
+      ${un.ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_UNINSTALL)"
+      StrCpy $TmpVal "true"
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
 Function un.preConfirm
   ${If} ${FileExists} "$INSTDIR\distribution\modern-header.bmp"
   ${AndIf} $hHeaderBitmap == ""
@@ -393,6 +420,8 @@ Function un.preConfirm
   SetCtlColors $1 0x000000 0xFFFFEE
   ShowWindow $1 ${SW_HIDE}
   System::Call "user32::SetFocus(i r0, i 0x0007, i,i)i"
+  ${MUI_INSTALLOPTIONS_READ} $1 "unconfirm.ini" "Field 2" "HWND"
+  SendMessage $1 ${WM_SETTEXT} 0 "STR:$INSTDIR"
   !insertmacro MUI_INSTALLOPTIONS_SHOW
 FunctionEnd
 
@@ -415,7 +444,6 @@ Function un.leaveConfirm
   ; running an instance that is located in another directory. If for whatever
   ; reason there is no message window we will just rename the app's files and
   ; then remove them on restart if they are in use.
-  StrCpy $TmpVal ""
   ClearErrors
   ${DeleteFile} "$INSTDIR\${FileMainEXE}"
   ${If} ${Errors}

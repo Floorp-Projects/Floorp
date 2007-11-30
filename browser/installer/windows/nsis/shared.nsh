@@ -549,3 +549,32 @@
   ${EndIf}
 !macroend
 !define RemoveDeprecatedKeys "!insertmacro RemoveDeprecatedKeys"
+
+; The files to check if they are in use during (un)install so the restart is
+; required message is displayed.
+!macro PushFilesToCheck
+  ; The first string to be pushed onto the stack MUST be "end" to indicate
+  ; that there are no more relative file paths to check and the last string
+  ; should be ${FileMainEXE} so if it is in use the CheckForFilesInUse macro
+  ; returns after the first check.
+  Push "end"
+  Push "chrome\browser.jar"
+  Push "chrome\classic.jar"
+  Push "chrome\comm.jar"
+  Push "chrome\${AB_CD}.jar"
+  Push "chrome\pippki.jar"
+  Push "chrome\reporter.jar"
+  Push "chrome\toolkit.jar"
+  Push "AccessibleMarshal.dll"
+  Push "freebl3.dll"
+  Push "nssckbi.dll"
+  Push "nspr4.dll"
+  Push "nssdbm3.dll"
+  Push "sqlite3.dll"
+  Push "xpcom.dll"
+  Push "crashreporter.exe"
+  Push "updater.exe"
+  Push "xpicleanup.exe"
+  Push "${FileMainEXE}"
+!macroend
+!define PushFilesToCheck "!insertmacro PushFilesToCheck"
