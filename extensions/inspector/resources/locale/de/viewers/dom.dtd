@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Shawn Wilsher <me@shawnwilsher.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-  <!ENTITY cmdShowFindDialog.label "Knoten suchen...">
+  <!ENTITY cmdShowFindDialog.label "Knoten suchen…">
   <!ENTITY cmdShowFindDialog.accesskey "s">
   <!ENTITY cmdShowFindDialog.accelkey "f">
 
@@ -57,6 +58,7 @@
   <!ENTITY cmdToggleProcessingInstructions.accesskey "D">
 
   <!ENTITY cmdFlashSelected.label "Ausgewähltes Element blinken lassen">
+  <!ENTITY cmdFlashSelected.accesskey "g">
 
   <!ENTITY cmdToggleAttributes.label "Attribute anzeigen">
   <!ENTITY cmdToggleAttributes.accesskey "t">
@@ -66,30 +68,39 @@
 
   <!ENTITY ColumnsDialog.title "Spalten">
 
-  <!ENTITY cmdShowColumnsDialog.label "Spalten...">
+  <!ENTITY cmdShowColumnsDialog.label "Spalten…">
   <!ENTITY cmdShowColumnsDialog.accesskey "S">
   
-  <!ENTITY cmdInsertNode.label "Einfügen...">
+  <!ENTITY cmdInsertNode.label "Einfügen…">
   <!ENTITY cmdDeleteNode.label "Löschen">
   <!ENTITY cmdCopyXML.label "XML kopieren">
   <!ENTITY cmdBlink.label "Element blinken lassen">
   <!ENTITY cmdInspectBrowser.label "Enthaltenes Dokument inspizieren">
   <!ENTITY cmdInspectInNewWindow.label "In neuem Fenster inspizieren">
   
-  <!ENTITY cmdShowPseudoClasses.label "Pseudo-Klassen setzen...">
+  <!ENTITY cmdShowPseudoClasses.label "Pseudo-Klassen setzen…">
   <!ENTITY cmdShowPseudoClasses.accesskey "P">
   
   <!ENTITY pseudoClasses.title "Pseudo-Klassen">
 
   <!ENTITY findNodes.title "Knoten suchen">
   <!ENTITY findNodesById.label "ID">
+  <!ENTITY findNodesById.accesskey "I">
+  <!ENTITY findNodesById.accesskey2 "D">
   <!ENTITY findNodesByTag.label "Tag">
+  <!ENTITY findNodesByTag.accesskey "T">
+  <!ENTITY findNodesByTag.accesskey2 "g">
   <!ENTITY findNodesByAttr.label "Attr">
+  <!ENTITY findNodesByAttr.accesskey "A">
+  <!ENTITY findNodesByAttr.accesskey2 "r">
   <!ENTITY findNodesByAttrValue.label "Wert">
+  <!ENTITY findNodesByAttrValue.accesskey "W">
   <!ENTITY findNodesSearchBy.label "Suchen nach">
   <!ENTITY findNodesDirection.label "Richtung">
   <!ENTITY findNodesDirectionUp.label "Nach oben">
+  <!ENTITY findNodesDirectionUp.accesskey "o">
   <!ENTITY findNodesDirectionDown.label "Nach unten">
+  <!ENTITY findNodesDirectionDown.accesskey "u">
   <!ENTITY findNodesFind.label "Suchen">
   <!ENTITY findNodesCancel.label "Abbrechen">
 
@@ -109,11 +120,15 @@
 
   <!ENTITY insertNode.title "Knoten einfügen">
   <!ENTITY nodeType.label "Knoten-Typ:">
+  <!ENTITY nodeType.accesskey "T">
   <!ENTITY nodeType.element.label "Element">
   <!ENTITY nodeType.text.label "Text">
   <!ENTITY namespaceURI.label "Namespace-URI:">
+  <!ENTITY namespaceURI.accesskey "U">
   <!ENTITY tagName.label "Tag-Name:">
+  <!ENTITY tagName.accesskey "N">
   <!ENTITY nodeValue.label "Knoten-Wert:">
+  <!ENTITY nodeValue.accesskey "W">
 
   <!ENTITY namespaceTitle.null.label "null">
   <!ENTITY namespaceTitle.default.label "Dokumentstandard">
