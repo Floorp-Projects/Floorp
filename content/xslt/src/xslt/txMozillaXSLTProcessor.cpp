@@ -264,6 +264,10 @@ public:
         NS_ADDREF(*aValue);
         return NS_OK;
     }
+    nsIVariant* getValue()
+    {
+        return mValue;
+    }
     void setValue(nsIVariant* aValue)
     {
         NS_ASSERTION(aValue, "setting variablevalue to null");
@@ -288,9 +292,26 @@ private:
  * txMozillaXSLTProcessor
  */
 
-NS_IMPL_ADDREF(txMozillaXSLTProcessor)
-NS_IMPL_RELEASE(txMozillaXSLTProcessor)
-NS_INTERFACE_MAP_BEGIN(txMozillaXSLTProcessor)
+NS_IMPL_CYCLE_COLLECTION_CLASS(txMozillaXSLTProcessor)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(txMozillaXSLTProcessor)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEmbeddedStylesheetRoot)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSource)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrincipal)
+    tmp->mVariables.clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(txMozillaXSLTProcessor)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEmbeddedStylesheetRoot)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSource)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrincipal)
+    txOwningExpandedNameMap<txIGlobalParameter>::iterator iter(tmp->mVariables);
+    while (iter.next()) {
+        cb.NoteXPCOMChild(static_cast<txVariable*>(iter.value())->getValue());
+    }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(txMozillaXSLTProcessor)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(txMozillaXSLTProcessor)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorObsolete)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorPrivate)
