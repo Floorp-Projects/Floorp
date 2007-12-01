@@ -67,20 +67,6 @@ function run_test() {
   
   do_check_true(scope2.XPCOMUtils == scope.XPCOMUtils);
 
-  // try on a new object using a file URL
-  var res = Components.classes["@mozilla.org/network/protocol;1?name=resource"]
-                      .getService(Components.interfaces.nsIResProtocolHandler);
-  var resURI = res.newURI("resource://gre/modules/XPCOMUtils.jsm", null, null);
-  dump("resURI: " + resURI + "\n");
-  var filePath = res.resolveURI(resURI);
-  do_check_eq(filePath.indexOf("file://"), 0);
-  var scope3 = {};
-  Components.utils.import(filePath, scope3);
-  do_check_eq(typeof(scope3.XPCOMUtils), "object");
-  do_check_eq(typeof(scope3.XPCOMUtils.generateModule), "function");
-  
-  do_check_true(scope3.XPCOMUtils == scope.XPCOMUtils);
-
   // make sure we throw when the second arg is bogus
   var didThrow = false;
   try {
