@@ -62,7 +62,6 @@ interface nsIDownloadManager : nsISupports {
   const short DOWNLOAD_QUEUED           = 5;
   const short DOWNLOAD_BLOCKED          = 6;
   const short DOWNLOAD_SCANNING         = 7;
-  const short DOWNLOAD_DIRTY            = 8;
 
   const short DOWNLOAD_TYPE_DOWNLOAD    = 0;
 
