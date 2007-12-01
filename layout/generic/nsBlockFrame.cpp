@@ -1845,7 +1845,14 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
     // Now repair the line and update |aState.mY| by calling
     // |ReflowLine| or |SlideLine|.
-    if (line->IsDirty() && !willReflowAgain) {
+    // If we're going to reflow everything again, then no need to reflow
+    // the dirty line ... unless the line has floats, in which case we'd
+    // better reflow it now to refresh its float cache, which may contain
+    // dangling frame pointers! Ugh! This reflow of the line may be
+    // incorrect because we skipped reflowing previous lines (e.g., floats
+    // may be placed incorrectly), but that's OK because we'll mark the
+    // line dirty below under "if (aState.mReflowState.mDiscoveredClearance..."
+    if (line->IsDirty() && (line->HasFloats() || !willReflowAgain)) {
       lastLineMovedUp = PR_TRUE;
 
       PRBool maybeReflowingForFirstTime =
@@ -1867,6 +1874,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
           *aState.mReflowState.mDiscoveredClearance) {
         line->MarkDirty();
         willReflowAgain = PR_TRUE;
+        // Note that once we've entered this state, every line that gets here
+        // (e.g. because it has floats) gets marked dirty and reflowed again.
+        // in the next pass. This is important, see above.
       }
 
       if (line->HasFloats()) {
@@ -1937,8 +1947,20 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       else
         repositionViews = PR_TRUE;
 
-      // XXX EVIL O(N^2) EVIL
-      aState.RecoverStateFrom(line, deltaY);
+      if (willReflowAgain) {
+        NS_ASSERTION(!line->HasFloats(), "Possibly stale float cache here!");
+        // If we're going to reflow everything again, and this line has no
+        // cached floats, then there is no need to recover float state. The line
+        // may be a block that contains other lines with floats, but in that
+        // case RecoverStateFrom would only add floats to the space manager.
+        // We don't need to do that because everything's going to get reflowed
+        // again "for real". Calling RecoverStateFrom in this situation could
+        // be lethal because the block's descendant lines may have float
+        // caches containing dangling frame pointers. Ugh!
+      } else {
+        // XXX EVIL O(N^2) EVIL
+        aState.RecoverStateFrom(line, deltaY);
+      }
 
       // Keep mY up to date in case we're propagating reflow damage
       // and also because our final height may depend on it. If the
