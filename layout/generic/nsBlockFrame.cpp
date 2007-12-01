@@ -2748,40 +2748,6 @@ nsBlockFrame::GetTopBlockChild(nsPresContext* aPresContext)
   return secondLine->mFirstChild;
 }
 
-// If placeholders/floats split during reflowing a line, but that line will 
-// be put on the next page, then put the placeholders/floats back the way
-// they were before the line was reflowed. 
-void
-nsBlockFrame::UndoSplitPlaceholders(nsBlockReflowState& aState,
-                                    nsIFrame*           aLastPlaceholder)
-{
-  nsIFrame* undoPlaceholder;
-  if (aLastPlaceholder) {
-    undoPlaceholder = aLastPlaceholder->GetNextSibling();
-    aLastPlaceholder->SetNextSibling(nsnull);
-  }
-  else {
-    undoPlaceholder = aState.mOverflowPlaceholders.FirstChild();
-    aState.mOverflowPlaceholders.SetFrames(nsnull);
-  }
-  // remove the next in flows of the placeholders that need to be removed
-  for (nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(undoPlaceholder);
-       placeholder; ) {
-    NS_ASSERTION(!placeholder->GetNextInFlow(), "Must be the last placeholder");
-
-    nsFrameManager* fm = aState.mPresContext->GetPresShell()->FrameManager();
-    fm->UnregisterPlaceholderFrame(placeholder);
-    placeholder->SetOutOfFlowFrame(nsnull);
-
-    // XXX we probably should be doing something with oof here. But what?
-
-    nsSplittableFrame::RemoveFromFlow(placeholder);
-    nsIFrame* savePlaceholder = placeholder; 
-    placeholder = static_cast<nsPlaceholderFrame*>(placeholder->GetNextSibling());
-    savePlaceholder->Destroy();
-  }
-}
-
 nsresult
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                line_iterator aLine,
@@ -2984,9 +2950,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       availSpace.height += topMargin;
     }
     
-    // keep track of the last overflow float in case we need to undo any new additions
-    nsIFrame* lastPlaceholder = aState.mOverflowPlaceholders.LastChild();
-    
     // Reflow the block into the available space
     nsMargin computedOffsets;
     // construct the html reflow state for the block. ReflowBlock 
@@ -3019,7 +2982,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     NS_ENSURE_SUCCESS(rv, rv);
     
     if (mayNeedRetry && clearanceFrame) {
-      UndoSplitPlaceholders(aState, lastPlaceholder);
       aState.mSpaceManager->PopState(&spaceManagerState);
       aState.mY = startingY;
       aState.mPrevBottomMargin = incomingMargin;
@@ -3034,7 +2996,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
       // None of the child block fits.
-      UndoSplitPlaceholders(aState, lastPlaceholder);
       PushLines(aState, aLine.prev());
       *aKeepReflowGoing = PR_FALSE;
       NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
@@ -3210,7 +3171,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         else {
           // Push the line that didn't fit and any lines that follow it
           // to our next-in-flow.
-          UndoSplitPlaceholders(aState, lastPlaceholder);
           PushLines(aState, aLine.prev());
           NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
         }
@@ -3325,11 +3285,8 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
 void
 nsBlockFrame::PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
                                            line_iterator       aLine,
-                                           nsIFrame*           aLastPlaceholder,
                                            PRBool&             aKeepReflowGoing)
 {
-  UndoSplitPlaceholders(aState, aLastPlaceholder);
-
   line_iterator prevLine = aLine;
   --prevLine;
   PushLines(aState, prevLine);
@@ -3397,9 +3354,6 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     aLineLayout.SetFirstLetterStyleOK(PR_TRUE);
   }
 
-  // keep track of the last overflow float in case we need to undo any new additions
-  nsIFrame* lastPlaceholder = aState.mOverflowPlaceholders.LastChild();
-
   // Reflow the frames that are already on the line first
   nsresult rv = NS_OK;
   LineReflowStatus lineReflowStatus = LINE_REFLOW_OK;
@@ -3445,7 +3399,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
       if (LINE_REFLOW_TRUNCATED == lineReflowStatus) {
         // Push the line with the truncated float 
-        PushTruncatedPlaceholderLine(aState, aLine, lastPlaceholder, *aKeepReflowGoing);
+        PushTruncatedPlaceholderLine(aState, aLine, *aKeepReflowGoing);
       }
     }
   }
@@ -3531,8 +3485,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
         // to go to the next page/column.
         lineReflowStatus = LINE_REFLOW_TRUNCATED;
         // Push the line that didn't fit
-        PushTruncatedPlaceholderLine(aState, aLine, lastPlaceholder,
-                                     *aKeepReflowGoing);
+        PushTruncatedPlaceholderLine(aState, aLine, *aKeepReflowGoing);
       }
     }
       
@@ -3558,9 +3511,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     // If we are propagating out a break-before status then there is
     // no point in placing the line.
     if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
-      if (PlaceLine(aState, aLineLayout, aLine, aKeepReflowGoing)) {
-        UndoSplitPlaceholders(aState, lastPlaceholder); // undo since we pushed the current line
-      }
+      PlaceLine(aState, aLineLayout, aLine, aKeepReflowGoing);
     }
   }
 #ifdef DEBUG
@@ -3726,6 +3677,12 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
     }
   }
+  else if (NS_FRAME_IS_TRUNCATED(frameReflowStatus) &&
+           nsGkAtoms::placeholderFrame == aFrame->GetType()) {
+    // if the frame is a placeholder and was complete but truncated (and not at the top
+    // of page), the entire line will be pushed to give it another chance to not truncate.
+    *aLineReflowStatus = LINE_REFLOW_TRUNCATED;
+  }  
   else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
     // Frame is not-complete, no special breaking status
 
@@ -3769,13 +3726,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
     }
   }
-  else if (NS_FRAME_IS_TRUNCATED(frameReflowStatus)) {
-    // if the frame is a placeholder and was complete but truncated (and not at the top
-    // of page), the entire line will be pushed to give it another chance to not truncate.
-    if (nsGkAtoms::placeholderFrame == aFrame->GetType()) {
-      *aLineReflowStatus = LINE_REFLOW_TRUNCATED;
-    }
-  }  
 
   return NS_OK;
 }
@@ -3962,7 +3912,7 @@ nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState,
   return PR_FALSE;
 }
 
-PRBool
+void
 nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
                         nsLineLayout&       aLineLayout,
                         line_iterator       aLine,
@@ -4088,7 +4038,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
       *aKeepReflowGoing = PR_FALSE;
     }
-    return PR_TRUE;
+    return;
   }
 
   // May be needed below
@@ -4111,9 +4061,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       // At least one float is truncated, so fix up any placeholders that got split and 
       // push the line. XXX It may be better to put the float on the next line, but this 
       // is not common enough to justify the complexity. Or maybe it is now...
-
-      nsIFrame* lastPlaceholder = aState.mOverflowPlaceholders.LastChild();
-      PushTruncatedPlaceholderLine(aState, aLine, lastPlaceholder, *aKeepReflowGoing);
+      PushTruncatedPlaceholderLine(aState, aLine, *aKeepReflowGoing);
     }
   }
 
@@ -4147,8 +4095,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   if (aLine->HasFloatBreakAfter()) {
     aState.mY = aState.ClearFloats(aState.mY, aLine->GetBreakTypeAfter());
   }
-
-  return PR_FALSE;
 }
 
 void
