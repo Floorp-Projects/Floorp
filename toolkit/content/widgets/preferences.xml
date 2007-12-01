@@ -729,6 +729,11 @@
           if (paneTitle != "")
             document.title = paneTitle;
 #endif
+          var helpButton = document.documentElement.getButton("help");
+          if (aPaneElement.hasAttribute("helpURI"))
+            helpButton.hidden = false;
+          else
+            helpButton.hidden = true;
 
           // Find this pane's index in the deck and set the deck's 
           // selectedIndex to that value to switch to it.
@@ -786,12 +791,6 @@
               break;
             }
           }
-
-          var helpButton = document.documentElement.getButton("help");
-          if (aPaneElement.hasAttribute("helpURI"))
-            helpButton.hidden = false;
-          else
-            helpButton.hidden = true;
         ]]>
         </body>
       </method>
