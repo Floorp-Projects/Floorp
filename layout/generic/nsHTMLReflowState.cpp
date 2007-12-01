@@ -362,7 +362,16 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs)
   nsIAtom* frameType = rs->frame->GetType();
   if (nsGkAtoms::blockFrame == frameType ||
       nsGkAtoms::areaFrame == frameType ||
-      nsGkAtoms::scrollFrame == frameType) {
+      nsGkAtoms::scrollFrame == frameType) {  
+
+    if (nsGkAtoms::areaFrame == frameType) {
+      // Skip over scrolled-content area frames
+      if (rs->frame->GetStyleContext()->GetPseudoType() ==
+          nsCSSAnonBoxes::scrolledContent) {
+        return PR_FALSE;
+      }
+    }
+    
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
     if (NS_AUTOHEIGHT == rs->ComputedHeight()) {
@@ -415,7 +424,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
     mStylePosition->mMinHeight.GetUnit() == eStyleUnit_Percent ||
     mStylePosition->mMaxHeight.GetUnit() == eStyleUnit_Percent ||
     mStylePosition->mOffset.GetTopUnit() == eStyleUnit_Percent ||
-    mStylePosition->mOffset.GetBottomUnit() != eStyleUnit_Auto ||
+    mStylePosition->mOffset.GetBottomUnit() == eStyleUnit_Percent ||
     frame->IsBoxFrame() ||
     frame->GetIntrinsicSize().height.GetUnit() == eStyleUnit_Percent;
 
@@ -1408,6 +1417,14 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
     if (nsGkAtoms::blockFrame == frameType ||
         nsGkAtoms::areaFrame == frameType ||
         nsGkAtoms::scrollFrame == frameType) {
+      
+      if (nsGkAtoms::areaFrame == frameType) {
+        // Skip over scrolled-content area frames
+        if (rs->frame->GetStyleContext()->GetPseudoType() ==
+            nsCSSAnonBoxes::scrolledContent) {
+          continue;
+        }
+      }
 
       secondAncestorRS = firstAncestorRS;
       firstAncestorRS = (nsHTMLReflowState*)rs;
@@ -1425,7 +1442,12 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
       }
     }
     else if (nsGkAtoms::canvasFrame == frameType) {
-      // Always continue on to the height calculation
+      // Use scroll frames' computed height if we have one, this will
+      // allow us to get viewport height for native scrollbars.
+      nsHTMLReflowState* scrollState = (nsHTMLReflowState *)rs->parentReflowState;
+      if (nsGkAtoms::scrollFrame == scrollState->frame->GetType()) {
+        rs = scrollState;
+      }
     }
     else if (nsGkAtoms::pageContentFrame == frameType) {
       nsIFrame* prevInFlow = rs->frame->GetPrevInFlow();
@@ -1646,14 +1668,24 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     // content
     nsIAtom* fType;
     if (NS_AUTOHEIGHT == aContainingBlockHeight) {
-      // See if the containing block is a cell frame which needs
+      // See if the containing block is (1) a scrolled frame, i.e. its
+      // parent is a scroll frame. The presence of the intervening
+      // frame (that the scroll frame scrolls) needs to be hidden from
+      // the containingBlockHeight calcuation, or (2) a cell frame which needs
       // to use the mComputedHeight of the cell instead of what the cell block passed in.
-      // XXX It seems like this could lead to bugs with min-height and friends
       if (cbrs->parentReflowState) {
-        fType = cbrs->frame->GetType();
-        if (IS_TABLE_CELL(fType)) {
-          // use the cell's computed height 
-          aContainingBlockHeight = cbrs->mComputedHeight;
+        nsIFrame* f = cbrs->parentReflowState->frame;
+        fType = f->GetType();
+        if (nsGkAtoms::scrollFrame == fType) {
+          // Use the scroll frame's computed height instead
+          aContainingBlockHeight = cbrs->parentReflowState->mComputedHeight;
+        }
+        else {
+          fType = cbrs->frame->GetType();
+          if (IS_TABLE_CELL(fType)) {
+            // use the cell's computed height 
+            aContainingBlockHeight = cbrs->mComputedHeight;
+          }
         }
       }
     }
