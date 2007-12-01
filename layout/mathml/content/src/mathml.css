@@ -473,11 +473,9 @@ semantics > :not(:first-child) {
   display: none;
 }
 
-/**
- * Temporary, until we make mtable no longer use display: table
- */
+/**********************************************************************/
+/* This is used when wrapping non-MathML inline elements inside math. */
 *|*::-moz-mathml-anonymous-block {
-  display: block !important;
+  display: inline-block !important;
   position: static !important;
 }
-
