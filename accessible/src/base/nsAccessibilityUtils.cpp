@@ -436,40 +436,48 @@ nsAccUtils::ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
     case nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE:
     {
       NS_ENSURE_ARG(aAccessNode);
-
-      nsCOMPtr<nsIDOMNode> DOMNode;
-      aAccessNode->GetDOMNode(getter_AddRefs(DOMNode));
-      NS_ENSURE_STATE(DOMNode);
-
-      nsIntPoint wndCoords = nsAccUtils::GetScreenCoordsForWindow(DOMNode);
-      *aCoords += wndCoords;
+      *aCoords += GetScreenCoordsForWindow(aAccessNode);
       break;
     }
 
     case nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE:
     {
       NS_ENSURE_ARG(aAccessNode);
+      *aCoords += GetScreenCoordsForParent(aAccessNode);
+      break;
+    }
 
-      nsCOMPtr<nsPIAccessNode> parent;
-      nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(aAccessNode));
-      if (accessible) {
-        nsCOMPtr<nsIAccessible> parentAccessible;
-        accessible->GetParent(getter_AddRefs(parentAccessible));
-        parent = do_QueryInterface(parentAccessible);
-      } else {
-        nsCOMPtr<nsIAccessNode> parentAccessNode;
-        aAccessNode->GetParentNode(getter_AddRefs(parentAccessNode));
-        parent = do_QueryInterface(parentAccessNode);
-      }
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
 
-      NS_ENSURE_STATE(parent);
+  return NS_OK;
+}
 
-      nsIFrame *parentFrame = parent->GetFrame();
-      NS_ENSURE_STATE(parentFrame);
+nsresult
+nsAccUtils::ConvertScreenCoordsTo(PRInt32 *aX, PRInt32 *aY,
+                                  PRUint32 aCoordinateType,
+                                  nsIAccessNode *aAccessNode)
+{
+  switch (aCoordinateType) {
+    case nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE:
+      break;
 
-      nsIntRect parentRect = parentFrame->GetScreenRectExternal();
-      aCoords->x += parentRect.x;
-      aCoords->y += parentRect.y;
+    case nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE:
+    {
+      NS_ENSURE_ARG(aAccessNode);
+      nsIntPoint coords = GetScreenCoordsForWindow(aAccessNode);
+      *aX -= coords.x;
+      *aY -= coords.y;
+      break;
+    }
+
+    case nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE:
+    {
+      NS_ENSURE_ARG(aAccessNode);
+      nsIntPoint coords = GetScreenCoordsForParent(aAccessNode);
+      *aX -= coords.x;
+      *aY -= coords.y;
       break;
     }
 
@@ -504,6 +512,43 @@ nsAccUtils::GetScreenCoordsForWindow(nsIDOMNode *aNode)
   windowInter->GetScreenX(&coords.x);
   windowInter->GetScreenY(&coords.y);
   return coords;
+}
+
+nsIntPoint
+nsAccUtils::GetScreenCoordsForWindow(nsIAccessNode *aAccessNode)
+{
+  nsCOMPtr<nsIDOMNode> DOMNode;
+  aAccessNode->GetDOMNode(getter_AddRefs(DOMNode));
+  if (DOMNode)
+    return GetScreenCoordsForWindow(DOMNode);
+
+  return nsIntPoint(0, 0);
+}
+
+nsIntPoint
+nsAccUtils::GetScreenCoordsForParent(nsIAccessNode *aAccessNode)
+{
+  nsCOMPtr<nsPIAccessNode> parent;
+  nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(aAccessNode));
+  if (accessible) {
+    nsCOMPtr<nsIAccessible> parentAccessible;
+    accessible->GetParent(getter_AddRefs(parentAccessible));
+    parent = do_QueryInterface(parentAccessible);
+  } else {
+    nsCOMPtr<nsIAccessNode> parentAccessNode;
+    aAccessNode->GetParentNode(getter_AddRefs(parentAccessNode));
+    parent = do_QueryInterface(parentAccessNode);
+  }
+
+  if (!parent)
+    return nsIntPoint(0, 0);
+
+  nsIFrame *parentFrame = parent->GetFrame();
+  if (!parentFrame)
+    return nsIntPoint(0, 0);
+
+  nsIntRect parentRect = parentFrame->GetScreenRectExternal();
+  return nsIntPoint(parentRect.x, parentRect.y);
 }
 
 already_AddRefed<nsIDocShellTreeItem>
