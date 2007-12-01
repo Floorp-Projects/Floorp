@@ -2283,27 +2283,30 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
       *aDeltaWidth = 0;
       return PR_TRUE;
     }
-    else if (pfd->GetFlag(PFD_ISNONEMPTYTEXTFRAME)) {
-      nscoord deltaWidth = 0;
-      PRBool lastCharIsJustifiable = PR_FALSE;
-      pfd->mFrame->TrimTrailingWhiteSpace(mPresContext,
-                                          *mBlockReflowState->rendContext,
-                                          deltaWidth,
-                                          lastCharIsJustifiable);
+    else if (pfd->GetFlag(PFD_ISTEXTFRAME)) {
+      // Call TrimTrailingWhiteSpace even on empty textframes because they
+      // might have a soft hyphen which should now appear, changing the frame's
+      // width
+      nsTextFrame::TrimOutput trimOutput = static_cast<nsTextFrame*>(pfd->mFrame)->
+          TrimTrailingWhiteSpace(mBlockReflowState->rendContext);
 #ifdef NOISY_TRIM
       nsFrame::ListTag(stdout, (psd == mRootSpan
                                 ? mBlockReflowState->frame
                                 : psd->mFrame->mFrame));
       printf(": trim of ");
       nsFrame::ListTag(stdout, pfd->mFrame);
-      printf(" returned %d\n", deltaWidth);
+      printf(" returned %d\n", trimOutput.mDeltaWidth);
 #endif
-      if (lastCharIsJustifiable && pfd->mJustificationNumSpaces > 0) {
+      if (trimOutput.mLastCharIsJustifiable && pfd->mJustificationNumSpaces > 0) {
         pfd->mJustificationNumSpaces--;
       }
+      
+      if (trimOutput.mChanged) {
+        pfd->SetFlag(PFD_RECOMPUTEOVERFLOW, PR_TRUE);
+      }
 
-      if (deltaWidth) {
-        pfd->mBounds.width -= deltaWidth;
+      if (trimOutput.mDeltaWidth) {
+        pfd->mBounds.width -= trimOutput.mDeltaWidth;
 
         // See if the text frame has already been placed in its parent
         if (psd != mRootSpan) {
@@ -2313,7 +2316,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         }
 
         // Adjust containing span's right edge
-        psd->mX -= deltaWidth;
+        psd->mX -= trimOutput.mDeltaWidth;
 
         // Slide any frames that follow the text frame over by the
         // right amount. The only thing that can follow the text
@@ -2321,7 +2324,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         // sensible (keeping the combined area honest).
         while (pfd->mNext) {
           pfd = pfd->mNext;
-          pfd->mBounds.x -= deltaWidth;
+          pfd->mBounds.x -= trimOutput.mDeltaWidth;
           if (psd != mRootSpan) {
             // When the child span is not a direct child of the block
             // we need to update the child spans frame rectangle
@@ -2329,14 +2332,16 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
             // that are direct children of the block will be updated
             // later, however, because the VerticalAlignFrames method
             // will be run after this method.
-            SlideSpanFrameRect(pfd->mFrame, deltaWidth);
+            SlideSpanFrameRect(pfd->mFrame, trimOutput.mDeltaWidth);
           }
         }
       }
 
-      // Pass up to caller so they can shrink their span
-      *aDeltaWidth = deltaWidth;
-      return PR_TRUE;
+      if (pfd->GetFlag(PFD_ISNONEMPTYTEXTFRAME) || trimOutput.mChanged) {
+        // Pass up to caller so they can shrink their span
+        *aDeltaWidth = trimOutput.mDeltaWidth;
+        return PR_TRUE;
+      }
     }
     pfd = pfd->mPrev;
   }

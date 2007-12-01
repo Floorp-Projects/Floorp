@@ -3211,17 +3211,6 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
-                                nsIRenderingContext& aRC,
-                                nscoord& aDeltaWidth,
-                                PRBool& aLastCharIsJustifiable)
-{
-  aDeltaWidth = 0;
-  aLastCharIsJustifiable = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrame::CharacterDataChanged(nsPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRBool          aAppend)
