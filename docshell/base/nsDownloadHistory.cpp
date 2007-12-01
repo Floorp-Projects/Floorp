@@ -69,7 +69,7 @@ nsDownloadHistory::RegisterSelf(nsIComponentManager *aCompMgr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If someone has already registered the contractID, we don't want to register
-  // it ourself.  We do want to register though in case someone wants to access
+  // it ourselves.  We do want to register though in case someone wants to access
   // this implementation (by CID).
   if (registered) {
     return compReg->RegisterFactoryLocation(GetCID(), "nsDownloadHistory",
