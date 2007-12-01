@@ -91,7 +91,6 @@ let gStr = {
   stateFailed: "stateFailed",
   stateCanceled: "stateCanceled",
   stateBlocked: "stateBlocked",
-  stateDirty: "stateDirty",
 
   units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
 
@@ -305,7 +304,6 @@ function onDownloadDblClick(aEvent)
         break;
       case nsIDM.DOWNLOAD_CANCELED:
       case nsIDM.DOWNLOAD_BLOCKED:
-      case nsIDM.DOWNLOAD_DIRTY:
       case nsIDM.DOWNLOAD_FAILED:
         gDownloadViewController.doCommand("cmd_retry");
         break;
@@ -540,10 +538,7 @@ var gContextMenus = [
   ["menuitem_retry", "menuitem_removeFromList", "menuitem_clearList",
    "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_SCANNING
-  ["menuitem_copyLocation"],
-  // DOWNLOAD_DIRTY
-  ["menuitem_retry", "menuitem_removeFromList", "menuitem_clearList",
-   "menuseparator_copy_location", "menuitem_copyLocation"]
+  ["menuitem_copyLocation"]
 ];
 
 function buildContextMenu(aEvent)
@@ -836,7 +831,6 @@ function updateStatus(aItem, aDownload) {
     case nsIDM.DOWNLOAD_FAILED:
     case nsIDM.DOWNLOAD_CANCELED:
     case nsIDM.DOWNLOAD_BLOCKED:
-    case nsIDM.DOWNLOAD_DIRTY:
       let (stateSize = {}) {
         stateSize[nsIDM.DOWNLOAD_FINISHED] = function() {
           // Display the file size, but show "Unknown" for negative sizes
@@ -852,7 +846,6 @@ function updateStatus(aItem, aDownload) {
         stateSize[nsIDM.DOWNLOAD_FAILED] = function() gStr.stateFailed;
         stateSize[nsIDM.DOWNLOAD_CANCELED] = function() gStr.stateCanceled;
         stateSize[nsIDM.DOWNLOAD_BLOCKED] = function() gStr.stateBlocked;
-        stateSize[nsIDM.DOWNLOAD_DIRTY] = function() gStr.stateDirty;
 
         // Insert 1 is the download size or download state
         status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
@@ -1082,7 +1075,7 @@ function buildDownloadListWithTime(aTime)
   var stmt = gDownloadListWithTimeQuery;
   if (!stmt) {
     stmt = db.createStatement(replaceInsert(gBaseQuery, 1, "startTime >= ?1 " +
-      "AND (state = ?2 OR state = ?3 OR state = ?4 OR state = ?5 OR state = ?6)"));
+      "AND (state = ?2 OR state = ?3 OR state = ?4 OR state = ?5)"));
     gDownloadListWithTimeQuery = stmt;
   }
 
@@ -1092,7 +1085,6 @@ function buildDownloadListWithTime(aTime)
     stmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_FAILED);
     stmt.bindInt32Parameter(3, nsIDM.DOWNLOAD_CANCELED);
     stmt.bindInt32Parameter(4, nsIDM.DOWNLOAD_BLOCKED);
-    stmt.bindInt32Parameter(5, nsIDM.DOWNLOAD_DIRTY);
     buildDownloadList(stmt, gDownloadsDoneArea);
   } finally {
     stmt.reset();
