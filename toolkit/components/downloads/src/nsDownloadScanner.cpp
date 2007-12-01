@@ -225,7 +225,7 @@ nsDownloadScanner::Scan::Run()
   DownloadState downloadState = 0;
   switch (mStatus) {
     case AVSCAN_BAD:
-      downloadState = nsIDownloadManager::DOWNLOAD_DIRTY;
+      downloadState = nsIDownloadManager::DOWNLOAD_BLOCKED;
       break;
     default:
     case AVSCAN_FAILED:
