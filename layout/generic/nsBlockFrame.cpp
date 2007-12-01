@@ -5229,7 +5229,8 @@ nsBlockInFlowLineIterator::Prev()
   }
 }
 
-static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames)
+static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames,
+                                 PRBool aRemoveOnlyFluidContinuations)
 {
   if (!aFrame)
     return NS_OK;
@@ -5238,7 +5239,8 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames)
   NS_ASSERTION(nextBlock->GetType() == nsGkAtoms::blockFrame ||
                nextBlock->GetType() == nsGkAtoms::areaFrame,
                "Our child's continuation's parent is not a block?");
-  return nextBlock->DoRemoveFrame(aFrame, aDestroyFrames);
+  return nextBlock->DoRemoveFrame(aFrame, aDestroyFrames,
+                                  aRemoveOnlyFluidContinuations);
 }
 
 // This function removes aDeletedFrame and all its continuations.  It
@@ -5295,7 +5297,8 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
       } else {
         aDeletedFrame->SetNextSibling(nsnull);
       }
-      return RemoveBlockChild(nif, aDestroyFrames);
+      return RemoveBlockChild(nif, aDestroyFrames,
+                              aRemoveOnlyFluidContinuations);
     }
   }
   
@@ -5455,7 +5458,8 @@ found_frame:;
       // Continuations for placeholder frames don't always appear in
       // consecutive lines. So for placeholders, just continue the slow easy way.
       if (isPlaceholder) {
-        return RemoveBlockChild(deletedNextContinuation, aDestroyFrames);
+        return RemoveBlockChild(deletedNextContinuation, aDestroyFrames,
+                                aRemoveOnlyFluidContinuations);
       }
 
       // See if we should keep looking in the current flow's line list.
@@ -5504,7 +5508,8 @@ found_frame:;
 #endif
 
   // Advance to next flow block if the frame has more continuations
-  return RemoveBlockChild(aDeletedFrame, aDestroyFrames);
+  return RemoveBlockChild(aDeletedFrame, aDestroyFrames,
+                          aRemoveOnlyFluidContinuations);
 }
 
 nsresult
