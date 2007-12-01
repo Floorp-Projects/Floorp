@@ -351,8 +351,12 @@ protected:
   virtual ~DocumentViewerImpl();
 
 private:
-  nsresult MakeWindow(nsIWidget* aParentWidget,
-                      const nsRect& aBounds);
+  /**
+   * Creates a view manager, root view, and widget for the root view, setting
+   * mViewManager and mWindow.
+   * @param aSize the initial size in appunits
+   */
+  nsresult MakeWindow(const nsSize& aSize);
   nsresult InitInternal(nsIWidget* aParentWidget,
                         nsISupports *aState,
                         nsIDeviceContext* aDeviceContext,
@@ -831,7 +835,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       // into nsSubDocumentFrame code through reflows caused by
       // FlushPendingNotifications() calls down the road...
 
-      rv = MakeWindow(aParentWidget, aBounds);
+      rv = MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(aBounds.width),
+                             mPresContext->DevPixelsToAppUnits(aBounds.height)));
       NS_ENSURE_SUCCESS(rv, rv);
       Hide();
 
@@ -1612,6 +1617,12 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 
   nsCOMPtr<nsILinkHandler> linkHandler;
   if (mPresShell) {
+    nsSize currentSize(0, 0);
+
+    if (mViewManager) {
+      mViewManager->GetWindowDimensions(&currentSize.width, &currentSize.height);
+    }
+
     if (mPresContext) {
       // Save the linkhandler (nsPresShell::Destroy removes it from
       // mPresContext).
@@ -1622,6 +1633,10 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     mPresShell->Destroy();
 
     mPresShell = nsnull;
+
+    // This destroys the root view because it was associated with the root frame,
+    // which has been torn down. Recreate the viewmanager and root view.
+    MakeWindow(currentSize);
   }
 
   // And if we're already given a prescontext...
@@ -1901,7 +1916,8 @@ DocumentViewerImpl::Show(void)
     nsRect tbounds;
     mParentWidget->GetBounds(tbounds);
 
-    rv = MakeWindow(mParentWidget, tbounds);
+    rv = MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(tbounds.width),
+                           mPresContext->DevPixelsToAppUnits(tbounds.height)));
     if (NS_FAILED(rv))
       return rv;
 
@@ -2200,8 +2216,7 @@ DocumentViewerImpl::ClearHistoryEntry()
 //-------------------------------------------------------
 
 nsresult
-DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
-                               const nsRect& aBounds)
+DocumentViewerImpl::MakeWindow(const nsSize& aSize)
 {
   nsresult rv;
 
@@ -2211,26 +2226,13 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
 
   nsIDeviceContext *dx = mPresContext->DeviceContext();
 
-  nsRect tbounds = aBounds;
-  tbounds *= mPresContext->AppUnitsPerDevPixel();
-
-   // Initialize the view manager with an offset. This allows the viewmanager
-   // to manage a coordinate space offset from (0,0)
   rv = mViewManager->Init(dx);
   if (NS_FAILED(rv))
     return rv;
 
-  // Reset the bounds offset so the root view is set to 0,0. The
-  // offset is specified in nsIViewManager::Init above.
-  // Besides, layout will reset the root view to (0,0) during reflow,
-  // so changing it to 0,0 eliminates placing the root view in the
-  // wrong place initially.
-  tbounds.x = 0;
-  tbounds.y = 0;
-
   // Create a child window of the parent that is our "root view/window"
   // if aParentWidget has a view, we'll hook our view manager up to its view tree
-  nsIView* containerView = nsIView::GetViewFor(aParentWidget);
+  nsIView* containerView = nsIView::GetViewFor(mParentWidget);
 
   if (containerView) {
     // see if the containerView has already been hooked into a foreign view manager hierarchy
@@ -2262,6 +2264,8 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
     }
   }
 
+  // The root view is always at 0,0.
+  nsRect tbounds(nsPoint(0, 0), aSize);
   // Create a view
   nsIView* view = mViewManager->CreateView(tbounds, containerView);
   if (!view)
@@ -2271,7 +2275,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   // otherwise the view will find its own parent widget and "do the right thing" to
   // establish a parent/child widget relationship
   rv = view->CreateWidget(kWidgetCID, nsnull,
-                          containerView != nsnull ? nsnull : aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
+                          containerView != nsnull ? nsnull : mParentWidget->GetNativeData(NS_NATIVE_WIDGET),
                           PR_TRUE, PR_FALSE);
   if (NS_FAILED(rv))
     return rv;
