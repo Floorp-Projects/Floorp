@@ -102,6 +102,7 @@ protected:
   time_t   FileTimeToTimeT(const char *aLowDateIntString,
                            const char *aHighDateIntString);
   void     GetUserStyleSheetFile(nsIFile **aUserFile);
+  PRBool   TestForIE7();
 
 private:
   nsCOMPtr<nsIObserverService> mObserverService;
