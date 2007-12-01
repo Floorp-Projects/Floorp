@@ -578,8 +578,7 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
     }
 
     if (aNode.isDocument() ||
-        aNode.mNode->IsNodeOfType(nsINode::eELEMENT) ||
-        aNode.mNode->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT)) {
+        aNode.mNode->IsNodeOfType(nsINode::eELEMENT)) {
         nsContentUtils::AppendNodeTextContent(aNode.mNode, PR_TRUE, aResult);
 
         return;
