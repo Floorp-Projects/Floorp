@@ -507,6 +507,12 @@ nsListBoxBodyFrame::ReflowFinished()
   return PR_TRUE;
 }
 
+void
+nsListBoxBodyFrame::ReflowCallbackCanceled()
+{
+  mReflowCallbackPosted = PR_FALSE;
+}
+
 ///////// nsIListBoxObject ///////////////
 
 NS_IMETHODIMP

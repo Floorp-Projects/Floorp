@@ -88,6 +88,7 @@ public:
 
   // nsIReflowCallback
   virtual PRBool ReflowFinished();
+  virtual void ReflowCallbackCanceled();
 
   // nsIBox
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
