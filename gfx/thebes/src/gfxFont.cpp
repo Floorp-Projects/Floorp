@@ -373,23 +373,24 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                  PRBool aTightBoundingBox, gfxContext *aRefContext,
                  Spacing *aSpacing)
 {
-    const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
-    PRBool isRTL = aTextRun->IsRightToLeft();
-    double direction = aTextRun->GetDirection();
     // Current position in appunits
     const gfxFont::Metrics& fontMetrics = GetMetrics();
 
     RunMetrics metrics;
     metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
     metrics.mDescent = fontMetrics.maxDescent*appUnitsPerDevUnit;
-    metrics.mAdvanceWidth = 0;
-    if (aTightBoundingBox) {
-        metrics.mBoundingBox = gfxRect(0, 0, 0, 0);
-    } else {
+    if (!aTightBoundingBox) {
         metrics.mBoundingBox = gfxRect(0, -metrics.mAscent, 0, metrics.mAscent + metrics.mDescent);
     }
+    if (aStart == aEnd) {
+      // exit now before we look at aSpacing[0], which is undefined
+      return metrics;
+    }
 
+    const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
+    PRBool isRTL = aTextRun->IsRightToLeft();
+    double direction = aTextRun->GetDirection();
     gfxGlyphExtents *extents =
         (!aTightBoundingBox && !NeedsGlyphExtents(aTextRun) && !aTextRun->HasDetailedGlyphs()) ? nsnull
         : GetOrCreateGlyphExtents(aTextRun->GetAppUnitsPerDevUnit());
