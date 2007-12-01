@@ -208,10 +208,21 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   virtual PRBool CanContinueTextRun() const;
-  NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
-                                    nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth,
-                                    PRBool& aLastCharIsJustifiable);
+  // Method that is called for a text frame that is logically
+  // adjacent to the end of the line (i.e. followed only by empty text frames,
+  // placeholders or inlines containing such).
+  struct TrimOutput {
+    // true if we trimmed some space or changed metrics in some other way.
+    // In this case, we should call RecomputeOverflowRect on this frame.
+    PRPackedBool mChanged;
+    // true if the last character is not justifiable so should be subtracted
+    // from the count of justifiable characters in the frame, since the last
+    // character in a line is not justifiable.
+    PRPackedBool mLastCharIsJustifiable;
+    // an amount to *subtract* from the frame's width (zero if !mChanged)
+    nscoord      mDeltaWidth;
+  };
+  TrimOutput TrimTrailingWhiteSpace(nsIRenderingContext* aRC);
   virtual nsresult GetRenderedText(nsAString* aString = nsnull,
                                    gfxSkipChars* aSkipChars = nsnull,
                                    gfxSkipCharsIterator* aSkipIter = nsnull,

@@ -2017,6 +2017,11 @@ public:
    * Count the number of justifiable characters in the given DOM range
    */
   PRUint32 ComputeJustifiableCharacters(PRInt32 aOffset, PRInt32 aLength);
+  /**
+   * Find the start and end of the justifiable characters. Does not depend on the
+   * position of aStart or aEnd, although it's most efficient if they are near the
+   * start and end of the text frame.
+   */
   void FindJustificationRange(gfxSkipCharsIterator* aStart,
                               gfxSkipCharsIterator* aEnd);
 
@@ -4883,7 +4888,6 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
       aData->atStartOfLine = PR_FALSE;
 
       if (collapseWhitespace) {
-        nscoord trailingWhitespaceWidth;
         PRUint32 trimStart = GetEndOfTrimmedText(frag, wordStart, i, &iter);
         if (trimStart == start) {
           // This is *all* trimmable whitespace, so whatever trailingWhitespace
@@ -5513,39 +5517,39 @@ nsTextFrame::CanContinueTextRun() const
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
-                                    nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth,
-                                    PRBool& aLastCharIsJustifiable)
+nsTextFrame::TrimOutput
+nsTextFrame::TrimTrailingWhiteSpace(nsIRenderingContext* aRC)
 {
-  aLastCharIsJustifiable = PR_FALSE;
-  aDeltaWidth = 0;
+  TrimOutput result;
+  result.mChanged = PR_FALSE;
+  result.mLastCharIsJustifiable = PR_FALSE;
+  result.mDeltaWidth = 0;
 
   AddStateBits(TEXT_END_OF_LINE);
 
   PRInt32 contentLength = GetContentLength();
   if (!contentLength)
-    return NS_OK;
+    return result;
 
   gfxContext* ctx = static_cast<gfxContext*>
-    (aRC.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+    (aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxSkipCharsIterator start = EnsureTextRun(ctx);
-  if (!mTextRun)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mTextRun, result);
+
   PRUint32 trimmedStart = start.GetSkippedOffset();
 
   const nsTextFragment* frag = mContent->GetText();
   TrimmedOffsets trimmed = GetTrimmedOffsets(frag, PR_TRUE);
-  gfxSkipCharsIterator iter = start;
+  gfxSkipCharsIterator trimmedEndIter = start;
   const nsStyleText* textStyle = GetStyleText();
   gfxFloat delta = 0;
-  PRUint32 trimmedEnd = iter.ConvertOriginalToSkipped(trimmed.GetEnd());
+  PRUint32 trimmedEnd = trimmedEndIter.ConvertOriginalToSkipped(trimmed.GetEnd());
   
   if (GetStateBits() & TEXT_TRIMMED_TRAILING_WHITESPACE) {
-    aLastCharIsJustifiable = PR_TRUE;
+    // We pre-trimmed this frame, so the last character is justifiable
+    result.mLastCharIsJustifiable = PR_TRUE;
   } else if (trimmed.GetEnd() < GetContentEnd()) {
-    gfxSkipCharsIterator end = iter;
+    gfxSkipCharsIterator end = trimmedEndIter;
     PRUint32 endOffset = end.ConvertOriginalToSkipped(GetContentOffset() + contentLength);
     if (trimmedEnd < endOffset) {
       // We can't be dealing with tabs here ... they wouldn't be trimmed. So it's
@@ -5556,23 +5560,36 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
       // non-compressed whitespace being skipped at end of line -> justifiable
       // XXX should we actually *count* justifiable characters that should be
       // removed from the overall count? I think so...
-      aLastCharIsJustifiable = PR_TRUE;
+      result.mLastCharIsJustifiable = PR_TRUE;
+      result.mChanged = PR_TRUE;
     }
   }
 
-  if (!aLastCharIsJustifiable &&
+  if (trimmed.GetEnd() == GetContentEnd() &&
+      HasSoftHyphenBefore(frag, mTextRun, trimmed.mStart, trimmedEndIter)) {
+    // This is a soft hyphen break.
+    // Fix up metrics to include hyphen
+    result.mChanged = PR_TRUE;
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, ctx, this));
+    if (hyphenTextRun.get()) {
+      delta = -hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
+    }
+    AddStateBits(TEXT_HYPHEN_BREAK);
+  }
+
+  if (!result.mLastCharIsJustifiable &&
       NS_STYLE_TEXT_ALIGN_JUSTIFY == textStyle->mTextAlign) {
     // Check if any character in the last cluster is justifiable
     PropertyProvider provider(mTextRun, textStyle, frag, this, start, contentLength,
                               nsnull, 0);
     PRBool isCJK = IsChineseJapaneseLangGroup(this);
-    gfxSkipCharsIterator justificationStart(iter), justificationEnd(iter);
+    gfxSkipCharsIterator justificationStart(start), justificationEnd(trimmedEndIter);
     provider.FindJustificationRange(&justificationStart, &justificationEnd);
 
     PRInt32 i;
     for (i = justificationEnd.GetOriginalOffset(); i < trimmed.GetEnd(); ++i) {
       if (IsJustifiableCharacter(frag, i, isCJK)) {
-        aLastCharIsJustifiable = PR_TRUE;
+        result.mLastCharIsJustifiable = PR_TRUE;
       }
     }
   }
@@ -5581,31 +5598,36 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
   mTextRun->SetLineBreaks(trimmedStart, trimmedEnd - trimmedStart,
                           (GetStateBits() & TEXT_START_OF_LINE) != 0, PR_TRUE,
                           &advanceDelta, ctx);
+  if (advanceDelta != 0) {
+    result.mChanged = PR_TRUE;
+  }
 
   // aDeltaWidth is *subtracted* from our width.
   // If advanceDelta is positive then setting the line break made us longer,
   // so aDeltaWidth could go negative.
-  aDeltaWidth = NSToCoordFloor(delta - advanceDelta);
-  // XXX if aDeltaWidth goes negative, that means this frame might not actually fit
-  // anymore!!! We need higher level line layout to recover somehow. This can
-  // really only happen when we have glyphs with special shapes at the end of
-  // lines, I think. Breaking inside a kerning pair won't do it because that
-  // would mean we broke inside this textrun, and BreakAndMeasureText should
-  // make sure the resulting shaped substring fits. Maybe if we passed a
-  // maxTextLength? But that only happens at direction changes (so we
-  // we wouldn't kern across the boundary) or for first-letter (which always fits
-  // because it starts the line!).
-  if (aDeltaWidth < 0) {
-    NS_WARNING("Negative deltawidth, something odd is happening");
-  }
-
-  // XXX what about adjusting bounding metrics?
+  result.mDeltaWidth = NSToCoordFloor(delta - advanceDelta);
+  // If aDeltaWidth goes negative, that means this frame might not actually fit
+  // anymore!!! We need higher level line layout to recover somehow.
+  // If it's because the frame has a soft hyphen that is now being displayed,
+  // this should actually be OK, because our reflow recorded the break
+  // opportunity that allowed the soft hyphen to be used, and we wouldn't
+  // have recorded the opportunity unless the hyphen fit (or was the first
+  // opportunity on the line).
+  // Otherwise this can/ really only happen when we have glyphs with special
+  // shapes at the end of lines, I think. Breaking inside a kerning pair won't
+  // do it because that would mean we broke inside this textrun, and
+  // BreakAndMeasureText should make sure the resulting shaped substring fits.
+  // Maybe if we passed a maxTextLength? But that only happens at direction
+  // changes (so we wouldn't kern across the boundary) or for first-letter
+  // (which always fits because it starts the line!).
+  NS_WARN_IF_FALSE(result.mDeltaWidth >= 0 || (GetStateBits() & TEXT_HYPHEN_BREAK),
+                   "Negative deltawidth in a non-hyphen case, something odd is happening");
 
 #ifdef NOISY_TRIM
   ListTag(stdout);
-  printf(": trim => %d\n", aDeltaWidth);
+  printf(": trim => %d\n", result.mDeltaWidth);
 #endif
-  return NS_OK;
+  return result;
 }
 
 nsRect
