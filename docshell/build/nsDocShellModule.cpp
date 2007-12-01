@@ -250,7 +250,8 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
     
     // download history
     { "nsDownloadHistory", NS_DOWNLOADHISTORY_CID,
-      NS_DOWNLOADHISTORY_CONTRACTID, nsDownloadHistoryConstructor }
+      nsnull, nsDownloadHistoryConstructor,
+      nsDownloadHistory::RegisterSelf }
 };
 
 // "docshell provider" to illustrate that this thing really *should*
