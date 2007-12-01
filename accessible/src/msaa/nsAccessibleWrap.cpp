@@ -1345,9 +1345,45 @@ nsAccessibleWrap::get_indexInParent(long *indexInParent)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_locale(IA2Locale *locale)
+nsAccessibleWrap::get_locale(IA2Locale *aLocale)
 {
-  return E_NOTIMPL;
+  // Language codes consist of a primary code and a possibly empty series of
+  // subcodes: language-code = primary-code ( "-" subcode )*
+  // Two-letter primary codes are reserved for [ISO639] language abbreviations.
+  // Any two-letter subcode is understood to be a [ISO3166] country code.
+
+  nsAutoString lang;
+  nsresult rv = GetLanguage(lang);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  // If primary code consists from two letters then expose it as language.
+  PRInt32 offset = lang.FindChar('-', 0);
+  if (offset == -1) {
+    if (lang.Length() == 2) {
+      aLocale->language = ::SysAllocString(lang.get());
+      return S_OK;
+    }
+  } else if (offset == 2) {
+    aLocale->language = ::SysAllocStringLen(lang.get(), 2);
+
+    // If the first subcode consists from two letters then expose it as
+    // country.
+    offset = lang.FindChar('-', 3);
+    if (offset == -1) {
+      if (lang.Length() == 5) {
+        aLocale->country = ::SysAllocString(lang.get() + 3);
+        return S_OK;
+      }
+    } else if (offset == 5) {
+      aLocale->country = ::SysAllocStringLen(lang.get() + 3, 2);
+    }
+  }
+
+  // Expose as a string if primary code or subcode cannot point to language or
+  // country abbreviations or if there are more than one subcode.
+  aLocale->variant = ::SysAllocString(lang.get());
+  return S_OK;
 }
 
 STDMETHODIMP
