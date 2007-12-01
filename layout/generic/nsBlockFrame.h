@@ -281,9 +281,6 @@ public:
   // Create a contination for aPlaceholder and its out of flow frame and
   // add it to the list of overflow floats
   nsresult SplitPlaceholder(nsBlockReflowState& aState, nsIFrame* aPlaceholder);
-
-  void UndoSplitPlaceholders(nsBlockReflowState& aState,
-                             nsIFrame*           aLastPlaceholder);
   
   PRBool HandleOverflowPlaceholdersForPulledFrame(
     nsBlockReflowState& aState, nsIFrame* aFrame);
@@ -453,10 +450,10 @@ protected:
                       PRBool* aKeepReflowGoing);
 
   // Return PR_TRUE if aLine gets pushed.
-  PRBool PlaceLine(nsBlockReflowState& aState,
-                   nsLineLayout&       aLineLayout,
-                   line_iterator       aLine,
-                   PRBool*             aKeepReflowGoing);
+  void PlaceLine(nsBlockReflowState& aState,
+                 nsLineLayout&       aLineLayout,
+                 line_iterator       aLine,
+                 PRBool*             aKeepReflowGoing);
 
   /**
    * Mark |aLine| dirty, and, if necessary because of possible
@@ -520,7 +517,6 @@ protected:
   // placeholders on the same line that were continued. Set aKeepReflowGoing to false. 
   void PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
                                     line_iterator       aLine,
-                                    nsIFrame*           aLastPlaceholder,
                                     PRBool&             aKeepReflowGoing);
 
   nsresult SplitLine(nsBlockReflowState& aState,
