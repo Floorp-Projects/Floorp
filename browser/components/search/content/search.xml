@@ -25,6 +25,7 @@
 #   Gavin Sharp (v3) <gavin@gavinsharp.com>
 #   Ben Goodger <beng@google.com>
 #   Pamela Greene <pamg.bugs@gmail.com>
+#   Michael Ventnor <m.ventnor@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -548,6 +549,10 @@
       ]]></handler>
 
       <handler event="popupshowing" action="this.rebuildPopupDynamic();"/>
+
+      <handler event="DOMMouseScroll"
+               phase="capturing"
+               action="this.selectEngine(event, (event.detail > 0));"/>
     </handlers>
   </binding>
 
