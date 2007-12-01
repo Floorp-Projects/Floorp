@@ -103,11 +103,11 @@ struct nsMargin;
 
 typedef class nsIFrame nsIBox;
 
-// IID for the nsIFrame interface 
-// 95f75c0a-de85-437a-a195-0304df3f62ce
-#define NS_IFRAME_IID \
-{ 0x95f75c0a, 0xde85, 0x437a, \
-  { 0xa1, 0x95, 0x03, 0x04, 0xdf, 0x3f, 0x62, 0xce } }
+// IID for the nsIFrame interface
+// 04a7dee5-3435-47dc-bd42-a36c0f66a42c
+  #define NS_IFRAME_IID \
+{ 0x04a7dee5, 0x3435, 0x47dc, \
+  { 0xbd, 0x42, 0xa3, 0x6c, 0x0f, 0x66, 0xa4, 0x2c } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1429,13 +1429,6 @@ public:
    *    and word breaking.
    */
   virtual PRBool CanContinueTextRun() const = 0;
-
-  // Justification helper method that is used to remove trailing
-  // whitespace before justification.
-  NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
-                                    nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth,
-                                    PRBool& aLastCharIsJustifiable) = 0;
 
   /**
    * Append the rendered text to the passed-in string.

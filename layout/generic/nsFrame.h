@@ -329,10 +329,6 @@ public:
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus);
   virtual PRBool CanContinueTextRun() const;
-  NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
-                                    nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth,
-                                    PRBool& aLastCharIsJustifiable);
 
   // Selection Methods
   // XXX Doc me... (in nsIFrame.h puhleeze)
