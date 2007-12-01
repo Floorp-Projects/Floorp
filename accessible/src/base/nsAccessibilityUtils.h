@@ -215,11 +215,40 @@ public:
                                         nsIntPoint *aCoords);
 
   /**
+   * Converts the given coordinates relative screen to another coordinate
+   * system.
+   *
+   * @param aX               [in, out] the given x coord
+   * @param aY               [in, out] the given y coord
+   * @param aCoordinateType  [in] specifies coordinates origin (refer to
+   *                         nsIAccessibleCoordinateType)
+   * @param aAccessNode      [in] the accessible if coordinates are given
+   *                         relative it
+   */
+  static nsresult ConvertScreenCoordsTo(PRInt32 *aX, PRInt32 *aY,
+                                        PRUint32 aCoordinateType,
+                                        nsIAccessNode *aAccessNode);
+
+  /**
    * Returns coordinates relative screen for the top level window.
    *
-   * @param - aNode - the DOM node hosted in the window.
+   * @param aNode  the DOM node hosted in the window.
    */
   static nsIntPoint GetScreenCoordsForWindow(nsIDOMNode *aNode);
+
+  /**
+   * Returns coordinates relative screen for the top level window.
+   *
+   * @param aAccessNode  the accessible hosted in the window
+   */
+  static nsIntPoint GetScreenCoordsForWindow(nsIAccessNode *aAccessNode);
+
+  /**
+   * Returns coordinates relative screen for the parent of the given accessible.
+   *
+   * @param aAccessNode  the accessible
+   */
+  static nsIntPoint GetScreenCoordsForParent(nsIAccessNode *aAccessNode);
 
   /**
    * Return document shell tree item for the given DOM node.

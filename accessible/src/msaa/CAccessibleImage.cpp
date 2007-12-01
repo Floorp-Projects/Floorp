@@ -44,6 +44,7 @@
 
 #include "nsIAccessible.h"
 #include "nsIAccessibleImage.h"
+#include "nsIAccessibleTypes.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -88,25 +89,23 @@ CAccessibleImage::get_description(BSTR *aDescription)
 }
 
 STDMETHODIMP
-CAccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordinateType,
+CAccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordType,
                                     long *aX,
                                     long *aY)
 {
   *aX = 0;
   *aY = 0;
 
-  // XXX: nsIAccessibleImage::getImageBounds() return coordinates relative
-  // to the screen. Make getImageBounds() to use nsIAccessibleCoordinateType to
-  // control it.
-  if (aCoordinateType != IA2_COORDTYPE_SCREEN_RELATIVE)
-    return E_NOTIMPL;
+  PRUint32 geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
+    nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
+    nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
   nsCOMPtr<nsIAccessibleImage> imageAcc(do_QueryInterface(this));
   if (!imageAcc)
     return E_FAIL;
 
-  PRInt32 x = 0, y = 0, width = 0, height = 0;
-  nsresult rv = imageAcc->GetImageBounds(&x, &y, &width, &height);
+  PRInt32 x = 0, y = 0;
+  nsresult rv = imageAcc->GetImagePosition(geckoCoordType, &x, &y);
   if (NS_FAILED(rv))
     return E_FAIL;
 
@@ -127,7 +126,7 @@ CAccessibleImage::get_imageSize(long *aHeight, long *aWidth)
     return E_FAIL;
 
   PRInt32 x = 0, y = 0, width = 0, height = 0;
-  nsresult rv = imageAcc->GetImageBounds(&x, &y, &width, &height);
+  nsresult rv = imageAcc->GetImageSize(&width, &height);
   if (NS_FAILED(rv))
     return E_FAIL;
 

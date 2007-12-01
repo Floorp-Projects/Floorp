@@ -66,10 +66,11 @@ public:
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD DoAction(PRUint8 index);
 
-  NS_IMETHOD GetImageBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-
   // nsPIAccessNode
   NS_IMETHOD Shutdown();
+
+  // nsIAccessibleImage
+  NS_DECL_NSIACCESSIBLEIMAGE
 
 protected:
   virtual void CacheChildren();
