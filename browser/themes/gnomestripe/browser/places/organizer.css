@@ -236,3 +236,87 @@
 .expander-up:hover:active {
   list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
 }
+
+/**** menuitem stock icons ****/
+menuitem:not([type]) {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
+}
+
+menuitem[command="cmd_cut"] {
+  list-style-image: url("moz-icon://stock/gtk-cut?size=menu");
+}
+
+menuitem[command="cmd_cut"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-cut?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_copy"] {
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
+}
+
+menuitem[command="cmd_copy"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_paste"] {
+  list-style-image: url("moz-icon://stock/gtk-paste?size=menu");
+}
+
+menuitem[command="cmd_paste"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-paste?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_delete"] {
+  list-style-image: url("moz-icon://stock/gtk-delete?size=menu");
+}
+
+menuitem[command="cmd_delete"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-delete?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_undo"] {
+  list-style-image: url("moz-icon://stock/gtk-undo?size=menu");
+}
+
+menuitem[command="cmd_undo"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-undo?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_redo"] {
+  list-style-image: url("moz-icon://stock/gtk-redo?size=menu");
+}
+
+menuitem[command="cmd_redo"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-redo?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_selectAll"] {
+  list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
+}
+
+#orgClose {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
+
+menuitem[command="placesCmd_open:window"] {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 80px 16px 64px);
+}
+
+menuitem[command="placesCmd_open:tab"] {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 64px 16px 48px);
+}
+
+menuitem[command="placesCmd_show:info"] {
+  list-style-image: url("moz-icon://stock/gtk-properties?size=menu");
+}
+
+menuitem[command="OrganizerCommand_import"] {
+  list-style-image: url("moz-icon://stock/gtk-revert-to-saved?size=menu");
+}
+
+menuitem[command="OrganizerCommand_export"] {
+  list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
+}
+
