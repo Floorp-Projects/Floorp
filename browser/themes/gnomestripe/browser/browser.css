@@ -245,6 +245,214 @@ menuitem.bookmark-item {
   -moz-image-region: auto;
 }
 
+/* Stock icons for the menu bar items */
+menuitem:not([type]) {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
+}
+
+menuitem[command="cmd_newNavigator"],
+#context-openlink {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 80px 16px 64px);
+}
+
+menuitem[command="cmd_newNavigatorTab"],
+#context-openlinkintab {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 64px 16px 48px);
+}
+
+menuitem[command="Browser:OpenFile"] {
+  list-style-image: url("moz-icon://stock/gtk-open?size=menu");
+}
+
+#menu_close {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
+
+menuitem[command="Browser:SavePage"],
+#context-savelink,
+#context-saveimage,
+#context-savepage {
+  list-style-image: url("moz-icon://stock/gtk-save-as?size=menu");
+}
+
+menuitem[command="cmd_printPreview"] {
+  list-style-image: url("moz-icon://stock/gtk-print-preview?size=menu");
+}
+
+menuitem[command="cmd_print"] {
+  list-style-image: url("moz-icon://stock/gtk-print?size=menu");
+}
+
+#menu_FileQuitItem {
+  list-style-image: url("moz-icon://stock/gtk-quit?size=menu");
+}
+
+menuitem[command="cmd_undo"],
+#context-undo {
+  list-style-image: url("moz-icon://stock/gtk-undo?size=menu");
+}
+
+menuitem[command="cmd_undo"][disabled],
+#context-undo[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-undo?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_redo"] {
+  list-style-image: url("moz-icon://stock/gtk-redo?size=menu");
+}
+
+menuitem[command="cmd_redo"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-redo?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_cut"],
+#context-cut {
+  list-style-image: url("moz-icon://stock/gtk-cut?size=menu");
+}
+
+menuitem[command="cmd_cut"][disabled],
+#context-cut[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-cut?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_copy"],
+#context-copy,
+#context-copyimage,
+#context-copylink {
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
+}
+
+menuitem[command="cmd_copy"][disabled],
+#context-copy[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_paste"],
+#context-paste {
+  list-style-image: url("moz-icon://stock/gtk-paste?size=menu");
+}
+
+menuitem[command="cmd_paste"][disabled],
+#context-paste[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-paste?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_delete"],
+#context-delete {
+  list-style-image: url("moz-icon://stock/gtk-delete?size=menu");
+}
+
+menuitem[command="cmd_delete"][disabled],
+#context-delete[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-delete?size=menu&state=disabled");
+}
+
+menuitem[command="cmd_selectAll"] {
+  list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
+}
+
+#menu_find {
+  list-style-image: url("moz-icon://stock/gtk-find?size=menu");
+}
+
+#menu_find[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-find?size=menu&state=disabled");
+}
+
+#menu_preferences {
+  list-style-image: url("moz-icon://stock/gtk-preferences?size=menu");
+}
+
+menuitem[command="Browser:Stop"],
+#context-stop,
+#javascriptConsole {
+  list-style-image: url("moz-icon://stock/gtk-stop?size=menu");
+}
+
+menuitem[command="Browser:Stop"][disabled],
+#context-stop[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-stop?size=menu&state=disabled");
+}
+
+menuitem[command="Browser:Reload"],
+#context-reload {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
+}
+
+menuitem[command="cmd_fullZoomEnlarge"] {
+  list-style-image: url("moz-icon://stock/gtk-zoom-in?size=menu");
+}
+
+menuitem[command="cmd_fullZoomReduce"] {
+  list-style-image: url("moz-icon://stock/gtk-zoom-out?size=menu");
+}
+
+menuitem[command="cmd_fullZoomReset"] {
+  list-style-image: url("moz-icon://stock/gtk-zoom-100?size=menu");
+}
+
+menuitem[key="goBackKb"],
+#context-back {
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=menu");
+}
+
+menuitem[key="goBackKb"][disabled],
+#context-back[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=menu&state=disabled");
+}
+
+menuitem[key="goForwardKb"],
+#context-forward {
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=menu");
+}
+
+menuitem[key="goForwardKb"][disabled],
+#context-forward[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=menu&state=disabled");
+}
+
+menuitem[command="Browser:Home"] {
+  list-style-image: url("moz-icon://stock/gtk-home?size=menu");
+}
+
+menuitem[command="Browser:ShowAllHistory"] {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+menuitem[command="Browser:ShowAllBookmarks"] {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+#menu_openDownloads {
+  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+menuitem[command="View:PageInfo"],
+#context-viewinfo {
+  list-style-image: url("moz-icon://stock/gtk-info?size=menu");
+}
+
+#context-metadata {
+  list-style-image: url("moz-icon://stock/gtk-properties?size=menu");
+}
+
+#sanitizeItem {
+  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
+}
+
+menuitem[key="key_openHelp"] {
+  list-style-image: url("moz-icon://stock/gtk-help?size=menu");
+}
+
+#aboutName {
+  list-style-image: url("moz-icon://stock/gtk-about?size=menu");
+}
+
 /* Primary toolbar buttons */
 .toolbarbutton-1 {
   -moz-box-orient: vertical;
