@@ -302,6 +302,8 @@ pref("capability.policy.default.History.next", "UniversalBrowserRead");
 pref("capability.policy.default.History.previous", "UniversalBrowserRead");
 pref("capability.policy.default.History.toString", "UniversalBrowserRead");
 
+pref("capability.policy.default.HTMLDocument.open.get", "allAccess");
+
 pref("capability.policy.default.Location.hash.set", "allAccess");
 pref("capability.policy.default.Location.href.set", "allAccess");
 pref("capability.policy.default.Location.replace.get", "allAccess");
@@ -313,6 +315,7 @@ pref("capability.policy.default.Navigator.preferenceinternal.set", "UniversalPre
 pref("capability.policy.default.Window.blur.get", "allAccess");
 pref("capability.policy.default.Window.close.get", "allAccess");
 pref("capability.policy.default.Window.closed.get", "allAccess");
+pref("capability.policy.default.Window.document.get", "allAccess");
 pref("capability.policy.default.Window.focus.get", "allAccess");
 pref("capability.policy.default.Window.frames.get", "allAccess");
 pref("capability.policy.default.Window.history.get", "allAccess");
