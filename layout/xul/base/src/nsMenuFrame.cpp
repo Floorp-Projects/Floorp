@@ -234,7 +234,8 @@ public:
   {
   }
 
-  virtual PRBool ReflowFinished() {
+  virtual PRBool ReflowFinished()
+  {
     PRBool shouldFlush = PR_FALSE;
     if (mWeakFrame.IsAlive()) {
       if (mWeakFrame.GetFrame()->GetType() == nsGkAtoms::menuFrame) {
@@ -245,6 +246,11 @@ public:
     }
     delete this;
     return shouldFlush;
+  }
+
+  virtual void ReflowCallbackCanceled()
+  {
+    delete this;
   }
 
   nsWeakFrame mWeakFrame;

@@ -1002,6 +1002,7 @@ protected:
   virtual ~PresShell();
 
   void HandlePostedReflowCallbacks();
+  void CancelPostedReflowCallbacks();
 
   void UnsuppressAndInvalidate();
 
@@ -1663,6 +1664,7 @@ PresShell::Destroy()
   mReflowEvent.Revoke();
 
   CancelAllPendingReflows();
+  CancelPostedReflowCallbacks();
 
   // Destroy the frame manager. This will destroy the frame hierarchy
   mFrameConstructor->WillDestroyFrameTree();
@@ -4373,6 +4375,23 @@ PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
 }
 
 void
+PresShell::CancelPostedReflowCallbacks()
+{
+  while (mFirstCallbackEventRequest) {
+    nsCallbackEventRequest* node = mFirstCallbackEventRequest;
+    mFirstCallbackEventRequest = node->next;
+    if (!mFirstCallbackEventRequest) {
+      mLastCallbackEventRequest = nsnull;
+    }
+    nsIReflowCallback* callback = node->callback;
+    FreeFrame(sizeof(nsCallbackEventRequest), node);
+    if (callback) {
+      callback->ReflowCallbackCanceled();
+    }
+  }
+}
+
+void
 PresShell::HandlePostedReflowCallbacks()
 {
    PRBool shouldFlush = PR_FALSE;
@@ -5492,7 +5511,7 @@ PresShell::HandleEvent(nsIView         *aView,
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
       if (pm) {
         nsTArray<nsIFrame*> popups = pm->GetOpenPopups();
-        PRInt32 i;
+        PRUint32 i;
         // Search from top to bottom
         for (i = 0; i < popups.Length(); i++) {
           nsIFrame* popup = popups[i];

@@ -481,6 +481,11 @@ nsTreeBodyFrame::ReflowFinished()
   return PR_FALSE;
 }
 
+void
+nsTreeBodyFrame::ReflowCallbackCanceled()
+{
+  mReflowCallbackPosted = PR_FALSE;
+}
 
 NS_IMETHODIMP nsTreeBodyFrame::GetView(nsITreeView * *aView)
 {

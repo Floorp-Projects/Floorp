@@ -2389,6 +2389,12 @@ nsGfxScrollFrameInner::ReflowFinished()
   return PR_TRUE;
 }
 
+void
+nsGfxScrollFrameInner::ReflowCallbackCanceled()
+{
+  mPostedReflowCallback = PR_FALSE;
+}
+
 static void LayoutAndInvalidate(nsBoxLayoutState& aState,
                                 nsIFrame* aBox, const nsRect& aRect)
 {
