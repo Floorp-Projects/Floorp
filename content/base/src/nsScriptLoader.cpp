@@ -272,8 +272,11 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   }
 
   // Default script language is whatever the root content specifies
-  // (which may come from a header or http-meta tag)
-  PRUint32 typeID = mDocument->GetRootContent()->GetScriptTypeID();
+  // (which may come from a header or http-meta tag), or if there
+  // is no root content, from the script global object.
+  nsCOMPtr<nsIContent> rootContent = mDocument->GetRootContent();
+  PRUint32 typeID = rootContent ? rootContent->GetScriptTypeID() :
+                                  context->GetScriptTypeID();
   PRUint32 version = 0;
   nsAutoString language, type, src;
   nsresult rv = NS_OK;
