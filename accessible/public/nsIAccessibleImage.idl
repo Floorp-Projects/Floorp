@@ -40,11 +40,27 @@
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(6e80cec3-ff7f-48f2-9823-0b962a0ed508)]
-interface nsIAccessibleImage: nsISupports
+[scriptable, uuid(09086623-0f09-4310-ac56-c2cda7c29648)]
+interface nsIAccessibleImage : nsISupports
 {
-  void getImageBounds(out long x,
-                      out long y,
-                      out long width,
-                      out long height);
+  /**
+   * Returns the coordinates of the image.
+   *
+   * @param coordType  specifies coordinates origin (for available constants
+   *                   refer to nsIAccessibleCoordinateType)
+   * @param x          the x coordinate
+   * @param y          the y coordinate
+   */
+  void getImagePosition(in unsigned long coordType,
+                        out long x,
+                        out long y);
+
+  /**
+   * Returns the size of the image.
+   *
+   * @param width      the heigth
+   * @param height     the width
+   */
+  void getImageSize(out long width, out long height);
 };
+

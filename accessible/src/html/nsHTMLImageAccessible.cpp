@@ -263,9 +263,23 @@ NS_IMETHODIMP nsHTMLImageAccessible::DoAction(PRUint8 index)
   return nsLinkableAccessible::DoAction(index);
 }
 
-NS_IMETHODIMP nsHTMLImageAccessible::GetImageBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+NS_IMETHODIMP
+nsHTMLImageAccessible::GetImagePosition(PRUint32 aCoordType,
+                                        PRInt32 *aX, PRInt32 *aY)
 {
-  return GetBounds(x, y, width, height);
+  PRInt32 width, height;
+  nsresult rv = GetBounds(aX, aY, &width, &height);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return nsAccUtils::ConvertScreenCoordsTo(aX, aY, aCoordType, this);
+}
+
+NS_IMETHODIMP
+nsHTMLImageAccessible::GetImageSize(PRInt32 *aWidth, PRInt32 *aHeight)
+{
+  PRInt32 x, y;
+  return GetBounds(&x, &y, aWidth, aHeight);
 }
 
 NS_IMETHODIMP
