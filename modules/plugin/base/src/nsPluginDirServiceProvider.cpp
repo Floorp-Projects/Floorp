@@ -192,6 +192,37 @@ CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
   return 0;
 }
 
+// Indicate whether we should try to use the new NPRuntime-based Java
+// Plug-In if it's available
+static PRBool
+TryToUseNPRuntimeJavaPlugIn(const char* javaVersion)
+{
+  HKEY javaKey = NULL;
+  char keyName[_MAX_PATH];
+  keyName[0] = 0;
+  PL_strcat(keyName, "Software\\JavaSoft\\Java Plug-in\\");
+  PL_strcat(keyName, javaVersion);
+  DWORD val;
+  DWORD valSize = sizeof(DWORD);
+    
+  if (ERROR_SUCCESS != ::RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                                      keyName, 0, KEY_READ, &javaKey)) {
+    return FALSE;
+  }
+
+  // Look for "UseNewJavaPlugin"
+  if (ERROR_SUCCESS != ::RegQueryValueEx(javaKey, "UseNewJavaPlugin",
+                                         NULL, NULL,
+                                         (LPBYTE) &val,
+                                         &valSize)) {
+    val = 0;
+  }
+
+  ::RegCloseKey(javaKey);
+  return (val == 0) ? PR_FALSE : PR_TRUE;
+}
+
+
 //*****************************************************************************
 // nsPluginDirServiceProvider::Constructor/Destructor
 //*****************************************************************************
@@ -299,10 +330,13 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
     ClearVersion(&maxVer);
     char curKey[_MAX_PATH] = "Software\\JavaSoft\\Java Runtime Environment";
     char path[_MAX_PATH];
-    // Add + 4 to prevent buffer overrun when adding \bin
-    char newestPath[_MAX_PATH + 4];
+    // Add + 15 to prevent buffer overrun when adding \bin (+ optionally
+    // \new_plugin)
+#define JAVA_PATH_SIZE _MAX_PATH + 15
+    char newestPath[JAVA_PATH_SIZE];
     const char mozPath[_MAX_PATH] = "Software\\mozilla.org\\Mozilla";
     char browserJavaVersion[_MAX_PATH];
+    PRBool tryNPRuntimeJavaPlugIn = PR_FALSE;
 
     newestPath[0] = 0;
     LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ,
@@ -348,6 +382,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
             if (CompareVersion(curVer, minVer) >= 0) {
               if (!strncmp(browserJavaVersion, curKey, _MAX_PATH)) {
                 PL_strcpy(newestPath, path);
+                tryNPRuntimeJavaPlugIn = TryToUseNPRuntimeJavaPlugIn(curKey);
                 ::RegCloseKey(keyloc);
                 break;
               }
@@ -355,6 +390,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
               if (CompareVersion(curVer, maxVer) >= 0) {
                 PL_strcpy(newestPath, path);
                 CopyVersion(&maxVer, &curVer);
+                tryNPRuntimeJavaPlugIn = TryToUseNPRuntimeJavaPlugIn(curKey);
               }
             }
           }
@@ -382,6 +418,35 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
       }
 
       PL_strcat(newestPath,"\\bin");
+
+      // See whether we should use the new NPRuntime-based Java Plug-In:
+      //  - If tryNPRuntimeJavaPlugIn is true, and
+      //  - If the appropriate subdirectory actually exists
+      // Note that this is a temporary code path until the old
+      // OJI-based Java Plug-In isn't being shipped alongside the new
+      // one any more.
+      if (tryNPRuntimeJavaPlugIn) {
+        // See whether the "new_plugin" directory exists
+        char tmpPath[JAVA_PATH_SIZE];
+        PL_strcpy(tmpPath, newestPath);
+        PL_strcat(tmpPath, "\\new_plugin");
+        nsCOMPtr<nsILocalFile> tmpFile;
+        if (NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(tmpPath),
+                                               PR_TRUE,
+                                               getter_AddRefs(tmpFile))) &&
+            tmpFile) {
+          PRBool exists = PR_FALSE;
+          PRBool isDir = PR_FALSE;
+          if (NS_SUCCEEDED(tmpFile->Exists(&exists)) && exists &&
+              NS_SUCCEEDED(tmpFile->IsDirectory(&isDir)) && isDir) {
+            // Assume we're supposed to use this as the search
+            // directory for the Java Plug-In instead of the normal
+            // one
+            PL_strcpy(newestPath, tmpPath);
+          }
+        }
+      }
+
       rv = NS_NewNativeLocalFile(nsDependentCString(newestPath), PR_TRUE,
                                  getter_AddRefs(localFile));
     }
