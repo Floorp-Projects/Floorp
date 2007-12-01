@@ -762,7 +762,7 @@ nsresult EmbedGlobalHistory::GetEntry(const char *entry)
 {
   char separator = (char) defaultSeparator;
   int pos = 0;
-  nsInt64 outValue = 0;
+  PRInt64 outValue = 0;
   while (PR_TRUE) {
     PRInt32 digit;
     if (entry[pos] == separator) {
@@ -772,8 +772,8 @@ nsresult EmbedGlobalHistory::GetEntry(const char *entry)
     if (entry[pos] == '\0' || !isdigit(entry[pos]))
       return NS_ERROR_FAILURE;
     digit = entry[pos] - '0';
-    outValue *= nsInt64(10);
-    outValue += nsInt64(digit);
+    outValue *= 10;
+    outValue += digit;
     pos++;
   }
   char url[1024], title[1024];
