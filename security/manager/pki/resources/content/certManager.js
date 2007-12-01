@@ -604,7 +604,7 @@ function addWebSiteCert()
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
-          bundle.GetStringFromName("importWebSiteCertPrompt"),
+          bundle.GetStringFromName("importServerCertPrompt"),
           nsIFilePicker.modeOpen);
   fp.appendFilter(bundle.GetStringFromName("file_browse_Certificate_spec"),
                   "*.crt; *.cert; *.cer; *.pem; *.der");
