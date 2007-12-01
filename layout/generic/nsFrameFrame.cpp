@@ -176,6 +176,7 @@ public:
 
   // nsIReflowCallback
   virtual PRBool ReflowFinished();
+  virtual void ReflowCallbackCanceled();
 
 protected:
   nsSize GetMargin();
@@ -584,6 +585,11 @@ nsSubDocumentFrame::ReflowFinished()
   return PR_FALSE;
 }
 
+void
+nsSubDocumentFrame::ReflowCallbackCanceled()
+{
+  mPostedReflowCallback = PR_FALSE;
+}
 
 NS_IMETHODIMP
 nsSubDocumentFrame::VerifyTree() const

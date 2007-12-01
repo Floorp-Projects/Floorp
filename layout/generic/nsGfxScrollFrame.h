@@ -96,6 +96,7 @@ public:
 
   // nsIReflowCallback
   virtual PRBool ReflowFinished();
+  virtual void ReflowCallbackCanceled();
 
   // nsIScrollPositionListener
 

@@ -94,6 +94,7 @@ public:
 
   // nsIReflowCallback
   virtual PRBool ReflowFinished();
+  virtual void ReflowCallbackCanceled();
 
   // nsICSSPseudoComparator
   NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
