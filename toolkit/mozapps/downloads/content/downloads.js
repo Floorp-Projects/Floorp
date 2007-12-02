@@ -717,7 +717,9 @@ var gDownloadViewController = {
 
 function setSearchboxFocus()
 {
-  document.getElementById("searchbox").focus();
+  var searchbox = document.getElementById("searchbox");
+  searchbox.focus();
+  searchbox.select();
 }
 
 function onDownloadShowInfo()

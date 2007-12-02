@@ -45,6 +45,15 @@
 
 #include browserMountPoints.inc
 
+<script type="application/javascript"><![CDATA[
+  // Bug 405696: Map Edit->Find command to the download manger's command
+  window.addEventListener("load", function(event) {
+    var findMenuItem = document.getElementById("menu_find");
+    findMenuItem.setAttribute("command", "cmd_findDownload");
+    findMenuItem.setAttribute("key", "key_findDownload");
+  }, false);
+]]></script>
+
 </window>
 
 </overlay>
