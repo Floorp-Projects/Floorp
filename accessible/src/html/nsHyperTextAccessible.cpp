@@ -198,6 +198,7 @@ void nsHyperTextAccessible::CacheChildren()
 
   // Special case for text entry fields, go directly to editor's root for children
   if (mAccChildCount == eChildCountUninitialized) {
+    mAccChildCount = 0;  // Avoid reentry
     PRUint32 role;
     GetRole(&role);
     if (role != nsIAccessibleRole::ROLE_ENTRY && role != nsIAccessibleRole::ROLE_PASSWORD_TEXT) {

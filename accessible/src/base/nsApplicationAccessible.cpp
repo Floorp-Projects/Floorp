@@ -189,6 +189,7 @@ nsApplicationAccessible::CacheChildren()
   }
 
   if (mAccChildCount == eChildCountUninitialized) {
+    mAccChildCount = 0;// Prevent reentry
     nsCOMPtr<nsISimpleEnumerator> enumerator;
     mChildren->Enumerate(getter_AddRefs(enumerator));
 

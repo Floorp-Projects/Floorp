@@ -458,6 +458,7 @@ void nsHTMLSelectListAccessible::CacheChildren()
     return;
   }
 
+  mAccChildCount = 0; // Avoid reentry
   PRInt32 childCount = 0;
   nsCOMPtr<nsIAccessible> lastGoodAccessible =
     CacheOptSiblings(accService, selectContent, nsnull, &childCount);
@@ -1254,6 +1255,7 @@ void nsHTMLComboboxTextFieldAccessible::CacheChildren()
 
   // Allows only 1 child
   if (mAccChildCount == eChildCountUninitialized) {
+    mAccChildCount = 0; // Prevent reentry
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
     // Seed the frame hint early while we're still on a container node.
     // This is better than doing the GetPrimaryFrameFor() later on

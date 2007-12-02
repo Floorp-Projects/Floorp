@@ -178,7 +178,7 @@ void nsXULButtonAccessible::CacheChildren()
     return;   // This outer doc node has been shut down
   }
   if (mAccChildCount == eChildCountUninitialized) {
-    mAccChildCount = 0;
+    mAccChildCount = 0;  // Avoid reentry
     SetFirstChild(nsnull);
     PRBool allowsAnonChildren = PR_FALSE;
     GetAllowsAnonChildAccessibles(&allowsAnonChildren);
