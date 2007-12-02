@@ -1309,7 +1309,8 @@ nsOverflowContinuationTracker::SetUpListWalker()
         mPrevOverflowCont = cur;
         cur = cur->GetNextSibling();
       }
-      while (cur && (mWalkOOFFrames == cur->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+      while (cur && (!(cur->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+                     == mWalkOOFFrames)) {
         mPrevOverflowCont = cur;
         cur = cur->GetNextSibling();
       }
@@ -1342,7 +1343,8 @@ nsOverflowContinuationTracker::StepForward()
   // Skip over oof or non-oof frames as appropriate
   if (mSkipOverflowContainerChildren) {
     nsIFrame* cur = mPrevOverflowCont->GetNextSibling();
-    while (cur && (mWalkOOFFrames == cur->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+    while (cur && (!(cur->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+                   == mWalkOOFFrames)) {
       mPrevOverflowCont = cur;
       cur = cur->GetNextSibling();
     }
@@ -1359,6 +1361,9 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
                                       nsReflowStatus& aReflowStatus)
 {
   NS_PRECONDITION(aOverflowCont, "null frame pointer");
+  NS_PRECONDITION(!mSkipOverflowContainerChildren || mWalkOOFFrames ==
+                  !!(aOverflowCont->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
+                  "shouldn't insert frame that doesn't match walker type");
   NS_PRECONDITION(aOverflowCont->GetPrevInFlow(),
                   "overflow containers must have a prev-in-flow");
   nsresult rv = NS_OK;
@@ -1400,8 +1405,11 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
 
   // It's in our list, just step forward
   StepForward();
-  NS_ASSERTION(mPrevOverflowCont == aOverflowCont,
-              "OverflowContTracker logic error");
+  NS_ASSERTION(mPrevOverflowCont == aOverflowCont ||
+               (mSkipOverflowContainerChildren &&
+                (mPrevOverflowCont->GetStateBits() & NS_FRAME_OUT_OF_FLOW) !=
+                (aOverflowCont->GetStateBits() & NS_FRAME_OUT_OF_FLOW)),
+              "OverflowContTracker in unexpected state");
   return rv;
 }
 
@@ -1422,11 +1430,14 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
       mParent = static_cast<nsContainerFrame*>(aChild->GetParent());
     }
     else {
-      // Don't move the mPrevOverflowCont, but shift the sentry
-      // The intervening overflow continuation will be deleted by our caller
+      // Step past aChild
       nsIFrame* prevOverflowCont = mPrevOverflowCont;
       StepForward();
-      mPrevOverflowCont = prevOverflowCont;
+      if (mPrevOverflowCont == aChild) {
+        // Pull mPrevOverflowChild back to aChild's prevSibling:
+        // aChild will be removed from our list by our caller
+        mPrevOverflowCont = prevOverflowCont;
+      }
     }
   }
 }
