@@ -124,7 +124,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         if (gid) {
             FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
             mMetrics->xHeight = face->glyph->metrics.height * yScale;
-            mMetrics->aveCharWidth = face->glyph->metrics.width * yScale;
+            mMetrics->aveCharWidth = face->glyph->metrics.width * xScale;
         } else {
             // this font doesn't have an 'x'...
             // fake these metrics using a fraction of the font size
