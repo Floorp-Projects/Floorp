@@ -105,12 +105,6 @@ protected:
                      const PRUint32 aLineNumber,
                      nsINodeInfo *aNodeInfo);
 
-    // If OpenScript returns NS_OK and after it returns our state is eInScript,
-    // that means that we created a prototype script and stuck it on
-    // mContextStack.  If NS_OK is returned but the state is still
-    // eInDocumentElement then we didn't create a prototype script (e.g. the
-    // script had an unknown type), and the caller should create a prototype
-    // element.
     nsresult OpenScript(const PRUnichar** aAttributes,
                         const PRUint32 aLineNumber);
 
