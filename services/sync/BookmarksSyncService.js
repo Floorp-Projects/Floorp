@@ -269,7 +269,7 @@ BookmarksSyncService.prototype = {
     }
     catch (ex) { /* use defaults */ }
 
-    this._readSnapshot();
+    this._snapshot.load();
 
     if (!enabled) {
       this._log.info("Bookmarks sync disabled");
@@ -339,85 +339,6 @@ BookmarksSyncService.prototype = {
     let vapp = logSvc.newFileAppender("rotating", verboseFile, formatter);
     vapp.level = root.LEVEL_DEBUG;
     root.addAppender(vapp);
-  },
-
-  _saveSnapshot: function BSS__saveSnapshot() {
-    this._log.info("Saving snapshot to disk");
-
-    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("bm-sync-snapshot.json");
-    file.QueryInterface(Ci.nsILocalFile);
-
-    if (!file.exists())
-      file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
-
-    let fos = Cc["@mozilla.org/network/file-output-stream;1"].
-      createInstance(Ci.nsIFileOutputStream);
-    let flags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-    fos.init(file, flags, PERMS_FILE, 0);
-
-    let out = {version: this._snapshot.version,
-               GUID: this._snapshot.GUID,
-               snapshot: this._snapshot};
-    out = uneval(out);
-    fos.write(out, out.length);
-    fos.close();
-  },
-
-  _readSnapshot: function BSS__readSnapshot() {
-    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("bm-sync-snapshot.json");
-
-    if (!file.exists())
-      return;
-
-    let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-      createInstance(Ci.nsIFileInputStream);
-    fis.init(file, MODE_RDONLY, PERMS_FILE, 0);
-    fis.QueryInterface(Ci.nsILineInputStream);
-
-    let json = "";
-    while (fis.available()) {
-      let ret = {};
-      fis.readLine(ret);
-      json += ret.value;
-    }
-    fis.close();
-    json = eval(json);
-
-    if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
-      this._log.info("Read saved snapshot from disk");
-      this._snapshot = json.snapshot;
-      this._snapshot.version = json.version;
-      this._snapshot.GUID = json.GUID;
-    }
-  },
-
-  _mungeNodes: function BSS__mungeNodes(nodes) {
-    let json = uneval(nodes);
-    json = json.replace(/:{type/g, ":\n\t{type");
-    json = json.replace(/}, /g, "},\n  ");
-    json = json.replace(/, parentGUID/g, ",\n\t parentGUID");
-    json = json.replace(/, index/g, ",\n\t index");
-    json = json.replace(/, title/g, ",\n\t title");
-    json = json.replace(/, URI/g, ",\n\t URI");
-    json = json.replace(/, tags/g, ",\n\t tags");
-    json = json.replace(/, keyword/g, ",\n\t keyword");
-    return json;
-  },
-
-  _mungeCommands: function BSS__mungeCommands(commands) {
-    let json = uneval(commands);
-    json = json.replace(/ {action/g, "\n {action");
-    //json = json.replace(/, data/g, ",\n  data");
-    return json;
-  },
-
-  _mungeConflicts: function BSS__mungeConflicts(conflicts) {
-    let json = uneval(conflicts);
-    json = json.replace(/ {action/g, "\n {action");
-    //json = json.replace(/, data/g, ",\n  data");
-    return json;
   },
 
   _lock: function BSS__lock() {
@@ -557,9 +478,9 @@ BookmarksSyncService.prototype = {
       this._sync.detectUpdates(cont, this._snapshot.data, localJson.data);
       let localUpdates = yield;
 
-      this._log.debug("local json:\n" + this._mungeNodes(localJson.data));
-      this._log.debug("Local updates: " + this._mungeCommands(localUpdates));
-      this._log.debug("Server updates: " + this._mungeCommands(server.updates));
+      this._log.debug("local json:\n" + localJson.serialize());
+      this._log.debug("Local updates: " + serializeCommands(localUpdates));
+      this._log.debug("Server updates: " + serializeCommands(server.updates));
 
       if (server.updates.length == 0 && localUpdates.length == 0) {
         this._snapshot.version = server.maxVersion;
@@ -583,17 +504,17 @@ BookmarksSyncService.prototype = {
       this._log.info("Predicted changes for server: " + serverChanges.length);
       this._log.info("Client conflicts: " + clientConflicts.length);
       this._log.info("Server conflicts: " + serverConflicts.length);
-      this._log.debug("Changes for client: " + this._mungeCommands(clientChanges));
-      this._log.debug("Predicted changes for server: " + this._mungeCommands(serverChanges));
-      this._log.debug("Client conflicts: " + this._mungeConflicts(clientConflicts));
-      this._log.debug("Server conflicts: " + this._mungeConflicts(serverConflicts));
+      this._log.debug("Changes for client: " + serializeCommands(clientChanges));
+      this._log.debug("Predicted changes for server: " + serializeCommands(serverChanges));
+      this._log.debug("Client conflicts: " + serializeConflicts(clientConflicts));
+      this._log.debug("Server conflicts: " + serializeConflicts(serverConflicts));
 
       if (!(clientChanges.length || serverChanges.length ||
             clientConflicts.length || serverConflicts.length)) {
         this._log.info("Sync complete (2): no changes needed on client or server");
         this._snapshot.data = localJson.data;
         this._snapshot.version = server.maxVersion;
-        this._saveSnapshot();
+        this._snapshot.save();
         synced = true;
         return;
       }
@@ -624,13 +545,13 @@ BookmarksSyncService.prototype = {
           this._log.warn("Commands did not apply correctly");
           this._log.debug("Diff from snapshot+commands -> " +
                           "new snapshot after commands:\n" +
-                          this._mungeCommands(diff));
+                          serializeCommands(diff));
           // FIXME: do we really want to revert the snapshot here?
           this._snapshot.data = eval(uneval(savedSnap));
           this._snapshot.version = savedVersion;
         }
 
-        this._saveSnapshot();
+        this._snapshot.save();
       }
 
       // 3.2) Append server delta to the delta file and upload
@@ -651,7 +572,7 @@ BookmarksSyncService.prototype = {
 
       this._log.info("Actual changes for server: " + serverDelta.length);
       this._log.debug("Actual changes for server: " +
-                      this._mungeCommands(serverDelta));
+                      serializeCommands(serverDelta));
 
       if (serverDelta.length) {
         this._log.info("Uploading changes to server");
@@ -671,7 +592,7 @@ BookmarksSyncService.prototype = {
         } else {
           let data;
           if (this.encryption == "none") {
-            data = this._mungeCommands(server.deltas);
+            data = serializeCommands(server.deltas);
           } else if (this.encryption == "XXXTEA") {
             this._log.debug("Encrypting snapshot");
             data = this._encrypter.encrypt(uneval(server.deltas), this.passphrase);
@@ -700,7 +621,7 @@ BookmarksSyncService.prototype = {
           if (deltasPut.status >= 200 && deltasPut.status < 300 &&
               statusPut.status >= 200 && statusPut.status < 300) {
             this._log.info("Successfully updated deltas and status on server");
-            this._saveSnapshot();
+            this.snapshot.save();
           } else {
             // FIXME: revert snapshot here? - can't, we already applied
             // updates locally! - need to save and retry
@@ -905,7 +826,7 @@ BookmarksSyncService.prototype = {
           return;
   
         this._log.info("Initial upload to server successful");
-        this._saveSnapshot();
+        this.snapshot.save();
   
         ret.status = 0;
         ret.formatVersion = STORAGE_FORMAT_VERSION;
@@ -943,7 +864,7 @@ BookmarksSyncService.prototype = {
     try {
       let data;
       if (this.encryption == "none") {
-        data = this._mungeNodes(this._snapshot.data);
+        data = this._snapshot.serialize();
       } else if (this.encryption == "XXXTEA") {
         this._log.debug("Encrypting snapshot");
         data = this._encrypter.encrypt(uneval(this._snapshot.data), this.passphrase);
@@ -1103,7 +1024,7 @@ BookmarksSyncService.prototype = {
 
       this._snapshot.data = {};
       this._snapshot.version = -1;
-      this._saveSnapshot();
+      this.snapshot.save();
       done = true;
 
     } catch (e) {
@@ -1202,6 +1123,18 @@ BookmarksSyncService.prototype = {
     this._resetClient.async(this);
   }
 };
+
+serializeCommands: function serializeCommands(commands) {
+  let json = uneval(commands);
+  json = json.replace(/ {action/g, "\n {action");
+  return json;
+}
+
+serializeConflicts: function serializeConflicts(conflicts) {
+  let json = uneval(conflicts);
+  json = json.replace(/ {action/g, "\n {action");
+  return json;
+}
 
 /*
  * SyncCore objects
@@ -1613,6 +1546,71 @@ SnapshotStore.prototype = {
   },
   set GUID(GUID) {
     this._GUID = GUID;
+  },
+
+  save: function SStore_save() {
+    this._log.info("Saving snapshot to disk");
+
+    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
+    file.append("bm-sync-snapshot.json");
+    file.QueryInterface(Ci.nsILocalFile);
+
+    if (!file.exists())
+      file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
+
+    let fos = Cc["@mozilla.org/network/file-output-stream;1"].
+      createInstance(Ci.nsIFileOutputStream);
+    let flags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+    fos.init(file, flags, PERMS_FILE, 0);
+
+    let out = {version: this._snapshot.version,
+               GUID: this._snapshot.GUID,
+               snapshot: this._snapshot};
+    out = uneval(out);
+    fos.write(out, out.length);
+    fos.close();
+  },
+
+  load: function SStore_load() {
+    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
+    file.append("bm-sync-snapshot.json");
+
+    if (!file.exists())
+      return;
+
+    let fis = Cc["@mozilla.org/network/file-input-stream;1"].
+      createInstance(Ci.nsIFileInputStream);
+    fis.init(file, MODE_RDONLY, PERMS_FILE, 0);
+    fis.QueryInterface(Ci.nsILineInputStream);
+
+    let json = "";
+    while (fis.available()) {
+      let ret = {};
+      fis.readLine(ret);
+      json += ret.value;
+    }
+    fis.close();
+    json = eval(json);
+
+    if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
+      this._log.info("Read saved snapshot from disk");
+      this._snapshot = json.snapshot;
+      this._snapshot.version = json.version;
+      this._snapshot.GUID = json.GUID;
+    }
+  },
+
+  serialize: function SStore_serialize() {
+    let json = uneval(this.data);
+    json = json.replace(/:{type/g, ":\n\t{type");
+    json = json.replace(/}, /g, "},\n  ");
+    json = json.replace(/, parentGUID/g, ",\n\t parentGUID");
+    json = json.replace(/, index/g, ",\n\t index");
+    json = json.replace(/, title/g, ",\n\t title");
+    json = json.replace(/, URI/g, ",\n\t URI");
+    json = json.replace(/, tags/g, ",\n\t tags");
+    json = json.replace(/, keyword/g, ",\n\t keyword");
+    return json;
   },
 
   wrap: function SStore_wrap() {
