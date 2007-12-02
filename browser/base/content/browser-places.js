@@ -195,7 +195,7 @@ var PlacesCommandHook = {
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
       var txn = PlacesUtils.ptm.createItem(uri, parent, -1,
                                            title, null, [descAnno]);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
       if (aShowEditUI)
         itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
