@@ -103,7 +103,12 @@
     <command id="cmd_clearList"
              oncommand="gDownloadViewController.doCommand('cmd_clearList');"/>
   </commandset>
-    
+
+  <!-- Use this commandset for command which do not depened on focus or selection -->
+  <commandset id="generalCommands">
+    <command id="cmd_findDownload" oncommand="setSearchboxFocus();"/>
+  </commandset>
+
   <keyset id="downloadKeys">
     <key id="key_pauseResume" key=" " command="cmd_pauseResume"/>
     <key id="key_removeFromList"  keycode="VK_DELETE" command="cmd_removeFromList"/>
@@ -117,9 +122,11 @@
     <key id="key_close2"  key="&cmd.close2.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
 #endif
     <key                  keycode="VK_ESCAPE"           oncommand="closeWindow(true);"/>
-    <key id="key_find"
-         key="&cmd.find.commandKey;" modifiers="accel"
-         oncommand="setSearchboxFocus()"/>
+
+    <key id="key_findDownload"
+         key="&cmd.find.commandKey;"
+         modifiers="accel"
+         command="cmd_findDownload"/>
     <key id="key_info"    key="&cmd.info.commandKey;"   oncommand="onDownloadShowInfo();" modifiers="accel"/>
   </keyset>
   
