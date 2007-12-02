@@ -959,16 +959,9 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
         // even though it is ignored (the nsPrototypeScriptElement
         // has its own script-type).
         element->mScriptTypeID = nsIProgrammingLanguage::JAVASCRIPT;
-        rv = OpenScript(aAttributes, aLineNumber);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        NS_ASSERTION(mState == eInScript || mState == eInDocumentElement,
-                     "Unexpected state");
-        if (mState == eInScript) {
-            // OpenScript has pushed the nsPrototypeScriptElement onto the 
-            // stack, so we're done.
-            return NS_OK;
-        }
+        // OpenScript will push the nsPrototypeScriptElement onto the 
+        // stack, so we're done after this.
+        return OpenScript(aAttributes, aLineNumber);
     }
 
     // Set the correct script-type for the element.
@@ -1011,15 +1004,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           rv = mimeHdrParser->GetParameter(typeAndParams, nsnull,
                                            EmptyCString(), PR_FALSE, nsnull,
                                            mimeType);
-          if (NS_FAILED(rv)) {
-              if (rv == NS_ERROR_INVALID_ARG) {
-                  // Might as well bail out now instead of setting langID to
-                  // nsIProgrammingLanguage::UNKNOWN and bailing out later.
-                  return NS_OK;
-              }
-              // We do want the warning here
-              NS_ENSURE_SUCCESS(rv, rv);
-          }
+          NS_ENSURE_SUCCESS(rv, rv);
 
           // Javascript keeps the fast path, optimized for most-likely type
           // Table ordered from most to least likely JS MIME types. For .xul
