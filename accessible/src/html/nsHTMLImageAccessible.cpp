@@ -207,12 +207,12 @@ void nsHTMLImageAccessible::CacheChildren()
     return;
   }
 
+  mAccChildCount = 0;
   nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
   if (mMapElement) {
     mMapElement->GetAreas(getter_AddRefs(mapAreas));
   }
   if (!mapAreas) {
-    mAccChildCount = 0;
     return;
   }
 
