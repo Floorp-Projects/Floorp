@@ -38,11 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsITransactionManager.idl"
 
 interface nsIVariant;
 interface nsIURI;
 interface nsIMicrosummary;
-interface nsITransactionManager;
 interface nsITransaction;
 
 /**
@@ -52,17 +52,9 @@ interface nsITransaction;
  * the global scope of a js window.
  */
 
-[scriptable, uuid(34cfb73e-ecd4-434d-b0f0-c17b8c7ceae9)]
-interface nsIPlacesTransactionsService : nsISupports
+[scriptable, uuid(939bccbd-ecb1-4742-9c38-a33af91ec872)]
+interface nsIPlacesTransactionsService : nsITransactionManager
 {
-  /**
-   * Performs a transaction.
-   *
-   * @param aTransaction
-   *        a transaction object for a transaction
-   */
-  void commitTransaction(in nsITransaction aTransaction);
-
   /**
    * Transaction for performing several Places Transactions in a single batch. 
    * 
@@ -305,9 +297,4 @@ interface nsIPlacesTransactionsService : nsISupports
    */
   nsITransaction sortFolderByName(in long long aFolderId,
                                   in long long aFolderIndex);
-
-  /**
-   * A reference to the transaction manager
-   */
-  readonly attribute nsITransactionManager transactionManager;
 };

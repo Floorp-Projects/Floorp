@@ -50,3 +50,5 @@ ifdef ENABLE_TESTS
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+XPIDL_FLAGS += -I$(topsrcdir)/browser/components/

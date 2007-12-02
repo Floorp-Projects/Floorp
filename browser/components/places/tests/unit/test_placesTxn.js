@@ -148,7 +148,7 @@ function run_test() {
   // Test creating an item
   // Create to Root
   var txn2 = ptSvc.createItem(uri("http://www.example.com"), root, bmStartIndex, "Testing1");
-  ptSvc.commitTransaction(txn2); //Also testing commitTransaction
+  ptSvc.doTransaction(txn2); //Also testing doTransaction
   var b = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {}))[0];
   do_check_eq(observer._itemAddedId, b);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
@@ -161,7 +161,7 @@ function run_test() {
   var txn2a = ptSvc.createFolder("Folder", root, bmStartIndex);
   var fldrId = bmsvc.getChildFolder(root, "Folder");
   var txn2b = ptSvc.createItem(uri("http://www.example2.com"), fldrId, bmStartIndex, "Testing1b");
-  ptSvc.commitTransaction(txn2b);
+  ptSvc.doTransaction(txn2b);
   var b2 = (bmsvc.getBookmarkIdsForURI(uri("http://www.example2.com"), {}))[0];
   do_check_eq(observer._itemAddedId, b2);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
@@ -171,9 +171,9 @@ function run_test() {
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
 
   // Testing moving an item
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing2"));
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing3"));   
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example3.com"), fldrId, -1, "Testing4"));
+  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing2"));
+  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing3"));   
+  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), fldrId, -1, "Testing4"));
   var bkmkIds = bmsvc.getBookmarkIdsForURI(uri("http://www.example3.com"), {});
   bkmkIds.sort();
   var bkmk1Id = bkmkIds[0];
@@ -211,7 +211,7 @@ function run_test() {
   do_check_eq(observer._itemMovedNewIndex, 0);
 
   // Test Removing a Folder
-  ptSvc.commitTransaction(ptSvc.createFolder("Folder2", root, -1));
+  ptSvc.doTransaction(ptSvc.createFolder("Folder2", root, -1));
   var fldrId2 = bmsvc.getChildFolder(root, "Folder2");
   var txn4 = ptSvc.removeItem(fldrId2);
   txn4.doTransaction();
@@ -246,7 +246,7 @@ function run_test() {
   do_check_eq(observer._itemRemovedIndex, 1);
 
   // Test removing a separator
-  ptSvc.commitTransaction(ptSvc.createSeparator(root, 1));
+  ptSvc.doTransaction(ptSvc.createSeparator(root, 1));
   var sepId2 = observer._itemAddedId;
   var txn7 = ptSvc.removeItem(sepId2);
   txn7.doTransaction();
@@ -342,11 +342,11 @@ function run_test() {
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
 
   // sortFolderByName
-  ptSvc.commitTransaction(ptSvc.createFolder("Sorting folder", root, bmStartIndex, [], null));
+  ptSvc.doTransaction(ptSvc.createFolder("Sorting folder", root, bmStartIndex, [], null));
   var srtFldId = bmsvc.getChildFolder(root, "Sorting folder");
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "c"));
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "b"));   
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "a"));
+  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "c"));
+  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "b"));   
+  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "a"));
   var b = bmsvc.getBookmarkIdsForURI(uri("http://www.sortingtest.com"), {});
   b.sort();
   var b1 = b[0];
@@ -368,7 +368,7 @@ function run_test() {
   // editBookmarkMicrosummary
   var tmpMs = mss.createMicrosummary(uri("http://testmicro.com"), 
                                      uri("http://dietrich.ganx4.com/mozilla/test-microsummary.xml"));
-  ptSvc.commitTransaction(
+  ptSvc.doTransaction(
   ptSvc.createItem(uri("http://dietrich.ganx4.com/mozilla/test-microsummary-content.php"),
                    root, -1, "micro test", null, null, null));
   var bId = (bmsvc.getBookmarkIdsForURI(uri("http://dietrich.ganx4.com/mozilla/test-microsummary-content.php"),{}))[0];

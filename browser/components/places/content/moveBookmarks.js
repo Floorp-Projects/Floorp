@@ -38,7 +38,6 @@
 
 var gMoveBookmarksDialog = {
   _nodes: null,
-  _tm: null,
 
   _foldersTree: null,
   get foldersTree() {
@@ -50,7 +49,6 @@ var gMoveBookmarksDialog = {
 
   init: function() {
     this._nodes = window.arguments[0];
-    this._tm = window.arguments[1];
 
     this.foldersTree.place =
       "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&folder=" +
@@ -75,7 +73,7 @@ var gMoveBookmarksDialog = {
 
     if (transactions.length != 0) {
       var txn = PlacesUtils.ptm.aggregateTransactions("Move Items", transactions);
-      this._tm.doTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
     }
   },
 

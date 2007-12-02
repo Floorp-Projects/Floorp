@@ -93,9 +93,9 @@ PlacesController.prototype = {
   isCommandEnabled: function PC_isCommandEnabled(aCommand) {
     switch (aCommand) {
     case "cmd_undo":
-      return PlacesUtils.tm.numberOfUndoItems > 0;
+      return PlacesUtils.ptm.numberOfUndoItems > 0;
     case "cmd_redo":
-      return PlacesUtils.tm.numberOfRedoItems > 0;
+      return PlacesUtils.ptm.numberOfRedoItems > 0;
     case "cmd_cut":
     case "cmd_delete":
       return this._hasRemovableSelection(false);
@@ -197,10 +197,10 @@ PlacesController.prototype = {
   doCommand: function PC_doCommand(aCommand) {
     switch (aCommand) {
     case "cmd_undo":
-      PlacesUtils.tm.undoTransaction();
+      PlacesUtils.ptm.undoTransaction();
       break;
     case "cmd_redo":
-      PlacesUtils.tm.redoTransaction();
+      PlacesUtils.ptm.redoTransaction();
       break;
     case "cmd_cut":
       this.cut();
@@ -802,7 +802,7 @@ PlacesController.prototype = {
     if (!ip)
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     var txn = PlacesUtils.ptm.createSeparator(ip.itemId, ip.index);
-    PlacesUtils.ptm.commitTransaction(txn);
+    PlacesUtils.ptm.doTransaction(txn);
   },
 
   /**
@@ -811,7 +811,7 @@ PlacesController.prototype = {
   moveSelectedBookmarks: function PC_moveBookmarks() {
     window.openDialog("chrome://browser/content/places/moveBookmarks.xul",
                       "", "chrome, modal",
-                      this._view.getSelectionNodes(), PlacesUtils.tm);
+                      this._view.getSelectionNodes());
   },
 
   /**
@@ -821,7 +821,7 @@ PlacesController.prototype = {
     var selectedNode = this._view.selectedNode;
     var txn = PlacesUtils.ptm.sortFolderByName(selectedNode.itemId,
                                                selectedNode.bookmarkIndex);
-    PlacesUtils.ptm.commitTransaction(txn);
+    PlacesUtils.ptm.doTransaction(txn);
   },
 
   /**
@@ -899,7 +899,7 @@ PlacesController.prototype = {
       this._removeRange(ranges[i], transactions);
     if (transactions.length > 0) {
       var txn = PlacesUtils.ptm.aggregateTransactions(txnName, transactions);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
     }
   },
 
@@ -1159,7 +1159,7 @@ PlacesController.prototype = {
                                         PlacesUtils.TYPE_X_MOZ_URL, 
                                         PlacesUtils.TYPE_UNICODE]);
     var txn = PlacesUtils.ptm.aggregateTransactions("Paste", transactions);
-    PlacesUtils.ptm.commitTransaction(txn);
+    PlacesUtils.ptm.doTransaction(txn);
   }
 };
 
@@ -1586,7 +1586,7 @@ var PlacesControllerDragHelper = {
     }
 
     var txn = PlacesUtils.ptm.aggregateTransactions("DropItems", transactions);
-    PlacesUtils.ptm.commitTransaction(txn);
+    PlacesUtils.ptm.doTransaction(txn);
   }
 };
 

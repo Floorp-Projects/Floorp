@@ -167,11 +167,6 @@ var PlacesUtils = {
     return this.localStore = this.RDF.GetDataSource("rdf:local-store");
   },
 
-  get tm() {
-    delete this.tm;
-    return this.tm = this.ptm.transactionManager;
-  },
-
   get ptm() {
     delete this.ptm;
     return this.ptm = Cc["@mozilla.org/browser/placesTransactionsService;1"].
