@@ -1080,9 +1080,10 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
   PRBool fullyComplete = NS_FRAME_IS_COMPLETE(aStatus) && !NS_FRAME_IS_TRUNCATED(aStatus);
-
-  aCellFrame->SetSize(
-    nsSize(cellSize.width, fullyComplete ? aAvailableHeight : desiredSize.height));
+  if (fullyComplete) {
+    desiredSize.height = aAvailableHeight;
+  }
+  aCellFrame->SetSize(nsSize(cellSize.width, desiredSize.height));
 
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
