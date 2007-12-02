@@ -660,7 +660,7 @@ var gUpdatesAvailablePage = {
     var updateName = gUpdates.strings.getFormattedString("updateName",
       [gUpdates.brandName, gUpdates.update.version]);
     if (gUpdates.update.channel == "nightly")
-      updateName = updateName + " nightly (" + gUpdates.update.buildID + ")";
+      updateName = updateName + " " + gUpdates.update.buildID + " nightly";
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
     var severity = gUpdates.update.type;
