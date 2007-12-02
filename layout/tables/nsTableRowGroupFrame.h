@@ -350,7 +350,7 @@ protected:
                           nsTableRowFrame&         aFirstRow, 
                           nsTableRowFrame&         aLastRow,  
                           PRBool                   aFirstRowIsTopOfPage,
-                          nscoord                  aAvailHeight,
+                          nscoord                  aSpanningRowBottom,
                           nsTableRowFrame*&        aContRowFrame,
                           nsTableRowFrame*&        aFirstTruncatedRow,
                           nscoord&                 aDesiredHeight);
