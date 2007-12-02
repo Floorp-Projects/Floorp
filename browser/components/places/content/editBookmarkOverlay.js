@@ -496,7 +496,7 @@ var gEditItemOverlay = {
     }
 
     var aggregate = ptm.aggregateTransactions("Edit Item Title", txns);
-    ptm.commitTransaction(aggregate);
+    ptm.doTransaction(aggregate);
   },
 
   onDescriptionFieldBlur: function EIO_onDescriptionFieldInput() {
@@ -504,7 +504,7 @@ var gEditItemOverlay = {
     if (description != PlacesUtils.getItemDescription(this._itemId)) {
       var txn = PlacesUtils.ptm
                            .editItemDescription(this._itemId, description);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
     }
   },
 
@@ -517,7 +517,7 @@ var gEditItemOverlay = {
 
     if (!this._uri.equals(uri)) {
       var txn = PlacesUtils.ptm.editBookmarkURI(this._itemId, uri);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
     }
   },
 
@@ -525,7 +525,7 @@ var gEditItemOverlay = {
     var keyword = this._element("keywordField").value;
     if (keyword != PlacesUtils.bookmarks.getKeywordForBookmark(this._itemId)) {
       var txn = PlacesUtils.ptm.editBookmarkKeyword(this._itemId, keyword);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
     }
   },
 
@@ -539,7 +539,7 @@ var gEditItemOverlay = {
     var currentFeedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);
     if (!currentFeedURI.equals(uri)) {
       var txn = PlacesUtils.ptm.editLivemarkFeedURI(this._itemId, uri);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
     }
   },
 
@@ -553,7 +553,7 @@ var gEditItemOverlay = {
     var currentSiteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
     if (!uri || !currentSiteURI.equals(uri)) {
       var txn = PlacesUtils.ptm.editLivemarkSiteURI(this._itemId, uri);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
     }
   },
 
@@ -562,7 +562,7 @@ var gEditItemOverlay = {
     var loadInSidebarChecked = this._element("loadInSidebarCheckbox").checked;
     var txn = PlacesUtils.ptm.setLoadInSidebar(this._itemId,
                                                loadInSidebarChecked);
-    PlacesUtils.ptm.commitTransaction(txn);
+    PlacesUtils.ptm.doTransaction(txn);
   },
 
   toggleFolderTreeVisibility: function EIO_toggleFolderTreeVisibility() {
@@ -652,7 +652,7 @@ var gEditItemOverlay = {
     // Move the item
     if (PlacesUtils.bookmarks.getFolderIdForItem(this._itemId) != container) {
       var txn = PlacesUtils.ptm.moveItem(this._itemId, container, -1);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
 
       // Mark the containing folder as recently-used if it isn't the
       // "All Bookmarks" root

@@ -627,7 +627,7 @@ var PlacesOrganizer = {
                                          PlacesUtils.bookmarksMenuFolderId,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
                                          input.value);
-    PlacesUtils.ptm.commitTransaction(txn);
+    PlacesUtils.ptm.doTransaction(txn);
   }
 };
 

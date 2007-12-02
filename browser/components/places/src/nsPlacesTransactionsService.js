@@ -63,7 +63,8 @@ placesTransactionsService.prototype = {
   classID: CLASS_ID,
   contractID: CONTRACT_ID,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPlacesTransactionsService]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPlacesTransactionsService,
+                                         Ci.nsITransactionManager]),
 
   aggregateTransactions: function placesAggrTransactions(name, transactions) {
     return new placesAggregateTransactions(name, transactions);
@@ -107,7 +108,7 @@ placesTransactionsService.prototype = {
     return new placesEditBookmarkURITransactions(aBookmarkId, aNewURI);
   },
 
-  setLoadInSidebar:  function placesSetLdInSdbar(aBookmarkId, aLoadInSidebar) {
+  setLoadInSidebar: function placesSetLdInSdbar(aBookmarkId, aLoadInSidebar) {
     return new placesSetLoadInSidebarTransactions(aBookmarkId, aLoadInSidebar);
   },
 
@@ -139,13 +140,57 @@ placesTransactionsService.prototype = {
    return new placesSortFolderByNameTransactions(aFolderId, aFolderIndex);
   },
 
-  commitTransaction: function placesCommitTxn(txn) {
-    this.mTransactionManager.doTransaction(txn);
+  // Update commands in the undo group of the active window
+  // commands in inactive windows will are updated on-focus
+  _updateCommands: function() {
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
+    var win = wm.getMostRecentWindow(null);
+    if (win)
+      win.updateCommands("undo");
   },
 
-  get transactionManager() {
-    return this.mTransactionManager;
-  }
+  // nsITransactionManager
+  doTransaction: function doTransaction(txn) {
+    this.mTransactionManager.doTransaction(txn);
+    this._updateCommands();
+  },
+
+  undoTransaction: function undoTransaction() {
+    this.mTransactionManager.undoTransaction();
+    this._updateCommands();
+  },
+
+  redoTransaction: function redoTransaction() {
+    this.mTransactionManager.redoTransaction();
+    this._updateCommands();
+  },
+
+  clear: function() this.mTransactionManager.clear(),
+  beginBatch: function() this.mTransactionManager.beginBatch(),
+  endBatch: function() this.mTransactionManager.endBatch(),
+
+  get numberOfUndoItems() {
+    return this.mTransactionManager.numberOfUndoItems;
+  },
+
+  get numberOfRedoItems() {
+    return this.mTransactionManager.numberOfRedoItems;
+  },
+
+  get maxTransactionCount() {
+    return this.mTransactionManager.maxTransactionCount;
+  },
+  set maxTransactionCount(val) {
+    return this.mTransactionManager.maxTransactionCount = val;
+  },
+
+  peekUndoStack: function() this.mTransactionManager.peekUndoStack(),
+  peekRedoStack: function() this.mTransactionManager.peekRedoStack(),
+  getUndoStack: function() this.mTransactionManager.getUndoStack(),
+  getRedoStack: function() this.mTransactionManager.getRedoStack(),
+  AddListener: function(l) this.mTransactionManager.AddListener(l),
+  RemoveListener: function(l) this.mTransactionManager.RemoveListener(l)
 };
 
 /**

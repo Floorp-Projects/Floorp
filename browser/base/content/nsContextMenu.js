@@ -1160,7 +1160,7 @@ nsContextMenu.prototype = {
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
       var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.bookmarksRootId, -1,
                                            title, null, [descAnno]);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
 

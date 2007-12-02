@@ -345,8 +345,6 @@ var BookmarkPropertiesPanel = {
    * dialog to initialize the state of the panel.
    */
   onDialogLoad: function BPP_onDialogLoad() {
-    this._tm = window.opener.PlacesUtils.tm;
-
     this._determineItemInfo();
     this._populateProperties();
     this._forceHideRows();
@@ -883,7 +881,7 @@ var BookmarkPropertiesPanel = {
       window.arguments[0].performed = true;
       var aggregate =
         PlacesUtils.ptm.aggregateTransactions(this._getDialogTitle(), transactions);
-      this._tm.doTransaction(aggregate);
+      PlacesUtils.ptm.doTransaction(aggregate);
     }
   },
 
@@ -1015,7 +1013,7 @@ var BookmarkPropertiesPanel = {
     // perfrom our transaction do via the transaction manager passed by the
     // opener so it can be undone.
     window.arguments[0].performed = true;
-    this._tm.doTransaction(createTxn);
+    PlacesUtils.ptm.doTransaction(createTxn);
   },
 
   onNamePickerInput: function BPP_onNamePickerInput() {
