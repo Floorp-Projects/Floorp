@@ -160,9 +160,9 @@ function testtag_timepicker_UI_key(tp, testid, value, field,
 
   var eventTarget = tp.readOnly ? null : tp;
 
-  var testname = testid + " " + value + " key down";
+  var testname = testid + " " + value + " key up";
   synthesizeKeyExpectEvent("VK_UP", { }, eventTarget, "change", testname);
-  testtag_comparetime(tp, testid + " " + value + " key up", uhour, uminute, usecond);
+  testtag_comparetime(tp, testname, uhour, uminute, usecond);
 
   testname = testid + " " + value + " key down";
   synthesizeKeyExpectEvent("VK_DOWN", { }, eventTarget, "change", testname);
