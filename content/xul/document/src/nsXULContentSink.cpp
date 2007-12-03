@@ -969,8 +969,6 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
             // stack, so we're done.
             return NS_OK;
         }
-
-        *((int*)0) = 1;  // Crash out, dammit
     }
 
     // Set the correct script-type for the element.
