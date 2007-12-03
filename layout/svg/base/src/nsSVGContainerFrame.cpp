@@ -154,8 +154,9 @@ nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
   nsISVGChildFrame* SVGFrame = nsnull;
   CallQueryInterface(aOldFrame, &SVGFrame);
 
-  if (SVGFrame && !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
-    dirtyRect = SVGFrame->GetCoveredRegion();
+  if (SVGFrame && !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    dirtyRect = nsSVGUtils::FindFilterInvalidation(aOldFrame);
+  }
 
   nsresult rv = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
 
