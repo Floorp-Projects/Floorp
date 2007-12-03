@@ -247,20 +247,17 @@ nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
     // real column below, spanned anonymous columns should be removed,
     // since the HTML spec says to ignore the span of a colgroup if it
     // has content columns in it.
+    NS_ASSERTION(col != aPrevFrame, "Bad aPrevFrame");
     nextCol = col->GetNextCol();
     RemoveFrame(nsnull, col);
     col = nextCol;
   }
 
-  if (aPrevFrame) {
-    col = GetNextColumn(aPrevFrame);
-    while (col && col->GetColType() == eColAnonymousCol) {
-      // This is a column frame from a <col span="N">.  We want to
-      // insert our new frame after the end of this span
-      aPrevFrame = col;
-      col = col->GetNextCol();
-    }
-  }
+  NS_ASSERTION(!aPrevFrame || aPrevFrame == aPrevFrame->GetLastContinuation(),
+               "Prev frame should be last in continuation chain");
+  NS_ASSERTION(!aPrevFrame || !GetNextColumn(aPrevFrame) ||
+               GetNextColumn(aPrevFrame)->GetColType() != eColAnonymousCol,
+               "Shouldn't be inserting before a spanned colframe");
 
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
   nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame,
