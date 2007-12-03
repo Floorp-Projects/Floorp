@@ -60,6 +60,7 @@
 #include "nsIURL.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebNavigationInfo.h"
+#include "nsIScriptChannel.h"
 
 #include "nsPluginError.h"
 
@@ -857,6 +858,23 @@ nsObjectLoadingContent::LoadObject(const nsAString& aURI,
   return LoadObject(uri, aNotify, aTypeHint, aForceLoad);
 }
 
+static PRBool
+IsAboutBlank(nsIURI* aURI)
+{
+  // XXXbz this duplicates an nsDocShell function, sadly
+  NS_PRECONDITION(aURI, "Must have URI");
+    
+  // GetSpec can be expensive for some URIs, so check the scheme first.
+  PRBool isAbout = PR_FALSE;
+  if (NS_FAILED(aURI->SchemeIs("about", &isAbout)) || !isAbout) {
+    return PR_FALSE;
+  }
+    
+  nsCAutoString str;
+  aURI->GetSpec(str);
+  return str.EqualsLiteral("about:blank");  
+}
+
 nsresult
 nsObjectLoadingContent::LoadObject(nsIURI* aURI,
                                    PRBool aNotify,
@@ -1138,6 +1156,23 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   // MIME Type hint
   if (!aTypeHint.IsEmpty()) {
     chan->SetContentType(aTypeHint);
+  }
+
+  // Set up the channel's principal and such, like nsDocShell::DoURILoad does
+  PRBool inheritPrincipal;
+  rv = NS_URIChainHasFlags(aURI,
+                           nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                           &inheritPrincipal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (inheritPrincipal || IsAboutBlank(aURI)) {
+    chan->SetOwner(thisContent->NodePrincipal());
+  }
+
+  nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(chan);
+  if (scriptChannel) {
+    // Allow execution against our context if the principals match
+    scriptChannel->
+      SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
   }
 
   // AsyncOpen can fail if a file does not exist.

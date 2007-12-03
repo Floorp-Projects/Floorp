@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=353334
+-->
+<head>
+  <title>Test for Bug 353334</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script>var x = "PASS"</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=353334">Mozilla Bug 353334</a>
+<p id="display">
+<iframe id="one"></iframe>
+<object id="two" data="about:blank"></object>
+<iframe id="three" src="data:text/html,<body>test</body>"></iframe>
+<object id="four" data="data:text/html,<body>test</body>"></object>
+<iframe id="five" src="javascript:parent.x"></iframe>
+<object id="six" data="javascript:x"></object>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 353334 **/
+SimpleTest.waitForExplicitFinish();
+
+function doPrincipalTest(id) {
+  var doc = $(id).contentDocument;
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  is(doc.nodePrincipal, document.nodePrincipal,
+     "Wrong principal for document in node with id='" + id + "'");
+}
+
+function doContentTest(id) {
+  is($(id).contentDocument.documentElement.textContent, "PASS",
+     "Script executed in wrong context in node with id='" + id + "'");
+}
+
+function checkPrincipal() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  is(document.nodePrincipal instanceof Components.interfaces.nsIPrincipal,
+     true,
+     "Should be a principal");
+}
+
+addLoadEvent(function() {
+  checkPrincipal();
+
+  for each (var i in [ "one", "two", "three", "four" ]) {
+    doPrincipalTest(i);
+  }
+
+  for each (i in [ "five", "six" ]) {
+    doContentTest(i);
+  }
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
+
