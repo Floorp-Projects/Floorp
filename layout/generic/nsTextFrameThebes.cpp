@@ -603,10 +603,16 @@ public:
     mDoubleByteText = PR_FALSE;
   }
   void ResetLineBreaker() {
-    mLineBreaker.Reset();
+    PRBool trailingBreak;
+    mLineBreaker.Reset(&trailingBreak);
   }
   void AccumulateRunInfo(nsTextFrame* aFrame);
-  void BuildTextRunForFrames(void* aTextBuffer);
+  /**
+   * @return null to indicate either textrun construction failed or
+   * we constructed just a partial textrun to set up linebreaker and other
+   * state for following textruns.
+   */
+  gfxTextRun* BuildTextRunForFrames(void* aTextBuffer);
   void AssignTextRun(gfxTextRun* aTextRun);
   nsTextFrame* GetNextBreakBeforeFrame(PRUint32* aIndex);
   void SetupBreakSinksForTextRun(gfxTextRun* aTextRun, PRBool aIsExistingTextRun,
@@ -691,9 +697,8 @@ private:
   gfxContext*                   mContext;
   nsIFrame*                     mLineContainer;
   nsTextFrame*                  mLastFrame;
-  // The common ancestor of the current frame and the previous text frame
-  // on the line, if there's no non-text frame boundaries in between. Otherwise
-  // null.
+  // The common ancestor of the current frame and the previous leaf frame
+  // on the line, or null if there was no previous leaf frame.
   nsIFrame*                     mCommonAncestorWithLastFrame;
   // mMaxTextLength is an upper bound on the size of the text in all mapped frames
   PRUint32                      mMaxTextLength;
@@ -1028,26 +1033,35 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks)
   if (mMappedFlows.Length() == 0)
     return;
 
+  gfxTextRun* textRun;
   if (!mSkipIncompleteTextRuns && mCurrentFramesAllSameTextRun &&
       ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_WHITESPACE) != 0) ==
       mCurrentRunTrimLeadingWhitespace &&
       IsTextRunValidForMappedFlows(mCurrentFramesAllSameTextRun)) {
     // Optimization: We do not need to (re)build the textrun.
+    textRun = mCurrentFramesAllSameTextRun;
 
     // Feed this run's text into the linebreaker to provide context. This also
     // updates mTrimNextRunLeadingWhitespace appropriately.
-    SetupBreakSinksForTextRun(mCurrentFramesAllSameTextRun, PR_TRUE, PR_FALSE);
+    SetupBreakSinksForTextRun(textRun, PR_TRUE, PR_FALSE);
     mTrimNextRunLeadingWhitespace =
-      (mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_WHITESPACE) != 0;
+      (textRun->GetFlags() & nsTextFrameUtils::TEXT_TRAILING_WHITESPACE) != 0;
   } else {
     nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> buffer;
     if (!buffer.AppendElements(mMaxTextLength*(mDoubleByteText ? 2 : 1)))
       return;
-    BuildTextRunForFrames(buffer.Elements());
+    textRun = BuildTextRunForFrames(buffer.Elements());
   }
 
   if (aFlushLineBreaks) {
-    mLineBreaker.Reset();
+    PRBool trailingLineBreak;
+    nsresult rv = mLineBreaker.Reset(&trailingLineBreak);
+    // textRun may be null for various reasons, including because we constructed
+    // a partial textrun just to get the linebreaker and other state set up
+    // to build the next textrun.
+    if (NS_SUCCEEDED(rv) && trailingLineBreak && textRun) {
+      textRun->SetFlagBits(nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK);
+    }
     PRUint32 i;
     for (i = 0; i < mBreakSinks.Length(); ++i) {
       if (!mBreakSinks[i]->mExistingTextRun || mBreakSinks[i]->mChangedBreaks) {
@@ -1067,7 +1081,7 @@ void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
   mMaxTextLength += aFrame->GetContentLength();
   mDoubleByteText |= aFrame->GetContent()->GetText()->Is2b();
   mLastFrame = aFrame;
-  mCommonAncestorWithLastFrame = aFrame;
+  mCommonAncestorWithLastFrame = aFrame->GetParent();
 
   MappedFlow* mappedFlow = &mMappedFlows[mMappedFlows.Length() - 1];
   NS_ASSERTION(mappedFlow->mStartFrame == aFrame ||
@@ -1198,12 +1212,12 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   PRBool descendInto = PR_TRUE;
   if (!continueTextRun) {
     FlushFrames(PR_TRUE);
-    mCommonAncestorWithLastFrame = nsnull;
+    mCommonAncestorWithLastFrame = aFrame;
+    mTrimNextRunLeadingWhitespace = PR_FALSE;
     // XXX do we need this? are there frames we need to descend into that aren't
     // float-containing-blocks?
     descendInto = !aFrame->IsFloatContainingBlock();
     mStartOfLine = PR_FALSE;
-    mTrimNextRunLeadingWhitespace = PR_FALSE;
   }
 
   if (descendInto) {
@@ -1215,7 +1229,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
 
   if (!continueTextRun) {
     FlushFrames(PR_TRUE);
-    mCommonAncestorWithLastFrame = nsnull;
+    mCommonAncestorWithLastFrame = aFrame;
     mTrimNextRunLeadingWhitespace = PR_FALSE;
   }
 
@@ -1322,7 +1336,7 @@ GetFontMetrics(gfxFontGroup* aFontGroup)
   return font->GetMetrics();
 }
 
-void
+gfxTextRun*
 BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 {
   gfxSkipCharsBuilder builder;
@@ -1421,7 +1435,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         nsAutoTArray<PRUint8,BIG_TEXT_NODE_SIZE> tempBuf;
         if (!tempBuf.AppendElements(contentLength)) {
           DestroyUserData(userData);
-          return;
+          return nsnull;
         }
         PRUint8* bufStart = tempBuf.Elements();
         PRUint8* end = nsTextFrameUtils::TransformText(
@@ -1456,7 +1470,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // Check for out-of-memory in gfxSkipCharsBuilder
   if (!builder.IsOK()) {
     DestroyUserData(userData);
-    return;
+    return nsnull;
   }
 
   void* finalUserData;
@@ -1491,7 +1505,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   gfxFontGroup* fontGroup = GetFontGroupForFrame(firstFrame);
   if (!fontGroup) {
     DestroyUserData(userData);
-    return;
+    return nsnull;
   }
 
   if (textFlags & nsTextFrameUtils::TEXT_HAS_TAB) {
@@ -1598,7 +1612,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   }
   if (!textRun) {
     DestroyUserData(userData);
-    return;
+    return nsnull;
   }
 
   // We have to set these up after we've created the textrun, because
@@ -1615,12 +1629,13 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     gTextRuns->RemoveFromCache(textRun);
     delete textRun;
     DestroyUserData(userData);
-    return;
+    return nsnull;
   }
 
   // Actually wipe out the textruns associated with the mapped frames and associate
   // those frames with this text run.
   AssignTextRun(textRun);
+  return textRun;
 }
 
 static PRBool
@@ -5508,6 +5523,19 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     lineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
         textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth);
   }
+  PRBool breakAfter = PR_FALSE;
+  if ((charsFit == length && transformedOffset + transformedLength == mTextRun->GetLength() &&
+       (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
+    // Note that because we didn't break, we can be sure that (thanks to the
+    // code up above) textMetrics.mAdvanceWidth includes the width of any
+    // trailing whitespace. So we need to subtract trimmableWidth here
+    // because if we did break at this point, that much width would be trimmed.
+    if (textMetrics.mAdvanceWidth - trimmableWidth > availWidth) {
+      breakAfter = PR_TRUE;
+    } else {
+      lineLayout.NotifyOptionalBreakPosition(mContent, offset + length, PR_TRUE);
+    }
+  }
   if (completedFirstLetter) {
     lineLayout.SetFirstLetterStyleOK(PR_FALSE);
   }
@@ -5523,6 +5551,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     // Ends in \n
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
     lineLayout.SetLineEndsInBR(PR_TRUE);
+  } else if (breakAfter) {
+    aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
   }
 
   // Compute space and letter counts for justification, if required

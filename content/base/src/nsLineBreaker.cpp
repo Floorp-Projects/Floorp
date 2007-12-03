@@ -391,7 +391,8 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
 }
 
 nsresult
-nsLineBreaker::AppendInvisibleWhitespace(PRUint32 aFlags) {
+nsLineBreaker::AppendInvisibleWhitespace(PRUint32 aFlags)
+{
   nsresult rv = FlushCurrentWord();
   if (NS_FAILED(rv))
     return rv;
@@ -401,5 +402,18 @@ nsLineBreaker::AppendInvisibleWhitespace(PRUint32 aFlags) {
     mBreakHere = PR_TRUE;
   }
   mAfterBreakableSpace = isBreakableSpace;
-  return NS_OK;  
+  return NS_OK;
+}
+
+nsresult
+nsLineBreaker::Reset(PRBool* aTrailingBreak)
+{
+  nsresult rv = FlushCurrentWord();
+  if (NS_FAILED(rv))
+    return rv;
+
+  *aTrailingBreak = mBreakHere || mAfterBreakableSpace;
+  mBreakHere = PR_FALSE;
+  mAfterBreakableSpace = PR_FALSE;
+  return NS_OK;
 }
