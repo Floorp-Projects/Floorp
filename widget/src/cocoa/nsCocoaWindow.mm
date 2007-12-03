@@ -1519,7 +1519,9 @@ static const float sPatternWidth = 1.0f;
 // These are the start and end greys for the default titlebar gradient.
 static const float sLeopardHeaderStartGrey = 196/255.0f;
 static const float sLeopardHeaderEndGrey = 149/255.0f;
-static const float sTigerHeaderStartGrey = 249/255.0f;
+static const float sLeopardHeaderBackgroundStartGrey = 232/255.0f;
+static const float sLeopardHeaderBackgroundEndGrey = 207/255.0f;
+static const float sTigerHeaderStartGrey = 239/255.0f;
 static const float sTigerHeaderEndGrey = 202/255.0f;
 
 // This is the grey for the border at the bottom of the titlebar.
@@ -1530,9 +1532,10 @@ static const float sTigerTitlebarBorderGrey = 140/255.0f;
 static void headerShading(void* aInfo, const float* aIn, float* aOut)
 {
   float startGrey, endGrey;
+  BOOL isMain = *(BOOL*)aInfo;
   if (nsToolkit::OnLeopardOrLater()) {
-    startGrey = sLeopardHeaderStartGrey;
-    endGrey = sLeopardHeaderEndGrey;
+    startGrey = isMain ? sLeopardHeaderStartGrey : sLeopardHeaderBackgroundStartGrey;
+    endGrey = isMain ? sLeopardHeaderEndGrey : sLeopardHeaderBackgroundEndGrey;
   }
   else {
     startGrey = sTigerHeaderStartGrey;
@@ -1563,17 +1566,24 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
   // If the titlebar color is nil, draw the default titlebar shading.
   if (!titlebarColor) {
-    //Create and draw a CGShading that uses headerShading() as its callback.
-    CGFunctionCallbacks callbacks = {0, headerShading, NULL};
-    CGFunctionRef function = CGFunctionCreate(NULL, 1, NULL, 4, NULL, &callbacks);
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGShadingRef shading = CGShadingCreateAxial(colorSpace, CGPointMake(0.0f, titlebarOrigin),
-                                                CGPointMake(0.0f, titlebarOrigin + titlebarHeight),
-                                                function, NO, NO);
-    CGColorSpaceRelease(colorSpace);
-    CGFunctionRelease(function);
-    CGContextDrawShading(aContext, shading);
-    CGShadingRelease(shading);
+    BOOL isMain = [window isMainWindow];
+    // On Tiger when the window is not main, we want to draw a pinstripe pattern instead.
+    if (!nsToolkit::OnLeopardOrLater() && !isMain) {
+      [[NSColor windowBackgroundColor] set];
+      NSRectFill(NSMakeRect(0.0f, titlebarOrigin, 1.0f, titlebarOrigin + titlebarHeight));
+    } else {
+      // Otherwise, create and draw a CGShading that uses headerShading() as its callback.
+      CGFunctionCallbacks callbacks = {0, headerShading, NULL};
+      CGFunctionRef function = CGFunctionCreate(&isMain, 1, NULL, 4, NULL, &callbacks);
+      CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+      CGShadingRef shading = CGShadingCreateAxial(colorSpace, CGPointMake(0.0f, titlebarOrigin),
+                                                  CGPointMake(0.0f, titlebarOrigin + titlebarHeight),
+                                                  function, NO, NO);
+      CGColorSpaceRelease(colorSpace);
+      CGFunctionRelease(function);
+      CGContextDrawShading(aContext, shading);
+      CGShadingRelease(shading);
+    }
 
     // Draw the one pixel border at the bottom of the titlebar.
     if (nsToolkit::OnLeopardOrLater())
