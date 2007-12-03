@@ -1370,6 +1370,8 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
     // only appears above the parent, instead of all windows
     if (aParent)
       extendedStyle = WS_EX_TOOLWINDOW;
+    else
+      parent = NULL;
   } else if (nsnull != aInitData) {
     // See if the caller wants to explictly set clip children and clip siblings
     if (aInitData->clipChildren) {
