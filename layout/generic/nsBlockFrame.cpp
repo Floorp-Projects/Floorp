@@ -4038,6 +4038,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     nscoord dy = aState.GetFlag(BRS_APPLYTOPMARGIN)
                    ? -aState.mPrevBottomMargin.get() : 0;
     newY = aState.mY + dy;
+    aLine->SlideBy(dy); // XXXldb Do we really want to do this?
   }
 
   // See if the line fit. If it doesn't we need to push it. Our first
