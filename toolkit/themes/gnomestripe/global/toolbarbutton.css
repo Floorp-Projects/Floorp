@@ -105,7 +105,6 @@ toolbarbutton[disabled="true"][open="true"] {
 /* ..... checked state ..... */
 
 toolbarbutton[checked="true"] {
-  -moz-appearance: none;
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
   padding-top: 4px !important;
   padding-bottom: 2px !important;

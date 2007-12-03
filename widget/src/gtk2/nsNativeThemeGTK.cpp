@@ -227,6 +227,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aState->inHover = (eventState & NS_EVENT_STATE_HOVER) == NS_EVENT_STATE_HOVER;
       aState->isDefault = IsDefaultButton(aFrame);
       aState->canDefault = FALSE; // XXX fix me
+      aState->depressed = FALSE;
 
       if (aFrame && aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) {
         // For these widget types, some element (either a child or parent)
@@ -296,6 +297,17 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
               AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
                           nsWidgetAtoms::_true, eIgnoreCase);
           }
+        }
+
+        // A button with drop down menu open or an activated toggle button
+        // should always appear depressed.
+        if (aWidgetType == NS_THEME_BUTTON ||
+            aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
+            aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON) {
+          PRBool menuOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
+          aState->depressed = IsCheckedButton(aFrame) || menuOpen;
+          // we must not highlight buttons with open drop down menus on hover.
+          aState->inHover = aState->inHover && !menuOpen;
         }
       }
     }
