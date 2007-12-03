@@ -274,6 +274,18 @@ nsGNOMERegistry::GetAppDescForScheme(const nsACString& aScheme,
   char *app = getAppForScheme(aScheme);
 
   if (app) {
+    // Try to only provide the executable name, as it is much simpler than with the path and arguments
+    char *firstSpace = strchr(app, ' ');
+    if (firstSpace) {
+      *firstSpace = '\0';
+      char *lastSlash = strrchr(app, '/');
+      if (lastSlash) {
+        CopyUTF8toUTF16(lastSlash + 1, aDesc);
+        g_free(app);
+        return;
+      }
+    }
+
     CopyUTF8toUTF16(app, aDesc);
     g_free(app);
   }
