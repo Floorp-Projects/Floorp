@@ -86,7 +86,6 @@ nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell, nsStyleContext* aContext):
     mStayActive(PR_FALSE),
     mIsActive(PR_FALSE),
     mCurrentMenu(nsnull),
-    mRecentlyClosedMenu(nsnull),
     mTarget(nsnull),
     mCaretWasVisible(PR_FALSE)
 {
@@ -338,7 +337,6 @@ nsMenuBarFrame::SetCurrentMenuItem(nsMenuFrame* aMenuItem)
     aMenuItem->SelectMenu(PR_TRUE);
 
   mCurrentMenu = aMenuItem;
-  mRecentlyClosedMenu = nsnull;
 
   return NS_OK;
 }
@@ -460,7 +458,6 @@ nsMenuBarFrame::MenuClosed()
 {
   SetActive(PR_FALSE);
   if (!mIsActive && mCurrentMenu) {
-    SetRecentlyClosed(mCurrentMenu);
     mCurrentMenu->SelectMenu(PR_FALSE);
     mCurrentMenu = nsnull;
     return PR_TRUE;

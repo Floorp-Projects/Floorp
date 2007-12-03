@@ -79,19 +79,6 @@ public:
 
   PRBool IsMenuOpen() { return mCurrentMenu && mCurrentMenu->IsOpen(); }
 
-  // return true if aMenuFrame was the recently closed menu, clearing the
-  // the recent menu state in the process.
-  PRBool IsRecentlyClosed(nsMenuFrame* aMenuFrame)
-  {
-    PRBool match = (aMenuFrame == mRecentlyClosedMenu);
-    mRecentlyClosedMenu = nsnull;
-    return match;
-  }
-  void SetRecentlyClosed(nsMenuFrame* aRecentlyClosedMenu)
-  {
-    mRecentlyClosedMenu = aRecentlyClosedMenu;
-  }
-
   void InstallKeyboardNavigator();
   void RemoveKeyboardNavigator();
 
@@ -149,12 +136,6 @@ protected:
   // The current menu that is active (highlighted), which may not be open. This will
   // be null if no menu is active.
   nsMenuFrame* mCurrentMenu;
-
-  // When a menu is closed by clicking the menu label, the menu is rolled up
-  // and the mouse event is fired at the menu. The menu that was closed is
-  // stored here, to avoid having it reopen again during the mouse event.
-  // This is OK to be a weak reference as it is never dereferenced.
-  nsMenuFrame* mRecentlyClosedMenu;
 
   nsIDOMEventTarget* mTarget;
 

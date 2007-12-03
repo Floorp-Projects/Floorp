@@ -41,14 +41,17 @@
 
 #include "nsISupports.idl"
 
-[uuid(23C2BA03-6C76-11d3-96ED-0060B0FB9956)]
+interface nsIContent;
+
+[uuid(ee6efe03-77dc-4aac-a6a8-905731a1796e)]
 interface nsIRollupListener : nsISupports
 {
   /**
-   * Notifies the object to rollup
+   * Notifies the object to rollup, optionally returning the node that
+   * was just rolled up.
    * @result NS_Ok if no errors
    */
-  void Rollup();
+  nsIContent Rollup();
 
   /**
    * Asks the RollupListener if it should rollup on mousevents

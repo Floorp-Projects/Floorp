@@ -233,7 +233,7 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
   // so would break the corresponding context menu).
   if (NSPointInRect(screenLocation, [ctxMenuWindow frame]))
     return event;
-  gRollupListener->Rollup();
+  gRollupListener->Rollup(nsnull);
   return event;
 }
 

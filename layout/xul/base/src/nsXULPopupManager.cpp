@@ -158,11 +158,30 @@ nsXULPopupManager::GetInstance()
 }
 
 NS_IMETHODIMP
-nsXULPopupManager::Rollup()
+nsXULPopupManager::Rollup(nsIContent** aLastRolledUp)
 {
+  if (aLastRolledUp)
+    *aLastRolledUp = nsnull;
+
   nsMenuChainItem* item = GetTopVisibleMenu();
-  if (item)
+  if (item) {
+    if (aLastRolledUp) {
+      // we need to get the popup that will be closed last, so that
+      // widget can keep track of it so it doesn't reopen if a mouse
+      // down event is going to processed.
+      // Keep going up the menu chain to get the first level menu. This will
+      // be the one that closes up last. It's possible that this menu doesn't
+      // end up closing because the popuphiding event was cancelled, but in
+      // that case we don't need to deal with the menu reopening as it will
+      // already still be open.
+      nsMenuChainItem* first = item;
+      while (first->GetParent())
+        first = first->GetParent();
+      if (first)
+        NS_ADDREF(*aLastRolledUp = first->Content());
+    }
     HidePopup(item->Content(), PR_TRUE, PR_TRUE, PR_FALSE);
+  }
   return NS_OK;
 }
 
@@ -1090,6 +1109,12 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   if (state != ePopupClosed && state != ePopupInvisible)
     return PR_FALSE;
 
+  // if the popup was just rolled up, don't reopen it
+  nsCOMPtr<nsIWidget> widget;
+  aPopup->GetWidget(getter_AddRefs(widget));
+  if (widget && widget->GetLastRollup() == aPopup->GetContent())
+      return PR_FALSE;
+
   nsCOMPtr<nsISupports> cont = aPopup->PresContext()->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
   if (!dsti)
@@ -1751,7 +1776,7 @@ nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
         // The access key just went down and no other
         // modifiers are already down.
         if (mCurrentMenu)
-          Rollup();
+          Rollup(nsnull);
         else if (mActiveMenuBar)
           mActiveMenuBar->MenuClosed();
       }
@@ -1826,7 +1851,7 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
   ) {
     // close popups or deactivate menubar when Tab or F10 are pressed
     if (item)
-      Rollup();
+      Rollup(nsnull);
     else if (mActiveMenuBar)
       mActiveMenuBar->MenuClosed();
   }
@@ -1919,15 +1944,9 @@ nsXULMenuCommandEvent::Run()
     // need to be hidden.
     nsIFrame* popupFrame = menuFrame->GetParent();
     while (popupFrame) {
-      // If the menu is a descendant of a menubar, clear the recently closed
-      // state. Break out afterwards, as the menubar is the top level of a
-      // menu hierarchy.
-      if (popupFrame->GetType() == nsGkAtoms::menuBarFrame) {
-        (static_cast<nsMenuBarFrame *>(popupFrame))->SetRecentlyClosed(nsnull);
-        break;
-      }
-      else if (!popup && popupFrame->GetType() == nsGkAtoms::menuPopupFrame) {
+      if (popupFrame->GetType() == nsGkAtoms::menuPopupFrame) {
         popup = popupFrame->GetContent();
+        break;
       }
       popupFrame = popupFrame->GetParent();
     }

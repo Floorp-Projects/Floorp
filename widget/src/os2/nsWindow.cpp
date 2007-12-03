@@ -664,7 +664,8 @@ nsWindow :: DealWithPopups ( ULONG inMsg, MRESULT* outResult )
 
       // if we've determined that we should still rollup everything, do it.
       if ( rollup ) {
-        gRollupListener->Rollup();
+        // only need to deal with the last rollup for left mouse down events.
+        gRollupListener->Rollup(inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
 
         // return TRUE tells Windows that the event is consumed, 
         // false allows the event to be dispatched
@@ -723,6 +724,8 @@ BOOL bothFromSameWindow( HWND hwnd1, HWND hwnd2 )
 //-------------------------------------------------------------------------
 MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
+   nsAutoRollup autoRollup;
+
    MRESULT popupHandlingResult;
    if( nsWindow::DealWithPopups(msg, &popupHandlingResult) )
       return popupHandlingResult;
@@ -767,7 +770,7 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
          if( !mp2 && 
              !bothFromSameWindow( ((nsWindow*)gRollupWidget)->GetMainWindow(), 
                                   (HWND)mp1) ) {
-            gRollupListener->Rollup();
+            gRollupListener->Rollup(nsnull);
          }
       }
    }
@@ -1120,7 +1123,7 @@ NS_METHOD nsWindow::Destroy()
     // the rollup widget, rollup and turn off capture.
     if (this == gRollupWidget) {
       if (gRollupListener) {
-        gRollupListener->Rollup();
+        gRollupListener->Rollup(nsnull);
       }
       CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
     }

@@ -193,8 +193,6 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  mMenuBarFrame->SetRecentlyClosed(nsnull);
-
   // if event has already been handled, bail
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent ( do_QueryInterface(aKeyEvent) );
   if ( uiEvent ) {
@@ -384,7 +382,6 @@ nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult 
 nsMenuBarListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  mMenuBarFrame->SetRecentlyClosed(nsnull);
   return NS_OK; // means I am NOT consuming event
 }
 

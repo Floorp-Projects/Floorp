@@ -63,6 +63,7 @@ struct  nsColorMap;
 class   imgIContainer;
 class   gfxASurface;
 class   nsIMouseListener;
+class   nsIContent;
 
 /**
  * Callback function that processes events.
@@ -94,10 +95,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 3B4E560A-11E6-4EBD-B987-35385624970D
+// 092c37e8-2806-4ebc-b04b-e0bb624ce0d4
 #define NS_IWIDGET_IID \
-{ 0x3B4E560A, 0x11E6, 0x4EBD, \
-  { 0xB9, 0x87, 0x35, 0x38, 0x56, 0x24, 0x97, 0x0D } }
+{ 0x092c37e8, 0x2806, 0x4ebc, \
+  { 0xb0, 0x4b, 0xe0, 0xbb, 0x62, 0x4c, 0xe0, 0xd4 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary
@@ -1039,6 +1040,10 @@ class nsIWidget : public nsISupports {
      */
     virtual gfxASurface *GetThebesSurface() = 0;
 
+    /**
+     * Return the popup that was last rolled up, or null if there isn't one.
+     */
+    virtual nsIContent* GetLastRollup() = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
