@@ -74,3 +74,310 @@ Expected closing tag after </.
 |     <style>
 |       "
 x { content:"</style" } "
+
+#data
+<!DOCTYPE html><body><table><tr><td></td><input><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tr><td></td><input type="hidden"><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <input>
+|             type="hidden"
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tr><td></td><input tYPe="	hiDDen	"><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <input>
+|             type="hidden"
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tr><td></td><input tYPe="  hiDDen  "><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|       type="  hiDDen  "
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tr><td></td><input type="text" type="hidden"><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|       type="text"
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tr><td></td><input type="hidden" type="text"><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <input>
+|             type="hidden"
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tr><td></td><input id="one"><input type="hidden"><input id="two"><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|       id="one"
+|     <input>
+|       id="two"
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <input>
+|             type="hidden"
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tr><td></td><input id="one" type="hidden"><input id="two"><input id="three" type="hidden"><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|       id="two"
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <input>
+|             type="hidden"
+|             id="one"
+|           <input>
+|             type="hidden"
+|             id="three"
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><input><tr><td></td><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><input type="hidden"><tr><td></td><td></td></tr></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <input>
+|         type="hidden"
+|       <tbody>
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tbody><input><tr><td></td><td></td></tr></tbody></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tbody><input type="hidden"><tr><td></td><td></td></tr></tbody></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <input>
+|           type="hidden"
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><thead><input><tr><td></td><td></td></tr></thead></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|     <table>
+|       <thead>
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><thead><input type="hidden"><tr><td></td><td></td></tr></thead></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <thead>
+|         <input>
+|           type="hidden"
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tfoot><input><tr><td></td><td></td></tr></tfoot></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|     <table>
+|       <tfoot>
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><body><table><tfoot><input type="hidden"><tr><td></td><td></td></tr></tfoot></table></body>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tfoot>
+|         <input>
+|           type="hidden"
+|         <tr>
+|           <td>
+|           <td>
+
+#data
+<!DOCTYPE html><html><head></head><form><input></form><frameset rows="*"><frame></frameset></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <form>
+|       <input>
+
+#data
+<!DOCTYPE html><html><head></head><form><input type="hidden"></form><frameset rows="*"><frame></frameset></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <frameset>
+|     rows="*"
+|     <frame>
+
+#data
+<!DOCTYPE html><html><head></head><form><input tYpE="	HIdDen	"></form><frameset rows="*"><frame></frameset></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <frameset>
+|     rows="*"
+|     <frame>
+
+#data
+<!DOCTYPE html><html><head></head><form><input type=" hidden"></form><frameset rows="*"><frame></frameset></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <form>
+|       <input>
+|         type=" hidden"
+
