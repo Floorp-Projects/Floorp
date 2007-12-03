@@ -82,6 +82,8 @@
 #include "nsSVGForeignObjectFrame.h"
 #include "nsIFontMetrics.h"
 
+static void AddEffectProperties(nsIFrame *aFrame);
+
 class nsSVGPropertyBase : public nsStubMutationObserver {
 public:
   nsSVGPropertyBase(nsIContent *aContent, nsIFrame *aFrame, nsIAtom *aName);
@@ -733,7 +735,7 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
 nsRect
 nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
 {
-  nsRect rect;
+  nsRect rect = aFrame->GetRect();
 
   while (aFrame) {
     if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)
@@ -754,6 +756,8 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
 void
 nsSVGUtils::UpdateFilterRegion(nsIFrame *aFrame)
 {
+  AddEffectProperties(aFrame);
+
   if (aFrame->GetStateBits() & NS_STATE_SVG_FILTERED) {
     nsSVGFilterProperty *property;
     property = static_cast<nsSVGFilterProperty *>

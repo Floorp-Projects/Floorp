@@ -232,7 +232,7 @@ public:
 
   /*
    * Figures out the worst case invalidation area for a frame, taking
-   * into account filters.  Empty return if no filter in the hierarchy.
+   * filters into account.
    */
   static nsRect FindFilterInvalidation(nsIFrame *aFrame);
 
