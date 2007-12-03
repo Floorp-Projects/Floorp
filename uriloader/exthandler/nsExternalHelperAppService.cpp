@@ -761,13 +761,8 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
   return LoadURI(aURL, nsnull);
 }
 
-// helper routines used by LoadURI to check whether we're allowed
-// to load external schemes and whether or not to warn the user
-
 static const char kExternalProtocolPrefPrefix[]  = "network.protocol-handler.external.";
 static const char kExternalProtocolDefaultPref[] = "network.protocol-handler.external-default";
-static const char kExternalWarningPrefPrefix[]   = "network.protocol-handler.warn-external.";
-static const char kExternalWarningDefaultPref[]  = "network.protocol-handler.warn-external-default";
 
 NS_IMETHODIMP 
 nsExternalHelperAppService::LoadURI(nsIURI *aURI,
@@ -811,16 +806,6 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   if (NS_FAILED(rv) || !allowLoad)
     return NS_OK; // explicitly denied or missing default pref
 
-  // allowLoad is now true. See whether we have to ask the user
-  nsCAutoString warningPref(kExternalWarningPrefPrefix);
-  warningPref += scheme;
-  PRBool warn = PR_TRUE;
-  rv = prefs->GetBoolPref(warningPref.get(), &warn);
-  if (NS_FAILED(rv))
-  {
-    // no scheme-specific value, check the default
-    prefs->GetBoolPref(kExternalWarningDefaultPref, &warn);
-  }
  
   nsCOMPtr<nsIHandlerInfo> handler;
   rv = GetProtocolHandlerInfo(scheme, getter_AddRefs(handler));
@@ -831,11 +816,9 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   PRBool alwaysAsk = PR_TRUE;
   handler->GetAlwaysAskBeforeHandling(&alwaysAsk);
 
-  // if we are not supposed to warn, we are not supposed to always ask, and
-  // the preferred action is to use a helper app or the system default, we just
-  // launch the URI.
-  if (!warn &&
-      !alwaysAsk && (preferredAction == nsIHandlerInfo::useHelperApp ||
+  // if we are not supposed to ask, and the preferred action is to use
+  // a helper app or the system default, we just launch the URI.
+  if (!alwaysAsk && (preferredAction == nsIHandlerInfo::useHelperApp ||
                      preferredAction == nsIHandlerInfo::useSystemDefault))
     return handler->LaunchWithURI(uri, aWindowContext);
   
@@ -895,13 +878,15 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
   return NS_OK;
 }
 
+static const char kExternalWarningPrefPrefix[] = 
+  "network.protocol-handler.warn-external.";
+static const char kExternalWarningDefaultPref[] = 
+  "network.protocol-handler.warn-external-default";
+
 NS_IMETHODIMP
 nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme, 
                                                    nsIHandlerInfo **aHandlerInfo)
 {
-  // XXX Now that we've exposed this to the UI (bug 391150), is there anything
-  // we need to do to make it compatible with the "warning" and "exposed" prefs?
-
   // XXX enterprise customers should be able to turn this support off with a
   // single master pref (maybe use one of the "exposed" prefs here?)
 
@@ -916,20 +901,37 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme,
   nsCOMPtr<nsIHandlerService> handlerSvc = do_GetService(NS_HANDLERSERVICE_CONTRACTID);
   if (handlerSvc)
     rv = handlerSvc->FillHandlerInfo(*aHandlerInfo, EmptyCString());
-
+  
+  // this type isn't in our database, so we've only got an OS default handler,
+  // if one exists
   if (NS_FAILED(rv)) {
-    // We don't know it, so we always ask the user.  By the time we call this
-    // method, we already have checked if we should open this protocol and ask
-    // the user, so these defaults are OK.
-    // XXX this is a bit different than the MIME system, so we may want to look
-    //     into this more in the future.
-    (*aHandlerInfo)->SetAlwaysAskBeforeHandling(PR_TRUE);
-    // If no OS default existed, we set the preferred action to alwaysAsk.  This
-    // really means not initialized to all the code...
-    if (exists)
+    
+    if (exists) {
+      // we've got a default, so use it
       (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::useSystemDefault);
-    else
+
+      // whether or not to ask the user depends on the warning preference
+
+      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (!prefs)
+        return NS_OK; // deny if we can't check prefs
+
+      nsCAutoString warningPref(kExternalWarningPrefPrefix);
+      warningPref += aScheme;
+      PRBool warn = PR_TRUE;
+      rv = prefs->GetBoolPref(warningPref.get(), &warn);
+      if (NS_FAILED(rv))
+      {
+        // no scheme-specific value, check the default
+        prefs->GetBoolPref(kExternalWarningDefaultPref, &warn);
+      }
+      (*aHandlerInfo)->SetAlwaysAskBeforeHandling(warn);
+    } else {
+      // If no OS default existed, we set the preferred action to alwaysAsk. 
+      // This really means not initialized (i.e. there's no available handler)
+      // to all the code...
       (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::alwaysAsk);
+    }
   }
 
   return NS_OK;

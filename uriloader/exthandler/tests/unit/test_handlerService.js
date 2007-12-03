@@ -45,6 +45,9 @@ function run_test() {
   const mimeSvc = Cc["@mozilla.org/mime;1"].
                   getService(Ci.nsIMIMEService);
 
+  const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+                   getService(Ci.nsIExternalProtocolService);
+  
   const prefSvc = Cc["@mozilla.org/preferences-service;1"].
                   getService(Ci.nsIPrefService);
                   
@@ -114,9 +117,29 @@ function run_test() {
   do_check_eq(handlerInfo.hasDefaultHandler, false);
   do_check_eq(handlerInfo.defaultDescription, "");
 
-  // FIXME: test a default protocol handler.
+  // test some default protocol info properties
+  const kExternalWarningDefault = 
+    "network.protocol-handler.warn-external-default";
+  prefSvc.setBoolPref(kExternalWarningDefault, true);
 
-
+  // XXX add more thorough protocol info property checking
+  
+  // no OS default handler exists
+  var protoInfo = protoSvc.getProtocolHandlerInfo("x-moz-rheet");
+  do_check_eq(protoInfo.preferredAction, protoInfo.alwaysAsk);
+  do_check_true(protoInfo.alwaysAskBeforeHandling);
+  
+  // OS default exists, explicit warning pref: false
+  const kExternalWarningPrefPrefix = "network.protocol-handler.warn-external.";
+  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false)
+  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+  do_check_false(protoInfo.alwaysAskBeforeHandling);
+  
+  // OS default exists, explicit warning pref: true
+  prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", true)
+  protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
+  do_check_true(protoInfo.alwaysAskBeforeHandling);
+  
   //**************************************************************************//
   // Test Round-Trip Data Integrity
 
