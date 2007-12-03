@@ -75,7 +75,7 @@ public:
   NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount) { aRowCount++; }
-  virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState) { NS_NOTREACHED("Should not be called"); }
+  virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState) { }
   virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows);
   virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal);
   virtual Type GetType() { return eGrid; }
