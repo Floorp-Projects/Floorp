@@ -2060,18 +2060,8 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     return NS_OK;
   }
 
-  if (!nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this))) {
-    nsPIDOMWindow *win = GetWindow();
-    if (win) {
-      nsCOMPtr<nsIDOMElement> frameElement;
-      rv = win->GetFrameElement(getter_AddRefs(frameElement));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (frameElement && !nsContentUtils::CanCallerAccess(frameElement)) {
-        return NS_ERROR_DOM_SECURITY_ERR;
-      }
-    }
-  }
+  NS_ASSERTION(nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this)),
+               "XOW should have caught this!");
 
   if (!aContentType.EqualsLiteral("text/html") &&
       !aContentType.EqualsLiteral("text/plain")) {
