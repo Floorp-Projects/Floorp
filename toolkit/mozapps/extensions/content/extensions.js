@@ -1164,12 +1164,19 @@ function onAddonSelect(aEvent)
     }
     else if (gView == "updates") {
       UpdateInfoLoader.cancelLoad();
-      if (!gExtensionsView.selectedItem)
+      if (!gExtensionsView.selectedItem) {
         previewImageDeck.selectedIndex = 3;
-      else if (!gExtensionsView.selectedItem.hasAttribute("availableUpdateInfo"))
-        previewImageDeck.selectedIndex = 4;
-      else
-        UpdateInfoLoader.loadInfo(gExtensionsView.selectedItem.getAttribute("availableUpdateInfo"));
+      }
+      else {
+        try {
+          var uri = makeURI(gExtensionsView.selectedItem.getAttribute("availableUpdateInfo"));
+          var scheme = uri.scheme;
+        } catch (ex) {}
+        if (uri && (scheme == "http" || scheme == "https"))
+          UpdateInfoLoader.loadInfo(uri.spec);
+        else
+          previewImageDeck.selectedIndex = 4;
+      }
     }
   }
 }
@@ -1989,11 +1996,9 @@ var gExtensionsViewController = {
       if (!aSelectedItem) return;
       var homepageURL = aSelectedItem.getAttribute("homepageURL");
       // only allow http(s) homepages
-      var scheme = "";
-      var uri = null;
       try {
-        uri = makeURI(homepageURL);
-        scheme = uri.scheme;
+        var uri = makeURI(homepageURL);
+        var scheme = uri.scheme;
       } catch (ex) {}
       if (uri && (scheme == "http" || scheme == "https"))
         openURL(uri.spec);
