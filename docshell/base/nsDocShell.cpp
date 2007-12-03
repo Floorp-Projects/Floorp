@@ -7267,19 +7267,21 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     //      (Currently chrome URIs set the owner when they are created!
     //      So setting a NULL owner would be bad!)
     //
-
+    // If this code ever changes, change nsObjectLoadingContent::LoadObject
+    // accordingly.
     PRBool inherit;
     // We expect URIInheritsSecurityContext to return success for an
     // about:blank URI, so don't call IsAboutBlank() if this call fails.
     rv = URIInheritsSecurityContext(aURI, &inherit);
     if (NS_SUCCEEDED(rv) && (inherit || IsAboutBlank(aURI))) {
         channel->SetOwner(aOwner);
-        nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);
-        if (scriptChannel) {
-            // Allow execution against our context if the principals match
-            scriptChannel->
-                SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
-        }
+    }
+
+    nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);
+    if (scriptChannel) {
+        // Allow execution against our context if the principals match
+        scriptChannel->
+            SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
     }
 
     if (aIsNewWindowTarget) {

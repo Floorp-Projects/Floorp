@@ -876,6 +876,28 @@ nsJSChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsJSChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
+    if (aLoadGroup) {
+        PRBool streamPending;
+        nsresult rv = mStreamChannel->IsPending(&streamPending);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (streamPending) {
+            nsCOMPtr<nsILoadGroup> curLoadGroup;
+            mStreamChannel->GetLoadGroup(getter_AddRefs(curLoadGroup));
+
+            if (aLoadGroup != curLoadGroup) {
+                // Move the stream channel to our new loadgroup.  Make sure to
+                // add it before removing it, so that we don't trigger onload
+                // by accident.
+                aLoadGroup->AddRequest(mStreamChannel, nsnull);
+                if (curLoadGroup) {
+                    curLoadGroup->RemoveRequest(mStreamChannel, nsnull,
+                                                NS_BINDING_RETARGETED);
+                }
+            }
+        }
+    }
+    
     return mStreamChannel->SetLoadGroup(aLoadGroup);
 }
 

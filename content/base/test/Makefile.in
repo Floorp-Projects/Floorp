@@ -65,6 +65,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug343596.html \
 		test_bug352728.html \
 		test_bug352728.xhtml \
+		test_bug353334.html \
 		test_bug355026.html \
 		test_bug357450.js \
 		test_bug357450.html \
