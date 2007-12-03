@@ -4040,6 +4040,9 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
     aNewCellOuterFrame = NS_NewMathMLmtdFrame(mPresShell, aStyleContext);
   else
 #endif
+    // Warning: If you change this and add a wrapper frame around table cell
+    // frames, make sure Bug 368554 doesn't regress!
+    // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.    
     aNewCellOuterFrame = NS_NewTableCellFrame(mPresShell, aStyleContext,
                                               IsBorderCollapse(parentFrame));
 
@@ -10646,6 +10649,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
 
   } else if (IS_TABLE_CELL(frameType)) {
+    // Warning: If you change this and add a wrapper frame around table cell
+    // frames, make sure Bug 368554 doesn't regress!
+    // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.
     newFrame = NS_NewTableCellFrame(shell, styleContext, IsBorderCollapse(aParentFrame));
 
     if (newFrame) {

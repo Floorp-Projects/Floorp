@@ -53,6 +53,7 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsContentUtils.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsImageMap.h"
@@ -1867,3 +1868,45 @@ NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,
   return mFrame->FrameChanged(aContainer, newframe, dirtyRect);
 }
 
+static PRBool
+IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
+{
+  if (eCompatibility_NavQuirks != aFrame->PresContext()->CompatibilityMode())
+    return PR_FALSE;
+  // Check if the parent of the closest nsBlockFrame has auto width.
+  nsBlockFrame *ancestor = nsLayoutUtils::FindNearestBlockAncestor(aFrame);
+  if (ancestor->GetStyleContext()->GetPseudoType() == nsCSSAnonBoxes::cellContent) {
+    // Assume direct parent is a table cell frame.
+    nsFrame *grandAncestor = static_cast<nsFrame*>(ancestor->GetParent());
+    return grandAncestor &&
+      grandAncestor->GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto;
+  }
+  return PR_FALSE;
+}
+
+/* virtual */ void
+nsImageFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                nsIFrame::InlineMinWidthData *aData)
+{
+
+  NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
+  
+  PRBool canBreak =
+    !CanContinueTextRun() &&
+    GetParent()->GetStyleText()->WhiteSpaceCanWrap() &&
+    !IsInAutoWidthTableCellForQuirk(this);
+
+  if (canBreak)
+    aData->OptionallyBreak(aRenderingContext);
+ 
+  aData->trailingWhitespace = 0;
+  aData->skipWhitespace = PR_FALSE;
+  aData->trailingTextFrame = nsnull;
+  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                            this, nsLayoutUtils::MIN_WIDTH);
+  aData->atStartOfLine = PR_FALSE;
+
+  if (canBreak)
+    aData->OptionallyBreak(aRenderingContext);
+
+}
