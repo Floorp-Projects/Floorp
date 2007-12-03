@@ -2524,7 +2524,7 @@ class nsNonNativeContextMenuEvent : public nsRunnable {
 
       // if we've determined that we should still rollup, do it.
       if (rollup) {
-        gRollupListener->Rollup();
+        gRollupListener->Rollup(nsnull);
         retVal = PR_TRUE;
       }
     }

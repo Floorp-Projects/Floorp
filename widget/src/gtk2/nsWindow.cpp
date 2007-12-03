@@ -431,7 +431,7 @@ nsWindow::Destroy(void)
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
     if (static_cast<nsIWidget *>(this) == rollupWidget.get()) {
         if (gRollupListener)
-            gRollupListener->Rollup();
+            gRollupListener->Rollup(nsnull);
         gRollupWindow = nsnull;
         gRollupListener = nsnull;
     }
@@ -4050,7 +4050,7 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
 
             // if we've determined that we should still rollup, do it.
             if (rollup) {
-                gRollupListener->Rollup();
+                gRollupListener->Rollup(nsnull);
                 retVal = PR_TRUE;
             }
         }
