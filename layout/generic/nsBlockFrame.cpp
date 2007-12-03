@@ -1081,17 +1081,18 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     ReflowBullet(state, metrics);
 
     nscoord baseline;
-    if (!nsLayoutUtils::GetFirstLineBaseline(this, &baseline)) {
-      baseline = 0;
+    if (nsLayoutUtils::GetFirstLineBaseline(this, &baseline)) {
+      // We have some lines to align the bullet with.  
+
+      // Doing the alignment using the baseline will also cater for
+      // bullets that are placed next to a child block (bug 92896)
+    
+      // Tall bullets won't look particularly nice here...
+      nsRect bbox = mBullet->GetRect();
+      bbox.y = baseline - metrics.ascent;
+      mBullet->SetRect(bbox);
     }
-    
-    // Doing the alignment using the baseline will also cater for
-    // bullets that are placed next to a child block (bug 92896)
-    
-    // Tall bullets won't look particularly nice here...
-    nsRect bbox = mBullet->GetRect();
-    bbox.y = baseline - metrics.ascent;
-    mBullet->SetRect(bbox);
+    // Otherwise just leave the bullet where it is, up against our top padding.
   }
 
   // Compute our final size
