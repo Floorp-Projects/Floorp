@@ -38,12 +38,23 @@
 #
 # ***** END LICENSE BLOCK *****
 */
+
+ menulist > menupopup > menuitem {
+   font: -moz-pull-down-menu;
+ }
+ 
 .prefWindow-dlgbuttons {
   margin: 0 12px 8px 12px;
 }
 
 #BrowserPreferences .prefWindow-dlgbuttons {
   padding-top: 0 !important;
+}
+
+#FontsDialog > .prefWindow-dlgbuttons,
+#ColorsDialog > .prefWindow-dlgbuttons,
+#LanguagesDialog > .prefWindow-dlgbuttons {
+  margin: 0;
 }
 
 .windowDialog {

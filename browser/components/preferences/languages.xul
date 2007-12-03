@@ -42,6 +42,9 @@
 <!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/languages.dtd">
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+#ifdef XP_MACOSX
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+#endif
 
 <prefwindow id="LanguagesDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -173,7 +173,7 @@ menulist > menupopup > menuitem,
 menulist > menupopup > menu {
   padding-right: 25px !important;
   max-width: none;
-  font: -moz-pull-down-menu;
+  font: inherit;
   color: -moz-FieldText;
 }
 
