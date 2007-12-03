@@ -513,9 +513,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow)
 {
-#ifdef DEBUG
   mInstantiating = PR_FALSE;
-#endif
 
   return nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
 }
@@ -771,9 +769,8 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
     appShell->SuspendNative();
   }
 
-#ifdef DEBUG
+  NS_PRECONDITION(!mInstantiating, "How did that happen?");
   mInstantiating = PR_TRUE;
-#endif
 
   NS_ASSERTION(mContent, "We should have a content node.");
 
@@ -792,9 +789,7 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
     rv = aPluginHost->InstantiateEmbeddedPlugin(aMimeType, aURI,
                                                 mInstanceOwner);
   }
-#ifdef DEBUG
   mInstantiating = PR_FALSE;
-#endif
 
   if (appShell) {
     appShell->ResumeNative();
@@ -1410,6 +1405,10 @@ nsObjectFrame::PrepareInstanceOwner()
 nsresult
 nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener)
 {
+  if (mInstantiating) {
+    return NS_OK;
+  }
+  
   nsresult rv = PrepareInstanceOwner();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1421,7 +1420,10 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   // This must be done before instantiating the plugin
   FixupWindow(mRect.Size());
 
+  NS_ASSERTION(!mInstantiating, "Say what?");
+  mInstantiating = PR_TRUE;
   rv = pluginHost->InstantiatePluginForChannel(aChannel, mInstanceOwner, aStreamListener);
+  mInstantiating = PR_FALSE;
 
   return rv;
 }
@@ -1429,6 +1431,10 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
 nsresult
 nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 {
+  if (mInstantiating) {
+    return NS_OK;
+  }
+  
   NS_ASSERTION(aMimeType || aURI, "Need a type or a URI!");
   nsresult rv = PrepareInstanceOwner();
   NS_ENSURE_SUCCESS(rv, rv);
