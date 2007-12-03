@@ -53,6 +53,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsToolkit.h"
+#include "nsPrintfCString.h"
 
 PRInt32 gXULModalLevel = 0;
 
@@ -168,6 +169,28 @@ static nsIMenuBar* GetHiddenWindowMenuBar()
 }
 
 
+// Very large windows work in Cocoa, but can take a long time to
+// process (multiple minutes), during which time the system is
+// unresponsive and seems hung. Although it's likely that windows
+// much larger than screen size are bugs, be conservative and only
+// intervene if the values are so large as to hog the cpu.
+#define SIZE_LIMIT 100000
+static bool WindowSizeAllowed(PRInt32 aWidth, PRInt32 aHeight)
+{
+  if (aWidth > SIZE_LIMIT) {
+    NS_ERROR(nsPrintfCString(256, "Requested Cocoa window width of %d is too much, max allowed is %d\n",
+                             aWidth, SIZE_LIMIT).get());
+    return false;
+  }
+  if (aHeight > SIZE_LIMIT) {
+    NS_ERROR(nsPrintfCString(256, "Requested Cocoa window height of %d is too much, max allowed is %d\n",
+                             aHeight, SIZE_LIMIT).get());
+    return false;
+  }
+  return true;
+}
+
+
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
 nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
@@ -179,6 +202,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
                         nsWidgetInitData *aInitData,
                         nsNativeWidget aNativeWindow)
 {
+  if (!WindowSizeAllowed(aRect.width, aRect.height))
+    return NS_ERROR_FAILURE;
+
   Inherited::BaseCreate(aParent, aRect, aHandleEventFunction, aContext, aAppShell,
                         aToolkit, aInitData);
   
@@ -768,6 +794,9 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  if (!WindowSizeAllowed(aWidth, aHeight))
+    return NS_ERROR_FAILURE;
+
   nsRect windowBounds(cocoaRectToGeckoRect([mWindow frame]));
   BOOL isMoving = (windowBounds.x != aX || windowBounds.y != aY);
   BOOL isResizing = (windowBounds.width != aWidth || windowBounds.height != aHeight);
@@ -808,6 +837,9 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  if (!WindowSizeAllowed(aWidth, aHeight))
+    return NS_ERROR_FAILURE;
+
   nsRect windowBounds(cocoaRectToGeckoRect([mWindow frame]));
   return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
 }
