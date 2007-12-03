@@ -967,3 +967,19 @@ nsIOService::UnescapeString(const nsACString &aStr,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
+                                           nsACString &aCharset,
+                                           PRInt32 *aCharsetStart,
+                                           PRInt32 *aCharsetEnd,
+                                           PRBool *aHadCharset)
+{
+    nsCAutoString ignored;
+    net_ParseContentType(aTypeHeader, ignored, aCharset, aHadCharset,
+                         aCharsetStart, aCharsetEnd);
+    if (*aHadCharset && *aCharsetStart == -1) {
+        *aHadCharset = PR_FALSE;
+    }
+    return NS_OK;
+}
+

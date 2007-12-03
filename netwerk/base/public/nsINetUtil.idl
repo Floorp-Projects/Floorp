@@ -45,7 +45,7 @@ interface nsIURI;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(fbbd8771-8059-4269-8352-a6f2ca6b3c7b)]
+[scriptable, uuid(57322c6f-f4ec-4e46-8253-b74be220de16)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -193,4 +193,29 @@ interface nsINetUtil : nsISupports
    */
   ACString unescapeString(in ACString aStr, in unsigned long aFlags);
 
+  /**
+   * Extract the charset parameter location and value from a content-type
+   * header.
+   *
+   * @param aTypeHeader the header string to parse
+   * @param [out] aCharset the charset parameter specified in the
+   *              header, if any.
+   * @param [out] aCharsetStart index of the start of the charset parameter
+   *              (the ';' separating it from what came before) in aTypeHeader.
+   *              This is only set if this function returns true.
+   * @param [out] aCharsetEnd index of the end of the charset parameter (the
+   *              ';' separating it from what comes after, or inded of the end
+   *              of the string) in aTypeHeader.  This is only set if this
+   *              function returns true.
+   *
+   * @return whether a charset parameter was found.  This can be false even in
+   * cases when parseContentType would claim to have a charset, if the type
+   * that won out does not have a charset parameter specified, because in this
+   * case setting the charset does in fact correspond to appending to the
+   * string.
+   */
+  boolean extractCharsetFromContentType(in AUTF8String aTypeHeader,
+                                        out AUTF8String aCharset,
+                                        out long aCharsetStart,
+                                        out long aCharsetEnd);
 };
