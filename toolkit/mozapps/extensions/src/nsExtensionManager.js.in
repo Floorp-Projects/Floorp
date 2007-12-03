@@ -3307,15 +3307,12 @@ ExtensionManager.prototype = {
         items = PendingOperations.getOperations(OP_NEEDS_UPGRADE);
         for (i = items.length - 1; i >= 0; --i) {
           id = items[i].id;
-          var oldLocation = this.getInstallLocation(id);
           var newLocation = InstallLocations.get(items[i].locationKey);
-          if (newLocation.priority <= oldLocation.priority) {
-            // check if there is updated app compatibility info
-            var newTargetAppInfo = ds.getUpdatedTargetAppInfo(id);
-            if (newTargetAppInfo)
-              updatedTargetAppInfos.push(newTargetAppInfo);
-            this._finalizeUpgrade(id);
-          }
+          // check if there is updated app compatibility info
+          var newTargetAppInfo = ds.getUpdatedTargetAppInfo(id);
+          if (newTargetAppInfo)
+            updatedTargetAppInfos.push(newTargetAppInfo);
+          this._finalizeUpgrade(id, newLocation);
         }
         PendingOperations.clearItems(OP_NEEDS_UPGRADE);
 
@@ -4625,11 +4622,12 @@ ExtensionManager.prototype = {
    * Removes an item's metadata in preparation for an upgrade-install.
    * @param   id
    *          The GUID of the item to uninstall.
+   * @param   installLocation
+   *          The nsIInstallLocation of the item
    */
-  _finalizeUpgrade: function(id) {
+  _finalizeUpgrade: function(id, installLocation) {
     // Retrieve the item properties *BEFORE* we clean the resource!
     var ds = this.datasource;
-    var installLocation = this.getInstallLocation(id);
 
     var stagedFile = null;
     if ("getStageFile" in installLocation)
