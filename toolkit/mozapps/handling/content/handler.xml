@@ -50,7 +50,6 @@
       </xul:vbox>
       <xul:vbox flex="1">
         <xul:label xbl:inherits="value=name"/>
-        <xul:label xbl:inherits="value=description"/>
       </xul:vbox>
     </content>
   </binding>

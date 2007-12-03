@@ -3,11 +3,15 @@
   width: 32px;
 }
 
-richlistitem {
+richlistitem[type] {
   min-height: 36px; /* Don't forget to update the richlistbox height! */
+ }
+
+richlistitem {
+  -moz-box-align: center;
 }
 
 richlistbox {
   /* 3 items high, plus 4px for top and bottom margins, less 2px for border */
-  min-height: 110px; 
+  min-height: 110px;
 }
