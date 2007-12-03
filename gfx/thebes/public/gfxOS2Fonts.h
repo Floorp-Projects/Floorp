@@ -103,17 +103,6 @@ public:
         return static_cast<gfxOS2Font*>(static_cast<gfxFont*>(mFonts[i]));
     }
 
-    gfxOS2Font *GetCachedFont(const nsAString& aName) const {
-        nsRefPtr<gfxOS2Font> font;
-        if (mFontCache.Get(aName, &font))
-            return font;
-        return nsnull;
-    }
-
-    void PutCachedFont(const nsAString& aName, gfxOS2Font *aFont) {
-        mFontCache.Put(aName, aFont);
-    }
-
 protected:
     void InitTextRun(gfxTextRun *aTextRun, const PRUint8 *aUTF8Text,
                      PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength);
@@ -123,7 +112,6 @@ protected:
                                const nsACString& aGenericName, void *aClosure);
 
 private:
-    nsDataHashtable<nsStringHashKey, nsRefPtr<gfxOS2Font> > mFontCache;
 };
 
 #endif /* GFX_OS2_FONTS_H */
