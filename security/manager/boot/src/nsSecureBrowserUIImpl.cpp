@@ -137,6 +137,7 @@ static PLDHashTableOps gMapOps = {
 
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   : mPreviousSecurityState(lis_no_security),
+    mPreviousToplevelWasEV(PR_FALSE),
     mIsViewSource(PR_FALSE)
 {
   mTransferringRequests.ops = nsnull;
@@ -234,9 +235,15 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetState(PRUint32* aState)
 {
+  return MapInternalToExternalState(aState, mPreviousSecurityState, mPreviousToplevelWasEV);
+}
+
+nsresult
+nsSecureBrowserUIImpl::MapInternalToExternalState(PRUint32* aState, lockIconState lock, PRBool ev)
+{
   NS_ENSURE_ARG(aState);
-  
-  switch (mPreviousSecurityState)
+
+  switch (lock)
   {
     case lis_broken_security:
       *aState = STATE_IS_BROKEN;
@@ -258,8 +265,10 @@ nsSecureBrowserUIImpl::GetState(PRUint32* aState)
     case lis_no_security:
       *aState = STATE_IS_INSECURE;
       break;
-
   }
+
+  if (ev && (*aState & STATE_IS_SECURE))
+    *aState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
   
   return NS_OK;
 }
@@ -1109,6 +1118,8 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
     }
     
     mPreviousSecurityState = newSecurityState;
+    mPreviousToplevelWasEV = mNewToplevelIsEV;
+    
 
     if (lis_no_security == newSecurityState)
     {
@@ -1120,38 +1131,11 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
   if (mToplevelEventSink)
   {
     PRUint32 newState = STATE_IS_INSECURE;
-
-    switch (newSecurityState)
-    {
-      case lis_broken_security:
-        newState = STATE_IS_BROKEN;
-        break;
-
-      case lis_mixed_security:
-        newState = STATE_IS_BROKEN;
-        break;
-
-      case lis_low_security:
-        newState = STATE_IS_SECURE | STATE_SECURE_LOW;
-        break;
-
-      case lis_high_security:
-        newState = STATE_IS_SECURE | STATE_SECURE_HIGH;
-        break;
-
-      default:
-      case lis_no_security:
-        newState = STATE_IS_INSECURE;
-        break;
-
-    }
+    MapInternalToExternalState(&newState, newSecurityState, mNewToplevelIsEV);
 
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: UpdateSecurityState: calling OnSecurityChange\n", this
             ));
-
-    if (mNewToplevelIsEV)
-      newState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
 
     mToplevelEventSink->OnSecurityChange(aRequest, newState);
   }
