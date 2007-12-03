@@ -139,6 +139,8 @@ typedef enum {
   MOZ_GTK_RADIOBUTTON_LABEL,
   /* Paints the background of a GtkHandleBox. */
   MOZ_GTK_TOOLBAR,
+  /* Paints a toolbar separator */
+  MOZ_GTK_TOOLBAR_SEPARATOR,
   /* Paints a GtkToolTip */
   MOZ_GTK_TOOLTIP,
   /* Paints a GtkFrame (e.g. a status bar panel). */
@@ -294,6 +296,14 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics* metrics);
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_dropdown_arrow_size(gint* width, gint* height);
+
+/**
+ * Get the desired size of a toolbar separator
+ * size:    [OUT] the desired width
+ *
+ * returns: MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_get_toolbar_separator_width(gint* size);
 
 /**
  * Get the size of a treeview's expander (we call them twisties)

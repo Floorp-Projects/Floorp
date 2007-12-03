@@ -356,6 +356,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       *aWidgetFlags = GTK_ORIENTATION_VERTICAL;
     aGtkWidgetType = MOZ_GTK_SCALE_VERTICAL;
     break;
+  case NS_THEME_TOOLBAR_SEPARATOR:
+    aGtkWidgetType = MOZ_GTK_TOOLBAR_SEPARATOR;
+    break;
   case NS_THEME_SCALE_THUMB_VERTICAL:
     if (aWidgetFlags)
       *aWidgetFlags = GTK_ORIENTATION_VERTICAL;
@@ -892,6 +895,15 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       aResult->height = border.top + border.bottom;
     }
     break;
+  case NS_THEME_TOOLBAR_SEPARATOR:
+    {
+      gint separator_width;
+    
+      moz_gtk_get_toolbar_separator_width(&separator_width);
+    
+      aResult->width = separator_width;
+    }
+    break;
   case NS_THEME_TREEVIEW_HEADER_SORTARROW:
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
@@ -998,7 +1010,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TOOLBAR_BUTTON:
   case NS_THEME_TOOLBAR_DUAL_BUTTON: // so we can override the border with 0
     // case NS_THEME_TOOLBAR_DUAL_BUTTON_DROPDOWN:
-    // case NS_THEME_TOOLBAR_SEPARATOR:
+  case NS_THEME_TOOLBAR_SEPARATOR:
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBAR_PANEL:
