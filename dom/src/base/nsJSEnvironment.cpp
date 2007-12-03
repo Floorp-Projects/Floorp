@@ -938,6 +938,35 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
     return JS_TRUE;
   }
 
+  // Append file and line number information, if available
+  if (script) {
+    const char *filename = ::JS_GetScriptFilename(cx, script);
+    if (filename) {
+      nsXPIDLString scriptLocation;
+      NS_ConvertUTF8toUTF16 filenameUTF16(filename);
+      const PRUnichar *formatParams[] = { filenameUTF16.get() };
+      rv = bundle->FormatStringFromName(NS_LITERAL_STRING("KillScriptLocation").get(),
+                                        formatParams, 1,
+                                        getter_Copies(scriptLocation));
+
+      if (NS_SUCCEEDED(rv) && scriptLocation) {
+        msg.AppendLiteral("\n\n");
+        msg.Append(scriptLocation);
+
+        JSStackFrame *fp, *iterator = nsnull;
+        fp = ::JS_FrameIterator(cx, &iterator);
+        if (fp) {
+          jsbytecode *pc = ::JS_GetFramePC(cx, fp);
+          if (pc) {
+            PRUint32 lineno = ::JS_PCToLineNumber(cx, script, pc);
+            msg.Append(':');
+            msg.AppendInt(lineno);
+          }
+        }
+      }
+    }
+  }
+
   PRInt32 buttonPressed = 1; //In case user exits dialog by clicking X
   PRBool neverShowDlgChk = PR_FALSE;
   PRUint32 buttonFlags = (nsIPrompt::BUTTON_TITLE_IS_STRING *
