@@ -1941,6 +1941,8 @@ static PRBool IsInBounds(const gfxSkipCharsIterator& aStart, PRInt32 aContentLen
                          PRUint32 aOffset, PRUint32 aLength) {
   if (aStart.GetSkippedOffset() > aOffset)
     return PR_FALSE;
+  if (aContentLength == PR_INT32_MAX)
+    return PR_TRUE;
   gfxSkipCharsIterator iter(aStart);
   iter.AdvanceOriginal(aContentLength);
   return iter.GetSkippedOffset() >= aOffset + aLength;
@@ -1952,6 +1954,11 @@ public:
   /**
    * Use this constructor for reflow, when we don't know what text is
    * really mapped by the frame and we have a lot of other data around.
+   * 
+   * @param aLength can be PR_INT32_MAX to indicate we cover all the text
+   * associated with aFrame up to where its flow chain ends in the given
+   * textrun. If PR_INT32_MAX is passed, justification and hyphen-related methods
+   * cannot be called, nor can GetOriginalLength().
    */
   PropertyProvider(gfxTextRun* aTextRun, const nsStyleText* aTextStyle,
                    const nsTextFragment* aFrag, nsTextFrame* aFrame,
@@ -2025,7 +2032,10 @@ public:
   // (for the static provider)
   const gfxSkipCharsIterator& GetStart() { return mStart; }
   // May return PR_INT32_MAX if that was given to the constructor
-  PRUint32 GetOriginalLength() { return mLength; }
+  PRUint32 GetOriginalLength() {
+    NS_ASSERTION(mLength != PR_INT32_MAX, "Length not known");
+    return mLength;
+  }
   const nsTextFragment* GetFragment() { return mFrag; }
 
   gfxFontGroup* GetFontGroup() {
@@ -2051,7 +2061,7 @@ protected:
   gfxSkipCharsIterator  mStart;  // Offset in original and transformed string
   gfxSkipCharsIterator  mTempIterator;
   nsTArray<gfxFloat>*   mTabWidths;  // widths for each transformed string character
-  PRInt32               mLength; // DOM string length
+  PRInt32               mLength; // DOM string length, may be PR_INT32_MAX
   gfxFloat              mWordSpacing;     // space for each whitespace char
   gfxFloat              mLetterSpacing;   // space for each letter
   gfxFloat              mJustificationSpacing;
@@ -2322,6 +2332,7 @@ PropertyProvider::GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
                                        PRPackedBool* aBreakBefore)
 {
   NS_PRECONDITION(IsInBounds(mStart, mLength, aStart, aLength), "Range out of bounds");
+  NS_PRECONDITION(mLength != PR_INT32_MAX, "Can't call this with undefined length");
 
   if (!mTextStyle->WhiteSpaceCanWrap()) {
     memset(aBreakBefore, PR_FALSE, aLength);
@@ -2381,7 +2392,9 @@ void
 PropertyProvider::FindJustificationRange(gfxSkipCharsIterator* aStart,
                                          gfxSkipCharsIterator* aEnd)
 {
+  NS_PRECONDITION(mLength != PR_INT32_MAX, "Can't call this with undefined length");
   NS_ASSERTION(aStart && aEnd, "aStart or/and aEnd is null");
+
   aStart->SetOriginalOffset(mStart.GetOriginalOffset());
   aEnd->SetOriginalOffset(mStart.GetOriginalOffset() + mLength);
 
@@ -2409,6 +2422,8 @@ PropertyProvider::FindJustificationRange(gfxSkipCharsIterator* aStart,
 void
 PropertyProvider::SetupJustificationSpacing()
 {
+  NS_PRECONDITION(mLength != PR_INT32_MAX, "Can't call this with undefined length");
+
   if (NS_STYLE_TEXT_ALIGN_JUSTIFY != mTextStyle->mTextAlign ||
       mTextStyle->WhiteSpaceIsSignificant())
     return;
@@ -4843,7 +4858,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   // OK since we can't really handle tabs for intrinsic sizing anyway.
   const nsTextFragment* frag = mContent->GetText();
   PropertyProvider provider(mTextRun, GetStyleText(), frag, this,
-                            iter, GetInFlowContentLength(), nsnull, 0);
+                            iter, PR_INT32_MAX, nsnull, 0);
 
   PRBool collapseWhitespace = !provider.GetStyleText()->WhiteSpaceIsSignificant();
   PRUint32 start =
@@ -4943,7 +4958,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
   // Pass null for the line container. This will disable tab spacing, but that's
   // OK since we can't really handle tabs for intrinsic sizing anyway.
   PropertyProvider provider(mTextRun, GetStyleText(), mContent->GetText(), this,
-                            iter, GetInFlowContentLength(), nsnull, 0);
+                            iter, PR_INT32_MAX, nsnull, 0);
 
   PRBool collapseWhitespace = !provider.GetStyleText()->WhiteSpaceIsSignificant();
   PRUint32 start =
