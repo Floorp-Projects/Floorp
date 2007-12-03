@@ -56,6 +56,7 @@
 
 static GtkWidget* gProtoWindow;
 static GtkWidget* gButtonWidget;
+static GtkWidget* gToggleButtonWidget;
 static GtkWidget* gCheckboxWidget;
 static GtkWidget* gRadiobuttonWidget;
 static GtkWidget* gHorizScrollbarWidget;
@@ -132,6 +133,18 @@ ensure_button_widget()
         setup_widget_prototype(gButtonWidget);
     }
     return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_toggle_button_widget()
+{
+    if (!gToggleButtonWidget) {
+        gToggleButtonWidget = gtk_toggle_button_new();
+        setup_widget_prototype(gToggleButtonWidget);
+        /* toggle button must be set active to get the right style on hover. */
+        GTK_TOGGLE_BUTTON(gToggleButtonWidget)->active = TRUE;
+  }
+  return MOZ_GTK_SUCCESS;
 }
 
 static gint
@@ -418,6 +431,8 @@ ConvertGtkState(GtkWidgetState* state)
 {
     if (state->disabled)
         return GTK_STATE_INSENSITIVE;
+    else if (state->depressed)
+        return (state->inHover ? GTK_STATE_PRELIGHT : GTK_STATE_ACTIVE);
     else if (state->inHover)
         return (state->active ? GTK_STATE_ACTIVE : GTK_STATE_PRELIGHT);
     else
@@ -482,10 +497,12 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
         height -= 2 * (focus_width + focus_pad);
     }
 
-    shadow_type = button_state == GTK_STATE_ACTIVE ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+    shadow_type = button_state == GTK_STATE_ACTIVE ||
+                      state->depressed ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
 
-    if (relief != GTK_RELIEF_NONE || (button_state != GTK_STATE_NORMAL &&
-                                      button_state != GTK_STATE_INSENSITIVE)) {
+    if (relief != GTK_RELIEF_NONE || state->depressed ||
+           (button_state != GTK_STATE_NORMAL &&
+            button_state != GTK_STATE_INSENSITIVE)) {
         TSOffsetStyleGCs(style, x, y);
         /* the following line can trigger an assertion (Crux theme)
            file ../../gdk/gdkwindow.c: line 1846 (gdk_window_clear_area):
@@ -2074,6 +2091,12 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
 {
     switch (widget) {
     case MOZ_GTK_BUTTON:
+        if (state->depressed) {
+            ensure_toggle_button_widget();
+            return moz_gtk_button_paint(drawable, rect, cliprect, state,
+                                        (GtkReliefStyle) flags,
+                                        gToggleButtonWidget);
+        }
         ensure_button_widget();
         return moz_gtk_button_paint(drawable, rect, cliprect, state,
                                     (GtkReliefStyle) flags, gButtonWidget);
@@ -2219,6 +2242,7 @@ moz_gtk_shutdown()
 
     gProtoWindow = NULL;
     gButtonWidget = NULL;
+    gToggleButtonWidget = NULL;
     gCheckboxWidget = NULL;
     gRadiobuttonWidget = NULL;
     gHorizScrollbarWidget = NULL;
