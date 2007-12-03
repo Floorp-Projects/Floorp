@@ -1,0 +1,19 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     style="-moz-binding: url(xbl-grad-ref--grad-in-bound-02.xbl#red);">
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=389670 -->
+
+  <title>Test SVG in XBL can't reference gradient in the bound document</title>
+
+  <!-- SVG in the binding should not be able to reference this gradient -->
+  <linearGradient id="grad" gradientUnits="userSpaceOnUse">
+    <stop stop-color="red"/>
+  </linearGradient>
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+</svg>
