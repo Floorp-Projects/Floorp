@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
 #   Asaf Romano <mano@mozilla.com>
+#   Dan Mosedale <dmose@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -446,6 +447,12 @@ WebContentConverterRegistrar.prototype = {
                     getService(Ci.nsIExternalProtocolService);
           var handlerInfo = eps.getProtocolHandlerInfo(protocol);
           handlerInfo.possibleApplicationHandlers.appendElement(handler, false);
+
+          // Since the user has agreed to add a new handler, chances are good
+          // that the next time they see a handler of this type, they're going
+          // to want to use it.  Reset the handlerInfo to ask before the next
+          // use.
+          handlerInfo.alwaysAskBeforeHandling = true;
 
           var hs = Cc["@mozilla.org/uriloader/handler-service;1"].
                    getService(Ci.nsIHandlerService);

@@ -123,7 +123,9 @@ var dialog = {
   */
   populateList: function populateList()
   {
+    var items = document.getElementById("items");
     var possibleHandlers = this._handlerInfo.possibleApplicationHandlers;
+    var preferredHandler = this._handlerInfo.preferredApplicationHandler;
     for (let i = possibleHandlers.length - 1; i >= 0; --i) {
       let app = possibleHandlers.queryElementAt(i, Ci.nsIHandlerApp);
       let elm = document.createElement("richlistitem");
@@ -142,7 +144,9 @@ var dialog = {
       }
       elm.obj = app;
 
-      document.getElementById("items").insertBefore(elm, this._itemChoose);
+      items.insertBefore(elm, this._itemChoose);
+      if (preferredHandler && app == preferredHandler)
+        this.selectedItem = elm;
     }
 
     if (this._handlerInfo.hasDefaultHandler) {
@@ -151,8 +155,12 @@ var dialog = {
       elm.id = "os-default-handler";
       elm.setAttribute("name", this._handlerInfo.defaultDescription);
     
-      document.getElementById("items").insertBefore(elm, this._itemChoose);
+      items.insertBefore(elm, items.firstChild);
+      if (this._handlerInfo.preferredAction == 
+          Ci.nsIHandlerInfo.useSystemDefault) 
+          this.selectedItem = elm;
     }
+    items.ensureSelectedElementIsVisible();
   },
   
  /**
@@ -259,10 +267,15 @@ var dialog = {
   //// Getters / Setters
 
  /**
-  * Returns the selected element in the richlistbox
+  * Returns/sets the selected element in the richlistbox
   */
   get selectedItem()
   {
     return document.getElementById("items").selectedItem;
+  },
+  set selectedItem(aItem)
+  {
+    return document.getElementById("items").selectedItem = aItem;
   }
+  
 };
