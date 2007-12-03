@@ -51,7 +51,7 @@ enum nsTableColType {
   eColAnonymousCell      = 3  // the result of a cell alone
 };
 
-class nsTableColFrame : public nsFrame {
+class nsTableColFrame : public nsSplittableFrame {
 public:
 
   enum {eWIDTH_SOURCE_NONE          =0,   // no cell has contributed to the width style
@@ -102,6 +102,8 @@ public:
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
+
+  virtual nsSplittableType GetSplittableType() const;
 
   /** return the number of the columns the col represents.  always >= 1 */
   PRInt32 GetSpan();
