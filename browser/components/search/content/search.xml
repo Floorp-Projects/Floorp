@@ -687,7 +687,7 @@
           <![CDATA[
             // Don't open search popup if history popup is open
             if (!this.popupOpen) {
-              document.getBindingParent(this)._popup.click();
+              document.getBindingParent(this).searchButton.open = true;
               return false;
             }
             return true;
