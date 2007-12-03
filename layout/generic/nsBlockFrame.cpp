@@ -1948,7 +1948,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         repositionViews = PR_TRUE;
 
       if (willReflowAgain) {
-        NS_ASSERTION(!line->HasFloats(), "Possibly stale float cache here!");
+        NS_ASSERTION(!line->IsDirty() || !line->HasFloats(),
+                     "Possibly stale float cache here!");
         // If we're going to reflow everything again, and this line has no
         // cached floats, then there is no need to recover float state. The line
         // may be a block that contains other lines with floats, but in that
