@@ -112,16 +112,19 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
 
         // properties of space
         gid = FT_Get_Char_Index(face, ' ');
-        // load glyph into glyph slot, use no_scale to get font units
-        FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
+        // Load glyph into glyph slot. Use load_default here to get results in
+        // 26.6 fractional pixel format which is what is used for all other
+        // characters in gfxOS2FontGroup::CreateGlyphRunsFT.
+        FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
         // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
-        mMetrics->spaceWidth = face->glyph->advance.x * xScale;
+        mMetrics->spaceWidth = face->glyph->advance.x >> 6;
         // save the space glyph
         mSpaceGlyph = gid;
 
         // properties of 'x', also use its width as average width
         gid = FT_Get_Char_Index(face, 'x'); // select the glyph
         if (gid) {
+            // Load glyph into glyph slot. Here, use no_scale to get font units.
             FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
             mMetrics->xHeight = face->glyph->metrics.height * yScale;
             mMetrics->aveCharWidth = face->glyph->metrics.width * xScale;
