@@ -107,6 +107,7 @@ protected:
   };
 
   lockIconState mPreviousSecurityState;
+  PRBool mPreviousToplevelWasEV;
 
   void ResetStateTracking();
   PRUint32 mNewToplevelSecurityState;
@@ -122,6 +123,7 @@ protected:
   PRInt32 mSubRequestsBrokenSecurity;
   PRInt32 mSubRequestsNoSecurity;
 
+  nsresult MapInternalToExternalState(PRUint32* aState, lockIconState lock, PRBool ev);
   nsresult UpdateSecurityState(nsIRequest* aRequest);
   nsresult EvaluateAndUpdateSecurityState(nsIRequest *aRequest);
   void UpdateSubrequestMembers(nsIRequest *aRequest);
