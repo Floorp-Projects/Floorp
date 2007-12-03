@@ -686,13 +686,15 @@ nsBinaryDetector::DetermineContentType(nsIRequest* aRequest)
   // Make sure to do a case-sensitive exact match comparison here.  Apache
   // 1.x just sends text/plain for "unknown", while Apache 2.x sends
   // text/plain with a ISO-8859-1 charset.  Debian's Apache version, just to
-  // be different, sends text/plain with iso-8859-1 charset.  Don't do
-  // general case-insensitive comparison, since we really want to apply this
-  // crap as rarely as we can.
+  // be different, sends text/plain with iso-8859-1 charset.  For extra fun,
+  // FC7, RHEL4, and Ubuntu Feisty send charset=UTF-8.  Don't do general
+  // case-insensitive comparison, since we really want to apply this crap as
+  // rarely as we can.
   if (!contentType.EqualsLiteral("text/plain") ||
       (!contentTypeHdr.EqualsLiteral("text/plain") &&
        !contentTypeHdr.EqualsLiteral("text/plain; charset=ISO-8859-1") &&
-       !contentTypeHdr.EqualsLiteral("text/plain; charset=iso-8859-1"))) {
+       !contentTypeHdr.EqualsLiteral("text/plain; charset=iso-8859-1") &&
+       !contentTypeHdr.EqualsLiteral("text/plain; charset=UTF-8"))) {
     return;
   }
 
