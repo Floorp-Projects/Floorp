@@ -340,9 +340,6 @@ protected:
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRTime* aResult);
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32* aResult);
 
-  // specific routine to get a URL but convert it from UTF-8
-  nsresult GetRowURL(nsIMdbRow *aRow, nsAString& aResult);
-
   // Look up a row in mStore and returns success if it is found or failure
   // if it is not.  |aResult| may be null if only testing for row existance.
   nsresult FindRow(mdb_column aCol, const char *aURL, nsIMdbRow **aResult);
