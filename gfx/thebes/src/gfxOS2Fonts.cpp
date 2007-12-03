@@ -185,7 +185,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
 #ifdef DEBUG_thebes_1
         printf("gfxOS2Font[%#x]::GetMetrics():\n"
                "  %s (%s)\n"
-               "  emHeight=%f == %f=gfxFont::mStyle.size == %f=adjSz\n"
+               "  emHeight=%f == %f=gfxFont::style.size == %f=adjSz\n"
                "  maxHeight=%f  xHeight=%f\n"
                "  aveCharWidth=%f==xWidth  spaceWidth=%f\n"
                "  supOff=%f SubOff=%f   strOff=%f strSz=%f\n"
@@ -195,7 +195,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
                (unsigned)this,
                NS_LossyConvertUTF16toASCII(mName).get(),
                os2 && os2->version != 0xFFFF ? "has OS/2 table" : "no OS/2 table!",
-               mMetrics->emHeight, mStyle.size, mAdjustedSize,
+               mMetrics->emHeight, GetStyle()->size, mAdjustedSize,
                mMetrics->maxHeight, mMetrics->xHeight,
                mMetrics->aveCharWidth, mMetrics->spaceWidth,
                mMetrics->superscriptOffset, mMetrics->subscriptOffset,
@@ -239,7 +239,7 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
     if (!mFontFace) {
 #ifdef DEBUG_thebes
         printf("gfxOS2Font[%#x]::CairoFontFace(): create it for %s, %f\n",
-               (unsigned)this, NS_LossyConvertUTF16toASCII(mName).get(), mStyle.size);
+               (unsigned)this, NS_LossyConvertUTF16toASCII(mName).get(), GetStyle()->size);
 #endif
         FcPattern *fcPattern = FcPatternCreate();
 
@@ -253,7 +253,7 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         // having a table of available font weights, so we map the gfxFont
         // weight to possible FontConfig weights.
         PRInt8 weight, offset;
-        mStyle.ComputeWeightAndOffset(&weight, &offset);
+        GetStyle()->ComputeWeightAndOffset(&weight, &offset);
         // gfxFont weight   FC weight
         //    400              80
         //    700             200
@@ -277,7 +277,7 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
 
         PRUint8 fcProperty;
         // add style to pattern
-        switch (mStyle.style) {
+        switch (GetStyle()->style) {
         case FONT_STYLE_ITALIC:
             fcProperty = FC_SLANT_ITALIC;
             break;
@@ -292,7 +292,7 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
 
         // add the size we want
         FcPatternAddDouble(fcPattern, FC_PIXEL_SIZE,
-                           mAdjustedSize ? mAdjustedSize : mStyle.size);
+                           mAdjustedSize ? mAdjustedSize : GetStyle()->size);
 
         // finally find a matching font
         FcResult fcRes;
@@ -310,7 +310,8 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         FcPatternGetInteger(fcMatch, FC_SLANT, 0, &i2);
         FcPatternGetDouble(fcMatch, FC_PIXEL_SIZE, 0, &s2);
         printf("  input=%s,%d,%d,%f\n  fcPattern=%s,%d,%d,%f\n  fcMatch=%s,%d,%d,%f\n",
-               NS_LossyConvertUTF16toASCII(mName).get(), mStyle.weight, mStyle.style, mStyle.size,
+               NS_LossyConvertUTF16toASCII(mName).get(),
+               GetStyle()->weight, GetStyle()->style, GetStyle()->size,
                (char *)str1, w1, i1, s1,
                (char *)str2, w2, i2, s2);
 #endif
@@ -337,10 +338,10 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
     if (!mScaledFont) {
 #ifdef DEBUG_thebes_2
         printf("gfxOS2Font[%#x]::CairoScaledFont(): create it for %s, %f\n",
-               (unsigned)this, NS_LossyConvertUTF16toASCII(mName).get(), mStyle.size);
+               (unsigned)this, NS_LossyConvertUTF16toASCII(mName).get(), GetStyle()->size);
 #endif
 
-        double size = mAdjustedSize ? mAdjustedSize : mStyle.size;
+        double size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
         cairo_matrix_t fontMatrix;
         cairo_matrix_init_scale(&fontMatrix, size, size);
         cairo_font_options_t *fontOptions = cairo_font_options_create();
@@ -388,6 +389,27 @@ PRBool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
 /**********************************************************************
  * class gfxOS2FontGroup
  **********************************************************************/
+
+/**
+ * Look up the font in the gfxFont cache. If we don't find it, create one.
+ * In either case, add a ref and return it ---
+ * except for OOM in which case we do nothing and return null.
+ */
+static already_AddRefed<gfxOS2Font> GetOrMakeFont(const nsAString& aName,
+                                                  const gfxFontStyle *aStyle)
+{
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aName, aStyle);
+    if (!font) {
+        font = new gfxOS2Font(aName, aStyle);
+        if (!font)
+            return nsnull;
+        gfxFontCache::GetCache()->AddNew(font);
+    }
+    gfxFont *f = nsnull;
+    font.swap(f);
+    return static_cast<gfxOS2Font *>(f);
+}
+
 gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
                                  const gfxFontStyle* aStyle)
     : gfxFontGroup(aFamilies, aStyle)
@@ -406,7 +428,6 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
     }
 
     nsStringArray familyArray;
-    mFontCache.Init(15);
     ForEachFont(FontCallback, &familyArray);
     FindGenericFontFromStyle(FontCallback, &familyArray);
 
@@ -428,14 +449,17 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
     }
 
     for (int i = 0; i < familyArray.Count(); i++) {
-        mFonts.AppendElement(new gfxOS2Font(*familyArray[i], &mStyle));
+        nsRefPtr<gfxOS2Font> font = GetOrMakeFont(*familyArray[i], &mStyle);
+        if (font) {
+            mFonts.AppendElement(font);
+        }
     }
 
 #ifdef REALLY_DESPERATE_FONT_MATCHING
     // just continue to append all fonts known to the system
     nsStringArray fontList;
     nsCAutoString generic;
-    if (!gfxPlatform::GetPlatform()->GetFontList(mStyle.langGroup, generic, fontList)) {
+    if (!gfxPlatform::GetPlatform()->GetFontList(GetStyle()->langGroup, generic, fontList)) {
         // we don't want MARKSYM in the list (which always matches every glyph)
         // nor MT Extra or the Math1* fonts which seem to have the same problem
         fontList.RemoveString(NS_LITERAL_STRING("MARKSYM"));
@@ -454,7 +478,10 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
         for (int i = 3; i < fontList.Count(); i++) {
             // check for duplicates that we already found through the familyArray
             if (familyArray.IndexOf(*fontList[i]) == -1) {
-                mFonts.AppendElement(new gfxOS2Font(*fontList[i], &mStyle));
+                nsRefPtr<gfxOS2Font> font = GetOrMakeFont(*fontList[i], &mStyle);
+                if (font) {
+                    mFonts.AppendElement(font);
+                }
             }
         }
     }
