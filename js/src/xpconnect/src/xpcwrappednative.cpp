@@ -73,7 +73,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
     cb.DescribeNode(RefCounted, tmp->mRefCnt.get());
 #endif
 
-    if (tmp->mRefCnt.get() > 1) {
+    if(tmp->mRefCnt.get() > 1) {
 
         // If our refcount is > 1, our reference to the flat JS object is
         // considered "strong", and we're going to traverse it. 
@@ -87,7 +87,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
 
         JSObject *obj = nsnull;
         nsresult rv = tmp->GetJSObject(&obj);
-        if (NS_SUCCEEDED(rv))
+        if(NS_SUCCEEDED(rv))
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
     }
 
@@ -1634,7 +1634,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                             "!!! xpconnect/xbl check - wrapper has no special proto");
 
                         PRBool found_our_proto = PR_FALSE;
-                        while (proto && !found_our_proto) {
+                        while(proto && !found_our_proto) {
                             proto = JS_GetPrototype(ccx, proto);
 
                             found_our_proto = proto == our_proto;
@@ -2007,7 +2007,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     if(argc < requiredArgs)
     {
         // skip over any optional arguments
-        while (requiredArgs && methodInfo->GetParam(requiredArgs-1).IsOptional())
+        while(requiredArgs && methodInfo->GetParam(requiredArgs-1).IsOptional())
           requiredArgs--;
 
         if(argc < requiredArgs) {
@@ -2067,7 +2067,9 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
         if((paramInfo.IsOut() || paramInfo.IsDipper()) &&
            !paramInfo.IsRetval()) {
-          jsval arg = paramInfo.IsOptional() && argc < i ? JSVAL_NULL : argv[i];
+          NS_ASSERTION(i < argc || paramInfo.IsOptional(),
+                       "Expected either enough arguments or an optional argument");
+          jsval arg = i < argc ? argv[i] : JSVAL_NULL;
           if(JSVAL_IS_PRIMITIVE(arg) ||
              !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(arg),
                                rt->GetStringID(XPCJSRuntime::IDX_VALUE),
@@ -2167,7 +2169,9 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             // Do this *after* the above because in the case where we have a
             // "T_DOMSTRING && IsDipper()" then arg might be null since this
             // is really an 'out' param masquerading as an 'in' param.
-            src = paramInfo.IsOptional() && argc < i ? JSVAL_NULL : argv[i];
+            NS_ASSERTION(i < argc || paramInfo.IsOptional(),
+                         "Expected either enough arguments or an optional argument");
+            src = i < argc ? argv[i] : JSVAL_NULL;
         }
 
         if(type_tag == nsXPTType::T_INTERFACE &&
@@ -2238,8 +2242,10 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                 dp->SetPtrIsData();
                 dp->ptr = &dp->val;
 
-                if (!paramInfo.IsRetval()) {
-                  jsval arg = paramInfo.IsOptional() && argc < i ? JSVAL_NULL : argv[i];
+                if(!paramInfo.IsRetval()) {
+                  NS_ASSERTION(i < argc || paramInfo.IsOptional(),
+                               "Expected either enough arguments or an optional argument");
+                  jsval arg = i < argc ? argv[i] : JSVAL_NULL;
                   if(JSVAL_IS_PRIMITIVE(arg) ||
                      !OBJ_GET_PROPERTY(ccx, JSVAL_TO_OBJECT(arg),
                          rt->GetStringID(XPCJSRuntime::IDX_VALUE), &src))
@@ -2262,7 +2268,9 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             }
             else
             {
-                src = paramInfo.IsOptional() && argc < i ? JSVAL_NULL : argv[i];
+                NS_ASSERTION(i < argc || paramInfo.IsOptional(),
+                             "Expected either enough arguments or an optional argument");
+                src = i < argc ? argv[i] : JSVAL_NULL;
 
                 if(datum_type.IsPointer() &&
                    datum_type.TagPart() == nsXPTType::T_IID)
@@ -2438,7 +2446,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             if(!ccx.GetReturnValueWasSet())
                 ccx.SetRetVal(v);
         }
-        else if (!paramInfo.IsOptional() || argc > i)
+        else if(i < argc)
         {
             // we actually assured this before doing the invoke
             NS_ASSERTION(JSVAL_IS_OBJECT(argv[i]), "out var is not object");
@@ -2448,6 +2456,11 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                 ThrowBadParam(NS_ERROR_XPC_CANT_SET_OUT_VAL, i, ccx);
                 goto done;
             }
+        }
+        else
+        {
+            NS_ASSERTION(paramInfo.IsOptional(),
+                         "Expected either enough arguments or an optional argument");
         }
     }
 
