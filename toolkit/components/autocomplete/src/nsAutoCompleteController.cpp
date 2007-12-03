@@ -657,8 +657,11 @@ nsAutoCompleteController::OnSearchResult(nsIAutoCompleteSearch *aSearch, nsIAuto
 //// nsIRollupListener
 
 NS_IMETHODIMP
-nsAutoCompleteController::Rollup()
+nsAutoCompleteController::Rollup(nsIContent** aLastRolledUp)
 {
+  if (aLastRolledUp)
+    *aLastRolledUp = nsnull;
+
   ClearSearchTimer();
   ClearResults();
   ClosePopup();

@@ -156,8 +156,6 @@ public:
 
   virtual PRBool MenuClosed() { return PR_TRUE; }
 
-  virtual PRBool IsRecentlyClosed(nsMenuFrame* aMenuFrame) { return PR_FALSE; }
-
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
 
   // The dismissal listener gets created and attached to the window.
