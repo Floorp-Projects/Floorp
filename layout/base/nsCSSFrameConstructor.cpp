@@ -3984,8 +3984,10 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsFrameConstructorState& aState,
       return NS_ERROR_OUT_OF_MEMORY;
     }
     InitAndRestoreFrame(aState, aContent, parentFrame, nsnull, newCol, PR_FALSE);
-    newCol->SetColType(eColAnonymousCol);
     lastCol->SetNextSibling(newCol);
+    lastCol->SetNextContinuation(newCol);
+    newCol->SetPrevContinuation(lastCol);
+    newCol->SetColType(eColAnonymousCol);
     lastCol = newCol;
   }
 

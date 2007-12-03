@@ -52,7 +52,8 @@
 #define COL_CONSTRAINT_BITS           0x07000000 // uses bits 25-27
 #define COL_CONSTRAINT_OFFSET         24
 
-nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) : nsFrame(aContext)
+nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) :
+  nsSplittableFrame(aContext)
 {
   SetColType(eColContent);
   ResetIntrinsics();
@@ -73,6 +74,11 @@ nsTableColFrame::GetColType() const
 void 
 nsTableColFrame::SetColType(nsTableColType aType) 
 {
+  NS_ASSERTION(aType != eColAnonymousCol ||
+               (GetPrevContinuation() &&
+                GetPrevContinuation()->GetNextContinuation() == this &&
+                GetPrevContinuation()->GetNextSibling() == this),
+               "spanned content cols must be continuations");
   PRUint32 type = aType - eColContent;
   mState |= (type << COL_TYPE_OFFSET);
 }
@@ -172,7 +178,7 @@ nsTableColFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aPrevInFlow)
 {
   // Let the base class do its initialization
-  nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
+  nsresult rv = nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
@@ -206,3 +212,10 @@ nsTableColFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("TableCol"), aResult);
 }
 #endif
+
+nsSplittableType
+nsTableColFrame::GetSplittableType() const
+{
+  return NS_FRAME_NOT_SPLITTABLE;
+}
+

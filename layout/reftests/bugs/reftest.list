@@ -487,6 +487,8 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 != 404030-1-notref2.html 404030-1.html
 == 404301-1.html 404301-1-ref.html
 != data:application/xml,<foo/> data:text/plain, # bug 404419
+== 404666-1.html 404666-1-ref.html
+== 404666-2.html 404666-2-ref.html
 == 405186-1.xhtml about:blank
 == 405305-1.html 405305-1-ref.html
 == 405584-1.html 405584-1-ref.html
