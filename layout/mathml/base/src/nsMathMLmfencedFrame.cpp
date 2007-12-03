@@ -291,8 +291,6 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   PRInt32 count = 0;
   nsReflowStatus childStatus;
   nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
-  nsHTMLReflowMetrics childDesiredSize(
-                      aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsIFrame* firstChild = aForFrame->GetFirstChild(nsnull);
   nsIFrame* childFrame = firstChild;
   nscoord ascent = 0, descent = 0;
@@ -303,6 +301,8 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
     fm->GetMaxDescent(descent);
   }
   while (childFrame) {
+    nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mFlags
+                                         | NS_REFLOW_CALC_BOUNDING_METRICS);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
     rv = mathMLFrame->ReflowChild(childFrame, aPresContext, childDesiredSize,
@@ -356,6 +356,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
       nsIMathMLFrame* mathmlChild;
       childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathmlChild);
       if (mathmlChild) {
+        nsHTMLReflowMetrics childDesiredSize;
         // retrieve the metrics that was stored at the previous pass
         GetReflowAndBoundingMetricsFor(childFrame, childDesiredSize, childDesiredSize.mBoundingMetrics);
 
