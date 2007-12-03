@@ -929,6 +929,13 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   if (!yarn.mYarn_Fill)
     return NS_OK;
   
+  if (aCol != kToken_NameColumn) {
+    const char* start = (const char*)yarn.mYarn_Buf;
+    if (start)
+      AppendUTF8toUTF16(Substring(start, start + yarn.mYarn_Fill), aResult);
+    return NS_OK;
+  }
+
   switch (yarn.mYarn_Form) {
   case 0:                       // unicode
     if (mReverseByteOrder) {
@@ -1032,22 +1039,6 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   else
     aResult.Truncate();
   
-  return NS_OK;
-}
-
-nsresult
-nsGlobalHistory::GetRowURL(nsIMdbRow *aRow, nsAString& aResult)
-{
-  mdbYarn yarn;
-  mdb_err err = aRow->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  const char* startPtr = (const char*)yarn.mYarn_Buf;
-  if (startPtr)
-    CopyUTF8toUTF16(Substring(startPtr, startPtr + yarn.mYarn_Fill), aResult);
-  else
-    aResult.Truncate();
-
   return NS_OK;
 }
 
@@ -1252,8 +1243,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
       if (err != 0)
         continue;
       
-      const char* startPtr = (const char*) yarn.mYarn_Buf;
-      nsCAutoString uri(Substring(startPtr, startPtr+yarn.mYarn_Fill));
+      nsCAutoString uri((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
       rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
       if (NS_FAILED(rv))
@@ -3660,7 +3650,6 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
   PRInt32 preTextLength = stringName.Length();
   stringName.Append(PRUnichar('-'));
   stringName.Append(term->text);
-  stringName.Append(PRUnichar(0));
 
   // try to find a localizable string
   const PRUnichar *strings[] = {
@@ -3966,83 +3955,47 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       mdb_err err;
 
       mdb_column property_column;
-      nsCAutoString property_name(term->property);
-      property_name.Append(char(0));
-      
-      err = mStore->QueryToken(mEnv, property_name.get(), &property_column);
+      err = mStore->QueryToken(mEnv, PromiseFlatCString(term->property).get(),
+                               &property_column);
       if (err != 0) {
         NS_WARNING("Unrecognized column!");
         continue;               // assume we match???
       }
       
-      // match the term directly against the column?
-      mdbYarn yarn;
-      err = aRow->AliasCellYarn(mEnv, property_column, &yarn);
-      if (err != 0 || !yarn.mYarn_Buf) return PR_FALSE;
+      nsAutoString rowVal;
+      nsresult rv = GetRowValue(aRow, property_column, rowVal);
+      if (NS_FAILED(rv))
+        return rv;
 
-      const char* startPtr;
-      PRInt32 yarnLength = yarn.mYarn_Fill;
-      nsCAutoString titleStr;
-      if (property_column == kToken_NameColumn) {
-        AppendUTF16toUTF8(Substring((const PRUnichar*)yarn.mYarn_Buf,
-                                    (const PRUnichar*)yarn.mYarn_Buf + yarnLength),
-                          titleStr);
-        startPtr = titleStr.get();
-        yarnLength = titleStr.Length();
-      }
-      else {
-        // account for null strings
-        if (yarn.mYarn_Buf)
-          startPtr = (const char *)yarn.mYarn_Buf;
-        else 
-          startPtr = "";
-      }
-      
-      const nsASingleFragmentCString& rowVal =
-          Substring(startPtr, startPtr + yarnLength);
+      const nsXPIDLString& searchText = term->text;
 
-      // set up some iterators
-      nsASingleFragmentCString::const_iterator start, end;
-      rowVal.BeginReading(start);
-      rowVal.EndReading(end);
-  
-      NS_ConvertUTF16toUTF8 utf8Value(term->text);
-      
       if (term->method.Equals("is")) {
-        if (!utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
+        if (!searchText.Equals(rowVal, nsCaseInsensitiveStringComparator()))
           return PR_FALSE;
       }
 
       else if (term->method.Equals("isnot")) {
-        if (utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
+        if (searchText.Equals(rowVal, nsCaseInsensitiveStringComparator()))
           return PR_FALSE;
       }
 
       else if (term->method.Equals("contains")) {
-        if (!FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
+        if (!FindInReadable(searchText, rowVal, nsCaseInsensitiveStringComparator()))
           return PR_FALSE;
       }
 
       else if (term->method.Equals("doesntcontain")) {
-        if (FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
+        if (FindInReadable(searchText, rowVal, nsCaseInsensitiveStringComparator()))
           return PR_FALSE;
       }
 
       else if (term->method.Equals("startswith")) {
-        // need to make sure that the found string is 
-        // at the beginning of the string
-        nsACString::const_iterator real_start = start;
-        if (!(FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
-              real_start == start))
+        if (!StringBeginsWith(rowVal, searchText, nsCaseInsensitiveStringComparator()))
           return PR_FALSE;
       }
 
       else if (term->method.Equals("endswith")) {
-        // need to make sure that the found string ends
-        // at the end of the string
-        nsACString::const_iterator real_end = end;
-        if (!(RFindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
-              real_end == end))
+        if (!StringEndsWith(rowVal, searchText, nsCaseInsensitiveStringComparator()))
           return PR_FALSE;
       }
 
@@ -4106,10 +4059,7 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
     mHistory->GetFindUriPrefix(*mQuery, PR_FALSE, mFindUriPrefix);
   
   nsCAutoString findUri(mFindUriPrefix);
-
-  const char* startPtr = (const char *)groupByValue.mYarn_Buf;
-  findUri.Append(Substring(startPtr, startPtr+groupByValue.mYarn_Fill));
-  findUri.Append('\0');
+  findUri.Append((const char*)groupByValue.mYarn_Buf, groupByValue.mYarn_Fill);
 
   rv = gRDFService->GetResource(findUri, getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
@@ -4166,7 +4116,7 @@ NS_IMETHODIMP
 nsGlobalHistory::GetValueAt(PRInt32 aIndex, nsAString& aValue)
 {
   NS_ENSURE_ARG_RANGE(aIndex, 0, mResults.Count() - 1);
-  return GetRowURL(mResults[aIndex], aValue);
+  return GetRowValue(mResults[aIndex], kToken_URLColumn, aValue);
 }
 
 NS_IMETHODIMP
@@ -4247,7 +4197,7 @@ nsGlobalHistory::StartSearch(const nsAString& aSearchString,
     nsAutoString value;
     PRUint32 count = mResults.Count();
     while (count--) {
-      GetRowURL(mResults[count], value);
+      GetRowValue(mResults[count], kToken_URLColumn, value);
       if (!AutoCompleteCompare(value, filtered, &exclude))
         mResults.RemoveObjectAt(count);
     }
@@ -4266,7 +4216,7 @@ nsGlobalHistory::StartSearch(const nsAString& aSearchString,
       }
 
       nsAutoString url;
-      GetRowURL(current, url);
+      GetRowValue(current, kToken_URLColumn, url);
       if (AutoCompleteCompare(url, filtered, &exclude))
         mResults.AppendObject(current);
     }
@@ -4414,21 +4364,18 @@ nsGlobalHistory::AutoCompleteSortComparison(nsIMdbRow* row1, nsIMdbRow* row2,
 {
   AutoCompleteSortClosure* closure = 
       static_cast<AutoCompleteSortClosure*>(closureVoid);
+  nsGlobalHistory* history = closure->history;
 
   // get visit counts - we're ignoring all errors from GetRowValue(), 
   // and relying on default values
   PRInt32 item1visits = 0, item2visits = 0;
-  closure->history->GetRowValue(row1, 
-                                closure->history->kToken_VisitCountColumn, 
-                                &item1visits);
-  closure->history->GetRowValue(row2, 
-                                closure->history->kToken_VisitCountColumn, 
-                                &item2visits);
+  history->GetRowValue(row1, history->kToken_VisitCountColumn, &item1visits);
+  history->GetRowValue(row2, history->kToken_VisitCountColumn, &item2visits);
 
   // get URLs
   nsAutoString url1, url2;
-  closure->history->GetRowURL(row1, url1);
-  closure->history->GetRowURL(row2, url2);
+  history->GetRowValue(row1, history->kToken_URLColumn, url1);
+  history->GetRowValue(row2, history->kToken_URLColumn, url2);
 
   // Favour websites and webpaths more than webpages by boosting 
   // their visit counts.  This assumes that URLs have been normalized, 
