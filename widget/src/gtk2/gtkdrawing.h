@@ -63,6 +63,9 @@ typedef struct {
   guint8 disabled;
   guint8 isDefault;
   guint8 canDefault;
+  /* The depressed state is for buttons which remain active for a longer period:
+   * activated toggle buttons or buttons showing a popup menu. */
+  guint8 depressed;
   gint32 curpos; /* curpos and maxpos are used for scrollbars */
   gint32 maxpos;
 } GtkWidgetState;
