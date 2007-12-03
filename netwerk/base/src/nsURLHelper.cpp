@@ -744,11 +744,16 @@ net_FindMediaDelimiter(const nsCString& flatStr,
     return flatStr.Length();
 }
 
+// aOffset should be added to aCharsetStart and aCharsetEnd if this
+// function sets them.
 static void
 net_ParseMediaType(const nsACString &aMediaTypeStr,
                    nsACString       &aContentType,
                    nsACString       &aContentCharset,
-                   PRBool           *aHadCharset)
+                   PRInt32          aOffset,
+                   PRBool           *aHadCharset,
+                   PRInt32          *aCharsetStart,
+                   PRInt32          *aCharsetEnd)
 {
     const nsCString& flatStr = PromiseFlatCString(aMediaTypeStr);
     const char* start = flatStr.get();
@@ -762,6 +767,8 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
 
     const char* charset = "";
     const char* charsetEnd = charset;
+    PRInt32 charsetParamStart;
+    PRInt32 charsetParamEnd;
 
     // Iterate over parameters
     PRBool typeHasCharset = PR_FALSE;
@@ -782,6 +789,8 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
                 charset = paramName + sizeof(charsetStr) - 1;
                 charsetEnd = start + curParamEnd;
                 typeHasCharset = PR_TRUE;
+                charsetParamStart = curParamStart - 1;
+                charsetParamEnd = curParamEnd;
             }
 
             curParamStart = curParamEnd + 1;
@@ -824,6 +833,13 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
         if ((!eq && *aHadCharset) || typeHasCharset) {
             *aHadCharset = PR_TRUE;
             aContentCharset.Assign(charset, charsetEnd - charset);
+            if (typeHasCharset) {
+                *aCharsetStart = charsetParamStart + aOffset;
+                *aCharsetEnd = charsetParamEnd + aOffset;
+            } else {
+                *aCharsetStart = -1;
+                *aCharsetEnd = -1;
+            }
         }
     }
 }
@@ -835,6 +851,19 @@ net_ParseContentType(const nsACString &aHeaderStr,
                      nsACString       &aContentType,
                      nsACString       &aContentCharset,
                      PRBool           *aHadCharset)
+{
+    PRInt32 dummy1, dummy2;
+    net_ParseContentType(aHeaderStr, aContentType, aContentCharset,
+                         aHadCharset, &dummy1, &dummy2);
+}
+
+void
+net_ParseContentType(const nsACString &aHeaderStr,
+                     nsACString       &aContentType,
+                     nsACString       &aContentCharset,
+                     PRBool           *aHadCharset,
+                     PRInt32          *aCharsetStart,
+                     PRInt32          *aCharsetEnd)
 {
     //
     // Augmented BNF (from RFC 2616 section 3.7):
@@ -875,7 +904,8 @@ net_ParseContentType(const nsACString &aHeaderStr,
         // starting at curTypeEnd ends.  Time to parse that!
         net_ParseMediaType(Substring(flatStr, curTypeStart,
                                      curTypeEnd - curTypeStart),
-                           aContentType, aContentCharset, aHadCharset);
+                           aContentType, aContentCharset, curTypeStart,
+                           aHadCharset, aCharsetStart, aCharsetEnd);
 
         // And let's move on to the next media-type
         curTypeStart = curTypeEnd + 1;

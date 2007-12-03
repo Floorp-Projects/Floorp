@@ -1966,15 +1966,36 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
       // We don't want to set a charset for streams.
       if (!charset.IsEmpty()) {
-        nsCAutoString actualType, dummy;
-        rv = NS_ParseContentType(contentType, actualType, dummy);
+        nsCAutoString specifiedCharset;
+        PRBool haveCharset;
+        PRInt32 charsetStart, charsetEnd;
+        rv = NS_ExtractCharsetFromContentType(contentType, specifiedCharset,
+                                              &haveCharset, &charsetStart,
+                                              &charsetEnd);
         if (NS_FAILED(rv)) {
-          actualType.AssignLiteral("application/xml");
+          contentType.AssignLiteral("application/xml");
+          specifiedCharset.Truncate();
+          haveCharset = PR_FALSE;
         }
 
-        contentType.Assign(actualType);
-        contentType.AppendLiteral(";charset=");
-        contentType.Append(charset);
+        if (!haveCharset) {
+          charsetStart = charsetEnd = contentType.Length();
+        } 
+
+        // If the content-type the page set already has a charset parameter,
+        // and it's the same charset, up to case, as |charset|, just send the
+        // page-set content-type header.  Apparently at least
+        // google-web-toolkit is broken and relies on the exact case of its
+        // charset parameter, which makes things break if we use |charset|
+        // (which is always a fully resolved charset per our charset alias
+        // table, hence might be differently cased).
+        if (!specifiedCharset.Equals(charset,
+                                     nsCaseInsensitiveCStringComparator())) {
+          nsCAutoString newCharset("; charset=");
+          newCharset.Append(charset);
+          contentType.Replace(charsetStart, charsetEnd - charsetStart,
+                              newCharset);
+        }
       }
 
       rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);

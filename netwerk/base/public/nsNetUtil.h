@@ -792,6 +792,25 @@ NS_ParseContentType(const nsACString &rawContentType,
 }
 
 inline nsresult
+NS_ExtractCharsetFromContentType(const nsACString &rawContentType,
+                                 nsCString        &contentCharset,
+                                 PRBool           *hadCharset,
+                                 PRInt32          *charsetStart,
+                                 PRInt32          *charsetEnd)
+{
+    // contentCharset is left untouched if not present in rawContentType
+    nsresult rv;
+    nsCOMPtr<nsINetUtil> util = do_GetIOService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return util->ExtractCharsetFromContentType(rawContentType,
+                                               contentCharset,
+                                               charsetStart,
+                                               charsetEnd,
+                                               hadCharset);
+}
+
+inline nsresult
 NS_NewLocalFileInputStream(nsIInputStream **result,
                            nsIFile         *file,
                            PRInt32          ioFlags       = -1,
