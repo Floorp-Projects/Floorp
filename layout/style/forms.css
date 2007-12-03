@@ -240,6 +240,7 @@ option {
   line-height: normal !important;
   -moz-user-select: none;
   text-indent: 0;
+  white-space: nowrap !important;
 }
 
 select > option {
@@ -265,6 +266,7 @@ optgroup {
   font-size: inherit;
   -moz-user-select: none;
   text-indent: 0;
+  white-space: nowrap !important;
 }
 
 optgroup > option {
