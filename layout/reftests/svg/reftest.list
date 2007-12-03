@@ -5,6 +5,9 @@ include bugs/reftest.list
 # sizing tests
 include sizing/reftest.list
 
+# Mozilla only tests (i.e. those containing XUL/XBL/etc.)
+include moz-only/reftest.list
+
 == clipPath-basic-01.svg pass.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
