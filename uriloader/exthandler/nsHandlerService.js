@@ -132,16 +132,20 @@ HandlerService.prototype = {
 
   _updateDB: function HS__updateDB() {
     // if the default prefs have changed, inject any new default handers
-    // into the datastore 
-    try { 
-      if (this._datastoreDefaultHandlersVersion <
-          this._prefsDefaultHandlersVersion) {
+    // into the datastore
+    var defaultHandlersVersion = this._datastoreDefaultHandlersVersion;
+    try {
+      if (defaultHandlersVersion < this._prefsDefaultHandlersVersion) {
+        // set the new version first so that if we recurse we don't
+        // call _injectNewDefaults several times
+        this._datastoreDefaultHandlersVersion =
+          this._prefsDefaultHandlersVersion;
         this._injectNewDefaults();
-        this._datastoreDefaultHandlersVersion = 
-        this._prefsDefaultHandlersVersion;
       }
     } catch (ex) {
-      // if injecting the defaults failed, life goes on...
+      // if injecting the defaults failed, set the version back to the
+      // previous value
+      this._datastoreDefaultHandlersVersion = defaultHandlersVersion;      
     }
   },
   
