@@ -964,11 +964,13 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
 
         NS_ASSERTION(mState == eInScript || mState == eInDocumentElement,
                      "Unexpected state");
-        if (mState == eInScript || 1) {
+        if (mState == eInScript) {
             // OpenScript has pushed the nsPrototypeScriptElement onto the 
             // stack, so we're done.
             return NS_OK;
         }
+
+        *((int*)0) = 1;  // Crash out, dammit
     }
 
     // Set the correct script-type for the element.
