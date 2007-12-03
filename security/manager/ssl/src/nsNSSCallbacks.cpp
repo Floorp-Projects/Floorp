@@ -211,6 +211,13 @@ SECStatus nsNSSHttpRequestSession::createFcn(SEC_HTTP_SERVER_SESSION session,
 
   rs->mTimeoutInterval = timeout;
 
+  // Use a maximum timeout value of 10 seconds because of bug 404059.
+  // FIXME: Use a better approach once 406120 is ready.
+  PRUint32 maxBug404059Timeout = PR_TicksPerSecond() * 10;
+  if (timeout > maxBug404059Timeout) {
+    rs->mTimeoutInterval = maxBug404059Timeout;
+  }
+
   rs->mURL.Append(nsDependentCString(http_protocol_variant));
   rs->mURL.AppendLiteral("://");
   rs->mURL.Append(hss->mHost);
