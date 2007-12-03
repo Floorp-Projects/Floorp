@@ -244,6 +244,14 @@ fails == 352980-1h.html 352980-1-ref.html
 == 363329-2.html 363329-2-ref.html
 == 363370-1.html 363370-1-ref.html
 == 363637-1.html 363637-1-ref.html
+== 363858-1.html 363858-1-ref.html
+== 363858-2.html 363858-2-ref.html
+== 363858-3.html 363858-3-ref.html
+== 363858-4.html 363858-4-ref.html
+== 363858-5a.html 363858-5-ref.html
+== 363858-5b.html 363858-5-ref.html
+== 363858-6a.html 363858-6-ref.html
+== 363858-6b.html 363858-6-ref.html
 == 363874.html 363874-ref.html
 == 363874-max-width.html 363874-max-width-ref.html
 == 364066-1.html 364066-1-ref.html
