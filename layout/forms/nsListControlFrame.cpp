@@ -90,6 +90,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
+#include "nsBoxLayoutState.h"
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -527,12 +528,14 @@ nsListControlFrame::CalcHeightOfARow()
 nscoord
 nsListControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
-  // We don't want to have options wrapping unless they absolutely
-  // have to, so our min width is our pref width.
+  // Scrollframes typically have an intrinsic min width of 0, but
+  // that's not how we want to behave.
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
 
-  result = GetPrefWidth(aRenderingContext);
+  result = GetScrolledFrame()->GetMinWidth(aRenderingContext);
+  nsBoxLayoutState bls(PresContext(), aRenderingContext);
+  result += GetDesiredScrollbarSizes(&bls).LeftRight();
 
   return result;
 }
