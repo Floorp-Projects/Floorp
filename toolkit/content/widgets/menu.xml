@@ -172,7 +172,7 @@
            extends="chrome://global/content/bindings/menu.xml#menu-base">
     <content>
       <xul:label class="menu-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:hbox anonid="accel">
+      <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
       <xul:hbox align="center" class="menu-right" chromedir="&locale.dir;"
@@ -186,7 +186,7 @@
   <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
       <xul:label class="menu-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:hbox anonid="accel">
+      <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
     </content>
@@ -216,7 +216,7 @@
         <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:hbox anonid="accel">
+      <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
     </content>
@@ -250,7 +250,7 @@
         <xul:image xbl:inherits="src=image"/>
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:hbox anonid="accel">
+      <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
       <xul:hbox class="menu-right" chromedir="&locale.dir;"

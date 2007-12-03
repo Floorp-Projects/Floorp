@@ -1721,8 +1721,11 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
       
       offset = GTK_CONTAINER(gCheckMenuItemWidget)->border_width + 
              gCheckMenuItemWidget->style->xthickness + 2;
-      
-      x = rect->x + offset;
+
+      /* while normally this "3" would be the horizontal-padding style value, passing it to Gecko
+         as the value of menuitem padding causes problems with dropdowns (bug 406129), so in the menu.css
+         file this is hardcoded as 3px. Yes it sucks, but we don't really have a choice. */
+      x = rect->x + offset + 3;
       y = rect->y + (rect->height - indicator_size) / 2;
                                                                                 
       TSOffsetStyleGCs(style, x, y);

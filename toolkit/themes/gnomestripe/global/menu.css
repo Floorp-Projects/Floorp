@@ -52,6 +52,9 @@ menu, menuitem {
   font: menu;
   list-style-image: none;
   -moz-image-region: auto;
+  /* 3px is the default padding value. See the big comment under moz_gtk_check_menu_item_paint()
+     in widget/src/gtk2/gtk2drawing.c and bug 406129 for why we're hardcoding this. */
+  padding: 0px 3px;
 }
 
 menuitem[default="true"] {
@@ -112,7 +115,8 @@ menulist > menupopup > menu {
 }
 
 .menu-text {
-  -moz-margin-start: 18px !important;
+  /* This is (18 + the size of end-padding on .menu-iconic-left)px */
+  -moz-margin-start: 21px !important;
   font-weight: inherit;
 }
 
@@ -127,13 +131,17 @@ menulist > menupopup > menu {
   margin-top: 0px !important;
   margin-bottom: 0px !important;
   -moz-margin-start: 7px !important;
-  -moz-margin-end: 2px !important;
-  -moz-padding-end: 14px;
   color: inherit;
+}
+
+.menu-accel-container {
+  -moz-box-pack: end;
 }
 
 .menu-iconic-left {
   width: 16px;
+  /* We can only hardcode this, to make the default GTK icon<->label spacing */
+  -moz-padding-end: 3px !important;
 }
 
 .menu-iconic-icon {
