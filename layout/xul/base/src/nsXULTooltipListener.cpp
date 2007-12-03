@@ -419,8 +419,8 @@ nsXULTooltipListener::ShowTooltip()
       // at this point, |mCurrentTooltip| holds the content node of
       // the tooltip. If there is an attribute on the popup telling us
       // not to create the auto-hide timer, don't.
-      if (mCurrentTooltip->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautohide,
-                                       nsGkAtoms::_true, eCaseMatters))
+      if (!mCurrentTooltip->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautohide,
+                                        nsGkAtoms::_true, eCaseMatters))
         CreateAutoHideTimer();
 
       // listen for popuphidden on the tooltip node, so that we can

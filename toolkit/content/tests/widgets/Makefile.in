@@ -63,6 +63,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_radio.xul \
 		test_tabbox.xul \
 		test_tooltip.xul \
+		test_tooltip_noautohide.xul \
 		popup_shared.js \
 		popup_trigger.js \
 		window_popup_button.xul \
