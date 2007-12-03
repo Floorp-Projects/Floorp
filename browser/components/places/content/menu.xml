@@ -327,7 +327,7 @@
 
           if (!menuitem.hasAttribute("livemark") &&
               PlacesUtils.nodeIsLivemarkContainer(aNode))
-            menuItem.setAttribute("livemark", "true");
+            menuitem.setAttribute("livemark", "true");
         },
 
         itemReplaced:
