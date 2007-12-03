@@ -568,8 +568,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     // affect our height.
     fm->GetMaxAscent(aMetrics.ascent);
     fm->GetHeight(aMetrics.height);
-    // Include the text-decoration lines to the height.
-    // Currently, only underline is overflowable.
+    // Include the text-decoration lines to the height for readable.
     nscoord offset, size;
     fm->GetUnderline(offset, size);
     nscoord ascentAndUnderline =
@@ -586,7 +585,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     aReflowState.mComputedBorderPadding.bottom;
 
   // For now our overflow area is zero. The real value will be
-  // computed during vertical alignment of the line we are on.
+  // computed in |nsLineLayout::RelativePositionFrames|.
   aMetrics.mOverflowArea.SetRect(0, 0, 0, 0);
 
 #ifdef NOISY_FINAL_SIZE
