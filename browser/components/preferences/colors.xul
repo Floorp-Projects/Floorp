@@ -39,6 +39,9 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+#ifdef XP_MACOSX
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+#endif
 
 <!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/colors.dtd" >
 
