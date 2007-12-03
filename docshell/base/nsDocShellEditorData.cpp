@@ -68,6 +68,12 @@ nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* inOwningDocShell)
 ----------------------------------------------------------------------------*/
 nsDocShellEditorData::~nsDocShellEditorData()
 {
+  TearDownEditor();
+}
+
+void
+nsDocShellEditorData::TearDownEditor()
+{
   if (mEditingSession)
   {
     nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(mDocShell);

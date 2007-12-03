@@ -66,7 +66,7 @@ public:
               ~nsDocShellEditorData();
               
 
-              // set a flag to say this frame should be editable when the next url loads
+  // set a flag to say this frame should be editable when the next url loads
   nsresult    MakeEditable(PRBool inWaitForUriLoad);
   
   PRBool      GetEditable();
@@ -83,6 +83,9 @@ public:
   
               // set the editor on this docShell
   nsresult    SetEditor(nsIEditor *inEditor);
+
+  // Tear down the editor on this docshell, if any.
+  void        TearDownEditor();
 
 protected:              
 
