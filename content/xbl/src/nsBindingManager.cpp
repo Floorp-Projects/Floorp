@@ -899,28 +899,43 @@ nsBindingManager::AddToAttachedQueue(nsXBLBinding* aBinding)
   // If we're in the middle of processing our queue already, don't
   // bother posting the event.
   if (!mProcessingAttachedStack && !mProcessAttachedQueueEvent) {
-    mProcessAttachedQueueEvent =
-      new nsRunnableMethod<nsBindingManager>(
-        this, &nsBindingManager::DoProcessAttachedQueue);
-    nsresult rv = NS_DispatchToCurrentThread(mProcessAttachedQueueEvent);
-    if (NS_SUCCEEDED(rv) && mDocument) {
-      mDocument->BlockOnload();
-    }
+    PostProcessAttachedQueueEvent();
   }
 
   return NS_OK;
+
+}
+
+void
+nsBindingManager::PostProcessAttachedQueueEvent()
+{
+  mProcessAttachedQueueEvent =
+    new nsRunnableMethod<nsBindingManager>(
+      this, &nsBindingManager::DoProcessAttachedQueue);
+  nsresult rv = NS_DispatchToCurrentThread(mProcessAttachedQueueEvent);
+  if (NS_SUCCEEDED(rv) && mDocument) {
+    mDocument->BlockOnload();
+  }
 }
 
 void
 nsBindingManager::DoProcessAttachedQueue()
 {
-  ProcessAttachedQueue();
+  if (!mProcessingAttachedStack) {
+    ProcessAttachedQueue();
 
-  NS_ASSERTION(mAttachedStack.Length() == 0,
+    NS_ASSERTION(mAttachedStack.Length() == 0,
                "Shouldn't have pending bindings!");
   
-  mProcessAttachedQueueEvent = nsnull;
+    mProcessAttachedQueueEvent = nsnull;
+  } else {
+    // Someone's doing event processing from inside a constructor.
+    // They're evil, but we'll fight back!  Just poll on them being
+    // done and repost the attached queue event.
+    PostProcessAttachedQueueEvent();
+  }
 
+  // No matter what, unblock onload for the event that's fired.
   if (mDocument) {
     // Hold a strong reference while calling UnblockOnload since that might
     // run script.
