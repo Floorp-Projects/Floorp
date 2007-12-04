@@ -4398,7 +4398,7 @@ ExtensionManager.prototype = {
           this._upgradeItem(installManifest, installData.id, installLocation,
                             installData.type);
           if (!restartRequired) {
-            this._finalizeUpgrade(installData.id);
+            this._finalizeUpgrade(installData.id, installLocation);
             this._finalizeInstall(installData.id, stagedFile);
           }
         }
