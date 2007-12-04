@@ -1445,6 +1445,13 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::InitializeNSS\n"));
 
+  // If we ever run into this assertion, we must update the values
+  // in nsINSSErrorsService.idl
+  PR_STATIC_ASSERT(nsINSSErrorsService::NSS_SEC_ERROR_BASE == SEC_ERROR_BASE
+                   && nsINSSErrorsService::NSS_SEC_ERROR_LIMIT == SEC_ERROR_LIMIT
+                   && nsINSSErrorsService::NSS_SSL_ERROR_BASE == SSL_ERROR_BASE
+                   && nsINSSErrorsService::NSS_SSL_ERROR_LIMIT == SSL_ERROR_LIMIT);
+
   // variables used for flow control within this function
 
   enum { problem_none, problem_no_rw, problem_no_security_at_all }

@@ -148,6 +148,26 @@ static PRErrorCode RandomizeConnectError(PRErrorCode code)
 
 //-----------------------------------------------------------------------------
 
+static PRBool
+IsNSSErrorCode(PRErrorCode code)
+{
+  return 
+    ((code >= nsINSSErrorsService::NSS_SEC_ERROR_BASE) && 
+      (code < nsINSSErrorsService::NSS_SEC_ERROR_LIMIT))
+    ||
+    ((code >= nsINSSErrorsService::NSS_SSL_ERROR_BASE) && 
+      (code < nsINSSErrorsService::NSS_SSL_ERROR_LIMIT));
+}
+
+// this logic is duplicated from the implementation of
+// nsINSSErrorsService::getXPCOMFromNSSError
+// It might have been better to implement that interface here...
+static nsresult
+GetXPCOMFromNSSError(PRErrorCode code)
+{
+    return NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, -1 * code);
+}
+
 static nsresult
 ErrorAccordingToNSPR(PRErrorCode errorCode)
 {
@@ -178,18 +198,9 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
         rv = NS_ERROR_NET_TIMEOUT;
         break;
     default:
-        {
-            nsCOMPtr<nsINSSErrorsService> nsserr =
-                do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
-            if (nsserr) {
-                nsresult nssXPCOMCode;
-                nsresult conversionStatus =
-                  nsserr->GetXPCOMFromNSSError(errorCode, &nssXPCOMCode);
-
-                if (NS_SUCCEEDED(conversionStatus))
-                    rv = nssXPCOMCode;
-            }
-        }
+        if (IsNSSErrorCode(errorCode))
+            rv = GetXPCOMFromNSSError(errorCode);
+        break;
     }
     LOG(("ErrorAccordingToNSPR [in=%d out=%x]\n", errorCode, rv));
     return rv;
