@@ -83,11 +83,11 @@ bool HTTPUpload::SendRequest(const wstring &url,
   memset(&components, 0, sizeof(components));
   components.dwStructSize = sizeof(components);
   components.lpszScheme = scheme;
-  components.dwSchemeLength = sizeof(scheme);
+  components.dwSchemeLength = sizeof(scheme) / sizeof(scheme[0]);
   components.lpszHostName = host;
-  components.dwHostNameLength = sizeof(host);
+  components.dwHostNameLength = sizeof(host) / sizeof(host[0]);
   components.lpszUrlPath = path;
-  components.dwUrlPathLength = sizeof(path);
+  components.dwUrlPathLength = sizeof(path) / sizeof(path[0]);
   if (!InternetCrackUrl(url.c_str(), static_cast<DWORD>(url.size()),
                         0, &components)) {
     return false;
