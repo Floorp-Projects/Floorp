@@ -110,7 +110,10 @@
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
 #define PREF_BROWSER_IMPORT_BOOKMARKS           "browser.places.importBookmarksHTML"
-
+#define PREF_BROWSER_IMPORT_DEFAULTS            "browser.places.importDefaults"
+#define PREF_BROWSER_CREATEDSMARTBOOKMARKS      "browser.places.createdSmartBookmarks"
+#define PREF_BROWSER_LEFTPANEFOLDERID           "browser.places.leftPaneFolderId"
+      
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
 // The most that will be used is the size of the DB file. Normal history sizes
@@ -502,6 +505,17 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     if (prefs) {
       rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_DEFAULTS, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);  
+
+      // if the places.sqlite gets deleted/corrupted the queries should be created again
+      rv = prefs->SetBoolPref(PREF_BROWSER_CREATEDSMARTBOOKMARKS, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);  
+      
+      // we must create a new Organizer left pane folder root, the old will not be valid anymore
+      rv = prefs->SetIntPref(PREF_BROWSER_LEFTPANEFOLDERID, -1);
+      NS_ENSURE_SUCCESS(rv, rv); 
     }
   }
 
