@@ -469,6 +469,10 @@ fails == 386310-1d.html 386310-1-ref.html
 == 400826-1.html 400826-1-ref.html
 == 401946-1.xul about:blank
 == 402338-1.html 402338-1-ref.html
+== 402567-1.html 402567-1-ref.html
+== 402567-2.html 402567-2-ref.html
+== 402567-3.html 402567-3-ref.html
+== 402567-4.html 402567-4-ref.html
 == 402950-1.html 402950-1-ref.html
 == 403129-1.html 403129-1-ref.html
 == 403129-2.html 403129-2-ref.html
