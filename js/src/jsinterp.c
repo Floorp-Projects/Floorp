@@ -637,9 +637,7 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     switch ((JSOp) *pc) {
       case JSOP_NAME:
       case JSOP_GETPROP:
-#if JS_HAS_XML_SUPPORT
       case JSOP_CALLPROP:
-#endif
         GET_ATOM_FROM_BYTECODE(fp->script, pc, 0, atom);
         roots[0] = ATOM_KEY(atom);
         argsobj = js_NewArrayObject(cx, argc, vp + 2);
@@ -5786,6 +5784,7 @@ interrupt:
             }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_XMLPI)
+#endif /* JS_HAS_XML_SUPPORT */
 
           BEGIN_CASE(JSOP_CALLPROP)
             /* Get an immediate atom naming the property. */
@@ -5797,6 +5796,7 @@ interrupt:
             if (!JSVAL_IS_PRIMITIVE(lval)) {
                 obj = JSVAL_TO_OBJECT(lval);
 
+#if JS_HAS_XML_SUPPORT
                 /* Special-case XML object method lookup, per ECMA-357. */
                 if (OBJECT_IS_XML(cx, obj)) {
                     JSXMLObjectOps *ops;
@@ -5805,7 +5805,9 @@ interrupt:
                     obj = ops->getMethod(cx, obj, id, &rval);
                     if (!obj)
                         ok = JS_FALSE;
-                } else {
+                } else
+#endif
+                {
                     ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
                 }
                 if (!ok)
@@ -5851,6 +5853,7 @@ interrupt:
             }
           END_CASE(JSOP_CALLPROP)
 
+#if JS_HAS_XML_SUPPORT
           BEGIN_CASE(JSOP_GETFUNNS)
             SAVE_SP_AND_PC(fp);
             ok = js_GetFunctionNamespace(cx, &rval);
@@ -6076,21 +6079,53 @@ interrupt:
           END_CASE(JSOP_ARRAYPUSH)
 #endif /* JS_HAS_GENERATORS */
 
-#if !JS_HAS_GENERATORS
-          L_JSOP_GENERATOR:
-          L_JSOP_YIELD:
-          L_JSOP_ARRAYPUSH:
-#endif
-
-#if !JS_HAS_DESTRUCTURING
-          L_JSOP_FOREACHKEYVAL:
-          L_JSOP_ENUMCONSTELEM:
-#endif
-
 #if JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
-#else
+
+# if !JS_HAS_GENERATORS
+          L_JSOP_GENERATOR:
+          L_JSOP_YIELD:
+          L_JSOP_ARRAYPUSH:
+# endif
+
+# if !JS_HAS_DESTRUCTURING
+          L_JSOP_FOREACHKEYVAL:
+          L_JSOP_ENUMCONSTELEM:
+# endif
+
+# if !JS_HAS_XML_SUPPORT
+          L_JSOP_CALLXMLNAME:
+          L_JSOP_STARTXMLEXPR:
+          L_JSOP_STARTXML:
+          L_JSOP_DELDESC:
+          L_JSOP_GETFUNNS:
+          L_JSOP_XMLPI:
+          L_JSOP_XMLCOMMENT:
+          L_JSOP_XMLCDATA:
+          L_JSOP_XMLOBJECT:
+          L_JSOP_XMLELTEXPR:
+          L_JSOP_XMLTAGEXPR:
+          L_JSOP_TOXMLLIST:
+          L_JSOP_TOXML:
+          L_JSOP_ENDFILTER:
+          L_JSOP_FILTER:
+          L_JSOP_DESCENDANTS:
+          L_JSOP_XMLNAME:
+          L_JSOP_SETXMLNAME:
+          L_JSOP_BINDXMLNAME:
+          L_JSOP_ADDATTRVAL:
+          L_JSOP_ADDATTRNAME:
+          L_JSOP_TOATTRVAL:
+          L_JSOP_TOATTRNAME:
+          L_JSOP_QNAME:
+          L_JSOP_QNAMECONST:
+          L_JSOP_QNAMEPART:
+          L_JSOP_ANYNAME:
+          L_JSOP_DEFXMLNS:
+# endif
+
+#else /* !JS_THREADED_INTERP */
           default:
 #endif
           {

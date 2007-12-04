@@ -992,10 +992,11 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
     JSAtom *atom;
     JSBool hadUnicodeEscape;
     const struct keyword *kw;
+#if JS_HAS_XML_SUPPORT
     JSBool inTarget;
     size_t targetLength;
     ptrdiff_t contentIndex;
-
+#endif
 
 #define INIT_TOKENBUF()     (ts->tokenbuf.ptr = ts->tokenbuf.base)
 #define TOKENBUF_LENGTH()   PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar)
