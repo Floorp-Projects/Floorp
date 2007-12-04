@@ -92,11 +92,12 @@ class nsIDocumentObserver;
 class nsBindingManager;
 class nsIDOMNodeList;
 class mozAutoSubtreeModified;
+struct JSObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xc7f56e99, 0x5538, 0x4841, \
-  { 0x97, 0x39, 0x43, 0x6e, 0x6d, 0x26, 0x95, 0x12 } }
+{ 0xed21686d, 0x4e2f, 0x41f5, \
+  { 0x94, 0xaa, 0xcc, 0x1f, 0xbd, 0xfa, 0x1f, 0x84 } }
 
 
 // Flag for AddStyleSheet().
@@ -120,7 +121,8 @@ public:
       mNodeInfoManager(nsnull),
       mCompatMode(eCompatibility_FullStandards),
       mIsInitialDocumentInWindow(PR_FALSE),
-      mPartID(0)
+      mPartID(0),
+      mJSObject(nsnull)
   {
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
   }
@@ -895,6 +897,16 @@ public:
     return mLoadedAsData;
   }
 
+  JSObject* GetJSObject() const
+  {
+    return mJSObject;
+  }
+
+  void SetJSObject(JSObject *aJSObject)
+  {
+    mJSObject = aJSObject;
+  }
+
 protected:
   ~nsIDocument()
   {
@@ -983,6 +995,12 @@ protected:
 
   nsCOMArray<nsINode> mSubtreeModifiedTargets;
   PRUint32            mSubtreeModifiedDepth;
+
+private:
+  // JSObject cache. Only to be used for performance
+  // optimizations. This will be set once this document is touched
+  // from JS, and it will be unset once the JSObject is finalized.
+  JSObject *mJSObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

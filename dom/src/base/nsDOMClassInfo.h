@@ -798,6 +798,8 @@ public:
   NS_IMETHOD GetFlags(PRUint32* aFlags);
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj);
+  NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                      JSObject *obj);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
