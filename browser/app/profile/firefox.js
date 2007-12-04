@@ -584,8 +584,8 @@ pref("accessibility.blockautorefresh", false);
 // import bookmarks.html into Places bookmarks
 pref("browser.places.importBookmarksHTML", true);
 
-// if false, will add the "Places" folder to the personal toolbar
-pref("browser.places.createdDefaultQueries", false);
+// if false, will add the "Smart Bookmarks" folder to the personal toolbar
+pref("browser.places.createdSmartBookmarks", false);
 
 // Controls behavior of the "Add Exception" dialog launched from SSL error pages
 // 0 - don't pre-populate anything
