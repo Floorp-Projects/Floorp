@@ -6035,11 +6035,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * but use a stack slot for t and avoid dup'ing and popping it via
          * the JSOP_NEWINIT and JSOP_INITELEM bytecodes.
          */
-        ale = js_IndexAtom(cx, CLASS_ATOM(cx, Array), &cg->atomList);
-        if (!ale)
-            return JS_FALSE;
-        EMIT_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
-        if (js_Emit1(cx, cg, JSOP_NEWINIT) < 0)
+        if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) JSProto_Array) < 0)
             return JS_FALSE;
 
         pn2 = pn->pn_head;
@@ -6108,11 +6104,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * but use a stack slot for t and avoid dup'ing and popping it via
          * the JSOP_NEWINIT and JSOP_INITELEM bytecodes.
          */
-        ale = js_IndexAtom(cx, CLASS_ATOM(cx, Object), &cg->atomList);
-        if (!ale)
-            return JS_FALSE;
-        EMIT_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
-        if (js_Emit1(cx, cg, JSOP_NEWINIT) < 0)
+        if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) JSProto_Object) < 0)
             return JS_FALSE;
 
         pn2 = pn->pn_head;

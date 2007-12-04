@@ -597,7 +597,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 JSClass js_StringClass = {
     js_String_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_String) | JSCLASS_FIXED_BINDING,
     JS_PropertyStub,   JS_PropertyStub,   str_getProperty,   JS_PropertyStub,
     str_enumerate, (JSResolveOp)str_resolve, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS

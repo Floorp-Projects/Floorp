@@ -237,7 +237,8 @@ namespace_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_FRIEND_DATA(JSExtendedClass) js_NamespaceClass = {
   { "Namespace",
     JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE | JSCLASS_IS_EXTENDED |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace) |
+    JSCLASS_FIXED_BINDING,
     JS_PropertyStub,   JS_PropertyStub,   namespace_getProperty, NULL,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    namespace_finalize,
     NULL,              NULL,              NULL,              NULL,
@@ -445,7 +446,8 @@ qname_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_FRIEND_DATA(JSExtendedClass) js_QNameClass = {
   { "QName",
     JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE | JSCLASS_IS_EXTENDED |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_QName) |
+    JSCLASS_FIXED_BINDING,
     JS_PropertyStub,   JS_PropertyStub,   qname_getProperty, NULL,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    qname_finalize,
     NULL,              NULL,              NULL,              NULL,
@@ -5559,7 +5561,7 @@ xml_getObjectOps(JSContext *cx, JSClass *clasp)
 JS_FRIEND_DATA(JSClass) js_XMLClass = {
     js_XML_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_XML) | JSCLASS_FIXED_BINDING,
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    xml_finalize,
     xml_getObjectOps,  NULL,              NULL,              NULL,
@@ -7676,7 +7678,8 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Define the XMLList function and give it the same prototype as XML. */
-    fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, 0);
+    fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1,
+                            JSPROP_READONLY | JSPROP_PERMANENT);
     if (!fun)
         return NULL;
     if (!js_SetClassPrototype(cx, fun->object, proto,
