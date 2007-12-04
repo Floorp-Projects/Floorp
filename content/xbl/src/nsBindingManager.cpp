@@ -1334,52 +1334,6 @@ nsBindingManager::GetNestedSingleInsertionPoint(nsIContent* aParent,
   return insertionElement;
 }
 
-// Note: We don't hold a reference to the document observer; we assume
-// that it has a live reference to the document.
-void
-nsBindingManager::AddObserver(nsIMutationObserver* aObserver)
-{
-  // The array makes sure the observer isn't already in the list
-  mObservers.AppendObserver(aObserver);
-}
-
-PRBool
-nsBindingManager::RemoveObserver(nsIMutationObserver* aObserver)
-{
-  return mObservers.RemoveObserver(aObserver);
-}
-
-void
-nsBindingManager::CharacterDataWillChange(nsIDocument* aDocument,
-                                          nsIContent* aContent,
-                                          CharacterDataChangeInfo* aInfo)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(CharacterDataWillChange,
-                                     (aDocument, aContent, aInfo));
-}
-
-void
-nsBindingManager::CharacterDataChanged(nsIDocument* aDocument,
-                                       nsIContent* aContent,
-                                       CharacterDataChangeInfo* aInfo)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(CharacterDataChanged,
-                                     (aDocument, aContent, aInfo));
-}
-
-void
-nsBindingManager::AttributeChanged(nsIDocument* aDocument,
-                                   nsIContent* aContent,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aAttribute,
-                                   PRInt32 aModType,
-                                   PRUint32 aStateMask)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(AttributeChanged,
-                                     (aDocument, aContent, aNameSpaceID,
-                                      aAttribute, aModType, aStateMask));
-}
-
 void
 nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                   nsIContent* aContainer,
@@ -1431,10 +1385,6 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
       }
     }
   }
-
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ContentAppended,
-                                     (aDocument, aContainer,
-                                      aNewIndexInContainer));
 }
 
 void
@@ -1450,10 +1400,6 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
     NS_ASSERTION(aIndexInContainer >= 0, "Bogus index");
     HandleChildInsertion(aContainer, aChild, aIndexInContainer, PR_FALSE);
   }
-
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ContentInserted,
-                                     (aDocument, aContainer, aChild,
-                                      aIndexInContainer));  
 }
 
 void
@@ -1483,31 +1429,18 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
             point->RemoveChild(aChild);
           }
         }
+        SetInsertionParent(aChild, nsnull);
       }
     }  
   }
-
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ContentRemoved,
-                                     (aDocument, aContainer, aChild,
-                                      aIndexInContainer));  
-
-
 }
 
 void
-nsBindingManager::NodeWillBeDestroyed(const nsINode *aNode)
+nsBindingManager::DropDocumentReference()
 {
   // Make sure to not run any more XBL constructors
   mProcessingAttachedStack = PR_TRUE;
   mDocument = nsnull;
-  
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(NodeWillBeDestroyed, (aNode));
-}
-
-void
-nsBindingManager::ParentChainChanged(nsIContent *aContent)
-{
-  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ParentChainChanged, (aContent));
 }
 
 void
