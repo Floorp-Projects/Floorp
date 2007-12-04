@@ -339,15 +339,14 @@ BrowserGlue.prototype = {
     // if we need to force a migration (due to a schema change)
     var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                   getService(Ci.nsINavHistoryService);
-                  
-    var importBookmarks = false;
 
+    var importBookmarks = false;
     try {
       var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                        getService(Ci.nsIPrefBranch);
       importBookmarks = prefBranch.getBoolPref("browser.places.importBookmarksHTML");
     } catch(ex) {}
-    
+
     if (!importBookmarks) {
       // Call it here for Fx3 profiles created before the Places folder
       // has been added, otherwise it's called during import.
@@ -359,7 +358,7 @@ BrowserGlue.prototype = {
                      getService(Ci.nsIProperties);
 
     var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
- 
+
     if (bookmarksFile.exists()) {
       // import the file
       try {
@@ -388,11 +387,6 @@ BrowserGlue.prototype = {
           }
         }
       }
-    }
-    else {
-      // this covers the case the places database gets corrupted (or removed)
-      // but the bookmarks html backup file does not exist
-      this.ensurePlacesDefaultQueriesInitialized();
     }
   },
 
