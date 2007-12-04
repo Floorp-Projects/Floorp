@@ -4003,16 +4003,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   nsRect combinedArea;
   aLineLayout.RelativePositionFrames(combinedArea);  // XXXldb This returned width as -15, 2001-06-12, Bugzilla
-  if (aState.mPresContext->CompatibilityMode() != eCompatibility_NavQuirks) {
-    PRUint8 decorations;
-    nscolor underColor, overColor, strikeColor;
-    GetTextDecorations(aState.mPresContext, PR_TRUE, decorations,
-                       underColor, overColor, strikeColor);
-    if (decorations) {
-      nsLineLayout::CombineTextDecorations(aState.mPresContext, decorations,
-                                           this, combinedArea);
-    }
-  }
   aLine->SetCombinedArea(combinedArea);
   if (addedBullet) {
     aLineLayout.RemoveBulletFrame(mBullet);
@@ -5887,6 +5877,7 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
       ctx, aColor, pt, size,
       PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
       PresContext()->AppUnitsToGfxUnits(aOffset),
+      PresContext()->AppUnitsToGfxUnits(aSize),
       aDecoration, NS_STYLE_BORDER_STYLE_SOLID, isRTL);
   }
 }

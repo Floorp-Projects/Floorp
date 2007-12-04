@@ -168,10 +168,10 @@ const PRUint8 kUseAltDCFor_CREATERC_PAINT  = 0x04; // Use when creating Renderin
 const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Surface Dimensions
 #endif
 
-// 92a1e76c-adbd-441e-aae6-243d6004e0ee
+// 4dd372b6-ef19-4995-a7ac-ba3efd3f656f
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0x92a1e76c, 0xadbd, 0x441e, \
- { 0xaa, 0xe6, 0x24, 0x3d, 0x60, 0x4, 0xe0, 0xee } }
+{ 0x4dd372b6, 0xef19, 0x4995, \
+ { 0xa7, 0xac, 0xba, 0x3e, 0xfd, 0x3f, 0x65, 0x6f } }
 
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
@@ -295,14 +295,7 @@ public:
   PRInt32 AppUnitsPerDevPixel() const { return mAppUnitsPerDevPixel; }
 
   /**
-   * Convert device pixels which is used for gfx/thebes to nearest (rounded)
-   * app units
-   */
-  nscoord GfxUnitsToAppUnits(gfxFloat aGfxUnits) const
-  { return nscoord(NS_round(aGfxUnits * AppUnitsPerDevPixel())); }
-
-  /**
-   * Convert app units to device pixels which is used for gfx/thebes.
+   * Convert app units to device pixels which is used in gfx/thebes.
    */
   gfxFloat AppUnitsToGfxUnits(nscoord aAppUnits) const
   { return gfxFloat(aAppUnits) / AppUnitsPerDevPixel(); }

@@ -41,7 +41,6 @@
 #define nsCSSRendering_h___
 
 #include "nsIRenderingContext.h"
-#include "nsStyleConsts.h"
 #include "gfxContext.h"
 struct nsPoint;
 class nsStyleContext;
@@ -202,8 +201,8 @@ public:
 
   /**
    * Function for painting the decoration lines for the text.
-   * NOTE: aPt, aLineSize, aAscent and aOffset are non-rounded device pixels,
-   *       not app units.
+   * NOTE: aPt, aLineSize, aAscent, aOffset and aPreferredHeight are non-rounded
+   *       device pixels, not app units.
    *   input:
    *     @param aGfxContext
    *     @param aColor            the color of the decoration line
@@ -214,6 +213,8 @@ public:
    *     @param aOffset           the offset of the decoration line from
    *                              the baseline of the text (if the value is
    *                              positive, the line is lifted up)
+   *     @param aPreferredHeight  the preferred size of the decoration line by
+   *                              the font of the text
    *     @param aDecoration       which line will be painted. The value can be
    *                              NS_STYLE_TEXT_DECORATION_UNDERLINE or
    *                              NS_STYLE_TEXT_DECORATION_OVERLINE or
@@ -222,7 +223,8 @@ public:
    *                              can be NS_STYLE_BORDER_STYLE_SOLID or
    *                              NS_STYLE_BORDER_STYLE_DOTTED or
    *                              NS_STYLE_BORDER_STYLE_DASHED or
-   *                              NS_STYLE_BORDER_STYLE_DOUBLE.
+   *                              NS_STYLE_BORDER_STYLE_DOUBLE or
+   *                              NS_STYLE_BORDER_STYLE_NONE.
    *     @param aIsRTL            when the text is RTL, it is true.
    */
   static void PaintDecorationLine(gfxContext* aGfxContext,
@@ -231,41 +233,10 @@ public:
                                   const gfxSize& aLineSize,
                                   const gfxFloat aAscent,
                                   const gfxFloat aOffset,
+                                  const gfxFloat aPreferredSize,
                                   const PRUint8 aDecoration,
                                   const PRUint8 aStyle,
                                   const PRBool aIsRTL);
-
-  /**
-   * Function for getting the decoration line rect for the text.
-   * NOTE: aLineSize, aAscent and aOffset are non-rounded device pixels,
-   *       not app units.
-   *   input:
-   *     @param aPresContext
-   *     @param aLineSize         the width and the height of the decoration
-   *                              line
-   *     @param aAscent           the ascent of the text
-   *     @param aOffset           the offset of the decoration line from
-   *                              the baseline of the text (if the value is
-   *                              positive, the line is lifted up)
-   *     @param aDecoration       which line will be painted. The value can be
-   *                              NS_STYLE_TEXT_DECORATION_UNDERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_OVERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
-   *     @param aStyle            the style of the decoration line. The value
-   *                              can be NS_STYLE_BORDER_STYLE_SOLID or
-   *                              NS_STYLE_BORDER_STYLE_DOTTED or
-   *                              NS_STYLE_BORDER_STYLE_DASHED or
-   *                              NS_STYLE_BORDER_STYLE_DOUBLE.
-   *   output:
-   *     @return                  the decoration line rect for the input,
-   *                              the each values are app units.
-   */
-  static nsRect GetTextDecorationRect(nsPresContext* aPresContext,
-                                      const gfxSize& aLineSize,
-                                      const gfxFloat aAscent,
-                                      const gfxFloat aOffset,
-                                      const PRUint8 aDecoration,
-                                      const PRUint8 aStyle);
 
 protected:
 
@@ -300,12 +271,6 @@ protected:
                            PRInt32 aNumPoints,
                            nsRect* aGap);
 
-  static gfxRect GetTextDecorationRectInternal(const gfxPoint& aPt,
-                                               const gfxSize& aLineSize,
-                                               const gfxFloat aAscent,
-                                               const gfxFloat aOffset,
-                                               const PRUint8 aDecoration,
-                                               const PRUint8 aStyle);
 };
 
 

@@ -66,7 +66,6 @@
 #include "nsBidiUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
-#include "nsCSSRendering.h"
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -2625,8 +2624,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     combinedAreaResult.height = mFinalLineHeight;
   }
 
-  PRBool isStandardsMode =
-    mPresContext->CompatibilityMode() != eCompatibility_NavQuirks;
   for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
     nsPoint origin = nsPoint(pfd->mBounds.x, pfd->mBounds.y);
     nsIFrame* frame = pfd->mFrame;
@@ -2655,15 +2652,6 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // <b>x</b> and <b>y</b> which were computed above.
     nsRect r;
     if (pfd->mSpan) {
-      if (isStandardsMode) {
-        // Combine the text decoration area for inline elements of standards
-        // mode
-        PRUint8 decorations = frame->GetStyleTextReset()->mTextDecoration;
-        if (decorations) {
-          nsLineLayout::CombineTextDecorations(mPresContext, decorations,
-                          frame, pfd->mSpan->mFrame->mCombinedArea);
-        }
-      }
       // Compute a new combined area for the child span before
       // aggregating it into our combined area.
       RelativePositionFrames(pfd->mSpan, r);
@@ -2706,61 +2694,4 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     frame->FinishAndStoreOverflow(&combinedAreaResult, frame->GetSize());
   }
   aCombinedArea = combinedAreaResult;
-}
-
-void
-nsLineLayout::CombineTextDecorations(nsPresContext* aPresContext,
-                                     PRUint8 aDecorations,
-                                     nsIFrame* aFrame,
-                                     nsRect& aCombinedArea,
-                                     nscoord aAscentOverride,
-                                     float aUnderlineSizeRatio)
-{
-  if (!(aDecorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
-                        NS_STYLE_TEXT_DECORATION_OVERLINE |
-                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH)))
-    return;
-
-  nsCOMPtr<nsIFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
-  if (aAscentOverride == 0)
-    fm->GetMaxAscent(aAscentOverride);
-  gfxFloat ascent = aPresContext->AppUnitsToGfxUnits(aAscentOverride);
-  nsRect decorationArea;
-  if (aDecorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
-                      NS_STYLE_TEXT_DECORATION_OVERLINE)) {
-    nscoord offsetCoord, sizeCoord;
-    fm->GetUnderline(offsetCoord, sizeCoord);
-    gfxSize size(aPresContext->AppUnitsToGfxUnits(aCombinedArea.width),
-                 aPresContext->AppUnitsToGfxUnits(sizeCoord));
-    if (aDecorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
-      decorationArea =
-        nsCSSRendering::GetTextDecorationRect(aPresContext, size, ascent,
-                          ascent, NS_STYLE_TEXT_DECORATION_OVERLINE,
-                          NS_STYLE_BORDER_STYLE_SOLID);
-      aCombinedArea.UnionRect(aCombinedArea, decorationArea);
-    }
-    if (aDecorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
-      aUnderlineSizeRatio = PR_MAX(aUnderlineSizeRatio, 1.0);
-      size.height *= aUnderlineSizeRatio;
-      gfxFloat offset = aPresContext->AppUnitsToGfxUnits(offsetCoord);
-      decorationArea =
-        nsCSSRendering::GetTextDecorationRect(aPresContext, size, ascent,
-                          offset, NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                          NS_STYLE_BORDER_STYLE_SOLID);
-      aCombinedArea.UnionRect(aCombinedArea, decorationArea);
-    }
-  }
-  if (aDecorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
-    nscoord offsetCoord, sizeCoord;
-    fm->GetStrikeout(offsetCoord, sizeCoord);
-    gfxSize size(aPresContext->AppUnitsToGfxUnits(aCombinedArea.width),
-                 aPresContext->AppUnitsToGfxUnits(sizeCoord));
-    gfxFloat offset = aPresContext->AppUnitsToGfxUnits(offsetCoord);
-    decorationArea =
-      nsCSSRendering::GetTextDecorationRect(aPresContext, size, ascent,
-                        offset, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
-                        NS_STYLE_BORDER_STYLE_SOLID);
-    aCombinedArea.UnionRect(aCombinedArea, decorationArea);
-  }
 }
