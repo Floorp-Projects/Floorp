@@ -221,6 +221,11 @@ private:
 
     static void PrefsChanged(nsIPrefBranch *prefs, const char *pref);
 
+    // IDN routines
+    static nsresult ACEtoDisplayIDN(const nsCSubstring &in, nsCString &out);
+    static nsresult UTF8toDisplayIDN(const nsCSubstring &in, nsCString &out);
+    static PRBool IsInWhitelist(const nsCSubstring &host);
+
     // mSpec contains the normalized version of the URL spec (UTF-8 encoded).
     nsCString mSpec;
     PRInt32   mDefaultPort;
@@ -271,6 +276,8 @@ private:
     static PRBool                       gEscapeUTF8;
     static PRBool                       gAlwaysEncodeInUTF8;
     static PRBool                       gEncodeQueryInUTF8;
+    static PRBool                       gShowPunycode;
+    static nsIPrefBranch               *gIDNWhitelistPrefBranch;
 };
 
 #define NS_THIS_STANDARDURL_IMPL_CID                 \
