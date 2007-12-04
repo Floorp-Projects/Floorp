@@ -62,12 +62,12 @@
     <content>
       <xul:hbox flex="1" equalsize="always">
         <xul:hbox flex="1" align="center">
-          <xul:image src="moz-icon://goat?size=16"
+          <xul:image src="moz-icon://goat?size=16" class="typeIcon"
                      xbl:inherits="src=typeIcon" height="16" width="16"/>
           <xul:label flex="1" crop="end" xbl:inherits="value=typeDescription"/>
         </xul:hbox>
         <xul:hbox flex="1" align="center">
-          <xul:image xbl:inherits="src=actionIcon" height="16" width="16"/>
+          <xul:image xbl:inherits="src=actionIcon" height="16" width="16" class="actionIcon"/>
           <xul:label flex="1" crop="end" xbl:inherits="value=actionDescription"/>
         </xul:hbox>
       </xul:hbox>
@@ -78,7 +78,7 @@
     <content>
       <xul:hbox flex="1" equalsize="always">
         <xul:hbox flex="1" align="center">
-          <xul:image src="moz-icon://goat?size=16"
+          <xul:image src="moz-icon://goat?size=16" class="typeIcon"
                      xbl:inherits="src=typeIcon" height="16" width="16"/>
           <xul:label flex="1" crop="end" xbl:inherits="value=typeDescription"/>
         </xul:hbox>
