@@ -57,7 +57,10 @@ toolbarpalette {
   min-height: 20px !important;
   color: #000000;
   border-bottom: 1px solid #a3a3a3;
-  background-color: #EBEBEB;
+  background-color: rgb(235, 235, 235);
+  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
+  background-repeat: repeat-x;
+  background-position: top right;
 }
 
 menubar {
