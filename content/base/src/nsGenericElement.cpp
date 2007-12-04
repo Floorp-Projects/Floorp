@@ -739,7 +739,7 @@ TryGetSVGBoundingRect(nsIFrame* aFrame, nsRect* aRect)
 
   // r is in pixels relative to 'outer', get it into twips
   // relative to ICB origin
-  r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerCSSPixel());
+  r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerDevPixel());
   *aRect = r + GetOffsetFromInitialContainingBlock(outer);
   return PR_TRUE;
 #else
