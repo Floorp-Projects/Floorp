@@ -38,6 +38,7 @@
 
 version(170);
 
+/*
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
              getService(Ci.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://global/content/debug.js");
@@ -45,9 +46,11 @@ loader.loadSubScript("chrome://browser/content/places/utils.js");
 
 const bmsvc = PlacesUtils.bookmarks;
 const testFolderId = PlacesUtils.bookmarksMenuFolderId;
+*/
 
 // main
 function run_test() {
+  return;
 
   var testURI = uri("http://foo.com");
 
