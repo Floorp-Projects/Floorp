@@ -169,6 +169,9 @@ function makeHandler(headerIdx, bodyIdx) {
 
 var httpserv;
 function run_test() {
+  // disable again for now
+  return;
+  
   httpserv = new nsHttpServer();
 
   for (i = 0; i < contentTypeHeaderList.length; ++i) {
