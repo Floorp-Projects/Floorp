@@ -493,9 +493,15 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
     return JS_FALSE;
   }
 
+  // Sever the prototype link from Object.prototype so we don't
+  // accidentally inherit properties like __proto__ and __parent__.
+  if (!JS_SetPrototype(cx, outerObj, nsnull)) {
+    return JS_FALSE;
+  }
+
   if (!JS_SetReservedSlot(cx, outerObj, XPCWrapper::sWrappedObjSlot, *vp) ||
       !JS_SetReservedSlot(cx, outerObj, XPCWrapper::sResolvingSlot,
-                          BOOLEAN_TO_JSVAL(JS_FALSE)) ||
+                          JSVAL_FALSE) ||
       !JS_SetReservedSlot(cx, outerObj, XPC_XOW_ScopeSlot,
                           PRIVATE_TO_JSVAL(parentScope))) {
     return JS_FALSE;
