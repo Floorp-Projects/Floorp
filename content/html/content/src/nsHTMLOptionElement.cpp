@@ -108,6 +108,9 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
 
+  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
+  
   // nsIOptionElement
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
 
@@ -127,6 +130,10 @@ protected:
 
   PRPackedBool mSelectedChanged;
   PRPackedBool mIsSelected;
+
+  // True only while we're under the SetOptionsSelectedByIndex call when our
+  // "selected" attribute is changing and mSelectedChanged is false.
+  PRPackedBool mIsInSetDefaultSelected;
 };
 
 nsGenericHTMLElement*
@@ -156,7 +163,8 @@ NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 nsHTMLOptionElement::nsHTMLOptionElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mSelectedChanged(PR_FALSE),
-    mIsSelected(PR_FALSE)
+    mIsSelected(PR_FALSE),
+    mIsInSetDefaultSelected(PR_FALSE)
 {
 }
 
@@ -206,7 +214,9 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
   mSelectedChanged = PR_TRUE;
   mIsSelected = aValue;
 
-  if (aNotify) {
+  // When mIsInSetDefaultSelected is true, the notification will be handled by
+  // SetAttr/UnsetAttr.
+  if (aNotify && !mIsInSetDefaultSelected) {
     nsIDocument* document = GetCurrentDoc();
     if (document) {
       mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, aNotify);
@@ -326,6 +336,53 @@ nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
   }
   return retval;
+}
+
+nsresult
+nsHTMLOptionElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                   const nsAString* aValue, PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLElement::BeforeSetAttr(aNamespaceID, aName,
+                                                    aValue, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNamespaceID != kNameSpaceID_None || aName != nsGkAtoms::selected ||
+      mSelectedChanged) {
+    return NS_OK;
+  }
+  
+  // We just changed out selected state (since we look at the "selected"
+  // attribute when mSelectedChanged is false.  Let's tell our select about
+  // it.
+  nsCOMPtr<nsISelectElement> selectInt = do_QueryInterface(GetSelect());
+  if (!selectInt) {
+    return NS_OK;
+  }
+
+  // Note that at this point mSelectedChanged is false and as long as that's
+  // true it doesn't matter what value mIsSelected has.
+  NS_ASSERTION(!mSelectedChanged, "Shouldn't be here");
+  
+  PRBool newSelected = (aValue != nsnull);
+  PRBool inSetDefaultSelected = mIsInSetDefaultSelected;
+  mIsInSetDefaultSelected = PR_TRUE;
+  
+  PRInt32 index;
+  GetIndex(&index);
+  // This should end up calling SetSelectedInternal, which we will allow to
+  // take effect so that parts of SetOptionsSelectedByIndex that might depend
+  // on it working don't get confused.
+  rv = selectInt->SetOptionsSelectedByIndex(index, index, newSelected,
+                                            PR_FALSE, PR_TRUE, aNotify,
+                                            nsnull);
+
+  // Now reset our members; when we finish the attr set we'll end up with the
+  // rigt selected state.
+  mIsInSetDefaultSelected = inSetDefaultSelected;
+  mSelectedChanged = PR_FALSE;
+  // mIsSelected doesn't matter while mSelectedChanged is false
+
+  return rv;
 }
 
 NS_IMETHODIMP

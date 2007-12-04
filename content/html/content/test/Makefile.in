@@ -103,6 +103,7 @@ _TEST_FILES = 	test_bug589.html \
 		bug392567.jar       \
 		bug392567.jar^headers^ \
 		test_bug394700.html \
+		test_bug395107.html \
 		test_bug401160.xhtml \
 		$(NULL)
 

@@ -3848,6 +3848,9 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     return NS_OK;
   }
 
+  nsresult rv = BeforeSetAttr(aNameSpaceID, aName, nsnull, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   nsIDocument *document = GetCurrentDoc();    
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   if (document) {
@@ -3890,7 +3893,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   nsAttrValue oldValue;
-  nsresult rv = mAttrsAndChildren.RemoveAttrAt(index, oldValue);
+  rv = mAttrsAndChildren.RemoveAttrAt(index, oldValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (document) {
@@ -3929,7 +3932,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
-  return NS_OK;
+  return AfterSetAttr(aNameSpaceID, aName, nsnull, aNotify);
 }
 
 const nsAttrName*

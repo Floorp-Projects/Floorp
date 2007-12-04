@@ -2822,19 +2822,6 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                             aValue, aNotify);
 }
 
-nsresult
-nsGenericHTMLFormElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                    PRBool aNotify)
-{
-  BeforeSetAttr(aNameSpaceID, aName, nsnull, aNotify);
-  
-  nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aName, aNotify);
-
-  AfterSetAttr(aNameSpaceID, aName, nsnull, aNotify);
-
-  return rv;
-}
-
 PRBool
 nsGenericHTMLFormElement::CanBeDisabled() const
 {
