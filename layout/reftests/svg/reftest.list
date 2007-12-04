@@ -21,7 +21,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg # bug 379610
 == opacity-and-pattern-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == pseudo-classes-02.svg pseudo-classes-02-ref.svg # bug 379600 (crashes linux)
+== pseudo-classes-02.svg pseudo-classes-02-ref.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
