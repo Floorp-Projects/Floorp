@@ -11,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
+ * The Original Code is the Firefox Preferences System.
  *
- * The Initial Developer of the Original Code is Mozilla.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Myk Melez <myk@mozilla.org>
+ *   Florian Queze <florian@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,20 +34,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-richlistitem {
-  -moz-binding: url("chrome://browser/content/preferences/handlers.xml#handler");
-}
-
-richlistitem[selected="true"] {
-  -moz-binding: url("chrome://browser/content/preferences/handlers.xml#handler-selected");
-}
-
 /**
- * Make the icons appear.
- * Note: we display the icon box for every item whether or not it has an icon
- * so the labels of all the items align vertically.
+ * Line up the actions menu with action labels above and below it.
+ * Equalize the distance from the left side of the action box to the left side
+ * of the icon for both the menu and the non-menu versions of the action box.
+ * Also make sure the labels are the same distance away from the icons.
  */
+.actionsMenu {
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: -2px;
+  -moz-margin-end: 0;
+}
+
+.typeIcon,
+.actionIcon {
+  -moz-margin-start: 3px;
+  -moz-margin-end: 3px;
+}
+
+richlistitem label {
+  -moz-margin-start: 1px;
+  margin-top: 2px;
+}
+
+richlistitem {
+  min-height: 22px;
+}
+
+.actionsMenu .menulist-icon {
+  -moz-margin-end: 3px;
+}
+
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
-  display: -moz-box;
-  min-width: 16px;
+  -moz-padding-start: 0px;
+  -moz-padding-end: 2px;
+}
+
+.actionsMenu > menupopup > menuitem {
+  -moz-padding-start: 4px;
 }
