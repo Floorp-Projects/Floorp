@@ -79,8 +79,8 @@ interface nsINSSErrorsService : nsISupports
      *  The security module will perform a runtime check and assertion
      *  to ensure the values are in synch with NSS.
      */
-    const long NSS_SEC_ERROR_BASE  = (-0x2000);
+    const long NSS_SEC_ERROR_BASE  = -(0x2000);
     const long NSS_SEC_ERROR_LIMIT = (NSS_SEC_ERROR_BASE + 1000);
-    const long NSS_SSL_ERROR_BASE  = (-0x3000);
+    const long NSS_SSL_ERROR_BASE  = -(0x3000);
     const long NSS_SSL_ERROR_LIMIT = (NSS_SSL_ERROR_BASE + 1000);
 };
