@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * The multiplex stream concatinates a list of input streams into a single
+ * The multiplex stream concatenates a list of input streams into a single
  * stream.
  */
 

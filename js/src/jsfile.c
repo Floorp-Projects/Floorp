@@ -273,7 +273,7 @@ js_isAbsolute(const char *name)
 }
 
 /*
- * Concatinates base and name to produce a valid filename.
+ * Concatenates base and name to produce a valid filename.
  * Returned string must be freed.
 */
 static char*
