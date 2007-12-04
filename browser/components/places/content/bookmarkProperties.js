@@ -929,15 +929,15 @@ var BookmarkPropertiesPanel = {
         PlacesUtils.ptm.editBookmarkMicrosummary(-1, microsummary));
     }
 
+    if (this._postData) {
+      childTransactions.push(
+        PlacesUtils.ptm.editBookmarkPostData(-1, this._postData));
+    }
+
     var transactions = [PlacesUtils.ptm.createItem(uri, aContainer, aIndex,
                                                    title, keyword,
                                                    annotations,
                                                    childTransactions)];
-
-    if (this._postData) {
-      transactions.push(
-        PlacesUtils.ptm.editURIPostData(uri, this._postData));
-    }
 
     return PlacesUtils.ptm.aggregateTransactions(this._getDialogTitle(), transactions);
   },
