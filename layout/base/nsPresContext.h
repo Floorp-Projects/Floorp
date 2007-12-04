@@ -509,10 +509,6 @@ public:
   { return NSAppUnitsToIntPixels(aAppUnits,
                                  mDeviceContext->AppUnitsPerDevPixel()); }
 
-  // If there is a remainder, it is rounded to nearest app units.
-  nscoord GfxUnitsToAppUnits(gfxFloat aGfxUnits) const
-  { return mDeviceContext->GfxUnitsToAppUnits(aGfxUnits); }
-
   gfxFloat AppUnitsToGfxUnits(nscoord aAppUnits) const
   { return mDeviceContext->AppUnitsToGfxUnits(aAppUnits); }
 

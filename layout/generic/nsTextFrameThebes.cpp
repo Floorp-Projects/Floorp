@@ -3561,85 +3561,6 @@ FillClippedRect(gfxContext* aCtx, nsPresContext* aPresContext,
   aCtx->Fill();
 }
 
-nsTextFrame::TextDecorations
-nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
-{
-  TextDecorations decorations;
-
-  // Quirks mode text decoration are rendered by children; see bug 1777
-  // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
-  // does the painting of text decorations.
-  if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode())
-    return decorations;
-
-  PRBool useOverride = PR_FALSE;
-  nscolor overrideColor;
-
-  // A mask of all possible decorations.
-  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | 
-                      NS_STYLE_TEXT_DECORATION_OVERLINE |
-                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-
-  for (nsStyleContext* context = GetStyleContext();
-       decorMask && context && context->HasTextDecorations();
-       context = context->GetParent()) {
-    const nsStyleTextReset* styleText = context->GetStyleTextReset();
-    if (!useOverride && 
-        (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & styleText->mTextDecoration)) {
-      // This handles the <a href="blah.html"><font color="green">La 
-      // la la</font></a> case. The link underline should be green.
-      useOverride = PR_TRUE;
-      overrideColor = context->GetStyleColor()->mColor;
-    }
-
-    PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
-    if (useDecorations) {// a decoration defined here
-      nscolor color = context->GetStyleColor()->mColor;
-  
-      if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
-        decorations.mUnderColor = useOverride ? overrideColor : color;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
-      }
-      if (NS_STYLE_TEXT_DECORATION_OVERLINE & useDecorations) {
-        decorations.mOverColor = useOverride ? overrideColor : color;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
-      }
-      if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & useDecorations) {
-        decorations.mStrikeColor = useOverride ? overrideColor : color;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-      }
-    }
-  }
-
-  return decorations;
-}
-
-void
-nsTextFrame::UnionTextDecorationOverflow(
-               nsPresContext* aPresContext,
-               const gfxTextRun::Metrics& aTextMetrics,
-               nsRect* aOverflowRect)
-{
-  NS_ASSERTION(mTextRun, "mTextRun is null");
-  nsRect rect;
-  TextDecorations decorations = GetTextDecorations(aPresContext);
-  float ratio = 1.0f;
-  // Note that we need to add underline area when this frame has selection for
-  // spellchecking and IME.
-  if (mState & NS_FRAME_SELECTED_CONTENT) {
-    nsILookAndFeel* look = aPresContext->LookAndFeel();
-    look->GetMetric(nsILookAndFeel::eMetricFloat_IMEUnderlineRelativeSize,
-                    ratio);
-    decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
-  }
-  nsLineLayout::CombineTextDecorations(aPresContext, decorations.mDecorations,
-                  this, *aOverflowRect, nscoord(NS_round(aTextMetrics.mAscent)),
-                  ratio);
-}
-
 void 
 nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
                                   const gfxPoint& aFramePt,
@@ -3647,9 +3568,63 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
                                   nsTextPaintStyle& aTextPaintStyle,
                                   PropertyProvider& aProvider)
 {
-  TextDecorations decorations =
-    GetTextDecorations(aTextPaintStyle.PresContext());
-  if (!decorations.HasDecorationlines())
+  // Quirks mode text decoration are rendered by children; see bug 1777
+  // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
+  // does the painting of text decorations.
+  if (eCompatibility_NavQuirks != aTextPaintStyle.PresContext()->CompatibilityMode())
+    return;
+
+  PRBool useOverride = PR_FALSE;
+  nscolor overrideColor;
+
+  PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE;
+  // A mask of all possible decorations.
+  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | 
+                      NS_STYLE_TEXT_DECORATION_OVERLINE |
+                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH;    
+  nscolor overColor, underColor, strikeColor;
+  nsStyleContext* context = GetStyleContext();
+  PRBool hasDecorations = context->HasTextDecorations();
+
+  while (hasDecorations) {
+    const nsStyleTextReset* styleText = context->GetStyleTextReset();
+    if (!useOverride && 
+        (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & styleText->mTextDecoration)) {
+      // This handles the <a href="blah.html"><font color="green">La 
+      // la la</font></a> case. The link underline should be green.
+      useOverride = PR_TRUE;
+      overrideColor = context->GetStyleColor()->mColor;          
+    }
+
+    PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
+    if (useDecorations) {// a decoration defined here
+      nscolor color = context->GetStyleColor()->mColor;
+  
+      if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
+        underColor = useOverride ? overrideColor : color;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+      }
+      if (NS_STYLE_TEXT_DECORATION_OVERLINE & useDecorations) {
+        overColor = useOverride ? overrideColor : color;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
+        decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
+      }
+      if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & useDecorations) {
+        strikeColor = useOverride ? overrideColor : color;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+        decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+      }
+    }
+    if (0 == decorMask)
+      break;
+    context = context->GetParent();
+    if (!context)
+      break;
+    hasDecorations = context->HasTextDecorations();
+  }
+
+  if (!decorations)
     return;
 
   gfxFont::Metrics fontMetrics = GetFontMetrics(aProvider.GetFontGroup());
@@ -3660,26 +3635,26 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   gfxSize size(GetRect().width / app, 0);
   gfxFloat ascent = gfxFloat(mAscent) / app;
 
-  if (decorations.HasOverline()) {
+  if (decorations & NS_FONT_DECORATION_OVERLINE) {
     size.height = fontMetrics.underlineSize;
     nsCSSRendering::PaintDecorationLine(
-      aCtx, decorations.mOverColor, pt, size, ascent, ascent,
+      aCtx, overColor, pt, size, ascent, ascent, size.height,
       NS_STYLE_TEXT_DECORATION_OVERLINE, NS_STYLE_BORDER_STYLE_SOLID,
       mTextRun->IsRightToLeft());
   }
-  if (decorations.HasUnderline()) {
+  if (decorations & NS_FONT_DECORATION_UNDERLINE) {
     size.height = fontMetrics.underlineSize;
     gfxFloat offset = fontMetrics.underlineOffset;
     nsCSSRendering::PaintDecorationLine(
-      aCtx, decorations.mUnderColor, pt, size, ascent, offset,
+      aCtx, underColor, pt, size, ascent, offset, size.height,
       NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
       mTextRun->IsRightToLeft());
   }
-  if (decorations.HasStrikeout()) {
+  if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
     size.height = fontMetrics.strikeoutSize;
     gfxFloat offset = fontMetrics.strikeoutOffset;
     nsCSSRendering::PaintDecorationLine(
-      aCtx, decorations.mStrikeColor, pt, size, ascent, offset,
+      aCtx, strikeColor, pt, size, ascent, offset, size.height,
       NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
       mTextRun->IsRightToLeft());
   }
@@ -3707,7 +3682,7 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
   gfxFloat width = PR_MAX(0, aWidth - 2.0 * aSize);
   gfxPoint pt(aPt.x + 1.0, aPt.y);
   nsCSSRendering::PaintDecorationLine(
-    aContext, color, pt, gfxSize(width, actualSize), aAscent, aOffset,
+    aContext, color, pt, gfxSize(width, actualSize), aAscent, aOffset, aSize,
     NS_STYLE_TEXT_DECORATION_UNDERLINE, style, aIsRTL);
 }
 
@@ -3725,7 +3700,7 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
     case nsISelectionController::SELECTION_SPELLCHECK: {
       nsCSSRendering::PaintDecorationLine(
         aContext, NS_RGB(255,0,0),
-        aPt, size, aAscent, aFontMetrics.underlineOffset,
+        aPt, size, aAscent, aFontMetrics.underlineOffset, size.height,
         NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_DOTTED,
         aIsRTL);
       break;
@@ -4353,7 +4328,6 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
     found = PR_TRUE;
   }
 
- nsFrameState oldState = mState;
   if ( aSelected )
     AddStateBits(NS_FRAME_SELECTED_CONTENT);
   else
@@ -4366,20 +4340,6 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
     }
   }
   if (found) {
-    // If the selection state is changed, we need to reflow to recompute
-    // the overflow area for underline of spellchecking or IME. However, if
-    // the non-selected text already has underline, we don't need to reflow.
-    // And also when the IME underline is thicker than normal underline.
-    nsILookAndFeel* look = aPresContext->LookAndFeel();
-    float ratio;
-    look->GetMetric(nsILookAndFeel::eMetricFloat_IMEUnderlineRelativeSize,
-                    ratio);
-    if (oldState != mState &&
-        (ratio > 1.0 || !GetTextDecorations(aPresContext).HasUnderline())) {
-      PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                   nsIPresShell::eStyleChange,
-                                                   NS_FRAME_IS_DIRTY);
-    }
     // Selection might change anything. Invalidate the overflow area.
     Invalidate(GetOverflowRect(), PR_FALSE);
   }
@@ -5502,9 +5462,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   aMetrics.mOverflowArea.UnionRect(boundingBox,
                                    nsRect(0, 0, aMetrics.width, aMetrics.height));
 
-  UnionTextDecorationOverflow(aPresContext, textMetrics,
-                              &aMetrics.mOverflowArea);
-
   /////////////////////////////////////////////////////////////////////
   // Clean up, update state
   /////////////////////////////////////////////////////////////////////
@@ -5722,9 +5679,6 @@ nsTextFrame::RecomputeOverflowRect()
     ConvertGfxRectOutward(textMetrics.mBoundingBox + gfxPoint(0, textMetrics.mAscent));
   boundingBox.UnionRect(boundingBox,
                         nsRect(nsPoint(0,0), GetSize()));
-
-  UnionTextDecorationOverflow(PresContext(), textMetrics, &boundingBox);
-
   return boundingBox;
 }
 

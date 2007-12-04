@@ -359,38 +359,6 @@ protected:
                                     PRBool isRTLChars,
                                     PRBool isOddLevel,
                                     PRBool isBidiSystem);
-
-  void UnionTextDecorationOverflow(nsPresContext* aPresContext,
-                                   const gfxTextRun::Metrics& aTextMetrics,
-                                   nsRect* aOverflowRect);
-
-  struct TextDecorations {
-    PRUint8 mDecorations;
-    nscolor mOverColor;
-    nscolor mUnderColor;
-    nscolor mStrikeColor;
-
-    TextDecorations() :
-      mDecorations(0), mOverColor(NS_RGB(0, 0, 0)),
-      mUnderColor(NS_RGB(0, 0, 0)), mStrikeColor(NS_RGB(0, 0, 0))
-    { }
-
-    PRBool HasDecorationlines() {
-      return !!(mDecorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
-                                NS_STYLE_TEXT_DECORATION_OVERLINE |
-                                NS_STYLE_TEXT_DECORATION_LINE_THROUGH));
-    }
-    PRBool HasUnderline() {
-      return !!(mDecorations & NS_STYLE_TEXT_DECORATION_UNDERLINE);
-    }
-    PRBool HasOverline() {
-      return !!(mDecorations & NS_STYLE_TEXT_DECORATION_OVERLINE);
-    }
-    PRBool HasStrikeout() {
-      return !!(mDecorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH);
-    }
-  };
-  TextDecorations GetTextDecorations(nsPresContext* aPresContext);
 };
 
 #endif
