@@ -328,6 +328,8 @@ SetOrRemoveObject(PLDHashTable& table, nsIContent* aKey, nsISupports* aValue)
 // Implement our nsISupports methods
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBindingManager)
+  tmp->mDestroyed = PR_TRUE;
+
   if (tmp->mBindingTable.IsInitialized())
     tmp->mBindingTable.Clear();
 
@@ -404,6 +406,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBindingManager)
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(nsIDocument* aDocument)
   : mProcessingAttachedStack(PR_FALSE),
+    mDestroyed(PR_FALSE),
     mAttachedStackSizeOnOutermost(0),
     mDocument(aDocument)
 {
@@ -415,6 +418,8 @@ nsBindingManager::nsBindingManager(nsIDocument* aDocument)
 
 nsBindingManager::~nsBindingManager(void)
 {
+  mDestroyed = PR_TRUE;
+
   if (mContentListTable.ops)
     PL_DHashTableFinish(&mContentListTable);
   if (mAnonymousNodesTable.ops)
@@ -553,6 +558,11 @@ nsBindingManager::SetInsertionParent(nsIContent* aContent, nsIContent* aParent)
 {
   NS_ASSERTION(!aParent || aParent->HasFlag(NODE_IS_INSERTION_PARENT),
                "Insertion parent should have NODE_IS_INSERTION_PARENT flag!");
+
+  if (mDestroyed) {
+    return NS_OK;
+  }
+
   return SetOrRemoveObject(mInsertionParentTable, aContent, aParent);
 }
 
@@ -569,6 +579,10 @@ nsBindingManager::GetWrappedJS(nsIContent* aContent)
 nsresult
 nsBindingManager::SetWrappedJS(nsIContent* aContent, nsIXPConnectWrappedJS* aWrappedJS)
 {
+  if (mDestroyed) {
+    return NS_OK;
+  }
+
   return SetOrRemoveObject(mWrapperTable, aContent, aWrappedJS);
 }
 
@@ -656,6 +670,10 @@ nsresult
 nsBindingManager::SetContentListFor(nsIContent* aContent,
                                     nsInsertionPointList* aList)
 {
+  if (mDestroyed) {
+    return NS_OK;
+  }
+
   nsIDOMNodeList* contentList = nsnull;
   if (aList) {
     contentList = new nsAnonymousContentList(aList);
@@ -712,6 +730,10 @@ nsresult
 nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent,
                                        nsInsertionPointList* aList)
 {
+  if (mDestroyed) {
+    return NS_OK;
+  }
+
   nsIDOMNodeList* contentList = nsnull;
   if (aList) {
     contentList = new nsAnonymousContentList(aList);
