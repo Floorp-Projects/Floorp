@@ -68,6 +68,7 @@ using google_breakpad::StackFrame;
 using google_breakpad::StackFramePPC;
 using google_breakpad::StackFrameSPARC;
 using google_breakpad::StackFrameX86;
+using google_breakpad::StackFrameAMD64;
 
 // Separator character for machine readable output.
 static const char kOutputSeparator = '|';
@@ -165,6 +166,16 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
         sequence = PrintRegister("srr0", frame_ppc->context.srr0, sequence);
       if (frame_ppc->context_validity & StackFramePPC::CONTEXT_VALID_GPR1)
         sequence = PrintRegister("r1", frame_ppc->context.gpr[1], sequence);
+    } else if (cpu == "amd64") {
+      const StackFrameAMD64 *frame_amd64 =
+        reinterpret_cast<const StackFrameAMD64*>(frame);
+
+      if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_RIP)
+        sequence = PrintRegister("rip", frame_amd64->context.rip, sequence);
+      if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_RSP)
+        sequence = PrintRegister("rsp", frame_amd64->context.rsp, sequence);
+      if (frame_amd64->context_validity & StackFrameAMD64::CONTEXT_VALID_RBP)
+        sequence = PrintRegister("rbp", frame_amd64->context.rbp, sequence);
     } else if (cpu == "sparc") {
       const StackFrameSPARC *frame_sparc =
           reinterpret_cast<const StackFrameSPARC*>(frame);
@@ -176,7 +187,6 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
       if (frame_sparc->context_validity & StackFrameSPARC::CONTEXT_VALID_PC)
         sequence = PrintRegister("pc", frame_sparc->context.pc, sequence);
     }
-
     printf("\n");
   }
 }
