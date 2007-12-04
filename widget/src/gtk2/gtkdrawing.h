@@ -88,6 +88,12 @@ typedef enum {
   MOZ_GTK_TAB_SELECTED        = 1 << 2
 } GtkTabFlags;
 
+/** flags for menuitems **/
+typedef enum {
+  /* menuitem is part of the menubar */
+  MOZ_TOPLEVEL_MENU_ITEM      = 1 << 0
+} GtkMenuItemFlags;
+
 /* function type for moz_gtk_enable_style_props */
 typedef gint (*style_prop_t)(GtkStyle*, const gchar*, gint);
 
