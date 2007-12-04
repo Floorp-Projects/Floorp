@@ -58,7 +58,6 @@ class nsAutoVoidArray;
 
 class nsIPrefBranch;
 class nsICookiePermission;
-class nsIEffectiveTLDService;
 class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
@@ -177,9 +176,11 @@ class nsCookieService : public nsICookieService
     void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
-    PRBool                        IsForeign(nsIURI *aHostURI, nsIURI *aFirstURI);
+    static PRBool                 IsIPAddress(const nsAFlatCString &aHost);
+    static PRBool                 IsInDomain(const nsACString &aDomain, const nsACString &aHost, PRBool aIsDomain = PR_TRUE);
+    static PRBool                 IsForeign(nsIURI *aHostURI, nsIURI *aFirstURI);
     PRUint32                      CheckPrefs(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const char *aCookieHeader);
-    PRBool                        CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI);
+    static PRBool                 CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
     void                          RemoveAllFromMemory();
@@ -192,13 +193,12 @@ class nsCookieService : public nsICookieService
 
   protected:
     // cached members
-    nsCOMPtr<mozIStorageConnection>  mDBConn;
-    nsCOMPtr<mozIStorageStatement>   mStmtInsert;
-    nsCOMPtr<mozIStorageStatement>   mStmtDelete;
-    nsCOMPtr<mozIStorageStatement>   mStmtUpdate;
-    nsCOMPtr<nsIObserverService>     mObserverService;
-    nsCOMPtr<nsICookiePermission>    mPermissionService;
-    nsCOMPtr<nsIEffectiveTLDService> mTLDService;
+    nsCOMPtr<mozIStorageConnection> mDBConn;
+    nsCOMPtr<mozIStorageStatement> mStmtInsert;
+    nsCOMPtr<mozIStorageStatement> mStmtDelete;
+    nsCOMPtr<mozIStorageStatement> mStmtUpdate;
+    nsCOMPtr<nsIObserverService>  mObserverService;
+    nsCOMPtr<nsICookiePermission> mPermissionService;
 
     // impl members
     nsTHashtable<nsCookieEntry>   mHostTable;
