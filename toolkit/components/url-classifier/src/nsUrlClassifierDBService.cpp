@@ -460,6 +460,15 @@ private:
                          const nsACString& addChunks,
                          const nsACString& subChunks);
 
+  // Cache the list of add/subtract chunks applied to the table, optionally
+  // parsing the add or sub lists.  These lists are cached while updating
+  // tables to avoid excessive database reads/writes and parsing.
+  nsresult CacheChunkLists(PRUint32 tableId,
+                           PRBool parseAdds,
+                           PRBool parseSubs);
+  // Flush the cached add/subtract lists to the database.
+  nsresult FlushChunkLists();
+
   // Add a list of entries to the database, merging with
   // existing entries as necessary
   nsresult AddChunk(PRUint32 tableId, PRUint32 chunkNum,
@@ -564,6 +573,18 @@ private:
 
   nsresult mUpdateStatus;
 
+  PRBool mHaveCachedLists;
+  PRUint32 mCachedListsTable;
+  nsCAutoString mCachedSubsStr;
+  nsCAutoString mCachedAddsStr;
+
+  PRBool mHaveCachedAddChunks;
+  nsTArray<PRUint32> mCachedAddChunks;
+
+  PRBool mHaveCachedSubChunks;
+  nsTArray<PRUint32> mCachedSubChunks;
+
+
   // Pending lookups are stored in a queue for processing.  The queue
   // is protected by mPendingLookupLock.
   PRLock* mPendingLookupLock;
@@ -583,6 +604,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierDBServiceWorker,
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mUpdateStatus(NS_OK)
+  , mHaveCachedLists(PR_FALSE)
+  , mCachedListsTable(PR_UINT32_MAX)
   , mPendingLookupLock(nsnull)
 {
 }
@@ -1411,6 +1434,72 @@ nsUrlClassifierDBServiceWorker::SetChunkLists(PRUint32 tableId,
 }
 
 nsresult
+nsUrlClassifierDBServiceWorker::CacheChunkLists(PRUint32 tableId,
+                                                PRBool parseAdds,
+                                                PRBool parseSubs)
+{
+  nsresult rv;
+
+  if (mHaveCachedLists && mCachedListsTable != tableId) {
+    rv = FlushChunkLists();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!mHaveCachedLists) {
+    rv = GetChunkLists(tableId, mCachedAddsStr, mCachedSubsStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mHaveCachedLists = PR_TRUE;
+    mCachedListsTable = tableId;
+  }
+
+  if (parseAdds && !mHaveCachedAddChunks) {
+    ParseChunkList(mCachedAddsStr, mCachedAddChunks);
+    mHaveCachedAddChunks = PR_TRUE;
+  }
+
+  if (parseSubs && !mHaveCachedSubChunks) {
+    ParseChunkList(mCachedSubsStr, mCachedSubChunks);
+    mHaveCachedSubChunks = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::FlushChunkLists()
+{
+  if (!mHaveCachedLists) {
+    return NS_OK;
+  }
+
+  if (mHaveCachedAddChunks) {
+    JoinChunkList(mCachedAddChunks, mCachedAddsStr);
+  }
+
+  if (mHaveCachedSubChunks) {
+    JoinChunkList(mCachedSubChunks, mCachedSubsStr);
+  }
+
+  nsresult rv = SetChunkLists(mCachedListsTable,
+                              mCachedAddsStr, mCachedSubsStr);
+  // clear out the cache before checking/returning the error here.
+
+  mCachedAddsStr.Truncate();
+  mCachedSubsStr.Truncate();
+  mCachedListsTable = PR_UINT32_MAX;
+  mHaveCachedLists = PR_FALSE;
+
+  mCachedAddChunks.Clear();
+  mHaveCachedAddChunks = PR_FALSE;
+
+  mCachedSubChunks.Clear();
+  mHaveCachedSubChunks = PR_FALSE;
+
+  return rv;
+}
+
+nsresult
 nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
                                          PRUint32 chunkNum,
                                          nsTArray<nsUrlClassifierEntry>& entries)
@@ -1424,20 +1513,9 @@ nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
 
   LOG(("Adding %d entries to chunk %d", entries.Length(), chunkNum));
 
-  nsCAutoString addChunks;
-  nsCAutoString subChunks;
-
-  HandlePendingLookups();
-
-  nsresult rv = GetChunkLists(tableId, addChunks, subChunks);
+  nsresult rv = CacheChunkLists(tableId, PR_TRUE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<PRUint32> adds;
-  ParseChunkList(addChunks, adds);
-  adds.AppendElement(chunkNum);
-  JoinChunkList(adds, addChunks);
-  rv = SetChunkLists(tableId, addChunks, subChunks);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mCachedAddChunks.AppendElement(chunkNum);
 
   nsTArray<PRUint32> entryIDs;
 
@@ -1495,20 +1573,9 @@ nsUrlClassifierDBServiceWorker::ExpireAdd(PRUint32 tableId,
 {
   LOG(("Expiring chunk %d\n", chunkNum));
 
-  nsCAutoString addChunks;
-  nsCAutoString subChunks;
-
-  HandlePendingLookups();
-
-  nsresult rv = GetChunkLists(tableId, addChunks, subChunks);
+  nsresult rv = CacheChunkLists(tableId, PR_TRUE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<PRUint32> adds;
-  ParseChunkList(addChunks, adds);
-  adds.RemoveElement(chunkNum);
-  JoinChunkList(adds, addChunks);
-  rv = SetChunkLists(tableId, addChunks, subChunks);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mCachedAddChunks.RemoveElement(chunkNum);
 
   mozStorageStatementScoper getChunkEntriesScoper(mGetChunkEntriesStatement);
 
@@ -1564,20 +1631,8 @@ nsUrlClassifierDBServiceWorker::SubChunk(PRUint32 tableId,
                                          PRUint32 chunkNum,
                                          nsTArray<nsUrlClassifierEntry>& entries)
 {
-  nsCAutoString addChunks;
-  nsCAutoString subChunks;
-
-  HandlePendingLookups();
-
-  nsresult rv = GetChunkLists(tableId, addChunks, subChunks);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<PRUint32> subs;
-  ParseChunkList(subChunks, subs);
-  subs.AppendElement(chunkNum);
-  JoinChunkList(subs, subChunks);
-  rv = SetChunkLists(tableId, addChunks, subChunks);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = CacheChunkLists(tableId, PR_FALSE, PR_TRUE);
+  mCachedSubChunks.AppendElement(chunkNum);
 
   for (PRUint32 i = 0; i < entries.Length(); i++) {
     nsUrlClassifierEntry& thisEntry = entries[i];
@@ -1603,20 +1658,9 @@ nsUrlClassifierDBServiceWorker::SubChunk(PRUint32 tableId,
 nsresult
 nsUrlClassifierDBServiceWorker::ExpireSub(PRUint32 tableId, PRUint32 chunkNum)
 {
-  nsCAutoString addChunks;
-  nsCAutoString subChunks;
-
-  HandlePendingLookups();
-
-  nsresult rv = GetChunkLists(tableId, addChunks, subChunks);
+  nsresult rv = CacheChunkLists(tableId, PR_FALSE, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<PRUint32> subs;
-  ParseChunkList(subChunks, subs);
-  subs.RemoveElement(chunkNum);
-  JoinChunkList(subs, subChunks);
-  rv = SetChunkLists(tableId, addChunks, subChunks);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mCachedSubChunks.RemoveElement(chunkNum);
 
   return NS_OK;
 }
@@ -1835,6 +1879,10 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::Finish(nsIUrlClassifierCallback* aSuccessCallback,
                                        nsIUrlClassifierCallback* aErrorCallback)
 {
+  if (NS_SUCCEEDED(mUpdateStatus)) {
+    mUpdateStatus = FlushChunkLists();
+  }
+
   nsCAutoString arg;
   if (NS_SUCCEEDED(mUpdateStatus)) {
     mUpdateStatus = mConnection->CommitTransaction();
