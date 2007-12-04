@@ -1257,6 +1257,12 @@ struct JSExtendedClass {
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 
 /*
+ * Indicates that the class object defined on the object provided to
+ * JS_InitClass should be readonly and permanent.
+ */
+#define JSCLASS_FIXED_BINDING           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
+
+/*
  * ECMA-262 requires that most constructors used internally create objects
  * with "the original Foo.prototype value" as their [[Prototype]] (__proto__)
  * member initial value.  The "original ... value" verbiage is there because

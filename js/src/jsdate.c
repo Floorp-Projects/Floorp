@@ -483,7 +483,8 @@ msFromTime(jsdouble t)
 
 JSClass js_DateClass = {
     js_Date_str,
-    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
+    JSCLASS_HAS_RESERVED_SLOTS(2) |  JSCLASS_HAS_CACHED_PROTO(JSProto_Date) |
+    JSCLASS_FIXED_BINDING,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS

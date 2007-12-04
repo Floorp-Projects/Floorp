@@ -3478,8 +3478,6 @@ interrupt:
           BEGIN_CASE(JSOP_NEW)
             /* Get immediate argc and find the constructor function. */
             argc = GET_ARGC(pc);
-
-          do_new:
             SAVE_SP_AND_PC(fp);
             vp = sp - (2 + argc);
             JS_ASSERT(vp >= fp->spbase);
@@ -3547,7 +3545,7 @@ interrupt:
           BEGIN_CASE(JSOP_ELEMDEC)
             /*
              * Delay fetching of id until we have the object to ensure
-             * the proper evaluation oder. See bug 372331.
+             * the proper evaluation order. See bug 372331.
              */
             id = 0;
             i = -2;
@@ -4690,6 +4688,7 @@ interrupt:
         ok = ComputeGlobalThis(cx, sp);                                       \
         if (!ok)                                                              \
             goto out;                                                         \
+        JS_ASSERT(!JSVAL_IS_NULL(sp[-1]) && !JSVAL_IS_VOID(sp[-1]));          \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_GLOBALTHIS)
@@ -5292,9 +5291,16 @@ interrupt:
 #endif /* JS_HAS_GETTER_SETTER */
 
           BEGIN_CASE(JSOP_NEWINIT)
-            argc = 0;
+            i = GET_INT8(pc);
+            JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
+            obj = (i == JSProto_Array)
+                  ? js_NewArrayObject(cx, 0, NULL)
+                  : js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+            if (!obj)
+                goto out;
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
             fp->sharpDepth++;
-            goto do_new;
+          END_CASE(JSOP_NEWINIT)
 
           BEGIN_CASE(JSOP_ENDINIT)
             if (--fp->sharpDepth == 0)
