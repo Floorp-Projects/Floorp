@@ -434,30 +434,16 @@ nsSVGPathElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       mSegments = nsnull;
     }
 
-    nsSVGPathDataParserToInternal parser(&mPathData);
-    parser.Parse(*aValue);
+    if (aValue) {
+      nsSVGPathDataParserToInternal parser(&mPathData);
+      parser.Parse(*aValue);
+    } else {
+      mPathData.Clear();
+    }
   }
 
   return nsSVGPathElementBase::BeforeSetAttr(aNamespaceID, aName,
                                              aValue, aNotify);
-}
-
-nsresult
-nsSVGPathElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                            PRBool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::d) {
-    if (mSegments) {
-      NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
-      mSegments = nsnull;
-    }
-
-    mPathData.Clear();
-
-    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
-  }
-
-  return nsSVGPathElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
 }
 
 NS_IMETHODIMP

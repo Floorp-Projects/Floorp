@@ -824,8 +824,6 @@ protected:
    * @param aName the localname of the attribute being set
    * @param aValue the value it's being set to.  If null, the attr is being
    *        removed.
-   * // XXXbz we don't actually call this method when we're removing attrs yet.
-   *          But we will eventually.
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
@@ -845,8 +843,6 @@ protected:
    * @param aName the localname of the attribute being set
    * @param aValue the value it's being set to.  If null, the attr is being
    *        removed.
-   * // XXXbz we don't actually call this method when we're removing attrs yet.
-   *          But we will eventually.
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
