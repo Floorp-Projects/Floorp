@@ -175,8 +175,9 @@ class MinidumpContext : public MinidumpStream {
   // Returns raw CPU-specific context data for the named CPU type.  If the
   // context data does not match the CPU type or does not exist, returns
   // NULL.
-  const MDRawContextX86* GetContextX86() const;
-  const MDRawContextPPC* GetContextPPC() const;
+  const MDRawContextX86*   GetContextX86() const;
+  const MDRawContextPPC*   GetContextPPC() const;
+  const MDRawContextAMD64* GetContextAMD64() const;
   const MDRawContextSPARC* GetContextSPARC() const;
  
   // Print a human-readable representation of the object to stdout.
@@ -200,11 +201,15 @@ class MinidumpContext : public MinidumpStream {
   // not contain a system info stream.
   bool CheckAgainstSystemInfo(u_int32_t context_cpu_type);
 
+  // Store this separately because of the weirdo AMD64 context
+  u_int32_t context_flags_;
+
   // The CPU-specific context structure.
   union {
-    MDRawContextBase* base;
-    MDRawContextX86*  x86;
-    MDRawContextPPC*  ppc;
+    MDRawContextBase*  base;
+    MDRawContextX86*   x86;
+    MDRawContextPPC*   ppc;
+    MDRawContextAMD64* amd64;
     // on Solaris SPARC, sparc is defined as a numeric constant,
     // so variables can NOT be named as sparc
     MDRawContextSPARC*  ctx_sparc;
@@ -450,6 +455,11 @@ class MinidumpModule : public MinidumpObject,
   // calls to determine whether the object is ready for auxiliary data to 
   // be read.
   bool              module_valid_;
+
+  // True if debug info was read from the module.  Certain modules
+  // may contain debug records in formats we don't support,
+  // so we can just set this to false to ignore them.
+  bool              has_debug_info_;
 
   MDRawModule       module_;
 

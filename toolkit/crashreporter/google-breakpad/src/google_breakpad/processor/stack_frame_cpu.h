@@ -98,6 +98,32 @@ struct StackFramePPC : public StackFrame {
   int context_validity;
 };
 
+struct StackFrameAMD64 : public StackFrame {
+  // ContextValidity has one entry for each relevant hardware pointer register
+  // (%rip and %rsp) and one entry for each nonvolatile (callee-save) register.
+  //FIXME: validate this list
+  enum ContextValidity {
+    CONTEXT_VALID_NONE = 0,
+    CONTEXT_VALID_RIP  = 1 << 0,
+    CONTEXT_VALID_RSP  = 1 << 1,
+    CONTEXT_VALID_RBP  = 1 << 2,
+    CONTEXT_VALID_ALL  = -1
+  };
+
+  StackFrameAMD64() : context(), context_validity(CONTEXT_VALID_NONE) {}
+
+  // Register state.  This is only fully valid for the topmost frame in a
+  // stack.  In other frames, the values of nonvolatile registers may be
+  // present, given sufficient debugging information.  Refer to
+  // context_validity.
+  MDRawContextAMD64 context;
+
+  // context_validity is actually ContextValidity, but int is used because
+  // the OR operator doesn't work well with enumerated types.  This indicates
+  // which fields in context are valid.
+  int context_validity;
+};
+
 struct StackFrameSPARC : public StackFrame {
   // to be confirmed
   enum ContextValidity {

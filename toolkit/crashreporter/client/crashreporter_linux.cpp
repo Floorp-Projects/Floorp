@@ -151,21 +151,20 @@ static bool RestartApplication()
 
 static gboolean SendReportIdle(gpointer userData)
 {
-  string response;
+  string response, error;
   bool success = google_breakpad::HTTPUpload::SendRequest
     (gSendURL,
      gQueryParameters,
      gDumpFile,
      "upload_file_minidump",
      "", "",
-     &response);
+     &response,
+     &error);
   if (success) {
     LogMessage("Crash report submitted successfully");
   }
   else {
-    //XXX: HTTPUpload::SendRequest eats the curl error code, filed
-    // http://code.google.com/p/google-breakpad/issues/detail?id=221
-    LogMessage("Crash report submission failed");
+    LogMessage("Crash report submission failed: " + error);
   }
   SendCompleted(success, response);
 
