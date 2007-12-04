@@ -645,6 +645,17 @@
         <parameter name="aInput"/>
         <parameter name="aElement"/>
         <body><![CDATA[
+          // until we have "baseBinding", (see bug #373652) this allows
+          // us to override openAutocompletePopup(), but still call
+          // the method on the base class
+          this._openAutocompletePopup(aInput, aElement);
+        ]]></body>
+      </method>
+
+      <method name="_openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body><![CDATA[
           if (!this.mPopupOpen) {
             this.mInput = aInput;
             this.view = aInput.controller.QueryInterface(Components.interfaces.nsITreeView);
@@ -851,6 +862,19 @@
       </property>
 
       <method name="openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body>
+          <![CDATA[
+          // until we have "baseBinding", (see bug #373652) this allows
+          // us to override openAutocompletePopup(), but still call
+          // the method on the base class
+          this._openAutocompletePopup(aInput, aElement);
+        ]]>
+        </body>
+      </method>
+
+      <method name="_openAutocompletePopup">
         <parameter name="aInput"/>
         <parameter name="aElement"/>
         <body>
