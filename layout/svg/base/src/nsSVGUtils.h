@@ -75,6 +75,8 @@ struct gfxMatrix;
 struct gfxSize;
 struct gfxIntSize;
 struct nsStyleFont;
+class nsSVGEnum;
+class nsISVGChildFrame;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -300,8 +302,9 @@ public:
   StyleEffects(nsIFrame *aFrame);
 
   /* Hit testing - check if point hits the clipPath of indicated
-   * frame.  Returns true of no clipPath set. */
-
+   * frame.  (x,y) are specified in device pixels relative to the
+   * origin of the outer svg frame.  Returns true if no clipPath
+   * set. */
   static PRBool
   HitTestClip(nsIFrame *aFrame, float x, float y);
 
@@ -390,6 +393,12 @@ public:
   /* Calculate the maximum expansion of a matrix */
   static float
   MaxExpansion(nsIDOMSVGMatrix *aMatrix);
+
+  /* Take a CTM and adjust for object bounding box coordinates, if needed */
+  static already_AddRefed<nsIDOMSVGMatrix>
+  AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
+                       nsSVGEnum *aUnits,
+                       nsISVGChildFrame *aFrame);
 
 #ifdef DEBUG
   static void
