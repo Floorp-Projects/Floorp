@@ -3616,9 +3616,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 (void) PopOff(ss, lastop);
                 /* FALL THROUGH */
 
-#if JS_HAS_XML_SUPPORT
               case JSOP_CALLPROP:
-#endif
               case JSOP_GETPROP:
               case JSOP_GETXPROP:
                 LOAD_ATOM(0);
@@ -3772,7 +3770,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 LOAD_ATOM(0);
               do_name:
                 lval = "";
+#if JS_HAS_XML_SUPPORT
               do_qname:
+#endif
                 sn = js_GetSrcNote(jp->script, pc);
                 rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
                                    inXML ? DONT_ESCAPE : 0);
