@@ -456,9 +456,6 @@ public:
    */
   virtual nsScriptLoader* ScriptLoader();
 
-  virtual void AddMutationObserver(nsIMutationObserver* aObserver);
-  virtual void RemoveMutationObserver(nsIMutationObserver* aMutationObserver);
-
   /**
    * Add a new observer of document change notifications. Whenever
    * content is changed, appended, inserted or removed the observers are

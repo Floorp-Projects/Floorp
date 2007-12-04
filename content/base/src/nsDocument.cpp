@@ -882,7 +882,10 @@ nsDocument::~nsDocument()
     mStyleAttrStyleSheet->SetOwningDocument(nsnull);
   }
 
-  NS_IF_RELEASE(mBindingManager);
+  if (mBindingManager) {
+    mBindingManager->DropDocumentReference();
+    NS_RELEASE(mBindingManager);
+  }
 
   delete mHeaderData;
   delete mBoxObjectTable;
@@ -1103,12 +1106,8 @@ nsDocument::Init()
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(mBindingManager = bindingManager);
 
-  // The binding manager needs to come before everything but us in our
-  // mutation observer list.
   nsINode::nsSlots* slots = GetSlots();
-  NS_ENSURE_TRUE(slots &&
-                 slots->mMutationObservers.PrependObserver(bindingManager),
-                 NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(slots,NS_ERROR_OUT_OF_MEMORY);
 
   // Prepend self as mutation-observer whether we need it or not (some
   // subclasses currently do, other don't). This is because the code in
@@ -2676,18 +2675,6 @@ nsScriptLoader*
 nsDocument::ScriptLoader()
 {
   return mScriptLoader;
-}
-
-void
-nsDocument::AddMutationObserver(nsIMutationObserver* aMutationObserver)
-{
-  mBindingManager->AddObserver(aMutationObserver);
-}
-
-void
-nsDocument::RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
-{
-  mBindingManager->RemoveObserver(aMutationObserver);
 }
 
 // Note: We don't hold a reference to the document observer; we assume
