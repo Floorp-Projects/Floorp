@@ -489,89 +489,88 @@ extern "C" void PR_CALLBACK RunInstallOnThread(void *data)
             } else {
                 finalStatus = nsInstall::UNEXPECTED_ERROR;
             }
-            // If install.rdf exists, but the install failed, we don't want
-            // to try an install.js install.
-        } else
-#endif
+        } else {
+            hZip->Close();
+            finalStatus = nsInstall::UNSUPPORTED_TYPE;
+        }
+#else
+        // If we're not a new toolkit app try XPInstall
+        finalStatus = GetInstallScriptFromJarfile( hZip,
+                                                   &scriptBuffer,
+                                                   &scriptLength);
+        if ( finalStatus == NS_OK && scriptBuffer )
         {
-            // If we're the suite, or there is no install.rdf,
-            // try original XPInstall
-            finalStatus = GetInstallScriptFromJarfile( hZip,
-                                                       &scriptBuffer,
-                                                       &scriptLength);
-            if ( finalStatus == NS_OK && scriptBuffer )
+            // create our runtime
+            rt = JS_NewRuntime(4L * 1024L * 1024L);
+
+            rv = SetupInstallContext( hZip, jarpath,
+                                      installInfo->GetURL(),
+                                      installInfo->GetArguments(),
+                                      installInfo->GetFlags(),
+                                      installInfo->GetChromeRegistry(),
+                                      rt, &cx, &glob);
+
+            if (NS_SUCCEEDED(rv))
             {
-                // create our runtime
-                rt = JS_NewRuntime(4L * 1024L * 1024L);
+                // Go ahead and run!!
+                jsval rval;
+                jsval installedFiles;
+                JS_BeginRequest(cx); //Increment JS thread counter associated
+                                    //with this context
+                PRBool ok = JS_EvaluateScript(  cx,
+                                                glob,
+                                                scriptBuffer,
+                                                scriptLength,
+                                                nsnull,
+                                                0,
+                                                &rval);
 
-                rv = SetupInstallContext( hZip, jarpath,
-                                          installInfo->GetURL(),
-                                          installInfo->GetArguments(),
-                                          installInfo->GetFlags(),
-                                          installInfo->GetChromeRegistry(),
-                                          rt, &cx, &glob);
 
-                if (NS_SUCCEEDED(rv))
+                if(!ok)
                 {
-                    // Go ahead and run!!
-                    jsval rval;
-                    jsval installedFiles;
-                    JS_BeginRequest(cx); //Increment JS thread counter associated
-                                        //with this context
-                    PRBool ok = JS_EvaluateScript(  cx,
-                                                    glob,
-                                                    scriptBuffer,
-                                                    scriptLength,
-                                                    nsnull,
-                                                    0,
-                                                    &rval);
-
-
-                    if(!ok)
+                    // problem compiling or running script -- a true SCRIPT_ERROR
+                    if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
+                      JSVAL_TO_BOOLEAN(installedFiles))
                     {
-                        // problem compiling or running script -- a true SCRIPT_ERROR
-                        if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
-                          JSVAL_TO_BOOLEAN(installedFiles))
-                        {
-                            nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
-                            a->InternalAbort(nsInstall::SCRIPT_ERROR);
-                        }
-
-                        finalStatus = nsInstall::SCRIPT_ERROR;
+                        nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
+                        a->InternalAbort(nsInstall::SCRIPT_ERROR);
                     }
-                    else
-                    {
-                        // check to make sure the script sent back a status -- if
-                        // not the install may have been syntactically correct but
-                        // left the init/(perform|cancel) transaction open
 
-                        if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
-                          JSVAL_TO_BOOLEAN(installedFiles))
-                        {
-                            // install items remain in queue, must clean up!
-                            nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
-                            a->InternalAbort(nsInstall::MALFORMED_INSTALL);
-                        }
-
-                        jsval sent;
-                        if ( JS_GetProperty( cx, glob, "_finalStatus", &sent ) )
-                            finalStatus = JSVAL_TO_INT(sent);
-                        else
-                            finalStatus = nsInstall::UNEXPECTED_ERROR;
-                    }
-                    JS_EndRequest(cx); //Decrement JS thread counter
-                    JS_DestroyContextMaybeGC(cx);
+                    finalStatus = nsInstall::SCRIPT_ERROR;
                 }
                 else
                 {
-                    // couldn't initialize install context
-                    finalStatus = nsInstall::UNEXPECTED_ERROR;
-                }
+                    // check to make sure the script sent back a status -- if
+                    // not the install may have been syntactically correct but
+                    // left the init/(perform|cancel) transaction open
 
-                // Clean up after ourselves.
-                JS_DestroyRuntime(rt);
+                    if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
+                      JSVAL_TO_BOOLEAN(installedFiles))
+                    {
+                        // install items remain in queue, must clean up!
+                        nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
+                        a->InternalAbort(nsInstall::MALFORMED_INSTALL);
+                    }
+
+                    jsval sent;
+                    if ( JS_GetProperty( cx, glob, "_finalStatus", &sent ) )
+                        finalStatus = JSVAL_TO_INT(sent);
+                    else
+                        finalStatus = nsInstall::UNEXPECTED_ERROR;
+                }
+                JS_EndRequest(cx); //Decrement JS thread counter
+                JS_DestroyContextMaybeGC(cx);
             }
+            else
+            {
+                // couldn't initialize install context
+                finalStatus = nsInstall::UNEXPECTED_ERROR;
+            }
+
+            // Clean up after ourselves.
+            JS_DestroyRuntime(rt);
         }
+#endif
         // force zip archive closed before other cleanup
         hZip = 0;
     }
