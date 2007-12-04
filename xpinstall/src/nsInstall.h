@@ -214,6 +214,8 @@ class nsInstall
             KEY_DOES_NOT_EXIST          = -242,
             VALUE_DOES_NOT_EXIST        = -243,
 
+            UNSUPPORTED_TYPE            = -244,
+
             INVALID_SIGNATURE           = -260,
             INVALID_HASH                = -261,
             INVALID_HASH_TYPE           = -262,
