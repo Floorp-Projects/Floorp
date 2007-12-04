@@ -25,7 +25,6 @@
  *                 gagan@netscape.com,
  *                 nhotta@netscape.com,
  *                 william.tan@i-dns.net
- *                 dwitte@stanford.edu
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -59,7 +58,7 @@
  * http://search.ietf.org/internet-drafts/draft-ietf-idn-idna-06.txt
  */
 
-[scriptable, uuid(a592a60e-3621-4f19-a318-2bf233cfad3e)]
+[scriptable, uuid(7B67747E-A8C4-4832-80C7-39EBB0C11F94)]
 interface nsIIDNService : nsISupports
 {
     /**
@@ -87,12 +86,4 @@ interface nsIIDNService : nsISupports
      * for callers that want early normalization.
      */
     AUTF8String normalize(in AUTF8String input);
-
-    /**
-     * Normalizes and converts a host to UTF-8 if the host is in the IDN
-     * whitelist, otherwise converts it to ACE. This is useful for display
-     * purposes and to ensure an encoding consistent with nsIURI::GetHost().
-     * If the result is ASCII or ACE encoded, |isASCII| will be true.
-     */
-    AUTF8String convertToDisplayIDN(in AUTF8String input, out boolean isASCII);
 };
