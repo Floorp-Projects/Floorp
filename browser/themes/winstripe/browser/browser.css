@@ -872,15 +872,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   visibility: collapse;
 }
 
-#wrapper-urlbar-container #urlbar {
-  -moz-user-input: disabled;
-  cursor: -moz-grab;
-}
-
-#wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
-  display: none;
-}
-
 /* Keep the URL bar LTR */
 
 #urlbar .autocomplete-textbox-container {
@@ -913,7 +904,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 }
 
 #page-proxy-deck {
-  cursor: -moz-grab;
   margin: 2px 3px;
 }
 
@@ -1160,10 +1150,6 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
   padding: 1px;
   background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
   font-weight: bold;
-}
-
-.tabbrowser-tab[selected="true"] > .tab-icon-image {
-  cursor: -moz-grab;
 }
 
 .tabbrowser-tab[busy] > .tab-icon-image {

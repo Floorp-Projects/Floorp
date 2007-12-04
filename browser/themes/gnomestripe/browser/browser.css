@@ -730,15 +730,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   visibility: collapse;
 }
 
-#wrapper-urlbar-container #urlbar {
-  -moz-user-input: disabled;
-  cursor: -moz-grab;
-}
-
-#wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
-  display: none;
-}
-
 /* Keep the URL bar LTR */
 #urlbar .autocomplete-textbox-container {
   direction: ltr;
@@ -769,7 +760,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #page-proxy-deck {
-  cursor: -moz-grab;
   margin: 2px 3px;
 }
 
@@ -1133,10 +1123,6 @@ tabpanels {
 .tabbrowser-tab[busy] > .tab-icon-image {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif") !important;
   opacity: 0.6;
-}
-
-.tabbrowser-tab[selected="true"] > .tab-icon-image {
-  cursor: -moz-grab;
 }
 
 .tabs-bottom {
