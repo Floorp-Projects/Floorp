@@ -864,15 +864,6 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   background: url("chrome://browser/skin/Secure-background.gif") #FFFED8 repeat-x;
 }
 
-#wrapper-urlbar-container #urlbar {
-  -moz-user-input: disabled;
-  cursor: -moz-grab;
-}
-
-#wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
-  display: none;
-}
-
 /* Keep the URL bar LTR */
 
 #PopupAutoCompleteRichResult {
@@ -888,10 +879,6 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   height: 16px;
   margin: 0px;
   padding: 0px;
-}
-
-#page-proxy-deck {
-  cursor: -moz-grab;
 }
 
 #page-proxy-favicon {
@@ -1199,10 +1186,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab[selected="true"] {
   -moz-user-focus: normal;
-}
-
-.tabbrowser-tab[selected="true"] > .tab-image-middle > .tab-icon {
-  cursor: -moz-grab;
 }
 
 .tabbrowser-tab > .tab-image-middle > .tab-text {
