@@ -110,8 +110,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
-  virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                             PRBool aNotify);
 
 protected:
 
