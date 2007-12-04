@@ -219,6 +219,14 @@ nsAnnotationService::Init()
     getter_AddRefs(mDBRemoveItemAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBGetItemsWithAnnotation
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT a.item_id FROM moz_anno_attributes n "
+    "INNER JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
+    "WHERE n.name = ?1"),
+    getter_AddRefs(mDBGetItemsWithAnnotation));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -1286,20 +1294,13 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
 nsresult
 nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
                                                   nsTArray<PRInt64>* aResults) {
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT a.item_id FROM moz_anno_attributes n "
-    "INNER JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
-    "WHERE n.name = ?1"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->BindUTF8StringParameter(0, aName);
+  mozStorageStatementScoper scoper(mDBGetItemsWithAnnotation);
+  nsresult rv = mDBGetItemsWithAnnotation->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
-  while (NS_SUCCEEDED(rv = statement->ExecuteStep(&hasMore)) && hasMore) {
-    if (!aResults->AppendElement(statement->AsInt64(0)))
+  while (NS_SUCCEEDED(rv = mDBGetItemsWithAnnotation->ExecuteStep(&hasMore)) && hasMore) {
+    if (!aResults->AppendElement(mDBGetItemsWithAnnotation->AsInt64(0)))
       return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
