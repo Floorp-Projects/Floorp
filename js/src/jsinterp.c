@@ -3823,6 +3823,73 @@ interrupt:
             STORE_OPND(-1, rval);
           END_VARLEN_CASE
 
+          BEGIN_CASE(JSOP_CALLPROP)
+            /* Get an immediate atom naming the property. */
+            LOAD_ATOM(0);
+            id = ATOM_TO_JSID(atom);
+            PUSH(JSVAL_NULL);
+            SAVE_SP_AND_PC(fp);
+            lval = FETCH_OPND(-2);
+            if (!JSVAL_IS_PRIMITIVE(lval)) {
+                obj = JSVAL_TO_OBJECT(lval);
+
+#if JS_HAS_XML_SUPPORT
+                /* Special-case XML object method lookup, per ECMA-357. */
+                if (OBJECT_IS_XML(cx, obj)) {
+                    JSXMLObjectOps *ops;
+
+                    ops = (JSXMLObjectOps *) obj->map->ops;
+                    obj = ops->getMethod(cx, obj, id, &rval);
+                    if (!obj)
+                        ok = JS_FALSE;
+                } else
+#endif
+                {
+                    ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
+                }
+                if (!ok)
+                    goto out;
+                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+                STORE_OPND(-2, rval);
+                ok = ComputeThis(cx, sp);
+                if (!ok)
+                    goto out;
+            } else {
+                if (JSVAL_IS_STRING(lval)) {
+                    i = JSProto_String;
+                } else if (JSVAL_IS_NUMBER(lval)) {
+                    i = JSProto_Number;
+                } else if (JSVAL_IS_BOOLEAN(lval)) {
+                    i = JSProto_Boolean;
+                } else {
+                    JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
+                    js_ReportIsNullOrUndefined(cx, -2, lval, NULL);
+                    ok = JS_FALSE;
+                    goto out;
+                }
+
+                ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj);
+                if (!ok)
+                    goto out;
+                JS_ASSERT(obj);
+                ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
+                if (!ok)
+                    goto out;
+                STORE_OPND(-1, lval);
+                STORE_OPND(-2, rval);
+
+                /* Wrap primitive lval in object clothing if necessary. */
+                if (!VALUE_IS_FUNCTION(cx, rval) ||
+                    (obj = JSVAL_TO_OBJECT(rval),
+                     fun = GET_FUNCTION_PRIVATE(cx, obj),
+                     !PRIMITIVE_THIS_TEST(fun, lval))) {
+                    ok = js_PrimitiveToObject(cx, &sp[-1]);
+                    if (!ok)
+                        goto out;
+                }
+            }
+          END_CASE(JSOP_CALLPROP)
+
           BEGIN_CASE(JSOP_SETPROP)
             /* Get an immediate atom naming the property. */
             LOAD_ATOM(0);
@@ -5784,76 +5851,7 @@ interrupt:
             }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_XMLPI)
-#endif /* JS_HAS_XML_SUPPORT */
 
-          BEGIN_CASE(JSOP_CALLPROP)
-            /* Get an immediate atom naming the property. */
-            LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            PUSH(JSVAL_NULL);
-            SAVE_SP_AND_PC(fp);
-            lval = FETCH_OPND(-2);
-            if (!JSVAL_IS_PRIMITIVE(lval)) {
-                obj = JSVAL_TO_OBJECT(lval);
-
-#if JS_HAS_XML_SUPPORT
-                /* Special-case XML object method lookup, per ECMA-357. */
-                if (OBJECT_IS_XML(cx, obj)) {
-                    JSXMLObjectOps *ops;
-
-                    ops = (JSXMLObjectOps *) obj->map->ops;
-                    obj = ops->getMethod(cx, obj, id, &rval);
-                    if (!obj)
-                        ok = JS_FALSE;
-                } else
-#endif
-                {
-                    ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
-                }
-                if (!ok)
-                    goto out;
-                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-                STORE_OPND(-2, rval);
-                ok = ComputeThis(cx, sp);
-                if (!ok)
-                    goto out;
-            } else {
-                if (JSVAL_IS_STRING(lval)) {
-                    i = JSProto_String;
-                } else if (JSVAL_IS_NUMBER(lval)) {
-                    i = JSProto_Number;
-                } else if (JSVAL_IS_BOOLEAN(lval)) {
-                    i = JSProto_Boolean;
-                } else {
-                    JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
-                    js_ReportIsNullOrUndefined(cx, -2, lval, NULL);
-                    ok = JS_FALSE;
-                    goto out;
-                }
-
-                ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj);
-                if (!ok)
-                    goto out;
-                JS_ASSERT(obj);
-                ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
-                if (!ok)
-                    goto out;
-                STORE_OPND(-1, lval);
-                STORE_OPND(-2, rval);
-
-                /* Wrap primitive lval in object clothing if necessary. */
-                if (!VALUE_IS_FUNCTION(cx, rval) ||
-                    (obj = JSVAL_TO_OBJECT(rval),
-                     fun = GET_FUNCTION_PRIVATE(cx, obj),
-                     !PRIMITIVE_THIS_TEST(fun, lval))) {
-                    ok = js_PrimitiveToObject(cx, &sp[-1]);
-                    if (!ok)
-                        goto out;
-                }
-            }
-          END_CASE(JSOP_CALLPROP)
-
-#if JS_HAS_XML_SUPPORT
           BEGIN_CASE(JSOP_GETFUNNS)
             SAVE_SP_AND_PC(fp);
             ok = js_GetFunctionNamespace(cx, &rval);
