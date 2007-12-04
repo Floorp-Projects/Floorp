@@ -1727,17 +1727,20 @@ var PlacesUtils = {
     var allBookmarksId;
     try {
       leftPaneRoot = prefs.getIntPref("browser.places.leftPaneFolderId");
-      // Build the leftPaneQueries Map
-      delete this.leftPaneQueries;
-      this.leftPaneQueries = {};
-      var items = this.annotations.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, { });
-      for (var i=0; i < items.length; i++) {
-        var queryName = this.annotations
-                            .getItemAnnotation(items[i], ORGANIZER_QUERY_ANNO);
-        this.leftPaneQueries[queryName] = items[i];
+      // if the pref is set to -1 then we must create a new root because we have a new places.sqlite
+      if (leftPaneRoot != -1) {
+        // Build the leftPaneQueries Map
+        delete this.leftPaneQueries;
+        this.leftPaneQueries = {};
+        var items = this.annotations.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, { });
+        for (var i=0; i < items.length; i++) {
+          var queryName = this.annotations
+                              .getItemAnnotation(items[i], ORGANIZER_QUERY_ANNO);
+          this.leftPaneQueries[queryName] = items[i];
+        }
+        delete this.leftPaneFolderId;
+        return this.leftPaneFolderId = leftPaneRoot;
       }
-      delete this.leftPaneFolderId;
-      return this.leftPaneFolderId = leftPaneRoot;
     }
     catch (ex) { }
 
