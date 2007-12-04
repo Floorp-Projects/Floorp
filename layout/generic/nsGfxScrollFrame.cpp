@@ -656,7 +656,7 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
 /* virtual */ nscoord
 nsHTMLScrollFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
-  nscoord result = 0;
+  nscoord result = mInner.mScrolledFrame->GetMinWidth(aRenderingContext);
   DISPLAY_MIN_WIDTH(this, result);
   return result;
 }
