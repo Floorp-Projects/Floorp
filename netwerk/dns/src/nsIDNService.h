@@ -75,6 +75,7 @@ private:
   nsresult encodeToACE(const nsAString& in, nsACString& out);
   nsresult stringPrep(const nsAString& in, nsAString& out);
   nsresult decodeACE(const nsACString& in, nsACString& out);
+  PRBool isInWhitelist(const nsACString &host);
   void prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref);
 
   PRBool mMultilingualTestBed;  // if true generates extra node for mulitlingual testbed 
@@ -82,6 +83,8 @@ private:
   nsCOMPtr<nsIUnicodeNormalizer> mNormalizer;
   char mACEPrefix[kACEPrefixLen+1];
   nsXPIDLString mIDNBlacklist;
+  PRBool mShowPunycode;
+  nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch;
 };
 
 #endif  // nsIDNService_h__
