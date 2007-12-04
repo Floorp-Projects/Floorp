@@ -128,6 +128,9 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 #define CHECK_MALWARE_PREF      "browser.safebrowsing.malware.enabled"
 #define CHECK_MALWARE_DEFAULT   PR_FALSE
 
+#define CHECK_PHISHING_PREF     "browser.safebrowsing.enabled"
+#define CHECK_PHISHING_DEFAULT  PR_FALSE
+
 // Singleton instance.
 static nsUrlClassifierDBService* sUrlClassifierDBService;
 
@@ -2130,12 +2133,18 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERCALLBACK
 
-  nsUrlClassifierClassifyCallback(nsIURIClassifierCallback *c)
+  nsUrlClassifierClassifyCallback(nsIURIClassifierCallback *c,
+                                  PRBool checkMalware,
+                                  PRBool checkPhishing)
     : mCallback(c)
+    , mCheckMalware(checkMalware)
+    , mCheckPhishing(checkPhishing)
     {}
 
 private:
   nsCOMPtr<nsIURIClassifierCallback> mCallback;
+  PRPackedBool mCheckMalware;
+  PRPackedBool mCheckPhishing;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierClassifyCallback,
@@ -2153,13 +2162,15 @@ nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
 
   tables.BeginReading(begin);
   tables.EndReading(end);
-  if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), begin, end)) {
+  if (mCheckMalware &&
+      FindInReadable(NS_LITERAL_CSTRING("-malware-"), begin, end)) {
     response = NS_ERROR_MALWARE_URI;
   } else {
     // Reset begin before checking phishing table
     tables.BeginReading(begin);
-  
-    if (FindInReadable(NS_LITERAL_CSTRING("-phish-"), begin, end)) {
+
+    if (mCheckPhishing &&
+        FindInReadable(NS_LITERAL_CSTRING("-phish-"), begin, end)) {
       response = NS_ERROR_PHISHING_URI;
     }
   }
@@ -2202,6 +2213,7 @@ nsUrlClassifierDBService::GetInstance()
 
 nsUrlClassifierDBService::nsUrlClassifierDBService()
  : mCheckMalware(CHECK_MALWARE_DEFAULT)
+ , mCheckPhishing(CHECK_PHISHING_DEFAULT)
 {
 }
 
@@ -2241,6 +2253,11 @@ nsUrlClassifierDBService::Init()
     mCheckMalware = NS_SUCCEEDED(rv) ? tmpbool : CHECK_MALWARE_DEFAULT;
 
     prefs->AddObserver(CHECK_MALWARE_PREF, this, PR_FALSE);
+
+    rv = prefs->GetBoolPref(CHECK_PHISHING_PREF, &tmpbool);
+    mCheckPhishing = NS_SUCCEEDED(rv) ? tmpbool : CHECK_PHISHING_DEFAULT;
+
+    prefs->AddObserver(CHECK_PHISHING_PREF, this, PR_FALSE);
   }
 
   // Start the background thread.
@@ -2277,13 +2294,13 @@ nsUrlClassifierDBService::Classify(nsIURI *uri,
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  if (!mCheckMalware) {
+  if (!(mCheckMalware || mCheckPhishing)) {
     *result = PR_FALSE;
     return NS_OK;
   }
 
   nsRefPtr<nsUrlClassifierClassifyCallback> callback =
-    new nsUrlClassifierClassifyCallback(c);
+    new nsUrlClassifierClassifyCallback(c, mCheckMalware, mCheckPhishing);
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = LookupURI(uri, callback, PR_TRUE);
@@ -2478,6 +2495,10 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
       PRBool tmpbool;
       rv = prefs->GetBoolPref(CHECK_MALWARE_PREF, &tmpbool);
       mCheckMalware = NS_SUCCEEDED(rv) ? tmpbool : CHECK_MALWARE_DEFAULT;
+    } else if (NS_LITERAL_STRING(CHECK_PHISHING_PREF).Equals(aData)) {
+      PRBool tmpbool;
+      rv = prefs->GetBoolPref(CHECK_PHISHING_PREF, &tmpbool);
+      mCheckPhishing = NS_SUCCEEDED(rv) ? tmpbool : CHECK_PHISHING_DEFAULT;
     }
   } else if (!strcmp(aTopic, "profile-before-change") ||
              !strcmp(aTopic, "xpcom-shutdown-threads")) {
@@ -2501,6 +2522,7 @@ nsUrlClassifierDBService::Shutdown()
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
     prefs->RemoveObserver(CHECK_MALWARE_PREF, this);
+    prefs->RemoveObserver(CHECK_PHISHING_PREF, this);
   }
 
   nsresult rv;
