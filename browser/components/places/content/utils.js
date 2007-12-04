@@ -50,7 +50,7 @@ Components.utils.import("resource://gre/modules/JSON.jsm");
 
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
-const POST_DATA_ANNO = "bookmarkProperties/POSTData";
+const POST_DATA_ANNO = "URIProperties/POSTData";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
@@ -1446,56 +1446,31 @@ var PlacesUtils = {
   },
 
   /**
-   * Set the POST data associated with a bookmark, if any.
+   * Set the POST data associated with a URI, if any.
    * Used by POST keywords.
-   *   @param aBookmarkId
+   *   @param aURI
    *   @returns string of POST data
    */
-  setPostDataForBookmark: function PU_setPostDataForBookmark(aBookmarkId, aPostData) {
+  setPostDataForURI: function PU_setPostDataForURI(aURI, aPostData) {
     const annos = this.annotations;
     if (aPostData)
-      annos.setItemAnnotation(aBookmarkId, POST_DATA_ANNO, aPostData, 
+      annos.setPageAnnotation(aURI, POST_DATA_ANNO, aPostData, 
                               0, Ci.nsIAnnotationService.EXPIRE_NEVER);
-    else if (annos.itemHasAnnotation(aBookmarkId, POST_DATA_ANNO))
-      annos.removeItemAnnotation(aBookmarkId, POST_DATA_ANNO);
+    else if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
+      annos.removePageAnnotation(aURI, POST_DATA_ANNO);
   },
 
   /**
    * Get the POST data associated with a bookmark, if any.
-   * @param aBookmarkId
-   * @returns string of POST data if set for aBookmarkId. null otherwise.
+   * @param aURI
+   * @returns string of POST data if set for aURI. null otherwise.
    */
-  getPostDataForBookmark: function PU_getPostDataForBookmark(aBookmarkId) {
+  getPostDataForURI: function PU_getPostDataForURI(aURI) {
     const annos = this.annotations;
-    if (annos.itemHasAnnotation(aBookmarkId, POST_DATA_ANNO))
-      return annos.getItemAnnotation(aBookmarkId, POST_DATA_ANNO);
+    if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
+      return annos.getPageAnnotation(aURI, POST_DATA_ANNO);
 
     return null;
-  },
-
-  /**
-   * Get the URI (and any associated POST data) for a given keyword.
-   * @param aKeyword string keyword
-   * @returns an array containing a string URL and a string of POST data
-   */
-  getURLAndPostDataForKeyword: function PU_getURLAndPostDataForKeyword(aKeyword) {
-    var url = null, postdata = null;
-    try {
-      var uri = this.bookmarks.getURIForKeyword(aKeyword);
-      if (uri) {
-        url = uri.spec;
-        var bookmarks = this.bookmarks.getBookmarkIdsForURI(uri, {});
-        for (let i = 0; i < bookmarks.length; i++) {
-          var bookmark = bookmarks[i];
-          var kw = this.bookmarks.getKeywordForBookmark(bookmark);
-          if (kw == aKeyword) {
-            postdata = this.getPostDataForBookmark(bookmark);
-            break;
-          }
-        }
-      }
-    } catch(ex) {}
-    return [url, postdata];
   },
 
   /**

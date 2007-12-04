@@ -38,9 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
 
 function LOG(aMsg) {
   aMsg = ("*** PLACES TESTS: " + aMsg);

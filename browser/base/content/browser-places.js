@@ -822,37 +822,3 @@ var PlacesStarButton = {
   onItemVisited: function() { },
   onItemMoved: function() { }
 };
-
-/**
- * Various migration tasks.
- */
-function placesMigrationTasks() {
-  // bug 398914 - move all post-data annotations from URIs to bookmarks
-  // XXX - REMOVE ME FOR BETA 3 (bug 391419)
-  if (gPrefService.getBoolPref("browser.places.migratePostDataAnnotations")) {
-    const annosvc = PlacesUtils.annotations;
-    const bmsvc = PlacesUtils.bookmarks;
-    const oldPostDataAnno = "URIProperties/POSTData";
-    var pages = annosvc.getPagesWithAnnotation(oldPostDataAnno, {});
-    for (let i = 0; i < pages.length; i++) {
-      try {
-        let uri = pages[i];
-        var postData = annosvc.getPageAnnotation(uri, oldPostDataAnno);
-        // We can't know which URI+keyword combo this postdata was for, but
-        // it's very likely that if this URI is bookmarked and has a keyword
-        // *and* the URI has postdata, then this bookmark was using the
-        // postdata. Propagate the annotation to all bookmarks for this URI
-        // just to be safe.
-        let bookmarks = bmsvc.getBookmarkIdsForURI(uri, {});
-        for (let i = 0; i < bookmarks.length; i++) {
-          var keyword = bmsvc.getKeywordForBookmark(bookmarks[i]);
-          if (keyword)
-            annosvc.setItemAnnotation(bookmarks[i], POST_DATA_ANNO, postData, 0, annosvc.EXPIRE_NEVER); 
-        }
-        // Remove the old annotation.
-        annosvc.removePageAnnotation(uri, oldPostDataAnno);
-      } catch(ex) {}
-    }
-    gPrefService.setBoolPref("browser.places.migratePostDataAnnotations", false);
-  }
-}

@@ -139,8 +139,6 @@ nsNavBookmarks::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBFindURIBookmarks
-  // NOTE: Do not modify the ORDER BY segment of the query, as certain
-  // features depend on it. See bug 398914 for an example.
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT a.id "
       "FROM moz_bookmarks a, moz_places h "
