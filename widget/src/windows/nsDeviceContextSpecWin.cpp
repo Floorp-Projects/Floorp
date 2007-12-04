@@ -418,7 +418,8 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 {
   mPrintSettings = aPrintSettings;
 
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = aIsPrintPreview ? NS_ERROR_GFX_PRINTER_PRINTPREVIEW : 
+                                  NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   if (aPrintSettings) {
     nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
     if (psWin) {
@@ -483,7 +484,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   }
 
   NS_ASSERTION(printerName, "We have to have a printer name");
-  if (!printerName || !*printerName) return NS_ERROR_FAILURE;
+  if (!printerName || !*printerName) return rv;
 
   if (!aIsPrintPreview) {
     CheckForPrintToFile(mPrintSettings, nsnull, printerName);
