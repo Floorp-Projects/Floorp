@@ -54,6 +54,7 @@ protected:
     nsSVGContainerFrameBase(aContext) {}
 
 public:
+  // Returns the transform to our gfxContext (to device pixels, not CSS px)
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM() { return nsnull; }
 
   // nsIFrame:

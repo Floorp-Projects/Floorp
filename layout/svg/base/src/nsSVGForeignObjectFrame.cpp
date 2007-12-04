@@ -291,10 +291,11 @@ nsSVGForeignObjectFrame::TransformPointFromOuterPx(float aX, float aY, nsPoint* 
   nsresult rv = tm->Inverse(getter_AddRefs(inverse));
   if (NS_FAILED(rv))
     return rv;
-   
+
   nsSVGUtils::TransformPoint(inverse, &aX, &aY);
-  *aOut = nsPoint(nsPresContext::CSSPixelsToAppUnits(aX),
-                  nsPresContext::CSSPixelsToAppUnits(aY));
+  PRInt32 appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+  *aOut = nsPoint(NSToCoordRound(aX * appUnitsPerDevPixel),
+                  NSToCoordRound(aY * appUnitsPerDevPixel));
   return NS_OK;
 }
  
@@ -322,8 +323,9 @@ nsPoint
 nsSVGForeignObjectFrame::TransformPointFromOuter(nsPoint aPt)
 {
   nsPoint pt(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  TransformPointFromOuterPx(nsPresContext::AppUnitsToFloatCSSPixels(aPt.x),
-                            nsPresContext::AppUnitsToFloatCSSPixels(aPt.y),
+  float appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+  TransformPointFromOuterPx(aPt.x / appUnitsPerDevPixel,
+                            aPt.y / appUnitsPerDevPixel,
                             &pt);
   return pt;
 }
@@ -697,7 +699,7 @@ nsSVGForeignObjectFrame::FlushDirtyRegion()
   
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
   nsRect r = mDirtyRegion.GetBounds();
-  r.ScaleRoundOut(1.0f / nsPresContext::AppUnitsPerCSSPixel());
+  r.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
   float x = r.x, y = r.y, w = r.width, h = r.height;
   r = GetTransformedRegion(x, y, w, h, tm);
   outerSVGFrame->InvalidateRect(r);
