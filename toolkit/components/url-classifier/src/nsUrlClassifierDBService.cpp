@@ -1424,8 +1424,6 @@ nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
 
   LOG(("Adding %d entries to chunk %d", entries.Length(), chunkNum));
 
-  mozStorageTransaction transaction(mConnection, PR_FALSE);
-
   nsCAutoString addChunks;
   nsCAutoString subChunks;
 
@@ -1480,11 +1478,6 @@ nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
   rv = mAddChunkEntriesStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  HandlePendingLookups();
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
 #if defined(PR_LOGGING)
   if (LOG_ENABLED()) {
     PRIntervalTime clockEnd = PR_IntervalNow();
@@ -1500,8 +1493,6 @@ nsresult
 nsUrlClassifierDBServiceWorker::ExpireAdd(PRUint32 tableId,
                                           PRUint32 chunkNum)
 {
-  mozStorageTransaction transaction(mConnection, PR_FALSE);
-
   LOG(("Expiring chunk %d\n", chunkNum));
 
   nsCAutoString addChunks;
@@ -1565,9 +1556,7 @@ nsUrlClassifierDBServiceWorker::ExpireAdd(PRUint32 tableId,
   rv = mDeleteChunkEntriesStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  HandlePendingLookups();
-
-  return transaction.Commit();
+  return NS_OK;
 }
 
 nsresult
@@ -1575,8 +1564,6 @@ nsUrlClassifierDBServiceWorker::SubChunk(PRUint32 tableId,
                                          PRUint32 chunkNum,
                                          nsTArray<nsUrlClassifierEntry>& entries)
 {
-  mozStorageTransaction transaction(mConnection, PR_FALSE);
-
   nsCAutoString addChunks;
   nsCAutoString subChunks;
 
@@ -1610,16 +1597,12 @@ nsUrlClassifierDBServiceWorker::SubChunk(PRUint32 tableId,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  HandlePendingLookups();
-
-  return transaction.Commit();
+  return NS_OK;
 }
 
 nsresult
 nsUrlClassifierDBServiceWorker::ExpireSub(PRUint32 tableId, PRUint32 chunkNum)
 {
-  mozStorageTransaction transaction(mConnection, PR_FALSE);
-
   nsCAutoString addChunks;
   nsCAutoString subChunks;
 
@@ -1635,9 +1618,7 @@ nsUrlClassifierDBServiceWorker::ExpireSub(PRUint32 tableId, PRUint32 chunkNum)
   rv = SetChunkLists(tableId, addChunks, subChunks);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  HandlePendingLookups();
-
-  return transaction.Commit();
+  return NS_OK;
 }
 
 nsresult
@@ -1820,6 +1801,16 @@ nsUrlClassifierDBServiceWorker::Update(const nsACString& chunk)
     return mUpdateStatus;
   }
 
+  PRBool transaction;
+  if (NS_SUCCEEDED(mConnection->GetTransactionInProgress(&transaction)) &&
+      !transaction) {
+    rv = mConnection->BeginTransaction();
+    if (NS_FAILED(rv)) {
+      mUpdateStatus = rv;
+      return rv;
+    }
+  }
+
   LOG(("Got %s\n", PromiseFlatCString(chunk).get()));
 
   mPendingStreamUpdate.Append(chunk);
@@ -1845,6 +1836,12 @@ nsUrlClassifierDBServiceWorker::Finish(nsIUrlClassifierCallback* aSuccessCallbac
                                        nsIUrlClassifierCallback* aErrorCallback)
 {
   nsCAutoString arg;
+  if (NS_SUCCEEDED(mUpdateStatus)) {
+    mUpdateStatus = mConnection->CommitTransaction();
+  } else {
+    mConnection->RollbackTransaction();
+  }
+
   if (NS_SUCCEEDED(mUpdateStatus)) {
     arg.AppendInt(mUpdateWait);
     aSuccessCallback->HandleEvent(arg);
