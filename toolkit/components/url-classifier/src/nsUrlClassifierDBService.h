@@ -96,6 +96,10 @@ private:
   // TRUE if the nsURIClassifier implementation should check for malware
   // uris on document loads.
   PRBool mCheckMalware;
+
+  // TRUE if the nsURIClassifier implementation should check for phishing
+  // uris on document loads.
+  PRBool mCheckPhishing;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsUrlClassifierDBService, NS_URLCLASSIFIERDBSERVICE_CID)
