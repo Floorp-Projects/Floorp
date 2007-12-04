@@ -4466,19 +4466,31 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // child frame in nsWindowSH::NewResolve() (*vp will tell us if
     // that's the case). If *vp is a window object (i.e. a child
     // frame), return without doing a security check.
+    //
+    // Calling GetWrappedNativeOfJSObject() is not all that cheap, so
+    // only do that if the JSClass name is one that is likely to be a
+    // window object.
 
-    nsCOMPtr<nsIXPConnectWrappedNative> vpwrapper;
-    sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
-                                           getter_AddRefs(vpwrapper));
+    const char *name = JS_GET_CLASS(cx, JSVAL_TO_OBJECT(*vp))->name;
 
-    if (vpwrapper) {
-      nsCOMPtr<nsIDOMWindow> window(do_QueryWrappedNative(vpwrapper));
+    // The list of Window class names here need to be kept in sync
+    // with the actual class names!
+    if ((*name == 'W' && strcmp(name, "Window") == 0) ||
+        (*name == 'C' && strcmp(name, "ChromeWindow") == 0) ||
+        (*name == 'M' && strcmp(name, "ModalContentWindow") == 0)) {
+      nsCOMPtr<nsIXPConnectWrappedNative> vpwrapper;
+      sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
+                                             getter_AddRefs(vpwrapper));
 
-      if (window) {
-        // Yup, *vp is a window object, return early (*vp is already
-        // the window, so no need to wrap it again).
+      if (vpwrapper) {
+        nsCOMPtr<nsIDOMWindow> window(do_QueryWrappedNative(vpwrapper));
 
-        return NS_SUCCESS_I_DID_SOMETHING;
+        if (window) {
+          // Yup, *vp is a window object, return early (*vp is already
+          // the window, so no need to wrap it again).
+
+          return NS_SUCCESS_I_DID_SOMETHING;
+        }
       }
     }
   }
