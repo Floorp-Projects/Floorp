@@ -1285,7 +1285,7 @@ nsUrlClassifierDBServiceWorker::GetChunkEntries(const nsACString& table,
         // fragment
         entry->AddFragment(entry->mKey, chunkNum);
       } else {
-        if (start + (numEntries * KEY_LENGTH) >= chunk.Length()) {
+        if (start + (numEntries * KEY_LENGTH) > chunk.Length()) {
           // there isn't as much data as they said there would be.
           return NS_ERROR_FAILURE;
         }
@@ -1689,9 +1689,8 @@ nsUrlClassifierDBServiceWorker::ProcessChunk(PRBool* done)
   LOG(("Handling a chunk sized %d", chunk.Length()));
 
   nsTArray<nsUrlClassifierEntry> entries;
-  GetChunkEntries(mUpdateTable, mUpdateTableId, mChunkNum, chunk, entries);
-
-  nsresult rv;
+  nsresult rv = GetChunkEntries(mUpdateTable, mUpdateTableId, mChunkNum, chunk, entries);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mChunkType == CHUNK_ADD) {
     rv = AddChunk(mUpdateTableId, mChunkNum, entries);
