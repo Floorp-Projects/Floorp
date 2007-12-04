@@ -1948,17 +1948,19 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       else
         repositionViews = PR_TRUE;
 
-      if (willReflowAgain) {
-        NS_ASSERTION(!line->IsDirty() || !line->HasFloats(),
-                     "Possibly stale float cache here!");
-        // If we're going to reflow everything again, and this line has no
-        // cached floats, then there is no need to recover float state. The line
-        // may be a block that contains other lines with floats, but in that
-        // case RecoverStateFrom would only add floats to the space manager.
-        // We don't need to do that because everything's going to get reflowed
-        // again "for real". Calling RecoverStateFrom in this situation could
-        // be lethal because the block's descendant lines may have float
-        // caches containing dangling frame pointers. Ugh!
+      NS_ASSERTION(!line->IsDirty() || !line->HasFloats(),
+                   "Possibly stale float cache here!");
+      if (willReflowAgain && line->IsBlock()) {
+        // If we're going to reflow everything again, and this line is a block,
+        // then there is no need to recover float state. The line may contain
+        // other lines with floats, but in that case RecoverStateFrom would only
+        // add floats to the space manager. We don't need to do that because
+        // everything's going to get reflowed again "for real". Calling
+        // RecoverStateFrom in this situation could be lethal because the
+        // block's descendant lines may have float caches containing dangling
+        // frame pointers. Ugh!
+        // If this line is inline, then we need to recover its state now
+        // to make sure that we don't forget to move its floats by deltaY.
       } else {
         // XXX EVIL O(N^2) EVIL
         aState.RecoverStateFrom(line, deltaY);
