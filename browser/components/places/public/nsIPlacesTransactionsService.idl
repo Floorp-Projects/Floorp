@@ -52,7 +52,7 @@ interface nsITransaction;
  * the global scope of a js window.
  */
 
-[scriptable, uuid(89f61a91-c8f7-4abb-b880-895cb9852c35)]
+[scriptable, uuid(939bccbd-ecb1-4742-9c38-a33af91ec872)]
 interface nsIPlacesTransactionsService : nsITransactionManager
 {
   /**
@@ -237,20 +237,20 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    *        new keyword for the bookmark
    * @returns nsITransaction object
    */
-  nsITransaction editBookmarkKeyword(in long long aItemId,
-                                     in AString aNewKeyword);
+  nsITransaction editBookmarkKeyword(in long long id,
+                                           in AString newKeyword);
 
   /**
-   * Transaction for editing the post data associated with a bookmark.
+   * Transaction for editing the post data associated with a URI
    *
-   * @param aItemId
-   *        id of the bookmark to edit
+   * @param aURI
+   *        uri to edit
    * @param aPostData
    *        post data
    * @returns nsITransaction object
    */
-  nsITransaction editBookmarkPostData(in long long aItemId,
-                                      in AString aPostData);
+  nsITransaction editURIPostData(in nsIURI aURI,
+                                 in AString aPostData);
 
   /**
    * Transaction for editing a live bookmark's site URI.

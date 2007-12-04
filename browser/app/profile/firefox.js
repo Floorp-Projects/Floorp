@@ -587,11 +587,6 @@ pref("browser.places.importBookmarksHTML", true);
 // if false, will add the "Smart Bookmarks" folder to the personal toolbar
 pref("browser.places.createdSmartBookmarks", false);
 
-// If true, will migrate uri post-data annotations to
-// bookmark post-data annotations (bug 398914)
-// XXX to be removed after beta 2 (bug 391419)
-pref("browser.places.migratePostDataAnnotations", true);
-
 // Controls behavior of the "Add Exception" dialog launched from SSL error pages
 // 0 - don't pre-populate anything
 // 1 - pre-populate site URL, but don't fetch certificate
