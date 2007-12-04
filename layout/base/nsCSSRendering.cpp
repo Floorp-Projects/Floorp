@@ -4352,26 +4352,24 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
                                     const gfxSize& aLineSize,
                                     const gfxFloat aAscent,
                                     const gfxFloat aOffset,
+                                    const gfxFloat aPreferredHeight,
                                     const PRUint8 aDecoration,
                                     const PRUint8 aStyle,
                                     const PRBool aIsRTL)
 {
-  gfxRect rect =
-    GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle);
-  if (rect.IsEmpty())
+  if (aLineSize.width <= 0 || aLineSize.height <= 0 ||
+      aStyle == NS_STYLE_BORDER_STYLE_NONE)
     return;
 
-  gfxFloat lineHeight = PR_MAX(NS_round(aLineSize.height), 1.0);
   PRBool contextIsSaved = PR_FALSE;
+  gfxFloat totalHeight = aLineSize.height;
   switch (aStyle) {
     case NS_STYLE_BORDER_STYLE_SOLID:
-    case NS_STYLE_BORDER_STYLE_DOUBLE:
       break;
     case NS_STYLE_BORDER_STYLE_DASHED: {
       aGfxContext->Save();
       contextIsSaved = PR_TRUE;
-      gfxFloat dashWidth = lineHeight * DOT_LENGTH * DASH_LENGTH;
+      gfxFloat dashWidth = aLineSize.height * DOT_LENGTH * DASH_LENGTH;
       gfxFloat dash[2] = { dashWidth, dashWidth };
       aGfxContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
       aGfxContext->SetDash(dash, 2, 0.0);
@@ -4380,9 +4378,9 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
     case NS_STYLE_BORDER_STYLE_DOTTED: {
       aGfxContext->Save();
       contextIsSaved = PR_TRUE;
-      gfxFloat dashWidth = lineHeight * DOT_LENGTH;
+      gfxFloat dashWidth = aLineSize.height * DOT_LENGTH;
       gfxFloat dash[2];
-      if (lineHeight > 2.0) {
+      if (aLineSize.height > 2.0) {
         dash[0] = 0.0;
         dash[1] = dashWidth * 2.0;
         aGfxContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
@@ -4393,41 +4391,74 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       aGfxContext->SetDash(dash, 2, 0.0);
       break;
     }
+    case NS_STYLE_BORDER_STYLE_DOUBLE:
+      totalHeight *= 3.0;
+      break;
     default:
       NS_ERROR("Invalid style value!");
       return;
   }
 
+  gfxFloat offset = aOffset;
+  switch (aDecoration) {
+    case NS_STYLE_TEXT_DECORATION_UNDERLINE:
+      break;
+    case NS_STYLE_TEXT_DECORATION_OVERLINE:
+      // The offset includes the preferred size, we should remove it
+      offset += aPreferredHeight;
+      // the bottom of the decoration line should be aligned to the top of the
+      // text.
+      offset -= totalHeight;
+      break;
+    case NS_STYLE_TEXT_DECORATION_LINE_THROUGH: {
+      // The offset includes the preferred size, we should remove it
+      offset += aPreferredHeight;
+      // the middle of the decoration line should be aligned to the middle of
+      // the original strike out offset.
+      offset -= PR_MAX(aPreferredHeight, (totalHeight / 2.0));
+      break;
+    }
+    default:
+      NS_ERROR("Invalid decoration value!");
+      if (contextIsSaved)
+        aGfxContext->Restore();
+      return;
+  }
+
+  // round to device pixels for suppressing the AA.
+  gfxFloat x = NS_round(aPt.x);
+  gfxFloat y = NS_round(aPt.y + aAscent) - NS_round(offset);
+  gfxFloat width = NS_round(aLineSize.width);
+  gfxFloat height = NS_round(aLineSize.height);
   // The y position should be set to the middle of the line.
-  rect.pos.y += lineHeight / 2;
+  y += height / 2;
 
   aGfxContext->SetColor(gfxRGBA(aColor));
-  aGfxContext->SetLineWidth(lineHeight);
+  aGfxContext->SetLineWidth(height);
   switch (aStyle) {
     case NS_STYLE_BORDER_STYLE_SOLID:
       aGfxContext->NewPath();
-      aGfxContext->MoveTo(rect.TopLeft());
-      aGfxContext->LineTo(rect.TopRight());
+      aGfxContext->MoveTo(gfxPoint(x, y));
+      aGfxContext->LineTo(gfxPoint(x + width, y));
       aGfxContext->Stroke();
       break;
     case NS_STYLE_BORDER_STYLE_DOUBLE:
       aGfxContext->NewPath();
-      aGfxContext->MoveTo(rect.TopLeft());
-      aGfxContext->LineTo(rect.TopRight());
-      rect.size.height -= lineHeight;
-      aGfxContext->MoveTo(rect.BottomLeft());
-      aGfxContext->LineTo(rect.BottomRight());
+      aGfxContext->MoveTo(gfxPoint(x, y));
+      aGfxContext->LineTo(gfxPoint(x + width, y));
+      aGfxContext->MoveTo(gfxPoint(x, y + height * 2.0));
+      aGfxContext->LineTo(gfxPoint(x + width, y + height * 2.0));
       aGfxContext->Stroke();
       break;
     case NS_STYLE_BORDER_STYLE_DOTTED:
     case NS_STYLE_BORDER_STYLE_DASHED:
       aGfxContext->NewPath();
       if (aIsRTL) {
-        aGfxContext->MoveTo(rect.TopRight());
-        aGfxContext->LineTo(rect.TopLeft());
+        aGfxContext->MoveTo(gfxPoint(x + width, y));
+        aGfxContext->LineTo(gfxPoint(x, y));
       } else {
-        aGfxContext->MoveTo(rect.TopLeft());
-        aGfxContext->LineTo(rect.TopRight());
+        aGfxContext->MoveTo(gfxPoint(x, y));
+        aGfxContext->LineTo(gfxPoint(x + width, y));
       }
       aGfxContext->Stroke();
       aGfxContext->Restore();
@@ -4438,71 +4469,4 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       break;
   }
   NS_ASSERTION(!contextIsSaved, "The gfxContext has been saved, but not restored!");
-}
-
-nsRect
-nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
-                                      const gfxSize& aLineSize,
-                                      const gfxFloat aAscent,
-                                      const gfxFloat aOffset,
-                                      const PRUint8 aDecoration,
-                                      const PRUint8 aStyle)
-{
-  NS_ASSERTION(aPresContext, "aPresContext is null");
-
-  gfxRect rect =
-    GetTextDecorationRectInternal(gfxPoint(0, 0), aLineSize, aAscent, aOffset,
-                                  aDecoration, aStyle);
-  // The rect values are already rounded to nearest device pixels.
-  nsRect r;
-  r.x = aPresContext->GfxUnitsToAppUnits(rect.X());
-  r.y = aPresContext->GfxUnitsToAppUnits(rect.Y());
-  r.width = aPresContext->GfxUnitsToAppUnits(rect.Width());
-  r.height = aPresContext->GfxUnitsToAppUnits(rect.Height());
-  return r;
-}
-
-gfxRect
-nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
-                                              const gfxSize& aLineSize,
-                                              const gfxFloat aAscent,
-                                              const gfxFloat aOffset,
-                                              const PRUint8 aDecoration,
-                                              const PRUint8 aStyle)
-{
-  gfxRect r;
-  r.pos.x = NS_round(aPt.x);
-  r.size.width = NS_round(aLineSize.width);
-
-  gfxFloat basesize = NS_round(aLineSize.height);
-  basesize = PR_MAX(basesize, 1.0);
-  r.size.height = basesize;
-  if (aStyle == NS_STYLE_BORDER_STYLE_DOUBLE) {
-    gfxFloat gap = NS_round(basesize / 2.0);
-    gap = PR_MAX(gap, 1.0);
-    r.size.height = basesize * 2.0 + gap;
-  } else {
-    r.size.height = basesize;
-  }
-
-  gfxFloat baseline = NS_round(aPt.y + aAscent);
-  gfxFloat offset = 0;
-  switch (aDecoration) {
-    case NS_STYLE_TEXT_DECORATION_UNDERLINE:
-      offset = NS_round(aOffset);
-      break;
-    case NS_STYLE_TEXT_DECORATION_OVERLINE:
-      offset = NS_round(aOffset - basesize + r.Height());
-      break;
-    case NS_STYLE_TEXT_DECORATION_LINE_THROUGH: {
-      gfxFloat extra = NS_round(r.Height() / 2.0);
-      extra = PR_MAX(extra, basesize);
-      offset = NS_round(aOffset - basesize + extra);
-      break;
-    }
-    default:
-      NS_ERROR("Invalid decoration value!");
-  }
-  r.pos.y = baseline - NS_round(offset);
-  return r;
 }

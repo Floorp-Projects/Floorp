@@ -85,7 +85,6 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("TextDecoration")
 private:
   nsLineBox*            mLine;
@@ -121,12 +120,6 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
     f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor,
                                offset, ascent, size, mDecoration);
   }
-}
-
-nsRect
-nsDisplayTextDecoration::GetBounds(nsDisplayListBuilder* aBuilder)
-{
-  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 nsresult
@@ -195,7 +188,7 @@ nsHTMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 static PRBool 
-HasTextFrameDescendantOrInFlow(nsIFrame* aFrame);
+HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame);
 
 /*virtual*/ void
 nsHTMLContainerFrame::PaintTextDecorationLine(
@@ -228,6 +221,7 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
   nsCSSRendering::PaintDecorationLine(
     ctx, aColor, pt, size, PresContext()->AppUnitsToGfxUnits(aAscent),
     PresContext()->AppUnitsToGfxUnits(aOffset),
+    PresContext()->AppUnitsToGfxUnits(aSize),
     aDecoration, NS_STYLE_BORDER_STYLE_SOLID, isRTL);
 }
 
@@ -303,14 +297,14 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
   
   if (aDecorations) {
     // If this frame contains no text, we're required to ignore this property
-    if (!HasTextFrameDescendantOrInFlow(this)) {
+    if (!HasTextFrameDescendantOrInFlow(aPresContext, this)) {
       aDecorations = NS_STYLE_TEXT_DECORATION_NONE;
     }
   }
 }
 
 static PRBool 
-HasTextFrameDescendant(nsIFrame* aParent)
+HasTextFrameDescendant(nsPresContext* aPresContext, nsIFrame* aParent)
 {
   for (nsIFrame* kid = aParent->GetFirstChild(nsnull); kid;
        kid = kid->GetNextSibling())
@@ -323,7 +317,7 @@ HasTextFrameDescendant(nsIFrame* aParent)
         return PR_TRUE;
       }
     }
-    if (HasTextFrameDescendant(kid)) {
+    if (HasTextFrameDescendant(aPresContext, kid)) {
       return PR_TRUE;
     }
   }
@@ -331,10 +325,10 @@ HasTextFrameDescendant(nsIFrame* aParent)
 }
 
 static PRBool 
-HasTextFrameDescendantOrInFlow(nsIFrame* aFrame)
+HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   for (nsIFrame *f = aFrame->GetFirstInFlow(); f; f = f->GetNextInFlow()) {
-    if (HasTextFrameDescendant(f))
+    if (HasTextFrameDescendant(aPresContext, f))
       return PR_TRUE;
   }
   return PR_FALSE;
