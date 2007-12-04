@@ -1643,25 +1643,33 @@ moz_gtk_menu_popup_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
 static gint
 moz_gtk_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                        GdkRectangle* cliprect, GtkWidgetState* state)
+                        GdkRectangle* cliprect, GtkWidgetState* state,
+                        gint flags)
 {
     GtkStyle* style;
     GtkShadowType shadow_type;
+    GtkWidget* item_widget;
 
     if (state->inHover && !state->disabled) {
-        ensure_menu_item_widget();
-
-        style = gMenuItemWidget->style;
+        if (flags & MOZ_TOPLEVEL_MENU_ITEM) {
+            ensure_menu_bar_item_widget();
+            item_widget = gMenuBarItemWidget;
+        } else {
+            ensure_menu_item_widget();
+            item_widget = gMenuItemWidget;
+        }
+        
+        style = item_widget->style;
         TSOffsetStyleGCs(style, rect->x, rect->y);
         if (have_menu_shadow_type) {
-            gtk_widget_style_get(gMenuItemWidget, "selected_shadow_type",
+            gtk_widget_style_get(item_widget, "selected_shadow_type",
                                  &shadow_type, NULL);
         } else {
             shadow_type = GTK_SHADOW_OUT;
         }
 
         gtk_paint_box(style, drawable, GTK_STATE_PRELIGHT, shadow_type,
-                      cliprect, gMenuItemWidget, "menuitem", rect->x, rect->y,
+                      cliprect, item_widget, "menuitem", rect->x, rect->y,
                       rect->width, rect->height);
     }
 
@@ -1702,7 +1710,7 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
     gint indicator_size;
     gint x, y;
    
-    moz_gtk_menu_item_paint(drawable, rect, cliprect, state);
+    moz_gtk_menu_item_paint(drawable, rect, cliprect, state, FALSE);
     
     ensure_check_menu_item_widget();
 
@@ -1959,6 +1967,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         break;
     case MOZ_GTK_MENUITEM:
         ensure_menu_item_widget();
+        ensure_menu_bar_item_widget();
         w = gMenuItemWidget;
         break;
     case MOZ_GTK_CHECKMENUITEM:
@@ -2205,7 +2214,7 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         return moz_gtk_menu_popup_paint(drawable, rect, cliprect);
         break;
     case MOZ_GTK_MENUITEM:
-        return moz_gtk_menu_item_paint(drawable, rect, cliprect, state);
+        return moz_gtk_menu_item_paint(drawable, rect, cliprect, state, flags);
         break;
     case MOZ_GTK_MENUARROW:
         return moz_gtk_menu_arrow_paint(drawable, rect, cliprect, state);

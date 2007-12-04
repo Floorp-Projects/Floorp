@@ -285,8 +285,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
           if (isTopLevel) {
             aState->inHover = menuFrame->IsOpen();
+            *aWidgetFlags |= MOZ_TOPLEVEL_MENU_ITEM;
           } else {
             aState->inHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
+            *aWidgetFlags &= ~MOZ_TOPLEVEL_MENU_ITEM;
           }
 
           aState->active = FALSE;
