@@ -43,7 +43,6 @@ extern "C" {
 #include <libgnome/libgnome.h>
 #include <libgnomeui/gnome-icon-theme.h>
 #include <libgnomeui/gnome-icon-lookup.h>
-#include <libgnomeui/gnome-ui-init.h>
 
 #include <libgnomevfs/gnome-vfs-file-info.h>
 #include <libgnomevfs/gnome-vfs-ops.h>
@@ -62,12 +61,32 @@ extern "C" {
 
 #include "nsNetUtil.h"
 #include "nsIURL.h"
+#include "prlink.h"
 
 #include "nsIconChannel.h"
 
 NS_IMPL_ISUPPORTS2(nsIconChannel,
                    nsIRequest,
                    nsIChannel)
+
+// These let us have a soft dependency on libgnomeui rather than a hard one. These are just basically the prototypes
+// of the functions in the libraries.
+typedef char* (*_GnomeIconLookup_fn)(GtkIconTheme *icon_theme, GnomeThumbnailFactory *thumbnail_factory,
+                                     const char *file_uri, const char *custom_icon, GnomeVFSFileInfo *file_info,
+                                     const char *mime_type, GnomeIconLookupFlags flags, GnomeIconLookupResultFlags *result);
+typedef GnomeIconTheme* (*_GnomeIconThemeNew_fn)(void);
+typedef char* (*_GnomeIconThemeLookupIcon_fn)(GnomeIconTheme *theme, const char *icon_name, int size,
+                                              const GnomeIconData **icon_data, int *base_size);
+typedef int (*_GnomeInit_fn)(const char *app_id, const char *app_version, int argc, char **argv, const struct poptOption *options,
+                             int flags, poptContext *return_ctx);
+
+static PRLibrary* gLibGnomeUI = nsnull;
+static PRBool gTriedToLoadLibGnomeUI = PR_FALSE;
+
+static _GnomeIconLookup_fn _gnome_icon_lookup = nsnull;
+static _GnomeIconThemeNew_fn _gnome_icon_theme_new = nsnull;
+static _GnomeIconThemeLookupIcon_fn _gnome_icon_theme_lookup_icon = nsnull;
+static _GnomeInit_fn _gnome_init = nsnull;
 
 static nsresult
 moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
@@ -168,6 +187,35 @@ ensure_icon_factory()
 }
 #endif
 
+static nsresult
+ensure_libgnomeui()
+{
+  // Attempt to get the libgnomeui symbol references. We do it this way so that stock icons from Init()
+  // don't get held back by InitWithGnome()'s libgnomeui dependency.
+  if (!gTriedToLoadLibGnomeUI) {
+    gLibGnomeUI = PR_LoadLibrary("libgnomeui-2.so.0");
+    gTriedToLoadLibGnomeUI = PR_TRUE;
+    if (!gLibGnomeUI)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    _gnome_init = (_GnomeInit_fn)PR_FindFunctionSymbol(gLibGnomeUI, "gnome_init_with_popt_table");
+    _gnome_icon_theme_new = (_GnomeIconThemeNew_fn)PR_FindFunctionSymbol(gLibGnomeUI, "gnome_icon_theme_new");
+    _gnome_icon_lookup = (_GnomeIconLookup_fn)PR_FindFunctionSymbol(gLibGnomeUI, "gnome_icon_lookup");
+    _gnome_icon_theme_lookup_icon = (_GnomeIconThemeLookupIcon_fn)PR_FindFunctionSymbol(gLibGnomeUI, "gnome_icon_theme_lookup_icon");
+
+    if (!_gnome_init || !_gnome_icon_theme_new || !gnome_icon_lookup || !_gnome_icon_theme_lookup_icon) {
+      PR_UnloadLibrary(gLibGnomeUI);
+      gLibGnomeUI = nsnull;
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  if (!gLibGnomeUI)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  return NS_OK;
+}
+
 static GtkIconSize
 moz_gtk_icon_size(const char *name)
 {
@@ -193,6 +241,9 @@ nsresult
 nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
 {
   nsresult rv;
+
+  if (NS_FAILED(ensure_libgnomeui()))
+    return NS_ERROR_NOT_AVAILABLE;
   
   if (!gnome_program_get()) {
     // Get the brandShortName from the string bundle to pass to GNOME
@@ -217,7 +268,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     }
 
     char* empty[] = { "" };
-    gnome_init(NS_ConvertUTF16toUTF8(appName).get(), "1.0", 1, empty);
+    _gnome_init(NS_ConvertUTF16toUTF8(appName).get(), "1.0", 1, empty, NULL, 0, NULL);
   }
 
   nsCAutoString iconSizeString;
@@ -287,23 +338,24 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
 
   // Get the icon theme
   if (!gIconTheme) {
-    gIconTheme = gnome_icon_theme_new();
+    gIconTheme = _gnome_icon_theme_new();
+
     if (!gIconTheme) {
       gnome_vfs_file_info_clear(&fileInfo);
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
-  char* name = gnome_icon_lookup(gIconTheme, NULL, spec.get(), NULL, &fileInfo,
-                                 type.get(), GNOME_ICON_LOOKUP_FLAGS_NONE,
-                                 NULL);
+  char* name = _gnome_icon_lookup(gIconTheme, NULL, spec.get(), NULL, &fileInfo,
+                                  type.get(), GNOME_ICON_LOOKUP_FLAGS_NONE,
+                                  NULL);
+
   gnome_vfs_file_info_clear(&fileInfo);
-  if (!name) {
+  if (!name)
     return NS_ERROR_NOT_AVAILABLE;
-  }
- 
-  char* file = gnome_icon_theme_lookup_icon(gIconTheme, name, iconSize,
-                                            NULL, NULL);
+
+  char* file = _gnome_icon_theme_lookup_icon(gIconTheme, name, iconSize,
+                                             NULL, NULL);
   g_free(name);
   if (!file)
     return NS_ERROR_NOT_AVAILABLE;
@@ -403,5 +455,10 @@ nsIconChannel::Shutdown() {
   if (gIconTheme) {
     g_object_unref(G_OBJECT(gIconTheme));
     gIconTheme = nsnull;
+  }
+  if (gLibGnomeUI) {
+    PR_UnloadLibrary(gLibGnomeUI);
+    gLibGnomeUI = nsnull;
+    gTriedToLoadLibGnomeUI = PR_FALSE;
   }
 }
