@@ -242,6 +242,9 @@ protected:
   // mProcessAttachedQueueEvent
   void DoProcessAttachedQueue();
 
+  // Post an event to process the attached queue.
+  void PostProcessAttachedQueueEvent();
+
 // MEMBER VARIABLES
 protected: 
   void RemoveInsertionParent(nsIContent* aParent);
