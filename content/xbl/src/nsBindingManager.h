@@ -280,6 +280,7 @@ protected:
   // A queue of binding attached event handlers that are awaiting execution.
   nsBindingList mAttachedStack;
   PRPackedBool mProcessingAttachedStack;
+  PRPackedBool mDestroyed;
   PRUint32 mAttachedStackSizeOnOutermost;
 
   // Our posted event to process the attached queue, if any
