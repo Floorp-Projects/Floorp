@@ -111,7 +111,7 @@
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
 #define PREF_BROWSER_IMPORT_BOOKMARKS           "browser.places.importBookmarksHTML"
 #define PREF_BROWSER_IMPORT_DEFAULTS            "browser.places.importDefaults"
-#define PREF_BROWSER_CREATEDDEFAULTQUERIES      "browser.places.createdDefaultQueries"
+#define PREF_BROWSER_CREATEDSMARTBOOKMARKS      "browser.places.createdSmartBookmarks"
 #define PREF_BROWSER_LEFTPANEFOLDERID           "browser.places.leftPaneFolderId"
       
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
@@ -510,7 +510,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
       NS_ENSURE_SUCCESS(rv, rv);  
 
       // if the places.sqlite gets deleted/corrupted the queries should be created again
-      rv = prefs->SetBoolPref(PREF_BROWSER_CREATEDDEFAULTQUERIES, PR_FALSE);
+      rv = prefs->SetBoolPref(PREF_BROWSER_CREATEDSMARTBOOKMARKS, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);  
       
       // we must create a new Organizer left pane folder root, the old will not be valid anymore
