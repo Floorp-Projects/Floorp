@@ -50,7 +50,12 @@ MODULE_NAME	= nsIconDecoderModule
 PACKAGE_FILE = imgicon.pkg
 
 ifdef MOZ_ENABLE_GNOMEUI
-EXTRA_DSO_LDOPTS = $(MOZ_GNOMEUI_LIBS)
+EXTRA_DSO_LDOPTS = \
+                   $(MOZ_GNOMEVFS_LIBS) \
+                   $(MOZ_LIBGNOME_LIBS) \
+                   $(MOZ_GTK2_LIBS) \
+                   $(NULL)
+
 PLATFORM = gtk
 FORCE_SHARED_LIB = 1
 else
