@@ -917,9 +917,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         else {
           placedFloat = AddFloat(placeholder, aReflowStatus);
         }
-        if (outOfFlowFrame->GetType() == nsGkAtoms::letterFrame) {
-          SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
-        }
+        NS_ASSERTION(!(outOfFlowFrame->GetType() == nsGkAtoms::letterFrame &&
+                       GetFirstLetterStyleOK()),
+                    "FirstLetterStyle set on line with floating first letter");
       }
     }
     else if (nsGkAtoms::textFrame == frameType) {

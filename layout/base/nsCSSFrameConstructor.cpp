@@ -12066,6 +12066,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
 
         letterFrame->SetInitialChildList(nsnull, textFrame);
         aResult.childList = aResult.lastChild = letterFrame;
+        aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       }
     }
   }
@@ -12356,6 +12357,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       aFrameManager->InsertFrames(aFrame, nsnull, prevSibling, textFrame);
 
       *aStopLooking = PR_TRUE;
+      aFrame->RemoveStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       break;
     }
     else if (IsInlineFrame(kid)) {
