@@ -61,12 +61,21 @@ class nsTableColFrame;
 /**
  * Additional frame-state bits used by nsBlockFrame
  * See the meanings at http://www.mozilla.org/newlayout/doc/block-and-line.html
+ *
+ * NS_BLOCK_HAS_FIRST_LETTER_STYLE means that the block has first-letter style,
+ *  even if it has no actual first-letter frame among its descendants.
+ *
+ * NS_BLOCK_HAS_FIRST_LETTER_CHILD means that there is an inflow first-letter
+ *  frame among the block's descendants. If there is a floating first-letter
+ *  frame, or the block has first-letter style but has no first letter, this
+ *  bit is not set.
  */
 #define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
 #define NS_BLOCK_MARGIN_ROOT                0x00400000
 #define NS_BLOCK_SPACE_MGR                  0x00800000
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE     0x20000000
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
+#define NS_BLOCK_HAS_FIRST_LETTER_CHILD     0x80000000
 // These are the bits that get inherited from a block frame to its
 // next-in-flows and are not private to blocks
 #define NS_BLOCK_FLAGS_MASK                 0xF0E00000 
