@@ -28,4 +28,4 @@ random == dynamic-3b.html dynamic-3-ref.html
 == 23605-4.html 23605-4-ref.html
 == 23605-5.html 23605-5-ref.html
 == 23605-6.html 23605-6-ref.html
-== 329069-1.html 329069-1-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 329069-1.html 329069-1-ref.html # failure is font-dependent, may be related to bug 404848
