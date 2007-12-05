@@ -56,11 +56,20 @@ var gPrivacyPane = {
   /*
    * Preferences:
    *
+   * NOTE: These first two are no longer shown in the UI. They're controlled
+   *       via the checkbox, which uses the zero state of the pref to turn
+   *       history off.
    * browser.history_expire_days
    * - the number of days of history to remember
    * browser.history_expire_days.mirror
    * - a preference whose value mirrors that of browser.history_expire_days, to
    *   make the "days of history" checkbox easier to code
+   *
+   * browser.history_expire_days_min
+   * - the mininum number of days of history to remember
+   * browser.history_expire_days_min.mirror
+   * - a preference whose value mirrors that of browser.history_expire_days_min
+   *   to make the "days of history" checkbox easier to code
    * browser.formfill.enable
    * - true if entries in forms and the search bar should be saved, false
    *   otherwise
@@ -82,6 +91,7 @@ var gPrivacyPane = {
   {
     var pref = document.getElementById("browser.history_expire_days");
     var mirror = document.getElementById("browser.history_expire_days.mirror");
+    var pref_min = document.getElementById("browser.history_expire_days_min");
     var textbox = document.getElementById("historyDays");
     var checkbox = document.getElementById("rememberHistoryDays");
 
@@ -91,25 +101,6 @@ var gPrivacyPane = {
 
     checkbox.checked = (pref.value > 0);
     textbox.disabled = !checkbox.checked;
-
-    // hook up textbox to mirror preference and force a preference read
-    textbox.setAttribute("onsynctopreference", "return gPrivacyPane._writeHistoryDaysMirror();");
-    textbox.setAttribute("preference", "browser.history_expire_days.mirror");
-    mirror.updateElements();
-  },
-
-  /**
-   * Stores the days of history to the actual days-of-history preference and
-   * returns that value, to be stored in the mirror preference.
-   */
-  _writeHistoryDaysMirror: function ()
-  {
-    var pref = document.getElementById("browser.history_expire_days");
-    var textbox = document.getElementById("historyDays");
-    pref.value = textbox.value;
-
-    // don't override the value in the textbox
-    return undefined;
   },
 
   /**
@@ -126,6 +117,19 @@ var gPrivacyPane = {
 
     pref.value = checkbox.checked ? mirror.value : 0;
     textbox.disabled = !checkbox.checked;
+  },
+
+  /**
+   * Responds to changes in the days-of-history textbox,
+   * unchecking the history-enabled checkbox if the days
+   * value is zero.
+   */
+  onkeyupHistoryDaysText: function ()
+  {
+    var textbox = document.getElementById("historyDays");
+    var checkbox = document.getElementById("rememberHistoryDays");
+    
+    checkbox.checked = textbox.value != 0;
   },
 
   /**
