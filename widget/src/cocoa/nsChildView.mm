@@ -4106,7 +4106,11 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
   geckoEvent.nativeMsg = &macEvent;
 
-  return (BOOL)mGeckoChild->DispatchWindowEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // We always return YES here because we can't know for sure if Gecko
+  // handled the event, even with the return value for the event dispatch.
+  return YES;
 }
 
 
