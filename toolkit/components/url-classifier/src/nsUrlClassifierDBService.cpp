@@ -113,8 +113,21 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 #define LOG_ENABLED() (PR_FALSE)
 #endif
 
-// Change filename each time we change the db schema.
+// Schema versioning:  note that we don't bother to migrate between different
+// versions of the schema, we just start fetching the data freshly with each
+// migration.
+
+// The database filename is updated when there is an incompatible
+// schema change and we expect both implementations to continue
+// accessing the same database (such as between stable versions of the
+// platform).
 #define DATABASE_FILENAME "urlclassifier3.sqlite"
+
+// The implementation version is updated during development when we
+// want to change schema, or to recover from updating bugs.  When an
+// implementation version change is detected, the database is scrapped
+// and we start over.
+#define IMPLEMENTATION_VERSION 1
 
 #define MAX_HOST_COMPONENTS 5
 #define MAX_PATH_COMPONENTS 4
@@ -1994,15 +2007,49 @@ nsUrlClassifierDBServiceWorker::OpenDb()
     do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRBool exists;
+  rv = mDBFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool newDB = !exists;
+
   nsCOMPtr<mozIStorageConnection> connection;
   rv = storageService->OpenDatabase(mDBFile, getter_AddRefs(connection));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // delete the db and try opening again
     rv = mDBFile->Remove(PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    newDB = PR_TRUE;
+
     rv = storageService->OpenDatabase(mDBFile, getter_AddRefs(connection));
   }
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!newDB) {
+    PRInt32 databaseVersion;
+    rv = connection->GetSchemaVersion(&databaseVersion);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (databaseVersion != IMPLEMENTATION_VERSION) {
+      LOG(("Incompatible database, removing."));
+
+      rv = connection->Close();
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = mDBFile->Remove(PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      newDB = PR_TRUE;
+
+      rv = storageService->OpenDatabase(mDBFile, getter_AddRefs(connection));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  if (newDB) {
+    rv = connection->SetSchemaVersion(IMPLEMENTATION_VERSION);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous=OFF"));
   NS_ENSURE_SUCCESS(rv, rv);
