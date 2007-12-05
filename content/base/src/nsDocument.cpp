@@ -5583,6 +5583,13 @@ nsDocument::Destroy()
   mLayoutHistoryState = nsnull;
 
   nsContentList::OnDocumentDestroy(this);
+
+  // XXX We really should let cycle collection do this, but that currently still
+  //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
+  //     When we start relying on cycle collection again we should remove the
+  //     check for mScriptGlobalObject in AddReference.
+  delete mContentWrapperHash;
+  mContentWrapperHash = nsnull;
 }
 
 already_AddRefed<nsILayoutHistoryState>
