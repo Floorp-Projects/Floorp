@@ -120,6 +120,24 @@ function run_test() {
   // modify the older bookmark
   bmsvc.setItemTitle(bm1, "change");
 
+  var bm1da = bmsvc.getItemDateAdded(bm1);
+  var bm1lm = bmsvc.getItemLastModified(bm1);
+  LOG("bm1 dateAdded: " + bm1da + ", lastModified: " + bm1lm);
+  var bm2da = bmsvc.getItemDateAdded(bm2);
+  var bm2lm = bmsvc.getItemLastModified(bm2);
+  LOG("bm2 dateAdded: " + bm2da + ", lastModified: " + bm2lm);
+  do_check_true(bm1da <= bm2da);
+  // the last modified for bm1 should be at least as big as bm2
+  // but could be equal if the test runs faster than our PRNow()
+  // granularity
+  do_check_true(bm1lm >= bm2lm);
+
+  // we need to ensure that bm1 last modified date is greater
+  // that the modified date of bm2, otherwise in case of a "tie"
+  // bm2 will win, as it has a bigger item id
+  if (bm1lm == bm2lm) 
+    bmsvc.setItemLastModified(bm1, bm2lm + 1);
+
   [url, postdata] = PlacesUtils.getURLAndPostDataForKeyword("foo");
   do_check_eq(testURI.spec, url);
   do_check_eq(postdata, "pdata1");
