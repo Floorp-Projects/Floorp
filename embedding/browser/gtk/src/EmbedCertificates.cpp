@@ -232,6 +232,14 @@ EmbedCertificates::ChooseToken(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+EmbedCertificates::DisplayProtectedAuth(
+  nsIInterfaceRequestor *aCtx,
+  nsIProtectedAuthThread *runnable)
+{
+  return NS_OK;
+}
+
 /* boolean ConfirmKeyEscrow (in nsIX509Cert escrowAuthority); */
 NS_IMETHODIMP
 EmbedCertificates::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, PRBool *_retval)
