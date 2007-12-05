@@ -361,6 +361,12 @@ nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
     mInsertionPointTable->Enumerate(TraverseInsertionPoint, &cb);
   if (mInterfaceTable)
     mInterfaceTable->Enumerate(TraverseBinding, &cb);
+
+  nsXBLPrototypeHandler* curr = mPrototypeHandler;
+  while (curr) {
+    curr->Traverse(cb);
+    curr = curr->GetNextHandler();
+  }
 }
 
 void
@@ -368,6 +374,12 @@ nsXBLPrototypeBinding::Unlink()
 {
   if (mImplementation)
     mImplementation->Unlink();
+
+  nsXBLPrototypeHandler* curr = mPrototypeHandler;
+  while (curr) {
+    curr->Unlink();
+    curr = curr->GetNextHandler();
+  }
 }
 
 void
@@ -375,6 +387,12 @@ nsXBLPrototypeBinding::Trace(TraceCallback aCallback, void *aClosure) const
 {
   if (mImplementation)
     mImplementation->Trace(aCallback, aClosure);
+
+  nsXBLPrototypeHandler* curr = mPrototypeHandler;
+  while (curr) {
+    curr->Trace(aCallback, aClosure);
+    curr = curr->GetNextHandler();
+  }
 }
 
 void
