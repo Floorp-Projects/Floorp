@@ -80,4 +80,15 @@ function run_test() {
   } catch(e) {
     do_check_eq(e.result, NS_ERROR_HOST_IS_IP_ADDRESS);
   }
+
+  // check normalization: output should be consistent with
+  // nsIURI::GetAsciiHost(), i.e. lowercased and ASCII/ACE encoded
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+
+  var uri = ioService.newURI("http://b\u00FCcher.co.uk", null, null);
+  do_check_eq(tld.getBaseDomain(uri), "xn--bcher-kva.co.uk");
+  do_check_eq(tld.getBaseDomainFromHost("b\u00FCcher.co.uk"), "xn--bcher-kva.co.uk");
+  do_check_eq(tld.getPublicSuffix(uri), "co.uk");
+  do_check_eq(tld.getPublicSuffixFromHost("b\u00FCcher.co.uk"), "co.uk");
 }
