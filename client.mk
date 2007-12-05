@@ -198,6 +198,7 @@ MODULES_core :=                                 \
   mozilla/storage                               \
   mozilla/db/sqlite3                            \
   mozilla/db/morkreader                         \
+  mozilla/testing/crashtest                     \
   mozilla/testing/mochitest                     \
   $(NULL)
 
