@@ -446,6 +446,10 @@ private:
                            nsACString& chunk,
                            nsTArray<nsUrlClassifierEntry>& entries);
 
+  // Parse a stringified range of chunks of the form "n" or "n-m".
+  PRBool ParseChunkRange(const nsACString& chunkStr,
+                         PRUint32 *first, PRUint32 *last);
+
   // Expand a stringified chunk list into an array of ints.
   nsresult ParseChunkList(const nsACString& chunkStr,
                           nsTArray<PRUint32>& chunks);
@@ -1320,6 +1324,30 @@ nsUrlClassifierDBServiceWorker::GetChunkEntries(const nsACString& table,
   return NS_OK;
 }
 
+PRBool
+nsUrlClassifierDBServiceWorker::ParseChunkRange(const nsACString& chunkStr,
+                                                PRUint32 *first,
+                                                PRUint32 *last)
+{
+  PRUint32 numRead = PR_sscanf(PromiseFlatCString(chunkStr).get(),
+                               "%u-%u", first, last);
+  if (numRead == 2) {
+    if (*first > *last) {
+      PRUint32 tmp = *first;
+      *first = *last;
+      *last = tmp;
+    }
+    return PR_TRUE;
+  }
+
+  if (numRead == 1) {
+    *last = *first;
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 nsresult
 nsUrlClassifierDBServiceWorker::ParseChunkList(const nsACString& chunkStr,
                                                nsTArray<PRUint32>& chunks)
@@ -1331,20 +1359,12 @@ nsUrlClassifierDBServiceWorker::ParseChunkList(const nsACString& chunkStr,
 
   for (PRInt32 i = 0; i < elements.Count(); i++) {
     nsCString& element = *elements[i];
-
     PRUint32 first;
     PRUint32 last;
-    if (PR_sscanf(element.get(), "%u-%u", &first, &last) == 2) {
-      if (first > last) {
-        PRUint32 tmp = first;
-        first = last;
-        last = tmp;
-      }
+    if (ParseChunkRange(element, &first, &last)) {
       for (PRUint32 num = first; num <= last; num++) {
         chunks.AppendElement(num);
       }
-    } else if (PR_sscanf(element.get(), "%u", &first) == 1) {
-      chunks.AppendElement(first);
     }
   }
 
@@ -1760,19 +1780,27 @@ nsUrlClassifierDBServiceWorker::ProcessResponseLines(PRBool* done)
       *done = PR_FALSE;
       break;
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("ad:"))) {
-      PRUint32 chunkNum;
-      if (PR_sscanf(PromiseFlatCString(line).get(), "ad:%u", &chunkNum) != 1) {
+      PRUint32 first;
+      PRUint32 last;
+      if (!ParseChunkRange(Substring(line, 3), &first, &last)) {
         return NS_ERROR_FAILURE;
       }
-      rv = ExpireAdd(mUpdateTableId, chunkNum);
-      NS_ENSURE_SUCCESS(rv, rv);
+
+      for (PRUint32 chunkNum = first; chunkNum <= last; chunkNum++) {
+        rv = ExpireAdd(mUpdateTableId, chunkNum);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("sd:"))) {
-      PRUint32 chunkNum;
-      if (PR_sscanf(PromiseFlatCString(line).get(), "ad:%u", &chunkNum) != 1) {
+      PRUint32 first;
+      PRUint32 last;
+      if (!ParseChunkRange(Substring(line, 3), &first, &last)) {
         return NS_ERROR_FAILURE;
       }
-      rv = ExpireSub(mUpdateTableId, chunkNum);
-      NS_ENSURE_SUCCESS(rv, rv);
+
+      for (PRUint32 chunkNum = first; chunkNum <= last; chunkNum++) {
+        rv = ExpireSub(mUpdateTableId, chunkNum);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     } else {
       LOG(("ignoring unknown line: '%s'", PromiseFlatCString(line).get()));
     }
