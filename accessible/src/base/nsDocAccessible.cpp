@@ -1894,21 +1894,27 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
                             eCoalesceFromSameSubtree, isAsynch);
 
     // Check to see change occured in an ARIA menu, and fire an EVENT_MENUPOPUP_START if it did
-    if (ARIARoleEquals(aChild, "menu")) {
+    nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(childNode);
+    if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
                               childNode, nsnull, eAllowDupes, isAsynch);
     }
 
     // Check to see if change occured inside an alert, and fire an EVENT_ALERT if it did
     nsIContent *ancestor = aChild;
-    while (ancestor) {
-      if (ARIARoleEquals(ancestor, "alert")) {
+    while (PR_TRUE) {
+      if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_ALERT) {
         nsCOMPtr<nsIDOMNode> alertNode(do_QueryInterface(ancestor));
         FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode, nsnull,
                                 eRemoveDupes, isAsynch);
         break;
       }
       ancestor = ancestor->GetParent();
+      nsCOMPtr<nsIDOMNode> ancestorNode = do_QueryInterface(ancestor);
+      if (!ancestorNode) {
+        break;
+      }
+      roleMapEntry = nsAccUtils::GetRoleMapEntry(ancestorNode);
     }
   }
 
