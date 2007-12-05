@@ -80,3 +80,7 @@ include ib-split/reftest.list
 
 # line-breaking
 include line-breaking/reftest.list
+
+# percent-overflow-sizing
+include percent-overflow-sizing/reftest.list
+
