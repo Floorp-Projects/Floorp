@@ -877,6 +877,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 #endif
 
+  // See comment below about oldSize. Use *only* for the
+  // abs-pos-containing-block-size-change optimization!
   nsSize oldSize = GetSize();
 
   // Should we create a space manager?
@@ -1131,7 +1133,15 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // can use our rect (the border edge) since if the border style
   // changed, the reflow would have been targeted at us so we'd satisfy
   // condition 1.
-  if (mAbsoluteContainer.HasAbsoluteFrames()) {
+  // XXX checking oldSize is bogus, there are various reasons we might have
+  // reflowed but our size might not have been changed to what we
+  // asked for (e.g., we ended up being pushed to a new page)
+  // When WillReflowAgainForClearance is true, we will reflow again without
+  // resetting the size. Because of this, we must not reflow our abs-pos children
+  // in that situation --- what we think is our "new size"
+  // will not be our real new size. This also happens to be more efficient.
+  if (mAbsoluteContainer.HasAbsoluteFrames() &&
+      !aReflowState.WillReflowAgainForClearance()) {
     nsRect childBounds;
     nsSize containingBlockSize
       = CalculateContainingBlockSizeForAbsolutes(aReflowState,
@@ -1866,13 +1876,15 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nscoord oldY = line->mBounds.y;
       nscoord oldYMost = line->mBounds.YMost();
 
+      NS_ASSERTION(!willReflowAgain || !line->IsBlock(),
+                   "Don't reflow blocks while willReflowAgain is true, reflow of block abs-pos children depends on this");
+
       // Reflow the dirty line. If it's an incremental reflow, then force
       // it to invalidate the dirty area if necessary
       rv = ReflowLine(aState, line, &keepGoing);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (aState.mReflowState.mDiscoveredClearance &&
-          *aState.mReflowState.mDiscoveredClearance) {
+      if (aState.mReflowState.WillReflowAgainForClearance()) {
         line->MarkDirty();
         willReflowAgain = PR_TRUE;
         // Note that once we've entered this state, every line that gets here
