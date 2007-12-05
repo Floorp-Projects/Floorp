@@ -320,6 +320,12 @@
       <implementation>
       <field name="_maxResults">0</field>
 
+      <field name="_bundle" readonly="true">
+        Cc["@mozilla.org/intl/stringbundle;1"].
+          getService(Ci.nsIStringBundleService).
+          createBundle("chrome://browser/locale/places/places.properties");
+      </field>
+
       <property name="maxResults" readonly="true">
         <getter>
           <![CDATA[
@@ -375,6 +381,25 @@
         ]]>
         </body>
       </method>
+
+      <method name="createResultLabel">
+        <parameter name="aTitle"/>
+        <parameter name="aUrl"/>
+        <parameter name="aType"/>
+        <body>
+          <![CDATA[
+            var label = aTitle + " " + aUrl;
+            // convert aType (ex: "ac-result-type-<aType>") to text to be spoke aloud
+            // by screen readers.  convert "tag" and "bookmark" to the localized versions,
+            // but don't do anything for "favicon" (the default)
+            if (aType != "favicon") {
+              label += " " + this._bundle.GetStringFromName(aType + "ResultLabel");
+            }
+            return label;
+          ]]>
+        </body>
+      </method>
+
     </implementation>
   </binding>
 </bindings>
