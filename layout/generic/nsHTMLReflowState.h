@@ -466,6 +466,10 @@ public:
 
   void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
 
+  PRBool WillReflowAgainForClearance() const {
+    return mDiscoveredClearance && *mDiscoveredClearance;
+  }
+  
 protected:
   void InitFrameType();
   void InitCBReflowState();

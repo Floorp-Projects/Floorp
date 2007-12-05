@@ -4947,7 +4947,7 @@ nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
     if (!aState->mAtStart) {
       if (aState->mLastCharWasPunctuation) {
         // We're not punctuation, so this is a punctuation boundary.
-        if (BreakWordBetweenPunctuation(aForward, aIsKeyboardSelect))
+        if (BreakWordBetweenPunctuation(aState, PR_FALSE, PR_FALSE, aIsKeyboardSelect))
           return PR_TRUE;
       } else {
         // This is not a punctuation boundary.
@@ -4957,7 +4957,9 @@ nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
     }
     // Otherwise skip to the other side and note that we encountered non-whitespace.
     *aOffset = 1 - startOffset;
-    aState->Update(PR_FALSE);
+    aState->Update(PR_FALSE, // not punctuation
+                   PR_FALSE  // not whitespace
+                   );
     if (!aWordSelectEatSpace)
       aState->SetSawBeforeType();
   }
@@ -4965,18 +4967,32 @@ nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
 }
 
 PRBool
-nsFrame::BreakWordBetweenPunctuation(PRBool aAfterPunct, PRBool aIsKeyboardSelect)
+nsFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
+                                     PRBool aPunctAfter, PRBool aWhitespaceAfter,
+                                     PRBool aIsKeyboardSelect)
 {
+  NS_ASSERTION(aPunctAfter != aState->mLastCharWasPunctuation,
+               "Call this only at punctuation boundaries");
+  if (aState->mLastCharWasWhitespace) {
+    // We always stop between whitespace and punctuation
+    return PR_TRUE;
+  }
   if (!nsContentUtils::GetBoolPref("layout.word_select.stop_at_punctuation")) {
-    // When this pref is false, we never stop at a punctuation boundary.
+    // When this pref is false, we never stop at a punctuation boundary unless
+    // it's after whitespace
     return PR_FALSE;
   }
   if (!aIsKeyboardSelect) {
     // mouse caret movement (e.g. word selection) always stops at every punctuation boundary
     return PR_TRUE;
   }
-  // keyboard caret movement stops after punctuation, not before it
-  return aAfterPunct;
+  if (!aState->mLastCharWasPunctuation) {
+    // keyboard caret movement stops after punctuation, not before it
+    return PR_FALSE;
+  }
+  // Stop only if we've seen some non-punctuation since the last whitespace;
+  // don't stop after punctuation that follows whitespace.
+  return aState->mSeenNonPunctuationSinceWhitespace;
 }
 
 NS_IMETHODIMP

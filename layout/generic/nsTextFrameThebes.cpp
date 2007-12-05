@@ -4723,23 +4723,23 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   
   do {
     PRBool isPunctuation = cIter.IsPunctuation();
-    if (aWordSelectEatSpace == cIter.IsWhitespace() && !aState->mSawBeforeType) {
+    PRBool isWhitespace = cIter.IsWhitespace();
+    if (aWordSelectEatSpace == isWhitespace && !aState->mSawBeforeType) {
       aState->SetSawBeforeType();
-      aState->Update(isPunctuation);
+      aState->Update(isPunctuation, isWhitespace);
       continue;
     }
     // See if we can break before the current cluster
     if (!aState->mAtStart) {
       PRBool canBreak = isPunctuation != aState->mLastCharWasPunctuation
-        ? BreakWordBetweenPunctuation(aForward ? aState->mLastCharWasPunctuation : isPunctuation,
-                                      aIsKeyboardSelect)
+        ? BreakWordBetweenPunctuation(aState, isPunctuation, isWhitespace, aIsKeyboardSelect)
         : cIter.HaveWordBreakBefore() && aState->mSawBeforeType;
       if (canBreak) {
         *aOffset = cIter.GetBeforeOffset() - mContentOffset;
         return PR_TRUE;
       }
     }
-    aState->Update(isPunctuation);
+    aState->Update(isPunctuation, isWhitespace);
   } while (cIter.NextCluster());
 
   *aOffset = cIter.GetAfterOffset() - mContentOffset;
@@ -5481,8 +5481,16 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
         textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth);
   }
   PRBool breakAfter = PR_FALSE;
-  if ((charsFit == length && transformedOffset + transformedLength == mTextRun->GetLength() &&
-       (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
+  if (charsFit == length && transformedOffset + transformedLength == mTextRun->GetLength() &&
+      (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK) &&
+      // check that we shouldn't be suppressing an initial break. Note that
+      // a text frame of collapsible space at the start of a line will have
+      // transformedLength 0 because the space will be trimmed away.
+      (transformedLength > 0 || lineLayout.LineIsBreakable())) {
+    // We placed all the text in the textrun and we have a break opportunity at
+    // the end of the textrun. We need to record it because the following
+    // content may not care about nsLineBreaker.
+
     // Note that because we didn't break, we can be sure that (thanks to the
     // code up above) textMetrics.mAdvanceWidth includes the width of any
     // trailing whitespace. So we need to subtract trimmableWidth here
