@@ -116,12 +116,12 @@ placesTransactionsService.prototype = {
     return new placesEditItemDescriptionTransactions(aItemId, aDescription);
   },
 
-  editBookmarkKeyword: function placesEditBkmkKwd(id, newKeyword) {
-    return new placesEditBookmarkKeywordTransactions(id, newKeyword);
+  editBookmarkKeyword: function placesEditBkmkKwd(aItemId, newKeyword) {
+    return new placesEditBookmarkKeywordTransactions(aItemId, newKeyword);
   },
 
-  editURIPostData: function placesEditURIPdata(aURI, aPostData) {
-    return new placesEditURIPostDataTransactions(aURI, aPostData);
+  editBookmarkPostData: function placesEditBookmarkPostdata(aItemId, aPostData) {
+    return new placesEditBookmarkPostDataTransactions(aItemId, aPostData);
   },
 
   editLivemarkSiteURI: function placesEditLvmkSiteURI(folderId, uri) {
@@ -206,7 +206,7 @@ placesBaseTransaction.prototype = {
   },
 
   // nsITransaction
-  redoTransaction: function PIT_redoTransaction() {
+  redoTransaction: function PBT_redoTransaction() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
@@ -640,23 +640,23 @@ placesEditBookmarkKeywordTransactions.prototype = {
   }
 };
 
-function placesEditURIPostDataTransactions(aURI, aPostData) {
-  this._uri = aURI;
+function placesEditBookmarkPostDataTransactions(aItemId, aPostData) {
+  this.id = aItemId;
   this._newPostData = aPostData;
   this._oldPostData = null;
   this.redoTransaction = this.doTransaction;
 }
 
-placesEditURIPostDataTransactions.prototype = {
+placesEditBookmarkPostDataTransactions.prototype = {
   __proto__: placesBaseTransaction.prototype,
 
   doTransaction: function PEUPDT_doTransaction() {
-    this._oldPostData = PlacesUtils.getPostDataForURI(this._uri);
-    PlacesUtils.setPostDataForURI(this._uri, this._newPostData);
+    this._oldPostData = PlacesUtils.getPostDataForBookmark(this._id);
+    PlacesUtils.setPostDataForBookmark(this.id, this._newPostData);
   },
 
   undoTransaction: function PEUPDT_undoTransaction() {
-    PlacesUtils.setPostDataForURI(this._uri, this._oldPostData);
+    PlacesUtils.setPostDataForBookmark(this.id, this._oldPostData);
   }
 };
 
