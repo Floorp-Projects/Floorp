@@ -829,6 +829,8 @@ pref("intl.locale.matchOS",                 false);
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
 
+pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Cambria Math, Standard Symbols L, DejaVu Sans");
+
 pref("images.dither", "auto");
 pref("security.directory",              "");
 
@@ -1768,6 +1770,9 @@ pref("font.size.fixed.zh-TW", 16);
 pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 15);
 pref("font.size.fixed.zh-HK", 16);
+
+// Apple's Symbol is Unicode so use it
+pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Cambria Math, Symbol, DejaVu Sans");
 
 pref("browser.urlbar.clickAtEndSelects", false);
 

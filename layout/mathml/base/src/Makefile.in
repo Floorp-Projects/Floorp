@@ -115,14 +115,10 @@ include $(topsrcdir)/config/rules.mk
 
 _PROPERTIES 	= \
 	mathfont.properties \
-	mathfontPUA.properties \
-	mathfontCMSY10.properties \
-	mathfontCMEX10.properties \
-	mathfontMTExtra.properties \
-	mathfontMath1.properties \
-	mathfontMath2.properties \
-	mathfontMath4.properties \
-	mathfontSymbol.properties \
+	mathfontUnicode.properties \
+	mathfontSTIXNonUnicode.properties \
+	mathfontSTIXSize1.properties \
+	mathfontStandardSymbolsL.properties \
 	$(NULL)
 
 libs:: $(_PROPERTIES)
