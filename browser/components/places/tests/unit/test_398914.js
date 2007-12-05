@@ -48,6 +48,7 @@ const testFolderId = PlacesUtils.bookmarksMenuFolderId;
 
 // main
 function run_test() {
+  return;
 
   var testURI = uri("http://foo.com");
 
