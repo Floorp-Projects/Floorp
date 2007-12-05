@@ -127,7 +127,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
-#define POST_DATA_ANNO NS_LITERAL_CSTRING("URIProperties/POSTData")
+#define POST_DATA_ANNO NS_LITERAL_CSTRING("bookmarkProperties/POSTData")
 #define LAST_CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 #define STATIC_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/staticTitle")
 
@@ -950,7 +950,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 
     // post data
     if (!postData.IsEmpty()) {
-      mAnnotationService->SetPageAnnotationString(frame.mPreviousLink, POST_DATA_ANNO,
+      mAnnotationService->SetItemAnnotationString(frame.mPreviousId, POST_DATA_ANNO,
                                                   postData, 0,
                                                   nsIAnnotationService::EXPIRE_NEVER);
     }
@@ -1855,12 +1855,12 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   NS_ENSURE_SUCCESS(rv, rv);
   
   PRBool hasPostData;
-  rv = mAnnotationService->PageHasAnnotation(pageURI, POST_DATA_ANNO,
+  rv = mAnnotationService->ItemHasAnnotation(itemId, POST_DATA_ANNO,
                                              &hasPostData);
   NS_ENSURE_SUCCESS(rv, rv);
   if (hasPostData) {
     nsAutoString postData;
-    rv = mAnnotationService->GetPageAnnotationString(pageURI, POST_DATA_ANNO,
+    rv = mAnnotationService->GetItemAnnotationString(itemId, POST_DATA_ANNO,
                                                      postData);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aOutput->Write(kPostDataAttribute, sizeof(kPostDataAttribute)-1, &dummy);
