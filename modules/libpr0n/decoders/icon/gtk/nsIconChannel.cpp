@@ -231,6 +231,9 @@ moz_gtk_icon_size(const char *name)
   if (strcmp(name, "toolbarsmall") == 0)
     return GTK_ICON_SIZE_SMALL_TOOLBAR;
 
+  if (strcmp(name, "dnd") == 0)
+    return GTK_ICON_SIZE_DND;
+
   if (strcmp(name, "dialog") == 0)
     return GTK_ICON_SIZE_DIALOG;
 
