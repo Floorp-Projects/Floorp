@@ -262,10 +262,10 @@ public:
   }
 
   PRBool TryLayout(ScrollReflowState* aState,
-                   const nsHTMLReflowMetrics& aKidMetrics,
+                   nsHTMLReflowMetrics* aKidMetrics,
                    PRBool aAssumeVScroll, PRBool aAssumeHScroll,
-                   PRBool aForce);
-  nsresult ReflowScrolledFrame(const ScrollReflowState& aState,
+                   PRBool aForce, nsresult* aResult);
+  nsresult ReflowScrolledFrame(ScrollReflowState* aState,
                                PRBool aAssumeHScroll,
                                PRBool aAssumeVScroll,
                                nsHTMLReflowMetrics* aMetrics,
