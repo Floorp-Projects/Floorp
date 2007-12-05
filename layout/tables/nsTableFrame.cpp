@@ -722,6 +722,8 @@ nsTableFrame::CreateAnonymousColFrames(PRInt32         aNumColsToAdd,
                                        PRBool          aDoAppend,
                                        nsIFrame*       aPrevColIn)
 {
+  NS_PRECONDITION(aColType != eColAnonymousCol, "Shouldn't happen");
+  
   // get the last col group frame
   nsTableColGroupFrame* colGroupFrame = nsnull;
   nsIFrame* childFrame = mColGroups.FirstChild();
@@ -740,11 +742,6 @@ nsTableFrame::CreateAnonymousColFrames(PRInt32         aNumColsToAdd,
   if (eColAnonymousCell == aColType) {
     if (eColGroupAnonymousCell != lastColGroupType) {
       newColGroupType = eColGroupAnonymousCell;
-    }
-  }
-  else if (eColAnonymousCol == aColType) {
-    if (eColGroupAnonymousCol != lastColGroupType) {
-      newColGroupType = eColGroupAnonymousCol;
     }
   }
   else {
@@ -781,6 +778,8 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
                                        nsIFrame**            aFirstNewFrame)
 {
   NS_PRECONDITION(aColGroupFrame, "null frame");
+  NS_PRECONDITION(aColType != eColAnonymousCol, "Shouldn't happen");
+
   *aFirstNewFrame = nsnull;
   nsIFrame* lastColFrame = nsnull;
   nsPresContext* presContext = PresContext();
@@ -803,20 +802,13 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     nsRefPtr<nsStyleContext> styleContext;
     nsStyleContext* parentStyleContext;
 
-    if ((aColType == eColAnonymousCol) && aPrevFrameIn) {
-      // a col due to a span in a previous col uses the style context of the col
-      styleContext = aPrevFrameIn->GetStyleContext();
-      // fix for bugzilla bug 54454: get the content from the prevFrame 
-      iContent = aPrevFrameIn->GetContent();
-    }
-    else {
-      // all other anonymous cols use a pseudo style context of the col group
-      iContent = aColGroupFrame->GetContent();
-      parentStyleContext = aColGroupFrame->GetStyleContext();
-      styleContext = shell->StyleSet()->ResolvePseudoStyleFor(iContent,
-                                                              nsCSSAnonBoxes::tableCol,
-                                                              parentStyleContext);
-    }
+    // all anonymous cols that we create here use a pseudo style context of the
+    // col group
+    iContent = aColGroupFrame->GetContent();
+    parentStyleContext = aColGroupFrame->GetStyleContext();
+    styleContext = shell->StyleSet()->ResolvePseudoStyleFor(iContent,
+                                                            nsCSSAnonBoxes::tableCol,
+                                                            parentStyleContext);
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
