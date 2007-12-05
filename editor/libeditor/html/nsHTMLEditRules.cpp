@@ -131,18 +131,20 @@ class nsBRNodeFunctor : public nsBoolDomIterFunctor
     }
 };
 
-class nsEmptyFunctor : public nsBoolDomIterFunctor
+class nsEmptyEditableFunctor : public nsBoolDomIterFunctor
 {
   public:
-    nsEmptyFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
+    nsEmptyEditableFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
     virtual PRBool operator()(nsIDOMNode* aNode)  
     {
-      if (nsHTMLEditUtils::IsListItem(aNode) || nsHTMLEditUtils::IsTableCellOrCaption(aNode))
+      if (mHTMLEditor->IsEditable(aNode) &&
+        (nsHTMLEditUtils::IsListItem(aNode) ||
+        nsHTMLEditUtils::IsTableCellOrCaption(aNode)))
       {
         PRBool bIsEmptyNode;
         nsresult res = mHTMLEditor->IsEmptyNode(aNode, &bIsEmptyNode, PR_FALSE, PR_FALSE);
         if (NS_FAILED(res)) return PR_FALSE;
-        if (bIsEmptyNode) 
+        if (bIsEmptyNode)
           return PR_TRUE;
       }
       return PR_FALSE;
@@ -7377,7 +7379,7 @@ nsHTMLEditRules::AdjustSpecialBreaks(PRBool aSafeToAskFrames)
   PRInt32 nodeCount,j;
   
   // gather list of empty nodes
-  nsEmptyFunctor functor(mHTMLEditor);
+  nsEmptyEditableFunctor functor(mHTMLEditor);
   nsDOMIterator iter;
   nsresult res = iter.Init(mDocChangeRange);
   if (NS_FAILED(res)) return res;
