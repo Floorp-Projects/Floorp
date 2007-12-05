@@ -145,7 +145,7 @@ nsNavBookmarks::Init()
       "SELECT a.id "
       "FROM moz_bookmarks a, moz_places h "
       "WHERE h.url = ?1 AND a.fk = h.id and a.type = ?2 "
-      "ORDER BY MAX(COALESCE(a.lastModified, 0), a.dateAdded) DESC"),
+      "ORDER BY MAX(COALESCE(a.lastModified, 0), a.dateAdded) DESC, a.id DESC"),
     getter_AddRefs(mDBFindURIBookmarks));
   NS_ENSURE_SUCCESS(rv, rv);
 
