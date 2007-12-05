@@ -657,6 +657,12 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       }
     }
     else {
+      // If the window is a popup window with a parent window we need to
+      // unhook it here before ordering it out. When you order out the child
+      // of a window it hides the parent window.
+      if (mWindowType == eWindowType_popup && nativeParentWindow)
+        [nativeParentWindow removeChildWindow:mWindow];
+
       [mWindow orderOut:nil];
       // Unless it's explicitly removed from NSApp's "window cache", a popup
       // window will keep receiving mouse-moved events even after it's been
@@ -667,14 +673,8 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // the NSApplication class (in header files generated using class-dump).
       // This workaround was "borrowed" from the Java Embedding Plugin (which
       // uses it for a different purpose).
-      if (mWindowType == eWindowType_popup) {
-        // remove the window as a child of its parent again. This will just
-        // do nothing if the popup was never added as a child.
-        if (nativeParentWindow)
-          [nativeParentWindow removeChildWindow:mWindow];
-
+      if (mWindowType == eWindowType_popup)
         [NSApp _removeWindowFromCache:mWindow];
-      }
 
       // it's very important to turn off mouse moved events when hiding a window, otherwise
       // the windows' tracking rects will interfere with each other. (bug 356528)
