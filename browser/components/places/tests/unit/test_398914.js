@@ -152,11 +152,14 @@ function run_test() {
   var bm2da = bmsvc.getItemDateAdded(bm2);
   var bm2lm = bmsvc.getItemLastModified(bm2);
   LOG("bm2 dateAdded: " + bm2da + ", lastModified: " + bm2lm);
-  do_check_true(bm1da <= bm2da);
-  do_check_true(bm1lm <= bm2lm);
+
+  do_check_eq(bm1da, bm2da);
+  do_check_eq(bm1lm, bm2lm);
+
 
   var ids = bmsvc.getBookmarkIdsForURI(testURI, {});
   do_check_eq(ids[0], bm2);
+  do_check_eq(ids[1], bm1);
 
   [url, postdata] = PlacesUtils.getURLAndPostDataForKeyword("foo");
   do_check_eq(testURI.spec, url);
