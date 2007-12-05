@@ -63,6 +63,9 @@ protected:
 
   nsNavHistory* mHistory;
 
+  // Number of partial expirations since last AddURI call.
+  PRUint32 mSequentialRuns;
+
   nsCOMPtr<nsITimer> mTimer;
   PRBool mTimerSet;
 
@@ -80,6 +83,7 @@ protected:
   // global statistics
   PRUint32 mAddCount;
   PRUint32 mExpiredItems;
+  PRUint32 mExpireRuns;
 
   nsresult DoPartialExpiration();
 
