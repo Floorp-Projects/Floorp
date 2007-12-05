@@ -57,6 +57,14 @@ LoginManagerStorage_legacy.prototype = {
         return this.__logService;
     },
 
+    __ioService: null, // IO service for string -> nsIURI conversion
+    get _ioService() {
+        if (!this.__ioService)
+            this.__ioService = Cc["@mozilla.org/network/io-service;1"].
+                               getService(Ci.nsIIOService);
+        return this.__ioService;
+    },
+
     __decoderRing : null,  // nsSecretDecoderRing service
     get _decoderRing() {
         if (!this.__decoderRing)
@@ -67,7 +75,7 @@ LoginManagerStorage_legacy.prototype = {
 
     _prefBranch : null,  // Preferences service
 
-    _signonsFile : null,  // nsIFile for "signons2.txt" (or whatever pref is)
+    _signonsFile : null,  // nsIFile for "signons3.txt" (or whatever pref is)
     _debug       : false, // mirrors signon.debug
 
 
@@ -439,42 +447,226 @@ LoginManagerStorage_legacy.prototype = {
      *
      */
     _getSignonsFile : function() {
-        var importFile = null;
+        var destFile = null, importFile = null;
 
         // Get the location of the user's profile.
         var DIR_SERVICE = new Components.Constructor(
                 "@mozilla.org/file/directory_service;1", "nsIProperties");
         var pathname = (new DIR_SERVICE()).get("ProfD", Ci.nsIFile).path;
 
+        // We've used a number of prefs over time due to compatibility issues.
+        // Use the filename specified in the newest pref, but import from
+        // older files if needed.
+        var prefs = ["SignonFileName3", "SignonFileName2", "SignonFileName"];
+        for (var i = 0; i < prefs.length; i++) {
+            var prefName = prefs[i];
 
-        // First try the default pref...
-        var filename = this._prefBranch.getCharPref("SignonFileName2");
+            var filename = this._prefBranch.getCharPref(prefName);
 
-        var file = Cc["@mozilla.org/file/local;1"].
-                   createInstance(Ci.nsILocalFile);
-        file.initWithPath(pathname);
-        file.append(filename);
+            this.log("Checking file " + filename + " (" + prefName + ")");
 
-        if (!file.exists()) {
-            this.log("SignonFilename2 file does not exist. file=" +
-                     filename + ", path=" + pathname);
+            var file = Cc["@mozilla.org/file/local;1"].
+                       createInstance(Ci.nsILocalFile);
+            file.initWithPath(pathname);
+            file.append(filename);
 
-            // Then try the old pref...
-            var oldname = this._prefBranch.getCharPref("SignonFileName");
+            // First loop through, save the preferred filename.
+            if (!destFile)
+                destFile = file;
+            else
+                importFile = file;
 
-            importFile = Cc["@mozilla.org/file/local;1"].
-                         createInstance(Ci.nsILocalFile);
-            importFile.initWithPath(pathname);
-            importFile.append(oldname);
-
-            if (!importFile.exists()) {
-                this.log("SignonFilename1 file does not exist. file=" +
-                        oldname + ", path=" + pathname);
-                importFile = null;
-            }
+            if (file.exists())
+                return [destFile, importFile];
         }
 
-        return [file, importFile];
+        // If we can't find any existing file, use the preferred file.
+        return [destFile, null];
+    },
+
+
+    /*
+     * _upgrade_entry_to_2E
+     *
+     * Updates the format of an entry from 2D to 2E. Returns an array of
+     * logins (1 or 2), as sometimes updating an entry requires creating an
+     * extra login.
+     */
+    _upgrade_entry_to_2E : function (aLogin) {
+        var upgradedLogins = [aLogin];
+
+        /*
+         * For logins stored from HTTP channels
+         *    - scheme needs to be derived and prepended
+         *    - blank or missing realm becomes same as hostname.
+         *
+         *  "site.com:80"  --> "http://site.com"
+         *  "site.com:443" --> "https://site.com"
+         *  "site.com:123" --> Who knows! (So add both)
+         *
+         * Note: For HTTP logins, the hostname never contained a username
+         *       or password. EG "user@site.com:80" shouldn't ever happen.
+         *
+         * Note: Proxy logins are also stored in this format.
+         */
+        if (aLogin.hostname.indexOf("://") == -1) {
+            var oldHost = aLogin.hostname;
+
+            // Parse out "host:port".
+            try {
+                // Small hack: Need a scheme for nsIURI, so just prepend http.
+                // We'll check for a port == -1 in case nsIURI ever starts
+                // noticing that "http://foo:80" is using the default port.
+                var uri = this._ioService.newURI("http://" + aLogin.hostname,
+                                                 null, null);
+                var host = uri.host;
+                var port = uri.port;
+            } catch (e) {
+                this.log("2E upgrade: Can't parse hostname " + aLogin.hostname);
+                return upgradedLogins;
+            }
+
+            if (port == 80 || port == -1)
+                aLogin.hostname = "http://" + host;
+            else if (port == 443)
+                aLogin.hostname = "https://" + host;
+            else {
+                // Not a standard port! Could be either http or https!
+                // (Or maybe it's a proxy login!) To try and avoid
+                // breaking logins, we'll add *both* http and https
+                // versions.
+                this.log("2E upgrade: Cloning login for " + aLogin.hostname);
+
+                aLogin.hostname = "http://" + host + ":" + port;
+
+                var extraLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                                 createInstance(Ci.nsILoginInfo);
+                extraLogin.init("https://" + host + ":" + port,
+                                null, aLogin.httpRealm,
+                                null, null, "", "");
+                // We don't have decrypted values, so clone the encrypted
+                // bits into the new entry.
+                extraLogin.wrappedJSObject.encryptedPassword = 
+                    aLogin.wrappedJSObject.encryptedPassword;
+                extraLogin.wrappedJSObject.encryptedUsername = 
+                    aLogin.wrappedJSObject.encryptedUsername;
+
+                if (extraLogin.httpRealm == "")
+                    extraLogin.httpRealm = extraLogin.hostname;
+                
+                upgradedLogins.push(extraLogin);
+            }
+
+            // If the server didn't send a realm (or it was blank), we
+            // previously didn't store anything.
+            if (aLogin.httpRealm == "")
+                aLogin.httpRealm = aLogin.hostname;
+
+            this.log("2E upgrade: " + oldHost + " ---> " + aLogin.hostname);
+
+            return upgradedLogins;
+        }
+
+
+        /*
+         * For form logins and non-HTTP channel logins (both were stored in
+         * the same format):
+         *
+         * Standardize URLs (.hostname and .actionURL)
+         *    - remove default port numbers, if specified
+         *      "http://site.com:80"  --> "http://site.com"
+         *    - remove usernames from URL (may move into aLogin.username)
+         *      "ftp://user@site.com" --> "ftp://site.com"
+         *
+         * Note: Passwords in the URL ("foo://user:pass@site.com") were not
+         *       stored in FF2, so no need to try to move the value into
+         *       aLogin.password.
+         */
+
+        // closures in cleanupURL
+        var ioService = this._ioService;
+        var log = this.log;
+
+        function cleanupURL(aURL) {
+            var newURL, username = null;
+
+            try {
+                var uri = ioService.newURI(aURL, null, null);
+
+                var scheme = uri.scheme;
+                newURL = scheme + "://" + uri.host;
+
+                // If the URL explicitly specified a port, only include it when
+                // it's not the default. (We never want "http://foo.com:80")
+                port = uri.port;
+                if (port != -1) {
+                    var handler = ioService.getProtocolHandler(scheme);
+                    if (port != handler.defaultPort)
+                        newURL += ":" + port;
+                }
+
+                // Could be a channel login with a username. 
+                if (scheme != "http" && scheme != "https" && uri.username)
+                    username = uri.username;
+                
+            } catch (e) {
+                log("Can't cleanup URL: " + aURL);
+                newURL = aURL;
+            }
+
+            if (newURL != aURL)
+                log("2E upgrade: " + aURL + " ---> " + newURL);
+
+            return [newURL, username];
+        }
+
+        var isFormLogin = (aLogin.formSubmitURL ||
+                           aLogin.usernameField ||
+                           aLogin.passwordField);
+
+        var [hostname, username] = cleanupURL(aLogin.hostname);
+        aLogin.hostname = hostname;
+
+        // If a non-HTTP URL contained a username, it wasn't stored in the
+        // encrypted username field (which contains an encrypted empty value)
+        // (Don't do this if it's a form login, though.)
+        if (username && !isFormLogin) {
+            var [encUsername, userCanceled] = this._encrypt(username);
+            if (!userCanceled)
+                aLogin.wrappedJSObject.encryptedUsername = encUsername;
+        }
+
+
+        if (aLogin.formSubmitURL) {
+            [hostname, username] = cleanupURL(aLogin.formSubmitURL);
+            aLogin.formSubmitURL = hostname;
+            // username, if any, ignored.
+        }
+
+
+        /*
+         * For logins stored from non-HTTP channels
+         *    - Set httpRealm so they don't look like form logins
+         *     "ftp://site.com" --> "ftp://site.com (ftp://site.com)"
+         *
+         * Tricky: Form logins and non-HTTP channel logins are stored in the
+         * same format, and we don't want to add a realm to a form login.
+         * Form logins have field names, so only update the realm if there are
+         * no field names set. [Any login with a http[s]:// hostname is always
+         * a form login, so explicitly ignore those just to be safe.]
+         *
+         * Bug 403790: mail entries (imap://, ldaps://, mailbox:// smtp:// have
+         * fieldnames set to "\=username=\" and "\=password=\" (non-escaping
+         * backslash). More work is needed to upgrade these properly.
+         */
+        const isHTTP = /^https?:\/\//;
+        if (!isHTTP.test(aLogin.hostname) && !isFormLogin) {
+            aLogin.httpRealm = aLogin.hostname;
+            aLogin.formSubmitURL = null;
+            this.log("2E upgrade: set empty realm to " + aLogin.httpRealm);
+        }
+
+        return upgradedLogins;
     },
 
 
@@ -483,7 +675,7 @@ LoginManagerStorage_legacy.prototype = {
      *
      */
     _readFile : function () {
-        var oldFormat = false;
+        var formatVersion;
 
         this.log("Reading passwords from " + this._signonsFile.path);
 
@@ -503,7 +695,8 @@ LoginManagerStorage_legacy.prototype = {
 
         const STATE = { HEADER : 0, REJECT : 1, REALM : 2,
                         USERFIELD : 3, USERVALUE : 4,
-                        PASSFIELD : 5, PASSVALUE : 6, ACTIONURL : 7 };
+                        PASSFIELD : 5, PASSVALUE : 6, ACTIONURL : 7,
+                        FILLER : 8 };
         var parseState = STATE.HEADER;
 
         var nsLoginInfo = new Components.Constructor(
@@ -517,8 +710,12 @@ LoginManagerStorage_legacy.prototype = {
                 // Check file header
                 case STATE.HEADER:
                     if (line.value == "#2c") {
-                        oldFormat = true;
-                    } else if (line.value != "#2d") {
+                        formatVersion = 0x2c;
+                    } else if (line.value == "#2d") {
+                        formatVersion = 0x2d;
+                    } else if (line.value == "#2e") {
+                        formatVersion = 0x2e;
+                    } else {
                         this.log("invalid file header (" + line.value + ")");
                         throw "invalid file header in signons file";
                         // We could disable later writing to file, so we
@@ -548,7 +745,6 @@ LoginManagerStorage_legacy.prototype = {
                     // appended if it's a HTTP-Auth login.
                     const realmFormat = /^(.+?)( \(.*\))?$/;
                     var matches = realmFormat.exec(hostrealm);
-
                     var hostname, httpRealm;
                     if (matches && matches.length == 3) {
                         hostname  = matches[1];
@@ -598,36 +794,69 @@ LoginManagerStorage_legacy.prototype = {
                 // Line is a password
                 case STATE.PASSVALUE:
                     entry.wrappedJSObject.encryptedPassword = line.value;
-                    if (oldFormat) {
-                        entry.formSubmitURL = "";
+
+                    // Version 2C doesn't have an ACTIONURL  line, so
+                    // process entry now.
+                    if (formatVersion < 0x2d)
                         processEntry = true;
-                        parseState = STATE.USERFIELD;
-                    } else {
-                        parseState++;
-                    }
+
+                    parseState++;
                     break;
 
                 // Line is the action URL
                 case STATE.ACTIONURL:
                     var formSubmitURL = line.value;
-                    if (!formSubmitURL && entry.httpRealm)
+                    if (!formSubmitURL && entry.httpRealm != null)
                         entry.formSubmitURL = null;
                     else
                         entry.formSubmitURL = formSubmitURL;
-                    processEntry = true;
-                    parseState = STATE.USERFIELD;
+
+                    // Version 2D doesn't have a FILLER line, so
+                    // process entry now.
+                    if (formatVersion < 0x2e)
+                        processEntry = true;
+
+                    parseState++;
                     break;
 
+                // Line is unused filler for future use
+                case STATE.FILLER:
+                    // Save the line's value (so we can dump it back out when
+                    // we save the file next time) for forwards compatability.
+                    entry.wrappedJSObject.filler = line.value;
+                    processEntry = true;
+
+                    parseState++;
+                    break;
             }
 
+            // If we've read all the lines for the current entry,
+            // process it and reset the parse state for the next entry.
             if (processEntry) {
-                if (!this._logins[hostname])
-                    this._logins[hostname] = [];
+                if (formatVersion < 0x2d) {
+                    // A blank, non-null value is handled as a wildcard.
+                    if (entry.httpRealm != null)
+                        entry.formSubmitURL = null;
+                    else
+                        entry.formSubmitURL = "";
+                }
 
-                this._logins[hostname].push(entry);
+                // Upgrading an entry to 2E can sometimes result in the need
+                // to create an extra login.
+                var entries = [entry];
+                if (formatVersion < 0x2e)
+                    entries = this._upgrade_entry_to_2E(entry);
+
+
+                for each (var e in entries) {
+                    if (!this._logins[e.hostname])
+                        this._logins[e.hostname] = [];
+                    this._logins[e.hostname].push(e);
+                }
 
                 entry = null;
                 processEntry = false;
+                parseState = STATE.USERFIELD;
             }
         } while (hasMore);
 
@@ -660,7 +889,7 @@ LoginManagerStorage_legacy.prototype = {
         outputStream.init(this._signonsFile, 0x02 | 0x08 | 0x20, 0600, null);
 
         // write file version header
-        writeLine("#2d");
+        writeLine("#2e");
 
         // write disabled logins list
         for (var hostname in this._disabledHosts) {
@@ -742,6 +971,10 @@ LoginManagerStorage_legacy.prototype = {
                     (login.passwordField ?  login.passwordField : ""));
                 writeLine(encPassword);
                 writeLine((login.formSubmitURL ? login.formSubmitURL : ""));
+                if (login.wrappedJSObject.filler)
+                    writeLine(login.wrappedJSObject.filler);
+                else
+                    writeLine("---");
 
                 lastRealm = login.httpRealm;
             }

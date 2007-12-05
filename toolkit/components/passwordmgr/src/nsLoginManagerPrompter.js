@@ -196,8 +196,7 @@ LoginManagerPrompter.prototype = {
             if (notifyBox)
                 this._removeSaveLoginNotification(notifyBox);
 
-            var hostname, httpRealm;
-            [hostname, httpRealm] = this._GetAuthKey(aChannel, aAuthInfo);
+            var [hostname, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
 
 
             // Looks for existing logins to prefill the prompt with.
@@ -635,92 +634,78 @@ LoginManagerPrompter.prototype = {
     },
 
 
-    // From /netwerk/base/public/nsNetUtil.h....
-    /**
-     * This function is a helper to get a protocol's default port if the
-     * URI does not specify a port explicitly. Returns -1 if protocol has no
-     * concept of ports or if there was an error getting the port.
+    /*
+     * _getFormattedHostname
+     *
+     * Returns the hostname to use in a nsILoginInfo object (for example,
+     * "http://example.com").
      */
-    _GetRealPort : function (aURI) {
-        var port = aURI.port;
-
-        if (port != -1)
-            return port; // explicitly specified
-
-        // Otherwise, we have to get the default port from the protocol handler
-        // Need the scheme first
+    _getFormattedHostname : function (aURI) {
         var scheme = aURI.scheme;
 
-        var ioService = Cc["@mozilla.org/network/io-service;1"].
-                        getService(Ci.nsIIOService);
+        var hostname = scheme + "://" + aURI.host;
 
-        var handler = ioService.getProtocolHandler(scheme);
-        port = handler.defaultPort;
+        // If the URI explicitly specified a port, only include it when
+        // it's not the default. (We never want "http://foo.com:80")
+        port = aURI.port;
+        if (port != -1) {
+            var ioService = Cc["@mozilla.org/network/io-service;1"].
+                            getService(Ci.nsIIOService);
+            var handler = ioService.getProtocolHandler(scheme);
+            if (port != handler.defaultPort)
+                hostname += ":" + port;
+        }
 
-        return port;
+        return hostname;
     },
 
 
-    // From: /embedding/components/windowwatcher/public/nsPromptUtils.h
-    // Args: nsIChannel, nsIAuthInformation, boolean, string, int
-    _GetAuthHostPort : function (aChannel, aAuthInfo) {
+    /*
+     * _getAuthTarget
+     *
+     * Returns the hostname and realm for which authentication is being
+     * requested, in the format expected to be used with nsILoginInfo.
+     */
+    _getAuthTarget : function (aChannel, aAuthInfo) {
+        var hostname, realm;
 
-        // Have to distinguish proxy auth and host auth here...
-        var flags = aAuthInfo.flags;
-
-        if (flags & (Ci.nsIAuthInformation.AUTH_PROXY)) {
-            // TODO: untested...
-            var proxied = aChannel.QueryInterface(Ci.nsIProxiedChannel);
-            if (!proxied)
+        // If our proxy is demanding authentication, don't use the
+        // channel's actual destination.
+        if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
+            this.log("getAuthTarget is for proxy auth");
+            if (!(aChannel instanceof Ci.nsIProxiedChannel))
                 throw "proxy auth needs nsIProxiedChannel";
 
-            var info = proxied.proxyInfo;
+            var info = aChannel.proxyInfo;
             if (!info)
                 throw "proxy auth needs nsIProxyInfo";
 
-            var idnhost = info.host;
-            var port    = info.port;
-
+            // Proxies don't have a scheme, but we'll use "moz-proxy://"
+            // so that it's more obvious what the login is for.
             var idnService = Cc["@mozilla.org/network/idn-service;1"].
                              getService(Ci.nsIIDNService);
-            host = idnService.convertUTF8toACE(idnhost);
-        } else {
-            var host = aChannel.URI.host;
-            var port = this._GetRealPort(aChannel.URI);
+            hostname = "moz-proxy://" +
+                        idnService.convertUTF8toACE(info.host) +
+                        ":" + info.port;
+            realm = aAuthInfo.realm;
+            if (!realm)
+                realm = hostname;
+
+            return [hostname, realm];
         }
 
-        return [host, port];
+        hostname = this._getFormattedHostname(aChannel.URI);
+
+        // If a HTTP WWW-Authenticate header specified a realm, that value
+        // will be available here. If it wasn't set or wasn't HTTP, we'll use
+        // the formatted hostname instead.
+        realm = aAuthInfo.realm;
+        if (!realm)
+            realm = hostname;
+
+        return [hostname, realm];
     },
 
-
-    // From: /embedding/components/windowwatcher/public/nsPromptUtils.h
-    // Args: nsIChannel, nsIAuthInformation
-    _GetAuthKey : function (aChannel, aAuthInfo) {
-        var key = "";
-        // HTTP does this differently from other protocols
-        var http = aChannel.QueryInterface(Ci.nsIHttpChannel);
-        if (!http) {
-            key = aChannel.URI.prePath;
-            this.log("_GetAuthKey: got http channel, key is: " + key);
-            return key;
-        }
-
-        var [host, port] = this._GetAuthHostPort(aChannel, aAuthInfo);
-
-        var realm = aAuthInfo.realm;
-
-        key += host;
-        key += ':';
-        key += port;
-
-        this.log("_GetAuthKey got host: " + key + " and realm: " + realm);
-
-        return [key, realm];
-    },
-
-
-    // From: /embedding/components/windowwatcher/public/nsPromptUtils.h
-    // Args: nsIAuthInformation, string, string
     /**
      * Given a username (possibly in DOMAIN\user form) and password, parses the
      * domain out of the username if necessary and sets domain, username and
