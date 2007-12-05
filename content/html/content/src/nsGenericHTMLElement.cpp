@@ -3782,7 +3782,7 @@ nsGenericHTMLElement::IsEditableRoot() const
   }
 
   if (document->HasFlag(NODE_IS_EDITABLE)) {
-    return this == document->GetRootContent();
+    return PR_FALSE;
   }
 
   if (GetContentEditableValue() != eTrue) {
