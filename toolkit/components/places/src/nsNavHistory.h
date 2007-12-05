@@ -203,7 +203,7 @@ public:
     { return mDateFormatter; }
 
   // returns true if history has been disabled
-  PRBool IsHistoryDisabled() { return mExpireDays == 0; }
+  PRBool IsHistoryDisabled() { return mExpireDaysMax == 0; }
 
   // get the statement for selecting a history row by URL
   mozIStorageStatement* DBGetURLPageInfo() { return mDBGetURLPageInfo; }
@@ -608,8 +608,9 @@ protected:
   static void AutoCompleteTimerCallback(nsITimer* aTimer, void* aClosure);
   void DoneSearching();
 
-  PRInt32 mExpireDays;
-  PRInt32 mExpireVisits;
+  PRInt32 mExpireDaysMin;
+  PRInt32 mExpireDaysMax;
+  PRInt32 mExpireSites;
 
   // in nsNavHistoryQuery.cpp
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
