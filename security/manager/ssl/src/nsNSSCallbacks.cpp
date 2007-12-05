@@ -24,6 +24,7 @@
  *   Brian Ryner <bryner@brianryner.com>
  *   Terry Hayes <thayes@netscape.com>
  *   Kai Engert <kengert@redhat.com>
+ *   Petr Kostka <petr.kostka@st.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +56,8 @@
 #include "nsProxiedService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsProtectedAuthThread.h"
+#include "nsITokenDialogs.h"
 #include "nsCRT.h"
 #include "nsNSSShutDown.h"
 #include "nsIUploadChannel.h"
@@ -630,6 +633,62 @@ void nsHTTPListener::send_done_signal()
   }
 }
 
+static char*
+ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
+{
+  char* protAuthRetVal = nsnull;
+
+  // Get protected auth dialogs
+  nsITokenDialogs* dialogs = 0;
+  nsresult nsrv = getNSSDialogs((void**)&dialogs, 
+                                NS_GET_IID(nsITokenDialogs), 
+                                NS_TOKENDIALOGS_CONTRACTID);
+  if (NS_SUCCEEDED(nsrv))
+  {
+    nsProtectedAuthThread* protectedAuthRunnable = new nsProtectedAuthThread();
+    if (protectedAuthRunnable)
+    {
+      NS_ADDREF(protectedAuthRunnable);
+
+      protectedAuthRunnable->SetParams(slot);
+      
+      nsCOMPtr<nsIProtectedAuthThread> runnable = do_QueryInterface(protectedAuthRunnable);
+      if (runnable)
+      {
+        nsrv = dialogs->DisplayProtectedAuth(ir, runnable);
+              
+        // We call join on the thread,
+        // so we can be sure that no simultaneous access will happen.
+        protectedAuthRunnable->Join();
+              
+        if (NS_SUCCEEDED(nsrv))
+        {
+          SECStatus rv = protectedAuthRunnable->GetResult();
+          switch (rv)
+          {
+              case SECSuccess:
+                  protAuthRetVal = PK11_PW_AUTHENTICATED;
+                  break;
+              case SECWouldBlock:
+                  protAuthRetVal = PK11_PW_RETRY;
+                  break;
+              default:
+                  protAuthRetVal = nsnull;
+                  break;
+              
+          }
+        }
+      }
+
+      NS_RELEASE(protectedAuthRunnable);
+    }
+
+    NS_RELEASE(dialogs);
+  }
+
+  return protAuthRetVal;
+}
+  
 char* PR_CALLBACK
 PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsNSSShutDownPreventionLock locker;
@@ -689,6 +748,9 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
                          NS_PROXY_SYNC,
                          getter_AddRefs(proxyPrompt));
   }
+
+  if (PK11_ProtectedAuthenticationPath(slot))
+    return ShowProtectedAuthPrompt(slot, ir);
 
   nsAutoString promptString;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
