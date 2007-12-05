@@ -70,9 +70,6 @@
       <preference id="browser.history_expire_days.mirror"
                   name="browser.history_expire_days.mirror"
                   type="int"/>
-      <preference id="browser.history_expire_days_min"
-                  name="browser.history_expire_days_min"
-                  type="int"/>
       <preference id="browser.formfill.enable"
                   name="browser.formfill.enable"
                   type="bool"/>
@@ -107,15 +104,13 @@
 
       <hbox align="center">
         <checkbox id="rememberHistoryDays"
-                  label="&rememberDaysBefore.label;"
-                  accesskey="&rememberDaysBefore.accesskey;"
+                  label="&rememberBefore.label;"
+                  accesskey="&rememberBefore.accesskey;"
                   oncommand="gPrivacyPane.onchangeHistoryDaysCheck();"
                   aaa:labelledby="rememberHistoryDays historyDays rememberAfter"/>
         <textbox id="historyDays" type="number" size="3"
-                 aaa:labelledby="rememberHistoryDays historyDays rememberAfter"
-                 onkeyup="gPrivacyPane.onkeyupHistoryDaysText();"
-                 preference="browser.history_expire_days_min"/>
-        <label id="rememberAfter"> &rememberDaysAfter.label;</label>
+                 aaa:labelledby="rememberHistoryDays historyDays rememberAfter"/>
+        <label id="rememberAfter"> &rememberAfter.label;</label>
       </hbox>
       <checkbox id="rememberForms"
                 label="&rememberForms.label;"
