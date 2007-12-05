@@ -1044,7 +1044,8 @@ SessionStoreService.prototype = {
     Array.forEach(aWindow.getBrowser().browsers, function(aBrowser, aIx) {
       try {
         var tabData = this._windows[aWindow.__SSi].tabs[aIx];
-        if (tabData.entries.length == 0)
+        if (tabData.entries.length == 0 ||
+            aBrowser.parentNode.__SS_data && aBrowser.parentNode.__SS_data._tab)
           return; // ignore incompletely initialized tabs
         
         var text = [];
