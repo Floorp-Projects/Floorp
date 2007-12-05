@@ -114,7 +114,6 @@
 #define PREF_BROWSER_IMPORT_DEFAULTS            "browser.places.importDefaults"
 #define PREF_BROWSER_CREATEDSMARTBOOKMARKS      "browser.places.createdSmartBookmarks"
 #define PREF_BROWSER_LEFTPANEFOLDERID           "browser.places.leftPaneFolderId"
-#define PREF_BROWSER_BOOKMARKS_OVERWRITE        "browser.bookmarks.overwrite"
       
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
@@ -513,23 +512,11 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
       rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_DEFAULTS, PR_TRUE);
       NS_ENSURE_SUCCESS(rv, rv);  
 
-      // if the places.sqlite gets deleted/corrupted the "Smart Bookmarks" 
-      // should only be forcibly re-created if we overwriting bookmarks
-      // (using bookmarks.html instead of bookmarks.postplaces.html)
-      // if we are using bookmarks.postplaces.html, the "Smart Bookmarks"
-      // should already exist and be in bookmarks.postplaces.html
-      PRBool overwriteBookmarks = PR_FALSE;
-      rv = prefs->GetBoolPref(PREF_BROWSER_BOOKMARKS_OVERWRITE, 
-                              &overwriteBookmarks);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (overwriteBookmarks) {
-        rv = prefs->SetBoolPref(PREF_BROWSER_CREATEDSMARTBOOKMARKS, PR_FALSE);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // if the places.sqlite gets deleted/corrupted the queries should be created again
+      rv = prefs->SetBoolPref(PREF_BROWSER_CREATEDSMARTBOOKMARKS, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);  
       
-      // we must create a new Organizer left pane folder root, 
-      // the old will not be valid anymore
+      // we must create a new Organizer left pane folder root, the old will not be valid anymore
       rv = prefs->SetIntPref(PREF_BROWSER_LEFTPANEFOLDERID, -1);
       NS_ENSURE_SUCCESS(rv, rv); 
     }
