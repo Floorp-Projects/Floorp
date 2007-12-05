@@ -912,7 +912,10 @@ function delayedStartup()
   }
 
   UpdateUrlbarSearchSplitterState();
-
+  
+  try {
+    placesMigrationTasks();
+  } catch(ex) {}
   initBookmarksToolbar();
   PlacesStarButton.init();
 
@@ -1661,11 +1664,8 @@ function getShortcutOrURI(aURL, aPostDataRef) {
   if (engine)
     return engine.getSubmission(param, null).uri.spec;
 
-  try {
-    var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(keyword);
-    shortcutURL = shortcutURI.spec;
-    aPostDataRef.value = PlacesUtils.getPostDataForURI(shortcutURI);
-  } catch(ex) {}
+  [shortcutURL, aPostDataRef.value] =
+    PlacesUtils.getURLAndPostDataForKeyword(keyword);
 
   if (!shortcutURL)
     return aURL;
