@@ -66,6 +66,7 @@ const DEFAULT_FAIL_MSG = "Live Bookmark feed failed to load.";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const LMANNO_EXPIRATION = "livemark/expiration";
+const LMANNO_LOADFAILED = "livemark/loadfailed";
 
 const PS_CONTRACTID = "@mozilla.org/preferences-service;1";
 const NH_CONTRACTID = "@mozilla.org/browser/nav-history-service;1";
@@ -109,6 +110,20 @@ function GetString(name)
 
   return null;
 }
+
+function MarkLivemarkLoadFailed(aFolderId) {
+  // if it failed before, too, nothing more to do
+  var ans = Cc[AS_CONTRACTID].getService(Ci.nsIAnnotationService);
+  if (ans.itemHasAnnotation(aFolderId, LMANNO_LOADFAILED))
+    return;
+
+  var failedMsg = GetString("bookmarksLivemarkFailed") || DEFAULT_FAIL_MSG;
+  var failedURI = gIoService.newURI("about:livemark-failed", null, null);
+  var bms = Cc[BMS_CONTRACTID].getService(Ci.nsINavBookmarksService);
+  bms.insertBookmark(aFolderId, failedURI, 0, failedMsg);
+  ans.setItemAnnotation(aFolderId, LMANNO_LOADFAILED, true, 0,
+                        ans.EXPIRE_NEVER);
+} 
 
 var gLivemarkService;
 function LivemarkService() {
@@ -212,7 +227,7 @@ LivemarkService.prototype = {
   function LS__updateLivemarkChildren(index, forceUpdate) {
     if (this._livemarks[index].locked)
       return;
-    
+
     var livemark = this._livemarks[index];
     livemark.locked = true;
     try {
@@ -243,7 +258,6 @@ LivemarkService.prototype = {
     }
     catch (ex) {
       // This livemark has never been loaded, since it has no expire time.
-      this.insertLivemarkLoadingItem(this._bms, livemark);
     }
 
     var loadgroup;
@@ -260,13 +274,17 @@ LivemarkService.prototype = {
       httpChannel.requestMethod = "GET";
       httpChannel.setRequestHeader("X-Moz", "livebookmarks", false);
 
-      this.insertLivemarkLoadingItem(this._bms, livemark);
-
       // Stream the result to the feed parser with this listener
       var listener = new LivemarkLoadListener(livemark);
+      this.insertLivemarkLoadingItem(this._bms, livemark);
       httpChannel.asyncOpen(listener, null);
     }
     catch (ex) {
+      if (livemark.loadingId != -1) {
+        this._bms.removeItem(livemark.loadingId);
+        livemark.loadingId = -1;
+      }
+      MarkLivemarkLoadFailed(livemark.folderId);      
       livemark.locked = false;
       LOG("exception: " + ex);
       throw ex;
@@ -460,10 +478,6 @@ function LivemarkLoadListener(livemark) {
 
 LivemarkLoadListener.prototype = {
 
-  get _failed() {
-    return GetString("bookmarksLivemarkFailed") || DEFAULT_FAIL_MSG;
-  },
-
   abort: function LLL_abort() {
     this._isAborted = true;
   },
@@ -497,14 +511,15 @@ LivemarkLoadListener.prototype = {
         this._bms.removeItem(this._livemark.loadingId);
         this._livemark.loadingId = -1;
       }
-
-      this.insertLivemarkFailedItem(this._livemark.folderId);
+      MarkLivemarkLoadFailed(this._livemark.folderId);
       this._ttl = gExpiration;
       throw Cr.NS_ERROR_FAILURE;
     }
 
     this.deleteLivemarkChildren(this._livemark.folderId);
     this._livemark.loadingId = -1;
+    // removeItemAnnotation can safely be used even when the anno isn't set
+    this._ans.removeItemAnnotation(this._livemark.folderId, LMANNO_LOADFAILED);
     var feed = result.doc.QueryInterface(Ci.nsIFeed);
     // Loop through and check for a link and a title
     // as the old code did
@@ -535,6 +550,11 @@ LivemarkLoadListener.prototype = {
    */
   handleResult: function LLL_handleResult(result) {
     if (this._isAborted) {
+      if (this._livemark.loadingId != -1) {
+        this._bms.removeItem(this._livemark.loadingId);
+        this._livemark.loadingId = -1;
+      }
+      MarkLivemarkLoadFailed(this._livemark.folderId);
       this._livemark.locked = false;
       return;
     }
@@ -550,11 +570,6 @@ LivemarkLoadListener.prototype = {
   },
   
   deleteLivemarkChildren: LivemarkService.prototype.deleteLivemarkChildren,
-
-  insertLivemarkFailedItem: function LS_insertLivemarkFailed(folderId) {
-    var failedURI = gIoService.newURI("about:livemark-failed", null, null);
-    var id = this._bms.insertBookmark(folderId, failedURI, 0, this._failed);
-  },
 
   insertLivemarkChild:
   function LS_insertLivemarkChild(folderId, uri, title) {
@@ -596,6 +611,12 @@ LivemarkLoadListener.prototype = {
       // Something went wrong; try to load again in a bit
       this._setResourceTTL(ERROR_EXPIRATION);
       this._isAborted = true;
+      if (this._livemark.loadingId != -1) {
+        this._bms.removeItem(this._livemark.loadingId);
+        this._livemark.loadingId = -1;
+      }
+      MarkLivemarkLoadFailed(this._livemark.folderId);
+      this._livemark.locked = false;
       return;
     }
     // Set an expiration on the livemark, for reloading the data
