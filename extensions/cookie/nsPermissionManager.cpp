@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Michiel van Leeuwen (mvl@exedo.nl)
+ *   Daniel Witte (dwitte@stanford.edu)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,10 +41,17 @@
 #include "nsPermission.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
+#include "nsCOMArray.h"
+#include "nsArrayEnumerator.h"
 #include "nsILineInputStream.h"
+#include "nsIIDNService.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsVoidArray.h"
 #include "prprf.h"
+#include "mozIStorageService.h"
+#include "mozIStorageStatement.h"
+#include "mozIStorageConnection.h"
+#include "mozStorageHelper.h"
+#include "mozStorageCID.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,135 +80,39 @@ ArenaStrDup(const char* str, PLArenaPool* aArena)
 nsHostEntry::nsHostEntry(const char* aHost)
 {
   mHost = ArenaStrDup(aHost, gHostArena);
-  mPermissions[0] = mPermissions[1] = 0;
 }
 
+// XXX this can fail on OOM
 nsHostEntry::nsHostEntry(const nsHostEntry& toCopy)
+ : mHost(toCopy.mHost)
+ , mPermissions(toCopy.mPermissions)
 {
-  // nsTHashtable shouldn't allow us to end up here, since we
-  // set ALLOW_MEMMOVE to true.
-  NS_NOTREACHED("nsHostEntry copy constructor is forbidden!");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsPermissionEnumerator : public nsISimpleEnumerator
-{
-  public:
-    NS_DECL_ISUPPORTS
- 
-    nsPermissionEnumerator(const nsTHashtable<nsHostEntry> *aHostTable,
-                           const char*   *aHostList,
-                           const PRUint32 aHostCount,
-                           const char*   *aTypeArray)
-      : mHostCount(aHostCount),
-        mHostIndex(0),
-        mTypeIndex(0),
-        mHostTable(aHostTable),
-        mHostList(aHostList),
-        mTypeArray(aTypeArray)
-    {
-      Prefetch();
-    }
-    
-    NS_IMETHOD HasMoreElements(PRBool *aResult) 
-    {
-      *aResult = (mNextPermission != nsnull);
-      return NS_OK;
-    }
-
-    NS_IMETHOD GetNext(nsISupports **aResult) 
-    {
-      *aResult = mNextPermission;
-      if (!mNextPermission)
-        return NS_ERROR_FAILURE;
-
-      NS_ADDREF(*aResult);
-      
-      Prefetch();
-
-      return NS_OK;
-    }
-
-    virtual ~nsPermissionEnumerator() 
-    {
-      delete[] mHostList;
-    }
-
-  protected:
-    void Prefetch();
-
-    PRInt32 mHostCount;
-    PRInt32 mHostIndex;
-    PRInt32 mTypeIndex;
-    
-    const nsTHashtable<nsHostEntry> *mHostTable;
-    const char*                     *mHostList;
-    nsCOMPtr<nsIPermission>          mNextPermission;
-    const char*                     *mTypeArray;
-};
-
-NS_IMPL_ISUPPORTS1(nsPermissionEnumerator, nsISimpleEnumerator)
-
-// Sets mNextPermission to a new nsIPermission on success,
-// to nsnull when no new permissions are present.
-void
-nsPermissionEnumerator::Prefetch() 
-{
-  // init to null, so we know when we've prefetched something
-  mNextPermission = nsnull;
-
-  // check we have something more to get
-  PRUint32 permission;
-  while (mHostIndex < mHostCount && !mNextPermission) {
-    // loop over the types to find it
-    nsHostEntry *entry = mHostTable->GetEntry(mHostList[mHostIndex]);
-    if (entry) {
-      // see if we've found it
-      permission = entry->GetPermission(mTypeIndex);
-      if (permission != nsIPermissionManager::UNKNOWN_ACTION && mTypeArray[mTypeIndex]) {
-        mNextPermission = new nsPermission(entry->GetHost(), 
-                                           nsDependentCString(mTypeArray[mTypeIndex]),
-                                           permission);
-      }
-    }
-
-    // increment mTypeIndex/mHostIndex as required
-    ++mTypeIndex;
-    if (mTypeIndex == NUMBER_OF_TYPES) {
-      mTypeIndex = 0;
-      ++mHostIndex;
-    }
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsPermissionManager Implementation
 
-static const char kPermissionsFileName[] = "hostperm.1";
-static const char kOldPermissionsFileName[] = "cookperm.txt";
-static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
+static const char kPermissionsFileName[] = "permissions.sqlite";
+#define HOSTS_SCHEMA_VERSION 1
 
-static const PRUint32 kLazyWriteTimeout = 2000; //msec
+static const char kHostpermFileName[] = "hostperm.1";
+
+static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
 
 NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference)
 
 nsPermissionManager::nsPermissionManager()
- : mHostCount(0),
-   mChangedList(PR_FALSE)
+ : mLargestID(0)
 {
 }
 
 nsPermissionManager::~nsPermissionManager()
 {
-  if (mWriteTimer)
-    mWriteTimer->Cancel();
-
-  RemoveTypeStrings();
   RemoveAllFromMemory();
 }
 
-nsresult nsPermissionManager::Init()
+nsresult
+nsPermissionManager::Init()
 {
   nsresult rv;
 
@@ -208,17 +120,10 @@ nsresult nsPermissionManager::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Clear the array of type strings
-  memset(mTypeArray, nsnull, sizeof(mTypeArray));
-
-  // Cache the permissions file
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mPermissionsFile));
-  if (NS_SUCCEEDED(rv)) {
-    mPermissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
-
-    // Ignore an error. That is not a problem. No cookperm.txt usually.
-    Read();
-  }
+  // ignore failure here, since it's non-fatal (we can run fine without
+  // persistent storage - e.g. if there's no profile).
+  // XXX should we tell the user about this?
+  InitDB();
 
   mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -227,6 +132,139 @@ nsresult nsPermissionManager::Init()
   }
 
   return NS_OK;
+}
+
+nsresult
+nsPermissionManager::InitDB()
+{
+  nsCOMPtr<nsIFile> permissionsFile;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
+  if (!permissionsFile)
+    return NS_ERROR_UNEXPECTED;
+
+  nsresult rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageService> storage = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+  if (!storage)
+    return NS_ERROR_UNEXPECTED;
+
+  // cache a connection to the hosts database
+  rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // delete and try again
+    rv = permissionsFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool tableExists = PR_FALSE;
+  mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"), &tableExists);
+  if (!tableExists) {
+      rv = CreateTable();
+      NS_ENSURE_SUCCESS(rv, rv);
+
+  } else {
+    // table already exists; check the schema version before reading
+    PRInt32 dbSchemaVersion;
+    rv = mDBConn->GetSchemaVersion(&dbSchemaVersion);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    switch (dbSchemaVersion) {
+    // upgrading.
+    // every time you increment the database schema, you need to implement
+    // the upgrading code from the previous version to the new one.
+    // fall through to current version
+
+    // current version.
+    case HOSTS_SCHEMA_VERSION:
+      break;
+
+    case 0:
+      {
+        NS_WARNING("couldn't get schema version!");
+          
+        // the table may be usable; someone might've just clobbered the schema
+        // version. we can treat this case like a downgrade using the codepath
+        // below, by verifying the columns we care about are all there. for now,
+        // re-set the schema version in the db, in case the checks succeed (if
+        // they don't, we're dropping the table anyway).
+        rv = mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      // fall through to downgrade check
+
+    // downgrading.
+    // if columns have been added to the table, we can still use the ones we
+    // understand safely. if columns have been deleted or altered, just
+    // blow away the table and start from scratch! if you change the way
+    // a column is interpreted, make sure you also change its name so this
+    // check will catch it.
+    default:
+      {
+        // check if all the expected columns exist
+        nsCOMPtr<mozIStorageStatement> stmt;
+        rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+          "SELECT host, type, permission FROM moz_hosts"), getter_AddRefs(stmt));
+        if (NS_SUCCEEDED(rv))
+          break;
+
+        // our columns aren't there - drop the table!
+        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_hosts"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = CreateTable();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      break;
+    }
+  }
+
+  // make operations on the table asynchronous, for performance
+  mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF"));
+
+  // cache frequently used statements (for insertion, deletion, and updating)
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO moz_hosts "
+    "(id, host, type, permission) "
+    "VALUES (?1, ?2, ?3, ?4)"), getter_AddRefs(mStmtInsert));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_hosts "
+    "WHERE id = ?1"), getter_AddRefs(mStmtDelete));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_hosts "
+    "SET permission = ?2 WHERE id = ?1"), getter_AddRefs(mStmtUpdate));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // check whether to import or just read in the db
+  if (tableExists)
+    return Read();
+
+  return Import();
+}
+
+// sets the schema version and creates the moz_hosts table.
+nsresult
+nsPermissionManager::CreateTable()
+{
+  // set the schema version, before creating the table
+  nsresult rv = mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
+  if (NS_FAILED(rv)) return rv;
+
+  // create the table
+  return mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE moz_hosts ("
+      " id INTEGER PRIMARY KEY"
+      ",host TEXT"
+      ",type TEXT"
+      ",permission INTEGER"
+    ")"));
 }
 
 NS_IMETHODIMP
@@ -241,29 +279,18 @@ nsPermissionManager::Add(nsIURI     *aURI,
 
   nsCAutoString host;
   rv = GetHost(aURI, host);
-  // no host doesn't mean an error. just return the default
-  if (NS_FAILED(rv)) return NS_OK;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 typeIndex = GetTypeIndex(aType, PR_TRUE);
-  if (typeIndex == -1 || aPermission >= NUMBER_OF_PERMISSIONS)
-    return NS_ERROR_FAILURE;
-
-  rv = AddInternal(host, typeIndex, aPermission, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-
-  mChangedList = PR_TRUE;
-  LazyWrite();
-
-  return NS_OK;
+  return AddInternal(host, nsDependentCString(aType), aPermission, 0, eNotify, eWriteToDB);
 }
 
-// This only adds a permission to memory (it doesn't save to disk), and doesn't
-// bounds check aTypeIndex or aPermission. These are up to the caller.
 nsresult
 nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
-                                 PRInt32               aTypeIndex,
+                                 const nsAFlatCString &aType,
                                  PRUint32              aPermission,
-                                 PRBool                aNotify)
+                                 PRInt64               aID,
+                                 NotifyOperationType   aNotifyOperation,
+                                 DBOperationType       aDBOperation)
 {
   if (!gHostArena) {
     gHostArena = new PLArenaPool;
@@ -271,6 +298,10 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
       return NS_ERROR_OUT_OF_MEMORY;    
     PL_INIT_ARENA_POOL(gHostArena, "PermissionHostArena", HOST_ARENA_SIZE);
   }
+
+  // look up the type index
+  PRInt32 typeIndex = GetTypeIndex(aType.get(), PR_TRUE);
+  NS_ENSURE_TRUE(typeIndex != -1, NS_ERROR_OUT_OF_MEMORY);
 
   // When an entry already exists, PutEntry will return that, instead
   // of adding a new one
@@ -281,46 +312,100 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (entry->PermissionsAreEmpty()) {
-    ++mHostCount;
+  // figure out the transaction type, and get any existing permission value
+  OperationType op;
+  PRInt32 index = entry->GetPermissionIndex(typeIndex);
+  PRUint32 oldPermission;
+  if (index == -1) {
+    if (aPermission == nsIPermissionManager::UNKNOWN_ACTION)
+      op = eOperationNone;
+    else
+      op = eOperationAdding;
+
+  } else {
+    oldPermission = entry->GetPermissions()[index].mPermission;
+
+    if (aPermission == oldPermission)
+      op = eOperationNone;
+    else if (aPermission == nsIPermissionManager::UNKNOWN_ACTION)
+      op = eOperationRemoving;
+    else
+      op = eOperationChanging;
   }
 
-  PRUint32 oldPermission = entry->GetPermission(aTypeIndex);
-  entry->SetPermission(aTypeIndex, aPermission);
+  // do the work for adding, deleting, or changing a permission:
+  // update the in-memory list, write to the db, and notify consumers.
+  PRInt64 id;
+  switch (op) {
+  case eOperationNone:
+    {
+      // nothing to do
+      return NS_OK;
+    }
 
-  // If no more types are present, remove the entry
-  // Can happen if this add() is resetting the permission to default.
-  if (entry->PermissionsAreEmpty()) {
-    mHostTable.RawRemoveEntry(entry);
-    --mHostCount;
-  }
+  case eOperationAdding:
+    {
+      if (aDBOperation == eWriteToDB) {
+        // we'll be writing to the database - generate a known unique id
+        id = ++mLargestID;
+      } else {
+        // we're reading from the database - use the id already assigned
+        id = aID;
+      }
 
-  // check whether we are deleting, adding, or changing a permission,
-  // so we can notify observers. this would be neater to do in Add(),
-  // but we need to do it here because we only know what type of notification
-  // to send (removal, addition, or change) after we've done the hash
-  // lookup.
-  if (aNotify) {
-    if (aPermission == nsIPermissionManager::UNKNOWN_ACTION) {
-      if (oldPermission != nsIPermissionManager::UNKNOWN_ACTION)
-        // deleting
+      entry->GetPermissions().AppendElement(nsPermissionEntry(typeIndex, aPermission, id));
+
+      if (aDBOperation == eWriteToDB)
+        UpdateDB(op, mStmtInsert, id, aHost, aType, aPermission);
+
+      if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(aHost,
-                                      mTypeArray[aTypeIndex],
-                                      oldPermission,
-                                      NS_LITERAL_STRING("deleted").get());
-    } else {
-      if (oldPermission == nsIPermissionManager::UNKNOWN_ACTION)
-        // adding
-        NotifyObserversWithPermission(aHost,
-                                      mTypeArray[aTypeIndex],
+                                      mTypeArray[typeIndex],
                                       aPermission,
                                       NS_LITERAL_STRING("added").get());
-      else
-        // changing
+      }
+
+      break;
+    }
+
+  case eOperationRemoving:
+    {
+      id = entry->GetPermissions()[index].mID;
+      entry->GetPermissions().RemoveElementAt(index);
+
+      // If no more types are present, remove the entry
+      if (entry->GetPermissions().IsEmpty())
+        mHostTable.RawRemoveEntry(entry);
+
+      if (aDBOperation == eWriteToDB)
+        UpdateDB(op, mStmtDelete, id, EmptyCString(), EmptyCString(), 0);
+
+      if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(aHost,
-                                      mTypeArray[aTypeIndex],
+                                      mTypeArray[typeIndex],
+                                      oldPermission,
+                                      NS_LITERAL_STRING("deleted").get());
+      }
+
+      break;
+    }
+
+  case eOperationChanging:
+    {
+      id = entry->GetPermissions()[index].mID;
+      entry->GetPermissions()[index].mPermission = aPermission;
+
+      if (aDBOperation == eWriteToDB)
+        UpdateDB(op, mStmtUpdate, id, EmptyCString(), EmptyCString(), aPermission);
+
+      if (aNotifyOperation == eNotify) {
+        NotifyObserversWithPermission(aHost,
+                                      mTypeArray[typeIndex],
                                       aPermission,
                                       NS_LITERAL_STRING("changed").get());
+      }
+
+      break;
     }
   }
 
@@ -332,42 +417,38 @@ nsPermissionManager::Remove(const nsACString &aHost,
                             const char       *aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
-  PRInt32 typeIndex = GetTypeIndex(aType, PR_FALSE);
-  // If type == -1, the type isn't known,
-  // so just return NS_OK
-  if (typeIndex == -1) return NS_OK;
 
-  nsHostEntry *entry = GetHostEntry(PromiseFlatCString(aHost), typeIndex, PR_FALSE);
-  if (entry) {
-    // cache the old permission before we delete it, to notify observers
-    PRUint32 oldPermission = entry->GetPermission(typeIndex);
-
-    entry->SetPermission(typeIndex, nsIPermissionManager::UNKNOWN_ACTION);
-
-    // If no more types are present, remove the entry
-    if (entry->PermissionsAreEmpty()) {
-      mHostTable.RawRemoveEntry(entry);
-      --mHostCount;
-    }
-    mChangedList = PR_TRUE;
-    LazyWrite();
-
-    // Notify Observers
-    if (oldPermission != nsIPermissionManager::UNKNOWN_ACTION)
-      NotifyObserversWithPermission(PromiseFlatCString(aHost),
-                                    aType,
-                                    oldPermission,
-                                    NS_LITERAL_STRING("deleted").get());
-  }
-  return NS_OK;
+  // AddInternal() handles removal, just let it do the work
+  return AddInternal(PromiseFlatCString(aHost),
+                     nsDependentCString(aType),
+                     nsIPermissionManager::UNKNOWN_ACTION,
+                     0,
+                     eNotify,
+                     eWriteToDB);
 }
 
 NS_IMETHODIMP
 nsPermissionManager::RemoveAll()
 {
-  RemoveAllFromMemory();
+  nsresult rv = RemoveAllInternal();
   NotifyObservers(nsnull, NS_LITERAL_STRING("cleared").get());
-  LazyWrite();
+  return rv;
+}
+
+nsresult
+nsPermissionManager::RemoveAllInternal()
+{
+  RemoveAllFromMemory();
+
+  // clear the db
+  if (mDBConn) {
+    nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_hosts"));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("db delete failed");
+      return rv;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -446,89 +527,64 @@ nsPermissionManager::GetHostEntry(const nsAFlatCString &aHost,
   return entry;
 }
 
-// A little helper function to add the hostname to the list.
-// The hostname comes from an arena, and so it won't go away
-PR_STATIC_CALLBACK(PLDHashOperator)
-AddHostToList(nsHostEntry *entry, void *arg)
+// helper struct for passing arguments into hash enumeration callback.
+struct nsGetEnumeratorData
 {
-  // arg is a double-ptr to an string entry in the hostList array,
-  // so we dereference it twice to assign the |const char*| string
-  // and once so we can increment the |const char**| array location
-  // ready for the next assignment.
-  const char*** elementPtr = static_cast<const char***>(arg);
-  **elementPtr = entry->GetKey();
-  ++(*elementPtr);
+  nsGetEnumeratorData(nsCOMArray<nsIPermission> *aArray, const nsTArray<nsCString> *aTypes)
+   : array(aArray)
+   , types(aTypes) {}
+
+  nsCOMArray<nsIPermission> *array;
+  const nsTArray<nsCString> *types;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+AddPermissionsToList(nsHostEntry *entry, void *arg)
+{
+  nsGetEnumeratorData *data = static_cast<nsGetEnumeratorData *>(arg);
+
+  for (PRUint32 i = 0; i < entry->GetPermissions().Length(); ++i) {
+    nsPermissionEntry &permEntry = entry->GetPermissions()[i];
+
+    nsPermission *perm = new nsPermission(entry->GetHost(), 
+                                          data->types->ElementAt(permEntry.mType),
+                                          permEntry.mPermission);
+
+    data->array->AppendObject(perm);
+  }
+
   return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
-  *aEnum = nsnull;
-  // get the host list, to hand to the enumerator.
-  // the enumerator takes ownership of the list.
+  // roll an nsCOMArray of all our permissions, then hand out an enumerator
+  nsCOMArray<nsIPermission> array;
+  nsGetEnumeratorData data(&array, &mTypeArray);
 
-  // create a new host list. enumerator takes ownership of it.
-  const char* *hostList = new const char*[mHostCount];
-  if (!hostList) return NS_ERROR_OUT_OF_MEMORY;
+  mHostTable.EnumerateEntries(AddPermissionsToList, &data);
 
-  // Make a copy of the pointer, so we can increase it without loosing
-  // the original pointer
-  const char** hostListCopy = hostList;
-  mHostTable.EnumerateEntries(AddHostToList, &hostListCopy);
-
-  nsPermissionEnumerator* permissionEnum = new nsPermissionEnumerator(&mHostTable, hostList, mHostCount, const_cast<const char**>(mTypeArray));
-  if (!permissionEnum) {
-    delete[] hostList;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(permissionEnum);
-  *aEnum = permissionEnum;
-  return NS_OK;
+  return NS_NewArrayEnumerator(aEnum, array);
 }
 
 NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  nsresult rv = NS_OK;
-
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
-    // The profile is about to change.
-
-    if (mWriteTimer) {
-      mWriteTimer->Cancel();
-      mWriteTimer = 0;
-    }
-    
-    // Dump current permission.  This will be done by calling 
-    // RemoveAllFromMemory which clears the memory-resident
-    // permission table.  The reason the permission file does not
-    // need to be updated is because the file was updated every time
-    // the memory-resident table changed (i.e., whenever a new permission
-    // was accepted).  If this condition ever changes, the permission
-    // file would need to be updated here.
-
+    // The profile is about to change,
+    // or is going away because the application is shutting down.
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
-      if (mPermissionsFile) {
-        mPermissionsFile->Remove(PR_FALSE);
-      }
+      // clear the permissions file
+      RemoveAllInternal();
     } else {
-      Write();
+      RemoveAllFromMemory();
     }
-    RemoveTypeStrings();
-    RemoveAllFromMemory();
   }  
   else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
-    // The profile has aleady changed.    
-    // Now just read them from the new profile location.
-
-    // Re-get the permissions file
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mPermissionsFile));
-    if (NS_SUCCEEDED(rv)) {
-      mPermissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
-      Read();
-    }
+    // the profile has already changed; init the db from the new location
+    InitDB();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -538,26 +594,15 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
 nsresult
 nsPermissionManager::RemoveAllFromMemory()
 {
+  mLargestID = 0;
+  mTypeArray.Clear();
   mHostTable.Clear();
-  mHostCount = 0;
   if (gHostArena) {
     PL_FinishArenaPool(gHostArena);
     delete gHostArena;
   }
   gHostArena = nsnull;
-  mChangedList = PR_TRUE;
   return NS_OK;
-}
-
-void
-nsPermissionManager::RemoveTypeStrings()
-{
-  for (PRUint32 i = NUMBER_OF_TYPES; i--; ) {
-    if (mTypeArray[i]) {
-      PL_strfree(mTypeArray[i]);
-      mTypeArray[i] = nsnull;
-    }
-  }
 }
 
 // Returns -1 on failure
@@ -565,42 +610,34 @@ PRInt32
 nsPermissionManager::GetTypeIndex(const char *aType,
                                   PRBool      aAdd)
 {
-  PRInt32 firstEmpty = -1;
-
-  for (PRUint32 i = 0; i < NUMBER_OF_TYPES; ++i) {
-    if (!mTypeArray[i]) {
-      if (firstEmpty == -1)
-        // Don't break, the type might be later in the array
-        firstEmpty = i;
-    } else if (!strcmp(aType, mTypeArray[i])) {
+  for (PRUint32 i = 0; i < mTypeArray.Length(); ++i)
+    if (mTypeArray[i].Equals(aType))
       return i;
-    }
+
+  if (!aAdd) {
+    // Not found, but that is ok - we were just looking.
+    return -1;
   }
 
-  if (!aAdd || firstEmpty == -1)
-    // Not found, but that is ok - we were just looking.
-    // Or, no free spots left - error.
-    return -1;
-
   // This type was not registered before.
-  // Can't use ToNewCString here, other strings in the array are allocated
-  // with PL_strdup too, and they all need to be freed the same way
-  mTypeArray[firstEmpty] = PL_strdup(aType);
-  if (!mTypeArray[firstEmpty])
+  // append it to the array, without copy-constructing the string
+  nsCString *elem = mTypeArray.AppendElement();
+  if (!elem)
     return -1;
 
-  return firstEmpty;
+  elem->Assign(aType);
+  return mTypeArray.Length() - 1;
 }
 
 // wrapper function for mangling (host,type,perm) triplet into an nsIPermission.
 void
 nsPermissionManager::NotifyObserversWithPermission(const nsACString &aHost,
-                                                   const char       *aType,
+                                                   const nsCString  &aType,
                                                    PRUint32          aPermission,
                                                    const PRUnichar  *aData)
 {
   nsCOMPtr<nsIPermission> permission =
-    new nsPermission(aHost, nsDependentCString(aType), aPermission);
+    new nsPermission(aHost, aType, aPermission);
   if (permission)
     NotifyObservers(permission, aData);
 }
@@ -621,64 +658,68 @@ nsPermissionManager::NotifyObservers(nsIPermission   *aPermission,
                                       aData);
 }
 
-static const char kTab = '\t';
-static const char kNew = '\n';
-static const char kTrue = 'T';
-static const char kFalse = 'F';
-static const char kFirstLetter = 'a';
-static const char kTypeSign = '%';
-
-static const char kMatchTypeHost[] = "host";
-
 nsresult
 nsPermissionManager::Read()
 {
   nsresult rv;
-  
-  PRBool readingOldFile = PR_FALSE;
-  nsCOMPtr<nsIInputStream> fileInputStream;
 
-  PRBool fileExists = PR_FALSE;
-  rv = mPermissionsFile->Exists(&fileExists);
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, host, type, permission "
+    "FROM moz_hosts"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (fileExists) {
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
-                                    mPermissionsFile);
-  } else {
-    // Try finding the old-style file
+  PRInt64 id;
+  nsCAutoString host, type;
+  PRUint32 permission;
+  PRBool hasResult;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    // explicitly set our entry id counter for use in AddInternal(),
+    // and keep track of the largest id so we know where to pick up.
+    id = stmt->AsInt64(0);
+    if (id > mLargestID)
+      mLargestID = id;
 
-    nsCOMPtr<nsIFile> oldPermissionsFile;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                getter_AddRefs(oldPermissionsFile));
+    rv = stmt->GetUTF8String(1, host);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = oldPermissionsFile->AppendNative(NS_LITERAL_CSTRING(kOldPermissionsFileName));
+    rv = stmt->GetUTF8String(2, type);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = oldPermissionsFile->Exists(&fileExists);
-    if (NS_SUCCEEDED(rv) && fileExists) {
-      rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
-                                      oldPermissionsFile);
-      readingOldFile = PR_TRUE;
-    } else {
-      rv = NS_ERROR_FILE_NOT_FOUND;
-    }
-    /* old format is:
-     * host \t number permission \t number permission ... \n
-     * if this format isn't respected we move onto the next line in the file.
-     * permission is T or F for accept or deny, otherwise a lowercase letter,
-     * with a=0, b=1 etc
-     */
+    permission = stmt->AsInt32(3);
+
+    rv = AddInternal(host, type, permission, id, eDontNotify, eNoDBOperation);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  // An error path is expected when cookperm.txt is not found either, or when
-  // creating the stream failed for another reason.
-  if (NS_FAILED(rv))
-    return rv;
 
+  return NS_OK;
+}
+
+static const char kMatchTypeHost[] = "host";
+
+nsresult
+nsPermissionManager::Import()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> permissionsFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(kHostpermFileName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInputStream> fileInputStream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
+                                  permissionsFile);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // start a transaction on the storage db, to optimize insertions.
+  // transaction will automically commit on completion
+  mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
   /* format is:
    * matchtype \t type \t permission \t host
@@ -687,8 +728,6 @@ nsPermissionManager::Read()
    * permission is an integer between 1 and 15
    */
 
-  mHasUnknownTypes = PR_FALSE;
-
   nsCAutoString buffer;
   PRBool isMore = PR_TRUE;
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
@@ -696,308 +735,48 @@ nsPermissionManager::Read()
       continue;
     }
 
-    if (!readingOldFile) {
-      nsCStringArray lineArray;
+    nsCStringArray lineArray;
+
+    // Split the line at tabs
+    lineArray.ParseString(buffer.get(), "\t");
+    
+    if (lineArray[0]->EqualsLiteral(kMatchTypeHost) &&
+        lineArray.Count() == 4) {
       
-      // Split the line at tabs
-      lineArray.ParseString(buffer.get(), "\t");
-      
-      if (lineArray[0]->EqualsLiteral(kMatchTypeHost) &&
-          lineArray.Count() == 4) {
-        
-        PRInt32 error;
-        PRUint32 permission = lineArray[2]->ToInteger(&error);
-        if (error)
-          continue;
-        PRInt32 type = GetTypeIndex(lineArray[1]->get(), PR_TRUE);
-        if (type < 0)
-          continue;
-
-        rv = AddInternal(*lineArray[3], type, permission, PR_FALSE);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        mHasUnknownTypes = PR_TRUE;
-      }
-
-    } else {
-      // Begin backwards compatibility code
-      nsASingleFragmentCString::char_iterator iter;
-      if (buffer.First() == kTypeSign) {
-        // A permission string line
-
-        PRInt32 stringIndex;
-
-        if ((stringIndex = buffer.FindChar(kTab) + 1) == 0) {
-          continue;      
-        }
-
-        PRUint32 type;
-        if (PR_sscanf(buffer.get() + 1, "%u", &type) != 1 || type >= NUMBER_OF_TYPES) {
-          continue;
-        }
-
-        // Older versions of mozilla can't parse the permission string lines.
-        // They will put them back like '%0 0F' instead of '%0 cookie'
-        // Ignore those lines, and revert to the defaults later.
-        // XXX This means that when the user has additional types besides the
-        // default, those will be lost after using an old version with the
-        // new profile, and then going back to a new version.
-        if (!strcmp(buffer.get() + stringIndex, "0F"))
-          continue;
-
-        NS_ASSERTION(GetTypeIndex(buffer.get() + stringIndex, PR_FALSE) == -1, "Corrupt cookperm.txt file");
-        mTypeArray[type] = PL_strdup(buffer.get() + stringIndex);
-
+      PRInt32 error;
+      PRUint32 permission = lineArray[2]->ToInteger(&error);
+      if (error)
         continue;
-      }
 
-      PRInt32 hostIndex, permissionIndex;
-      PRUint32 nextPermissionIndex = 0;
-      hostIndex = 0;
-
-      if ((permissionIndex = buffer.FindChar('\t', hostIndex) + 1) == 0)
-        continue;      
-
-      // ignore leading periods in host name
-      while (hostIndex < permissionIndex && (buffer.CharAt(hostIndex) == '.'))
-        ++hostIndex;
-
-      // nullstomp the trailing tab, to get a flat string
-      buffer.BeginWriting(iter);
-      *(iter += permissionIndex - 1) = char(0);
-      nsDependentCString host(buffer.get() + hostIndex, iter);
-
-      for (;;) {
-        if (nextPermissionIndex == buffer.Length()+1)
-          break;
-
-        if ((nextPermissionIndex = buffer.FindChar(kTab, permissionIndex) + 1) == 0)
-          nextPermissionIndex = buffer.Length()+1;
-
-        const nsASingleFragmentCString &permissionString = Substring(buffer, permissionIndex, nextPermissionIndex - permissionIndex - 1);
-        permissionIndex = nextPermissionIndex;
-
-        PRInt32 type = 0;
-        PRUint32 index = 0;
-
-        if (permissionString.IsEmpty())
-          continue; // empty permission entry -- should never happen
-
-        // Parse "2T"
-        char c = permissionString.CharAt(index);
-        while (index < permissionString.Length() && c >= '0' && c <= '9') {
-          type = 10*type + (c-'0');
-          c = permissionString.CharAt(++index);
-        }
-
-        if (type >= NUMBER_OF_TYPES)
-          continue; // invalid type for this permission entry
-
-        if (index >= permissionString.Length())
-          continue; // bad format for this permission entry
-
-        PRUint32 permission;
-        if (permissionString.CharAt(index) == kTrue)
-          permission = nsIPermissionManager::ALLOW_ACTION;
-        else if (permissionString.CharAt(index) == kFalse)
-          permission = nsIPermissionManager::DENY_ACTION;
-        else
-          permission = permissionString.CharAt(index) - kFirstLetter;
-
-        // |permission| is unsigned, so no need to check for < 0
-        if (permission >= NUMBER_OF_PERMISSIONS)
+      // hosts might be encoded in UTF8; switch them to ACE to be consistent
+      if (!IsASCII(*lineArray[3])) {
+        rv = NormalizeToACE(*lineArray[3]);
+        if (NS_FAILED(rv))
           continue;
-
-        // Ignore @@@ as host. Old style checkbox status
-        if (!permissionString.IsEmpty() && !host.EqualsLiteral("@@@@")) {
-          rv = AddInternal(host, type, permission, PR_FALSE);
-          if (NS_FAILED(rv)) return rv;
-        }
-
       }
-      // Old files, without the part that defines the types, assume 0 is cookie
-      // etc. So add those types, but make sure not to overwrite types from new
-      // style files.
-      GetTypeIndex("cookie", PR_TRUE);
-      GetTypeIndex("image", PR_TRUE);
-      GetTypeIndex("popup", PR_TRUE);
 
-      // End backwards compatibility code
+      rv = AddInternal(*lineArray[3], *lineArray[1], permission, 0, eDontNotify, eWriteToDB);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-
   }
 
-
-  mChangedList = PR_FALSE;
+  // we're done importing - delete the old file
+  permissionsFile->Remove(PR_FALSE);
 
   return NS_OK;
-}
-
-// A helper function that adds the pointer to the entry to the list.
-// This is not threadsafe, and only safe if the consumer does not 
-// modify the list. It is only used in Write() where we are sure
-// that nothing else changes the list while we are saving.
-PR_STATIC_CALLBACK(PLDHashOperator)
-AddEntryToList(nsHostEntry *entry, void *arg)
-{
-  // arg is a double-ptr to an entry in the hostList array,
-  // so we dereference it twice to assign the |nsHostEntry*|
-  // and once so we can increment the |nsHostEntry**| array location
-  // ready for the next assignment.
-  nsHostEntry*** elementPtr = static_cast<nsHostEntry***>(arg);
-  **elementPtr = entry;
-  ++(*elementPtr);
-  return PL_DHASH_NEXT;
-}
-
-void
-nsPermissionManager::LazyWrite()
-{
-  if (mWriteTimer) {
-    mWriteTimer->SetDelay(kLazyWriteTimeout);
-  } else {
-    mWriteTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (mWriteTimer) {
-      mWriteTimer->InitWithFuncCallback(DoLazyWrite, this, kLazyWriteTimeout,
-                                        nsITimer::TYPE_ONE_SHOT);
-    }
-  }
-}
-
-void
-nsPermissionManager::DoLazyWrite(nsITimer *aTimer,
-                                 void     *aClosure)
-{
-  nsPermissionManager *service = reinterpret_cast<nsPermissionManager*>(aClosure);
-  service->Write();
-  service->mWriteTimer = 0;
 }
 
 nsresult
-nsPermissionManager::Write()
+nsPermissionManager::NormalizeToACE(nsCString &aHost)
 {
-  nsresult rv;
-
-  if (!mChangedList) {
-    return NS_OK;
+  // lazily init the IDN service
+  if (!mIDNService) {
+    nsresult rv;
+    mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!mPermissionsFile) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Start with reading the old file, and remember any data that
-  // wasn't parsed, to put it right back into the new file.
-  // But only do that if we know there is unknown stuff
-  nsCStringArray rememberList;
-  if (mHasUnknownTypes) {
-    nsCOMPtr<nsIInputStream> fileInputStream;
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), mPermissionsFile);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        nsCAutoString buffer;
-        PRBool isMore = PR_TRUE;
-        while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
-          if (buffer.IsEmpty() || buffer.First() == '#' ||
-              StringBeginsWith(buffer, NS_LITERAL_CSTRING(kMatchTypeHost)))
-            continue;
-
-          rememberList.AppendCString(buffer);
-        }
-      }
-    }
-  }
-
-  nsCOMPtr<nsIOutputStream> fileOutputStream;
-  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream),
-                                       mPermissionsFile,
-                                       -1,
-                                       0600);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // get a buffered output stream 4096 bytes big, to optimize writes
-  nsCOMPtr<nsIOutputStream> bufferedOutputStream;
-  rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream), fileOutputStream, 4096);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  static const char kHeader[] = 
-    "# Permission File\n"
-    "# This is a generated file! Do not edit.\n\n";
-
-  bufferedOutputStream->Write(kHeader, sizeof(kHeader) - 1, &rv);
-
-  /* format is:
-   * matchtype \t type \t permission \t host \t
-   */
-
-  // Write out the list of strings we remembered from the old file
-  PRUint32 i;
-  if (mHasUnknownTypes) {
-    for (i = 0 ; i < rememberList.Count() ; ++i) {
-      bufferedOutputStream->Write(rememberList[i]->get(), 
-                                  rememberList[i]->Length(), &rv);
-      bufferedOutputStream->Write(&kNew, 1, &rv);
-    }
-  }
-
-  // create a new host list
-  nsHostEntry* *hostList = new nsHostEntry*[mHostCount];
-  if (!hostList) return NS_ERROR_OUT_OF_MEMORY;
-
-  // Make a copy of the pointer, so we can increase it without losing
-  // the original pointer
-  nsHostEntry** hostListCopy = hostList;
-  mHostTable.EnumerateEntries(AddEntryToList, &hostListCopy);
-
-  for (i = 0; i < mHostCount; ++i) {
-    nsHostEntry *entry = static_cast<nsHostEntry*>(hostList[i]);
-    NS_ASSERTION(entry, "corrupt permission list");
-
-    for (PRInt32 type = 0; type < NUMBER_OF_TYPES; ++type) {
-    
-      PRUint32 permission = entry->GetPermission(type);
-      if (permission && mTypeArray[type]) {
-        // Write matchtype
-        // only "host" is possible at the moment.
-        bufferedOutputStream->Write(kMatchTypeHost, sizeof(kMatchTypeHost) - 1, &rv);
-
-        // Write type
-        bufferedOutputStream->Write(&kTab, 1, &rv);
-        bufferedOutputStream->Write(mTypeArray[type], strlen(mTypeArray[type]), &rv);
-
-        // Write permission
-        bufferedOutputStream->Write(&kTab, 1, &rv);
-        char permissionString[5];
-        PRUint32 len = PR_snprintf(permissionString, sizeof(permissionString) - 1, "%u", permission);
-        bufferedOutputStream->Write(permissionString, len, &rv);
-
-        // Write host
-        bufferedOutputStream->Write(&kTab, 1, &rv);
-        bufferedOutputStream->Write(entry->GetHost().get(), entry->GetHost().Length(), &rv);
-        
-        // Write newline
-        bufferedOutputStream->Write(&kNew, 1, &rv);
-      }
-    }
-  }
-
-  delete[] hostList;
-
-  // All went ok. Maybe except for problems in Write(), but the stream detects
-  // that for us
-  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(bufferedOutputStream);
-  NS_ASSERTION(safeStream, "expected a safe output stream!");
-  if (safeStream) {
-    rv = safeStream->Finish();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("failed to save permissions file! possible dataloss");
-      return rv;
-    }
-  }
-
-  mChangedList = PR_FALSE;
-  return NS_OK;
+  return mIDNService->ConvertUTF8toACE(aHost, aHost);
 }
 
 nsresult
@@ -1006,18 +785,74 @@ nsPermissionManager::GetHost(nsIURI *aURI, nsACString &aResult)
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
   if (!innerURI) return NS_ERROR_FAILURE;
 
-  innerURI->GetHost(aResult);
+  nsresult rv = innerURI->GetAsciiHost(aResult);
 
-  // If there is no host, use the scheme, and prepend "scheme:",
-  // to make sure it isn't a host or something.
-  if (aResult.IsEmpty()) {
-    innerURI->GetScheme(aResult);
-    if (aResult.IsEmpty()) {
-      // still empty. Return error.
-      return NS_ERROR_FAILURE;
-    }
-    aResult = NS_LITERAL_CSTRING("scheme:") + aResult;
-  }
+  if (NS_FAILED(rv) || aResult.IsEmpty())
+    return NS_ERROR_UNEXPECTED;
 
   return NS_OK;
 }
+
+void
+nsPermissionManager::UpdateDB(OperationType         aOp,
+                              mozIStorageStatement* aStmt,
+                              PRInt64               aID,
+                              const nsACString     &aHost,
+                              const nsACString     &aType,
+                              PRUint32              aPermission)
+{
+  nsresult rv;
+
+  // no statement is ok - just means we don't have a profile
+  if (!aStmt)
+    return;
+
+  switch (aOp) {
+  case eOperationAdding:
+    {
+      rv = aStmt->BindInt64Parameter(0, aID);
+      if (NS_FAILED(rv)) break;
+
+      rv = aStmt->BindUTF8StringParameter(1, aHost);
+      if (NS_FAILED(rv)) break;
+      
+      rv = aStmt->BindUTF8StringParameter(2, aType);
+      if (NS_FAILED(rv)) break;
+
+      rv = aStmt->BindInt32Parameter(3, aPermission);
+      break;
+    }
+
+  case eOperationRemoving:
+    {
+      rv = aStmt->BindInt64Parameter(0, aID);
+      break;
+    }
+
+  case eOperationChanging:
+    {
+      rv = aStmt->BindInt64Parameter(0, aID);
+      if (NS_FAILED(rv)) break;
+
+      rv = aStmt->BindInt32Parameter(1, aPermission);
+      break;
+    }
+
+  default:
+    {
+      NS_NOTREACHED("need a valid operation in UpdateDB()!");
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    PRBool hasResult;
+    rv = aStmt->ExecuteStep(&hasResult);
+    aStmt->Reset();
+  }
+
+  if (NS_FAILED(rv))
+    NS_WARNING("db change failed!");
+}
+

@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  docshell \
 		  appshell \
+		  storage \
 		  $(NULL)
 
 CPPSRCS		= \
