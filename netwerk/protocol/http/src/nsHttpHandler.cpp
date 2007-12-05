@@ -694,7 +694,7 @@ nsHttpHandler::InitUserAgentComponents()
     }
 #elif defined (XP_MACOSX)
 #if defined(__ppc__)
-    mOscpu.AssignLiteral("PPC Mac OS X Mach-O");
+    mOscpu.AssignLiteral("PPC Mac OS X");
 #elif defined(__i386__)
     mOscpu.AssignLiteral("Intel Mac OS X");
 #endif
