@@ -341,7 +341,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
      * Note: If you pass a rect with 0,0 for an origin, the window ends up in a
      * weird place for some reason. This stops that without breaking popups.
      */
-    NSRect rect = geckoRectToCocoaRect(aRect);
+    NSRect rect = nsCocoaUtils::GeckoRectToCocoaRect(aRect);
     
     // compensate for difference between frame and content area height (e.g. title bar)
     NSRect newWindowFrame = [NSWindow frameRectForContentRect:rect styleMask:features];
@@ -748,7 +748,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
-  NSPoint coord = {aX, FlippedScreenY(aY)};
+  NSPoint coord = {aX, nsCocoaUtils::FlippedScreenY(aY)};
   [mWindow setFrameTopLeftPoint:coord];
 
   return NS_OK;
@@ -797,7 +797,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   if (!WindowSizeAllowed(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
-  nsRect windowBounds(cocoaRectToGeckoRect([mWindow frame]));
+  nsRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
   BOOL isMoving = (windowBounds.x != aX || windowBounds.y != aY);
   BOOL isResizing = (windowBounds.width != aWidth || windowBounds.height != aHeight);
 
@@ -805,7 +805,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
     return NS_OK;
 
   nsRect geckoRect(aX, aY, aWidth, aHeight);
-  NSRect newFrame = geckoRectToCocoaRect(geckoRect);
+  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(geckoRect);
 
   // We have to report the size event -first-, to make sure that content
   // repositions itself.  Cocoa views are anchored at the bottom left,
@@ -840,14 +840,14 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   if (!WindowSizeAllowed(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
-  nsRect windowBounds(cocoaRectToGeckoRect([mWindow frame]));
+  nsRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
   return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
 {
-  nsRect windowFrame = cocoaRectToGeckoRect([mWindow frame]);
+  nsRect windowFrame = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
   aRect.x = windowFrame.x;
   aRect.y = windowFrame.y;
   aRect.width = windowFrame.width;
@@ -1065,7 +1065,7 @@ NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
 
 NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  nsRect r = cocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
+  nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
   aNewRect.x = r.x + aOldRect.x;
   aNewRect.y = r.y + aOldRect.y;
@@ -1078,7 +1078,7 @@ NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNew
 
 NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  nsRect r = cocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
+  nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
   aNewRect.x = aOldRect.x - r.x;
   aNewRect.y = aOldRect.y - r.y;
@@ -1727,11 +1727,9 @@ void patternDraw(void* aInfo, CGContextRef aContext)
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
       if ((contentView = [self contentView]) != nil) {
-        // Since [anEvent window] might not be us, we can't use [anEvent
-        // locationInWindow].
-        windowLocation = [self mouseLocationOutsideOfEventStream];
-        target = [contentView hitTest:[contentView convertPoint:
-                                      windowLocation fromView:nil]];
+        // Since [anEvent window] might not be us, we can't use [anEvent locationInWindow].
+        windowLocation = nsCocoaUtils::EventLocationForWindow(anEvent, self);
+        target = [contentView hitTest:[contentView convertPoint:windowLocation fromView:nil]];
       }
       break;
     default:
