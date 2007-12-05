@@ -156,8 +156,6 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 - (BOOL)ensureCorrectMouseEventTarget:(NSEvent *)anEvent;
 
-+ (BOOL)isEvent:(NSEvent*)anEvent overWindow:(NSWindow*)aWindow;
-
 - (void)maybeInitContextMenuTracking;
 
 - (nsChildView *)getGeckoChild;
@@ -223,7 +221,7 @@ ConvertGeckoRectToMacRect(const nsRect& aRect, Rect& outMacRect)
 static inline void
 FlipCocoaScreenCoordinate (NSPoint &inPoint)
 {  
-  inPoint.y = FlippedScreenY(inPoint.y);
+  inPoint.y = nsCocoaUtils::FlippedScreenY(inPoint.y);
 }
   
 
@@ -2321,46 +2319,64 @@ NSEvent* gLastDragEvent = nil;
 #endif
 
 
-// If gRollupWidget exists, mouse events that happen over it should be rerouted
-// to it if they've been sent elsewhere. Returns NO if the event was rerouted,
-// YES otherwise. The return value indicates whether or not the event already had
-// the correct target.
-// This is needed when the user tries to navigate a context menu while keeping
-// the mouse-button down (left or right mouse button) -- the OS thinks this is
-// a dragging operation, so it sends events (mouseMoved and mouseUp) to the
+// Events should always go to the window that is directly under the point where
+// the event happened, with one exception. If there is no window under the event,
+// mouse moved events should go to the rollup widget if it exists. The return value
+// of this method indicates whether or not the event was supposed to be sent to this
+// view. If the return value is YES, then this view should continue to process the
+// event. If the return value is NO, the event was rerouted and this view should not
+// process the event.
+//
+// Rerouting may be needed when the user tries to navigate a context menu while
+// keeping the mouse-button down (left or right mouse button) -- the OS thinks this
+// is a dragging operation, so it sends events (mouseMoved and mouseUp) to the
 // window where the dragging operation started (the parent of the context
 // menu window).  It also works around a bizarre Apple bug - if (while a context
 // menu is open) you move the mouse over another app's window and then back over
 // the context menu, mouseMoved events will be sent to the window underneath the
 // context menu.
-- (BOOL)ensureCorrectMouseEventTarget:(NSEvent *)anEvent
+- (BOOL)ensureCorrectMouseEventTarget:(NSEvent*)anEvent
 {
-  if (!gRollupWidget)
+  NSWindow* windowUnderMouse = nsCocoaUtils::FindWindowUnderPoint(nsCocoaUtils::ScreenLocationForEvent(anEvent));
+
+  if (windowUnderMouse == mWindow)
     return YES;
 
-  // Return YES if we can't get a native window for the rollup widget or if our window
-  // is the popup window.
-  NSWindow *popupWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (!popupWindow || (mWindow == popupWindow))
-    return YES;
-
-  // Don't bother retargeting if the event is not over the popup window.
-  NSPoint windowEventLocation = [anEvent locationInWindow];
-  NSPoint screenEventLocation = [mWindow convertBaseToScreen:windowEventLocation];
-  if (!NSPointInRect(screenEventLocation, [popupWindow frame]))
-    return YES;
+  if (!windowUnderMouse) {
+    if ([anEvent type] == NSMouseMoved) {
+      if (gRollupWidget) {
+        // If a mouse moved event is not over any window and there is a rollup widget, the event
+        // should go to the rollup widget.
+        NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+        if (mWindow == rollupWindow)
+          return YES;
+        else
+          windowUnderMouse = rollupWindow;
+      }
+      else {
+        // If the event is not over a window and is a mouse moved event but there is no rollup widget,
+        // then we don't want it to get handled. Essentially, reroute it to nowhere.
+        return NO;
+      }
+    }
+    else {
+      // If the event is not over a window and is not a mouse moved event, then we don't
+      // want it to get handled. Essentially, reroute it to nowhere.
+      return NO;
+    }
+  }
 
   NSEventType type = [anEvent type];
-  NSPoint locationInPopupWindow = [popupWindow convertScreenToBase:screenEventLocation];
+  NSPoint newWindowLocation = nsCocoaUtils::EventLocationForWindow(anEvent, windowUnderMouse);
   NSEvent *newEvent = nil;
 
   // If anEvent is a mouseUp event, send an extra mouseDown event before
   // sending a mouseUp event -- this is needed to support selection by
   // dragging the mouse to a menu item and then releasing it.  We retain
-  // popupWindow in case it gets destroyed as a result of the extra
+  // the window in case it gets destroyed as a result of the extra
   // mouseDown (and release it below).
-  if ((type == NSLeftMouseUp) || (type == NSRightMouseUp)) {
-    [popupWindow retain];
+  if (type == NSLeftMouseUp || type == NSRightMouseUp) {
+    [windowUnderMouse retain];
     NSEventType extraEventType;
     switch (type) {
       case NSLeftMouseUp:
@@ -2374,41 +2390,32 @@ NSEvent* gLastDragEvent = nil;
         break;
     }
     newEvent = [NSEvent mouseEventWithType:extraEventType
-                                  location:locationInPopupWindow
+                                  location:newWindowLocation
                              modifierFlags:[anEvent modifierFlags]
                                  timestamp:GetCurrentEventTime()
-                              windowNumber:[popupWindow windowNumber]
+                              windowNumber:[windowUnderMouse windowNumber]
                                    context:nil
                                eventNumber:0
                                 clickCount:1
                                   pressure:0.0];
-    [popupWindow sendEvent:newEvent];
+    [windowUnderMouse sendEvent:newEvent];
   }
 
   newEvent = [NSEvent mouseEventWithType:type
-                                location:locationInPopupWindow
+                                location:newWindowLocation
                            modifierFlags:[anEvent modifierFlags]
                                timestamp:GetCurrentEventTime()
-                            windowNumber:[popupWindow windowNumber]
+                            windowNumber:[windowUnderMouse windowNumber]
                                  context:nil
                              eventNumber:0
                               clickCount:1
                                 pressure:0.0];
-  [popupWindow sendEvent:newEvent];
+  [windowUnderMouse sendEvent:newEvent];
 
-  if ((type == NSLeftMouseUp) || (type == NSRightMouseUp))
-    [popupWindow release];
+  if (type == NSLeftMouseUp || type == NSRightMouseUp)
+    [windowUnderMouse release];
 
   return NO;
-}
-
-
-+ (BOOL)isEvent:(NSEvent*)anEvent overWindow:(NSWindow*)aWindow
-{
-  if (!aWindow)
-    return NO;
-  NSPoint screenEventLocation = [[anEvent window] convertBaseToScreen:[anEvent locationInWindow]];
-  return NSPointInRect(screenEventLocation, [aWindow frame]);
 }
 
 
@@ -2486,7 +2493,7 @@ class nsNonNativeContextMenuEvent : public nsRunnable {
   PRBool retVal = PR_FALSE;
   if (gRollupWidget && gRollupListener) {
     NSWindow* currentPopup = static_cast<NSWindow*>(gRollupWidget->GetNativeData(NS_NATIVE_WINDOW));
-    if (![ChildView isEvent:theEvent overWindow:currentPopup]) {
+    if (!nsCocoaUtils::IsEventOverWindow(theEvent, currentPopup)) {
       PRBool rollup = PR_TRUE;
       if ([theEvent type] == NSScrollWheel) {
         gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
@@ -2514,7 +2521,7 @@ class nsNonNativeContextMenuEvent : public nsRunnable {
             nsCOMPtr<nsIWidget> widget(do_QueryInterface(genericWidget));
             if (widget) {
               NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
-              if ([ChildView isEvent:theEvent overWindow:currWindow]) {
+              if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
                 rollup = PR_FALSE;
                 break;
               }
@@ -2646,7 +2653,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 - (void)mouseMoved:(NSEvent*)theEvent
 {
-  NSPoint windowEventLocation = [theEvent locationInWindow];
+  NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(theEvent, mWindow);
   NSPoint screenEventLocation = [mWindow convertBaseToScreen:windowEventLocation];
   NSPoint viewEventLocation = [self convertPoint:windowEventLocation fromView:nil];
 
@@ -2659,8 +2666,9 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   BOOL mouseEventIsOverRollupWidget = NO;
   if (gRollupWidget) {
     NSWindow *popupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-    mouseEventIsOverRollupWidget = [ChildView isEvent:theEvent overWindow:popupWindow];
+    mouseEventIsOverRollupWidget = nsCocoaUtils::IsEventOverWindow(theEvent, popupWindow);
   }
+
   if (![NSApp isActive] && !mouseEventIsOverRollupWidget) {
     if (sLastViewEntered) {
       nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
@@ -2673,67 +2681,12 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
-  // If this is a popup window and the event is not over it, then we may want
-  // to send the event to another window.  (Even with bmo bug 378645 fixed
-  // ("popup windows still receive native mouse move events after being
-  // closed"), the following is still needed to deal with mouseMoved events
-  // that happen over other objects while a context menu is up (and has the
-  // focus).)
-  if ([mWindow level] == NSPopUpMenuWindowLevel &&
-      !NSPointInRect(screenEventLocation, [mWindow frame])) {
-    NSWindow* otherWindowForEvent = nil;
-    
-    // look for another popup window that is under the mouse
-    NSArray* appWindows = [NSApp windows];
-    unsigned int appWindowsCount = [appWindows count];
-    for (unsigned int i = 0; i < appWindowsCount; i++) {
-      NSWindow* currentWindow = [appWindows objectAtIndex:i];
-      if (currentWindow != mWindow &&
-          [currentWindow level] == NSPopUpMenuWindowLevel &&
-          [currentWindow isVisible] &&
-          NSPointInRect(screenEventLocation, [currentWindow frame])) {
-        // found another popup window to send the event to
-        otherWindowForEvent = currentWindow;
-        break;
-      }
-    }
-    
-    if (!otherWindowForEvent) {
-      // If the event is outside this active popup window but not over another popup window,
-      // see if the event is over the main window and route it there if so.
-      NSWindow* mainWindow = [NSApp mainWindow];
-      if (NSPointInRect(screenEventLocation, [mainWindow frame])) {
-        otherWindowForEvent = mainWindow;
-      }
-    }
-    
-    if (otherWindowForEvent) {
-      NSPoint locationInOtherWindow = [otherWindowForEvent convertScreenToBase:screenEventLocation];
-      NSView* targetView = [[otherWindowForEvent contentView] hitTest:locationInOtherWindow];
-      if (targetView) {
-        NSEvent* newEvent = [NSEvent mouseEventWithType:NSMouseMoved
-                                               location:locationInOtherWindow
-                                          modifierFlags:[theEvent modifierFlags]
-                                              timestamp:[theEvent timestamp]
-                                           windowNumber:[otherWindowForEvent windowNumber]
-                                                context:nil
-                                            eventNumber:[theEvent eventNumber]
-                                             clickCount:0
-                                               pressure:0.0];
-        [targetView mouseMoved:newEvent];
-      }
-      return;
-    }
-    // at this point we mimic GTK2 by sending the event to our popup window if we
-    // couldn't find an alternative
-  }
-
   NSView* view = [[mWindow contentView] hitTest:windowEventLocation];
   if (view) {
     // we shouldn't handle this if the hit view is not us
     if (view != (NSView*)self) {
       [view mouseMoved:theEvent];
-      return;      
+      return;
     }
   }
   else {
