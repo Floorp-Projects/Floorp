@@ -830,7 +830,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   wrapperObj = ::JS_NewObject(cx, XPCNativeWrapper::GetJSClass(), nsnull,
                               wrappedNative->GetScope()->GetGlobalJSObject());
 
-  if (!wrapperObj) {
+  if (!wrapperObj || !::JS_SetPrototype(cx, wrapperObj, nsnull)) {
     // JS_NewObject already threw (or reported OOM).
     return JS_FALSE;
   }
