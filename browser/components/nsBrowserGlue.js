@@ -359,6 +359,20 @@ BrowserGlue.prototype = {
 
     var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
 
+    var overwriteBookmarks = 
+      prefBranch.getBoolPref("browser.bookmarks.overwrite");
+
+    // if we don't plan on overwriting bookmarks.html, that means we'll
+    // be writing to bookmarks.postplaces.html and we could be importing
+    // because places.sqlite is corrupt or non-existant.
+    // in this scenario, attempt to use the postplaces first.
+    if (!overwriteBookmarks) {
+      bookmarksFile.leafName = "bookmarks.postplaces.html";
+      // note, it may not exist, and then we should fall back to bookmarks.html
+      if (!bookmarksFile.exists())
+        bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
+    }
+
     if (bookmarksFile.exists()) {
       // import the file
       try {
@@ -372,7 +386,7 @@ BrowserGlue.prototype = {
       }
 
       // only back up pre-places bookmarks.html if we plan on overwriting it
-      if (prefBranch.getBoolPref("browser.bookmarks.overwrite")) {
+      if (overwriteBookmarks) {
         // backup pre-places bookmarks.html
         // XXXtodo remove this before betas, after import/export is solid
         var profDir = dirService.get("ProfD", Ci.nsILocalFile);
