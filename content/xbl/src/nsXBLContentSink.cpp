@@ -676,11 +676,9 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
   newHandler = new nsXBLPrototypeHandler(event, phase, action, command,
                                          keycode, charcode, modifiers, button,
                                          clickcount, group, preventdefault,
-                                         allowuntrusted, mBinding);
+                                         allowuntrusted, mBinding, aLineNumber);
 
   if (newHandler) {
-    newHandler->SetLineNumber(aLineNumber);
-    
     // Add this handler to our chain of handlers.
     if (mHandler) {
       // Already have a chain. Just append to the end.
