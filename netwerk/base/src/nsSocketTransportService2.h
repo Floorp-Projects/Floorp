@@ -178,7 +178,7 @@ private:
     // misc (any thread)
     //-------------------------------------------------------------------------
 
-    nsIThread  *mThread;
+    nsCOMPtr<nsIThread> mThread;    // protected by mLock
     PRFileDesc *mThreadEvent;
                             // protected by mLock.  mThreadEvent may change
                             // if the old pollable event is broken.  only
@@ -189,6 +189,9 @@ private:
                             // whenever they access mThreadEvent.
     PRBool      mAutodialEnabled;
                             // pref to control autodial code
+
+    // Returns mThread, protecting the get-and-addref with mLock
+    already_AddRefed<nsIThread> GetThreadSafely();
 
     //-------------------------------------------------------------------------
     // initialization and shutdown (any thread)
