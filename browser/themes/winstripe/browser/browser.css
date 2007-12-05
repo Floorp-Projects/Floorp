@@ -872,6 +872,15 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   visibility: collapse;
 }
 
+#wrapper-urlbar-container #urlbar {
+  -moz-user-input: disabled;
+  cursor: -moz-grab;
+}
+
+#wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
+  display: none;
+}
+
 /* Keep the URL bar LTR */
 
 #urlbar .autocomplete-textbox-container {
