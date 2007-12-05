@@ -864,6 +864,15 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   background: url("chrome://browser/skin/Secure-background.gif") #FFFED8 repeat-x;
 }
 
+#wrapper-urlbar-container #urlbar {
+  -moz-user-input: disabled;
+  cursor: -moz-grab;
+}
+
+#wrapper-urlbar-container #urlbar > .autocomplete-history-dropmarker {
+  display: none;
+}
+
 /* Keep the URL bar LTR */
 
 #PopupAutoCompleteRichResult {
