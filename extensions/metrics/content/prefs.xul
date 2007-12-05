@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://metrics/skin/prefs.css" type="text/css"?>
+
+<!DOCTYPE prefwindow SYSTEM "chrome://metrics/locale/prefs.dtd">
+
+<prefwindow
+    id="metrics-options-window"
+    type="prefwindow"
+    windowtype="Metrics:Preferences"
+    title="&prefs.title;"
+    width="400" height="160"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <prefpane id="metricsPrefsPanel" class="prefs" flex="1">
+    <preferences id="metrics-prefs" label="Test Label">
+      <preference id="metrics-pref-upload-enable" name="extensions.mozilla.metrics.upload.enable" type="bool" instantApply="tue"  />
+    </preferences>
+    <vbox flex="1">
+      <description class="msg">&prefs.label.msg;</description>
+      <checkbox id="metrics-enable-checkbox" checked="true" label="&prefs.checkbox.enable;" preference="metrics-pref-upload-enable" 
+                persist="checked" class="cb" />
+    </vbox>
+  </prefpane>
+
+  <hbox flex="1" pack="end">
+    <button label="&prefs.button.close;" oncommand="close();" />
+  </hbox>
+
+</prefwindow>

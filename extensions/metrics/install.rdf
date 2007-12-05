@@ -21,5 +21,14 @@
     <em:name>Metrics Collector</em:name>
     <em:description>Collects anonymous usage statistics from the browser</em:description>
     <em:creator>mozilla.org</em:creator>
+    <em:optionsURL>chrome://metrics/content/prefs.xul</em:optionsURL>
+
+    <em:file>
+      <Description about="urn:mozilla:extension:file:metrics.jar">
+        <em:package>content/</em:package>
+        <em:skin>skin/</em:skin>
+        <em:locale>locale/en-US/</em:locale>
+      </Description>
+    </em:file>
   </Description>
 </RDF>
