@@ -42,6 +42,7 @@
 #include "nsIAccessibleDocument.h"
 #include "nsAccessibleWrap.h"
 #include "nsAccessibilityUtils.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsGUIEvent.h"
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsILink.h"
@@ -109,7 +110,13 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsHyperTextAccessibleWrap)
 NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 { 
   if (mActionContent && mActionContent->IsFocusable()) {
-    mActionContent->SetFocus(nsCOMPtr<nsPresContext>(GetPresContext()));
+    nsCOMPtr<nsIDOMNSHTMLElement> htmlElement(do_QueryInterface(mActionContent));
+    if (htmlElement) {
+      // HTML Elements also set the caret position
+      // in order to affect tabbing order
+      return htmlElement->Focus();
+    }
+    NS_WARNING("Has action content that is not an HTML element");
   }
   
   return NS_OK;
