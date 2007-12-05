@@ -56,10 +56,12 @@
 #include "nsIEditor.h"
 #include "nsIFontMetrics.h"
 #include "nsIFrame.h"
+#include "nsFrameSelection.h"
 #include "nsIScrollableFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISelection2.h"
+#include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"
 #include "nsTextFragment.h"
 #include "gfxSkipChars.h"
@@ -322,11 +324,17 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
                                      nsIAccessible **aStartAcc,
                                      nsIAccessible **aEndAcc)
 {
-  if (aStartOffset < 0) {
+  if (aStartOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
     GetCharacterCount(&aStartOffset);
   }
-  if (aEndOffset < 0) {
+  if (aStartOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+    GetCaretOffset(&aStartOffset);
+  }
+  if (aEndOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
     GetCharacterCount(&aEndOffset);
+  }
+  if (aEndOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+    GetCaretOffset(&aEndOffset);
   }
 
   PRInt32 startOffset = aStartOffset;
@@ -842,14 +850,35 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     return NS_ERROR_FAILURE;
   }
 
-  PRInt32 startOffset = aOffset;
-  PRInt32 endOffset = aOffset;
-
-  if (aBoundaryType == BOUNDARY_LINE_END) {
-    // Avoid getting the previous line
-    ++ startOffset;
-    ++ endOffset;
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
+    GetCharacterCount(&aOffset);
   }
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+    GetCaretOffset(&aOffset);
+    if (aOffset > 0 && (aBoundaryType == BOUNDARY_LINE_START ||
+                        aBoundaryType == BOUNDARY_LINE_END)) {
+      // It is the same character offset when the caret is visually at the very end of a line
+      // or the start of a new line. Getting text at the line should provide the line with the visual caret,
+      // otherwise screen readers will announce the wrong line as the user presses up or down arrow and land
+      // at the end of a line.
+      nsCOMPtr<nsISelection> domSel;
+      nsresult rv = GetSelections(nsnull, getter_AddRefs(domSel));
+      nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSel));
+      nsCOMPtr<nsFrameSelection> frameSelection;
+      rv = privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (frameSelection->GetHint() == nsFrameSelection::HINTLEFT) {
+        -- aOffset;  // We are at the start of a line
+      }
+    }
+  }
+  else if (aOffset < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 startOffset = aOffset + (aBoundaryType == BOUNDARY_LINE_END);  // Avoid getting the previous line
+  PRInt32 endOffset = startOffset;
+
   // Convert offsets to frame-relative
   nsCOMPtr<nsIAccessible> startAcc;
   nsIFrame *startFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
@@ -866,7 +895,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
       }
     }
     if (!startFrame) {
-      return (aOffset < 0 || aOffset > textLength) ? NS_ERROR_FAILURE : NS_OK;
+      return aOffset > textLength ? NS_ERROR_FAILURE : NS_OK;
     }
     else {
       // We're on the last continuation since we're on the last character
@@ -949,7 +978,8 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     // Start moving forward from the start so that we don't get 
     // 2 words/lines if the offset occured on whitespace boundary
     // Careful, startOffset and endOffset are passed by reference to GetPosAndText() and changed
-    startOffset = endOffset = finalStartOffset;
+    // For BOUNDARY_LINE_END, make sure we start of this line
+    startOffset = endOffset = finalStartOffset + (aBoundaryType == BOUNDARY_LINE_END);
     nsCOMPtr<nsIAccessible> endAcc;
     nsIFrame *endFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
                                        nsnull, getter_AddRefs(endAcc));
