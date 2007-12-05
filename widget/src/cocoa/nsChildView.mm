@@ -1773,6 +1773,7 @@ NSEvent* gLastDragEvent = nil;
     mMarkedRange.length = 0;
     mSelectedRange.location = NSNotFound;
     mSelectedRange.length = 0;
+    mIgnoreDoCommand = NO;
     mLastMenuForEventEvent = nil;
     mDragService = nsnull;
   }
