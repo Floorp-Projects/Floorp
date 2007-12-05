@@ -2804,10 +2804,44 @@ nsTableFrame::GetTFoot() const
 }
 
 static PRBool
-IsRepeatable(nsTableRowGroupFrame& aHeaderOrFooter,
-             nscoord               aPageHeight)
+IsRepeatable(nscoord aFrameHeight, nscoord aPageHeight)
 {
-  return aHeaderOrFooter.GetSize().height < (aPageHeight / 4);
+  return aFrameHeight < (aPageHeight / 4);
+}
+
+nsresult
+nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
+                                     nsTableRowGroupFrame* aFrame,
+                                     nscoord* aDesiredHeight)
+{
+  nsPresContext* presContext = PresContext();
+  nscoord pageHeight = presContext->GetPageSize().height;
+
+  if (aFrame->GetParent() != this || pageHeight == NS_UNCONSTRAINEDSIZE) {
+    // Must be a scrollable head/footer (we don't allow those to repeat), or
+    // page has unconstrained height for some reason.
+    *aDesiredHeight = 0;
+    return NS_OK;
+  }
+
+  // Reflow the child with unconstrainted height
+  nsHTMLReflowState kidReflowState(presContext, aReflowState.reflowState,
+                                   aFrame,
+                                   nsSize(aReflowState.availSize.width, NS_UNCONSTRAINEDSIZE),
+                                   -1, -1, PR_FALSE);
+  InitChildReflowState(kidReflowState);
+  kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
+  nsHTMLReflowMetrics desiredSize;
+  desiredSize.width = desiredSize.height = 0;
+  nsReflowStatus status;
+  nsresult rv = ReflowChild(aFrame, presContext, desiredSize, kidReflowState,
+                            aReflowState.x, aReflowState.y, 0, status);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // The child will be reflowed again "for real" so no need to place it now
+
+  aFrame->SetRepeatable(IsRepeatable(desiredSize.height, pageHeight));
+  *aDesiredHeight = desiredSize.height;
+  return NS_OK;
 }
 
 // Reflow the children based on the avail size and reason in aReflowState
@@ -2839,6 +2873,30 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
   nsTableRowGroupFrame *thead, *tfoot;
   PRUint32 numRowGroups = OrderRowGroups(rowGroups, &thead, &tfoot);
   PRBool pageBreak = PR_FALSE;
+  nscoord footerHeight = 0;
+
+  // Determine the repeatablility of headers and footers, and also the desired
+  // height of any repeatable footer.
+  // The repeatability of headers on continued tables is handled
+  // when they are created in nsCSSFrameConstructor::CreateContinuingTableFrame.
+  // We handle the repeatability of footers again here because we need to
+  // determine the footer's height anyway. We could perhaps optimize by
+  // using the footer's prev-in-flow's height instead of reflowing it again,
+  // but there's no real need.
+  if (isPaginated) {
+    if (thead && !GetPrevInFlow()) {
+      nscoord desiredHeight;
+      rv = SetupHeaderFooterChild(aReflowState, thead, &desiredHeight);
+      if (NS_FAILED(rv))
+        return rv;
+    }
+    if (tfoot) {
+      rv = SetupHeaderFooterChild(aReflowState, tfoot, &footerHeight);
+      if (NS_FAILED(rv))
+        return rv;
+    }
+  }
+
   for (PRUint32 childX = 0; childX < numRowGroups; childX++) {
     nsIFrame* kidFrame = rowGroups[childX];
     // Get the frame state bits
@@ -2856,23 +2914,15 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 
       nsSize kidAvailSize(aReflowState.availSize);
       // if the child is a tbody in paginated mode reduce the height by a repeated footer
-      // XXXldb Shouldn't this check against |thead| and |tfoot| from
-      // OrderRowGroups?
-      nsIFrame* repeatedFooter = nsnull;
-      nscoord repeatedFooterHeight = 0;
+      PRBool allowRepeatedFooter = PR_FALSE;
       if (isPaginated && (NS_UNCONSTRAINEDSIZE != kidAvailSize.height)) {
-        if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == kidFrame->GetStyleDisplay()->mDisplay) { // the child is a tbody
-          nsIFrame* lastChild = rowGroups[rowGroups.Length() - 1];
-          if (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == lastChild->GetStyleDisplay()->mDisplay) { // the last child is a tfoot
-            // XXXbz what if lastChild is a scrollable tfoot?  Bogus!!
-            // dbaron is right -- this should be using thead/tfoot!
-            if (((nsTableRowGroupFrame*)lastChild)->IsRepeatable()) {
-              repeatedFooterHeight = lastChild->GetSize().height;
-              if (repeatedFooterHeight + cellSpacingY < kidAvailSize.height) {
-                repeatedFooter = lastChild;
-                kidAvailSize.height -= repeatedFooterHeight + cellSpacingY;
-              }
-            }
+        nsTableRowGroupFrame* kidRG = GetRowGroupFrame(kidFrame);
+        if (kidRG != thead && kidRG != tfoot && tfoot && tfoot->IsRepeatable()) {
+          // the child is a tbody and there is a repeatable footer
+          NS_ASSERTION(tfoot == rowGroups[rowGroups.Length() - 1], "Missing footer!");
+          if (footerHeight + cellSpacingY < kidAvailSize.height) {
+            allowRepeatedFooter = PR_TRUE;
+            kidAvailSize.height -= footerHeight + cellSpacingY;
           }
         }
       }
@@ -2938,6 +2988,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
         }
         else { // we are not on top, push this rowgroup onto the next page
           if (prevKidFrame) { // we had a rowgroup before so push this
+            // XXXroc shouldn't we add a repeated footer here?
             aStatus = NS_FRAME_NOT_COMPLETE;
             PushChildren(rowGroups, childX);
             aLastChildReflowed = prevKidFrame;
@@ -2998,18 +3049,18 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
         if (nsnull != nextSibling) {
           PushChildren(rowGroups, childX + 1);
         }
-        if (repeatedFooter) {
-          kidAvailSize.height = repeatedFooterHeight;
+        if (allowRepeatedFooter) {
+          kidAvailSize.height = footerHeight;
           nsHTMLReflowState footerReflowState(presContext,
                                               aReflowState.reflowState,
-                                              repeatedFooter, kidAvailSize,
+                                              tfoot, kidAvailSize,
                                               -1, -1, PR_FALSE);
           InitChildReflowState(footerReflowState);
           aReflowState.y += cellSpacingY;
           nsReflowStatus footerStatus;
-          rv = ReflowChild(repeatedFooter, presContext, desiredSize, footerReflowState,
+          rv = ReflowChild(tfoot, presContext, desiredSize, footerReflowState,
                            aReflowState.x, aReflowState.y, 0, footerStatus);
-          PlaceChild(aReflowState, repeatedFooter, desiredSize);
+          PlaceChild(aReflowState, tfoot, desiredSize);
         }
         break;
       }
@@ -3034,19 +3085,6 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
     ConsiderChildOverflow(aOverflowArea, kidFrame);
   }
   
-  // set the repeatablility of headers and footers in the original table during its first reflow
-  // the repeatability of header and footers on continued tables is handled when they are created
-  if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE == aReflowState.availSize.height)) {
-    nscoord height = presContext->GetPageSize().height;
-    // don't repeat the thead or tfoot unless it is < 25% of the page height
-    if (thead && height != NS_UNCONSTRAINEDSIZE) {
-      thead->SetRepeatable(IsRepeatable(*thead, height));
-    }
-    if (tfoot && height != NS_UNCONSTRAINEDSIZE) {
-      tfoot->SetRepeatable(IsRepeatable(*tfoot, height));
-    }
-  }
-
   // We've now propagated the column resizes and geometry changes to all
   // the children.
   mBits.mResizedColumns = PR_FALSE;
