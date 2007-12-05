@@ -104,6 +104,7 @@
 
 // preference ID strings
 #define PREF_BRANCH_BASE                        "browser."
+#define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_VISITS      "history_expire_visits"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
@@ -172,7 +173,7 @@
 #define MAX_EXPIRE_RECORDS_ON_IDLE 200
 
 // Limit the number of items in the history for performance reasons
-#define EXPIRATION_CAP_VISITS 20000
+#define EXPIRATION_CAP_SITES 40000
 
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
@@ -271,8 +272,9 @@ nsNavHistory* nsNavHistory::gHistoryService;
 nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
-                               mExpireDays(0),
-                               mExpireVisits(0),
+                               mExpireDaysMin(0),
+                               mExpireDaysMax(0),
+                               mExpireSites(0),
                                mAutoCompleteOnlyTyped(PR_FALSE),
                                mBatchLevel(0),
                                mLock(nsnull),
@@ -410,8 +412,9 @@ nsNavHistory::Init()
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
-    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
-    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_VISITS, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
   }
 
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
@@ -1417,10 +1420,11 @@ nsNavHistory::LoadPrefs()
   if (! mPrefBranch)
     return NS_OK;
 
-  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
-  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_VISITS,
-                                        &mExpireVisits)))
-    mExpireVisits = EXPIRATION_CAP_VISITS;
+  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, &mExpireDaysMax);
+  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, &mExpireDaysMin);
+  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_SITES,
+                                        &mExpireSites)))
+    mExpireSites = EXPIRATION_CAP_SITES;
   
   PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
@@ -1936,7 +1940,6 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
   PRBool newItem = PR_FALSE; // used to send out notifications at the end
   if (alreadyVisited) {
     // Update the existing entry...
-
     rv = mDBGetPageVisitStats->GetInt64(0, &pageID);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2610,8 +2613,6 @@ nsNavHistory::GetHistoryDisabled(PRBool *_retval)
 //
 //    Note that this always adds the page with one visit and no parent, which
 //    is appropriate for imported URIs.
-//
-//    UNTESTED
 
 NS_IMETHODIMP
 nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
@@ -3520,10 +3521,12 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationMessage);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
-    PRInt32 oldDays = mExpireDays;
-    PRInt32 oldVisits = mExpireVisits;
+    PRInt32 oldDaysMin = mExpireDaysMin;
+    PRInt32 oldDaysMax = mExpireDaysMax;
+    PRInt32 oldVisits = mExpireSites;
     LoadPrefs();
-    if (oldDays != mExpireDays || oldVisits != mExpireVisits)
+    if (oldDaysMin != mExpireDaysMin || oldDaysMax != mExpireDaysMax ||
+        oldVisits != mExpireSites)
       mExpire.OnExpirationChanged();
   }
 
@@ -4561,7 +4564,7 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
 //    Sees if this URL happened "recently."
 //
 //    It is always removed from our recent list no matter what. It only counts
-//    as "recent" if the event happend more recently than our event
+//    as "recent" if the event happened more recently than our event
 //    threshold ago.
 
 PRBool
@@ -5305,9 +5308,9 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 //
 //    Construct a matrix of search terms from the given queries array.
 //    All of the query objects are ORed together. Within a query, all the terms
-//    are ANDed together. See nsINavHistory.idl.
+//    are ANDed together. See nsINavHistoryService.idl.
 //
-//    This just breaks the quer up into words. We don't do anything fancy,
+//    This just breaks the query up into words. We don't do anything fancy,
 //    not even quoting. We do, however, strip quotes, because people might
 //    try to input quotes expecting them to do something and get no results
 //    back.
