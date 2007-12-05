@@ -877,8 +877,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 #endif
 
-  // See comment below about oldSize. Use *only* for the
-  // abs-pos-containing-block-size-change optimization!
   nsSize oldSize = GetSize();
 
   // Should we create a space manager?
@@ -1133,14 +1131,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // can use our rect (the border edge) since if the border style
   // changed, the reflow would have been targeted at us so we'd satisfy
   // condition 1.
-  // XXX checking oldSize is bogus, there are various reasons we might have
-  // reflowed but our size might not have been changed to what we
-  // asked for (e.g., we ended up being pushed to a new page)
-  // Because of this, we must not reflow our abs-pos children if we will
-  // reflow again due to a clearance change --- what we think is our "new size"
-  // will not be our real new size. This also happens to be more efficient.
-  if (mAbsoluteContainer.HasAbsoluteFrames() &&
-      !aReflowState.WillReflowAgainForClearance()) {
+  if (mAbsoluteContainer.HasAbsoluteFrames()) {
     nsRect childBounds;
     nsSize containingBlockSize
       = CalculateContainingBlockSizeForAbsolutes(aReflowState,
@@ -1880,7 +1871,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       rv = ReflowLine(aState, line, &keepGoing);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (aState.mReflowState.WillReflowAgainForClearance()) {
+      if (aState.mReflowState.mDiscoveredClearance &&
+          *aState.mReflowState.mDiscoveredClearance) {
         line->MarkDirty();
         willReflowAgain = PR_TRUE;
         // Note that once we've entered this state, every line that gets here
