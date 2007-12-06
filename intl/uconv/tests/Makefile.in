@@ -39,6 +39,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir	= intl/uconv/tests
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -64,6 +65,16 @@ CPPSRCS		+= convperf.cpp
 endif
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
+ifdef MOZ_MOCHITEST
+
+_TEST_FILES =	\
+		test_bug335816.html \
+		$(NULL)
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+endif # MOZ_MOCHITEST
 
 XPCSHELL_TESTS = unit
 
