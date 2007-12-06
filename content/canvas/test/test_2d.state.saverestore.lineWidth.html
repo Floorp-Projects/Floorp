@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.state.saverestore.lineWidth</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+// Test that restore() undoes any modifications
+var old = ctx.lineWidth;
+ctx.save();
+ctx.lineWidth = 0.5;
+ctx.restore();
+ok(ctx.lineWidth === old, "ctx.lineWidth === old");
+
+// Also test that save() doesn't modify the values
+ctx.lineWidth = 0.5;
+old = ctx.lineWidth;
+    // we're not interested in failures caused by get(set(x)) != x (e.g.
+    // from rounding), so compare against d instead of against 0.5
+ctx.save();
+ok(ctx.lineWidth === old, "ctx.lineWidth === old");
+ctx.restore();
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+
