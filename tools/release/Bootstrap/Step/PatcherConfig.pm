@@ -40,12 +40,11 @@ sub Execute {
     }
 
     # checkout config to bump
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['-d', $mofoCvsroot, 'co', '-d', 'patcher',  
-                    CvsCatfile('release', 'patcher', $patcherConfig)],
-      logFile => catfile($logDir, 'patcherconfig-checkout.log'),
-      dir => $configBumpDir,
+    $this->CvsCo(cvsroot => $mofoCvsroot,
+                 checkoutDir => 'patcher',
+                 modules => [CvsCatfile('release', 'patcher', $patcherConfig)],
+                 logFile => catfile($logDir, 'patcherconfig-checkout.log'),
+                 workDir => $configBumpDir
     );
 
     # Do all the work...

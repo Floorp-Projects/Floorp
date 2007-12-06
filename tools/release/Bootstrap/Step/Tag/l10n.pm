@@ -54,30 +54,22 @@ sub Execute {
     # Config::Set() for us by Step::Tag::Execute() 
     my $geckoTag = $config->Get(var => 'geckoBranchTag');
 
-    # Check out the l10n files from the branch you want to tag.
-
-    my @l10nCheckoutArgs = (1 == $rc) ?
-     # For rc1, pull by date on the branch
-     ('-r', $branchTag, '-D', $l10n_pullDate) :
-     # For rc(N > 1), pull the _RELBRANCH tag and tag that
-     ('-r', $geckoTag);
-
     for my $locale (sort(keys(%{$localeInfo}))) {
         # skip en-US; it's kept in the main repo
         next if ($locale eq 'en-US');
 
-        $this->Shell(
-            cmd => 'cvs',
-            cmdArgs => ['-d', $l10nCvsroot, 'co', @l10nCheckoutArgs, 
-                        CvsCatfile('l10n', $locale)],
-            dir => $l10nTagDir,
-            logFile => catfile($logDir, 'tag-l10n_checkout.log'),
-        );
+        # Make sure to pull from the right tag and/or date for rcN.
+        $this->CvsCo(cvsroot => $l10nCvsroot,
+                     tag => (1 == $rc) ? $branchTag : $geckoTag,
+                     date => (1 == $rc) ? $l10n_pullDate : 0,
+                     modules => [CvsCatfile('l10n', $locale)],
+                     workDir => $l10nTagDir,
+                     logFile => catfile($logDir, 'tag-l10n_checkout.log'));
     }
 
     my $cwd = getcwd();
     chdir(catfile($l10nTagDir, 'l10n')) or
-     die "chdir() to $releaseTagDir/l10n failed: $!\n";
+     die "chdir() to $l10nTagDir/l10n failed: $!\n";
     my @topLevelFiles = grep(!/^CVS$/, glob('*'));
     chdir($cwd) or die "Couldn't chdir() home: $!\n";
 
