@@ -430,7 +430,6 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     availableWidth -= leftEdge;
     availableWidth -= ltr ? aReflowState.mComputedBorderPadding.right
                           : aReflowState.mComputedBorderPadding.left;
-    availableWidth = PR_MAX(0, availableWidth);
   }
   lineLayout->BeginSpan(this, &aReflowState, leftEdge, leftEdge + availableWidth);
 
