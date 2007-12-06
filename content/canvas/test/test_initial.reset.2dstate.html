@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<title>Canvas test: initial.reset.2dstate</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+canvas.width = 100;
+var default_val;
+
+default_val = ctx.strokeStyle;
+ctx.strokeStyle = "#ff0000";
+canvas.width = 100;
+ok(ctx.strokeStyle === default_val, "ctx.strokeStyle === default_val");
+
+default_val = ctx.fillStyle;
+ctx.fillStyle = "#ff0000";
+canvas.width = 100;
+ok(ctx.fillStyle === default_val, "ctx.fillStyle === default_val");
+
+default_val = ctx.globalAlpha;
+ctx.globalAlpha = 0.5;
+canvas.width = 100;
+ok(ctx.globalAlpha === default_val, "ctx.globalAlpha === default_val");
+
+default_val = ctx.lineWidth;
+ctx.lineWidth = 0.5;
+canvas.width = 100;
+ok(ctx.lineWidth === default_val, "ctx.lineWidth === default_val");
+
+default_val = ctx.lineCap;
+ctx.lineCap = "round";
+canvas.width = 100;
+ok(ctx.lineCap === default_val, "ctx.lineCap === default_val");
+
+default_val = ctx.lineJoin;
+ctx.lineJoin = "round";
+canvas.width = 100;
+ok(ctx.lineJoin === default_val, "ctx.lineJoin === default_val");
+
+default_val = ctx.miterLimit;
+ctx.miterLimit = 0.5;
+canvas.width = 100;
+ok(ctx.miterLimit === default_val, "ctx.miterLimit === default_val");
+
+default_val = ctx.shadowOffsetX;
+ctx.shadowOffsetX = 5;
+canvas.width = 100;
+ok(ctx.shadowOffsetX === default_val, "ctx.shadowOffsetX === default_val");
+
+default_val = ctx.shadowOffsetY;
+ctx.shadowOffsetY = 5;
+canvas.width = 100;
+ok(ctx.shadowOffsetY === default_val, "ctx.shadowOffsetY === default_val");
+
+default_val = ctx.shadowBlur;
+ctx.shadowBlur = 5;
+canvas.width = 100;
+ok(ctx.shadowBlur === default_val, "ctx.shadowBlur === default_val");
+
+default_val = ctx.shadowColor;
+ctx.shadowColor = "#ff0000";
+canvas.width = 100;
+ok(ctx.shadowColor === default_val, "ctx.shadowColor === default_val");
+
+default_val = ctx.globalCompositeOperation;
+ctx.globalCompositeOperation = "copy";
+canvas.width = 100;
+ok(ctx.globalCompositeOperation === default_val, "ctx.globalCompositeOperation === default_val");
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+
