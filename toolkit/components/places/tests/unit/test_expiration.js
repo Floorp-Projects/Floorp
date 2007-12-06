@@ -533,11 +533,10 @@ confirmation:
   - query for the visit, confirm it's there
 */
 function startExpireDaysOnly() {
+  dump("startExpireDaysOnly()\n");
   // setup
   histsvc.removeAllPages();
   observer.expiredURI = null;
-
-  dump("startExpireDaysOnly()\n");
 
   // add expirable visit
   histsvc.addVisit(testURI, (Date.now() - (86400 * 2 * 1000)) * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
@@ -549,9 +548,7 @@ function startExpireDaysOnly() {
   // set visit cap to 2
   prefs.setIntPref("browser.history_expire_sites", 2);
   // set date minimum to 2
-  prefs.setIntPref("browser.history_expire_days_min", 2);
-  // set date maximum to 3
-  prefs.setIntPref("browser.history_expire_days", 3);
+  prefs.setIntPref("browser.history_expire_days", 2);
 
   // trigger expiration
   ghist.addURI(triggerURI, false, true, null); 
@@ -563,8 +560,8 @@ function startExpireDaysOnly() {
 function checkExpireDaysOnly() {
   try {
     // test expired record
-    do_check_eq(observer.expiredURI, null);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
+    do_check_eq(observer.expiredURI, testURI.spec);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
     // test unexpired record
     do_check_neq(histsvc.getPageTitle(uri("http://unexpirable.com")), null);
   } catch(ex) {}
@@ -594,10 +591,10 @@ confirmation:
   - query for the visit, confirm it's not there
 */
 function startExpireBoth() {
+  dump("starting expiration test 3: both criteria met\n");
   // setup
   histsvc.removeAllPages();
   observer.expiredURI = null;
-  dump("starting expiration test 3: both criteria met\n");
 
   // add visits
   // 2 days old, in microseconds
@@ -612,7 +609,7 @@ function startExpireBoth() {
   // set date max to 3
   prefs.setIntPref("browser.history_expire_days", 3);
   // set date minimum to 1
-  prefs.setIntPref("browser.history_expire_days_min", 1);
+  prefs.setIntPref("browser.history_expire_days", 1);
 
   // trigger expiration
   ghist.addURI(triggerURI, false, true, null);
