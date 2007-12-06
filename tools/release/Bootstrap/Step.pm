@@ -251,4 +251,60 @@ sub GetBuildIDFromFTP() {
     return $buildID;
 }
 
+sub CvsCo {
+    my $this = shift;
+    my %args = @_;
+
+    # Required arguments
+    die "ASSERT: Bootstrap::Util::CvsCo(): null cvsroot" if
+     (!exists($args{'cvsroot'}));
+    my $cvsroot = $args{'cvsroot'};
+
+    die "ASSERT: Bootstrap::Util::CvsCo(): null modules" if
+     (!exists($args{'modules'}));
+    my $modules = $args{'modules'};
+
+    die "ASSERT: Bootstrap::Util::CvsCo(): bad modules data" if
+     (ref($modules) ne 'ARRAY');
+
+    # Optional arguments
+    my $logFile = $args{'logFile'};
+    my $tag = exists($args{'tag'}) ? $args{'tag'} : 0; 
+    my $date = exists($args{'date'}) ? $args{'date'} : 0;
+    my $checkoutDir = exists($args{'checkoutDir'}) ? $args{'checkoutDir'} : 0;
+    my $workDir = exists($args{'workDir'}) ? $args{'workDir'} : 0;
+    my $ignoreExitValue = exists($args{'ignoreExitValue'}) ?
+        $args{'ignoreExitValue'} : 0;
+    my $timeout = exists($args{'timeout'}) ? $args{'timeout'} :
+     $Bootstrap::Util::DEFAULT_SHELL_TIMEOUT;
+
+    my $config = new Bootstrap::Config();
+
+    my $useCvsCompression = 0;
+    if ($config->Exists(var => 'useCvsCompression')) {
+        $useCvsCompression = $config->Get(var => 'useCvsCompression');
+    }
+
+    my @cmdArgs;
+    push(@cmdArgs, '-z3') if ($useCvsCompression);
+    push(@cmdArgs, ('-d', $cvsroot));
+    push(@cmdArgs, 'co');
+    # Don't use a tag/branch if pulling from HEAD
+    push(@cmdArgs, ('-r', $tag)) if ($tag && $tag ne 'HEAD');
+    push(@cmdArgs, ('-D', $date)) if ($date);
+    push(@cmdArgs, ('-d', $checkoutDir)) if ($checkoutDir);
+    push(@cmdArgs, @{$modules});
+
+    my %cvsCoArgs = (cmd => 'cvs',
+                     cmdArgs => \@cmdArgs,
+                     dir => $workDir,
+                     timeout => $timeout,
+                     ignoreExitValue => $ignoreExitValue,
+    );
+    if ($logFile) {
+        $cvsCoArgs{'logFile'} = $logFile;
+    }
+
+    $this->Shell(%cvsCoArgs);
+}
 1;

@@ -224,7 +224,7 @@ sub SystemInfo {
     } elsif ($var eq 'machine') {
         return $machine;
     } elsif ($var eq 'osname') {
-        if ($sysname =~ /cygwin/i) {
+        if ($sysname =~ /cygwin/i || $sysname =~ /mingw32/i) {
             return 'win32';
         } elsif ($sysname =~ /darwin/i) {
             return 'macosx';

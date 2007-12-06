@@ -38,30 +38,30 @@ sub Execute {
     }
 
     # check out patcher
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'patcher', 
-                  CvsCatfile('mozilla', 'tools', 'patcher')],
-      logFile => catfile($logDir, 'updates_patcher-checkout.log'),
-      dir => $versionedUpdateDir,
+    $this->CvsCo(cvsroot => $mozillaCvsroot,
+                 checkoutDir => 'patcher',
+                 modules => [CvsCatfile('mozilla', 'tools', 'patcher')],
+                 logFile => catfile($logDir, 'updates_patcher-checkout.log'),
+                 workDir => $versionedUpdateDir
     );
-
+          
     # check out utilities
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'MozBuild', 
-                  CvsCatfile('mozilla', 'tools', 'release', 'MozBuild')],
-      logFile => catfile($logDir, 'updates_patcher-utils-checkout.log'),
-      dir => catfile($versionedUpdateDir, 'patcher'),
+    $this->CvsCo(cvsroot => $mozillaCvsroot,
+                 checkoutDir => 'MozBuild',
+                 modules => [CvsCatfile('mozilla', 'tools', 'release',
+                                        'MozBuild')],
+                 logFile => catfile($logDir,
+                                    'updates_patcher-utils-checkout.log'),
+                 workDir => catfile($versionedUpdateDir, 'patcher')
     );
-
+          
     # config lives in private repo
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['-d', $mofoCvsroot, 'co', '-d', 'config',  
-                  CvsCatfile('release', 'patcher', $patcherConfig)],
-      logFile => catfile($logDir, 'updates_patcher-config-checkout.log'),
-      dir => $versionedUpdateDir,
+    $this->CvsCo(cvsroot => $mofoCvsroot,
+                 checkoutDir => 'config',
+                 modules => [CvsCatfile('release', 'patcher', $patcherConfig)],
+                 logFile => catfile($logDir,
+                                    'updates_patcher-config-checkout.log'),
+                 workDir => $versionedUpdateDir
     );
 
     # build tools
@@ -139,13 +139,13 @@ sub Verify {
       or die("Could not mkdir $verifyDirVersion: $!");
 
     foreach my $dir ('updates', 'common') {
-        $this->Shell(
-          cmd => 'cvs',
-          cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', $dir,
-                      CvsCatfile('mozilla', 'testing', 'release', $dir)],
-          logFile => catfile($logDir, 
-                               'updates_verify_checkout-' . $dir . '.log'),
-          dir => $verifyDirVersion,
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     checkoutDir => $dir,
+                     modules => [CvsCatfile('mozilla', 'testing', 'release',
+                                            $dir)],
+                     logFile => catfile($logDir,
+                                 'updates_verify_checkout-' . $dir . '.log'),
+                     workDir => $verifyDirVersion
         );
     }
 
@@ -232,6 +232,13 @@ sub BumpVerifyConfig {
     my $externalStagingServer = $config->Get(var => 'externalStagingServer');
     my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
     my $logDir = $config->Get(sysvar => 'logDir');
+    # We are assuming tar.bz2 to help minimize bootstrap.cfg variables in
+    # the future. tar.gz support can probably be removed once we stop
+    # building/releasing products that use it.
+    my $useTarGz = $config->Exists(var => 'useTarGz') ?
+     $config->Get(var => 'useTarGz') : 0;
+    my $linuxExtension = ($useTarGz) ? '.gz' : '.bz2';
+
 
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
     my $configFile = catfile($verifyDirVersion, 'updates', $verifyConfig);
@@ -253,8 +260,9 @@ sub BumpVerifyConfig {
         $buildTarget = 'Linux_x86-gcc3';
         $platform = 'linux';
         $ftpOsname = 'linux-i686';
-        $releaseFile = $product.'-'.$oldVersion.'.tar.gz';
-        $nightlyFile = $product.'-'.$version.'.%locale%.linux-i686.tar.gz';
+        $releaseFile = $product.'-'.$oldVersion.'.tar'.$linuxExtension;
+        $nightlyFile = $product.'-'.$version.'.%locale%.linux-i686.tar'.
+         $linuxExtension;
     } elsif ($osname eq 'macosx') {
         $buildTarget = 'Darwin_Universal-gcc3';
         $platform = 'osx';
