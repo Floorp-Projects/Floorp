@@ -502,14 +502,14 @@ _TEST_FILES_E = \
 	image_green.png \
 	$(NULL)
 
-# This one test crashes Mac for now
+# This one test crashes Mac for now.  Bug 407104
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 _TEST_FILES_E += \
 	test_2d.gradient.empty.html \
 	$(NULL)
 endif
 
-# Tests that fail on Mac (possibly because spec is underdefined?)
+# Tests that fail on Mac (possibly because spec is underdefined?).  Bug 407105
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 _TEST_FILES_E += \
 	test_2d.line.cap.zerobezier.round.html \
@@ -526,7 +526,7 @@ _TEST_FILES_E += \
 	$(NULL)
 endif
 
-# Tests that fail on non-Mac (still need bugs)
+# Tests that fail on non-Mac (bug 407107)
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 _TEST_FILES_E += \
 	test_2d.path.rect.selfintersect.html \
