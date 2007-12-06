@@ -187,7 +187,6 @@ sub Announce {
     my $version = $config->Get(var => 'version');
     my $product = $config->Get(var => 'product');
     my $productTag = $config->Get(var => 'productTag');
-    my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
 
