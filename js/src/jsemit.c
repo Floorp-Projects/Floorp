@@ -6118,19 +6118,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         for (; pn2; pn2 = pn2->pn_next) {
             /* Emit an index for t[2], else map an atom for t.p or t['%q']. */
             pn3 = pn2->pn_left;
-            switch (pn3->pn_type) {
-              case TOK_NUMBER:
+            if (pn3->pn_type == TOK_NUMBER) {
+#ifdef __GNUC__
+                ale = NULL;     /* quell GCC overwarning */
+#endif
                 if (!EmitNumberOp(cx, pn3->pn_dval, cg))
                     return JS_FALSE;
-                break;
-              case TOK_NAME:
-              case TOK_STRING:
+            } else {
+                JS_ASSERT(pn3->pn_type == TOK_NAME ||
+                          pn3->pn_type == TOK_STRING);
                 ale = js_IndexAtom(cx, pn3->pn_atom, &cg->atomList);
                 if (!ale)
                     return JS_FALSE;
-                break;
-              default:
-                JS_ASSERT(0);
             }
 
             /* Emit code for the property initializer. */
