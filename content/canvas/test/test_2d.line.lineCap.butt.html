@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.line.lineCap.butt</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+function isPixel(ctx, x,y, r,g,b,a, pos, colour, d, f) {
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    (f || ok)(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+
+ctx.lineCap = 'butt';
+ctx.lineWidth = 20;
+
+ctx.fillStyle = '#f00';
+ctx.strokeStyle = '#0f0';
+ctx.fillRect(15, 15, 20, 20);
+ctx.beginPath();
+ctx.moveTo(25, 15);
+ctx.lineTo(25, 35);
+ctx.stroke();
+
+ctx.fillStyle = '#0f0';
+ctx.strokeStyle = '#f00';
+ctx.beginPath();
+ctx.moveTo(75, 15);
+ctx.lineTo(75, 35);
+ctx.stroke();
+ctx.fillRect(65, 15, 20, 20);
+
+isPixel(ctx, 25,14, 0,255,0,255, "25,14", "0,255,0,255", 0);
+isPixel(ctx, 25,15, 0,255,0,255, "25,15", "0,255,0,255", 0);
+isPixel(ctx, 25,16, 0,255,0,255, "25,16", "0,255,0,255", 0);
+isPixel(ctx, 25,34, 0,255,0,255, "25,34", "0,255,0,255", 0);
+isPixel(ctx, 25,35, 0,255,0,255, "25,35", "0,255,0,255", 0);
+isPixel(ctx, 25,36, 0,255,0,255, "25,36", "0,255,0,255", 0);
+
+isPixel(ctx, 75,14, 0,255,0,255, "75,14", "0,255,0,255", 0);
+isPixel(ctx, 75,15, 0,255,0,255, "75,15", "0,255,0,255", 0);
+isPixel(ctx, 75,16, 0,255,0,255, "75,16", "0,255,0,255", 0);
+isPixel(ctx, 75,34, 0,255,0,255, "75,34", "0,255,0,255", 0);
+isPixel(ctx, 75,35, 0,255,0,255, "75,35", "0,255,0,255", 0);
+isPixel(ctx, 75,36, 0,255,0,255, "75,36", "0,255,0,255", 0);
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+

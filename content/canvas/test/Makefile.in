@@ -1,0 +1,526 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2007
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Philip Taylor <philip.taylor@cl.cam.ac.uk>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = content/canvas/test
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES = \
+	test_fallback.basic.html \
+	test_fallback.multiple.html \
+	test_fallback.nested.html \
+	test_type.name.html \
+	test_type.exists.html \
+	test_type.delete.html \
+	test_type.prototype.html \
+	test_type.replace.html \
+	test_type.extend.html \
+	test_size.attributes.html \
+	test_size.attributes.type.get.html \
+	test_size.attributes.type.set.html \
+	test_size.attributes.default.html \
+	test_size.attributes.reflect.1.html \
+	test_size.attributes.reflect.2.html \
+	test_size.attributes.removed.html \
+	test_size.attributes.parse.whitespace.html \
+	test_size.attributes.parse.nonnumber.html \
+	test_size.attributes.parse.zero.html \
+	test_size.attributes.parse.negative.html \
+	test_size.attributes.parse.zerosuffix.html \
+	test_size.attributes.parse.floatsuffix.html \
+	test_size.attributes.parse.badsuffix.html \
+	test_size.attributes.parse.percentsuffix.html \
+	test_size.attributes.setAttribute.whitespace.html \
+	test_size.attributes.setAttribute.nonnumber.html \
+	test_size.attributes.setAttribute.zero.html \
+	test_size.attributes.setAttribute.negative.html \
+	test_size.attributes.setAttribute.zerosuffix.html \
+	test_size.attributes.setAttribute.floatsuffix.html \
+	test_size.attributes.setAttribute.badsuffix.html \
+	test_size.attributes.setAttribute.percentsuffix.html \
+	test_size.attributes.style.html \
+	test_initial.colour.html \
+	test_initial.reset.different.html \
+	test_initial.reset.same.html \
+	test_initial.reset.path.html \
+	test_initial.reset.clip.html \
+	test_initial.reset.transform.html \
+	test_initial.reset.gradient.html \
+	test_initial.reset.pattern.html \
+	test_toDataURL.default.html \
+	test_toDataURL.png.html \
+	test_toDataURL.nocontext.html \
+	test_toDataURL.primarycolours.html \
+	test_toDataURL.complexcolours.html \
+	test_2d.getcontext.exists.html \
+	test_2d.type.name.html \
+	test_2d.type.exists.html \
+	test_2d.type.delete.html \
+	test_2d.type.prototype.html \
+	test_2d.type.replace.html \
+	test_2d.type.extend.html \
+	test_2d.getcontext.unique.html \
+	test_2d.getcontext.shared.html \
+	test_2d.voidreturn.html \
+	test_2d.canvas.reference.html \
+	test_2d.canvas.readonly.html \
+	test_2d.state.saverestore.strokeStyle.html \
+	test_2d.state.saverestore.fillStyle.html \
+	test_2d.state.saverestore.globalAlpha.html \
+	test_2d.state.saverestore.lineWidth.html \
+	test_2d.state.saverestore.lineCap.html \
+	test_2d.state.saverestore.lineJoin.html \
+	test_2d.state.saverestore.miterLimit.html \
+	test_2d.state.saverestore.shadowOffsetX.html \
+	test_2d.state.saverestore.shadowOffsetY.html \
+	test_2d.state.saverestore.shadowBlur.html \
+	test_2d.state.saverestore.shadowColor.html \
+	test_2d.state.saverestore.globalCompositeOperation.html \
+	test_initial.reset.2dstate.html \
+	test_2d.state.saverestore.transformation.html \
+	test_2d.state.saverestore.clip.html \
+	test_2d.state.saverestore.path.html \
+	test_2d.state.saverestore.bitmap.html \
+	test_2d.state.saverestore.stack.html \
+	test_2d.state.saverestore.stackdepth.html \
+	test_2d.transformation.order.html \
+	test_2d.transformation.scale.basic.html \
+	test_2d.transformation.scale.zero.html \
+	test_2d.transformation.scale.negative.html \
+	test_2d.transformation.scale.large.html \
+	test_2d.transformation.scale.multiple.html \
+	test_2d.transformation.rotate.zero.html \
+	test_2d.transformation.rotate.radians.html \
+	test_2d.transformation.rotate.direction.html \
+	test_2d.transformation.rotate.wrap.html \
+	test_2d.transformation.rotate.wrapnegative.html \
+	test_2d.transformation.rotate.infinity.html \
+	test_2d.transformation.rotate.neginfinity.html \
+	test_2d.transformation.rotate.nan.html \
+	test_2d.transformation.translate.basic.html \
+	test_2d.transformation.transform.identity.html \
+	test_2d.transformation.transform.skewed.html \
+	test_2d.transformation.transform.multiply.html \
+	test_2d.transformation.setTransform.skewed.html \
+	test_2d.transformation.setTransform.multiple.html \
+	test_2d.composite.globalAlpha.range.html \
+	test_2d.composite.globalAlpha.default.html \
+	test_2d.composite.globalAlpha.fill.html \
+	test_2d.composite.globalAlpha.image.html \
+	test_2d.composite.globalAlpha.canvas.html \
+	test_2d.composite.globalAlpha.imagepattern.html \
+	test_2d.composite.globalAlpha.canvaspattern.html \
+	test_2d.composite.solid.source-over.html \
+	test_2d.composite.solid.destination-over.html \
+	test_2d.composite.solid.source-in.html \
+	test_2d.composite.solid.destination-in.html \
+	test_2d.composite.solid.source-out.html \
+	test_2d.composite.solid.destination-out.html \
+	test_2d.composite.solid.source-atop.html \
+	test_2d.composite.solid.destination-atop.html \
+	test_2d.composite.solid.copy.html \
+	test_2d.composite.solid.lighter.html \
+	test_2d.composite.transparent.source-over.html \
+	test_2d.composite.transparent.destination-over.html \
+	test_2d.composite.transparent.source-in.html \
+	test_2d.composite.transparent.destination-in.html \
+	test_2d.composite.transparent.source-out.html \
+	test_2d.composite.transparent.destination-out.html \
+	test_2d.composite.transparent.source-atop.html \
+	test_2d.composite.transparent.destination-atop.html \
+	test_2d.composite.transparent.xor.html \
+	test_2d.composite.transparent.copy.html \
+	test_2d.composite.transparent.lighter.html \
+	test_2d.composite.image.source-over.html \
+	test_2d.composite.image.destination-over.html \
+	test_2d.composite.image.source-in.html \
+	test_2d.composite.image.destination-in.html \
+	test_2d.composite.image.source-out.html \
+	test_2d.composite.image.destination-out.html \
+	test_2d.composite.image.source-atop.html \
+	test_2d.composite.image.destination-atop.html \
+	test_2d.composite.image.xor.html \
+	test_2d.composite.image.copy.html \
+	test_2d.composite.image.lighter.html \
+	test_2d.composite.operation.get.html \
+	test_2d.composite.operation.darker.html \
+	test_2d.composite.operation.over.html \
+	test_2d.composite.operation.clear.html \
+	test_2d.composite.operation.default.html \
+	test_2d.fillStyle.parse.html4.html \
+	test_2d.fillStyle.parse.hex3.html \
+	test_2d.fillStyle.parse.hex6.html \
+	test_2d.fillStyle.parse.rgb-num.html \
+	test_2d.fillStyle.parse.rgb-clamp-1.html \
+	test_2d.fillStyle.parse.rgb-clamp-2.html \
+	test_2d.fillStyle.parse.rgb-percent.html \
+	test_2d.fillStyle.parse.rgba-solid-1.html \
+	test_2d.fillStyle.parse.rgba-solid-2.html \
+	test_2d.fillStyle.parse.rgba-num-1.html \
+	test_2d.fillStyle.parse.rgba-num-2.html \
+	test_2d.fillStyle.parse.rgba-percent.html \
+	test_2d.fillStyle.parse.rgba-clamp-1.html \
+	test_2d.fillStyle.parse.rgba-clamp-2.html \
+	test_2d.fillStyle.parse.transparent-1.html \
+	test_2d.fillStyle.parse.transparent-2.html \
+	test_2d.fillStyle.parse.hsl-1.html \
+	test_2d.fillStyle.parse.hsl-2.html \
+	test_2d.fillStyle.parse.hsl-3.html \
+	test_2d.fillStyle.parse.hsl-4.html \
+	test_2d.fillStyle.parse.hsl-5.html \
+	test_2d.fillStyle.parse.hsla-1.html \
+	test_2d.fillStyle.parse.hsla-2.html \
+	test_2d.fillStyle.parse.svg-1.html \
+	test_2d.fillStyle.parse.svg-2.html \
+	test_2d.fillStyle.parse.invalid.hex3.html \
+	test_2d.fillStyle.parse.invalid.hex6.html \
+	test_2d.fillStyle.parse.invalid.rgb-1.html \
+	test_2d.fillStyle.parse.invalid.rgb-2.html \
+	test_2d.fillStyle.parse.invalid.rgb-3.html \
+	test_2d.fillStyle.parse.invalid.rgb-4.html \
+	test_2d.fillStyle.parse.invalid.rgba-1.html \
+	test_2d.fillStyle.parse.invalid.rgba-2.html \
+	test_2d.fillStyle.parse.invalid.rgba-3.html \
+	test_2d.fillStyle.parse.invalid.rgba-4.html \
+	test_2d.fillStyle.parse.invalid.rgba-5.html \
+	test_2d.fillStyle.parse.invalid.hsl-1.html \
+	test_2d.fillStyle.parse.invalid.hsl-2.html \
+	test_2d.fillStyle.parse.invalid.hsl-3.html \
+	test_2d.fillStyle.parse.invalid.hsl-4.html \
+	test_2d.fillStyle.parse.system.html \
+	test_2d.fillStyle.parse.flavor.html \
+	test_2d.fillStyle.invalidstring.html \
+	test_2d.fillStyle.invalidtype.html \
+	test_2d.fillStyle.get.solid.html \
+	test_2d.fillStyle.get.semitransparent.html \
+	test_2d.fillStyle.get.transparent.html \
+	test_2d.fillStyle.default.html \
+	test_2d.strokeStyle.default.html \
+	test_2d.gradient.object.return.html \
+	test_2d.gradient.interpolate.solid.html \
+	test_2d.gradient.interpolate.colour.html \
+	test_2d.gradient.interpolate.alpha.html \
+	test_2d.gradient.interpolate.colouralpha.html \
+	test_2d.gradient.interpolate.outside.html \
+	test_2d.gradient.interpolate.zerosize.html \
+	test_2d.gradient.interpolate.vertical.html \
+	test_2d.gradient.interpolate.multiple.html \
+	test_2d.gradient.interpolate.overlap.html \
+	test_2d.gradient.interpolate.overlap2.html \
+	test_2d.gradient.object.update.html \
+	test_2d.gradient.object.compare.html \
+	test_2d.gradient.object.crosscanvas.html \
+	test_2d.gradient.object.invalidoffset.html \
+	test_2d.gradient.object.invalidcolour.html \
+	test_2d.gradient.radial.negative.html \
+	test_2d.gradient.radial.invalid.html \
+	test_2d.gradient.radial.inside1.html \
+	test_2d.gradient.radial.inside2.html \
+	test_2d.gradient.radial.inside3.html \
+	test_2d.gradient.radial.outside1.html \
+	test_2d.gradient.radial.cone.front.html \
+	test_2d.gradient.radial.cone.bottom.html \
+	test_2d.gradient.radial.cone.top.html \
+	test_2d.gradient.radial.cone.cylinder.html \
+	test_2d.gradient.radial.cone.shape1.html \
+	test_2d.pattern.basic.type.html \
+	test_2d.pattern.basic.image.html \
+	test_2d.pattern.basic.canvas.html \
+	test_2d.pattern.basic.nocontext.html \
+	test_2d.pattern.image.undefined.html \
+	test_2d.pattern.image.null.html \
+	test_2d.pattern.image.string.html \
+	test_2d.pattern.image.incomplete.html \
+	test_2d.pattern.image.broken.html \
+	test_2d.pattern.repeat.empty.html \
+	test_2d.pattern.repeat.null.html \
+	test_2d.pattern.repeat.undefined.html \
+	test_2d.pattern.repeat.missing.html \
+	test_2d.pattern.repeat.unrecognised.html \
+	test_2d.pattern.repeat.case.html \
+	test_2d.pattern.repeat.nullsuffix.html \
+	test_2d.pattern.modify.image1.html \
+	test_2d.pattern.modify.image2.html \
+	test_2d.pattern.modify.canvas1.html \
+	test_2d.pattern.modify.canvas2.html \
+	test_2d.pattern.crosscanvas.html \
+	test_2d.pattern.paint.norepeat.basic.html \
+	test_2d.pattern.paint.norepeat.outside.html \
+	test_2d.pattern.paint.norepeat.coord1.html \
+	test_2d.pattern.paint.norepeat.coord2.html \
+	test_2d.pattern.paint.coord3.html \
+	test_2d.pattern.paint.repeat.basic.html \
+	test_2d.pattern.paint.repeat.outside.html \
+	test_2d.pattern.paint.repeat.coord1.html \
+	test_2d.pattern.paint.repeat.coord2.html \
+	test_2d.pattern.paint.repeat.coord3.html \
+	test_2d.pattern.paint.repeatx.basic.html \
+	test_2d.pattern.paint.repeatx.outside.html \
+	test_2d.pattern.paint.repeatx.coord1.html \
+	test_2d.pattern.paint.repeaty.basic.html \
+	test_2d.pattern.paint.repeaty.outside.html \
+	test_2d.pattern.paint.repeaty.coord1.html \
+	test_2d.line.defaults.html \
+	test_2d.line.invalid.lineWidth.html \
+	test_2d.line.invalid.miterLimit.html \
+	test_2d.line.lineWidth.basic.html \
+	test_2d.line.lineWidth.transformed.html \
+	test_2d.line.lineCap.butt.html \
+	test_2d.line.lineCap.round.html \
+	test_2d.line.lineCap.square.html \
+	test_2d.line.lineJoin.bevel.html \
+	test_2d.line.lineJoin.round.html \
+	test_2d.line.lineJoin.miter.html \
+	test_2d.line.join.open.html \
+	test_2d.line.join.closed.html \
+	test_2d.line.join.zeroline.corner.html \
+	test_2d.line.join.zeroline.join.html \
+	test_2d.line.cap.open.html \
+	test_2d.line.cap.closed.html \
+	test_2d.line.cap.zeroline.round.html \
+	test_2d.line.cap.zeroline.square.html \
+	test_2d.line.miter.exceeded.html \
+	test_2d.line.miter.within.html \
+	test_2d.line.cross.html \
+	test_2d.line.union.html \
+	test_2d.clearRect.basic.html \
+	test_2d.clearRect.path.html \
+	test_2d.clearRect.zero.html \
+	test_2d.clearRect.transform.html \
+	test_2d.clearRect.globalalpha.html \
+	test_2d.clearRect.globalcomposite.html \
+	test_2d.clearRect.clip.html \
+	test_2d.clearRect.shadow.html \
+	test_2d.fillRect.negative.html \
+	test_2d.fillRect.basic.html \
+	test_2d.fillRect.path.html \
+	test_2d.fillRect.zero.html \
+	test_2d.fillRect.transform.html \
+	test_2d.fillRect.clip.html \
+	test_2d.fillRect.shadow.html \
+	test_2d.strokeRect.negative.html \
+	test_2d.strokeRect.basic.html \
+	test_2d.strokeRect.path.html \
+	test_2d.strokeRect.zero.1.html \
+	test_2d.strokeRect.zero.2.html \
+	test_2d.strokeRect.zero.3.html \
+	test_2d.strokeRect.zero.4.html \
+	test_2d.strokeRect.transform.html \
+	test_2d.strokeRect.globalalpha.html \
+	test_2d.strokeRect.globalcomposite.html \
+	test_2d.strokeRect.clip.html \
+	test_2d.strokeRect.shadow.html \
+	test_2d.path.initial.html \
+	test_2d.path.beginPath.html \
+	test_2d.path.moveTo.basic.html \
+	test_2d.path.moveTo.newsubpath.html \
+	test_2d.path.moveTo.multiple.html \
+	test_2d.path.closePath.empty.html \
+	test_2d.path.closePath.newline.html \
+	test_2d.path.closePath.nextpoint.html \
+	test_2d.path.lineTo.emptysubpath.html \
+	test_2d.path.lineTo.basic.html \
+	test_2d.path.lineTo.nextpoint.html \
+	test_2d.path.quadraticCurveTo.emptysubpath.html \
+	test_2d.path.quadraticCurveTo.basic.html \
+	test_2d.path.quadraticCurveTo.shape.html \
+	test_2d.path.quadraticCurveTo.scaled.html \
+	test_2d.path.bezierCurveTo.emptysubpath.html \
+	test_2d.path.bezierCurveTo.basic.html \
+	test_2d.path.bezierCurveTo.shape.html \
+	test_2d.path.bezierCurveTo.scaled.html \
+	test_2d.path.arc.empty.html \
+	test_2d.path.arc.nonempty.html \
+	test_2d.path.arc.end.html \
+	test_2d.path.arc.angle.1.html \
+	test_2d.path.arc.angle.2.html \
+	test_2d.path.arc.angle.3.html \
+	test_2d.path.arc.angle.4.html \
+	test_2d.path.arc.zero.1.html \
+	test_2d.path.arc.zero.2.html \
+	test_2d.path.arc.zero.3.html \
+	test_2d.path.arc.zero.4.html \
+	test_2d.path.arc.zero.5.html \
+	test_2d.path.arc.zero.6.html \
+	test_2d.path.arc.shape.1.html \
+	test_2d.path.arc.shape.2.html \
+	test_2d.path.arc.shape.3.html \
+	test_2d.path.arc.shape.4.html \
+	test_2d.path.arc.shape.5.html \
+	test_2d.path.arc.selfintersect.1.html \
+	test_2d.path.arc.selfintersect.2.html \
+	test_2d.path.arc.negative.html \
+	test_2d.path.arc.zero.html \
+	test_2d.path.rect.basic.html \
+	test_2d.path.rect.newsubpath.html \
+	test_2d.path.rect.closed.html \
+	test_2d.path.rect.end.1.html \
+	test_2d.path.rect.end.2.html \
+	test_2d.path.rect.zero.1.html \
+	test_2d.path.rect.zero.2.html \
+	test_2d.path.rect.zero.3.html \
+	test_2d.path.rect.zero.4.html \
+	test_2d.path.rect.zero.5.html \
+	test_2d.path.rect.negative.html \
+	test_2d.path.fill.winding.add.html \
+	test_2d.path.fill.winding.subtract.1.html \
+	test_2d.path.fill.winding.subtract.2.html \
+	test_2d.path.fill.winding.subtract.3.html \
+	test_2d.path.fill.closed.basic.html \
+	test_2d.path.fill.closed.unaffected.html \
+	test_2d.path.stroke.union.html \
+	test_2d.path.stroke.unaffected.html \
+	test_2d.path.transformation.basic.html \
+	test_2d.path.transformation.multiple.1.html \
+	test_2d.path.transformation.multiple.2.html \
+	test_2d.path.transformation.multiple.3.html \
+	test_2d.path.clip.empty.html \
+	test_2d.path.clip.basic.1.html \
+	test_2d.path.clip.basic.2.html \
+	test_2d.path.clip.intersect.html \
+	test_2d.path.clip.winding.1.html \
+	test_2d.path.clip.winding.2.html \
+	test_2d.path.clip.unaffected.html \
+	test_2d.path.isPointInPath.basic.1.html \
+	test_2d.path.isPointInPath.basic.2.html \
+	test_2d.path.isPointInPath.empty.html \
+	test_2d.path.isPointInPath.unclosed.html \
+	test_2d.path.isPointInPath.winding.html \
+	test_2d.path.isPointInPath.transform.1.html \
+	test_2d.path.isPointInPath.transform.2.html \
+	test_2d.path.isPointInPath.transform.3.html \
+	test_2d.drawImage.3arg.html \
+	test_2d.drawImage.5arg.html \
+	test_2d.drawImage.9arg.basic.html \
+	test_2d.drawImage.9arg.sourcepos.html \
+	test_2d.drawImage.9arg.sourcesize.html \
+	test_2d.drawImage.9arg.destpos.html \
+	test_2d.drawImage.9arg.destsize.html \
+	test_2d.drawImage.null.html \
+	test_2d.drawImage.wrongtype.html \
+	test_2d.drawImage.floatsource.html \
+	test_2d.drawImage.zerosource.html \
+	test_2d.drawImage.negativesource.html \
+	test_2d.drawImage.negativedest.html \
+	test_2d.drawImage.outsidesource.html \
+	test_2d.drawImage.incomplete.html \
+	test_2d.drawImage.broken.html \
+	test_2d.drawImage.path.html \
+	test_2d.drawImage.transform.html \
+	test_2d.drawImage.alpha.html \
+	test_2d.drawImage.clip.html \
+	test_2d.drawImage.composite.html \
+	test_2d.imageData.get.basic.html \
+	test_2d.imageData.get.sourcepos.html \
+	test_2d.imageData.get.values.html \
+	test_2d.imageData.get.sourcesize.html \
+	test_2d.imageData.get.properties.html \
+	test_2d.imageData.get.nonpremul.html \
+	test_2d.imageData.get.order.cols.html \
+	test_2d.imageData.get.order.rows.html \
+	test_2d.imageData.get.order.rgb.html \
+	test_2d.imageData.get.order.alpha.html \
+	test_2d.imageData.get.smallest.html \
+	test_2d.imageData.get.nonpositive.html \
+	test_2d.imageData.get.nonfinite.html \
+	test_2d.imageData.put.basic.html \
+	test_2d.imageData.put.alpha.html \
+	test_2d.imageData.put.modified.html \
+	test_2d.imageData.put.type.correct.html \
+	test_2d.imageData.put.type.onepixel.html \
+	test_2d.imageData.put.type.extra.html \
+	test_2d.imageData.put.type.missing.html \
+	test_2d.imageData.put.type.invalidsize.html \
+	test_2d.imageData.put.type.invalidvalues.html \
+	test_2d.imageData.put.unchanged.html \
+	test_2d.imageData.put.unaffected.html \
+	test_2d.imageData.put.path.html \
+	image_transparent50.png \
+	image_redtransparent.png \
+	image_yellow.png \
+	image_green-16x16.png \
+	image_red-16x16.png \
+	image_green-1x1.png \
+	image_ggrr-256x256.png \
+	image_yellow75.png \
+	image_broken.png \
+	image_rgrg-256x256.png \
+	image_red.png \
+	image_transparent.png \
+	image_green.png \
+	$(NULL)
+
+# This one test crashes Mac for now
+ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+_TEST_FILES += \
+	test_2d.gradient.empty.html \
+	$(NULL)
+endif
+
+# Tests that fail on Mac (possibly because spec is underdefined?)
+ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+_TEST_FILES += \
+	test_2d.line.cap.zerobezier.round.html \
+	test_2d.line.join.parallel.html \
+	test_2d.strokeRect.zero.5.html \
+	$(NULL)
+endif
+
+# Tests that fail on non-Mac (bug 401791)
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+_TEST_FILES += \
+	test_2d.line.miter.rightangle.html \
+	test_2d.line.miter.lineedge.html \
+	$(NULL)
+endif
+
+# Tests that fail on non-Mac (still need bugs)
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+_TEST_FILES += \
+	test_2d.path.rect.selfintersect.html \
+	test_2d.path.rect.zero.6.html \
+	$(NULL)
+endif
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
