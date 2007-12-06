@@ -45,7 +45,7 @@ relativesrcdir  = content/canvas/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+_TEST_FILES_A = \
 	test_fallback.basic.html \
 	test_fallback.multiple.html \
 	test_fallback.nested.html \
@@ -150,6 +150,9 @@ _TEST_FILES = \
 	test_2d.composite.globalAlpha.canvas.html \
 	test_2d.composite.globalAlpha.imagepattern.html \
 	test_2d.composite.globalAlpha.canvaspattern.html \
+	$(NULL)
+
+_TEST_FILES_B = \
 	test_2d.composite.solid.source-over.html \
 	test_2d.composite.solid.destination-over.html \
 	test_2d.composite.solid.source-in.html \
@@ -252,6 +255,9 @@ _TEST_FILES = \
 	test_2d.gradient.object.crosscanvas.html \
 	test_2d.gradient.object.invalidoffset.html \
 	test_2d.gradient.object.invalidcolour.html \
+	$(NULL)
+
+_TEST_FILES_C = \
 	test_2d.gradient.radial.negative.html \
 	test_2d.gradient.radial.invalid.html \
 	test_2d.gradient.radial.inside1.html \
@@ -350,6 +356,9 @@ _TEST_FILES = \
 	test_2d.strokeRect.globalcomposite.html \
 	test_2d.strokeRect.clip.html \
 	test_2d.strokeRect.shadow.html \
+	$(NULL)
+
+_TEST_FILES_D = \
 	test_2d.path.initial.html \
 	test_2d.path.beginPath.html \
 	test_2d.path.moveTo.basic.html \
@@ -450,6 +459,9 @@ _TEST_FILES = \
 	test_2d.drawImage.alpha.html \
 	test_2d.drawImage.clip.html \
 	test_2d.drawImage.composite.html \
+	$(NULL)
+
+_TEST_FILES_E = \
 	test_2d.imageData.get.basic.html \
 	test_2d.imageData.get.sourcepos.html \
 	test_2d.imageData.get.values.html \
@@ -492,14 +504,14 @@ _TEST_FILES = \
 
 # This one test crashes Mac for now
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-_TEST_FILES += \
+_TEST_FILES_E += \
 	test_2d.gradient.empty.html \
 	$(NULL)
 endif
 
 # Tests that fail on Mac (possibly because spec is underdefined?)
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-_TEST_FILES += \
+_TEST_FILES_E += \
 	test_2d.line.cap.zerobezier.round.html \
 	test_2d.line.join.parallel.html \
 	test_2d.strokeRect.zero.5.html \
@@ -508,7 +520,7 @@ endif
 
 # Tests that fail on non-Mac (bug 401791)
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-_TEST_FILES += \
+_TEST_FILES_E += \
 	test_2d.line.miter.rightangle.html \
 	test_2d.line.miter.lineedge.html \
 	$(NULL)
@@ -516,11 +528,24 @@ endif
 
 # Tests that fail on non-Mac (still need bugs)
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-_TEST_FILES += \
+_TEST_FILES_E += \
 	test_2d.path.rect.selfintersect.html \
 	test_2d.path.rect.zero.6.html \
 	$(NULL)
 endif
 
-libs:: $(_TEST_FILES)
+# split up into groups to work around command-line length limits
+libs:: $(_TEST_FILES_A)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_TEST_FILES_B)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_TEST_FILES_C)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_TEST_FILES_D)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_TEST_FILES_E)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
