@@ -959,10 +959,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     aResult->width = 14;
     aResult->height = 13;
     break;
-  case NS_THEME_RESIZER:
-    // same as Windows to make our lives easier
-    aResult->width = aResult->height = 15;
-    break;
   case NS_THEME_TREEVIEW_TWISTY:
   case NS_THEME_TREEVIEW_TWISTY_OPEN:
     {
@@ -1063,7 +1059,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBAR_PANEL:
   case NS_THEME_STATUSBAR_RESIZER_PANEL:
-  case NS_THEME_RESIZER:
+    // case NS_THEME_RESIZER: // _VERY_BROKEN_ in gtk2
   case NS_THEME_LISTBOX:
     // case NS_THEME_LISTBOX_LISTITEM:
   case NS_THEME_TREEVIEW:
