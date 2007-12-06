@@ -65,18 +65,15 @@ sub Execute {
 
     # Check out Mozilla from the branch you want to tag.
     # TODO this should support running without branch tag or pull date.
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['-d', $mozillaCvsroot, 
-                  'co', 
-                  '-r', $geckoBranchTag, 
-                  CvsCatfile('mozilla', 'client.mk'),
+    $this->CvsCo(
+      cvsroot => $mozillaCvsroot,
+      tag => $geckoBranchTag,
+      modules => [CvsCatfile('mozilla', 'client.mk'),
                   CvsCatfile('mozilla', $appName, 'app', 'module.ver'),
                   CvsCatfile('mozilla', $appName, 'config', 'version.txt'),
-                  CvsCatfile('mozilla', 'config', 'milestone.txt'),
-                 ],
-      dir => $cvsrootTagDir,
-      logFile => catfile($logDir, 'tag-bump_checkout.log'),
+                  CvsCatfile('mozilla', 'config', 'milestone.txt')],
+      workDir => $cvsrootTagDir,
+      logFile => catfile($logDir, 'tag-bump_checkout.log')
     );
 
     ### Perform version bump
@@ -95,7 +92,9 @@ sub Execute {
         # sure that the order replacement happens does not matter.
         if ($fileName eq 'client.mk') {
             %searchReplace = (
-             '^MOZ_CO_TAG\s+=\s+' . $branchTag . '$' =>
+             # MOZ_CO_TAG is commented out on some branches, make sure to
+             # accommodate that
+             '^#?MOZ_CO_TAG\s+=.+$' =>
               'MOZ_CO_TAG           = ' . $releaseTag,
              '^NSPR_CO_TAG\s+=\s+\w*' => 
               'NSPR_CO_TAG          = ' . $releaseTag,
@@ -142,7 +141,7 @@ sub Execute {
         close INFILE or die("Could not close $file: $!");
         close OUTFILE or die("Coule not close $file.tmp: $!");
         if (not $found) {
-            die("None of " . join(keys(%searchReplace)) . 
+            die("None of " . join(' ', keys(%searchReplace)) . 
              " found in file $file: $!");
         }
 

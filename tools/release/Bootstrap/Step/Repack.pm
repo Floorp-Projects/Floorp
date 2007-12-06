@@ -18,7 +18,7 @@ sub Execute {
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $l10n_buildPlatform = $config->Get(sysvar => 'l10n_buildPlatform');
-    my $osname = $config->SystemInfo(var => 'osname');    
+    my $sysname = $config->SystemInfo(var => 'sysname');
     my $rcTag = $productTag . '_RC' . $rc;
 
     my $buildLog = catfile($logDir, 'repack_' . $rcTag . '-build-l10n.log');
@@ -29,7 +29,7 @@ sub Execute {
 
     # For Cygwin only, ensure that the system mount point is textmode
     # This forces CVS to use DOS-style carriage-return EOL characters.
-    if ($osname eq 'win32') {
+    if ($sysname =~ /cygwin/i) {
         $this->Shell(
           cmd => 'mount',
           cmdArgs => ['-t', '-sc', '/cygdrive'],
@@ -49,7 +49,7 @@ sub Execute {
 
     # For Cygwin only, set the system mount point back to binmode
     # This forces CVS to use Unix-style linefeed EOL characters.
-    if ($osname eq 'win32') {
+    if ($sysname =~ /cygwin/i) {
         $this->Shell(
           cmd => 'mount',
           cmdArgs => ['-b', '-sc', '/cygdrive'],
@@ -72,9 +72,11 @@ sub Verify {
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $stagingServer = $config->Get(var => 'stagingServer');
-
+    my $useTarGz = $config->Exists(var => 'useTarGz') ?
+     $config->Get(var => 'useTarGz') : 0;
     my $rcTag = $productTag.'_RC'.$rc;
 
+    my $linuxExtension = ($useTarGz) ? '.gz' : '.bz2';
     # l10n metadiff test
 
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
@@ -84,14 +86,13 @@ sub Verify {
 
     # check out l10n verification scripts
     foreach my $dir ('common', 'l10n') {
-        $this->Shell(
-          cmd => 'cvs',
-          cmdArgs => ['-d', $mozillaCvsroot, 
-                      'co', '-d', $dir, 
-                      CvsCatfile('mozilla', 'testing', 'release', $dir)],
-          dir => $verifyDirVersion,
-          logFile => catfile($logDir, 
-                               'repack_checkout-l10n_verification.log'),
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     checkoutDir => $dir,
+                     modules => [CvsCatfile('mozilla', 'testing', 'release',
+                                            $dir)],
+                     workDir => $verifyDirVersion,
+                     logFile => catfile($logDir,
+                                 'repack_checkout-l10n_verification.log')
         );
     }
 
@@ -102,7 +103,7 @@ sub Verify {
                   '-e', 'ssh', 
                   '--include=*.dmg',
                   '--include=*.exe',
-                  '--include=*.tar.gz',
+                  '--include=*.tar'.$linuxExtension,
                   '--exclude=*',
                   $stagingServer . ':/home/ftp/pub/' . $product
                   . '/nightly/' . $version . '-candidates/rc' . $rc . '/*',
@@ -121,7 +122,7 @@ sub Verify {
                   '-e', 'ssh', 
                   '--include=*.dmg',
                   '--include=*.exe',
-                  '--include=*.tar.gz',
+                  '--include=*.tar'.$linuxExtension,
                   '--exclude=*',
                   $stagingServer . ':/home/ftp/pub/' . $product
                   . '/nightly/' . $oldVersion . '-candidates/rc' 

@@ -366,10 +366,15 @@ sub Execute {
 
     foreach my $xpiDir (keys(%xpiDirs)) {
         my $fromDir = catfile($batch1Dir, 'stage-unsigned', $xpiDir);
-        my $toDir = catfile($batch1Dir, 'stage-unsigned',
-         $xpiDirs{$xpiDir}, 'xpi');
+        my $parentToDir = catfile($batch1Dir, 'stage-unsigned',
+         $xpiDirs{$xpiDir});
+        my $toDir = catfile($parentToDir, 'xpi');
 
         if (-e $fromDir) {
+           if (! -e $parentToDir) {
+               MkdirWithPath(dir => $parentToDir) or
+                die("Cannot create $parentToDir");
+           }
            move($fromDir, $toDir)
             or die(msg => "Cannot rename $fromDir $toDir: $!");
            $this->Log(msg => "Moved $fromDir -> $toDir");
