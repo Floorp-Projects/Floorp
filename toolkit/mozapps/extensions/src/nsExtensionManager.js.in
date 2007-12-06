@@ -7211,7 +7211,7 @@ ExtensionsDataSource.prototype = {
    *          The maximum version of the target application that this item can
    *          run in
    * @param   datasource
-   *          The datasource to loko up target application info in
+   *          The datasource to look up target application info in
    *
    * @note Add-ons can specify a targetApplication id of toolkit@mozilla.org in
    *       their install manifest for compatibility with all apps using a
