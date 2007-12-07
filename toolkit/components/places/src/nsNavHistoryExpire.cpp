@@ -290,8 +290,7 @@ nsNavHistoryExpire::DoPartialExpiration()
   nsresult rv = ExpireItems(EXPIRATION_COUNT_PER_RUN, &keepGoing);
   if (NS_FAILED(rv))
     NS_WARNING("ExpireItems failed.");
-
-  if (keepGoing)
+  else if (keepGoing)
     StartTimer(SUBSEQUENT_EXPIRATION_TIMEOUT);
   return NS_OK;
 }
