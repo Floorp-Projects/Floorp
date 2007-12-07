@@ -153,24 +153,7 @@ case "$OSID" in
         ;;
     linux)
         arch="`uname -p`"
-        kernel="`uname -r`"
-        case "$kernel" in
-            *el5PAE)
-                kernel='.*el5PAE'
-                ;;
-            *el5)
-                kernel='.*el5'
-                ;;
-            *ELsmp)
-                kernel='.*ELsmp'
-                ;;
-            *fc*)
-                kernel='.*fc.'
-                ;;
-            *)
-                kernel='[.][*]'
-                ;;
-        esac
+        kernel="`uname -r | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)[-.0-9]*\.\([a-zA-Z0-9]*\)|\1.\2.\3.*\4|'`"
         ;;
     mac)
         arch="`uname -p`"
