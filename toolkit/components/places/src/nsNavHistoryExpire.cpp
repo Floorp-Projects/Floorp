@@ -478,16 +478,18 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
     nsresult rv = aConnection->CreateStatement(sqlMinAge, getter_AddRefs(selectMinStatement));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = selectStatement->BindInt64Parameter(0, aExpireThreshold);
+    PRInt64 minDaysAgo = mHistory->mExpireDaysMin * 86400 * PR_USEC_PER_SEC;
+    PRTime minThreshold = PR_Now() - minDaysAgo;
+    rv = selectMinStatement->BindInt64Parameter(0, minThreshold);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = selectStatement->BindInt64Parameter(1, aNumToExpire);
+    rv = selectMinStatement->BindInt64Parameter(1, aNumToExpire);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = selectStatement->BindInt32Parameter(2, mHistory->mExpireSites);
+    rv = selectMinStatement->BindInt32Parameter(2, mHistory->mExpireSites);
     NS_ENSURE_SUCCESS(rv, rv);
 
     hasMore = PR_FALSE;
-    while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore) {
-      nsNavHistoryExpireRecord record(selectStatement);
+    while (NS_SUCCEEDED(selectMinStatement->ExecuteStep(&hasMore)) && hasMore) {
+      nsNavHistoryExpireRecord record(selectMinStatement);
       aRecords.AppendElement(record);
     }
   }
