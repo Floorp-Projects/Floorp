@@ -251,14 +251,11 @@ public:
                                 PRInt32* aOffset, PeekWordState *aState);
   /**
    * Check whether we should break at a boundary between punctuation and
-   * non-punctuation. Only call it at a punctuation boundary
-   * (i.e. exactly one of the previous and next characters are punctuation).
-   * @param aPunctAfter true if the next character is punctuation
+   * non-punctuation.
+   * @param aAfterPunct true when this point is logically *after* punctuation.
    */
-  PRBool BreakWordBetweenPunctuation(const PeekWordState* aState,
-                                     PRBool aPunctAfter, PRBool aWhitespaceAfter,
-                                     PRBool aIsKeyboardSelect);
-
+  PRBool BreakWordBetweenPunctuation(PRBool aAfterPunct, PRBool aIsKeyboardSelect);
+  
   NS_IMETHOD  CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
