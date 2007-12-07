@@ -1030,9 +1030,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     
     // See if we can place the frame. If we can't fit it, then we
     // return now.
+    PRBool optionalBreakAfterFits;
     if (CanPlaceFrame(pfd, reflowState, notSafeToBreak, continuingTextRun,
                       savedOptionalBreakContent != nsnull, metrics,
-                      aReflowStatus)) {
+                      aReflowStatus, &optionalBreakAfterFits)) {
       // Place the frame, updating aBounds with the final size and
       // location.  Then apply the bottom+right margins (as
       // appropriate) to the frame.
@@ -1053,7 +1054,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // record soft break opportunity after this content that can't be
           // part of a text run. This is not a text frame so we know
           // that offset PR_INT32_MAX means "after the content".
-          if (NotifyOptionalBreakPosition(aFrame->GetContent(), PR_INT32_MAX, PR_TRUE)) {
+          if (NotifyOptionalBreakPosition(aFrame->GetContent(), PR_INT32_MAX, optionalBreakAfterFits)) {
             // If this returns true then we are being told to actually break here.
             aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(aReflowStatus);
           }
@@ -1146,9 +1147,12 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
                             PRBool aFrameCanContinueTextRun,
                             PRBool aCanRollBackBeforeFrame,
                             nsHTMLReflowMetrics& aMetrics,
-                            nsReflowStatus& aStatus)
+                            nsReflowStatus& aStatus,
+                            PRBool* aOptionalBreakAfterFits)
 {
   NS_PRECONDITION(pfd && pfd->mFrame, "bad args, null pointers for frame data");
+  
+  *aOptionalBreakAfterFits = PR_TRUE;
   // Compute right margin to use
   if (0 != pfd->mBounds.width) {
     NS_ASSERTION(aReflowState.mStyleDisplay->mFloats == NS_STYLE_FLOAT_NONE,
@@ -1205,6 +1209,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 #endif
     return PR_TRUE;
   }
+  *aOptionalBreakAfterFits = PR_FALSE;
 
   // When it doesn't fit, check for a few special conditions where we
   // allow it to fit anyway.
