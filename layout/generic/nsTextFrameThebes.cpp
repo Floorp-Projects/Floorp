@@ -4723,23 +4723,23 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   
   do {
     PRBool isPunctuation = cIter.IsPunctuation();
-    if (aWordSelectEatSpace == cIter.IsWhitespace() && !aState->mSawBeforeType) {
+    PRBool isWhitespace = cIter.IsWhitespace();
+    if (aWordSelectEatSpace == isWhitespace && !aState->mSawBeforeType) {
       aState->SetSawBeforeType();
-      aState->Update(isPunctuation);
+      aState->Update(isPunctuation, isWhitespace);
       continue;
     }
     // See if we can break before the current cluster
     if (!aState->mAtStart) {
       PRBool canBreak = isPunctuation != aState->mLastCharWasPunctuation
-        ? BreakWordBetweenPunctuation(aForward ? aState->mLastCharWasPunctuation : isPunctuation,
-                                      aIsKeyboardSelect)
+        ? BreakWordBetweenPunctuation(aState, isPunctuation, isWhitespace, aIsKeyboardSelect)
         : cIter.HaveWordBreakBefore() && aState->mSawBeforeType;
       if (canBreak) {
         *aOffset = cIter.GetBeforeOffset() - mContentOffset;
         return PR_TRUE;
       }
     }
-    aState->Update(isPunctuation);
+    aState->Update(isPunctuation, isWhitespace);
   } while (cIter.NextCluster());
 
   *aOffset = cIter.GetAfterOffset() - mContentOffset;
