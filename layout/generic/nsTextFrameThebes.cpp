@@ -4723,23 +4723,23 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   
   do {
     PRBool isPunctuation = cIter.IsPunctuation();
-    PRBool isWhitespace = cIter.IsWhitespace();
-    if (aWordSelectEatSpace == isWhitespace && !aState->mSawBeforeType) {
+    if (aWordSelectEatSpace == cIter.IsWhitespace() && !aState->mSawBeforeType) {
       aState->SetSawBeforeType();
-      aState->Update(isPunctuation, isWhitespace);
+      aState->Update(isPunctuation);
       continue;
     }
     // See if we can break before the current cluster
     if (!aState->mAtStart) {
       PRBool canBreak = isPunctuation != aState->mLastCharWasPunctuation
-        ? BreakWordBetweenPunctuation(aState, isPunctuation, isWhitespace, aIsKeyboardSelect)
+        ? BreakWordBetweenPunctuation(aForward ? aState->mLastCharWasPunctuation : isPunctuation,
+                                      aIsKeyboardSelect)
         : cIter.HaveWordBreakBefore() && aState->mSawBeforeType;
       if (canBreak) {
         *aOffset = cIter.GetBeforeOffset() - mContentOffset;
         return PR_TRUE;
       }
     }
-    aState->Update(isPunctuation, isWhitespace);
+    aState->Update(isPunctuation);
   } while (cIter.NextCluster());
 
   *aOffset = cIter.GetAfterOffset() - mContentOffset;
@@ -4918,7 +4918,9 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
       }
     }
 
-    if (i < flowEndInTextRun) {
+    if (i < flowEndInTextRun ||
+        (i == mTextRun->GetLength() &&
+         (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
       if (preformattedNewline) {
         aData->ForceBreak(aRenderingContext);
       } else {
