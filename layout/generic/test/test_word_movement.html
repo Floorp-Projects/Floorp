@@ -31,18 +31,14 @@ function getPrefs() {
                                                .getBranch("layout.word_select.");
 }
 
-function setPrefs(eat_space, stop_at_punctuation) {
-  getPrefs().setBoolPref("eat_space_to_next_word", eat_space);
-  getPrefs().setBoolPref("stop_at_punctuation", stop_at_punctuation);
-  eatSpace = eat_space;
+function setEatSpace(newValue) {
+  getPrefs().setBoolPref("eat_space_to_next_word", newValue);
+  eatSpace = newValue;
 }
 
-function restorePrefs() {
+function restoreEatSpace() {
   try {
     getPrefs().clearUserPref("eat_space_to_next_word");
-  } catch(ex) {}
-  try {
-    getPrefs().clearUserPref("stop_at_punctuation");
   } catch(ex) {}
 }
 
@@ -73,7 +69,7 @@ function test() {
 
   var afterEditorNode = document.getElementById("catch").firstChild;
 
-  setPrefs(false, true);
+  setEatSpace(false);
 
   editor.innerHTML = "Hello Kitty";
   sel.collapse(editor.firstChild, 0);
@@ -107,18 +103,7 @@ function test() {
   testLeft(editor.firstChild.firstChild, 4);
   testLeft(editor.firstChild.firstChild, 0);
 
-  editor.innerHTML = "Set .rc to <b>'</b>quiz'";
-  sel.collapse(editor.firstChild, 0);
-  testRight(editor.firstChild, 3);
-  testRight(editor.firstChild, 7);
-  testRight(editor.firstChild, 10);
-  testRight(editor.firstChild.nextSibling.nextSibling, 5);
-  testLeft(editor.firstChild, 11);
-  testLeft(editor.firstChild, 8);
-  testLeft(editor.firstChild, 4);
-  testLeft(editor.firstChild, 0);
-
-  setPrefs(true, true);
+  setEatSpace(true);
 
   // test basic word movement with eat_space_next_to_word true.
 
@@ -152,18 +137,7 @@ function test() {
   testLeft(editor.firstChild.firstChild, 4);
   testLeft(editor.firstChild.firstChild, 0);
 
-  editor.innerHTML = "Set .rc to <b>'</b>quiz'";
-  sel.collapse(editor.firstChild, 0);
-  testRight(editor.firstChild, 4);
-  testRight(editor.firstChild, 8);
-  testRight(editor.firstChild.nextSibling.firstChild, 0);
-  testRight(afterEditorNode, 0);
-  testLeft(editor.firstChild, 11);
-  testLeft(editor.firstChild, 8);
-  testLeft(editor.firstChild, 4);
-  testLeft(editor.firstChild, 0);
-
-  restorePrefs();
+  restoreEatSpace();
 
   SimpleTest.finish();
 }
