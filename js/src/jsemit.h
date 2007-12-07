@@ -464,8 +464,8 @@ js_PopStatementCG(JSContext *cx, JSCodeGenerator *cg);
  * and saves the const's value in cg->constList, if it can be used at compile
  * time.  It returns true unless an error occurred.
  *
- * If the initializer's value could not be saved, js_LookupCompileTimeConstant
- * calls will return the undefined value.  js_LookupCompileTimeConstant tries
+ * If the initializer's value could not be saved, js_DefineCompileTimeConstant
+ * calls will return the undefined value.  js_DefineCompileTimeConstant tries
  * to find a const value memorized for atom, returning true with *vp set to a
  * value other than undefined if the constant was found, true with *vp set to
  * JSVAL_VOID if not found, and false on error.
@@ -473,10 +473,6 @@ js_PopStatementCG(JSContext *cx, JSCodeGenerator *cg);
 extern JSBool
 js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                              JSParseNode *pn);
-
-extern JSBool
-js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
-                             jsval *vp);
 
 /*
  * Find a lexically scoped variable (one declared by let, catch, or an array
