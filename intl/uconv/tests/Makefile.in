@@ -39,12 +39,13 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir	= intl/uconv/tests
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = test_intl_uconv
+XPCSHELL_TESTS	= unit
 
+ifndef MOZ_ENABLE_LIBXUL
 MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= \
@@ -66,7 +67,10 @@ endif
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
+endif # MOZ_ENABLE_LIBXUL
+
 ifdef MOZ_MOCHITEST
+relativesrcdir	= intl/uconv/tests
 
 _TEST_FILES =	\
 		test_bug335816.html \
@@ -76,10 +80,9 @@ libs:: $(_TEST_FILES)
 
 endif # MOZ_MOCHITEST
 
-XPCSHELL_TESTS = unit
-
 include $(topsrcdir)/config/rules.mk
 
+ifndef MOZ_ENABLE_LIBXUL
 INCLUDES	+= \
 		-I$(srcdir)/../ucvlatin \
 		-I$(srcdir)/../ucvja \
@@ -98,3 +101,4 @@ ifneq ($(OS_RELEASE),1.2)
 OS_LIBS		+= /usr/lib/libdl.so
 endif
 endif
+endif # MOZ_ENABLE_LIBXUL
