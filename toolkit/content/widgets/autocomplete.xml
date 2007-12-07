@@ -847,6 +847,7 @@
     <implementation implements="nsIAutoCompletePopup">
       <field name="_currentIndex">0</field>
       <field name="_rowHeight">0</field>
+      <field name="_chunkSize">5</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
 
@@ -964,7 +965,11 @@
           if (this._rowHeight && this.richlistbox.height != height)
             this.richlistbox.height = height;
 
-          if (this._currentIndex < this._matchCount) {
+          // process _chunkSize results at a time to increase performance
+          for (var i = 0; i < this._chunkSize; i++) {
+            if (this._currentIndex >= this._matchCount)
+              return;
+
             var existingItemsCount = this.richlistbox.childNodes.length;
             var item;
 
@@ -1014,14 +1019,10 @@
             }
 
             this._currentIndex++;
-
-            // yield after creating each item so that the UI is responsive
-            // note, when browser.urlbar.maxRichResults is small, this setTimeout()
-            // is not needed, and we could call this._appendCurrentResult() directly.
-            // but the bigger browser.urlbar.maxRichResults gets, this is necessary
-            // so that typing the url bar is responsive
-            setTimeout(function (self) { self._appendCurrentResult(); }, 0, this);
           }
+
+          // yield after each batch of items so that typing the url bar is responsive
+          setTimeout(function (self) { self._appendCurrentResult(); }, 0, this);
         ]]>
         </body>
       </method>
