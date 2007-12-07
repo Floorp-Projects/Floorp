@@ -437,6 +437,11 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   nscoord computedHeight = aState->mReflowState.ComputedHeight();
   nscoord computedMinHeight = aState->mReflowState.mComputedMinHeight;
   nscoord computedMaxHeight = aState->mReflowState.mComputedMaxHeight;
+  if (!ShouldPropagateComputedHeightToScrolledContent()) {
+    computedHeight = NS_UNCONSTRAINEDSIZE;
+    computedMinHeight = 0;
+    computedMaxHeight = NS_UNCONSTRAINEDSIZE;
+  }
   if (aAssumeHScroll) {
     nsSize hScrollbarPrefSize = 
       mInner.mHScrollbarBox->GetPrefSize(const_cast<nsBoxLayoutState&>(aState->mBoxState));
@@ -446,7 +451,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
     if (computedMaxHeight != NS_UNCONSTRAINEDSIZE)
       computedMaxHeight = PR_MAX(0, computedMaxHeight - hScrollbarPrefSize.height);
   }
-  
+
   if (aAssumeVScroll) {
     nsSize vScrollbarPrefSize = 
       mInner.mVScrollbarBox->GetPrefSize(const_cast<nsBoxLayoutState&>(aState->mBoxState));

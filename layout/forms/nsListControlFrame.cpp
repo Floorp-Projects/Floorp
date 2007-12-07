@@ -787,6 +787,12 @@ nsListControlFrame::GetScrollbarStyles() const
                                                 verticalStyle);
 }
 
+PRBool
+nsListControlFrame::ShouldPropagateComputedHeightToScrolledContent() const
+{
+  return !IsInDropDownMode();
+}
+
 //---------------------------------------------------------
 PRBool 
 nsListControlFrame::IsOptionElement(nsIContent* aContent)

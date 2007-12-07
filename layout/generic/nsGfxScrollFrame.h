@@ -401,6 +401,13 @@ protected:
   // NS_FRAME_FIRST_REFLOW set are NOT "initial" as far as we're concerned.
   PRBool InInitialReflow() const;
   
+  /**
+   * Override this to return false if computed height/min-height/max-height
+   * should NOT be propagated to child content.
+   * nsListControlFrame uses this.
+   */
+  virtual PRBool ShouldPropagateComputedHeightToScrolledContent() const { return PR_TRUE; }
+
 private:
   friend class nsGfxScrollFrameInner;
   nsGfxScrollFrameInner mInner;
