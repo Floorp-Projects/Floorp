@@ -144,6 +144,7 @@ public:
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
 
   virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
+  virtual PRBool ShouldPropagateComputedHeightToScrolledContent() const;
 
     // for accessibility purposes
 #ifdef ACCESSIBILITY
