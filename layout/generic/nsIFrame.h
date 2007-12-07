@@ -2168,27 +2168,15 @@ protected:
     PRPackedBool mSawBeforeType;
     // true when the last character encountered was punctuation
     PRPackedBool mLastCharWasPunctuation;
-    // true when the last character encountered was whitespace
-    PRPackedBool mLastCharWasWhitespace;
-    // true when we've seen non-punctuation since the last whitespace
-    PRPackedBool mSeenNonPunctuationSinceWhitespace;
     // text that's *before* the current frame when aForward is true, *after*
-    // the current frame when aForward is false. Only includes the text
-    // on the current line.
+    // the current frame when aForward is false.
     nsAutoString mContext;
 
     PeekWordState() : mAtStart(PR_TRUE), mSawBeforeType(PR_FALSE),
-        mLastCharWasPunctuation(PR_FALSE), mLastCharWasWhitespace(PR_FALSE),
-        mSeenNonPunctuationSinceWhitespace(PR_FALSE) {}
+        mLastCharWasPunctuation(PR_FALSE) {}
     void SetSawBeforeType() { mSawBeforeType = PR_TRUE; }
-    void Update(PRBool aAfterPunctuation, PRBool aAfterWhitespace) {
+    void Update(PRBool aAfterPunctuation) {
       mLastCharWasPunctuation = aAfterPunctuation;
-      mLastCharWasWhitespace = aAfterWhitespace;
-      if (aAfterWhitespace) {
-        mSeenNonPunctuationSinceWhitespace = PR_FALSE;
-      } else if (!aAfterPunctuation) {
-        mSeenNonPunctuationSinceWhitespace = PR_TRUE;
-      }
       mAtStart = PR_FALSE;
     }
   };
