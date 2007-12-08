@@ -262,7 +262,7 @@ COMPONENT_LIBS += system-pref
 endif
 endif
 
-ifneq (,$(MOZ_ENABLE_GTK2))
+ifdef MOZ_ENABLE_GTK2
 STATIC_LIBS += gtkxtbin
 endif
 
@@ -277,7 +277,7 @@ STATIC_LIBS += gfxpsshar
 endif
 
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
-ifneq (,$(MOZ_ENABLE_GTK2))
+ifndef MOZ_ENABLE_GTK2
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
