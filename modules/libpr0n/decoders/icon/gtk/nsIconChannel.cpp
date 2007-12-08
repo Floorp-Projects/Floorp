@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef MOZ_ENABLE_GNOMEUI
 // Older versions of these headers seem to be missing an extern "C"
 extern "C" {
 #include <libgnome/libgnome.h>
@@ -47,6 +48,7 @@ extern "C" {
 #include <libgnomevfs/gnome-vfs-file-info.h>
 #include <libgnomevfs/gnome-vfs-ops.h>
 }
+#endif
 
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkiconfactory.h>
@@ -69,6 +71,7 @@ NS_IMPL_ISUPPORTS2(nsIconChannel,
                    nsIRequest,
                    nsIChannel)
 
+#ifdef MOZ_ENABLE_GNOMEUI
 // These let us have a soft dependency on libgnomeui rather than a hard one. These are just basically the prototypes
 // of the functions in the libraries.
 typedef char* (*_GnomeIconLookup_fn)(GtkIconTheme *icon_theme, GnomeThumbnailFactory *thumbnail_factory,
@@ -79,14 +82,23 @@ typedef char* (*_GnomeIconThemeLookupIcon_fn)(GnomeIconTheme *theme, const char 
                                               const GnomeIconData **icon_data, int *base_size);
 typedef int (*_GnomeInit_fn)(const char *app_id, const char *app_version, int argc, char **argv, const struct poptOption *options,
                              int flags, poptContext *return_ctx);
+typedef GnomeProgram* (*_GnomeProgramGet_fn)(void);
+typedef GnomeVFSResult (*_GnomeVFSGetFileInfo_fn)(const gchar *text_uri, GnomeVFSFileInfo *info, GnomeVFSFileInfoOptions options);
+typedef void (*_GnomeVFSFileInfoClear_fn)(GnomeVFSFileInfo *info);
 
 static PRLibrary* gLibGnomeUI = nsnull;
-static PRBool gTriedToLoadLibGnomeUI = PR_FALSE;
+static PRLibrary* gLibGnome = nsnull;
+static PRLibrary* gLibGnomeVFS = nsnull;
+static PRBool gTriedToLoadGnomeLibs = PR_FALSE;
 
 static _GnomeIconLookup_fn _gnome_icon_lookup = nsnull;
 static _GnomeIconThemeNew_fn _gnome_icon_theme_new = nsnull;
 static _GnomeIconThemeLookupIcon_fn _gnome_icon_theme_lookup_icon = nsnull;
 static _GnomeInit_fn _gnome_init = nsnull;
+static _GnomeProgramGet_fn _gnome_program_get = nsnull;
+static _GnomeVFSGetFileInfo_fn _gnome_vfs_get_file_info = nsnull;
+static _GnomeVFSFileInfoClear_fn _gnome_vfs_file_info_clear = nsnull;
+#endif
 
 static nsresult
 moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
@@ -154,7 +166,9 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
 
 static GtkWidget *gProtoWindow = nsnull;
 static GtkWidget *gStockImageWidget = nsnull;
+#ifdef MOZ_ENABLE_GNOMEUI
 static GnomeIconTheme *gIconTheme = nsnull;
+#endif
 
 #if GTK_CHECK_VERSION(2,4,0)
 static GtkIconFactory *gIconFactory = nsnull;
@@ -187,14 +201,14 @@ ensure_icon_factory()
 }
 #endif
 
+#ifdef MOZ_ENABLE_GNOMEUI
 static nsresult
 ensure_libgnomeui()
 {
   // Attempt to get the libgnomeui symbol references. We do it this way so that stock icons from Init()
   // don't get held back by InitWithGnome()'s libgnomeui dependency.
-  if (!gTriedToLoadLibGnomeUI) {
+  if (!gTriedToLoadGnomeLibs) {
     gLibGnomeUI = PR_LoadLibrary("libgnomeui-2.so.0");
-    gTriedToLoadLibGnomeUI = PR_TRUE;
     if (!gLibGnomeUI)
       return NS_ERROR_NOT_AVAILABLE;
 
@@ -203,7 +217,7 @@ ensure_libgnomeui()
     _gnome_icon_lookup = (_GnomeIconLookup_fn)PR_FindFunctionSymbol(gLibGnomeUI, "gnome_icon_lookup");
     _gnome_icon_theme_lookup_icon = (_GnomeIconThemeLookupIcon_fn)PR_FindFunctionSymbol(gLibGnomeUI, "gnome_icon_theme_lookup_icon");
 
-    if (!_gnome_init || !_gnome_icon_theme_new || !gnome_icon_lookup || !_gnome_icon_theme_lookup_icon) {
+    if (!_gnome_init || !_gnome_icon_theme_new || !_gnome_icon_lookup || !_gnome_icon_theme_lookup_icon) {
       PR_UnloadLibrary(gLibGnomeUI);
       gLibGnomeUI = nsnull;
       return NS_ERROR_NOT_AVAILABLE;
@@ -215,6 +229,52 @@ ensure_libgnomeui()
 
   return NS_OK;
 }
+
+static nsresult
+ensure_libgnome()
+{
+  if (!gTriedToLoadGnomeLibs) {
+    gLibGnome = PR_LoadLibrary("libgnome-2.so.0");
+    if (!gLibGnome)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    _gnome_program_get = (_GnomeProgramGet_fn)PR_FindFunctionSymbol(gLibGnome, "gnome_program_get");
+    if (!_gnome_program_get) {
+      PR_UnloadLibrary(gLibGnome);
+      gLibGnome = nsnull;
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  if (!gLibGnome)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  return NS_OK;
+}
+
+static nsresult
+ensure_libgnomevfs()
+{
+  if (!gTriedToLoadGnomeLibs) {
+    gLibGnomeVFS = PR_LoadLibrary("libgnomevfs-2.so.0");
+    if (!gLibGnomeVFS)
+      return NS_ERROR_NOT_AVAILABLE;
+
+    _gnome_vfs_get_file_info = (_GnomeVFSGetFileInfo_fn)PR_FindFunctionSymbol(gLibGnomeVFS, "gnome_vfs_get_file_info");
+    _gnome_vfs_file_info_clear = (_GnomeVFSFileInfoClear_fn)PR_FindFunctionSymbol(gLibGnomeVFS, "gnome_vfs_file_info_clear");
+    if (!_gnome_vfs_get_file_info || !_gnome_vfs_file_info_clear) {
+      PR_UnloadLibrary(gLibGnomeVFS);
+      gLibGnomeVFS = nsnull;
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
+  if (!gLibGnomeVFS)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  return NS_OK;
+}
+#endif
 
 static GtkIconSize
 moz_gtk_icon_size(const char *name)
@@ -240,15 +300,20 @@ moz_gtk_icon_size(const char *name)
   return GTK_ICON_SIZE_MENU;
 }
 
+#ifdef MOZ_ENABLE_GNOMEUI
 nsresult
 nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
 {
   nsresult rv;
 
-  if (NS_FAILED(ensure_libgnomeui()))
+  if (NS_FAILED(ensure_libgnomeui()) || NS_FAILED(ensure_libgnome()) || NS_FAILED(ensure_libgnomevfs())) {
+    gTriedToLoadGnomeLibs = PR_TRUE;
     return NS_ERROR_NOT_AVAILABLE;
-  
-  if (!gnome_program_get()) {
+  }
+
+  gTriedToLoadGnomeLibs = PR_TRUE;
+
+  if (!_gnome_program_get()) {
     // Get the brandShortName from the string bundle to pass to GNOME
     // as the application name.  This may be used for things such as
     // the title of grouped windows in the panel.
@@ -305,7 +370,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     // network request
     PRBool isFile;
     if (NS_SUCCEEDED(fileURI->SchemeIs("file", &isFile)) && isFile) {
-      gnome_vfs_get_file_info(spec.get(), &fileInfo, GNOME_VFS_FILE_INFO_DEFAULT);
+      _gnome_vfs_get_file_info(spec.get(), &fileInfo, GNOME_VFS_FILE_INFO_DEFAULT);
     }
     else {
       // We have to get a leaf name from our uri...
@@ -344,7 +409,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     gIconTheme = _gnome_icon_theme_new();
 
     if (!gIconTheme) {
-      gnome_vfs_file_info_clear(&fileInfo);
+      _gnome_vfs_file_info_clear(&fileInfo);
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -353,7 +418,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
                                   type.get(), GNOME_ICON_LOOKUP_FLAGS_NONE,
                                   NULL);
 
-  gnome_vfs_file_info_clear(&fileInfo);
+  _gnome_vfs_file_info_clear(&fileInfo);
   if (!name)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -391,6 +456,7 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
   gdk_pixbuf_unref(scaled);
   return rv;
 }
+#endif
 
 nsresult
 nsIconChannel::Init(nsIURI* aURI)
@@ -401,7 +467,11 @@ nsIconChannel::Init(nsIURI* aURI)
   nsCAutoString stockIcon;
   iconURI->GetStockIcon(stockIcon);
   if (stockIcon.IsEmpty()) {
+#ifdef MOZ_ENABLE_GNOMEUI
     return InitWithGnome(iconURI);
+#else
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
   }
 
   nsCAutoString iconSizeString;
@@ -455,13 +525,23 @@ nsIconChannel::Shutdown() {
     gProtoWindow = nsnull;
     gStockImageWidget = nsnull;
   }
+#ifdef MOZ_ENABLE_GNOMEUI
   if (gIconTheme) {
     g_object_unref(G_OBJECT(gIconTheme));
     gIconTheme = nsnull;
   }
+  gTriedToLoadGnomeLibs = PR_FALSE;
   if (gLibGnomeUI) {
     PR_UnloadLibrary(gLibGnomeUI);
     gLibGnomeUI = nsnull;
-    gTriedToLoadLibGnomeUI = PR_FALSE;
   }
+  if (gLibGnome) {
+    PR_UnloadLibrary(gLibGnome);
+    gLibGnome = nsnull;
+  }
+  if (gLibGnomeVFS) {
+    PR_UnloadLibrary(gLibGnomeVFS);
+    gLibGnomeVFS = nsnull;
+  }
+#endif
 }
