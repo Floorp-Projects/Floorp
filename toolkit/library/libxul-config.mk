@@ -277,7 +277,7 @@ STATIC_LIBS += gfxpsshar
 endif
 
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
-ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+ifneq (,$(MOZ_ENABLE_GTK2))
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
