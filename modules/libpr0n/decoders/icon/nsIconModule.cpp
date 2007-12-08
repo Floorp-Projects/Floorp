@@ -119,7 +119,9 @@ IconDecoderModuleCtor(nsIModule* aSelf)
 PR_STATIC_CALLBACK(void)
 IconDecoderModuleDtor(nsIModule* aSelf)
 {
+#ifdef MOZ_WIDGET_GTK2
   nsIconChannel::Shutdown();
+#endif
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsIconDecoderModule, components,
