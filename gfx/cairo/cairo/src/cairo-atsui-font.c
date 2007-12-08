@@ -87,6 +87,7 @@ struct _cairo_atsui_font {
 
     Fixed size;
     CGAffineTransform font_matrix;
+    CGFontRef cgfref;
 };
 
 struct _cairo_atsui_font_face {
@@ -300,6 +301,8 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
     status = _cairo_atsui_font_set_metrics (font);
 
+    font->cgfref = NULL;
+
   FAIL:
     if (status) {
 	if (font) {
@@ -448,6 +451,8 @@ _cairo_atsui_font_fini(void *abstract_font)
         ATSUDisposeStyle(font->style);
     if (font->unscaled_style)
         ATSUDisposeStyle(font->unscaled_style);
+    if (font->cgfref)
+	CGFontRelease(font->cgfref);
 }
 
 static GlyphID 
@@ -942,6 +947,19 @@ _cairo_atsui_scaled_font_get_atsu_font_id (cairo_scaled_font_t *sfont)
 
     return afont->fontID;
 }
+
+CGFontRef
+_cairo_atsui_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont)
+{
+    cairo_atsui_font_t *afont = (cairo_atsui_font_t *) sfont;
+
+    if (!afont->cgfref) {
+	ATSFontRef atsfref = FMGetATSFontRefFromFont (afont->fontID);
+	afont->cgfref = CGFontCreateWithPlatformFont (&atsfref);
+    }
+    return afont->cgfref;
+}
+
 
 static cairo_int_status_t
 _cairo_atsui_load_truetype_table (void	           *abstract_font,
