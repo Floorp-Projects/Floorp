@@ -119,9 +119,7 @@ IconDecoderModuleCtor(nsIModule* aSelf)
 PR_STATIC_CALLBACK(void)
 IconDecoderModuleDtor(nsIModule* aSelf)
 {
-#ifdef MOZ_ENABLE_GNOMEUI
   nsIconChannel::Shutdown();
-#endif
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsIconDecoderModule, components,
