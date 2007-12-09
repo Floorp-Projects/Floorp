@@ -1853,6 +1853,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
     JSLocalKind localKind;
     uintN index;
     JSAtomListElement *ale;
+    JSBool constOp;
 
     JS_ASSERT(pn->pn_type == TOK_NAME);
     if (pn->pn_slot >= 0 || pn->pn_op == JSOP_ARGUMENTS)
@@ -1956,6 +1957,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
             /* Use precedes declaration, or name is never declared. */
             return JS_TRUE;
         }
+        constOp = (ALE_JSOP(ale) == JSOP_DEFCONST);
 
         /* Index atom so we can map fast global number to name. */
         JS_ASSERT(tc->flags & TCF_COMPILING);
@@ -1984,7 +1986,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
           case JSOP_DELNAME:  /* NB: no change */ break;
           default: JS_ASSERT(0);
         }
-        pn->pn_const = (ALE_JSOP(ale) == JSOP_DEFCONST);
+        pn->pn_const = constOp;
         if (op != pn->pn_op) {
             pn->pn_op = op;
             pn->pn_slot = slot;
