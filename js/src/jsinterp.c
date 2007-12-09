@@ -3486,9 +3486,7 @@ interrupt:
             sp = vp + 1;
             vp[-depth] = (jsval)pc;
             LOAD_INTERRUPT_HANDLER(cx);
-            obj = JSVAL_TO_OBJECT(*vp);
-            len = js_CodeSpec[op].length;
-            DO_NEXT_OP(len);
+          END_CASE(JSOP_NEW)
 
           BEGIN_CASE(JSOP_DELNAME)
             LOAD_ATOM(0);
@@ -5358,6 +5356,7 @@ interrupt:
           BEGIN_CASE(JSOP_NEWINIT)
             i = GET_INT8(pc);
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
+            SAVE_SP_AND_PC(fp);
             obj = (i == JSProto_Array)
                   ? js_NewArrayObject(cx, 0, NULL)
                   : js_NewObject(cx, &js_ObjectClass, NULL, NULL);
@@ -5365,6 +5364,7 @@ interrupt:
                 goto out;
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             fp->sharpDepth++;
+            LOAD_INTERRUPT_HANDLER(cx);
           END_CASE(JSOP_NEWINIT)
 
           BEGIN_CASE(JSOP_ENDINIT)
