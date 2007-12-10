@@ -2375,7 +2375,8 @@ NSEvent* gLastDragEvent = nil;
   // dragging the mouse to a menu item and then releasing it.  We retain
   // the window in case it gets destroyed as a result of the extra
   // mouseDown (and release it below).
-  if (type == NSLeftMouseUp || type == NSRightMouseUp) {
+  BOOL sendSynthMouseDown = gRollupWidget && (type == NSLeftMouseUp || type == NSRightMouseUp);
+  if (sendSynthMouseDown) {
     [windowUnderMouse retain];
     NSEventType extraEventType;
     switch (type) {
@@ -2412,7 +2413,7 @@ NSEvent* gLastDragEvent = nil;
                                 pressure:0.0];
   [windowUnderMouse sendEvent:newEvent];
 
-  if (type == NSLeftMouseUp || type == NSRightMouseUp)
+  if (sendSynthMouseDown)
     [windowUnderMouse release];
 
   return NO;
