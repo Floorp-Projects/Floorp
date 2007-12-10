@@ -47,9 +47,10 @@
 !define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}/${AB_CD}/exit.html"
 
 # Everything below this line may be modified for Alpha / Beta releases.
-!define BrandFullName         "Mozilla Firefox"
+!define BrandFullName         "Mozilla Firefox 3 Beta 2"
 
 # Add !define NO_INSTDIR_FROM_REG to prevent finding a non-default installation
 # directory in the registry and using that as the default. This prevents
 # Beta releases built with official branding from finding an existing install
 # of an official release and defaulting to its installation directory.
+!define NO_INSTDIR_FROM_REG
