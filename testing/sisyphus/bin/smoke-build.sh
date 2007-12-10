@@ -61,8 +61,10 @@ for filepath in $@; do
 
     echo $product $branch
 
-    install-build.sh  -p "$product" -b "$branch" -x "/tmp/$product-$branch" \
-	-f "$filepath"
+    if ! install-build.sh  -p "$product" -b "$branch" -x "/tmp/$product-$branch" \
+	-f "$filepath"; then
+	error "installing build $product $branch into /tmp/$product-$branch"
+    fi
 
     if [[ "$product" == "thunderbird" ]]; then
 	template="-L ${TEST_DIR}/profiles/imap"
@@ -70,20 +72,26 @@ for filepath in $@; do
 	unset template
     fi
 
-    create-profile.sh -p "$product" -b "$branch" \
+    if ! create-profile.sh -p "$product" -b "$branch" \
 	-x "/tmp/$product-$branch" \
 	-D "/tmp/$product-$branch-profile" -N "$product-$branch-profile" \
 	-U ${TEST_DIR}/prefs/test-user.js \
-	$template
+	$template; then
+	error "creating profile $product-$branch-profile at /tmp/$product-$branch"
+    fi
 
-    install-extensions.sh -p "$product" -b "$branch" \
+    if ! install-extensions.sh -p "$product" -b "$branch" \
 	-x "/tmp/$product-$branch" \
 	-N "$product-$branch-profile" \
-	-E ${TEST_DIR}/xpi
+	-E ${TEST_DIR}/xpi; then
+        error "installing extensions from ${TEST_DIR}/xpi"
+    fi
 
-    check-spider.sh -p "$product" -b "$branch" \
+    if ! check-spider.sh -p "$product" -b "$branch" \
 	-x "/tmp/$product-$branch" \
-	-N "$product-$branch-profile"
+	-N "$product-$branch-profile"; then
+        error "check-spider.sh failed."
+    fi
 
     uninstall-build.sh  -p "$product" -b "$branch" -x "/tmp/$product-$branch"
 

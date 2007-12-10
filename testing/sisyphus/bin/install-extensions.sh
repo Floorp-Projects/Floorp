@@ -164,6 +164,6 @@ fi
 
 if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "install extensions - second restart" \
     $executable -P $profilename "http://${TEST_HTTP}/bin/install-extensions-2.html"; then
-    echo "Ignoring 2nd failure to load the install-extensions page"
+    error "Fatal 2nd failure to load the install-extensions page"
 fi
 

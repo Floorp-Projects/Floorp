@@ -109,10 +109,14 @@ for data in $datalist; do
     echo "log: $TEST_LOG "
 
     if [[ "$verbose" == "1" ]]; then
-        test-setup.sh -d $TEST_DIR/data/$data.data 2>&1 | tee -a $TEST_LOG
+        if ! test-setup.sh -d $TEST_DIR/data/$data.data 2>&1 | tee -a $TEST_LOG; then
+            error "test-setup.sh failed"
+        fi
         $testscript $testargs -d $TEST_DIR/data/$data.data 2>&1 | tee -a $TEST_LOG
     else
-        test-setup.sh -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
+        if ! test-setup.sh -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1; then
+            error "test-setup.sh failed"
+        fi
         $testscript $testargs -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
     fi
 
