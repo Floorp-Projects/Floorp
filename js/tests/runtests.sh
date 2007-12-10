@@ -76,7 +76,7 @@ usage: runtests.sh -p "$products" -b "$branches" -T  "$buildtypes" -B "$buildcom
 variable            description
 ===============     ============================================================
 -p products         space separated list of js, firefox
--b branches         space separated list of branches 1.8.1, 1.9.0
+-b branches         space separated list of branches 1.8.0, 1.8.1, 1.9.0
 -T buildtypes       space separated list of build types opt debug
 -e extra            optional. extra qualifier to pick build tree and mozconfig.
 -B buildcommands    optional space separated list of build commands
@@ -134,14 +134,22 @@ testlogfilelist=`mktemp /tmp/TESTLOGFILES.XXXX`
 export testlogfiles
 export testlogfile
 
+# because without pipefail, the pipe will not return a non-zero 
+# exit code, we must pipe stderr from tester.sh to stdout and then
+# look into the testlogfilelist for the error
+
 if [[ -z "$extra" ]]; then
-    if tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$buildtypes"| tee -a $testlogfilelist; then
-        testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
+    tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$buildtypes" 2>&1 | tee -a $testlogfilelist
+    if grep -q 'test-setup.sh failed' $testlogfilelist; then
+        error "runtests.sh: terminating due to error"
     fi
+    testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
 else
-    if tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$extra" "$buildtypes"| tee -a $testlogfilelist; then
-        testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
+    tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$extra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
+    if grep -q 'test-setup.sh failed' $testlogfilelist; then
+        error "runtests.sh: terminating due to error"
     fi
+    testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
 fi
 
 rm $testlogfilelist
@@ -176,6 +184,7 @@ for testlogfile in $testlogfiles; do
         *) error "unknown buildtype in logfile $testlogfile";;
     esac
     case "$testlogfile" in
+        *,1.8.0,*) branch=1.8.0;;
         *,1.8.1,*) branch=1.8.1;;
         *,1.9.0,*) branch=1.9.0;;
         *) error "unknown branch in logfile $testlogfile";;
@@ -194,6 +203,7 @@ for testlogfile in $testlogfiles; do
         nfail=`cat ${outputprefix}-results-failures.log | wc -l`
         nfixes=`cat ${outputprefix}-results-possible-fixes.log | wc -l`
         nregressions=`cat ${outputprefix}-results-possible-regressions.log | wc -l`
+
         echo -e "\nJavaScript Tests $branch $buildtype $testtype\n"
         echo -e "\nFailures:\n"
         cat "${outputprefix}-results-failures.log"
@@ -201,7 +211,7 @@ for testlogfile in $testlogfiles; do
         cat "${outputprefix}-results-possible-fixes.log"
         echo -e "\nPossible Regressions:\n"
         cat "${outputprefix}-results-possible-regressions.log"
-        echo -e "\nTinderboxPrint: js tests  $branch $buildtype $testtype $npass/$nfail<br/>F:$nfixes<br/>R:$nregressions"
+        echo -e "\nTinderboxPrint: js tests<br/>$branch $buildtype $testtype<br/>$npass/$nfail<br/>F:$nfixes R:$nregressions"
 
     fi
 done
