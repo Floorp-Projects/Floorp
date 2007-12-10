@@ -608,13 +608,17 @@ sub IsValidLocaleDeliverable {
     my $this = shift;
     my %args = @_;
 
+    my $useTarGz = $config->Exists(var => 'useTarGz') ?
+     $config->Get(var => 'useTarGz') : 0;
+    my $linuxExtension = ($useTarGz) ? '.gz' : '.bz2';
+
     my $dirent = $File::Find::name;
 
     my ($locale, $platform);
     my @parts = split(/\./, basename($dirent));
     my $partsCount = scalar(@parts);
 
-    if ($dirent =~ /\.tar\.gz/) {
+    if ($dirent =~ /\.tar\.$linuxExtension) {
         # e.g. firefox-2.0.0.2.sk.linux-i686.tar.gz
         $locale = $parts[$partsCount - 4];
         $platform = 'linux';
