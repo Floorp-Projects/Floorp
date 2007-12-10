@@ -294,6 +294,10 @@ menuitem[command="cmd_selectAll"] {
   list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
 }
 
+menuitem[command="cmd_selectAll"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-select-all?size=menu&state=disabled");
+}
+
 #orgClose {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }

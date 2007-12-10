@@ -381,6 +381,11 @@ menuitem[command="Browser:Reload"],
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
+menuitem[command="Browser:Reload"][disabled],
+#context-reload[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
+}
+
 menuitem[command="cmd_fullZoomEnlarge"] {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=menu");
 }
