@@ -45,7 +45,16 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-ReferenceError = 5;
+// work around bug 376957
+var SavedReferenceError = ReferenceError;
+
+try
+{
+  ReferenceError = 5;
+}
+catch(ex)
+{
+}
 
 try
 {
@@ -56,7 +65,13 @@ catch(ex)
   print(ex + '');
 }
 
-expect = 5;
-actual = ReferenceError
- 
-  reportCompare(expect, actual, summary);
+if (SavedReferenceError == ReferenceError)
+{
+  actual = expect = 'Test ignored due to bug 376957';
+}
+else
+{
+  expect = 5;
+  actual = ReferenceError;
+} 
+reportCompare(expect, actual, summary);
