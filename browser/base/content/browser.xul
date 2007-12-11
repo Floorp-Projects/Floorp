@@ -265,7 +265,8 @@
                  newlines="stripsurroundingwhitespace"
                  oninput="URLBarOnInput(event);"
                  ontextentered="return handleURLBarCommand(param);"
-                 ontextreverted="return handleURLBarRevert();">
+                 ontextreverted="return handleURLBarRevert();"
+                 pageproxystate="invalid">
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events -->
           <box id="identity-box"
