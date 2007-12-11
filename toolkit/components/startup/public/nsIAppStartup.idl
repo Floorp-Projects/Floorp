@@ -41,13 +41,19 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(e9b0f89b-0529-4d96-98a8-eb5b2b9a8383)]
+[scriptable, uuid(6799abed-4721-4f51-9304-d1a2ea1df5d5)]
 interface nsIAppStartup : nsISupports
 {
     /**
      * Create the hidden window.
      */
     void createHiddenWindow();
+
+    /**
+     * Destroys the hidden window. This will have no effect if the hidden window
+     * has not yet been created.
+     */
+    void destroyHiddenWindow();
 
     /**
      * Runs an application event loop: normally the main event pump which
