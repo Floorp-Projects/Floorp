@@ -23,6 +23,7 @@
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Seth Spitzer <sspitzer@mozilla.com>
  *   Asaf Romano <mano@mozilla.com>
+ *   Marco Bonardo <mak77@supereva.it>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2268,14 +2269,11 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
   // we generate a super-optimized SQL query
   if (IsHistoryMenuQuery(aQueries, aOptions, 
         nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING)) {
-    // Note:  visit_date column is null, which is acceptable for
-    // a menu (as it is unused) and we are not sorting by it.  
-    // by not requiring the visit_date value, 
-    // we can avoid JOINing against the moz_historyvisits, 
-    // making this query very fast.
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-      "null, f.url, null, null "
+      "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id "
+      " AND visit_type <> 4 AND visit_type <> 0), "
+      "f.url, null, null "
       "FROM moz_places h "
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id WHERE "
       "h.id IN (SELECT id FROM moz_places WHERE hidden <> 1 "
