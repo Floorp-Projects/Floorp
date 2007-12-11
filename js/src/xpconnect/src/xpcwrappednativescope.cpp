@@ -631,35 +631,22 @@ GetScopeOfObject(JSContext* cx, JSObject* obj)
     nsISupports* supports;
     JSClass* clazz = JS_GET_CLASS(cx, obj);
 
-    if(!IS_WRAPPER_CLASS(clazz) ||
+    if(!clazz ||
+       !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
+       !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
        !(supports = (nsISupports*) JS_GetPrivate(cx, obj)))
-    {
-#ifdef DEBUG
-        {
-            if(clazz->flags & JSCLASS_HAS_PRIVATE &&
-               clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)
-            {
-                nsCOMPtr<nsIXPConnectWrappedNative> iface =
-                    do_QueryInterface((nsISupports*) JS_GetPrivate(cx, obj));
-
-                NS_ASSERTION(!iface, "Uh, how'd this happen?");
-            }
-        }
-#endif
-
         return nsnull;
-    }
 
-#ifdef DEBUG
+    nsCOMPtr<nsIXPConnectWrappedNative> iface = do_QueryInterface(supports);
+    if(iface)
     {
-        nsCOMPtr<nsIXPConnectWrappedNative> iface = do_QueryInterface(supports);
-
-        NS_ASSERTION(iface, "Uh, how'd this happen?");
+        // We can fairly safely assume that this is really one of our
+        // nsXPConnectWrappedNative objects. No other component in our
+        // universe should be creating objects that implement the
+        // nsIXPConnectWrappedNative interface!
+        return ((XPCWrappedNative*)supports)->GetScope();
     }
-#endif
-
-    // obj is one of our nsXPConnectWrappedNative objects.
-    return ((XPCWrappedNative*)supports)->GetScope();
+    return nsnull;
 }
 
 
