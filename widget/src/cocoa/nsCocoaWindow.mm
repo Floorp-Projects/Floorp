@@ -1498,8 +1498,11 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   if ((self = [super init])) {
     mTitlebarColor = [aTitlebarColor retain];
     mBackgroundColor = [aBackgroundColor retain];
-    mWindow = aWindow; // weak ref
+    mWindow = aWindow; // weak ref to avoid a cycle
     NSRect frameRect = [aWindow frame];
+
+    // We cant just use a static because the height can vary by window, and we don't
+    // want to recalculate this every time we draw. A member is the best solution.
     mTitlebarHeight = frameRect.size.height - [aWindow contentRectForFrameRect:frameRect].size.height;
   }
   return self;
@@ -1526,6 +1529,7 @@ static const float sTigerHeaderEndGrey = 202/255.0f;
 
 // This is the grey for the border at the bottom of the titlebar.
 static const float sLeopardTitlebarBorderGrey = 64/255.0f;
+static const float sLeopardTitlebarBackgroundBorderGrey = 134/255.0f;
 static const float sTigerTitlebarBorderGrey = 140/255.0f;
 
 // Callback used by the default titlebar shading.
@@ -1556,6 +1560,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NSColor *titlebarColor = [color titlebarColor];
   NSColor *backgroundColor = [color backgroundColor];
   NSWindow *window = [color window];
+  BOOL isMain = [window isMainWindow];
 
   // Remember: this context is NOT flipped, so the origin is in the bottom left.
   float titlebarHeight = [color titlebarHeight];
@@ -1566,7 +1571,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
   // If the titlebar color is nil, draw the default titlebar shading.
   if (!titlebarColor) {
-    BOOL isMain = [window isMainWindow];
     // On Tiger when the window is not main, we want to draw a pinstripe pattern instead.
     if (!nsToolkit::OnLeopardOrLater() && !isMain) {
       [[NSColor windowBackgroundColor] set];
@@ -1586,10 +1590,9 @@ void patternDraw(void* aInfo, CGContextRef aContext)
     }
 
     // Draw the one pixel border at the bottom of the titlebar.
-    if (nsToolkit::OnLeopardOrLater())
-      [[NSColor colorWithDeviceWhite:sLeopardTitlebarBorderGrey alpha:1.0f] set];
-    else
-      [[NSColor colorWithDeviceWhite:sTigerTitlebarBorderGrey alpha:1.0f] set];
+    float borderGrey = !nsToolkit::OnLeopardOrLater() ? sTigerTitlebarBorderGrey :
+      (isMain ? sLeopardTitlebarBorderGrey : sLeopardTitlebarBackgroundBorderGrey);
+    [[NSColor colorWithDeviceWhite:borderGrey alpha:1.0f] set];
     NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
   } else {
     // if the titlebar color is not nil, just set and draw it normally.
@@ -1670,6 +1673,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 {
   [self setFill];
 }
+
 
 - (float)titlebarHeight
 {
