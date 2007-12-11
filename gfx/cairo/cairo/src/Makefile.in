@@ -138,6 +138,13 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CSRCS   += cairo-os2-surface.c
 EXPORTS += cairo-os2.h cairo-os2-private.h
+CSRCS   += cairo-base85-stream.c \
+           cairo-pdf-surface.c \
+           cairo-type1-subset.c \
+           cairo-type1-fallback.c \
+           cairo-truetype-subset.c \
+           cairo-cff-subset.c
+EXPORTS += cairo-pdf.h
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
