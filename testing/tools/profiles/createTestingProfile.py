@@ -79,7 +79,6 @@ def main(argv):
         if o in ("-c","--clobber"):
             clobber=1
     if binary=="" or not os.path.exists(binary):
-	print binary + " XXX3\n";
 	usage()
         sys.exit(2)
 
