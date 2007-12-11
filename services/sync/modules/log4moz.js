@@ -50,7 +50,6 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
-// Note: these are also available in the idl
 const LEVEL_FATAL  = 70;
 const LEVEL_ERROR  = 60;
 const LEVEL_WARN   = 50;
@@ -78,126 +77,29 @@ const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /*
- * LoggingService
+ * LogMessage
+ * Encapsulates a single log event's data
  */
-
-function Log4MozService() {
-  this._repository = new LoggerRepository();
+function LogMessage(loggerName, level, message){
+  this.loggerName = loggerName;
+  this.message = message;
+  this.level = level;
+  this.time = Date.now();
 }
-Log4MozService.prototype = {
-  classDescription: "Log4moz Logging Service",
-  contractID: "@mozilla.org/log4moz/service;1",
-  classID: Components.ID("{a60e50d7-90b8-4a12-ad0c-79e6a1896978}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.ILog4MozService,
-                                         Ci.nsISupports]),
+LogMessage.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.ILogMessage, 
 
-  get rootLogger() {
-    return this._repository.rootLogger;
+  get levelDesc() {
+    if (this.level in LEVEL_DESC)
+      return LEVEL_DESC[this.level];
+    return "UNKNOWN";
   },
 
-  getLogger: function LogSvc_getLogger(name) {
-    return this._repository.getLogger(name);
-  },
-
-  newAppender: function LogSvc_newAppender(kind, formatter) {
-    switch (kind) {
-    case "dump":
-      return new DumpAppender(formatter);
-    case "console":
-      return new ConsoleAppender(formatter);
-    default:
-      dump("log4moz: unknown appender kind: " + kind);
-      return;
-    }
-  },
-
-  newFileAppender: function LogSvc_newAppender(kind, file, formatter) {
-    switch (kind) {
-    case "file":
-      return new FileAppender(file, formatter);
-    case "rotating":
-      // FIXME: hardcoded constants
-      return new RotatingFileAppender(file, formatter, ONE_MEGABYTE * 5, 0);
-    default:
-      dump("log4moz: unknown appender kind: " + kind);
-      return;
-    }
-  },
-
-  newFormatter: function LogSvc_newFormatter(kind) {
-    switch (kind) {
-    case "basic":
-      return new BasicFormatter();
-    default:
-      dump("log4moz: unknown formatter kind: " + kind);
-      return;
-    }
+  toString: function LogMsg_toString(){
+    return "LogMessage [" + this._date + " " + this.level + " " +
+      this.message + "]";
   }
 };
-
-function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule([Log4MozService]);
-}
-
-/*
- * LoggerRepository
- * Implements a hierarchy of Loggers
- */
-
-function LoggerRepository() {}
-LoggerRepository.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.ILoggerRepository, Ci.nsISupports]),
-
-  _loggers: {},
-
-  _rootLogger: null,
-  get rootLogger() {
-    if (!this._rootLogger) {
-      this._rootLogger = new Logger("root", this);
-      this._rootLogger.level = LEVEL_ALL;
-    }
-    return this._rootLogger;
-  },
-  // FIXME: need to update all parent values if we do this
-  //set rootLogger(logger) {
-  //  this._rootLogger = logger;
-  //},
-
-  _updateParents: function LogRep__updateParents(name) {
-    let pieces = name.split('.');
-    let cur, parent;
-
-    // find the closest parent
-    for (let i = 0; i < pieces.length; i++) {
-      if (cur)
-        cur += '.' + pieces[i];
-      else
-        cur = pieces[i];
-      if (cur in this._loggers)
-        parent = cur;
-    }
-
-    // if they are the same it has no parent
-    if (parent == name)
-      this._loggers[name].parent = this.rootLogger;
-    else
-      this._loggers[name].parent = this._loggers[parent];
-
-    // trigger updates for any possible descendants of this logger
-    for (let logger in this._loggers) {
-      if (logger != name && name.indexOf(logger) == 0)
-        this._updateParents(logger);
-    }
-  },
-
-  getLogger: function LogRep_getLogger(name) {
-    if (!(name in this._loggers)) {
-      this._loggers[name] = new Logger(name, this);
-      this._updateParents(name);
-    }
-    return this._loggers[name];
-  }
-}
 
 /*
  * Logger
@@ -210,7 +112,7 @@ function Logger(name, repository) {
   this._appenders = [];
 }
 Logger.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.ILogger, Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.ILogger, 
 
   parent: null,
 
@@ -275,6 +177,106 @@ Logger.prototype = {
 };
 
 /*
+ * LoggerRepository
+ * Implements a hierarchy of Loggers
+ */
+
+function LoggerRepository() {}
+LoggerRepository.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.ILoggerRepository, 
+
+  _loggers: {},
+
+  _rootLogger: null,
+  get rootLogger() {
+    if (!this._rootLogger) {
+      this._rootLogger = new Logger("root", this);
+      this._rootLogger.level = LEVEL_ALL;
+    }
+    return this._rootLogger;
+  },
+  // FIXME: need to update all parent values if we do this
+  //set rootLogger(logger) {
+  //  this._rootLogger = logger;
+  //},
+
+  _updateParents: function LogRep__updateParents(name) {
+    let pieces = name.split('.');
+    let cur, parent;
+
+    // find the closest parent
+    for (let i = 0; i < pieces.length; i++) {
+      if (cur)
+        cur += '.' + pieces[i];
+      else
+        cur = pieces[i];
+      if (cur in this._loggers)
+        parent = cur;
+    }
+
+    // if they are the same it has no parent
+    if (parent == name)
+      this._loggers[name].parent = this.rootLogger;
+    else
+      this._loggers[name].parent = this._loggers[parent];
+
+    // trigger updates for any possible descendants of this logger
+    for (let logger in this._loggers) {
+      if (logger != name && name.indexOf(logger) == 0)
+        this._updateParents(logger);
+    }
+  },
+
+  getLogger: function LogRep_getLogger(name) {
+    if (!(name in this._loggers)) {
+      this._loggers[name] = new Logger(name, this);
+      this._updateParents(name);
+    }
+    return this._loggers[name];
+  }
+};
+
+/*
+ * Formatters
+ * These massage a LogMessage into whatever output is desired
+ * Only the BasicFormatter is currently implemented
+ */
+
+// Abstract formatter
+function Formatter() {}
+Formatter.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.IFormatter, 
+  format: function Formatter_format(message) {}
+};
+
+// FIXME: should allow for formatting the whole string, not just the date
+function BasicFormatter(dateFormat) {
+  if (dateFormat)
+    this.dateFormat = dateFormat;
+}
+BasicFormatter.prototype = {
+  _dateFormat: null,
+
+  get dateFormat() {
+    if (!this._dateFormat)
+      this._dateFormat = "%Y-%m-%d %H:%M:%S";
+    return this._dateFormat;
+  },
+
+  set dateFormat(format) {
+    this._dateFormat = format;
+  },
+
+  format: function BF_format(message) {
+    let date = new Date(message.time);
+    return date.toLocaleFormat(this.dateFormat) + "\t" +
+      message.loggerName + "\t" + message.levelDesc + "\t" +
+      message.message + "\n";
+  }
+};
+BasicFormatter.prototype.__proto__ = new Formatter();
+
+/*
  * Appenders
  * These can be attached to Loggers to log to different places
  * Simply subclass and override doAppend to implement a new one
@@ -285,7 +287,7 @@ function Appender(formatter) {
   this._formatter = formatter? formatter : new BasicFormatter();
 }
 Appender.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.IAppender, Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.IAppender, 
 
   _level: LEVEL_ALL,
   get level() { return this._level; },
@@ -434,66 +436,76 @@ RotatingFileAppender.prototype = {
 RotatingFileAppender.prototype.__proto__ = new FileAppender();
 
 /*
- * Formatters
- * These massage a LogMessage into whatever output is desired
- * Only the BasicFormatter is currently implemented
+ * LoggingService
  */
 
-// Abstract formatter
-function Formatter() {}
-Formatter.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.IFormatter, Ci.nsISupports]),
-  format: function Formatter_format(message) {}
-};
-
-// FIXME: should allow for formatting the whole string, not just the date
-function BasicFormatter(dateFormat) {
-  if (dateFormat)
-    this.dateFormat = dateFormat;
+function Log4MozService() {
+  this._repository = new LoggerRepository();
 }
-BasicFormatter.prototype = {
-  _dateFormat: null,
+Log4MozService.prototype = {
+  //classDescription: "Log4moz Logging Service",
+  //contractID: "@mozilla.org/log4moz/service;1",
+  //classID: Components.ID("{a60e50d7-90b8-4a12-ad0c-79e6a1896978}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), //Ci.ILog4MozService,
 
-  get dateFormat() {
-    if (!this._dateFormat)
-      this._dateFormat = "%Y-%m-%d %H:%M:%S";
-    return this._dateFormat;
+  get rootLogger() {
+    return this._repository.rootLogger;
   },
 
-  set dateFormat(format) {
-    this._dateFormat = format;
+  getLogger: function LogSvc_getLogger(name) {
+    return this._repository.getLogger(name);
   },
 
-  format: function BF_format(message) {
-    let date = new Date(message.time);
-    return date.toLocaleFormat(this.dateFormat) + "\t" +
-      message.loggerName + "\t" + message.levelDesc + "\t" +
-      message.message + "\n";
+  newAppender: function LogSvc_newAppender(kind, formatter) {
+    switch (kind) {
+    case "dump":
+      return new DumpAppender(formatter);
+    case "console":
+      return new ConsoleAppender(formatter);
+    default:
+      dump("log4moz: unknown appender kind: " + kind);
+      return;
+    }
+  },
+
+  newFileAppender: function LogSvc_newAppender(kind, file, formatter) {
+    switch (kind) {
+    case "file":
+      return new FileAppender(file, formatter);
+    case "rotating":
+      // FIXME: hardcoded constants
+      return new RotatingFileAppender(file, formatter, ONE_MEGABYTE * 5, 0);
+    default:
+      dump("log4moz: unknown appender kind: " + kind);
+      return;
+    }
+  },
+
+  newFormatter: function LogSvc_newFormatter(kind) {
+    switch (kind) {
+    case "basic":
+      return new BasicFormatter();
+    default:
+      dump("log4moz: unknown formatter kind: " + kind);
+      return;
+    }
   }
 };
-BasicFormatter.prototype.__proto__ = new Formatter();
 
-/*
- * LogMessage
- * Encapsulates a single log event's data
- */
-function LogMessage(loggerName, level, message){
-  this.loggerName = loggerName;
-  this.message = message;
-  this.level = level;
-  this.time = Date.now();
-}
-LogMessage.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.ILogMessage, Ci.nsISupports]),
+const EXPORTED_SYMBOLS = ['Log4Moz'];
 
-  get levelDesc() {
-    if (this.level in LEVEL_DESC)
-      return LEVEL_DESC[this.level];
-    return "UNKNOWN";
-  },
+const Log4Moz = {};
 
-  toString: function LogMsg_toString(){
-    return "LogMessage [" + this._date + " " + this.level + " " +
-      this.message + "]";
-  }
-};
+Log4Moz.Level = {};
+Log4Moz.Level.Fatal  = LEVEL_FATAL;
+Log4Moz.Level.Error  = LEVEL_ERROR;
+Log4Moz.Level.Warn   = LEVEL_WARN;
+Log4Moz.Level.Info   = LEVEL_INFO;
+Log4Moz.Level.Config = LEVEL_CONFIG;
+Log4Moz.Level.Debug  = LEVEL_DEBUG;
+Log4Moz.Level.Trace  = LEVEL_TRACE;
+Log4Moz.Level.All    = LEVEL_ALL;
+
+Log4Moz.Level.Desc = LEVEL_DESC;
+
+Log4Moz.Service = new Log4MozService();
