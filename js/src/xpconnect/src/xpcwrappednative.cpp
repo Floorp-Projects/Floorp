@@ -1252,11 +1252,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     return NS_OK;
 }
 
-#define IS_WRAPPER_CLASS(clazz)                                               \
-          ((clazz) == &XPC_WN_NoHelper_JSClass.base ||                        \
-           (clazz)->getObjectOps == XPC_WN_GetObjectOpsNoCall ||              \
-           (clazz)->getObjectOps == XPC_WN_GetObjectOpsWithCall)
-
 #define IS_TEAROFF_CLASS(clazz)                                               \
           ((clazz) == &XPC_WN_Tearoff_JSClass)
 
