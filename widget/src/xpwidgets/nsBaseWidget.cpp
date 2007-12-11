@@ -929,6 +929,12 @@ nsBaseWidget::ResolveIconName(const nsAString &aIconName,
     NS_ADDREF(*aResult = file);
 }
 
+NS_IMETHODIMP 
+nsBaseWidget::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+ 
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////
 //

@@ -6058,3 +6058,85 @@ nsWindow::GetThebesSurface()
 
     return mThebesSurface;
 }
+
+NS_IMETHODIMP
+nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
+{
+    NS_ENSURE_ARG_POINTER(aEvent);
+
+    if (aEvent->eventStructType != NS_MOUSE_EVENT) {
+      // you can only begin a resize drag with a mouse event
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsMouseEvent* mouse_event = static_cast<nsMouseEvent*>(aEvent);
+    
+    if (mouse_event->button != nsMouseEvent::eLeftButton) {
+      // you can only begin a resize drag with the left mouse button
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    // work out what GdkWindowEdge we're talking about
+    GdkWindowEdge window_edge;
+    if (aVertical < 0) {
+        if (aHorizontal < 0) {
+            window_edge = GDK_WINDOW_EDGE_NORTH_WEST;
+        } else if (aHorizontal == 0) {
+            window_edge = GDK_WINDOW_EDGE_NORTH;
+        } else {
+            window_edge = GDK_WINDOW_EDGE_NORTH_EAST;
+        }
+    } else if (aVertical == 0) {
+        if (aHorizontal < 0) {
+            window_edge = GDK_WINDOW_EDGE_WEST;
+        } else if (aHorizontal == 0) {
+            return NS_ERROR_INVALID_ARG;
+        } else {
+            window_edge = GDK_WINDOW_EDGE_EAST;
+        }
+    } else {
+        if (aHorizontal < 0) {
+            window_edge = GDK_WINDOW_EDGE_SOUTH_WEST;
+        } else if (aHorizontal == 0) {
+            window_edge = GDK_WINDOW_EDGE_SOUTH;
+        } else {
+            window_edge = GDK_WINDOW_EDGE_SOUTH_EAST;
+        }
+    }
+
+    // get the gdk window for this widget
+    GdkWindow* gdk_window = mDrawingarea->inner_window;
+    if (!GDK_IS_WINDOW(gdk_window)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // find the top-level window
+    gdk_window = gdk_window_get_toplevel(gdk_window);
+    if (!GDK_IS_WINDOW(gdk_window)) {
+      return NS_ERROR_FAILURE;
+    }
+
+
+    // get the current (default) display
+    GdkDisplay* display = gdk_display_get_default();
+    if (!GDK_IS_DISPLAY(display)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // get the current pointer position and button state
+    GdkScreen* screen = NULL;
+    gint screenX, screenY;
+    GdkModifierType mask;
+    gdk_display_get_pointer(display, &screen, &screenX, &screenY, &mask);
+
+    // we only support resizing with button 1
+    if (!(mask & GDK_BUTTON1_MASK)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // tell the window manager to start the resize
+    gdk_window_begin_resize_drag(gdk_window, window_edge, 1,
+            screenX, screenY, aEvent->time);
+
+    return NS_OK;
+}

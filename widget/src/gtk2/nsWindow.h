@@ -266,6 +266,8 @@ public:
     static guint32     mLastButtonPressTime;
     static guint32     mLastButtonReleaseTime;
 
+    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
+
 #ifdef USE_XIM
     void               IMEInitData       (void);
     void               IMEReleaseData    (void);
