@@ -651,15 +651,22 @@ JS_GetTypeName(JSContext *cx, JSType type)
 
 /************************************************************************/
 
+/*
+ * Has a new runtime ever been created?  This flag is used to detect unsafe
+ * changes to js_CStringsAreUTF8 after a runtime has been created, and to
+ * ensure that "first checks" on runtime creation are run only once.
+ */
+#ifdef DEBUG
+static JSBool js_NewRuntimeWasCalled = JS_FALSE;
+#endif
+
 JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes)
 {
     JSRuntime *rt;
 
 #ifdef DEBUG
-    static JSBool didFirstChecks;
-
-    if (!didFirstChecks) {
+    if (!js_NewRuntimeWasCalled) {
         /*
          * This code asserts that the numbers associated with the error names
          * in jsmsg.def are monotonically increasing.  It uses values for the
@@ -685,7 +692,7 @@ JS_NewRuntime(uint32 maxbytes)
 #include "js.msg"
 #undef MSG_DEF
 
-        didFirstChecks = JS_TRUE;
+        js_NewRuntimeWasCalled = JS_TRUE;
     }
 #endif /* DEBUG */
 
@@ -5232,13 +5239,34 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
     return js_InflateStringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
+JS_PUBLIC_API(char *)
+JS_EncodeString(JSContext *cx, JSString *str)
+{
+    return js_DeflateString(cx, JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
+}
+
+/*
+ * The following determines whether C Strings are to be treated as UTF-8
+ * or ISO-8859-1.  For correct operation, it must be set prior to the
+ * first call to JS_NewRuntime.
+ */
+#ifndef JS_C_STRINGS_ARE_UTF8
+JSBool js_CStringsAreUTF8 = JS_FALSE;
+#endif
+
 JS_PUBLIC_API(JSBool)
 JS_CStringsAreUTF8()
 {
-#ifdef JS_C_STRINGS_ARE_UTF8
-    return JS_TRUE;
-#else
-    return JS_FALSE;
+    return js_CStringsAreUTF8;
+}
+
+JS_PUBLIC_API(void)
+JS_SetCStringsAreUTF8()
+{
+    JS_ASSERT(!js_NewRuntimeWasCalled);
+
+#ifndef JS_C_STRINGS_ARE_UTF8
+    js_CStringsAreUTF8 = JS_TRUE;
 #endif
 }
 

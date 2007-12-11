@@ -50,9 +50,9 @@
 **      %ld, %lu, %lx, %lX, %lo - 32-bit versions of above
 **      %lld, %llu, %llx, %llX, %llo - 64 bit versions of above
 **      %s - string
-**      %hs - 16-bit version of above (only available if compiled with JS_C_STRINGS_ARE_UTF8)
+**      %hs - 16-bit version of above (only available if js_CStringsAreUTF8)
 **      %c - character
-**      %hc - 16-bit version of above (only available if compiled with JS_C_STRINGS_ARE_UTF8)
+**      %hc - 16-bit version of above (only available if js_CStringsAreUTF8)
 **      %p - pointer (deals with machine dependent pointer size)
 **      %f - float
 **      %g - float
