@@ -2044,14 +2044,7 @@ function SetPageProxyState(aState)
   if (!gProxyDeck)
     gProxyDeck = document.getElementById("page-proxy-deck");
 
-  if (gURLBar.getAttribute("pageproxystate") != aState) {
-    gURLBar.setAttribute("pageproxystate", aState);
-#ifdef MOZ_WIDGET_GTK2
-    // redraw gtk focus ring
-    if (gURLBar.focused)
-      gURLBar.focus();
-#endif
-  }
+  gURLBar.setAttribute("pageproxystate", aState);
   gProxyButton.setAttribute("pageproxystate", aState);
 
   // the page proxy state is set to valid via OnLocationChange, which
