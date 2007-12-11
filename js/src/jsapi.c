@@ -776,6 +776,13 @@ JS_DestroyRuntime(JSRuntime *rt)
     js_FinishAtomState(rt);
 
     /*
+     * Free unit string storage only after all strings have been finalized, so
+     * that js_FinalizeString can detect unit strings and avoid calling free
+     * on their chars storage.
+     */
+    js_FinishUnitStrings(rt);
+
+    /*
      * Finish the deflated string cache after the last GC and after
      * calling js_FinishAtomState, which finalizes strings.
      */
