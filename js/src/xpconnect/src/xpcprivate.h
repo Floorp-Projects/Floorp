@@ -2917,7 +2917,7 @@ private:
     void SyncJSContexts();
 
 private:
-    nsTArray<JSContextAndFrame> mStack;
+    nsAutoTArray<JSContextAndFrame, 16> mStack;
     JSContext*  mSafeJSContext;
 
     // If non-null, we own it; same as mSafeJSContext if SetSafeJSContext
