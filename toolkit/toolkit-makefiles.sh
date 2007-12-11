@@ -367,7 +367,6 @@ MAKEFILES_uriloader="
   uriloader/base/Makefile
   uriloader/exthandler/Makefile
   uriloader/exthandler/tests/Makefile
-  uriloader/exthandler/tests/browser/Makefile
 "
 
 MAKEFILES_profile="
@@ -613,7 +612,6 @@ MAKEFILES_embedding="
   embedding/browser/photon/Makefile
   embedding/browser/photon/src/Makefile
   embedding/browser/photon/tests/Makefile
-  embedding/browser/cocoa/Makefile
   embedding/components/Makefile
   embedding/components/build/Makefile
   embedding/components/windowwatcher/Makefile
@@ -689,7 +687,6 @@ MAKEFILES_xulapp="
   toolkit/components/viewsource/Makefile
   toolkit/locales/Makefile
   toolkit/mozapps/Makefile
-  toolkit/mozapps/downloads/content/Makefile
   toolkit/mozapps/downloads/Makefile
   toolkit/mozapps/downloads/src/Makefile
   toolkit/mozapps/extensions/Makefile
@@ -708,12 +705,10 @@ MAKEFILES_xulapp="
   toolkit/themes/gnomestripe/Makefile
   toolkit/themes/pmstripe/global/Makefile
   toolkit/themes/pmstripe/Makefile
-  toolkit/themes/pinstripe/communicator/Makefile
   toolkit/themes/pinstripe/Makefile
   toolkit/themes/pinstripe/global/Makefile
   toolkit/themes/pinstripe/help/Makefile
   toolkit/themes/pinstripe/mozapps/Makefile
-  toolkit/themes/winstripe/communicator/Makefile
   toolkit/themes/winstripe/Makefile
   toolkit/themes/winstripe/global/Makefile
   toolkit/themes/winstripe/help/Makefile
@@ -769,11 +764,6 @@ MAKEFILES_libmar="
   modules/libmar/tool/Makefile
 "
 
-MAKEFILES_themes="
-  themes/Makefile
-  themes/classic/Makefile
-"
-
 add_makefiles "
   $MAKEFILES_db
   $MAKEFILES_dom
@@ -818,7 +808,6 @@ add_makefiles "
   $MAKEFILES_zlib
   $MAKEFILES_libbz2
   $MAKEFILES_libmar
-  $MAKEFILES_themes
 "
 
 #
