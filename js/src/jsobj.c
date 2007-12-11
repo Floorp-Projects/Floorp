@@ -2744,6 +2744,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
     JSObject *obj, *cobj, *pobj;
     JSProtoKey key;
     JSProperty *prop;
+    jsval v;
     JSScopeProperty *sprop;
 
     if (start || (cx->fp && (start = cx->fp->scopeChain) != NULL)) {
@@ -2781,16 +2782,19 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
                                     &pobj, &prop)) {
         return JS_FALSE;
     }
-    if (!prop)  {
-        *vp = JSVAL_VOID;
-        return JS_TRUE;
+    v = JSVAL_VOID;
+    if (prop)  {
+        if (OBJ_IS_NATIVE(pobj)) {
+            sprop = (JSScopeProperty *) prop;
+            if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj))) {
+                v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+                if (JSVAL_IS_PRIMITIVE(v))
+                    v = JSVAL_VOID; 
+            }
+        }
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
-
-    JS_ASSERT(OBJ_IS_NATIVE(pobj));
-    sprop = (JSScopeProperty *) prop;
-    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
-    *vp = OBJ_GET_SLOT(cx, pobj, sprop->slot);
-    OBJ_DROP_PROPERTY(cx, pobj, prop);
+    *vp = v;
     return JS_TRUE;
 }
 
