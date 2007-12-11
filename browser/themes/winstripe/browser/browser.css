@@ -1668,10 +1668,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-outline-radius-bottomleft: 2px;
 }
 
-#identity-box.verifiedIdentity {
-  outline-color: highlight;
-}
-
 #identity-box:hover {
   outline-color: ThreeDDarkShadow;
 }
@@ -1681,7 +1677,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin: 0;
 }
 
-.unknownIdentity > #identity-icon-label {
+#identity-box.verifiedIdentity > hbox {
+  background-color: rgba(0, 255, 0, 0.25);
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
   display: none;
 }
 
