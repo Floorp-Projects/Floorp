@@ -374,6 +374,9 @@ extern JSString *
 js_GetUnitString(JSContext *cx, jschar c);
 
 extern void
+js_FinishUnitStrings(JSRuntime *rt);
+
+extern void
 js_FinishRuntimeStringState(JSContext *cx);
 
 extern void

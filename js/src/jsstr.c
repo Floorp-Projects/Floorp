@@ -2428,6 +2428,13 @@ js_GetUnitString(JSContext *cx, jschar c)
 }
 
 void
+js_FinishUnitStrings(JSRuntime *rt)
+{
+    free(rt->unitStrings);
+    rt->unitStrings = NULL;
+}
+
+void
 js_FinishRuntimeStringState(JSContext *cx)
 {
     cx->runtime->emptyString = NULL;
