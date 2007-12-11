@@ -57,9 +57,10 @@
 #include "nsIFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsFrameSelection.h"
-#include "nsIScrollableFrame.h"
+#include "nsILineIterator.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPlaintextEditor.h"
+#include "nsIScrollableFrame.h"
 #include "nsISelection2.h"
 #include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"
@@ -1075,7 +1076,7 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(GetRoleContent(mDOMNode)));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
   nsIAtom *tag = content->Tag();
 
@@ -1107,6 +1108,16 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
     nsAutoString oldValueUnused;
     aAttributes->SetStringProperty(NS_LITERAL_CSTRING("formatting"), NS_LITERAL_STRING("block"),
                                    oldValueUnused);
+  }
+
+  if (gLastFocusedNode == mDOMNode) {
+    PRInt32 lineNumber = GetCaretLineNumber();
+    if (lineNumber >= 1) {
+      nsAutoString strLineNumber;
+      strLineNumber.AppendInt(lineNumber);
+      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::lineNumber,
+                             strLineNumber);
+    }
   }
 
   return  NS_OK;
@@ -1468,6 +1479,74 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
   domSel->GetFocusOffset(&caretOffset);
 
   return DOMPointToHypertextOffset(caretNode, caretOffset, aCaretOffset);
+}
+
+PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
+{
+  // Provide the line number for the caret, relative to the
+  // currently focused node. Use a 1-based index
+  nsCOMPtr<nsISelection> domSel;
+  GetSelections(nsnull, getter_AddRefs(domSel));
+  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSel));
+  NS_ENSURE_TRUE(privateSelection, -1);
+  nsCOMPtr<nsFrameSelection> frameSelection;
+  privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+  NS_ENSURE_TRUE(frameSelection, -1);
+
+  nsCOMPtr<nsIDOMNode> caretNode;
+  domSel->GetFocusNode(getter_AddRefs(caretNode));
+  nsCOMPtr<nsIContent> caretContent = do_QueryInterface(caretNode);
+  if (!caretContent || !nsAccUtils::IsAncestorOf(mDOMNode, caretNode)) {
+    return -1;
+  }
+
+  PRInt32 caretOffset, returnOffsetUnused;
+  domSel->GetFocusOffset(&caretOffset);
+  nsFrameSelection::HINT hint = frameSelection->GetHint();
+  nsIFrame *caretFrame = frameSelection->GetFrameForNodeOffset(caretContent, caretOffset,
+                                                               hint, &returnOffsetUnused);
+  NS_ENSURE_TRUE(caretFrame, -1);
+
+  PRInt32 lineNumber = 1;
+  nsCOMPtr<nsILineIterator> lineIterForCaret;
+  nsCOMPtr<nsIContent> hyperTextContent = do_QueryInterface(mDOMNode);
+  while (caretFrame) {
+    if (hyperTextContent == caretFrame->GetContent()) {
+      return lineNumber; // Must be in a single line hyper text, there is no line iterator
+    }
+    nsIFrame *parentFrame = caretFrame->GetParent();
+    if (!parentFrame)
+      break;
+
+    // Add lines for the sibling frames before the caret
+    nsIFrame *sibling = parentFrame->GetFirstChild(nsnull);
+    while (sibling && sibling != caretFrame) {
+      nsCOMPtr<nsILineIterator> lineIterForSibling = do_QueryInterface(sibling);
+      if (lineIterForSibling) {
+        PRInt32 addLines;
+        // For the frames before that grab all the lines
+        lineIterForSibling->GetNumLines(&addLines);
+        lineNumber += addLines;
+      }
+      sibling = sibling->GetNextSibling();
+    }
+
+    // Get the line number relative to the container with lines
+    if (!lineIterForCaret) {   // Add the caret line just once
+      lineIterForCaret = do_QueryInterface(parentFrame);
+      if (lineIterForCaret) {
+        // Ancestor of caret
+        PRInt32 addLines;
+        lineIterForCaret->FindLineContaining(caretFrame, &addLines);
+        lineNumber += addLines;
+      }
+    }
+
+    caretFrame = parentFrame;
+  }
+
+  NS_NOTREACHED("DOM ancestry had this hypertext but frame ancestry didn't");
+  return lineNumber;
 }
 
 nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon,
