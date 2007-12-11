@@ -838,6 +838,8 @@ SessionStoreService.prototype = {
       }
       if (disallow.length != 0)
         tabData.disallow = disallow.join(",");
+      else if (tabData.disallow)
+        delete tabData.disallow;
       
       if (this.xulAttributes.length != 0) {
         var xulattr = Array.filter(tabbrowser.mTabs[i].attributes, function(aAttr) {
@@ -850,6 +852,8 @@ SessionStoreService.prototype = {
       
       if (tabbrowser.mTabs[i].__SS_extdata)
         tabData.extData = tabbrowser.mTabs[i].__SS_extdata;
+      else if (tabData.extData)
+        delete tabData.extData;
       
       tabs.push(tabData);
       
@@ -1064,6 +1068,8 @@ SessionStoreService.prototype = {
         }
         if (text.length != 0)
           tabData.text = text.join(" ");
+        else if (tabData.text)
+          delete tabData.text;
         
         updateRecursively(aBrowser.contentWindow, tabData.entries[tabData.index - 1]);
       }
@@ -1153,29 +1159,22 @@ SessionStoreService.prototype = {
     var winData = this._windows[aWindow.__SSi];
     
     WINDOW_ATTRIBUTES.forEach(function(aAttr) {
-      var value = this._getWindowDimension(aWindow, aAttr);
-      switch (aAttr) {
-        case "screenX":
-        case "screenY":
-          if (value != 0)
-            winData[aAttr] = value;
-          break;
-        default:
-          winData[aAttr] = value;
-      }
+      winData[aAttr] = this._getWindowDimension(aWindow, aAttr);
     }, this);
     
-    var hidden = [];
-    WINDOW_HIDEABLE_FEATURES.forEach(function(aItem) {
-      if (aWindow[aItem] && !aWindow[aItem].visible)
-        hidden.push(aItem);
+    var hidden = WINDOW_HIDEABLE_FEATURES.filter(function(aItem) {
+      return aWindow[aItem] && !aWindow[aItem].visible;
     });
     if (hidden.length != 0)
       winData.hidden = hidden.join(",");
+    else if (winData.hidden)
+      delete winData.hidden;
 
     var sidebar = aWindow.document.getElementById("sidebar-box").getAttribute("sidebarcommand");
     if (sidebar)
       winData.sidebar = sidebar;
+    else if (winData.sidebar)
+      delete winData.sidebar;
   },
 
   /**
