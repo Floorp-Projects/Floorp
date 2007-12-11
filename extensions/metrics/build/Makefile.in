@@ -76,5 +76,8 @@ LOCAL_INCLUDES	= \
 
 include $(topsrcdir)/config/rules.mk
 
-LDFLAGS += -NODEFAULTLIB:MSVCRT
+ifeq ($(OS_ARCH),WINNT)
+  LDFLAGS += -NODEFAULTLIB:MSVCRT
+endif
+
 
