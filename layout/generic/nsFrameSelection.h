@@ -360,10 +360,10 @@ public:
    * @param aOffset offset into above node.
    * @param aReturnOffset will contain offset into frame.
    */
-  nsIFrame* GetFrameForNodeOffset(nsIContent *aNode,
-                                  PRInt32     aOffset,
-                                  HINT        aHint,
-                                  PRInt32    *aReturnOffset) const;
+  virtual nsIFrame* GetFrameForNodeOffset(nsIContent *aNode,
+                                          PRInt32     aOffset,
+                                          HINT        aHint,
+                                          PRInt32    *aReturnOffset) const;
 
   /**
    * Scrolling then moving caret placement code in common to text areas and 

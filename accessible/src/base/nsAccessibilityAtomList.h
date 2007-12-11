@@ -190,3 +190,6 @@ ACCESSIBILITY_ATOM(role, "role")
 // a form property used to obtain the default label
 // of an HTML button from the button frame
 ACCESSIBILITY_ATOM(defaultLabel, "defaultLabel")
+
+// An atom used to set the line-number object attribute
+ACCESSIBILITY_ATOM(lineNumber, "line-number")

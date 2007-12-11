@@ -510,15 +510,6 @@ NS_IMETHODIMP nsDocAccessible::GetParent(nsIAccessible **aParent)
   return mParent ? nsAccessible::GetParent(aParent) : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsDocAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
-{
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  *aAttributes = nsnull;
-
-  return mDOMNode ? NS_OK : NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsDocAccessible::Init()
 {
   PutCacheEntry(gGlobalDocAccessibleCache, mDocument, this);
