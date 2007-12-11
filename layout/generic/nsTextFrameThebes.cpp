@@ -594,7 +594,7 @@ public:
   }
   void ScanFrame(nsIFrame* aFrame);
   PRBool IsTextRunValidForMappedFlows(gfxTextRun* aTextRun);
-  void FlushFrames(PRBool aFlushLineBreaks);
+  void FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppressTrailingBreak);
   void ResetRunInfo() {
     mLastFrame = nsnull;
     mMappedFlows.Clear();
@@ -864,7 +864,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     }
     // Set mStartOfLine so FlushFrames knows its textrun ends a line
     scanner.SetAtStartOfLine();
-    scanner.FlushFrames(PR_TRUE);
+    scanner.FlushFrames(PR_TRUE, PR_FALSE);
     return;
   }
 
@@ -989,7 +989,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
 
   // Set mStartOfLine so FlushFrames knows its textrun ends a line
   scanner.SetAtStartOfLine();
-  scanner.FlushFrames(PR_TRUE);
+  scanner.FlushFrames(PR_TRUE, PR_FALSE);
 }
 
 static PRUnichar*
@@ -1028,7 +1028,7 @@ PRBool BuildTextRunsScanner::IsTextRunValidForMappedFlows(gfxTextRun* aTextRun)
  * This gets called when we need to make a text run for the current list of
  * frames.
  */
-void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks)
+void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppressTrailingBreak)
 {
   if (mMappedFlows.Length() == 0)
     return;
@@ -1059,7 +1059,7 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks)
     // textRun may be null for various reasons, including because we constructed
     // a partial textrun just to get the linebreaker and other state set up
     // to build the next textrun.
-    if (NS_SUCCEEDED(rv) && trailingLineBreak && textRun) {
+    if (NS_SUCCEEDED(rv) && trailingLineBreak && textRun && !aSuppressTrailingBreak) {
       textRun->SetFlagBits(nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK);
     }
     PRUint32 i;
@@ -1178,13 +1178,14 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     }
   }
 
+  nsIAtom* frameType = aFrame->GetType();
   // Now see if we can add a new set of frames to the current textrun
-  if (aFrame->GetType() == nsGkAtoms::textFrame) {
+  if (frameType == nsGkAtoms::textFrame) {
     nsTextFrame* frame = static_cast<nsTextFrame*>(aFrame);
 
     if (mLastFrame) {
       if (!ContinueTextRunAcrossFrames(mLastFrame, frame)) {
-        FlushFrames(PR_FALSE);
+        FlushFrames(PR_FALSE, PR_FALSE);
       } else {
         if (mLastFrame->GetContent() == frame->GetContent()) {
           AccumulateRunInfo(frame);
@@ -1210,8 +1211,11 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
 
   PRBool continueTextRun = CanTextRunCrossFrameBoundary(aFrame);
   PRBool descendInto = PR_TRUE;
+  PRBool isBR = frameType == nsGkAtoms::brFrame;
   if (!continueTextRun) {
-    FlushFrames(PR_TRUE);
+    // BR frames are special. We do not need or want to record a break opportunity
+    // before a BR frame.
+    FlushFrames(PR_TRUE, isBR);
     mCommonAncestorWithLastFrame = aFrame;
     mTrimNextRunLeadingWhitespace = PR_FALSE;
     // XXX do we need this? are there frames we need to descend into that aren't
@@ -1228,7 +1232,9 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   }
 
   if (!continueTextRun) {
-    FlushFrames(PR_TRUE);
+    // Really if we're a BR frame this is unnecessary since descendInto will be
+    // false. In fact this whole "if" statement should move into the descendInto.
+    FlushFrames(PR_TRUE, isBR);
     mCommonAncestorWithLastFrame = aFrame;
     mTrimNextRunLeadingWhitespace = PR_FALSE;
   }
