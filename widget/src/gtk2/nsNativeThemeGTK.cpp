@@ -275,6 +275,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         if (aWidgetType == NS_THEME_MENUITEM ||
             aWidgetType == NS_THEME_CHECKMENUITEM ||
             aWidgetType == NS_THEME_RADIOMENUITEM ||
+            aWidgetType == NS_THEME_MENUSEPARATOR ||
             aWidgetType == NS_THEME_MENUARROW) {
           PRBool isTopLevel = PR_FALSE;
           nsIMenuFrame *menuFrame;
@@ -502,6 +503,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_MENUITEM:
     aGtkWidgetType = MOZ_GTK_MENUITEM;
+    break;
+  case NS_THEME_MENUSEPARATOR:
+    aGtkWidgetType = MOZ_GTK_MENUSEPARATOR;
     break;
   case NS_THEME_MENUARROW:
     aGtkWidgetType = MOZ_GTK_MENUARROW;
@@ -904,6 +908,16 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       *aIsOverridable = PR_FALSE;
     }
     break;
+  case NS_THEME_MENUSEPARATOR:
+    {
+      gint separator_height;
+
+      moz_gtk_get_menu_separator_height(&separator_height);
+      aResult->height = separator_height;
+    
+      *aIsOverridable = PR_FALSE;
+    }
+    break;
   case NS_THEME_CHECKBOX:
   case NS_THEME_CHECKBOX_SMALL:
   case NS_THEME_RADIO:
@@ -991,6 +1005,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_TOOLTIP ||
       aWidgetType == NS_THEME_TREEVIEW_HEADER_SORTARROW ||
+      aWidgetType == NS_THEME_MENUSEPARATOR ||
       aWidgetType == NS_THEME_WINDOW ||
       aWidgetType == NS_THEME_DIALOG) {
     *aShouldRepaint = PR_FALSE;
@@ -1114,6 +1129,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_MENUPOPUP:
   case NS_THEME_MENUITEM:
   case NS_THEME_MENUARROW:
+  case NS_THEME_MENUSEPARATOR:
   case NS_THEME_CHECKMENUITEM:
   case NS_THEME_RADIOMENUITEM:
   case NS_THEME_WINDOW:

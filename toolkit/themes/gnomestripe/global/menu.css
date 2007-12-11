@@ -202,14 +202,14 @@ menuitem[type="radio"] {
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  margin: 2px 3px;
+  -moz-appearance: menuseparator !important;
+  margin: 2px 0;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
 }
 
 menulist > menupopup > menuseparator,
 .menulist-menupopup > menuseparator {
-  margin: 2px 0;
   border-top: 1px solid #000000;
   border-bottom: none;
 }
