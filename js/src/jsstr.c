@@ -2883,42 +2883,81 @@ js_SkipWhiteSpace(const jschar *s, const jschar *end)
     return s;
 }
 
-#ifdef JS_C_STRINGS_ARE_UTF8
-
 jschar *
-js_InflateString(JSContext *cx, const char *bytes, size_t *length)
+js_InflateString(JSContext *cx, const char *bytes, size_t *lengthp)
 {
-    jschar *chars = NULL;
-    size_t dstlen = 0;
+    size_t nbytes, nchars, i;
+    jschar *chars;
+#ifdef DEBUG
+    JSBool ok;
+#endif
 
-    if (!js_InflateStringToBuffer(cx, bytes, *length, NULL, &dstlen))
-        return NULL;
-    chars = (jschar *) JS_malloc(cx, (dstlen + 1) * sizeof (jschar));
-    if (!chars)
-        return NULL;
-    js_InflateStringToBuffer(cx, bytes, *length, chars, &dstlen);
-    chars[dstlen] = 0;
-    *length = dstlen;
+    nbytes = *lengthp;
+    if (js_CStringsAreUTF8) {
+        if (!js_InflateStringToBuffer(cx, bytes, nbytes, NULL, &nchars))
+            goto bad;
+        chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof (jschar));
+        if (!chars)
+            goto bad;
+#ifdef DEBUG
+        ok =
+#endif
+            js_InflateStringToBuffer(cx, bytes, nbytes, chars, &nchars);
+        JS_ASSERT(ok);
+    } else {
+        nchars = nbytes;
+        chars = (jschar *) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
+        if (!chars)
+            goto bad;
+        for (i = 0; i < nchars; i++)
+            chars[i] = (unsigned char) bytes[i];
+    }
+    *lengthp = nchars;
+    chars[nchars] = 0;
     return chars;
+
+  bad:
+    /*
+     * For compatibility with callers of JS_DecodeBytes we must zero lengthp
+     * on errors.
+     */
+    *lengthp = 0;
+    return NULL;
 }
 
 /*
  * May be called with null cx by js_GetStringBytes, see below.
  */
 char *
-js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
+js_DeflateString(JSContext *cx, const jschar *chars, size_t nchars)
 {
-    size_t size;
+    size_t nbytes, i;
     char *bytes;
+#ifdef DEBUG
+    JSBool ok;
+#endif
 
-    size = js_GetDeflatedStringLength(cx, chars, length);
-    if (size == (size_t)-1)
-        return NULL;
-    bytes = (char *) (cx ? JS_malloc(cx, size+1) : malloc(size+1));
-    if (!bytes)
-        return NULL;
-    js_DeflateStringToBuffer(cx, chars, length, bytes, &size);
-    bytes[size] = 0;
+    if (js_CStringsAreUTF8) {
+        nbytes = js_GetDeflatedStringLength(cx, chars, nchars);
+        if (nbytes == (size_t) -1)
+            return NULL;
+        bytes = (char *) (cx ? JS_malloc(cx, nbytes + 1) : malloc(nbytes + 1));
+        if (!bytes)
+            return NULL;
+#ifdef DEBUG
+        ok =
+#endif
+            js_DeflateStringToBuffer(cx, chars, nchars, bytes, &nbytes);
+        JS_ASSERT(ok);
+    } else {
+        nbytes = nchars;
+        bytes = (char *) (cx ? JS_malloc(cx, nbytes + 1) : malloc(nbytes + 1));
+        if (!bytes)
+            return NULL;
+        for (i = 0; i < nbytes; i++)
+            bytes[i] = (char) chars[i];
+    }
+    bytes[nbytes] = 0;
     return bytes;
 }
 
@@ -2926,16 +2965,18 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
  * May be called with null cx through js_GetStringBytes, see below.
  */
 size_t
-js_GetDeflatedStringLength(JSContext *cx, const jschar *chars,
-                           size_t charsLength)
+js_GetDeflatedStringLength(JSContext *cx, const jschar *chars, size_t nchars)
 {
+    size_t nbytes;
     const jschar *end;
-    size_t length;
     uintN c, c2;
     char buffer[10];
 
-    length = charsLength;
-    for (end = chars + length; chars != end; chars++) {
+    if (!js_CStringsAreUTF8)
+        return nchars;
+
+    nbytes = nchars;
+    for (end = chars + nchars; chars != end; chars++) {
         c = *chars;
         if (c < 0x80)
             continue;
@@ -2950,13 +2991,13 @@ js_GetDeflatedStringLength(JSContext *cx, const jschar *chars,
             c = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
         }
         c >>= 11;
-        length++;
+        nbytes++;
         while (c) {
             c >>= 5;
-            length++;
+            nbytes++;
         }
     }
-    return length;
+    return nbytes;
 
   bad_surrogate:
     if (cx) {
@@ -2964,18 +3005,36 @@ js_GetDeflatedStringLength(JSContext *cx, const jschar *chars,
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
                                      NULL, JSMSG_BAD_SURROGATE_CHAR, buffer);
     }
-    return (size_t)-1;
+    return (size_t) -1;
 }
 
 JSBool
 js_DeflateStringToBuffer(JSContext *cx, const jschar *src, size_t srclen,
                          char *dst, size_t *dstlenp)
 {
-    size_t i, utf8Len, dstlen = *dstlenp, origDstlen = dstlen;
+    size_t dstlen, i, origDstlen, utf8Len;
     jschar c, c2;
     uint32 v;
     uint8 utf8buf[6];
 
+    dstlen = *dstlenp;
+    if (!js_CStringsAreUTF8) {
+        if (srclen > dstlen) {
+            for (i = 0; i < dstlen; i++)
+                dst[i] = (char) src[i];
+            if (cx) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BUFFER_TOO_SMALL);
+            }
+            return JS_FALSE;
+        }
+        for (i = 0; i < srclen; i++)
+            dst[i] = (char) src[i];
+        *dstlenp = srclen;
+        return JS_TRUE;
+    }
+
+    origDstlen = dstlen;
     while (srclen) {
         c = *src++;
         srclen--;
@@ -3031,11 +3090,31 @@ JSBool
 js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen,
                          jschar *dst, size_t *dstlenp)
 {
+    size_t dstlen, i, origDstlen, offset, j, n;
     uint32 v;
-    size_t offset = 0, j, n, dstlen = *dstlenp, origDstlen = dstlen;
 
-    if (!dst)
-        dstlen = origDstlen = (size_t) -1;
+    if (!js_CStringsAreUTF8) {
+        if (dst) {
+            dstlen = *dstlenp;
+            if (srclen > dstlen) {
+                for (i = 0; i < dstlen; i++)
+                    dst[i] = (unsigned char) src[i];
+                if (cx) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_BUFFER_TOO_SMALL);
+                }
+                return JS_FALSE;
+            }
+            for (i = 0; i < srclen; i++)
+                dst[i] = (unsigned char) src[i];
+        }
+        *dstlenp = srclen;
+        return JS_TRUE;
+    }
+
+    dstlen = dst ? *dstlenp : (size_t) -1;
+    origDstlen = dstlen;
+    offset = 0;
 
     while (srclen) {
         v = (uint8) *src;
@@ -3109,98 +3188,6 @@ bufferTooSmall:
     return JS_FALSE;
 }
 
-#else /* !JS_C_STRINGS_ARE_UTF8 */
-
-JSBool
-js_InflateStringToBuffer(JSContext* cx, const char *bytes, size_t length,
-                         jschar *chars, size_t* charsLength)
-{
-    size_t i;
-
-    if (length > *charsLength) {
-        for (i = 0; i < *charsLength; i++)
-            chars[i] = (unsigned char) bytes[i];
-        if (cx) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BUFFER_TOO_SMALL);
-        }
-        return JS_FALSE;
-    }
-    for (i = 0; i < length; i++)
-        chars[i] = (unsigned char) bytes[i];
-    *charsLength = length;
-    return JS_TRUE;
-}
-
-jschar *
-js_InflateString(JSContext *cx, const char *bytes, size_t *bytesLength)
-{
-    jschar *chars;
-    size_t i, length = *bytesLength;
-
-    chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
-    if (!chars) {
-        *bytesLength = 0;
-        return NULL;
-    }
-    for (i = 0; i < length; i++)
-        chars[i] = (unsigned char) bytes[i];
-    chars[length] = 0;
-    *bytesLength = length;
-    return chars;
-}
-
-size_t
-js_GetDeflatedStringLength(JSContext *cx, const jschar *chars,
-                           size_t charsLength)
-{
-    return charsLength;
-}
-
-JSBool
-js_DeflateStringToBuffer(JSContext* cx, const jschar *chars, size_t length,
-                         char *bytes, size_t* bytesLength)
-{
-    size_t i;
-
-    if (length > *bytesLength) {
-        for (i = 0; i < *bytesLength; i++)
-            bytes[i] = (char) chars[i];
-        if (cx) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BUFFER_TOO_SMALL);
-        }
-        return JS_FALSE;
-    }
-    for (i = 0; i < length; i++)
-        bytes[i] = (char) chars[i];
-    *bytesLength = length;
-    return JS_TRUE;
-}
-
-/*
- * May be called with null cx by js_GetStringBytes, see below.
- */
-char *
-js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
-{
-    size_t i, size;
-    char *bytes;
-
-    size = (length + 1) * sizeof(char);
-    bytes = (char *) (cx ? JS_malloc(cx, size) : malloc(size));
-    if (!bytes)
-        return NULL;
-
-    for (i = 0; i < length; i++)
-        bytes[i] = (char) chars[i];
-
-    bytes[length] = 0;
-    return bytes;
-}
-
-#endif
-
 JSBool
 js_SetStringBytes(JSContext *cx, JSString *str, char *bytes, size_t length)
 {
@@ -3263,11 +3250,11 @@ js_GetStringBytes(JSContext *cx, JSString *str)
     if (he) {
         bytes = (char *) he->value;
 
-#ifndef JS_C_STRINGS_ARE_UTF8
         /* Try to catch failure to JS_ShutDown between runtime epochs. */
-        JS_ASSERT_IF(*bytes != (char) JSSTRING_CHARS(str)[0],
-                     *bytes == '\0' && JSSTRING_LENGTH(str) == 0);
-#endif
+        if (!js_CStringsAreUTF8) {
+            JS_ASSERT_IF(*bytes != (char) JSSTRING_CHARS(str)[0],
+                         *bytes == '\0' && JSSTRING_LENGTH(str) == 0);
+        }
     } else {
         bytes = js_DeflateString(cx, JSSTRING_CHARS(str),
                                  JSSTRING_LENGTH(str));
