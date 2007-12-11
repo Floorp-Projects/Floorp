@@ -270,6 +270,11 @@ nsRootAccessible::GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget)
 }
 
 const char* const docEvents[] = {
+#ifdef DEBUG
+  // Capture mouse over events and fire fake DRAGDROPSTART event to simplify
+  // debugging a11y objects with event viewers
+  "mouseover",
+#endif
   // capture DOM focus events 
   "focus",
   // capture Form change events 
@@ -885,6 +890,11 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else if (eventType.EqualsLiteral("ValueChange")) {
     nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, accessible);
   }
+#ifdef DEBUG
+  else if (eventType.EqualsLiteral("mouseover")) {
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_DRAGDROP_START, accessible);
+  }
+#endif
   return NS_OK;
 }
 

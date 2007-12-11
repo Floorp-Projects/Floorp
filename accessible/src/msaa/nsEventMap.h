@@ -82,8 +82,8 @@ static const PRUint32 gWinEventMap[] = {
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_MOVESIZE_END
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_CONTEXT_HELP_START
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_CONTEXT_HELP_END
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_DRAGDROP_START
-  kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_DRAGDROP_END
+  EVENT_SYSTEM_DRAGDROPSTART,                        // nsIAccessibleEvent::EVENT_DRAGDROP_START
+  EVENT_SYSTEM_DRAGDROPEND,                          // nsIAccessibleEvent::EVENT_DRAGDROP_END
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_DIALOG_START
   kEVENT_WIN_UNKNOWN,                                // nsIAccessibleEvent::EVENT_DIALOG_END
   EVENT_SYSTEM_SCROLLINGSTART,                       // nsIAccessibleEvent::EVENT_SCROLLING_START
