@@ -85,6 +85,7 @@ static GtkWidget* gTreeHeaderCellWidget;
 static GtkWidget* gTreeHeaderSortArrowWidget;
 static GtkWidget* gExpanderWidget;
 static GtkWidget* gToolbarSeparatorWidget;
+static GtkWidget* gMenuSeparatorWidget;
 
 static GtkShadowType gMenuBarShadowType;
 static GtkShadowType gToolbarShadowType;
@@ -371,6 +372,19 @@ ensure_menu_item_widget()
         gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
                               gMenuItemWidget);
         gtk_widget_realize(gMenuItemWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_menu_separator_widget()
+{
+    if (!gMenuSeparatorWidget) {
+        ensure_menu_popup_widget();
+        gMenuSeparatorWidget = gtk_separator_menu_item_new();
+        gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
+                              gMenuSeparatorWidget);
+        gtk_widget_realize(gMenuSeparatorWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -1642,6 +1656,55 @@ moz_gtk_menu_popup_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_menu_separator_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                             GdkRectangle* cliprect)
+{
+    GtkStyle* style;
+    gboolean wide_separators;
+    gint separator_height;
+    guint horizontal_padding;
+    gint paint_height;
+
+    ensure_menu_separator_widget();
+
+    style = gMenuSeparatorWidget->style;
+
+    gtk_widget_style_get(gMenuSeparatorWidget,
+                         "wide-separators",    &wide_separators,
+                         "separator-height",   &separator_height,
+                         "horizontal-padding", &horizontal_padding,
+                         NULL);
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+
+    if (wide_separators) {
+        if (separator_height > rect->height)
+            separator_height = rect->height;
+
+        gtk_paint_box(style, drawable,
+                      GTK_STATE_NORMAL, GTK_SHADOW_ETCHED_OUT,
+                      cliprect, gMenuSeparatorWidget, "hseparator",
+                      rect->x + horizontal_padding + style->xthickness,
+                      rect->y + (rect->height - separator_height - style->ythickness) / 2,
+                      rect->width - 2 * (horizontal_padding + style->xthickness),
+                      separator_height);
+    } else {
+        paint_height = style->ythickness;
+        if (paint_height > rect->height)
+            paint_height = rect->height;
+
+        gtk_paint_hline(style, drawable,
+                        GTK_STATE_NORMAL, cliprect, gMenuSeparatorWidget,
+                        "menuitem",
+                        rect->x + horizontal_padding + style->xthickness,
+                        rect->x + rect->width - horizontal_padding - style->xthickness - 1,
+                        rect->y + (rect->height - style->ythickness) / 2);
+    }
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         GdkRectangle* cliprect, GtkWidgetState* state,
                         gint flags)
@@ -1990,6 +2053,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_TAB:
     case MOZ_GTK_EXPANDER:
     case MOZ_GTK_TOOLBAR_SEPARATOR:
+    case MOZ_GTK_MENUSEPARATOR:
     /* These widgets have no borders.*/
     case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_WINDOW:
@@ -2058,6 +2122,27 @@ moz_gtk_get_expander_size(gint* size)
     gtk_widget_style_get(gExpanderWidget,
                          "expander-size", size,
                          NULL);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
+moz_gtk_get_menu_separator_height(gint *size)
+{
+    gboolean wide_separators;
+    gint     separator_height;
+
+    ensure_menu_separator_widget();
+
+    gtk_widget_style_get(gMenuSeparatorWidget,
+                          "wide-separators",  &wide_separators,
+                          "separator-height", &separator_height,
+                          NULL);
+
+    if (wide_separators)
+        *size = separator_height + gMenuSeparatorWidget->style->ythickness;
+    else
+        *size = gMenuSeparatorWidget->style->ythickness * 2;
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2213,6 +2298,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
     case MOZ_GTK_MENUPOPUP:
         return moz_gtk_menu_popup_paint(drawable, rect, cliprect);
         break;
+    case MOZ_GTK_MENUSEPARATOR:
+        return moz_gtk_menu_separator_paint(drawable, rect, cliprect);
+        break;
     case MOZ_GTK_MENUITEM:
         return moz_gtk_menu_item_paint(drawable, rect, cliprect, state, flags);
         break;
@@ -2281,6 +2369,7 @@ moz_gtk_shutdown()
     gTreeHeaderSortArrowWidget = NULL;
     gExpanderWidget = NULL;
     gToolbarSeparatorWidget = NULL;
+    gMenuSeparatorWidget = NULL;
 
     is_initialized = FALSE;
 
