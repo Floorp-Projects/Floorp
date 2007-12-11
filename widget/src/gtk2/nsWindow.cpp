@@ -2392,14 +2392,53 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 void
 nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
-    nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
-    InitMouseScrollEvent(event, aEvent);
-
     // check to see if we should rollup
     if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
                          PR_TRUE)) {
         return;
     }
+
+    nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
+    switch (aEvent->direction) {
+    case GDK_SCROLL_UP:
+        event.scrollFlags = nsMouseScrollEvent::kIsVertical;
+        event.delta = -3;
+        break;
+    case GDK_SCROLL_DOWN:
+        event.scrollFlags = nsMouseScrollEvent::kIsVertical;
+        event.delta = 3;
+        break;
+    case GDK_SCROLL_LEFT:
+        event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+        event.delta = -3;
+        break;
+    case GDK_SCROLL_RIGHT:
+        event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+        event.delta = 3;
+        break;
+    }
+
+    if (aEvent->window == mDrawingarea->inner_window) {
+        // we are the window that the event happened on so no need for expensive ScreenToWidget
+        event.refPoint.x = nscoord(aEvent->x);
+        event.refPoint.y = nscoord(aEvent->y);
+    } else {
+        // XXX we're never quite sure which GdkWindow the event came from due to our custom bubbling
+        // in scroll_event_cb(), so use ScreenToWidget to translate the screen root coordinates into
+        // coordinates relative to this widget.
+        nsRect windowRect;
+        ScreenToWidget(nsRect(nscoord(aEvent->x_root), nscoord(aEvent->y_root), 1, 1), windowRect);
+
+        event.refPoint.x = windowRect.x;
+        event.refPoint.y = windowRect.y;
+    }
+
+    event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
+    event.isControl = (aEvent->state & GDK_CONTROL_MASK) != 0;
+    event.isAlt     = (aEvent->state & GDK_MOD1_MASK) != 0;
+    event.isMeta    = (aEvent->state & GDK_MOD4_MASK) != 0;
+
+    event.time = aEvent->time;
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -4619,9 +4658,16 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 gboolean
 scroll_event_cb(GtkWidget *widget, GdkEventScroll *event)
 {
-    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
-    if (!window)
-        return FALSE;
+    nsRefPtr<nsWindow> window;
+    GdkWindow *gdkWindow = event->window;
+    while (!(window = get_window_for_gdk_window(gdkWindow))) {
+        // The event has bubbled to the moz_container widget as passed into the *widget parameter,
+        // but its corresponding nsWindow is an ancestor of the window that we need.  Instead, look at
+        // event->window and find the first ancestor nsWindow of it because event->window may be in a plugin.
+        gdkWindow = gdk_window_get_parent(gdkWindow);
+        if (!gdkWindow)
+            return FALSE;
+    }
 
     window->OnScrollEvent(widget, event);
 
