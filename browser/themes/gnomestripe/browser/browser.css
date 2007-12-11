@@ -801,7 +801,11 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   margin: 0;
 }
 
-.unknownIdentity > #identity-icon-label {
+#identity-box.verifiedIdentity > hbox {
+  background-color: rgba(0, 255, 0, 0.25);
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
   display: none;
 }
 

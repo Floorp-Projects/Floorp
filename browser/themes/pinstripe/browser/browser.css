@@ -1634,10 +1634,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   opacity: 1.0;
 }
 
-#identity-box.verifiedIdentity {
-  background-color: #BFA;
-}
-
 #urlbar[level="high"] > #identity-box,
 #urlbar[level="low"] > #identity-box {
   /* urlbar adds padding when security level is set, which we need to
@@ -1653,7 +1649,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
     vertical-align: middle;
 }
 
-.unknownIdentity > #identity-icon-label {
+#identity-box.verifiedIdentity {
+  background-color: #BFA;
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
     display: none;
 }
 
