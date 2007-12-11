@@ -119,7 +119,7 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
 JSClass js_IteratorClass = {
     "Iterator",
     JSCLASS_HAS_RESERVED_SLOTS(2) | /* slots for state and flags */
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) | JSCLASS_FIXED_BINDING,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
