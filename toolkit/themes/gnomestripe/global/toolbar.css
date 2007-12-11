@@ -71,10 +71,9 @@ toolbaritem > menubar {
 
 toolbarseparator {
   -moz-appearance: separator !important;
-  margin : 2px 0.2em;
-  border-right : 1px solid ThreeDHighlight;
-  border-left : 1px solid ThreeDShadow;
-  width : 2px;
+  margin : 0;
+  border: 0;
+  min-width: 2px;
 }
 
 toolbarspacer {
