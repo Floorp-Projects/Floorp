@@ -177,11 +177,19 @@ GetWrappedObject(JSContext *cx, JSObject *wrapper)
 
 static inline
 nsIScriptSecurityManager *
-GetSecurityManager()
+GetSecurityManager(JSContext *cx)
 {
-  extern nsIScriptSecurityManager *gScriptSecurityManager;
+  XPCCallContext ccx(JS_CALLER, cx);
+  NS_ENSURE_TRUE(ccx.IsValid(), nsnull);
 
-  return gScriptSecurityManager;
+  // XXX HOOK_CALL_METHOD seems wrong.
+  nsCOMPtr<nsIXPCSecurityManager> sm = ccx.GetXPCContext()->
+    GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CALL_METHOD);
+
+  nsCOMPtr<nsIScriptSecurityManager> ssm(do_QueryInterface(sm));
+
+  // This Releases, but that's OK, since XPConnect holds a reference to it.
+  return ssm;
 }
 
 static JSBool
@@ -226,7 +234,7 @@ IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
   nsCOMPtr<nsIPrincipal> subjectPrin, objectPrin;
 
   // Get the subject principal from the execution stack.
-  nsIScriptSecurityManager *ssm = GetSecurityManager();
+  nsIScriptSecurityManager *ssm = GetSecurityManager(cx);
   if (!ssm) {
     ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
     return NS_ERROR_NOT_INITIALIZED;
@@ -618,7 +626,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
       XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wrappedObj);
     NS_ASSERTION(wn, "How did we wrap a non-WrappedNative?");
     if (!IsValFrame(cx, wrappedObj, id, wn)) {
-      nsIScriptSecurityManager *ssm = GetSecurityManager();
+      nsIScriptSecurityManager *ssm = GetSecurityManager(cx);
       if (!ssm) {
         return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
       }
@@ -764,7 +772,7 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
       XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wrappedObj);
     NS_ASSERTION(wn, "How did we wrap a non-WrappedNative?");
     if (!IsValFrame(cx, wrappedObj, id, wn)) {
-      nsIScriptSecurityManager *ssm = GetSecurityManager();
+      nsIScriptSecurityManager *ssm = GetSecurityManager(cx);
       if (!ssm) {
         return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
       }
@@ -1138,7 +1146,7 @@ XPC_XOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
   if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
-    nsIScriptSecurityManager *ssm = GetSecurityManager();
+    nsIScriptSecurityManager *ssm = GetSecurityManager(cx);
     if (!ssm) {
       return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
     }
