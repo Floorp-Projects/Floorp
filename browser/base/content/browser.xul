@@ -268,21 +268,23 @@
                  ontextreverted="return handleURLBarRevert();">
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events -->
-          <box id="identity-box" align="center" 
+          <box id="identity-box"
                onclick="getIdentityHandler().handleIdentityClick(event);">
-            <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
-              <image id="page-proxy-button"
-                     ondraggesture="PageProxyDragGesture(event);"
-                     tooltiptext="&proxyIcon.tooltip;"/>
-              <image id="page-proxy-favicon" validate="never"
-                     ondraggesture="PageProxyDragGesture(event);"
-                     onload="this.parentNode.selectedIndex = 1;
-                             event.stopPropagation();"
-                     onerror="this.removeAttribute('src');
-                              this.parentNode.selectedIndex = 0;"
-                     tooltiptext="&proxyIcon.tooltip;"/>
-            </deck>
-            <label id="identity-icon-label"/>
+            <hbox align="center">
+              <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
+                <image id="page-proxy-button"
+                       ondraggesture="PageProxyDragGesture(event);"
+                       tooltiptext="&proxyIcon.tooltip;"/>
+                <image id="page-proxy-favicon" validate="never"
+                       ondraggesture="PageProxyDragGesture(event);"
+                       onload="this.parentNode.selectedIndex = 1;
+                               event.stopPropagation();"
+                       onerror="this.removeAttribute('src');
+                                this.parentNode.selectedIndex = 0;"
+                       tooltiptext="&proxyIcon.tooltip;"/>
+              </deck>
+              <label id="identity-icon-label"/>
+            </hbox>
           </box>
           <hbox id="urlbar-icons">
             <button type="menu"
