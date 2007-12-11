@@ -1325,12 +1325,13 @@ nsAccessibleWrap::get_uniqueID(long *uniqueID)
 STDMETHODIMP
 nsAccessibleWrap::get_windowHandle(HWND *windowHandle)
 {
-  void **handle = nsnull;
-  if (NS_SUCCEEDED(GetOwnerWindow(handle))) {
-    *windowHandle = reinterpret_cast<HWND>(*handle);
-    return S_OK;
-  }
-  return E_FAIL;
+  void *handle = nsnull;
+  nsresult rv = GetOwnerWindow(&handle);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  *windowHandle = reinterpret_cast<HWND>(handle);
+  return S_OK;
 }
 
 STDMETHODIMP
