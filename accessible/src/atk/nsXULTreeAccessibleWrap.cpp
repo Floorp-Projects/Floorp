@@ -447,7 +447,7 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::IsProbablyForLayout(PRBool *aIsProbablyFo
 }
 
 // --------------------------------------------------------
-// nsXULTreeAccessibleWrap Accessible
+// nsXULTreeColumnsAccessibleWrap Accessible
 // --------------------------------------------------------
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULTreeColumnsAccessibleWrap, nsXULTreeColumnsAccessible, nsIAccessibleTable)
 

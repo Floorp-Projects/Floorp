@@ -413,6 +413,17 @@ protected:
   void PostScrollEvent();
   void FireScrollEvent();
 
+  /**
+   * Fires 'treeRowCountChanged' event asynchronously. The event supports
+   * nsIDOMDataContainerEvent interface that is used to expose the following
+   * information structures.
+   *
+   * @param aIndex  the row index rows are added/removed from
+   * @param aCount  the number of added/removed rows (the sign points to
+   *                an operation, plus - addition, minus - removing)
+   */
+  void FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount);
+
 protected: // Data Members
   // The cached box object parent.
   nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;
