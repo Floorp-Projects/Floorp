@@ -916,7 +916,9 @@ CalculateBitmapSize(CompilerState *state, RENode *target, const jschar *src,
     }
 
     while (src != end) {
+        JSBool canStartRange = JS_TRUE;
         uintN localMax = 0;
+
         switch (*src) {
           case '\\':
             ++src;
@@ -971,6 +973,7 @@ lexHex:
                 localMax = n;
                 break;
               case 'd':
+                canStartRange = JS_FALSE;
                 if (inRange) {
                     JS_ReportErrorNumber(state->context,
                                          js_GetErrorMessage, NULL,
@@ -984,6 +987,7 @@ lexHex:
               case 'S':
               case 'w':
               case 'W':
+                canStartRange = JS_FALSE;
                 if (inRange) {
                     JS_ReportErrorNumber(state->context,
                                          js_GetErrorMessage, NULL,
@@ -1053,7 +1057,7 @@ lexHex:
             }
             inRange = JS_FALSE;
         } else {
-            if (src < end - 1) {
+            if (canStartRange && src < end - 1) {
                 if (*src == '-') {
                     ++src;
                     inRange = JS_TRUE;
