@@ -112,6 +112,7 @@ protected:
                                const nsACString& aGenericName, void *aClosure);
 
 private:
+    PRBool mEnableKerning;
 };
 
 #endif /* GFX_OS2_FONTS_H */
