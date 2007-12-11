@@ -130,7 +130,7 @@ protected:
     nsEventStatus ExecuteCommand(nsIContent* inDispatchTo);
     
     // build the Application menu shared by all menu bars.
-    NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString& nodeID, SEL action,
+    NSMenuItem* CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString& nodeID, SEL action,
                                                     int tag, NativeMenuItemTarget* target);
     nsresult CreateApplicationMenu(nsIMenu* inMenu);
 
