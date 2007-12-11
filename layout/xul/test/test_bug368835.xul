@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<!--
+  Bug 368835 - fire TreeViewChanged/TreeRowCountChanged events.
+-->
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 368835">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+    function inTreeView() { }
+
+    inTreeView.prototype =
+    {
+      mRowCount: 0,
+      mTree: null,
+
+      get rowCount() { return this.mRowCount; },
+      setTree: function(aTree) { this.mTree = aTree; },
+      getCellText: function(aRow, aCol) { return "hello"; },
+      getRowProperties: function(aIndex, aProperties) {},
+      getCellProperties: function(aIndex, aCol, aProperties) {},
+      getColumnProperties: function(aCol, aProperties) {},
+      getParentIndex: function(aRowIndex) { },
+      hasNextSibling: function(aRowIndex, aAfterIndex) { },
+      getLevel: function(aIndex) {},
+      getImageSrc: function(aRow, aCol) {},
+      getProgressMode: function(aRow, aCol) {},
+      getCellValue: function(aRow, aCol) {},
+      isContainer: function(aIndex) {},
+      isContainerOpen: function(aIndex) {},
+      isContainerEmpty: function(aIndex) {},
+      isSeparator: function(aIndex) {},
+      isSorted: function() {},
+      toggleOpenState: function(aIndex) {},
+      selectionChanged: function() {},
+      cycleHeader: function(aCol) {},
+      cycleCell: function(aRow, aCol) {},
+      isEditable: function(aRow, aCol) {},
+      isSelectable: function(aRow, aCol) {},
+      setCellValue: function(aRow, aCol, aValue) {},
+      setCellText: function(aRow, aCol, aValue) { },
+      performAction: function(aAction) {},
+      performActionOnRow: function(aAction, aRow) {},
+      performActionOnCell: function(aAction, aRow, aCol) {}
+    };
+
+    var gTreeViewChanged = false;
+    function TreeViewChangedHandler(aEvent)
+    {
+      gTreeViewChanged = true;
+    }
+
+    var gTreeRowCountChanged = false;
+    function TreeRowCountChangedHandler(aEvent)
+    {
+      netscape.security.PrivilegeManager.
+        enablePrivilege("UniversalXPConnect UniversalBrowserWrite");
+
+      gTreeRowCountChanged = true;
+
+      var index = aEvent.getData("index");
+      ok(index == 0, "Wrong 'index' data of 'treeRowCountChanged' event.");
+
+      var count = aEvent.getData("count");
+      ok(count == 1, "Wrong 'count' data of 'treeRowCountChanged' event.");
+    }
+
+    function CheckEvents()
+    {
+      netscape.security.PrivilegeManager.
+        enablePrivilege("UniversalXPConnect UniversalBrowserWrite");
+
+      // If these fail then it doesn't mean actually events are not fired,
+      // possibly setTimeout was executed earlier than events have beenS fired.
+
+      ok(gTreeViewChanged, "TreeViewChanged event should have been fired.")
+      ok(gTreeRowCountChanged, "TreeRowCountChanged event should have been fired.");
+
+      document.removeEventListener("TreeViewChanged",
+                                   TreeViewChangedHandler, true);
+
+      document.removeEventListener("TreeRowCountChanged",
+                                   TreeRowCountChangedHandler, true);
+
+      SimpleTest.finish();
+    }
+
+    var gAccService = null;
+
+    function doTest()
+    {
+      netscape.security.PrivilegeManager.
+        enablePrivilege("UniversalXPConnect UniversalBrowserWrite");
+
+      // Check whether accessbility support is enabled.
+      if (!("@mozilla.org/accessibleRetrieval;1" in Components.classes)) {
+        SimpleTest.finish();
+        return;
+      }
+
+      // Activate accessibility, otherwise events aren't fired.
+      gAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                    getService(Components.interfaces.nsIAccessibleRetrieval);
+
+      document.addEventListener("TreeViewChanged",
+                                TreeViewChangedHandler, true);
+      document.addEventListener("TreeRowCountChanged",
+                                TreeRowCountChangedHandler, true);
+
+      var tree = document.getElementById("tree");
+      var treeBox = tree.treeBoxObject;
+
+      var view = new inTreeView();
+      view.mRowCount = 5;
+
+      treeBox.view = view;
+
+      view.selection.currentIndex = 0;
+      view.selection.selectAll();
+
+      ++view.mRowCount;
+      treeBox.rowCountChanged(0, 1);
+
+      if (gTreeViewChanged && gTreeRowCountChanged)
+        CheckEvents();
+      else
+        window.setTimeout(CheckEvents, 1000);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=368835">
+      Mozilla Bug 368835
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+  </body>
+
+  <tree id="tree" flex="1">
+    <treecols>
+      <treecol id="col" flex="1" primary="true" label="column"/>
+    </treecols>
+    <treechildren id="treechildren"/>
+  </tree>
+</window>
+

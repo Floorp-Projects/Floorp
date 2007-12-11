@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,13 +15,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
+ * Contributor(s):
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+ *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -33,38 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsITreeColumns.idl"
+#ifndef nsDOMDataContainerEvent_h___
+#define nsDOMDataContainerEvent_h___
 
-interface nsIAccessible;
+#include "nsIDOMDataContainerEvent.h"
+#include "nsDOMEvent.h"
 
-/**
- * A cross-platform interface that supports cache for tree item 
- *
- * @status UNDER_REVIEW
- */
-[uuid(7cdad914-948b-4bbc-9c47-ee5e1ae6b148)]
-interface nsIAccessibleTreeCache : nsISupports
+class nsDOMDataContainerEvent : public nsDOMEvent,
+                                public nsIDOMDataContainerEvent
 {
-  /**
-   * Get tree item from cache according to row and column, create if doesn't
-   * exist in cache.
-   *
-   * @param aRow     the given row index
-   * @param aColumn  the given column object. If is is nsnull then primary
-   *                 column is used. It makes sense for ATK only.
-   */
-  nsIAccessible getCachedTreeitemAccessible(in long aRow,
-                                            in nsITreeColumn aColumn);
+public:
+  nsDOMDataContainerEvent(nsPresContext* aPresContext, nsEvent* aEvent);
 
-  /**
-   * Invalidates the number of cached treeitem accessibles.
-   *
-   * @param aRow    row index the invalidation starts from
-   * @param aCount  the number of treeitem accessibles to invalidate,
-   *                the number sign specifies whether rows have been
-   *                inserted (plus) or removed (minus)
-   */
-  void invalidateCache(in long aRow, in long aCount);
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMDataContainerEvent, nsDOMEvent)
+
+  NS_FORWARD_TO_NSDOMEVENT
+
+  NS_DECL_NSIDOMDATACONTAINEREVENT
+
+private:
+  static PLDHashOperator PR_CALLBACK
+    TraverseEntry(const nsAString& aKey, nsIVariant *aDataItem, void* aUserArg);
+
+  nsInterfaceHashtable<nsStringHashKey, nsIVariant> mData;
 };
+
+#endif
 
