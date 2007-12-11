@@ -1606,6 +1606,13 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           accessibleText->GetCharacterAtOffset(caretOffset, &chAtOffset);
           printf("\nCaret moved to %d with char %c", caretOffset, chAtOffset);
 #endif
+#ifdef DEBUG_CARET
+          // Test caret line # -- fire an EVENT_ALERT on the focused node so we can watch the
+          // line-number object attribute on it
+          nsCOMPtr<nsIAccessible> accForFocus;
+          GetAccService()->GetAccessibleFor(gLastFocusedNode, getter_AddRefs(accForFocus));
+          nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ALERT, accForFocus);
+#endif
           nsCOMPtr<nsIAccessibleCaretMoveEvent> caretMoveEvent =
             new nsAccCaretMoveEvent(accessible, caretOffset);
           NS_ENSURE_TRUE(caretMoveEvent, NS_ERROR_OUT_OF_MEMORY);
