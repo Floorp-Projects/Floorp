@@ -1,5 +1,6 @@
-<!ENTITY places.organizer.title  "Places Organizer">
-<!ENTITY organize.label          "Organize">
+<!-- LOCALIZATION NOTE (places.library.title): use "Library", "Archive" or "Repository" -->
+<!ENTITY places.library.title  "Library">
+<!ENTITY organize.label        "Organize">
 
 <!ENTITY file.accesskey                 "F">
 <!ENTITY file.close.label               "Close">
