@@ -2166,7 +2166,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 nsresult
 nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(GetRoleContent(mDOMNode)));
   NS_ENSURE_TRUE(element, NS_ERROR_UNEXPECTED);
 
   nsAutoString tagName;
