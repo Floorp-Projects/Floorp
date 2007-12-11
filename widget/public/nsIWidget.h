@@ -95,10 +95,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 092c37e8-2806-4ebc-b04b-e0bb624ce0d4
+// d7d1aae8-fcb9-4fe7-be62-b20ffc53f1f9
 #define NS_IWIDGET_IID \
-{ 0x092c37e8, 0x2806, 0x4ebc, \
-  { 0xb0, 0x4b, 0xe0, 0xbb, 0x62, 0x4c, 0xe0, 0xd4 } }
+{ 0xd7d1aae8, 0xfcb9, 0x4fe7, \
+  { 0xbe, 0x62, 0xb2, 0x0f, 0xfc, 0x53, 0xf1, 0xf9 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary
@@ -1044,6 +1044,11 @@ class nsIWidget : public nsISupports {
      * Return the popup that was last rolled up, or null if there isn't one.
      */
     virtual nsIContent* GetLastRollup() = 0;
+
+    /**
+     * Begin a window resizing drag, based on the event passed in.
+     */
+    NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
