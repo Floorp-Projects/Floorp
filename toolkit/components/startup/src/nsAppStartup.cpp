@@ -151,6 +151,17 @@ nsAppStartup::CreateHiddenWindow()
 
 
 NS_IMETHODIMP
+nsAppStartup::DestroyHiddenWindow()
+{
+  nsCOMPtr<nsIAppShellService> appShellService
+    (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
+
+  return appShellService->DestroyHiddenWindow();
+}
+
+
+NS_IMETHODIMP
 nsAppStartup::Run(void)
 {
   NS_ASSERTION(!mRunning, "Reentrant appstartup->Run()");
@@ -299,12 +310,6 @@ nsAppStartup::Quit(PRUint32 aMode)
       obsService->NotifyObservers(nsnull, "quit-application",
         mRestart ? restartStr.get() : shutdownStr.get());
     }
-
-    nsCOMPtr<nsIAppShellService> appShellService
-      (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-    NS_ASSERTION(appShellService, "We're gonna leak something.");
-    if (appShellService)
-      appShellService->DestroyHiddenWindow();
 
     if (!mRunning) {
       postedExitEvent = PR_TRUE;

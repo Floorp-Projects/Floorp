@@ -850,6 +850,10 @@ private:
 ScopedXPCOMStartup::~ScopedXPCOMStartup()
 {
   if (mServiceManager) {
+    nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
+    if (appStartup)
+      appStartup->DestroyHiddenWindow();
+
     gDirServiceProvider->DoShutdown();
 
     WriteConsoleLog();
@@ -3182,12 +3186,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef XP_MACOSX
           SetupMacCommandLine(gRestartArgc, gRestartArgv);
 #endif
-
-          // Ensure hidden window is destroyed before xpcom shuts down
-          nsCOMPtr<nsIAppShellService> appShellService
-                  (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-          if (appShellService)
-            appShellService->DestroyHiddenWindow();
         }
       }
     }
