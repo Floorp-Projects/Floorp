@@ -3434,6 +3434,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGenericElement)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
+  // nsNodeSH::PreCreate() depends on the identity pointer being the
+  // same as nsINode (which nsIContent inherits), so if you change the
+  // below line, make sure nsNodeSH::PreCreate() still does the right
+  // thing!
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
