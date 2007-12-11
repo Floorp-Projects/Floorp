@@ -24,9 +24,4 @@
                 persist="checked" class="cb" />
     </vbox>
   </prefpane>
-
-  <hbox flex="1" pack="end">
-    <button label="&prefs.button.close;" oncommand="close();" />
-  </hbox>
-
 </prefwindow>
