@@ -51,6 +51,7 @@ _TEST_FILES = \
 		test_bug336682_2.xul \
 		test_bug336682.js \
 		test_bug367781.html \
+		test_bug368835.html \
 		test_bug379120.html \
 		test_bug391568.xhtml \
 		test_bug402089.html \
