@@ -99,7 +99,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMAttr)
+  // nsNodeSH::PreCreate() depends on the identity pointer being the
+  // same as nsINode (which nsIAttribute inherits), so if you change
+  // the below line, make sure nsNodeSH::PreCreate() still does the
+  // right thing!
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAttribute)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Attr)
 NS_INTERFACE_MAP_END
 
