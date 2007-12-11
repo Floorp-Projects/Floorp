@@ -251,6 +251,11 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
     *dest = result; \
     return (result || !src) ? NS_OK : NS_ERROR_OUT_OF_MEMORY
 
+#define IS_WRAPPER_CLASS(clazz)                                               \
+          ((clazz) == &XPC_WN_NoHelper_JSClass.base ||                        \
+           (clazz)->getObjectOps == XPC_WN_GetObjectOpsNoCall ||              \
+           (clazz)->getObjectOps == XPC_WN_GetObjectOpsWithCall)
+
 /***************************************************************************/
 // Auto locking support class...
 
