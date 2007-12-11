@@ -814,6 +814,14 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
     return PR_TRUE;
   }
 
+  if (aWidgetType == NS_THEME_MENUPOPUP) {
+    gint vertical_padding;
+    moz_gtk_get_menu_popup_vertical_padding(&vertical_padding);
+
+    aResult->SizeTo(0, vertical_padding, 0, vertical_padding);
+    return PR_TRUE;
+  }
+
   return PR_FALSE;
 }
 
