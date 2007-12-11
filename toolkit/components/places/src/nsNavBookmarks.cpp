@@ -387,24 +387,6 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
 }
 
 
-struct RenumberItem {
-  PRInt64 folderChild;
-  nsCOMPtr<nsIURI> itemURI;
-  PRInt32 position;
-};
-
-struct RenumberItemsArray {
-  nsVoidArray items;
-  ~RenumberItemsArray();
-};
-
-RenumberItemsArray::~RenumberItemsArray()
-{
-  for (PRInt32 i = 0; i < items.Count(); ++i) {
-    delete static_cast<RenumberItem*>(items[i]);
-  }
-}
-
 // nsNavBookmarks::InitRoots
 //
 //    This locates and creates if necessary the root items in the bookmarks
@@ -817,7 +799,6 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
   NS_ASSERTION(aStartIndex <= aEndIndex, "start index must be <= end index");
 
   mozIStorageConnection *dbConn = DBConn();
-  mozStorageTransaction transaction(dbConn, PR_FALSE);
 
   nsCAutoString buffer;
   buffer.AssignLiteral("UPDATE moz_bookmarks SET position = position + ");
@@ -834,53 +815,11 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
     buffer.AppendInt(aEndIndex);
   }
 
+  nsBookmarksUpdateBatcher batch;
+  
   nsresult rv = DBConn()->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  RenumberItemsArray itemsArray;
-  nsVoidArray *items = &itemsArray.items;
-  {
-    mozStorageStatementScoper scope(mDBGetChildren);
  
-    rv = mDBGetChildren->BindInt64Parameter(0, aFolder);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDBGetChildren->BindInt32Parameter(1, aStartIndex + aDelta);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mDBGetChildren->BindInt32Parameter(2, aEndIndex + aDelta);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool results;
-    while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&results)) && results) {
-      RenumberItem *item = new RenumberItem();
-      if (!item) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      if (mDBGetChildren->AsInt32(kGetChildrenIndex_Type) == TYPE_BOOKMARK) {
-        nsCAutoString spec;
-        mDBGetChildren->GetUTF8String(nsNavHistory::kGetInfoIndex_URL, spec);
-        rv = NS_NewURI(getter_AddRefs(item->itemURI), spec, nsnull);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      else {
-        item->folderChild = mDBGetChildren->AsInt64(kGetChildrenIndex_ForeignKey);
-      }
-
-      item->position = mDBGetChildren->AsInt32(kGetChildrenIndex_Position);
-      if (!items->AppendElement(item)) {
-        delete item;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-  }
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsBookmarksUpdateBatcher batch;
-
   return NS_OK;
 }
 
