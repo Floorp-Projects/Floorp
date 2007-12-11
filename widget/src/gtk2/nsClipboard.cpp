@@ -44,6 +44,9 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIServiceManager.h"
+#include "nsIImage.h"
+#include "nsImageToPixbuf.h"
+#include "nsStringStream.h"
 
 #include <gtk/gtkclipboard.h>
 #include <gtk/gtkinvisible.h>
@@ -218,6 +221,38 @@ nsClipboard::SetData(nsITransferable *aTransferable,
                 continue;
             }
 
+            // very special case for this one. since our selection mechanism doesn't work for images,
+            // we must use GTK's clipboard utility functions
+            if (!strcmp(flavorStr, kNativeImageMime) || !strcmp(flavorStr, kPNGImageMime) ||
+                !strcmp(flavorStr, kJPEGImageMime) || !strcmp(flavorStr, kGIFImageMime)) {
+                nsCOMPtr<nsISupports> item;
+                PRUint32 len;
+                rv = aTransferable->GetTransferData(flavorStr, getter_AddRefs(item), &len);
+                nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_QueryInterface(item));
+                if (!ptrPrimitive)
+                    continue;
+
+                nsCOMPtr<nsISupports> primitiveData;
+                ptrPrimitive->GetData(getter_AddRefs(primitiveData));
+                nsCOMPtr<nsIImage> image(do_QueryInterface(primitiveData));
+                if (!image) // Not getting an image for an image mime type!?
+                    continue;
+
+                if (NS_FAILED(image->LockImagePixels(PR_FALSE)))
+                    continue;
+                GdkPixbuf* pixbuf = nsImageToPixbuf::ImageToPixbuf(image);
+                if (!pixbuf) {
+                    image->UnlockImagePixels(PR_FALSE);
+                    continue;
+                }
+
+                GtkClipboard *aClipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
+                gtk_clipboard_set_image(aClipboard, pixbuf);
+                g_object_unref(pixbuf);
+                image->UnlockImagePixels(PR_FALSE);
+                continue;
+            }
+
             // Add this to our list of valid targets
             GdkAtom atom = gdk_atom_intern(flavorStr, FALSE);
             AddTarget(atom, selectionAtom);
@@ -279,6 +314,27 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
                 // text off the clipboard, run the next loop
                 // iteration.
                 continue;
+            }
+
+            // For images, we must wrap the data in an nsIInputStream then return instead of break,
+            // because that code below won't help us.
+            if (!strcmp(flavorStr, kJPEGImageMime) || !strcmp(flavorStr, kPNGImageMime) || !strcmp(flavorStr, kGIFImageMime)) {
+                GdkAtom atom;
+                if (!strcmp(flavorStr, kJPEGImageMime)) // This is image/jpg, but X only understands image/jpeg
+                    atom = gdk_atom_intern("image/jpeg", FALSE);
+                else
+                    atom = gdk_atom_intern(flavorStr, FALSE);
+
+                GtkSelectionData *selectionData = wait_for_contents(clipboard, atom);
+                if (!selectionData)
+                    continue;
+
+                nsCOMPtr<nsIInputStream> byteStream;
+                NS_NewByteInputStream(getter_AddRefs(byteStream), (const char*)selectionData->data,
+                                      selectionData->length, NS_ASSIGNMENT_COPY);
+                aTransferable->SetTransferData(flavorStr, byteStream, sizeof(nsIInputStream*));
+                gtk_selection_data_free(selectionData);
+                return NS_OK;
             }
 
             // Get the atom for this type and try to request it off
@@ -383,6 +439,10 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
         for (PRInt32 j = 0; j < n_targets; j++) {
             gchar *atom_name = gdk_atom_name(targets[j]);
             if (!strcmp(atom_name, aFlavorList[i]))
+                *_retval = PR_TRUE;
+
+            // X clipboard wants image/jpeg, not image/jpg
+            if (!strcmp(aFlavorList[i], kJPEGImageMime) && !strcmp(atom_name, "image/jpeg"))
                 *_retval = PR_TRUE;
 
             g_free(atom_name);
