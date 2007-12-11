@@ -2952,7 +2952,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         NS_ENSURE_ARG_POINTER(aURI);
         // Get the host
         nsCAutoString host;
-        aURI->GetHost(host);
+        nsCOMPtr<nsIURI> innermostURI = NS_GetInnermostURI(aURI);
+        innermostURI->GetHost(host);
         CopyUTF8toUTF16(host, formatStrs[0]);
         formatStrCount = 1;
         error.AssignLiteral("dnsNotFound");
