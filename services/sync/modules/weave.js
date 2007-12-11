@@ -58,6 +58,21 @@ const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+let ioSvc = Components.classes["@mozilla.org/network/io-service;1"]
+  .getService(Components.interfaces.nsIIOService);
+let resProt = ioSvc.getProtocolHandler("resource")
+  .QueryInterface(Components.interfaces.nsIResProtocolHandler);
+
+if (!resProt.hasSubstitution("weave")) {
+  let extMgr = Components.classes["@mozilla.org/extensions/manager;1"]
+    .getService(Components.interfaces.nsIExtensionManager);
+  let loc = extMgr.getInstallLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
+  let extD = loc.getItemLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
+  extD.append("modules");
+  resProt.setSubstitution("weave", ioSvc.newFileURI(extD));
+}
+Cu.import("resource://weave/log4moz.js");
+
 /*
  * Service object
  * Implements IBookmarksSyncService, main entry point 
@@ -225,21 +240,18 @@ BookmarksSyncService.prototype = {
   },
 
   _initLogs: function BSS__initLogs() {
-    let logSvc = Cc["@mozilla.org/log4moz/service;1"].
-      getService(Ci.ILog4MozService);
+    this._log = Log4Moz.Service.getLogger("Service.Main");
 
-    this._log = logSvc.getLogger("Service.Main");
+    let formatter = Log4Moz.Service.newFormatter("basic");
+    let root = Log4Moz.Service.rootLogger;
+    root.level = Log4Moz.Level.Debug;
 
-    let formatter = logSvc.newFormatter("basic");
-    let root = logSvc.rootLogger;
-    root.level = root.LEVEL_DEBUG;
-
-    let capp = logSvc.newAppender("console", formatter);
-    capp.level = root.LEVEL_WARN;
+    let capp = Log4Moz.Service.newAppender("console", formatter);
+    capp.level = Log4Moz.Level.Warn;
     root.addAppender(capp);
 
-    let dapp = logSvc.newAppender("dump", formatter);
-    dapp.level = root.LEVEL_ALL;
+    let dapp = Log4Moz.Service.newAppender("dump", formatter);
+    dapp.level = Log4Moz.Level.All;
     root.addAppender(dapp);
 
     let logFile = this._dirSvc.get("ProfD", Ci.nsIFile);
@@ -249,11 +261,11 @@ BookmarksSyncService.prototype = {
     verboseFile.append("bm-sync-verbose.log");
     verboseFile.QueryInterface(Ci.nsILocalFile);
 
-    let fapp = logSvc.newFileAppender("rotating", logFile, formatter);
-    fapp.level = root.LEVEL_INFO;
+    let fapp = Log4Moz.Service.newFileAppender("rotating", logFile, formatter);
+    fapp.level = Log4Moz.Level.Info;
     root.addAppender(fapp);
-    let vapp = logSvc.newFileAppender("rotating", verboseFile, formatter);
-    vapp.level = root.LEVEL_DEBUG;
+    let vapp = Log4Moz.Service.newFileAppender("rotating", verboseFile, formatter);
+    vapp.level = Log4Moz.Level.Debug;
     root.addAppender(vapp);
   },
 
@@ -478,11 +490,7 @@ BookmarksEngine.prototype = {
   _init: function BmkEngine__init(davCollection, cryptoId) {
     this._dav = davCollection;
     this._cryptoId = cryptoId;
-
-    let logSvc = Cc["@mozilla.org/log4moz/service;1"].
-      getService(Ci.ILog4MozService);
-    this._log = logSvc.getLogger("Service." + this._logName);
-
+    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
     this._snapshot.load();
   },
 
@@ -1124,10 +1132,7 @@ Crypto.prototype = {
   },
 
   _init: function Crypto__init() {
-    let logSvc = Cc["@mozilla.org/log4moz/service;1"].
-      getService(Ci.ILog4MozService);
-    this._log = logSvc.getLogger("Service." + this._logName);
-
+    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
     let branch = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch2);
     branch.addObserver("browser.places.sync.encryption", this, false);
@@ -1283,9 +1288,7 @@ SyncCore.prototype = {
   _logName: "Sync",
 
   _init: function SC__init() {
-    let logSvc = Cc["@mozilla.org/log4moz/service;1"].
-      getService(Ci.ILog4MozService);
-    this._log = logSvc.getLogger("Service." + this._logName);
+    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
   },
 
   // FIXME: this won't work for deep objects, or objects with optional properties
@@ -1630,9 +1633,7 @@ Store.prototype = {
   _logName: "Store",
 
   _init: function Store__init() {
-    let logSvc = Cc["@mozilla.org/log4moz/service;1"].
-      getService(Ci.ILog4MozService);
-    this._log = logSvc.getLogger("Service." + this._logName);
+    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
   },
 
   wrap: function Store_wrap() {
@@ -2119,9 +2120,7 @@ BookmarksStore.prototype.__proto__ = new Store();
 function DAVCollection(baseURL) {
   this._baseURL = baseURL;
   this._authProvider = new DummyAuthProvider();
-  let logSvc = Cc["@mozilla.org/log4moz/service;1"].
-    getService(Ci.ILog4MozService);
-  this._log = logSvc.getLogger("Service.DAV");
+  this._log = Log4Moz.Service.getLogger("Service.DAV");
 }
 DAVCollection.prototype = {
   __dp: null,
@@ -2614,9 +2613,7 @@ DummyAuthProvider.prototype = {
 function EventListener(handler, eventName) {
   this._handler = handler;
   this._eventName = eventName;
-  let logSvc = Cc["@mozilla.org/log4moz/service;1"].
-    getService(Ci.ILog4MozService);
-  this._log = logSvc.getLogger("Service.EventHandler");
+  this._log = Log4Moz.Service.getLogger("Service.EventHandler");
 }
 EventListener.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsISupports]),
