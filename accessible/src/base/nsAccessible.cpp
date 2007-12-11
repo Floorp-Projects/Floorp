@@ -2304,6 +2304,27 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
+  if (mRoleMapEntry) {
+    // If an object has an ancestor with the activedescendant property
+    // pointing at it, we mark it as ACTIVE even if it's not currently focused.
+    // This allows screen reader virtual buffer modes to know which descendant
+    // is the current one that would get focus if the user navigates to the container widget.
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+    nsAutoString id;
+    if (content && nsAccUtils::GetID(content, id)) {
+      nsIContent *ancestorContent = content;
+      nsAutoString activeID;
+      while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
+        if (ancestorContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant, activeID)) {
+          if (id == activeID) {
+            *aExtraState |= nsIAccessibleStates::EXT_STATE_ACTIVE;
+          }
+          break;
+        }
+      }
+    }
+  }
+
   PRUint32 role;
   rv = GetFinalRole(&role);
   NS_ENSURE_SUCCESS(rv, rv);
