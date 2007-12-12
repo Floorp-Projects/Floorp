@@ -2585,6 +2585,7 @@ nsDocument::GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const
     do_QueryReferent(mScriptObject);
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(scriptHandlingObject);
   if (win) {
+    NS_ASSERTION(win->IsInnerWindow(), "Should have inner window here!");
     nsPIDOMWindow* outer = win->GetOuterWindow();
     if (!outer || outer->GetCurrentInnerWindow() != win) {
       NS_WARNING("Wrong inner/outer window combination!");
@@ -2599,6 +2600,8 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
   NS_ASSERTION(!mScriptGlobalObject ||
                mScriptGlobalObject == aScriptObject,
                "Wrong script object!");
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aScriptObject);
+  NS_ASSERTION(!win || win->IsInnerWindow(), "Should have inner window here!");
   mScriptObject = do_GetWeakReference(aScriptObject);
   if (aScriptObject) {
     mHasHadScriptHandlingObject = PR_TRUE;

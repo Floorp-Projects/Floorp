@@ -4734,7 +4734,8 @@ FindConstructorContractID(PRInt32 aDOMClassInfoID)
 }
 
 static nsresult
-BaseStubConstructor(const nsGlobalNameStruct *name_struct, JSContext *cx,
+BaseStubConstructor(nsIWeakReference* aWeakOwner,
+                    const nsGlobalNameStruct *name_struct, JSContext *cx,
                     JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsresult rv;
@@ -4757,7 +4758,9 @@ BaseStubConstructor(const nsGlobalNameStruct *name_struct, JSContext *cx,
 
   nsCOMPtr<nsIJSNativeInitializer> initializer(do_QueryInterface(native));
   if (initializer) {
-    rv = initializer->Initialize(cx, obj, argc, argv);
+    nsCOMPtr<nsISupports> owner = do_QueryReferent(aWeakOwner);
+    NS_ENSURE_STATE(owner);
+    rv = initializer->Initialize(owner, cx, obj, argc, argv);
     if (NS_FAILED(rv)) {
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -4865,9 +4868,11 @@ class nsDOMConstructor : public nsIDOMDOMConstructor
 {
 public:
   nsDOMConstructor(const PRUnichar *aName,
-                   const nsGlobalNameStruct *aNameStruct)
+                   const nsGlobalNameStruct *aNameStruct,
+                   nsISupports* aOwner)
     : mClassName(aName),
-      mConstructable(IsConstructable(aNameStruct))
+      mConstructable(IsConstructable(aNameStruct)),
+      mWeakOwner(do_GetWeakReference(aOwner))
   {
   }
 
@@ -4946,8 +4951,9 @@ private:
       aNameStruct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias;
   }
 
-  const PRUnichar *mClassName;
+  const PRUnichar*   mClassName;
   const PRPackedBool mConstructable;
+  nsWeakPtr          mWeakOwner;
 };
 
 NS_IMPL_ADDREF(nsDOMConstructor)
@@ -4994,7 +5000,7 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  return BaseStubConstructor(name_struct, cx, obj, argc, argv, vp);
+  return BaseStubConstructor(mWeakOwner, name_struct, cx, obj, argc, argv, vp);
 }
 
 nsresult
@@ -5200,7 +5206,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     nsRefPtr<nsDOMConstructor> constructor =
       new nsDOMConstructor(reinterpret_cast<PRUnichar *>
                                            (::JS_GetStringChars(str)),
-                           name_struct);
+                           name_struct,
+                           static_cast<nsPIDOMWindow*>(aWin));
     if (!constructor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -5262,7 +5269,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     const PRUnichar *name = reinterpret_cast<PRUnichar *>
                                             (::JS_GetStringChars(str));
     nsRefPtr<nsDOMConstructor> constructor =
-      new nsDOMConstructor(name, name_struct);
+      new nsDOMConstructor(name, name_struct,
+                           static_cast<nsPIDOMWindow*>(aWin));
     if (!constructor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -5483,7 +5491,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
     nsRefPtr<nsDOMConstructor> constructor =
-      new nsDOMConstructor(class_name, name_struct);
+      new nsDOMConstructor(class_name, name_struct,
+                           static_cast<nsPIDOMWindow*>(aWin));
     if (!constructor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
