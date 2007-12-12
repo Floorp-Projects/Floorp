@@ -396,8 +396,12 @@ public:
    */
   nsIContent *GetRootContent() const
   {
-    return mRootContent;
+    return (mCachedRootContent &&
+            mCachedRootContent->GetNodeParent() == this) ?
+           reinterpret_cast<nsIContent*>(mCachedRootContent.get()) :
+           GetRootContentInternal();
   }
+  virtual nsIContent *GetRootContentInternal() const = 0;
 
   /**
    * Accessors to the collection of stylesheets owned by this document.
@@ -941,9 +945,10 @@ protected:
   // This is just a weak pointer; the parent document owns its children.
   nsIDocument* mParentDocument;
 
-  // A weak reference to the only child element, or null if no
-  // such element exists.
-  nsIContent* mRootContent;
+  // A reference to the content last returned from GetRootContent().
+  // This should be an nsIContent, but that would force us to pull in
+  // nsIContent.h
+  nsCOMPtr<nsINode> mCachedRootContent;
 
   // We'd like these to be nsRefPtrs, but that'd require us to include
   // additional headers that we don't want to expose.
