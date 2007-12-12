@@ -2,3 +2,4 @@
 # DO NOT ADD CRASHTESTS INDIVIDUALLY HERE!
 
 include ../../testing/crashtest/sanity/crashtests.list
+include ../../gfx/src/mac/crashtests/crashtests.list
