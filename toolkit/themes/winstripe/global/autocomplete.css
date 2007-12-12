@@ -218,6 +218,11 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   color: HighlightText !important;
 }
 
+.autocomplete-treebody::-moz-tree-image(treecolAutoCompleteValue) {
+  max-width: 16px;
+  height: 16px;
+}
+
 /* ::::: richlistbox autocomplete ::::: */
 
 .autocomplete-richlistbox {

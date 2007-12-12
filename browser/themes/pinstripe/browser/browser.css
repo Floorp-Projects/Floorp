@@ -910,13 +910,6 @@ statusbarpanel#statusbar-display {
 
 /* ----- AUTOCOMPLETE ----- */
 
-.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteValue),
-.autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteValue),
-.autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteValue) {
-  width: 16px;
-  height: 16px;
-}
-
 #treecolAutoCompleteImage {
   max-width: 36px;
 }
