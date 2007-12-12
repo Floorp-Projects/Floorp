@@ -62,6 +62,8 @@
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSValPtr(jsval);
       native JSVal(jsval);
+[ptr] native JSClassConstPtr(const JSClass);
+      native JSGetObjectOps(JSGetObjectOps);
       native JSID(jsid);
 [ptr] native voidPtrPtr(void*);
 [ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
@@ -206,7 +208,7 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
      * here does NOT indicate system principal or no principals at all, just
      * that this wrapper doesn't have an intrinsic one.
      */
-    virtual nsIPrincipal* GetObjectPrincipal() const = 0;   
+    virtual nsIPrincipal* GetObjectPrincipal() const = 0;
 #endif
     
 protected:
@@ -445,7 +447,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(9f45711b-bf4f-4af6-a71d-d165f042986d)]
+[uuid(256a41a5-10e6-40a1-8392-8baa4adfabe2)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -751,4 +753,14 @@ interface nsIXPConnect : nsISupports
      */
     [noscript,notxpcom] void noteJSContext(in JSContextPtr aJSContext,
                                            in nsCCTraversalCallbackRef aCb);
+
+    /**
+     * Get the JSClass and JSGetObjectOps pointers to use for
+     * identifying JSObjects that hold nsIXPConnectWrappedNative
+     * pointers in their private date. See IS_WRAPPER_CLASS in
+     * xpcprivate.h for details.
+     */
+    void GetXPCWrappedNativeJSClassInfo(out JSClassConstPtr clazz,
+                                        out JSGetObjectOps ops1,
+                                        out JSGetObjectOps ops2);
 };
