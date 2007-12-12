@@ -1158,8 +1158,8 @@ public:
     nscoord currentLine;
 
     // True if initial collapsable whitespace should be skipped.  This
-    // should be true at the beginning of a block and when the last text
-    // ended with whitespace.
+    // should be true at the beginning of a block, after hard breaks
+    // and when the last text ended with whitespace.
     PRBool skipWhitespace;
 
     // This contains the width of the trimmable whitespace at the end of
