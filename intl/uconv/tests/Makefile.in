@@ -98,7 +98,7 @@ LIBS		+= \
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)
 ifneq ($(OS_RELEASE),1.2)
-OS_LIBS		+= /usr/lib/libdl.so
+OS_LIBS		+= -ldl
 endif
 endif
 endif # MOZ_ENABLE_LIBXUL
