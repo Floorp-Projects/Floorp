@@ -450,13 +450,23 @@ PRBool TypeInState::FindPropInList(nsIAtom *aProp,
  *    PropItem: helper struct for TypeInState
  *******************************************************************/
 
+PropItem::PropItem() : 
+ tag(nsnull)
+,attr()
+,value()
+{
+  MOZ_COUNT_CTOR(PropItem);
+}
+
 PropItem::PropItem(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue) :
  tag(aTag)
 ,attr(aAttr)
 ,value(aValue)
 {
+  MOZ_COUNT_CTOR(PropItem);
 }
 
 PropItem::~PropItem()
 {
+  MOZ_COUNT_DTOR(PropItem);
 }

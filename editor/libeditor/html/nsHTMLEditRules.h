@@ -58,10 +58,18 @@ struct StyleCache : public PropItem
 {
   PRBool mPresent;
   
-  StyleCache() : PropItem(nsnull, EmptyString(), EmptyString()), mPresent(PR_FALSE){}
+  StyleCache() : PropItem(), mPresent(PR_FALSE) {
+    MOZ_COUNT_CTOR(StyleCache);
+  }
+
   StyleCache(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue) : 
-             PropItem(aTag, aAttr, aValue), mPresent(PR_FALSE) {}
-  ~StyleCache() {}
+             PropItem(aTag, aAttr, aValue), mPresent(PR_FALSE) {
+    MOZ_COUNT_CTOR(StyleCache);
+  }
+
+  ~StyleCache() {
+    MOZ_COUNT_DTOR(StyleCache);
+  }
 };
 
 
