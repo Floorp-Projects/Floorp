@@ -42,7 +42,7 @@
 interface nsIControllers;
 interface nsIDOMFileList;
 
-[scriptable, uuid(7564318a-8d75-4191-890d-f0150488d431)]
+[scriptable, uuid(df3dc133-d77a-482f-8364-8e40df978a33)]
 interface nsIDOMNSHTMLInputElement : nsISupports
 {
 	readonly attribute nsIControllers   controllers;
@@ -52,7 +52,7 @@ interface nsIDOMNSHTMLInputElement : nsISupports
            attribute long             selectionStart;
            attribute long             selectionEnd;
 
-	readonly attribute nsIDOMFileList   fileList;
+	readonly attribute nsIDOMFileList   files;
 
 	/* convenience */
   void                      setSelectionRange(in long selectionStart,
