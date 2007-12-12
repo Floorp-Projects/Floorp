@@ -203,7 +203,10 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   aResult.y = mY;
   aResult.height = GetFlag(BRS_UNCONSTRAINEDHEIGHT)
     ? NS_UNCONSTRAINEDSIZE
-    : mBottomEdge - mY;
+    : PR_MAX(0, mBottomEdge - mY);
+  // mY might be greater than mBottomEdge if the block's top margin pushes
+  // it off the page/column. Negative available height can confuse other code
+  // and is nonsense in principle.
 
   const nsMargin& borderPadding = BorderPadding();
 

@@ -10802,8 +10802,12 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   }
 
   //XXXbz Should mInitialContainingBlock be docRootFrame? It probably doesn't matter.
+  // Don't allow abs-pos descendants of the fixed content to escape the content.
+  // This should not normally be possible (because fixed-pos elements should
+  // be absolute containers) but fixed-pos tables currently aren't abs-pos
+  // containers.
   nsFrameConstructorState state(mPresShell, aParentFrame,
-                                mInitialContainingBlock,
+                                nsnull,
                                 mInitialContainingBlock);
 
   // Iterate across fixed frames and replicate each whose placeholder is a
