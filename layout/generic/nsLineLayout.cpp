@@ -2612,8 +2612,10 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // -- the bounds of all inline descendants
     // The former two parts are computed right here, we gather the descendants
     // below.
-    nsRect adjustedBounds(0, 0, psd->mFrame->mBounds.width,
-                          psd->mFrame->mBounds.height);
+    // At this point psd->mFrame->mBounds might be out of date since
+    // bidi reordering can move and resize the frames. So use the frame's
+    // rect instead of mBounds.
+    nsRect adjustedBounds(nsPoint(0, 0), psd->mFrame->mFrame->GetSize());
     combinedAreaResult.UnionRect(psd->mFrame->mCombinedArea, adjustedBounds);
   }
   else {
@@ -2630,16 +2632,16 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   }
 
   for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
-    nsPoint origin = nsPoint(pfd->mBounds.x, pfd->mBounds.y);
     nsIFrame* frame = pfd->mFrame;
+    nsPoint origin = frame->GetPosition();
 
     // Adjust the origin of the frame
     if (pfd->GetFlag(PFD_RELATIVEPOS)) {
       // right and bottom are handled by
       // nsHTMLReflowState::ComputeRelativeOffsets
       nsPoint change(pfd->mOffsets.left, pfd->mOffsets.top);
-      frame->SetPosition(frame->GetPosition() + change);
       origin += change;
+      frame->SetPosition(origin);
     }
 
     // We must position the view correctly before positioning its
