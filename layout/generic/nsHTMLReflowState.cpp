@@ -110,9 +110,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   mPercentHeightObserver = nsnull;
   mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
-#ifdef IBMBIDI
-  mRightEdge = NS_UNCONSTRAINEDSIZE;
-#endif
 }
 
 static PRBool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent)
@@ -179,10 +176,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   if (aInit) {
     Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
   }
-
-#ifdef IBMBIDI
-  mRightEdge = aParentReflowState.mRightEdge;
-#endif // IBMBIDI
 }
 
 inline void
