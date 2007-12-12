@@ -15,6 +15,8 @@ userPrefs = {
     'browser.sessionstore.enabled': 'false',
     'browser.sessionstore.resume_from_crash': 'false',
     'browser.shell.checkDefaultBrowser': 'false',
+    'browser.tabs.warnOnClose': 'false',
+    'browser.warnOnQuit': 'false',
     'dom.allow_scripts_to_close_windows': 'true',
     'dom.disable_open_during_load': 'false',
     'dom.disable_window_flip': 'false',
