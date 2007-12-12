@@ -82,6 +82,7 @@ const DIR_STAGE                       = "staged-xpis";
 const FILE_EXTENSIONS                 = "extensions.rdf";
 const FILE_EXTENSION_MANIFEST         = "extensions.ini";
 const FILE_EXTENSIONS_STARTUP_CACHE   = "extensions.cache";
+const FILE_EXTENSIONS_LOG             = "extensions.log";
 const FILE_AUTOREG                    = ".autoreg";
 const FILE_INSTALL_MANIFEST           = "install.rdf";
 const FILE_CONTENTS_MANIFEST          = "contents.rdf";
@@ -512,7 +513,7 @@ function removeDirRecursive(dir) {
 /**
  * Logs a string to the error console.
  * @param   string
- *          The string to write to the error console..
+ *          The string to write to the error console.
  */
 function LOG(string) {
   if (gLoggingEnabled) {
@@ -520,6 +521,29 @@ function LOG(string) {
     if (gConsole)
       gConsole.logStringMessage(string);
   }
+}
+
+/**
+ * Logs a string to the error console and to a permanent log file. 
+ * @param   string
+ *          The string to write out.
+ */  
+function ERROR(string) {
+  LOG(string);
+  try {
+    var tstamp = new Date();
+    var logfile = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS_LOG]);
+    var stream = Cc["@mozilla.org/network/file-output-stream;1"].
+                 createInstance(Ci.nsIFileOutputStream);
+    stream.init(logfile, 0x02 | 0x08 | 0x10, 0666, 0); // write, create, append
+    var writer = Cc["@mozilla.org/intl/converter-output-stream;1"].
+                 createInstance(Ci.nsIConverterOutputStream);
+    writer.init(stream, "UTF-8", 0, 0x0000);
+    string = tstamp.toLocaleFormat("%Y-%m-%d %H:%M:%S - ") + string;
+    writer.writeString(string + "\n");
+    writer.close();
+  }
+  catch (e) { }
 }
 
 /**
@@ -996,8 +1020,8 @@ function DirectoryInstallLocation(name, location, restricted, priority) {
       location.create(Ci.nsILocalFile.DIRECTORY_TYPE, 0775);
     }
     catch (e) {
-      LOG("DirectoryInstallLocation: failed to create location " +
-          " directory = " + location.path + ", exception = " + e + "\n");
+      ERROR("DirectoryInstallLocation: failed to create location " +
+            " directory = " + location.path + ", exception = " + e + "\n");
     }
   }
 
@@ -1268,8 +1292,8 @@ DirectoryInstallLocation.prototype = {
         entries.close();
     }
     catch (e) {
-      LOG("DirectoryInstallLocation::removeFile: failed to remove staged " +
-          " directory = " + parent.path + ", exception = " + e + "\n");
+      ERROR("DirectoryInstallLocation::removeFile: failed to remove staged " +
+            " directory = " + parent.path + ", exception = " + e + "\n");
     }
   },
 
@@ -1518,8 +1542,8 @@ Installer.prototype = {
             target.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
           }
           catch (e) {
-            LOG("extractExtensionsFiles: failed to create target directory for extraction " +
-                " file = " + target.path + ", exception = " + e + "\n");
+            ERROR("extractExtensionsFiles: failed to create target directory for extraction " +
+                  " file = " + target.path + ", exception = " + e + "\n");
           }
         }
       }
@@ -1535,8 +1559,8 @@ Installer.prototype = {
           target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
         }
         catch (e) {
-          LOG("extractExtensionsFiles: failed to create target file for extraction " +
-              " file = " + target.path + ", exception = " + e + "\n");
+          ERROR("extractExtensionsFiles: failed to create target file for extraction " +
+                " file = " + target.path + ", exception = " + e + "\n");
         }
         zipReader.extract(entryName, target);
       }
@@ -1583,8 +1607,8 @@ Installer.prototype = {
             target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
           }
           catch (e) {
-            LOG("extractThemeFiles: failed to create target file for extraction " +
-                " file = " + target.path + ", exception = " + e + "\n");
+            ERROR("extractThemeFiles: failed to create target file for extraction " +
+                  " file = " + target.path + ", exception = " + e + "\n");
           }
           zipReader.extract(entryName, target);
         }
@@ -1598,7 +1622,7 @@ Installer.prototype = {
         }
         catch (e) {
           zipReader.close();
-          LOG("extractThemeFiles: failed to extract contents.rdf: " + target.path);
+          ERROR("extractThemeFiles: failed to extract contents.rdf: " + target.path);
           throw e; // let the safe-op clean up
         }
         zipReader.close();
@@ -1607,7 +1631,7 @@ Installer.prototype = {
           jarFile.copyTo(chromeDir, jarFile.leafName);
         }
         catch (e) {
-          LOG("extractThemeFiles: failed to copy theme JAR file to: " + chromeDir.path);
+          ERROR("extractThemeFiles: failed to copy theme JAR file to: " + chromeDir.path);
           throw e; // let the safe-op clean up
         }
 
@@ -1686,9 +1710,9 @@ Installer.prototype = {
       // etc. Set the pending op to be OP_NEEDS_UNINSTALL so that the
       // extension is uninstalled properly during the subsequent uninstall
       // pass in |ExtensionManager::_finalizeOperations|
-      LOG("upgradeThemeChrome: failed for theme " + this._id + " - why " +
-          "not convert to the new chrome.manifest format while you're at it? " +
-          "Failure exception: " + e);
+      ERROR("upgradeThemeChrome: failed for theme " + this._id + " - why " +
+            "not convert to the new chrome.manifest format while you're at it? " +
+            "Failure exception: " + e);
       showMessage("malformedRegistrationTitle", [], "malformedRegistrationMessage",
                   [BundleManager.appName]);
 
@@ -1776,9 +1800,9 @@ Installer.prototype = {
       // etc. Set the pending op to be OP_NEEDS_UNINSTALL so that the
       // extension is uninstalled properly during the subsequent uninstall
       // pass in |ExtensionManager::_finalizeOperations|
-      LOG("upgradeExtensionChrome: failed for extension " + this._id + " - why " +
-          "not convert to the new chrome.manifest format while you're at it? " +
-          "Failure exception: " + e);
+      ERROR("upgradeExtensionChrome: failed for extension " + this._id + " - why " +
+            "not convert to the new chrome.manifest format while you're at it? " +
+            "Failure exception: " + e);
       showMessage("malformedRegistrationTitle", [], "malformedRegistrationMessage",
                   [BundleManager.appName]);
 
@@ -1827,9 +1851,9 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
         newFile.moveTo(oldFile.parent, newFile.leafName);
       }
       catch (e) {
-        LOG("safeInstallOperation: failed to roll back files after an install " +
-            "operation failed. Failed to roll back: " + newFile.path + " to: " +
-            oldFile.path + " ... aborting installation.");
+        ERROR("safeInstallOperation: failed to roll back files after an install " +
+              "operation failed. Failed to roll back: " + newFile.path + " to: " +
+              oldFile.path + " ... aborting installation.");
         throw e;
       }
     }
@@ -1849,9 +1873,9 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
       movedFiles.push({ oldFile: oldFile, newFile: file });
     }
     catch (e) {
-      LOG("safeInstallOperation: failed to back up file: " + file.path + " to: " +
-          destination.path + " ... rolling back file moves and aborting " +
-          "installation.");
+      ERROR("safeInstallOperation: failed to back up file: " + file.path + " to: " +
+            destination.path + " ... rolling back file moves and aborting " +
+            "installation.");
       rollbackMove();
       throw e;
     }
@@ -1898,8 +1922,8 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
         removeDirRecursive(directory);
     }
     catch (e) {
-      LOG("safeInstallOperation: failed to clean up the temporary backup of the " +
-          "older version: " + itemLocationTrash.path);
+      ERROR("safeInstallOperation: failed to clean up the temporary backup of the " +
+            "older version: " + itemLocationTrash.path);
       // This is a non-fatal error. Annoying, but non-fatal.
     }
   }
@@ -1918,8 +1942,8 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
           removeDirRecursive(itemLocationTrash);
         }
         catch (e) {
-          LOG("safeFileOperation: failed to remove existing trash directory " +
-              itemLocationTrash.path + " ... aborting installation.");
+          ERROR("safeFileOperation: failed to remove existing trash directory " +
+                itemLocationTrash.path + " ... aborting installation.");
           throw e;
         }
       }
@@ -1935,9 +1959,9 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
         removeDirRecursive(itemLocation);
       }
       catch (e) {
-        LOG("safeInstallOperation: failed to clean up item location after its contents " +
-            "were properly backed up. Failed to clean up: " + itemLocation.path +
-            " ... rolling back file moves and aborting installation.");
+        ERROR("safeInstallOperation: failed to clean up item location after its contents " +
+              "were properly backed up. Failed to clean up: " + itemLocation.path +
+              " ... rolling back file moves and aborting installation.");
         rollbackMove();
         cleanUpTrash(itemLocationTrash);
         throw e;
@@ -1961,8 +1985,8 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
           removeDirRecursive(itemLocationTrash);
         }
         catch (e) {
-          LOG("safeFileOperation: failed to remove existing trash directory " +
-              itemLocationTrash.path + " ... aborting installation.");
+          ERROR("safeFileOperation: failed to remove existing trash directory " +
+                itemLocationTrash.path + " ... aborting installation.");
           throw e;
         }
       }
@@ -1978,16 +2002,16 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
   }
   catch (e) {
     // This means the install operation failed. Remove everything and roll back.
-    LOG("safeInstallOperation: install operation (caller-supplied callback) failed, " +
-        "rolling back file moves and aborting installation.");
+    ERROR("safeInstallOperation: install operation (caller-supplied callback) failed, " +
+          "rolling back file moves and aborting installation.");
     try {
       // Us-generated. Safe.
       removeDirRecursive(itemLocation);
     }
     catch (e) {
-      LOG("safeInstallOperation: failed to remove the folder we failed to install " +
-          "an item into: " + itemLocation.path + " -- There is not much to suggest " +
-          "here... maybe restart and try again?");
+      ERROR("safeInstallOperation: failed to remove the folder we failed to install " +
+            "an item into: " + itemLocation.path + " -- There is not much to suggest " +
+            "here... maybe restart and try again?");
       cleanUpTrash(itemLocationTrash);
       throw e;
     }
@@ -2673,8 +2697,8 @@ ExtensionManager.prototype = {
       }
     }
     catch (e) {
-      LOG("ExtensionManager:handleCommandLineArgs - failure, catching exception - lineno: " +
-          e.lineNumber + " - file: " + e.fileName + " - " + e);
+      ERROR("ExtensionManager:handleCommandLineArgs - failure, catching exception - lineno: " +
+            e.lineNumber + " - file: " + e.fileName + " - " + e);
     }
     commandLine.preventDefault = true;
   },
@@ -3207,9 +3231,9 @@ ExtensionManager.prototype = {
         entries.close();
       }
       catch (e) {
-        LOG("_upgradeChrome: failed to upgrade contents manifest for " +
-            "theme: " + item.id + ", exception: " + e + "... The theme will be " +
-            "disabled.");
+        ERROR("_upgradeChrome: failed to upgrade contents manifest for " +
+              "theme: " + item.id + ", exception: " + e + "... The theme will be " +
+              "disabled.");
         this._appDisableItem(item.id);
       }
       finally {
@@ -3343,12 +3367,13 @@ ExtensionManager.prototype = {
 
         // When there have been operations and all operations have completed.
         if (PendingOperations.size == 0) {
-          // If there is updated app compatibility info update the data sources.
+          // If there is updated app compatibility info update the datasource.
           for (i = 0; i < updatedTargetAppInfos.length; ++i)
-            ds.updateTargetAppInfo(updatedTargetAppInfos[i].id,
-                                   updatedTargetAppInfos[i].targetAppID,
-                                   updatedTargetAppInfos[i].minVersion,
-                                   updatedTargetAppInfos[i].maxVersion);
+            ds.setTargetApplicationInfo(updatedTargetAppInfos[i].id,
+                                        updatedTargetAppInfos[i].targetAppID,
+                                        updatedTargetAppInfos[i].minVersion,
+                                        updatedTargetAppInfos[i].maxVersion,
+                                        null);
 
           // Enumerate all items
           var ctr = getContainer(ds, ds._itemRoot);
@@ -3391,8 +3416,8 @@ ExtensionManager.prototype = {
 
     }
     catch (e) {
-      LOG("ExtensionManager:_finishOperations - failure, catching exception - lineno: " +
-          e.lineNumber + " - file: " + e.fileName + " - " + e);
+      ERROR("ExtensionManager:_finishOperations - failure, catching exception - lineno: " +
+            e.lineNumber + " - file: " + e.fileName + " - " + e);
     }
     return needsRestart;
   },
@@ -3640,8 +3665,8 @@ ExtensionManager.prototype = {
           zipReader.close();
         }
         catch (e) {
-          LOG("ExtensionManager:_upgradeFromV10 - failed to extract theme files\r\n" +
-              "Exception: " + e);
+          ERROR("ExtensionManager:_upgradeFromV10 - failed to extract theme files\r\n" +
+                "Exception: " + e);
         }
       }
     }
@@ -3710,7 +3735,8 @@ ExtensionManager.prototype = {
             // in the version 1.0 extensions datasource makes it compatible
             if (versionChecker.compare(currAppVersion, updatedMinVersion) >= 0 &&
                 versionChecker.compare(currAppVersion, updatedMaxVersion) <= 0)
-              ds.updateTargetAppInfo(item.id, foundAppID, updatedMinVersion, updatedMaxVersion);
+              ds.setTargetApplicationInfo(item.id, foundAppID, updatedMinVersion,
+                                          updatedMaxVersion, null);
 
             break;
           }
@@ -4278,18 +4304,20 @@ ExtensionManager.prototype = {
 
           // Add the updated compatibility info to the datasource if done
           if (StartupCache.entries[aInstallLocationKey][addon.id].op == OP_NONE) {
-            em.datasource.updateTargetAppInfo(addon.id,
-                                              addon.targetAppID,
-                                              addon.minAppVersion,
-                                              addon.maxAppVersion);
+            em.datasource.setTargetApplicationInfo(addon.id,
+                                                   addon.targetAppID,
+                                                   addon.minAppVersion,
+                                                   addon.maxAppVersion,
+                                                   null);
           }
           else { // needs a restart
             // Add updatedMinVersion and updatedMaxVersion so it can be used
-            // to update the data sources during the installation or upgrade.
+            // to update the datasource during the installation or upgrade.
             em.datasource.setUpdatedTargetAppInfo(addon.id,
                                                   addon.targetAppID,
                                                   addon.minAppVersion,
-                                                  addon.maxAppVersion);
+                                                  addon.maxAppVersion,
+                                                  null);
           }
           // Prevent the datasource file from being lazily recreated after
           // it is deleted by calling Flush.
@@ -4678,8 +4706,8 @@ ExtensionManager.prototype = {
                              { data: null, callback: function() { } });
       }
       catch (e) {
-        LOG("_finalizeUninstall: failed to remove directory for item: " + id +
-            " at Install Location: " + installLocation.name + ", rolling back uninstall");
+        ERROR("_finalizeUninstall: failed to remove directory for item: " + id +
+              " at Install Location: " + installLocation.name + ", rolling back uninstall");
         // Removal of the files failed, reset the uninstalled flag and rewrite
         // the install manifests so this item's components are registered.
         // Clear the op flag from the Startup Cache
@@ -5876,10 +5904,11 @@ ExtensionItemUpdater.prototype = {
     if (gVersionChecker.compare(targetAppInfo.maxVersion, aRemoteItem.maxAppVersion) < 0) {
       // Remotely specified maxVersion is newer than the maxVersion
       // for the installed Extension. Apply that change to the datasources.
-      this._emDS.updateTargetAppInfo(aLocalItem.id,
-                                     aRemoteItem.targetAppID,
-                                     aRemoteItem.minAppVersion,
-                                     aRemoteItem.maxAppVersion);
+      this._emDS.setTargetApplicationInfo(aLocalItem.id,
+                                          aRemoteItem.targetAppID,
+                                          aRemoteItem.minAppVersion,
+                                          aRemoteItem.maxAppVersion,
+                                          null);
 
       // If we got here through |checkForMismatches|, this extension has
       // already been disabled, re-enable it.
@@ -5890,10 +5919,11 @@ ExtensionItemUpdater.prototype = {
       return true;
     }
     else if (this._updateCheckType == Ci.nsIExtensionManager.UPDATE_SYNC_COMPATIBILITY)
-      this._emDS.updateTargetAppInfo(aLocalItem.id,
-                                     aRemoteItem.targetAppID,
-                                     aRemoteItem.minAppVersion,
-                                     aRemoteItem.maxAppVersion);
+      this._emDS.setTargetApplicationInfo(aLocalItem.id,
+                                          aRemoteItem.targetAppID,
+                                          aRemoteItem.minAppVersion,
+                                          aRemoteItem.maxAppVersion,
+                                          null);
     return false;
   },
 
@@ -7011,31 +7041,6 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
-   * Sets the target application info for an item in the Extensions
-   * datasource and in the item's install manifest if it is installed in a
-   * profile's extensions directory, it exists, and we have write access.
-   * @param   id
-   *          The ID of the item to update target application info for
-   * @param   targetAppID
-   *          The target application ID used for checking compatibility for this item.
-   * @param   minVersion
-   *          The minimum version of the target application that this item can
-   *          run in
-   * @param   maxVersion
-   *          The maximum version of the target application that this item can
-   *          run in
-   *
-   * @note Add-ons can specify a targetApplication id of toolkit@mozilla.org in
-   *       their install manifest for compatibility with all apps using a
-   *       specific release of the toolkit.
-   */
-  updateTargetAppInfo: function(id, targetAppID, minVersion, maxVersion)
-  {
-    // Update the Extensions datasource
-    this.setTargetApplicationInfo(id, targetAppID, minVersion, maxVersion, null);
-  },
-
-  /**
    * Gets the updated target application info if it exists for an item from
    * the Extensions datasource during an installation or upgrade.
    * @param   id
@@ -7842,8 +7847,8 @@ ExtensionsDataSource.prototype = {
       this._inner = gRDF.GetDataSourceBlocking(getURLSpecFromFile(extensionsFile));
     }
     catch (e) {
-      LOG("Datasource::loadExtensions: removing corrupted extensions datasource " +
-          " file = " + extensionsFile.path + ", exception = " + e + "\n");
+      ERROR("Datasource::loadExtensions: removing corrupted extensions datasource " +
+            " file = " + extensionsFile.path + ", exception = " + e + "\n");
       extensionsFile.remove(false);
       return;
     }
