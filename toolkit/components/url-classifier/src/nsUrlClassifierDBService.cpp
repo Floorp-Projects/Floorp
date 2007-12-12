@@ -626,6 +626,8 @@ nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mUpdateStatus(NS_OK)
   , mHaveCachedLists(PR_FALSE)
   , mCachedListsTable(PR_UINT32_MAX)
+  , mHaveCachedAddChunks(PR_FALSE)
+  , mHaveCachedSubChunks(PR_FALSE)
   , mPendingLookupLock(nsnull)
 {
 }
