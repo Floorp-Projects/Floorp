@@ -59,7 +59,7 @@ NS_IMETHODIMP
 nsXFormsLabelAccessible::GetName(nsAString& aName)
 {
   nsAutoString name;
-  nsresult rv = GetTextFromRelationID(eAria_labelledby, name);
+  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, name);
   aName = name;
   return rv;
 }
@@ -68,7 +68,7 @@ NS_IMETHODIMP
 nsXFormsLabelAccessible::GetDescription(nsAString& aDescription)
 {
   nsAutoString description;
-  nsresult rv = GetTextFromRelationID(eAria_describedby, description);
+  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_describedby, description);
   aDescription = description;
   return rv;
 }

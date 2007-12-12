@@ -88,6 +88,7 @@ ACCESSIBILITY_ATOM(a, "a")
 ACCESSIBILITY_ATOM(abbr, "abbr")
 ACCESSIBILITY_ATOM(acronym, "acronym")
 ACCESSIBILITY_ATOM(area, "area")
+ACCESSIBILITY_ATOM(autocomplete, "autocomplete")
 ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(br, "br")
 ACCESSIBILITY_ATOM(body, "body")
@@ -149,6 +150,7 @@ ACCESSIBILITY_ATOM(alt, "alt")
 ACCESSIBILITY_ATOM(anonid, "anonid") // Used for ID's in XBL
 ACCESSIBILITY_ATOM(contenteditable, "contenteditable")
 ACCESSIBILITY_ATOM(control, "control")
+ACCESSIBILITY_ATOM(disabled, "disabled")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(curpos, "curpos") // XUL
 ACCESSIBILITY_ATOM(data, "data")
@@ -162,9 +164,12 @@ ACCESSIBILITY_ATOM(lang, "lang")
 ACCESSIBILITY_ATOM(linkedPanel, "linkedpanel") // XUL
 ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL
 ACCESSIBILITY_ATOM(minpos, "minpos") // XUL
+ACCESSIBILITY_ATOM(multiline, "multiline") // XUL
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(onclick, "onclick")
+ACCESSIBILITY_ATOM(readonly, "readonly")
 ACCESSIBILITY_ATOM(src, "src")
+ACCESSIBILITY_ATOM(selected, "selected")
 ACCESSIBILITY_ATOM(summary, "summary")
 ACCESSIBILITY_ATOM(tabindex, "tabindex")
 ACCESSIBILITY_ATOM(title, "title")
@@ -176,20 +181,49 @@ ACCESSIBILITY_ATOM(value, "value")
   // Also add to nsARIAMap.cpp and nsARIAMap.h
   // ARIA role attribute
 ACCESSIBILITY_ATOM(role, "role")
-
-  // ARIA properties
-#define ARIA_PROPERTY(atom) ACCESSIBILITY_ATOM(atom, #atom)
-#include "nsARIAPropertyList.h"
-#undef ARIA_PROPERTY
-
-#define ARIA_PROPERTY(atom) ACCESSIBILITY_ATOM(aria_##atom, "aria-"#atom)
-#include "nsARIAPropertyList.h"
-#undef ARIA_PROPERTY
+ACCESSIBILITY_ATOM(aria_activedescendant, "aria-activedescendant")
+ACCESSIBILITY_ATOM(aria_atomic, "aria-atomic")
+ACCESSIBILITY_ATOM(aria_autocomplete, "aria-autocomplete")
+ACCESSIBILITY_ATOM(aria_busy, "aria-busy")
+ACCESSIBILITY_ATOM(aria_channel, "aria-channel")
+ACCESSIBILITY_ATOM(aria_checked, "aria-checked")
+ACCESSIBILITY_ATOM(aria_controls, "aria-controls")
+ACCESSIBILITY_ATOM(aria_datatype, "aria-datatype")
+ACCESSIBILITY_ATOM(aria_describedby, "aria-describedby")
+ACCESSIBILITY_ATOM(aria_droppable, "aria-droppable")
+ACCESSIBILITY_ATOM(aria_disabled, "aria-disabled")
+ACCESSIBILITY_ATOM(aria_dropeffect, "aria-dropeffect")
+ACCESSIBILITY_ATOM(aria_expanded, "aria-expanded")
+ACCESSIBILITY_ATOM(aria_flowto, "aria-flowto")
+ACCESSIBILITY_ATOM(aria_grab, "aria-grab")
+ACCESSIBILITY_ATOM(aria_haspopup, "aria-haspopup")
+ACCESSIBILITY_ATOM(aria_invalid, "aria-invalid")
+ACCESSIBILITY_ATOM(aria_labelledby, "aria-labelledby")
+ACCESSIBILITY_ATOM(aria_level, "aria-level")
+ACCESSIBILITY_ATOM(aria_live, "aria-live")
+ACCESSIBILITY_ATOM(aria_multiline, "aria-multiline")
+ACCESSIBILITY_ATOM(aria_multiselectable, "aria-multiselectable")
+ACCESSIBILITY_ATOM(aria_owns, "aria-owns")
+ACCESSIBILITY_ATOM(aria_posinset, "aria-posinset")
+ACCESSIBILITY_ATOM(aria_pressed, "aria-pressed")
+ACCESSIBILITY_ATOM(aria_readonly, "aria-readonly")
+ACCESSIBILITY_ATOM(aria_relevant, "aria-relevant")
+ACCESSIBILITY_ATOM(aria_required, "aria-required")
+ACCESSIBILITY_ATOM(aria_secret, "aria-secret")
+ACCESSIBILITY_ATOM(aria_selected, "aria-selected")
+ACCESSIBILITY_ATOM(aria_setsize, "aria-setsize")
+ACCESSIBILITY_ATOM(aria_sort, "aria-sort")
+ACCESSIBILITY_ATOM(aria_valuenow, "aria-valuenow")
+ACCESSIBILITY_ATOM(aria_valuemin, "aria-valuemin")
+ACCESSIBILITY_ATOM(aria_valuemax, "aria-valuemax")
 
   // misc atoms
 // a form property used to obtain the default label
 // of an HTML button from the button frame
 ACCESSIBILITY_ATOM(defaultLabel, "defaultLabel")
 
-// An atom used to set the line-number object attribute
+// Object attributes
+ACCESSIBILITY_ATOM(level, "level")
+ACCESSIBILITY_ATOM(posinset, "posinset") 
+ACCESSIBILITY_ATOM(setsize, "setsize")
 ACCESSIBILITY_ATOM(lineNumber, "line-number")

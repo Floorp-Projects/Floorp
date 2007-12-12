@@ -677,13 +677,10 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
     NS_ENSURE_SUCCESS(rv, rv);
     
     name = nodeInfo->NameAtom();
-    // Add if it's xmlns, xml:, aaa:, xhtml2:role, or on the HTML whitelist
+    // Add if it's xmlns, xml: or on the HTML whitelist
     if (nameSpaceID == kNameSpaceID_XMLNS ||
         nameSpaceID == kNameSpaceID_XML ||
-        nameSpaceID == kNameSpaceID_WAIProperties ||
-        (nameSpaceID == kNameSpaceID_XHTML2_Unofficial &&
-         name == nsGkAtoms::role) ||
-        sAllowedAttributes && sAllowedAttributes->GetEntry(name)) {
+        (sAllowedAttributes && sAllowedAttributes->GetEntry(name))) {
       allowedAttrs.AppendElement(aAtts[i]);
       allowedAttrs.AppendElement(aAtts[i + 1]);
     }

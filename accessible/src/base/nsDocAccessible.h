@@ -215,7 +215,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
 protected:
     PRBool mIsAnchor;
     PRBool mIsAnchorJumped;
-    PRUint32 mAriaPropTypes;
     static PRUint32 gLastFocusedAccessiblesState;
 
 private:

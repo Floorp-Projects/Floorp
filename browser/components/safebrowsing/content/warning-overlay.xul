@@ -34,8 +34,7 @@
       <vbox id="safebrowsing-palm-message-content" 
             class="safebrowsing-palm-fixed-width"
             style="-moz-user-focus: normal"
-            xmlns:xhtml="http://www.w3.org/1999/xhtml"
-            xhtml:role="alert">
+            role="alert">
 
         <hbox id="safebrowsing-palm-close-container" align="center"
               class="safebrowsing-palm-fixed-width">
