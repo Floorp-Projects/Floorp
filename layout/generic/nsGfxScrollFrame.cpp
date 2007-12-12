@@ -631,9 +631,13 @@ nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
   if (TryLayout(aState, &kidDesiredSize, PR_TRUE, newVScrollbarState, PR_FALSE, &rv))
     return NS_OK;
 
-  // OK, we're out of ideas. Try again with both scrollbars and force the layout
-  // to stick even if it's inconsistent. This just happens sometimes.
-  TryLayout(aState, &kidDesiredSize, PR_TRUE, PR_TRUE, PR_TRUE, &rv);
+  // OK, we're out of ideas. Try again enabling whatever scrollbars we can
+  // enable and force the layout to stick even if it's inconsistent.
+  // This just happens sometimes.
+  TryLayout(aState, &kidDesiredSize,
+            aState->mStyles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN,
+            aState->mStyles.mVertical != NS_STYLE_OVERFLOW_HIDDEN,
+            PR_TRUE, &rv);
   return rv;
 }
 
