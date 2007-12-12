@@ -1039,25 +1039,19 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
 
 static JSFunction *
 NewCompilerFunction(JSContext *cx, JSTreeContext *tc, JSAtom *atom,
-                    uintN lambda)
+                    JSBool lambda)
 {
     JSObject *parent;
-    JSFunction *fun;
 
-    JS_ASSERT((lambda & ~JSFUN_LAMBDA) == 0);
     parent = (tc->flags & TCF_IN_FUNCTION) ? tc->fun->object : cx->fp->varobj;
-    fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
-                         parent, atom);
-    if (fun && !(tc->flags & TCF_COMPILE_N_GO)) {
-        STOBJ_SET_PARENT(fun->object, NULL);
-        STOBJ_SET_PROTO(fun->object, NULL);
-    }
-    return fun;
+    return js_NewFunction(cx, NULL, NULL, 0,
+                          JSFUN_INTERPRETED | (lambda ? JSFUN_LAMBDA : 0),
+                          parent, atom);
 }
 
 static JSParseNode *
 FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
-            uintN lambda)
+            JSBool lambda)
 {
     JSOp op, prevop;
     JSParseNode *pn, *body, *result;
@@ -1086,7 +1080,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (tt == TOK_NAME) {
         funAtom = CURRENT_TOKEN(ts).t_atom;
     } else {
-        if (lambda == 0 && (cx->options & JSOPTION_ANONFUNFIX)) {
+        if (!lambda && (cx->options & JSOPTION_ANONFUNFIX)) {
             js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_SYNTAX_ERROR);
             return NULL;
@@ -1099,7 +1093,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      * Record names for function statements in tc->decls so we know when to
      * avoid optimizing variable references that might name a function.
      */
-    if (lambda == 0 && funAtom) {
+    if (!lambda && funAtom) {
         ATOM_LIST_SEARCH(ale, &tc->decls, funAtom);
         if (ale) {
             prevop = ALE_JSOP(ale);
@@ -1277,7 +1271,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #if JS_HAS_EXPR_CLOSURES
     if (tt == TOK_LC)
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
-    else if (lambda == 0)
+    else if (!lambda)
         js_MatchToken(cx, ts, TOK_SEMI);
 #else
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
@@ -1343,12 +1337,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * traversed the function's body
          */
         JS_ASSERT(!(funtc.flags & TCF_FUN_USES_NONLOCALS));
-        if (lambda == 0 && funAtom && !AT_TOP_LEVEL(tc))
+        if (!lambda && funAtom && !AT_TOP_LEVEL(tc))
             tc->flags |= TCF_FUN_HEAVYWEIGHT;
     }
 
     result = pn;
-    if (lambda != 0) {
+    if (lambda) {
         /*
          * ECMA ed. 3 standard: function expression, possibly anonymous.
          */
@@ -1391,13 +1385,13 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 static JSParseNode *
 FunctionStmt(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
-    return FunctionDef(cx, ts, tc, 0);
+    return FunctionDef(cx, ts, tc, JS_FALSE);
 }
 
 static JSParseNode *
 FunctionExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
-    return FunctionDef(cx, ts, tc, JSFUN_LAMBDA);
+    return FunctionDef(cx, ts, tc, JS_TRUE);
 }
 
 /*
@@ -4265,7 +4259,7 @@ GeneratorExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      * Make the generator function and flag it as interpreted ASAP (see the
      * comment in FunctionBody).
      */
-    fun = NewCompilerFunction(cx, tc, NULL, JSFUN_LAMBDA);
+    fun = NewCompilerFunction(cx, tc, NULL, JS_TRUE);
     if (!fun)
         return NULL;
 
@@ -5726,10 +5720,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                  CURRENT_TOKEN(ts).t_reflags);
         if (!obj)
             return NULL;
-        if (!(tc->flags & TCF_COMPILE_N_GO)) {
-            STOBJ_SET_PARENT(obj, NULL);
-            STOBJ_SET_PROTO(obj, NULL);
-        }
 
         pn->pn_pob = js_NewParsedObjectBox(cx, tc->parseContext, obj);
         if (!pn->pn_pob)
