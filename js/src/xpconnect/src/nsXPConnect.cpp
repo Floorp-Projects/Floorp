@@ -1861,6 +1861,23 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
 #endif /* XPCONNECT_STANDALONE */
 }
 
+/* void GetXPCWrappedNativeJSClassInfo(out JSClassConstPtr clazz, out JSObjectOpsConstPtr ops1, out JSObjectOpsConstPtr ops2); */
+NS_IMETHODIMP
+nsXPConnect::GetXPCWrappedNativeJSClassInfo(const JSClass **clazz,
+                                            JSGetObjectOps *ops1,
+                                            JSGetObjectOps *ops2)
+{
+    // Expose the JSClass and JSGetObjectOps pointers used by
+    // IS_WRAPPER_CLASS(). If that macro ever changes, this function
+    // needs to stay in sync.
+
+    *clazz = &XPC_WN_NoHelper_JSClass.base;
+    *ops1 = XPC_WN_GetObjectOpsNoCall;
+    *ops2 = XPC_WN_GetObjectOpsWithCall;
+
+    return NS_OK;
+}
+
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
 NS_IMETHODIMP 
 nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext, 
