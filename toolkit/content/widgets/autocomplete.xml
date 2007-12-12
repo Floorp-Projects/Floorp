@@ -667,7 +667,11 @@
             document.popupNode = null;
 
             var rect = aElement.getBoundingClientRect();
-            var width = rect.right - rect.left;
+            var nav = aElement.ownerDocument.defaultView.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIWebNavigation);
+            var docShell = nav.QueryInterface(Components.interfaces.nsIDocShell);
+            var docViewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+            var width = (rect.right - rect.left) * docViewer.fullZoom;
             this.setAttribute("width", width > 100 ? width : 100);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
 
