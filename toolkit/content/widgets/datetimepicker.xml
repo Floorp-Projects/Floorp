@@ -1204,24 +1204,24 @@
       <xul:hbox class="textbox-input-box datetimepicker-input-box" align="center"
                 allowevents="true" xbl:inherits="context">
         <xul:hbox class="datetimepicker-input-subbox" align="baseline">
-          <input class="datetimepicker-input textbox-input" anonid="input-one"
+          <html:input class="datetimepicker-input textbox-input" anonid="input-one"
                       size="2" maxlength="2" flex="1" chromedir="&locale.dir;"
                       xbl:inherits="disabled,readonly"/>
         </xul:hbox>
         <xul:label anonid="sep-first" class="datetimepicker-separator" value=":"/>
         <xul:hbox class="datetimepicker-input-subbox" align="baseline">
-          <input class="datetimepicker-input textbox-input" anonid="input-two"
+          <html:input class="datetimepicker-input textbox-input" anonid="input-two"
                       size="2" maxlength="2" flex="1" chromedir="&locale.dir;"
                       xbl:inherits="disabled,readonly"/>
         </xul:hbox>
         <xul:label anonid="sep-second" class="datetimepicker-separator" value=":"/>
         <xul:hbox class="datetimepicker-input-subbox" align="center">
-          <input class="datetimepicker-input textbox-input" anonid="input-three"
+          <html:input class="datetimepicker-input textbox-input" anonid="input-three"
                       size="2" maxlength="2" flex="1" chromedir="&locale.dir;"
                       xbl:inherits="disabled,readonly"/>
         </xul:hbox>
         <xul:hbox class="datetimepicker-input-subbox" align="center">
-          <input class="datetimepicker-input textbox-input" anonid="input-ampm"
+          <html:input class="datetimepicker-input textbox-input" anonid="input-ampm"
                       size="2" maxlength="2" flex="1" chromedir="&locale.dir;" 
                       xbl:inherits="disabled,readonly"/>
         </xul:hbox>
