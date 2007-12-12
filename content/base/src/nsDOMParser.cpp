@@ -57,6 +57,8 @@
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
 #include "nsDOMError.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 
 // nsIDOMEventListener
 nsresult
@@ -426,7 +428,7 @@ GetInitArgs(JSContext *cx, PRUint32 argc, jsval *argv,
 }
 
 NS_IMETHODIMP
-nsDOMParser::Initialize(JSContext *cx, JSObject* obj,
+nsDOMParser::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                         PRUint32 argc, jsval *argv)
 {
   AttemptedInitMarker marker(&mAttemptedInit);
@@ -463,9 +465,14 @@ nsDOMParser::Initialize(JSContext *cx, JSObject* obj,
     // Also note that |cx| matches what GetDocumentFromContext() would return,
     // while GetDocumentFromCaller() gives us the window that the DOMParser()
     // call was made on.
-    
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aOwner);
+    if (aOwner) {
+      nsCOMPtr<nsIDOMDocument> domdoc = window->GetExtantDocument();
+      doc = do_QueryInterface(domdoc);
+    }
+
     if (!doc) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -474,9 +481,8 @@ nsDOMParser::Initialize(JSContext *cx, JSObject* obj,
     documentURI = doc->GetDocumentURI();
   }
 
-  nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
-  return Init(prin, documentURI, baseURI,
-              scriptContext ? scriptContext->GetGlobalObject() : nsnull);
+  nsCOMPtr<nsIScriptGlobalObject> scriptglobal = do_QueryInterface(aOwner);
+  return Init(prin, documentURI, baseURI, scriptglobal);
 }
 
 NS_IMETHODIMP

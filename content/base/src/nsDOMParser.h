@@ -74,7 +74,7 @@ public:
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
   // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(JSContext *cx, JSObject *obj, 
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                         PRUint32 argc, jsval *argv);
 
 private:
