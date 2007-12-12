@@ -536,11 +536,9 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // line-height calculations. However, continuations of an inline
   // that are empty we force to empty so that things like collapsed
   // whitespace in an inline element don't affect the line-height.
-  nsSize size;
-  lineLayout->EndSpan(this, size);
+  aMetrics.width = lineLayout->EndSpan(this);
 
   // Compute final width
-  aMetrics.width = size.width;
   if (nsnull == GetPrevContinuation()) {
     aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.left
                           : aReflowState.mComputedBorderPadding.right;
