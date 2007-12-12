@@ -47,8 +47,7 @@
 }
 
 .folder-icon {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
-  -moz-image-region: rect(0px, 32px, 16px, 16px) !important;
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu") !important;
 }
 
 
