@@ -231,7 +231,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   overflow-x: hidden !important;
 }
 
-.autocomplete-richlistbox > richlistitem[selected="true"] {
+.autocomplete-richlistitem[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
@@ -264,7 +264,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   padding: 0;
 }
 
-.ac-emphasize-text {
+html|*.ac-emphasize-text {
   margin: 0 !important;
   padding: 0;
   font-weight: bold;
