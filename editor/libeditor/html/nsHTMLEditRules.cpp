@@ -4058,8 +4058,8 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
           nsAutoString value;
           mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(n, marginProperty, value);
           float f;
-          nsIAtom * unit;
-          mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, &unit);
+          nsCOMPtr<nsIAtom> unit;
+          mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
           if (f > 0)
           {
             curBlockQuote = n;
