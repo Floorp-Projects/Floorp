@@ -52,9 +52,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();"
-            helpURI="chrome://browser/locale/help/help.rdf"
-            xmlns:xhtml="http://www.w3.org/1999/xhtml"
-            xmlns:aaa="http://www.w3.org/2005/07/aaa">
+            helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences id="advancedPreferences">
       <preference id="browser.preferences.advanced.selectedTabIndex"
@@ -227,7 +225,7 @@
                         preference="browser.cache.disk.capacity"
                         onsyncfrompreference="return gAdvancedPane.readCacheSize();"
                         onsynctopreference="return gAdvancedPane.writeCacheSize();"
-                        aaa:labelledby="useCacheBefore cacheSize useCacheAfter"/>
+                        aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
                <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
                <button id="clearCacheButton" icon="clear"
                        label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
@@ -239,7 +237,7 @@
         <!-- Update -->
         <tabpanel id="updatePanel" orient="vertical" align="start">
           <label control="autoUpdateGroup">&autoCheck.label;</label>
-          <vbox class="indent" id="autoUpdateGroup" xhtml:role="group">
+          <vbox class="indent" id="autoUpdateGroup" role="group">
             <checkbox id="enableAppUpdate"
                       label="&enableAppUpdate.label;"
                       accesskey="&enableAppUpdate.accesskey;"
@@ -325,7 +323,7 @@
               I KID YOU NOT.
             -->
             <radiogroup id="certSelection" orient="horizontal" preftype="string" 
-	                      preference="security.default_personal_cert" aaa:labelledby="CertGroupCaption CertSelectionDesc">
+	                      preference="security.default_personal_cert" aria-abelledby="CertGroupCaption CertSelectionDesc">
               <radio label="&certs.auto;" accesskey="&certs.auto.accesskey;" 
                      value="Select Automatically"/>
               <radio label="&certs.ask;" accesskey="&certs.ask.accesskey;" 

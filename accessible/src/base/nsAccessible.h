@@ -185,7 +185,7 @@ protected:
    * @param aName        Where to put the text
    * @return error or success code
    */
-  nsresult GetTextFromRelationID(EAriaProperty aIDProperty, nsString &aName);
+  nsresult GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aName);
 
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
   static nsIContent *GetLabelContent(nsIContent *aForNode);
@@ -238,7 +238,7 @@ protected:
   PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);
 
   /**
-   *  Get the container node for an atomic region, defined by aria:atomic="true"
+   *  Get the container node for an atomic region, defined by aria-atomic="true"
    *  @return the container node
    */
   nsIDOMNode* GetAtomicRegion();
@@ -251,7 +251,7 @@ protected:
    *
    * @return - NS_OK_NO_ARIA_VALUE if there is no setted ARIA attribute
    */
-  nsresult GetAttrValue(EAriaProperty aAriaProperty, double *aValue);
+  nsresult GetAttrValue(nsIAtom *aAriaProperty, double *aValue);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;

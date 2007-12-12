@@ -879,15 +879,3 @@ nsAccessNode::GetLanguage(nsAString& aLanguage)
   return NS_OK;
 }
 
-PRBool
-nsAccessNode::GetARIARole(nsIContent *aContent, nsString& aRole)
-{
-  aRole.Truncate();
-
-  if (aContent->IsNodeOfType(nsINode::eHTML)) {
-    // Allow non-namespaced role attribute in HTML
-    return aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, aRole);
-  }
-  // In non-HTML content, use XHTML namespaced-role attribute
-  return aContent->GetAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role, aRole);
-}

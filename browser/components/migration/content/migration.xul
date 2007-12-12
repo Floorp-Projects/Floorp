@@ -47,8 +47,7 @@
         onunload="MigrationWizard.uninit()"
         style="width: 40em;"
         buttons="accept,cancel"
-        branded="true"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+        branded="true">
 
   <script type="application/x-javascript" src="chrome://browser/content/migration/migration.js"/>
 
@@ -131,8 +130,7 @@
               oncommand="MigrationWizard.onImportItemCommand();">
     <description control="dataSources">&importItems.label;</description>
 
-    <vbox id="dataSources" style="overflow: auto; -moz-appearance: listbox" align="left" flex="1"
-          xhtml:role="group"/>
+    <vbox id="dataSources" style="overflow: auto; -moz-appearance: listbox" align="left" flex="1" role="group"/>
   </wizardpage>
 
   <wizardpage id="homePageImport" pageid="homePageImport"
@@ -152,14 +150,14 @@
               onpageshow="MigrationWizard.onMigratingPageShow();">
     <description control="migratingItems">&migrating.label;</description>
 
-    <vbox id="migratingItems" style="overflow: auto;" align="left" xhtml:role="group"/>
+    <vbox id="migratingItems" style="overflow: auto;" align="left" role="group"/>
   </wizardpage>
 
   <wizardpage id="done" pageid="done" label="&done.title;"
               onpageshow="MigrationWizard.onDonePageShow();">
     <description control="doneItems">&done.label;</description>
 
-    <vbox id="doneItems" style="overflow: auto;" align="left" xhtml:role="group"/>
+    <vbox id="doneItems" style="overflow: auto;" align="left" role="group"/>
   </wizardpage>
 
 </wizard>
