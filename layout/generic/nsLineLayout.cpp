@@ -445,8 +445,8 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
   return rv;
 }
 
-void
-nsLineLayout::EndSpan(nsIFrame* aFrame, nsSize& aSizeResult)
+nscoord
+nsLineLayout::EndSpan(nsIFrame* aFrame)
 {
   NS_ASSERTION(mSpanDepth > 0, "end-span without begin-span");
 #ifdef NOISY_REFLOW
@@ -455,23 +455,12 @@ nsLineLayout::EndSpan(nsIFrame* aFrame, nsSize& aSizeResult)
   printf(": EndSpan width=%d\n", mCurrentSpan->mX - mCurrentSpan->mLeftEdge);
 #endif
   PerSpanData* psd = mCurrentSpan;
-  nscoord width = 0;
-  nscoord maxHeight = 0;
-  if (nsnull != psd->mLastFrame) {
-    width = psd->mX - psd->mLeftEdge;
-    PerFrameData* pfd = psd->mFirstFrame;
-    while (nsnull != pfd) {
-      if (pfd->mBounds.height > maxHeight)
-        maxHeight = pfd->mBounds.height;
-      pfd = pfd->mNext;
-    }
-  }
-  aSizeResult.width = width;
-  aSizeResult.height = maxHeight;
+  nscoord widthResult = psd->mLastFrame ? (psd->mX - psd->mLeftEdge) : 0;
 
   mSpanDepth--;
   mCurrentSpan->mReflowState = nsnull;  // no longer valid so null it out!
   mCurrentSpan = mCurrentSpan->mParent;
+  return widthResult;
 }
 
 PRInt32
