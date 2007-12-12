@@ -63,6 +63,7 @@ function run()
   } catch(e) {
      //don't try to test on Mac, since the print preview code doesn't work there
      SimpleTest.finish();
+     return;
   }
 
   if (printService.defaultPrinterName != '') {
