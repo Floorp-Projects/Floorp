@@ -55,9 +55,9 @@ function run()
   netscape.security.PrivilegeManager.enablePrivilege('UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
   var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                                .getService(Components.interfaces.nsIPrintSettingsService);
+  SimpleTest.waitForExplicitFinish();
   if (printService.defaultPrinterName != '') {
     window.frames[0].frameElement.setAttribute('onload', 'run2()');
-    SimpleTest.waitForExplicitFinish();
     printpreview();
     ok(gWbp.doingPrintPreview, "Should be doing print preview");
     exitprintpreview();
@@ -65,7 +65,8 @@ function run()
     printpreview();
     window.frames[0].location.reload();
   } else {
-    todo(false, "No printer seems installed on this machine, that is necessary for this test")
+    todo(false, "No printer seems installed on this machine, that is necessary for this test");
+    SimpleTest.finish();
   }
 }
 
