@@ -90,9 +90,6 @@ _TEST_FILES_A = \
 	test_toDataURL.default.html \
 	test_toDataURL.png.html \
 	test_toDataURL.nocontext.html \
-# The following two tests tend to fail randomly.
-#	test_toDataURL.primarycolours.html \
-#	test_toDataURL.complexcolours.html \
 	test_2d.getcontext.exists.html \
 	test_2d.type.name.html \
 	test_2d.type.exists.html \
@@ -152,6 +149,9 @@ _TEST_FILES_A = \
 	test_2d.composite.globalAlpha.imagepattern.html \
 	test_2d.composite.globalAlpha.canvaspattern.html \
 	$(NULL)
+# The following two tests tend to fail randomly.
+#       test_toDataURL.primarycolours.html 
+#       test_toDataURL.complexcolours.html 
 
 _TEST_FILES_B = \
 	test_2d.composite.solid.source-over.html \
