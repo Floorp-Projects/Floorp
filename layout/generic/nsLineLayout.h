@@ -97,7 +97,8 @@ public:
                      nscoord aLeftEdge,
                      nscoord aRightEdge);
 
-  void EndSpan(nsIFrame* aFrame, nsSize& aSizeResult);
+  // Returns the width of the span
+  nscoord EndSpan(nsIFrame* aFrame);
 
   PRInt32 GetCurrentSpanCount() const;
 
