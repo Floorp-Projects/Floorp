@@ -56,6 +56,15 @@ function run()
   var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                                .getService(Components.interfaces.nsIPrintSettingsService);
   SimpleTest.waitForExplicitFinish();
+
+  try {
+     var printerEnumerator = Components.classes["@mozilla.org/gfx/printerenumerator;1"]
+                             .getService(Components.interfaces.nsIPrinterEnumerator);
+  } catch(e) {
+     //don't try to test on Mac, since the print preview code doesn't work there
+     SimpleTest.finish();
+  }
+
   if (printService.defaultPrinterName != '') {
     window.frames[0].frameElement.setAttribute('onload', 'run2()');
     printpreview();
