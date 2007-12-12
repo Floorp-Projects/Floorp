@@ -425,12 +425,12 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                    : aReflowState.mComputedBorderPadding.right;
   }
   nscoord availableWidth = aReflowState.availableWidth;
-  if (NS_UNCONSTRAINEDSIZE != availableWidth) {
-    // Subtract off left and right border+padding from availableWidth
-    availableWidth -= leftEdge;
-    availableWidth -= ltr ? aReflowState.mComputedBorderPadding.right
-                          : aReflowState.mComputedBorderPadding.left;
-  }
+  NS_ASSERTION(availableWidth != NS_UNCONSTRAINEDSIZE,
+               "should no longer use available widths");
+  // Subtract off left and right border+padding from availableWidth
+  availableWidth -= leftEdge;
+  availableWidth -= ltr ? aReflowState.mComputedBorderPadding.right
+                        : aReflowState.mComputedBorderPadding.left;
   lineLayout->BeginSpan(this, &aReflowState, leftEdge, leftEdge + availableWidth);
 
   // First reflow our current children
