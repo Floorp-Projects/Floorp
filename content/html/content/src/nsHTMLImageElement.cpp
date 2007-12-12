@@ -108,8 +108,8 @@ public:
   NS_DECL_NSIDOMNSHTMLIMAGEELEMENT
 
   // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj,
-                        PRUint32 argc, jsval *argv);
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
+                        JSObject* aObj, PRUint32 argc, jsval* argv);
 
   // nsIContent
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -542,8 +542,8 @@ nsHTMLImageElement::IntrinsicState() const
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
-                               PRUint32 argc, jsval *argv)
+nsHTMLImageElement::Initialize(nsISupports* aOwner, JSContext* aContext,
+                               JSObject *aObj, PRUint32 argc, jsval *argv)
 {
   if (argc <= 0) {
     // Nothing to do here if we don't get any arguments.

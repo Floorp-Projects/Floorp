@@ -89,6 +89,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsIMultiPartChannel.h"
+#include "nsIScriptObjectPrincipal.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -338,27 +339,6 @@ nsACProxyListener::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
-
-static nsIScriptContext *
-GetCurrentContext()
-{
-  // Get JSContext from stack.
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-
-  if (!stack) {
-    return nsnull;
-  }
-
-  JSContext *cx;
-
-  if (NS_FAILED(stack->Peek(&cx)) || !cx) {
-    return nsnull;
-  }
-
-  return GetScriptContextFromJSContext(cx);
-}
-
 /**
  * Gets the nsIDocument given the script context. Will return nsnull on failure.
  *
@@ -412,6 +392,68 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   nsLayoutStatics::Release();
 }
 
+nsresult
+nsXMLHttpRequest::Init()
+{
+  // Set the original mScriptContext and mPrincipal, if available.
+  // Get JSContext from stack.
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+  if (!stack) {
+    return NS_OK;
+  }
+
+  JSContext *cx;
+
+  if (NS_FAILED(stack->Peek(&cx)) || !cx) {
+    return NS_OK;
+  }
+
+  nsIScriptContext* context = GetScriptContextFromJSContext(cx);
+  if (!context) {
+    return NS_OK;
+  }
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  if (secMan) {
+    secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  }
+  NS_ENSURE_STATE(subjectPrincipal);
+
+  mScriptContext = context;
+  mPrincipal = subjectPrincipal;
+  nsCOMPtr<nsPIDOMWindow> window =
+    do_QueryInterface(context->GetGlobalObject());
+  if (window) {
+    mOwner = window->GetCurrentInnerWindow();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
+                             PRUint32 argc, jsval *argv)
+{
+  mOwner = do_QueryInterface(aOwner);
+  if (!mOwner) {
+    NS_WARNING("Unexpected nsIJSNativeInitializer owner");
+    return NS_OK;
+  }
+
+  // This XHR object is bound to a |window|,
+  // so re-set principal and script context.
+  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal = do_QueryInterface(aOwner);
+  NS_ENSURE_STATE(scriptPrincipal);
+  mPrincipal = scriptPrincipal->GetPrincipal();
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aOwner);
+  NS_ENSURE_STATE(sgo);
+  mScriptContext = sgo->GetContext();
+  NS_ENSURE_STATE(mScriptContext);
+  return NS_OK; 
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLHttpRequest)
@@ -436,6 +478,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLHttpRequest)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannelEventSink)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mProgressEventSink)
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
@@ -461,6 +505,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXMLHttpRequest)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannelEventSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mProgressEventSink)
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -477,6 +523,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequest)
 NS_INTERFACE_MAP_END
 
@@ -511,8 +558,6 @@ nsXMLHttpRequest::AddEventListener(const nsAString& type,
   }
 
   array->AppendObject(listener);
-
-  mScriptContext = GetCurrentContext();
 
 #undef IMPL_ADD_LISTENER
   
@@ -578,9 +623,6 @@ NS_IMETHODIMP
 nsXMLHttpRequest::SetOnreadystatechange(nsIDOMEventListener * aOnreadystatechange)
 {
   mOnReadystatechangeListener = aOnreadystatechange;
-
-  mScriptContext = GetCurrentContext();
-
   return NS_OK;
 }
 
@@ -600,9 +642,6 @@ NS_IMETHODIMP
 nsXMLHttpRequest::SetOnload(nsIDOMEventListener * aOnLoad)
 {
   mOnLoadListener = aOnLoad;
-
-  mScriptContext = GetCurrentContext();
-
   return NS_OK;
 }
 
@@ -621,9 +660,6 @@ NS_IMETHODIMP
 nsXMLHttpRequest::SetOnerror(nsIDOMEventListener * aOnerror)
 {
   mOnErrorListener = aOnerror;
-
-  mScriptContext = GetCurrentContext();
-
   return NS_OK;
 }
 
@@ -642,9 +678,6 @@ NS_IMETHODIMP
 nsXMLHttpRequest::SetOnprogress(nsIDOMEventListener * aOnprogress)
 {
   mOnProgressListener = aOnprogress;
-
-  mScriptContext = GetCurrentContext();
-
   return NS_OK;
 }
 
@@ -663,9 +696,6 @@ NS_IMETHODIMP
 nsXMLHttpRequest::SetOnuploadprogress(nsIDOMEventListener * aOnuploadprogress)
 {
   mOnUploadProgressListener = aOnuploadprogress;
-
-  mScriptContext = GetCurrentContext();
-
   return NS_OK;
 }
 
@@ -983,10 +1013,6 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
   NS_ENSURE_ARG_POINTER(aLoadGroup);
   *aLoadGroup = nsnull;
 
-  if (!mScriptContext) {
-    mScriptContext = GetCurrentContext();
-  }
-
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   if (doc) {
     *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
@@ -999,10 +1025,7 @@ nsIURI *
 nsXMLHttpRequest::GetBaseURI()
 {
   if (!mScriptContext) {
-    mScriptContext = GetCurrentContext();
-    if (!mScriptContext) {
-      return nsnull;
-    }
+    return nsnull;
   }
 
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
@@ -1066,6 +1089,10 @@ nsXMLHttpRequest::NotifyEventListeners(const nsCOMArray<nsIDOMEventListener>& aL
 
   nsCOMPtr<nsIJSContextStack> stack;
   JSContext *cx = nsnull;
+
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+    return;
+  }
 
   if (mScriptContext) {
     stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
@@ -1209,20 +1236,6 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
     return NS_ERROR_INVALID_ARG;
   }
 
-  // Get the principal.
-  // XXX This should be done at construction time.
-  nsCOMPtr<nsIDocument> doc =
-    do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
-  if (doc) {
-    mPrincipal = doc->NodePrincipal();
-  }
-  else {
-    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
-    if (secMan) {
-      secMan->GetSubjectPrincipal(getter_AddRefs(mPrincipal));
-    }
-  }
-
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
   PRBool authp = PR_FALSE;
@@ -1262,11 +1275,13 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 
   // mScriptContext should be initialized because of GetBaseURI() above.
   // Still need to consider the case that doc is nsnull however.
-  doc = GetDocumentFromScriptContext(mScriptContext);
+  rv = CheckInnerWindowCorrectness();
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
                                  uri,
-                                 (doc ? doc->NodePrincipal() : nsnull),
+                                 mPrincipal,
                                  doc,
                                  EmptyCString(), //mime guess
                                  nsnull,         //extra
@@ -1552,8 +1567,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   // Create an empty document from it 
   const nsAString& emptyStr = EmptyString();
-  nsIScriptGlobalObject* global = mScriptContext ?
-    mScriptContext->GetGlobalObject() : nsnull;
+  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(mOwner);
   nsresult rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, uri,
                                                uri, mPrincipal, global,
                                                getter_AddRefs(mDocument));
@@ -1824,7 +1838,8 @@ nsXMLHttpRequest::SendAsBinary(const nsAString &aBody)
 NS_IMETHODIMP
 nsXMLHttpRequest::Send(nsIVariant *aBody)
 {
-  nsresult rv;
+  nsresult rv = CheckInnerWindowCorrectness();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT & mState) {
@@ -2014,11 +2029,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     mState |= XML_HTTP_REQUEST_SYNCLOOPING;
-  }
-
-  if (!mScriptContext) {
-    // We need a context to check if redirect (if any) is allowed
-    mScriptContext = GetCurrentContext();
   }
 
   rv = CheckChannelForCrossSiteRequest();

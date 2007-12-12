@@ -102,8 +102,8 @@ public:
   NS_IMETHOD SetText(const nsAString & aText); 
 
   // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj, 
-                        PRUint32 argc, jsval *argv);
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
+                        JSObject *aObj, PRUint32 argc, jsval *argv);
 
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
@@ -455,7 +455,8 @@ nsHTMLOptionElement::GetSelect()
 }
 
 NS_IMETHODIMP    
-nsHTMLOptionElement::Initialize(JSContext* aContext, 
+nsHTMLOptionElement::Initialize(nsISupports* aOwner,
+                                JSContext* aContext,
                                 JSObject *aObj,
                                 PRUint32 argc, 
                                 jsval *argv)
