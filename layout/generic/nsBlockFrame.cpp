@@ -4006,6 +4006,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   } // bidi enabled
 #endif // IBMBIDI
 
+  // From here on, pfd->mBounds rectangles are incorrect because bidi
+  // might have moved frames around!
   nsRect combinedArea;
   aLineLayout.RelativePositionFrames(combinedArea);  // XXXldb This returned width as -15, 2001-06-12, Bugzilla
   aLine->SetCombinedArea(combinedArea);
