@@ -47,13 +47,8 @@ interface nsILoginInfo : nsISupports {
     /**
      * The hostname the login applies to.
      *
-     * For logins obtained from HTML forms, the login is formatted like
-     * a URL. For example: "http://www.site.com" A port number (":123")
-     * may be appended in some cases.
-     *
-     * For logins obtained from a HTTP or FTP protocol authentication, 
-     * the hostname is not a URL format, but does always have the port
-     * number appended. For example "www.site.com:80".
+     * The hostname should be formatted as an URL. For example,
+     * "https://site.com", "http://site.com:1234", "ftp://ftp.site.com".
      */
     attribute AString hostname;
 
@@ -75,7 +70,8 @@ interface nsILoginInfo : nsISupports {
      *
      * When an HTTP server sends a 401 result, the WWW-Authenticate
      * header includes a realm to identify the "protection space." See
-     * RFC2617.
+     * RFC2617. If the response sent has a missing or blank realm, the
+     * hostname is used instead.
      *
      * For logins obtained from HTML forms, this field is NULL.
      */
