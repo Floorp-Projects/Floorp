@@ -2246,7 +2246,7 @@ nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetFileList(nsIDOMFileList** aFileList)
+nsHTMLInputElement::GetFiles(nsIDOMFileList** aFileList)
 {
   *aFileList = nsnull;
 
