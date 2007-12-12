@@ -757,8 +757,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
   if (!ancestorCTM) {
     // we didn't find an SVG ancestor
     float s=1, x=0, y=0;
-    if (ownerDoc &&
-        ownerDoc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (IsRoot()) {
       // we're the root element. get our currentScale and currentTranslate vals
       mCurrentScale->GetValue(&s);
       mCurrentTranslate->GetX(&x);
@@ -867,8 +866,7 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   if (!ancestorScreenCTM) {
     // we didn't find an SVG ancestor
     float s=1, x=0, y=0;
-    if (ownerDoc &&
-        ownerDoc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (IsRoot()) {
       // we're the root element. get our currentScale and currentTranslate vals
       mCurrentScale->GetValue(&s);
       mCurrentTranslate->GetX(&x);
@@ -996,8 +994,7 @@ nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     NS_ASSERTION(presShell, "no presShell");
-    if (presShell &&
-        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (presShell && IsRoot()) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
       event.eventStructType = NS_SVGZOOM_EVENT;
@@ -1021,8 +1018,7 @@ nsSVGSVGElement::SetCurrentTranslate(float x, float y)
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     NS_ASSERTION(presShell, "no presShell");
-    if (presShell &&
-        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (presShell && IsRoot()) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent event(PR_TRUE, NS_SVG_SCROLL);
       event.eventStructType = NS_SVG_EVENT;
@@ -1160,8 +1156,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   // dispatch an SVGZoom or SVGScroll DOM event before repainting
   nsCOMPtr<nsIDOMSVGNumber> n = do_QueryInterface(observable);
   if (n && n==mCurrentScale) {
-    if (mDispatchEvent &&
-        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (mDispatchEvent && IsRoot()) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
       event.eventStructType = NS_SVGZOOM_EVENT;
@@ -1174,8 +1169,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   else {
     nsCOMPtr<nsIDOMSVGPoint> p = do_QueryInterface(observable);
     if (p && p==mCurrentTranslate) {
-      if (mDispatchEvent &&
-          doc->GetRootContent() == static_cast<nsIContent*>(this)) {
+      if (mDispatchEvent && IsRoot()) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsEvent event(PR_TRUE, NS_SVG_SCROLL);
         event.eventStructType = NS_SVG_EVENT;
