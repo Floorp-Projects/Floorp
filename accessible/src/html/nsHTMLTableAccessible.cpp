@@ -983,7 +983,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute");
   }
 
-  if (HasRoleAttribute(content)) {
+  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) {
     RETURN_LAYOUT_ANSWER(PR_TRUE, "Has role attribute, and role is table");
   }
   

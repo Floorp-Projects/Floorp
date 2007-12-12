@@ -43,12 +43,6 @@
 #include "prtypes.h"
 #include "nsAccessibilityAtoms.h"
 
-#define ARIA_PROPERTY(atom) eAria_##atom,
-enum EAriaProperty {
-#include "nsARIAPropertyList.h"
-  eAria_none };
-#undef ARIA_PROPERTY
-
 // Name mapping rule: can the name be computed from descendants?
 enum ENameRule
 {
@@ -73,7 +67,7 @@ enum ENameRule
 enum EValueRule
 {
   eNoValue,
-  eHasValueMinMax    // Supports value, min and max from aaa:valuenow, valuemin and valuemax
+  eHasValueMinMax    // Supports value, min and max from aria-valuenow, aria-valuemin and aria-valuemax
 };
 
 // Used for an nsStateMapEntry if a given state attribute supports "true" and "false"
@@ -86,7 +80,7 @@ enum EValueRule
 // nsStateMapEntry.state
 struct nsStateMapEntry
 {
-  EAriaProperty attributeName;  // eARIA_none indicates last entry in map
+  nsIAtom** attributeName;  // nsnull indicates last entry in map
   const char* attributeValue; // magic value of kBoolState (0) means supports "true" and "false"
   PRUint32 state;             // If match, this is the nsIAccessibleStates to map to
 };
@@ -110,7 +104,7 @@ struct nsRoleMapEntry
   PRUint32 state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
   
   // ARIA properties supported for this role
-  // (in other words, the aaa:foo attribute to nsIAccessibleStates mapping rules)
+  // (in other words, the aria-foo attribute to nsIAccessibleStates mapping rules)
   // Currently you cannot have unlimited mappings, because
   // a variable sized array would not allow the use of
   // C++'s struct initialization feature.
@@ -131,8 +125,6 @@ struct nsRoleMapEntry
  */
 struct nsARIAMap
 {
-  static nsIAtom** gAriaAtomPtrsNS[eAria_none];
-  static nsIAtom** gAriaAtomPtrsHyphenated[eAria_none];
   static nsRoleMapEntry gWAIRoleMap[];
   static PRUint32 gWAIRoleMapLength;
   static nsRoleMapEntry gLandmarkRoleMap;
