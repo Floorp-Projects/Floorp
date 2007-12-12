@@ -54,6 +54,7 @@ B<--target> I<target-image>
 [B<--tempdir> I<temp-dir>]
 [B<--mkdir> I<directory>]
 [B<--copy> I<source>[:I<dest>]]
+[B<--symlink> I<source>[:I<dest>]]
 [B<--license> I<file>]
 [B<--resource> I<file>]
 [B<--icon> I<icns-file>]
@@ -133,6 +134,14 @@ multiple times.
 
 This option is useful for adding .DS_Store files and window backgrounds
 to disk images.
+
+=item B<--symlink> I<source>[:I<dest>]
+
+Like B<--copy>, but allows symlinks to point out of the volume. Empty symlink
+destinations are interpreted as "like the source path, but inside the dmg"
+
+This option is useful for adding symlinks to external resources,
+e.g. to /Applications.
 
 =item B<--license> I<file>
 
@@ -237,6 +246,7 @@ pkg-dmg --source /Applications/DeerPark.app --target ~/DeerPark.dmg
   --mkdir /.background
   --copy DeerParkBackground.png:/.background/background.png
   --copy DeerParkDSStore:/.DS_Store
+  --symlink /Applications:"/Drag to here"
 
 =head1 REQUIREMENTS
 
@@ -272,6 +282,7 @@ sub commandInternalVerbosity($$@);
 sub commandOutput(@);
 sub commandOutputVerbosity($@);
 sub commandVerbosity($@);
+sub copyFiles($@);
 sub diskImageMaker($$$$$$$$);
 sub giveExtension($$);
 sub hdidMountImage($@);
@@ -407,9 +418,9 @@ else {
 }
 
 # Non-global variables used in Getopt
-my(@attributes, @copyFiles, $iconFile, $idme, $licenseFile, @makeDirs,
- $outputFormat, @resourceFiles, $sourceFile, $sourceFolder, $targetImage,
- $tempDir, $volumeName);
+my(@attributes, @copyFiles, @createSymlinks, $iconFile, $idme, $licenseFile,
+ @makeDirs, $outputFormat, @resourceFiles, $sourceFile, $sourceFolder,
+ $targetImage, $tempDir, $volumeName);
 
 # --format
 $outputFormat = 'UDZO';
@@ -436,6 +447,7 @@ GetOptions('source=s'    => \$sourceFolder,
            'tempdir=s'   => \$tempDir,
            'mkdir=s'     => \@makeDirs,
            'copy=s'      => \@copyFiles,
+           'symlink=s'   => \@createSymlinks,
            'license=s'   => \$licenseFile,
            'resource=s'  => \@resourceFiles,
            'icon=s'      => \$iconFile,
@@ -574,24 +586,9 @@ if(@makeDirs) {
   }
 }
 
-my($copyFile);
-foreach $copyFile (@copyFiles) {
-  my($copySource, $copyDestination);
-  ($copySource, $copyDestination) = split(/:/, $copyFile);
-  if(!defined($copyDestination)) {
-    $copyDestination = $tempRoot;
-  }
-  elsif($copyDestination =~ /^\//) {
-    $copyDestination = $tempRoot.$copyDestination;
-  }
-  else {
-    $copyDestination = $tempRoot.'/'.$copyDestination;
-  }
-  if(command($gConfig{'cmd_rsync'}, '-a', '--copy-unsafe-links',
-   $copySource, $copyDestination) != 0) {
-    cleanupDie('rsync failed for item copy');
-  }
-}
+# copy files and/or create symlinks
+copyFiles($tempRoot, 'copy', @copyFiles);
+copyFiles($tempRoot, 'symlink', @createSymlinks);
 
 if($gConfig{'create_directly'}) {
   # If create_directly is false, the contents will be rsynced into a
@@ -730,8 +727,12 @@ sub command(@) {
 
 # commandInternal($command, @arguments)
 #
-# Removes the files specified by @arguments with a verbosity level specified
-# by $gVerbosity.
+# Runs the specified internal command at the verbosity level defined by
+# $gVerbosity.
+# Returns zero(!) on failure, because commandInternal is supposed to be a
+# direct replacement for the Perl system call wrappers, which, unlike shell
+# commands and C equivalent system calls, return true (instead of 0) to
+# indicate success.
 sub commandInternal($@) {
   my(@arguments, $command);
   ($command, @arguments) = @_;
@@ -746,9 +747,8 @@ sub commandInternal($@) {
 # If $command is unlink:
 # Removes the files specified by @arguments.  Wraps unlink.
 #
-# If $command is mkdir:
-# Creates the directory specified by @arguments, with an optional mask
-# argument, wrapping mkdir.
+# If $command is symlink:
+# Creates the symlink specified by @arguments. Wraps symlink.
 sub commandInternalVerbosity($$@) {
   my(@arguments, $command, $verbosity);
   ($verbosity, $command, @arguments) = @_;
@@ -760,6 +760,17 @@ sub commandInternalVerbosity($$@) {
       return $#arguments+1;
     }
     return unlink(@arguments);
+  }
+  elsif($command eq 'symlink') {
+    if($verbosity || $gDryRun) {
+      print(join(' ', 'ln', '-s', argumentEscape(@arguments))."\n");
+    }
+    if($gDryRun) {
+      return 1;
+    }
+    my($source, $target);
+    ($source, $target) = @arguments;
+    return symlink($source, $target);
   }
 }
 
@@ -850,6 +861,49 @@ sub commandVerbosity($@) {
     return -1;
   }
   return $?;
+}
+
+# copyFiles($tempRoot, $method, @arguments)
+#
+# Copies files or create symlinks in the disk image.
+# See --copy and --symlink descriptions for details.
+# If $method is 'copy', @arguments are interpreted as source:target, if $method
+# is 'symlink', @arguments are interpreted as symlink:target.
+sub copyFiles($@) {
+  my(@fileList, $method, $tempRoot);
+  ($tempRoot, $method, @fileList) = @_;
+  my($file, $isSymlink);
+  $isSymlink = ($method eq 'symlink');
+  foreach $file (@fileList) {
+    my($source, $target);
+    ($source, $target) = split(/:/, $file);
+    if(!defined($target) and $isSymlink) {
+      # empty symlink targets would result in an invalid target and fail,
+      # but they shall be interpreted as "like source path, but inside dmg"
+      $target = $source;
+    }
+    if(!defined($target)) {
+      $target = $tempRoot;
+    }
+    elsif($target =~ /^\//) {
+      $target = $tempRoot.$target;
+    }
+    else {
+      $target = $tempRoot.'/'.$target;
+    }
+
+    my($success);
+    if($isSymlink) {
+      $success = commandInternal('symlink', $source, $target);
+    }
+    else {
+      $success = !command($gConfig{'cmd_rsync'}, '-a', '--copy-unsafe-links',
+                          $source, $target);
+    }
+    if(!$success) {
+      cleanupDie('copyFiles failed for method '.$method);
+    }
+  }
 }
 
 # diskImageMaker($source, $destination, $format, $name, $tempDir, $tempMount,
@@ -1448,18 +1502,19 @@ sub usage() {
   print STDERR (
 "usage: pkg-dmg --source <source-folder>\n".
 "               --target <target-image>\n".
-"              [--format <format>]        (default: UDZO)\n".
-"              [--volname <volume-name>]  (default: same name as source)\n".
-"              [--tempdir <temp-dir>]     (default: same dir as target)\n".
-"              [--mkdir <directory>]      (make directory in image)\n".
-"              [--copy <source>[:<dest>]] (extra files to add)\n".
-"              [--license <file>]         (plain text license agreement)\n".
-"              [--resource <file>]        (flat .r files to merge)\n".
-"              [--icon <icns-file>]       (volume icon)\n".
-"              [--attribute <a>:<file>]   (set file attributes)\n".
-"              [--idme]                   (make an Internet-enabled image)\n".
-"              [--sourcefile]             (treat --source as a file)\n".
-"              [--verbosity <level>]      (0, 1, 2; default=2)\n".
-"              [--dry-run]                (print what would be done)\n");
+"              [--format <format>]           (default: UDZO)\n".
+"              [--volname <volume-name>]     (default: same name as source)\n".
+"              [--tempdir <temp-dir>]        (default: same dir as target)\n".
+"              [--mkdir <directory>]         (make directory in image)\n".
+"              [--copy <source>[:<dest>]]    (extra files to add)\n".
+"              [--symlink <source>[:<dest>]] (extra symlinks to add)\n".
+"              [--license <file>]            (plain text license agreement)\n".
+"              [--resource <file>]           (flat .r files to merge)\n".
+"              [--icon <icns-file>]          (volume icon)\n".
+"              [--attribute <a>:<file>]      (set file attributes)\n".
+"              [--idme]                      (make Internet-enabled image)\n".
+"              [--sourcefile]                (treat --source as a file)\n".
+"              [--verbosity <level>]         (0, 1, 2; default=2)\n".
+"              [--dry-run]                   (print what would be done)\n");
   return;
 }
