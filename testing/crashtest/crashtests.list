@@ -3,4 +3,5 @@
 
 include ../../testing/crashtest/sanity/crashtests.list
 include ../../gfx/src/mac/crashtests/crashtests.list
+include ../../layout/base/crashtests/crashtests.list
 include ../../layout/xul/base/src/grid/crashtests/crashtests.list
