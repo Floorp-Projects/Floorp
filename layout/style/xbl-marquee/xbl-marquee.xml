@@ -358,8 +358,12 @@
       <method name="start">
         <body>
         <![CDATA[
-          if (this.runId == 0)
-            this._doMove(false);
+          if (this.runId == 0) {
+            var myThis = this;
+            var lambda = function myTimeOutFunction(){myThis._doMove(false);}
+            this.runId = window.setTimeout(lambda, this._scrollDelay - this._deltaStartStop);
+            this._deltaStartStop = 0;
+          }
         ]]>
         </body>
       </method>
@@ -367,8 +371,10 @@
       <method name="stop">
         <body>
         <![CDATA[
-          if (this.runId != 0)
+          if (this.runId != 0) {
+            this._deltaStartStop = Date.now()- this._lastMoveDate;
             clearTimeout(this.runId);
+          }
 
           this.runId = 0;
         ]]>
@@ -379,6 +385,7 @@
         <parameter name="aResetPosition"/>
         <body>
         <![CDATA[
+          this._lastMoveDate = Date.now();
 
           //startNewDirection is true at first load and whenever the direction is changed
           if (this.startNewDirection) {
