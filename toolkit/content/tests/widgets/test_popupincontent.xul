@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Popup in Content Positioning Tests"
+        onload="setTimeout(nextTest, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<!--
+  This test checks that popups in content areas don't extend past the content area.
+  -->
+
+<hbox>
+  <spacer width="100"/>
+  <menu id="menu">
+    <menupopup id="popup" onpopupshown="popupShown()" onpopuphidden="nextTest()">
+      <menuitem label="One"/>
+      <menuitem label="Two"/>
+      <menuitem label="Three"/>
+      <menuitem label="Four"/>
+      <menuitem label="Five"/>
+      <menuitem label="A final longer label that is actually quite long. Very long indeed."/>
+    </menupopup>
+  </menu>
+</hbox>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var step = "";
+var originalHeight = -1;
+
+function nextTest()
+{
+  // there are four tests here:
+  //   openPopupAtScreen - checks that opening a popup using openPopupAtScreen
+  //                       constrains the popup to the content area
+  //   left and top - check with the left and top attributes set
+  //   large menu - try with a menu that is very large and should be scaled
+  //   shorter menu again - try with a menu that is shorter again. It should have
+  //                        the same height as the 'left and top' test
+  var popup = $("popup");
+  var menu = $("menu");
+  switch (step) {
+    case "":
+      step = "openPopupAtScreen";
+      popup.openPopupAtScreen(1000, 1200);
+      break;
+    case "openPopupAtScreen":
+      step = "left and top";
+      popup.setAttribute("left", "800");
+      popup.setAttribute("top", "2900");
+      synthesizeMouse($("menu"), 2, 2, { });
+      break;
+    case "left and top":
+      step = "large menu";
+      popup.removeAttribute("left");
+      popup.removeAttribute("top");
+      for (var i = 0; i < 40; i++)
+        menu.appendItem("Test", "");
+      synthesizeMouse(menu, 2, 2, { });
+      break;
+    case "large menu":
+      step = "shorter menu again";
+      for (var i = 0; i < 40; i++)
+        menu.removeItemAt(menu.itemCount - 1);
+      synthesizeMouse(menu, 2, 2, { });
+      break;
+    case "shorter menu again":
+      SimpleTest.finish();
+      break;
+  }
+}
+
+function popupShown()
+{
+  var windowrect = document.documentElement.getBoundingClientRect();
+  var popuprect = $("popup").getBoundingClientRect();
+
+  // subtract one off the edge due to a rounding issue
+  ok(popuprect.left >= windowrect.left, step + " left");
+  ok(popuprect.right - 1 <= windowrect.right, step + " right");
+
+  if (step == "left and top")
+    originalHeight = popuprect.bottom - popuprect.top;
+
+  if (step == "largemenu") {
+    ok(popuprect.top == windowrect.top, step + " top");
+    ok(popuprect.bottom - 1 == windowrect.bottom, step + " bottom");
+  }
+  else {
+    ok(popuprect.top >= windowrect.top, step + " top");
+    ok(popuprect.bottom - 1 <= windowrect.bottom, step + " bottom");
+    if (step == "shorter menu again")
+      is(popuprect.bottom - popuprect.top, originalHeight, step + " height shortened");
+  }
+
+  $("menu").open = false;
+}
+ 
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>
