@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" onload="setTimeout(boom, 30);" class="reftest-wait">
+
+<script>
+
+function boom()
+{
+  var doomed = document.getElementById("doomed");
+  doomed.parentNode.removeChild(doomed);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+<g stroke="url(#grad)">
+
+  <g id="doomed">
+
+    <linearGradient id="grad" />
+    <rect fill="url(#grad)" />
+  </g>
+</g>
+
+</svg>
