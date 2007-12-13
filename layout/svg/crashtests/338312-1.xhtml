@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+
+function boom()
+{
+  document.getElementById("foo").appendChild(document.getElementById("bar"));
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+</head>
+
+<body>
+
+  <div id="foo"></div>
+
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="grad1"/>
+    </defs>
+    <rect id="bar" style="fill:url(#grad1);" />  
+  </svg>
+
+</body>
+</html>

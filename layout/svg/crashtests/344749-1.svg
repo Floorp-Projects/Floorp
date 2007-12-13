@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+
+<circle cx="6cm" cy="2cm" r="100" fill="red" transform="translate(0,50)" />
+<circle cx="6cm" cy="2cm" r="100" fill="blue" transform="translate(70,150)" />
+<circle cx="6cm" cy="2cm" r="100" fill="green" transform="translate(-70,150)" />
+
+<rect id="rect1" fill="url(#pat0)"/>
+
+<pattern patternUnits="userSpaceOnUse" id="pat0" x="10" y="10" width="20" height="20">  <rect x="5" y="5" width="10" height="10" fill="red" />  <rect x="10" y="10" width="10" height="10" fill="green" /></pattern>	
+</svg>

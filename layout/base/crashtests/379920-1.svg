@@ -1,0 +1,7 @@
+<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg' onload="document.documentElement.style.MozBinding = 'url(#foo)';">
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo"><content></content></binding>
+</bindings>
+
+</svg>
