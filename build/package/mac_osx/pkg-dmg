@@ -54,6 +54,7 @@ B<--target> I<target-image>
 [B<--tempdir> I<temp-dir>]
 [B<--mkdir> I<directory>]
 [B<--copy> I<source>[:I<dest>]]
+[B<--symlink> I<source>[:I<dest>]]
 [B<--license> I<file>]
 [B<--resource> I<file>]
 [B<--icon> I<icns-file>]
@@ -92,6 +93,8 @@ See B<--format>.
 
 The format to create the disk image in.  Valid values for I<format> are:
      - UDZO - zlib-compressed, read-only; extension I<.dmg>
+     - UDBZ - bzip2-compressed, read-only; extension I<.dmg>;
+              create and use on 10.4 ("Tiger") and later only
      - UDRW - read-write; extension I<.dmg>
      - UDSP - read-write, sparse; extension I<.sparseimage>
 
@@ -132,6 +135,14 @@ multiple times.
 This option is useful for adding .DS_Store files and window backgrounds
 to disk images.
 
+=item B<--symlink> I<source>[:I<dest>]
+
+Like B<--copy>, but allows symlinks to point out of the volume. Empty symlink
+destinations are interpreted as "like the source path, but inside the dmg"
+
+This option is useful for adding symlinks to external resources,
+e.g. to /Applications.
+
 =item B<--license> I<file>
 
 A plain text file containing a license agreement to be displayed before
@@ -141,8 +152,8 @@ or to use formatted text, prepare a resource and use L<--resource>.
 
 =item B<--resource> I<file>
 
-A resource file to merge into I<target-image>.  If I<format> is UDZO,
-the disk image will be flattened to a single-fork file that contains
+A resource file to merge into I<target-image>.  If I<format> is UDZO or
+UDBZ, the disk image will be flattened to a single-fork file that contains
 the resource but may be freely transferred without any special encodings.
 I<file> must be in a format suitable for L<Rez(1)>.  See L<Rez(1)> for a
 description of the format, and L<hdiutil(1)> for a discussion on flattened
@@ -235,6 +246,7 @@ pkg-dmg --source /Applications/DeerPark.app --target ~/DeerPark.dmg
   --mkdir /.background
   --copy DeerParkBackground.png:/.background/background.png
   --copy DeerParkDSStore:/.DS_Store
+  --symlink /Applications:"/Drag to here"
 
 =head1 REQUIREMENTS
 
@@ -270,9 +282,11 @@ sub commandInternalVerbosity($$@);
 sub commandOutput(@);
 sub commandOutputVerbosity($@);
 sub commandVerbosity($@);
+sub copyFiles($@);
 sub diskImageMaker($$$$$$$$);
 sub giveExtension($$);
 sub hdidMountImage($@);
+sub isFormatCompressed($);
 sub licenseMaker($$);
 sub pathSplit($);
 sub setAttributes($@);
@@ -404,9 +418,9 @@ else {
 }
 
 # Non-global variables used in Getopt
-my(@attributes, @copyFiles, $iconFile, $idme, $licenseFile, @makeDirs,
- $outputFormat, @resourceFiles, $sourceFile, $sourceFolder, $targetImage,
- $tempDir, $volumeName);
+my(@attributes, @copyFiles, @createSymlinks, $iconFile, $idme, $licenseFile,
+ @makeDirs, $outputFormat, @resourceFiles, $sourceFile, $sourceFolder,
+ $targetImage, $tempDir, $volumeName);
 
 # --format
 $outputFormat = 'UDZO';
@@ -433,6 +447,7 @@ GetOptions('source=s'    => \$sourceFolder,
            'tempdir=s'   => \$tempDir,
            'mkdir=s'     => \@makeDirs,
            'copy=s'      => \@copyFiles,
+           'symlink=s'   => \@createSymlinks,
            'license=s'   => \$licenseFile,
            'resource=s'  => \@resourceFiles,
            'icon=s'      => \$iconFile,
@@ -571,24 +586,9 @@ if(@makeDirs) {
   }
 }
 
-my($copyFile);
-foreach $copyFile (@copyFiles) {
-  my($copySource, $copyDestination);
-  ($copySource, $copyDestination) = split(/:/, $copyFile);
-  if(!defined($copyDestination)) {
-    $copyDestination = $tempRoot;
-  }
-  elsif($copyDestination =~ /^\//) {
-    $copyDestination = $tempRoot.$copyDestination;
-  }
-  else {
-    $copyDestination = $tempRoot.'/'.$copyDestination;
-  }
-  if(command($gConfig{'cmd_rsync'}, '-a', '--copy-unsafe-links',
-   $copySource, $copyDestination) != 0) {
-    cleanupDie('rsync failed for item copy');
-  }
-}
+# copy files and/or create symlinks
+copyFiles($tempRoot, 'copy', @copyFiles);
+copyFiles($tempRoot, 'symlink', @createSymlinks);
 
 if($gConfig{'create_directly'}) {
   # If create_directly is false, the contents will be rsynced into a
@@ -605,7 +605,7 @@ if(defined($iconFile)) {
   # It's pointless to set the attributes of the root when diskutil create
   # -srcfolder is being used.  In that case, the attributes will be set
   # later, after the image is already created.
-  if($outputFormat eq 'UDZO' &&
+  if(isFormatCompressed($outputFormat) &&
    (command($gConfig{'cmd_SetFile'}, '-a', 'C', $tempRoot) != 0)) {
     cleanupDie('SetFile failed');
   }
@@ -617,7 +617,7 @@ if(command($gConfig{'cmd_chmod'}, '-R', 'a+rX,a-st,u+w,go-w',
 }
 
 my($unflattenable);
-if($outputFormat eq 'UDZO') {
+if(isFormatCompressed($outputFormat)) {
   $unflattenable = 1;
 }
 else {
@@ -727,8 +727,12 @@ sub command(@) {
 
 # commandInternal($command, @arguments)
 #
-# Removes the files specified by @arguments with a verbosity level specified
-# by $gVerbosity.
+# Runs the specified internal command at the verbosity level defined by
+# $gVerbosity.
+# Returns zero(!) on failure, because commandInternal is supposed to be a
+# direct replacement for the Perl system call wrappers, which, unlike shell
+# commands and C equivalent system calls, return true (instead of 0) to
+# indicate success.
 sub commandInternal($@) {
   my(@arguments, $command);
   ($command, @arguments) = @_;
@@ -743,9 +747,8 @@ sub commandInternal($@) {
 # If $command is unlink:
 # Removes the files specified by @arguments.  Wraps unlink.
 #
-# If $command is mkdir:
-# Creates the directory specified by @arguments, with an optional mask
-# argument, wrapping mkdir.
+# If $command is symlink:
+# Creates the symlink specified by @arguments. Wraps symlink.
 sub commandInternalVerbosity($$@) {
   my(@arguments, $command, $verbosity);
   ($verbosity, $command, @arguments) = @_;
@@ -757,6 +760,17 @@ sub commandInternalVerbosity($$@) {
       return $#arguments+1;
     }
     return unlink(@arguments);
+  }
+  elsif($command eq 'symlink') {
+    if($verbosity || $gDryRun) {
+      print(join(' ', 'ln', '-s', argumentEscape(@arguments))."\n");
+    }
+    if($gDryRun) {
+      return 1;
+    }
+    my($source, $target);
+    ($source, $target) = @arguments;
+    return symlink($source, $target);
   }
 }
 
@@ -849,6 +863,49 @@ sub commandVerbosity($@) {
   return $?;
 }
 
+# copyFiles($tempRoot, $method, @arguments)
+#
+# Copies files or create symlinks in the disk image.
+# See --copy and --symlink descriptions for details.
+# If $method is 'copy', @arguments are interpreted as source:target, if $method
+# is 'symlink', @arguments are interpreted as symlink:target.
+sub copyFiles($@) {
+  my(@fileList, $method, $tempRoot);
+  ($tempRoot, $method, @fileList) = @_;
+  my($file, $isSymlink);
+  $isSymlink = ($method eq 'symlink');
+  foreach $file (@fileList) {
+    my($source, $target);
+    ($source, $target) = split(/:/, $file);
+    if(!defined($target) and $isSymlink) {
+      # empty symlink targets would result in an invalid target and fail,
+      # but they shall be interpreted as "like source path, but inside dmg"
+      $target = $source;
+    }
+    if(!defined($target)) {
+      $target = $tempRoot;
+    }
+    elsif($target =~ /^\//) {
+      $target = $tempRoot.$target;
+    }
+    else {
+      $target = $tempRoot.'/'.$target;
+    }
+
+    my($success);
+    if($isSymlink) {
+      $success = commandInternal('symlink', $source, $target);
+    }
+    else {
+      $success = !command($gConfig{'cmd_rsync'}, '-a', '--copy-unsafe-links',
+                          $source, $target);
+    }
+    if(!$success) {
+      cleanupDie('copyFiles failed for method '.$method);
+    }
+  }
+}
+
 # diskImageMaker($source, $destination, $format, $name, $tempDir, $tempMount,
 #  $baseName, $setRootIcon)
 #
@@ -865,7 +922,7 @@ sub diskImageMaker($$$$$$$$) {
    $tempDir, $tempMount);
   ($source, $destination, $format, $name, $tempDir, $tempMount,
    $baseName, $setRootIcon) = @_;
-  if($format eq 'UDZO') {
+  if(isFormatCompressed($format)) {
     my($uncompressedImage);
 
     if($gConfig{'makehybrid'}) {
@@ -942,10 +999,11 @@ sub diskImageMaker($$$$$$$$) {
     }
     else {
       # makehybrid is not available, fall back to making a UDRW and
-      # converting to UDZO.  It ought to be possible to do a UDZO directly,
-      # but those come out far too large (journaling?) and need to be
-      # read-write to fix up the volume icon anyway.  Luckily, we can
-      # take advantage of a single call back into this function.
+      # converting to a compressed image.  It ought to be possible to
+      # create a compressed image directly, but those come out far too
+      # large (journaling?) and need to be read-write to fix up the
+      # volume icon anyway.  Luckily, we can take advantage of a single
+      # call back into this function.
       my($udrwImage);
       $udrwImage = giveExtension($tempDir.'/udrw', '.dmg');
 
@@ -960,8 +1018,12 @@ sub diskImageMaker($$$$$$$$) {
     # The uncompressed disk image is now in its final form.  Compress it.
     # Jaguar doesn't support hdiutil convert -ov, but it always allows
     # overwriting.
-    if(command($gConfig{'cmd_hdiutil'}, 'convert', '-format', 'UDZO',
-     '-imagekey', 'zlib-level=9', 
+    # bzip2-compressed UDBZ images can only be created and mounted on 10.4
+    # and later.  The bzip2-level imagekey is only effective when creating
+    # images in 10.5.  In 10.4, bzip2-level is harmlessly ignored, and the
+    # default value of 1 is always used.
+    if(command($gConfig{'cmd_hdiutil'}, 'convert', '-format', $format,
+     '-imagekey', ($format eq 'UDBZ' ? 'bzip2-level=9' : 'zlib-level=9'),
      (defined($gDarwinMajor) && $gDarwinMajor <= 6 ? () : ('-ov')),
      $uncompressedImage, '-o', $destination) != 0) {
       cleanupDie('hdiutil convert failed');
@@ -976,8 +1038,8 @@ sub diskImageMaker($$$$$$$$) {
       cleanupDie('unlink uncompressedImage failed: '.$!);
     }
 
-    # At this point, the only thing that the UDZO block has added to the
-    # cleanup stack is the removal of $destination.  $source has already
+    # At this point, the only thing that the compressed block has added to
+    # the cleanup stack is the removal of $destination.  $source has already
     # been removed, and its cleanup entry has been removed as well.
   }
   elsif($format eq 'UDRW' || $format eq 'UDSP') {
@@ -1247,6 +1309,16 @@ sub hdidMountImage($@) {
   return undef;
 }
 
+# isFormatCompressed($format)
+#
+# Returns true if $format corresponds to a compressed disk image format.
+# Returns false otherwise.
+sub isFormatCompressed($) {
+  my($format);
+  ($format) = @_;
+  return $format eq 'UDZO' || $format eq 'UDBZ';
+}
+
 # licenseMaker($text, $resource)
 #
 # Takes a plain text file at path $text and creates a license agreement
@@ -1430,18 +1502,19 @@ sub usage() {
   print STDERR (
 "usage: pkg-dmg --source <source-folder>\n".
 "               --target <target-image>\n".
-"              [--format <format>]        (default: UDZO)\n".
-"              [--volname <volume-name>]  (default: same name as source)\n".
-"              [--tempdir <temp-dir>]     (default: same dir as target)\n".
-"              [--mkdir <directory>]      (make directory in image)\n".
-"              [--copy <source>[:<dest>]] (extra files to add)\n".
-"              [--license <file>]         (plain text license agreement)\n".
-"              [--resource <file>]        (flat .r files to merge)\n".
-"              [--icon <icns-file>]       (volume icon)\n".
-"              [--attribute <a>:<file>]   (set file attributes)\n".
-"              [--idme]                   (make an Internet-enabled image)\n".
-"              [--sourcefile]             (treat --source as a file)\n".
-"              [--verbosity <level>]      (0, 1, 2; default=2)\n".
-"              [--dry-run]                (print what would be done)\n");
+"              [--format <format>]           (default: UDZO)\n".
+"              [--volname <volume-name>]     (default: same name as source)\n".
+"              [--tempdir <temp-dir>]        (default: same dir as target)\n".
+"              [--mkdir <directory>]         (make directory in image)\n".
+"              [--copy <source>[:<dest>]]    (extra files to add)\n".
+"              [--symlink <source>[:<dest>]] (extra symlinks to add)\n".
+"              [--license <file>]            (plain text license agreement)\n".
+"              [--resource <file>]           (flat .r files to merge)\n".
+"              [--icon <icns-file>]          (volume icon)\n".
+"              [--attribute <a>:<file>]      (set file attributes)\n".
+"              [--idme]                      (make Internet-enabled image)\n".
+"              [--sourcefile]                (treat --source as a file)\n".
+"              [--verbosity <level>]         (0, 1, 2; default=2)\n".
+"              [--dry-run]                   (print what would be done)\n");
   return;
 }

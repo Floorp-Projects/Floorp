@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=400204
+-->
+<head>
+  <title>Test for Bug 400204</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=400204">Mozilla Bug 400204</a>
+<p id="display"></p>
+<iframe id="content" src="about:blank" style="display: none"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  var c = document.getElementById("content");
+  var success = false;
+  // try to access innerWidth
+  try { success = (c.contentWindow.innerWidth == 0); } catch(ex) { success = false; }
+  ok(success, "can't access hidden iframe innerWidth, or it's not 0");
+
+  // try to access innerHeight
+  success = false;
+  try { success = (c.contentWindow.innerHeight == 0); } catch(ex) { success = false; }
+  ok(success, "can't access hidden iframe innerHeight, or it's not 0");
+
+  // try to set innerWidth
+  success = false;
+  try { c.contentWindow.innerWidth = 100; success = true; } catch(ex) { success = false; }
+  ok(success, "can't set hidden iframe innerWidth");
+
+  // try to set innerHeight
+  success = false;
+  try { c.contentWindow.innerHeight = 100; success = true; } catch(ex) { success = false; }
+  ok(success, "can't set hidden iframe innerHeight");
+
+  // now try these again for good measure, and to ensure the values
+  // haven't changed
+  // try to access innerWidth
+  success = false;
+  try { success = (c.contentWindow.innerWidth == 0); } catch(ex) { success = false; }
+  ok(success, "can't access hidden iframe innerWidth, or it's not 0");
+
+  // try to access innerHeight
+  success = false;
+  try { success = (c.contentWindow.innerHeight == 0); } catch(ex) { success = false; }
+  ok(success, "can't access hidden iframe innerHeight, or it's not 0");
+</script>
+</pre>
+</body>
+</html>

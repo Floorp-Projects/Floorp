@@ -53,6 +53,7 @@
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
+#include "jsbool.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsemit.h"
@@ -1603,9 +1604,21 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, uintN decltype)
     return stmt;
 }
 
-JSBool
-js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
-                             jsval *vp)
+/*
+ * Check if the attributes describe a property holding a compile-time constant
+ * or a permanent, read-only property without a getter.
+ */
+#define IS_CONSTANT_PROPERTY(attrs)                                           \
+    (((attrs) & (JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_GETTER)) ==      \
+     (JSPROP_READONLY | JSPROP_PERMANENT))
+
+/*
+ * The function sets vp to JSVAL_HOLE when the atom does not corresponds to a
+ * name defining a constant.
+ */
+static JSBool
+LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
+                          jsval *vp)
 {
     JSBool ok;
     JSStmtInfo *stmt;
@@ -1620,7 +1633,7 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
      * This enables propagating consts from top-level into switch cases in a
      * function compiled along with the top-level script.
      */
-    *vp = JSVAL_VOID;
+    *vp = JSVAL_HOLE;
     do {
         if ((cg->treeContext.flags & TCF_IN_FUNCTION) ||
             cx->fp->varobj == cx->fp->scopeChain) {
@@ -1631,6 +1644,7 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 
             ATOM_LIST_SEARCH(ale, &cg->constList, atom);
             if (ale) {
+                JS_ASSERT(ALE_VALUE(ale) != JSVAL_HOLE);
                 *vp = ALE_VALUE(ale);
                 return JS_TRUE;
             }
@@ -1662,8 +1676,10 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                      */
                     ok = OBJ_GET_ATTRIBUTES(cx, obj, ATOM_TO_JSID(atom), prop,
                                             &attrs);
-                    if (ok && !(~attrs & (JSPROP_READONLY | JSPROP_PERMANENT)))
+                    if (ok && IS_CONSTANT_PROPERTY(attrs)) {
                         ok = OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), vp);
+                        JS_ASSERT_IF(ok, *vp != JSVAL_HOLE);
+                    }
                 }
                 if (prop)
                     OBJ_DROP_PROPERTY(cx, pobj, prop);
@@ -1837,6 +1853,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
     JSLocalKind localKind;
     uintN index;
     JSAtomListElement *ale;
+    JSBool constOp;
 
     JS_ASSERT(pn->pn_type == TOK_NAME);
     if (pn->pn_slot >= 0 || pn->pn_op == JSOP_ARGUMENTS)
@@ -1940,6 +1957,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
             /* Use precedes declaration, or name is never declared. */
             return JS_TRUE;
         }
+        constOp = (ALE_JSOP(ale) == JSOP_DEFCONST);
 
         /* Index atom so we can map fast global number to name. */
         JS_ASSERT(tc->flags & TCF_COMPILING);
@@ -1968,7 +1986,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
           case JSOP_DELNAME:  /* NB: no change */ break;
           default: JS_ASSERT(0);
         }
-        pn->pn_const = (ALE_JSOP(ale) == JSOP_DEFCONST);
+        pn->pn_const = constOp;
         if (op != pn->pn_op) {
             pn->pn_op = op;
             pn->pn_slot = slot;
@@ -2744,10 +2762,18 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 break;
               case TOK_NAME:
                 if (!pn4->pn_expr) {
-                    ok = js_LookupCompileTimeConstant(cx, cg, pn4->pn_atom, &v);
+                    ok = LookupCompileTimeConstant(cx, cg, pn4->pn_atom, &v);
                     if (!ok)
                         goto release;
-                    if (!JSVAL_IS_VOID(v)) {
+                    if (v != JSVAL_HOLE) {
+                        if (!JSVAL_IS_PRIMITIVE(v)) {
+                            /*
+                             * XXX JSOP_LOOKUPSWITCH does not support const-
+                             * propagated object values, see bug 407186.
+                             */
+                            switchOp = JSOP_CONDSWITCH;
+                            continue;
+                        }
                         pn3->pn_val = v;
                         constPropagated = JS_TRUE;
                         break;
@@ -2769,9 +2795,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 continue;
             }
 
-            JS_ASSERT(JSVAL_IS_NUMBER(pn3->pn_val) ||
-                      JSVAL_IS_STRING(pn3->pn_val) ||
-                      JSVAL_IS_BOOLEAN(pn3->pn_val));
+            JS_ASSERT(JSVAL_IS_PRIMITIVE(pn3->pn_val));
 
             if (switchOp != JSOP_TABLESWITCH)
                 continue;
@@ -4011,26 +4035,20 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         CG_SWITCH_TO_PROLOG(cg);
 
-        op = JSOP_DEFFUN;
-#ifdef __GNUC__
-        slot = 0;   /* quell GCC overwarning */
+        if (!(cg->treeContext.flags & TCF_IN_FUNCTION)) {
+            /*
+             * Emit JSOP_CLOSURE for eval code to do less checks when
+             * instantiating top-level functions in the non-eval case.
+             */
+            JS_ASSERT(!cg->treeContext.topStmt);
+            op = (cx->fp->flags & JSFRAME_EVAL) ? JSOP_CLOSURE : JSOP_DEFFUN;
+            EMIT_INDEX_OP(op, index);
+        } else {
+#ifdef DEBUG
+            JSLocalKind localKind =
 #endif
-        JS_ASSERT((cg->treeContext.flags & TCF_IN_FUNCTION) ||
-                  !cg->treeContext.topStmt);
-
-        if ((cg->treeContext.flags & TCF_IN_FUNCTION) ||
-            ((cx->fp->flags & JSFRAME_SPECIAL) && cx->fp->fun)) {
-            JSFunction *parentFun;
-            JSLocalKind localKind;
-
-            parentFun = (cg->treeContext.flags & TCF_IN_FUNCTION)
-                        ? cg->treeContext.fun
-                        : cx->fp->fun;
-            localKind = js_LookupLocal(cx, parentFun, fun->atom, &slot);
-            if (localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST)
-                op = JSOP_DEFLOCALFUN;
-            else
-                JS_ASSERT(!(cg->treeContext.flags & TCF_IN_FUNCTION));
+                js_LookupLocal(cx, cg->treeContext.fun, fun->atom, &slot);
+            JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
 
             /*
              * If this local function is declared in a body block induced
@@ -4046,15 +4064,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                           &js_BlockClass);
                 OBJ_SET_PARENT(cx, fun->object, stmt->down->u.blockObj);
             }
-        }
-
-        if (op == JSOP_DEFLOCALFUN) {
-            if (!EmitSlotIndexOp(cx, op, slot, index, cg))
+            if (!EmitSlotIndexOp(cx, JSOP_DEFLOCALFUN, slot, index, cg))
                 return JS_FALSE;
-        } else {
-            EMIT_INDEX_OP(op, index);
         }
-
         CG_SWITCH_TO_MAIN(cg);
         break;
       }
@@ -6035,11 +6047,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * but use a stack slot for t and avoid dup'ing and popping it via
          * the JSOP_NEWINIT and JSOP_INITELEM bytecodes.
          */
-        ale = js_IndexAtom(cx, CLASS_ATOM(cx, Array), &cg->atomList);
-        if (!ale)
-            return JS_FALSE;
-        EMIT_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
-        if (js_Emit1(cx, cg, JSOP_NEWINIT) < 0)
+        if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) JSProto_Array) < 0)
             return JS_FALSE;
 
         pn2 = pn->pn_head;
@@ -6108,11 +6116,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * but use a stack slot for t and avoid dup'ing and popping it via
          * the JSOP_NEWINIT and JSOP_INITELEM bytecodes.
          */
-        ale = js_IndexAtom(cx, CLASS_ATOM(cx, Object), &cg->atomList);
-        if (!ale)
-            return JS_FALSE;
-        EMIT_INDEX_OP(JSOP_CALLNAME, ALE_INDEX(ale));
-        if (js_Emit1(cx, cg, JSOP_NEWINIT) < 0)
+        if (js_Emit2(cx, cg, JSOP_NEWINIT, (jsbytecode) JSProto_Object) < 0)
             return JS_FALSE;
 
         pn2 = pn->pn_head;
@@ -6126,19 +6130,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         for (; pn2; pn2 = pn2->pn_next) {
             /* Emit an index for t[2], else map an atom for t.p or t['%q']. */
             pn3 = pn2->pn_left;
-            switch (pn3->pn_type) {
-              case TOK_NUMBER:
+            if (pn3->pn_type == TOK_NUMBER) {
+#ifdef __GNUC__
+                ale = NULL;     /* quell GCC overwarning */
+#endif
                 if (!EmitNumberOp(cx, pn3->pn_dval, cg))
                     return JS_FALSE;
-                break;
-              case TOK_NAME:
-              case TOK_STRING:
+            } else {
+                JS_ASSERT(pn3->pn_type == TOK_NAME ||
+                          pn3->pn_type == TOK_STRING);
                 ale = js_IndexAtom(cx, pn3->pn_atom, &cg->atomList);
                 if (!ale)
                     return JS_FALSE;
-                break;
-              default:
-                JS_ASSERT(0);
             }
 
             /* Emit code for the property initializer. */

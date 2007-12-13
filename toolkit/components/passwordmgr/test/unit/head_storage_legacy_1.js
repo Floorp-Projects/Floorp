@@ -98,33 +98,32 @@ const LoginTest = {
     do_check_eq(ref_logins.length, stor_logins.length);
 
     /*
-     * Check values of the disabled list. We check both "x in y" and "y in x"
-     * to make sure any differences are explicitly noted.
+     * Check values of the disabled list.
      */
     var i, j, found;
     for (i = 0; i < ref_disabledHosts.length; i++) {
+        found = false;
         for (j = 0; !found && j < stor_disabledHosts.length; j++) {
             found = (ref_disabledHosts[i] == stor_disabledHosts[j]);
         }
-        do_check_true(found || stor_disabledHosts.length == 0);
-    }
-    for (j = 0; j < stor_disabledHosts.length; j++) {
-        for (i = 0; !found && i < ref_disabledHosts.length; i++) {
-            found = (ref_disabledHosts[i] == stor_disabledHosts[j]);
-        }
-        do_check_true(found || stor_disabledHosts.length == 0);
+        do_check_true(found);
     }
 
     /*
-     * Check values of the logins list. We check both "x in y" and "y in x"
-     * to make sure any differences are explicitly noted.
+     * Check values of the logins list.
      */
     var ref, stor;
     for (i = 0; i < ref_logins.length; i++) {
+        found = false;
         for (j = 0; !found && j < stor_logins.length; j++) {
             found = ref_logins[i].equals(stor_logins[j]);
+            // Ugh. The .equals() does fuzzy matching on the formSubmitURL
+            // fields sometimes, since "" is a wildcard value. But we want
+            // strict matching in the tests, so explicitly check it here.
+            if (ref_logins[i].formSubmitURL != stor_logins[j].formSubmitURL)
+                found = false;
         }
-        do_check_true(found || stor_logins.length == 0);
+        do_check_true(found);
     }
 
   }

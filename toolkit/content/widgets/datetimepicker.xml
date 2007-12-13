@@ -874,7 +874,7 @@
                   chromedir="&locale.dir;" xbl:inherits="disabled"
                   oncommand="document.getBindingParent(this)._increaseOrDecreaseMonth(1);"/>
         </hbox>
-        <grid class="datepicker-grid" html:role="grid">
+        <grid class="datepicker-grid" role="grid">
           <columns>
             <column class="datepicker-gridrow" flex="1"/>
             <column class="datepicker-gridrow" flex="1"/>
@@ -886,67 +886,67 @@
           </columns>
           <rows anonid="datebox">
             <row anonid="dayofweekbox">
-              <label class="datepicker-weeklabel" html:role="columnheader"/>
-              <label class="datepicker-weeklabel" html:role="columnheader"/>
-              <label class="datepicker-weeklabel" html:role="columnheader"/>
-              <label class="datepicker-weeklabel" html:role="columnheader"/>
-              <label class="datepicker-weeklabel" html:role="columnheader"/>
-              <label class="datepicker-weeklabel" html:role="columnheader"/>
-              <label class="datepicker-weeklabel" html:role="columnheader"/>
+              <label class="datepicker-weeklabel" role="columnheader"/>
+              <label class="datepicker-weeklabel" role="columnheader"/>
+              <label class="datepicker-weeklabel" role="columnheader"/>
+              <label class="datepicker-weeklabel" role="columnheader"/>
+              <label class="datepicker-weeklabel" role="columnheader"/>
+              <label class="datepicker-weeklabel" role="columnheader"/>
+              <label class="datepicker-weeklabel" role="columnheader"/>
             </row>
             <row>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
             </row>
             <row>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
             </row>
             <row>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
             </row>
             <row>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
             </row>
             <row>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
             </row>
             <row>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
-              <label class="datepicker-gridlabel" html:role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
+              <label class="datepicker-gridlabel" role="gridcell"/>
             </row>
           </rows>
         </grid>

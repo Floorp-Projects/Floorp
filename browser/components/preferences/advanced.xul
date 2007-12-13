@@ -52,9 +52,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();"
-            helpURI="chrome://browser/locale/help/help.rdf"
-            xmlns:xhtml="http://www.w3.org/1999/xhtml"
-            xmlns:aaa="http://www.w3.org/2005/07/aaa">
+            helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences id="advancedPreferences">
       <preference id="browser.preferences.advanced.selectedTabIndex"
@@ -72,6 +70,15 @@
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
       <preference id="layout.spellcheckDefault"        name="layout.spellcheckDefault"        type="int"/>
 
+#ifdef HAVE_SHELL_SERVICE
+      <preference id="browser.shell.checkDefaultBrowser"
+                  name="browser.shell.checkDefaultBrowser"
+                  type="bool"/>
+
+      <preference id="pref.general.disable_button.default_browser"
+                  name="pref.general.disable_button.default_browser"
+                  type="bool"/>
+#endif
 
       <!-- Network tab -->
       <preference id="browser.cache.disk.capacity"     name="browser.cache.disk.capacity"     type="int"/>
@@ -114,6 +121,11 @@
                   type="bool"/>
     </preferences>
     
+#ifdef HAVE_SHELL_SERVICE
+    <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
+    <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
+#endif
+
     <script type="application/x-javascript" src="chrome://browser/content/preferences/advanced.js"/>
 
     <tabbox id="advancedPrefs" flex="1"
@@ -169,6 +181,22 @@
                       preference="layout.spellcheckDefault"/>
           </groupbox>
 
+#ifdef HAVE_SHELL_SERVICE
+          <!-- System Defaults -->
+          <groupbox id="systemDefaultsGroup" orient="horizontal">
+            <caption label="&systemDefaults.label;"/>
+
+            <hbox id="checkDefaultBox" align="center" flex="1">      
+              <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
+                        label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
+                        flex="1"/>
+              <button id="checkDefaultButton"
+                      label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                      oncommand="gAdvancedPane.checkNow()"
+                      preference="pref.general.disable_button.default_browser"/>
+            </hbox>
+          </groupbox>
+#endif
         </tabpanel>
 
         <!-- Network -->
@@ -197,10 +225,10 @@
                         preference="browser.cache.disk.capacity"
                         onsyncfrompreference="return gAdvancedPane.readCacheSize();"
                         onsynctopreference="return gAdvancedPane.writeCacheSize();"
-                        aaa:labelledby="useCacheBefore cacheSize useCacheAfter"/>
+                        aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
                <label id="useCacheAfter" flex="1">&useCacheAfter.label;</label>
                <button id="clearCacheButton" icon="clear"
-                       label="&clearCacheNow.label;"
+                       label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
                        oncommand="gAdvancedPane.clearCache();"/>
              </hbox>
            </groupbox>
@@ -209,7 +237,7 @@
         <!-- Update -->
         <tabpanel id="updatePanel" orient="vertical" align="start">
           <label control="autoUpdateGroup">&autoCheck.label;</label>
-          <vbox class="indent" id="autoUpdateGroup" xhtml:role="group">
+          <vbox class="indent" id="autoUpdateGroup" role="group">
             <checkbox id="enableAppUpdate"
                       label="&enableAppUpdate.label;"
                       accesskey="&enableAppUpdate.accesskey;"
@@ -295,7 +323,7 @@
               I KID YOU NOT.
             -->
             <radiogroup id="certSelection" orient="horizontal" preftype="string" 
-	                      preference="security.default_personal_cert" aaa:labelledby="CertGroupCaption CertSelectionDesc">
+	                      preference="security.default_personal_cert" aria-abelledby="CertGroupCaption CertSelectionDesc">
               <radio label="&certs.auto;" accesskey="&certs.auto.accesskey;" 
                      value="Select Automatically"/>
               <radio label="&certs.ask;" accesskey="&certs.ask.accesskey;" 

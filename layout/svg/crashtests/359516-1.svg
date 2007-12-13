@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:html="http://www.w3.org/1999/xhtml"
+     class="reftest-wait"
+     onload="setTimeout(doStuff, 30);">
+
+<html:script style="display: none;" type="text/javascript">
+
+function doStuff()
+{
+  var svg = document.documentElement;
+  var ellipse = document.getElementById("ellipse");
+  var filter = document.getElementById("filter");
+
+  document.addEventListener("DOMNodeRemoved", foopy, false);
+  filter.removeChild(filter.firstChild);
+  document.removeEventListener("DOMNodeRemoved", foopy, false);
+  
+  function foopy()
+  {
+    document.removeEventListener("DOMNodeRemoved", foopy, false);
+    svg.appendChild(filter);
+  }
+
+  // Needed for the crash, but not for the assertion.
+  svg.appendChild(ellipse);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</html:script>
+
+<ellipse id="ellipse" cx="200" cy="150" rx="70" ry="40" style="filter: url(#filter);"/>
+
+<filter id="filter"> </filter>
+
+</svg>

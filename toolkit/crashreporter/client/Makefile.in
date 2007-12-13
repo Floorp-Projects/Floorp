@@ -83,7 +83,7 @@ LIBS += \
   $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS)
-OS_LIBS += $(MOZ_GTK2_LIBS) -lcurl
+OS_LIBS += $(MOZ_GTK2_LIBS)
 CPPSRCS += http_upload.cc
 FORCE_USE_PIC=1
 endif

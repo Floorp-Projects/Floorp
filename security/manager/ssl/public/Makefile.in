@@ -96,6 +96,7 @@ XPIDLSRCS = \
     nsICipherInfo.idl \
     nsIStreamCipher.idl \
     nsIKeyModule.idl \
+    nsIProtectedAuthThread.idl \
     nsIDataSignatureVerifier.idl \
     $(NULL)
 

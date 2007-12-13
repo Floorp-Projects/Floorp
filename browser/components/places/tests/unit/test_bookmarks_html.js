@@ -81,7 +81,7 @@ try {
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
-const POST_DATA_ANNO = "URIProperties/POSTData";
+const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 const LAST_CHARSET_ANNO = "URIProperties/characterSet";
 
 // main
@@ -91,7 +91,7 @@ function run_test() {
 
   // avoid creating the places smart folder during tests
   Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
-  setBoolPref("browser.places.createdDefaultQueries", true);
+  setBoolPref("browser.places.createdSmartBookmarks", true);
 
   // file pointer to legacy bookmarks file
   var bookmarksFileOld = do_get_file("browser/components/places/tests/unit/bookmarks.preplaces.html");
@@ -241,11 +241,12 @@ function testCanonicalBookmarks(aFolder) {
   do_check_eq(testBookmark1.lastModified/1000000, 1177375423);
 
   // post data
-  var pageURI = iosvc.newURI(testBookmark1.uri, "", null);
-  do_check_true(annosvc.pageHasAnnotation(pageURI, POST_DATA_ANNO));
+  do_check_true(annosvc.itemHasAnnotation(testBookmark1.itemId, POST_DATA_ANNO));
   do_check_eq("hidden1%3Dbar&text1%3D%25s",
-              annosvc.getPageAnnotation(pageURI, POST_DATA_ANNO));
+              annosvc.getItemAnnotation(testBookmark1.itemId, POST_DATA_ANNO));
+
   // last charset 
+  var pageURI = iosvc.newURI(testBookmark1.uri, "", null);
   do_check_true(annosvc.pageHasAnnotation(pageURI, LAST_CHARSET_ANNO));
   do_check_eq("ISO-8859-1", annosvc.getPageAnnotation(pageURI,
                                                       LAST_CHARSET_ANNO));

@@ -168,6 +168,8 @@ protected:
   nsCOMPtr<nsIDOMSVGPoint>  mCurrentTranslate;
   nsCOMPtr<nsIDOMSVGNumber> mCurrentScale;
 
+  float mFullZoom;
+
   PRPackedBool mViewportInitialized;
 };
 

@@ -118,6 +118,11 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   color: HighlightText !important;
 }
 
+.autocomplete-treebody::-moz-tree-image(treecolAutoCompleteValue) {
+  max-width: 16px;
+  height: 16px;
+}
+
 /* ::::: richlistbox autocomplete ::::: */
 
 .autocomplete-richlistbox {
@@ -131,7 +136,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   overflow-x: hidden !important;
 }
 
-.autocomplete-richlistbox > richlistitem[selected="true"] {
+.autocomplete-richlistitem[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
@@ -164,7 +169,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   padding: 0;
 }
 
-.ac-emphasize-text {
+html|*.ac-emphasize-text {
   margin: 0 !important;
   padding: 0;
   font-weight: bold;

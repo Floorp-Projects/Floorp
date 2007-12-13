@@ -594,7 +594,7 @@ public:
   }
   void ScanFrame(nsIFrame* aFrame);
   PRBool IsTextRunValidForMappedFlows(gfxTextRun* aTextRun);
-  void FlushFrames(PRBool aFlushLineBreaks);
+  void FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppressTrailingBreak);
   void ResetRunInfo() {
     mLastFrame = nsnull;
     mMappedFlows.Clear();
@@ -864,7 +864,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     }
     // Set mStartOfLine so FlushFrames knows its textrun ends a line
     scanner.SetAtStartOfLine();
-    scanner.FlushFrames(PR_TRUE);
+    scanner.FlushFrames(PR_TRUE, PR_FALSE);
     return;
   }
 
@@ -989,7 +989,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
 
   // Set mStartOfLine so FlushFrames knows its textrun ends a line
   scanner.SetAtStartOfLine();
-  scanner.FlushFrames(PR_TRUE);
+  scanner.FlushFrames(PR_TRUE, PR_FALSE);
 }
 
 static PRUnichar*
@@ -1028,7 +1028,7 @@ PRBool BuildTextRunsScanner::IsTextRunValidForMappedFlows(gfxTextRun* aTextRun)
  * This gets called when we need to make a text run for the current list of
  * frames.
  */
-void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks)
+void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppressTrailingBreak)
 {
   if (mMappedFlows.Length() == 0)
     return;
@@ -1059,7 +1059,7 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks)
     // textRun may be null for various reasons, including because we constructed
     // a partial textrun just to get the linebreaker and other state set up
     // to build the next textrun.
-    if (NS_SUCCEEDED(rv) && trailingLineBreak && textRun) {
+    if (NS_SUCCEEDED(rv) && trailingLineBreak && textRun && !aSuppressTrailingBreak) {
       textRun->SetFlagBits(nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK);
     }
     PRUint32 i;
@@ -1178,13 +1178,14 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     }
   }
 
+  nsIAtom* frameType = aFrame->GetType();
   // Now see if we can add a new set of frames to the current textrun
-  if (aFrame->GetType() == nsGkAtoms::textFrame) {
+  if (frameType == nsGkAtoms::textFrame) {
     nsTextFrame* frame = static_cast<nsTextFrame*>(aFrame);
 
     if (mLastFrame) {
       if (!ContinueTextRunAcrossFrames(mLastFrame, frame)) {
-        FlushFrames(PR_FALSE);
+        FlushFrames(PR_FALSE, PR_FALSE);
       } else {
         if (mLastFrame->GetContent() == frame->GetContent()) {
           AccumulateRunInfo(frame);
@@ -1210,8 +1211,11 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
 
   PRBool continueTextRun = CanTextRunCrossFrameBoundary(aFrame);
   PRBool descendInto = PR_TRUE;
+  PRBool isBR = frameType == nsGkAtoms::brFrame;
   if (!continueTextRun) {
-    FlushFrames(PR_TRUE);
+    // BR frames are special. We do not need or want to record a break opportunity
+    // before a BR frame.
+    FlushFrames(PR_TRUE, isBR);
     mCommonAncestorWithLastFrame = aFrame;
     mTrimNextRunLeadingWhitespace = PR_FALSE;
     // XXX do we need this? are there frames we need to descend into that aren't
@@ -1228,7 +1232,9 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   }
 
   if (!continueTextRun) {
-    FlushFrames(PR_TRUE);
+    // Really if we're a BR frame this is unnecessary since descendInto will be
+    // false. In fact this whole "if" statement should move into the descendInto.
+    FlushFrames(PR_TRUE, isBR);
     mCommonAncestorWithLastFrame = aFrame;
     mTrimNextRunLeadingWhitespace = PR_FALSE;
   }
@@ -3155,6 +3161,8 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
   aPrevInFlow->SetNextInFlow(this);
   nsTextFrame* prev = static_cast<nsTextFrame*>(aPrevInFlow);
   mContentOffset = prev->GetContentOffset() + prev->GetContentLengthHint();
+  NS_ASSERTION(mContentOffset < aContent->GetText()->GetLength(),
+               "Creating ContinuingTextFrame, but there is no more content");
   if (prev->GetStyleContext() != GetStyleContext()) {
     // We're taking part of prev's text, and its style may be different
     // so clear its textrun which may no longer be valid (and don't set ours)
@@ -3561,85 +3569,6 @@ FillClippedRect(gfxContext* aCtx, nsPresContext* aPresContext,
   aCtx->Fill();
 }
 
-nsTextFrame::TextDecorations
-nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
-{
-  TextDecorations decorations;
-
-  // Quirks mode text decoration are rendered by children; see bug 1777
-  // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
-  // does the painting of text decorations.
-  if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode())
-    return decorations;
-
-  PRBool useOverride = PR_FALSE;
-  nscolor overrideColor;
-
-  // A mask of all possible decorations.
-  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | 
-                      NS_STYLE_TEXT_DECORATION_OVERLINE |
-                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-
-  for (nsStyleContext* context = GetStyleContext();
-       decorMask && context && context->HasTextDecorations();
-       context = context->GetParent()) {
-    const nsStyleTextReset* styleText = context->GetStyleTextReset();
-    if (!useOverride && 
-        (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & styleText->mTextDecoration)) {
-      // This handles the <a href="blah.html"><font color="green">La 
-      // la la</font></a> case. The link underline should be green.
-      useOverride = PR_TRUE;
-      overrideColor = context->GetStyleColor()->mColor;
-    }
-
-    PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
-    if (useDecorations) {// a decoration defined here
-      nscolor color = context->GetStyleColor()->mColor;
-  
-      if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
-        decorations.mUnderColor = useOverride ? overrideColor : color;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
-      }
-      if (NS_STYLE_TEXT_DECORATION_OVERLINE & useDecorations) {
-        decorations.mOverColor = useOverride ? overrideColor : color;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
-      }
-      if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & useDecorations) {
-        decorations.mStrikeColor = useOverride ? overrideColor : color;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-      }
-    }
-  }
-
-  return decorations;
-}
-
-void
-nsTextFrame::UnionTextDecorationOverflow(
-               nsPresContext* aPresContext,
-               const gfxTextRun::Metrics& aTextMetrics,
-               nsRect* aOverflowRect)
-{
-  NS_ASSERTION(mTextRun, "mTextRun is null");
-  nsRect rect;
-  TextDecorations decorations = GetTextDecorations(aPresContext);
-  float ratio = 1.0f;
-  // Note that we need to add underline area when this frame has selection for
-  // spellchecking and IME.
-  if (mState & NS_FRAME_SELECTED_CONTENT) {
-    nsILookAndFeel* look = aPresContext->LookAndFeel();
-    look->GetMetric(nsILookAndFeel::eMetricFloat_IMEUnderlineRelativeSize,
-                    ratio);
-    decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
-  }
-  nsLineLayout::CombineTextDecorations(aPresContext, decorations.mDecorations,
-                  this, *aOverflowRect, nscoord(NS_round(aTextMetrics.mAscent)),
-                  ratio);
-}
-
 void 
 nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
                                   const gfxPoint& aFramePt,
@@ -3647,9 +3576,63 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
                                   nsTextPaintStyle& aTextPaintStyle,
                                   PropertyProvider& aProvider)
 {
-  TextDecorations decorations =
-    GetTextDecorations(aTextPaintStyle.PresContext());
-  if (!decorations.HasDecorationlines())
+  // Quirks mode text decoration are rendered by children; see bug 1777
+  // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
+  // does the painting of text decorations.
+  if (eCompatibility_NavQuirks != aTextPaintStyle.PresContext()->CompatibilityMode())
+    return;
+
+  PRBool useOverride = PR_FALSE;
+  nscolor overrideColor;
+
+  PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE;
+  // A mask of all possible decorations.
+  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | 
+                      NS_STYLE_TEXT_DECORATION_OVERLINE |
+                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH;    
+  nscolor overColor, underColor, strikeColor;
+  nsStyleContext* context = GetStyleContext();
+  PRBool hasDecorations = context->HasTextDecorations();
+
+  while (hasDecorations) {
+    const nsStyleTextReset* styleText = context->GetStyleTextReset();
+    if (!useOverride && 
+        (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & styleText->mTextDecoration)) {
+      // This handles the <a href="blah.html"><font color="green">La 
+      // la la</font></a> case. The link underline should be green.
+      useOverride = PR_TRUE;
+      overrideColor = context->GetStyleColor()->mColor;          
+    }
+
+    PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
+    if (useDecorations) {// a decoration defined here
+      nscolor color = context->GetStyleColor()->mColor;
+  
+      if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
+        underColor = useOverride ? overrideColor : color;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+      }
+      if (NS_STYLE_TEXT_DECORATION_OVERLINE & useDecorations) {
+        overColor = useOverride ? overrideColor : color;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
+        decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
+      }
+      if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & useDecorations) {
+        strikeColor = useOverride ? overrideColor : color;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+        decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+      }
+    }
+    if (0 == decorMask)
+      break;
+    context = context->GetParent();
+    if (!context)
+      break;
+    hasDecorations = context->HasTextDecorations();
+  }
+
+  if (!decorations)
     return;
 
   gfxFont::Metrics fontMetrics = GetFontMetrics(aProvider.GetFontGroup());
@@ -3660,26 +3643,26 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   gfxSize size(GetRect().width / app, 0);
   gfxFloat ascent = gfxFloat(mAscent) / app;
 
-  if (decorations.HasOverline()) {
+  if (decorations & NS_FONT_DECORATION_OVERLINE) {
     size.height = fontMetrics.underlineSize;
     nsCSSRendering::PaintDecorationLine(
-      aCtx, decorations.mOverColor, pt, size, ascent, ascent,
+      aCtx, overColor, pt, size, ascent, ascent, size.height,
       NS_STYLE_TEXT_DECORATION_OVERLINE, NS_STYLE_BORDER_STYLE_SOLID,
       mTextRun->IsRightToLeft());
   }
-  if (decorations.HasUnderline()) {
+  if (decorations & NS_FONT_DECORATION_UNDERLINE) {
     size.height = fontMetrics.underlineSize;
     gfxFloat offset = fontMetrics.underlineOffset;
     nsCSSRendering::PaintDecorationLine(
-      aCtx, decorations.mUnderColor, pt, size, ascent, offset,
+      aCtx, underColor, pt, size, ascent, offset, size.height,
       NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
       mTextRun->IsRightToLeft());
   }
-  if (decorations.HasStrikeout()) {
+  if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
     size.height = fontMetrics.strikeoutSize;
     gfxFloat offset = fontMetrics.strikeoutOffset;
     nsCSSRendering::PaintDecorationLine(
-      aCtx, decorations.mStrikeColor, pt, size, ascent, offset,
+      aCtx, strikeColor, pt, size, ascent, offset, size.height,
       NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
       mTextRun->IsRightToLeft());
   }
@@ -3707,7 +3690,7 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
   gfxFloat width = PR_MAX(0, aWidth - 2.0 * aSize);
   gfxPoint pt(aPt.x + 1.0, aPt.y);
   nsCSSRendering::PaintDecorationLine(
-    aContext, color, pt, gfxSize(width, actualSize), aAscent, aOffset,
+    aContext, color, pt, gfxSize(width, actualSize), aAscent, aOffset, aSize,
     NS_STYLE_TEXT_DECORATION_UNDERLINE, style, aIsRTL);
 }
 
@@ -3725,7 +3708,7 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
     case nsISelectionController::SELECTION_SPELLCHECK: {
       nsCSSRendering::PaintDecorationLine(
         aContext, NS_RGB(255,0,0),
-        aPt, size, aAscent, aFontMetrics.underlineOffset,
+        aPt, size, aAscent, aFontMetrics.underlineOffset, size.height,
         NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_DOTTED,
         aIsRTL);
       break;
@@ -4353,7 +4336,6 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
     found = PR_TRUE;
   }
 
- nsFrameState oldState = mState;
   if ( aSelected )
     AddStateBits(NS_FRAME_SELECTED_CONTENT);
   else
@@ -4366,20 +4348,6 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
     }
   }
   if (found) {
-    // If the selection state is changed, we need to reflow to recompute
-    // the overflow area for underline of spellchecking or IME. However, if
-    // the non-selected text already has underline, we don't need to reflow.
-    // And also when the IME underline is thicker than normal underline.
-    nsILookAndFeel* look = aPresContext->LookAndFeel();
-    float ratio;
-    look->GetMetric(nsILookAndFeel::eMetricFloat_IMEUnderlineRelativeSize,
-                    ratio);
-    if (oldState != mState &&
-        (ratio > 1.0 || !GetTextDecorations(aPresContext).HasUnderline())) {
-      PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                   nsIPresShell::eStyleChange,
-                                                   NS_FRAME_IS_DIRTY);
-    }
     // Selection might change anything. Invalidate the overflow area.
     Invalidate(GetOverflowRect(), PR_FALSE);
   }
@@ -4958,7 +4926,9 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
       }
     }
 
-    if (i < flowEndInTextRun) {
+    if (i < flowEndInTextRun ||
+        (i == mTextRun->GetLength() &&
+         (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
       if (preformattedNewline) {
         aData->ForceBreak(aRenderingContext);
       } else {
@@ -5366,7 +5336,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   PRInt32 limitLength = length;
   PRInt32 forceBreak = lineLayout.GetForcedBreakPosition(mContent);
+  PRBool forceBreakAfter = PR_FALSE;
   if (forceBreak >= offset + length) {
+    forceBreakAfter = forceBreak == offset + length;
     // The break is not within the text considered for this textframe.
     forceBreak = -1;
   }
@@ -5502,9 +5474,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   aMetrics.mOverflowArea.UnionRect(boundingBox,
                                    nsRect(0, 0, aMetrics.width, aMetrics.height));
 
-  UnionTextDecorationOverflow(aPresContext, textMetrics,
-                              &aMetrics.mOverflowArea);
-
   /////////////////////////////////////////////////////////////////////
   // Clean up, update state
   /////////////////////////////////////////////////////////////////////
@@ -5523,9 +5492,14 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     lineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
         textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth);
   }
-  PRBool breakAfter = PR_FALSE;
-  if ((charsFit == length && transformedOffset + transformedLength == mTextRun->GetLength() &&
-       (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
+  PRBool breakAfter = forceBreakAfter;
+  if (!breakAfter && charsFit == length &&
+      transformedOffset + transformedLength == mTextRun->GetLength() &&
+      (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK)) {
+    // We placed all the text in the textrun and we have a break opportunity at
+    // the end of the textrun. We need to record it because the following
+    // content may not care about nsLineBreaker.
+
     // Note that because we didn't break, we can be sure that (thanks to the
     // code up above) textMetrics.mAdvanceWidth includes the width of any
     // trailing whitespace. So we need to subtract trimmableWidth here
@@ -5722,9 +5696,6 @@ nsTextFrame::RecomputeOverflowRect()
     ConvertGfxRectOutward(textMetrics.mBoundingBox + gfxPoint(0, textMetrics.mAscent));
   boundingBox.UnionRect(boundingBox,
                         nsRect(nsPoint(0,0), GetSize()));
-
-  UnionTextDecorationOverflow(PresContext(), textMetrics, &boundingBox);
-
   return boundingBox;
 }
 

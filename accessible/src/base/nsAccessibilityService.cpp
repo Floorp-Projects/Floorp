@@ -1401,12 +1401,25 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         nsAutoString tableRole;
         while ((tableContent = tableContent->GetParent()) != nsnull) {
           if (tableContent->Tag() == nsAccessibilityAtoms::table) {
-            nsIFrame *tableFrame = aPresShell->GetPrimaryFrameFor(tableContent);
-            if (!tableFrame || tableFrame->GetType() != nsAccessibilityAtoms::tableOuterFrame ||
-                nsAccessNode::HasRoleAttribute(tableContent)) {
-              // Table that we're a descendant of is not styled as a table,
-              // and has no table accessible for an ancestor, or
-              // table that we're a descendant of is presentational
+            // Table that we're a descendant of is not styled as a table,
+            // and has no table accessible for an ancestor, or
+            // table that we're a descendant of is presentational
+
+            nsCOMPtr<nsIDOMNode> tableNode(do_QueryInterface(tableContent));
+            if (tableNode) {
+              nsRoleMapEntry *tableRoleMapEntry =
+                nsAccUtils::GetRoleMapEntry(tableNode);
+              if (tableRoleMapEntry &&
+                  tableRoleMapEntry != &nsARIAMap::gLandmarkRoleMap) {
+                tryTagNameOrFrame = PR_FALSE;
+                break;
+              }
+            }
+
+            nsIFrame *tableFrame =
+              aPresShell->GetPrimaryFrameFor(tableContent);
+            if (!tableFrame ||
+                tableFrame->GetType() != nsAccessibilityAtoms::tableOuterFrame) {
               tryTagNameOrFrame = PR_FALSE;
             }
             break;
@@ -1476,33 +1489,23 @@ PRBool
 nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent,
                                                  nsIWeakReference *aWeakShell)
 {
-  nsCOMPtr<nsIAccessibleDocument> docAccessible =
-    nsAccessNode::GetDocAccessibleFor(aWeakShell);
-  if (!docAccessible) {
-    return PR_FALSE;
-  }
-
-  // Precalculate |ariaPropTypes| so that HasAriaProperty() doesn't have to do that each time
-  PRUint32 ariaPropTypes;
-  docAccessible->GetAriaPropTypes(&ariaPropTypes);
-
-  return nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_atomic, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_busy, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_channel, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_controls, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_datatype, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_describedby, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_dropeffect, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_flowto, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_grab, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_haspopup, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_invalid, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_labelledby, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_live, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_owns, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_relevant, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_required, ariaPropTypes) ||
-         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_sort, ariaPropTypes);
+  return aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_atomic) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_busy) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_channel) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_controls) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_datatype) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_describedby) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_dropeffect) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_flowto) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_grab) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_haspopup) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_invalid) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_owns) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_relevant) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_required) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_sort);
 }
 
 NS_IMETHODIMP

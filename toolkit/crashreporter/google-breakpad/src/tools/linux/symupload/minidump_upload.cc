@@ -59,19 +59,20 @@ static void Start(Options *options) {
   parameters["ver"] = options->version;
 
   // Send it
-  std::string response;
+  std::string response, error;
   bool success = HTTPUpload::SendRequest(options->uploadURLStr,
                                          parameters,
                                          options->minidumpPath,
                                          "upload_file_minidump",
                                          options->proxy,
                                          options->proxy_user_pwd,
-                                         &response);
+                                         &response,
+                                         &error);
 
   if (success) {
     printf("Successfully sent the minidump file.\n");
   } else {
-    printf("Failed to send minidump\n");
+    printf("Failed to send minidump: %s\n", error.c_str());
     printf("Response:\n");
     printf("%s\n", response.c_str());
   }

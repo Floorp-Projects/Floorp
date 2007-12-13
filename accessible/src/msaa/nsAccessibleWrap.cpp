@@ -476,7 +476,8 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
 
   if (content->IsNodeOfType(nsINode::eELEMENT)) {
     nsAutoString roleString;
-    if (msaaRole != ROLE_SYSTEM_CLIENT && !GetARIARole(content, roleString)) {
+    if (msaaRole != ROLE_SYSTEM_CLIENT &&
+        !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString)) {
       nsINodeInfo *nodeInfo = content->NodeInfo();
       nodeInfo->GetName(roleString);
       nsAutoString nameSpaceURI;
@@ -1325,12 +1326,13 @@ nsAccessibleWrap::get_uniqueID(long *uniqueID)
 STDMETHODIMP
 nsAccessibleWrap::get_windowHandle(HWND *windowHandle)
 {
-  void **handle = nsnull;
-  if (NS_SUCCEEDED(GetOwnerWindow(handle))) {
-    *windowHandle = reinterpret_cast<HWND>(*handle);
-    return S_OK;
-  }
-  return E_FAIL;
+  void *handle = nsnull;
+  nsresult rv = GetOwnerWindow(&handle);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  *windowHandle = reinterpret_cast<HWND>(handle);
+  return S_OK;
 }
 
 STDMETHODIMP

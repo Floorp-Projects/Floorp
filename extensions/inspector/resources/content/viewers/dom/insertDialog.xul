@@ -114,12 +114,6 @@
 	            <menuitem label="&namespaceTitle.XMLEvents.label;"
 	                      id="mi_XMLEventsNS"
 	                      value="http://www.w3.org/2001/xml-events"/>
-	            <menuitem label="&namespaceTitle.WAIRoles.label;"
-	                      id="mi_WAIRolesNS"
-	                      value="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy"/>
-	            <menuitem label="&namespaceTitle.WAIProperties.label;"
-	                      id="mi_WAIPropertiesNS"
-	                      value="http://www.w3.org/2005/07/aaa"/>
 	            <!-- Value set onload -->
 	            <menuitem label="&namespaceTitle.default.label;"
 	                      id="mi_namespace"/>

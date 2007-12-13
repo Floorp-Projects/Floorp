@@ -97,7 +97,8 @@ public:
                      nscoord aLeftEdge,
                      nscoord aRightEdge);
 
-  void EndSpan(nsIFrame* aFrame, nsSize& aSizeResult);
+  // Returns the width of the span
+  nscoord EndSpan(nsIFrame* aFrame);
 
   PRInt32 GetCurrentSpanCount() const;
 
@@ -132,12 +133,6 @@ public:
    */
   void RelativePositionFrames(nsRect& aCombinedArea);
 
-  static void CombineTextDecorations(nsPresContext* aPresContext,
-                                     PRUint8 aDecorations,
-                                     nsIFrame* aFrame,
-                                     nsRect& aCombinedArea,
-                                     nscoord aAscentOverride = 0,
-                                     float aUnderlineSizeRatio = 1.0f);
   //----------------------------------------
 
   // Supporting methods and data for flags
@@ -256,8 +251,8 @@ public:
    */
   PRBool NotifyOptionalBreakPosition(nsIContent* aContent, PRInt32 aOffset,
                                      PRBool aFits) {
-    NS_ASSERTION(!GetFlag(LL_NEEDBACKUP),
-                  "Shouldn't be updating the break position after we've already flagged an overrun");
+    NS_ASSERTION(!aFits || !GetFlag(LL_NEEDBACKUP),
+                  "Shouldn't be updating the break position with a break that fits after we've already flagged an overrun");
     // Remember the last break position that fits; if there was no break that fit,
     // just remember the first break
     if (aFits || !mLastOptionalBreakContent) {
@@ -524,7 +519,8 @@ protected:
                        PRBool aFrameCanContinueTextRun,
                        PRBool aCanRollBackBeforeFrame,
                        nsHTMLReflowMetrics& aMetrics,
-                       nsReflowStatus& aStatus);
+                       nsReflowStatus& aStatus,
+                       PRBool* aOptionalBreakAfterFits);
 
   void PlaceFrame(PerFrameData* pfd,
                   nsHTMLReflowMetrics& aMetrics);
@@ -540,7 +536,6 @@ protected:
   void RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea);
 
   PRBool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaWidth);
-
 
   void ComputeJustificationWeights(PerSpanData* psd, PRInt32* numSpaces, PRInt32* numLetters);
 

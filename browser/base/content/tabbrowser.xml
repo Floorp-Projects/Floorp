@@ -1792,15 +1792,50 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.sourceNode && aDragSession.sourceNode.parentNode == this.mTabContainer) {
+#ifndef XP_MACOSX
+            var accelKeyPressed = aEvent.ctrlKey;
+#else
+            var accelKeyPressed = aEvent.metaKey;
+#endif
+            var draggedTab;
+            if (aDragSession.sourceNode && aDragSession.sourceNode.localName == "tab" &&
+                (aDragSession.sourceNode.parentNode == this.mTabContainer ||
+                 aDragSession.sourceNode.ownerDocument.defaultView instanceof ChromeWindow &&
+                 aDragSession.sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser"))
+              draggedTab = aDragSession.sourceNode;
+            if (draggedTab && (accelKeyPressed || draggedTab.parentNode == this.mTabContainer)) {
               var newIndex = this.getNewIndex(aEvent);
-              var oldIndex = aDragSession.sourceNode._tPos;
-
-              if (newIndex > oldIndex)
-                newIndex--;
-              if (newIndex != oldIndex)
-                this.moveTabTo(this.mTabs[oldIndex], newIndex);
-            } else {
+              if (accelKeyPressed) {
+                // copy the dropped tab (wherever it's from)
+                var newTab = this.duplicateTab(draggedTab);
+                this.moveTabTo(newTab, newIndex);
+                if (draggedTab.parentNode != this.mTabContainer || aEvent.shiftKey)
+                  this.selectedTab = newTab;
+              }
+              else {
+                // move the dropped tab
+                if (newIndex > draggedTab._tPos)
+                  newIndex--;
+                if (newIndex != draggedTab._tPos)
+                  this.moveTabTo(draggedTab, newIndex);
+              }
+            }
+            else if (draggedTab) {
+              // copy the dropped tab and remove it from the other window
+              // (making it seem to have moved between windows)
+              newIndex = this.getNewIndex(aEvent);
+              newTab = this.duplicateTab(draggedTab);
+              this.moveTabTo(newTab, newIndex);
+              this.selectedTab = newTab;
+              
+              var remoteBrowser = draggedTab.ownerDocument.defaultView.getBrowser();
+              var tabCount = remoteBrowser.tabContainer.childNodes.length;
+              remoteBrowser.removeTab(draggedTab);
+              // close the other window if this was its last tab
+              if (tabCount == 1)
+                draggedTab.ownerDocument.defaultView.close();
+            }
+            else {
               var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
 
               // valid urls don't contain spaces ' '; if we have a space it isn't a valid url.
@@ -1820,9 +1855,11 @@
               if (aEvent.shiftKey)
                 bgLoad = !bgLoad;
 
-              if (document.getBindingParent(aEvent.originalTarget).localName != "tab") {
+              if (document.getBindingParent(aEvent.originalTarget).localName != "tab" || accelKeyPressed) {
                 // We're adding a new tab.
-                this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad, false);
+                newIndex = this.getNewIndex(aEvent);
+                newTab = this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad, false);
+                this.moveTabTo(newTab, newIndex);
               }
               else {
                 // Load in an existing tab.
@@ -1992,6 +2029,23 @@
               this.moveTabForward();
             else
               this.moveTabBackward();
+          ]]>
+        </body>
+      </method>
+
+      <method name="duplicateTab">
+        <parameter name="aTab"/><!-- can be from a different window as well -->
+        <body>
+          <![CDATA[
+            // try to have SessionStore duplicate the given tab
+            try {
+              var ss = Components.classes["@mozilla.org/browser/sessionstore;1"]
+                                 .getService(Components.interfaces.nsISessionStore);
+              return ss.duplicateTab(window, aTab);
+            } catch (ex) {
+              // fall back to basic URL copying
+              return this.loadOneTab(this.getBrowserForTab(aTab).currentURI.spec);
+            }
           ]]>
         </body>
       </method>

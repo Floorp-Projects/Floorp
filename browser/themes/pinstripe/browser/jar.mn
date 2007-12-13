@@ -73,6 +73,7 @@ classic.jar:
   skin/classic/browser/preferences/Options.png              (preferences/Options.png)
   skin/classic/browser/preferences/plugin.png               (preferences/plugin.png)
   skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
+  skin/classic/browser/preferences/applications.css         (preferences/applications.css)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd.png                  (tabbrowser/alltabs-box-bkgnd.png)
   skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd.png         (tabbrowser/alltabs-box-overflow-bkgnd.png)
   skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-bkgnd-animate.png)

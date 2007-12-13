@@ -465,6 +465,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
         nsCSSRendering::PaintDecorationLine(ctx, overColor,
                                             pt, gfxSize(width, sizePixel),
                                             ascentPixel, ascentPixel,
+                                            sizePixel,
                                             NS_STYLE_TEXT_DECORATION_OVERLINE,
                                             NS_STYLE_BORDER_STYLE_SOLID,
                                             isRTL);
@@ -473,6 +474,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
         nsCSSRendering::PaintDecorationLine(ctx, underColor,
                                             pt, gfxSize(width, sizePixel),
                                             ascentPixel, offsetPixel,
+                                            sizePixel,
                                             NS_STYLE_TEXT_DECORATION_UNDERLINE,
                                             NS_STYLE_BORDER_STYLE_SOLID,
                                             isRTL);
@@ -485,6 +487,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       nsCSSRendering::PaintDecorationLine(ctx, underColor,
                                           pt, gfxSize(width, sizePixel),
                                           ascentPixel, offsetPixel,
+                                          sizePixel,
                                           NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
                                           NS_STYLE_BORDER_STYLE_SOLID,
                                           isRTL);
@@ -818,31 +821,27 @@ nsTextBoxFrame::UpdateAccessTitle()
     }
 
     const nsDependentString kEllipsis = nsContentUtils::GetLocalizedEllipsis();
-    PRInt32 offset = mTitle.RFind(kEllipsis);
-    if (offset == kNotFound) {
+    PRUint32 offset = mTitle.Length();
+    if (StringEndsWith(mTitle, kEllipsis)) {
+        offset -= kEllipsis.Length();
+    } else if (StringEndsWith(mTitle, OLD_ELLIPSIS)) {
         // Try to check with our old ellipsis (for old addons)
-        if (!kEllipsis.Equals(OLD_ELLIPSIS))
-            offset = mTitle.RFind(OLD_ELLIPSIS);
-        if (offset == kNotFound) {
-            // Try to check with our default ellipsis (for non-localized addons)
-            nsAutoString defaultEllipsis(PRUnichar(0x2026));
-            if (!kEllipsis.Equals(defaultEllipsis))
-                offset = mTitle.RFind(defaultEllipsis);
-        }
-    }
-    if (offset == kNotFound) {
-        offset = (PRInt32)mTitle.Length();
-        if (mTitle.Last() == PRUnichar(':'))
+        offset -= OLD_ELLIPSIS.Length();
+    } else {
+        // Try to check with
+        // our default ellipsis (for non-localized addons) or ':'
+        const PRUnichar kLastChar = mTitle.Last();
+        if (kLastChar == PRUnichar(0x2026) || kLastChar == PRUnichar(':'))
             offset--;
     }
 
-    if (InsertSeparatorBeforeAccessKey() && offset > 0 &&
+    if (InsertSeparatorBeforeAccessKey() &&
         !NS_IS_SPACE(mTitle[offset - 1])) {
-        mTitle.Insert(' ', (PRUint32)offset);
+        mTitle.Insert(' ', offset);
         offset++;
     }
 
-    mTitle.Insert(accessKeyLabel, (PRUint32)offset);
+    mTitle.Insert(accessKeyLabel, offset);
 }
 
 void

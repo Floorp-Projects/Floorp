@@ -60,6 +60,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsXPConnect,
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 JSBool       nsXPConnect::gOnceAliveNowDead = JS_FALSE;
 
+// Global cache of the default script security manager (QI'd to
+// nsIScriptSecurityManager)
+nsIScriptSecurityManager *gScriptSecurityManager = nsnull;
+
 const char XPC_CONTEXT_STACK_CONTRACTID[] = "@mozilla.org/js/xpc/ContextStack;1";
 const char XPC_RUNTIME_CONTRACTID[]       = "@mozilla.org/js/xpc/RuntimeService;1";
 const char XPC_EXCEPTION_CONTRACTID[]     = "@mozilla.org/js/xpc/Exception;1";
@@ -150,6 +154,8 @@ nsXPConnect::~nsXPConnect()
 
     NS_IF_RELEASE(mContextStack);
     NS_IF_RELEASE(mDefaultSecurityManager);
+
+    gScriptSecurityManager = nsnull;
 
     // shutdown the logging system
     XPC_LOG_FINISH();
@@ -1511,6 +1517,14 @@ nsXPConnect::SetDefaultSecurityManager(nsIXPCSecurityManager *aManager,
     NS_IF_RELEASE(mDefaultSecurityManager);
     mDefaultSecurityManager = aManager;
     mDefaultSecurityManagerFlags = flags;
+
+    nsCOMPtr<nsIScriptSecurityManager> ssm =
+        do_QueryInterface(mDefaultSecurityManager);
+
+    // Remember the result of the above QI for fast access to the
+    // script securityt manager.
+    gScriptSecurityManager = ssm;
+
     return NS_OK;
 }
 
@@ -1845,6 +1859,23 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
                              NS_ConvertUTF16toUTF8(source).get(), 1,
                              returnStringOnly, rval);
 #endif /* XPCONNECT_STANDALONE */
+}
+
+/* void GetXPCWrappedNativeJSClassInfo(out JSClassConstPtr clazz, out JSObjectOpsConstPtr ops1, out JSObjectOpsConstPtr ops2); */
+NS_IMETHODIMP
+nsXPConnect::GetXPCWrappedNativeJSClassInfo(const JSClass **clazz,
+                                            JSGetObjectOps *ops1,
+                                            JSGetObjectOps *ops2)
+{
+    // Expose the JSClass and JSGetObjectOps pointers used by
+    // IS_WRAPPER_CLASS(). If that macro ever changes, this function
+    // needs to stay in sync.
+
+    *clazz = &XPC_WN_NoHelper_JSClass.base;
+    *ops1 = XPC_WN_GetObjectOpsNoCall;
+    *ops2 = XPC_WN_GetObjectOpsWithCall;
+
+    return NS_OK;
 }
 
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */

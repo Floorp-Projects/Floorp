@@ -500,6 +500,13 @@ public:
   void   SetRowInserted(PRBool aValue);
 
 protected:
+    
+  // A helper function to reflow a header or footer with unconstrained height
+  // to see if it should be made repeatable and also to determine its desired
+  // height.
+  nsresult SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
+                                  nsTableRowGroupFrame* aFrame,
+                                  nscoord* aDesiredHeight);
 
   NS_METHOD ReflowChildren(nsTableReflowState&  aReflowState,
                            nsReflowStatus&      aStatus,

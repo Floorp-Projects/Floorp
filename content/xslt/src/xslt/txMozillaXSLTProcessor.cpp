@@ -1258,8 +1258,8 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
 }
 
 NS_IMETHODIMP
-txMozillaXSLTProcessor::Initialize(JSContext* cx, JSObject* obj,
-                                   PRUint32 argc, jsval* argv)
+txMozillaXSLTProcessor::Initialize(nsISupports* aOwner, JSContext* cx,
+                                   JSObject* obj, PRUint32 argc, jsval* argv)
 {
     nsCOMPtr<nsIPrincipal> prin;
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();

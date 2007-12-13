@@ -397,6 +397,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
 
     if (profile) {
       int fileIntent;
+      png_set_gray_to_rgb(png_ptr); 
       png_get_sRGB(png_ptr, info_ptr, &fileIntent);
       PRUint32 map[] = { INTENT_PERCEPTUAL, INTENT_RELATIVE_COLORIMETRIC,
                          INTENT_SATURATION, INTENT_ABSOLUTE_COLORIMETRIC };
@@ -440,7 +441,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
 
     profile = cmsCreateRGBProfile(&whitePoint, &primaries, gammaTable);
 
-    if (profile && !(color_type & PNG_COLOR_MASK_COLOR))
+    if (profile)
       png_set_gray_to_rgb(png_ptr);
 
     cmsFreeGamma(gammaTable[0]);
@@ -523,9 +524,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
                                              intent,
                                              0);
   } else {
-    if (color_type == PNG_COLOR_TYPE_GRAY ||
-        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-      png_set_gray_to_rgb(png_ptr);
+    png_set_gray_to_rgb(png_ptr);
     if (gfxPlatform::IsCMSEnabled()) {
       if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
         decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
@@ -535,10 +534,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   }
 
   if (!decoder->mTransform) {
-    if (color_type == PNG_COLOR_TYPE_GRAY ||
-        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-      png_set_gray_to_rgb(png_ptr);
-
+    png_set_gray_to_rgb(png_ptr);
     if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
       if ((aGamma <= 0.0) || (aGamma > 21474.83)) {
         aGamma = 0.45455;

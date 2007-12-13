@@ -1,0 +1,7 @@
+<!ENTITY prefs.title           "Metrics Preferences">
+
+<!ENTITY prefs.label.msg       "Help us make Firefox better by sending anonymous usage statistics.">
+<!ENTITY prefs.checkbox.enable "Enable Metrics">
+
+<!ENTITY prefs.button.close    "Close">
+

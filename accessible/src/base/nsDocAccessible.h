@@ -80,7 +80,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
     NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
     NS_IMETHOD GetParent(nsIAccessible **aParent);
-    NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
     NS_IMETHOD TakeFocus(void);
 
     // ----- nsIScrollPositionListener ---------------------------
@@ -216,7 +215,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
 protected:
     PRBool mIsAnchor;
     PRBool mIsAnchorJumped;
-    PRUint32 mAriaPropTypes;
     static PRUint32 gLastFocusedAccessiblesState;
 
 private:

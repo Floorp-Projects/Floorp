@@ -21,10 +21,10 @@ use strict;
 
 our @ISA = qw(Bootstrap::Step);
 
+# Talkback will be appended in Execute() if it is to be used
 my @TAG_SUB_STEPS = qw( Bump
                         Mozilla
                         l10n
-                        Talkback
                       );
 
 sub Execute {
@@ -39,11 +39,18 @@ sub Execute {
     my $branchTag = $config->Get(var => 'branchTag');
     my $pullDate = $config->Get(var => 'pullDate');
     my $logDir = $config->Get(sysvar => 'logDir');
+    my $useTalkback = $config->Exists(var => 'useTalkback') ?
+     $config->Get(var => 'useTalkback') : 0;
 
     my $releaseTag = $productTag . '_RELEASE';
     my $rcTag = $productTag . '_RC' . $rc;
     my $releaseTagDir = catfile($tagDir, $releaseTag);
     my $rcTagDir = catfile($tagDir, $rcTag);
+
+    # If specified, tag Talkback
+    if ($useTalkback) {
+        push(@TAG_SUB_STEPS, 'Talkback');
+    }
 
     # create the main tag directory
     if (not -d $rcTagDir) {
@@ -66,16 +73,13 @@ sub Execute {
     my $geckoTag = undef;
 
     if (1 == $rc) {
-        $this->Shell(cmd => 'cvs',
-                     cmdArgs => ['-d', $mozillaCvsroot, 
-                                 'co', 
-                                 '-r', $branchTag, 
-                                 '-D', $pullDate, 
-                                 CvsCatfile('mozilla', 'client.mk'),
-                                ],
-                     dir => $cvsrootTagDir,
-                     logFile => catfile($logDir, 'tag_checkout_client_mk.log'),
-                   );
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     tag => $branchTag,
+                     date => $pullDate,
+                     modules => [CvsCatfile('mozilla', 'client.mk')],
+                     workDir => $cvsrootTagDir,
+                     logFile => catfile($logDir, 'tag_checkout_client_mk.log')
+        );
 
         $this->CheckLog(log => catfile($logDir, 'tag_checkout_client_mk.log'),
                        checkForOnly => '^U mozilla/client.mk');
@@ -126,16 +130,13 @@ sub Execute {
         my $rcOneTag = $productTag . '_RC1';
         my $checkoutLog = "tag_rc${rc}_checkout_client_ck.log";
 
-        $this->Shell(cmd => 'cvs',
-                     cmdArgs => ['-d', $mozillaCvsroot,
-                                 'co', 
-                                 '-r', $branchTag, 
-                                 '-D', $pullDate, 
-                                 CvsCatfile('mozilla', 'client.mk')],
-                     dir => $cvsrootTagDir,
-                     logFile => catfile($logDir, $checkoutLog),
-                   );
-
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     tag => $branchTag,
+                     date => $pullDate,
+                     modules => [CvsCatfile('mozilla', 'client.mk')],
+                     workDir => $cvsrootTagDir,
+                     logFile => catfile($logDir, $checkoutLog)
+        );
 
         $this->CheckLog(log => catfile($logDir, $checkoutLog),
                         checkForOnly => '^U mozilla/client.mk');
@@ -194,15 +195,12 @@ sub Execute {
         $geckoTag = $this->GenerateRelbranchName(milestone => $milestone,
          datespec => $relBranchDateSpec);
 
-        $this->Shell(cmd => 'cvs',
-                     cmdArgs => ['-d', $mozillaCvsroot,
-                                 'co',
-                                 '-r', $geckoTag,
-                                 'mozilla'],
-                     dir => $cvsrootTagDir,
-                     logFile => catfile($logDir, 'tag_checkout_client_mk.log'),
-                   );
-
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     tag => $geckoTag,
+                     modules => ['mozilla'],
+                     workDir => $cvsrootTagDir,
+                     logFile => catfile($logDir, 'tag_checkout_client_mk.log')
+        );
     }
 
     $config->Set(var => 'geckoBranchTag', value => $geckoTag);
@@ -301,15 +299,24 @@ sub GenerateRelbranchName {
         return $config->Get(var => 'RelbranchOverride');
     }
 
-    # Convert milestone (1.8.1.x) into "181"; we assume we should always have
-    # three digits for now (180, 181, 190, etc.)
+    # Convert milestone (1.8.1.x => 181 or 1.9b1 => 19b1) 
 
     my $geckoVersion = $args{'milestone'};
-    $geckoVersion =~ s/\.//g;
-    $geckoVersion =~ s/^(\d{3}).*$/$1/;
 
-    die "ASSERT: GenerateRelbranchName(): Gecko version should be only " .
-     "numbers by now" if ($geckoVersion !~ /^\d{3}$/);
+    # 1.9.0.10 style version numbers (for releases, generally)
+    if ($geckoVersion =~ m/(\d\.){3,4}/) {
+        $geckoVersion =~ s/\.//g;
+        $geckoVersion =~ s/^(\d{3}).*$/$1/;
+        die "ASSERT: GenerateRelbranchName(): Gecko version should be only " .
+         "numbers by now" if ($geckoVersion !~ /^\d{3}$/);
+    }
+    # 1.9b1 style version numbers (for alpha/betas, generally) 
+    elsif ($geckoVersion =~ m/\d\.\d[ab]\d+/i) {
+        $geckoVersion =~ s/\.//g;
+    }
+    else {
+        die "ASSERT: GenerateRelbranchName(): Unknown Gecko version format";
+    }
 
     my $geckoDateSpec = exists($args{'datespec'}) ? $args{'datespec'} : 
      strftime('%Y%m%d', localtime());

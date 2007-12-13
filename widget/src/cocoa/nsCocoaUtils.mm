@@ -40,9 +40,8 @@
 
 #include "nsCocoaUtils.h"
 
-// Returns the height of the primary screen (the one with the menu bar, which
-// is documented to be the first in the |screens| array).
-float MenuBarScreenHeight()
+
+float nsCocoaUtils::MenuBarScreenHeight()
 {
   NSArray* allScreens = [NSScreen screens];
   if ([allScreens count])
@@ -52,13 +51,13 @@ float MenuBarScreenHeight()
 }
 
 
-float FlippedScreenY(float y)
+float nsCocoaUtils::FlippedScreenY(float y)
 {
   return MenuBarScreenHeight() - y;
 }
 
 
-NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
+NSRect nsCocoaUtils::GeckoRectToCocoaRect(const nsRect &geckoRect)
 {
   // We only need to change the Y coordinate by starting with the primary screen
   // height, subtracting the gecko Y coordinate, and subtracting the height.
@@ -69,7 +68,7 @@ NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
 }
 
 
-nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
+nsRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
 {
   // We only need to change the Y coordinate by starting with the primary screen
   // height and subtracting both the cocoa y origin and the height of the
@@ -78,4 +77,45 @@ nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
                 (nscoord)(MenuBarScreenHeight() - (cocoaRect.origin.y + cocoaRect.size.height)),
                 (nscoord)cocoaRect.size.width,
                 (nscoord)cocoaRect.size.height);
+}
+
+
+NSPoint nsCocoaUtils::ScreenLocationForEvent(NSEvent* anEvent)
+{
+  return [[anEvent window] convertBaseToScreen:[anEvent locationInWindow]];
+}
+
+
+BOOL nsCocoaUtils::IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow)
+{
+  return NSPointInRect(ScreenLocationForEvent(anEvent), [aWindow frame]);
+}
+
+
+NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow)
+{
+  return [aWindow convertScreenToBase:ScreenLocationForEvent(anEvent)];
+}
+
+
+NSWindow* nsCocoaUtils::FindWindowUnderPoint(NSPoint aPoint)
+{
+  int windowCount;
+  NSCountWindows(&windowCount);
+  int* windowList = (int*)malloc(sizeof(int) * windowCount);
+  if (!windowList)
+    return nil;
+  // The list we get back here is in order from front to back.
+  NSWindowList(windowCount, windowList);
+
+  for (int i = 0; i < windowCount; i++) {
+    NSWindow* currentWindow = [NSApp windowWithWindowNumber:windowList[i]];
+    if (currentWindow && NSPointInRect(aPoint, [currentWindow frame])) {
+      free(windowList);
+      return currentWindow;
+    }
+  }
+
+  free(windowList);
+  return nil;
 }

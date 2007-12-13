@@ -102,6 +102,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBAddItemAnnotation;
   nsCOMPtr<mozIStorageStatement> mDBRemoveAnnotation;
   nsCOMPtr<mozIStorageStatement> mDBRemoveItemAnnotation;
+  nsCOMPtr<mozIStorageStatement> mDBGetItemsWithAnnotation;
 
   nsCOMArray<nsIAnnotationObserver> mObservers;
 

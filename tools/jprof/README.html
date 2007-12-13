@@ -87,6 +87,14 @@ which have the following meanings:
     accomplish that.
 </ul>
 
+<h4>Starting and stopping jprof from JavaScript</h4>
+<p>
+A build with jprof enabled adds two functions to the Window object:
+<code>JProfStartProfiling()</code> and <code>JProfStopProfiling()</code>.  When used with JP_DEFER, these
+allow one to start and stop the timer just around whatever critical section is
+being profiled
+</p>
+
 <h4>Examples of JPROF_FLAGS usage</h4>
 <ul>
 

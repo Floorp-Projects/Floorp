@@ -44,10 +44,10 @@
 #include "nsXULSelectAccessible.h"
 #include "nsIAccessibleTreeCache.h"
 
-
 /*
  * A class the represents the XUL Tree widget.
  */
+const PRUint32 kMaxTreeColumns = 100;
 const PRUint32 kDefaultTreeCacheSize = 256;
 
 class nsXULTreeAccessible : public nsXULSelectableAccessible,

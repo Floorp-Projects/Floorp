@@ -175,6 +175,12 @@ class ExceptionHandler {
   // dumps.
   DWORD get_requesting_thread_id() const { return requesting_thread_id_; }
 
+  // Controls behavior of EXCEPTION_BREAKPOINT and EXCEPTION_SINGLE_STEP.
+  bool get_handle_debug_exceptions() const { return handle_debug_exceptions_; }
+  void set_handle_debug_exceptions(bool handle_debug_exceptions) {
+    handle_debug_exceptions_ = handle_debug_exceptions;
+  }
+
  private:
   friend class AutoExceptionHandler;
 
@@ -321,6 +327,11 @@ class ExceptionHandler {
   // The return value of the handler, passed from the handler thread back to
   // the requesting thread.
   bool handler_return_value_;
+
+  // If true, the handler will intercept EXCEPTION_BREAKPOINT and
+  // EXCEPTION_SINGLE_STEP exceptions.  Leave this false (the default)
+  // to not interfere with debuggers.
+  bool handle_debug_exceptions_;
 
   // A stack of ExceptionHandler objects that have installed unhandled
   // exception filters.  This vector is used by HandleException to determine

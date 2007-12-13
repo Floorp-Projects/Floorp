@@ -76,6 +76,7 @@ static nsSystemFontsWin *gSystemFonts = nsnull;
 #include <usp10.h>
 #elif defined(XP_OS2)
 #include "nsSystemFontsOS2.h"
+#include "gfxPDFSurface.h"
 static nsSystemFontsOS2 *gSystemFonts = nsnull;
 #elif defined(XP_BEOS)
 #include "nsSystemFontsBeOS.h"
@@ -673,7 +674,7 @@ nsThebesDeviceContext::CalcPrintingSize()
         size = reinterpret_cast<gfxImageSurface*>(mPrintingSurface.get())->GetSize();
         break;
 
-#if defined(MOZ_ENABLE_GTK2) || defined(XP_WIN)
+#if defined(MOZ_ENABLE_GTK2) || defined(XP_WIN) || defined(XP_OS2)
     case gfxASurface::SurfaceTypePDF:
         inPoints = PR_TRUE;
         size = reinterpret_cast<gfxPDFSurface*>(mPrintingSurface.get())->GetSize();

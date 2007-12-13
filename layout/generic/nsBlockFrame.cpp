@@ -42,8 +42,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * rendering object for CSS display:block and display:list-item objects,
- * also used inside table cells
+ * rendering object for CSS display:block, inline-block, and list-item
+ * boxes, also used for various anonymous boxes
  */
 
 #include "nsCOMPtr.h"
@@ -672,7 +672,7 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
         }
         // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
-      data.line = &line;
+        data.line = &line;
         nsIFrame *kid = line->mFirstChild;
         for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
@@ -746,7 +746,7 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
         }
         // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
-      data.line = &line;
+        data.line = &line;
         nsIFrame *kid = line->mFirstChild;
         for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
@@ -784,12 +784,8 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
   // The issue here is that for a 'height' of 'auto' the reflow state
   // code won't know how to calculate the containing block height
   // because it's calculated bottom up. So we use our own computed
-  // size as the dimensions. We don't really want to do this for the
-  // initial containing block
+  // size as the dimensions.
   nsIFrame* frame = aReflowState.frame;
-  if (nsLayoutUtils::IsInitialContainingBlock(frame)) {
-    return nsSize(-1, -1);
-  }
 
   nsSize cbSize(aFrameSize);
     // Containing block is relative to the padding edge
@@ -825,13 +821,9 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
         nsBoxLayoutState dummyState(aLastRS->frame->PresContext(),
                                     aLastRS->rendContext);
         scrollbars = scrollFrame->GetDesiredScrollbarSizes(&dummyState);
-        // XXX We should account for the horizontal scrollbar too --- but currently
-        // nsGfxScrollFrame assumes nothing depends on the presence (or absence) of
-        // a horizontal scrollbar, so accounting for it would create incremental
-        // reflow bugs.
-        //if (!lastButOneRS->mFlags.mAssumingHScrollbar) {
+        if (!lastButOneRS->mFlags.mAssumingHScrollbar) {
           scrollbars.top = scrollbars.bottom = 0;
-        //}
+        }
         if (!lastButOneRS->mFlags.mAssumingVScrollbar) {
           scrollbars.left = scrollbars.right = 0;
         }
@@ -877,6 +869,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 #endif
 
+  // See comment below about oldSize. Use *only* for the
+  // abs-pos-containing-block-size-change optimization!
   nsSize oldSize = GetSize();
 
   // Should we create a space manager?
@@ -1131,7 +1125,15 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // can use our rect (the border edge) since if the border style
   // changed, the reflow would have been targeted at us so we'd satisfy
   // condition 1.
-  if (mAbsoluteContainer.HasAbsoluteFrames()) {
+  // XXX checking oldSize is bogus, there are various reasons we might have
+  // reflowed but our size might not have been changed to what we
+  // asked for (e.g., we ended up being pushed to a new page)
+  // When WillReflowAgainForClearance is true, we will reflow again without
+  // resetting the size. Because of this, we must not reflow our abs-pos children
+  // in that situation --- what we think is our "new size"
+  // will not be our real new size. This also happens to be more efficient.
+  if (mAbsoluteContainer.HasAbsoluteFrames() &&
+      !aReflowState.WillReflowAgainForClearance()) {
     nsRect childBounds;
     nsSize containingBlockSize
       = CalculateContainingBlockSizeForAbsolutes(aReflowState,
@@ -1866,13 +1868,15 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nscoord oldY = line->mBounds.y;
       nscoord oldYMost = line->mBounds.YMost();
 
+      NS_ASSERTION(!willReflowAgain || !line->IsBlock(),
+                   "Don't reflow blocks while willReflowAgain is true, reflow of block abs-pos children depends on this");
+
       // Reflow the dirty line. If it's an incremental reflow, then force
       // it to invalidate the dirty area if necessary
       rv = ReflowLine(aState, line, &keepGoing);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (aState.mReflowState.mDiscoveredClearance &&
-          *aState.mReflowState.mDiscoveredClearance) {
+      if (aState.mReflowState.WillReflowAgainForClearance()) {
         line->MarkDirty();
         willReflowAgain = PR_TRUE;
         // Note that once we've entered this state, every line that gets here
@@ -1948,17 +1952,19 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       else
         repositionViews = PR_TRUE;
 
-      if (willReflowAgain) {
-        NS_ASSERTION(!line->IsDirty() || !line->HasFloats(),
-                     "Possibly stale float cache here!");
-        // If we're going to reflow everything again, and this line has no
-        // cached floats, then there is no need to recover float state. The line
-        // may be a block that contains other lines with floats, but in that
-        // case RecoverStateFrom would only add floats to the space manager.
-        // We don't need to do that because everything's going to get reflowed
-        // again "for real". Calling RecoverStateFrom in this situation could
-        // be lethal because the block's descendant lines may have float
-        // caches containing dangling frame pointers. Ugh!
+      NS_ASSERTION(!line->IsDirty() || !line->HasFloats(),
+                   "Possibly stale float cache here!");
+      if (willReflowAgain && line->IsBlock()) {
+        // If we're going to reflow everything again, and this line is a block,
+        // then there is no need to recover float state. The line may contain
+        // other lines with floats, but in that case RecoverStateFrom would only
+        // add floats to the space manager. We don't need to do that because
+        // everything's going to get reflowed again "for real". Calling
+        // RecoverStateFrom in this situation could be lethal because the
+        // block's descendant lines may have float caches containing dangling
+        // frame pointers. Ugh!
+        // If this line is inline, then we need to recover its state now
+        // to make sure that we don't forget to move its floats by deltaY.
       } else {
         // XXX EVIL O(N^2) EVIL
         aState.RecoverStateFrom(line, deltaY);
@@ -3360,6 +3366,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   // XXX Unfortunately we need to know this before reflowing the first
   // inline frame in the line. FIX ME.
   if ((0 == aLineLayout.GetLineNumber()) &&
+      (NS_BLOCK_HAS_FIRST_LETTER_CHILD & mState) &&
       (NS_BLOCK_HAS_FIRST_LETTER_STYLE & mState)) {
     aLineLayout.SetFirstLetterStyleOK(PR_TRUE);
   }
@@ -3999,18 +4006,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   } // bidi enabled
 #endif // IBMBIDI
 
+  // From here on, pfd->mBounds rectangles are incorrect because bidi
+  // might have moved frames around!
   nsRect combinedArea;
   aLineLayout.RelativePositionFrames(combinedArea);  // XXXldb This returned width as -15, 2001-06-12, Bugzilla
-  if (aState.mPresContext->CompatibilityMode() != eCompatibility_NavQuirks) {
-    PRUint8 decorations;
-    nscolor underColor, overColor, strikeColor;
-    GetTextDecorations(aState.mPresContext, PR_TRUE, decorations,
-                       underColor, overColor, strikeColor);
-    if (decorations) {
-      nsLineLayout::CombineTextDecorations(aState.mPresContext, decorations,
-                                           this, combinedArea);
-    }
-  }
   aLine->SetCombinedArea(combinedArea);
   if (addedBullet) {
     aLineLayout.RemoveBulletFrame(mBullet);
@@ -5885,6 +5884,7 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
       ctx, aColor, pt, size,
       PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
       PresContext()->AppUnitsToGfxUnits(aOffset),
+      PresContext()->AppUnitsToGfxUnits(aSize),
       aDecoration, NS_STYLE_BORDER_STYLE_SOLID, isRTL);
   }
 }

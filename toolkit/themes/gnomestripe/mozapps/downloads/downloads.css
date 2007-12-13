@@ -1,0 +1,128 @@
+#downloadManager {
+  background-color: ThreeDFace;
+}
+
+/* Download View */
+#downloadView {
+  -moz-appearance: none !important;
+  margin: 0;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+}
+
+/* Download View Items */
+richlistitem[type="download"] {
+  padding: 4px 8px 4px 4px;
+  min-height: 46px;
+}
+
+richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
+  background-color: ThreeDLightShadow;
+}
+
+richlistitem[type="download"] .name {
+  font-size: larger;
+}
+
+#information {
+  -moz-appearance: none;
+  background-color: white;
+  width: 300px;
+  max-width: 300px;
+}
+
+#information > button .button-text {
+  -moz-box-flex: 1;
+  text-align: left;
+  -moz-padding-start: 2px;
+}
+
+.mini-button {
+  -moz-appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mini-button > .button-box {
+  padding: 0 !important;
+}
+
+menuitem:not([type]) {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
+}
+
+.cancel,
+#menuitem_cancel {
+  list-style-image: url("moz-icon://stock/gtk-cancel?size=menu");
+}
+
+.info {
+  list-style-image: url("moz-icon://stock/gtk-info?size=menu");
+}
+
+.open,
+#menuitem_open {
+  list-style-image: url("moz-icon://stock/gtk-open?size=menu");
+}
+/* .open can't handle disabled because by using commandsets all the .open buttons share the disabled attribute :-( */
+#menuitem_open[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-open?size=menu&state=disabled");
+}
+
+.pause,
+#menuitem_pause {
+  list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu");
+}
+
+.resume,
+#menuitem_resume {
+  list-style-image: url("moz-icon://stock/gtk-media-play?size=menu");
+}
+
+.retry,
+#menuitem_retry {
+  list-style-image: url("moz-icon://stock/gtk-redo?size=menu");
+}
+
+#menuitem_removeFromList {
+  list-style-image: url("moz-icon://stock/gtk-remove?size=menu");
+}
+
+#menuitem_copyLocation {
+  list-style-image: url("moz-icon://stock/gtk-copy?size=menu");
+}
+
+#menuitem_clearList {
+  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
+}
+
+#information-uri {
+  list-style-image: url("moz-icon://stock/gtk-network?size=menu");
+}
+
+#information-location {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+}
+#information-location[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu&state=disabled");
+}
+
+.blockedIcon {
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=dialog");
+  width: 32px;
+  height: 32px;
+}
+
+/* prevent flickering when changing states */
+.downloadTypeIcon {
+  min-height: 32px;
+  min-width: 32px;
+}
+
+#searchbox[empty] {
+  color: GrayText;
+}

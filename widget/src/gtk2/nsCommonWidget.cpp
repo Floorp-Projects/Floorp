@@ -106,44 +106,6 @@ nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent,
 }
 
 void
-nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
-                                     GdkEventScroll *aGdkEvent)
-{
-    switch (aGdkEvent->direction) {
-    case GDK_SCROLL_UP:
-        aEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
-        aEvent.delta = -3;
-        break;
-    case GDK_SCROLL_DOWN:
-        aEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
-        aEvent.delta = 3;
-        break;
-    case GDK_SCROLL_LEFT:
-        aEvent.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
-        aEvent.delta = -3;
-        break;
-    case GDK_SCROLL_RIGHT:
-        aEvent.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
-        aEvent.delta = 3;
-        break;
-    }
-
-    aEvent.refPoint.x = nscoord(aGdkEvent->x);
-    aEvent.refPoint.y = nscoord(aGdkEvent->y);
-
-    aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
-        ? PR_TRUE : PR_FALSE;
-    aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK)
-        ? PR_TRUE : PR_FALSE;
-    aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
-        ? PR_TRUE : PR_FALSE;
-    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
-        ? PR_TRUE : PR_FALSE;
-    
-    aEvent.time = aGdkEvent->time;
-}
-
-void
 nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
 {
     aEvent.keyCode   = GdkKeyCodeToDOMKeyCode(aGdkEvent->keyval);

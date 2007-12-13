@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.state.saverestore.strokeStyle</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+// Test that restore() undoes any modifications
+var old = ctx.strokeStyle;
+ctx.save();
+ctx.strokeStyle = "#ff0000";
+ctx.restore();
+ok(ctx.strokeStyle === old, "ctx.strokeStyle === old");
+
+// Also test that save() doesn't modify the values
+ctx.strokeStyle = "#ff0000";
+old = ctx.strokeStyle;
+    // we're not interested in failures caused by get(set(x)) != x (e.g.
+    // from rounding), so compare against d instead of against "#ff0000"
+ctx.save();
+ok(ctx.strokeStyle === old, "ctx.strokeStyle === old");
+ctx.restore();
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+

@@ -41,63 +41,9 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsIFrame.h"
+#include "nsSVGTextPathElement.h"
 #include "nsSVGAnimatedString.h"
-#include "nsSVGEnum.h"
 #include "nsDOMError.h"
-#include "nsSVGLength2.h"
-
-typedef nsSVGStylableElement nsSVGTextPathElementBase;
-
-class nsSVGTextPathElement : public nsSVGTextPathElementBase,
-                             public nsIDOMSVGTextPathElement,
-                             public nsIDOMSVGURIReference
-{
-protected:
-  friend nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
-                                        nsINodeInfo *aNodeInfo);
-  nsSVGTextPathElement(nsINodeInfo* aNodeInfo);
-  nsresult Init();
-  
-public:
-  // interfaces:
-  
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGTEXTPATHELEMENT
-  NS_DECL_NSIDOMSVGTEXTCONTENTELEMENT
-  NS_DECL_NSIDOMSVGURIREFERENCE
-
-  // xxx If xpcom allowed virtual inheritance we wouldn't need to
-  // forward here :-(
-  NS_FORWARD_NSIDOMNODE(nsSVGTextPathElementBase::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGTextPathElementBase::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextPathElementBase::)
-
-  // nsIContent interface
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-protected:
-
-  virtual LengthAttributesInfo GetLengthInfo();
-  virtual EnumAttributesInfo GetEnumInfo();
-
-  virtual PRBool IsEventName(nsIAtom* aName);
-
-  already_AddRefed<nsISVGTextContentMetrics> GetTextContentMetrics();
-
-  enum { STARTOFFSET };
-  nsSVGLength2 mLengthAttributes[1];
-  static LengthInfo sLengthInfo[1];
-
-  enum { METHOD, SPACING };
-  nsSVGEnum mEnumAttributes[2];
-  static nsSVGEnumMapping sMethodMap[];
-  static nsSVGEnumMapping sSpacingMap[];
-  static EnumInfo sEnumInfo[2];
-
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
-};
 
 nsSVGElement::LengthInfo nsSVGTextPathElement::sLengthInfo[1] =
 {

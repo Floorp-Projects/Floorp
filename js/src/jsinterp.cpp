@@ -637,9 +637,7 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     switch ((JSOp) *pc) {
       case JSOP_NAME:
       case JSOP_GETPROP:
-#if JS_HAS_XML_SUPPORT
       case JSOP_CALLPROP:
-#endif
         GET_ATOM_FROM_BYTECODE(fp->script, pc, 0, atom);
         roots[0] = ATOM_KEY(atom);
         argsobj = js_NewArrayObject(cx, argc, vp + 2);
@@ -2140,6 +2138,9 @@ JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
 JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
 
+/* Ensure we can share deffun and closure code. */
+JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
+
 JSBool
 js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 {
@@ -3478,8 +3479,6 @@ interrupt:
           BEGIN_CASE(JSOP_NEW)
             /* Get immediate argc and find the constructor function. */
             argc = GET_ARGC(pc);
-
-          do_new:
             SAVE_SP_AND_PC(fp);
             vp = sp - (2 + argc);
             JS_ASSERT(vp >= fp->spbase);
@@ -3490,9 +3489,7 @@ interrupt:
             sp = vp + 1;
             vp[-depth] = (jsval)pc;
             LOAD_INTERRUPT_HANDLER(cx);
-            obj = JSVAL_TO_OBJECT(*vp);
-            len = js_CodeSpec[op].length;
-            DO_NEXT_OP(len);
+          END_CASE(JSOP_NEW)
 
           BEGIN_CASE(JSOP_DELNAME)
             LOAD_ATOM(0);
@@ -3547,7 +3544,7 @@ interrupt:
           BEGIN_CASE(JSOP_ELEMDEC)
             /*
              * Delay fetching of id until we have the object to ensure
-             * the proper evaluation oder. See bug 372331.
+             * the proper evaluation order. See bug 372331.
              */
             id = 0;
             i = -2;
@@ -3826,6 +3823,73 @@ interrupt:
             }
             STORE_OPND(-1, rval);
           END_VARLEN_CASE
+
+          BEGIN_CASE(JSOP_CALLPROP)
+            /* Get an immediate atom naming the property. */
+            LOAD_ATOM(0);
+            id = ATOM_TO_JSID(atom);
+            PUSH(JSVAL_NULL);
+            SAVE_SP_AND_PC(fp);
+            lval = FETCH_OPND(-2);
+            if (!JSVAL_IS_PRIMITIVE(lval)) {
+                obj = JSVAL_TO_OBJECT(lval);
+
+#if JS_HAS_XML_SUPPORT
+                /* Special-case XML object method lookup, per ECMA-357. */
+                if (OBJECT_IS_XML(cx, obj)) {
+                    JSXMLObjectOps *ops;
+
+                    ops = (JSXMLObjectOps *) obj->map->ops;
+                    obj = ops->getMethod(cx, obj, id, &rval);
+                    if (!obj)
+                        ok = JS_FALSE;
+                } else
+#endif
+                {
+                    ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
+                }
+                if (!ok)
+                    goto out;
+                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+                STORE_OPND(-2, rval);
+                ok = ComputeThis(cx, sp);
+                if (!ok)
+                    goto out;
+            } else {
+                if (JSVAL_IS_STRING(lval)) {
+                    i = JSProto_String;
+                } else if (JSVAL_IS_NUMBER(lval)) {
+                    i = JSProto_Number;
+                } else if (JSVAL_IS_BOOLEAN(lval)) {
+                    i = JSProto_Boolean;
+                } else {
+                    JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
+                    js_ReportIsNullOrUndefined(cx, -2, lval, NULL);
+                    ok = JS_FALSE;
+                    goto out;
+                }
+
+                ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj);
+                if (!ok)
+                    goto out;
+                JS_ASSERT(obj);
+                ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
+                if (!ok)
+                    goto out;
+                STORE_OPND(-1, lval);
+                STORE_OPND(-2, rval);
+
+                /* Wrap primitive lval in object clothing if necessary. */
+                if (!VALUE_IS_FUNCTION(cx, rval) ||
+                    (obj = JSVAL_TO_OBJECT(rval),
+                     fun = GET_FUNCTION_PRIVATE(cx, obj),
+                     !PRIMITIVE_THIS_TEST(fun, lval))) {
+                    ok = js_PrimitiveToObject(cx, &sp[-1]);
+                    if (!ok)
+                        goto out;
+                }
+            }
+          END_CASE(JSOP_CALLPROP)
 
           BEGIN_CASE(JSOP_SETPROP)
             /* Get an immediate atom naming the property. */
@@ -4690,6 +4754,7 @@ interrupt:
         ok = ComputeGlobalThis(cx, sp);                                       \
         if (!ok)                                                              \
             goto out;                                                         \
+        JS_ASSERT(!JSVAL_IS_NULL(sp[-1]) && !JSVAL_IS_VOID(sp[-1]));          \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_GLOBALTHIS)
@@ -4842,20 +4907,13 @@ interrupt:
 
           BEGIN_CASE(JSOP_DEFFUN)
             LOAD_FUNCTION(0);
-            fun = GET_FUNCTION_PRIVATE(cx, obj);
-            id = ATOM_TO_JSID(fun->atom);
 
             /*
              * We must be at top-level (either outermost block that forms a
              * function's body, or a global) scope, not inside an expression
              * (JSOP_{ANON,NAMED}FUNOBJ) or compound statement (JSOP_CLOSURE)
-             * in the same compilation unit (ECMA Program).
-             *
-             * However, we could be in a Program being eval'd from inside a
-             * with statement, so we need to distinguish scope chain head from
-             * variables object.  Hence the obj2 vs. parent distinction below.
-             * First we make sure the function object we're defining has the
-             * right scope chain.  Then we define its name in fp->varobj.
+             * in the same compilation unit (ECMA Program). We also not inside
+             * an eval script.
              *
              * If static link is not current scope, clone fun's object to link
              * to the current scope via parent.  This clause exists to enable
@@ -4876,7 +4934,28 @@ interrupt:
              * is not and will not be standardized.
              */
             JS_ASSERT(!fp->blockChain);
+            JS_ASSERT((fp->flags & JSFRAME_EVAL) == 0);
+            JS_ASSERT(fp->scopeChain == fp->varobj);
             obj2 = fp->scopeChain;
+
+            /*
+             * ECMA requires functions defined when entering Global code to be
+             * permanent.
+             */
+            attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+            SAVE_SP_AND_PC(fp);
+
+          do_deffun:
+            /* The common code for JSOP_DEFFUN and JSOP_CLOSURE. */
+            ASSERT_SAVED_SP_AND_PC(fp);
+
+            /*
+             * Clone the function object with the current scope chain as the
+             * clone's parent.  The original function object is the prototype
+             * of the clone.  Do this only if re-parenting; the compiler may
+             * have seen the right parent already and created a sufficiently
+             * well-scoped function object.
+             */
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
                 obj = js_CloneFunctionObject(cx, obj, obj2);
                 if (!obj) {
@@ -4894,19 +4973,11 @@ interrupt:
             rval = OBJECT_TO_JSVAL(obj);
 
             /*
-             * ECMA requires functions defined when entering Global code to be
-             * permanent, and functions defined when entering Eval code to be
-             * impermanent.
-             */
-            attrs = JSPROP_ENUMERATE;
-            if (!(fp->flags & JSFRAME_EVAL))
-                attrs |= JSPROP_PERMANENT;
-
-            /*
              * Load function flags that are also property attributes.  Getters
              * and setters do not need a slot, their value is stored elsewhere
              * in the property itself, not in obj slots.
              */
+            fun = GET_FUNCTION_PRIVATE(cx, obj);
             flags = JSFUN_GSFLAG2ATTR(fun->flags);
             if (flags) {
                 attrs |= flags | JSPROP_SHARED;
@@ -4914,31 +4985,45 @@ interrupt:
             }
 
             /*
+             * We define the function as a property of the variable object and
+             * not the current scope chain even for the case of function
+             * expression statements and functions defined by eval inside let
+             * or with blocks.
+             */
+            parent = fp->varobj;
+
+            /*
              * Check for a const property of the same name -- or any kind
              * of property if executing with the strict option.  We check
              * here at runtime as well as at compile-time, to handle eval
              * as well as multiple HTML script tags.
              */
-            parent = fp->varobj;
-            SAVE_SP_AND_PC(fp);
+            id = ATOM_TO_JSID(fun->atom);
             ok = js_CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
             if (ok) {
-                ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
-                                         (flags & JSPROP_GETTER)
-                                         ? JS_EXTENSION (JSPropertyOp) obj
-                                         : NULL,
-                                         (flags & JSPROP_SETTER)
-                                         ? JS_EXTENSION (JSPropertyOp) obj
-                                         : NULL,
-                                         attrs,
-                                         &prop);
+                if (attrs == JSPROP_ENUMERATE) {
+                    JS_ASSERT(fp->flags & JSFRAME_EVAL);
+                    JS_ASSERT(op == JSOP_CLOSURE);
+                    ok = OBJ_SET_PROPERTY(cx, parent, id, &rval);
+                } else {
+                    ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
+                                             (flags & JSPROP_GETTER)
+                                             ? JS_EXTENSION (JSPropertyOp) obj
+                                             : NULL,
+                                             (flags & JSPROP_SETTER)
+                                             ? JS_EXTENSION (JSPropertyOp) obj
+                                             : NULL,
+                                             attrs,
+                                             NULL);
+                }
             }
 
             /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
             fp->scopeChain = obj2;
-            if (!ok)
+            if (!ok) {
+                cx->weakRoots.newborn[GCX_OBJECT] = NULL;
                 goto out;
-            OBJ_DROP_PROPERTY(cx, parent, prop);
+            }
           END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
@@ -5117,9 +5202,10 @@ interrupt:
 
           BEGIN_CASE(JSOP_CLOSURE)
             /*
-             * ECMA ed. 3 extension: a named function expression in a compound
-             * statement (not at the top statement level of global code, or at
-             * the top level of a function body).
+             * A top-level function inside eval or ECMA ed. 3 extension: a
+             * named function expression statement in a compound statement
+             * (not at the top statement level of global code, or at the top
+             * level of a function body).
              */
             LOAD_FUNCTION(0);
 
@@ -5136,53 +5222,16 @@ interrupt:
                 ok = JS_FALSE;
                 goto out;
             }
-            if (OBJ_GET_PARENT(cx, obj) != obj2) {
-                obj = js_CloneFunctionObject(cx, obj, obj2);
-                if (!obj) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
-            }
 
             /*
-             * Protect obj from any GC hiding below OBJ_DEFINE_PROPERTY.  All
-             * paths from here must flow through the "Restore fp->scopeChain"
-             * code below the OBJ_DEFINE_PROPERTY call.
+             * ECMA requires that functions defined when entering Eval code to
+             * be impermanent.
              */
-            fp->scopeChain = obj;
-            rval = OBJECT_TO_JSVAL(obj);
+            attrs = JSPROP_ENUMERATE;
+            if (!(fp->flags & JSFRAME_EVAL))
+                attrs |= JSPROP_PERMANENT;
 
-            /*
-             * Make a property in fp->varobj with id fun->atom and value obj,
-             * unless fun is a getter or setter (in which case, obj is cast to
-             * a JSPropertyOp and passed accordingly).
-             */
-            fun = GET_FUNCTION_PRIVATE(cx, obj);
-            attrs = JSFUN_GSFLAG2ATTR(fun->flags);
-            if (attrs) {
-                attrs |= JSPROP_SHARED;
-                rval = JSVAL_VOID;
-            }
-            parent = fp->varobj;
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
-                                     (attrs & JSPROP_GETTER)
-                                     ? JS_EXTENSION (JSPropertyOp) obj
-                                     : NULL,
-                                     (attrs & JSPROP_SETTER)
-                                     ? JS_EXTENSION (JSPropertyOp) obj
-                                     : NULL,
-                                     attrs | JSPROP_ENUMERATE
-                                           | JSPROP_PERMANENT,
-                                     &prop);
-
-            /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
-            fp->scopeChain = obj2;
-            if (!ok) {
-                cx->weakRoots.newborn[GCX_OBJECT] = NULL;
-                goto out;
-            }
-            OBJ_DROP_PROPERTY(cx, parent, prop);
-          END_CASE(JSOP_CLOSURE)
+            goto do_deffun;
 
 #if JS_HAS_GETTER_SETTER
           BEGIN_CASE(JSOP_GETTER)
@@ -5292,9 +5341,18 @@ interrupt:
 #endif /* JS_HAS_GETTER_SETTER */
 
           BEGIN_CASE(JSOP_NEWINIT)
-            argc = 0;
+            i = GET_INT8(pc);
+            JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
+            SAVE_SP_AND_PC(fp);
+            obj = (i == JSProto_Array)
+                  ? js_NewArrayObject(cx, 0, NULL)
+                  : js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+            if (!obj)
+                goto out;
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
             fp->sharpDepth++;
-            goto do_new;
+            LOAD_INTERRUPT_HANDLER(cx);
+          END_CASE(JSOP_NEWINIT)
 
           BEGIN_CASE(JSOP_ENDINIT)
             if (--fp->sharpDepth == 0)
@@ -5781,70 +5839,6 @@ interrupt:
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_XMLPI)
 
-          BEGIN_CASE(JSOP_CALLPROP)
-            /* Get an immediate atom naming the property. */
-            LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            PUSH(JSVAL_NULL);
-            SAVE_SP_AND_PC(fp);
-            lval = FETCH_OPND(-2);
-            if (!JSVAL_IS_PRIMITIVE(lval)) {
-                obj = JSVAL_TO_OBJECT(lval);
-
-                /* Special-case XML object method lookup, per ECMA-357. */
-                if (OBJECT_IS_XML(cx, obj)) {
-                    JSXMLObjectOps *ops;
-
-                    ops = (JSXMLObjectOps *) obj->map->ops;
-                    obj = ops->getMethod(cx, obj, id, &rval);
-                    if (!obj)
-                        ok = JS_FALSE;
-                } else {
-                    ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
-                }
-                if (!ok)
-                    goto out;
-                STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-                STORE_OPND(-2, rval);
-                ok = ComputeThis(cx, sp);
-                if (!ok)
-                    goto out;
-            } else {
-                if (JSVAL_IS_STRING(lval)) {
-                    i = JSProto_String;
-                } else if (JSVAL_IS_NUMBER(lval)) {
-                    i = JSProto_Number;
-                } else if (JSVAL_IS_BOOLEAN(lval)) {
-                    i = JSProto_Boolean;
-                } else {
-                    JS_ASSERT(JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval));
-                    js_ReportIsNullOrUndefined(cx, -2, lval, NULL);
-                    ok = JS_FALSE;
-                    goto out;
-                }
-
-                ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj);
-                if (!ok)
-                    goto out;
-                JS_ASSERT(obj);
-                ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
-                if (!ok)
-                    goto out;
-                STORE_OPND(-1, lval);
-                STORE_OPND(-2, rval);
-
-                /* Wrap primitive lval in object clothing if necessary. */
-                if (!VALUE_IS_FUNCTION(cx, rval) ||
-                    (obj = JSVAL_TO_OBJECT(rval),
-                     fun = GET_FUNCTION_PRIVATE(cx, obj),
-                     !PRIMITIVE_THIS_TEST(fun, lval))) {
-                    ok = js_PrimitiveToObject(cx, &sp[-1]);
-                    if (!ok)
-                        goto out;
-                }
-            }
-          END_CASE(JSOP_CALLPROP)
-
           BEGIN_CASE(JSOP_GETFUNNS)
             SAVE_SP_AND_PC(fp);
             ok = js_GetFunctionNamespace(cx, &rval);
@@ -6070,21 +6064,53 @@ interrupt:
           END_CASE(JSOP_ARRAYPUSH)
 #endif /* JS_HAS_GENERATORS */
 
-#if !JS_HAS_GENERATORS
-          L_JSOP_GENERATOR:
-          L_JSOP_YIELD:
-          L_JSOP_ARRAYPUSH:
-#endif
-
-#if !JS_HAS_DESTRUCTURING
-          L_JSOP_FOREACHKEYVAL:
-          L_JSOP_ENUMCONSTELEM:
-#endif
-
 #if JS_THREADED_INTERP
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_POP:
-#else
+
+# if !JS_HAS_GENERATORS
+          L_JSOP_GENERATOR:
+          L_JSOP_YIELD:
+          L_JSOP_ARRAYPUSH:
+# endif
+
+# if !JS_HAS_DESTRUCTURING
+          L_JSOP_FOREACHKEYVAL:
+          L_JSOP_ENUMCONSTELEM:
+# endif
+
+# if !JS_HAS_XML_SUPPORT
+          L_JSOP_CALLXMLNAME:
+          L_JSOP_STARTXMLEXPR:
+          L_JSOP_STARTXML:
+          L_JSOP_DELDESC:
+          L_JSOP_GETFUNNS:
+          L_JSOP_XMLPI:
+          L_JSOP_XMLCOMMENT:
+          L_JSOP_XMLCDATA:
+          L_JSOP_XMLOBJECT:
+          L_JSOP_XMLELTEXPR:
+          L_JSOP_XMLTAGEXPR:
+          L_JSOP_TOXMLLIST:
+          L_JSOP_TOXML:
+          L_JSOP_ENDFILTER:
+          L_JSOP_FILTER:
+          L_JSOP_DESCENDANTS:
+          L_JSOP_XMLNAME:
+          L_JSOP_SETXMLNAME:
+          L_JSOP_BINDXMLNAME:
+          L_JSOP_ADDATTRVAL:
+          L_JSOP_ADDATTRNAME:
+          L_JSOP_TOATTRVAL:
+          L_JSOP_TOATTRNAME:
+          L_JSOP_QNAME:
+          L_JSOP_QNAMECONST:
+          L_JSOP_QNAMEPART:
+          L_JSOP_ANYNAME:
+          L_JSOP_DEFXMLNS:
+# endif
+
+#else /* !JS_THREADED_INTERP */
           default:
 #endif
           {

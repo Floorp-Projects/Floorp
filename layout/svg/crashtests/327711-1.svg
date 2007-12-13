@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script>
+
+function init()
+{
+  document.documentElement.unsuspendRedrawAll();
+  document.getElementsByTagName("text")[0].firstChild.data = "Quux";
+}
+
+window.addEventListener("load", init, false);
+
+</script>
+
+<text x="125" y="30">Foo</text>
+
+</svg>

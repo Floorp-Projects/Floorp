@@ -104,7 +104,8 @@ sub LoadLocaleManifest {
     my @manifestLines = <MANIFEST>;
     close(MANIFEST);
 
-    my @bouncerPlatforms = sort(GetBouncerPlatforms());
+    my @bouncerPlatforms = GetBouncerPlatforms();
+    @bouncerPlatforms = sort(@bouncerPlatforms);
 
     foreach my $line (@manifestLines) {   
        # We create an instance variable so if the caller munges the reference

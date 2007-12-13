@@ -84,8 +84,7 @@ PRUint32 nsDocAccessible::gLastFocusedAccessiblesState = 0;
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsHyperTextAccessibleWrap(aDOMNode, aShell), mWnd(nsnull),
-  mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE),
-  mAriaPropTypes(eCheckNamespaced)
+  mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
 {
   // For GTK+ native window, we do nothing here.
   if (!mDOMNode)
@@ -100,21 +99,7 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   if (shell) {
     // Find mDocument
     mDocument = shell->GetDocument();
-    // Find mAriaPropTypes: the initial type of ARIA properties that should be checked for
-    if (!mDocument) {
-      NS_WARNING("No document!");
-      return;
-    }
     
-    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
-    if (htmlDoc) {
-      nsAutoString mimeType;
-      GetMimeType(mimeType);
-      mAriaPropTypes = eCheckHyphenated;
-      if (! mimeType.EqualsLiteral("text/html")) {
-        mAriaPropTypes |= eCheckNamespaced;
-      }
-    }
     // Find mWnd
     nsIViewManager* vm = shell->GetViewManager();
     if (vm) {
@@ -225,7 +210,7 @@ NS_IMETHODIMP
 nsDocAccessible::GetDescription(nsAString& aDescription)
 {
   nsAutoString description;
-  GetTextFromRelationID(eAria_describedby, description);
+  GetTextFromRelationID(nsAccessibilityAtoms::aria_describedby, description);
   aDescription = description;
   return NS_OK;
 }
@@ -508,15 +493,6 @@ NS_IMETHODIMP nsDocAccessible::GetParent(nsIAccessible **aParent)
     }
   }
   return mParent ? nsAccessible::GetParent(aParent) : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDocAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
-{
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  *aAttributes = nsnull;
-
-  return mDOMNode ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocAccessible::Init()
@@ -918,13 +894,6 @@ NS_IMETHODIMP nsDocAccessible::Observe(nsISupports *aSubject, const char *aTopic
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocAccessible::GetAriaPropTypes(PRUint32 *aAriaPropTypes) 
-{
-  *aAriaPropTypes = mAriaPropTypes;
-  return NS_OK;
-}
-
   ///////////////////////////////////////////////////////////////////////
 // nsIDocumentObserver
 
@@ -969,13 +938,6 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   if (!docShell) {
     return;
   }
-  if (aNameSpaceID == kNameSpaceID_WAIProperties) {
-    // Using setAttributeNS() in HTML to set namespaced ARIA properties.
-    // From this point forward, check namespaced properties, which
-    // take precedence over hyphenated properties, since in text/html
-    // that can only be set dynamically.
-    mAriaPropTypes |= eCheckNamespaced;
-  }
 
   PRUint32 busyFlags;
   docShell->GetBusyFlags(&busyFlags);
@@ -1001,13 +963,13 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
 
   // Universal boolean properties that don't require a role.
   if (aAttribute == nsAccessibilityAtoms::disabled ||
-      (aAttribute == nsAccessibilityAtoms::aria_disabled && (mAriaPropTypes & eCheckHyphenated))) {
+      aAttribute == nsAccessibilityAtoms::aria_disabled) {
     // Fire the state change whether disabled attribute is
     // set for XUL, HTML or ARIA namespace.
     // Checking the namespace would not seem to gain us anything, because
     // disabled really is going to mean the same thing in any namespace.
     // We use the attribute instead of the disabled state bit because
-    // ARIA's aaa:disabled does not affect the disabled state bit
+    // ARIA's aria-disabled does not affect the disabled state bit
     nsCOMPtr<nsIAccessibleStateChangeEvent> enabledChangeEvent =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::EXT_STATE_ENABLED,
@@ -1022,28 +984,19 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   }
 
   // Check for namespaced ARIA attribute
-  nsCOMPtr<nsIAtom> ariaAttribute;
-  if (aNameSpaceID == kNameSpaceID_WAIProperties) {
-    ariaAttribute = aAttribute;
-  }
-  else if (mAriaPropTypes & eCheckHyphenated && aNameSpaceID == kNameSpaceID_None) {
+  if (aNameSpaceID == kNameSpaceID_None) {
     // Check for hyphenated aria-foo property?
     const char* attributeName;
     aAttribute->GetUTF8String(&attributeName);
     if (!PL_strncmp("aria-", attributeName, 5)) {
-      // Convert to WAI property atom attribute
-      ariaAttribute = do_GetAtom(attributeName + 5);
+      ARIAAttributeChanged(aContent, aAttribute);
     }
-  }
-  if (ariaAttribute) {  // We have an ARIA attribute
-    ARIAAttributeChanged(aContent, ariaAttribute);
-    return;
   }
 
   if (aAttribute == nsAccessibilityAtoms::role ||
       aAttribute == nsAccessibilityAtoms::href ||
       aAttribute == nsAccessibilityAtoms::onclick ||
-      aAttribute == nsAccessibilityAtoms::droppable) {
+      aAttribute == nsAccessibilityAtoms::aria_droppable) {
     // Not worth the expense to ensure which namespace these are in
     // It doesn't kill use to recreate the accessible even if the attribute was used
     // in the wrong namespace or an element that doesn't support it
@@ -1051,8 +1004,9 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::selected) {
-    // DHTML or XUL selection
+  if (aAttribute == nsAccessibilityAtoms::selected ||
+      aAttribute == nsAccessibilityAtoms::aria_selected) {
+    // ARIA or XUL selection
     nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(targetNode);
     // Multi selects use selection_add and selection_remove
     // Single select widgets just mirror event_selection for
@@ -1072,11 +1026,8 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
 
       static nsIContent::AttrValuesArray strings[] =
         {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
-      if (aContent->FindAttrValueIn(kNameSpaceID_None,
-                                    nsAccessibilityAtoms::selected,
-                                    strings, eCaseMatters) !=
-          nsIContent::ATTR_VALUE_NO_MATCH) {
-
+      if (aContent->FindAttrValueIn(kNameSpaceID_None, aAttribute,
+                                    strings, eCaseMatters) >= 0) {
         FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_REMOVE,
                                 targetNode, nsnull);
         return;
@@ -1104,7 +1055,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   if (!targetNode)
     return;
 
-  if (aAttribute == nsAccessibilityAtoms::required) {
+  if (aAttribute == nsAccessibilityAtoms::aria_required) {
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::STATE_REQUIRED,
@@ -1113,7 +1064,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::invalid) {
+  if (aAttribute == nsAccessibilityAtoms::aria_invalid) {
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::STATE_INVALID,
@@ -1122,7 +1073,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::activedescendant) {
+  if (aAttribute == nsAccessibilityAtoms::aria_activedescendant) {
     // The activedescendant universal property redirects accessible focus events
     // to the element with the id that activedescendant points to
     nsCOMPtr<nsIDOMNode> currentFocus = GetCurrentFocus();
@@ -1134,7 +1085,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (!HasRoleAttribute(aContent)) {
+  if (!aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) {
     // We don't care about these other ARIA attribute changes unless there is
     // an ARIA role set for the element
     // XXX: we should check the role map to see if the changed property is
@@ -1142,9 +1093,10 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::checked ||
-      aAttribute == nsAccessibilityAtoms::pressed) {
-    const PRUint32 kState = (aAttribute == nsAccessibilityAtoms::checked) ?
+  // The following ARIA attributes only take affect when dynamic content role is present
+  if (aAttribute == nsAccessibilityAtoms::aria_checked ||
+      aAttribute == nsAccessibilityAtoms::aria_pressed) {
+    const PRUint32 kState = (aAttribute == nsAccessibilityAtoms::aria_checked) ?
                             nsIAccessibleStates::STATE_CHECKED : 
                             nsIAccessibleStates::STATE_PRESSED;
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
@@ -1153,7 +1105,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     if (targetNode == gLastFocusedNode) {
       // State changes for MIXED state currently only supported for focused item, because
       // otherwise we would need access to the old attribute value in this listener.
-      // This is because we don't know if the previous value of aaa:checked or aaa:pressed was "mixed"
+      // This is because we don't know if the previous value of aria-checked or aria-pressed was "mixed"
       // without caching that info.
       nsCOMPtr<nsIAccessible> accessible;
       event->GetAccessible(getter_AddRefs(accessible));
@@ -1172,7 +1124,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::expanded) {
+  if (aAttribute == nsAccessibilityAtoms::aria_expanded) {
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::STATE_EXPANDED,
@@ -1181,7 +1133,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::readonly) {
+  if (aAttribute == nsAccessibilityAtoms::aria_readonly) {
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::STATE_READONLY,
@@ -1190,21 +1142,18 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::valuenow) {
+  if (aAttribute == nsAccessibilityAtoms::aria_valuenow) {
     FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
                             targetNode, nsnull);
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::multiselectable) {
+  if (aAttribute == nsAccessibilityAtoms::aria_multiselectable &&
+      aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) {
     // This affects whether the accessible supports nsIAccessibleSelectable.
     // COM says we cannot change what interfaces are supported on-the-fly,
     // so invalidate this object. A new one will be created on demand.
-    if (HasRoleAttribute(aContent)) {
-      // The multiselectable and other waistate attributes only take affect
-      // when dynamic content role is present
-      InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
-    }
+    InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
   }
 }
 
@@ -1606,6 +1555,13 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           accessibleText->GetCharacterAtOffset(caretOffset, &chAtOffset);
           printf("\nCaret moved to %d with char %c", caretOffset, chAtOffset);
 #endif
+#ifdef DEBUG_CARET
+          // Test caret line # -- fire an EVENT_ALERT on the focused node so we can watch the
+          // line-number object attribute on it
+          nsCOMPtr<nsIAccessible> accForFocus;
+          GetAccService()->GetAccessibleFor(gLastFocusedNode, getter_AddRefs(accForFocus));
+          nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ALERT, accForFocus);
+#endif
           nsCOMPtr<nsIAccessibleCaretMoveEvent> caretMoveEvent =
             new nsAccCaretMoveEvent(accessible, caretOffset);
           NS_ENSURE_TRUE(caretMoveEvent, NS_ERROR_OUT_OF_MEMORY);
@@ -1756,6 +1712,9 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMNode> childNode = aChild ? do_QueryInterface(aChild) : mDOMNode;
 
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  
   if (!mIsContentLoaded) {
     // Still loading document
     if (mAccessNodeCache.Count() <= 1) {
@@ -1769,8 +1728,6 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       return InvalidateChildren();
     }
     if (aChangeEventType == nsIAccessibleEvent::EVENT_DOM_CREATE) {
-      nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-      NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
       nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
       NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
       if (!esm->IsHandlingUserInputExternal()) {
@@ -1834,9 +1791,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
   if (!isShowing) {
     // Fire EVENT_ASYNCH_HIDE or EVENT_DOM_DESTROY
-    nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));
     if (isHiding) {
-      nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+      nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));
       if (content) {
         nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
         if (frame) {
@@ -1894,21 +1850,27 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
                             eCoalesceFromSameSubtree, isAsynch);
 
     // Check to see change occured in an ARIA menu, and fire an EVENT_MENUPOPUP_START if it did
-    if (ARIARoleEquals(aChild, "menu")) {
+    nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(childNode);
+    if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
                               childNode, nsnull, eAllowDupes, isAsynch);
     }
 
     // Check to see if change occured inside an alert, and fire an EVENT_ALERT if it did
     nsIContent *ancestor = aChild;
-    while (ancestor) {
-      if (ARIARoleEquals(ancestor, "alert")) {
+    while (PR_TRUE) {
+      if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_ALERT) {
         nsCOMPtr<nsIDOMNode> alertNode(do_QueryInterface(ancestor));
         FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode, nsnull,
                                 eRemoveDupes, isAsynch);
         break;
       }
       ancestor = ancestor->GetParent();
+      nsCOMPtr<nsIDOMNode> ancestorNode = do_QueryInterface(ancestor);
+      if (!ancestorNode) {
+        break;
+      }
+      roleMapEntry = nsAccUtils::GetRoleMapEntry(ancestorNode);
     }
   }
 

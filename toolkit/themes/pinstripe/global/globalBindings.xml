@@ -4,7 +4,6 @@
 
 <bindings id="globalBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xhtml="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
   <binding id="unifiedWindow">
@@ -49,11 +48,11 @@
              persist="lastSelected screenX screenY"
              closebuttonlabel="&preferencesCloseButton.label;"
              closebuttonaccesskey="&preferencesCloseButton.accesskey;"
-             xhtml:role="dialog"
+             role="dialog"
              title="&preferencesDefaultTitleMac.title;"
              titlebarcolor="#EBEBEB">
       <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
-                      xhtml:role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
+                      role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
       <xul:hbox flex="1" class="paneDeckContainer">
         <xul:deck anonid="paneDeck" flex="1">
           <children includes="prefpane"/>

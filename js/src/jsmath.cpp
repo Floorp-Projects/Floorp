@@ -506,7 +506,8 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
 {
     JSObject *Math;
 
-    Math = JS_DefineObject(cx, obj, js_Math_str, &js_MathClass, NULL, 0);
+    Math = JS_DefineObject(cx, obj, js_Math_str, &js_MathClass, NULL,
+                           JSPROP_READONLY | JSPROP_PERMANENT);
     if (!Math)
         return NULL;
     if (!JS_DefineFunctions(cx, Math, math_static_methods))

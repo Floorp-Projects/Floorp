@@ -88,6 +88,12 @@ typedef enum {
   MOZ_GTK_TAB_SELECTED        = 1 << 2
 } GtkTabFlags;
 
+/** flags for menuitems **/
+typedef enum {
+  /* menuitem is part of the menubar */
+  MOZ_TOPLEVEL_MENU_ITEM      = 1 << 0
+} GtkMenuItemFlags;
+
 /* function type for moz_gtk_enable_style_props */
 typedef gint (*style_prop_t)(GtkStyle*, const gchar*, gint);
 
@@ -176,6 +182,7 @@ typedef enum {
   MOZ_GTK_MENUITEM,
   MOZ_GTK_CHECKMENUITEM,
   MOZ_GTK_RADIOMENUITEM,
+  MOZ_GTK_MENUSEPARATOR,
   /* Paints the background of a window, dialog or page. */
   MOZ_GTK_WINDOW
 } GtkThemeWidgetType;
@@ -315,6 +322,22 @@ gint moz_gtk_get_toolbar_separator_width(gint* size);
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_expander_size(gint* size);
+
+/**
+ * Get the vertical padding for menu popups
+ * vertical_padding:    [OUT] the vertical padding for the menu popup
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_get_menu_popup_vertical_padding(gint* vertical_padding);
+
+/**
+ * Get the desired height of a menu separator
+ * size:    [OUT] the desired height
+ *
+ * returns: MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_get_menu_separator_height(gint* size);
 
 /**
  * Retrieve an actual GTK scrollbar widget for style analysis. It will not

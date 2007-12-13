@@ -441,6 +441,11 @@ fails == 386310-1d.html 386310-1-ref.html
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
+== 395107-1.html 395107-1-ref.html
+== 395107-2.html 395107-2-ref.html
+== 395107-3.html 395107-3-ref.html
+== 395107-4.html 395107-4-ref.html
+== 395107-5.html 395107-5-ref.html
 == 395130-1.html 395130-1-ref.html
 == 395130-2.html 395130-2-ref.html
 == 395331-1.xml 395331-1-ref.xml
@@ -464,6 +469,10 @@ fails == 386310-1d.html 386310-1-ref.html
 == 400826-1.html 400826-1-ref.html
 == 401946-1.xul about:blank
 == 402338-1.html 402338-1-ref.html
+== 402567-1.html 402567-1-ref.html
+== 402567-2.html 402567-2-ref.html
+== 402567-3.html 402567-3-ref.html
+== 402567-4.html 402567-4-ref.html
 == 402950-1.html 402950-1-ref.html
 == 403129-1.html 403129-1-ref.html
 == 403129-2.html 403129-2-ref.html
@@ -486,13 +495,24 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 #== 403657-1.html 403657-1-ref.html  # Fails depending on the fonts...
 == 403733-1.html 403733-1-ref.html
 == 403962-1.xhtml 403962-1-ref.xhtml
+== 404180-1.html 404180-1-ref.html
 == 404030-1.html 404030-1-ref.html
 != 404030-1-notref.html 404030-1.html
 != 404030-1-notref2.html 404030-1.html
 == 404301-1.html 404301-1-ref.html
 != data:application/xml,<foo/> data:text/plain, # bug 404419
+== 404553-1.html 404553-1-ref.html  # assertion test, also tests that marquee binding is applied correctly
 == 404666-1.html 404666-1-ref.html
 == 404666-2.html 404666-2-ref.html
 == 405186-1.xhtml about:blank
 == 405305-1.html 405305-1-ref.html
+== 405380-1.html 405380-1-ref.html
+== 405577-1.html 405577-1-ref.html
 == 405584-1.html 405584-1-ref.html
+== 406073-1.html 406073-1-ref.html
+== 406484-1.html 406484-1-ref.html
+== 406568-1.html 406568-1-ref.html
+== 407078-1.html 407078-1-ref.html
+== 407111-1.html 407111-1-ref.html
+== 407227-1.html 407227-1-ref.html
+== 407937-1.html 407937-1-ref.html

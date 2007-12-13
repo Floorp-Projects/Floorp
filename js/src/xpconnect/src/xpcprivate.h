@@ -251,6 +251,19 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
     *dest = result; \
     return (result || !src) ? NS_OK : NS_ERROR_OUT_OF_MEMORY
 
+
+// NOTE!!!
+//
+// If this ever changes,
+// nsScriptSecurityManager::doGetObjectPrincipal() *must* be updated
+// also!
+//
+// NOTE!!!
+#define IS_WRAPPER_CLASS(clazz)                                               \
+          ((clazz) == &XPC_WN_NoHelper_JSClass.base ||                        \
+           (clazz)->getObjectOps == XPC_WN_GetObjectOpsNoCall ||              \
+           (clazz)->getObjectOps == XPC_WN_GetObjectOpsWithCall)
+
 /***************************************************************************/
 // Auto locking support class...
 
@@ -2912,7 +2925,7 @@ private:
     void SyncJSContexts();
 
 private:
-    nsTArray<JSContextAndFrame> mStack;
+    nsAutoTArray<JSContextAndFrame, 16> mStack;
     JSContext*  mSafeJSContext;
 
     // If non-null, we own it; same as mSafeJSContext if SetSafeJSContext

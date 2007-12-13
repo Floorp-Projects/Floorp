@@ -138,6 +138,7 @@ public:
   NS_IMETHOD              SetWindowTitlebarColor(nscolor aColor);
   virtual void            ConvertToDeviceCoordinates(nscoord  &aX,nscoord &aY) {}
   virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}
+  NS_IMETHOD              BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
 
 protected:
 

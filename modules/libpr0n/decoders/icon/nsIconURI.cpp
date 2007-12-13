@@ -57,6 +57,7 @@ static const char *kSizeStrings[] =
   "toolbar",
   "toolbarsmall",
   "menu",
+  "dnd",
   "dialog"
 };
 

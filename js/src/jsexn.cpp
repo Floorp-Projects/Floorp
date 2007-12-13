@@ -1052,7 +1052,8 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
         /* Make a constructor function for the current name. */
         atom = cx->runtime->atomState.classAtoms[exceptions[i].key];
-        fun = js_DefineFunction(cx, obj, atom, exceptions[i].native, 3, 0);
+        fun = js_DefineFunction(cx, obj, atom, exceptions[i].native, 3,
+                                JSPROP_READONLY | JSPROP_PERMANENT);
         if (!fun)
             break;
 

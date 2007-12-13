@@ -1,0 +1,8 @@
+metrics.jar:
+% content metrics %content/ xpcnativewrappers=no
+% skin    metrics classic/1.0 %skin/
+% locale  metrics en-US %locale/en-US/
+% overlay chrome://browser/content/preferences/privacy.xul chrome://metrics/content/metricsOverlay.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+  content/prefs.xul               (content/prefs.xul)
+  skin/prefs.css                  (skin/prefs.css)
+  locale/en-US/prefs.dtd          (locale/en-US/prefs.dtd)

@@ -175,16 +175,11 @@ filefield[disabled="true"] .fileFieldIcon {
   width: 16px;
   height: 16px;
   margin: 0px 2px;
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
 }
 
 #cookiesChildren::-moz-tree-image(domainCol, container) {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-#cookiesChildren::-moz-tree-image(domainCol, container, open) {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }
 
 #cookieInfoBox {

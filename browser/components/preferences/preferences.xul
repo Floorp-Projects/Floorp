@@ -49,6 +49,7 @@
    - by putting it here instead.
    -->
 <?xml-stylesheet href="chrome://browser/content/preferences/handlers.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
 
 <!DOCTYPE prefwindow [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -82,12 +83,12 @@
 #endif
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 #ifdef USE_WIN_TITLE_STYLE
-            style="&prefWin.styleWin;">
+            style="&prefWin.styleWin2;">
 #else
 #ifdef XP_MACOSX
-            style="&prefWin.styleMac;">
+            style="&prefWin.styleMac2;">
 #else
-            style="&prefWin.styleGNOME;">
+            style="&prefWin.styleGNOME2;">
 #endif
 #endif
 

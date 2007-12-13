@@ -389,9 +389,16 @@ nsresult nsPrefService::ReadAndOwnUserPrefFile(nsIFile *aFile)
   gSharedPrefHandler->ReadingUserPrefs(PR_TRUE);
 #endif
 
-  nsresult rv = openPrefFile(mCurrentFile);
-  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
-    mDontWriteUserPrefs = NS_FAILED(MakeBackupPrefFile(mCurrentFile));
+  nsresult rv = NS_OK;
+  PRBool exists = PR_FALSE;
+  mCurrentFile->Exists(&exists);
+  if (exists) {
+    rv = openPrefFile(mCurrentFile);
+    if (NS_FAILED(rv)) {
+      mDontWriteUserPrefs = NS_FAILED(MakeBackupPrefFile(mCurrentFile));
+    }
+  } else {
+    rv = NS_ERROR_FILE_NOT_FOUND;
   }
 
 #ifdef MOZ_PROFILESHARING

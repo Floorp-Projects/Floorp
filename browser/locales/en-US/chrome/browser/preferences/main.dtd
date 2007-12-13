@@ -30,17 +30,8 @@
 <!ENTITY alwaysAsk.label "Always ask me where to save files">
 <!ENTITY alwaysAsk.accesskey "A">
 
-
-<!ENTITY systemDefaults.label  "System Defaults">
-
-<!ENTITY alwaysCheckDefault.label      "Always check to see if &brandShortName; is the default browser on startup"><!--XXX-->
-<!ENTITY alwaysCheckDefault.accesskey  "y">
-
-<!ENTITY checkNow.label             "Check Now">
-<!ENTITY checkNow.accesskey         "N">
-
-<!ENTITY addonsMgr.label            "Add-ons">
-<!ENTITY manageAddonsDesc.label     "Change options for your add-ons.">
-<!ENTITY manageAddonsDescUnix.label "Change preferences for your add-ons.">
-<!ENTITY manageAddons.label         "Manage Add-ons…">
-<!ENTITY manageAddons.accesskey     "M">
+<!ENTITY addonsMgr.label               "Add-ons">
+<!ENTITY manageAddonsDescWin.label     "Change options for your add-ons">
+<!ENTITY manageAddonsDescUnix2.label   "Change preferences for your add-ons">
+<!ENTITY manageAddons.label            "Manage Add-ons…">
+<!ENTITY manageAddons.accesskey        "M">

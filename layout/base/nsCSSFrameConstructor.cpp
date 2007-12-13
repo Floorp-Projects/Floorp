@@ -10802,8 +10802,12 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   }
 
   //XXXbz Should mInitialContainingBlock be docRootFrame? It probably doesn't matter.
+  // Don't allow abs-pos descendants of the fixed content to escape the content.
+  // This should not normally be possible (because fixed-pos elements should
+  // be absolute containers) but fixed-pos tables currently aren't abs-pos
+  // containers.
   nsFrameConstructorState state(mPresShell, aParentFrame,
-                                mInitialContainingBlock,
+                                nsnull,
                                 mInitialContainingBlock);
 
   // Iterate across fixed frames and replicate each whose placeholder is a
@@ -12066,6 +12070,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
 
         letterFrame->SetInitialChildList(nsnull, textFrame);
         aResult.childList = aResult.lastChild = letterFrame;
+        aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       }
     }
   }
@@ -12356,6 +12361,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       aFrameManager->InsertFrames(aFrame, nsnull, prevSibling, textFrame);
 
       *aStopLooking = PR_TRUE;
+      aFrame->RemoveStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       break;
     }
     else if (IsInlineFrame(kid)) {
