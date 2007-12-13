@@ -119,6 +119,7 @@
 
 <!ENTITY errorConsoleCmd.label        "Error Console">
 <!ENTITY errorConsoleCmd.accesskey    "C">
+<!ENTITY errorConsoleCmd.commandkey   "j">
 
 <!ENTITY fileMenu.label         "File"> 
 <!ENTITY fileMenu.accesskey       "F">
