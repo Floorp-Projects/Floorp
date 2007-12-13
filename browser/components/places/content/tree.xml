@@ -180,6 +180,10 @@
       <method name="selectPlaceURI">
         <parameter name="placeURI"/>
         <body><![CDATA[
+          // Do nothing if a node matching the given uri is already selected
+          if (this.hasSelection && this.selectedNode.uri == placeURI)
+            return;
+
           function findNode(container, placeURI, nodesURIChecked) {
             var containerURI = container.uri;
             if (containerURI == placeURI)
@@ -190,7 +194,9 @@
             // never check the contents of the same query
             nodesURIChecked.push(containerURI);
 
-            container.containerOpen = true;
+            var wasOpen = container.containerOpen;
+            if (!wasOpen)
+              container.containerOpen = true;
             for (var i = 0; i < container.childCount; ++i) {
               var child = container.getChild(i);
               var childURI = child.uri;
@@ -202,29 +208,29 @@
                   return nested;
               }
             }
-            container.containerOpen = false;
+
+            if (!wasOpen)
+              container.containerOpen = false;
 
             return null;
           }
-          
-          var container = this._getRootNode();
+
+          var container = this.getResultNode();
           NS_ASSERT(container, "No result, cannot select place URI!");
           if (!container)
             return;
 
           var child = findNode(container, placeURI, []);
-          container.containerOpen = true;
           if (child)
             this.selectNode(child);
           else {
-            // If the specified child could not be located, just select the first
-            // item in the list. 
-            if (this.view.rowCount)
-              this.view.selection.select(0);
+            // If the specified child could not be located, clear the selection
+            var selection = this.view.selection;
+            selection.clearSelection();
           }
         ]]></body>
       </method>
-      
+
       <!-- 
         Causes a particular node to be selected in the tree, resulting in all 
         containers above the node in the hierarchy to be opened, so that the
@@ -233,34 +239,36 @@
       <method name="selectNode">
         <parameter name="node"/>
         <body><![CDATA[ 
+          var view = this.getResultView();
+
           var parent = node.parent;
-          
-          // Build a list of all of the nodes that are the parent of this one 
-          // in the result. 
-          var parents = [];
-          var root = this._getRootNode();
-          while (parent && parent != root) {
-            parents.push(parent);
-            parent = parent.parent;
+          if (parent && !parent.containerOpen) {
+            // Build a list of all of the nodes that are the parent of this one 
+            // in the result. 
+            var parents = [];
+            var root = this.getResultNode();
+            while (parent && parent != root) {
+              parents.push(parent);
+              parent = parent.parent;
+            }
+
+            // Walk the list backwards (opening from the root of the hierarchy)
+            // opening each folder as we go.
+            for (var i = parents.length - 1; i >= 0; --i) {
+              var index = view.treeIndexForNode(parents[i]);
+              if (view.isContainer(index) && !view.isContainerOpen(index)) 
+                view.toggleOpenState(index);
+            }
+            // Select the specified node...
           }
-          
-          // Walk the list backwards (opening from the root of the hierarchy)
-          // opening each folder as we go.
-          var resultview = this.getResultView();
-          var view = this.view;
-          for (var i = parents.length - 1; i >= 0; --i) {
-            var index = resultview.treeIndexForNode(parents[i]);
-            if (view.isContainer(index) && !view.isContainerOpen(index)) 
-              view.toggleOpenState(index);
-          }
-          // Select the specified node...
-          index = resultview.treeIndexForNode(node);
+
+          var index = view.treeIndexForNode(node);
           view.selection.select(index);
           // ... and ensure it's visible, not scrolled off somewhere. 
           this.treeBoxObject.ensureRowIsVisible(index);
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <method name="getResult">
         <body><![CDATA[
