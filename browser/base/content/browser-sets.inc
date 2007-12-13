@@ -202,6 +202,7 @@
 #else
     <key id="key_openDownloads" key="&downloads.commandkey;" command="Tools:Downloads" modifiers="accel"/>
 #endif
+    <key id="key_errorConsole" key="&errorConsoleCmd.commandkey;" oncommand="toJavaScriptConsole();" modifiers="accel,shift"/>
     <key id="openFileKb" key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage" key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb" key="&printCmd.commandkey;" command="cmd_print"  modifiers="accel"/>
