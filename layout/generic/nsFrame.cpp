@@ -2817,6 +2817,7 @@ nsIFrame::InlineMinWidthData::ForceBreak(nsIRenderingContext *aRenderingContext)
   }
   floats.Clear();
   trailingTextFrame = nsnull;
+  skipWhitespace = PR_TRUE;
 }
 
 void
@@ -2880,6 +2881,7 @@ nsIFrame::InlinePrefWidthData::ForceBreak(nsIRenderingContext *aRenderingContext
   currentLine = NSCoordSaturatingSubtract(currentLine, trailingWhitespace, nscoord_MAX);
   prevLines = PR_MAX(prevLines, currentLine);
   currentLine = trailingWhitespace = 0;
+  skipWhitespace = PR_TRUE;
 }
 
 static void

@@ -117,10 +117,11 @@ function SignonSelected() {
 }
 
 function DeleteSignon() {
+  syncNeeded = (signonsTreeView._filterSet.length != 0);
   DeleteSelectedItemFromTree(signonsTree, signonsTreeView,
                              signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
                              deletedSignons, "removeSignon", "removeAllSignons");
-  FinalizeSignonDeletions();
+  FinalizeSignonDeletions(syncNeeded);
 }
 
 function DeleteAllSignons() {
@@ -136,10 +137,11 @@ function DeleteAllSignons() {
                          null, null, null, null, dummy) == 1) // 1 == "No" button
     return;
 
+  syncNeeded = (signonsTreeView._filterSet.length != 0);
   DeleteAllFromTree(signonsTree, signonsTreeView,
                         signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
                         deletedSignons, "removeSignon", "removeAllSignons");
-  FinalizeSignonDeletions();
+  FinalizeSignonDeletions(syncNeeded);
 }
 
 function TogglePasswordVisible() {
@@ -186,10 +188,14 @@ function ConfirmShowPasswords() {
   return token.isLoggedIn();
 }
 
-function FinalizeSignonDeletions() {
+function FinalizeSignonDeletions(syncNeeded) {
   for (var s=0; s<deletedSignons.length; s++) {
     passwordmanager.removeLogin(deletedSignons[s]);
   }
+  // If the deletion has been performed in a filtered view, reflect the deletion in the unfiltered table.
+  // See bug 405389.
+  if (syncNeeded)
+    signons = passwordmanager.getAllLogins({});
   deletedSignons.length = 0;
 }
 

@@ -494,7 +494,8 @@ array_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
 JSClass js_ArrayClass = {
     "Array",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
+    JSCLASS_FIXED_BINDING,
     array_addProperty, JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,  JS_ResolveStub,    array_convert,     JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS

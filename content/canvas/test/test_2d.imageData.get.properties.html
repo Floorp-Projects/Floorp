@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.imageData.get.properties</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+var imgdata = ctx.getImageData(0, 0, 100, 50);
+ok(typeof(imgdata.width) == 'number', "typeof(imgdata.width) == 'number'");
+ok(typeof(imgdata.height) == 'number', "typeof(imgdata.height) == 'number'");
+ok(typeof(imgdata.data) == 'object', "typeof(imgdata.data) == 'object'");
+ok(imgdata.data.length === imgdata.width*imgdata.height*4, "imgdata.data.length === imgdata.width*imgdata.height*4");
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+

@@ -1106,7 +1106,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetDescription(nsAString& aDescription)
 {
   aDescription.Truncate();
   // First check to see if combo box itself has a description, perhaps through
-  // tooltip (title attribute) or via aaa:describedby
+  // tooltip (title attribute) or via aria-describedby
   nsAccessible::GetDescription(aDescription);
   if (!aDescription.IsEmpty()) {
     return NS_OK;

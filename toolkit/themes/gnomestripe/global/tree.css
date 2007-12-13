@@ -349,16 +349,11 @@ treechildren::-moz-tree-image(Name) {
 
 treechildren::-moz-tree-image(Name) {
   margin: 0px 2px;
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("moz-icon://stock/gtk-file?size=menu");
 }
 
 treechildren::-moz-tree-image(Name, container) {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-treechildren::-moz-tree-image(Name, open) {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }
 
 treechildren::-moz-tree-image(Name, separator) {

@@ -389,16 +389,16 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
   // keep track of all added menus
   mMenusArray.AppendObject(aMenu); // owner
   
-  NSMenu* menuRef = NULL;
-  aMenu->GetNativeData((void**)&menuRef);
+  NSMenu* nativeMenu = NULL;
+  aMenu->GetNativeData((void**)&nativeMenu);
   
   nsCOMPtr<nsIContent> menu;
   aMenu->GetMenuContent(getter_AddRefs(menu));
   if (menu->GetChildCount() > 0 &&
       !NodeIsHiddenOrCollapsed(menu)) {
-    NSMenuItem* newMenuItem = [[[NSMenuItem alloc] initWithTitle:@"SomeMenuItem" action:NULL keyEquivalent:@""] autorelease];
+    NSMenuItem* newMenuItem = [[[NSMenuItem alloc] initWithTitle:[nativeMenu title] action:NULL keyEquivalent:@""] autorelease];
     [mRootMenu addItem:newMenuItem];
-    [newMenuItem setSubmenu:menuRef];
+    [newMenuItem setSubmenu:nativeMenu];
   }
   
   return NS_OK;

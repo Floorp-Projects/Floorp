@@ -262,9 +262,9 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   const nsMargin& bp = aReflowState.mComputedBorderPadding;
   nscoord lr = bp.left + bp.right;
   nscoord tb = bp.top + bp.bottom;
-  if (NS_UNCONSTRAINEDSIZE != availSize.width) {
-    availSize.width -= lr;
-  }
+  NS_ASSERTION(availSize.width != NS_UNCONSTRAINEDSIZE,
+               "should no longer use unconstrained widths");
+  availSize.width -= lr;
   if (NS_UNCONSTRAINEDSIZE != availSize.height) {
     availSize.height -= tb;
   }
@@ -276,7 +276,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     // line context is when its floating.
     nsHTMLReflowState rs(aPresContext, aReflowState, kid, availSize);
     nsLineLayout ll(aPresContext, nsnull, &aReflowState, nsnull);
-    ll.BeginLineReflow(0, 0, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE,
+    ll.BeginLineReflow(bp.left, bp.top, availSize.width, NS_UNCONSTRAINEDSIZE,
                        PR_FALSE, PR_TRUE);
     rs.mLineLayout = &ll;
     ll.SetFirstLetterStyleOK(PR_TRUE);
@@ -293,8 +293,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
 
     ll->BeginSpan(this, &aReflowState, bp.left, availSize.width);
     ll->ReflowFrame(kid, aReflowStatus, &aMetrics, pushedFrame);
-    nsSize size;
-    ll->EndSpan(this, size);
+    ll->EndSpan(this);
   }
 
   // Place and size the child and update the output metrics

@@ -1270,13 +1270,16 @@ void
 nsXULPopupManager::UpdateKeyboardListeners()
 {
   nsCOMPtr<nsIDOMEventTarget> newTarget;
+  PRBool isForMenu = PR_FALSE;
   nsMenuChainItem* item = GetTopVisibleMenu();
   if (item) {
     if (!item->IgnoreKeys())
       newTarget = do_QueryInterface(item->Content()->GetDocument());
+    isForMenu = item->PopupType() == ePopupTypeMenu;
   }
   else if (mActiveMenuBar) {
     newTarget = do_QueryInterface(mActiveMenuBar->GetContent()->GetDocument());
+    isForMenu = PR_TRUE;
   }
 
   if (mKeyListener != newTarget) {
@@ -1292,7 +1295,7 @@ nsXULPopupManager::UpdateKeyboardListeners()
       newTarget->AddEventListener(NS_LITERAL_STRING("keypress"), this, PR_TRUE);
       newTarget->AddEventListener(NS_LITERAL_STRING("keydown"), this, PR_TRUE);
       newTarget->AddEventListener(NS_LITERAL_STRING("keyup"), this, PR_TRUE);
-      nsContentUtils::NotifyInstalledMenuKeyboardListener(PR_TRUE);
+      nsContentUtils::NotifyInstalledMenuKeyboardListener(isForMenu);
       mKeyListener = newTarget;
     }
   }

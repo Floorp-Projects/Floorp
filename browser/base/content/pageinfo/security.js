@@ -135,11 +135,17 @@ var security = {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
     var win = wm.getMostRecentWindow("Browser:Cookies");
-    if (win)
+    var eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
+                      getService(Ci.nsIEffectiveTLDService);
+    var eTLD = eTLDService.getBaseDomainFromHost(this._getSecurityInfo()
+                                                     .hostName);
+    if (win) {
+      win.gCookiesWindow.setFilter(eTLD);
       win.focus();
+    }
     else
       window.openDialog("chrome://browser/content/preferences/cookies.xul",
-                        "Browser:Cookies", "");
+                        "Browser:Cookies", "", {filterString : eTLD});
   },
   
   /**

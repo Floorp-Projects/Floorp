@@ -492,7 +492,7 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
       nsCOMPtr<nsIContent> formContent(do_QueryInterface(form));
       if (formContent) {
         formContent->GetAttr(kNameSpaceID_None,
-                     nsAccessibilityAtoms::autocomplete, autocomplete);
+                             nsAccessibilityAtoms::autocomplete, autocomplete);
       }
 
       if (!formContent || !autocomplete.LowerCaseEqualsLiteral("off"))

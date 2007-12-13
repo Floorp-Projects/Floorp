@@ -425,7 +425,12 @@ STDMETHODIMP
 CAccessibleTable::get_summary(IUnknown **aAccessible)
 {
   *aAccessible = NULL;
-  return E_NOTIMPL;
+
+  // Neither html:table nor xul:tree nor ARIA grid/tree have an ability to
+  // link an accessible object to specify a summary. There is closes method
+  // in nsIAccessibleTable::summary to get a summary as a string which is not
+  // mapped directly to IAccessible2.
+  return S_OK;
 }
 
 STDMETHODIMP

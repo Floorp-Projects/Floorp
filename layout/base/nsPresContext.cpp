@@ -739,14 +739,19 @@ void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
   if (!nsCRT::strcmp(aPrefName, "layout.css.dpi")) {
-    nsRect bounds(mVisibleArea);
-    bounds *= 1.0f / AppUnitsPerDevPixel();
+    // Re-fetch the view manager's window dimensions in case there's a deferred
+    // resize which hasn't affected our mVisibleArea yet
+    nscoord oldWidthAppUnits, oldHeightAppUnits;
+    nsIViewManager* vm = GetViewManager();
+    vm->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
+    float oldWidthDevPixels = oldWidthAppUnits/AppUnitsPerDevPixel();
+    float oldHeightDevPixels = oldHeightAppUnits/AppUnitsPerDevPixel();
+
     if (mDeviceContext->CheckDPIChange() && mShell) {
       mDeviceContext->FlushFontCache();
 
-      nsIViewManager* vm = GetViewManager();
-      nscoord width = DevPixelsToAppUnits(bounds.width);
-      nscoord height = DevPixelsToAppUnits(bounds.height);
+      nscoord width = NSToCoordRound(oldWidthDevPixels*AppUnitsPerDevPixel());
+      nscoord height = NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel());
       vm->SetWindowDimensions(width, height);
 
       ClearStyleDataAndReflow();
@@ -1156,13 +1161,18 @@ nsPresContext::SetFullZoom(float aZoom)
   if (!mShell || mFullZoom == aZoom) {
     return;
   }
-  float oldWidth = mVisibleArea.width / float(mCurAppUnitsPerDevPixel);
-  float oldHeight = mVisibleArea.height / float(mCurAppUnitsPerDevPixel);
+  // Re-fetch the view manager's window dimensions in case there's a deferred
+  // resize which hasn't affected our mVisibleArea yet
+  nscoord oldWidthAppUnits, oldHeightAppUnits;
+  GetViewManager()->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
+  float oldWidthDevPixels = oldWidthAppUnits / float(mCurAppUnitsPerDevPixel);
+  float oldHeightDevPixels = oldHeightAppUnits / float(mCurAppUnitsPerDevPixel);
   if (mDeviceContext->SetPixelScale(aZoom)) {
     mDeviceContext->FlushFontCache();
   }
   mFullZoom = aZoom;
-  GetViewManager()->SetWindowDimensions(oldWidth * AppUnitsPerDevPixel(), oldHeight * AppUnitsPerDevPixel());
+  GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels*AppUnitsPerDevPixel()),
+                                        NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel()));
   ClearStyleDataAndReflow();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }

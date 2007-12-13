@@ -1512,10 +1512,18 @@ nsStyleTextReset::~nsStyleTextReset(void) { }
 
 nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) const
 {
-  if (mVerticalAlign == aOther.mVerticalAlign &&
-      mUnicodeBidi == aOther.mUnicodeBidi &&
-      mTextDecoration == aOther.mTextDecoration)
+  if (mVerticalAlign == aOther.mVerticalAlign
+      && mUnicodeBidi == aOther.mUnicodeBidi) {
+    if (mTextDecoration != aOther.mTextDecoration) {
+      // Reflow for blink changes, repaint for others
+      return
+        (mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK) ==
+        (aOther.mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK) ?
+          NS_STYLE_HINT_VISUAL : NS_STYLE_HINT_REFLOW;
+    }
+    
     return NS_STYLE_HINT_NONE;
+  }
   return NS_STYLE_HINT_REFLOW;
 }
 

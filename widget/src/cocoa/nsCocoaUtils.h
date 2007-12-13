@@ -45,24 +45,43 @@
 
 #include "nsRect.h"
 
-//
-// Returns the given y coordinate, which must be in screen coordinates,
-// flipped from Gecko to Cocoa or Cocoa to Gecko.
-//
-float FlippedScreenY(float y);
+class nsCocoaUtils
+{
+  public:
+  // Returns the height of the primary screen (the one with the menu bar, which
+  // is documented to be the first in the |screens| array).
+  static float MenuBarScreenHeight();
 
-/*
- * Gecko rects (nsRect) contain an origin (x,y) in a coordinate
- * system with (0,0) in the top-left of the primary screen. Cocoa rects
- * (NSRect) contain an origin (x,y) in a coordinate system with (0,0)
- * in the bottom-left of the primary screen. Both nsRect and NSRect
- * contain width/height info, with no difference in their use.
- */
-NSRect geckoRectToCocoaRect(const nsRect &geckoRect);
-
-//
-// See explanation for geckoRectToCocoaRect, guess what this does...
-//
-nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect);
+  // Returns the given y coordinate, which must be in screen coordinates,
+  // flipped from Gecko to Cocoa or Cocoa to Gecko.
+  static float FlippedScreenY(float y);
+  
+  // Gecko rects (nsRect) contain an origin (x,y) in a coordinate
+  // system with (0,0) in the top-left of the primary screen. Cocoa rects
+  // (NSRect) contain an origin (x,y) in a coordinate system with (0,0)
+  // in the bottom-left of the primary screen. Both nsRect and NSRect
+  // contain width/height info, with no difference in their use.
+  static NSRect GeckoRectToCocoaRect(const nsRect &geckoRect);
+  
+  // See explanation for geckoRectToCocoaRect, guess what this does...
+  static nsRect CocoaRectToGeckoRect(const NSRect &cocoaRect);
+  
+  // Gives the location for the event in screen coordinates. Do not call this
+  // unless the window the event was originally targeted at is still alive!
+  static NSPoint ScreenLocationForEvent(NSEvent* anEvent);
+  
+  // Determines if an event happened over a window, whether or not the event
+  // is for the window. Does not take window z-order into account.
+  static BOOL IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow);
+  
+  // Events are set up so that their coordinates refer to the window to which they
+  // were originally sent. If we reroute the event somewhere else, we'll have
+  // to get the window coordinates this way. Do not call this unless the window
+  // the event was originally targeted at is still alive!
+  static NSPoint EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow);
+  
+  // Finds the foremost window that is under the mouse for the current application.
+  static NSWindow* FindWindowUnderPoint(NSPoint aPoint);  
+};
 
 #endif // nsCocoaUtils_h_

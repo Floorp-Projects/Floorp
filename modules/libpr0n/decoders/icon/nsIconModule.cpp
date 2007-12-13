@@ -119,7 +119,7 @@ IconDecoderModuleCtor(nsIModule* aSelf)
 PR_STATIC_CALLBACK(void)
 IconDecoderModuleDtor(nsIModule* aSelf)
 {
-#ifdef MOZ_ENABLE_GNOMEUI
+#ifdef MOZ_WIDGET_GTK2
   nsIconChannel::Shutdown();
 #endif
 }

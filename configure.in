@@ -5476,7 +5476,7 @@ case "$MOZ_WIDGET_TOOLKIT" in
 beos|windows|os2|mac|cocoa)
     ;;
 *)
-    if test -z "$MOZ_ENABLE_GNOMEUI"; then
+    if test -z "$MOZ_ENABLE_GTK2"; then
        MOZ_IMG_DECODERS_DEFAULT=`echo $MOZ_IMG_DECODERS_DEFAULT | sed -e 's|icon||'`                
     fi
     ;;
@@ -6964,6 +6964,7 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
        if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
            OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
            FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+           PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
            MOZ_ENABLE_CAIRO_FT=1
            CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
            CAIRO_FT_LIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"

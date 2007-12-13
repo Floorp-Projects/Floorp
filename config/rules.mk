@@ -2173,11 +2173,3 @@ documentation:
 check:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_TOOL_DIRS)
-
-check-interactive:: $(SUBMAKEFILES) $(MAKE_DIRS)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)
-
-check-one:: $(SUBMAKEFILES) $(MAKE_DIRS)
-	+$(LOOP_OVER_DIRS)
-	+$(LOOP_OVER_TOOL_DIRS)

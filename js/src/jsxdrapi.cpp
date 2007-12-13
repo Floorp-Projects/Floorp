@@ -644,8 +644,8 @@ js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
     uint32 nchars;
     JSAtom *atom;
     JSContext *cx;
-    void *mark;
     jschar *chars;
+    jschar stackChars[256];
 
     if (xdr->mode == JSXDR_ENCODE) {
         JS_ASSERT(ATOM_IS_STRING(*atomp));
@@ -661,14 +661,23 @@ js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
         return JS_FALSE;
     atom = NULL;
     cx = xdr->cx;
-    mark = JS_ARENA_MARK(&cx->tempPool);
-    JS_ARENA_ALLOCATE_CAST(chars, jschar *, &cx->tempPool,
-                           nchars * sizeof(jschar));
-    if (!chars)
-        js_ReportOutOfScriptQuota(cx);
-    else if (XDRChars(xdr, chars, nchars))
+    if (nchars <= JS_ARRAY_LENGTH(stackChars)) {
+        chars = stackChars;
+    } else {
+        /*
+         * This is very uncommon. Don't use the tempPool arena for this as
+         * most allocations here will be bigger than tempPool's arenasize.
+         */
+        chars = (jschar *) JS_malloc(cx, nchars * sizeof(jschar));
+        if (!chars)
+            return JS_FALSE;
+    }
+
+    if (XDRChars(xdr, chars, nchars))
         atom = js_AtomizeChars(cx, chars, nchars, 0);
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
+    if (chars != stackChars)
+        JS_free(cx, chars);
+
     if (!atom)
         return JS_FALSE;
     *atomp = atom;

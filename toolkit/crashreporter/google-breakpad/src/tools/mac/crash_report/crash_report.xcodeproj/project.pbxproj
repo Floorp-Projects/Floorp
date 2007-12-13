@@ -43,6 +43,7 @@
 		9BE650B50B52FE3000611104 /* macho_id.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9BE650AF0B52FE3000611104 /* macho_id.h */; };
 		9BE650B60B52FE3000611104 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BE650B00B52FE3000611104 /* macho_walker.cc */; };
 		9BE650B70B52FE3000611104 /* macho_walker.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9BE650B10B52FE3000611104 /* macho_walker.h */; };
+		FD6625CD0CF4D45C004AC844 /* stackwalker_amd64.cc in Sources */ = {isa = PBXBuildFile; fileRef = FD6625C40CF4D438004AC844 /* stackwalker_amd64.cc */; };
 		FD8EDEAE0CADDAD400A5EDF1 /* stackwalker_sparc.cc in Sources */ = {isa = PBXBuildFile; fileRef = FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */; };
 		FD8EDEAF0CADDAD400A5EDF1 /* stackwalker_sparc.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */; };
 /* End PBXBuildFile section */
@@ -126,6 +127,8 @@
 		9BE650AF0B52FE3000611104 /* macho_id.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_id.h; path = ../../../common/mac/macho_id.h; sourceTree = SOURCE_ROOT; };
 		9BE650B00B52FE3000611104 /* macho_walker.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_walker.cc; path = ../../../common/mac/macho_walker.cc; sourceTree = SOURCE_ROOT; };
 		9BE650B10B52FE3000611104 /* macho_walker.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_walker.h; path = ../../../common/mac/macho_walker.h; sourceTree = SOURCE_ROOT; };
+		FD6625C40CF4D438004AC844 /* stackwalker_amd64.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackwalker_amd64.cc; path = ../../../processor/stackwalker_amd64.cc; sourceTree = SOURCE_ROOT; };
+		FD6625C50CF4D438004AC844 /* stackwalker_amd64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stackwalker_amd64.h; path = ../../../processor/stackwalker_amd64.h; sourceTree = SOURCE_ROOT; };
 		FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = stackwalker_sparc.cc; path = ../../../processor/stackwalker_sparc.cc; sourceTree = SOURCE_ROOT; };
 		FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = stackwalker_sparc.h; path = ../../../processor/stackwalker_sparc.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -247,6 +250,8 @@
 				9BDF17520B1B8BF900F8391B /* stackwalker_x86.cc */,
 				FD8EDEAC0CADDAD400A5EDF1 /* stackwalker_sparc.cc */,
 				FD8EDEAD0CADDAD400A5EDF1 /* stackwalker_sparc.h */,
+				FD6625C40CF4D438004AC844 /* stackwalker_amd64.cc */,
+				FD6625C50CF4D438004AC844 /* stackwalker_amd64.h */,
 			);
 			name = processor;
 			sourceTree = "<group>";
@@ -291,9 +296,11 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 1DEB927808733DD40010E9CD /* Build configuration list for PBXProject "crash_report" */;
+			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* crash_report */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				8DD76F960486AA7600D96B5E /* crash_report */,
 			);
@@ -324,6 +331,7 @@
 				557800400BE1F28500EC23E0 /* macho_utilities.cc in Sources */,
 				8B40BDC00C0638E4009535AF /* logging.cc in Sources */,
 				FD8EDEAE0CADDAD400A5EDF1 /* stackwalker_sparc.cc in Sources */,
+				FD6625CD0CF4D45C004AC844 /* stackwalker_amd64.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

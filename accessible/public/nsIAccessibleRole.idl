@@ -61,7 +61,7 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Represents the menu bar (positioned beneath the title bar of a window)
    * from which menus are selected by the user. The role is used by
-   * xul:menubar or role="wairole:menubar".
+   * xul:menubar or role="menubar".
    */
   const unsigned long ROLE_MENUBAR = 2;
 
@@ -98,7 +98,7 @@ interface nsIAccessibleRole : nsISupports
    * Assistive Technologies typically respond to the role by reading the entire
    * onscreen contents of containers advertising this role. Should be used for
    * warning dialogs, etc. The role is used by xul:browsermessage,
-   * role="wairole:alert", xforms:message.
+   * role="alert", xforms:message.
    */
   const unsigned long ROLE_ALERT = 8;
 
@@ -116,14 +116,14 @@ interface nsIAccessibleRole : nsISupports
 
   /**
    * Represents a menu, which presents a list of options from which the user can
-   * make a selection to perform an action. It is used for role="wairole:menu".
+   * make a selection to perform an action. It is used for role="menu".
    */
   const unsigned long ROLE_MENUPOPUP = 11;
 
   /**
    * Represents a menu item, which is an entry in a menu that a user can choose
    * to carry out a command, select an option. It is used for xul:menuitem,
-   * role="wairole:menuitem".
+   * role="menuitem".
    */
   const unsigned long ROLE_MENUITEM = 12;
 
@@ -134,13 +134,13 @@ interface nsIAccessibleRole : nsISupports
 
   /**
    * Represents a main window for an application. It is used for
-   * role="wairole:application". Also refer to ROLE_APP_ROOT
+   * role="application". Also refer to ROLE_APP_ROOT
    */
   const unsigned long ROLE_APPLICATION = 14;
 
   /**
    * Represents a document window. A document window is always contained within
-   * an application window. It is used for role="wairole:document".
+   * an application window. It is used for role="document".
    */
   const unsigned long ROLE_DOCUMENT = 15;
 
@@ -160,7 +160,7 @@ interface nsIAccessibleRole : nsISupports
 
   /**
    * Represents a dialog box or message box. It is used for xul:dialog, 
-   * role="wairole:dialog".
+   * role="dialog".
    */
   const unsigned long ROLE_DIALOG = 18;
 
@@ -172,21 +172,21 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Logically groups other objects. There is not always a parent-child
    * relationship between the grouping object and the objects it contains. It
-   * is used for html:textfield, xul:groupbox, role="wairole:group".
+   * is used for html:textfield, xul:groupbox, role="group".
    */
   const unsigned long ROLE_GROUPING = 20;
 
   /**
    * Used to visually divide a space into two regions, such as a separator menu
    * item or a bar that divides split panes within a window. It is used for
-   * xul:separator, html:hr, role="wairole:separator".
+   * xul:separator, html:hr, role="separator".
    */
   const unsigned long ROLE_SEPARATOR = 21;
 
   /**
    * Represents a toolbar, which is a grouping of controls (push buttons or
    * toggle buttons) that provides easy access to frequently used features. It
-   * is used for xul:toolbar, role="wairole:toolbar".
+   * is used for xul:toolbar, role="toolbar".
    */
   const unsigned long ROLE_TOOLBAR = 22;
 
@@ -201,7 +201,7 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Represents a table that contains rows and columns of cells, and optionally,
    * row headers and column headers. It is used for html:table,
-   * role="wairole:grid". Also refer to the following roles: ROLE_COLUMNHEADER,
+   * role="grid". Also refer to the following roles: ROLE_COLUMNHEADER,
    * ROLE_ROWHEADER, ROLE_COLUMN, ROLE_ROW, ROLE_CELL.
    */
   const unsigned long ROLE_TABLE = 24;
@@ -209,13 +209,13 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Represents a column header, providing a visual label for a column in
    * a table. It is used for XUL tree column headers, html:th,
-   * role="wairole:colheader". Also refer to ROLE_TABLE.
+   * role="colheader". Also refer to ROLE_TABLE.
    */
   const unsigned long ROLE_COLUMNHEADER = 25;
 
   /**
    * Represents a row header, which provides a visual label for a table row.
-   * It is used for role="wairole:rowheader". Also, see ROLE_TABLE.
+   * It is used for role="rowheader". Also, see ROLE_TABLE.
    */
   const unsigned long ROLE_ROWHEADER = 26;
 
@@ -231,7 +231,7 @@ interface nsIAccessibleRole : nsISupports
 
   /**
    * Represents a cell within a table. Is is used for html:td,
-   * role="wairole:gridcell". Also, see ROLE_TABLE.
+   * role="gridcell". Also, see ROLE_TABLE.
    */
   const unsigned long ROLE_CELL = 29;
 
@@ -256,7 +256,7 @@ interface nsIAccessibleRole : nsISupports
 
   /**
    * Represents a list box, allowing the user to select one or more items. It
-   * is used for xul:listbox, html:select@size, role="wairole:list". See also
+   * is used for xul:listbox, html:select@size, role="list". See also
    * ROLE_LIST_ITEM.
    */
   const unsigned long ROLE_LIST = 33;
@@ -269,25 +269,25 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Represents an outline or tree structure, such as a tree view control,
    * that displays a hierarchical list and allows the user to expand and
-   * collapse branches. Is is used for role="wairole:tree".
+   * collapse branches. Is is used for role="tree".
    */
   const unsigned long ROLE_OUTLINE = 35;
 
   /**
    * Represents an item in an outline or tree structure. It is used for
-   * role="wairole:treeitem".
+   * role="treeitem".
    */
   const unsigned long ROLE_OUTLINEITEM = 36;
 
   /**
    * Represents a page tab, it is a child of a page tab list. It is used for
-   * xul:tab, role="wairole:treeitem". Also refer to ROLE_PAGETABLIST.
+   * xul:tab, role="treeitem". Also refer to ROLE_PAGETABLIST.
    */
   const unsigned long ROLE_PAGETAB = 37;
 
   /**
    * Represents a property sheet. It is used for xul:tabpanel,
-   * role="wairole:tabpanel".
+   * role="tabpanel".
    */
   const unsigned long ROLE_PROPERTYPAGE = 38;
 
@@ -306,7 +306,7 @@ interface nsIAccessibleRole : nsISupports
    * Represents read-only text, such as labels for other controls or
    * instructions in a dialog box. Static text cannot be modified or selected.
    * Is is used for xul:label, xul:description, html:lablel,
-   * role="wairole:label" or role="wairole:description", xforms:output.
+   * role="label" or role="description", xforms:output.
    */
   const unsigned long ROLE_STATICTEXT = 41;
 
@@ -317,13 +317,13 @@ interface nsIAccessibleRole : nsISupports
 
   /**
    * Represents a push button control. It is used for xul:button, html:button,
-   * role="wairole:button", xforms:trigger, xforms:submit.
+   * role="button", xforms:trigger, xforms:submit.
    */
   const unsigned long ROLE_PUSHBUTTON = 43;
 
   /**
    * Represents a check box control. It is used for xul:checkbox,
-   * html:input@type="checkbox", role="wairole:checkbox", boolean xforms:input.
+   * html:input@type="checkbox", role="checkbox", boolean xforms:input.
    */
   const unsigned long ROLE_CHECKBUTTON = 44;
 
@@ -332,14 +332,14 @@ interface nsIAccessibleRole : nsISupports
    * group of mutually exclusive options. All objects sharing a single parent
    * that have this attribute are assumed to be part of single mutually
    * exclusive group. It is used for xul:radio, html:input@type="radio",
-   * role="wairole:radio".
+   * role="radio".
    */
   const unsigned long ROLE_RADIOBUTTON = 45;
 
   /**
    * Represents a combo box; an edit control with an associated list box that
    * provides a set of predefined choices. It is used for html:select,
-   * xul:menulist, role="wairole:combobox".
+   * xul:menulist, role="combobox".
    */
   const unsigned long ROLE_COMBOBOX = 46;
 
@@ -351,7 +351,7 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Represents a progress bar, dynamically showing the user the percent
    * complete of an operation in progress. It is used for xul:progressmeter,
-   * role="wairole:progressbar".
+   * role="progressbar".
    */
   const unsigned long ROLE_PROGRESSBAR = 48;
 
@@ -369,7 +369,7 @@ interface nsIAccessibleRole : nsISupports
   /**
    * Represents a slider, which allows the user to adjust a setting in given
    * increments between minimum and maximum values. It is used by xul:scale,
-   * role="wairole:slider", xforms:range.
+   * role="slider", xforms:range.
    */
   const unsigned long ROLE_SLIDER = 51;
 
@@ -418,7 +418,7 @@ interface nsIAccessibleRole : nsISupports
 
   /**
    * Represents a container of page tab controls. Is it used for xul:tabs,
-   * DHTML: role="wairole:tabs". Also refer to ROLE_PAGETAB.
+   * DHTML: role="tabs". Also refer to ROLE_PAGETAB.
    */
   const unsigned long ROLE_PAGETABLIST = 60;
 

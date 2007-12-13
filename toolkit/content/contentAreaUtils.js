@@ -73,6 +73,9 @@ function urlSecurityCheck(aURL, aPrincipal, aFlags)
   }
 }
 
+/**
+ * Determine whether or not a given focused DOMWindow is in the content area.
+ **/
 function isContentFrame(aFocusedWindow)
 {
   if (!aFocusedWindow)
@@ -81,10 +84,6 @@ function isContentFrame(aFocusedWindow)
   return (aFocusedWindow.top == window.content);
 }
 
-
-const kSaveAsType_Complete = 0;   // Save document with attached objects
-// const kSaveAsType_URL = 1;     // Save document or URL by itself
-const kSaveAsType_Text = 2;       // Save document, converting to plain text. 
 
 // Clientelle: (Make sure you don't break any of these)
 //  - File    ->  Save Page/Frame As...
@@ -100,7 +99,7 @@ const kSaveAsType_Text = 2;       // Save document, converting to plain text.
 // - An image with an extension (e.g. .jpg) in its file name, using
 //   Context->Save Image As...
 // - An image without an extension (e.g. a banner ad on cnn.com) using
-//   the above method. 
+//   the above method.
 // - A linked document using Save Link As...
 // - A linked document using Alt-click Save Link As...
 //
@@ -213,6 +212,10 @@ DownloadListener.prototype = {
   }
 }
 
+const kSaveAsType_Complete = 0; // Save document with attached objects.
+// const kSaveAsType_URL      = 1; // Save document or URL by itself.
+const kSaveAsType_Text     = 2; // Save document, converting to plain text.
+
 /**
  * internalSave: Used when saving a document or URL. This method:
  *  - Determines a local target filename to use (unless parameter
@@ -305,7 +308,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     source      : source,
     contentType : (!aChosenData && useSaveDocument &&
                    saveAsType == kSaveAsType_Text) ?
-                   "text/plain" : null,
+                  "text/plain" : null,
     target      : fileURL,
     postData    : isDocument ? getPostData() : null,
     bypassCache : aShouldBypassCache
@@ -635,14 +638,13 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
   aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
 }
 
-
 function getPostData()
 {
   try {
     var sessionHistory = getWebNavigation().sessionHistory;
-    var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
-    entry = entry.QueryInterface(Components.interfaces.nsISHEntry);
-    return entry.postData;
+    return sessionHistory.getEntryAtIndex(sessionHistory.index, false)
+                         .QueryInterface(Components.interfaces.nsISHEntry)
+                         .postData;
   }
   catch (e) {
   }
@@ -652,16 +654,16 @@ function getPostData()
 function getStringBundle()
 {
   const bundleURL = "chrome://global/locale/contentAreaCommands.properties";
-  
+
   const sbsContractID = "@mozilla.org/intl/stringbundle;1";
   const sbsIID = Components.interfaces.nsIStringBundleService;
   const sbs = Components.classes[sbsContractID].getService(sbsIID);
-  
+
   const lsContractID = "@mozilla.org/intl/nslocaleservice;1";
   const lsIID = Components.interfaces.nsILocaleService;
   const ls = Components.classes[lsContractID].getService(lsIID);
   var appLocale = ls.getApplicationLocale();
-  return sbs.createBundle(bundleURL, appLocale);    
+  return sbs.createBundle(bundleURL, appLocale);
 }
 
 function makeWebBrowserPersist()
@@ -671,6 +673,13 @@ function makeWebBrowserPersist()
   return Components.classes[persistContractID].createInstance(persistIID);
 }
 
+/**
+ * Constructs a new URI, using nsIIOService.
+ * @param aURL The URI spec.
+ * @param aOriginCharset The charset of the URI.
+ * @param aBaseURI Base URI to resolve aURL, or null.
+ * @return an nsIURI object based on aURL.
+ */
 function makeURI(aURL, aOriginCharset, aBaseURI)
 {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
@@ -709,7 +718,7 @@ function getFileBaseName(aFileName, aFileExt)
 
 function getMIMETypeForURI(aURI)
 {
-  try {  
+  try {
     return getMIMEService().getTypeFromURI(aURI);
   }
   catch (e) {
@@ -831,7 +840,7 @@ function getNormalizedLeafName(aFile, aDefaultExtension)
 
   // Remove leading dots
   aFile = aFile.replace(/^\.+/, "");
-      
+
   // Fix up the file name we're saving to to include the default extension
   var i = aFile.lastIndexOf(".");
   if (aFile.substr(i + 1) != aDefaultExtension)
@@ -855,12 +864,12 @@ function getDefaultExtension(aFilename, aURI, aContentType)
 
   // This mirrors some code in nsExternalHelperAppService::DoContent
   // Use the filename first and then the URI if that fails
-  
+
   var mimeInfo = getMIMEInfoForType(aContentType, ext);
 
   if (ext && mimeInfo && mimeInfo.extensionExists(ext))
     return ext;
-  
+
   // Well, that failed.  Now try the extension from the URI
   var urlext;
   try {

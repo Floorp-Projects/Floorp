@@ -1290,8 +1290,19 @@ nsAutoCompleteController::ClearResults()
   mRowCount = 0;
   mResults->Clear();
   mMatchCounts.Clear();
-  if (oldRowCount != 0 && mTree)
-    mTree->RowCountChanged(0, -oldRowCount);
+  if (oldRowCount != 0) {
+    if (mTree)
+      mTree->RowCountChanged(0, -oldRowCount);
+    else if (mInput) {
+      nsCOMPtr<nsIAutoCompletePopup> popup;
+      mInput->GetPopup(getter_AddRefs(popup));
+      NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
+      // if we had a tree, RowCountChanged() would have cleared the selection
+      // when the selected row was removed.  But since we don't have a tree,
+      // we need to clear the selection manually.
+      popup->SetSelectedIndex(-1);
+    }
+  }
   return NS_OK;
 }
 

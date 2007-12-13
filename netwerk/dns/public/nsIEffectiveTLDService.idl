@@ -51,8 +51,8 @@ interface nsIEffectiveTLDService : nsISupports
      * because the .uk TLD does not allow the registration of domains at the
      * second level ("bbc.uk" is forbidden).
      *
-     * The public suffix will be returned encoded in UTF8 and will be normalized using
-     * nsIIDNService::normalize, which follows RFC 3454.
+     * The public suffix will be returned encoded in ASCII/ACE and will be normalized
+     * according to RFC 3454, i.e. the same encoding returned by nsIURI::GetAsciiHost().
      *
      * @param   aURI               The URI to be analyzed
      *
@@ -82,8 +82,8 @@ interface nsIEffectiveTLDService : nsISupports
      *    0 (default) -> mozilla.org
      *    1           -> developer.mozilla.org
      *
-     * The base domain will be returned encoded in UTF8 and will be normalized using
-     * nsIIDNService::normalize, which follows RFC 3454.
+     * The base domain will be returned encoded in ASCII/ACE and will be normalized
+     * according to RFC 3454, i.e. the same encoding returned by nsIURI::GetAsciiHost().
      *
      * @param   aURI               The URI to be analyzed
      * @param   aAdditionalParts   Number of domain name parts to be

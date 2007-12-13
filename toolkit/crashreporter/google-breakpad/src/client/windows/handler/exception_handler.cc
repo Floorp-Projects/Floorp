@@ -72,7 +72,8 @@ ExceptionHandler::ExceptionHandler(const wstring &dump_path,
       requesting_thread_id_(0),
       exception_info_(NULL),
       assertion_(NULL),
-      handler_return_value_(false) {
+      handler_return_value_(false),
+      handle_debug_exceptions_(false) {
 #if _MSC_VER >= 1400  // MSVC 2005/8
   previous_iph_ = NULL;
 #endif  // _MSC_VER >= 1400
@@ -274,10 +275,13 @@ LONG ExceptionHandler::HandleException(EXCEPTION_POINTERS *exinfo) {
   // Ignore EXCEPTION_BREAKPOINT and EXCEPTION_SINGLE_STEP exceptions.  This
   // logic will short-circuit before calling WriteMinidumpOnHandlerThread,
   // allowing something else to handle the breakpoint without incurring the
-  // overhead transitioning to and from the handler thread.
+  // overhead transitioning to and from the handler thread.  This behavior
+  // can be overridden by calling ExceptionHandler::set_handle_debug_exceptions.
   DWORD code = exinfo->ExceptionRecord->ExceptionCode;
   LONG action;
-  if (code != EXCEPTION_BREAKPOINT && code != EXCEPTION_SINGLE_STEP &&
+  bool is_debug_exception = (code == EXCEPTION_BREAKPOINT) ||
+                            (code == EXCEPTION_SINGLE_STEP);
+  if ((!is_debug_exception || current_handler->get_handle_debug_exceptions()) &&
       current_handler->WriteMinidumpOnHandlerThread(exinfo, NULL)) {
     // The handler fully handled the exception.  Returning
     // EXCEPTION_EXECUTE_HANDLER indicates this to the system, and usually

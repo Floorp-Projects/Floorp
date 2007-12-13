@@ -1875,7 +1875,7 @@ nsXULDocument::Init()
 nsresult
 nsXULDocument::StartLayout(void)
 {
-    if (!mRootContent) {
+    if (!GetRootContent()) {
 #ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
             nsCAutoString urlspec;
@@ -3046,9 +3046,9 @@ nsXULDocument::DoneWalking()
         mDocumentLoaded = PR_TRUE;
 
         nsAutoString title;
-        if (mRootContent) {
-            mRootContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title,
-                                  title);
+        nsIContent* root = GetRootContent();
+        if (root) {
+            root->GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
         }
         SetTitle(title);
 
@@ -3729,11 +3729,12 @@ nsXULDocument::OverlayForwardReference::Resolve()
     if (id.IsEmpty()) {
         // mOverlay is a direct child of <overlay> and has no id.
         // Insert it under the root element in the base document.
-        if (!mDocument->mRootContent) {
+        nsIContent* root = mDocument->GetRootContent();
+        if (!root) {
             return eResolve_Error;
         }
 
-        rv = mDocument->InsertElement(mDocument->mRootContent, mOverlay, notify);
+        rv = mDocument->InsertElement(root, mOverlay, notify);
         if (NS_FAILED(rv)) return eResolve_Error;
 
         target = mOverlay;

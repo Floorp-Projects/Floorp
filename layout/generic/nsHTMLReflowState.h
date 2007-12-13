@@ -366,10 +366,6 @@ public:
                                      // and never insider a column frame
   } mFlags;
 
-#ifdef IBMBIDI
-  nscoord mRightEdge;
-#endif
-
   // Note: The copy constructor is written by the compiler automatically. You
   // can use that and then override specific values if you want, or you can
   // call Init as desired...
@@ -466,6 +462,10 @@ public:
 
   void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
 
+  PRBool WillReflowAgainForClearance() const {
+    return mDiscoveredClearance && *mDiscoveredClearance;
+  }
+  
 protected:
   void InitFrameType();
   void InitCBReflowState();

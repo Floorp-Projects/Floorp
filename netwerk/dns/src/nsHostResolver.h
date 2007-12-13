@@ -95,7 +95,17 @@ public:
      * |af| is the address family of the record we are querying for.
      */
 
+    /* the lock protects |addr_info| and |addr_info_gencnt| because they
+     * are mutable and accessed by the resolver worker thread and the
+     * nsDNSService2 class.  |addr| doesn't change after it has been
+     * assigned a value.  only the resolver worker thread modifies
+     * nsHostRecord (and only in nsHostResolver::OnLookupComplete);
+     * the other threads just read it.  therefore the resolver worker
+     * thread doesn't need to lock when reading |addr_info|.
+     */
+    PRLock      *addr_info_lock;
     PRAddrInfo  *addr_info;
+    int          addr_info_gencnt; /* generation count of |addr_info| */
     PRNetAddr   *addr;
     PRUint32     expiration; /* measured in minutes since epoch */
 

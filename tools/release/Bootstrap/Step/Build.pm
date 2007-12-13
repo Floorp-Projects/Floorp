@@ -14,26 +14,31 @@ sub Execute {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
+    my $version = $config->Get(var => 'version');
     my $buildDir = $config->Get(sysvar => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $buildPlatform = $config->Get(sysvar => 'buildPlatform');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $osname = $config->SystemInfo(var => 'osname');    
+    my $sysname = $config->SystemInfo(var => 'sysname');    
     my $rcTag = $productTag . '_RC' . $rc;
 
-    my $lastBuilt = catfile($buildDir, $buildPlatform, 'last-built');
-    if (! unlink($lastBuilt)) {
-        $this->Log(msg => "Cannot unlink last-built file $lastBuilt: $!");
+    if ($version eq 'nightly') {
+        $this->Log(msg => 'Skip force-clobber for nightly mode');
     } else {
-        $this->Log(msg => "Unlinked $lastBuilt");
+        my $lastBuilt = catfile($buildDir, $buildPlatform, 'last-built');
+        if (! unlink($lastBuilt)) {
+            $this->Log(msg => "Cannot unlink last-built file $lastBuilt: $!");
+        } else {
+            $this->Log(msg => "Unlinked $lastBuilt");
+        }
     }
 
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
  
     # For Cygwin only, ensure that the system mount point is binmode
     # This forces CVS to use Unix-style linefeed EOL characters.
-    if ($osname eq 'win32') {
+    if ($sysname =~ /cygwin/i) {
         $this->Shell(
           cmd => 'mount',
           cmdArgs => ['-b', '-sc', '/cygdrive'],
@@ -51,18 +56,28 @@ sub Execute {
       timeout => 36000
     );
 
-    $this->StoreBuildID();
+    if ($version eq 'nightly') {
+        $this->Log(msg => 'Skip buildID storage for nightly mode');
+    } else {
+        $this->StoreBuildID();
+    }
 }
 
 sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
+    my $version = $config->Get(var => 'version');
     my $buildDir = $config->Get(sysvar => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $rcTag = $productTag.'_RC'.$rc;
     my $logDir = $config->Get(sysvar => 'logDir');
+
+    if ($version eq 'nightly') {
+        $this->Log(msg => 'Skip Verify for nightly mode');
+        return;
+    }
 
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
 
@@ -87,11 +102,17 @@ sub Push {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
+    my $version = $config->Get(var => 'version');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
+
+    if ($version eq 'nightly') {
+        $this->Log(msg => 'Skip Push for nightly mode');
+        return;
+    }
 
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
@@ -163,11 +184,16 @@ sub Announce {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
+    my $version = $config->Get(var => 'version');
     my $product = $config->Get(var => 'product');
     my $productTag = $config->Get(var => 'productTag');
-    my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
+
+    if ($version eq 'nightly') {
+        $this->Log(msg => 'Skip Announce for nightly mode');
+        return;
+    }
 
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');

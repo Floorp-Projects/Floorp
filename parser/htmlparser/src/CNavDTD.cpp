@@ -686,7 +686,8 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
             }
 
             if (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody) &&
-                ((theTag != eHTMLTag_input) ||
+                (theTag != eHTMLTag_input ||
+                 theType != eToken_start ||
                  !IsHiddenInput(aToken, mTokenizer))) {
               CToken* theBodyToken =
                 mTokenAllocator->CreateTokenOfType(eToken_start,

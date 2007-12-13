@@ -853,8 +853,6 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                             PRBool aNotify);
   virtual PRUint32 GetDesiredIMEState();
   virtual PRInt32 IntrinsicState() const;
 

@@ -535,7 +535,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     }
 
     // We set return to true unless there was a parsing error
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mRootContent);
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(GetRootContent());
     if (node) {
       nsAutoString name, ns;      
       if (NS_SUCCEEDED(node->GetLocalName(name)) &&
@@ -660,14 +660,15 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   // If we tried to load a document and something went wrong, we might not have
   // root content. This can happen when you do document.load() and the document
   // to load is not XML, for example.
-  if (!mRootContent)
+  nsIContent* root = GetRootContent();
+  if (!root)
     return NS_OK;
 
   // XXX For now, we do a brute force search of the content tree.
   // We should come up with a more efficient solution.
   // Note that content is *not* refcounted here, so do *not* release it!
   nsIContent *content =
-    nsContentUtils::MatchElementId(mRootContent, aElementId);
+    nsContentUtils::MatchElementId(root, aElementId);
 
   if (!content) {
     return NS_OK;

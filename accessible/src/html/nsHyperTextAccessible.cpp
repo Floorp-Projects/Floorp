@@ -56,10 +56,13 @@
 #include "nsIEditor.h"
 #include "nsIFontMetrics.h"
 #include "nsIFrame.h"
-#include "nsIScrollableFrame.h"
+#include "nsFrameSelection.h"
+#include "nsILineIterator.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPlaintextEditor.h"
+#include "nsIScrollableFrame.h"
 #include "nsISelection2.h"
+#include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"
 #include "nsTextFragment.h"
 #include "gfxSkipChars.h"
@@ -322,11 +325,17 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
                                      nsIAccessible **aStartAcc,
                                      nsIAccessible **aEndAcc)
 {
-  if (aStartOffset < 0) {
+  if (aStartOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
     GetCharacterCount(&aStartOffset);
   }
-  if (aEndOffset < 0) {
+  if (aStartOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+    GetCaretOffset(&aStartOffset);
+  }
+  if (aEndOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
     GetCharacterCount(&aEndOffset);
+  }
+  if (aEndOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+    GetCaretOffset(&aEndOffset);
   }
 
   PRInt32 startOffset = aStartOffset;
@@ -842,14 +851,35 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     return NS_ERROR_FAILURE;
   }
 
-  PRInt32 startOffset = aOffset;
-  PRInt32 endOffset = aOffset;
-
-  if (aBoundaryType == BOUNDARY_LINE_END) {
-    // Avoid getting the previous line
-    ++ startOffset;
-    ++ endOffset;
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
+    GetCharacterCount(&aOffset);
   }
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+    GetCaretOffset(&aOffset);
+    if (aOffset > 0 && (aBoundaryType == BOUNDARY_LINE_START ||
+                        aBoundaryType == BOUNDARY_LINE_END)) {
+      // It is the same character offset when the caret is visually at the very end of a line
+      // or the start of a new line. Getting text at the line should provide the line with the visual caret,
+      // otherwise screen readers will announce the wrong line as the user presses up or down arrow and land
+      // at the end of a line.
+      nsCOMPtr<nsISelection> domSel;
+      nsresult rv = GetSelections(nsnull, getter_AddRefs(domSel));
+      nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSel));
+      nsCOMPtr<nsFrameSelection> frameSelection;
+      rv = privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (frameSelection->GetHint() == nsFrameSelection::HINTLEFT) {
+        -- aOffset;  // We are at the start of a line
+      }
+    }
+  }
+  else if (aOffset < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 startOffset = aOffset + (aBoundaryType == BOUNDARY_LINE_END);  // Avoid getting the previous line
+  PRInt32 endOffset = startOffset;
+
   // Convert offsets to frame-relative
   nsCOMPtr<nsIAccessible> startAcc;
   nsIFrame *startFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
@@ -866,7 +896,11 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
       }
     }
     if (!startFrame) {
-      return (aOffset < 0 || aOffset > textLength) ? NS_ERROR_FAILURE : NS_OK;
+      return aOffset > textLength ? NS_ERROR_FAILURE : NS_OK;
+    }
+    else {
+      // We're on the last continuation since we're on the last character
+      startFrame = startFrame->GetLastContinuation();
     }
   }
 
@@ -945,7 +979,8 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     // Start moving forward from the start so that we don't get 
     // 2 words/lines if the offset occured on whitespace boundary
     // Careful, startOffset and endOffset are passed by reference to GetPosAndText() and changed
-    startOffset = endOffset = finalStartOffset;
+    // For BOUNDARY_LINE_END, make sure we start of this line
+    startOffset = endOffset = finalStartOffset + (aBoundaryType == BOUNDARY_LINE_END);
     nsCOMPtr<nsIAccessible> endAcc;
     nsIFrame *endFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
                                        nsnull, getter_AddRefs(endAcc));
@@ -1041,7 +1076,7 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(GetRoleContent(mDOMNode)));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
   nsIAtom *tag = content->Tag();
 
@@ -1073,6 +1108,16 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
     nsAutoString oldValueUnused;
     aAttributes->SetStringProperty(NS_LITERAL_CSTRING("formatting"), NS_LITERAL_STRING("block"),
                                    oldValueUnused);
+  }
+
+  if (gLastFocusedNode == mDOMNode) {
+    PRInt32 lineNumber = GetCaretLineNumber();
+    if (lineNumber >= 1) {
+      nsAutoString strLineNumber;
+      strLineNumber.AppendInt(lineNumber);
+      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::lineNumber,
+                             strLineNumber);
+    }
   }
 
   return  NS_OK;
@@ -1434,6 +1479,74 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
   domSel->GetFocusOffset(&caretOffset);
 
   return DOMPointToHypertextOffset(caretNode, caretOffset, aCaretOffset);
+}
+
+PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
+{
+  // Provide the line number for the caret, relative to the
+  // currently focused node. Use a 1-based index
+  nsCOMPtr<nsISelection> domSel;
+  GetSelections(nsnull, getter_AddRefs(domSel));
+  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(domSel));
+  NS_ENSURE_TRUE(privateSelection, -1);
+  nsCOMPtr<nsFrameSelection> frameSelection;
+  privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+  NS_ENSURE_TRUE(frameSelection, -1);
+
+  nsCOMPtr<nsIDOMNode> caretNode;
+  domSel->GetFocusNode(getter_AddRefs(caretNode));
+  nsCOMPtr<nsIContent> caretContent = do_QueryInterface(caretNode);
+  if (!caretContent || !nsAccUtils::IsAncestorOf(mDOMNode, caretNode)) {
+    return -1;
+  }
+
+  PRInt32 caretOffset, returnOffsetUnused;
+  domSel->GetFocusOffset(&caretOffset);
+  nsFrameSelection::HINT hint = frameSelection->GetHint();
+  nsIFrame *caretFrame = frameSelection->GetFrameForNodeOffset(caretContent, caretOffset,
+                                                               hint, &returnOffsetUnused);
+  NS_ENSURE_TRUE(caretFrame, -1);
+
+  PRInt32 lineNumber = 1;
+  nsCOMPtr<nsILineIterator> lineIterForCaret;
+  nsCOMPtr<nsIContent> hyperTextContent = do_QueryInterface(mDOMNode);
+  while (caretFrame) {
+    if (hyperTextContent == caretFrame->GetContent()) {
+      return lineNumber; // Must be in a single line hyper text, there is no line iterator
+    }
+    nsIFrame *parentFrame = caretFrame->GetParent();
+    if (!parentFrame)
+      break;
+
+    // Add lines for the sibling frames before the caret
+    nsIFrame *sibling = parentFrame->GetFirstChild(nsnull);
+    while (sibling && sibling != caretFrame) {
+      nsCOMPtr<nsILineIterator> lineIterForSibling = do_QueryInterface(sibling);
+      if (lineIterForSibling) {
+        PRInt32 addLines;
+        // For the frames before that grab all the lines
+        lineIterForSibling->GetNumLines(&addLines);
+        lineNumber += addLines;
+      }
+      sibling = sibling->GetNextSibling();
+    }
+
+    // Get the line number relative to the container with lines
+    if (!lineIterForCaret) {   // Add the caret line just once
+      lineIterForCaret = do_QueryInterface(parentFrame);
+      if (lineIterForCaret) {
+        // Ancestor of caret
+        PRInt32 addLines;
+        lineIterForCaret->FindLineContaining(caretFrame, &addLines);
+        lineNumber += addLines;
+      }
+    }
+
+    caretFrame = parentFrame;
+  }
+
+  NS_NOTREACHED("DOM ancestry had this hypertext but frame ancestry didn't");
+  return lineNumber;
 }
 
 nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon,

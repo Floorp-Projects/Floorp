@@ -52,6 +52,14 @@
 static char dempty[] = "<null>";
 
 char *
+jsdtrace_funcclass_name(JSFunction *fun)
+{
+    return (!FUN_INTERPRETED(fun) && fun->u.n.clasp)
+           ? (char *)fun->u.n.clasp->name
+           : dempty;
+}
+
+char *
 jsdtrace_filename(JSStackFrame *fp)
 {
     while (fp && fp->script == NULL)
@@ -201,7 +209,7 @@ jsdtrace_function_entry(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
 {
     JAVASCRIPT_FUNCTION_ENTRY(
         jsdtrace_filename(fp),
-        fun->clasp ? (char *)fun->clasp->name : dempty,
+        jsdtrace_funcclass_name(fun),
         jsdtrace_function_name(cx, fp, fun)
     );
 }
@@ -212,7 +220,7 @@ jsdtrace_function_info(JSContext *cx, JSStackFrame *fp, JSStackFrame *dfp,
 {
     JAVASCRIPT_FUNCTION_INFO(
         jsdtrace_filename(fp),
-        fun->clasp ? (char *)fun->clasp->name : dempty,
+        jsdtrace_funcclass_name(fun),
         jsdtrace_function_name(cx, fp, fun),
         fp->script->lineno,
         jsdtrace_filename(dfp),
@@ -225,7 +233,7 @@ jsdtrace_function_args(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
 {
     JAVASCRIPT_FUNCTION_ARGS(
         jsdtrace_filename(fp),
-        fun->clasp ? (char *)fun->clasp->name : dempty,
+        jsdtrace_funcclass_name(fun),
         jsdtrace_function_name(cx, fp, fun),
         fp->argc, (void *)fp->argv,
         (fp->argc > 0) ? jsdtrace_jsvaltovoid(cx, fp->argv[0]) : 0,
@@ -241,7 +249,7 @@ jsdtrace_function_rval(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
 {
     JAVASCRIPT_FUNCTION_RVAL(
         jsdtrace_filename(fp),
-        fun->clasp ? (char *)fun->clasp->name : dempty,
+        jsdtrace_funcclass_name(fun),
         jsdtrace_function_name(cx, fp, fun),
         jsdtrace_linenumber(cx, fp), (void *)fp->rval,
         jsdtrace_jsvaltovoid(cx, fp->rval)
@@ -253,7 +261,7 @@ jsdtrace_function_return(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
 {
     JAVASCRIPT_FUNCTION_RETURN(
         jsdtrace_filename(fp),
-        fun->clasp ? (char *)fun->clasp->name : dempty,
+        jsdtrace_funcclass_name(fun),
         jsdtrace_function_name(cx, fp, fun)
     );
 }

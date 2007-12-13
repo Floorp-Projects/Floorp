@@ -15,8 +15,6 @@
 <!ENTITY bookmarks.site_location.accesskey    "S">
 <!ENTITY bookmarks.loadInSidebar.label        "Load this bookmark in the sidebar">
 <!ENTITY bookmarks.loadInSidebar.accesskey    "o">
-<!ENTITY bookmarks.bookmarksFolderItem.label  "Bookmarks">
-<!ENTITY bookmarks.toolbarFolderItem.label    "Bookmarks Toolbar">
 <!ENTITY bookmarks.expanderDown.tooltip       "Show all the bookmarks folders">
 <!ENTITY bookmarks.expanderUp.tooltip         "Hide">
 <!ENTITY bookmarks.newFolderButton.label      "New Folder">

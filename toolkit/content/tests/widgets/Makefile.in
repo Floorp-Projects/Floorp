@@ -82,6 +82,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		tree_shared.js \
 		test_textbox_number.xul \
 		xul_selectcontrol.js \
+		test_popupincontent.xul \
 		test_panelfrommenu.xul \
 		test_hiddenitems.xul \
 		test_hiddenpaging.xul \

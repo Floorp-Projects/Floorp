@@ -1,11 +1,7 @@
-diff -up8N en-US.dic
+diff -up4 en-US.dic en-US.dic
 --- en-US.dic	Sat Nov 24 21:50:56 2007
-+++ en-US.dic	Wed Nov 28 19:54:52 2007
-@@ -2296,16 +2296,17 @@ Buddhism/SM
- Buddhist/SM
- Buddie/M
- Buddy/M
- Budweiser/M
++++ en-US.dic	Sat Dec  8 10:05:34 2007
+@@ -2300,8 +2300,9 @@ Budweiser/M
  Buffalo/M
  Buffy/M
  Buford/M
@@ -15,15 +11,7 @@ diff -up8N en-US.dic
  Buiron/M
  Bujumbura/M
  Bukhara
- Bukharin
- Bulawayo
- Bulfinch
- Bulganin
-@@ -2499,16 +2500,17 @@ Cameron/M
- Cameroon/SM
- Cameroonian/SM
- Camey/M
- Cami/M
+@@ -2503,8 +2504,9 @@ Cami/M
  Camila/M
  Camile/M
  Camilla/M
@@ -33,15 +21,7 @@ diff -up8N en-US.dic
  Cammie/M
  Cammy/M
  Camoens/M
- Campbell
- Campinas
- Campos
- Camry/M
-@@ -2938,16 +2940,17 @@ Chas
- Chase
- Chasity/M
- Chastity/M
- Chateaubriand/M
+@@ -2942,8 +2944,9 @@ Chateaubriand/M
  Chattahoochee/M
  Chattanooga/M
  Chatterley/M
@@ -51,15 +31,7 @@ diff -up8N en-US.dic
  Chaunce/M
  Chauncey/M
  Chautauqua
- Chavez/M
- Chayefsky/M
- Che/M
- Chechen
-@@ -6321,16 +6324,17 @@ HP/M
- HQ/M
- HR
- HRH
- HS
+@@ -6325,8 +6328,9 @@ HS
  HST
  HT
  HTML/M
@@ -69,15 +41,7 @@ diff -up8N en-US.dic
  Ha
  Haas/M
  Habakkuk
- Haber/M
- Had/M
- Hadar/M
- Hades/M
-@@ -6941,16 +6945,17 @@ Humfrid/M
- Humfried/M
- Humphrey
- Humvee
- Hun/SM
+@@ -6945,8 +6949,9 @@ Hun/SM
  Hunfredo/M
  Hung
  Hungarian/SM
@@ -87,15 +51,7 @@ diff -up8N en-US.dic
  Hunter/M
  Huntington/M
  Huntlee/M
- Huntley/M
- Huntsville
- Hurlee/M
- Hurleigh/M
-@@ -9500,16 +9505,17 @@ Manda/M
- Mandalay/M
- Mandarin/M
- Mandel/M
- Mandela
+@@ -9504,8 +9509,9 @@ Mandela
  Mandelbrot
  Mandi/M
  Mandie/M
@@ -105,15 +61,7 @@ diff -up8N en-US.dic
  Manet
  Manfred/M
  Manhattan/SM
- Mani
- Manichean
- Manila/SM
- Manitoba/M
-@@ -10615,16 +10621,17 @@ Myron
- Myrta/M
- Myrtia/M
- Myrtice/M
- Myrtie/M
+@@ -10619,8 +10625,9 @@ Myrtie/M
  Myrtle/M
  Myrvyn/M
  Myrwyn/M
@@ -123,15 +71,7 @@ diff -up8N en-US.dic
  N'Djamena
  N/MD
  NAACP
- NAFTA
- NASA/M
- NASDAQ/M
- NATO/M
-@@ -13236,16 +13243,17 @@ Scruggs/M
- Scud
- Sculley/M
- Scylla/M
- Scythia
+@@ -13240,8 +13247,9 @@ Scythia
  Scythian
  Se/MH
  Seaborg
@@ -141,15 +81,7 @@ diff -up8N en-US.dic
  Sean/M
  Seana/M
  Sears/M
- Seattle/M
- Sebastian/M
- Sebastiano/M
- Sebastien/M
-@@ -13975,16 +13983,17 @@ Sumatran/SM
- Sumeria/M
- Sumerian/SM
- Summer/MS
- Sumner/M
+@@ -13979,8 +13987,9 @@ Sumner/M
  Sumter
  Sun/SM
  Sunbeam/M
@@ -159,34 +91,18 @@ diff -up8N en-US.dic
  Sundas
  Sunday/MS
  Sung
- Sunkist/M
- Sunni/SM
- Sunnite/MS
- Sunny/M
-@@ -42226,16 +42235,18 @@ philologist/MS
- philology/M
- philosopher/SM
- philosophic
- philosophical/Y
+@@ -42230,8 +42239,10 @@ philosophical/Y
  philosophize/ZGDRS
  philosophizer/M
  philosophy/SM
  philter/MS
-+phisher/M
-+phishing/M
++phish/DGS
++phisher/MS
  phlebitis/M
  phlebotomy
  phlegm/M
  phlegmatic
- phlegmatically
- phloem/M
- phlogiston
- phlox/M
-@@ -49098,16 +49109,17 @@ spadeful/MS
- spadework/M
- spadices
- spadix/M
- spaghetti/M
+@@ -49102,8 +49113,9 @@ spaghetti/M
  spake
  spam/S
  spamblock/S
@@ -196,64 +112,37 @@ diff -up8N en-US.dic
  span/MS
  spandex/M
  spandrels
- spangle/DSMG
- spangly
- spaniel/SM
- spank/SMDRGJ
-@@ -53645,16 +53657,20 @@ uniformity/M
- unify/AGDSN
- unilateral/Y
- unilateralism
- unilateralist
+@@ -53649,8 +53661,10 @@ unilateralist
  unimportance
  unimportant
  unimpressive
  uninhibited/Y
-+uninstall/GSMB
-+uninstalled
++uninstall/GSBD
 +uninstaller/MS
-+uninstalling
  uninsured
  unintellectual
  unintelligent
  unintended
- uninteresting
- uninterrupted/Y
- unintuitive
- uninviting
-@@ -53807,16 +53823,17 @@ unspectacular
- unsporting
- unstable/RT
- unstack/DG
- unstamped
+@@ -53811,8 +53825,10 @@ unstamped
  unsteady/PTR
  unstinting/Y
  unstoppably
  unstrapping
-+unsubscribe
++unsubscribe/DGS
++unsubscriber/MS
  unsubstantial
  unsubtle
  unsure/P
  unsuspecting/Y
- unswerving/Y
- unsymmetrical
- untactful
- untenability
-@@ -54981,16 +54998,17 @@ weave/DRSMZG
- weaver/M
- weaving/M
- web/SM
+@@ -54984,9 +55000,10 @@ web/SM
  webbed
  webbing/M
  webfeet
  webfoot/M
- webmaster/S
-+webmistress
+-webmaster/S
++webmaster/MS
++webmistress/S
  website/SM
  wed/AS
  wedded/A
  wedder
- wedding/SM
- wedge/DSMG
- wedgie/MS
- wedlock/M

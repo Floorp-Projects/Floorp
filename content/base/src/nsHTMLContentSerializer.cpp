@@ -1264,9 +1264,8 @@ nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
   // We are copying and we are at the "first" LI node of OL in selected range.
   // It may not be the first LI child of OL but it's first in the selected range.
   // Note that we get into this condition only once per a OL.
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
   PRBool found = PR_FALSE;
-  nsIDOMNode* currNode = node;
+  nsCOMPtr<nsIDOMNode> currNode = do_QueryInterface(aElement);
   nsAutoString valueStr;
   PRInt32 offset = 0;
   olState defaultOLState(0, PR_FALSE);
@@ -1299,7 +1298,9 @@ nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
         }
       }
     }
-    currNode->GetPreviousSibling(&currNode);
+    nsCOMPtr<nsIDOMNode> tmp;
+    currNode->GetPreviousSibling(getter_AddRefs(tmp));
+    currNode.swap(tmp);
   }
   // If LI was not having "value", Set the "value" attribute for it.
   // Note that We are at the first LI in the selected range of OL.

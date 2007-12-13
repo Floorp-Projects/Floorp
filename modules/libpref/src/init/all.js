@@ -87,7 +87,7 @@ pref("browser.display.force_inline_alttext", false); // true = force ALT text fo
 pref("browser.display.normal_lineheight_calc_control", 2);
 pref("browser.display.show_image_placeholders", true); // true = show image placeholders while image is loaded and when image is broken
 // min font device pixel size at which to turn on high quality
-pref("browser.display.auto_quality_min_font_size", 60);
+pref("browser.display.auto_quality_min_font_size", 20);
 pref("browser.anchor_color",                "#0000EE");
 pref("browser.active_color",                "#EE0000");
 pref("browser.visited_color",               "#551A8B");
@@ -828,6 +828,8 @@ pref("intl.locale.matchOS",                 false);
 // for ISO-8859-1
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
 pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
+
+pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Cambria Math, Standard Symbols L, DejaVu Sans");
 
 pref("images.dither", "auto");
 pref("security.directory",              "");
@@ -1769,6 +1771,9 @@ pref("font.default.zh-HK", "sans-serif");
 pref("font.size.variable.zh-HK", 15);
 pref("font.size.fixed.zh-HK", 16);
 
+// Apple's Symbol is Unicode so use it
+pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Cambria Math, Symbol, DejaVu Sans");
+
 pref("browser.urlbar.clickAtEndSelects", false);
 
 // Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL
@@ -2473,7 +2478,8 @@ pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d'}${MOZ_PRINTER_NAM
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 pref("signon.SignonFileName",               "signons.txt"); // obsolete 
-pref("signon.SignonFileName2",              "signons2.txt");
+pref("signon.SignonFileName2",              "signons2.txt"); // obsolete
+pref("signon.SignonFileName3",              "signons3.txt");
 pref("signon.autofillForms",                true); 
 pref("signon.debug",                        false); // logs to Error Console
 

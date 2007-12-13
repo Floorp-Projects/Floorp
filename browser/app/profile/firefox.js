@@ -258,7 +258,8 @@ pref("browser.history.grouping", "day");
 pref("browser.history.showSessions", false);
 pref("browser.sessionhistory.max_entries", 50);
 pref("browser.history_expire_days", 180);
-pref("browser.history_expire_visits", 20000);
+pref("browser.history_expire_days_min", 90);
+pref("browser.history_expire_sites", 40000);
 
 // handle external links
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
@@ -584,8 +585,13 @@ pref("accessibility.blockautorefresh", false);
 // import bookmarks.html into Places bookmarks
 pref("browser.places.importBookmarksHTML", true);
 
-// if false, will add the "Places" folder to the personal toolbar
-pref("browser.places.createdDefaultQueries", false);
+// if false, will add the "Smart Bookmarks" folder to the personal toolbar
+pref("browser.places.createdSmartBookmarks", false);
+
+// If true, will migrate uri post-data annotations to
+// bookmark post-data annotations (bug 398914)
+// XXX to be removed after beta 2 (bug 391419)
+pref("browser.places.migratePostDataAnnotations", true);
 
 // Controls behavior of the "Add Exception" dialog launched from SSL error pages
 // 0 - don't pre-populate anything

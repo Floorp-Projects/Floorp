@@ -316,7 +316,16 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
   case NPVariantType_Bool :
     return BOOLEAN_TO_JSVAL(NPVARIANT_TO_BOOLEAN(*variant));
   case NPVariantType_Int32 :
-    return INT_TO_JSVAL(NPVARIANT_TO_INT32(*variant));
+    {
+      // Don't use INT_TO_JSVAL directly to prevent bugs when dealing
+      // with ints larger than what fits in a integer jsval.
+      jsval val;
+      if (::JS_NewNumberValue(cx, NPVARIANT_TO_INT32(*variant), &val)) {
+        return val;
+      }
+
+      break;
+    }
   case NPVariantType_Double :
     {
       jsval val;

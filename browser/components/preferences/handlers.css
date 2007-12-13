@@ -43,24 +43,11 @@ richlistitem[selected="true"] {
 }
 
 /**
- * Somewhat line up the actions menu with action labels above and below it.
- * FIXME: to really line this up, equalize the distance from the left side
- * of the action box to the left side of the icon for both the menu and the
- * non-menu versions of the action box.  Also make sure the labels are the
- * same distance away from the icons.
- */
-.actionsMenu {
-  margin-left: 0;
-}
-
-/**
- * Make the icons appear and pad them a bit.
+ * Make the icons appear.
  * Note: we display the icon box for every item whether or not it has an icon
  * so the labels of all the items align vertically.
  */
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
   display: -moz-box;
   min-width: 16px;
-  -moz-padding-start: 2px;
-  -moz-padding-end: 2px;
 }

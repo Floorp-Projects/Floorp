@@ -91,6 +91,9 @@ function makeListener(headerIdx, bodyIdx) {
     onStartRequest : function test_onStartR(request, ctx) {
       try {
         var chan = request.QueryInterface(Components.interfaces.nsIChannel);
+
+	do_check_eq(chan.status, Components.results.NS_OK);
+	
         var type = chan.contentType;
 
         var expectedType =
@@ -166,6 +169,9 @@ function makeHandler(headerIdx, bodyIdx) {
 
 var httpserv;
 function run_test() {
+  // disable again for now
+  return;
+  
   httpserv = new nsHttpServer();
 
   for (i = 0; i < contentTypeHeaderList.length; ++i) {

@@ -64,6 +64,7 @@ CPPSRCS = 				\
 	nsSSLThread.cpp                 \
 	nsCertVerificationThread.cpp    \
 	nsCipherInfo.cpp \
+	nsProtectedAuthThread.cpp \
 	nsNSSCallbacks.cpp		\
 	nsNSSComponent.cpp		\
 	nsNSSErrors.cpp			\

@@ -54,6 +54,7 @@
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsILineInputStream.h"
+#include "nsIEffectiveTLDService.h"
 
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
@@ -62,7 +63,6 @@
 #include "nsCRT.h"
 #include "prtime.h"
 #include "prprf.h"
-#include "prnetdb.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -422,6 +422,10 @@ nsCookieService::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  nsresult rv;
+  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // init our pref and observer
   nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
@@ -433,7 +437,7 @@ nsCookieService::Init()
 
   // ignore failure here, since it's non-fatal (we can run fine without
   // persistent storage - e.g. if there's no profile)
-  nsresult rv = InitDB();
+  rv = InitDB();
   if (NS_FAILED(rv))
     COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): InitDB() gave error %x", rv));
 
@@ -611,11 +615,9 @@ nsCookieService::Observe(nsISupports     *aSubject,
 
     if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get()) && mDBConn) {
       // clear the cookie file
-      if (mDBConn) {
-        nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_cookies"));
-        if (NS_FAILED(rv))
-          NS_WARNING("db delete failed");
-      }
+      nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_cookies"));
+      if (NS_FAILED(rv))
+        NS_WARNING("db delete failed");
     }
 
   } else if (!strcmp(aTopic, "profile-do-change")) {
@@ -1128,7 +1130,6 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   // insert a leading dot, so we begin the hash lookup with the
   // equivalent domain cookie host
   hostFromURI.Insert(NS_LITERAL_CSTRING("."), 0);
-  ToLowerCase(hostFromURI);
 
   // check if aHostURI is using an https secure protocol.
   // if it isn't, then we can't send a secure cookie over the connection.
@@ -1700,73 +1701,12 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
  * private domain & permission compliance enforcement functions
  ******************************************************************************/
 
-// returns PR_TRUE if aHost is an IP address
-PRBool
-nsCookieService::IsIPAddress(const nsAFlatCString &aHost)
-{
-  PRNetAddr addr;
-  return (PR_StringToNetAddr(aHost.get(), &addr) == PR_SUCCESS);
-}
-
-PRBool
-nsCookieService::IsInDomain(const nsACString &aDomain,
-                            const nsACString &aHost,
-                            PRBool           aIsDomain)
-{
-  // if we have a non-domain cookie, require an exact match between domain and host.
-  // RFC2109 specifies this behavior; it allows a site to prevent its subdomains
-  // from accessing a cookie, for whatever reason.
-  if (!aIsDomain) {
-    return aDomain.Equals(aHost);
-  }
-
-  // we have a domain cookie; test the following two cases:
-  /*
-   * normal case for hostName = x<domainName>
-   *    e.g., hostName = home.netscape.com
-   *          domainName = .netscape.com
-   *
-   * special case for domainName = .hostName
-   *    e.g., hostName = netscape.com
-   *          domainName = .netscape.com
-   */
-  // the lengthDifference tests are for efficiency, so we do only one .Equals()
-  PRUint32 domainLength = aDomain.Length();
-  PRInt32 lengthDifference = aHost.Length() - domainLength;
-  // case for host & domain equal
-  // (e.g. .netscape.com & .netscape.com)
-  // this gives us slightly more efficiency, since we don't have
-  // to call up Substring().
-  if (lengthDifference == 0) {
-    return aDomain.Equals(aHost);
-  }
-  // normal case
-  if (lengthDifference > 0) {
-    return aDomain.Equals(Substring(aHost, lengthDifference, domainLength));
-  }
-  // special case
-  if (lengthDifference == -1) {
-    return Substring(aDomain, 1, domainLength - 1).Equals(aHost);
-  }
-  // no match
-  return PR_FALSE;
-}
-
 PRBool
 nsCookieService::IsForeign(nsIURI *aHostURI,
                            nsIURI *aFirstURI)
 {
   // if aFirstURI is null, default to not foreign
   if (!aFirstURI) {
-    return PR_FALSE;
-  }
-
-  // chrome URLs are never foreign (otherwise sidebar cookies won't work).
-  // eventually we want to have a protocol whitelist here,
-  // _or_ do something smart with nsIProtocolHandler::protocolFlags.
-  PRBool isChrome = PR_FALSE;
-  nsresult rv = aFirstURI->SchemeIs("chrome", &isChrome);
-  if (NS_SUCCEEDED(rv) && isChrome) {
     return PR_FALSE;
   }
 
@@ -1779,46 +1719,53 @@ nsCookieService::IsForeign(nsIURI *aHostURI,
   // trim trailing dots
   currentHost.Trim(".");
   firstHost.Trim(".");
-  ToLowerCase(currentHost);
-  ToLowerCase(firstHost);
 
-  // determine if it's foreign. we have a new algorithm for doing this,
-  // since the old behavior was broken:
+  // fast path: check if the two hosts are identical.
+  // this also covers two special cases:
+  // 1) if we're dealing with IP addresses, require an exact match. this
+  // eliminates any chance of IP address funkiness (e.g. the alias 127.1
+  // domain-matching 99.54.127.1). bug 105917 originally noted the requirement
+  // to deal with IP addresses. note that GetBaseDomain() below will return an
+  // error if the URI is an IP address.
+  // 2) we also need this for the (rare) case where the site is actually an eTLD,
+  // e.g. http://co.tv; GetBaseDomain() will throw an error and we might
+  // erroneously think currentHost is foreign. so we consider this case non-
+  // foreign only if the hosts exactly match.
+  if (firstHost.Equals(currentHost))
+    return PR_FALSE;
 
-  // first ensure we're not dealing with IP addresses; if we are, require an
-  // exact match. we can't avoid this, otherwise the algo below will allow two
-  // IP's such as 128.12.96.5 and 213.12.96.5 to match.
-  if (IsIPAddress(firstHost)) {
-    return !IsInDomain(firstHost, currentHost, PR_FALSE);
+  // chrome URLs are never foreign (otherwise sidebar cookies won't work).
+  // eventually we want to have a protocol whitelist here,
+  // _or_ do something smart with nsIProtocolHandler::protocolFlags.
+  PRBool isChrome = PR_FALSE;
+  nsresult rv = aFirstURI->SchemeIs("chrome", &isChrome);
+  if (NS_SUCCEEDED(rv) && isChrome) {
+    return PR_FALSE;
   }
 
-  // next, allow a one-subdomain-level "fuzz" in the comparison. first, we need
-  // to find how many subdomain levels each host has; we only do the looser
-  // comparison if they have the same number of levels. e.g.
-  //  firstHost = weather.yahoo.com, currentHost = cookies.yahoo.com -> match
-  //  firstHost =     a.b.yahoo.com, currentHost =       b.yahoo.com -> no match
-  //  firstHost =         yahoo.com, currentHost = weather.yahoo.com -> no match
-  //  (since the normal test (next) will catch this case and give a match.)
-  // also, we can only do this if they have >=2 subdomain levels, to avoid
-  // matching yahoo.com with netscape.com (yes, this breaks for .co.nz etc...)
-  PRUint32 dotsInFirstHost = firstHost.CountChar('.');
-  if (dotsInFirstHost == currentHost.CountChar('.') &&
-      dotsInFirstHost >= 2) {
-    // we have enough dots - check IsInDomain(choppedFirstHost, currentHost)
-    PRInt32 dot1 = firstHost.FindChar('.');
-    return !IsInDomain(Substring(firstHost, dot1, firstHost.Length() - dot1), currentHost);
-  }
+  // get the base domain for the originating URI.
+  // e.g. for "images.bbc.co.uk", this would be "bbc.co.uk".
+  nsCAutoString baseDomain;
+  rv = mTLDService->GetBaseDomain(aFirstURI, 0, baseDomain);
+  if (NS_FAILED(rv)) {
+    // URI is an IP, eTLD, or something else went wrong - assume foreign
+    return PR_TRUE;
+  }  
+  baseDomain.Trim(".");
 
-  // don't have enough dots to chop firstHost, or the subdomain levels differ;
-  // so we just do the plain old check, IsInDomain(firstHost, currentHost).
-  return !IsInDomain(NS_LITERAL_CSTRING(".") + firstHost, currentHost);
+  // ensure the host domain is derived from the base domain.
+  // we prepend dots before the comparison to ensure e.g.
+  // "mybbc.co.uk" isn't matched as a superset of "bbc.co.uk".
+  currentHost.Insert(NS_LITERAL_CSTRING("."), 0);
+  baseDomain.Insert(NS_LITERAL_CSTRING("."), 0);
+  return !StringEndsWith(currentHost, baseDomain);
 }
 
 PRUint32
-nsCookieService::CheckPrefs(nsIURI         *aHostURI,
-                            nsIURI         *aFirstURI,
-                            nsIChannel     *aChannel,
-                            const char     *aCookieHeader)
+nsCookieService::CheckPrefs(nsIURI     *aHostURI,
+                            nsIURI     *aFirstURI,
+                            nsIChannel *aChannel,
+                            const char *aCookieHeader)
 {
   // pref tree:
   // 0) get the scheme strings from the two URI's
@@ -1895,6 +1842,8 @@ PRBool
 nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
                              nsIURI             *aHostURI)
 {
+  nsresult rv;
+
   // get host from aHostURI
   nsCAutoString hostFromURI;
   if (NS_FAILED(aHostURI->GetAsciiHost(hostFromURI))) {
@@ -1902,7 +1851,6 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
   }
   // trim trailing dots
   hostFromURI.Trim(".");
-  ToLowerCase(hostFromURI);
 
   // if a domain is given, check the host has permission
   if (!aCookieAttributes.host.IsEmpty()) {
@@ -1910,32 +1858,33 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
     // switch to lowercase now, to avoid case-insensitive compares everywhere
     ToLowerCase(aCookieAttributes.host);
 
-    // check whether the host is an IP address, and override isDomain to
-    // make the cookie a non-domain one. this will require an exact host
-    // match for the cookie, so we eliminate any chance of IP address
-    // funkiness (e.g. the alias 127.1 domain-matching 99.54.127.1).
-    // bug 105917 originally noted the requirement to deal with IP addresses.
-    if (IsIPAddress(aCookieAttributes.host)) {
-      return IsInDomain(aCookieAttributes.host, hostFromURI, PR_FALSE);
-    }
+    // get the base domain for the host URI.
+    // e.g. for "images.bbc.co.uk", this would be "bbc.co.uk", which
+    // represents the lowest level domain a cookie can be set for.
+    nsCAutoString baseDomain;
+    rv = mTLDService->GetBaseDomain(aHostURI, 0, baseDomain);
+    baseDomain.Trim(".");
+    if (NS_FAILED(rv)) {
+      // check whether the host is an IP address, and leave the cookie as
+      // a non-domain one. this will require an exact host match for the cookie,
+      // so we eliminate any chance of IP address funkiness (e.g. the alias 127.1
+      // domain-matching 99.54.127.1). bug 105917 originally noted the
+      // requirement to deal with IP addresses.
+      if (rv == NS_ERROR_HOST_IS_IP_ADDRESS)
+        return hostFromURI.Equals(aCookieAttributes.host);
 
-    /*
-     * verify that this host has the authority to set for this domain.   We do
-     * this by making sure that the host is in the domain.  We also require
-     * that a domain have at least one embedded period to prevent domains of the form
-     * ".com" and ".edu"
-     */
-    PRInt32 dot = aCookieAttributes.host.FindChar('.');
-    if (dot == kNotFound) {
-      // fail dot test
       return PR_FALSE;
     }
 
-    // prepend a dot, and check if the host is in the domain
+    // ensure the proposed domain is derived from the base domain; and also
+    // that the host domain is derived from the proposed domain (per RFC2109).
+    // we prepend a dot before the comparison to ensure e.g.
+    // "mybbc.co.uk" isn't matched as a superset of "bbc.co.uk".
+    hostFromURI.Insert(NS_LITERAL_CSTRING("."), 0);
     aCookieAttributes.host.Insert(NS_LITERAL_CSTRING("."), 0);
-    if (!IsInDomain(aCookieAttributes.host, hostFromURI)) {
-      return PR_FALSE;
-    }
+    baseDomain.Insert(NS_LITERAL_CSTRING("."), 0);
+    return StringEndsWith(aCookieAttributes.host, baseDomain) &&
+           StringEndsWith(hostFromURI, aCookieAttributes.host);
 
     /*
      * note: RFC2109 section 4.3.2 requires that we check the following:
@@ -1944,18 +1893,18 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
      * entire .co.nz domain. however, it's only a only a partial solution and
      * it breaks sites (IE doesn't enforce it), so we don't perform this check.
      */
+  }
+
+  // block any URIs without a host that aren't file:/// URIs
+  if (hostFromURI.IsEmpty()) {
+    PRBool isFileURI = PR_FALSE;
+    aHostURI->SchemeIs("file", &isFileURI);
+    if (!isFileURI)
+      return PR_FALSE;
+  }
 
   // no domain specified, use hostFromURI
-  } else {
-    // block any URIs without a host that aren't file:/// URIs
-    if (hostFromURI.IsEmpty()) {
-      PRBool isFileURI = PR_FALSE;
-      aHostURI->SchemeIs("file", &isFileURI);
-      if (!isFileURI)
-        return PR_FALSE;
-    }
-    aCookieAttributes.host = hostFromURI;
-  }
+  aCookieAttributes.host = hostFromURI;
 
   return PR_TRUE;
 }

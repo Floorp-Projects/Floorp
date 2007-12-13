@@ -200,9 +200,15 @@ sub BuildTools {
         # these aren't required and introduce more dependencies
         $mozconfig .= "ac_add_options --disable-dbus\n";
         $mozconfig .= "ac_add_options --disable-svg\n";
-        # This is necessary because PANGO'S NOW A DEPENDANCY! WHEEEEEE.
-        # (but update packaging doesn't need it)
-        $mozconfig .= "ac_add_options --enable-default-toolkit=gtk2\n";
+        # On our *prometheus-vm machines we must use gtk2 as the default toolkit
+        # On any other machines, they will be able to use the default,
+        # cairo-gtk2, without issue.
+        if (system("pkg-config --atleast-version=1.6.0 pango") != 0 ||
+         system("pkg-config --atleast-version=1.6.0 pangoft2") != 0 ||
+         system("pkg-config --atleast-version=1.6.0 pangoxft") != 0) {
+            $mozconfig .= "ac_add_options --enable-default-toolkit=gtk2";
+        }
+
         open(MOZCFG, '>' . catfile($mozDir, '.mozconfig')) or die "ERROR: Opening .mozconfig for writing failed: $!";
         print MOZCFG $mozconfig;
         close(MOZCFG);

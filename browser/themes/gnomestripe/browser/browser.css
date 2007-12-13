@@ -381,6 +381,11 @@ menuitem[command="Browser:Reload"],
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
+menuitem[command="Browser:Reload"][disabled],
+#context-reload[disabled] {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
+}
+
 menuitem[command="cmd_fullZoomEnlarge"] {
   list-style-image: url("moz-icon://stock/gtk-zoom-in?size=menu");
 }
@@ -769,7 +774,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #page-proxy-deck {
-  cursor: -moz-grab;
   margin: 2px 3px;
 }
 
@@ -797,7 +801,11 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   margin: 0;
 }
 
-.unknownIdentity > #identity-icon-label {
+#identity-box.verifiedIdentity > hbox {
+  background-color: rgba(0, 255, 0, 0.25);
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
   display: none;
 }
 
@@ -843,6 +851,13 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   white-space: -moz-pre-wrap;
   color: black;
   padding-left: 10px;
+  margin-left: 0;
+}
+
+#identity-popup-content-box > label {
+  white-space: -moz-pre-wrap;
+  margin-left: 0;
+  padding-left: 10px;
 }
 
 #identity-popup-content {
@@ -859,7 +874,12 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #identity-popup-encryption {
-  margin: 10px 0;
+  padding: 10px 0;
+}
+
+.verifiedIdentity > #identity-popup-encryption,
+.verifiedDomain > #identity-popup-encryption {
+  margin-left: -18px;
 }
 
 .verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,
@@ -932,13 +952,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 /* Autocomplete */
 #urlbar .autocomplete-textbox-container {
   -moz-box-align: stretch;
-}
-
-.autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteValue),
-.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteValue),
-.autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteValue) {
-  width: 16px;
-  height: 16px;
 }
 
 #treecolAutoCompleteImage {
@@ -1133,10 +1146,6 @@ tabpanels {
 .tabbrowser-tab[busy] > .tab-icon-image {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif") !important;
   opacity: 0.6;
-}
-
-.tabbrowser-tab[selected="true"] > .tab-icon-image {
-  cursor: -moz-grab;
 }
 
 .tabs-bottom {

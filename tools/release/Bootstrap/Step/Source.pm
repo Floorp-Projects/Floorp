@@ -33,15 +33,14 @@ sub Execute {
           or die("Cannot create $stageDir: $!");
     }
 
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['-d', $mozillaCvsroot, 
-                  'co', '-r', $productTag . '_RELEASE',
-                  'mozilla/client.mk', catfile('mozilla', $appName, 'config')],
-      dir => $stageDir,
-      logFile => catfile($logDir, 'source.log'),
+    $this->CvsCo(cvsroot => $mozillaCvsroot,
+                 tag => $productTag . '_RELEASE',
+                 modules => ['mozilla/client.mk',
+                             catfile('mozilla', $appName, 'config')],
+                 workDir => $stageDir,
+                 logFile => catfile($logDir, 'source.log')
     );
-
+                 
     $this->Shell(
       cmd => 'make',
       cmdArgs => ['-f', 'client.mk', 'checkout',

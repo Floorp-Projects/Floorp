@@ -171,7 +171,7 @@
 #endif
                 <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" command="Browser:Reload" key="key_reload"/>
                 <menuseparator/>
-                <menu id="viewFullZoomMenu" label="&fullZoom.label;" accesskey="&fullZoom.accesskey;" observes="isImage">
+                <menu id="viewFullZoomMenu" label="&fullZoom.label;" accesskey="&fullZoom.accesskey;">
                   <menupopup>
                     <menuitem key="key_fullZoomEnlarge" label="&fullZoomEnlargeCmd.label;" accesskey="&fullZoomEnlargeCmd.accesskey;"
                               command="cmd_fullZoomEnlarge"/>
@@ -417,7 +417,7 @@
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="javascriptConsole" 
                         label="&errorConsoleCmd.label;" accesskey="&errorConsoleCmd.accesskey;" 
-                        oncommand="toJavaScriptConsole();"/>
+                        key="key_errorConsole" oncommand="toJavaScriptConsole();"/>
 #ifdef XP_WIN
               <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   
                         command="View:PageInfo"/>

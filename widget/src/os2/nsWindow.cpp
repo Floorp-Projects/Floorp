@@ -665,7 +665,7 @@ nsWindow :: DealWithPopups ( ULONG inMsg, MRESULT* outResult )
       // if we've determined that we should still rollup everything, do it.
       if ( rollup ) {
         // only need to deal with the last rollup for left mouse down events.
-        gRollupListener->Rollup(inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
+        gRollupListener->Rollup(inMsg == WM_BUTTON1DOWN ? &mLastRollup : nsnull);
 
         // return TRUE tells Windows that the event is consumed, 
         // false allows the event to be dispatched

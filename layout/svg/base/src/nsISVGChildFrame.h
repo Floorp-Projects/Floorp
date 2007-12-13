@@ -74,6 +74,7 @@ public:
   // See bug 290852 for foreignObject complications.
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit)=0;
 
+  // Get bounds in our gfxContext's coordinates space (in device pixels)
   NS_IMETHOD_(nsRect) GetCoveredRegion()=0;
   NS_IMETHOD UpdateCoveredRegion()=0;
 

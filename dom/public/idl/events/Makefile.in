@@ -61,6 +61,7 @@ SDK_XPIDLSRCS =                                 \
 
 XPIDLSRCS =					\
 	nsIDOMNSEvent.idl			\
+	nsIDOMDataContainerEvent.idl	\
 	nsIDOMKeyEvent.idl			\
 	nsIDOMMutationEvent.idl			\
 	nsIDOMNSUIEvent.idl			\

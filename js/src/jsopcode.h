@@ -120,7 +120,7 @@ typedef enum JSOpLength {
 #define JOF_PARENHEAD    (1U<<21) /* opcode consumes value of expression in
                                      parenthesized statement head */
 #define JOF_INVOKE       (1U<<22) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
-#define JOF_TMPSLOT      (1U<<23) /* interpreter uses extra temporray slot
+#define JOF_TMPSLOT      (1U<<23) /* interpreter uses extra temporary slot
                                      to root intermediate objects */
 #define JOF_TMPSLOT_SHIFT 23
 

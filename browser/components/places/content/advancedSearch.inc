@@ -153,11 +153,11 @@
         </hbox>              
         <button id="advancedSearch0Minus"
                 label="&advancedSearch.minus.label;"
-                class="small"
+                class="small advancedSearchMinus"
                 oncommand="PlacesQueryBuilder.removeRow(event.target.parentNode);"/>
         <button id="advancedSearch0Plus"
                 label="&advancedSearch.plus.label;"
-                class="small"
+                class="small advancedSearchPlus"
                 command="OrganizerCommand_search:moreCriteria"/>
       </row>
     </rows>

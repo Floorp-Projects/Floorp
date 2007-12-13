@@ -739,7 +739,7 @@ TryGetSVGBoundingRect(nsIFrame* aFrame, nsRect* aRect)
 
   // r is in pixels relative to 'outer', get it into twips
   // relative to ICB origin
-  r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerCSSPixel());
+  r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerDevPixel());
   *aRect = r + GetOffsetFromInitialContainingBlock(outer);
   return PR_TRUE;
 #else
@@ -3434,6 +3434,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGenericElement)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
+  // nsNodeSH::PreCreate() depends on the identity pointer being the
+  // same as nsINode (which nsIContent inherits), so if you change the
+  // below line, make sure nsNodeSH::PreCreate() still does the right
+  // thing!
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
@@ -3848,6 +3852,9 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     return NS_OK;
   }
 
+  nsresult rv = BeforeSetAttr(aNameSpaceID, aName, nsnull, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   nsIDocument *document = GetCurrentDoc();    
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   if (document) {
@@ -3890,7 +3897,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   nsAttrValue oldValue;
-  nsresult rv = mAttrsAndChildren.RemoveAttrAt(index, oldValue);
+  rv = mAttrsAndChildren.RemoveAttrAt(index, oldValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (document) {
@@ -3929,7 +3936,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
-  return NS_OK;
+  return AfterSetAttr(aNameSpaceID, aName, nsnull, aNotify);
 }
 
 const nsAttrName*

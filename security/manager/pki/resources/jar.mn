@@ -66,5 +66,7 @@ pippki.jar:
     content/pippki/crlImportDialog.js        (content/crlImportDialog.js)
     content/pippki/pref-crlupdate.xul        (content/pref-crlupdate.xul)
     content/pippki/pref-crlupdate.js         (content/pref-crlupdate.js)
+    content/pippki/protectedAuth.xul         (content/protectedAuth.xul)
+    content/pippki/protectedAuth.js          (content/protectedAuth.js)
     content/pippki/formsigning.xul           (content/formsigning.xul)
     content/pippki/formsigning.js            (content/formsigning.js)

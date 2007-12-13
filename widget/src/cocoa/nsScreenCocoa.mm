@@ -56,7 +56,7 @@ nsScreenCocoa::~nsScreenCocoa ()
 NS_IMETHODIMP
 nsScreenCocoa::GetRect(PRInt32 *outX, PRInt32 *outY, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-    nsRect r = cocoaRectToGeckoRect([mScreen frame]);
+    nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mScreen frame]);
 
     *outX = r.x;
     *outY = r.y;
@@ -69,7 +69,7 @@ nsScreenCocoa::GetRect(PRInt32 *outX, PRInt32 *outY, PRInt32 *outWidth, PRInt32 
 NS_IMETHODIMP
 nsScreenCocoa::GetAvailRect(PRInt32 *outX, PRInt32 *outY, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-    nsRect r = cocoaRectToGeckoRect([mScreen visibleFrame]);
+    nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mScreen visibleFrame]);
 
     *outX = r.x;
     *outY = r.y;

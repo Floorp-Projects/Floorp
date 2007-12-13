@@ -278,15 +278,18 @@ PlacesController.prototype = {
     var nodes = this._view.getSelectionNodes();
     var root = this._view.getResultNode();
 
-    var btFolderId = PlacesUtils.toolbarFolderId;
     for (var i = 0; i < nodes.length; ++i) {
-      // Disallow removing the view's root node 
+      // Disallow removing the view's root node
       if (nodes[i] == root)
         return false;
 
-      // Disallow removing the toolbar folder
+      // Disallow removing the toolbar, menu and unfiled-bookmarks folders
+      var nodeItemId = nodes[i].itemId;
       if (!aIsMoveCommand &&
-          PlacesUtils.nodeIsFolder(nodes[i]) && nodes[i].itemId == btFolderId)
+           PlacesUtils.nodeIsFolder(nodes[i]) &&
+           (nodeItemId == PlacesUtils.toolbarFolderId ||
+            nodeItemId == PlacesUtils.unfiledBookmarksFolderId ||
+            nodeItemId == PlacesUtils.bookmarksMenuFolderId))
         return false;
 
       // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that

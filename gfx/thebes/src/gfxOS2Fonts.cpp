@@ -519,6 +519,8 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
     if (!textRun)
         return nsnull;
 
+    mEnableKerning = !(aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED);
+
     textRun->RecordSurrogates(aString);
 
     nsCAutoString utf8;
@@ -551,6 +553,8 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
     gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
+
+    mEnableKerning = !(aFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED);
 
     const char *chars = reinterpret_cast<const char *>(aString);
     PRBool isRTL = textRun->IsRightToLeft();
@@ -673,8 +677,43 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                 } else if (gid == 0) {
                     advance = -1; // trigger the missing glyphs case below
                 } else {
+                    // find next character and its glyph -- in case they exist
+                    // and exist in the current font face -- to compute kerning
+                    PRUint32 chNext = 0;
+                    FT_UInt gidNext = 0;
+                    FT_Pos lsbDeltaNext = 0;
+#ifdef DEBUG_thebes_2
+                    printf("(kerning=%s/%s)", mEnableKerning ? "enable" : "disable", FT_HAS_KERNING(face) ? "yes" : "no");
+#endif
+                    if (mEnableKerning && FT_HAS_KERNING(face) && p < aUTF8 + aUTF8Length) {
+                        chNext = getUTF8CharAndNext(p, &chLen);
+                        if (chNext) {
+                            gidNext = FT_Get_Char_Index(face, chNext);
+                            if (gidNext && gidNext != font->GetSpaceGlyph()) {
+                                FT_Load_Glyph(face, gidNext, FT_LOAD_DEFAULT);
+                                lsbDeltaNext = face->glyph->lsb_delta;
+                            }
+                        }
+                    }
+
+                    // now load the current glyph
                     FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load glyph into the slot
-                    advance = (face->glyph->advance.x >> 6) * appUnitsPerDevUnit;
+                    advance = face->glyph->advance.x;
+
+                    // now add kerning to the current glyph's advance
+                    if (chNext && gidNext) {
+                        FT_Vector kerning;
+                        FT_Get_Kerning(face, gid, gidNext, FT_KERNING_DEFAULT, &kerning);
+                        advance += kerning.x;
+                        if (face->glyph->rsb_delta - lsbDeltaNext >= 32) {
+                            advance -= 64;
+                        } else if (face->glyph->rsb_delta - lsbDeltaNext < -32) {
+                            advance += 64;
+                        }
+                    }
+
+                    // now apply unit conversion and scaling
+                    advance = (advance >> 6) * appUnitsPerDevUnit;
                 }
 #ifdef DEBUG_thebes_2
                 printf(" gid=%d, advance=%d (%s)\n", gid, advance,

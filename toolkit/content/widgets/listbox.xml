@@ -604,8 +604,13 @@
       </handler>
       <handler event="focus">
       <![CDATA[
-        if (this.currentIndex == -1 && this.getRowCount() > 0) {
-          this.currentIndex = this.getIndexOfFirstVisibleRow();
+        if (this.getRowCount() > 0) {
+          if (this.currentIndex == -1) {
+            this.currentIndex = this.getIndexOfFirstVisibleRow();
+          }
+          else {
+            this.currentItem._fireEvent("DOMMenuItemActive");
+          }
         }
         this._lastKeyTime = 0;
       ]]>

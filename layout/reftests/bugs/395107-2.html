@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<select id="a">
+<option>Option 1</option>
+<option>Option 2</option>
+<option>Option 3</option>
+<option>Option 4</option>
+</select>
+
+<script>
+document.body.offsetWidth;
+var x=document.getElementById('a').options;
+x[1].defaultSelected = true;
+x[2].defaultSelected = true;
+x[3].defaultSelected = true;
+</script>
+</body>
+</html>

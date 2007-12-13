@@ -763,7 +763,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
     }
 
     // Document level notification...
-    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+    if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT &&
+        !(aStateFlags & nsIWebProgressListener::STATE_RESTORING)) {
 #ifdef NOISY_DOC_LOADING
       printf("STATE_START & STATE_IS_DOCUMENT flags=%x\n", aStateFlags);
 #endif

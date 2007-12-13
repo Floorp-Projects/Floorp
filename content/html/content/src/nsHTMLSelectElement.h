@@ -332,12 +332,16 @@ protected:
    * @param aPresContext the current pres context
    * @param aIndex the index that was selected or deselected
    * @param aSelected whether the index was selected or deselected
+   * @param aChangeOptionState if false, don't do anything to the
+   *                           nsHTMLOptionElement at aIndex.  If true, change
+   *                           its selected state to aSelected.
    * @param aNotify whether to notify the style system and such
    */
   void OnOptionSelected(nsISelectControlFrame* aSelectFrame,
                         nsPresContext* aPresContext,
                         PRInt32 aIndex,
                         PRBool aSelected,
+                        PRBool aChangeOptionState,
                         PRBool aNotify);
   /**
    * Restore state to a particular state string (representing the options)

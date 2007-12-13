@@ -151,6 +151,17 @@ nsAppStartup::CreateHiddenWindow()
 
 
 NS_IMETHODIMP
+nsAppStartup::DestroyHiddenWindow()
+{
+  nsCOMPtr<nsIAppShellService> appShellService
+    (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
+
+  return appShellService->DestroyHiddenWindow();
+}
+
+
+NS_IMETHODIMP
 nsAppStartup::Run(void)
 {
   NS_ASSERTION(!mRunning, "Reentrant appstartup->Run()");
@@ -189,11 +200,6 @@ nsAppStartup::Quit(PRUint32 aMode)
 
   if (mShuttingDown)
     return NS_OK;
-
-  nsCOMPtr<nsIObserverService> obsService
-    (do_GetService("@mozilla.org/observer-service;1"));
-  if (obsService)
-    obsService->NotifyObservers(nsnull, "quit-application-granted", nsnull);
 
   /* eForceQuit doesn't actually work; it can cause a subtle crash if
      there are windows open which have unload handlers which open
@@ -236,11 +242,16 @@ nsAppStartup::Quit(PRUint32 aMode)
   if (!mRestart) 
       mRestart = (aMode & eRestart) != 0;
 
+  nsCOMPtr<nsIObserverService> obsService;
   /* Currently ferocity can never have the value of eForceQuit here.
      That's temporary (in an unscheduled kind of way) and logically
      this code is part of the eForceQuit case, so I'm checking against
      that value anyway. Reviewers made me add this comment. */
   if (ferocity == eAttemptQuit || ferocity == eForceQuit) {
+
+    obsService = do_GetService("@mozilla.org/observer-service;1");
+    if (obsService)
+      obsService->NotifyObservers(nsnull, "quit-application-granted", nsnull);
 
     AttemptingQuit(PR_TRUE);
 
@@ -299,12 +310,6 @@ nsAppStartup::Quit(PRUint32 aMode)
       obsService->NotifyObservers(nsnull, "quit-application",
         mRestart ? restartStr.get() : shutdownStr.get());
     }
-
-    nsCOMPtr<nsIAppShellService> appShellService
-      (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-    NS_ASSERTION(appShellService, "We're gonna leak something.");
-    if (appShellService)
-      appShellService->DestroyHiddenWindow();
 
     if (!mRunning) {
       postedExitEvent = PR_TRUE;

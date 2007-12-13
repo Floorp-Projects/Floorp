@@ -1,0 +1,23 @@
+<html>
+<head>
+<script>
+ 
+function boo()
+{
+  var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  rect.setAttribute("stroke", "blue");
+
+  document.body.appendChild(rect);
+}
+ 
+</script>
+</head>
+
+<body class="bodytext" onload="boo();">
+
+<div id="c1"></div>
+
+<p>In a debug trunk build from 2006-006-27, loading this page triggers an assertion.  (It also triggers a CSS error in the console, but I think that's a known, separate bug.)</p>
+
+</body>
+</html>

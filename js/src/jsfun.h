@@ -102,7 +102,7 @@ struct JSFunction {
                               : (fun)->nargs)
 
 extern JSClass js_ArgumentsClass;
-extern JSClass js_CallClass;
+extern JS_FRIEND_DATA(JSClass) js_CallClass;
 
 /* JS_FRIEND_DATA so that VALUE_IS_FUNCTION is callable from the shell. */
 extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
