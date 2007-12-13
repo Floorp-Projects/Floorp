@@ -78,10 +78,11 @@ var PlacesOrganizer = {
     PlacesQueryBuilder.init();
 
 #ifdef XP_MACOSX
-    // 1. Make Edit->Find focus the organizer search field
-    var findCommand = document.getElementById("cmd_find");
-    findCommand.setAttribute("oncommand", "PlacesSearchBox.findCurrent();");
-    findCommand.removeAttribute("disabled");
+    // 1. Map Edit->Find command to the organizer's command
+    var findMenuItem = document.getElementById("menu_find");
+    findMenuItem.setAttribute("command", "OrganizerCommand_find:current");
+    var findKey = document.getElementById("key_find");
+    findKey.setAttribute("command", "OrganizerCommand_find:current");
 
     // 2. Disable some keybindings from browser.xul
     var elements = ["cmd_handleBackspace", "cmd_handleShiftBackspace"];
