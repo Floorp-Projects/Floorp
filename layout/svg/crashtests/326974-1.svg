@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script>
+
+function init() {   var n2 = document.getElementById("n2");
+  var n3 = document.getElementById("n3");
+  
+  n2.appendChild(n3);
+}
+
+window.addEventListener("load", init, false);
+
+</script>
+
+
+<g id="n2">  <text id="n3" />
+</g>
+
+</svg>

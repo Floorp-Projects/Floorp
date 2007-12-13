@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<script>
+
+var SVG_NS = "http://www.w3.org/2000/svg";
+
+function boom()
+{
+  var svgElem = document.createElementNS(SVG_NS, "svg");
+  var ellipse = document.createElementNS(SVG_NS, "ellipse");
+
+  svgElem.setAttribute("viewBox", "0 0 30 40"); 
+  document.body.appendChild(svgElem);
+  document.body.appendChild(ellipse);
+  ellipse.appendChild(svgElem);
+  svgElem.removeAttribute("viewBox");
+}
+
+</script>
+</head>
+
+<body onload="boom()">
+
+</body>
+
+</html>
+

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     onload="setTimeout(boom, 30);"
+     class="reftest-wait">
+     
+<script style="display: none" type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  var oldGrad = document.getElementById("grad");
+  oldGrad.parentNode.removeChild(oldGrad);
+
+  var newGrad = document.createElementNS("http://www.w3.org/2000/svg", "radialGradient");
+  newGrad.setAttribute("gradientUnits", "userSpaceOnUse");
+  newGrad.setAttribute("id", "grad"); 
+  
+  document.documentElement.appendChild(newGrad);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+</script>
+
+		<radialGradient id="grad" gradientUnits="userSpaceOnUse" cx="240" cy="210" r="220" fx="240" fy="210">
+			<stop stop-color="yellow" offset="0"/>
+			<stop stop-color="green"  offset="1"/>
+		</radialGradient>
+		<rect x="20" y="150" width="440" height="80" fill="url(#grad)" stroke-width="40"/>
+
+</svg>

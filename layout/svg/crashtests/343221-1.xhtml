@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+
+function boo()
+{
+  document.getElementById("c").style.overflow = "hidden";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="setTimeout(boo, 30);">
+
+<svg xmlns="http://www.w3.org/2000/svg">
+  <circle id="c" cx="50" cy="50" r="20" />
+</svg>
+
+</body>
+</html>

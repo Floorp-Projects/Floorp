@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<script>
+
+function init()
+{ 
+  var a = document.getElementById("a");
+  var b = document.getElementById("b");
+  a.appendChild(b);
+  b.getBBox();
+};
+
+window.addEventListener("load", init, false);
+</script>
+
+<rect id="a" width="20" height="10"/><rect id="b" width="10" height="20"/>
+
+</svg>

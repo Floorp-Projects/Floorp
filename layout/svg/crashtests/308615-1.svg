@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+ <pattern id="pattern1">  
+   <rect style="fill:url(#pattern1);"/>
+ </pattern> 
+
+ <rect style="fill:url(#pattern1);" />
+
+</svg> 
