@@ -238,9 +238,12 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
             if (mBIH.colors && mBIH.colors < mNumColors)
                 mNumColors = mBIH.colors;
 
-            mColors = new colorTable[mNumColors];
+            // Always allocate 256 even though mNumColors might be smaller
+            mColors = new colorTable[256];
             if (!mColors)
                 return NS_ERROR_OUT_OF_MEMORY;
+
+            memset(mColors, 0, 256 * sizeof(colorTable));
         }
         else if (mBIH.compression != BI_BITFIELDS && mBIH.bpp == 16) {
             // Use default 5-5-5 format
