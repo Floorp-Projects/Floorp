@@ -266,7 +266,8 @@
 
   </binding>
 
-  <binding id="urlbar-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
+  <!-- Note: this binding is applied to the autocomplete popup used in the Search bar and in web page content -->
+  <binding id="browser-autocomplete-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
     <implementation>
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
@@ -285,31 +286,35 @@
       <method name="onPopupClick">
         <parameter name="aEvent"/>
         <body><![CDATA[
+          // Ignore all right-clicks
+          if (aEvent.button == 2)
+            return;
+
           var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
 
-          // default action on unmodified left-click
+          // Check for unmodified left-click, and use default behavior
           if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
               !aEvent.altKey && !aEvent.metaKey) {
             controller.handleEnter();
+            return;
           }
-          // completely ignore right-clicks
-          else if (aEvent.button != 2) {
-            if (this.mInput._getParentSearchbar) {
-              // handle search bar click
-              var search = controller.getValueAt(this.selectedIndex);
-              var textbox = this.mInput;
 
-              // close the autocomplete popup and copy the selected value to the search box
-              this.closePopup();
-              textbox.value = search;
-              // open the search results according to the clicking subtlety
-              var where = whereToOpenLink(aEvent, false, true);
-              textbox._getParentSearchbar().doSearch(search, where);
-            }
-            else {
-              // everybody else (i.e. browser content) gets unmodified behavior
-              controller.handleEnter();
-            }
+          // Check for middle-click or modified clicks on the search bar
+          var searchBar = BrowserSearch.searchBar;
+          if (searchBar && searchBar.textbox == this.mInput) {
+            // Handle search bar popup clicks
+            var search = controller.getValueAt(this.selectedIndex);
+  
+            // close the autocomplete popup and revert the entered search term
+            this.closePopup();
+            controller.handleEscape();
+
+            // Fill in the search bar's value
+            searchBar.value = search;
+
+            // open the search results according to the clicking subtlety
+            var where = whereToOpenLink(aEvent, false, true);
+            searchBar.doSearch(search, where);
           }
           ]]></body>
         </method>
@@ -358,25 +363,29 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
+          // Ignore right-clicks
+          if (aEvent.button == 2)
+            return;
+
           var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
 
-          // default action on unmodified left-click
+          // Check for unmodified left-click, and use default behavior
           if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
               !aEvent.altKey && !aEvent.metaKey) {
             controller.handleEnter();
+            return;
           }
-          // completely ignore right-clicks
-          else if (aEvent.button != 2) {
-            if (gURLBar && this.mInput == gURLBar) {
-              // handle address bar click
-              var url = controller.getValueAt(this.selectedIndex);
 
-              // close the autocomplete popup and revert the entered address
-              this.closePopup();
-              controller.handleEscape();
-              // respect the usual clicking subtleties
-              openUILink(url, aEvent);
-            }
+          // Check for middle-click or modified clicks on the URL bar
+          if (gURLBar && this.mInput == gURLBar) {
+            var url = controller.getValueAt(this.selectedIndex);
+
+            // close the autocomplete popup and revert the entered address
+            this.closePopup();
+            controller.handleEscape();
+
+            // respect the usual clicking subtleties
+            openUILink(url, aEvent);
           }
         ]]>
         </body>
