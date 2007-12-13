@@ -265,52 +265,6 @@ public:
   static PRBool GetID(nsIContent *aContent, nsAString& aID);
 
   /**
-   * Find out what kinds of properties are checked for this content node's document
-   * @param aContent     The content node we're going to look for ARIA properties on
-   * @param aWeakShell   The presshell for the document we're looking for ARIA properties on (optional optimization)
-   * @return             The types of properties checked
-   */
-  static PRUint32 GetAriaPropTypes(nsIContent *aContent, nsIWeakReference *aWeakShell = nsnull);
-
-  /**
-   *  Check for the relevant ARIA property. Can check either for a properly namespaced property,
-   *  or a fake hyphenated namespace using "aria-" as a prefix in HTML. Is optimized to only
-   *  check for each type when it is possible to exist on a given node.
-   *  @param aContent     Node to check for property on
-   *  @param aWeakShell   The current pres shell if known (as an optimization), or nsnull if not known by caller
-   *  @param aProperty    An enumeration indicating which ARIA property we are checking
-   *  @param aAriaPropTypes  A bitflag for the property types to check for (namespaced, hyphenated or both), if known by caller
-   *  @return             PR_TRUE if the property is defined
-   */
-  static PRBool HasAriaProperty(nsIContent *aContent, nsIWeakReference *aWeakShell,
-                                EAriaProperty aProperty,
-                                PRUint32 aCheckFlags = 0);
-
-  /**
-   *  Get the relevant ARIA property. Can check either for a properly namespaced property,
-   *  or a fake hyphenated namespace using "aria-" as a prefix in HTML. Is optimized to only
-   *  check for each type when it is possible to exist on a given node.
-   *  @param aContent     Node to check for property on
-   *  @param aWeakShell   The current pres shell if known (as an optimization), or nsnull if not known by caller
-   *  @param aProperty    An enumeration indicating which ARIA property we are checking
-   *  @param aValue       Where to store the property value
-   *  @param aAriaPropTypes  A bitflag for the property types to check for (namespaced, hyphenated or both), if known by caller
-   *  @return             PR_TRUE if the property is defined
-   */
-  static PRBool GetAriaProperty(nsIContent *aContent, nsIWeakReference *aWeakShell,
-                                EAriaProperty aProperty, nsAString& aValue, 
-                                PRUint32 aCheckFlags = 0);
-
-  /**
-   * Given a role string, return the role with any WAI role prefix trimmed off
-   * @param aRole  The role to start with
-   * @param aContent  What content nodes the role is set on
-   * @return          The entire role if there is no prefix that is a WAI role prefix,
-   *                  or the role without the prefix, if it was mapped to WAI roles
-   */
-  static const char *TrimmedRole(const char *aRole, nsIContent *aContent);  
-
-  /**
    * Get the role map entry for a given DOM node. This will use the first
    * ARIA role if the role attribute provides a space delimited list of roles.
    * @param aNode  The DOM node to get the role map entry for
@@ -324,17 +278,15 @@ public:
    * ID attribute can be either 'id' attribute or 'anonid' if the element is
    * anonymous.
    *
-   * @param aAriaProperty - the ARIA property to search for or eAria_none, if aRelationAttr is passed in
    * @param aForNode - the given element the search is performed for
-   * @param aTagName - tag name of searched element, or nsnull for any -- ignored if aAriaProperty passed in
    * @param aRelationAttr - attribute name of searched element, ignored if aAriaProperty passed in
+   * @param aTagName - tag name of searched element, or nsnull for any -- ignored if aAriaProperty passed in
    * @param aAncestorLevelsToSearch - points how is the neighborhood of the
    *                                  given element big.
    */
   static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
-                                                 EAriaProperty aAriaProperty,
+                                                 nsIAtom *aRelationAttr,
                                                  nsIAtom *aTagName = nsnull,
-                                                 nsIAtom *aRelationAttr = nsnull,
                                                  PRUint32 aAncestorLevelsToSearch = 5);
 
   /**
@@ -344,8 +296,7 @@ public:
    *
    * @param aId - value of searched attribute
    * @param aLookContent - element that search is performed inside
-   * @param aAriaProperty - the ARIA property to search for or eAria_none, if aRelationAttr is passed in
-   * @param aRelationAttr - searched attribute-- ignored if aAriaProperty passed in
+   * @param aRelationAttr - searched attribute
    * @param                 if both aAriaProperty and aRelationAttr are null, then any element with aTagType will do
    * @param aExcludeContent - element that is skiped for search
    * @param aTagType - tag name of searched element, by default it is 'label' --
@@ -353,17 +304,14 @@ public:
    */
   static nsIContent *FindDescendantPointingToID(const nsString *aId,
                                                 nsIContent *aLookContent,
-                                                EAriaProperty aAriaProperty,
-                                                nsIAtom *aRelationAttr = nsnull,
+                                                nsIAtom *aRelationAttr,
                                                 nsIContent *aExcludeContent = nsnull,
                                                 nsIAtom *aTagType = nsAccessibilityAtoms::label);
 
   // Helper for FindDescendantPointingToID(), same args
   static nsIContent *FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
                                                     nsIContent *aLookContent,
-                                                    EAriaProperty aAriaProperty,
-                                                    PRUint32 aAriaPropTypes,
-                                                    nsIAtom *aRelationAttr = nsnull,
+                                                    nsIAtom *aRelationAttrs,
                                                     nsIContent *aExcludeContent = nsnull,
                                                     nsIAtom *aTagType = nsAccessibilityAtoms::label);
 };

@@ -322,45 +322,6 @@ GetSingleValue(nsISVGGlyphFragmentLeaf *fragment,
     nsCOMPtr<nsIDOMSVGLength> length;
     list->GetItem(0, getter_AddRefs(length));
     length->GetValue(val);
-
-    nsSVGTextPathFrame *textPath = fragment->FindTextPathParent();
-
-    if (textPath) {
-      nsRefPtr<gfxFlattenedPath> data = textPath->GetFlattenedPath();
-      if (!data)
-        return;
-
-      nsIFrame *pathFrame = textPath->GetPathFrame();
-      if (!pathFrame)
-        return;
-
-      /* check for % sizing of textpath */
-      PRUint16 type;
-      length->GetUnitType(&type);
-      if (type == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-        float percent;
-        length->GetValueInSpecifiedUnits(&percent);
-
-        *val = data->GetLength()*percent/100.0f;
-      } else if (pathFrame->GetContent()->HasAttr(kNameSpaceID_None, 
-                                                  nsGkAtoms::pathLength)) {
-         nsCOMPtr<nsIDOMSVGPathElement> pathElement = 
-                                     do_QueryInterface(pathFrame->GetContent());
-        if (!pathElement)
-          return;
-
-        nsIDOMSVGAnimatedNumber* pathLength;
-        pathElement->GetPathLength(&pathLength);
-        if (!pathLength)
-          return;
-        float pl;
-        pathLength->GetAnimVal(&pl);
-        if (pl) 
-           *val *= data->GetLength() / pl;
-        else 
-           *val = 0;
-      }
-    }
   }
 }
 
@@ -437,6 +398,12 @@ nsSVGTextFrame::UpdateGlyphPositioning()
     {
       nsCOMPtr<nsIDOMSVGLengthList> list = firstFragment->GetY();
       GetSingleValue(firstFragment, list, &y);
+    }
+
+    // check for startOffset on textPath
+    nsSVGTextPathFrame *textPath = firstFragment->FindTextPathParent();
+    if (textPath) {
+      x = textPath->GetStartOffset();
     }
 
     // determine x offset based on text_anchor:

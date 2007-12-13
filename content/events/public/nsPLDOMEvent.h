@@ -59,12 +59,17 @@ public:
   nsPLDOMEvent (nsIDOMNode *aEventNode, const nsAString& aEventType)
     : mEventNode(aEventNode), mEventType(aEventType)
   { }
- 
+
+  nsPLDOMEvent(nsIDOMNode *aEventNode, nsIDOMEvent *aEvent)
+    : mEventNode(aEventNode), mEvent(aEvent)
+  { }
+
   NS_IMETHOD Run();
   nsresult PostDOMEvent();
 
-  nsCOMPtr<nsIDOMNode> mEventNode;
-  nsString mEventType;
+  nsCOMPtr<nsIDOMNode>  mEventNode;
+  nsCOMPtr<nsIDOMEvent> mEvent;
+  nsString              mEventType;
 };
 
 #endif

@@ -69,6 +69,7 @@ CPPSRCS		= \
 		nsEventListenerManager.cpp \
 		nsEventStateManager.cpp \
 		nsDOMEvent.cpp \
+		nsDOMDataContainerEvent.cpp \
 		nsDOMUIEvent.cpp \
 		nsDOMKeyboardEvent.cpp \
 		nsDOMTextEvent.cpp \

@@ -38,7 +38,6 @@ function printpreview() {
                             .getService(Components.interfaces.nsIPrefBranch);
   prefs.setBoolPref('print.show_print_progress', false);
   //XXX I would have thought this would work, instead I'm forced to use prefs service
-  // I'm disabling showPrintProgress dialog, because it stays as a zombie dialog, see bug 405588
   gWbp.globalPrintSettings.showPrintProgress = false; 
   gWbp.printPreview(gWbp.globalPrintSettings, null, listener);
   prefs.clearUserPref('print.show_print_progress');
@@ -53,15 +52,32 @@ function exitprintpreview() {
 function run()
 {
 /** Test for Bug 396024 **/
-  window.frames[0].frameElement.setAttribute('onload', 'run2()');
   netscape.security.PrivilegeManager.enablePrivilege('UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  var printService = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                               .getService(Components.interfaces.nsIPrintSettingsService);
   SimpleTest.waitForExplicitFinish();
-  printpreview();
-  ok(gWbp.doingPrintPreview, "Should be doing print preview");
-  exitprintpreview();
-  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore1");
-  printpreview();
-  window.frames[0].location.reload();
+
+  try {
+     var printerEnumerator = Components.classes["@mozilla.org/gfx/printerenumerator;1"]
+                             .getService(Components.interfaces.nsIPrinterEnumerator);
+  } catch(e) {
+     //don't try to test on Mac, since the print preview code doesn't work there
+     SimpleTest.finish();
+     return;
+  }
+
+  if (printService.defaultPrinterName != '') {
+    window.frames[0].frameElement.setAttribute('onload', 'run2()');
+    printpreview();
+    ok(gWbp.doingPrintPreview, "Should be doing print preview");
+    exitprintpreview();
+    ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore1");
+    printpreview();
+    window.frames[0].location.reload();
+  } else {
+    todo(false, "No printer seems installed on this machine, that is necessary for this test");
+    SimpleTest.finish();
+  }
 }
 
 function run2() {
@@ -88,4 +104,3 @@ function run2() {
 </pre>
 </body>
 </html>
-

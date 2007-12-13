@@ -214,6 +214,28 @@
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
 }
 
+.advancedSearchMinus {
+  list-style-image: url("moz-icon://stock/gtk-remove?size=menu");
+}
+
+.advancedSearchPlus {
+  list-style-image: url("moz-icon://stock/gtk-add?size=menu");
+}
+
+.advancedSearchMinus .button-text,
+.advancedSearchPlus .button-text {
+  display: none;
+}
+
+.advancedSearchMinus .button-icon,
+.advancedSearchPlus .button-icon {
+  margin: 0 !important;
+}
+
+#saveSearch {
+  list-style-image: url("moz-icon://stock/gtk-save?size=menu");
+}
+
 /**** expanders ****/
 
 .expander-up,
@@ -292,6 +314,10 @@ menuitem[command="cmd_redo"][disabled] {
 
 menuitem[command="cmd_selectAll"] {
   list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
+}
+
+menuitem[command="cmd_selectAll"][disabled] {
+  list-style-image: url("moz-icon://stock/gtk-select-all?size=menu&state=disabled");
 }
 
 #orgClose {

@@ -271,7 +271,8 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
           // This is sort of a hack ... we need to notify that the option was
           // set and change selectedIndex even though we didn't really change
           // its value.
-          OnOptionSelected(selectFrame, presContext, i, PR_TRUE, PR_FALSE);
+          OnOptionSelected(selectFrame, presContext, i, PR_TRUE, PR_FALSE,
+                           PR_FALSE);
         }
       }
     }
@@ -829,6 +830,7 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
                                       nsPresContext* aPresContext,
                                       PRInt32 aIndex,
                                       PRBool aSelected,
+                                      PRBool aChangeOptionState,
                                       PRBool aNotify)
 {
   // Set the selected index
@@ -838,12 +840,14 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
     FindSelectedIndex(aIndex+1);
   }
 
-  // Tell the option to get its bad self selected
-  nsCOMPtr<nsIDOMNode> option;
-  Item(aIndex, getter_AddRefs(option));
-  if (option) {
-    nsCOMPtr<nsIOptionElement> optionElement(do_QueryInterface(option));
-    optionElement->SetSelectedInternal(aSelected, aNotify);
+  if (aChangeOptionState) {
+    // Tell the option to get its bad self selected
+    nsCOMPtr<nsIDOMNode> option;
+    Item(aIndex, getter_AddRefs(option));
+    if (option) {
+      nsCOMPtr<nsIOptionElement> optionElement(do_QueryInterface(option));
+      optionElement->SetSelectedInternal(aSelected, aNotify);
+    }
   }
 
   // Let the frame know too
@@ -885,6 +889,11 @@ nsHTMLSelectElement::FindSelectedIndex(PRInt32 aStartIndex)
 //                   changed regardless of whether it is selected or not.
 //                   Generally the UI passes TRUE and JS passes FALSE.
 //                   (setDisabled currently is the opposite)
+//
+// XXXbz the above comment is pretty confusing.  Maybe we should actually
+// document the args to this function too, in addition to documenting what
+// things might end up looking like?  In particular, pay attention to the
+// setDisabled vs checkDisabled business.
 NS_IMETHODIMP
 nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
                                                PRInt32 aEndIndex,
@@ -996,7 +1005,8 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
 
             did_get_frame = PR_TRUE;
 
-            OnOptionSelected(selectFrame, presContext, optIndex, PR_TRUE, aNotify);
+            OnOptionSelected(selectFrame, presContext, optIndex, PR_TRUE,
+                             PR_TRUE, aNotify);
             optionsSelected = PR_TRUE;
           }
         }
@@ -1028,7 +1038,8 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
                 did_get_frame = PR_TRUE;
               }
 
-              OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE, aNotify);
+              OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE,
+                               PR_TRUE, aNotify);
               optionsDeselected = PR_TRUE;
 
               // Only need to deselect one option if not multiple
@@ -1069,7 +1080,8 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
             did_get_frame = PR_TRUE;
           }
 
-          OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE, aNotify);
+          OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE,
+                           PR_TRUE, aNotify);
           optionsDeselected = PR_TRUE;
         }
       }

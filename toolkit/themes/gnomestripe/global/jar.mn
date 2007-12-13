@@ -12,6 +12,8 @@ classic.jar:
 +  skin/classic/global/tree.css
 +  skin/classic/global/listbox.css
 +  skin/classic/global/groupbox.css
++  skin/classic/global/findBar.css
++  skin/classic/global/textbox.css
 +  skin/classic/global/icons/notfound.png                      (icons/notfound.png)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)
 +  skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)

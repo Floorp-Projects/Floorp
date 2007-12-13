@@ -1,0 +1,45 @@
+load 307314-1.svg
+load 308615-1.svg
+load 308917-1.svg
+load 310436-1.svg
+load 322185-1.svg
+load 326495-1.svg
+load 326974-1.svg
+load 327711-1.svg
+load 328137-1.svg
+load 329848-1.svg
+load 338301-1.xhtml
+load 338312-1.xhtml
+load 340083-1.svg
+load 340945-1.svg
+load 342923-1.html
+load 343221-1.xhtml
+load 344749-1.svg
+load 344887-1.svg
+load 344892-1.svg
+load 344898-1.svg
+load 344904-1.svg
+load 345418-1.svg
+load 348982-1.xhtml
+load 354777-1.xhtml
+load 359516-1.svg
+load 361015-1.svg
+load 361587-1.svg
+load 363611-1.xhtml
+load 366956-1.svg
+load 366956-2.svg
+load 367111-1.svg
+load 369233-1.svg
+load 369438-1.svg
+load 369438-2.svg
+load 371563-1.xhtml
+load 375775-1.svg
+skip load 380691-1.svg # crashes due to bug 408145
+load 384391-1.xhtml
+load 384728-1.svg
+load 385246-1.svg
+load 385246-2.svg
+load 385840-1.svg # asserts (bug 385845)
+load 385852-1.svg
+load 386475-1.xhtml # asserts (bug 385554)
+load 402408-1.svg

@@ -40,17 +40,26 @@ sub Execute {
     MkdirWithPath(dir => $productConfigBumpDir)
       or die("Cannot mkdir $productConfigBumpDir: $!");
 
-    foreach my $branch ($branchTag . '_release', $branchTag . '_l10n_release') {
-        $this->Shell(
-          cmd => 'cvs',
-          cmdArgs => ['-d', $mozillaCvsroot, 
-                      'co', '-d', $branch,
-                      '-r', $branch,
-                      CvsCatfile('mozilla', 'tools', 'tinderbox-configs',
-                                 $product, $osname)],
-          logFile => catfile($logDir, 
-           'build_config-checkout-' . $branch . '.log'),
-          dir => $productConfigBumpDir,
+    my @branches = ();
+    # tinderbox-configs tags are different on branches vs trunk
+    # Do the right thing in both cases
+    if ($branchTag eq 'HEAD') {
+        push(@branches, ('release', 'l10n_release'));
+    }
+    else {
+        push(@branches, $branchTag . '_release');
+        push(@branches, $branchTag . '_l10n_release');
+    }
+
+    foreach my $branch (@branches) {
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     checkoutDir => $branch,
+                     tag => $branch,
+                     modules => [CvsCatfile('mozilla', 'tools',
+                                  'tinderbox-configs', $product, $osname)],
+                     logFile => catfile($logDir,
+                      'build_config-checkout-' . $branch . '.log'),
+                     workDir => $productConfigBumpDir
         );
   
         my @bumpConfigFiles = qw(tinder-config.pl mozconfig);
@@ -114,9 +123,19 @@ sub Verify {
     my $config = new Bootstrap::Config();
     my $branchTag = $config->Get(var => 'branchTag');
     my $logDir = $config->Get(sysvar => 'logDir');
+    
+    my @branches = ();
+    # tinderbox-configs tags are different on branches vs trunk
+    # Do the right thing in both cases
+    if ($branchTag eq 'HEAD') {
+        push(@branches, ('release', 'l10n_release'));
+    }
+    else {
+        push(@branches, $branchTag . '_release');
+        push(@branches, $branchTag . '_l10n_release');
+    }
 
-    foreach my $branch ($branchTag . '_release', $branchTag . '_l10n_release') {
-
+    foreach my $branch (@branches) {
         $this->CheckLog(
             log => catfile($logDir, 
              'build_config-checkout-' . $branch . '.log'),

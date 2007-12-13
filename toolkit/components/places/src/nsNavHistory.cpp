@@ -23,6 +23,7 @@
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Seth Spitzer <sspitzer@mozilla.com>
  *   Asaf Romano <mano@mozilla.com>
+ *   Marco Bonardo <mak77@supereva.it>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -104,13 +105,17 @@
 
 // preference ID strings
 #define PREF_BRANCH_BASE                        "browser."
-#define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
-#define PREF_BROWSER_HISTORY_EXPIRE_VISITS      "history_expire_visits"
+#define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
+#define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
+#define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
 #define PREF_BROWSER_IMPORT_BOOKMARKS           "browser.places.importBookmarksHTML"
-
+#define PREF_BROWSER_IMPORT_DEFAULTS            "browser.places.importDefaults"
+#define PREF_BROWSER_CREATEDSMARTBOOKMARKS      "browser.places.createdSmartBookmarks"
+#define PREF_BROWSER_LEFTPANEFOLDERID           "browser.places.leftPaneFolderId"
+      
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
 // The most that will be used is the size of the DB file. Normal history sizes
@@ -168,7 +173,7 @@
 #define MAX_EXPIRE_RECORDS_ON_IDLE 200
 
 // Limit the number of items in the history for performance reasons
-#define EXPIRATION_CAP_VISITS 20000
+#define EXPIRATION_CAP_SITES 40000
 
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
@@ -267,8 +272,9 @@ nsNavHistory* nsNavHistory::gHistoryService;
 nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
-                               mExpireDays(0),
-                               mExpireVisits(0),
+                               mExpireDaysMin(0),
+                               mExpireDaysMax(0),
+                               mExpireSites(0),
                                mAutoCompleteOnlyTyped(PR_FALSE),
                                mBatchLevel(0),
                                mLock(nsnull),
@@ -406,8 +412,9 @@ nsNavHistory::Init()
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
-    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
-    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_VISITS, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, this, PR_FALSE);
+    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
   }
 
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
@@ -502,6 +509,17 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     if (prefs) {
       rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = prefs->SetBoolPref(PREF_BROWSER_IMPORT_DEFAULTS, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);  
+
+      // if the places.sqlite gets deleted/corrupted the queries should be created again
+      rv = prefs->SetBoolPref(PREF_BROWSER_CREATEDSMARTBOOKMARKS, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);  
+      
+      // we must create a new Organizer left pane folder root, the old will not be valid anymore
+      rv = prefs->SetIntPref(PREF_BROWSER_LEFTPANEFOLDERID, -1);
+      NS_ENSURE_SUCCESS(rv, rv); 
     }
   }
 
@@ -1390,10 +1408,11 @@ nsNavHistory::LoadPrefs()
   if (! mPrefBranch)
     return NS_OK;
 
-  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
-  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_VISITS,
-                                        &mExpireVisits)))
-    mExpireVisits = EXPIRATION_CAP_VISITS;
+  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, &mExpireDaysMax);
+  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, &mExpireDaysMin);
+  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_SITES,
+                                        &mExpireSites)))
+    mExpireSites = EXPIRATION_CAP_SITES;
   
   PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
@@ -1909,7 +1928,6 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
   PRBool newItem = PR_FALSE; // used to send out notifications at the end
   if (alreadyVisited) {
     // Update the existing entry...
-
     rv = mDBGetPageVisitStats->GetInt64(0, &pageID);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2117,8 +2135,11 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
 // from browser-menubar.inc, our history menu query is:
 // place:type=0&sort=4&maxResults=10
 // note, any maxResult > 0 will still be considered a history menu query
+// or if this is the place query from the "Most Visited" item in the "Smart Bookmarks" folder:
+// place:queryType=0&sort=8&maxResults=10
+// note, any maxResult > 0 will still be considered a Most Visited menu query
 static
-PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHistoryQueryOptions *aOptions)
+PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHistoryQueryOptions *aOptions, PRUint16 aSortMode)
 {
   if (aQueries.Count() != 1)
     return PR_FALSE;
@@ -2131,7 +2152,7 @@ PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHi
   if (aOptions->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_URI)
     return PR_FALSE;
 
-  if (aOptions->SortingMode() != nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)
+  if (aOptions->SortingMode() != aSortMode)
     return PR_FALSE;
 
   if (aOptions->MaxResults() <= 0)
@@ -2225,7 +2246,8 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
 
   // for the very special query for the history menu 
   // we generate a super-optimized SQL query
-  if (IsHistoryMenuQuery(aQueries, aOptions)) {
+  if (IsHistoryMenuQuery(aQueries, aOptions, 
+        nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)) {
     // visit_type <> 4 == TRANSITION_EMBED
     // visit_type <> 0 == undefined (see bug #375777 for details)
     queryString = NS_LITERAL_CSTRING(
@@ -2242,6 +2264,24 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
     queryString += NS_LITERAL_CSTRING(")) GROUP BY h.id ORDER BY 6 DESC"); // v.visit_date
     return NS_OK;
   }
+
+  // for the most visited menu query
+  // we generate a super-optimized SQL query
+  if (IsHistoryMenuQuery(aQueries, aOptions, 
+        nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING)) {
+    queryString = NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+      "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id "
+      " AND visit_type <> 4 AND visit_type <> 0), "
+      "f.url, null, null "
+      "FROM moz_places h "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id WHERE "
+      "h.id IN (SELECT id FROM moz_places WHERE hidden <> 1 "
+      " ORDER BY visit_count DESC LIMIT ");
+    queryString.AppendInt(aOptions->MaxResults());
+    queryString += NS_LITERAL_CSTRING(") ORDER BY h.visit_count DESC");
+    return NS_OK;
+  }  
 
   PRBool asVisits =
     (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_VISIT ||
@@ -2583,8 +2623,6 @@ nsNavHistory::GetHistoryDisabled(PRBool *_retval)
 //
 //    Note that this always adds the page with one visit and no parent, which
 //    is appropriate for imported URIs.
-//
-//    UNTESTED
 
 NS_IMETHODIMP
 nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
@@ -3493,10 +3531,12 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationMessage);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
-    PRInt32 oldDays = mExpireDays;
-    PRInt32 oldVisits = mExpireVisits;
+    PRInt32 oldDaysMin = mExpireDaysMin;
+    PRInt32 oldDaysMax = mExpireDaysMax;
+    PRInt32 oldVisits = mExpireSites;
     LoadPrefs();
-    if (oldDays != mExpireDays || oldVisits != mExpireVisits)
+    if (oldDaysMin != mExpireDaysMin || oldDaysMax != mExpireDaysMax ||
+        oldVisits != mExpireSites)
       mExpire.OnExpirationChanged();
   }
 
@@ -4534,7 +4574,7 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
 //    Sees if this URL happened "recently."
 //
 //    It is always removed from our recent list no matter what. It only counts
-//    as "recent" if the event happend more recently than our event
+//    as "recent" if the event happened more recently than our event
 //    threshold ago.
 
 PRBool
@@ -5278,9 +5318,9 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 //
 //    Construct a matrix of search terms from the given queries array.
 //    All of the query objects are ORed together. Within a query, all the terms
-//    are ANDed together. See nsINavHistory.idl.
+//    are ANDed together. See nsINavHistoryService.idl.
 //
-//    This just breaks the quer up into words. We don't do anything fancy,
+//    This just breaks the query up into words. We don't do anything fancy,
 //    not even quoting. We do, however, strip quotes, because people might
 //    try to input quotes expecting them to do something and get no results
 //    back.

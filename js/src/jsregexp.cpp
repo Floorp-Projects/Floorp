@@ -916,7 +916,9 @@ CalculateBitmapSize(CompilerState *state, RENode *target, const jschar *src,
     }
 
     while (src != end) {
+        JSBool canStartRange = JS_TRUE;
         uintN localMax = 0;
+
         switch (*src) {
           case '\\':
             ++src;
@@ -971,6 +973,7 @@ lexHex:
                 localMax = n;
                 break;
               case 'd':
+                canStartRange = JS_FALSE;
                 if (inRange) {
                     JS_ReportErrorNumber(state->context,
                                          js_GetErrorMessage, NULL,
@@ -984,6 +987,7 @@ lexHex:
               case 'S':
               case 'w':
               case 'W':
+                canStartRange = JS_FALSE;
                 if (inRange) {
                     JS_ReportErrorNumber(state->context,
                                          js_GetErrorMessage, NULL,
@@ -1053,7 +1057,7 @@ lexHex:
             }
             inRange = JS_FALSE;
         } else {
-            if (src < end - 1) {
+            if (canStartRange && src < end - 1) {
                 if (*src == '-') {
                     ++src;
                     inRange = JS_TRUE;
@@ -3367,7 +3371,14 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     gData.start = start;
     gData.skipped = 0;
 
-    JS_INIT_ARENA_POOL(&gData.pool, "RegExpPool", 8096, 4,
+    /*
+     * To avoid multiple allocations in InitMatch(), the arena size parameter
+     * should be at least as big as:
+     * INITIAL_BACKTRACK
+     * + (sizeof(REProgState) * INITIAL_STATESTACK)
+     * + (offsetof(REMatchState, parens) + avgParanSize * sizeof(RECapture))
+     */
+    JS_INIT_ARENA_POOL(&gData.pool, "RegExpPool", 12288, 4,
                        &cx->scriptStackQuota);
     x = InitMatch(cx, &gData, re, length);
 
@@ -3866,7 +3877,8 @@ regexp_trace(JSTracer *trc, JSObject *obj)
 JSClass js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp) |
+    JSCLASS_FIXED_BINDING,
     JS_PropertyStub,    JS_PropertyStub,
     regexp_getProperty, regexp_setProperty,
     JS_EnumerateStub,   JS_ResolveStub,

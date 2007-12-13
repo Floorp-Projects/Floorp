@@ -47,12 +47,13 @@ sub Execute {
     }
 
     # Check out the talkback files from the branch you want to tag.
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['-d', $mofoCvsroot, 'co', '-r', $branchTag, '-D', 
-                  $pullDate, CvsCatfile('talkback', 'fullsoft')],
-      dir => catfile($releaseTagDir, 'mofo'),
-      logFile => catfile($logDir, 'tag-talkback_mofo-checkout.log'),
+    $this->CvsCo(
+      cvsroot => $mofoCvsroot,
+      tag => $branchTag,
+      date => $pullDate,
+      modules => [CvsCatfile('talkback', 'fullsoft')],
+      workDir => catfile($releaseTagDir, 'mofo'),
+      logFile => catfile($logDir, 'tag-talkback_mofo-checkout.log')
     );
 
     # Create the talkback RELEASE tag.

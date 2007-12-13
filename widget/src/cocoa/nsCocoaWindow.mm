@@ -341,7 +341,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
      * Note: If you pass a rect with 0,0 for an origin, the window ends up in a
      * weird place for some reason. This stops that without breaking popups.
      */
-    NSRect rect = geckoRectToCocoaRect(aRect);
+    NSRect rect = nsCocoaUtils::GeckoRectToCocoaRect(aRect);
     
     // compensate for difference between frame and content area height (e.g. title bar)
     NSRect newWindowFrame = [NSWindow frameRectForContentRect:rect styleMask:features];
@@ -657,6 +657,12 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       }
     }
     else {
+      // If the window is a popup window with a parent window we need to
+      // unhook it here before ordering it out. When you order out the child
+      // of a window it hides the parent window.
+      if (mWindowType == eWindowType_popup && nativeParentWindow)
+        [nativeParentWindow removeChildWindow:mWindow];
+
       [mWindow orderOut:nil];
       // Unless it's explicitly removed from NSApp's "window cache", a popup
       // window will keep receiving mouse-moved events even after it's been
@@ -667,14 +673,8 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       // the NSApplication class (in header files generated using class-dump).
       // This workaround was "borrowed" from the Java Embedding Plugin (which
       // uses it for a different purpose).
-      if (mWindowType == eWindowType_popup) {
-        // remove the window as a child of its parent again. This will just
-        // do nothing if the popup was never added as a child.
-        if (nativeParentWindow)
-          [nativeParentWindow removeChildWindow:mWindow];
-
+      if (mWindowType == eWindowType_popup)
         [NSApp _removeWindowFromCache:mWindow];
-      }
 
       // it's very important to turn off mouse moved events when hiding a window, otherwise
       // the windows' tracking rects will interfere with each other. (bug 356528)
@@ -748,7 +748,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 
   // The point we have is in Gecko coordinates (origin top-left). Convert
   // it to Cocoa ones (origin bottom-left).
-  NSPoint coord = {aX, FlippedScreenY(aY)};
+  NSPoint coord = {aX, nsCocoaUtils::FlippedScreenY(aY)};
   [mWindow setFrameTopLeftPoint:coord];
 
   return NS_OK;
@@ -797,7 +797,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
   if (!WindowSizeAllowed(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
-  nsRect windowBounds(cocoaRectToGeckoRect([mWindow frame]));
+  nsRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
   BOOL isMoving = (windowBounds.x != aX || windowBounds.y != aY);
   BOOL isResizing = (windowBounds.width != aWidth || windowBounds.height != aHeight);
 
@@ -805,7 +805,7 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
     return NS_OK;
 
   nsRect geckoRect(aX, aY, aWidth, aHeight);
-  NSRect newFrame = geckoRectToCocoaRect(geckoRect);
+  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(geckoRect);
 
   // We have to report the size event -first-, to make sure that content
   // repositions itself.  Cocoa views are anchored at the bottom left,
@@ -840,14 +840,14 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   if (!WindowSizeAllowed(aWidth, aHeight))
     return NS_ERROR_FAILURE;
 
-  nsRect windowBounds(cocoaRectToGeckoRect([mWindow frame]));
+  nsRect windowBounds(nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]));
   return Resize(windowBounds.x, windowBounds.y, aWidth, aHeight, aRepaint);
 }
 
 
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
 {
-  nsRect windowFrame = cocoaRectToGeckoRect([mWindow frame]);
+  nsRect windowFrame = nsCocoaUtils::CocoaRectToGeckoRect([mWindow frame]);
   aRect.x = windowFrame.x;
   aRect.y = windowFrame.y;
   aRect.width = windowFrame.width;
@@ -1065,7 +1065,7 @@ NS_IMETHODIMP nsCocoaWindow::ShowMenuBar(PRBool aShow)
 
 NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  nsRect r = cocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
+  nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
   aNewRect.x = r.x + aOldRect.x;
   aNewRect.y = r.y + aOldRect.y;
@@ -1078,7 +1078,7 @@ NS_IMETHODIMP nsCocoaWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNew
 
 NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  nsRect r = cocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
+  nsRect r = nsCocoaUtils::CocoaRectToGeckoRect([mWindow contentRectForFrameRect:[mWindow frame]]);
 
   aNewRect.x = aOldRect.x - r.x;
   aNewRect.y = aOldRect.y - r.y;
@@ -1498,8 +1498,11 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   if ((self = [super init])) {
     mTitlebarColor = [aTitlebarColor retain];
     mBackgroundColor = [aBackgroundColor retain];
-    mWindow = aWindow; // weak ref
+    mWindow = aWindow; // weak ref to avoid a cycle
     NSRect frameRect = [aWindow frame];
+
+    // We cant just use a static because the height can vary by window, and we don't
+    // want to recalculate this every time we draw. A member is the best solution.
     mTitlebarHeight = frameRect.size.height - [aWindow contentRectForFrameRect:frameRect].size.height;
   }
   return self;
@@ -1526,6 +1529,7 @@ static const float sTigerHeaderEndGrey = 202/255.0f;
 
 // This is the grey for the border at the bottom of the titlebar.
 static const float sLeopardTitlebarBorderGrey = 64/255.0f;
+static const float sLeopardTitlebarBackgroundBorderGrey = 134/255.0f;
 static const float sTigerTitlebarBorderGrey = 140/255.0f;
 
 // Callback used by the default titlebar shading.
@@ -1556,6 +1560,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NSColor *titlebarColor = [color titlebarColor];
   NSColor *backgroundColor = [color backgroundColor];
   NSWindow *window = [color window];
+  BOOL isMain = [window isMainWindow];
 
   // Remember: this context is NOT flipped, so the origin is in the bottom left.
   float titlebarHeight = [color titlebarHeight];
@@ -1566,7 +1571,6 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
   // If the titlebar color is nil, draw the default titlebar shading.
   if (!titlebarColor) {
-    BOOL isMain = [window isMainWindow];
     // On Tiger when the window is not main, we want to draw a pinstripe pattern instead.
     if (!nsToolkit::OnLeopardOrLater() && !isMain) {
       [[NSColor windowBackgroundColor] set];
@@ -1586,10 +1590,9 @@ void patternDraw(void* aInfo, CGContextRef aContext)
     }
 
     // Draw the one pixel border at the bottom of the titlebar.
-    if (nsToolkit::OnLeopardOrLater())
-      [[NSColor colorWithDeviceWhite:sLeopardTitlebarBorderGrey alpha:1.0f] set];
-    else
-      [[NSColor colorWithDeviceWhite:sTigerTitlebarBorderGrey alpha:1.0f] set];
+    float borderGrey = !nsToolkit::OnLeopardOrLater() ? sTigerTitlebarBorderGrey :
+      (isMain ? sLeopardTitlebarBorderGrey : sLeopardTitlebarBackgroundBorderGrey);
+    [[NSColor colorWithDeviceWhite:borderGrey alpha:1.0f] set];
     NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
   } else {
     // if the titlebar color is not nil, just set and draw it normally.
@@ -1671,6 +1674,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   [self setFill];
 }
 
+
 - (float)titlebarHeight
 {
   return mTitlebarHeight;
@@ -1727,11 +1731,9 @@ void patternDraw(void* aInfo, CGContextRef aContext)
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
       if ((contentView = [self contentView]) != nil) {
-        // Since [anEvent window] might not be us, we can't use [anEvent
-        // locationInWindow].
-        windowLocation = [self mouseLocationOutsideOfEventStream];
-        target = [contentView hitTest:[contentView convertPoint:
-                                      windowLocation fromView:nil]];
+        // Since [anEvent window] might not be us, we can't use [anEvent locationInWindow].
+        windowLocation = nsCocoaUtils::EventLocationForWindow(anEvent, self);
+        target = [contentView hitTest:[contentView convertPoint:windowLocation fromView:nil]];
       }
       break;
     default:

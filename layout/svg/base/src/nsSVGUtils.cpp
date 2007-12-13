@@ -81,6 +81,7 @@
 #include "gfxPlatform.h"
 #include "nsSVGForeignObjectFrame.h"
 #include "nsIFontMetrics.h"
+#include "nsIDOMSVGUnitTypes.h"
 
 static void AddEffectProperties(nsIFrame *aFrame);
 
@@ -1475,6 +1476,47 @@ nsSVGUtils::MaxExpansion(nsIDOMSVGMatrix *aMatrix)
   float g = (a * a + b * b - c * c - d * d) / 2;
   float h = a * c + b * d;
   return sqrt(f + sqrt(g * g + h * h));
+}
+
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGUtils::AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
+                                 nsSVGEnum *aUnits,
+                                 nsISVGChildFrame *aFrame)
+{
+  nsCOMPtr<nsIDOMSVGMatrix> fini = aMatrix;
+
+  if (aFrame &&
+      aUnits->GetAnimValue() == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+    nsCOMPtr<nsIDOMSVGRect> rect;
+    nsresult rv = aFrame->GetBBox(getter_AddRefs(rect));
+
+    if (NS_SUCCEEDED(rv)) {
+      float minx, miny, width, height;
+      rect->GetX(&minx);
+      rect->GetY(&miny);
+      rect->GetWidth(&width);
+      rect->GetHeight(&height);
+
+      // Correct for scaling in outersvg CTM
+      nsIFrame *frame;
+      CallQueryInterface(aFrame, &frame);
+      nsPresContext *presCtx = frame->PresContext();
+      float cssPxPerDevPx =
+        presCtx->AppUnitsToFloatCSSPixels(presCtx->AppUnitsPerDevPixel());
+      minx *= cssPxPerDevPx;
+      miny *= cssPxPerDevPx;
+      width *= cssPxPerDevPx;
+      height *= cssPxPerDevPx;
+
+      nsCOMPtr<nsIDOMSVGMatrix> tmp;
+      aMatrix->Translate(minx, miny, getter_AddRefs(tmp));
+      tmp->ScaleNonUniform(width, height, getter_AddRefs(fini));
+    }
+  }
+
+  nsIDOMSVGMatrix* retval = fini.get();
+  NS_IF_ADDREF(retval);
+  return retval;
 }
 
 #ifdef DEBUG

@@ -130,7 +130,7 @@ def runTest(browser_config, test_config):
   for i in range(test_config['cycles']):
     # Run the test 
     browser_results = ""
-    timeout = 18000 # 5 hours
+    timeout = 28800 # 8 hours
     total_time = 0
     output = ''
     url = test_config['url']
@@ -204,7 +204,7 @@ def runTest(browser_config, test_config):
         if ffprocess.ProcessesWithNameExist("crashreporter") or not ffprocess.ProcessesWithNameExist("firefox"):
           busted = True
 
-    if total_time > timeout:
+    if total_time >= timeout:
       print "FAIL: timeout from test"
 
     #stop the counter manager since this test is complete

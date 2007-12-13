@@ -49,8 +49,6 @@
 #include "nsIAccessibleTable.h"
 #endif
 
-#define kMaxTreeColumns 100
-
 /* static */
 PRBool nsXULTreeAccessible::IsColumnHidden(nsITreeColumn *aColumn)
 {
@@ -506,6 +504,8 @@ NS_IMETHODIMP nsXULTreeAccessible::SelectAllSelection(PRBool *_retval)
   return NS_OK;
 }
 
+// nsIAccessible nsIAccessibleTreeCache::
+//   GetCachedTreeitemAccessible(in long aRow, nsITreeColumn* aColumn)
 NS_IMETHODIMP
 nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow,
                                                  nsITreeColumn* aColumn,
@@ -551,6 +551,77 @@ nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow,
   }
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
   NS_IF_ADDREF(*aAccessible = accessible);
+  return NS_OK;
+}
+
+// void nsIAccessibleTreeCache::
+//   invalidateCache(in PRInt32 aRow, in PRInt32 aCount)
+NS_IMETHODIMP
+nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
+{
+  // Do not invalidate the cache if rows have been inserted.
+  if (aCount > 0)
+    return NS_OK;
+
+  nsCOMPtr<nsITreeColumns> cols;
+  nsresult rv = mTree->GetColumns(getter_AddRefs(cols));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+  PRInt32 colsCount = 0;
+  rv = cols->GetCount(&colsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+#else
+  nsCOMPtr<nsITreeColumn> col;
+  rv = cols->GetKeyColumn(getter_AddRefs(col));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 colIdx = 0;
+  rv = col->GetIndex(&colIdx);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  for (PRInt32 rowIdx = aRow; rowIdx < aRow - aCount; rowIdx++) {
+#ifdef MOZ_ACCESSIBILITY_ATK
+    for (PRInt32 colIdx = 0; colIdx < colsCount; ++colIdx) {
+#else
+    {
+#endif
+
+      void *key = reinterpret_cast<void*>(rowIdx * kMaxTreeColumns + colIdx);
+
+      nsCOMPtr<nsIAccessNode> accessNode;
+      GetCacheEntry(*mAccessNodeCache, key, getter_AddRefs(accessNode));
+
+      if (accessNode) {
+        nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
+        nsCOMPtr<nsIAccessibleEvent> event =
+          new nsAccEvent(nsIAccessibleEvent::EVENT_DOM_DESTROY,
+                         accessible, nsnull, PR_FALSE);
+        FireAccessibleEvent(event);
+
+        mAccessNodeCache->Remove(key);
+      }
+    }
+  }
+
+  PRInt32 newRowCount = 0;
+  rv = mTreeView->GetRowCount(&newRowCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 oldRowCount = newRowCount - aCount;
+
+  for (PRInt32 rowIdx = newRowCount; rowIdx < oldRowCount; ++rowIdx) {
+#ifdef MOZ_ACCESSIBILITY_ATK
+    for (PRInt32 colIdx = 0; colIdx < colsCount; ++colIdx) {
+#else
+    {
+#endif
+      void *key = reinterpret_cast<void*>(rowIdx * kMaxTreeColumns + colIdx);
+      mAccessNodeCache->Remove(key);
+    }
+  }
+
   return NS_OK;
 }
 

@@ -334,9 +334,20 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
   *hit = nsnull;
 
-  PRUint16 mask = GetHittestMask();
-  if (!mask || (!(mask & HITTEST_MASK_FORCE_TEST) && !mRect.Contains(x, y)))
-    return NS_OK;
+  PRUint16 fillRule, mask;
+  // check if we're a clipPath - cheaper than IsClipChild(), and we shouldn't
+  // get in here for other nondisplay children
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    NS_ASSERTION(IsClipChild(), "should be in clipPath but we're not");
+    mask = HITTEST_MASK_FILL;
+    fillRule = GetClipRule();
+  } else {
+    mask = GetHittestMask();
+    if (!mask || (!(mask & HITTEST_MASK_FORCE_TEST) &&
+                  !mRect.Contains(nscoord(x), nscoord(y))))
+      return NS_OK;
+    fillRule = GetStyleSVG()->mFillRule;
+  }
 
   PRBool isHit = PR_FALSE;
 
@@ -344,12 +355,6 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 
   GeneratePath(&context);
   gfxPoint devicePoint = context.DeviceToUser(gfxPoint(x, y));
-
-  PRUint32 fillRule;
-  if (IsClipChild())
-    fillRule = GetClipRule();
-  else
-    fillRule = GetStyleSVG()->mFillRule;
 
   if (fillRule == NS_STYLE_FILL_RULE_EVENODD)
     context.SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);

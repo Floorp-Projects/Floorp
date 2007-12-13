@@ -1,6 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is JavaScript Engine testing utilities.
  *
- * The Initial Developer of the Original Code is IBM Corporation
- * Portions created by the Initial Developer are Copyright (C)2007
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *   Aaron Leventhal <aleventh@us.ibm.com>
+ * Contributor(s): Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,38 +35,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-  // ARIA properties
-ARIA_PROPERTY(activedescendant)
-ARIA_PROPERTY(atomic)
-ARIA_PROPERTY(autocomplete)
-ARIA_PROPERTY(busy)
-ARIA_PROPERTY(channel)
-ARIA_PROPERTY(checked)
-ARIA_PROPERTY(controls)
-ARIA_PROPERTY(datatype)
-ARIA_PROPERTY(describedby)
-ARIA_PROPERTY(disabled)
-ARIA_PROPERTY(dropeffect)
-ARIA_PROPERTY(expanded)
-ARIA_PROPERTY(flowto)
-ARIA_PROPERTY(grab)
-ARIA_PROPERTY(haspopup)
-ARIA_PROPERTY(invalid)
-ARIA_PROPERTY(labelledby)
-ARIA_PROPERTY(level)
-ARIA_PROPERTY(live)
-ARIA_PROPERTY(multiline)
-ARIA_PROPERTY(multiselectable)
-ARIA_PROPERTY(owns)
-ARIA_PROPERTY(posinset)
-ARIA_PROPERTY(pressed)
-ARIA_PROPERTY(readonly)
-ARIA_PROPERTY(relevant)
-ARIA_PROPERTY(required)
-ARIA_PROPERTY(secret)
-ARIA_PROPERTY(selected)
-ARIA_PROPERTY(setsize)
-ARIA_PROPERTY(sort)
-ARIA_PROPERTY(valuenow)
-ARIA_PROPERTY(valuemin)
-ARIA_PROPERTY(valuemax)
+var gTestfile = 'regress-371636.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 371636;
+var summary = 'Numeric sort performance';
+var actual = false;
+var expect = '(tint/tstr < 3)=true';
+
+
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
+
+function test()
+{
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
+ 
+  function testint(power)
+  {
+    var N = 1 << power;
+    var a = new Array(N);
+    for (var i = 0; i != N; ++i)
+      a[i] = (N-1) & (0x9E3779B9 * i);
+    var now = Date.now;
+    var t = now();
+    a.sort();
+    return now() - t;
+  }
+
+  function teststr(power)
+  {
+    var N = 1 << power;
+    var a = new Array(N);
+    for (var i = 0; i != N; ++i)
+      a[i] = String((N-1) & (0x9E3779B9 * i));
+    var now = Date.now;
+    var t = now();
+    a.sort();
+    return now() - t;
+  }
+
+  var tint = testint(18);
+  var tstr = teststr(18);
+  print('int: ' + tint, 'str: ' + tstr, 'int/str: ' + (tint/tstr).toFixed(2));
+
+  actual = '(tint/tstr < 3)=' + (tint/tstr < 3);
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}

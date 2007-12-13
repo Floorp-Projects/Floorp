@@ -864,12 +864,21 @@ LoginManager.prototype = {
         try {
             var uri = this._ioService.newURI(uriString, null, null);
 
-            realm += uri.scheme;
-            realm += "://";
-            realm += uri.hostPort;
+            realm = uri.scheme + "://" + uri.host;
+
+            // If the URI explicitly specified a port, only include it when
+            // it's not the default. (We never want "http://foo.com:80")
+            var port = uri.port;
+            if (port != -1) {
+                var handler = this._ioService.getProtocolHandler(uri.scheme);
+                if (port != handler.defaultPort)
+                    realm += ":" + port;
+            }
+
         } catch (e) {
             // bug 159484 - disallow url types that don't support a hostPort.
             // (set null to cause throw in the JS above)
+            this.log("Couldn't parse origin for " + uriString);
             realm = null;
         }
 

@@ -72,16 +72,6 @@ class nsIDocShellTreeItem;
 typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsIAccessNode>
         nsAccessNodeHashtable;
 
-/**
- * Does the current content have this ARIA role? 
- * Implemented as a compiler macro so that length can be computed at compile time.
- * @param aContent  Node to get role string from
- * @param aRoleName Role string to compare with -- literal const char*
- * @return PR_TRUE if there is a match
- */
-#define ARIARoleEquals(aContent, aRoleName) \
-  nsAccessNode::ARIARoleEqualsImpl(aContent, aRoleName, NS_ARRAY_LENGTH(aRoleName) - 1)
-
 class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
 {
   public: // construction, destruction
@@ -118,25 +108,6 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     static already_AddRefed<nsIDOMNode> GetDOMNodeForContainer(nsISupports *aContainer);
     static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
     
-    // Return PR_TRUE if there is a role attribute
-    static PRBool HasRoleAttribute(nsIContent *aContent)
-    {
-      return (aContent->IsNodeOfType(nsINode::eHTML) && aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::role)) ||
-              aContent->HasAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role) ||
-              aContent->HasAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role);
-    }
-
-    /**
-     * Provide the role string if there is one
-     * @param aContent Node to get role string from
-     * @param aRole String to fill role into
-     * @return PR_TRUE if there is a role attribute, and fill it into aRole
-     */
-    static PRBool GetARIARole(nsIContent *aContent, nsString& aRole);
-
-    static PRBool ARIARoleEqualsImpl(nsIContent* aContent, const char* aRoleName, PRUint32 aLen)
-      { nsAutoString role; return GetARIARole(aContent, role) && role.EqualsASCII(aRoleName, aLen); }
-
     static void GetComputedStyleDeclaration(const nsAString& aPseudoElt,
                                             nsIDOMElement *aElement,
                                             nsIDOMCSSStyleDeclaration **aCssDecl);

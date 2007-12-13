@@ -912,7 +912,10 @@ function delayedStartup()
   }
 
   UpdateUrlbarSearchSplitterState();
-
+  
+  try {
+    placesMigrationTasks();
+  } catch(ex) {}
   initBookmarksToolbar();
   PlacesStarButton.init();
 
@@ -1661,17 +1664,16 @@ function getShortcutOrURI(aURL, aPostDataRef) {
   if (engine)
     return engine.getSubmission(param, null).uri.spec;
 
-  try {
-    var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(keyword);
-    shortcutURL = shortcutURI.spec;
-    aPostDataRef.value = PlacesUtils.getPostDataForURI(shortcutURI);
-  } catch(ex) {}
+  if (!aPostDataRef)
+    aPostDataRef = {};
+  [shortcutURL, aPostDataRef.value] =
+    PlacesUtils.getURLAndPostDataForKeyword(keyword);
 
   if (!shortcutURL)
     return aURL;
 
   var postData = "";
-  if (aPostDataRef && aPostDataRef.value)
+  if (aPostDataRef.value)
     postData = unescape(aPostDataRef.value);
 
   if (/%s/i.test(shortcutURL) || /%s/i.test(postData)) {
@@ -2042,14 +2044,7 @@ function SetPageProxyState(aState)
   if (!gProxyDeck)
     gProxyDeck = document.getElementById("page-proxy-deck");
 
-  if (gURLBar.getAttribute("pageproxystate") != aState) {
-    gURLBar.setAttribute("pageproxystate", aState);
-#ifdef MOZ_WIDGET_GTK2
-    // redraw gtk focus ring
-    if (gURLBar.focused)
-      gURLBar.focus();
-#endif
-  }
+  gURLBar.setAttribute("pageproxystate", aState);
   gProxyButton.setAttribute("pageproxystate", aState);
 
   // the page proxy state is set to valid via OnLocationChange, which
@@ -2152,7 +2147,7 @@ function BrowserOnCommand(event) {
             case 2 : // Pre-fetch & pre-populate
               params.prefetchCert = true;
             case 1 : // Pre-populate
-              params.location = content.location.href;
+              params.location = errorDoc.location.href;
           }
         } catch (e) {
           Components.utils.reportError("Couldn't get ssl_override pref: " + e);
@@ -2163,7 +2158,7 @@ function BrowserOnCommand(event) {
         
         // If the user added the exception cert, attempt to reload the page
         if (params.exceptionAdded)
-          content.location.reload();
+          errorDoc.location.reload();
       }
       else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
         // Redirect them to a known-functioning page, default start page

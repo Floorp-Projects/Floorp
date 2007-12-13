@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.imageData.put.type.missing</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+var imgdata1 = ctx.getImageData(0, 0, 10, 10);
+var _thrown = undefined; try {
+  ctx.putImageData({ height: imgdata1.height, data: imgdata1.data }, 0, 0);
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+var _thrown = undefined; try {
+  ctx.putImageData({ width: imgdata1.width, data: imgdata1.data }, 0, 0);
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+var _thrown = undefined; try {
+  ctx.putImageData({ width: imgdata1.width, height: imgdata1.height }, 0, 0);
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+

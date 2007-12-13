@@ -48,6 +48,12 @@ interface nsIAccessible;
 [scriptable, uuid(caa4f543-070e-4705-8428-2e53575c41bb)]
 interface nsIAccessibleText : nsISupports
 {
+  // In parameters for character offsets:
+  //  -1 will be treated as the equal to the end of the text
+  //  -2 will be treated as the caret position
+  const PRInt32 TEXT_OFFSET_END_OF_TEXT = -1;
+  const PRInt32 TEXT_OFFSET_CARET       = -2;
+
   const nsAccessibleTextBoundary BOUNDARY_CHAR = 0;
   const nsAccessibleTextBoundary BOUNDARY_WORD_START = 1;
   const nsAccessibleTextBoundary BOUNDARY_WORD_END = 2;
@@ -166,7 +172,6 @@ interface nsIAccessibleText : nsISupports
 
   /**
    * Set the bounds for the given selection range
-   * Offsets < 0 will be treated as the equal to the end of the text
    */
   void setSelectionBounds (in long selectionNum,
                            in long startOffset,

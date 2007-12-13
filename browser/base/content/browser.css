@@ -28,7 +28,7 @@ menuitem.spell-suggestion {
   -moz-user-focus: normal;
 }
 
-.verifiedDomain > #identity-icon-label {
+.verifiedDomain > hbox > #identity-icon-label {
   display: none;
 }
 

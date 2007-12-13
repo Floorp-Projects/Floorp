@@ -44,6 +44,8 @@
 
 /**************************************************************************/
 /* <math> - outermost math element                                        */
+/* Put Cambria before Cambria Math as Cambria Math has neither bold nor   */
+/* italic.                                                                */
 /**************************************************************************/
 
 math {
@@ -52,7 +54,7 @@ math {
   display: inline;
   font-size: inherit;
   font-style: normal;
-  font-family: CMSY10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
+  font-family: STIXGeneral, Cambria, Cambria Math, DejaVu Serif, DejaVu Sans, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
   -moz-float-edge: margin-box;
 }
 math[mode="display"], math[display="block"] {
@@ -450,7 +452,7 @@ mtd[-moz-math-columnline="dashed"] {
 
 ::-moz-math-stretchy {
   font-style: normal;
-  font-family: serif;
+  font-family: serif; /* an empty family is ignored as an error and behaves like inherit */
 /*  background-color: #3C6; */
 }
 ::-moz-math-anonymous {

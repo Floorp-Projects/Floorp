@@ -92,11 +92,12 @@ class nsIDocumentObserver;
 class nsBindingManager;
 class nsIDOMNodeList;
 class mozAutoSubtreeModified;
+struct JSObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xc7f56e99, 0x5538, 0x4841, \
-  { 0x97, 0x39, 0x43, 0x6e, 0x6d, 0x26, 0x95, 0x12 } }
+{ 0xed21686d, 0x4e2f, 0x41f5, \
+  { 0x94, 0xaa, 0xcc, 0x1f, 0xbd, 0xfa, 0x1f, 0x84 } }
 
 
 // Flag for AddStyleSheet().
@@ -120,7 +121,8 @@ public:
       mNodeInfoManager(nsnull),
       mCompatMode(eCompatibility_FullStandards),
       mIsInitialDocumentInWindow(PR_FALSE),
-      mPartID(0)
+      mPartID(0),
+      mJSObject(nsnull)
   {
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
   }
@@ -394,8 +396,12 @@ public:
    */
   nsIContent *GetRootContent() const
   {
-    return mRootContent;
+    return (mCachedRootContent &&
+            mCachedRootContent->GetNodeParent() == this) ?
+           reinterpret_cast<nsIContent*>(mCachedRootContent.get()) :
+           GetRootContentInternal();
   }
+  virtual nsIContent *GetRootContentInternal() const = 0;
 
   /**
    * Accessors to the collection of stylesheets owned by this document.
@@ -895,6 +901,16 @@ public:
     return mLoadedAsData;
   }
 
+  JSObject* GetJSObject() const
+  {
+    return mJSObject;
+  }
+
+  void SetJSObject(JSObject *aJSObject)
+  {
+    mJSObject = aJSObject;
+  }
+
 protected:
   ~nsIDocument()
   {
@@ -929,9 +945,10 @@ protected:
   // This is just a weak pointer; the parent document owns its children.
   nsIDocument* mParentDocument;
 
-  // A weak reference to the only child element, or null if no
-  // such element exists.
-  nsIContent* mRootContent;
+  // A reference to the content last returned from GetRootContent().
+  // This should be an nsIContent, but that would force us to pull in
+  // nsIContent.h
+  nsCOMPtr<nsINode> mCachedRootContent;
 
   // We'd like these to be nsRefPtrs, but that'd require us to include
   // additional headers that we don't want to expose.
@@ -983,6 +1000,12 @@ protected:
 
   nsCOMArray<nsINode> mSubtreeModifiedTargets;
   PRUint32            mSubtreeModifiedDepth;
+
+private:
+  // JSObject cache. Only to be used for performance
+  // optimizations. This will be set once this document is touched
+  // from JS, and it will be unset once the JSObject is finalized.
+  JSObject *mJSObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

@@ -383,6 +383,7 @@
 
             var button = aEvent.target.buttonInfo;
             if (button.popup) {
+              document.popupNode = aEvent.target;
               document.getElementById(button.popup).
                 showPopup(aEvent.originalTarget, -1, -1, "popup", "bottomleft", "topleft");
               aEvent.stopPropagation();

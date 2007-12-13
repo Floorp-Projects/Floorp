@@ -64,6 +64,9 @@ var PlacesOrganizer = {
       leftPaneSelection = window.arguments[0];
 
     this.selectLeftPaneQuery(leftPaneSelection);
+    // clear the back-stack
+    this._backHistory.splice(0);
+    document.getElementById("OrganizerCommand:Back").setAttribute("disabled", true);
 
     var view = this._content.treeBoxObject.view;
     if (view.rowCount > 0)
@@ -78,10 +81,11 @@ var PlacesOrganizer = {
     PlacesQueryBuilder.init();
 
 #ifdef XP_MACOSX
-    // 1. Make Edit->Find focus the organizer search field
-    var findCommand = document.getElementById("cmd_find");
-    findCommand.setAttribute("oncommand", "PlacesSearchBox.findCurrent();");
-    findCommand.removeAttribute("disabled");
+    // 1. Map Edit->Find command to the organizer's command
+    var findMenuItem = document.getElementById("menu_find");
+    findMenuItem.setAttribute("command", "OrganizerCommand_find:current");
+    var findKey = document.getElementById("key_find");
+    findKey.setAttribute("command", "OrganizerCommand_find:current");
 
     // 2. Disable some keybindings from browser.xul
     var elements = ["cmd_handleBackspace", "cmd_handleShiftBackspace"];
@@ -100,15 +104,21 @@ var PlacesOrganizer = {
   },
 
   set location(aLocation) {
-    LOG("Node URI: " + aLocation);
-
-    if (!aLocation)
+    if (!aLocation || this._location == aLocation)
       return aLocation;
 
-    if (this.location)
+    if (this.location) {
       this._backHistory.unshift(this.location);
+      this._forwardHistory.splice(0);
+    }
 
-    this._content.place = this._location = aLocation;
+    this._location = aLocation;
+    this._places.selectPlaceURI(aLocation);
+
+    if (!this._places.hasSelection) {
+      // If no node was found for the given place: uri, just load it directly
+      this._content.place = aLocation;
+    }
     this.onContentTreeSelect();
 
     // update navigation commands
@@ -126,6 +136,7 @@ var PlacesOrganizer = {
 
   _backHistory: [],
   _forwardHistory: [],
+
   back: function PO_back() {
     this._forwardHistory.unshift(this.location);
     var historyEntry = this._backHistory.shift();
@@ -133,7 +144,9 @@ var PlacesOrganizer = {
     this.location = historyEntry;
   },
   forward: function PO_forward() {
+    this._backHistory.unshift(this.location);
     var historyEntry = this._forwardHistory.shift();
+    this._location = null;
     this.location = historyEntry;
   },
 
@@ -144,22 +157,24 @@ var PlacesOrganizer = {
    *          be left alone.
    */
   onPlaceSelected: function PO_onPlaceSelected(resetSearchBox) {
+    // Don't change the right-hand pane contents when there's no selection
     if (!this._places.hasSelection)
       return;
 
-    var node = asQuery(this._places.selectedNode);
-
-    var queries = node.getQueries({});
+    var node = this._places.selectedNode;
+    var queries = asQuery(node).getQueries({});
 
     // Items are only excluded on the left pane
     var options = node.queryOptions.clone();
     options.excludeItems = false;
+    var placeURI = PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
 
-    // clear forward history
-    this._forwardHistory.splice(0);
+    // update the right-pane contents
+    this._content.place = placeURI;
 
-    // update location
-    this.location = PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
+    // This just updates the back/forward buttons, it doesn't call us back
+    // because node.uri is our current selection.
+    this.location = node.uri;
 
     // Make sure the search UI is hidden.
     PlacesSearchBox.hideSearchUI();

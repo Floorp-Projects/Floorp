@@ -39,7 +39,6 @@
 
 interface nsIDOMWindow;
 interface nsIDOMNode;
-interface nsIDictionary;
 
 /**
  * nsISessionStore keeps track of the current browsing state - i.e.

@@ -1006,9 +1006,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   PRInt32 screenRightTwips  = rect.XMost();
   PRInt32 screenBottomTwips = rect.YMost();
 
-  if (mPopupAnchor != POPUPALIGNMENT_NONE) {
-    NS_ASSERTION(mScreenXPos == -1 && mScreenYPos == -1,
-                 "screen position used with anchor");
+  if (mPopupAnchor != POPUPALIGNMENT_NONE && mScreenXPos == -1 && mScreenYPos == -1) {
     //
     // Popup is anchored to the parent, guarantee that it does not cover the parent. We
     // shouldn't do anything funky if it will already fit on the screen as is.
@@ -1175,8 +1173,19 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
       // XXXbz it'd be good to make use of IsMoreRoomOnOtherSideOfParent and
       // such here, but that's really focused on having a nonempty parent
       // rect...
-      if (screenBottomTwips - screenViewLocY >
-          screenViewLocY - screenTopTwips) {
+      if (screenViewLocY > screenBottomTwips) {
+        // if the popup is positioned off the edge, move it up. This is important
+        // when the popup is constrained to the content area so that the popup
+        // doesn't extend past the edge. This is a rare situation so include this
+        // check within the other.
+
+        // we already constrained the height to the screen size above, so this
+        // calculation should always result in a y position below the top.
+        NS_ASSERTION(mRect.height <= screenBottomTwips - screenTopTwips, "height too large");
+        ypos += screenBottomTwips - screenViewLocY - mRect.height;
+      }
+      else if (screenBottomTwips - screenViewLocY >
+               screenViewLocY - screenTopTwips) {
         // More space below our desired point.  Resize to fit in this space.
         // Note that this is making mRect smaller; othewise we would not have
         // reached this code.

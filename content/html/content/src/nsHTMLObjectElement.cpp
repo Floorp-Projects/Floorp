@@ -103,6 +103,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom *aAttribute) const;
   virtual PRInt32 IntrinsicState() const;
+  virtual void DestroyContent();
 
   // nsObjectLoadingContent
   virtual PRUint32 GetCapabilities() const;
@@ -435,4 +436,11 @@ PRUint32
 nsHTMLObjectElement::GetCapabilities() const
 {
   return nsObjectLoadingContent::GetCapabilities() | eSupportClassID;
+}
+
+void
+nsHTMLObjectElement::DestroyContent()
+{
+  RemovedFromDocument();
+  nsGenericHTMLFormElement::DestroyContent();
 }

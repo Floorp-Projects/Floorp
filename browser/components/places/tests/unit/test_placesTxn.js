@@ -381,6 +381,17 @@ function run_test() {
   do_check_eq(observer._itemChangedId, bId);
   do_check_true(!mss.hasMicrosummary(bId));
 
-  // Testing edit Post Data...
-  // mmm.. cant figure out a good way to test this.
+  // Testing edit Post Data
+  const POST_DATA_ANNO = "bookmarkProperties/POSTData";
+  var postData = "foo";
+  var postDataURI = uri("http://foo.com");
+  ptSvc.doTransaction(
+    ptSvc.createItem(postDataURI, root, -1, "postdata test", null, null, null));
+  var postDataId = (bmsvc.getBookmarkIdsForURI(postDataURI,{}))[0];
+  var postDataTxn = ptSvc.editBookmarkPostData(postDataId, postData);
+  postDataTxn.doTransaction();
+  do_check_true(annotationService.itemHasAnnotation(postDataId, POST_DATA_ANNO))
+  do_check_eq(annotationService.getItemAnnotation(postDataId, POST_DATA_ANNO), postData);
+  postDataTxn.undoTransaction();
+  do_check_false(annotationService.itemHasAnnotation(postDataId, POST_DATA_ANNO))
 }

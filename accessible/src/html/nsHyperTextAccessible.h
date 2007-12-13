@@ -222,6 +222,13 @@ protected:
                          nsCOMArray<nsIDOMRange>* aRanges = nsnull);
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
 
+  /**
+   * Provide the line number for the caret, relative to the
+   * current DOM node.
+   * @return 1-based index for the line number with the caret
+   */
+  PRInt32 GetCaretLineNumber();
+
   // Helpers
   nsresult GetDOMPointByFrameOffset(nsIFrame *aFrame, PRInt32 aOffset,
                                     nsIAccessible *aAccessible,

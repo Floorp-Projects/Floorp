@@ -322,7 +322,8 @@ nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *result)
     nsCacheServiceAutoLock lock;
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     
-    return mCacheEntry->StoragePolicy();
+    *result = mCacheEntry->StoragePolicy();
+    return NS_OK;
 }
 
 
@@ -336,7 +337,16 @@ nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
     PRBool      storageEnabled = PR_FALSE;
     storageEnabled = nsCacheService::IsStorageEnabledForPolicy_Locked(policy);
     if (!storageEnabled)    return NS_ERROR_FAILURE;
+
+    // Don't change the storage policy of entries we can't write
+    if (!(mAccessGranted & nsICache::ACCESS_WRITE))
+        return NS_ERROR_NOT_AVAILABLE;
     
+    // Don't allow a cache entry to move from memory-only to anything else
+    if (mCacheEntry->StoragePolicy() == nsICache::STORE_IN_MEMORY &&
+        policy != nsICache::STORE_IN_MEMORY)
+        return NS_ERROR_NOT_AVAILABLE;
+        
     mCacheEntry->SetStoragePolicy(policy);
     mCacheEntry->MarkEntryDirty();
     return NS_OK;

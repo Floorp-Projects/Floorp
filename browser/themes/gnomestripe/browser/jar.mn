@@ -48,6 +48,7 @@ classic.jar:
   skin/classic/browser/preferences/Options.png        (preferences/Options.png)
   skin/classic/browser/preferences/plugin.png         (preferences/plugin.png)
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
+  skin/classic/browser/preferences/applications.css   (preferences/applications.css)
 #ifdef MOZ_SAFE_BROWSING
   skin/classic/browser/safebrowsing/browser-protection.css (safebrowsing/browser-protection.css)
   skin/classic/browser/safebrowsing/close16x16.png         (safebrowsing/close16x16.png)

@@ -109,7 +109,7 @@ var dbConnection = dbService.openDatabase(dbFile);
 var testURI = uri("http://mozilla.com");
 var testAnnoName = "tests/expiration/history";
 var testAnnoVal = "foo";
-var bookmark = bmsvc.insertBookmark(bmsvc.bookmarksRoot, testURI, bmsvc.DEFAULT_INDEX, "foo");
+var bookmark = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, bmsvc.DEFAULT_INDEX, "foo");
 var triggerURI = uri("http://foobar.com");
 
 // main
@@ -118,7 +118,7 @@ function run_test() {
   test that nsIBrowserHistory.removePagesFromHost does remove expirable annotations
   but doesn't remove bookmarks or EXPIRE_NEVER annotations.
   */
-  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName + "Hist", testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
   annosvc.setPageAnnotation(testURI, testAnnoName + "Never", testAnnoVal, 0, annosvc.EXPIRE_NEVER);
   bhist.removePagesFromHost("mozilla.com", false);
@@ -136,9 +136,9 @@ function run_test() {
   */
   var removeAllTestURI = uri("http://removeallpages.com");
   var removeAllTestURINever = uri("http://removeallpagesnever.com");
-  histsvc.addVisit(removeAllTestURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(removeAllTestURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   var bmURI = uri("http://bookmarked");
-  bmsvc.insertBookmark(bmsvc.bookmarksRoot, bmURI, bmsvc.DEFAULT_INDEX, "foo");
+  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, bmURI, bmsvc.DEFAULT_INDEX, "foo");
   //bhist.addPageWithDetails(placeURI, "place uri", Date.now());
   var placeURI = uri("place:folder=23");
   bhist.addPageWithDetails(placeURI, "place uri", Date.now());
@@ -167,7 +167,7 @@ function run_test() {
   /*
   test anno expiration (expire never)
   */
-  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
   histsvc.removeAllPages();
@@ -179,7 +179,7 @@ function run_test() {
   /*
   test anno expiration (expire with history)
   */
-  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
   histsvc.removeAllPages();
   try {
@@ -195,7 +195,7 @@ function run_test() {
     - try to get the anno (should fail. maybe race here? is there a way to determine
       if the page has been added, so we know that expiration is done?)
   */
-  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
 
   // these annotations should be removed (after manually tweaking their dateAdded)
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
@@ -211,7 +211,7 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_DAYS);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -239,7 +239,7 @@ function run_test() {
   } catch(ex) {}
 
   // test anno expiration (days) removes annos annos 6 days old
-  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
   // these annotations should remain as they are only 6 days old
@@ -248,7 +248,7 @@ function run_test() {
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -267,7 +267,7 @@ function run_test() {
 
 
   // test anno expiration (weeks) removes annos 31 days old
-  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   // these annotations should not remain as they are 31 days old
@@ -279,7 +279,7 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -306,7 +306,7 @@ function run_test() {
   } catch(ex) {}
 
   // test anno expiration (weeks) does not remove annos 29 days old
-  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   // these annotations should remain as they are only 29 days old
@@ -315,7 +315,7 @@ function run_test() {
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -343,7 +343,7 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -370,7 +370,7 @@ function run_test() {
   } catch(ex) {}
 
   // test anno expiration (months) does not remove annos 179 days old
-  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   // these annotations should remain as they are only 179 days old
@@ -379,7 +379,7 @@ function run_test() {
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -411,7 +411,7 @@ function run_test() {
   annosvc.setPageAnnotation(testURI, testAnnoName, "mod", 0, annosvc.EXPIRE_DAYS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, "mod", 0, annosvc.EXPIRE_DAYS);
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
   // anno should still be there
   try {
@@ -430,7 +430,7 @@ function run_test() {
   dbConnection.executeSimpleSQL("UPDATE moz_annos SET lastModified = " + expirationDate);
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET lastModified = " + expirationDate);
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
   // anno should have been deleted
   try {
@@ -449,87 +449,183 @@ function run_test() {
 // run async, chained
 
 function startIncrementalExpirationTests() {
-  startExpireByVisitsTest();
+  startExpireNeither();
 }
 
 var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 var ghist = Cc["@mozilla.org/browser/global-history;2"].getService(Ci.nsIGlobalHistory2);
 
 /*
-test visit-count-based history expiration via the browser.history_expire_visits pref.
+test 1: NO EXPIRATION CRITERIA MET
+
+1. zero visits > {browser.history_expire_days}
+2. zero visits > {browser.history_expire_days_min}
+   AND total visited site count < {browser.history_expire_sites}
+
 steps:
-  - reset observer
   - clear history
-  - add 6 visits
-  - set browser.history_expire_visits pref to 1 visit
-  - kick off incremental expiration via addURI
-  - check onPageExpired for the older visit
+  - reset observer
+  - add a visit, w/ current date
+  - set browser.history_expire_days to 3
+  - set browser.history_expire_days_min to 2
+  - set browser.history_expire_sites to 2
+  - kick off incremental expiration
+
+confirmation:
+  - check onPageExpired, confirm nothing was expired
+  - query for the visit, confirm it's there
+
 */
-function startExpireByVisitsTest() {
-  dump("starting history_expire_visits test\n");
-  observer.expiredURI = null;
+function startExpireNeither() {
+  dump("startExpireNeither()\n");
+  // setup
   histsvc.removeAllPages();
-  var fillerURI = uri("http://blah.com");
-  for (var i = 0; i < 5; i++)
-    histsvc.addVisit(uri("http://filler.com/" + i), Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
-  // 6th visit (incremental expiration does chunks of 6, see EXPIRATION_COUNT_PER_RUN)
-  // distinguish it from the other visits, and make it the oldest
-  histsvc.addVisit(testURI, Date.now() - (86400 * 2), 0, histsvc.TRANSITION_TYPED, false, 0);
+  observer.expiredURI = null;
+
+  // add data
+  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
-  prefs.setIntPref("browser.history_expire_visits", 1);
-  // addURI triggers incremental expiration, and is also the 7th visit
-  ghist.addURI(uri("http://fizz.com"), false, true, triggerURI); 
+
+  // set visit cap to 2
+  prefs.setIntPref("browser.history_expire_sites", 2);
+  // set date minimum to 2
+  prefs.setIntPref("browser.history_expire_days_min", 2);
+  // set date maximum to 3
+  prefs.setIntPref("browser.history_expire_days", 3);
+
+  // trigger expiration
+  ghist.addURI(triggerURI, false, true, null); 
+
+  // setup confirmation
   do_test_pending();
-  do_timeout(3600, "checkExpireByVisitsTest();"); // incremental expiration timer is 3500, see PARTIAL_EXPIRATION_TIMEOUT 
+  do_timeout(3600, "checkExpireNeither();"); // incremental expiration timer is 3500
 }
 
-function checkExpireByVisitsTest() {
+function checkExpireNeither() {
+  dump("checkExpireNeither()\n");
   try {
-    do_check_eq(testURI.spec, observer.expiredURI);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
-    do_check_eq(histsvc.getPageTitle(uri("http://fizz.com")), "fizz.com");
-  } catch(ex) {}
-  dump("done history_expire_visits test\n");
-  startExpireByDaysTest();
+    do_check_eq(observer.expiredURI, null);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
+  } catch(ex) {
+    do_throw(ex);
+  }
+  dump("done incremental expiration test 1\n");
+  startExpireDaysOnly();
 }
-
 
 /*
-test fallback to age-based history expiration via the browser.history_expire_days pref.
+test 2: MAX-AGE DATE CRITERIA MET
 
-ie: assuming there are less than browser.history_expire_visits visits, expire any visits
-over browser.history_expire_days old.
+1. some visits > {browser.history_expire_days}
+2. total visited sites count < {browser.history_expire_sites}
 
 steps:
-  - reset observer
   - clear history
-  - add 6 visits, each 2 days old
-  - browser.history_expire_visits is at 1
-  - set browser.history_expire_days pref to 1 day
+  - reset observer
+  - add a visit, 4 days old
+  - set browser.history_expire_days to 3
+  - set browser.history_expire_days_min to 2
+  - set browser.history_expire_sites to 2
   - kick off incremental expiration
-  - check onPageExpired for the older visit
+
+confirmation:
+  - check onPageExpired, confirm nothing was expired
+  - query for the visit, confirm it's there
 */
-function startExpireByDaysTest() {
-  dump("starting history_expire_days test\n");
-  observer.expiredURI = null;
+function startExpireDaysOnly() {
+  // setup
   histsvc.removeAllPages();
-  histsvc.addVisit(uri("http://blah.com"), Date.now() - (86400 * 2), 0, histsvc.TRANSITION_TYPED, false, 0);
-  histsvc.addVisit(uri("http://bleh.com"), Date.now() - (86400 * 2), 0, histsvc.TRANSITION_TYPED, false, 0);
-  histsvc.addVisit(testURI, Date.now() - (86400 * 2), 0, histsvc.TRANSITION_TYPED, false, 0);
+  observer.expiredURI = null;
+
+  dump("startExpireDaysOnly()\n");
+
+  // add expirable visit
+  histsvc.addVisit(testURI, (Date.now() - (86400 * 2 * 1000)) * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  // history_expire_visits is set to 1 already
-  // setting history_expire_days to 1 will cause all of our 2 day-old visits to expire
-  prefs.setIntPref("browser.history_expire_days", 1);
-  ghist.addURI(testURI, false, true, triggerURI); 
-  do_timeout(3600, "checkExpireByDaysTest();"); // incremental expiration timer is 3500
+
+  // add un-expirable visit
+  histsvc.addVisit(uri("http://unexpirable.com"), (Date.now() - (86400 * 1000)) * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+
+  // set visit cap to 2
+  prefs.setIntPref("browser.history_expire_sites", 2);
+  // set date minimum to 2
+  prefs.setIntPref("browser.history_expire_days_min", 2);
+  // set date maximum to 3
+  prefs.setIntPref("browser.history_expire_days", 3);
+
+  // trigger expiration
+  ghist.addURI(triggerURI, false, true, null); 
+
+  // setup confirmation
+  do_timeout(3600, "checkExpireDaysOnly();"); // incremental expiration timer is 3500
 }
 
-function checkExpireByDaysTest() {
+function checkExpireDaysOnly() {
   try {
-    do_check_eq(testURI.spec, observer.expiredURI);
+    // test expired record
+    do_check_eq(observer.expiredURI, null);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
+    // test unexpired record
+    do_check_neq(histsvc.getPageTitle(uri("http://unexpirable.com")), null);
+  } catch(ex) {}
+  dump("done expiration test 2\n");
+  startExpireBoth();
+}
+
+/*
+test 3: MIN-AGE+VISIT-CAP CRITERIA MET
+
+1. zero visits > {browser.history_expire_days}
+2. some visits > {browser.history_expire_days_min}
+   AND total visited sites count > {browser.history_expire_sites}
+
+steps:
+  - clear history
+  - reset observer
+  - add a visit, 2 days old
+  - add a visit, 2 days old
+  - set browser.history_expire_days to 3
+  - set browser.history_expire_days_min to 1
+  - set browser.history_expire_sites to 1
+  - kick off incremental expiration
+
+confirmation:
+  - check onPageExpired, confirm our visit was expired
+  - query for the visit, confirm it's not there
+*/
+function startExpireBoth() {
+  // setup
+  histsvc.removeAllPages();
+  observer.expiredURI = null;
+  dump("starting expiration test 3: both criteria met\n");
+
+  // add visits
+  // 2 days old, in microseconds
+  var age = (Date.now() - (86400 * 2 * 1000)) * 1000;
+  dump("AGE: " + age + "\n");
+  histsvc.addVisit(testURI, age, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, age, 0, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
+
+  // set visit cap to 1
+  prefs.setIntPref("browser.history_expire_sites", 1);
+  // set date max to 3
+  prefs.setIntPref("browser.history_expire_days", 3);
+  // set date minimum to 1
+  prefs.setIntPref("browser.history_expire_days_min", 1);
+
+  // trigger expiration
+  ghist.addURI(triggerURI, false, true, null);
+
+  // setup confirmation
+  do_timeout(3600, "checkExpireBoth();"); // incremental expiration timer is 3500
+}
+
+function checkExpireBoth() {
+  try {
+    do_check_eq(observer.expiredURI, testURI.spec);
     do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
   } catch(ex) {}
-  dump("done history_expire_days test\n");
+  dump("done expiration test 3\n");
   do_test_finished();
 }

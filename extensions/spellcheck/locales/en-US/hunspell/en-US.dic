@@ -42240,8 +42240,8 @@ philosophize/ZGDRS
 philosophizer/M
 philosophy/SM
 philter/MS
-phisher/M
-phishing/M
+phish/DGS
+phisher/MS
 phlebitis/M
 phlebotomy
 phlegm/M
@@ -53662,10 +53662,8 @@ unimportance
 unimportant
 unimpressive
 uninhibited/Y
-uninstall/GSMB
-uninstalled
+uninstall/GSBD
 uninstaller/MS
-uninstalling
 uninsured
 unintellectual
 unintelligent
@@ -53828,7 +53826,8 @@ unsteady/PTR
 unstinting/Y
 unstoppably
 unstrapping
-unsubscribe
+unsubscribe/DGS
+unsubscriber/MS
 unsubstantial
 unsubtle
 unsure/P
@@ -55002,8 +55001,8 @@ webbed
 webbing/M
 webfeet
 webfoot/M
-webmaster/S
-webmistress
+webmaster/MS
+webmistress/S
 website/SM
 wed/AS
 wedded/A

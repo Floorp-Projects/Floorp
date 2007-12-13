@@ -2,3 +2,16 @@
 # DO NOT ADD CRASHTESTS INDIVIDUALLY HERE!
 
 include ../../testing/crashtest/sanity/crashtests.list
+
+include ../../content/svg/content/src/crashtests/crashtests.list
+include ../../content/xul/templates/src/crashtests/crashtests.list
+
+include ../../layout/base/crashtests/crashtests.list
+include ../../layout/style/crashtests/crashtests.list
+include ../../layout/svg/crashtests/crashtests.list
+include ../../layout/xul/base/src/crashtests/crashtests.list
+include ../../layout/xul/base/src/grid/crashtests/crashtests.list
+include ../../layout/xul/base/src/tree/src/crashtests/crashtests.list
+
+include ../../gfx/src/mac/crashtests/crashtests.list
+include ../../gfx/src/thebes/crashtests/crashtests.list

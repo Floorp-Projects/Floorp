@@ -2392,14 +2392,53 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 void
 nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
-    nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
-    InitMouseScrollEvent(event, aEvent);
-
     // check to see if we should rollup
     if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
                          PR_TRUE)) {
         return;
     }
+
+    nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
+    switch (aEvent->direction) {
+    case GDK_SCROLL_UP:
+        event.scrollFlags = nsMouseScrollEvent::kIsVertical;
+        event.delta = -3;
+        break;
+    case GDK_SCROLL_DOWN:
+        event.scrollFlags = nsMouseScrollEvent::kIsVertical;
+        event.delta = 3;
+        break;
+    case GDK_SCROLL_LEFT:
+        event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+        event.delta = -3;
+        break;
+    case GDK_SCROLL_RIGHT:
+        event.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+        event.delta = 3;
+        break;
+    }
+
+    if (aEvent->window == mDrawingarea->inner_window) {
+        // we are the window that the event happened on so no need for expensive ScreenToWidget
+        event.refPoint.x = nscoord(aEvent->x);
+        event.refPoint.y = nscoord(aEvent->y);
+    } else {
+        // XXX we're never quite sure which GdkWindow the event came from due to our custom bubbling
+        // in scroll_event_cb(), so use ScreenToWidget to translate the screen root coordinates into
+        // coordinates relative to this widget.
+        nsRect windowRect;
+        ScreenToWidget(nsRect(nscoord(aEvent->x_root), nscoord(aEvent->y_root), 1, 1), windowRect);
+
+        event.refPoint.x = windowRect.x;
+        event.refPoint.y = windowRect.y;
+    }
+
+    event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
+    event.isControl = (aEvent->state & GDK_CONTROL_MASK) != 0;
+    event.isAlt     = (aEvent->state & GDK_MOD1_MASK) != 0;
+    event.isMeta    = (aEvent->state & GDK_MOD4_MASK) != 0;
+
+    event.time = aEvent->time;
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -4619,9 +4658,16 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 gboolean
 scroll_event_cb(GtkWidget *widget, GdkEventScroll *event)
 {
-    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
-    if (!window)
-        return FALSE;
+    nsRefPtr<nsWindow> window;
+    GdkWindow *gdkWindow = event->window;
+    while (!(window = get_window_for_gdk_window(gdkWindow))) {
+        // The event has bubbled to the moz_container widget as passed into the *widget parameter,
+        // but its corresponding nsWindow is an ancestor of the window that we need.  Instead, look at
+        // event->window and find the first ancestor nsWindow of it because event->window may be in a plugin.
+        gdkWindow = gdk_window_get_parent(gdkWindow);
+        if (!gdkWindow)
+            return FALSE;
+    }
 
     window->OnScrollEvent(widget, event);
 
@@ -6011,4 +6057,86 @@ nsWindow::GetThebesSurface()
     }
 
     return mThebesSurface;
+}
+
+NS_IMETHODIMP
+nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
+{
+    NS_ENSURE_ARG_POINTER(aEvent);
+
+    if (aEvent->eventStructType != NS_MOUSE_EVENT) {
+      // you can only begin a resize drag with a mouse event
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsMouseEvent* mouse_event = static_cast<nsMouseEvent*>(aEvent);
+    
+    if (mouse_event->button != nsMouseEvent::eLeftButton) {
+      // you can only begin a resize drag with the left mouse button
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    // work out what GdkWindowEdge we're talking about
+    GdkWindowEdge window_edge;
+    if (aVertical < 0) {
+        if (aHorizontal < 0) {
+            window_edge = GDK_WINDOW_EDGE_NORTH_WEST;
+        } else if (aHorizontal == 0) {
+            window_edge = GDK_WINDOW_EDGE_NORTH;
+        } else {
+            window_edge = GDK_WINDOW_EDGE_NORTH_EAST;
+        }
+    } else if (aVertical == 0) {
+        if (aHorizontal < 0) {
+            window_edge = GDK_WINDOW_EDGE_WEST;
+        } else if (aHorizontal == 0) {
+            return NS_ERROR_INVALID_ARG;
+        } else {
+            window_edge = GDK_WINDOW_EDGE_EAST;
+        }
+    } else {
+        if (aHorizontal < 0) {
+            window_edge = GDK_WINDOW_EDGE_SOUTH_WEST;
+        } else if (aHorizontal == 0) {
+            window_edge = GDK_WINDOW_EDGE_SOUTH;
+        } else {
+            window_edge = GDK_WINDOW_EDGE_SOUTH_EAST;
+        }
+    }
+
+    // get the gdk window for this widget
+    GdkWindow* gdk_window = mDrawingarea->inner_window;
+    if (!GDK_IS_WINDOW(gdk_window)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // find the top-level window
+    gdk_window = gdk_window_get_toplevel(gdk_window);
+    if (!GDK_IS_WINDOW(gdk_window)) {
+      return NS_ERROR_FAILURE;
+    }
+
+
+    // get the current (default) display
+    GdkDisplay* display = gdk_display_get_default();
+    if (!GDK_IS_DISPLAY(display)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // get the current pointer position and button state
+    GdkScreen* screen = NULL;
+    gint screenX, screenY;
+    GdkModifierType mask;
+    gdk_display_get_pointer(display, &screen, &screenX, &screenY, &mask);
+
+    // we only support resizing with button 1
+    if (!(mask & GDK_BUTTON1_MASK)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // tell the window manager to start the resize
+    gdk_window_begin_resize_drag(gdk_window, window_edge, 1,
+            screenX, screenY, aEvent->time);
+
+    return NS_OK;
 }

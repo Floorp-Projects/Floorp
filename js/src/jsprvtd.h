@@ -249,6 +249,14 @@ struct JSTempValueRooter {
     JSTempValueUnion    u;
 };
 
-
+/*
+ * The following determines whether JS_EncodeCharacters and JS_DecodeBytes
+ * treat char[] as utf-8 or simply as bytes that need to be inflated/deflated.
+ */
+#ifdef JS_C_STRINGS_ARE_UTF8
+# define js_CStringsAreUTF8 JS_TRUE
+#else
+extern JSBool js_CStringsAreUTF8;
+#endif
 
 #endif /* jsprvtd_h___ */

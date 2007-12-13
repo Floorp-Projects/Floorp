@@ -148,28 +148,211 @@ do_check_eq(0, storage.countLogins("blah", "", ""));
 
 /* ========== 11 ========== */
 testnum++;
-testdesc = "Initialize with signons-08.txt (1000 disabled, 1000 logins)";
+testdesc = "Initialize with signons-08.txt (500 disabled, 500 logins)";
 
 LoginTest.initStorage(storage, INDIR, "signons-08.txt");
 
 var disabledHosts = [];
-for (var i = 1; i <= 1000; i++) {
+for (var i = 1; i <= 500; i++) {
     disabledHosts.push("http://host-" + i + ".site.com");
 }
 
-var logins = [];
-for (i = 1; i <= 500; i++) {
-    logins.push("http://dummyhost.site.org");
+var bulkLogin, logins = [];
+for (i = 1; i <= 250; i++) {
+    bulkLogin = new nsLoginInfo;
+    bulkLogin.init("http://dummyhost.site.org", "http://cgi.site.org", null,
+        "dummydude", "itsasecret", "usernameField-" + i, "passwordField-" + i);
+    logins.push(bulkLogin);
 }
-for (i = 1; i <= 500; i++) {
-    logins.push("http://dummyhost-" + i + ".site.org");
+for (i = 1; i <= 250; i++) {
+    bulkLogin = new nsLoginInfo;
+    bulkLogin.init("http://dummyhost-" + i + ".site.org", "http://cgi.site.org", null,
+        "dummydude", "itsasecret", "usernameField", "passwordField");
+    logins.push(bulkLogin);
 }
 LoginTest.checkStorageData(storage, disabledHosts, logins);
 
 // counting all logins for dummyhost
-do_check_eq(500, storage.countLogins("http://dummyhost.site.org", "", ""));
+do_check_eq(250, storage.countLogins("http://dummyhost.site.org", "", ""));
+do_check_eq(250, storage.countLogins("http://dummyhost.site.org", "", null));
+do_check_eq(0,   storage.countLogins("http://dummyhost.site.org", null, ""));
 // counting all logins for dummyhost-1
 do_check_eq(1, storage.countLogins("http://dummyhost-1.site.org", "", ""));
+do_check_eq(1, storage.countLogins("http://dummyhost-1.site.org", "", null));
+do_check_eq(0, storage.countLogins("http://dummyhost-1.site.org", null, ""));
+
+
+/* ========== 12 ========== */
+testnum++;
+testdesc = "Initialize with signons-2c-01.txt";
+// This test confirms that when upgrading from an entry that does not have
+// a formSubmitURL stored, we correctly set the new formSubmitURL to
+// null or "", depending on if it's a form login or protocol login.
+
+// First with a form login (formSubmitURL should be "")
+LoginTest.initStorage(storage, INDIR, "signons-2c-01.txt");
+LoginTest.checkStorageData(storage, [], [testuser1]);
+
+// Then with a protocol login (formSubmitURL should be null)
+testdesc = "Initialize with signons-2c-02.txt";
+var testuser3 = new nsLoginInfo;
+testuser3.init("http://dummyhost.mozilla.org", null, "Some Realm",
+    "dummydude", "itsasecret", "", "");
+LoginTest.initStorage(storage, INDIR, "signons-2c-02.txt");
+LoginTest.checkStorageData(storage, [], [testuser3]);
+
+
+/* ========== 13 ========== */
+testnum++;
+testdesc = "Initialize with signons-2c-03.txt";
+// Make sure that when we read a blank HTTP realm, it's reset to
+// the hostname and the formSubmitURL is null (not blank).
+testuser3.init("http://dummyhost.mozilla.org", null,
+               "http://dummyhost.mozilla.org",
+               "dummydude", "itsasecret", "", "");
+LoginTest.initStorage(storage, INDIR, "signons-2c-03.txt");
+LoginTest.checkStorageData(storage, [], [testuser3]);
+
+/* ========== 14 ========== */
+testnum++;
+testdesc = "Initialize with signons-2d-01.txt";
+// This test confirms that when reading a 2D entry with a blank
+// formSubmitURL line, the parser sets formSubmitURL to null or ""
+// depending on if it's a form login or protocol login.
+
+// First with a form login
+LoginTest.initStorage(storage, INDIR, "signons-2d-01.txt");
+LoginTest.checkStorageData(storage, [], [testuser1]);
+
+// Then with a protocol login
+testdesc = "Initialize with signons-2d-02.txt";
+testuser3.init("http://dummyhost.mozilla.org", null, "Some Realm",
+    "dummydude", "itsasecret", "", "");
+LoginTest.initStorage(storage, INDIR, "signons-2d-02.txt");
+LoginTest.checkStorageData(storage, [], [testuser3]);
+
+
+/* ========== 15 ========== */
+testnum++;
+testdesc = "Initialize with signons-2d-03.txt";
+// This test confirms that when upgrading a 2D entry with HTTP[S] protocol
+// logins on the default port, that we correctly update the form and drop
+// the port number. EG:
+// www.site.com:80 --> http://www.site.com
+
+testuser1.init("http://dummyhost80.mozilla.org", null, "Some Realm",
+    "dummydude", "itsasecret", "", "");
+testuser2.init("https://dummyhost443.mozilla.org", null, "Some Realm",
+    "dummydude", "itsasecret", "", "");
+
+LoginTest.initStorage(storage, INDIR, "signons-2d-03.txt");
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
+
+/* ========== 16 ========== */
+testnum++;
+testdesc = "Initialize with signons-2d-04.txt";
+// This test confirms that when upgrading a 2D entry with a protocol
+// logins on a nonstandard port, that we add both http and https
+// versions of the login.
+// site.com:8080 --> http://site.com:8080, https://site.com:8080
+
+testuser1.init("http://dummyhost8080.mozilla.org:8080", null, "Some Realm",
+    "dummydude", "itsasecret", "", "");
+testuser2.init("https://dummyhost8080.mozilla.org:8080", null, "Some Realm",
+    "dummydude", "itsasecret", "", "");
+
+LoginTest.initStorage(storage, INDIR, "signons-2d-04.txt");
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
+
+/* ========== 17 ========== */
+testnum++;
+testdesc = "Initialize with signons-2d-05.txt";
+// This test confirms that when upgrading a 2D entry with a blank
+// HTTP realm, we set the realm to the hostname.
+// foo.com:80 () --> http://foo.com (http://foo.com)
+
+testuser1.init("http://dummyhost80.mozilla.org", null,
+               "http://dummyhost80.mozilla.org",
+               "dummydude", "itsasecret", "", "");
+testuser2.init("https://dummyhost443.mozilla.org", null,
+               "https://dummyhost443.mozilla.org",
+               "dummydude", "itsasecret", "", "");
+
+LoginTest.initStorage(storage, INDIR, "signons-2d-05.txt");
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
+
+// And again, with a single entry that was cloned
+testdesc = "Initialize with signons-2d-06.txt";
+testuser1.init("http://dummyhost8080.mozilla.org:8080", null,
+               "http://dummyhost8080.mozilla.org:8080",
+               "dummydude", "itsasecret", "", "");
+testuser2.init("https://dummyhost8080.mozilla.org:8080", null,
+               "https://dummyhost8080.mozilla.org:8080",
+               "dummydude", "itsasecret", "", "");
+
+LoginTest.initStorage(storage, INDIR, "signons-2d-06.txt");
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
+
+/* ========== 17 ========== */
+testnum++;
+testdesc = "Initialize with signons-2d-07.txt";
+// Form logins could have been saved with the port number explicitly
+// specified in the hostname or formSubmitURL. Make sure it gets
+// stripped when it's the default value.
+
+testuser1.init("http://dummyhost80.mozilla.org",
+               "http://dummyhost80.mozilla.org", null,
+               "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+testuser2.init("https://dummyhost443.mozilla.org",
+               "https://dummyhost443.mozilla.org", null,
+               "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+// non-standard port, so it shouldn't get stripped.
+testuser3.init("http://dummyhost8080.mozilla.org:8080",
+               "http://dummyhost8080.mozilla.org:8080", null,
+               "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+LoginTest.initStorage(storage, INDIR, "signons-2d-07.txt");
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2, testuser3]);
+
+
+/* ========== 18 ========== */
+testnum++;
+testdesc = "Initialize with signons-2d-08.txt";
+// Bug 396316: Non-HTTP[S] hostnames were stored the same way for both forms 
+// and protocol logins. If the login looks like it's not a form login (no
+// form field names, no action URL), then assign it a default realm.
+
+testuser1.init("ftp://protocol.mozilla.org", null,
+               "ftp://protocol.mozilla.org",
+               "dummydude", "itsasecret", "", "");
+testuser2.init("ftp://form.mozilla.org", "", null,
+               "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+testuser3.init("ftp://form2.mozilla.org", "http://cgi.mozilla.org", null,
+               "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+
+LoginTest.initStorage(storage, INDIR, "signons-2d-08.txt");
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2, testuser3]);
+
+
+/* ========== 19 ========== */
+testnum++;
+testdesc = "Initialize with signons-2d-09.txt";
+// Logins stored when signing into, say, an FTP server via a URL with a
+// username (ftp://user@ftp.site.com) were stored with a blank encrypted
+// username, and the actual username in the hostname. Test to make sure we
+// move it back to the encrypted username field. If the username was saved as
+// part of a form, just drop it. (eg, ftp://ftpuser@site.com/form.html)
+
+testuser1.init("ftp://protocol.mozilla.org", null, "ftp://protocol.mozilla.org",
+               "urluser", "itsasecret", "", "");
+testuser2.init("ftp://form.mozilla.org", "", null,
+               "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+LoginTest.initStorage(storage, INDIR, "signons-2d-09.txt");
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
 
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;

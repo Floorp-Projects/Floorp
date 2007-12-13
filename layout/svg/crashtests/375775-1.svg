@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" onload="setTimeout(boom, 30);" class="reftest-wait">
+     
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("filter").style.display = "none";
+  document.getElementById("path").style.display = "none";
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+<filter id="filter" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="120" />
+
+<g filter="url(#filter)">
+  <path id="path"
+        fill="black"
+        d="M60,80 C30,80 30,40 60,40 L140,40 C170,40 170,80 140,80 z" />
+</g>
+
+</svg>

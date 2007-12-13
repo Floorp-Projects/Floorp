@@ -53,6 +53,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
@@ -270,6 +271,11 @@ nsRootAccessible::GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget)
 }
 
 const char* const docEvents[] = {
+#ifdef DEBUG
+  // Capture mouse over events and fire fake DRAGDROPSTART event to simplify
+  // debugging a11y objects with event viewers
+  "mouseover",
+#endif
   // capture DOM focus events 
   "focus",
   // capture Form change events 
@@ -282,6 +288,7 @@ const char* const docEvents[] = {
   "AlertActive",
   // add ourself as a TreeViewChanged listener (custom event fired in nsTreeBodyFrame.cpp)
   "TreeViewChanged",
+  "TreeRowCountChanged",
   // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
   "OpenStateChange",
   // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
@@ -458,13 +465,13 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     }
   }
 
-  // Check for aaa:activedescendant, which changes which element has focus
+  // Check for aria-activedescendant, which changes which element has focus
   nsCOMPtr<nsIDOMNode> finalFocusNode = aNode;
   nsCOMPtr<nsIAccessible> finalFocusAccessible = aAccessible;
   nsCOMPtr<nsIContent> finalFocusContent  = do_QueryInterface(aNode);
   if (finalFocusContent) {
     nsAutoString id;
-    if (nsAccUtils::GetAriaProperty(finalFocusContent, nsnull, eAria_activedescendant, id)) {
+    if (finalFocusContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant, id)) {
       nsCOMPtr<nsIDOMDocument> domDoc;
       aNode->GetOwnerDocument(getter_AddRefs(domDoc));
       if (!domDoc) {
@@ -636,7 +643,9 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   }
 
   if (eventType.EqualsLiteral("TreeViewChanged")) { // Always asynch, always from user input
-    NS_ENSURE_TRUE(localName.EqualsLiteral("tree"), NS_OK);
+    if (!localName.EqualsLiteral("tree"))
+      return NS_OK;
+
     nsCOMPtr<nsIContent> treeContent = do_QueryInterface(aTargetNode);
     nsAccEvent::PrepareForEvent(aTargetNode, PR_TRUE);
     return accService->InvalidateSubtreeFor(eventShell, treeContent,
@@ -649,6 +658,33 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
   if (!privAcc)
     return NS_OK;
+
+  if (eventType.EqualsLiteral("TreeRowCountChanged")) {
+    if (!localName.EqualsLiteral("tree"))
+      return NS_OK;
+
+    nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
+    NS_ENSURE_STATE(dataEvent);
+
+    nsCOMPtr<nsIVariant> indexVariant;
+    dataEvent->GetData(NS_LITERAL_STRING("index"),
+                       getter_AddRefs(indexVariant));
+    NS_ENSURE_STATE(indexVariant);
+
+    nsCOMPtr<nsIVariant> countVariant;
+    dataEvent->GetData(NS_LITERAL_STRING("count"),
+                       getter_AddRefs(countVariant));
+    NS_ENSURE_STATE(countVariant);
+
+    PRInt32 index, count;
+    indexVariant->GetAsInt32(&index);
+    countVariant->GetAsInt32(&count);
+
+    nsCOMPtr<nsIAccessibleTreeCache> treeAccCache(do_QueryInterface(accessible));
+    NS_ENSURE_STATE(treeAccCache);
+
+    return treeAccCache->InvalidateCache(index, count);
+  }
 
   if (eventType.EqualsLiteral("RadioStateChange")) {
     PRUint32 state = State(accessible);
@@ -885,6 +921,11 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else if (eventType.EqualsLiteral("ValueChange")) {
     nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, accessible);
   }
+#ifdef DEBUG
+  else if (eventType.EqualsLiteral("mouseover")) {
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_DRAGDROP_START, accessible);
+  }
+#endif
   return NS_OK;
 }
 

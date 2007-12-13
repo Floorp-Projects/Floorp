@@ -137,10 +137,11 @@ EmbedCertificates::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
                                     PRUint32 *_trust,
                                     PRBool *_retval)
 {
-  *_retval = PR_TRUE;
-  *_trust |= nsIX509CertDB::TRUSTED_SSL;
-  *_trust |= nsIX509CertDB::TRUSTED_EMAIL;
-  *_trust |= nsIX509CertDB::TRUSTED_OBJSIGN;
+  // If an implementation chooses not to implement UI for displaying
+  // the cert and asking the user for confirmation,
+  // then this function must return PR_FALSE.
+  *_retval = PR_FALSE;
+  *_trust = nsIX509CertDB::UNTRUSTED;
   return NS_OK;
 }
 
@@ -232,11 +233,22 @@ EmbedCertificates::ChooseToken(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+EmbedCertificates::DisplayProtectedAuth(
+  nsIInterfaceRequestor *aCtx,
+  nsIProtectedAuthThread *runnable)
+{
+  return NS_OK;
+}
+
 /* boolean ConfirmKeyEscrow (in nsIX509Cert escrowAuthority); */
 NS_IMETHODIMP
 EmbedCertificates::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, PRBool *_retval)
 {
-  *_retval = PR_TRUE;
+  // If an implementation chooses not to implement UI that asks the user for 
+  // confirmation to hand out the private key, 
+  // then this function must return PR_FALSE.
+  *_retval = PR_FALSE;
   return NS_OK;
 }
 

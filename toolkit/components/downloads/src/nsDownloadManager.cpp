@@ -72,7 +72,6 @@
 #include "nsIPropertyBag2.h"
 #include "nsIHttpChannel.h"
 #include "nsIDownloadManagerUI.h"
-#include "nsTArray.h"
 #include "nsIResumableChannel.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalHelperAppService.h"

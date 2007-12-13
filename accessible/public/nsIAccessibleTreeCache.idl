@@ -37,17 +37,34 @@
 #include "nsITreeColumns.idl"
 
 interface nsIAccessible;
+
 /**
  * A cross-platform interface that supports cache for tree item 
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(CC742DA2-9C25-4D04-96CD-DA407D676C6D)]
+[uuid(7cdad914-948b-4bbc-9c47-ee5e1ae6b148)]
 interface nsIAccessibleTreeCache : nsISupports
 {
   /**
-   * Get tree item from cache according to row and column, create if doesn't exist in cache
-   * "aColumn" can be nsnull
+   * Get tree item from cache according to row and column, create if doesn't
+   * exist in cache.
+   *
+   * @param aRow     the given row index
+   * @param aColumn  the given column object. If is is nsnull then primary
+   *                 column is used. It makes sense for ATK only.
    */
-  [noscript] nsIAccessible getCachedTreeitemAccessible(in PRInt32 aRow, in nsITreeColumn aColumn);
+  nsIAccessible getCachedTreeitemAccessible(in long aRow,
+                                            in nsITreeColumn aColumn);
+
+  /**
+   * Invalidates the number of cached treeitem accessibles.
+   *
+   * @param aRow    row index the invalidation starts from
+   * @param aCount  the number of treeitem accessibles to invalidate,
+   *                the number sign specifies whether rows have been
+   *                inserted (plus) or removed (minus)
+   */
+  void invalidateCache(in long aRow, in long aCount);
 };
+

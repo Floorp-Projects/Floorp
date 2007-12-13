@@ -890,10 +890,6 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   padding: 0px;
 }
 
-#page-proxy-deck {
-  cursor: -moz-grab;
-}
-
 #page-proxy-favicon {
   list-style-image: none;
 }
@@ -913,13 +909,6 @@ statusbarpanel#statusbar-display {
 }
 
 /* ----- AUTOCOMPLETE ----- */
-
-.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteValue),
-.autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteValue),
-.autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteValue) {
-  width: 16px;
-  height: 16px;
-}
 
 #treecolAutoCompleteImage {
   max-width: 36px;
@@ -1199,10 +1188,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab[selected="true"] {
   -moz-user-focus: normal;
-}
-
-.tabbrowser-tab[selected="true"] > .tab-image-middle > .tab-icon {
-  cursor: -moz-grab;
 }
 
 .tabbrowser-tab > .tab-image-middle > .tab-text {
@@ -1642,10 +1627,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   opacity: 1.0;
 }
 
-#identity-box.verifiedIdentity {
-  background-color: #BFA;
-}
-
 #urlbar[level="high"] > #identity-box,
 #urlbar[level="low"] > #identity-box {
   /* urlbar adds padding when security level is set, which we need to
@@ -1661,7 +1642,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
     vertical-align: middle;
 }
 
-.unknownIdentity > #identity-icon-label {
+#identity-box.verifiedIdentity {
+  background-color: #BFA;
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
     display: none;
 }
 
@@ -1709,6 +1694,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
     padding-left: 10px;
 }
 
+#identity-popup-content-box > label {
+    white-space: -moz-pre-wrap;
+    margin-left: 0;
+    padding-left: 10px;
+}
+
 #identity-popup-content {
     padding-top: 5px;
     margin-bottom: 0;
@@ -1723,7 +1714,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #identity-popup-encryption {
-  margin: 10px 0;
+  padding: 10px 0;
+}
+
+.verifiedIdentity > #identity-popup-encryption,
+.verifiedDomain > #identity-popup-encryption {
+  margin-left: -18px;
 }
 
 .verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,

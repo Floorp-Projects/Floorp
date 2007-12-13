@@ -1257,6 +1257,12 @@ struct JSExtendedClass {
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 
 /*
+ * Indicates that the class object defined on the object provided to
+ * JS_InitClass should be readonly and permanent.
+ */
+#define JSCLASS_FIXED_BINDING           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
+
+/*
  * ECMA-262 requires that most constructors used internally create objects
  * with "the original Foo.prototype value" as their [[Prototype]] (__proto__)
  * member initial value.  The "original ... value" verbiage is there because
@@ -2240,11 +2246,18 @@ JS_MakeStringImmutable(JSContext *cx, JSString *str);
 
 /*
  * Return JS_TRUE if C (char []) strings passed via the API and internally
- * are UTF-8. The source must be compiled with JS_C_STRINGS_ARE_UTF8 defined
- * to get UTF-8 support.
+ * are UTF-8.
  */
 JS_PUBLIC_API(JSBool)
 JS_CStringsAreUTF8(void);
+
+/*
+ * Update the value to be returned by JS_CStringsAreUTF8().  Once set,
+ * it can not be changed.  Must be called before the first call to 
+ * JS_NewRuntime.
+ */
+JS_PUBLIC_API(void)
+JS_SetCStringsAreUTF8();
 
 /*
  * Character encoding support.
@@ -2262,11 +2275,10 @@ JS_CStringsAreUTF8(void);
  * NB: Neither function stores an additional zero byte or jschar after the
  * transcoded string.
  *
- * If the source has been compiled with the #define JS_C_STRINGS_ARE_UTF8 to
- * enable UTF-8 interpretation of C char[] strings, then JS_EncodeCharacters
- * encodes to UTF-8, and JS_DecodeBytes decodes from UTF-8, which may create
- * addititional errors if the character sequence is malformed.  If UTF-8
- * support is disabled, the functions deflate and inflate, respectively.
+ * If JS_CStringsAreUTF8() is true then JS_EncodeCharacters encodes to
+ * UTF-8, and JS_DecodeBytes decodes from UTF-8, which may create additional
+ * errors if the character sequence is malformed.  If UTF-8 support is
+ * disabled, the functions deflate and inflate, respectively.
  */
 JS_PUBLIC_API(JSBool)
 JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
@@ -2275,6 +2287,13 @@ JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
 JS_PUBLIC_API(JSBool)
 JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
                size_t *dstlenp);
+
+/*
+ * A variation on JS_EncodeCharacters where a null terminated string is
+ * returned that you are expected to call JS_free on when done.
+ */
+JS_PUBLIC_API(char *)
+JS_EncodeString(JSContext *cx, JSString *str);
 
 /************************************************************************/
 

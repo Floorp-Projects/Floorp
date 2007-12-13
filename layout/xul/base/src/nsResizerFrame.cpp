@@ -100,16 +100,36 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
            static_cast<nsMouseEvent*>(aEvent)->button ==
              nsMouseEvent::eLeftButton)
        {
-         // we're tracking.
-         mTrackingMouseMove = PR_TRUE;
 
-         // start capture.
-         aEvent->widget->CaptureMouse(PR_TRUE);
-         CaptureMouseEvents(aPresContext,PR_TRUE);
+         nsresult rv = NS_OK;
 
-         // remember current mouse coordinates.
-         mLastPoint = aEvent->refPoint;
-         aEvent->widget->GetScreenBounds(mWidgetRect);
+         // what direction should we go in? 
+         // convert eDirection to horizontal and vertical directions
+         static const PRInt8 directions[][2] = {
+           {-1, -1}, {0, -1}, {1, -1},
+           {-1,  0},          {1,  0},
+           {-1,  1}, {0,  1}, {1,  1}
+         };
+
+         // ask the widget implementation to begin a resize drag if it can
+         rv = aEvent->widget->BeginResizeDrag(aEvent, 
+             directions[mDirection][0], directions[mDirection][1]);
+
+         if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+           // there's no native resize support, 
+           // we need to window resizing ourselves
+
+           // we're tracking.
+           mTrackingMouseMove = PR_TRUE;
+
+           // start capture.
+           aEvent->widget->CaptureMouse(PR_TRUE);
+           CaptureMouseEvents(aPresContext,PR_TRUE);
+
+           // remember current mouse coordinates.
+           mLastPoint = aEvent->refPoint;
+           aEvent->widget->GetScreenBounds(mWidgetRect);
+         }
 
          *aEventStatus = nsEventStatus_eConsumeNoDefault;
          doDefault = PR_FALSE;

@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=398492
+-->
+<window title="Mozilla Bug 398492"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="test">
+      <content>
+        <xul:hbox id="xxx"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          <children/>
+        </xul:hbox>
+      </content>
+    </binding>
+  </bindings>
+
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=398492"
+     target="_blank">Mozilla Bug 398492</a>
+  </body>
+
+  <hbox id="testbox" style="-moz-binding: url(#test)">Text</hbox>
+  
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    /** Test for Bug 398492 **/
+    SimpleTest.waitForExplicitFinish();
+
+    function getXBLParent(node) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+                            .getService(Components.interfaces.inIDOMUtils);
+      return utils.getParentForNode(node, true);
+    }
+
+    addLoadEvent(function() {
+      var n = $("testbox");
+      var kid = n.firstChild;
+      var anonKid = document.getAnonymousNodes(n)[0];
+      is(anonKid instanceof XULElement, true, "Must be a XUL element");
+      is(anonKid, getXBLParent(kid), "Unexpected anonymous nodes");
+
+      var n2 = n.cloneNode(true);
+      var kid2 = n2.firstChild;
+      var anonKid2 = document.getAnonymousNodes(n2)[0];
+      is(anonKid2 instanceof XULElement, true,
+         "Must be a XUL element after clone");
+      is(anonKid2, getXBLParent(kid2),
+         "Unexpected anonymous nodes after clone");
+
+      var n3 = document.createElement("hbox");
+      var kid3 = document.createTextNode("Text");
+      n3.appendChild(kid3);
+      document.addBinding(n3, document.location.href + "#test");
+      var anonKid3 = document.getAnonymousNodes(n3)[0];
+      is(anonKid3 instanceof XULElement, true,
+         "Must be a XUL element after addBinding");
+      is(anonKid3, getXBLParent(kid3),
+         "Unexpected anonymous nodes after addBinding");
+      
+
+      n.removeChild(kid);
+      isnot(anonKid, getXBLParent(kid),
+            "Should have removed kid from insertion point");
+
+      n2.removeChild(kid2);
+      isnot(anonKid2, getXBLParent(kid2),
+            "Should have removed kid2 from insertion point");
+    
+      n3.removeChild(kid3);
+      isnot(anonKid3, getXBLParent(kid3),
+            "Should have removed kid3 from insertion point");
+    
+      SimpleTest.finish();
+    });
+
+
+  ]]></script>
+</window>

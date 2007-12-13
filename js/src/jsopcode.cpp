@@ -368,7 +368,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         goto print_int;
 
       case JOF_INT8:
-        JS_ASSERT(op == JSOP_INT8);
         i = GET_INT8(pc);
         goto print_int;
 
@@ -571,32 +570,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
                  ? Sprint(sp, "%c", (char)c) >= 0
                  : Sprint(sp, "\\%c", e[1]) >= 0;
         } else {
-#ifdef JS_C_STRINGS_ARE_UTF8
-            /* If this is a surrogate pair, make sure to print the pair. */
-            if (c >= 0xD800 && c <= 0xDBFF) {
-                jschar buffer[3];
-                buffer[0] = c;
-                buffer[1] = *++t;
-                buffer[2] = 0;
-                if (t == z) {
-                    char numbuf[10];
-                    JS_snprintf(numbuf, sizeof numbuf, "0x%x", c);
-                    JS_ReportErrorFlagsAndNumber(sp->context, JSREPORT_ERROR,
-                                                 js_GetErrorMessage, NULL,
-                                                 JSMSG_BAD_SURROGATE_CHAR,
-                                                 numbuf);
-                    ok = JS_FALSE;
-                    break;
-                }
-                ok = Sprint(sp, "%hs", buffer) >= 0;
-            } else {
-                /* Print as UTF-8 string. */
-                ok = Sprint(sp, "%hc", c) >= 0;
-            }
-#else
-            /* Use \uXXXX or \xXX  if the string can't be displayed as UTF-8. */
             ok = Sprint(sp, (c >> 8) ? "\\u%04X" : "\\x%02X", c) >= 0;
-#endif
         }
         if (!ok)
             return NULL;
@@ -3617,9 +3591,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 (void) PopOff(ss, lastop);
                 /* FALL THROUGH */
 
-#if JS_HAS_XML_SUPPORT
               case JSOP_CALLPROP:
-#endif
               case JSOP_GETPROP:
               case JSOP_GETXPROP:
                 LOAD_ATOM(0);
@@ -3773,7 +3745,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 LOAD_ATOM(0);
               do_name:
                 lval = "";
+#if JS_HAS_XML_SUPPORT
               do_qname:
+#endif
                 sn = js_GetSrcNote(jp->script, pc);
                 rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
                                    inXML ? DONT_ESCAPE : 0);
@@ -4239,12 +4213,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_NEWINIT:
               {
-                JSBool isArray;
+                i = GET_INT8(pc);
+                JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
-                LOCAL_ASSERT(ss->top >= 2);
-                (void) PopOff(ss, op);
-                lval = POP_STR();
-                isArray = (*lval == 'A');
                 todo = ss->sprinter.offset;
 #if JS_HAS_SHARP_VARS
                 op = (JSOp)pc[len];
@@ -4252,12 +4223,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc += len;
                     cs = &js_CodeSpec[op];
                     len = cs->length;
-                    i = (jsint) GET_UINT16(pc);
-                    if (Sprint(&ss->sprinter, "#%u=", (unsigned) i) < 0)
+                    if (Sprint(&ss->sprinter, "#%u=",
+                               (unsigned) (jsint) GET_UINT16(pc)) < 0)
                         return NULL;
                 }
 #endif /* JS_HAS_SHARP_VARS */
-                if (isArray) {
+                if (i == JSProto_Array) {
                     ++ss->inArrayInit;
                     if (SprintCString(&ss->sprinter, "[") < 0)
                         return NULL;
@@ -4269,6 +4240,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               }
 
               case JSOP_ENDINIT:
+              {
+                JSBool inArray;
+
                 op = JSOP_NOP;           /* turn off parens */
                 rval = POP_STR();
                 sn = js_GetSrcNote(jp->script, pc);
@@ -4276,35 +4250,53 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 /* Skip any #n= prefix to find the opening bracket. */
                 for (xval = rval; *xval != '[' && *xval != '{'; xval++)
                     continue;
-                if (*xval == '[')
+                inArray = (*xval == '[');
+                if (inArray)
                     --ss->inArrayInit;
                 todo = Sprint(&ss->sprinter, "%s%s%c",
                               rval,
                               (sn && SN_TYPE(sn) == SRC_CONTINUE) ? ", " : "",
-                              (*xval == '[') ? ']' : '}');
+                              inArray ? ']' : '}');
                 break;
+              }
 
               case JSOP_INITPROP:
+              {
+                JSBool isFirst;
+
                 LOAD_ATOM(0);
                 xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
                                    (jschar)
                                    (ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
                 if (!xval)
                     return NULL;
+                isFirst = (ss->opcodes[ss->top - 2] == JSOP_NEWINIT);
                 rval = POP_STR();
                 lval = POP_STR();
-              do_initprop:
-#ifdef OLD_GETTER_SETTER
-                todo = Sprint(&ss->sprinter, "%s%s%s%s%s:%s",
+                todo = Sprint(&ss->sprinter, "%s%s",
                               lval,
-                              (lval[1] != '\0') ? ", " : "",
-                              xval,
-                              (lastop == JSOP_GETTER || lastop == JSOP_SETTER)
-                              ? " " : "",
-                              (lastop == JSOP_GETTER) ? js_getter_str :
-                              (lastop == JSOP_SETTER) ? js_setter_str :
-                              "",
-                              rval);
+                              isFirst ? "" : ", ");
+              }
+
+              do_initprop:
+                /*
+                 * NB: From here onward we must not overwrite todo, which must
+                 * be the offset just before we print the [ or { which starts
+                 * this literal.  This is important both for JSOP_INITPROP and
+                 * for JSOP_INITELEM (whose control flow can extend through
+                 * here via a goto).
+                 */
+#ifdef OLD_GETTER_SETTER
+                if (Sprint(&ss->sprinter, "%s%s%s%s%s:%s",
+                           xval,
+                           (lastop == JSOP_GETTER || lastop == JSOP_SETTER)
+                           ? " " : "",
+                           (lastop == JSOP_GETTER) ? js_getter_str :
+                           (lastop == JSOP_SETTER) ? js_setter_str :
+                           "",
+                           rval) < 0) {
+                    return NULL;
+                }
 #else
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
                     if (!atom ||
@@ -4313,12 +4305,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         ATOM_IS_KEYWORD(atom) ||
                         (ss->opcodes[ss->top+1] != JSOP_ANONFUNOBJ &&
                          ss->opcodes[ss->top+1] != JSOP_NAMEDFUNOBJ)) {
-                        todo = Sprint(&ss->sprinter, "%s%s%s %s: %s", lval,
-                                      (lval[1] != '\0') ? ", " : "", xval,
-                                      (lastop == JSOP_GETTER) ? js_getter_str :
-                                      (lastop == JSOP_SETTER) ? js_setter_str :
-                                      "",
-                                      rval);
+                        if (Sprint(&ss->sprinter, "%s %s: %s", xval,
+                                   (lastop == JSOP_GETTER) ? js_getter_str :
+                                   (lastop == JSOP_SETTER) ? js_setter_str :
+                                   "",
+                                   rval) < 0) {
+                            return NULL;
+                        }
                     } else {
                         const char *end = rval + strlen(rval);
 
@@ -4328,29 +4321,30 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         LOCAL_ASSERT(rval[8] == ' ');
                         rval += 8 + 1;
                         LOCAL_ASSERT(*end ? *end == ')' : end[-1] == '}');
-                        todo = Sprint(&ss->sprinter, "%s%s%s %s%s%.*s",
-                                      lval,
-                                      (lval[1] != '\0') ? ", " : "",
-                                      (lastop == JSOP_GETTER)
-                                      ? js_get_str : js_set_str,
-                                      xval,
-                                      (rval[0] != '(') ? " " : "",
-                                      end - rval, rval);
+                        if (Sprint(&ss->sprinter, "%s %s%s%.*s",
+                                   (lastop == JSOP_GETTER)
+                                   ? js_get_str : js_set_str,
+                                   xval,
+                                   (rval[0] != '(') ? " " : "",
+                                   end - rval, rval) < 0) {
+                            return NULL;
+                        }
                     }
                 } else {
-                    todo = Sprint(&ss->sprinter, "%s%s%s: %s",
-                                  lval,
-                                  (lval[1] != '\0') ? ", " : "",
-                                  xval,
-                                  rval);
+                    if (Sprint(&ss->sprinter, "%s: %s", xval, rval) < 0)
+                        return NULL;
                 }
 #endif
                 break;
 
               case JSOP_INITELEM:
+              {
+                JSBool isFirst;
+
                 /* Turn off most parens (all if there's only one initialiser). */
                 LOCAL_ASSERT(pc + len < endpc);
-                op = (GetStr(ss, ss->top - 3)[1] == '\0' &&
+                isFirst = (ss->opcodes[ss->top - 3] == JSOP_NEWINIT);
+                op = (isFirst &&
                       GetStr(ss, ss->top - 2)[0] == '0' &&
                       (JSOp) pc[len] == JSOP_ENDINIT)
                      ? JSOP_NOP
@@ -4362,15 +4356,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 xval = POP_STR();
                 lval = POP_STR();
                 sn = js_GetSrcNote(jp->script, pc);
+
+                /* NB: must not overwrite todo after this! */
+                todo = Sprint(&ss->sprinter, "%s%s",
+                              lval,
+                              isFirst ? "" : ", ");
+                if (todo < 0) 
+                    break;
                 if (sn && SN_TYPE(sn) == SRC_INITPROP) {
                     atom = NULL;
                     goto do_initprop;
                 }
-                todo = Sprint(&ss->sprinter, "%s%s%s",
-                              lval,
-                              (lval[1] != '\0' || *xval != '0') ? ", " : "",
-                              rval);
+                if (SprintCString(&ss->sprinter, rval) < 0)
+                    return NULL;
                 break;
+              }
 
 #if JS_HAS_SHARP_VARS
               case JSOP_DEFSHARP:

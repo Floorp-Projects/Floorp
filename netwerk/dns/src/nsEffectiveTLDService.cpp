@@ -130,7 +130,8 @@ nsEffectiveTLDService::GetPublicSuffix(nsIURI     *aURI,
   NS_ENSURE_ARG_POINTER(innerURI);
 
   nsCAutoString host;
-  innerURI->GetHost(host);
+  nsresult rv = innerURI->GetAsciiHost(host);
+  if (NS_FAILED(rv)) return rv;
 
   return GetBaseDomainInternal(host, 0, aPublicSuffix);
 }
@@ -149,7 +150,8 @@ nsEffectiveTLDService::GetBaseDomain(nsIURI     *aURI,
   NS_ENSURE_ARG_POINTER(innerURI);
 
   nsCAutoString host;
-  innerURI->GetHost(host);
+  nsresult rv = innerURI->GetAsciiHost(host);
+  if (NS_FAILED(rv)) return rv;
 
   return GetBaseDomainInternal(host, aAdditionalParts + 1, aBaseDomain);
 }
@@ -160,7 +162,13 @@ NS_IMETHODIMP
 nsEffectiveTLDService::GetPublicSuffixFromHost(const nsACString &aHostname,
                                                nsACString       &aPublicSuffix)
 {
-  return GetBaseDomainInternal(aHostname, 0, aPublicSuffix);
+  // Create a mutable copy of the hostname and normalize it to ACE.
+  // This will fail if the hostname includes invalid characters.
+  nsCAutoString normHostname(aHostname);
+  nsresult rv = NormalizeHostname(normHostname);
+  if (NS_FAILED(rv)) return rv;
+
+  return GetBaseDomainInternal(normHostname, 0, aPublicSuffix);
 }
 
 // External function for dealing with a host string directly: finds the base
@@ -171,7 +179,13 @@ nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString &aHostname,
                                              PRUint32          aAdditionalParts,
                                              nsACString       &aBaseDomain)
 {
-  return GetBaseDomainInternal(aHostname, aAdditionalParts + 1, aBaseDomain);
+  // Create a mutable copy of the hostname and normalize it to ACE.
+  // This will fail if the hostname includes invalid characters.
+  nsCAutoString normHostname(aHostname);
+  nsresult rv = NormalizeHostname(normHostname);
+  if (NS_FAILED(rv)) return rv;
+
+  return GetBaseDomainInternal(normHostname, aAdditionalParts + 1, aBaseDomain);
 }
 
 // Finds the base domain for a host, with requested number of additional parts.
@@ -180,28 +194,21 @@ nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString &aHostname,
 // includes characters that are not valid in a URL. Normalization is performed
 // on the host string and the result will be in UTF8.
 nsresult
-nsEffectiveTLDService::GetBaseDomainInternal(const nsACString &aHostname,
-                                             PRUint32          aAdditionalParts,
-                                             nsACString       &aBaseDomain)
+nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
+                                             PRUint32    aAdditionalParts,
+                                             nsACString &aBaseDomain)
 {
   if (aHostname.IsEmpty())
     return NS_ERROR_INVALID_ARG;
 
-  // Create a mutable copy of the hostname and normalize it to UTF8.
-  // This will fail if the hostname includes invalid characters.
-  nsCAutoString normHostname(aHostname);
-  nsresult rv = NormalizeHostname(normHostname);
-  if (NS_FAILED(rv))
-    return rv;
-
   // chomp any trailing dot, and keep track of it for later
-  PRBool trailingDot = normHostname.Last() == '.';
+  PRBool trailingDot = aHostname.Last() == '.';
   if (trailingDot)
-    normHostname.Truncate(normHostname.Length() - 1);
+    aHostname.Truncate(aHostname.Length() - 1);
 
   // Check if we're dealing with an IPv4/IPv6 hostname, and return
   PRNetAddr addr;
-  PRStatus result = PR_StringToNetAddr(normHostname.get(), &addr);
+  PRStatus result = PR_StringToNetAddr(aHostname.get(), &addr);
   if (result == PR_SUCCESS)
     return NS_ERROR_HOST_IS_IP_ADDRESS;
 
@@ -209,9 +216,9 @@ nsEffectiveTLDService::GetBaseDomainInternal(const nsACString &aHostname,
   // looking for matches at each level. note that a given level may
   // have multiple attributes (e.g. IsWild() and IsNormal()).
   const char *prevDomain = nsnull;
-  const char *currDomain = normHostname.get();
+  const char *currDomain = aHostname.get();
   const char *nextDot = strchr(currDomain, '.');
-  const char *end = currDomain + normHostname.Length();
+  const char *end = currDomain + aHostname.Length();
   const char *eTLD = currDomain;
   while (1) {
     nsDomainEntry *entry = mHash.GetEntry(currDomain);
@@ -245,7 +252,7 @@ nsEffectiveTLDService::GetBaseDomainInternal(const nsACString &aHostname,
   }
 
   // count off the number of requested domains.
-  const char *begin = normHostname.get();
+  const char *begin = aHostname.get();
   const char *iter = eTLD;
   while (1) {
     if (iter == begin)
@@ -269,24 +276,17 @@ nsEffectiveTLDService::GetBaseDomainInternal(const nsACString &aHostname,
   return NS_OK;
 }
 
-// Normalizes characters of hostname. ASCII names are lower-cased, UTF8 names
-// are normalized with nsIIDNService::Normalize which follows RFC 3454, and
-// ACE names are converted to UTF8 and normalized as above.
+// Normalizes characters of hostname. ASCII/ACE names are lower-cased,
+// and UTF8 names are normalized per RFC 3454 and converted to ACE.
 nsresult
 nsEffectiveTLDService::NormalizeHostname(nsCString &aHostname)
 {
   if (IsASCII(aHostname)) {
-    PRBool isACE;
-    if (NS_FAILED(mIDNService->IsACE(aHostname, &isACE)) || !isACE) {
-      ToLowerCase(aHostname);
-      return NS_OK;
-    }
-
-    nsresult rv = mIDNService->ConvertACEtoUTF8(aHostname, aHostname);
-    if (NS_FAILED(rv)) return rv;
+    ToLowerCase(aHostname);
+    return NS_OK;
   }
 
-  return mIDNService->Normalize(aHostname, aHostname);
+  return mIDNService->ConvertUTF8toACE(aHostname, aHostname);
 }
 
 // Adds the given domain name rule to the effective-TLD hash.

@@ -258,8 +258,14 @@ bool MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
     return false;
 
   switch (raw_system_info->processor_architecture) {
-    case MD_CPU_ARCHITECTURE_X86: {
-      info->cpu = "x86";
+    case MD_CPU_ARCHITECTURE_X86:
+    case MD_CPU_ARCHITECTURE_AMD64: {
+      if (raw_system_info->processor_architecture == 
+          MD_CPU_ARCHITECTURE_X86)
+        info->cpu = "x86";
+      else
+        info->cpu = "amd64";
+
       const string *cpu_vendor = system_info->GetCPUVendor();
       if (cpu_vendor) {
         info->cpu_info = *cpu_vendor;

@@ -988,7 +988,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
 
   // Unlink any associated preserved wrapper.
   if (tmp->mDoc) {
-    tmp->mDoc->RemoveReference(tmp->mDoc.get());
+    tmp->mDoc->RemoveReference(tmp);
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDoc)
   }
 
@@ -3557,6 +3557,8 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
 {
   FORWARD_TO_OUTER(SetFullScreen, (aFullScreen), NS_ERROR_NOT_INITIALIZED);
 
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
   PRBool rootWinFullScreen;
   GetFullScreen(&rootWinFullScreen);
   // Only chrome can change our fullScreen mode.
@@ -3609,12 +3611,14 @@ nsGlobalWindow::GetFullScreen(PRBool* aFullScreen)
   // Get the fullscreen value of the root window, to always have the value
   // accurate, even when called from content.
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
-  nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-  if (rootItem != treeItem) {
-    nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(rootItem);
-    if (window)
-      return window->GetFullScreen(aFullScreen);
+  if (treeItem) {
+    nsCOMPtr<nsIDocShellTreeItem> rootItem;
+    treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+    if (rootItem != treeItem) {
+      nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(rootItem);
+      if (window)
+        return window->GetFullScreen(aFullScreen);
+    }
   }
 
   // We are the root window, or something went wrong. Return our internal value.
