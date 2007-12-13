@@ -2578,16 +2578,15 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
 
     /*
-     * Share proto's map only if it has the same newObjectMap ops, and
-     * only if proto's class has the same private and reserved slots
-     * as obj's map and class have.  We assume that if proto and obj
-     * are of the same class, they always have the same number of
-     * computed reserved slots (returned via clasp->reserveSlots);
-     * otherwise, prototype and object classes must have the same
-     * (null or not) reserveSlots hook.
+     * Share proto's map only if it has the same JSObjectOps, and only if
+     * proto's class has the same private and reserved slots as obj's map
+     * and class have.  We assume that if prototype and object are of the
+     * same class, they always have the same number of computed reserved
+     * slots (returned via clasp->reserveSlots); otherwise, prototype and
+     * object classes must have the same (null or not) reserveSlots hook.
      */
     if (proto &&
-        (map = proto->map)->ops->newObjectMap == ops->newObjectMap &&
+        (map = proto->map)->ops == ops &&
         ((protoclasp = OBJ_GET_CLASS(cx, proto)) == clasp ||
          (!((protoclasp->flags ^ clasp->flags) &
             (JSCLASS_HAS_PRIVATE |
