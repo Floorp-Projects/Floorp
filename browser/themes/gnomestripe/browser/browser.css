@@ -851,6 +851,13 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   white-space: -moz-pre-wrap;
   color: black;
   padding-left: 10px;
+  margin-left: 0;
+}
+
+#identity-popup-content-box > label {
+  white-space: -moz-pre-wrap;
+  margin-left: 0;
+  padding-left: 10px;
 }
 
 #identity-popup-content {
@@ -867,7 +874,12 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #identity-popup-encryption {
-  margin: 10px 0;
+  padding: 10px 0;
+}
+
+.verifiedIdentity > #identity-popup-encryption,
+.verifiedDomain > #identity-popup-encryption {
+  margin-left: -18px;
 }
 
 .verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,

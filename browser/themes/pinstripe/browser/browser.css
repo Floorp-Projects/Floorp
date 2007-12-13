@@ -1694,6 +1694,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
     padding-left: 10px;
 }
 
+#identity-popup-content-box > label {
+    white-space: -moz-pre-wrap;
+    margin-left: 0;
+    padding-left: 10px;
+}
+
 #identity-popup-content {
     padding-top: 5px;
     margin-bottom: 0;
@@ -1708,7 +1714,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #identity-popup-encryption {
-  margin: 10px 0;
+  padding: 10px 0;
+}
+
+.verifiedIdentity > #identity-popup-encryption,
+.verifiedDomain > #identity-popup-encryption {
+  margin-left: -18px;
 }
 
 .verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,
