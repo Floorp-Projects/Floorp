@@ -411,6 +411,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
+          frame->AdjustOffsetsForBidi(contentOffset, contentOffset + runLength);
           if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex) ) {
             break;
           }
@@ -421,7 +422,6 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
             }
           }
           line->MarkDirty();
-          frame->AdjustOffsetsForBidi(contentOffset, contentOffset + runLength);
           frame = nextBidi;
           contentOffset += runLength;
         } // if (runLength < fragmentLength)
