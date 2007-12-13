@@ -2147,7 +2147,7 @@ function BrowserOnCommand(event) {
             case 2 : // Pre-fetch & pre-populate
               params.prefetchCert = true;
             case 1 : // Pre-populate
-              params.location = content.location.href;
+              params.location = errorDoc.location.href;
           }
         } catch (e) {
           Components.utils.reportError("Couldn't get ssl_override pref: " + e);
@@ -2158,7 +2158,7 @@ function BrowserOnCommand(event) {
         
         // If the user added the exception cert, attempt to reload the page
         if (params.exceptionAdded)
-          content.location.reload();
+          errorDoc.location.reload();
       }
       else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
         // Redirect them to a known-functioning page, default start page
