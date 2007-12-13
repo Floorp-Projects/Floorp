@@ -74,12 +74,16 @@
   <keyset id="extensionsKeys">
     <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close"/>
     <key id="key_close2"  keycode="VK_ESCAPE" command="cmd_close"/>
-    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about" 
+    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel"
          oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
-    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"
+    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel"
          oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
-    <key id="key_uninstall" keycode="VK_DELETE"                             command="cmd_uninstall"
+    <key id="key_uninstall" keycode="VK_DELETE"
          oncommand="gExtensionsViewController.doCommand('cmd_uninstall');"/>
+#ifdef XP_MACOSX
+    <key id="key_uninstall_mac" keycode="VK_BACK"
+         oncommand="gExtensionsViewController.doCommand('cmd_uninstall');"/>
+#endif
   </keyset>
 
   <commandset id="extensionsCommands"
