@@ -135,8 +135,8 @@ var security = {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
     var win = wm.getMostRecentWindow("Browser:Cookies");
-    var eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
-                      getService(Ci.nsIEffectiveTLDService);
+    var eTLDService = Components.classes["@mozilla.org/network/effective-tld-service;1"].
+                      getService(Components.interfaces.nsIEffectiveTLDService);
     var eTLD = eTLDService.getBaseDomainFromHost(this._getSecurityInfo()
                                                      .hostName);
     if (win) {
