@@ -89,7 +89,7 @@
  * been performed by the dialog.
  */
 
-const LAST_USED_ANNO = "bookmarkPropertiesDialog/lastUsed";
+const LAST_USED_ANNO = "bookmarkPropertiesDialog/folderLastUsed";
 const STATIC_TITLE_ANNO = "bookmarks/staticTitle";
 
 // This doesn't include "static" special folders (first two menu items)
@@ -111,17 +111,6 @@ var BookmarkPropertiesPanel = {
       this.__strings = document.getElementById("stringBundle");
     }
     return this.__strings;
-  },
-
-  /**
-   * The Microsummary Service for displaying microsummaries.
-   */
-  __mss: null,
-  get _mss() {
-    if (!this.__mss)
-      this.__mss = Cc["@mozilla.org/microsummary/service;1"].
-                  getService(Ci.nsIMicrosummaryService);
-    return this.__mss;
   },
 
   _action: null,
@@ -391,6 +380,15 @@ var BookmarkPropertiesPanel = {
   },
 
   _initFolderMenuList: function BPP__initFolderMenuList() {
+    // Build the static list
+    var bms = PlacesUtils.bookmarks;
+    var bmMenuItem = this._element("bookmarksRootItem");
+    bmMenuItem.label = bms.getItemTitle(PlacesUtils.bookmarksMenuFolderId);
+    bmMenuItem.folderId = PlacesUtils.bookmarksMenuFolderId;
+    var toolbarItem = this._element("toolbarFolderItem");
+    toolbarItem.label = bms.getItemTitle(PlacesUtils.toolbarFolderId);
+    toolbarItem.folderId = PlacesUtils.toolbarFolderId;
+
     // List of recently used folders:
     var annos = PlacesUtils.annotations;
     var folderIds = annos.getItemsWithAnnotation(LAST_USED_ANNO, { });
@@ -429,7 +427,7 @@ var BookmarkPropertiesPanel = {
     }
 
     var defaultItem =
-      this._getFolderMenuItem(this._defaultInsertionPoint.itemId, true);
+      this._getFolderMenuItem(this._defaultInsertionPoint.itemId);
 
     // if we fail to get a menuitem for the default insertion point
     // use the Bookmarks root
@@ -568,8 +566,9 @@ var BookmarkPropertiesPanel = {
 
     var itemToSelect = userEnteredNameField;
     try {
-      this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
-                                                         this._bookmarkId);
+      this._microsummaries =
+        PlacesUtils.microsummaries.getMicrosummaries(this._bookmarkURI,
+                                                     this._bookmarkId);
     }
     catch(ex) {
       // getMicrosummaries will throw an exception if the page to which the URI
@@ -591,7 +590,8 @@ var BookmarkPropertiesPanel = {
           var menuItem = this._createMicrosummaryMenuItem(microsummary);
 
           if (this._action == ACTION_EDIT &&
-              this._mss.isMicrosummary(this._bookmarkId, microsummary))
+              PlacesUtils.microsummaries
+                         .isMicrosummary(this._bookmarkId, microsummary))
             itemToSelect = menuItem;
 
           menupopup.appendChild(menuItem);
@@ -840,9 +840,11 @@ var BookmarkPropertiesPanel = {
       // microsummary, but the bookmark previously had one, or the user
       // selected a microsummary which is not the one the bookmark previously
       // had.
-      if ((newMicrosummary == null && this._mss.hasMicrosummary(itemId)) ||
+      if ((newMicrosummary == null &&
+           PlacesUtils.microsummaries.hasMicrosummary(itemId)) ||
           (newMicrosummary != null &&
-           !this._mss.isMicrosummary(itemId, newMicrosummary))) {
+           !PlacesUtils.microsummaries
+                       .isMicrosummary(itemId, newMicrosummary))) {
         transactions.push(
           PlacesUtils.ptm.editBookmarkMicrosummary(itemId, newMicrosummary));
       }
@@ -1007,8 +1009,11 @@ var BookmarkPropertiesPanel = {
     else // BOOKMARK_ITEM
       createTxn = this._getCreateNewBookmarkTransaction(container, index);
 
-    // Mark the containing folder as recently-used
-    this._markFolderAsRecentlyUsed(container);
+    // Mark the containing folder as recently-used if it isn't in the static
+    // list
+    if (container != PlacesUtils.toolbarFolderId &&
+        container != PlacesUtils.bookmarksMenuFolderId)
+      this._markFolderAsRecentlyUsed(container);
 
     // perfrom our transaction do via the transaction manager passed by the
     // opener so it can be undone.
@@ -1058,14 +1063,7 @@ var BookmarkPropertiesPanel = {
 
   _getFolderIdFromMenuList:
   function BPP__getFolderIdFromMenuList() {
-    var selectedItem = this._folderMenuList.selectedItem
-    switch (selectedItem.id) {
-      case "bookmarksRootItem":
-        return PlacesUtils.bookmarksMenuFolderId;
-      case "toolbarFolderItem":
-        return PlacesUtils.toolbarFolderId;
-    }
-
+    var selectedItem = this._folderMenuList.selectedItem;
     NS_ASSERT("folderId" in selectedItem,
               "Invalid menuitem in the folders-menulist");
     return selectedItem.folderId;
@@ -1077,27 +1075,15 @@ var BookmarkPropertiesPanel = {
    * folder. If the items-count limit (see MAX_FOLDERS_IN_MENU_LIST) is reached,
    * the new item replaces the last menu-item.
    * @param aFolderId
-   *        The identifier of the bookmarks folder
-   * @param aCheckStaticFolderItems
-   *        whether or not to also treat the static items at the top of
-   *        menu-list. Note dynamic items get precedence even if this is set to
-   *        true.
+   *        The identifier of the bookmarks folder.
    */
   _getFolderMenuItem:
-  function BPP__getFolderMenuItem(aFolderId, aCheckStaticFolderItems) {
+  function BPP__getFolderMenuItem(aFolderId) {
     var menupopup = this._folderMenuList.menupopup;
 
-    // 0: Bookmarks root, 1: toolbar folder, 2: separator
-    for (var i=3; i < menupopup.childNodes.length; i++) {
+    for (var i=0; i < menupopup.childNodes.length; i++) {
       if (menupopup.childNodes[i].folderId == aFolderId)
         return menupopup.childNodes[i];
-    }
-
-    if (aCheckStaticFolderItems) {
-      if (aFolderId == PlacesUtils.bookmarksMenuFolderId)
-        return this._element("bookmarksRootItem")
-      if (aFolderId == PlacesUtils.toolbarFolderId)
-        return this._element("toolbarFolderItem")
     }
 
     // 2 special folders + separator + folder-items-count limit
@@ -1129,7 +1115,7 @@ var BookmarkPropertiesPanel = {
          folderId == PlacesUtils.bookmarksMenuFolderId))
       return;
 
-    var folderItem = this._getFolderMenuItem(folderId, false);
+    var folderItem = this._getFolderMenuItem(folderId);
     this._folderMenuList.selectedItem = folderItem;
   },
 
