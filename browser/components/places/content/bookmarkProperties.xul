@@ -133,10 +133,8 @@
           <menupopup>
             <!-- Static item for special folders -->
             <menuitem id="bookmarksRootItem"
-                      label="&bookmarks.bookmarksFolderItem.label;"
                       class="menuitem-iconic folder-icon"/>
             <menuitem id="toolbarFolderItem"
-                      label="&bookmarks.toolbarFolderItem.label;"
                       class="menuitem-iconic folder-icon"/>
             <menuseparator id="foldersSeparator" hidden="true"/>
           </menupopup>
