@@ -417,7 +417,7 @@
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="javascriptConsole" 
                         label="&errorConsoleCmd.label;" accesskey="&errorConsoleCmd.accesskey;" 
-                        oncommand="toJavaScriptConsole();"/>
+                        key="key_errorConsole" oncommand="toJavaScriptConsole();"/>
 #ifdef XP_WIN
               <menuitem accesskey="&pageInfoCmd.accesskey;" label="&pageInfoCmd.label;"   
                         command="View:PageInfo"/>
