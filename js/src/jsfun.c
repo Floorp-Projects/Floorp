@@ -893,7 +893,7 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_TRUE;
 }
 
-JSClass js_CallClass = {
+JS_FRIEND_DATA(JSClass) js_CallClass = {
     js_Call_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Call),
