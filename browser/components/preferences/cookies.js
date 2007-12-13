@@ -64,6 +64,10 @@ var gCookiesWindow = {
     this.sort("rawHost");
     if (this._view.rowCount > 0) 
       this._tree.view.selection.select(0);
+
+    if ("arguments" in window && window.arguments.length > 0 &&
+        window.arguments[0].filterString)
+      this.setFilter(window.arguments[0].filterString);
     
     this._saveState();
       
@@ -915,6 +919,12 @@ var gCookiesWindow = {
     var filter = document.getElementById("filter");
     filter.focus();
     filter.select();
+  },
+
+  setFilter: function (aFilterString)
+  {
+    document.getElementById("filter").value = aFilterString;
+    this.onFilterInput();
   }
 };
 
