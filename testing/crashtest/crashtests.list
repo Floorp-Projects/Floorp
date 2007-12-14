@@ -3,6 +3,7 @@
 
 include ../../testing/crashtest/sanity/crashtests.list
 
+include ../../content/base/crashtests/crashtests.list
 include ../../content/svg/content/src/crashtests/crashtests.list
 include ../../content/xul/templates/src/crashtests/crashtests.list
 
