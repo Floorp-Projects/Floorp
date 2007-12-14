@@ -279,8 +279,6 @@
           <xul:hbox align="center" flex="1">
             <xul:label xbl:inherits="value=status,tooltiptext=status"
                        crop="end" flex="1" class="status"/>
-            <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
-                        command="cmd_retry" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
                         command="cmd_showInfo" ondblclick="event.stopPropagation();"
                         anonid="info"/>
@@ -331,8 +329,6 @@
           <xul:hbox align="center" flex="1">
             <xul:label xbl:inherits="value=status,tooltiptext=status"
                        crop="end" flex="1" class="status"/>
-            <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
-                        command="cmd_retry" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
                         command="cmd_showInfo" ondblclick="event.stopPropagation();"
                         anonid="info"/>
