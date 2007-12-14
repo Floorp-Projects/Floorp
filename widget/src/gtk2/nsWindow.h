@@ -362,6 +362,7 @@ private:
     void              *SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsCStringArray &aIconList);
     void               SetDefaultIcon(void);
+    void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
