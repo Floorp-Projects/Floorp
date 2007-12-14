@@ -218,16 +218,18 @@ gint moz_gtk_shutdown();
 /*** Widget drawing ***/
 /**
  * Paint a widget in the current theme.
- * widget:   a constant giving the widget to paint
- * rect:     the bounding rectangle for the widget
- * cliprect: a clipprect rectangle for this painting operation
- * state:    the state of the widget.  ignored for some widgets.
- * flags:    widget-dependant flags; see the GtkThemeWidgetType definition.
+ * widget:    a constant giving the widget to paint
+ * rect:      the bounding rectangle for the widget
+ * cliprect:  a clipprect rectangle for this painting operation
+ * state:     the state of the widget.  ignored for some widgets.
+ * flags:     widget-dependant flags; see the GtkThemeWidgetType definition.
+ * direction: the text direction, to draw the widget correctly LTR and RTL.
  */
 gint
 moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                      GdkRectangle* rect, GdkRectangle* cliprect,
-                     GtkWidgetState* state, gint flags);
+                     GtkWidgetState* state, gint flags,
+                     GtkTextDirection direction);
 
 
 /*** Widget metrics ***/
@@ -235,13 +237,15 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
  * Get the border size of a widget
  * left/right:  [OUT] the widget's left/right border
  * top/bottom:  [OUT] the widget's top/bottom border
+ * direction:   the text direction for the widget
  * inhtml:      boolean indicating whether this widget will be drawn as a HTML form control,
  *              in order to workaround a size issue (MOZ_GTK_BUTTON only, ignored otherwise)
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top, 
-                               gint* right, gint* bottom, gboolean inhtml);
+                               gint* right, gint* bottom, GtkTextDirection direction,
+                               gboolean inhtml);
 
 /**
  * Get the desired size of a GtkCheckButton
