@@ -24,6 +24,10 @@ richlistitem[type="download"] .name {
   font-size: larger;
 }
 
+richlistitem[type="download"] .dateTime {
+  font-size: smaller;
+}
+
 #information {
   -moz-appearance: none;
   background-color: white;
