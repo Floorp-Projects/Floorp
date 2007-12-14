@@ -346,9 +346,6 @@ PRUint32 nsEventListenerManager::mInstanceCount = 0;
 
 nsEventListenerManager::nsEventListenerManager() :
   mTarget(nsnull),
-  mListenersRemoved(PR_FALSE),
-  mListenerRemoved(PR_FALSE),
-  mHandlingEvent(PR_FALSE),
   mMayHaveMutationListeners(PR_FALSE),
   mNoListenerForEvent(NS_EVENT_TYPE_NULL)
 {
@@ -372,10 +369,9 @@ nsEventListenerManager::~nsEventListenerManager()
 nsresult
 nsEventListenerManager::RemoveAllListeners()
 {
-  mListenersRemoved = PR_TRUE;
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    delete static_cast<nsListenerStruct*>(mListeners.ElementAt(i));
+    delete mListeners.FastObserverAt(i);
   }
   mListeners.Clear();
   return NS_OK;
@@ -402,12 +398,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsEventListenerManager, nsIEventListe
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   PRInt32 i, count = tmp->mListeners.Count();
-  nsListenerStruct *ls;
   for (i = 0; i < count; i++) {
-    ls = static_cast<nsListenerStruct*>(tmp->mListeners.ElementAt(i));
-    if (ls) {
-      cb.NoteXPCOMChild(ls->mListener.get());
-    }
+    cb.NoteXPCOMChild(tmp->mListeners.FastObserverAt(i)->mListener.get());
   }  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -487,7 +479,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   nsListenerStruct* ls = nsnull;
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; i++) {
-    ls = static_cast<nsListenerStruct*>(mListeners.ElementAt(i));
+    ls = mListeners.FastObserverAt(i);
     if (ls->mListener == aListener && ls->mFlags == aFlags &&
         ls->mGroupFlags == group &&
         (EVENT_TYPE_EQUALS(ls, aType, aTypeAtom) ||
@@ -509,7 +501,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls->mGroupFlags = group;
   ls->mHandlerIsString = PR_FALSE;
   ls->mTypeData = aTypeData;
-  mListeners.AppendElement((void*)ls);
+  mListeners.AppendObserver(ls);
 
   // For mutation listeners, we need to update the global bit on the DOM window.
   // Otherwise we won't actually fire the mutation event.
@@ -573,18 +565,17 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
 
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    ls = static_cast<nsListenerStruct*>(mListeners.ElementAt(i));
+    ls = mListeners.FastObserverAt(i);
     if (ls->mListener == aListener &&
         ls->mGroupFlags == group &&
         ((ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) &&
         (EVENT_TYPE_EQUALS(ls, aType, aUserType) ||
          (!(ls->mEventType) &&
           EVENT_TYPE_DATA_EQUALS(ls->mTypeData, aTypeData)))) {
-      mListeners.RemoveElementAt(i);
+      mListeners.RemoveObserverAt(i);
       delete ls;
       mNoListenerForEvent = NS_EVENT_TYPE_NULL;
       mNoListenerForEventAtom = nsnull;
-      mListenerRemoved = PR_TRUE;
       break;
     }
   }
@@ -656,7 +647,7 @@ nsEventListenerManager::FindJSEventListener(PRUint32 aEventType,
   nsListenerStruct *ls;
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    ls = static_cast<nsListenerStruct*>(mListeners.ElementAt(i));
+    ls = mListeners.FastObserverAt(i);
     if (EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom) &&
         ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
       return ls;
@@ -852,11 +843,10 @@ nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
   nsListenerStruct* ls = FindJSEventListener(eventType, aName);
 
   if (ls) {
-    mListeners.RemoveElement((void*)ls);
+    mListeners.RemoveObserver(ls);
     delete ls;
     mNoListenerForEvent = NS_EVENT_TYPE_NULL;
     mNoListenerForEventAtom = nsnull;
-    mListenerRemoved = PR_TRUE;
   }
 
   return NS_OK;
@@ -1116,7 +1106,7 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
                                     PRUint32 aFlags,
                                     nsEventStatus* aEventStatus)
 {
-  if (mListeners.Count() <= 0 || aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
+  if (mListeners.Count() == 0 || aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
     return NS_OK;
   }
 
@@ -1167,23 +1157,11 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
 
 found:
 
-  PRBool topMostHandleEvent = !mHandlingEvent;
-  if (topMostHandleEvent) {
-    mHandlingEvent = PR_TRUE;
-    mListenerRemoved = PR_FALSE;
-  }
-
-  PRInt32 count = mListeners.Count();
-  nsVoidArray originalListeners(count);
-  originalListeners = mListeners;
+  nsTObserverArray<nsListenerStruct>::EndLimitedIterator iter(mListeners);
   nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
   PRBool hasListener = PR_FALSE;
-  for (PRInt32 k = 0; !mListenersRemoved && k < count; ++k) {
-    nsListenerStruct* ls =
-      static_cast<nsListenerStruct*>(originalListeners.FastElementAt(k));
-    if (!ls || (mListenerRemoved && mListeners.IndexOf(ls) == -1)) {
-      continue;
-    }
+  nsListenerStruct* ls;
+  while ((ls = iter.GetNext())) {
     PRBool useTypeInterface =
       EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData);
     PRBool useGenericInterface =
@@ -1223,10 +1201,6 @@ found:
 
   if (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) {
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
-  }
-
-  if (topMostHandleEvent) {
-    mHandlingEvent = PR_FALSE;
   }
 
   return NS_OK;
@@ -1710,10 +1684,8 @@ nsEventListenerManager::HasMutationListeners(PRBool* aListener)
   if (mMayHaveMutationListeners) {
     PRInt32 count = mListeners.Count();
     for (PRInt32 i = 0; i < count; ++i) {
-      nsListenerStruct* ls = static_cast<nsListenerStruct*>
-                                        (mListeners.FastElementAt(i));
-      if (ls &&
-          ls->mEventType >= NS_MUTATION_START &&
+      nsListenerStruct* ls = mListeners.FastObserverAt(i);
+      if (ls->mEventType >= NS_MUTATION_START &&
           ls->mEventType <= NS_MUTATION_END) {
         *aListener = PR_TRUE;
         break;
@@ -1731,11 +1703,9 @@ nsEventListenerManager::MutationListenerBits()
   if (mMayHaveMutationListeners) {
     PRInt32 i, count = mListeners.Count();
     for (i = 0; i < count; ++i) {
-      nsListenerStruct* ls = static_cast<nsListenerStruct*>
-                                        (mListeners.FastElementAt(i));
-      if (ls &&
-          (ls->mEventType >= NS_MUTATION_START &&
-           ls->mEventType <= NS_MUTATION_END)) {
+      nsListenerStruct* ls = mListeners.FastObserverAt(i);
+      if (ls->mEventType >= NS_MUTATION_START &&
+          ls->mEventType <= NS_MUTATION_END) {
         if (ls->mEventType == NS_MUTATION_SUBTREEMODIFIED) {
           return kAllMutationBits;
         }
@@ -1771,11 +1741,9 @@ found:
 
   PRInt32 i, count = mListeners.Count();
   for (i = 0; i < count; ++i) {
-    nsListenerStruct* ls = static_cast<nsListenerStruct*>
-                                      (mListeners.FastElementAt(i));
-    if (ls &&
-        (ls->mTypeAtom == atom ||
-         EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData))) {
+    nsListenerStruct* ls = mListeners.FastObserverAt(i);
+    if (ls->mTypeAtom == atom ||
+        EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData)) {
       return PR_TRUE;
     }
   }
@@ -1787,11 +1755,9 @@ nsEventListenerManager::HasUnloadListeners()
 {
   PRInt32 count = mListeners.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    nsListenerStruct* ls = static_cast<nsListenerStruct*>
-                                      (mListeners.FastElementAt(i));
-    if (ls &&
-        (ls->mEventType == NS_PAGE_UNLOAD ||
-         ls->mEventType == NS_BEFORE_PAGE_UNLOAD) ||
+    nsListenerStruct* ls = mListeners.FastObserverAt(i);
+    if (ls->mEventType == NS_PAGE_UNLOAD ||
+        ls->mEventType == NS_BEFORE_PAGE_UNLOAD ||
         (ls->mTypeData && ls->mTypeData->iid &&
          ls->mTypeData->iid->Equals(NS_GET_IID(nsIDOMLoadListener)))) {
       return PR_TRUE;
