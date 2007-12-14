@@ -162,7 +162,7 @@
               label="&cmd.removeFromList.label;" accesskey="&cmd.removeFromList.accesskey;"
               command="cmd_removeFromList"/>
               
-    <menuseparator id="menuseparator_copy_location"/>
+    <menuseparator id="menuseparator"/>
               
     <menuitem id="menuitem_copyLocation"
               label="&cmd.copyDownloadLink.label;"
