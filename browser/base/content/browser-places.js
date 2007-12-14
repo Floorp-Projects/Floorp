@@ -236,7 +236,7 @@ var PlacesCommandHook = {
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     if (itemId == -1) {
       var txn = PlacesUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
-      PlacesUtils.ptm.commitTransaction(txn);
+      PlacesUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     }
 
