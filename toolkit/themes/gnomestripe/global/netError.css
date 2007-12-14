@@ -1,0 +1,136 @@
+/*
+ *  This defines the look-and-feel styling of the error pages.
+ *  (see: netError.xhtml)
+ *
+ *  Original styling by William Price <bugzilla@mob.rice.edu>
+ *  Updated by: Michael Ventnor <m.ventnor@gmail.com>
+ */
+
+html {
+  background: -moz-Dialog;
+}
+
+body {
+  margin: 0;
+  padding: 0 1em;
+  color: -moz-FieldText;
+  font: message-box;
+}
+
+h1 {
+  margin: 0 0 .6em 0;
+  border-bottom: 1px solid ThreeDLightShadow;
+  font-size: 160%;
+}
+
+ul, ol {
+  margin: 0;
+  -moz-margin-start: 1.5em;
+  padding: 0;
+}
+
+ul > li, ol > li {
+  margin-bottom: .5em;
+}
+
+ul {
+  list-style: square;
+}
+
+#errorPageContainer {
+  position: relative;
+  min-width: 13em;
+  max-width: 52em;
+  margin: 4em auto;
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 10px;
+  padding: 3em;
+  -moz-padding-start: 30px;
+  background: url("moz-icon://stock/gtk-dialog-warning?size=dialog") left 0 no-repeat -moz-Field;
+  -moz-background-origin: content;
+}
+
+body[dir="rtl"] #errorPageContainer {
+  background-position: right 0;
+}
+
+#errorTitle {
+  -moz-margin-start: 80px;
+}
+
+#errorLongContent {
+  -moz-margin-start: 80px;
+}
+
+#errorShortDesc > p {
+  overflow: auto;
+  border-bottom: 1px solid ThreeDLightShadow;
+  padding-bottom: 1em;
+  font-size: 130%;
+  white-space: -moz-pre-wrap;
+}
+
+#errorLongDesc {
+  -moz-padding-end: 3em;
+  font-size: 110%;
+}
+
+#errorLongDesc > p {
+}
+
+#errorTryAgain {
+  margin-top: 2em;
+  -moz-margin-start: 80px;
+}
+
+#brand {
+  position: absolute;
+  right: 0;
+  bottom: -1.5em;
+  -moz-margin-end: 10px;
+  opacity: .4;
+}
+
+body[dir="rtl"] #brand {
+  right: auto;
+  left: 0;
+}
+
+#brand > p {
+  margin: 0;
+}
+
+#errorContainer {
+  display: none;
+}
+
+#securityOverrideDiv {
+  padding-top: 10px;
+}
+
+#securityOverrideContent {
+  background-color: #FFF090; /* Pale yellow */
+  padding: 10px;
+  -moz-border-radius: 10px;
+}
+
+/* Custom styling for 'blacklist' error class */
+:root.blacklist #errorTitle, :root.blacklist #errorLongContent,
+:root.blacklist #errorShortDesc, :root.blacklist #errorLongDesc,
+:root.blacklist a {
+  background-color: #722; /* Dark red */
+  color: white;
+}
+
+:root.blacklist #errorPageContainer {
+  background-image: url("moz-icon://stock/gtk-dialog-error?size=dialog");
+  background-color: #722;
+}
+
+:root.blacklist {
+  background: #333;
+}
+
+:root.blacklist #errorTryAgain {
+  display: none;
+}
