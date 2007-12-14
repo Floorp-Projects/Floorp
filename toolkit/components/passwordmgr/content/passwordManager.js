@@ -47,6 +47,7 @@ var kSignonBundle;
 function SignonsStartup() {
   kSignonBundle = document.getElementById("signonBundle");
   document.getElementById("togglePasswords").label = kSignonBundle.getString("showPasswords");
+  document.getElementById("togglePasswords").accessKey = kSignonBundle.getString("showPasswordsAccessKey");
   LoadSignons();
   FocusFilterBox();
 }
@@ -150,6 +151,7 @@ function TogglePasswordVisible() {
 
   showingPasswords = !showingPasswords;
   document.getElementById("togglePasswords").label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
+  document.getElementById("togglePasswords").accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
   document.getElementById("passwordCol").hidden = !showingPasswords;
   _filterPasswords();
 }
