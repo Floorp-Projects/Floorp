@@ -164,6 +164,21 @@ static void SetWidgetStateSafe(PRUint8 *aSafeVector,
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
 
+static GtkTextDirection GetTextDirection(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return GTK_TEXT_DIR_NONE;
+
+  switch (aFrame->GetStyleVisibility()->mDirection) {
+    case NS_STYLE_DIRECTION_RTL:
+      return GTK_TEXT_DIR_RTL;
+    case NS_STYLE_DIRECTION_LTR:
+      return GTK_TEXT_DIR_LTR;
+  }
+
+  return GTK_TEXT_DIR_NONE;
+}
+
 PRBool
 nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                                        GtkThemeWidgetType& aGtkWidgetType,
@@ -536,10 +551,10 @@ NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
 class ThemeRenderer : public gfxXlibNativeRenderer {
 public:
   ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
-                gint aFlags, const GdkRectangle& aGDKRect,
-                const GdkRectangle& aGDKClip)
+                gint aFlags, GtkTextDirection aDirection,
+                const GdkRectangle& aGDKRect, const GdkRectangle& aGDKClip)
     : mState(aState), mGTKWidgetType(aGTKWidgetType), mFlags(aFlags),
-      mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
+      mDirection(aDirection), mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
   nsresult NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
                       short offsetX, short offsetY,
                       XRectangle* clipRects, PRUint32 numClipRects);
@@ -547,6 +562,7 @@ private:
   GtkWidgetState mState;
   GtkThemeWidgetType mGTKWidgetType;
   gint mFlags;
+  GtkTextDirection mDirection;
   GdkWindow* mWindow;
   const GdkRectangle& mGDKRect;
   const GdkRectangle& mGDKClip;
@@ -589,7 +605,7 @@ ThemeRenderer::NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
 
   NS_ASSERTION(numClipRects == 0, "We don't support clipping!!!");
   moz_gtk_widget_paint(mGTKWidgetType, gdkPixmap, &gdk_rect, &gdk_clip, &mState,
-                       mFlags);
+                       mFlags, mDirection);
 
   g_object_unref(G_OBJECT(gdkPixmap));
   return NS_OK;
@@ -655,6 +671,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 {
   GtkWidgetState state;
   GtkThemeWidgetType gtkWidgetType;
+  GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
   if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
                             &flags))
@@ -712,7 +729,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     gdk_rect = ConvertToGdkRect(aRect - drawingRect.TopLeft(), p2a);
     gdk_clip = ConvertToGdkRect(aClipRect - drawingRect.TopLeft(), p2a);
   }
-  ThemeRenderer renderer(state, gtkWidgetType, flags, gdk_rect, gdk_clip);
+  ThemeRenderer renderer(state, gtkWidgetType, flags, direction, gdk_rect, gdk_clip);
 
   // XXXbz do we really want to round here, then snap, then round again?
   gfxRect rect(0, 0, NSAppUnitsToIntPixels(drawingRect.width, p2a),
@@ -792,10 +809,11 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
   default:
     {
       GtkThemeWidgetType gtkWidgetType;
+      GtkTextDirection direction = GetTextDirection(aFrame);
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
                                nsnull))
         moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                                  &aResult->right, &aResult->bottom,
+                                  &aResult->right, &aResult->bottom, direction,
                                   (aFrame ? aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) : FALSE));
     }
   }

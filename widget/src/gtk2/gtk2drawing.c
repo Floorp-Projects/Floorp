@@ -1173,7 +1173,8 @@ moz_gtk_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
 static gint
 moz_gtk_option_menu_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                          GdkRectangle* cliprect, GtkWidgetState* state)
+                          GdkRectangle* cliprect, GtkWidgetState* state,
+                          GtkTextDirection direction)
 {
     GtkStyle* style;
     GtkStateType state_type = ConvertGtkState(state);
@@ -1186,6 +1187,7 @@ moz_gtk_option_menu_paint(GdkDrawable* drawable, GdkRectangle* rect,
     gint focus_pad;
 
     ensure_option_menu_widget();
+    gtk_widget_set_direction(gOptionMenuWidget, direction);
     moz_gtk_option_menu_get_metrics(&interior_focus, &indicator_size,
                                     &indicator_spacing, &focus_width,
                                     &focus_pad);
@@ -1204,7 +1206,7 @@ moz_gtk_option_menu_paint(GdkDrawable* drawable, GdkRectangle* rect,
                   cliprect, gOptionMenuWidget, "optionmenu",
                   x, y, width, height);
       
-    if (gtk_widget_get_direction(gOptionMenuWidget) == GTK_TEXT_DIR_RTL) {
+    if (direction == GTK_TEXT_DIR_RTL) {
         tab_x = x + indicator_spacing.right + XTHICKNESS(style);
     } else {
         tab_x = x + width - indicator_size.width - indicator_spacing.right -
@@ -1585,14 +1587,14 @@ moz_gtk_tab_paint(GdkDrawable* drawable, GdkRectangle* rect,
         gboolean before_selected = ((flags & MOZ_GTK_TAB_BEFORE_SELECTED)!=0);
         cliprect->y -= 2;
         cliprect->height += 2;
+        rect->y -= 2 * before_selected;
+        rect->x += rect->width - 2;
 
-        TSOffsetStyleGCs(style, rect->x + rect->width - 2,
-                         rect->y - (2 * before_selected));
+        TSOffsetStyleGCs(style, rect->x, rect->y);
 
         gtk_paint_extension(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
                             cliprect, gTabWidget, "tab",
-                            rect->x + rect->width - 2,
-                            rect->y - (2 * before_selected), rect->width,
+                            rect->x, rect->y, rect->width,
                             rect->height + (2 * before_selected),
                             GTK_POS_BOTTOM);
     }
@@ -1741,21 +1743,20 @@ moz_gtk_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
 static gint
 moz_gtk_menu_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                         GdkRectangle* cliprect, GtkWidgetState* state)
+                         GdkRectangle* cliprect, GtkWidgetState* state,
+                         GtkTextDirection direction)
 {
     GtkStyle* style;
-    GtkTextDirection chromedir;
     GtkStateType state_type = ConvertGtkState(state);
 
     ensure_menu_item_widget();
     style = gMenuItemWidget->style;
-    chromedir = gtk_widget_get_direction(gMenuItemWidget);
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
     gtk_paint_arrow(style, drawable, state_type,
                     (state_type == GTK_STATE_PRELIGHT) ? GTK_SHADOW_IN : GTK_SHADOW_OUT,
                     cliprect, gMenuItemWidget, "menuitem",
-                    (chromedir == GTK_TEXT_DIR_LTR) ? GTK_ARROW_RIGHT : GTK_ARROW_LEFT,
+                    (direction == GTK_TEXT_DIR_LTR) ? GTK_ARROW_RIGHT : GTK_ARROW_LEFT,
                     TRUE, rect->x, rect->y, rect->width, rect->height);
 
     return MOZ_GTK_SUCCESS;
@@ -1764,7 +1765,8 @@ moz_gtk_menu_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
 static gint
 moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
                               GdkRectangle* cliprect, GtkWidgetState* state,
-                              gboolean checked, gboolean isradio)
+                              gboolean checked, GtkTextDirection direction,
+                              gboolean isradio)
 {
     GtkStateType state_type = ConvertGtkState(state);
     GtkStyle* style;
@@ -1772,9 +1774,9 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
     gint offset;
     gint indicator_size;
     gint x, y;
-   
+
     moz_gtk_menu_item_paint(drawable, rect, cliprect, state, FALSE);
-    
+
     ensure_check_menu_item_widget();
 
     gtk_widget_style_get (gCheckMenuItemWidget,
@@ -1783,20 +1785,21 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     if (checked || GTK_CHECK_MENU_ITEM(gCheckMenuItemWidget)->always_show_toggle) {
       style = gCheckMenuItemWidget->style;
-      
-      offset = GTK_CONTAINER(gCheckMenuItemWidget)->border_width + 
+
+      offset = GTK_CONTAINER(gCheckMenuItemWidget)->border_width +
              gCheckMenuItemWidget->style->xthickness + 2;
 
       /* while normally this "3" would be the horizontal-padding style value, passing it to Gecko
          as the value of menuitem padding causes problems with dropdowns (bug 406129), so in the menu.css
          file this is hardcoded as 3px. Yes it sucks, but we don't really have a choice. */
-      x = rect->x + offset + 3;
+      x = (direction == GTK_TEXT_DIR_RTL) ?
+            rect->width - indicator_size - offset - 3: rect->x + offset + 3;
       y = rect->y + (rect->height - indicator_size) / 2;
-                                                                                
+
       TSOffsetStyleGCs(style, x, y);
       gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(gCheckMenuItemWidget),
                                      checked);
-      
+
       if (isradio) {
         gtk_paint_option(style, drawable, state_type, shadow_type, cliprect,
                          gCheckMenuItemWidget, "option",
@@ -1807,7 +1810,7 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         x, y, indicator_size, indicator_size);
       }
     }
-    
+
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1830,7 +1833,8 @@ moz_gtk_window_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
 gint
 moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
-                          gint* right, gint* bottom, gboolean inhtml)
+                          gint* right, gint* bottom, GtkTextDirection direction,
+                          gboolean inhtml)
 {
     GtkWidget* w;
 
@@ -1925,7 +1929,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             moz_gtk_option_menu_get_metrics(&interior_focus, &indicator_size,
                                             &indicator_spacing, &focus_width, &focus_pad);
 
-            if (gtk_widget_get_direction(gOptionMenuWidget) == GTK_TEXT_DIR_RTL)
+            if (direction == GTK_TEXT_DIR_RTL)
                 *left += indicator_spacing.left + indicator_size.width + indicator_spacing.right;
             else
                 *right += indicator_spacing.left + indicator_size.width + indicator_spacing.right;
@@ -2189,7 +2193,7 @@ moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics *metrics)
 gint
 moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                      GdkRectangle* rect, GdkRectangle* cliprect,
-                     GtkWidgetState* state, gint flags)
+                     GtkWidgetState* state, gint flags, GtkTextDirection direction)
 {
     switch (widget) {
     case MOZ_GTK_BUTTON:
@@ -2255,7 +2259,7 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         return moz_gtk_entry_paint(drawable, rect, cliprect, state);
         break;
     case MOZ_GTK_DROPDOWN:
-        return moz_gtk_option_menu_paint(drawable, rect, cliprect, state);
+        return moz_gtk_option_menu_paint(drawable, rect, cliprect, state, direction);
         break;
     case MOZ_GTK_DROPDOWN_ARROW:
         return moz_gtk_dropdown_arrow_paint(drawable, rect, cliprect, state);
@@ -2310,12 +2314,12 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         return moz_gtk_menu_item_paint(drawable, rect, cliprect, state, flags);
         break;
     case MOZ_GTK_MENUARROW:
-        return moz_gtk_menu_arrow_paint(drawable, rect, cliprect, state);
+        return moz_gtk_menu_arrow_paint(drawable, rect, cliprect, state, direction);
         break;
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
         return moz_gtk_check_menu_item_paint(drawable, rect, cliprect, state,
-                                             (gboolean) flags,
+                                             (gboolean) flags, direction,
                                              (widget == MOZ_GTK_RADIOMENUITEM));
         break;
     case MOZ_GTK_WINDOW:
