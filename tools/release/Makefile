@@ -24,7 +24,7 @@ stage:
 	# staging environment
 	mkdir -p /data/cltbld/firefox-2.0.0.11/batch1/stage
 	# download 2.0.0.10, for l10n verify
-	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.10-candidates/rc2/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/firefox/nightly/ && rm -rfv ftp.mozilla.org
+	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.10-candidates/rc1/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/firefox/nightly/ && rm -rfv ftp.mozilla.org
 	# download 2.0.0.10 release, for update verify
 	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.10/ && mv releases.mozilla.org/releases/* /home/ftp/pub/firefox/releases/ && rm -rfv releases.mozilla.org
 
