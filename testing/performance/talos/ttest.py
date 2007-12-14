@@ -170,26 +170,29 @@ def runTest(browser_config, test_config):
       # Check to see if page load times were outputted
       (bytes, current_output) = ffprocess.NonBlockingReadProcessOutput(handle)
       output += current_output
+      match = RESULTS_GENERIC.search(current_output)
+      if match:
+        if match.group(1):
+          utils.noisy(match.group(1))
       match = RESULTS_REGEX.search(output)
       if match:
         browser_results += match.group(1)
+        utils.debug("Matched basic results: " + browser_results)
         res = 1
         break
       #TODO: this a stop gap until all of the tests start outputting the same format
       match = RESULTS_TP_REGEX.search(output)
       if match:
         browser_results += match.group(1)
+        utils.debug("Matched tp results: " + browser_results)
         res = 1
         break
       match = RESULTS_REGEX_FAIL.search(output)
       if match:
         browser_results += match.group(1)
+        utils.debug("Matched fail results: " + browser_results)
         print "FAIL: " + match.group(1)
         break
-      match = RESULTS_GENERIC.search(current_output)
-      if match:
-        if match.group(1) != '':
-          utils.noisy(match.group(1))
 
       #ensure that the browser is still running
       #check at intervals of 60 - this is just to cut down on load 
@@ -210,6 +213,7 @@ def runTest(browser_config, test_config):
     #stop the counter manager since this test is complete
     cm.stopMonitor()
 
+    utils.debug("Completed test with: " + browser_results)
     #kill any remaining firefox processes
     ffprocess.TerminateAllProcesses("firefox")
     all_browser_results.append(browser_results)

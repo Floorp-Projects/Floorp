@@ -162,9 +162,9 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
   links = ''
 
   for res in results:
-    filename = tempfile.mktemp()
-    tmpf = open(filename, "w")
     browser_dump, counter_dump = results[res]
+    utils.debug("Working with test: " + res)
+    utils.debug("Sending results: " + " ".join(browser_dump))
     filename = tempfile.mktemp()
     tmpf = open(filename, "w")
     if res in ('ts', 'twinopen'):
@@ -305,6 +305,7 @@ def test_file(filename):
       utils.stamped_msg("Failed " + test, "Stopped")
       print 'FAIL: failure to complete test: ' + test
       sys.exit(0)
+    utils.debug("Received test results: " + " ".join(browser_dump))
     results[test] = [browser_dump, counter_dump]
     utils.stamped_msg("Completed test " + test, "Stopped")
   utils.stamped_msg(title, "Stopped")
