@@ -25,6 +25,7 @@
 #   Ben Goodger <ben@bengoodger.com> (v2.0) 
 #   Blake Ross <blakeross@telocity.com>
 #   Shawn Wilsher <me@shawnwilsher.com> (v3.0)
+#   Edward Lee <edward.lee@engineering.uiuc.edu>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -186,14 +187,15 @@
                      xbl:inherits="src=image"/>
         </xul:vbox>
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target,tooltiptext=target"
-                     crop="center" class="name"/>
-          <xul:spacer flex="1"/>
-          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
-                     crop="right" class="status"/>
-        </xul:vbox>
-        <xul:vbox pack="center">
-          <xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=target,tooltiptext=target"
+                       crop="center" flex="1" class="name"/>
+            <xul:label xbl:inherits="value=dateTime,tooltiptext=dateTime"
+                       class="dateTime"/>
+          </xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=status,tooltiptext=status"
+                       crop="end" flex="1" class="status"/>
             <xul:button class="open mini-button" tooltiptext="&cmd.open.label;"
                         command="cmd_open" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
@@ -213,14 +215,15 @@
                      xbl:inherits="src=image"/>
         </xul:vbox>
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target,tooltiptext=target"
-                     crop="center" class="name"/>
-          <xul:spacer flex="1"/>
-          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
-                     crop="right" class="status"/>
-        </xul:vbox>
-        <xul:vbox pack="center">
-          <xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=target,tooltiptext=target"
+                       crop="center" flex="1" class="name"/>
+            <xul:label xbl:inherits="value=dateTime,tooltiptext=dateTime"
+                       class="dateTime"/>
+          </xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=status,tooltiptext=status"
+                       crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
@@ -240,14 +243,15 @@
                      xbl:inherits="src=image"/>
         </xul:vbox>
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target,tooltiptext=target"
-                     crop="center" class="name"/>
-          <xul:spacer flex="1"/>
-          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
-                     crop="right" class="status"/>
-        </xul:vbox>
-        <xul:vbox pack="center">
-          <xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=target,tooltiptext=target"
+                       crop="center" flex="1" class="name"/>
+            <xul:label xbl:inherits="value=dateTime,tooltiptext=dateTime"
+                       class="dateTime"/>
+          </xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=status,tooltiptext=status"
+                       crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
@@ -266,14 +270,15 @@
           <xul:image class="downloadTypeIcon blockedIcon"/>
         </xul:vbox>
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target,tooltiptext=target"
-                     crop="center" class="name"/>
-          <xul:spacer flex="1"/>
-          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
-                     crop="right" class="status"/>
-        </xul:vbox>
-        <xul:vbox pack="center">
-          <xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=target,tooltiptext=target"
+                       crop="center" flex="1" class="name"/>
+            <xul:label xbl:inherits="value=dateTime,tooltiptext=dateTime"
+                       class="dateTime"/>
+          </xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=status,tooltiptext=status"
+                       crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
@@ -317,14 +322,15 @@
           <xul:image class="downloadTypeIcon blockedIcon"/>
         </xul:vbox>
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target,tooltiptext=target"
-                     crop="center" class="name"/>
-          <xul:spacer flex="1"/>
-          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
-                     crop="right" class="status"/>
-        </xul:vbox>
-        <xul:vbox pack="center">
-          <xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=target,tooltiptext=target"
+                       crop="center" flex="1" class="name"/>
+            <xul:label xbl:inherits="value=dateTime,tooltiptext=dateTime"
+                       class="dateTime"/>
+          </xul:hbox>
+          <xul:hbox align="center" flex="1">
+            <xul:label xbl:inherits="value=status,tooltiptext=status"
+                       crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"

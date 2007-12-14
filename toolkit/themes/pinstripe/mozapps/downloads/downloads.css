@@ -18,6 +18,10 @@ richlistitem[type="download"] .name {
   font-size: larger;
 }
 
+richlistitem[type="download"] .dateTime {
+  font-size: smaller;
+}
+
 richlistitem[type="download"] button {
   -moz-appearance: none;
   min-height: 16px;
