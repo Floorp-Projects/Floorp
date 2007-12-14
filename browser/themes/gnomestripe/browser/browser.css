@@ -1180,11 +1180,12 @@ tabpanels {
 
 /* In-tab close button */
 .tab-close-button > .toolbarbutton-icon {
-  -moz-margin-end: 0px !important;
+  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
+     use evil CSS to give the impression of smaller content */
+  margin: -3px !important;
 }
 
 .tab-close-button {
-  -moz-appearance: none;
   -moz-margin-end: 6px;
   padding: 0px;
   border: none;
@@ -1205,6 +1206,10 @@ tabpanels {
 .tabs-closebutton {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
   border: none;
+}
+
+.tabs-closebutton > .toolbarbutton-icon {
+  margin: -3px !important;
 }
 
 /* All tabs menupopup */
