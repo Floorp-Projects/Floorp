@@ -7,6 +7,8 @@ include ../../content/base/crashtests/crashtests.list
 include ../../content/svg/content/src/crashtests/crashtests.list
 include ../../content/xul/templates/src/crashtests/crashtests.list
 
+include ../../dom/src/base/crashtests/crashtests.list
+
 include ../../layout/base/crashtests/crashtests.list
 include ../../layout/style/crashtests/crashtests.list
 include ../../layout/svg/crashtests/crashtests.list
