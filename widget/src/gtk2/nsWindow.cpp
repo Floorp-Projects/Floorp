@@ -176,6 +176,8 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
 static void     theme_changed_cb          (GtkSettings *settings,
                                            GParamSpec *pspec,
                                            nsWindow *data);
+static nsWindow* GetFirstNSWindowForGDKWindow (GdkWindow *aGdkWindow);
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -1968,8 +1970,17 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
         event.time = xevent.xmotion.time;
     }
     else {
-        event.refPoint.x = nscoord(aEvent->x);
-        event.refPoint.y = nscoord(aEvent->y);
+        // XXX see OnScrollEvent()
+        if (aEvent->window == mDrawingarea->inner_window) {
+            event.refPoint.x = nscoord(aEvent->x);
+            event.refPoint.y = nscoord(aEvent->y);
+        } else {
+            nsRect windowRect;
+            ScreenToWidget(nsRect(nscoord(aEvent->x_root), nscoord(aEvent->y_root), 1, 1), windowRect);
+
+            event.refPoint.x = windowRect.x;
+            event.refPoint.y = windowRect.y;
+        }
 
         event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
             ? PR_TRUE : PR_FALSE;
@@ -1983,6 +1994,42 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 
     nsEventStatus status;
     DispatchEvent(&event, status);
+}
+
+void
+nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
+                          GdkEventButton *aGdkEvent)
+{
+    // XXX see OnScrollEvent()
+    if (aGdkEvent->window == mDrawingarea->inner_window) {
+        aEvent.refPoint.x = nscoord(aGdkEvent->x);
+        aEvent.refPoint.y = nscoord(aGdkEvent->y);
+    } else {
+        nsRect windowRect;
+        ScreenToWidget(nsRect(nscoord(aGdkEvent->x_root), nscoord(aGdkEvent->y_root), 1, 1), windowRect);
+
+        aEvent.refPoint.x = windowRect.x;
+        aEvent.refPoint.y = windowRect.y;
+    }
+
+    aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK) != 0;
+    aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK) != 0;
+    aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK) != 0;
+    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK) != 0;
+
+    aEvent.time = aGdkEvent->time;
+
+    switch (aGdkEvent->type) {
+    case GDK_2BUTTON_PRESS:
+        aEvent.clickCount = 2;
+        break;
+    case GDK_3BUTTON_PRESS:
+        aEvent.clickCount = 3;
+        break;
+        // default is one click
+    default:
+        aEvent.clickCount = 1;
+    }
 }
 
 void
@@ -4460,13 +4507,30 @@ leave_notify_event_cb(GtkWidget *widget,
     return TRUE;
 }
 
+nsWindow*
+GetFirstNSWindowForGDKWindow(GdkWindow *aGdkWindow)
+{
+    nsWindow* window;
+    while (!(window = get_window_for_gdk_window(aGdkWindow))) {
+        // The event has bubbled to the moz_container widget as passed into each caller's *widget parameter,
+        // but its corresponding nsWindow is an ancestor of the window that we need.  Instead, look at
+        // event->window and find the first ancestor nsWindow of it because event->window may be in a plugin.
+        aGdkWindow = gdk_window_get_parent(aGdkWindow);
+        if (!aGdkWindow) {
+            window = nsnull;
+            break;
+        }
+    }
+    return window;
+}
+
 /* static */
 gboolean
 motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 {
-    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+    nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
-        return TRUE;
+        return FALSE;
 
     window->OnMotionNotifyEvent(widget, event);
 
@@ -4477,10 +4541,9 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 gboolean
 button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
-    LOG(("button_press_event_cb\n"));
-    nsWindow *window = get_window_for_gdk_window(event->window);
+    nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
-        return TRUE;
+        return FALSE;
 
     window->OnButtonPressEvent(widget, event);
 
@@ -4491,9 +4554,9 @@ button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 gboolean
 button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
-    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+    nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
-        return TRUE;
+        return FALSE;
 
     window->OnButtonReleaseEvent(widget, event);
 
@@ -4658,16 +4721,9 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 gboolean
 scroll_event_cb(GtkWidget *widget, GdkEventScroll *event)
 {
-    nsRefPtr<nsWindow> window;
-    GdkWindow *gdkWindow = event->window;
-    while (!(window = get_window_for_gdk_window(gdkWindow))) {
-        // The event has bubbled to the moz_container widget as passed into the *widget parameter,
-        // but its corresponding nsWindow is an ancestor of the window that we need.  Instead, look at
-        // event->window and find the first ancestor nsWindow of it because event->window may be in a plugin.
-        gdkWindow = gdk_window_get_parent(gdkWindow);
-        if (!gdkWindow)
-            return FALSE;
-    }
+    nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
+    if (!window)
+        return FALSE;
 
     window->OnScrollEvent(widget, event);
 
