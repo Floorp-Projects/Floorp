@@ -18,12 +18,18 @@ var Microformats = {
    * 
    * @param  name          The name of the microformat (required)
    * @param  rootElement   The DOM element at which to start searching (required)
-   * @param  recurseFrames Whether or not to search child frames for microformats (optional - defaults to true)
+   * @param  options       Literal object with the following options:
+   *                       recurseFrames - Whether or not to search child frames
+   *                       for microformats (optional - defaults to true)
+   *                       showHidden -  Whether or not to add hidden microformat
+   *                       (optional - defaults to false)
+   *                       debug - Whether or not we are in debug mode (optional
+   *                       - defaults to false)
    * @param  targetArray  An array of microformat objects to which is added the results (optional)
    * @return A new array of microformat objects or the passed in microformat 
    *         object array with the new objects added
    */
-  get: function(name, rootElement, recurseFrames, targetArray) {
+  get: function(name, rootElement, options, targetArray) {
     if (!Microformats[name]) {
       return;
     }
@@ -32,10 +38,10 @@ var Microformats = {
     rootElement = rootElement || content.document;
 
     /* If recurseFrames is undefined or true, look through all child frames for microformats */
-    if ((recurseFrames == undefined) || (recurseFrames == true)) {
+    if (!options || !options.hasOwnProperty("recurseFrames") || options.recurseFrames) {
       if (rootElement.defaultView && rootElement.defaultView.frames.length > 0) {
         for (let i=0; i < rootElement.defaultView.frames.length; i++) {
-          Microformats.get(name, rootElement.defaultView.frames[i].document, recurseFrames, targetArray);
+          Microformats.get(name, rootElement.defaultView.frames[i].document, options, targetArray);
         }
       }
     }
@@ -63,6 +69,13 @@ var Microformats = {
     /* Create objects for the microformat nodes and put them into the microformats */
     /* array */
     for (let i = 0; i < microformatNodes.length; i++) {
+      /* If showHidden undefined or false, don't add microformats to the list that aren't visible */
+      if (!options || !options.hasOwnProperty("showHidden") || !options.showHidden) {
+        var box = (microformatNodes[i].ownerDocument || microformatNodes[i]).getBoxObjectFor(microformatNodes[i]);
+        if ((box.height == 0) || (box.width == 0)) {
+          continue;
+        }
+      }
       targetArray.push(new Microformats[name].mfObject(microformatNodes[i]));
     }
     return targetArray;
@@ -72,47 +85,19 @@ var Microformats = {
    * 
    * @param  name          The name of the microformat (required)
    * @param  rootElement   The DOM element at which to start searching (required)
-   * @param  recurseFrames Whether or not to search child frames for microformats (optional - defaults to true)
+   * @param  options       Literal object with the following options:
+   *                       recurseFrames - Whether or not to search child frames
+   *                       for microformats (optional - defaults to true)
+   *                       showHidden -  Whether or not to add hidden microformat
+   *                       (optional - defaults to false)
    * @return The new count
    */
-  count: function(name, rootElement, recurseFrames) {
-    if (!Microformats[name]) {
-      return;
+  count: function(name, rootElement, options) {
+    var mfArray = Microformats.get(name, rootElement, options);
+    if (mfArray) {
+      return mfArray.length;
     }
-    var count = 0;
-
-    rootElement = rootElement || content.document;
-
-    /* If recurseFrames is undefined or true, look through all child frames for microformats */
-    if (recurseFrames || recurseFrames === undefined) {
-      if (rootElement.defaultView && rootElement.defaultView.frames.length > 0) {
-        for (let i=0; i < rootElement.defaultView.frames.length; i++) {
-          count += Microformats.count(name, rootElement.defaultView.frames[i].document, recurseFrames);
-        }
-      }
-    }
-
-    /* Get the microformat nodes for the document */
-    var microformatNodes = [];
-    if (Microformats[name].className) {
-      microformatNodes = Microformats.getElementsByClassName(rootElement,
-                                        Microformats[name].className);
-      /* alternateClassName is for cases where a parent microformat is inferred by the children */
-      /* If we find alternateClassName, the entire document becomes the microformat */
-      if ((microformatNodes.length == 0) && Microformats[name].alternateClassName) {
-        var altClass = Microformats.getElementsByClassName(rootElement, Microformats[name].alternateClassName);
-        if (altClass.length > 0) {
-          microformatNodes.push(rootElement); 
-        }
-      }
-    } else if (Microformats[name].attributeValues) {
-      microformatNodes = 
-        Microformats.getElementsByAttribute(rootElement,
-                                            Microformats[name].attributeName,
-                                            Microformats[name].attributeValues);
-    }
-    count += microformatNodes.length;
-    return count;
+    return 0;
   },
   /**
    * Returns true if the passed in node is a microformat. Does NOT return true
