@@ -557,11 +557,11 @@ function addImage(url, type, alt, elem, isBg)
 {
   if (!url)
     return;
-  if (!(url in gImageHash))
+  if (!gImageHash.hasOwnProperty(url))
     gImageHash[url] = { };
-  if (!(type in gImageHash[url]))
+  if (!gImageHash[url].hasOwnProperty(type))
     gImageHash[url][type] = { };
-  if (!(alt in gImageHash[url][type])) {
+  if (!gImageHash[url][type].hasOwnProperty(alt)) {
     gImageHash[url][type][alt] = gImageView.data.length;
     try {
       // open for READ, in non-blocking mode
