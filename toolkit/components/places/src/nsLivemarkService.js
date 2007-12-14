@@ -81,6 +81,7 @@ const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
 const SEC_CONTRACTID = "@mozilla.org/scriptsecuritymanager;1";
 const IS_CONTRACTID = "@mozilla.org/widget/idleservice;1";
 const SEC_FLAGS = Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
+const NS_BINDING_ABORTED = 0x804b0002;
 
 // Check every hour by default
 var gExpiration = 3600000;
@@ -202,7 +203,7 @@ LivemarkService.prototype = {
 
     for (var livemark in this._livemarks) {
       if (livemark.loadGroup) 
-        livemark.loadGroup.cancel(Cr.NS_BINDING_ABORTED);
+        livemark.loadGroup.cancel(NS_BINDING_ABORTED);
     }
   },
 
@@ -447,7 +448,7 @@ LivemarkService.prototype = {
     }
 
     if (livemark.loadGroup) 
-      livemark.loadGroup.cancel(Cr.NS_BINDING_ABORTED);
+      livemark.loadGroup.cancel(NS_BINDING_ABORTED);
     this._livemarks.splice(livemarkIndex, 1);
   },
 
