@@ -1,0 +1,27 @@
+/* ..... page navigation ..... */
+
+.home-arrow {
+  list-style-image: url("moz-icon://stock/gtk-goto-first?size=menu");
+}
+
+.end-arrow {
+  list-style-image: url("moz-icon://stock/gtk-goto-last?size=menu");
+}
+
+.left-arrow {
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=menu");
+}
+
+.right-arrow {
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=menu");
+}
+
+/* ..... orientation ..... */
+
+.toolbar-portrait-page {
+  list-style-image: url("moz-icon://stock/gtk-orientation-portrait?size=button");
+}
+
+.toolbar-landscape-page {
+  list-style-image: url("moz-icon://stock/gtk-orientation-landscape?size=button");
+}
