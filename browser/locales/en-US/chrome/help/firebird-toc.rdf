@@ -215,7 +215,7 @@
   <rdf:Description about="#a11y-web-content">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="a11y-popup-windows" nc:name="Blocking Popup Windows" nc:link="accessibility.xhtml#blocking_popup_windows"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="a11y-popup-windows" nc:name="Blocking Pop-up Windows" nc:link="accessibility.xhtml#blocking_popup_windows"/> </rdf:li>
         <rdf:li> <rdf:Description ID="a11y-java" nc:name="Turning Off Java Applets" nc:link="accessibility.xhtml#turning_off_java_applets"/> </rdf:li>
         <rdf:li> <rdf:Description ID="a11y-javascript" nc:name="Restricting JavaScript Behavior" nc:link="accessibility.xhtml#restricting_javascript_behavior"/> </rdf:li>
       </rdf:Seq>
