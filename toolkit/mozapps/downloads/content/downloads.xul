@@ -165,8 +165,8 @@
     <menuseparator id="menuseparator_copy_location"/>
               
     <menuitem id="menuitem_copyLocation"
-              label="&cmd.copyLocation.label;"
-              accesskey="&cmd.copyLocation.accesskey;"
+              label="&cmd.copyDownloadLink.label;"
+              accesskey="&cmd.copyDownloadLink.accesskey;"
               command="cmd_copyLocation"/>
 
     <menuitem id="menuitem_clearList"
