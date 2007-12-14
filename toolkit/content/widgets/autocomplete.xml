@@ -860,7 +860,12 @@
         <setter>
           <![CDATA[
           this.richlistbox.selectedIndex = val;
-          this.richlistbox.ensureSelectedElementIsVisible();
+ 
+          // when clearing the selection (val == -1, so selectedItem will be
+          // null), we want to scroll back to the top.  see bug #406194
+          this.richlistbox.ensureElementIsVisible(
+            this.richlistbox.selectedItem || this.richlistbox.firstChild);
+
           return val;
         ]]>
         </setter>
