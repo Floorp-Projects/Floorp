@@ -2325,7 +2325,7 @@ NS_IMETHODIMP
 CSSLoaderImpl::AddObserver(nsICSSLoaderObserver* aObserver)
 {
   NS_PRECONDITION(aObserver, "Must have observer");
-  if (mObservers.AppendObserver(aObserver)) {
+  if (mObservers.AppendObserverUnlessExists(aObserver)) {
     NS_ADDREF(aObserver);
     return NS_OK;
   }

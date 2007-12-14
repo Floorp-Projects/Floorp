@@ -284,7 +284,7 @@ nsINode::AddMutationObserver(nsIMutationObserver* aMutationObserver)
 {
   nsSlots* slots = GetSlots();
   if (slots) {
-    slots->mMutationObservers.AppendObserver(aMutationObserver);
+    slots->mMutationObservers.AppendObserverUnlessExists(aMutationObserver);
   }
 }
 
