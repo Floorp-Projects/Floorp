@@ -70,7 +70,12 @@ function test()
 function crash()
 {
   document.getElementById('button').click();
+  setTimeout(checkCrash, 0);
+}
+
+function checkCrash()
+{
   gDelayTestDriverEnd = false;
-  jsTestDriverEnd();
   reportCompare(expect, actual, summary);
+  jsTestDriverEnd();
 }
