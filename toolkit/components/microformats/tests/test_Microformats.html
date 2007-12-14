@@ -25,13 +25,17 @@ function test_Microformats() {
   Components.utils.import("resource://gre/modules/Microformats.js");
   
   ok(Microformats, "Check global access to Microformats");
-  var hCards = Microformats.get("hCard", document, false);
+  var hCards = Microformats.get("hCard", document, {showHidden: true});
   is(hCards.length, 1, "Check Microformats.get");
-  is(Microformats.count("hCard", document, false), 1, "Check Microformats.count");
+  is(Microformats.count("hCard", document,  {showHidden: true}), 1, "Check Microformats.count");
   ok(Microformats.isMicroformat(document.getElementById("vcard1_node")), "Check isMicroformat");
   is(Microformats.getParent(document.getElementById("vcard1_org")), document.getElementById("vcard1_node"), "Check getParent");
   is(Microformats.getNamesFromNode(document.getElementById("vcard1_node")), "hCard", "Check getNamesFromNode");
   
+  var hCardArray1 = Microformats.get("hCard", document, {showHidden: true});
+  is(hCardArray1.length, 1, "Check showHidden=true");
+  var hCardArray2 = Microformats.get("hCard", content.document, {showHidden: false});
+  is(hCardArray2.length, 0, "Check showHidden=false");
 }
 
 function test_hCard() {
@@ -39,7 +43,7 @@ function test_hCard() {
 
   Components.utils.import("resource://gre/modules/Microformats.js");
   
-  var hCards = Microformats.get("hCard", document, false); 
+  var hCards = Microformats.get("hCard", document,  {showHidden: true}); 
   
   is(hCards[0].fn, "Tantek Çelik", "Check for fn on test vcard");
   is(hCards[0].url, "http://tantek.com/", "Check for url on test vcard");
