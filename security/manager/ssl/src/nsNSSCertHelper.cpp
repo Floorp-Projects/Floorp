@@ -1215,102 +1215,70 @@ ProcessAuthKeyId(SECItem  *extData,
   return rv;
 }
 
-enum DisplayTextForm { VisibleForm, BMPForm, UTF8Form };
-
-struct DisplayText {
-  DisplayTextForm variant;
-  SECItem value;
-};
-
-const SEC_ASN1Template DisplayTextTemplate[] = {
-    { SEC_ASN1_CHOICE,
-      offsetof(DisplayText, variant), NULL,
-      sizeof(DisplayText) },
-    { SEC_ASN1_IA5_STRING, 
-      offsetof(DisplayText, value), NULL, VisibleForm },
-    { SEC_ASN1_VISIBLE_STRING, 
-      offsetof(DisplayText, value), NULL, VisibleForm },
-    { SEC_ASN1_BMP_STRING, 
-      offsetof(DisplayText, value), NULL, BMPForm },
-    { SEC_ASN1_UTF8_STRING, 
-      offsetof(DisplayText, value), NULL, UTF8Form },
-    { 0 }
-};
-
 static nsresult
 ProcessUserNotice(SECItem *der_notice,
 		  nsAString &text,
 		  nsINSSComponent *nssComponent)
 {
-  nsresult rv = NS_OK;
   CERTUserNotice *notice = NULL;
   SECItem **itemList;
-  DisplayText display;
   PRArenaPool *arena;
-  char *buf;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena)
     return NS_ERROR_FAILURE;
 
   notice = CERT_DecodeUserNotice(der_notice);
-  /* XXX: currently, polcyxtn.c assumes that organization
-     is an IA5String, whereas it really ought to be a
-     choice of VisibleString, BMPString, and UTF8String.
-     So if decoding of the user notice fails, it is most likely
-     that the organization was encoded in an unexpected way.
-     Make this function return "something" in this case,
-     instead letting the decode for the entire certificate
-     fail.
-  */
   if (notice == NULL) {
-    text.Append(NS_LITERAL_STRING("<implementation limitation>"));
+    ProcessRawBytes(nssComponent, der_notice, text);
     goto finish;
   }
 
   if (notice->noticeReference.organization.len != 0) {
-    rv = ProcessIA5String(&notice->noticeReference.organization,
-			  text, nssComponent);
-    if (NS_FAILED(rv))
-      goto finish;
-
+    switch (notice->noticeReference.organization.type) {
+    case siAsciiString:
+    case siVisibleString:
+    case siUTF8String:
+      text.Append(NS_ConvertUTF8toUTF16(
+                  (const char *)notice->noticeReference.organization.data,
+                  notice->noticeReference.organization.len));
+      break;
+    case siBMPString:
+      AppendBMPtoUTF16(arena, notice->noticeReference.organization.data,
+                       notice->noticeReference.organization.len, text);
+      break;
+    default:
+      break;
+    }
+    text.Append(NS_LITERAL_STRING(" - "));
     itemList = notice->noticeReference.noticeNumbers;
     while (*itemList) {
       unsigned long number;
       char buffer[60];
-      if (SEC_ASN1DecodeInteger(*itemList, &number) != SECSuccess) {
-	rv = NS_ERROR_FAILURE;
-	goto finish;
+      if (SEC_ASN1DecodeInteger(*itemList, &number) == SECSuccess) {
+        PR_snprintf(buffer, sizeof(buffer), "#%d", number);
+        if (itemList != notice->noticeReference.noticeNumbers)
+          text.Append(NS_LITERAL_STRING(", "));
+        AppendASCIItoUTF16(buffer, text);
       }
-      PR_snprintf(buffer, sizeof(buffer), "%d ", number);
-      AppendASCIItoUTF16(buffer, text);
       itemList++;
     }
   }
   if (notice->displayText.len != 0) {
-    if (SEC_QuickDERDecodeItem(arena, &display,
-			       DisplayTextTemplate,
-			       &notice->displayText) != SECSuccess) {
-      rv = NS_ERROR_FAILURE;
-      goto finish;
-    }
-    switch (display.variant) {
-    case VisibleForm:
-      /* Need to null-terminate string before appending it. */
-      buf = (char*)PORT_ArenaAlloc(arena, display.value.len+1);
-      PORT_Memcpy(buf, display.value.data, display.value.len);
-      buf[display.value.len] = '\0';
-      text.AppendASCII(buf);
+    text.Append(NS_LITERAL_STRING(SEPARATOR));
+    text.Append(NS_LITERAL_STRING("    "));
+    switch (notice->displayText.type) {
+    case siAsciiString:
+    case siVisibleString:
+    case siUTF8String:
+      text.Append(NS_ConvertUTF8toUTF16((const char *)notice->displayText.data,
+                                        notice->displayText.len));
       break;
-    case BMPForm:
-      AppendBMPtoUTF16(arena, display.value.data, display.value.len,
+    case siBMPString:
+      AppendBMPtoUTF16(arena, notice->displayText.data, notice->displayText.len,
 		       text);
       break;
-    case UTF8Form:
-      buf = (char*)PORT_ArenaAlloc(arena, display.value.len+1);
-      PORT_Memcpy(buf, display.value.data, display.value.len);
-      buf[display.value.len] = '\0';
-      AppendUTF8toUTF16(buf, text);
+    default:
       break;
     }
   }
@@ -1318,7 +1286,7 @@ ProcessUserNotice(SECItem *der_notice,
   if (notice)
     CERT_DestroyUserNotice(notice);
   PORT_FreeArena(arena, PR_FALSE);
-  return rv;
+  return NS_OK;
 }
 
 static nsresult
