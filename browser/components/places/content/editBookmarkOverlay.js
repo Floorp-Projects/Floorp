@@ -113,6 +113,10 @@ var gEditItemOverlay = {
                            PlacesUtils.tagging
                                       .getTagsForURI(this._uri).join(", "),
                           false);
+
+      // tags selector
+      this._rebuildTagsSelectorList();
+
       this._initTextField("keywordField",
                           bms.getKeywordForBookmark(this._itemId));
 
@@ -669,6 +673,8 @@ var gEditItemOverlay = {
 
   _rebuildTagsSelectorList: function EIO__rebuildTagsSelectorList() {
     var tagsSelector = this._element("tagsSelector");
+    if (tagsSelector.collapsed)
+      return;
 
     while (tagsSelector.hasChildNodes())
       tagsSelector.removeChild(tagsSelector.lastChild);
@@ -693,12 +699,11 @@ var gEditItemOverlay = {
       expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
-
+      tagsSelector.collapsed = false;
       this._rebuildTagsSelectorList();
 
       // This is a no-op if we've added the listener.
       tagsSelector.addEventListener("CheckboxStateChange", this, false);
-      tagsSelector.collapsed = false;
     }
     else {
       expander.className = "expander-down";
