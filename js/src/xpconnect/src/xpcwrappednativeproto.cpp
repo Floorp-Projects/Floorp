@@ -99,10 +99,30 @@ XPCWrappedNativeProto::Init(
             return JS_FALSE;
     }
 
-    JSClass* jsclazz = mScriptableInfo &&
-                       mScriptableInfo->GetFlags().AllowPropModsToPrototype() ?
-                            &XPC_WN_ModsAllowed_Proto_JSClass :
-                            &XPC_WN_NoMods_Proto_JSClass;
+    JSClass* jsclazz;
+
+
+    if(mScriptableInfo)
+    {
+        const XPCNativeScriptableFlags& flags(mScriptableInfo->GetFlags());
+
+        if(flags.AllowPropModsToPrototype())
+        {
+            jsclazz = flags.WantCall() ?
+                &XPC_WN_ModsAllowed_WithCall_Proto_JSClass :
+                &XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
+        }
+        else
+        {
+            jsclazz = flags.WantCall() ?
+                &XPC_WN_NoMods_WithCall_Proto_JSClass :
+                &XPC_WN_NoMods_NoCall_Proto_JSClass;
+        }
+    }
+    else
+    {
+        jsclazz = &XPC_WN_NoMods_NoCall_Proto_JSClass;
+    }
 
     JSObject *parent = mScope->GetGlobalJSObject();
 
