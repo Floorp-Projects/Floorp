@@ -81,6 +81,13 @@ DownloadProgressListener.prototype = {
     // autoRemoveAndClose could have already closed our window...
     try {
       let dl = getDownload(aDownload.id);
+
+      // We should eventually know the referrer at some point
+      let referrer = aDownload.referrer;
+      if (referrer)
+        dl.setAttribute("referrer", referrer.spec);
+
+      // Update to the new state
       dl.setAttribute("state", state);
       updateStatus(dl);
       gDownloadViewController.onCommandUpdate();
