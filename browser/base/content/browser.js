@@ -1087,14 +1087,6 @@ function BrowserShutdown()
 
   BrowserOffline.uninit();
 
-  // Store current window position/size into the window attributes 
-  // for persistence.
-  var win = document.documentElement;
-  win.setAttribute("x", window.screenX);
-  win.setAttribute("y", window.screenY);
-  win.setAttribute("height", window.outerHeight);
-  win.setAttribute("width", window.outerWidth);
-
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
   var enumerator = windowManagerInterface.getEnumerator(null);
