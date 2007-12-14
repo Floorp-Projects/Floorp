@@ -331,7 +331,7 @@ gfxPangoFont::RealizeFont(PRBool force)
         return;
 
     mAdjustedSize = GetStyle()->size;
-    if (GetStyle()->sizeAdjust == 0)
+    if (mAdjustedSize == 0 || GetStyle()->sizeAdjust == 0)
         return;
 
     gfxSize isz, lsz;
