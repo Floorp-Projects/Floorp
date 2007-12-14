@@ -118,15 +118,6 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp);
 extern JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark);
 
-#ifdef DUMP_CALL_TABLE
-# define JSOPTION_LOGCALL_TOSOURCE JS_BIT(15)
-
-extern JSHashTable  *js_CallTable;
-extern size_t       js_LogCallToSourceLimit;
-
-extern void         js_DumpCallTable(JSContext *cx);
-#endif
-
 /*
  * Refresh and return fp->scopeChain.  It may be stale if block scopes are
  * active but not yet reflected by objects in the scope chain.  If a block

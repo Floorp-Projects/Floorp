@@ -2553,14 +2553,6 @@ restart:
     /* Finalize watch points associated with unreachable objects. */
     js_SweepWatchPoints(cx);
 
-#ifdef DUMP_CALL_TABLE
-    /*
-     * Call js_DumpCallTable here so it can meter and then clear weak refs to
-     * GC-things that are about to be finalized.
-     */
-    js_DumpCallTable(cx);
-#endif
-
     /*
      * Here we need to ensure that JSObject instances are finalized before GC-
      * allocated JSString and jsdouble instances so object's finalizer can
