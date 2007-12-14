@@ -1001,16 +1001,16 @@
         // When the user clicks down on a button, set it as the selection and 
         // tell the controller that we are the active view.
         //
-        // Sub-menus are handled by the DOMMenuItemActive handler
         var target = event.target;
-        if (target.parentNode != this)
+        if (target == this)
+          this._selection = this.getResult().root;
+        else if (target.parentNode == this &&
+                 (target.localName == "toolbarbutton" ||
+                  target.localName == "toolbarseparator"))
+          this._selection = target.node;
+        else  // Sub-menus are handled by the DOMMenuItemActive handler
           return;
 
-        if (target.localName == "toolbarbutton" ||
-            target.localName == "toolbarseparator")
-          this._selection = target.node;
-        else
-          this._selection = this.getResult().root;
         this._cachedInsertionPoint = undefined;
       ]]></handler>
       <handler event="draggesture"><![CDATA[
