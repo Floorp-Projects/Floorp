@@ -1064,17 +1064,20 @@ ProcessGeneralName(PRArenaPool *arena,
   case certIPAddress:
     {
       char buf[INET6_ADDRSTRLEN];
+      PRStatus status = PR_FAILURE;
       PRNetAddr addr;
+      memset(&addr, 0, sizeof(addr));
       nssComponent->GetPIPNSSBundleString("CertDumpIPAddress", key);
       if (current->name.other.len == 4) {
         addr.inet.family = PR_AF_INET;
         memcpy(&addr.inet.ip, current->name.other.data, current->name.other.len);
-        PR_NetAddrToString(&addr, buf, sizeof(buf));
-        value.AssignASCII(buf);
+        status = PR_NetAddrToString(&addr, buf, sizeof(buf));
       } else if (current->name.other.len == 16) {
         addr.ipv6.family = PR_AF_INET6;
         memcpy(&addr.ipv6.ip, current->name.other.data, current->name.other.len);
-        PR_NetAddrToString(&addr, buf, sizeof(buf));
+        status = PR_NetAddrToString(&addr, buf, sizeof(buf));
+      }
+      if (status == PR_SUCCESS) {
         value.AssignASCII(buf);
       } else {
         /* invalid IP address */
