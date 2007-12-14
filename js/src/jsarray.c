@@ -1257,8 +1257,10 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
              * to make it fast and unroot the cached results of toString
              * invocations before the callback has a chance to run the GC.
              */
-            for (i = 0; i < newlen; i++)
+            i = 0;
+            do {
                 vec[i] = vec[2 * i + 1];
+            } while (++i != newlen);
         }
     } else {
         void *mark;
