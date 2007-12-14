@@ -130,7 +130,8 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
   NS_PRECONDITION(proxy, "null imgRequestProxy passed in");
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::AddProxy", "proxy", proxy);
 
-  return mObservers.AppendObserver(proxy) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return mObservers.AppendObserverUnlessExists(proxy) ?
+    NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify)
