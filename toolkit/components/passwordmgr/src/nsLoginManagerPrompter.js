@@ -613,10 +613,10 @@ LoginManagerPrompter.prototype = {
 
 
     /*
-     * _getLocalisedString
+     * _getLocalizedString
      *
      * Can be called as:
-     *   _getLocalisedString("key1");
+     *   _getLocalizedString("key1");
      *   _getLocalizedString("key2", ["arg1"]);
      *   _getLocalizedString("key3", ["arg1", "arg2"]);
      *   (etc)
