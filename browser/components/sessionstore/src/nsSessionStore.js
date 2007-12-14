@@ -540,6 +540,12 @@ SessionStoreService.prototype = {
    *        TabPanel reference
    */
   onTabClose: function sss_onTabClose(aWindow, aTab) {
+    // notify the tabbrowser that the tab state will be retrieved for the last time
+    // (so that extension authors can easily set data on soon-to-be-closed tabs)
+    var event = aWindow.document.createEvent("Events");
+    event.initEvent("SSTabClosing", true, false);
+    aTab.dispatchEvent(event);
+    
     var maxTabsUndo = this._prefBranch.getIntPref("sessionstore.max_tabs_undo");
     // don't update our internal state if we don't have to
     if (maxTabsUndo == 0) {
