@@ -1593,7 +1593,7 @@ case "$target" in
 *-darwin*) 
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-
+    MOZ_OPTIMIZE_FLAGS="-O2"
     _PEDANTIC=
     CFLAGS="$CFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
     CXXFLAGS="$CXXFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
@@ -1716,6 +1716,7 @@ case "$target" in
 
 *-*linux*)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions"
     MOZ_DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb,
                                       # and that combo is not yet good at
                                       # debugging inlined functions (even
