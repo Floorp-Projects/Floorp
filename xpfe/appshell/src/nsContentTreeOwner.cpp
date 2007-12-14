@@ -877,10 +877,9 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   }
 
   *aWindowIsNew = (containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
-  
-  // Get a new rendering area from the browserDOMWin.  To make this
-  // safe for cases when it'll try to return an existing window or
-  // something, get it with a null URI.
+
+  // Get a new rendering area from the browserDOMWin.  We don't want
+  // to be starting any loads here, so get it with a null URI.
   return browserDOMWin->OpenURI(nsnull, aParent, containerPref,
                                 nsIBrowserDOMWindow::OPEN_NEW, aReturn);
 }

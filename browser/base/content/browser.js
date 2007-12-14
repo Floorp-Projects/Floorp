@@ -3816,9 +3816,11 @@ nsBrowserAccess.prototype =
           aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
       }
     }
-    var url = aURI ? aURI.spec : "about:blank";
     switch(aWhere) {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
+        // FIXME: Bug 408379. So how come this doesn't send the
+        // referrer like the other loads do?
+        var url = aURI ? aURI.spec : "about:blank";
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
@@ -3828,16 +3830,18 @@ nsBrowserAccess.prototype =
                             .QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIDOMWindow);
         try {
-          if (aOpener) {
-            location = aOpener.location;
-            referrer =
-                    Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService)
-                              .newURI(location, null, null);
+          if (aURI) {
+            if (aOpener) {
+              location = aOpener.location;
+              referrer =
+                      Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(location, null, null);
+            }
+            newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .loadURI(aURI.spec, loadflags, referrer, null, null);
           }
-          newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation)
-                   .loadURI(url, loadflags, referrer, null, null);
           if (!loadInBackground && isExternal)
             newWindow.focus();
         } catch(e) {
@@ -3847,20 +3851,25 @@ nsBrowserAccess.prototype =
         try {
           if (aOpener) {
             newWindow = aOpener.top;
-            location = aOpener.location;
-            referrer =
-                    Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService)
-                              .newURI(location, null, null);
+            if (aURI) {
+              location = aOpener.location;
+              referrer =
+                      Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(location, null, null);
 
-            newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(nsIWebNavigation)
-                     .loadURI(url, loadflags, referrer, null, null);
+              newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(nsIWebNavigation)
+                       .loadURI(aURI.spec, loadflags, referrer, null, null);
+            }
           } else {
             newWindow = gBrowser.selectedBrowser.docShell
                                 .QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindow);
-            getWebNavigation().loadURI(url, loadflags, null, null, null);
+            if (aURI) {
+              getWebNavigation().loadURI(aURI.spec, loadflags, null, 
+                                         null, null);
+            }
           }
           if(!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
             content.focus();
