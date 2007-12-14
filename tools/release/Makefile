@@ -22,11 +22,11 @@ stage:
 	chmod -R g+rwxs /home/ftp/pub/firefox
 	chmod -R o+rx /home/ftp/pub
 	# staging environment
-	mkdir -p /data/cltbld/firefox-2.0.0.6/batch1/stage
-	# download 2.0.0.6, for l10n verify
-	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.6-candidates/rc2/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/firefox/nightly/ && rm -rfv ftp.mozilla.org
-	# download 2.0.0.6 release, for update verify
-	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.6/ && mv releases.mozilla.org/releases/* /home/ftp/pub/firefox/releases/ && rm -rfv releases.mozilla.org
+	mkdir -p /data/cltbld/firefox-2.0.0.11/batch1/stage
+	# download 2.0.0.10, for l10n verify
+	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.10-candidates/rc2/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/firefox/nightly/ && rm -rfv ftp.mozilla.org
+	# download 2.0.0.10 release, for update verify
+	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.10/ && mv releases.mozilla.org/releases/* /home/ftp/pub/firefox/releases/ && rm -rfv releases.mozilla.org
 
 
 cvsmirror: cvsmirror_mofo cvsmirror_main
@@ -36,15 +36,12 @@ cvsmirror_main:
 	rsync -a --delete-after cvs-mirror.mozilla.org::l10n/ /builds/cvsmirror.clean/l10n/
 	chgrp -R cvs /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
 	chmod -R g+rw /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
-	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RELEASE mozilla
-	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RELEASE_l10n mozilla
-	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC1 mozilla
-	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC1_l10n mozilla/tools/tinderbox-configs/
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC2 mozilla
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC2_l10n mozilla/tools/tinderbox-configs/
-	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d -B FIREFOX_2_0_0_7_MINIBRANCH mozilla
-	#cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_7_RELEASE l10n
-	#cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_7_RC1 l10n
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_11_RELEASE mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_11_RELEASE_l10n mozilla/tools/tinderbox-configs/
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_11_RC1 mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_11_RC1_l10n mozilla/tools/tinderbox-configs/
+	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_11_RELEASE l10n
+	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_11_RC1 l10n
 
 cvsmirror_mofo:
 	mkdir -p /builds/cvsmirror.clean/tmp/mofo
