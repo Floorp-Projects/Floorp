@@ -1,0 +1,32 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+notification {
+  background-color: InfoBackground;
+  color: InfoText;
+}
+
+notification[type="info"] {
+  background-color: -moz-Dialog;
+}
+
+notification[type="critical"] {
+  background-color: red;
+}
+
+.messageImage {
+  width: 16px;
+  height: 16px;
+  margin: 0px 1px 0px 6px;
+}
+
+.messageText {
+  -moz-margin-start: 5px;
+}
+
+.messageButton {
+  margin: 0px 5px 0px 5px;
+}
+
+.messageCloseButton {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
