@@ -1766,7 +1766,7 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
                               GdkRectangle* cliprect, GtkWidgetState* state,
                               gboolean checked, gboolean isradio)
 {
-    GtkStateType state_type;
+    GtkStateType state_type = ConvertGtkState(state);
     GtkStyle* style;
     GtkShadowType shadow_type = (checked)?GTK_SHADOW_IN:GTK_SHADOW_OUT;
     gint offset;
@@ -1783,12 +1783,6 @@ moz_gtk_check_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     if (checked || GTK_CHECK_MENU_ITEM(gCheckMenuItemWidget)->always_show_toggle) {
       style = gCheckMenuItemWidget->style;
-      
-      if (state->inHover && !state->disabled) {
-        state_type = GTK_STATE_PRELIGHT;
-      } else {
-        state_type = GTK_STATE_NORMAL;
-      }
       
       offset = GTK_CONTAINER(gCheckMenuItemWidget)->border_width + 
              gCheckMenuItemWidget->style->xthickness + 2;
