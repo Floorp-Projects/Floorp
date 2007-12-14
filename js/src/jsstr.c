@@ -4925,9 +4925,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
     return ucs4Char;
 }
 
-#if defined(DEBUG) ||                                                         \
-    defined(DUMP_CALL_TABLE) ||                                               \
-    defined(DUMP_SCOPE_STATS)
+#if defined(DEBUG) || defined(DUMP_SCOPE_STATS)
 
 JS_FRIEND_API(size_t)
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
