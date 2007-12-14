@@ -50,6 +50,13 @@ MOZILLA_INTERNAL_API = 1
 REQUIRES	= string \
 		  $(NULL)
 
+# work around bug 408258
+ifdef GNU_CC 
+ifneq ($(OS_ARCH), Darwin)
+MODULE_OPTIMIZE_FLAGS = -Os -fno-strict-aliasing
+endif
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES		+= macmorefiles
 endif
