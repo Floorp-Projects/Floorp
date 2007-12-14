@@ -83,6 +83,7 @@ def process_Request(post):
   for line in lines:
     if line.find("RETURN:") > -1:
         str += line.split(":")[3] + ":" + shortNames(line.split(":")[1]) + ":" + line.split(":")[2] + '\n'
+    utils.debug("process_Request line: " + line)
   return str
 
 def send_to_csv(csv_dir, results):
