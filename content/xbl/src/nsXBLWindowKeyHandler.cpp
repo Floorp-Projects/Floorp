@@ -350,12 +350,7 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
     nsNativeKeyEvent nativeEvent;
     // Some key events have no useful charCode
     nativeEvent.charCode = 0;
-    keyEvent->GetKeyCode(&nativeEvent.keyCode);
-    keyEvent->GetAltKey(&nativeEvent.altKey);
-    keyEvent->GetCtrlKey(&nativeEvent.ctrlKey);
-    keyEvent->GetShiftKey(&nativeEvent.shiftKey);
-    keyEvent->GetMetaKey(&nativeEvent.metaKey);
-
+    nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE);
     // get the DOM window we're attached to
     nsCOMPtr<nsIControllers> controllers;
     nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(mTarget);

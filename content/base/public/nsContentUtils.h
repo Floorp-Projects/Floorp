@@ -55,6 +55,9 @@
 #include "nsDataHashtable.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIDOMEvent.h"
+
+struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
 class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
@@ -1125,6 +1128,13 @@ public:
    * Return the localized ellipsis for UI.
    */
   static const nsDependentString GetLocalizedEllipsis();
+  
+   /*The routine GetNativeEvent is used to fill nsNativeKeyEvent nsNativeKeyEvent and
+  it's used in DOMEventToNativeKeyEvent. See Bug 406407 page for details. */
+  static nsEvent* GetNativeEvent(nsIDOMEvent* aDOMEvent);
+  static PRBool DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
+                                         nsNativeKeyEvent* aNativeEvent,
+                                         PRBool aGetCharCode);
 
 private:
 
