@@ -22,8 +22,8 @@
 <!ENTITY cmd.openWith.accesskey           "h">
 <!ENTITY cmd.retry.label                  "Retry">
 <!ENTITY cmd.retry.accesskey              "R">
-<!ENTITY cmd.copyLocation.label           "Copy Source Location">
-<!ENTITY cmd.copyLocation.accesskey       "L">
+<!ENTITY cmd.copyDownloadLink.label       "Copy Download Link">
+<!ENTITY cmd.copyDownloadLink.accesskey   "L">
 <!ENTITY cmd.removeFromList.label         "Remove From List">
 <!ENTITY cmd.removeFromList.accesskey     "e">
 <!ENTITY cmd.info.label                   "Information">
