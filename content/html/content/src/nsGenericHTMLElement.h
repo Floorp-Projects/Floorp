@@ -235,7 +235,6 @@ public:
   nsresult GetHrefURIForAnchors(nsIURI** aURI) const;
 
   // HTML element methods
-  void Compact() { mAttrsAndChildren.Compact(); }
   const nsAttrValue* GetParsedAttr(nsIAtom* aAttr) const
   {
     return mAttrsAndChildren.GetAttr(aAttr);
@@ -960,14 +959,15 @@ protected:
 nsGenericHTMLElement*                                                        \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 {                                                                            \
-  return new nsHTML##_elementName##Element(aNodeInfo);                       \
+  return new (aNodeInfo) nsHTML##_elementName##Element(aNodeInfo);           \
 }
 
 #define NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(_elementName)               \
 nsGenericHTMLElement*                                                        \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 {                                                                            \
-  return new nsHTML##_elementName##Element(aNodeInfo, aFromParser);          \
+  return                                                                     \
+    new (aNodeInfo) nsHTML##_elementName##Element(aNodeInfo, aFromParser);   \
 }
 
 

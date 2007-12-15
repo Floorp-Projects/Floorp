@@ -133,7 +133,7 @@ nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
-  nsSVGUseElement *it = new nsSVGUseElement(aNodeInfo);
+  nsSVGUseElement *it = new (aNodeInfo) nsSVGUseElement(aNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

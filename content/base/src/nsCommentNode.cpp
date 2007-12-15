@@ -88,7 +88,7 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult,
   nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetCommentNodeInfo();
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCommentNode *instance = new nsCommentNode(ni);
+  nsCommentNode *instance = new (ni) nsCommentNode(ni);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -163,7 +163,7 @@ nsCommentNode::GetNodeType(PRUint16* aNodeType)
 nsGenericDOMDataNode*
 nsCommentNode::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  nsCommentNode *it = new nsCommentNode(aNodeInfo);
+  nsCommentNode *it = new (aNodeInfo) nsCommentNode(aNodeInfo);
   if (it && aCloneText) {
     it->mText = mText;
   }

@@ -75,8 +75,10 @@ class nsGenericHTMLElement;
 class nsAttrAndChildArray
 {
 public:
-  nsAttrAndChildArray();
+  nsAttrAndChildArray(nsDOMNodeAllocator* aAllocator);
   ~nsAttrAndChildArray();
+  void SetAllocator(nsDOMNodeAllocator* aAllocator);
+  nsDOMNodeAllocator* Allocator() { return mAllocator; }
 
   PRUint32 ChildCount() const
   {
@@ -122,8 +124,6 @@ public:
                                 nsHTMLStyleSheet* aSheet);
   nsresult SetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet);
   void WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker);
-
-  void Compact();
 
 private:
   nsAttrAndChildArray(const nsAttrAndChildArray& aOther); // Not to be implemented
@@ -186,7 +186,8 @@ private:
     void* mBuffer[1];
   };
 
-  Impl* mImpl;
+  Impl*               mImpl;
+  nsDOMNodeAllocator* mAllocator;
 };
 
 #endif

@@ -81,7 +81,7 @@ NS_NewGenConImageContent(nsIContent** aResult, nsINodeInfo* aNodeInfo,
                          imgIRequest* aImageRequest)
 {
   NS_PRECONDITION(aImageRequest, "Must have request!");
-  nsGenConImageContent *it = new nsGenConImageContent(aNodeInfo);
+  nsGenConImageContent *it = new (aNodeInfo) nsGenConImageContent(aNodeInfo);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult = it);

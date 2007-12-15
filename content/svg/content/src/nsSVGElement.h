@@ -313,7 +313,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  nsINodeInfo *aNodeInfo)                     \
 {                                                                            \
   nsSVG##_elementName##Element *it =                                         \
-    new nsSVG##_elementName##Element(aNodeInfo);                             \
+    new (aNodeInfo) nsSVG##_elementName##Element(aNodeInfo);                 \
   if (!it)                                                                   \
     return NS_ERROR_OUT_OF_MEMORY;                                           \
                                                                              \

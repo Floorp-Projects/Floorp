@@ -51,6 +51,146 @@
 #include "nsReadableUtils.h"
 #include "nsGkAtoms.h"
 #include "nsComponentManagerUtils.h"
+#include "prbit.h"
+#include "plarena.h"
+#include "nsMemory.h"
+
+#define NS_MAX_NODE_RECYCLE_SIZE \
+  (NS_NODE_RECYCLER_SIZE * sizeof(void*))
+
+#ifdef DEBUG
+static PRUint32 gDOMNodeAllocators = 0;
+// Counts the number of non-freed allocations.
+static size_t   gDOMNodeAllocations = 0;
+static PRUint32 gDOMNodeRecyclerCounters[NS_NODE_RECYCLER_SIZE];
+static PRUint32 gDOMNodeNormalAllocations = 0;
+class nsDOMNodeAllocatorTester
+{
+public:
+  nsDOMNodeAllocatorTester()
+  {
+    memset(gDOMNodeRecyclerCounters, 0, sizeof(gDOMNodeRecyclerCounters));
+  }
+  ~nsDOMNodeAllocatorTester()
+  {
+#ifdef DEBUG_smaug
+    for (PRInt32 i = 0 ; i < NS_NODE_RECYCLER_SIZE; ++i) {
+      if (gDOMNodeRecyclerCounters[i]) {
+        printf("DOMNodeAllocator, arena allocation: %u bytes %u times\n",
+               static_cast<unsigned int>((i + 1) * sizeof(void*)),
+               gDOMNodeRecyclerCounters[i]);
+      }
+    }
+    if (gDOMNodeNormalAllocations) {
+      printf("DOMNodeAllocator, normal allocations: %i times \n",
+             gDOMNodeNormalAllocations);
+    }
+#endif
+    if (gDOMNodeAllocations != 0) {
+      printf("nsDOMNodeAllocator leaked %u bytes \n",
+             static_cast<unsigned int>(gDOMNodeAllocations));
+    }
+  }
+};
+nsDOMNodeAllocatorTester gDOMAllocatorTester;
+#endif
+
+nsDOMNodeAllocator::~nsDOMNodeAllocator()
+{
+  if (mPool) {
+    PL_FinishArenaPool(mPool);
+    delete mPool;
+  }
+#ifdef DEBUG
+  --gDOMNodeAllocators;
+#endif
+}
+
+nsresult
+nsDOMNodeAllocator::Init()
+{
+#ifdef DEBUG
+  ++gDOMNodeAllocators;
+#endif
+  mPool = new PLArenaPool();
+  NS_ENSURE_TRUE(mPool, NS_ERROR_OUT_OF_MEMORY);
+  PL_InitArenaPool(mPool, "nsDOMNodeAllocator", 4096 * (sizeof(void*)/2), 0);
+  memset(mRecyclers, 0, sizeof(mRecyclers));
+  return NS_OK;
+}
+
+nsrefcnt
+nsDOMNodeAllocator::Release()
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsDOMNodeAllocator");
+  if (mRefCnt == 0) {
+    mRefCnt = 1; /* stabilize */
+    delete this;
+    return 0;
+  }
+  return mRefCnt;
+}
+
+void*
+nsDOMNodeAllocator::Alloc(size_t aSize)
+{
+  void* result = nsnull;
+
+  // Ensure we have correct alignment for pointers.
+  aSize = aSize ? PR_ROUNDUP(aSize, sizeof(void*)) : sizeof(void*);
+  // Check recyclers first
+  if (aSize <= NS_MAX_NODE_RECYCLE_SIZE) {
+    const PRInt32 index = (aSize / sizeof(void*)) - 1;
+    result = mRecyclers[index];
+    if (result) {
+      // Need to move to the next object
+      void* next = *((void**)result);
+      mRecyclers[index] = next;
+    }
+    if (!result) {
+      // Allocate a new chunk from the arena
+      PL_ARENA_ALLOCATE(result, mPool, aSize);
+    }
+#ifdef DEBUG
+    ++gDOMNodeRecyclerCounters[index];
+#endif
+  } else {
+    result = nsMemory::Alloc(aSize);
+#ifdef DEBUG
+    ++gDOMNodeNormalAllocations;
+#endif
+  }
+
+#ifdef DEBUG
+  gDOMNodeAllocations += aSize;
+#endif
+  return result;
+}
+
+void
+nsDOMNodeAllocator::Free(size_t aSize, void* aPtr)
+{
+  if (!aPtr) {
+    return;
+  }
+  // Ensure we have correct alignment for pointers.
+  aSize = aSize ? PR_ROUNDUP(aSize, sizeof(void*)) : sizeof(void*);
+  // See if it's a size that we recycle
+  if (aSize <= NS_MAX_NODE_RECYCLE_SIZE) {
+    const PRInt32 index = (aSize / sizeof(void*)) - 1;
+    void* currentTop = mRecyclers[index];
+    mRecyclers[index] = aPtr;
+    *((void**)aPtr) = currentTop;
+  } else {
+    nsMemory::Free(aPtr);
+  }
+
+#ifdef DEBUG
+  gDOMNodeAllocations -= aSize;
+#endif
+}
 
 PRUint32 nsNodeInfoManager::gNodeManagerCount;
 
@@ -153,6 +293,10 @@ nsresult
 nsNodeInfoManager::Init(nsIDocument *aDocument)
 {
   NS_ENSURE_TRUE(mNodeInfoHash, NS_ERROR_OUT_OF_MEMORY);
+
+  mNodeAllocator = new nsDOMNodeAllocator();
+  NS_ENSURE_TRUE(mNodeAllocator && NS_SUCCEEDED(mNodeAllocator->Init()),
+                 NS_ERROR_OUT_OF_MEMORY);
 
   NS_PRECONDITION(!mPrincipal,
                   "Being inited when we already have a principal?");
