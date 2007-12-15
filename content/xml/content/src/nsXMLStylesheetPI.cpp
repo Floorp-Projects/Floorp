@@ -246,7 +246,7 @@ nsXMLStylesheetPI::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) cons
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
 
-  return new nsXMLStylesheetPI(aNodeInfo, data);
+  return new (aNodeInfo) nsXMLStylesheetPI(aNodeInfo, data);
 }
 
 nsresult
@@ -265,7 +265,7 @@ NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
                                   getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXMLStylesheetPI *instance = new nsXMLStylesheetPI(ni, aData);
+  nsXMLStylesheetPI *instance = new (ni) nsXMLStylesheetPI(ni, aData);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

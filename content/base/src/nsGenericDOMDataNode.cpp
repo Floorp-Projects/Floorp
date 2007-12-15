@@ -66,7 +66,7 @@
 #include "prprf.h"
 
 nsGenericDOMDataNode::nsGenericDOMDataNode(nsINodeInfo *aNodeInfo)
-  : nsIContent(aNodeInfo)
+  : nsIContent(aNodeInfo), mText(aNodeInfo->NodeInfoManager()->NodeAllocator())
 {
 }
 
@@ -864,7 +864,7 @@ nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 nsINode::nsSlots*
 nsGenericDOMDataNode::CreateSlots()
 {
-  return new nsDataSlots(mFlagsOrSlots);
+  return new (GetAllocator()) nsDataSlots(mFlagsOrSlots);
 }
 
 //----------------------------------------------------------------------
