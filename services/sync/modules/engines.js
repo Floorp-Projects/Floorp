@@ -34,13 +34,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['BookmarksEngine'];
+const EXPORTED_SYMBOLS = ['Engine', 'BookmarksEngine', 'HistoryEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -51,11 +52,24 @@ Cu.import("resource://weave/syncCores.js");
 Function.prototype.async = generatorAsync;
 let Crypto = new WeaveCrypto();
 
-function BookmarksEngine(davCollection, cryptoId) {
-  this._init(davCollection, cryptoId);
+function Engine(davCollection, cryptoId) {
+  //this._init(davCollection, cryptoId);
 }
-BookmarksEngine.prototype = {
-  _logName: "BmkEngine",
+Engine.prototype = {
+  // "default-engine";
+  get name() { throw "name property must be overridden in subclasses"; },
+
+  // "DefaultEngine";
+  get logName() { throw "logName property must be overridden in subclasses"; },
+
+  // "user-data/default-engine/";
+  get serverPrefix() { throw "serverPrefix property must be overridden in subclasses"; },
+
+  // These can be overridden in subclasses, but don't need to be (assuming
+  // serverPrefix is not shared with anything else)
+  get statusFile() { return this.serverPrefix + "status.json"; },
+  get snapshotFile() { return this.serverPrefix + "snapshot.json"; },
+  get deltasFile() { return this.serverPrefix + "deltas.json"; },
 
   __os: null,
   get _os() {
@@ -65,24 +79,25 @@ BookmarksEngine.prototype = {
     return this.__os;
   },
 
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new BookmarksStore();
-    return this.__store;
-  },
-
+  // _core, and _store need to be overridden in subclasses
   __core: null,
   get _core() {
     if (!this.__core)
-      this.__core = new BookmarksSyncCore();
+      this.__core = new SyncCore();
     return this.__core;
+  },
+
+  __store: null,
+  get _store() {
+    if (!this.__store)
+      this.__store = new Store();
+    return this.__store;
   },
 
   __snapshot: null,
   get _snapshot() {
     if (!this.__snapshot)
-      this.__snapshot = new SnapshotStore();
+      this.__snapshot = new SnapshotStore(this.name);
     return this.__snapshot;
   },
   set _snapshot(value) {
@@ -92,235 +107,98 @@ BookmarksEngine.prototype = {
   _init: function BmkEngine__init(davCollection, cryptoId) {
     this._dav = davCollection;
     this._cryptoId = cryptoId;
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._log = Log4Moz.Service.getLogger("Service." + this.logName);
+    this._osPrefix = "weave:" + this.name + ":";
     this._snapshot.load();
   },
 
-  _checkStatus: function BmkEngine__checkStatus(code, msg) {
+  _checkStatus: function BmkEngine__checkStatus(code, msg, ok404) {
     if (code >= 200 && code < 300)
+      return;
+    if (ok404 && code == 404)
       return;
     this._log.error(msg + " Error code: " + code);
     throw 'checkStatus failed';
   },
 
-  /* Get the deltas/combined updates from the server
-   * Returns:
-   *   status:
-   *     -1: error
-   *      0: ok
-   * These fields may be null when status is -1:
-   *   formatVersion:
-   *     version of the data format itself.  For compatibility checks.
-   *   maxVersion:
-   *     the latest version on the server
-   *   snapVersion:
-   *     the version of the current snapshot on the server (deltas not applied)
-   *   snapEncryption:
-   *     encryption algorithm currently used on the server-stored snapshot
-   *   deltasEncryption:
-   *     encryption algorithm currently used on the server-stored deltas
-   *   snapshot:
-   *     full snapshot of the latest server version (deltas applied)
-   *   deltas:
-   *     all of the individual deltas on the server
-   *   updates:
-   *     the relevant deltas (from our snapshot version to current),
-   *     combined into a single set.
-   */
-  _getServerData: function BmkEngine__getServerData(onComplete) {
+  _resetServer: function Engine__resetServer(onComplete) {
     let [self, cont] = yield;
-    let ret = {status: -1,
-               formatVersion: null, maxVersion: null, snapVersion: null,
-               snapEncryption: null, deltasEncryption: null,
-               snapshot: null, deltas: null, updates: null};
+    let done = false;
 
     try {
-      this._log.info("Getting bookmarks status from server");
-      this._dav.GET("bookmarks-status.json", cont);
-      let resp = yield;
-      let status = resp.status;
-  
-      switch (status) {
-      case 200:
-        this._log.info("Got bookmarks status from server");
-  
-        let status = eval(resp.responseText);
-        let deltas, allDeltas;
-	let snap = new SnapshotStore();
-  
-        // Bail out if the server has a newer format version than we can parse
-        if (status.formatVersion > STORAGE_FORMAT_VERSION) {
-          this._log.error("Server uses storage format v" + status.formatVersion +
-                    ", this client understands up to v" + STORAGE_FORMAT_VERSION);
-          generatorDone(this, self, onComplete, ret)
-          return;
-        }
+      this._log.debug("Resetting server data");
+      this._os.notifyObservers(null, this._osPrefix + "reset-server:start", "");
 
-        if (status.formatVersion == 0) {
-          ret.snapEncryption = status.snapEncryption = "none";
-          ret.deltasEncryption = status.deltasEncryption = "none";
-        }
-  
-        if (status.GUID != this._snapshot.GUID) {
-          this._log.info("Remote/local sync GUIDs do not match.  " +
-                      "Forcing initial sync.");
-          this._store.resetGUIDs();
-          this._snapshot.data = {};
-          this._snapshot.version = -1;
-          this._snapshot.GUID = status.GUID;
-        }
-  
-        if (this._snapshot.version < status.snapVersion) {
-          if (this._snapshot.version >= 0)
-            this._log.info("Local snapshot is out of date");
-  
-          this._log.info("Downloading server snapshot");
-          this._dav.GET("bookmarks-snapshot.json", cont);
-          resp = yield;
-          this._checkStatus(resp.status, "Could not download snapshot.");
-          snap.data = Crypto.PBEdecrypt(resp.responseText,
-					this._cryptoId,
-					status.snapEncryption);
-
-          this._log.info("Downloading server deltas");
-          this._dav.GET("bookmarks-deltas.json", cont);
-          resp = yield;
-          this._checkStatus(resp.status, "Could not download deltas.");
-          allDeltas = Crypto.PBEdecrypt(resp.responseText,
-					this._cryptoId,
-					status.deltasEncryption);
-          deltas = eval(uneval(allDeltas));
-  
-        } else if (this._snapshot.version >= status.snapVersion &&
-                   this._snapshot.version < status.maxVersion) {
-          snap.data = eval(uneval(this._snapshot.data));
-  
-          this._log.info("Downloading server deltas");
-          this._dav.GET("bookmarks-deltas.json", cont);
-          resp = yield;
-          this._checkStatus(resp.status, "Could not download deltas.");
-          allDeltas = Crypto.PBEdecrypt(resp.responseText,
-					this._cryptoId,
-					status.deltasEncryption);
-          deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
-  
-        } else if (this._snapshot.version == status.maxVersion) {
-          snap.data = eval(uneval(this._snapshot.data));
-  
-          // FIXME: could optimize this case by caching deltas file
-          this._log.info("Downloading server deltas");
-          this._dav.GET("bookmarks-deltas.json", cont);
-          resp = yield;
-          this._checkStatus(resp.status, "Could not download deltas.");
-          allDeltas = Crypto.PBEdecrypt(resp.responseText,
-					this._cryptoId,
-					status.deltasEncryption);
-          deltas = [];
-  
-        } else { // this._snapshot.version > status.maxVersion
-          this._log.error("Server snapshot is older than local snapshot");
-          return;
-        }
-  
-        for (var i = 0; i < deltas.length; i++) {
-	  snap.applyCommands(deltas[i]);
-        }
-  
-        ret.status = 0;
-        ret.formatVersion = status.formatVersion;
-        ret.maxVersion = status.maxVersion;
-        ret.snapVersion = status.snapVersion;
-        ret.snapEncryption = status.snapEncryption;
-        ret.deltasEncryption = status.deltasEncryption;
-        ret.snapshot = snap.data;
-        ret.deltas = allDeltas;
-        this._core.detectUpdates(cont, this._snapshot.data, snap.data);
-        ret.updates = yield;
-        break;
-  
-      case 404:
-        this._log.info("Server has no status file, Initial upload to server");
-  
-        this._snapshot.data = this._store.wrap();
-        this._snapshot.version = 0;
-        this._snapshot.GUID = null; // in case there are other snapshots out there
-
-        this._fullUpload.async(this, cont);
-        let uploadStatus = yield;
-        if (!uploadStatus)
-          return;
-  
-        this._log.info("Initial upload to server successful");
-        this.snapshot.save();
-  
-        ret.status = 0;
-        ret.formatVersion = STORAGE_FORMAT_VERSION;
-        ret.maxVersion = this._snapshot.version;
-        ret.snapVersion = this._snapshot.version;
-        ret.snapEncryption = Crypto.defaultAlgorithm;
-        ret.deltasEncryption = Crypto.defaultAlgorithm;
-        ret.snapshot = eval(uneval(this._snapshot.data));
-        ret.deltas = [];
-        ret.updates = [];
-        break;
-  
-      default:
-        this._log.error("Could not get bookmarks.status: unknown HTTP status code " +
-                        status);
-        break;
+      this._dav.lock.async(this._dav, cont);
+      let locked = yield;
+      if (locked)
+        this._log.debug("Lock acquired");
+      else {
+        this._log.warn("Could not acquire lock, aborting server reset");
+        return;        
       }
 
+      // try to delete all 3, check status after
+      this._dav.DELETE(this.statusFile, cont);
+      let statusResp = yield;
+      this._dav.DELETE(this.snapshotFile, cont);
+      let snapshotResp = yield;
+      this._dav.DELETE(this.deltasFile, cont);
+      let deltasResp = yield;
+
+      this._dav.unlock.async(this._dav, cont);
+      let unlocked = yield;
+
+      checkStatus(statusResp.status, "Could not delete status file.", true);
+      checkStatus(snapshotResp.status, "Could not delete snapshot file.", true);
+      checkStatus(deltasResp.status, "Could not delete deltas file.", true);
+
+      this._log.debug("Server files deleted");
+      done = true;
+        
     } catch (e) {
-      if (e != 'checkStatus failed' &&
-          e != 'decrypt failed')
-        this._log.error("Exception caught: " + e.message);
+      if (e != 'checkStatus failed')
+	this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self, onComplete, ret)
+      if (done) {
+        this._log.debug("Server reset completed successfully");
+        this._os.notifyObservers(null, this._osPrefix + "reset-server:end", "");
+      } else {
+        this._log.debug("Server reset failed");
+        this._os.notifyObservers(null, this._osPrefix + "reset-server:error", "");
+      }
+      generatorDone(this, self, onComplete, done)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
-  _fullUpload: function BmkEngine__fullUpload(onComplete) {
+  _resetClient: function Engine__resetClient(onComplete) {
     let [self, cont] = yield;
-    let ret = false;
+    let done = false;
 
     try {
-      let data = Crypto.PBEencrypt(this._snapshot.serialize(),
-				   this._cryptoId);
-      this._dav.PUT("bookmarks-snapshot.json", data, cont);
-      resp = yield;
-      this._checkStatus(resp.status, "Could not upload snapshot.");
+      this._log.debug("Resetting client state");
+      this._os.notifyObservers(null, this._osPrefix + "reset-client:start", "");
 
-      this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
-      resp = yield;
-      this._checkStatus(resp.status, "Could not upload deltas.");
-
-      let c = 0;
-      for (GUID in this._snapshot.data)
-        c++;
-
-      this._dav.PUT("bookmarks-status.json",
-                    uneval({GUID: this._snapshot.GUID,
-                            formatVersion: STORAGE_FORMAT_VERSION,
-                            snapVersion: this._snapshot.version,
-                            maxVersion: this._snapshot.version,
-                            snapEncryption: Crypto.defaultAlgorithm,
-                            deltasEncryption: "none",
-                            bookmarksCount: c}), cont);
-      resp = yield;
-      this._checkStatus(resp.status, "Could not upload status file.");
-
-      this._log.info("Full upload to server successful");
-      ret = true;
+      this._snapshot.data = {};
+      this._snapshot.version = -1;
+      this._snapshot.save();
+      done = true;
 
     } catch (e) {
-      if (e != 'checkStatus failed')
-        this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      generatorDone(this, self, onComplete, ret)
+      if (done) {
+        this._log.debug("Client reset completed successfully");
+        this._os.notifyObservers(null, this._osPrefix + "reset-client:end", "");
+      } else {
+        this._log.debug("Client reset failed");
+        this._os.notifyObservers(null, this._osPrefix + "reset-client:error", "");
+      }
+      generatorDone(this, self, onComplete, done);
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
@@ -360,7 +238,7 @@ BookmarksEngine.prototype = {
 
     try {
       this._log.info("Beginning sync");
-      this._os.notifyObservers(null, "bookmarks-sync:sync-start", "");
+      this._os.notifyObservers(null, this._osPrefix + "sync:start", "");
 
       this._dav.lock.async(this._dav, cont);
       locked = yield;
@@ -371,6 +249,11 @@ BookmarksEngine.prototype = {
         this._log.warn("Could not acquire lock, aborting sync");
         return;
       }
+
+      // Before we get started, make sure we have a remote directory to play in
+      this._dav.MKCOL(this.serverPrefix, cont);
+      let ret = yield;
+      this._checkStatus(ret.status, "Could not create remote folder.");
 
       // 1) Fetch server deltas
       this._getServerData.async(this, cont);
@@ -409,7 +292,7 @@ BookmarksEngine.prototype = {
 
       this._log.info("Reconciling client/server updates");
       this._core.reconcile(cont, localUpdates, server.updates);
-      let ret = yield;
+      ret = yield;
 
       let clientChanges = ret.propagations[0];
       let serverChanges = ret.propagations[1];
@@ -466,7 +349,6 @@ BookmarksEngine.prototype = {
           this._snapshot.data = eval(uneval(savedSnap));
           this._snapshot.version = savedVersion;
         }
-
         this._snapshot.save();
       }
 
@@ -508,21 +390,21 @@ BookmarksEngine.prototype = {
         } else {
 	  let data = Crypto.PBEencrypt(serializeCommands(server.deltas),
 				       this._cryptoId);
-          this._dav.PUT("bookmarks-deltas.json", data, cont);
+          this._dav.PUT(this.deltasFile, data, cont);
           let deltasPut = yield;
 
           let c = 0;
           for (GUID in this._snapshot.data)
             c++;
 
-          this._dav.PUT("bookmarks-status.json",
+          this._dav.PUT(this.statusFile,
                         uneval({GUID: this._snapshot.GUID,
                                 formatVersion: STORAGE_FORMAT_VERSION,
                                 snapVersion: server.snapVersion,
                                 maxVersion: this._snapshot.version,
                                 snapEncryption: server.snapEncryption,
                                 deltasEncryption: Crypto.defaultAlgorithm,
-                                Bookmarkscount: c}), cont);
+                                itemCount: c}), cont);
           let statusPut = yield;
 
           if (deltasPut.status >= 200 && deltasPut.status < 300 &&
@@ -541,7 +423,7 @@ BookmarksEngine.prototype = {
       synced = true;
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       let ok = false;
@@ -550,10 +432,10 @@ BookmarksEngine.prototype = {
         ok = yield;
       }
       if (ok && synced) {
-        this._os.notifyObservers(null, "bookmarks-sync:sync-end", "");
+        this._os.notifyObservers(null, this._osPrefix + "sync:end", "");
         generatorDone(this, self, onComplete, true);
       } else {
-        this._os.notifyObservers(null, "bookmarks-sync:sync-error", "");
+        this._os.notifyObservers(null, this._osPrefix + "sync:error", "");
         generatorDone(this, self, onComplete, false);
       }
       yield; // onComplete is responsible for closing the generator
@@ -561,111 +443,289 @@ BookmarksEngine.prototype = {
     this._log.warn("generator not properly closed");
   },
 
-  _resetServer: function BmkEngine__resetServer(onComplete) {
+  /* Get the deltas/combined updates from the server
+   * Returns:
+   *   status:
+   *     -1: error
+   *      0: ok
+   * These fields may be null when status is -1:
+   *   formatVersion:
+   *     version of the data format itself.  For compatibility checks.
+   *   maxVersion:
+   *     the latest version on the server
+   *   snapVersion:
+   *     the version of the current snapshot on the server (deltas not applied)
+   *   snapEncryption:
+   *     encryption algorithm currently used on the server-stored snapshot
+   *   deltasEncryption:
+   *     encryption algorithm currently used on the server-stored deltas
+   *   snapshot:
+   *     full snapshot of the latest server version (deltas applied)
+   *   deltas:
+   *     all of the individual deltas on the server
+   *   updates:
+   *     the relevant deltas (from our snapshot version to current),
+   *     combined into a single set.
+   */
+  _getServerData: function BmkEngine__getServerData(onComplete) {
     let [self, cont] = yield;
-    let done = false;
+    let ret = {status: -1,
+               formatVersion: null, maxVersion: null, snapVersion: null,
+               snapEncryption: null, deltasEncryption: null,
+               snapshot: null, deltas: null, updates: null};
 
     try {
-      this._log.debug("Resetting server data");
-      this._os.notifyObservers(null, "bookmarks-sync:reset-server-start", "");
+      this._log.debug("Getting status file from server");
+      this._dav.GET(this.statusFile, cont);
+      let resp = yield;
+      let status = resp.status;
+  
+      switch (status) {
+      case 200:
+        this._log.info("Got status file from server");
+  
+        let status = eval(resp.responseText);
+        let deltas, allDeltas;
+	let snap = new SnapshotStore();
+  
+        // Bail out if the server has a newer format version than we can parse
+        if (status.formatVersion > STORAGE_FORMAT_VERSION) {
+          this._log.error("Server uses storage format v" + status.formatVersion +
+                    ", this client understands up to v" + STORAGE_FORMAT_VERSION);
+          generatorDone(this, self, onComplete, ret)
+          return;
+        }
 
-      this._dav.lock.async(this._dav, cont);
-      let locked = yield;
-      if (locked)
-        this._log.debug("Lock acquired");
-      else {
-        this._log.warn("Could not acquire lock, aborting server reset");
-        return;        
+        if (status.formatVersion == 0) {
+          ret.snapEncryption = status.snapEncryption = "none";
+          ret.deltasEncryption = status.deltasEncryption = "none";
+        }
+  
+        if (status.GUID != this._snapshot.GUID) {
+          this._log.info("Remote/local sync GUIDs do not match.  " +
+                      "Forcing initial sync.");
+          this._store.resetGUIDs();
+          this._snapshot.data = {};
+          this._snapshot.version = -1;
+          this._snapshot.GUID = status.GUID;
+        }
+  
+        if (this._snapshot.version < status.snapVersion) {
+          if (this._snapshot.version >= 0)
+            this._log.info("Local snapshot is out of date");
+  
+          this._log.info("Downloading server snapshot");
+          this._dav.GET(this.snapshotFile, cont);
+          resp = yield;
+          this._checkStatus(resp.status, "Could not download snapshot.");
+          snap.data = Crypto.PBEdecrypt(resp.responseText,
+					this._cryptoId,
+					status.snapEncryption);
+
+          this._log.info("Downloading server deltas");
+          this._dav.GET(this.deltasFile, cont);
+          resp = yield;
+          this._checkStatus(resp.status, "Could not download deltas.");
+          allDeltas = Crypto.PBEdecrypt(resp.responseText,
+					this._cryptoId,
+					status.deltasEncryption);
+          deltas = eval(uneval(allDeltas));
+  
+        } else if (this._snapshot.version >= status.snapVersion &&
+                   this._snapshot.version < status.maxVersion) {
+          snap.data = eval(uneval(this._snapshot.data));
+  
+          this._log.info("Downloading server deltas");
+          this._dav.GET(this.deltasFile, cont);
+          resp = yield;
+          this._checkStatus(resp.status, "Could not download deltas.");
+          allDeltas = Crypto.PBEdecrypt(resp.responseText,
+					this._cryptoId,
+					status.deltasEncryption);
+          deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
+  
+        } else if (this._snapshot.version == status.maxVersion) {
+          snap.data = eval(uneval(this._snapshot.data));
+  
+          // FIXME: could optimize this case by caching deltas file
+          this._log.info("Downloading server deltas");
+          this._dav.GET(this.deltasFile, cont);
+          resp = yield;
+          this._checkStatus(resp.status, "Could not download deltas.");
+          allDeltas = Crypto.PBEdecrypt(resp.responseText,
+					this._cryptoId,
+					status.deltasEncryption);
+          deltas = [];
+  
+        } else { // this._snapshot.version > status.maxVersion
+          this._log.error("Server snapshot is older than local snapshot");
+          return;
+        }
+  
+        for (var i = 0; i < deltas.length; i++) {
+	  snap.applyCommands(deltas[i]);
+        }
+  
+        ret.status = 0;
+        ret.formatVersion = status.formatVersion;
+        ret.maxVersion = status.maxVersion;
+        ret.snapVersion = status.snapVersion;
+        ret.snapEncryption = status.snapEncryption;
+        ret.deltasEncryption = status.deltasEncryption;
+        ret.snapshot = snap.data;
+        ret.deltas = allDeltas;
+        this._core.detectUpdates(cont, this._snapshot.data, snap.data);
+        ret.updates = yield;
+        break;
+  
+      case 404:
+        this._log.info("Server has no status file, Initial upload to server");
+  
+        this._snapshot.data = this._store.wrap();
+        this._snapshot.version = 0;
+        this._snapshot.GUID = null; // in case there are other snapshots out there
+
+        this._fullUpload.async(this, cont);
+        let uploadStatus = yield;
+        if (!uploadStatus)
+          return;
+  
+        this._log.info("Initial upload to server successful");
+        this._snapshot.save();
+  
+        ret.status = 0;
+        ret.formatVersion = STORAGE_FORMAT_VERSION;
+        ret.maxVersion = this._snapshot.version;
+        ret.snapVersion = this._snapshot.version;
+        ret.snapEncryption = Crypto.defaultAlgorithm;
+        ret.deltasEncryption = Crypto.defaultAlgorithm;
+        ret.snapshot = eval(uneval(this._snapshot.data));
+        ret.deltas = [];
+        ret.updates = [];
+        break;
+  
+      default:
+        this._log.error("Could not get status file: unknown HTTP status code " +
+                        status);
+        break;
       }
 
-      this._dav.DELETE("bookmarks-status.json", cont);
-      let statusResp = yield;
-      this._dav.DELETE("bookmarks-snapshot.json", cont);
-      let snapshotResp = yield;
-      this._dav.DELETE("bookmarks-deltas.json", cont);
-      let deltasResp = yield;
-
-      this._dav.unlock.async(this._dav, cont);
-      let unlocked = yield;
-
-      function ok(code) {
-        if (code >= 200 && code < 300)
-          return true;
-        if (code == 404)
-          return true;
-        return false;
-      }
-
-      if (!(ok(statusResp.status) && ok(snapshotResp.status) &&
-            ok(deltasResp.status))) {
-        this._log.error("Could delete server data, response codes " +
-                        statusResp.status + ", " + snapshotResp.status + ", " +
-                        deltasResp.status);
-        return;
-      }
-
-      this._log.debug("Server files deleted");
-      done = true;
-        
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      if (e != 'checkStatus failed' &&
+          e != 'decrypt failed')
+	this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      if (done) {
-        this._log.debug("Server reset completed successfully");
-        this._os.notifyObservers(null, "bookmarks-sync:reset-server-end", "");
-      } else {
-        this._log.debug("Server reset failed");
-        this._os.notifyObservers(null, "bookmarks-sync:reset-server-error", "");
-      }
-      generatorDone(this, self, onComplete, done)
+      generatorDone(this, self, onComplete, ret)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
-  _resetClient: function BmkEngine__resetClient(onComplete) {
+  _fullUpload: function Engine__fullUpload(onComplete) {
     let [self, cont] = yield;
-    let done = false;
+    let ret = false;
 
     try {
-      this._log.debug("Resetting client state");
-      this._os.notifyObservers(null, "bookmarks-sync:reset-client-start", "");
+      let data = Crypto.PBEencrypt(this._snapshot.serialize(),
+				   this._cryptoId);
+      this._dav.PUT(this.snapshotFile, data, cont);
+      resp = yield;
+      this._checkStatus(resp.status, "Could not upload snapshot.");
 
-      this._snapshot.data = {};
-      this._snapshot.version = -1;
-      this.snapshot.save();
-      done = true;
+      this._dav.PUT(this.deltasFile, uneval([]), cont);
+      resp = yield;
+      this._checkStatus(resp.status, "Could not upload deltas.");
+
+      let c = 0;
+      for (GUID in this._snapshot.data)
+        c++;
+
+      this._dav.PUT(this.statusFile,
+                    uneval({GUID: this._snapshot.GUID,
+                            formatVersion: STORAGE_FORMAT_VERSION,
+                            snapVersion: this._snapshot.version,
+                            maxVersion: this._snapshot.version,
+                            snapEncryption: Crypto.defaultAlgorithm,
+                            deltasEncryption: "none",
+                            itemCount: c}), cont);
+      resp = yield;
+      this._checkStatus(resp.status, "Could not upload status file.");
+
+      this._log.info("Full upload to server successful");
+      ret = true;
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      if (e != 'checkStatus failed')
+	this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      if (done) {
-        this._log.debug("Client reset completed successfully");
-        this._os.notifyObservers(null, "bookmarks-sync:reset-client-end", "");
-      } else {
-        this._log.debug("Client reset failed");
-        this._os.notifyObservers(null, "bookmarks-sync:reset-client-error", "");
-      }
-      generatorDone(this, self, onComplete, done);
+      generatorDone(this, self, onComplete, ret)
       yield; // onComplete is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
 
-  sync: function BmkEngine_sync(onComplete) {
+  sync: function Engine_sync(onComplete) {
     return this._sync.async(this, onComplete);
   },
 
-  resetServer: function BmkEngine_resetServer(onComplete) {
+  resetServer: function Engine_resetServer(onComplete) {
     return this._resetServer.async(this, onComplete);
   },
 
-  resetClient: function BmkEngine_resetClient(onComplete) {
+  resetClient: function Engine_resetClient(onComplete) {
     return this._resetClient.async(this, onComplete);
   }
 };
+
+function BookmarksEngine(davCollection, cryptoId) {
+  this._init(davCollection, cryptoId);
+}
+BookmarksEngine.prototype = {
+  get name() { return "bookmarks-engine"; },
+  get logName() { return "BmkEngine"; },
+  get serverPrefix() { return "user-data/bookmarks/"; },
+
+  __core: null,
+  get _core() {
+    if (!this.__core)
+      this.__core = new BookmarksSyncCore();
+    return this.__core;
+  },
+
+  __store: null,
+  get _store() {
+    if (!this.__store)
+      this.__store = new BookmarksStore();
+    return this.__store;
+  }
+};
+BookmarksEngine.prototype.__proto__ = new Engine();
+
+function HistoryEngine(davCollection, cryptoId) {
+  this._init(davCollection, cryptoId);
+}
+HistoryEngine.prototype = {
+  get name() { return "history-engine"; },
+  get logName() { return "HistEngine"; },
+  get serverPrefix() { return "user-data/history/"; },
+
+  __core: null,
+  get _core() {
+    if (!this.__core)
+      this.__core = new HistorySyncCore();
+    return this.__core;
+  },
+
+  __store: null,
+  get _store() {
+    if (!this.__store)
+      this.__store = new HistoryStore();
+    return this.__store;
+  }
+};
+HistoryEngine.prototype.__proto__ = new Engine();
 
 serializeCommands: function serializeCommands(commands) {
   let json = uneval(commands);

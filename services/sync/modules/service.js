@@ -41,6 +41,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -49,7 +50,6 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/identity.js");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Function.prototype.async = generatorAsync;
 
@@ -84,11 +84,20 @@ WeaveSyncService.prototype = {
     return this.__dav;
   },
 
+  // FIXME: engines should be loaded dynamically somehow / need API to register
+
   __bmkEngine: null,
   get _bmkEngine() {
     if (!this.__bmkEngine)
       this.__bmkEngine = new BookmarksEngine(this._dav, this._cryptoId);
     return this.__bmkEngine;
+  },
+
+  __histEngine: null,
+  get _histEngine() {
+    if (!this.__histEngine)
+      this.__histEngine = new HistoryEngine(this._dav, this._cryptoId);
+    return this.__histEngine;
   },
 
   // Logger object
@@ -163,7 +172,7 @@ WeaveSyncService.prototype = {
     return null;
   },
 
-  _init: function BSS__init() {
+  _init: function WeaveSync__init() {
     this._initLogs();
     this._log.info("Weave Sync Service Initializing");
 
@@ -202,7 +211,7 @@ WeaveSyncService.prototype = {
     }
   },
 
-  _enableSchedule: function BSS__enableSchedule() {
+  _enableSchedule: function WeaveSync__enableSchedule() {
     this._scheduleTimer = Cc["@mozilla.org/timer;1"].
       createInstance(Ci.nsITimer);
     let listener = new EventListener(bind2(this, this._onSchedule));
@@ -210,16 +219,16 @@ WeaveSyncService.prototype = {
                                          this._scheduleTimer.TYPE_REPEATING_SLACK);
   },
 
-  _disableSchedule: function BSS__disableSchedule() {
+  _disableSchedule: function WeaveSync__disableSchedule() {
     this._scheduleTimer = null;
   },
 
-  _onSchedule: function BSS__onSchedule() {
+  _onSchedule: function WeaveSync__onSchedule() {
     this._log.info("Running scheduled sync");
     this.sync();
   },
 
-  _initLogs: function BSS__initLogs() {
+  _initLogs: function WeaveSync__initLogs() {
     this._log = Log4Moz.Service.getLogger("Service.Main");
 
     let formatter = Log4Moz.Service.newFormatter("basic");
@@ -249,7 +258,7 @@ WeaveSyncService.prototype = {
     root.addAppender(vapp);
   },
 
-  _lock: function BSS__lock() {
+  _lock: function weaveSync__lock() {
     if (this._locked) {
       this._log.warn("Service lock failed: already locked");
       return false;
@@ -259,14 +268,14 @@ WeaveSyncService.prototype = {
     return true;
   },
 
-  _unlock: function BSS__unlock() {
+  _unlock: function WeaveSync__unlock() {
     this._locked = false;
     this._log.debug("Service lock released");
   },
 
   // IBookmarksSyncService internal implementation
 
-  _login: function BSS__login(onComplete) {
+  _login: function WeaveSync__login(onComplete) {
     let [self, cont] = yield;
     let success = false;
 
@@ -309,7 +318,7 @@ WeaveSyncService.prototype = {
     this._log.warn("generator not properly closed");
   },
 
-  _resetLock: function BSS__resetLock(onComplete) {
+  _resetLock: function WeaveSync__resetLock(onComplete) {
     let [self, cont] = yield;
     let success = false;
 
@@ -321,7 +330,7 @@ WeaveSyncService.prototype = {
       success = yield;
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       if (success) {
@@ -332,7 +341,75 @@ WeaveSyncService.prototype = {
         this._os.notifyObservers(null, "bookmarks-sync:lock-reset-error", "");
       }
       generatorDone(this, self, onComplete, success);
-      yield; // onComplete is responsible for closing the generator
+      yield; // generatorDone is responsible for closing the generator
+    }
+    this._log.warn("generator not properly closed");
+  },
+
+  _sync: function WeaveSync__sync() {
+    let [self, cont] = yield;
+
+    try {
+      if (!this._lock())
+	return;
+
+      this._bmkEngine.sync(cont);
+      yield;
+      this._histEngine.sync(cont);
+      yield;
+
+      this._unlock();
+
+    } catch (e) {
+      this._log.error("Exception caught: " + (e.message? e.message : e));
+
+    } finally {
+      generatorDone(this, self);
+      yield; // generatorDone is responsible for closing the generator
+    }
+    this._log.warn("generator not properly closed");
+  },
+
+  _resetServer: function WeaveSync__resetServer() {
+    let [self, cont] = yield;
+
+    try {
+      if (!this._lock())
+	return;
+
+      this._bmkEngine.resetServer(cont);
+      this._histEngine.resetServer(cont);
+
+      this._unlock();
+
+    } catch (e) {
+      this._log.error("Exception caught: " + (e.message? e.message : e));
+
+    } finally {
+      generatorDone(this, self);
+      yield; // generatorDone is responsible for closing the generator
+    }
+    this._log.warn("generator not properly closed");
+  },
+
+  _resetClient: function WeaveSync__resetClient() {
+    let [self, cont] = yield;
+
+    try {
+      if (!this._lock())
+	return;
+
+      this._bmkEngine.resetClient(cont);
+      this._histEngine.resetClient(cont);
+
+      this._unlock();
+
+    } catch (e) {
+      this._log.error("Exception caught: " + (e.message? e.message : e));
+
+    } finally {
+      generatorDone(this, self);
+      yield; // generatorDone is responsible for closing the generator
     }
     this._log.warn("generator not properly closed");
   },
@@ -341,7 +418,7 @@ WeaveSyncService.prototype = {
 
   // nsIObserver
 
-  observe: function BSS__observe(subject, topic, data) {
+  observe: function WeaveSync__observe(subject, topic, data) {
     switch (topic) {
     case "browser.places.sync.enabled":
       switch (data) {
@@ -379,7 +456,7 @@ WeaveSyncService.prototype = {
 
   // These are global (for all engines)
 
-  login: function BSS_login(password, passphrase) {
+  login: function WeaveSync_login(password, passphrase) {
     if (!this._lock())
       return;
     // cache password & passphrase
@@ -390,7 +467,7 @@ WeaveSyncService.prototype = {
     this._login.async(this, function() {self._unlock()});
   },
 
-  logout: function BSS_logout() {
+  logout: function WeaveSync_logout() {
     this._log.info("Logging out");
     this._dav.logout();
     this._mozId.setTempPassword(null); // clear cached password
@@ -398,7 +475,7 @@ WeaveSyncService.prototype = {
     this._os.notifyObservers(null, "bookmarks-sync:logout", "");
   },
 
-  resetLock: function BSS_resetLock() {
+  resetLock: function WeaveSync_resetLock() {
     if (!this._lock())
       return;
     let self = this;
@@ -407,24 +484,7 @@ WeaveSyncService.prototype = {
 
   // These are per-engine
 
-  sync: function BSS_sync() {
-    if (!this._lock())
-      return;
-    let self = this;
-    this._bmkEngine.sync(function() {self._unlock()});
-  },
-
-  resetServer: function BSS_resetServer() {
-    if (!this._lock())
-      return;
-    let self = this;
-    this._bmkEngine.resetServer(function() {self._unlock()});
-  },
-
-  resetClient: function BSS_resetClient() {
-    if (!this._lock())
-      return;
-    let self = this;
-    this._bmkEngine.resetClient(function() {self._unlock()});
-  }
+  sync: function WeaveSync_sync() { this._sync.async(this); },
+  resetServer: function WeaveSync_resetServer() { this._resetServer.async(this); },
+  resetClient: function WeaveSync_resetClient() { this._resetClient.async(this); }
 };

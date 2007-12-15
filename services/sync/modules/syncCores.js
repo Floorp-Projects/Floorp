@@ -34,14 +34,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['SyncCore', 'BookmarksSyncCore'];
+const EXPORTED_SYMBOLS = ['SyncCore', 'BookmarksSyncCore', 'HistorySyncCore'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-addModuleAlias("weave", "{340c2bbc-ce74-4362-90b5-7c26312808ef}");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
@@ -332,7 +332,6 @@ BookmarksSyncCore.prototype = {
     return this.__bms;
   },
 
-  // NOTE: Needs to be subclassed
   _itemExists: function BSC__itemExists(GUID) {
     return this._bms.getItemIdForGUID(GUID) >= 0;
   },
@@ -396,18 +395,23 @@ BookmarksSyncCore.prototype = {
 };
 BookmarksSyncCore.prototype.__proto__ = new SyncCore();
 
-function addModuleAlias(alias, extensionId) {
-  let ioSvc = Cc["@mozilla.org/network/io-service;1"]
-    .getService(Ci.nsIIOService);
-  let resProt = ioSvc.getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-
-  if (!resProt.hasSubstitution(alias)) {
-    let extMgr = Cc["@mozilla.org/extensions/manager;1"]
-      .getService(Ci.nsIExtensionManager);
-    let loc = extMgr.getInstallLocation(extensionId);
-    let extD = loc.getItemLocation(extensionId);
-    extD.append("modules");
-    resProt.setSubstitution(alias, ioSvc.newFileURI(extD));
-  }
+function HistorySyncCore() {
+  this._init();
 }
+HistorySyncCore.prototype = {
+  _logName: "HistSync",
+
+  _itemExists: function BSC__itemExists(GUID) {
+    // we don't care about already-existing items; just try to re-add them
+    return false;
+  },
+
+  _commandLike: function BSC_commandLike(a, b) {
+    // History commands never qualify for likeness.  We will always
+    // take the union of all client/server items.  We use the URL as
+    // the GUID, so the same sites will map to the same item (same
+    // GUID), without our intervention.
+    return false;
+  }
+};
+HistorySyncCore.prototype.__proto__ = new SyncCore();
