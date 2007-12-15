@@ -397,6 +397,8 @@ fails == 385823-2b.html 385823-2-ref.html
 == 386014-1a.html 386014-1-ref.html
 == 386014-1b.html 386014-1-ref.html
 == 386014-1c.html 386014-1-ref.html
+== 386065-1.html 386065-1-ref.html
+== 386065-2.html about:blank
 == 386147-1.html 386147-1-ref.html
 == 386310-1a.html 386310-1-ref.html
 fails == 386310-1b.html 386310-1-ref.html
