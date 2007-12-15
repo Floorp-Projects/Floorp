@@ -715,6 +715,17 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
 
+  PRInt32 rowCount = 0;
+  rv = mTreeView->GetRowCount(&rowCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mRow < 0 || mRow >= rowCount) {
+    if (aExtraState)
+      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+
+    return NS_OK;
+  }
+
   *aState = nsIAccessibleStates::STATE_FOCUSABLE |
             nsIAccessibleStates::STATE_SELECTABLE;
 
