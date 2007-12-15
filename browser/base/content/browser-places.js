@@ -184,7 +184,7 @@ var PlacesCommandHook = {
       var title;
       var description;
       try {
-        title = webNav.document.title;
+        title = webNav.document.title || url.spec;
         description = PlacesUtils.getDescriptionFromDocument(webNav.document);
       }
       catch (e) { }
