@@ -157,7 +157,7 @@ NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
     NS_ENSURE_SUCCESS(rv, nsnull);
   }
 
-  return new nsHTMLOptionElement(nodeInfo);
+  return new (nodeInfo) nsHTMLOptionElement(nodeInfo);
 }
 
 nsHTMLOptionElement::nsHTMLOptionElement(nsINodeInfo *aNodeInfo)

@@ -59,6 +59,7 @@ class nsIMutationObserver;
 class nsChildContentList;
 class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
+class nsDOMNodeAllocator;
 
 enum {
   // This bit will be set if the node doesn't have nsSlots
@@ -126,8 +127,8 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x8cef8b4e, 0x4b7f, 0x4f86, \
-  { 0xba, 0x64, 0x75, 0xdf, 0xed, 0x0d, 0xa2, 0x3e } }
+{ 0x42f3a894, 0xe5d4, 0x44b1, \
+  { 0x96, 0x34, 0x73, 0x8f, 0xf8, 0xbe, 0x5d, 0x9b } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsPIDOMEventTarget {
@@ -578,6 +579,11 @@ public:
      * Weak reference to this node
      */
     nsNodeWeakReference* mWeakReference;
+
+    void* operator new(size_t aSize, nsDOMNodeAllocator* aAllocator);
+    void operator delete(void* aPtr, size_t aSize);
+private:
+    void* operator new(size_t aSize) CPP_THROW_NEW;
   };
 
   /**
@@ -636,6 +642,13 @@ public:
 #endif
   }
 
+  // Returns nsnull only when called on an nsIDocument object.
+  virtual nsDOMNodeAllocator* GetAllocator() = 0;
+
+  void* operator new(size_t aSize, nsINodeInfo* aNodeInfo);
+  void operator delete(void* aPtr, size_t aSize);
+private:
+  void* operator new(size_t aSize) CPP_THROW_NEW;
 protected:
 
   // Override this function to create a custom slots class.

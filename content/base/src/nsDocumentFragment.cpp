@@ -171,7 +171,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                                   getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDocumentFragment *it = new nsDocumentFragment(nodeInfo);
+  nsDocumentFragment *it = new (nodeInfo) nsDocumentFragment(nodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

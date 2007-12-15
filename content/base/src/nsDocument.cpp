@@ -769,6 +769,7 @@ nsDOMImplementation::Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument(),
+    mChildren(nsnull),
     mVisible(PR_TRUE)
 {
   nsLayoutStatics::AddRef();
@@ -1105,6 +1106,19 @@ nsDocument::Init()
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(mBindingManager = bindingManager);
 
+  mNodeInfoManager = new nsNodeInfoManager();
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(mNodeInfoManager);
+
+  nsresult  rv = mNodeInfoManager->Init(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mChildren.SetAllocator(mNodeInfoManager->NodeAllocator());
+
+  mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
+
   nsINode::nsSlots* slots = GetSlots();
   NS_ENSURE_TRUE(slots,NS_ERROR_OUT_OF_MEMORY);
 
@@ -1125,23 +1139,19 @@ nsDocument::Init()
   mCSSLoader->SetCaseSensitive(PR_TRUE);
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
-  mNodeInfoManager = new nsNodeInfoManager();
-  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(mNodeInfoManager);
-
-  nsresult  rv = mNodeInfoManager->Init(this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
-  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-
   NS_ASSERTION(GetOwnerDoc() == this, "Our nodeinfo is busted!");
 
   mScriptLoader = new nsScriptLoader(this);
   NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
+}
+
+nsINode::nsSlots*
+nsDocument::CreateSlots()
+{
+  return
+    new (mNodeInfo->NodeInfoManager()->NodeAllocator()) nsSlots(mFlagsOrSlots);
 }
 
 nsresult
@@ -3124,7 +3134,7 @@ nsDocument::CreateAttribute(const nsAString& aName,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  attribute = new (nodeInfo) nsDOMAttribute(nsnull, nodeInfo, value);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aReturn);
@@ -3146,7 +3156,8 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
-  nsDOMAttribute* attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  nsDOMAttribute* attribute =
+    new (nodeInfo) nsDOMAttribute(nsnull, nodeInfo, value);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aResult);

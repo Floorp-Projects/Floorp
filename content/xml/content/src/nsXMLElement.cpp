@@ -47,7 +47,7 @@
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
-  nsXMLElement* it = new nsXMLElement(aNodeInfo);
+  nsXMLElement* it = new (aNodeInfo) nsXMLElement(aNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -44,6 +44,8 @@
 
 #include "nsCOMPtr.h" // for already_AddRefed
 #include "plhash.h"
+#include "prlog.h"
+#include "nsAutoPtr.h"
 
 class nsIAtom;
 class nsIDocument;
@@ -57,6 +59,39 @@ class nsIDOMDocument;
 class nsAString;
 class nsIDOMNamedNodeMap;
 class nsXULPrototypeDocument;
+class nsNodeInfoManager;
+struct PLArenaPool;
+
+// The size of mRecyclers array. The max size of recycled memory is
+// sizeof(void*) * NS_NODE_RECYCLER_SIZE.
+#define NS_NODE_RECYCLER_SIZE 64
+
+class nsDOMNodeAllocator
+{
+public:
+  nsDOMNodeAllocator() : mPool(nsnull) {}
+  ~nsDOMNodeAllocator();
+
+  nsrefcnt AddRef()
+  {
+    NS_ASSERTION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsDOMNodeAllocator", sizeof(*this));
+    return mRefCnt;
+  }
+  nsrefcnt Release();
+
+  void* Alloc(size_t aSize);
+  void Free(size_t aSize, void* aPtr);
+protected:
+  friend class nsNodeInfoManager;
+  nsresult Init();
+  nsAutoRefCnt mRefCnt;
+  PLArenaPool* mPool;
+  // The recycler array points to recycled memory, where the size of
+  // block is index*sizeof(void*), i.e., 0, 4, 8, 12, 16, ... or 0, 8, 16, ...
+  void*        mRecyclers[NS_NODE_RECYCLER_SIZE];
+};
 
 class nsNodeInfoManager
 {
@@ -123,6 +158,7 @@ public:
 
   void RemoveNodeInfo(nsNodeInfo *aNodeInfo);
 
+  nsDOMNodeAllocator* NodeAllocator() { return mNodeAllocator; }
 protected:
   friend class nsDocument;
   friend class nsXULPrototypeDocument;
@@ -158,6 +194,8 @@ private:
   nsINodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership
+
+  nsRefPtr<nsDOMNodeAllocator> mNodeAllocator;
 
   static PRUint32 gNodeManagerCount;
 };
