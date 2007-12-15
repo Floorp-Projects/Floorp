@@ -1,0 +1,52 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+<![CDATA[
+
+function foop(targetWindow)
+{
+  var targetDocument = targetWindow.document;
+
+  var r1 = targetDocument.createRange(); 
+  r1.setStart(targetDocument.getElementById("out1"), 0); 
+  r1.setEnd  (targetDocument.getElementById("out2"), 0); 
+  targetWindow.getSelection().addRange(r1);
+
+  var r2 = targetDocument.createRange(); 
+  r2.setStart(targetDocument.getElementById("in1"), 0); 
+  r2.setEnd  (targetDocument.getElementById("in2"), 0); 
+  targetWindow.getSelection().addRange(r2);
+    
+  targetDocument.execCommand('removeformat', false, null);
+  targetDocument.execCommand('outdent', false, null);
+}
+
+function init()
+{
+  setTimeout(function()
+  {
+    var fd = window.frames[0].document;
+    fd.body.appendChild(fd.importNode(document.getElementById('rootish'), true));
+    fd.designMode = 'on';
+    foop(window.frames[0]);
+    document.documentElement.removeAttribute("class");
+  }, 100); 
+}
+
+]]>
+</script>
+</head>
+
+<body onload="init()">
+
+<iframe src="data:text/html," style="width: 95%; height: 500px;"/>
+
+<div id="rootish">
+<div id="out1"/>
+<div id="in1"/>
+<div id="in2"/>
+<div id="out2"/>
+</div>
+
+</body>
+</html>
