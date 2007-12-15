@@ -419,11 +419,6 @@ SessionStoreService.prototype = {
         this.restoreWindow(aWindow, this._initialState, this._isCmdLineEmpty(aWindow));
         delete this._initialState;
       }
-      
-      if (this._lastSessionCrashed) {
-        // restart any interrupted downloads
-        aWindow.setTimeout(this.retryDownloads, 0);
-      }
     }
     
     var tabbrowser = aWindow.getBrowser();
@@ -1759,15 +1754,6 @@ SessionStoreService.prototype = {
       }
       catch (ex) { Cu.reportError(ex); } // don't let a single cookie stop recovering
     }
-  },
-
-  /**
-   * Restart incomplete downloads
-   */
-  retryDownloads: function sss_retryDownloads() {
-    // The download manager cleans up after itself when it is created.
-    var dlManager = Cc["@mozilla.org/download-manager;1"].
-                    getService(Ci.nsIDownloadManager);
   },
 
 /* ........ Disk Access .............. */
