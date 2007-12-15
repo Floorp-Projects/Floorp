@@ -799,7 +799,11 @@
         <![CDATA[
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
+#ifdef XP_MACOSX
+          var animate = true;
+#else
           var animate = false;
+#endif
           try {
             animate = psvc.getBoolPref("browser.preferences.animateFadeIn");
           }
