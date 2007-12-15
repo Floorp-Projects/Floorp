@@ -14,6 +14,7 @@ include ../../docshell/base/crashtests/crashtests.list
 
 include ../../dom/src/base/crashtests/crashtests.list
 include ../../dom/src/offline/crashtests/crashtests.list
+include ../../dom/src/jsurl/crashtests/crashtests.list
 
 include ../../editor/libeditor/html/crashtests/crashtests.list
 
