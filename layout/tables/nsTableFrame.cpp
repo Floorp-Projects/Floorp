@@ -4221,21 +4221,15 @@ BCMapCellIterator::SetNewRow(nsTableRowFrame* aRow)
 PRBool
 BCMapCellIterator::SetNewRowGroup(PRBool aFindFirstDamagedRow)
 {
-  mAtEnd = PR_TRUE;
-  mRowGroupIndex++;
+   mAtEnd = PR_TRUE;  
   PRInt32 numRowGroups = mRowGroups.Length();
   mCellMap = nsnull;
-  for (PRInt32 rgX = mRowGroupIndex; rgX < numRowGroups; rgX++) {
-    // XXXbz do we really want the group at mRowGroupIndex?  If so, what's the
-    // point of this rgX loop variable, exactly?  Why not just do a while
-    // (mRowGroupIndex < numRowGroups) loop or something?  I suspect this means
-    // to be getting the rowgroup at rgX.
+  for (mRowGroupIndex++; mRowGroupIndex < numRowGroups; mRowGroupIndex++) {
     mRowGroup = mRowGroups[mRowGroupIndex];
     PRInt32 rowCount = mRowGroup->GetRowCount();
     mRowGroupStart = mRowGroup->GetStartRowIndex();
     mRowGroupEnd   = mRowGroupStart + rowCount - 1;
-    if (rowCount > 0) { // XXXbz and if it's not we just keep looping?  What's
-                        // the point?
+    if (rowCount > 0) {
       mCellMap = mTableCellMap->GetMapFor(mRowGroup, mCellMap);
       if (!mCellMap) ABORT1(PR_FALSE);
       nsTableRowFrame* firstRow = mRowGroup->GetFirstRow();
@@ -4251,8 +4245,7 @@ BCMapCellIterator::SetNewRowGroup(PRBool aFindFirstDamagedRow)
             }
           }
         }
-        else {
-          mRowGroupIndex++;
+        else {     
           continue;
         }
       }
