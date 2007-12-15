@@ -1051,6 +1051,14 @@ function delayedStartup()
   // do privileged things, without letting error pages have any privilege
   // themselves.
   gBrowser.addEventListener("command", BrowserOnCommand, false);
+
+  // Initialize the download manager some time after the app starts so that
+  // auto-resume downloads begin (such as after crashing or quitting with
+  // active downloads) and speeds up the first-load of the download manager UI.
+  // If the user manually opens the download manager before the timeout, the
+  // downloads will start right away, and getting the service again won't hurt.
+  setTimeout(function() Cc["@mozilla.org/download-manager;1"].
+                        getService(Ci.nsIDownloadManager), 10000);
 }
 
 function BrowserShutdown()
