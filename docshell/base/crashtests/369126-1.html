@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  document.getElementById("frameset").removeChild(document.getElementById("frame"));
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<frameset id="frameset" onload="setTimeout(boom, 100)">
+  <frame id="frame" src="data:text/html,<body onUnload=&quot;location = 'http://www.mozilla.org/'&quot;>This frame's onunload tries to load another page.">
+</frameset>
+
+</html>
