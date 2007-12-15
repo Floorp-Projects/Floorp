@@ -19,6 +19,7 @@ include ../../dom/src/jsurl/crashtests/crashtests.list
 include ../../editor/libeditor/html/crashtests/crashtests.list
 
 include ../../layout/base/crashtests/crashtests.list
+include ../../layout/forms/crashtests/crashtests.list
 include ../../layout/generic/crashtests/crashtests.list
 include ../../layout/style/crashtests/crashtests.list
 include ../../layout/svg/crashtests/crashtests.list
