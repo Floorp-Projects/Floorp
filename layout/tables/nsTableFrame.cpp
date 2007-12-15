@@ -3278,7 +3278,8 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     return;
   }
 
-  // get the first row without a style height where its row group has an unconstrianed height
+  // get the first row without a style height where its row group has an
+  // unconstrained height
   nsTableRowGroupFrame* firstUnStyledRG  = nsnull;
   nsTableRowFrame*      firstUnStyledRow = nsnull;
   for (rgX = 0; rgX < rowGroups.Length() && !firstUnStyledRG; rgX++) {
@@ -3296,33 +3297,48 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     }
   }
 
-  nsTableRowFrame* lastElligibleRow = nsnull;
-  // accumulate the correct divisor. This will be the total of all unstyled rows inside 
-  // unstyled row groups, unless there are none, in which case, it will be all rows
+  nsTableRowFrame* lastEligibleRow = nsnull;
+  // Accumulate the correct divisor. This will be the total total height of all
+  // unstyled rows inside unstyled row groups, unless there are none, in which
+  // case, it will be number of all rows. If the unstyled rows don't have a
+  // height, divide the space equally among them.
   nscoord divisor = 0;
-  PRUint32 rowCount = 0;
-  for (rgX = 0; rgX < rowGroups.Length(); rgX++) {
-    nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
-    if (!firstUnStyledRG || !rgFrame->HasStyleHeight()) {
-      nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
-      while (rowFrame) {
-        if (!firstUnStyledRG || !rowFrame->HasStyleHeight()) {
-          NS_ASSERTION(rowFrame->GetSize().height >= 0, "negative height");
-          divisor += rowFrame->GetSize().height;
-          ++rowCount;
-          lastElligibleRow = rowFrame;
+  PRInt32 eligibleRows = 0;
+  PRBool expandEmptyRows = PR_FALSE;
+
+  if (!firstUnStyledRow) {
+    // there is no unstyled row
+    divisor = GetRowCount();
+  }
+  else {
+    for (rgX = 0; rgX < rowGroups.Length(); rgX++) {
+      nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
+      if (!firstUnStyledRG || !rgFrame->HasStyleHeight()) {
+        nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
+        while (rowFrame) {
+          if (!firstUnStyledRG || !rowFrame->HasStyleHeight()) {
+            NS_ASSERTION(rowFrame->GetSize().height >= 0,
+                         "negative row frame height");
+            divisor += rowFrame->GetSize().height;
+            eligibleRows++;
+            lastEligibleRow = rowFrame;
+          }
+          rowFrame = rowFrame->GetNextRow();
         }
-        rowFrame = rowFrame->GetNextRow();
+      }
+    }
+    if (divisor <= 0) {
+      if (eligibleRows > 0) {
+        expandEmptyRows = PR_TRUE;
+      }
+      else {
+        NS_ERROR("invalid divisor");
+        return;
       }
     }
   }
-  if (divisor < 0) {
-    NS_ERROR("invalid divisor");
-    return;
-  }
-
   // allocate the extra height to the unstyled row groups and rows
-  pctBasis = aAmount - amountUsed;
+  nscoord heightToDistribute = aAmount - amountUsed;
   yOriginRG = borderPadding.top + cellSpacingY;
   yEndRG = yOriginRG;
   for (rgX = 0; rgX < rowGroups.Length(); rgX++) {
@@ -3330,23 +3346,32 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     nscoord amountUsedByRG = 0;
     nscoord yOriginRow = 0;
     nsRect rgRect = rgFrame->GetRect();
-    // see if there is an eligible row group
-    if (!firstUnStyledRG || !rgFrame->HasStyleHeight()) {
+    // see if there is an eligible row group or we distribute to all rows
+    if (!firstUnStyledRG || !rgFrame->HasStyleHeight() || !eligibleRows) {
       nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
       while (rowFrame) {
         nsRect rowRect = rowFrame->GetRect();
-        // see if there is an eligible row
-        if (!firstUnStyledRow || !rowFrame->HasStyleHeight()) {
-          // The amount of additional space each row gets is proportional to its height
-          float percent;
-          if (divisor != 0) {
-            percent = float(rowRect.height) / float(divisor);
-          } else {
-            percent = 1.0f / float(rowCount);
+        // see if there is an eligible row or we distribute to all rows
+        if (!firstUnStyledRow || !rowFrame->HasStyleHeight() || !eligibleRows) {          
+          float ratio;
+          if (eligibleRows) {
+            if (!expandEmptyRows) {
+              // The amount of additional space each row gets is proportional to
+              // its height
+              ratio = float(rowRect.height) / float(divisor);
+            } else {
+              // empty rows get all the same additional space
+              ratio = 1.0f / float(eligibleRows);
+            }
           }
-          // give rows their percentage, except for the last row which gets the remainder
-          nscoord amountForRow = (rowFrame == lastElligibleRow) 
-                                 ? aAmount - amountUsed : NSToCoordRound(((float)(pctBasis)) * percent);
+          else {
+            // all rows get the same additional space
+            ratio = 1.0f / float(divisor);
+          }
+          // give rows their additional space, except for the last row which
+          // gets the remainder
+          nscoord amountForRow = (rowFrame == lastEligibleRow) 
+                                 ? aAmount - amountUsed : NSToCoordRound(((float)(heightToDistribute)) * ratio);
           amountForRow = PR_MIN(amountForRow, aAmount - amountUsed);
           // update the row height
           nsRect newRowRect(rowRect.x, yOriginRow, rowRect.width, rowRect.height + amountForRow);
