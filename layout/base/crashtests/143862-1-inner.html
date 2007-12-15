@@ -1,0 +1,12 @@
+<title>Testcase, bug 143862</title>
+<style type="text/css">
+html { overflow: hidden; }
+</style>
+<script>
+setTimeout(o, 100);
+function o()
+{
+  document.open();
+  parent.document.documentElement.removeAttribute("class");
+}
+</script>
