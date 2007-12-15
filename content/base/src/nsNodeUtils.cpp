@@ -250,7 +250,8 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     delete aNode; // Calls destructor and sets size to *aNode.
     size_t* sz = reinterpret_cast<size_t*>(aNode);
     allocator->Free(*sz, static_cast<void*>(aNode));
-    NS_RELEASE(allocator);
+    nsDOMNodeAllocator* tmpAlloc = allocator;
+    NS_RELEASE(tmpAlloc);
   }
 }
 
