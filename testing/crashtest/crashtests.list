@@ -10,6 +10,8 @@ include ../../content/xml/document/crashtests/crashtests.list
 include ../../content/xul/templates/src/crashtests/crashtests.list
 include ../../content/xul/content/crashtests/crashtests.list
 
+include ../../docshell/base/crashtests/crashtests.list
+
 include ../../dom/src/base/crashtests/crashtests.list
 
 include ../../editor/libeditor/html/crashtests/crashtests.list
