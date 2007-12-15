@@ -75,3 +75,10 @@ tabbrowser {
 .tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
   display: -moz-box;
 }
+
+/* Hide extension toolbars that neglected to set the proper class */
+window[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar),
+window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-menubar)
+{
+  display: none;
+}
