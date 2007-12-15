@@ -1,0 +1,28 @@
+<html class="reftest-wait">
+
+<head>
+<script type="text/javascript">
+
+
+function boom()
+{
+  var map = document.getElementById("map");
+  var table = document.getElementById("table");
+
+  map.appendChild(table);
+  map.childNodes[0].appendChild(document.createTextNode(' '));
+
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+<img src="../../../testing/crashtest/images/tree.gif" usemap="#map">
+<map name="map" id="map"><area></map>
+<table aardvark="aardvark" id="table"><tbody><tr><td>Table</td></tr></tbody></table>
+
+</body>
+</html>
