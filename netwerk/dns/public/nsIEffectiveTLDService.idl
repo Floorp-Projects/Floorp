@@ -74,13 +74,14 @@ interface nsIEffectiveTLDService : nsISupports
      * be:
      *
      *    0 (default) -> bbc.co.uk
-     *    1           -> news.bbc.co.uk
+     *    1           -> www.bbc.co.uk
      *
-     * Similarly, the public suffix for "developer.mozilla.org" is "org", and the base
+     * Similarly, the public suffix for "www.developer.mozilla.org" is "org", and the base
      * domain will be:
      *
      *    0 (default) -> mozilla.org
      *    1           -> developer.mozilla.org
+     *    2           -> www.developer.mozilla.org
      *
      * The base domain will be returned encoded in ASCII/ACE and will be normalized
      * according to RFC 3454, i.e. the same encoding returned by nsIURI::GetAsciiHost().
