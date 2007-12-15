@@ -104,7 +104,7 @@ function OnRefTestLoad()
         StartCurrentTest();
     } catch (ex) {
         //gBrowser.loadURI('data:text/plain,' + ex);
-        dump("REFTEST EXCEPTION: " + ex);
+        dump("REFTEST EXCEPTION: " + ex + "\n");
         DoneTests();
     }
 }
