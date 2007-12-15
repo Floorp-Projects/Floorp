@@ -36,30 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const EXPORTED_SYMBOLS = ['Log4Moz'];
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-const MODE_RDONLY   = 0x01;
-const MODE_WRONLY   = 0x02;
-const MODE_CREATE   = 0x08;
-const MODE_APPEND   = 0x10;
-const MODE_TRUNCATE = 0x20;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://weave/constants.js");
 
-const PERMS_FILE      = 0644;
-const PERMS_DIRECTORY = 0755;
+const Log4Moz = {};
+Log4Moz.Level = {};
+Log4Moz.Level.Fatal  = 70;
+Log4Moz.Level.Error  = 60;
+Log4Moz.Level.Warn   = 50;
+Log4Moz.Level.Info   = 40;
+Log4Moz.Level.Config = 30;
+Log4Moz.Level.Debug  = 20;
+Log4Moz.Level.Trace  = 10;
+Log4Moz.Level.All    = 0;
 
-const LEVEL_FATAL  = 70;
-const LEVEL_ERROR  = 60;
-const LEVEL_WARN   = 50;
-const LEVEL_INFO   = 40;
-const LEVEL_CONFIG = 30;
-const LEVEL_DEBUG  = 20;
-const LEVEL_TRACE  = 10;
-const LEVEL_ALL    = 0;
-
-const LEVEL_DESC = {
+Log4Moz.Level.Desc = {
   70: "FATAL",
   60: "ERROR",
   50: "WARN",
@@ -69,12 +67,6 @@ const LEVEL_DESC = {
   10: "TRACE",
   0:  "ALL"
 };
-
-const ONE_BYTE = 1;
-const ONE_KILOBYTE = 1024 * ONE_BYTE;
-const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /*
  * LogMessage
@@ -87,11 +79,11 @@ function LogMessage(loggerName, level, message){
   this.time = Date.now();
 }
 LogMessage.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.ILogMessage, 
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   get levelDesc() {
-    if (this.level in LEVEL_DESC)
-      return LEVEL_DESC[this.level];
+    if (this.level in Log4Moz.Level.Desc)
+      return Log4Moz.Level.Desc[this.level];
     return "UNKNOWN";
   },
 
@@ -112,7 +104,7 @@ function Logger(name, repository) {
   this._appenders = [];
 }
 Logger.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.ILogger, 
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   parent: null,
 
@@ -123,7 +115,7 @@ Logger.prototype = {
     if (this.parent)
       return this.parent.level;
     dump("log4moz warning: root logger configuration error: no level defined\n");
-    return LEVEL_ALL;
+    return Log4Moz.Level.All;
   },
   set level(level) {
     this._level = level;
@@ -154,25 +146,25 @@ Logger.prototype = {
   },
 
   fatal: function Logger_fatal(string) {
-    this.log(new LogMessage(this._name, LEVEL_FATAL, string));
+    this.log(new LogMessage(this._name, Log4Moz.Level.Fatal, string));
   },
   error: function Logger_error(string) {
-    this.log(new LogMessage(this._name, LEVEL_ERROR, string));
+    this.log(new LogMessage(this._name, Log4Moz.Level.Error, string));
   },
   warn: function Logger_warn(string) {
-    this.log(new LogMessage(this._name, LEVEL_WARN, string));
+    this.log(new LogMessage(this._name, Log4Moz.Level.Warn, string));
   },
   info: function Logger_info(string) {
-    this.log(new LogMessage(this._name, LEVEL_INFO, string));
+    this.log(new LogMessage(this._name, Log4Moz.Level.Info, string));
   },
   config: function Logger_config(string) {
-    this.log(new LogMessage(this._name, LEVEL_CONFIG, string));
+    this.log(new LogMessage(this._name, Log4Moz.Level.Config, string));
   },
   debug: function Logger_debug(string) {
-    this.log(new LogMessage(this._name, LEVEL_DEBUG, string));
+    this.log(new LogMessage(this._name, Log4Moz.Level.Debug, string));
   },
   trace: function Logger_trace(string) {
-    this.log(new LogMessage(this._name, LEVEL_TRACE, string));
+    this.log(new LogMessage(this._name, Log4Moz.Level.Trace, string));
   }
 };
 
@@ -183,7 +175,7 @@ Logger.prototype = {
 
 function LoggerRepository() {}
 LoggerRepository.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.ILoggerRepository, 
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   _loggers: {},
 
@@ -191,7 +183,7 @@ LoggerRepository.prototype = {
   get rootLogger() {
     if (!this._rootLogger) {
       this._rootLogger = new Logger("root", this);
-      this._rootLogger.level = LEVEL_ALL;
+      this._rootLogger.level = Log4Moz.Level.All;
     }
     return this._rootLogger;
   },
@@ -245,7 +237,7 @@ LoggerRepository.prototype = {
 // Abstract formatter
 function Formatter() {}
 Formatter.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.IFormatter, 
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
   format: function Formatter_format(message) {}
 };
 
@@ -287,9 +279,9 @@ function Appender(formatter) {
   this._formatter = formatter? formatter : new BasicFormatter();
 }
 Appender.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), // Ci.IAppender, 
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
-  _level: LEVEL_ALL,
+  _level: Log4Moz.Level.All,
   get level() { return this._level; },
   set level(level) { this._level = level; },
 
@@ -331,7 +323,7 @@ function ConsoleAppender(formatter) {
 }
 ConsoleAppender.prototype = {
   doAppend: function CApp_doAppend(message) {
-    if (message.level > LEVEL_WARN) {
+    if (message.level > Log4Moz.Level.Warn) {
       Cu.reportError(message);
       return;
     }
@@ -446,7 +438,7 @@ Log4MozService.prototype = {
   //classDescription: "Log4moz Logging Service",
   //contractID: "@mozilla.org/log4moz/service;1",
   //classID: Components.ID("{a60e50d7-90b8-4a12-ad0c-79e6a1896978}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]), //Ci.ILog4MozService,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   get rootLogger() {
     return this._repository.rootLogger;
@@ -491,21 +483,5 @@ Log4MozService.prototype = {
     }
   }
 };
-
-const EXPORTED_SYMBOLS = ['Log4Moz'];
-
-const Log4Moz = {};
-
-Log4Moz.Level = {};
-Log4Moz.Level.Fatal  = LEVEL_FATAL;
-Log4Moz.Level.Error  = LEVEL_ERROR;
-Log4Moz.Level.Warn   = LEVEL_WARN;
-Log4Moz.Level.Info   = LEVEL_INFO;
-Log4Moz.Level.Config = LEVEL_CONFIG;
-Log4Moz.Level.Debug  = LEVEL_DEBUG;
-Log4Moz.Level.Trace  = LEVEL_TRACE;
-Log4Moz.Level.All    = LEVEL_ALL;
-
-Log4Moz.Level.Desc = LEVEL_DESC;
 
 Log4Moz.Service = new Log4MozService();

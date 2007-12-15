@@ -34,19 +34,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Store', 'SnapshotStore', 'BookmarksStore'];
+const EXPORTED_SYMBOLS = ['Store', 'SnapshotStore', 'BookmarksStore',
+			  'HistoryStore'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-addModuleAlias("weave", "{340c2bbc-ce74-4362-90b5-7c26312808ef}");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /*
  * Data Stores
@@ -67,14 +66,45 @@ Store.prototype = {
   },
 
   applyCommands: function Store_applyCommands(commandList) {
+    for (var i = 0; i < commandList.length; i++) {
+      var command = commandList[i];
+      this._log.debug("Processing command: " + uneval(command));
+      switch (command["action"]) {
+      case "create":
+        this._createCommand(command);
+        break;
+      case "remove":
+        this._removeCommand(command);
+        break;
+      case "edit":
+        this._editCommand(command);
+        break;
+      default:
+        this._log.error("unknown action in command: " + command["action"]);
+        break;
+      }
+    }
+  },
+
+  resetGUIDs: function Store_resetGUIDs() {
   }
 };
 
-function SnapshotStore() {
-  this._init();
+function SnapshotStore(name) {
+  this._init(name);
 }
 SnapshotStore.prototype = {
   _logName: "SStore",
+
+  _filename: null,
+  get filename() {
+    if (this._filename === null)
+      throw "filename is null";
+    return this._filename;
+  },
+  set filename(value) {
+    this._filename = value + ".json";
+  },
 
   __dirSvc: null,
   get _dirSvc() {
@@ -108,13 +138,25 @@ SnapshotStore.prototype = {
     this._GUID = GUID;
   },
 
+  _init: function SStore__init(name) {
+    this.filename = name;
+    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+  },
+
   save: function SStore_save() {
     this._log.info("Saving snapshot to disk");
 
     let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("bm-sync-snapshot.json");
-    file.QueryInterface(Ci.nsILocalFile);
+    file.append("weave-snapshots");
 
+    file.QueryInterface(Ci.nsILocalFile);
+    if (!file.exists())
+      file.create(file.DIRECTORY_TYPE, PERMS_DIRECTORY);
+    file.QueryInterface(Ci.nsIFile);
+
+    file.append(this.filename);
+
+    file.QueryInterface(Ci.nsILocalFile);
     if (!file.exists())
       file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
 
@@ -133,7 +175,8 @@ SnapshotStore.prototype = {
 
   load: function SStore_load() {
     let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("bm-sync-snapshot.json");
+    file.append("weave-snapshots");
+    file.append(this.filename);
 
     if (!file.exists())
       return;
@@ -539,18 +582,57 @@ BookmarksStore.prototype = {
 };
 BookmarksStore.prototype.__proto__ = new Store();
 
-function addModuleAlias(alias, extensionId) {
-  let ioSvc = Cc["@mozilla.org/network/io-service;1"]
-    .getService(Ci.nsIIOService);
-  let resProt = ioSvc.getProtocolHandler("resource")
-    .QueryInterface(Ci.nsIResProtocolHandler);
-
-  if (!resProt.hasSubstitution(alias)) {
-    let extMgr = Cc["@mozilla.org/extensions/manager;1"]
-      .getService(Ci.nsIExtensionManager);
-    let loc = extMgr.getInstallLocation(extensionId);
-    let extD = loc.getItemLocation(extensionId);
-    extD.append("modules");
-    resProt.setSubstitution(alias, ioSvc.newFileURI(extD));
-  }
+function HistoryStore() {
+  this._init();
 }
+HistoryStore.prototype = {
+  _logName: "HistStore",
+
+  __hsvc: null,
+  get _hsvc() {
+    if (!this.__hsvc)
+      this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                    getService(Ci.nsINavHistoryService);
+    return this.__hsvc;
+  },
+
+  _createCommand: function HistStore__createCommand(command) {
+    this._log.info("  -> creating history entry: " + command.GUID);
+    this._hsvc.addVisit(makeURI(command.data.URI), command.data.time,
+			0, this._hsvc.TRANSITION_LINK, false, 0);
+    this._hsvc.addVisit(makeURI(command.data.URI), command.data.title,
+			command.data.accessCount, false, false);
+  },
+
+  _removeCommand: function HistStore__removeCommand(command) {
+    this._log.info("  -> NOT removing history entry: " + command.GUID);
+    // skip removals
+  },
+
+  _editCommand: function HistStore__editCommand(command) {
+    this._log.info("  -> FIXME: NOT editing history entry: " + command.GUID);
+    // FIXME: implement!
+  },
+
+  wrap: function HistStore_wrap() {
+    let query = this._hsvc.getNewQuery();
+    query.minVisits = 1;
+    let root = this._hsvc.executeQuery(query,
+				       this._hsvc.getNewQueryOptions()).root;
+    root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    root.containerOpen = true;
+    let items = {};
+    for (let i = 0; i < root.childCount; i++) {
+      let item = root.getChild(i);
+      items[item.uri] = {parentGUID: '',
+			 title: item.title,
+			 URI: item.uri,
+			 time: item.time,
+			 accessCount: item.accessCount,
+			 dateAdded: item.dateAdded,
+			};
+    }
+    return items;
+  }
+};
+HistoryStore.prototype.__proto__ = new Store();

@@ -34,17 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Cc', 'Ci', 'Cr', 'Cu',
-			  'MODE_RDONLY', 'MODE_WRONLY',
+const EXPORTED_SYMBOLS = ['MODE_RDONLY', 'MODE_WRONLY',
 			  'MODE_CREATE', 'MODE_APPEND', 'MODE_TRUNCATE',
 			  'PERMS_FILE', 'PERMS_DIRECTORY',
 			  'STORAGE_FORMAT_VERSION',
 			  'ONE_BYTE', 'ONE_KILOBYTE', 'ONE_MEGABYTE'];
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;

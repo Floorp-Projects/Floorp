@@ -41,10 +41,9 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Function.prototype.async = generatorAsync;
 
@@ -123,7 +122,7 @@ DAVCollection.prototype = {
         this._log.warn("_makeRequest: got status " + ret.status);
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       generatorDone(this, self, onComplete, ret);
@@ -136,7 +135,56 @@ DAVCollection.prototype = {
     return {'Authorization': this._auth? this._auth : '',
             'Content-type': 'text/plain',
             'If': this._token?
-              "<" + this._baseURL + "> (<" + this._token + ">)" : ''};
+            "<" + this._baseURL + "> (<" + this._token + ">)" : ''};
+  },
+
+  // mkdir -p
+  _mkcol: function DC__mkcol(path, onComplete) {
+    let [self, cont] = yield;
+    let ret;
+
+    try {
+      let components = path.split('/');
+      let path2 = '';
+
+      for (let i = 0; i < components.length; i++) {
+
+	// trailing slashes will cause an empty path component at the end
+	if (components[i] == '')
+	  break;
+
+	path2 = path2 + components[i];
+
+	// check if it exists first
+	this._makeRequest.async(this, cont, "GET", path2 + "/", this._defaultHeaders);
+	ret = yield;
+	if (!(ret.status == 404 || ret.status == 500)) { // FIXME: 500 is a services.m.c oddity
+	  this._log.debug("Skipping creation of path " + path2 +
+			  " (got status " + ret.status + ")");
+	} else {
+	  this._log.debug("Creating path: " + path2);
+	  let gen = this._makeRequest.async(this, cont, "MKCOL", path2,
+					    this._defaultHeaders);
+	  ret = yield;
+
+	  if (ret.status != 201) {
+	    this._log.debug(ret.responseText);
+	    throw 'request failed: ' + ret.status;
+	  }
+	}
+
+	// add slash *after* the request, trailing slashes cause a 412!
+	path2 = path2 + "/";
+      }
+
+    } catch (e) {
+      this._log.error("Exception caught: " + (e.message? e.message : e));
+
+    } finally {
+      generatorDone(this, self, onComplete, ret);
+      yield; // onComplete is responsible for closing the generator
+    }
+    this._log.warn("generator not properly closed");
   },
 
   GET: function DC_GET(path, onComplete) {
@@ -152,6 +200,10 @@ DAVCollection.prototype = {
   DELETE: function DC_DELETE(path, onComplete) {
     return this._makeRequest.async(this, onComplete, "DELETE", path,
                                    this._defaultHeaders);
+  },
+
+  MKCOL: function DC_MKCOL(path, onComplete) {
+    return this._mkcol.async(this, path, onComplete);
   },
 
   PROPFIND: function DC_PROPFIND(path, data, onComplete) {
@@ -202,7 +254,7 @@ DAVCollection.prototype = {
       this._loggedIn = true;
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       if (this._loggedIn)
@@ -244,7 +296,7 @@ DAVCollection.prototype = {
       ret = token.textContent;
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       if (ret)
@@ -286,7 +338,7 @@ DAVCollection.prototype = {
         this._token = token.textContent;
 
     } catch (e){
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       if (this._token)
@@ -318,7 +370,7 @@ DAVCollection.prototype = {
       this._token = null;
 
     } catch (e){
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       if (this._token) {
@@ -353,7 +405,7 @@ DAVCollection.prototype = {
       unlocked = yield;
 
     } catch (e){
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       if (unlocked)
@@ -380,7 +432,7 @@ DAVCollection.prototype = {
       }
 
     } catch (e){
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       generatorDone(this, self, onComplete, stolen);
