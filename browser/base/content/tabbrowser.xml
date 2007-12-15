@@ -708,7 +708,8 @@
             }
 
             var updatePageReport = false;
-            if ((this.mCurrentBrowser.pageReport && !newBrowser.pageReport) ||
+            if (!this.mCurrentBrowser ||
+                (this.mCurrentBrowser.pageReport && !newBrowser.pageReport) ||
                 (!this.mCurrentBrowser.pageReport && newBrowser.pageReport))
               updatePageReport = true;
 
@@ -1431,6 +1432,9 @@
             // clearing focusedWindow happens below because it gets
             // reset by updateCurrentBrowser.
             oldBrowser.destroy();
+
+            if (oldBrowser == this.mCurrentBrowser)
+              this.mCurrentBrowser = null;
 
             // Remove the tab
             this.mTabContainer.removeChild(oldTab);
