@@ -3388,6 +3388,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 
+  if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
+    tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
+    tmp->DeleteProperty(nsGkAtoms::popuplistener);
+  }
+
   // Unlink child content (and unbind our subtree).
   {
     PRUint32 i;
