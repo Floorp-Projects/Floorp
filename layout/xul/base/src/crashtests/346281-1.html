@@ -1,0 +1,13 @@
+<html>
+<head>
+</head>
+<body>
+<script>
+var boxy = document.getBoxObjectFor(document.body);
+boxy.setPropertyAsSupports("zoink", undefined);
+try {
+  boxy.removeProperty(undefined);
+} catch(e) { }
+</script>
+</body>
+</html>
