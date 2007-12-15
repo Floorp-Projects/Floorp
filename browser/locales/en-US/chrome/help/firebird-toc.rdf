@@ -26,7 +26,7 @@
             <nc:subheadings rdf:resource="#prefs-tree"/>
           </rdf:Description>
         </rdf:li>
-        <rdf:li> <rdf:Description ID="popup-blocker" nc:name="Controlling Popups" nc:link="popup.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="popup-blocker" nc:name="Controlling Pop-ups" nc:link="popup.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cookies" nc:name="Managing Cookies" nc:link="cookies.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="tabbed-browsing" nc:name="Tabbed Browsing" nc:link="tabbed_browsing.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="firebird-keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="shortcuts.xhtml"/> </rdf:li>
@@ -137,9 +137,9 @@
   <rdf:Description about="#popup-blocker">
       <nc:subheadings>
         <rdf:Seq>
-          <rdf:li> <rdf:Description ID="popup-blocker-what-are-popups" nc:name="What are Popups?" nc:link="popup.xhtml#what_are_popups"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="popup-blocker-prefs-win" nc:name="Popup Blocker Options" nc:link="popup.xhtml#popup_blocker_preferences" nc:platform="win os2"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="popup-blocker-prefs-unix" nc:name="Popup Blocker Preferences" nc:link="popup.xhtml#popup_blocker_preferences" nc:platform="unix mac"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="popup-blocker-what-are-popups" nc:name="What are Pop-ups?" nc:link="popup.xhtml#what_are_popups"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="popup-blocker-prefs-win" nc:name="Pop-up Blocker Options" nc:link="popup.xhtml#popup_blocker_preferences" nc:platform="win os2"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="popup-blocker-prefs-unix" nc:name="Pop-up Blocker Preferences" nc:link="popup.xhtml#popup_blocker_preferences" nc:platform="unix mac"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
   </rdf:Description>
