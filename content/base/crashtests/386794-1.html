@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var weirdScript = document.createElementNS('http://example.com/foo', 'script');
+  document.body.appendChild(weirdScript);
+  document.body.innerHTML;
+}
+
+</script>
+</head>
+<body onload="boom()">
+</body>
+</html>
