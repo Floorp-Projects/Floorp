@@ -1,2 +1,4 @@
 load 336081-1.xhtml # asserts (no bug?)
 load 382778-1.html
+load 407074-1.html
+load 407277-1.html
