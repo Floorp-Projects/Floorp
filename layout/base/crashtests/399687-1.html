@@ -1,0 +1,38 @@
+<html>
+<head>
+<style>
+
+#colset {
+  width: 300pt;
+  height: 2in;
+  -moz-column-count: 3;
+  -moz-column-gap: 0;
+}
+
+.ocontainer {
+  height: 0;
+}
+
+.overflow {
+  height: 5in;
+}
+
+</style>
+
+<script>
+function boom()
+{
+  var newDiv = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  var colset = document.getElementById("colset");
+  colset.insertBefore(newDiv, colset.childNodes[1]);
+}
+</script>
+
+</head>
+
+<body onload="boom();">
+
+<div id="colset"><div class="ocontainer"><div class="overflow"></div></div>    </div>
+
+</body>
+</html>
