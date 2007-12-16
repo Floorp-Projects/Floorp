@@ -1,0 +1,37 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+
+function boom1()
+{
+  var c = document.getElementById("c");
+  c.style.MozBinding = "url('#foo')";
+  
+  setTimeout(boom2, 30);
+}
+
+function boom2()
+{
+  var v = document.getElementById("v");
+  v.parentNode.removeChild(v);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="foo">
+  <content>x x x x x <children/></content>
+</binding></bindings>
+
+</head>
+
+<body style="font-family: monospace; width: 10ch;" onload="setTimeout(boom1, 30);">
+
+<div style="background: lightblue; border: 1px solid blue; margin-bottom: 1em;">
+  <span id="c">y y<span id="v">Z<div/></span></span>
+</div>
+
+<div style="background: lightgreen; border: 1px solid green; height: 2000px;">s</div>
+
+</body>
+</html>
