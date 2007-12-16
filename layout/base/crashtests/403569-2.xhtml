@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+body {
+  -moz-column-count: 2;
+  -moz-column-width: 100px;
+  height: 200px;
+}
+#b {
+  float: left;
+  height: 300px;
+}
+</style>
+</head>
+<body onclick="document.getElementById('span').style.display = 'block';">
+<img src="../../../testing/crashtest/images/tree.gif" width="1070" height="335" id="b"/>
+<optgroup label="foo"><span id="span"></span></optgroup>
+</body>
+</html>
