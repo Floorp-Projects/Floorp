@@ -531,6 +531,7 @@ var gContextMenus = [
     , "menuseparator"
     , "menuitem_show"
     , "menuseparator"
+    , "menuitem_openReferrer"
     , "menuitem_copyLocation"
   ],
   // DOWNLOAD_FINISHED
@@ -538,6 +539,7 @@ var gContextMenus = [
     "menuitem_open"
     , "menuitem_show"
     , "menuseparator"
+    , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_removeFromList"
@@ -547,6 +549,7 @@ var gContextMenus = [
   [
     "menuitem_retry"
     , "menuseparator"
+    , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_removeFromList"
@@ -556,6 +559,7 @@ var gContextMenus = [
   [
     "menuitem_retry"
     , "menuseparator"
+    , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_removeFromList"
@@ -568,6 +572,7 @@ var gContextMenus = [
     , "menuseparator"
     , "menuitem_show"
     , "menuseparator"
+    , "menuitem_openReferrer"
     , "menuitem_copyLocation"
   ],
   // DOWNLOAD_QUEUED
@@ -576,11 +581,13 @@ var gContextMenus = [
     , "menuseparator"
     , "menuitem_show"
     , "menuseparator"
+    , "menuitem_openReferrer"
     , "menuitem_copyLocation"
   ],
   // DOWNLOAD_BLOCKED
   [
-    "menuitem_copyLocation"
+    "menuitem_openReferrer"
+    , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_removeFromList"
     , "menuitem_clearList"
@@ -589,11 +596,13 @@ var gContextMenus = [
   [
     "menuitem_show"
     , "menuseparator"
+    , "menuitem_openReferrer"
     , "menuitem_copyLocation"
   ],
   // DOWNLOAD_DIRTY
   [
-    "menuitem_copyLocation"
+    "menuitem_openReferrer"
+    , "menuitem_copyLocation"
     , "menuseparator"
     , "menuitem_removeFromList"
     , "menuitem_clearList"
@@ -695,6 +704,7 @@ var gDownloadViewController = {
       case "cmd_resume":
         return dl.paused;
       case "cmd_openReferrer":
+        return dl.hasAttribute("referrer");
       case "cmd_removeFromList":
       case "cmd_retry":
         return dl.removable;
