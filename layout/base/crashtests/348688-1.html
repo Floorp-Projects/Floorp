@@ -1,0 +1,24 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase #1 for bug 348688</title>
+<script>
+function boom() {
+  var e = document.getElementById('inline1');
+  e.parentNode.removeChild(e);
+  
+  e = document.getElementById('inline2');
+  e.parentNode.removeChild(e);
+  var x = document.body.offsetHeight;
+}
+</script>
+</head>
+<body onload="boom()">
+
+<div style="overflow:hidden">
+<font><span id="inline1"><b id="float1" style="float:left">x</b></span></font>
+<i id="inline2">y</i>
+</div>
+
+</body>
+</html>
