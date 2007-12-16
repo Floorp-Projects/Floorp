@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+body {
+  -moz-column-count: 2;
+  -moz-column-width: 100px;
+  height: 200px;
+}
+#b {
+  float: left;
+  height: 300px;
+}
+
+.og:before {
+  display: block;
+  content: "foo";
+}
+
+</style>
+</head>
+<body onload="document.getElementById('span').style.display = 'block';">
+<img src="../../../testing/crashtest/images/tree.gif" width="1070" height="335" id="b"/>
+<div class="og"><span id="span"></span></div>
+</body>
+</html>
