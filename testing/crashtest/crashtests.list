@@ -31,3 +31,5 @@ include ../../layout/xul/base/src/tree/src/crashtests/crashtests.list
 include ../../gfx/src/mac/crashtests/crashtests.list
 include ../../gfx/src/thebes/crashtests/crashtests.list
 include ../../gfx/thebes/crashtests/crashtests.list
+
+include ../../view/crashtests/crashtests.list
