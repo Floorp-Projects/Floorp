@@ -487,7 +487,7 @@ var BookmarksEventHandler = {
           openHomePage.setAttribute("siteURI", siteURIString);
           openHomePage.setAttribute("oncommand",
               "openUILink(this.getAttribute('siteURI'), event);");
-          // If a user middle-click this item we serve the oncommand event
+          // If a user middle-clicks this item we serve the oncommand event
           // We are using checkForMiddleClick because of Bug 246720
           // Note: stopPropagation is needed to avoid serving middle-click 
           // with BT_onClick that would open all items in tabs
