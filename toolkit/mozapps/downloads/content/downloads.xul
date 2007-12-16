@@ -164,6 +164,11 @@
               
     <menuseparator id="menuseparator"/>
               
+    <menuitem id="menuitem_openReferrer"
+              label="&cmd.goToDownloadPage.label;"
+              accesskey="&cmd.goToDownloadPage.accesskey;"
+              command="cmd_openReferrer"/>
+
     <menuitem id="menuitem_copyLocation"
               label="&cmd.copyDownloadLink.label;"
               accesskey="&cmd.copyDownloadLink.accesskey;"
