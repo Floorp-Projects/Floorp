@@ -47,8 +47,6 @@
 
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
-const PREF_BDM_DISPLAYEDHISTORYDAYS =
-  "browser.download.manager.displayedHistoryDays";
 
 const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
@@ -59,13 +57,18 @@ var Ci = Components.interfaces;
 const nsIDM = Ci.nsIDownloadManager;
 
 let gDownloadManager = Cc["@mozilla.org/download-manager;1"].getService(nsIDM);
-var gDownloadListener     = null;
-var gDownloadsView        = null;
-var gDownloadsActiveArea  = null;
-var gDownloadsDoneArea    = null;
-var gDownloadInfoPopup    = null;
-var gUserInterfered       = false;
-var gSearching            = false;
+let gDownloadListener = null;
+let gDownloadsView = null;
+let gSearchBox = null;
+let gDownloadInfoPopup = null;
+let gSearchTerms = "";
+let gBuilder = 0;
+
+// Control the performance of the incremental list building by setting how many
+// milliseconds to wait before building more of the list and how many items to
+// add between each delay.
+const gListBuildDelay = 100;
+const gListBuildChunk = 10;
 
 // If the user has interacted with the window in a significant way, we should
 // not auto-close the window. Tough UI decisions about what is "significant."
@@ -101,12 +104,13 @@ let gStr = {
   fileExecutableSecurityWarningDontAsk: "fileExecutableSecurityWarningDontAsk"
 };
 
-// base query used to display download items, use replaceInsert to set WHERE
-let gBaseQuery = "SELECT id, target, name, source, state, startTime, " +
-                        "endTime, referrer, currBytes, maxBytes " +
-                 "FROM moz_downloads " +
-                 "WHERE #1 " +
-                 "ORDER BY endTime ASC, startTime ASC";
+// The statement to query for downloads that are active or match the search
+let gStmt = gDownloadManager.DBConnection.createStatement(
+  "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
+         "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
+  "FROM moz_downloads " +
+  "WHERE isActive OR name LIKE ?6 ESCAPE '/' " +
+  "ORDER BY isActive DESC, endTime DESC, startTime DESC");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility Functions
@@ -117,43 +121,6 @@ function fireEventForElement(aElement, aEventType)
   e.initEvent("download-" + aEventType, true, true);
 
   aElement.dispatchEvent(e);
-}
-
-function createDownloadItem(aID, aFile, aTarget, aURI, aState, aProgress,
-                            aStartTime, aEndTime, aReferrer, aCurrBytes,
-                            aMaxBytes)
-{
-  var dl = document.createElement("richlistitem");
-  dl.setAttribute("type", "download");
-  dl.setAttribute("id", "dl" + aID);
-  dl.setAttribute("dlid", aID);
-  dl.setAttribute("image", "moz-icon://" + aFile + "?size=32");
-  dl.setAttribute("file", aFile);
-  dl.setAttribute("target", aTarget);
-  dl.setAttribute("uri", aURI);
-  dl.setAttribute("state", aState);
-  dl.setAttribute("progress", aProgress);
-  dl.setAttribute("startTime", aStartTime);
-  dl.setAttribute("endTime", aEndTime);
-  if (aReferrer)
-    dl.setAttribute("referrer", aReferrer);
-  dl.setAttribute("currBytes", aCurrBytes);
-  dl.setAttribute("maxBytes", aMaxBytes);
-  dl.setAttribute("lastSeconds", Infinity);
-
-  updateTime(dl);
-  updateStatus(dl);
-
-  try {
-    var file = getLocalFileFromNativePathOrUrl(aFile);
-    dl.setAttribute("path", file.nativePath || file.path);
-    return dl;
-  }
-  catch (ex) {
-    // aFile might not be a file: url or a valid native path
-    // see bug #392386 for details
-  }
-  return null;
 }
 
 function getDownload(aID)
@@ -181,13 +148,21 @@ function downloadCompleted(aDownload)
     // Show the finish time because we're done
     updateTime(dl);
 
-    // If we are displaying search results, we do not want to add it to the list
-    // of completed downloads
-    if (!gSearching) {
-      gDownloadsView.insertBefore(dl, gDownloadsDoneArea.nextSibling);
-      evenOddCellAttribution();
-    } else
+    // If we aren't displaying search results, move the download to after the
+    // active ones
+    if (gSearchTerms.length == 0) {
+      // Iterate down until we find a non-active download
+      let next = dl.nextSibling;
+      while (next && next.inProgress)
+        next = next.nextSibling;
+
+      // Move the item and color everything after where it moved from
+      let fixup = dl.nextSibling;
+      gDownloadsView.insertBefore(dl, next);
+      stripeifyList(fixup);
+    } else {
       removeFromView(dl);
+    }
 
     // getTypeFromFile fails if it can't find a type for this file.
     try {
@@ -459,10 +434,9 @@ function onUpdateProgress()
 
 function Startup()
 {
-  gDownloadsView        = document.getElementById("downloadView");
-  gDownloadsActiveArea  = document.getElementById("active-downloads-area");
-  gDownloadsDoneArea    = document.getElementById("done-downloads-area");
-  gDownloadInfoPopup    = document.getElementById("information");
+  gDownloadsView = document.getElementById("downloadView");
+  gSearchBox = document.getElementById("searchbox");
+  gDownloadInfoPopup = document.getElementById("information");
 
   // convert strings to those in the string bundle
   let (sb = document.getElementById("downloadStrings")) {
@@ -471,7 +445,7 @@ function Startup()
       gStr[name] = typeof value == "string" ? getStr(value) : value.map(getStr);
   }
 
-  buildDefaultView();
+  buildDownloadList();
 
   // View event listeners
   gDownloadsView.addEventListener("dblclick", onDownloadDblClick, false);
@@ -498,6 +472,10 @@ function Shutdown()
   let obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
   obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
+
+  clearTimeout(gBuilder);
+  gStmt.reset();
+  gStmt.finalize();
 }
 
 let gDownloadObserver = {
@@ -507,7 +485,7 @@ let gDownloadObserver = {
         // A null subject here indicates "remove all"
         if (!aSubject) {
           // Rebuild the default view
-          buildDefaultView();
+          buildDownloadList();
           break;
         }
 
@@ -781,9 +759,8 @@ var gDownloadViewController = {
 
 function setSearchboxFocus()
 {
-  var searchbox = document.getElementById("searchbox");
-  searchbox.focus();
-  searchbox.select();
+  gSearchBox.focus();
+  gSearchBox.select();
 }
 
 function onDownloadShowInfo()
@@ -805,7 +782,46 @@ function openExternal(aFile)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Utility functions
+//// Utility Functions
+
+/**
+ * Create a download richlistitem with the provided attributes. Some attributes
+ * are *required* while optional ones will only be set on the item if provided.
+ *
+ * @param aAttrs
+ *        An object that must have the following properties: dlid, file,
+ *        target, uri, state, progress, startTime, endTime, currBytes,
+ *        maxBytes; optional properties: referrer
+ * @return An initialized download richlistitem
+ */
+function createDownloadItem(aAttrs)
+{
+  let dl = document.createElement("richlistitem");
+
+  // Copy the attributes from the argument into the item
+  for (let attr in aAttrs)
+    dl.setAttribute(attr, aAttrs[attr]);
+
+  // Initialize other attributes
+  dl.setAttribute("type", "download");
+  dl.setAttribute("id", "dl" + aAttrs.dlid);
+  dl.setAttribute("image", "moz-icon://" + aAttrs.file + "?size=32");
+  dl.setAttribute("lastSeconds", Infinity);
+
+  // Initialize more complex attributes
+  updateTime(dl);
+  updateStatus(dl);
+
+  try {
+    let file = getLocalFileFromNativePathOrUrl(aAttrs.file);
+    dl.setAttribute("path", file.nativePath || file.path);
+    return dl;
+  } catch (e) {
+    // aFile might not be a file: url or a valid native path
+    // see bug #392386 for details
+  }
+  return null;
+}
 
 /**
  * Updates the status for a download item depending on its state
@@ -1051,7 +1067,9 @@ function removeFromView(aDownload)
   let index = gDownloadsView.selectedIndex;
   gDownloadsView.removeChild(aDownload);
   gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
-  evenOddCellAttribution();
+
+  // Color everything after from the newly selected item
+  stripeifyList(gDownloadsView.selectedItem);
 }
 
 function getReferrerOrSource(aDownload)
@@ -1065,204 +1083,169 @@ function getReferrerOrSource(aDownload)
 }
 
 /**
- * Builds the default view that the download manager starts out with.
+ * Initiate building the download list to have the active downloads followed by
+ * completed ones filtered by the search term if necessary.
  */
-function buildDefaultView()
+function buildDownloadList()
 {
-  buildActiveDownloadsList();
+  // Clear out values before using them
+  clearTimeout(gBuilder);
+  gStmt.reset();
+  gSearchTerms = "";
 
-  let pref = Cc["@mozilla.org/preferences-service;1"].
-             getService(Ci.nsIPrefBranch);
-  let days = pref.getIntPref(PREF_BDM_DISPLAYEDHISTORYDAYS);
-  buildDownloadListWithTime(Date.now() - days * 24 * 60 * 60 * 1000);
-
-  // select the first visible download item, if any
-  var children = gDownloadsView.children;
-  if (children.length > 0)
-    gDownloadsView.selectedItem = children[0];
-}
-
- /**
- * Gives every second cell an odd attribute so they can receive alternating
- * backgrounds from the stylesheets.
- */
-function evenOddCellAttribution()
-{
-  let alternateCell = false;
-  let allDownloadsInView = gDownloadsView.getElementsByTagName("richlistitem");
-
-  for (let i = 0; i < allDownloadsInView.length; i++) {
-    if (alternateCell)
-      allDownloadsInView[i].setAttribute("alternate", "true");
-    else 
-      allDownloadsInView[i].removeAttribute("alternate");
-
-    alternateCell = !alternateCell;
+  // Clear the list before adding items by replacing with a shallow copy
+  let (empty = gDownloadsView.cloneNode(false)) {
+    gDownloadsView.parentNode.replaceChild(empty, gDownloadsView);
+    gDownloadsView = empty;
   }
+
+  // If the search box isn't empty, trim the search terms
+  if (!gSearchBox.hasAttribute("empty"))
+    gSearchTerms = gSearchBox.value.replace(/^\s+|\s+$/, "");
+
+  let like = "%" + gStmt.escapeStringForLIKE(gSearchTerms, "/") + "%";
+
+  try {
+    gStmt.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
+    gStmt.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
+    gStmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
+    gStmt.bindInt32Parameter(3, nsIDM.DOWNLOAD_QUEUED);
+    gStmt.bindInt32Parameter(4, nsIDM.DOWNLOAD_SCANNING);
+    gStmt.bindStringParameter(5, like);
+  } catch (e) {
+    // Something must have gone wrong when binding, so clear and quit
+    gStmt.reset();
+    return;
+  }
+
+  // Start building the list and select the first item
+  stepListBuilder(1);
+  gDownloadsView.selectedIndex = 0;
 }
 
 /**
- * Builds the downloads list with a given statement and reference node.
+ * Incrementally build the download list by adding at most the requested number
+ * of items if there are items to add. After doing that, it will schedule
+ * another chunk of items specified by gListBuildDelay and gListBuildChunk.
  *
- * @param aStmt
- *        The compiled SQL statement to build with.  This needs to have the
- *        following columns in this order to work properly:
- *        id, target, name, source, state, startTime, endTime, referrer,
- *        currBytes, and maxBytes
- *        This statement should be ordered on the endTime ASC so that the end
- *        result is a list of downloads with their end time's descending.
- * @param aRef
- *        The node we use for placement of the download objects.  We place each
- *        new node above the previously inserted one.
+ * @param aNumItems
+ *        Number of items to add to the list before taking a break
  */
-function buildDownloadList(aStmt, aRef)
-{
-  while (aRef.nextSibling && aRef.nextSibling.tagName == "richlistitem")
-    gDownloadsView.removeChild(aRef.nextSibling);
+function stepListBuilder(aNumItems) {
+  try {
+    // If we're done adding all items, we can quit
+    if (!gStmt.executeStep())
+      return;
 
-  while (aStmt.executeStep()) {
-    let id = aStmt.getInt64(0);
-    let state = aStmt.getInt32(4);
-    let percentComplete = 100;
-    if (state == nsIDM.DOWNLOAD_NOTSTARTED ||
-        state == nsIDM.DOWNLOAD_DOWNLOADING ||
-        state == nsIDM.DOWNLOAD_PAUSED) {
-      // so we have an in-progress download that we need to determine the
-      // proper percentage complete for.  This download will actually be in
-      // the active downloads array internally, so calling getDownload is cheap.
-      let dl = gDownloadManager.getDownload(id);
-      percentComplete = dl.percentComplete;
+    // Try to get the attribute values from the statement
+    let attrs = {
+      dlid: gStmt.getInt64(0),
+      file: gStmt.getString(1),
+      target: gStmt.getString(2),
+      uri: gStmt.getString(3),
+      state: gStmt.getInt32(4),
+      startTime: Math.round(gStmt.getInt64(5) / 1000),
+      endTime: Math.round(gStmt.getInt64(6) / 1000),
+      currBytes: gStmt.getInt64(8),
+      maxBytes: gStmt.getInt64(9)
+    };
+
+    // Only add the referrer if it's not null
+    let (referrer = gStmt.getString(7)) {
+      if (referrer)
+        attrs.referrer = referrer;
     }
-    let dl = createDownloadItem(id,
-                                aStmt.getString(1),
-                                aStmt.getString(2),
-                                aStmt.getString(3),
-                                state,
-                                percentComplete,
-                                Math.round(aStmt.getInt64(5) / 1000),
-                                Math.round(aStmt.getInt64(6) / 1000),
-                                aStmt.getString(7),
-                                aStmt.getInt64(8),
-                                aStmt.getInt64(9));
-    if (dl)
-      gDownloadsView.insertBefore(dl, aRef.nextSibling);
-  }
-  evenOddCellAttribution();
-}
 
-var gActiveDownloadsQuery = null;
-function buildActiveDownloadsList()
-{
-  // Are there any active downloads?
-  if (gDownloadManager.activeDownloadCount == 0)
+    // If the download is active, grab the real progress, otherwise default 100
+    attrs.progress = gStmt.getInt32(10) ?
+      gDownloadManager.getDownload(attrs.dlid).percentComplete : 100;
+
+    // Make the item and add it to the end
+    let item = createDownloadItem(attrs);
+    if (item) {
+      // Add item to the end and color just that one item
+      gDownloadsView.appendChild(item);
+      stripeifyList(item);
+    }
+  } catch (e) {
+    // Something went wrong when stepping or getting values, so clear and quit
+    gStmt.reset();
     return;
-
-  // repopulate the list
-  var db = gDownloadManager.DBConnection;
-  var stmt = gActiveDownloadsQuery;
-  if (!stmt) {
-    stmt = db.createStatement(replaceInsert(gBaseQuery, 1,
-      "state = ?1 OR state = ?2 OR state = ?3 OR state = ?4 OR state = ?5"));
-    gActiveDownloadsQuery = stmt;
   }
 
-  try {
-    stmt.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
-    stmt.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
-    stmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
-    stmt.bindInt32Parameter(3, nsIDM.DOWNLOAD_QUEUED);
-    stmt.bindInt32Parameter(4, nsIDM.DOWNLOAD_SCANNING);
-    buildDownloadList(stmt, gDownloadsActiveArea);
-  } finally {
-    stmt.reset();
+  // Add another item to the list if we should; otherwise, let the UI update
+  // and continue later
+  if (aNumItems > 1) {
+    stepListBuilder(aNumItems - 1);
+  } else {
+    // Use a shorter delay for earlier downloads to display them faster
+    let delay = Math.min(gDownloadsView.itemCount, gListBuildDelay);
+    gBuilder = setTimeout(stepListBuilder, delay, gListBuildChunk);
   }
 }
 
 /**
- * Builds the download view with downloads from a given time until now.
+ * Add a download to the front of the download list
  *
- * @param aTime
- *        The time that we want to start displaying downloads from.  This time
- *        is in milliseconds (what is returned from Date.now()).
+ * @param aDownload
+ *        The nsIDownload to make into a richlistitem
  */
-var gDownloadListWithTimeQuery = null;
-function buildDownloadListWithTime(aTime)
+function prependList(aDownload)
 {
-  var db = gDownloadManager.DBConnection;
-  var stmt = gDownloadListWithTimeQuery;
-  if (!stmt) {
-    stmt = db.createStatement(replaceInsert(gBaseQuery, 1, "startTime >= ?1 " +
-      "AND (state = ?2 OR state = ?3 OR state = ?4 OR state = ?5 OR state = ?6)"));
-    gDownloadListWithTimeQuery = stmt;
-  }
+  let attrs = {
+    dlid: aDownload.id,
+    file: aDownload.target.spec,
+    target: aDownload.displayName,
+    uri: aDownload.source.spec,
+    state: aDownload.state,
+    progress: aDownload.percentComplete,
+    startTime: Math.round(aDownload.startTime / 1000),
+    endTime: Date.now(),
+    currBytes: aDownload.amountTransferred,
+    maxBytes: aDownload.size
+  };
 
-  try {
-    stmt.bindInt64Parameter(0, aTime * 1000);
-    stmt.bindInt32Parameter(1, nsIDM.DOWNLOAD_FINISHED);
-    stmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_FAILED);
-    stmt.bindInt32Parameter(3, nsIDM.DOWNLOAD_CANCELED);
-    stmt.bindInt32Parameter(4, nsIDM.DOWNLOAD_BLOCKED);
-    stmt.bindInt32Parameter(5, nsIDM.DOWNLOAD_DIRTY);
-    buildDownloadList(stmt, gDownloadsDoneArea);
-  } finally {
-    stmt.reset();
+  // Make the item and add it to the beginning
+  let item = createDownloadItem(attrs);
+  if (item) {
+    // Add item to the beginning and color the whole list
+    gDownloadsView.insertBefore(item, gDownloadsView.firstChild);
+    stripeifyList(item);
   }
 }
 
 /**
- * Builds the download list with an array of search terms.  This also changes
- * the label of the second group of downloads to search results (or the locale
- * equivalent).
+ * Stripeify the download list by setting or clearing the "alternate" attribute
+ * on items starting from a particular item and continuing to the end.
  *
- * @param aTerms
- *        An array of search terms that will be checked for past downloads.  If
- *        this array is empty, we clear the search results and build the default
- *        view.
+ * @param aItem
+ *        Download rishlist item to start stripeifying
  */
-function buildDownloadListWithSearch(aTerms)
+function stripeifyList(aItem)
 {
-  gSearching = true;
+  let alt = "alternate";
+  // Set the item to be opposite of the other
+  let flipFrom = function(aOther) aOther && aOther.hasAttribute(alt) ?
+    aItem.removeAttribute(alt) : aItem.setAttribute(alt, "true");
 
-  // remove and trailing or leading whitespace first
-  aTerms = aTerms.replace(/^\s+|\s+$/, "");
-  if (aTerms.length == 0) {
-    gSearching = false;
-    buildDefaultView();
-    return;
+  // Keep coloring items as the opposite of its previous until no more
+  while (aItem) {
+    flipFrom(aItem.previousSibling);
+    aItem = aItem.nextSibling;
   }
-
-  var db = gDownloadManager.DBConnection;
-  let stmt = db.createStatement(replaceInsert(gBaseQuery, 1,
-    "name LIKE ?1 ESCAPE '/' AND state != ?2 AND state != ?3"));
-
-  try {
-    var paramForLike = stmt.escapeStringForLIKE(aTerms, '/');
-    stmt.bindStringParameter(0, "%" + paramForLike + "%");
-    stmt.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
-    stmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
-    buildDownloadList(stmt, gDownloadsDoneArea);
-  } finally {
-    stmt.reset();
-  }
-}
-
-function performSearch() {
-  buildDownloadListWithSearch(document.getElementById("searchbox").value);
 }
 
 function onSearchboxBlur() {
-  var searchbox = document.getElementById("searchbox");
-  if (searchbox.value == "") {
-    searchbox.setAttribute("empty", "true");
-    searchbox.value = searchbox.getAttribute("defaultValue");
+  if (gSearchBox.value == "") {
+    gSearchBox.setAttribute("empty", "true");
+    gSearchBox.value = gSearchBox.getAttribute("defaultValue");
   }
 }
 
 function onSearchboxFocus() {
-  var searchbox = document.getElementById("searchbox");
-  if (searchbox.hasAttribute("empty")) {
-    searchbox.value = "";
-    searchbox.removeAttribute("empty");
+  if (gSearchBox.hasAttribute("empty")) {
+    gSearchBox.value = "";
+    gSearchBox.removeAttribute("empty");
   }
 }
 
