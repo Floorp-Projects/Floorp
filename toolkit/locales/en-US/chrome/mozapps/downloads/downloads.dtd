@@ -22,6 +22,8 @@
 <!ENTITY cmd.openWith.accesskey           "h">
 <!ENTITY cmd.retry.label                  "Retry">
 <!ENTITY cmd.retry.accesskey              "R">
+<!ENTITY cmd.goToDownloadPage.label       "Go to Download Page">
+<!ENTITY cmd.goToDownloadPage.accesskey   "G">
 <!ENTITY cmd.copyDownloadLink.label       "Copy Download Link">
 <!ENTITY cmd.copyDownloadLink.accesskey   "L">
 <!ENTITY cmd.removeFromList.label         "Remove From List">
