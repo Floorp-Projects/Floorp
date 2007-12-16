@@ -940,42 +940,7 @@ function updateStatus(aItem, aDownload) {
         status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
       }
 
-      let (displayHost,
-           ioService = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService),
-           eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
-                         getService(Ci.nsIEffectiveTLDService)) {
-        // Get a URI that knows about its components
-        let uri = ioService.newURI(getReferrerOrSource(aItem), null, null);
-
-        // Get the inner-most uri for schemes like jar:
-        if (uri instanceof Ci.nsINestedURI)
-          uri = uri.innermostURI
-
-        try {
-          // This might fail if it's an IP address or doesn't have >1 parts
-          displayHost = eTLDService.getBaseDomain(uri);
-        } catch (e) {
-          try {
-            // Default to the host name; some special URIs fail (data: jar:)
-            displayHost = uri.host;
-          } catch (e) {
-            displayHost = "";
-          }
-        }
-
-        // Check if we need to show something else for the host
-        if (uri.scheme == "file") {
-          // Display special text for file protocol
-          displayHost = gStr.doneFileScheme;
-        } else if (displayHost.length == 0) {
-          // Got nothing; show the scheme (data: about: moz-icon:)
-          displayHost = replaceInsert(gStr.doneScheme, 1, uri.scheme);
-        } else if (uri.port != -1) {
-          // Tack on the port if it's not the default port
-          displayHost += ":" + uri.port;
-        }
-
+      let (displayHost = getDisplayHost(getReferrerOrSource(aItem))) {
         // Insert 2 is the eTLD + 1 or other variations of the host
         status = replaceInsert(status, 2, displayHost);
       }
@@ -1052,6 +1017,61 @@ function convertByteUnits(aBytes)
   aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) ? 1 : 0);
 
   return [aBytes, gStr.units[unitIndex]];
+}
+
+/**
+ * Get the appropriate display host string for a URI string depending on if the
+ * URI has an eTLD + 1, is an IP address, a local file, or other protocol
+ *
+ * @param aURIString
+ *        The URI string to try getting an eTLD + 1, etc.
+ * @returns The display host for the provided URI string
+ */
+function getDisplayHost(aURIString)
+{
+  let ioService = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService);
+  let eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
+                    getService(Ci.nsIEffectiveTLDService);
+  let idnService = Cc["@mozilla.org/network/idn-service;1"].
+                   getService(Ci.nsIIDNService);
+
+  // Get a URI that knows about its components
+  let uri = ioService.newURI(aURIString, null, null);
+
+  // Get the inner-most uri for schemes like jar:
+  if (uri instanceof Ci.nsINestedURI)
+    uri = uri.innermostURI;
+
+  let displayHost;
+  try {
+    // This might fail if it's an IP address or doesn't have more than 1 part
+    let baseDomain = eTLDService.getBaseDomain(uri);
+
+    // Convert base domain for display; ignore the isAscii out param
+    displayHost = idnService.convertToDisplayIDN(baseDomain, {});
+  } catch (e) {
+    try {
+      // Default to the host name; some special URIs fail (data: jar:)
+      displayHost = uri.host;
+    } catch (e) {
+      displayHost = "";
+    }
+  }
+
+  // Check if we need to show something else for the host
+  if (uri.scheme == "file") {
+    // Display special text for file protocol
+    displayHost = gStr.doneFileScheme;
+  } else if (displayHost.length == 0) {
+    // Got nothing; show the scheme (data: about: moz-icon:)
+    displayHost = replaceInsert(gStr.doneScheme, 1, uri.scheme);
+  } else if (uri.port != -1) {
+    // Tack on the port if it's not the default port
+    displayHost += ":" + uri.port;
+  }
+
+  return displayHost;
 }
 
 function replaceInsert(aText, aIndex, aValue)
