@@ -65,7 +65,7 @@ DownloadProgressListener.prototype = {
     let state = aDownload.state;
     switch (state) {
       case nsIDM.DOWNLOAD_QUEUED:
-        buildActiveDownloadsList();
+        prependList(aDownload);
         break;
       case nsIDM.DOWNLOAD_FAILED:
       case nsIDM.DOWNLOAD_CANCELED:

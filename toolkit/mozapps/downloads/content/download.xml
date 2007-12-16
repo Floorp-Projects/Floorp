@@ -78,7 +78,8 @@
           return state == dl.DOWNLOAD_NOTSTARTED || 
                  state == dl.DOWNLOAD_QUEUED ||
                  state == dl.DOWNLOAD_DOWNLOADING || 
-                 state == dl.DOWNLOAD_PAUSED;
+                 state == dl.DOWNLOAD_PAUSED ||
+                 state == dl.DOWNLOAD_SCANNING;
         ]]>
         </getter>
       </property>
