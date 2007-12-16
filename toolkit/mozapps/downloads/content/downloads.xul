@@ -25,6 +25,7 @@
 #   Ben Goodger <ben@bengoodger.com> (v2.0)
 #   Blake Ross <blakeross@telocity.com>
 #   Shawn Wilsher <me@shawnwilsher.com> (v3.0)
+#   Edward Lee <edward.lee@engineering.uiuc.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -193,13 +194,11 @@
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
                ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
-    <hbox id="active-downloads-area" hidden="true"/>
-    <hbox id="done-downloads-area" hidden="true"/>
   </richlistbox>
 
   <hbox id="search">
     <textbox type="timed" timeout="500" id="searchbox"
-             oncommand="performSearch();" empty="true"
+             oncommand="buildDownloadList();" empty="true"
              value="&searchBox.label;" defaultValue="&searchBox.label;"
              onblur="onSearchboxBlur();" onfocus="onSearchboxFocus();"/>
     <spacer flex="1"/>
