@@ -4357,16 +4357,6 @@ function middleMousePaste(event)
   event.stopPropagation();
 }
 
-function makeURLAbsolute( base, url )
-{
-  // Construct nsIURL.
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                .getService(Components.interfaces.nsIIOService);
-  var baseURI  = ioService.newURI(base, null, null);
-
-  return ioService.newURI(baseURI.resolve(url), null, null).spec;
-}
-
 /*
  * Note that most of this routine has been moved into C++ in order to
  * be available for all <browser> tags as well as gecko embedding. See

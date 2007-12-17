@@ -609,6 +609,12 @@ function grabAll(elem)
   if (elem instanceof HTMLImageElement)
     addImage(elem.src, gStrings.mediaImg,
              (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
+#ifdef MOZ_SVG
+  else if (elem instanceof SVGImageElement) {
+    var href = makeURLAbsolute(elem.baseURI, elem.href.baseVal);
+    addImage(href, gStrings.mediaImg, "", elem, false);
+  }
+#endif
   else if (elem instanceof HTMLLinkElement) {
     if (elem.rel && /\bicon\b/i.test(elem.rel))
       addImage(elem.href, gStrings.mediaLink, "", elem, false);
@@ -837,6 +843,14 @@ function makePreview(row)
   else
     setItemValue("imagealttext", getValueText(item));
 
+#ifdef MOZ_SVG
+  if (item instanceof SVGImageElement) {
+    setItemValue("imagetitletext", null);
+    setItemValue("imagelongdesctext", null);
+    setItemValue("imagealttext", null);
+  }
+#endif
+
   // get cache info
   var sourceText = gBundle.getString("generalNotCached");
   var cacheKey = url.replace(/#.*$/, "");
@@ -913,6 +927,9 @@ function makePreview(row)
 
   if ((item instanceof HTMLLinkElement || item instanceof HTMLInputElement ||
        item instanceof HTMLImageElement ||
+#ifdef MOZ_SVG
+       item instanceof SVGImageElement ||
+#endif
       (item instanceof HTMLObjectElement && /^image\//.test(mimeType)) || isBG) && isProtocolAllowed) {
     newImage.setAttribute("src", url);
     physWidth = newImage.width || 0;
@@ -926,11 +943,18 @@ function makePreview(row)
       newImage.height = ("height" in item && item.height) || newImage.naturalHeight;
     }
     else {
-      // the Width and Height of an HTML tag should not be use for its background image
+      // the Width and Height of an HTML tag should not be used for its background image
       // (for example, "table" can have "width" or "height" attributes)
       newImage.width = newImage.naturalWidth;
       newImage.height = newImage.naturalHeight;
     }
+
+#ifdef MOZ_SVG
+    if (item instanceof SVGImageElement) {
+      newImage.width = item.width.baseVal.value;
+      newImage.height = item.height.baseVal.value;
+    }
+#endif
 
     width = newImage.width;
     height = newImage.height;

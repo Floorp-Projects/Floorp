@@ -495,6 +495,11 @@ function isElementVisible(aElement)
   return (bo.height > 0 && bo.width > 0);
 }
 
+function makeURLAbsolute(aBase, aUrl)
+{
+  return IO.newURI(IO.newURI(aBase).resolve(aUrl)).spec;
+}
+
 function getBrowserFromContentWindow(aContentWindow)
 {
   var browsers = gBrowser.browsers;
