@@ -22,6 +22,7 @@
  *   Vladimir Vukicevic <vladimir@mozilla.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Behdad Esfahbod <behdad@gnome.org>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * based on nsFontMetricsPango.cpp by
  *   Christopher Blizzard <blizzard@mozilla.org>
@@ -367,6 +368,14 @@ void
 gfxPangoFont::GetCharSize(char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
                           PRUint32 *aGlyphID)
 {
+    if (NS_UNLIKELY(GetStyle()->size == 0.0)) {
+        if (aGlyphID)
+            *aGlyphID = 0;
+        aInkSize.SizeTo(0.0, 0.0);
+        aLogSize.SizeTo(0.0, 0.0);
+        return;
+    }
+
     PangoAnalysis analysis;
     // Initialize new fields, gravity and flags in pango 1.16
     // (or padding in 1.14).
@@ -418,23 +427,67 @@ gfxPangoFont::GetMetrics()
         return mMetrics;
 
     /* pango_cairo case; try to get all the metrics from pango itself */
-    PangoFont *font = GetPangoFont(); // RealizeFont is called here.
+    PangoFont *font;
+    PangoFontMetrics *pfm;
+    if (NS_LIKELY(GetStyle()->size > 0.0)) {
+        font = GetPangoFont(); // RealizeFont is called here.
+        PangoLanguage *lang = GetPangoLanguage(GetStyle()->langGroup);
 
-    PangoLanguage *lang = GetPangoLanguage(GetStyle()->langGroup);
-    // XXX
-    // 1.18 null is fine
-    // 1.16 might want to use pango_language_get_default if lang is null here.
-    // earlier we want to use something other than null where possible
-    PangoFontMetrics *pfm = pango_font_get_metrics (font, lang);
+        // XXX
+        // 1.18 null is fine
+        // 1.16 might want to use pango_language_get_default if lang is null here.
+        // earlier we want to use something other than null where possible.
+        //
+        pfm = pango_font_get_metrics(font, lang);
+    } else {
+        // Don't ask pango when the font-size is zero since it causes
+        // some versions of libpango to crash (bug 404112).
+        font = NULL;
+        pfm = NULL;
+    }
+
+    if (NS_LIKELY(pfm)) {
+        mMetrics.maxAscent =
+            pango_font_metrics_get_ascent(pfm) / FLOAT_PANGO_SCALE;
+
+        mMetrics.maxDescent =
+            pango_font_metrics_get_descent(pfm) / FLOAT_PANGO_SCALE;
+
+        mMetrics.aveCharWidth =
+            pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
+
+        gfxFloat temp =
+            pango_font_metrics_get_underline_position(pfm) / FLOAT_PANGO_SCALE;
+        mMetrics.underlineOffset = PR_MIN(temp, -1.0);
+        
+        mMetrics.underlineSize =
+            pango_font_metrics_get_underline_thickness(pfm) / FLOAT_PANGO_SCALE;
+        
+        mMetrics.strikeoutOffset =
+            pango_font_metrics_get_strikethrough_position(pfm) / FLOAT_PANGO_SCALE;
+        
+        mMetrics.strikeoutSize =
+            pango_font_metrics_get_strikethrough_thickness(pfm) / FLOAT_PANGO_SCALE;
+
+        // We're going to overwrite this below if we have a FT_Face
+        // (which we normally should have...).
+        mMetrics.maxAdvance =
+            pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
+    } else {
+        mMetrics.maxAscent = 0.0;
+        mMetrics.maxDescent = 0.0;
+        mMetrics.aveCharWidth = 0.0;
+        mMetrics.underlineOffset = -1.0;
+        mMetrics.underlineSize = 0.0;
+        mMetrics.strikeoutOffset = 0.0;
+        mMetrics.strikeoutSize = 0.0;
+        mMetrics.maxAdvance = 0.0;
+    }
 
     // ??
     mMetrics.emHeight = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
 
-    mMetrics.maxAscent = pango_font_metrics_get_ascent(pfm) / FLOAT_PANGO_SCALE;
-    mMetrics.maxDescent = pango_font_metrics_get_descent(pfm) / FLOAT_PANGO_SCALE;
-
     gfxFloat lineHeight = mMetrics.maxAscent + mMetrics.maxDescent;
-
     if (lineHeight > mMetrics.emHeight)
         mMetrics.externalLeading = lineHeight - mMetrics.emHeight;
     else
@@ -443,11 +496,9 @@ gfxPangoFont::GetMetrics()
 
     mMetrics.maxHeight = lineHeight;
 
-    mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / lineHeight;
+    mMetrics.emAscent = lineHeight > 0.0 ?
+        mMetrics.maxAscent * mMetrics.emHeight / lineHeight : 0.0;
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
-
-    // we're going to overwrite this below if we have a FT_Face (which we should...)
-    mMetrics.maxAdvance = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
 
     gfxSize isz, lsz;
     GetCharSize(' ', isz, lsz, &mSpaceGlyph);
@@ -455,22 +506,9 @@ gfxPangoFont::GetMetrics()
     GetCharSize('x', isz, lsz);
     mMetrics.xHeight = isz.height;
 
-    mMetrics.aveCharWidth = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
-
-    //    printf("font name: %s %f %f\n", NS_ConvertUTF16toUTF8(mName).get(), GetStyle()->size, mAdjustedSize);
-    //    printf ("pango font %s\n", pango_font_description_to_string (pango_font_describe (font)));
-
-    mMetrics.underlineOffset = pango_font_metrics_get_underline_position(pfm) / FLOAT_PANGO_SCALE;
-    mMetrics.underlineSize = pango_font_metrics_get_underline_thickness(pfm) / FLOAT_PANGO_SCALE;
-
-    mMetrics.underlineOffset = PR_MIN(mMetrics.underlineOffset, -1.0);
-
-    mMetrics.strikeoutOffset = pango_font_metrics_get_strikethrough_position(pfm) / FLOAT_PANGO_SCALE;
-    mMetrics.strikeoutSize = pango_font_metrics_get_strikethrough_thickness(pfm) / FLOAT_PANGO_SCALE;
-
     FT_Face face = NULL;
-    if (PANGO_IS_FC_FONT (font))
-        face = pango_fc_font_lock_face (PANGO_FC_FONT (font));
+    if (pfm && PANGO_IS_FC_FONT(font))
+        face = pango_fc_font_lock_face(PANGO_FC_FONT(font));
 
     if (face) {
         mMetrics.maxAdvance = face->size->metrics.max_advance / 64.0; // 26.6
@@ -487,7 +525,6 @@ gfxPangoFont::GetMetrics()
             mMetrics.superscriptOffset = mMetrics.xHeight;
         }
     
-        // mSubscriptOffset
         if (os2 && os2->ySubscriptYOffset) {
             val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySubscriptYOffset,
                                                  face->size->metrics.y_scale);
@@ -504,9 +541,10 @@ gfxPangoFont::GetMetrics()
         mMetrics.subscriptOffset = mMetrics.xHeight;
     }
 
-    pango_font_metrics_unref (pfm);
-
 #if 0
+    //    printf("font name: %s %f %f\n", NS_ConvertUTF16toUTF8(mName).get(), GetStyle()->size, mAdjustedSize);
+    //    printf ("pango font %s\n", pango_font_description_to_string (pango_font_describe (font)));
+
     fprintf (stderr, "Font: %s\n", NS_ConvertUTF16toUTF8(mName).get());
     fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
     fprintf (stderr, "    maxAscent: %f maxDescent: %f\n", mMetrics.maxAscent, mMetrics.maxDescent);
@@ -514,6 +552,9 @@ gfxPangoFont::GetMetrics()
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
     fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
+
+    if (pfm)
+        pango_font_metrics_unref(pfm);
 
     mHasMetrics = PR_TRUE;
     return mMetrics;
