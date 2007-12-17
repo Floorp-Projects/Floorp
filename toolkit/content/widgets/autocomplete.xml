@@ -1253,7 +1253,7 @@
         <body>
           <![CDATA[
           // XXX hack
-          // see bug #399644 comment #39 for some details
+          // see bug #399664 comment #39 for some details
           // add 16px for the site image, 8 for the margin right of the site icon,
           // 16px for the type image, and 24px for scroll bar
           var pixelsUsedForNonText = 16 + 8 + 16 + 24;
