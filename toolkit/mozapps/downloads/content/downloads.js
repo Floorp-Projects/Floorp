@@ -987,7 +987,7 @@ function updateTime(aItem)
   } else {
     // Download must have been from some time ago.. show month/day
     let month = end.toLocaleFormat("%B");
-    let date = end.toLocaleFormat("%d");
+    let date = end.toLocaleFormat("%e").replace(/\s+/g, "");
     dateTime = replaceInsert(gStr.monthDate, 1, month);
     dateTime = replaceInsert(dateTime, 2, date);
   }
