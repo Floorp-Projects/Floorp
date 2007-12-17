@@ -9,15 +9,15 @@ fails-if(MOZ_WIDGET_TOOLKIT=="windows") == ccwn3p08.png ccwn3p08.html
 
 # pHYs chunks
 #
-# Bug 408622 - pngsuite images with non-square pixels [pHYs] rendered incorrectly
-# (Following 3 tests disabled.)
+# PngSuite implies these first 3 should end up as 32x32 bitmaps, but
+# per discussion in bug 408622 that's not actually true.
 #
 # cdfn2c08 - physical pixel dimensions, 8x32 flat pixels
-#== cdfn2c08.png cdfn2c08.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == cdfn2c08.png cdfn2c08.html
 # cdhn2c08 - physical pixel dimensions, 32x8 high pixels
-#== cdhn2c08.png cdhn2c08.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == cdhn2c08.png cdhn2c08.html
 # cdsn2c08 - physical pixel dimensions, 8x8 square pixels
-#== cdsn2c08.png cdsn2c08.html
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") == cdsn2c08.png cdsn2c08.html
 # cdun2c08 - physical pixel dimensions, 1000 pixels per 1 meter
 fails-if(MOZ_WIDGET_TOOLKIT=="windows") == cdun2c08.png cdun2c08.html
 
