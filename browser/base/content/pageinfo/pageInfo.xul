@@ -414,7 +414,7 @@
         </grid>
         <spacer flex="1"/>
         <hbox><!-- Cert button -->
-          <label id="security-view-text" class="fieldLabel"
+          <description id="security-view-text" class="fieldLabel"
                  control="security-view-cert" flex="1"/>
           <button id="security-view-cert" label="&securityView.certView;"
                   accesskey="&securityView.accesskey;"
