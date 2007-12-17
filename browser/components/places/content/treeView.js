@@ -298,6 +298,20 @@ PlacesTreeView.prototype = {
     var startReplacement = aContainer.viewIndex + 1;
     var replaceCount = this._countVisibleRowsForItem(aContainer);
 
+    // Persist selection state
+    var nodesToSelect = [];
+    var selection = this.selection;
+    var rc = selection.getRangeCount();
+    for (var rangeIndex = 0; rangeIndex < rc; rangeIndex++) {
+      var min = { }, max = { };
+      selection.getRangeAt(rangeIndex, min, max);
+      if (min.value > startReplacement + replaceCount)
+        continue;
+
+      for (var nodeIndex = min.value; nodeIndex <= max.value; nodeIndex++)
+        nodesToSelect.push(this._visibleElements[nodeIndex]);
+    }
+
     // We don't replace the container item itself so we decrease the
     // replaceCount by 1. We don't do so though if there is no visible item
     // for the container. This happens when aContainer is the root node and
@@ -313,22 +327,6 @@ PlacesTreeView.prototype = {
     var newElements = [];
     var toOpenElements = [];
     this._buildVisibleSection(aContainer, newElements, toOpenElements, startReplacement);
-
-    // Persist selection state
-    var nodesToSelect = [];
-    var selection = this.selection;
-    var rc = selection.getRangeCount();
-    for (var rangeIndex = 0; rangeIndex < rc; rangeIndex++) {
-      var min = { }, max = { };
-      selection.getRangeAt(rangeIndex, min, max);
-      if (min.value > startReplacement + replaceCount)
-        continue;
-
-      for (var nodeIndex = min.value; nodeIndex <= max.value; nodeIndex++) {
-        if (newElements.indexOf(this._visibleElements[nodeIndex]) != -1)
-          nodesToSelect.push(this._visibleElements[nodeIndex]);
-      }
-    }
 
     // actually update the visible list
     this._visibleElements =
@@ -377,7 +375,29 @@ PlacesTreeView.prototype = {
     if (nodesToSelect.length > 0) {
       for each (var node in nodesToSelect) {
         var index = node.viewIndex;
-        selection.rangedSelect(index, index, true);
+
+        // if the same node was used (happens on sorting-changes),
+        // just use viewIndex
+        if (index == -1) { // otherwise, try to find an equal node
+          var itemId = node.itemId;
+          if (itemId != 1) { // bookmark-nodes in queries case
+            for (i=0; i < newElements.length && index == -1; i++) {
+              if (newElements[i].itemId == itemId)
+                index = newElements[i].viewIndex;
+            }
+          }
+          else { // history nodes
+            var uri = node.uri;
+            if (uri) {
+              for (i=0; i < newElements.length && index == -1; i++) {
+                if (newElements[i].uri == uri)
+                  index = newElements[i].viewIndex;
+              }
+            }
+          }
+        }
+        if (index != -1)
+          selection.rangedSelect(index, index, true);
       }
       selection.selectEventsSuppressed = false;
     }
