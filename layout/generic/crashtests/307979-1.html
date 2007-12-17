@@ -1,0 +1,27 @@
+<html class="reftest-wait">
+<head>
+
+<title>Crash testcase</title>
+
+<script>
+
+function foo()
+{
+  document.body.appendChild(document.createElement('frameset'));
+  setTimeout(bar, 30);
+}
+
+function bar()
+{
+  document.body.style.display = '-moz-groupbox';
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body onload="setTimeout(foo, 30);">
+
+</body>
+</html>
