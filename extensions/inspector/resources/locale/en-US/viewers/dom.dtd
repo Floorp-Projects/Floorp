@@ -74,13 +74,17 @@
   <!ENTITY cmdInsertNode.label "Insert…">
   <!ENTITY cmdDeleteNode.label "Delete">
   <!ENTITY cmdCopyXML.label "Copy XML">
+  <!ENTITY cmdCopyXML.accesskey "X">
   <!ENTITY cmdBlink.label "Blink Element">
+  <!ENTITY cmdBlink.accesskey "B">
   <!ENTITY cmdInspectBrowser.label "Inspect Contained Document">
+  <!ENTITY cmdInspectBrowser.accesskey "e">
   <!ENTITY cmdInspectInNewWindow.label "Inspect in New Window">
-  
+  <!ENTITY cmdInspectInNewWindow.accesskey "N">
+
   <!ENTITY cmdShowPseudoClasses.label "Set Pseudo-classes…">
-  <!ENTITY cmdShowPseudoClasses.accesskey "p">
-  
+  <!ENTITY cmdShowPseudoClasses.accesskey "S">
+
   <!ENTITY pseudoClasses.title "Pseudo-classes">
 
   <!ENTITY findNodes.title "Find Nodes">
@@ -105,18 +109,30 @@
   <!ENTITY findNodesCancel.label "Cancel">
 
   <!ENTITY mnEditPasteMenu.label "Paste">
+  <!ENTITY mnEditPasteMenu.accesskey "P">
   <!ENTITY mnEditPasteBefore.label "Before">
+  <!ENTITY mnEditPasteBefore.accesskey "B">
   <!ENTITY mnEditPasteAfter.label "After">
+  <!ENTITY mnEditPasteAfter.accesskey "A">
   <!ENTITY mnEditPasteReplace.label "In place of (Replace)">
+  <!ENTITY mnEditPasteReplace.accesskey "I">
   <!ENTITY mnEditPasteFirstChild.label "As first child">
+  <!ENTITY mnEditPasteFirstChild.accesskey "f">
   <!ENTITY mnEditPasteLastChild.label "As last child">
+  <!ENTITY mnEditPasteLastChild.accesskey "c">
   <!ENTITY mnEditPasteAsParent.label "As parent">
+  <!ENTITY mnEditPasteAsParent.accesskey "r">
 
   <!ENTITY mnEditInsertMenu.label "Insert">
+  <!ENTITY mnEditInsertMenu.accesskey "I">
   <!ENTITY mnEditInsertAfter.label "After">
+  <!ENTITY mnEditInsertAfter.accesskey "A">
   <!ENTITY mnEditInsertBefore.label "Before">
+  <!ENTITY mnEditInsertBefore.accesskey "B">
   <!ENTITY mnEditInsertFirstChild.label "As first child">
+  <!ENTITY mnEditInsertFirstChild.accesskey "f">
   <!ENTITY mnEditInsertLastChild.label "As last child">
+  <!ENTITY mnEditInsertLastChild.accesskey "c">
 
   <!ENTITY insertNode.title "Insert Node">
   <!ENTITY nodeType.label "Node Type:">
