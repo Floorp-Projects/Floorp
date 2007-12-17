@@ -63,39 +63,87 @@
 
   <popupset id="psPopups">
     <popup id="ppDOMContext" onpopupshowing="viewer.onContextCreate(this)">
-      <menuitem label="&cmdInspectInNewWindow.label;" observes="cmdInspectInNewWindow"/>
-      <menuitem label="&cmdInspectBrowser.label;" observes="cmdInspectBrowser"/>
+      <menuitem label="&cmdInspectInNewWindow.label;"
+                accesskey="&cmdInspectInNewWindow.accesskey;"
+                observes="cmdInspectInNewWindow"/>
+      <menuitem label="&cmdInspectBrowser.label;"
+                accesskey="&cmdInspectBrowser.accesskey;"
+                observes="cmdInspectBrowser"/>
       <menuseparator/>
       <menuitem id="mnEditCut"/>
       <menuitem id="mnEditCopy"/>
-      <menu id="mnEditPasteMenu" label="&mnEditPasteMenu.label;">
+      <menu id="mnEditPasteMenu"
+            label="&mnEditPasteMenu.label;"
+            accesskey="&mnEditPasteMenu.accesskey;">
         <menupopup onpopupshowing="viewer.onCommandPopupShowing(this)">
           <!-- keep older functionality of paste command for paste menu in DOM Nodes viewer -->
-          <menuitem id="mnEditPasteAfter" label="&mnEditPasteAfter.label;" command="cmdEditPaste"
-                    accesskey="&mnEditPaste.accesskey;" key="keyEditPaste"/>
+          <menuitem id="mnEditPasteAfter"
+                    label="&mnEditPasteAfter.label;"
+                    accesskey="&mnEditPasteAfter.accesskey;"
+                    command="cmdEditPaste"
+                    key="keyEditPaste"/>
           <!-- other paste commands -->            
-          <menuitem id="mnEditPasteBefore" label="&mnEditPasteBefore.label;" command="cmdEditPasteBefore"/>
-          <menuitem id="mnEditPasteReplace" label="&mnEditPasteReplace.label;" command="cmdEditPasteReplace"/>
-          <menuitem id="mnEditPasteFirstChild" label="&mnEditPasteFirstChild.label;" command="cmdEditPasteFirstChild"/>
-          <menuitem id="mnEditPasteLastChild" label="&mnEditPasteLastChild.label;" command="cmdEditPasteLastChild"/>
-          <menuitem id="mnEditPasteAsParent" label="&mnEditPasteAsParent.label;" command="cmdEditPasteAsParent"/>
+          <menuitem id="mnEditPasteBefore"
+                    label="&mnEditPasteBefore.label;"
+                    accesskey="&mnEditPasteBefore.accesskey;"
+                    command="cmdEditPasteBefore"/>
+          <menuitem id="mnEditPasteReplace"
+                    label="&mnEditPasteReplace.label;"
+                    accesskey="&mnEditPasteReplace.accesskey;"
+                    command="cmdEditPasteReplace"/>
+          <menuitem id="mnEditPasteFirstChild"
+                    label="&mnEditPasteFirstChild.label;"
+                    accesskey="&mnEditPasteFirstChild.accesskey;"
+                    command="cmdEditPasteFirstChild"/>
+          <menuitem id="mnEditPasteFirstChild"
+                    label="&mnEditPasteFirstChild.label;"
+                    accesskey="&mnEditPasteFirstChild.accesskey;"
+                    command="cmdEditPasteFirstChild"/>
+          <menuitem id="mnEditPasteLastChild"
+                    label="&mnEditPasteLastChild.label;"
+                    accesskey="&mnEditPasteLastChild.accesskey;"
+                    command="cmdEditPasteLastChild"/>
+          <menuitem id="mnEditPasteAsParent"
+                    label="&mnEditPasteAsParent.label;"
+                    accesskey="&mnEditPasteAsParent.accesskey;"
+                    command="cmdEditPasteAsParent"/>
         </menupopup>
       </menu>
       <menuseparator/>
-      <menu id="mnEditInsertMenu" label="&mnEditInsertMenu.label;">
+      <menu id="mnEditInsertMenu"
+            label="&mnEditInsertMenu.label;"
+            accesskey="&mnEditInsertMenu.accesskey;">
         <menupopup onpopupshowing="viewer.onCommandPopupShowing(this)">
-          <menuitem id="mnEditInsertAfter" label="&mnEditInsertAfter.label;" command="cmdEditInsertAfter"/>
-          <menuitem id="mnEditInsertBefore" label="&mnEditInsertBefore.label;" command="cmdEditInsertBefore"/>
-          <menuitem id="mnEditInsertFirstChild" label="&mnEditInsertFirstChild.label;" command="cmdEditInsertFirstChild"/>
-          <menuitem id="mnEditInsertLastChild" label="&mnEditInsertLastChild.label;" command="cmdEditInsertLastChild"/>
+          <menuitem id="mnEditInsertAfter"
+                    label="&mnEditInsertAfter.label;"
+                    accesskey="&mnEditInsertAfter.accesskey;"
+                    command="cmdEditInsertAfter"/>
+          <menuitem id="mnEditInsertBefore"
+                    label="&mnEditInsertBefore.label;"
+                    accesskey="&mnEditInsertBefore.accesskey;"
+                    command="cmdEditInsertBefore"/>
+          <menuitem id="mnEditInsertFirstChild"
+                    label="&mnEditInsertFirstChild.label;"
+                    accesskey="&mnEditInsertFirstChild.accesskey;"
+                    command="cmdEditInsertFirstChild"/>
+          <menuitem id="mnEditInsertLastChild"
+                    label="&mnEditInsertLastChild.label;"
+                    accesskey="&mnEditInsertLastChild.accesskey;"
+                    command="cmdEditInsertLastChild"/>
         </menupopup>
       </menu>
       <menuitem id="mnEditDelete"/>
       <menuseparator/>
-      <menuitem label="&cmdCopyXML.label;" observes="cmdCopyXML"/>
+      <menuitem label="&cmdCopyXML.label;"
+                accesskey="&cmdCopyXML.accesskey;"
+                observes="cmdCopyXML"/>
       <menuseparator/>
-      <menuitem label="&cmdBlink.label;" observes="cmdBlink"/>
-      <menuitem label="&cmdShowPseudoClasses.label;" observes="cmdShowPseudoClasses"/>
+      <menuitem label="&cmdBlink.label;"
+                accesskey="&cmdBlink.accesskey;"
+                observes="cmdBlink"/>
+      <menuitem label="&cmdShowPseudoClasses.label;"
+                accesskey="&cmdShowPseudoClasses.accesskey;"
+                observes="cmdShowPseudoClasses"/>
     </popup>
   </popupset>
 
