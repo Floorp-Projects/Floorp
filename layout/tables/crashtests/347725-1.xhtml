@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+
+function foo()
+{
+  var e = document.createElement("td"); 
+  document.getElementById("h").appendChild(e); 
+  
+  e.setAttribute("rowspan", 2); 
+  e.setAttribute("colspan", 3);
+  
+  var tbody = document.getElementById("tbody"); 
+  tbody.parentNode.removeChild(tbody);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body onload="setTimeout(foo, 30)">
+
+<table id="table1">
+  <thead style="visibility: collapse">
+    <tr id="h"><td rowspan="2">A</td></tr>
+  </thead>
+  <tfoot>
+    <tr><td rowspan="2" colspan="0">B</td></tr>
+    <tr><td>C</td></tr>
+  </tfoot>
+  <tbody id="tbody">
+    <tr><td>D</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>

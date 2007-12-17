@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script>
+
+function boo()
+{
+  document.getElementById("td46").setAttribute("rowspan", 3);
+  document.getElementById("tbody6").appendChild(document.createTextNode('X'));
+}
+
+window.addEventListener("load", boo, false);
+
+</script>
+
+
+</head>
+<body>
+
+<table border="1">
+ <tbody id="tbody6">
+  <tr id="tr7">
+   <td>A</td>
+   <td>B</td>
+   Y
+  </tr>
+  <tr>
+   <td>C</td>
+   <td id="td46">D</td>
+  </tr>
+ </tbody>
+</table>
+
+</body>
+</html>
