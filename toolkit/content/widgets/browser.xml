@@ -89,15 +89,8 @@
         <body>
           <![CDATA[
             var webNavigation = this.webNavigation;
-            if (webNavigation.canGoBack) {
-              try {
-                this.userTypedClear++;
-                webNavigation.goBack();
-              } finally {
-                if (this.userTypedClear)
-                  this.userTypedClear--;
-              }
-            }
+            if (webNavigation.canGoBack)
+              webNavigation.goBack();
           ]]>
         </body>
       </method>
@@ -106,15 +99,8 @@
         <body>
           <![CDATA[
             var webNavigation = this.webNavigation;
-            if (webNavigation.canGoForward) {
-              try {
-                this.userTypedClear++;
-                webNavigation.goForward();
-              } finally {
-                if (this.userTypedClear)
-                  this.userTypedClear--;
-              }
-            }
+            if (webNavigation.canGoForward)
+              webNavigation.goForward();
           ]]>
         </body>
       </method>
@@ -182,13 +168,7 @@
               }
             }
             this.mIconURL = null;
-            try {
-              this.userTypedClear++;
-              this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
-            } finally {
-              if (this.userTypedClear)
-                this.userTypedClear--;
-            }
+            this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
           ]]>
         </body>
       </method>
@@ -230,13 +210,7 @@
         <parameter name="aIndex"/>
         <body>
           <![CDATA[
-            try {
-              this.userTypedClear++;
-              this.webNavigation.gotoIndex(aIndex);
-            } finally {
-              if (this.userTypedClear)
-                this.userTypedClear--;
-            }
+            this.webNavigation.gotoIndex(aIndex);
           ]]>
         </body>
       </method>
@@ -500,9 +474,13 @@
       <method name="updatePageReport">
         <body>
           <![CDATA[
+            var tabBrowser = this.getTabBrowser();
+            if (!tabBrowser || tabBrowser.mCurrentBrowser != this)
+              return;
+
             var event = document.createEvent("Events");
             event.initEvent("DOMUpdatePageReport", true, true);
-            this.dispatchEvent(event);
+            tabBrowser.dispatchEvent(event);
           ]]>
         </body>
       </method>
