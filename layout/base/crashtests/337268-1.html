@@ -1,0 +1,45 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+window.addEventListener("load", foo1, false);
+
+function foo1()
+{
+  document.getElementById("a").style.width = "20em";
+  setTimeout(foo2, 30);
+}
+
+function foo2()
+{
+  document.getElementById("b").style.width = "auto";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body>
+
+<table>
+<tr>
+<td id="a">
+
+<table style="display: -moz-inline-box;">
+<tr>
+<td width="100%">
+
+XXX XXX
+
+<div id="b" style="width: 200%; display: table-column-group;"></div>
+
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
