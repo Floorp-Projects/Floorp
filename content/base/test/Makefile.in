@@ -116,6 +116,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug402150.html \
 		test_bug402150.html^headers^ \
 		test_bug401662.html \
+		test_bug403852.html \
 		test_bug403868.xml \
 		test_bug405182.html \
 		$(NULL)
