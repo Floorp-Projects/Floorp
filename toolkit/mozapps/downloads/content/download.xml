@@ -199,9 +199,6 @@
                        crop="end" flex="1" class="status"/>
             <xul:button class="open mini-button" tooltiptext="&cmd.open.label;"
                         command="cmd_open" ondblclick="event.stopPropagation();"/>
-            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
-                        anonid="info"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -227,9 +224,6 @@
                        crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry" ondblclick="event.stopPropagation();"/>
-            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
-                        anonid="info"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -255,9 +249,6 @@
                        crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry" ondblclick="event.stopPropagation();"/>
-            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
-                        anonid="info"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -280,9 +271,6 @@
           <xul:hbox align="center" flex="1">
             <xul:label xbl:inherits="value=status,tooltiptext=status"
                        crop="end" flex="1" class="status"/>
-            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
-                        anonid="info"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -303,9 +291,6 @@
             <xul:vbox flex="1">
               <xul:progressmeter mode="undetermined" flex="1" />
             </xul:vbox>
-            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
-                        anonid="info"/>
           </xul:hbox>
           <xul:label value="&scanning.label;" class="status"/>
           <xul:spacer flex="1"/>
@@ -330,9 +315,6 @@
           <xul:hbox align="center" flex="1">
             <xul:label xbl:inherits="value=status,tooltiptext=status"
                        crop="end" flex="1" class="status"/>
-            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
-                        anonid="info"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>

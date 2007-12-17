@@ -128,7 +128,6 @@
          key="&cmd.find.commandKey;"
          modifiers="accel"
          command="cmd_findDownload"/>
-    <key id="key_info"    key="&cmd.info.commandKey;"   oncommand="onDownloadShowInfo();" modifiers="accel"/>
   </keyset>
   
   <vbox id="contextMenuPalette" hidden="true">
@@ -182,14 +181,6 @@
   </vbox>
   
   <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
-
-  <!--Information popup-->
-  <panel id="information" orient="vertical" align="start">
-    <label id="information-title" flex="1"/>
-    <button type="image" crop="center" id="information-uri" class="mini-button"
-            flex="1" command="cmd_openReferrer"/>
-    <button type="image" crop="center" id="information-location" class="mini-button" flex="1" command="cmd_show"/>
-  </panel>
 
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
                ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
