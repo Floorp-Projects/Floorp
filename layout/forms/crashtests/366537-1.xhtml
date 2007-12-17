@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+<script>
+
+function boom()
+{
+  var fieldset = document.getElementById("fieldset");
+  var h3 = document.getElementById("h3");
+  var legend = document.getElementById("legend");
+
+  fieldset.appendChild(legend);
+  fieldset.appendChild(h3);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+
+<body onload="setTimeout(boom, 30);">
+
+<legend id="legend">legend</legend>
+
+<h3 id="h3">H3</h3>
+
+<select><option>option<fieldset id="fieldset"></fieldset></option></select>
+
+</body>
+
+</html>
