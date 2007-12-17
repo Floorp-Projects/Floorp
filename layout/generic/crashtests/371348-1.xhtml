@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+
+<head>
+<script>
+
+function boom()
+{
+  var span = document.getElementById("span");
+  var table = document.getElementById("table");
+  
+  table.appendChild(span);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+
+<body onload="setTimeout(boom, 20)">
+
+<span id="span"></span>
+
+<table id="table">
+  <tbody>
+    <tr>
+      <td style="float: left">
+        Table
+        <xul:box>
+          <input type="checkbox"/>
+        </xul:box>
+        cell
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>
