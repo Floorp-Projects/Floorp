@@ -1,0 +1,32 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+
+<title>Testcase for MathML crash</title>
+
+<script><![CDATA[
+
+function boom() {
+  var div = document.getElementById("div"); 
+  var mi = document.getElementById("mi"); 
+  mi.appendChild(div);
+  mi.removeChild(div);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+setTimeout(boom, 30);
+
+]]></script>
+
+</head>
+
+
+<body>
+
+<div style="float: right;" id="div">Floated div</div>
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi id="mi">mi</mi></math>
+
+</body>
+</html>
