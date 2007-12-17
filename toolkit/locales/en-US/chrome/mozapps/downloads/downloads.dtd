@@ -28,9 +28,6 @@
 <!ENTITY cmd.copyDownloadLink.accesskey   "L">
 <!ENTITY cmd.removeFromList.label         "Remove From List">
 <!ENTITY cmd.removeFromList.accesskey     "e">
-<!ENTITY cmd.info.label                   "Information">
-<!ENTITY cmd.info.accesskey               "i">
-<!ENTITY cmd.info.commandKey              "i">
 
 <!ENTITY cmd.close.commandKey             "w">
 <!ENTITY cmd.close2.commandKey            "j">
