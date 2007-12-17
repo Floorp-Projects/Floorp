@@ -1520,8 +1520,10 @@ nsXULPopupManager::HandleKeyboardNavigation(PRUint32 aKeyCode)
     }
     else if NS_DIRECTION_IS_BLOCK(theDirection) {
       // Open the menu and select its first item.
-      nsCOMPtr<nsIContent> content = currentMenu->GetContent();
-      ShowMenu(content, PR_TRUE, PR_FALSE);
+      if (currentMenu) {
+        nsCOMPtr<nsIContent> content = currentMenu->GetContent();
+        ShowMenu(content, PR_TRUE, PR_FALSE);
+      }
       return PR_TRUE;
     }
   }
