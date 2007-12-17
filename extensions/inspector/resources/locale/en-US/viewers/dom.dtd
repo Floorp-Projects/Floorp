@@ -150,3 +150,9 @@
   <!ENTITY namespaceTitle.XMLEvents.label "XML Events">
   <!ENTITY namespaceTitle.WAIRoles.label "WAI Roles">
   <!ENTITY namespaceTitle.WAIProperties.label "WAI Properties">
+
+  <!-- LOCALIZATION NOTE: Localizers can choose not to translate the following access keys. For a discussion about the pros and cons of such a decision, see https://bugzilla.mozilla.org/show_bug.cgi?id=398704, comments 1 and 2. -->
+  <!ENTITY cbxStateHover.accesskey "h">
+  <!ENTITY cbxStateActive.accesskey "a">
+  <!ENTITY cbxStateFocus.accesskey "f">
+

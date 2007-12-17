@@ -24,10 +24,15 @@
   <groupbox style="width: 25em;">
     <caption label="&pseudoClasses.title;"/>
     <vbox>
-      <!-- These don't need to be localized, since they are CSS APIs -->
-      <checkbox id="cbxStateHover" label=":hover"/>
-      <checkbox id="cbxStateActive" label=":active"/>
-      <checkbox id="cbxStateFocus" label=":focus"/>
+      <!--
+        The labels don't need to be localized, since they are CSS APIs,
+        but the access keys are localizable, because an English
+        keyboard may not always be available
+        see: https://bugzilla.mozilla.org/show_bug.cgi?id=398704#c1
+      -->
+      <checkbox id="cbxStateHover" label=":hover" accesskey="&cbxStateHover.accesskey;"/>
+      <checkbox id="cbxStateActive" label=":active" accesskey="&cbxStateActive.accesskey;"/>
+      <checkbox id="cbxStateFocus" label=":focus" accesskey="&cbxStateFocus.accesskey;"/>
     </vbox>
   </groupbox>
 
