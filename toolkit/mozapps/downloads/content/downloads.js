@@ -60,7 +60,6 @@ let gDownloadManager = Cc["@mozilla.org/download-manager;1"].getService(nsIDM);
 let gDownloadListener = null;
 let gDownloadsView = null;
 let gSearchBox = null;
-let gDownloadInfoPopup = null;
 let gSearchTerms = "";
 let gBuilder = 0;
 
@@ -337,39 +336,6 @@ function openReferrer(aDownload)
   openURL(getReferrerOrSource(aDownload));
 }
 
-function showDownloadInfo(aDownload)
-{
-  gUserInteracted = true;
-
-  var popupTitle    = document.getElementById("information-title");
-  var uriLabel      = document.getElementById("information-uri");
-  var locationLabel = document.getElementById("information-location");
-
-  // Generate the proper title (the start time of the download)
-  var dts = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-            getService(Ci.nsIScriptableDateFormat);
-  var dateStarted = new Date(parseInt(aDownload.getAttribute("startTime")));
-  dateStarted = dts.FormatDateTime("",
-                                   dts.dateFormatLong,
-                                   dts.timeFormatNoSeconds,
-                                   dateStarted.getFullYear(),
-                                   dateStarted.getMonth() + 1,
-                                   dateStarted.getDate(),
-                                   dateStarted.getHours(),
-                                   dateStarted.getMinutes(), 0);
-  popupTitle.setAttribute("value", dateStarted);
-  // Add proper uri and path
-  let uri = getReferrerOrSource(aDownload);
-  uriLabel.label = uri;
-  uriLabel.setAttribute("tooltiptext", uri);
-  var path = aDownload.getAttribute("path");
-  locationLabel.label = path;
-  locationLabel.setAttribute("tooltiptext", path);
-
-  var button = document.getAnonymousElementByAttribute(aDownload, "anonid", "info");
-  gDownloadInfoPopup.openPopup(button, "after_end", 0, 0, false, false);
-}
-
 function copySourceLocation(aDownload)
 {
   var uri = aDownload.getAttribute("uri");
@@ -436,7 +402,6 @@ function Startup()
 {
   gDownloadsView = document.getElementById("downloadView");
   gSearchBox = document.getElementById("searchbox");
-  gDownloadInfoPopup = document.getElementById("information");
 
   // convert strings to those in the string bundle
   let (sb = document.getElementById("downloadStrings")) {
@@ -686,7 +651,6 @@ var gDownloadViewController = {
       case "cmd_removeFromList":
       case "cmd_retry":
         return dl.removable;
-      case "cmd_showInfo":
       case "cmd_copyLocation":
         return true;
     }
@@ -745,9 +709,6 @@ var gDownloadViewController = {
     cmd_show: function(aSelectedItem) {
       showDownload(aSelectedItem);
     },
-    cmd_showInfo: function(aSelectedItem) {
-      showDownloadInfo(aSelectedItem);
-    },
     cmd_copyLocation: function(aSelectedItem) {
       copySourceLocation(aSelectedItem);
     },
@@ -761,12 +722,6 @@ function setSearchboxFocus()
 {
   gSearchBox.focus();
   gSearchBox.select();
-}
-
-function onDownloadShowInfo()
-{
-  if (gDownloadsView.selectedItem)
-    fireEventForElement(gDownloadsView.selectedItem, "properties");
 }
 
 function openExternal(aFile)

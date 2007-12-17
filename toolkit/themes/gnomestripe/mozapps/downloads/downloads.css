@@ -28,19 +28,6 @@ richlistitem[type="download"] .dateTime {
   font-size: smaller;
 }
 
-#information {
-  -moz-appearance: none;
-  background-color: white;
-  width: 300px;
-  max-width: 300px;
-}
-
-#information > button .button-text {
-  -moz-box-flex: 1;
-  text-align: left;
-  -moz-padding-start: 2px;
-}
-
 .mini-button {
   -moz-appearance: none;
   background-color: transparent;
@@ -62,10 +49,6 @@ menuitem:not([type]) {
 .cancel,
 #menuitem_cancel {
   list-style-image: url("moz-icon://stock/gtk-cancel?size=menu");
-}
-
-.info {
-  list-style-image: url("moz-icon://stock/gtk-info?size=menu");
 }
 
 .open,
@@ -102,17 +85,6 @@ menuitem:not([type]) {
 
 #menuitem_clearList {
   list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
-}
-
-#information-uri {
-  list-style-image: url("moz-icon://stock/gtk-network?size=menu");
-}
-
-#information-location {
-  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
-}
-#information-location[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-directory?size=menu&state=disabled");
 }
 
 .blockedIcon {

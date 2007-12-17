@@ -32,38 +32,14 @@ richlistitem[type="download"] button {
   margin: 0 1px 0 1px;
 }
 
-#information {
-  -moz-appearance: none;
-  background-color: white;
-  width: 300px;
-  max-width: 300px;
-}
-
-#information > button {
-  -moz-appearance: none;
-  margin: 0;
-  padding: 0;
-  width: 300px;
-}
-
-#information > button .button-text {
-  -moz-box-flex: 1;
-  text-align: left;
-}
-
 /**
  * Images for buttons in the interface
  */
-richlistitem[type="download"] button,
-#information-uri,
-#information-location {
+richlistitem[type="download"] button {
   list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);
 }
 .cancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-.info {
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 .open {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
@@ -76,13 +52,6 @@ richlistitem[type="download"] button,
 }
 .retry {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-
-#information-uri {
-  -moz-image-region: rect(16px, 16px, 32px, 0px);
-}
-#information-location {
-  -moz-image-region: rect(32px, 16px, 48px, 0px);
 }
 
 .blockedIcon {
