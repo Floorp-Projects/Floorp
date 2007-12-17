@@ -6,15 +6,15 @@
 # http://www.libpng.org/pub/png/pngsuite.html
 #
 
-#include pngsuite-basic-n/reftest.list
-#include pngsuite-basic-i/reftest.list
-#include pngsuite-ancillary/reftest.list
+include pngsuite-basic-n/reftest.list
+include pngsuite-basic-i/reftest.list
+include pngsuite-ancillary/reftest.list
 #include pngsuite-background/reftest.list
 #include pngsuite-chunkorder/reftest.list
 #include pngsuite-corrupted/reftest.list
 #include pngsuite-filtering/reftest.list
 #include pngsuite-gamma/reftest.list
-#include pngsuite-oddsizes/reftest.list
+include pngsuite-oddsizes/reftest.list
 #include pngsuite-palettes/reftest.list
 #include pngsuite-transparency/reftest.list
 include pngsuite-zlib/reftest.list
