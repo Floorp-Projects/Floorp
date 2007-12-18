@@ -584,8 +584,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   aContext->GetDeviceContext(*getter_AddRefs(dctx));
   PRInt32 p2a = dctx->AppUnitsPerDevPixel();
 
-  nsRefPtr<gfxContext> thebesCtx = (gfxContext*)
-    aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  nsRefPtr<gfxContext> thebesCtx = aContext->ThebesContext();
   if (!thebesCtx)
     return NS_ERROR_FAILURE;
 

@@ -5874,8 +5874,7 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
   if (width > 0) {
     const nsStyleVisibility* visibility = GetStyleVisibility();
     PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
-    nsRefPtr<gfxContext> ctx = (gfxContext*)
-      aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+    nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
     gfxPoint pt(PresContext()->AppUnitsToGfxUnits(start + aPt.x),
                 PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
     gfxSize size(PresContext()->AppUnitsToGfxUnits(width),

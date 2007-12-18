@@ -783,7 +783,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   aCtx->GetDeviceContext(*getter_AddRefs(devCtx));
   float a2p = 1.0f / devCtx->AppUnitsPerDevPixel();
 
-  nsRefPtr<gfxContext> ctx = (gfxContext*)aCtx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  nsRefPtr<gfxContext> ctx = aCtx->ThebesContext();
 
   ctx->Save();
 

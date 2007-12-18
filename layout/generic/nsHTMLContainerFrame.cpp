@@ -212,8 +212,7 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
   const nsStyleVisibility* visibility = GetStyleVisibility();
   PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord innerWidth = mRect.width - bp.left - bp.right;
-  nsRefPtr<gfxContext> ctx = (gfxContext*)
-    aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
   gfxPoint pt(PresContext()->AppUnitsToGfxUnits(bp.left + aPt.x),
               PresContext()->AppUnitsToGfxUnits(bp.top + aPt.y));
   gfxSize size(PresContext()->AppUnitsToGfxUnits(innerWidth),

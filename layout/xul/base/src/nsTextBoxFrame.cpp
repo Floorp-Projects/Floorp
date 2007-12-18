@@ -451,8 +451,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
 
     nscoord baseline =
       presContext->RoundAppUnitsToNearestDevPixels(textRect.y + ascent);
-    nsRefPtr<gfxContext> ctx = (gfxContext*)
-      aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+    nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
     gfxPoint pt(presContext->AppUnitsToGfxUnits(textRect.x),
                 presContext->AppUnitsToGfxUnits(textRect.y));
     gfxFloat width = presContext->AppUnitsToGfxUnits(textRect.width);

@@ -212,7 +212,7 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
     aRenderingContext.Translate(inner.x, inner.y);
     aRenderingContext.Scale(sx, sy);
 
-    canvas->RenderContexts((gfxContext*) aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+    canvas->RenderContexts(aRenderingContext.ThebesContext());
 
     aRenderingContext.PopState();
   } else {
@@ -221,7 +221,7 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.Translate(inner.x, inner.y);
 
-    canvas->RenderContexts((gfxContext*) aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+    canvas->RenderContexts(aRenderingContext.ThebesContext());
 
     aRenderingContext.PopState();
   }
