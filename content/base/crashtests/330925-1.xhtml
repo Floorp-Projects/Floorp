@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+
+<script>
+
+function init()
+{
+  var foopy = document.getElementById("foopy");
+  var emb = document.getElementById("emb");
+
+  try {  
+    foopy.appendChild(document.getAnonymousNodes(emb)[0]);
+    emb.parentNode.removeChild(emb);
+    foopy.parentNode.removeChild(foopy);
+  } catch (e) {
+  }
+  
+  document.documentElement.removeAttribute("class");
+}
+
+
+window.addEventListener("load", function() { setTimeout(init, 30); }, false);
+
+</script>
+
+</head>
+<body> 
+
+<div id="foopy"/>
+
+<embed src="data:foo/bar,baz" id="emb" />
+
+</body>
+</html>
