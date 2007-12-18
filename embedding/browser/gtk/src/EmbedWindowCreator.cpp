@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,8 +14,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard.
- *
+ * Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -45,9 +42,8 @@
 // in order to create orphaned windows
 #include "gtkmozembedprivate.h"
 
-EmbedWindowCreator::EmbedWindowCreator(PRBool *aOpenBlockPtr)
+EmbedWindowCreator::EmbedWindowCreator(void)
 {
-  mOpenBlock = aOpenBlockPtr;
 }
 
 EmbedWindowCreator::~EmbedWindowCreator()
@@ -58,34 +54,29 @@ NS_IMPL_ISUPPORTS1(EmbedWindowCreator, nsIWindowCreator)
 
 NS_IMETHODIMP
 EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
-               PRUint32 aChromeFlags,
-               nsIWebBrowserChrome **_retval)
+				       PRUint32 aChromeFlags,
+				       nsIWebBrowserChrome **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  if (mOpenBlock) {
-    if (*mOpenBlock == PR_TRUE) {
-      *mOpenBlock = PR_FALSE;
-      return NS_ERROR_FAILURE;
-    }
-  }
   GtkMozEmbed *newEmbed = nsnull;
 
   // No parent?  Ask via the singleton object instead.
   if (!aParent) {
     gtk_moz_embed_single_create_window(&newEmbed,
-               (guint)aChromeFlags);
-  } else {
+				       (guint)aChromeFlags);
+  }
+  else {
     // Find the EmbedPrivate object for this web browser chrome object.
     EmbedPrivate *embedPrivate = EmbedPrivate::FindPrivateForBrowser(aParent);
-
+    
     if (!embedPrivate)
       return NS_ERROR_FAILURE;
-
+    
     gtk_signal_emit(GTK_OBJECT(embedPrivate->mOwningWidget),
-        moz_embed_signals[NEW_WINDOW],
-        &newEmbed, (guint)aChromeFlags);
-
+		    moz_embed_signals[NEW_WINDOW],
+		    &newEmbed, (guint)aChromeFlags);
+    
   }
 
   // check to make sure that we made a new window
@@ -97,17 +88,15 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
   // will do things like GetDocShell() and the widget has to be
   // realized before that can happen.
   gtk_widget_realize(GTK_WIDGET(newEmbed));
-
-  EmbedPrivate *newEmbedPrivate = static_cast<EmbedPrivate *>
-                                             (newEmbed->data);
+  
+  EmbedPrivate *newEmbedPrivate = static_cast<EmbedPrivate *>(newEmbed->data);
 
   // set the chrome flag on the new window if it's a chrome open
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
     newEmbedPrivate->mIsChrome = PR_TRUE;
 
-  *_retval = static_cast<nsIWebBrowserChrome *>
-                        ((newEmbedPrivate->mWindow));
-
+  *_retval = static_cast<nsIWebBrowserChrome *>(newEmbedPrivate->mWindow);
+  
   if (*_retval) {
     NS_ADDREF(*_retval);
     return NS_OK;
