@@ -3223,6 +3223,10 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
   nsAutoTArray<nsAutoString, 32> tagStack;
   nsAutoString uriStr, nameStr;
 
+  // just in case we have a text node
+  if (!content->IsNodeOfType(nsINode::eELEMENT))
+    content = content->GetParent();
+
   while (content && content->IsNodeOfType(nsINode::eELEMENT)) {
     nsAutoString& tagName = *tagStack.AppendElement();
     NS_ENSURE_TRUE(&tagName, NS_ERROR_OUT_OF_MEMORY);
