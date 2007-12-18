@@ -32,7 +32,7 @@
 == 18217-zorder-5.html 18217-zorder-ref-inline-table.html
 == 23604-1.html 23604-1-ref.html
 == 23604-2.html 23604-2-ref.html
-== 24998-1.html 24998-1-ref.html
+!= 24998-1.html 24998-1-ref.html
 fails == 25888-1l.html 25888-1l-ref.html # bug 25888
 fails != 25888-1l.html 25888-1l-notref.html # bug 25888
 fails == 25888-1r.html 25888-1r-ref.html # bug 25888
