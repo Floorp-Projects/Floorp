@@ -40,8 +40,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 /**
  * DownloadProgressListener "class" is used to help update download items shown
  * in the Download Manager UI such as displaying amount transferred, transfer
