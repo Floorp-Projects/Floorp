@@ -613,7 +613,7 @@ sub IsValidLocaleDeliverable {
 
     my $useTarGz = $config->Exists(var => 'useTarGz') ?
      $config->Get(var => 'useTarGz') : 0;
-    my $linuxExtension = ($useTarGz) ? '.gz' : '.bz2';
+    my $linuxExtension = ($useTarGz) ? 'gz' : 'bz2';
 
     my $dirent = $File::Find::name;
 
