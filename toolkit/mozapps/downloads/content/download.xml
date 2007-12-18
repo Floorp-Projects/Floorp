@@ -197,8 +197,6 @@
           <xul:hbox align="center" flex="1">
             <xul:label xbl:inherits="value=status,tooltiptext=status"
                        crop="end" flex="1" class="status"/>
-            <xul:button class="open mini-button" tooltiptext="&cmd.open.label;"
-                        command="cmd_open" ondblclick="event.stopPropagation();"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>

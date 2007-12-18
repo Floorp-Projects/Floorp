@@ -41,9 +41,6 @@ richlistitem[type="download"] button {
 .cancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
-.open {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
-}
 .pause {
   -moz-image-region: rect(32px, 32px, 48px, 16px);
 }
