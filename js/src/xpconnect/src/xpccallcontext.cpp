@@ -373,6 +373,7 @@ XPCCallContext::~XPCCallContext()
             NS_ASSERTION(!se[i].mInUse, "Uh, string wrapper still in use!");
         }
     }
+#endif
 
     NS_IF_RELEASE(mXPC);
 }
