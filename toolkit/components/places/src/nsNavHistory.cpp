@@ -994,12 +994,12 @@ nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn)
 nsresult
 nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn) 
 {
-  // if dateAdded & lastModified cols are already there, then a partial update occurred.
-  // return, making no changes, and allowing db version to be updated.
+  // if dateAdded & lastModified cols are already there, then a partial update occurred,
+  // and so we should not attempt to add these cols.
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT a.dateAdded, a.lastModified, b.dateAdded, b.lastModified "
-    "FROM moz_annos a, moz_items_annos b"), getter_AddRefs(statement));
+    "SELECT a.dateAdded, a.lastModified FROM moz_annos a"), 
+    getter_AddRefs(statement));
   if (NS_FAILED(rv)) {
     // add dateAdded and lastModified columns to moz_annos
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -1008,7 +1008,14 @@ nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn)
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "ALTER TABLE moz_annos ADD lastModified INTEGER DEFAULT 0"));
     NS_ENSURE_SUCCESS(rv, rv);
+  }
 
+  // if dateAdded & lastModified cols are already there, then a partial update occurred,
+  // and so we should not attempt to add these cols.  see bug #408443 for details.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT b.dateAdded, b.lastModified FROM moz_items_annos b"), 
+    getter_AddRefs(statement));
+  if (NS_FAILED(rv)) {
     // add dateAdded and lastModified columns to moz_items_annos
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "ALTER TABLE moz_items_annos ADD dateAdded INTEGER DEFAULT 0"));
