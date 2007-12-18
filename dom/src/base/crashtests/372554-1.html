@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  if (location.protocol == "file:") {
+    try {
+      location.hostname = 'foo';
+    } catch(e) {
+    }
+  }
+  
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="setTimeout(boom, 30)">
+
+</body>
+
+</html>
