@@ -958,6 +958,7 @@ public:
 class nsDisplayBackground : public nsDisplayItem {
 public:
   nsDisplayBackground(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
+    mIsThemed = mFrame->IsThemed();
     MOZ_COUNT_CTOR(nsDisplayBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -971,9 +972,13 @@ public:
   virtual PRBool IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aAncestorFrame);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Background")
+private:
+    /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
+    PRPackedBool mIsThemed;
 };
 
 /**

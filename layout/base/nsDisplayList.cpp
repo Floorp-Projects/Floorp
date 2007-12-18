@@ -461,7 +461,7 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
 PRBool
 nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
-  if (mFrame->IsThemed())
+  if (mIsThemed)
     return PR_FALSE;
 
   PRBool isCanvas;
@@ -479,7 +479,7 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
 PRBool
 nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
-  if (mFrame->IsThemed())
+  if (mIsThemed)
     return PR_FALSE;
 
   PRBool isCanvas;
@@ -530,6 +530,14 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
                                   *mFrame->GetStyleBorder(),
                                   *mFrame->GetStylePadding(),
                                   mFrame->HonorPrintBackgroundSettings());
+}
+
+nsRect
+nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder) {
+  if (mIsThemed)
+    return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+
+  return nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
 }
 
 nsRect
