@@ -149,10 +149,12 @@ NSCoordSaturatingAdd(nscoord a, nscoord b)
     // a + b = a + b
     NS_ASSERTION(a < nscoord_MAX && b < nscoord_MAX,
                  "Doing nscoord addition with values > nscoord_MAX");
-    NS_ASSERTION((PRInt64)a + (PRInt64)b < (PRInt64)nscoord_MAX,
-                 "nscoord addition will reach or pass nscoord_MAX");
     NS_ASSERTION((PRInt64)a + (PRInt64)b > (PRInt64)nscoord_MIN,
                  "nscoord addition will reach or pass nscoord_MIN");
+    // This one's only a warning because the PR_MIN below means that
+    // we'll handle this case correctly.
+    NS_WARN_IF_FALSE((PRInt64)a + (PRInt64)b < (PRInt64)nscoord_MAX,
+                     "nscoord addition capped to nscoord_MAX");
 
     // Cap the result, just in case we're dealing with numbers near nscoord_MAX
     return PR_MIN(nscoord_MAX, a + b);
@@ -206,10 +208,12 @@ NSCoordSaturatingSubtract(nscoord a, nscoord b,
       // case (d) for integers
       NS_ASSERTION(a < nscoord_MAX && b < nscoord_MAX,
                    "Doing nscoord subtraction with values > nscoord_MAX");
-      NS_ASSERTION((PRInt64)a - (PRInt64)b < (PRInt64)nscoord_MAX,
-                   "nscoord subtraction will reach or pass nscoord_MAX");
       NS_ASSERTION((PRInt64)a - (PRInt64)b > (PRInt64)nscoord_MIN,
                    "nscoord subtraction will reach or pass nscoord_MIN");
+      // This one's only a warning because the PR_MIN below means that
+      // we'll handle this case correctly.
+      NS_WARN_IF_FALSE((PRInt64)a - (PRInt64)b < (PRInt64)nscoord_MAX,
+                       "nscoord subtraction capped to nscoord_MAX");
 
       // Cap the result, in case we're dealing with numbers near nscoord_MAX
       return PR_MIN(nscoord_MAX, a - b);
