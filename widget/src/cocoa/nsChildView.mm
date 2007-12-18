@@ -2319,13 +2319,8 @@ NSEvent* gLastDragEvent = nil;
 #endif
 
 
-// Events should always go to the window that is directly under the point where
-// the event happened, with one exception. If there is no window under the event,
-// mouse moved events should go to the rollup widget if it exists. The return value
-// of this method indicates whether or not the event was supposed to be sent to this
-// view. If the return value is YES, then this view should continue to process the
-// event. If the return value is NO, the event was rerouted and this view should not
-// process the event.
+// We sometimes need to reroute events when there is a rollup widget and the
+// event isn't targeted at it.
 //
 // Rerouting may be needed when the user tries to navigate a context menu while
 // keeping the mouse-button down (left or right mouse button) -- the OS thinks this
@@ -2337,85 +2332,59 @@ NSEvent* gLastDragEvent = nil;
 // context menu.
 - (BOOL)ensureCorrectMouseEventTarget:(NSEvent*)anEvent
 {
-  NSWindow* windowUnderMouse = nsCocoaUtils::FindWindowUnderPoint(nsCocoaUtils::ScreenLocationForEvent(anEvent));
-
-  if (windowUnderMouse == mWindow)
+  // If there is no rollup widget we assume the OS routed the event correctly.
+  if (!gRollupWidget)
     return YES;
 
-  if (!windowUnderMouse) {
-    if ([anEvent type] == NSMouseMoved) {
-      if (gRollupWidget) {
-        // If a mouse moved event is not over any window and there is a rollup widget, the event
-        // should go to the rollup widget.
-        NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-        if (mWindow == rollupWindow)
-          return YES;
-        else
-          windowUnderMouse = rollupWindow;
-      }
-      else {
-        // If the event is not over a window and is a mouse moved event but there is no rollup widget,
-        // then we don't want it to get handled. Essentially, reroute it to nowhere.
-        return NO;
-      }
-    }
-    else {
-      // If the event is not over a window and is not a mouse moved event, then we don't
-      // want it to get handled. Essentially, reroute it to nowhere.
-      return NO;
-    }
-  }
+  // If this is the rollup widget and the event is not a mouse move then trust the OS routing.  
+  // The reason for this trust is complicated.
+  //
+  // There are three types of mouse events that can legitimately need to be targeted at a window
+  // that they are not over. Mouse moves, mouse drags, and mouse ups. Anything else our app wouldn't
+  // handle (if the mouse was not over any window) or it would go to the appropriate window.
+  //
+  // We need to do manual event rerouting for mouse moves because we know that in some cases, like
+  // when there is a submenu opened from a popup window, the OS will route mouse move events to the
+  // submenu even if the mouse is over the parent. Mouse move events are never tied to a particular
+  // window because of some originating action like the starting point of a drag for drag events or
+  // a mouse down event for mouse up events, so it is always safe to do our own routing on them here.
+  //
+  // As for mouse drags and mouse ups, they have originating actions that tie them to windows they
+  // may no longer be over. If there is a rollup window present when one of these events is getting
+  // processed but we are not it, we are probably the window where the action originated, and that
+  // action must have caused the rollup window to come into existence. In that case, we might need
+  // to reroute the event if it is over the rollup window. That is why if we're not the rollup window
+  // we don't return YES here.
+  NSWindow* rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (mWindow == rollupWindow && [anEvent type] != NSMouseMoved)
+    return YES;
 
-  NSEventType type = [anEvent type];
-  NSPoint newWindowLocation = nsCocoaUtils::EventLocationForWindow(anEvent, windowUnderMouse);
-  NSEvent *newEvent = nil;
+  // Find the window that the event is over.
+  NSWindow* targetWindow = nsCocoaUtils::FindWindowUnderPoint(nsCocoaUtils::ScreenLocationForEvent(anEvent));
 
-  // If anEvent is a mouseUp event, send an extra mouseDown event before
-  // sending a mouseUp event -- this is needed to support selection by
-  // dragging the mouse to a menu item and then releasing it.  We retain
-  // the window in case it gets destroyed as a result of the extra
-  // mouseDown (and release it below).
-  BOOL sendSynthMouseDown = gRollupWidget && (type == NSLeftMouseUp || type == NSRightMouseUp);
-  if (sendSynthMouseDown) {
-    [windowUnderMouse retain];
-    NSEventType extraEventType;
-    switch (type) {
-      case NSLeftMouseUp:
-        extraEventType = NSLeftMouseDown;
-        break;
-      case NSRightMouseUp:
-        extraEventType = NSRightMouseDown;
-        break;
-      default:
-        extraEventType = (NSEventType) 0;
-        break;
-    }
-    newEvent = [NSEvent mouseEventWithType:extraEventType
-                                  location:newWindowLocation
-                             modifierFlags:[anEvent modifierFlags]
-                                 timestamp:GetCurrentEventTime()
-                              windowNumber:[windowUnderMouse windowNumber]
-                                   context:nil
-                               eventNumber:0
-                                clickCount:1
-                                  pressure:0.0];
-    [windowUnderMouse sendEvent:newEvent];
-  }
+  // If the event was not over any window, send it to the rollup window.
+  if (!targetWindow)
+    targetWindow = rollupWindow;
 
-  newEvent = [NSEvent mouseEventWithType:type
-                                location:newWindowLocation
-                           modifierFlags:[anEvent modifierFlags]
-                               timestamp:GetCurrentEventTime()
-                            windowNumber:[windowUnderMouse windowNumber]
-                                 context:nil
-                             eventNumber:0
-                              clickCount:1
-                                pressure:0.0];
-  [windowUnderMouse sendEvent:newEvent];
+  // At this point we've resolved a target window, if we are it then just return
+  // yes so we handle it. No need to redirect.
+  if (targetWindow == mWindow)
+    return YES;
 
-  if (sendSynthMouseDown)
-    [windowUnderMouse release];
+  // Send the event to its new destination.
+  NSPoint newWindowLocation = nsCocoaUtils::EventLocationForWindow(anEvent, targetWindow);
+  NSEvent *newEvent = [NSEvent mouseEventWithType:[anEvent type]
+                                         location:newWindowLocation
+                                    modifierFlags:[anEvent modifierFlags]
+                                        timestamp:GetCurrentEventTime()
+                                     windowNumber:[targetWindow windowNumber]
+                                          context:nil
+                                      eventNumber:0
+                                       clickCount:1
+                                         pressure:0.0];
+  [targetWindow sendEvent:newEvent];
 
+  // Return NO because we just sent the event somewhere else.
   return NO;
 }
 
