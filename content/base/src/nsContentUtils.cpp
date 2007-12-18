@@ -141,6 +141,10 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
 #include "nsCompressedCharMap.h"
+#include "nsINativeKeyBindings.h"
+#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMNSEvent.h"
+#include "nsIPrivateDOMEvent.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3749,6 +3753,54 @@ nsContentUtils::GetLocalizedEllipsis()
       sBuf[0] = PRUnichar(0x2026);
   }
   return nsDependentString(sBuf);
+}
+
+//static
+nsEvent*
+nsContentUtils::GetNativeEvent(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aDOMEvent));
+  if (!privateEvent)
+    return nsnull;
+  nsEvent* nativeEvent;
+  privateEvent->GetInternalNSEvent(&nativeEvent);
+  return nativeEvent;
+}
+
+//static
+PRBool
+nsContentUtils::DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
+                                         nsNativeKeyEvent* aNativeEvent,
+                                         PRBool aGetCharCode)
+{
+  nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aDOMEvent);
+  PRBool defaultPrevented;
+  uievent->GetPreventDefault(&defaultPrevented);
+  if (defaultPrevented)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aDOMEvent);
+  PRBool trusted = PR_FALSE;
+  nsevent->GetIsTrusted(&trusted);
+  if (!trusted)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aDOMEvent);
+
+  if (aGetCharCode) {
+    keyEvent->GetCharCode(&aNativeEvent->charCode);
+  } else {
+    aNativeEvent->charCode = 0;
+  }
+  keyEvent->GetKeyCode(&aNativeEvent->keyCode);
+  keyEvent->GetAltKey(&aNativeEvent->altKey);
+  keyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
+  keyEvent->GetShiftKey(&aNativeEvent->shiftKey);
+  keyEvent->GetMetaKey(&aNativeEvent->metaKey);
+
+  aNativeEvent->nativeEvent = GetNativeEvent(aDOMEvent);
+
+  return PR_TRUE;
 }
 
 /* static */
