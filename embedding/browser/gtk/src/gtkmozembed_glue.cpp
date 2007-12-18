@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,41 +40,11 @@
 // XPCOMGlueStartup to glue the gtkmozembed functions.
 
 #include "gtkmozembed.h"
-#include "gtkmozembed_internal.h"
-#include "gtkmozembed_common.h"
-#include "gtkmozembed_download.h"
 #include "nsXPCOMGlue.h"
 
 #ifndef XPCOM_GLUE
 #error This file only makes sense when XPCOM_GLUE is defined.
 #endif
-
-#define GTKMOZEMBED2_FUNCTIONS \
-  GTKF(gtk_moz_embed_download_get_type) \
-  GTKF(gtk_moz_embed_download_new) \
-  GTKF(gtk_moz_embed_common_get_type) \
-  GTKF(gtk_moz_embed_common_new) \
-  GTKF(gtk_moz_embed_common_set_pref) \
-  GTKF(gtk_moz_embed_common_get_pref) \
-  GTKF(gtk_moz_embed_common_save_prefs) \
-  GTKF(gtk_moz_embed_common_remove_passwords) \
-  GTKF(gtk_moz_embed_common_get_history_list) \
-  GTKF(gtk_moz_embed_get_zoom_level) \
-  GTKF(gtk_moz_embed_set_zoom_level) \
-  GTKF(gtk_moz_embed_find_text) \
-  GTKF(gtk_moz_embed_clipboard) \
-  GTKF(gtk_moz_embed_notify_plugins) \
-  GTKF(gtk_moz_embed_get_context_info) \
-  GTKF(gtk_moz_embed_get_selection) \
-  GTKF(gtk_moz_embed_get_doc_info) \
-  GTKF(gtk_moz_embed_insert_text) \
-  GTKF(gtk_moz_embed_common_nsx509_to_raw) \
-  GTKF(gtk_moz_embed_common_observe) \
-  GTKF(gtk_moz_embed_get_shistory_list) \
-  GTKF(gtk_moz_embed_get_shistory_index) \
-  GTKF(gtk_moz_embed_shistory_goto_index) \
-  GTKF(gtk_moz_embed_get_server_cert) \
-  GTKF(gtk_moz_embed_get_nsIWebBrowser)
 
 #define GTKMOZEMBED_FUNCTIONS \
   GTKF(gtk_moz_embed_get_type) \
@@ -104,9 +72,7 @@
   GTKF(gtk_moz_embed_set_chrome_mask) \
   GTKF(gtk_moz_embed_get_chrome_mask) \
   GTKF(gtk_moz_embed_single_get_type) \
-  GTKF(gtk_moz_embed_single_get) \
-  GTKF(gtk_moz_embed_set_directory_service_provider) \
-  GTKMOZEMBED2_FUNCTIONS
+  GTKF(gtk_moz_embed_single_get)
 
 #define GTKF(fname) fname##Type fname;
 
