@@ -599,7 +599,3 @@ pref("browser.places.migratePostDataAnnotations", true);
 // 1 - pre-populate site URL, but don't fetch certificate
 // 2 - pre-populate site URL and pre-fetch certificate
 pref("browser.ssl_override_behavior", 1);
-
-// replace newlines with spaces when pasting into <input type="text"> fields
-pref("editor.singleLine.pasteNewlines", 2);
-
