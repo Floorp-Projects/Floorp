@@ -671,6 +671,15 @@ NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
 NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  PRInt32 rowCount = 0;
+  nsresult rv = mTreeView->GetRowCount(&rowCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mRow < 0 || mRow >= rowCount) {
+    return NS_ERROR_FAILURE;
+  }
+  
   mTreeView->GetCellText(mRow, mColumn, aName);
   
   // If there is still no name try the cell value:
