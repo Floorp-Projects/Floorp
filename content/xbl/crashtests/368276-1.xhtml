@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+
+<head>
+<script>
+
+function boom()
+{
+  var quote = document.getElementById("quote");
+  var para = document.getElementById("para");
+  var dialog = document.getElementById("dialog");
+  var e = document.getElementById("e");
+
+  dialog.appendChild(quote);
+  e.insertBefore(quote, para);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30)">
+
+<p>He said <q id="quote">J<xul:hbox/></q></p>
+
+<xul:dialog id="dialog"/>
+
+<div id="e"><p id="para">Foopy</p></div>
+
+</body>
+</html>
