@@ -258,6 +258,7 @@ LOCALES_suite :=                                \
   suite                                         \
   editor/ui                                     \
   extensions/reporter                           \
+  extensions/spellcheck                         \
   $(NULL)
 
 BOOTSTRAP_suite :=                              \
