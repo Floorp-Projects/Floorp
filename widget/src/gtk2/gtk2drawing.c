@@ -522,7 +522,7 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
            file ../../gdk/gdkwindow.c: line 1846 (gdk_window_clear_area):
            assertion `GDK_IS_WINDOW (window)' failed */
         gtk_paint_box(style, drawable, button_state, shadow_type, cliprect,
-                      widget, "button", x, y, width, height);
+                      widget, (state->isDefault ? "buttondefault" : "button"), x, y, width, height);
     }
 
     if (state->focused) {
