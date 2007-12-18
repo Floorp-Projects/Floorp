@@ -65,7 +65,7 @@ var gCookiesWindow = {
     if (this._view.rowCount > 0) 
       this._tree.view.selection.select(0);
 
-    if ("arguments" in window && window.arguments.length > 0 &&
+    if ("arguments" in window && window.arguments[0] &&
         window.arguments[0].filterString)
       this.setFilter(window.arguments[0].filterString);
     
