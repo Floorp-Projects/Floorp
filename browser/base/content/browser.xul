@@ -255,7 +255,7 @@
                  chromedir="&locale.dir;"
                  type="autocomplete"
                  autocompletesearch="history"
-                 autocompletepopup="PopupAutoComplete"
+                 autocompletepopup="PopupAutoCompleteRichResult"
                  completeselectedindex="true"
                  tabscrolling="true"
                  showcommentcolumn="true"
