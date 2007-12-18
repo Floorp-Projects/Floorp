@@ -871,20 +871,6 @@ mozStorageConnection::BackupDB(const nsAString &aFileName,
 }
 
 /**
- * Mozilla-specific sqlite function to preload the DB into the cache. See the
- * IDL and sqlite3.h
- */
-nsresult
-mozStorageConnection::Preload()
-{
-/*
-  int srv = sqlite3Preload(mDBConn);
-  return ConvertResultCode(srv);
-*/
-    return NS_OK; // XXX restore after sqlite upgrade
-}
-
-/**
  ** Other bits
  **/
 void

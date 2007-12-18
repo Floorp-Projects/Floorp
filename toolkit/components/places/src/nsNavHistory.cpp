@@ -749,15 +749,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
   // --- PUT SCHEMA-MODIFYING THINGS (like create table) ABOVE THIS LINE ---
 
-  // This causes the database data to be preloaded up to the maximum cache size
-  // set above. This dramatically speeds up some later operations. Failures
-  // here are not fatal since we can run fine without this.
-  if (cachePages > 0) {
-    rv = mDBConn->Preload();
-    if (NS_FAILED(rv))
-      NS_WARNING("Preload of database failed");
-  }
-
   // DO NOT PUT ANY SCHEMA-MODIFYING THINGS HERE
 
   rv = InitStatements();
