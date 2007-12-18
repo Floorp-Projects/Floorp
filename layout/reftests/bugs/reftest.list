@@ -184,7 +184,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 346774-1a.html 346774-1-ref.html
 == 346774-1b.html 346774-1-ref.html
 == 346774-1c.html 346774-1-ref.html
-skip-if(MOZ_WIDGET_TOOLKIT=="windows") == 347348-1.xhtml 347348-1-ref.xhtml
+== 347348-1.xhtml 347348-1-ref.xhtml
 skip-if(MOZ_WIDGET_TOOLKIT=="windows") == 347496-1.xhtml 347496-1-ref.xhtml
 == 347912-1.html 347912-1-ref.html
 == 348516-1.html 348516-1-ref.html
