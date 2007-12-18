@@ -14,12 +14,13 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard.
+ * Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Adrian Mardare <amaradre@qnx.com>
+ *   Adrian Mardare <amardare@qnx.com>
+ *   Max Feil       <mfeil@qnx.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,25 +36,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsPhMozRemoteHelper_h__
-#define __nsPhMozRemoteHelper_h__
+#ifndef __nsPhRemoteService_h__
+#define __nsPhRemoteService_h__
 
-#include <nsIXRemoteWidgetHelper.h>
+#include "nsIRemoteService.h"
+#include "nsIObserver.h"
+#include "nsString.h"
 
-// {84f94aac-1dd2-11b2-a05f-9b338fea662c}
+class nsIWeakReference;
 
-#define NS_PHXREMOTEWIDGETHELPER_CID \
-  { 0x84f94aac, 0x1dd2, 0x11b2, \
-  { 0xa0, 0x5f, 0x9b, 0x33, 0x8f, 0xea, 0x66, 0x2c } }
-
-class nsPhXRemoteWidgetHelper : public nsIXRemoteWidgetHelper {
- public:
-  nsPhXRemoteWidgetHelper();
-  virtual ~nsPhXRemoteWidgetHelper();
-
+class nsPhRemoteService : public nsIRemoteService,
+                          public nsIObserver
+{
+public:
+  // We will be a static singleton, so don't use the ordinary methods.
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIREMOTESERVICE
+  NS_DECL_NSIOBSERVER
 
-  NS_IMETHOD EnableXRemoteCommands( nsIWidget *aWidget, const char *aProfile, const char *aProgram );
+  nsPhRemoteService() { mIsInitialized = PR_FALSE; }
+
+private:
+  ~nsPhRemoteService() { }
+
+  void HandleCommandsFor(nsIWidget *aWidget,
+                         nsIWeakReference* aWindow);
+  PRBool mIsInitialized;
+  nsCString mAppName;
+
 };
 
-#endif /* __nsPhMozRemoteHelper_h__ */
+#endif /* __nsPhRemoteService_h__ */
