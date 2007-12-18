@@ -474,8 +474,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
   PRInt32 p2a = mContext->AppUnitsPerDevPixel();
 
-  nsRefPtr<gfxContext> ctx =
-    (gfxContext*) localcx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  nsRefPtr<gfxContext> ctx = localcx->ThebesContext();
 
   ctx->Save();
 

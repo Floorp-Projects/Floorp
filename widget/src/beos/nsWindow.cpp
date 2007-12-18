@@ -2553,8 +2553,7 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 
 	// Double buffering for cairo builds is done here
 #ifdef MOZ_CAIRO_GFX
-	nsRefPtr<gfxContext> ctx =
-		(gfxContext*)rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+	nsRefPtr<gfxContext> ctx = rc->ThebesContext();
 	ctx->Save();
 
 	// Clip

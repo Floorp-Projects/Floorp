@@ -696,6 +696,11 @@ public:
    *         doesn't support rendering EPSF, 
    */
   NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile) = 0;
+
+  /**
+   * Return the Thebes gfxContext associated with this nsIRenderingContext.
+   */
+  virtual gfxContext *ThebesContext() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRenderingContext, NS_IRENDERING_CONTEXT_IID)

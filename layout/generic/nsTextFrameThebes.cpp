@@ -1293,8 +1293,7 @@ GetReferenceRenderingContext(nsTextFrame* aTextFrame, nsIRenderingContext* aRC)
       return nsnull;
   }
 
-  gfxContext* ctx = static_cast<gfxContext*>
-          (tmp->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = tmp->ThebesContext();
   NS_ADDREF(ctx);
   return ctx;
 }
@@ -4103,8 +4102,7 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   // Trim trailing whitespace
   provider.InitializeForDisplay(PR_TRUE);
 
-  gfxContext* ctx = static_cast<gfxContext*>
-                               (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRenderingContext->ThebesContext();
 
   gfxPoint framePt(aPt.x, aPt.y);
   gfxPoint textBaselinePt(
@@ -4870,8 +4868,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
                                       nsIFrame::InlineMinWidthData *aData)
 {
   PRUint32 flowEndInTextRun;
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxSkipCharsIterator iter =
     EnsureTextRun(ctx, nsnull, aData->line, &flowEndInTextRun);
   if (!mTextRun)
@@ -4973,8 +4970,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
                                        nsIFrame::InlinePrefWidthData *aData)
 {
   PRUint32 flowEndInTextRun;
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxSkipCharsIterator iter =
     EnsureTextRun(ctx, nsnull, aData->line, &flowEndInTextRun);
   if (!mTextRun)
@@ -5279,8 +5275,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   PRUint32 flowEndInTextRun;
   nsIFrame* lineContainer = lineLayout.GetLineContainerFrame();
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aReflowState.rendContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aReflowState.rendContext->ThebesContext();
   gfxSkipCharsIterator iter =
     EnsureTextRun(ctx, lineContainer, lineLayout.GetLine(), &flowEndInTextRun);
 
@@ -5578,8 +5573,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIRenderingContext* aRC)
   if (!contentLength)
     return result;
 
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRC->ThebesContext();
   gfxSkipCharsIterator start = EnsureTextRun(ctx);
   NS_ENSURE_TRUE(mTextRun, result);
 

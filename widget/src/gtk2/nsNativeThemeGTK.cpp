@@ -706,8 +706,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
   }
 
-  gfxContext* ctx =
-    (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  gfxContext* ctx = aContext->ThebesContext();
   gfxMatrix current = ctx->CurrentMatrix();
 
   // We require the use of the default display and visual
