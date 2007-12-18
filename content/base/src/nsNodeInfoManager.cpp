@@ -112,9 +112,6 @@ nsDOMNodeAllocator::Init()
 #ifdef DEBUG
   ++gDOMNodeAllocators;
 #endif
-  mPool = new PLArenaPool();
-  NS_ENSURE_TRUE(mPool, NS_ERROR_OUT_OF_MEMORY);
-  PL_InitArenaPool(mPool, "nsDOMNodeAllocator", 4096 * (sizeof(void*)/2), 0);
   memset(mRecyclers, 0, sizeof(mRecyclers));
   return NS_OK;
 }
@@ -150,6 +147,12 @@ nsDOMNodeAllocator::Alloc(size_t aSize)
       mRecyclers[index] = next;
     }
     if (!result) {
+      if (!mPool) {
+        mPool = new PLArenaPool();
+        NS_ENSURE_TRUE(mPool, nsnull);
+        PL_InitArenaPool(mPool, "nsDOMNodeAllocator",
+                         4096 * (sizeof(void*)/2), 0);
+      }
       // Allocate a new chunk from the arena
       PL_ARENA_ALLOCATE(result, mPool, aSize);
     }
