@@ -136,7 +136,7 @@ class EmbedPrivate {
   nsCOMPtr<nsISHistory>          mSessionHistory;
 
   // our event receiver
-  nsCOMPtr<nsPIDOMEventTarget>   mEventReceiver;
+  nsCOMPtr<nsPIDOMEventTarget>   mEventTarget;
 
   // the currently loaded uri
   nsString                       mURI;
