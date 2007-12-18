@@ -1,0 +1,17 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+  var p = document.getElementById("p");
+  window.getComputedStyle(p, null).getPropertyValue("right");
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<p id="p" style="position: relative; left: 3ch;">foo</p>
+
+</body>
+</html>
