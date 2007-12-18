@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      class="reftest-wait">
+  <head>
+    <bindings xmlns="http://www.mozilla.org/xbl">
+      <binding id="td">
+        <content>
+          <html:td><children/></html:td>
+        </content>
+      </binding>
+    </bindings>
+    <script>
+      function f1() {
+        document.getElementById("outer")
+                .appendChild(document.createTextNode("PASS"));
+        document.documentElement.className = "";
+      }
+    </script>
+  </head>
+  <body onload="f1();">
+    <div id="outer" style="-moz-binding: url(#td)"/>
+  </body>
+
+</html>
