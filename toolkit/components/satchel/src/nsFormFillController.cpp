@@ -672,12 +672,21 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
       break;
     }
 #endif
+  case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
+  case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
+    {
+      PRBool isCtrl, isAlt, isMeta;
+      keyEvent->GetCtrlKey(&isCtrl);
+      keyEvent->GetAltKey(&isAlt);
+      keyEvent->GetMetaKey(&isMeta);
+      if (isCtrl || isAlt || isMeta)
+        break;
+    }
+    /* fall through */
   case nsIDOMKeyEvent::DOM_VK_UP:
   case nsIDOMKeyEvent::DOM_VK_DOWN:
   case nsIDOMKeyEvent::DOM_VK_LEFT:
   case nsIDOMKeyEvent::DOM_VK_RIGHT:
-  case nsIDOMKeyEvent::DOM_VK_PAGE_UP:
-  case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN:
     mController->HandleKeyNavigation(k, &cancel);
     break;
   case nsIDOMKeyEvent::DOM_VK_ESCAPE:
