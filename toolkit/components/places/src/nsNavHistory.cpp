@@ -1375,22 +1375,21 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 #endif
 
   // check the main DB
-  nsresult rv;
-  mozStorageStatementScoper statementResetter(mDBGetURLPageInfo);
-  rv = mDBGetURLPageInfo->BindUTF8StringParameter(0, aURIString);
+  mozStorageStatementScoper scoper(mDBGetPageVisitStats);
+  nsresult rv = mDBGetPageVisitStats->BindUTF8StringParameter(0, aURIString);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   PRBool hasMore = PR_FALSE;
-  rv = mDBGetURLPageInfo->ExecuteStep(&hasMore);
+  rv = mDBGetPageVisitStats->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  if (! hasMore)
+  if (!hasMore)
     return PR_FALSE;
 
   // Actually get the result to make sure the visit count > 0.  there are
   // several ways that we can get pages with visit counts of 0, and those
   // should not count.
   PRInt32 visitCount;
-  rv = mDBGetURLPageInfo->GetInt32(kGetInfoIndex_VisitCount, &visitCount);
+  rv = mDBGetPageVisitStats->GetInt32(1, &visitCount);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   return visitCount > 0;
