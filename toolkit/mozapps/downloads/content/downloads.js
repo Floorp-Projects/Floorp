@@ -265,14 +265,23 @@ function showDownload(aDownload)
   var f = getLocalFileFromNativePathOrUrl(aDownload.getAttribute("file"));
 
   try {
+    // Show the directory containing the file and select the file
     f.reveal();
-  } catch (ex) {
-    // if reveal failed for some reason (eg on unix it's not currently
-    // implemented), send the file: URL window rooted at the parent to
-    // the OS handler for that protocol
-    var parent = f.parent;
-    if (parent)
+  } catch (e) {
+    // If reveal fails for some reason (e.g., it's not implemented on unix or
+    // the file doesn't exist), try using the parent if we have it.
+    let parent = f.parent.QueryInterface(Ci.nsILocalFile);
+    if (!parent)
+      return;
+
+    try {
+      // "Double click" the parent directory to show where the file should be
+      parent.launch();
+    } catch (e) {
+      // If launch also fails (probably because it's not implemented), let the
+      // OS handler try to open the parent
       openExternal(parent);
+    }
   }
 }
 
@@ -629,7 +638,6 @@ var gDownloadViewController = {
       case "cmd_cancel":
         return dl.inProgress;
       case "cmd_open":
-      case "cmd_show":
         let file = getLocalFileFromNativePathOrUrl(dl.getAttribute("file"));
         return dl.openable && file.exists();
       case "cmd_pause":
@@ -643,6 +651,7 @@ var gDownloadViewController = {
       case "cmd_removeFromList":
       case "cmd_retry":
         return dl.removable;
+      case "cmd_show":
       case "cmd_copyLocation":
         return true;
     }
