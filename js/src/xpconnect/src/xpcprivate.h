@@ -919,6 +919,21 @@ private:
 #define NATIVE_CALLER  XPCContext::LANG_NATIVE
 #define JS_CALLER      XPCContext::LANG_JS
 
+// class to export a JSString as an const nsAString, no refcounting :(
+class XPCReadableJSStringWrapper : public nsDependentString
+{
+public:
+    typedef nsDependentString::char_traits char_traits;
+
+    XPCReadableJSStringWrapper(PRUnichar *chars, size_t length) :
+        nsDependentString(chars, length)
+    { }
+
+    XPCReadableJSStringWrapper() :
+        nsDependentString(char_traits::sEmptyBuffer, char_traits::sEmptyBuffer)
+    { SetIsVoid(PR_TRUE); }
+};
+
 // No virtuals
 // XPCCallContext is ALWAYS declared as a local variable in some function;
 // i.e. instance lifetime is always controled by some C++ function returning.
@@ -1019,6 +1034,9 @@ public:
 
     operator JSContext*() const {return GetJSContext();}
 
+    XPCReadableJSStringWrapper *NewStringWrapper(PRUnichar *str, PRUint32 len);
+    void DeleteString(nsAString *string);
+
 #ifdef XPC_IDISPATCH_SUPPORT
     /**
      * Sets the IDispatch information for the context
@@ -1103,8 +1121,29 @@ private:
     // XPCContext returns true.  We're not responsible for rooting this object;
     // whoever sets it on us needs to deal with that.
     JSObject*                       mCallee;
-};
 
+#define XPCCCX_STRING_CACHE_SIZE 2
+
+    // String wrapper entry, holds a string, and a boolean that tells
+    // whether the string is in use or not.
+    struct StringWrapperEntry
+    {
+        StringWrapperEntry()
+            : mInUse(PR_FALSE)
+        {
+        }
+
+        XPCReadableJSStringWrapper mString;
+        PRBool mInUse;
+    };
+
+    // Reserve space for XPCCCX_STRING_CACHE_SIZE string wrapper
+    // entries for use on demand. It's important to not make this be
+    // string class members since we don't want to pay the cost of
+    // calling the constructors and destructors when the strings
+    // aren't being used.
+    char mStringWrapperData[sizeof(StringWrapperEntry) * XPCCCX_STRING_CACHE_SIZE];
+};
 
 /***************************************************************************
 ****************************************************************************
@@ -2663,21 +2702,6 @@ private:
 
 /***************************************************************************/
 
-// class to export a JSString as an const nsAString, no refcounting :(
-class XPCReadableJSStringWrapper : public nsDependentString
-{
-public:
-    typedef nsDependentString::char_traits char_traits;
-
-    XPCReadableJSStringWrapper(PRUnichar *chars, size_t length) :
-        nsDependentString(chars, length)
-    { }
-
-    XPCReadableJSStringWrapper() :
-        nsDependentString(char_traits::sEmptyBuffer, char_traits::sEmptyBuffer)
-    { SetIsVoid(PR_TRUE); }
-};
-
 // readable string conversions, static methods only
 class XPCStringConvert
 {
@@ -2686,7 +2710,8 @@ public:
     static JSString *ReadableToJSString(JSContext *cx,
                                         const nsAString &readable);
 
-    static XPCReadableJSStringWrapper *JSStringToReadable(JSString *str);
+    static XPCReadableJSStringWrapper *JSStringToReadable(XPCCallContext& ccx,
+                                                          JSString *str);
 
     static void ShutdownDOMStringFinalizer();
 
