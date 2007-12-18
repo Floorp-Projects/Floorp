@@ -545,8 +545,9 @@ sub TrimCallback {
         # Don't ship xforms in the release area
         if (($dirent =~ /xforms\.xpi/) || 
          # ZIP files are not shipped; neither are en-US lang packs
-         ($dirent =~ /\.zip$/) ||
-         ($dirent =~ /en-US\.xpi$/)) {
+         ($dirent =~ /\.zip$/) || ($dirent =~ /en-US\.xpi$/) ||
+         # nor the BuildID files, nor the 2.0.0.x signing log
+         ($dirent =~ /_info.txt$/) || ($dirent =~ /win32_signing_rc\d+\.log/) ) {
             unlink($dirent) || die "Could not unlink $dirent: $!";
             $this->Log(msg => "Unlinked $dirent");
             return;
