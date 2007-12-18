@@ -1137,8 +1137,13 @@ nsContainerFrame::RemovePropTableFrame(nsPresContext*  aPresContext,
                                        nsIAtom*        aPropID) const
 {
   nsFrameList* frameList = RemovePropTableFrames(aPresContext, aPropID);
-  if (!frameList || !frameList->RemoveFrame(aFrame)) {
-    // Failed to remove frame
+  if (!frameList) {
+    // No such list
+    return PR_FALSE;
+  }
+  if (!frameList->RemoveFrame(aFrame)) {
+    // Found list, but it doesn't have the frame. Put list back.
+    SetPropTableFrames(aPresContext, frameList, aPropID);
     return PR_FALSE;
   }
 
