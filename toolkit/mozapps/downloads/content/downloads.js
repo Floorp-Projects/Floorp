@@ -53,6 +53,7 @@ const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -103,12 +104,19 @@ let gStr = {
   fileExecutableSecurityWarningDontAsk: "fileExecutableSecurityWarningDontAsk"
 };
 
+// Create a getDisplayHost function for queries to use
+gDownloadManager.DBConnection.createFunction("getDisplayHost", 1, {
+  QueryInterface: XPCOMUtils.generateQI([Ci.mozIStorageFunction]),
+  onFunctionCall: function(aArgs) getDisplayHost(aArgs.getUTF8String(0))
+});
+
 // The statement to query for downloads that are active or match the search
 let gStmt = gDownloadManager.DBConnection.createStatement(
   "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
-         "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive " +
+         "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive, " +
+         "getDisplayHost(IFNULL(referrer, source)) display " +
   "FROM moz_downloads " +
-  "WHERE isActive OR name LIKE ?6 ESCAPE '/' " +
+  "WHERE isActive OR name LIKE ?6 ESCAPE '/' OR display LIKE ?6 ESCAPE '/' " +
   "ORDER BY isActive DESC, endTime DESC, startTime DESC");
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -441,6 +449,8 @@ function Shutdown()
   clearTimeout(gBuilder);
   gStmt.reset();
   gStmt.finalize();
+
+  gDownloadManager.DBConnection.removeFunction("getDisplayHost");
 }
 
 let gDownloadObserver = {
