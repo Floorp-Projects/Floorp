@@ -80,11 +80,7 @@
 #include "EmbedContentListener.h"
 #include "EmbedEventListener.h"
 #include "EmbedWindowCreator.h"
-#ifdef MOZ_WIDGET_GTK2
 #include "GtkPromptService.h"
-#else
-#include "nsNativeCharsetUtils.h"
-#endif
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "nsIAccessibilityService.h"
@@ -165,11 +161,7 @@ GTKEmbedDirectoryProvider::GetFiles(const char *aKey,
 #define NS_PROMPTSERVICE_CID \
  {0x95611356, 0xf583, 0x46f5, {0x81, 0xff, 0x4b, 0x3e, 0x01, 0x62, 0xc6, 0x19}}
 
-#ifdef MOZ_WIDGET_GTK2
 NS_GENERIC_FACTORY_CONSTRUCTOR(GtkPromptService)
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
 
 static const nsModuleComponentInfo defaultAppComps[] = {
   {
@@ -182,13 +174,6 @@ static const nsModuleComponentInfo defaultAppComps[] = {
 
 const nsModuleComponentInfo *EmbedPrivate::sAppComps = defaultAppComps;
 int   EmbedPrivate::sNumAppComps = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
-
-#else
-
-const nsModuleComponentInfo *EmbedPrivate::sAppComps = nsnull;
-int   EmbedPrivate::sNumAppComps = 0;
-
-#endif
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -437,15 +422,7 @@ EmbedPrivate::Destroy(void)
 void
 EmbedPrivate::SetURI(const char *aURI)
 {
-#ifdef MOZ_WIDGET_GTK
-  // XXX: Even though NS_CopyNativeToUnicode is not designed for non-filenames,
-  // we know that it will do "the right thing" on UNIX.
-  NS_CopyNativeToUnicode(nsDependentCString(aURI), mURI);
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
   CopyUTF8toUTF16(aURI, mURI);
-#endif
 }
 
 void
@@ -783,50 +760,12 @@ EmbedPrivate::ContentFinishedLoading(void)
   }
 }
 
-#ifdef MOZ_WIDGET_GTK
-// handle focus in and focus out events
-void
-EmbedPrivate::TopLevelFocusIn(void)
-{
-  if (mIsDestroyed)
-    return;
-
-  nsCOMPtr<nsPIDOMWindow> piWin;
-  GetPIDOMWindow(getter_AddRefs(piWin));
-
-  if (!piWin)
-    return;
-
-  nsIFocusController *focusController = piWin->GetRootFocusController();
-  if (focusController)
-    focusController->SetActive(PR_TRUE);
-}
-
-void
-EmbedPrivate::TopLevelFocusOut(void)
-{
-  if (mIsDestroyed)
-    return;
-
-  nsCOMPtr<nsPIDOMWindow> piWin;
-  GetPIDOMWindow(getter_AddRefs(piWin));
-
-  if (!piWin)
-    return;
-
-  nsIFocusController *focusController = piWin->GetRootFocusController();
-  if (focusController)
-    focusController->SetActive(PR_FALSE);
-}
-#endif /* MOZ_WIDGET_GTK */
-
 void
 EmbedPrivate::ChildFocusIn(void)
 {
   if (mIsDestroyed)
     return;
 
-#ifdef MOZ_WIDGET_GTK2
   nsresult rv;
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -838,17 +777,6 @@ EmbedPrivate::ChildFocusIn(void)
     return;
   
   webBrowserFocus->Activate();
-#endif /* MOZ_WIDGET_GTK2 */
-
-#ifdef MOZ_WIDGET_GTK
-  nsCOMPtr<nsPIDOMWindow> piWin;
-  GetPIDOMWindow(getter_AddRefs(piWin));
-
-  if (!piWin)
-    return;
-
-  piWin->Activate();
-#endif /* MOZ_WIDGET_GTK */
 }
 
 void
@@ -857,7 +785,6 @@ EmbedPrivate::ChildFocusOut(void)
   if (mIsDestroyed)
     return;
 
-#ifdef MOZ_WIDGET_GTK2
   nsresult rv;
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -869,23 +796,6 @@ EmbedPrivate::ChildFocusOut(void)
 	  return;
   
   webBrowserFocus->Deactivate();
-#endif /* MOZ_WIDGET_GTK2 */
-
-#ifdef MOZ_WIDGET_GTK
-  nsCOMPtr<nsPIDOMWindow> piWin;
-  GetPIDOMWindow(getter_AddRefs(piWin));
-
-  if (!piWin)
-    return;
-
-  piWin->Deactivate();
-
-  // but the window is still active until the toplevel gets a focus
-  // out
-  nsIFocusController *focusController = piWin->GetRootFocusController();
-  if (focusController)
-    focusController->SetActive(PR_TRUE);
-#endif /* MOZ_WIDGET_GTK */
 }
 
 // Get the event listener for the chrome event handler.
