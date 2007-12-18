@@ -346,6 +346,8 @@
             case "accessibility.typeaheadfind.casesensitive":
               this._self._typeAheadCaseSensitive = prefsvc.getIntPref(aPrefName);
               this._self._updateCaseSensitivity();
+              if (this._self.getElement("highlight").checked)
+                this._self._setHighlightTimeout();
               break;
           }
         }
