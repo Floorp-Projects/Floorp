@@ -54,7 +54,7 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(e42f0655-cdc3-47c6-824a-cdb88c731cb9)]
+[scriptable, uuid(ffddc17b-cec3-492c-b13e-d5393c4b1595)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
@@ -275,20 +275,4 @@ interface mozIStorageConnection : nsISupports {
    */
   nsIFile backupDB(in AString aFileName,
                    [optional] in nsIFile aParentDirectory);
-
-  /**
-   * This is used to preload the database cache. It loads pages from the
-   * start of the database file until the memory cache (specified by
-   * "PRAGMA cache_size=") is full or the entire file is read.
-   *
-   * The cache MUST be active on the database for this to work. This means
-   * that you must have a transaction open on the connection, or have a
-   * transaction open on another connection that shares the same pager cache.
-   * This cached data will go away when the transaction is closed.
-   *
-   * This preload operation can dramatically speed up read operations because
-   * the data is loaded as one large block. Normally, pages are read in on
-   * demand, which can cause many disk seeks.
-   */
-  void preload();
 };
