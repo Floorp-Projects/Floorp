@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+
+<binding id="td">
+  <content>
+    <html:td><children/></html:td>
+  </content>
+</binding>
+
+<binding id="foo">
+  <content>
+    <html:span/>
+  </content>
+</binding>
+
+</bindings>
+
+
+<script>
+function f1()
+{
+  document.getElementById("inner").style.MozBinding = "url(#foo)";
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+</head>
+
+
+<body onload="setTimeout(f1, 30);">
+
+
+<div id="outer" style="-moz-binding: url(#td)"><div id="inner">M</div></div>
+
+
+</body>
+
+</html>
