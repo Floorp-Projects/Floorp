@@ -52,38 +52,10 @@
 #include <nsXPIDLString.h>
 #include <nsReadableUtils.h>
 
-#ifdef MOZ_WIDGET_GTK2
-
 #include "gtkmozembedmarshal.h"
 
 #define NEW_TOOLKIT_STRING(x) g_strdup(NS_ConvertUTF16toUTF8(x).get())
 #define GET_OBJECT_CLASS_TYPE(x) G_OBJECT_CLASS_TYPE(x)
-
-#endif /* MOZ_WIDGET_GTK2 */
-
-#ifdef MOZ_WIDGET_GTK
-
-// so we can get callbacks from the mozarea
-#include <gtkmozarea.h>
-
-// so we get the right marshaler for gtk 1.2
-#define gtkmozembed_VOID__INT_UINT \
-  gtk_marshal_NONE__INT_INT
-#define gtkmozembed_VOID__STRING_INT_INT \
-  gtk_marshal_NONE__POINTER_INT_INT
-#define gtkmozembed_VOID__STRING_INT_UINT \
-  gtk_marshal_NONE__POINTER_INT_INT
-#define gtkmozembed_VOID__POINTER_INT_POINTER \
-  gtk_marshal_NONE__POINTER_INT_POINTER
-#define gtkmozembed_BOOL__STRING \
-  gtk_marshal_BOOL__POINTER
-
-#define G_SIGNAL_TYPE_STATIC_SCOPE 0
-
-#define NEW_TOOLKIT_STRING(x) g_strdup(NS_LossyConvertUTF16toASCII(x).get())
-#define GET_OBJECT_CLASS_TYPE(x) (GTK_OBJECT_CLASS(x)->type)
-
-#endif /* MOZ_WIDGET_GTK */
 
 class nsIDirectoryServiceProvider;
 
@@ -130,18 +102,6 @@ static gint
 handle_child_focus_out(GtkWidget     *aWidget,
 		       GdkEventFocus *aGdkFocusEvent,
 		       GtkMozEmbed   *aEmbed);
-
-#ifdef MOZ_WIDGET_GTK
-// signal handlers for tracking the focus in and and focus out events
-// on the toplevel window.
-
-static void
-handle_toplevel_focus_in (GtkMozArea    *aArea,
-			  GtkMozEmbed   *aEmbed);
-static void
-handle_toplevel_focus_out(GtkMozArea    *aArea,
-			  GtkMozEmbed   *aEmbed);
-#endif /* MOZ_WIDGET_GTK */
 
 // globals for this type of widget
 
@@ -410,11 +370,6 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
                    GTK_SIGNAL_OFFSET(GtkMozEmbedClass, dom_focus_out),
                    gtk_marshal_BOOL__POINTER,
                    GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
-#ifdef MOZ_WIDGET_GTK
-  gtk_object_class_add_signals(object_class, moz_embed_signals,
-			       EMBED_LAST_SIGNAL);
-#endif /* MOZ_WIDGET_GTK */
-
 }
 
 static void
@@ -424,9 +379,7 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   embed->data = priv;
   gtk_widget_set_name(GTK_WIDGET(embed), "gtkmozembed");
 
-#ifdef MOZ_WIDGET_GTK2
   GTK_WIDGET_UNSET_FLAGS(GTK_WIDGET(embed), GTK_NO_WINDOW);
-#endif
 }
 
 GtkWidget *
@@ -526,22 +479,6 @@ gtk_moz_embed_realize(GtkWidget *widget)
 				 GTK_SIGNAL_FUNC(handle_child_focus_in),
 				 embed,
 				 GTK_OBJECT(child_widget));
-
-#ifdef MOZ_WIDGET_GTK
-  // connect to the toplevel focus out events for the child
-  GtkMozArea *mozarea = GTK_MOZAREA(child_widget);
-  gtk_signal_connect_while_alive(GTK_OBJECT(mozarea),
-				 "toplevel_focus_in",
-				 GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
-				 embed,
-				 GTK_OBJECT(mozarea));
-
-  gtk_signal_connect_while_alive(GTK_OBJECT(mozarea),
-				 "toplevel_focus_out",
-				 GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
-				 embed,
-				 GTK_OBJECT(mozarea));
-#endif /* MOZ_WIDGET_GTK */
 }
 
 static void
@@ -667,28 +604,6 @@ handle_child_focus_out(GtkWidget     *aWidget,
  
   return FALSE;
 }
-
-#ifdef MOZ_WIDGET_GTK
-void
-handle_toplevel_focus_in (GtkMozArea    *aArea,
-			  GtkMozEmbed   *aEmbed)
-{
-  EmbedPrivate   *embedPrivate;
-  embedPrivate = (EmbedPrivate *)aEmbed->data;
-
-  embedPrivate->TopLevelFocusIn();
-}
-
-void
-handle_toplevel_focus_out(GtkMozArea    *aArea,
-			  GtkMozEmbed   *aEmbed)
-{
-  EmbedPrivate   *embedPrivate;
-  embedPrivate = (EmbedPrivate *)aEmbed->data;
-
-  embedPrivate->TopLevelFocusOut();
-}
-#endif /* MOZ_WIDGET_GTK */
 
 // Widget methods
 
@@ -1142,11 +1057,6 @@ gtk_moz_embed_single_class_init(GtkMozEmbedSingleClass *klass)
 				     new_window_orphan),
 		   gtk_marshal_NONE__POINTER_UINT,
 		   GTK_TYPE_NONE, 2, GTK_TYPE_POINTER, GTK_TYPE_UINT);
-  
-#ifdef MOZ_WIDGET_GTK
-  gtk_object_class_add_signals(object_class, moz_embed_single_signals,
-			       SINGLE_LAST_SIGNAL);
-#endif /* MOZ_WIDGET_GTK */
 }
 
 static void
