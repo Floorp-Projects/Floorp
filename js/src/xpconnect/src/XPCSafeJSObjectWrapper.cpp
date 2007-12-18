@@ -204,11 +204,6 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                   jsval *rval);
 
-static JSFunctionSpec sXPC_SJOW_JSClass_methods[] = {
-  {"toString", XPC_SJOW_toString, 0, 0, 0},
-  {0, 0, 0, 0, 0}
-};
-
 // Reserved slot indexes on safe wrappers.
 
 // Boolean value, initialized to false on object creation and true
@@ -621,7 +616,9 @@ XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 {
   // No need to resolve toString as it's a class method.
   if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
-    return JS_TRUE;
+    *objp = obj;
+    return JS_DefineFunction(cx, obj, "toString",
+                             XPC_SJOW_toString, 0, 0) != nsnull;
   }
 
   obj = FindSafeObject(cx, obj);
@@ -897,9 +894,11 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   // Don't use the object the JS engine created for us, it is in most
   // cases incorectly parented and has a proto from the wrong scope.
   JSObject *wrapperObj = ::JS_NewObject(cx, &sXPC_SJOW_JSClass.base, nsnull,
-                                        objToWrap);
+                                        nsnull);
 
-  if (!wrapperObj) {
+  if (!wrapperObj ||
+      !::JS_SetPrototype(cx, wrapperObj, nsnull) ||
+      !::JS_SetParent(cx, wrapperObj, objToWrap)) {
     // JS_NewObject already threw.
     return JS_FALSE;
   }
@@ -994,8 +993,7 @@ XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
 
   JSObject *class_obj =
     ::JS_InitClass(ccx, aGlobalObject, nsnull, &sXPC_SJOW_JSClass.base,
-                   XPC_SJOW_Construct, 0, nsnull, sXPC_SJOW_JSClass_methods,
-                   nsnull, nsnull);
+                   XPC_SJOW_Construct, 0, nsnull, nsnull, nsnull, nsnull);
   if (!class_obj) {
     NS_WARNING("can't initialize the XPCSafeJSObjectWrapper class");
     return PR_FALSE;
