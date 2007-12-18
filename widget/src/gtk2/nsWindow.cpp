@@ -1672,8 +1672,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                                  &boundsRect.width, &boundsRect.height);
 
     // do double-buffering and clipping here
-    nsRefPtr<gfxContext> ctx
-        = (gfxContext*)rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+    nsRefPtr<gfxContext> ctx = rc->ThebesContext();
     ctx->Save();
     ctx->NewPath();
     if (translucent) {

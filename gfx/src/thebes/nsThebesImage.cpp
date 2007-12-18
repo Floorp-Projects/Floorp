@@ -383,7 +383,7 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     }
 
     nsThebesRenderingContext *thebesRC = static_cast<nsThebesRenderingContext*>(&aContext);
-    gfxContext *ctx = thebesRC->Thebes();
+    gfxContext *ctx = thebesRC->ThebesContext();
 
 #if 0
     fprintf (stderr, "nsThebesImage::Draw src [%f %f %f %f] dest [%f %f %f %f] trans: [%f %f] dec: [%f %f]\n",

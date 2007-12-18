@@ -1547,8 +1547,7 @@ nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
 nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
   mRenderMode(NORMAL), mRenderingContext(aContext)
 {
-  mGfxContext = static_cast<gfxContext*>
-                           (aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  mGfxContext = aContext->ThebesContext();
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :

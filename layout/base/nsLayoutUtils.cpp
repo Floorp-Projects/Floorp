@@ -2239,9 +2239,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   nsCOMPtr<nsIDeviceContext> dc;
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
 
-  nsRefPtr<gfxContext> ctx = static_cast<gfxContext*>
-                                        (aRenderingContext->GetNativeGraphicData(
-      nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  nsRefPtr<gfxContext> ctx = aRenderingContext->ThebesContext();
 
   // the dest rect is affected by the current transform; that'll be
   // handled by Image::Draw(), when we actually set up the rectangle.

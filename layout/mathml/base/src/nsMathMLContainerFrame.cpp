@@ -1018,9 +1018,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
   if (IsForeignChild(aChildFrame) &&
       (aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS)) {
     // use ComputeTightBounds API as aDesiredSize.mBoundingMetrics is not set.
-    gfxContext* ctx = static_cast<gfxContext*>
-      (aReflowState.rendContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));  
-    nsRect r = aChildFrame->ComputeTightBounds(ctx);
+    nsRect r = aChildFrame->ComputeTightBounds(aReflowState.rendContext->ThebesContext());
     aDesiredSize.mBoundingMetrics.leftBearing = r.x;
     aDesiredSize.mBoundingMetrics.rightBearing = r.XMost();
     aDesiredSize.mBoundingMetrics.ascent = aDesiredSize.ascent - r.y;
