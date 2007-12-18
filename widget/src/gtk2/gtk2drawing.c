@@ -2114,17 +2114,6 @@ moz_gtk_get_toolbar_separator_width(gint* size)
 }
 
 gint
-moz_gtk_get_menu_popup_vertical_padding(gint* vertical_padding)
-{
-    ensure_menu_popup_widget();
-    gtk_widget_style_get(gMenuPopupWidget,
-                         "vertical-padding", vertical_padding,
-                         NULL);
-
-    return MOZ_GTK_SUCCESS;
-}
-
-gint
 moz_gtk_get_expander_size(gint* size)
 {
     ensure_expander_widget();

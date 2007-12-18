@@ -328,14 +328,6 @@ gint moz_gtk_get_toolbar_separator_width(gint* size);
 gint moz_gtk_get_expander_size(gint* size);
 
 /**
- * Get the vertical padding for menu popups
- * vertical_padding:    [OUT] the vertical padding for the menu popup
- *
- * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
- */
-gint moz_gtk_get_menu_popup_vertical_padding(gint* vertical_padding);
-
-/**
  * Get the desired height of a menu separator
  * size:    [OUT] the desired height
  *
