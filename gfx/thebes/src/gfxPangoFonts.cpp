@@ -70,7 +70,6 @@
 #include <cairo-ft.h>
 
 #include <pango/pango.h>
-#include <pango/pango-utils.h>
 #include <pango/pangocairo.h>
 #include <pango/pangofc-fontmap.h>
 
@@ -90,7 +89,8 @@
 #define PANGO_GLYPH_EMPTY           ((PangoGlyph)0)
 #endif
 // For g a PangoGlyph,
-#define IS_MISSING_GLYPH(g) (((g) & PANGO_GLYPH_UNKNOWN_FLAG) || (g) == PANGO_GLYPH_EMPTY)
+#define IS_MISSING_GLYPH(g) ((g) & PANGO_GLYPH_UNKNOWN_FLAG)
+#define IS_EMPTY_GLYPH(g) ((g) == PANGO_GLYPH_EMPTY)
 
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
 
@@ -394,7 +394,7 @@ gfxPangoFont::GetCharSize(char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
         *aGlyphID = 0;
         if (glstr->num_glyphs == 1) {
             PangoGlyph glyph = glstr->glyphs[0].glyph;
-            if (!IS_MISSING_GLYPH(glyph)) {
+            if (!IS_MISSING_GLYPH(glyph) && !IS_EMPTY_GLYPH(glyph)) {
                 *aGlyphID = glyph;
             }
         }
@@ -1002,18 +1002,17 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
                 return NS_ERROR_FAILURE;
             }
         } else {
-            gunichar ch = g_utf8_get_char(clusterUTF8);
-            do { // Does pango ever provide more than one glyph in the cluster
-                // if there is a missing glyph?
-                // behdad: yes
-                if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
-                    if (pango_is_zero_width(ch)) {
-                        // the zero width characters returns empty glyph ID at shaping,
-                        // we should override it if the font has the character.
-                        glyphs[glyphIndex].glyph = aFont->GetGlyph(' ');
-                        glyphs[glyphIndex].geometry.width = 0;
-                    } else
-                        haveMissingGlyph = PR_TRUE;
+            do {
+                if (IS_EMPTY_GLYPH(glyphs[glyphIndex].glyph)) {
+                    // The zero width characters return empty glyph ID at
+                    // shaping, we should override it.
+                    glyphs[glyphIndex].glyph = aFont->GetGlyph(' ');
+                    glyphs[glyphIndex].geometry.width = 0;
+                } else if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
+                    // Does pango ever provide more than one glyph in the
+                    // cluster if there is a missing glyph?
+                    // behdad: yes
+                    haveMissingGlyph = PR_TRUE;
                 }
                 glyphIndex++;
             } while (glyphIndex < numGlyphs && 
