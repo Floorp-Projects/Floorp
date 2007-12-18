@@ -278,27 +278,9 @@ function showDownload(aDownload)
 
 function onDownloadDblClick(aEvent)
 {
-  var item = aEvent.target;
-  if (item.getAttribute("type") == "download" && aEvent.button == 0) {
-    var state = parseInt(item.getAttribute("state"));
-    switch (state) {
-      case nsIDM.DOWNLOAD_FINISHED:
-        gDownloadViewController.doCommand("cmd_open");
-        break;
-      case nsIDM.DOWNLOAD_DOWNLOADING:
-        gDownloadViewController.doCommand("cmd_pause");
-        break;
-      case nsIDM.DOWNLOAD_PAUSED:
-        gDownloadViewController.doCommand("cmd_resume");
-        break;
-      case nsIDM.DOWNLOAD_CANCELED:
-      case nsIDM.DOWNLOAD_BLOCKED:
-      case nsIDM.DOWNLOAD_DIRTY:
-      case nsIDM.DOWNLOAD_FAILED:
-        gDownloadViewController.doCommand("cmd_retry");
-        break;
-    }
-  }
+  // Only do the default action for double primary clicks
+  if (aEvent.button == 0)
+    doDefaultForSelected();
 }
 
 function openDownload(aDownload)
@@ -1042,6 +1024,24 @@ function getDisplayHost(aURIString)
 function replaceInsert(aText, aIndex, aValue)
 {
   return aText.replace("#" + aIndex, aValue);
+}
+
+/**
+ * Perform the default action for the currently selected download item
+ */
+function doDefaultForSelected()
+{
+  // Make sure we have something selected
+  let item = gDownloadsView.selectedItem;
+  if (!item)
+    return;
+
+  // Get the default action (first item in the menu)
+  let state = Number(item.getAttribute("state"));
+  let menuitem = document.getElementById(gContextMenus[state][0]);
+
+  // Try to do the action if the command is enabled
+  gDownloadViewController.doCommand(menuitem.command);
 }
 
 function removeFromView(aDownload)
