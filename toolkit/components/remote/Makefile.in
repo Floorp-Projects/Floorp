@@ -74,7 +74,7 @@ CPPSRCS += nsGTKRemoteService.cpp
 endif
 
 ifeq (photon,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += nsPhMozRemoteHelper.cpp
+CPPSRCS += nsPhRemoteService.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk
