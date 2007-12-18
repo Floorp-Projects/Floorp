@@ -591,7 +591,9 @@ nsComboboxControlFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext
       NS_ASSERTION(aType == nsLayoutUtils::PREF_WIDTH, "Unexpected type");
       dropdownContentWidth = mDropdownFrame->GetPrefWidth(aRenderingContext);
     }
-    dropdownContentWidth -= scrollbarWidth;
+    dropdownContentWidth = NSCoordSaturatingSubtract(dropdownContentWidth, 
+                                                     scrollbarWidth,
+                                                     nscoord_MAX);
   
     displayWidth = PR_MAX(dropdownContentWidth, displayWidth);
   }
