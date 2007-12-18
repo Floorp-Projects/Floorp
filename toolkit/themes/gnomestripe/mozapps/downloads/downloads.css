@@ -51,11 +51,9 @@ menuitem:not([type]) {
   list-style-image: url("moz-icon://stock/gtk-cancel?size=menu");
 }
 
-.open,
 #menuitem_open {
   list-style-image: url("moz-icon://stock/gtk-open?size=menu");
 }
-/* .open can't handle disabled because by using commandsets all the .open buttons share the disabled attribute :-( */
 #menuitem_open[disabled] {
   list-style-image: url("moz-icon://stock/gtk-open?size=menu&state=disabled");
 }
