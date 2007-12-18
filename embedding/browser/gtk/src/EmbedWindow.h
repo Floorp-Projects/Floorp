@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,7 +14,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard.
+ * Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -40,30 +38,27 @@
 #ifndef __EmbedWindow_h
 #define __EmbedWindow_h
 
-#ifdef MOZILLA_INTERNAL_API
+#include <nsString.h>
+#include <nsIWebBrowserChrome.h>
+#include <nsIWebBrowserChromeFocus.h>
+#include <nsIEmbeddingSiteWindow.h>
+#include <nsITooltipListener.h>
+#include <nsISupports.h>
+#include <nsIWebBrowser.h>
+#include <nsIBaseWindow.h>
+#include <nsIInterfaceRequestor.h>
+#include <nsCOMPtr.h>
 #include "nsString.h"
-#else
-#include "nsStringAPI.h"
-#endif
-#include "nsIWebBrowserChrome.h"
-#include "nsIWebBrowserChromeFocus.h"
-#include "nsIEmbeddingSiteWindow.h"
-//#include "nsITooltipListener.h"
-#include "nsISupports.h"
-#include "nsIWebBrowser.h"
-#include "nsIBaseWindow.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsCOMPtr.h"
 
 #include <gtk/gtk.h>
 
 class EmbedPrivate;
 
 class EmbedWindow : public nsIWebBrowserChrome,
-        public nsIWebBrowserChromeFocus,
+		    public nsIWebBrowserChromeFocus,
                     public nsIEmbeddingSiteWindow,
-//                    public nsITooltipListener,
-        public nsIInterfaceRequestor
+                    public nsITooltipListener,
+		    public nsIInterfaceRequestor
 {
 
  public:
@@ -83,7 +78,7 @@ class EmbedWindow : public nsIWebBrowserChrome,
 
   NS_DECL_NSIEMBEDDINGSITEWINDOW
 
-//  NS_DECL_NSITOOLTIPLISTENER
+  NS_DECL_NSITOOLTIPLISTENER
 
   NS_DECL_NSIINTERFACEREQUESTOR
 
@@ -102,6 +97,6 @@ private:
   PRBool                   mIsModal;
 
 };
-
+  
 
 #endif /* __EmbedWindow_h */
