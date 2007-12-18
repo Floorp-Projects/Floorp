@@ -270,13 +270,8 @@ function runTest2() {
   }
 
   var doc = $("t").contentDocument;
-  try {
-    is(doc instanceof $("t").contentWindow.HTMLDocument, true,
-      "Expected an HTMLDocument here");
-    todo(1, "Someone fixed bug 396849; need to update this code");
-  } catch (e) {
-    todo(0, "Running into bug 396849");
-  }
+  is(doc instanceof $("t").contentWindow.HTMLDocument, true,
+     "Expected an HTMLDocument here");
   isnot(doc.nodePrincipal, null, "Must have doc principal");
   is(doc.nodePrincipal instanceof Components.interfaces.nsIPrincipal,
      true, "doc principal must be a principal");
