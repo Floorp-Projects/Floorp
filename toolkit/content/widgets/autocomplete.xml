@@ -828,6 +828,11 @@
         var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
         controller.stopSearch();
 
+        // when the popup hides, we need to clear the selection
+        // otherwise we will use the value of the selected index when the
+        // user hits enter.
+        // see bug #400671 for details
+        this.selectedIndex = -1;
         this.mPopupOpen = false;
 
         // Reset the maxRows property to the cached "normal" value, and reset
