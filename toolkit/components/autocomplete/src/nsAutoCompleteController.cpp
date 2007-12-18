@@ -339,6 +339,13 @@ nsAutoCompleteController::HandleStartComposition()
   // Stop all searches in case they are async.
   StopSearch();
 
+  if (!mInput) {
+    // StopSearch() can call PostSearchCleanup() which might result
+    // in a blur event, which could null out mInput, so we need to check it
+    // again.  See bug #408463 for more details
+    return NS_OK;
+  }
+
   PRBool isOpen;
   mInput->GetPopupOpen(&isOpen);
   if (isOpen)
