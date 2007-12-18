@@ -733,7 +733,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 if(str && !isNewString)
                 {
                     XPCReadableJSStringWrapper *wrapper =
-                        XPCStringConvert::JSStringToReadable(str);
+                        XPCStringConvert::JSStringToReadable(ccx, str);
                     if(!wrapper)
                         return JS_FALSE;
 
