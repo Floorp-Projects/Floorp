@@ -229,10 +229,10 @@ sub CvsTag {
     push(@cmdArgs, @{$files}) if (scalar(@{$files}) > 0);
 
     # We can't use Bootstrap::Step logs since we are in Util, oh well...
-    print 'log: Running "cvs tag" as follows in' . $cvsDir . ':';
-    print 'log:   cvs ' . join(' ', @cmdArgs);
-    print 'log: Logging output to: ' . $logFile;
-    print 'log: Timeout: ' . $timeout;
+    print 'log: Running "cvs tag" as follows in' . $cvsDir . ":\n";
+    print 'log:   cvs ' . join(' ', @cmdArgs) . "\n";
+    print 'log: Logging output to: ' . $logFile . "\n";
+    print 'log: Timeout: ' . $timeout . "\n";
 
     my %cvsTagArgs = (command => 'cvs',
                       args => \@cmdArgs,
