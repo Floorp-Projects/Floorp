@@ -137,8 +137,11 @@ var security = {
     var win = wm.getMostRecentWindow("Browser:Cookies");
     var eTLDService = Components.classes["@mozilla.org/network/effective-tld-service;1"].
                       getService(Components.interfaces.nsIEffectiveTLDService);
-    var eTLD = eTLDService.getBaseDomainFromHost(this._getSecurityInfo()
-                                                     .hostName);
+    var eTLD = "";
+
+    if (this._getSecurityInfo().hostName)
+      eTLD = eTLDService.getBaseDomainFromHost(this._getSecurityInfo().hostName);
+
     if (win) {
       win.gCookiesWindow.setFilter(eTLD);
       win.focus();
