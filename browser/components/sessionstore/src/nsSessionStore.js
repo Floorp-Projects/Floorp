@@ -2096,19 +2096,11 @@ const SessionStoreModule = {
   registerSelf: function(aCompMgr, aFileSpec, aLocation, aType) {
     aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
   },
 
   unregisterSelf: function(aCompMgr, aLocation, aType) {
     aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CID, aLocation);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.deleteCategoryEntry( "app-startup", "service," + CONTRACT_ID, true);
   },
 
   canUnload: function(aCompMgr) {
@@ -2132,8 +2124,7 @@ const SessionStoreFactory = {
   lockFactory: function(aLock) { },
 
   QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsISupports) && !aIID.equals(Ci.nsIModule) &&
-        !aIID.equals(Ci.nsIFactory) && !aIID.equals(Ci.nsISessionStore)) {
+    if (!aIID.equals(Ci.nsISupports) && !aIID.equals(Ci.nsIFactory)) {
       Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
       return null;
     }
