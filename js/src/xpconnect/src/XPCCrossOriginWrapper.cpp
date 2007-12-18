@@ -86,6 +86,9 @@ XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                   jsval *rval);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_XOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+
+JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 JS_STATIC_DLL_CALLBACK(JSObject *)
@@ -102,7 +105,7 @@ JSExtendedClass sXPC_XOW_JSClass = {
     XPC_XOW_Convert,     XPC_XOW_Finalize,
     nsnull,              XPC_XOW_CheckAccess,
     XPC_XOW_Call,        XPC_XOW_Construct,
-    nsnull,              nsnull,
+    nsnull,              XPC_XOW_HasInstance,
     nsnull,              nsnull
   },
 
@@ -917,6 +920,40 @@ XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   return XPC_XOW_RewrapIfNeeded(cx, callee, rval);
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_XOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+{
+  JSObject *iface = GetWrappedObject(cx, obj);
+  nsresult rv = IsWrapperSameOrigin(cx, iface);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
+      // Don't do this test across origins.
+      return ThrowException(rv, cx);
+    }
+    return JS_FALSE;
+  }
+
+  JSClass *clasp = JS_GET_CLASS(cx, iface);
+
+  *bp = JS_FALSE;
+  if (!clasp->hasInstance) {
+    return JS_TRUE;
+  }
+
+  // Prematurely unwrap the left hand side.
+  if (!JSVAL_IS_PRIMITIVE(v)) {
+    JSObject *test = JSVAL_TO_OBJECT(v);
+
+    // GetWrappedObject does an instanceof check.
+    test = GetWrappedObject(cx, test);
+    if (test) {
+      v = OBJECT_TO_JSVAL(test);
+    }
+  }
+
+  return clasp->hasInstance(cx, iface, v, bp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
