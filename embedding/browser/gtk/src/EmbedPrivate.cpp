@@ -402,8 +402,8 @@ EmbedPrivate::Destroy(void)
 
   // detach our event listeners and release the event receiver
   DetachListeners();
-  if (mEventReceiver)
-    mEventReceiver = nsnull;
+  if (mEventTarget)
+    mEventTarget = nsnull;
 
   // destroy our child window
   mWindow->ReleaseChildren();
@@ -722,7 +722,7 @@ EmbedPrivate::ContentStateChange(void)
 
   GetListener();
 
-  if (!mEventReceiver)
+  if (!mEventTarget)
     return;
 
   AttachListeners();
@@ -803,7 +803,7 @@ EmbedPrivate::ChildFocusOut(void)
 void
 EmbedPrivate::GetListener(void)
 {
-  if (mEventReceiver)
+  if (mEventTarget)
     return;
 
   nsCOMPtr<nsPIDOMWindow> piWin;
@@ -812,7 +812,7 @@ EmbedPrivate::GetListener(void)
   if (!piWin)
     return;
 
-  mEventReceiver = do_QueryInterface(piWin->GetChromeEventHandler());
+  mEventTarget = do_QueryInterface(piWin->GetChromeEventHandler());
 }
 
 // attach key and mouse event listeners
@@ -820,7 +820,7 @@ EmbedPrivate::GetListener(void)
 void
 EmbedPrivate::AttachListeners(void)
 {
-  if (!mEventReceiver || mListenersAttached)
+  if (!mEventTarget || mListenersAttached)
     return;
 
   nsIDOMEventListener *eventListener =
@@ -828,21 +828,21 @@ EmbedPrivate::AttachListeners(void)
 
   // add the key listener
   nsresult rv;
-  rv = mEventReceiver->AddEventListenerByIID(eventListener,
+  rv = mEventTarget->AddEventListenerByIID(eventListener,
 					     NS_GET_IID(nsIDOMKeyListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add key listener\n");
     return;
   }
 
-  rv = mEventReceiver->AddEventListenerByIID(eventListener,
+  rv = mEventTarget->AddEventListenerByIID(eventListener,
 					     NS_GET_IID(nsIDOMMouseListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add mouse listener\n");
     return;
   }
 
-  rv = mEventReceiver->AddEventListenerByIID(eventListener,
+  rv = mEventTarget->AddEventListenerByIID(eventListener,
                                              NS_GET_IID(nsIDOMUIListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add UI listener\n");
@@ -856,14 +856,14 @@ EmbedPrivate::AttachListeners(void)
 void
 EmbedPrivate::DetachListeners(void)
 {
-  if (!mListenersAttached || !mEventReceiver)
+  if (!mListenersAttached || !mEventTarget)
     return;
 
   nsIDOMEventListener *eventListener =
     static_cast<nsIDOMEventListener *>(static_cast<nsIDOMKeyListener *>(mEventListener));
 
   nsresult rv;
-  rv = mEventReceiver->RemoveEventListenerByIID(eventListener,
+  rv = mEventTarget->RemoveEventListenerByIID(eventListener,
 						NS_GET_IID(nsIDOMKeyListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to remove key listener\n");
@@ -871,14 +871,14 @@ EmbedPrivate::DetachListeners(void)
   }
 
   rv =
-    mEventReceiver->RemoveEventListenerByIID(eventListener,
+    mEventTarget->RemoveEventListenerByIID(eventListener,
 					     NS_GET_IID(nsIDOMMouseListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to remove mouse listener\n");
     return;
   }
 
-  rv = mEventReceiver->RemoveEventListenerByIID(eventListener,
+  rv = mEventTarget->RemoveEventListenerByIID(eventListener,
 						NS_GET_IID(nsIDOMUIListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to remove UI listener\n");
