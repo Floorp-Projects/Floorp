@@ -4708,7 +4708,7 @@ interrupt:
                  * scope needed to parent the function object's clone.
                  */
                 parent = OBJ_GET_PARENT(cx, obj);
-                if (OBJ_GET_CLASS(cx, parent) == &js_BlockClass)
+                if (parent && OBJ_GET_CLASS(cx, parent) == &js_BlockClass)
                     fp->blockChain = parent;
                 parent = js_GetScopeChain(cx, fp);
             } else {
@@ -4872,8 +4872,7 @@ interrupt:
 
             /*
              * Clone the function object with the current scope chain as the
-             * clone's parent.  The original function object is the prototype
-             * of the clone.  Do this only if re-parenting; the compiler may
+             * clone's parent. Do this only if re-parenting; the compiler may
              * have seen the right parent already and created a sufficiently
              * well-scoped function object.
              */
