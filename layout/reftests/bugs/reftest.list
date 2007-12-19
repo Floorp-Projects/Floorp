@@ -280,6 +280,7 @@ fails == 352980-1h.html 352980-1-ref.html
 == 364861-1.html 364861-1-ref.html
 == 364862-1.html 364862-1-ref.html
 == 365173-1.html 365173-1-ref.html
+== 366207-1.xul 366207-1-ref.xul 
 == 366616-1.xul 366616-1-ref.xul
 == 367220-1.html 367220-1-ref.html
 == 367247-s-visible.html 367247-s-hidden.html
