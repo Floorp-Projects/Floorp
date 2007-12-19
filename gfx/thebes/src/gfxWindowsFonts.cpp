@@ -243,7 +243,7 @@ gfxWindowsFont::MakeHFONT()
         chosenWeight = baseWeight * 100;
 
     mAdjustedSize = GetStyle()->size;
-    if (mMetrics->xHeight != 0.0 && GetStyle()->sizeAdjust > 0.0) {
+    if (GetStyle()->sizeAdjust > 0.0) {
         if (!mFont) {
             FillLogFont(mAdjustedSize, chosenWeight);
             mFont = CreateFontIndirectW(&mLogFont);
