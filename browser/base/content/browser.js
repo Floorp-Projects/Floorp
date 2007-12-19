@@ -320,8 +320,11 @@ const gPopupBlockerObserver = {
   _reportButton: null,
   _kIPM: Components.interfaces.nsIPermissionManager,
 
-  onUpdatePageReport: function ()
+  onUpdatePageReport: function (aEvent)
   {
+    if (aEvent.originalTarget != gBrowser.selectedBrowser)
+      return;
+
     if (!this._reportButton)
       this._reportButton = document.getElementById("page-report-button");
 
@@ -804,6 +807,7 @@ function prepareForStartup()
   // Note: we need to listen to untrusted events, because the pluginfinder XBL
   // binding can't fire trusted ones (runs with page privileges).
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, true, true);
+  gBrowser.addEventListener("NewPluginInstalled", gMissingPluginInstaller.refreshBrowser, false);
   gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
@@ -4970,7 +4974,7 @@ function getPluginInfo(pluginElement)
 
 missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
   var tabbrowser = getBrowser();
-  var missingPluginsArray = new Object;
+  var missingPluginsArray = {};
 
   var pluginInfo = getPluginInfo(aEvent.target);
   missingPluginsArray[pluginInfo.mimetype] = pluginInfo;
@@ -4978,7 +4982,7 @@ missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
                       "PFSWindow", "modal,chrome,resizable=yes",
-                      {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
+                      {plugins: missingPluginsArray, browser: tabbrowser.selectedBrowser});
   }
 
   aEvent.preventDefault();
@@ -5017,15 +5021,14 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
       break;
   }
 
-  var tab = tabbrowser.mTabContainer.childNodes[i];
-  if (!tab.missingPlugins)
-    tab.missingPlugins = {};
+  var browser = tabbrowser.getBrowserAtIndex(i);
+  if (!browser.missingPlugins)
+    browser.missingPlugins = {};
 
   var pluginInfo = getPluginInfo(aEvent.target);
 
-  tab.missingPlugins[pluginInfo.mimetype] = pluginInfo;
+  browser.missingPlugins[pluginInfo.mimetype] = pluginInfo;
 
-  var browser = tabbrowser.getBrowserAtIndex(i);
   var notificationBox = gBrowser.getNotificationBox(browser);
   if (!notificationBox.getNotificationWithValue("missing-plugins")) {
     var bundle_browser = document.getElementById("bundle_browser");
@@ -5044,23 +5047,30 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   }
 }
 
-missingPluginInstaller.prototype.closeNotification = function() {
-  var notificationBox = gBrowser.getNotificationBox();
+missingPluginInstaller.prototype.refreshBrowser = function(aEvent) {
+  var browser = aEvent.target;
+  var notificationBox = gBrowser.getNotificationBox(browser);
   var notification = notificationBox.getNotificationWithValue("missing-plugins");
 
+  // clear the plugin list, now that at least one plugin has been installed
+  browser.missingPlugins = null;
   if (notification) {
+    // reset UI
     notificationBox.removeNotification(notification);
   }
+  // reload the browser to make the new plugin show.
+  browser.reload();
 }
 
 function pluginsMissing()
 {
   // get the urls of missing plugins
   var tabbrowser = getBrowser();
-  var missingPluginsArray = tabbrowser.mCurrentTab.missingPlugins;
+  var missingPluginsArray = tabbrowser.selectedBrowser.missingPlugins;
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-      "PFSWindow", "modal,chrome,resizable=yes", {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
+                      "PFSWindow", "modal,chrome,resizable=yes",
+                      {plugins: missingPluginsArray, browser: tabbrowser.selectedBrowser});
   }
 }
 

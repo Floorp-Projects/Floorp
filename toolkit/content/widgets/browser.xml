@@ -474,13 +474,9 @@
       <method name="updatePageReport">
         <body>
           <![CDATA[
-            var tabBrowser = this.getTabBrowser();
-            if (!tabBrowser || tabBrowser.mCurrentBrowser != this)
-              return;
-
             var event = document.createEvent("Events");
             event.initEvent("DOMUpdatePageReport", true, true);
-            tabBrowser.dispatchEvent(event);
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
