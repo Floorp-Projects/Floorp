@@ -794,6 +794,10 @@ sub GeneratePrettyName {
     my $newVersion = $config->Get(var => 'version');
     my $newVersionShort = $newVersion;
 
+    # Use long alpha/beta name for Win32 and Mac
+    $newVersion =~ s/a([0-9]+)/ Alpha $1/;
+    $newVersion =~ s/b([0-9]+)/ Beta $1/;
+
     my @result;
 
     # $1 = first character of name
