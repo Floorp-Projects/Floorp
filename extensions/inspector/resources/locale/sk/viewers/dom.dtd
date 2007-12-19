@@ -43,13 +43,13 @@
 <!ENTITY cmdShowFindDialog.accelkey "f">
 
 <!ENTITY cmdFindNext.label "Hľadať ďalej">
-<!ENTITY cmdFindNext.accesskey "n">
+<!ENTITY cmdFindNext.accesskey "a">
 
 <!ENTITY cmdToggleAnonContent.label "Zobraziť anonymný obsah">
 <!ENTITY cmdToggleAnonContent.accesskey "a">
 
 <!ENTITY cmdToggleWhitespaceNodes.label "Zobraziť prázdne uzly">
-<!ENTITY cmdToggleWhitespaceNodes.accesskey "p">
+<!ENTITY cmdToggleWhitespaceNodes.accesskey "u">
 
 <!ENTITY cmdToggleAccessibleNodes.label "Zobraziť dostupné uzly">
 <!ENTITY cmdToggleAccessibleNodes.accesskey "b">
@@ -74,12 +74,16 @@
 <!ENTITY cmdInsertNode.label "Vložiť">
 <!ENTITY cmdDeleteNode.label "Odstrániť">
 <!ENTITY cmdCopyXML.label "Kopírovať XML">
+<!ENTITY cmdCopyXML.accesskey "X">
 <!ENTITY cmdBlink.label "Zvýrazniť prvok">
+<!ENTITY cmdBlink.accesskey "Z">
 <!ENTITY cmdInspectBrowser.label "Preskúmať">
+<!ENTITY cmdInspectBrowser.accesskey "r">
 <!ENTITY cmdInspectInNewWindow.label "Preskúmať v novom okne">
+<!ENTITY cmdInspectInNewWindow.accesskey "e">
 
 <!ENTITY cmdShowPseudoClasses.label "Nastaviť pseudo-triedy">
-<!ENTITY cmdShowPseudoClasses.accesskey "p">
+<!ENTITY cmdShowPseudoClasses.accesskey "N">
 
 <!ENTITY pseudoClasses.title "Pseudo-triedy">
 
@@ -105,18 +109,30 @@
 <!ENTITY findNodesCancel.label "Zrušiť">
 
   <!ENTITY mnEditPasteMenu.label "Prilepiť">
+  <!ENTITY mnEditPasteMenu.accesskey "P">
   <!ENTITY mnEditPasteBefore.label "Pred">
+  <!ENTITY mnEditPasteBefore.accesskey "r">
   <!ENTITY mnEditPasteAfter.label "Po">
+  <!ENTITY mnEditPasteAfter.accesskey "P">
   <!ENTITY mnEditPasteReplace.label "Na miesto (Nahradiť)">
+  <!ENTITY mnEditPasteReplace.accesskey "N">
   <!ENTITY mnEditPasteFirstChild.label "Ako prvý potomok">
+  <!ENTITY mnEditPasteFirstChild.accesskey "A">
   <!ENTITY mnEditPasteLastChild.label "Ako posledný potomok">
+  <!ENTITY mnEditPasteLastChild.accesskey "k">
   <!ENTITY mnEditPasteAsParent.label "Ako rodič">
+  <!ENTITY mnEditPasteAsParent.accesskey "o">
 
   <!ENTITY mnEditInsertMenu.label "Vložiť">
+  <!ENTITY mnEditInsertMenu.accesskey "i">
   <!ENTITY mnEditInsertAfter.label "Po">
+  <!ENTITY mnEditInsertAfter.accesskey "P">
   <!ENTITY mnEditInsertBefore.label "Pred">
+  <!ENTITY mnEditInsertBefore.accesskey "r">
   <!ENTITY mnEditInsertFirstChild.label "Ako prvý potomok">
+  <!ENTITY mnEditInsertFirstChild.accesskey "A">
   <!ENTITY mnEditInsertLastChild.label "Ako posledný potomok">
+  <!ENTITY mnEditInsertLastChild.accesskey "k">
 
   <!ENTITY insertNode.title "Vložiť uzol">
   <!ENTITY nodeType.label "Typ uzla:">
@@ -150,3 +166,9 @@
   <!ENTITY namespaceTitle.XMLEvents.label "Udalosti XML">
   <!ENTITY namespaceTitle.WAIRoles.label "Úlohy WAI">
   <!ENTITY namespaceTitle.WAIProperties.label "Vlastnosti WAI">
+
+  <!-- LOCALIZATION NOTE: Localizers can choose not to translate the following access keys. For a discussion about the pros and cons of such a decision, see https://bugzilla.mozilla.org/show_bug.cgi?id=398704, comments 1 and 2. -->
+  <!ENTITY cbxStateHover.accesskey "h">
+  <!ENTITY cbxStateActive.accesskey "a">
+  <!ENTITY cbxStateFocus.accesskey "f">
+
