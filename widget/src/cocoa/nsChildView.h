@@ -91,6 +91,9 @@ union nsPluginPort;
   // Whether we're a plugin view.
   BOOL mIsPluginView;
 
+  // Whether we're in nsChildView::SetFocus()
+  int mInSetFocusLevel;
+
   NSEvent* mCurKeyEvent;   // only valid during a keyDown
   PRBool mKeyDownHandled;
   
@@ -127,6 +130,9 @@ union nsPluginPort;
 
 // Stop NSView hierarchy being changed during [ChildView drawRect:]
 - (void)delayedTearDown;
+
+-(void)setInSetFocus:(BOOL)aInSetFocus;
+-(BOOL)inSetFocus;
 @end
 
 
