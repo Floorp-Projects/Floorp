@@ -1,0 +1,9 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        class="reftest-wait"
+        onload="setTimeout(function() { var foo = document.getElementById('foo'); foo.parentNode.removeChild(foo); document.documentElement.removeAttribute('class'); }, 30);">
+        
+  <listboxbody>
+    <hbox id="foo"/>
+  </listboxbody>
+  
+</window>
