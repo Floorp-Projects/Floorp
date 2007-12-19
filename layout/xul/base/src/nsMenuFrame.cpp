@@ -748,9 +748,9 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
         prefSize.width = mRect.width;
 
     // if the pref size changed then set bounds to be the pref size
-    PRBool sizeChanged = (mPopupFrame->GetRect().Size() != prefSize);
+    PRBool sizeChanged = (mPopupFrame->PreferredSize() != prefSize);
     if (sizeChanged) {
-      mPopupFrame->SetBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
+      mPopupFrame->SetPreferredBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
     }
 
     // if the menu has just been opened, or its size changed, position
