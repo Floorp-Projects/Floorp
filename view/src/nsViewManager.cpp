@@ -1028,11 +1028,11 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             nsRefPtr<nsViewManager> rootVM = RootViewManager();
 
             nsIWidget *widget = mRootView->GetWidget();
-            PRBool translucentWindow = PR_FALSE;
+            PRBool transparentWindow = PR_FALSE;
             if (widget)
-                widget->GetWindowTranslucency(translucentWindow);
+                widget->GetHasTransparentBackground(transparentWindow);
 
-            if (rootVM->mScrollCnt == 0 && !translucentWindow) {
+            if (rootVM->mScrollCnt == 0 && !transparentWindow) {
               nsIViewObserver* observer = GetViewObserver();
               if (observer) {
                 // Do an update view batch.  Make sure not to do it DEFERRED,

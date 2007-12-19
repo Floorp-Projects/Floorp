@@ -5286,9 +5286,9 @@ PresShell::Paint(nsIView*             aView,
   mViewManager->GetDefaultBackgroundColor(&backgroundColor);
   for (nsIView *view = aView; view; view = view->GetParent()) {
     if (view->HasWidget()) {
-      PRBool widgetIsTranslucent;
-      view->GetWidget()->GetWindowTranslucency(widgetIsTranslucent);
-      if (widgetIsTranslucent) {
+      PRBool widgetIsTransparent;
+      view->GetWidget()->GetHasTransparentBackground(widgetIsTransparent);
+      if (widgetIsTransparent) {
         backgroundColor = NS_RGBA(0,0,0,0);
         break;
       }

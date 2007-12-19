@@ -458,7 +458,7 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
         // don't proceed unless this is the root view
         // (sometimes the non-root-view is a canvas)
         if (aView->HasWidget() && aView == rootView) {
-          aView->GetWidget()->SetWindowTranslucency(nsLayoutUtils::FrameHasTransparency(aFrame));
+          aView->GetWidget()->SetHasTransparentBackground(nsLayoutUtils::FrameHasTransparency(aFrame));
         }
       }
     }
