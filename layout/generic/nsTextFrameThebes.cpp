@@ -3052,13 +3052,18 @@ nsTextPaintStyle::GetResolvedForeColor(nscolor aColor,
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
 {
-  if (!IsEmpty() || GetNextInFlow()) {
-
-    nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
-    if (accService) {
-      return accService->CreateHTMLTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
+  if (IsEmpty()) {
+    nsAutoString renderedWhitespace;
+    GetRenderedText(&renderedWhitespace, nsnull, nsnull, 0, 1);
+    if (renderedWhitespace.IsEmpty()) {
+      return NS_ERROR_FAILURE;
     }
+  }
+
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    return accService->CreateHTMLTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
   return NS_ERROR_FAILURE;
 }
