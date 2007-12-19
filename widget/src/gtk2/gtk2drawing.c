@@ -268,9 +268,10 @@ ensure_toolbar_separator_widget()
 {
     if (!gToolbarSeparatorWidget) {
         ensure_toolbar_widget();
-        gToolbarSeparatorWidget = gtk_separator_tool_item_new();
+        gToolbarSeparatorWidget = GTK_WIDGET(gtk_separator_tool_item_new());
         setup_widget_prototype(gToolbarSeparatorWidget);
     }
+    return MOZ_GTK_SUCCESS;
 }
 
 static gint
@@ -1287,18 +1288,21 @@ moz_gtk_container_paint(GdkDrawable* drawable, GdkRectangle* rect,
 {
     GtkStateType state_type = ConvertGtkState(state);
     GtkStyle* style;
+    GtkWidget *widget;
     gboolean interior_focus;
     gint focus_width, focus_pad;
 
     if (isradio) {
         ensure_radiobutton_widget();
-        style = gRadiobuttonWidget->style;  
-        moz_gtk_widget_get_focus(gRadiobuttonWidget, &interior_focus, &focus_width, &focus_pad);
+        widget = gRadiobuttonWidget;
     } else {
         ensure_checkbox_widget();
-        style = gCheckboxWidget->style;
-        moz_gtk_widget_get_focus(gCheckboxWidget, &interior_focus, &focus_width, &focus_pad);
+        widget = gCheckboxWidget;
     }
+
+    style = widget->style;
+    moz_gtk_widget_get_focus(widget, &interior_focus, &focus_width,
+                             &focus_pad);
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
@@ -1307,8 +1311,8 @@ moz_gtk_container_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     /* this is for drawing a prelight box */
     if (state_type == GTK_STATE_PRELIGHT || state_type == GTK_STATE_ACTIVE) {
-        gtk_paint_flat_box(style, drawable, GTK_STATE_PRELIGHT, GTK_SHADOW_ETCHED_OUT,
-                           cliprect, gCheckboxWidget,
+        gtk_paint_flat_box(style, drawable, GTK_STATE_PRELIGHT,
+                           GTK_SHADOW_ETCHED_OUT, cliprect, widget,
                            "checkbutton",
                            rect->x, rect->y, rect->width, rect->height);
     }
@@ -1317,7 +1321,7 @@ moz_gtk_container_paint(GdkDrawable* drawable, GdkRectangle* rect,
         state_type = GTK_STATE_NORMAL;
 
     if (state->focused && !interior_focus) {
-        gtk_paint_focus(style, drawable, state_type, cliprect, gCheckboxWidget,
+        gtk_paint_focus(style, drawable, state_type, cliprect, widget,
                         "checkbutton",
                         rect->x, rect->y, rect->width, rect->height);
     }
@@ -1450,7 +1454,7 @@ moz_gtk_tooltip_paint(GdkDrawable* drawable, GdkRectangle* rect,
                                       "gtk-tooltips", "GtkWindow",
                                       GTK_TYPE_WINDOW);
 
-    gtk_style_attach(style, gTooltipWidget->window);
+    style = gtk_style_attach(style, gTooltipWidget->window);
     TSOffsetStyleGCs(style, rect->x, rect->y);
     gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
                        cliprect, gTooltipWidget, "tooltip",
@@ -2107,7 +2111,7 @@ moz_gtk_get_toolbar_separator_width(gint* size)
                          "separator-width", &separator_width,
                          NULL);
 
-    // Just in case...
+    /* Just in case... */
     *size = MAX(*size, (wide_separators ? separator_width : style->xthickness));
 
     return MOZ_GTK_SUCCESS;
