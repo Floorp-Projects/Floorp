@@ -261,16 +261,19 @@ WeaveSyncService.prototype = {
   _lock: function weaveSync__lock() {
     if (this._locked) {
       this._log.warn("Service lock failed: already locked");
+      this._os.notifyObservers(null, "weave:service-lock:error", "");
       return false;
     }
     this._locked = true;
     this._log.debug("Service lock acquired");
+    this._os.notifyObservers(null, "weave:service-lock:success", "");
     return true;
   },
 
   _unlock: function WeaveSync__unlock() {
     this._locked = false;
     this._log.debug("Service lock released");
+    this._os.notifyObservers(null, "weave:service-unlock:success", "");
   },
 
   // IBookmarksSyncService internal implementation
@@ -285,13 +288,11 @@ WeaveSyncService.prototype = {
 
       if (!this.username) {
         this._log.warn("No username set, login failed");
-        this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
-        return;
+	return;
       }
       if (!this.password) {
         this._log.warn("No password given or found in password manager");
-        this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
-        return;
+	return;
       }
 
       this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
@@ -306,10 +307,10 @@ WeaveSyncService.prototype = {
     } finally {
       this._passphrase = null;
       if (success) {
-        this._log.debug("Login successful");
+        //this._log.debug("Login successful"); // chrome prints this too, hm
         this._os.notifyObservers(null, "bookmarks-sync:login-end", "");
       } else {
-        this._log.debug("Login error");
+        //this._log.debug("Login error");
         this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
       }
       generatorDone(this, self, onComplete, success);

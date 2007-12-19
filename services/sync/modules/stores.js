@@ -62,9 +62,6 @@ Store.prototype = {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
   },
 
-  wrap: function Store_wrap() {
-  },
-
   applyCommands: function Store_applyCommands(commandList) {
     for (var i = 0; i < commandList.length; i++) {
       var command = commandList[i];
@@ -86,15 +83,17 @@ Store.prototype = {
     }
   },
 
-  resetGUIDs: function Store_resetGUIDs() {
-  }
+  // override these in derived objects
+  wrap: function Store_wrap() {},
+  wipe: function Store_wipe() {},
+  resetGUIDs: function Store_resetGUIDs() {}
 };
 
 function SnapshotStore(name) {
   this._init(name);
 }
 SnapshotStore.prototype = {
-  _logName: "SStore",
+  _logName: "SnapStore",
 
   _filename: null,
   get filename() {
@@ -141,6 +140,35 @@ SnapshotStore.prototype = {
   _init: function SStore__init(name) {
     this.filename = name;
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+  },
+
+  _createCommand: function SStore__createCommand(command) {
+    this._data[command.GUID] = eval(uneval(command.data));
+  },
+
+  _removeCommand: function SStore__removeCommand(command) {
+    delete this._data[command.GUID];
+  },
+
+  _editCommand: function SStore__editCommand(command) {
+    if ("GUID" in command.data) {
+      // special-case guid changes
+      let newGUID = command.data.GUID,
+      oldGUID = command.GUID;
+
+      this._data[newGUID] = this._data[oldGUID];
+      delete this._data[oldGUID]
+
+      for (let GUID in this._data) {
+        if (this._data[GUID].parentGUID == oldGUID)
+          this._data[GUID].parentGUID = newGUID;
+      }
+    }
+    for (let prop in command.data) {
+      if (prop == "GUID")
+        continue;
+      this._data[command.GUID][prop] = command.data[prop];
+    }
   },
 
   save: function SStore_save() {
@@ -217,41 +245,14 @@ SnapshotStore.prototype = {
   },
 
   wrap: function SStore_wrap() {
+    return this.data;
   },
 
-  applyCommands: function SStore_applyCommands(commands) {
-    for (let i = 0; i < commands.length; i++) {
-      // this._log.debug("Applying cmd to obj: " + uneval(commands[i]));
-      switch (commands[i].action) {
-      case "create":
-        this._data[commands[i].GUID] = eval(uneval(commands[i].data));
-        break;
-      case "edit":
-        if ("GUID" in commands[i].data) {
-          // special-case guid changes
-          let newGUID = commands[i].data.GUID,
-              oldGUID = commands[i].GUID;
-
-          this._data[newGUID] = this._data[oldGUID];
-          delete this._data[oldGUID]
-
-          for (let GUID in this._data) {
-            if (this._data[GUID].parentGUID == oldGUID)
-              this._data[GUID].parentGUID = newGUID;
-          }
-        }
-        for (let prop in commands[i].data) {
-          if (prop == "GUID")
-            continue;
-          this._data[commands[i].GUID][prop] = commands[i].data[prop];
-        }
-        break;
-      case "remove":
-        delete this._data[commands[i].GUID];
-        break;
-      }
-    }
-    return this._data;
+  wipe: function SStore_wipe() {
+    this.data = {};
+    this.version = -1;
+    this.GUID = null;
+    this.save();
   }
 };
 SnapshotStore.prototype.__proto__ = new Store();
@@ -553,31 +554,16 @@ BookmarksStore.prototype = {
     return filed; // (combined)
   },
 
+  wipe: function BStore_wipe() {
+    this._bms.removeFolderChildren(this._bms.bookmarksMenuFolder);
+    this._bms.removeFolderChildren(this._bms.toolbarFolder);
+    this._bms.removeFolderChildren(this._bms.unfiledBookmarksFolder);
+  },
+
   resetGUIDs: function BStore_resetGUIDs() {
     this._resetGUIDsInt(this._getFolderNodes(this._bms.bookmarksMenuFolder));
     this._resetGUIDsInt(this._getFolderNodes(this._bms.toolbarFolder));
     this._resetGUIDsInt(this._getFolderNodes(this._bms.unfiledBookmarksFolder));
-  },
-
-  applyCommands: function BStore_applyCommands(commandList) {
-    for (var i = 0; i < commandList.length; i++) {
-      var command = commandList[i];
-      this._log.debug("Processing command: " + uneval(command));
-      switch (command["action"]) {
-      case "create":
-        this._createCommand(command);
-        break;
-      case "remove":
-        this._removeCommand(command);
-        break;
-      case "edit":
-        this._editCommand(command);
-        break;
-      default:
-        this._log.error("unknown action in command: " + command["action"]);
-        break;
-      }
-    }
   }
 };
 BookmarksStore.prototype.__proto__ = new Store();
@@ -596,17 +582,30 @@ HistoryStore.prototype = {
     return this.__hsvc;
   },
 
+  __browserHist: null,
+  get _browserHist() {
+    if (!this.__browserHist)
+      this.__browserHist = Cc["@mozilla.org/browser/nav-history-service;1"].
+                           getService(Ci.nsIBrowserHistory);
+    return this.__browserHist;
+  },
+
   _createCommand: function HistStore__createCommand(command) {
     this._log.info("  -> creating history entry: " + command.GUID);
-    this._hsvc.addVisit(makeURI(command.data.URI), command.data.time,
-			0, this._hsvc.TRANSITION_LINK, false, 0);
-    this._hsvc.addVisit(makeURI(command.data.URI), command.data.title,
-			command.data.accessCount, false, false);
+    try {
+      this._browserHist.addPageWithDetails(makeURI(command.GUID),
+					   command.data.title,
+					   command.data.time);
+      this._hsvc.setPageDetails(makeURI(command.GUID), command.data.title,
+				command.data.accessCount, false, false);
+    } catch (e) {
+      this._log.error("Exception caught: " + (e.message? e.message : e));
+    }
   },
 
   _removeCommand: function HistStore__removeCommand(command) {
-    this._log.info("  -> NOT removing history entry: " + command.GUID);
-    // skip removals
+    this._log.info("  -> removing history entry: " + command.GUID);
+    this._browserHist.removePage(command.GUID);
   },
 
   _editCommand: function HistStore__editCommand(command) {
@@ -614,12 +613,20 @@ HistoryStore.prototype = {
     // FIXME: implement!
   },
 
-  wrap: function HistStore_wrap() {
-    let query = this._hsvc.getNewQuery();
+  _historyRoot: function HistStore__historyRoot() {
+    let query = this._hsvc.getNewQuery(),
+        options = this._hsvc.getNewQueryOptions();
+
     query.minVisits = 1;
-    let root = this._hsvc.executeQuery(query,
-				       this._hsvc.getNewQueryOptions()).root;
+    options.queryType = options.QUERY_TYPE_HISTORY;
+
+    let root = this._hsvc.executeQuery(query, options).root;
     root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    return root;
+  },
+
+  wrap: function HistStore_wrap() {
+    let root = this._historyRoot();
     root.containerOpen = true;
     let items = {};
     for (let i = 0; i < root.childCount; i++) {
@@ -633,6 +640,10 @@ HistoryStore.prototype = {
 			};
     }
     return items;
+  },
+
+  wipe: function HistStore_wipe() {
+    this._browserHist.removeAllPages();
   }
 };
 HistoryStore.prototype.__proto__ = new Store();
