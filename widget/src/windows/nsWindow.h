@@ -209,14 +209,14 @@ public:
   gfxASurface             *GetThebesSurface();
 
 #ifdef MOZ_XUL
-  NS_IMETHOD              SetWindowTranslucency(PRBool aTransparent);
-  NS_IMETHOD              GetWindowTranslucency(PRBool& aTransparent);
+  NS_IMETHOD              SetHasTransparentBackground(PRBool aTransparent);
+  NS_IMETHOD              GetHasTransparentBackground(PRBool& aTransparent);
 private:
   nsresult                SetWindowTranslucencyInner(PRBool aTransparent);
-  PRBool                  GetWindowTranslucencyInner() { return mIsTranslucent; }
+  PRBool                  GetWindowTranslucencyInner() { return mIsTransparent; }
   void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PRBool force = PR_FALSE);
   nsresult                UpdateTranslucentWindow();
-  nsresult                SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent);
+  nsresult                SetupTranslucentWindowMemoryBitmap(PRBool aTransparent);
 public:
 #endif
 
@@ -408,14 +408,14 @@ protected:
 
 #ifdef MOZ_XUL
   // use layered windows to support full 256 level alpha translucency
-  nsRefPtr<gfxWindowsSurface> mTranslucentSurface;
+  nsRefPtr<gfxWindowsSurface> mTransparentSurface;
 
   HDC           mMemoryDC;
   HBITMAP       mMemoryBitmap;
   PRUint8*      mMemoryBits;
   PRUint8*      mAlphaMask;
-  PRPackedBool  mIsTranslucent;
-  PRPackedBool  mIsTopTranslucent;     // Topmost window itself or any of it's child windows has tranlucency enabled
+  PRPackedBool  mIsTransparent;
+  PRPackedBool  mIsTopTransparent;     // Topmost window itself or any of it's child windows has tranlucency enabled
 #endif
   PRPackedBool  mHasAeroGlass;
   PRPackedBool  mIsTopWidgetWindow;

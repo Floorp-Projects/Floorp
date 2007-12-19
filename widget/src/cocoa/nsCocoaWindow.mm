@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -66,6 +66,8 @@ extern nsIWidget         * gRollupWidget;
 extern BOOL                gSomeMenuBarPainted;
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
+
+#define POPUP_DEFAULT_TRANSPARENCY 0.95
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 
@@ -372,10 +374,10 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
 
     // Create the window
     mWindow = [[windowClass alloc] initWithContentRect:rect styleMask:features 
-                                   backing:NSBackingStoreBuffered defer:NO];
+                                   backing:NSBackingStoreBuffered defer:YES];
     
     if (mWindowType == eWindowType_popup) {
-      [mWindow setAlphaValue:0.95];
+      [mWindow setAlphaValue:POPUP_DEFAULT_TRANSPARENCY];
       [mWindow setLevel:NSPopUpMenuWindowLevel];
       [mWindow setHasShadow:YES];
 
@@ -694,6 +696,48 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   if (mPopupContentView)
       mPopupContentView->Show(bState);
 
+  return NS_OK;
+}
+
+
+void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
+{
+  BOOL currentTransparency = ![mWindow isOpaque];
+  if (aTransparent != currentTransparency) {
+    // Popups have an alpha value we need to toggle.
+    if (mWindowType == eWindowType_popup) {
+      [mWindow setAlphaValue:(aTransparent ? 1.0 : POPUP_DEFAULT_TRANSPARENCY)];
+    }
+    [mWindow setOpaque:!aTransparent];
+    [mWindow setBackgroundColor:(aTransparent ? [NSColor clearColor] : [NSColor whiteColor])];
+    [mWindow setHasShadow:!aTransparent];
+  }
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::GetHasTransparentBackground(PRBool& aTransparent)
+{
+  aTransparent = ![mWindow isOpaque];   
+  return NS_OK;
+}
+
+
+// This is called from nsMenuPopupFrame when making a popup transparent.
+// For other window types, nsChildView::SetHasTransparentBackground is used.
+NS_IMETHODIMP nsCocoaWindow::SetHasTransparentBackground(PRBool aTransparent)
+{
+  BOOL currentTransparency = ![mWindow isOpaque];
+  if (aTransparent != currentTransparency) {
+    // Take care of window transparency
+    MakeBackgroundTransparent(aTransparent);
+    // Make sure our content view is also transparent
+    if (mPopupContentView) {
+      ChildView *childView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
+      if (childView) {
+        [childView setTransparent:aTransparent];
+      }
+    }
+  }
   return NS_OK;
 }
 

@@ -347,7 +347,7 @@ nsWindow::nsWindow()
     mRootAccessible  = nsnull;
 #endif
 
-    mIsTranslucent = PR_FALSE;
+    mIsTransparent = PR_FALSE;
     mTransparencyBitmap = nsnull;
 
     mTransparencyBitmapWidth  = 0;
@@ -1663,7 +1663,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 
     PRBool translucent;
-    GetWindowTranslucency(translucent);
+    GetHasTransparentBackground(translucent);
     nsIntRect boundsRect;
     GdkPixmap* bufferPixmap = nsnull;
     nsRefPtr<gfxXlibSurface> bufferPixmapSurface;
@@ -3465,7 +3465,7 @@ nsWindow::EnsureGrabs(void)
 }
 
 NS_IMETHODIMP
-nsWindow::SetWindowTranslucency(PRBool aTranslucent)
+nsWindow::SetHasTransparentBackground(PRBool aTransparent)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
@@ -3478,13 +3478,13 @@ nsWindow::SetWindowTranslucency(PRBool aTranslucent)
         if (!topWindow)
             return NS_ERROR_FAILURE;
 
-        return topWindow->SetWindowTranslucency(aTranslucent);
+        return topWindow->SetHasTransparentBackground(aTransparent);
     }
 
-    if (mIsTranslucent == aTranslucent)
+    if (mIsTransparent == aTransparent)
         return NS_OK;
 
-    if (!aTranslucent) {
+    if (!aTransparent) {
         if (mTransparencyBitmap) {
             delete[] mTransparencyBitmap;
             mTransparencyBitmap = nsnull;
@@ -3495,32 +3495,32 @@ nsWindow::SetWindowTranslucency(PRBool aTranslucent)
     } // else the new default alpha values are "all 1", so we don't
     // need to change anything yet
 
-    mIsTranslucent = aTranslucent;
+    mIsTransparent = aTransparent;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
+nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
         GtkWidget *topWidget = nsnull;
         GetToplevelWidget(&topWidget);
         if (!topWidget) {
-            aTranslucent = PR_FALSE;
+            aTransparent = PR_FALSE;
             return NS_ERROR_FAILURE;
         }
 
         nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
         if (!topWindow) {
-            aTranslucent = PR_FALSE;
+            aTransparent = PR_FALSE;
             return NS_ERROR_FAILURE;
         }
 
-        return topWindow->GetWindowTranslucency(aTranslucent);
+        return topWindow->GetHasTransparentBackground(aTransparent);
     }
 
-    aTranslucent = mIsTranslucent;
+    aTransparent = mIsTransparent;
     return NS_OK;
 }
 
@@ -3648,7 +3648,7 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
         return topWindow->UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aStride);
     }
 
-    NS_ASSERTION(mIsTranslucent, "Window is not transparent");
+    NS_ASSERTION(mIsTransparent, "Window is not transparent");
 
     if (mTransparencyBitmap == nsnull) {
         PRInt32 size = ((mBounds.width+7)/8)*mBounds.height;
@@ -3677,12 +3677,6 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
         ApplyTransparencyBitmap();
     }
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
-{
-    return UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aRect.width);
 }
 
 void

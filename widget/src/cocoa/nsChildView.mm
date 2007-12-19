@@ -46,7 +46,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
-#include "prmem.h"
 #include "nsCRT.h"
 #include "nsplugindefs.h"
 #include "nsThreadUtils.h"
@@ -343,7 +342,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mDestructorCalled(PR_FALSE)
 , mVisible(PR_FALSE)
 , mDrawing(PR_FALSE)
-, mAcceptFocusOnClick(PR_TRUE)
 , mLiveResizeInProgress(PR_FALSE)
 , mIsPluginView(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
@@ -655,8 +653,34 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 
 #pragma mark -
 
+NS_IMETHODIMP nsChildView::GetHasTransparentBackground(PRBool& aTransparent)
+{
+  aTransparent = ![mView isOpaque];
+  return NS_OK;
+}
 
-// Return PR_TRUE if the whether the component is visible, PR_FALSE otherwise
+
+// This is called by nsContainerFrame on the root widget for all window types
+// except popup windows (when nsCocoaWindow::SetHasTransparentBackground is used instead).
+NS_IMETHODIMP nsChildView::SetHasTransparentBackground(PRBool aTransparent)
+{
+  BOOL currentTransparency = ![[mView nativeWindow] isOpaque];
+  if (aTransparent != currentTransparency) {
+    // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
+    // tell the nsCocoaWindow to set its background to transparent.
+    id windowDelegate = [[mView nativeWindow] delegate];
+    if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
+      nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
+      if (widget) {
+        widget->MakeBackgroundTransparent(aTransparent);
+        [mView setTransparent:aTransparent];
+      }
+    }
+  }
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
 {
   if (!mVisible) {
@@ -2042,10 +2066,15 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
+- (void)setTransparent:(BOOL)transparent
+{
+  mIsTransparent = transparent;
+}
+
+
 - (BOOL)isOpaque
 {
-  // this will be NO when we can do transparent windows/views
-  return YES;
+  return !mIsTransparent;
 }
 
 
@@ -2171,11 +2200,6 @@ NSEvent* gLastDragEvent = nil;
   PRBool isVisible;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) || !isVisible)
     return;
-  
-  // Workaround for the fact that NSQuickDrawViews can't be opaque; see if the rect
-  // being drawn is covered by a subview, and, if so, just bail.
-  if ([self isRectObscuredBySubview:aRect])
-    return;
 
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
@@ -2259,22 +2283,6 @@ NSEvent* gLastDragEvent = nil;
   CGContextStrokeRect (cgContext,
                        CGRectMake(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
 #endif
-}
-
-
-- (BOOL)isRectObscuredBySubview:(NSRect)inRect
-{
-  unsigned int numSubviews = [[self subviews] count];
-  for (unsigned int i = 0; i < numSubviews; i++) {
-    NSView* view = (NSView*)[[self subviews] objectAtIndex:i];
-    if (![view isHidden]) {
-      NSRect subviewFrame = [view frame];
-      if (NSContainsRect(subviewFrame, inRect))
-        return YES;
-    }
-  }
-  
-  return NO;
 }
 
 

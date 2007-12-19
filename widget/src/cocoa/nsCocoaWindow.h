@@ -237,6 +237,8 @@ public:
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
+    NS_IMETHOD GetHasTransparentBackground(PRBool& aTransparent);
+    NS_IMETHOD SetHasTransparentBackground(PRBool aTransparent);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor);
 
     virtual gfxASurface* GetThebesSurface();
@@ -251,6 +253,8 @@ public:
     
     // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
+    
+    void MakeBackgroundTransparent(PRBool aTransparent);
 
     NS_IMETHOD BeginSecureKeyboardInput();
     NS_IMETHOD EndSecureKeyboardInput();
