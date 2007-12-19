@@ -21,7 +21,8 @@
 var gOverflowed = false, gUnderflowed = false;
 var gScreenY = -1;
 var gTestIndex = 0;
-var gTests = ["open normal", "open flipped position", "open with scrolling", "open small again"];
+var gTests = ["open normal", "open flipped position", "open with scrolling",
+              "open after scrolling", "open small again"];
 
 function runTests()
 {
@@ -54,7 +55,7 @@ function nextTest()
       popup.appendChild(menu);
     }
   }
-  else if (gTestIndex == 3) {
+  else if (gTestIndex == 4) {
     for (var t = 1; t <= 30; t++)
       popup.removeChild(popup.lastChild);
   }
@@ -66,6 +67,9 @@ function popupShown()
 {
   var popup = document.getElementById("popup");
   var rect = popup.getBoundingClientRect();
+  var sbo = document.getAnonymousNodes(popup)[0].scrollBoxObject;
+  var expectedScrollPos = 0;
+
   if (gTestIndex == 0) {
     // the popup should be in the center of the screen 
     is(Math.round(rect.top) + gScreenY, screen.height / 2,
@@ -88,14 +92,24 @@ function popupShown()
     ok(Math.round(rect.top) + gScreenY >= screen.top, gTests[gTestIndex] + " top");
     ok(Math.round(rect.bottom) + gScreenY < screen.height, gTests[gTestIndex] + " bottom");
     ok(gOverflowed && !gUnderflowed, gTests[gTestIndex] + " overflow")
+
+    sbo.scrollTo(0, 40);
+    expectedScrollPos = 40;
   }
   else if (gTestIndex == 3) {
+    expectedScrollPos = 40;
+  }
+  else if (gTestIndex == 4) {
     is(Math.round(rect.top) + gScreenY, screen.height / 2,
                               gTests[gTestIndex] + " top");
     ok(Math.round(rect.bottom) + gScreenY < screen.height,
                                 gTests[gTestIndex] + " bottom");
     ok(!gOverflowed && gUnderflowed, gTests[gTestIndex] + " overflow")
   }
+
+  var sx = { }, sy = { };
+  sbo.getPosition(sx, sy);
+  is(sy.value, expectedScrollPos, "menu scroll position");
 
   popup.hidePopup();
 }

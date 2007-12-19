@@ -114,7 +114,8 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mMenuCanOverlapOSBar(PR_FALSE),
   mShouldAutoPosition(PR_TRUE),
   mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT),
-  mInContentShell(PR_TRUE)
+  mInContentShell(PR_TRUE),
+  mPrefSize(-1, -1)
 {
 } // ctor
 
@@ -297,6 +298,14 @@ nsMenuPopupFrame::IsLeaf() const
   nsIContent* parentContent = mContent->GetParent();
   return (parentContent &&
           !parentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup));
+}
+
+void
+nsMenuPopupFrame::SetPreferredBounds(nsBoxLayoutState& aState,
+                                     const nsRect& aRect)
+{
+  nsBox::SetBounds(aState, aRect, PR_FALSE);
+  mPrefSize = aRect.Size();
 }
 
 void
@@ -907,11 +916,19 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   parentSize.width = NSToCoordCeil(parentSize.width * adj);
   parentSize.height = NSToCoordCeil(parentSize.height * adj);
 
-  // If we stick to our parent's width, set it here before we move the
-  // window around, because moving is done with respect to the width...
+  // Set the popup's size to the preferred size. Below, this size will be
+  // adjusted to fit on the screen or within the content area. If the anchor
+  // is sized to the popup, use the anchor's width instead of the preferred
+  // width. The preferred size should already be set by the parent frame.
+  NS_ASSERTION(mPrefSize.width >= 0 || mPrefSize.height >= 0,
+               "preferred size of popup not set");
   if (sizedToPopup) {
     mRect.width = parentSize.width;
   }
+  else {
+    mRect.width = mPrefSize.width;
+  }
+  mRect.height = mPrefSize.height;
 
   // |xpos| and |ypos| hold the x and y positions of where the popup will be moved to,
   // in app units, in the coordinate system of the _parent view_.
