@@ -115,7 +115,7 @@ struct DCFromContext {
 
 gfxWindowsFont::gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFontStyle)
     : gfxFont(aName, aFontStyle),
-      mFont(nsnull), mAdjustedSize(0), mScriptCache(nsnull),
+      mFont(nsnull), mAdjustedSize(0.0f), mScriptCache(nsnull),
       mFontFace(nsnull), mScaledFont(nsnull),
       mMetrics(nsnull)
 {
@@ -243,7 +243,7 @@ gfxWindowsFont::MakeHFONT()
         chosenWeight = baseWeight * 100;
 
     mAdjustedSize = GetStyle()->size;
-    if (GetStyle()->sizeAdjust > 0) {
+    if (mMetrics->xHeight != 0.0f && GetStyle()->sizeAdjust > 0.0f) {
         if (!mFont) {
             FillLogFont(mAdjustedSize, chosenWeight);
             mFont = CreateFontIndirectW(&mLogFont);
