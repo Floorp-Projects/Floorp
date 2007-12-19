@@ -64,6 +64,8 @@ inspector.jar:
   content/inspector/prefs/prefsOverlay.xul                            (resources/content/prefs/prefsOverlay.xul)
   content/inspector/prefs/pref-sidebar.js                             (resources/content/prefs/pref-sidebar.js)
   content/inspector/tests/allskin.xul                                 (resources/content/tests/allskin.xul)
+  content/inspector/viewers/accessibleEvent/accessibleEvent.js       (resources/content/viewers/accessibleEvent/accessibleEvent.js)
+  content/inspector/viewers/accessibleEvent/accessibleEvent.xul      (resources/content/viewers/accessibleEvent/accessibleEvent.xul)
   content/inspector/viewers/accessibleEvents/accessibleEvents.js      (resources/content/viewers/accessibleEvents/accessibleEvents.js)
   content/inspector/viewers/accessibleEvents/accessibleEvents.xul     (resources/content/viewers/accessibleEvents/accessibleEvents.xul)
   content/inspector/viewers/accessibleObject/accessibleObject.js      (resources/content/viewers/accessibleObject/accessibleObject.js)
