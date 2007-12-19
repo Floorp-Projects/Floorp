@@ -28,7 +28,7 @@ sub Execute {
     my $configBumpDir = $config->Get(var => 'configBumpDir');
     my $version = $config->Get(var => 'version');
     my $oldVersion = $config->Get(var => 'oldVersion');
-    my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
+    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
     my $ftpServer = $config->Get(var => 'ftpServer');
     my $bouncerServer = $config->Get(var => 'bouncerServer');
@@ -40,9 +40,10 @@ sub Execute {
     }
 
     # checkout config to bump
-    $this->CvsCo(cvsroot => $mofoCvsroot,
+    $this->CvsCo(cvsroot => $mozillaCvsroot,
                  checkoutDir => 'patcher',
-                 modules => [CvsCatfile('release', 'patcher', $patcherConfig)],
+                 modules => [CvsCatfile('mozilla', 'tools', 'patcher-configs',
+                                        $patcherConfig)],
                  logFile => catfile($logDir, 'patcherconfig-checkout.log'),
                  workDir => $configBumpDir
     );
@@ -65,7 +66,7 @@ sub Execute {
 
     $this->Shell(
       cmd => 'cvs',
-      cmdArgs => ['-d', $mofoCvsroot,
+      cmdArgs => ['-d', $mozillaCvsroot,
                   'ci', '-m', "\"Automated configuration bump: $patcherConfig, "
                    .  "from $oldVersion to $version\"", $patcherConfig],
       logFile => catfile($logDir, 'patcherconfig-checkin.log'),

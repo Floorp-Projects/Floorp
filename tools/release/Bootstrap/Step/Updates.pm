@@ -24,7 +24,6 @@ sub Execute {
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $version = $config->Get(var => 'version');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
-    my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $updateDir = $config->Get(var => 'updateDir');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
     my $patcherToolsRev = $config->Get(var => 'patcherToolsRev');
@@ -56,9 +55,10 @@ sub Execute {
     );
           
     # config lives in private repo
-    $this->CvsCo(cvsroot => $mofoCvsroot,
+    $this->CvsCo(cvsroot => $mozillaCvsroot,
                  checkoutDir => 'config',
-                 modules => [CvsCatfile('release', 'patcher', $patcherConfig)],
+                 modules => [CvsCatfile('mozilla', 'tools', 'patcher-configs',
+                                        $patcherConfig)],
                  logFile => catfile($logDir,
                                     'updates_patcher-config-checkout.log'),
                  workDir => $versionedUpdateDir
