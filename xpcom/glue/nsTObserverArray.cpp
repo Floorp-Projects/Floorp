@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *   Jonas Sicking <jonas@sicking.cc> (Original Author)
- *   Daniel Witte <dwitte@stanford.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,13 +38,15 @@
 #include "nsTObserverArray.h"
 
 void
-nsTObserverArray_base::AdjustIterators(index_type aModPos,
-                                       diff_type  aAdjustment)
+nsTObserverArray_base::AdjustIterators(PRInt32 aModPos,
+                                       PRInt32 aAdjustment)
 {
   NS_PRECONDITION(aAdjustment == -1 || aAdjustment == 1,
                   "invalid adjustment");
   Iterator_base* iter = mIterators;
   while (iter) {
+    NS_ASSERTION(&(iter->mArray) == this, "wrong array");
+
     if (iter->mPosition > aModPos) {
       iter->mPosition += aAdjustment;
     }
@@ -54,10 +55,14 @@ nsTObserverArray_base::AdjustIterators(index_type aModPos,
 }
 
 void
-nsTObserverArray_base::ClearIterators()
+nsTObserverArray_base::Clear()
 {
+  mObservers.Clear();
+
   Iterator_base* iter = mIterators;
   while (iter) {
+    NS_ASSERTION(&(iter->mArray) == this, "wrong array");
+
     iter->mPosition = 0;
     iter = iter->mNext;
   }

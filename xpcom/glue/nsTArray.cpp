@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdlib.h>
 #include <string.h>
 #include "nsTArray.h"
 #include "nsXPCOM.h"
@@ -71,7 +70,7 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   if (mHdr == &sEmptyHdr) {
     // NS_Alloc new data
     Header *header = static_cast<Header*>
-                                (malloc(sizeof(Header) + capacity * elemSize));
+                                (NS_Alloc(sizeof(Header) + capacity * elemSize));
     if (!header)
       return PR_FALSE;
     header->mLength = 0;
@@ -84,21 +83,16 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
 
   // Use doubling algorithm when forced to increase available capacity.
   NS_ASSERTION(mHdr->mCapacity > 0, "should not have buffer of zero size");
-  if (capacity < 8) {
-    // grow to 8 elements
-    capacity = 8;
-  } else {
-    size_type temp = mHdr->mCapacity;
-    while (temp < capacity)
-      temp <<= 1;
-    capacity = temp;
-  }
+  size_type temp = mHdr->mCapacity;
+  while (temp < capacity)
+    temp <<= 1;
+  capacity = temp;
 
   Header *header;
   if (UsesAutoArrayBuffer()) {
     // NS_Alloc and copy
     header = static_cast<Header*>
-                        (malloc(sizeof(Header) + capacity * elemSize));
+                        (NS_Alloc(sizeof(Header) + capacity * elemSize));
     if (!header)
       return PR_FALSE;
 
@@ -106,7 +100,7 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   } else {
     // NS_Realloc existing data
     size_type size = sizeof(Header) + capacity * elemSize;
-    header = static_cast<Header*>(realloc(mHdr, size));
+    header = static_cast<Header*>(NS_Realloc(mHdr, size));
     if (!header)
       return PR_FALSE;
   }
@@ -134,20 +128,20 @@ nsTArray_base::ShrinkCapacity(size_type elemSize) {
     header->mLength = length;
     memcpy(header + 1, mHdr + 1, length * elemSize);
 
-    free(mHdr);
+    NS_Free(mHdr);
     mHdr = header;
     return;
   }
 
   if (length == 0) {
     NS_ASSERTION(!IsAutoArray(), "autoarray should have fit 0 elements");
-    free(mHdr);
+    NS_Free(mHdr);
     mHdr = &sEmptyHdr;
     return;
   }
 
   size_type size = sizeof(Header) + length * elemSize;
-  void *ptr = realloc(mHdr, size);
+  void *ptr = NS_Realloc(mHdr, size);
   if (!ptr)
     return;
   mHdr = static_cast<Header*>(ptr);
@@ -271,7 +265,7 @@ nsTArray_base::EnsureNotUsingAutoArrayBuffer(size_type elemSize)
   if (UsesAutoArrayBuffer()) {
     size_type size = sizeof(Header) + Length() * elemSize;
 
-    Header* header = static_cast<Header*>(malloc(size));
+    Header* header = static_cast<Header*>(NS_Alloc(size));
     if (!header)
       return PR_FALSE;
 
