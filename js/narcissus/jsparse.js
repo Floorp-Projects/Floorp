@@ -1,4 +1,4 @@
-/* vim: set sw=4 ts=8 et tw=80: */
+/* vim: set sw=4 ts=8 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -91,9 +91,13 @@ Tokenizer.prototype = {
     },
 
     peek: function () {
-        var tt;
+        var tt, next;
         if (this.lookahead) {
-            tt = this.tokens[(this.tokenIndex + this.lookahead) & 3].type;
+            next = this.tokens[(this.tokenIndex + this.lookahead) & 3];
+            if (this.scanNewlines && next.lineno != this.lineno)
+                tt = NEWLINE;
+            else
+                tt = next.type;
         } else {
             tt = this.get();
             this.unget();
@@ -179,6 +183,8 @@ Tokenizer.prototype = {
                 token.assignOp = null;
             }
             token.value = op;
+        } else if (this.scanNewlines && (match = /^\n/(input))) {
+            token.type = NEWLINE;
         } else {
             throw this.newSyntaxError("Illegal token");
         }
