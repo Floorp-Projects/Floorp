@@ -1,0 +1,28 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="setTimeout(foopy, 30);" class="reftest-wait">
+
+<script>
+
+<![CDATA[
+
+var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+function foopy()
+{
+  var hbox = document.createElementNS(XUL_NS, 'hbox');
+  var tooltip = document.createElementNS(XUL_NS, 'tooltip');
+  var vbox = document.createElementNS(XUL_NS, 'vbox');
+  var toolbarspring = document.createElementNS(XUL_NS, 'toolbarspring');
+  
+  document.documentElement.appendChild(hbox);
+  hbox.appendChild(toolbarspring);
+
+  vbox.appendChild(tooltip);
+  toolbarspring.appendChild(vbox);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+</script>
+
+</window>
