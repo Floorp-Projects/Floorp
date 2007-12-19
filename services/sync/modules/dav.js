@@ -257,10 +257,6 @@ DAVCollection.prototype = {
       this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
-      if (this._loggedIn)
-        this._log.info("Logged in");
-      else
-        this._log.warn("Could not log in");
       generatorDone(this, self, onComplete, this._loggedIn);
       yield; // onComplete is responsible for closing the generator
     }

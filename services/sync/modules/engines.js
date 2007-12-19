@@ -182,9 +182,8 @@ Engine.prototype = {
       this._log.debug("Resetting client state");
       this._os.notifyObservers(null, this._osPrefix + "reset-client:start", "");
 
-      this._snapshot.data = {};
-      this._snapshot.version = -1;
-      this._snapshot.save();
+      this._snapshot.wipe();
+      this._store.wipe();
       done = true;
 
     } catch (e) {
