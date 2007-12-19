@@ -158,7 +158,7 @@ private:
   nsCOMPtr<imgIDecoder> mDecoder;
   nsCOMPtr<nsIProperties> mProperties;
 
-  nsTObserverArray<imgRequestProxy*> mObservers;
+  nsTObserverArray<imgRequestProxy> mObservers;
 
   PRPackedBool mLoading;
   PRPackedBool mProcessing;
