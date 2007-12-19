@@ -320,7 +320,7 @@ nsINode::AddMutationObserver(nsIMutationObserver* aMutationObserver)
 {
   nsSlots* slots = GetSlots();
   if (slots) {
-    slots->mMutationObservers.AppendObserverUnlessExists(aMutationObserver);
+    slots->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
   }
 }
 
@@ -329,7 +329,7 @@ nsINode::RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
 {
   nsSlots* slots = GetExistingSlots();
   if (slots) {
-    slots->mMutationObservers.RemoveObserver(aMutationObserver);
+    slots->mMutationObservers.RemoveElement(aMutationObserver);
   }
 }
 
