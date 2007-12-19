@@ -95,10 +95,6 @@
                     label="&mnEditPasteFirstChild.label;"
                     accesskey="&mnEditPasteFirstChild.accesskey;"
                     command="cmdEditPasteFirstChild"/>
-          <menuitem id="mnEditPasteFirstChild"
-                    label="&mnEditPasteFirstChild.label;"
-                    accesskey="&mnEditPasteFirstChild.accesskey;"
-                    command="cmdEditPasteFirstChild"/>
           <menuitem id="mnEditPasteLastChild"
                     label="&mnEditPasteLastChild.label;"
                     accesskey="&mnEditPasteLastChild.accesskey;"
