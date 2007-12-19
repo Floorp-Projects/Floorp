@@ -3066,9 +3066,15 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
   if (IsHistoryDisabled())
     return NS_OK;
 
+  // filter out any unwanted URIs
+  PRBool canAdd = PR_FALSE;
+  nsresult rv = CanAddURI(aURI, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd)
+    return NS_OK;
+
   PRTime now = PR_Now();
 
-  nsresult rv;
 #ifdef LAZY_ADD
   LazyMessage message;
   rv = message.Init(LazyMessage::Type_AddURI, aURI);
