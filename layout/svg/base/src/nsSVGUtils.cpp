@@ -736,7 +736,12 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
 nsRect
 nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
 {
-  nsRect rect = aFrame->GetRect();
+  nsISVGChildFrame *svgFrame = nsnull;
+  CallQueryInterface(aFrame, &svgFrame);
+  if (!svgFrame)
+    return nsRect();
+
+  nsRect rect = svgFrame->GetCoveredRegion();
 
   while (aFrame) {
     if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)
