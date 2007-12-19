@@ -501,6 +501,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 391045.html 391045-ref.html # windows-s
 == 402567-2.html 402567-2-ref.html
 == 402567-3.html 402567-3-ref.html
 == 402567-4.html 402567-4-ref.html
+fails == 402807-1.html 402807-1-ref.html # bug 402807
 == 402950-1.html 402950-1-ref.html
 == 403129-1.html 403129-1-ref.html
 == 403129-2.html 403129-2-ref.html
