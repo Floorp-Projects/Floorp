@@ -359,26 +359,6 @@ class nsTArray : public nsTArray_base {
     // Search methods
     //
 
-    // This method searches for the first element in this array that is equal
-    // to the given element.
-    // @param item   The item to search for.
-    // @param comp   The Comparator used to determine element equality.
-    // @return       PR_TRUE if the element was found.
-    template<class Item, class Comparator>
-    PRBool Contains(const Item& item, const Comparator& comp) const {
-      return IndexOf(item, 0, comp) != NoIndex;
-    }
-
-    // This method searches for the first element in this array that is equal
-    // to the given element.  This method assumes that 'operator==' is defined
-    // for elem_type.
-    // @param item   The item to search for.
-    // @return       PR_TRUE if the element was found.
-    template<class Item>
-    PRBool Contains(const Item& item) const {
-      return IndexOf(item) != NoIndex;
-    }
-
     // This method searches for the offset of the first element in this
     // array that is equal to the given element.
     // @param item   The item to search for.
@@ -753,14 +733,6 @@ class nsAutoTArray : public nsTArray<E> {
 
   protected:
     char mAutoBuf[sizeof(Header) + N * sizeof(elem_type)];
-};
-
-// specialization for N = 0. this makes the inheritance model easier for
-// templated users of nsAutoTArray.
-template<class E>
-class nsAutoTArray<E, 0> : public nsTArray<E> {
-  public:
-    nsAutoTArray() {}
 };
 
 #endif  // nsTArray_h__

@@ -1126,7 +1126,7 @@ nsDocument::Init()
   // subclasses currently do, other don't). This is because the code in
   // nsNodeUtils always notifies the first observer first, expecting the
   // first observer to be the document.
-  NS_ENSURE_TRUE(slots->mMutationObservers.PrependElementUnlessExists(this),
+  NS_ENSURE_TRUE(slots->mMutationObservers.PrependObserver(this),
                  NS_ERROR_OUT_OF_MEMORY);
 
 
@@ -2045,7 +2045,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
-  NS_ENSURE_TRUE(mPresShells.AppendElementUnlessExists(shell),
+  NS_ENSURE_TRUE(mPresShells.AppendObserverUnlessExists(shell),
                  NS_ERROR_OUT_OF_MEMORY);
   shell.swap(*aInstancePtrResult);
 
@@ -2055,14 +2055,14 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 PRBool
 nsDocument::DeleteShell(nsIPresShell* aShell)
 {
-  return mPresShells.RemoveElement(aShell);
+  return mPresShells.RemoveObserver(aShell);
 }
 
 
 nsIPresShell *
 nsDocument::GetPrimaryShell() const
 {
-  return mShellsAreHidden ? nsnull : mPresShells.SafeElementAt(0, nsnull);
+  return mShellsAreHidden ? nsnull : mPresShells.SafeObserverAt(0);
 }
 
 PR_STATIC_CALLBACK(void)
@@ -2654,7 +2654,7 @@ void
 nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
   // The array makes sure the observer isn't already in the list
-  mObservers.AppendElementUnlessExists(aObserver);
+  mObservers.AppendObserverUnlessExists(aObserver);
   AddMutationObserver(aObserver);
 }
 
@@ -2667,7 +2667,7 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
   // don't hold a live reference to the observers.
   if (!mInDestructor) {
     RemoveMutationObserver(aObserver);
-    return mObservers.RemoveElement(aObserver);
+    return mObservers.RemoveObserver(aObserver);
   }
 
   return mObservers.Contains(aObserver);
