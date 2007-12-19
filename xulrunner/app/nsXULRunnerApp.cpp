@@ -267,11 +267,6 @@ public:
       XRE_FreeAppData(mAppData);
   }
 
-  nsresult
-  Override(nsILocalFile* aINIFile) {
-    return XRE_ParseAppData(aINIFile, mAppData);
-  }
-
   operator nsXREAppData*() const { return mAppData; }
   nsXREAppData* operator -> () const { return mAppData; }
 
@@ -446,30 +441,6 @@ int main(int argc, char* argv[])
   if (!appData) {
     Output(PR_TRUE, "Error: couldn't parse application.ini.\n");
     return 2;
-  }
-
-  if (argc > 1 && IsArg(argv[1], "override")) {
-    if (argc == 2) {
-      Usage(argv[0]);
-      return 1;
-    }
-    argv[1] = argv[0];
-    ++argv;
-    --argc;
-
-    const char *ovrDataFile = argv[1];
-    argv[1] = argv[0];
-    ++argv;
-    --argc;
-
-    nsCOMPtr<nsILocalFile> ovrDataLF;
-    nsresult rv = XRE_GetFileFromPath(ovrDataFile, getter_AddRefs(ovrDataLF));
-    if (NS_FAILED(rv)) {
-      Output(PR_TRUE, "Error: unrecognized override.ini path.\n");
-      return 2;
-    }
-
-    appData.Override(ovrDataLF);
   }
 
   return XRE_main(argc, argv, appData);
