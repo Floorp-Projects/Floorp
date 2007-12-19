@@ -41,6 +41,8 @@ fails == 25888-2l.html 25888-2l-ref.html # bug 25888
 fails == 25888-2r.html 25888-2r-ref.html # bug 25888
 fails == 25888-3l.html 25888-3l-ref.html # bug 25888
 fails == 25888-3r.html 25888-3r-ref.html # bug 25888
+== 271747-1a.html 271747-1-ref.html
+== 271747-1b.html 271747-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-1a.html 28811-1-ref.html # bug 381765
 == 28811-1b.html 28811-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 381765
