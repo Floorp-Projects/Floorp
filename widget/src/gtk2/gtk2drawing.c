@@ -516,7 +516,12 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     shadow_type = button_state == GTK_STATE_ACTIVE ||
                       state->depressed ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
-
+ 
+    if (state->isDefault && GTK_BUTTON(widget)->relief == GTK_RELIEF_NORMAL) {
+        gtk_paint_box(style, drawable, button_state, shadow_type, cliprect,
+                      widget, "buttondefault", x, y, width, height);                   
+    }
+ 
     if (relief != GTK_RELIEF_NONE || state->depressed ||
            (button_state != GTK_STATE_NORMAL &&
             button_state != GTK_STATE_INSENSITIVE)) {
@@ -525,7 +530,7 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
            file ../../gdk/gdkwindow.c: line 1846 (gdk_window_clear_area):
            assertion `GDK_IS_WINDOW (window)' failed */
         gtk_paint_box(style, drawable, button_state, shadow_type, cliprect,
-                      widget, (state->isDefault ? "buttondefault" : "button"), x, y, width, height);
+                      widget, "button", x, y, width, height);
     }
 
     if (state->focused) {
