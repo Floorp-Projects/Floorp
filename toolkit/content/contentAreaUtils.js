@@ -883,13 +883,14 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   }
   else {
     try {
-      return mimeInfo.primaryExtension;
+      if (mimeInfo)
+        return mimeInfo.primaryExtension;
     }
     catch (e) {
-      // Fall back on the extensions in the filename and URI for lack
-      // of anything better.
-      return ext || urlext;
     }
+    // Fall back on the extensions in the filename and URI for lack
+    // of anything better.
+    return ext || urlext;
   }
 }
 
