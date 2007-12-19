@@ -309,7 +309,7 @@ gfxPangoFont::RealizeFont(PRBool force)
     mPangoFontDesc = pango_font_description_new();
 
     pango_font_description_set_family(mPangoFontDesc, NS_ConvertUTF16toUTF8(mName).get());
-    gfxFloat size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
+    gfxFloat size = mAdjustedSize != 0.0f ? mAdjustedSize : GetStyle()->size;
     pango_font_description_set_absolute_size(mPangoFontDesc, size * PANGO_SCALE);
     pango_font_description_set_style(mPangoFontDesc, ThebesStyleToPangoStyle(GetStyle()));
     pango_font_description_set_weight(mPangoFontDesc, ThebesStyleToPangoWeight(GetStyle()));
@@ -328,11 +328,11 @@ gfxPangoFont::RealizeFont(PRBool force)
     NS_ASSERTION(mHasMetrics == PR_FALSE, "throwing away our good metrics....");
     mHasMetrics = PR_FALSE;
 
-    if (mAdjustedSize != 0)
+    if (mAdjustedSize != 0.0f)
         return;
 
     mAdjustedSize = GetStyle()->size;
-    if (mAdjustedSize == 0 || GetStyle()->sizeAdjust == 0)
+    if (mAdjustedSize == 0.0f || GetStyle()->sizeAdjust == 0.0f)
         return;
 
     gfxSize isz, lsz;

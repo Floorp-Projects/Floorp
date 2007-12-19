@@ -90,7 +90,7 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
                            const gfxFontStyle *fontStyle)
     : gfxFont(name, fontStyle),
       mFontStyle(fontStyle), mATSUFontID(fontID), mATSUStyle(nsnull),
-      mHasMirroring(PR_FALSE), mHasMirroringLookedUp(PR_FALSE), mAdjustedSize(0)
+      mHasMirroring(PR_FALSE), mHasMirroringLookedUp(PR_FALSE), mAdjustedSize(0.0f)
 {
     ATSFontRef fontRef = FMGetATSFontRefFromFont(fontID);
 
@@ -128,7 +128,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     };
 
     gfxFloat size =
-        PR_MAX(((mAdjustedSize != 0) ? mAdjustedSize : GetStyle()->size), 1.0f);
+        PR_MAX(((mAdjustedSize != 0.0f) ? mAdjustedSize : GetStyle()->size), 1.0f);
 
     //fprintf (stderr, "string: '%s', size: %f\n", NS_ConvertUTF16toUTF8(aString).get(), size);
 
@@ -165,8 +165,8 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     else
         mMetrics.xHeight = GetCharHeight('x');
 
-    if (mAdjustedSize == 0) {
-        if (GetStyle()->sizeAdjust != 0) {
+    if (mAdjustedSize == 0.0f) {
+        if (mMetrics.xHeight != 0.0f && GetStyle()->sizeAdjust != 0.0f) {
             gfxFloat aspect = mMetrics.xHeight / size;
             mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
             InitMetrics(aFontID, aFontRef);
