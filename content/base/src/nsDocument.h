@@ -741,7 +741,7 @@ protected:
   nsCOMArray<nsIStyleSheet> mCatalogSheets;
 
   // Array of observers
-  nsTObserverArray<nsIDocumentObserver*> mObservers;
+  nsTObserverArray<nsIDocumentObserver> mObservers;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
