@@ -130,7 +130,7 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
   NS_PRECONDITION(proxy, "null imgRequestProxy passed in");
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::AddProxy", "proxy", proxy);
 
-  return mObservers.AppendObserverUnlessExists(proxy) ?
+  return mObservers.AppendElementUnlessExists(proxy) ?
     NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -138,7 +138,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::RemoveProxy", "proxy", proxy);
 
-  mObservers.RemoveObserver(proxy);
+  mObservers.RemoveElement(proxy);
 
   /* Check mState below before we potentially call Cancel() below. Since
      Cancel() may result in OnStopRequest being called back before Cancel()
@@ -333,9 +333,10 @@ void imgRequest::RemoveFromCache()
 
 PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
 {
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
   imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
+  while (iter.HasMore()) {
+    proxy = iter.GetNext();
     if (proxy == aProxyToIgnore) {
       continue;
     }
@@ -366,7 +367,7 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, PRInt32 delta)
   // concern though is that image loads remain lower priority than other pieces
   // of content such as link clicks, CSS, and JS.
   //
-  if (mObservers.SafeObserverAt(0) != proxy)
+  if (mObservers.SafeElementAt(0, nsnull) != proxy)
     return;
 
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mRequest);
@@ -412,10 +413,9 @@ NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container,
 {
   LOG_SCOPE(gImgLog, "imgRequest::FrameChanged");
 
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->FrameChanged(container, newframe, dirtyRect);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->FrameChanged(container, newframe, dirtyRect);
   }
 
   return NS_OK;
@@ -430,10 +430,9 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request)
 
   mState |= onStartDecode;
 
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->OnStartDecode();
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnStartDecode();
   }
 
   /* In the case of streaming jpegs, it is possible to get multiple OnStartDecodes which
@@ -465,10 +464,9 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, imgIContainer *
 
   mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE;
 
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->OnStartContainer(image);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnStartContainer(image);
   }
 
   return NS_OK;
@@ -480,10 +478,9 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request,
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartFrame");
 
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->OnStartFrame(frame);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnStartFrame(frame);
   }
 
   return NS_OK;
@@ -496,10 +493,9 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request,
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable");
 
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->OnDataAvailable(frame, rect);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnDataAvailable(frame, rect);
   }
 
   return NS_OK;
@@ -526,10 +522,9 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request,
     mCacheEntry->SetDataSize(cacheSize + imageSize);
   }
 
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->OnStopFrame(frame);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnStopFrame(frame);
   }
 
   return NS_OK;
@@ -543,10 +538,9 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request,
 
   mState |= onStopContainer;
 
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->OnStopContainer(image);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnStopContainer(image);
   }
 
   return NS_OK;
@@ -567,10 +561,9 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
     mImageStatus |= imgIRequest::STATUS_ERROR;
   }
 
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), aStatusArg);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnStopDecode(GetResultFromImageStatus(mImageStatus), aStatusArg);
   }
 
   return NS_OK;
@@ -607,10 +600,9 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   mLoading = PR_TRUE;
 
   /* notify our kids */
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    proxy->OnStartRequest(aRequest, ctxt);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnStartRequest(aRequest, ctxt);
   }
 
   /* Get our principal */
@@ -739,13 +731,9 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   }
 
   /* notify the kids */
-  nsTObserverArray<imgRequestProxy>::ForwardIterator iter(mObservers);
-  imgRequestProxy* proxy;
-  while ((proxy = iter.GetNext())) {
-    /* calling OnStopRequest may result in the death of |proxy| so don't use the
-       pointer after this call.
-     */
-    proxy->OnStopRequest(aRequest, ctxt, status, mHadLastPart);
+  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+  while (iter.HasMore()) {
+    iter.GetNext()->OnStopRequest(aRequest, ctxt, status, mHadLastPart);
   }
 
   return NS_OK;
