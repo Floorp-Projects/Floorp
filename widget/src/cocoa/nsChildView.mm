@@ -718,64 +718,11 @@ NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
 }
 
 
-class nsAutoSetInSetFocus {
-  public:
-    nsAutoSetInSetFocus(NSView *aView)
-    {
-      if ([aView isKindOfClass:[ChildView class]]) {
-        mChildView = (ChildView *) [aView retain];
-        [mChildView setInSetFocus:PR_TRUE];
-      } else {
-        mChildView = nil;
-      }
-    }
-    ~nsAutoSetInSetFocus()
-    {
-      if (mChildView) {
-        [mChildView setInSetFocus:PR_FALSE];
-        [mChildView release];
-      }
-    }
-
-  private:
-    ChildView *mChildView;  // [STRONG]
-};
-
-
 NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
   NSWindow* window = [mView window];
-  if (window) {
-    // For reasons that aren't yet clear, focus changes within a window (as
-    // opposed to those between windows or between apps) should only trigger
-    // NS_LOSTFOCUS and NS_GOTFOCUS messages (to Gecko) in the context of a
-    // call to nsChildView::SetFocus() (or nsCocoaWindow::SetFocus(), which
-    // in any case re-routes to nsChildView::SetFocus()).  If we send these
-    // messages on every intra-window focus change (on every call to
-    // [ChildView becomeFirstResponder:] or [ChildView resignFirstResponder:]),
-    // the result will be strange focus bugs (like bmo bugs 399471, 403232,
-    // 404433 and 408266).
-    nsAutoSetInSetFocus setInSetFocus(mView);
-    NSResponder* firstResponder = [window firstResponder];
-    if ([mView isEqual:firstResponder]) {
-      // Sometimes SetFocus() is called on an nsChildView object that's
-      // already focused.  If we simply call [NSWindow makeFirstResponder:],
-      // neither [ChildView becomeFirstResponder:] nor [ChildView
-      // resignFirstResponder:] will get called, and no NS_LOSTFOCUS or
-      // NS_GOTFOCUS messages will be sent.  But in this case we sometimes
-      // get text-input cursors blinking in more than one text field.  So we
-      // need to guarantee that the code in nsEventStateManager::
-      // PreHandleEvent() which handles NS_LOSTFOCUS messages (and calls
-      // SetContentCaretVisible(... PR_FALSE)) gets invoked on every call to
-      // nsChildView::SetFocus().
-      if ([mView isKindOfClass:[ChildView class]]) {
-        [(ChildView *)mView sendFocusEvent:NS_LOSTFOCUS];
-        [(ChildView *)mView sendFocusEvent:NS_GOTFOCUS];
-      }
-    } else {
-      [window makeFirstResponder:mView];
-    }
-  }
+  if (window)
+    [window makeFirstResponder:mView];
   return NS_OK;
 }
 
@@ -1816,7 +1763,6 @@ NSEvent* gLastDragEvent = nil;
     mWindow = nil;
     mGeckoChild = inChild;
     mIsPluginView = NO;
-    mInSetFocusLevel = 0;
     mCurKeyEvent = nil;
     mKeyDownHandled = PR_FALSE;
     
@@ -2125,24 +2071,6 @@ NSEvent* gLastDragEvent = nil;
   }
   
   return NO;
-}
-
-
--(void)setInSetFocus:(BOOL)aInSetFocus
-{
-  if (aInSetFocus) {
-    ++mInSetFocusLevel;
-  } else if (mInSetFocusLevel > 0) {
-    --mInSetFocusLevel;
-  } else {
-    NS_WARNING("ChildView setInFocus: inSetFocus already false");
-  }
-}
-
-
--(BOOL)inSetFocus
-{
-  return mInSetFocusLevel > 0;
 }
 
 
@@ -4158,11 +4086,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return NO;
 
-  // Focus events should only be sent to Gecko here in the context of a call
-  // to nsChildView::SetFocus().  For more info see nsChildView::SetFocus()
-  // above.
-  if ([self inSetFocus])
-    [self sendFocusEvent:NS_GOTFOCUS];
+  [self sendFocusEvent:NS_GOTFOCUS];
 
   return [super becomeFirstResponder];
 }
@@ -4175,10 +4099,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 {
   nsTSMManager::CommitIME();
 
-  // Focus events should only be sent to Gecko here in the context of a call
-  // to nsChildView::SetFocus().  For more info see nsChildView::SetFocus()
-  // above.
-  if (mGeckoChild && [self inSetFocus])
+  if (mGeckoChild)
     [self sendFocusEvent:NS_LOSTFOCUS];
 
   return [super resignFirstResponder];
