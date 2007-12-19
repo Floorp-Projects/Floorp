@@ -103,9 +103,8 @@ public:
                                     PRUint32 aHotspotX, PRUint32 aHotspotY);
   NS_IMETHOD              GetWindowType(nsWindowType& aWindowType);
   NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
-  NS_IMETHOD              SetWindowTranslucency(PRBool aTranslucent);
-  NS_IMETHOD              GetWindowTranslucency(PRBool& aTranslucent);
-  NS_IMETHOD              UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
+  NS_IMETHOD              SetHasTransparentBackground(PRBool aTransparent);
+  NS_IMETHOD              GetHasTransparentBackground(PRBool& aTransparent);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   nsresult                MakeFullScreenInternal(PRBool aFullScreen);

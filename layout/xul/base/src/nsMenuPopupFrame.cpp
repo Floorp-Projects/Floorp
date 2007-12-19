@@ -244,7 +244,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE,
                       eContentTypeInherit, parentWidget);
 #endif
-  aView->GetWidget()->SetWindowTranslucency(viewHasTransparentContent);
+  aView->GetWidget()->SetHasTransparentBackground(viewHasTransparentContent);
   return NS_OK;
 }
 
