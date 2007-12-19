@@ -190,7 +190,7 @@ pref("browser.chrome.favicons", true);
 pref("browser.formfill.enable", true);
 pref("browser.warnOnQuit", true);
 
-#ifdef XP_UNIX
+#ifdef UNIX_BUT_NOT_MAC
 pref("browser.urlbar.clickSelectsAll", false);
 #else
 pref("browser.urlbar.clickSelectsAll", true);
