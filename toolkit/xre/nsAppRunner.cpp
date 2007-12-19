@@ -2485,6 +2485,29 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     gBinaryPath = nsnull;
 #endif
 
+  // Check for application.ini overrides
+  const char* override = nsnull;
+  ar = CheckArg("override", PR_TRUE, &override);
+  if (ar == ARG_BAD) {
+    Output(PR_TRUE, "Incorrect number of arguments passed to -override");
+    return 1;
+  }
+  else if (ar == ARG_FOUND) {
+    nsCOMPtr<nsILocalFile> overrideLF;
+    rv = XRE_GetFileFromPath(override, getter_AddRefs(overrideLF));
+    if (NS_FAILED(rv)) {
+      Output(PR_TRUE, "Error: unrecognized override.ini path.\n");
+      return 1;
+    }
+
+    nsXREAppData* overrideAppData = const_cast<nsXREAppData*>(aAppData);
+    rv = XRE_ParseAppData(overrideLF, overrideAppData);
+    if (NS_FAILED(rv)) {
+      Output(PR_TRUE, "Couldn't read override.ini");
+      return 1;
+    }
+  }
+
   ScopedAppData appData(aAppData);
   gAppData = &appData;
 
