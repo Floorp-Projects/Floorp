@@ -937,12 +937,17 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
                                  &rectVisibility);
 
   if (rectVisibility == nsRectVisibility_kZeroAreaRect) {
-    if (frame->GetNextContinuation()) {
+    nsIAtom *frameType = frame->GetType();
+    if (frameType == nsAccessibilityAtoms::textFrame) {
       // Zero area rects can occur in the first frame of a multi-frame text flow,
-      // in which case the next frame exists because the text flow is visible
-      rectVisibility = nsRectVisibility_kVisible;
+      // in which case the rendered text is not empty and the frame should not be marked invisible
+      nsAutoString renderedText;
+      frame->GetRenderedText (&renderedText, nsnull, nsnull, 0, 1);
+      if (!renderedText.IsEmpty()) {
+        rectVisibility = nsRectVisibility_kVisible;
+      }
     }
-    else if (IsCorrectFrameType(frame, nsAccessibilityAtoms::inlineFrame)) {
+    else if (frameType == nsAccessibilityAtoms::inlineFrame) {
       // Yuck. Unfortunately inline frames can contain larger frames inside of them,
       // so we can't really believe this is a zero area rect without checking more deeply.
       // GetBounds() will do that for us.
