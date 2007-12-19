@@ -369,10 +369,6 @@ nsEventListenerManager::~nsEventListenerManager()
 nsresult
 nsEventListenerManager::RemoveAllListeners()
 {
-  PRInt32 count = mListeners.Count();
-  for (PRInt32 i = 0; i < count; i++) {
-    delete mListeners.FastObserverAt(i);
-  }
   mListeners.Clear();
   return NS_OK;
 }
@@ -397,9 +393,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsEventListenerManager, nsIEventListen
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
-  PRInt32 i, count = tmp->mListeners.Count();
+  PRInt32 i, count = tmp->mListeners.Length();
   for (i = 0; i < count; i++) {
-    cb.NoteXPCOMChild(tmp->mListeners.FastObserverAt(i)->mListener.get());
+    cb.NoteXPCOMChild(tmp->mListeners.ElementAt(i)->mListener.get());
   }  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -477,9 +473,9 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   }
 
   nsListenerStruct* ls = nsnull;
-  PRInt32 count = mListeners.Count();
+  PRInt32 count = mListeners.Length();
   for (PRInt32 i = 0; i < count; i++) {
-    ls = mListeners.FastObserverAt(i);
+    ls = mListeners.ElementAt(i);
     if (ls->mListener == aListener && ls->mFlags == aFlags &&
         ls->mGroupFlags == group &&
         (EVENT_TYPE_EQUALS(ls, aType, aTypeAtom) ||
@@ -501,7 +497,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls->mGroupFlags = group;
   ls->mHandlerIsString = PR_FALSE;
   ls->mTypeData = aTypeData;
-  mListeners.AppendObserver(ls);
+  mListeners.AppendElement(ls);
 
   // For mutation listeners, we need to update the global bit on the DOM window.
   // Otherwise we won't actually fire the mutation event.
@@ -563,17 +559,16 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   nsListenerStruct* ls = nsnull;
   aFlags &= ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
 
-  PRInt32 count = mListeners.Count();
+  PRInt32 count = mListeners.Length();
   for (PRInt32 i = 0; i < count; ++i) {
-    ls = mListeners.FastObserverAt(i);
+    ls = mListeners.ElementAt(i);
     if (ls->mListener == aListener &&
         ls->mGroupFlags == group &&
         ((ls->mFlags & ~NS_PRIV_EVENT_UNTRUSTED_PERMITTED) == aFlags) &&
         (EVENT_TYPE_EQUALS(ls, aType, aUserType) ||
          (!(ls->mEventType) &&
           EVENT_TYPE_DATA_EQUALS(ls->mTypeData, aTypeData)))) {
-      mListeners.RemoveObserverAt(i);
-      delete ls;
+      mListeners.RemoveElementAt(i);
       mNoListenerForEvent = NS_EVENT_TYPE_NULL;
       mNoListenerForEventAtom = nsnull;
       break;
@@ -645,9 +640,9 @@ nsEventListenerManager::FindJSEventListener(PRUint32 aEventType,
   // Run through the listeners for this type and see if a script
   // listener is registered
   nsListenerStruct *ls;
-  PRInt32 count = mListeners.Count();
+  PRInt32 count = mListeners.Length();
   for (PRInt32 i = 0; i < count; ++i) {
-    ls = mListeners.FastObserverAt(i);
+    ls = mListeners.ElementAt(i);
     if (EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom) &&
         ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
       return ls;
@@ -843,8 +838,7 @@ nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
   nsListenerStruct* ls = FindJSEventListener(eventType, aName);
 
   if (ls) {
-    mListeners.RemoveObserver(ls);
-    delete ls;
+    mListeners.RemoveElement(ls);
     mNoListenerForEvent = NS_EVENT_TYPE_NULL;
     mNoListenerForEventAtom = nsnull;
   }
@@ -1106,7 +1100,7 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
                                     PRUint32 aFlags,
                                     nsEventStatus* aEventStatus)
 {
-  if (mListeners.Count() == 0 || aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
+  if (mListeners.IsEmpty() || aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
     return NS_OK;
   }
 
@@ -1157,11 +1151,11 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
 
 found:
 
-  nsTObserverArray<nsListenerStruct>::EndLimitedIterator iter(mListeners);
+  nsAutoTObserverArray<nsAutoPtr<nsListenerStruct>, 2>::EndLimitedIterator iter(mListeners);
   nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
   PRBool hasListener = PR_FALSE;
-  nsListenerStruct* ls;
-  while ((ls = iter.GetNext())) {
+  while (iter.HasMore()) {
+    nsListenerStruct* ls = iter.GetNext();
     PRBool useTypeInterface =
       EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData);
     PRBool useGenericInterface =
@@ -1682,9 +1676,9 @@ nsEventListenerManager::HasMutationListeners(PRBool* aListener)
 {
   *aListener = PR_FALSE;
   if (mMayHaveMutationListeners) {
-    PRInt32 count = mListeners.Count();
+    PRInt32 count = mListeners.Length();
     for (PRInt32 i = 0; i < count; ++i) {
-      nsListenerStruct* ls = mListeners.FastObserverAt(i);
+      nsListenerStruct* ls = mListeners.ElementAt(i);
       if (ls->mEventType >= NS_MUTATION_START &&
           ls->mEventType <= NS_MUTATION_END) {
         *aListener = PR_TRUE;
@@ -1701,9 +1695,9 @@ nsEventListenerManager::MutationListenerBits()
 {
   PRUint32 bits = 0;
   if (mMayHaveMutationListeners) {
-    PRInt32 i, count = mListeners.Count();
+    PRInt32 i, count = mListeners.Length();
     for (i = 0; i < count; ++i) {
-      nsListenerStruct* ls = mListeners.FastObserverAt(i);
+      nsListenerStruct* ls = mListeners.ElementAt(i);
       if (ls->mEventType >= NS_MUTATION_START &&
           ls->mEventType <= NS_MUTATION_END) {
         if (ls->mEventType == NS_MUTATION_SUBTREEMODIFIED) {
@@ -1739,9 +1733,9 @@ nsEventListenerManager::HasListenersFor(const nsAString& aEventName)
   }
 found:
 
-  PRInt32 i, count = mListeners.Count();
+  PRInt32 i, count = mListeners.Length();
   for (i = 0; i < count; ++i) {
-    nsListenerStruct* ls = mListeners.FastObserverAt(i);
+    nsListenerStruct* ls = mListeners.ElementAt(i);
     if (ls->mTypeAtom == atom ||
         EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData)) {
       return PR_TRUE;
@@ -1753,9 +1747,9 @@ found:
 PRBool
 nsEventListenerManager::HasUnloadListeners()
 {
-  PRInt32 count = mListeners.Count();
+  PRInt32 count = mListeners.Length();
   for (PRInt32 i = 0; i < count; ++i) {
-    nsListenerStruct* ls = mListeners.FastObserverAt(i);
+    nsListenerStruct* ls = mListeners.ElementAt(i);
     if (ls->mEventType == NS_PAGE_UNLOAD ||
         ls->mEventType == NS_BEFORE_PAGE_UNLOAD ||
         (ls->mTypeData && ls->mTypeData->iid &&
