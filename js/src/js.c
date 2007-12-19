@@ -647,6 +647,7 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     FILE *from;
     char *buf, *tmp;
     size_t bufsize, buflength, gotlength;
+    JSBool sawNewline;
     JSString *str;
 
     from = stdin;
@@ -656,6 +657,7 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
     if (!buf)
         return JS_FALSE;
 
+    sawNewline = JS_FALSE;
     while ((gotlength =
             js_fgets(buf + buflength, bufsize - buflength, from)) > 0) {
         buflength += gotlength;
@@ -663,6 +665,9 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
         /* Are we done? */
         if (buf[buflength - 1] == '\n') {
             buf[buflength - 1] = '\0';
+            sawNewline = JS_TRUE;
+            break;
+        } else if (buflength < bufsize - 1) {
             break;
         }
 
@@ -703,7 +708,7 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
      * Turn buf into a JSString. Note that buflength includes the trailing null
      * character.
      */
-    str = JS_NewString(cx, buf, buflength - 1);
+    str = JS_NewString(cx, buf, sawNewline ? buflength - 1 : buflength);
     if (!str) {
         JS_free(cx, buf);
         return JS_FALSE;
