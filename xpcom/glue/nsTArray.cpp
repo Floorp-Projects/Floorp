@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdlib.h>
 #include <string.h>
 #include "nsTArray.h"
 #include "nsXPCOM.h"
@@ -70,7 +71,7 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   if (mHdr == &sEmptyHdr) {
     // NS_Alloc new data
     Header *header = static_cast<Header*>
-                                (NS_Alloc(sizeof(Header) + capacity * elemSize));
+                                (malloc(sizeof(Header) + capacity * elemSize));
     if (!header)
       return PR_FALSE;
     header->mLength = 0;
@@ -92,7 +93,7 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   if (UsesAutoArrayBuffer()) {
     // NS_Alloc and copy
     header = static_cast<Header*>
-                        (NS_Alloc(sizeof(Header) + capacity * elemSize));
+                        (malloc(sizeof(Header) + capacity * elemSize));
     if (!header)
       return PR_FALSE;
 
@@ -100,7 +101,7 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   } else {
     // NS_Realloc existing data
     size_type size = sizeof(Header) + capacity * elemSize;
-    header = static_cast<Header*>(NS_Realloc(mHdr, size));
+    header = static_cast<Header*>(realloc(mHdr, size));
     if (!header)
       return PR_FALSE;
   }
@@ -128,20 +129,20 @@ nsTArray_base::ShrinkCapacity(size_type elemSize) {
     header->mLength = length;
     memcpy(header + 1, mHdr + 1, length * elemSize);
 
-    NS_Free(mHdr);
+    free(mHdr);
     mHdr = header;
     return;
   }
 
   if (length == 0) {
     NS_ASSERTION(!IsAutoArray(), "autoarray should have fit 0 elements");
-    NS_Free(mHdr);
+    free(mHdr);
     mHdr = &sEmptyHdr;
     return;
   }
 
   size_type size = sizeof(Header) + length * elemSize;
-  void *ptr = NS_Realloc(mHdr, size);
+  void *ptr = realloc(mHdr, size);
   if (!ptr)
     return;
   mHdr = static_cast<Header*>(ptr);
@@ -265,7 +266,7 @@ nsTArray_base::EnsureNotUsingAutoArrayBuffer(size_type elemSize)
   if (UsesAutoArrayBuffer()) {
     size_type size = sizeof(Header) + Length() * elemSize;
 
-    Header* header = static_cast<Header*>(NS_Alloc(size));
+    Header* header = static_cast<Header*>(malloc(size));
     if (!header)
       return PR_FALSE;
 
