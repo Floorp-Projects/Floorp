@@ -54,6 +54,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsSVGMatrix.h"
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
 #include "nsIDeviceContext.h"
@@ -713,15 +714,21 @@ already_AddRefed<nsIDOMSVGMatrix>
 nsSVGOuterSVGFrame::GetCanvasTM()
 {
   if (!mCanvasTM) {
-    nsCOMPtr<nsIDOMSVGMatrix> vb2vp;
     nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
-    svgElement->GetViewboxToViewportTransform(getter_AddRefs(vb2vp));
 
-    // Scale the transform from CSS pixel space to device pixel space
     float devPxPerCSSPx =
       1 / PresContext()->AppUnitsToFloatCSSPixels(
                                 PresContext()->AppUnitsPerDevPixel());
-    vb2vp->Scale(devPxPerCSSPx, getter_AddRefs(mCanvasTM));
+    nsCOMPtr<nsIDOMSVGMatrix> devPxToCSSPxMatrix;
+    NS_NewSVGMatrix(getter_AddRefs(devPxToCSSPxMatrix),
+                    devPxPerCSSPx, 0.0f,
+                    0.0f, devPxPerCSSPx);
+
+    nsCOMPtr<nsIDOMSVGMatrix> viewBoxMatrix;
+    svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxMatrix));
+
+    // PRE-multiply px conversion!
+    devPxToCSSPxMatrix->Multiply(viewBoxMatrix, getter_AddRefs(mCanvasTM));
 
     // our content is the document element so we must premultiply the values
     // of its currentScale and currentTranslate properties
