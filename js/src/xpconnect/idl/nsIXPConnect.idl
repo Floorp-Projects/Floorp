@@ -447,7 +447,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(256a41a5-10e6-40a1-8392-8baa4adfabe2)]
+[uuid(2d7f1bd7-ef8b-4f62-b2bb-1a8b0801edc3)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -675,8 +675,12 @@ interface nsIXPConnect : nsISupports
      *
      * @param aFilenamePrefix the UTF-8 filename prefix to match, which
      *                        should end with a slash (/) character
+     * @param aWantNativeWrappers whether XPConnect should produce native
+     *                            wrappers for scripts whose paths begin
+     *                            with this prefix
      */
-    void flagSystemFilenamePrefix(in string aFilenamePrefix);
+    void flagSystemFilenamePrefix(in string aFilenamePrefix,
+                                  in PRBool aWantNativeWrappers);
 
     /**
      * Restore an old prototype for wrapped natives of type

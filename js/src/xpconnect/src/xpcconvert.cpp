@@ -1151,11 +1151,11 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                 }
                 // else don't create XPCNativeWrappers, since we have
                 // no idea what's calling what here.
-                
+
                 uint32 flags = script ? JS_GetScriptFilenameFlags(script) : 0;
                 NS_ASSERTION(flags != JSFILENAME_NULL, "null script filename");
 
-                if((flags & JSFILENAME_SYSTEM) &&
+                if((flags & JSFILENAME_PROTECTED) &&
                    !JS_IsSystemObject(ccx, wrapper->GetFlatJSObject()))
                 {
 #ifdef DEBUG_XPCNativeWrapper
