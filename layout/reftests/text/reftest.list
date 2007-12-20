@@ -7,4 +7,4 @@ random == soft-hyphens-1c.html soft-hyphens-1-ref.html # bug 406299
 == white-space-2.html white-space-2-ref.html
 == zwnj-01.html zwnj-01-ref.html
 == zwnj-02.html zwnj-02-ref.html
-!= zwnj-01.html zwnj-02-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != zwnj-01.html zwnj-02-ref.html # Bad fonts on the tinderbox -- works locally
