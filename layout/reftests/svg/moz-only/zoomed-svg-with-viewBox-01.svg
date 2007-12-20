@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="40" height="30" viewBox="20 20 40 30">
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=407959 -->
+
+  <title>Test that zooming isn't broken when we have a viewBox</title>
+
+  <script>
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+var shell = document.defaultView
+              .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIWebNavigation)
+              .QueryInterface(Components.interfaces.nsIDocShell);
+
+var viewer = shell.contentViewer
+              .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer)
+
+viewer.fullZoom = 3;
+
+  </script>
+
+  <ellipse cx="40" cy="35" rx="20" ry="15" fill="blue"/>
+
+</svg>
