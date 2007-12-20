@@ -111,7 +111,7 @@ var gEditItemOverlay = {
       this._initTextField("locationField", this._uri.spec);
       this._initTextField("tagsField",
                            PlacesUtils.tagging
-                                      .getTagsForURI(this._uri).join(", "),
+                                      .getTagsForURI(this._uri, {}).join(", "),
                           false);
 
       // tags selector
@@ -432,7 +432,7 @@ var gEditItemOverlay = {
   },
 
   _updateTags: function EIO__updateTags() {
-    var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri);
+    var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, { });
     var tags = this._getTagsArrayFromTagField();
     if (tags.length > 0 || currentTags.length > 0) {
       var tagsToRemove = [];
@@ -784,7 +784,7 @@ var gEditItemOverlay = {
         this._initNamePicker(); // for microsummaries
         this._initTextField("tagsField",
                              PlacesUtils.tagging
-                                        .getTagsForURI(this._uri).join(", "),
+                                        .getTagsForURI(this._uri, { }).join(", "),
                             false);
         this._rebuildTagsSelectorList();
       }

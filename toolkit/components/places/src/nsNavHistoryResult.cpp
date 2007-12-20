@@ -61,6 +61,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIWritablePropertyBag.h"
+#include "nsITaggingService.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsPromiseFlatString.h"
@@ -127,6 +128,7 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(
   mIndentLevel(-1),
   mViewIndex(-1)
 {
+  mTags.SetIsVoid(PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -160,6 +162,62 @@ nsNavHistoryResultNode::GetParentResult(nsINavHistoryResult** aResult)
    return NS_ERROR_UNEXPECTED;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryResultNode::GetTags(nsAString& aTags) {
+  // Only URI-nodes may be associated with tags
+  if (!IsURI()) {
+    aTags.Truncate();
+    return NS_OK;
+  }
+
+  // Initially, the tags string is set to a void string (see construtor). We
+  // then build it the first time this method called is called (and by that,
+  // implicitly unset the void flag). Result observers may re-set the void flag
+  // in order to force rebuilding of the tags string.
+  if (!mTags.IsVoid()) {
+    aTags.Assign(mTags);
+    return NS_OK;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsITaggingService> svc =
+    do_GetService("@mozilla.org/browser/tagging-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), mURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // build the tags string
+  PRUnichar **tags;
+  PRUint32 count;
+  rv = svc->GetTagsForURI(uri, &count, &tags);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (count > 0) {
+    for (PRUint32 i=0; i < count; i++) {
+      mTags.Append(tags[i]);
+      if (i < count -1) { // separate with commas
+        mTags.Append(NS_LITERAL_STRING(", "));
+      }
+    }
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, tags);
+  }
+  aTags.Assign(mTags);
+
+  // If this node is a child of a history, we need to make sure
+  // bookmarks-liveupdate is turned on for this query
+  if (mParent && mParent->IsQuery()) {
+    nsNavHistoryQueryResultNode* query = mParent->GetAsQuery();
+    if (query->mLiveUpdate != QUERYUPDATE_COMPLEX_WITH_BOOKMARKS) {
+      query->mLiveUpdate = QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+      nsNavHistoryResult* result = query->GetResult();
+      NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+      result->AddAllBookmarksObserver(query);
+    }
+  }
   return NS_OK;
 }
 
@@ -206,7 +264,6 @@ nsNavHistoryResultNode::GetResult()
   NS_NOTREACHED("No container node found in hierarchy!");
   return nsnull;
 }
-
 
 // nsNavHistoryResultNode::GetGeneratingOptions
 //
@@ -636,6 +693,10 @@ nsNavHistoryContainerResultNode::GetSortingComparator(PRUint16 aSortType)
       return &SortComparison_CountLess;
     case nsINavHistoryQueryOptions::SORT_BY_COUNT_DESCENDING:
       return &SortComparison_CountGreater;
+    case nsINavHistoryQueryOptions::SORT_BY_TAGS_ASCENDING:
+      return &SortComparison_TagsLess;
+    case nsINavHistoryQueryOptions::SORT_BY_TAGS_DESCENDING:
+      return &SortComparison_TagsGreater;
     default:
       NS_NOTREACHED("Bad sorting type");
       return nsnull;
@@ -1170,6 +1231,34 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_VisitCountGr
   return -nsNavHistoryContainerResultNode::SortComparison_VisitCountLess(a, b, closure);
 }
 
+
+// nsNavHistoryContainerResultNode::SortComparison_Tags*
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TagsLess(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  PRInt32 value = 0;
+  nsAutoString aTags, bTags;
+
+  nsresult rv = a->GetTags(aTags);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  rv = b->GetTags(bTags);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  value = SortComparison_StringLess(aTags, bTags);
+
+  // fall back to title sorting
+  if (value == 0)
+    value = SortComparison_TitleLess(a, b, closure);
+
+  return value;
+}
+
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TagsGreater(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  return -SortComparison_TagsLess(a, b, closure);
+}
 
 // nsNavHistoryContainerResultNode::FindChildURI
 //
@@ -2225,7 +2314,8 @@ nsNavHistoryQueryResultNode::FillChildren()
   }
 
   if (mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS ||
-      mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_UNIFIED) {
+      mOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_UNIFIED ||
+      mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS) {
     // register with the result for bookmark updates
     result->AddAllBookmarksObserver(this);
   }
@@ -3237,12 +3327,17 @@ nsNavHistoryResultNode::OnItemChanged(PRInt64 aItemId,
   }
   else if (aProperty.EqualsLiteral("uri")) {
     mURI = aValue;
+    // clear the tags string as well
+    mTags.SetIsVoid(PR_TRUE);
   }
   else if (aProperty.EqualsLiteral("favicon")) {
     mFaviconURI = aValue;
   }
   else if (aProperty.EqualsLiteral("cleartime")) {
     mTime = 0;
+  }
+  else if (aProperty.EqualsLiteral("tags")) {
+    mTags.SetIsVoid(PR_TRUE);
   }
   else if (!aProperty.EqualsLiteral("keyword") && !aIsAnnotationProperty) {
     // XXX: expose a keyword getter on bookmarks nodes?

@@ -492,7 +492,7 @@ PlacesTreeView.prototype = {
   },
 
   _sortTypeToColumnType: function PTV__sortTypeToColumnType(aSortType) {
-    switch(aSortType) {
+    switch (aSortType) {
       case Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING:
         return [this.COLUMN_TYPE_TITLE, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING:
@@ -528,6 +528,10 @@ PlacesTreeView.prototype = {
         return [this.COLUMN_TYPE_LASTMODIFIED, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING:
         return [this.COLUMN_TYPE_LASTMODIFIED, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_TAGS_ASCENDING:
+        return [this.COLUMN_TYPE_TAGS, false];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_TAGS_DESCENDING:
+        return [this.COLUMN_TYPE_TAGS, true];
     }
     return [this.COLUMN_TYPE_UNKNOWN, false];
   },
@@ -1099,13 +1103,7 @@ PlacesTreeView.prototype = {
           return "";
         return node.title || PlacesUtils.getString("noTitle");
       case this.COLUMN_TYPE_TAGS:
-        if (PlacesUtils.nodeIsURI(node)) {
-          var tagsvc = PlacesUtils.tagging;
-          var uri = PlacesUtils._uri(node.uri);
-          var tags = tagsvc.getTagsForURI(uri, {});
-          return tags.join(", ");
-        }
-        return "";
+        return node.tags;
       case this.COLUMN_TYPE_URI:
         if (PlacesUtils.nodeIsURI(node))
           return node.uri;
@@ -1189,10 +1187,6 @@ PlacesTreeView.prototype = {
   cycleHeader: function PTV_cycleHeader(aColumn) {
     if (!this._result)
       throw Cr.NS_ERROR_UNEXPECTED;
-
-    // Currently cannot sort by tags
-    if (aColumn.id == "tags")
-      return;
 
     this._enumerateObservers("onCycleHeader", [aColumn]);
 
@@ -1299,6 +1293,15 @@ PlacesTreeView.prototype = {
           newSort = NHQO.SORT_BY_NONE;
         else
           newSort = NHQO.SORT_BY_LASTMODIFIED_ASCENDING;
+
+        break;
+      case this.COLUMN_TYPE_TAGS:
+        if (oldSort == NHQO.SORT_BY_TAGS_ASCENDING)
+          newSort = NHQO.SORT_BY_TAGS_DESCENDING;
+        else if (allowTriState && oldSort == NHQO.SORT_BY_TAGS_DESCENDING)
+          newSort = NHQO.SORT_BY_NONE;
+        else
+          newSort = NHQO.SORT_BY_TAGS_ASCENDING;
 
         break;
       default:

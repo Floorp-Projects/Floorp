@@ -209,7 +209,7 @@ TaggingService.prototype = {
     if (!aTags) {
       // see IDL.
       // XXXmano: write a perf-sensitive version of this code path...
-      aTags = this.getTagsForURI(aURI);
+      aTags = this.getTagsForURI(aURI, { });
     }
 
     for (var i=0; i < aTags.length; i++) {
@@ -246,7 +246,7 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
-  getTagsForURI: function TS_getTagsForURI(aURI) {
+  getTagsForURI: function TS_getTagsForURI(aURI, aCount) {
     if (!aURI)
       throw Cr.NS_ERROR_INVALID_ARG;
 
@@ -265,6 +265,7 @@ TaggingService.prototype = {
 
     // sort the tag list
     tags.sort();
+    aCount.value = tags.length;
     return tags;
   },
 
