@@ -163,7 +163,7 @@ Engine.prototype = {
     } finally {
       if (done) {
         this._log.debug("Server reset completed successfully");
-        this._os.notifyObservers(null, this._osPrefix + "reset-server:end", "");
+        this._os.notifyObservers(null, this._osPrefix + "reset-server:success", "");
       } else {
         this._log.debug("Server reset failed");
         this._os.notifyObservers(null, this._osPrefix + "reset-server:error", "");
@@ -192,7 +192,7 @@ Engine.prototype = {
     } finally {
       if (done) {
         this._log.debug("Client reset completed successfully");
-        this._os.notifyObservers(null, this._osPrefix + "reset-client:end", "");
+        this._os.notifyObservers(null, this._osPrefix + "reset-client:success", "");
       } else {
         this._log.debug("Client reset failed");
         this._os.notifyObservers(null, this._osPrefix + "reset-client:error", "");
@@ -431,7 +431,7 @@ Engine.prototype = {
         ok = yield;
       }
       if (ok && synced) {
-        this._os.notifyObservers(null, this._osPrefix + "sync:end", "");
+        this._os.notifyObservers(null, this._osPrefix + "sync:success", "");
         generatorDone(this, self, onComplete, true);
       } else {
         this._os.notifyObservers(null, this._osPrefix + "sync:error", "");
