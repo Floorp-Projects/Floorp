@@ -19,7 +19,7 @@ main(int argc, char **argv)
   args[i++] = "coredll.lib";
   args[i++] = "ceshell.lib";
   args[i++] = "ole32.lib";
-
+  args[i++] = "mmtimer.lib";
   args[i++] = "shunt.lib";
 
   args[i++] = "/subsystem:\"WINDOWSCE,5.01\"";
@@ -51,6 +51,5 @@ main(int argc, char **argv)
 
   dumpargs(args);
 
-  run(args);
-  return 0;
+  return run(args);
 }
