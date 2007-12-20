@@ -175,16 +175,17 @@ SnapshotStore.prototype = {
     this._log.info("Saving snapshot to disk");
 
     let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("weave-snapshots");
-
     file.QueryInterface(Ci.nsILocalFile);
+
+    file.append("weave");
     if (!file.exists())
       file.create(file.DIRECTORY_TYPE, PERMS_DIRECTORY);
-    file.QueryInterface(Ci.nsIFile);
+
+    file.append("snapshots");
+    if (!file.exists())
+      file.create(file.DIRECTORY_TYPE, PERMS_DIRECTORY);
 
     file.append(this.filename);
-
-    file.QueryInterface(Ci.nsILocalFile);
     if (!file.exists())
       file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
 

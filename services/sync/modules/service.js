@@ -244,16 +244,31 @@ WeaveSyncService.prototype = {
     root.addAppender(dapp);
 
     let logFile = this._dirSvc.get("ProfD", Ci.nsIFile);
-    let verboseFile = logFile.clone();
-    logFile.append("bm-sync.log");
-    logFile.QueryInterface(Ci.nsILocalFile);
-    verboseFile.append("bm-sync-verbose.log");
-    verboseFile.QueryInterface(Ci.nsILocalFile);
 
-    let fapp = Log4Moz.Service.newFileAppender("rotating", logFile, formatter);
+    let brief = this._dirSvc.get("ProfD", Ci.nsIFile);
+    brief.QueryInterface(Ci.nsILocalFile);
+
+    brief.append("weave");
+    if (!brief.exists())
+      brief.create(brief.DIRECTORY_TYPE, PERMS_DIRECTORY);
+
+    brief.append("logs");
+    if (!brief.exists())
+      brief.create(brief.DIRECTORY_TYPE, PERMS_DIRECTORY);
+
+    brief.append("brief-log.txt");
+    if (!brief.exists())
+      brief.create(brief.NORMAL_FILE_TYPE, PERMS_FILE);
+
+    let verbose = brief.parent.clone();
+    verbose.append("verbose-log.txt");
+    if (!verbose.exists())
+      verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
+
+    let fapp = Log4Moz.Service.newFileAppender("rotating", brief, formatter);
     fapp.level = Log4Moz.Level.Info;
     root.addAppender(fapp);
-    let vapp = Log4Moz.Service.newFileAppender("rotating", verboseFile, formatter);
+    let vapp = Log4Moz.Service.newFileAppender("rotating", verbose, formatter);
     vapp.level = Log4Moz.Level.Debug;
     root.addAppender(vapp);
   },
