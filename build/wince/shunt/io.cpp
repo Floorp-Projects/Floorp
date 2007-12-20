@@ -46,12 +46,12 @@ extern "C" {
 #endif
 
 
-MOZCE_SHUNT_API int mozce_chmod(const char* inFilename, int inMode)
+MOZCE_SHUNT_API int chmod(const char* inFilename, int inMode)
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_chmod called\n");
+    mozce_printf("chmod called\n");
 #endif
     
     int retval = -1;
@@ -90,12 +90,12 @@ MOZCE_SHUNT_API int mozce_chmod(const char* inFilename, int inMode)
 }
 
 
-MOZCE_SHUNT_API int mozce_isatty(int inHandle)
+MOZCE_SHUNT_API int isatty(int inHandle)
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("-- mozce_isatty called\n");
+    mozce_printf("-- isatty called\n");
 #endif
     
     int retval = 0;
@@ -127,7 +127,7 @@ static struct protoent sProtos[] = {
  *
  * As getprotobyname
  */
-MOZCE_SHUNT_API struct protoent* mozce_getprotobyname(const char* inName)
+MOZCE_SHUNT_API struct protoent* getprotobyname(const char* inName)
 {
     struct protoent* retval = NULL;
 
@@ -153,7 +153,7 @@ MOZCE_SHUNT_API struct protoent* mozce_getprotobyname(const char* inName)
  *
  * As getprotobynumber
  */
-MOZCE_SHUNT_API struct protoent* mozce_getprotobynumber(int inNumber)
+MOZCE_SHUNT_API struct protoent* getprotobynumber(int inNumber)
 {
     struct protoent* retval = NULL;
     unsigned uLoop;
