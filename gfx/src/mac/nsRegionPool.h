@@ -63,7 +63,7 @@ private:
 
 //------------------------------------------------------------------------
 
-extern nsNativeRegionPool sNativeRegionPool;
+extern NS_EXPORT nsNativeRegionPool sNativeRegionPool;
 
 //------------------------------------------------------------------------
 
