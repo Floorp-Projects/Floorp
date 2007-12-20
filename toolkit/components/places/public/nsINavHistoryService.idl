@@ -50,7 +50,7 @@ interface nsINavHistoryBatchCallback;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
-[scriptable, uuid(62c517f4-046e-474d-adba-975bf8924703)]
+[scriptable, uuid(47cf89e3-4777-46bf-9677-21793870ce62)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
@@ -182,6 +182,12 @@ interface nsINavHistoryResultNode : nsISupports
    * time that the item was last modified. For other nodes, this value is 0.
    */
   readonly attribute PRTime lastModified;
+
+  /**
+   * For uri nodes, this is a sorted list of the tags, delimited with commans,
+   * for the uri represented by this node. Otherwise this is an empty string.
+   */
+  readonly attribute AString tags;
 };
 
 
@@ -1000,8 +1006,10 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short SORT_BY_LASTMODIFIED_DESCENDING = 14;
   const unsigned short SORT_BY_COUNT_ASCENDING = 15;
   const unsigned short SORT_BY_COUNT_DESCENDING = 16;
-  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 17;
-  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 18;
+  const unsigned short SORT_BY_TAGS_ASCENDING = 17;
+  const unsigned short SORT_BY_TAGS_DESCENDING = 18;
+  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 19;
+  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 20;
 
 
   /**

@@ -50,11 +50,12 @@ try {
   do_throw("Could not get history service\n");
 } 
 
-// get bookmarks root id
-var root = bmsvc.bookmarksRoot;
 
 // main
 function run_test() {
+  // get bookmarks root id
+  var root = bmsvc.bookmarksMenuFolder;
+
   /**
    * All of the query objects are ORed together. Within a query, all the terms
    * are ANDed together. See nsINavHistory.idl.

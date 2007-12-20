@@ -256,7 +256,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
   NS_IMETHOD GetParentResult(nsINavHistoryResult** aResult) \
     { return nsNavHistoryResultNode::GetParentResult(aResult); } \
   NS_IMETHOD GetPropertyBag(nsIWritablePropertyBag** aBag) \
-    { return nsNavHistoryResultNode::GetPropertyBag(aBag); }
+    { return nsNavHistoryResultNode::GetPropertyBag(aBag); } \
+  NS_IMETHOD GetTags(nsAString& aTags) \
+    { return nsNavHistoryResultNode::GetTags(aTags); } \
 
 class nsNavHistoryResultNode : public nsINavHistoryResultNode
 {
@@ -280,6 +282,7 @@ public:
     { *type = nsNavHistoryResultNode::RESULT_TYPE_URI; return NS_OK; }
   NS_IMETHOD GetUri(nsACString& aURI)
     { aURI = mURI; return NS_OK; }
+  NS_IMETHOD GetTags(nsAString& aTags);
 
   virtual void OnRemoving();
 
@@ -388,6 +391,7 @@ public:
   nsNavHistoryContainerResultNode* mParent;
   nsCString mURI; // not necessarily valid for containers, call GetUri
   nsCString mTitle;
+  nsString mTags;
   PRUint32 mAccessCount;
   PRInt64 mTime;
   nsCString mFaviconURI;
@@ -621,6 +625,10 @@ public:
   PR_STATIC_CALLBACK(int) SortComparison_CountLess(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_CountGreater(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_TagsLess(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_TagsGreater(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
 
   // finding children: THESE DO NOT ADDREF

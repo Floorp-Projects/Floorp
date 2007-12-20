@@ -72,7 +72,6 @@
 #include "prtime.h"
 #include "prprf.h"
 #include "nsEscape.h"
-#include "nsITaggingService.h"
 #include "nsIVariant.h"
 #include "nsVariant.h"
 

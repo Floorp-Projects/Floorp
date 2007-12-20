@@ -923,6 +923,27 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                       OnItemAdded(rowId, aFolder, index))
 
+  // If the bookmark has been added to a tag container, notify all
+  // bookmark-folder result nodes which contain a bookmark for the new
+  // bookmark's url
+  PRInt64 grandParent;
+  rv = GetFolderIdForItem(aFolder, &grandParent);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (grandParent == mTagRoot) {
+    // query for all bookmarks for that URI, notify for each
+    nsTArray<PRInt64> bookmarks;
+
+    rv = GetBookmarkIdsForURITArray(aItem, &bookmarks);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (bookmarks.Length()) {
+      for (PRUint32 i = 0; i < bookmarks.Length(); i++) {
+        ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                            OnItemChanged(bookmarks[i], NS_LITERAL_CSTRING("tags"),
+                                          PR_FALSE, EmptyCString()))
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -934,7 +955,9 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 
   PRInt32 childIndex;
   PRInt64 placeId, folderId;
+  PRInt32 itemType;
   nsCAutoString buffer;
+  nsCAutoString spec;
 
   // First, remove item annotations
   nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
@@ -956,6 +979,11 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     childIndex = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Position);
     placeId = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_PlaceID);
     folderId = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
+    itemType = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
+    if (itemType == TYPE_BOOKMARK) {
+      rv = mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_URI, spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE id = ");
@@ -981,6 +1009,31 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                       OnItemRemoved(aItemId, folderId, childIndex))
 
+  if (itemType == TYPE_BOOKMARK) {
+    // If the removed bookmark was a child of a tag container, notify all
+    // bookmark-folder result nodes which contain a bookmark for the removed
+    // bookmark's url.
+    PRInt64 grandParent;
+    rv = GetFolderIdForItem(folderId, &grandParent);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (grandParent == mTagRoot) {
+      nsCOMPtr<nsIURI> uri;
+      rv = NS_NewURI(getter_AddRefs(uri), spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsTArray<PRInt64> bookmarks;
+
+      rv = GetBookmarkIdsForURITArray(uri, &bookmarks);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (bookmarks.Length()) {
+        for (PRUint32 i = 0; i < bookmarks.Length(); i++) {
+          ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                              OnItemChanged(bookmarks[i], NS_LITERAL_CSTRING("tags"),
+                                            PR_FALSE, EmptyCString()))
+        }
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -1412,8 +1465,7 @@ nsNavBookmarks::MoveItem(PRInt64 aItemId, PRInt64 aNewParent, PRInt32 aIndex)
   // get item properties
   nsresult rv;
   PRInt64 oldParent;
-  PRInt32 oldIndex;
-  PRInt32 itemType;
+  PRInt32 oldIndex, itemType;
   nsCAutoString folderType;
   {
     mozStorageStatementScoper scope(mDBGetItemProperties);
