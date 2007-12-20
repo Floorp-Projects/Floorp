@@ -415,7 +415,10 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     if (last) {
         js_GC(cx, GC_LAST_CONTEXT);
 
-        /* Free the script filename table if it exists and is empty. */
+        /*
+         * Free the script filename table if it exists and is empty. Do this
+         * after the last GC to avoid finalizers tripping on free memory.
+         */
         if (rt->scriptFilenameTable && rt->scriptFilenameTable->nentries == 0)
             js_FinishRuntimeScriptState(rt);
 

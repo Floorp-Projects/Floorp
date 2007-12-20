@@ -1437,7 +1437,7 @@ struct JSFunctionSpec {
 #define JS_FS_END JS_FS(NULL,NULL,0,0,0)
 
 /*
- * Initializer macro for a row in a JSFunctionSpec array. This is the original
+ * Initializer macro for a JSFunctionSpec array element. This is the original
  * kind of native function specifier initializer. Use JS_FN ("fast native", see
  * JSFastNative in jspubtd.h) for all functions that do not need a stack frame
  * when activated.

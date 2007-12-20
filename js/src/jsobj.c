@@ -114,7 +114,7 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
 
 JSClass js_ObjectClass = {
     js_Object_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) | JSCLASS_FIXED_BINDING,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -2766,7 +2766,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
             if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj))) {
                 v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
                 if (JSVAL_IS_PRIMITIVE(v))
-                    v = JSVAL_VOID; 
+                    v = JSVAL_VOID;
             }
         }
         OBJ_DROP_PROPERTY(cx, pobj, prop);
