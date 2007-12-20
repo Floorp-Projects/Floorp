@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2234,16 +2235,15 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       if (platform)
         entry->flags |= PackageEntry::PLATFORM_PACKAGE;
-      if (xpcNativeWrappers) {
+      if (xpcNativeWrappers)
         entry->flags |= PackageEntry::XPCNATIVEWRAPPERS;
-        if (xpc) {
-          nsCAutoString urlp("chrome://");
-          urlp.Append(package);
-          urlp.Append('/');
+      if (xpc) {
+        nsCAutoString urlp("chrome://");
+        urlp.Append(package);
+        urlp.Append('/');
 
-          rv = xpc->FlagSystemFilenamePrefix(urlp.get());
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
+        rv = xpc->FlagSystemFilenamePrefix(urlp.get(), xpcNativeWrappers);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     }
     else if (!strcmp(token, "locale")) {

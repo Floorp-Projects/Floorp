@@ -391,6 +391,7 @@ JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags);
 
 #define JSFILENAME_NULL         0xffffffff      /* null script filename */
 #define JSFILENAME_SYSTEM       0x00000001      /* "system" script, see below */
+#define JSFILENAME_PROTECTED    0x00000002      /* scripts need protection */
 
 /*
  * Return true if obj is a "system" object, that is, one created by
