@@ -1,5 +1,6 @@
 pref("extensions.weave.serverURL", "https://services.mozilla.com/");
 pref("extensions.weave.username", "nobody@mozilla.com");
+pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.rememberpassword", true);
 pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
