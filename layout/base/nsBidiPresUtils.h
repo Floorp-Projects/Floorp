@@ -118,7 +118,6 @@ public:
    * descendants of a given block frame.
    *
    * @param aBlockFrame          The block frame
-   * @param aFirstChild          The first child frame of aBlockFrame
    * @param aIsVisualFormControl [IN]  Set if we are in a form control on a
    *                                   visual page.
    *                                   @see nsBlockFrame::IsVisualFormControl
@@ -126,7 +125,6 @@ public:
    *  @lina 06/18/2000
    */
   nsresult Resolve(nsBlockFrame*   aBlockFrame,
-                   nsIFrame*       aFirstChild,
                    PRBool          aIsVisualFormControl);
 
   /**
