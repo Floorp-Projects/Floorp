@@ -82,6 +82,9 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_SJOW_WrappedObject(JSContext *cx, JSObject *obj);
+
 static inline
 JSBool
 ThrowException(nsresult ex, JSContext *cx)
@@ -197,7 +200,10 @@ JSExtendedClass sXPC_SJOW_JSClass = {
     nsnull,               nsnull
   },
   // JSExtendedClass initialization
-  XPC_SJOW_Equality
+  XPC_SJOW_Equality,
+  nsnull, // iteratorObject
+  XPC_SJOW_WrappedObject,
+  JSCLASS_NO_RESERVED_MEMBERS
 };
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -930,6 +936,12 @@ XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   }
 
   return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_SJOW_WrappedObject(JSContext *cx, JSObject *obj)
+{
+  return GetUnsafeObject(cx, obj);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
