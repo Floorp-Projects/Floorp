@@ -1000,6 +1000,7 @@ nsSVGUtils::NotifyChildrenCanvasTMChanged(nsIFrame *aFrame, PRBool suppressInval
     if (SVGFrame) {
       SVGFrame->NotifyCanvasTMChanged(suppressInvalidation); 
     } else {
+      NS_ASSERTION(aKid->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
       nsSVGUtils::NotifyChildrenCanvasTMChanged(aKid, suppressInvalidation);
