@@ -211,7 +211,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
                       JSObject **objp, JSProperty **propp);
 
 extern JSBool
-js_StrictlyEqual(jsval lval, jsval rval);
+js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval);
 
 extern JSBool
 js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc);

@@ -1495,7 +1495,7 @@ bad:
 }
 
 JSBool
-js_StrictlyEqual(jsval lval, jsval rval)
+js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
 {
     jsval ltag = JSVAL_TAG(lval), rtag = JSVAL_TAG(rval);
     jsdouble ld, rd;
@@ -1510,6 +1510,26 @@ js_StrictlyEqual(jsval lval, jsval rval)
             ld = *JSVAL_TO_DOUBLE(lval);
             rd = *JSVAL_TO_DOUBLE(rval);
             return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
+        }
+        if (ltag == JSVAL_OBJECT &&
+            lval != rval &&
+            !JSVAL_IS_NULL(lval) &&
+            !JSVAL_IS_NULL(rval)) {
+            JSObject *lobj, *robj;
+            JSClass *lclasp, *rclasp;
+
+            lobj = JSVAL_TO_OBJECT(lval);
+            robj = JSVAL_TO_OBJECT(rval);
+            lclasp = OBJ_GET_CLASS(cx, lobj);
+            rclasp = OBJ_GET_CLASS(cx, robj);
+            if (lclasp->flags & rclasp->flags & JSCLASS_IS_EXTENDED) {
+                JSExtendedClass *lxclasp = (JSExtendedClass *) lclasp,
+                                *rxclasp = (JSExtendedClass *) rclasp;
+                return (lxclasp->wrappedObject && rxclasp->wrappedObject)
+                       ? lxclasp->wrappedObject(cx, lval) ==
+                         rxclasp->wrappedObject(cx, rval)
+                       : lval == rval;
+            }
         }
         return lval == rval;
     }
@@ -2883,7 +2903,7 @@ interrupt:
     JS_BEGIN_MACRO                                                            \
         rval = FETCH_OPND(-1);                                                \
         lval = FETCH_OPND(-2);                                                \
-        cond = js_StrictlyEqual(lval, rval) OP JS_TRUE;                       \
+        cond = js_StrictlyEqual(cx, lval, rval) OP JS_TRUE;                   \
         sp--;                                                                 \
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO

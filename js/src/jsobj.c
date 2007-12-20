@@ -276,6 +276,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
 {
     JSRuntime *rt;
     JSObject *obj2, *oldproto;
+    JSClass *clasp;
     JSScope *scope, *newscope;
 
     /*
@@ -336,6 +337,17 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
 
     obj2 = pobj;
     while (obj2) {
+        clasp = OBJ_GET_CLASS(cx, obj2);
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+            if (xclasp->wrappedObject) {
+                /* If there is no wrapped object, just use the wrapper. */
+                JSObject *wrapped = xclasp->wrappedObject(cx, obj2);
+                if (wrapped)
+                    obj2 = wrapped;
+            }
+        }
+
         if (obj2 == obj) {
             SET_SLOT_DONE(rt);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1240,6 +1252,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
     JSObject *scopeobj;
+    JSClass *clasp;
     JSString *str;
     const char *file;
     uintN line;
@@ -1252,7 +1265,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool setCallerVarObj = JS_FALSE;
 #endif
 
-
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
     JS_ASSERT(!caller || caller->pc);
@@ -1264,6 +1276,16 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * the former indirect case.
      */
     scopeobj = OBJ_GET_PARENT(cx, obj);
+    if (scopeobj &&
+        ((clasp = OBJ_GET_CLASS(cx, obj))->flags & JSCLASS_IS_EXTENDED)) {
+        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        if (xclasp->wrappedObject) {
+            JSObject *wrapped = xclasp->wrappedObject(cx, obj);
+            if (wrapped)
+                scopeobj = OBJ_GET_PARENT(cx, wrapped);
+        }
+    }
+
     if (indirectCall || scopeobj) {
         uintN flags = scopeobj
                       ? JSREPORT_ERROR
