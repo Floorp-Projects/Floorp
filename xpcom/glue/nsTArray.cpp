@@ -83,10 +83,15 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
 
   // Use doubling algorithm when forced to increase available capacity.
   NS_ASSERTION(mHdr->mCapacity > 0, "should not have buffer of zero size");
-  size_type temp = mHdr->mCapacity;
-  while (temp < capacity)
-    temp <<= 1;
-  capacity = temp;
+  if (capacity < 8) {
+    // grow to 8 elements
+    capacity = 8;
+  } else {
+    size_type temp = mHdr->mCapacity;
+    while (temp < capacity)
+      temp <<= 1;
+    capacity = temp;
+  }
 
   Header *header;
   if (UsesAutoArrayBuffer()) {
