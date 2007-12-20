@@ -564,7 +564,7 @@ public:
     /**
      * A list of mutation observers
      */
-    nsTObserverArray<nsIMutationObserver> mMutationObservers;
+    nsTObserverArray<nsIMutationObserver*> mMutationObservers;
 
     /**
      * An object implementing nsIDOMNodeList for this content (childNodes)
