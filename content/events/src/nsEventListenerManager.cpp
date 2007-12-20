@@ -1157,7 +1157,7 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
 
 found:
 
-  nsTObserverArray<nsListenerStruct*>::EndLimitedIterator iter(mListeners);
+  nsAutoTObserverArray<nsListenerStruct*, 2>::EndLimitedIterator iter(mListeners);
   nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
   PRBool hasListener = PR_FALSE;
   while (iter.HasMore()) {
