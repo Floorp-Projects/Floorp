@@ -989,6 +989,25 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
   return retval;
 }
 
+void 
+nsSVGUtils::NotifyChildrenCanvasTMChanged(nsIFrame *aFrame, PRBool suppressInvalidation)
+{
+  nsIFrame *aKid = aFrame->GetFirstChild(nsnull);
+
+  while (aKid) {
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(aKid, &SVGFrame);
+    if (SVGFrame) {
+      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation); 
+    } else {
+      // recurse into the children of container frames e.g. <clipPath>, <mask>
+      // in case they have child frames with transformation matrices
+      nsSVGUtils::NotifyChildrenCanvasTMChanged(aKid, suppressInvalidation);
+    }
+    aKid = aKid->GetNextSibling();
+  }
+}
+
 void
 nsSVGUtils::AddObserver(nsISupports *aObserver, nsISupports *aTarget)
 {
