@@ -6742,19 +6742,7 @@ nsBlockFrame::ResolveBidi()
   if (!bidiUtils)
     return NS_ERROR_NULL_POINTER;
 
-  for (nsBlockFrame* curFrame = this; curFrame;
-       curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
-    curFrame->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
-    if (!curFrame->mLines.empty()) {
-      nsresult rv = bidiUtils->Resolve(curFrame,
-                                       curFrame->mLines.front()->mFirstChild,
-                                       IsVisualFormControl(presContext));
-      if (NS_FAILED(rv))
-        return rv;
-    }
-  }
-
-  return NS_OK;
+  return bidiUtils->Resolve(this, IsVisualFormControl(presContext));
 }
 
 PRBool

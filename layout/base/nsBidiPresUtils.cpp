@@ -254,7 +254,6 @@ AdvanceLineIteratorToFrame(nsIFrame* aFrame,
  */
 nsresult
 nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
-                         nsIFrame*       aFirstChild,
                          PRBool          aIsVisualFormControl)
 {
   mLogicalFrames.Clear();
@@ -283,7 +282,11 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
       mLogicalFrames.AppendElement(directionalFrame);
     }
   }
-  InitLogicalArray(aFirstChild);
+  for (nsBlockFrame* block = aBlockFrame; block;
+       block = static_cast<nsBlockFrame*>(block->GetNextContinuation())) {
+    block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+    InitLogicalArray(block->GetFirstChild(nsnull));
+  }
 
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
     nsIFrame* directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kPDF);
@@ -481,6 +484,9 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
 void
 nsBidiPresUtils::InitLogicalArray(nsIFrame*       aCurrentFrame)
 {
+  if (!aCurrentFrame)
+    return;
+
   nsIPresShell* shell = aCurrentFrame->PresContext()->PresShell();
   nsStyleContext* styleContext;
 
