@@ -15,14 +15,12 @@ function boom() {
   document.documentElement.removeAttribute("class");
 }
 
-setTimeout(boom, 30);
-
 ]]></script>
 
 </head>
 
 
-<body>
+<body onload="setTimeout(boom, 30);">
 
 <div style="float: right;" id="div">Floated div</div>
 
