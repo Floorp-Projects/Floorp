@@ -1595,8 +1595,8 @@ case "$target" in
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O2"
     _PEDANTIC=
-    CFLAGS="$CFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
-    CXXFLAGS="$CXXFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
+    CFLAGS="$CFLAGS -fpascal-strings -fno-common"
+    CXXFLAGS="$CXXFLAGS -fpascal-strings -fno-common"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
