@@ -4,6 +4,7 @@ pref("extensions.weave.rememberpassword", true);
 pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
 pref("extensions.weave.bookmarks", true);
+pref("extensions.weave.history", true);
 pref("extensions.weave.schedule", 1);
 pref("extensions.weave.lastsync", "0");
 pref("extensions.weave.encryption", "XXXTEA");
