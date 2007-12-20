@@ -889,6 +889,9 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
       return rv;
     }
     needToBlankComposite = PR_TRUE;
+  } else if (aNextFrameIndex == 1) {
+    // When we are looping the compositing frame needs to be cleared.
+    needToBlankComposite = PR_TRUE;
   }
 
   // More optimizations possible when next frame is not transparent
