@@ -129,7 +129,11 @@ WeaveSyncService.prototype = {
   set username(value) {
     let branch = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch);
-    branch.setCharPref("browser.places.sync.username", value);
+    if (value)
+      branch.setCharPref("browser.places.sync.username", value);
+    else
+      branch.clearUserPref("browser.places.sync.username");
+
     // fixme - need to loop over all Identity objects - needs some rethinking...
     this._mozId.username = value;
     this._cryptoId.username = value;
