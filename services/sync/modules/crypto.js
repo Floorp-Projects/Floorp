@@ -75,21 +75,21 @@ WeaveCrypto.prototype = {
   get defaultAlgorithm() {
     let branch = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch);
-    return branch.getCharPref("browser.places.sync.encryption");
+    return branch.getCharPref("extensions.weave.encryption");
   },
   set defaultAlgorithm(value) {
     let branch = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch);
-    let cur = branch.getCharPref("browser.places.sync.encryption");
+    let cur = branch.getCharPref("extensions.weave.encryption");
     if (value != cur)
-      branch.setCharPref("browser.places.sync.encryption", value);
+      branch.setCharPref("extensions.weave.encryption", value);
   },
 
   _init: function Crypto__init() {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
     let branch = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch2);
-    branch.addObserver("browser.places.sync.encryption", this, false);
+    branch.addObserver("extensions.weave.encryption", this, false);
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports]),
@@ -98,11 +98,11 @@ WeaveCrypto.prototype = {
 
   observe: function Sync_observe(subject, topic, data) {
     switch (topic) {
-    case "browser.places.sync.encryption":
+    case "extensions.weave.encryption":
       let branch = Cc["@mozilla.org/preferences-service;1"]
         .getService(Ci.nsIPrefBranch);
 
-      let cur = branch.getCharPref("browser.places.sync.encryption");
+      let cur = branch.getCharPref("extensions.weave.encryption");
       if (cur == data)
 	return;
 
@@ -115,7 +115,7 @@ WeaveCrypto.prototype = {
         break;
       default:
 	this._log.warn("Unknown encryption algorithm, resetting");
-	branch.setCharPref("browser.places.sync.encryption", "XXXTEA");
+	branch.setCharPref("extensions.weave.encryption", "XXXTEA");
 	return; // otherwise we'll send the alg changed event twice
       }
       // FIXME: listen to this bad boy somewhere

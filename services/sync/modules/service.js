@@ -124,15 +124,15 @@ WeaveSyncService.prototype = {
   get username() {
     let branch = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch);
-    return branch.getCharPref("browser.places.sync.username");
+    return branch.getCharPref("extensions.weave.username");
   },
   set username(value) {
     let branch = Cc["@mozilla.org/preferences-service;1"]
       .getService(Ci.nsIPrefBranch);
     if (value)
-      branch.setCharPref("browser.places.sync.username", value);
+      branch.setCharPref("extensions.weave.username", value);
     else
-      branch.clearUserPref("browser.places.sync.username");
+      branch.clearUserPref("extensions.weave.username");
 
     // fixme - need to loop over all Identity objects - needs some rethinking...
     this._mozId.username = value;
@@ -187,11 +187,11 @@ WeaveSyncService.prototype = {
     try {
       let branch = Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch2);
-      this._serverURL = branch.getCharPref("browser.places.sync.serverURL");
-      enabled = branch.getBoolPref("browser.places.sync.enabled");
-      schedule = branch.getIntPref("browser.places.sync.schedule");
+      this._serverURL = branch.getCharPref("extensions.weave.serverURL");
+      enabled = branch.getBoolPref("extensions.weave.enabled");
+      schedule = branch.getIntPref("extensions.weave.schedule");
 
-      branch.addObserver("browser.places.sync", this, false);
+      branch.addObserver("extensions.weave", this, false);
     }
     catch (ex) { /* use defaults */ }
 
@@ -448,7 +448,7 @@ WeaveSyncService.prototype = {
 
   observe: function WeaveSync__observe(subject, topic, data) {
     switch (topic) {
-    case "browser.places.sync.enabled":
+    case "extensions.weave.enabled":
       switch (data) {
       case false:
         this._log.info("Disabling automagic bookmarks sync");
@@ -460,7 +460,7 @@ WeaveSyncService.prototype = {
         break;
       }
       break;
-    case "browser.places.sync.schedule":
+    case "extensions.weave.schedule":
       switch (data) {
       case 0:
         this._log.info("Disabling automagic bookmarks sync");
