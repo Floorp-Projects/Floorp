@@ -10,4 +10,4 @@ fails == xbl-grad-ref--grad-in-resources-01.svg pass.svg
 fails == xbl-grad-ref--grad-in-resources-02.svg pass.svg
 
 # Tests for zooming with the full page zoom UI
-== zoomed-svg-with-viewBox-01.svg       zoomed-svg-with-viewBox-01-ref.svg
+skip == zoomed-svg-with-viewBox-01.svg       zoomed-svg-with-viewBox-01-ref.svg
