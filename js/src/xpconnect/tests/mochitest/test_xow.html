@@ -35,7 +35,7 @@
         window.__proto__ = origProto;
     } catch (e) {
         is(e.toString(),
-           'Error: invalid __proto__ value (can only be set to null)',
+           'Error: cyclic __proto__ value',
            'throw the right exception for a cyclic proto');
         is(window.__proto__, origProto, 'reset __proto__ after a cyclic proto');
     }
