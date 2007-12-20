@@ -1820,7 +1820,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
             !GetArrayElement(cx, obj, (jsuint)i, &hole, vp)) {
             return JS_FALSE;
         }
-        if (!hole && js_StrictlyEqual(*vp, vp[2]))
+        if (!hole && js_StrictlyEqual(cx, *vp, vp[2]))
             return js_NewNumberValue(cx, i, vp);
         if (i == stop)
             goto not_found;

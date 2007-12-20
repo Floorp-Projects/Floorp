@@ -94,6 +94,9 @@ XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 JS_STATIC_DLL_CALLBACK(JSObject *)
 XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
 
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_XOW_WrappedObject(JSContext *cx, JSObject *obj);
+
 JSExtendedClass sXPC_XOW_JSClass = {
   // JSClass (JSExtendedClass.base) initialization
   { "XPCCrossOriginWrapper",
@@ -114,6 +117,7 @@ JSExtendedClass sXPC_XOW_JSClass = {
   nsnull,             // outerObject
   nsnull,             // innerObject
   XPC_XOW_Iterator,
+  XPC_XOW_WrappedObject,
   JSCLASS_NO_RESERVED_MEMBERS
 };
 
@@ -1149,6 +1153,12 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
   }
 
   return iterObj;
+}
+
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_XOW_WrappedObject(JSContext *cx, JSObject *obj)
+{
+  return GetWrappedObject(cx, obj);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
