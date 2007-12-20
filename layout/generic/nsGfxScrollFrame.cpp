@@ -1248,7 +1248,8 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
     mHadNonInitialReflow(PR_FALSE),
     mHorizontalOverflow(PR_FALSE),
     mVerticalOverflow(PR_FALSE),
-    mPostedReflowCallback(PR_FALSE)
+    mPostedReflowCallback(PR_FALSE),
+    mMayHaveDirtyFixedChildren(PR_FALSE)
 {
 }
 
@@ -2350,6 +2351,19 @@ nsGfxScrollFrameInner::ReflowFinished()
 {
   mPostedReflowCallback = PR_FALSE;
 
+  if (mMayHaveDirtyFixedChildren) {
+    mMayHaveDirtyFixedChildren = PR_FALSE;
+    nsIFrame* parentFrame = mOuter->GetParent();
+    for (nsIFrame* fixedChild =
+           parentFrame->GetFirstChild(nsGkAtoms::fixedList);
+         fixedChild; fixedChild = fixedChild->GetNextSibling()) {
+      // force a reflow of the fixed child
+      mOuter->PresContext()->PresShell()->
+        FrameNeedsReflow(fixedChild, nsIPresShell::eResize,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
+    }
+  }
+
   // Update scrollbar attributes.
   nsPresContext* presContext = mOuter->PresContext();
 
@@ -2505,16 +2519,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   if (aOldScrollArea.Size() != aScrollArea.Size() && 
       !(mOuter->GetStateBits() & NS_FRAME_IS_DIRTY) &&
       mIsRoot) {
-    nsIFrame* parentFrame = mOuter->GetParent();
-    for (nsIFrame *fixedChild =
-           parentFrame->GetFirstChild(nsGkAtoms::fixedList);
-         fixedChild; fixedChild = fixedChild->GetNextSibling()) {
-      // force a reflow of the fixed child
-      // XXX Will this work given where we currently are in reflow?
-      aState.PresContext()->PresShell()->
-        FrameNeedsReflow(fixedChild, nsIPresShell::eResize,
-                         NS_FRAME_HAS_DIRTY_CHILDREN);
-    }
+    mMayHaveDirtyFixedChildren = PR_TRUE;
   }
   
   // post reflow callback to modify scrollbar attributes
