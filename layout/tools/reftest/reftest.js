@@ -145,9 +145,11 @@ function ReadManifest(aURL)
         var more = lis.readLine(line);
         ++lineNo;
         var str = line.value;
-        str = /^[^#]*/.exec(str)[0]; // strip everything after "#"
-        if (!str)
+        if (str.charAt(0) == "#")
             continue; // entire line was a comment
+        var i = str.search(/\s+#/);
+        if (i >= 0)
+            str = str.substring(0, i);
         // strip leading and trailing whitespace
         str = str.replace(/^\s*/, '').replace(/\s*$/, '');
         if (!str || str == "")
@@ -386,7 +388,8 @@ function DocumentLoaded()
     /* XXX This needs to be rgb(255,255,255) because otherwise we get
      * black bars at the bottom of every test that are different size
      * for the first test and the rest (scrollbar-related??) */
-    canvas.getContext("2d").drawWindow(gBrowser.contentWindow, 0, 0,
+    var win = gBrowser.contentWindow;
+    canvas.getContext("2d").drawWindow(win, win.scrollX, win.scrollY,
                                        canvas.width, canvas.height, "rgb(255,255,255)");
 
     switch (gState) {
