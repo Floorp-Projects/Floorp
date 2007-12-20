@@ -356,6 +356,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   if (newViewportSize != svgElem->GetViewportSize() ||
       mFullZoom != PresContext()->GetFullZoom()) {
     svgElem->SetViewportSize(newViewportSize);
+    mViewportInitialized = PR_TRUE;
     mFullZoom = PresContext()->GetFullZoom();
     NotifyViewportChange();
   }
@@ -380,12 +381,11 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus aStatus)
 {
+  PRBool firstReflow = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+
   nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
-  if (!mViewportInitialized) {
-    // it is now
-    mViewportInitialized = PR_TRUE;
-
+  if (firstReflow) {
     // call InitialUpdate() on all frames:
     nsIFrame* kid = mFrames.FirstChild();
     while (kid) {
@@ -695,14 +695,7 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
   
   // inform children
   SuspendRedraw();
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
-    if (SVGFrame)
-      SVGFrame->NotifyCanvasTMChanged(PR_FALSE); 
-    kid = kid->GetNextSibling();
-  }
+  nsSVGUtils::NotifyChildrenCanvasTMChanged(this, PR_FALSE);
   UnsuspendRedraw();
   return NS_OK;
 }

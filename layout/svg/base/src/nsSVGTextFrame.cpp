@@ -204,6 +204,12 @@ nsSVGTextFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;
 
+  // If we are positioned using percentage values we need to update our
+  // position whenever our viewport's dimensions change.
+  // XXX we should really have a separate notification for viewport changes and
+  // not overload NotifyCanvasTMChanged.
+  NotifyGlyphMetricsChange();
+
   return nsSVGTextFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
 }
 
