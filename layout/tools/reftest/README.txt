@@ -33,9 +33,10 @@ running tests at any time to see whether they still pass.
 Manifest Format
 ===============
 
-The test manifest format is a plain text file.  The "#" makes the
-remainder of a line a comment.  Each non-blank line (after removal of
-comments) must be one of the following:
+The test manifest format is a plain text file.  A line starting with a
+"#" is a comment.  Lines may be commented using whitespace followed by
+a "#" and the comment.  Each non-blank line (after removal of comments)
+must be one of the following:
 
 1. Inclusion of another manifest
 
