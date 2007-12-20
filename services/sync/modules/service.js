@@ -284,7 +284,7 @@ WeaveSyncService.prototype = {
 
     try {
       this._log.debug("Logging in");
-      this._os.notifyObservers(null, "bookmarks-sync:login-start", "");
+      this._os.notifyObservers(null, "weave:service-login:start", "");
 
       if (!this.username) {
         this._log.warn("No username set, login failed");
@@ -308,10 +308,10 @@ WeaveSyncService.prototype = {
       this._passphrase = null;
       if (success) {
         //this._log.debug("Login successful"); // chrome prints this too, hm
-        this._os.notifyObservers(null, "bookmarks-sync:login-end", "");
+        this._os.notifyObservers(null, "weave:service-login:success", "");
       } else {
         //this._log.debug("Login error");
-        this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+        this._os.notifyObservers(null, "weave:service-login:error", "");
       }
       generatorDone(this, self, onComplete, success);
       yield; // onComplete is responsible for closing the generator
@@ -325,7 +325,7 @@ WeaveSyncService.prototype = {
 
     try {
       this._log.debug("Resetting server lock");
-      this._os.notifyObservers(null, "bookmarks-sync:lock-reset-start", "");
+      this._os.notifyObservers(null, "weave:server-lock-reset:start", "");
 
       this._dav.forceUnlock.async(this._dav, cont);
       success = yield;
@@ -336,10 +336,10 @@ WeaveSyncService.prototype = {
     } finally {
       if (success) {
         this._log.debug("Server lock reset successful");
-        this._os.notifyObservers(null, "bookmarks-sync:lock-reset-end", "");
+        this._os.notifyObservers(null, "weave:server-lock-reset:success", "");
       } else {
         this._log.debug("Server lock reset failed");
-        this._os.notifyObservers(null, "bookmarks-sync:lock-reset-error", "");
+        this._os.notifyObservers(null, "weave:server-lock-reset:error", "");
       }
       generatorDone(this, self, onComplete, success);
       yield; // generatorDone is responsible for closing the generator
@@ -349,22 +349,30 @@ WeaveSyncService.prototype = {
 
   _sync: function WeaveSync__sync() {
     let [self, cont] = yield;
+    let success = false;
 
     try {
       if (!this._lock())
 	return;
+
+      this._os.notifyObservers(null, "weave:service:sync:start", "");
 
       this._bmkEngine.sync(cont);
       yield;
       this._histEngine.sync(cont);
       yield;
 
+      success = true;
       this._unlock();
 
     } catch (e) {
       this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
+      if (success)
+        this._os.notifyObservers(null, "weave:service:sync:success", "");
+      else
+        this._os.notifyObservers(null, "weave:service:sync:error", "");
       generatorDone(this, self);
       yield; // generatorDone is responsible for closing the generator
     }
@@ -473,7 +481,7 @@ WeaveSyncService.prototype = {
     this._dav.logout();
     this._mozId.setTempPassword(null); // clear cached password
     this._cryptoId.setTempPassword(null); // and passphrase
-    this._os.notifyObservers(null, "bookmarks-sync:logout", "");
+    this._os.notifyObservers(null, "weave:service-logout:success", "");
   },
 
   resetLock: function WeaveSync_resetLock() {
