@@ -52,17 +52,17 @@ static _sigsig sigArray[_SIGCOUNT];
 static void defaultSighandler(int inSignal)
 {
     // From process.cpp
-    extern void mozce_abort(void);
-    mozce_abort();
+    extern void abort(void);
+    abort();
 }
 
 
-MOZCE_SHUNT_API int mozce_raise(int inSignal)
+MOZCE_SHUNT_API int raise(int inSignal)
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_raise called\n");
+    mozce_printf("raise called\n");
 #endif
 
     void (*handler)(int inSignal) = defaultSighandler;
@@ -80,12 +80,12 @@ MOZCE_SHUNT_API int mozce_raise(int inSignal)
 }
 
 
-MOZCE_SHUNT_API _sigsig mozce_signal(int inSignal, _sigsig inFunc)
+MOZCE_SHUNT_API _sigsig signal(int inSignal, _sigsig inFunc)
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_signal called\n");
+    mozce_printf("signal called\n");
 #endif
 
     void (*retval)(int inSignal) = defaultSighandler;

@@ -72,28 +72,27 @@ main(int argc, char **argv)
   {
     args[i++] = "/link";
 
-    args[i++] = "-ENTRY:mainACRTStartup";
+    args[i++] = "/ENTRY:mainACRTStartup";
 
     args[i++] = "/SUBSYSTEM:WINDOWSCE,5.01";
     args[i++] = "/MACHINE:THUMB";
 
-    args[i++] = "-LIBPATH:\"" WCE_LIB "\"";
-    args[i++] = "-LIBPATH:\"" SHUNT_LIB "\"";
+    args[i++] = "/LIBPATH:\"" WCE_LIB "\"";
+    args[i++] = "/LIBPATH:\"" SHUNT_LIB "\"";
     args[i++] = "shunt.lib";
     args[i++] = "winsock.lib"; 
     args[i++] = "corelibc.lib";
     args[i++] = "coredll.lib";
 
-    args[i++] = "-OPT:REF";
-    args[i++] = "-OPT:ICF";
+    args[i++] = "/OPT:REF";
+    args[i++] = "/OPT:ICF";
 
-    args[i++] = "-NODEFAULTLIB:LIBC";
-    args[i++] = "-NODEFAULTLIB:OLDNAMES.lib";
+    args[i++] = "/NODEFAULTLIB:LIBC";
+    args[i++] = "/NODEFAULTLIB:OLDNAMES.lib";
 
   }
   args[i] = NULL;
 
   dumpargs(args);
-  run(args);
-  return 0;
+  return run(args);
 }
