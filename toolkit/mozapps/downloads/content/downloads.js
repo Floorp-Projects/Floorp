@@ -916,6 +916,9 @@ function updateTime(aItem)
   if (aItem.inProgress)
     return;
 
+  let dts = Cc["@mozilla.org/intl/scriptabledateformat;1"].
+            getService(Ci.nsIScriptableDateFormat);
+
   // Figure out when today begins
   let now = new Date();
   let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -927,8 +930,6 @@ function updateTime(aItem)
   let dateTime;
   if (end >= today) {
     // Download finished after today started, show the time
-    let dts = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-              getService(Ci.nsIScriptableDateFormat);
     dateTime = dts.FormatTime("", dts.timeFormatNoSeconds,
                               end.getHours(), end.getMinutes(), 0);
   } else if (today - end < (24 * 60 * 60 * 1000)) {
@@ -947,6 +948,19 @@ function updateTime(aItem)
   }
 
   aItem.setAttribute("dateTime", dateTime);
+
+  // Set the tooltip to be the full date and time
+  let dateTimeTip = dts.FormatDateTime("",
+                                       dts.dateFormatLong,
+                                       dts.timeFormatNoSeconds,
+                                       end.getFullYear(),
+                                       end.getMonth() + 1,
+                                       end.getDate(),
+                                       end.getHours(),
+                                       end.getMinutes(),
+                                       0); 
+
+  aItem.setAttribute("dateTimeTip", dateTimeTip);
 }
 
 /**
