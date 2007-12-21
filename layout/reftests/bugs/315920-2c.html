@@ -4,7 +4,7 @@
     <style>
       option {color: red}
       option:disabled {color: green}
-      option[disabled]:not(:disabled) + option {color: green}
+      option[disabled]:not(:enabled) + option {color: green}
       option:not([disabled]):enabled + option {color: red}
     </style>
   </head>
