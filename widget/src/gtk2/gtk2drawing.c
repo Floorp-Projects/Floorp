@@ -2297,7 +2297,6 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_SCALE_THUMB_VERTICAL:
     case MOZ_GTK_GRIPPER:
     case MOZ_GTK_PROGRESS_CHUNK:
-    case MOZ_GTK_TAB:
     case MOZ_GTK_EXPANDER:
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
