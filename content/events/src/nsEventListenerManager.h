@@ -188,17 +188,17 @@ protected:
   nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);
   PRBool ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent);
 
-  nsAutoTObserverArray<nsListenerStruct*, 2> mListeners;
-  nsISupports*                               mTarget;  //WEAK
-  PRUint32                                   mMayHaveMutationListeners : 1;
+  nsAutoTObserverArray<nsAutoPtr<nsListenerStruct>, 2> mListeners;
+  nsISupports*                                         mTarget;  //WEAK
+  PRUint32                                             mMayHaveMutationListeners : 1;
   // These two member variables are used to cache the information
   // about the last event which was handled but for which event listener manager
   // didn't have event listeners.
-  PRUint32                                   mNoListenerForEvent : 31;
-  nsCOMPtr<nsIAtom>                          mNoListenerForEventAtom;
+  PRUint32                                             mNoListenerForEvent : 31;
+  nsCOMPtr<nsIAtom>                                    mNoListenerForEventAtom;
 
-  static PRUint32                            mInstanceCount;
-  static jsval                               sAddListenerID;
+  static PRUint32                                      mInstanceCount;
+  static jsval                                         sAddListenerID;
 };
 
 #endif // nsEventListenerManager_h__
