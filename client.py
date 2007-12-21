@@ -63,9 +63,24 @@ o = OptionParser(usage="client.py [options] checkout")
 o.add_option("-m", "--mozilla-repo", dest="mozilla_repo",
              default=None,
              help="URL of Mozilla repository to pull from (default: use hg default in .hg/hgrc)")
+o.add_option("--skip-mozilla", dest="skip_mozilla",
+             action="store_true", default=False,
+             help="Skip pulling the Mozilla repository.")
+
 o.add_option("-t", "--tamarin-repo", dest="tamarin_repo",
              default=None,
              help="URL of Tamarin repository to pull from (default: use hg default in js/tamarin/.hg/hgrc; or if that file doesn't exist, use \"" + DEFAULT_TAMARIN_REPO + "\".)")
+o.add_option("--skip-tamarin", dest="skip_tamarin",
+             action="store_true", default=False,
+             help="Skip pulling the Tamarin repository.")
+
+o.add_option("--skip-nspr", dest="skip_nspr",
+             action="store_true", default=False,
+             help="Skip pulling the NSPR repository.")
+o.add_option("--skip-nss", dest="skip_nss",
+             action="store_true", default=False,
+             help="Skip pulling the NSS repository.")
+
 o.add_option("--hg", dest="hg", default=os.environ.get('HG', 'hg'),
              help="The location of the hg binary")
 o.add_option("--cvs", dest="cvs", default=os.environ.get('CVS', 'cvs'),
@@ -106,10 +121,18 @@ except ValueError:
 fixup_repo_options(options)
 
 if action in ('checkout', 'co'):
-    do_cvs_checkout(NSPR_DIRS, NSPR_CO_TAG, options.cvsroot, options.cvs)
-    do_cvs_checkout(NSS_DIRS, NSS_CO_TAG, options.cvsroot, options.cvs)
-    do_hg_pull('js/tamarin', options.tamarin_repo, options.hg)
-    do_hg_pull('.', options.mozilla_repo, options.hg)
+    if not options.skip_nspr:
+        do_cvs_checkout(NSPR_DIRS, NSPR_CO_TAG, options.cvsroot, options.cvs)
+
+    if not options.skip_nss:
+        do_cvs_checkout(NSS_DIRS, NSS_CO_TAG, options.cvsroot, options.cvs)
+
+    if not options.skip_tamarin:
+        do_hg_pull('js/tamarin', options.tamarin_repo, options.hg)
+
+    if not options.skip_mozilla:
+        do_hg_pull('.', options.mozilla_repo, options.hg)
+
 else:
     o.print_help()
     sys.exit(2)
