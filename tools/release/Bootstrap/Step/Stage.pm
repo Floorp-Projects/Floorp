@@ -435,6 +435,9 @@ sub Verify {
     my $stageHome = $config->Get(var => 'stageHome');
     my $productTag = $config->Get(var => 'productTag');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $useTarGz = $config->Exists(var => 'useTarGz') ?
+     $config->Get(var => 'useTarGz') : 0;
+    my $linuxExtension = ($useTarGz) ? 'gz' : 'bz2';
  
     ## Prepare the staging directory for the release.
     # Create the staging directory.
@@ -457,7 +460,7 @@ sub Verify {
     $this->Shell(
       cmd => catfile($stageHome, 'bin', 'verify-locales.pl'),
       cmdArgs => ['-m', catfile($stageDir, 'batch1', 'config',
-                  'shipped-locales')],
+                  'shipped-locales'), '-l', $linuxExtension],
       logFile => catfile($logDir, 'stage_verify_l10n.log'),
       dir => catfile($stageDir, 'batch1', 'stage-signed'),
     );
