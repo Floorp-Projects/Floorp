@@ -622,13 +622,6 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                     JSObject **objp)
 {
-  // No need to resolve toString as it's a class method.
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
-    *objp = obj;
-    return JS_DefineFunction(cx, obj, "toString",
-                             XPC_SJOW_toString, 0, 0) != nsnull;
-  }
-
   obj = FindSafeObject(cx, obj);
   NS_ASSERTION(obj != nsnull, "FindSafeObject() returned null in class hook!");
 
@@ -643,6 +636,13 @@ XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   if (!CanCallerAccess(cx, unsafeObj)) {
     // CanCallerAccess() already threw for us.
     return JS_FALSE;
+  }
+
+  // Resolve toString specially.
+  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+    *objp = obj;
+    return JS_DefineFunction(cx, obj, "toString",
+                             XPC_SJOW_toString, 0, 0) != nsnull;
   }
 
   return XPCWrapper::NewResolve(cx, obj, unsafeObj, id, flags, objp);
@@ -1010,6 +1010,11 @@ XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
                    XPC_SJOW_Construct, 0, nsnull, nsnull, nsnull, nsnull);
   if (!class_obj) {
     NS_WARNING("can't initialize the XPCSafeJSObjectWrapper class");
+    return PR_FALSE;
+  }
+
+  if (!::JS_DefineFunction(ccx, class_obj, "toString", XPC_SJOW_toString,
+                           0, 0)) {
     return PR_FALSE;
   }
 
