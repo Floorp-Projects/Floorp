@@ -460,7 +460,6 @@ nsresult nsScanner::SkipWhitespace(PRInt32& aNewlinesSkipped) {
       case '\n':
       case '\r': ++aNewlinesSkipped;
       case ' ' :
-      case '\b':
       case '\t':
         {
           skipped = PR_TRUE;
@@ -565,7 +564,6 @@ nsresult nsScanner::ReadTagIdentifier(nsScannerSharedSubstring& aString) {
       case '\n':
       case '\r':
       case ' ' :
-      case '\b':
       case '\t':
       case '\v':
       case '\f':
@@ -768,7 +766,6 @@ nsresult nsScanner::ReadWhitespace(nsScannerSharedSubstring& aString,
         }
         break;
       case ' ' :
-      case '\b':
       case '\t':
         theChar = (++current != end) ? *current : '\0';
         break;
@@ -818,7 +815,6 @@ nsresult nsScanner::ReadWhitespace(nsScannerIterator& aStart,
       case '\n':
       case '\r': ++aNewlinesSkipped;
       case ' ' :
-      case '\b':
       case '\t':
         {
           PRUnichar thePrevChar = theChar;
