@@ -338,6 +338,7 @@
 #else
                           key="goBackKb"
 #endif
+                          chromedir="&locale.dir;"
                           oncommand="BrowserBack(event, true)"
                           onclick="checkForMiddleClick(this, event);">
                   <observes element="Browser:Back" attribute="disabled" />
@@ -348,6 +349,7 @@
 #else
                           key="goForwardKb"
 #endif
+                          chromedir="&locale.dir;"
                           oncommand="BrowserForward(event, true)"
                           onclick="checkForMiddleClick(this, event);">
                   <observes element="Browser:Forward" attribute="disabled" />
