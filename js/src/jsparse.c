@@ -5889,7 +5889,6 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
 {
     jsdouble d, d2;
     int32 i, j;
-    uint32 u;
 
     JS_ASSERT(pn1->pn_type == TOK_NUMBER && pn2->pn_type == TOK_NUMBER);
     d = pn1->pn_dval;
@@ -5897,21 +5896,16 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
     switch (op) {
       case JSOP_LSH:
       case JSOP_RSH:
-        if (!js_DoubleToECMAInt32(d, &i))
-            return JS_FALSE;
-        if (!js_DoubleToECMAInt32(d2, &j))
-            return JS_FALSE;
+        i = js_DoubleToECMAInt32(d);
+        j = js_DoubleToECMAInt32(d2);
         j &= 31;
         d = (op == JSOP_LSH) ? i << j : i >> j;
         break;
 
       case JSOP_URSH:
-        if (!js_DoubleToECMAUint32(d, &u))
-            return JS_FALSE;
-        if (!js_DoubleToECMAInt32(d2, &j))
-            return JS_FALSE;
+        j = js_DoubleToECMAInt32(d2);
         j &= 31;
-        d = u >> j;
+        d = js_DoubleToECMAUint32(d) >> j;
         break;
 
       case JSOP_ADD:
@@ -6512,15 +6506,12 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             pn1 = pn1->pn_kid;
         if (pn1->pn_type == TOK_NUMBER) {
             jsdouble d;
-            int32 i;
 
             /* Operate on one numeric constant. */
             d = pn1->pn_dval;
             switch (pn->pn_op) {
               case JSOP_BITNOT:
-                if (!js_DoubleToECMAInt32(d, &i))
-                    return JS_FALSE;
-                d = ~i;
+                d = ~js_DoubleToECMAInt32(d);
                 break;
 
               case JSOP_NEG:
