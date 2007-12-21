@@ -929,12 +929,31 @@ moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
 }
 
 static gint
-moz_gtk_spin_paint(GdkDrawable* drawable, GdkRectangle* rect, gboolean isDown,
-                   GtkWidgetState* state, GtkTextDirection direction)
+moz_gtk_spin_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                   GtkTextDirection direction)
+{
+    GtkStyle* style;
+
+    ensure_spin_widget();
+    gtk_widget_set_direction(gSpinWidget, direction);
+    style = gSpinWidget->style;
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+    gtk_paint_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN, NULL,
+                  gSpinWidget, "spinbutton",
+                  rect->x, rect->y, rect->width, rect->height);
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_spin_updown_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                          gboolean isDown, GtkWidgetState* state,
+                          GtkTextDirection direction)
 {
     GdkRectangle arrow_rect;
     GtkStateType state_type = ConvertGtkState(state);
-    GtkShadowType shadow_type = state_type == GTK_STATE_ACTIVE ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+    GtkShadowType shadow_type = state_type == GTK_STATE_ACTIVE ?
+                                  GTK_SHADOW_IN : GTK_SHADOW_OUT;
     GtkStyle* style;
 
     ensure_spin_widget();
@@ -1095,31 +1114,30 @@ moz_gtk_vpaned_paint(GdkDrawable* drawable, GdkRectangle* rect,
 static gint
 moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     GdkRectangle* cliprect, GtkWidgetState* state,
-                    GtkTextDirection direction)
+                    GtkWidget* widget, GtkTextDirection direction)
 {
     gint x, y, width = rect->width, height = rect->height;
     GtkStyle* style;
     gboolean interior_focus;
     gint focus_width;
 
-    ensure_entry_widget();
-    gtk_widget_set_direction(gEntryWidget, direction);
+    gtk_widget_set_direction(widget, direction);
 
-    style = gEntryWidget->style;
+    style = widget->style;
 
     /* paint the background first */
     x = XTHICKNESS(style);
     y = YTHICKNESS(style);
 
     /* This gets us a lovely greyish disabledish look */
-    gtk_widget_set_sensitive(gEntryWidget, !state->disabled);
+    gtk_widget_set_sensitive(widget, !state->disabled);
 
     TSOffsetStyleGCs(style, rect->x + x, rect->y + y);
     gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
-                       cliprect, gEntryWidget, "entry_bg",  rect->x + x,
+                       cliprect, widget, "entry_bg",  rect->x + x,
                        rect->y + y, rect->width - 2*x, rect->height - 2*y);
 
-    gtk_widget_style_get(gEntryWidget,
+    gtk_widget_style_get(widget,
                          "interior-focus", &interior_focus,
                          "focus-line-width", &focus_width,
                          NULL);
@@ -1140,7 +1158,7 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     if (state->focused && !state->disabled) {
          /* This will get us the lit borders that focused textboxes enjoy on some themes. */
-        GTK_WIDGET_SET_FLAGS(gEntryWidget, GTK_HAS_FOCUS);
+        GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_FOCUS);
 
         if (!interior_focus) {
             /* Indent the border a little bit if we have exterior focus 
@@ -1154,18 +1172,18 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     TSOffsetStyleGCs(style, x, y);
     gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                     cliprect, gEntryWidget, "entry", x, y, width, height);
+                     cliprect, widget, "entry", x, y, width, height);
 
     if (state->focused && !state->disabled) {
         if (!interior_focus) {
             TSOffsetStyleGCs(style, rect->x, rect->y);
             gtk_paint_focus(style, drawable,  GTK_STATE_NORMAL, cliprect,
-                            gEntryWidget, "entry",
+                            widget, "entry",
                             rect->x, rect->y, rect->width, rect->height);
         }
 
         /* Now unset the focus flag. We don't want other entries to look like they're focused too! */
-        GTK_WIDGET_UNSET_FLAGS(gEntryWidget, GTK_HAS_FOCUS);
+        GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_FOCUS);
     }
 
     return MOZ_GTK_SUCCESS;
@@ -2086,6 +2104,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         ensure_progress_widget();
         w = gProgressWidget;
         break;
+    case MOZ_GTK_SPINBUTTON_ENTRY:
     case MOZ_GTK_SPINBUTTON_UP:
     case MOZ_GTK_SPINBUTTON_DOWN:
         ensure_spin_widget();
@@ -2198,6 +2217,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
     /* These widgets have no borders.*/
+    case MOZ_GTK_SPINBUTTON:
     case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_WINDOW:
     case MOZ_GTK_RESIZER:
@@ -2375,11 +2395,19 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         return moz_gtk_scale_thumb_paint(drawable, rect, cliprect, state,
                                          (GtkOrientation) flags, direction);
         break;
+    case MOZ_GTK_SPINBUTTON:
+        return moz_gtk_spin_paint(drawable, rect, direction);
+        break;
     case MOZ_GTK_SPINBUTTON_UP:
     case MOZ_GTK_SPINBUTTON_DOWN:
-        return moz_gtk_spin_paint(drawable, rect,
-                                  (widget == MOZ_GTK_SPINBUTTON_DOWN),
-                                  state, direction);
+        return moz_gtk_spin_updown_paint(drawable, rect,
+                                         (widget == MOZ_GTK_SPINBUTTON_DOWN),
+                                         state, direction);
+        break;
+    case MOZ_GTK_SPINBUTTON_ENTRY:
+        ensure_spin_widget();
+        return moz_gtk_entry_paint(drawable, rect, cliprect, state,
+                                   gSpinWidget, direction);
         break;
     case MOZ_GTK_GRIPPER:
         return moz_gtk_gripper_paint(drawable, rect, cliprect, state,
@@ -2404,8 +2432,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                       (GtkExpanderStyle) flags, direction);
         break;
     case MOZ_GTK_ENTRY:
+        ensure_entry_widget();
         return moz_gtk_entry_paint(drawable, rect, cliprect, state,
-                                   direction);
+                                   gEntryWidget, direction);
         break;
     case MOZ_GTK_DROPDOWN:
         return moz_gtk_option_menu_paint(drawable, rect, cliprect, state,

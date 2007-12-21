@@ -123,6 +123,9 @@
 // The down button of a spin control
 #define NS_THEME_SPINNER_DOWN_BUTTON                       74
 
+// The textfield of a spin control
+#define NS_THEME_SPINNER_TEXTFIELD                         75
+
 // A scrollbar.
 #define NS_THEME_SCROLLBAR                                 80
 
