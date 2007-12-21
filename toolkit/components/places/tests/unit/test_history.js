@@ -45,16 +45,43 @@ try {
   do_throw("Could not get history service\n");
 } 
 
-// adds a test URI visit to the database, and checks for a valid place ID
-function add_visit(aURI) {
+/**
+ * Adds a test URI visit to the database, and checks for a valid place ID.
+ *
+ * @param aURI
+ *        The URI to add a visit for.
+ * @param aReferrer
+ *        The referring URI for the given URI.  This can be null.
+ * @returns the place id for aURI.
+ */
+function add_visit(aURI, aReferrer) {
   var placeID = histsvc.addVisit(aURI,
                                  Date.now(),
-                                 0, // no referrer
+                                 aReferrer,
                                  histsvc.TRANSITION_TYPED, // user typed in URL bar
                                  false, // not redirect
                                  0);
   do_check_true(placeID > 0);
   return placeID;
+}
+
+/**
+ * Checks to see that a URI is in the database.
+ *
+ * @param aURI
+ *        The URI to check.
+ * @returns true if the URI is in the DB, false otherwise.
+ */
+function uri_in_db(aURI) {
+  var options = histsvc.getNewQueryOptions();
+  options.maxResults = 1;
+  options.resultType = options.RESULTS_AS_URI
+  var query = histsvc.getNewQuery();
+  query.uri = aURI;
+  var result = histsvc.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+  return (root.childCount == 1);
 }
 
 // main
@@ -161,16 +188,7 @@ function run_test() {
   do_check_eq(title, "mozilla.com");
 
   // query for the visit
-  var options = histsvc.getNewQueryOptions();
-  options.maxResults = 1;
-  options.resultType = options.RESULTS_AS_URI
-  var query = histsvc.getNewQuery();
-  query.uri = testURI;
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
-  root.containerOpen = true;
-  do_check_eq(root.childCount, 1);
-  root.containerOpen = false;
+  do_check_true(uri_in_db(testURI));
 
   // test for schema changes in bug 373239
   // get direct db connection
@@ -199,4 +217,10 @@ function run_test() {
   var root = result.root;
   root.containerOpen = true;
   do_check_true(root.childCount > 0);
+
+  // bug 400544 - testing that a referrer that is not in the DB gets added
+  var referrerURI = uri("http://yahoo.com");
+  do_check_false(uri_in_db(referrerURI));
+  add_visit(uri("http://mozilla.com"), referrerURI);
+  do_check_true(uri_in_db(referrerURI));
 }
