@@ -1118,13 +1118,22 @@ nsLayoutUtils::FindChildContainingDescendant(nsIFrame* aParent, nsIFrame* aDesce
 }
 
 nsBlockFrame*
+nsLayoutUtils::GetAsBlock(nsIFrame* aFrame)
+{
+  nsBlockFrame* block;
+  if (NS_SUCCEEDED(aFrame->QueryInterface(kBlockFrameCID, (void**)&block)))
+    return block;
+  return nsnull;
+}
+
+nsBlockFrame*
 nsLayoutUtils::FindNearestBlockAncestor(nsIFrame* aFrame)
 {
   nsIFrame* nextAncestor;
   for (nextAncestor = aFrame->GetParent(); nextAncestor;
        nextAncestor = nextAncestor->GetParent()) {
-    nsBlockFrame* block;
-    if (NS_SUCCEEDED(nextAncestor->QueryInterface(kBlockFrameCID, (void**)&block)))
+    nsBlockFrame* block = GetAsBlock(nextAncestor);
+    if (block)
       return block;
   }
   return nsnull;
