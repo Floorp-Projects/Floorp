@@ -1113,9 +1113,12 @@ function buildDownloadList()
     return;
   }
 
-  // Start building the list and select the first item
-  stepListBuilder(1);
-  gDownloadsView.selectedIndex = 0;
+  // Take a quick break before we actually start building the list
+  gBuilder = setTimeout(function() {
+    // Start building the list and select the first item
+    stepListBuilder(1);
+    gDownloadsView.selectedIndex = 0;
+  }, 0);
 }
 
 /**
