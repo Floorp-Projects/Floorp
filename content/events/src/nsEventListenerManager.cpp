@@ -369,10 +369,6 @@ nsEventListenerManager::~nsEventListenerManager()
 nsresult
 nsEventListenerManager::RemoveAllListeners()
 {
-  PRInt32 count = mListeners.Length();
-  for (PRInt32 i = 0; i < count; i++) {
-    delete mListeners.ElementAt(i);
-  }
   mListeners.Clear();
   return NS_OK;
 }
@@ -573,7 +569,6 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
          (!(ls->mEventType) &&
           EVENT_TYPE_DATA_EQUALS(ls->mTypeData, aTypeData)))) {
       mListeners.RemoveElementAt(i);
-      delete ls;
       mNoListenerForEvent = NS_EVENT_TYPE_NULL;
       mNoListenerForEventAtom = nsnull;
       break;
@@ -844,7 +839,6 @@ nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
 
   if (ls) {
     mListeners.RemoveElement(ls);
-    delete ls;
     mNoListenerForEvent = NS_EVENT_TYPE_NULL;
     mNoListenerForEventAtom = nsnull;
   }
@@ -1157,7 +1151,7 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
 
 found:
 
-  nsAutoTObserverArray<nsListenerStruct*, 2>::EndLimitedIterator iter(mListeners);
+  nsAutoTObserverArray<nsAutoPtr<nsListenerStruct>, 2>::EndLimitedIterator iter(mListeners);
   nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
   PRBool hasListener = PR_FALSE;
   while (iter.HasMore()) {
