@@ -943,7 +943,8 @@ function updateTime(aItem)
   } else {
     // Download must have been from some time ago.. show month/day
     let month = end.toLocaleFormat("%B");
-    let date = end.toLocaleFormat("%d");
+    // Remove leading 0 by converting the date string to a number
+    let date = Number(end.toLocaleFormat("%d"));
     dateTime = replaceInsert(gStr.monthDate, 1, month);
     dateTime = replaceInsert(dateTime, 2, date);
   }
