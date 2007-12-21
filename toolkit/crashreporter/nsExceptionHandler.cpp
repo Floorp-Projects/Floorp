@@ -417,6 +417,12 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
     AnnotateCrashReport(NS_LITERAL_CSTRING("ServerURL"),
                         nsDependentCString(aServerURL));
 
+  // store application start time
+  char timeString[32];
+  XP_TTOA(time(NULL), timeString, 10);
+  AnnotateCrashReport(NS_LITERAL_CSTRING("StartupTime"),
+                      nsDependentCString(timeString));
+
 #if defined(XP_MACOSX)
   // On OS X, many testers like to see the OS crash reporting dialog
   // since it offers immediate stack traces.  We allow them to set
