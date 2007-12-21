@@ -1160,7 +1160,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(c5846d2c-5340-4cfb-9c0d-c15feca939ce)]
+[scriptable, uuid(a9bea2db-0a3e-4895-9ccc-24bac41a0674)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1265,9 +1265,8 @@ interface nsINavHistoryService : nsISupports
    *
    * @param aURI             Visited page
    * @param aTime            Time page was visited (microseconds)
-   * @param aReferringVisit  The ID of the visit that generated this one. Use 0
-   *                         for no referrer. This must be a valid visit already
-   *                         in the DB or 0.
+   * @param aReferringURI    The URI of the visit that generated this one. Use
+   *                         null for no referrer.
    * @param aTranstitionType Type of transition: one of TRANSITION_* above
    * @param aIsRedirect      True if the given visit redirects to somewhere else.
    *                         (ie you will create an visit out of here that is a
@@ -1280,7 +1279,7 @@ interface nsINavHistoryService : nsISupports
    *          valid for adding to history (canAddURI = false).
    */
   long long addVisit(in nsIURI aURI, in PRTime aTime,
-                     in long long aReferringVisit, in long aTransitionType,
+                     in nsIURI aReferringURI, in long aTransitionType,
                      in boolean aIsRedirect, in long long aSessionID);
 
   /**
