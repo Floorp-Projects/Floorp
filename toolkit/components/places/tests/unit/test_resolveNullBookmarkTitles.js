@@ -71,9 +71,9 @@ function run_test() {
   tagssvc.tagURI(uri1, ["tag 1"]);
   tagssvc.tagURI(uri2, ["tag 2"]);
 
-  histsvc.addVisit(uri1, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(uri1, Date.now(), null, histsvc.TRANSITION_TYPED, false, 0);
   histsvc.setPageDetails(uri1, "foo title", 0, false, true);
-  histsvc.addVisit(uri2, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(uri2, Date.now(), null, histsvc.TRANSITION_TYPED, false, 0);
   histsvc.setPageDetails(uri2, "bar title", 0, false, true);
 
   var options = histsvc.getNewQueryOptions();

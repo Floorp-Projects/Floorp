@@ -50,7 +50,7 @@ try {
 function add_visit(aURI, aType) {
   var placeID = histsvc.addVisit(uri(aURI),
                                  Date.now(),
-                                 0, // no referrer
+                                 null, // no referrer
                                  aType,
                                  false, // not redirect
                                  0);
