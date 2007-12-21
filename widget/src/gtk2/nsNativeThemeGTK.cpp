@@ -499,20 +499,28 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_TABPANELS;
     break;
   case NS_THEME_TAB:
-  case NS_THEME_TAB_LEFT_EDGE:
-  case NS_THEME_TAB_RIGHT_EDGE:
     {
       if (aWidgetFlags) {
-        *aWidgetFlags = 0;
+        /* First bits will be used to store max(0,-bmargin) where bmargin
+         * is the bottom margin of the tab in pixels  (resp. top margin,
+         * for bottom tabs). */
+        gint margin;
+        if (IsBottomTab(aFrame)) {
+            *aWidgetFlags = MOZ_GTK_TAB_BOTTOM;
+            margin = aFrame->GetUsedMargin().top;
+        } else {
+            *aWidgetFlags = 0;
+            margin = aFrame->GetUsedMargin().bottom;
+        }
 
-        if (aWidgetType == NS_THEME_TAB &&
-            CheckBooleanAttr(aFrame, nsWidgetAtoms::selected))
+        *aWidgetFlags |= PR_MIN(MOZ_GTK_TAB_MARGIN_MASK,
+                                PR_MAX(0, aFrame->PresContext()->
+                                   AppUnitsToDevPixels(-margin) ));
+
+        if (IsSelectedTab(aFrame))
           *aWidgetFlags |= MOZ_GTK_TAB_SELECTED;
-        else if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
-          *aWidgetFlags |= MOZ_GTK_TAB_BEFORE_SELECTED;
 
-        if (aFrame->GetContent()->HasAttr(kNameSpaceID_None,
-                                          nsWidgetAtoms::firsttab))
+        if (IsFirstTab(aFrame))
           *aWidgetFlags |= MOZ_GTK_TAB_FIRST;
       }
 
@@ -797,6 +805,7 @@ NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType, nsMargin* aResult)
 {
+  GtkTextDirection direction = GetTextDirection(aFrame);
   aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
@@ -820,15 +829,25 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
     // To make this happen, we draw a button border for the outer button,
     // but don't reserve any space for it.
     break;
+  case NS_THEME_TAB:
+    // Top tabs have no bottom border, bottom tabs have no top border
+    moz_gtk_get_widget_border(MOZ_GTK_TAB, &aResult->left, &aResult->top,
+                              &aResult->right, &aResult->bottom, direction,
+                              FALSE);
+    if (IsBottomTab(aFrame))
+        aResult->top = 0;
+    else
+        aResult->bottom = 0;
+    break;
   default:
     {
       GtkThemeWidgetType gtkWidgetType;
-      GtkTextDirection direction = GetTextDirection(aFrame);
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
                                nsnull))
         moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
                                   &aResult->right, &aResult->bottom, direction,
-                                  (aFrame ? aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) : FALSE));
+                                  aFrame && aFrame->GetContent()->
+                                        IsNodeOfType(nsINode::eHTML));
     }
   }
   return NS_OK;
@@ -855,8 +874,24 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
                                     nsRect* aResult)
 {
   nsIntMargin extraSize;
-  if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
+  if (aWidgetType == NS_THEME_TAB)
+  {
+    if (!IsSelectedTab(aFrame))
+      return PR_FALSE;
+
+    if (IsBottomTab(aFrame)) {
+      extraSize = nsMargin(0, aFrame->PresContext()->
+                             DevPixelsToAppUnits(moz_gtk_get_tab_thickness())
+                           + PR_MIN(0, aFrame->GetUsedMargin().top), 0, 0);
+    } else {
+      extraSize = nsMargin(0, 0, 0, aFrame->PresContext()->
+                             DevPixelsToAppUnits(moz_gtk_get_tab_thickness())
+                           + PR_MIN(0, aFrame->GetUsedMargin().bottom));
+    }
+  }
+  else if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
     return PR_FALSE;
+
   PRInt32 p2a = aContext->AppUnitsPerDevPixel();
   nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
              NSIntPixelsToAppUnits(extraSize.top, p2a),
@@ -1147,8 +1182,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     case NS_THEME_TAB:
     // case NS_THEME_TAB_PANEL:
-    case NS_THEME_TAB_LEFT_EDGE:
-    case NS_THEME_TAB_RIGHT_EDGE:
     case NS_THEME_TAB_PANELS:
   case NS_THEME_TOOLTIP:
   case NS_THEME_SPINNER:
