@@ -68,8 +68,8 @@ function test()
   XMLList = obj;
   reportCompare(obj, XMLList, summary + ': XMLList');
 
-  Namespace = {};
-  reportCompare(saveNamespace, Namespace, summary);
+  Namespace = obj;
+  reportCompare(obj, Namespace, summary + ': Namespace');
 
   exitFunc ('test');
 }
