@@ -567,6 +567,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     JSStackFrame *fp, frame;
     JSArenaPool codePool, notePool;
     JSCodeGenerator cg;
+    JSTokenType tt;
     JSParseNode *pn;
     JSScript *script;
 #ifdef METER_PARSENODES
@@ -599,17 +600,42 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 
     /* From this point the control must flow via the label out. */
     cg.treeContext.flags |= tcflags;
-    pn = Statements(cx, &pc.tokenStream, &cg.treeContext);
-    if (!pn) {
-        script = NULL;
-        goto out;
+
+    /*
+     * Inline Statements() to emit as we go to save space.
+     */
+    for (;;) {
+        pc.tokenStream.flags |= TSF_OPERAND;
+        tt = js_PeekToken(cx, &pc.tokenStream);
+        pc.tokenStream.flags &= ~TSF_OPERAND;
+        if (tt <= TOK_EOF) {
+            if (tt == TOK_EOF)
+                break;
+            JS_ASSERT(tt == TOK_ERROR);
+            script = NULL;
+            goto out;
+        }
+
+        pn = Statement(cx, &pc.tokenStream, &cg.treeContext);
+        if (!pn) {
+            script = NULL;
+            goto out;
+        }
+
+        /*
+         * FIXME bug 346749: let declarations at the top level in a script are
+         * turned into var declarations and do not introduce block nodes.
+         */
+        JS_ASSERT(!cg.treeContext.blockNode);
+
+        if (!js_FoldConstants(cx, pn, &cg.treeContext) ||
+            !js_EmitTree(cx, &cg, pn)) {
+            script = NULL;
+            goto out;
+        }
+        RecycleTree(pn, &cg.treeContext);
     }
-    if (!js_MatchToken(cx, &pc.tokenStream, TOK_EOF)) {
-        js_ReportCompileErrorNumber(cx, &pc.tokenStream, NULL, JSREPORT_ERROR,
-                                    JSMSG_SYNTAX_ERROR);
-        script = NULL;
-        goto out;
-    }
+
 #ifdef METER_PARSENODES
     printf("Parser growth: %d (%u nodes, %u max, %u unrecycled)\n",
            (char *)sbrk(0) - (char *)before,
@@ -620,16 +646,9 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 #endif
 
     /*
-     * No need to emit bytecode here -- Statements already has, for each
-     * statement in turn.  Search for TCF_COMPILING in Statements, below.
-     * That flag is set for every tc == &cg->treeContext, and it implies
-     * that the tc can be downcast to a cg and used to emit code during
-     * parsing, rather than at the end of the parse phase.
-     *
      * Nowadays the threaded interpreter needs a stop instruction, so we
      * do have to emit that here.
      */
-    JS_ASSERT(cg.treeContext.flags & TCF_COMPILING);
     if (js_Emit1(cx, &cg, JSOP_STOP) < 0) {
         script = NULL;
         goto out;
@@ -1420,50 +1439,24 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     tc->blockNode = pn;
     PN_INIT_LIST(pn);
 
-    ts->flags |= TSF_OPERAND;
-    while ((tt = js_PeekToken(cx, ts)) > TOK_EOF && tt != TOK_RC) {
+    for (;;) {
+        ts->flags |= TSF_OPERAND;
+        tt = js_PeekToken(cx, ts);
         ts->flags &= ~TSF_OPERAND;
+        if (tt <= TOK_EOF || tt == TOK_RC)
+            break;
         pn2 = Statement(cx, ts, tc);
         if (!pn2) {
             if (ts->flags & TSF_EOF)
                 ts->flags |= TSF_UNEXPECTED_EOF;
             return NULL;
         }
-        ts->flags |= TSF_OPERAND;
 
         /* Detect a function statement for the TOK_LC case in Statement. */
         if (pn2->pn_type == TOK_FUNCTION && !AT_TOP_LEVEL(tc))
             tc->flags |= TCF_HAS_FUNCTION_STMT;
 
-        /* If compiling top-level statements, emit as we go to save space. */
-        if (!tc->topStmt && (tc->flags & TCF_COMPILING)) {
-            if (JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR)) {
-                /*
-                 * Check pn2 for lack of a final return statement if it is the
-                 * last statement in the block.
-                 */
-                tt = js_PeekToken(cx, ts);
-                if ((tt == TOK_EOF || tt == TOK_RC) &&
-                    !CheckFinalReturn(cx, tc, pn2)) {
-                    tt = TOK_ERROR;
-                    break;
-                }
-
-                /*
-                 * Clear TCF_RETURN_EXPR so FunctionBody doesn't try to
-                 * CheckFinalReturn again.
-                 */
-                tc->flags &= ~TCF_RETURN_EXPR;
-            }
-            if (!js_FoldConstants(cx, pn2, tc) ||
-                !js_EmitTree(cx, (JSCodeGenerator *)tc, pn2)) {
-                tt = TOK_ERROR;
-                break;
-            }
-            RecycleTree(pn2, tc);
-        } else {
-            PN_APPEND(pn, pn2);
-        }
+        PN_APPEND(pn, pn2);
     }
 
     /*
