@@ -369,11 +369,17 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
     break;
+  case NS_THEME_SPINNER:
+    aGtkWidgetType = MOZ_GTK_SPINBUTTON;
+    break;
   case NS_THEME_SPINNER_UP_BUTTON:
     aGtkWidgetType = MOZ_GTK_SPINBUTTON_UP;
     break;
   case NS_THEME_SPINNER_DOWN_BUTTON:
     aGtkWidgetType = MOZ_GTK_SPINBUTTON_DOWN;
+    break;
+  case NS_THEME_SPINNER_TEXTFIELD:
+    aGtkWidgetType = MOZ_GTK_SPINBUTTON_ENTRY;
     break;
   case NS_THEME_SCALE_HORIZONTAL:
     if (aWidgetFlags)
@@ -1007,6 +1013,11 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       aResult->width = separator_width;
     }
     break;
+  case NS_THEME_SPINNER:
+    // hard code these sizes
+    aResult->width = 14;
+    aResult->height = 26;
+    break;
   case NS_THEME_TREEVIEW_HEADER_SORTARROW:
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
@@ -1140,9 +1151,10 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_TAB_RIGHT_EDGE:
     case NS_THEME_TAB_PANELS:
   case NS_THEME_TOOLTIP:
-    // case NS_THEME_SPINNER:
+  case NS_THEME_SPINNER:
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
+  case NS_THEME_SPINNER_TEXTFIELD:
     // case NS_THEME_SCROLLBAR:  (n/a for gtk)
     // case NS_THEME_SCROLLBAR_SMALL: (n/a for gtk)
   case NS_THEME_SCROLLBAR_BUTTON_UP:
