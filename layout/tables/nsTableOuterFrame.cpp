@@ -1113,15 +1113,19 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*             aPresContext,
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   nscoord availHeight = aOuterRS.availableHeight;
   if (NS_UNCONSTRAINEDSIZE != availHeight) {
-    nsMargin margin;
-    GetMargin(aPresContext, aOuterRS, aChildFrame, aOuterRS.availableWidth,
-              margin);
+    if (mCaptionFrame == aChildFrame) {
+      availHeight = NS_UNCONSTRAINEDSIZE;
+    } else {
+      nsMargin margin;
+      GetMargin(aPresContext, aOuterRS, aChildFrame, aOuterRS.availableWidth,
+                margin);
     
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.top, "No unconstrainedsize arithmetic, please");
-    availHeight -= margin.top;
-    
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.bottom, "No unconstrainedsize arithmetic, please");
-    availHeight -= margin.bottom;
+      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.top, "No unconstrainedsize arithmetic, please");
+      availHeight -= margin.top;
+ 
+      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.bottom, "No unconstrainedsize arithmetic, please");
+      availHeight -= margin.bottom;
+    }
   }
   nsSize availSize(aAvailWidth, availHeight);
   // create and init the child reflow state, using placement new on
