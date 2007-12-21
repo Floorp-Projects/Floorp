@@ -201,6 +201,8 @@ JSExtendedClass sXPC_SJOW_JSClass = {
   },
   // JSExtendedClass initialization
   XPC_SJOW_Equality,
+  nsnull, // outerObject
+  nsnull, // innerObject
   nsnull, // iteratorObject
   XPC_SJOW_WrappedObject,
   JSCLASS_NO_RESERVED_MEMBERS
