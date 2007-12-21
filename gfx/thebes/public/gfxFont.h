@@ -272,7 +272,10 @@ public:
     }
 
     // Get glyph extents; a rectangle relative to the left baseline origin
-    gfxRect GetTightGlyphExtentsAppUnits(gfxFont *aFont, gfxContext *aContext, PRUint32 aGlyphID);
+    // Returns true on success. Can fail on OOM or when aContext is null
+    // and extents were not (successfully) prefetched.
+    PRBool GetTightGlyphExtentsAppUnits(gfxFont *aFont, gfxContext *aContext,
+            PRUint32 aGlyphID, gfxRect *aExtents);
 
     void SetContainedGlyphWidthAppUnits(PRUint32 aGlyphID, PRUint16 aWidth) {
         mContainedGlyphWidths.Set(aGlyphID, aWidth);
@@ -488,6 +491,8 @@ public:
      * the advance width for the character run,y=-(font ascent), and height=
      * font ascent + font descent). Otherwise, we must return as tight as possible
      * an approximation to the area actually painted by glyphs.
+     * @param aContextForTightBoundingBox when aTight is true, this must
+     * be non-null.
      * @param aSpacing spacing to insert before and after glyphs. The bounding box
      * need not include the spacing itself, but the spacing affects the glyph
      * positions. null if there is no spacing.
@@ -1203,6 +1208,12 @@ public:
     void SetMissingGlyph(PRUint32 aCharIndex, PRUint32 aUnicodeChar);
     void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIndex);
     
+    /**
+     * Prefetch all the glyph extents needed to ensure that Measure calls
+     * on this textrun with aTightBoundingBox false will succeed. Note
+     * that some glyph extents might not be fetched due to OOM or other
+     * errors.
+     */
     void FetchGlyphExtents(gfxContext *aRefContext);
 
     // API for access to the raw glyph data, needed by gfxFont::Draw
@@ -1402,6 +1413,7 @@ public:
      * Make a textrun for a given string.
      * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
      * textrun will copy it.
+     * This calls FetchGlyphExtents on the textrun.
      */
     virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags) = 0;
@@ -1409,6 +1421,7 @@ public:
      * Make a textrun for a given string.
      * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
      * textrun will copy it.
+     * This calls FetchGlyphExtents on the textrun.
      */
     virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags) = 0;
