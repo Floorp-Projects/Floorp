@@ -5904,18 +5904,18 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, JSParseNode *pn1, JSParseNode *pn2,
     switch (op) {
       case JSOP_LSH:
       case JSOP_RSH:
-        if (!js_DoubleToECMAInt32(cx, d, &i))
+        if (!js_DoubleToECMAInt32(d, &i))
             return JS_FALSE;
-        if (!js_DoubleToECMAInt32(cx, d2, &j))
+        if (!js_DoubleToECMAInt32(d2, &j))
             return JS_FALSE;
         j &= 31;
         d = (op == JSOP_LSH) ? i << j : i >> j;
         break;
 
       case JSOP_URSH:
-        if (!js_DoubleToECMAUint32(cx, d, &u))
+        if (!js_DoubleToECMAUint32(d, &u))
             return JS_FALSE;
-        if (!js_DoubleToECMAInt32(cx, d2, &j))
+        if (!js_DoubleToECMAInt32(d2, &j))
             return JS_FALSE;
         j &= 31;
         d = u >> j;
@@ -6525,7 +6525,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             d = pn1->pn_dval;
             switch (pn->pn_op) {
               case JSOP_BITNOT:
-                if (!js_DoubleToECMAInt32(cx, d, &i))
+                if (!js_DoubleToECMAInt32(d, &i))
                     return JS_FALSE;
                 d = ~i;
                 break;
