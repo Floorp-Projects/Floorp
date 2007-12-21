@@ -109,10 +109,12 @@
       <menuitem id="context-back"
                 label="&backCmd.label;"
                 accesskey="&backCmd.accesskey;"
+                chromedir="&locale.dir;"
                 command="Browser:Back"/>
       <menuitem id="context-forward"
                 label="&forwardCmd.label;"
                 accesskey="&forwardCmd.accesskey;"
+                chromedir="&locale.dir;"
                 command="Browser:Forward"/>
       <menuitem id="context-reload"
                 label="&reloadCmd.label;"

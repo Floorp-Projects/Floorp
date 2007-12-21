@@ -45,6 +45,8 @@
 <!DOCTYPE bindings [
 <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
 %findBarDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
 ]>
 
 <bindings id="findbarBindings"
@@ -225,6 +227,7 @@
                            tooltiptext="&next.tooltip;"
                            oncommand="onFindAgainCommand(false);"
                            disabled="true"
+                           chromedir="&locale.dir;"
                            xbl:inherits="accesskey=findnextaccesskey"/>
         <xul:toolbarbutton anonid="find-previous"
                            class="findbar-find-previous tabbable"
@@ -233,6 +236,7 @@
                            tooltiptext="&previous.tooltip;"
                            oncommand="onFindAgainCommand(true);"
                            disabled="true"
+                           chromedir="&locale.dir;"
                            xbl:inherits="accesskey=findpreviousaccesskey"/>
       </xul:hbox>
       <xul:toolbarbutton anonid="highlight"

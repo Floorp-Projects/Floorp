@@ -45,19 +45,35 @@
 }
 
 #help-back-button {
-  list-style-image: url("moz-icon://stock/gtk-go-back?size=toolbar");
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
 }
 
 #help-back-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-go-back?size=toolbar&state=disabled");
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
+}
+
+#help-back-button[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
+}
+
+#help-back-button[disabled="true"][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
 }
 
 #help-forward-button {
-  list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar");
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
 }
 
 #help-forward-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar&state=disabled");
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+}
+
+#help-forward-button[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
+}
+
+#help-forward-button[disabled="true"][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
 }
 
 #help-home-button {
