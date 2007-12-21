@@ -183,6 +183,10 @@ typedef enum {
   MOZ_GTK_CHECKMENUITEM,
   MOZ_GTK_RADIOMENUITEM,
   MOZ_GTK_MENUSEPARATOR,
+  /* Paints a GtkVPaned separator */
+  MOZ_GTK_SPLITTER_HORIZONTAL,
+  /* Paints a GtkHPaned separator */
+  MOZ_GTK_SPLITTER_VERTICAL,
   /* Paints the background of a window, dialog or page. */
   MOZ_GTK_WINDOW
 } GtkThemeWidgetType;
@@ -334,6 +338,15 @@ gint moz_gtk_get_expander_size(gint* size);
  * returns: MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint moz_gtk_get_menu_separator_height(gint* size);
+
+/**
+ * Get the desired size of a splitter
+ * orientation:   [IN]  GTK_ORIENTATION_HORIZONTAL or GTK_ORIENTATION_VERTICAL
+ * size:          [OUT] width or height of the splitter handle
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_splitter_get_metrics(gint orientation, gint* size);
 
 /**
  * Retrieve an actual GTK scrollbar widget for style analysis. It will not

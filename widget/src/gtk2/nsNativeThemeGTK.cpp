@@ -510,6 +510,12 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aGtkWidgetType = MOZ_GTK_TAB;
     }
     break;
+  case NS_THEME_SPLITTER:
+    if (IsHorizontal(aFrame))
+      aGtkWidgetType = MOZ_GTK_SPLITTER_VERTICAL;
+    else 
+      aGtkWidgetType = MOZ_GTK_SPLITTER_HORIZONTAL;
+    break;
   case NS_THEME_MENUBAR:
     aGtkWidgetType = MOZ_GTK_MENUBAR;
     break;
@@ -884,6 +890,21 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
         *aIsOverridable = PR_FALSE;
       }
       break;
+    case NS_THEME_SPLITTER:
+    {
+      gint metrics;
+      if (IsHorizontal(aFrame)) {
+        moz_gtk_splitter_get_metrics(GTK_ORIENTATION_HORIZONTAL, &metrics);
+        aResult->width = metrics;
+        aResult->height = 0;
+      } else {
+        moz_gtk_splitter_get_metrics(GTK_ORIENTATION_VERTICAL, &metrics);
+        aResult->width = 0;
+        aResult->height = metrics;
+      }
+      *aIsOverridable = PR_FALSE;
+    }
+    break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
       {
@@ -1153,6 +1174,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_MENUSEPARATOR:
   case NS_THEME_CHECKMENUITEM:
   case NS_THEME_RADIOMENUITEM:
+  case NS_THEME_SPLITTER:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
   case NS_THEME_DROPDOWN:
