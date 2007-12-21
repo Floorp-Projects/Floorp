@@ -80,12 +80,14 @@ typedef struct {
 
 /** flags for tab state **/
 typedef enum {
+  /* first eight bits are used to pass a margin */
+  MOZ_GTK_TAB_MARGIN_MASK     = 0xFF,
+  /* bottom tabs */
+  MOZ_GTK_TAB_BOTTOM          = 1 << 8,
   /* the first tab in the group */
-  MOZ_GTK_TAB_FIRST           = 1 << 0,
-  /* the tab just before the selected tab */
-  MOZ_GTK_TAB_BEFORE_SELECTED = 1 << 1,
+  MOZ_GTK_TAB_FIRST           = 1 << 9,
   /* the selected tab */
-  MOZ_GTK_TAB_SELECTED        = 1 << 2
+  MOZ_GTK_TAB_SELECTED        = 1 << 10
 } GtkTabFlags;
 
 /** flags for menuitems **/
@@ -355,6 +357,11 @@ gint moz_gtk_splitter_get_metrics(gint orientation, gint* size);
  * be modified.
  */
 GtkWidget* moz_gtk_get_scrollbar_widget(void);
+
+/**
+ * Get the YTHICKNESS of a tab (notebook extension).
+ */
+gint moz_gtk_get_tab_thickness(void);
 
 #ifdef __cplusplus
 }
