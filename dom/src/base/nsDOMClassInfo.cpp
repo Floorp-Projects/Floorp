@@ -132,7 +132,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormControlList.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIHTMLDocument.h"
+#include "nsHTMLDocument.h"
 
 // HTMLSelectElement helper includes
 #include "nsIDOMHTMLSelectElement.h"
@@ -7667,8 +7667,9 @@ nsHTMLDocumentSH::ResolveImpl(JSContext *cx,
                               nsIXPConnectWrappedNative *wrapper, jsval id,
                               nsISupports **result)
 {
-  nsCOMPtr<nsIHTMLDocument> doc(do_QueryWrappedNative(wrapper));
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+  nsHTMLDocument *doc =
+    static_cast<nsHTMLDocument*>(static_cast<nsINode*>
+                                 (wrapper->Native()));
 
   // 'id' is not always a string, it can be a number since document.1
   // should map to <input name="1">. Thus we can't use
@@ -8252,7 +8253,7 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (id == sAll_id && !sDisableDocumentAllSupport &&
         !ObjectIsNativeWrapper(cx, obj)) {
-      nsCOMPtr<nsIDocument> doc(do_QueryWrappedNative(wrapper));
+      nsIDocument *doc = static_cast<nsIDocument*>(wrapper->Native());
 
       if (doc->GetCompatibilityMode() == eCompatibility_NavQuirks) {
         JSObject *helper =
