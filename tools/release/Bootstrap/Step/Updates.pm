@@ -53,8 +53,8 @@ sub Execute {
                                     'updates_patcher-utils-checkout.log'),
                  workDir => catfile($versionedUpdateDir, 'patcher')
     );
-          
-    # config lives in private repo
+
+    # this config lives in the public repo since bug 408849 was checked in
     $this->CvsCo(cvsroot => $mozillaCvsroot,
                  checkoutDir => 'config',
                  modules => [CvsCatfile('mozilla', 'tools', 'patcher-configs',
