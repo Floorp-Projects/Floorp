@@ -119,7 +119,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 == 262151-1.html 262151-1-ref.html
 == 267353-1.html 267353-1-ref.html
 == 273681-1.html 273681-1-ref.html
-HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page
+fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
 == 290129-1.html 290129-1-ref.html
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
