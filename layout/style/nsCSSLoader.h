@@ -505,7 +505,7 @@ private:
   PRUint32 mDatasToNotifyOn;
 
   // Our array of "global" observers
-  nsTObserverArray<nsICSSLoaderObserver*> mObservers;
+  nsTObserverArray< nsCOMPtr<nsICSSLoaderObserver> > mObservers;
 };
 
 #endif // nsCSSLoader_h__
