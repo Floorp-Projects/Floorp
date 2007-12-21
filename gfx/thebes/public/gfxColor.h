@@ -55,7 +55,7 @@
 #  define GFX_BYTESWAP16(x) _byteswap_ushort(x)
 #  define GFX_BYTESWAP32(x) _byteswap_ulong(x)
 #  define _GFX_USE_INTRIN_BYTESWAP_
-#elif defined(__GNUC__) && (__GNUC__ >= 2) && defined(__i386__) && !defined(XP_OS2)
+#elif defined(__GNUC__) && (__GNUC__ >= 2) && defined(__i386__) && !defined(XP_MACOSX) && !defined(XP_OS2)
 #  include <byteswap.h>
 #  define GFX_BYTESWAP16(x) bswap_16(x)
 #  define GFX_BYTESWAP32(x) bswap_32(x)
