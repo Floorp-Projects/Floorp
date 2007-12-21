@@ -5,14 +5,16 @@
 <!ENTITY advancedTab.label                  "Advanced">
 
 <!ENTITY alreadyHaveAccount.description     "Already have a Weave account?">
-<!ENTITY signIntoAccount.description        "Sign into your account to set up Weave on this computer.">
+<!ENTITY signIntoAccount.description        "Sign into your account to use Weave on this computer.">
 <!ENTITY signInButton.label                 "Sign In...">
-<!ENTITY signedIn.description               "Signed in to Weave as ">
+<!ENTITY signedIn.label                     "Status">
+<!ENTITY signedIn.description               "Signed in as ">
 <!ENTITY signOutButton.label                "Sign Out">
-<!ENTITY autoconnectCheckbox.label          "Automatically connect each time I start Firefox">
+<!ENTITY autoconnectCheckbox.label          "Automatically connect each time you start Firefox">
 <!ENTITY createAccount.description          "Create an account">
-<!ENTITY signUpForAccount.description       "Sign up now for a Weave account.">
+<!ENTITY signUpForAccount.description       "To use Weave you must first create an account.">
 <!ENTITY createAccountButton.label          "Create Account...">
+<!ENTITY accountSettings.label              "Settings">
 
 <!ENTITY backUpCheckbox.label               "Back up and synchronize my data to a Weave server">
 <!ENTITY encryptOnServerCheckbox.label      "Encrypt my data on the server">
@@ -22,20 +24,27 @@
 
 <!ENTITY addonsGroupbox.description         "This is where you will find, install, and manage Weave add-ons.">
 
-<!ENTITY advancedCaption.label              "Weave Server">
+<!ENTITY advancedCaption.label              "Server Settings">
 <!ENTITY serverLocation.label               "Server Location:">
 <!ENTITY encryption.label                   "Encryption:">
-<!ENTITY teaAlgorithmItem.label             "Placeholder Algorithm (Corrected Block TEA)">
+<!ENTITY teaAlgorithmItem.label             "Placeholder Algorithm">
 <!ENTITY noEncryptionItem.label             "No encryption">
-<!ENTITY defaultServerRequiresEncryption.description "Note: Encryption is required for the default server.">
+<!ENTITY defaultServerRequiresEncryption.description "Note: Encryption is required by default in this version.">
 <!ENTITY resetServerURLButton.label         "Reset to Default">
 
-<!ENTITY debugCaption.label "Debug">
-<!ENTITY debugGroupbox.description          "The following actions are for advanced debugging by developers only.">
-<!ENTITY resetCredentialsButton.label       "Reset Username and Password">
+<!ENTITY debugCaption.label                 "Debugging Tools">
+<!ENTITY debugGroupbox.description          "Warning: The following actions cannot be undone and should be used by advanced testers and developers only.">
+<!ENTITY resetCredentialsButton.label       "Reset Login">
+<!ENTITY resetCredentialsButton.description "Delete username and password from Password Manager">
 <!ENTITY resetServerLockButton.label        "Reset Server Lock">
+<!ENTITY resetServerLockButton.description  "Removes the write lock on server">
 <!ENTITY resetServerDataButton.label        "Reset Server Data">
+<!ENTITY resetServerDataButton.description  "Delete all user data on server">
 <!ENTITY resetClientDataButton.label        "Reset Client Data">
+<!ENTITY resetClientDataButton.description  "Delete all locally stored bookmarks and history data">
 
 <!ENTITY logsCaption.label                  "Logs">
-<!ENTITY openActivityLogButton.label        "Activity Log...">
+<!ENTITY openActivityLogButton.label        "Open...">
+<!ENTITY openActivityLogButton.description  "Detailed activity log">
+
+<!ENTITY footerNotice.description           "Weave is an experimental prototype from Mozilla Labs.  Use at your own risk.">
