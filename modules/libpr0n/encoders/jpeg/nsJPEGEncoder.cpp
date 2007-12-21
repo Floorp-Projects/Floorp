@@ -126,6 +126,9 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
         NS_WARNING("Quality value invalid, should be integer 0-100, using default");
       }
     }
+    else {
+      return NS_ERROR_INVALID_ARG;
+    }
   }
 
   jpeg_compress_struct cinfo;

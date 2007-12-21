@@ -736,6 +736,7 @@ nsCanvasRenderingContext2D::GetInputStream(const char *aMimeType,
         cairo_surface_status(mSurface) != CAIRO_STATUS_SUCCESS)
         return NS_ERROR_FAILURE;
 
+    nsresult rv;
     const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
     nsAutoArrayPtr<char> conid(new (std::nothrow) char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
     strcpy(conid, encoderPrefix);
@@ -746,10 +747,11 @@ nsCanvasRenderingContext2D::GetInputStream(const char *aMimeType,
         return NS_ERROR_FAILURE;
 
     if (mImageSurfaceData) {
-        encoder->InitFromData(mImageSurfaceData,
-                              mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
-                              imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                              nsDependentString(aEncoderOptions));
+        rv = encoder->InitFromData(mImageSurfaceData,
+                                   mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
+                                   imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                                   nsDependentString(aEncoderOptions));
+        NS_ENSURE_SUCCESS(rv, rv);
     } else {
         nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[mWidth * mHeight * 4]);
         if (!imageBuffer)
@@ -769,10 +771,11 @@ nsCanvasRenderingContext2D::GetInputStream(const char *aMimeType,
         cairo_paint (cr);
         cairo_destroy (cr);
 
-        encoder->InitFromData(imageBuffer.get(),
-                              mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
-                              imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                              nsDependentString(aEncoderOptions));
+        rv = encoder->InitFromData(imageBuffer.get(),
+                                   mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
+                                   imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                                   nsDependentString(aEncoderOptions));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return CallQueryInterface(encoder, aStream);
