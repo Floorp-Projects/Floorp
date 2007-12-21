@@ -89,7 +89,6 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg, JSParseContext *pc,
 {
     memset(cg, 0, sizeof *cg);
     TREE_CONTEXT_INIT(&cg->treeContext, pc);
-    cg->treeContext.flags |= TCF_COMPILING;
     cg->codePool = codePool;
     cg->notePool = notePool;
     cg->codeMark = JS_ARENA_MARK(codePool);
@@ -1842,9 +1841,10 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
  * in js_EmitTree.
  */
 static JSBool
-BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
+BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                uintN decltype)
 {
+    JSTreeContext *tc;
     JSAtom *atom;
     JSStmtInfo *stmt;
     jsint slot;
@@ -1869,6 +1869,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
      * as this node.  FIXME: we should be able to optimize catch vars to be
      * block-locals.
      */
+    tc = &cg->treeContext;
     atom = pn->pn_atom;
     if (decltype != VAR_DECL &&
         (stmt = js_LexicalLookup(tc, atom, &slot, decltype))) {
@@ -1960,8 +1961,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         constOp = (ALE_JSOP(ale) == JSOP_DEFCONST);
 
         /* Index atom so we can map fast global number to name. */
-        JS_ASSERT(tc->flags & TCF_COMPILING);
-        ale = js_IndexAtom(cx, atom, &((JSCodeGenerator *) tc)->atomList);
+        ale = js_IndexAtom(cx, atom, &cg->atomList);
         if (!ale)
             return JS_FALSE;
 
@@ -2071,7 +2071,7 @@ BindNameToSlot(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
  * pop bytecode.
  */
 static JSBool
-CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
+CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                  JSBool *answer)
 {
     JSBool ok;
@@ -2120,14 +2120,14 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
             *answer = JS_TRUE;
         } else {
             for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
-                ok &= CheckSideEffects(cx, tc, pn2, answer);
+                ok &= CheckSideEffects(cx, cg, pn2, answer);
         }
         break;
 
       case PN_TERNARY:
-        ok = CheckSideEffects(cx, tc, pn->pn_kid1, answer) &&
-             CheckSideEffects(cx, tc, pn->pn_kid2, answer) &&
-             CheckSideEffects(cx, tc, pn->pn_kid3, answer);
+        ok = CheckSideEffects(cx, cg, pn->pn_kid1, answer) &&
+             CheckSideEffects(cx, cg, pn->pn_kid2, answer) &&
+             CheckSideEffects(cx, cg, pn->pn_kid3, answer);
         break;
 
       case PN_BINARY:
@@ -2145,9 +2145,9 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
             if (pn2->pn_type != TOK_NAME) {
                 *answer = JS_TRUE;
             } else {
-                if (!BindNameToSlot(cx, tc, pn2, 0))
+                if (!BindNameToSlot(cx, cg, pn2, 0))
                     return JS_FALSE;
-                if (!CheckSideEffects(cx, tc, pn->pn_right, answer))
+                if (!CheckSideEffects(cx, cg, pn->pn_right, answer))
                     return JS_FALSE;
                 if (!*answer &&
                     (pn->pn_op != JSOP_NOP ||
@@ -2168,7 +2168,7 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
       case PN_UNARY:
         switch (pn->pn_type) {
           case TOK_RP:
-            ok = CheckSideEffects(cx, tc, pn->pn_kid, answer);
+            ok = CheckSideEffects(cx, cg, pn->pn_kid, answer);
             break;
 
           case TOK_DELETE:
@@ -2187,7 +2187,7 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
                 *answer = JS_TRUE;
                 break;
               default:
-                ok = CheckSideEffects(cx, tc, pn2, answer);
+                ok = CheckSideEffects(cx, cg, pn2, answer);
                 break;
             }
             break;
@@ -2211,7 +2211,7 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
          * defaulted to JSOP_NOP).
          */
         if (pn->pn_type == TOK_NAME && pn->pn_op != JSOP_NOP) {
-            if (!BindNameToSlot(cx, tc, pn, 0))
+            if (!BindNameToSlot(cx, cg, pn, 0))
                 return JS_FALSE;
             if (pn->pn_slot < 0 && pn->pn_op != JSOP_ARGUMENTS) {
                 /*
@@ -2223,10 +2223,8 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         }
         pn2 = pn->pn_expr;
         if (pn->pn_type == TOK_DOT) {
-            if (pn2->pn_type == TOK_NAME &&
-                !BindNameToSlot(cx, tc, pn2, 0)) {
+            if (pn2->pn_type == TOK_NAME && !BindNameToSlot(cx, cg, pn2, 0))
                 return JS_FALSE;
-            }
             if (!(pn2->pn_op == JSOP_ARGUMENTS &&
                   pn->pn_atom == cx->runtime->atomState.lengthAtom)) {
                 /*
@@ -2236,7 +2234,7 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
                 *answer = JS_TRUE;
             }
         }
-        ok = CheckSideEffects(cx, tc, pn2, answer);
+        ok = CheckSideEffects(cx, cg, pn2, answer);
         break;
 
       case PN_NULLARY:
@@ -2253,7 +2251,7 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 {
     JSOp op;
 
-    if (!BindNameToSlot(cx, &cg->treeContext, pn, 0))
+    if (!BindNameToSlot(cx, cg, pn, 0))
         return JS_FALSE;
     op = PN_OP(pn);
 
@@ -2349,7 +2347,7 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
              *  - varname.prop into JSOP_GETVARPROP
              *  - localname.prop into JSOP_GETLOCALPROP
              */
-            if (!BindNameToSlot(cx, &cg->treeContext, pn2, 0))
+            if (!BindNameToSlot(cx, cg, pn2, 0))
                 return JS_FALSE;
             switch (pn2->pn_op) {
               case JSOP_ARGUMENTS:
@@ -2461,7 +2459,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
          * one or more index expression and JSOP_GETELEM op pairs.
          */
         if (left->pn_type == TOK_NAME && next->pn_type == TOK_NUMBER) {
-            if (!BindNameToSlot(cx, &cg->treeContext, left, 0))
+            if (!BindNameToSlot(cx, cg, left, 0))
                 return JS_FALSE;
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT(next->pn_dval, slot) &&
@@ -2536,7 +2534,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
         if (op == JSOP_GETELEM &&
             left->pn_type == TOK_NAME &&
             right->pn_type == TOK_NUMBER) {
-            if (!BindNameToSlot(cx, &cg->treeContext, left, 0))
+            if (!BindNameToSlot(cx, cg, left, 0))
                 return JS_FALSE;
             if (left->pn_op == JSOP_ARGUMENTS &&
                 JSDOUBLE_IS_INT(right->pn_dval, slot) &&
@@ -3273,13 +3271,12 @@ static JSBool
 EmitDestructuringDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
                       JSParseNode *pn)
 {
+    JSOp decltype;
+
     JS_ASSERT(pn->pn_type == TOK_NAME);
-    if (!BindNameToSlot(cx, &cg->treeContext, pn,
-                        (prologOp == JSOP_NOP)
-                        ? LET_DECL
-                        : VAR_DECL)) {
+    decltype = (prologOp == JSOP_NOP) ? LET_DECL : VAR_DECL;
+    if (!BindNameToSlot(cx, cg, pn, decltype))
         return JS_FALSE;
-    }
 
     JS_ASSERT(pn->pn_op != JSOP_ARGUMENTS);
     return MaybeEmitVarDecl(cx, cg, prologOp, pn, NULL);
@@ -3340,10 +3337,8 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (js_Emit1(cx, cg, JSOP_POP) < 0)
             return JS_FALSE;
     } else {
-        if (pn->pn_type == TOK_NAME &&
-            !BindNameToSlot(cx, &cg->treeContext, pn, 0)) {
+        if (pn->pn_type == TOK_NAME && !BindNameToSlot(cx, cg, pn, 0))
             return JS_FALSE;
-        }
 
         switch (pn->pn_op) {
           case JSOP_SETNAME:
@@ -3715,7 +3710,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 JSBool useful = JS_FALSE;
 
                 JS_ASSERT(pn->pn_count == 1);
-                if (!CheckSideEffects(cx, tc, pn2->pn_right, &useful))
+                if (!CheckSideEffects(cx, cg, pn2->pn_right, &useful))
                     return JS_FALSE;
                 if (!useful)
                     return JS_TRUE;
@@ -3762,8 +3757,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         JS_ASSERT(pn2->pn_type == TOK_NAME);
 #endif
 
-        if (!BindNameToSlot(cx, &cg->treeContext, pn2,
-                            let ? LET_DECL : VAR_DECL))
+        if (!BindNameToSlot(cx, cg, pn2, let ? LET_DECL : VAR_DECL))
             return JS_FALSE;
         JS_ASSERT(pn2->pn_slot >= 0 || !let);
 
@@ -3790,7 +3784,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     JSBool useful = JS_FALSE;
 
                     JS_ASSERT(pn->pn_count == 1);
-                    if (!CheckSideEffects(cx, tc, pn3, &useful))
+                    if (!CheckSideEffects(cx, cg, pn3, &useful))
                         return JS_FALSE;
                     if (!useful)
                         return JS_TRUE;
@@ -4409,7 +4403,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     }
                 } else {
                     pn3->pn_op = JSOP_FORNAME;
-                    if (!BindNameToSlot(cx, &cg->treeContext, pn3, 0))
+                    if (!BindNameToSlot(cx, cg, pn3, 0))
                         return JS_FALSE;
                     op = PN_OP(pn3);
                 }
@@ -4428,10 +4422,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
               case TOK_DOT:
                 useful = JS_FALSE;
-                if (!CheckSideEffects(cx, &cg->treeContext, pn3->pn_expr,
-                                      &useful)) {
+                if (!CheckSideEffects(cx, cg, pn3->pn_expr, &useful))
                     return JS_FALSE;
-                }
                 if (!useful) {
                     if (!EmitPropOp(cx, pn3, JSOP_FORPROP, cg, JS_FALSE))
                         return JS_FALSE;
@@ -5194,7 +5186,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              */
             useful = wantval = !(cg->treeContext.flags & TCF_IN_FUNCTION);
             if (!useful) {
-                if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
+                if (!CheckSideEffects(cx, cg, pn2, &useful))
                     return JS_FALSE;
             }
 
@@ -5308,7 +5300,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         atomIndex = (jsatomid) -1;              /* quell GCC overwarning */
         switch (pn2->pn_type) {
           case TOK_NAME:
-            if (!BindNameToSlot(cx, &cg->treeContext, pn2, 0))
+            if (!BindNameToSlot(cx, cg, pn2, 0))
                 return JS_FALSE;
             if (pn2->pn_slot >= 0) {
                 atomIndex = (jsatomid) pn2->pn_slot;
@@ -5681,7 +5673,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         switch (pn2->pn_type) {
           case TOK_NAME:
             pn2->pn_op = op;
-            if (!BindNameToSlot(cx, &cg->treeContext, pn2, 0))
+            if (!BindNameToSlot(cx, cg, pn2, 0))
                 return JS_FALSE;
             op = PN_OP(pn2);
             if (pn2->pn_slot >= 0) {
@@ -5754,7 +5746,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         switch (pn2->pn_type) {
           case TOK_NAME:
             pn2->pn_op = JSOP_DELNAME;
-            if (!BindNameToSlot(cx, &cg->treeContext, pn2, 0))
+            if (!BindNameToSlot(cx, cg, pn2, 0))
                 return JS_FALSE;
             op = PN_OP(pn2);
             if (op == JSOP_FALSE) {
@@ -5797,7 +5789,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * also JSOP_GROUP for correctly parenthesized decompilation).
              */
             useful = JS_FALSE;
-            if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
+            if (!CheckSideEffects(cx, cg, pn2, &useful))
                 return JS_FALSE;
             if (!useful) {
                 off = noteIndex = -1;

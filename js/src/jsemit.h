@@ -175,23 +175,33 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        names when flags & TCF_IN_FUNCTION */
 };
 
-#define TCF_COMPILING          0x01 /* generating bytecode; this tc is a cg */
-#define TCF_IN_FUNCTION        0x02 /* parsing inside function body */
-#define TCF_RETURN_EXPR        0x04 /* function has 'return expr;' */
-#define TCF_RETURN_VOID        0x08 /* function has 'return;' */
-#define TCF_RETURN_FLAGS       0x0C /* propagate these out of blocks */
-#define TCF_IN_FOR_INIT        0x10 /* parsing init expr of for; exclude 'in' */
-#define TCF_FUN_CLOSURE_VS_VAR 0x20 /* function and var with same name */
-#define TCF_FUN_USES_NONLOCALS 0x40 /* function refers to non-local names */
-#define TCF_FUN_HEAVYWEIGHT    0x80 /* function needs Call object per call */
-#define TCF_FUN_IS_GENERATOR  0x100 /* parsed yield statement in function */
-#define TCF_FUN_FLAGS         0x1E0 /* flags to propagate from FunctionBody */
-#define TCF_HAS_DEFXMLNS      0x200 /* default xml namespace = ...; parsed */
-#define TCF_HAS_FUNCTION_STMT 0x400 /* block contains a function statement */
-#define TCF_GENEXP_LAMBDA     0x800 /* flag lambda from generator expression */
-#define TCF_COMPILE_N_GO     0x1000 /* compiler-and-go mode of script, can
+#define TCF_IN_FUNCTION        0x01 /* parsing inside function body */
+#define TCF_RETURN_EXPR        0x02 /* function has 'return expr;' */
+#define TCF_RETURN_VOID        0x04 /* function has 'return;' */
+#define TCF_IN_FOR_INIT        0x08 /* parsing init expr of for; exclude 'in' */
+#define TCF_FUN_CLOSURE_VS_VAR 0x10 /* function and var with same name */
+#define TCF_FUN_USES_NONLOCALS 0x20 /* function refers to non-local names */
+#define TCF_FUN_HEAVYWEIGHT    0x40 /* function needs Call object per call */
+#define TCF_FUN_IS_GENERATOR   0x80 /* parsed yield statement in function */
+#define TCF_HAS_DEFXMLNS      0x100 /* default xml namespace = ...; parsed */
+#define TCF_HAS_FUNCTION_STMT 0x200 /* block contains a function statement */
+#define TCF_GENEXP_LAMBDA     0x400 /* flag lambda from generator expression */
+#define TCF_COMPILE_N_GO      0x800 /* compiler-and-go mode of script, can
                                        optimize name references based on scope
                                        chain */
+
+/*
+ * Flags to propagate out of the blocks.
+ */
+#define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
+
+/*
+ * Flags to propagate from FunctionBody.
+ */
+#define TCF_FUN_FLAGS           (TCF_FUN_IS_GENERATOR   |                     \
+                                 TCF_FUN_HEAVYWEIGHT    |                     \
+                                 TCF_FUN_USES_NONLOCALS |                     \
+                                 TCF_FUN_CLOSURE_VS_VAR)
 
 #define TREE_CONTEXT_INIT(tc, pc)                                             \
     ((tc)->flags = (tc)->ngvars = 0,                                          \
