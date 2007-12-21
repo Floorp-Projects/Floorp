@@ -1677,74 +1677,150 @@ moz_gtk_progress_chunk_paint(GdkDrawable* drawable, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+gint
+moz_gtk_get_tab_thickness(void)
+{
+    ensure_tab_widget();
+    if (YTHICKNESS(gTabWidget->style) < 2)
+        return 2; /* some themes don't set ythickness correctly */
+
+    return YTHICKNESS(gTabWidget->style);
+}
+
 static gint
 moz_gtk_tab_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                  GdkRectangle* cliprect, gint flags,
+                  GdkRectangle* cliprect, GtkTabFlags flags,
                   GtkTextDirection direction)
 {
-    /*
-     * In order to get the correct shadows and highlights, GTK paints
-     * tabs right-to-left (end-to-beginning, to be generic), leaving
-     * out the active tab, and then paints the current tab once
-     * everything else is painted.  In addition, GTK uses a 2-pixel
-     * overlap between adjacent tabs (this value is hard-coded in
-     * gtknotebook.c).  For purposes of mapping to gecko's frame
-     * positions, we put this overlap on the far edge of the frame
-     * (i.e., for a horizontal/top tab strip, we shift the left side
-     * of each tab 2px to the left, into the neighboring tab's frame
-     * rect.  The right 2px * of a tab's frame will be referred to as
-     * the "overlap area".
-     *
-     * Since we can't guarantee painting order with gecko, we need to
-     * manage the overlap area manually. There are three types of tab
-     * boundaries we need to handle:
-     *
-     * * two non-active tabs: In this case, we just have both tabs
-     *   paint normally.
-     *
-     * * non-active to active tab: Here, we need the tab on the left to paint
-     *                             itself normally, then paint the edge of the
-     *                             active tab in its overlap area.
-     *
-     * * active to non-active tab: In this case, we just have both tabs paint
-     *                             normally.
-     *
-     * We need to make an exception for the first tab - since there is
-     * no tab to the left to paint the overlap area, we do _not_ shift
-     * the tab left by 2px.
-     */
+    /* When the tab isn't selected, we just draw a notebook extension.
+     * When it is selected, we overwrite the adjacent border of the tabpanel
+     * touching the tab with a pierced border (called "the gap") to make the
+     * tab appear physically attached to the tabpanel; see details below. */
 
     GtkStyle* style;
+
     ensure_tab_widget();
     gtk_widget_set_direction(gTabWidget, direction);
 
-    if (!(flags & MOZ_GTK_TAB_FIRST)) {
-        rect->x -= 2;
-        rect->width += 2;
-    }
-
     style = gTabWidget->style;
     TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_extension(style, drawable,
-                        ((flags & MOZ_GTK_TAB_SELECTED) ?
-                         GTK_STATE_NORMAL : GTK_STATE_ACTIVE),
-                        GTK_SHADOW_OUT, cliprect, gTabWidget, "tab", rect->x,
-                        rect->y, rect->width, rect->height, GTK_POS_BOTTOM);
 
-    if (flags & MOZ_GTK_TAB_BEFORE_SELECTED) {
-        gboolean before_selected = ((flags & MOZ_GTK_TAB_BEFORE_SELECTED)!=0);
-        cliprect->y -= 2;
-        cliprect->height += 2;
-        rect->y -= 2 * before_selected;
-        rect->x += rect->width - 2;
-
-        TSOffsetStyleGCs(style, rect->x, rect->y);
-
-        gtk_paint_extension(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+    if ((flags & MOZ_GTK_TAB_SELECTED) == 0) {
+        /* Only draw the tab */
+        gtk_paint_extension(style, drawable, GTK_STATE_ACTIVE, GTK_SHADOW_OUT,
                             cliprect, gTabWidget, "tab",
-                            rect->x, rect->y, rect->width,
-                            rect->height + (2 * before_selected),
-                            GTK_POS_BOTTOM);
+                            rect->x, rect->y, rect->width, rect->height,
+                            (flags & MOZ_GTK_TAB_BOTTOM) ?
+                                GTK_POS_TOP : GTK_POS_BOTTOM );
+    } else {
+        /* Draw the tab and the gap
+         * We want the gap to be positionned exactly on the tabpanel top
+         * border; since tabbox.css may set a negative margin so that the tab
+         * frame rect already overlaps the tabpanel frame rect, we need to take
+         * that into account when drawing. To that effect, nsNativeThemeGTK
+         * passes us this negative margin (bmargin in the graphic below) in the
+         * lowest bits of |flags|.  We use it to set gap_voffset, the distance
+         * between the top of the gap and the bottom of the tab (resp. the
+         * bottom of the gap and the top of the tab when we draw a bottom tab),
+         * while ensuring that the gap always touches the border of the tab,
+         * i.e. 0 <= gap_voffset <= gap_height, to avoid surprinsing results
+         * with big negative or positive margins.
+         * Here is a graphical explanation in the case of top tabs:
+         *             ___________________________
+         *            /                           \
+         *           |            T A B            |
+         * ----------|. . . . . . . . . . . . . . .|----- top of tabpanel
+         *           :    ^       bmargin          :  ^
+         *           :    | (-negative margin,     :  |
+         *  bottom   :    v  passed in flags)      :  |       gap_height
+         *    of  -> :.............................:  |    (the size of the
+         * the tab   .       part of the gap       .  |  tabpanel top border)
+         *           .      outside of the tab     .  v
+         * ----------------------------------------------
+         *
+         * To draw the gap, we use gtk_paint_box_gap(), see comment in
+         * moz_gtk_tabpanels_paint(). This box_gap is made 3 * gap_height tall,
+         * which should suffice to ensure that the only visible border is the
+         * pierced one.  If the tab is in the middle, we make the box_gap begin
+         * a bit to the left of the tab and end a bit to the right, adjusting
+         * the gap position so it still is under the tab, because we want the
+         * rendering of a gap in the middle of a tabpanel.  This is the role of
+         * the gints gap_{l,r}_offset. On the contrary, if the tab is the
+         * first, we align the start border of the box_gap with the start
+         * border of the tab (left if LTR, right if RTL), by setting the
+         * appropriate offset to 0.*/
+        gint gap_loffset, gap_roffset, gap_voffset, gap_height;
+
+        /* Get height needed by the gap */
+        gap_height = moz_gtk_get_tab_thickness();
+
+        /* Extract gap_voffset from the first bits of flags */
+        gap_voffset = flags & MOZ_GTK_TAB_MARGIN_MASK;
+        if (gap_voffset > gap_height)
+            gap_voffset = gap_height;
+
+        /* Set gap_{l,r}_offset to appropriate values */
+        gap_loffset = gap_roffset = 20; /* should be enough */
+        if (flags & MOZ_GTK_TAB_FIRST) {
+            if (direction == GTK_TEXT_DIR_RTL)
+                gap_roffset = 0;
+            else
+                gap_loffset = 0;
+        }
+
+        if (flags & MOZ_GTK_TAB_BOTTOM) {
+            /* Enlarge the cliprect to have room for the full gap height */
+            cliprect->height += gap_height - gap_voffset;
+            cliprect->y -= gap_height - gap_voffset;
+
+            /* Draw the tab */
+            gtk_paint_extension(style, drawable, GTK_STATE_NORMAL,
+                                GTK_SHADOW_OUT, cliprect, gTabWidget, "tab",
+                                rect->x, rect->y + gap_voffset, rect->width,
+                                rect->height - gap_voffset, GTK_POS_TOP);
+
+            /* Draw the gap; erase with background color before painting in
+             * case theme does not */
+            gtk_style_apply_default_background(style, drawable, TRUE,
+                                               GTK_STATE_NORMAL, cliprect,
+                                               rect->x,
+                                               rect->y + gap_voffset
+                                                       - gap_height,
+                                               rect->width, gap_height);
+            gtk_paint_box_gap(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                              cliprect, gTabWidget, "notebook",
+                              rect->x - gap_loffset,
+                              rect->y + gap_voffset - 3 * gap_height,
+                              rect->width + gap_loffset + gap_roffset,
+                              3 * gap_height, GTK_POS_BOTTOM,
+                              gap_loffset, rect->width);
+        } else {
+            /* Enlarge the cliprect to have room for the full gap height */
+            cliprect->height += gap_height - gap_voffset;
+
+            /* Draw the tab */
+            gtk_paint_extension(style, drawable, GTK_STATE_NORMAL,
+                                GTK_SHADOW_OUT, cliprect, gTabWidget, "tab",
+                                rect->x, rect->y, rect->width,
+                                rect->height - gap_voffset, GTK_POS_BOTTOM);
+
+            /* Draw the gap; erase with background color before painting in
+             * case theme does not */
+            gtk_style_apply_default_background(style, drawable, TRUE,
+                                               GTK_STATE_NORMAL, cliprect,
+                                               rect->x,
+                                               rect->y + rect->height
+                                                       - gap_voffset,
+                                               rect->width, gap_height);
+            gtk_paint_box_gap(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                              cliprect, gTabWidget, "notebook",
+                              rect->x - gap_loffset,
+                              rect->y + rect->height - gap_voffset,
+                              rect->width + gap_loffset + gap_roffset,
+                              3 * gap_height, GTK_POS_TOP,
+                              gap_loffset, rect->width);
+        }
+
     }
 
     return MOZ_GTK_SUCCESS;
@@ -1754,6 +1830,10 @@ static gint
 moz_gtk_tabpanels_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         GdkRectangle* cliprect, GtkTextDirection direction)
 {
+    /* We use gtk_paint_box_gap() to draw the tabpanels widget. gtk_paint_box()
+     * draws an all-purpose box, which a lot of themes render differently.
+     * A zero-width gap is still visible in most themes, so we hide it to the
+     * left (10px should be enough) */
     GtkStyle* style;
 
     ensure_tab_widget();
@@ -1762,9 +1842,10 @@ moz_gtk_tabpanels_paint(GdkDrawable* drawable, GdkRectangle* rect,
     style = gTabWidget->style;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
-    gtk_paint_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-                  cliprect, gTabWidget, "notebook", rect->x, rect->y,
-                  rect->width, rect->height);
+    gtk_paint_box_gap(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                      cliprect, gTabWidget, "notebook", rect->x, rect->y,
+                      rect->width, rect->height,
+                      GTK_POS_TOP, -10, 0);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2198,6 +2279,10 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         ensure_check_menu_item_widget();
         w = gCheckMenuItemWidget;
         break;
+    case MOZ_GTK_TAB:
+        ensure_tab_widget();
+        w = gTabWidget;
+        break;
     /* These widgets have no borders, since they are not containers. */
     case MOZ_GTK_SPLITTER_HORIZONTAL:
     case MOZ_GTK_SPLITTER_VERTICAL:
@@ -2481,7 +2566,8 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                             direction);
         break;
     case MOZ_GTK_TAB:
-        return moz_gtk_tab_paint(drawable, rect, cliprect, flags, direction);
+        return moz_gtk_tab_paint(drawable, rect, cliprect,
+                                 (GtkTabFlags) flags, direction);
         break;
     case MOZ_GTK_TABPANELS:
         return moz_gtk_tabpanels_paint(drawable, rect, cliprect, direction);
