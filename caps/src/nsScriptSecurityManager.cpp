@@ -2403,7 +2403,8 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
                 nsCOMPtr<nsIXPConnectWrappedNative> xpcWrapper =
                     do_QueryInterface(priv);
 
-                NS_ASSERTION(!xpcWrapper,
+                NS_ASSERTION(!xpcWrapper ||
+                             !strcmp(jsClass->name, "XPCNativeWrapper"),
                              "Uh, an nsIXPConnectWrappedNative with the "
                              "wrong JSClass or getObjectOps hooks!");
             }
