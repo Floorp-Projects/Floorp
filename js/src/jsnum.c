@@ -761,11 +761,11 @@ js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 
     if (!js_ValueToNumber(cx, v, &d))
         return JS_FALSE;
-    return js_DoubleToECMAInt32(cx, d, ip);
+    return js_DoubleToECMAInt32(d, ip);
 }
 
 JSBool
-js_DoubleToECMAInt32(JSContext *cx, jsdouble d, int32 *ip)
+js_DoubleToECMAInt32(jsdouble d, int32 *ip)
 {
     jsdouble two32 = 4294967296.0;
     jsdouble two31 = 2147483648.0;
@@ -790,11 +790,11 @@ js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
 
     if (!js_ValueToNumber(cx, v, &d))
         return JS_FALSE;
-    return js_DoubleToECMAUint32(cx, d, ip);
+    return js_DoubleToECMAUint32(d, ip);
 }
 
 JSBool
-js_DoubleToECMAUint32(JSContext *cx, jsdouble d, uint32 *ip)
+js_DoubleToECMAUint32(jsdouble d, uint32 *ip)
 {
     JSBool neg;
     jsdouble two32 = 4294967296.0;

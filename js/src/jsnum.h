@@ -211,7 +211,7 @@ extern JSBool
 js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip);
 
 extern JSBool
-js_DoubleToECMAInt32(JSContext *cx, jsdouble d, int32 *ip);
+js_DoubleToECMAInt32(jsdouble d, int32 *ip);
 
 /*
  * Convert a value or a double to a uint32, according to the ECMA rules
@@ -221,7 +221,7 @@ extern JSBool
 js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip);
 
 extern JSBool
-js_DoubleToECMAUint32(JSContext *cx, jsdouble d, uint32 *ip);
+js_DoubleToECMAUint32(jsdouble d, uint32 *ip);
 
 /*
  * Convert a value to a number, then to an int32 if it fits by rounding to

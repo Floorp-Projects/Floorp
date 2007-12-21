@@ -1846,7 +1846,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
                 return JS_FALSE;
 
             /* Clamp limit between 0 and 1 + string length. */
-            if (!js_DoubleToECMAUint32(cx, d, &limit))
+            if (!js_DoubleToECMAUint32(d, &limit))
                 return JS_FALSE;
             if (limit > JSSTRING_LENGTH(str))
                 limit = 1 + JSSTRING_LENGTH(str);
