@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      label {color: red}
+      input:default + label {color: green}
+      input:not(:checked):not([checked]):not(:default) + label {color:green}
+    </style>
+  </head>
+  <body onload='document.getElementById("one").setAttribute("checked", "true");
+                document.getElementById("two").removeAttribute("checked");'>
+    <form>
+      <input type="radio" name="group1" id="one" value="1"/>
+      <label id="l1" for="one">Should be no red</label><br>
+      <input type="radio" name="group1" id="two" value="2" checked="true"/>
+      <label id="l2" for="two">Should be no red</label>
+    </form>
+  </body>
+</html>

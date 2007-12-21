@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style>
+      label {color: red}
+      input:not(:-moz-broken) ~ label {color: green}
+      input { display: none }
+    </style>
+  </head>
+  <body onload='var i1 = document.getElementById("ffximage");
+                i1.onload =
+                  function() { document.documentElement.className = ""; };
+                i1.setAttribute("src", "solidblue.png");'>
+    <input type="image" src="no-such-scheme:nothing" id="ffximage"/>
+    <label for="ffximage">Text should be green</label>
+  </body>
+</html>
