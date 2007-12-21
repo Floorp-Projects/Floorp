@@ -65,7 +65,7 @@ try {
 function add_visit(aURI, aTime) {
   histsvc.addVisit(aURI,
                     aTime,
-                    0, // no referrer
+                    null, // no referrer
                     histsvc.TRANSITION_TYPED, // user typed in URL bar
                     false, // not redirect
                     0);
