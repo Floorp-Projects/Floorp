@@ -149,11 +149,9 @@ ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
                              JSMSG_BAD_ARRAY_LENGTH);
         return JS_FALSE;
     }
-    if (!js_DoubleToECMAUint32(d, (uint32 *)lengthp)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_ARRAY_LENGTH);
-        return JS_FALSE;
-    }
+
+    *lengthp = js_DoubleToECMAUint32(d);
+
     if (JSDOUBLE_IS_NaN(d) || d != *lengthp) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_ARRAY_LENGTH);
