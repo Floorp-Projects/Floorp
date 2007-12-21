@@ -3098,9 +3098,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
               // the line is already marked dirty, so just handle the
               // first case.
               if (!madeContinuation) {
-                nsBlockFrame* nifBlock = static_cast<nsBlockFrame*>(nextFrame->GetParent());
-                NS_ASSERTION(nifBlock->GetType() == nsGkAtoms::blockFrame
-                             || nifBlock->GetType() == nsGkAtoms::areaFrame,
+                nsBlockFrame* nifBlock =
+                  nsLayoutUtils::GetAsBlock(nextFrame->GetParent());
+                NS_ASSERTION(nifBlock,
                              "A block's child's next in flow's parent must be a block!");
                 for (line_iterator line = nifBlock->begin_lines(),
                      line_end = nifBlock->end_lines(); line != line_end; ++line) {
