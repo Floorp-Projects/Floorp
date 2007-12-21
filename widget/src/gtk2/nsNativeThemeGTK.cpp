@@ -191,8 +191,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       memset(aState, 0, sizeof(GtkWidgetState));
     } else {
 
-      // for dropdown textfields, look at the parent frame (textbox or menulist)
-      if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD)
+      // for dropdown and spinner textfields,
+      // look at the parent frame (textbox or menulist)
+      if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
+          aWidgetType == NS_THEME_SPINNER_TEXTFIELD)
         aFrame = aFrame->GetParent();
 
       // For XUL checkboxes and radio buttons, the state of the parent
@@ -252,6 +254,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         if (aWidgetType == NS_THEME_TEXTFIELD ||
             aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
             aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
+            aWidgetType == NS_THEME_SPINNER_TEXTFIELD ||
             aWidgetType == NS_THEME_RADIO_CONTAINER ||
             aWidgetType == NS_THEME_RADIO_LABEL) {
           aState->focused = IsFocused(aFrame);
