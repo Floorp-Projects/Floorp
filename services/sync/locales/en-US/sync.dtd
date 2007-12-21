@@ -1,0 +1,6 @@
+<!ENTITY syncMenu.label       "Weave">
+<!ENTITY logInItem.label      "Sign In...">
+<!ENTITY logOutItem.label     "Sign Out">
+<!ENTITY syncNowItem.label    "Sync Now">
+<!ENTITY openPrefsItem.label  "Weave Preferences...">
+<!ENTITY openLogItem.label    "Activity Log...">
