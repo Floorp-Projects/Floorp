@@ -761,26 +761,22 @@ js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 
     if (!js_ValueToNumber(cx, v, &d))
         return JS_FALSE;
-    return js_DoubleToECMAInt32(d, ip);
+    *ip = js_DoubleToECMAInt32(d);
+    return JS_TRUE;
 }
 
-JSBool
-js_DoubleToECMAInt32(jsdouble d, int32 *ip)
+int32
+js_DoubleToECMAInt32(jsdouble d)
 {
     jsdouble two32 = 4294967296.0;
     jsdouble two31 = 2147483648.0;
 
-    if (!JSDOUBLE_IS_FINITE(d) || d == 0) {
-        *ip = 0;
-        return JS_TRUE;
-    }
+    if (!JSDOUBLE_IS_FINITE(d) || d == 0)
+        return 0;
+
     d = fmod(d, two32);
     d = (d >= 0) ? floor(d) : ceil(d) + two32;
-    if (d >= two31)
-        *ip = (int32)(d - two32);
-    else
-        *ip = (int32)d;
-    return JS_TRUE;
+    return (int32) (d >= two31) ? (d - two32) : d;
 }
 
 JSBool
@@ -790,19 +786,18 @@ js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
 
     if (!js_ValueToNumber(cx, v, &d))
         return JS_FALSE;
-    return js_DoubleToECMAUint32(d, ip);
+    *ip = js_DoubleToECMAUint32(d);
+    return JS_TRUE;
 }
 
-JSBool
-js_DoubleToECMAUint32(jsdouble d, uint32 *ip)
+uint32
+js_DoubleToECMAUint32(jsdouble d)
 {
     JSBool neg;
     jsdouble two32 = 4294967296.0;
 
-    if (!JSDOUBLE_IS_FINITE(d) || d == 0) {
-        *ip = 0;
-        return JS_TRUE;
-    }
+    if (!JSDOUBLE_IS_FINITE(d) || d == 0)
+        return 0;
 
     neg = (d < 0);
     d = floor(neg ? -d : d);
@@ -810,9 +805,7 @@ js_DoubleToECMAUint32(jsdouble d, uint32 *ip)
 
     d = fmod(d, two32);
 
-    d = (d >= 0) ? d : d + two32;
-    *ip = (uint32)d;
-    return JS_TRUE;
+    return (uint32) (d >= 0) ? d : d + two32;
 }
 
 JSBool
