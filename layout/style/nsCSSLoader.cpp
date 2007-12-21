@@ -1575,7 +1575,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
                                         aStatus);
     }
 
-    nsTObserverArray<nsICSSLoaderObserver*>::ForwardIterator iter(mObservers);
+    nsTObserverArray< nsCOMPtr<nsICSSLoaderObserver> >::ForwardIterator iter(mObservers);
     nsCOMPtr<nsICSSLoaderObserver> obs;
     while (iter.HasMore()) {
       obs = iter.GetNext();
@@ -2327,7 +2327,6 @@ CSSLoaderImpl::AddObserver(nsICSSLoaderObserver* aObserver)
 {
   NS_PRECONDITION(aObserver, "Must have observer");
   if (mObservers.AppendElementUnlessExists(aObserver)) {
-    NS_ADDREF(aObserver);
     return NS_OK;
   }
 
@@ -2337,9 +2336,7 @@ CSSLoaderImpl::AddObserver(nsICSSLoaderObserver* aObserver)
 NS_IMETHODIMP_(void)
 CSSLoaderImpl::RemoveObserver(nsICSSLoaderObserver* aObserver)
 {
-  if (mObservers.RemoveElement(aObserver)) {
-    NS_RELEASE(aObserver);
-  }
+  mObservers.RemoveElement(aObserver);
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
