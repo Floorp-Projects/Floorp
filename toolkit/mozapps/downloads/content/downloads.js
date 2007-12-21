@@ -152,9 +152,6 @@ function downloadCompleted(aDownload)
     dl.setAttribute("currBytes", aDownload.amountTransferred);
     dl.setAttribute("maxBytes", aDownload.size);
 
-    // Show the finish time because we're done
-    updateTime(dl);
-
     // If we aren't displaying search results, move the download to after the
     // active ones
     if (gSearchTerms.length == 0) {
