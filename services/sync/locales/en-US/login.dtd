@@ -1,0 +1,7 @@
+<!ENTITY dialog.title                 "Mozilla Services Login">
+<!ENTITY dialog.label                 "Sign in to Weave from this computer.">
+<!ENTITY username.label               "Username:">
+<!ENTITY password.label               "Password:">
+<!ENTITY encryptionPassphrase.label   "Encryption Passphrase:">
+<!ENTITY savePassword.label           "Save password on this computer">
+<!ENTITY autoconnect.label            "Automatically connect each time I start Firefox">
