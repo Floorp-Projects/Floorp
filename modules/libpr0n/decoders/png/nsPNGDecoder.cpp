@@ -732,7 +732,26 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     case gfxIFormats::RGB:
     case gfxIFormats::BGR:
       {
-        for (PRUint32 x=iwidth; x>0; --x) {
+        // counter for while() loops below
+        PRUint32 idx = iwidth;
+
+        // bulk copy of pixels.
+        while (idx > 4) {          // >4 to avoid last 3 bytes in buffer
+          PRUint32 p0, p1, p2, p3; // to avoid back-to-back register stalls
+          p0 = GFX_0XFF_PPIXEL_FROM_BPTR(line+0);
+          p1 = GFX_0XFF_PPIXEL_FROM_BPTR(line+3);
+          p2 = GFX_0XFF_PPIXEL_FROM_BPTR(line+6);
+          p3 = GFX_0XFF_PPIXEL_FROM_BPTR(line+9);
+          cptr32[0] = p0; cptr32[1] = p1;
+          cptr32[2] = p2; cptr32[3] = p3;
+          idx    -=  4;
+          line   += 12;
+          cptr32 +=  4;
+        }
+
+        // copy remaining pixel(s)
+        while (idx--) {
+          // 32-bit read of final pixel will exceed buffer, so read bytes
           *cptr32++ = GFX_PACKED_PIXEL(0xFF, line[0], line[1], line[2]);
           line += 3;
         }
