@@ -86,6 +86,8 @@ static GtkWidget* gTreeHeaderSortArrowWidget;
 static GtkWidget* gExpanderWidget;
 static GtkWidget* gToolbarSeparatorWidget;
 static GtkWidget* gMenuSeparatorWidget;
+static GtkWidget* gHPanedWidget;
+static GtkWidget* gVPanedWidget;
 
 static GtkShadowType gMenuBarShadowType;
 static GtkShadowType gToolbarShadowType;
@@ -132,6 +134,26 @@ ensure_button_widget()
     if (!gButtonWidget) {
         gButtonWidget = gtk_button_new_with_label("M");
         setup_widget_prototype(gButtonWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_hpaned_widget()
+{
+    if (!gHPanedWidget) {
+        gHPanedWidget = gtk_hpaned_new();
+        setup_widget_prototype(gHPanedWidget);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+ensure_vpaned_widget()
+{
+    if (!gVPanedWidget) {
+        gVPanedWidget = gtk_vpaned_new();
+        setup_widget_prototype(gVPanedWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -644,6 +666,19 @@ moz_gtk_option_menu_get_metrics(gboolean* interior_focus,
     return MOZ_GTK_SUCCESS;
 }
 
+gint
+moz_gtk_splitter_get_metrics(gint orientation, gint* size)
+{
+    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+        ensure_hpaned_widget();
+        gtk_widget_style_get(gHPanedWidget, "handle_size", size, NULL);
+    } else {
+        ensure_vpaned_widget();
+        gtk_widget_style_get(gVPanedWidget, "handle_size", size, NULL);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
 static gint
 moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
                      GdkRectangle* cliprect, GtkWidgetState* state,
@@ -1023,6 +1058,36 @@ moz_gtk_gripper_paint(GdkDrawable* drawable, GdkRectangle* rect,
     gtk_paint_box(style, drawable, state_type, shadow_type, cliprect,
                   gHandleBoxWidget, "handlebox_bin", rect->x, rect->y,
                   rect->width, rect->height);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_hpaned_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                     GdkRectangle* cliprect, GtkWidgetState* state)
+{
+    GtkStateType hpaned_state = ConvertGtkState(state);
+
+    ensure_hpaned_widget();
+    gtk_paint_handle(gHPanedWidget->style, drawable, hpaned_state,
+                     GTK_SHADOW_NONE, cliprect, gHPanedWidget, "paned",
+                     rect->x, rect->y, rect->width, rect->height,
+                     GTK_ORIENTATION_VERTICAL);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
+moz_gtk_vpaned_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                     GdkRectangle* cliprect, GtkWidgetState* state)
+{
+    GtkStateType vpaned_state = ConvertGtkState(state);
+
+    ensure_vpaned_widget();
+    gtk_paint_handle(gVPanedWidget->style, drawable, vpaned_state,
+                     GTK_SHADOW_NONE, cliprect, gVPanedWidget, "paned",
+                     rect->x, rect->y, rect->width, rect->height,
+                     GTK_ORIENTATION_HORIZONTAL);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2115,6 +2180,8 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         w = gCheckMenuItemWidget;
         break;
     /* These widgets have no borders, since they are not containers. */
+    case MOZ_GTK_SPLITTER_HORIZONTAL:
+    case MOZ_GTK_SPLITTER_VERTICAL:
     case MOZ_GTK_CHECKBUTTON:
     case MOZ_GTK_RADIOBUTTON:
     case MOZ_GTK_SCROLLBAR_BUTTON:
@@ -2415,6 +2482,12 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                              (widget == MOZ_GTK_RADIOMENUITEM),
                                              direction);
         break;
+    case MOZ_GTK_SPLITTER_HORIZONTAL:
+        return moz_gtk_vpaned_paint(drawable, rect, cliprect, state);
+        break;
+    case MOZ_GTK_SPLITTER_VERTICAL:
+        return moz_gtk_hpaned_paint(drawable, rect, cliprect, state);
+        break;
     case MOZ_GTK_WINDOW:
         return moz_gtk_window_paint(drawable, rect, cliprect, direction);
         break;
@@ -2472,6 +2545,8 @@ moz_gtk_shutdown()
     gExpanderWidget = NULL;
     gToolbarSeparatorWidget = NULL;
     gMenuSeparatorWidget = NULL;
+    gHPanedWidget = NULL;
+    gVPanedWidget = NULL;
 
     is_initialized = FALSE;
 

@@ -190,6 +190,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_dualbutton,             NS_THEME_TOOLBAR_DUAL_BUTTON,
   eCSSKeyword_dualbutton_dropdown,    NS_THEME_TOOLBAR_DUAL_BUTTON_DROPDOWN,
   eCSSKeyword_separator,              NS_THEME_TOOLBAR_SEPARATOR,
+  eCSSKeyword_splitter,               NS_THEME_SPLITTER,
   eCSSKeyword_statusbar,              NS_THEME_STATUSBAR,
   eCSSKeyword_statusbarpanel,         NS_THEME_STATUSBAR_PANEL,
   eCSSKeyword_resizerpanel,           NS_THEME_STATUSBAR_RESIZER_PANEL,
