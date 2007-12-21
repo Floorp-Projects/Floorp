@@ -1,32 +1,35 @@
-<!ENTITY wizard.title                     "Weave Sync Setup Wizard">
+<!ENTITY wizard.title                     "Weave Setup">
 
 <!ENTITY step1.counter                    "Step 1 of 5">
-<!ENTITY step1.title                      "Weave Setup Wizard">
-<!ENTITY step1.description                "This Wizard will guide you through the steps necessary to backup your current bookmarks, login to Weave, and backup and synchronize your data to the Internet and your other browsers.">
-<!ENTITY step1.note                       "Please note that the user interface is temporary and is solely intended to allow for testing of the underlying service framework.">
+<!ENTITY step1.title                      "Weave Setup">
+<!ENTITY step1.description                "This Setup Wizard will guide you through the steps necessary to connect this computer to Weave. This process will take 5 to 10 minutes to complete.">
+<!ENTITY step1.note                       "You must have a valid Weave account.  If you do not have one, please create one in the Weave Preferences pane.">
+<!ENTITY step1.warning                    "Warning: This is an experimental prototype from Mozilla Labs.  Use at your own risk.">
+<!ENTITY step1.button                     "Create Account...">
 
 <!ENTITY step2.counter                    "Step 2 of 5">
-<!ENTITY step2.title                      "Backup Your Bookmarks">
-<!ENTITY step2.description                "Backing up now will allow you to recover from the data loss you may experience. We strongly recommend that you make a backup copy of your bookmarks now.">
-<!ENTITY step2.note                       "To do so, simply press the &quot;Back Up Bookmarks...&quot; button below, and we will save a copy of your bookmarks to your desktop.">
+<!ENTITY step2.title                      "Backup Your Data">
+<!ENTITY step2.description                "Backing up now will allow you to recover from some of the data loss you will experience. Seriously. We're not kidding.">
+<!ENTITY step2.note                       "Click on the &quot;Back Up Bookmarks...&quot; button below, and we will save a copy of your bookmarks to your desktop.">
 <!ENTITY backUpBookmarks.label            "Back Up Bookmarks...">
 
 <!ENTITY step3.counter                    "Step 3 of 5">
-<!ENTITY step3.title                      "Enter Login Details">
-<!ENTITY step3.description                "We're temporarily using the internal Mozilla LDAP server for authentication. Please enter your username and password here and click the &quot;Verify&quot; button to validate before proceeding.">
+<!ENTITY step3.title                      "Account Details">
+<!ENTITY step3.description                "Please enter the Weave account details and click the &quot;Verify&quot; button to validate before proceeding.">
 <!ENTITY username.label                   "Username:">
 <!ENTITY password.label                   "Password:">
+<!ENTITY encryptionPassphrase.description "You must also now choose an encryption passphrase that is different from your password. This will be used to protect your data on the server.">
 <!ENTITY encryptionPassphrase.label       "Encryption Passphrase:">
-<!ENTITY verify.label                     "Verify">
-<!ENTITY verifyStatusUnverified.label     "Status: Unverified.">
+<!ENTITY verify.label                     "Verify Account">
+<!ENTITY verifyStatusUnverified.label     "Status: Unverified">
 
 <!ENTITY step4.counter                    "Step 4 of 5">
-<!ENTITY step4.title                      "Initial Synchronization">
-<!ENTITY step4.description                "You're now ready to synchronize your computer with Weave.  If this is your first time, we will encrypt and upload a representation of your bookmarks and history over SSL to a secure remote server.">
+<!ENTITY step4.title                      "Initial Data Transfer">
+<!ENTITY step4.description                "You're now ready to connect your browser with Weave.  If this is your first time, we will encrypt and upload a representation of your bookmarks and history over SSL to a secure remote server hosted by Mozilla.">
 <!ENTITY step4.note                       "If you have previously set up Weave on another computer, we will merge your data and reconcile any conflicts for you.">
-<!ENTITY performInitialSync.label         "Perform Initial Synchronization">
-<!ENTITY initStatusReady.label            "Status: Ready.">
+<!ENTITY performInitialSync.label         "Perform Initial Transfer">
+<!ENTITY initStatusReady.label            "Status: Ready">
 
 <!ENTITY step5.counter                    "Step 5 of 5">
 <!ENTITY step5.title                      "Setup Complete">
-<!ENTITY step5.description                "By default you will now connect to the Weave each time you start Firefox.">
+<!ENTITY step5.description                "By default you will now connect to Weave each time you start Firefox.">
