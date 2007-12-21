@@ -61,7 +61,7 @@ TEST(2, obj, XML);
 XMLList = obj;
 TEST(3, obj, XMLList);
 
-Namespace = {};
-TEST(4, saveNamespace, Namespace);
+Namespace = obj;
+TEST(4, obj, Namespace);
 
 END();
