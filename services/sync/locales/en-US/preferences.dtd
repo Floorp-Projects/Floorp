@@ -1,0 +1,41 @@
+<!ENTITY prefpane.label                     "Weave">
+<!ENTITY accountTab.label                   "Account">
+<!ENTITY syncTab.label                      "Data">
+<!ENTITY addonsTab.label                    "Add-ons">
+<!ENTITY advancedTab.label                  "Advanced">
+
+<!ENTITY alreadyHaveAccount.description     "Already have a Weave account?">
+<!ENTITY signIntoAccount.description        "Sign into your account to set up Weave on this computer.">
+<!ENTITY signInButton.label                 "Sign In...">
+<!ENTITY signedIn.description               "Signed in to Weave as ">
+<!ENTITY signOutButton.label                "Sign Out">
+<!ENTITY autoconnectCheckbox.label          "Automatically connect each time I start Firefox">
+<!ENTITY createAccount.description          "Create an account">
+<!ENTITY signUpForAccount.description       "Sign up now for a Weave account.">
+<!ENTITY createAccountButton.label          "Create Account...">
+
+<!ENTITY backUpCheckbox.label               "Back up and synchronize my data to a Weave server">
+<!ENTITY encryptOnServerCheckbox.label      "Encrypt my data on the server">
+<!ENTITY syncNowButton.label                "Sync Now">
+<!ENTITY bookmarksCheckbox.label            "Bookmarks">
+<!ENTITY historyCheckbox.label              "History">
+
+<!ENTITY addonsGroupbox.description         "This is where you will find, install, and manage Weave add-ons.">
+
+<!ENTITY advancedCaption.label              "Weave Server">
+<!ENTITY serverLocation.label               "Server Location:">
+<!ENTITY encryption.label                   "Encryption:">
+<!ENTITY teaAlgorithmItem.label             "Placeholder Algorithm (Corrected Block TEA)">
+<!ENTITY noEncryptionItem.label             "No encryption">
+<!ENTITY defaultServerRequiresEncryption.description "Note: Encryption is required for the default server.">
+<!ENTITY resetServerURLButton.label         "Reset to Default">
+
+<!ENTITY debugCaption.label "Debug">
+<!ENTITY debugGroupbox.description          "The following actions are for advanced debugging by developers only.">
+<!ENTITY resetCredentialsButton.label       "Reset Username and Password">
+<!ENTITY resetServerLockButton.label        "Reset Server Lock">
+<!ENTITY resetServerDataButton.label        "Reset Server Data">
+<!ENTITY resetClientDataButton.label        "Reset Client Data">
+
+<!ENTITY logsCaption.label                  "Logs">
+<!ENTITY openActivityLogButton.label        "Activity Log...">
