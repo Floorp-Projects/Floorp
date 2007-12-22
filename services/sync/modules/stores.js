@@ -204,7 +204,8 @@ SnapshotStore.prototype = {
 
   load: function SStore_load() {
     let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("weave-snapshots");
+    file.append("weave");
+    file.append("snapshots");
     file.append(this.filename);
 
     if (!file.exists())
@@ -605,8 +606,8 @@ HistoryStore.prototype = {
   },
 
   _removeCommand: function HistStore__removeCommand(command) {
-    this._log.info("  -> removing history entry: " + command.GUID);
-    this._browserHist.removePage(command.GUID);
+    this._log.info("  -> NOT removing history entry: " + command.GUID);
+    //this._browserHist.removePage(command.GUID);
   },
 
   _editCommand: function HistStore__editCommand(command) {
@@ -619,6 +620,8 @@ HistoryStore.prototype = {
         options = this._hsvc.getNewQueryOptions();
 
     query.minVisits = 1;
+    options.maxResults = 500;
+    options.sortingMode = query.SORT_BY_LASTMODIFIED_DESCENDING;
     options.queryType = options.QUERY_TYPE_HISTORY;
 
     let root = this._hsvc.executeQuery(query, options).root;
