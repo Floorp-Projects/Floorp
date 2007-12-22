@@ -8,7 +8,6 @@
 <!ENTITY signIntoAccount.description        "Sign into your account to use Weave on this computer.">
 <!ENTITY signInButton.label                 "Sign In...">
 <!ENTITY signedIn.label                     "Status">
-<!ENTITY signedIn.description               "Signed in as ">
 <!ENTITY signOutButton.label                "Sign Out">
 <!ENTITY autoconnectCheckbox.label          "Automatically connect each time you start Firefox">
 <!ENTITY createAccount.description          "Create an account">
@@ -19,12 +18,13 @@
 <!ENTITY backUpCheckbox.label               "Back up and synchronize my data to a Weave server">
 <!ENTITY encryptOnServerCheckbox.label      "Encrypt my data on the server">
 <!ENTITY syncNowButton.label                "Sync Now">
+<!ENTITY syncItemsList.label                "Synchronize these items:">
 <!ENTITY bookmarksCheckbox.label            "Bookmarks">
-<!ENTITY historyCheckbox.label              "History">
+<!ENTITY historyCheckbox.label              "Browsing History">
 
 <!ENTITY addonsGroupbox.description         "This is where you will find, install, and manage Weave add-ons.">
 
-<!ENTITY advancedCaption.label              "Server Settings">
+<!ENTITY serverSettingsCaption.label        "Server Settings">
 <!ENTITY serverLocation.label               "Server Location:">
 <!ENTITY encryption.label                   "Encryption:">
 <!ENTITY teaAlgorithmItem.label             "Placeholder Algorithm">
