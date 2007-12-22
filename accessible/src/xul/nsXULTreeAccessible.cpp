@@ -670,16 +670,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
 {
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
-
-  PRInt32 rowCount = 0;
-  nsresult rv = mTreeView->GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mRow < 0 || mRow >= rowCount) {
+  if (IsDefunct())
     return NS_ERROR_FAILURE;
-  }
-  
+
   mTreeView->GetCellText(mRow, mColumn, aName);
   
   // If there is still no name try the cell value:
@@ -722,16 +715,9 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   if (aExtraState)
     *aExtraState = 0;
 
-  NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
-
-  PRInt32 rowCount = 0;
-  nsresult rv = mTreeView->GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mRow < 0 || mRow >= rowCount) {
+  if (IsDefunct()) {
     if (aExtraState)
       *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-
     return NS_OK;
   }
 
@@ -787,9 +773,22 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
+PRBool
+nsXULTreeitemAccessible::IsDefunct()
+{
+  if (!mTree || !mTreeView || !mColumn || mRow < 0)
+    return PR_TRUE;
+
+  PRInt32 rowCount = 0;
+  nsresult rv = mTreeView->GetRowCount(&rowCount);
+  return NS_FAILED(rv) || mRow >= rowCount;
+}
+
 PRBool nsXULTreeitemAccessible::IsExpandable()
 {
-  NS_ENSURE_TRUE(mTree && mTreeView && mColumn, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   PRBool isContainer;
   mTreeView->IsContainer(mRow, &isContainer);
   if (isContainer) {
@@ -810,16 +809,21 @@ PRBool nsXULTreeitemAccessible::IsExpandable()
 // "expand/collapse" action is avaible for treeitem which is container
 NS_IMETHODIMP nsXULTreeitemAccessible::GetNumActions(PRUint8 *aNumActions)
 {
-  NS_ENSURE_TRUE(mTree && mTreeView && mColumn, NS_ERROR_FAILURE);
-  *aNumActions = IsExpandable() ? 2 : 1;
+  NS_ENSURE_ARG_POINTER(aNumActions);
+  *aNumActions = 0;
 
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  *aNumActions = IsExpandable() ? 2 : 1;
   return NS_OK;
 }
 
 // Return the name of our actions
 NS_IMETHODIMP nsXULTreeitemAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   if (aIndex == eAction_Click) {
     PRBool isCycler;
@@ -849,7 +853,9 @@ nsresult
 nsXULTreeitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsresult rv = nsLeafAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -912,7 +918,11 @@ nsXULTreeitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribu
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetParent(nsIAccessible **aParent)
 {
+  NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   if (mParent) {
     *aParent = mParent;
@@ -926,9 +936,11 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetParent(nsIAccessible **aParent)
 // otherwise return the next cell.
 NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibling)
 {
+  NS_ENSURE_ARG_POINTER(aNextSibling);
   *aNextSibling = nsnull;
 
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(mParent));
   NS_ENSURE_TRUE(treeCache, NS_ERROR_FAILURE);
@@ -973,9 +985,11 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
 // otherwise return the previous cell.
 NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPreviousSibling)
 {
+  NS_ENSURE_ARG_POINTER(aPreviousSibling);
   *aPreviousSibling = nsnull;
 
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(mParent));
   NS_ENSURE_TRUE(treeCache, NS_ERROR_FAILURE);
@@ -1009,7 +1023,8 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPrevi
 
 NS_IMETHODIMP nsXULTreeitemAccessible::DoAction(PRUint8 index)
 {
-  NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   if (index == eAction_Click) {
     nsresult rv = NS_OK;
@@ -1037,9 +1052,17 @@ NS_IMETHODIMP nsXULTreeitemAccessible::DoAction(PRUint8 index)
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
 {
-  *x = *y = *width = *height = 0;
+  NS_ENSURE_ARG_POINTER(x);
+  *x = 0;
+  NS_ENSURE_ARG_POINTER(y);
+  *y = 0;
+  NS_ENSURE_ARG_POINTER(width);
+  *width = 0;
+  NS_ENSURE_ARG_POINTER(height);
+  *height = 0;
 
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   // This Bounds are based on Tree's coord
   mTree->GetCoordsForCellItem(mRow, mColumn, EmptyCString(), x, y, width, height);
@@ -1088,7 +1111,8 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32
 
 NS_IMETHODIMP nsXULTreeitemAccessible::SetSelected(PRBool aSelect)
 {
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
@@ -1103,8 +1127,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::SetSelected(PRBool aSelect)
 }
 
 NS_IMETHODIMP nsXULTreeitemAccessible::TakeFocus()
-{ 
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
@@ -1117,11 +1142,13 @@ NS_IMETHODIMP nsXULTreeitemAccessible::TakeFocus()
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated)
 {
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   //currentlly only for ATK. and in the future, we'll sync MSAA and ATK same. 
   //that's why ATK specific code shows here
   *aRelated = nsnull;
 #ifdef MOZ_ACCESSIBILITY_ATK
-  NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
   if (aRelationType == nsIAccessibleRelation::RELATION_NODE_CHILD_OF) {
     PRInt32 columnIndex;
     if (NS_SUCCEEDED(mColumn->GetIndex(&columnIndex)) && columnIndex == 0) {
