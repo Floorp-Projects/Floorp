@@ -181,6 +181,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIGlobalHistory2, nsIGlobalHistory3)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalHistory3)
+  NS_INTERFACE_MAP_ENTRY(nsIDownloadHistory)
   NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -3498,6 +3499,27 @@ nsNavHistory::IdleTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   nsNavHistory* history = static_cast<nsNavHistory*>(aClosure);
   (void)history->OnIdle();
+}
+
+// nsIDownloadHistory **********************************************************
+
+NS_IMETHODIMP
+nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
+                          PRTime aStartTime)
+{
+  PRInt64 visitID, sessionID = 0;
+  // If we've already visited this page, we won't need to send a notification
+  // about having a new visited link.  We do this because docshell doesn't mark
+  // downloads running through exthandler as visited, so we get to do it.
+  if (!FindLastVisit(aSource, &visitID, &sessionID)) {
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (os)
+      (void)os->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
+  }
+
+  return AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD, PR_FALSE,
+                  sessionID, &visitID);
 }
 
 // nsIObserver *****************************************************************
