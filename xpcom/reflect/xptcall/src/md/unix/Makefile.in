@@ -94,6 +94,12 @@ ASFILES		:= xptcstubs_asm_ipf64.s xptcinvoke_asm_ipf64.s
 endif
 endif
 #
+# OpenBSD/amd64
+#
+ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDx86_64)
+CPPSRCS		:= xptcinvoke_amd64_openbsd.cpp xptcstubs_amd64_openbsd.cpp
+endif
+#
 # BeOS/Intel (uses the same unixish_x86 code)
 #
 ifeq ($(OS_ARCH)$(OS_TEST),BeOSBePC)
@@ -150,6 +156,12 @@ ifneq (,$(filter Linuxalpha FreeBSDalpha NetBSDalpha,$(OS_ARCH)$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_linux_alpha.cpp xptcstubs_linux_alpha.cpp
 endif
 #
+# OpenBSD/Alpha
+#
+ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDalpha)
+CPPSRCS		:= xptcinvoke_alpha_openbsd.cpp xptcstubs_alpha_openbsd.cpp
+endif
+#
 # OpenVMS/Alpha
 #
 ifeq ($(OS_ARCH)$(CPU_ARCH),OpenVMSAlpha)
@@ -176,6 +188,12 @@ ifeq ($(OS_ARCH),NetBSD)
 ifneq (,$(filter arm% sa110,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_arm_netbsd.cpp xptcstubs_arm_netbsd.cpp
 endif
+endif
+#
+# OpenBSD/ARM
+#
+ifneq (,$(filter OpenBSDarmish OpenBSDzaurus,$(OS_ARCH)$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_arm_openbsd.cpp xptcstubs_arm_openbsd.cpp
 endif
 
 ######################################################################
@@ -293,6 +311,14 @@ ASFILES		:= xptcinvoke_asm_ppc_netbsd.s xptcstubs_asm_ppc_netbsd.s
 endif
 
 #
+# OpenBSD/PPC
+#
+ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDpowerpc)
+CPPSRCS		:= xptcinvoke_ppc_openbsd.cpp xptcstubs_ppc_openbsd.cpp
+ASFILES		:= xptcinvoke_asm_ppc_openbsd.s xptcstubs_asm_ppc_openbsd.s
+endif
+
+#
 # Darwin/PPC
 #
 ifeq ($(OS_ARCH),Darwin)
@@ -337,6 +363,20 @@ endif
 ifeq ($(OS_ARCH)$(OS_TEST),NetBSDsparc)
 CPPSRCS		:= xptcinvoke_sparc_netbsd.cpp xptcstubs_sparc_netbsd.cpp
 ASFILES		:= xptcinvoke_asm_sparc_netbsd.s xptcstubs_asm_sparc_netbsd.s
+endif
+#
+# OpenBSD/SPARC
+#
+ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDsparc)
+CPPSRCS		:= xptcinvoke_sparc_openbsd.cpp xptcstubs_sparc_openbsd.cpp
+ASFILES		:= xptcinvoke_asm_sparc_openbsd.s xptcstubs_asm_sparc_openbsd.s
+endif
+#
+# OpenBSD/SPARC64
+#
+ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDsparc64)
+CPPSRCS		:= xptcinvoke_sparc64_openbsd.cpp xptcstubs_sparc64_openbsd.cpp
+ASFILES		:= xptcinvoke_asm_sparc64_openbsd.s xptcstubs_asm_sparc64_openbsd.s
 endif
 #
 # Solaris/SPARC
