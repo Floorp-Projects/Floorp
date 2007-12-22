@@ -268,7 +268,7 @@ SyncCore.prototype = {
       }
   
       listA = listA.filter(function(elt) { return elt });
-      listB = listB.concat(guidChanges);
+      listB = guidChanges.concat(listB);
   
       for (let i = 0; i < listA.length; i++) {
         for (let j = 0; j < listB.length; j++) {
