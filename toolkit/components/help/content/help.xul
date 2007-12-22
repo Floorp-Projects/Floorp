@@ -209,12 +209,10 @@
                           object="?subheadings"/>
                   <member container="?subheadings"
                           child="?subheading"/>
+                  <triple subject="?subheading"
+                          predicate="http://home.netscape.com/NC-rdf#name"
+                          object="?name"/>
                 </conditions>
-                <bindings>
-                  <binding subject="?subheading"
-                           predicate="http://home.netscape.com/NC-rdf#name"
-                           object="?name"/>
-                </bindings>
                 <action>
                   <treechildren>
                     <treeitem uri="?subheading">

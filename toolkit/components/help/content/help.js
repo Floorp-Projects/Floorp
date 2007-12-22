@@ -689,9 +689,10 @@ function doFindOnSeq(resultsDS, sourceDS, resource, level) {
         var target = targets.getNext();
         var link = sourceDS.GetTarget(target, NC_LINK, true);
         var name = sourceDS.GetTarget(target, NC_NAME, true);
-        name = name.QueryInterface(Components.interfaces.nsIRDFLiteral);
 
-        if (link && isMatch(name.Value)) {
+        if (link &&
+            name instanceof Components.interfaces.nsIRDFLiteral &&
+            isMatch(name.Value)) {
             // we have found a search entry - add it to the results datasource.
             var urn = RDF.GetAnonymousResource();
             resultsDS.Assert(urn, NC_NAME, name, true);
