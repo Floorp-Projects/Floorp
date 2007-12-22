@@ -42,11 +42,12 @@
 #include "nsTArray.h"
 
 class NS_COM_GLUE nsTObserverArray_base {
-  protected:
+  public:
     typedef PRUint32 index_type;
     typedef PRUint32 size_type;
     typedef PRInt32  diff_type;
 
+  protected:
     class Iterator_base {
       protected:
         friend class nsTObserverArray_base;
