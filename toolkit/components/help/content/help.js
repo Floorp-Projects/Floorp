@@ -237,9 +237,9 @@ function loadHelpRDF() {
 
         var panelID        = getAttribute(helpFileDS, panelDef, NC_PANELID, null);
         var datasources    = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "");
-        var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform);
+        var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, null);
 
-        if (panelPlatforms.split(/\s+/).indexOf(platform) == -1)
+        if (panelPlatforms && panelPlatforms.split(/\s+/).indexOf(platform) == -1)
           continue; // ignore datasources for other platforms
 
         // empty datasources are valid on search panel definitions
@@ -260,7 +260,8 @@ function loadHelpRDF() {
 
           datasourceArray.forEach(helpSearchPanel.database.AddDataSource,
                                   helpSearchPanel.database);
-          filterDatasourceByPlatform(helpSearchPanel.database);
+          if (!panelPlatforms)
+            filterDatasourceByPlatform(helpSearchPanel.database);
 
           continue; // to next panel definition
         }
@@ -276,7 +277,8 @@ function loadHelpRDF() {
                                 tree.database);
 
         // filter and display the current tree
-        filterDatasourceByPlatform(tree.database);
+        if (!panelPlatforms)
+          filterDatasourceByPlatform(tree.database);
         tree.builder.rebuild();
       }
     } catch (e) {
