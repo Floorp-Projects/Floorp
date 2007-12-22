@@ -118,6 +118,11 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     static nsIAccessibilityService* GetAccService();
     already_AddRefed<nsIDOMNode> GetCurrentFocus();
 
+    /**
+     * Returns true when the accessible is defunct.
+     */
+    virtual PRBool IsDefunct() { return !mDOMNode; }
+
 protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
     already_AddRefed<nsIPresShell> GetPresShell();
