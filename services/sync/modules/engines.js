@@ -503,6 +503,8 @@ Engine.prototype = {
         if (status.GUID != this._snapshot.GUID) {
           this._log.info("Remote/local sync GUIDs do not match.  " +
                       "Forcing initial sync.");
+          this._log.debug("Remote: " + status.GUID);
+          this._log.debug("Local: " + this._snapshot.GUID);
           this._store.resetGUIDs();
           this._snapshot.data = {};
           this._snapshot.version = -1;
