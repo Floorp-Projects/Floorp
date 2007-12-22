@@ -361,7 +361,7 @@ mozStorageArgvValueArray::GetString(PRUint32 aIndex, nsAString & _retval)
     } else {
         int slen = sqlite3_value_bytes16 (mArgv[aIndex]);
         const PRUnichar *wstr = (const PRUnichar *) sqlite3_value_text16 (mArgv[aIndex]);
-        _retval.Assign (wstr, slen);
+        _retval.Assign (wstr, slen/2);
     }
     return NS_OK;
 }
