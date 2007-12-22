@@ -67,8 +67,8 @@ let gBuilder = 0;
 // Control the performance of the incremental list building by setting how many
 // milliseconds to wait before building more of the list and how many items to
 // add between each delay.
-const gListBuildDelay = 100;
-const gListBuildChunk = 10;
+const gListBuildDelay = 300;
+const gListBuildChunk = 3;
 
 // If the user has interacted with the window in a significant way, we should
 // not auto-close the window. Tough UI decisions about what is "significant."
@@ -1188,7 +1188,7 @@ function stepListBuilder(aNumItems) {
     stepListBuilder(aNumItems - 1);
   } else {
     // Use a shorter delay for earlier downloads to display them faster
-    let delay = Math.min(gDownloadsView.itemCount, gListBuildDelay);
+    let delay = Math.min(gDownloadsView.itemCount * 10, gListBuildDelay);
     gBuilder = setTimeout(stepListBuilder, delay, gListBuildChunk);
   }
 }
