@@ -2636,10 +2636,12 @@ moz_gtk_shutdown()
     gRadiobuttonWidget = NULL;
     gHorizScrollbarWidget = NULL;
     gVertScrollbarWidget = NULL;
+    gSpinWidget = NULL;
     gHScaleWidget = NULL;
     gVScaleWidget = NULL;
     gEntryWidget = NULL;
     gArrowWidget = NULL;
+    gOptionMenuWidget = NULL;
     gDropdownButtonWidget = NULL;
     gHandleBoxWidget = NULL;
     gToolbarWidget = NULL;
