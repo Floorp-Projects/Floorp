@@ -56,6 +56,7 @@
 #include "nsIDateTimeFormat.h"
 #include "nsIGlobalHistory.h"
 #include "nsIGlobalHistory3.h"
+#include "nsIDownloadHistory.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIObserver.h"
@@ -101,6 +102,7 @@ class nsNavHistory : public nsSupportsWeakReference,
                      public nsIObserver,
                      public nsIBrowserHistory,
                      public nsIGlobalHistory3,
+                     public nsIDownloadHistory,
                      public nsIAutoCompleteSearch,
                      public nsIAutoCompleteSimpleResultListener
 {
@@ -114,6 +116,7 @@ public:
   NS_DECL_NSINAVHISTORYSERVICE
   NS_DECL_NSIGLOBALHISTORY2
   NS_DECL_NSIGLOBALHISTORY3
+  NS_DECL_NSIDOWNLOADHISTORY
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIAUTOCOMPLETESEARCH

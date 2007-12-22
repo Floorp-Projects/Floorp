@@ -5,6 +5,7 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
+#include "nsDocShellCID.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAnnoProtocolHandler)
@@ -27,6 +28,11 @@ static const nsModuleComponentInfo components[] =
   { "Browser Navigation History",
     NS_NAVHISTORYSERVICE_CID,
     "@mozilla.org/autocomplete/search;1?name=history",
+    nsNavHistoryConstructor },
+
+  { "Download Navigation History",
+    NS_NAVHISTORYSERVICE_CID,
+    NS_DOWNLOADHISTORY_CONTRACTID,
     nsNavHistoryConstructor },
 
   { "Page Annotation Service",
