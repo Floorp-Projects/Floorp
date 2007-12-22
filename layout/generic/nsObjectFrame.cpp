@@ -2024,7 +2024,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (mOwner && invalidRect) {
+  if (mOwner && invalidRect && mWidgetVisible) {
     //no reference count on view
     nsIView* view = mOwner->GetView();
 
