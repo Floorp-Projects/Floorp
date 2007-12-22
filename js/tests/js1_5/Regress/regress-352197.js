@@ -57,7 +57,7 @@ catch(ex)
   actual = ex + '';
 }
 
-reportCompare(expect, actual, summary);
+reportCompare(expect, actual, summary + ': 1');
 
 try
 {
@@ -68,4 +68,29 @@ catch(ex)
   actual = ex + '';
 }
 
-reportCompare(expect, actual, summary);
+reportCompare(expect, actual, summary + ': 2');
+
+var f;
+expect = 'TypeError: function anonymous does not always return a value';
+
+try
+{
+  f = Function('if (x) return y;');
+}
+catch(ex)
+{
+  actual = ex + '';
+}
+
+reportCompare(expect, actual, summary + ': 3');
+
+try
+{
+  f = Function('if (x) { return y; }');
+}
+catch(ex)
+{
+  actual = ex + '';
+}
+
+reportCompare(expect, actual, summary + ': 4');
