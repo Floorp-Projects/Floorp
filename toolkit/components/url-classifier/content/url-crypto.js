@@ -490,7 +490,7 @@ function TEST_PROT_UrlCrypto() {
     if (doLongTest) {
       
       // Now run it through its paces. For a variety of keys of a
-      // variety of lengths, and a variety of coutns, encrypt
+      // variety of lengths, and a variety of counts, encrypt
       // plaintexts of different lengths
 
       // For a variety of key lengths...
