@@ -68,6 +68,7 @@
 #include "nsDisplayList.h"
 #include "nsContentErrors.h"
 #include "nsIEventStateManager.h"
+#include "nsListControlFrame.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -429,6 +430,24 @@ nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame)
   vm->MoveViewTo(view, pt.x, pt.y);
 }
 
+static PRBool
+IsMenuPopup(nsIFrame *aFrame)
+{
+  nsIAtom *frameType = aFrame->GetType();
+
+  // We're a menupopup if we're the list control frame dropdown for a combobox.
+  if (frameType == nsGkAtoms::listControlFrame) {
+    nsListControlFrame *listControlFrame = static_cast<nsListControlFrame*>(aFrame);
+      
+    if (listControlFrame) {
+      return listControlFrame->IsInDropDownMode();
+    }
+  }
+
+  // ... or if we're a XUL menupopup frame.
+  return (frameType == nsGkAtoms::menuPopupFrame);
+}
+
 static void
 SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
                                          nsIFrame*        aFrame,
@@ -532,7 +551,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
       // visible in all cases because the scrollbars will be showing
       // XXXldb Does the view system really enforce this correctly?
       viewIsVisible = PR_FALSE;
-    } else if (aFrame->GetType() == nsGkAtoms::menuPopupFrame) {
+    } else if (IsMenuPopup(aFrame)) {
       // if the view is for a popup, don't show the view if the popup is closed
       nsIWidget* widget = aView->GetWidget();
       if (widget) {

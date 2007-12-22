@@ -185,6 +185,7 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += \
 		-I$(srcdir) \
 		-I$(srcdir)/../base \
+		-I$(srcdir)/../forms \
 		-I$(srcdir)/../tables \
 		-I$(srcdir)/../xul/base/src \
 		-I$(srcdir)/../../content/xul/content/src \
