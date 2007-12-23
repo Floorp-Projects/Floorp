@@ -54,11 +54,10 @@
 #include "nsPresContext.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetAtoms.h"
+#include "nsToolkit.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
-
-#import <Cocoa/Cocoa.h>
 
 #define DRAW_IN_FRAME_DEBUG 0
 #define SCROLLBARS_VISUAL_DEBUG 0
@@ -80,25 +79,20 @@ static const int kThemeScrollBarArrowsBoth = 2;
 
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
 
-// Minimum size for buttons that we can create with scaling:
-#define MIN_SCALED_PUSH_BUTTON_WIDTH 28
-#define MIN_SCALED_PUSH_BUTTON_HEIGHT 12
-// We use an offscreen buffer and image scaling to make HITheme draw buttons at any height.
-// Minimum height that HITheme will draw a normal push button:
-#define MIN_UNSCALED_PUSH_BUTTON_HEIGHT 22
-// Difference between the height given to HITheme for a button and the button it actually draws:
-#define NATIVE_PUSH_BUTTON_HEIGHT_DIFF 2
-
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
 
 nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
+  mPushButtonCell = [[NSButtonCell alloc] initTextCell:nil];
+  [mPushButtonCell setButtonType:NSMomentaryPushInButton];
+  [mPushButtonCell setHighlightsBy:NSPushInCellMask];
 }
 
 nsNativeThemeCocoa::~nsNativeThemeCocoa()
 {
+  [mPushButtonCell release];
 }
 
 
@@ -159,6 +153,181 @@ nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind in
 }
 
 
+// These are the sizes that Gecko needs to request to draw if it wants
+// to get a standard-sized Aqua rounded bevel button drawn. Note that
+// the rects that draw these are actually a little bigger.
+#define NATURAL_MINI_ROUNDED_BUTTON_MIN_WIDTH 18
+#define NATURAL_MINI_ROUNDED_BUTTON_HEIGHT 16
+#define NATURAL_SMALL_ROUNDED_BUTTON_MIN_WIDTH 26
+#define NATURAL_SMALL_ROUNDED_BUTTON_HEIGHT 19
+#define NATURAL_REGULAR_ROUNDED_BUTTON_MIN_WIDTH 30
+#define NATURAL_REGULAR_ROUNDED_BUTTON_HEIGHT 22
+
+// These enums are for indexing into the margin array.
+enum {
+  tigerOS,
+  leopardOS
+};
+
+enum {
+  miniControlSize,
+  smallControlSize,
+  regularControlSize
+};
+
+enum {
+  leftMargin,
+  topMargin,
+  rightMargin,
+  bottomMargin
+};
+
+static int EnumSizeForCocoaSize(NSControlSize cocoaControlSize) {
+  if (cocoaControlSize == NSMiniControlSize)
+    return miniControlSize;
+  else if (cocoaControlSize == NSSmallControlSize)
+    return smallControlSize;
+  else
+    return regularControlSize;
+}
+
+// These were calculated by testing all three sizes on the respective operating system.
+static const float pushButtonMargins[2][3][4] =
+{
+  { // Tiger
+    {1, 1, 1, 1}, // mini
+    {5, 1, 5, 1}, // small
+    {6, 0, 6, 2}  // regular
+  },
+  { // Leopard
+    {0, 0, 0, 0}, // mini
+    {4, 0, 4, 1}, // small
+    {5, 0, 5, 2}  // regular
+  }
+};
+
+static void InflatePushButtonRect(NSRect* rect, NSControlSize cocoaControlSize)
+{
+  static int osIndex = nsToolkit::OnLeopardOrLater() ? leopardOS : tigerOS;
+  int controlSize = EnumSizeForCocoaSize(cocoaControlSize);
+  const float* buttonMargins = pushButtonMargins[osIndex][controlSize];
+  rect->origin.x -= buttonMargins[leftMargin];
+  rect->origin.y -= buttonMargins[bottomMargin];
+  rect->size.width += buttonMargins[leftMargin] + buttonMargins[rightMargin];
+  rect->size.height += buttonMargins[bottomMargin] + buttonMargins[topMargin];
+}
+
+
+void
+nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
+                                   PRBool inDisabled, PRInt32 inState)
+{
+  NSRect drawRect = NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y, inBoxRect.size.width, inBoxRect.size.height);
+
+  [mPushButtonCell setEnabled:!inDisabled];
+  [mPushButtonCell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER) || (inIsDefault && !inDisabled))];
+  [mPushButtonCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
+  
+  // Set up the graphics context we've been asked to draw to.
+  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+  [NSGraphicsContext saveGraphicsState];
+
+  // We clip to exactly the gecko rect to make sure we don't draw outside of it.
+  [NSBezierPath clipRect:drawRect];
+
+  // This flips the image in place and is necessary to work around a bug in the way
+  // NSButtonCell draws buttons.
+  CGContextScaleCTM(cgContext, 1.0f, -1.0f);
+  CGContextTranslateCTM(cgContext, 0.0f, -(2.0 * drawRect.origin.y + drawRect.size.height));
+
+  // If the button is tall enough, draw the square button style so that buttons with
+  // non-standard content look good. Otherwise draw normal rounded aqua buttons.
+  if (drawRect.size.height > 26) {
+    [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
+    [mPushButtonCell drawWithFrame:drawRect inView:[NSView focusView]];
+  }
+  else {
+    [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
+
+    // Figure out what size cell control we're going to draw and grab its
+    // natural height and min width.
+    NSControlSize controlSize = NSRegularControlSize;
+    float naturalHeight = NATURAL_REGULAR_ROUNDED_BUTTON_HEIGHT;
+    float minWidth = NATURAL_REGULAR_ROUNDED_BUTTON_MIN_WIDTH;
+    if (drawRect.size.height <= NATURAL_MINI_ROUNDED_BUTTON_HEIGHT &&
+        drawRect.size.width >= NATURAL_MINI_ROUNDED_BUTTON_MIN_WIDTH) {
+      controlSize = NSMiniControlSize;
+      naturalHeight = NATURAL_MINI_ROUNDED_BUTTON_HEIGHT;
+      minWidth = NATURAL_MINI_ROUNDED_BUTTON_MIN_WIDTH;
+    }
+    else if (drawRect.size.height <= NATURAL_SMALL_ROUNDED_BUTTON_HEIGHT &&
+             drawRect.size.width >= NATURAL_SMALL_ROUNDED_BUTTON_MIN_WIDTH) {
+      controlSize = NSSmallControlSize;
+      naturalHeight = NATURAL_SMALL_ROUNDED_BUTTON_HEIGHT;
+      minWidth = NATURAL_SMALL_ROUNDED_BUTTON_MIN_WIDTH;
+    }
+    [mPushButtonCell setControlSize:controlSize];
+
+    // Render, by scaling if the target height is not the natural height of the control we're drawing.
+    if (drawRect.size.height == naturalHeight) {
+      // Just inflate the rect Gecko gave us by the margin for the control.
+      NSRect cellRenderRect = drawRect;
+      InflatePushButtonRect(&cellRenderRect, controlSize);
+      
+      [mPushButtonCell drawWithFrame:cellRenderRect inView:[NSView focusView]];
+    }
+    else {
+      // The initial buffer size is the natural height of the control and either the target
+      // width or the minimum width of the control.
+      NSSize initialBufferSize = NSMakeSize(drawRect.size.width, naturalHeight);
+      initialBufferSize.width = PR_MAX(minWidth, initialBufferSize.width);
+      
+      // Scale the initial buffer width up to compensate for the down-scaling we'll do.
+      float scaleFactor = drawRect.size.height / naturalHeight;
+      if (scaleFactor != 0.0)
+        initialBufferSize.width = initialBufferSize.width / scaleFactor;
+
+      // This is the rect we should have the cell render to in the buffer. We will then resize
+      // the image to the size of drawRect.
+      NSRect bufferRenderRect = NSMakeRect(0, 0, initialBufferSize.width, initialBufferSize.height);
+      InflatePushButtonRect(&bufferRenderRect, controlSize);
+
+      // Create a buffer and lock focus on it.
+      NSImage *buffer = [[NSImage alloc] initWithSize:initialBufferSize];
+      if (!LockFocusOnImage(buffer)) {
+        [buffer release];
+        [NSGraphicsContext restoreGraphicsState];
+        [NSGraphicsContext setCurrentContext:savedContext];
+        return;
+      }
+
+      // Draw into the focused buffer.
+      [mPushButtonCell drawWithFrame:bufferRenderRect inView:[NSView focusView]];
+
+      // Resize the image to the final size.
+      [buffer setScalesWhenResized:YES];
+      [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+      [buffer setSize:drawRect.size];
+
+      [buffer unlockFocus];
+
+      [buffer drawInRect:drawRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+
+      [buffer release];
+    }
+  }
+
+  [NSGraphicsContext restoreGraphicsState];
+  [NSGraphicsContext setCurrentContext:savedContext];
+
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextFillRect(cgContext, inBoxRect);
+#endif
+}
+
+
 void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
                                const HIRect& inBoxRect, PRBool inIsDefault, PRBool inDisabled,
@@ -184,61 +353,15 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   if (inIsDefault && !inDisabled)
     bdi.adornment |= kThemeAdornmentDefault;
 
-  // If any of the origin and size offset arithmatic seems strange here, check out the
-  // actual dimensions of an HITheme button compared to the rect you pass to HIThemeDrawButton.
-  if (inKind == kThemePushButton && inBoxRect.size.height < MIN_UNSCALED_PUSH_BUTTON_HEIGHT) {
-    // adjust width up to componsate for the down-scaling we will do later
-    float scaleFactor = inBoxRect.size.height / MIN_UNSCALED_PUSH_BUTTON_HEIGHT;
-    // We'll use these two values to size the button we draw offscreen
-    float offscreenWidth = inBoxRect.size.width / scaleFactor;
-    float offscreenHeight = MIN_UNSCALED_PUSH_BUTTON_HEIGHT;
-
-    // create an offscreen image
-    NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(offscreenWidth, offscreenHeight)];
-    [image setDataRetained:YES];
-    [image setScalesWhenResized:YES];
-
-    // set up HITheme button to draw
-    HIRect drawFrame;
-    drawFrame.origin.x = 0;
-    drawFrame.origin.y = NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
-    drawFrame.size.width = offscreenWidth;
-    drawFrame.size.height = offscreenHeight - NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
-
-    // draw into offscreen image
-    if (!LockFocusOnImage(image)) {
-      [image release];
-      return;
-    }
-    [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationLow];
-    HIThemeDrawButton(&drawFrame, &bdi, (CGContext*)[[NSGraphicsContext currentContext] graphicsPort], kHIThemeOrientationInverted, NULL);
-    [image unlockFocus];
-
-    // resize vertically
-    [image setSize:NSMakeSize(inBoxRect.size.width, inBoxRect.size.height)];
-
-    // render to the given CGContextRef
-    [NSGraphicsContext saveGraphicsState];
-    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
-    [image compositeToPoint:NSMakePoint(inBoxRect.origin.x, inBoxRect.origin.y + inBoxRect.size.height)
-                  operation:NSCompositeSourceOver];
-    [NSGraphicsContext restoreGraphicsState];
-    [image release];
+  HIRect drawFrame = inBoxRect;
+  if (inKind == kThemePopupButton) {
+    // popup buttons draw outside their frame by 1 pixel on each side and two on the bottom
+    drawFrame.size.width -= 2;
+    drawFrame.origin.x += 1;
+    drawFrame.size.height -= 2;
   }
-  else {
-    HIRect drawFrame = inBoxRect;
-    if (inKind == kThemePushButton) {
-      drawFrame.size.height -= NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
-    }
-    else if (inKind == kThemePopupButton) {
-      // popup buttons draw outside their frame by 1 pixel on each side and two on the bottom
-      drawFrame.size.width -= 2;
-      drawFrame.origin.x += 1;
-      drawFrame.size.height -= NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
-    }
 
-    HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
-  }
+  HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
@@ -735,9 +858,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_BUTTON:
-      DrawButton(cgContext, kThemePushButton, macRect,
-                 IsDefaultButton(aFrame), IsDisabled(aFrame),
-                 kThemeButtonOn, kThemeAdornmentNone, eventState);
+      DrawPushButton(cgContext, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), eventState);
       break;
 
     case NS_THEME_BUTTON_BEVEL:
@@ -973,10 +1094,10 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
 
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
-      // Top has a single pixel line, bottom has a single pixel line plus a single
-      // pixel shadow.
-      aResult->SizeTo(6, 1, 6, 3);
+    {
+      aResult->SizeTo(7, 1, 7, 3);
       break;
+    }
 
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
@@ -1107,7 +1228,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     {
-      aResult->SizeTo(MIN_SCALED_PUSH_BUTTON_WIDTH, MIN_SCALED_PUSH_BUTTON_HEIGHT);
+      aResult->SizeTo(NATURAL_MINI_ROUNDED_BUTTON_MIN_WIDTH, NATURAL_MINI_ROUNDED_BUTTON_HEIGHT);
       break;
     }
 
