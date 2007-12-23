@@ -166,8 +166,7 @@ _destroyJSDScript(JSDContext*  jsdc,
     if (jsdscript->profileData)
         free(jsdscript->profileData);
     
-    if(jsdscript)
-        free(jsdscript);
+    free(jsdscript);
 }
 
 /***************************************************************************/
