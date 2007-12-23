@@ -39,6 +39,7 @@
 #define nsNativeThemeCocoa_h_
 
 #import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
@@ -108,6 +109,8 @@ protected:
                   PRBool inDirection, PRBool inIsReverse,
                   PRInt32 inCurrentValue,
                   PRInt32 inMinValue, PRInt32 inMaxValue);
+  void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
+                      PRBool inDisabled, PRInt32 inState);
   void DrawButton (CGContextRef context, ThemeButtonKind inKind,
                    const HIRect& inBoxRect, PRBool inIsDefault, 
                    PRBool inDisabled, ThemeButtonValue inValue,
@@ -125,6 +128,9 @@ protected:
   void GetScrollbarDrawInfo (HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
                              const HIRect& aRect, PRBool aShouldGetButtonStates);
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
+
+private:
+  NSButtonCell* mPushButtonCell;
 };
 
 #endif // nsNativeThemeCocoa_h_
