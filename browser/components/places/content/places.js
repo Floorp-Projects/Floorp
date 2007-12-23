@@ -1643,3 +1643,27 @@ var ViewMenu = {
     result.sortingMode = sortingMode;
   }
 };
+
+var PlacesToolbar = {
+  // make places toolbar act like menus
+  openedMenuButton: null,
+
+  autoOpenMenu: function (aTarget) {
+    if (this.openedMenuButton && this.openedMenuButton != aTarget &&
+        aTarget.localName == "toolbarbutton" &&
+        (aTarget.type == "menu" || aTarget.type == "menu-button")) {
+      this.openedMenuButton.open = false;
+      aTarget.open = true;
+    }
+  },
+
+  onMenuOpen: function (aTarget) {
+    if (aTarget.parentNode.localName == "toolbarbutton")
+      this.openedMenuButton = aTarget.parentNode;
+  },
+
+  onMenuClose: function (aTarget) {
+    if (aTarget.parentNode.localName == "toolbarbutton")
+      this.openedMenuButton = null;
+  }
+};
