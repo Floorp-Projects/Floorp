@@ -54,10 +54,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-const CID = Components.ID("{5280606b-2510-4fe0-97ef-9b5a22eafe6b}");
-const CONTRACT_ID = "@mozilla.org/browser/sessionstore;1";
-const CLASS_NAME = "Browser Session Store Service";
-
 const STATE_STOPPED = 0;
 const STATE_RUNNING = 1;
 const STATE_QUITTING = -1;
@@ -102,6 +98,7 @@ const CAPABILITIES = [
 
 // module for JSON conversion (needed for the nsISessionStore API)
 Cu.import("resource://gre/modules/JSON.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function debug(aMsg) {
   aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
@@ -115,6 +112,13 @@ function SessionStoreService() {
 }
 
 SessionStoreService.prototype = {
+  classDescription: "Browser Session Store Service",
+  contractID: "@mozilla.org/browser/sessionstore;1",
+  classID: Components.ID("{5280606b-2510-4fe0-97ef-9b5a22eafe6b}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISessionStore,
+                                         Ci.nsIDOMEventListener,
+                                         Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
 
   // xul:tab attributes to (re)store (extensions might want to hook in here)
   xulAttributes: [],
@@ -2060,79 +2064,8 @@ SessionStoreService.prototype = {
     } else {
       stream.close();
     }
-  },
-
-/* ........ QueryInterface .............. */
-
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsISupports) && 
-      !aIID.equals(Ci.nsIObserver) && 
-      !aIID.equals(Ci.nsISupportsWeakReference) && 
-      !aIID.equals(Ci.nsIDOMEventListener) &&
-      !aIID.equals(Ci.nsISessionStore)) {
-      Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
-      return null;
-    }
-    
-    return this;
   }
 };
 
-/* :::::::: Service Registration & Initialization ::::::::::::::: */
-
-/* ........ nsIModule .............. */
-
-const SessionStoreModule = {
-
-  getClassObject: function(aCompMgr, aCID, aIID) {
-    if (aCID.equals(CID)) {
-      return SessionStoreFactory;
-    }
-    
-    Components.returnCode = Cr.NS_ERROR_NOT_REGISTERED;
-    return null;
-  },
-
-  registerSelf: function(aCompMgr, aFileSpec, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
-  },
-
-  unregisterSelf: function(aCompMgr, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CID, aLocation);
-  },
-
-  canUnload: function(aCompMgr) {
-    return true;
-  }
-}
-
-/* ........ nsIFactory .............. */
-
-const SessionStoreFactory = {
-
-  createInstance: function(aOuter, aIID) {
-    if (aOuter != null) {
-      Components.returnCode = Cr.NS_ERROR_NO_AGGREGATION;
-      return null;
-    }
-    
-    return (new SessionStoreService()).QueryInterface(aIID);
-  },
-
-  lockFactory: function(aLock) { },
-
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsISupports) && !aIID.equals(Ci.nsIFactory)) {
-      Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
-      return null;
-    }
-    
-    return this;
-  }
-};
-
-function NSGetModule(aComMgr, aFileSpec) {
-  return SessionStoreModule;
-}
+function NSGetModule(aComMgr, aFileSpec)
+  XPCOMUtils.generateModule([SessionStoreService]);
