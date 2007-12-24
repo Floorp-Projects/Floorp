@@ -1,0 +1,16 @@
+<html>
+<head>
+<script>
+function m()
+{
+  document.body.offsetHeight;
+  var parent = document.getElementById("parent");
+  parent.appendChild(document.createTextNode("i"));
+}
+</script>
+</head>
+
+<body onload="m();">
+<div id="div" style="font-size: 180px"><span>f</span><span id="parent"></span></div>
+</body>
+</html>
