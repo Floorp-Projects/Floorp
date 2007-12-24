@@ -21,6 +21,8 @@ include ../../dom/src/jsurl/crashtests/crashtests.list
 
 include ../../editor/libeditor/html/crashtests/crashtests.list
 
+include ../../js/src/xpconnect/crashtests/crashtests.list
+
 include ../../layout/base/crashtests/crashtests.list
 include ../../layout/forms/crashtests/crashtests.list
 include ../../layout/generic/crashtests/crashtests.list
