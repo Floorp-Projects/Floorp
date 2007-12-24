@@ -743,12 +743,6 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 {
   obj = GetWrapper(cx, obj);
 
-  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
-    *objp = obj;
-    return JS_DefineFunction(cx, obj, "toString",
-                             XPC_XOW_toString, 0, 0) != nsnull;
-  }
-
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
   if (!wrappedObj) {
     // No wrappedObj means that this is probably the prototype.
@@ -791,6 +785,24 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return XPCWrapper::ResolveNativeProperty(cx, obj, wrappedObj, wn, id,
                                              flags, objp, JS_FALSE);
 
+  }
+
+  if (id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
+    jsval oldSlotVal;
+    if (!::JS_GetReservedSlot(cx, obj, XPCWrapper::sResolvingSlot, &oldSlotVal) ||
+        !::JS_SetReservedSlot(cx, obj, XPCWrapper::sResolvingSlot, JSVAL_TRUE)) {
+      return JS_FALSE;
+    }
+
+    JSBool ok = JS_DefineFunction(cx, obj, "toString",
+                                  XPC_XOW_toString, 0, 0) != nsnull;
+
+    if (ok && (ok = ::JS_SetReservedSlot(cx, obj, XPCWrapper::sResolvingSlot,
+                                         oldSlotVal))) {
+      *objp = obj;
+    }
+
+    return ok;
   }
 
   return XPCWrapper::NewResolve(cx, obj, wrappedObj, id, flags, objp);
