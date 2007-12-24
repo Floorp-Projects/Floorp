@@ -742,12 +742,11 @@ CNavDTD::HandleToken(CToken* aToken, nsIParser* aParser)
         break;
     }
 
-    if (NS_SUCCEEDED(result) || NS_ERROR_HTMLPARSER_BLOCK == result) {
-       IF_FREE(theToken, mTokenAllocator);
-    } else if (result == NS_ERROR_HTMLPARSER_STOPPARSING) {
+    IF_FREE(theToken, mTokenAllocator);
+    if (result == NS_ERROR_HTMLPARSER_STOPPARSING) {
       mFlags |= NS_DTD_FLAG_STOP_PARSING;
-    } else {
-      return NS_OK;
+    } else if (NS_FAILED(result) && result != NS_ERROR_HTMLPARSER_BLOCK) {
+      result = NS_OK;
     }
   }
 
@@ -2015,12 +2014,6 @@ CNavDTD::HandleDocTypeDeclToken(CToken* aToken)
   nsresult result = mSink ? mSink->AddDocTypeDecl(*theNode) : NS_OK;
 
   IF_FREE(theNode, &mNodeAllocator);
-
-  // Hack for bug 395846, if we failed to add the node for whatever reason,
-  // then we need to free the token ourselves.
-  if (NS_FAILED(result) && result != NS_ERROR_HTMLPARSER_BLOCK) {
-    IF_FREE(aToken, mTokenAllocator);
-  }
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   START_TIMER();
