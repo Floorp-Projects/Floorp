@@ -464,6 +464,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 
 == 384762-1.html about:blank
 == 384876-1.html 384876-1-ref.html
 == 385533-1.html about:blank # assertion test
+== 385569-1a.html 385569-1-ref.html
+== 385569-1b.html 385569-1-ref.html
 == 385823-1.html 385823-1-ref.html 
 == 385823-2a.html 385823-2-ref.html 
 fails == 385823-2b.html 385823-2-ref.html 
