@@ -41,3 +41,5 @@ include ../../gfx/thebes/crashtests/crashtests.list
 include ../../security/manager/ssl/crashtests/crashtests.list
 
 include ../../view/crashtests/crashtests.list
+
+include ../../widget/src/cocoa/crashtests/crashtests.list
