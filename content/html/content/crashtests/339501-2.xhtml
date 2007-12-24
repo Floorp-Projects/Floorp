@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script>
+
+function boom()
+{
+  document.addEventListener("DOMNodeRemoved", foo, false);
+  remove(document.getElementById("B"));
+  document.removeEventListener("DOMNodeRemoved", foo, false);
+
+  function foo()
+  {
+    document.removeEventListener("DOMNodeRemoved", foo, false);
+    remove(document.getElementById("A"));
+  }
+}
+
+
+window.addEventListener("load", boom, false);
+
+function remove(q1) { q1.parentNode.removeChild(q1); }
+
+</script>
+
+</head>
+
+<body>
+
+<select><option id="A">A</option><option id="B">B</option></select>
+
+</body>
+</html>
