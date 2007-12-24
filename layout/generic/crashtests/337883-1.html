@@ -1,0 +1,20 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html class="reftest-wait">
+<head>
+<script>
+
+function foop()
+{
+  document.getElementById("xxx").style.height = "10%";
+  document.getElementById("yyy").style.position = "relative";
+  
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", function(){setTimeout(foop, 30)}, false);
+
+</script>
+</head>
+
+<body>--<a id="yyy"><IMG align="right"></a><br id="xxx">==</body></html>
+
