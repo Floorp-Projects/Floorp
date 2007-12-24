@@ -1,0 +1,20 @@
+<html>
+<head>
+<style>
+#z:first-letter { float: right; }
+</style>
+<script>
+function boom()
+{
+  var z = document.getElementById("z");
+  z.removeChild(z.firstChild);
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<div id="z">abc</div>
+
+</body>
+</html>
