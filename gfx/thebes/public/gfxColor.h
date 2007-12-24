@@ -73,8 +73,13 @@
 // Avoid tortured construction of 32-bit ARGB pixel from 3 individual bytes
 //   of memory plus constant 0xFF.  RGB bytes are already contiguous!
 // Equivalent to: GFX_PACKED_PIXEL(0xff,r,g,b)
-#define GFX_0XFF_PPIXEL_FROM_BPTR(pbptr) \
-   (GFX_BYTESWAP32(*((PRUint32 *)(pbptr))) >> 8) | (0xFF << 24)
+#ifndef IS_BIG_ENDIAN
+#  define GFX_0XFF_PPIXEL_FROM_BPTR(pbptr) \
+     (GFX_BYTESWAP32(*((PRUint32 *)(pbptr))) >> 8) | (0xFF << 24)
+#else
+#  define GFX_0XFF_PPIXEL_FROM_BPTR(pbptr) \
+     (*((PRUint32 *)(pbptr)) >> 8) | (0xFF << 24)
+#endif /* IS_BIG_ENDIAN */
 
 /**
  * Fast approximate division by 255. It has the property that
