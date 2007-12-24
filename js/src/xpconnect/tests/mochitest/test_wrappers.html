@@ -56,6 +56,13 @@
     } catch (e) {
         ok(false, "some crazy exception was thrown");
     }
+
+    // Some tests for SJOWs too.
+    is(new XPCSafeJSObjectWrapper(document.body) === document.body, true,
+       "triple equals ignores wrappers");
+    is(XPCSafeJSObjectWrapper.prototype + '',
+       "[object XPCSafeJSObjectWrapper]",
+       "able to convert XPCSafeJSObjectWrapper.prototype to string");
     </script>
 </body>
 </html>
