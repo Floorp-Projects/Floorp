@@ -35,8 +35,9 @@ load 369438-1.svg
 load 369438-2.svg
 load 371563-1.xhtml
 load 375775-1.svg
-skip load 380691-1.svg # crashes due to bug 408145
+skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") load 380691-1.svg # crashes due to bug 407099
 load 384391-1.xhtml
+skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") load 384637-1.svg # crashes due to bug 407099
 load 384728-1.svg
 load 385246-1.svg
 load 385246-2.svg
