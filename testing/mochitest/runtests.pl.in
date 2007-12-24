@@ -156,7 +156,7 @@ my $unixish = (!($is_win32) && !($is_mac));
 sub main {
   my ($close_when_done, $appoverride, $log_path, $autorun,
       $console_level, $file_level, $help, $do_chrome, $test_path,
-      $do_browser_chrome, %browser_env);
+      $do_browser_chrome, %browser_env, %browser_args);
   GetOptions("close-when-done!"=> \$close_when_done,
              "appname:s"=> \$appoverride,
              "log-file:s" => \$log_path,
@@ -167,6 +167,7 @@ sub main {
              "test-path:s" => \$test_path,
              "browser-chrome!" => \$do_browser_chrome,
              "setenv=s%" => \%browser_env,
+             "browser-arg=s%" => \%browser_args,
              "help!" => \$help);
 
   # if the switches include --help, exit and print directions
@@ -231,7 +232,7 @@ sub main {
     }
   }
   
-  my $test_start = runTests($url, \%browser_env);
+  my $test_start = runTests($url, \%browser_env, \%browser_args);
 
   if (!$do_browser_chrome) {
     shutdownServer($serverPid);
@@ -268,6 +269,7 @@ sub usage_and_exit {
   print "   [--log-file=/path/to/logfile] \\\n";
   print "   [--test-path=relative/path/to/tests] \\\n";
   print "   [--setenv=VAR=value] \\\n";  
+  print "   [--browser-arg=VAR=value] \\\n";
   print "   [--file-level=DEBUG|INFO|ERROR|FATAL|WARNING] \\\n";  
   print "   [--console-level=DEBUG|INFO|ERROR|FATAL|WARNING] \n\n";  
   exit(1);
@@ -575,7 +577,7 @@ sub kill_process {
  ##################
 
 sub runTests {
-  my ($test_url, $browser_env) = @_;
+  my ($test_url, $browser_env, $browser_args) = @_;
 
   # mark the start
   my $test_start = localtime();
@@ -605,10 +607,17 @@ sub runTests {
   my $rc = -1;
   if (!$is_mac) {
     my @runargs = ($app, '-no-remote', '-profile', $profile_arg);
+    if ($browser_args) {
+      foreach my $key (keys %$browser_args) {
+        push(@runargs, ($key,
+			$browser_args->{$key})
+	    );
+      }
+    }
     push(@runargs, $test_url);
     $rc = 0xffff & system @runargs;
   } else {
-    $rc = executeMac($profile_arg, $test_url);
+    $rc = executeMac($profile_arg, $test_url, $browser_args);
   }
 
   if ($rc != 0) {
@@ -619,7 +628,7 @@ sub runTests {
 }
 
 sub executeMac {
-  my ($profile_arg, $test_url) = @_;
+  my ($profile_arg, $test_url, $browser_args) = @_;
   my $pid = fork();
   if (not defined $pid) {
     die "cannot fork: $!";
@@ -629,6 +638,13 @@ sub executeMac {
         $app .= "-bin";
     }
     my @runargs = ($app, '-foreground', '-no-remote', '-profile', $profile_arg);
+    if ($browser_args) {
+      foreach my $key (keys %$browser_args) {     
+        push(@runargs, ($key,
+                        $browser_args->{$key})
+            );
+      }
+    }
     push(@runargs, $test_url);
     
     # redirect stderr to stdout for easier buildbot / tinderbox logging
