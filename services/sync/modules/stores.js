@@ -360,7 +360,7 @@ BookmarksStore.prototype = {
         item.title = node.title;
       }
       item.URI = node.uri;
-      item.tags = this._ts.getTagsForURI(makeURI(node.uri));
+      item.tags = this._ts.getTagsForURI(makeURI(node.uri), {});
       item.keyword = this._bms.getKeywordForBookmark(node.itemId);
     } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
       item.type = "separator";
