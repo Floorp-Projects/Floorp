@@ -65,6 +65,9 @@ var PlacesCommandHook = {
   _blockCommands: function PCH__blockCommands() {
     for each(var key in this._blockedCommands) {
       var elt = document.getElementById(key);
+      // make sure not to permanently disable this item (see bug 409155)
+      if (elt.hasAttribute("wasDisabled"))
+        continue;
       if (elt.getAttribute("disabled") == "true")
         elt.setAttribute("wasDisabled", "true");
       else {
