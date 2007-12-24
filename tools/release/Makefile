@@ -1,5 +1,6 @@
 test:
-	for f in release t/test.pl `find . -name "*.pm"`; do perl -c $$f; done
+	for f in release t/test.pl `find . -name "*.pm"`; do \
+	perl -c $$f || exit $?; done
 	if [ -f t/test.log ]; then rm t/test.log; fi
 	if [ ! -f bootstrap.cfg ]; then cp bootstrap.cfg.example bootstrap.cfg; fi
 	cp t/tinder-config.pl.orig t/tinder-config.pl
