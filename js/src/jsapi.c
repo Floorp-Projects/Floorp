@@ -904,8 +904,8 @@ JS_EndRequest(JSContext *cx)
              * If js_DropObjectMap returns null, we held the last ref to scope.
              * The waiting thread(s) must have been killed, after which the GC
              * collected the object that held this scope.  Unlikely, because it
-             * requires that the GC ran (e.g., from a branch callback) during
-             * this request, but possible.
+             * requires that the GC ran (e.g., from an operation callback)
+             * during this request, but possible.
              */
             if (js_DropObjectMap(cx, &scope->map, NULL)) {
                 js_InitLock(&scope->lock);
@@ -4929,13 +4929,79 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
     return ok;
 }
 
+JS_PUBLIC_API(void)
+JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
+                        uint32 operationLimit)
+{
+    JS_ASSERT(callback);
+    JS_ASSERT(operationLimit <= JS_MAX_OPERATION_LIMIT);
+    JS_ASSERT(operationLimit > 0);
+
+    cx->operationCount = (int32) operationLimit;
+    cx->operationLimit = operationLimit;
+    cx->operationCallbackIsSet = 1;
+    cx->operationCallback = callback;
+}
+
+JS_PUBLIC_API(void)
+JS_ClearOperationCallback(JSContext *cx)
+{
+    cx->operationCount = (int32) JS_MAX_OPERATION_LIMIT;
+    cx->operationLimit = JS_MAX_OPERATION_LIMIT;
+    cx->operationCallbackIsSet = 0;
+    cx->operationCallback = NULL;
+}
+
+JS_PUBLIC_API(JSOperationCallback)
+JS_GetOperationCallback(JSContext *cx)
+{
+    JS_ASSERT(cx->operationCallbackIsSet || !cx->operationCallback);
+    return cx->operationCallback;
+}
+
+JS_PUBLIC_API(uint32)
+JS_GetOperationLimit(JSContext *cx)
+{
+    JS_ASSERT(cx->operationCallbackIsSet);
+    return cx->operationLimit;
+}
+
+JS_PUBLIC_API(void)
+JS_SetOperationLimit(JSContext *cx, uint32 operationLimit)
+{
+    JS_ASSERT(operationLimit <= JS_MAX_OPERATION_LIMIT);
+    JS_ASSERT(operationLimit > 0);
+    JS_ASSERT(cx->operationCallbackIsSet);
+
+    cx->operationLimit = operationLimit;
+    if (cx->operationCount > (int32) operationLimit)
+        cx->operationCount = (int32) operationLimit;
+}
+
 JS_PUBLIC_API(JSBranchCallback)
 JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb)
 {
     JSBranchCallback oldcb;
 
-    oldcb = cx->branchCallback;
-    cx->branchCallback = cb;
+    if (cx->operationCallbackIsSet) {
+#ifdef DEBUG
+        fprintf(stderr,
+"JS API usage error: call to JS_SetOperationCallback is followed by\n"
+"invocation of deprecated JS_SetBranchCallback\n");
+        JS_ASSERT(0);
+#endif
+        cx->operationCallbackIsSet = 0;
+        oldcb = NULL;
+    } else {
+        oldcb = (JSBranchCallback) cx->operationCallback;
+    }
+    if (cb) {
+        cx->operationCount = JSOW_SCRIPT_JUMP;
+        cx->operationLimit = JSOW_SCRIPT_JUMP;
+        cx->operationCallback = (JSOperationCallback) cb;
+    } else {
+        JS_ClearOperationCallback(cx);
+    }
     return oldcb;
 }
 
