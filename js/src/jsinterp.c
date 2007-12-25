@@ -1983,9 +1983,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
      */
 #define CHECK_BRANCH(len)                                                     \
     JS_BEGIN_MACRO                                                            \
-        if (len <= 0 && cx->branchCallback) {                                 \
+        if (len <= 0 && (cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {      \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!(ok = cx->branchCallback(cx, script)))                       \
+            ok = js_ResetOperationCount(cx);                                  \
+            if (!ok)                                                          \
                 goto out;                                                     \
         }                                                                     \
     JS_END_MACRO
@@ -2323,9 +2324,6 @@ interrupt:
                 depth = (jsint) script->depth;
                 atoms = script->atomMap.vector;
                 pc = fp->pc;
-#if !JS_THREADED_INTERP
-                endpc = script->code + script->length;
-#endif
 
                 /* Store the generating pc for the return value. */
                 vp[-depth] = (jsval)pc;
@@ -3773,9 +3771,6 @@ interrupt:
                     /* Push the frame and set interpreter registers. */
                     cx->fp = fp = &newifp->frame;
                     pc = script->code;
-#if !JS_THREADED_INTERP
-                    endpc = pc + script->length;
-#endif
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
 
