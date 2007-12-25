@@ -49,7 +49,7 @@
 
 pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);
-pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
+pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
@@ -802,32 +802,31 @@ pref("network.proxy.autoconfig_retry_interval_max", 300);  // 5 minutes
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 
-pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
+pref("intl.accept_languages",               "chrome://global/locale/intl.properties");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
-pref("intl.menuitems.alwaysappendaccesskeys","chrome://navigator/locale/navigator.properties");
-pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.static",     "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more1",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more2",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more3",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more4",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more5",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.unicode",    "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.mailedit",           "chrome://navigator/locale/navigator.properties");
+pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
+pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.static",     "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more1",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more2",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more3",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more4",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more5",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.unicode",    "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.mailedit",           "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.cache",      "");
 pref("intl.charsetmenu.mailview.cache",     "");
 pref("intl.charsetmenu.composer.cache",     "");
 pref("intl.charsetmenu.browser.cache.size", 5);
-pref("intl.charset.detector",               "chrome://navigator/locale/navigator.properties");
-pref("intl.charset.default",                "chrome://navigator-platform/locale/navigator.properties");
-pref("intl.content.langcode",               "chrome://communicator-region/locale/region.properties");
+pref("intl.charset.detector",               "chrome://global/locale/intl.properties");
+pref("intl.charset.default",                "chrome://global-platform/locale/intl.properties");
 pref("intl.ellipsis",                       "chrome://global-platform/locale/intl.properties");
 pref("intl.locale.matchOS",                 false);
 // fallback charset list for Unicode conversion (converting from Unicode)
 // currently used for mail send only to handle symbol characters (e.g Euro, trademark, smartquotes)
 // for ISO-8859-1
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
-pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
+pref("font.language.group",                 "chrome://global/locale/intl.properties");
 
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Cambria Math, Standard Symbols L, DejaVu Sans");
 
