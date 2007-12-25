@@ -1944,10 +1944,10 @@ nsCanvasRenderingContext2D::DrawImage()
         goto FINISH;
     }
 
-    if (!FloatValidate(sx,sy,sw,sh))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-    if (!FloatValidate(dx,dy,dw,dh))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    if (!FloatValidate(sx,sy,sw,sh) || !FloatValidate(dx,dy,dw,dh))
+        rv = NS_ERROR_DOM_SYNTAX_ERR;
+        goto FINISH;
+    }
 
     // check args
     if (sx < 0.0 || sy < 0.0 ||
