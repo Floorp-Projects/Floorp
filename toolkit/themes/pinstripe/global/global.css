@@ -244,13 +244,14 @@ browser {
   padding: 0;
   background-image: url("chrome://global/skin/icons/autoscroll.png");
   background-color: transparent;
+  background-position: right top;
   -moz-appearance: none;
 }
 
 #autoscroller[scrolldir="NS"] {
-  background-position: left center;
+  background-position: right center;
 }
 
 #autoscroller[scrolldir="EW"] {
-  background-position: left bottom;
+  background-position: right bottom;
 }
