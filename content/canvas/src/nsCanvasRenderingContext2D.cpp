@@ -1944,7 +1944,7 @@ nsCanvasRenderingContext2D::DrawImage()
         goto FINISH;
     }
 
-    if (!FloatValidate(sx,sy,sw,sh) || !FloatValidate(dx,dy,dw,dh))
+    if (!FloatValidate(sx,sy,sw,sh) || !FloatValidate(dx,dy,dw,dh)) {
         rv = NS_ERROR_DOM_SYNTAX_ERR;
         goto FINISH;
     }
