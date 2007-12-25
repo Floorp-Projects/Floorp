@@ -44,7 +44,6 @@
 
 #include "nsCOMPtr.h" // for already_AddRefed
 #include "plhash.h"
-#include "prlog.h"
 #include "nsAutoPtr.h"
 
 class nsIAtom;
