@@ -81,8 +81,8 @@ class NS_GFX nsRegion
     RgnRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRectFast (aX, aY, aWidth, aHeight) {}
     RgnRect (const nsRectFast& aRect) : nsRectFast (aRect) {}
 
-    inline void* operator new (size_t) CPP_THROW_NEW;
-    inline void  operator delete (void* aRect, size_t);
+    void* operator new (size_t) CPP_THROW_NEW;
+    void  operator delete (void* aRect, size_t);
 
     RgnRect& operator = (const RgnRect& aRect)      // Do not overwrite prev/next pointers
     {
