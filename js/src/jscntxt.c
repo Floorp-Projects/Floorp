@@ -232,6 +232,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
+    JS_ClearOperationCallback(cx);
     cx->debugHooks = &rt->globalDebugHooks;
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword)-1;
@@ -1309,10 +1310,26 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 }
 
 JSBool
-js_ResetOperationCounter(JSContext *cx)
+js_ResetOperationCount(JSContext *cx)
 {
-    JS_ASSERT(cx->operationCounter & JSOW_BRANCH_CALLBACK);
+    JSScript *script;
 
-    cx->operationCounter = 0;
-    return !cx->branchCallback || cx->branchCallback(cx, NULL);
+    JS_ASSERT(cx->operationCount <= 0);
+    JS_ASSERT(cx->operationLimit > 0);
+
+    cx->operationCount = (int32) cx->operationLimit;
+    if (cx->operationCallbackIsSet)
+        return cx->operationCallback(cx);
+
+    if (cx->operationCallback) {
+        /*
+         * Invoke the deprecated branch callback. It may be called only when
+         * the top-most frame is scripted or JSOPTION_NATIVE_BRANCH_CALLBACK
+         * is set.
+         */
+        script = cx->fp ? cx->fp->script : NULL;
+        if (script || JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK))
+            return ((JSBranchCallback) cx->operationCallback)(cx, script);
+    }
+    return JS_TRUE;
 }
