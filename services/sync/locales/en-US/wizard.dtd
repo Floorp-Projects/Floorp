@@ -16,7 +16,7 @@
 <!ENTITY step3.counter                    "Step 3 of 5">
 <!ENTITY step3.title                      "Account Details">
 <!ENTITY step3.description                "Please enter the Weave account details and click the &quot;Verify&quot; button to validate before proceeding.">
-<!ENTITY username.label                   "Username:">
+<!ENTITY username.label                   "Email:">
 <!ENTITY password.label                   "Password:">
 <!ENTITY encryptionPassphrase.description "You must also now choose an encryption passphrase that is different from your password. This will be used to protect your data on the server.">
 <!ENTITY encryptionPassphrase.label       "Encryption Passphrase:">
