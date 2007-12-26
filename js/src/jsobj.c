@@ -558,8 +558,11 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     char buf[20];
     size_t len;
 
-    if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_ENTER_SHARP))
+    if (JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
+        cx->branchCallback &&
+        !cx->branchCallback(cx, NULL)) {
         return NULL;
+    }
 
     /* Set to null in case we return an early error. */
     *sp = NULL;
