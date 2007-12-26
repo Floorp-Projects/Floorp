@@ -105,7 +105,10 @@ DAVCollection.prototype = {
 
       let key;
       for (key in headers) {
-        this._log.debug("HTTP Header " + key + ": " + headers[key]);
+        if (key == 'Authentication')
+          this._log.debug("HTTP Header " + key + ": (supressed)");
+        else
+          this._log.debug("HTTP Header " + key + ": " + headers[key]);
         request.setRequestHeader(key, headers[key]);
       }
   
