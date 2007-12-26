@@ -236,11 +236,12 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI * aURL)
   NS_NAMED_LITERAL_CSTRING(group, "%group%");
   NS_NAMED_LITERAL_CSTRING(msgid, "%msgid%");
   NS_NAMED_LITERAL_CSTRING(channel, "%channel%");
-  
+
+  PRBool replaced = PR_FALSE;
   if (applicationName.IsEmpty() && parameters.IsEmpty()) {
     /* Put application name in parameters */
     applicationName.Append(prefString);
-  
+
     prefName.Append(".");
     nsCOMPtr<nsIPrefBranch> prefBranch;
     rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
@@ -250,7 +251,7 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI * aURL)
       if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
         parameters.Append(" ");
         parameters.Append(prefString);
-  
+
         PRInt32 pos = parameters.Find(url.get());
         if (pos != kNotFound) {
           nsCAutoString uURL;
@@ -258,6 +259,7 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI * aURL)
           NS_UnescapeURL(uURL);
           uURL.Cut(0, uProtocol.Length()+1);
           parameters.Replace(pos, url.Length(), uURL);
+          replaced = PR_TRUE;
         }
       } else {
         /* port */
@@ -306,9 +308,8 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI * aURL)
   printf("uEmail=%s\n", uEmail.get());
   printf("uGroup=%s\n", uGroup.get());
 #endif
-  
+
   PRInt32 pos;
-  PRBool replaced = PR_FALSE;
   pos = parameters.Find(url.get());
   if (pos != kNotFound) {
     replaced = PR_TRUE;
@@ -386,7 +387,7 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI * aURL)
        if (NS_FAILED(rv)) {
          return rv;
        }
-  
+
        params[0] = "/c";
        params[1] = applicationName.get();
        params[2] = parameters.get();
