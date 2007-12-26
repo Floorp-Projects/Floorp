@@ -57,9 +57,21 @@ check_updates () {
     return 1
   fi
 
-  diff -r \
-    -x installed-chrome.txt \
-    -x removed-files \
-    source/$platform_dirname target/$platform_dirname 
-  return $?
+  diff -r source/$platform_dirname target/$platform_dirname  > results.diff
+  err=$?
+  cat results.diff
+  grep '^Binary files' results.diff > /dev/null
+  if [ $? == 0 ]
+  then
+    echo "FAIL: binary files found in diff"
+    return 1
+  elif [ -s results.diff ]
+  then
+    echo "WARN: non-binary files found in diff"
+    return 2
+  else
+    # unknown error
+    echo "FAIL: Unknown error from diff exit code: $err"
+    return 3
+  fi
 }
