@@ -491,25 +491,27 @@ nsHTMLOptionElement::Initialize(nsISupports* aOwner,
     if (argc > 1) {
       // The second (optional) parameter is the value of the option
       jsstr = JS_ValueToString(aContext, argv[1]);
-      if (nsnull != jsstr) {
-        // Set the value attribute for this element
-        nsAutoString value(reinterpret_cast<const PRUnichar*>
-                                           (JS_GetStringChars(jsstr)));
+      if (!jsstr) {
+        return NS_ERROR_FAILURE;
+      }
 
-        result = SetAttr(kNameSpaceID_None, nsGkAtoms::value, value,
-                         PR_FALSE);
-        if (NS_FAILED(result)) {
-          return result;
-        }
+      // Set the value attribute for this element
+      nsAutoString value(reinterpret_cast<const PRUnichar*>
+                                         (JS_GetStringChars(jsstr)));
+
+      result = SetAttr(kNameSpaceID_None, nsGkAtoms::value, value,
+                       PR_FALSE);
+      if (NS_FAILED(result)) {
+        return result;
       }
 
       if (argc > 2) {
         // The third (optional) parameter is the defaultSelected value
         JSBool defaultSelected;
-        if ((JS_TRUE == JS_ValueToBoolean(aContext,
-                                          argv[2],
-                                          &defaultSelected)) &&
-            (JS_TRUE == defaultSelected)) {
+        if (!JS_ValueToBoolean(aContext, argv[2], &defaultSelected)) {
+            return NS_ERROR_FAILURE;
+        }
+        if (defaultSelected) {
           result = SetAttr(kNameSpaceID_None, nsGkAtoms::selected,
                            EmptyString(), PR_FALSE);
           NS_ENSURE_SUCCESS(result, result);
@@ -518,11 +520,11 @@ nsHTMLOptionElement::Initialize(nsISupports* aOwner,
         // XXX This is *untested* behavior.  Should work though.
         if (argc > 3) {
           JSBool selected;
-          if (JS_TRUE == JS_ValueToBoolean(aContext,
-                                           argv[3],
-                                           &selected)) {
-            return SetSelected(selected);
+          if (!JS_ValueToBoolean(aContext, argv[3], &selected)) {
+            return NS_ERROR_FAILURE;
           }
+
+          return SetSelected(selected);
         }
       }
     }
