@@ -644,12 +644,6 @@ typedef void
 (* JS_DLL_CALLBACK JSTraceDataOp)(JSTracer *trc, void *data);
 
 typedef JSBool
-(* JS_DLL_CALLBACK JSOperationCallback)(JSContext *cx);
-
-/*
- * Deprecated form of JSOperationCallback.
- */
-typedef JSBool
 (* JS_DLL_CALLBACK JSBranchCallback)(JSContext *cx, JSScript *script);
 
 typedef void

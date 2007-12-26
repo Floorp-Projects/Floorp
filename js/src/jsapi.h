@@ -563,10 +563,7 @@ JS_StringToVersion(const char *string);
                                                    JS_SetBranchCallback may be
                                                    called with a null script
                                                    parameter, by native code
-                                                   that loops intensively.
-                                                   Deprecated, use
-                                                   JS_SetOperationCallback
-                                                   instead */
+                                                   that loops intensively */
 #define JSOPTION_DONT_REPORT_UNCAUGHT \
                                 JS_BIT(8)       /* When returning from the
                                                    outermost API call, prevent
@@ -2097,56 +2094,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval);
 
-/*
- * The maximum value of the operation limit to pass to JS_SetOperationCallback
- * and JS_SetOperationLimit.
- */
-#define JS_MAX_OPERATION_LIMIT ((uint32) 0x7FFFFFFF)
-
-/*
- * Set the operation callback that the engine calls periodically after
- * the internal operation count reaches the specified limit.
- *
- * When operationLimit is 1000, the callback will be called at least after
- * each backward jump in the interpreter. To minimize the overhead of the
- * callback invocation we suggest at least 100*1000 as a value for
- * operationLimit.
- */
-extern JS_PUBLIC_API(void)
-JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
-                        uint32 operationLimit);
-
-extern JS_PUBLIC_API(void)
-JS_ClearOperationCallback(JSContext *cx);
-
-extern JS_PUBLIC_API(JSOperationCallback)
-JS_GetOperationCallback(JSContext *cx);
-
-/*
- * Get the operation limit associated with the operation callback. This API
- * function may be called only when the result of JS_GetOperationCallback(cx)
- * is not null.
- */
-extern JS_PUBLIC_API(uint32)
-JS_GetOperationLimit(JSContext *cx);
-
-/*
- * Change the operation limit associated with the operation callback. This API
- * function may be called only when the result of JS_GetOperationCallback(cx)
- * is not null.
- */
-extern JS_PUBLIC_API(void)
-JS_SetOperationLimit(JSContext *cx, uint32 operationLimit);
-
-/*
- * Note well: JS_SetBranchCallback is deprecated. It is similar to
- *
- *   JS_SetOperationCallback(cx, callback, 1000, NULL);
- *
- * except that the callback will not be called from a long-running native
- * function when JSOPTION_NATIVE_BRANCH_CALLBACK is not set and the top-most
- * frame is native.
- */
 extern JS_PUBLIC_API(JSBranchCallback)
 JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb);
 
@@ -2307,12 +2254,12 @@ JS_PUBLIC_API(JSBool)
 JS_CStringsAreUTF8(void);
 
 /*
- * Update the value to be returned by JS_CStringsAreUTF8(). Once set, it
- * can never be changed. This API must be called before the first call to
+ * Update the value to be returned by JS_CStringsAreUTF8().  Once set,
+ * it can not be changed.  Must be called before the first call to 
  * JS_NewRuntime.
  */
 JS_PUBLIC_API(void)
-JS_SetCStringsAreUTF8(void);
+JS_SetCStringsAreUTF8();
 
 /*
  * Character encoding support.

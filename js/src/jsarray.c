@@ -1250,10 +1250,9 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
             goto out;
         if (!all_strings) {
             /*
-             * We want to make the following loop fast and to unroot the
-             * cached results of toString invocations before the operation
-             * callback has a chance to run the GC. For this reason we do
-             * not call JS_CHECK_OPERATION_LIMIT in the loop.
+             * Do not call the branch callback in the following moving loop
+             * to make it fast and unroot the cached results of toString
+             * invocations before the callback has a chance to run the GC.
              */
             i = 0;
             do {
