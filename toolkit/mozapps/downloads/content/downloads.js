@@ -107,7 +107,7 @@ let gStr = {
 // Create a getDisplayHost function for queries to use
 gDownloadManager.DBConnection.createFunction("getDisplayHost", 1, {
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIStorageFunction]),
-  onFunctionCall: function(aArgs) getDisplayHost(aArgs.getUTF8String(0))
+  onFunctionCall: function(aArgs) getHost(aArgs.getUTF8String(0))[0]
 });
 
 // The statement to query for downloads that are active or match the search
@@ -787,6 +787,7 @@ function createDownloadItem(aAttrs)
  */
 function updateStatus(aItem, aDownload) {
   let status = "";
+  let statusTip = "";
 
   let state = Number(aItem.getAttribute("state"));
   switch (state) {
@@ -893,15 +894,17 @@ function updateStatus(aItem, aDownload) {
         status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
       }
 
-      let (displayHost = getDisplayHost(getReferrerOrSource(aItem))) {
-        // Insert 2 is the eTLD + 1 or other variations of the host
-        status = replaceInsert(status, 2, displayHost);
-      }
+      let [displayHost, fullHost] = getHost(getReferrerOrSource(aItem));
+      // Insert 2 is the eTLD + 1 or other variations of the host
+      status = replaceInsert(status, 2, displayHost);
+      // Set the tooltip to be the full host
+      statusTip = fullHost;
 
       break;
   }
 
   aItem.setAttribute("status", status);
+  aItem.setAttribute("statusTip", statusTip != "" ? statusTip : status);
 }
 
 /**
@@ -993,9 +996,9 @@ function convertByteUnits(aBytes)
  *
  * @param aURIString
  *        The URI string to try getting an eTLD + 1, etc.
- * @returns The display host for the provided URI string
+ * @return a pair: [display host for the provided URI string, full host name]
  */
-function getDisplayHost(aURIString)
+function getHost(aURIString)
 {
   let ioService = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
@@ -1011,6 +1014,14 @@ function getDisplayHost(aURIString)
   if (uri instanceof Ci.nsINestedURI)
     uri = uri.innermostURI;
 
+  let fullHost;
+  try {
+    // Get the full host name; some special URIs fail (data: jar:)
+    fullHost = uri.host;
+  } catch (e) {
+    fullHost = "";
+  }
+
   let displayHost;
   try {
     // This might fail if it's an IP address or doesn't have more than 1 part
@@ -1019,27 +1030,27 @@ function getDisplayHost(aURIString)
     // Convert base domain for display; ignore the isAscii out param
     displayHost = idnService.convertToDisplayIDN(baseDomain, {});
   } catch (e) {
-    try {
-      // Default to the host name; some special URIs fail (data: jar:)
-      displayHost = uri.host;
-    } catch (e) {
-      displayHost = "";
-    }
+    // Default to the host name
+    displayHost = fullHost;
   }
 
   // Check if we need to show something else for the host
   if (uri.scheme == "file") {
     // Display special text for file protocol
     displayHost = gStr.doneFileScheme;
+    fullHost = displayHost;
   } else if (displayHost.length == 0) {
     // Got nothing; show the scheme (data: about: moz-icon:)
     displayHost = replaceInsert(gStr.doneScheme, 1, uri.scheme);
+    fullHost = displayHost;
   } else if (uri.port != -1) {
     // Tack on the port if it's not the default port
-    displayHost += ":" + uri.port;
+    let port = ":" + uri.port;
+    displayHost += port;
+    fullHost += port;
   }
 
-  return displayHost;
+  return [displayHost, fullHost];
 }
 
 function replaceInsert(aText, aIndex, aValue)
