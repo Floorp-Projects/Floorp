@@ -143,7 +143,7 @@
             <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
                         command="cmd_cancel" ondblclick="event.stopPropagation();"/>
           </xul:hbox>
-          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
+          <xul:label xbl:inherits="value=status,tooltiptext=statusTip" flex="1"
                      crop="right" class="status"/>
           <xul:spacer flex="1"/>
         </xul:vbox>
@@ -172,7 +172,7 @@
             <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
                         command="cmd_cancel" ondblclick="event.stopPropagation();"/>
           </xul:hbox>
-          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
+          <xul:label xbl:inherits="value=status,tooltiptext=statusTip" flex="1"
                      crop="right" class="status"/>
           <xul:spacer flex="1"/>
         </xul:vbox>
@@ -195,7 +195,7 @@
                        class="dateTime"/>
           </xul:hbox>
           <xul:hbox align="center" flex="1">
-            <xul:label xbl:inherits="value=status,tooltiptext=status"
+            <xul:label xbl:inherits="value=status,tooltiptext=statusTip"
                        crop="end" flex="1" class="status"/>
           </xul:hbox>
         </xul:vbox>
@@ -218,7 +218,7 @@
                        class="dateTime"/>
           </xul:hbox>
           <xul:hbox align="center" flex="1">
-            <xul:label xbl:inherits="value=status,tooltiptext=status"
+            <xul:label xbl:inherits="value=status,tooltiptext=statusTip"
                        crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry" ondblclick="event.stopPropagation();"/>
@@ -243,7 +243,7 @@
                        class="dateTime"/>
           </xul:hbox>
           <xul:hbox align="center" flex="1">
-            <xul:label xbl:inherits="value=status,tooltiptext=status"
+            <xul:label xbl:inherits="value=status,tooltiptext=statusTip"
                        crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry" ondblclick="event.stopPropagation();"/>
@@ -267,7 +267,7 @@
                        class="dateTime"/>
           </xul:hbox>
           <xul:hbox align="center" flex="1">
-            <xul:label xbl:inherits="value=status,tooltiptext=status"
+            <xul:label xbl:inherits="value=status,tooltiptext=statusTip"
                        crop="end" flex="1" class="status"/>
           </xul:hbox>
         </xul:vbox>
@@ -311,7 +311,7 @@
                        class="dateTime"/>
           </xul:hbox>
           <xul:hbox align="center" flex="1">
-            <xul:label xbl:inherits="value=status,tooltiptext=status"
+            <xul:label xbl:inherits="value=status,tooltiptext=statusTip"
                        crop="end" flex="1" class="status"/>
           </xul:hbox>
         </xul:vbox>
