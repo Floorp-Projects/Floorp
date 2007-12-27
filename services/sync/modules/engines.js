@@ -519,18 +519,20 @@ Engine.prototype = {
           this._dav.GET(this.snapshotFile, cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download snapshot.");
-          snap.data = Crypto.PBEdecrypt(resp.responseText,
-					this._cryptoId,
-					status.snapEncryption);
+          let data = Crypto.PBEdecrypt(resp.responseText,
+				       this._cryptoId,
+				       status.snapEncryption);
+          snap.data = eval(data);
 
           this._log.info("Downloading server deltas");
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download deltas.");
-          allDeltas = Crypto.PBEdecrypt(resp.responseText,
-					this._cryptoId,
-					status.deltasEncryption);
-          deltas = eval(uneval(allDeltas));
+          data = Crypto.PBEdecrypt(resp.responseText,
+				   this._cryptoId,
+				   status.deltasEncryption);
+          allDeltas = eval(data);
+          deltas = eval(data);
   
         } else if (this._snapshot.version >= status.snapVersion &&
                    this._snapshot.version < status.maxVersion) {
@@ -540,9 +542,10 @@ Engine.prototype = {
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download deltas.");
-          allDeltas = Crypto.PBEdecrypt(resp.responseText,
-					this._cryptoId,
-					status.deltasEncryption);
+          let data = Crypto.PBEdecrypt(resp.responseText,
+				       this._cryptoId,
+				       status.deltasEncryption);
+          allDeltas = eval(data);
           deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
   
         } else if (this._snapshot.version == status.maxVersion) {
@@ -553,9 +556,10 @@ Engine.prototype = {
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download deltas.");
-          allDeltas = Crypto.PBEdecrypt(resp.responseText,
-					this._cryptoId,
-					status.deltasEncryption);
+          let data = Crypto.PBEdecrypt(resp.responseText,
+				       this._cryptoId,
+				       status.deltasEncryption);
+          allDeltas = eval(data);
           deltas = [];
   
         } else { // this._snapshot.version > status.maxVersion
