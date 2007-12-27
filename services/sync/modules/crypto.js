@@ -64,9 +64,7 @@ WeaveCrypto.prototype = {
   __xxxteaLoaded: false,
   get _xxxtea() {
     if (!this.__xxxteaLoaded) {
-      let jsLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-        getService(Ci.mozIJSSubScriptLoader);
-      jsLoader.loadSubScript("chrome://weave/content/encrypt.js", this.__xxxtea);
+      Cu.import("resource://weave/xxxtea.js", this.__xxxtea);
       this.__xxxteaLoaded = true;
     }
     return this.__xxxtea;
@@ -129,48 +127,56 @@ WeaveCrypto.prototype = {
   // Crypto
 
   PBEencrypt: function Crypto_PBEencrypt(data, identity, algorithm) {
-    let out;
     if (!algorithm)
       algorithm = this.defaultAlgorithm;
-    switch (algorithm) {
-    case "none":
-      out = data;
-      break;
-    case "XXXTEA":
-      try {
-        this._log.debug("Encrypting data");
+
+    if (algorithm == "none") // check to skip the 'encrypting data' log msgs
+      return data;
+
+    let out;
+    try {
+      this._log.debug("Encrypting data");
+
+      switch (algorithm) {
+      case "XXXTEA":
         out = this._xxxtea.encrypt(data, identity.password);
-        this._log.debug("Done encrypting data");
-      } catch (e) {
-        this._log.error("Data encryption failed: " + e);
-        throw 'encrypt failed';
+        break;
+      default:
+        throw "Unknown encryption algorithm: " + algorithm;
       }
-      break;
-    default:
-      this._log.error("Unknown encryption algorithm: " + algorithm);
+
+      this._log.debug("Done encrypting data");
+
+    } catch (e) {
+      this._log.error("Data encryption failed: " + e);
       throw 'encrypt failed';
     }
     return out;
   },
 
   PBEdecrypt: function Crypto_PBEdecrypt(data, identity, algorithm) {
+    if (!algorithm)
+      algorithm = this.defaultAlgorithm;
+
+    if (algorithm == "none") // check to skip the 'decrypting data' log msgs
+      return data;
+
     let out;
-    switch (algorithm) {
-    case "none":
-      out = eval(data);
-      break;
-    case "XXXTEA":
-      try {
-        this._log.debug("Decrypting data");
-        out = eval(this._xxxtea.decrypt(data, identity.password));
-        this._log.debug("Done decrypting data");
-      } catch (e) {
-        this._log.error("Data decryption failed: " + e);
-        throw 'decrypt failed';
+    try {
+      this._log.debug("Decrypting data");
+
+      switch (algorithm) {
+      case "XXXTEA":
+        out = this._xxxtea.decrypt(data, identity.password);
+        break;
+      default:
+        throw "Unknown encryption algorithm: " + algorithm;
       }
-      break;
-    default:
-      this._log.error("Unknown encryption algorithm: " + algorithm);
+
+      this._log.debug("Done decrypting data");
+
+    } catch (e) {
+      this._log.error("Data decryption failed: " + e);
       throw 'decrypt failed';
     }
     return out;
