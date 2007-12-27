@@ -136,6 +136,7 @@ EXPORTS		= \
 		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
+		jsdtoa.h \
 		jsemit.h \
 		jsfun.h \
 		jsgc.h \
