@@ -314,10 +314,6 @@ WeaveSyncService.prototype = {
 	return;
       }
 
-      this._log.debug("USERNAME: " + this.username);
-      this._log.debug("PASSWORD: " + this.password);
-      this._log.debug("PASSPHRASE: " + this.passphrase);
-
       this._dav.baseURL = this._serverURL + "user/" + this.userPath + "/";
       this._log.info("Using server URL: " + this._dav.baseURL);
 
