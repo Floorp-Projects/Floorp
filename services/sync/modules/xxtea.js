@@ -43,26 +43,46 @@
 
 const EXPORTED_SYMBOLS = ['encrypt', 'decrypt'];
 
+function Paused() {
+}
+Paused.prototype = {
+  toString: function Paused_toString() {
+    return "[Generator Paused]";
+  }
+}
+
 // use (16 chars of) 'password' to encrypt 'plaintext'
+//
+// note1:this is a generator so the caller can pause and give control
+// to the UI thread
+//
+// note2: if plaintext or password are passed as string objects, rather
+// than strings, this function will throw an 'Object doesn't support
+// this property or method' error
 
 function encrypt(plaintext, password) {
   var v = new Array(2), k = new Array(4), s = "", i;
 
-  plaintext = escape(plaintext);  // use escape() so only have single-byte chars to encode 
+  // use escape() so only have single-byte chars to encode 
+  plaintext = escape(plaintext);
 
   // build key directly from 1st 16 chars of password
-  for (var i=0; i<4; i++) k[i] = Str4ToLong(password.slice(i*4,(i+1)*4));
+  for (i = 0; i < 4; i++)
+    k[i] = Str4ToLong(password.slice(i * 4, (i + 1) * 4));
 
-  for (i=0; i<plaintext.length; i+=8) {  // encode plaintext into s in 64-bit (8 char) blocks
-    v[0] = Str4ToLong(plaintext.slice(i,i+4));  // ... note this is 'electronic codebook' mode
-    v[1] = Str4ToLong(plaintext.slice(i+4,i+8));
+  for (i = 0; i < plaintext.length; i += 8) {
+    // encode plaintext into s in 64-bit (8 char) blocks
+    // ... note this is 'electronic codebook' mode
+    v[0] = Str4ToLong(plaintext.slice(i, i + 4));
+    v[1] = Str4ToLong(plaintext.slice(i + 4, i + 8));
     code(v, k);
     s += LongToStr4(v[0]) + LongToStr4(v[1]);
+
+    if (i % 512 == 0)
+      yield new Paused();
   }
 
-  return escCtrlCh(s);
-  // note: if plaintext or password are passed as string objects, rather than strings, this
-  // function will throw an 'Object doesn't support this property or method' error
+  yield escCtrlCh(s);
 }
 
 // use (16 chars of) 'password' to decrypt 'ciphertext' with xTEA
@@ -70,20 +90,25 @@ function encrypt(plaintext, password) {
 function decrypt(ciphertext, password) {
   var v = new Array(2), k = new Array(4), s = "", i;
 
-  for (var i=0; i<4; i++) k[i] = Str4ToLong(password.slice(i*4,(i+1)*4));
+  for (i = 0; i < 4; i++)
+    k[i] = Str4ToLong(password.slice(i * 4, (i + 1) * 4));
 
   ciphertext = unescCtrlCh(ciphertext);
-  for (i=0; i<ciphertext.length; i+=8) {  // decode ciphertext into s in 64-bit (8 char) blocks
-    v[0] = Str4ToLong(ciphertext.slice(i,i+4));
-    v[1] = Str4ToLong(ciphertext.slice(i+4,i+8));
+  for (i = 0; i < ciphertext.length; i += 8) {
+    // decode ciphertext into s in 64-bit (8 char) blocks
+    v[0] = Str4ToLong(ciphertext.slice(i, i + 4));
+    v[1] = Str4ToLong(ciphertext.slice(i + 4, i + 8));
     decode(v, k);
     s += LongToStr4(v[0]) + LongToStr4(v[1]);
+
+    if (i % 512 == 0)
+      yield new Paused();
   }
 
   // strip trailing null chars resulting from filling 4-char blocks:
   s = s.replace(/\0+$/, '');
 
-  return unescape(s);
+  yield unescape(s);
 }
 
 
