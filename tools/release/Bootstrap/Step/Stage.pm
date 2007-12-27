@@ -457,12 +457,22 @@ sub Verify {
     );
 
     # Verify locales
+    my $verifyLocalesLogFile = catfile($logDir, 'stage_verify_l10n.log');
     $this->Shell(
       cmd => catfile($stageHome, 'bin', 'verify-locales.pl'),
       cmdArgs => ['-m', catfile($stageDir, 'batch1', 'config',
                   'shipped-locales'), '-l', $linuxExtension],
-      logFile => catfile($logDir, 'stage_verify_l10n.log'),
+      logFile => $verifyLocalesLogFile,
       dir => catfile($stageDir, 'batch1', 'stage-signed'),
+    );
+
+    $this->CheckLog(
+      log => $verifyLocalesLogFile,
+      notAllowed => '^FAIL: '
+    );
+    $this->CheckLog(
+      log => $verifyLocalesLogFile,
+      notAllowed => '^ASSERT: '
     );
 }
 
