@@ -807,6 +807,7 @@ function prepareForStartup()
   // Note: we need to listen to untrusted events, because the pluginfinder XBL
   // binding can't fire trusted ones (runs with page privileges).
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, true, true);
+  gBrowser.addEventListener("PluginBlocklisted", gMissingPluginInstaller.newMissingPlugin, true, true);
   gBrowser.addEventListener("NewPluginInstalled", gMissingPluginInstaller.refreshBrowser, false);
   gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
@@ -4999,7 +5000,8 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   // plugin. Object tags can, and often do, deal with that themselves,
   // so don't stomp on the page developers toes.
 
-  if (!(aEvent.target instanceof HTMLObjectElement)) {
+  if (aEvent.type != "PluginBlocklisted" &&
+      !(aEvent.target instanceof HTMLObjectElement)) {
     aEvent.target.addEventListener("click",
                                    gMissingPluginInstaller.installSinglePlugin,
                                    false);
@@ -5030,8 +5032,39 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   browser.missingPlugins[pluginInfo.mimetype] = pluginInfo;
 
   var notificationBox = gBrowser.getNotificationBox(browser);
-  if (!notificationBox.getNotificationWithValue("missing-plugins")) {
-    var bundle_browser = document.getElementById("bundle_browser");
+
+  // If there is already a missing plugin notification then do nothing
+  if (notificationBox.getNotificationWithValue("missing-plugins"))
+    return;
+
+  var bundle_browser = document.getElementById("bundle_browser");
+  var blockedNotification = notificationBox.getNotificationWithValue("blocked-plugins");
+  const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+  const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric.png";
+
+  if (aEvent.type == "PluginBlocklisted" && !blockedNotification) {
+    var messageString = bundle_browser.getString("blockedpluginsMessage.title");
+    var buttons = [{
+      label: bundle_browser.getString("blockedpluginsMessage.infoButton.label"),
+      accessKey: bundle_browser.getString("blockedpluginsMessage.infoButton.accesskey"),
+      popup: null,
+      callback: blocklistInfo
+    }, {
+      label: bundle_browser.getString("blockedpluginsMessage.searchButton.label"),
+      accessKey: bundle_browser.getString("blockedpluginsMessage.searchButton.accesskey"),
+      popup: null,
+      callback: pluginsMissing
+    }];
+
+    notificationBox.appendNotification(messageString, "blocked-plugins",
+                                       iconURL, priority, buttons);
+  }
+
+  if (aEvent.type == "PluginNotFound") {
+    // Cancel any notification about blocklisting
+    if (blockedNotification)
+      blockedNotification.close();
+
     var messageString = bundle_browser.getString("missingpluginsMessage.title");
     var buttons = [{
       label: bundle_browser.getString("missingpluginsMessage.button.label"),
@@ -5040,8 +5073,6 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
       callback: pluginsMissing
     }];
 
-    const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-    const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric.png";
     notificationBox.appendNotification(messageString, "missing-plugins",
                                        iconURL, priority, buttons);
   }
@@ -5060,6 +5091,15 @@ missingPluginInstaller.prototype.refreshBrowser = function(aEvent) {
   }
   // reload the browser to make the new plugin show.
   browser.reload();
+}
+
+function blocklistInfo()
+{
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                            .getService(Components.interfaces.nsIURLFormatter);
+  var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+  gBrowser.loadOneTab(url, null, null, null, false, false);
+  return true;
 }
 
 function pluginsMissing()
