@@ -58,20 +58,28 @@ check_updates () {
   fi
 
   diff -r source/$platform_dirname target/$platform_dirname  > results.diff
-  err=$?
+  diffErr=$?
   cat results.diff
   grep '^Binary files' results.diff > /dev/null
-  if [ $? == 0 ]
+  grepErr=$?
+  if [ $grepErr == 0 ]
   then
     echo "FAIL: binary files found in diff"
     return 1
-  elif [ -s results.diff ]
+  elif [ $grepErr == 1 ]
   then
-    echo "WARN: non-binary files found in diff"
-    return 2
+    if [ -s results.diff ]
+    then
+      echo "WARN: non-binary files found in diff"
+      return 2
+    fi
   else
-    # unknown error
-    echo "FAIL: Unknown error from diff exit code: $err"
+    echo "FAIL: unknown error from grep: $grepErr"
+    return 3
+  fi
+  if [ $diffErr != 0 ]
+  then
+    echo "FAIL: unknown error from diff: $diffErr"
     return 3
   fi
 }
