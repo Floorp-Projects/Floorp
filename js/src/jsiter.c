@@ -328,7 +328,7 @@ js_GetNativeIteratorFlags(JSContext *cx, JSObject *iterobj)
  * Call ToObject(v).__iterator__(keyonly) if ToObject(v).__iterator__ exists.
  * Otherwise construct the defualt iterator.
  */
-JSBool
+JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
 {
     JSObject *obj;
@@ -439,7 +439,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
     goto out;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_CloseIterator(JSContext *cx, jsval v)
 {
     JSObject *obj;
@@ -593,7 +593,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
     return JS_TRUE;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
 {
     uintN flags;
