@@ -387,8 +387,10 @@ Engine.prototype = {
             this._log.error("Could not upload files to server"); // eep?
 
         } else {
-	  let data = Crypto.PBEencrypt(serializeCommands(server.deltas),
-				       this._cryptoId);
+	  Crypto.PBEencrypt.async(Crypto, cont,
+                                  serializeCommands(server.deltas),
+				  this._cryptoId);
+          let data = yield;
           this._dav.PUT(this.deltasFile, data, cont);
           let deltasPut = yield;
 
@@ -519,18 +521,22 @@ Engine.prototype = {
           this._dav.GET(this.snapshotFile, cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download snapshot.");
-          let data = Crypto.PBEdecrypt(resp.responseText,
-				       this._cryptoId,
-				       status.snapEncryption);
+          Crypto.PBEdecrypt.async(Crypto, cont,
+                                  resp.responseText,
+				  this._cryptoId,
+				  status.snapEncryption);
+          let data = yield;
           snap.data = eval(data);
 
           this._log.info("Downloading server deltas");
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download deltas.");
-          data = Crypto.PBEdecrypt(resp.responseText,
-				   this._cryptoId,
-				   status.deltasEncryption);
+          Crypto.PBEdecrypt.async(Crypto, cont,
+                                  resp.responseText,
+				  this._cryptoId,
+				  status.deltasEncryption);
+          data = yield;
           allDeltas = eval(data);
           deltas = eval(data);
   
@@ -542,9 +548,11 @@ Engine.prototype = {
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download deltas.");
-          let data = Crypto.PBEdecrypt(resp.responseText,
-				       this._cryptoId,
-				       status.deltasEncryption);
+          Crypto.PBEdecrypt.async(Crypto, cont,
+                                  resp.responseText,
+				  this._cryptoId,
+				  status.deltasEncryption);
+          let data = yield;
           allDeltas = eval(data);
           deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
   
@@ -556,9 +564,11 @@ Engine.prototype = {
           this._dav.GET(this.deltasFile, cont);
           resp = yield;
           this._checkStatus(resp.status, "Could not download deltas.");
-          let data = Crypto.PBEdecrypt(resp.responseText,
-				       this._cryptoId,
-				       status.deltasEncryption);
+          Crypto.PBEdecrypt.async(Crypto, cont,
+                                  resp.responseText,
+				  this._cryptoId,
+				  status.deltasEncryption);
+          let data = yield;
           allDeltas = eval(data);
           deltas = [];
   
@@ -632,8 +642,10 @@ Engine.prototype = {
     let ret = false;
 
     try {
-      let data = Crypto.PBEencrypt(this._snapshot.serialize(),
-				   this._cryptoId);
+      Crypto.PBEencrypt.async(Crypto, cont,
+                              this._snapshot.serialize(),
+			      this._cryptoId);
+      let data = yield;
       this._dav.PUT(this.snapshotFile, data, cont);
       resp = yield;
       this._checkStatus(resp.status, "Could not upload snapshot.");
