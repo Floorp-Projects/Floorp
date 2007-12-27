@@ -534,17 +534,25 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
 
   mWeakShell = nsnull;  // Avoid reentrancy
 
-  if (mFireEventTimer) {
-    mFireEventTimer->Cancel();
-    mFireEventTimer = nsnull;
-  }
-  mEventsToFire.Clear();
-
   ClearCache(mAccessNodeCache);
 
   mDocument = nsnull;
 
-  return nsHyperTextAccessibleWrap::Shutdown();
+  nsHyperTextAccessibleWrap::Shutdown();
+
+  if (mFireEventTimer) {
+    // Doc being shut down before events fired,
+    mFireEventTimer->Cancel();
+    mFireEventTimer = nsnull;
+    if (mEventsToFire.Count() > 0 ) {
+      mEventsToFire.Clear();
+      // Make sure we release the kung fu death grip which is always
+      // there when there are still events left to be fired
+      NS_RELEASE_THIS();
+    }
+  }
+
+  return NS_OK;
 }
 
 void nsDocAccessible::ShutdownChildDocuments(nsIDocShellTreeItem *aStart)
@@ -1471,6 +1479,7 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
   if (!isTimerStarted) {
     // This is be the first delayed event in queue, start timer
     // so that event gets fired via FlushEventsCallback
+    NS_ADDREF_THIS(); // Kung fu death grip to prevent crash in callback
     mFireEventTimer->InitWithFuncCallback(FlushEventsCallback,
                                           static_cast<nsPIAccessibleDocument*>(this),
                                           0, nsITimer::TYPE_ONE_SHOT);
@@ -1595,6 +1604,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
     }
   }
   mEventsToFire.Clear(); // Clear out array
+  NS_RELEASE_THIS(); // Release kung fu death grip
   return NS_OK;
 }
 
@@ -1602,7 +1612,11 @@ void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)
 {
   nsPIAccessibleDocument *accessibleDoc = static_cast<nsPIAccessibleDocument*>(aClosure);
   NS_ASSERTION(accessibleDoc, "How did we get here without an accessible document?");
-  accessibleDoc->FlushPendingEvents();
+  if (accessibleDoc) {
+    // A lot of crashes were happening here, so now we're reffing the doc
+    // now until the events are flushed
+    accessibleDoc->FlushPendingEvents();
+  }
 }
 
 void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
