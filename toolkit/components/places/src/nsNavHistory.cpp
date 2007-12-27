@@ -2029,9 +2029,10 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
 
   // Normally docshell send the link visited observer notification for us (this
   // will tell all the documents to update their visited link coloring).
-  // However, for redirects (since we implement nsIGlobalHistory3) this will
-  // not happen and we need to send it ourselves.
-  if (newItem && aIsRedirect) {
+  // However, for redirects (since we implement nsIGlobalHistory3) and downloads
+  // (since we implement nsIDownloadHistory) this will not happen and we need to
+  // send it ourselves.
+  if (newItem && (aIsRedirect || aTransitionType == TRANSITION_DOWNLOAD)) {
     nsCOMPtr<nsIObserverService> obsService =
       do_GetService("@mozilla.org/observer-service;1");
     if (obsService)
@@ -3507,19 +3508,9 @@ NS_IMETHODIMP
 nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
                           PRTime aStartTime)
 {
-  PRInt64 visitID, sessionID = 0;
-  // If we've already visited this page, we won't need to send a notification
-  // about having a new visited link.  We do this because docshell doesn't mark
-  // downloads running through exthandler as visited, so we get to do it.
-  if (!FindLastVisit(aSource, &visitID, &sessionID)) {
-    nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (os)
-      (void)os->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
-  }
-
+  PRInt64 visitID;
   return AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD, PR_FALSE,
-                  sessionID, &visitID);
+                  0, &visitID);
 }
 
 // nsIObserver *****************************************************************
