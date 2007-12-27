@@ -473,6 +473,19 @@ public:
                                            nsAString& aOutput);
 
   /**
+   * Determine whether a buffer begins with a BOM for UTF-8, UTF-16LE,
+   * UTF-16BE, UTF-32LE, UTF-32BE.
+   *
+   * @param aBuffer the buffer to check
+   * @param aLength the length of the buffer
+   * @param aCharset empty if not found
+   * @return boolean indicating whether a BOM was detected.
+   */
+  static PRBool CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
+                            nsACString& aCharset);
+
+
+  /**
    * Determine whether aContent is in some way associated with aForm.  If the
    * form is a container the only elements that are considered to be associated
    * with a form are the elements that are contained within the form. If the
