@@ -491,12 +491,19 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, PRBool *_retval)
       ClearSearchTimer();
       ClosePopup();
     }
-    // Update last-searched string to the current input, since the input may
-    // have changed.  Without this, subsequent backspaces look like text
-    // additions, not text deletions.
-    nsAutoString value;
-    mInput->GetTextValue(value);
-    mSearchString = value;
+
+    // mInput may be null, see bug #408463 and bug #409902
+    if (mInput) {
+      // Update last-searched string to the current input, since the input may
+      // have changed.  Without this, subsequent backspaces look like text
+      // additions, not text deletions.
+      nsAutoString value;
+
+      mInput->GetTextValue(value);
+      mSearchString = value;
+    }
+    else
+      NS_WARNING("unexpected, please comment in bug #409902");
   }
   
   return NS_OK;
@@ -1159,6 +1166,12 @@ nsAutoCompleteController::EnterMatch()
 nsresult
 nsAutoCompleteController::RevertTextValue()
 {
+  // StopSearch() can call PostSearchCleanup() which might result
+  // in a blur event, which could null out mInput, so we need to check it
+  // again.  See bug #408463 for more details
+  if (!mInput)
+    return NS_OK;
+
   nsAutoString oldValue(mSearchString);
   
   PRBool cancel = PR_FALSE;
