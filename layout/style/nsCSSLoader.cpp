@@ -463,34 +463,8 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     step = 1;
     pos = 0;
   }
-  else if (aStyleSheetData[0] == 0xEF &&
-           aStyleSheetData[1] == 0xBB &&
-           aStyleSheetData[2] == 0xBF) {
-    // UTF-8 BOM
-    step = 1;
-    pos = 3;
-    aCharset = "UTF-8";
-  }
   // Check for a 4-byte encoding BOM before checking for a 2-byte one,
   // since the latter can be a proper subset of the former.
-  else if (aStyleSheetData[0] == 0x00 &&
-           aStyleSheetData[1] == 0x00 &&
-           aStyleSheetData[2] == 0xFE &&
-           aStyleSheetData[3] == 0xFF) {
-    // big-endian 4-byte encoding BOM
-    step = 4;
-    pos = 7;
-    aCharset = "UTF-32BE";
-  }
-  else if (aStyleSheetData[0] == 0xFF &&
-           aStyleSheetData[1] == 0xFE &&
-           aStyleSheetData[2] == 0x00 &&
-           aStyleSheetData[3] == 0x00) {
-    // little-endian 4-byte encoding BOM
-    step = 4;
-    pos = 4;
-    aCharset = "UTF-32LE";
-  }
   else if (aStyleSheetData[0] == 0x00 &&
            aStyleSheetData[1] == 0x00 &&
            aStyleSheetData[2] == 0xFF &&
@@ -511,17 +485,28 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     pos = 5;
     aCharset = "UTF-32";
   }
-  else if (aStyleSheetData[0] == 0xFE && aStyleSheetData[1] == 0xFF) {
-    // big-endian 2-byte encoding BOM
-    step = 2;
-    pos = 3;
-    aCharset = "UTF-16BE";
-  }
-  else if (aStyleSheetData[0] == 0xFF && aStyleSheetData[1] == 0xFE) {
-    // little-endian 2-byte encoding BOM
-    step = 2;
-    pos = 2;
-    aCharset = "UTF-16LE";
+  else if (nsContentUtils::CheckForBOM(aStyleSheetData,
+                                       aDataLength, aCharset)) {
+    if (aCharset.Equals("UTF-8")) {
+      step = 1;
+      pos = 3;
+    }
+    else if (aCharset.Equals("UTF-32BE")) {
+      step = 4;
+      pos = 7;
+    }
+    else if (aCharset.Equals("UTF-32LE")) {
+      step = 4;
+      pos = 4;
+    }
+    else if (aCharset.Equals("UTF-16BE")) {
+      step = 2;
+      pos = 3;
+    }
+    else if (aCharset.Equals("UTF-16LE")) {
+      step = 2;
+      pos = 2;
+    }
   }
   else if (aStyleSheetData[0] == 0x00 &&
            aStyleSheetData[1] == 0x00 &&
