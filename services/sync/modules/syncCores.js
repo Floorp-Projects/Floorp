@@ -141,7 +141,7 @@ SyncCore.prototype = {
       });
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       timer = null;
@@ -297,7 +297,7 @@ SyncCore.prototype = {
       ret = {propagations: propagations, conflicts: conflicts};
 
     } catch (e) {
-      this._log.error("Exception caught: " + e.message);
+      this._log.error("Exception caught: " + (e.message? e.message : e));
 
     } finally {
       timer = null;
