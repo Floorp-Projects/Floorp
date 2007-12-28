@@ -435,9 +435,7 @@ sub Verify {
     my $stageHome = $config->Get(var => 'stageHome');
     my $productTag = $config->Get(var => 'productTag');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
-    my $useTarGz = $config->Exists(var => 'useTarGz') ?
-     $config->Get(var => 'useTarGz') : 0;
-    my $linuxExtension = ($useTarGz) ? 'gz' : 'bz2';
+    my $linuxExtension = $config->GetLinuxExtension();
  
     ## Prepare the staging directory for the release.
     # Create the staging directory.
@@ -624,9 +622,7 @@ sub IsValidLocaleDeliverable {
 
     my $config = new Bootstrap::Config();
 
-    my $useTarGz = $config->Exists(var => 'useTarGz') ?
-     $config->Get(var => 'useTarGz') : 0;
-    my $linuxExtension = ($useTarGz) ? 'gz' : 'bz2';
+    my $linuxExtension = $config->GetLinuxExtension();
 
     my $dirent = $File::Find::name;
 
