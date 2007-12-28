@@ -1760,7 +1760,13 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 
 // nsNavHistory::MarkPageAsFollowedBookmark
 //
-//    @see MarkPageAsTyped
+// We call MarkPageAsFollowedBookmark() before visiting a URL in order to 
+// help determine the transition type of the visit.  
+// We keep track of the URL so that later, in AddVisitChain() 
+// we can use TRANSITION_BOOKMARK as the transition.
+// Note, AddVisitChain() is not called immediately when we are doing LAZY_ADDs
+//
+// @see MarkPageAsTyped
 
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
@@ -1780,7 +1786,7 @@ nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
   if (mRecentBookmark.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentBookmark);
 
-  mRecentTyped.Put(uriString, GetNow());
+  mRecentBookmark.Put(uriString, GetNow());
   return NS_OK;
 }
 
@@ -3030,17 +3036,13 @@ nsNavHistory::HidePage(nsIURI *aURI)
 
 // nsNavHistory::MarkPageAsTyped
 //
-//    Just sets the typed column to true, which will make this page more likely
-//    to float to the top of autocomplete suggestions.
+// We call MarkPageAsTyped() before visiting a URL in order to 
+// help determine the transition type of the visit.  
+// We keep track of the URL so that later, in AddVisitChain() 
+// we can use TRANSITION_TYPED as the transition.
+// Note, AddVisitChain() is not called immediately when we are doing LAZY_ADDs
 //
-//    We can get this notification for pages that have not yet been added to the
-//    DB. This happens when you type a new URL. The AddURI is called only when
-//    the page is successfully found. If we don't have an entry yet, we add
-//    one for this page, marking it as typed but hidden, with a 0 visit count.
-//    This will get updated when AddURI is called, and it will clear the hidden
-//    flag for typed URLs.
-//
-//    @see MarkPageAsFollowedBookmark
+// @see MarkPageAsFollowedBookmark
 
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsTyped(nsIURI *aURI)

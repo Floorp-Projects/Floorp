@@ -1171,7 +1171,9 @@ interface nsINavHistoryService : nsISupports
 
   /**
    * This transition type means that the user typed the page's URL in the
-   * URL bar.
+   * URL bar or selected it from URL bar autocomplete results, clicked on
+   * it from a history query (from the History sidebar, History menu, 
+   * or history query in the personal toolbar or Places organizer.
    */
   const unsigned long TRANSITION_TYPED = 2;
 

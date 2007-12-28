@@ -324,7 +324,7 @@
             </menu>
 
             <menu id="history-menu"
-                  oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
+                  oncommand="var url = event.target.getAttribute('statustext'); if (url) { PlacesUtils.markPageAsTyped(url); openUILink(url, event, false, true); }"
                   onclick="checkForMiddleClick(this, event);"
                   label="&historyMenu.label;"
                   accesskey="&historyMenu.accesskey;">

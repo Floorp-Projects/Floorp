@@ -77,7 +77,6 @@ const TYPE_XUL = "application/vnd.mozilla.xul+xml";
 // We use this once, for Clear Private Data
 const GLUE_CID = "@mozilla.org/browser/browserglue;1";
 
-var gGlobalHistory = null;
 var gURIFixup = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
@@ -2885,17 +2884,9 @@ function addToUrlbarHistory(aUrlToAdd)
   if (aUrlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
      return;
 
-  if (!gGlobalHistory)
-    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                               .getService(Components.interfaces.nsIBrowserHistory);
-
-  if (!gURIFixup)
-    gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                          .getService(Components.interfaces.nsIURIFixup);
    try {
      if (aUrlToAdd.indexOf(" ") == -1) {
-       var fixedUpURI = gURIFixup.createFixupURI(aUrlToAdd, 0);
-       gGlobalHistory.markPageAsTyped(fixedUpURI);
+       PlacesUtils.markPageAsTyped(aUrlToAdd);
      }
    }
    catch(ex) {
