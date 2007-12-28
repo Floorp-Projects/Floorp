@@ -232,13 +232,7 @@ sub BumpVerifyConfig {
     my $externalStagingServer = $config->Get(var => 'externalStagingServer');
     my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
     my $logDir = $config->Get(sysvar => 'logDir');
-    # We are assuming tar.bz2 to help minimize bootstrap.cfg variables in
-    # the future. tar.gz support can probably be removed once we stop
-    # building/releasing products that use it.
-    my $useTarGz = $config->Exists(var => 'useTarGz') ?
-     $config->Get(var => 'useTarGz') : 0;
-    my $linuxExtension = ($useTarGz) ? '.gz' : '.bz2';
-
+    my $linuxExtension = $config->GetLinuxExtension();
 
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
     my $configFile = catfile($verifyDirVersion, 'updates', $verifyConfig);
@@ -260,8 +254,8 @@ sub BumpVerifyConfig {
         $buildTarget = 'Linux_x86-gcc3';
         $platform = 'linux';
         $ftpOsname = 'linux-i686';
-        $releaseFile = $product.'-'.$oldVersion.'.tar'.$linuxExtension;
-        $nightlyFile = $product.'-'.$version.'.%locale%.linux-i686.tar'.
+        $releaseFile = $product.'-'.$oldVersion.'.tar.'.$linuxExtension;
+        $nightlyFile = $product.'-'.$version.'.%locale%.linux-i686.tar.'.
          $linuxExtension;
     } elsif ($osname eq 'macosx') {
         $buildTarget = 'Darwin_Universal-gcc3';
