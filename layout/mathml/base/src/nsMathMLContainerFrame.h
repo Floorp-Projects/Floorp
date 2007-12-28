@@ -304,6 +304,11 @@ public:
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
+  // A variant on FinishAndStoreOverflow() that uses the union of child
+  // overflows, the frame bounds, and mBoundingMetrics to set and store the
+  // overflow.
+  void GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics);
+
   /**
    * Call DidReflow() if the NS_FRAME_IN_REFLOW frame bit is set on aFirst and
    * all its next siblings up to, but not including, aStop.

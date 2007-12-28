@@ -369,6 +369,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
+  GatherAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
