@@ -294,14 +294,12 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 }
 
 void
-nsMathMLmpaddedFrame::UpdateValue(nsPresContext*      aPresContext,
-                                  nsStyleContext*      aStyleContext,
-                                  PRInt32              aSign,
+nsMathMLmpaddedFrame::UpdateValue(PRInt32              aSign,
                                   PRInt32              aPseudoUnit,
                                   nsCSSValue&          aCSSValue,
                                   nscoord              aLeftSpace,
                                   nsBoundingMetrics&   aBoundingMetrics,
-                                  nscoord&             aValueToUpdate)
+                                  nscoord&             aValueToUpdate) const
 {
   nsCSSUnit unit = aCSSValue.GetUnit();
   if (NS_MATHML_SIGN_INVALID != aSign && eCSSUnit_Null != unit) {
@@ -338,7 +336,7 @@ nsMathMLmpaddedFrame::UpdateValue(nsPresContext*      aPresContext,
     else if (eCSSUnit_Percent == unit)
       amount = NSToCoordRound(float(scaler) * aCSSValue.GetPercentValue());
     else
-      amount = CalcLength(aPresContext, aStyleContext, aCSSValue);
+      amount = CalcLength(PresContext(), mStyleContext, aCSSValue);
 
     nscoord oldValue = aValueToUpdate;
     if (NS_MATHML_SIGN_PLUS == aSign)
@@ -372,10 +370,21 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
   nsresult rv = nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
                                                aReflowState, aStatus);
   //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-  if (NS_FAILED(rv)) return rv;
+  return rv;
+}
 
-  // use our overflow area to cache our natural size
-  aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+NS_IMETHODIMP
+nsMathMLmpaddedFrame::Place(nsIRenderingContext& aRenderingContext,
+                            PRBool               aPlaceOrigin,
+                            nsHTMLReflowMetrics& aDesiredSize)
+{
+  nsresult rv =
+    nsMathMLContainerFrame::Place(aRenderingContext, aPlaceOrigin,
+                                  aDesiredSize);
+  if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
+    DidReflowChildren(GetFirstChild(nsnull));
+    return rv;
+  }
 
   nscoord height = mBoundingMetrics.ascent;
   nscoord depth  = mBoundingMetrics.descent;
@@ -387,29 +396,25 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
   // update width
   pseudoUnit = (mWidthPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_WIDTH : mWidthPseudoUnit;
-  UpdateValue(aPresContext, mStyleContext,
-              mWidthSign, pseudoUnit, mWidth,
+  UpdateValue(mWidthSign, pseudoUnit, mWidth,
               lspace, mBoundingMetrics, width);
 
   // update "height" (this is the ascent in the terminology of the REC)
   pseudoUnit = (mHeightPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_HEIGHT : mHeightPseudoUnit;
-  UpdateValue(aPresContext, mStyleContext,
-              mHeightSign, pseudoUnit, mHeight,
+  UpdateValue(mHeightSign, pseudoUnit, mHeight,
               lspace, mBoundingMetrics, height);
 
   // update "depth" (this is the descent in the terminology of the REC)
   pseudoUnit = (mDepthPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_DEPTH : mDepthPseudoUnit;
-  UpdateValue(aPresContext, mStyleContext,
-              mDepthSign, pseudoUnit, mDepth,
+  UpdateValue(mDepthSign, pseudoUnit, mDepth,
               lspace, mBoundingMetrics, depth);
 
   // update lspace -- should be *last* because lspace is overwritten!!
   pseudoUnit = (mLeftSpacePseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_LSPACE : mLeftSpacePseudoUnit;
-  UpdateValue(aPresContext, mStyleContext,
-              mLeftSpaceSign, pseudoUnit, mLeftSpace,
+  UpdateValue(mLeftSpaceSign, pseudoUnit, mLeftSpace,
               lspace, mBoundingMetrics, lspace);
 
   // do the padding now that we have everything
@@ -441,12 +446,10 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.height += dy + depth - mBoundingMetrics.descent;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
-  // combine our tweaked size and our natural size to get our real estate
-  nsRect rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-  aDesiredSize.mOverflowArea.MoveTo(dx, dy);
-  aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, rect);
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
 
-  if (dx || dy) {
+  if (aPlaceOrigin && (dx || dy)) {
     nsIFrame* childFrame = mFrames.FirstChild();
     while (childFrame) {
       childFrame->SetPosition(childFrame->GetPosition() + nsPoint(dx, dy));
@@ -454,11 +457,5 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
 
-  mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
-
-  FinishAndStoreOverflow(&aDesiredSize);
-
-  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
