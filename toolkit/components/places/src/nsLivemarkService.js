@@ -332,8 +332,7 @@ LivemarkService.prototype = {
 
     if (siteURI) {
       // Add an annotation to map the folder URI to the livemark site URI
-      this._ans.setItemAnnotation(livemarkID, LMANNO_SITEURI, siteURI.spec,
-                                  0, this._ans.EXPIRE_NEVER);
+      this._setSiteURISecure(livemarkID, feedURI, siteURI);
     }
 
     return livemarkID;
@@ -368,8 +367,21 @@ LivemarkService.prototype = {
       return;
     }
 
+    var livemarkIndex = this._getLivemarkIndex(container);
+    var livemark = this._livemarks[livemarkIndex];
+    this._setSiteURISecure(container, livemark.feedURI, siteURI);
+  },
+
+  _setSiteURISecure: function LS__setSiteURISecure(container, feedURI, siteURI) {
+    var secMan = Cc[SEC_CONTRACTID].getService(Ci.nsIScriptSecurityManager);
+    var feedPrincipal = secMan.getCodebasePrincipal(feedURI);
+    try {
+      secMan.checkLoadURIWithPrincipal(feedPrincipal, siteURI, SEC_FLAGS);
+    } catch (e) {
+      return;
+    }
     this._ans.setItemAnnotation(container, LMANNO_SITEURI, siteURI.spec,
-                                      0, this._ans.EXPIRE_NEVER);
+                                0, this._ans.EXPIRE_NEVER);
   },
 
   getFeedURI: function LS_getFeedURI(container) {
