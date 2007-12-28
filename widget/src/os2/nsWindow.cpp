@@ -79,7 +79,6 @@
 #include "nsIFile.h"
 
 #include "nsOS2Uni.h"
-#include "nsPaletteOS2.h"
 
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
@@ -956,7 +955,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 #endif
 
    // Create a window: create hidden & then size to avoid swp_noadjust problems
-   // owner == parent except for 'borderless top-level' -- see nsCanvas.cpp
+   // owner == parent except for 'borderless top-level'
    mWnd = WinCreateWindow( hwndP,
                            WindowClass(),
                            0,          // text
@@ -2233,7 +2232,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
             CheckDragStatus(ACTION_DRAW, &hps);
             if (!hps)
               hps = WinGetPS(mWnd);
-            nsPaletteOS2::SelectGlobalPalette(hps, mWnd);
             return (void*)hps;
         }
 
@@ -2940,10 +2938,6 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
     
     
-        case WM_REALIZEPALETTE:          // hopefully only nsCanvas & nsFrame
-          result = OnRealizePalette();   // will need this
-          break;
-    
         case WM_PRESPARAMCHANGED:
           // This is really for font-change notifies.  Do that first.
           rc = GetPrevWP()( mWnd, msg, mp1, mp2);
@@ -3013,26 +3007,6 @@ PRBool nsWindow::OnReposition( PSWP pSwp)
       result = OnResize( pSwp->cx, pSwp->cy);
 
    return result;
-}
-
-PRBool nsWindow::OnRealizePalette()
-{
-  if (WinQueryWindowUShort(mWnd, QWS_ID) == FID_CLIENT) {
-    HWND hwndFocus = WinQueryFocus(HWND_DESKTOP);
-    if (WinIsChild(hwndFocus, mWnd)) {
-      /* We are getting the focus */
-      HPS hps = WinGetPS(hwndFocus);
-      nsPaletteOS2::SelectGlobalPalette(hps, hwndFocus);
-      WinReleasePS(hps);
-      WinInvalidateRect( mWnd, 0, TRUE);
-    } else {
-      /* We are losing the focus */
-      WinInvalidateRect( mWnd, 0, TRUE);
-    }
-  }
-
-  // Always call the default window procedure
-  return PR_TRUE;
 }
 
 PRBool nsWindow::OnPresParamChanged( MPARAM mp1, MPARAM mp2)
@@ -3142,7 +3116,6 @@ PRBool nsWindow::OnPaint()
     HPS hpsDrag = 0;
     CheckDragStatus(ACTION_PAINT, &hpsDrag);
     HPS hPS = WinBeginPaint(mWnd, hpsDrag, &rcl);
-    nsPaletteOS2::SelectGlobalPalette(hPS, mWnd);
 
     // if the update rect is empty, suppress the paint event
     if (!WinIsRectEmpty(0, &rcl)) {
