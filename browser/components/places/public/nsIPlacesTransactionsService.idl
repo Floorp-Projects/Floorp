@@ -52,7 +52,7 @@ interface nsITransaction;
  * the global scope of a js window.
  */
 
-[scriptable, uuid(89f61a91-c8f7-4abb-b880-895cb9852c35)]
+[scriptable, uuid(310f22ff-35e3-44b2-8593-08a119933f7e)]
 interface nsIPlacesTransactionsService : nsITransactionManager
 {
   /**
@@ -285,6 +285,30 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    */
   nsITransaction editBookmarkMicrosummary(in long long aItemId,
                                           in nsIMicrosummary aNewMicrosummary);
+
+  /**
+   * Transaction for editing an item's date added property.
+   *
+   * @param aItemId
+   *        id of the item to edit
+   * @param aNewDateAdded
+   *        new date added for the item 
+   * @returns nsITransaction object
+   */
+  nsITransaction editItemDateAdded(in long long aItemId,
+                                   in PRTime aNewDateAdded);
+
+  /**
+   * Transaction for editing an item's last modified time.
+   *
+   * @param aItemId
+   *        id of the item to edit
+   * @param aNewLastModified
+   *        new last modified date for the item 
+   * @returns nsITransaction object
+   */
+  nsITransaction editItemLastModified(in long long aItemId,
+                                      in PRTime aNewLastModified);
 
   /**
    * Transaction for sorting a folder by name

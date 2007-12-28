@@ -395,4 +395,22 @@ function run_test() {
   do_check_eq(annotationService.getItemAnnotation(postDataId, POST_DATA_ANNO), postData);
   postDataTxn.undoTransaction();
   do_check_false(annotationService.itemHasAnnotation(postDataId, POST_DATA_ANNO))
+
+  // Test editing item date added
+  var oldAdded = bmsvc.getItemDateAdded(bkmk1Id);
+  var newAdded = Date.now();
+  var eidaTxn = ptSvc.editItemDateAdded(bkmk1Id, newAdded);
+  eidaTxn.doTransaction();
+  do_check_eq(newAdded, bmsvc.getItemDateAdded(bkmk1Id));
+  eidaTxn.undoTransaction();
+  do_check_eq(oldAdded, bmsvc.getItemDateAdded(bkmk1Id));
+
+  // Test editing item last modified 
+  var oldModified = bmsvc.getItemLastModified(bkmk1Id);
+  var newModified = Date.now();
+  var eilmTxn = ptSvc.editItemLastModified(bkmk1Id, newModified);
+  eilmTxn.doTransaction();
+  do_check_eq(newModified, bmsvc.getItemLastModified(bkmk1Id));
+  eilmTxn.undoTransaction();
+  do_check_eq(oldModified, bmsvc.getItemLastModified(bkmk1Id));
 }
