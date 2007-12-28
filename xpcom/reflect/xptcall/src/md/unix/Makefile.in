@@ -218,6 +218,21 @@ CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
 endif
 endif
 
+#
+# Linux/HPPA/gcc
+#
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(filter hppa2.0 hppa1.1,$(OS_TEST)))
+ifndef GNU_CXX
+$(error Unknown C++ compiler, xptcall assembly will probably be incorrect.)
+else
+CPPSRCS		:= xptcinvoke_pa32.cpp xptcstubs_pa32.cpp
+ASFILES		:= xptcstubs_asm_parisc_linux.s xptcinvoke_asm_parisc_linux.s
+endif
+endif
+endif
+
+
 ######################################################################
 # M68k
 ######################################################################
