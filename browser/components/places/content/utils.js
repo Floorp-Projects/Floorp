@@ -669,9 +669,14 @@ var PlacesUtils = {
                        return aExcludeAnnotations.indexOf(aValue.name) == -1;
                     });
     }
+    var childTxns = [];
+    if (aData.dateAdded)
+      childTxns.push(this.ptm.editItemDateAdded(null, aData.dateAdded));
+    if (aData.lastModified)
+      childTxns.push(this.ptm.editItemLastModified(null, aData.lastModified));
 
     return this.ptm.createItem(itemURL, aContainer, aIndex, itemTitle, keyword,
-                               annos);
+                               annos, childTxns);
   },
 
   /**
@@ -732,9 +737,12 @@ var PlacesUtils = {
 
     var title = aData.folder.title;
     var annos = aData.folder.annos;
-
-    return this.ptm.createFolder(title, aContainer, aIndex, annos,
-                                 getChildItemsTransactions(aData.children));
+    var childItems = getChildItemsTransactions(aData.children);
+    if (aData.folder.dateAdded)
+      childItems.push(this.ptm.editItemDateAdded(null, aData.folder.dateAdded));
+    if (aData.folder.lastModified)
+      childItems.push(this.ptm.editItemLastModified(null, aData.folder.lastModified));
+    return this.ptm.createFolder(title, aContainer, aIndex, annos, childItems);
   },
 
   /**
