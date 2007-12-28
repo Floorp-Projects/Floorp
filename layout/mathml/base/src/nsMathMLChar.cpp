@@ -1854,20 +1854,30 @@ public:
   }
 #endif
 
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
+    nsRect rect;
+    mChar->GetRect(rect);
+    nsPoint offset =
+      aBuilder->ToReferenceFrame(mFrame) + rect.TopLeft();
+    nsBoundingMetrics bm;
+    mChar->GetBoundingMetrics(bm);
+    return nsRect(offset.x + bm.leftBearing, offset.y,
+                  bm.rightBearing - bm.leftBearing, bm.ascent + bm.descent);
+  }
+
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+     const nsRect& aDirtyRect)
+  {
+    mChar->PaintForeground(mFrame->PresContext(), *aCtx,
+                         aBuilder->ToReferenceFrame(mFrame), mIsSelected);
+  }
+
   NS_DISPLAY_DECL_NAME("MathMLCharForeground")
+
 private:
   nsMathMLChar* mChar;
   PRPackedBool  mIsSelected;
 };
-
-void nsDisplayMathMLCharForeground::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
-{
-  mChar->PaintForeground(mFrame->PresContext(), *aCtx,
-                         aBuilder->ToReferenceFrame(mFrame), mIsSelected);
-}
 
 #ifdef NS_DEBUG
 class nsDisplayMathMLCharDebug : public nsDisplayItem {
