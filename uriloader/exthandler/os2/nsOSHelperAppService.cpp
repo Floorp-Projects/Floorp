@@ -50,8 +50,6 @@
 #include "nsILineInputStream.h"
 #include "nsILocalFile.h"
 #include "nsIProcess.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsHashtable.h"
@@ -1126,105 +1124,6 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
   return rv;
 }
 
-// Check OS/2 INI for application and parameters for the protocol
-// return NS_OK, if application exists for protocol in INI and is not empty
-nsresult
-nsOSHelperAppService::GetApplicationAndParametersFromINI(const nsACString& aProtocol,
-                                                         char * app, ULONG appLength,
-                                                         char * param, ULONG paramLength)
-{
-  /* initialize app to '\0' for later check */
-  *app = '\0';
-
-  /* http or https */
-  if ((aProtocol == NS_LITERAL_CSTRING("http")) ||
-      (aProtocol == NS_LITERAL_CSTRING("https"))) {
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultBrowserExe",
-                          "",
-                          app,
-                          appLength);
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultParameters",
-                          "",
-                          param,
-                          paramLength);
-  }
-  /* mailto: */
-  else if (aProtocol == NS_LITERAL_CSTRING("mailto")) {
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultMailExe",
-                          "",
-                          app,
-                          appLength);
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultMailParameters",
-                          "",
-                          param,
-                          paramLength);
-  }
-  /* ftp */
-  else if (aProtocol == NS_LITERAL_CSTRING("ftp")) {
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultFTPExe",
-                          "",
-                          app,
-                          appLength);
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultFTPParameters",
-                          "",
-                          param,
-                          paramLength);
-  }
-  /* news: or snews: */
-  else if ((aProtocol == NS_LITERAL_CSTRING("news")) ||
-           (aProtocol == NS_LITERAL_CSTRING("snews"))) {
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultNewsExe",
-                          "",
-                          app,
-                          appLength);
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultNewsParameters",
-                          "",
-                          param,
-                          paramLength);
-  }
-  /* irc: */
-  else if (aProtocol == NS_LITERAL_CSTRING("irc")) {
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultIRCExe",
-                          "",
-                          app,
-                          appLength);
-    PrfQueryProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultIRCParameters",
-                          "",
-                          param,
-                          paramLength);
-  }
-  else {
-    NS_WARNING("GetApplicationAndParametersFromINI(): unsupported protocol scheme");
-    return NS_ERROR_FAILURE;
-  }
-
-  /* application string in INI was empty */
-  if (app[0] == '\0')
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
   LOG(("-- nsOSHelperAppService::OSProtocolHandlerExists for '%s'\n",
@@ -1236,13 +1135,17 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
   nsCAutoString prefName;
   prefName = NS_LITERAL_CSTRING("applications.") + nsDependentCString(aProtocolScheme);
 
-  nsCOMPtr<nsIPref> thePrefsService(do_GetService(NS_PREF_CONTRACTID));
-  if (thePrefsService) {
-    nsXPIDLCString prefString;
-    rv = thePrefsService->CopyCharPref(prefName.get(), getter_Copies(prefString));
-    *aHandlerExists = NS_SUCCEEDED(rv) && !prefString.IsEmpty();
-    if (*aHandlerExists) {
-      return NS_OK;
+  nsCOMPtr<nsIPrefService> thePrefsService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
+    if (NS_SUCCEEDED(rv)) {
+      nsXPIDLCString prefString;
+      rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(prefString));
+      *aHandlerExists = NS_SUCCEEDED(rv) && !prefString.IsEmpty();
+      if (*aHandlerExists) {
+        return NS_OK;
+      }
     }
   }
   /* Check the OS/2 INI for the protocol */
@@ -1520,16 +1423,15 @@ nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme,
 NS_IMETHODIMP
 nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
 {
-  nsCOMPtr<nsIPref> thePrefsService(do_GetService(NS_PREF_CONTRACTID));
-  if (!thePrefsService) {
-    return NS_ERROR_FAILURE;
-  }
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> thePrefsService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCAutoString prefName = NS_LITERAL_CSTRING("applications.") + aScheme;
-  nsXPIDLCString prefString;
+  nsCOMPtr<nsIPrefBranch> prefBranch;
   nsCAutoString applicationName;
 
-  nsresult rv = thePrefsService->CopyCharPref(prefName.get(), getter_Copies(prefString));
-  if (NS_FAILED(rv) || prefString.IsEmpty()) {
+  rv = thePrefsService->GetBranch(prefName.get(), getter_AddRefs(prefBranch));
+  if (NS_FAILED(rv)) {
     char szAppFromINI[CCHMAXPATH];
     char szParamsFromINI[MAXINIPARAMLENGTH];
     /* did OS2.INI contain application? */
@@ -1542,7 +1444,11 @@ nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsASt
       return NS_ERROR_NOT_AVAILABLE;
     }
   } else {
-    applicationName.Append(prefString);
+    nsXPIDLCString prefString;
+    rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(prefString));
+    if (NS_SUCCEEDED(rv) && !prefString.IsEmpty()) {
+      applicationName.Append(prefString);
+    }
   }
 
 
@@ -1568,3 +1474,100 @@ nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsASt
   return NS_OK;
 }
 
+// Check OS/2 INI for application and parameters for the protocol
+// return NS_OK, if application exists for protocol in INI and is not empty
+nsresult GetApplicationAndParametersFromINI(const nsACString& aProtocol,
+                                            char* app, ULONG appLength,
+                                            char* param, ULONG paramLength)
+{
+  /* initialize app to '\0' for later check */
+  *app = '\0';
+
+  /* http or https */
+  if ((aProtocol == NS_LITERAL_CSTRING("http")) ||
+      (aProtocol == NS_LITERAL_CSTRING("https"))) {
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultBrowserExe",
+                          "",
+                          app,
+                          appLength);
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultParameters",
+                          "",
+                          param,
+                          paramLength);
+  }
+  /* mailto: */
+  else if (aProtocol == NS_LITERAL_CSTRING("mailto")) {
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultMailExe",
+                          "",
+                          app,
+                          appLength);
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultMailParameters",
+                          "",
+                          param,
+                          paramLength);
+  }
+  /* ftp */
+  else if (aProtocol == NS_LITERAL_CSTRING("ftp")) {
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultFTPExe",
+                          "",
+                          app,
+                          appLength);
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultFTPParameters",
+                          "",
+                          param,
+                          paramLength);
+  }
+  /* news: or snews: */
+  else if ((aProtocol == NS_LITERAL_CSTRING("news")) ||
+           (aProtocol == NS_LITERAL_CSTRING("snews"))) {
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultNewsExe",
+                          "",
+                          app,
+                          appLength);
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultNewsParameters",
+                          "",
+                          param,
+                          paramLength);
+  }
+  /* irc: */
+  else if (aProtocol == NS_LITERAL_CSTRING("irc")) {
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultIRCExe",
+                          "",
+                          app,
+                          appLength);
+    PrfQueryProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultIRCParameters",
+                          "",
+                          param,
+                          paramLength);
+  }
+  else {
+    NS_WARNING("GetApplicationAndParametersFromINI(): unsupported protocol scheme");
+    return NS_ERROR_FAILURE;
+  }
+
+  /* application string in INI was empty */
+  if (app[0] == '\0')
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}

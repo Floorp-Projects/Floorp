@@ -48,6 +48,9 @@
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
 
+#define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(mLog, PR_LOG_DEBUG)
+
 class nsHashtable;
 class nsILineInputStream;
 class nsMIMEInfoOS2;
@@ -69,14 +72,12 @@ public:
   NS_IMETHODIMP GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
   nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
+
 protected:
   already_AddRefed<nsMIMEInfoOS2> GetFromType(const nsCString& aMimeType);
   already_AddRefed<nsMIMEInfoOS2> GetFromExtension(const nsCString& aFileExt);
 
 private:
-  nsresult GetApplicationAndParametersFromINI(const nsACString& aProtocol,
-                                              char * app, unsigned long appLength,
-                                              char * param, unsigned long paramLength);
   // Helper methods which have to access static members
   static nsresult UnescapeCommand(const nsAString& aEscapedCommand,
                                   const nsAString& aMajorType,
@@ -146,5 +147,12 @@ private:
                                                           nsAString& aDescription,
                                                           nsAString& aMozillaFlags);
 };
+
+#define MAXINIPARAMLENGTH 1024 // max length of OS/2 INI key for application parameters
+
+// helper function for access to OS2.INI
+nsresult GetApplicationAndParametersFromINI(const nsACString& aProtocol,
+                                            char* app, unsigned long appLength,
+                                            char* param, unsigned long paramLength);
 
 #endif // nsOSHelperAppService_h__
