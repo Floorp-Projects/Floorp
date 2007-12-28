@@ -166,11 +166,6 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   // place and size children
   FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
 
-  // XXX set a tentative size for the overflow area. The frame might still be
-  // stretched later.
-  aDesiredSize.mOverflowArea.SetRect(0, 0, aDesiredSize.width, aDesiredSize.height);
-  FinishAndStoreOverflow(&aDesiredSize);
-
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -203,7 +198,7 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
       nsRect rect = childFrame->GetRect();
       nsHTMLReflowMetrics childSize;
       childSize.width = rect.width;
-      childSize.height = aDesiredSize.height; //rect.height;
+      childSize.height = rect.height;
 
       // place and size the child; (dx,0) makes the caret happy - bug 188146
       dy = rect.IsEmpty() ? 0 : aDesiredSize.ascent - rect.y;
