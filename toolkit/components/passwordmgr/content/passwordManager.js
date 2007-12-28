@@ -256,20 +256,23 @@ function FocusFilterBox()
 }
 
 function SignonMatchesFilter(aSignon, aFilterValue) {
-  if (aSignon.hostname.indexOf(aFilterValue) != -1)
+  if (aSignon.hostname.toLowerCase().indexOf(aFilterValue) != -1)
     return true;
-  if (aSignon.username && aSignon.username.indexOf(aFilterValue) != -1)
+  if (aSignon.username &&
+      aSignon.username.toLowerCase().indexOf(aFilterValue) != -1)
     return true;
-  if (aSignon.httpRealm && aSignon.httpRealm.indexOf(aFilterValue) != -1)
+  if (aSignon.httpRealm &&
+      aSignon.httpRealm.toLowerCase().indexOf(aFilterValue) != -1)
     return true;
   if (showingPasswords && aSignon.password &&
-           aSignon.password.indexOf(aFilterValue) != -1)
+      aSignon.password.toLowerCase().indexOf(aFilterValue) != -1)
     return true;
 
   return false;
 }
 
 function FilterPasswords(aFilterValue, view) {
+  aFilterValue = aFilterValue.toLowerCase();
   return signons.filter(function (s) SignonMatchesFilter(s, aFilterValue));
 }
 
