@@ -721,10 +721,10 @@ nsColumnSetFrame::DrainOverflowColumns()
 }
 
 NS_IMETHODIMP 
-nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
-                      nsHTMLReflowMetrics&     aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus)
+nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
+                         nsHTMLReflowMetrics&     aDesiredSize,
+                         const nsHTMLReflowState& aReflowState,
+                         nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsColumnSetFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
