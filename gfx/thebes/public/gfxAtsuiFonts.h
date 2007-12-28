@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   John Daggett <jdaggett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,10 +43,12 @@
 #include "cairo.h"
 #include "gfxTypes.h"
 #include "gfxFont.h"
+#include "gfxFontUtils.h"
 
 #include <Carbon/Carbon.h>
 
 class gfxAtsuiFontGroup;
+class FontEntry;
 
 class gfxAtsuiFont : public gfxFont {
 public:
@@ -75,12 +78,16 @@ public:
     virtual void SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
             PRBool aNeedTight, gfxGlyphExtents *aExtents);
 
+    PRBool TestCharacterMap(PRUint32 aCh);
+
 protected:
     const gfxFontStyle *mFontStyle;
 
     ATSUFontID mATSUFontID;
     ATSUStyle mATSUStyle;
-    
+
+    nsRefPtr<FontEntry> mFontEntry;
+
     PRBool mHasMirroring;
     PRBool mHasMirroringLookedUp;
 
@@ -103,7 +110,7 @@ class THEBES_API gfxAtsuiFontGroup : public gfxFontGroup {
 public:
     gfxAtsuiFontGroup(const nsAString& families,
                       const gfxFontStyle *aStyle);
-    virtual ~gfxAtsuiFontGroup();
+    virtual ~gfxAtsuiFontGroup() {};
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
@@ -120,15 +127,25 @@ public:
     void MakeTextRunInternal(const PRUnichar *aString, PRUint32 aLength,
                              PRBool aWrapped, gfxTextRun *aTextRun);
 
-    ATSUFontFallbacks *GetATSUFontFallbacksPtr() { return &mFallbacks; }
-    
-    gfxAtsuiFont* GetFontAt(PRInt32 i) {
-        return static_cast<gfxAtsuiFont*>(static_cast<gfxFont*>(mFonts[i]));
+    gfxAtsuiFont* GetFontAt(PRInt32 aFontIndex) {
+        return static_cast<gfxAtsuiFont*>(static_cast<gfxFont*>(mFonts[aFontIndex]));
     }
 
     gfxAtsuiFont* FindFontFor(ATSUFontID fid);
 
     PRBool HasFont(ATSUFontID fid);
+    
+    inline gfxAtsuiFont* WhichFontSupportsChar(nsTArray< nsRefPtr<gfxFont> >& aFontList, PRUint32 aCh) {
+        PRUint32 len = aFontList.Length();
+        for (PRUint32 i = 0; i < len; i++) {
+            gfxAtsuiFont* font = static_cast<gfxAtsuiFont*>(aFontList.ElementAt(i).get());
+            if (font->TestCharacterMap(aCh))
+                return font;
+        }
+        return nsnull;
+    }
+
+   already_AddRefed<gfxAtsuiFont> FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, gfxAtsuiFont* aPrevMatchedFont);
 
 protected:
     static PRBool FindATSUFont(const nsAString& aName,
@@ -141,6 +158,5 @@ protected:
     PRBool InitTextRun(gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength,
                        PRBool aWrapped, PRUint32 aSegmentStart, PRUint32 aSegmentLength);
 
-    ATSUFontFallbacks mFallbacks;
 };
 #endif /* GFX_ATSUIFONTS_H */

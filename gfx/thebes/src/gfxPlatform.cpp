@@ -238,7 +238,7 @@ AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *
         return;
 
     nsCAutoString prefName;
-    nsXPIDLString value;
+    nsXPIDLString nameValue, nameListValue;
 
     nsXPIDLString genericName;
     if (aGenericName) {
@@ -254,22 +254,24 @@ AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *
     genericDotLang.AppendLiteral(".");
     genericDotLang.Append(aLangGroup);
 
+    // fetch font.name.xxx value                   
     prefName.AssignLiteral("font.name.");
     prefName.Append(genericDotLang);
-    rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
+    rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(nameValue));
     if (NS_SUCCEEDED(rv)) {
         if (!aFonts.IsEmpty())
             aFonts.AppendLiteral(", ");
-        aFonts.Append(value);
+        aFonts.Append(nameValue);
     }
 
+    // fetch font.name-list.xxx value                   
     prefName.AssignLiteral("font.name-list.");
     prefName.Append(genericDotLang);
-    rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
-    if (NS_SUCCEEDED(rv)) {
+    rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(nameListValue));
+    if (NS_SUCCEEDED(rv) && !nameListValue.Equals(nameValue)) {
         if (!aFonts.IsEmpty())
             aFonts.AppendLiteral(", ");
-        aFonts.Append(value);
+        aFonts.Append(nameListValue);
     }
 }
 
