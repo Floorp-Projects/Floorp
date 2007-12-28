@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   John Daggett <jdaggett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,10 @@
 
 #include "nsDataHashtable.h"
 
+#include "gfxFontUtils.h"
 #include "gfxAtsuiFonts.h"
+
+#include <Carbon/Carbon.h>
 
 #include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
@@ -71,11 +75,12 @@ class FontEntry
 public:
     THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
 
-    FontEntry(nsString &aName) :
-        mName(aName), mWeight(0)
+    FontEntry(ATSUFontID aFontID, nsString &aName) :
+        mName(aName), mWeight(0), mUnicodeRanges(0), 
+        mCmapInitialized(PR_FALSE), mATSUFontID(aFontID)
     {
     }
-
+    
     const nsString& Name() { return mName; }
     PRInt32 Weight() {
         if (!mWeight)
@@ -87,15 +92,28 @@ public:
     PRBool IsBold();
     NSFont* GetNSFont(float aSize);
 
+    ATSUFontID GetFontID() { return mATSUFontID; }                   
+    nsresult ReadCMAP();
+    inline PRBool TestCharacterMap(PRUint32 aCh) {
+        if ( !mCmapInitialized ) ReadCMAP();
+        return mCharacterMap.test(aCh);
+    }
+
 protected:
     void RealizeWeightAndTraits();
     void GetStringForNSString(const NSString *aSrc, nsAString& aDist);
     NSString* GetNSStringForString(const nsAString& aSrc);
 
+    ATSUFontID mATSUFontID;
     nsString mName;
     PRInt32 mWeight;
     PRPackedBool mFixedPitch;
     PRPackedBool mItalicStyle;
+
+    std::bitset<128> mUnicodeRanges;
+    gfxSparseBitSet mCharacterMap;
+    PRPackedBool mCmapInitialized;
+
 };
 
 class gfxQuartzFontCache {
@@ -131,8 +149,14 @@ public:
     const nsString& GetPostscriptNameForFontID(ATSUFontID fid);
 
     PRBool IsFixedPitch(ATSUFontID fid);
+    
+    FontEntry* FindFontEntry(ATSUFontID aFontID);                  
+    FontEntry* FindFontForChar(const PRUint32 aCh, gfxAtsuiFont *aPrevFont);
 
 private:
+    static PLDHashOperator PR_CALLBACK FindFontForCharProc(nsUint32HashKey::KeyType aKey,
+                                                             nsRefPtr<FontEntry>& aFontEntry,
+                                                             void* userArg);
     static gfxQuartzFontCache *sSharedFontCache;
 
     gfxQuartzFontCache();

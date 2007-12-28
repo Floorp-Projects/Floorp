@@ -58,15 +58,6 @@
 
 //#define DEBUG_CMAP_SIZE 1
 
-/* Define this if we want to update the unicode range bitsets based
- * on the actual characters a font supports.
- *
- * Doing this can result in very large lists of fonts being returned.
- * Not doing this can let us prioritize fonts that do have the bit set
- * as they are more likely to provide better glyphs (in theory).
- */
-//#define UPDATE_RANGES
-
 int PR_CALLBACK
 gfxWindowsPlatform::PrefChangedCallback(const char *aPrefName, void *closure)
 {
@@ -174,139 +165,7 @@ gfxWindowsPlatform::FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
     return 1;
 }
 
-static inline PRUint16
-ReadShortAt(const PRUint8 *aBuf, PRUint32 aIndex)
-{
-    return (aBuf[aIndex] << 8) | aBuf[aIndex + 1];
-}
-
-static inline PRUint16
-ReadShortAt16(const PRUint16 *aBuf, PRUint32 aIndex)
-{
-    return (((aBuf[aIndex]&0xFF) << 8) | ((aBuf[aIndex]&0xFF00) >> 8));
-}
-
-static inline PRUint32
-ReadLongAt(const PRUint8 *aBuf, PRUint32 aIndex)
-{
-    return ((aBuf[aIndex] << 24) | (aBuf[aIndex + 1] << 16) | (aBuf[aIndex + 2] << 8) | (aBuf[aIndex + 3]));
-}
-
-static nsresult
-ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, FontEntry *aFontEntry) 
-{
-    enum {
-        OffsetFormat = 0,
-        OffsetReserved = 2,
-        OffsetTableLength = 4,
-        OffsetLanguage = 8,
-        OffsetNumberGroups = 12,
-        OffsetGroups = 16,
-
-        SizeOfGroup = 12,
-
-        GroupOffsetStartCode = 0,
-        GroupOffsetEndCode = 4
-    };
-    NS_ENSURE_TRUE(aLength >= 16, NS_ERROR_FAILURE);
-
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 12, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetReserved) == 0, NS_ERROR_FAILURE);
-
-    PRUint32 tablelen = ReadLongAt(aBuf, OffsetTableLength);
-    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(tablelen >= 16, NS_ERROR_FAILURE);
-
-    NS_ENSURE_TRUE(ReadLongAt(aBuf, OffsetLanguage) == 0, NS_ERROR_FAILURE);
-
-    const PRUint32 numGroups  = ReadLongAt(aBuf, OffsetNumberGroups);
-    NS_ENSURE_TRUE(tablelen >= 16 + (12 * numGroups), NS_ERROR_FAILURE);
-
-    const PRUint8 *groups = aBuf + OffsetGroups;
-    for (PRUint32 i = 0; i < numGroups; i++, groups += SizeOfGroup) {
-        const PRUint32 startCharCode = ReadLongAt(groups, GroupOffsetStartCode);
-        const PRUint32 endCharCode = ReadLongAt(groups, GroupOffsetEndCode);
-        aFontEntry->mCharacterMap.SetRange(startCharCode, endCharCode);
-#ifdef UPDATE_RANGES
-        for (PRUint32 c = startCharCode; c <= endCharCode; ++c) {
-            PRUint16 b = CharRangeBit(c);
-            if (b != NO_RANGE_FOUND)
-                aFontEntry->mUnicodeRanges.set(b, true);
-        }
-#endif
-    }
-
-    return NS_OK;
-}
-
-static nsresult 
-ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, FontEntry *aFontEntry)
-{
-    enum {
-        OffsetFormat = 0,
-        OffsetLength = 2,
-        OffsetLanguage = 4,
-        OffsetSegCountX2 = 6
-    };
-
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetFormat) == 4, NS_ERROR_FAILURE);
-    PRUint16 tablelen = ReadShortAt(aBuf, OffsetLength);
-    NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(tablelen > 16, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetLanguage) == 0, NS_ERROR_FAILURE);
-
-    PRUint16 segCountX2 = ReadShortAt(aBuf, OffsetSegCountX2);
-    NS_ENSURE_TRUE(tablelen >= 16 + (segCountX2 * 4), NS_ERROR_FAILURE);
-
-    const PRUint16 segCount = segCountX2 / 2;
-
-    const PRUint16 *endCounts = (PRUint16*)(aBuf + 14);
-    const PRUint16 *startCounts = endCounts + 1 /* skip one uint16 for reservedPad */ + segCount;
-    const PRUint16 *idDeltas = startCounts + segCount;
-    const PRUint16 *idRangeOffsets = idDeltas + segCount;
-    for (PRUint16 i = 0; i < segCount; i++) {
-        const PRUint16 endCount = ReadShortAt16(endCounts, i);
-        const PRUint16 startCount = ReadShortAt16(startCounts, i);
-        const PRUint16 idRangeOffset = ReadShortAt16(idRangeOffsets, i);
-        if (idRangeOffset == 0) {
-            aFontEntry->mCharacterMap.SetRange(startCount, endCount);
-#ifdef UPDATE_RANGES
-            for (PRUint32 c = startCount; c <= endCount; c++) {
-                PRUint16 b = CharRangeBit(c);
-                if (b != NO_RANGE_FOUND)
-                    aFontEntry->mUnicodeRanges.set(b, true);
-            }
-#endif
-        } else {
-            const PRUint16 idDelta = ReadShortAt16(idDeltas, i);
-            for (PRUint32 c = startCount; c <= endCount; ++c) {
-                if (c == 0xFFFF)
-                    break;
-
-                const PRUint16 *gdata = (idRangeOffset/2 
-                                         + (c - startCount)
-                                         + &idRangeOffsets[i]);
-
-                NS_ENSURE_TRUE((PRUint8*)gdata > aBuf && (PRUint8*)gdata < aBuf + aLength, NS_ERROR_FAILURE);
-
-                // make sure we have a glyph
-                if (*gdata != 0) {
-                    // The glyph index at this point is:
-                    // glyph = (ReadShortAt16(idDeltas, i) + *gdata) % 65536;
-
-                    aFontEntry->mCharacterMap.set(c);
-#ifdef UPDATE_RANGES
-                    PRUint16 b = CharRangeBit(c);
-                    if (b != NO_RANGE_FOUND)
-                        aFontEntry->mUnicodeRanges.set(b, true);
-#endif
-                }
-            }
-        }
-    }
-
-    return NS_OK;
-}
+// general cmap reading routines moved to gfxFontUtils.cpp
 
 static nsresult
 ReadCMAP(HDC hdc, FontEntry *aFontEntry)
@@ -324,72 +183,9 @@ ReadCMAP(HDC hdc, FontEntry *aFontEntry)
 
     DWORD newLen = GetFontData(hdc, kCMAP, 0, buf, len);
     NS_ENSURE_TRUE(newLen == len, NS_ERROR_FAILURE);
-
-    enum {
-        OffsetVersion = 0,
-        OffsetNumTables = 2,
-        SizeOfHeader = 4,
-
-        TableOffsetPlatformID = 0,
-        TableOffsetEncodingID = 2,
-        TableOffsetOffset = 4,
-        SizeOfTable = 8,
-
-        SubtableOffsetFormat = 0
-    };
-    enum {
-        PlatformIDMicrosoft = 3
-    };
-    enum {
-        EncodingIDSymbol = 0,
-        EncodingIDMicrosoft = 1,
-        EncodingIDUCS4 = 10
-    };
-
-    PRUint16 version = ReadShortAt(buf, OffsetVersion);
-    PRUint16 numTables = ReadShortAt(buf, OffsetNumTables);
-
-    // save the format and offset we want here
-    PRUint32 keepOffset = 0;
-    PRUint32 keepFormat = 0;
-
-    PRUint8 *table = buf + SizeOfHeader;
-    for (PRUint16 i = 0; i < numTables; ++i, table += SizeOfTable) {
-        const PRUint16 platformID = ReadShortAt(table, TableOffsetPlatformID);
-        if (platformID != PlatformIDMicrosoft)
-            continue;
-
-        const PRUint16 encodingID = ReadShortAt(table, TableOffsetEncodingID);
-        const PRUint32 offset = ReadLongAt(table, TableOffsetOffset);
-
-        NS_ASSERTION(offset < newLen, "ugh");
-        const PRUint8 *subtable = buf + offset;
-        const PRUint16 format = ReadShortAt(subtable, SubtableOffsetFormat);
-
-        if (encodingID == EncodingIDSymbol) {
-            aFontEntry->mUnicodeFont = PR_FALSE;
-            aFontEntry->mSymbolFont = PR_TRUE;
-            keepFormat = format;
-            keepOffset = offset;
-            break;
-        } else if (format == 4 && encodingID == EncodingIDMicrosoft) {
-            keepFormat = format;
-            keepOffset = offset;
-        } else if (format == 12 && encodingID == EncodingIDUCS4) {
-            keepFormat = format;
-            keepOffset = offset;
-            break; // we don't want to try anything else when this format is available.
-        }
-    }
-
-    nsresult rv = NS_ERROR_FAILURE;
-
-    if (keepFormat == 12)
-        rv = ReadCMAPTableFormat12(buf + keepOffset, len - keepOffset, aFontEntry);
-    else if (keepFormat == 4)
-        rv = ReadCMAPTableFormat4(buf + keepOffset, len - keepOffset, aFontEntry);
-
-    return rv;
+    
+    return gfxFontUtils::ReadCMAP(buf, len, aFontEntry->mCharacterMap, aFontEntry->mUnicodeRanges,
+                    aFontEntry->mUnicodeFont, aFontEntry->mSymbolFont);
 }
 
 PLDHashOperator PR_CALLBACK
@@ -700,7 +496,7 @@ gfxWindowsPlatform::FindFontForStringProc(nsStringHashKey::KeyType aKey,
 
             // fonts that claim to support the range are more
             // likely to be "better fonts" than ones that don't... (in theory)
-            if (aFontEntry->SupportsRange(CharRangeBit(ch)))
+            if (aFontEntry->SupportsRange(gfxFontUtils::CharRangeBit(ch)))
                 rank += 1;
         }
     }
