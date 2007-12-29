@@ -26,7 +26,23 @@
 
     is(answer.sort().toString(),
        expected.sort().toString(),
-       'enumeration does not work');
+       'enumeration over XOWs walks the prototype chain');
+
+    answer = [];
+    let (obj = { a: 3 }) {
+        for (let i in XPCSafeJSObjectWrapper({ __proto__: obj}))
+            answer.push(i);
+        is(answer.toString(), 'a',
+           'enumeration over SJOWs walks the prototype chain');
+    }
+
+    answer = [];
+    for (let i in XPCSafeJSObjectWrapper(location))
+        answer.push(i);
+
+    is(answer.sort().toString(),
+       expected.sort().toString(),
+       'enumeration over SJOWs walks the prototype chain and works over XOWs');
 
     var origProto = window.__proto__;
     try {
