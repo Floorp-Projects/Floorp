@@ -270,7 +270,12 @@ pref("browser.link.open_newwindow", 3);
 // 2: don't divert window.open with features
 pref("browser.link.open_newwindow.restriction", 2);
 
-// Tab browser preferences.
+// Tabbed browser
+pref("browser.tabs.autoHide", true);
+pref("browser.tabs.forceHide", false);
+pref("browser.tabs.warnOnClose", true);
+pref("browser.tabs.warnOnOpen", true);
+pref("browser.tabs.maxOpenBeforeWarn", 15);
 pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
