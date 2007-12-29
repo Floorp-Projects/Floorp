@@ -419,38 +419,6 @@ DoCommandCallback(const char *aCommand, void *aData)
   }
 }
 
-static PRBool
-DOMEventToNativeKeyEvent(nsIDOMEvent      *aDOMEvent,
-                         nsNativeKeyEvent *aNativeEvent,
-                         PRBool            aGetCharCode)
-{
-  nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aDOMEvent);
-  PRBool defaultPrevented;
-  uievent->GetPreventDefault(&defaultPrevented);
-  if (defaultPrevented)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aDOMEvent);
-  PRBool trusted = PR_FALSE;
-  nsevent->GetIsTrusted(&trusted);
-  if (!trusted)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aDOMEvent);
-
-  if (aGetCharCode) {
-      keyEvent->GetCharCode(&aNativeEvent->charCode);
-  } else {
-      aNativeEvent->charCode = 0;
-  }
-  keyEvent->GetKeyCode(&aNativeEvent->keyCode);
-  keyEvent->GetAltKey(&aNativeEvent->altKey);
-  keyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
-  keyEvent->GetShiftKey(&aNativeEvent->shiftKey);
-  keyEvent->GetMetaKey(&aNativeEvent->metaKey);
-
-  return PR_TRUE;
-}
 
 NS_IMETHODIMP
 nsTextInputListener::KeyDown(nsIDOMEvent *aKeyEvent)
@@ -458,7 +426,7 @@ nsTextInputListener::KeyDown(nsIDOMEvent *aKeyEvent)
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
   if (bindings &&
-      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
+      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
     if (bindings->KeyDown(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
@@ -473,7 +441,7 @@ nsTextInputListener::KeyPress(nsIDOMEvent *aKeyEvent)
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
   if (bindings &&
-      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_TRUE)) {
+      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_TRUE)) {
     if (bindings->KeyPress(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
@@ -488,7 +456,7 @@ nsTextInputListener::KeyUp(nsIDOMEvent *aKeyEvent)
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
   if (bindings &&
-      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
+      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
     if (bindings->KeyUp(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
