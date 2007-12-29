@@ -281,10 +281,11 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
       // force the new wrapper to use the principal of the unsafe
       // object we got the new object from.
       nsCOMPtr<nsIPrincipal> srcObjPrincipal;
+      nsCOMPtr<nsIPrincipal> subjPrincipal;
       nsCOMPtr<nsIPrincipal> valObjPrincipal;
 
       nsresult rv = FindPrincipals(cx, obj, getter_AddRefs(srcObjPrincipal),
-                                   nsnull, nsnull);
+                                   getter_AddRefs(subjPrincipal), nsnull);
       if (NS_FAILED(rv)) {
         return ThrowException(rv, cx);
       }
@@ -299,6 +300,19 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
       rv = srcObjPrincipal->Subsumes(valObjPrincipal, &subsumes);
       if (NS_FAILED(rv)) {
         return ThrowException(rv, cx);
+      }
+
+      // If the subject can access both the source and object principals, then
+      // don't bother forcing the principal below.
+      if (!subsumes) {
+        PRBool subjSubsumes = PR_FALSE;
+        rv = subjPrincipal->Subsumes(srcObjPrincipal, &subjSubsumes);
+        if (NS_SUCCEEDED(rv) && subjSubsumes) {
+          rv = subjPrincipal->Subsumes(valObjPrincipal, &subjSubsumes);
+          if (NS_SUCCEEDED(rv) && subjSubsumes) {
+            subsumes = PR_TRUE;
+          }
+        }
       }
 
       if (!subsumes) {
