@@ -588,22 +588,10 @@ nsNavHistoryContainerResultNode::ReverseUpdateStats(PRInt32 aAccessCountChange)
       SortComparator comparator = GetSortingComparator(sortMode);
       nsCAutoString sortingAnnotation;
       GetSortingAnnotation(sortingAnnotation);
-      int ourIndex = mParent->FindChild(this);
-      if (mParent->DoesChildNeedResorting(ourIndex, comparator, sortingAnnotation.get())) {
-        // prevent us from being destroyed when removed from the parent
-        nsRefPtr<nsNavHistoryContainerResultNode> ourLock = this;
-        nsNavHistoryContainerResultNode* ourParent = mParent;
-
-        // Performance: moving items by removing and re-inserting is not very
-        // efficient because there may be a lot of unnecessary renumbering of
-        // items. I don't think the overhead is worth the extra complexity in
-        // this case.
-        ourParent->RemoveChildAt(ourIndex, PR_TRUE);
-        ourParent->InsertSortedChild(this, PR_TRUE);
-        resorted = PR_TRUE;
-      }
+      PRUint32 ourIndex = mParent->FindChild(this);
+      resorted = EnsureItemPosition(ourIndex);
     }
-    if (! resorted) {
+    if (!resorted) {
       // repaint visible rows
       nsNavHistoryResult* result = GetResult();
       if (result && result->GetView() && mParent->AreChildrenVisible()) {
@@ -1414,6 +1402,42 @@ nsNavHistoryContainerResultNode::InsertSortedChild(
   return InsertChildAt(aNode, mChildren.Count(), aIsTemporary);
 }
 
+// nsNavHistoryContainerResultNode::EnsureItemPosition
+//
+//  This checks if the item at aIndex is located correctly given the sorting
+//  move. If it's not, the item is moved, and the result view are notified.
+//
+//  Returns true if the item position has been changed, false otherwise.
+
+PRBool
+nsNavHistoryContainerResultNode::EnsureItemPosition(PRUint32 aIndex) {
+  NS_ASSERTION(aIndex >= 0 && aIndex < mChildren.Count(), "Invalid index");
+  if (aIndex < 0 || aIndex >= mChildren.Count())
+    return PR_FALSE;
+
+  SortComparator comparator = GetSortingComparator(GetSortType());
+  if (!comparator)
+    return PR_FALSE;
+
+  nsCAutoString sortAnno;
+  GetSortingAnnotation(sortAnno);
+  if (!DoesChildNeedResorting(aIndex, comparator, sortAnno.get()))
+    return PR_FALSE;
+
+  nsRefPtr<nsNavHistoryResultNode> node(mChildren[aIndex]);
+  mChildren.RemoveObjectAt(aIndex);
+
+  PRUint32 newIndex = FindInsertionPoint(node, comparator,sortAnno.get());
+  mChildren.InsertObjectAt(node.get(), newIndex);
+
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_TRUE(result, PR_TRUE);
+
+  if (result->GetView() && AreChildrenVisible())
+    result->GetView()->ItemMoved(node, this, aIndex, this, newIndex);
+
+  return PR_TRUE;
+}
 
 // nsNavHistoryContainerResultNode::MergeResults
 //
@@ -1694,14 +1718,7 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
 
     if (aUpdateSort) {
       PRInt32 childIndex = parent->FindChild(node);
-      if (childIndex >= 0 && parent->DoesChildNeedResorting(childIndex, comparator,
-                                                            sortingAnnotation.get())) {
-        // child position changed
-        parent->RemoveChildAt(childIndex, PR_TRUE);
-        parent->InsertChildAt(node, parent->FindInsertionPoint(node, comparator,
-                                                               sortingAnnotation.get()),
-                              PR_TRUE);
-      } else if (childrenVisible) {
+      if ((childIndex < 0 || !parent->EnsureItemPosition(childIndex) && childrenVisible)) {
         result->GetView()->ItemChanged(node);
       }
     } else if (childrenVisible) {
@@ -3379,18 +3396,8 @@ nsNavHistoryResultNode::OnItemChanged(PRInt64 aItemId,
   // DO NOT OPTIMIZE THIS TO CHECK aProperty
   // the sorting methods fall back to each other so we need to re-sort the
   // result even if it's not set to sort by the given property
-  nsNavHistoryContainerResultNode::SortComparator comparator =
-    mParent->GetSortingComparator(mParent->GetSortType());
   PRInt32 ourIndex = mParent->FindChild(this);
-  nsCAutoString sortAnno;
-  mParent->GetSortingAnnotation(sortAnno);
-  if (mParent->DoesChildNeedResorting(ourIndex, comparator, sortAnno.get())) {
-    nsCOMPtr<nsINavHistoryResultNode> nodeLock(this);
-    mParent->RemoveChildAt(ourIndex, PR_TRUE);
-    mParent->InsertChildAt(this,
-                           mParent->FindInsertionPoint(this, comparator, sortAnno.get()),
-                           PR_TRUE);
-  }
+  mParent->EnsureItemPosition(ourIndex);
 
   return NS_OK;
 }
@@ -3446,14 +3453,7 @@ nsNavHistoryFolderResultNode::OnItemVisited(PRInt64 aItemId,
     PRInt32 childIndex = FindChild(node);
     NS_ASSERTION(childIndex >= 0, "Could not find child we just got a reference to");
     if (childIndex >= 0) {
-      SortComparator comparator = GetSortingComparator(GetSortType());
-      nsCAutoString sortingAnnotation;
-      GetSortingAnnotation(sortingAnnotation);
-      nsCOMPtr<nsINavHistoryResultNode> nodeLock(node);
-      RemoveChildAt(childIndex, PR_TRUE);
-      InsertChildAt(node,
-                    FindInsertionPoint(node, comparator, sortingAnnotation.get()),
-                    PR_TRUE);
+      EnsureItemPosition(childIndex);
     }
   } else if (result->GetView() && AreChildrenVisible()) {
     // no sorting changed, just redraw the row if visible
@@ -3493,21 +3493,8 @@ nsNavHistoryFolderResultNode::OnItemMoved(PRInt64 aItemId, PRInt64 aOldParent,
     node->mBookmarkIndex = aNewIndex;
 
     // adjust position
-    PRInt32 sortType = GetSortType();
-    SortComparator comparator = GetSortingComparator(sortType);
-    nsCAutoString sortingAnnotation;
-    GetSortingAnnotation(sortingAnnotation);
-    if (DoesChildNeedResorting(index, comparator, sortingAnnotation.get())) {
-      // needs resorting, this will cause everything to be redrawn, so we
-      // don't need to do that explicitly later.
-      nsRefPtr<nsNavHistoryResultNode> lock(node);
-      RemoveChildAt(index, PR_TRUE);
-      InsertChildAt(node,
-                    FindInsertionPoint(node, comparator, sortingAnnotation.get()),
-                    PR_TRUE);
-      return NS_OK;
-    }
-
+    EnsureItemPosition(index);
+    return NS_OK;
   } else {
     // moving between two different folders, just do a remove and an add
     if (aOldParent == mItemId)

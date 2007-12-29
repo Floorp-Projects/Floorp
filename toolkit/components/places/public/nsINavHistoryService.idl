@@ -485,27 +485,42 @@ interface nsINavHistoryResultViewObserver : nsISupports
  *
  * @see nsINavHistoryResult for where this fits in
  */
-[scriptable, uuid(f208e54c-834f-4a6c-bd4d-a476015bc139)]
+[scriptable, uuid(76cad155-21d5-427e-9740-01386cc8b923)]
 interface nsINavHistoryResultViewer : nsISupports
 {
   /**
-   * Called when 'item' is inserted into 'parent' at index 'newIndex'. The item
-   * previously at index (if any) and everything below it will have been
-   * shifted down by one. The item may be a container or a leaf.
+   * Called when 'aItem' is inserted into 'aParent' at index 'aNewIndex'.
+   * The item previously at index (if any) and everything below it will have
+   * been shifted down by one. The item may be a container or a leaf.
    */
-  void itemInserted(in nsINavHistoryContainerResultNode parent,
-                    in nsINavHistoryResultNode item,
-                    in unsigned long newIndex);
+  void itemInserted(in nsINavHistoryContainerResultNode aParent,
+                    in nsINavHistoryResultNode aItem,
+                    in unsigned long aNewIndex);
 
   /**
-   * Called whan 'item' is removed from 'parent' at 'oldIndex'. The item may be
-   * a container or a leaf. This function will be called after the item has
-   * been removed from its parent list, but before anything else (including
+   * Called whan 'aItem' is removed from 'aParent' at 'aOldIndex'. The item
+   * may be a container or a leaf. This function will be called after the item
+   * has been removed from its parent list, but before anything else (including
    * NULLing out the item's parent) has happened.
    */
-  void itemRemoved(in nsINavHistoryContainerResultNode parent,
-                   in nsINavHistoryResultNode item,
-                   in unsigned long oldIndex);
+  void itemRemoved(in nsINavHistoryContainerResultNode aParent,
+                   in nsINavHistoryResultNode aItem,
+                   in unsigned long aOldIndex);
+
+  /**
+   * Called whan 'aItem' is moved from 'aOldParent' at 'aOldIndex' to
+   * aNewParent at aNewIndex. The item may be a container or a leaf.
+   *
+   * XXX: at the moment, this method is called only when an item is moved
+   * within the same container. When an item is moved between containers,
+   * a new node is created for the item, and the itemRemoved/itemAdded methods
+   * are used.
+   */
+  void itemMoved(in nsINavHistoryResultNode aItem,
+                 in nsINavHistoryContainerResultNode aOldParent,
+                 in unsigned long aOldIndex,
+                 in nsINavHistoryContainerResultNode aNewParent,
+                 in unsigned long aNewIndex);
 
   /**
    * Called when an item has been changed and should be repainted. This only
