@@ -132,14 +132,6 @@ DownloadProgressListener.prototype = {
   {
   },
 
-  onLocationChange: function(aWebProgress, aRequest, aLocation, aDownload)
-  {
-  },
-
-  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage, aDownload)
-  {
-  },
-
   onSecurityChange: function(aWebProgress, aRequest, aState, aDownload)
   {
   }
