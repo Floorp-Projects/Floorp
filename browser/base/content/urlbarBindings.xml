@@ -146,14 +146,15 @@
           if (url) {
             nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
 
+            this.value = url;
             try {
-              gURLBar.value = url;
-              const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
-              urlSecurityCheck(gURLBar.value,
+              urlSecurityCheck(this.value,
                                gBrowser.contentPrincipal,
-                               nsIScriptSecMan.DISALLOW_INHERIT_PRINCIPAL);
-              handleURLBarCommand();
-            } catch (ex) {}
+                               Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+            } catch (ex) {
+              return;
+            }
+            handleURLBarCommand();
           }
         ]]></body>
       </method>
