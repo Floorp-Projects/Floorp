@@ -45,6 +45,8 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	test_bug408328.html \
 		bug408328-data.xml \
+		test_bug368464.html \
+		bug368464-data.xml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
