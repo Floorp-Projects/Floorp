@@ -52,7 +52,7 @@ interface nsIURI;
 interface nsIDownload;
 interface nsIDOMDocument;
 
-[scriptable, uuid(8b193f0a-cf0c-4b5f-b4e3-a388df6f07b2)]
+[scriptable, uuid(7acb07ea-cac2-4c15-a3ad-23aaa789ed51)]
 interface nsIDownloadProgressListener : nsISupports {
 
  /**
@@ -83,17 +83,6 @@ interface nsIDownloadProgressListener : nsISupports {
                         in long long aMaxSelfProgress,
                         in long long aCurTotalProgress,
                         in long long aMaxTotalProgress,
-                        in nsIDownload aDownload);
-
-  void onStatusChange(in nsIWebProgress aWebProgress,
-                      in nsIRequest aRequest,
-                      in nsresult aStatus,
-                      in wstring aMessage,
-                      in nsIDownload aDownload);
-
-  void onLocationChange(in nsIWebProgress aWebProgress,
-                        in nsIRequest aRequest,
-                        in nsIURI aLocation,
                         in nsIDownload aDownload);
 
   void onSecurityChange(in nsIWebProgress aWebProgress,
