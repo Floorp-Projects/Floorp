@@ -83,6 +83,9 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
+
+JS_STATIC_DLL_CALLBACK(JSObject *)
 XPC_SJOW_WrappedObject(JSContext *cx, JSObject *obj);
 
 static inline
@@ -203,7 +206,7 @@ JSExtendedClass sXPC_SJOW_JSClass = {
   XPC_SJOW_Equality,
   nsnull, // outerObject
   nsnull, // innerObject
-  nsnull, // iteratorObject
+  XPC_SJOW_Iterator,
   XPC_SJOW_WrappedObject,
   JSCLASS_NO_RESERVED_MEMBERS
 };
@@ -898,6 +901,17 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
+  if (JS_GET_CLASS(cx, objToWrap) == &sXPC_XOW_JSClass.base) {
+    // We're being asked to wrap a XOW. By using XPCWrapper::Unwrap,
+    // we guarantee that the wrapped object is same-origin to us. If
+    // it isn't, then just wrap the XOW for an added layer of wrapping.
+
+    JSObject *maybeInner = XPCWrapper::Unwrap(cx, objToWrap);
+    if (maybeInner) {
+      objToWrap = maybeInner;
+    }
+  }
+
   // Check that the caller can access the unsafe object.
   if (!CanCallerAccess(cx, objToWrap)) {
     // CanCallerAccess() already threw for us.
@@ -952,6 +966,36 @@ XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   }
 
   return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
+{
+  JSObject *innerObj = GetUnsafeObject(cx, obj);
+  if (!innerObj) {
+    ThrowException(NS_ERROR_INVALID_ARG, cx);
+    return nsnull;
+  }
+
+  // Create our dummy SJOW.
+  JSObject *wrapperIter = ::JS_NewObject(cx, &sXPC_SJOW_JSClass.base, nsnull,
+                                         nsnull);
+  if (!wrapperIter ||
+      !::JS_SetParent(cx, wrapperIter, innerObj) ||
+      !::JS_SetPrototype(cx, wrapperIter, nsnull)) {
+    return nsnull;
+  }
+
+  if (!::JS_SetReservedSlot(cx, wrapperIter, XPC_SJOW_SLOT_IS_RESOLVING,
+                            BOOLEAN_TO_JSVAL(JS_FALSE))) {
+    return JS_FALSE;
+  }
+
+  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+
+  // Initialize the wrapper.
+  return XPCWrapper::CreateIteratorObj(cx, wrapperIter, obj, innerObj,
+                                       keysonly);
 }
 
 JS_STATIC_DLL_CALLBACK(JSObject *)
