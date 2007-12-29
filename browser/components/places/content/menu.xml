@@ -288,6 +288,26 @@
           }
         },
 
+        itemMoved:
+        function PMV_itemMoved(aItem, aOldParent, aOldIndex, aNewParent,
+                               aNewIndex) {
+          // This cannot actually happen yet (see IDL)
+          if (aNewParent != aOldParent);
+            return;
+
+          var popup = this._getPopupForContainer(aNewParent);
+          var index = popup._startMarker + 1 + aNewIndex;
+          var children = popup.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            var menuItem = children[i];
+            if (menuItem.node == aItem) {
+              popup.removeChild(menuItem);
+              popup.insertBefore(menuItem, children[index]);
+              return;
+            }
+          }
+        },
+
         itemChanged: function PMV_itemChanged(aNode) {
           // this check can be removed once we fix bug #382397
           var parentNode = aNode.parent;

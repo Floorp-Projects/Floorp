@@ -653,6 +653,7 @@ public:
                          PRBool aIsTemporary = PR_FALSE);
   nsresult InsertSortedChild(nsNavHistoryResultNode* aNode,
                              PRBool aIsTemporary = PR_FALSE);
+  PRBool EnsureItemPosition(PRUint32 aIndex);
   void MergeResults(nsCOMArray<nsNavHistoryResultNode>* aNodes);
   nsresult ReplaceChildURIAt(PRUint32 aIndex, nsNavHistoryResultNode* aNode);
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aIsTemporary = PR_FALSE);

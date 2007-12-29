@@ -298,6 +298,13 @@ PlacesTreeView.prototype = {
     var startReplacement = aContainer.viewIndex + 1;
     var replaceCount = this._countVisibleRowsForItem(aContainer);
 
+    // We don't replace the container item itself so we decrease the
+    // replaceCount by 1. We don't do so though if there is no visible item
+    // for the container. This happens when aContainer is the root node and
+    // showRoot is not set.
+    if (aContainer.viewIndex != -1)
+      replaceCount-=1;
+
     // Persist selection state
     var nodesToSelect = [];
     var selection = this.selection;
@@ -305,19 +312,13 @@ PlacesTreeView.prototype = {
     for (var rangeIndex = 0; rangeIndex < rc; rangeIndex++) {
       var min = { }, max = { };
       selection.getRangeAt(rangeIndex, min, max);
-      if (min.value > startReplacement + replaceCount)
+      var lastIndex = Math.min(max.value, startReplacement + replaceCount -1);
+      if (min.value < startReplacement || min.value > lastIndex)
         continue;
 
-      for (var nodeIndex = min.value; nodeIndex <= max.value; nodeIndex++)
+      for (var nodeIndex = min.value; nodeIndex <= lastIndex; nodeIndex++)
         nodesToSelect.push(this._visibleElements[nodeIndex]);
     }
-
-    // We don't replace the container item itself so we decrease the
-    // replaceCount by 1. We don't do so though if there is no visible item
-    // for the container. This happens when aContainer is the root node and
-    // showRoot is not set.
-    if (aContainer.viewIndex != -1)
-      replaceCount-=1;
 
     // Mark the removes as invisible
     for (var i = 0; i < replaceCount; i++)
@@ -660,7 +661,7 @@ PlacesTreeView.prototype = {
   itemRemoved: function PTV_itemRemoved(aParent, aItem, aOldIndex) {
     NS_ASSERT(this._result, "Got a notification but have no result!");
     if (!this._tree)
-        return; // nothing to do
+      return; // nothing to do
 
     var oldViewIndex = aItem.viewIndex;
     if (oldViewIndex < 0)
@@ -709,6 +710,55 @@ PlacesTreeView.prototype = {
     // redraw parent because twisty may have changed
     if (!aParent.hasChildren)
       this.itemChanged(aParent);
+  },
+
+  /**
+   * Be careful, aOldIndex and aNewIndex specify the index in the
+   * corresponding parent nodes, not the visible indexes.
+   */
+  itemMoved:
+  function PTV_itemMoved(aItem, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+    NS_ASSERT(this._result, "Got a notification but have no result!");
+    if (!this._tree)
+      return; // nothing to do
+
+    var oldViewIndex = aItem.viewIndex;
+    if (oldViewIndex < 0)
+      return; // item was already invisible, nothing to do
+
+    // this may have been a container, in which case it has a lot of rows
+    var count = this._countVisibleRowsForItem(aItem);
+
+    // Persist selection state
+    var nodesToSelect = [];
+    var selection = this.selection;
+    var rc = selection.getRangeCount();
+    for (var rangeIndex = 0; rangeIndex < rc; rangeIndex++) {
+      var min = { }, max = { };
+      selection.getRangeAt(rangeIndex, min, max);
+      var lastIndex = Math.min(max.value, oldViewIndex + count -1);
+      if (min.value < oldViewIndex || min.value > lastIndex)
+        continue;
+
+      for (var nodeIndex = min.value; nodeIndex <= lastIndex; nodeIndex++)
+        nodesToSelect.push(this._visibleElements[nodeIndex]);
+    }
+    if (nodesToSelect.length > 0)
+      selection.selectEventsSuppressed = true;
+
+    // remove the nodes, let itemInserted restore all of its contents
+    this._visibleElements.splice(oldViewIndex, count);
+    this._tree.rowCountChanged(oldViewIndex, -count);
+    this.itemInserted(aNewParent, aItem, aNewIndex);
+
+    // restore selection
+    if (nodesToSelect.length > 0) {
+      for each (var node in nodesToSelect) {
+        var index = node.viewIndex;
+        selection.rangedSelect(index, index, true);
+      }
+      selection.selectEventsSuppressed = false;
+    }
   },
 
   /**

@@ -496,6 +496,37 @@
           }
         },
 
+        itemMoved:
+        function TV_V_itemMoved(aItem, aOldParent, aOldIndex, aNewParent,
+                                aNewIndex) {
+          // This cannot actually happen yet (see IDL)
+          if (aNewParent != aOldParent);
+            return;
+
+          if (aNewParent == this._self.getResultNode()) {
+            var children = this._self.childNodes;
+            for (var i = 0; i < children.length; i++) {
+              var button = children[i];
+              if (button.node == aItem) {
+                this._self.removeChild(button);
+                this._self.insertBefore(button, children[aNewIndex]);
+                this._self.updateChevron();
+                return;
+              }
+            }
+          }
+          var popup = this._getPopupForContainer(aNewParent);
+          var children = popup.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            var menuItem = children[i];
+            if (menuItem.node == aItem) {
+              popup.removeChild(menuItem);
+              popup.insertBefore(menuItem, children[aNewIndex]);
+              return;
+            }
+          }
+        },
+
         itemChanged: function TV_V_itemChanged(aNode) {
           // this check can be removed once we fix bug #382397
           var parentNode = aNode.parent;
