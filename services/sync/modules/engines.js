@@ -149,9 +149,12 @@ Engine.prototype = {
       this._dav.unlock.async(this._dav, cont);
       let unlocked = yield;
 
-      checkStatus(statusResp.status, "Could not delete status file.", true);
-      checkStatus(snapshotResp.status, "Could not delete snapshot file.", true);
-      checkStatus(deltasResp.status, "Could not delete deltas file.", true);
+      this._checkStatus(statusResp.status,
+                        "Could not delete status file.", true);
+      this._checkStatus(snapshotResp.status,
+                        "Could not delete snapshot file.", true);
+      this._checkStatus(deltasResp.status,
+                        "Could not delete deltas file.", true);
 
       this._log.debug("Server files deleted");
       done = true;

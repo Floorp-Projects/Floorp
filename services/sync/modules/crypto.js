@@ -183,6 +183,7 @@ WeaveCrypto.prototype = {
       switch (algorithm) {
       case "none":
         ret = data;
+        break;
       case "XXTEA":
       case "XXXTEA": // Weave 0.1.12.10 and below had this typo
         this._log.debug("Decrypting data");
