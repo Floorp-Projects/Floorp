@@ -295,9 +295,19 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
 
   JSBool isXOW = (JS_GET_CLASS(cx, wrapperObj) == &sXPC_XOW_JSClass.base);
   uintN attrs = JSPROP_ENUMERATE;
-  if (OBJ_IS_NATIVE(innerObjp)) {
+  JSPropertyOp getter = nsnull;
+  JSPropertyOp setter = nsnull;
+  if (isXOW && OBJ_IS_NATIVE(innerObjp)) {
     JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+
     attrs = sprop->attrs;
+    if (attrs & JSPROP_GETTER) {
+      getter =  sprop->getter;
+    }
+    if (attrs & JSPROP_SETTER) {
+      setter = sprop->setter;
+    }
+
     if ((preserveVal || isXOW) &&
         SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
       v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
@@ -326,8 +336,16 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
     return JS_FALSE;
   }
 
-  JSBool ok = OBJ_DEFINE_PROPERTY(cx, wrapperObj, interned_id, v, nsnull,
-                                  nsnull, (attrs & JSPROP_ENUMERATE), nsnull);
+  const uintN interesting_attrs = isXOW
+                                  ? (JSPROP_ENUMERATE |
+                                     JSPROP_READONLY  |
+                                     JSPROP_PERMANENT |
+                                     JSPROP_SHARED    |
+                                     JSPROP_GETTER    |
+                                     JSPROP_SETTER)
+                                  : JSPROP_ENUMERATE;
+  JSBool ok = OBJ_DEFINE_PROPERTY(cx, wrapperObj, interned_id, v, getter,
+                                  setter, (attrs & interesting_attrs), nsnull);
 
   if (ok && (ok = ::JS_SetReservedSlot(cx, wrapperObj, sResolvingSlot,
                                        oldSlotVal))) {
