@@ -686,12 +686,21 @@ private:
 
 class WrappedNative2WrapperMap
 {
+    static struct JSDHashTableOps sOps;
+
+    static void ClearLink(JSDHashTable* table, JSDHashEntryHdr* entry);
+
 public:
+    struct Link : public PRCList
+    {
+        JSObject *obj;
+    };
+
     struct Entry : public JSDHashEntryHdr
     {
         // Note: key must be the flat JSObject for a wrapped native.
         JSObject*         key;
-        JSObject*         value;
+        Link*             value;
     };
 
     static WrappedNative2WrapperMap* newMap(int size);
@@ -703,25 +712,28 @@ public:
             JS_DHashTableOperate(mTable, wrapper, JS_DHASH_LOOKUP);
         if(JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
-        return entry->value;
+        return entry->value->obj;
     }
 
     // Note: If the entry already exists, then this will overwrite the
     // existing entry, returning the old value.
-    inline JSObject* Add(JSObject* wrapper, JSObject *obj)
+    JSObject* Add(WrappedNative2WrapperMap* head,
+                  JSObject* wrappedObject,
+                  JSObject* wrapper);
+
+    // Function to find a link.
+    Link* FindLink(JSObject* wrappedObject)
     {
-        NS_PRECONDITION(wrapper,"bad param");
         Entry* entry = (Entry*)
-            JS_DHashTableOperate(mTable, wrapper, JS_DHASH_ADD);
-        if(!entry)
-            return nsnull;
-        JSObject *old;
-        if(!entry->key)
-            entry->key = wrapper;
-        old = entry->value;
-        entry->value = obj;
-        return old;
+            JS_DHashTableOperate(mTable, wrappedObject, JS_DHASH_LOOKUP);
+        if(JS_DHASH_ENTRY_IS_BUSY(entry))
+            return entry->value;
+        return nsnull;
     }
+
+    // "Internal" function to add an empty link without doing unnecessary
+    // work.
+    PRBool AddLink(JSObject* wrappedObject, Link* oldLink);
 
     inline void Remove(JSObject* wrapper)
     {
@@ -734,9 +746,11 @@ public:
         {return JS_DHashTableEnumerate(mTable, f, arg);}
 
     ~WrappedNative2WrapperMap();
+
 private:
     WrappedNative2WrapperMap();    // no implementation
     WrappedNative2WrapperMap(int size);
+
 private:
     JSDHashTable *mTable;
 };
