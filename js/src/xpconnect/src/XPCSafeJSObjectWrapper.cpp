@@ -988,7 +988,7 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 
   if (!::JS_SetReservedSlot(cx, wrapperIter, XPC_SJOW_SLOT_IS_RESOLVING,
                             BOOLEAN_TO_JSVAL(JS_FALSE))) {
-    return JS_FALSE;
+    return nsnull;
   }
 
   JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
