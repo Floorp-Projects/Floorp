@@ -2155,7 +2155,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
         NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &samePrincipal)) ||
         !samePrincipal) {
       SetIsInitialDocument(PR_FALSE);
-    }      
+    }
 
     rv = window->SetNewDocument(this, nsnull, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
