@@ -617,7 +617,3 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 408782-1b.html 408782-1-ref.html
 == 408782-2a.html 408782-2-ref.html
 == 408782-2b.html 408782-2-ref.html
-== 409659-1a.html 409659-1-ref.html
-!= 409659-1b.html 409659-1-ref.html
-!= 409659-1c.html 409659-1-ref.html
-== 409659-1d.html 409659-1-ref.html
