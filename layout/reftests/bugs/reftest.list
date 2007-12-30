@@ -136,6 +136,10 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # 
 == 306660-1.html 306660-1-ref.html
 == 306660-2.html 306660-2-ref.html
 == 306660-3.html 306660-3-ref.html
+== 307102-1.html 307102-1-ref.html
+== 307102-2.html 307102-2-ref.html
+== 307102-3.html 307102-3-ref.html
+== 307102-4.html 307102-4-ref.html
 == 311822-1.html 311822-1-ref-a.html
 == 311822-1.html 311822-1-ref-b.html
 == 315620-1a.html 315620-1-ref.html
@@ -613,3 +617,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 408782-1b.html 408782-1-ref.html
 == 408782-2a.html 408782-2-ref.html
 == 408782-2b.html 408782-2-ref.html
+== 409659-1a.html 409659-1-ref.html
+!= 409659-1b.html 409659-1-ref.html
+!= 409659-1c.html 409659-1-ref.html
+== 409659-1d.html 409659-1-ref.html
