@@ -67,10 +67,11 @@ gfxAlphaRecovery::RecoverAlpha (gfxImageSurface *blackSurf,
     resultSurf = new gfxImageSurface(dimensions, gfxASurface::ImageFormatARGB32);
 
     // copy blackSurf into resultSurf
-    gfxContext ctx(resultSurf);
-    ctx.SetSource(blackSurf);
-    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx.Paint();
+    nsRefPtr<gfxContext> ctx = new gfxContext(resultSurf);
+    ctx->SetSource(blackSurf);
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx->Paint();
+    ctx = nsnull;
 
     gfxAlphaRecoveryResult result;
     _compute_alpha_values ((unsigned int*) resultSurf->Data(),
