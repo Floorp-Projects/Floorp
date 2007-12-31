@@ -1344,9 +1344,6 @@ main(int argc, char **argv, char **envp)
         nsRefPtr<FullTrustSecMan> secman = new FullTrustSecMan();
         xpc->SetSecurityManagerForJSContext(cx, secman, 0xFFFF);
 
-        //    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
-        //    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
-
 #ifndef XPCONNECT_STANDALONE
         // Fetch the system principal and store it away in a global, to use for
         // script compilation in Load() and ProcessFile() (including interactive
