@@ -204,10 +204,10 @@ gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
     if (!optSurface || optSurface->CairoStatus() != 0)
         return nsnull;
 
-    nsRefPtr<gfxContext> tmpCtx(new gfxContext(optSurface));
-    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx->SetSource(aSurface);
-    tmpCtx->Paint();
+    gfxContext tmpCtx(optSurface);
+    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx.SetSource(aSurface);
+    tmpCtx.Paint();
 
     gfxASurface *ret = optSurface;
     NS_ADDREF(ret);

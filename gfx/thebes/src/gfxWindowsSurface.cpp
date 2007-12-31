@@ -151,10 +151,10 @@ gfxWindowsSurface::OptimizeToDDB(HDC dc, const gfxIntSize& size, gfxImageFormat 
     if (wsurf->CairoStatus() != 0)
         return nsnull;
 
-    nsRefPtr<gfxContext> tmpCtx = new gfxContext(wsurf);
-    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx->SetSource(this);
-    tmpCtx->Paint();
+    gfxContext tmpCtx(wsurf);
+    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx.SetSource(this);
+    tmpCtx.Paint();
 
     gfxWindowsSurface *raw = (gfxWindowsSurface*) (wsurf.get());
     NS_ADDREF(raw);
