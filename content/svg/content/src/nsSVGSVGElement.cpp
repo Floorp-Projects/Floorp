@@ -701,6 +701,12 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
   nsresult rv;
   *_retval = nsnull;
 
+  nsIDocument* currentDoc = GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are uptodate
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
+
   // first try to get the "screen" CTM of our nearest SVG ancestor
 
   nsBindingManager *bindingManager = nsnull;
@@ -816,6 +822,12 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 {
   nsresult rv;
   *_retval = nsnull;
+
+  nsIDocument* currentDoc = GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are uptodate
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
 
   // first try to get the "screen" CTM of our nearest SVG ancestor
 
