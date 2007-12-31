@@ -38,6 +38,12 @@
 #ifndef nsUTF8Utils_h_
 #define nsUTF8Utils_h_
 
+// This file may be used in two ways: if MOZILLA_INTERNAL_API is defined, this
+// file will provide signatures for the Mozilla abstract string types. It will
+// use XPCOM assertion/debugging macros, etc.
+
+#include "nscore.h"
+
 #include "nsCharTraits.h"
 
 class UTF8traits
@@ -136,6 +142,8 @@ public:
     return ucs4;
   }
 
+#ifdef MOZILLA_INTERNAL_API
+
   static PRUint32 NextChar(nsACString::const_iterator& iter,
                            const nsACString::const_iterator& end,
                            PRBool *err = nsnull, PRBool *overlong = nsnull)
@@ -199,6 +207,7 @@ public:
       *overlong = ucs4 < minUcs4;
     return ucs4;
   }
+#endif // MOZILLA_INTERNAL_API
 
 private:
   static PRBool CalcState(char c, PRUint32& ucs4, PRUint32& minUcs4,
@@ -356,6 +365,8 @@ public:
     return 0;
   }
 
+#ifdef MOZILLA_INTERNAL_API
+
   static PRUint32 NextChar(nsAString::const_iterator& iter,
                            const nsAString::const_iterator& end,
                            PRBool *err = nsnull)
@@ -437,6 +448,7 @@ public:
       *err = PR_TRUE;
     return 0;
   }
+#endif // MOZILLA_INTERNAL_API
 };
 
 
@@ -447,8 +459,8 @@ public:
 class ConvertUTF8toUTF16
   {
     public:
-      typedef nsACString::char_type value_type;
-      typedef nsAString::char_type  buffer_type;
+      typedef char      value_type;
+      typedef PRUnichar buffer_type;
 
     ConvertUTF8toUTF16( buffer_type* aBuffer )
         : mStart(aBuffer), mBuffer(aBuffer), mErrorEncountered(PR_FALSE) {}
@@ -533,7 +545,7 @@ class ConvertUTF8toUTF16
 class CalculateUTF8Length
   {
     public:
-      typedef nsACString::char_type value_type;
+      typedef char value_type;
 
     CalculateUTF8Length() : mLength(0), mErrorEncountered(PR_FALSE) { }
 
@@ -602,8 +614,8 @@ class CalculateUTF8Length
 class ConvertUTF16toUTF8
   {
     public:
-      typedef nsAString::char_type  value_type;
-      typedef nsACString::char_type buffer_type;
+      typedef PRUnichar value_type;
+      typedef char      buffer_type;
 
     // The error handling here is more lenient than that in
     // |ConvertUTF8toUTF16|, but it's that way for backwards
@@ -716,7 +728,7 @@ class ConvertUTF16toUTF8
 class CalculateUTF8Size
   {
     public:
-      typedef nsAString::char_type value_type;
+      typedef PRUnichar value_type;
 
     CalculateUTF8Size()
       : mSize(0) { }
@@ -780,6 +792,7 @@ class CalculateUTF8Size
       size_t mSize;
   };
 
+#ifdef MOZILLA_INTERNAL_API
 /**
  * A character sink that performs a |reinterpret_cast| style conversion
  * between character types.
@@ -816,5 +829,6 @@ class LossyConvertEncoding
     private:
       output_type* mDestination;
   };
+#endif // MOZILLA_INTERNAL_API
 
 #endif /* !defined(nsUTF8Utils_h_) */
