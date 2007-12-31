@@ -1,6 +1,6 @@
 <!ENTITY about.version                "version">
 
-<!ENTITY about.copy.beforeLink        "Copyright &copy; 1998-2007 by">
+<!ENTITY about.copy.beforeLink        "Copyright &copy; 1998-2008 by">
 <!ENTITY about.copy.linkTitle         "contributors">
 <!ENTITY about.copy.afterLink         "to the Mozilla Project.">
 
