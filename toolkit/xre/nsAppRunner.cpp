@@ -291,9 +291,46 @@ SaveWordToEnv(const char *name, const nsACString & word)
 static void
 SaveFileToEnv(const char *name, nsIFile *file)
 {
+#ifdef XP_WIN
+  nsAutoString path;
+  file->GetPath(path);
+  SetEnvironmentVariableW(NS_ConvertASCIItoUTF16(name).get(), path.get());
+#else
   nsCAutoString path;
   file->GetNativePath(path);
   SaveWordToEnv(name, path);
+#endif
+}
+
+// Load the path of a file saved with SaveFileToEnv
+static already_AddRefed<nsILocalFile>
+GetFileFromEnv(const char *name)
+{
+  nsresult rv;
+  nsILocalFile *file = nsnull;
+
+#ifdef XP_WIN
+  WCHAR path[_MAX_PATH];
+  if (!GetEnvironmentVariableW(NS_ConvertASCIItoUTF16(name).get(),
+                               path, _MAX_PATH))
+    return nsnull;
+
+  rv = NS_NewLocalFile(nsDependentString(path), PR_TRUE, &file);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  return file;
+#else
+  const char *arg = PR_GetEnv(name);
+  if (!arg || !*arg)
+    return nsnull;
+
+  rv = NS_NewNativeLocalFile(nsDependentCString(arg), PR_TRUE, &file);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  return file;
+#endif
 }
 
 // Save the path of the given word to the specified environment variable
@@ -691,8 +728,8 @@ nsXULAppInfo::LaunchAppHelperWithArgs(int aArgc, char **aArgv)
   rv = appHelper->AppendNative(NS_LITERAL_CSTRING("helper.exe"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString appHelperPath;
-  rv = appHelper->GetNativePath(appHelperPath);
+  nsAutoString appHelperPath;
+  rv = appHelper->GetPath(appHelperPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!WinLaunchChild(appHelperPath.get(), aArgc, aArgv, 1))
@@ -1325,13 +1362,13 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
   // nsGREDirServiceProvider.cpp
 
 #ifdef XP_WIN
-  char exePath[MAXPATHLEN];
+  PRUnichar exePath[MAXPATHLEN];
 
-  if (!::GetModuleFileName(0, exePath, MAXPATHLEN))
+  if (!::GetModuleFileNameW(0, exePath, MAXPATHLEN))
     return NS_ERROR_FAILURE;
 
-  rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
-                             getter_AddRefs(lf));
+  rv = NS_NewLocalFile(nsDependentString(exePath), PR_TRUE,
+                       getter_AddRefs(lf));
   if (NS_FAILED(rv))
     return rv;
 
@@ -1579,15 +1616,22 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   if (NS_FAILED(rv))
     return rv;
 
+#if defined(XP_WIN)
+  nsAutoString exePath;
+  rv = lf->GetPath(exePath);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, needElevation))
+    return NS_ERROR_FAILURE;
+
+#else
   nsCAutoString exePath;
   rv = lf->GetNativePath(exePath);
   if (NS_FAILED(rv))
     return rv;
 
-#if defined(XP_WIN)
-  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, needElevation))
-    return NS_ERROR_FAILURE;
-#elif defined(XP_OS2) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
+#if defined(XP_OS2) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
   // implementation of _execv() is broken with GCC 3.3.x on OS/2
   if (OS2LaunchChild(exePath.get(), gRestartArgc, gRestartArgv) == -1)
     return NS_ERROR_FAILURE;
@@ -1612,8 +1656,9 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   PRStatus failed = PR_WaitProcess(process, &exitCode);
   if (failed || exitCode)
     return NS_ERROR_FAILURE;
-#endif
-#endif
+#endif // XP_OS2 series
+#endif // WP_WIN
+#endif // WP_MACOSX
 
   return NS_ERROR_LAUNCHED_CHILD_PROCESS;
 }
@@ -1855,27 +1900,17 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     *aStartOffline = PR_TRUE;
 
 
-  arg = PR_GetEnv("XRE_PROFILE_PATH");
-  if (arg && *arg) {
-    nsCOMPtr<nsILocalFile> lf;
-    rv = NS_NewNativeLocalFile(nsDependentCString(arg), PR_TRUE,
-                               getter_AddRefs(lf));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsILocalFile> localDir;
-    arg = PR_GetEnv("XRE_PROFILE_LOCAL_PATH");
-    if (arg && *arg) {
-      rv = NS_NewNativeLocalFile(nsDependentCString(arg), PR_TRUE,
-                                 getter_AddRefs(localDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
+  nsCOMPtr<nsILocalFile> lf = GetFileFromEnv("XRE_PROFILE_PATH");
+  if (lf) {
+    nsCOMPtr<nsILocalFile> localDir =
+      GetFileFromEnv("XRE_PROFILE_LOCAL_PATH");
+    if (!localDir) {
       localDir = lf;
     }
 
     arg = PR_GetEnv("XRE_PROFILE_NAME");
     if (arg && *arg && aProfileName)
       aProfileName->Assign(nsDependentCString(arg));
-
 
     // Clear out flags that we handled (or should have handled!) last startup.
     const char *dummy;

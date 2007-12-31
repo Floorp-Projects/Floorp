@@ -384,20 +384,17 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
     // going to fail, and I haven't figured out a way to work around this without
     // the PathCombine() function, which is not available in plain win95/nt4
 
-    nsCAutoString fullPath;
-    mWorkingDir->GetNativePath(fullPath);
-
-    nsCAutoString carg;
-    NS_CopyUnicodeToNative(aArgument, carg);
+    nsAutoString fullPath;
+    mWorkingDir->GetPath(fullPath);
 
     fullPath.Append('\\');
-    fullPath.Append(carg);
+    fullPath.Append(aArgument);
 
-    char pathBuf[MAX_PATH];
-    if (!_fullpath(pathBuf, fullPath.get(), MAX_PATH))
+    WCHAR pathBuf[MAX_PATH];
+    if (!_wfullpath(pathBuf, fullPath.get(), MAX_PATH))
       return NS_ERROR_FAILURE;
 
-    rv = lf->InitWithNativePath(nsDependentCString(pathBuf));
+    rv = lf->InitWithPath(nsDependentString(pathBuf));
     if (NS_FAILED(rv)) return rv;
   }
   NS_ADDREF(*aResult = lf);
@@ -471,7 +468,11 @@ nsCommandLine::appendArg(const char* arg)
 #endif
 
   nsAutoString warg;
+#ifdef XP_WIN
+  CopyUTF8toUTF16(nsDependentCString(arg), warg);
+#else
   NS_CopyNativeToUnicode(nsDependentCString(arg), warg);
+#endif
 
   mArgs.AppendString(warg);
 }

@@ -52,7 +52,7 @@ CPPSRCS = \
 
 PROGRAM = updater$(BIN_SUFFIX)
 
-REQUIRES = libmar libbz2
+REQUIRES = libmar libbz2 string
 
 LIBS += \
 	$(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
@@ -65,6 +65,7 @@ HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
 CPPSRCS += progressui_win.cpp
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
+DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
 else
@@ -103,6 +104,12 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DNS_NO_XPCOM
+
+ifdef _MSC_VER
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 libs::

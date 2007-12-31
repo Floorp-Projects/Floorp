@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = xulrunner
 
-REQUIRES  = xpcom xulapp
+REQUIRES  = xpcom string xulapp
 
 CPPSRCS   = nsXULStub.cpp
 
@@ -82,6 +82,12 @@ MOZ_WINCONSOLE = 1
 else
 MOZ_WINCONSOLE = 0
 endif
+endif
+
+include $(topsrcdir)/config/config.mk
+
+ifdef _MSC_VER
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 
 include $(topsrcdir)/config/rules.mk

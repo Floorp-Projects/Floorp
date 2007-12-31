@@ -254,8 +254,9 @@ struct nsXREAppData
  * Begin an XUL application. Does not return until the user exits the
  * application.
  *
- * @param argc/argv Command-line parameters to pass to the application. These
- *                  are in the "native" character set.
+ * @param argc/argv Command-line parameters to pass to the application. On
+ *                  Windows, these should be in UTF8. On unix-like platforms
+ *                  these are in the "native" character set.
  *
  * @param aAppData  Information about the application to be run.
  *
@@ -264,10 +265,6 @@ struct nsXREAppData
  * @note           If the binary is linked against the standalone XPCOM glue,
  *                 XPCOMGlueStartup() should be called before this method.
  *
- * @note           XXXbsmedberg Nobody uses the glue yet, but there is a
- *                 potential problem: on windows, the standalone glue calls
- *                 SetCurrentDirectory, and relative paths on the command line
- *                 won't be correct.
  */
 XRE_API(int,
         XRE_main, (int argc, char* argv[], const nsXREAppData* sAppData))
@@ -275,6 +272,8 @@ XRE_API(int,
 /**
  * Given a path relative to the current working directory (or an absolute
  * path), return an appropriate nsILocalFile object.
+ *
+ * @note Pass UTF8 strings on Windows... native charset on other platforms.
  */
 XRE_API(nsresult,
         XRE_GetFileFromPath, (const char *aPath, nsILocalFile* *aResult))

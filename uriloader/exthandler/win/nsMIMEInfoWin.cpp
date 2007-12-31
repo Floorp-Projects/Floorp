@@ -54,6 +54,7 @@
 #include "nsIWindowsRegKey.h"
 #include "nsIProcess.h"
 #include "nsOSHelperAppService.h"
+#include "nsUnicharUtils.h"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsMIMEInfoWin, nsMIMEInfoBase, nsIPropertyBag)
 
@@ -541,15 +542,15 @@ PRBool nsMIMEInfoWin::GetProgIDVerbCommandHandler(const nsAString& appProgIDName
 // Helper routine used in tracking app lists. Converts path
 // entries to lower case and stores them in the trackList array.
 void nsMIMEInfoWin::ProcessPath(nsCOMPtr<nsIMutableArray>& appList,
-                                nsTArray<nsCAutoString>& trackList,
+                                nsTArray<nsString>& trackList,
                                 const nsAString& appFilesystemCommand)
 {
-  NS_ConvertUTF16toUTF8 lower(appFilesystemCommand);
+  nsAutoString lower(appFilesystemCommand);
   ToLowerCase(lower);
 
   // Don't include firefox.exe in the list
-  char exe[MAX_PATH+1];
-  PRUint32 len = GetModuleFileName(NULL, exe, MAX_PATH);
+  WCHAR exe[MAX_PATH+1];
+  PRUint32 len = GetModuleFileNameW(NULL, exe, MAX_PATH);
   if (len < MAX_PATH && len != 0) {
     PRUint32 index = lower.Find(exe);
     if (index != -1)
@@ -568,11 +569,11 @@ void nsMIMEInfoWin::ProcessPath(nsCOMPtr<nsIMutableArray>& appList,
 // Helper routine that handles a compare between a path
 // and an array of paths.
 static PRBool IsPathInList(nsAString& appPath,
-                           nsTArray<nsCAutoString>& trackList)
+                           nsTArray<nsString>& trackList)
 {
   // trackList data is always lowercase, see ProcessPath
   // above.
-  NS_ConvertUTF16toUTF8 tmp(appPath);
+  nsAutoString tmp(appPath);
   ToLowerCase(tmp);
 
   for (PRUint32 i = 0; i < trackList.Length(); i++) {
@@ -604,7 +605,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray **_retval)
   if (!appList)
     return NS_ERROR_FAILURE;
 
-  nsTArray<nsCAutoString> trackList;
+  nsTArray<nsString> trackList;
 
   nsCAutoString fileExt;
   GetPrimaryExtension(fileExt);
