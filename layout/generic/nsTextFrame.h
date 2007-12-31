@@ -284,7 +284,11 @@ public:
 #endif
 
   PRInt32 GetContentOffset() const { return mContentOffset; }
-  PRInt32 GetContentLength() const { return GetContentEnd() - mContentOffset; }
+  PRInt32 GetContentLength() const
+  {
+    NS_ASSERTION(GetContentEnd() - mContentOffset >= 0, "negative length");
+    return GetContentEnd() - mContentOffset;
+  }
   PRInt32 GetContentEnd() const;
   // This returns the length the frame thinks it *should* have after it was
   // last reflowed (0 if it hasn't been reflowed yet). This should be used only
