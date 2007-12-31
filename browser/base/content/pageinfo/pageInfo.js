@@ -611,8 +611,12 @@ function grabAll(elem)
              (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem, false);
 #ifdef MOZ_SVG
   else if (elem instanceof SVGImageElement) {
-    var href = makeURLAbsolute(elem.baseURI, elem.href.baseVal);
-    addImage(href, gStrings.mediaImg, "", elem, false);
+    try {
+      // Note: makeURLAbsolute will throw if either the baseURI is not a valid URI
+      //       or the URI formed from the baseURI and the URL is not a valid URI
+      var href = makeURLAbsolute(elem.baseURI, elem.href.baseVal);
+      addImage(href, gStrings.mediaImg, "", elem, false);
+    } catch (e) { }
   }
 #endif
   else if (elem instanceof HTMLLinkElement) {
