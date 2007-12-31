@@ -1078,6 +1078,7 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppress
 
 void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
 {
+  NS_ASSERTION(mMaxTextLength <= mMaxTextLength + aFrame->GetContentLength(), "integer overflow");
   mMaxTextLength += aFrame->GetContentLength();
   mDoubleByteText |= aFrame->GetContent()->GetText()->Is2b();
   mLastFrame = aFrame;
@@ -3159,7 +3160,9 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
   // NOTE: bypassing nsTextFrame::Init!!!
   nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
 
+#ifdef IBMBIDI
   nsIFrame* nextContinuation = aPrevInFlow->GetNextContinuation();
+#endif // IBMBIDI
   // Hook the frame into the flow
   SetPrevInFlow(aPrevInFlow);
   aPrevInFlow->SetNextInFlow(this);
@@ -3176,9 +3179,6 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
   }
 #ifdef IBMBIDI
   if (aPrevInFlow->GetStateBits() & NS_FRAME_IS_BIDI) {
-    PRInt32 start, end;
-    aPrevInFlow->GetOffsets(start, mContentOffset);
-
     nsPropertyTable *propTable = PresContext()->PropertyTable();
     propTable->SetProperty(this, nsGkAtoms::embeddingLevel,
           propTable->GetProperty(aPrevInFlow, nsGkAtoms::embeddingLevel),
@@ -3192,7 +3192,9 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
     if (nextContinuation) {
       SetNextContinuation(nextContinuation);
       nextContinuation->SetPrevContinuation(this);
-      nextContinuation->GetOffsets(start, end);
+      PRInt32 end = static_cast<nsTextFrame*>(nextContinuation)->GetContentOffset();
+      // Adjust next-continuations' content offset as needed.
+      SetLength(PR_MAX(0, end - mContentOffset));
     }
     mState |= NS_FRAME_IS_BIDI;
   } // prev frame is bidi
@@ -5156,27 +5158,35 @@ nsTextFrame::SetLength(PRInt32 aLength)
 {
   mContentLengthHint = aLength;
   PRInt32 end = GetContentOffset() + aLength;
-  nsTextFrame* f = static_cast<nsTextFrame*>(GetNextInFlow());
-  if (!f)
+  nsTextFrame* continuation = static_cast<nsTextFrame*>(GetNextContinuation());
+  if (!continuation)
     return;
-  if (end < f->mContentOffset) {
-    // Our frame is shrinking. Give the text to our next in flow.
-    f->mContentOffset = end;
-    if (f->GetTextRun() != mTextRun) {
+
+  if (end < continuation->mContentOffset) {
+    // Our frame is shrinking. Give the text to our next-continuation.
+    continuation->mContentOffset = end;
+    if (continuation->GetTextRun() != mTextRun) {
       ClearTextRun();
-      f->ClearTextRun();
+      continuation->ClearTextRun();
     }
     return;
   }
-  while (f && f->mContentOffset < end) {
-    // Our frame is growing. Take text from our in-flow.
-    f->mContentOffset = end;
-    if (f->GetTextRun() != mTextRun) {
+  while (continuation && continuation->mContentOffset < end) {
+    // Our frame is growing. Take text from our next-continuation.
+    continuation->mContentOffset = end;
+    if (continuation->GetTextRun() != mTextRun) {
       ClearTextRun();
-      f->ClearTextRun();
+      continuation->ClearTextRun();
     }
-    f = static_cast<nsTextFrame*>(f->GetNextInFlow());
+    continuation = static_cast<nsTextFrame*>(continuation->GetNextContinuation());
   }
+#ifdef DEBUG
+  continuation = this;
+  while (continuation) {
+    continuation->GetContentLength(); // Assert if negative length
+    continuation = static_cast<nsTextFrame*>(continuation->GetNextContinuation());
+  }
+#endif
 }
 
 NS_IMETHODIMP
@@ -6023,10 +6033,8 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
     aEnd = PR_MAX(aEnd, prevOffset);
     prev->ClearTextRun();
   }
-  if (mContentOffset != aStart) {
-    mContentOffset = aStart;
-  }
 
+  mContentOffset = aStart;
   SetLength(aEnd - aStart);
 }
 
