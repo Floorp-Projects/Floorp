@@ -141,6 +141,12 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
   nsresult rv;
   *_retval = nsnull;
 
+  nsIDocument* currentDoc = GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are uptodate
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
+
   nsBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
   // that would have attached the binding that gives us our anonymous parent.
@@ -182,6 +188,12 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 {
   nsresult rv;
   *_retval = nsnull;
+
+  nsIDocument* currentDoc = GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are uptodate
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
 
   nsBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
