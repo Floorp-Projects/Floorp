@@ -244,7 +244,8 @@ nsSVGDisplayContainerFrame::InitialUpdate()
 NS_IMETHODIMP
 nsSVGDisplayContainerFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
-  if (!suppressInvalidation)
+  if (!suppressInvalidation &&
+      !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
     nsSVGUtils::UpdateFilterRegion(this);
 
   nsSVGUtils::NotifyChildrenCanvasTMChanged(this, suppressInvalidation);
