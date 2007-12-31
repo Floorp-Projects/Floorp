@@ -526,7 +526,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
         {
             case JSGC_BEGIN:
             {
-                if(self->GetMainThreadOnlyGC() && !NS_IsMainThread())
+                if(!NS_IsMainThread())
                 {
                     return JS_FALSE;
                 }
@@ -544,11 +544,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 }
 
                 dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
-                {
-                    XPCLock* lock = self->GetMainThreadOnlyGC() ?
-                                    nsnull : self->GetMapLock();
 
-                    XPCAutoLock al(lock); // lock the wrapper map if necessary
+                {
                     JSDyingJSObjectData data = {cx, dyingWrappedJSArray};
 
                     // Add any wrappers whose JSObjects are to be finalized to
@@ -585,23 +582,18 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // to be dead.
 
                 dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
-                XPCLock* mapLock = self->GetMainThreadOnlyGC() ?
-                                   nsnull : self->GetMapLock();
                 while(1)
                 {
                     nsXPCWrappedJS* wrapper;
+                    PRInt32 count = dyingWrappedJSArray->Count();
+                    if(!count)
                     {
-                        XPCAutoLock al(mapLock); // lock if necessary
-                        PRInt32 count = dyingWrappedJSArray->Count();
-                        if(!count)
-                        {
-                            dyingWrappedJSArray->Compact();
-                            break;
-                        }
-                        wrapper = static_cast<nsXPCWrappedJS*>
-                                             (dyingWrappedJSArray->ElementAt(count-1));
-                        dyingWrappedJSArray->RemoveElementAt(count-1);
+                        dyingWrappedJSArray->Compact();
+                        break;
                     }
+                    wrapper = static_cast<nsXPCWrappedJS*>
+                        (dyingWrappedJSArray->ElementAt(count-1));
+                    dyingWrappedJSArray->RemoveElementAt(count-1);
                     NS_RELEASE(wrapper);
                 }
 
@@ -801,9 +793,6 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // the js engine. So this could be simultaneous with the
                 // events above.
 
-                XPCLock* lock = self->GetMainThreadOnlyGC() ?
-                                nsnull : self->GetMapLock();
-
                 // Do any deferred released of native objects.
                 if(self->GetDeferReleases())
                 {
@@ -816,7 +805,6 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                     {
                         nsISupports* obj;
                         {
-                            XPCAutoLock al(lock); // lock if necessary
                             PRInt32 count = array->Count();
                             if(!count)
                             {
@@ -1067,7 +1055,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mThreadRunningGC(nsnull),
    mWrappedJSToReleaseArray(),
    mNativesToReleaseArray(),
-   mMainThreadOnlyGC(JS_FALSE),
    mDeferReleases(JS_FALSE),
    mDoingFinalization(JS_FALSE),
    mVariantRoots(nsnull),
@@ -1273,18 +1260,14 @@ XPCJSRuntime::DeferredRelease(nsISupports* obj)
     NS_ASSERTION(obj, "bad param");
     NS_ASSERTION(GetDeferReleases(), "bad call");
 
-    XPCLock* lock = GetMainThreadOnlyGC() ? nsnull : GetMapLock();
+    if(!mNativesToReleaseArray.Count())
     {
-        XPCAutoLock al(lock); // lock if necessary
-        if(!mNativesToReleaseArray.Count())
-        {
-            // This array sometimes has 1000's
-            // of entries, and usually has 50-200 entries. Avoid lots
-            // of incremental grows.  We compact it down when we're done.
-            mNativesToReleaseArray.SizeTo(256);
-        }
-        return mNativesToReleaseArray.AppendElement(obj);
-    }        
+        // This array sometimes has 1000's
+        // of entries, and usually has 50-200 entries. Avoid lots
+        // of incremental grows.  We compact it down when we're done.
+        mNativesToReleaseArray.SizeTo(256);
+    }
+    return mNativesToReleaseArray.AppendElement(obj);
 }
 
 /***************************************************************************/

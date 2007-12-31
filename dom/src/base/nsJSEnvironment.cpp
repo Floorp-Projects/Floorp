@@ -3649,8 +3649,6 @@ nsJSRuntime::Init()
 
   // Set these global xpconnect options...
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
-  xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
 
   nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
                                        MaxScriptRunTimePrefChangedCallback,

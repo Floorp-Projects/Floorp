@@ -1976,52 +1976,6 @@ nsXPConnect::UpdateXOWs(JSContext* aJSContext,
     return NS_OK;
 }
 
-/* attribute PRBool collectGarbageOnMainThreadOnly; */
-NS_IMETHODIMP 
-nsXPConnect::GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    if(!rt)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    *aCollectGarbageOnMainThreadOnly = rt->GetMainThreadOnlyGC();
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXPConnect::SetCollectGarbageOnMainThreadOnly(PRBool aCollectGarbageOnMainThreadOnly)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    if(!rt)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    rt->SetMainThreadOnlyGC(aCollectGarbageOnMainThreadOnly);
-    return NS_OK;
-}
-
-/* attribute PRBool deferReleasesUntilAfterGarbageCollection; */
-NS_IMETHODIMP 
-nsXPConnect::GetDeferReleasesUntilAfterGarbageCollection(PRBool *aDeferReleasesUntilAfterGarbageCollection)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    if(!rt)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    *aDeferReleasesUntilAfterGarbageCollection = rt->GetDeferReleases();
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXPConnect::SetDeferReleasesUntilAfterGarbageCollection(PRBool aDeferReleasesUntilAfterGarbageCollection)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    if(!rt)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    rt->SetDeferReleases(aDeferReleasesUntilAfterGarbageCollection);
-    return NS_OK;
-}
-
 /* void releaseJSContext (in JSContextPtr aJSContext, in PRBool noGC); */
 NS_IMETHODIMP 
 nsXPConnect::ReleaseJSContext(JSContext * aJSContext, PRBool noGC)
