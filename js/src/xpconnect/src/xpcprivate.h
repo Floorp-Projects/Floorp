@@ -656,9 +656,6 @@ public:
     XPCContext* GetXPCContext(JSContext* cx);
     XPCContext* SyncXPCContextList(JSContext* cx = nsnull);
 
-    JSBool GetMainThreadOnlyGC() const   {return mMainThreadOnlyGC;}
-    void   SetMainThreadOnlyGC(JSBool b) {mMainThreadOnlyGC = b;}
-    
     JSBool GetDeferReleases() const {return mDeferReleases;}
     void   SetDeferReleases(JSBool b) 
         {/* If deferring is turned off while any are pending they'll leak! */
@@ -790,7 +787,6 @@ private:
     PRThread* mThreadRunningGC;
     nsVoidArray mWrappedJSToReleaseArray;
     nsVoidArray mNativesToReleaseArray;
-    JSBool mMainThreadOnlyGC;
     JSBool mDeferReleases;
     JSBool mDoingFinalization;
     XPCRootSetElem *mVariantRoots;
