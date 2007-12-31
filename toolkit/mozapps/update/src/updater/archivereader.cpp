@@ -96,6 +96,16 @@ ArchiveReader::ExtractFile(const char *name, const char *dest)
 }
 
 int
+ArchiveReader::ExtractFileToStream(const char *name, FILE *fp)
+{
+  const MarItem *item = mar_find_item(mArchive, name);
+  if (!item)
+    return READ_ERROR;
+
+  return ExtractItemToStream(item, fp);
+}
+
+int
 ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
 {
   /* decompress the data chunk by chunk */

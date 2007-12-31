@@ -563,29 +563,29 @@ struct MessageWindow {
         return retval;
     }
 
-    // SendRequest: Pass string via WM_COPYDATA to message window.
-    NS_IMETHOD SendRequest( const char *cmd ) {
-        // Construct a data buffer <commandline>\0<workingdir>\0
-        int cmdlen = strlen(cmd);
-        char* cmdbuf = (char*) malloc(cmdlen + MAX_PATH + 1);
-        if (!cmdbuf)
-            return NS_ERROR_OUT_OF_MEMORY;
+    // SendRequest: Pass the command line via WM_COPYDATA to message window.
+    NS_IMETHOD SendRequest() {
+        WCHAR *cmd = ::GetCommandLineW();
+        WCHAR cwd[MAX_PATH];
+        _wgetcwd(cwd, MAX_PATH);
 
-        strcpy(cmdbuf, cmd);
-        _getcwd(cmdbuf + cmdlen + 1, MAX_PATH);
+        // Construct a narrow UTF8 buffer <commandline>\0<workingdir>\0
+        NS_ConvertUTF16toUTF8 utf8buffer(cmd);
+        utf8buffer.Append('\0');
+        AppendUTF16toUTF8(cwd, utf8buffer);
+        utf8buffer.Append('\0');
 
         // We used to set dwData to zero, when we didn't send the working dir.
         // Now we're using it as a version number.
         COPYDATASTRUCT cds = {
             1,
-            cmdlen + strlen(cmdbuf + cmdlen + 1) + 2,
-            (void*) cmdbuf
+            utf8buffer.Length(),
+            (void*) utf8buffer.get()
         };
         // Bring the already running Mozilla process to the foreground.
         // nsWindow will restore the window (if minimized) and raise it.
         ::SetForegroundWindow( mHandle );
         ::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
-        free (cmdbuf);
         return NS_OK;
     }
 
@@ -615,9 +615,9 @@ struct MessageWindow {
                 printf( "Working dir: %s\n", wdpath);
 #endif
 
-                NS_NewNativeLocalFile(nsDependentCString(wdpath),
-                                      PR_FALSE,
-                                      getter_AddRefs(workingDir));
+                NS_NewLocalFile(NS_ConvertUTF8toUTF16(wdpath),
+                                PR_FALSE,
+                                getter_AddRefs(workingDir));
             }
             (void)nsNativeAppSupportWin::HandleCommandLine((char*)cds->lpData, workingDir, nsICommandLine::STATE_REMOTE_AUTO);
 
@@ -701,8 +701,7 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     MessageWindow msgWindow;
     if ( (HWND)msgWindow ) {
         // We are a client process.  Pass request to message window.
-        LPTSTR cmd = ::GetCommandLine();
-        rv = msgWindow.SendRequest( cmd );
+        rv = msgWindow.SendRequest();
     } else {
         // We will be server.
         rv = msgWindow.Create();

@@ -39,8 +39,16 @@
 #ifndef PROGRESSUI_H__
 #define PROGRESSUI_H__
 
+#if defined(XP_WIN)
+  typedef WCHAR NS_tchar;
+  #define NS_main wmain
+#else
+  typedef char NS_tchar;
+  #define NS_main main
+#endif
+
 // Called to perform any initialization of the widget toolkit
-int InitProgressUI(int *argc, char ***argv);
+int InitProgressUI(int *argc, NS_tchar ***argv);
 
 // Called on the main thread at startup
 int ShowProgressUI();

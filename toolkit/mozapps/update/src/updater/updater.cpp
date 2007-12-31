@@ -47,6 +47,41 @@
  *  LWS      = 1*( " " | "\t" )
  */
 
+#if defined(XP_WIN)
+# include <windows.h>
+# include <direct.h>
+# include <io.h>
+# define F_OK 00
+# define W_OK 02
+# define R_OK 04
+# define access _access
+# define putenv _putenv
+# define snprintf _snprintf
+# define fchmod(a,b)
+# define mkdir(path, perms) _mkdir(path)
+
+# define NS_T(str) L ## str
+# define NS_tsnprintf _snwprintf
+# define NS_tstrrchr wcsrchr
+# define NS_tchdir _wchdir
+# define NS_tremove _wremove
+# define NS_topen _wopen
+# define NS_tfopen _wfopen
+# define NS_tatoi _wtoi64
+#else
+# include <sys/wait.h>
+# include <unistd.h>
+
+# define NS_T(str) str
+# define NS_tsnprintf snprintf
+# define NS_tstrrchr strrchr
+# define NS_tchdir chdir
+# define NS_tremove remove
+# define NS_topen open
+# define NS_tfopen fopen
+# define NS_tatoi atoi
+#endif
+
 #include "bspatch.h"
 #include "progressui.h"
 #include "archivereader.h"
@@ -63,24 +98,6 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <errno.h>
-
-#if defined(XP_WIN)
-# include <windows.h>
-# include <direct.h>
-# include <io.h>
-# define F_OK 00
-# define W_OK 02
-# define R_OK 04
-# define access _access
-# define snprintf _snprintf
-# define putenv _putenv
-# define fchmod(a,b)
-# define mkdir(path, perm) _mkdir(path)
-# define chdir(path) _chdir(path)
-#else
-# include <sys/wait.h>
-# include <unistd.h>
-#endif
 
 #if defined(XP_MACOSX)
 // This function is defined in launchchild_osx.mm
@@ -261,7 +278,7 @@ private:
 
 //-----------------------------------------------------------------------------
 
-static char* gSourcePath;
+static NS_tchar* gSourcePath;
 static ArchiveReader gArchiveReader;
 #ifdef XP_WIN
 static bool gSucceeded = FALSE;
@@ -281,10 +298,10 @@ static void LogInit()
   if (gLogFP)
     return;
 
-  char logFile[MAXPATHLEN];
-  snprintf(logFile, MAXPATHLEN, "%s/update.log", gSourcePath);
+  NS_tchar logFile[MAXPATHLEN];
+  NS_tsnprintf(logFile, MAXPATHLEN, NS_T("%s/update.log"), gSourcePath);
 
-  gLogFP = fopen(logFile, "w");
+  gLogFP = NS_tfopen(logFile, NS_T("w"));
 }
 
 static void LogFinish()
@@ -359,7 +376,7 @@ mstrtok(const char *delims, char **str)
 static void ensure_write_permissions(const char *path)
 {
 #ifdef XP_WIN
-  (void)_chmod(path, _S_IREAD | _S_IWRITE);
+  (void) chmod(path, _S_IREAD | _S_IWRITE);
 #else
   struct stat fs;
   if (!stat(path, &fs) && !(fs.st_mode & S_IWUSR)) {
@@ -741,9 +758,11 @@ PatchFile::~PatchFile()
     close(pfd);
 
   // delete the temporary patch file
-  char spath[MAXPATHLEN];
-  snprintf(spath, MAXPATHLEN, "%s/%d.patch", gSourcePath, mPatchIndex);
-  ensure_remove(spath);
+  NS_tchar spath[MAXPATHLEN];
+  NS_tsnprintf(spath, MAXPATHLEN, NS_T("%s/%d.patch"),
+               gSourcePath, mPatchIndex);
+
+  NS_tremove(spath);
 
   free(buf);
 }
@@ -818,12 +837,18 @@ PatchFile::Prepare()
   // extract the patch to a temporary file
   mPatchIndex = sPatchIndex++;
 
-  char spath[MAXPATHLEN];
-  snprintf(spath, MAXPATHLEN, "%s/%d.patch", gSourcePath, mPatchIndex);
+  NS_tchar spath[MAXPATHLEN];
+  NS_tsnprintf(spath, MAXPATHLEN, NS_T("%s/%d.patch"),
+               gSourcePath, mPatchIndex);
 
-  ensure_remove(spath);
+  NS_tremove(spath);
 
-  int rv = gArchiveReader.ExtractFile(mPatchFile, spath);
+  FILE *fp = NS_tfopen(spath, NS_T("wb"));
+  if (!fp)
+    return WRITE_ERROR;
+
+  int rv = gArchiveReader.ExtractFileToStream(mPatchFile, fp);
+  fclose(fp);
   if (rv)
     return rv;
 
@@ -831,7 +856,7 @@ PatchFile::Prepare()
   //          no need to open all of the patch files and read all of 
   //          the source files before applying any patches.
 
-  pfd = open(spath, O_RDONLY | _O_BINARY);
+  pfd = NS_topen(spath, O_RDONLY | _O_BINARY);
   if (pfd < 0)
     return READ_ERROR;
 
@@ -1011,55 +1036,66 @@ PatchIfFile::Finish(int status)
 #include "nsWindowsRestart.cpp"
 
 static void
-LaunchWinPostProcess(const char *appExe)
+copyASCIItoWCHAR(WCHAR *dest, const char *src)
+{
+  while (*src) {
+    *dest = *src;
+    ++src; ++dest;
+  }
+}
+
+static void
+LaunchWinPostProcess(const WCHAR *appExe)
 {
   // Launch helper.exe to perform post processing (e.g. registry and log file
   // modifications) for the update.
-  char inifile[MAXPATHLEN];
-  strcpy(inifile, appExe);
+  WCHAR inifile[MAXPATHLEN];
+  wcscpy(inifile, appExe);
 
-  char *slash = strrchr(inifile, '\\');
+  WCHAR *slash = wcsrchr(inifile, '\\');
   if (!slash)
     return;
 
-  strcpy(slash + 1, "updater.ini");
+  wcscpy(slash + 1, L"updater.ini");
 
-  char exefile[MAXPATHLEN];
-  char exearg[MAXPATHLEN];
-  if (!GetPrivateProfileString("PostUpdateWin", "ExeRelPath", NULL, exefile,
-      sizeof(exefile), inifile))
+  WCHAR exefile[MAXPATHLEN];
+  WCHAR exearg[MAXPATHLEN];
+
+  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeRelPath", NULL, exefile,
+                                MAXPATHLEN, inifile))
     return;
 
-  if (!GetPrivateProfileString("PostUpdateWin", "ExeArg", NULL, exearg,
-      sizeof(exearg), inifile))
+  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeArg", NULL, exearg,
+                                MAXPATHLEN, inifile))
     return;
 
-  char exefullpath[MAXPATHLEN];
-  strcpy(exefullpath, appExe);
+  WCHAR exefullpath[MAXPATHLEN];
+  wcscpy(exefullpath, appExe);
 
-  slash = strrchr(exefullpath, '\\');
-  strcpy(slash + 1, exefile);
+  slash = wcsrchr(exefullpath, '\\');
+  wcscpy(slash + 1, exefile);
 
-  char dlogFile[MAXPATHLEN];
-  strcpy(dlogFile, exefullpath);
+  WCHAR dlogFile[MAXPATHLEN];
+  wcscpy(dlogFile, exefullpath);
 
-  slash = strrchr(dlogFile, '\\');
-  strcpy(slash + 1, "uninstall.update");
+  slash = wcsrchr(dlogFile, '\\');
+  wcscpy(slash + 1, L"uninstall.update");
 
-  char slogFile[MAXPATHLEN];
-  snprintf(slogFile, MAXPATHLEN, "%s/update.log", gSourcePath);
+  WCHAR slogFile[MAXPATHLEN];
+  _snwprintf(slogFile, MAXPATHLEN, L"%s/update.log", gSourcePath);
 
   // We want to launch the post update helper app to update the Windows
   // registry even if there is a failure with removing the uninstall.update
   // file or copying the update.log file.
-  ensure_remove(dlogFile);
-  copy_file(slogFile, dlogFile);
+  NS_tremove(dlogFile);
+  CopyFile(slogFile, dlogFile, FALSE);
 
   static int    argc = 2;
-  static char **argv = (char**) malloc(sizeof(char*) * (argc + 1));
-  argv[0] = "argv0ignoredbywinlaunchchild";
-  argv[1] = exearg;
-  argv[2] = "\0";
+  static WCHAR* argv[3] = {
+    L"argv0ignoredbywinlaunchchild",
+    exearg,
+    L"\0"
+  };
 
   WinLaunchChild(exefullpath, argc, argv, 1);
   free(argv);
@@ -1067,13 +1103,13 @@ LaunchWinPostProcess(const char *appExe)
 #endif
 
 static void
-LaunchCallbackApp(const char *workingDir, int argc, char **argv)
+LaunchCallbackApp(const NS_tchar *workingDir, int argc, NS_tchar **argv)
 {
   putenv("NO_EM_RESTART=");
   putenv("MOZ_LAUNCHED_CHILD=1");
 
   // Run from the specified working directory (see bug 312360).
-  chdir(workingDir);
+  NS_tchdir(workingDir);
 
 #if defined(USE_EXECV)
   execv(argv[0], argv);
@@ -1134,7 +1170,7 @@ UpdateThreadFunc(void *param)
   QuitProgressUI();
 }
 
-int main(int argc, char **argv)
+int NS_main(int argc, NS_tchar **argv)
 {
   InitProgressUI(&argc, &argv);
 
@@ -1150,7 +1186,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  int pid = atoi(argv[2]);
+  int pid = NS_tatoi(argv[2]);
   if (pid) {
 #ifdef XP_WIN
     HANDLE parent = OpenProcess(SYNCHRONIZE, FALSE, (DWORD) pid);
@@ -1306,15 +1342,20 @@ ActionList::Finish(int status)
 
 int DoUpdate()
 {
-  char manifest[MAXPATHLEN];
-  snprintf(manifest, MAXPATHLEN, "%s/update.manifest", gSourcePath);
+  NS_tchar manifest[MAXPATHLEN];
+  NS_tsnprintf(manifest, MAXPATHLEN, NS_T("%s/update.manifest"), gSourcePath);
 
   // extract the manifest
-  int rv = gArchiveReader.ExtractFile("update.manifest", manifest);
+  FILE *fp = NS_tfopen(manifest, NS_T("wb"));
+  if (!fp)
+    return READ_ERROR;
+
+  int rv = gArchiveReader.ExtractFileToStream("update.manifest", fp);
+  fclose(fp);
   if (rv)
     return rv;
 
-  AutoFD mfd = open(manifest, O_RDONLY | _O_BINARY);
+  AutoFD mfd = NS_topen(manifest, O_RDONLY | _O_BINARY);
   if (mfd < 0)
     return READ_ERROR;
 
@@ -1394,13 +1435,3 @@ int DoUpdate()
   list.Finish(rv);
   return rv;
 }
-
-#if defined(XP_WIN) && !defined(DEBUG) && !defined(__GNUC__)
-// We need WinMain in order to not be a console app.  This function is unused
-// if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
-{
-  // Do the real work.
-  return main(__argc, __argv);
-}
-#endif

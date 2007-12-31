@@ -53,6 +53,7 @@ public:
   void Close();
 
   int ExtractFile(const char *item, const char *destination);
+  int ExtractFileToStream(const char *item, FILE *fp);
 
 private:
   int ExtractItemToStream(const MarItem *item, FILE *fp);
