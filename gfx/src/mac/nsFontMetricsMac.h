@@ -43,7 +43,6 @@
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
 #include "nsString.h"
-#include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"

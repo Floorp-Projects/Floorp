@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsUnitConversion.h"
-
 #include "nsScreenCocoa.h"
 #include "nsCocoaUtils.h"
 

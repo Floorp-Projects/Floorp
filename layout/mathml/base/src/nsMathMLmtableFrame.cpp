@@ -40,7 +40,6 @@
 #include "nsFrame.h"
 #include "nsAreaFrame.h"
 #include "nsPresContext.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"

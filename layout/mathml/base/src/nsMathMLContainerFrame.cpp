@@ -44,7 +44,6 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"

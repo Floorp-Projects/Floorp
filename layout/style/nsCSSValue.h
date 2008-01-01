@@ -44,7 +44,6 @@
 #include "nsString.h"
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
-#include "nsUnitConversion.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"

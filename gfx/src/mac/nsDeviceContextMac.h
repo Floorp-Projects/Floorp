@@ -39,7 +39,6 @@
 #define nsDeviceContextMac_h___
 
 #include "nsDeviceContext.h"
-#include "nsUnitConversion.h"
 #include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
