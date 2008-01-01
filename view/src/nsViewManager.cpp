@@ -44,7 +44,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsViewManager.h"
-#include "nsUnitConversion.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"

@@ -43,7 +43,6 @@
 #include <Menu.h>
 
 #include "nsIDeviceContext.h"
-#include "nsUnitConversion.h"
 #include "nsSystemFontsBeOS.h"
 
 #define DEFAULT_PIXEL_FONT_SIZE 16.0f

@@ -40,7 +40,6 @@
 
 #include "gfxCore.h"
 #include "nsCoord.h"
-#include "nsUnitConversion.h"
 
 #define MG_2DIDENTITY     0
 #define MG_2DTRANSLATION  1

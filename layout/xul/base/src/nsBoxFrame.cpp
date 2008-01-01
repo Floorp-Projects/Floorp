@@ -69,7 +69,6 @@
 #include "nsStyleContext.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
-#include "nsUnitConversion.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"

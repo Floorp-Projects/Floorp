@@ -42,7 +42,6 @@
 #include "nsCRT.h"  // to get NS_IS_SPACE
 #include "nsFrame.h"
 #include "nsPresContext.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"

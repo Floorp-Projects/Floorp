@@ -39,7 +39,6 @@
 #include "nsStyleUtil.h"
 #include "nsCRT.h"
 #include "nsStyleConsts.h"
-#include "nsUnitConversion.h"
 
 #include "nsGkAtoms.h"
 #include "nsILinkHandler.h"

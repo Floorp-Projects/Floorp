@@ -51,7 +51,6 @@
 #include "prenv.h"
 
 #include "nsRuleNode.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "imgIRequest.h"
 
