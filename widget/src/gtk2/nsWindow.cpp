@@ -5765,6 +5765,8 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
     PRBool foundMasks = gdk_keyboard_get_modmap_masks(
                           GDK_WINDOW_XDISPLAY(mDrawingarea->inner_window),
                           &capsLockMask, &numLockMask, &scrollLockMask);
+    if (!foundMasks)
+        return NS_ERROR_NOT_IMPLEMENTED;
 
     PRUint32 mask = 0;
     switch (aKeyCode) {

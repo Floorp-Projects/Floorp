@@ -380,8 +380,8 @@ private:
     PRInt32             mSizeState;
     PluginType          mPluginType;
 
-    PRUint32            mTransparencyBitmapWidth;
-    PRUint32            mTransparencyBitmapHeight;
+    PRInt32             mTransparencyBitmapWidth;
+    PRInt32             mTransparencyBitmapHeight;
 
     nsRefPtr<gfxASurface> mThebesSurface;
 
