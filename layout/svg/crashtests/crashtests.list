@@ -45,3 +45,4 @@ load 385840-1.svg # asserts (bug 385845)
 load 385852-1.svg
 load 386475-1.xhtml # asserts (bug 385554)
 load 402408-1.svg
+load 409573-1.svg
