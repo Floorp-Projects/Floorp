@@ -881,12 +881,16 @@ LoginManagerStorage_legacy.prototype = {
 
         this.log("Writing passwords to " + this._signonsFile.path);
 
-        var outputStream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
-                                .createInstance(Ci.nsIFileOutputStream);
-        outputStream.QueryInterface(Ci.nsISafeOutputStream);
-
+        var safeStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                         createInstance(Ci.nsIFileOutputStream);
         // WR_ONLY|CREAT|TRUNC
-        outputStream.init(this._signonsFile, 0x02 | 0x08 | 0x20, 0600, null);
+        safeStream.init(this._signonsFile, 0x02 | 0x08 | 0x20, 0600, null);
+
+        var outputStream = Cc["@mozilla.org/network/buffered-output-stream;1"].
+                           createInstance(Ci.nsIBufferedOutputStream);
+        outputStream.init(safeStream, 8192);
+        outputStream.QueryInterface(Ci.nsISafeOutputStream); // for .finish()
+
 
         // write file version header
         writeLine("#2e");
