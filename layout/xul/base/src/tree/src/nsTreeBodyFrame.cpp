@@ -2660,7 +2660,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     PRInt32 parentIndex;
     nsresult rv = mView->GetParentIndex(mSlots->mDropRow, &parentIndex);
     while (NS_SUCCEEDED(rv) && parentIndex >= 0) {
-      mSlots->mValueArray.RemoveValue(parentIndex);
+      mSlots->mArray.RemoveElement(parentIndex);
       rv = mView->GetParentIndex(parentIndex, &parentIndex);
     }
 
@@ -2689,7 +2689,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
       mSlots->mTimer = nsnull;
     }
 
-    if (mSlots->mValueArray.Count()) {
+    if (!mSlots->mArray.IsEmpty()) {
       // Close all spring loaded folders except the drop folder.
       CreateTimer(nsILookAndFeel::eMetric_TreeCloseDelay,
                   CloseCallback, nsITimer::TYPE_ONE_SHOT,
@@ -4285,7 +4285,7 @@ nsTreeBodyFrame::OpenCallback(nsITimer *aTimer, void *aClosure)
     self->mSlots->mTimer = nsnull;
 
     if (self->mSlots->mDropRow >= 0) {
-      self->mSlots->mValueArray.AppendValue(self->mSlots->mDropRow);
+      self->mSlots->mArray.AppendElement(self->mSlots->mDropRow);
       self->mView->ToggleOpenState(self->mSlots->mDropRow);
     }
   }
@@ -4299,11 +4299,11 @@ nsTreeBodyFrame::CloseCallback(nsITimer *aTimer, void *aClosure)
     aTimer->Cancel();
     self->mSlots->mTimer = nsnull;
 
-    for (PRInt32 i = self->mSlots->mValueArray.Count() - 1; i >= 0; i--) {
+    for (PRUint32 i = self->mSlots->mArray.Length(); i--; ) {
       if (self->mView)
-        self->mView->ToggleOpenState(self->mSlots->mValueArray[i]);
-      self->mSlots->mValueArray.RemoveValueAt(i);
+        self->mView->ToggleOpenState(self->mSlots->mArray[i]);
     }
+    self->mSlots->mArray.Clear();
   }
 }
 
