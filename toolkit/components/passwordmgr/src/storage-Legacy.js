@@ -377,10 +377,27 @@ LoginManagerStorage_legacy.prototype = {
      * countLogins
      *
      */
-    countLogins : function (hostname, formSubmitURL, httpRealm) {
-        var logins = this._searchLogins(hostname, formSubmitURL, httpRealm);
+    countLogins : function (aHostname, aFormSubmitURL, aHttpRealm) {
+        var logins;
 
-        return logins.length;
+        // Normal case: return direct results for the specified host.
+        if (aHostname) {
+            logins = this._searchLogins(aHostname, aFormSubmitURL, aHttpRealm);
+            return logins.length
+        } 
+
+        // For consistency with how aFormSubmitURL and aHttpRealm work
+        if (aHostname == null)
+            return 0;
+
+        // aHostname == "", so loop through each known host to match with each.
+        var count = 0;
+        for (var hostname in this._logins) {
+            logins = this._searchLogins(hostname, aFormSubmitURL, aHttpRealm);
+            count += logins.length;
+        }
+
+        return count;
     },
 
 
