@@ -177,6 +177,37 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGElementBase)
 // nsIContent methods
 
 nsresult
+nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                            nsIContent* aBindingParent,
+                            PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsSVGElementBase::BindToTree(aDocument, aParent,
+                                             aBindingParent,
+                                             aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
+    return NS_OK;
+  }
+  const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
+
+  if (oldVal && oldVal->Type() == nsAttrValue::eCSSStyleRule) {
+    // we need to force a reparse because the baseURI of the document
+    // may have changed
+    nsAttrValue attrValue;
+    nsAutoString stringValue;
+    oldVal->ToString(stringValue);
+    ParseStyleAttribute(this, stringValue, attrValue);
+    // Don't bother going through SetInlineStyleRule, we don't want to fire off
+    // mutation events or document notifications anyway
+    rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, attrValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsSVGElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                             const nsAString* aValue, PRBool aNotify)
 {
@@ -486,6 +517,28 @@ PRBool
 nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eELEMENT | eSVG));
+}
+
+already_AddRefed<nsIURI>
+nsSVGElement::GetBaseURI() const
+{
+  nsCOMPtr<nsIURI> baseURI = nsSVGElementBase::GetBaseURI();
+
+  nsIContent* bindingParent = GetBindingParent();
+  if (bindingParent) {
+    nsIDocument* doc = bindingParent->GetOwnerDoc();
+    if (doc) {
+      nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
+      if (binding) {
+        // XXX sXBL/XBL2 issue
+        // If this is an anonymous XBL element use the binding
+        // document for the base URI. 
+        // XXX Will fail with xml:base
+        baseURI = binding->PrototypeBinding()->DocURI();
+      }
+    }
+  }
+  return baseURI.forget();
 }
 
 NS_IMETHODIMP
@@ -814,19 +867,6 @@ nsSVGElement::UpdateContentStyleRule()
   
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsIURI *docURI = doc->GetDocumentURI();
-
-  nsIContent* bindingParent = GetBindingParent();
-  if (bindingParent) {
-    nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
-    if (binding) {
-      // XXX sXBL/XBL2 issue
-      // If this is an anonymous XBL element use the binding
-      // document for the base URI. 
-      // XXX Will fail with xml:base
-      baseURI = binding->PrototypeBinding()->DocURI();
-    }
-  }
-
   nsICSSLoader* cssLoader = doc->CSSLoader();
 
   nsCSSDeclaration* declaration = nsnull;

@@ -79,10 +79,16 @@ public:
 
   // nsIContent interface methods
 
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
+
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
 
