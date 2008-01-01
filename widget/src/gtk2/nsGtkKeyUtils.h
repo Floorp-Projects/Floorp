@@ -40,7 +40,7 @@
 #define __nsGdkKeyUtils_h__
 
 int      GdkKeyCodeToDOMKeyCode     (int aKeysym);
-int      DOMKeyCodeToGdkKeyCode     (PRUint32 aKeysym);
+int      DOMKeyCodeToGdkKeyCode     (int aKeysym);
 PRUint32 nsConvertCharCodeToUnicode (GdkEventKey* aEvent);
 
 #endif /* __nsGdkKeyUtils_h__ */
