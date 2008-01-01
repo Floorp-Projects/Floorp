@@ -37,7 +37,6 @@
 
 #include "nsRect.h"
 #include "nsString.h"
-#include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 
 #ifdef MIN
