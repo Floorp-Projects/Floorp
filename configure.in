@@ -2827,7 +2827,7 @@ if test "x$enable_dtrace" = "xyes"; then
   if test -n "$HAVE_DTRACE"; then
       AC_DEFINE(INCLUDE_MOZILLA_DTRACE)
   else
-      AC_MSG_ERROR([dtrace enabled but sys/std.h not found]);
+      AC_MSG_ERROR([dtrace enabled but sys/sdt.h not found]);
   fi
 fi
 AC_SUBST(HAVE_DTRACE)
