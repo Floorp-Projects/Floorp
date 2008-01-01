@@ -2239,7 +2239,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
         // defensive code against odd things such as a smallish TextZoom...
         NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
         if (stride < onePixel || 1000 == count) {
-          aRenderingContext.PopState();
           return NS_ERROR_UNEXPECTED;
         }
         dy += stride;
@@ -2435,7 +2434,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
         // defensive code against odd things such as a smallish TextZoom...
         NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
         if (stride < onePixel || 1000 == count) {
-          aRenderingContext.PopState();
           return NS_ERROR_UNEXPECTED;
         }
         dx += stride;
