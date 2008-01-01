@@ -210,8 +210,8 @@ Sanitizer.prototype = {
       {
         var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
                               .getService(Components.interfaces.nsILoginManager);
-        var logins = pwmgr.getAllLogins({});
-        return (logins.length > 0);
+        var count = pwmgr.countLogins("", "", ""); // count all logins
+        return (count > 0);
       }
     },
     
