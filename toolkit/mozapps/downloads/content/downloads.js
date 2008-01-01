@@ -408,9 +408,6 @@ function Startup()
 
   buildDownloadList();
 
-  // View event listeners
-  gDownloadsView.addEventListener("dblclick", onDownloadDblClick, false);
-
   // The DownloadProgressListener (DownloadProgressListener.js) handles progress
   // notifications.
   gDownloadListener = new DownloadProgressListener();

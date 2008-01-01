@@ -185,6 +185,7 @@
   <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
+               ondblclick="onDownloadDblClick(event);"
                ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
   </richlistbox>
