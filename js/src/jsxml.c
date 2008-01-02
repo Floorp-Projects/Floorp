@@ -2332,8 +2332,8 @@ MakeXMLPIString(JSContext *cx, JSStringBuffer *sb, JSString *name,
 static void
 AppendAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *valstr)
 {
-    js_AppendCString(sb, "=\"");
-    valstr = js_EscapeAttributeValue(cx, valstr);
+    js_AppendChar(sb, '=');
+    valstr = js_EscapeAttributeValue(cx, valstr, JS_TRUE);
     if (!valstr) {
         if (STRING_BUFFER_OK(sb)) {
             free(sb->base);
@@ -2342,7 +2342,6 @@ AppendAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *valstr)
         return;
     }
     js_AppendJSString(sb, valstr);
-    js_AppendChar(sb, '"');
 }
 
 /*
@@ -2406,14 +2405,15 @@ EscapeElementValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
  * This function takes ownership of sb->base, if sb is non-null, in all cases.
  */
 static JSString *
-EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
+EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str,
+                     JSBool quote)
 {
     size_t length, newlength;
     const jschar *cp, *start, *end;
     jschar c;
 
     JSSTRING_CHARS_AND_LENGTH(str, start, length);
-    newlength = length;
+    newlength = length + (quote ? 2 : 0);
     for (cp = start, end = cp + length; cp < end; cp++) {
         c = *cp;
         if (c == '"')
@@ -2438,6 +2438,8 @@ EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
             JS_ReportOutOfMemory(cx);
             return NULL;
         }
+        if (quote)
+            js_AppendChar(sb, '"');
         for (cp = start; cp < end; cp++) {
             c = *cp;
             if (c == '"')
@@ -2455,6 +2457,8 @@ EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
             else
                 js_AppendChar(sb, c);
         }
+        if (quote)
+            js_AppendChar(sb, '"');
         JS_ASSERT(STRING_BUFFER_OK(sb));
         str = js_NewString(cx, sb->base, STRING_BUFFER_OFFSET(sb));
         if (!str)
@@ -2669,18 +2673,19 @@ namespace_match(const void *a, const void *b)
 }
 
 /* ECMA-357 10.2.1 and 10.2.2 */
+#define TO_SOURCE_FLAG 0x80000000
+
 static JSString *
 XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
-               uintN indentLevel)
+               uint32 indentLevel)
 {
     JSBool pretty, indentKids;
     JSStringBuffer sb;
     JSString *str, *prefix, *kidstr;
     JSXMLArrayCursor cursor;
-    uint32 i, n;
+    uint32 i, n, nextIndentLevel;
     JSXMLArray empty, decls, ancdecls;
     JSXMLNamespace *ns, *ns2;
-    uintN nextIndentLevel;
     JSXML *attr, *kid;
 
     if (!GetBooleanXMLSetting(cx, js_prettyPrinting_str, &pretty))
@@ -2688,7 +2693,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
     js_InitStringBuffer(&sb);
     if (pretty) {
-        js_RepeatChar(&sb, ' ', indentLevel);
+        js_RepeatChar(&sb, ' ', indentLevel & ~TO_SOURCE_FLAG);
 
         if (!STRING_BUFFER_OK(&sb)) {
             JS_ReportOutOfMemory(cx);
@@ -2711,7 +2716,8 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
       case JSXML_CLASS_ATTRIBUTE:
         /* Step 5. */
-        return EscapeAttributeValue(cx, &sb, xml->xml_value);
+        return EscapeAttributeValue(cx, &sb, xml->xml_value,
+                                    (indentLevel & TO_SOURCE_FLAG) != 0);
 
       case JSXML_CLASS_COMMENT:
         /* Step 6. */
@@ -2981,7 +2987,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                 goto out;
             nextIndentLevel = indentLevel + i;
         } else {
-            nextIndentLevel = 0;
+            nextIndentLevel = indentLevel & TO_SOURCE_FLAG;
         }
 
         XMLArrayCursorInit(&cursor, &xml->xml_kids);
@@ -3001,7 +3007,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
         if (pretty && indentKids) {
             js_AppendChar(&sb, '\n');
-            js_RepeatChar(&sb, ' ', indentLevel);
+            js_RepeatChar(&sb, ' ', indentLevel & ~TO_SOURCE_FLAG);
         }
         js_AppendCString(&sb, "</");
 
@@ -3034,7 +3040,7 @@ out:
 
 /* ECMA-357 10.2 */
 static JSString *
-ToXMLString(JSContext *cx, jsval v)
+ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
 {
     JSObject *obj;
     JSString *str;
@@ -3065,7 +3071,7 @@ ToXMLString(JSContext *cx, jsval v)
 
     /* Handle non-element cases in this switch, returning from each case. */
     xml = (JSXML *) JS_GetPrivate(cx, obj);
-    return XMLToXMLString(cx, xml, NULL, 0);
+    return XMLToXMLString(cx, xml, NULL, toSourceFlag | 0);
 }
 
 static JSXMLQName *
@@ -7116,7 +7122,7 @@ xml_toString_helper(JSContext *cx, JSXML *xml)
     }
 
     if (!HasSimpleContent(xml))
-        return ToXMLString(cx, OBJECT_TO_JSVAL(xml->object));
+        return ToXMLString(cx, OBJECT_TO_JSVAL(xml->object), 0);
 
     str = cx->runtime->emptyString;
     if (!js_EnterLocalRootScope(cx))
@@ -7141,6 +7147,18 @@ xml_toString_helper(JSContext *cx, JSXML *xml)
 }
 
 static JSBool
+xml_toSource(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSString *str;
+
+    str = ToXMLString(cx, vp[1], TO_SOURCE_FLAG);
+    if (!str)
+        return JS_FALSE;
+    *vp = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+static JSBool
 xml_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
@@ -7159,7 +7177,7 @@ xml_toXMLString(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
 
-    str = ToXMLString(cx, vp[1]);
+    str = ToXMLString(cx, vp[1], 0);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -7211,9 +7229,9 @@ static JSFunctionSpec xml_methods[] = {
     JS_FN("setName",               xml_setName,               1,1,0),
     JS_FN("setNamespace",          xml_setNamespace,          1,1,0),
     JS_FN(js_text_str,             xml_text,                  0,0,0),
+    JS_FN(js_toSource_str,         xml_toSource,              0,0,0),
     JS_FN(js_toString_str,         xml_toString,              0,0,0),
     JS_FN(js_toXMLString_str,      xml_toXMLString,           0,0,0),
-    JS_FN(js_toSource_str,         xml_toXMLString,           0,0,0),
     JS_FN(js_valueOf_str,          xml_valueOf,               0,0,0),
     JS_FS_END
 };
@@ -7860,9 +7878,9 @@ js_ToAttributeName(JSContext *cx, jsval *vp)
 }
 
 JSString *
-js_EscapeAttributeValue(JSContext *cx, JSString *str)
+js_EscapeAttributeValue(JSContext *cx, JSString *str, JSBool quote)
 {
-    return EscapeAttributeValue(cx, NULL, str);
+    return EscapeAttributeValue(cx, NULL, str, quote);
 }
 
 JSString *
@@ -7917,7 +7935,7 @@ js_EscapeElementValue(JSContext *cx, JSString *str)
 JSString *
 js_ValueToXMLString(JSContext *cx, jsval v)
 {
-    return ToXMLString(cx, v);
+    return ToXMLString(cx, v, 0);
 }
 
 static JSBool
