@@ -158,6 +158,9 @@ nsresult
 NS_NewSVGFEDiffuseLightingElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFESpecularLightingElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEImageElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -278,8 +281,9 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFEDiffuseLightingElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feSpecularLighting)
     return NS_NewSVGFESpecularLightingElement(aResult, aNodeInfo);
-  if (name == nsGkAtoms::feDisplacementMap  ||
-      name == nsGkAtoms::feImage)
+  if (name == nsGkAtoms::feImage)
+    return NS_NewSVGFEImageElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feDisplacementMap)
     return NS_NewSVGFEUnimplementedMOZElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::pattern)
     return NS_NewSVGPatternElement(aResult, aNodeInfo);
