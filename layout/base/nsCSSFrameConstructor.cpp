@@ -13365,8 +13365,12 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
     // the lazy generation, but as long as it's a popup frame that hasn't
     // generated its children yet, that's OK.
     nsMenuPopupFrame* menuPopupFrame = static_cast<nsMenuPopupFrame *>(frame);
-    if (menuPopupFrame->HasGeneratedChildren())
+    if (menuPopupFrame->HasGeneratedChildren()) {
+      if (mCallback)
+        mCallback(mContent, frame, mArg);
+      
       return NS_OK;
+    }     
 
     // indicate that the children have been generated
     menuPopupFrame->SetGeneratedChildren();

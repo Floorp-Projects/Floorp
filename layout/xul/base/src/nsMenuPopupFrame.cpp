@@ -526,18 +526,19 @@ LazyGeneratePopupDone(nsIContent* aPopup, nsIFrame* aFrame, void* aArg)
     nsWeakFrame weakFrame(aFrame);
     nsMenuPopupFrame* popupFrame = static_cast<nsMenuPopupFrame*>(aFrame);
 
-    popupFrame->SetGeneratedChildren();
-
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm && popupFrame->IsMenu()) {
       nsCOMPtr<nsIContent> popup = aPopup;
+      pm->UpdateMenuItems(popup);
+
+      if (!weakFrame.IsAlive())
+        return;
+
       PRBool selectFirstItem = (PRBool)NS_PTR_TO_INT32(aArg);
       if (selectFirstItem) {
         nsMenuFrame* next = pm->GetNextMenuItem(popupFrame, nsnull, PR_TRUE);
         popupFrame->SetCurrentMenuItem(next);
       }
-
-      pm->UpdateMenuItems(popup);
     }
 
     if (weakFrame.IsAlive()) {
