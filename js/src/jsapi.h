@@ -1425,8 +1425,10 @@ struct JSFunctionSpec {
     uint16          flags;
 
     /*
-     * extra & 0xFFFF: number of arg slots for local GC roots;
-     * extra >> 16:    reserved, must be zero.
+     * extra & 0xFFFF:  Number of extra argument slots for local GC roots.
+     *                  If fast native, must be zero.
+     * extra >> 16:     If slow native, reserved for future use (must be 0).
+     *                  If fast native, minimum required argc.
      */
     uint32          extra;
 #endif
