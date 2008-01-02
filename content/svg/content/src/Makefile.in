@@ -178,6 +178,7 @@ INCLUDES += 	\
 		-I$(srcdir)/../../../events/src \
 		-I$(srcdir)/../../../html/content/src \
 		-I$(topsrcdir)/content/xbl/src \
+		-I$(topsrcdir)/gfx/src/thebes \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
