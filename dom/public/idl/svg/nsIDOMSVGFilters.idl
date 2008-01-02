@@ -301,6 +301,16 @@ interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement {
   readonly attribute nsIDOMSVGAnimatedNumber limitingConeAngle;
 };
 
+[scriptable, uuid(3250f5c9-9c76-4e77-96d8-5f0cc85f41c4)]
+interface nsIDOMSVGFEImageElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+/*
+  nsIDOMSVGURIReference,
+  nsIDOMSVGLangSpace,
+  nsIDOMSVGExternalResourcesRequired
+*/
+{
+};
+
 [scriptable, uuid(8698c635-26c7-468b-905e-494e8825d56b)]
 interface nsIDOMSVGFEUnimplementedMOZElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {

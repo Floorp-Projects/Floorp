@@ -60,6 +60,20 @@
 #include "nsIFrame.h"
 #include "gfxContext.h"
 #include "nsSVGLengthList.h"
+#include "nsIDOMSVGURIReference.h"
+#include "nsImageLoadingContent.h"
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#if defined(XP_WIN) && !defined(NOUSER)
+// Prevent Windows redefining LoadImage
+#define NOUSER
+#endif
+#include "nsThebesImage.h"
+#include "nsSVGAnimatedPreserveAspectRatio.h"
+#include "nsSVGPreserveAspectRatio.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsSVGMatrix.h"
+#include "nsSVGFilterElement.h"
 
 //--------------------Filter Resource-----------------------
 /**
@@ -5141,6 +5155,333 @@ nsSVGFESpecularLightingElement::LightPixel(const float *N, const float *L,
     targetData[GFX_ARGB32_OFFSET_G] = 0;
     targetData[GFX_ARGB32_OFFSET_R] = 0;
     targetData[GFX_ARGB32_OFFSET_A] = 255;
+  }
+}
+
+//---------------------Image------------------------
+
+typedef nsSVGFE nsSVGFEImageElementBase;
+
+class nsSVGFEImageElement : public nsSVGFEImageElementBase,
+                            public nsIDOMSVGFEImageElement,
+                            public nsISVGFilter,
+                            public nsIDOMSVGURIReference,
+                            public nsImageLoadingContent
+{
+protected:
+  friend nsresult NS_NewSVGFEImageElement(nsIContent **aResult,
+                                          nsINodeInfo *aNodeInfo);
+  nsSVGFEImageElement(nsINodeInfo* aNodeInfo);
+  virtual ~nsSVGFEImageElement();
+  nsresult Init();
+
+public:
+  virtual PRBool SubregionIsUnionOfRegions() { return PR_FALSE; }
+
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEImageElementBase::)
+
+  // nsISVGFilter
+  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
+  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
+
+  NS_DECL_NSIDOMSVGFEIMAGEELEMENT
+  NS_DECL_NSIDOMSVGURIREFERENCE
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEImageElementBase::)
+
+  NS_FORWARD_NSIDOMNODE(nsSVGFEImageElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGFEImageElementBase::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
+
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual PRInt32 IntrinsicState() const;
+
+  // imgIDecoderObserver
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
+                          const PRUnichar *statusArg);
+  // imgIContainerObserver
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
+                          nsRect * dirtyRect);
+  // imgIContainerObserver
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest,
+                              imgIContainer *aContainer);
+
+private:
+  // Invalidate users of the filter containing this element.
+  void Invalidate();
+
+protected:
+  virtual PRBool OperatesOnSRGB(nsIDOMSVGAnimatedString*) { return PR_TRUE; }
+
+  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
+  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEImage)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFEImageElement,nsSVGFEImageElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFEImageElement,nsSVGFEImageElementBase)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGFEImageElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFEImageElement)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGURIReference)
+  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEImageElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFEImageElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsSVGFEImageElement::nsSVGFEImageElement(nsINodeInfo *aNodeInfo)
+  : nsSVGFEImageElementBase(aNodeInfo)
+{
+}
+
+nsSVGFEImageElement::~nsSVGFEImageElement()
+{
+  DestroyImageLoadingContent();
+}
+
+nsresult
+nsSVGFEImageElement::Init()
+{
+  nsresult rv = nsSVGFEImageElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGPreserveAspectRatio> preserveAspectRatio;
+    rv = NS_NewSVGPreserveAspectRatio(getter_AddRefs(preserveAspectRatio));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedPreserveAspectRatio(
+                                          getter_AddRefs(mPreserveAspectRatio),
+                                          preserveAspectRatio);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
+                           mPreserveAspectRatio);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSVGFEImageElement::GetRequirements(PRUint32 *aRequirements)
+{
+  *aRequirements = 0;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIContent methods:
+
+nsresult
+nsSVGFEImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                  const nsAString* aValue, PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::href) {
+    nsAutoString href;
+    if (GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, href)) {
+      // Note: no need to notify here; since we're just now being bound
+      // we don't have any frames or anything yet.
+      LoadImage(href, PR_FALSE, PR_FALSE);
+    }
+  }
+
+  return nsSVGFEImageElementBase::AfterSetAttr(aNamespaceID, aName,
+                                               aValue, aNotify);
+}
+
+nsresult
+nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsSVGFEImageElementBase::BindToTree(aDocument, aParent,
+                                                    aBindingParent,
+                                                    aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Our base URI may have changed; claim that our URI changed, and the
+  // nsImageLoadingContent will decide whether a new image load is warranted.
+  nsAutoString href;
+  if (GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, href)) {
+    // Note: no need to notify here; since we're just now being bound
+    // we don't have any frames or anything yet.
+    LoadImage(href, PR_FALSE, PR_FALSE);
+  }
+
+  return rv;
+}
+
+PRInt32
+nsSVGFEImageElement::IntrinsicState() const
+{
+  return nsSVGFEImageElementBase::IntrinsicState() |
+    nsImageLoadingContent::ImageState();
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEImageElement)
+
+//----------------------------------------------------------------------
+// nsIDOMSVGURIReference methods:
+
+/* readonly attribute nsIDOMSVGAnimatedString href; */
+NS_IMETHODIMP
+nsSVGFEImageElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
+{
+  *aHref = mHref;
+  NS_IF_ADDREF(*aHref);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMSVGFEImageElement methods
+
+NS_IMETHODIMP
+nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance)
+{
+  nsresult rv;
+  PRUint8 *sourceData, *targetData;
+  nsRefPtr<gfxImageSurface> targetSurface;
+
+  nsSVGFilterResource fr(this, instance);
+
+  nsIDOMSVGAnimatedString* sourceGraphic = nsnull;
+  rv = NS_NewSVGAnimatedString(&sourceGraphic);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = fr.AcquireSourceImage(sourceGraphic, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData,
+                             getter_AddRefs(targetSurface));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsRect rect = fr.GetFilterSubregion();
+
+#ifdef DEBUG_tor
+  fprintf(stderr, "FILTER IMAGE rect: %d,%d  %dx%d\n",
+          rect.x, rect.y, rect.width, rect.height);
+#endif
+
+  nsCOMPtr<imgIRequest> currentRequest;
+  GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+             getter_AddRefs(currentRequest));
+
+  nsCOMPtr<imgIContainer> imageContainer;
+  if (currentRequest)
+    currentRequest->GetImage(getter_AddRefs(imageContainer));
+
+  nsCOMPtr<gfxIImageFrame> currentFrame;
+  if (imageContainer)
+    imageContainer->GetCurrentFrame(getter_AddRefs(currentFrame));
+
+  gfxASurface *thebesSurface = nsnull;
+  if (currentFrame) {
+    nsCOMPtr<nsIImage> img(do_GetInterface(currentFrame));
+
+    nsThebesImage *thebesImage = nsnull;
+    if (img)
+      thebesImage = static_cast<nsThebesImage*>(img.get());
+
+    if (thebesImage)
+      thebesSurface = thebesImage->ThebesSurface();
+  }
+
+  if (thebesSurface) {
+    PRInt32 x, y, nativeWidth, nativeHeight;
+    currentFrame->GetX(&x);
+    currentFrame->GetY(&y);
+    currentFrame->GetWidth(&nativeWidth);
+    currentFrame->GetHeight(&nativeHeight);
+
+    nsCOMPtr<nsIDOMSVGMatrix> trans;
+    trans = nsSVGUtils::GetViewBoxTransform(rect.width, rect.height,
+                                            x, y,
+                                            nativeWidth, nativeHeight,
+                                            mPreserveAspectRatio);
+    nsCOMPtr<nsIDOMSVGMatrix> xy, fini;
+    NS_NewSVGMatrix(getter_AddRefs(xy), 1, 0, 0, 1, rect.x, rect.y);
+    xy->Multiply(trans, getter_AddRefs(fini));
+
+    gfxContext ctx(targetSurface);
+    nsSVGUtils::CompositeSurfaceMatrix(&ctx, thebesSurface, fini, 1.0);
+  }
+
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// imgIDecoderObserver methods
+
+NS_IMETHODIMP
+nsSVGFEImageElement::OnStopDecode(imgIRequest *aRequest,
+                                  nsresult status,
+                                  const PRUnichar *statusArg)
+{
+  nsresult rv =
+    nsImageLoadingContent::OnStopDecode(aRequest, status, statusArg);
+  Invalidate();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSVGFEImageElement::FrameChanged(imgIContainer *aContainer,
+                                  gfxIImageFrame *newframe,
+                                  nsRect * dirtyRect)
+{
+  nsresult rv =
+    nsImageLoadingContent::FrameChanged(aContainer, newframe, dirtyRect);
+  Invalidate();
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSVGFEImageElement::OnStartContainer(imgIRequest *aRequest,
+                                      imgIContainer *aContainer)
+{
+  nsresult rv =
+    nsImageLoadingContent::OnStartContainer(aRequest, aContainer);
+  Invalidate();
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// helper methods
+
+void
+nsSVGFEImageElement::Invalidate()
+{
+  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(GetParent());
+  if (filter) {
+    static_cast<nsSVGFilterElement*>(GetParent())->Invalidate();
   }
 }
 

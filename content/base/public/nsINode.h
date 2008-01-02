@@ -127,8 +127,8 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x42f3a894, 0xe5d4, 0x44b1, \
-  { 0x96, 0x34, 0x73, 0x8f, 0xf8, 0xbe, 0x5d, 0x9b } }
+{ 0xdfcef311, 0xba28, 0x4600, \
+  { 0xbe, 0xff, 0x2f, 0x9d, 0x42, 0x77, 0x07, 0x4e } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsPIDOMEventTarget {
@@ -682,6 +682,11 @@ protected:
     }
 
     return slots;
+  }
+
+  nsTObserverArray<nsIMutationObserver*> *GetMutationObservers()
+  {
+    return HasSlots() ? &FlagsAsSlots()->mMutationObservers : nsnull;
   }
 
   PRBool IsEditableInternal() const;
