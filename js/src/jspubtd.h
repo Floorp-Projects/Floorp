@@ -132,8 +132,6 @@ typedef struct JSContext         JSContext;
 typedef struct JSErrorReport     JSErrorReport;
 typedef struct JSFunction        JSFunction;
 typedef struct JSFunctionSpec    JSFunctionSpec;
-typedef struct JSFastNativeSpec  JSFastNativeSpec;
-typedef struct JSFastNativeBlock JSFastNativeBlock;
 typedef struct JSTracer          JSTracer;
 typedef struct JSIdArray         JSIdArray;
 typedef struct JSProperty        JSProperty;

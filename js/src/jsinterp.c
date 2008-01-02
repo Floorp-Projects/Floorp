@@ -5321,7 +5321,7 @@ interrupt:
             rval = FETCH_OPND(-1);
             JS_ASSERT(JSVAL_IS_STRING(rval));
             SAVE_SP_AND_PC(fp);
-            str = js_EscapeAttributeValue(cx, JSVAL_TO_STRING(rval));
+            str = js_EscapeAttributeValue(cx, JSVAL_TO_STRING(rval), JS_FALSE);
             if (!str) {
                 ok = JS_FALSE;
                 goto out;
