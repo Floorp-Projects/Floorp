@@ -1332,11 +1332,11 @@ nsNavHistory::FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
 {
   mozStorageStatementScoper scoper(mDBRecentVisitOfURL);
   nsresult rv = BindStatementURI(mDBRecentVisitOfURL, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   PRBool hasMore;
   rv = mDBRecentVisitOfURL->ExecuteStep(&hasMore);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
   if (hasMore) {
     *aVisitID = mDBRecentVisitOfURL->AsInt64(0);
     *aSessionID = mDBRecentVisitOfURL->AsInt64(1);
