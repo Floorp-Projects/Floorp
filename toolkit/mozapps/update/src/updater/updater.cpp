@@ -1127,10 +1127,10 @@ WriteStatusFile(int status)
 {
   // This is how we communicate our completion status to the main application.
 
-  char filename[MAXPATHLEN];
-  snprintf(filename, MAXPATHLEN, "%s/update.status", gSourcePath);
+  NS_tchar filename[MAXPATHLEN];
+  NS_tsnprintf(filename, MAXPATHLEN, NS_T("%s/update.status"), gSourcePath);
 
-  AutoFD fd = ensure_open(filename, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, 0644);
+  AutoFD fd = NS_topen(filename, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, 0644);
   if (fd < 0)
     return;
 
@@ -1151,8 +1151,8 @@ UpdateThreadFunc(void *param)
 {
   // open ZIP archive and process...
 
-  char dataFile[MAXPATHLEN];
-  snprintf(dataFile, MAXPATHLEN, "%s/update.mar", gSourcePath);
+  NS_tchar dataFile[MAXPATHLEN];
+  NS_tsnprintf(dataFile, MAXPATHLEN, NS_T("%s/update.mar"), gSourcePath);
 
   int rv = gArchiveReader.Open(dataFile);
   if (rv == OK) {

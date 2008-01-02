@@ -49,12 +49,20 @@
 #endif
 
 int
+#ifdef XP_WIN
+ArchiveReader::Open(const WCHAR *path)
+#else
 ArchiveReader::Open(const char *path)
+#endif
 {
   if (mArchive)
     Close();
 
+#ifdef XP_WIN
+  mArchive = mar_wopen(path);
+#else
   mArchive = mar_open(path);
+#endif
   if (!mArchive)
     return READ_ERROR;
 
