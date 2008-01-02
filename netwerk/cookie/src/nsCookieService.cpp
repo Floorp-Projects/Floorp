@@ -456,9 +456,8 @@ nsresult
 nsCookieService::InitDB()
 {
   nsCOMPtr<nsIFile> cookieFile;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
-  if (!cookieFile)
-    return NS_ERROR_UNEXPECTED;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
+  if (NS_FAILED(rv)) return rv;
 
   cookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
 
@@ -467,7 +466,7 @@ nsCookieService::InitDB()
     return NS_ERROR_UNEXPECTED;
 
   // cache a connection to the cookie database
-  nsresult rv = storage->OpenDatabase(cookieFile, getter_AddRefs(mDBConn));
+  rv = storage->OpenDatabase(cookieFile, getter_AddRefs(mDBConn));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // delete and try again
     cookieFile->Remove(PR_FALSE);
@@ -571,11 +570,11 @@ nsCookieService::InitDB()
     return Read();
 
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookieFile));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
 
   cookieFile->AppendNative(NS_LITERAL_CSTRING(kOldCookieFileName));
   rv = ImportCookies(cookieFile);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
 
   // we're done importing - delete the old cookie file
   cookieFile->Remove(PR_FALSE);
