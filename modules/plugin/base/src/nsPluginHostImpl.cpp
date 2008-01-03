@@ -1797,7 +1797,7 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbedded(nsIURI *aURL,
 {
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
-  if(aURL != nsnull) (void)aURL->GetSpec(urlSpec);
+  (void)aURL->GetSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
         ("nsPluginStreamListenerPeer::InitializeEmbedded url=%s\n", urlSpec.get()));
