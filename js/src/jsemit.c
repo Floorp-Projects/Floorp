@@ -3176,7 +3176,7 @@ bad:
 }
 
 JSBool
-js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
+js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
 {
     if (cg->treeContext.flags & TCF_FUN_IS_GENERATOR) {
         /* JSOP_GENERATOR must be the first instruction. */
@@ -3188,7 +3188,8 @@ js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
     }
 
     return js_EmitTree(cx, cg, body) &&
-           js_Emit1(cx, cg, JSOP_STOP) >= 0;
+           js_Emit1(cx, cg, JSOP_STOP) >= 0 &&
+           js_NewScriptFromCG(cx, cg);
 }
 
 /* A macro for inlining at the top of js_EmitTree (whence it came). */
@@ -3984,24 +3985,25 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         fun = GET_FUNCTION_PRIVATE(cx, pn->pn_funpob->object);
         cg2->treeContext.fun = fun;
         cg2->parent = cg;
-        if (!js_EmitFunctionBytecode(cx, cg2, pn->pn_body) ||
-            !js_NewScriptFromCG(cx, cg2)) {
-            return JS_FALSE;
-        }
-
-        /*
-         * We need an activation object if an inner peeks out, or if such
-         * inner-peeking caused one of our inners to become heavyweight.
-         */
-        if (cg2->treeContext.flags &
-            (TCF_FUN_USES_NONLOCALS | TCF_FUN_HEAVYWEIGHT)) {
-            cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
+        if (!js_EmitFunctionScript(cx, cg2, pn->pn_body)) {
+            pn = NULL;
+        } else {
+            /*
+             * We need an activation object if an inner peeks out, or if such
+             * inner-peeking caused one of our inners to become heavyweight.
+             */
+            if (cg2->treeContext.flags &
+                (TCF_FUN_USES_NONLOCALS | TCF_FUN_HEAVYWEIGHT)) {
+                cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
+            }
         }
         js_FinishCodeGenerator(cx, cg2);
         JS_ASSERT(js_GuardedArenaMark(&cx->tempPool, cg2mark,
                                       cg->treeContext.
                                       parseContext->lastAllocMark));
         JS_ARENA_RELEASE(&cx->tempPool, cg2mark);
+        if (!pn)
+            return JS_FALSE;
 
         /* Make the function object a literal in the outer script's pool. */
         index = IndexParsedObject(pn->pn_funpob, &cg->objectList);
