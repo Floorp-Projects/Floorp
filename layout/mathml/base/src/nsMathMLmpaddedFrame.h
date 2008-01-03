@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -98,12 +99,12 @@ private:
                  PRInt32&    aPseudoUnit);
 
   void
-  UpdateValue(PRInt32              aSign,
-              PRInt32              aPseudoUnit,
-              nsCSSValue&          aCSSValue,
-              nscoord              aLeftSpace,
-              nsBoundingMetrics&   aBoundingMetrics,
-              nscoord&             aValueToUpdate) const;
+  UpdateValue(PRInt32                  aSign,
+              PRInt32                  aPseudoUnit,
+              const nsCSSValue&        aCSSValue,
+              nscoord                  aLeftSpace,
+              const nsBoundingMetrics& aBoundingMetrics,
+              nscoord&                 aValueToUpdate) const;
 };
 
 #endif /* nsMathMLmpaddedFrame_h___ */
