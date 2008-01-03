@@ -80,6 +80,7 @@ public:
                    gfxImageSurface **aImage,
                    nsRect *aRegion,
                    const ColorModel &aColorModel);
+  ColorModel LookupImageColorModel(const nsAString &aName);
   void DefineImage(const nsAString &aName,
                    gfxImageSurface *aImage,
                    const nsRect &aRegion,

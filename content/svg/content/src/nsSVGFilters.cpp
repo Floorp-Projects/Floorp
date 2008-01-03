@@ -202,7 +202,7 @@ nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
   nsRefPtr<gfxImageSurface> surface;
   mInstance->LookupImage(mInput, getter_AddRefs(surface),
                          &mSourceRegion,
-                         mFilter->GetColorModel(aIn));
+                         mFilter->GetColorModel(mInstance, aIn));
   if (!surface) {
     return NS_ERROR_FAILURE;
   }
@@ -256,7 +256,7 @@ nsSVGFilterResource::ReleaseTarget()
   mInstance->DefineImage(mResult,
                          mTargetImage,
                          mFilterSubregion,
-                         mFilter->GetColorModel(nsnull));
+                         mFilter->GetColorModel(mInstance, nsnull));
 
   mTargetImage = nsnull;
 }
@@ -2681,7 +2681,8 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
-  virtual PRBool OperatesOnSRGB(nsIDOMSVGAnimatedString*) { return PR_TRUE; }
+  virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
+                                nsIDOMSVGAnimatedString*) { return PR_TRUE; }
 
   nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
 };
@@ -5221,7 +5222,8 @@ private:
   void Invalidate();
 
 protected:
-  virtual PRBool OperatesOnSRGB(nsIDOMSVGAnimatedString*) { return PR_TRUE; }
+  virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
+                                nsIDOMSVGAnimatedString*) { return PR_TRUE; }
 
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
   nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
@@ -5483,6 +5485,280 @@ nsSVGFEImageElement::Invalidate()
   if (filter) {
     static_cast<nsSVGFilterElement*>(GetParent())->Invalidate();
   }
+}
+
+//---------------------Displacement------------------------
+
+typedef nsSVGFE nsSVGFEDisplacementMapElementBase;
+
+class nsSVGFEDisplacementMapElement : public nsSVGFEDisplacementMapElementBase,
+                                      public nsIDOMSVGFEDisplacementMapElement,
+                                      public nsISVGFilter
+{
+protected:
+  friend nsresult NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
+                                                    nsINodeInfo *aNodeInfo);
+  nsSVGFEDisplacementMapElement(nsINodeInfo* aNodeInfo)
+    : nsSVGFEDisplacementMapElementBase(aNodeInfo) {}
+  nsresult Init();
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // FE Base
+  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEDisplacementMapElementBase::)
+
+  // nsISVGFilter
+  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
+  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
+
+  // DisplacementMap
+  NS_DECL_NSIDOMSVGFEDISPLACEMENTMAPELEMENT
+
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEDisplacementMapElementBase::)
+
+  NS_FORWARD_NSIDOMNODE(nsSVGFEDisplacementMapElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGFEDisplacementMapElementBase::)
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  virtual PRBool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
+                                nsIDOMSVGAnimatedString* aString) {
+    if (aString == mIn1) {
+      nsAutoString input;
+      mIn1->GetAnimVal(input);
+      return aInstance->LookupImageColorModel(input).mColorSpace ==
+               nsSVGFilterInstance::ColorModel::SRGB;
+    }
+
+    return nsSVGFEDisplacementMapElementBase::OperatesOnSRGB(aInstance,
+                                                             aString);
+  }
+
+  virtual NumberAttributesInfo GetNumberInfo();
+  virtual EnumAttributesInfo GetEnumInfo();
+
+  enum { SCALE };
+  nsSVGNumber2 mNumberAttributes[1];
+  static NumberInfo sNumberInfo[1];
+
+  enum { CHANNEL_X, CHANNEL_Y };
+  nsSVGEnum mEnumAttributes[2];
+  static nsSVGEnumMapping sChannelMap[];
+  static EnumInfo sEnumInfo[2];
+
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  nsCOMPtr<nsIDOMSVGAnimatedString> mIn2;
+};
+
+nsSVGElement::NumberInfo nsSVGFEDisplacementMapElement::sNumberInfo[1] =
+{
+  { &nsGkAtoms::scale, 0 },
+};
+
+nsSVGEnumMapping nsSVGFEDisplacementMapElement::sChannelMap[] = {
+  {&nsGkAtoms::R, nsSVGFEDisplacementMapElement::SVG_CHANNEL_R},
+  {&nsGkAtoms::G, nsSVGFEDisplacementMapElement::SVG_CHANNEL_G},
+  {&nsGkAtoms::B, nsSVGFEDisplacementMapElement::SVG_CHANNEL_B},
+  {&nsGkAtoms::A, nsSVGFEDisplacementMapElement::SVG_CHANNEL_A},
+  {nsnull, 0}
+};
+
+nsSVGElement::EnumInfo nsSVGFEDisplacementMapElement::sEnumInfo[2] =
+{
+  { &nsGkAtoms::xChannelSelector,
+    sChannelMap,
+    nsSVGFEDisplacementMapElement::SVG_CHANNEL_A
+  },
+  { &nsGkAtoms::yChannelSelector,
+    sChannelMap,
+    nsSVGFEDisplacementMapElement::SVG_CHANNEL_A
+  }
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEDisplacementMap)
+
+//----------------------------------------------------------------------
+// nsISupports methods
+
+NS_IMPL_ADDREF_INHERITED(nsSVGFEDisplacementMapElement,nsSVGFEDisplacementMapElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGFEDisplacementMapElement,nsSVGFEDisplacementMapElementBase)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGFEDisplacementMapElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFEDisplacementMapElement)
+  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEDisplacementMapElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGFEDisplacementMapElementBase)
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsresult
+nsSVGFEDisplacementMapElement::Init()
+{
+  nsresult rv = nsSVGFEDisplacementMapElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // DOM property: in1 , #IMPLIED attrib: in
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  // DOM property: in2 , #IMPLIED attrib: in2
+  {
+    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn2));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsGkAtoms::in2, mIn2);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  return rv;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods
+
+NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEDisplacementMapElement)
+
+//----------------------------------------------------------------------
+// nsIDOMSVGFEDisplacementMapElement methods
+
+/* readonly attribute nsIDOMSVGAnimatedString in1; */
+NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn1;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedString in2; */
+NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
+{
+  *aIn = mIn2;
+  NS_IF_ADDREF(*aIn);
+  return NS_OK;
+}
+
+/* readonly attribute nsIDOMSVGAnimatedNumber scale; */
+NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetScale(nsIDOMSVGAnimatedNumber * *aScale)
+{
+  return mNumberAttributes[SCALE].ToDOMAnimatedNumber(aScale, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedEnumeration xChannelSelector; */
+NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetXChannelSelector(nsIDOMSVGAnimatedEnumeration * *aChannel)
+{
+  return mEnumAttributes[CHANNEL_X].ToDOMAnimatedEnum(aChannel, this);
+}
+
+/* readonly attribute nsIDOMSVGAnimatedEnumeration yChannelSelector; */
+NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetYChannelSelector(nsIDOMSVGAnimatedEnumeration * *aChannel)
+{
+  return mEnumAttributes[CHANNEL_Y].ToDOMAnimatedEnum(aChannel, this);
+}
+
+NS_IMETHODIMP
+nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance)
+{
+  nsresult rv;
+  PRUint8 *sourceData, *displacementData, *targetData;
+  nsSVGFilterResource fr(this, instance);
+
+  rv = fr.AcquireSourceImage(mIn1, &sourceData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = fr.AcquireTargetImage(mResult, &targetData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRect rect = fr.GetFilterSubregion();
+  PRInt32 stride = fr.GetDataStride();
+
+#ifdef DEBUG_tor
+  fprintf(stderr, "FILTER DISPLACEMENT rect: %d,%d  %dx%d\n",
+          rect.x, rect.y, rect.width, rect.height);
+#endif
+
+  float scale = mNumberAttributes[SCALE].GetAnimValue();
+  if (scale == 0.0f) {
+    fr.CopySourceImage();
+    return NS_OK;
+  }
+
+  rv = fr.AcquireSourceImage(mIn2, &displacementData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 width, height;
+  width = fr.GetWidth();
+  height = fr.GetHeight();
+
+  nsSVGLength2 val;
+  val.Init(nsSVGUtils::XY, 0xff, scale, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  scale = instance->GetPrimitiveLength(&val);
+
+  static const PRUint16 channelMap[5] = { 
+                             0,
+                             GFX_ARGB32_OFFSET_R,
+                             GFX_ARGB32_OFFSET_G,
+                             GFX_ARGB32_OFFSET_B,
+                             GFX_ARGB32_OFFSET_A };
+  PRUint16 xChannel = channelMap[mEnumAttributes[CHANNEL_X].GetAnimValue()];
+  PRUint16 yChannel = channelMap[mEnumAttributes[CHANNEL_Y].GetAnimValue()];
+
+  double scaleOver255 = scale / 255.0;
+  double scaleAdjustment = 0.5 - 0.5 * scale;
+
+  for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
+    for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
+      PRUint32 targIndex = y * stride + 4 * x;
+      // At some point we might want to replace this with a bilinear sample.
+      PRInt32 sourceX = x +
+        PRInt32(scaleOver255 * displacementData[targIndex + xChannel] +
+                scaleAdjustment);
+      PRInt32 sourceY = y +
+        PRInt32(scaleOver255 * displacementData[targIndex + yChannel] +
+                scaleAdjustment);
+      if (sourceX < 0 || sourceX >= width ||
+          sourceY < 0 || sourceY >= height) {
+        *(PRUint32*)(targetData + targIndex) = 0;
+      } else {
+        *(PRUint32*)(targetData + targIndex) =
+          *(PRUint32*)(sourceData + sourceY * stride + 4 * sourceX);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGFEDisplacementMapElement::GetRequirements(PRUint32 *aRequirements)
+{
+  *aRequirements = CheckStandardNames(mIn1) | CheckStandardNames(mIn2);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFEDisplacementMapElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGFEDisplacementMapElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
 }
 
 //---------------------UnimplementedMOZ------------------------
