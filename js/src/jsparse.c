@@ -935,8 +935,7 @@ js_CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
             pn = NULL;
         } else {
             if (!js_FoldConstants(cx, pn, &funcg.treeContext) ||
-                !js_EmitFunctionBytecode(cx, &funcg, pn) ||
-                !js_NewScriptFromCG(cx, &funcg)) {
+                !js_EmitFunctionScript(cx, &funcg, pn)) {
                 pn = NULL;
             }
         }
@@ -1358,8 +1357,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          *
          * The TCF_FUN_USES_NONLOCALS flag is set only by the code generator,
          * so it won't be set here.  Assert that it's not.  We have to check
-         * it later, in js_EmitTree, after js_EmitFunctionBytecode has
-         * traversed the function's body
+         * it later, in js_EmitTree, after js_EmitFunctionScript has traversed
+         * the function's body.
          */
         JS_ASSERT(!(funtc.flags & TCF_FUN_USES_NONLOCALS));
         if (lambda == 0 && funAtom && !AT_TOP_LEVEL(tc))
