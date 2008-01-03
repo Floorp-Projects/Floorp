@@ -1267,6 +1267,31 @@ moz_gtk_tree_header_sort_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_treeview_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                                GdkRectangle* cliprect, GtkWidgetState* state,
+                                GtkExpanderStyle expander_state,
+                                GtkTextDirection direction)
+{
+    GtkStyle *style;
+    GtkStateType state_type;
+
+    ensure_tree_view_widget();
+    gtk_widget_set_direction(gTreeViewWidget, direction);
+
+    style = gTreeViewWidget->style;
+
+    /* Because the frame we get is of the entire treeview, we can't get the precise
+     * event state of one expander, thus rendering hover and active feedback useless. */
+    state_type = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+    gtk_paint_expander(style, drawable, state_type, cliprect, gTreeViewWidget, "treeview",
+                       rect->x + rect->width / 2, rect->y + rect->height / 2, expander_state);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
                        GdkRectangle* cliprect, GtkWidgetState* state,
                        GtkExpanderStyle expander_state,
@@ -1279,10 +1304,6 @@ moz_gtk_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
     gtk_widget_set_direction(gExpanderWidget, direction);
 
     style = gExpanderWidget->style;
-
-    /* Because the frame we get is of the entire treeview, we can't get the precise
-     * event state of one expander, thus rendering hover and active feedback useless. */
-    state_type = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
     gtk_paint_expander(style, drawable, state_type, cliprect, gExpanderWidget, "expander",
@@ -2374,6 +2395,17 @@ moz_gtk_get_expander_size(gint* size)
 }
 
 gint
+moz_gtk_get_treeview_expander_size(gint* size)
+{
+    ensure_tree_view_widget();
+    gtk_widget_style_get(gTreeViewWidget,
+                         "expander-size", size,
+                         NULL);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
 moz_gtk_get_menu_separator_height(gint *size)
 {
     gboolean wide_separators;
@@ -2510,6 +2542,10 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                                     state,
                                                     (GtkArrowType) flags,
                                                     direction);
+        break;
+    case MOZ_GTK_TREEVIEW_EXPANDER:
+        return moz_gtk_treeview_expander_paint(drawable, rect, cliprect, state,
+                                               (GtkExpanderStyle) flags, direction);
         break;
     case MOZ_GTK_EXPANDER:
         return moz_gtk_expander_paint(drawable, rect, cliprect, state,
