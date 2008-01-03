@@ -509,10 +509,10 @@ extern JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
 
 /*
- * Emit function code into cg for the tree rooted at body.
+ * Emit function code using cg for the tree rooted at body.
  */
 extern JSBool
-js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body);
+js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body);
 
 /*
  * Source notes generated along with bytecode for decompiling and debugging.
