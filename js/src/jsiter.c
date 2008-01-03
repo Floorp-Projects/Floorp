@@ -920,7 +920,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     }
 
     /*
-     * An error, silent termination by branch callback or an exception.
+     * An error, silent termination by operation callback or an exception.
      * Propagate the condition to the caller.
      */
     return JS_FALSE;
