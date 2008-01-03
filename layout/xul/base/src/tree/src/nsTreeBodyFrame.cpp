@@ -405,9 +405,10 @@ nsTreeBodyFrame::EnsureView()
     }
     nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
     if (box) {
+      nsWeakFrame weakFrame(this);
       nsCOMPtr<nsITreeView> treeView;
       mTreeBoxObject->GetView(getter_AddRefs(treeView));
-      if (treeView) {
+      if (treeView && weakFrame.IsAlive()) {
         nsXPIDLString rowStr;
         box->GetProperty(NS_LITERAL_STRING("topRow").get(),
                          getter_Copies(rowStr));
@@ -417,6 +418,7 @@ nsTreeBodyFrame::EnsureView()
 
         // Set our view.
         SetView(treeView);
+        ENSURE_TRUE(weakFrame.IsAlive());
 
         // Scroll to the given row.
         // XXX is this optimal if we haven't laid out yet?
@@ -494,7 +496,10 @@ nsTreeBodyFrame::ReflowCallbackCanceled()
 
 NS_IMETHODIMP nsTreeBodyFrame::GetView(nsITreeView * *aView)
 {
+  *aView = nsnull;
+  nsWeakFrame weakFrame(this);
   EnsureView();
+  NS_ENSURE_STATE(weakFrame.IsAlive());
   NS_IF_ADDREF(*aView = mView);
   return NS_OK;
 }
@@ -849,9 +854,10 @@ nsTreeBodyFrame::UpdateScrollbars(const ScrollParts& aParts)
   nsCOMPtr<nsIContent> hScroll = aParts.mHScrollbarContent;
 
   if (aParts.mVScrollbar) {
+    nsCOMPtr<nsIContent> vScroll = aParts.mVScrollbarContent;
     nsAutoString curPos;
     curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
-    aParts.mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curPos, PR_TRUE);
+    vScroll->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curPos, PR_TRUE);
   }
 
   if (aParts.mHScrollbar) {
