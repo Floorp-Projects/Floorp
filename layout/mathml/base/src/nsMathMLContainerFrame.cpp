@@ -23,6 +23,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1264,73 +1265,111 @@ GetInterFrameSpacing(PRInt32           aScriptLevel,
   return space;
 }
 
+static nscoord GetThinSpace(const nsStyleFont* aStyleFont)
+{
+  return NSToCoordRound(float(aStyleFont->mFont.size)*float(3) / float(18));
+}
+
+class nsMathMLContainerFrame::RowChildFrameIterator {
+public:
+  explicit RowChildFrameIterator(nsMathMLContainerFrame* aParentFrame) :
+    mParentFrame(aParentFrame),
+    mChildFrame(aParentFrame->mFrames.FirstChild()),
+    mX(0),
+    mCarrySpace(0),
+    mFromFrameType(eMathMLFrameType_UNKNOWN)
+  {
+    if (!mChildFrame)
+      return;
+
+    InitMetricsForChild();
+    // Remove left correction in <msqrt> because the sqrt glyph itself is
+    // there first.
+    if (mParentFrame->GetContent()->Tag() == nsGkAtoms::msqrt_) {
+      mX = 0;
+    }
+  }
+
+  RowChildFrameIterator& operator++()
+  {
+    // add child size + italic correction
+    mX += mSize.mBoundingMetrics.width + mItalicCorrection;
+
+    mChildFrame = mChildFrame->GetNextSibling();
+    if (!mChildFrame)
+      return *this;
+
+    eMathMLFrameType prevFrameType = mChildFrameType;
+    InitMetricsForChild();
+
+    // add inter frame spacing
+    nscoord space =
+      GetInterFrameSpacing(mParentFrame->mPresentationData.scriptLevel,
+                           prevFrameType, mChildFrameType,
+                           &mFromFrameType, &mCarrySpace);
+    mX += space * GetThinSpace(mParentFrame->GetStyleFont());
+    return *this;
+  }
+
+  nsIFrame* Frame() const { return mChildFrame; }
+  nscoord X() const { return mX; }
+  const nsHTMLReflowMetrics& ReflowMetrics() const { return mSize; }
+  nscoord Ascent() const { return mSize.ascent; }
+  nscoord Descent() const { return mSize.height - mSize.ascent; }
+  const nsBoundingMetrics& BoundingMetrics() const {
+    return mSize.mBoundingMetrics;
+  }
+
+private:
+  const nsMathMLContainerFrame* mParentFrame;
+  nsIFrame* mChildFrame;
+  nsHTMLReflowMetrics mSize;
+  nscoord mX;
+
+  nscoord mItalicCorrection;
+  eMathMLFrameType mChildFrameType;
+  PRInt32 mCarrySpace;
+  eMathMLFrameType mFromFrameType;
+
+  void InitMetricsForChild()
+  {
+    GetReflowAndBoundingMetricsFor(mChildFrame, mSize, mSize.mBoundingMetrics,
+                                   &mChildFrameType);
+    nscoord leftCorrection;
+    GetItalicCorrection(mSize.mBoundingMetrics, leftCorrection,
+                        mItalicCorrection);
+    // add left correction -- this fixes the problem of the italic 'f'
+    // e.g., <mo>q</mo> <mi>f</mi> <mo>I</mo> 
+    mX += leftCorrection;
+  }
+};
+
 NS_IMETHODIMP
 nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
                               PRBool               aPlaceOrigin,
                               nsHTMLReflowMetrics& aDesiredSize)
 {
-  // these are needed in case this frame is empty (i.e., we don't enter the loop)
-  aDesiredSize.width = aDesiredSize.height = 0;
-  aDesiredSize.ascent = 0;
+  // This is needed in case this frame is empty (i.e., no child frames)
   mBoundingMetrics.Clear();
 
-  // cache away thinspace
-  const nsStyleFont* font = GetStyleFont();
-  nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
-
-  PRInt32 count = 0;
-  PRInt32 carrySpace = 0;
-  nsHTMLReflowMetrics childSize;
-  nsBoundingMetrics bmChild;
-  nscoord leftCorrection = 0, italicCorrection = 0;
-  eMathMLFrameType fromFrameType = eMathMLFrameType_UNKNOWN;
-  eMathMLFrameType prevFrameType = eMathMLFrameType_UNKNOWN;
-  eMathMLFrameType childFrameType;
-
-  nsIFrame* childFrame = mFrames.FirstChild();
+  RowChildFrameIterator child(this);
   nscoord ascent = 0, descent = 0;
-  while (childFrame) {
-    GetReflowAndBoundingMetricsFor(childFrame, childSize, bmChild, &childFrameType);
-    GetItalicCorrection(bmChild, leftCorrection, italicCorrection);
-    if (0 == count) {
-      ascent = childSize.ascent;
-      descent = childSize.height - ascent;
-      mBoundingMetrics = bmChild;
-      // update to include the left correction
-      // but leave <msqrt> alone because the sqrt glyph itself is there first
-
-      if (mContent->Tag() == nsGkAtoms::msqrt_)
-        leftCorrection = 0;
-      else
-        mBoundingMetrics.leftBearing += leftCorrection;
-    }
-    else {
-      nscoord childDescent = childSize.height - childSize.ascent;
-      if (descent < childDescent)
-        descent = childDescent;
-      if (ascent < childSize.ascent)
-        ascent = childSize.ascent;
-      // add inter frame spacing
-      nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
-        prevFrameType, childFrameType, &fromFrameType, &carrySpace);
-      mBoundingMetrics.width += space * thinSpace;
-      // add the child size
-      mBoundingMetrics += bmChild;
-    }
-    count++;
-    prevFrameType = childFrameType;
-    // add left correction -- this fixes the problem of the italic 'f'
-    // e.g., <mo>q</mo> <mi>f</mi> <mo>I</mo> 
-    mBoundingMetrics.width += leftCorrection;
-    mBoundingMetrics.rightBearing += leftCorrection;
-    // add the italic correction at the end (including the last child).
-    // this gives a nice gap between math and non-math frames, and still
-    // gives the same math inter-spacing in case this frame connects to
-    // another math frame
-    mBoundingMetrics.width += italicCorrection;
-
-    childFrame = childFrame->GetNextSibling();
+  while (child.Frame()) {
+    if (descent < child.Descent())
+      descent = child.Descent();
+    if (ascent < child.Ascent())
+      ascent = child.Ascent();
+    // add the child size
+    mBoundingMetrics.width = child.X();
+    mBoundingMetrics += child.BoundingMetrics();
+    ++child;
   }
+  // Add the italic correction at the end (including the last child).
+  // This gives a nice gap between math and non-math frames, and still
+  // gives the same math inter-spacing in case this frame connects to
+  // another math frame
+  mBoundingMetrics.width = child.X();
+
   aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.height = ascent + descent;
   aDesiredSize.ascent = ascent;
@@ -1343,41 +1382,24 @@ nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
   // Place Children
 
   if (aPlaceOrigin) {
-    count = 0;
-    nscoord dx = 0, dy = 0;
-    italicCorrection = 0;
-    carrySpace = 0;
-    fromFrameType = eMathMLFrameType_UNKNOWN;
-    childFrame = mFrames.FirstChild();
-    while (childFrame) {
-      GetReflowAndBoundingMetricsFor(childFrame, childSize, bmChild, &childFrameType);
-      GetItalicCorrection(bmChild, leftCorrection, italicCorrection);
-      dy = aDesiredSize.ascent - childSize.ascent;
-      if (0 == count) {
-        // for <msqrt>, the sqrt glyph itself is there first
-
-        if (mContent->Tag() == nsGkAtoms::msqrt_)
-          leftCorrection = 0;
-      }
-      else {
-        // add inter frame spacing
-        nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
-          prevFrameType, childFrameType, &fromFrameType, &carrySpace);
-        dx += space * thinSpace;
-      }
-      count++;
-      prevFrameType = childFrameType;
-      // add left correction
-      dx += leftCorrection;
-      FinishReflowChild(childFrame, PresContext(), nsnull, childSize,
-                        dx, dy, 0);
-      // add child size + italic correction
-      dx += bmChild.width + italicCorrection;
-      childFrame = childFrame->GetNextSibling();
-    }
+    PositionRowChildFrames(0, aDesiredSize.ascent);
   }
 
   return NS_OK;
+}
+
+void
+nsMathMLContainerFrame::PositionRowChildFrames(nscoord aOffsetX,
+                                               nscoord aBaseline)
+{
+  RowChildFrameIterator child(this);
+  while (child.Frame()) {
+    nscoord dx = aOffsetX + child.X();
+    nscoord dy = aBaseline - child.Ascent();
+    FinishReflowChild(child.Frame(), PresContext(), nsnull,
+                      child.ReflowMetrics(), dx, dy, 0);
+    ++child;
+  }
 }
 
 // helpers to fix the inter-spacing when <math> is the only parent
@@ -1405,8 +1427,7 @@ GetInterFrameSpacingFor(PRInt32         aScriptLevel,
     if (aChildFrame == childFrame) {
       // get thinspace
       nsStyleContext* parentContext = aParentFrame->GetStyleContext();
-      const nsStyleFont* font = parentContext->GetStyleFont();
-      nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
+      nscoord thinSpace = GetThinSpace(parentContext->GetStyleFont());
       // we are done
       return space * thinSpace;
     }
