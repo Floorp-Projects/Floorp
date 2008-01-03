@@ -113,7 +113,6 @@ EXPORTS		= \
 		nsMultiplexInputStream.h \
 		nsScriptableInputStream.h \
 		nsStorageStream.h \
-		nsStringIO.h \
 		nsStringStream.h \
 		nsStreamUtils.h \
 		nsNativeCharsetUtils.h \
