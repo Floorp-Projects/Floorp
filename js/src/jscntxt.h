@@ -637,8 +637,11 @@ struct JSContext {
     /* JSRuntime contextList linkage. */
     JSCList             links;
 
-    /* Counter of operations for branch callback calls. */
-    uint32              operationCounter;
+    /*
+     * Operation count. It is declared early in the structure as a frequently
+     * accessed field.
+     */
+    int32               operationCount;
 
 #if JS_HAS_XML_SUPPORT
     /*
@@ -732,9 +735,17 @@ struct JSContext {
     void                *tracefp;
 #endif
 
-    /* Per-context optional user callbacks. */
-    JSBranchCallback    branchCallback;
+    /* Per-context optional error reporter. */
     JSErrorReporter     errorReporter;
+
+    /*
+     * Flag indicating that the operation callback is set. When the flag is 0
+     * but operationCallback is not null, operationCallback stores the branch
+     * callback.
+     */
+    uint32              operationCallbackIsSet :    1;
+    uint32              operationLimit         :    31;
+    JSOperationCallback operationCallback;
 
     /* Interpreter activation count. */
     uintN               interpLevel;
@@ -842,9 +853,6 @@ class JSAutoTempValueRooter
                                                      JSVERSION_MASK))
 #define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML || \
                                          JSVERSION_NUMBER(cx) >= JSVERSION_1_6)
-
-#define JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx)                              \
-    JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK)
 
 /*
  * Initialize a library-wide thread private data index, and remember that it
@@ -1026,6 +1034,39 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 # define JS_CHECK_STACK_SIZE(cx, lval)  ((jsuword)&(lval) > (cx)->stackLimit)
 #endif
 
+/*
+ * Update the operation counter according to the given weight and call the
+ * operation callback when we reach the operation limit. To make this
+ * frequently executed macro faster we decrease the counter from
+ * JSContext.operationLimit and compare against zero to check the limit.
+ *
+ * This macro can run the full GC. Return true if it is OK to continue and
+ * false otherwise.
+ */
+#define JS_CHECK_OPERATION_LIMIT(cx, weight)                                  \
+    (JS_CHECK_OPERATION_WEIGHT(weight),                                       \
+     (((cx)->operationCount -= (weight)) > 0 || js_ResetOperationCount(cx)))
+
+/*
+ * A version of JS_CHECK_OPERATION_LIMIT that just updates the operation count
+ * without calling the operation callback or any other API. This macro resets
+ * the count to 0 when it becomes negative to prevent a wrap-around when the
+ * macro is called repeatably.
+ */
+#define JS_COUNT_OPERATION(cx, weight)                                        \
+    ((void)(JS_CHECK_OPERATION_WEIGHT(weight),                                \
+            (cx)->operationCount = ((cx)->operationCount > 0)                 \
+                                   ? (cx)->operationCount - (weight)          \
+                                   : 0))
+
+/*
+ * The implementation of the above macros assumes that subtracting weights
+ * twice from a positive number does not wrap-around INT32_MIN.
+ */
+#define JS_CHECK_OPERATION_WEIGHT(weight)                                     \
+    (JS_ASSERT((uint32) (weight) > 0),                                        \
+     JS_ASSERT((uint32) (weight) < JS_BIT(30)))
+
 /* Relative operations weights. */
 #define JSOW_JUMP                   1
 #define JSOW_ALLOCATION             100
@@ -1034,43 +1075,15 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 #define JSOW_SET_PROPERTY           20
 #define JSOW_NEW_PROPERTY           200
 #define JSOW_DELETE_PROPERTY        30
-
-#define JSOW_BRANCH_CALLBACK        JS_BIT(12)
-
-/*
- * The implementation of JS_COUNT_OPERATION macro below assumes that
- * JSOW_BRANCH_CALLBACK is a power of two to ensures that an unsigned int
- * overflow does not bring the counter below JSOW_BRANCH_CALLBACK limit.
- */
-JS_STATIC_ASSERT((JSOW_BRANCH_CALLBACK & (JSOW_BRANCH_CALLBACK - 1)) == 0);
+#define JSOW_ENTER_SHARP            4096
+#define JSOW_SCRIPT_JUMP            4096
 
 /*
- * Update the operation counter according the specified weight. This macro
- * does not call the branch callback or any API.
- */
-#define JS_COUNT_OPERATION(cx, weight)                                        \
-    ((void)(JS_ASSERT((weight) > 0),                                          \
-            JS_ASSERT((weight) <= JSOW_BRANCH_CALLBACK),                      \
-            (cx)->operationCounter = (((cx)->operationCounter + (weight)) |   \
-                                      (~(JSOW_BRANCH_CALLBACK - 1) &          \
-                                       (cx)->operationCounter))))
-
-/*
- * Update the operation counter and call the branch callback when it reaches
- * JSOW_BRANCH_CALLBACK limit. This macro can run the full GC. Return true if
- * it is OK to continue and false otherwise.
- */
-#define JS_CHECK_OPERATION_LIMIT(cx, weight)                                  \
-    (JS_COUNT_OPERATION(cx, weight),                                          \
-     ((cx)->operationCounter < JSOW_BRANCH_CALLBACK ||                        \
-     js_ResetOperationCounter(cx)))
-
-/*
- * Reset the operation counter and call branch callback assuming that the
+ * Reset the operation count and call the operation callback assuming that the
  * operation limit is reached.
  */
 extern JSBool
-js_ResetOperationCounter(JSContext *cx);
+js_ResetOperationCount(JSContext *cx);
 
 JS_END_EXTERN_C
 
