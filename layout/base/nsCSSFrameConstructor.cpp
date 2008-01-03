@@ -175,8 +175,6 @@ NS_NewSVGAFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* 
 nsIFrame*
 NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-nsIFrame*
 NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
@@ -7349,7 +7347,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   
   // Are we another child of a switch which already has a child
   if (aParentFrame && 
-      aParentFrame->GetType() == nsGkAtoms::svgSwitchFrame &&
+      aParentFrame->GetType() == nsGkAtoms::svgSwitch &&
       aParentFrame->GetFirstChild(nsnull)) {
     *aHaltProcessing = PR_TRUE;
     return NS_OK;
@@ -7398,11 +7396,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       newFrame = NS_NewSVGInnerSVGFrame(mPresShell, aContent, aStyleContext);
     }
   }
-  else if (aTag == nsGkAtoms::g) {
+  else if (aTag == nsGkAtoms::g ||
+           aTag == nsGkAtoms::svgSwitch) {
     newFrame = NS_NewSVGGFrame(mPresShell, aContent, aStyleContext);
-  }
-  else if (aTag == nsGkAtoms::svgSwitch) {
-    newFrame = NS_NewSVGSwitchFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsGkAtoms::polygon ||
            aTag == nsGkAtoms::polyline ||
