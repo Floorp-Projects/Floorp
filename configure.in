@@ -3189,7 +3189,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64)
+AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64)
 AC_CHECK_FUNCS(flockfile getpagesize)
 
 dnl localtime_r and strtok_r are only present on MacOS version 10.2 and higher
