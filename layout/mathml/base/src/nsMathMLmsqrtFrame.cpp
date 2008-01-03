@@ -24,6 +24,7 @@
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Vilya Harvey <vilya@nag.co.uk>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu>
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -172,7 +173,7 @@ nsMathMLmsqrtFrame::Place(nsIRenderingContext& aRenderingContext,
   // inferred mrow.
   nsHTMLReflowMetrics baseSize;
   nsresult rv =
-    nsMathMLContainerFrame::Place(aRenderingContext, aPlaceOrigin, baseSize);
+    nsMathMLContainerFrame::Place(aRenderingContext, PR_FALSE, baseSize);
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
     DidReflowChildren(GetFirstChild(nsnull));
     return rv;
@@ -273,15 +274,9 @@ nsMathMLmsqrtFrame::Place(nsIRenderingContext& aRenderingContext,
 
   if (aPlaceOrigin) {
     //////////////////
-    // Adjust the origins to leave room for the sqrt char and the overline bar
-
-    dx = radicalSize.width;
-    dy = aDesiredSize.ascent - baseSize.ascent;
-    nsIFrame* childFrame = mFrames.FirstChild();
-    while (childFrame) {
-      childFrame->SetPosition(childFrame->GetPosition() + nsPoint(dx, dy));
-      childFrame = childFrame->GetNextSibling();
-    }
+    // Finish reflowing child frames, positioning their origins so as to leave
+    // room for the sqrt char and the overline bar.
+    PositionRowChildFrames(radicalSize.width, aDesiredSize.ascent);
   }
 
   return NS_OK;

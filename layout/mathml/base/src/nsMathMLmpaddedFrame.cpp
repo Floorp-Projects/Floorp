@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -293,12 +294,12 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 }
 
 void
-nsMathMLmpaddedFrame::UpdateValue(PRInt32              aSign,
-                                  PRInt32              aPseudoUnit,
-                                  nsCSSValue&          aCSSValue,
-                                  nscoord              aLeftSpace,
-                                  nsBoundingMetrics&   aBoundingMetrics,
-                                  nscoord&             aValueToUpdate) const
+nsMathMLmpaddedFrame::UpdateValue(PRInt32                  aSign,
+                                  PRInt32                  aPseudoUnit,
+                                  const nsCSSValue&        aCSSValue,
+                                  nscoord                  aLeftSpace,
+                                  const nsBoundingMetrics& aBoundingMetrics,
+                                  nscoord&                 aValueToUpdate) const
 {
   nsCSSUnit unit = aCSSValue.GetUnit();
   if (NS_MATHML_SIGN_INVALID != aSign && eCSSUnit_Null != unit) {
@@ -378,8 +379,7 @@ nsMathMLmpaddedFrame::Place(nsIRenderingContext& aRenderingContext,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
   nsresult rv =
-    nsMathMLContainerFrame::Place(aRenderingContext, aPlaceOrigin,
-                                  aDesiredSize);
+    nsMathMLContainerFrame::Place(aRenderingContext, PR_FALSE, aDesiredSize);
   if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
     DidReflowChildren(GetFirstChild(nsnull));
     return rv;
@@ -387,8 +387,27 @@ nsMathMLmpaddedFrame::Place(nsIRenderingContext& aRenderingContext,
 
   nscoord height = mBoundingMetrics.ascent;
   nscoord depth  = mBoundingMetrics.descent;
+  // In MathML2 (http://www.w3.org/TR/MathML2/chapter3.html#presm.mpadded),
+  // lspace is "the amount of space between the left edge of a bounding box
+  // and the start of the rendering of its contents' bounding box" and the
+  // default is zero.
+  //
+  // In MathML3 draft
+  // http://www.w3.org/TR/2007/WD-MathML3-20070427/chapter3.html#id.3.3.6.2,
+  // lspace is "the amount of space between the left edge of the bounding box
+  // and the positioning poin [sic] of the mpadded element" and the default is
+  // "same as content".
+  //
+  // In both cases, "MathML renderers should ensure that, except for the
+  // effects of the attributes, relative spacing between the contents of
+  // mpadded and surrounding MathML elements is not modified by replacing an
+  // mpadded element with an mrow element with the same content."
+  nscoord lspace = 0;
+  // In MATHML3, "width" will be the bounding box width and "advancewidth" will
+  // refer "to the horizontal distance between the positioning point of the
+  // mpadded and the positioning point for the following content".  MathML2
+  // doesn't make the distinction.
   nscoord width  = mBoundingMetrics.width;
-  nscoord lspace = 0; // XXX it is unclear from the REC what is the default here 
 
   PRInt32 pseudoUnit;
 
@@ -448,12 +467,9 @@ nsMathMLmpaddedFrame::Place(nsIRenderingContext& aRenderingContext,
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;
 
-  if (aPlaceOrigin && (dx || dy)) {
-    nsIFrame* childFrame = mFrames.FirstChild();
-    while (childFrame) {
-      childFrame->SetPosition(childFrame->GetPosition() + nsPoint(dx, dy));
-      childFrame = childFrame->GetNextSibling();
-    }
+  if (aPlaceOrigin) {
+    // Finish reflowing child frames, positioning their origins.
+    PositionRowChildFrames(dx, aDesiredSize.ascent);
   }
 
   return NS_OK;

@@ -23,6 +23,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu> (added TeX rendering rules)
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -304,6 +305,12 @@ public:
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
+  // Helper method which positions child frames as an <mrow> on given baseline
+  // y = aBaseline starting from x = aOffsetX, calling FinishReflowChild()
+  // on the frames.
+  void
+  PositionRowChildFrames(nscoord aOffsetX, nscoord aBaseline);
+
   // A variant on FinishAndStoreOverflow() that uses the union of child
   // overflows, the frame bounds, and mBoundingMetrics to set and store the
   // overflow.
@@ -316,6 +323,10 @@ protected:
    * The method does nothing if aFirst == nsnull.
    */
   void DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop = nsnull);
+
+private:
+  class RowChildFrameIterator;
+  friend class RowChildFrameIterator;
 };
 
 
