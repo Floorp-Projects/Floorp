@@ -325,7 +325,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         // should always appear depressed.
         if (aWidgetType == NS_THEME_BUTTON ||
             aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
-            aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON) {
+            aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON ||
+            aWidgetType == NS_THEME_DROPDOWN) {
           PRBool menuOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
           aState->depressed = IsCheckedButton(aFrame) || menuOpen;
           // we must not highlight buttons with open drop down menus on hover.
@@ -1120,7 +1121,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::focused ||
         aAttribute == nsWidgetAtoms::readonly ||
         aAttribute == nsWidgetAtoms::_default ||
-        aAttribute == nsWidgetAtoms::mozmenuactive)
+        aAttribute == nsWidgetAtoms::mozmenuactive ||
+        aAttribute == nsWidgetAtoms::open)
       *aShouldRepaint = PR_TRUE;
   }
 
