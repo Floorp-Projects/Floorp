@@ -1076,36 +1076,34 @@
 
   <binding id="autocomplete-richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <content>
-      <xul:vbox>
-        <xul:hbox align="center">
-          <xul:image xbl:inherits="src=image" class="ac-site-icon"/>
-          <xul:hbox anonid="title-box" class="ac-title">
+      <xul:hbox align="center">
+        <xul:image xbl:inherits="src=image" class="ac-site-icon"/>
+        <xul:hbox anonid="title-box" class="ac-title">
 # note, we rely on the newlines here so that we have
 # a textNode before and after the span.  see _setUpDescription()
 # for more details
-            <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected">
-              <html:span class="ac-emphasize-text"/>
-            </xul:description>
-          </xul:hbox>
-          <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
-                     class="ac-ellipsis-after ac-comment"/>
-          <xul:image anonid="type-image" class="ac-type-icon"/>
+          <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected">
+            <html:span class="ac-emphasize-text"/>
+          </xul:description>
         </xul:hbox>
-        <xul:hbox align="center">
-          <xul:spacer class="ac-site-icon"/>
-          <xul:hbox anonid="url-box" class="ac-url">
+        <xul:label anonid="title-overflow-ellipsis" xbl:inherits="selected"
+                   class="ac-ellipsis-after ac-comment"/>
+        <xul:image anonid="type-image" class="ac-type-icon"/>
+      </xul:hbox>
+      <xul:hbox align="center">
+        <xul:spacer class="ac-site-icon"/>
+        <xul:hbox anonid="url-box" class="ac-url">
 # note, we rely on the newlines here so that we have
 # a textNode before and after the span.  see _setUpDescription()
 # for more details
-            <xul:description anonid="url" class="ac-normal-text ac-url-text" xbl:inherits="selected">
-              <html:span class="ac-emphasize-text"/>
-            </xul:description>
-          </xul:hbox>
-          <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected" 
-                     class="ac-ellipsis-after ac-url-text"/>
-          <xul:spacer class="ac-type-icon"/>
+          <xul:description anonid="url" class="ac-normal-text ac-url-text" xbl:inherits="selected">
+            <html:span class="ac-emphasize-text"/>
+          </xul:description>
         </xul:hbox>
-      </xul:vbox>
+        <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected" 
+                   class="ac-ellipsis-after ac-url-text"/>
+        <xul:spacer class="ac-type-icon"/>
+      </xul:hbox>
     </content>
     <implementation implements="nsIDOMXULSelectControlItemElement">
       <constructor>
