@@ -129,7 +129,6 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.mBoundingMetrics.Clear();
 
   nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
-  PRInt32 count = 0;
   nsIFrame* childFrame = GetFirstChild(nsnull);
   while (childFrame) {
     // ask our children to compute their bounding metrics
@@ -146,16 +145,12 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
       return rv;
     }
 
-    // origins are used as placeholders to store the child's ascent and descent.
+    // origins are used as placeholders to store the child's ascent.
     childFrame->SetRect(nsRect(0, childDesiredSize.ascent,
                                childDesiredSize.width, childDesiredSize.height));
     // compute and cache the bounding metrics
-    if (0 == count)
-      aDesiredSize.mBoundingMetrics  = childDesiredSize.mBoundingMetrics;
-    else
-      aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
+    aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
 
-    count++;
     childFrame = childFrame->GetNextSibling();
   }
 

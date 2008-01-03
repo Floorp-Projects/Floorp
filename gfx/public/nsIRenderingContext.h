@@ -890,15 +890,20 @@ struct nsBoundingMetrics {
   }
 
   /* Append another bounding metrics */
-  /* Notice that leftBearing is not set. The user must set leftBearing on 
-     initialization and (repeatedly) use this operator to append 
-     other bounding metrics on the right.
-   */
   void 
   operator += (const nsBoundingMetrics& bm) {
-    if (ascent < bm.ascent) ascent = bm.ascent;
-    if (descent < bm.descent) descent = bm.descent;   
-    rightBearing = PR_MAX(rightBearing, width + bm.rightBearing);
+    if (ascent + descent == 0 && rightBearing - leftBearing == 0) {
+      ascent = bm.ascent;
+      descent = bm.descent;
+      leftBearing = width + bm.leftBearing;
+      rightBearing = width + bm.rightBearing;
+    }
+    else {
+      if (ascent < bm.ascent) ascent = bm.ascent;
+      if (descent < bm.descent) descent = bm.descent;   
+      leftBearing = PR_MIN(leftBearing, width + bm.leftBearing);
+      rightBearing = PR_MAX(rightBearing, width + bm.rightBearing);
+    }
     width += bm.width;
   }
 };
