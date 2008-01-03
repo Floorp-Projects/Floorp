@@ -3354,9 +3354,11 @@ public:
     NS_DECL_ISUPPORTS
 
 private:
-    static JSBool JS_DLL_CALLBACK ContextHolderOperationCallback(JSContext *cx);
+    static JSBool JS_DLL_CALLBACK ContextHolderBranchCallback(JSContext *cx,
+                                                              JSScript *script);
     
     XPCAutoJSContext mJSContext;
+    JSBranchCallback mOrigBranchCallback;
     JSContext* mOrigCx;
 };
 
@@ -3364,49 +3366,38 @@ NS_IMPL_ISUPPORTS0(ContextHolder)
 
 ContextHolder::ContextHolder(JSContext *aOuterCx, JSObject *aSandbox)
     : mJSContext(JS_NewContext(JS_GetRuntime(aOuterCx), 1024), JS_FALSE),
+      mOrigBranchCallback(nsnull),
       mOrigCx(aOuterCx)
 {
-    if(mJSContext)
-    {
+    if (mJSContext) {
         JS_SetOptions(mJSContext,
                       JSOPTION_DONT_REPORT_UNCAUGHT |
                       JSOPTION_PRIVATE_IS_NSISUPPORTS);
         JS_SetGlobalObject(mJSContext, aSandbox);
         JS_SetContextPrivate(mJSContext, this);
 
-        if(JS_GetOperationCallback(aOuterCx))
-        {
-            JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback,
-                                    JS_GetOperationLimit(aOuterCx));
+        // Now cache the original branch callback
+        mOrigBranchCallback = JS_SetBranchCallback(aOuterCx, nsnull);
+        JS_SetBranchCallback(aOuterCx, mOrigBranchCallback);
+
+        if (mOrigBranchCallback) {
+            JS_SetBranchCallback(mJSContext, ContextHolderBranchCallback);
         }
     }
 }
 
 JSBool JS_DLL_CALLBACK
-ContextHolder::ContextHolderOperationCallback(JSContext *cx)
+ContextHolder::ContextHolderBranchCallback(JSContext *cx, JSScript *script)
 {
     ContextHolder* thisObject =
         static_cast<ContextHolder*>(JS_GetContextPrivate(cx));
     NS_ASSERTION(thisObject, "How did that happen?");
 
-    JSContext *origCx = thisObject->mOrigCx;
-    JSOperationCallback callback = JS_GetOperationCallback(origCx);
-    JSBool ok = JS_TRUE;
-    if(callback)
-    {
-        ok = callback(origCx);
-        callback = JS_GetOperationCallback(origCx);
-        if(callback)
-        {
-            // If the callback is still set in the original context, reflect
-            // a possibly updated operation limit into cx.
-            JS_SetOperationLimit(cx, JS_GetOperationLimit(origCx));
-            return ok;
-        }
+    if (thisObject->mOrigBranchCallback) {
+        return (thisObject->mOrigBranchCallback)(thisObject->mOrigCx, script);
     }
 
-    JS_ClearOperationCallback(cx);
-    return ok;
+    return JS_TRUE;
 }
 
 /***************************************************************************/
