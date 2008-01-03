@@ -87,6 +87,7 @@ CPPSRCS		= \
 		nsSVGPathGeometryFrame.cpp \
 		nsSVGPatternFrame.cpp \
 		nsSVGStopFrame.cpp \
+		nsSVGSwitchFrame.cpp \
 		nsSVGTextContainerFrame.cpp \
 		nsSVGTextFrame.cpp \
 		nsSVGTextPathFrame.cpp \
