@@ -449,12 +449,12 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_TREE_HEADER_SORTARROW;
     break;
   case NS_THEME_TREEVIEW_TWISTY:
-    aGtkWidgetType = MOZ_GTK_EXPANDER;
+    aGtkWidgetType = MOZ_GTK_TREEVIEW_EXPANDER;
     if (aWidgetFlags)
       *aWidgetFlags = GTK_EXPANDER_COLLAPSED;
     break;
   case NS_THEME_TREEVIEW_TWISTY_OPEN:
-    aGtkWidgetType = MOZ_GTK_EXPANDER;
+    aGtkWidgetType = MOZ_GTK_TREEVIEW_EXPANDER;
     if (aWidgetFlags)
       *aWidgetFlags = GTK_EXPANDER_EXPANDED;
     break;
@@ -1070,7 +1070,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     {
       gint expander_size;
 
-      moz_gtk_get_expander_size(&expander_size);
+      moz_gtk_get_treeview_expander_size(&expander_size);
       aResult->width = aResult->height = expander_size;
       *aIsOverridable = PR_FALSE;
     }
