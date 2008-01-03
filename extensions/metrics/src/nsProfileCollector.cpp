@@ -723,8 +723,9 @@ nsProfileCollector::BookmarkCounter::CountChildren(PRInt64 root, PRBool deep,
     return;
   }
 
-  const PRUint16 groupMode = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
-  options->SetGroupingMode(&groupMode, 1);
+  // setting option breaks bookmark count
+  // const PRUint16 groupMode = nsINavHistoryQueryOptions::GROUP_BY_FOLDER;
+  // options->SetGroupingMode(&groupMode, 1);
 
   nsCOMPtr<nsINavHistoryResult> result;
   histSvc->ExecuteQuery(query, options, getter_AddRefs(result));
