@@ -621,9 +621,12 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
-  mFilters.AppendString(aFilter);
+  if (aFilter.EqualsLiteral("..apps"))
+    mFilters.AppendString(NS_LITERAL_STRING("*.exe;*.cmd;*.com;*.bat"));
+  else
+    mFilters.AppendString(aFilter);
   mTitles.AppendString(aTitle);
-  
+
   return NS_OK;
 }
 
