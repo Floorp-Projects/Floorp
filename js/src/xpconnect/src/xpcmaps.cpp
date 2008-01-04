@@ -652,24 +652,6 @@ XPCNativeWrapperMap::~XPCNativeWrapperMap()
 /***************************************************************************/
 // implement WrappedNative2WrapperMap...
 
-struct JSDHashTableOps
-WrappedNative2WrapperMap::sOps = { nsnull };
-
-// static
-void
-WrappedNative2WrapperMap::ClearLink(JSDHashTable* table,
-                                    JSDHashEntryHdr* entry)
-{
-    Entry* e = static_cast<Entry*>(entry);
-    e->key = nsnull;
-    if(e->value)
-    {
-        PR_REMOVE_LINK(e->value);
-        delete e->value;
-        e->value = nsnull;
-    }
-}
-
 // static
 WrappedNative2WrapperMap*
 WrappedNative2WrapperMap::newMap(int size)
@@ -683,85 +665,14 @@ WrappedNative2WrapperMap::newMap(int size)
 
 WrappedNative2WrapperMap::WrappedNative2WrapperMap(int size)
 {
-    if(!sOps.allocTable)
-    {
-        sOps = *JS_DHashGetStubOps();
-        sOps.clearEntry = WrappedNative2WrapperMap::ClearLink;
-    }
-
-    mTable = JS_NewDHashTable(&sOps, nsnull, sizeof(Entry), size);
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+                              sizeof(Entry), size);
 }
 
 WrappedNative2WrapperMap::~WrappedNative2WrapperMap()
 {
     if(mTable)
         JS_DHashTableDestroy(mTable);
-}
-
-JSObject*
-WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
-                              JSObject* wrappedObject,
-                              JSObject* wrapper)
-{
-    NS_PRECONDITION(wrappedObject,"bad param");
-    Entry* entry = (Entry*)
-        JS_DHashTableOperate(mTable, wrappedObject, JS_DHASH_ADD);
-    if(!entry)
-        return nsnull;
-    NS_ASSERTION(!entry->key || this == head, "dangling pointer?");
-    entry->key = wrappedObject;
-    Link* l = new Link;
-    if(!l)
-        return nsnull;
-    PR_INIT_CLIST(l);
-    l->obj = wrapper;
-
-    if(this != head)
-    {
-        Link* headLink = head->FindLink(wrappedObject);
-        if(!headLink)
-        {
-            Entry* dummy = (Entry*)
-                JS_DHashTableOperate(head->mTable, wrappedObject, JS_DHASH_ADD);
-            dummy->key = wrappedObject;
-            headLink = dummy->value = new Link;
-            if(!headLink)
-            {
-                Remove(wrappedObject);
-                return nsnull;
-            }
-            PR_INIT_CLIST(headLink);
-            headLink->obj = nsnull;
-        }
-
-        PR_INSERT_BEFORE(l, headLink);
-    }
-
-    entry->value = l;
-    return wrapper;
-}
-
-PRBool
-WrappedNative2WrapperMap::AddLink(JSObject* wrappedObject, Link* oldLink)
-{
-    Entry* entry = (Entry*)
-        JS_DHashTableOperate(mTable, wrappedObject, JS_DHASH_ADD);
-    if(!entry)
-        return PR_FALSE;
-    NS_ASSERTION(!entry->key, "Eh? What's happening?");
-    entry->key = wrappedObject;
-    Link* newLink = entry->value = new Link;
-    if(!newLink)
-    {
-        Remove(wrappedObject);
-        return PR_FALSE;
-    }
-
-    PR_INSERT_LINK(newLink, oldLink);
-    PR_REMOVE_AND_INIT_LINK(oldLink);
-    newLink->obj = oldLink->obj;
-
-    return PR_TRUE;
 }
 
 /***************************************************************************/
