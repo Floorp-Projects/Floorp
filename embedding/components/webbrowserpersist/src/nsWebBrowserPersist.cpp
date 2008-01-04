@@ -121,6 +121,8 @@
 
 #include "nsWebBrowserPersist.h"
 
+// Buffer file writes in 32kb chunks
+#define BUFFERED_OUTPUT_SIZE (1024 * 32)
 
 #define NS_SUCCESS_DONT_FIXUP NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
 
@@ -2281,7 +2283,8 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     rv = fileOutputStream->Init(aFile, ioFlags, -1, 0);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ENSURE_SUCCESS(CallQueryInterface(fileOutputStream, aOutputStream), NS_ERROR_FAILURE);
+    *aOutputStream = NS_BufferOutputStream(fileOutputStream,
+                                           BUFFERED_OUTPUT_SIZE).get();
 
     if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE)
     {
