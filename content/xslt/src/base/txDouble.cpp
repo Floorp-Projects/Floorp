@@ -154,7 +154,7 @@ public:
                     }
                     else {
                         mState = eIllegal;
-                        return aSourceLength;
+                        return;
                     }
                     break;
                 case eWhiteend:
