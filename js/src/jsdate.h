@@ -64,6 +64,10 @@ js_NewDateObjectMsec(JSContext* cx, jsdouble msec_time);
 
 /*
  * Construct a new Date Object from an exploded local time value.
+ *
+ * Assert that mon < 12 to help catch off-by-one user errors, which are common
+ * due to the 0-based month numbering copied into JS from Java (java.util.Date
+ * in 1995). js_DateSetMonth (below) likewise asserts month < 12.
  */
 extern JS_FRIEND_API(JSObject*)
 js_NewDateObject(JSContext* cx, int year, int mon, int mday,
@@ -98,7 +102,7 @@ extern JS_FRIEND_API(void)
 js_DateSetYear(JSContext *cx, JSObject *obj, int year);
 
 extern JS_FRIEND_API(void)
-js_DateSetMonth(JSContext *cx, JSObject *obj, int year);
+js_DateSetMonth(JSContext *cx, JSObject *obj, int month);
 
 extern JS_FRIEND_API(void)
 js_DateSetDate(JSContext *cx, JSObject *obj, int date);
