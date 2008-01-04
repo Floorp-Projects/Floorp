@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=410229
+-->
+<head>
+  <title>Test for Bug 410229</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=410229">Mozilla Bug 410229</a>
+<p id="display"></p>
+
+<span id="s"><span id="inner">Hello</span>
+<div>My</div>
+Kitty</span>
+
+<br>
+<span id="s2">Hello<div>My</div><span id="inner2">Kitty</span></span>
+
+<br>
+<span id="s3"><div id="inner3block">My</div><span id="inner3">Kitty</span></span>
+
+<br>
+<span id="s4"><div id="inner4block">My</div></span>
+
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var s = document.getElementById("s");
+var inner = document.getElementById("inner");
+var rects = s.getClientRects();
+ok(s.getBoundingClientRect().top == inner.getBoundingClientRect().top,
+   "'"+s.id+"' "+"IB-split span should start where its first line starts");
+is(s.getClientRects().length, 3,
+   "'"+s.id+"' "+"IB-split span should have three CSS boxes");
+ok(rects[0].left < rects[0].right && rects[0].top < rects[0].bottom,
+   "'"+s.id+"' "+"IB-split span should have a non-zero width first rect");
+ok(rects[1].left < rects[1].right && rects[1].top < rects[1].bottom,
+   "'"+s.id+"' "+"IB-split span should have a non-zero width second rect");
+ok(rects[2].left < rects[2].right && rects[2].top < rects[2].bottom,
+   "'"+s.id+"' "+"IB-split span should have a non-zero width second rect");
+ok(s.getBoundingClientRect().top == rects[0].top,
+   "'"+s.id+"' "+"IB-split span should start where its first rect starts");
+ok(s.getBoundingClientRect().bottom == rects[2].bottom,
+   "'"+s.id+"' "+"IB-split span should end where its last rect ends");
+
+s = document.getElementById("s2");
+inner = document.getElementById("inner2");
+rects = s.getClientRects();
+ok(s.getBoundingClientRect().bottom == inner.getBoundingClientRect().bottom,
+   "'"+s.id+"' "+"IB-split span should end where its last line ends");
+is(s.getClientRects().length, 3,
+   "'"+s.id+"' "+"IB-split span should have three CSS boxes");
+ok(s.getBoundingClientRect().bottom == rects[2].bottom,
+   "'"+s.id+"' "+"IB-split span should end where its last rect ends");
+
+s = document.getElementById("s3");
+inner = document.getElementById("inner3");
+var block = document.getElementById("inner3block");
+rects = s.getClientRects();
+ok(s.getBoundingClientRect().top == block.getBoundingClientRect().top,
+   "'"+s.id+"' "+"IB-split span should start where its first line starts");
+ok(s.getBoundingClientRect().bottom == inner.getBoundingClientRect().bottom,
+   "'"+s.id+"' "+"IB-split span should end where its last line ends");
+is(s.getClientRects().length, 3,
+   "'"+s.id+"' "+"IB-split span should have three CSS boxes");
+ok(rects[0].left == rects[0].right,
+   "'"+s.id+"' "+"IB-split span should have a zero width first rect");
+ok(s.getBoundingClientRect().top == rects[1].top,
+   "'"+s.id+"' "+"IB-split span should start where its second rect starts");
+
+s = document.getElementById("s4");
+block = document.getElementById("inner4block");
+rects = s.getClientRects();
+ok(s.getBoundingClientRect().top == block.getBoundingClientRect().top,
+   "'"+s.id+"' "+"IB-split span should start where its first line starts");
+ok(s.getBoundingClientRect().bottom == block.getBoundingClientRect().bottom,
+   "'"+s.id+"' "+"IB-split span should end where its last line ends");
+is(s.getClientRects().length, 2,
+   "'"+s.id+"' "+"IB-split span should have two CSS boxes");
+ok(rects[0].left == rects[0].right,
+   "'"+s.id+"' "+"IB-split span should have a zero width first rect");
+ok(s.getBoundingClientRect().bottom == rects[1].bottom,
+   "'"+s.id+"' "+"IB-split span should end where its block rect ends");
+/*
+ok(rects[2].left == rects[2].right,
+   "'"+s.id+"' "+"IB-split span should have a zero width last rect");
+*/
+
+/*
+alert("'"+s.id+"' bounding rect:\n"+
+      '  left='+s.getBoundingClientRect().left+' right='+s.getBoundingClientRect().right+' top='+s.getBoundingClientRect().top+' bottom='+s.getBoundingClientRect().bottom + '\nclient rects:\n' +
+      '  left='+rects[0].left+' right='+rects[0].right+' top='+rects[0].top+' bottom='+rects[0].bottom + '\n' +
+      '  left='+rects[1].left+' right='+rects[1].right+' top='+rects[1].top+' bottom='+rects[1].bottom + '\n' +
+      '  left='+rects[2].left+' right='+rects[2].right+' top='+rects[2].top+' bottom='+rects[2].bottom + '\n');
+*/
+
+</script>
+</pre>
+</body>
+
+</html>
