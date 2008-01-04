@@ -230,8 +230,6 @@ IsValFrame(JSContext *cx, JSObject *obj, jsval v, XPCWrappedNative *wn)
 nsresult
 IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
 {
-  nsCOMPtr<nsIPrincipal> subjectPrin, objectPrin;
-
   // Get the subject principal from the execution stack.
   nsIScriptSecurityManager *ssm = GetSecurityManager();
   if (!ssm) {
@@ -239,8 +237,7 @@ IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIPrincipal *subjectPrin = ssm->GetCxSubjectPrincipal(cx);
 
   if (!subjectPrin) {
     ThrowException(NS_ERROR_FAILURE, cx);
@@ -248,7 +245,7 @@ IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
   }
 
   PRBool isSystem = PR_FALSE;
-  rv = ssm->IsSystemPrincipal(subjectPrin, &isSystem);
+  nsresult rv = ssm->IsSystemPrincipal(subjectPrin, &isSystem);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If we somehow end up being called from chrome, just allow full access.
@@ -257,6 +254,7 @@ IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
     return NS_OK;
   }
 
+  nsCOMPtr<nsIPrincipal> objectPrin;
   rv = ssm->GetObjectPrincipal(cx, wrappedObj, getter_AddRefs(objectPrin));
   if (NS_FAILED(rv)) {
     return rv;
