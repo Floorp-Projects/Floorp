@@ -61,7 +61,7 @@
  * the partial line will be appended to the out parameter of NS_ReadLine and the
  * buffer will be emptied.
  */
-#define kLineBufferSize 1024
+#define kLineBufferSize 4096
 
 /**
  * @internal
