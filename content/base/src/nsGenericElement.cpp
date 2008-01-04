@@ -753,15 +753,16 @@ static void
 SetTextRectangle(const nsRect& aLayoutRect, nsPresContext* aPresContext,
                  nsTextRectangle* aRect)
 {
-  double scale = 4096.0;
+  double scale = 65536.0;
   // Round to the nearest 1/scale units. We choose scale so it can be represented
   // exactly by machine floating point.
   double scaleInv = 1/scale;
   double t2pScaled = scale/aPresContext->AppUnitsPerCSSPixel();
-  aRect->SetRect(RoundFloat(aLayoutRect.x*t2pScaled)*scaleInv,
-                 RoundFloat(aLayoutRect.y*t2pScaled)*scaleInv,
-                 RoundFloat(aLayoutRect.width*t2pScaled)*scaleInv,
-                 RoundFloat(aLayoutRect.height*t2pScaled)*scaleInv);
+  double x = RoundFloat(aLayoutRect.x*t2pScaled)*scaleInv;
+  double y = RoundFloat(aLayoutRect.y*t2pScaled)*scaleInv;
+  aRect->SetRect(x, y,
+                 RoundFloat(aLayoutRect.XMost()*t2pScaled)*scaleInv - x,
+                 RoundFloat(aLayoutRect.YMost()*t2pScaled)*scaleInv - y);
 }
 
 static PRBool
