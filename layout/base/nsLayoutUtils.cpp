@@ -769,7 +769,8 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
   }
 #endif
   
-  nsIFrame* result = list.HitTest(&builder, aPt);
+  nsDisplayItem::HitTestState hitTestState;
+  nsIFrame* result = list.HitTest(&builder, aPt, &hitTestState);
   list.DeleteAll();
   return result;
 }

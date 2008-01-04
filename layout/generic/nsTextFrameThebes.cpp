@@ -3479,7 +3479,8 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
   }
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) {
     return nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize()).Contains(aPt) ? mFrame : nsnull;
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
