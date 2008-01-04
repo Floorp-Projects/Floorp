@@ -54,11 +54,11 @@ is(s.getBoundingClientRect().bottom, rects[2].bottom,
 s = document.getElementById("s2");
 inner = document.getElementById("inner2");
 rects = s.getClientRects();
-todo_is(s.getBoundingClientRect().bottom, inner.getBoundingClientRect().bottom,
+is(s.getBoundingClientRect().bottom, inner.getBoundingClientRect().bottom,
    "'"+s.id+"' "+"IB-split span should end where its last line ends");
 is(s.getClientRects().length, 3,
    "'"+s.id+"' "+"IB-split span should have three CSS boxes");
-todo_is(s.getBoundingClientRect().bottom, rects[2].bottom,
+is(s.getBoundingClientRect().bottom, rects[2].bottom,
    "'"+s.id+"' "+"IB-split span should end where its last rect ends");
 
 s = document.getElementById("s3");
