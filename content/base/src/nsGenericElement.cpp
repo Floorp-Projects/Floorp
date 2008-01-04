@@ -803,9 +803,7 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
   if (TryGetSVGBoundingRect(frame, &r)) {
     // Currently SVG frames don't have continuations but I don't want things to
     // break if that changes.
-    nsIFrame* next;
-    while ((next = frame->GetNextContinuation()) != nsnull) {
-      frame = next;
+    while ((frame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame)) != nsnull) {
       nsRect nextRect;
 #ifdef DEBUG
       PRBool isSVG =
@@ -839,7 +837,8 @@ nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
   }
   
   nsPresContext* presContext = frame->PresContext();
-  for (nsIFrame* f = frame; f; f = f->GetNextContinuation()) {
+  for (nsIFrame* f = frame; f;
+       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
     nsRefPtr<nsTextRectangle> rect = new nsTextRectangle();
     if (!rect)
       return NS_ERROR_OUT_OF_MEMORY;
