@@ -331,23 +331,32 @@ void nsDisplayList::DeleteAll() {
   }
 }
 
-nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) const {
-  nsVoidArray elements;
+nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                                 nsDisplayItem::HitTestState* aState) const {
+  PRInt32 itemBufferStart = aState->mItemBuffer.Length();
   nsDisplayItem* item;
   for (item = GetBottom(); item; item = item->GetAbove()) {
-    elements.AppendElement(item);
+    aState->mItemBuffer.AppendElement(item);
   }
-  for (PRInt32 i = elements.Count() - 1; i >= 0; --i) {
-    item = static_cast<nsDisplayItem*>(elements.ElementAt(i));
+  for (PRInt32 i = aState->mItemBuffer.Length() - 1; i >= itemBufferStart; --i) {
+    // Pop element off the end of the buffer. We want to shorten the buffer
+    // so that recursive calls to HitTest have more buffer space.
+    item = aState->mItemBuffer[i];
+    aState->mItemBuffer.SetLength(i);
+
     if (item->GetBounds(aBuilder).Contains(aPt)) {
-      nsIFrame* f = item->HitTest(aBuilder, aPt);
+      nsIFrame* f = item->HitTest(aBuilder, aPt, aState);
       // Handle the XUL 'mousethrough' feature.
       if (f) {
-        if (!f->GetMouseThrough())
+        if (!f->GetMouseThrough()) {
+          aState->mItemBuffer.SetLength(itemBufferStart);
           return f;
+        }
       }
     }
   }
+  NS_ASSERTION(aState->mItemBuffer.Length() == itemBufferStart,
+               "How did we forget to pop some elements?");
   return nsnull;
 }
 
@@ -634,8 +643,9 @@ nsDisplayWrapList::~nsDisplayWrapList() {
 }
 
 nsIFrame*
-nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
-  return mList.HitTest(aBuilder, aPt);
+nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                           HitTestState* aState) {
+  return mList.HitTest(aBuilder, aPt, aState);
 }
 
 nsRect
