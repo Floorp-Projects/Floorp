@@ -500,8 +500,13 @@ var feedHandlerInfo = {
     Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
     getService(Ci.nsIWebContentConverterService),
 
-  _shellSvc: Cc["@mozilla.org/browser/shell-service;1"].
-             getService(Ci.nsIShellService),
+  _shellSvc:
+#ifdef HAVE_SHELL_SERVICE
+    Cc["@mozilla.org/browser/shell-service;1"].
+    getService(Ci.nsIShellService),
+#else
+    null,
+#endif
 
 
   //**************************************************************************//
@@ -610,13 +615,15 @@ var feedHandlerInfo = {
     if (typeof this.__defaultApplicationHandler != "undefined")
       return this.__defaultApplicationHandler;
 
-    var defaultFeedReader;
+    var defaultFeedReader = null;
+#ifdef HAVE_SHELL_SERVICE
     try {
       defaultFeedReader = this._shellSvc.defaultFeedReader;
     }
     catch(ex) {
       // no default reader
     }
+#endif
 
     if (defaultFeedReader) {
       let handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
@@ -635,6 +642,7 @@ var feedHandlerInfo = {
   },
 
   get hasDefaultHandler() {
+#ifdef HAVE_SHELL_SERVICE
     try {
       if (this._shellSvc.defaultFeedReader)
         return true;
@@ -642,6 +650,7 @@ var feedHandlerInfo = {
     catch(ex) {
       // no default reader
     }
+#endif
 
     return false;
   },
