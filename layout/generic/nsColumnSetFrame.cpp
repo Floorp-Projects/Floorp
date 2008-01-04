@@ -48,6 +48,7 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
+#include "nsLayoutUtils.h"
 
 class nsColumnSetFrame : public nsHTMLContainerFrame {
 public:
@@ -183,7 +184,9 @@ nsColumnSetFrame::SetInitialChildList(nsIAtom*        aListName,
   return nsHTMLContainerFrame::SetInitialChildList(nsnull, aChildList);
 }
 
-static nscoord GetAvailableContentWidth(const nsHTMLReflowState& aReflowState) {
+static nscoord
+GetAvailableContentWidth(const nsHTMLReflowState& aReflowState)
+{
   if (aReflowState.availableWidth == NS_INTRINSICSIZE) {
     return NS_INTRINSICSIZE;
   }
@@ -193,7 +196,9 @@ static nscoord GetAvailableContentWidth(const nsHTMLReflowState& aReflowState) {
   return PR_MAX(0, aReflowState.availableWidth - borderPaddingWidth);
 }
 
-static nscoord GetAvailableContentHeight(const nsHTMLReflowState& aReflowState) {
+static nscoord
+GetAvailableContentHeight(const nsHTMLReflowState& aReflowState)
+{
   if (aReflowState.availableHeight == NS_INTRINSICSIZE) {
     return NS_INTRINSICSIZE;
   }
@@ -204,15 +209,19 @@ static nscoord GetAvailableContentHeight(const nsHTMLReflowState& aReflowState) 
 }
 
 static nscoord
-GetColumnGap(nsColumnSetFrame* aFrame, const nsStyleColumn* aColStyle) {
-  switch (aColStyle->mColumnGap.GetUnit()) {
-    case eStyleUnit_Coord:
-      return aColStyle->mColumnGap.GetCoordValue();
-    case eStyleUnit_Normal:
-      return aFrame->GetStyleFont()->mFont.size;
-    default:
-      NS_NOTREACHED("Unknown gap type");
-  }
+GetColumnGap(nsColumnSetFrame*    aFrame,
+             const nsStyleColumn* aColStyle,
+             nsIRenderingContext* aRenderingContext)
+{
+  nscoord colGap;
+  if (eStyleUnit_Normal == aColStyle->mColumnGap.GetUnit())
+    return aFrame->GetStyleFont()->mFont.size;
+  else if (nsLayoutUtils::GetAbsoluteCoord(aColStyle->mColumnGap,
+                                           aRenderingContext,
+                                           aFrame, colGap))
+    return colGap;
+
+  NS_NOTREACHED("Unknown gap type");
   return 0;
 }
 
@@ -229,13 +238,13 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
     colHeight = aReflowState.ComputedHeight();
   }
 
-  nscoord colGap = GetColumnGap(this, colStyle);
+  nscoord colGap = GetColumnGap(this, colStyle, aReflowState.rendContext);
   PRInt32 numColumns = colStyle->mColumnCount;
 
-  nscoord colWidth = NS_INTRINSICSIZE;
-  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
-    colWidth = colStyle->mColumnWidth.GetCoordValue();
-
+  nscoord colWidth;
+  if (nsLayoutUtils::GetAbsoluteCoord(colStyle->mColumnWidth,
+                                      aReflowState.rendContext,
+                                      this, colWidth)) {
     // Reduce column count if necessary to make columns fit in the
     // available width. Compute max number of columns that fit in
     // availContentWidth, satisfying colGap*(maxColumns - 1) +
@@ -250,6 +259,8 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
   } else if (numColumns > 0 && availContentWidth != NS_INTRINSICSIZE) {
     nscoord widthMinusGaps = availContentWidth - colGap*(numColumns - 1);
     colWidth = widthMinusGaps/numColumns;
+  } else {
+    colWidth = NS_INTRINSICSIZE;
   }
   // Take care of the situation where there's only one column but it's
   // still too wide
@@ -336,11 +347,13 @@ nsColumnSetFrame::GetMinWidth(nsIRenderingContext *aRenderingContext) {
     width = mFrames.FirstChild()->GetMinWidth(aRenderingContext);
   }
   const nsStyleColumn* colStyle = GetStyleColumn();
-  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
+  nscoord colWidth;
+  if (nsLayoutUtils::GetAbsoluteCoord(colStyle->mColumnWidth,
+                                      aRenderingContext, this, colWidth)) {
     // As available width reduces to zero, we reduce our number of columns to one,
     // and don't enforce the column width, so just return the min of the
     // child's min-width with any specified column width.
-    width = PR_MIN(width, colStyle->mColumnWidth.GetCoordValue());
+    width = PR_MIN(width, colWidth);
   } else {
     NS_ASSERTION(colStyle->mColumnCount > 0, "column-count and column-width can't both be auto");
     // As available width reduces to zero, we still have mColumnCount columns, so
@@ -359,12 +372,11 @@ nsColumnSetFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext) {
   // required column gaps
   // XXX what about forced column breaks here?
   const nsStyleColumn* colStyle = GetStyleColumn();
-  nscoord colGap = GetColumnGap(this, colStyle);
+  nscoord colGap = GetColumnGap(this, colStyle, aRenderingContext);
 
   nscoord colWidth;
-  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
-    colWidth = colStyle->mColumnWidth.GetCoordValue();
-  } else {
+  if (!nsLayoutUtils::GetAbsoluteCoord(colStyle->mColumnWidth,
+                                       aRenderingContext, this, colWidth)) {
     if (mFrames.FirstChild()) {
       colWidth = mFrames.FirstChild()->GetPrefWidth(aRenderingContext);
     } else {
