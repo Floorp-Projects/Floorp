@@ -132,9 +132,10 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
-  for (PRUint32 i = 0; i < mFramesMarkedForDisplay.Length(); ++i) {
-    UnmarkFrameForDisplay(mFramesMarkedForDisplay[i]);
-  }
+  NS_ASSERTION(mFramesMarkedForDisplay.Length() == 0,
+               "All frames should have been unmarked");
+  NS_ASSERTION(mPresShellStates.Length() == 0,
+               "All presshells should have been exited");
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
@@ -142,57 +143,58 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
 
 nsICaret *
 nsDisplayListBuilder::GetCaret() {
-  NS_ASSERTION(mCaretStates.Length() > 0, "Not enough presshells");
-
-  nsIFrame* frame = GetCaretFrame();
-  if (!frame) {
-    return nsnull;
-  }
-  nsIPresShell* shell = frame->PresContext()->PresShell();
   nsCOMPtr<nsICaret> caret;
-  shell->GetCaret(getter_AddRefs(caret));
-
+  CurrentPresShellState()->mPresShell->GetCaret(getter_AddRefs(caret));
   return caret;
 }
 
 void
 nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
                                      const nsRect& aDirtyRect) {
+  PresShellState* state = mPresShellStates.AppendElement();
+  if (!state)
+    return;
+  state->mPresShell = aReferenceFrame->PresContext()->PresShell();
+  state->mCaretFrame = nsnull;
+  state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
+
   if (!mBuildCaret)
     return;
 
-  nsIPresShell* shell = aReferenceFrame->PresContext()->PresShell();
   nsCOMPtr<nsICaret> caret;
-  shell->GetCaret(getter_AddRefs(caret));
-  nsIFrame* frame = caret->GetCaretFrame();
+  state->mPresShell->GetCaret(getter_AddRefs(caret));
+  state->mCaretFrame = caret->GetCaretFrame();
 
-  if (frame) {
+  if (state->mCaretFrame) {
     // Check if the dirty rect intersects with the caret's dirty rect.
     nsRect caretRect =
-      caret->GetCaretRect() + frame->GetOffsetTo(aReferenceFrame);
+      caret->GetCaretRect() + state->mCaretFrame->GetOffsetTo(aReferenceFrame);
     if (caretRect.Intersects(aDirtyRect)) {
       // Okay, our rects intersect, let's mark the frame and all of its ancestors.
-      mFramesMarkedForDisplay.AppendElement(frame);
-      MarkFrameForDisplay(frame, nsnull);
+      mFramesMarkedForDisplay.AppendElement(state->mCaretFrame);
+      MarkFrameForDisplay(state->mCaretFrame, nsnull);
     }
   }
-
-  mCaretStates.AppendElement(frame);
 }
 
 void
 nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
                                      const nsRect& aDirtyRect)
 {
-  if (!mBuildCaret)
+  if (CurrentPresShellState()->mPresShell != aReferenceFrame->PresContext()->PresShell()) {
+    // Must have not allocated a state for this presshell, presumably due
+    // to OOM.
     return;
+  }
 
-  // Pop the state off.
-  NS_ASSERTION(mCaretStates.Length() > 0, "Leaving too many PresShell");
-  NS_ASSERTION(GetCaret() || GetCaretFrame() == nsnull,
-               "GetCaret and LeavePresShell diagree");
-
-  mCaretStates.SetLength(mCaretStates.Length() - 1);
+  // Unmark and pop off the frames marked for display in this pres shell.
+  PRUint32 firstFrameForShell = CurrentPresShellState()->mFirstFrameMarkedForDisplay;
+  for (PRUint32 i = firstFrameForShell;
+       i < mFramesMarkedForDisplay.Length(); ++i) {
+    UnmarkFrameForDisplay(mFramesMarkedForDisplay[i]);
+  }
+  mFramesMarkedForDisplay.SetLength(firstFrameForShell);
+  mPresShellStates.SetLength(mPresShellStates.Length() - 1);
 }
 
 void
