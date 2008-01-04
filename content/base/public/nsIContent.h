@@ -62,42 +62,28 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xe0c5d967, 0x2c15, 0x4097, \
-  { 0xb0, 0xdc, 0x75, 0xa3, 0xa7, 0xfc, 0xcd, 0x1a } }
-
-// hack to make egcs / gcc 2.95.2 happy
-class nsIContent_base : public nsINode {
-public:
-#ifdef MOZILLA_INTERNAL_API
-  // If you're using the external API, the only thing you can know about
-  // nsIContent is that it exists with an IID
-
-  nsIContent_base(nsINodeInfo *aNodeInfo)
-    : nsINode(aNodeInfo)
-  {
-  }
-#endif
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
-};
+{ 0xfba9aa39, 0x016e, 0x4d5d, \
+  { 0xab, 0x62, 0x22, 0xa1, 0xb8, 0x4a, 0x3c, 0x7b } }
 
 /**
  * A node of content in a document's content model. This interface
  * is supported by all content objects.
  */
-class nsIContent : public nsIContent_base {
+class nsIContent : public nsINode {
 public:
 #ifdef MOZILLA_INTERNAL_API
   // If you're using the external API, the only thing you can know about
   // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
-    : nsIContent_base(aNodeInfo)
+    : nsINode(aNodeInfo)
   {
     NS_ASSERTION(aNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
   }
 #endif // MOZILLA_INTERNAL_API
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
   /**
    * Bind this content node to a tree.  If this method throws, the caller must
@@ -166,20 +152,13 @@ public:
   }
 
   /**
-   * Returns PR_TRUE if this content is anonymous for event handling.
-   */
-  PRBool IsAnonymousForEvents() const
-  {
-    return HasFlag(NODE_IS_ANONYMOUS_FOR_EVENTS);
-  }
-
-  /**
-   * Set whether this content is anonymous
-   * This is virtual and non-inlined due to nsXULElement::SetNativeAnonymous
+   * Makes this content anonymous
    * @see nsIAnonymousContentCreator
-   * @param aAnonymous whether this content is anonymous
    */
-  virtual void SetNativeAnonymous(PRBool aAnonymous);
+  void SetNativeAnonymous()
+  {
+    SetFlags(NODE_IS_ANONYMOUS);
+  }
 
   /**
    * Get the namespace that this element's tag is defined in

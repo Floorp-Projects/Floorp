@@ -69,6 +69,8 @@ function is(left, right, message) {
 
 function eventOccured(event)
 {
+   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
   if (gPopupTests.length <= gTestIndex) {
     ok(false, "Extra " + event.type + " event fired");
     return;
