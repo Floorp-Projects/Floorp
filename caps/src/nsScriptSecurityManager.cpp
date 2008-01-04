@@ -470,6 +470,20 @@ nsScriptSecurityManager::IsSystemPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIPrincipal *)
+nsScriptSecurityManager::GetCxSubjectPrincipal(JSContext *cx)
+{
+    NS_ASSERTION(cx == GetCurrentJSContext(),
+                 "Uh, cx is not the current JS context!");
+
+    nsresult rv = NS_ERROR_FAILURE;
+    nsIPrincipal *principal = GetSubjectPrincipal(cx, &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
+
+    return principal;
+}
+
 ////////////////////
 // Policy Storage //
 ////////////////////
