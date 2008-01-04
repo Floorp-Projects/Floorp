@@ -2539,7 +2539,9 @@ DrawBorders(gfxContext *ctx,
         sideBits = SIDE_BITS_ALL;
     }
 
-    if (borderStyles[side] != NS_STYLE_BORDER_STYLE_NONE) {
+    const PRUint8 style = borderStyles[side];
+    if (style != NS_STYLE_BORDER_STYLE_NONE &&
+        style != NS_STYLE_BORDER_STYLE_HIDDEN) {
       // Draw the whole border.  If we're not drawing multiple passes,
       // then sides are identical and no clip was set -- this will draw
       // the entire border.  Otherwise, this will still draw the entire
@@ -2549,7 +2551,7 @@ DrawBorders(gfxContext *ctx,
       DrawBorderSides(ctx,
                       borderWidths,
                       sideBits,
-                      borderStyles[side],
+                      style,
                       oRect, iRect,
                       borderColors[side],
                       compositeColors[side],
