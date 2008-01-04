@@ -326,14 +326,13 @@ class nsWritingIterator
           return *this;
         }
 
-      PRUint32
+      void
       write( const value_type* s, PRUint32 n )
         {
           NS_ASSERTION(size_forward() > 0, "You can't |write| into an |nsWritingIterator| with no space!");
 
           nsCharTraits<value_type>::move(mPosition, s, n);
           advance( difference_type(n) );
-          return n;
         }
   };
 
