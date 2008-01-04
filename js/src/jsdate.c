@@ -2163,6 +2163,7 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
     JSObject *obj;
     jsdouble msec_time;
 
+    JS_ASSERT(mon < 12);
     msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
     obj = js_NewDateObjectMsec(cx, UTC(msec_time));
     return obj;
@@ -2270,6 +2271,8 @@ JS_FRIEND_API(void)
 js_DateSetMonth(JSContext *cx, JSObject *obj, int month)
 {
     jsdouble local;
+
+    JS_ASSERT(month < 12);
 
     if (!GetLocalTime(cx, obj, NULL, &local))
         return;
