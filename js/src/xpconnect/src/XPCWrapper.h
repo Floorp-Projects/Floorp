@@ -74,10 +74,6 @@ XPC_XOW_WrapFunction(JSContext *cx, JSObject *wrapperObj, JSObject *funobj,
 JSBool
 XPC_XOW_RewrapIfNeeded(JSContext *cx, JSObject *wrapperObj, jsval *vp);
 
-JSBool
-XPC_XOW_WrapperMoved(JSContext *cx, XPCWrappedNative *innerObj,
-                     XPCWrappedNativeScope *newScope);
-
 nsresult
 IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj);
 

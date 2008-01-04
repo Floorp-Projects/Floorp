@@ -91,7 +91,6 @@
 #include "prlong.h"
 #include "prmem.h"
 #include "prenv.h"
-#include "prclist.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"

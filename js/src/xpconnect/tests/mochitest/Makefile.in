@@ -45,7 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	test_bug390488.html \
-		test_bug393269.html \
 		test_wrappers.html \
 		$(NULL)
 
