@@ -1660,6 +1660,7 @@ ifdef EXTRA_PP_COMPONENTS
 libs:: $(EXTRA_PP_COMPONENTS)
 ifndef NO_DIST_INSTALL
 	$(EXIT_ON_ERROR) \
+	$(NSINSTALL) -D $(FINAL_TARGET)/components; \
 	for i in $^; do \
 	  dest=$(FINAL_TARGET)/components/`basename $$i`; \
 	  $(RM) -f $$dest; \
@@ -1683,6 +1684,7 @@ ifdef EXTRA_PP_JS_MODULES
 libs:: $(EXTRA_PP_JS_MODULES)
 ifndef NO_DIST_INSTALL
 	$(EXIT_ON_ERROR) \
+	$(NSINSTALL) -D $(FINAL_TARGET)/modules; \
 	for i in $^; do \
 	  dest=$(FINAL_TARGET)/modules/`basename $$i`; \
 	  $(RM) -f $$dest; \
