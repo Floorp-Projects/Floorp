@@ -1690,7 +1690,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   // Set the div native anonymous, so CSS will be its style language
   // no matter what.
-  mAnonymousDiv->SetNativeAnonymous(PR_TRUE);
+  mAnonymousDiv->SetNativeAnonymous();
 
   // Set the necessary style attributes on the text control.
 

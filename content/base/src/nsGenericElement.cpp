@@ -349,18 +349,6 @@ nsINode::IsEditableInternal() const
 
 //----------------------------------------------------------------------
 
-void
-nsIContent::SetNativeAnonymous(PRBool aAnonymous)
-{
-  if (aAnonymous) {
-    SetFlags(NODE_IS_ANONYMOUS);
-    SetFlags(NODE_IS_ANONYMOUS_FOR_EVENTS);
-  } else {
-    UnsetFlags(NODE_IS_ANONYMOUS);
-    UnsetFlags(NODE_IS_ANONYMOUS_FOR_EVENTS);
-  }
-}
-
 PRInt32
 nsIContent::IntrinsicState() const
 {
@@ -2185,7 +2173,7 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 static nsIContent*
 FindFirstNonAnonContent(nsIContent* aContent)
 {
-  while (aContent && aContent->IsAnonymousForEvents()) {
+  while (aContent && aContent->IsNativeAnonymous()) {
     aContent = aContent->GetParent();
   }
   return aContent;
@@ -2194,7 +2182,7 @@ FindFirstNonAnonContent(nsIContent* aContent)
 static PRBool
 IsInAnonContent(nsIContent* aContent)
 {
-  while (aContent && !aContent->IsAnonymousForEvents()) {
+  while (aContent && !aContent->IsNativeAnonymous()) {
     aContent = aContent->GetParent();
   }
   return !!aContent;
@@ -2209,7 +2197,7 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
 
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside native anonymous content.
-  PRBool isAnonForEvents = aContent->IsAnonymousForEvents();
+  PRBool isAnonForEvents = aContent->IsNativeAnonymous();
   if (aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
       aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) {
      nsCOMPtr<nsIContent> relatedTarget =

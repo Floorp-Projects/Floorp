@@ -547,7 +547,6 @@ public:
 
     // nsIContent
     virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
-    virtual void SetNativeAnonymous(PRBool aAnonymous);
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
     virtual nsIAtom *GetClassAttributeName() const;
