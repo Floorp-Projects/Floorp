@@ -100,11 +100,11 @@ public:
     typedef PRUnichar value_type;
     txStringToDouble(): mState(eWhitestart), mSign(ePositive) {}
 
-    PRUint32
+    void
     write(const input_type* aSource, PRUint32 aSourceLength)
     {
         if (mState == eIllegal) {
-            return aSourceLength;
+            return;
         }
         PRUint32 i = 0;
         PRUnichar c;
@@ -126,7 +126,7 @@ public:
                     }
                     else if (!XMLUtils::isWhitespace(c)) {
                         mState = eIllegal;
-                        return aSourceLength;
+                        return;
                     }
                     break;
                 case eDecimal:
@@ -142,7 +142,7 @@ public:
                     }
                     else {
                         mState = eIllegal;
-                        return aSourceLength;
+                        return;
                     }
                     break;
                 case eMantissa:
@@ -160,14 +160,13 @@ public:
                 case eWhiteend:
                     if (!XMLUtils::isWhitespace(c)) {
                         mState = eIllegal;
-                        return aSourceLength;
+                        return;
                     }
                     break;
                 default:
                     break;
             }
         }
-        return aSourceLength;
     }
 
     double

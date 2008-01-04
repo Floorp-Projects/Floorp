@@ -579,7 +579,7 @@ class CopyNormalizeNewlines
       return mLastCharCR;
     }
 
-    PRUint32 write(const typename OutputIterator::value_type* aSource, PRUint32 aSourceLength) {
+    void write(const typename OutputIterator::value_type* aSource, PRUint32 aSourceLength) {
 
       const typename OutputIterator::value_type* done_writing = aSource + aSourceLength;
 
@@ -615,7 +615,6 @@ class CopyNormalizeNewlines
       }
 
       mWritten += num_written;
-      return aSourceLength;
     }
 
   private:
