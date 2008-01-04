@@ -798,10 +798,10 @@ template <class OutputIterator>
 struct nsCharSinkTraits
   {
     static
-    PRUint32
+    void
     write( OutputIterator& iter, const typename OutputIterator::value_type* s, PRUint32 n )
       {
-        return iter.write(s, n);
+        iter.write(s, n);
       }
   };
 
@@ -811,12 +811,11 @@ template <class CharT>
 struct nsCharSinkTraits<CharT*>
   {
     static
-    PRUint32
+    void
     write( CharT*& iter, const CharT* s, PRUint32 n )
       {
         nsCharTraits<CharT>::move(iter, s, n);
         iter += n;
-        return n;
       }
   };
 
@@ -826,12 +825,11 @@ NS_SPECIALIZE_TEMPLATE
 struct nsCharSinkTraits<char*>
   {
     static
-    PRUint32
+    void
     write( char*& iter, const char* s, PRUint32 n )
       {
         nsCharTraits<char>::move(iter, s, n);
         iter += n;
-        return n;
       }
   };
 
@@ -839,12 +837,11 @@ NS_SPECIALIZE_TEMPLATE
 struct nsCharSinkTraits<PRUnichar*>
   {
     static
-    PRUint32
+    void
     write( PRUnichar*& iter, const PRUnichar* s, PRUint32 n )
       {
         nsCharTraits<PRUnichar>::move(iter, s, n);
         iter += n;
-        return n;
       }
   };
 

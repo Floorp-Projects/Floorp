@@ -467,10 +467,10 @@ class ConvertUTF8toUTF16
 
     size_t Length() const { return mBuffer - mStart; }
 
-    PRUint32 NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
         if ( mErrorEncountered )
-          return N;
+          return;
 
         // algorithm assumes utf8 units won't
         // be spread across fragments
@@ -487,7 +487,7 @@ class ConvertUTF8toUTF16
               {
                 mErrorEncountered = PR_TRUE;
                 mBuffer = out;
-                return N;
+                return;
               }
 
             if ( overlong )
@@ -524,7 +524,6 @@ class ConvertUTF8toUTF16
               }
           }
         mBuffer = out;
-        return p - start;
       }
 
     void write_terminator()
@@ -551,11 +550,11 @@ class CalculateUTF8Length
 
     size_t Length() const { return mLength; }
 
-    PRUint32 NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
           // ignore any further requests
         if ( mErrorEncountered )
-            return N;
+            return;
 
         // algorithm assumes utf8 units won't
         // be spread across fragments
@@ -596,9 +595,7 @@ class CalculateUTF8Length
           {
             NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
             mErrorEncountered = PR_TRUE;
-            return N;
           }
-        return p - start;
       }
 
     private:
@@ -626,7 +623,7 @@ class ConvertUTF16toUTF8
 
     size_t Size() const { return mBuffer - mStart; }
 
-    PRUint32 NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
         buffer_type *out = mBuffer; // gcc isn't smart enough to do this!
 
@@ -707,7 +704,6 @@ class ConvertUTF16toUTF8
           }
 
         mBuffer = out;
-        return N;
       }
 
     void write_terminator()
@@ -735,7 +731,7 @@ class CalculateUTF8Size
 
     size_t Size() const { return mSize; }
 
-    PRUint32 NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
         // Assume UCS2 surrogate pairs won't be spread across fragments.
         for (const value_type *p = start, *end = start + N; p < end; ++p )
@@ -784,8 +780,6 @@ class CalculateUTF8Size
                 NS_WARNING("got a low Surrogate but no high surrogate");
               }
           }
-
-        return N;
       }
 
     private:
@@ -811,13 +805,12 @@ class LossyConvertEncoding
     public:
       LossyConvertEncoding( output_type* aDestination ) : mDestination(aDestination) { }
 
-      PRUint32
+      void
       write( const input_type* aSource, PRUint32 aSourceLength )
         {
           const input_type* done_writing = aSource + aSourceLength;
           while ( aSource < done_writing )
             *mDestination++ = (output_type)(unsigned_input_type)(*aSource++);  // use old-style cast to mimic old |ns[C]String| behavior
-          return aSourceLength;
         }
 
       void

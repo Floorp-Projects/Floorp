@@ -22,7 +22,7 @@ AllocConvertUTF16toUTF8(const WCHAR *arg)
     return NULL;
 
   ConvertUTF16toUTF8 convert(s);
-  len = convert.write(arg, len);
+  convert.write(arg, len);
   s[len] = '\0';
   return s;
 }
