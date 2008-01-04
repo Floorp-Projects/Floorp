@@ -362,16 +362,16 @@ def main(argv):
                 usage()                     
                 sys.exit()       
             elif opt in ("-f", "--patchlist_file"):
-                patchlist_filename = arg               
+                patchlist_file = arg               
     except getopt.GetoptError:          
           usage()                         
           sys.exit(2)                     
     
-    if not patchlist_filename:
+    if not patchlist_file:
         usage()
         sys.exit(2)
         
-    create_partial_patches(patchlist_filename)
+    create_partial_patches(patchlist_file)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
