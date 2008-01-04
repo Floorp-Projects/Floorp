@@ -82,6 +82,7 @@ ifdef MOZ_MOCHITEST
 
 _TEST_FILES =	\
 		test_bug66619.html \
+		test_bug386575.xhtml \
 		test_bug388019.html \
 		test_bug396024.html \
 		test_bug399284.html \
