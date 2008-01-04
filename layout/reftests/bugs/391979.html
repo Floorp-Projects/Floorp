@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 391979</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+        .float { float:left; clear:both; }
+        .t1 { -moz-column-count:2; -moz-column-width: 30ch; -moz-column-gap: 10ch; background:red; height:2ch; }
+
+        .abs { position:absolute; width:70ch; height:2ch; }
+
+        .red { background:red; }
+        .green { background:green; }
+    </style>
+</head>
+<body>
+<div class="abs green" style="left:0; top:0;">There should be no red areas on this page</div>
+<div class="abs red" style="left:0; top:2ch; z-index:-1;">There should be no red areas on this page</div>
+<div class="abs green" style="left:0; top:4ch; z-index:2;">There should be no red areas on this page</div>
+<div class="abs red" style="left:0; top:6ch;">There should be no red areas on this page</div>
+
+<div class="float">
+  <div class="t1 red">There should be no red areas on this page</div>
+</div>
+
+<div class="float">
+  <div class="t1 green">There should be no red areas on this page</div>
+</div>
+
+<div class="t1" style="position: absolute; top:4ch; ">There should be no red areas on this page</div>
+<div class="t1 green" style="position: absolute; top:6ch; z-index:2;">There should be no red areas on this page</div>
+
+</body>
+</html>
