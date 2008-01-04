@@ -7,7 +7,7 @@ orient="vertical"
     windowtype="opener:test"	
     onunload="restoreChromeURL();"
     onload="scheduleNextWindow();">
-
+<script language="JavaScript" type="text/javascript" src="../../page_load_test/quit.js"></script>
 <script src="winopen.js" type="application/x-javascript"></script>
 
 <groupbox orient="vertical">
