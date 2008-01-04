@@ -164,50 +164,6 @@ static void GetIDString(const nsID& aCID, char buf[UID_STRING_LENGTH])
 }
 
 nsresult
-nsCreateInstanceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const
-{
-    /*
-     * If I were a real man, I would consolidate this with
-     * nsGetServiceFromContractID::operator().
-     */
-    nsresult rv;
-    nsXPIDLCString value;
-    nsCOMPtr<nsIComponentManager> compMgr;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(kCategoryManagerCID, &rv);
-
-    if (NS_FAILED(rv)) goto error;
-
-    if (!mCategory || !mEntry) {
-        // when categories have defaults, use that for null mEntry
-        rv = NS_ERROR_NULL_POINTER;
-        goto error;
-    }
-
-    /* find the contractID for category.entry */
-    rv = catman->GetCategoryEntry(mCategory, mEntry,
-                                  getter_Copies(value));
-    if (NS_FAILED(rv)) goto error;
-    if (!value) {
-        rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
-        goto error;
-    }
-    NS_GetComponentManager(getter_AddRefs(compMgr));
-    if (!compMgr)
-        return NS_ERROR_FAILURE;
-    rv = compMgr->CreateInstanceByContractID(value, mOuter, aIID, aInstancePtr);
-    if (NS_FAILED(rv)) {
-    error:
-        *aInstancePtr = 0;
-    }
-
-    if (mErrorPtr)
-        *mErrorPtr = rv;
-    return rv;
-}
-
-
-nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const
 {
     nsresult rv;
