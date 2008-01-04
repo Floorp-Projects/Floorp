@@ -367,6 +367,14 @@ public:
     TYPE_WRAPLIST
   };
 
+  struct HitTestState {
+    ~HitTestState() {
+      NS_ASSERTION(mItemBuffer.Length() == 0,
+                   "mItemBuffer should have been cleared");
+    }
+    nsAutoTArray<nsDisplayItem*, 100> mItemBuffer;
+  };
+
   /**
    * Some consecutive items should be rendered together as a unit, e.g.,
    * outlines for the same element. For this, we need a way for items to
@@ -377,10 +385,13 @@ public:
    * This is called after we've constructed a display list for event handling.
    * When this is called, we've already ensured that aPt is in the item's bounds.
    * 
+   * @param aState must point to a HitTestState. If you don't have one,
+   * just create one with the default constructor and pass it in.
    * @return the frame that the point is considered over, or nsnull if
    * this is not over any frame
    */
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return nsnull; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) { return nsnull; }
   /**
    * @return the frame that this display item is based on. This is used to sort
    * items by z-index and content order and for some other uses. For some items
@@ -657,8 +668,9 @@ public:
    * Find the topmost display item that returns a non-null frame, and return
    * the frame.
    */
-  nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) const;
-  
+  nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                    nsDisplayItem::HitTestState* aState) const;
+
 private:
   // This class is only used on stack, so we don't have to worry about leaking
   // it.  Don't let us be heap-allocated!
@@ -974,7 +986,8 @@ public:
   }
 #endif
 
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) { return mFrame; }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aAncestorFrame);
@@ -1024,7 +1037,8 @@ public:
   }
 #endif
 
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) { return mFrame; }
   NS_DISPLAY_DECL_NAME("EventReceiver")
 };
 
@@ -1054,7 +1068,8 @@ public:
   nsDisplayWrapList(nsIFrame* aFrame, nsDisplayItem* aItem);
   virtual ~nsDisplayWrapList();
   virtual Type GetType() { return TYPE_WRAPLIST; }
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);
