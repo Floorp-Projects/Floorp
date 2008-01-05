@@ -800,7 +800,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 {
                     objectPrincipal = doGetObjectPrincipal(cx, aJSObject);
                     if (!objectPrincipal)
-                        return NS_ERROR_FAILURE;
+                        rv = NS_ERROR_DOM_SECURITY_ERR;
                 }
                 else if(aTargetURI)
                 {
@@ -813,8 +813,9 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                     NS_ERROR("CheckPropertyAccessImpl called without a target object or URL");
                     return NS_ERROR_FAILURE;
                 }
-                rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
-                                            aAction, aTargetURI != nsnull);
+                if(NS_SUCCEEDED(rv))
+                    rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
+                                                aAction, aTargetURI != nsnull);
                 break;
             }
         default:
