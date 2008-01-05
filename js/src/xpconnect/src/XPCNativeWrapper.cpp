@@ -276,6 +276,25 @@ XPC_NW_WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+  JSProperty *prop;
+  JSObject *pobj;
+  jsid idAsId;
+
+  if (!::JS_ValueToId(cx, id, &idAsId) ||
+      !OBJ_LOOKUP_PROPERTY(cx, obj, idAsId, &pobj, &prop)) {
+    return JS_FALSE;
+  }
+
+  // Do not allow scripted getters or setters on XPCNativeWrappers.
+  NS_ASSERTION(prop && pobj == obj, "Wasn't this property just added?");
+  JSScopeProperty *sprop = (JSScopeProperty *) prop;
+  uint8 attrs = sprop->attrs;
+
+  OBJ_DROP_PROPERTY(cx, pobj, prop);
+  if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+    return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
+  }
+
   jsval flags;
   ::JS_GetReservedSlot(cx, obj, 0, &flags);
   if (!HAS_FLAGS(flags, FLAG_RESOLVING)) {
