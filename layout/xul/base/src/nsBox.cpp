@@ -469,9 +469,7 @@ nsBox::GetPrefSize(nsBoxLayoutState& aState)
 
   nsSize minSize = GetMinSize(aState);
   nsSize maxSize = GetMaxSize(aState);
-  BoundsCheck(minSize, pref, maxSize);
-
-  return pref;
+  return BoundsCheck(minSize, pref, maxSize);
 }
 
 nsSize
@@ -991,35 +989,30 @@ nsBox::AddMargin(nsSize& aSize, const nsMargin& aMargin)
      aSize.height += aMargin.top + aMargin.bottom;
 }
 
-void
-nsBox::BoundsCheck(nscoord& aMin, nscoord& aPref, nscoord& aMax)
+nscoord
+nsBox::BoundsCheck(nscoord aMin, nscoord aPref, nscoord aMax)
 {
-   if (aMax < aMin)
-       aMax = aMin;
-
    if (aPref > aMax)
        aPref = aMax;
 
    if (aPref < aMin)
        aPref = aMin;
+
+   return aPref;
 }
 
-void
-nsBox::BoundsCheckMinMax(nsSize& aMinSize, nsSize& aMaxSize)
+nsSize
+nsBox::BoundsCheckMinMax(const nsSize& aMinSize, const nsSize& aMaxSize)
 {
-  if (aMaxSize.width < aMinSize.width) {
-    aMaxSize.width = aMinSize.width;
-  }
-
-  if (aMaxSize.height < aMinSize.height)
-    aMaxSize.height = aMinSize.height;
+  return nsSize(PR_MAX(aMaxSize.width, aMinSize.width),
+                PR_MAX(aMaxSize.height, aMinSize.height));
 }
 
-void
-nsBox::BoundsCheck(nsSize& aMinSize, nsSize& aPrefSize, nsSize& aMaxSize)
+nsSize
+nsBox::BoundsCheck(const nsSize& aMinSize, const nsSize& aPrefSize, const nsSize& aMaxSize)
 {
-   BoundsCheck(aMinSize.width, aPrefSize.width, aMaxSize.width);
-   BoundsCheck(aMinSize.height, aPrefSize.height, aMaxSize.height);
+  return nsSize(BoundsCheck(aMinSize.width, aPrefSize.width, aMaxSize.width),
+                BoundsCheck(aMinSize.height, aPrefSize.height, aMaxSize.height));
 }
 
 #ifdef DEBUG_LAYOUT
