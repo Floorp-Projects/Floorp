@@ -1080,28 +1080,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
   }
 
   JSObject *obj = wrapper->GetWrapper();
-  if (obj && XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
-    return obj;
-  }
-
-  XPCWrappedNativeScope *scope = wrapper->GetScope();
-  XPCJSRuntime *rt = nsXPConnect::GetRuntime();
-
-  { // Scoped lock.
-    XPCAutoLock al(rt->GetMapLock());
-
-    if (obj) {
-      obj = scope->GetWrapperMap()->Add(wrapper->GetFlatJSObject(), obj);
-      wrapper->SetWrapper(nsnull);
-    } else {
-      obj = scope->GetWrapperMap()->Find(wrapper->GetFlatJSObject());
-    }
-  }
-
   if (obj) {
-    NS_ASSERTION(XPCNativeWrapper::IsNativeWrapper(cx, obj),
-                 "Weird object in the wrapper map");
-    wrapper->SetWrapper(obj);
     return obj;
   }
 
