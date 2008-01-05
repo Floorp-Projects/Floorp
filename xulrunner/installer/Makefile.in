@@ -85,6 +85,8 @@ endif
 pkg_config_files = \
 	libxul.pc \
 	libxul-embedding.pc \
+	libxul-unstable.pc \
+	libxul-embedding-unstable.pc \
 	mozilla-js.pc \
 	mozilla-plugin.pc \
 	$(NULL)
