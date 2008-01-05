@@ -170,7 +170,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
       nsSize minSize = popupChild->GetMinSize(aState);
       nsSize maxSize = popupChild->GetMaxSize(aState);
 
-      BoundsCheck(minSize, prefSize, maxSize);
+      prefSize = BoundsCheck(minSize, prefSize, maxSize);
 
       popupChild->SetPreferredBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
       popupChild->SetPopupPosition(nsnull);

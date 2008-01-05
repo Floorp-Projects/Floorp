@@ -722,7 +722,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
     prefSize = GetPrefSize(state);
     nsSize minSize = GetMinSize(state);
     nsSize maxSize = GetMaxSize(state);
-    BoundsCheck(minSize, prefSize, maxSize);
+    prefSize = BoundsCheck(minSize, prefSize, maxSize);
   }
 
   // get our desiredSize
@@ -821,10 +821,9 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
 
   nsSize minSize = GetMinSize(aBoxLayoutState);
   nsSize maxSize = GetMaxSize(aBoxLayoutState);
-  BoundsCheck(minSize, size, maxSize);
-  mPrefSize = size;
+  mPrefSize = BoundsCheck(minSize, size, maxSize);
  
-  return size;
+  return mPrefSize;
 }
 
 nscoord
