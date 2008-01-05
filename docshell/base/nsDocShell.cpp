@@ -8644,13 +8644,20 @@ nsDocShell::ConfirmRepost(PRBool * aRepost)
   nsXPIDLString brandName;
   rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
                                       getter_Copies(brandName));
-  if (NS_FAILED(rv)) return rv;
-  const PRUnichar *formatStrings[] = { brandName.get() };
 
   nsXPIDLString msgString, button0Title;
-  rv = appBundle->FormatStringFromName(NS_LITERAL_STRING("confirmRepost").get(),
-                                        formatStrings, NS_ARRAY_LENGTH(formatStrings),
-                                        getter_Copies(msgString));
+  if (NS_FAILED(rv)) { // No brand, use the generic version.
+    rv = appBundle->GetStringFromName(NS_LITERAL_STRING("confirmRepostPrompt").get(),
+                                      getter_Copies(msgString));
+  }
+  else {
+    // Brand available - if the app has an override file with formatting, the app name will
+    // be included. Without an override, the prompt will look like the generic version.
+    const PRUnichar *formatStrings[] = { brandName.get() };
+    rv = appBundle->FormatStringFromName(NS_LITERAL_STRING("confirmRepostPrompt").get(),
+                                         formatStrings, NS_ARRAY_LENGTH(formatStrings),
+                                         getter_Copies(msgString));
+  }
   if (NS_FAILED(rv)) return rv;
 
   rv = appBundle->GetStringFromName(NS_LITERAL_STRING("resendButton.label").get(),
