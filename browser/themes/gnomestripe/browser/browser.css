@@ -170,13 +170,6 @@ menuitem.bookmark-item {
   background: Highlight !important;
   color: HighlightText !important;
 }
-.bookmark-item[dragover="true"][open="true"] {
-  -moz-appearance: none;
-  background: Highlight !important;
-  color: HighlightText !important;
-  list-style-image: url("chrome://browser/skin/places/folderDragOver.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px) !important;
-}
 
 .toolbar-drop-indicator {
   width: 9px;
