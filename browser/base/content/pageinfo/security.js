@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Terry Hayes <thayes@netscape.com>
 #   Florian QUEZE <f.qu@queze.net>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -159,11 +160,14 @@ var security = {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
     var win = wm.getMostRecentWindow("Toolkit:PasswordManager");
-    if (win)
+    if (win) {
+      win.setFilter(this._getSecurityInfo().hostName);
       win.focus();
+    }
     else
       window.openDialog("chrome://passwordmgr/content/passwordManager.xul",
-                        "Toolkit:PasswordManager", "");
+                        "Toolkit:PasswordManager", "", 
+                        {filterString : this._getSecurityInfo().hostName});
   },
 
   _cert : null
