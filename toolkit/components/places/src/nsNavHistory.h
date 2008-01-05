@@ -88,6 +88,13 @@
 #define QUERYUPDATE_COMPLEX 2
 #define QUERYUPDATE_COMPLEX_WITH_BOOKMARKS 3
 
+// this is a work-around for a problem with the optimizer of sqlite
+// A sub-select on MAX(visit_date) is slower than this query with our indexes
+// see Bug #392399 for more details
+#define SQL_STR_FRAGMENT_MAX_VISIT_DATE( place_relation ) \
+  "(SELECT visit_date FROM moz_historyvisits WHERE place_id = " place_relation \
+  " AND visit_type NOT IN (0,4) ORDER BY visit_date DESC LIMIT 1)"
+
 struct AutoCompleteIntermediateResult;
 class AutoCompleteResultComparator;
 class mozIAnnotationService;
@@ -221,16 +228,8 @@ public:
   static const PRInt32 kGetInfoIndex_ItemDateAdded;
   static const PRInt32 kGetInfoIndex_ItemLastModified;
 
-  // select a history row by URL, with visit date info (extra work)
-  mozIStorageStatement* DBGetURLPageInfoFull()
-  { return mDBGetURLPageInfoFull; }
-
   // select a history row by id
   mozIStorageStatement* DBGetIdPageInfo() { return mDBGetIdPageInfo; }
-
-  // select a history row by id, with visit date info (extra work)
-  mozIStorageStatement* DBGetIdPageInfoFull()
-  { return mDBGetIdPageInfoFull; }
 
   // Constants for the columns returned by the above statement
   // (in addition to the ones above).
@@ -261,9 +260,7 @@ public:
   nsresult VisitIdToResultNode(PRInt64 visitId,
                                nsNavHistoryQueryOptions* aOptions,
                                nsNavHistoryResultNode** aResult);
-  nsresult UriToResultNode(nsIURI* aUri,
-                           nsNavHistoryQueryOptions* aOptions,
-                           nsNavHistoryResultNode** aResult);
+
   nsresult BookmarkIdToResultNode(PRInt64 aBookmarkId,
                                   nsNavHistoryQueryOptions* aOptions,
                                   nsNavHistoryResultNode** aResult);
@@ -369,9 +366,7 @@ protected:
   nsCOMPtr<nsIFile> mDBFile;
 
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfoFull; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfo;     // kGetInfoIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfoFull; // kGetInfoIndex_* results
 
   nsCOMPtr<mozIStorageStatement> mDBRecentVisitOfURL; // converts URL into most recent visit ID/session ID
   nsCOMPtr<mozIStorageStatement> mDBInsertVisit; // used by AddVisit
@@ -394,6 +389,7 @@ protected:
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
+  nsresult EnsureCurrentSchema(mozIStorageConnection* aDBConn);
   nsresult CleanUpOnQuit();
 
 #ifdef IN_MEMORY_LINKS
