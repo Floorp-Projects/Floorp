@@ -106,7 +106,7 @@ nsNavHistory::CreateAutoCompleteQueries()
     "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
     "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE v.visit_date >= ?1 AND v.visit_date <= ?2 AND h.hidden <> 1 AND "
-    " v.visit_type <> 0 AND v.visit_type <> 4 AND ");
+    " v.visit_type NOT IN(0,4) AND ");
 
   if (mAutoCompleteOnlyTyped)
     sql += NS_LITERAL_CSTRING("h.typed = 1 AND ");
@@ -394,7 +394,7 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
     // determine our earliest visit
     nsCOMPtr<mozIStorageStatement> dbSelectStatement;
     rv = mDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT MIN(visit_date) id FROM moz_historyvisits WHERE visit_type <> 4 AND visit_type <> 0"),
+      NS_LITERAL_CSTRING("SELECT MIN(visit_date) id FROM moz_historyvisits WHERE visit_type NOT IN(0,4)"),
       getter_AddRefs(dbSelectStatement));
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool hasMinVisit;
@@ -452,7 +452,7 @@ nsresult nsNavHistory::AutoCompleteTypedSearch()
     "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
     "JOIN moz_historyvisits v ON h.id = v.place_id WHERE (h.id IN "
     "(SELECT DISTINCT h.id from moz_historyvisits v, moz_places h WHERE "
-    "v.place_id = h.id AND h.typed = 1 AND v.visit_type <> 0 AND v.visit_type <> 4 "
+    "v.place_id = h.id AND h.typed = 1 AND v.visit_type NOT IN(0,4) "
     "ORDER BY v.visit_date DESC LIMIT ");
   sql.AppendInt(AUTOCOMPLETE_MAX_PER_TYPED);
   sql += NS_LITERAL_CSTRING(")) GROUP BY h.id ORDER BY MAX(v.visit_date) DESC");  
