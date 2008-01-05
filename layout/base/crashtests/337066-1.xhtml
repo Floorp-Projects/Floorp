@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function init()
+{ 
+  var A = document.getElementById("A");
+  var B = document.getElementById("B");
+
+  for (var i = 0; i &lt; 2; ++i)
+    B.insertBefore(document.createElement("span"), A);
+}
+
+</script>
+</head>
+
+<body onload="init()">
+
+<em id="B"><td></td><span id="A"><div></div></span></em>
+
+</body>
+</html>
