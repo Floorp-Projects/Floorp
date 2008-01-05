@@ -3493,8 +3493,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     outGeckoEvent->charCode = 0;
   } 
 
-  if (outGeckoEvent->message == NS_KEY_PRESS && !outGeckoEvent->isMeta && outGeckoEvent->keyCode != NS_VK_PAGE_UP && 
-      outGeckoEvent->keyCode != NS_VK_PAGE_DOWN)
+  if (outGeckoEvent->message == NS_KEY_PRESS && !outGeckoEvent->isMeta)
     [NSCursor setHiddenUntilMouseMoves:YES];
 }
 
