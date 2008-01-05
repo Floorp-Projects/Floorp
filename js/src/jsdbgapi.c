@@ -336,10 +336,9 @@ typedef struct JSWatchPoint {
 static JSBool
 DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
 {
-    JSBool ok;
+    JSBool ok, found;
     JSScopeProperty *sprop;
-    JSObject *pobj;
-    JSProperty *prop;
+    JSScope *scope;
     JSPropertyOp setter;
 
     ok = JS_TRUE;
@@ -366,25 +365,24 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
     setter = js_GetWatchedSetter(cx->runtime, NULL, sprop);
     DBG_UNLOCK(cx->runtime);
     if (!setter) {
-        ok = js_LookupProperty(cx, wp->object, sprop->id, &pobj, &prop);
+        JS_LOCK_OBJ(cx, wp->object);
+        scope = OBJ_SCOPE(wp->object);
+        found = (scope->object == wp->object &&
+                 SCOPE_GET_PROPERTY(scope, sprop->id));
+        JS_UNLOCK_SCOPE(cx, scope);
 
         /*
          * If the property wasn't found on wp->object or didn't exist, then
          * someone else has dealt with this sprop, and we don't need to change
          * the property attributes.
          */
-        if (ok && prop) {
-            if (pobj == wp->object) {
-                JS_ASSERT(OBJ_SCOPE(pobj)->object == pobj);
-
-                sprop = js_ChangeScopePropertyAttrs(cx, OBJ_SCOPE(pobj), sprop,
-                                                    0, sprop->attrs,
-                                                    sprop->getter,
-                                                    wp->setter);
-                if (!sprop)
-                    ok = JS_FALSE;
-            }
-            OBJ_DROP_PROPERTY(cx, pobj, prop);
+        if (found) {
+            sprop = js_ChangeScopePropertyAttrs(cx, scope, sprop,
+                                                0, sprop->attrs,
+                                                sprop->getter,
+                                                wp->setter);
+            if (!sprop)
+                ok = JS_FALSE;
         }
     }
 
