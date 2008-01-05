@@ -91,6 +91,7 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 			     cairo_path_fixed_t *other)
 {
     cairo_path_buf_t *buf, *other_buf;
+    unsigned int num_points, num_ops, buf_size;
 
     _cairo_path_fixed_init (path);
 
@@ -106,21 +107,37 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 	    other->buf_head.base.num_ops * sizeof (other->buf_head.op[0]));
     memcpy (path->buf_head.points, other->buf_head.points,
 	    other->buf_head.base.num_points * sizeof (other->buf_head.points[0]));
+
+    num_points = num_ops = 0;
     for (other_buf = other->buf_head.base.next;
-	 other_buf;
+	 other_buf != NULL;
 	 other_buf = other_buf->next)
     {
-	buf = _cairo_path_buf_create (other_buf->buf_size);
+	num_ops    += other_buf->num_ops;
+	num_points += other_buf->num_points;
+    }
+
+    buf_size = MAX (num_ops, (num_points + 1) / 2);
+    if (buf_size) {
+	buf = _cairo_path_buf_create (buf_size);
 	if (buf == NULL) {
 	    _cairo_path_fixed_fini (path);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
-	buf->num_ops = other_buf->num_ops;
-	buf->num_points = other_buf->num_points;
-	memcpy (buf->op, other_buf->op,
-		buf->num_ops * sizeof (buf->op[0]));
-	memcpy (buf->points, other_buf->points,
-		buf->num_points * sizeof (buf->points[0]));
+
+	for (other_buf = other->buf_head.base.next;
+	     other_buf != NULL;
+	     other_buf = other_buf->next)
+	{
+	    memcpy (buf->op + buf->num_ops, other_buf->op,
+		    other_buf->num_ops * sizeof (buf->op[0]));
+	    buf->num_ops += other_buf->num_ops;
+
+	    memcpy (buf->points + buf->num_points, other_buf->points,
+		    other_buf->num_points * sizeof (buf->points[0]));
+	    buf->num_points += other_buf->num_points;
+	}
+
 	_cairo_path_fixed_add_buf (path, buf);
     }
 
@@ -404,6 +421,9 @@ _cairo_path_buf_create (int buf_size)
 {
     cairo_path_buf_t *buf;
 
+    /* adjust buf_size to ensure that buf->points is naturally aligned */
+    buf_size += sizeof (double)
+	       - ((buf_size + sizeof (cairo_path_buf_t)) & (sizeof (double)-1));
     buf = _cairo_malloc_ab_plus_c (buf_size,
 	                           sizeof (cairo_path_op_t) +
 				   2 * sizeof (cairo_point_t),
