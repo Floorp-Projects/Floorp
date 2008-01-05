@@ -7467,8 +7467,9 @@ nsDocShell::CheckClassifier(nsIChannel *aChannel)
 
     classifier->SetChannel(aChannel);
     nsresult rv = classifier->Run();
-    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
-        // no URI classifier, ignore this
+    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED ||
+        rv == NS_ERROR_NOT_AVAILABLE) {
+        // no URI classifier => ignored cases
         return NS_OK;
     }
     NS_ENSURE_SUCCESS(rv, rv);
