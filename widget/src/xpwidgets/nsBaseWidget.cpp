@@ -561,11 +561,7 @@ NS_IMETHODIMP nsBaseWidget::HideWindowChrome(PRBool aShouldHide)
 NS_IMETHODIMP nsBaseWidget::MakeFullScreen(PRBool aFullScreen)
 {
   HideWindowChrome(aFullScreen);
-  return MakeFullScreenInternal(aFullScreen);
-}
 
-nsresult nsBaseWidget::MakeFullScreenInternal(PRBool aFullScreen)
-{
   nsCOMPtr<nsIFullScreen> fullScreen = do_GetService("@mozilla.org/browser/fullscreen;1");
 
   if (aFullScreen) {
