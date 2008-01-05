@@ -22,7 +22,7 @@ FORCE_USE_PIC = 1
 # We always need the Python and pyxpcom includes and libs.
 LOCAL_INCLUDES = $(MOZ_PYTHON_INCLUDES)
 EXTRA_LIBS += $(MOZ_PYTHON_LIBS) \
-              $(DIST)/lib/$(LIB_PREFIX)pyxpcom.$(LIB_SUFFIX) \
+              $(call EXPAND_LIBNAME_PATH,pyxpcom,$(DIST)/lib) \
               $(NULL)
 
 # In the shorter term we need JS too.
