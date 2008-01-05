@@ -1,0 +1,38 @@
+<html class="reftest-wait">
+<head>
+
+<style id="s"></style>
+
+<script>
+
+window.addEventListener("load", f1, false);
+
+function f1()
+{
+  document.getElementsByTagName('head')[0].style.display = "table-row-group";
+  setTimeout(f2, 30);
+}
+
+function f2()
+{
+  document.body.style.display = "table-caption";
+  setTimeout(f3, 30);
+}
+
+function f3()
+{
+  document.body.style.display = "table-column-group";
+  document.getElementById('s').textContent += "body { }";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body>
+
+<span style="position: absolute">f</span>
+
+</body>
+</html>
