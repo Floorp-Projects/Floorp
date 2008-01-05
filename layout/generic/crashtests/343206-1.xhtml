@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<style id="sty">
+html::before { 
+  content: "before text"; 
+  float: right; 
+}
+</style>
+
+<script>
+function boom()
+{ 
+  var sty = document.getElementById("sty"); 
+  sty.appendChild(document.createTextNode(" "));
+  document.documentElement.removeAttribute("class");
+}
+  
+setTimeout(boom, 30);
+</script>
+
+</html>
