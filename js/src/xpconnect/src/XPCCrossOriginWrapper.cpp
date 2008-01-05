@@ -485,14 +485,18 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
     return JS_TRUE;
   }
 
-  outerObj = JS_NewObject(cx, &sXPC_XOW_JSClass.base, nsnull, parent);
+  // FIXME: bug 408871, Note that we create outerObj with a null parent
+  // here. We set it later so that we find our nominal prototype in the
+  // same scope as the one that is calling us.
+  outerObj = JS_NewObject(cx, &sXPC_XOW_JSClass.base, nsnull, nsnull);
   if (!outerObj) {
     return JS_FALSE;
   }
 
   // Sever the prototype link from Object.prototype so we don't
   // accidentally inherit properties like __proto__ and __parent__.
-  if (!JS_SetPrototype(cx, outerObj, nsnull)) {
+  if (!JS_SetParent(cx, outerObj, parent) ||
+      !JS_SetPrototype(cx, outerObj, nsnull)) {
     return JS_FALSE;
   }
 
