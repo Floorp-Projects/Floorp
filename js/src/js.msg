@@ -302,3 +302,4 @@ MSG_DEF(JSMSG_NON_LIST_XML_METHOD,    219, 2, JSEXN_TYPEERR, "cannot call {0} me
 MSG_DEF(JSMSG_BAD_DELETE_OPERAND,     220, 0, JSEXN_SYNTAXERR, "invalid delete operand")
 MSG_DEF(JSMSG_BAD_INCOP_OPERAND,      221, 0, JSEXN_SYNTAXERR, "invalid increment/decrement operand")
 MSG_DEF(JSMSG_NULL_OR_UNDEFINED,      222, 2, JSEXN_TYPEERR, "{0} is {1}")
+MSG_DEF(JSMSG_LET_DECL_NOT_IN_BLOCK,  223, 0, JSEXN_SYNTAXERR, "let declaration not directly within block")
