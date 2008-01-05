@@ -1604,18 +1604,17 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 
 /* Personal toolbar */
 .toolbar-drop-indicator {
-  height: 16px;
-  width: 5px;
-  margin-bottom: -8px;
+  width: 9px;
+  height: 18px;
+  margin-bottom: -6px;
   position: relative;
   background: url("chrome://browser/skin/places/toolbarDropMarker.png") 50% 50% no-repeat;
 }
 
 .toolbar-drop-indicator-bar {
   visibility: hidden;
-  height: 16px;
-  margin-bottom: -16px;
-  margin-left: 4px;
+  height: 18px;
+  margin-bottom: -18px;
   position: relative;
 }
 
