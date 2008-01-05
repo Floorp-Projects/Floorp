@@ -107,7 +107,6 @@ public:
   NS_IMETHOD              GetHasTransparentBackground(PRBool& aTransparent);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
-  nsresult                MakeFullScreenInternal(PRBool aFullScreen);
   virtual nsIRenderingContext* GetRenderingContext();
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();  
