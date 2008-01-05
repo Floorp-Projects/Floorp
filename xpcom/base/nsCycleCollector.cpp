@@ -278,8 +278,8 @@ struct nsCycleCollectorStats
 #endif
 
 #ifdef DEBUG_CC
-static PRBool
-nsCycleCollector_shouldSuppress(nsISupports *s);
+static PRBool nsCycleCollector_shouldSuppress(nsISupports *s);
+static void InitMemHook(void);
 #endif
 
 ////////////////////////////////////////////////////////////////////////
