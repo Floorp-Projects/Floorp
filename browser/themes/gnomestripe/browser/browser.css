@@ -60,12 +60,6 @@
   min-height: 26px;
 }
 
-/* ..... fix searchbar "add engine" padding issue ..... */
-
-.searchbar-popup .open-engine-manager { 
-  -moz-padding-start: 4px; 
-}
-
 #searchbar[empty="true"] > .searchbar-textbox {
   color: GrayText;
   direction: ltr !important;
