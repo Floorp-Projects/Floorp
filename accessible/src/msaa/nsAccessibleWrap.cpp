@@ -1317,7 +1317,7 @@ nsAccessibleWrap::get_uniqueID(long *uniqueID)
 {
   void *id;
   if (NS_SUCCEEDED(GetUniqueID(&id))) {
-    *uniqueID = reinterpret_cast<long>(id);
+    *uniqueID = - reinterpret_cast<long>(id);
     return S_OK;
   }
   return E_FAIL;
