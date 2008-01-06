@@ -2,6 +2,11 @@
 <body>
 <p>This page made Firefox leak domwindows and documents.</p>
 <span onmouseover="1"></span>
-<script>window.__proto__ = document.createElement("div");</script>
+<script>
+try {
+  window.__proto__ = document.createElement("div");
+} catch(e) {
+}
+</script>
 </body>
 </html>
