@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+
+<head>
+<script>
+
+var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+function boom()
+{
+  var hbox = document.getElementById("hbox");
+  var checkbox = document.createElementNS(XUL_NS, "checkbox");
+    
+  hbox.appendChild(checkbox);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30)">
+
+<xul:scrollbar><span><xul:hbox id="hbox"/></span></xul:scrollbar>
+
+</body>
+
+</html>
