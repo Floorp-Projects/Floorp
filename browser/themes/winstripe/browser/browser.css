@@ -58,12 +58,6 @@
   min-height: 26px;
 }
 
-/* ..... fix searchbar "add engine" padding issue ..... */
-
-.searchbar-popup .open-engine-manager { 
-  -moz-padding-start: 4px; 
-}
-
 #searchbar[empty="true"] > .searchbar-textbox {
   color: GrayText;
   direction: ltr !important;
@@ -165,18 +159,6 @@ menuitem.bookmark-item {
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
   -moz-padding-start: 0px;
-}
-
-/* ..... fix bookmarks padding issue ..... */
-
-#menu_BookmarksPopup menuitem,
-#menu_BookmarksPopup menu { 
--moz-padding-start: 4px; 
-}
-
-#menu_BookmarksPopup menuitem.menuitem-iconic,
-#menu_BookmarksPopup menu.menu-iconic { 
--moz-padding-start: 0px; 
 }
 
 
