@@ -767,11 +767,22 @@ var PlacesUtils = {
         var parts = blob.split("\n");
         // data in this type has 2 parts per entry, so if there are fewer
         // than 2 parts left, the blob is malformed and we should stop
-        if (parts.length % 2)
+        // but drag and drop of files from the shell has parts.length = 1
+        if (parts.length != 1 && parts.length % 2)
           break;
         for (var i = 0; i < parts.length; i=i+2) {
           var uriString = parts[i];
-          var titleString = parts[i+1];
+          var titleString = "";
+          if (parts.length > i+1)
+            titleString = parts[i+1];
+          else {
+            // for drag and drop of files, try to use the leafName as title
+            try {
+              titleString = IO.newURI(uriString).QueryInterface(Ci.nsIURL)
+                              .fileName;
+            }
+            catch (e) {}
+          }
           // note:  IO.newURI() will throw if uriString is not a valid URI
           if (IO.newURI(uriString)) {
             nodes.push({ uri: uriString,
