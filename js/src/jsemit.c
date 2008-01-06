@@ -3275,7 +3275,7 @@ EmitDestructuringDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     JSOp decltype;
 
     JS_ASSERT(pn->pn_type == TOK_NAME);
-    decltype = (prologOp == JSOP_NOP) ? LET_DECL : VAR_DECL;
+    decltype = (prologOp == JSOP_NOP) ? (JSOp) LET_DECL : (JSOp) VAR_DECL;
     if (!BindNameToSlot(cx, cg, pn, decltype))
         return JS_FALSE;
 
