@@ -1232,7 +1232,8 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
             } while (i != 0);
 
             JS_ASSERT(tvr.u.array == vec);
-            vec = JS_realloc(cx, vec, 4 * (size_t) newlen * sizeof(jsval));
+            vec = (jsval *) JS_realloc(cx, vec,
+                                       4 * (size_t) newlen * sizeof(jsval));
             if (!vec) {
                 vec = tvr.u.array;
                 ok = JS_FALSE;
