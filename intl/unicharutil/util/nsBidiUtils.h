@@ -41,7 +41,6 @@
 #ifndef nsBidiUtils_h__
 #define nsBidiUtils_h__
 
-#include "nsCOMPtr.h"
 #include "nsStringGlue.h"
 
    /**
