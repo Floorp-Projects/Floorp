@@ -24,6 +24,7 @@
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Robert Sayre <sayrer@gmail.com> (JS port)
+ *   Phil Ringnalda <philringnalda@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of either the GNU General Public License Version 2 or later
@@ -520,6 +521,11 @@ LivemarkLoadListener.prototype = {
     // removeItemAnnotation can safely be used even when the anno isn't set
     this._ans.removeItemAnnotation(this._livemark.folderId, LMANNO_LOADFAILED);
     var feed = result.doc.QueryInterface(Ci.nsIFeed);
+    if (feed.link) {
+      var oldSiteURI = lmService.getSiteURI(this._livemark.folderId);
+      if (!oldSiteURI || !feed.link.equals(oldSiteURI))
+        lmService.setSiteURI(this._livemark.folderId, feed.link);
+    }
     // Loop through and check for a link and a title
     // as the old code did
     for (var i = 0; i < feed.items.length; ++i) {
