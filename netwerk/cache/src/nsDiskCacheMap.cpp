@@ -49,6 +49,8 @@
 
 #include <string.h>
 
+#include "nsISerializable.h"
+#include "nsSerializationHelper.h"
 
 /******************************************************************************
  *  nsDiskCacheMap
@@ -735,6 +737,15 @@ nsDiskCacheMap::CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
     nsCacheEntry * entry = binding->mCacheEntry;
     if (!entry)  return nsnull;
     
+    // Store security info, if it is serializable
+    nsCOMPtr<nsISerializable> serializable =
+        do_QueryInterface(entry->SecurityInfo());
+    if (serializable) {
+        nsCString info;
+        NS_SerializeToString(serializable, info);
+        entry->SetMetaDataElement("security-info", info.get());
+    }
+
     PRUint32  keySize  = entry->Key()->Length() + 1;
     PRUint32  metaSize = entry->MetaDataSize();
     PRUint32  size     = sizeof(nsDiskCacheEntry) + keySize + metaSize;
