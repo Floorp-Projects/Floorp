@@ -2313,6 +2313,9 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
       return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // We promise to only send lower case mime types to the OS
+  ToLowerCase(typeToUse);
+
   // (1) Ask the OS for a mime info
   PRBool found;
   *_retval = GetMIMEInfoFromOS(typeToUse, aFileExt, &found).get();
