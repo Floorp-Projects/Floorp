@@ -872,8 +872,11 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
   for (PRInt32 index = 0; index < numEntries; index++)
   {
     localFile = mTemporaryFilesList[index];
-    if (localFile)
+    if (localFile) {
+      // First make the file writable, since the temp file is probably readonly.
+      localFile->SetPermissions(0600);
       localFile->Remove(PR_FALSE);
+    }
   }
 
   mTemporaryFilesList.Clear();
