@@ -1,0 +1,12 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<body>
+<p>This page made Firefox leak domwindows and documents.</p>
+<span onmouseover="1"></span>
+<script>
+try {
+  window.__proto__ = document.createElement("div");
+} catch(e) {
+}
+</script>
+</body>
+</html>

@@ -392,7 +392,7 @@ static void Output(PRBool isError, const char *fmt, ... )
       flags |= MB_ICONERROR;
     else 
       flags |= MB_ICONINFORMATION;
-    MessageBox(NULL, msg, "XULRunner", flags);
+    MessageBoxA(NULL, msg, "XULRunner", flags);
     PR_smprintf_free(msg);
   }
 #else

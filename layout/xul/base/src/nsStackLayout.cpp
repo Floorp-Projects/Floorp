@@ -136,9 +136,8 @@ nsStackLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 
   nsIBox* child = aBox->GetChildBox();
   while (child) {  
-    nsSize max = child->GetMaxSize(aState);
     nsSize min = child->GetMinSize(aState);
-    nsBox::BoundsCheckMinMax(min, max);
+    nsSize max = nsBox::BoundsCheckMinMax(min, child->GetMaxSize(aState));
 
     AddMargin(child, max);
     AddOffset(aState, child, max);

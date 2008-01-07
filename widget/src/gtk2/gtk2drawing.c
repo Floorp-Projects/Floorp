@@ -1298,7 +1298,7 @@ moz_gtk_expander_paint(GdkDrawable* drawable, GdkRectangle* rect,
                        GtkTextDirection direction)
 {
     GtkStyle *style;
-    GtkStateType state_type;
+    GtkStateType state_type = ConvertGtkState(state);
 
     ensure_expander_widget();
     gtk_widget_set_direction(gExpanderWidget, direction);

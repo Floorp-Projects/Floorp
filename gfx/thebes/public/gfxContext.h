@@ -557,12 +557,17 @@ public:
          * However, when printing complex renderings such as SVG,
          * care should be taken to clear this flag.
          */
-        FLAG_SIMPLIFY_OPERATORS = (1 << 0)
+        FLAG_SIMPLIFY_OPERATORS = (1 << 0),
+        /**
+         * When this flag is set, snapping to device pixels is disabled.
+         * It simply never does anything.
+         */
+        FLAG_DISABLE_SNAPPING = (1 << 1)
     };
 
     void SetFlag(PRInt32 aFlag) { mFlags |= aFlag; }
     void ClearFlag(PRInt32 aFlag) { mFlags &= ~aFlag; }
-    PRInt32 GetFlags() { return mFlags; }
+    PRInt32 GetFlags() const { return mFlags; }
 
 private:
     cairo_t *mCairo;

@@ -204,6 +204,7 @@ function reportResults() {
     dump("__xulWinOpenTime:" + medOpenTime + "\n");
     // Close the root window, if required.
     if ( AUTOCLOSE ) {
+        goQuitApplication();
         window.close();
     } else {
         document.getElementById("formTimes").value = openingTimes.slice(1);

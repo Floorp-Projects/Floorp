@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script>
+
+<![CDATA[
+
+
+function init() 
+{ 
+  var textbox = document.getElementsByTagName("textbox")[0];
+  var hbox = document.getAnonymousNodes(textbox)[0];
+  var menupopup = document.getAnonymousNodes(hbox)[1];
+
+  menupopup.click();
+}
+
+window.addEventListener("load", init, false);
+
+]]>
+</script>
+
+</head>
+
+<body>
+
+
+  <textbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+
+</body>
+</html>

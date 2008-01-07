@@ -157,8 +157,8 @@ nsNavBookmarks::Init()
   nsCAutoString selectChildren(
     NS_LITERAL_CSTRING("SELECT h.id, h.url, COALESCE(a.title, h.title), "
       "h.rev_host, h.visit_count, "
-      "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
-      "f.url, null, a.id, "
+      SQL_STR_FRAGMENT_MAX_VISIT_DATE( "h.id" )
+      ", f.url, null, a.id, "
       "a.dateAdded, a.lastModified, "
       "a.position, a.type, a.fk "
      "FROM moz_bookmarks a "

@@ -872,8 +872,11 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
   for (PRInt32 index = 0; index < numEntries; index++)
   {
     localFile = mTemporaryFilesList[index];
-    if (localFile)
+    if (localFile) {
+      // First make the file writable, since the temp file is probably readonly.
+      localFile->SetPermissions(0600);
       localFile->Remove(PR_FALSE);
+    }
   }
 
   mTemporaryFilesList.Clear();
@@ -2312,6 +2315,9 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
     if (NS_FAILED(rv))
       return NS_ERROR_NOT_AVAILABLE;
   }
+
+  // We promise to only send lower case mime types to the OS
+  ToLowerCase(typeToUse);
 
   // (1) Ask the OS for a mime info
   PRBool found;

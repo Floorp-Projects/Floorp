@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet
   href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
-<window title="Add Livemarks"
+<window title="Update Livemark SiteURI, null to start"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
@@ -14,7 +14,10 @@
 
 <script type="application/javascript">
 <![CDATA[
-// Test the asynchronous downloading of a feed to the livemarks service
+/*
+ Test updating livemark siteURI to the value from the feed, when it's null
+ to start
+ */
 SimpleTest.waitForExplicitFinish();
 
 const Cc = Components.classes;
@@ -31,16 +34,15 @@ var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
               getService(Ci.nsILivemarkService);
 var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
-var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
-                getService(Ci.nsIAnnotationService);
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
 
-var gLivemarkId;
+var toolbarFolderId = bmsvc.toolbarFolder;
 
 var observer =
 {
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsINavBookmarkObserver) ||
-        iid.equals(Ci.nsIAnnotationObserver) ||
         iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
@@ -48,45 +50,39 @@ var observer =
 
   // nsINavBookmarkObserve
   onBeginUpdateBatch: function(){},
-  onEndUpdateBatch: function(){},
-  onItemAdded: function(itemId, folder, index) {
-    if (bmsvc.getBookmarkURI(itemId).spec == "http://example.org/2003/12/13/atom03") {
-      is(folder, gLivemarkId, "Livemark added to correct folder");
-      this._lastBookmarkId = itemId;
-      bmsvc.removeObserver(this);
-    }
+  onEndUpdateBatch: function(){
+    // give it plenty of time to actually change things
+    setTimeout(runTest, 2000);
+    bmsvc.removeObserver(this);
   },
+  onItemAdded: function(itemId, folder, index) {},
   onItemRemoved: function(itemId, folder, index){},
   onItemChanged: function(itemId, property, isAnnotationProperty, value){},
   onItemVisited: function(itemId, aVisitID, time){},
   onItemMoved: function(itemId, oldParent, oldIndex, newParent, newIndex){},
 
-  // nsIAnnotationObserver
-  onItemAnnotationSet: function(aItemId, aAnnotationName) {
-    if (aAnnotationName == "livemark/bookmarkFeedURI") {
-      ok("_lastBookmarkId" in this,
-         "Unexpected livemark/bookmarkFeedURI annotation set");
-      ok(this._lastBookmarkId == aItemId,
-         "livemark/bookmarkFeedURI annotation set on the wrong item");
-      annosvc.removeObserver(this);
-      SimpleTest.finish();
-    }
-  },
-
-  onItemAnnotationRemoved: function(aItemId, aAnnotationName) { },
-  onPageAnnotationSet: function(uri, name) { },
-  onPageAnnotationRemoved: function(uri, name) { }
 };
+
+function runTest() {
+  // site URI should have changed from the null we used while creating
+  // to the example.org that's in the feed
+  ok(lmsvc.getSiteURI(gLivemarkId).equals(uri(FEEDSITESPEC)),
+     "livemark site URI not reset to value in feed");
+
+  // clean up
+  bmsvc.removeFolder(gLivemarkId);
+  SimpleTest.finish();
+}
 
 var root = bmsvc.bookmarksRoot;
 const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
+const FEEDSITESPEC = "http://example.org/"; 
 
-gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, root, "foo",
-                                            uri("http:/localhost/"),
-                                            uri(FEEDSPEC), -1);
+gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, toolbarFolderId, "foo",
+                                             null, uri(FEEDSPEC), -1);
 bmsvc.addObserver(observer, false);
-annosvc.addObserver(observer, false);
 lmsvc.reloadLivemarkFolder(gLivemarkId);
+
 ]]>
 </script>
 

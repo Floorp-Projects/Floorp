@@ -3923,7 +3923,7 @@ function onViewToolbarCommand(aEvent)
 
 function displaySecurityInfo()
 {
-  BrowserPageInfo(null, "security");
+  BrowserPageInfo(null, "securityTab");
 }
 
 /**

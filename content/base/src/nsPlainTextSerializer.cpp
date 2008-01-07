@@ -645,6 +645,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     return NS_OK;
   }
 
+  // Keep this in sync with DoCloseContainer!
   if (!DoOutput()) {
     return NS_OK;
   }
@@ -893,7 +894,13 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     // so just return now:
     return NS_OK;
   }
-  else if (type == eHTMLTag_tr) {
+
+  // Keep this in sync with DoOpenContainer!
+  if (!DoOutput()) {
+    return NS_OK;
+  }
+
+  if (type == eHTMLTag_tr) {
     PopBool(mHasWrittenCellsForRow);
     // Should always end a line, but get no more whitespace
     if (mFloatingLines < 0)
@@ -922,6 +929,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   else if (type == eHTMLTag_ol) {
     FlushLine(); // Doing this after decreasing OLStackIndex would be wrong.
     mIndent -= kIndentSizeList;
+    NS_ASSERTION(mOLStackIndex, "Wrong OLStack level!");
     mOLStackIndex--;
     if (mULCount + mOLStackIndex == 0) {
       mFloatingLines = 1;
@@ -937,6 +945,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     mIndent -= kIndentSizeDD;
   }
   else if (type == eHTMLTag_span) {
+    NS_ASSERTION(mSpanLevel, "Span level will be negative!");
     --mSpanLevel;
   }
   else if (type == eHTMLTag_div) {
@@ -951,6 +960,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     PRBool isInCiteBlockquote = PopBool(mIsInCiteBlockquote);
 
     if (isInCiteBlockquote) {
+      NS_ASSERTION(mCiteQuoteLevel, "CiteQuote level will be negative!");
       mCiteQuoteLevel--;
       mFloatingLines = 0;
       mHasWrittenCiteBlockquote = PR_TRUE;
@@ -1252,6 +1262,16 @@ nsPlainTextSerializer::Output(nsString& aString)
   mOutputString->Append(aString);
 }
 
+static PRBool
+IsSpaceStuffable(const PRUnichar *s)
+{
+  if (s[0] == '>' || s[0] == ' ' || s[0] == kNBSP ||
+      nsCRT::strncmp(s, NS_LITERAL_STRING("From ").get(), 5) == 0)
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+}
+
 /**
  * This function adds a piece of text to the current stored line. If we are
  * wrapping text and the stored line will become too long, a suitable
@@ -1275,13 +1295,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
     }
 
     if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-      if(
-         (
-          '>' == aLineFragment[0] ||
-          ' ' == aLineFragment[0] ||
-        kNBSP == aLineFragment[0] ||  // bug 215068
-          !nsCRT::strncmp(aLineFragment, NS_LITERAL_STRING("From ").get(), 5)
-          )
+      if(IsSpaceStuffable(aLineFragment)
          && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
          )
         {
@@ -1398,14 +1412,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
         mCurrentLine.Truncate();
         // Space stuff new line?
         if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-          if(
-              !restOfLine.IsEmpty()
-              &&
-              (
-                restOfLine[0] == '>' ||
-                restOfLine[0] == ' ' ||
-                StringBeginsWith(restOfLine, NS_LITERAL_STRING("From "))
-              )
+          if(!restOfLine.IsEmpty() && IsSpaceStuffable(restOfLine.get())
               && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
             )
           {
@@ -1581,7 +1588,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
 
 #ifdef DEBUG_wrapping
   printf("Write(%s): wrap col = %d\n",
-         NS_ConvertUTF16toUTF8(aString).get(), mWrapColumn);
+         NS_ConvertUTF16toUTF8(str).get(), mWrapColumn);
 #endif
 
   PRInt32 bol = 0;
@@ -1595,12 +1602,11 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
   // For Flowed text change nbsp-ses to spaces at end of lines to allow them
   // to be cut off along with usual spaces if required. (bug #125928)
   if (mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-    PRUnichar nbsp = 160;
     for (PRInt32 i = totLen-1; i >= 0; i--) {
       PRUnichar c = str[i];
       if ('\n' == c || '\r' == c || ' ' == c || '\t' == c)
         continue;
-      if (nbsp == c)
+      if (kNBSP == c)
         str.Replace(i, 1, ' ');
       else
         break;
@@ -1629,6 +1635,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
       PRBool outputQuotes = mAtFirstColumn;
       PRBool atFirstColumn = mAtFirstColumn;
       PRBool outputLineBreak = PR_FALSE;
+      PRBool spacesOnly = PR_TRUE;
 
       // Find one of '\n' or '\r' using iterators since nsAString
       // doesn't have the old FindCharInSet function.
@@ -1642,14 +1649,17 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
           newline = new_newline;
           break;
         }
+        if(' ' != *iter)
+          spacesOnly = PR_FALSE;
         ++new_newline;
         ++iter;
       }
 
       // Done searching
+      nsAutoString stringpart;
       if(newline == kNotFound) {
         // No new lines.
-        nsAutoString stringpart(Substring(str, bol, totLen - bol));
+        stringpart.Assign(Substring(str, bol, totLen - bol));
         if(!stringpart.IsEmpty()) {
           PRUnichar lastchar = stringpart[stringpart.Length()-1];
           if((lastchar == '\t') || (lastchar == ' ') ||
@@ -1660,18 +1670,14 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
             mInWhitespace = PR_FALSE;
           }
         }
-        mCurrentLine.Assign(stringpart);
         mEmptyLines=-1;
         atFirstColumn = mAtFirstColumn && (totLen-bol)==0;
         bol = totLen;
       } 
       else {
         // There is a newline
-        nsAutoString stringpart(Substring(str, bol, newline-bol));
-        if (mFlags & nsIDocumentEncoder::OutputFormatFlowed)
-          stringpart.Trim(" ", PR_FALSE, PR_TRUE, PR_TRUE);
+        stringpart.Assign(Substring(str, bol, newline-bol));
         mInWhitespace = PR_TRUE;
-        mCurrentLine.Assign(stringpart);
         outputLineBreak = PR_TRUE;
         mEmptyLines=0;
         atFirstColumn = PR_TRUE;
@@ -1683,6 +1689,17 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
           bol++;
         }
       }
+
+      mCurrentLine.AssignLiteral("");
+      if (mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+        if ((outputLineBreak || !spacesOnly) && // bugs 261467,125928
+            !stringpart.EqualsLiteral("-- ") &&
+            !stringpart.EqualsLiteral("- -- "))
+          stringpart.Trim(" ", PR_FALSE, PR_TRUE, PR_TRUE);
+        if (IsSpaceStuffable(stringpart.get()) && stringpart[0] != '>')
+          mCurrentLine.Append(PRUnichar(' '));
+      }
+      mCurrentLine.Append(stringpart);
 
       if(outputQuotes) {
         // Note: this call messes with mAtFirstColumn

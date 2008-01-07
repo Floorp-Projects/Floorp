@@ -4041,10 +4041,10 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
         gdk_window_fullscreen (mShell->window);
     else
         gdk_window_unfullscreen (mShell->window);
+    return NS_OK;
 #else
-    HideWindowChrome(aFullScreen);
+    return nsBaseWidget::MakeFullScreen(aFullScreen);
 #endif
-    return MakeFullScreenInternal(aFullScreen);
 }
 
 NS_IMETHODIMP

@@ -838,23 +838,26 @@
             if (!ib.hasAttribute("dragging"))
               ib.setAttribute("dragging", "true");
             var ind = ib.firstChild;
+            var halfInd = ind.boxObject.width / 2;
             var direction = document.defaultView.getComputedStyle(this._self.parentNode, "").direction;
             if (direction == "ltr") {
+              halfInd = Math.ceil(halfInd);
               if (!this._self.childNodes.length)
-                ind.style.marginLeft = 0 - this._self.boxObject.x - 7 + 'px'
+                ind.style.marginLeft = 0 - this._self.boxObject.x - halfInd + 'px'
               else if (dropPoint.beforeIndex == -1)
                 ind.style.marginLeft = this._self.lastChild.boxObject.x + 
-                                       this._self.lastChild.boxObject.width - this._self.boxObject.x - 7 + 'px';
+                                       this._self.lastChild.boxObject.width - this._self.boxObject.x - halfInd + 'px';
               else
                 ind.style.marginLeft = this._self.childNodes[dropPoint.beforeIndex].boxObject.x -
-                                       this._self.boxObject.x - 7 + 'px';
+                                       this._self.boxObject.x - halfInd + 'px';
             } else {
+              halfInd = Math.floor(halfInd);
               if (dropPoint.beforeIndex == -1 || !this._self.childNodes.length)
                 ind.style.marginRight = '0px';
               else
                 ind.style.marginRight = (this._self.childNodes[this._self.childNodes.length - 1].boxObject.x +
                                          this._self.childNodes[this._self.childNodes.length - 1].boxObject.width) -
-                                        (this._self.childNodes[dropPoint.beforeIndex].boxObject.x) - 5 + 'px';
+                                        (this._self.childNodes[dropPoint.beforeIndex].boxObject.x) - halfInd + 'px';
             }
             // Clear out old folder information
             this._clearOverFolder();

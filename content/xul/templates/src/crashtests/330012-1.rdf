@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:s="urn:squarefree:a1:">
+  <rdf:Description about="urn:root">
+    <s:grapes>
+      <rdf:Bag>
+        <rdf:li>
+          <rdf:Description/>
+        </rdf:li>
+      </rdf:Bag>
+    </s:grapes>
+ </rdf:Description>
+</rdf:RDF>

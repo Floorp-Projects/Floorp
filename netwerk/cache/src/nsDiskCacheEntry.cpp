@@ -46,6 +46,8 @@
 
 #include "nsCache.h"
 
+#include "nsISerializable.h"
+#include "nsSerializationHelper.h"
 
 /******************************************************************************
  *  nsDiskCacheEntry
@@ -80,7 +82,15 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
         delete entry;
         return nsnull;
     }
-    
+
+    // Restore security info, if present
+    const char* info = entry->GetMetaDataElement("security-info");
+    if (info) {
+        nsCOMPtr<nsISupports> infoObj;
+        NS_DeserializeObject(nsDependentCString(info), getter_AddRefs(infoObj));
+        entry->SetSecurityInfo(infoObj);
+    }
+
     return entry;                      
 }
 

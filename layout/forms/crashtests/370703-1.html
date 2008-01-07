@@ -1,0 +1,30 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("M").style.width = "6em";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+<body onload="setTimeout(boom, 30);">
+
+<div style="position:absolute; top: 50px; left: 50px; border: 2px solid orange;">
+
+  <select>
+    <option id="M">M</option>
+  </select>
+ 
+  <br>
+ 
+  <select style="width: 200%">
+    <option style="visibility: collapse; overflow: auto; display: table-footer-group;">X</option>
+  </select>
+ 
+</div>
+
+</body>
+</html>

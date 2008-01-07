@@ -45,9 +45,9 @@
 
 class THEBES_API gfxQuartzSurface : public gfxASurface {
 public:
-    gfxQuartzSurface(const gfxSize& size, gfxImageFormat format);
-    gfxQuartzSurface(CGContextRef context, const gfxSize& size);
-    gfxQuartzSurface(cairo_surface_t *csurf);
+    gfxQuartzSurface(const gfxSize& size, gfxImageFormat format, PRBool aForPrinting = PR_FALSE);
+    gfxQuartzSurface(CGContextRef context, const gfxSize& size, PRBool aForPrinting = PR_FALSE);
+    gfxQuartzSurface(cairo_surface_t *csurf, PRBool aForPrinting = PR_FALSE);
 
     virtual ~gfxQuartzSurface();
 
@@ -55,9 +55,12 @@ public:
 
     CGContextRef GetCGContext() { return mCGContext; }
 
+    virtual PRInt32 GetDefaultContextFlags() const;
+
 protected:
     CGContextRef mCGContext;
-    gfxSize mSize;
+    gfxSize      mSize;
+    PRPackedBool mForPrinting;
 };
 
 #endif /* GFX_QUARTZSURFACE_H */

@@ -447,7 +447,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(8a47448a-66b0-4beb-a5a2-24f22e9c9dea)]
+[uuid(20df9082-5b83-416d-ba80-0422af516d57)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -729,9 +729,26 @@ interface nsIXPConnect : nsISupports
      * @param aParent The parent to create the wrapper with.
      * @param aWrappedObj The object to wrap.
      */
-    [noscript] JSVal getCrossOriginWrapperForObject(in JSContextPtr aJSContext,
-                                                    in JSObjectPtr aParent,
-                                                    in JSObjectPtr aWrappedObj);
+    [noscript] JSVal getXOWForObject(in JSContextPtr aJSContext,
+                                     in JSObjectPtr aParent,
+                                     in JSObjectPtr aWrappedObj);
+
+    /**
+     * Tells updateXOWs to clear the scope of all of the XOWs it finds.
+     */
+    const PRUint32 XPC_XOW_CLEARSCOPE = 1;
+
+    /**
+     * Performs an operation over all of |object|'s XOWs such as clearing
+     * their scopes or updating their concept of the current principal.
+     *
+     * @param aJSContext A context to use to perform JS operations.
+     * @param aObject Which XPCWrappedNative we should find the XOWs for.
+     * @param aWay What operation to perform.
+     */
+    [noscript] void updateXOWs(in JSContextPtr aJSContext,
+                               in nsIXPConnectWrappedNative aObject,
+                               in PRUint32 aWay);
 
     /**
      * Root JS objects held by aHolder.
