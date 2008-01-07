@@ -928,7 +928,7 @@ nsHTMLEditor::RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL)
 }
 
 nsresult
-nsHTMLEditor::RelativizeURIInFragmentList(nsCOMArray<nsIDOMNode> aNodeList,
+nsHTMLEditor::RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeList,
                                           const nsAString &aFlavor,
                                           nsIDOMDocument *aSourceDoc,
                                           nsIDOMNode *aTargetNode)
