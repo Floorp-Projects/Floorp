@@ -136,6 +136,7 @@ struct JSStmtInfo {
 
 #define SIF_SCOPE        0x0001     /* statement has its own lexical scope */
 #define SIF_BODY_BLOCK   0x0002     /* STMT_BLOCK type is a function body */
+#define SIF_FOR_BLOCK    0x0004     /* for (let ...) induced block scope */
 
 /*
  * To reuse space in JSStmtInfo, rename breaks and continues for use during
