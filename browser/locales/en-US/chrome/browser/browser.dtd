@@ -258,7 +258,7 @@
 <!ENTITY sendImageCmd.label           "Send Image…">
 <!ENTITY sendImageCmd.accesskey       "n">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
-<!ENTITY copyLinkCmd.accesskey        "C">
+<!ENTITY copyLinkCmd.accesskey        "a">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "o">
 <!ENTITY copyImageContentsCmd.label   "Copy Image">
