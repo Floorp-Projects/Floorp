@@ -260,7 +260,7 @@ static JSBool js_gcUseMmap = JS_FALSE;
 
 #define ARENA_START_TO_INFO(arenaStart)                                       \
     (JS_ASSERT(((arenaStart) & (jsuword) GC_ARENA_MASK) == 0),                \
-     (JSGCArenaInfo *) ((arenaStart) + ARENA_INFO_OFFSET))
+     (JSGCArenaInfo *) ((arenaStart) + (jsuword) ARENA_INFO_OFFSET))
 
 #define ARENA_INFO_TO_START(arena)                                            \
     (JS_ASSERT(IS_ARENA_INFO_ADDRESS(arena)),                                 \
@@ -268,7 +268,7 @@ static JSBool js_gcUseMmap = JS_FALSE;
 
 #define ARENA_PAGE_TO_INFO(arenaPage)                                         \
     (JS_ASSERT(arenaPage != 0),                                               \
-     JS_ASSERT(((arenaPage) >> (JS_BITS_PER_WORD - GC_ARENA_SHIFT)) == 0),    \
+     JS_ASSERT(!((jsuword)(arenaPage) >> (JS_BITS_PER_WORD-GC_ARENA_SHIFT))), \
      ARENA_START_TO_INFO((arenaPage) << GC_ARENA_SHIFT))
 
 #define ARENA_INFO_TO_PAGE(arena)                                             \

@@ -1069,7 +1069,10 @@ XMLArraySetCapacity(JSContext *cx, JSXMLArray *array, uint32 capacity)
             free(array->vector);
         vector = NULL;
     } else {
-        if ((size_t)capacity > ~(size_t)0 / sizeof(void *) ||
+        if (
+#if JS_BITS_PER_WORD == 32
+            (size_t)capacity > ~(size_t)0 / sizeof(void *) ||
+#endif
             !(vector = (void **)
                        realloc(array->vector, capacity * sizeof(void *)))) {
             if (cx)
@@ -1164,7 +1167,10 @@ XMLArrayAddMember(JSContext *cx, JSXMLArray *array, uint32 index, void *elt)
                 JS_CEILING_LOG2(log2, capacity);
                 capacity = JS_BIT(log2);
             }
-            if ((size_t)capacity > ~(size_t)0 / sizeof(void *) ||
+            if (
+#if JS_BITS_PER_WORD == 32
+                (size_t)capacity > ~(size_t)0 / sizeof(void *) ||
+#endif
                 !(vector = (void **)
                            realloc(array->vector, capacity * sizeof(void *)))) {
                 JS_ReportOutOfMemory(cx);

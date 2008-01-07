@@ -1101,10 +1101,12 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
      * overflow size_t, which would allow for indexing beyond the end of the
      * malloc'd vector.
      */
-    if (len > (size_t) -1 / (2 * sizeof(jsval))) {
+#if JS_BITS_PER_WORD == 32
+    if ((size_t)len > ~(size_t)0 / (2 * sizeof(jsval))) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
+#endif
     vec = (jsval *) JS_malloc(cx, 2 * (size_t) len * sizeof(jsval));
     if (!vec)
         return JS_FALSE;
@@ -1203,11 +1205,13 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
              * realloc only when we know that we successfully converted all
              * the elements.
              */
-            if (newlen > (size_t) -1 / (4 * sizeof(jsval))) {
+#if JS_BITS_PER_WORD == 32
+            if ((size_t)newlen > ~(size_t)0 / (4 * sizeof(jsval))) {
                 JS_ReportOutOfMemory(cx);
                 ok = JS_FALSE;
                 goto out;
             }
+#endif
 
             /*
              * Rearrange and string-convert the elements of the vector from
