@@ -38,7 +38,7 @@
 #ifndef GFX_POINT_H
 #define GFX_POINT_H
 
-#include <math.h>
+#include "nsMathUtils.h"
 
 #include "gfxTypes.h"
 
@@ -142,8 +142,8 @@ struct THEBES_API gfxPoint {
         return gfxPoint(x / v, y / v);
     }
     gfxPoint& Round() {
-        x = ::floor(x + 0.5);
-        y = ::floor(y + 0.5);
+        x = NS_round(x);
+        y = NS_round(y);
         return *this;
     }
 };
