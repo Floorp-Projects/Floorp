@@ -556,7 +556,7 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(JSObject *));
 
 #define JS_PUSH_TEMP_ROOT(cx,cnt,arr,tvr)                                     \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT((ptrdiff_t)(cnt) >= 0);                                     \
+        JS_ASSERT((int)(cnt) >= 0);                                           \
         (tvr)->count = (ptrdiff_t)(cnt);                                      \
         (tvr)->u.array = (arr);                                               \
         JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
