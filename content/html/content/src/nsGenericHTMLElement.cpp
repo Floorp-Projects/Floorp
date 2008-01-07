@@ -1022,7 +1022,7 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
   }
 
   PRIntn vpercent = aTop ? NS_PRESSHELL_SCROLL_TOP :
-    NS_PRESSHELL_SCROLL_ANYWHERE;
+    NS_PRESSHELL_SCROLL_BOTTOM;
 
   presShell->ScrollContentIntoView(this, vpercent,
                                    NS_PRESSHELL_SCROLL_ANYWHERE);
