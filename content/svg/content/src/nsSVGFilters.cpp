@@ -3184,8 +3184,8 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  nsIDOMSVGAnimatedString* sourceGraphic = nsnull;
-  rv = NS_NewSVGAnimatedString(&sourceGraphic);
+  nsCOMPtr<nsIDOMSVGAnimatedString> sourceGraphic;
+  rv = NS_NewSVGAnimatedString(getter_AddRefs(sourceGraphic));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = fr.AcquireSourceImage(sourceGraphic, &sourceData);
@@ -5377,8 +5377,8 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance)
 
   nsSVGFilterResource fr(this, instance);
 
-  nsIDOMSVGAnimatedString* sourceGraphic = nsnull;
-  rv = NS_NewSVGAnimatedString(&sourceGraphic);
+  nsCOMPtr<nsIDOMSVGAnimatedString> sourceGraphic;
+  rv = NS_NewSVGAnimatedString(getter_AddRefs(sourceGraphic));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = fr.AcquireSourceImage(sourceGraphic, &sourceData);
