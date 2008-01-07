@@ -1338,7 +1338,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
     if (minh > h)
       h = minh;
   } else {
-    NS_ASSERTION(pos->mMaxHeight.GetUnit() == eStyleUnit_Percent,
+    NS_ASSERTION(pos->mMinHeight.GetUnit() == eStyleUnit_Percent,
                  "unknown min-height unit");
   }
 

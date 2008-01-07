@@ -48,7 +48,6 @@ NO_PKG_FILES = \
 	xulrunner-config \
 	regchrome* \
 	regxpcom* \
-	xpcshell* \
 	$(NULL)
 
 # If we're on mac, we want to make the .pkg first, in the mac/
@@ -85,6 +84,8 @@ endif
 pkg_config_files = \
 	libxul.pc \
 	libxul-embedding.pc \
+	libxul-unstable.pc \
+	libxul-embedding-unstable.pc \
 	mozilla-js.pc \
 	mozilla-plugin.pc \
 	$(NULL)

@@ -298,7 +298,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
      prefSize = GetPrefSize(state);
      nsSize minSize = GetMinSize(state);
      nsSize maxSize = GetMaxSize(state);
-     BoundsCheck(minSize, prefSize, maxSize);
+     prefSize = BoundsCheck(minSize, prefSize, maxSize);
   }
 
   // get our desiredSize

@@ -39,6 +39,7 @@
 #define GFX_PDFSURFACE_H
 
 #include "gfxASurface.h"
+#include "gfxContext.h"
 
 /* for the output stream */
 #include "nsCOMPtr.h"
@@ -61,6 +62,8 @@ public:
 
     // this is in points!
     const gfxSize& GetSize() const { return mSize; }
+
+    virtual PRInt32 GetDefaultContextFlags() const { return gfxContext::FLAG_DISABLE_SNAPPING; }
 
 private:
     nsCOMPtr<nsIOutputStream> mStream;

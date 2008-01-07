@@ -1198,6 +1198,13 @@ FullTrustSecMan::IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval)
     *_retval = aPrincipal == mSystemPrincipal;
     return NS_OK;
 }
+
+NS_IMETHODIMP_(nsIPrincipal *)
+FullTrustSecMan::GetCxSubjectPrincipal(JSContext *cx)
+{
+    return mSystemPrincipal;
+}
+
 #endif
 
 /***************************************************************************/

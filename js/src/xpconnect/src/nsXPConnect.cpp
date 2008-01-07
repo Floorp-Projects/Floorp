@@ -1916,14 +1916,64 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
 
 /* [noscript] JSVal GetCrossOriginWrapperForValue(in JSContextPtr aJSContext, in JSVal aCurrentVal); */
 NS_IMETHODIMP
-nsXPConnect::GetCrossOriginWrapperForObject(JSContext * aJSContext,
-                                            JSObject * aParent,
-                                            JSObject * aWrappedObj,
-                                            jsval * rval)
+nsXPConnect::GetXOWForObject(JSContext * aJSContext,
+                             JSObject * aParent,
+                             JSObject * aWrappedObj,
+                             jsval * rval)
 {
     *rval = OBJECT_TO_JSVAL(aWrappedObj);
     return XPC_XOW_WrapObject(aJSContext, aParent, rval)
            ? NS_OK : NS_ERROR_FAILURE;
+}
+
+static inline PRBool
+PerformOp(JSContext *cx, PRUint32 aWay, JSObject *obj)
+{
+    NS_ASSERTION(aWay == nsIXPConnect::XPC_XOW_CLEARSCOPE,
+                 "Nothing else is implemented yet");
+
+    JS_ClearScope(cx, obj);
+    return PR_TRUE;
+}
+
+/* [noscript] void updateXOWs (in JSContextPtr aJSContext,
+ *                             in nsIXPConnectJSObjectHolder aObject,
+ *                             in PRUint32 aWay); */
+NS_IMETHODIMP
+nsXPConnect::UpdateXOWs(JSContext* aJSContext,
+                        nsIXPConnectWrappedNative* aObject,
+                        PRUint32 aWay)
+{
+    typedef WrappedNative2WrapperMap::Link Link;
+    XPCWrappedNative* wn = static_cast<XPCWrappedNative *>(aObject);
+    XPCWrappedNativeScope* scope = wn->GetScope();
+    WrappedNative2WrapperMap* map = scope->GetWrapperMap();
+    Link* list;
+
+    {
+        XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+        XPCAutoLock al(rt->GetMapLock());
+
+        list = map->FindLink(wn->GetFlatJSObject());
+    }
+
+    if(!list)
+        return NS_OK; // No wrappers to update.
+
+    AutoJSRequestWithNoCallContext req(aJSContext);
+
+    Link* cur = list;
+    if(cur->obj && !PerformOp(aJSContext, aWay, cur->obj))
+        return NS_ERROR_FAILURE;
+
+    for(cur = (Link *)PR_NEXT_LINK(list); cur != list;
+        cur = (Link *)PR_NEXT_LINK(cur))
+    {
+        if(!PerformOp(aJSContext, aWay, cur->obj))
+            return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
 }
 
 /* void releaseJSContext (in JSContextPtr aJSContext, in PRBool noGC); */

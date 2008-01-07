@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIChannel;
 
 
-[scriptable, uuid(0b8a9b32-713f-4c39-bea0-6cacec46f385)]
+[scriptable, uuid(ce216cf7-3bcb-48ab-9ff8-d03a24f19ca5)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -317,6 +317,14 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * script to check whether a given principal is system.
      */
     boolean isSystemPrincipal(in nsIPrincipal aPrincipal);
+
+    /**
+     * Same as getSubjectPrincipal(), only faster. cx must *never* be
+     * passed null, and it must be the context on the top of the
+     * context stack. Does *not* reference count the returned
+     * principal.
+     */
+    [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
 };
 
 %{C++

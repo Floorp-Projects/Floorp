@@ -57,12 +57,12 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
-let gDownloadManager = Cc["@mozilla.org/download-manager;1"].getService(nsIDM);
-let gDownloadListener = null;
-let gDownloadsView = null;
-let gSearchBox = null;
-let gSearchTerms = "";
-let gBuilder = 0;
+var gDownloadManager = Cc["@mozilla.org/download-manager;1"].getService(nsIDM);
+var gDownloadListener = null;
+var gDownloadsView = null;
+var gSearchBox = null;
+var gSearchTerms = "";
+var gBuilder = 0;
 
 // Control the performance of the incremental list building by setting how many
 // milliseconds to wait before building more of the list and how many items to
@@ -76,7 +76,7 @@ var gUserInteracted = false;
 
 // These strings will be converted to the corresponding ones from the string
 // bundle on startup.
-let gStr = {
+var gStr = {
   paused: "paused",
   statusFormat: "statusFormat2",
   transferSameUnits: "transferSameUnits",
@@ -111,7 +111,7 @@ gDownloadManager.DBConnection.createFunction("getDisplayHost", 1, {
 });
 
 // The statement to query for downloads that are active or match the search
-let gStmt = gDownloadManager.DBConnection.createStatement(
+var gStmt = gDownloadManager.DBConnection.createStatement(
   "SELECT id, target, name, source, state, startTime, endTime, referrer, " +
          "currBytes, maxBytes, state IN (?1, ?2, ?3, ?4, ?5) isActive, " +
          "getDisplayHost(IFNULL(referrer, source)) display " +
@@ -121,14 +121,6 @@ let gStmt = gDownloadManager.DBConnection.createStatement(
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility Functions
-
-function fireEventForElement(aElement, aEventType)
-{
-  var e = document.createEvent("Events");
-  e.initEvent("download-" + aEventType, true, true);
-
-  aElement.dispatchEvent(e);
-}
 
 function getDownload(aID)
 {
@@ -341,8 +333,7 @@ function copySourceLocation(aDownload)
   clipboard.copyString(uri);
 }
 
-// This is called by the progress listener. We don't actually use the event
-// system here to minimize time wastage.
+// This is called by the progress listener.
 var gLastComputedMean = -1;
 var gLastActiveDownloads = 0;
 function onUpdateProgress()
@@ -381,7 +372,7 @@ function onUpdateProgress()
     gLastComputedMean = mean;
     gLastActiveDownloads = numActiveDownloads;
 
-    let strings = document.getElementById("downloadStrings");
+    var strings = document.getElementById("downloadStrings");
     if (numActiveDownloads > 1) {
       document.title = strings.getFormattedString("downloadsTitleMultiple",
                                                   [mean, numActiveDownloads]);
@@ -418,7 +409,7 @@ function Startup()
   if (!autoRemoveAndClose())
     gDownloadsView.focus();
 
-  let obs = Cc["@mozilla.org/observer-service;1"].
+  var obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
   obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
 }
@@ -427,7 +418,7 @@ function Shutdown()
 {
   gDownloadManager.removeListener(gDownloadListener);
 
-  let obs = Cc["@mozilla.org/observer-service;1"].
+  var obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
   obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
 
@@ -438,7 +429,7 @@ function Shutdown()
   gDownloadManager.DBConnection.removeFunction("getDisplayHost");
 }
 
-let gDownloadObserver = {
+var gDownloadObserver = {
   observe: function gdo_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "download-manager-remove-download":
@@ -450,8 +441,8 @@ let gDownloadObserver = {
         }
 
         // Otherwise, remove a single download
-        let id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
-        let dl = getDownload(id.data);
+        var id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
+        var dl = getDownload(id.data);
         removeFromView(dl);
         break;
     }
@@ -557,13 +548,20 @@ function buildContextMenu(aEvent)
     popup.removeChild(popup.firstChild);
 
   if (gDownloadsView.selectedItem) {
-    var idx = parseInt(gDownloadsView.selectedItem.getAttribute("state"));
+    let dl = gDownloadsView.selectedItem;
+    let idx = parseInt(dl.getAttribute("state"));
     if (idx < 0)
       idx = 0;
 
     var menus = gContextMenus[idx];
-    for (var i = 0; i < menus.length; ++i)
-      popup.appendChild(document.getElementById(menus[i]).cloneNode(true));
+    for (let i = 0; i < menus.length; ++i) {
+      let menuitem = document.getElementById(menus[i]).cloneNode(true);
+      let cmd = menuitem.getAttribute("cmd");
+      if (cmd)
+        menuitem.disabled = !gDownloadViewController.isCommandEnabled(cmd, dl);
+
+      popup.appendChild(menuitem);
+    }
 
     return true;
   }
@@ -606,33 +604,21 @@ var gDownloadDNDObserver =
 //// Command Updating and Command Handlers
 
 var gDownloadViewController = {
-  supportsCommand: function(aCommand)
+  isCommandEnabled: function(aCommand, aItem)
   {
-    var commandNode = document.getElementById(aCommand);
-    return commandNode && commandNode.parentNode ==
-                            document.getElementById("downloadsCommands");
-  },
-
-  isCommandEnabled: function(aCommand)
-  {
-    if (!window.gDownloadsView)
-      return false;
-
     // This switch statement is for commands that do not need a download object
     switch (aCommand) {
       case "cmd_clearList":
         return gDownloadManager.canCleanUp;
     }
 
-    var dl = gDownloadsView.selectedItem;
-    if (!dl)
-      return false;
+    let dl = aItem;
 
     switch (aCommand) {
       case "cmd_cancel":
         return dl.inProgress;
       case "cmd_open":
-        let file = getLocalFileFromNativePathOrUrl(dl.getAttribute("file"));
+        var file = getLocalFileFromNativePathOrUrl(dl.getAttribute("file"));
         return dl.openable && file.exists();
       case "cmd_pause":
         return dl.inProgress && !dl.paused;
@@ -652,25 +638,10 @@ var gDownloadViewController = {
     return false;
   },
 
-  doCommand: function(aCommand)
+  doCommand: function(aCommand, aItem)
   {
-    if (this.isCommandEnabled(aCommand))
-      this.commands[aCommand](gDownloadsView.selectedItem);
-  },
-
-  onCommandUpdate: function ()
-  {
-    var downloadsCommands = document.getElementById("downloadsCommands");
-    for (var i = 0; i < downloadsCommands.childNodes.length; ++i)
-      this.updateCommand(downloadsCommands.childNodes[i]);
-  },
-
-  updateCommand: function (command)
-  {
-    if (this.isCommandEnabled(command.id))
-      command.removeAttribute("disabled");
-    else
-      command.setAttribute("disabled", "true");
+    if (this.isCommandEnabled(aCommand, aItem))
+      this.commands[aCommand](aItem);
   },
 
   commands: {
@@ -713,6 +684,32 @@ var gDownloadViewController = {
   }
 };
 
+/**
+ * Helper function to do commands.
+ *
+ * @param aCmd
+ *        The command to be performed.
+ * @param aItem
+ *        The richlistitem that represents the download that will have the
+ *        command performed on it.  If this is null, it assumes the currently
+ *        selected item.  If the item passed in is not a richlistitem that
+ *        represents a download, it will walk up the parent nodes until it finds
+ *        a DOM node that is.
+ */
+function performCommand(aCmd, aItem)
+{
+  let elm = aItem;
+  if (!elm) {
+    elm = gDownloadsView.selectedItem;
+  } else {
+    while (elm.nodeName != "richlistitem" ||
+           elm.getAttribute("type") != "download")
+      elm = elm.parentNode;
+  }
+
+  gDownloadViewController.doCommand(aCmd, elm);
+}
+
 function setSearchboxFocus()
 {
   gSearchBox.focus();
@@ -746,7 +743,7 @@ function openExternal(aFile)
  */
 function createDownloadItem(aAttrs)
 {
-  let dl = document.createElement("richlistitem");
+  var dl = document.createElement("richlistitem");
 
   // Copy the attributes from the argument into the item
   for (let attr in aAttrs)
@@ -774,6 +771,23 @@ function createDownloadItem(aAttrs)
 }
 
 /**
+ * Updates the disabled state of the buttons of a downlaod.
+ *
+ * @param aItem
+ *        The richlistitem representing the download.
+ */
+function updateButtons(aItem)
+{
+  let buttons = aItem.buttons;
+
+  for (let i = 0; i < buttons.length; ++i) {
+    let cmd = buttons[i].getAttribute("cmd");
+    let enabled = gDownloadViewController.isCommandEnabled(cmd, aItem);
+    buttons[i].disabled = !enabled;
+  }
+}
+
+/**
  * Updates the status for a download item depending on its state
  *
  * @param aItem
@@ -783,15 +797,15 @@ function createDownloadItem(aAttrs)
  *        is useful for certain states such as DOWNLOADING.
  */
 function updateStatus(aItem, aDownload) {
-  let status = "";
-  let statusTip = "";
+  var status = "";
+  var statusTip = "";
 
-  let state = Number(aItem.getAttribute("state"));
+  var state = Number(aItem.getAttribute("state"));
   switch (state) {
     case nsIDM.DOWNLOAD_PAUSED:
     case nsIDM.DOWNLOAD_DOWNLOADING:
-      let currBytes = Number(aItem.getAttribute("currBytes"));
-      let maxBytes = Number(aItem.getAttribute("maxBytes"));
+      var currBytes = Number(aItem.getAttribute("currBytes"));
+      var maxBytes = Number(aItem.getAttribute("maxBytes"));
 
       // Update the bytes transferred and bytes total
       let ([progress, progressUnits] = convertByteUnits(currBytes),
@@ -821,7 +835,7 @@ function updateStatus(aItem, aDownload) {
       }
 
       // if we don't have an active download, assume 0 bytes/sec
-      let speed = aDownload ? aDownload.speed : 0;
+      var speed = aDownload ? aDownload.speed : 0;
 
       // Update the download rate
       let ([rate, unit] = convertByteUnits(speed)) {
@@ -834,8 +848,8 @@ function updateStatus(aItem, aDownload) {
       // Update time remaining.
       let (remain) {
         if ((speed > 0) && (maxBytes > 0)) {
-          let seconds = Math.ceil((maxBytes - currBytes) / speed);
-          let lastSec = Number(aItem.getAttribute("lastSeconds"));
+          var seconds = Math.ceil((maxBytes - currBytes) / speed);
+          var lastSec = Number(aItem.getAttribute("lastSeconds"));
 
           // Reuse the last seconds if the new one is only slighty longer
           // This avoids jittering seconds, e.g., 41 40 38 40 -> 41 40 38 38
@@ -891,7 +905,7 @@ function updateStatus(aItem, aDownload) {
         status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
       }
 
-      let [displayHost, fullHost] = getHost(getReferrerOrSource(aItem));
+      var [displayHost, fullHost] = getHost(getReferrerOrSource(aItem));
       // Insert 2 is the eTLD + 1 or other variations of the host
       status = replaceInsert(status, 2, displayHost);
       // Set the tooltip to be the full host
@@ -916,18 +930,18 @@ function updateTime(aItem)
   if (aItem.inProgress)
     return;
 
-  let dts = Cc["@mozilla.org/intl/scriptabledateformat;1"].
+  var dts = Cc["@mozilla.org/intl/scriptabledateformat;1"].
             getService(Ci.nsIScriptableDateFormat);
 
   // Figure out when today begins
-  let now = new Date();
-  let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   // Get the end time to display
-  let end = new Date(parseInt(aItem.getAttribute("endTime")));
+  var end = new Date(parseInt(aItem.getAttribute("endTime")));
 
   // Figure out if the end time is from today, yesterday, this week, etc.
-  let dateTime;
+  var dateTime;
   if (end >= today) {
     // Download finished after today started, show the time
     dateTime = dts.FormatTime("", dts.timeFormatNoSeconds,
@@ -940,9 +954,9 @@ function updateTime(aItem)
     dateTime = end.toLocaleFormat("%A");
   } else {
     // Download must have been from some time ago.. show month/day
-    let month = end.toLocaleFormat("%B");
+    var month = end.toLocaleFormat("%B");
     // Remove leading 0 by converting the date string to a number
-    let date = Number(end.toLocaleFormat("%d"));
+    var date = Number(end.toLocaleFormat("%d"));
     dateTime = replaceInsert(gStr.monthDate, 1, month);
     dateTime = replaceInsert(dateTime, 2, date);
   }
@@ -950,7 +964,7 @@ function updateTime(aItem)
   aItem.setAttribute("dateTime", dateTime);
 
   // Set the tooltip to be the full date and time
-  let dateTimeTip = dts.FormatDateTime("",
+  var dateTimeTip = dts.FormatDateTime("",
                                        dts.dateFormatLong,
                                        dts.timeFormatNoSeconds,
                                        end.getFullYear(),
@@ -971,7 +985,7 @@ function updateTime(aItem)
  */
 function convertByteUnits(aBytes)
 {
-  let unitIndex = 0;
+  var unitIndex = 0;
 
   // convert to next unit if it needs 4 digits (after rounding), but only if
   // we know the name of the next unit
@@ -997,21 +1011,21 @@ function convertByteUnits(aBytes)
  */
 function getHost(aURIString)
 {
-  let ioService = Cc["@mozilla.org/network/io-service;1"].
+  var ioService = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
-  let eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
+  var eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
                     getService(Ci.nsIEffectiveTLDService);
-  let idnService = Cc["@mozilla.org/network/idn-service;1"].
+  var idnService = Cc["@mozilla.org/network/idn-service;1"].
                    getService(Ci.nsIIDNService);
 
   // Get a URI that knows about its components
-  let uri = ioService.newURI(aURIString, null, null);
+  var uri = ioService.newURI(aURIString, null, null);
 
   // Get the inner-most uri for schemes like jar:
   if (uri instanceof Ci.nsINestedURI)
     uri = uri.innermostURI;
 
-  let fullHost;
+  var fullHost;
   try {
     // Get the full host name; some special URIs fail (data: jar:)
     fullHost = uri.host;
@@ -1019,7 +1033,7 @@ function getHost(aURIString)
     fullHost = "";
   }
 
-  let displayHost;
+  var displayHost;
   try {
     // This might fail if it's an IP address or doesn't have more than 1 part
     let baseDomain = eTLDService.getBaseDomain(uri);
@@ -1061,16 +1075,16 @@ function replaceInsert(aText, aIndex, aValue)
 function doDefaultForSelected()
 {
   // Make sure we have something selected
-  let item = gDownloadsView.selectedItem;
+  var item = gDownloadsView.selectedItem;
   if (!item)
     return;
 
   // Get the default action (first item in the menu)
-  let state = Number(item.getAttribute("state"));
-  let menuitem = document.getElementById(gContextMenus[state][0]);
+  var state = Number(item.getAttribute("state"));
+  var menuitem = document.getElementById(gContextMenus[state][0]);
 
   // Try to do the action if the command is enabled
-  gDownloadViewController.doCommand(menuitem.command);
+  gDownloadViewController.doCommand(menuitem.getAttribute("cmd"), item);
 }
 
 function removeFromView(aDownload)
@@ -1078,7 +1092,7 @@ function removeFromView(aDownload)
   // Make sure we have an item to remove
   if (!aDownload) return;
 
-  let index = gDownloadsView.selectedIndex;
+  var index = gDownloadsView.selectedIndex;
   gDownloadsView.removeChild(aDownload);
   gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
 
@@ -1117,7 +1131,7 @@ function buildDownloadList()
   if (!gSearchBox.hasAttribute("empty"))
     gSearchTerms = gSearchBox.value.replace(/^\s+|\s+$/, "");
 
-  let like = "%" + gStmt.escapeStringForLIKE(gSearchTerms, "/") + "%";
+  var like = "%" + gStmt.escapeStringForLIKE(gSearchTerms, "/") + "%";
 
   try {
     gStmt.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
@@ -1183,6 +1197,10 @@ function stepListBuilder(aNumItems) {
       // Add item to the end and color just that one item
       gDownloadsView.appendChild(item);
       stripeifyList(item);
+    
+      // Because of the joys of XBL, we can't update the buttons until the
+      // download object is in the document.
+      updateButtons(item);
     }
   } catch (e) {
     // Something went wrong when stepping or getting values, so clear and quit
@@ -1209,7 +1227,7 @@ function stepListBuilder(aNumItems) {
  */
 function prependList(aDownload)
 {
-  let attrs = {
+  var attrs = {
     dlid: aDownload.id,
     file: aDownload.target.spec,
     target: aDownload.displayName,
@@ -1223,11 +1241,15 @@ function prependList(aDownload)
   };
 
   // Make the item and add it to the beginning
-  let item = createDownloadItem(attrs);
+  var item = createDownloadItem(attrs);
   if (item) {
     // Add item to the beginning and color the whole list
     gDownloadsView.insertBefore(item, gDownloadsView.firstChild);
     stripeifyList(item);
+    
+    // Because of the joys of XBL, we can't update the buttons until the
+    // download object is in the document.
+    updateButtons(item);
   }
 }
 
@@ -1240,9 +1262,9 @@ function prependList(aDownload)
  */
 function stripeifyList(aItem)
 {
-  let alt = "alternate";
+  var alt = "alternate";
   // Set the item to be opposite of the other
-  let flipFrom = function(aOther) aOther && aOther.hasAttribute(alt) ?
+  var flipFrom = function(aOther) aOther && aOther.hasAttribute(alt) ?
     aItem.removeAttribute(alt) : aItem.setAttribute(alt, "true");
 
   // Keep coloring items as the opposite of its previous until no more
@@ -1276,7 +1298,7 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
 {
   if (aPathOrUrl.substring(0,7) == "file://") {
     // if this is a URL, get the file from that
-    let ioSvc = Cc["@mozilla.org/network/io-service;1"].
+    var ioSvc = Cc["@mozilla.org/network/io-service;1"].
                 getService(Ci.nsIIOService);
 
     // XXX it's possible that using a null char-set here is bad

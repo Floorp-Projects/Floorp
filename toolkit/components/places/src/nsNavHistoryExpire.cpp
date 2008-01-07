@@ -208,16 +208,17 @@ nsNavHistoryExpire::OnQuit()
   if (NS_FAILED(rv))
     NS_WARNING("ExpireEmbeddedLinks failed.");
 
-  // Determine whether we must partially or fully expire dangling entries.
+  // Determine whether we can skip partially expiration of dangling entries
+  // because we be doing a full expiration on shutdown in ClearHistory()
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
   PRBool sanitizeOnShutdown, sanitizeHistory;
   prefs->GetBoolPref(PREF_SANITIZE_ON_SHUTDOWN, &sanitizeOnShutdown);
   prefs->GetBoolPref(PREF_SANITIZE_ITEM_HISTORY, &sanitizeHistory);
-  PRInt32 maxRecords =
-    (sanitizeHistory && sanitizeOnShutdown) ? -1 :EXPIRATION_CAP_PLACES;
+  if (sanitizeHistory && sanitizeOnShutdown)
+    return;
 
   // vacuum up dangling items
-  rv = ExpireHistoryParanoid(connection, maxRecords);
+  rv = ExpireHistoryParanoid(connection, EXPIRATION_CAP_PLACES);
   if (NS_FAILED(rv))
     NS_WARNING("ExpireHistoryParanoid failed.");
   rv = ExpireFaviconsParanoid(connection);

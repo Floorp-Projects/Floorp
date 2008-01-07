@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Asaf Romano <mozilla.mano@sent.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -459,11 +460,12 @@ var gMainPane = {
     var theEM = wm.getMostRecentWindow(EMTYPE);
     if (theEM) {
       theEM.focus();
+      theEM.showView("extensions");
       return;
     }
 
     const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
     const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
-    window.openDialog(EMURL, "", EMFEATURES);
+    window.openDialog(EMURL, "", EMFEATURES, "extensions");
   }
 };

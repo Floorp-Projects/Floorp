@@ -94,8 +94,7 @@ nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin)
 #else
     nsjsprin->refcount++;
 #endif
-    if (nsjsprin->nsIPrincipalPtr)
-        nsjsprin->nsIPrincipalPtr->Release();
+    nsjsprin->nsIPrincipalPtr->Release();
     // The nsIPrincipal that we release owns the JSPrincipal struct,
     // so we don't need to worry about "codebase"
 }

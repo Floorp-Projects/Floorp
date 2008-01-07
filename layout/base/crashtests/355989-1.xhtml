@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<style>
+ body, #tq { display: inline; } 
+ #tq { position: relative; }
+</style>
+
+<style id="newstyle">
+</style>
+
+<script>
+function foo()
+{
+  document.getElementById("tq").style.position = "static";
+  document.getElementById("newstyle").textContent = "*:first-letter { }";
+}
+</script>
+
+</head>
+
+<body onload="foo()">
+  <table><tr><td>Table</td></tr></table>
+  <div id="tq">Div</div>
+</body>
+
+</html>

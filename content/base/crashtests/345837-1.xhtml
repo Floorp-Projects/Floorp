@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+<script>
+<![CDATA[
+
+function foo()
+{
+  var r = document.createRange(); 
+  r.setStart(document.getElementById("a"), 0); 
+  r.setEnd(document.getElementById("b"), 0); 
+  window.getSelection().addRange(r);
+
+  var everything = document.getElementById("everything");
+  everything.parentNode.removeChild(everything);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+</script>
+</head>
+
+<body onload="setTimeout(foo, 30);">
+
+<div id="everything">
+
+<div id="a">
+  <span id="b" />
+</div>
+
+</div>
+
+</body>
+</html>

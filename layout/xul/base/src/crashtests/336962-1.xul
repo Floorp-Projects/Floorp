@@ -1,0 +1,17 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script>
+
+function init() { 
+  document.getElementById("foopy").style.position = "absolute";   
+}
+
+window.addEventListener("load", init, 0);
+
+</script>
+
+
+<box id="foopy" />
+       
+
+</window>

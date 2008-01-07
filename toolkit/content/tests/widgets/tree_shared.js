@@ -986,6 +986,148 @@ function testtag_tree_TreeSelection_State(tree, testid, current, selected, viewi
   is(compareArrays(selected, actualSelected), true, testid + " range selection [" + selected + "]");
 }
 
+function testtag_tree_column_reorder()
+{
+  // Make sure the tree is scrolled into the view, otherwise the test will
+  // fail
+  var testframe = window.parent.document.getElementById("testframe");
+  if (testframe) {
+    testframe.scrollIntoView();
+  }
+
+  var tree = document.getElementById("tree-column-reorder");
+  var numColumns = tree.columns.count;
+
+  var reference = [];
+  for (var i = 0; i < numColumns; i++) {
+    reference.push("col_" + i);
+  }
+
+  // Drag the first column to each position
+  for (var i = 0; i < numColumns - 1; i++) {
+    synthesizeColumnDrag(tree, i, i + 1, true);
+    arrayMove(reference, i, i + 1, true);
+    checkColumns(tree, reference, "drag first column right");
+  }
+
+  // And back
+  for (var i = numColumns - 1; i >= 1; i--) {
+    synthesizeColumnDrag(tree, i, i - 1, false);
+    arrayMove(reference, i, i - 1, false);
+    checkColumns(tree, reference, "drag last column left");
+  }
+
+  // Drag each column one column left
+  for (var i = 1; i < numColumns; i++) {
+    synthesizeColumnDrag(tree, i, i - 1, false);
+    arrayMove(reference, i, i - 1, false);
+    checkColumns(tree, reference, "drag each column left");
+  }
+
+  // And back
+  for (var i = numColumns - 2; i >= 0; i--) {
+    synthesizeColumnDrag(tree, i, i + 1, true);
+    arrayMove(reference, i, i + 1, true);
+    checkColumns(tree, reference, "drag each column right");
+  }
+
+  // Drag each column 5 to the right
+  for (var i = 0; i < numColumns - 5; i++) {
+    synthesizeColumnDrag(tree, i, i + 5, true);
+    arrayMove(reference, i, i + 5, true);
+    checkColumns(tree, reference, "drag each column 5 to the right");
+  }
+
+  // And to the left
+  for (var i = numColumns - 6; i >= 5; i--) {
+    synthesizeColumnDrag(tree, i, i - 5, false);
+    arrayMove(reference, i, i - 5, false);
+    checkColumns(tree, reference, "drag each column 5 to the left");
+  }
+
+  // Test that moving a column after itself does not move anything
+  synthesizeColumnDrag(tree, 0, 0, true);
+  checkColumns(tree, reference, "drag to itself");
+  is(document.treecolDragging, null, "drag to itself completed");
+
+  SimpleTest.finish();
+
+}
+
+function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumber, aAfter)
+{
+  var columns = getSortedColumnArray(aTree);
+
+  var down = columns[aMouseDownColumnNumber].element;
+  var up   = columns[aMouseUpColumnNumber].element;
+
+  // Target the initial mousedown in the middle of the column header so we
+  // avoid the extra hit test space given to the splitter
+  var columnWidth = down.boxObject.width;
+  var splitterHitWidth = columnWidth / 2;
+  synthesizeMouse(down, splitterHitWidth, 0, { type: "mousedown"});
+
+  var offsetX = 0;
+  if (aAfter) {
+    offsetX = columnWidth;
+  }
+
+  if (aMouseUpColumnNumber > aMouseDownColumnNumber) {
+    for (var i = aMouseDownColumnNumber; i <= aMouseUpColumnNumber; i++) {
+      var move = columns[i].element;
+      synthesizeMouse(move, offsetX, 0, { type: "mousemove"});
+    }
+  }
+  else {
+    for (var i = aMouseDownColumnNumber; i >= aMouseUpColumnNumber; i--) {
+      var move = columns[i].element;
+      synthesizeMouse(move, offsetX, 0, { type: "mousemove"});
+    }
+  }
+
+  synthesizeMouse(up, offsetX, 0, { type: "mouseup"});
+}
+
+function arrayMove(aArray, aFrom, aTo, aAfter)
+{
+  var o = aArray.splice(aFrom, 1)[0];
+  if (aTo > aFrom) {
+    aTo--;
+  }
+
+  if (aAfter) {
+    aTo++;
+  }
+
+  aArray.splice(aTo, 0, o);
+}
+
+function getSortedColumnArray(aTree)
+{
+  var columns = aTree.columns;
+  var a = [];
+  for (var i = 0; i < columns.length; i++) {
+    a.push(columns.getColumnAt(i));
+  }
+
+  a.sort(function(a, b) {
+    var o1 = parseInt(a.element.getAttribute("ordinal"));
+    var o2 = parseInt(b.element.getAttribute("ordinal"));
+    return o1 - o2;
+  });
+  return a;
+}
+
+function checkColumns(aTree, aReference, aMessage)
+{
+  var columns = getSortedColumnArray(aTree);
+  var ids = [];
+  columns.forEach(function(e) {
+    ids.push(e.element.id);
+  });
+  is(compareArrays(ids, aReference), true, aMessage);
+}
+
 function mouseOnCell(tree, row, column, testname)
 {
   var x = {}, y = {}, width = {}, height = {};

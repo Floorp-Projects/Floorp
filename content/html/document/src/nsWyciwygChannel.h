@@ -86,6 +86,8 @@ protected:
 
     void WriteCharsetAndSourceToCache(PRInt32 aSource,
                                       const nsCString& aCharset);
+
+    void NotifyListener();
        
     nsresult                            mStatus;
     PRPackedBool                        mIsPending;

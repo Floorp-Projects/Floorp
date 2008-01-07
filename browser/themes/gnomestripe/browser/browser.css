@@ -60,12 +60,6 @@
   min-height: 26px;
 }
 
-/* ..... fix searchbar "add engine" padding issue ..... */
-
-.searchbar-popup .open-engine-manager { 
-  -moz-padding-start: 4px; 
-}
-
 #searchbar[empty="true"] > .searchbar-textbox {
   color: GrayText;
   direction: ltr !important;
@@ -170,27 +164,19 @@ menuitem.bookmark-item {
   background: Highlight !important;
   color: HighlightText !important;
 }
-.bookmark-item[dragover="true"][open="true"] {
-  -moz-appearance: none;
-  background: Highlight !important;
-  color: HighlightText !important;
-  list-style-image: url("chrome://browser/skin/places/folderDragOver.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px) !important;
-}
 
 .toolbar-drop-indicator {
-  height: 16px;
-  width: 5px;
-  margin-bottom: -8px;
+  width: 9px;
+  height: 18px;
+  margin-bottom: -6px;
   position: relative;
   background: url("chrome://browser/skin/places/toolbarDropMarker.png") 50% 50% no-repeat;
 }
 
 .toolbar-drop-indicator-bar {
   visibility: hidden;
-  height: 16px;
-  margin-bottom: -16px;
-  margin-left: 4px;
+  height: 18px;
+  margin-bottom: -18px;
   position: relative;
 }
 

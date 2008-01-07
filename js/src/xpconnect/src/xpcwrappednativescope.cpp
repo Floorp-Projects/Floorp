@@ -270,6 +270,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
 
     if(mWrapperMap)
     {
+        NS_ASSERTION(0 == mWrapperMap->Count(), "scope has non-empty map");
         delete mWrapperMap;
     }
 

@@ -39,6 +39,7 @@
 #define GFX_QUARTZPDFSURFACE_H
 
 #include "gfxASurface.h"
+#include "gfxContext.h"
 
 #include <Carbon/Carbon.h>
 
@@ -59,6 +60,8 @@ public:
     }
 
     CGContextRef GetCGContext() { return mCGContext; }
+
+    virtual PRInt32 GetDefaultContextFlags() const { return gfxContext::FLAG_DISABLE_SNAPPING; }
 
 protected:
     CGContextRef mCGContext;

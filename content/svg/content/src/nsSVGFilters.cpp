@@ -3184,8 +3184,8 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  nsIDOMSVGAnimatedString* sourceGraphic = nsnull;
-  rv = NS_NewSVGAnimatedString(&sourceGraphic);
+  nsCOMPtr<nsIDOMSVGAnimatedString> sourceGraphic;
+  rv = NS_NewSVGAnimatedString(getter_AddRefs(sourceGraphic));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = fr.AcquireSourceImage(sourceGraphic, &sourceData);
@@ -5377,8 +5377,8 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance)
 
   nsSVGFilterResource fr(this, instance);
 
-  nsIDOMSVGAnimatedString* sourceGraphic = nsnull;
-  rv = NS_NewSVGAnimatedString(&sourceGraphic);
+  nsCOMPtr<nsIDOMSVGAnimatedString> sourceGraphic;
+  rv = NS_NewSVGAnimatedString(getter_AddRefs(sourceGraphic));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = fr.AcquireSourceImage(sourceGraphic, &sourceData);
@@ -5759,78 +5759,4 @@ nsSVGFEDisplacementMapElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             NS_ARRAY_LENGTH(sEnumInfo));
-}
-
-//---------------------UnimplementedMOZ------------------------
-
-typedef nsSVGFE nsSVGFEUnimplementedMOZElementBase;
-
-class nsSVGFEUnimplementedMOZElement : public nsSVGFEUnimplementedMOZElementBase,
-                                       public nsIDOMSVGFEUnimplementedMOZElement,
-                                       public nsISVGFilter
-{
-  friend nsresult NS_NewSVGFEUnimplementedMOZElement(nsIContent **aResult,
-                                                     nsINodeInfo *aNodeInfo);
-protected:
-  nsSVGFEUnimplementedMOZElement(nsINodeInfo* aNodeInfo)
-    : nsSVGFEUnimplementedMOZElementBase(aNodeInfo) {}
-
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // FE Base
-  NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEUnimplementedMOZElementBase::)
-
-  // nsISVGFilter
-  NS_IMETHOD Filter(nsSVGFilterInstance *instance);
-  NS_IMETHOD GetRequirements(PRUint32 *aRequirements);
-
-  // Gaussian
-  NS_DECL_NSIDOMSVGFEMERGEELEMENT
-
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFEUnimplementedMOZElementBase::)
-
-  NS_FORWARD_NSIDOMNODE(nsSVGFEUnimplementedMOZElementBase::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGFEUnimplementedMOZElementBase::)
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-};
-
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEUnimplementedMOZ)
-
-//----------------------------------------------------------------------
-// nsISupports methods
-
-NS_IMPL_ADDREF_INHERITED(nsSVGFEUnimplementedMOZElement,nsSVGFEUnimplementedMOZElementBase)
-NS_IMPL_RELEASE_INHERITED(nsSVGFEUnimplementedMOZElement,nsSVGFEUnimplementedMOZElementBase)
-
-NS_INTERFACE_MAP_BEGIN(nsSVGFEUnimplementedMOZElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGFEUnimplementedMOZElement)
-  NS_INTERFACE_MAP_ENTRY(nsISVGFilter)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGFEUnimplementedMOZElement)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFEUnimplementedMOZElementBase)
-
-//----------------------------------------------------------------------
-// nsIDOMNode methods
-
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEUnimplementedMOZElement)
-
-NS_IMETHODIMP
-nsSVGFEUnimplementedMOZElement::Filter(nsSVGFilterInstance *instance)
-{
-  /* should never be called */
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsSVGFEUnimplementedMOZElement::GetRequirements(PRUint32 *aRequirements)
-{
-  /* should never be called */
-  return NS_ERROR_NOT_IMPLEMENTED;
 }

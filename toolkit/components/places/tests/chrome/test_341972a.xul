@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Update Livemark SiteURI"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+/*
+ Test updating livemark siteURI to the value from the feed
+ */
+SimpleTest.waitForExplicitFinish();
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+function uri(spec) {
+  return iosvc.newURI(spec, null, null);
+}
+
+var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
+              getService(Ci.nsILivemarkService);
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+
+var toolbarFolderId = bmsvc.toolbarFolder;
+
+var observer =
+{
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsINavBookmarkObserver) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsINavBookmarkObserve
+  onBeginUpdateBatch: function(){},
+  onEndUpdateBatch: function(){
+    setTimeout(runTest, 1000);
+    bmsvc.removeObserver(this);
+  },
+  onItemAdded: function(itemId, folder, index) {},
+  onItemRemoved: function(itemId, folder, index){},
+  onItemChanged: function(itemId, property, isAnnotationProperty, value){},
+  onItemVisited: function(itemId, aVisitID, time){},
+  onItemMoved: function(itemId, oldParent, oldIndex, newParent, newIndex){},
+
+};
+
+function runTest() {
+  // site URI should have changed from the localhost we used while creating
+  // to the example.org that's in the feed
+  ok(lmsvc.getSiteURI(gLivemarkId).equals(uri(FEEDSITESPEC)),
+     "livemark site URI not reset to value in feed");
+
+  // clean up
+  bmsvc.removeFolder(gLivemarkId);
+  SimpleTest.finish();
+}
+
+var root = bmsvc.bookmarksRoot;
+const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
+const INITIALSITESPEC = "http://localhost:8888/";
+const FEEDSITESPEC = "http://example.org/"; 
+
+gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, toolbarFolderId, "foo",
+                                             uri(INITIALSITESPEC),
+                                             uri(FEEDSPEC), -1);
+bmsvc.addObserver(observer, false);
+lmsvc.reloadLivemarkFolder(gLivemarkId);
+
+]]>
+</script>
+
+</window>
