@@ -236,10 +236,11 @@ nsresult gfxWindowsSurface::EndPage()
     return NS_OK;
 }
 
-PRInt32 gfxWindowsSurface::GetDefaultContextFlags()
+PRInt32 gfxWindowsSurface::GetDefaultContextFlags() const
 {
     if (mForPrinting)
-        return gfxContext::FLAG_SIMPLIFY_OPERATORS;
+        return gfxContext::FLAG_SIMPLIFY_OPERATORS |
+               gfxContext::FLAG_DISABLE_SNAPPING;
 
     return 0;
 }
