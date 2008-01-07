@@ -43,6 +43,7 @@
 /* for the output stream */
 #include "nsCOMPtr.h"
 #include "nsIOutputStream.h"
+#include "gfxContext.h"
 
 class THEBES_API gfxPSSurface : public gfxASurface {
 public:
