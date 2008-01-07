@@ -305,6 +305,21 @@ PlacesTreeView.prototype = {
     if (aContainer.viewIndex != -1)
       replaceCount-=1;
 
+    // Persist selection state
+    var nodesToSelect = [];
+    var selection = this.selection;
+    var rc = selection.getRangeCount();
+    for (var rangeIndex = 0; rangeIndex < rc; rangeIndex++) {
+      var min = { }, max = { };
+      selection.getRangeAt(rangeIndex, min, max);
+      var lastIndex = Math.min(max.value, startReplacement + replaceCount -1);
+      if (min.value < startReplacement || min.value > lastIndex)
+        continue;
+
+      for (var nodeIndex = min.value; nodeIndex <= lastIndex; nodeIndex++)
+        nodesToSelect.push(this._visibleElements[nodeIndex]);
+    }
+
     // Mark the removes as invisible
     for (var i = 0; i < replaceCount; i++)
       this._visibleElements[startReplacement + i].viewIndex = -1;
@@ -313,22 +328,6 @@ PlacesTreeView.prototype = {
     var newElements = [];
     var toOpenElements = [];
     this._buildVisibleSection(aContainer, newElements, toOpenElements, startReplacement);
-
-    // Persist selection state
-    var nodesToSelect = [];
-    var selection = this.selection;
-    var rc = selection.getRangeCount();
-    for (var rangeIndex = 0; rangeIndex < rc; rangeIndex++) {
-      var min = { }, max = { };
-      selection.getRangeAt(rangeIndex, min, max);
-      if (min.value > startReplacement + replaceCount)
-        continue;
-
-      for (var nodeIndex = min.value; nodeIndex <= max.value; nodeIndex++) {
-        if (newElements.indexOf(this._visibleElements[nodeIndex]) != -1)
-          nodesToSelect.push(this._visibleElements[nodeIndex]);
-      }
-    }
 
     // actually update the visible list
     this._visibleElements =
@@ -377,7 +376,29 @@ PlacesTreeView.prototype = {
     if (nodesToSelect.length > 0) {
       for each (var node in nodesToSelect) {
         var index = node.viewIndex;
-        selection.rangedSelect(index, index, true);
+
+        // if the same node was used (happens on sorting-changes),
+        // just use viewIndex
+        if (index == -1) { // otherwise, try to find an equal node
+          var itemId = node.itemId;
+          if (itemId != 1) { // bookmark-nodes in queries case
+            for (i=0; i < newElements.length && index == -1; i++) {
+              if (newElements[i].itemId == itemId)
+                index = newElements[i].viewIndex;
+            }
+          }
+          else { // history nodes
+            var uri = node.uri;
+            if (uri) {
+              for (i=0; i < newElements.length && index == -1; i++) {
+                if (newElements[i].uri == uri)
+                  index = newElements[i].viewIndex;
+              }
+            }
+          }
+        }
+        if (index != -1)
+          selection.rangedSelect(index, index, true);
       }
       selection.selectEventsSuppressed = false;
     }
@@ -472,7 +493,7 @@ PlacesTreeView.prototype = {
   },
 
   _sortTypeToColumnType: function PTV__sortTypeToColumnType(aSortType) {
-    switch(aSortType) {
+    switch (aSortType) {
       case Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING:
         return [this.COLUMN_TYPE_TITLE, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING:
@@ -508,6 +529,10 @@ PlacesTreeView.prototype = {
         return [this.COLUMN_TYPE_LASTMODIFIED, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING:
         return [this.COLUMN_TYPE_LASTMODIFIED, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_TAGS_ASCENDING:
+        return [this.COLUMN_TYPE_TAGS, false];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_TAGS_DESCENDING:
+        return [this.COLUMN_TYPE_TAGS, true];
     }
     return [this.COLUMN_TYPE_UNKNOWN, false];
   },
@@ -636,7 +661,7 @@ PlacesTreeView.prototype = {
   itemRemoved: function PTV_itemRemoved(aParent, aItem, aOldIndex) {
     NS_ASSERT(this._result, "Got a notification but have no result!");
     if (!this._tree)
-        return; // nothing to do
+      return; // nothing to do
 
     var oldViewIndex = aItem.viewIndex;
     if (oldViewIndex < 0)
@@ -685,6 +710,55 @@ PlacesTreeView.prototype = {
     // redraw parent because twisty may have changed
     if (!aParent.hasChildren)
       this.itemChanged(aParent);
+  },
+
+  /**
+   * Be careful, aOldIndex and aNewIndex specify the index in the
+   * corresponding parent nodes, not the visible indexes.
+   */
+  itemMoved:
+  function PTV_itemMoved(aItem, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+    NS_ASSERT(this._result, "Got a notification but have no result!");
+    if (!this._tree)
+      return; // nothing to do
+
+    var oldViewIndex = aItem.viewIndex;
+    if (oldViewIndex < 0)
+      return; // item was already invisible, nothing to do
+
+    // this may have been a container, in which case it has a lot of rows
+    var count = this._countVisibleRowsForItem(aItem);
+
+    // Persist selection state
+    var nodesToSelect = [];
+    var selection = this.selection;
+    var rc = selection.getRangeCount();
+    for (var rangeIndex = 0; rangeIndex < rc; rangeIndex++) {
+      var min = { }, max = { };
+      selection.getRangeAt(rangeIndex, min, max);
+      var lastIndex = Math.min(max.value, oldViewIndex + count -1);
+      if (min.value < oldViewIndex || min.value > lastIndex)
+        continue;
+
+      for (var nodeIndex = min.value; nodeIndex <= lastIndex; nodeIndex++)
+        nodesToSelect.push(this._visibleElements[nodeIndex]);
+    }
+    if (nodesToSelect.length > 0)
+      selection.selectEventsSuppressed = true;
+
+    // remove the nodes, let itemInserted restore all of its contents
+    this._visibleElements.splice(oldViewIndex, count);
+    this._tree.rowCountChanged(oldViewIndex, -count);
+    this.itemInserted(aNewParent, aItem, aNewIndex);
+
+    // restore selection
+    if (nodesToSelect.length > 0) {
+      for each (var node in nodesToSelect) {
+        var index = node.viewIndex;
+        selection.rangedSelect(index, index, true);
+      }
+      selection.selectEventsSuppressed = false;
+    }
   },
 
   /**
@@ -1079,13 +1153,7 @@ PlacesTreeView.prototype = {
           return "";
         return node.title || PlacesUtils.getString("noTitle");
       case this.COLUMN_TYPE_TAGS:
-        if (PlacesUtils.nodeIsURI(node)) {
-          var tagsvc = PlacesUtils.tagging;
-          var uri = PlacesUtils._uri(node.uri);
-          var tags = tagsvc.getTagsForURI(uri, {});
-          return tags.join(", ");
-        }
-        return "";
+        return node.tags;
       case this.COLUMN_TYPE_URI:
         if (PlacesUtils.nodeIsURI(node))
           return node.uri;
@@ -1169,10 +1237,6 @@ PlacesTreeView.prototype = {
   cycleHeader: function PTV_cycleHeader(aColumn) {
     if (!this._result)
       throw Cr.NS_ERROR_UNEXPECTED;
-
-    // Currently cannot sort by tags
-    if (aColumn.id == "tags")
-      return;
 
     this._enumerateObservers("onCycleHeader", [aColumn]);
 
@@ -1279,6 +1343,15 @@ PlacesTreeView.prototype = {
           newSort = NHQO.SORT_BY_NONE;
         else
           newSort = NHQO.SORT_BY_LASTMODIFIED_ASCENDING;
+
+        break;
+      case this.COLUMN_TYPE_TAGS:
+        if (oldSort == NHQO.SORT_BY_TAGS_ASCENDING)
+          newSort = NHQO.SORT_BY_TAGS_DESCENDING;
+        else if (allowTriState && oldSort == NHQO.SORT_BY_TAGS_DESCENDING)
+          newSort = NHQO.SORT_BY_NONE;
+        else
+          newSort = NHQO.SORT_BY_TAGS_ASCENDING;
 
         break;
       default:

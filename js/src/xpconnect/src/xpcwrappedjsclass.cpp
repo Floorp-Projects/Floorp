@@ -513,7 +513,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     }
 
     // Objects internal to xpconnect are the only objects that even know *how*
-    // to ask for this iid. And none of them bother refcoutning the thing.
+    // to ask for this iid. And none of them bother refcounting the thing.
     if(aIID.Equals(NS_GET_IID(WrappedJSIdentity)))
     {
         // asking to find out if this is a wrapper object

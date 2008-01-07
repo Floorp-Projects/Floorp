@@ -1,0 +1,16 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style id="style">
+.penguin { overflow: hidden; }
+.penguin:first-line { }
+</style>
+<script>
+function boom()
+{
+  document.getElementById("style").textContent += "";
+  document.getElementById("td").className = "penguin";
+}
+</script>
+</head>
+<body onload="boom();"><td id="td">Text</td></body>
+</html>

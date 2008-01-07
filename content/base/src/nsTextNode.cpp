@@ -114,9 +114,9 @@ public:
   virtual nsGenericDOMDataNode *CloneDataNode(nsINodeInfo *aNodeInfo,
                                               PRBool aCloneText) const
   {
-    nsAttributeTextNode *it = new nsAttributeTextNode(aNodeInfo,
-                                                      mNameSpaceID,
-                                                      mAttrName);
+    nsAttributeTextNode *it = new (aNodeInfo) nsAttributeTextNode(aNodeInfo,
+                                                                  mNameSpaceID,
+                                                                  mAttrName);
     if (it && aCloneText) {
       it->mText = mText;
     }
@@ -154,7 +154,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsIContent *instance = new nsTextNode(ni);
+  nsIContent *instance = new (ni) nsTextNode(ni);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -220,7 +220,7 @@ nsTextNode::IsNodeOfType(PRUint32 aFlags) const
 nsGenericDOMDataNode*
 nsTextNode::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  nsTextNode *it = new nsTextNode(aNodeInfo);
+  nsTextNode *it = new (aNodeInfo) nsTextNode(aNodeInfo);
   if (it && aCloneText) {
     it->mText = mText;
   }
@@ -280,8 +280,8 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsAttributeTextNode* textNode = new nsAttributeTextNode(ni, aNameSpaceID,
-                                                          aAttrName);
+  nsAttributeTextNode* textNode = new (ni) nsAttributeTextNode(ni, aNameSpaceID,
+                                                               aAttrName);
   if (!textNode) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

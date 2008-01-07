@@ -179,8 +179,8 @@ nsDOMAttributeMap::GetAttribute(nsINodeInfo* aNodeInfo,
       // the attribute node.
       mContent->GetAttr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom(), value);
     }
-    nsCOMPtr<nsIDOMNode> newAttr = new nsDOMAttribute(aRemove ? nsnull : this,
-                                                      aNodeInfo, value);
+    nsCOMPtr<nsIDOMNode> newAttr =
+      new (aNodeInfo) nsDOMAttribute(aRemove ? nsnull : this, aNodeInfo, value);
     if (!newAttr) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+<script>
+
+function boom() {
+  var table = document.getElementById("table");
+
+  var doomed = document.getElementById("doomed"); 
+  doomed.parentNode.removeChild(doomed);
+
+  var colgroup1 = document.createElement("colgroup");
+  table.appendChild(colgroup1);
+
+  var thead = document.createElement("thead");
+  var tr = document.createElement("tr");
+  var td = document.createElement("td");
+  td.setAttribute("colspan", 0);
+  tr.appendChild(td);
+  thead.appendChild(tr);
+  table.insertBefore(thead, colgroup1);
+
+  colgroup1.parentNode.removeChild(colgroup1);
+
+  var colgroup2 = document.createElement("colgroup");
+  table.appendChild(colgroup2);
+}
+  
+</script>
+</head>
+
+<body onload="boom();">
+
+<table id="table"><tbody><tr id="doomed"><td>x</tr></tbody></table>
+
+</body>
+</html>

@@ -655,9 +655,6 @@ public:
     XPCContext* GetXPCContext(JSContext* cx);
     XPCContext* SyncXPCContextList(JSContext* cx = nsnull);
 
-    JSBool GetMainThreadOnlyGC() const   {return mMainThreadOnlyGC;}
-    void   SetMainThreadOnlyGC(JSBool b) {mMainThreadOnlyGC = b;}
-    
     JSBool GetDeferReleases() const {return mDeferReleases;}
     void   SetDeferReleases(JSBool b) 
         {/* If deferring is turned off while any are pending they'll leak! */
@@ -789,7 +786,6 @@ private:
     PRThread* mThreadRunningGC;
     nsVoidArray mWrappedJSToReleaseArray;
     nsVoidArray mNativesToReleaseArray;
-    JSBool mMainThreadOnlyGC;
     JSBool mDeferReleases;
     JSBool mDoingFinalization;
     XPCRootSetElem *mVariantRoots;
@@ -919,6 +915,21 @@ private:
 #define NATIVE_CALLER  XPCContext::LANG_NATIVE
 #define JS_CALLER      XPCContext::LANG_JS
 
+// class to export a JSString as an const nsAString, no refcounting :(
+class XPCReadableJSStringWrapper : public nsDependentString
+{
+public:
+    typedef nsDependentString::char_traits char_traits;
+
+    XPCReadableJSStringWrapper(PRUnichar *chars, size_t length) :
+        nsDependentString(chars, length)
+    { }
+
+    XPCReadableJSStringWrapper() :
+        nsDependentString(char_traits::sEmptyBuffer, char_traits::sEmptyBuffer)
+    { SetIsVoid(PR_TRUE); }
+};
+
 // No virtuals
 // XPCCallContext is ALWAYS declared as a local variable in some function;
 // i.e. instance lifetime is always controled by some C++ function returning.
@@ -1019,6 +1030,9 @@ public:
 
     operator JSContext*() const {return GetJSContext();}
 
+    XPCReadableJSStringWrapper *NewStringWrapper(PRUnichar *str, PRUint32 len);
+    void DeleteString(nsAString *string);
+
 #ifdef XPC_IDISPATCH_SUPPORT
     /**
      * Sets the IDispatch information for the context
@@ -1103,8 +1117,29 @@ private:
     // XPCContext returns true.  We're not responsible for rooting this object;
     // whoever sets it on us needs to deal with that.
     JSObject*                       mCallee;
-};
 
+#define XPCCCX_STRING_CACHE_SIZE 2
+
+    // String wrapper entry, holds a string, and a boolean that tells
+    // whether the string is in use or not.
+    struct StringWrapperEntry
+    {
+        StringWrapperEntry()
+            : mInUse(PR_FALSE)
+        {
+        }
+
+        XPCReadableJSStringWrapper mString;
+        PRBool mInUse;
+    };
+
+    // Reserve space for XPCCCX_STRING_CACHE_SIZE string wrapper
+    // entries for use on demand. It's important to not make this be
+    // string class members since we don't want to pay the cost of
+    // calling the constructors and destructors when the strings
+    // aren't being used.
+    char mStringWrapperData[sizeof(StringWrapperEntry) * XPCCCX_STRING_CACHE_SIZE];
+};
 
 /***************************************************************************
 ****************************************************************************
@@ -1118,8 +1153,10 @@ private:
 // visibility from more than one .cpp file.
 
 extern JSExtendedClass XPC_WN_NoHelper_JSClass;
-extern JSClass XPC_WN_NoMods_Proto_JSClass;
-extern JSClass XPC_WN_ModsAllowed_Proto_JSClass;
+extern JSClass XPC_WN_NoMods_WithCall_Proto_JSClass;
+extern JSClass XPC_WN_NoMods_NoCall_Proto_JSClass;
+extern JSClass XPC_WN_ModsAllowed_WithCall_Proto_JSClass;
+extern JSClass XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
 extern JSClass XPC_WN_Tearoff_JSClass;
 
 extern JSObjectOps * JS_DLL_CALLBACK
@@ -1139,9 +1176,14 @@ XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
 extern JSBool
 xpc_InitWrappedNativeJSOps();
 
+// Maybe this macro should check for class->enumerate ==
+// XPC_WN_Shared_Proto_Enumerate or something rather than checking for
+// 4 classes?
 #define IS_PROTO_CLASS(clazz)                                                 \
-          ((clazz) == &XPC_WN_NoMods_Proto_JSClass ||                         \
-           (clazz) == &XPC_WN_ModsAllowed_Proto_JSClass)
+          ((clazz) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||                \
+           (clazz) == &XPC_WN_NoMods_NoCall_Proto_JSClass ||                  \
+           (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||           \
+           (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
 
 // Comes from xpcwrappednativeops.cpp
 extern void
@@ -2656,21 +2698,6 @@ private:
 
 /***************************************************************************/
 
-// class to export a JSString as an const nsAString, no refcounting :(
-class XPCReadableJSStringWrapper : public nsDependentString
-{
-public:
-    typedef nsDependentString::char_traits char_traits;
-
-    XPCReadableJSStringWrapper(PRUnichar *chars, size_t length) :
-        nsDependentString(chars, length)
-    { }
-
-    XPCReadableJSStringWrapper() :
-        nsDependentString(char_traits::sEmptyBuffer, char_traits::sEmptyBuffer)
-    { SetIsVoid(PR_TRUE); }
-};
-
 // readable string conversions, static methods only
 class XPCStringConvert
 {
@@ -2679,7 +2706,8 @@ public:
     static JSString *ReadableToJSString(JSContext *cx,
                                         const nsAString &readable);
 
-    static XPCReadableJSStringWrapper *JSStringToReadable(JSString *str);
+    static XPCReadableJSStringWrapper *JSStringToReadable(XPCCallContext& ccx,
+                                                          JSString *str);
 
     static void ShutdownDOMStringFinalizer();
 

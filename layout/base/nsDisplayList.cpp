@@ -132,9 +132,10 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
-  for (PRUint32 i = 0; i < mFramesMarkedForDisplay.Length(); ++i) {
-    UnmarkFrameForDisplay(mFramesMarkedForDisplay[i]);
-  }
+  NS_ASSERTION(mFramesMarkedForDisplay.Length() == 0,
+               "All frames should have been unmarked");
+  NS_ASSERTION(mPresShellStates.Length() == 0,
+               "All presshells should have been exited");
 
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
@@ -142,57 +143,58 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
 
 nsICaret *
 nsDisplayListBuilder::GetCaret() {
-  NS_ASSERTION(mCaretStates.Length() > 0, "Not enough presshells");
-
-  nsIFrame* frame = GetCaretFrame();
-  if (!frame) {
-    return nsnull;
-  }
-  nsIPresShell* shell = frame->PresContext()->PresShell();
   nsCOMPtr<nsICaret> caret;
-  shell->GetCaret(getter_AddRefs(caret));
-
+  CurrentPresShellState()->mPresShell->GetCaret(getter_AddRefs(caret));
   return caret;
 }
 
 void
 nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
                                      const nsRect& aDirtyRect) {
+  PresShellState* state = mPresShellStates.AppendElement();
+  if (!state)
+    return;
+  state->mPresShell = aReferenceFrame->PresContext()->PresShell();
+  state->mCaretFrame = nsnull;
+  state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
+
   if (!mBuildCaret)
     return;
 
-  nsIPresShell* shell = aReferenceFrame->PresContext()->PresShell();
   nsCOMPtr<nsICaret> caret;
-  shell->GetCaret(getter_AddRefs(caret));
-  nsIFrame* frame = caret->GetCaretFrame();
+  state->mPresShell->GetCaret(getter_AddRefs(caret));
+  state->mCaretFrame = caret->GetCaretFrame();
 
-  if (frame) {
+  if (state->mCaretFrame) {
     // Check if the dirty rect intersects with the caret's dirty rect.
     nsRect caretRect =
-      caret->GetCaretRect() + frame->GetOffsetTo(aReferenceFrame);
+      caret->GetCaretRect() + state->mCaretFrame->GetOffsetTo(aReferenceFrame);
     if (caretRect.Intersects(aDirtyRect)) {
       // Okay, our rects intersect, let's mark the frame and all of its ancestors.
-      mFramesMarkedForDisplay.AppendElement(frame);
-      MarkFrameForDisplay(frame, nsnull);
+      mFramesMarkedForDisplay.AppendElement(state->mCaretFrame);
+      MarkFrameForDisplay(state->mCaretFrame, nsnull);
     }
   }
-
-  mCaretStates.AppendElement(frame);
 }
 
 void
 nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
                                      const nsRect& aDirtyRect)
 {
-  if (!mBuildCaret)
+  if (CurrentPresShellState()->mPresShell != aReferenceFrame->PresContext()->PresShell()) {
+    // Must have not allocated a state for this presshell, presumably due
+    // to OOM.
     return;
+  }
 
-  // Pop the state off.
-  NS_ASSERTION(mCaretStates.Length() > 0, "Leaving too many PresShell");
-  NS_ASSERTION(GetCaret() || GetCaretFrame() == nsnull,
-               "GetCaret and LeavePresShell diagree");
-
-  mCaretStates.SetLength(mCaretStates.Length() - 1);
+  // Unmark and pop off the frames marked for display in this pres shell.
+  PRUint32 firstFrameForShell = CurrentPresShellState()->mFirstFrameMarkedForDisplay;
+  for (PRUint32 i = firstFrameForShell;
+       i < mFramesMarkedForDisplay.Length(); ++i) {
+    UnmarkFrameForDisplay(mFramesMarkedForDisplay[i]);
+  }
+  mFramesMarkedForDisplay.SetLength(firstFrameForShell);
+  mPresShellStates.SetLength(mPresShellStates.Length() - 1);
 }
 
 void
@@ -329,23 +331,32 @@ void nsDisplayList::DeleteAll() {
   }
 }
 
-nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) const {
-  nsVoidArray elements;
+nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                                 nsDisplayItem::HitTestState* aState) const {
+  PRInt32 itemBufferStart = aState->mItemBuffer.Length();
   nsDisplayItem* item;
   for (item = GetBottom(); item; item = item->GetAbove()) {
-    elements.AppendElement(item);
+    aState->mItemBuffer.AppendElement(item);
   }
-  for (PRInt32 i = elements.Count() - 1; i >= 0; --i) {
-    item = static_cast<nsDisplayItem*>(elements.ElementAt(i));
+  for (PRInt32 i = aState->mItemBuffer.Length() - 1; i >= itemBufferStart; --i) {
+    // Pop element off the end of the buffer. We want to shorten the buffer
+    // so that recursive calls to HitTest have more buffer space.
+    item = aState->mItemBuffer[i];
+    aState->mItemBuffer.SetLength(i);
+
     if (item->GetBounds(aBuilder).Contains(aPt)) {
-      nsIFrame* f = item->HitTest(aBuilder, aPt);
+      nsIFrame* f = item->HitTest(aBuilder, aPt, aState);
       // Handle the XUL 'mousethrough' feature.
       if (f) {
-        if (!f->GetMouseThrough())
+        if (!f->GetMouseThrough()) {
+          aState->mItemBuffer.SetLength(itemBufferStart);
           return f;
+        }
       }
     }
   }
+  NS_ASSERTION(aState->mItemBuffer.Length() == itemBufferStart,
+               "How did we forget to pop some elements?");
   return nsnull;
 }
 
@@ -461,7 +472,7 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
 PRBool
 nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
-  if (mFrame->IsThemed())
+  if (mIsThemed)
     return PR_FALSE;
 
   PRBool isCanvas;
@@ -479,7 +490,7 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
 PRBool
 nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
   // theme background overrides any other background
-  if (mFrame->IsThemed())
+  if (mIsThemed)
     return PR_FALSE;
 
   PRBool isCanvas;
@@ -530,6 +541,14 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
                                   *mFrame->GetStyleBorder(),
                                   *mFrame->GetStylePadding(),
                                   mFrame->HonorPrintBackgroundSettings());
+}
+
+nsRect
+nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder) {
+  if (mIsThemed)
+    return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+
+  return nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
 }
 
 nsRect
@@ -624,8 +643,9 @@ nsDisplayWrapList::~nsDisplayWrapList() {
 }
 
 nsIFrame*
-nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
-  return mList.HitTest(aBuilder, aPt);
+nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                           HitTestState* aState) {
+  return mList.HitTest(aBuilder, aPt, aState);
 }
 
 nsRect
@@ -775,7 +795,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   aCtx->GetDeviceContext(*getter_AddRefs(devCtx));
   float a2p = 1.0f / devCtx->AppUnitsPerDevPixel();
 
-  nsRefPtr<gfxContext> ctx = (gfxContext*)aCtx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  nsRefPtr<gfxContext> ctx = aCtx->ThebesContext();
 
   ctx->Save();
 

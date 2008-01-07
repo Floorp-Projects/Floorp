@@ -40,7 +40,6 @@
 #define nsRenderingContextWin_h___
 
 #include "nsIRenderingContext.h"
-#include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsFontMetricsWin.h"
 #include "nsPoint.h"

@@ -74,7 +74,6 @@ WIN_LIBS=                                       \
 #include "nsIWidget.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsWin.h"
-#include "nsUnitConversion.h"
 #include "nsIPrintOptions.h"
 #include "nsWidgetsCID.h"
 static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);

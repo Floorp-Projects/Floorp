@@ -57,13 +57,13 @@ endif
 endif
 
 ifdef GNU_CC
-MODULE_OPTIMIZE_FLAGS = -O3
+MODULE_OPTIMIZE_FLAGS = -O2
 else
 ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -xO5
 endif
 ifeq ($(OS_ARCH),WINNT)
-MODULE_OPTIMIZE_FLAGS = -Ox
+MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif
 

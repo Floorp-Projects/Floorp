@@ -554,6 +554,27 @@ nsSVGFilterInstance::LookupImage(const nsAString &aName,
   }
 }
 
+nsSVGFilterInstance::ColorModel
+nsSVGFilterInstance::LookupImageColorModel(const nsAString &aName)
+{
+  ImageEntry *entry;
+
+  if (aName.IsEmpty())
+    entry = mLastImage;
+  else
+    mImageDictionary.Get(aName, &entry);
+
+  if (entry)
+    return entry->mColorModel;
+
+  // We'll reach this point if someone specifies a nonexistent input
+  // for a filter, as feDisplacementMap need to find the color model
+  // before the filter element calls AcquireSourceImage() which both
+  // uses the color model and tells us if the input exists.
+
+  return ColorModel(ColorModel::SRGB, ColorModel::PREMULTIPLIED);
+}
+
 void
 nsSVGFilterInstance::DefineImage(const nsAString &aName,
                                  gfxImageSurface *aImage,

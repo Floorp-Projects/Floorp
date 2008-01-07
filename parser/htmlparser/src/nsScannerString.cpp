@@ -483,6 +483,25 @@ nsScannerSharedSubstring::MakeMutable()
    * utils -- based on code from nsReadableUtils.cpp
    */
 
+// private helper function
+static inline
+nsAString::iterator&
+copy_multifragment_string( nsScannerIterator& first, const nsScannerIterator& last, nsAString::iterator& result )
+  {
+    typedef nsCharSourceTraits<nsScannerIterator> source_traits;
+    typedef nsCharSinkTraits<nsAString::iterator> sink_traits;
+
+    while ( first != last )
+      {
+        PRUint32 distance = source_traits::readable_distance(first, last);
+        sink_traits::write(result, source_traits::read(first), distance);
+        NS_ASSERTION(distance > 0, "|copy_multifragment_string| will never terminate");
+        source_traits::advance(first, distance);
+      }
+
+    return result;
+  }
+
 void
 CopyUnicodeTo( const nsScannerIterator& aSrcStart,
                const nsScannerIterator& aSrcEnd,
@@ -496,7 +515,7 @@ CopyUnicodeTo( const nsScannerIterator& aSrcStart,
     aDest.BeginWriting(writer);
     nsScannerIterator fromBegin(aSrcStart);
     
-    copy_string(fromBegin, aSrcEnd, writer);
+    copy_multifragment_string(fromBegin, aSrcEnd, writer);
   }
 
 void
@@ -527,7 +546,7 @@ AppendUnicodeTo( const nsScannerIterator& aSrcStart,
     aDest.BeginWriting(writer).advance(oldLength);
     nsScannerIterator fromBegin(aSrcStart);
     
-    copy_string(fromBegin, aSrcEnd, writer);
+    copy_multifragment_string(fromBegin, aSrcEnd, writer);
   }
 
 PRBool

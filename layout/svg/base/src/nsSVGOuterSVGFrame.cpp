@@ -54,6 +54,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsSVGMatrix.h"
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
 #include "nsIDeviceContext.h"
@@ -355,6 +356,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   if (newViewportSize != svgElem->GetViewportSize() ||
       mFullZoom != PresContext()->GetFullZoom()) {
     svgElem->SetViewportSize(newViewportSize);
+    mViewportInitialized = PR_TRUE;
     mFullZoom = PresContext()->GetFullZoom();
     NotifyViewportChange();
   }
@@ -379,12 +381,11 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
                               const nsHTMLReflowState*  aReflowState,
                               nsDidReflowStatus aStatus)
 {
+  PRBool firstReflow = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+
   nsresult rv = nsSVGOuterSVGFrameBase::DidReflow(aPresContext,aReflowState,aStatus);
 
-  if (!mViewportInitialized) {
-    // it is now
-    mViewportInitialized = PR_TRUE;
-
+  if (firstReflow) {
     // call InitialUpdate() on all frames:
     nsIFrame* kid = mFrames.FirstChild();
     while (kid) {
@@ -424,14 +425,16 @@ public:
   }
 #endif
 
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("SVGEventReceiver")
 };
 
 nsIFrame*
-nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt)
+nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                      HitTestState* aState)
 {
   return static_cast<nsSVGOuterSVGFrame*>(mFrame)->
     GetFrameForPoint(aPt - aBuilder->ToReferenceFrame(mFrame));
@@ -694,14 +697,7 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
   
   // inform children
   SuspendRedraw();
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
-    if (SVGFrame)
-      SVGFrame->NotifyCanvasTMChanged(PR_FALSE); 
-    kid = kid->GetNextSibling();
-  }
+  nsSVGUtils::NotifyChildrenCanvasTMChanged(this, PR_FALSE);
   UnsuspendRedraw();
   return NS_OK;
 }
@@ -713,15 +709,21 @@ already_AddRefed<nsIDOMSVGMatrix>
 nsSVGOuterSVGFrame::GetCanvasTM()
 {
   if (!mCanvasTM) {
-    nsCOMPtr<nsIDOMSVGMatrix> vb2vp;
     nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
-    svgElement->GetViewboxToViewportTransform(getter_AddRefs(vb2vp));
 
-    // Scale the transform from CSS pixel space to device pixel space
     float devPxPerCSSPx =
       1 / PresContext()->AppUnitsToFloatCSSPixels(
                                 PresContext()->AppUnitsPerDevPixel());
-    vb2vp->Scale(devPxPerCSSPx, getter_AddRefs(mCanvasTM));
+    nsCOMPtr<nsIDOMSVGMatrix> devPxToCSSPxMatrix;
+    NS_NewSVGMatrix(getter_AddRefs(devPxToCSSPxMatrix),
+                    devPxPerCSSPx, 0.0f,
+                    0.0f, devPxPerCSSPx);
+
+    nsCOMPtr<nsIDOMSVGMatrix> viewBoxMatrix;
+    svgElement->GetViewboxToViewportTransform(getter_AddRefs(viewBoxMatrix));
+
+    // PRE-multiply px conversion!
+    devPxToCSSPxMatrix->Multiply(viewBoxMatrix, getter_AddRefs(mCanvasTM));
 
     // our content is the document element so we must premultiply the values
     // of its currentScale and currentTranslate properties

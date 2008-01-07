@@ -596,6 +596,18 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         valueStr = tempURI;
     }
 
+    if (mIsWholeDocument && aTagName == nsGkAtoms::meta &&
+        attrName == nsGkAtoms::content) {
+      // If we're serializing a <meta http-equiv="content-type">,
+      // use the proper value, rather than what's in the document.
+      nsAutoString header;
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+      if (header.LowerCaseEqualsLiteral("content-type")) {
+        valueStr = NS_LITERAL_STRING("text/html; charset=") +
+          NS_ConvertASCIItoUTF16(mCharset);
+      }
+    }
+
     attrName->ToString(nameStr);
     
     /*If we already crossed the MaxColumn limit or 
@@ -636,16 +648,6 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
                                          nsGkAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
-
-  // We need too skip any meta tags that set the content type
-  // becase we set our own later.
-  if (mIsWholeDocument && name == nsGkAtoms::meta) {
-    nsAutoString header;
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
-    if (header.LowerCaseEqualsLiteral("content-type")) {
-      return NS_OK;
-    }
-  }
 
   if (name == nsGkAtoms::br && mPreLevel > 0
       && (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
@@ -742,12 +744,36 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   }
 
   if (mIsWholeDocument && name == nsGkAtoms::head) {
-    AppendToString(mLineBreak, aStr);
-    AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
-                   aStr);
-    AppendToString(NS_LITERAL_STRING(" content=\"text/html; charset="), aStr);
-    AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr);
-    AppendToString(NS_LITERAL_STRING("\">"), aStr);
+    // Check if there already are any content-type meta children.
+    // If there are, they will be modified to use the correct charset.
+    // If there aren't, we'll insert one here.
+    PRBool hasMeta = PR_FALSE;
+    PRUint32 i, childCount = content->GetChildCount();
+    for (i = 0; i < childCount; ++i) {
+      nsIContent* child = content->GetChildAt(i);
+      if (child->IsNodeOfType(nsINode::eHTML) &&
+          child->Tag() == nsGkAtoms::meta &&
+          child->HasAttr(kNameSpaceID_None, nsGkAtoms::content)) {
+        nsAutoString header;
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+
+        printf("Header value = '%s'\n", NS_ConvertUTF16toUTF8(header).get());
+
+        if (header.LowerCaseEqualsLiteral("content-type")) {
+          hasMeta = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!hasMeta) {
+      AppendToString(mLineBreak, aStr);
+      AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
+                     aStr);
+      AppendToString(NS_LITERAL_STRING(" content=\"text/html; charset="), aStr);
+      AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr);
+      AppendToString(NS_LITERAL_STRING("\">"), aStr);
+    }
   }
 
   return NS_OK;
@@ -766,15 +792,6 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
                                          nsGkAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
-
-  // So that we don't mess up the line breaks.
-  if (mIsWholeDocument && name == nsGkAtoms::meta) {
-    nsAutoString header;
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
-    if (header.LowerCaseEqualsLiteral("content-type")) {
-      return NS_OK;
-    }
-  }
 
   if (name == nsGkAtoms::script) {
     nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aElement);

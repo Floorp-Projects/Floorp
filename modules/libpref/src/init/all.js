@@ -49,7 +49,7 @@
 
 pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);
-pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
+pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
@@ -172,28 +172,9 @@ pref("browser.frames.enabled", true);
 // form submission
 pref("browser.forms.submit.backwards_compatible", true);
 
-// xxxbsmedberg more toolkit prefs?
-// Tab browser preferences.
-pref("browser.tabs.autoHide", true);
-pref("browser.tabs.forceHide", false);
-pref("browser.tabs.warnOnClose", true);
-pref("browser.tabs.warnOnCloseOther", true);
-pref("browser.tabs.warnOnOpen", true);
-pref("browser.tabs.maxOpenBeforeWarn", 15);
-// 0 = append, 1 = replace
-pref("browser.tabs.loadGroup", 1);
-
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
-
-// lets new tab/window load something different than first window
-// -1 - use navigator startup preference
-//  0 - loads blank page
-//  1 - loads home page
-//  2 - loads last page visited
-pref("browser.tabs.loadOnNewTab", 0);
-pref("browser.windows.loadOnNewWindow", 1);
 
 // view source
 pref("view_source.syntax_highlight", true);
@@ -802,32 +783,31 @@ pref("network.proxy.autoconfig_retry_interval_max", 300);  // 5 minutes
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 
-pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
+pref("intl.accept_languages",               "chrome://global/locale/intl.properties");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
-pref("intl.menuitems.alwaysappendaccesskeys","chrome://navigator/locale/navigator.properties");
-pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.static",     "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more1",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more2",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more3",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more4",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more5",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.unicode",    "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.mailedit",           "chrome://navigator/locale/navigator.properties");
+pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
+pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.static",     "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more1",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more2",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more3",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more4",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more5",      "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.unicode",    "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.mailedit",           "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.cache",      "");
 pref("intl.charsetmenu.mailview.cache",     "");
 pref("intl.charsetmenu.composer.cache",     "");
 pref("intl.charsetmenu.browser.cache.size", 5);
-pref("intl.charset.detector",               "chrome://navigator/locale/navigator.properties");
-pref("intl.charset.default",                "chrome://navigator-platform/locale/navigator.properties");
-pref("intl.content.langcode",               "chrome://communicator-region/locale/region.properties");
+pref("intl.charset.detector",               "chrome://global/locale/intl.properties");
+pref("intl.charset.default",                "chrome://global-platform/locale/intl.properties");
 pref("intl.ellipsis",                       "chrome://global-platform/locale/intl.properties");
 pref("intl.locale.matchOS",                 false);
 // fallback charset list for Unicode conversion (converting from Unicode)
 // currently used for mail send only to handle symbol characters (e.g Euro, trademark, smartquotes)
 // for ISO-8859-1
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
-pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
+pref("font.language.group",                 "chrome://global/locale/intl.properties");
 
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Cambria Math, Standard Symbols L, DejaVu Sans");
 
@@ -2134,7 +2114,7 @@ pref("applications.telnet", "xterm -e telnet %h %p");
 pref("applications.tn3270", "xterm -e tn3270 %h");
 pref("applications.rlogin", "xterm -e rlogin %h");
 pref("applications.rlogin_with_user", "xterm -e rlogin %h -l %u");
-pref("print.print_command", "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
+pref("print.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
 pref("print.printer_list", ""); // list of printers, separated by spaces
 pref("print.print_reversed", false);
 pref("print.print_color", true);
@@ -2346,7 +2326,7 @@ pref("font.size.fixed.zh-HK", 16);
 // pref("print.postscript.enabled",      true);
 pref("print.postscript.paper_size",    "letter");
 pref("print.postscript.orientation",   "portrait");
-pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
+pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
 
 # XP_UNIX
 #endif
@@ -2468,8 +2448,8 @@ pref("font.name.monospace.x-unicode", "dt-interface user-ucs2.cjk_japan-0");
 
 #ifdef SOLARIS
 
-pref("print.postscript.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d'}${MOZ_PRINTER_NAME}");
-pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+'-d'}${MOZ_PRINTER_NAME}");
+pref("print.postscript.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+-d\"$MOZ_PRINTER_NAME\"}");
+pref("print.print_command", "lp -c -s ${MOZ_PRINTER_NAME:+-d\"$MOZ_PRINTER_NAME\"}");
 
 # Solaris
 #endif

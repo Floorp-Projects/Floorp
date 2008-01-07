@@ -242,6 +242,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 }
 
 .autocomplete-richlistitem {
+  -moz-box-orient: vertical;
   overflow:-moz-hidden-unscrollable;
   padding: 1px 0px 1px 2px;
   border-bottom: 1px solid ThreeDShadow;

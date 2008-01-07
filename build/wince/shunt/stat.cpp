@@ -48,12 +48,12 @@ extern "C" {
 #endif
 
 
-MOZCE_SHUNT_API int mozce_stat(const char* inPath, struct mozce_stat* outStats)
+MOZCE_SHUNT_API int stat(const char* inPath, struct stat* outStats)
 {
     MOZCE_PRECHECK
         
 #ifdef DEBUG
-        mozce_printf("mozce_stat called\n");
+        mozce_printf("stat called\n");
 #endif
     
     int retval = -1;
@@ -111,8 +111,8 @@ MOZCE_SHUNT_API int mozce_stat(const char* inPath, struct mozce_stat* outStats)
                 else
                 {	
                     // From Errno.
-                    extern int mozce_errno;
-                    mozce_errno = ENOENT;
+                    extern int errno;
+                    errno = ENOENT;
                 }
             }
         }

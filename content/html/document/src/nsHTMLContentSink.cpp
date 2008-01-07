@@ -931,7 +931,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
 
   nsGenericHTMLElement* content = mStack[mStackPos].mContent;
 
-  content->Compact();
 
   // If we're in a state where we do append notifications as
   // we go up the tree, and we're at the level where the next

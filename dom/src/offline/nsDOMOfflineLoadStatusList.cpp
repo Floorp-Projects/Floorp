@@ -322,7 +322,7 @@ nsDOMOfflineLoadStatusList::Item(PRUint32 aItem, nsIDOMLoadStatus **aStatus)
   nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if ((PRInt32)aItem > mItems.Count()) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if ((PRInt32)aItem >= mItems.Count()) return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
   NS_ADDREF(*aStatus = mItems[aItem]);
 
@@ -497,7 +497,6 @@ nsDOMOfflineLoadStatusList::Observe(nsISupports *aSubject,
                                     const char *aTopic,
                                     const PRUnichar *aData)
 {
-  nsresult rv;
   if (!strcmp(aTopic, "offline-cache-update-added")) {
     nsCOMPtr<nsIOfflineCacheUpdate> update = do_QueryInterface(aSubject);
     if (update) {

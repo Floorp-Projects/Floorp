@@ -60,7 +60,6 @@
 #include "nsString.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
-#include "nsUnitConversion.h"
 #include "nsIFontMetrics.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSStyleRuleDOMWrapper.h"

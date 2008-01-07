@@ -86,7 +86,7 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
                                               getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXMLCDATASection *instance = new nsXMLCDATASection(ni);
+  nsXMLCDATASection *instance = new (ni) nsXMLCDATASection(ni);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -154,7 +154,7 @@ nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
 nsGenericDOMDataNode*
 nsXMLCDATASection::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  nsXMLCDATASection *it = new nsXMLCDATASection(aNodeInfo);
+  nsXMLCDATASection *it = new (aNodeInfo) nsXMLCDATASection(aNodeInfo);
   if (it && aCloneText) {
     it->mText = mText;
   }

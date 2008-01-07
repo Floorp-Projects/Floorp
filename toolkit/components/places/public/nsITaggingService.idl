@@ -41,7 +41,7 @@
 interface nsIURI;
 interface nsIVariant;
 
-[scriptable, uuid(6c473fa6-8c2c-406c-b31f-62f40a2841bc)]
+[scriptable, uuid(e39cea60-7e6d-4c8b-80a3-997af1c2cbcb)]
 interface nsITaggingService : nsISupports
 {
   /**
@@ -84,7 +84,7 @@ interface nsITaggingService : nsISupports
    *        a URL.
    * @returns array of tags (sorted by name).
    */
-  nsIVariant getTagsForURI(in nsIURI aURI);
+  void getTagsForURI(in nsIURI aURI, out unsigned long length, [retval, array, size_is(length)] out wstring aTags);
 
   /**
    * Retrieves all tags used to tag URIs in the data-base (sorted by name).

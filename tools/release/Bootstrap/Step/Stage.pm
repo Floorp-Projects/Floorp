@@ -435,6 +435,7 @@ sub Verify {
     my $stageHome = $config->Get(var => 'stageHome');
     my $productTag = $config->Get(var => 'productTag');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $linuxExtension = $config->GetLinuxExtension();
  
     ## Prepare the staging directory for the release.
     # Create the staging directory.
@@ -454,12 +455,22 @@ sub Verify {
     );
 
     # Verify locales
+    my $verifyLocalesLogFile = catfile($logDir, 'stage_verify_l10n.log');
     $this->Shell(
       cmd => catfile($stageHome, 'bin', 'verify-locales.pl'),
       cmdArgs => ['-m', catfile($stageDir, 'batch1', 'config',
-                  'shipped-locales')],
-      logFile => catfile($logDir, 'stage_verify_l10n.log'),
+                  'shipped-locales'), '-l', $linuxExtension],
+      logFile => $verifyLocalesLogFile,
       dir => catfile($stageDir, 'batch1', 'stage-signed'),
+    );
+
+    $this->CheckLog(
+      log => $verifyLocalesLogFile,
+      notAllowed => '^FAIL: '
+    );
+    $this->CheckLog(
+      log => $verifyLocalesLogFile,
+      notAllowed => '^ASSERT: '
     );
 }
 
@@ -545,8 +556,9 @@ sub TrimCallback {
         # Don't ship xforms in the release area
         if (($dirent =~ /xforms\.xpi/) || 
          # ZIP files are not shipped; neither are en-US lang packs
-         ($dirent =~ /\.zip$/) ||
-         ($dirent =~ /en-US\.xpi$/)) {
+         ($dirent =~ /\.zip$/) || ($dirent =~ /en-US\.xpi$/) ||
+         # nor the BuildID files, nor the 2.0.0.x signing log
+         ($dirent =~ /_info.txt$/) || ($dirent =~ /win32_signing_rc\d+\.log/) ) {
             unlink($dirent) || die "Could not unlink $dirent: $!";
             $this->Log(msg => "Unlinked $dirent");
             return;
@@ -610,9 +622,7 @@ sub IsValidLocaleDeliverable {
 
     my $config = new Bootstrap::Config();
 
-    my $useTarGz = $config->Exists(var => 'useTarGz') ?
-     $config->Get(var => 'useTarGz') : 0;
-    my $linuxExtension = ($useTarGz) ? '.gz' : '.bz2';
+    my $linuxExtension = $config->GetLinuxExtension();
 
     my $dirent = $File::Find::name;
 
@@ -792,6 +802,10 @@ sub GeneratePrettyName {
     my $config = new Bootstrap::Config();
     my $newVersion = $config->Get(var => 'version');
     my $newVersionShort = $newVersion;
+
+    # Use long alpha/beta name for Win32 and Mac
+    $newVersion =~ s/a([0-9]+)/ Alpha $1/;
+    $newVersion =~ s/b([0-9]+)/ Beta $1/;
 
     my @result;
 

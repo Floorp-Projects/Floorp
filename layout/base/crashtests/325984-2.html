@@ -1,0 +1,31 @@
+<html>
+ <head>
+  <title>colgroup pseudos</title>
+  <style>
+   div.table {background-color:red; color:yellow; display:table}
+  div.col {background-color:green; width:400px; display:table-column}
+
+  </style>
+ </head>
+ <body>
+ <div class="table">
+ <div class="col" ></div> anonymous content
+ </div>
+<div class="table">
+ <div class="col" ></div> <div style="display:table-cell">anonymous cell</div>
+ </div>
+<div class="table">
+ <div class="col" ></div> <div style="display:table-row">anonymous row</div>
+ </div>
+<div class="table">
+ <div class="col" ></div> <div style="display:table-row-group">anonymous rowgroup</div>
+ </div>
+<div class="table">
+ <div class="col" ></div> <div style="display:table">anonymous table</div>
+ </div>
+<div class="table">
+ <div class="col" ></div> <div style="display:table-caption">anonymous caption</div>
+ </div>
+
+ </body>
+</html>

@@ -2516,7 +2516,7 @@ done:
             else if(dp->IsValInterface())
                 ((nsISupports*)p)->Release();
             else if(dp->IsValDOMString())
-                delete (nsAString*)p;
+                ccx.DeleteString((nsAString*)p);
             else if(dp->IsValUTF8String())
                 delete (nsCString*) p;
             else if(dp->IsValCString())

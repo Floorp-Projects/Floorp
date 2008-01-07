@@ -7,6 +7,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   John Daggett <jdaggett@mozilla.com>
  * 
  * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
  *
@@ -42,6 +43,7 @@
 
 #include "gfxPlatformMac.h"
 #include "gfxQuartzFontCache.h"
+#include "gfxAtsuiFonts.h"
 
 // _atsFontID is private; add it in our new category to NSFont
 @interface NSFont (MozillaCategory)
@@ -145,6 +147,36 @@ NSString*
 FontEntry::GetNSStringForString(const nsAString& aSrc)
 {
     return ::GetNSStringForString(aSrc);
+}
+
+nsresult
+FontEntry::ReadCMAP()
+{
+    OSStatus status;
+    ByteCount size;
+    
+    if (mCmapInitialized) return NS_OK;
+    
+    // attempt this once, if errors occur leave a blank cmap
+    mCmapInitialized = PR_TRUE;
+    
+    status = ATSFontGetTable(mATSUFontID, 'cmap', 0, 0, 0, &size);
+    //printf( "cmap size: %s %d\n", NS_ConvertUTF16toUTF8(mName).get(), size );
+    NS_ENSURE_TRUE(status == noErr, NS_ERROR_FAILURE);
+
+    nsAutoTArray<PRUint8,16384> buffer;
+    if (!buffer.AppendElements(size))
+        return NS_ERROR_OUT_OF_MEMORY;
+    PRUint8 *cmap = buffer.Elements();
+
+    status = ATSFontGetTable(mATSUFontID, 'cmap', 0, size, cmap, &size);
+    NS_ENSURE_TRUE(status == noErr, NS_ERROR_FAILURE);
+
+    nsresult rv = NS_ERROR_FAILURE;
+    PRPackedBool  unicodeFont, symbolFont; // currently ignored
+    rv = gfxFontUtils::ReadCMAP(cmap, size, mCharacterMap, mUnicodeRanges, unicodeFont, symbolFont);
+    
+    return rv;
 }
 
 /* gfxQuartzFontCache */
@@ -343,7 +375,7 @@ gfxQuartzFontCache::InitFontList()
 
         // We should get family name from mFamilies for checking the first
         // character of the name.
-        nsRefPtr<FontEntry> psFont = new FontEntry(postscriptName);
+        nsRefPtr<FontEntry> psFont = new FontEntry(fontIDs[i], postscriptName);
         NSFont *font = psFont->GetNSFont(10.0);
         basicFamilyName.Truncate();
         GetStringForNSString([font familyName], basicFamilyName);
@@ -360,6 +392,8 @@ gfxQuartzFontCache::InitFontList()
         if (!ignoreThisFont) {
             mPostscriptFonts.Put(key, psFont);
             mFontIDTable.Put(PRUint32(fontIDs[i]), psFont);
+            // for now, don't read in cmap's at startup
+            //psFont->ReadCMAP();
         } else {
             mNonExistingFonts.AppendString(key);
         }
@@ -797,4 +831,89 @@ gfxQuartzFontCache::IsFixedPitch(ATSUFontID fid)
     }
 
     return fe->IsFixedPitch();
+}
+
+FontEntry* 
+gfxQuartzFontCache::FindFontEntry(ATSUFontID aFontID)
+{
+    nsRefPtr<FontEntry> fe;
+
+    if (!mFontIDTable.Get(PRUint32(aFontID), &fe)) {
+        NS_WARNING("Invalid font");
+        return nsnull;
+    }
+
+    return fe;
+}
+
+struct FontSearch {
+    FontSearch(const PRUint32 aCharacter, gfxAtsuiFont *aFont) :
+        ch(aCharacter), fontToMatch(aFont), matchRank(0) {
+    }
+    const PRUint32 ch;
+    gfxAtsuiFont *fontToMatch;
+    PRInt32 matchRank;
+    nsRefPtr<FontEntry> bestMatch;
+};
+
+FontEntry*  
+gfxQuartzFontCache::FindFontForChar(const PRUint32 aCh, gfxAtsuiFont *aPrevFont)
+{
+    FontSearch data(aCh, aPrevFont);
+
+    // find fonts that support the character
+    mFontIDTable.Enumerate(gfxQuartzFontCache::FindFontForCharProc, &data);
+
+    return data.bestMatch;
+}
+
+PLDHashOperator PR_CALLBACK 
+gfxQuartzFontCache::FindFontForCharProc(nsUint32HashKey::KeyType aKey, nsRefPtr<FontEntry>& aFontEntry,
+     void* userArg)
+{
+    FontSearch *data = (FontSearch*)userArg;
+
+    PRInt32 rank = 0;
+
+    if (aFontEntry->TestCharacterMap(data->ch)) {
+        rank += 20;
+    }
+
+    // if we didn't match any characters don't bother wasting more time.
+    if (rank == 0)
+        return PL_DHASH_NEXT;
+        
+    // omitting from original windows code -- family name, lang group, pitch
+    // not available in current FontEntry implementation
+
+    if (data->fontToMatch) { 
+        const gfxFontStyle *style = data->fontToMatch->GetStyle();
+        
+        // italics
+        if (aFontEntry->IsItalicStyle() && (style->style == FONT_STYLE_ITALIC || style->style == FONT_STYLE_ITALIC)) {
+            rank += 5;
+        }
+        
+        // weight
+        PRInt8 baseWeight, weightDistance;
+        style->ComputeWeightAndOffset(&baseWeight, &weightDistance);
+        PRUint16 targetWeight = (baseWeight * 100) + (weightDistance * 100);
+        if (aFontEntry->Weight() == targetWeight)
+            rank += 5;
+    } else {
+        // if no font to match, prefer non-bold, non-italic fonts
+        if (!aFontEntry->IsItalicStyle() && !aFontEntry->IsBold())
+            rank += 5;
+    }
+    
+    // xxx - add whether AAT font with morphing info for specific lang groups
+    
+    if (rank > data->matchRank
+        || (rank == data->matchRank && Compare(aFontEntry->Name(), data->bestMatch->Name()) > 0)) 
+    {
+        data->bestMatch = aFontEntry;
+        data->matchRank = rank;
+    }
+
+    return PL_DHASH_NEXT;
 }

@@ -1078,6 +1078,7 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppress
 
 void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
 {
+  NS_ASSERTION(mMaxTextLength <= mMaxTextLength + aFrame->GetContentLength(), "integer overflow");
   mMaxTextLength += aFrame->GetContentLength();
   mDoubleByteText |= aFrame->GetContent()->GetText()->Is2b();
   mLastFrame = aFrame;
@@ -1293,8 +1294,7 @@ GetReferenceRenderingContext(nsTextFrame* aTextFrame, nsIRenderingContext* aRC)
       return nsnull;
   }
 
-  gfxContext* ctx = static_cast<gfxContext*>
-          (tmp->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = tmp->ThebesContext();
   NS_ADDREF(ctx);
   return ctx;
 }
@@ -3053,13 +3053,18 @@ nsTextPaintStyle::GetResolvedForeColor(nscolor aColor,
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
 {
-  if (!IsEmpty() || GetNextInFlow()) {
-
-    nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-
-    if (accService) {
-      return accService->CreateHTMLTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
+  if (IsEmpty()) {
+    nsAutoString renderedWhitespace;
+    GetRenderedText(&renderedWhitespace, nsnull, nsnull, 0, 1);
+    if (renderedWhitespace.IsEmpty()) {
+      return NS_ERROR_FAILURE;
     }
+  }
+
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    return accService->CreateHTMLTextAccessible(static_cast<nsIFrame*>(this), aAccessible);
   }
   return NS_ERROR_FAILURE;
 }
@@ -3155,7 +3160,10 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
   // NOTE: bypassing nsTextFrame::Init!!!
   nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
 
-  nsIFrame* nextContinuation = aPrevInFlow->GetNextContinuation();
+#ifdef IBMBIDI
+  nsTextFrame* nextContinuation =
+    static_cast<nsTextFrame*>(aPrevInFlow->GetNextContinuation());
+#endif // IBMBIDI
   // Hook the frame into the flow
   SetPrevInFlow(aPrevInFlow);
   aPrevInFlow->SetNextInFlow(this);
@@ -3172,9 +3180,6 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
   }
 #ifdef IBMBIDI
   if (aPrevInFlow->GetStateBits() & NS_FRAME_IS_BIDI) {
-    PRInt32 start, end;
-    aPrevInFlow->GetOffsets(start, mContentOffset);
-
     nsPropertyTable *propTable = PresContext()->PropertyTable();
     propTable->SetProperty(this, nsGkAtoms::embeddingLevel,
           propTable->GetProperty(aPrevInFlow, nsGkAtoms::embeddingLevel),
@@ -3188,7 +3193,20 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
     if (nextContinuation) {
       SetNextContinuation(nextContinuation);
       nextContinuation->SetPrevContinuation(this);
-      nextContinuation->GetOffsets(start, end);
+      // Adjust next-continuations' content offset as needed.
+      while (nextContinuation &&
+             nextContinuation->GetContentOffset() < mContentOffset) {
+        NS_ASSERTION(
+          propTable->GetProperty(this, nsGkAtoms::embeddingLevel) ==
+          propTable->GetProperty(nextContinuation, nsGkAtoms::embeddingLevel) &&
+          propTable->GetProperty(this, nsGkAtoms::baseLevel) ==
+          propTable->GetProperty(nextContinuation, nsGkAtoms::baseLevel) &&
+          propTable->GetProperty(this, nsGkAtoms::charType) ==
+          propTable->GetProperty(nextContinuation, nsGkAtoms::charType),
+            "stealing text from different type of BIDI continuation");
+        nextContinuation->mContentOffset = mContentOffset;
+        nextContinuation = static_cast<nsTextFrame*>(nextContinuation->GetNextContinuation());
+      }
     }
     mState |= NS_FRAME_IS_BIDI;
   } // prev frame is bidi
@@ -3475,7 +3493,8 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
   }
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) {
     return nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize()).Contains(aPt) ? mFrame : nsnull;
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
@@ -4103,8 +4122,7 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   // Trim trailing whitespace
   provider.InitializeForDisplay(PR_TRUE);
 
-  gfxContext* ctx = static_cast<gfxContext*>
-                               (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRenderingContext->ThebesContext();
 
   gfxPoint framePt(aPt.x, aPt.y);
   gfxPoint textBaselinePt(
@@ -4870,8 +4888,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
                                       nsIFrame::InlineMinWidthData *aData)
 {
   PRUint32 flowEndInTextRun;
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxSkipCharsIterator iter =
     EnsureTextRun(ctx, nsnull, aData->line, &flowEndInTextRun);
   if (!mTextRun)
@@ -4973,8 +4990,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
                                        nsIFrame::InlinePrefWidthData *aData)
 {
   PRUint32 flowEndInTextRun;
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxSkipCharsIterator iter =
     EnsureTextRun(ctx, nsnull, aData->line, &flowEndInTextRun);
   if (!mTextRun)
@@ -5176,6 +5192,13 @@ nsTextFrame::SetLength(PRInt32 aLength)
     }
     f = static_cast<nsTextFrame*>(f->GetNextInFlow());
   }
+#ifdef DEBUG
+  f = static_cast<nsTextFrame*>(this->GetFirstContinuation());
+  while (f) {
+    f->GetContentLength(); // Assert if negative length
+    f = static_cast<nsTextFrame*>(f->GetNextContinuation());
+  }
+#endif
 }
 
 NS_IMETHODIMP
@@ -5279,8 +5302,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   PRUint32 flowEndInTextRun;
   nsIFrame* lineContainer = lineLayout.GetLineContainerFrame();
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aReflowState.rendContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aReflowState.rendContext->ThebesContext();
   gfxSkipCharsIterator iter =
     EnsureTextRun(ctx, lineContainer, lineLayout.GetLine(), &flowEndInTextRun);
 
@@ -5578,8 +5600,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIRenderingContext* aRC)
   if (!contentLength)
     return result;
 
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxContext* ctx = aRC->ThebesContext();
   gfxSkipCharsIterator start = EnsureTextRun(ctx);
   NS_ENSURE_TRUE(mTextRun, result);
 
@@ -6024,10 +6045,8 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
     aEnd = PR_MAX(aEnd, prevOffset);
     prev->ClearTextRun();
   }
-  if (mContentOffset != aStart) {
-    mContentOffset = aStart;
-  }
 
+  mContentOffset = aStart;
   SetLength(aEnd - aStart);
 }
 

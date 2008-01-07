@@ -50,11 +50,11 @@ menulist {
   -moz-appearance: menulist;
   margin: 2px 4px;
   min-height: 20px !important;
+  color: -moz-DialogText;
 }
 
 .menulist-label-box {
   -moz-appearance: menulist-text;
-  color: -moz-DialogText;
   -moz-box-align: center;
   -moz-box-pack: center;
 }

@@ -77,7 +77,6 @@ const TYPE_XUL = "application/vnd.mozilla.xul+xml";
 // We use this once, for Clear Private Data
 const GLUE_CID = "@mozilla.org/browser/browserglue;1";
 
-var gGlobalHistory = null;
 var gURIFixup = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
@@ -320,8 +319,11 @@ const gPopupBlockerObserver = {
   _reportButton: null,
   _kIPM: Components.interfaces.nsIPermissionManager,
 
-  onUpdatePageReport: function ()
+  onUpdatePageReport: function (aEvent)
   {
+    if (aEvent.originalTarget != gBrowser.selectedBrowser)
+      return;
+
     if (!this._reportButton)
       this._reportButton = document.getElementById("page-report-button");
 
@@ -804,6 +806,8 @@ function prepareForStartup()
   // Note: we need to listen to untrusted events, because the pluginfinder XBL
   // binding can't fire trusted ones (runs with page privileges).
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, true, true);
+  gBrowser.addEventListener("PluginBlocklisted", gMissingPluginInstaller.newMissingPlugin, true, true);
+  gBrowser.addEventListener("NewPluginInstalled", gMissingPluginInstaller.refreshBrowser, false);
   gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
@@ -888,14 +892,6 @@ function delayedStartup()
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
-  }
-
-  if (gURLBar) {
-    try {
-      if (gPrefService.getBoolPref("browser.urlbar.richResults"))
-        gURLBar.setAttribute("autocompletepopup", "PopupAutoCompleteRichResult");
-    } catch (ex) {
-    }
   }
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
@@ -1051,6 +1047,14 @@ function delayedStartup()
   // do privileged things, without letting error pages have any privilege
   // themselves.
   gBrowser.addEventListener("command", BrowserOnCommand, false);
+
+  // Initialize the download manager some time after the app starts so that
+  // auto-resume downloads begin (such as after crashing or quitting with
+  // active downloads) and speeds up the first-load of the download manager UI.
+  // If the user manually opens the download manager before the timeout, the
+  // downloads will start right away, and getting the service again won't hurt.
+  setTimeout(function() Cc["@mozilla.org/download-manager;1"].
+                        getService(Ci.nsIDownloadManager), 10000);
 }
 
 function BrowserShutdown()
@@ -1086,14 +1090,6 @@ function BrowserShutdown()
     gSanitizeListener.shutdown();
 
   BrowserOffline.uninit();
-
-  // Store current window position/size into the window attributes 
-  // for persistence.
-  var win = document.documentElement;
-  win.setAttribute("x", window.screenX);
-  win.setAttribute("y", window.screenY);
-  win.setAttribute("height", window.outerHeight);
-  win.setAttribute("width", window.outerWidth);
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
@@ -2888,17 +2884,9 @@ function addToUrlbarHistory(aUrlToAdd)
   if (aUrlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
      return;
 
-  if (!gGlobalHistory)
-    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                               .getService(Components.interfaces.nsIBrowserHistory);
-
-  if (!gURIFixup)
-    gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                          .getService(Components.interfaces.nsIURIFixup);
    try {
      if (aUrlToAdd.indexOf(" ") == -1) {
-       var fixedUpURI = gURIFixup.createFixupURI(aUrlToAdd, 0);
-       gGlobalHistory.markPageAsTyped(fixedUpURI);
+       PlacesUtils.markPageAsTyped(aUrlToAdd);
      }
    }
    catch(ex) {
@@ -3816,9 +3804,11 @@ nsBrowserAccess.prototype =
           aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
       }
     }
-    var url = aURI ? aURI.spec : "about:blank";
     switch(aWhere) {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
+        // FIXME: Bug 408379. So how come this doesn't send the
+        // referrer like the other loads do?
+        var url = aURI ? aURI.spec : "about:blank";
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
@@ -3828,16 +3818,18 @@ nsBrowserAccess.prototype =
                             .QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIDOMWindow);
         try {
-          if (aOpener) {
-            location = aOpener.location;
-            referrer =
-                    Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService)
-                              .newURI(location, null, null);
+          if (aURI) {
+            if (aOpener) {
+              location = aOpener.location;
+              referrer =
+                      Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(location, null, null);
+            }
+            newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .loadURI(aURI.spec, loadflags, referrer, null, null);
           }
-          newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation)
-                   .loadURI(url, loadflags, referrer, null, null);
           if (!loadInBackground && isExternal)
             newWindow.focus();
         } catch(e) {
@@ -3847,20 +3839,25 @@ nsBrowserAccess.prototype =
         try {
           if (aOpener) {
             newWindow = aOpener.top;
-            location = aOpener.location;
-            referrer =
-                    Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService)
-                              .newURI(location, null, null);
+            if (aURI) {
+              location = aOpener.location;
+              referrer =
+                      Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(location, null, null);
 
-            newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(nsIWebNavigation)
-                     .loadURI(url, loadflags, referrer, null, null);
+              newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(nsIWebNavigation)
+                       .loadURI(aURI.spec, loadflags, referrer, null, null);
+            }
           } else {
             newWindow = gBrowser.selectedBrowser.docShell
                                 .QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindow);
-            getWebNavigation().loadURI(url, loadflags, null, null, null);
+            if (aURI) {
+              getWebNavigation().loadURI(aURI.spec, loadflags, null, 
+                                         null, null);
+            }
           }
           if(!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
             content.focus();
@@ -4164,6 +4161,15 @@ function asyncOpenWebPanel(event)
    var wrapper = null;
    if (linkNode) {
      wrapper = linkNode;
+
+     // javascript links should be executed in the current browser
+     if (wrapper.href.substr(0, 11) === "javascript:")
+       return true;
+
+     // data links should be executed in the current browser
+     if (wrapper.href.substr(0, 5) === "data:")
+       return true;
+
      if (event.button == 0 && !event.ctrlKey && !event.shiftKey &&
          !event.altKey && !event.metaKey) {
        // A Web panel's links should target the main content area.  Do this
@@ -4179,12 +4185,6 @@ function asyncOpenWebPanel(event)
          if (!wrapper.href)
            return true;
          if (wrapper.getAttribute("onclick"))
-           return true;
-         // javascript links should be executed in the current browser
-         if (wrapper.href.substr(0, 11) === "javascript:")
-           return true;
-         // data links should be executed in the current browser
-         if (wrapper.href.substr(0, 5) === "data:")
            return true;
 
          try {
@@ -4346,16 +4346,6 @@ function middleMousePaste(event)
              true /* ignore the fact this is a middle click */);
 
   event.stopPropagation();
-}
-
-function makeURLAbsolute( base, url )
-{
-  // Construct nsIURL.
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                .getService(Components.interfaces.nsIIOService);
-  var baseURI  = ioService.newURI(base, null, null);
-
-  return ioService.newURI(baseURI.resolve(url), null, null).spec;
 }
 
 /*
@@ -4976,7 +4966,7 @@ function getPluginInfo(pluginElement)
 
 missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
   var tabbrowser = getBrowser();
-  var missingPluginsArray = new Object;
+  var missingPluginsArray = {};
 
   var pluginInfo = getPluginInfo(aEvent.target);
   missingPluginsArray[pluginInfo.mimetype] = pluginInfo;
@@ -4984,7 +4974,7 @@ missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
                       "PFSWindow", "modal,chrome,resizable=yes",
-                      {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
+                      {plugins: missingPluginsArray, browser: tabbrowser.selectedBrowser});
   }
 
   aEvent.preventDefault();
@@ -5001,7 +4991,8 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   // plugin. Object tags can, and often do, deal with that themselves,
   // so don't stomp on the page developers toes.
 
-  if (!(aEvent.target instanceof HTMLObjectElement)) {
+  if (aEvent.type != "PluginBlocklisted" &&
+      !(aEvent.target instanceof HTMLObjectElement)) {
     aEvent.target.addEventListener("click",
                                    gMissingPluginInstaller.installSinglePlugin,
                                    false);
@@ -5023,18 +5014,48 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
       break;
   }
 
-  var tab = tabbrowser.mTabContainer.childNodes[i];
-  if (!tab.missingPlugins)
-    tab.missingPlugins = {};
+  var browser = tabbrowser.getBrowserAtIndex(i);
+  if (!browser.missingPlugins)
+    browser.missingPlugins = {};
 
   var pluginInfo = getPluginInfo(aEvent.target);
 
-  tab.missingPlugins[pluginInfo.mimetype] = pluginInfo;
+  browser.missingPlugins[pluginInfo.mimetype] = pluginInfo;
 
-  var browser = tabbrowser.getBrowserAtIndex(i);
   var notificationBox = gBrowser.getNotificationBox(browser);
-  if (!notificationBox.getNotificationWithValue("missing-plugins")) {
-    var bundle_browser = document.getElementById("bundle_browser");
+
+  // If there is already a missing plugin notification then do nothing
+  if (notificationBox.getNotificationWithValue("missing-plugins"))
+    return;
+
+  var bundle_browser = document.getElementById("bundle_browser");
+  var blockedNotification = notificationBox.getNotificationWithValue("blocked-plugins");
+  const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+  const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric.png";
+
+  if (aEvent.type == "PluginBlocklisted" && !blockedNotification) {
+    var messageString = bundle_browser.getString("blockedpluginsMessage.title");
+    var buttons = [{
+      label: bundle_browser.getString("blockedpluginsMessage.infoButton.label"),
+      accessKey: bundle_browser.getString("blockedpluginsMessage.infoButton.accesskey"),
+      popup: null,
+      callback: blocklistInfo
+    }, {
+      label: bundle_browser.getString("blockedpluginsMessage.searchButton.label"),
+      accessKey: bundle_browser.getString("blockedpluginsMessage.searchButton.accesskey"),
+      popup: null,
+      callback: pluginsMissing
+    }];
+
+    notificationBox.appendNotification(messageString, "blocked-plugins",
+                                       iconURL, priority, buttons);
+  }
+
+  if (aEvent.type == "PluginNotFound") {
+    // Cancel any notification about blocklisting
+    if (blockedNotification)
+      blockedNotification.close();
+
     var messageString = bundle_browser.getString("missingpluginsMessage.title");
     var buttons = [{
       label: bundle_browser.getString("missingpluginsMessage.button.label"),
@@ -5043,30 +5064,44 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
       callback: pluginsMissing
     }];
 
-    const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-    const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric.png";
     notificationBox.appendNotification(messageString, "missing-plugins",
                                        iconURL, priority, buttons);
   }
 }
 
-missingPluginInstaller.prototype.closeNotification = function() {
-  var notificationBox = gBrowser.getNotificationBox();
+missingPluginInstaller.prototype.refreshBrowser = function(aEvent) {
+  var browser = aEvent.target;
+  var notificationBox = gBrowser.getNotificationBox(browser);
   var notification = notificationBox.getNotificationWithValue("missing-plugins");
 
+  // clear the plugin list, now that at least one plugin has been installed
+  browser.missingPlugins = null;
   if (notification) {
+    // reset UI
     notificationBox.removeNotification(notification);
   }
+  // reload the browser to make the new plugin show.
+  browser.reload();
+}
+
+function blocklistInfo()
+{
+  var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                            .getService(Components.interfaces.nsIURLFormatter);
+  var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+  gBrowser.loadOneTab(url, null, null, null, false, false);
+  return true;
 }
 
 function pluginsMissing()
 {
   // get the urls of missing plugins
   var tabbrowser = getBrowser();
-  var missingPluginsArray = tabbrowser.mCurrentTab.missingPlugins;
+  var missingPluginsArray = tabbrowser.selectedBrowser.missingPlugins;
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-      "PFSWindow", "modal,chrome,resizable=yes", {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
+                      "PFSWindow", "modal,chrome,resizable=yes",
+                      {plugins: missingPluginsArray, browser: tabbrowser.selectedBrowser});
   }
 }
 

@@ -48,6 +48,17 @@ MODULE		= js
 LIBRARY_NAME	= mozjs
 GRE_MODULE	= 1
 
+ifdef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -Os
+else
+ifeq ($(OS_ARCH),SunOS)
+MODULE_OPTIMIZE_FLAGS = -O
+endif
+ifeq ($(OS_ARCH),WINNT)
+MODULE_OPTIMIZE_FLAGS = -O1
+endif
+endif
+
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 LIBRARY_NAME	= js$(MOZ_BITS)$(VERSION_NUMBER)
 RESFILE		= js$(MOZ_BITS)40.res
@@ -124,6 +135,7 @@ EXPORTS		= \
 		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
+		jsdtoa.h \
 		jsemit.h \
 		jsfun.h \
 		jsgc.h \

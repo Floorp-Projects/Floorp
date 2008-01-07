@@ -111,8 +111,12 @@ var gEditItemOverlay = {
       this._initTextField("locationField", this._uri.spec);
       this._initTextField("tagsField",
                            PlacesUtils.tagging
-                                      .getTagsForURI(this._uri).join(", "),
+                                      .getTagsForURI(this._uri, {}).join(", "),
                           false);
+
+      // tags selector
+      this._rebuildTagsSelectorList();
+
       this._initTextField("keywordField",
                           bms.getKeywordForBookmark(this._itemId));
 
@@ -428,7 +432,7 @@ var gEditItemOverlay = {
   },
 
   _updateTags: function EIO__updateTags() {
-    var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri);
+    var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, { });
     var tags = this._getTagsArrayFromTagField();
     if (tags.length > 0 || currentTags.length > 0) {
       var tagsToRemove = [];
@@ -669,6 +673,8 @@ var gEditItemOverlay = {
 
   _rebuildTagsSelectorList: function EIO__rebuildTagsSelectorList() {
     var tagsSelector = this._element("tagsSelector");
+    if (tagsSelector.collapsed)
+      return;
 
     while (tagsSelector.hasChildNodes())
       tagsSelector.removeChild(tagsSelector.lastChild);
@@ -693,12 +699,11 @@ var gEditItemOverlay = {
       expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
-
+      tagsSelector.collapsed = false;
       this._rebuildTagsSelectorList();
 
       // This is a no-op if we've added the listener.
       tagsSelector.addEventListener("CheckboxStateChange", this, false);
-      tagsSelector.collapsed = false;
     }
     else {
       expander.className = "expander-down";
@@ -779,7 +784,7 @@ var gEditItemOverlay = {
         this._initNamePicker(); // for microsummaries
         this._initTextField("tagsField",
                              PlacesUtils.tagging
-                                        .getTagsForURI(this._uri).join(", "),
+                                        .getTagsForURI(this._uri, { }).join(", "),
                             false);
         this._rebuildTagsSelectorList();
       }

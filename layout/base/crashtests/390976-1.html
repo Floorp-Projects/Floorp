@@ -1,0 +1,22 @@
+<html>
+
+<head>
+<script>
+function boom()
+{
+  var aaa = document.getElementById("aaa");
+  var bbb = document.getElementById("bbb");
+  aaa.parentNode.insertBefore(bbb, aaa);
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<div><span><span style="display: table-caption;"></span><span id="aaa"><div></div></span></span></div>
+
+<b id="bbb" style="display: table-caption;"></b>
+
+</body>
+
+</html>

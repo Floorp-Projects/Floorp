@@ -39,6 +39,7 @@
 #include <gtk/gtkdialog.h>
 #include <gtk/gtkstock.h>
 #include <gtk/gtkmessagedialog.h>
+#include <gtk/gtkimage.h>
 
 #include "nsIFileURL.h"
 #include "nsIURI.h"
@@ -61,6 +62,8 @@
 
 #define DECL_FUNC_PTR(func) static _##func##_fn _##func
 #define GTK_FILE_CHOOSER(widget) ((GtkFileChooser*) widget)
+
+#define MAX_PREVIEW_SIZE 180
 
 PRLibrary    *nsFilePicker::mGTK24 = nsnull;
 nsILocalFile *nsFilePicker::mPrevDisplayDirectory = nsnull;
@@ -101,6 +104,12 @@ typedef GSList* (*_gtk_file_chooser_list_filters_fn)(GtkFileChooser* chooser);
 typedef GtkFileFilter* (*_gtk_file_filter_new_fn)();
 typedef void (*_gtk_file_filter_add_pattern_fn)(GtkFileFilter* filter, const gchar* pattern);
 typedef void (*_gtk_file_filter_set_name_fn)(GtkFileFilter* filter, const gchar* name);
+typedef char* (*_gtk_file_chooser_get_preview_filename_fn)(GtkFileChooser *chooser);
+typedef void (*_gtk_file_chooser_set_preview_widget_active_fn)(GtkFileChooser *chooser, gboolean active);
+typedef void (*_gtk_image_set_from_pixbuf_fn)(GtkImage *image, GdkPixbuf *pixbuf);
+typedef void (*_gtk_file_chooser_set_preview_widget_fn)(GtkFileChooser *chooser, GtkWidget *preview_widget);
+typedef GtkWidget* (*_gtk_image_new_fn)();
+typedef void (*_gtk_misc_set_padding_fn)(GtkMisc *misc, gint xpad, gint ypad);
 
 
 DECL_FUNC_PTR(gtk_file_chooser_get_filename);
@@ -117,6 +126,12 @@ DECL_FUNC_PTR(gtk_file_chooser_list_filters);
 DECL_FUNC_PTR(gtk_file_filter_new);
 DECL_FUNC_PTR(gtk_file_filter_add_pattern);
 DECL_FUNC_PTR(gtk_file_filter_set_name);
+DECL_FUNC_PTR(gtk_file_chooser_get_preview_filename);
+DECL_FUNC_PTR(gtk_file_chooser_set_preview_widget_active);
+DECL_FUNC_PTR(gtk_image_set_from_pixbuf);
+DECL_FUNC_PTR(gtk_file_chooser_set_preview_widget);
+DECL_FUNC_PTR(gtk_image_new);
+DECL_FUNC_PTR(gtk_misc_set_padding);
 
 static GtkWindow *
 get_gtk_window_for_nsiwidget(nsIWidget *widget)
@@ -201,6 +216,12 @@ nsFilePicker::LoadSymbolsGTK24()
   GET_LIBGTK_FUNC(gtk_file_filter_new);
   GET_LIBGTK_FUNC(gtk_file_filter_add_pattern);
   GET_LIBGTK_FUNC(gtk_file_filter_set_name);
+  GET_LIBGTK_FUNC(gtk_file_chooser_get_preview_filename);
+  GET_LIBGTK_FUNC(gtk_file_chooser_set_preview_widget_active);
+  GET_LIBGTK_FUNC(gtk_image_set_from_pixbuf);
+  GET_LIBGTK_FUNC(gtk_file_chooser_set_preview_widget);
+  GET_LIBGTK_FUNC(gtk_image_new);
+  GET_LIBGTK_FUNC(gtk_misc_set_padding);
 
   initialized = PR_TRUE;
 
@@ -248,6 +269,46 @@ GetGtkFileChooserAction(PRInt16 aMode)
   return action;
 }
 
+
+static void
+UpdateFilePreviewWidget(GtkFileChooser *file_chooser,
+                        gpointer preview_widget_voidptr)
+{
+  GtkImage *preview_widget = GTK_IMAGE(preview_widget_voidptr);
+  char *image_filename = _gtk_file_chooser_get_preview_filename(file_chooser);
+
+  if (!image_filename) {
+    _gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
+    return;
+  }
+
+  // We do this so GTK scales down images that are too big, but not scale up images that are too small
+  GdkPixbuf *preview_pixbuf = gdk_pixbuf_new_from_file(image_filename, NULL);
+  if (!preview_pixbuf) {
+    g_free(image_filename);
+    _gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
+    return;
+  }
+  if (gdk_pixbuf_get_width(preview_pixbuf) > MAX_PREVIEW_SIZE || gdk_pixbuf_get_height(preview_pixbuf) > MAX_PREVIEW_SIZE) {
+    g_object_unref(preview_pixbuf);
+    preview_pixbuf = gdk_pixbuf_new_from_file_at_size(image_filename, MAX_PREVIEW_SIZE, MAX_PREVIEW_SIZE, NULL);
+  }
+
+  g_free(image_filename);
+  if (!preview_pixbuf) {
+    _gtk_file_chooser_set_preview_widget_active(file_chooser, FALSE);
+    return;
+  }
+
+  // This is the easiest way to do center alignment without worrying about containers
+  // Minimum 3px padding each side (hence the 6) just to make things nice
+  gint x_padding = (MAX_PREVIEW_SIZE + 6 - gdk_pixbuf_get_width(preview_pixbuf)) / 2;
+  _gtk_misc_set_padding(GTK_MISC(preview_widget), x_padding, 0);
+
+  _gtk_image_set_from_pixbuf(preview_widget, preview_pixbuf);
+  g_object_unref(preview_pixbuf);
+  _gtk_file_chooser_set_preview_widget_active(file_chooser, TRUE);
+}
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -512,6 +573,12 @@ nsFilePicker::Show(PRInt16 *aReturn)
                                    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                    accept_button, GTK_RESPONSE_ACCEPT,
                                    NULL);
+
+  if (mMode == GTK_FILE_CHOOSER_ACTION_OPEN || mMode == GTK_FILE_CHOOSER_ACTION_SAVE) {
+    GtkWidget *img_preview = _gtk_image_new();
+    _gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(file_chooser), img_preview);
+    g_signal_connect(file_chooser, "update-preview", G_CALLBACK(UpdateFilePreviewWidget), img_preview);
+  }
 
   if (parent_widget && parent_widget->group) {
     gtk_window_group_add_window(parent_widget->group, GTK_WINDOW(file_chooser));

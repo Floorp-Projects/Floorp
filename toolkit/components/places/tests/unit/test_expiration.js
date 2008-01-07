@@ -118,7 +118,7 @@ function run_test() {
   test that nsIBrowserHistory.removePagesFromHost does remove expirable annotations
   but doesn't remove bookmarks or EXPIRE_NEVER annotations.
   */
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName + "Hist", testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
   annosvc.setPageAnnotation(testURI, testAnnoName + "Never", testAnnoVal, 0, annosvc.EXPIRE_NEVER);
   bhist.removePagesFromHost("mozilla.com", false);
@@ -136,7 +136,7 @@ function run_test() {
   */
   var removeAllTestURI = uri("http://removeallpages.com");
   var removeAllTestURINever = uri("http://removeallpagesnever.com");
-  histsvc.addVisit(removeAllTestURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(removeAllTestURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   var bmURI = uri("http://bookmarked");
   bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, bmURI, bmsvc.DEFAULT_INDEX, "foo");
   //bhist.addPageWithDetails(placeURI, "place uri", Date.now());
@@ -167,7 +167,7 @@ function run_test() {
   /*
   test anno expiration (expire never)
   */
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
   histsvc.removeAllPages();
@@ -179,7 +179,7 @@ function run_test() {
   /*
   test anno expiration (expire with history)
   */
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
   histsvc.removeAllPages();
   try {
@@ -195,7 +195,7 @@ function run_test() {
     - try to get the anno (should fail. maybe race here? is there a way to determine
       if the page has been added, so we know that expiration is done?)
   */
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
 
   // these annotations should be removed (after manually tweaking their dateAdded)
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
@@ -211,7 +211,7 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_DAYS);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -239,7 +239,7 @@ function run_test() {
   } catch(ex) {}
 
   // test anno expiration (days) removes annos annos 6 days old
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
   // these annotations should remain as they are only 6 days old
@@ -248,7 +248,7 @@ function run_test() {
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -267,7 +267,7 @@ function run_test() {
 
 
   // test anno expiration (weeks) removes annos 31 days old
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   // these annotations should not remain as they are 31 days old
@@ -279,7 +279,7 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -306,7 +306,7 @@ function run_test() {
   } catch(ex) {}
 
   // test anno expiration (weeks) does not remove annos 29 days old
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   // these annotations should remain as they are only 29 days old
@@ -315,7 +315,7 @@ function run_test() {
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -343,7 +343,7 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -370,7 +370,7 @@ function run_test() {
   } catch(ex) {}
 
   // test anno expiration (months) does not remove annos 179 days old
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   // these annotations should remain as they are only 179 days old
@@ -379,7 +379,7 @@ function run_test() {
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
 
   // test for unexpired annos
@@ -411,7 +411,7 @@ function run_test() {
   annosvc.setPageAnnotation(testURI, testAnnoName, "mod", 0, annosvc.EXPIRE_DAYS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, "mod", 0, annosvc.EXPIRE_DAYS);
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
   // anno should still be there
   try {
@@ -430,7 +430,7 @@ function run_test() {
   dbConnection.executeSimpleSQL("UPDATE moz_annos SET lastModified = " + expirationDate);
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET lastModified = " + expirationDate);
   // add a uri and then remove it, to trigger expiration
-  histsvc.addVisit(triggerURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   bhist.removePage(triggerURI);
   // anno should have been deleted
   try {
@@ -483,7 +483,7 @@ function startExpireNeither() {
   observer.expiredURI = null;
 
   // add data
-  histsvc.addVisit(testURI, Date.now() * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
 
   // set visit cap to 2
@@ -540,11 +540,11 @@ function startExpireDaysOnly() {
   dump("startExpireDaysOnly()\n");
 
   // add expirable visit
-  histsvc.addVisit(testURI, (Date.now() - (86400 * 2 * 1000)) * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, (Date.now() - (86400 * 2 * 1000)) * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
 
   // add un-expirable visit
-  histsvc.addVisit(uri("http://unexpirable.com"), (Date.now() - (86400 * 1000)) * 1000, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(uri("http://unexpirable.com"), (Date.now() - (86400 * 1000)) * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
 
   // set visit cap to 2
   prefs.setIntPref("browser.history_expire_sites", 2);
@@ -603,8 +603,8 @@ function startExpireBoth() {
   // 2 days old, in microseconds
   var age = (Date.now() - (86400 * 2 * 1000)) * 1000;
   dump("AGE: " + age + "\n");
-  histsvc.addVisit(testURI, age, 0, histsvc.TRANSITION_TYPED, false, 0);
-  histsvc.addVisit(testURI, age, 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, age, null, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, age, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
 
   // set visit cap to 1

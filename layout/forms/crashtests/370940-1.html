@@ -1,0 +1,28 @@
+﻿<html class="reftest-wait">
+<head>
+<script>
+  
+var HTML_NS = "http://www.w3.org/1999/xhtml";
+
+function boom1()
+{
+  var newSpan = document.createElementNS(HTML_NS, "span");
+  document.body.appendChild(newSpan);
+  
+  setTimeout(boom2, 30);
+}
+
+function boom2()
+{
+  var newDiv = document.createElementNS(HTML_NS, "div");
+  document.getElementById("s").appendChild(newDiv);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="setTimeout(boom1, 30);">
+ <p>العربي</p>
+ <span id="s"></span><input><select></select><isindex><span></span>
+</body>
+</html>

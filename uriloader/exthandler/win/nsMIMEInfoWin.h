@@ -94,7 +94,7 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
 
     // Helper routine used in tracking app lists
     void ProcessPath(nsCOMPtr<nsIMutableArray>& appList,
-                     nsTArray<nsCAutoString>& trackList,
+                     nsTArray<nsString>& trackList,
                      const nsAString& appFilesystemCommand);
 
 };

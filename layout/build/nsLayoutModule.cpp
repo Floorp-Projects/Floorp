@@ -125,6 +125,7 @@
 #include "nsIControllerContext.h"
 #include "nsDOMScriptObjectFactory.h"
 #include "nsDOMStorage.h"
+#include "nsJSON.h"
 
 // Editor stuff
 #include "nsEditorCID.h"
@@ -1320,6 +1321,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_DOMSTORAGEMANAGER_CID,
     "@mozilla.org/dom/storagemanager;1",
     nsDOMStorageManagerConstructor },
+
+  { "DOM JSON",
+    NS_DOMJSON_CID,
+    "@mozilla.org/dom/json;1",
+    NS_NewJSON },
 
   { "Text Editor",
     NS_TEXTEDITOR_CID,

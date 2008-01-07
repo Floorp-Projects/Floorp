@@ -39,7 +39,6 @@
 
 #include "nsPrintOptionsImpl.h"
 #include "nsCoord.h"
-#include "nsUnitConversion.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
 

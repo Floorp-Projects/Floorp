@@ -92,6 +92,23 @@
     </rdf:li>
 
     <rdf:li>
+      <rdf:Description ins:uid="accessibleEvent"
+                       ins:panels="bxObjectPanel bxObjPanel"
+                       ins:description="Accessible Event">
+        <ins:filter><![CDATA[
+          if (!linkedViewer ||
+              !(object instanceof Components.interfaces.nsIDOMNode))
+            return false;
+
+          if (linkedViewer.uid != "accessibleEvents")
+            return false;
+
+          return object.getUserData("accessibleEvent");
+        ]]></ins:filter>
+      </rdf:Description>
+    </rdf:li>
+
+    <rdf:li>
       <rdf:Description ins:uid="accessibleObject"
                        ins:panels="bxObjectPanel bxObjPanel"
                        ins:description="Accessible Object">

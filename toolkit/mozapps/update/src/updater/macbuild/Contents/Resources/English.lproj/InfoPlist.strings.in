@@ -1,4 +1,4 @@
 /* Localized versions of Info.plist keys */
 
 CFBundleName = "@APP_NAME@ Software Update";
-NSHumanReadableCopyright = "Copyright © 2005-2007 Mozilla Foundation";
+NSHumanReadableCopyright = "Copyright © 2005-2008 Mozilla Foundation";

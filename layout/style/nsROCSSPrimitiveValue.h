@@ -43,7 +43,6 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsString.h"
 #include "nsCoord.h"
-#include "nsUnitConversion.h"
 #include "nsReadableUtils.h"
 #include "nsIURI.h"
 #include "nsIAtom.h"

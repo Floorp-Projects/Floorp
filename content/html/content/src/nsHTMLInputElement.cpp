@@ -430,7 +430,8 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nsnull;
 
-  nsHTMLInputElement *it = new nsHTMLInputElement(aNodeInfo, PR_FALSE);
+  nsHTMLInputElement *it =
+    new (aNodeInfo) nsHTMLInputElement(aNodeInfo, PR_FALSE);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2094,6 +2095,12 @@ nsHTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   nsChangeHint retval =
     nsGenericHTMLFormElement::GetAttributeChangeHint(aAttribute, aModType);
   if (aAttribute == nsGkAtoms::type) {
+    NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
+  } else if (mType == NS_FORM_INPUT_IMAGE &&
+             (aAttribute == nsGkAtoms::alt ||
+              aAttribute == nsGkAtoms::value)) {
+    // We might need to rebuild our alt text.  Just go ahead and
+    // reconstruct our frame.  This should be quite rare..
     NS_UpdateHint(retval, NS_STYLE_HINT_FRAMECHANGE);
   } else if (aAttribute == nsGkAtoms::value) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);

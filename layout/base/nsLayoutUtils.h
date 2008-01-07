@@ -501,6 +501,12 @@ public:
    * Find the nearest ancestor that's a block
    */
   static nsBlockFrame* FindNearestBlockAncestor(nsIFrame* aFrame);
+
+  /**
+   * Cast aFrame to an nsBlockFrame* or return null if it's not
+   * an nsBlockFrame.
+   */
+  static nsBlockFrame* GetAsBlock(nsIFrame* aFrame);
   
   /**
    * If aFrame is an out of flow frame, return its placeholder, otherwise

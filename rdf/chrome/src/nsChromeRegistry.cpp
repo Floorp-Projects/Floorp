@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2976,7 +2977,7 @@ nsChromeRegistry::FlagXPCNativeWrappers()
         uri.AssignLiteral("chrome://");
         uri.Append(source + sizeof urn - 1);
         uri.Append('/');
-        rv = xpc->FlagSystemFilenamePrefix(uri.get());
+        rv = xpc->FlagSystemFilenamePrefix(uri.get(), PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }

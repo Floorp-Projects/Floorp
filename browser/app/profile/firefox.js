@@ -190,7 +190,7 @@ pref("browser.chrome.favicons", true);
 pref("browser.formfill.enable", true);
 pref("browser.warnOnQuit", true);
 
-#ifdef XP_UNIX
+#ifdef UNIX_BUT_NOT_MAC
 pref("browser.urlbar.clickSelectsAll", false);
 #else
 pref("browser.urlbar.clickSelectsAll", true);
@@ -203,8 +203,6 @@ pref("browser.urlbar.doubleClickSelectsAll", false);
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.matchOnlyTyped", false);
 
-// if false, will use one-line-per-result for urlbar autocomplete
-pref("browser.urlbar.richResults", true);
 // the maximum number of results to show in autocomplete when doing richResults
 pref("browser.urlbar.maxRichResults", 25);
 
@@ -219,7 +217,6 @@ pref("browser.download.manager.closeWhenDone", false);
 pref("browser.download.manager.openDelay", 0);
 pref("browser.download.manager.focusWhenStarting", false);
 pref("browser.download.manager.flashCount", 2);
-pref("browser.download.manager.displayedHistoryDays", 7);
 pref("browser.download.manager.addToRecentDocs", true);
 
 // search engines URL
@@ -273,7 +270,12 @@ pref("browser.link.open_newwindow", 3);
 // 2: don't divert window.open with features
 pref("browser.link.open_newwindow.restriction", 2);
 
-// Tab browser preferences.
+// Tabbed browser
+pref("browser.tabs.autoHide", true);
+pref("browser.tabs.forceHide", false);
+pref("browser.tabs.warnOnClose", true);
+pref("browser.tabs.warnOnOpen", true);
+pref("browser.tabs.maxOpenBeforeWarn", 15);
 pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
@@ -348,8 +350,7 @@ pref("privacy.sanitize.promptOnSanitize", true);
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
-pref("network.cookie.cookieBehavior",       0); // cookies enabled
-pref("network.cookie.enableForCurrentSessionOnly", false);
+pref("network.cookie.cookieBehavior",       1); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 
 // l12n and i18n
 pref("intl.accept_languages", "chrome://global/locale/intl.properties");
@@ -454,7 +455,11 @@ pref("browser.preferences.instantApply", false);
 #else
 pref("browser.preferences.instantApply", true);
 #endif
+#ifdef XP_MACOSX
+pref("browser.preferences.animateFadeIn", true);
+#else
 pref("browser.preferences.animateFadeIn", false);
+#endif
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
@@ -598,3 +603,7 @@ pref("browser.places.migratePostDataAnnotations", true);
 // 1 - pre-populate site URL, but don't fetch certificate
 // 2 - pre-populate site URL and pre-fetch certificate
 pref("browser.ssl_override_behavior", 1);
+
+// replace newlines with spaces when pasting into <input type="text"> fields
+pref("editor.singleLine.pasteNewlines", 2);
+

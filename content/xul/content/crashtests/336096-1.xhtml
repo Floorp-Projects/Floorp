@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+
+function init()
+{
+    var targetWindow = window.frames[0];
+    var targetDocument = targetWindow.document;
+    
+    targetDocument.body.appendChild(document.getElementById('rootish'));
+    targetDocument.designMode = 'on';
+
+    var r = targetDocument.createRange(); 
+    r.setStart(targetDocument.getElementById("start"), 0); 
+    r.setEnd  (targetDocument.getElementById("end"), 0); 
+    targetWindow.getSelection().addRange(r);
+
+    targetDocument.execCommand('bold', false, null);
+}
+
+]]>
+</script>
+</head>
+
+<body onload="setTimeout(init, 200);">
+
+<iframe src="data:text/html," style="width: 95%; height: 500px;"></iframe>
+
+<div id="rootish">
+  <div id="start"></div>
+  <hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <hbox/>
+    <vbox id="end">
+      <hbox/>
+    </vbox>
+  </hbox>
+</div>
+
+</body>
+</html>

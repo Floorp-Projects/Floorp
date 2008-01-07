@@ -396,7 +396,6 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
 
 #include "gfxPDFSurface.h"
 #include "gfxPSSurface.h"
-#include "nsUnitConversion.h"
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurface)
 {
   *aSurface = nsnull;

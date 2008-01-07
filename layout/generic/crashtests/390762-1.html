@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<script>
+function boom()
+{
+  var s = document.getElementById("s");
+  var t = document.getElementById("t");
+
+  s.parentNode.removeChild(s);
+  t.style.display = "none";
+}
+</script>
+
+<style id="s">
+.float { float: right; height: 1em; }
+</style>
+
+<style>
+#t { border: 1px solid green; }
+</style>
+
+</head>
+
+<body onload="boom();">
+<div style="-moz-column-count: 2;"><div id="t" class="float"></div></div>
+</body>
+
+</html>

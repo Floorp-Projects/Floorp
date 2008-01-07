@@ -461,9 +461,8 @@ var FeedResultService = {
 };
 
 /**
- * A protocol handler that converts the URIs of Apple's various bogo protocol
- * schemes into http, as they should be. Mostly, this object just forwards 
- * things through to the HTTP protocol handler.
+ * A protocol handler that attempts to deal with the variant forms of feed:
+ * URIs that are actually either http or https.
  */
 function FeedProtocolHandler(scheme) {
   this._scheme = scheme;
@@ -491,6 +490,23 @@ FeedProtocolHandler.prototype = {
   },
   
   newURI: function FPH_newURI(spec, originalCharset, baseURI) {
+    // See bug 408599 - feed URIs can be either standard URLs of the form
+    // feed://example.com, in which case the real protocol is http, or nested
+    // URIs of the form feed:realscheme:. When realscheme is either http or
+    // https, we deal with the way that creates a standard URL with the
+    // realscheme as the host by unmangling in newChannel; for others, we fail
+    // rather than let it wind up loading something like www.realscheme.com//foo
+
+    const feedSlashes = "feed://";
+    const feedHttpSlashes = "feed:http://";
+    const feedHttpsSlashes = "feed:https://";
+    const NS_ERROR_MALFORMED_URI = 0x804B000A;
+
+    if (spec.substr(0, feedSlashes.length) != feedSlashes &&
+        spec.substr(0, feedHttpSlashes.length) != feedHttpSlashes &&
+        spec.substr(0, feedHttpsSlashes.length) != feedHttpsSlashes)
+      throw NS_ERROR_MALFORMED_URI;
+
     var uri = 
         Cc["@mozilla.org/network/standard-url;1"].
         createInstance(Ci.nsIStandardURL);
@@ -499,26 +515,28 @@ FeedProtocolHandler.prototype = {
     return uri;
   },
   
-  newChannel: function FPH_newChannel(uri) {
+  newChannel: function FPH_newChannel(aUri) {
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);
     // feed: URIs either start feed://, in which case the real scheme is http:
     // or feed:http(s)://, (which by now we've changed to feed://realscheme//)
+    var feedSpec = aUri.spec;
     const httpsChunk = "feed://https//";
     const httpChunk = "feed://http//";
-    if (uri.spec.substr(0, httpsChunk.length) == httpsChunk)
-      uri.spec = "https://" + uri.spec.substr(httpsChunk.length);
-    else if (uri.spec.substr(0, httpChunk.length) == httpChunk)
-      uri.spec = "http://" + uri.spec.substr(httpChunk.length);
+    if (feedSpec.substr(0, httpsChunk.length) == httpsChunk)
+      feedSpec = "https://" + feedSpec.substr(httpsChunk.length);
+    else if (feedSpec.substr(0, httpChunk.length) == httpChunk)
+      feedSpec = "http://" + feedSpec.substr(httpChunk.length);
     else
-      uri.scheme = "http";
+      feedSpec = feedSpec.replace(/^feed/, "http");
 
+    var uri = ios.newURI(feedSpec, aUri.originCharset, null);
     var channel =
       ios.newChannelFromURI(uri, null).QueryInterface(Ci.nsIHttpChannel);
     // Set this so we know this is supposed to be a feed
     channel.setRequestHeader("X-Moz-Is-Feed", "1", false);
-    channel.originalURI = uri;
+    channel.originalURI = aUri;
     return channel;
   },
   

@@ -324,7 +324,7 @@
             </menu>
 
             <menu id="history-menu"
-                  oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
+                  oncommand="var url = event.target.getAttribute('statustext'); if (url) { PlacesUtils.markPageAsTyped(url); openUILink(url, event, false, true); }"
                   onclick="checkForMiddleClick(this, event);"
                   label="&historyMenu.label;"
                   accesskey="&historyMenu.accesskey;">
@@ -338,6 +338,7 @@
 #else
                           key="goBackKb"
 #endif
+                          chromedir="&locale.dir;"
                           oncommand="BrowserBack(event, true)"
                           onclick="checkForMiddleClick(this, event);">
                   <observes element="Browser:Back" attribute="disabled" />
@@ -348,6 +349,7 @@
 #else
                           key="goForwardKb"
 #endif
+                          chromedir="&locale.dir;"
                           oncommand="BrowserForward(event, true)"
                           onclick="checkForMiddleClick(this, event);">
                   <observes element="Browser:Forward" attribute="disabled" />

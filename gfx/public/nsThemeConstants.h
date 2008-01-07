@@ -41,6 +41,9 @@
 // The gripper for a toolbar.
 #define NS_THEME_TOOLBAR_GRIPPER                           17
 
+// A splitter.  Can be horizontal or vertical.
+#define NS_THEME_SPLITTER                                  19
+
 // A status bar in a main application window.
 #define NS_THEME_STATUSBAR                                 21
 
@@ -122,6 +125,9 @@
 
 // The down button of a spin control
 #define NS_THEME_SPINNER_DOWN_BUTTON                       74
+
+// The textfield of a spin control
+#define NS_THEME_SPINNER_TEXTFIELD                         75
 
 // A scrollbar.
 #define NS_THEME_SCROLLBAR                                 80

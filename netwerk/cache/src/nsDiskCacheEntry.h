@@ -107,10 +107,6 @@ struct nsDiskCacheEntry {
     }
 };
 
-nsDiskCacheEntry *  CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
-                                         PRUint32 * size);
-
-
 
 /******************************************************************************
  *  nsDiskCacheEntryInfo

@@ -185,7 +185,9 @@ interface nsILoginManager : nsISupports {
     * password to decrypt the logins.
     *
     * @param aHostname
-    *        The hostname to restrict searches to.
+    *        The hostname to restrict searches to. Specify an empty string
+    *        to match all hosts. A null value will not match any logins, and
+    *        will thus always return a count of 0.
     * @param aActionURL
     *        The URL to which a form login will be submitted. To match any
     *        form login, specify an empty string. To not match any form

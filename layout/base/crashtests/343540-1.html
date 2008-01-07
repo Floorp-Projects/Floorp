@@ -1,0 +1,26 @@
+<html>
+<head>
+
+<script>
+
+function boo()
+{
+  var div = document.getElementById("div"); 
+  var dd = document.getElementById("dd"); 
+  var newSpan = document.createElement('span'); 
+  dd.insertBefore(newSpan, div);
+}
+
+window.addEventListener("load", boo, false);
+</script>
+
+</head>
+
+
+<body>
+
+<dd id="dd"><div id="div"></div></dd>
+
+</body>
+
+</html>

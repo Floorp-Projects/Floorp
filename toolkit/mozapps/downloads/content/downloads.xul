@@ -25,6 +25,7 @@
 #   Ben Goodger <ben@bengoodger.com> (v2.0)
 #   Blake Ross <blakeross@telocity.com>
 #   Shawn Wilsher <me@shawnwilsher.com> (v3.0)
+#   Edward Lee <edward.lee@engineering.uiuc.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -110,6 +111,8 @@
   </commandset>
 
   <keyset id="downloadKeys">
+    <key keycode="VK_ENTER" oncommand="doDefaultForSelected();"/>
+    <key keycode="VK_RETURN" oncommand="doDefaultForSelected();"/>
     <key id="key_pauseResume" key=" " command="cmd_pauseResume"/>
     <key id="key_removeFromList"  keycode="VK_DELETE" command="cmd_removeFromList"/>
 #ifdef XP_MACOSX
@@ -127,7 +130,6 @@
          key="&cmd.find.commandKey;"
          modifiers="accel"
          command="cmd_findDownload"/>
-    <key id="key_info"    key="&cmd.info.commandKey;"   oncommand="onDownloadShowInfo();" modifiers="accel"/>
   </keyset>
   
   <vbox id="contextMenuPalette" hidden="true">
@@ -162,11 +164,16 @@
               label="&cmd.removeFromList.label;" accesskey="&cmd.removeFromList.accesskey;"
               command="cmd_removeFromList"/>
               
-    <menuseparator id="menuseparator_copy_location"/>
+    <menuseparator id="menuseparator"/>
               
+    <menuitem id="menuitem_openReferrer"
+              label="&cmd.goToDownloadPage.label;"
+              accesskey="&cmd.goToDownloadPage.accesskey;"
+              command="cmd_openReferrer"/>
+
     <menuitem id="menuitem_copyLocation"
-              label="&cmd.copyLocation.label;"
-              accesskey="&cmd.copyLocation.accesskey;"
+              label="&cmd.copyDownloadLink.label;"
+              accesskey="&cmd.copyDownloadLink.accesskey;"
               command="cmd_copyLocation"/>
 
     <menuitem id="menuitem_clearList"
@@ -177,24 +184,15 @@
   
   <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
-  <!--Information popup-->
-  <panel id="information" orient="vertical" align="start">
-    <label id="information-title" flex="1"/>
-    <button type="image" crop="center" id="information-uri" class="mini-button"
-            flex="1" command="cmd_openReferrer"/>
-    <button type="image" crop="center" id="information-location" class="mini-button" flex="1" command="cmd_show"/>
-  </panel>
-
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
+               ondblclick="onDownloadDblClick(event);"
                ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
-    <hbox id="active-downloads-area" hidden="true"/>
-    <hbox id="done-downloads-area" hidden="true"/>
   </richlistbox>
 
   <hbox id="search">
     <textbox type="timed" timeout="500" id="searchbox"
-             oncommand="performSearch();" empty="true"
+             oncommand="buildDownloadList();" empty="true"
              value="&searchBox.label;" defaultValue="&searchBox.label;"
              onblur="onSearchboxBlur();" onfocus="onSearchboxFocus();"/>
     <spacer flex="1"/>

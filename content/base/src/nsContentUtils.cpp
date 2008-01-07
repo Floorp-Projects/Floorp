@@ -141,6 +141,10 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
 #include "nsCompressedCharMap.h"
+#include "nsINativeKeyBindings.h"
+#include "nsIDOMNSUIEvent.h"
+#include "nsIDOMNSEvent.h"
+#include "nsIPrivateDOMEvent.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -575,7 +579,7 @@ class CopyNormalizeNewlines
       return mLastCharCR;
     }
 
-    PRUint32 write(const typename OutputIterator::value_type* aSource, PRUint32 aSourceLength) {
+    void write(const typename OutputIterator::value_type* aSource, PRUint32 aSourceLength) {
 
       const typename OutputIterator::value_type* done_writing = aSource + aSourceLength;
 
@@ -611,7 +615,6 @@ class CopyNormalizeNewlines
       }
 
       mWritten += num_written;
-      return aSourceLength;
     }
 
   private:
@@ -2870,6 +2873,47 @@ nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
   return rv;
 }
 
+/* static */
+PRBool
+nsContentUtils::CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
+                            nsACString& aCharset)
+{
+  PRBool found = PR_TRUE;
+  aCharset.Truncate();
+  if (aLength >= 3 &&
+      aBuffer[0] == 0xEF &&
+      aBuffer[1] == 0xBB &&
+      aBuffer[2] == 0xBF) {
+    aCharset = "UTF-8";
+  }
+  else if (aLength >= 4 &&
+           aBuffer[0] == 0x00 &&
+           aBuffer[1] == 0x00 &&
+           aBuffer[2] == 0xFE &&
+           aBuffer[3] == 0xFF) {
+    aCharset = "UTF-32BE";
+  }
+  else if (aLength >= 4 &&
+           aBuffer[0] == 0xFF &&
+           aBuffer[1] == 0xFE &&
+           aBuffer[2] == 0x00 &&
+           aBuffer[3] == 0x00) {
+    aCharset = "UTF-32LE";
+  }
+  else if (aLength >= 2 &&
+           aBuffer[0] == 0xFE && aBuffer[1] == 0xFF) {
+    aCharset = "UTF-16BE";
+  }
+  else if (aLength >= 2 &&
+           aBuffer[0] == 0xFF && aBuffer[1] == 0xFE) {
+    aCharset = "UTF-16LE";
+  } else {
+    found = PR_FALSE;
+  }
+
+  return found;
+}
+
 static PRBool EqualExceptRef(nsIURL* aURL1, nsIURL* aURL2)
 {
   nsCOMPtr<nsIURI> u1;
@@ -3218,6 +3262,10 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
 
   nsAutoTArray<nsAutoString, 32> tagStack;
   nsAutoString uriStr, nameStr;
+
+  // just in case we have a text node
+  if (!content->IsNodeOfType(nsINode::eELEMENT))
+    content = content->GetParent();
 
   while (content && content->IsNodeOfType(nsINode::eELEMENT)) {
     nsAutoString& tagName = *tagStack.AppendElement();
@@ -3749,6 +3797,54 @@ nsContentUtils::GetLocalizedEllipsis()
       sBuf[0] = PRUnichar(0x2026);
   }
   return nsDependentString(sBuf);
+}
+
+//static
+nsEvent*
+nsContentUtils::GetNativeEvent(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aDOMEvent));
+  if (!privateEvent)
+    return nsnull;
+  nsEvent* nativeEvent;
+  privateEvent->GetInternalNSEvent(&nativeEvent);
+  return nativeEvent;
+}
+
+//static
+PRBool
+nsContentUtils::DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
+                                         nsNativeKeyEvent* aNativeEvent,
+                                         PRBool aGetCharCode)
+{
+  nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aDOMEvent);
+  PRBool defaultPrevented;
+  uievent->GetPreventDefault(&defaultPrevented);
+  if (defaultPrevented)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aDOMEvent);
+  PRBool trusted = PR_FALSE;
+  nsevent->GetIsTrusted(&trusted);
+  if (!trusted)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aDOMEvent);
+
+  if (aGetCharCode) {
+    keyEvent->GetCharCode(&aNativeEvent->charCode);
+  } else {
+    aNativeEvent->charCode = 0;
+  }
+  keyEvent->GetKeyCode(&aNativeEvent->keyCode);
+  keyEvent->GetAltKey(&aNativeEvent->altKey);
+  keyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
+  keyEvent->GetShiftKey(&aNativeEvent->shiftKey);
+  keyEvent->GetMetaKey(&aNativeEvent->metaKey);
+
+  aNativeEvent->nativeEvent = GetNativeEvent(aDOMEvent);
+
+  return PR_TRUE;
 }
 
 /* static */

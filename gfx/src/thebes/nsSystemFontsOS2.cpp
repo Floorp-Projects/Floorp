@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDeviceContext.h"
-#include "nsUnitConversion.h"
 #include "nsSystemFontsOS2.h"
 #include <stdlib.h>
 

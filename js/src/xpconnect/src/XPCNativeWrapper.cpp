@@ -828,9 +828,12 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   printf("Creating new JSObject\n");
 #endif
   wrapperObj = ::JS_NewObject(cx, XPCNativeWrapper::GetJSClass(), nsnull,
-                              wrappedNative->GetScope()->GetGlobalJSObject());
+                              nsnull);
 
-  if (!wrapperObj || !::JS_SetPrototype(cx, wrapperObj, nsnull)) {
+  if (!wrapperObj ||
+      !::JS_SetParent(cx, wrapperObj,
+                      wrappedNative->GetScope()->GetGlobalJSObject()) ||
+      !::JS_SetPrototype(cx, wrapperObj, nsnull)) {
     // JS_NewObject already threw (or reported OOM).
     return JS_FALSE;
   }
@@ -1104,13 +1107,14 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
     ::JS_LockGCThing(cx, nw_parent);
   }
 
-  obj = ::JS_NewObject(cx, GetJSClass(), nsnull, nw_parent);
+  obj = ::JS_NewObject(cx, GetJSClass(), nsnull, nsnull);
 
   if (lock) {
     ::JS_UnlockGCThing(cx, nw_parent);
   }
 
   if (!obj ||
+      !::JS_SetParent(cx, obj, nw_parent) ||
       !::JS_SetPrivate(cx, obj, wrapper) ||
       !::JS_SetPrototype(cx, obj, nsnull) ||
       !::JS_SetReservedSlot(cx, obj, 0, INT_TO_JSVAL(FLAG_DEEP))) {

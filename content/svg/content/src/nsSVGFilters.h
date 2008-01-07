@@ -76,9 +76,9 @@ protected:
 
 public:
   nsSVGFilterInstance::ColorModel
-  GetColorModel(nsIDOMSVGAnimatedString* aIn) {
+  GetColorModel(nsSVGFilterInstance* aInstance, nsIDOMSVGAnimatedString* aIn) {
     return nsSVGFilterInstance::ColorModel (
-          (OperatesOnSRGB(aIn) ?
+          (OperatesOnSRGB(aInstance, aIn) ?
              nsSVGFilterInstance::ColorModel::SRGB :
              nsSVGFilterInstance::ColorModel::LINEAR_RGB),
           (OperatesOnPremultipledAlpha() ?
@@ -96,7 +96,8 @@ public:
 protected:
   virtual PRBool OperatesOnPremultipledAlpha() { return PR_TRUE; }
 
-  virtual PRBool OperatesOnSRGB(nsIDOMSVGAnimatedString*) {
+  virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
+                                nsIDOMSVGAnimatedString*) {
     nsIFrame* frame = GetPrimaryFrame();
     if (!frame) return PR_FALSE;
 

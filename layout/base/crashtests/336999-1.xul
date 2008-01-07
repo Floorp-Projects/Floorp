@@ -1,0 +1,26 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait">
+
+<script>
+
+function boom()
+{
+  document.getElementById("xxx").style.position = "fixed";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", function(){setTimeout(boom, 30)}, 0);
+
+</script>
+	
+
+  <hbox id="xxx" style="position: absolute;">
+    <label value="X" />
+    <menulist>
+      <menupopup>
+        <menuitem label="Y" />
+      </menupopup>
+    </menulist>
+  </hbox>
+
+
+</window>

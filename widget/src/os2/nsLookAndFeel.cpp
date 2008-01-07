@@ -220,11 +220,27 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_BUTTONDEFAULT;
       break;
     case eColor__moz_menuhover:
-      idx = SYSCLR_MENUHILITEBGND;
+      if (WinQuerySysColor(HWND_DESKTOP, SYSCLR_MENUHILITEBGND, 0) ==
+          WinQuerySysColor(HWND_DESKTOP, SYSCLR_MENU, 0)) {
+        // if this happens, we would paint menu selections unreadable
+        // (we are most likely on Warp3), so let's fake a dark grey
+        // background for the selected menu item
+        aColor = NS_RGB( 132, 130, 132);
+        return res;
+      } else {
+        idx = SYSCLR_MENUHILITEBGND;
+      }
       break;
     case eColor__moz_menuhovertext:
     case eColor__moz_menubarhovertext:
-      idx = SYSCLR_MENUHILITE;
+      if (WinQuerySysColor(HWND_DESKTOP, SYSCLR_MENUHILITEBGND, 0) ==
+          WinQuerySysColor(HWND_DESKTOP, SYSCLR_MENU, 0)) {
+        // white text to be readable on dark grey
+        aColor = NS_RGB( 255, 255, 255);
+        return res;
+      } else {
+        idx = SYSCLR_MENUHILITE;
+      }
       break;
     default:
       idx = SYSCLR_WINDOW;

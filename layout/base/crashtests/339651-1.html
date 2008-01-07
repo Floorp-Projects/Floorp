@@ -1,0 +1,37 @@
+<html style="border: 1px solid red; width: 6em;" class="reftest-wait">
+
+<head>
+<script type="text/javascript">
+
+function f1()
+{
+  document.getElementById("s").style.cssFloat = "left";
+
+  document.body.style.display = "inline";
+  document.getElementById("d").style.display = "inline"; 
+  document.getElementById("p").style.display = "inline"; 
+  
+  setTimeout(f2, 30);
+}
+
+function f2()
+{
+  document.getElementById("d").style.cssFloat = "left";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="f1()">
+
+TTTTT TTTTT
+<div id="d">
+YY
+<p id="p">
+ZZ
+<span id="s">
+
+</body>
+
+</html>

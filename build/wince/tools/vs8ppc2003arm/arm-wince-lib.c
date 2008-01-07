@@ -1,4 +1,4 @@
-#include "toolpaths.h"
+#include "toolspath.h"
 
 
 int 
@@ -14,7 +14,6 @@ main(int argc, char **argv)
 
   argpath_conv(&argv[1], &args[i]);
 
-  run(args);
+  return run(args);
 
-  return 0;
 }

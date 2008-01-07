@@ -72,7 +72,6 @@
 #include "prtime.h"
 #include "prprf.h"
 #include "nsEscape.h"
-#include "nsITaggingService.h"
 #include "nsIVariant.h"
 #include "nsVariant.h"
 
@@ -182,6 +181,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIGlobalHistory2, nsIGlobalHistory3)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalHistory3)
+  NS_INTERFACE_MAP_ENTRY(nsIDownloadHistory)
   NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -749,15 +749,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
   // --- PUT SCHEMA-MODIFYING THINGS (like create table) ABOVE THIS LINE ---
 
-  // This causes the database data to be preloaded up to the maximum cache size
-  // set above. This dramatically speeds up some later operations. Failures
-  // here are not fatal since we can run fine without this.
-  if (cachePages > 0) {
-    rv = mDBConn->Preload();
-    if (NS_FAILED(rv))
-      NS_WARNING("Preload of database failed");
-  }
-
   // DO NOT PUT ANY SCHEMA-MODIFYING THINGS HERE
 
   rv = InitStatements();
@@ -994,12 +985,12 @@ nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn)
 nsresult
 nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn) 
 {
-  // if dateAdded & lastModified cols are already there, then a partial update occurred.
-  // return, making no changes, and allowing db version to be updated.
+  // if dateAdded & lastModified cols are already there, then a partial update occurred,
+  // and so we should not attempt to add these cols.
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT a.dateAdded, a.lastModified, b.dateAdded, b.lastModified "
-    "FROM moz_annos a, moz_items_annos b"), getter_AddRefs(statement));
+    "SELECT a.dateAdded, a.lastModified FROM moz_annos a"), 
+    getter_AddRefs(statement));
   if (NS_FAILED(rv)) {
     // add dateAdded and lastModified columns to moz_annos
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -1008,7 +999,14 @@ nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn)
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "ALTER TABLE moz_annos ADD lastModified INTEGER DEFAULT 0"));
     NS_ENSURE_SUCCESS(rv, rv);
+  }
 
+  // if dateAdded & lastModified cols are already there, then a partial update occurred,
+  // and so we should not attempt to add these cols.  see bug #408443 for details.
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT b.dateAdded, b.lastModified FROM moz_items_annos b"), 
+    getter_AddRefs(statement));
+  if (NS_FAILED(rv)) {
     // add dateAdded and lastModified columns to moz_items_annos
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "ALTER TABLE moz_items_annos ADD dateAdded INTEGER DEFAULT 0"));
@@ -1334,11 +1332,11 @@ nsNavHistory::FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
 {
   mozStorageStatementScoper scoper(mDBRecentVisitOfURL);
   nsresult rv = BindStatementURI(mDBRecentVisitOfURL, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   PRBool hasMore;
   rv = mDBRecentVisitOfURL->ExecuteStep(&hasMore);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
   if (hasMore) {
     *aVisitID = mDBRecentVisitOfURL->AsInt64(0);
     *aSessionID = mDBRecentVisitOfURL->AsInt64(1);
@@ -1377,22 +1375,21 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 #endif
 
   // check the main DB
-  nsresult rv;
-  mozStorageStatementScoper statementResetter(mDBGetURLPageInfo);
-  rv = mDBGetURLPageInfo->BindUTF8StringParameter(0, aURIString);
+  mozStorageStatementScoper scoper(mDBGetPageVisitStats);
+  nsresult rv = mDBGetPageVisitStats->BindUTF8StringParameter(0, aURIString);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   PRBool hasMore = PR_FALSE;
-  rv = mDBGetURLPageInfo->ExecuteStep(&hasMore);
+  rv = mDBGetPageVisitStats->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  if (! hasMore)
+  if (!hasMore)
     return PR_FALSE;
 
   // Actually get the result to make sure the visit count > 0.  there are
   // several ways that we can get pages with visit counts of 0, and those
   // should not count.
   PRInt32 visitCount;
-  rv = mDBGetURLPageInfo->GetInt32(kGetInfoIndex_VisitCount, &visitCount);
+  rv = mDBGetPageVisitStats->GetInt32(1, &visitCount);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   return visitCount > 0;
@@ -1763,7 +1760,13 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 
 // nsNavHistory::MarkPageAsFollowedBookmark
 //
-//    @see MarkPageAsTyped
+// We call MarkPageAsFollowedBookmark() before visiting a URL in order to 
+// help determine the transition type of the visit.  
+// We keep track of the URL so that later, in AddVisitChain() 
+// we can use TRANSITION_BOOKMARK as the transition.
+// Note, AddVisitChain() is not called immediately when we are doing LAZY_ADDs
+//
+// @see MarkPageAsTyped
 
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
@@ -1783,7 +1786,7 @@ nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
   if (mRecentBookmark.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentBookmark);
 
-  mRecentTyped.Put(uriString, GetNow());
+  mRecentBookmark.Put(uriString, GetNow());
   return NS_OK;
 }
 
@@ -1889,7 +1892,7 @@ nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
 //    added to the history.
 
 NS_IMETHODIMP
-nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
+nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
                        PRInt32 aTransitionType, PRBool aIsRedirect,
                        PRInt64 aSessionID, PRInt64* aVisitID)
 {
@@ -2005,7 +2008,19 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = InternalAddVisit(pageID, aReferringVisit, aSessionID, aTime,
+  // Get the place id for the referrer, if we have one
+  PRInt64 referringVisitID = 0;
+  PRInt64 referringSessionID;
+  if (aReferringURI &&
+      !FindLastVisit(aReferringURI, &referringVisitID, &referringSessionID)) {
+    // Add the referrer
+    rv = AddVisit(aReferringURI, aTime - 1, nsnull, TRANSITION_LINK, PR_FALSE,
+                  aSessionID, &referringVisitID);
+    if (NS_FAILED(rv))
+      referringVisitID = 0;
+  }
+
+  rv = InternalAddVisit(pageID, referringVisitID, aSessionID, aTime,
                         aTransitionType, aVisitID);
 
   // Notify observers: The hidden detection code must match that in
@@ -2015,14 +2030,15 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
   if (! hidden && aTransitionType != TRANSITION_EMBED) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                         OnVisit(aURI, *aVisitID, aTime, aSessionID,
-                                aReferringVisit, aTransitionType));
+                                referringVisitID, aTransitionType));
   }
 
   // Normally docshell send the link visited observer notification for us (this
   // will tell all the documents to update their visited link coloring).
-  // However, for redirects (since we implement nsIGlobalHistory3) this will
-  // not happen and we need to send it ourselves.
-  if (newItem && aIsRedirect) {
+  // However, for redirects (since we implement nsIGlobalHistory3) and downloads
+  // (since we implement nsIDownloadHistory) this will not happen and we need to
+  // send it ourselves.
+  if (newItem && (aIsRedirect || aTransitionType == TRANSITION_DOWNLOAD)) {
     nsCOMPtr<nsIObserverService> obsService =
       do_GetService("@mozilla.org/observer-service;1");
     if (obsService)
@@ -3020,17 +3036,13 @@ nsNavHistory::HidePage(nsIURI *aURI)
 
 // nsNavHistory::MarkPageAsTyped
 //
-//    Just sets the typed column to true, which will make this page more likely
-//    to float to the top of autocomplete suggestions.
+// We call MarkPageAsTyped() before visiting a URL in order to 
+// help determine the transition type of the visit.  
+// We keep track of the URL so that later, in AddVisitChain() 
+// we can use TRANSITION_TYPED as the transition.
+// Note, AddVisitChain() is not called immediately when we are doing LAZY_ADDs
 //
-//    We can get this notification for pages that have not yet been added to the
-//    DB. This happens when you type a new URL. The AddURI is called only when
-//    the page is successfully found. If we don't have an entry yet, we add
-//    one for this page, marking it as typed but hidden, with a 0 visit count.
-//    This will get updated when AddURI is called, and it will clear the hidden
-//    flag for typed URLs.
-//
-//    @see MarkPageAsFollowedBookmark
+// @see MarkPageAsFollowedBookmark
 
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
@@ -3069,9 +3081,15 @@ nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
   if (IsHistoryDisabled())
     return NS_OK;
 
+  // filter out any unwanted URIs
+  PRBool canAdd = PR_FALSE;
+  nsresult rv = CanAddURI(aURI, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd)
+    return NS_OK;
+
   PRTime now = PR_Now();
 
-  nsresult rv;
 #ifdef LAZY_ADD
   LazyMessage message;
   rv = message.Init(LazyMessage::Type_AddURI, aURI);
@@ -3252,7 +3270,7 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
   }
 
   // this call will create the visit and create/update the page entry
-  return AddVisit(aURI, visitTime, referringVisit, transitionType,
+  return AddVisit(aURI, visitTime, aReferrer, transitionType,
                   aIsRedirect, *aSessionID, aVisitID);
 }
 
@@ -3484,6 +3502,17 @@ nsNavHistory::IdleTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   nsNavHistory* history = static_cast<nsNavHistory*>(aClosure);
   (void)history->OnIdle();
+}
+
+// nsIDownloadHistory **********************************************************
+
+NS_IMETHODIMP
+nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
+                          PRTime aStartTime)
+{
+  PRInt64 visitID;
+  return AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD, PR_FALSE,
+                  0, &visitID);
 }
 
 // nsIObserver *****************************************************************

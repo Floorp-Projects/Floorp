@@ -1158,8 +1158,9 @@ nsContextMenu.prototype = {
       var description = PlacesUtils.getDescriptionFromDocument(doc);
 
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
-      var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.bookmarksRootId, -1,
-                                           title, null, [descAnno]);
+      var txn = PlacesUtils.ptm.createItem(uri, 
+                                           PlacesUtils.bookmarksMenuFolderId,
+                                           -1, title, null, [descAnno]);
       PlacesUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }

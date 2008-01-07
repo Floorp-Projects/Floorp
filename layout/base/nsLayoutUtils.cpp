@@ -769,7 +769,8 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
   }
 #endif
   
-  nsIFrame* result = list.HitTest(&builder, aPt);
+  nsDisplayItem::HitTestState hitTestState;
+  nsIFrame* result = list.HitTest(&builder, aPt, &hitTestState);
   list.DeleteAll();
   return result;
 }
@@ -1068,7 +1069,8 @@ nsLayoutUtils::GetAllInFlowBoundingRect(nsIFrame* aFrame)
   if (!parent)
     return r;
 
-  for (nsIFrame* f = aFrame->GetNextContinuation(); f; f = f->GetNextContinuation()) {
+  for (nsIFrame* f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame);
+       f; f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
     r.UnionRect(r, nsRect(f->GetOffsetTo(parent), f->GetSize()));
   }
 
@@ -1118,13 +1120,22 @@ nsLayoutUtils::FindChildContainingDescendant(nsIFrame* aParent, nsIFrame* aDesce
 }
 
 nsBlockFrame*
+nsLayoutUtils::GetAsBlock(nsIFrame* aFrame)
+{
+  nsBlockFrame* block;
+  if (NS_SUCCEEDED(aFrame->QueryInterface(kBlockFrameCID, (void**)&block)))
+    return block;
+  return nsnull;
+}
+
+nsBlockFrame*
 nsLayoutUtils::FindNearestBlockAncestor(nsIFrame* aFrame)
 {
   nsIFrame* nextAncestor;
   for (nextAncestor = aFrame->GetParent(); nextAncestor;
        nextAncestor = nextAncestor->GetParent()) {
-    nsBlockFrame* block;
-    if (NS_SUCCEEDED(nextAncestor->QueryInterface(kBlockFrameCID, (void**)&block)))
+    nsBlockFrame* block = GetAsBlock(nextAncestor);
+    if (block)
       return block;
   }
   return nsnull;
@@ -2239,9 +2250,7 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   nsCOMPtr<nsIDeviceContext> dc;
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
 
-  nsRefPtr<gfxContext> ctx = static_cast<gfxContext*>
-                                        (aRenderingContext->GetNativeGraphicData(
-      nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  nsRefPtr<gfxContext> ctx = aRenderingContext->ThebesContext();
 
   // the dest rect is affected by the current transform; that'll be
   // handled by Image::Draw(), when we actually set up the rectangle.

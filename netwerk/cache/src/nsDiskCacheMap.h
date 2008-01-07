@@ -391,8 +391,16 @@ struct nsDiskCacheHeader {
 class nsDiskCacheMap {
 public:
 
-     nsDiskCacheMap() : mCacheDirectory(nsnull), mMapFD(nsnull), mRecordArray(nsnull) { }
-    ~nsDiskCacheMap() { (void) Close(PR_TRUE); }
+     nsDiskCacheMap() : 
+        mCacheDirectory(nsnull),
+        mMapFD(nsnull),
+        mRecordArray(nsnull),
+        mBufferSize(0),
+        mBuffer(nsnull) { }
+
+    ~nsDiskCacheMap() {
+        (void) Close(PR_TRUE);
+    }
 
 /**
  *  File Operations
@@ -432,8 +440,9 @@ public:
                                                 PRBool               meta,
                                                 nsILocalFile **      result);
 
-    nsresult    ReadDiskCacheEntry( nsDiskCacheRecord *  record,
-                                    nsDiskCacheEntry **  result);
+    // On success, this returns the buffer owned by nsDiskCacheMap,
+    // so it must not be deleted by the caller.
+    nsDiskCacheEntry * ReadDiskCacheEntry( nsDiskCacheRecord *  record);
 
     nsresult    WriteDiskCacheEntry( nsDiskCacheBinding *  binding);
     
@@ -514,6 +523,13 @@ private:
     nsresult GrowRecords();
     nsresult ShrinkRecords();
 
+    nsresult EnsureBuffer(PRUint32 bufSize);
+
+    // The returned structure will point to the buffer owned by nsDiskCacheMap, 
+    // so it must not be deleted by the caller.
+    nsDiskCacheEntry *  CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
+                                             PRUint32 * size);
+
 /**
  *  data members
  */
@@ -522,6 +538,8 @@ private:
     PRFileDesc *            mMapFD;
     nsDiskCacheRecord *     mRecordArray;
     nsDiskCacheBlockFile    mBlockFile[3];
+    PRUint32                mBufferSize;
+    char *                  mBuffer;
     nsDiskCacheHeader       mHeader;
 };
 

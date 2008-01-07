@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=403852
+-->
+  <title>Test for Bug 403852</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=403852">Mozilla Bug 403852</a>
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
+<div id="content" style="display: none">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
+var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+testFile.append("prefs.js");
+
+var fileList = document.getElementById('fileList');
+fileList.value = testFile.path;
+
+// Make sure the file is accessible with indexed notation
+var domFile = fileList.files[0];
+
+is(domFile.fileName, "prefs.js", "fileName should be prefs.js");
+
+</script>
+</pre>
+</body> </html>

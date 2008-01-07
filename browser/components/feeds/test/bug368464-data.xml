@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+                 <rdf:RDF 
+               xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+               xmlns="http://my.netscape.com/rdf/simple/0.9/">
+               <channel>
+               <title>Tinderbox - Firefox</title>
+               <description>Build bustages for Firefox</description>
+               <link>http://tinderbox.mozilla.org/showbuilds.cgi?tree=Firefox</link>
+               </channel>
+               <image>
+               <title>Bad</title>
+               <url>http://tinderbox.mozilla.org/channelflames.gif</url>
+               <link>http://tinderbox.mozilla.org/showbuilds.cgi?tree=Firefox</link>
+               </image>
+           <item><title>The tree is currently closed</title><link>http://tinderbox.mozilla.org/showbuilds.cgi?tree=Firefox</link></item>
+
+<item><title>MacOSX Darwin 8.8.4 qm-xserve01 dep unit test is in flames</title><link>http://tinderbox.mozilla.org/showbuilds.cgi?tree=Firefox</link></item>
+</rdf:RDF>

@@ -80,6 +80,7 @@ var PlacesOrganizer = {
     // Set up the advanced query builder UI
     PlacesQueryBuilder.init();
 
+    window.addEventListener("AppCommand", this, true);
 #ifdef XP_MACOSX
     // 1. Map Edit->Find command to the organizer's command
     var findMenuItem = document.getElementById("menu_find");
@@ -93,6 +94,34 @@ var PlacesOrganizer = {
       document.getElementById(elements[i]).setAttribute("disabled", "true");
     }
 #endif
+  },
+
+  QueryInterface: function PO_QueryInterface(aIID) {
+    if (aIID.equals(Components.interfaces.nsIDOMEventListener) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
+
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  handleEvent: function PO_handleEvent(aEvent) {
+    if (aEvent.type != "AppCommand")
+      return;
+
+    aEvent.stopPropagation();
+    switch (aEvent.command) {
+      case "Back":
+        if (this._backHistory.length > 0)
+          this.back();
+        break;
+      case "Forward":
+        if (this._forwardHistory.length > 0)
+          this.forward();
+        break;
+      case "Search":
+        PlacesSearchBox.findAll();
+        break;
+    }
   },
 
   destroy: function PO_destroy() {
@@ -1612,5 +1641,29 @@ var ViewMenu = {
     }
     result.sortingAnnotation = sortingAnnotation;
     result.sortingMode = sortingMode;
+  }
+};
+
+var PlacesToolbar = {
+  // make places toolbar act like menus
+  openedMenuButton: null,
+
+  autoOpenMenu: function (aTarget) {
+    if (this.openedMenuButton && this.openedMenuButton != aTarget &&
+        aTarget.localName == "toolbarbutton" &&
+        (aTarget.type == "menu" || aTarget.type == "menu-button")) {
+      this.openedMenuButton.open = false;
+      aTarget.open = true;
+    }
+  },
+
+  onMenuOpen: function (aTarget) {
+    if (aTarget.parentNode.localName == "toolbarbutton")
+      this.openedMenuButton = aTarget.parentNode;
+  },
+
+  onMenuClose: function (aTarget) {
+    if (aTarget.parentNode.localName == "toolbarbutton")
+      this.openedMenuButton = null;
   }
 };
