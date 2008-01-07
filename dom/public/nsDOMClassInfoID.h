@@ -270,7 +270,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGFESpotLightElement_id,
   eDOMClassInfo_SVGFETileElement_id,
   eDOMClassInfo_SVGFETurbulenceElement_id,
-  eDOMClassInfo_SVGFEUnimplementedMOZElement_id,
   eDOMClassInfo_SVGFilterElement_id,
   eDOMClassInfo_SVGGElement_id,
   eDOMClassInfo_SVGImageElement_id,
