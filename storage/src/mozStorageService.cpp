@@ -91,6 +91,9 @@ mozStorageService::Init()
     // cache.
     sqlite3_enable_shared_cache(1);
 
+    // Disable async IO; need to test to see whether corruption is
+    // caused by it or not
+#if 0
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService = 
             do_GetService("@mozilla.org/observer-service;1", &rv);
@@ -101,6 +104,7 @@ mozStorageService::Init()
 
     rv = observerService->AddObserver(this, kShutdownMessage, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
     return NS_OK;
 }
