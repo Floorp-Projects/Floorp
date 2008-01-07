@@ -1,0 +1,2 @@
+circle {fill: red}
+image:-moz-broken ~ circle {fill: green}

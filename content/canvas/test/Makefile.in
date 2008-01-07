@@ -488,6 +488,7 @@ _TEST_FILES_E = \
 	test_2d.imageData.put.unchanged.html \
 	test_2d.imageData.put.unaffected.html \
 	test_2d.imageData.put.path.html \
+	test_bug405982.html \
 	image_transparent50.png \
 	image_redtransparent.png \
 	image_yellow.png \

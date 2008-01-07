@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>Overflow: Auto / Cascaded Boxes / Scrollbar Rendering Testcase</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<style type="text/css">
+			#outer_box {
+				width: 400px;
+				height: 100px;
+				overflow-x: scroll;
+				overflow-y: hidden;
+			}
+			#inner_box {
+				width: 200%;
+				height: 100%;
+				overflow: auto;
+			}
+			#dummy_content {
+				height: 101px;
+				background: yellow;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="outer_box">
+			<div id="inner_box">
+				<div id="dummy_content">
+					&nbsp;
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

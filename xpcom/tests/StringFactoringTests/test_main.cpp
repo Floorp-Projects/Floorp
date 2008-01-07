@@ -1,5 +1,4 @@
 #include <iostream.h>
-#include "nsStringIO.h"
 
 //#define TEST_STD_STRING
 
@@ -465,25 +464,6 @@ main()
       nsSlidingSubstring ss2(ss0, ri0, ri1);
       tests_failed += test_readable_hello(ss2);
     }
-
-
-    {
-      nsLiteralCString s0("Patrick Beard made me write this: \"This is just a test\"\n");
-      print_string(s0);
-
-      const char* raw_string = "He also made me write this.\n";
-      nsFileCharSink<char> output(stdout);
-      copy_string(raw_string, raw_string+nsCharTraits<char>::length(raw_string), output);
-
-      nsLiteralCString s1("This ", 5), s2("is ", 3), s3("a ", 2), s4("test\n", 5);
-      print_string(s1+s2+s3+s4);
-
-      nsLiteralCString s5( "This is " "a " "test" );
-      print_string(s5+NS_LITERAL_CSTRING("\n"));
-
-      print_string(nsLiteralCString("The value of the string |x| is \"") + Substring(s0, 0, s0.Length()-1) + NS_LITERAL_CSTRING("\".  Hope you liked it."));
-    }
-
 
     {
       tests_failed += test_readable_hello(NS_LITERAL_STRING("Hello"));

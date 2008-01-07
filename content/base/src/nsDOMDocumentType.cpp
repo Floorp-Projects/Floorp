@@ -89,8 +89,8 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                           kNameSpaceID_None, getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aDocType = new nsDOMDocumentType(ni, aName, aEntities, aNotations,
-                                    aPublicId, aSystemId, aInternalSubset);
+  *aDocType = new (ni) nsDOMDocumentType(ni, aName, aEntities, aNotations,
+                                         aPublicId, aSystemId, aInternalSubset);
   if (!*aDocType) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -235,8 +235,9 @@ nsDOMDocumentType::GetNodeType(PRUint16* aNodeType)
 nsGenericDOMDataNode*
 nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  return new nsDOMDocumentType(aNodeInfo, mName, mEntities, mNotations,
-                               mPublicId, mSystemId, mInternalSubset);
+  return new (aNodeInfo) nsDOMDocumentType(aNodeInfo, mName, mEntities,
+                                           mNotations, mPublicId, mSystemId,
+                                           mInternalSubset);
 }
 
 nsresult

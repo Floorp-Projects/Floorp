@@ -120,6 +120,15 @@ do_check_eq(1, storage.countLogins("http://dummyhost.mozilla.org", "foo", null))
 do_check_eq(0, storage.countLogins("http://dummyhost.mozilla.org", null,    ""));
 // counting logins (don't match a bogus hostname)
 do_check_eq(0, storage.countLogins("blah", "", ""));
+// counting all logins (empty hostname)
+do_check_eq(1, storage.countLogins("", "", null));
+// counting all logins (empty hostname)
+do_check_eq(1, storage.countLogins("", "foo", null));
+// counting no logins (null hostname)
+do_check_eq(0, storage.countLogins(null, "", null));
+do_check_eq(0, storage.countLogins(null, null, ""));
+do_check_eq(0, storage.countLogins(null, "", ""));
+do_check_eq(0, storage.countLogins(null, null, null));
 
 
 /* ========== 9 ========== */
@@ -180,6 +189,17 @@ do_check_eq(0,   storage.countLogins("http://dummyhost.site.org", null, ""));
 do_check_eq(1, storage.countLogins("http://dummyhost-1.site.org", "", ""));
 do_check_eq(1, storage.countLogins("http://dummyhost-1.site.org", "", null));
 do_check_eq(0, storage.countLogins("http://dummyhost-1.site.org", null, ""));
+// counting logins for all hosts
+do_check_eq(500, storage.countLogins("", "", ""));
+do_check_eq(500, storage.countLogins("", "http://cgi.site.org", ""));
+do_check_eq(500, storage.countLogins("", "http://cgi.site.org", null));
+do_check_eq(0,   storage.countLogins("", "blah", ""));
+do_check_eq(0,   storage.countLogins("", "", "blah"));
+// counting logins for no hosts
+do_check_eq(0, storage.countLogins(null, "", ""));
+do_check_eq(0, storage.countLogins(null, "http://cgi.site.org", ""));
+do_check_eq(0, storage.countLogins(null, "http://cgi.site.org", null));
+do_check_eq(0, storage.countLogins(null, null, null));
 
 
 /* ========== 12 ========== */

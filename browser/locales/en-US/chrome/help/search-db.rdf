@@ -18,7 +18,7 @@
         <li><Description nc:name="Anti-Phishing Preferences" nc:link="prefs.xhtml#phishing" nc:platform="unix mac"/></li>
         <li><Description nc:name="authentication (definition)" nc:link="glossary.xhtml#authentication"/></li>
         <li><Description nc:name="Back Button" nc:link="using_firebird.xhtml#retracing_your_steps"/></li>
-        <li><Description nc:name="Block Popups" nc:link="popup.xhtml"/></li>
+        <li><Description nc:name="Block Pop-ups" nc:link="popup.xhtml"/></li>
         <li><Description nc:name="bookmark (definition)" nc:link="glossary.xhtml#bookmark"/></li>
         <li><Description nc:name="Bookmarks Toolbar (definition)" nc:link="glossary.xhtml#Bookmarks_Toolbar"/></li>
         <li><Description nc:name="Browsing" nc:link="using_firebird.xhtml#navigating_web_pages"/></li>

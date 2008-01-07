@@ -46,6 +46,7 @@ textbox[type="number"] {
   padding: 0 !important;
   border: none;
   cursor: default;
+  background-color: transparent;
 }
 
 html|*.numberbox-input {
@@ -54,7 +55,7 @@ html|*.numberbox-input {
 
 .numberbox-input-box {
   -moz-box-align: center;
-  -moz-appearance: textfield;
+  -moz-appearance: spinner-textfield;
   cursor: text;
   margin-right: -1px;
   border: 2px solid;
@@ -65,4 +66,8 @@ html|*.numberbox-input {
   padding: 3px;
   background-color: -moz-Field;
   color: -moz-FieldText;
+}
+
+textbox[hidespinbuttons="true"] > .numberbox-input-box {
+  -moz-appearance: textfield;
 }

@@ -226,11 +226,7 @@ public:
    * If the caret is currently invisible, this will be null.
    */
   nsIFrame* GetCaretFrame() {
-    if (mBuildCaret) {
-      NS_ASSERTION(mCaretStates.Length() > 0, "Not enough presshells");
-      return mCaretStates[mCaretStates.Length() - 1];
-    }
-    return nsnull;
+    return CurrentPresShellState()->mCaretFrame;
   }
   /**
    * Get the caret associated with the current presshell.
@@ -290,18 +286,29 @@ private:
   // it.  Don't let us be heap-allocated!
   void* operator new(size_t sz) CPP_THROW_NEW;
   
-  nsIFrame*              mReferenceFrame;
-  nsIFrame*              mMovingFrame;
-  nsIFrame*              mIgnoreScrollFrame;
-  PLArenaPool            mPool;
-  nsCOMPtr<nsISelection> mBoundingSelection;
-  nsTArray<nsIFrame*>    mCaretStates;
-  nsTArray<nsIFrame*>    mFramesMarkedForDisplay;
-  PRPackedBool           mBuildCaret;
-  PRPackedBool           mEventDelivery;
-  PRPackedBool           mIsBackgroundOnly;
-  PRPackedBool           mIsAtRootOfPseudoStackingContext;
-  PRPackedBool           mPaintAllFrames;
+  struct PresShellState {
+    nsIPresShell* mPresShell;
+    nsIFrame*     mCaretFrame;
+    PRUint32      mFirstFrameMarkedForDisplay;
+  };
+  PresShellState* CurrentPresShellState() {
+    NS_ASSERTION(mPresShellStates.Length() > 0,
+                 "Someone forgot to enter a presshell");
+    return &mPresShellStates[mPresShellStates.Length() - 1];
+  }
+  
+  nsIFrame*                      mReferenceFrame;
+  nsIFrame*                      mMovingFrame;
+  nsIFrame*                      mIgnoreScrollFrame;
+  PLArenaPool                    mPool;
+  nsCOMPtr<nsISelection>         mBoundingSelection;
+  nsAutoTArray<PresShellState,8> mPresShellStates;
+  nsAutoTArray<nsIFrame*,100>    mFramesMarkedForDisplay;
+  PRPackedBool                   mBuildCaret;
+  PRPackedBool                   mEventDelivery;
+  PRPackedBool                   mIsBackgroundOnly;
+  PRPackedBool                   mIsAtRootOfPseudoStackingContext;
+  PRPackedBool                   mPaintAllFrames;
 };
 
 class nsDisplayItem;
@@ -360,6 +367,14 @@ public:
     TYPE_WRAPLIST
   };
 
+  struct HitTestState {
+    ~HitTestState() {
+      NS_ASSERTION(mItemBuffer.Length() == 0,
+                   "mItemBuffer should have been cleared");
+    }
+    nsAutoTArray<nsDisplayItem*, 100> mItemBuffer;
+  };
+
   /**
    * Some consecutive items should be rendered together as a unit, e.g.,
    * outlines for the same element. For this, we need a way for items to
@@ -370,10 +385,13 @@ public:
    * This is called after we've constructed a display list for event handling.
    * When this is called, we've already ensured that aPt is in the item's bounds.
    * 
+   * @param aState must point to a HitTestState. If you don't have one,
+   * just create one with the default constructor and pass it in.
    * @return the frame that the point is considered over, or nsnull if
    * this is not over any frame
    */
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return nsnull; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) { return nsnull; }
   /**
    * @return the frame that this display item is based on. This is used to sort
    * items by z-index and content order and for some other uses. For some items
@@ -650,8 +668,9 @@ public:
    * Find the topmost display item that returns a non-null frame, and return
    * the frame.
    */
-  nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) const;
-  
+  nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                    nsDisplayItem::HitTestState* aState) const;
+
 private:
   // This class is only used on stack, so we don't have to worry about leaking
   // it.  Don't let us be heap-allocated!
@@ -958,6 +977,7 @@ public:
 class nsDisplayBackground : public nsDisplayItem {
 public:
   nsDisplayBackground(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
+    mIsThemed = mFrame->IsThemed();
     MOZ_COUNT_CTOR(nsDisplayBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -966,14 +986,19 @@ public:
   }
 #endif
 
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) { return mFrame; }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aAncestorFrame);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Background")
+private:
+    /* Used to cache mFrame->IsThemed() since it isn't a cheap call */
+    PRPackedBool mIsThemed;
 };
 
 /**
@@ -1012,7 +1037,8 @@ public:
   }
 #endif
 
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) { return mFrame; }
   NS_DISPLAY_DECL_NAME("EventReceiver")
 };
 
@@ -1042,7 +1068,8 @@ public:
   nsDisplayWrapList(nsIFrame* aFrame, nsDisplayItem* aItem);
   virtual ~nsDisplayWrapList();
   virtual Type GetType() { return TYPE_WRAPLIST; }
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);

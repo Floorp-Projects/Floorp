@@ -45,9 +45,9 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
-#include "nsMemory.h"
 #include "nsBidiUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsNodeInfoManager.h"
 
 #define TEXTFRAG_WHITE_AFTER_NEWLINE 50
 #define TEXTFRAG_MAX_NEWLINES 7
@@ -102,22 +102,43 @@ nsTextFragment::Shutdown()
   }
 }
 
+nsTextFragment::nsTextFragment(nsDOMNodeAllocator* aAllocator)
+  : m1b(nsnull), mAllBits(0), mAllocator(aAllocator)
+{
+  NS_ADDREF(mAllocator);
+  NS_ASSERTION(sizeof(FragmentBits) == 4, "Bad field packing!");
+}
+
 nsTextFragment::~nsTextFragment()
 {
   ReleaseText();
+  NS_RELEASE(mAllocator);
 }
 
 void
 nsTextFragment::ReleaseText()
 {
   if (mState.mLength && m1b && mState.mInHeap) {
-    nsMemory::Free(m2b); // m1b == m2b as far as nsMemory is concerned
+    // m1b == m2b as far as memory is concerned
+    mAllocator->Free(mState.mLength *
+                       (mState.mIs2b ? sizeof(PRUnichar) : sizeof(char)),
+                     m2b);
   }
 
   m1b = nsnull;
 
   // Set mState.mIs2b, mState.mInHeap, and mState.mLength = 0 with mAllBits;
   mAllBits = 0;
+}
+
+void*
+nsTextFragment::CloneMemory(const void* aPtr, PRSize aSize)
+{
+  void* newPtr = mAllocator->Alloc(aSize);
+  if (newPtr) {
+    memcpy(newPtr, aPtr, aSize);
+  }
+ return newPtr;
 }
 
 nsTextFragment&
@@ -130,9 +151,11 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
       m1b = aOther.m1b; // This will work even if aOther is using m2b
     }
     else {
-      m2b = static_cast<PRUnichar*>
-                       (nsMemory::Clone(aOther.m2b, aOther.mState.mLength *
-                                    (aOther.mState.mIs2b ? sizeof(PRUnichar) : sizeof(char))));
+      m2b =
+        static_cast<PRUnichar*>
+          (CloneMemory(aOther.m2b, aOther.mState.mLength *
+                       (aOther.mState.mIs2b ?
+                          sizeof(PRUnichar) : sizeof(char))));
     }
 
     if (m1b) {
@@ -213,14 +236,13 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
 
   if (need2) {
     // Use ucs2 storage because we have to
-    m2b = (PRUnichar *)nsMemory::Clone(aBuffer,
-                                       aLength * sizeof(PRUnichar));
+    m2b = (PRUnichar *)CloneMemory(aBuffer, aLength * sizeof(PRUnichar));
     if (!m2b) {
       return;
     }
   } else {
     // Use 1 byte storage because we can
-    char* buff = (char *)nsMemory::Alloc(aLength * sizeof(char));
+    char* buff = (char *)mAllocator->Alloc(aLength * sizeof(char));
     if (!buff) {
       return;
     }
@@ -301,15 +323,20 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
 
   if (mState.mIs2b) {
     // Already a 2-byte string so the result will be too
-    PRUnichar* buff = (PRUnichar*)nsMemory::Realloc(m2b, (mState.mLength + aLength) * sizeof(PRUnichar));
+    PRUnichar* buff =
+      (PRUnichar*)mAllocator->Alloc((mState.mLength + aLength) *
+                                    sizeof(PRUnichar));
     if (!buff) {
       return;
     }
-    
+    memcpy(buff, m2b, mState.mLength * sizeof(PRUnichar));
     memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(PRUnichar));
+    if (mState.mInHeap) {
+      mAllocator->Free(mState.mLength * sizeof(PRUnichar), m2b);
+    }
     mState.mLength += aLength;
     m2b = buff;
-
+    mState.mInHeap = PR_TRUE;
     return;
   }
 
@@ -329,8 +356,8 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
   if (need2) {
     // The old data was 1-byte, but the new is not so we have to expand it
     // all to 2-byte
-    PRUnichar* buff = (PRUnichar*)nsMemory::Alloc((mState.mLength + aLength) *
-                                                  sizeof(PRUnichar));
+    PRUnichar* buff = (PRUnichar*)mAllocator->Alloc((mState.mLength + aLength) *
+                                                    sizeof(PRUnichar));
     if (!buff) {
       return;
     }
@@ -342,42 +369,34 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
     
     memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(PRUnichar));
 
+    if (mState.mInHeap) {
+      mAllocator->Free(mState.mLength * sizeof(char), m2b);
+    }
     mState.mLength += aLength;
     mState.mIs2b = PR_TRUE;
-
-    if (mState.mInHeap) {
-      nsMemory::Free(m2b);
-    }
     m2b = buff;
-
     mState.mInHeap = PR_TRUE;
 
     return;
   }
 
   // The new and the old data is all 1-byte
-  char* buff;
-  if (mState.mInHeap) {
-    buff = (char*)nsMemory::Realloc(const_cast<char*>(m1b),
-                                    (mState.mLength + aLength) * sizeof(char));
-    if (!buff) {
-      return;
-    }
+  char* buff =
+    (char*)mAllocator->Alloc((mState.mLength + aLength) * sizeof(char));
+  if (!buff) {
+    return;
   }
-  else {
-    buff = (char*)nsMemory::Alloc((mState.mLength + aLength) * sizeof(char));
-    if (!buff) {
-      return;
-    }
 
-    memcpy(buff, m1b, mState.mLength);
-    mState.mInHeap = PR_TRUE;
-  }
-    
+  memcpy(buff, m1b, mState.mLength);
+
   for (PRUint32 i = 0; i < aLength; ++i) {
     buff[mState.mLength + i] = (char)aBuffer[i];
   }
 
+  if (mState.mInHeap) {
+    mAllocator->Free(mState.mLength * sizeof(char), const_cast<char*>(m1b));
+  }
+  mState.mInHeap = PR_TRUE;
   m1b = buff;
   mState.mLength += aLength;
 

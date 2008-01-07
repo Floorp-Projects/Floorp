@@ -95,7 +95,7 @@
 <!ENTITY  permBlock             "Block">
 <!ENTITY  permissionsFor        "Permissions for:">
 <!ENTITY  permImage             "Load Images">
-<!ENTITY  permPopup             "Open Popup Windows">
+<!ENTITY  permPopup             "Open Pop-up Windows">
 <!ENTITY  permCookie            "Set Cookies">
 <!ENTITY  permInstall           "Install Extensions or Themes">
 

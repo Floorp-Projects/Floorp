@@ -217,7 +217,7 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
 }
 
 int
-DOMKeyCodeToGdkKeyCode(PRUint32 aKeysym)
+DOMKeyCodeToGdkKeyCode(int aKeysym)
 {
     int i, length = 0;
 

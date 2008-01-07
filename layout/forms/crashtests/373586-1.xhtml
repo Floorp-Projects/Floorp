@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo">
+    <content>
+      <children xmlns="http://www.mozilla.org/xbl" />
+    </content>
+  </binding>
+</bindings>
+
+<script>
+function boom()
+{
+  document.getElementById("div").style.MozBinding = "url('#foo')";
+
+  var opt1 = document.getElementById("opt1");
+  opt1.removeChild(opt1.firstChild);
+
+  document.getElementById("textarea").value += " ";
+  
+  document.documentElement.removeAttribute("class")
+}
+</script>
+
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+<div id="div">
+  <textarea rows="3" cols="5" id="textarea"></textarea>
+</div>
+
+<select>
+  <option id="opt1">opt1</option>
+</select>
+
+</body>
+</html>
+

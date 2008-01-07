@@ -388,7 +388,7 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
     if (mTextRunRTL) {
         pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
     }
-    textRun->Draw(aContext->Thebes(), pt, 0, aLength,
+    textRun->Draw(aContext->ThebesContext(), pt, 0, aLength,
                   nsnull, &provider, nsnull);
     return NS_OK;
 }
@@ -412,7 +412,7 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
     if (mTextRunRTL) {
         pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
     }
-    textRun->Draw(aContext->Thebes(), pt, 0, aLength,
+    textRun->Draw(aContext->ThebesContext(), pt, 0, aLength,
                   nsnull, &provider, nsnull);
     return NS_OK;
 }
@@ -426,7 +426,7 @@ GetTextRunBoundingMetrics(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aLengt
 {
     StubPropertyProvider provider;
     gfxTextRun::Metrics theMetrics =
-        aTextRun->MeasureText(aStart, aLength, PR_TRUE, aContext->Thebes(), &provider);
+        aTextRun->MeasureText(aStart, aLength, PR_TRUE, aContext->ThebesContext(), &provider);
 
     aBoundingMetrics.leftBearing = NSToCoordFloor(theMetrics.mBoundingBox.X());
     aBoundingMetrics.rightBearing = NSToCoordCeil(theMetrics.mBoundingBox.XMost());

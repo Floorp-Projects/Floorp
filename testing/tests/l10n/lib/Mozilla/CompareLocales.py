@@ -45,37 +45,6 @@ import Parser
 import Paths
 
 class FileCollector:
-  class Iter:
-    def __init__(self, path):
-      self.__base = path
-    def __iter__(self):
-      self.__w = os.walk(self.__base)
-      try:
-        self.__nextDir()
-      except StopIteration:
-        # empty dir, bad, but happens
-        self.__i = [].__iter__()
-      return self
-    def __nextDir(self):
-      self.__t = self.__w.next()
-      try:
-        self.__t[1].remove("CVS")
-      except ValueError:
-        pass
-      self.__t[1].sort()
-      self.__t[2].sort()
-      self.__i = self.__t[2].__iter__()
-    def next(self):
-      try:
-        leaf = self.__i.next()
-        path = self.__t[0] + '/' + leaf
-        key = path[len(self.__base) + 1:]
-        return (key, path)
-      except StopIteration:
-        self.__nextDir()
-        return self.next()
-      print "not expected"
-      raise StopIteration
   def __init__(self):
     pass
   def getFiles(self, mod, locale):
@@ -84,7 +53,19 @@ class FileCollector:
       fls[leaf] = path
     return fls
   def iterateFiles(self, mod, locale):
-    return FileCollector.Iter(Paths.get_base_path(mod, locale))
+    base = Paths.get_base_path(mod, locale)
+    cutoff  = len(base) + 1
+    for dirpath, dirnames, filenames in os.walk(base):
+      try:
+        # ignore CVS dirs
+        dirnames.remove('CVS')
+      except ValueError:
+        pass
+      dirnames.sort()
+      filenames.sort()
+      for f in filenames:
+        leaf = dirpath + '/' + f
+        yield (leaf[cutoff:], leaf)
 
 def collectFiles(aComparer, apps = None, locales = None):
   '''

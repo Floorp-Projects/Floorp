@@ -536,6 +536,7 @@ public:
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  virtual nsDOMNodeAllocator* GetAllocator() { return nsnull; }
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -658,6 +659,7 @@ public:
                                                const nsAString& aClasses,
                                                nsIDOMNodeList** aReturn);
 protected:
+  virtual nsINode::nsSlots* CreateSlots();
 
   /**
    * Check that aId is not empty and log a message to the console
@@ -739,12 +741,15 @@ protected:
   nsCOMArray<nsIStyleSheet> mCatalogSheets;
 
   // Array of observers
-  nsTObserverArray<nsIDocumentObserver> mObservers;
+  nsTObserverArray<nsIDocumentObserver*> mObservers;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
   // *inner* window object.
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
+  // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
+  // updated on every set of mSecriptGlobalObject.
+  nsPIDOMWindow *mWindow;
 
   // If document is created for example using
   // document.implementation.createDocument(...), mScriptObject points to

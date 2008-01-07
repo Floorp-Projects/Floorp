@@ -7,19 +7,33 @@
 /* back button */
 
 #back-button {
-  list-style-image: url("moz-icon://stock/gtk-go-back?size=toolbar");
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
 }
 #back-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-go-back?size=toolbar&state=disabled");
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
+}
+
+#back-button[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
+}
+#back-button[disabled="true"][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
 }
 
 /* forward button */
 
 #forward-button {
-  list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar");
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
 }
 #forward-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar&state=disabled");
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+}
+
+#forward-button[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
+}
+#forward-button[disabled="true"][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
 }
 
 /* organize button */
@@ -39,13 +53,11 @@
 
 /* Root View */
 #placesView {
-  border-top: 1px solid ThreeDDarkShadow;
   background-color: Window;
 }
 
 #splitter {
-  border: 0px;
-  width: 3px;
+  min-width: 3px;
 }
 
 /* Place List, Place Content */
@@ -54,14 +66,12 @@
 }
 
 #placesList {
-  -moz-appearance: none;
   margin: 0px;
   border: none;
   padding: 0;
 }
 
 #placeContent {
-  -moz-appearance: none;
   border: 0px;
 }
 
@@ -237,26 +247,9 @@
 }
 
 /**** expanders ****/
-
 .expander-up,
 .expander-down {
   min-width: 0;
-}
-
-.expander-up {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
-}
-
-.expander-down {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.expander-down:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
-}
-
-.expander-up:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
 }
 
 /**** menuitem stock icons ****/

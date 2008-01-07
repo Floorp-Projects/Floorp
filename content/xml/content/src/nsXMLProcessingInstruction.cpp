@@ -65,7 +65,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXMLProcessingInstruction *instance =
-    new nsXMLProcessingInstruction(ni, aTarget, aData);
+    new (ni) nsXMLProcessingInstruction(ni, aTarget, aData);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -176,7 +176,7 @@ nsXMLProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
 
-  return new nsXMLProcessingInstruction(aNodeInfo, mTarget, data);
+  return new (aNodeInfo) nsXMLProcessingInstruction(aNodeInfo, mTarget, data);
 }
 
 #ifdef DEBUG

@@ -347,6 +347,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_ScrollButtonRightMouseButtonAction:
         aMetric = 2;
         return NS_OK;
+    default:
+        break;
     }
 
     res = nsXPLookAndFeel::GetMetric(aID, aMetric);

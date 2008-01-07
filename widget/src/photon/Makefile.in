@@ -80,11 +80,6 @@ CPPSRCS		= \
 		nsSound.cpp \
 		$(NULL)
 
-ifdef MOZ_ENABLE_XREMOTE
-REQUIRES += xremoteservice
-CPPSRCS += nsPhMozRemoteHelper.cpp
-endif
-
 # always include the PHOTON_DND in the build - the bookmarks in firefox require it
 PHOTON_DND=1
 ifdef PHOTON_DND

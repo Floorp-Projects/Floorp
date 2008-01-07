@@ -105,8 +105,6 @@ function run_test()
     },
     onStateChange: function(a, b, c, d, e) { },
     onProgressChange: function(a, b, c, d, e, f, g) { },
-    onStatusChange: function(a, b, c, d, e) { },
-    onLocationChange: function(a, b, c, d) { },
     onSecurityChange: function(a, b, c, d) { }
   };
 

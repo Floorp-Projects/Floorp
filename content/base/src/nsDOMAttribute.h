@@ -59,9 +59,9 @@ class nsDOMAttribute;
 
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttr, nsIDOM3Attr, nsIDOMNode, nsIDOM3Node
-class nsDOMAttribute : public nsIDOMAttr,
-                       public nsIDOM3Attr,
-                       public nsIAttribute
+class nsDOMAttribute : public nsIAttribute,
+                       public nsIDOMAttr,
+                       public nsIDOM3Attr
 {
 public:
   nsDOMAttribute(nsDOMAttributeMap* aAttrMap, nsINodeInfo *aNodeInfo,
@@ -108,6 +108,7 @@ public:
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsDOMNodeAllocator* GetAllocator() { return mAllocator; }
 
   static void Initialize();
   static void Shutdown();
@@ -120,6 +121,7 @@ protected:
 private:
   nsresult EnsureChildState(PRBool aSetText, PRBool &aHasChild) const;
 
+  nsDOMNodeAllocator* mAllocator;
   nsString mValue;
   // XXX For now, there's only a single child - a text
   // element representing the value

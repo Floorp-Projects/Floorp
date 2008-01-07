@@ -57,6 +57,10 @@
 #include "prenv.h"
 #include "nsINIParser.h"
 
+#ifdef XP_WIN
+#include "nsWindowsWMain.cpp"
+#endif
+
 /**
  * Output a string to the user.  This method is really only meant to be used to
  * output last-ditch error messages designed for developers NOT END USERS.
@@ -267,11 +271,6 @@ public:
       XRE_FreeAppData(mAppData);
   }
 
-  nsresult
-  Override(nsILocalFile* aINIFile) {
-    return XRE_ParseAppData(aINIFile, mAppData);
-  }
-
   operator nsXREAppData*() const { return mAppData; }
   nsXREAppData* operator -> () const { return mAppData; }
 
@@ -448,39 +447,5 @@ int main(int argc, char* argv[])
     return 2;
   }
 
-  if (argc > 1 && IsArg(argv[1], "override")) {
-    if (argc == 2) {
-      Usage(argv[0]);
-      return 1;
-    }
-    argv[1] = argv[0];
-    ++argv;
-    --argc;
-
-    const char *ovrDataFile = argv[1];
-    argv[1] = argv[0];
-    ++argv;
-    --argc;
-
-    nsCOMPtr<nsILocalFile> ovrDataLF;
-    nsresult rv = XRE_GetFileFromPath(ovrDataFile, getter_AddRefs(ovrDataLF));
-    if (NS_FAILED(rv)) {
-      Output(PR_TRUE, "Error: unrecognized override.ini path.\n");
-      return 2;
-    }
-
-    appData.Override(ovrDataLF);
-  }
-
   return XRE_main(argc, argv, appData);
 }
-
-#if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)
-// We need WinMain in order to not be a console app.  This function is
-// unused if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
-{
-  // Do the real work.
-  return main( __argc, __argv );
-}
-#endif

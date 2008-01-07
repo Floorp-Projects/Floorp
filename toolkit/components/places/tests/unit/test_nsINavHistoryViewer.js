@@ -56,7 +56,7 @@ function add_visit(aURI, aDate) {
   var date = aDate || Date.now();
   var placeID = histsvc.addVisit(aURI,
                                  date,
-                                 0, // no referrer
+                                 null, // no referrer
                                  histsvc.TRANSITION_TYPED, // user typed in URL bar
                                  false, // not redirect
                                  0);
@@ -81,6 +81,10 @@ var viewer = {
   itemReplaced: function(parent, oldItem, newItem, index) {
     dump("itemReplaced: " + newItem.uri + "\n");
     this.replacedItem = item;
+  },
+  movedItem: null,
+  itemMoved: function(item, oldParent, oldIndex, newParent, newIndex) {
+    this.movedItem = item;
   },
   openedContainer: null,
   containerOpened: function(item) {
@@ -112,6 +116,7 @@ var viewer = {
     this.removedItem = null;
     this.changedItem = null;
     this.replacedItem = null;
+    this.movedItem = null;
     this.openedContainer = null;
     this.closedContainer = null;
     this.invalidatedContainer = null;
@@ -210,10 +215,13 @@ function run_test() {
   bmsvc.setItemTitle(testBookmark, "baz");
   do_check_eq(viewer.changedItem.title, "baz");
 
+  var testBookmark2 = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri("http://google.com"), bmsvc.DEFAULT_INDEX, "foo");
+  bmsvc.moveItem(testBookmark2, bmsvc.bookmarksMenuFolder, 0);
+  do_check_eq(viewer.movedItem.itemId, testBookmark2);
+
   // nsINavHistoryResultViewer.itemRemoved
-  var removedBookmark = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri("http://google.com"), bmsvc.DEFAULT_INDEX, "foo");
-  bmsvc.removeItem(removedBookmark);
-  do_check_eq(removedBookmark, viewer.removedItem.itemId);
+  bmsvc.removeItem(testBookmark2);
+  do_check_eq(testBookmark2, viewer.removedItem.itemId);
 
   // XXX nsINavHistoryResultViewer.itemReplaced
   // NHQRN.onVisit()->NHCRN.MergeResults()->NHCRN.ReplaceChildURIAt()->NHRV.ItemReplaced()

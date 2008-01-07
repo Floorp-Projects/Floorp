@@ -3,10 +3,12 @@ classic.jar:
 +  skin/classic/global/menu.css
 +  skin/classic/global/menulist.css
 +  skin/classic/global/numberbox.css
++  skin/classic/global/tabbox.css
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/toolbarbutton.css
 +  skin/classic/global/button.css
 +  skin/classic/global/checkbox.css
++  skin/classic/global/splitter.css
 +  skin/classic/global/radio.css
 +  skin/classic/global/global.css
 +  skin/classic/global/tree.css
@@ -14,6 +16,11 @@ classic.jar:
 +  skin/classic/global/groupbox.css
 +  skin/classic/global/findBar.css
 +  skin/classic/global/textbox.css
++  skin/classic/global/filepicker.css
++  skin/classic/global/netError.css
++  skin/classic/global/notification.css
++  skin/classic/global/printPreview.css
++  skin/classic/global/printPageSetup.css
 +  skin/classic/global/icons/notfound.png                      (icons/notfound.png)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)
 +  skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)

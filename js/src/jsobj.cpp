@@ -114,7 +114,7 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
 
 JSClass js_ObjectClass = {
     js_Object_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object) | JSCLASS_FIXED_BINDING,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -276,6 +276,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
 {
     JSRuntime *rt;
     JSObject *obj2, *oldproto;
+    JSClass *clasp;
     JSScope *scope, *newscope;
 
     /*
@@ -336,6 +337,17 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
 
     obj2 = pobj;
     while (obj2) {
+        clasp = OBJ_GET_CLASS(cx, obj2);
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+            if (xclasp->wrappedObject) {
+                /* If there is no wrapped object, just use the wrapper. */
+                JSObject *wrapped = xclasp->wrappedObject(cx, obj2);
+                if (wrapped)
+                    obj2 = wrapped;
+            }
+        }
+
         if (obj2 == obj) {
             SET_SLOT_DONE(rt);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -546,11 +558,8 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     char buf[20];
     size_t len;
 
-    if (JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx) &&
-        cx->branchCallback &&
-        !cx->branchCallback(cx, NULL)) {
+    if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_ENTER_SHARP))
         return NULL;
-    }
 
     /* Set to null in case we return an early error. */
     *sp = NULL;
@@ -796,47 +805,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 
-#ifdef DUMP_CALL_TABLE
-    if (cx->options & JSOPTION_LOGCALL_TOSOURCE) {
-        const char *classname = OBJ_GET_CLASS(cx, obj)->name;
-        size_t classnchars = strlen(classname);
-        static const char classpropid[] = "C";
-        const char *cp;
-#ifdef DEBUG
-        size_t onchars = nchars;
-#endif
-
-        /* 2 for ': ', 2 quotes around classname, 2 for ', ' after. */
-        classnchars += sizeof classpropid - 1 + 2 + 2;
-        if (ida->length)
-            classnchars += 2;
-
-        /* 2 for the braces, 1 for the terminator */
-        chars = (jschar *)
-            realloc((ochars = chars),
-                    (nchars + classnchars + 2 + 1) * sizeof(jschar));
-        if (!chars) {
-            free(ochars);
-            goto error;
-        }
-
-        chars[nchars++] = '{';          /* 1 from the 2 braces */
-        for (cp = classpropid; *cp; cp++)
-            chars[nchars++] = (jschar) *cp;
-        chars[nchars++] = ':';
-        chars[nchars++] = ' ';          /* 2 for ': ' */
-        chars[nchars++] = '"';
-        for (cp = classname; *cp; cp++)
-            chars[nchars++] = (jschar) *cp;
-        chars[nchars++] = '"';          /* 2 quotes */
-        if (ida->length) {
-            chars[nchars++] = ',';
-            chars[nchars++] = ' ';      /* 2 for ', ' */
-        }
-
-        JS_ASSERT(nchars - onchars == 1 + classnchars);
-    } else
-#endif
     chars[nchars++] = '{';
 
     comma = NULL;
@@ -1113,10 +1081,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
             if (vsharp)
                 JS_free(cx, vsharp);
-#ifdef DUMP_CALL_TABLE
-            if (outermost && nchars >= js_LogCallToSourceLimit)
-                break;
-#endif
         }
     }
 
@@ -1285,6 +1249,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
     JSObject *scopeobj;
+    JSClass *clasp;
     JSString *str;
     const char *file;
     uintN line;
@@ -1297,7 +1262,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool setCallerVarObj = JS_FALSE;
 #endif
 
-
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
     JS_ASSERT(!caller || caller->pc);
@@ -1309,6 +1273,16 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * the former indirect case.
      */
     scopeobj = OBJ_GET_PARENT(cx, obj);
+    if (scopeobj &&
+        ((clasp = OBJ_GET_CLASS(cx, obj))->flags & JSCLASS_IS_EXTENDED)) {
+        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        if (xclasp->wrappedObject) {
+            JSObject *wrapped = xclasp->wrappedObject(cx, obj);
+            if (wrapped)
+                scopeobj = OBJ_GET_PARENT(cx, wrapped);
+        }
+    }
+
     if (indirectCall || scopeobj) {
         uintN flags = scopeobj
                       ? JSREPORT_ERROR
@@ -2789,7 +2763,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
             if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj))) {
                 v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
                 if (JSVAL_IS_PRIMITIVE(v))
-                    v = JSVAL_VOID; 
+                    v = JSVAL_VOID;
             }
         }
         OBJ_DROP_PROPERTY(cx, pobj, prop);
@@ -4127,11 +4101,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             /* Object has a private scope; Enumerate all props in scope. */
             for (sprop = lastProp = SCOPE_LAST_PROP(scope); sprop;
                  sprop = sprop->parent) {
-                if ((
-#ifdef DUMP_CALL_TABLE
-                     (cx->options & JSOPTION_LOGCALL_TOSOURCE) ||
-#endif
-                     (sprop->attrs & JSPROP_ENUMERATE)) &&
+                if ((sprop->attrs & JSPROP_ENUMERATE) &&
                     !(sprop->flags & SPROP_IS_ALIAS) &&
                     (!SCOPE_HAD_MIDDLE_DELETE(scope) ||
                      SCOPE_HAS_PROPERTY(scope, sprop))) {
@@ -4145,11 +4115,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             }
             i = length;
             for (sprop = lastProp; sprop; sprop = sprop->parent) {
-                if ((
-#ifdef DUMP_CALL_TABLE
-                     (cx->options & JSOPTION_LOGCALL_TOSOURCE) ||
-#endif
-                     (sprop->attrs & JSPROP_ENUMERATE)) &&
+                if ((sprop->attrs & JSPROP_ENUMERATE) &&
                     !(sprop->flags & SPROP_IS_ALIAS) &&
                     (!SCOPE_HAD_MIDDLE_DELETE(scope) ||
                      SCOPE_HAS_PROPERTY(scope, sprop))) {

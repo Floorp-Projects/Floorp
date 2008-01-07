@@ -285,7 +285,7 @@ extern JSBool
 js_ToAttributeName(JSContext *cx, jsval *vp);
 
 extern JSString *
-js_EscapeAttributeValue(JSContext *cx, JSString *str);
+js_EscapeAttributeValue(JSContext *cx, JSString *str, JSBool quote);
 
 extern JSString *
 js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str,

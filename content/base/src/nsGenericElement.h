@@ -376,6 +376,10 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+  virtual nsDOMNodeAllocator* GetAllocator()
+  {
+    return mAttrsAndChildren.Allocator();
+  }
 
   // nsIContent interface methods
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -1010,7 +1014,7 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 {                                                                           \
   *aResult = nsnull;                                                        \
                                                                             \
-  _elementName *it = new _elementName(aNodeInfo);                           \
+  _elementName *it = new (aNodeInfo) _elementName(aNodeInfo);               \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
@@ -1030,7 +1034,7 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 {                                                                           \
   *aResult = nsnull;                                                        \
                                                                             \
-  _elementName *it = new _elementName(aNodeInfo);                           \
+  _elementName *it = new (aNodeInfo) _elementName(aNodeInfo);               \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \

@@ -483,8 +483,7 @@ msFromTime(jsdouble t)
 
 JSClass js_DateClass = {
     js_Date_str,
-    JSCLASS_HAS_RESERVED_SLOTS(2) |  JSCLASS_HAS_CACHED_PROTO(JSProto_Date) |
-    JSCLASS_FIXED_BINDING,
+    JSCLASS_HAS_RESERVED_SLOTS(2) |  JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -2164,6 +2163,7 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
     JSObject *obj;
     jsdouble msec_time;
 
+    JS_ASSERT(mon < 12);
     msec_time = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
     obj = js_NewDateObjectMsec(cx, UTC(msec_time));
     return obj;
@@ -2271,6 +2271,8 @@ JS_FRIEND_API(void)
 js_DateSetMonth(JSContext *cx, JSObject *obj, int month)
 {
     jsdouble local;
+
+    JS_ASSERT(month < 12);
 
     if (!GetLocalTime(cx, obj, NULL, &local))
         return;

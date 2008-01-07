@@ -337,7 +337,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
       // Create the local directory into which to save associated files.
       filesFolder = file.clone();
 
-      var nameWithoutExtension = filesFolder.leafName.replace(/\.[^.]*$/, "");
+      var nameWithoutExtension = getFileBaseName(filesFolder.leafName);
       var filesFolderLeafName = getStringBundle().formatStringFromName("filesFolder",
                                                                        [nameWithoutExtension],
                                                                        1);
@@ -441,7 +441,7 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
       aFI.fileBaseName = aFI.fileName;
     } else {
       aFI.fileExt = getDefaultExtension(aFI.fileName, aFI.uri, aContentType);
-      aFI.fileBaseName = getFileBaseName(aFI.fileName, aFI.fileExt);
+      aFI.fileBaseName = getFileBaseName(aFI.fileName);
     }
   } catch (e) {
   }
@@ -710,7 +710,7 @@ function getMIMEService()
 }
 
 // Given aFileName, find the fileName without the extension on the end.
-function getFileBaseName(aFileName, aFileExt)
+function getFileBaseName(aFileName)
 {
   // Remove the file extension from aFileName:
   return aFileName.replace(/\.[^.]*$/, "");
@@ -883,13 +883,14 @@ function getDefaultExtension(aFilename, aURI, aContentType)
   }
   else {
     try {
-      return mimeInfo.primaryExtension;
+      if (mimeInfo)
+        return mimeInfo.primaryExtension;
     }
     catch (e) {
-      // Fall back on the extensions in the filename and URI for lack
-      // of anything better.
-      return ext || urlext;
     }
+    // Fall back on the extensions in the filename and URI for lack
+    // of anything better.
+    return ext || urlext;
   }
 }
 

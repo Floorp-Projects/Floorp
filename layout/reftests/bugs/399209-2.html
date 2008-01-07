@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+  table { background: white; }
+  col { visibility: collapse; }
+  td { color: black; }
+</style>
+<script>
+function boom()
+{
+  var col = document.getElementsByTagName("col")[0];
+  col.parentNode.removeChild(col);
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body onload="boom();">
+<table>
+  <col span="3">
+  <td>One</td>
+  <td>Two</td>
+  <td>Three</td>
+</body>
+</html>

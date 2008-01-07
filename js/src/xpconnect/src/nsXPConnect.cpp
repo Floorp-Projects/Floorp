@@ -1926,52 +1926,6 @@ nsXPConnect::GetCrossOriginWrapperForObject(JSContext * aJSContext,
            ? NS_OK : NS_ERROR_FAILURE;
 }
 
-/* attribute PRBool collectGarbageOnMainThreadOnly; */
-NS_IMETHODIMP 
-nsXPConnect::GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    if(!rt)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    *aCollectGarbageOnMainThreadOnly = rt->GetMainThreadOnlyGC();
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXPConnect::SetCollectGarbageOnMainThreadOnly(PRBool aCollectGarbageOnMainThreadOnly)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    if(!rt)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    rt->SetMainThreadOnlyGC(aCollectGarbageOnMainThreadOnly);
-    return NS_OK;
-}
-
-/* attribute PRBool deferReleasesUntilAfterGarbageCollection; */
-NS_IMETHODIMP 
-nsXPConnect::GetDeferReleasesUntilAfterGarbageCollection(PRBool *aDeferReleasesUntilAfterGarbageCollection)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    if(!rt)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    *aDeferReleasesUntilAfterGarbageCollection = rt->GetDeferReleases();
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsXPConnect::SetDeferReleasesUntilAfterGarbageCollection(PRBool aDeferReleasesUntilAfterGarbageCollection)
-{
-    XPCJSRuntime* rt = GetRuntime();
-    if(!rt)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    rt->SetDeferReleases(aDeferReleasesUntilAfterGarbageCollection);
-    return NS_OK;
-}
-
 /* void releaseJSContext (in JSContextPtr aJSContext, in PRBool noGC); */
 NS_IMETHODIMP 
 nsXPConnect::ReleaseJSContext(JSContext * aJSContext, PRBool noGC)
@@ -2187,9 +2141,11 @@ nsXPConnect::JSToVariant(JSContext* ctx, jsval value, nsIVariant** _retval)
     return NS_OK;
 }
 
-/* void flagSystemFilenamePrefix (in string filenamePrefix); */
+/* void flagSystemFilenamePrefix (in string filenamePrefix,
+ *                                in PRBool aWantNativeWrappers); */
 NS_IMETHODIMP 
-nsXPConnect::FlagSystemFilenamePrefix(const char *aFilenamePrefix)
+nsXPConnect::FlagSystemFilenamePrefix(const char *aFilenamePrefix,
+                                      PRBool aWantNativeWrappers)
 {
     NS_PRECONDITION(aFilenamePrefix, "bad param");
 
@@ -2202,7 +2158,10 @@ nsXPConnect::FlagSystemFilenamePrefix(const char *aFilenamePrefix)
     if(NS_FAILED(rv))
         return rv;
 
-    if(!JS_FlagScriptFilenamePrefix(rt, aFilenamePrefix, JSFILENAME_SYSTEM))
+    uint32 flags = JSFILENAME_SYSTEM;
+    if(aWantNativeWrappers)
+        flags |= JSFILENAME_PROTECTED;
+    if(!JS_FlagScriptFilenamePrefix(rt, aFilenamePrefix, flags))
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }

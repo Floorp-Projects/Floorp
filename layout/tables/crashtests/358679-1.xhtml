@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+<script>
+function foo() { 
+  var cell2 = document.createElementNS("http://www.w3.org/1999/xhtml", "td"); 
+  cell2.appendChild(document.createTextNode('2'));
+
+  document.getElementById("row2").appendChild(cell2);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(foo, 30);">
+
+<table border="1">
+  <tr>
+    <td>A</td>
+    <td>B</td>
+  </tr>
+  <tr id="row2">
+    <td colspan="0">1</td>
+  </tr>
+</table>
+
+
+</body>
+</html>

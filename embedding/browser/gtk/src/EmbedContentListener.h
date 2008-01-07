@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,8 +38,8 @@
 #ifndef __EmbedContentListener_h
 #define __EmbedContentListener_h
 
-#include "nsIURIContentListener.h"
-#include "nsWeakReference.h"
+#include <nsIURIContentListener.h>
+#include <nsWeakReference.h>
 
 class EmbedPrivate;
 
@@ -53,7 +51,7 @@ class EmbedContentListener : public nsIURIContentListener,
   EmbedContentListener();
   virtual ~EmbedContentListener();
 
-  nsresult Init(EmbedPrivate *aOwner);
+  nsresult Init (EmbedPrivate *aOwner);
 
   NS_DECL_ISUPPORTS
 
@@ -62,7 +60,7 @@ class EmbedContentListener : public nsIURIContentListener,
  private:
 
   EmbedPrivate *mOwner;
-
+  
 };
 
 #endif /* __EmbedContentListener_h */

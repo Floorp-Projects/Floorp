@@ -1947,7 +1947,7 @@ nsCSSFrameConstructor::CreateAttributeContent(nsIContent* aParentContent,
                                        getter_AddRefs(content));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  content->SetNativeAnonymous(PR_TRUE);
+  content->SetNativeAnonymous();
 
   // Set aContent as the parent content so that event handling works.
   rv = content->BindToTree(mDocument, aParentContent, content, PR_TRUE);
@@ -2016,7 +2016,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
                                            data.mContent.mImage);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    content->SetNativeAnonymous(PR_TRUE);
+    content->SetNativeAnonymous();
   
     // Set aContent as the parent content and set the document object. This
     // way event handling works
@@ -2200,7 +2200,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
           NS_ASSERTION(*textPtr, "must implement nsIDOMCharacterData");
         }
 
-        textContent->SetNativeAnonymous(PR_TRUE);
+        textContent->SetNativeAnonymous();
 
         // Set aContent as the parent content so that event handling works.
         nsresult rv = textContent->BindToTree(mDocument, aContent, textContent,
@@ -5735,7 +5735,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
     nsIContent* content = newAnonymousItems[i];
     NS_ASSERTION(content, "null anonymous content?");
 
-    content->SetNativeAnonymous(PR_TRUE);
+    content->SetNativeAnonymous();
 
     nsIContent* bindingParent = content;
 #ifdef MOZ_SVG
@@ -5946,7 +5946,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
         newFrame = NS_NewMenuBarFrame(mPresShell, aStyleContext);
       }
-      else if (aTag == nsGkAtoms::popupgroup) {
+      else if (aTag == nsGkAtoms::popupgroup && aContent->IsNativeAnonymous()) {
         // This frame contains child popups
         newFrame = NS_NewPopupSetFrame(mPresShell, aStyleContext);
       }
@@ -6208,7 +6208,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     }
 
 #ifdef MOZ_XUL
-    if (aTag == nsGkAtoms::popupgroup) {
+    if (aTag == nsGkAtoms::popupgroup && aContent->IsNativeAnonymous()) {
       nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
       if (rootBox) {
         NS_ASSERTION(rootBox->GetPopupSetFrame() == newFrame,
@@ -13365,8 +13365,12 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
     // the lazy generation, but as long as it's a popup frame that hasn't
     // generated its children yet, that's OK.
     nsMenuPopupFrame* menuPopupFrame = static_cast<nsMenuPopupFrame *>(frame);
-    if (menuPopupFrame->HasGeneratedChildren())
+    if (menuPopupFrame->HasGeneratedChildren()) {
+      if (mCallback)
+        mCallback(mContent, frame, mArg);
+      
       return NS_OK;
+    }     
 
     // indicate that the children have been generated
     menuPopupFrame->SetGeneratedChildren();

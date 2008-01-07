@@ -58,17 +58,17 @@ JS_BEGIN_EXTERN_C
  * for-in semantics are required, and when the caller can guarantee that the
  * iterator will never be exposed to scripts.
  */
-extern JSBool
+extern JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
 
-extern JSBool
+extern JS_FRIEND_API(JSBool)
 js_CloseIterator(JSContext *cx, jsval v);
 
 /*
  * Given iterobj, call iterobj.next().  If the iterator stopped, set *rval to
  * JSVAL_HOLE. Otherwise set it to the result of the next call.
  */
-extern JSBool
+extern JS_FRIEND_API(JSBool)
 js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval);
 
 /*

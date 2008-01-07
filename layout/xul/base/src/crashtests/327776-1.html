@@ -1,0 +1,24 @@
+<html>
+<head>
+<script>
+
+function init()
+{ 
+  var span = document.getElementsByTagName("span")[0]; 
+  var boxobj = document.getBoxObjectFor(span);
+  try {
+    boxobj.setPropertyAsSupports(undefined, undefined);
+  } catch(e) {
+  }
+}
+
+</script>
+
+</head>
+
+<body onload="init();">
+
+<span></span>
+
+</body>
+</html>

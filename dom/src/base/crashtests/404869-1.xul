@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="boom();">
+        
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="empty"><content></content></binding>
+</bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var menupopup = document.getElementById("menupopup");
+  var x = document.getAnonymousNodes(menupopup)[0];
+  menupopup.style.MozBinding = "url('#empty')";
+  for (var ppp in x) {
+  }
+}
+
+</script>
+
+<menupopup id="menupopup"/>
+
+</window>

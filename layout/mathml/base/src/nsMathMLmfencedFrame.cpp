@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsPresContext.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
@@ -288,7 +287,6 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   // XXX The above decision was revisited in bug 121748 and this code can be
   // refactored to use nsMathMLContainerFrame::Reflow() at some stage.
 
-  PRInt32 count = 0;
   nsReflowStatus childStatus;
   nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
   nsIFrame* firstChild = aForFrame->GetFirstChild(nsnull);
@@ -326,10 +324,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
       descent = childDescent;
     if (ascent < childDesiredSize.ascent)
       ascent = childDesiredSize.ascent;
-    if (0 == count++)
-      aDesiredSize.mBoundingMetrics  = childDesiredSize.mBoundingMetrics;
-    else
-      aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
+    aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
 
     childFrame = childFrame->GetNextSibling();
   }
@@ -465,6 +460,9 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
 
   // see if we should fix the spacing
   mathMLFrame->FixInterFrameSpacing(aDesiredSize);
+
+  // Set our overflow area
+  mathMLFrame->GatherAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

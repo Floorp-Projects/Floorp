@@ -72,11 +72,9 @@ sub Verify {
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $stagingServer = $config->Get(var => 'stagingServer');
-    my $useTarGz = $config->Exists(var => 'useTarGz') ?
-     $config->Get(var => 'useTarGz') : 0;
+    my $linuxExtension = $config->GetLinuxExtension();
     my $rcTag = $productTag.'_RC'.$rc;
 
-    my $linuxExtension = ($useTarGz) ? '.gz' : '.bz2';
     # l10n metadiff test
 
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
@@ -103,7 +101,7 @@ sub Verify {
                   '-e', 'ssh', 
                   '--include=*.dmg',
                   '--include=*.exe',
-                  '--include=*.tar'.$linuxExtension,
+                  '--include=*.tar.'.$linuxExtension,
                   '--exclude=*',
                   $stagingServer . ':/home/ftp/pub/' . $product
                   . '/nightly/' . $version . '-candidates/rc' . $rc . '/*',
@@ -122,7 +120,7 @@ sub Verify {
                   '-e', 'ssh', 
                   '--include=*.dmg',
                   '--include=*.exe',
-                  '--include=*.tar'.$linuxExtension,
+                  '--include=*.tar.'.$linuxExtension,
                   '--exclude=*',
                   $stagingServer . ':/home/ftp/pub/' . $product
                   . '/nightly/' . $oldVersion . '-candidates/rc' 

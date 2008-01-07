@@ -45,7 +45,7 @@ extern "C" {
 }
 #endif
 
-MOZCE_SHUNT_API int mozce_errno = 0;
+MOZCE_SHUNT_API int errno = 0;
 
 #if 0
 {

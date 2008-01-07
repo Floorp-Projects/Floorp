@@ -41,7 +41,6 @@
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
 #include "nsString.h"
-#include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 
 class nsRegressionTestFontMetrics : public nsIFontMetrics

@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<script>
+<![CDATA[
+
+var a;
+var b;
+
+function foopy()
+{
+  a = document.getElementById("a");
+  b = document.getElementById("b");
+  
+  var img = document.getElementById("img");
+  var rx = document.getElementById("rx");
+
+  img.setAttribute('src', "javascript:aC(a, b);");
+  aC(rx, a);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+// This has to be a top-level function to avoid hitting bug 344890.
+function aC(q1, q2) { q1.appendChild(q2); }
+
+]]>
+</script>
+
+</head>
+
+<body onload="setTimeout(foopy, 30);">
+
+<span id="a" style="border: 1px solid green;">A<img src="../../../../testing/crashtest/images/tree.gif" id="img" /></span>
+
+<span id="b">B</span>
+
+<div data="text/plain,Hi!" style="border: 1px solid blue; display: block;" id="rx" />
+
+</body>
+</html>

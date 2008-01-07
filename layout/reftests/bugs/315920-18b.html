@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      img:-moz-broken ~ label {color: green}
+      label {color: red}
+      img { display: none; }
+    </style>
+  </head>
+  <body>
+    <img src="no-such-scheme:nothing" id="ffximage"/>
+    <label for="ffximage">Text should be green</label>
+  </body>
+</html>

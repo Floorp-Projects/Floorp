@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -98,6 +99,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPresShell.h"
+#include "nsIProtocolHandler.h"
+#include "nsIResProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
@@ -2098,6 +2101,13 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
   nsCOMPtr<nsIIOService> io (do_GetIOService());
   if (!io) return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIProtocolHandler> ph;
+  rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIResProtocolHandler> rph (do_QueryInterface(ph));
+  if (!rph) return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIURI> manifestURI;
   rv = io->NewFileURI(aManifest, getter_AddRefs(manifestURI));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2234,16 +2244,15 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
 
       if (platform)
         entry->flags |= PackageEntry::PLATFORM_PACKAGE;
-      if (xpcNativeWrappers) {
+      if (xpcNativeWrappers)
         entry->flags |= PackageEntry::XPCNATIVEWRAPPERS;
-        if (xpc) {
-          nsCAutoString urlp("chrome://");
-          urlp.Append(package);
-          urlp.Append('/');
+      if (xpc) {
+        nsCAutoString urlp("chrome://");
+        urlp.Append(package);
+        urlp.Append('/');
 
-          rv = xpc->FlagSystemFilenamePrefix(urlp.get());
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
+        rv = xpc->FlagSystemFilenamePrefix(urlp.get(), xpcNativeWrappers);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     }
     else if (!strcmp(token, "locale")) {
@@ -2514,6 +2523,72 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
         continue;
 
       mOverrideTable.Put(chromeuri, resolveduri);
+    }
+    else if (!strcmp(token, "resource")) {
+      if (aSkinOnly) {
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Ignoring resource registration in skin-only manifest.");
+        continue;
+      }
+
+      char *package = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
+      char *uri     = nsCRT::strtok(whitespace, kWhitespace, &whitespace);
+      if (!package || !uri) {
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Malformed resource registration.");
+        continue;
+      }
+
+      EnsureLowerCase(package);
+
+      TriState stAppVersion = eUnspecified;
+      TriState stApp = eUnspecified;
+      TriState stOsVersion = eUnspecified;
+      TriState stOs = eUnspecified;
+
+      PRBool badFlag = PR_FALSE;
+
+      while (nsnull != (token = nsCRT::strtok(whitespace, kWhitespace, &whitespace)) &&
+             !badFlag) {
+        NS_ConvertASCIItoUTF16 wtoken(token);
+        ToLowerCase(wtoken);
+
+        if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
+            CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
+            CheckVersionFlag(kOsVersion, wtoken, osVersion, vc, stOsVersion) ||
+            CheckVersionFlag(kAppVersion, wtoken, appVersion, vc, stAppVersion))
+          continue;
+
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Unrecognized chrome registration modifier '%s'.",
+                              token);
+        badFlag = PR_TRUE;
+      }
+
+      if (badFlag || stApp == eBad || stAppVersion == eBad || 
+          stOs == eBad || stOsVersion == eBad)
+        continue;
+      
+      nsDependentCString host(package);
+
+      PRBool exists;
+      rv = rph->HasSubstitution(host, &exists);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (exists) {
+        LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,
+                              "Warning: Duplicate resource declaration for '%s' ignored.",
+                              package);
+        continue;
+      }
+
+      nsCOMPtr<nsIURI> resolved;
+      rv = io->NewURI(nsDependentCString(uri), nsnull, manifestURI,
+                      getter_AddRefs(resolved));
+      if (NS_FAILED(rv))
+        continue;
+
+      rv = rph->SetSubstitution(host, resolved);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
       LogMessageWithContext(manifestURI, line, nsIScriptError::warningFlag,

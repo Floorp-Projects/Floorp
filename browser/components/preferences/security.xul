@@ -170,7 +170,8 @@
 
     <!-- Warning Messages -->
     <hbox class="bottomBox">
-      <groupbox id="warningMessagesGroup" orient="horizontal" flex="1">
+      <groupbox id="warningMessagesGroup" orient="horizontal" flex="1"
+                align="center">
         <caption label="&warnings.label;"/>
 
         <description control="warningSettings" flex="1">&chooseWarnings.label;</description>

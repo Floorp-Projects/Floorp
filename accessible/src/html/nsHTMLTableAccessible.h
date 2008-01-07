@@ -73,6 +73,20 @@ public:
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
 
+  /**
+    * Returns true if the column index is in the valid column range.
+    *
+    * @param aColumn  The index to check for validity.
+    */
+  PRBool IsValidColumn(PRInt32 aColumn);
+
+  /**
+    * Returns true if the given index is in the valid row range.
+    *
+    * @param aRow  The index to check for validity.
+    */
+  PRBool IsValidRow(PRInt32 aRow);
+
 protected:
 
   /**

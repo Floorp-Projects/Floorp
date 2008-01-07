@@ -87,7 +87,7 @@ NS_IMPL_ELEMENT_CLONE(nsXMLEventsElement)
 nsresult
 NS_NewXMLEventsElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
-  nsXMLEventsElement* it = new nsXMLEventsElement(aNodeInfo);
+  nsXMLEventsElement* it = new (aNodeInfo) nsXMLEventsElement(aNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

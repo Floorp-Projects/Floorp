@@ -135,7 +135,7 @@ public:
 nsGenericHTMLElement*
 NS_NewHTMLCanvasElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
-  return new nsHTMLCanvasElement(aNodeInfo);
+  return new (aNodeInfo) nsHTMLCanvasElement(aNodeInfo);
 }
 
 nsHTMLCanvasElement::nsHTMLCanvasElement(nsINodeInfo *aNodeInfo)

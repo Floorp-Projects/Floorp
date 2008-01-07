@@ -1,0 +1,42 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<style>
+<![CDATA[
+#baz { -moz-binding: url('data:text/xml,%3Cbindings%20xmlns%3D%22http%3A%2F%2Fwww.mozilla.org%2Fxbl%22%3E%3Cbinding%20id%3D%22foo%22%3E%3Ccontent%3E%0D%0A%3Ca%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%20href%3D%22http%3A%2F%2Fwww.mozilla.org%2F%22%20id%3D%22mlink%22%3EFoo%3Cchildren%20xmlns%3D%22http%3A%2F%2Fwww.mozilla.org%2Fxbl%22%2F%3E%3C%2Fa%3E%0D%0A%3C%2Fcontent%3E%3C%2Fbinding%3E%3C%2Fbindings%3E%0D%0A'); }
+]]>
+</style>
+
+<script>
+<![CDATA[
+
+function stuff()
+{
+  var baz = document.getElementById("baz");
+  var count = 0;
+  
+  setTimeout(step, 30);
+  
+  function step()
+  {
+    ++count;
+    if (count < 15) {
+      baz.cloneNode(true);
+      setTimeout(step, 30);
+    }
+    else {
+      document.documentElement.removeAttribute("class");
+    }
+  }
+  
+}
+
+]]>
+</script>
+</head>
+<body onload="stuff()">
+
+<hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="baz"></hbox>
+
+</body>
+</html>

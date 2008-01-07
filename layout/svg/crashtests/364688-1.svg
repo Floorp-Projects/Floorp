@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:html="http://www.w3.org/1999/xhtml"
+     onload="setTimeout(boom, 30);"
+     class="reftest-wait">
+
+<script>
+function boom()
+{
+  document.getElementById("sss").removeAttribute('value');
+
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+
+<foreignObject width="500" height="500" y="300">
+
+<div xmlns="http://www.w3.org/1999/xhtml">
+
+<table border="1">
+ <tr>
+  <td>Foo</td>
+ </tr>
+ <tr>
+  <td><input type="text" value="Baz" id="sss" /></td>
+ </tr>
+</table>
+
+</div>
+
+</foreignObject>
+
+
+</svg>

@@ -947,6 +947,33 @@ NS_NewBufferedOutputStream(nsIOutputStream **result,
     return rv;
 }
 
+/**
+ * Attempts to buffer a given output stream.  If this fails, it returns the
+ * passed-in output stream.
+ *
+ * @param aOutputStream
+ *        The output stream we want to buffer.  This cannot be null.
+ * @param aBufferSize
+ *        The size of the buffer for the buffered output stream.
+ * @returns an nsIOutputStream that is buffered with the specified buffer size,
+ *          or is aOutputStream if creating the new buffered stream failed.
+ */
+inline already_AddRefed<nsIOutputStream>
+NS_BufferOutputStream(nsIOutputStream *aOutputStream,
+                      PRUint32 aBufferSize)
+{
+    NS_ASSERTION(aOutputStream, "No output stream given!");
+
+    nsCOMPtr<nsIOutputStream> bos;
+    nsresult rv = NS_NewBufferedOutputStream(getter_AddRefs(bos), aOutputStream,
+                                             aBufferSize);
+    if (NS_SUCCEEDED(rv))
+        return bos.forget();
+
+    NS_ADDREF(aOutputStream);
+    return aOutputStream;
+}
+
 // returns an input stream compatible with nsIUploadChannel::SetUploadStream()
 inline nsresult
 NS_NewPostDataStream(nsIInputStream  **result,

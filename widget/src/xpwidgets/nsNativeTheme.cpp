@@ -218,6 +218,17 @@ nsNativeTheme::IsLastTab(nsIFrame* aFrame)
   return aFrame->GetContent()->HasAttr(kNameSpaceID_None, nsWidgetAtoms::lasttab);
 }
 
+PRBool
+nsNativeTheme::IsHorizontal(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return PR_FALSE;
+    
+  return !aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient,
+                                            nsWidgetAtoms::vertical, 
+                                            eCaseMatters);
+}
+
 // progressbar:
 PRBool
 nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame)

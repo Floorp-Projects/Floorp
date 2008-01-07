@@ -389,8 +389,8 @@ js_FinishSharingScope(JSContext *cx, JSScope *scope)
         if (JSVAL_IS_STRING(v) &&
             !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
             /*
-             * FIXME bug 363059: The following error recovery changes the
-             * execution semantic arbitrary and silently ignores any errors
+             * FIXME bug 363059: The following error recovery changes runtime
+             * execution semantics, arbitrarily and silently ignoring errors
              * except out-of-memory, which should have been reported through
              * JS_ReportOutOfMemory at this point.
              */

@@ -95,13 +95,13 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// d7d1aae8-fcb9-4fe7-be62-b20ffc53f1f9
+// a6593177-ba36-400e-8812-a0d36b3af17b
 #define NS_IWIDGET_IID \
-{ 0xd7d1aae8, 0xfcb9, 0x4fe7, \
-  { 0xbe, 0x62, 0xb2, 0x0f, 0xfc, 0x53, 0xf1, 0xf9 } }
+{ 0xa6593177, 0xba36, 0x400e, \
+  { 0x88, 0x12, 0xa0, 0xd3, 0x6b, 0x3a, 0xf1, 0x7b } }
 
 // Hide the native window systems real window type so as to avoid
-// including native window system types and api's. This is necessary
+// including native window system types and APIs. This is necessary
 // to ensure cross-platform code.
 typedef void* nsNativeWidget;
 
@@ -669,29 +669,18 @@ class nsIWidget : public nsISupports {
      * If the window is resized then the alpha channel values for
      * all pixels are reset to 1.
      * Pixel RGB color values are already premultiplied with alpha channel values.
-     * @param aTranslucent true if the window may have translucent
+     * @param aTransparent true if the window may have translucent
      *   or transparent pixels
      */
-    NS_IMETHOD SetWindowTranslucency(PRBool aTranslucent) = 0;
+    NS_IMETHOD SetHasTransparentBackground(PRBool aTransparent) = 0;
 
     /**
      * Get the translucency of the top-level window that contains this
      * widget.
-     * @param aTranslucent true if the window may have translucent or
+     * @param aTransparent true if the window may have translucent or
      *   transparent pixels
      */
-    NS_IMETHOD GetWindowTranslucency(PRBool& aTranslucent) = 0;
-
-    /**
-     * Update the alpha channel for some pixels of the top-level window
-     * that contains this widget.
-     * The window must have been made translucent using SetWindowTranslucency.
-     * Pixel RGB color values are already premultiplied with alpha channel values.
-     * @param aRect the rect to update
-     * @param aAlphas the alpha values, in w x h array, row-major order,
-     * in units of 1/255. nsBlender::GetAlphas is a good way to compute this array.
-     */
-    NS_IMETHOD UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas) = 0;
+    NS_IMETHOD GetHasTransparentBackground(PRBool& aTransparent) = 0;
 
     /** 
      * Hide window chrome (borders, buttons) for this widget.

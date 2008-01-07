@@ -1,0 +1,16 @@
+<html>
+<head>
+<script>
+function m()
+{
+  document.body.offsetHeight;
+  var div = document.getElementById("div");
+  var doomed = document.getElementById("doomed");
+  div.removeChild(doomed);
+}
+</script>
+</head>
+<body onload="m();">
+<div id="div"><span>x </span><div id="doomed">y</div><span> x</span></div>
+</body>
+</html>

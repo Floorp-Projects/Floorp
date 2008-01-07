@@ -1,0 +1,21 @@
+<html><head>
+<title>Bug 271747 – Width in table cells in bottom row sometimes ignored</title>
+<style>
+td{background-color:green;}
+tr{height:100px;}
+</style>
+</head>
+<body>
+<table cellpadding="0"><tbody>
+<tr>
+   <td></td>
+   <td>
+      <script>var x=document.body.offsetHeight;</script>
+   </td>
+</tr>
+<tr>
+   <td width="100"></td>
+   <td width="500"></td>
+</tr>
+</tbody></table>
+</body></html>

@@ -597,7 +597,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 JSClass js_StringClass = {
     js_String_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_String) | JSCLASS_FIXED_BINDING,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
     JS_PropertyStub,   JS_PropertyStub,   str_getProperty,   JS_PropertyStub,
     str_enumerate, (JSResolveOp)str_resolve, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -1846,8 +1846,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
                 return JS_FALSE;
 
             /* Clamp limit between 0 and 1 + string length. */
-            if (!js_DoubleToECMAUint32(cx, d, &limit))
-                return JS_FALSE;
+            limit = js_DoubleToECMAUint32(d);
             if (limit > JSSTRING_LENGTH(str))
                 limit = 1 + JSSTRING_LENGTH(str);
         }
@@ -4925,9 +4924,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
     return ucs4Char;
 }
 
-#if defined(DEBUG) ||                                                         \
-    defined(DUMP_CALL_TABLE) ||                                               \
-    defined(DUMP_SCOPE_STATS)
+#if defined(DEBUG) || defined(DUMP_SCOPE_STATS)
 
 JS_FRIEND_API(size_t)
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,

@@ -405,14 +405,18 @@ gfxFont::Measure(gfxTextRun *aTextRun,
             double advance = glyphData->GetSimpleAdvance();
             // Only get the real glyph horizontal extent if we were asked
             // for the tight bounding box or we're in quality mode
-            if (aTightBoundingBox || NeedsGlyphExtents(aTextRun)) {
+            if ((aTightBoundingBox || NeedsGlyphExtents(aTextRun)) && extents) {
                 PRUint32 glyphIndex = glyphData->GetSimpleGlyph();
                 PRUint16 extentsWidth = extents->GetContainedGlyphWidthAppUnits(glyphIndex);
                 if (extentsWidth != gfxGlyphExtents::INVALID_WIDTH && !aTightBoundingBox) {
                     UnionWithXPoint(&metrics.mBoundingBox, x + direction*extentsWidth);
                 } else {
-                    gfxRect glyphRect =
-                        extents->GetTightGlyphExtentsAppUnits(this, aRefContext, glyphIndex);
+                    gfxRect glyphRect;
+                    if (!extents->GetTightGlyphExtentsAppUnits(this,
+                            aRefContext, glyphIndex, &glyphRect)) {
+                        glyphRect = gfxRect(0, metrics.mBoundingBox.Y(),
+                            advance, metrics.mBoundingBox.Height());
+                    }
                     if (isRTL) {
                         glyphRect.pos.x -= advance;
                     }
@@ -429,8 +433,15 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                 PRUint32 glyphIndex = details->mGlyphID;
                 gfxPoint glyphPt(x + details->mXOffset, details->mYOffset);
                 double advance = details->mAdvance;
-                gfxRect glyphRect =
-                    extents->GetTightGlyphExtentsAppUnits(this, aRefContext, glyphIndex);
+                gfxRect glyphRect;
+                if (glyphData->IsMissing() || !extents ||
+                    !extents->GetTightGlyphExtentsAppUnits(this,
+                            aRefContext, glyphIndex, &glyphRect)) {
+                    // We might have failed to get glyph extents due to
+                    // OOM or something
+                    glyphRect = gfxRect(0, metrics.mBoundingBox.Y(),
+                        advance, metrics.mBoundingBox.Height());
+                }
                 if (isRTL) {
                     glyphRect.pos.x -= advance;
                 }
@@ -522,12 +533,17 @@ gfxGlyphExtents::~gfxGlyphExtents()
     MOZ_COUNT_DTOR(gfxGlyphExtents);
 }
 
-gfxRect
+PRBool
 gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
-    gfxContext *aContext, PRUint32 aGlyphID)
+    gfxContext *aContext, PRUint32 aGlyphID, gfxRect *aExtents)
 {
     HashEntry *entry = mTightGlyphExtents.GetEntry(aGlyphID);
     if (!entry) {
+        if (!aContext) {
+            NS_WARNING("Could not get glyph extents (no aContext)");
+            return PR_FALSE;
+        }
+
         aFont->SetupCairoFont(aContext);
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
         ++gGlyphExtentsSetupLazyTight;
@@ -536,11 +552,12 @@ gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
         entry = mTightGlyphExtents.GetEntry(aGlyphID);
         if (!entry) {
             NS_WARNING("Could not get glyph extents");
-            return gfxRect(0,0,0,0);
+            return PR_FALSE;
         }
     }
     
-    return gfxRect(entry->x, entry->y, entry->width, entry->height);
+    *aExtents = gfxRect(entry->x, entry->y, entry->width, entry->height);
+    return PR_TRUE;
 }
 
 gfxGlyphExtents::GlyphWidths::~GlyphWidths()
@@ -1931,7 +1948,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                         font->SetupGlyphExtents(aRefContext, glyphIndex, PR_FALSE, extents);
                     }
                 }
-            } else {
+            } else if (!glyphData->IsMissing()) {
                 PRUint32 k;
                 PRUint32 glyphCount = glyphData->GetGlyphCount();
                 const gfxTextRun::DetailedGlyph *details = GetDetailedGlyphs(j);

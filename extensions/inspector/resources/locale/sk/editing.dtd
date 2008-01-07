@@ -7,7 +7,7 @@
 <!ENTITY mnEditCopy.label "Kopírovať">
 <!ENTITY mnEditCopy.accesskey "K">
 <!ENTITY mnEditPaste.label "Prilepiť">
-<!ENTITY mnEditPaste.accesskey "l">
+<!ENTITY mnEditPaste.accesskey "P">
 <!ENTITY mnEditInsert.label "Vložiť">
 <!ENTITY mnEditInsert.accesskey "i">
 <!ENTITY mnEditEdit.label "Upraviť">

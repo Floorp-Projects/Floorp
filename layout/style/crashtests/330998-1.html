@@ -1,0 +1,30 @@
+<html>
+
+<head>
+
+<script>
+
+function init()
+{
+  var form1 = document.getElementById("form1");
+  var tr1 = document.getElementById("tr1");
+
+  tr1.appendChild(form1);
+  tr1.removeChild(form1);
+}
+
+window.addEventListener("load", init, false);
+
+</script>
+
+</head>
+
+<body>
+
+<table><tr id="tr1"><td></td></tr></table>
+
+<form id="form1"><span style="float:left"></span></form>
+
+</body>
+
+</html>

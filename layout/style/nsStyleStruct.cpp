@@ -46,7 +46,6 @@
 #include "nsStyleConsts.h"
 #include "nsThemeConstants.h"
 #include "nsString.h"
-#include "nsUnitConversion.h"
 #include "nsPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIStyleRule.h"
