@@ -327,8 +327,3 @@ interface nsIDOMSVGFEDisplacementMapElement : nsIDOMSVGFilterPrimitiveStandardAt
   readonly attribute nsIDOMSVGAnimatedEnumeration xChannelSelector;
   readonly attribute nsIDOMSVGAnimatedEnumeration yChannelSelector;
 };
-
-[scriptable, uuid(8698c635-26c7-468b-905e-494e8825d56b)]
-interface nsIDOMSVGFEUnimplementedMOZElement : nsIDOMSVGFilterPrimitiveStandardAttributes
-{
-};

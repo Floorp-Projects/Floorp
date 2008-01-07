@@ -90,7 +90,6 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   nsCOMPtr<nsIDOMSVGFilterElement> aFilter = do_QueryInterface(mContent);
   NS_ASSERTION(aFilter, "Wrong content element (not filter)");
 
-  PRBool unimplementedFilter = PR_FALSE;
   PRUint32 requirements = 0;
   PRUint32 count = mContent->GetChildCount();
   for (PRUint32 i=0; i<count; ++i) {
@@ -102,21 +101,13 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
       filter->GetRequirements(&tmp);
       requirements |= tmp;
     }
-
-    nsCOMPtr<nsIDOMSVGFEUnimplementedMOZElement> unimplemented;
-    unimplemented = do_QueryInterface(child);
-    if (unimplemented)
-      unimplementedFilter = PR_TRUE;
   }
 
-  // check for source requirements or filter elements that we don't support yet
-  if (requirements & ~(NS_FE_SOURCEGRAPHIC | NS_FE_SOURCEALPHA) ||
-      unimplementedFilter) {
+  // check for source requirements that we don't support yet
+  if (requirements & ~(NS_FE_SOURCEGRAPHIC | NS_FE_SOURCEALPHA)) {
 #ifdef DEBUG_tor
     if (requirements & ~(NS_FE_SOURCEGRAPHIC | NS_FE_SOURCEALPHA))
       fprintf(stderr, "FilterFrame: unimplemented source requirement\n");
-    if (unimplementedFilter)
-      fprintf(stderr, "FilterFrame: unimplemented filter element\n");
 #endif
     aTarget->PaintSVG(aContext, nsnull);
     return NS_OK;
