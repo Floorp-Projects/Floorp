@@ -1925,20 +1925,19 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
   return PR_FALSE;
 }
 
-PR_STATIC_CALLBACK(PRBool)
-AddRule(void* aRuleInfo, void* aCascade)
+static PRBool
+AddRule(RuleValue* aRuleInfo, void* aCascade)
 {
-  RuleValue* ruleInfo = static_cast<RuleValue*>(aRuleInfo);
   RuleCascadeData *cascade = static_cast<RuleCascadeData*>(aCascade);
 
   // Build the rule hash.
-  cascade->mRuleHash.PrependRule(ruleInfo);
+  cascade->mRuleHash.PrependRule(aRuleInfo);
 
   nsVoidArray* stateArray = &cascade->mStateSelectors;
   nsVoidArray* classArray = &cascade->mClassSelectors;
   nsVoidArray* idArray = &cascade->mIDSelectors;
   
-  for (nsCSSSelector* selector = ruleInfo->mSelector;
+  for (nsCSSSelector* selector = aRuleInfo->mSelector;
            selector; selector = selector->mNext) {
     // It's worth noting that this loop over negations isn't quite
     // optimal for two reasons.  One, we could add something to one of
@@ -1978,23 +1977,60 @@ AddRule(void* aRuleInfo, void* aCascade)
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-RuleArraysDestroy(nsHashKey *aKey, void *aData, void *aClosure)
+struct PerWeightData {
+  PRInt32 mWeight;
+  RuleValue* mRules; // linked list (reverse order)
+};
+
+struct RuleByWeightEntry : public PLDHashEntryHdr {
+  PerWeightData data; // mWeight is key, mRules are value
+};
+
+PR_STATIC_CALLBACK(PLDHashNumber)
+HashIntKey(PLDHashTable *table, const void *key)
 {
-  delete static_cast<nsAutoVoidArray*>(aData);
-  return PR_TRUE;
+  return PLDHashNumber(NS_PTR_TO_INT32(key));
 }
+
+PR_STATIC_CALLBACK(PRBool)
+MatchWeightEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+                 const void *key)
+{
+  const RuleByWeightEntry *entry = (const RuleByWeightEntry *)hdr;
+  return entry->data.mWeight == NS_PTR_TO_INT32(key);
+}
+
+static PLDHashTableOps gRulesByWeightOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    HashIntKey,
+    MatchWeightEntry,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    NULL
+};
 
 struct CascadeEnumData {
   CascadeEnumData(nsPresContext* aPresContext, PLArenaPool& aArena)
     : mPresContext(aPresContext),
-      mRuleArrays(nsnull, nsnull, RuleArraysDestroy, nsnull, 64),
       mArena(aArena)
   {
+    if (!PL_DHashTableInit(&mRulesByWeight, &gRulesByWeightOps, nsnull,
+                          sizeof(RuleByWeightEntry), 64))
+      mRulesByWeight.ops = nsnull;
+  }
+
+  ~CascadeEnumData()
+  {
+    if (mRulesByWeight.ops)
+      PL_DHashTableFinish(&mRulesByWeight);
   }
 
   nsPresContext* mPresContext;
-  nsObjectHashtable mRuleArrays; // of nsAutoVoidArray
+  // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
+  // provide a getter that gives me a *reference* to the value.
+  PLDHashTable mRulesByWeight; // of RuleValue* linked lists (?)
   PLArenaPool& mArena;
 };
 
@@ -2011,24 +2047,25 @@ InsertRuleByWeight(nsICSSRule* aRule, void* aData)
     for (nsCSSSelectorList *sel = styleRule->Selector();
          sel; sel = sel->mNext) {
       PRInt32 weight = sel->mWeight;
-      nsPRUint32Key key(weight);
-      nsAutoVoidArray *rules =
-        static_cast<nsAutoVoidArray*>(data->mRuleArrays.Get(&key));
-      if (!rules) {
-        rules = new nsAutoVoidArray();
-        if (!rules) return PR_FALSE; // out of memory
-        data->mRuleArrays.Put(&key, rules);
-      }
+      RuleByWeightEntry *entry = static_cast<RuleByWeightEntry*>(
+        PL_DHashTableOperate(&data->mRulesByWeight, NS_INT32_TO_PTR(weight),
+                             PL_DHASH_ADD));
+      if (!entry)
+        return PR_FALSE;
+      entry->data.mWeight = weight;
       RuleValue *info =
         new (data->mArena) RuleValue(styleRule, sel->mSelectors);
-      rules->AppendElement(info);
+      // entry->data.mRules must be in backwards order.
+      info->mNext = entry->data.mRules;
+      entry->data.mRules = info;
     }
   }
   else if (nsICSSRule::MEDIA_RULE == type ||
            nsICSSRule::DOCUMENT_RULE == type) {
     nsICSSGroupRule* groupRule = (nsICSSGroupRule*)aRule;
     if (groupRule->UseForPresentation(data->mPresContext))
-      groupRule->EnumerateRulesForwards(InsertRuleByWeight, aData);
+      if (!groupRule->EnumerateRulesForwards(InsertRuleByWeight, aData))
+        return PR_FALSE;
   }
   return PR_TRUE;
 }
@@ -2050,68 +2087,43 @@ CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
     }
 
     if (sheet->mInner) {
-      sheet->mInner->mOrderedRules.EnumerateForwards(InsertRuleByWeight, data);
+      if (!sheet->mInner->mOrderedRules.EnumerateForwards(InsertRuleByWeight, data))
+        return PR_FALSE;
     }
   }
   return PR_TRUE;
 }
 
-struct RuleArrayData {
-  PRInt32 mWeight;
-  nsVoidArray* mRuleArray;
-};
-
-PR_STATIC_CALLBACK(int) CompareArrayData(const void* aArg1, const void* aArg2,
+PR_STATIC_CALLBACK(int) CompareWeightData(const void* aArg1, const void* aArg2,
                                          void* closure)
 {
-  const RuleArrayData* arg1 = static_cast<const RuleArrayData*>(aArg1);
-  const RuleArrayData* arg2 = static_cast<const RuleArrayData*>(aArg2);
+  const PerWeightData* arg1 = static_cast<const PerWeightData*>(aArg1);
+  const PerWeightData* arg2 = static_cast<const PerWeightData*>(aArg2);
   return arg1->mWeight - arg2->mWeight; // put lower weight first
 }
 
 
-struct FillArrayData {
-  FillArrayData(RuleArrayData* aArrayData) :
+struct FillWeightArrayData {
+  FillWeightArrayData(PerWeightData* aArrayData) :
     mIndex(0),
-    mArrayData(aArrayData)
+    mWeightArray(aArrayData)
   {
   }
   PRInt32 mIndex;
-  RuleArrayData* mArrayData;
+  PerWeightData* mWeightArray;
 };
 
-PR_STATIC_CALLBACK(PRBool)
-FillArray(nsHashKey* aKey, void* aData, void* aClosure)
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+FillWeightArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                PRUint32 number, void *arg)
 {
-  nsPRUint32Key* key = static_cast<nsPRUint32Key*>(aKey);
-  nsVoidArray* weightArray = static_cast<nsVoidArray*>(aData);
-  FillArrayData* data = static_cast<FillArrayData*>(aClosure);
+  FillWeightArrayData* data = static_cast<FillWeightArrayData*>(arg);
+  const RuleByWeightEntry *entry = (const RuleByWeightEntry *)hdr;
 
-  RuleArrayData& ruleData = data->mArrayData[data->mIndex++];
-  ruleData.mRuleArray = weightArray;
-  ruleData.mWeight = key->GetValue();
+  data->mWeightArray[data->mIndex++] = entry->data;
 
-  return PR_TRUE;
-}
-
-/**
- * Takes the hashtable of arrays (keyed by weight, in order sort) and
- * puts them all in one big array which has a primary sort by weight
- * and secondary sort by order.
- */
-static void PutRulesInList(nsObjectHashtable* aRuleArrays,
-                           nsVoidArray* aWeightedRules)
-{
-  PRInt32 arrayCount = aRuleArrays->Count();
-  RuleArrayData* arrayData = new RuleArrayData[arrayCount];
-  FillArrayData faData(arrayData);
-  aRuleArrays->Enumerate(FillArray, &faData);
-  NS_QuickSort(arrayData, arrayCount, sizeof(RuleArrayData),
-               CompareArrayData, nsnull);
-  for (PRInt32 i = 0; i < arrayCount; ++i)
-    aWeightedRules->AppendElements(*arrayData[i].mRuleArray);
-
-  delete [] arrayData;
+  return PL_DHASH_NEXT;
 }
 
 RuleCascadeData*
@@ -2133,22 +2145,43 @@ nsCSSRuleProcessor::GetRuleCascade(nsPresContext* aPresContext)
   }
 
   if (mSheets.Count() != 0) {
-    cascade = new RuleCascadeData(medium,
-                                  eCompatibility_NavQuirks == aPresContext->CompatibilityMode());
-    if (cascade) {
-      CascadeEnumData data(aPresContext, cascade->mRuleHash.Arena());
-      mSheets.EnumerateForwards(CascadeSheetRulesInto, &data);
-      nsVoidArray weightedRules;
-      PutRulesInList(&data.mRuleArrays, &weightedRules);
+    nsAutoPtr<RuleCascadeData> newCascade(
+      new RuleCascadeData(medium,
+                          eCompatibility_NavQuirks == aPresContext->CompatibilityMode()));
+    if (newCascade) {
+      CascadeEnumData data(aPresContext, newCascade->mRuleHash.Arena());
+      if (!data.mRulesByWeight.ops)
+        return nsnull;
+      if (!mSheets.EnumerateForwards(CascadeSheetRulesInto, &data))
+        return nsnull;
+
+      // Sort the hash table of per-weight linked lists by weight.
+      PRUint32 weightCount = data.mRulesByWeight.entryCount;
+      nsAutoArrayPtr<PerWeightData> weightArray(new PerWeightData[weightCount]);
+      FillWeightArrayData fwData(weightArray);
+      PL_DHashTableEnumerate(&data.mRulesByWeight, FillWeightArray, &fwData);
+      NS_QuickSort(weightArray, weightCount, sizeof(PerWeightData),
+                   CompareWeightData, nsnull);
 
       // Put things into the rule hash backwards because it's easier to
       // build a singly linked list lowest-first that way.
-      if (!weightedRules.EnumerateBackwards(AddRule, cascade)) {
-        delete cascade;
-        cascade = nsnull;
+      // The primary sort is by weight...
+      PRUint32 i = weightCount;
+      while (i > 0) {
+        --i;
+        // and the secondary sort is by order.  mRules are already backwards.
+        RuleValue *ruleValue = weightArray[i].mRules;
+        do {
+          // Calling |AddRule| reuses mNext!
+          RuleValue *next = ruleValue->mNext;
+          if (!AddRule(ruleValue, newCascade))
+            return nsnull;
+          ruleValue = next;
+        } while (ruleValue);
       }
 
-      *cascadep = cascade;
+      *cascadep = newCascade;
+      cascade = newCascade.forget();
     }
   }
   return cascade;

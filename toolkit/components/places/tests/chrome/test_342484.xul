@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Add Bad Livemarks"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+/*
+ Test loading feeds with items that aren't allowed
+ */
+SimpleTest.waitForExplicitFinish();
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+function uri(spec) {
+  return iosvc.newURI(spec, null, null);
+}
+
+var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
+              getService(Ci.nsILivemarkService);
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+
+var toolbarFolderId = bmsvc.toolbarFolder;
+
+var observer =
+{
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsINavBookmarkObserver) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsINavBookmarkObserve
+  onBeginUpdateBatch: function(){},
+  onEndUpdateBatch: function(){
+    setTimeout(runTest, 1000);
+    bmsvc.removeObserver(this);
+  },
+  onItemAdded: function(itemId, folder, index) {},
+  onItemRemoved: function(itemId, folder, index){},
+  onItemChanged: function(itemId, property, isAnnotationProperty, value){},
+  onItemVisited: function(itemId, aVisitID, time){},
+  onItemMoved: function(itemId, oldParent, oldIndex, newParent, newIndex){},
+
+};
+
+function runTest() {
+  var goodItems = ["http://example.org/first", "http://example.org/last"];
+  var options = histsvc.getNewQueryOptions();
+  var query = histsvc.getNewQuery();
+  query.setFolders([gLivemarkId], 1);
+  var result = histsvc.executeQuery(query, options);
+  var rootNode = result.root;
+  rootNode.containerOpen = true;
+
+  var cc = rootNode.childCount;
+  ok(cc == 2, "failed to create the two good livemark items");
+  for (var i = 0; i < cc; ++i) {
+    var node = rootNode.getChild(i);
+    ok(goodItems.indexOf(node.uri) != -1, "livemark item created with bad uri " + node.uri);
+  }
+
+  rootNode.containerOpen = false;
+  bmsvc.removeFolder(gLivemarkId);
+  SimpleTest.finish();
+}
+
+var root = bmsvc.bookmarksRoot;
+const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/bad_links.atom";
+
+gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, toolbarFolderId, "foo",
+                                            uri("http:/localhost/"),
+                                            uri(FEEDSPEC), -1);
+bmsvc.addObserver(observer, false);
+lmsvc.reloadLivemarkFolder(gLivemarkId);
+]]>
+</script>
+
+</window>

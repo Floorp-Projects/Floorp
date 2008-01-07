@@ -58,12 +58,13 @@ function nsPluginInstallerWizard(){
   // how many plugins are to be installed
   this.pluginsToInstallNum = 0;
 
-  this.mTab = null;
+  this.mBrowser = null;
   this.mSuccessfullPluginInstallation = 0;
 
   // arguments[0] is an array that contains two items:
   //     an array of mimetypes that are missing
-  //     a reference to the tab that needs them, so we can reload it
+  //     a reference to the browser that needs them, 
+  //        so we can notify which browser can be reloaded.
 
   if ("arguments" in window) {
     for (var item in window.arguments[0].plugins){
@@ -73,7 +74,7 @@ function nsPluginInstallerWizard(){
       this.mPluginRequestArrayLength++;
     }
 
-    this.mTab = window.arguments[0].tab;
+    this.mBrowser = window.arguments[0].browser;
   }
 
   this.WSPluginCounter = 0;
@@ -644,13 +645,12 @@ function wizardFinish(){
   // don't refresh if no plugins were found or installed
   if ((gPluginInstaller.mSuccessfullPluginInstallation > 0) &&
       (gPluginInstaller.mPluginInfoArray.length != 0) &&
-      gPluginInstaller.mTab) {
-    // clear the tab's plugin list only if we installed at least one plugin
-    gPluginInstaller.mTab.missingPlugins = null;
-    // reset UI
-    window.opener.gMissingPluginInstaller.closeNotification();
-    // reload the browser to make the new plugin show
-    window.opener.getBrowser().reloadTab(gPluginInstaller.mTab);
+      gPluginInstaller.mBrowser) {
+    // notify listeners that a plugin is installed,
+    // so that they can reset the UI and update the browser.
+    var event = document.createEvent("Events");
+    event.initEvent("NewPluginInstalled", true, true);
+    gPluginInstaller.mBrowser.dispatchEvent(event);
   }
 
   return true;

@@ -554,15 +554,15 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
     return NS_OK;
 
   return aConnection->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id IN( ") +
-      deletedPlaceIds +
-      NS_LITERAL_CSTRING(") AND id IN( "    
-      "SELECT h.id FROM moz_places h "
-      "WHERE (SELECT id from moz_historyvisits WHERE place_id=h.id) IS NULL "
-      ") AND id NOT IN( " 
-      "SELECT DISTINCT place_id FROM moz_annos WHERE expiration = ") +
+    NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id IN( "
+      "SELECT h.id "
+      "FROM moz_places h "
+      "LEFT OUTER JOIN moz_historyvisits v ON v.place_id = h.id "
+      "LEFT OUTER JOIN moz_annos a ON a.place_id = h.id "
+      "WHERE h.id IN(") + deletedPlaceIds +
+      NS_LITERAL_CSTRING(") AND v.place_id IS NULL AND (a.expiration <> ") +
       nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
-      NS_LITERAL_CSTRING(")"));              
+      NS_LITERAL_CSTRING(" OR a.expiration IS NULL))"));
 }
 
 
@@ -589,12 +589,11 @@ nsNavHistoryExpire::EraseFavicons(mozIStorageConnection* aConnection,
 
   // delete only if id is not referenced in moz_places
   return aConnection->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING("DELETE FROM moz_favicons WHERE id IN (") +
-    deletedFaviconIds +
-    NS_LITERAL_CSTRING(") AND id IN "
-      "(SELECT f.id FROM moz_favicons f "
+    NS_LITERAL_CSTRING("DELETE FROM moz_favicons WHERE id IN ( "
+      "SELECT f.id FROM moz_favicons f "
       "LEFT OUTER JOIN moz_places h ON f.id = h.favicon_id "
-      "WHERE h.favicon_id IS NULL)"));
+      "WHERE f.id IN (") + deletedFaviconIds +
+      NS_LITERAL_CSTRING(") AND h.favicon_id IS NULL)"));
 }
 
 

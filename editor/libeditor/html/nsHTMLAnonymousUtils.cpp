@@ -152,7 +152,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   }
 
   // establish parenthood of the element
-  newContent->SetNativeAnonymous(PR_TRUE);
+  newContent->SetNativeAnonymous();
   res = newContent->BindToTree(doc, parentContent, newContent, PR_TRUE);
   if (NS_FAILED(res)) {
     newContent->UnbindFromTree();

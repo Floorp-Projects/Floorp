@@ -1,0 +1,24 @@
+<html>
+<head>
+<style>
+span#dd:before {
+  display: inline;  white-space: pre;  content: "bef-\Aore";
+  color: gray;}
+</style>
+<script>
+function boo()
+{
+  var div = document.getElementById("div"); 
+  var dd = document.getElementById("dd");
+  var newTextNode = document.createTextNode("new");
+  dd.insertBefore(newTextNode, div);
+}
+
+window.addEventListener("load", boo, false);
+
+</script>
+</head>
+<body>
+<span id="dd"><div id="div">div</div></span>
+</body>
+</html>

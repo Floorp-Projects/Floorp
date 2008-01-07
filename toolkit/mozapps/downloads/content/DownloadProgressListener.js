@@ -40,8 +40,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-
 /**
  * DownloadProgressListener "class" is used to help update download items shown
  * in the Download Manager UI such as displaying amount transferred, transfer
@@ -65,7 +63,7 @@ DownloadProgressListener.prototype = {
     let state = aDownload.state;
     switch (state) {
       case nsIDM.DOWNLOAD_QUEUED:
-        buildActiveDownloadsList();
+        prependList(aDownload);
         break;
       case nsIDM.DOWNLOAD_FAILED:
       case nsIDM.DOWNLOAD_CANCELED:
@@ -81,8 +79,19 @@ DownloadProgressListener.prototype = {
     // autoRemoveAndClose could have already closed our window...
     try {
       let dl = getDownload(aDownload.id);
+
+      // We should eventually know the referrer at some point
+      let referrer = aDownload.referrer;
+      if (referrer)
+        dl.setAttribute("referrer", referrer.spec);
+
+      // Update to the new state
       dl.setAttribute("state", state);
+
+      // Update ui text values after switching states
+      updateTime(dl);
       updateStatus(dl);
+
       gDownloadViewController.onCommandUpdate();
     } catch (e) { }
   },
@@ -120,14 +129,6 @@ DownloadProgressListener.prototype = {
   },
 
   onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload)
-  {
-  },
-
-  onLocationChange: function(aWebProgress, aRequest, aLocation, aDownload)
-  {
-  },
-
-  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage, aDownload)
   {
   },
 

@@ -55,6 +55,9 @@
 #include "nsDataHashtable.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIDOMEvent.h"
+
+struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
 class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
@@ -468,6 +471,19 @@ public:
   static nsresult ConvertStringFromCharset(const nsACString& aCharset,
                                            const nsACString& aInput,
                                            nsAString& aOutput);
+
+  /**
+   * Determine whether a buffer begins with a BOM for UTF-8, UTF-16LE,
+   * UTF-16BE, UTF-32LE, UTF-32BE.
+   *
+   * @param aBuffer the buffer to check
+   * @param aLength the length of the buffer
+   * @param aCharset empty if not found
+   * @return boolean indicating whether a BOM was detected.
+   */
+  static PRBool CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
+                            nsACString& aCharset);
+
 
   /**
    * Determine whether aContent is in some way associated with aForm.  If the
@@ -1125,6 +1141,16 @@ public:
    * Return the localized ellipsis for UI.
    */
   static const nsDependentString GetLocalizedEllipsis();
+
+  /**
+   * The routine GetNativeEvent is used to fill nsNativeKeyEvent
+   * nsNativeKeyEvent. It's also used in DOMEventToNativeKeyEvent.
+   * See bug 406407 for details.
+   */
+  static nsEvent* GetNativeEvent(nsIDOMEvent* aDOMEvent);
+  static PRBool DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
+                                         nsNativeKeyEvent* aNativeEvent,
+                                         PRBool aGetCharCode);
 
 private:
 

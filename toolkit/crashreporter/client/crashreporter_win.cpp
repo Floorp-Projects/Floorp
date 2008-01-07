@@ -830,8 +830,8 @@ void UIShowCrashUI(const string& dumpFile,
     if (!gQueryParameters[L"Vendor"].empty()) {
       gCrashReporterKey += gQueryParameters[L"Vendor"] + L"\\";
     }
-    gCrashReporterKey += gQueryParameters[L"Name"] + L"\\Crash Reporter";
-  }  
+    gCrashReporterKey += gQueryParameters[L"ProductName"] + L"\\Crash Reporter";
+  }
 
   if (gQueryParameters.find(L"URL") != gQueryParameters.end())
     gURLParameter = gQueryParameters[L"URL"];

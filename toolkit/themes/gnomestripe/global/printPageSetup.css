@@ -1,0 +1,7 @@
+.portrait-page {
+  list-style-image: url("moz-icon://stock/gtk-orientation-portrait?size=button");
+}
+
+.landscape-page {
+  list-style-image: url("moz-icon://stock/gtk-orientation-landscape?size=button");
+}

@@ -377,10 +377,27 @@ LoginManagerStorage_legacy.prototype = {
      * countLogins
      *
      */
-    countLogins : function (hostname, formSubmitURL, httpRealm) {
-        var logins = this._searchLogins(hostname, formSubmitURL, httpRealm);
+    countLogins : function (aHostname, aFormSubmitURL, aHttpRealm) {
+        var logins;
 
-        return logins.length;
+        // Normal case: return direct results for the specified host.
+        if (aHostname) {
+            logins = this._searchLogins(aHostname, aFormSubmitURL, aHttpRealm);
+            return logins.length
+        } 
+
+        // For consistency with how aFormSubmitURL and aHttpRealm work
+        if (aHostname == null)
+            return 0;
+
+        // aHostname == "", so loop through each known host to match with each.
+        var count = 0;
+        for (var hostname in this._logins) {
+            logins = this._searchLogins(hostname, aFormSubmitURL, aHttpRealm);
+            count += logins.length;
+        }
+
+        return count;
     },
 
 
@@ -881,12 +898,16 @@ LoginManagerStorage_legacy.prototype = {
 
         this.log("Writing passwords to " + this._signonsFile.path);
 
-        var outputStream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
-                                .createInstance(Ci.nsIFileOutputStream);
-        outputStream.QueryInterface(Ci.nsISafeOutputStream);
-
+        var safeStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                         createInstance(Ci.nsIFileOutputStream);
         // WR_ONLY|CREAT|TRUNC
-        outputStream.init(this._signonsFile, 0x02 | 0x08 | 0x20, 0600, null);
+        safeStream.init(this._signonsFile, 0x02 | 0x08 | 0x20, 0600, null);
+
+        var outputStream = Cc["@mozilla.org/network/buffered-output-stream;1"].
+                           createInstance(Ci.nsIBufferedOutputStream);
+        outputStream.init(safeStream, 8192);
+        outputStream.QueryInterface(Ci.nsISafeOutputStream); // for .finish()
+
 
         // write file version header
         writeLine("#2e");

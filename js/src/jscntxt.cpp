@@ -102,12 +102,12 @@ js_ThreadDestructorCB(void *ptr)
 
     if (!thread)
         return;
-    while (!JS_CLIST_IS_EMPTY(&thread->contextList)) {
-        /* NB: use a temporary, as the macro evaluates its args many times. */
-        JSCList *link = thread->contextList.next;
 
-        JS_REMOVE_AND_INIT_LINK(link);
-    }
+    /*
+     * Check that this thread properly called either JS_DestroyContext or
+     * JS_ClearContextThread on each JSContext it created or used.
+     */
+    JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
     GSN_CACHE_CLEAR(&thread->gsnCache);
     free(thread);
 }
@@ -173,9 +173,11 @@ js_SetContextThread(JSContext *cx)
     if (JS_CLIST_IS_EMPTY(&thread->contextList))
         memset(thread->gcFreeLists, 0, sizeof(thread->gcFreeLists));
 
+    /* Assert that the previous cx->thread called JS_ClearContextThread(). */
+    JS_ASSERT(!cx->thread || cx->thread == thread);
+    if (!cx->thread)
+        JS_APPEND_LINK(&cx->threadLinks, &thread->contextList);
     cx->thread = thread;
-    JS_REMOVE_LINK(&cx->threadLinks);
-    JS_APPEND_LINK(&cx->threadLinks, &thread->contextList);
     return JS_TRUE;
 }
 
@@ -183,6 +185,11 @@ js_SetContextThread(JSContext *cx)
 void
 js_ClearContextThread(JSContext *cx)
 {
+    /*
+     * If cx is associated with a thread, this must be called only from that
+     * thread.  If not, this is a harmless no-op.
+     */
+    JS_ASSERT(cx->thread == js_GetCurrentThread(cx->runtime) || !cx->thread);
     JS_REMOVE_AND_INIT_LINK(&cx->threadLinks);
 #ifdef DEBUG
     if (JS_CLIST_IS_EMPTY(&cx->thread->contextList)) {
@@ -225,6 +232,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
+    JS_ClearOperationCallback(cx);
     cx->debugHooks = &rt->globalDebugHooks;
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword)-1;
@@ -408,7 +416,10 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     if (last) {
         js_GC(cx, GC_LAST_CONTEXT);
 
-        /* Free the script filename table if it exists and is empty. */
+        /*
+         * Free the script filename table if it exists and is empty. Do this
+         * after the last GC to avoid finalizers tripping on free memory.
+         */
         if (rt->scriptFilenameTable && rt->scriptFilenameTable->nentries == 0)
             js_FinishRuntimeScriptState(rt);
 
@@ -1299,10 +1310,26 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 }
 
 JSBool
-js_ResetOperationCounter(JSContext *cx)
+js_ResetOperationCount(JSContext *cx)
 {
-    JS_ASSERT(cx->operationCounter & JSOW_BRANCH_CALLBACK);
+    JSScript *script;
 
-    cx->operationCounter = 0;
-    return !cx->branchCallback || cx->branchCallback(cx, NULL);
+    JS_ASSERT(cx->operationCount <= 0);
+    JS_ASSERT(cx->operationLimit > 0);
+
+    cx->operationCount = (int32) cx->operationLimit;
+    if (cx->operationCallbackIsSet)
+        return cx->operationCallback(cx);
+
+    if (cx->operationCallback) {
+        /*
+         * Invoke the deprecated branch callback. It may be called only when
+         * the top-most frame is scripted or JSOPTION_NATIVE_BRANCH_CALLBACK
+         * is set.
+         */
+        script = cx->fp ? cx->fp->script : NULL;
+        if (script || JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK))
+            return ((JSBranchCallback) cx->operationCallback)(cx, script);
+    }
+    return JS_TRUE;
 }

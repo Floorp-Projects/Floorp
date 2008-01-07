@@ -157,8 +157,7 @@ protected:
                     const char* aString, PRInt32 aLength) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 reinterpret_cast<const PRUint8*>(aString), aLength,
-                aMetrics->mFontGroup,
-                static_cast<gfxContext*>(aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
+                aMetrics->mFontGroup, aRC->ThebesContext(),
                 aMetrics->mP2A,
                 ComputeFlags(aMetrics));
         }
@@ -166,7 +165,7 @@ protected:
                     const PRUnichar* aString, PRInt32 aLength) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 aString, aLength, aMetrics->mFontGroup,
-                static_cast<gfxContext*>(aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
+                aRC->ThebesContext(),
                 aMetrics->mP2A,
                 ComputeFlags(aMetrics));
         }

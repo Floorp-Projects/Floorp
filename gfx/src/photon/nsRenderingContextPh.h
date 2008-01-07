@@ -38,7 +38,6 @@
 #define nsRenderingContextPh_h___
 
 #include "nsRenderingContextImpl.h"
-#include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
 #include "nsPoint.h"

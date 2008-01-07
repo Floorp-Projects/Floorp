@@ -41,7 +41,6 @@
 #include "nsString.h"
 #include "nscore.h"
 #include "nsCoord.h"
-#include "nsUnitConversion.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include <math.h>

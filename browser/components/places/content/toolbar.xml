@@ -496,6 +496,37 @@
           }
         },
 
+        itemMoved:
+        function TV_V_itemMoved(aItem, aOldParent, aOldIndex, aNewParent,
+                                aNewIndex) {
+          // This cannot actually happen yet (see IDL)
+          if (aNewParent != aOldParent);
+            return;
+
+          if (aNewParent == this._self.getResultNode()) {
+            var children = this._self.childNodes;
+            for (var i = 0; i < children.length; i++) {
+              var button = children[i];
+              if (button.node == aItem) {
+                this._self.removeChild(button);
+                this._self.insertBefore(button, children[aNewIndex]);
+                this._self.updateChevron();
+                return;
+              }
+            }
+          }
+          var popup = this._getPopupForContainer(aNewParent);
+          var children = popup.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            var menuItem = children[i];
+            if (menuItem.node == aItem) {
+              popup.removeChild(menuItem);
+              popup.insertBefore(menuItem, children[aNewIndex]);
+              return;
+            }
+          }
+        },
+
         itemChanged: function TV_V_itemChanged(aNode) {
           // this check can be removed once we fix bug #382397
           var parentNode = aNode.parent;
@@ -1001,16 +1032,16 @@
         // When the user clicks down on a button, set it as the selection and 
         // tell the controller that we are the active view.
         //
-        // Sub-menus are handled by the DOMMenuItemActive handler
         var target = event.target;
-        if (target.parentNode != this)
+        if (target == this)
+          this._selection = this.getResult().root;
+        else if (target.parentNode == this &&
+                 (target.localName == "toolbarbutton" ||
+                  target.localName == "toolbarseparator"))
+          this._selection = target.node;
+        else  // Sub-menus are handled by the DOMMenuItemActive handler
           return;
 
-        if (target.localName == "toolbarbutton" ||
-            target.localName == "toolbarseparator")
-          this._selection = target.node;
-        else
-          this._selection = this.getResult().root;
         this._cachedInsertionPoint = undefined;
       ]]></handler>
       <handler event="draggesture"><![CDATA[

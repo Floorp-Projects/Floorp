@@ -24,7 +24,6 @@ sub Execute {
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $version = $config->Get(var => 'version');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
-    my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $updateDir = $config->Get(var => 'updateDir');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
     my $patcherToolsRev = $config->Get(var => 'patcherToolsRev');
@@ -54,11 +53,12 @@ sub Execute {
                                     'updates_patcher-utils-checkout.log'),
                  workDir => catfile($versionedUpdateDir, 'patcher')
     );
-          
-    # config lives in private repo
-    $this->CvsCo(cvsroot => $mofoCvsroot,
+
+    # this config lives in the public repo since bug 408849 was checked in
+    $this->CvsCo(cvsroot => $mozillaCvsroot,
                  checkoutDir => 'config',
-                 modules => [CvsCatfile('release', 'patcher', $patcherConfig)],
+                 modules => [CvsCatfile('mozilla', 'tools', 'patcher-configs',
+                                        $patcherConfig)],
                  logFile => catfile($logDir,
                                     'updates_patcher-config-checkout.log'),
                  workDir => $versionedUpdateDir
@@ -232,13 +232,7 @@ sub BumpVerifyConfig {
     my $externalStagingServer = $config->Get(var => 'externalStagingServer');
     my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
     my $logDir = $config->Get(sysvar => 'logDir');
-    # We are assuming tar.bz2 to help minimize bootstrap.cfg variables in
-    # the future. tar.gz support can probably be removed once we stop
-    # building/releasing products that use it.
-    my $useTarGz = $config->Exists(var => 'useTarGz') ?
-     $config->Get(var => 'useTarGz') : 0;
-    my $linuxExtension = ($useTarGz) ? '.gz' : '.bz2';
-
+    my $linuxExtension = $config->GetLinuxExtension();
 
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
     my $configFile = catfile($verifyDirVersion, 'updates', $verifyConfig);
@@ -260,8 +254,8 @@ sub BumpVerifyConfig {
         $buildTarget = 'Linux_x86-gcc3';
         $platform = 'linux';
         $ftpOsname = 'linux-i686';
-        $releaseFile = $product.'-'.$oldVersion.'.tar'.$linuxExtension;
-        $nightlyFile = $product.'-'.$version.'.%locale%.linux-i686.tar'.
+        $releaseFile = $product.'-'.$oldVersion.'.tar.'.$linuxExtension;
+        $nightlyFile = $product.'-'.$version.'.%locale%.linux-i686.tar.'.
          $linuxExtension;
     } elsif ($osname eq 'macosx') {
         $buildTarget = 'Darwin_Universal-gcc3';

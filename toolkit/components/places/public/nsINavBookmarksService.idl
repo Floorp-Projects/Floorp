@@ -115,11 +115,13 @@ interface nsINavBookmarkObserver : nsISupports
    *        Is aProperty the name of an item annotation
    *
    * property = "cleartime": (history was deleted, there is no last visit date):
-   *                         value = none
-   * property = "title": value = new title
+   *                         value = empty string.
+   * property = "title": value = new title.
    * property = "favicon": value = new "moz-anno" URL of favicon image
-   * property = "uri": value = new uri spec
-   * aIsAnnotationProperty = true: value = empty string
+   * property = "uri": value = new uri spec.
+   * property = "tags: (tags set for the bookmarked uri have changed)
+   *             value = empty string.
+   * aIsAnnotationProperty = true: value = empty string.
    */
   void onItemChanged(in long long aBookmarkId, in ACString aProperty,
                      in boolean aIsAnnotationProperty,

@@ -176,6 +176,8 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
 static void     theme_changed_cb          (GtkSettings *settings,
                                            GParamSpec *pspec,
                                            nsWindow *data);
+static nsWindow* GetFirstNSWindowForGDKWindow (GdkWindow *aGdkWindow);
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -345,7 +347,7 @@ nsWindow::nsWindow()
     mRootAccessible  = nsnull;
 #endif
 
-    mIsTranslucent = PR_FALSE;
+    mIsTransparent = PR_FALSE;
     mTransparencyBitmap = nsnull;
 
     mTransparencyBitmapWidth  = 0;
@@ -1661,7 +1663,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 
     PRBool translucent;
-    GetWindowTranslucency(translucent);
+    GetHasTransparentBackground(translucent);
     nsIntRect boundsRect;
     GdkPixmap* bufferPixmap = nsnull;
     nsRefPtr<gfxXlibSurface> bufferPixmapSurface;
@@ -1670,8 +1672,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                                  &boundsRect.width, &boundsRect.height);
 
     // do double-buffering and clipping here
-    nsRefPtr<gfxContext> ctx
-        = (gfxContext*)rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+    nsRefPtr<gfxContext> ctx = rc->ThebesContext();
     ctx->Save();
     ctx->NewPath();
     if (translucent) {
@@ -1968,8 +1969,17 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
         event.time = xevent.xmotion.time;
     }
     else {
-        event.refPoint.x = nscoord(aEvent->x);
-        event.refPoint.y = nscoord(aEvent->y);
+        // XXX see OnScrollEvent()
+        if (aEvent->window == mDrawingarea->inner_window) {
+            event.refPoint.x = nscoord(aEvent->x);
+            event.refPoint.y = nscoord(aEvent->y);
+        } else {
+            nsRect windowRect;
+            ScreenToWidget(nsRect(nscoord(aEvent->x_root), nscoord(aEvent->y_root), 1, 1), windowRect);
+
+            event.refPoint.x = windowRect.x;
+            event.refPoint.y = windowRect.y;
+        }
 
         event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
             ? PR_TRUE : PR_FALSE;
@@ -1983,6 +1993,42 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 
     nsEventStatus status;
     DispatchEvent(&event, status);
+}
+
+void
+nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
+                          GdkEventButton *aGdkEvent)
+{
+    // XXX see OnScrollEvent()
+    if (aGdkEvent->window == mDrawingarea->inner_window) {
+        aEvent.refPoint.x = nscoord(aGdkEvent->x);
+        aEvent.refPoint.y = nscoord(aGdkEvent->y);
+    } else {
+        nsRect windowRect;
+        ScreenToWidget(nsRect(nscoord(aGdkEvent->x_root), nscoord(aGdkEvent->y_root), 1, 1), windowRect);
+
+        aEvent.refPoint.x = windowRect.x;
+        aEvent.refPoint.y = windowRect.y;
+    }
+
+    aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK) != 0;
+    aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK) != 0;
+    aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK) != 0;
+    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK) != 0;
+
+    aEvent.time = aGdkEvent->time;
+
+    switch (aGdkEvent->type) {
+    case GDK_2BUTTON_PRESS:
+        aEvent.clickCount = 2;
+        break;
+    case GDK_3BUTTON_PRESS:
+        aEvent.clickCount = 3;
+        break;
+        // default is one click
+    default:
+        aEvent.clickCount = 1;
+    }
 }
 
 void
@@ -2471,8 +2517,8 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
 
     // We don't care about anything but changes in the maximized/icon
     // states
-    if (aEvent->changed_mask &
-        (GDK_WINDOW_STATE_ICONIFIED|GDK_WINDOW_STATE_MAXIMIZED) == 0) {
+    if ((aEvent->changed_mask
+         & (GDK_WINDOW_STATE_ICONIFIED|GDK_WINDOW_STATE_MAXIMIZED)) == 0) {
         return;
     }
 
@@ -3419,7 +3465,7 @@ nsWindow::EnsureGrabs(void)
 }
 
 NS_IMETHODIMP
-nsWindow::SetWindowTranslucency(PRBool aTranslucent)
+nsWindow::SetHasTransparentBackground(PRBool aTransparent)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
@@ -3432,13 +3478,13 @@ nsWindow::SetWindowTranslucency(PRBool aTranslucent)
         if (!topWindow)
             return NS_ERROR_FAILURE;
 
-        return topWindow->SetWindowTranslucency(aTranslucent);
+        return topWindow->SetHasTransparentBackground(aTransparent);
     }
 
-    if (mIsTranslucent == aTranslucent)
+    if (mIsTransparent == aTransparent)
         return NS_OK;
 
-    if (!aTranslucent) {
+    if (!aTransparent) {
         if (mTransparencyBitmap) {
             delete[] mTransparencyBitmap;
             mTransparencyBitmap = nsnull;
@@ -3449,32 +3495,32 @@ nsWindow::SetWindowTranslucency(PRBool aTranslucent)
     } // else the new default alpha values are "all 1", so we don't
     // need to change anything yet
 
-    mIsTranslucent = aTranslucent;
+    mIsTransparent = aTransparent;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
+nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
         GtkWidget *topWidget = nsnull;
         GetToplevelWidget(&topWidget);
         if (!topWidget) {
-            aTranslucent = PR_FALSE;
+            aTransparent = PR_FALSE;
             return NS_ERROR_FAILURE;
         }
 
         nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
         if (!topWindow) {
-            aTranslucent = PR_FALSE;
+            aTransparent = PR_FALSE;
             return NS_ERROR_FAILURE;
         }
 
-        return topWindow->GetWindowTranslucency(aTranslucent);
+        return topWindow->GetHasTransparentBackground(aTransparent);
     }
 
-    aTranslucent = mIsTranslucent;
+    aTransparent = mIsTransparent;
     return NS_OK;
 }
 
@@ -3602,7 +3648,7 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
         return topWindow->UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aStride);
     }
 
-    NS_ASSERTION(mIsTranslucent, "Window is not transparent");
+    NS_ASSERTION(mIsTransparent, "Window is not transparent");
 
     if (mTransparencyBitmap == nsnull) {
         PRInt32 size = ((mBounds.width+7)/8)*mBounds.height;
@@ -3631,12 +3677,6 @@ nsWindow::UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
         ApplyTransparencyBitmap();
     }
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
-{
-    return UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aRect.width);
 }
 
 void
@@ -4451,6 +4491,16 @@ leave_notify_event_cb(GtkWidget *widget,
         return TRUE;
     }
 
+    // bug 369599: Suppress LeaveNotify events caused by pointer grabs to
+    // avoid generating spurious mouse exit events.
+    gint x = gint(event->x_root);
+    gint y = gint(event->y_root);
+    GdkDisplay* display = gtk_widget_get_display(widget);
+    GdkWindow* winAtPt = gdk_display_get_window_at_pointer(display, &x, &y);
+    if (winAtPt == event->window) {
+        return TRUE;
+    }
+
     nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
     if (!window)
         return TRUE;
@@ -4460,13 +4510,30 @@ leave_notify_event_cb(GtkWidget *widget,
     return TRUE;
 }
 
+nsWindow*
+GetFirstNSWindowForGDKWindow(GdkWindow *aGdkWindow)
+{
+    nsWindow* window;
+    while (!(window = get_window_for_gdk_window(aGdkWindow))) {
+        // The event has bubbled to the moz_container widget as passed into each caller's *widget parameter,
+        // but its corresponding nsWindow is an ancestor of the window that we need.  Instead, look at
+        // event->window and find the first ancestor nsWindow of it because event->window may be in a plugin.
+        aGdkWindow = gdk_window_get_parent(aGdkWindow);
+        if (!aGdkWindow) {
+            window = nsnull;
+            break;
+        }
+    }
+    return window;
+}
+
 /* static */
 gboolean
 motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 {
-    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+    nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
-        return TRUE;
+        return FALSE;
 
     window->OnMotionNotifyEvent(widget, event);
 
@@ -4477,10 +4544,9 @@ motion_notify_event_cb(GtkWidget *widget, GdkEventMotion *event)
 gboolean
 button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
-    LOG(("button_press_event_cb\n"));
-    nsWindow *window = get_window_for_gdk_window(event->window);
+    nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
-        return TRUE;
+        return FALSE;
 
     window->OnButtonPressEvent(widget, event);
 
@@ -4491,9 +4557,9 @@ button_press_event_cb(GtkWidget *widget, GdkEventButton *event)
 gboolean
 button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
 {
-    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+    nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
     if (!window)
-        return TRUE;
+        return FALSE;
 
     window->OnButtonReleaseEvent(widget, event);
 
@@ -4658,16 +4724,9 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 gboolean
 scroll_event_cb(GtkWidget *widget, GdkEventScroll *event)
 {
-    nsRefPtr<nsWindow> window;
-    GdkWindow *gdkWindow = event->window;
-    while (!(window = get_window_for_gdk_window(gdkWindow))) {
-        // The event has bubbled to the moz_container widget as passed into the *widget parameter,
-        // but its corresponding nsWindow is an ancestor of the window that we need.  Instead, look at
-        // event->window and find the first ancestor nsWindow of it because event->window may be in a plugin.
-        gdkWindow = gdk_window_get_parent(gdkWindow);
-        if (!gdkWindow)
-            return FALSE;
-    }
+    nsWindow *window = GetFirstNSWindowForGDKWindow(event->window);
+    if (!window)
+        return FALSE;
 
     window->OnScrollEvent(widget, event);
 
@@ -5706,6 +5765,8 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState)
     PRBool foundMasks = gdk_keyboard_get_modmap_masks(
                           GDK_WINDOW_XDISPLAY(mDrawingarea->inner_window),
                           &capsLockMask, &numLockMask, &scrollLockMask);
+    if (!foundMasks)
+        return NS_ERROR_NOT_IMPLEMENTED;
 
     PRUint32 mask = 0;
     switch (aKeyCode) {

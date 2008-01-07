@@ -167,6 +167,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   mLastUsedSelection = do_GetWeakReference(aSel);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
+  NS_ENSURE_TRUE(doc, NS_OK);
   nsIPresShell *presShell = doc->GetPrimaryShell();
   NS_ENSURE_TRUE(presShell, NS_OK);
 

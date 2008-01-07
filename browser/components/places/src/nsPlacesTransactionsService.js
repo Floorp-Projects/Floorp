@@ -136,6 +136,14 @@ placesTransactionsService.prototype = {
     return new placesEditBookmarkMicrosummaryTransactions(aID, newMicrosummary);
   },
 
+  editItemDateAdded: function placesEditItemDateAdded(aID, aNewDateAdded) {
+    return new placesEditItemDateAddedTransaction(aID, aNewDateAdded);
+  },
+
+  editItemLastModified: function placesEditItemLastModified(aID, aNewLastModified) {
+    return new placesEditItemLastModifiedTransaction(aID, aNewLastModified);
+  },
+
   sortFolderByName: function placesSortFldrByName(aFolderId, aFolderIndex) {
    return new placesSortFolderByNameTransactions(aFolderId, aFolderIndex);
   },
@@ -727,6 +735,54 @@ placesEditBookmarkMicrosummaryTransactions.prototype = {
       this._mss.setMicrosummary(this.id, this._oldMicrosummary);
     else
       this._mss.removeMicrosummary(this.id);
+  }
+};
+
+function placesEditItemDateAddedTransaction(id, newDateAdded) {
+  this.id = id;
+  this._newDateAdded = newDateAdded;
+  this._oldDateAdded = null;
+  this.redoTransaction = this.doTransaction;
+}
+
+placesEditItemDateAddedTransaction.prototype = {
+  __proto__: placesBaseTransaction.prototype,
+
+  // to support folders as well
+  get container() { return this.id; },
+  set container(val) { return this.id = val; },
+
+  doTransaction: function PEITT_doTransaction() {
+    this._oldDateAdded = PlacesUtils.bookmarks.getItemDateAdded(this.id);
+    PlacesUtils.bookmarks.setItemDateAdded(this.id, this._newDateAdded);
+  },
+
+  undoTransaction: function PEITT_undoTransaction() {
+    PlacesUtils.bookmarks.setItemDateAdded(this.id, this._oldDateAdded);
+  }
+};
+
+function placesEditItemLastModifiedTransaction(id, newLastModified) {
+  this.id = id;
+  this._newLastModified = newLastModified;
+  this._oldLastModified = null;
+  this.redoTransaction = this.doTransaction;
+}
+
+placesEditItemLastModifiedTransaction.prototype = {
+  __proto__: placesBaseTransaction.prototype,
+
+  // to support folders as well
+  get container() { return this.id; },
+  set container(val) { return this.id = val; },
+
+  doTransaction: function PEITT_doTransaction() {
+    this._oldLastModified = PlacesUtils.bookmarks.getItemLastModified(this.id);
+    PlacesUtils.bookmarks.setItemLastModified(this.id, this._newLastModified);
+  },
+
+  undoTransaction: function PEITT_undoTransaction() {
+    PlacesUtils.bookmarks.setItemLastModified(this.id, this._oldLastModified);
   }
 };
 

@@ -171,7 +171,43 @@ nsINode::nsSlots::~nsSlots()
   }
 }
 
+void*
+nsINode::nsSlots::operator new(size_t aSize, nsDOMNodeAllocator* aAllocator)
+{
+  void* result = aAllocator->Alloc(aSize);
+  if (result) {
+    NS_ADDREF(aAllocator);
+  }
+  return result;
+}
+
+void
+nsINode::nsSlots::operator delete(void* aPtr, size_t aSize)
+{
+  size_t* szPtr = static_cast<size_t*>(aPtr);
+  *szPtr = aSize;
+}
+
 //----------------------------------------------------------------------
+
+void*
+nsINode::operator new(size_t aSize, nsINodeInfo* aNodeInfo)
+{
+  nsDOMNodeAllocator* allocator =
+    aNodeInfo->NodeInfoManager()->NodeAllocator();
+  void* result = allocator->Alloc(aSize);
+  if (result) {
+    NS_ADDREF(allocator);
+  }
+  return result;
+}
+
+void
+nsINode::operator delete(void* aPtr, size_t aSize)
+{
+  size_t* szPtr = static_cast<size_t*>(aPtr);
+  *szPtr = aSize;
+}
 
 nsINode::~nsINode()
 {
@@ -276,7 +312,7 @@ nsGenericElement::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
 nsINode::nsSlots*
 nsINode::CreateSlots()
 {
-  return new nsSlots(mFlagsOrSlots);
+  return new (GetAllocator()) nsSlots(mFlagsOrSlots);
 }
 
 void
@@ -284,7 +320,7 @@ nsINode::AddMutationObserver(nsIMutationObserver* aMutationObserver)
 {
   nsSlots* slots = GetSlots();
   if (slots) {
-    slots->mMutationObservers.AppendObserver(aMutationObserver);
+    slots->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
   }
 }
 
@@ -293,7 +329,7 @@ nsINode::RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
 {
   nsSlots* slots = GetExistingSlots();
   if (slots) {
-    slots->mMutationObservers.RemoveObserver(aMutationObserver);
+    slots->mMutationObservers.RemoveElement(aMutationObserver);
   }
 }
 
@@ -312,18 +348,6 @@ nsINode::IsEditableInternal() const
 }
 
 //----------------------------------------------------------------------
-
-void
-nsIContent::SetNativeAnonymous(PRBool aAnonymous)
-{
-  if (aAnonymous) {
-    SetFlags(NODE_IS_ANONYMOUS);
-    SetFlags(NODE_IS_ANONYMOUS_FOR_EVENTS);
-  } else {
-    UnsetFlags(NODE_IS_ANONYMOUS);
-    UnsetFlags(NODE_IS_ANONYMOUS_FOR_EVENTS);
-  }
-}
 
 PRInt32
 nsIContent::IntrinsicState() const
@@ -717,15 +741,16 @@ static void
 SetTextRectangle(const nsRect& aLayoutRect, nsPresContext* aPresContext,
                  nsTextRectangle* aRect)
 {
-  double scale = 4096.0;
+  double scale = 65536.0;
   // Round to the nearest 1/scale units. We choose scale so it can be represented
   // exactly by machine floating point.
   double scaleInv = 1/scale;
   double t2pScaled = scale/aPresContext->AppUnitsPerCSSPixel();
-  aRect->SetRect(RoundFloat(aLayoutRect.x*t2pScaled)*scaleInv,
-                 RoundFloat(aLayoutRect.y*t2pScaled)*scaleInv,
-                 RoundFloat(aLayoutRect.width*t2pScaled)*scaleInv,
-                 RoundFloat(aLayoutRect.height*t2pScaled)*scaleInv);
+  double x = RoundFloat(aLayoutRect.x*t2pScaled)*scaleInv;
+  double y = RoundFloat(aLayoutRect.y*t2pScaled)*scaleInv;
+  aRect->SetRect(x, y,
+                 RoundFloat(aLayoutRect.XMost()*t2pScaled)*scaleInv - x,
+                 RoundFloat(aLayoutRect.YMost()*t2pScaled)*scaleInv - y);
 }
 
 static PRBool
@@ -767,9 +792,7 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
   if (TryGetSVGBoundingRect(frame, &r)) {
     // Currently SVG frames don't have continuations but I don't want things to
     // break if that changes.
-    nsIFrame* next;
-    while ((next = frame->GetNextContinuation()) != nsnull) {
-      frame = next;
+    while ((frame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame)) != nsnull) {
       nsRect nextRect;
 #ifdef DEBUG
       PRBool isSVG =
@@ -803,7 +826,8 @@ nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
   }
   
   nsPresContext* presContext = frame->PresContext();
-  for (nsIFrame* f = frame; f; f = f->GetNextContinuation()) {
+  for (nsIFrame* f = frame; f;
+       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
     nsRefPtr<nsTextRectangle> rect = new nsTextRectangle();
     if (!rect)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1094,7 +1118,8 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
 }
 
 nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
-  : nsIContent(aNodeInfo)
+  : nsIContent(aNodeInfo),
+    mAttrsAndChildren(aNodeInfo->NodeInfoManager()->NodeAllocator())
 {
   // Set the default scriptID to JS - but skip SetScriptTypeID as it
   // does extra work we know isn't necessary here...
@@ -2148,7 +2173,7 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 static nsIContent*
 FindFirstNonAnonContent(nsIContent* aContent)
 {
-  while (aContent && aContent->IsAnonymousForEvents()) {
+  while (aContent && aContent->IsNativeAnonymous()) {
     aContent = aContent->GetParent();
   }
   return aContent;
@@ -2157,7 +2182,7 @@ FindFirstNonAnonContent(nsIContent* aContent)
 static PRBool
 IsInAnonContent(nsIContent* aContent)
 {
-  while (aContent && !aContent->IsAnonymousForEvents()) {
+  while (aContent && !aContent->IsNativeAnonymous()) {
     aContent = aContent->GetParent();
   }
   return !!aContent;
@@ -2172,7 +2197,7 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
 
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside native anonymous content.
-  PRBool isAnonForEvents = aContent->IsAnonymousForEvents();
+  PRBool isAnonForEvents = aContent->IsNativeAnonymous();
   if (aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
       aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) {
      nsCOMPtr<nsIContent> relatedTarget =
@@ -3351,6 +3376,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 
+  if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
+    tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
+    tmp->DeleteProperty(nsGkAtoms::popuplistener);
+  }
+
   // Unlink child content (and unbind our subtree).
   {
     PRUint32 i;
@@ -4170,7 +4200,7 @@ nsGenericElement::IndexOf(nsINode* aPossibleChild) const
 nsINode::nsSlots*
 nsGenericElement::CreateSlots()
 {
-  return new nsDOMSlots(mFlagsOrSlots);
+  return new (GetAllocator()) nsDOMSlots(mFlagsOrSlots);
 }
 
 PRBool

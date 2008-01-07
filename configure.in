@@ -1593,10 +1593,10 @@ case "$target" in
 *-darwin*) 
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-
+    MOZ_OPTIMIZE_FLAGS="-O2"
     _PEDANTIC=
-    CFLAGS="$CFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
-    CXXFLAGS="$CXXFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
+    CFLAGS="$CFLAGS -fpascal-strings -fno-common"
+    CXXFLAGS="$CXXFLAGS -fpascal-strings -fno-common"
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
@@ -1716,6 +1716,7 @@ case "$target" in
 
 *-*linux*)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions"
     MOZ_DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb,
                                       # and that combo is not yet good at
                                       # debugging inlined functions (even
@@ -2826,7 +2827,7 @@ if test "x$enable_dtrace" = "xyes"; then
   if test -n "$HAVE_DTRACE"; then
       AC_DEFINE(INCLUDE_MOZILLA_DTRACE)
   else
-      AC_MSG_ERROR([dtrace enabled but sys/std.h not found]);
+      AC_MSG_ERROR([dtrace enabled but sys/sdt.h not found]);
   fi
 fi
 AC_SUBST(HAVE_DTRACE)
@@ -3188,7 +3189,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64)
+AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64)
 AC_CHECK_FUNCS(flockfile getpagesize)
 
 dnl localtime_r and strtok_r are only present on MacOS version 10.2 and higher

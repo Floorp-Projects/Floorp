@@ -90,6 +90,7 @@
 
   <popupset id="editorContentContextSet"/>
   <popup id="sidebarPopup"/>
+  <popup id="popupNotificationMenu"/>
 
   <commandset id="tasksCommands">
     <commandset id="globalEditMenuItems"/>

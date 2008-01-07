@@ -893,7 +893,7 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_TRUE;
 }
 
-JSClass js_CallClass = {
+JS_FRIEND_DATA(JSClass) js_CallClass = {
     js_Call_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Call),
@@ -1089,46 +1089,20 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
      */
     atom = cx->runtime->atomState.classPrototypeAtom;
     if (id == ATOM_KEY(atom)) {
-        JSObject *proto, *parentProto;
-        jsval pval;
-
-        proto = parentProto = NULL;
-        if (fun->object != obj &&
-            (!cx->runtime->findObjectPrincipals ||
-             cx->runtime->findObjectPrincipals(cx, obj) ==
-             cx->runtime->findObjectPrincipals(cx, fun->object))) {
-            /*
-             * Clone of a function where the clone and the object owning fun
-             * appear to be in the same trust domain: make the cloned function
-             * object's 'prototype' property value have the same class as the
-             * clone-parent's 'prototype' value.
-             */
-            if (!OBJ_GET_PROPERTY(cx, fun->object, ATOM_TO_JSID(atom), &pval))
-                return JS_FALSE;
-            if (!JSVAL_IS_PRIMITIVE(pval)) {
-                /*
-                 * We are about to allocate a new object, so hack the newborn
-                 * root until then to protect pval in case it is figuratively
-                 * up in the air, with no strong refs protecting it.
-                 */
-                cx->weakRoots.newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(pval);
-                parentProto = JSVAL_TO_OBJECT(pval);
-            }
-        }
+        JSObject *proto;
 
         /*
          * Beware of the wacky case of a user function named Object -- trying
          * to find a prototype for that will recur back here _ad perniciem_.
          */
-        if (!parentProto && fun->atom == CLASS_ATOM(cx, Object))
+        if (fun->atom == CLASS_ATOM(cx, Object))
             return JS_TRUE;
 
         /*
-         * If resolving "prototype" in a clone, clone the parent's prototype.
-         * Pass the constructor's (obj's) parent as the prototype parent, to
-         * avoid defaulting to parentProto.constructor.__parent__.
+         * Make the prototype object to have the same parent as the function
+         * object itself.
          */
-        proto = js_NewObject(cx, &js_ObjectClass, parentProto,
+        proto = js_NewObject(cx, &js_ObjectClass, NULL,
                              OBJ_GET_PARENT(cx, obj));
         if (!proto)
             return JS_FALSE;
@@ -1216,6 +1190,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return JS_FALSE;
+        STOBJ_SET_PARENT(fun->object, NULL);
+        STOBJ_SET_PROTO(fun->object, NULL);
 #ifdef __GNUC__
         nvars = nargs = 0;   /* quell GCC uninitialized warning */
 #endif
@@ -1407,8 +1383,7 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
 JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(2) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Function) |
-    JSCLASS_FIXED_BINDING,
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     JS_PropertyStub,  JS_PropertyStub,
     fun_getProperty,  JS_PropertyStub,
     fun_enumerate,    (JSResolveOp)fun_resolve,

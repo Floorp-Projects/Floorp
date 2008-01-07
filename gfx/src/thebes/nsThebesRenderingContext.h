@@ -211,7 +211,7 @@ public:
 
     // Thebes specific stuff
 
-    gfxContext *Thebes() { return mThebes; }
+    gfxContext *ThebesContext() { return mThebes; }
 
     nsTransform2D& CurrentTransform();
 

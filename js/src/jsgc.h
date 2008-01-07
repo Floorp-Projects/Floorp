@@ -268,7 +268,8 @@ typedef struct JSGCStats {
 #endif
     uint32  alloc;      /* number of allocation attempts */
     uint32  retry;      /* allocation attempt retries after running the GC */
-    uint32  retryhalt;  /* allocation retries halted by the branch callback */
+    uint32  retryhalt;  /* allocation retries halted by the operation
+                           callback */
     uint32  fail;       /* allocation failures */
     uint32  finalfail;  /* finalizer calls allocator failures */
     uint32  lockborn;   /* things born locked */

@@ -130,8 +130,9 @@ FeedWriter.prototype = {
                  getService(Ci.nsIScriptSecurityManager);    
     const flags = Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
     try {
-      secman.checkLoadURIStr(this._window.location.href, uri, flags);
-      // checkLoadURIStr will throw if the link URI should not be loaded per 
+      secman.checkLoadURIStrWithPrincipal(this._feedPrincipal, uri, flags);
+      // checkLoadURIStrWithPrincipal will throw if the link URI should not be
+      // loaded, either because our feedURI isn't allowed to load it or per
       // the rules specified in |flags|, so we'll never "linkify" the link...
       element.setAttribute(attribute, uri);
     }
@@ -776,6 +777,7 @@ FeedWriter.prototype = {
   _window: null,
   _document: null,
   _feedURI: null,
+  _feedPrincipal: null,
 
   // nsIFeedWriter
   init: function FW_init(aWindow) {
@@ -789,6 +791,10 @@ FeedWriter.prototype = {
 
     this._window = window;
     this._document = window.document;
+
+    var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].
+                 getService(Ci.nsIScriptSecurityManager);
+    this._feedPrincipal = secman.getCodebasePrincipal(this._feedURI);
 
     LOG("Subscribe Preview: feed uri = " + this._window.location.href);
 

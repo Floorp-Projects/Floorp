@@ -74,13 +74,17 @@
   <!ENTITY cmdInsertNode.label "Einfügen…">
   <!ENTITY cmdDeleteNode.label "Löschen">
   <!ENTITY cmdCopyXML.label "XML kopieren">
+  <!ENTITY cmdCopyXML.accesskey "X">
   <!ENTITY cmdBlink.label "Element blinken lassen">
+  <!ENTITY cmdBlink.accesskey "b">
   <!ENTITY cmdInspectBrowser.label "Enthaltenes Dokument inspizieren">
+  <!ENTITY cmdInspectBrowser.accesskey "E">
   <!ENTITY cmdInspectInNewWindow.label "In neuem Fenster inspizieren">
-  
+  <!ENTITY cmdInspectInNewWindow.accesskey "F">
+
   <!ENTITY cmdShowPseudoClasses.label "Pseudo-Klassen setzen…">
   <!ENTITY cmdShowPseudoClasses.accesskey "P">
-  
+
   <!ENTITY pseudoClasses.title "Pseudo-Klassen">
 
   <!ENTITY findNodes.title "Knoten suchen">
@@ -105,18 +109,30 @@
   <!ENTITY findNodesCancel.label "Abbrechen">
 
   <!ENTITY mnEditPasteMenu.label "Einfügen">
+  <!ENTITY mnEditPasteMenu.accesskey "E">
   <!ENTITY mnEditPasteBefore.label "Davor">
+  <!ENTITY mnEditPasteBefore.accesskey "v">
   <!ENTITY mnEditPasteAfter.label "Danach">
+  <!ENTITY mnEditPasteAfter.accesskey "D">
   <!ENTITY mnEditPasteReplace.label "Anstatt (Ersetzen)">
+  <!ENTITY mnEditPasteReplace.accesskey "A">
   <!ENTITY mnEditPasteFirstChild.label "Als erstes &quot;Kind&quot;">
+  <!ENTITY mnEditPasteFirstChild.accesskey "e">
   <!ENTITY mnEditPasteLastChild.label "Als letztes &quot;Kind&quot;">
+  <!ENTITY mnEditPasteLastChild.accesskey "z">
   <!ENTITY mnEditPasteAsParent.label "Darüberliegend">
+  <!ENTITY mnEditPasteAsParent.accesskey "b">
 
-  <!ENTITY mnEditInsertMenu.label "Einfügen">
+  <!ENTITY mnEditInsertMenu.label "Hinzufügen">
+  <!ENTITY mnEditInsertMenu.accesskey "H">
   <!ENTITY mnEditInsertAfter.label "Danach">
+  <!ENTITY mnEditInsertAfter.accesskey "D">
   <!ENTITY mnEditInsertBefore.label "Davor">
+  <!ENTITY mnEditInsertBefore.accesskey "v">
   <!ENTITY mnEditInsertFirstChild.label "Als erstes &quot;Kind&quot;">
+  <!ENTITY mnEditInsertFirstChild.accesskey "e">
   <!ENTITY mnEditInsertLastChild.label "Als letztes &quot;Kind&quot;">
+  <!ENTITY mnEditInsertLastChild.accesskey "z">
 
   <!ENTITY insertNode.title "Knoten einfügen">
   <!ENTITY nodeType.label "Knoten-Typ:">
@@ -150,3 +166,9 @@
   <!ENTITY namespaceTitle.XMLEvents.label "XML-Ereignisse">
   <!ENTITY namespaceTitle.WAIRoles.label "WAI-Rollen">
   <!ENTITY namespaceTitle.WAIProperties.label "WAI-Eigenschaften">
+
+  <!-- LOCALIZATION NOTE: Localizers can choose not to translate the following access keys. For a discussion about the pros and cons of such a decision, see https://bugzilla.mozilla.org/show_bug.cgi?id=398704, comments 1 and 2. -->
+  <!ENTITY cbxStateHover.accesskey "h">
+  <!ENTITY cbxStateActive.accesskey "a">
+  <!ENTITY cbxStateFocus.accesskey "f">
+

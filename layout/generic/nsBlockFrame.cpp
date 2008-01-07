@@ -3098,9 +3098,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
               // the line is already marked dirty, so just handle the
               // first case.
               if (!madeContinuation) {
-                nsBlockFrame* nifBlock = static_cast<nsBlockFrame*>(nextFrame->GetParent());
-                NS_ASSERTION(nifBlock->GetType() == nsGkAtoms::blockFrame
-                             || nifBlock->GetType() == nsGkAtoms::areaFrame,
+                nsBlockFrame* nifBlock =
+                  nsLayoutUtils::GetAsBlock(nextFrame->GetParent());
+                NS_ASSERTION(nifBlock,
                              "A block's child's next in flow's parent must be a block!");
                 for (line_iterator line = nifBlock->begin_lines(),
                      line_end = nifBlock->end_lines(); line != line_end; ++line) {
@@ -5874,8 +5874,7 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
   if (width > 0) {
     const nsStyleVisibility* visibility = GetStyleVisibility();
     PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
-    nsRefPtr<gfxContext> ctx = (gfxContext*)
-      aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+    nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
     gfxPoint pt(PresContext()->AppUnitsToGfxUnits(start + aPt.x),
                 PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
     gfxSize size(PresContext()->AppUnitsToGfxUnits(width),
@@ -6743,19 +6742,7 @@ nsBlockFrame::ResolveBidi()
   if (!bidiUtils)
     return NS_ERROR_NULL_POINTER;
 
-  for (nsBlockFrame* curFrame = this; curFrame;
-       curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
-    curFrame->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
-    if (!curFrame->mLines.empty()) {
-      nsresult rv = bidiUtils->Resolve(curFrame,
-                                       curFrame->mLines.front()->mFirstChild,
-                                       IsVisualFormControl(presContext));
-      if (NS_FAILED(rv))
-        return rv;
-    }
-  }
-
-  return NS_OK;
+  return bidiUtils->Resolve(this, IsVisualFormControl(presContext));
 }
 
 PRBool

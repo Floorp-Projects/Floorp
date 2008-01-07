@@ -76,6 +76,6 @@ function test()
 function crash()
 {
   gDelayTestDriverEnd = false;
-  jsTestDriverEnd();
   reportCompare(expect, actual, summary);
+  jsTestDriverEnd();
 }

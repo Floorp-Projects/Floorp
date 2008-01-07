@@ -700,6 +700,11 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
 
       // Mark the overlap as being shared
       aBand->AddFrame(aBandRect->FrameAt(0));
+
+      // We no longer need aBandRect, since the area it covers is covered by
+      // the part of aBand that SplitHorizontally left in place.  Just delete
+      // it.
+      delete aBandRect;
       return;
 
     } else {

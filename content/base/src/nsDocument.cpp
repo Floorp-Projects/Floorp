@@ -336,14 +336,14 @@ nsDOMStyleSheetList::~nsDOMStyleSheetList()
   }
 }
 
-
 // XXX couldn't we use the GetIIDs method from CSSStyleSheetList here?
 // QueryInterface implementation for nsDOMStyleSheetList
-NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
-  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStyleSheetList)
+NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetList)
+  NS_INTERFACE_TABLE3(nsDOMStyleSheetList,
+                      nsIDOMStyleSheetList,
+                      nsIDocumentObserver,
+                      nsIMutationObserver)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentStyleSheetList)
 NS_INTERFACE_MAP_END
 
@@ -769,6 +769,7 @@ nsDOMImplementation::Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument(),
+    mChildren(nsnull),
     mVisible(PR_TRUE)
 {
   nsLayoutStatics::AddRef();
@@ -885,35 +886,38 @@ nsDocument::~nsDocument()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocument)
-  NS_INTERFACE_MAP_ENTRY(nsINode)
-  NS_INTERFACE_MAP_ENTRY(nsIDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3DocumentEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentStyle)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSDocumentStyle)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentView)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentRange)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentTraversal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
-  NS_INTERFACE_MAP_ENTRY(nsIDOM3Document)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  // nsNodeSH::PreCreate() depends on the identity pointer being the
-  // same as nsINode (which nsIDocument inherits), so if you change
-  // the below line, make sure nsNodeSH::PreCreate() still does the
-  // right thing!
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
+NS_INTERFACE_TABLE_HEAD(nsDocument)
+  NS_INTERFACE_TABLE_BEGIN
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsINode)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocument)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentEvent)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocumentStyle)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentView)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentRange)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTraversal)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3EventTarget)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSEventTarget)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNode)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsPIDOMEventTarget)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3Node)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3Document)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
+    // nsNodeSH::PreCreate() depends on the identity pointer being the
+    // same as nsINode (which nsIDocument inherits), so if you change
+    // the below line, make sure nsNodeSH::PreCreate() still does the
+    // right thing!
+    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsDocument, nsISupports, nsIDocument)
+  NS_INTERFACE_TABLE_END
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
     if (!mXPathEvaluatorTearoff) {
@@ -1102,6 +1106,19 @@ nsDocument::Init()
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(mBindingManager = bindingManager);
 
+  mNodeInfoManager = new nsNodeInfoManager();
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(mNodeInfoManager);
+
+  nsresult  rv = mNodeInfoManager->Init(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mChildren.SetAllocator(mNodeInfoManager->NodeAllocator());
+
+  mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
+  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
+
   nsINode::nsSlots* slots = GetSlots();
   NS_ENSURE_TRUE(slots,NS_ERROR_OUT_OF_MEMORY);
 
@@ -1109,7 +1126,7 @@ nsDocument::Init()
   // subclasses currently do, other don't). This is because the code in
   // nsNodeUtils always notifies the first observer first, expecting the
   // first observer to be the document.
-  NS_ENSURE_TRUE(slots->mMutationObservers.PrependObserver(this),
+  NS_ENSURE_TRUE(slots->mMutationObservers.PrependElementUnlessExists(static_cast<nsIMutationObserver*>(this)),
                  NS_ERROR_OUT_OF_MEMORY);
 
 
@@ -1122,23 +1139,19 @@ nsDocument::Init()
   mCSSLoader->SetCaseSensitive(PR_TRUE);
   mCSSLoader->SetCompatibilityMode(eCompatibility_FullStandards);
 
-  mNodeInfoManager = new nsNodeInfoManager();
-  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(mNodeInfoManager);
-
-  nsresult  rv = mNodeInfoManager->Init(this);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mNodeInfo = mNodeInfoManager->GetDocumentNodeInfo();
-  NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-
   NS_ASSERTION(GetOwnerDoc() == this, "Our nodeinfo is busted!");
 
   mScriptLoader = new nsScriptLoader(this);
   NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
+}
+
+nsINode::nsSlots*
+nsDocument::CreateSlots()
+{
+  return
+    new (mNodeInfo->NodeInfoManager()->NodeAllocator()) nsSlots(mFlagsOrSlots);
 }
 
 nsresult
@@ -2032,7 +2045,8 @@ nsDocument::doCreateShell(nsPresContext* aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
-  NS_ENSURE_TRUE(mPresShells.AppendObserver(shell), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mPresShells.AppendElementUnlessExists(shell),
+                 NS_ERROR_OUT_OF_MEMORY);
   shell.swap(*aInstancePtrResult);
 
   return NS_OK;
@@ -2041,14 +2055,14 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 PRBool
 nsDocument::DeleteShell(nsIPresShell* aShell)
 {
-  return mPresShells.RemoveObserver(aShell);
+  return mPresShells.RemoveElement(aShell);
 }
 
 
 nsIPresShell *
 nsDocument::GetPrimaryShell() const
 {
-  return mShellsAreHidden ? nsnull : mPresShells.SafeObserverAt(0);
+  return mShellsAreHidden ? nsnull : mPresShells.SafeElementAt(0, nsnull);
 }
 
 PR_STATIC_CALLBACK(void)
@@ -2571,6 +2585,11 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     mLayoutHistoryState = nsnull;
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
   }
+
+  // Remember the pointer to our window (or lack there of), to avoid
+  // having to QI every time it's asked for.
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  mWindow = window;
 }
 
 nsIScriptGlobalObject*
@@ -2611,6 +2630,10 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
 nsPIDOMWindow *
 nsDocument::GetWindow()
 {
+  if (mWindow) {
+    return mWindow->GetOuterWindow();
+  }
+
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
 
   if (!win) {
@@ -2640,7 +2663,7 @@ void
 nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
   // The array makes sure the observer isn't already in the list
-  mObservers.AppendObserver(aObserver);
+  mObservers.AppendElementUnlessExists(aObserver);
   AddMutationObserver(aObserver);
 }
 
@@ -2653,7 +2676,7 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
   // don't hold a live reference to the observers.
   if (!mInDestructor) {
     RemoveMutationObserver(aObserver);
-    return mObservers.RemoveObserver(aObserver);
+    return mObservers.RemoveElement(aObserver);
   }
 
   return mObservers.Contains(aObserver);
@@ -3120,7 +3143,7 @@ nsDocument::CreateAttribute(const nsAString& aName,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  attribute = new (nodeInfo) nsDOMAttribute(nsnull, nodeInfo, value);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aReturn);
@@ -3142,7 +3165,8 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
-  nsDOMAttribute* attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
+  nsDOMAttribute* attribute =
+    new (nodeInfo) nsDOMAttribute(nsnull, nodeInfo, value);
   NS_ENSURE_TRUE(attribute, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(attribute, aResult);
@@ -5777,7 +5801,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
     for (PRInt32 i = 0; i < count; ++i) {
       nsINode* possibleTarget = mSubtreeModifiedTargets[i];
       nsCOMPtr<nsIContent> content = do_QueryInterface(possibleTarget);
-      if (content && content->IsAnonymousForEvents()) {
+      if (content && content->IsNativeAnonymous()) {
         if (realTargets.IndexOf(possibleTarget) == -1) {
           realTargets.AppendObject(possibleTarget);
         }

@@ -165,6 +165,17 @@ sub GetFtpCandidateDir {
     return $candidateDir;  
 }
 
+sub GetLinuxExtension {
+    my $this = shift;
+
+    # We are assuming tar.bz2 to help minimize bootstrap.cfg variables in
+    # the future. tar.gz support can probably be removed once we stop
+    # building/releasing products that use it.
+    my $useTarGz = $this->Exists(var => 'useTarGz') ?
+     $this->Get(var => 'useTarGz') : 0;
+    return ($useTarGz) ? 'gz' : 'bz2';
+}
+
 ##
 # Exists checks to see if a config variable exists.
 # Returns boolean (1 or 0)

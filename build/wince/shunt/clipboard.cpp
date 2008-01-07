@@ -194,7 +194,7 @@ private:
 
 
 
-MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject * pDataObj)
+MOZCE_SHUNT_API HRESULT OleSetClipboard(IDataObject * pDataObj)
 {
   MOZCE_PRECHECK
     
@@ -242,7 +242,8 @@ MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject * pDataObj)
   return S_OK;
 }
 
-MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject ** pDataObj)
+// dougt??  do we need this clipboard function
+MOZCE_SHUNT_API HRESULT OleGetClipboard(IDataObject ** pDataObj)
 {
   MOZCE_PRECHECK
     oleSetup();
@@ -263,17 +264,17 @@ MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject ** pDataObj)
   return S_OK;
 }
 
-MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard()
+MOZCE_SHUNT_API HRESULT OleFlushClipboard()
 {
   MOZCE_PRECHECK
     oleSetup();
   
-  mozce_OleSetClipboard(NULL);
+  OleSetClipboard(NULL);
   return S_OK;
 }
 
 
-MOZCE_SHUNT_API BOOL mozce_IsClipboardFormatAvailable(UINT format)
+MOZCE_SHUNT_API BOOL IsClipboardFormatAvailable(UINT format)
 {
   if (gClipboardWND)
   {

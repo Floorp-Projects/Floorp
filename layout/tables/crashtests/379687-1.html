@@ -1,0 +1,14 @@
+<html style="display: inline-table;" class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  document.documentElement.style.overflow = "auto";
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="setTimeout(boom, 30);">
+Foo
+</body>
+</html>

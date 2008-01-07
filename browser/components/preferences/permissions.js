@@ -126,9 +126,10 @@ var gPermissionManager = {
     var exists = false;
     for (var i = 0; i < this._permissions.length; ++i) {
       if (this._permissions[i].rawHost == host) {
-        exists = true;
-        this._permissions[i].capability = capabilityString;
-        this._permissions[i].perm = aCapability;
+        // Avoid calling the permission manager if the capability settings are
+        // the same. Otherwise allow the call to the permissions manager to
+        // update the listbox for us.
+        exists = this._permissions[i].perm == aCapability;
         break;
       }
     }

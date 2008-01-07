@@ -56,7 +56,6 @@
 #include "gfxWindowsSurface.h"
 
 #include "nsIFileStreams.h"
-#include "nsUnitConversion.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 

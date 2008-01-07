@@ -118,12 +118,4 @@ function run_test() {
   //bhist.addPageWithDetails(testURI, "testURI", Date.now());
   //bhist.hidePage(testURI);
   //do_check_eq(0, bhist.count);
-
-  /**
-   * markPageAsTyped
-   * Designate the url as having been explicitly typed in by
-   * the user, so it's okay to be an autocomplete result.
-   */
-  //XXX how to test this?
-  //bhist.markPageAsTyped(testURI);
 }

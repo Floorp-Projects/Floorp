@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -22,7 +22,6 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
- *  Oleg Romashin <romaxa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,23 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIPromptService.h"
-#include "nsICookiePromptService.h"
-#include "nsICookie.h"
-#include "nsNetCID.h"
+#include <nsIPromptService.h>
+#include <nsString.h>
 #include <gtk/gtk.h>
-#ifdef MOZILLA_INTERNAL_API
-#include "nsString.h"
-#else
-#include "nsStringAPI.h"
-#endif
-#define NS_PROMPTSERVICE_CID \
- {0x95611356, 0xf583, 0x46f5, {0x81, 0xff, 0x4b, 0x3e, 0x01, 0x62, 0xc6, 0x19}}
 
 class nsIDOMWindow;
 
-class GtkPromptService : public nsIPromptService,
-                         public nsICookiePromptService
+class GtkPromptService : public nsIPromptService
 {
 public:
     GtkPromptService();
@@ -62,11 +51,9 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROMPTSERVICE
-    NS_DECL_NSICOOKIEPROMPTSERVICE
 
-#ifndef MOZ_NO_GECKO_UI_FALLBACK_1_8_COMPAT
 private:
+    GtkWindow* GetGtkWindowForDOMWindow(nsIDOMWindow* aDOMWindow);
     void GetButtonLabel(PRUint32 aFlags, PRUint32 aPos,
                         const PRUnichar* aStringValue, nsAString &aLabel);
-#endif
 };

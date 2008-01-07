@@ -94,9 +94,15 @@ interface nsIBrowserHistory : nsIGlobalHistory2
     void hidePage(in nsIURI aURI);
 
     /**
-     * markPageAsTyped
-     * Designate the url as having been explicitly typed in by
-     * the user, so it's okay to be an autocomplete result.
+     * This is just like markPageAsFollowedBookmark (in nsINavHistory, 
+     * also implemented by the history service), but for URLs that a
+     * user visits from the chrome that are not bookmarks, such as a
+     * URL that is typed in the URL bar or clicking on a link in the 
+     * history menu or history sidebar.   It declares that the given URI
+     * is treated as if they typed the URL into the URL bar (which
+     * get more weight in our URL bar autocomplete algorithm.)
+     * If this URI is loaded soon after this message has been received, 
+     * that transition will be marked as typed.
      */
     void markPageAsTyped(in nsIURI aURI);
 };

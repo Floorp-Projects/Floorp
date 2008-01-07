@@ -3,7 +3,7 @@
 
 <!ENTITY thDOMNodes.label "Uzly DOM">
 <!ENTITY btnInspect.label "Preskúmať">
-<!ENTITY btnInspect.accesskey "P">
+<!ENTITY btnInspect.accesskey "r">
 <!ENTITY bxDocPanel.title "Dokument">
 <!ENTITY bxObjectPanel.title "Objekt">
 <!ENTITY btnSelecting.tooltip "Vyhľadať kliknutím uzol na preskúmanie">
@@ -37,7 +37,7 @@
   <!ENTITY cmdCopy.label "Kopírovať">
   <!ENTITY cmdCopy.accesskey "K">
   <!ENTITY cmdPaste.label "Prilepiť">
-  <!ENTITY cmdPaste.accesskey "l">
+  <!ENTITY cmdPaste.accesskey "P">
   <!ENTITY cmdDelete.label "Odstrániť">
   <!ENTITY cmdDelete.accesskey "O">
   

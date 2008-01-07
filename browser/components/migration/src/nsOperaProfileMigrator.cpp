@@ -316,7 +316,7 @@ static
 nsOperaProfileMigrator::PrefTransform gTransforms[] = {
   { "User Prefs", "Download Directory", _OPM(STRING), "browser.download.dir", _OPM(SetFile), PR_FALSE, -1 },
   { nsnull, "Enable Cookies", _OPM(INT), "network.cookie.cookieBehavior", _OPM(SetCookieBehavior), PR_FALSE, -1 },
-  { nsnull, "Accept Cookies Session Only", _OPM(BOOL), "network.cookie.enableForCurrentSessionOnly", _OPM(SetBool), PR_FALSE, -1 },
+  { nsnull, "Accept Cookies Session Only", _OPM(BOOL), "network.cookie.lifetimePolicy", _OPM(SetCookieLifetime), PR_FALSE, -1 },
   { nsnull, "Allow script to resize window", _OPM(BOOL), "dom.disable_window_move_resize", _OPM(SetBool), PR_FALSE, -1 },
   { nsnull, "Allow script to move window", _OPM(BOOL), "dom.disable_window_move_resize", _OPM(SetBool), PR_FALSE, -1 },
   { nsnull, "Allow script to raise window", _OPM(BOOL), "dom.disable_window_flip", _OPM(SetBool), PR_FALSE, -1 },
@@ -351,6 +351,13 @@ nsOperaProfileMigrator::SetCookieBehavior(void* aTransform, nsIPrefBranch* aBran
   PrefTransform* xform = (PrefTransform*)aTransform;
   PRInt32 val = (xform->intValue == 3) ? 0 : (xform->intValue == 0) ? 2 : 1;
   return aBranch->SetIntPref(xform->targetPrefName, val);
+}
+
+nsresult 
+nsOperaProfileMigrator::SetCookieLifetime(void* aTransform, nsIPrefBranch* aBranch)
+{
+  PrefTransform* xform = (PrefTransform*)aTransform;
+  return aBranch->SetIntPref(xform->targetPrefName, xform->boolValue ? 2 : 0);
 }
 
 nsresult 

@@ -3845,6 +3845,8 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
         obj = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
+        STOBJ_SET_PARENT(obj, NULL);
+        STOBJ_SET_PROTO(obj, NULL);
         re = js_NewRegExp(xdr->cx, NULL, source, (uint8)flagsword, JS_FALSE);
         if (!re)
             return JS_FALSE;
@@ -3877,8 +3879,7 @@ regexp_trace(JSTracer *trc, JSObject *obj)
 JSClass js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp) |
-    JSCLASS_FIXED_BINDING,
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     JS_PropertyStub,    JS_PropertyStub,
     regexp_getProperty, regexp_setProperty,
     JS_EnumerateStub,   JS_ResolveStub,

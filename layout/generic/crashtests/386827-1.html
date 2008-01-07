@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function boom()
+{
+  document.getElementById("d1").appendChild(document.createElement("span"));
+  document.getElementById("d2").style.direction = "rtl";
+}
+</script>
+</head>
+<body onload="boom()">
+<div id="d1" style="-moz-column-width: 1em;">a b c d</div>
+<div id="d2"></div>
+</body>
+</html>

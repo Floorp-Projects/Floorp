@@ -417,6 +417,12 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
     AnnotateCrashReport(NS_LITERAL_CSTRING("ServerURL"),
                         nsDependentCString(aServerURL));
 
+  // store application start time
+  char timeString[32];
+  XP_TTOA(time(NULL), timeString, 10);
+  AnnotateCrashReport(NS_LITERAL_CSTRING("StartupTime"),
+                      nsDependentCString(timeString));
+
 #if defined(XP_MACOSX)
   // On OS X, many testers like to see the OS crash reporting dialog
   // since it offers immediate stack traces.  We allow them to set
@@ -780,7 +786,20 @@ SetRestartArgs(int argc, char **argv)
     envVar = "MOZ_CRASHREPORTER_RESTART_ARG_";
     envVar.AppendInt(i);
     envVar += "=";
-    envVar += argv[i];
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+    // we'd like to run the script around the binary
+    // instead of the binary itself, so remove the -bin
+    // if it exists on the first argument
+    int arg_len = 0;
+    if (i == 0 &&
+        (arg_len = strlen(argv[i])) > 4 &&
+        strcmp(argv[i] + arg_len - 4, "-bin") == 0) {
+      envVar.Append(argv[i], arg_len - 4);
+    } else
+#endif
+    {
+      envVar += argv[i];
+    }
 
     // PR_SetEnv() wants the string to be available for the lifetime
     // of the app, so dup it here

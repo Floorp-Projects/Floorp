@@ -124,6 +124,9 @@
 #include "plbase64.h"
 #include "prmem.h"
 
+// Buffer file writes in 32kb chunks
+#define BUFFERED_OUTPUT_SIZE (1024 * 32)
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsExternalHelperAppService::mLog = nsnull;
 #endif
@@ -1240,12 +1243,15 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   }
 #endif
 
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutStream), mTempFile,
+  nsCOMPtr<nsIOutputStream> outputStream;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), mTempFile,
                                    PR_WRONLY | PR_CREATE_FILE, 0600);
   if (NS_FAILED(rv)) {
     mTempFile->Remove(PR_FALSE);
     return rv;
   }
+
+  mOutStream = NS_BufferOutputStream(outputStream, BUFFERED_OUTPUT_SIZE);
 
 #ifdef XP_MACOSX
     nsCAutoString contentType;
@@ -1995,8 +2001,10 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
       rv = mTempFile->MoveTo(dir, name);
       if (NS_SUCCEEDED(rv)) // if it failed, we just continue with $TEMP
         mTempFile = movedFile;
-      rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOutStream), mTempFile,
-                                         PR_WRONLY | PR_APPEND, 0600);
+
+      nsCOMPtr<nsIOutputStream> outputStream;
+      rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), mTempFile,
+                                       PR_WRONLY | PR_APPEND, 0600);
       if (NS_FAILED(rv)) { // (Re-)opening the output stream failed. bad luck.
         nsAutoString path;
         mTempFile->GetPath(path);
@@ -2004,6 +2012,8 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
         Cancel(rv);
         return NS_OK;
       }
+
+      mOutStream = NS_BufferOutputStream(outputStream, BUFFERED_OUTPUT_SIZE);
     }
   }
 

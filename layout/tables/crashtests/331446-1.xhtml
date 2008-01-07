@@ -1,0 +1,42 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<style id="styles"></style>
+
+<script>
+
+window.addEventListener("load", f1, false);
+
+function f1()
+{
+  document.getElementById("div2").setAttribute("style", "position: absolute;");
+  document.getElementById("table").setAttribute("style", "width: 200%;");
+  setTimeout(f2, 30);
+}
+
+function f2()
+{
+  document.getElementById("styles").textContent = ".thisMatchesNothing { }";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body style="position: relative; -moz-column-width: 1px;">
+
+<table id="table">
+ <tr>
+  <td>Table</td>
+ </tr>
+</table>
+
+<div>A</div>
+
+<div id="div2">B</div>
+
+<div style="display: table; width: 200%;">C</div>
+
+</body>
+</html>

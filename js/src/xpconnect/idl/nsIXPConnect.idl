@@ -447,7 +447,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(256a41a5-10e6-40a1-8392-8baa4adfabe2)]
+[uuid(8a47448a-66b0-4beb-a5a2-24f22e9c9dea)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -659,9 +659,6 @@ interface nsIXPConnect : nsISupports
                               in JSObjectPtr  aScope,
                               in nsIClassInfo aClassInfo);
 
-    attribute PRBool collectGarbageOnMainThreadOnly;
-    attribute PRBool deferReleasesUntilAfterGarbageCollection;
-
     void releaseJSContext(in JSContextPtr aJSContext, in PRBool noGC);
 
     JSVal variantToJS(in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value);
@@ -675,8 +672,12 @@ interface nsIXPConnect : nsISupports
      *
      * @param aFilenamePrefix the UTF-8 filename prefix to match, which
      *                        should end with a slash (/) character
+     * @param aWantNativeWrappers whether XPConnect should produce native
+     *                            wrappers for scripts whose paths begin
+     *                            with this prefix
      */
-    void flagSystemFilenamePrefix(in string aFilenamePrefix);
+    void flagSystemFilenamePrefix(in string aFilenamePrefix,
+                                  in PRBool aWantNativeWrappers);
 
     /**
      * Restore an old prototype for wrapped natives of type

@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<script>
+function foopy()
+{
+  var optgroup = document.getElementById("optgroup");
+  var newspan = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  optgroup.insertBefore(newspan, optgroup.firstChild);
+}
+</script>
+</head>
+
+<body onload="foopy()">
+
+<select><optgroup label="optgroup" id="optgroup"><option>option</option></optgroup></select>
+
+</body>
+
+</html>

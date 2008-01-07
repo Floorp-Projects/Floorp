@@ -52,10 +52,10 @@
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <script type="application/x-javascript" src="pippki.js" />
 
-  <description id="confirm"/>
+  <description id="confirm" style="white-space: wrap; width: 400px;"/>
   <separator />
   <vbox id="certlist"/>
   <separator />
-  <description id="impact"/>
+  <description id="impact" style="white-space: wrap; width: 400px;"/>
 
 </dialog>

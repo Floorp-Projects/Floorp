@@ -48,7 +48,6 @@
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsUnitConversion.h"
 #include "nsWidgetsCID.h"
 #include "nsCRT.h"
 

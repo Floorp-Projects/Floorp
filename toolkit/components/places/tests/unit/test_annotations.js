@@ -93,7 +93,7 @@ var annoObserver = {
 // main
 function run_test() {
   var testURI = uri("http://mozilla.com/");
-  var testItemId = bmsvc.insertBookmark(bmsvc.bookmarksRoot, testURI, -1, "");
+  var testItemId = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, -1, "");
   var testAnnoName = "moz-test-places/annotations";
   var testAnnoVal = "test";
 
@@ -148,7 +148,7 @@ function run_test() {
   do_check_true(pages[0].equals(uri2) || pages[1].equals(uri2));
 
   // test getItemsWithAnnotation
-  var testItemId2 = bmsvc.insertBookmark(bmsvc.bookmarksRoot, uri2, -1, "");
+  var testItemId2 = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri2, -1, "");
   annosvc.setItemAnnotation(testItemId2, testAnnoName, testAnnoVal, 0, 0);
   var items = annosvc.getItemsWithAnnotation(testAnnoName, { });
   do_check_eq(items.length, 2);
@@ -334,7 +334,7 @@ function run_test() {
   }
 
   // setting an annotation with EXPIRE_HISTORY for an item should throw
-  var itemId = bmsvc.insertBookmark(bmsvc.bookmarksRoot, testURI, -1, "");
+  var itemId = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, -1, "");
   try {
     annosvc.setItemAnnotation(itemId, "foo", "bar", 0, annosvc.EXPIRE_WITH_HISTORY);
     do_throw("setting an item annotation with EXPIRE_HISTORY should throw");

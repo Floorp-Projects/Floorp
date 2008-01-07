@@ -671,9 +671,33 @@ static void ConvertColormap(PRUint32 *aColormap, PRUint32 aColors)
   PRUint32 *to = aColormap + aColors;
 
   // Convert color entries to Cairo format
-  for (PRUint32 c = aColors; c > 0; c--) {
+
+  // set up for loops below
+  if (!aColors) return;
+  PRUint32 c = aColors;
+
+  // copy 1st pixel as bytes to avoid reading past end of buffer
+  *--to = GFX_PACKED_PIXEL(0xFF, from[-3], from[-2], from[-1]);
+  from -= 3; c--;
+
+  // bulk copy of pixels.
+  while (c >= 4) {
+    PRUint32 p0, p1, p2, p3; // to avoid back-to-back register stalls
+    from -= 12;
+    to   -=  4;
+    c    -=  4;
+    p0 = GFX_0XFF_PPIXEL_FROM_BPTR(from+9);
+    p1 = GFX_0XFF_PPIXEL_FROM_BPTR(from+6);
+    p2 = GFX_0XFF_PPIXEL_FROM_BPTR(from+3);
+    p3 = GFX_0XFF_PPIXEL_FROM_BPTR(from+0);
+    to[3] = p0; to[2] = p1;
+    to[1] = p2; to[0] = p3;
+  }
+
+  // copy remaining pixel(s)
+  while (c--) {
     from -= 3;
-    *--to = GFX_PACKED_PIXEL(0xFF, from[0], from[1], from[2]);
+    *--to = GFX_0XFF_PPIXEL_FROM_BPTR(from);
   }
 }
 
@@ -1044,17 +1068,17 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
       if (q[8] & 0x80) /* has a local colormap? */
       {
         mGIFStruct.local_colormap_size = 1 << depth;
+        PRUint32 paletteSize;
         if (mGIFStruct.images_decoded) {
           // Copy directly into the palette of current frame,
           // by pointing mColormap to that palette.
-          PRUint32 paletteSize;
           mImageFrame->GetPaletteData(&mColormap, &paletteSize);
         } else {
           // First frame has local colormap, allocate space for it
           // as the image frame doesn't have its own palette
+          paletteSize = sizeof(PRUint32) << realDepth;
           if (!mGIFStruct.local_colormap) {
-            mGIFStruct.local_colormap = 
-  			  (PRUint32*)PR_MALLOC(mGIFStruct.local_colormap_size * sizeof(PRUint32));
+            mGIFStruct.local_colormap = (PRUint32*)PR_MALLOC(paletteSize);
             if (!mGIFStruct.local_colormap) {
               mGIFStruct.state = gif_oom;
               break;
@@ -1063,9 +1087,9 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
           mColormap = mGIFStruct.local_colormap;
         }
         const PRUint32 size = 3 << depth;
-        // Clear the notfilled part of the colormap
-        if (realDepth > depth) {
-          memset(mColormap + size, 0, (3<<realDepth) - size);
+        if (paletteSize > size) {
+          // Clear the notfilled part of the colormap
+          memset(((PRUint8*)mColormap) + size, 0, paletteSize - size);
         }
         if (len < size) {
           // Use 'hold' pattern to get the image colormap

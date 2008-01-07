@@ -664,7 +664,7 @@ function run_test() {
   // bug 378820
   var uri1 = uri("http://foo.tld/a");
   bmsvc.insertBookmark(testRoot, uri1, bmsvc.DEFAULT_INDEX, "");
-  histsvc.addVisit(uri1, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(uri1, Date.now(), null, histsvc.TRANSITION_TYPED, false, 0);
 
   testSimpleFolderResult();
 }

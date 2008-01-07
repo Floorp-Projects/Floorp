@@ -536,11 +536,18 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             if( 'B' == *src) {
               mState = mState_ASCII;
               if (mRunLength == 0) {
-                goto error2;
+                if((dest+1) >= destEnd)
+                  goto error1;
+                *dest++ = 0xFFFD;
               }
               mRunLength = 0;
             } else if ('J' == *src)  {
               mState = mState_JISX0201_1976Roman;
+              if (mRunLength == 0 && mLastLegalState != mState_ASCII) {
+                if((dest+1) >= destEnd)
+                  goto error1;
+                *dest++ = 0xFFFD;
+              }
               mRunLength = 0;
             } else if ('I' == *src)  {
               mState = mState_JISX0201_1976Kana;

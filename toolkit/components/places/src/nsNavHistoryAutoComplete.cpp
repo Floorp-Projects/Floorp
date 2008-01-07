@@ -125,7 +125,7 @@ nsNavHistory::CreateAutoCompleteQueries()
     "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
     "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE "
-    "(b.parent = (SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND LOWER(t.title) = LOWER(?2))) "
+    "(b.parent in (SELECT t.id FROM moz_bookmarks t WHERE t.parent = ?1 AND LOWER(t.title) = LOWER(?2))) "
     "GROUP BY h.id ORDER BY h.visit_count DESC, MAX(v.visit_date) DESC;");
   rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBTagAutoCompleteQuery));
   NS_ENSURE_SUCCESS(rv, rv);

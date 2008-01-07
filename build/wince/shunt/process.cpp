@@ -48,12 +48,12 @@ extern "C" {
 
 #include "kfuncs.h"
 
-MOZCE_SHUNT_API void mozce_abort(void)
+MOZCE_SHUNT_API void abort(void)
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_abort called\n");
+    mozce_printf("abort called\n");
 #endif
 
 #if defined(DEBUG)
@@ -63,12 +63,12 @@ MOZCE_SHUNT_API void mozce_abort(void)
 }
 
 
-MOZCE_SHUNT_API char* mozce_getenv(const char* inName)
+MOZCE_SHUNT_API char* getenv(const char* inName)
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_getenv called (%s)\n", inName);
+    mozce_printf("getenv called (%s)\n", inName);
 #endif
 
     char* retval = NULL;
@@ -94,23 +94,23 @@ MOZCE_SHUNT_API char* mozce_getenv(const char* inName)
     return retval;
 }
 
-MOZCE_SHUNT_API int mozce_putenv(const char *a) 
+MOZCE_SHUNT_API int putenv(const char *a) 
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_putenv called\n");
+    mozce_printf("putenv called\n");
 #endif
 
     return 0;
 }
 
-MOZCE_SHUNT_API int mozce_getpid(void)
+MOZCE_SHUNT_API int getpid(void)
 {
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_getpid called\n");
+    mozce_printf("getpid called\n");
 #endif
 
     int retval = 0;

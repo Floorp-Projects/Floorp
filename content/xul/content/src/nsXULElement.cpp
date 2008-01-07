@@ -262,7 +262,7 @@ nsXULElement::nsXULSlots::~nsXULSlots()
 nsINode::nsSlots*
 nsXULElement::CreateSlots()
 {
-    return new nsXULSlots(mFlagsOrSlots);
+    return new (GetAllocator()) nsXULSlots(mFlagsOrSlots);
 }
 
 /* static */
@@ -270,7 +270,7 @@ already_AddRefed<nsXULElement>
 nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
                      PRBool aIsScriptable)
 {
-    nsXULElement *element = new nsXULElement(aNodeInfo);
+    nsXULElement *element = new (aNodeInfo) nsXULElement(aNodeInfo);
     if (element) {
         NS_ADDREF(element);
 
@@ -351,7 +351,7 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     *aResult = nsnull;
 
     // Create an nsXULElement with the specified namespace and tag.
-    nsXULElement* element = new nsXULElement(aNodeInfo);
+    nsXULElement* element = new (aNodeInfo) nsXULElement(aNodeInfo);
     NS_ENSURE_TRUE(element, NS_ERROR_OUT_OF_MEMORY);
 
     NS_ADDREF(*aResult = element);
@@ -431,7 +431,7 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
                      "Didn't get the default language from proto?");
     }
     else {
-        element = new nsXULElement(aNodeInfo);
+        element = new (aNodeInfo) nsXULElement(aNodeInfo);
         if (element) {
         	// If created from a prototype, we will already have the script
         	// language specified by the proto - otherwise copy it directly
@@ -830,22 +830,6 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     }
 
     nsGenericElement::UnbindFromTree(aDeep, aNullParent);
-}
-
-void
-nsXULElement::SetNativeAnonymous(PRBool aAnonymous)
-{
-    // XXX Workaround for bug 280541, wallpaper for bug 326644
-    if (NodeInfo()->Equals(nsGkAtoms::popupgroup)) {
-        nsGenericElement::SetNativeAnonymous(aAnonymous);
-    } else {
-      // We still want to set the anonymous bit for events.
-      if (aAnonymous) {
-        SetFlags(NODE_IS_ANONYMOUS_FOR_EVENTS);
-      } else {
-        UnsetFlags(NODE_IS_ANONYMOUS_FOR_EVENTS);
-      }
-    }
 }
 
 PRUint32

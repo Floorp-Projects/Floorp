@@ -1,0 +1,34 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var d = document.getElementById("d");
+  d.parentNode.removeChild(d);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+<div id="d">
+  <div style="float: right">
+    <table border="1">
+      <tr> 
+        <td style="display: -moz-groupbox"><img></td>
+      </tr>
+      <tr style="position: absolute"> 
+        <td>TD2</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+</body>
+
+</html>
+

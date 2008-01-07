@@ -44,7 +44,6 @@
 #include "nsPoint.h"
 #include "nsSize.h"
 #include "nsMargin.h"
-#include "nsUnitConversion.h"
 #include "gfxCore.h"
 #include "nsTraceRefcnt.h"
 

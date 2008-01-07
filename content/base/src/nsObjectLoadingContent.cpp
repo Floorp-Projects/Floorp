@@ -543,7 +543,8 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
           pluginState == ePluginBlocklisted) {
         FirePluginError(thisContent, pluginState == ePluginBlocklisted);
       }
-      if (pluginState != ePluginDisabled) {
+      if (pluginState != ePluginDisabled &&
+          pluginState != ePluginBlocklisted) {
         mTypeUnsupported = PR_TRUE;
       }
       return NS_BINDING_ABORTED;
@@ -1058,7 +1059,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
             pluginState == ePluginBlocklisted) {
           FirePluginError(thisContent, pluginState == ePluginBlocklisted);
         }
-        if (pluginState != ePluginDisabled) {
+        if (pluginState != ePluginDisabled &&
+            pluginState != ePluginBlocklisted) {
           fallback.TypeUnsupported();
         }
 

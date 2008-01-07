@@ -172,7 +172,7 @@ NS_NewHTMLImageElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
     NS_ENSURE_SUCCESS(rv, nsnull);
   }
 
-  return new nsHTMLImageElement(nodeInfo);
+  return new (nodeInfo) nsHTMLImageElement(nodeInfo);
 }
 
 nsHTMLImageElement::nsHTMLImageElement(nsINodeInfo *aNodeInfo)

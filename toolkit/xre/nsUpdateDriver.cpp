@@ -363,6 +363,11 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (NS_FAILED(rv))
     return;
 
+  nsAutoString updaterPathW;
+  rv = updater->GetPath(updaterPathW);
+  if (NS_FAILED(rv))
+    return;
+
   // Get the directory to which the update will be applied. On Mac OSX we need
   // to apply the update to the Foo.app directory which is the parent of the
   // parent of the appDir. On other platforms we will just apply to the appDir.
@@ -435,7 +440,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
 #elif defined(XP_WIN)
   _chdir(applyToDir.get());
 
-  if (!WinLaunchChild(updaterPath.get(), appArgc + 4, argv, 1))
+  if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv, 1))
     return;
   _exit(0);
 #else

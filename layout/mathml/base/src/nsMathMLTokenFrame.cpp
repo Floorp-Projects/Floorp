@@ -39,7 +39,6 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsPresContext.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
@@ -130,7 +129,6 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.mBoundingMetrics.Clear();
 
   nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
-  PRInt32 count = 0;
   nsIFrame* childFrame = GetFirstChild(nsnull);
   while (childFrame) {
     // ask our children to compute their bounding metrics
@@ -147,16 +145,12 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
       return rv;
     }
 
-    // origins are used as placeholders to store the child's ascent and descent.
+    // origins are used as placeholders to store the child's ascent.
     childFrame->SetRect(nsRect(0, childDesiredSize.ascent,
                                childDesiredSize.width, childDesiredSize.height));
     // compute and cache the bounding metrics
-    if (0 == count)
-      aDesiredSize.mBoundingMetrics  = childDesiredSize.mBoundingMetrics;
-    else
-      aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
+    aDesiredSize.mBoundingMetrics += childDesiredSize.mBoundingMetrics;
 
-    count++;
     childFrame = childFrame->GetNextSibling();
   }
 
@@ -165,11 +159,6 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 
   // place and size children
   FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
-
-  // XXX set a tentative size for the overflow area. The frame might still be
-  // stretched later.
-  aDesiredSize.mOverflowArea.SetRect(0, 0, aDesiredSize.width, aDesiredSize.height);
-  FinishAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -203,7 +192,7 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
       nsRect rect = childFrame->GetRect();
       nsHTMLReflowMetrics childSize;
       childSize.width = rect.width;
-      childSize.height = aDesiredSize.height; //rect.height;
+      childSize.height = rect.height;
 
       // place and size the child; (dx,0) makes the caret happy - bug 188146
       dy = rect.IsEmpty() ? 0 : aDesiredSize.ascent - rect.y;

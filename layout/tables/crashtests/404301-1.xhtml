@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+  var b = document.getElementById('b');
+  b.style.counterIncrement = 'chicken';
+  document.body.offsetHeight;
+  b.style.counterIncrement = '';
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<col id="a" span="2"></col><col id="b"></col>
+
+</body>
+</html>

@@ -41,7 +41,6 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsPresContext.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"
@@ -1099,23 +1098,32 @@ ComputeSizeFromParts(nsPresContext* aPresContext,
                      PRUint32     aHint)
 {
   enum {first, middle, last, glue};
-  float flex[] = {0.901f, 0.901f, 0.901f};
-  // refine the flexibility depending on whether some parts can be left out
-  if (aGlyphs[glue] == aGlyphs[middle]) flex[middle] = 0.0f;
-  if (aGlyphs[glue] == aGlyphs[first]) flex[first] = 0.0f;
-  if (aGlyphs[glue] == aGlyphs[last]) flex[last] = 0.0f;
-
-  // get the minimum allowable size
-  nscoord computedSize = nscoord(flex[first] * aSizes[first] +
-                                 flex[middle] * aSizes[middle] +
-                                 flex[last] * aSizes[last]);
-
-  if (computedSize <= aTargetSize) {
-    // if we can afford more room, the default is to fill-up the target area
-    return aTargetSize;
+  // Add the parts that cannot be left out.
+  nscoord sum = 0;
+  for (PRInt32 i = first; i <= last; i++) {
+    if (aGlyphs[i] != aGlyphs[glue]) {
+      sum += aSizes[i];
+    }
   }
-  // settle with the size, and let Paint() do the rest
-  return computedSize;
+
+  // Get the minimum allowable size using some flex.
+  const float flex = 0.901f;
+  nscoord minSize = NSToCoordRound(flex * sum);
+
+  if (minSize > aTargetSize)
+    return minSize; // settle with the minimum size
+
+  // Pick a maximum size using a maximum number of glue glyphs that we are
+  // prepared to draw for one character.
+  const PRInt32 maxGlyphs = 1000;
+  // This also takes into account the fact that, if the glue has no size,
+  // then the character can't be lengthened.
+  nscoord maxSize = sum + maxGlyphs * aSizes[glue];
+  if (maxSize < aTargetSize)
+    return maxSize; // settle with the maximum size
+
+  // Fill-up the target area
+  return aTargetSize;
 }
 
 // Insert aFallbackFamilies before the first generic family in or at the end
@@ -1351,8 +1359,13 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
     // empty slots are filled with the glue if it is not null
     if (!ch.Exists()) ch = glue;
     nsBoundingMetrics bm;
-    // if (!ch.Exists()) glue is null, leave bounding metrics at 0
-    if (ch.Exists()) {
+    chdata[i] = ch;
+    if (!ch.Exists()) {
+      // Null glue indicates that a rule will be drawn, which can stretch to
+      // fill any space.  Leave bounding metrics at 0.
+      sizedata[i] = aTargetSize;
+    }
+    else {
       SetFontFamily(aRenderingContext, font, aGlyphTable, ch, aFamily);
       nsresult rv = aRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
       if (NS_FAILED(rv)) {
@@ -1364,11 +1377,10 @@ nsMathMLChar::TryParts(nsPresContext*       aPresContext,
       // TODO: For the generic Unicode table, ideally we should check that the
       // glyphs are actually found and that they each come from the same
       // font.
+      bmdata[i] = bm;
+      sizedata[i] = isVertical ? bm.ascent + bm.descent
+                               : bm.rightBearing - bm.leftBearing;
     }
-    chdata[i] = ch;
-    bmdata[i] = bm;
-    sizedata[i] = isVertical ? bm.ascent + bm.descent
-                             : bm.rightBearing - bm.leftBearing;
   }
 
   // Build by parts if we have successfully computed the
@@ -1854,20 +1866,30 @@ public:
   }
 #endif
 
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
+    nsRect rect;
+    mChar->GetRect(rect);
+    nsPoint offset =
+      aBuilder->ToReferenceFrame(mFrame) + rect.TopLeft();
+    nsBoundingMetrics bm;
+    mChar->GetBoundingMetrics(bm);
+    return nsRect(offset.x + bm.leftBearing, offset.y,
+                  bm.rightBearing - bm.leftBearing, bm.ascent + bm.descent);
+  }
+
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+     const nsRect& aDirtyRect)
+  {
+    mChar->PaintForeground(mFrame->PresContext(), *aCtx,
+                         aBuilder->ToReferenceFrame(mFrame), mIsSelected);
+  }
+
   NS_DISPLAY_DECL_NAME("MathMLCharForeground")
+
 private:
   nsMathMLChar* mChar;
   PRPackedBool  mIsSelected;
 };
-
-void nsDisplayMathMLCharForeground::Paint(nsDisplayListBuilder* aBuilder,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
-{
-  mChar->PaintForeground(mFrame->PresContext(), *aCtx,
-                         aBuilder->ToReferenceFrame(mFrame), mIsSelected);
-}
 
 #ifdef NS_DEBUG
 class nsDisplayMathMLCharDebug : public nsDisplayItem {
@@ -2189,18 +2211,25 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
       last++;
     }
   }
-  else { // glue is present
+  else if (bmdata[3].ascent + bmdata[3].descent > 0) {
+    // glue is present
     nscoord overlap;
     nsCOMPtr<nsIFontMetrics> fm;
     aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
     nsMathMLFrame::GetRuleThickness(fm, overlap);
     overlap = 2 * PR_MAX(overlap, onePixel);
+    // Ensure the stride for the glue is not reduced to less than onePixel
     while (overlap > 0 && bmdata[3].ascent + bmdata[3].descent <= 2*overlap + onePixel)
       overlap -= onePixel;
 
     if (overlap > 0) {
-      // to protect against gaps, pretend the glue is smaller than 
-      // it says to allow a small overlap when adjoining it
+      // To protect against gaps, pretend the glue is smaller than 
+      // it says to allow a small overlap when adjoining it.
+      // XXXkt Does the overlap need to be this large: removing from both
+      // ascent and descent means the overlap between glue glyphs is 4 *
+      // max(ruleThickness, onePixel), while the overlap between glue and
+      // other glyphs is 2 * max(ruleThickness, onePixel).
+      // See also bug 349907.
       bmdata[3].ascent -= overlap;
       bmdata[3].descent -= overlap;
     }
@@ -2226,12 +2255,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
           bm = bmdata[3]; // glue
           stride += bm.ascent;
         }
-        // defensive code against odd things such as a smallish TextZoom...
-        NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
-        if (stride < onePixel || 1000 == count) {
-          aRenderingContext.PopState();
-          return NS_ERROR_UNEXPECTED;
-        }
         dy += stride;
         aRenderingContext.DrawString(&glue.code, 1, dx, dy);
       }
@@ -2244,6 +2267,12 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
 #endif
     }
   }
+#ifdef DEBUG
+  else { // no glue
+    NS_ASSERTION(end[0] >= start[1] && end[1] >= start[2],
+                 "gap between parts with no glue");
+  }
+#endif
   return NS_OK;
 }
 
@@ -2279,7 +2308,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     // empty slots are filled with the glue if it is not null
     if (!ch.Exists()) ch = glue;
     nsBoundingMetrics bm;
-    // if (!ch.Exists()) glue is null, leave bounding metrics at 0
+    // if (!ch.Exists()) glue is null, leave bounding metrics at 0.
     if (ch.Exists()) {
       SetFontFamily(aRenderingContext, aFont, aGlyphTable, ch, mFamily);
       rv = aRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
@@ -2385,12 +2414,14 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
       last++;
     }
   }
-  else { // glue is present
+  else if (bmdata[3].rightBearing - bmdata[3].leftBearing > 0) {
+    // glue is present
     nscoord overlap;
     nsCOMPtr<nsIFontMetrics> fm;
     aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
     nsMathMLFrame::GetRuleThickness(fm, overlap);
     overlap = 2 * PR_MAX(overlap, onePixel);
+    // Ensure the stride for the glue is not reduced to less than onePixel
     while (overlap > 0 && bmdata[3].rightBearing - bmdata[3].leftBearing <= 2*overlap + onePixel)
       overlap -= onePixel;
 
@@ -2422,12 +2453,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
           bm = bmdata[3]; // glue
           stride -= bm.leftBearing;
         }
-        // defensive code against odd things such as a smallish TextZoom...
-        NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
-        if (stride < onePixel || 1000 == count) {
-          aRenderingContext.PopState();
-          return NS_ERROR_UNEXPECTED;
-        }
         dx += stride;
         aRenderingContext.DrawString(&glue.code, 1, dx, dy);
       }
@@ -2440,5 +2465,11 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
 #endif
     }
   }
+#ifdef DEBUG
+  else { // no glue
+    NS_ASSERTION(end[0] >= start[1] && end[1] >= start[2],
+                 "gap between parts with no glue");
+  }
+#endif
   return NS_OK;
 }

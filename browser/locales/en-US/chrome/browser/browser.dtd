@@ -313,14 +313,14 @@
 <!ENTITY pageStylePersistentOnly.label "Basic Page Style">
 <!ENTITY pageStylePersistentOnly.accesskey "b">
 
-<!ENTITY pageReportIcon.tooltip            "Change popup blocking settings for this web site">
+<!ENTITY pageReportIcon.tooltip            "Change pop-up blocking settings for this web site">
 
 <!ENTITY allowPopups.accesskey "p">
 <!-- On Windows we use the term "Options" to describe settings, but
      on Linux and Mac OS X we use "Preferences" - carry that distinction
      over into this string, which is used in the "popup blocked" info bar . -->
-<!ENTITY editPopupSettingsUnix.label "Edit Popup Blocker Preferences…">
-<!ENTITY editPopupSettings.label "Edit Popup Blocker Options…">
+<!ENTITY editPopupSettingsUnix.label "Edit Pop-up Blocker Preferences…">
+<!ENTITY editPopupSettings.label "Edit Pop-up Blocker Options…">
 <!ENTITY editPopupSettings.accesskey "E">
 <!ENTITY dontShowMessage.accesskey "D">
 

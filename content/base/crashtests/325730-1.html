@@ -1,0 +1,27 @@
+<html>
+
+<head>
+
+<script>
+
+function init()
+{
+  document.addEventListener("DOMNodeRemoved", meep, false);
+  document.body.appendChild(document.getElementById("b"));
+
+  function meep()
+  {
+    document.removeEventListener("DOMNodeRemoved", meep, false);
+    document.body.removeChild(document.getElementById("c"));
+  }
+}
+
+window.addEventListener("load", init, false);
+
+
+</script>
+
+</head>
+
+<body><div id="b"></div><div id="c"></div></body>
+</html>

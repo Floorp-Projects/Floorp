@@ -127,8 +127,8 @@ void XXXNeverCalled()
     {
       nsTObserverArray<PRBool> dummyObserverArray;
       PRBool a = PR_FALSE;
-      dummyObserverArray.AppendObserver(&a);
-      dummyObserverArray.RemoveObserver(&a);
+      dummyObserverArray.AppendElement(a);
+      dummyObserverArray.RemoveElement(a);
       dummyObserverArray.Clear();
     }
     nsStringHashSet();

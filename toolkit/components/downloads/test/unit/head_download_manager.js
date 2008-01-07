@@ -80,11 +80,24 @@ if (!profileDir) {
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
 
+
+/**
+ * Imports a download test file to use.  Works with rdf and sqlite files.
+ *
+ * @param aFName
+ *        The name of the file to import.  This file should be located in the
+ *        same directory as this file.
+ */
 function importDownloadsFile(aFName)
 {
   var file = do_get_file("toolkit/components/downloads/test/unit/" + aFName);
   var newFile = dirSvc.get("ProfD", Ci.nsIFile);
-  file.copyTo(newFile, "downloads.rdf");
+  if (/\.rdf$/i.test(aFName))
+    file.copyTo(newFile, "downloads.rdf");
+  else if (/\.sqlite$/i.test(aFName))
+    file.copyTo(newFile, "downloads.sqlite");
+  else
+    do_throw("Unexpected filename!");
 }
 
 function cleanup()
@@ -161,8 +174,6 @@ function getDownloadListener()
     },
     onStateChange: function(a, b, c, d, e) { },
     onProgressChange: function(a, b, c, d, e, f, g) { },
-    onStatusChange: function(a, b, c, d, e) { },
-    onLocationChange: function(a, b, c, d) { },
     onSecurityChange: function(a, b, c, d) { }
   };
 }

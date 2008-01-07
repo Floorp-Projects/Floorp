@@ -271,7 +271,15 @@ public:
   void SetConsumeRollupEvent(PRUint32 aConsumeMode);
 
   nsIScrollableView* GetScrollableView(nsIFrame* aStart);
-  
+
+  // same as SetBounds except the preferred size mPrefSize is also set.
+  void SetPreferredBounds(nsBoxLayoutState& aState, const nsRect& aRect);
+
+  // retrieve the last preferred size
+  nsSize PreferredSize() { return mPrefSize; }
+  // set the last preferred size
+  void SetPreferredSize(nsSize aSize) { mPrefSize = aSize; }
+
 protected:
   // Move without updating attributes.                                          
   void MoveToInternal(PRInt32 aLeft, PRInt32 aTop);                             
@@ -327,6 +335,15 @@ protected:
   PRPackedBool mInContentShell; // True if the popup is in a content shell
 
   nsString     mIncrementalString;  // for incremental typing navigation
+
+  // A popup's preferred size may be different than its actual size stored in
+  // mRect in the case where the popup was resized because it was too large
+  // for the screen. The preferred size mPrefSize holds the full size the popup
+  // would be before resizing. Computations are performed using this size.
+  // The parent frame is responsible for setting the preferred size using
+  // SetPreferredBounds or SetPreferredSize before positioning the popup with
+  // SetPopupPosition.
+  nsSize mPrefSize;
 
 }; // class nsMenuPopupFrame
 

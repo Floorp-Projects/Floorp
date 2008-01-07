@@ -101,7 +101,6 @@ EXPORTS		= \
 		nsSupportsArray.h \
 		nsSupportsPrimitives.h \
 		nsTime.h \
-		nsUnitConversion.h \
 		nsVariant.h \
 		nsValueArray.h \
 		nsStringEnumerator.h \

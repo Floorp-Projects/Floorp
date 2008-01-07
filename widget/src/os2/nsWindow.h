@@ -75,12 +75,9 @@ class imgIContainer;
 // Base widget class.
 // This is abstract.  Controls (labels, radio buttons, listboxen) derive
 // from here.  A thing called a child window derives from here, and the
-// frame window class derives from the child.  The content-displaying
-// classes are off on their own branch to avoid creating a palette for
-// every window we create.  This may turn out to be what's required, in
-// which case the paint & palette code from nsChildWindow needs to be
-// munged in here.  nsFrameWindow is separate because work needs to be done
-// there to decide whether methods apply to frame or client.
+// frame window class derives from the child.
+// nsFrameWindow is separate because work needs to be done there to decide
+// whether methods apply to frame or client.
 
 /* Possible states of the window, used to emulate windows better... */
    // default state; Create() not called 
@@ -234,7 +231,7 @@ protected:
                                   long cx, long cy, unsigned long flags);
 
    // Message handlers - may wish to override.  Default implementation for
-   // palette, control, paint & scroll is to do nothing.
+   // control, paint & scroll is to do nothing.
 
    // Return whether message has been processed.
    virtual PRBool ProcessMessage( ULONG m, MPARAM p1, MPARAM p2, MRESULT &r);
@@ -244,7 +241,6 @@ protected:
    virtual PRBool OnResize( PRInt32 aX, PRInt32 aY);
    virtual PRBool OnMove( PRInt32 aX, PRInt32 aY);
    virtual PRBool OnKey( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnRealizePalette();
    virtual PRBool DispatchFocus( PRUint32 aEventType, PRBool isMozWindowTakingFocus);
    virtual PRBool OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2);
    virtual PRBool OnVScroll( MPARAM mp1, MPARAM mp2);
@@ -382,29 +378,5 @@ protected:
 extern PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2);
 
 extern nsWindow *NS_HWNDToWindow( HWND hwnd);
-
-#define NSCANVASCLASS "WarpzillaCanvas"
-
-#if 0
-
-// Need to do this because the cross-platform widgets (toolbars) assume
-// that the name of the NS_CHILD_CID is ChildWindow and that it gets
-// defined in "nsWindow.h".
-//
-// However, if we've included this header *from nsCanvas.h*, then we
-// get a lovely circular dependency, and so special-case this.
-//
-// Yes, I suppose I'm just being perverse by having three separate classes
-// here, but I just baulk at naming a class 'ChildWindow'.
-//
-// (and don't tell me there's a JLib class called JMother.  Believe me,
-//  I know, and I regret it at least twice a week...)
-//
-#ifndef _nscanvas_h
-#include "nsCanvas.h"
-typedef nsCanvas ChildWindow;
-#endif
-
-#endif
 
 #endif

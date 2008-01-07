@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsPresContext.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
@@ -889,6 +888,9 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
       }
     }
   }
+
+  // Set our overflow area
+  GatherAndStoreOverflow(&aDesiredStretchSize);
 
   if (mFrames.GetLength() != 1)
     return NS_OK;

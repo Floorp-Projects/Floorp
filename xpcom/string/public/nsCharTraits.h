@@ -62,9 +62,19 @@
   // for |PRUnichar|
 #endif
 
+// This file may be used (through nsUTF8Utils.h) from non-XPCOM code, in
+// particular the standalone software updater. In that case stub out
+// the macros provided by nsDebug.h which are only usable when linking XPCOM
+
+#ifdef NS_NO_XPCOM
+#define NS_WARNING(msg)
+#define NS_ASSERTION(cond, msg)
+#define NS_ERROR(msg)
+#else
 #ifndef nsDebug_h__
 #include "nsDebug.h"
   // for NS_ASSERTION
+#endif
 #endif
 
 #ifdef HAVE_CPP_BOOL
@@ -788,10 +798,10 @@ template <class OutputIterator>
 struct nsCharSinkTraits
   {
     static
-    PRUint32
+    void
     write( OutputIterator& iter, const typename OutputIterator::value_type* s, PRUint32 n )
       {
-        return iter.write(s, n);
+        iter.write(s, n);
       }
   };
 
@@ -801,12 +811,11 @@ template <class CharT>
 struct nsCharSinkTraits<CharT*>
   {
     static
-    PRUint32
+    void
     write( CharT*& iter, const CharT* s, PRUint32 n )
       {
         nsCharTraits<CharT>::move(iter, s, n);
         iter += n;
-        return n;
       }
   };
 
@@ -816,12 +825,11 @@ NS_SPECIALIZE_TEMPLATE
 struct nsCharSinkTraits<char*>
   {
     static
-    PRUint32
+    void
     write( char*& iter, const char* s, PRUint32 n )
       {
         nsCharTraits<char>::move(iter, s, n);
         iter += n;
-        return n;
       }
   };
 
@@ -829,12 +837,11 @@ NS_SPECIALIZE_TEMPLATE
 struct nsCharSinkTraits<PRUnichar*>
   {
     static
-    PRUint32
+    void
     write( PRUnichar*& iter, const PRUnichar* s, PRUint32 n )
       {
         nsCharTraits<PRUnichar>::move(iter, s, n);
         iter += n;
-        return n;
       }
   };
 

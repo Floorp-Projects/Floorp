@@ -166,7 +166,8 @@ nsSVGPropertyBase::ContentRemoved(nsIDocument *aDocument,
   DoUpdate();
 }
 
-class nsSVGFilterProperty : public nsSVGPropertyBase {
+class nsSVGFilterProperty :
+  public nsSVGPropertyBase, public nsISVGFilterProperty {
 public:
   nsSVGFilterProperty(nsIContent *aFilter, nsIFrame *aFilteredFrame);
   virtual ~nsSVGFilterProperty() {
@@ -177,8 +178,14 @@ public:
   nsSVGFilterFrame *GetFilterFrame();
   void UpdateRect();
 
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
+
+  // nsISVGFilterProperty
+  virtual void Invalidate() { DoUpdate(); }
 
 private:
   // nsSVGPropertyBase
@@ -186,6 +193,10 @@ private:
 
   nsRect mFilterRect;
 };
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsSVGFilterProperty,
+                             nsSVGPropertyBase,
+                             nsISVGFilterProperty)
 
 nsSVGFilterProperty::nsSVGFilterProperty(nsIContent *aFilter,
                                          nsIFrame *aFilteredFrame)
@@ -736,7 +747,12 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
 nsRect
 nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
 {
-  nsRect rect = aFrame->GetRect();
+  nsISVGChildFrame *svgFrame = nsnull;
+  CallQueryInterface(aFrame, &svgFrame);
+  if (!svgFrame)
+    return nsRect();
+
+  nsRect rect = svgFrame->GetCoveredRegion();
 
   while (aFrame) {
     if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)
@@ -982,6 +998,26 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
   retval = matrix.get();
   NS_IF_ADDREF(retval);
   return retval;
+}
+
+void 
+nsSVGUtils::NotifyChildrenCanvasTMChanged(nsIFrame *aFrame, PRBool suppressInvalidation)
+{
+  nsIFrame *aKid = aFrame->GetFirstChild(nsnull);
+
+  while (aKid) {
+    nsISVGChildFrame* SVGFrame = nsnull;
+    CallQueryInterface(aKid, &SVGFrame);
+    if (SVGFrame) {
+      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation); 
+    } else {
+      NS_ASSERTION(aKid->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
+      // recurse into the children of container frames e.g. <clipPath>, <mask>
+      // in case they have child frames with transformation matrices
+      nsSVGUtils::NotifyChildrenCanvasTMChanged(aKid, suppressInvalidation);
+    }
+    aKid = aKid->GetNextSibling();
+  }
 }
 
 void
@@ -1547,8 +1583,7 @@ nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
 nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
   mRenderMode(NORMAL), mRenderingContext(aContext)
 {
-  mGfxContext = static_cast<gfxContext*>
-                           (aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  mGfxContext = aContext->ThebesContext();
 }
 
 nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :

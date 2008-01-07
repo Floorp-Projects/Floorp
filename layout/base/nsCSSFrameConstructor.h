@@ -132,6 +132,8 @@ public:
   // aCallback will be called with three arguments, the first is the value
   // of aContent, the second is aContent's primary frame, and the third is
   // the value of aArg.
+  // aCallback will always be called even if the children of aContent had
+  // been generated earlier.
   nsresult AddLazyChildren(nsIContent* aContent,
                            nsLazyFrameConstructionCallback* aCallback,
                            void* aArg, PRBool aIsSynch = PR_FALSE);
@@ -1099,6 +1101,7 @@ private:
   class LazyGenerateChildrenEvent;
   friend class LazyGenerateChildrenEvent;
 
+  // See comments of nsCSSFrameConstructor::AddLazyChildren()
   class LazyGenerateChildrenEvent : public nsRunnable {
   public:
     NS_DECL_NSIRUNNABLE

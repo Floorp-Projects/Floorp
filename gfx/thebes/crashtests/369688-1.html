@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+
+<head>
+<script>
+function boom()
+{
+  document.body.style.fontSizeAdjust = 0xffffffff;
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+<p>Foo</p>
+
+</body>
+
+</html>

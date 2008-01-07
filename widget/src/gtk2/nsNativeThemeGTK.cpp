@@ -164,6 +164,21 @@ static void SetWidgetStateSafe(PRUint8 *aSafeVector,
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
 
+static GtkTextDirection GetTextDirection(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return GTK_TEXT_DIR_NONE;
+
+  switch (aFrame->GetStyleVisibility()->mDirection) {
+    case NS_STYLE_DIRECTION_RTL:
+      return GTK_TEXT_DIR_RTL;
+    case NS_STYLE_DIRECTION_LTR:
+      return GTK_TEXT_DIR_LTR;
+  }
+
+  return GTK_TEXT_DIR_NONE;
+}
+
 PRBool
 nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                                        GtkThemeWidgetType& aGtkWidgetType,
@@ -176,8 +191,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       memset(aState, 0, sizeof(GtkWidgetState));
     } else {
 
-      // for dropdown textfields, look at the parent frame (textbox or menulist)
-      if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD)
+      // for dropdown and spinner textfields,
+      // look at the parent frame (textbox or menulist)
+      if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
+          aWidgetType == NS_THEME_SPINNER_TEXTFIELD)
         aFrame = aFrame->GetParent();
 
       // For XUL checkboxes and radio buttons, the state of the parent
@@ -237,6 +254,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         if (aWidgetType == NS_THEME_TEXTFIELD ||
             aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
             aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
+            aWidgetType == NS_THEME_SPINNER_TEXTFIELD ||
             aWidgetType == NS_THEME_RADIO_CONTAINER ||
             aWidgetType == NS_THEME_RADIO_LABEL) {
           aState->focused = IsFocused(aFrame);
@@ -307,7 +325,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         // should always appear depressed.
         if (aWidgetType == NS_THEME_BUTTON ||
             aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
-            aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON) {
+            aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON ||
+            aWidgetType == NS_THEME_DROPDOWN) {
           PRBool menuOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
           aState->depressed = IsCheckedButton(aFrame) || menuOpen;
           // we must not highlight buttons with open drop down menus on hover.
@@ -351,11 +370,17 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL;
     break;
+  case NS_THEME_SPINNER:
+    aGtkWidgetType = MOZ_GTK_SPINBUTTON;
+    break;
   case NS_THEME_SPINNER_UP_BUTTON:
     aGtkWidgetType = MOZ_GTK_SPINBUTTON_UP;
     break;
   case NS_THEME_SPINNER_DOWN_BUTTON:
     aGtkWidgetType = MOZ_GTK_SPINBUTTON_DOWN;
+    break;
+  case NS_THEME_SPINNER_TEXTFIELD:
+    aGtkWidgetType = MOZ_GTK_SPINBUTTON_ENTRY;
     break;
   case NS_THEME_SCALE_HORIZONTAL:
     if (aWidgetFlags)
@@ -424,12 +449,12 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_TREE_HEADER_SORTARROW;
     break;
   case NS_THEME_TREEVIEW_TWISTY:
-    aGtkWidgetType = MOZ_GTK_EXPANDER;
+    aGtkWidgetType = MOZ_GTK_TREEVIEW_EXPANDER;
     if (aWidgetFlags)
       *aWidgetFlags = GTK_EXPANDER_COLLAPSED;
     break;
   case NS_THEME_TREEVIEW_TWISTY_OPEN:
-    aGtkWidgetType = MOZ_GTK_EXPANDER;
+    aGtkWidgetType = MOZ_GTK_TREEVIEW_EXPANDER;
     if (aWidgetFlags)
       *aWidgetFlags = GTK_EXPANDER_EXPANDED;
     break;
@@ -475,25 +500,39 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_TABPANELS;
     break;
   case NS_THEME_TAB:
-  case NS_THEME_TAB_LEFT_EDGE:
-  case NS_THEME_TAB_RIGHT_EDGE:
     {
       if (aWidgetFlags) {
-        *aWidgetFlags = 0;
+        /* First bits will be used to store max(0,-bmargin) where bmargin
+         * is the bottom margin of the tab in pixels  (resp. top margin,
+         * for bottom tabs). */
+        gint margin;
+        if (IsBottomTab(aFrame)) {
+            *aWidgetFlags = MOZ_GTK_TAB_BOTTOM;
+            margin = aFrame->GetUsedMargin().top;
+        } else {
+            *aWidgetFlags = 0;
+            margin = aFrame->GetUsedMargin().bottom;
+        }
 
-        if (aWidgetType == NS_THEME_TAB &&
-            CheckBooleanAttr(aFrame, nsWidgetAtoms::selected))
+        *aWidgetFlags |= PR_MIN(MOZ_GTK_TAB_MARGIN_MASK,
+                                PR_MAX(0, aFrame->PresContext()->
+                                   AppUnitsToDevPixels(-margin) ));
+
+        if (IsSelectedTab(aFrame))
           *aWidgetFlags |= MOZ_GTK_TAB_SELECTED;
-        else if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
-          *aWidgetFlags |= MOZ_GTK_TAB_BEFORE_SELECTED;
 
-        if (aFrame->GetContent()->HasAttr(kNameSpaceID_None,
-                                          nsWidgetAtoms::firsttab))
+        if (IsFirstTab(aFrame))
           *aWidgetFlags |= MOZ_GTK_TAB_FIRST;
       }
 
       aGtkWidgetType = MOZ_GTK_TAB;
     }
+    break;
+  case NS_THEME_SPLITTER:
+    if (IsHorizontal(aFrame))
+      aGtkWidgetType = MOZ_GTK_SPLITTER_VERTICAL;
+    else 
+      aGtkWidgetType = MOZ_GTK_SPLITTER_HORIZONTAL;
     break;
   case NS_THEME_MENUBAR:
     aGtkWidgetType = MOZ_GTK_MENUBAR;
@@ -536,10 +575,10 @@ NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
 class ThemeRenderer : public gfxXlibNativeRenderer {
 public:
   ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
-                gint aFlags, const GdkRectangle& aGDKRect,
-                const GdkRectangle& aGDKClip)
+                gint aFlags, GtkTextDirection aDirection,
+                const GdkRectangle& aGDKRect, const GdkRectangle& aGDKClip)
     : mState(aState), mGTKWidgetType(aGTKWidgetType), mFlags(aFlags),
-      mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
+      mDirection(aDirection), mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
   nsresult NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
                       short offsetX, short offsetY,
                       XRectangle* clipRects, PRUint32 numClipRects);
@@ -547,6 +586,7 @@ private:
   GtkWidgetState mState;
   GtkThemeWidgetType mGTKWidgetType;
   gint mFlags;
+  GtkTextDirection mDirection;
   GdkWindow* mWindow;
   const GdkRectangle& mGDKRect;
   const GdkRectangle& mGDKClip;
@@ -589,7 +629,7 @@ ThemeRenderer::NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
 
   NS_ASSERTION(numClipRects == 0, "We don't support clipping!!!");
   moz_gtk_widget_paint(mGTKWidgetType, gdkPixmap, &gdk_rect, &gdk_clip, &mState,
-                       mFlags);
+                       mFlags, mDirection);
 
   g_object_unref(G_OBJECT(gdkPixmap));
   return NS_OK;
@@ -655,6 +695,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 {
   GtkWidgetState state;
   GtkThemeWidgetType gtkWidgetType;
+  GtkTextDirection direction = GetTextDirection(aFrame);
   gint flags;
   if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
                             &flags))
@@ -689,8 +730,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
   }
 
-  gfxContext* ctx =
-    (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  gfxContext* ctx = aContext->ThebesContext();
   gfxMatrix current = ctx->CurrentMatrix();
 
   // We require the use of the default display and visual
@@ -712,7 +752,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     gdk_rect = ConvertToGdkRect(aRect - drawingRect.TopLeft(), p2a);
     gdk_clip = ConvertToGdkRect(aClipRect - drawingRect.TopLeft(), p2a);
   }
-  ThemeRenderer renderer(state, gtkWidgetType, flags, gdk_rect, gdk_clip);
+  ThemeRenderer renderer(state, gtkWidgetType, flags, direction, gdk_rect, gdk_clip);
 
   // XXXbz do we really want to round here, then snap, then round again?
   gfxRect rect(0, 0, NSAppUnitsToIntPixels(drawingRect.width, p2a),
@@ -766,6 +806,7 @@ NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType, nsMargin* aResult)
 {
+  GtkTextDirection direction = GetTextDirection(aFrame);
   aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
@@ -789,14 +830,25 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
     // To make this happen, we draw a button border for the outer button,
     // but don't reserve any space for it.
     break;
+  case NS_THEME_TAB:
+    // Top tabs have no bottom border, bottom tabs have no top border
+    moz_gtk_get_widget_border(MOZ_GTK_TAB, &aResult->left, &aResult->top,
+                              &aResult->right, &aResult->bottom, direction,
+                              FALSE);
+    if (IsBottomTab(aFrame))
+        aResult->top = 0;
+    else
+        aResult->bottom = 0;
+    break;
   default:
     {
       GtkThemeWidgetType gtkWidgetType;
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
                                nsnull))
         moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                                  &aResult->right, &aResult->bottom,
-                                  (aFrame ? aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) : FALSE));
+                                  &aResult->right, &aResult->bottom, direction,
+                                  aFrame && aFrame->GetContent()->
+                                        IsNodeOfType(nsINode::eHTML));
     }
   }
   return NS_OK;
@@ -814,14 +866,6 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
     return PR_TRUE;
   }
 
-  if (aWidgetType == NS_THEME_MENUPOPUP) {
-    gint vertical_padding;
-    moz_gtk_get_menu_popup_vertical_padding(&vertical_padding);
-
-    aResult->SizeTo(0, vertical_padding, 0, vertical_padding);
-    return PR_TRUE;
-  }
-
   return PR_FALSE;
 }
 
@@ -831,8 +875,24 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
                                     nsRect* aResult)
 {
   nsIntMargin extraSize;
-  if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
+  if (aWidgetType == NS_THEME_TAB)
+  {
+    if (!IsSelectedTab(aFrame))
+      return PR_FALSE;
+
+    if (IsBottomTab(aFrame)) {
+      extraSize = nsMargin(0, aFrame->PresContext()->
+                             DevPixelsToAppUnits(moz_gtk_get_tab_thickness())
+                           + PR_MIN(0, aFrame->GetUsedMargin().top), 0, 0);
+    } else {
+      extraSize = nsMargin(0, 0, 0, aFrame->PresContext()->
+                             DevPixelsToAppUnits(moz_gtk_get_tab_thickness())
+                           + PR_MIN(0, aFrame->GetUsedMargin().bottom));
+    }
+  }
+  else if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
     return PR_FALSE;
+
   PRInt32 p2a = aContext->AppUnitsPerDevPixel();
   nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
              NSIntPixelsToAppUnits(extraSize.top, p2a),
@@ -875,6 +935,21 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
         *aIsOverridable = PR_FALSE;
       }
       break;
+    case NS_THEME_SPLITTER:
+    {
+      gint metrics;
+      if (IsHorizontal(aFrame)) {
+        moz_gtk_splitter_get_metrics(GTK_ORIENTATION_HORIZONTAL, &metrics);
+        aResult->width = metrics;
+        aResult->height = 0;
+      } else {
+        moz_gtk_splitter_get_metrics(GTK_ORIENTATION_VERTICAL, &metrics);
+        aResult->width = 0;
+        aResult->height = metrics;
+      }
+      *aIsOverridable = PR_FALSE;
+    }
+    break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
       {
@@ -974,6 +1049,11 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       aResult->width = separator_width;
     }
     break;
+  case NS_THEME_SPINNER:
+    // hard code these sizes
+    aResult->width = 14;
+    aResult->height = 26;
+    break;
   case NS_THEME_TREEVIEW_HEADER_SORTARROW:
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
@@ -990,7 +1070,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     {
       gint expander_size;
 
-      moz_gtk_get_expander_size(&expander_size);
+      moz_gtk_get_treeview_expander_size(&expander_size);
       aResult->width = aResult->height = expander_size;
       *aIsOverridable = PR_FALSE;
     }
@@ -1041,7 +1121,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::focused ||
         aAttribute == nsWidgetAtoms::readonly ||
         aAttribute == nsWidgetAtoms::_default ||
-        aAttribute == nsWidgetAtoms::mozmenuactive)
+        aAttribute == nsWidgetAtoms::mozmenuactive ||
+        aAttribute == nsWidgetAtoms::open)
       *aShouldRepaint = PR_TRUE;
   }
 
@@ -1103,13 +1184,12 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     case NS_THEME_TAB:
     // case NS_THEME_TAB_PANEL:
-    case NS_THEME_TAB_LEFT_EDGE:
-    case NS_THEME_TAB_RIGHT_EDGE:
     case NS_THEME_TAB_PANELS:
   case NS_THEME_TOOLTIP:
-    // case NS_THEME_SPINNER:
+  case NS_THEME_SPINNER:
   case NS_THEME_SPINNER_UP_BUTTON:
   case NS_THEME_SPINNER_DOWN_BUTTON:
+  case NS_THEME_SPINNER_TEXTFIELD:
     // case NS_THEME_SCROLLBAR:  (n/a for gtk)
     // case NS_THEME_SCROLLBAR_SMALL: (n/a for gtk)
   case NS_THEME_SCROLLBAR_BUTTON_UP:
@@ -1144,6 +1224,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_MENUSEPARATOR:
   case NS_THEME_CHECKMENUITEM:
   case NS_THEME_RADIOMENUITEM:
+  case NS_THEME_SPLITTER:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
   case NS_THEME_DROPDOWN:

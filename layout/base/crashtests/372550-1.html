@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    div#x::first-letter { color: blue; }
+  </style>
+</head>
+<body>
+<div id="x">x</div>
+<script>
+  document.body.offsetWidth;
+  var div = document.getElementById("x");
+  div.id = "y";
+  div.removeChild(div.firstChild);
+</script>
+</body>
+</html>

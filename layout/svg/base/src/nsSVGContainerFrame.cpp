@@ -244,18 +244,11 @@ nsSVGDisplayContainerFrame::InitialUpdate()
 NS_IMETHODIMP
 nsSVGDisplayContainerFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
-  if (!suppressInvalidation)
+  if (!suppressInvalidation &&
+      !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
     nsSVGUtils::UpdateFilterRegion(this);
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
-    }
-  }
-
+  nsSVGUtils::NotifyChildrenCanvasTMChanged(this, suppressInvalidation);
   return NS_OK;
 }
 
