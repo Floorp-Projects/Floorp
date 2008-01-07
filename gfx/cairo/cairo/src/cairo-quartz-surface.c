@@ -1567,7 +1567,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
                                          cairo_pattern_t *source,
                                          cairo_surface_pattern_t *mask)
 {
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
     cairo_quartz_surface_t *quartz_surf;
     CGRect rect;
     CGImageRef img;
