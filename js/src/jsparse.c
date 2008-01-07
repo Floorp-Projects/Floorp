@@ -2669,6 +2669,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     pnlet = PushLexicalScope(cx, ts, tc, &blockInfo);
                     if (!pnlet)
                         return NULL;
+                    blockInfo.flags |= SIF_FOR_BLOCK;
                     pn1 = Variables(cx, ts, tc);
                 }
 #endif
@@ -3190,16 +3191,19 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         }
 
         /*
-         * This is a let declaration. We must convert the nearest JSStmtInfo
-         * that is a block or a switch body to be our scope statement. Further
-         * let declarations in this block will find this scope statement and
-         * use the same block object. If we are the first let declaration in
-         * this block (i.e., when the nearest maybe-scope JSStmtInfo isn't a
-         * scope statement) then we also need to set tc->blockNode to be our
-         * TOK_LEXICALSCOPE.
+         * This is a let declaration. We must be directly under a block per
+         * the proposed ES4 specs, but not an implicit block created due to
+         * 'for (let ...)'. If we pass this error test, make the enclosing
+         * JSStmtInfo be our scope. Further let declarations in this block
+         * will find this scope statement and use the same block object.
+         *
+         * If we are the first let declaration in this block (i.e., when the
+         * enclosing maybe-scope JSStmtInfo isn't yet a scope statement) then
+         * we also need to set tc->blockNode to be our TOK_LEXICALSCOPE.
          */
         stmt = tc->topStmt;
-        if (stmt && !STMT_MAYBE_SCOPE(stmt)) {
+        if (stmt &&
+            (!STMT_MAYBE_SCOPE(stmt) || (stmt->flags & SIF_FOR_BLOCK))) {
             js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                         JSMSG_LET_DECL_NOT_IN_BLOCK);
             return NULL;
