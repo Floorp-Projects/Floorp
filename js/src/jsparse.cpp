@@ -2254,7 +2254,7 @@ PushLexicalScope(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 {
     JSParseNode *pn;
     JSObject *obj;
-    JSParsedObjectBox *blockPob;
+    JSParsedObjectBox *blockpob;
 
     pn = NewParseNode(cx, ts, PN_NAME, tc);
     if (!pn)
@@ -2264,14 +2264,14 @@ PushLexicalScope(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (!obj)
         return NULL;
 
-    blockPob = js_NewParsedObjectBox(cx, tc->parseContext, obj);
-    if (!blockPob)
+    blockpob = js_NewParsedObjectBox(cx, tc->parseContext, obj);
+    if (!blockpob)
         return NULL;
 
     js_PushBlockScope(tc, stmtInfo, obj, -1);
     pn->pn_type = TOK_LEXICALSCOPE;
     pn->pn_op = JSOP_LEAVEBLOCK;
-    pn->pn_pob = blockPob;
+    pn->pn_pob = blockpob;
     pn->pn_slot = -1;
     return pn;
 }
@@ -2669,6 +2669,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     pnlet = PushLexicalScope(cx, ts, tc, &blockInfo);
                     if (!pnlet)
                         return NULL;
+                    blockInfo.flags |= SIF_FOR_BLOCK;
                     pn1 = Variables(cx, ts, tc);
                 }
 #endif
@@ -3174,9 +3175,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
       {
-        JSStmtInfo **sip;
         JSObject *obj;
-        JSParsedObjectBox *blockPob;
+        JSParsedObjectBox *blockpob;
 
         /* Check for a let statement or let expression. */
         if (js_PeekToken(cx, ts) == TOK_LP) {
@@ -3191,20 +3191,22 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         }
 
         /*
-         * This is a let declaration. We must convert the nearest JSStmtInfo
-         * that is a block or a switch body to be our scope statement. Further
-         * let declarations in this block will find this scope statement and
-         * use the same block object. If we are the first let declaration in
-         * this block (i.e., when the nearest maybe-scope JSStmtInfo isn't a
-         * scope statement) then we also need to set tc->blockNode to be our
-         * TOK_LEXICALSCOPE.
+         * This is a let declaration. We must be directly under a block per
+         * the proposed ES4 specs, but not an implicit block created due to
+         * 'for (let ...)'. If we pass this error test, make the enclosing
+         * JSStmtInfo be our scope. Further let declarations in this block
+         * will find this scope statement and use the same block object.
+         *
+         * If we are the first let declaration in this block (i.e., when the
+         * enclosing maybe-scope JSStmtInfo isn't yet a scope statement) then
+         * we also need to set tc->blockNode to be our TOK_LEXICALSCOPE.
          */
-        sip = &tc->topScopeStmt;
-        for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
-            if (STMT_MAYBE_SCOPE(stmt))
-                break;
-            if (stmt == *sip)
-                sip = &stmt->downScope;
+        stmt = tc->topStmt;
+        if (stmt &&
+            (!STMT_MAYBE_SCOPE(stmt) || (stmt->flags & SIF_FOR_BLOCK))) {
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                        JSMSG_LET_DECL_NOT_IN_BLOCK);
+            return NULL;
         }
 
         if (stmt && (stmt->flags & SIF_SCOPE)) {
@@ -3236,8 +3238,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             obj = js_NewBlockObject(cx);
             if (!obj)
                 return NULL;
-            blockPob = js_NewParsedObjectBox(cx, tc->parseContext, obj);
-            if (!blockPob)
+            blockpob = js_NewParsedObjectBox(cx, tc->parseContext, obj);
+            if (!blockpob)
                 return NULL;
 
             /*
@@ -3248,14 +3250,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
              */
             JS_ASSERT(!(stmt->flags & SIF_SCOPE));
             stmt->flags |= SIF_SCOPE;
-            if (stmt != *sip) {
+            if (stmt != tc->topScopeStmt) {
                 JS_ASSERT(!stmt->downScope);
                 JS_ASSERT(stmt->type == STMT_BLOCK ||
-                          stmt->type == STMT_SWITCH ||
                           stmt->type == STMT_TRY ||
                           stmt->type == STMT_FINALLY);
-                stmt->downScope = *sip;
-                *sip = stmt;
+                stmt->downScope = tc->topScopeStmt;
+                tc->topScopeStmt = stmt;
             } else {
                 JS_ASSERT(stmt->type == STMT_CATCH);
                 JS_ASSERT(stmt->downScope);
@@ -3278,7 +3279,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn1->pn_type = TOK_LEXICALSCOPE;
             pn1->pn_op = JSOP_LEAVEBLOCK;
             pn1->pn_pos = tc->blockNode->pn_pos;
-            pn1->pn_pob = blockPob;
+            pn1->pn_pob = blockpob;
             pn1->pn_expr = tc->blockNode;
             pn1->pn_slot = -1;
             tc->blockNode = pn1;

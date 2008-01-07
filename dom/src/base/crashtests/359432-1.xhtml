@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+
+<head>
+
+<script>
+ 
+function boo()
+{
+  var tabbox = document.getElementById("tabbox");
+  document.body.removeChild(tabbox);
+  tabbox.setAttribute("context", "a");
+  document.documentElement.removeAttribute("class");
+}
+ 
+</script>
+
+</head>
+
+<body onload="setTimeout(boo, 30)">
+
+<xul:tabbox id="tabbox" />
+
+</body>
+
+</html>

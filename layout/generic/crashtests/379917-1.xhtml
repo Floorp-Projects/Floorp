@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml" 
+      xmlns:math="http://www.w3.org/1998/Math/MathML"
+      class="reftest-wait">
+<head>
+<script>
+
+// This testcase uses long timeouts to make sure the marquee has a chance to animate.
+
+function boom()
+{
+  var div1 = document.getElementById("div1");
+  var marquee = document.getElementById("marquee");
+
+  div1.parentNode.removeChild(div1);
+  marquee.width = 4;
+  
+  setTimeout(done, 100);
+}
+
+function done()
+{
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 100);">
+
+<math:math><div id="div1"/>x&#1506;</math:math>
+<marquee id="marquee">m</marquee>
+<div/>
+
+</body>
+</html>

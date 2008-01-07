@@ -834,12 +834,10 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
       ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || (mState & IMAGE_SIZECONSTRAINED)) &&
       NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight && 
       aMetrics.height > aReflowState.availableHeight) { 
-    // split an image frame but not an image control frame
-    if (nsGkAtoms::imageFrame == GetType()) {
-      // our desired height was greater than 0, so to avoid infinite splitting, use 1 pixel as the min
-      aMetrics.height = PR_MAX(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.availableHeight);
-      aStatus = NS_FRAME_NOT_COMPLETE;
-    }
+    // our desired height was greater than 0, so to avoid infinite
+    // splitting, use 1 pixel as the min
+    aMetrics.height = PR_MAX(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.availableHeight);
+    aStatus = NS_FRAME_NOT_COMPLETE;
   }
 
   aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);

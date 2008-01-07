@@ -96,6 +96,14 @@
         ]]>
         </getter>
       </property>
+      <property name="buttons">
+        <getter>
+        <![CDATA[
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          return this.getElementsByTagNameNS(XULNS, "button");
+        ]]>
+        </getter>
+      </property>
     </implementation>
   </binding>
   
@@ -116,7 +124,8 @@
         </xul:vbox>
         <xul:vbox pack="center">
           <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
-                      command="cmd_cancel" ondblclick="event.stopPropagation();"/>
+                      cmd="cmd_cancel" ondblclick="event.stopPropagation();"
+                      oncommand="performCommand('cmd_cancel', this);"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -139,9 +148,11 @@
                                  xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
             <xul:button class="pause mini-button" tooltiptext="&cmd.pause.label;"
-                        command="cmd_pause" ondblclick="event.stopPropagation();"/>
+                        cmd="cmd_pause" ondblclick="event.stopPropagation();"
+                        oncommand="performCommand('cmd_pause', this);"/>
             <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
-                        command="cmd_cancel" ondblclick="event.stopPropagation();"/>
+                        cmd="cmd_cancel" ondblclick="event.stopPropagation();"
+                        oncommand="performCommand('cmd_cancel', this);"/>
           </xul:hbox>
           <xul:label xbl:inherits="value=status,tooltiptext=statusTip" flex="1"
                      crop="right" class="status"/>
@@ -168,9 +179,11 @@
                                  xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
             <xul:button class="resume mini-button" tooltiptext="&cmd.resume.label;"
-                        command="cmd_resume" ondblclick="event.stopPropagation();"/>
+                        cmd="cmd_resume" ondblclick="event.stopPropagation();"
+                        oncommand="performCommand('cmd_resume', this);"/>
             <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
-                        command="cmd_cancel" ondblclick="event.stopPropagation();"/>
+                        cmd="cmd_cancel" ondblclick="event.stopPropagation();"
+                        oncommand="performCommand('cmd_cancel', this);"/>
           </xul:hbox>
           <xul:label xbl:inherits="value=status,tooltiptext=statusTip" flex="1"
                      crop="right" class="status"/>
@@ -221,7 +234,8 @@
             <xul:label xbl:inherits="value=status,tooltiptext=statusTip"
                        crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
-                        command="cmd_retry" ondblclick="event.stopPropagation();"/>
+                        cmd="cmd_retry" ondblclick="event.stopPropagation();"
+                        oncommand="performCommand('cmd_retry', this);"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -246,7 +260,8 @@
             <xul:label xbl:inherits="value=status,tooltiptext=statusTip"
                        crop="end" flex="1" class="status"/>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
-                        command="cmd_retry" ondblclick="event.stopPropagation();"/>
+                        cmd="cmd_retry" ondblclick="event.stopPropagation();"
+                        oncommand="performCommand('cmd_retry', this);"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>

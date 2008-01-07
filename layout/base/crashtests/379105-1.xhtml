@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<bindings xmlns="http://www.mozilla.org/xbl">
+
+<binding id="x"><content>
+  <zzz><children/></zzz>
+</content></binding>
+
+<binding id="empty"><content>
+</content></binding>
+
+</bindings>
+
+<script>
+
+var xbltarget;
+
+function boom1()
+{
+  xbltarget = document.getElementById("xbltarget");
+  xbltarget.style.MozBinding = "url('#x')";
+  setTimeout(boom2, 30);
+}
+
+function boom2()
+{
+  var anox = document.getAnonymousNodes(xbltarget)[0];
+  var frame = document.createElementNS("http://www.w3.org/1999/xhtml", "frame")
+  frame.src = "http://www.squarefree.com/tests/simple.html";
+  anox.appendChild(frame);
+  xbltarget.style.MozBinding = "url('#empty')";
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="boom1()">
+<div id="xbltarget"></div>
+</body>
+</html>

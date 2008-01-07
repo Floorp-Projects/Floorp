@@ -670,7 +670,7 @@ var feedHandlerInfo = {
       case "bookmarks":
         return Ci.nsIHandlerInfo.handleInternally;
 
-      case "reader":
+      case "reader": {
         let preferredApp = this.preferredApplicationHandler;
         let defaultApp = this._defaultApplicationHandler;
 
@@ -688,6 +688,7 @@ var feedHandlerInfo = {
         // should direct the user to the default app, if any), but for now let's
         // direct the user to live bookmarks.
         return Ci.nsIHandlerInfo.handleInternally;
+      }
 
       // If the action is "ask", then alwaysAskBeforeHandling will override
       // the action, so it doesn't matter what we say it is, it just has to be
@@ -1628,9 +1629,10 @@ var gApplicationsPane = {
         return this._getIconURLForSystemDefault(aHandlerInfo);
 
       case Ci.nsIHandlerInfo.useHelperApp:
-        let preferredApp = aHandlerInfo.preferredApplicationHandler;
-        if (this.isValidHandlerApp(preferredApp))
-          return this._getIconURLForHandlerApp(preferredApp);
+        let (preferredApp = aHandlerInfo.preferredApplicationHandler) {
+          if (this.isValidHandlerApp(preferredApp))
+            return this._getIconURLForHandlerApp(preferredApp);
+        }
         break;
 
       case kActionUsePlugin:

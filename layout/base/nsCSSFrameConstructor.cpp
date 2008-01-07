@@ -10698,6 +10698,12 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     if (newFrame) {
       newFrame->Init(content, aParentFrame, aFrame);
     }
+  } else if (nsGkAtoms::imageControlFrame == frameType) {
+    newFrame = NS_NewImageControlFrame(shell, styleContext);
+
+    if (newFrame) {
+      newFrame->Init(content, aParentFrame, aFrame);
+    }    
   } else if (nsGkAtoms::placeholderFrame == frameType) {
     // create a continuing out of flow frame
     nsIFrame* oofFrame = nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);

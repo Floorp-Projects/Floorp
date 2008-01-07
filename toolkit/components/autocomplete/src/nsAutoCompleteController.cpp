@@ -59,9 +59,8 @@
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
-NS_IMPL_ISUPPORTS5(nsAutoCompleteController, nsIAutoCompleteController,
+NS_IMPL_ISUPPORTS4(nsAutoCompleteController, nsIAutoCompleteController,
                                              nsIAutoCompleteObserver,
-                                             nsIRollupListener,
                                              nsITimerCallback,
                                              nsITreeView)
 
@@ -664,35 +663,6 @@ nsAutoCompleteController::OnSearchResult(nsIAutoCompleteSearch *aSearch, nsIAuto
     }
   }
   
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-//// nsIRollupListener
-
-NS_IMETHODIMP
-nsAutoCompleteController::Rollup(nsIContent** aLastRolledUp)
-{
-  if (aLastRolledUp)
-    *aLastRolledUp = nsnull;
-
-  ClearSearchTimer();
-  ClearResults();
-  ClosePopup();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAutoCompleteController::ShouldRollupOnMouseWheelEvent(PRBool *aShouldRollup)
-{
-  *aShouldRollup = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAutoCompleteController::ShouldRollupOnMouseActivate(PRBool *aShouldRollup)
-{
-  *aShouldRollup = PR_FALSE;
   return NS_OK;
 }
 

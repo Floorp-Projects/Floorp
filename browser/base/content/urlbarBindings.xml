@@ -103,7 +103,7 @@
 
       <method name="_initURLTooltip">
         <body><![CDATA[
-          if (this.focused)
+          if (this.focused || this.value == "")
             return;
           if (this._tooltipTimer)
             clearTimeout(this._tooltipTimer);

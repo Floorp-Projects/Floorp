@@ -86,10 +86,27 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 
 #ifdef MOZ_URL_CLASSIFIER
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsUrlClassifierDBService,
-                                         nsUrlClassifierDBService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlClassifierStreamUpdater)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlClassifierUtils, Init)
+
+static NS_IMETHODIMP
+nsUrlClassifierDBServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                    void **aResult)
+{
+    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_NO_AGGREGATION(aOuter);
+
+    nsUrlClassifierDBService *inst = nsUrlClassifierDBService::GetInstance(&rv);
+    if (NULL == inst) {
+        return rv;
+    }
+    /* NS_ADDREF(inst); */
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
+
+    return rv;
+}
 #endif
 
 #ifdef MOZ_FEEDS

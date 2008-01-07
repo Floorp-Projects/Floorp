@@ -966,8 +966,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFETurbulenceElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGFEUnimplementedMOZElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGFilterElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGGElement, nsElementSH,
@@ -1951,6 +1949,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(XMLDocument, nsIDOMXMLDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
     DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -2820,12 +2819,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGFETurbulenceElement, nsIDOMSVGFETurbulenceElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFETurbulenceElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFilterPrimitiveStandardAttributes)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStylable)
-    DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(SVGFEUnimplementedMOZElement, nsIDOMSVGFEUnimplementedMOZElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFEUnimplementedMOZElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStylable)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
@@ -4737,6 +4730,21 @@ nsWindowSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  // Notify any XOWs on our outer window.
+
+  nsGlobalWindow *outerWin = win->GetOuterWindowInternal();
+  if (outerWin) {
+    nsCOMPtr<nsIXPConnectWrappedNative> wn;
+    nsIXPConnect *xpc = nsContentUtils::XPConnect();
+    nsresult rv =
+      xpc->GetWrappedNativeOfJSObject(cx, outerWin->GetGlobalJSObject(),
+                                      getter_AddRefs(wn));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = xpc->UpdateXOWs(cx, wn, nsIXPConnect::XPC_XOW_CLEARSCOPE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -5865,10 +5873,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // a different context.
 
         if (!win->IsChromeWindow()) {
-          rv = sXPConnect->GetCrossOriginWrapperForObject(cx,
-                                                          win->GetGlobalJSObject(),
-                                                          JSVAL_TO_OBJECT(v),
-                                                          &v);
+          rv = sXPConnect->GetXOWForObject(cx, win->GetGlobalJSObject(),
+                                           JSVAL_TO_OBJECT(v), &v);
           NS_ENSURE_SUCCESS(rv, rv);
         }
 
@@ -5979,9 +5985,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     sDoSecurityCheckInAddProperty = PR_FALSE;
 
     if (!win->IsChromeWindow()) {
-      rv = sXPConnect->GetCrossOriginWrapperForObject(cx, scope,
-                                                      JSVAL_TO_OBJECT(v),
-                                                      &v);
+      rv = sXPConnect->GetXOWForObject(cx, scope, JSVAL_TO_OBJECT(v), &v);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -6089,10 +6093,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           scope = oldWin->GetGlobalJSObject();
         }
 
-        rv = sXPConnect->GetCrossOriginWrapperForObject(cx,
-                                                        scope,
-                                                        JSVAL_TO_OBJECT(winVal),
-                                                        &winVal);
+        rv = sXPConnect->GetXOWForObject(cx, scope, JSVAL_TO_OBJECT(winVal),
+                                         &winVal);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       PRBool ok =
@@ -6302,7 +6304,7 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     }
     scope = ::JS_GetGlobalForObject(cx, scope);
     jsval v;
-    rv = sXPConnect->GetCrossOriginWrapperForObject(cx, scope, winObj, &v);
+    rv = sXPConnect->GetXOWForObject(cx, scope, winObj, &v);
     *_retval = NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(v) : nsnull;
   }
 
@@ -7648,8 +7650,8 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     nsGlobalWindow *internalWin = static_cast<nsGlobalWindow *>(sgo);
     if (!internalWin->IsChromeWindow()) {
-      rv = sXPConnect->GetCrossOriginWrapperForObject(cx, sgo->GetGlobalJSObject(),
-                                                      obj, &docVal);
+      rv = sXPConnect->GetXOWForObject(cx, sgo->GetGlobalJSObject(), obj,
+                                       &docVal);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

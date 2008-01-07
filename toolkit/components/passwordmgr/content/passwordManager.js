@@ -25,6 +25,7 @@
 #   Ben "Count XULula" Goodger
 #   Brian Ryner <bryner@brianryner.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Ronny Perinke <ronny.perinke@gmx.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,6 +50,12 @@ function SignonsStartup() {
   document.getElementById("togglePasswords").label = kSignonBundle.getString("showPasswords");
   document.getElementById("togglePasswords").accessKey = kSignonBundle.getString("showPasswordsAccessKey");
   LoadSignons();
+
+  // filter the table if requested by caller
+  if (window.arguments && window.arguments[0] &&
+      window.arguments[0].filterString)
+    setFilter(window.arguments[0].filterString);
+
   FocusFilterBox();
 }
 
@@ -321,4 +328,11 @@ function _filterPasswords()
 function HandleSignonFilterKeyPress(aEvent) {
   if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
     SignonClearFilter();
+}
+
+function setFilter(aFilterString) {
+  if (document.getElementById("filter").value != "")
+    SignonClearFilter();
+  document.getElementById("filter").value = aFilterString;
+  _filterPasswords();
 }

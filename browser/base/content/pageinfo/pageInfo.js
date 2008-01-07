@@ -308,12 +308,12 @@ function onLoadPageInfo()
   loadPageInfo();
 
   /* Select the requested tab, if the name is specified */
-  var initialTab = "general";
+  var initialTab = "generalTab";
   if ("arguments" in window && window.arguments.length >= 1 &&
        window.arguments[0] && window.arguments[0].initialTab)
     initialTab = window.arguments[0].initialTab;
   var radioGroup = document.getElementById("viewGroup");
-  initialTab = document.getElementById(initialTab + "Tab") || document.getElementById("generalTab");
+  initialTab = document.getElementById(initialTab) || document.getElementById("generalTab");
   radioGroup.selectedItem = initialTab;
   radioGroup.selectedItem.doCommand();
   radioGroup.focus();

@@ -118,11 +118,13 @@ FindPrincipals(JSContext *cx, JSObject *obj, nsIPrincipal **objectPrincipal,
   nsCOMPtr<nsIScriptSecurityManager> ssm(do_QueryInterface(sm));
 
   if (subjectPrincipal) {
-    ssm->GetSubjectPrincipal(subjectPrincipal);
+    nsCOMPtr<nsIPrincipal> tmp = ssm->GetCxSubjectPrincipal(cx);
 
-    if (!*subjectPrincipal) {
+    if (!tmp) {
       return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
     }
+
+    tmp.swap(*subjectPrincipal);
   }
 
   ssm->GetObjectPrincipal(cx, obj, objectPrincipal);

@@ -40,6 +40,7 @@
 // XPCOMGlueStartup to glue the gtkmozembed functions.
 
 #include "gtkmozembed.h"
+#include "gtkmozembed_internal.h"
 #include "nsXPCOMGlue.h"
 
 #ifndef XPCOM_GLUE
@@ -74,9 +75,18 @@
   GTKF(gtk_moz_embed_single_get_type) \
   GTKF(gtk_moz_embed_single_get)
 
+#define GTKMOZEMBED_FUNCTIONS_INTERNAL \
+  GTKF(gtk_moz_embed_get_nsIWebBrowser) \
+  GTKF(gtk_moz_embed_get_title_unichar) \
+  GTKF(gtk_moz_embed_get_js_status_unichar) \
+  GTKF(gtk_moz_embed_get_link_message_unichar) \
+  GTKF(gtk_moz_embed_set_directory_service_provider) \
+  GTKF(gtk_moz_embed_set_app_components)
+
 #define GTKF(fname) fname##Type fname;
 
 GTKMOZEMBED_FUNCTIONS
+GTKMOZEMBED_FUNCTIONS_INTERNAL
 
 #undef GTKF
 
@@ -87,6 +97,10 @@ GTKMOZEMBED_FUNCTIONS
   { nsnull, nsnull }
 };
 
+static const nsDynamicFunctionLoad GtkSymbolsInternal[] = {
+GTKMOZEMBED_FUNCTIONS_INTERNAL
+  { nsnull, nsnull }
+};
 #undef GTKF
 
 static nsresult
@@ -94,3 +108,10 @@ GTKEmbedGlueStartup()
 {
   return XPCOMGlueLoadXULFunctions(GtkSymbols);
 }
+
+static nsresult
+GTKEmbedGlueStartupInternal()
+{
+  return XPCOMGlueLoadXULFunctions(GtkSymbolsInternal);
+}
+

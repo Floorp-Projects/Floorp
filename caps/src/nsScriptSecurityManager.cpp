@@ -470,6 +470,20 @@ nsScriptSecurityManager::IsSystemPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIPrincipal *)
+nsScriptSecurityManager::GetCxSubjectPrincipal(JSContext *cx)
+{
+    NS_ASSERTION(cx == GetCurrentJSContext(),
+                 "Uh, cx is not the current JS context!");
+
+    nsresult rv = NS_ERROR_FAILURE;
+    nsIPrincipal *principal = GetSubjectPrincipal(cx, &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
+
+    return principal;
+}
+
 ////////////////////
 // Policy Storage //
 ////////////////////
@@ -786,7 +800,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 {
                     objectPrincipal = doGetObjectPrincipal(cx, aJSObject);
                     if (!objectPrincipal)
-                        return NS_ERROR_FAILURE;
+                        rv = NS_ERROR_DOM_SECURITY_ERR;
                 }
                 else if(aTargetURI)
                 {
@@ -799,8 +813,9 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                     NS_ERROR("CheckPropertyAccessImpl called without a target object or URL");
                     return NS_ERROR_FAILURE;
                 }
-                rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
-                                            aAction, aTargetURI != nsnull);
+                if(NS_SUCCEEDED(rv))
+                    rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
+                                                aAction, aTargetURI != nsnull);
                 break;
             }
         default:

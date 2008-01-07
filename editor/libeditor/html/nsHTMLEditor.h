@@ -624,7 +624,7 @@ protected:
                                      nsIDOMNode **aTargetNode,       
                                      PRInt32 *aTargetOffset,   
                                      PRBool *aDoContinue);
-  nsresult   RelativizeURIInFragmentList(nsCOMArray<nsIDOMNode> aNodeList,
+  nsresult   RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeList,
                                         const nsAString &aFlavor,
                                         nsIDOMDocument *aSourceDoc,
                                         nsIDOMNode *aTargetNode);

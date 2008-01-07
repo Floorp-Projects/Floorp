@@ -386,6 +386,9 @@ gfxContext::UserToDevice(const gfxRect& rect) const
 PRBool
 gfxContext::UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale) const
 {
+    if (GetFlags() & FLAG_DISABLE_SNAPPING)
+        return PR_FALSE;
+
     // if we're not at 1.0 scale, don't snap, unless we're
     // ignoring the scale.  If we're not -just- a scale,
     // never snap.

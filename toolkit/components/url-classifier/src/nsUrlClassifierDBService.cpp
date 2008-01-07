@@ -650,7 +650,13 @@ nsUrlClassifierDBServiceWorker::Init()
   // portable between machine types, so store it in the local profile dir.
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
                                        getter_AddRefs(mDBFile));
-  if (NS_FAILED(rv)) return rv;
+
+  if (NS_FAILED(rv)) {
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(mDBFile));
+  }
+
+  if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
 
   rv = mDBFile->Append(NS_LITERAL_STRING(DATABASE_FILENAME));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2266,16 +2272,20 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsUrlClassifierDBService,
                               nsIObserver)
 
 /* static */ nsUrlClassifierDBService*
-nsUrlClassifierDBService::GetInstance()
+nsUrlClassifierDBService::GetInstance(nsresult *result)
 {
+  *result = NS_OK;
   if (!sUrlClassifierDBService) {
     sUrlClassifierDBService = new nsUrlClassifierDBService();
-    if (!sUrlClassifierDBService)
+    if (!sUrlClassifierDBService) {
+      *result = NS_ERROR_OUT_OF_MEMORY;
       return nsnull;
+    }
 
     NS_ADDREF(sUrlClassifierDBService);   // addref the global
 
-    if (NS_FAILED(sUrlClassifierDBService->Init())) {
+    *result = sUrlClassifierDBService->Init();
+    if (NS_FAILED(*result)) {
       NS_RELEASE(sUrlClassifierDBService);
       return nsnull;
     }

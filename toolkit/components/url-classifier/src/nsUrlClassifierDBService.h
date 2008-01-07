@@ -61,7 +61,7 @@ public:
 
   nsresult Init();
 
-  static nsUrlClassifierDBService* GetInstance();
+  static nsUrlClassifierDBService* GetInstance(nsresult *result);
 
 #ifdef MOZILLA_1_8_BRANCH
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_URLCLASSIFIERDBSERVICE_CID)
