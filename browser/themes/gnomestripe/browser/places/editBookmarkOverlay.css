@@ -95,7 +95,7 @@
   color: -moz-FieldText;
 }
 
-#editBMPanel_namePicker[droppable="false"] > .menulist-dropmarker {
+#editBMPanel_namePicker[droppable="false"] > .menulist-editable-box {
   /* Normal editable menulists set this to "menulist-textfield". */
   -moz-appearance: none;
   padding: 2px 2px 3px 4px;
