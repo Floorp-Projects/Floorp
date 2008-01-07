@@ -39,6 +39,7 @@
 #define GFX_PDFSURFACE_H
 
 #include "gfxASurface.h"
+#include "gfxContext.h"
 
 /* for the output stream */
 #include "nsCOMPtr.h"
