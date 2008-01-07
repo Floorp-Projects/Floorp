@@ -542,8 +542,10 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   tempList.BorderBackground()->DeleteAll();
 
-  rv = OverflowClip(aBuilder, tempList, aLists,
-                    nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
+  // Clip height only
+  nsRect clipRect(aBuilder->ToReferenceFrame(this), GetSize());
+  clipRect.width = GetOverflowRect().XMost();
+  rv = OverflowClip(aBuilder, tempList, aLists, clipRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Disabled file controls don't pass mouse events to their children, so we
