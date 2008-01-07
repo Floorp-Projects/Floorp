@@ -116,7 +116,10 @@ nsSVGPropertyBase::nsSVGPropertyBase(nsIContent *aContent,
   mObservedContent = do_GetWeakReference(aContent);
   aContent->AddMutationObserver(this);
 
-  NS_ADDREF(this); // addref to allow QI - SupportsDtorFunc releases
+  // Would like to NS_ADDREF here to avoid AddEffectProperties needing
+  // to do it manually, but that confuses the XPCOM_MEM_LOG_LEAKS
+  // tracking code because the call isn't virtual at this point.
+
   mFrame->SetProperty(aName,
                       static_cast<nsISupports*>(this),
                       nsPropertyTable::SupportsDtorFunc);
@@ -1053,28 +1056,34 @@ AddEffectProperties(nsIFrame *aFrame)
   if (style->mFilter && !(aFrame->GetStateBits() & NS_STATE_SVG_FILTERED)) {
     nsIContent *filter = NS_GetSVGFilterElement(style->mFilter,
                                                 aFrame->GetContent());
-    if (filter && !new nsSVGFilterProperty(filter, aFrame)) {
+    nsSVGPropertyBase *property = nsnull;
+    if (filter && !(property = new nsSVGFilterProperty(filter, aFrame))) {
       NS_ERROR("Could not create filter property");
       return;
     }
+    NS_IF_ADDREF(property); // addref to allow QI - SupportsDtorFunc releases
   }
 
   if (style->mClipPath && !(aFrame->GetStateBits() & NS_STATE_SVG_CLIPPED)) {
     nsIContent *clipPath = NS_GetSVGClipPathElement(style->mClipPath,
                                                     aFrame->GetContent());
-    if (clipPath && !new nsSVGClipPathProperty(clipPath, aFrame)) {
+    nsSVGPropertyBase *property = nsnull;
+    if (clipPath && !(property = new nsSVGClipPathProperty(clipPath, aFrame))) {
       NS_ERROR("Could not create clipPath property");
       return;
     }
+    NS_IF_ADDREF(property); // addref to allow QI - SupportsDtorFunc releases
   }
 
   if (style->mMask && !(aFrame->GetStateBits() & NS_STATE_SVG_MASKED)) {
     nsIContent *mask = NS_GetSVGMaskElement(style->mMask,
                                             aFrame->GetContent());
-    if (mask && !new nsSVGMaskProperty(mask, aFrame)) {
+    nsSVGPropertyBase *property = nsnull;
+    if (mask && !(property = new nsSVGMaskProperty(mask, aFrame))) {
       NS_ERROR("Could not create mask property");
       return;
     }
+    NS_IF_ADDREF(property); // addref to allow QI - SupportsDtorFunc releases
   }
 }
 
