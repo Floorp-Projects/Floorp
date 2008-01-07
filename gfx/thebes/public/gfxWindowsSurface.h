@@ -80,7 +80,7 @@ public:
     nsresult BeginPage();
     nsresult EndPage();
 
-    virtual PRInt32 GetDefaultContextFlags();
+    virtual PRInt32 GetDefaultContextFlags() const;
 
 private:
     PRPackedBool mOwnsDC;
