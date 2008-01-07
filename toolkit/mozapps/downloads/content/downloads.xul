@@ -76,35 +76,6 @@
     <stringbundle id="downloadStrings" src="chrome://mozapps/locale/downloads/downloads.properties"/>
   </stringbundleset>
 
-  <commandset id="downloadsCommands"
-              commandupdater="true"
-              oncommandupdate="gDownloadViewController.onCommandUpdate();">
-    <command id="cmd_cancel"
-             oncommand="gDownloadViewController.doCommand('cmd_cancel');"/>
-    <command id="cmd_open"
-             oncommand="gDownloadViewController.doCommand('cmd_open');"/>
-    <command id="cmd_openReferrer"
-             oncommand="gDownloadViewController.doCommand('cmd_openReferrer');"/>
-    <command id="cmd_pause"
-             oncommand="gDownloadViewController.doCommand('cmd_pause');"/>
-    <command id="cmd_pauseResume"
-             oncommand="gDownloadViewController.doCommand('cmd_pauseResume');"/>
-    <command id="cmd_removeFromList"
-             oncommand="gDownloadViewController.doCommand('cmd_removeFromList');"/>
-    <command id="cmd_resume"
-             oncommand="gDownloadViewController.doCommand('cmd_resume');"/>
-    <command id="cmd_retry"
-             oncommand="gDownloadViewController.doCommand('cmd_retry');"/>
-    <command id="cmd_show"
-             oncommand="gDownloadViewController.doCommand('cmd_show');"/>
-    <command id="cmd_showInfo"
-             oncommand="gDownloadViewController.doCommand('cmd_showInfo');"/>
-    <command id="cmd_copyLocation"
-             oncommand="gDownloadViewController.doCommand('cmd_copyLocation');"/>
-    <command id="cmd_clearList"
-             oncommand="gDownloadViewController.doCommand('cmd_clearList');"/>
-  </commandset>
-
   <!-- Use this commandset for command which do not depened on focus or selection -->
   <commandset id="generalCommands">
     <command id="cmd_findDownload" oncommand="setSearchboxFocus();"/>
@@ -135,17 +106,21 @@
   <vbox id="contextMenuPalette" hidden="true">
     <menuitem id="menuitem_pause" 
               label="&cmd.pause.label;" accesskey="&cmd.pause.accesskey;"
-              command="cmd_pause"/>
+              oncommand="performCommand('cmd_pause');"
+              cmd="cmd_pause"/>
     <menuitem id="menuitem_resume" 
               label="&cmd.resume.label;" accesskey="&cmd.resume.accesskey;"
-              command="cmd_resume"/>
+              oncommand="performCommand('cmd_resume');"
+              cmd="cmd_resume"/>
     <menuitem id="menuitem_cancel" 
               label="&cmd.cancel.label;" accesskey="&cmd.cancel.accesskey;"
-              command="cmd_cancel"/>
+              oncommand="performCommand('cmd_cancel');"
+              cmd="cmd_cancel"/>
 
     <menuitem id="menuitem_open" default="true"
               label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"
-              command="cmd_open"/>
+              oncommand="performCommand('cmd_open');"
+              cmd="cmd_open"/>
     <menuitem id="menuitem_show"
 #ifdef XP_MACOSX
               label="&cmd.show.labelMac;"
@@ -154,32 +129,38 @@
               label="&cmd.show.label;"
               accesskey="&cmd.show.accesskey;"
 #endif
-              command="cmd_show"/>
+              oncommand="performCommand('cmd_show');"
+              cmd="cmd_show"/>
 
     <menuitem id="menuitem_retry" default="true"
               label="&cmd.retry.label;" accesskey="&cmd.retry.accesskey;"
-              command="cmd_retry"/>
+              oncommand="performCommand('cmd_retry');"
+              cmd="cmd_retry"/>
 
     <menuitem id="menuitem_removeFromList"
               label="&cmd.removeFromList.label;" accesskey="&cmd.removeFromList.accesskey;"
-              command="cmd_removeFromList"/>
+              oncommand="performCommand('cmd_removeFromList');"
+              cmd="cmd_removeFromList"/>
               
     <menuseparator id="menuseparator"/>
               
     <menuitem id="menuitem_openReferrer"
               label="&cmd.goToDownloadPage.label;"
               accesskey="&cmd.goToDownloadPage.accesskey;"
-              command="cmd_openReferrer"/>
+              oncommand="performCommand('cmd_openReferrer');"
+              cmd="cmd_openReferrer"/>
 
     <menuitem id="menuitem_copyLocation"
               label="&cmd.copyDownloadLink.label;"
               accesskey="&cmd.copyDownloadLink.accesskey;"
-              command="cmd_copyLocation"/>
+              oncommand="performCommand('cmd_copyLocation');"
+              cmd="cmd_copyLocation"/>
 
     <menuitem id="menuitem_clearList"
               label="&cmd.clearList.label;"
               accesskey="&cmd.clearList.accesskey;"
-              command="cmd_clearList"/>
+              oncommand="performCommand('cmd_clearList');"
+              cmd="cmd_clearList"/>
   </vbox>
   
   <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>

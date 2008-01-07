@@ -91,8 +91,7 @@ DownloadProgressListener.prototype = {
       // Update ui text values after switching states
       updateTime(dl);
       updateStatus(dl);
-
-      gDownloadViewController.onCommandUpdate();
+      updateButtons(dl);
     } catch (e) { }
   },
 
