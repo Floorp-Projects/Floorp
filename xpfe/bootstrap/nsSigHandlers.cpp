@@ -191,11 +191,13 @@ my_glib_log_func(const gchar *log_domain, GLogLevelFlags log_level,
 my_glib_log_func(const gchar *log_domain, GLogLevelFlags log_level,
                  const gchar *message, gpointer user_data)
 {
-  orig_log_func(log_domain, log_level, message, NULL);
-
-  if (log_level & (G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING)) {
+  if (log_level & (G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION)) {
     NS_DebugBreak(NS_DEBUG_ASSERTION, message, "glib assertion", __FILE__, __LINE__);
+  } else if (log_level & (G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING)) {
+    NS_DebugBreak(NS_DEBUG_WARNING, message, "glib warning", __FILE__, __LINE__);
   }
+
+  orig_log_func(log_domain, log_level, message, NULL);
 }
 
 #endif
