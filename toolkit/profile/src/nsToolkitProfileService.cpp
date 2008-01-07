@@ -686,30 +686,7 @@ nsToolkitProfileService::CreateProfile(nsILocalFile* aRootDir,
             return NS_ERROR_FILE_NOT_DIRECTORY;
     }
     else {
-        nsCOMPtr<nsIFile> profileDefaultsDir;
-        nsCOMPtr<nsIFile> profileDirParent;
-        nsCAutoString profileDirName;
-
-        rv = rootDir->GetParent(getter_AddRefs(profileDirParent));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = rootDir->GetNativeLeafName(profileDirName);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        PRBool dummy;
-        rv = gDirServiceProvider->GetFile(NS_APP_PROFILE_DEFAULTS_50_DIR, &dummy,
-                                          getter_AddRefs(profileDefaultsDir));
-
-        if (NS_SUCCEEDED(rv))
-            rv = profileDefaultsDir->CopyToNative(profileDirParent,
-                                                  profileDirName);
-        if (NS_FAILED(rv)) {
-            // if copying failed, lets just ensure that the profile directory exists.
-            rv = rootDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-      
-        rv = rootDir->SetPermissions(0700);
+        rv = rootDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
