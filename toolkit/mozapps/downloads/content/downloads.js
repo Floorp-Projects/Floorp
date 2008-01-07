@@ -122,14 +122,6 @@ var gStmt = gDownloadManager.DBConnection.createStatement(
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility Functions
 
-function fireEventForElement(aElement, aEventType)
-{
-  var e = document.createEvent("Events");
-  e.initEvent("download-" + aEventType, true, true);
-
-  aElement.dispatchEvent(e);
-}
-
 function getDownload(aID)
 {
   return document.getElementById("dl" + aID);
@@ -341,8 +333,7 @@ function copySourceLocation(aDownload)
   clipboard.copyString(uri);
 }
 
-// This is called by the progress listener. We don't actually use the event
-// system here to minimize time wastage.
+// This is called by the progress listener.
 var gLastComputedMean = -1;
 var gLastActiveDownloads = 0;
 function onUpdateProgress()
@@ -557,13 +548,20 @@ function buildContextMenu(aEvent)
     popup.removeChild(popup.firstChild);
 
   if (gDownloadsView.selectedItem) {
-    var idx = parseInt(gDownloadsView.selectedItem.getAttribute("state"));
+    let dl = gDownloadsView.selectedItem;
+    let idx = parseInt(dl.getAttribute("state"));
     if (idx < 0)
       idx = 0;
 
     var menus = gContextMenus[idx];
-    for (var i = 0; i < menus.length; ++i)
-      popup.appendChild(document.getElementById(menus[i]).cloneNode(true));
+    for (let i = 0; i < menus.length; ++i) {
+      let menuitem = document.getElementById(menus[i]).cloneNode(true);
+      let cmd = menuitem.getAttribute("cmd");
+      if (cmd)
+        menuitem.disabled = !gDownloadViewController.isCommandEnabled(cmd, dl);
+
+      popup.appendChild(menuitem);
+    }
 
     return true;
   }
@@ -606,27 +604,15 @@ var gDownloadDNDObserver =
 //// Command Updating and Command Handlers
 
 var gDownloadViewController = {
-  supportsCommand: function(aCommand)
+  isCommandEnabled: function(aCommand, aItem)
   {
-    var commandNode = document.getElementById(aCommand);
-    return commandNode && commandNode.parentNode ==
-                            document.getElementById("downloadsCommands");
-  },
-
-  isCommandEnabled: function(aCommand)
-  {
-    if (!window.gDownloadsView)
-      return false;
-
     // This switch statement is for commands that do not need a download object
     switch (aCommand) {
       case "cmd_clearList":
         return gDownloadManager.canCleanUp;
     }
 
-    var dl = gDownloadsView.selectedItem;
-    if (!dl)
-      return false;
+    let dl = aItem;
 
     switch (aCommand) {
       case "cmd_cancel":
@@ -652,25 +638,10 @@ var gDownloadViewController = {
     return false;
   },
 
-  doCommand: function(aCommand)
+  doCommand: function(aCommand, aItem)
   {
-    if (this.isCommandEnabled(aCommand))
-      this.commands[aCommand](gDownloadsView.selectedItem);
-  },
-
-  onCommandUpdate: function ()
-  {
-    var downloadsCommands = document.getElementById("downloadsCommands");
-    for (var i = 0; i < downloadsCommands.childNodes.length; ++i)
-      this.updateCommand(downloadsCommands.childNodes[i]);
-  },
-
-  updateCommand: function (command)
-  {
-    if (this.isCommandEnabled(command.id))
-      command.removeAttribute("disabled");
-    else
-      command.setAttribute("disabled", "true");
+    if (this.isCommandEnabled(aCommand, aItem))
+      this.commands[aCommand](aItem);
   },
 
   commands: {
@@ -712,6 +683,32 @@ var gDownloadViewController = {
     }
   }
 };
+
+/**
+ * Helper function to do commands.
+ *
+ * @param aCmd
+ *        The command to be performed.
+ * @param aItem
+ *        The richlistitem that represents the download that will have the
+ *        command performed on it.  If this is null, it assumes the currently
+ *        selected item.  If the item passed in is not a richlistitem that
+ *        represents a download, it will walk up the parent nodes until it finds
+ *        a DOM node that is.
+ */
+function performCommand(aCmd, aItem)
+{
+  let elm = aItem;
+  if (!elm) {
+    elm = gDownloadsView.selectedItem;
+  } else {
+    while (elm.nodeName != "richlistitem" ||
+           elm.getAttribute("type") != "download")
+      elm = elm.parentNode;
+  }
+
+  gDownloadViewController.doCommand(aCmd, elm);
+}
 
 function setSearchboxFocus()
 {
@@ -771,6 +768,23 @@ function createDownloadItem(aAttrs)
     // see bug #392386 for details
   }
   return null;
+}
+
+/**
+ * Updates the disabled state of the buttons of a downlaod.
+ *
+ * @param aItem
+ *        The richlistitem representing the download.
+ */
+function updateButtons(aItem)
+{
+  let buttons = aItem.buttons;
+
+  for (let i = 0; i < buttons.length; ++i) {
+    let cmd = buttons[i].getAttribute("cmd");
+    let enabled = gDownloadViewController.isCommandEnabled(cmd, aItem);
+    buttons[i].disabled = !enabled;
+  }
 }
 
 /**
@@ -1070,7 +1084,7 @@ function doDefaultForSelected()
   var menuitem = document.getElementById(gContextMenus[state][0]);
 
   // Try to do the action if the command is enabled
-  gDownloadViewController.doCommand(menuitem.command);
+  gDownloadViewController.doCommand(menuitem.getAttribute("cmd"), item);
 }
 
 function removeFromView(aDownload)
@@ -1183,6 +1197,10 @@ function stepListBuilder(aNumItems) {
       // Add item to the end and color just that one item
       gDownloadsView.appendChild(item);
       stripeifyList(item);
+    
+      // Because of the joys of XBL, we can't update the buttons until the
+      // download object is in the document.
+      updateButtons(item);
     }
   } catch (e) {
     // Something went wrong when stepping or getting values, so clear and quit
@@ -1228,6 +1246,10 @@ function prependList(aDownload)
     // Add item to the beginning and color the whole list
     gDownloadsView.insertBefore(item, gDownloadsView.firstChild);
     stripeifyList(item);
+    
+    // Because of the joys of XBL, we can't update the buttons until the
+    // download object is in the document.
+    updateButtons(item);
   }
 }
 
