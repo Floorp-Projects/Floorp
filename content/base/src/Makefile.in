@@ -136,6 +136,7 @@ CPPSRCS		= \
 		nsImageLoadingContent.cpp \
 		nsLineBreaker.cpp \
 		nsLoadListenerProxy.cpp \
+		nsMappedAttributeElement.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
 		nsNoDataProtocolContentPolicy.cpp \

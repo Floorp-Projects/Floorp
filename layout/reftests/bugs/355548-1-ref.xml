@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:m="http://www.w3.org/1998/Math/MathML">
+<body>
+<p><m:math>
+  <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:24px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:18px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:18px;">Id</m:mi></m:mstyle>
+</m:math></p>
+
+<p><m:math>
+  <m:mstyle><m:mi style="font-size:96px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:192px;">Id</m:mi></m:mstyle>
+</m:math></p>
+
+<p><m:math>
+  <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:96px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:192px;">Id</m:mi></m:mstyle>
+</m:math></p>
+<p><m:math>
+  <m:mstyle><m:mi style="font-size:24px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:96px;">Id</m:mi></m:mstyle>
+</m:math></p>
+<p><m:math>
+  <m:mstyle><m:mi style="font-size:18px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:24px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
+</m:math></p>
+<p><m:math>
+  <m:mstyle><m:mi style="font-size:18px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:18px;">Id</m:mi></m:mstyle>
+  <m:mstyle><m:mi style="font-size:24px;">Id</m:mi></m:mstyle>
+</m:math></p>
+</body>
+</html>

@@ -1835,6 +1835,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mCountersDirty(PR_FALSE)
   , mInitialContainingBlockIsAbsPosContainer(PR_FALSE)
   , mIsDestroyingFrameTree(PR_FALSE)
+  , mRebuildAllStyleData(PR_FALSE)
 {
   if (!gGotXBLFormPrefs) {
     gGotXBLFormPrefs = PR_TRUE;
@@ -13264,6 +13265,39 @@ nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
 #define RESTYLE_ARRAY_STACKSIZE 128
 
 void
+nsCSSFrameConstructor::RebuildAllStyleData()
+{
+  mRebuildAllStyleData = PR_FALSE;
+
+  if (!mPresShell || !mPresShell->GetRootFrame())
+    return;
+
+  // Tell the style set to get the old rule tree out of the way
+  // so we can recalculate while maintaining rule tree immutability
+  nsresult rv = mPresShell->StyleSet()->BeginReconstruct();
+  if (NS_FAILED(rv))
+    return;
+
+  // Recalculate all of the style contexts for the document
+  // Note that we can ignore the return value of ComputeStyleChangeFor
+  // because we never need to reframe the root frame
+  // XXX This could be made faster by not rerunning rule matching
+  // (but note that nsPresShell::SetPreferenceStyleRules currently depends
+  // on us re-running rule matching here
+  nsStyleChangeList changeList;
+  mPresShell->FrameManager()->ComputeStyleChangeFor(mPresShell->GetRootFrame(),
+                                                    &changeList, nsChangeHint(0));
+  // Process the required changes
+  ProcessRestyledFrames(changeList);
+  // Tell the style set it's safe to destroy the old rule tree.  We
+  // must do this after the ProcessRestyledFrames call in case the
+  // change list has frame reconstructs in it (since frames to be
+  // reconstructed will still have their old style context pointers
+  // until they are destroyed).
+  mPresShell->StyleSet()->EndReconstruct();
+}
+
+void
 nsCSSFrameConstructor::ProcessPendingRestyles()
 {
   PRUint32 count = mPendingRestyles.Count();
@@ -13309,6 +13343,12 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
 #ifdef DEBUG
   mPresShell->VerifyStyleTree();
 #endif
+
+  if (mRebuildAllStyleData) {
+    // We probably wasted a lot of work up above, but this seems safest
+    // and it should be rarely used.
+    RebuildAllStyleData();
+  }
 }
 
 void
@@ -13344,6 +13384,14 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
       mRestyleEvent = ev;
     }
   }
+}
+
+void
+nsCSSFrameConstructor::PostRebuildAllStyleDataEvent()
+{
+  mRebuildAllStyleData = PR_TRUE;
+  // Get a restyle event posted if necessary
+  mPresShell->ReconstructStyleDataInternal();
 }
 
 NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run()

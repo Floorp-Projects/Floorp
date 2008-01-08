@@ -1335,6 +1335,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       result = data.mIsHTMLContent &&
         data.mContent->GetNameSpaceID() == kNameSpaceID_None;
     }
+#ifdef MOZ_MATHML
+    else if (nsCSSPseudoClasses::mozMathIncrementScriptLevel == pseudoClass->mAtom) {
+      stateToCheck = NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL;
+    }
+#endif
     else {
       NS_ERROR("CSS parser parsed a pseudo-class that we do not handle");
       result = PR_FALSE;  // unknown pseudo class
@@ -1918,6 +1923,9 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSPseudoClasses::outOfRange) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozReadOnly) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozReadWrite) ||
+#ifdef MOZ_MATHML
+        (pseudoClass->mAtom == nsCSSPseudoClasses::mozMathIncrementScriptLevel) ||
+#endif
         (pseudoClass->mAtom == nsCSSPseudoClasses::defaultPseudo)) {
       return PR_TRUE;
     }
