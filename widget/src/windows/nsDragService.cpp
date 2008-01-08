@@ -111,9 +111,10 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
   // Prepare the drag image
   nsRect dragRect;
   nsRefPtr<gfxASurface> surface;
+  nsPresContext* pc;
   DrawDrag(aDOMNode, aRegion,
            mScreenX, mScreenY,
-           &dragRect, getter_AddRefs(surface));
+           &dragRect, getter_AddRefs(surface), &pc);
   if (!surface)
     return PR_FALSE;
 
@@ -169,10 +170,10 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
       psdi->ptOffset.x = (PRUint32)((float)bmWidth/2.0f);
       psdi->ptOffset.y = (PRUint32)((float)bmHeight/2.0f);
     } else {
-      PRInt32 xOffset = mScreenX - dragRect.x;
-      PRInt32 yOffset = mScreenY - dragRect.y;
-      psdi->ptOffset.x = xOffset;
-      psdi->ptOffset.y = yOffset;
+      PRInt32 sx = mScreenX, sy = mScreenY;
+      ConvertToUnscaledDevPixels(pc, &sx, &sy);
+      psdi->ptOffset.x = sx - dragRect.x;
+      psdi->ptOffset.y = sy - dragRect.y;
     }
 
     DeleteDC(hdcSrc);
