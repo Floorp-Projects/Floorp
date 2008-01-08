@@ -106,45 +106,33 @@ static PRBool EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
 // --------------------
 // nsStyleFont
 //
-nsStyleFont::nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext)
-  : mFont(aFont),
-    mFlags(NS_STYLE_FONT_DEFAULT)
+nsStyleFont::nsStyleFont()
+  : mFlags(NS_STYLE_FONT_DEFAULT),
+    mFont(nsnull, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+          NS_FONT_WEIGHT_NORMAL, NS_FONT_DECORATION_NONE, 0),
+    mSize(0)
+{ }
+
+nsStyleFont::nsStyleFont(const nsFont& aFont)
+  : mFlags(NS_STYLE_FONT_DEFAULT),
+    mFont(aFont),
+    mSize(aFont.size)
 {
-  mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
-#ifdef MOZ_MATHML
-  mScriptUnconstrainedSize = mSize;
-  mScriptMinSize = aPresContext->TwipsToAppUnits(
-      NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT));
-  mScriptLevel = 0;
-  mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
-#endif
 }
 
 nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
-  : mFont(aSrc.mFont)
-  , mSize(aSrc.mSize)
-  , mFlags(aSrc.mFlags)
-#ifdef MOZ_MATHML
-  , mScriptLevel(aSrc.mScriptLevel)
-  , mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize)
-  , mScriptSizeMultiplier(aSrc.mScriptSizeMultiplier)
-  , mScriptMinSize(aSrc.mScriptMinSize)
-#endif
+  : mFlags(aSrc.mFlags),
+    mFont(aSrc.mFont),
+    mSize(aSrc.mSize)
 {
 }
 
+
 nsStyleFont::nsStyleFont(nsPresContext* aPresContext)
-  : mFont(*(aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID))),
-    mFlags(NS_STYLE_FONT_DEFAULT)
+  : mFlags(NS_STYLE_FONT_DEFAULT),
+    mFont(*(aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID)))
 {
   mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
-#ifdef MOZ_MATHML
-  mScriptUnconstrainedSize = mSize;
-  mScriptMinSize = aPresContext->TwipsToAppUnits(
-      NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT));
-  mScriptLevel = 0;
-  mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
-#endif
 }
 
 void* 

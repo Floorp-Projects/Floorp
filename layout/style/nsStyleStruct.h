@@ -89,7 +89,8 @@ struct nsStyleStruct {
 // The lifetime of these objects is managed by the presshell's arena.
 
 struct nsStyleFont : public nsStyleStruct {
-  nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext);
+  nsStyleFont(void);
+  nsStyleFont(const nsFont& aFont);
   nsStyleFont(const nsStyleFont& aStyleFont);
   nsStyleFont(nsPresContext *aPresContext);
   ~nsStyleFont(void) {}
@@ -102,25 +103,16 @@ struct nsStyleFont : public nsStyleStruct {
 
   static nscoord ZoomText(nsPresContext* aPresContext, nscoord aSize);
   static nscoord UnZoomText(nsPresContext* aPresContext, nscoord aSize);
-
+  
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsPresContext* aContext);
 
+  PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
   nsFont  mFont;        // [inherited]
   nscoord mSize;        // [inherited] Our "computed size". Can be different from mFont.size
                         // which is our "actual size" and is enforced to be >= the user's
                         // preferred min-size. mFont.size should be used for display purposes
                         // while mSize is the value to return in getComputedStyle() for example.
-  PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
-
-#ifdef MOZ_MATHML
-  // MathML scriptlevel support
-  PRInt8  mScriptLevel;          // [inherited]
-  // The value mSize would have had if scriptminsize had never been applied
-  nscoord mScriptUnconstrainedSize;
-  nscoord mScriptMinSize;        // [inherited] length
-  float   mScriptSizeMultiplier; // [inherited]
-#endif
 };
 
 struct nsStyleColor : public nsStyleStruct {

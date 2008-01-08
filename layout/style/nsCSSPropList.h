@@ -517,14 +517,6 @@ CSS_PROP_XUL(-moz-box-orient, box_orient, MozBoxOrient, XUL, mBoxOrient, eCSSTyp
 CSS_PROP_XUL(-moz-box-pack, box_pack, MozBoxPack, XUL, mBoxPack, eCSSType_Value, kBoxPackKTable) // XXX bug 3935
 CSS_PROP_XUL(-moz-box-ordinal-group, box_ordinal_group, MozBoxOrdinalGroup, XUL, mBoxOrdinal, eCSSType_Value, nsnull)
 
-#ifdef MOZ_MATHML
-#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
-CSS_PROP_FONT(-moz-script-level, script_level, ScriptLevel, Font, mScriptLevel, eCSSType_Value, nsnull)
-CSS_PROP_FONT(-moz-script-size-multiplier, script_size_multiplier, ScriptSizeMultiplier, Font, mScriptSizeMultiplier, eCSSType_Value, nsnull)
-CSS_PROP_FONT(-moz-script-min-size, script_min_size, ScriptMinSize, Font, mScriptMinSize, eCSSType_Value, nsnull)
-#endif
-#endif
-
 #ifdef MOZ_SVG
 // XXX treat SVG's CSS Properties as internal for now.
 // Do we want to create an nsIDOMSVGCSS2Properties interface?

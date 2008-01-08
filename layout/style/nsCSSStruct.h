@@ -210,12 +210,6 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSValue mSizeAdjust; // NEW
   nsCSSValue mStretch; // NEW
 
-#ifdef MOZ_MATHML
-  nsCSSValue mScriptLevel; // Integer values mean "relative", Number values mean "absolute" 
-  nsCSSValue mScriptSizeMultiplier;
-  nsCSSValue mScriptMinSize;
-#endif
-
 private:
   nsCSSFont(const nsCSSFont& aOther); // NOT IMPLEMENTED
 };

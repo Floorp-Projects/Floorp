@@ -53,10 +53,6 @@ ifdef MOZ_XTF
 DIRS            += xtf
 endif
 
-ifdef MOZ_MATHML
-DIRS            += mathml
-endif
-
 DIRS           += events
 
 ifdef ENABLE_TESTS
