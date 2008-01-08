@@ -21,8 +21,8 @@ sub Execute {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $oldVersion = $config->Get(var => 'oldVersion');
-    my $version = $config->Get(var => 'version');
+    my $oldVersion = $config->GetOldVersion(longName => 0);
+    my $version = $config->GetVersion(longName => 0);
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $updateDir = $config->Get(var => 'updateDir');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
@@ -127,7 +127,7 @@ sub Verify {
 
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $product = $config->Get(var => 'product');
@@ -221,8 +221,9 @@ sub BumpVerifyConfig {
     my $config = new Bootstrap::Config();
     my $osname = $config->SystemInfo(var => 'osname');
     my $product = $config->Get(var => 'product');
-    my $oldVersion = $config->Get(var => 'oldVersion');
-    my $version = $config->Get(var => 'version');
+    my $oldVersion = $config->GetOldVersion(longName => 0);
+    my $oldLongVersion = $config->GetOldVersion(longName => 1);
+    my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $oldRc = $config->Get(var => 'oldRc');
     my $appName = $config->Get(var => 'appName');
@@ -261,13 +262,13 @@ sub BumpVerifyConfig {
         $buildTarget = 'Darwin_Universal-gcc3';
         $platform = 'osx';
         $ftpOsname = 'mac';
-        $releaseFile = ucfirst($product).' '.$oldVersion.'.dmg';
+        $releaseFile = ucfirst($product).' '.$oldLongVersion.'.dmg';
         $nightlyFile = $product.'-'.$version.'.%locale%.mac.dmg';
     } elsif ($osname eq 'win32') {
         $buildTarget = 'WINNT_x86-msvc';
         $platform = 'win32';
         $ftpOsname = 'win32';
-        $releaseFile = ucfirst($product).' Setup '.$oldVersion.'.exe';
+        $releaseFile = ucfirst($product).' Setup '.$oldLongVersion.'.exe';
         $nightlyFile = $product.'-'.$version.'.%locale%.win32.installer.exe';
     } else {
         die("ASSERT: unknown OS $osname");
@@ -340,9 +341,9 @@ sub Push {
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(sysvar => 'logDir');
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
-    my $oldVersion = $config->Get(var => 'oldVersion');
+    my $oldVersion = $config->GetOldVersion(longName => 0);
     my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
     my $ausUser = $config->Get(var => 'ausUser');
@@ -416,7 +417,7 @@ sub Announce {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
 
     $this->SendAnnouncement(
       subject => "$product $version update step finished",

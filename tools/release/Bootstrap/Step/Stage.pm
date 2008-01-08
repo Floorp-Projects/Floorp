@@ -181,7 +181,7 @@ sub GetStageDir {
 
     my $stageHome = $config->Get(var => 'stageHome');
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     return catfile($stageHome, $product . '-' . $version);
 }
 
@@ -190,7 +190,7 @@ sub Execute {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $stageHome = $config->Get(var => 'stageHome');
@@ -430,7 +430,6 @@ sub Verify {
     my $product = $config->Get(var => 'product');
     my $appName = $config->Get(var => 'appName');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
     my $stageHome = $config->Get(var => 'stageHome');
     my $productTag = $config->Get(var => 'productTag');
@@ -674,7 +673,7 @@ sub Announce {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
 
     $this->SendAnnouncement(
       subject => "$product $version stage step finished",
@@ -800,12 +799,8 @@ sub GeneratePrettyName {
     my $name = $args{'name'};
     print "name: $name\n";
     my $config = new Bootstrap::Config();
-    my $newVersion = $config->Get(var => 'version');
-    my $newVersionShort = $newVersion;
-
-    # Use long alpha/beta name for Win32 and Mac
-    $newVersion =~ s/a([0-9]+)/ Alpha $1/;
-    $newVersion =~ s/b([0-9]+)/ Beta $1/;
+    my $currentVersion = $config->GetVersion(longName => 1);
+    my $currentVersionShort = $config->GetVersion(longName => 0);
 
     my @result;
 
@@ -819,7 +814,8 @@ sub GeneratePrettyName {
     # Windows update files.
     if ( $name =~ m/ $win_update_re /x ) {
         # Windows update files.
-        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+        push @result, "update/$5/$4/$1$2-" . $currentVersionShort .
+         ".complete.mar";
 
     } elsif ( $name =~ m/ $win_partial_update_re /x ) {
         # Windows partial update files.
@@ -828,17 +824,18 @@ sub GeneratePrettyName {
     # Windows installer files.
     } elsif ( $name =~ m/ $win_installer_re /x ) {
         # Windows installer files.
-        push @result, "$5/$4/" . uc($1) . "$2 Setup " . $newVersion . ".exe";
+        push @result, "$5/$4/" . uc($1) . "$2 Setup " . $currentVersion . ".exe";
 
     # Mac OS X disk image files.
     } elsif ( $name =~ m/ $mac_re /x ) {
         # Mac OS X disk image files.
-        push @result, "$5/$4/" . uc($1) . "$2 ". $newVersion . ".dmg";
+        push @result, "$5/$4/" . uc($1) . "$2 ". $currentVersion . ".dmg";
 
     # Mac OS X update files.
     } elsif ( $name =~ m/ $mac_update_re /x ) {
         # Mac OS X update files.
-        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+        push @result, "update/$5/$4/$1$2-" . $currentVersionShort .
+         ".complete.mar";
 
     } elsif ( $name =~ m/ $mac_partial_update_re /x ) {
          # Mac partial update files.
@@ -847,12 +844,13 @@ sub GeneratePrettyName {
     # Linux tarballs.
     } elsif ( $name =~ m/ $linux_re /x ) {
         # Linux tarballs.
-        push @result, "$5/$4/$1$2-" . $newVersionShort . ".tar.$6";
+        push @result, "$5/$4/$1$2-" . $currentVersionShort . ".tar.$6";
 
     # Linux update files.
     } elsif ( $name =~ m/ $linux_update_re /x ) {
         # Linux update files.
-        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+        push @result, "update/$5/$4/$1$2-" . $currentVersionShort .
+         ".complete.mar";
 
     } elsif ( $name =~ m/ $linux_partial_update_re /x ) {
         # Linux partial update files.
@@ -861,7 +859,7 @@ sub GeneratePrettyName {
     # Source tarballs.
     } elsif ( $name =~ m/ $source_re /x ) {
         # Source tarballs.
-        push @result, "source/$1$2-" . $newVersionShort . "-source.tar.bz2";
+        push @result, "source/$1$2-" . $currentVersionShort . "-source.tar.bz2";
 
     # XPI langpack files.
     } elsif ( $name =~ m/ $xpi_langpack_re /x ) {
