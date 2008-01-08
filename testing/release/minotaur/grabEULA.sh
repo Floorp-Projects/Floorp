@@ -1,3 +1,6 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
 # The contents of this file are subject to the Mozilla Public License Version
 # 1.1 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -32,51 +35,46 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import re
-from optparse import OptionParser
-import platform
+options="f:m:p:"
 
-cygwinmatch = re.compile(".*cygwin.*", re.I)
 
-def getPlatform():
-  # On Vista, python reports "Microsoft" and on cygwin shells it can report
-  # several different strings that contain the word "cygwin"
-  if platform.system() == "Microsoft" or cygwinmatch.search(platform.system()):
-    print "Windows"
-  else:
-    print platform.system()
+function usage()
+{
+    cat<<EOF
+    usage:
+    $script -f FirefoxDir -m MinotaurDir -p partnerName
 
-def getFxName(os):
-  if os == "Darwin":
-    print "firefox-bin"
-  elif os == "Linux":
-    print "firefox"
-  else:
-    print "firefox.exe"
+variable             description
+=============        ================================================
+-m MinotaurDir       required, the path to the directory where Minotaur is
+-f firefoxDir        required, path to Firefox installed build
+-p partnerName       required, name of the partner extension
 
-def main(os, fxname):
-  # The options given determine the behavior
-  # If no options -- return the OS
-  # If OS AND fxname, return the firefox executable name on this OS
-  # Anything else, fail.
+NOTES
+======
+Uses checks the partner preference file in the firefoxDir for the initial value
+of the browser.EULA.2.accpected" preference, and stores that value into a file
+in the minotaur directory.
 
-  retval = ""
+EOF
+exit 2
+}
 
-  if not os:
-    getPlatform()
-  elif os and fxname:
-    getFxName(os)
-  else:
-    raise SystemExit("Invalid Command use getOsInfo --h for help")
+while getopts $options optname ;
+do
+    case $optname in
+        m) minotaurdir=$OPTARG;;
+        f) fxdir=$OPTARG;;
+        p) ptrname=$OPTARG;;
+    esac
+done
 
-if __name__ == "__main__":
-  parser = OptionParser()
-  parser.add_option("-o", "--os", dest="os",
-                   help="OS identifer - either Darwin, Linux, or Windows can be\
-                        obtained by calling without any params", metavar="OS")
-  parser.add_option("-f", "--firefoxName", action="store_true", dest="fxname", default=False,
-                    help="Firefox executable name on this platform requires OS")
-  (options, args) = parser.parse_args()
+# If anything is not defined, display the usage string above
+if [[ -z "$fxdir" || -z "$ptrname" || -z "$minotaurdir" ]]
+then
+    usage
+fi
 
-  # Call Main
-  main(options.os, options.fxname)
+grep "browser.EULA.2.accepted" $fxdir/extensions/$ptrname/defaults/preferences/partner.js > $minotaurdir/EULA.txt
+sed '/browser.EULA.2.accepted/s/false/true/' $fxdir/extensions/$ptrname/defaults/preferences/partner.js > $fxdir/extensions/$ptrname/defaults/preferences/partner-new.js
+cp $fxdir/extensions/$ptrname/defaults/preferences/partner-new.js $fxdir/extensions/$ptrname/defaults/preferences/partner.js

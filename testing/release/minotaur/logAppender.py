@@ -35,10 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Class to append data to a text file
+# Class to append data to a text file.  It also provides a method to handle
+# information going to stderr. To use the stderr redirect, make this call after
+# you instantiate LogAppender:
+# import sys
+# sys.stderr=stderrCatcher(<logFileAppenderObject>)
+
+class stderrCatcher:
+  def __init__(self, logappender=0):
+    self.lf = logappender
+  def write(self, stuff):
+    if self.lf:
+      self.lf.onStdError(stuff)
+
 class LogAppender:
   def __init__(self, file):
     self.logFile = open(file, "a")
+  def onStdError(self, str):
+    self.logFile.write("STDERR:" + str + "\n")
   def writeLog(self, str):
     self.logFile.write(str + "\n")
     return str

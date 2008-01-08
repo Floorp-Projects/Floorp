@@ -1,3 +1,6 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
 # The contents of this file are subject to the Mozilla Public License Version
 # 1.1 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -32,51 +35,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import re
-from optparse import OptionParser
-import platform
+#!/bin/sh
 
-cygwinmatch = re.compile(".*cygwin.*", re.I)
+#set -x
 
-def getPlatform():
-  # On Vista, python reports "Microsoft" and on cygwin shells it can report
-  # several different strings that contain the word "cygwin"
-  if platform.system() == "Microsoft" or cygwinmatch.search(platform.system()):
-    print "Windows"
-  else:
-    print platform.system()
-
-def getFxName(os):
-  if os == "Darwin":
-    print "firefox-bin"
-  elif os == "Linux":
-    print "firefox"
-  else:
-    print "firefox.exe"
-
-def main(os, fxname):
-  # The options given determine the behavior
-  # If no options -- return the OS
-  # If OS AND fxname, return the firefox executable name on this OS
-  # Anything else, fail.
-
-  retval = ""
-
-  if not os:
-    getPlatform()
-  elif os and fxname:
-    getFxName(os)
-  else:
-    raise SystemExit("Invalid Command use getOsInfo --h for help")
-
-if __name__ == "__main__":
-  parser = OptionParser()
-  parser.add_option("-o", "--os", dest="os",
-                   help="OS identifer - either Darwin, Linux, or Windows can be\
-                        obtained by calling without any params", metavar="OS")
-  parser.add_option("-f", "--firefoxName", action="store_true", dest="fxname", default=False,
-                    help="Firefox executable name on this platform requires OS")
-  (options, args) = parser.parse_args()
-
-  # Call Main
-  main(options.os, options.fxname)
+mkdir -p mnt
+./installdmg-expect.ex $1
+rsync -a ./mnt/* $2
+hdiutil detach mnt
+rm -rdf ./mnt
