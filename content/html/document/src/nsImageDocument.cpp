@@ -608,7 +608,7 @@ nsresult
 nsImageDocument::CheckOverflowing(PRBool changeState)
 {
   /* Create a scope so that the style context gets destroyed before we might
-   * call ClearStyleDataAndReflow.  Also, holding onto pointers to the
+   * call RebuildStyleData.  Also, holding onto pointers to the
    * presentatation through style resolution is potentially dangerous.
    */
   {

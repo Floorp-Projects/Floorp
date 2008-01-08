@@ -76,6 +76,8 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../generic \
 	-I$(srcdir)/../../../tables \
 	-I$(srcdir)/../../content/src \
+	-I$(topsrcdir)/content/base/src \
+	-I$(topsrcdir)/content/mathml/content/src \
 	-I$(srcdir)/../../../xul/base/src \
 	$(NULL)
 

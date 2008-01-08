@@ -94,6 +94,10 @@ CSS_PSEUDO_CLASS(mozIsHTML, ":-moz-is-html")
 // Matches anything when the specified look-and-feel metric is set
 CSS_PSEUDO_CLASS(mozSystemMetric, ":-moz-system-metric")
 
+#ifdef MOZ_MATHML
+CSS_PSEUDO_CLASS(mozMathIncrementScriptLevel, ":-moz-math-increment-script-level")
+#endif
+
 // CSS 3 UI
 // http://www.w3.org/TR/2004/CR-css3-ui-20040511/#pseudo-classes
 CSS_PSEUDO_CLASS(required, ":required")

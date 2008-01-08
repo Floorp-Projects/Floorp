@@ -4618,6 +4618,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_left_width_rtl_source:
   case eCSSProperty_border_right_width_ltr_source:
   case eCSSProperty_border_right_width_rtl_source:
+#ifdef MOZ_MATHML
+  case eCSSProperty_script_size_multiplier:
+  case eCSSProperty_script_min_size:
+#endif
     NS_ERROR("not currently parsed here");
     return PR_FALSE;
 
@@ -4933,6 +4937,16 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HK, nsCSSProps::kPositionKTable);
   case eCSSProperty_richness:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
+#ifdef MOZ_MATHML
+  // script-level can take Integer or Number values, but only Integer ("relative")
+  // values can be specified in a style sheet. Also we only allow this property
+  // when unsafe rules are enabled, because otherwise it could interfere
+  // with rulenode optimizations if used in a non-MathML-enabled document.
+  case eCSSProperty_script_level:
+    if (!mUnsafeRulesEnabled)
+      return PR_FALSE;
+    return ParseVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
+#endif
   case eCSSProperty_speak:
     return ParseVariant(aErrorCode, aValue, VARIANT_HMK | VARIANT_NONE,
                         nsCSSProps::kSpeakKTable);
