@@ -63,12 +63,14 @@ public:
   TransmitAutomaticData();
 
   NS_IMETHOD
-  UpdatePresentationData(PRUint32        aFlagsValues,
+  UpdatePresentationData(PRInt32         aScriptLevelIncrement,
+                         PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate);
 

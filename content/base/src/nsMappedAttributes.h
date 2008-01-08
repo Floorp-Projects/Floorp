@@ -45,7 +45,7 @@
 #define nsMappedAttributes_h___
 
 #include "nsAttrAndChildArray.h"
-#include "nsMappedAttributeElement.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIStyleRule.h"
 
 class nsIAtom;

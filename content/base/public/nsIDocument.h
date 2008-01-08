@@ -275,7 +275,7 @@ public:
     CopyASCIItoUTF16(mContentLanguage, aContentLanguage);
   }
 
-  // The states BidiEnabled and MathMLEnabled should persist across multiple views
+  // The state BidiEnabled should persist across multiple views
   // (screen, print) of the same document.
 
   /**
@@ -296,19 +296,6 @@ public:
   void SetBidiEnabled(PRBool aBidiEnabled)
   {
     mBidiEnabled = aBidiEnabled;
-  }
-  
-  /**
-   * Check if the document contains (or has contained) any MathML elements.
-   */
-  PRBool GetMathMLEnabled() const
-  {
-    return mMathMLEnabled;
-  }
-  
-  void SetMathMLEnabled()
-  {
-    mMathMLEnabled = PR_TRUE;
   }
 
   /**
@@ -978,8 +965,6 @@ protected:
 
   // True if BIDI is enabled.
   PRPackedBool mBidiEnabled;
-  // True if a MathML element has ever been owned by this document.
-  PRPackedBool mMathMLEnabled;
 
   // True if this document is the initial document for a window.  This should
   // basically be true only for documents that exist in newly-opened windows or

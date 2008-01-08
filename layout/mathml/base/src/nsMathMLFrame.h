@@ -49,7 +49,6 @@
 #include "nsIMathMLFrame.h"
 #include "nsFrame.h"
 #include "nsCSSValue.h"
-#include "nsMathMLElement.h"
 
 class nsMathMLChar;
 
@@ -150,14 +149,22 @@ public:
   }
 
   NS_IMETHOD
-  UpdatePresentationData(PRUint32        aFlagsValues,
+  UpdatePresentationData(PRInt32         aScriptLevelIncrement,
+                         PRUint32        aFlagsValues,
                          PRUint32        aFlagsToUpdate);
 
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate)
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  ReResolveScriptStyle(PRInt32 aParentScriptLevel)
   {
     return NS_OK;
   }
@@ -216,10 +223,8 @@ public:
   // utilities to parse and retrieve numeric values in CSS units
   // All values are stored in twips.
   static PRBool
-  ParseNumericValue(const nsString& aString,
-                    nsCSSValue&     aCSSValue) {
-    return nsMathMLElement::ParseNumericValue(aString, aCSSValue, PR_FALSE);
-  }
+  ParseNumericValue(nsString&   aString,
+                    nsCSSValue& aCSSValue);
 
   static nscoord 
   CalcLength(nsPresContext*   aPresContext,
@@ -427,6 +432,24 @@ public:
   GetAxisHeight(nsIRenderingContext& aRenderingContext, 
                 nsIFontMetrics*      aFontMetrics,
                 nscoord&             aAxisHeight);
+
+  // ================
+  // helpers to map attributes into CSS rules (work-around to bug 69409 which
+  // is not scheduled to be fixed anytime soon)
+  static PRInt32
+  MapCommonAttributesIntoCSS(nsPresContext* aPresContext,
+                             nsIContent*    aContent);
+  static PRInt32
+  MapCommonAttributesIntoCSS(nsPresContext* aPresContext,
+                             nsIFrame*      aFrame);
+ 
+  // helper used by all AttributeChanged() methods. It handles
+  // those attributes that are common to all tags.
+  // @return true if the attribue is handled.
+  static PRBool
+  CommonAttributeChangedFor(nsPresContext* aPresContext,
+                            nsIContent*    aContent,
+                            nsIAtom*       aAttribute);
 
 protected:
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)

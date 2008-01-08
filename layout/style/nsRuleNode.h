@@ -600,25 +600,13 @@ protected:
 #endif
 
   // helpers for |ComputeFontData| that need access to |mNoneBits|:
-  static NS_HIDDEN_(void) SetFontSize(nsPresContext* aPresContext,
-                                      const nsRuleDataFont& aFontData,
-                                      const nsStyleFont* aFont,
-                                      const nsStyleFont* aParentFont,
-                                      nscoord* aSize,
-                                      const nsFont& aSystemFont,
-                                      nscoord aParentSize,
-                                      nscoord aScriptLevelAdjustedParentSize,
-                                      PRBool aUsedStartStruct,
-                                      PRBool& aInherited);
-
   static NS_HIDDEN_(void) SetFont(nsPresContext* aPresContext,
                                   nsStyleContext* aContext,
                                   nscoord aMinFontSize,
                                   PRUint8 aGenericFontID,
                                   const nsRuleDataFont& aFontData,
                                   const nsStyleFont* aParentFont,
-                                  nsStyleFont* aFont,
-                                  PRBool aStartStruct, PRBool& aInherited);
+                                  nsStyleFont* aFont, PRBool& aInherited);
 
   static NS_HIDDEN_(void) SetGenericFont(nsPresContext* aPresContext,
                                          nsStyleContext* aContext,

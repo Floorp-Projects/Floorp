@@ -909,6 +909,28 @@ nsXMLContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
   StartLayout(aIgnorePendingSheets);
 }
 
+#ifdef MOZ_MATHML
+////////////////////////////////////////////////////////////////////////
+// MathML Element Factory - temporary location for bug 132844
+// Will be factored out post 1.0
+
+nsresult
+NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
+{
+  static const char kMathMLStyleSheetURI[] = "resource://gre/res/mathml.css";
+
+  aNodeInfo->SetIDAttributeAtom(nsGkAtoms::id);
+  
+  // this bit of code is to load mathml.css on demand
+  nsIDocument *doc = aNodeInfo->GetDocument();
+  if (doc)
+    doc->EnsureCatalogStyleSheet(kMathMLStyleSheetURI);
+
+  return NS_NewXMLElement(aResult, aNodeInfo);
+}
+#endif // MOZ_MATHML
+
+
 ////////////////////////////////////////////////////////////////////////
 
 PRBool
