@@ -353,7 +353,8 @@ void nsGIFDecoder2::BeginImageFrame(gfx_depth aDepth)
   }
 
   mImageFrame->SetFrameDisposalMethod(mGIFStruct.disposal_method);
-  mImageContainer->AppendFrame(mImageFrame);
+  if (!mGIFStruct.images_decoded)
+    mImageContainer->AppendFrame(mImageFrame);
 
   if (mObserver)
     mObserver->OnStartFrame(nsnull, mImageFrame);
@@ -390,17 +391,27 @@ void nsGIFDecoder2::EndImageFrame()
   mCurrentRow = mLastFlushedRow = -1;
   mCurrentPass = mLastFlushedPass = 0;
 
-  mGIFStruct.images_decoded++;
+  // Only add frame if we have any rows at all
+  if (mGIFStruct.rows_remaining != mGIFStruct.height) {
+    if (mGIFStruct.rows_remaining && mGIFStruct.images_decoded) {
+      // Clear the remaining rows (only needed for the animation frames)
+      PRUint8 *rowp = mImageData + ((mGIFStruct.rows_remaining - mGIFStruct.height) * mGIFStruct.width);
+      memset(rowp, 0, mGIFStruct.rows_remaining * mGIFStruct.width);
+    }
 
-  // We actually have the timeout information before we get the lzw encoded 
-  // image data, at least according to the spec, but we delay in setting the 
-  // timeout for the image until here to help ensure that we have the whole 
-  // image frame decoded before we go off and try to display another frame.
-  mImageFrame->SetTimeout(mGIFStruct.delay_time);
-  mImageContainer->EndFrameDecode(mGIFStruct.images_decoded, mGIFStruct.delay_time);
+    // We actually have the timeout information before we get the lzw encoded 
+    // image data, at least according to the spec, but we delay in setting the 
+    // timeout for the image until here to help ensure that we have the whole 
+    // image frame decoded before we go off and try to display another frame.
+    mImageFrame->SetTimeout(mGIFStruct.delay_time);
+    if (mGIFStruct.images_decoded)
+      mImageContainer->AppendFrame(mImageFrame);
+    mImageContainer->EndFrameDecode(mGIFStruct.images_decoded, mGIFStruct.delay_time);
+    mGIFStruct.images_decoded++; 
 
-  if (mObserver)
-    mObserver->OnStopFrame(nsnull, mImageFrame);
+    if (mObserver)
+      mObserver->OnStopFrame(nsnull, mImageFrame);
+  }
 
   // Release reference to this frame
   mImageFrame = nsnull;
