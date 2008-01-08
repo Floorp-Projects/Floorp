@@ -351,11 +351,21 @@ nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 }
 
 NS_IMETHODIMP
+nsMathMLmtableOuterFrame::Init(nsIContent*      aContent,
+                               nsIFrame*        aParent,
+                               nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsTableOuterFrame::Init(aContent, aParent, aPrevInFlow);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // XXX the REC says that by default, displaystyle=false in <mtable>
 
-  // let the base class inherit the displaystyle from our parent
+  // let the base class inherit the scriptlevel and displaystyle from our parent
   nsMathMLFrame::InheritAutomaticData(aParent);
 
   // see if the displaystyle attribute is there and let it override what we inherited
@@ -369,7 +379,8 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 // Since UpdatePresentation() and UpdatePresentationDataFromChildAt() can be called
 // by a parent, ensure that the displaystyle attribute of mtable takes precedence
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::UpdatePresentationData(PRUint32 aFlagsValues,
+nsMathMLmtableOuterFrame::UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                                                 PRUint32 aFlagsValues,
                                                  PRUint32 aWhichFlags)
 {
   if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
@@ -378,12 +389,14 @@ nsMathMLmtableOuterFrame::UpdatePresentationData(PRUint32 aFlagsValues,
     aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
   }
 
-  return nsMathMLFrame::UpdatePresentationData(aFlagsValues, aWhichFlags);
+  return nsMathMLFrame::UpdatePresentationData(
+    aScriptLevelIncrement, aFlagsValues, aWhichFlags);
 }
 
 NS_IMETHODIMP
 nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
                                                             PRInt32  aLastIndex,
+                                                            PRInt32  aScriptLevelIncrement,
                                                             PRUint32 aFlagsValues,
                                                             PRUint32 aWhichFlags)
 {
@@ -394,7 +407,7 @@ nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex
   }
 
   nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(this,
-    aFirstIndex, aLastIndex, aFlagsValues, aWhichFlags);
+    aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aWhichFlags);
 
   return NS_OK; 
 }
@@ -404,6 +417,10 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                            nsIAtom* aAttribute,
                                            PRInt32  aModType)
 {
+  // Attributes common to MathML tags
+  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
+    return NS_OK;
+
   // Attributes specific to <mtable>:
   // frame         : in mathml.css
   // framespacing  : not yet supported 
@@ -439,6 +456,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   // presentational data, and issue a style-changed reflow request
   if (aAttribute == nsGkAtoms::displaystyle_) {
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(mParent);
+    nsMathMLContainerFrame::PropagateScriptStyleFor(tableFrame, mPresentationData.scriptLevel);
     // Need to reflow the parent, not us, because this can actually
     // affect siblings.
     PresContext()->PresShell()->
@@ -689,10 +707,24 @@ nsMathMLmtrFrame::~nsMathMLmtrFrame()
 }
 
 NS_IMETHODIMP
+nsMathMLmtrFrame::Init(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsTableRowFrame::Init(aContent, aParent, aPrevInFlow);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    PRInt32  aModType)
 {
+  // Attributes common to MathML tags
+  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
+    return NS_OK;
+
   // Attributes specific to <mtr>:
   // groupalign  : Not yet supported.
   // rowalign    : Fully specified in mathml.css, and so HasAttributeDependentStyle() will
@@ -749,6 +781,16 @@ nsMathMLmtdFrame::~nsMathMLmtdFrame()
 {
 }
 
+NS_IMETHODIMP
+nsMathMLmtdFrame::Init(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*   aPrevInFlow)
+{
+  nsresult rv = nsTableCellFrame::Init(aContent, aParent, aPrevInFlow);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
+  return rv;
+}
+
 PRInt32
 nsMathMLmtdFrame::GetRowSpan()
 {
@@ -792,6 +834,10 @@ nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    PRInt32  aModType)
 {
+  // Attributes common to MathML tags
+  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
+    return NS_OK;
+
   // Attributes specific to <mtd>:
   // groupalign  : Not yet supported
   // rowalign    : in mathml.css

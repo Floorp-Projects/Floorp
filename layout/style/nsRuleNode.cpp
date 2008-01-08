@@ -185,7 +185,7 @@ static void EnsureBlockDisplay(PRUint8& display)
 }
 
 // XXX This should really be done in the CSS parser.
-static nsString& Unquote(nsString& aString)
+nsString& Unquote(nsString& aString)
 {
   PRUnichar start = aString.First();
   PRUnichar end = aString.Last();
@@ -200,17 +200,13 @@ static nsString& Unquote(nsString& aString)
   return aString;
 }
 
-static nscoord CalcLengthWith(const nsCSSValue& aValue,
-                              nscoord aFontSize,
-                              const nsStyleFont* aStyleFont,
-                              nsStyleContext* aStyleContext,
-                              nsPresContext* aPresContext,
-                              PRBool& aInherited)
+nscoord CalcLength(const nsCSSValue& aValue,
+                   const nsFont* aFont, 
+                   nsStyleContext* aStyleContext,
+                   nsPresContext* aPresContext,
+                   PRBool& aInherited)
 {
   NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
-  NS_ASSERTION(aStyleFont || aStyleContext, "Must have style data");
-  NS_ASSERTION(aPresContext, "Must have prescontext");
-
   if (aValue.IsFixedLengthUnit()) {
     return aPresContext->TwipsToAppUnits(aValue.GetLengthTwips());
   }
@@ -220,51 +216,37 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   }
   // Common code for all units other than pixels:
   aInherited = PR_TRUE;
-  if (!aStyleFont) {
-    aStyleFont = aStyleContext->GetStyleFont();
-  }
-  if (aFontSize == -1) {
-    // XXX Should this be aStyleFont->mSize instead to avoid taking minfontsize
-    // prefs into account?
-    aFontSize = aStyleFont->mFont.size;
+  const nsFont* font;
+  if (aStyleContext) {
+    font = &aStyleContext->GetStyleFont()->mFont;
+  } else {
+    font = aFont;
   }
   switch (unit) {
     case eCSSUnit_EM:
     case eCSSUnit_Char: {
-      return NSToCoordRound(aValue.GetFloatValue() * float(aFontSize));
+      return NSToCoordRound(aValue.GetFloatValue() * (float)font->size);
       // XXX scale against font metrics height instead?
     }
     case eCSSUnit_EN: {
-      return NSToCoordRound((aValue.GetFloatValue() * float(aFontSize)) / 2.0f);
+      return NSToCoordRound((aValue.GetFloatValue() * (float)font->size) / 2.0f);
     }
     case eCSSUnit_XHeight: {
-      nsFont font = aStyleFont->mFont;
-      font.size = aFontSize;
-      nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);
+      nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(*font);
       nscoord xHeight;
       fm->GetXHeight(xHeight);
-      return NSToCoordRound(aValue.GetFloatValue() * float(xHeight));
+      return NSToCoordRound(aValue.GetFloatValue() * (float)xHeight);
     }
     case eCSSUnit_CapHeight: {
       NS_NOTYETIMPLEMENTED("cap height unit");
-      nscoord capHeight = ((aFontSize / 3) * 2); // XXX HACK!
-      return NSToCoordRound(aValue.GetFloatValue() * float(capHeight));
+      nscoord capHeight = ((font->size / 3) * 2); // XXX HACK!
+      return NSToCoordRound(aValue.GetFloatValue() * (float)capHeight);
     }
     default:
       NS_NOTREACHED("unexpected unit");
       break;
   }
   return 0;
-}
-
-static nscoord CalcLength(const nsCSSValue& aValue,
-                          nsStyleContext* aStyleContext,
-                          nsPresContext* aPresContext,
-                          PRBool& aInherited)
-{
-  NS_ASSERTION(aStyleContext, "Must have style data");
-
-  return CalcLengthWith(aValue, -1, nsnull, aStyleContext, aPresContext, aInherited);
 }
 
 #define SETCOORD_NORMAL                 0x01   // N
@@ -312,8 +294,8 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   } 
   else if (((aMask & SETCOORD_LENGTH) != 0) && 
            aValue.IsLengthUnit()) {
-    aCoord.SetCoordValue(CalcLength(aValue, aStyleContext, aPresContext, aInherited));
-  }
+    aCoord.SetCoordValue(CalcLength(aValue, nsnull, aStyleContext, aPresContext, aInherited));
+  } 
   else if (((aMask & SETCOORD_PERCENT) != 0) && 
            (aValue.GetUnit() == eCSSUnit_Percent)) {
     aCoord.SetPercentValue(aValue.GetPercentValue());
@@ -694,9 +676,6 @@ CheckFontCallback(const nsRuleDataStruct& aData,
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
         size.GetIntValue() == NS_STYLE_FONT_SIZE_LARGER)) ||
-#ifdef MOZ_MATHML
-      fontData.mScriptLevel.GetUnit() == eCSSUnit_Integer ||
-#endif
       (weight.GetUnit() == eCSSUnit_Enumerated &&
        (weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_BOLDER ||
         weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_LIGHTER))) {
@@ -970,16 +949,6 @@ QuotesAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
                            (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
-#if defined(MOZ_MATHML) && defined(DEBUG)
-static PRBool
-AreAllMathMLPropertiesUndefined(const nsCSSFont& aRuleData)
-{
-  return aRuleData.mScriptLevel.GetUnit() == eCSSUnit_Null &&
-         aRuleData.mScriptSizeMultiplier.GetUnit() == eCSSUnit_Null &&
-         aRuleData.mScriptMinSize.GetUnit() == eCSSUnit_Null;
-}
-#endif
-
 inline nsRuleNode::RuleDetail
 nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
                                      const nsRuleDataStruct& aRuleDataStruct)
@@ -1069,13 +1038,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
          aSID, total, specified, inherited);
 #endif
 
-#ifdef MOZ_MATHML
-  NS_ASSERTION(aSID != eStyleStruct_Font ||
-               mPresContext->Document()->GetMathMLEnabled() ||
-               AreAllMathMLPropertiesUndefined(static_cast<const nsCSSFont&>(aRuleDataStruct)),
-               "MathML style property was defined even though MathML is disabled");
-#endif
-
   /*
    * Return the most specific information we can: prefer None or Full
    * over Partial, and Reset or Inherited over Mixed, since we can
@@ -1084,18 +1046,7 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
   nsRuleNode::RuleDetail result;
   if (inherited == total)
     result = eRuleFullInherited;
-  else if (specified == total
-#ifdef MOZ_MATHML
-           // MathML defines 3 properties in Font that will never be set when
-           // MathML is not in use. Therefore if all but three
-           // properties have been set, and MathML is not enabled, we can treat
-           // this as fully specified. Code in nsMathMLElementFactory will
-           // rebuild the rule tree and style data when MathML is first enabled
-           // (see nsMathMLElement::BindToTree).
-           || (aSID == eStyleStruct_Font && specified + 3 == total &&
-               !mPresContext->Document()->GetMathMLEnabled())
-#endif
-          ) {
+  else if (specified == total) {
     if (inherited == 0)
       result = eRuleFullReset;
     else
@@ -1934,201 +1885,13 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   }                                                                           \
                                                                               \
   return data_;
-
-#ifdef MOZ_MATHML
-// This function figures out how much scaling should be suppressed to
-// satisfy scriptminsize. This is our attempt to implement
-// http://www.w3.org/TR/MathML2/chapter3.html#id.3.3.4.2.2
-// This is called after mScriptLevel, mScriptMinSize and mScriptSizeMultiplier
-// have been set in aFont.
-//
-// Here are the invariants we enforce:
-// 1) A decrease in size must not reduce the size below minscriptsize.
-// 2) An increase in size must not increase the size above the size we would
-// have if minscriptsize had not been applied anywhere.
-// 3) The scriptlevel-induced size change must between 1.0 and the parent's
-// scriptsizemultiplier^(new script level - old script level), as close to the
-// latter as possible subject to constraints 1 and 2.
-static nscoord
-ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
-                       nsPresContext* aPresContext, nscoord* aUnconstrainedSize)
-{
-  PRInt32 scriptLevelChange =
-    aFont->mScriptLevel - aParentFont->mScriptLevel;
-  if (scriptLevelChange == 0) {
-    *aUnconstrainedSize = aParentFont->mScriptUnconstrainedSize;
-    // Constraint #3 says that we cannot change size, and #1 and #2 are always
-    // satisfied with no change. It's important this be fast because it covers
-    // all non-MathML content.
-    return aParentFont->mSize;
-  }
-
-  // Compute actual value of minScriptSize
-  nscoord minScriptSize =
-    nsStyleFont::ZoomText(aPresContext, aParentFont->mScriptMinSize);
-
-  double scriptLevelScale =
-    pow(aParentFont->mScriptSizeMultiplier, scriptLevelChange);
-  // Compute the size we would have had if minscriptsize had never been applied
-  *aUnconstrainedSize =
-    NSToCoordRound(aParentFont->mScriptUnconstrainedSize*scriptLevelScale);
-  // Compute the size we could get via scriptlevel change
-  nscoord scriptLevelSize =
-    NSToCoordRound(aParentFont->mSize*scriptLevelScale);
-  if (scriptLevelScale <= 1.0) {
-    if (aParentFont->mSize <= minScriptSize) {
-      // We can't decrease the font size at all, so just stick to no change
-      // (authors are allowed to explicitly set the font size smaller than
-      // minscriptsize)
-      return aParentFont->mSize;
-    }
-    // We can decrease, so apply constraint #1
-    return PR_MAX(minScriptSize, scriptLevelSize);
-  } else {
-    // scriptminsize can only make sizes larger than the unconstrained size
-    NS_ASSERTION(*aUnconstrainedSize <= scriptLevelSize, "How can this ever happen?");
-    // Apply constraint #2
-    return PR_MIN(scriptLevelSize, PR_MAX(*aUnconstrainedSize, minScriptSize));
-  }
-}
-#endif
-
-/* static */ void
-nsRuleNode::SetFontSize(nsPresContext* aPresContext,
-                        const nsRuleDataFont& aFontData,
-                        const nsStyleFont* aFont,
-                        const nsStyleFont* aParentFont,
-                        nscoord* aSize,
-                        const nsFont& aSystemFont,
-                        nscoord aParentSize,
-                        nscoord aScriptLevelAdjustedParentSize,
-                        PRBool aUsedStartStruct,
-                        PRBool& aInherited)
-{
-  PRBool zoom = PR_FALSE;
-  PRInt32 baseSize = (PRInt32) aPresContext->
-    GetDefaultFont(aFont->mFlags & NS_STYLE_FONT_FACE_MASK)->size;
-  if (eCSSUnit_Enumerated == aFontData.mSize.GetUnit()) {
-    PRInt32 value = aFontData.mSize.GetIntValue();
-    PRInt32 scaler = aPresContext->FontScaler();
-    float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-
-    zoom = PR_TRUE;
-    if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
-        (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
-      *aSize = nsStyleUtil::CalcFontPointSize(value, baseSize,
-                       scaleFactor, aPresContext, eFontSize_CSS);
-    }
-    else if (NS_STYLE_FONT_SIZE_XXXLARGE == value) {
-      // <font size="7"> is not specified in CSS, so we don't use eFontSize_CSS.
-      *aSize = nsStyleUtil::CalcFontPointSize(value, baseSize,
-                       scaleFactor, aPresContext);
-    }
-    else if (NS_STYLE_FONT_SIZE_LARGER  == value ||
-             NS_STYLE_FONT_SIZE_SMALLER == value) {
-      aInherited = PR_TRUE;
-
-      // Un-zoom so we use the tables correctly.  We'll then rezoom due
-      // to the |zoom = PR_TRUE| above.
-      // Note that relative units here use the parent's size unadjusted
-      // for scriptlevel changes. A scriptlevel change between us and the parent
-      // is simply ignored.
-      nscoord parentSize =
-        nsStyleFont::UnZoomText(aPresContext, aParentSize);
-
-      if (NS_STYLE_FONT_SIZE_LARGER == value) {
-        *aSize = nsStyleUtil::FindNextLargerFontSize(parentSize,
-                         baseSize, scaleFactor, aPresContext, eFontSize_CSS);
-        NS_ASSERTION(*aSize > parentSize,
-                     "FindNextLargerFontSize failed");
-      }
-      else {
-        *aSize = nsStyleUtil::FindNextSmallerFontSize(parentSize,
-                         baseSize, scaleFactor, aPresContext, eFontSize_CSS);
-        NS_ASSERTION(*aSize < parentSize ||
-                     parentSize <= nsPresContext::CSSPixelsToAppUnits(1), 
-                     "FindNextSmallerFontSize failed");
-      }
-    } else {
-      NS_NOTREACHED("unexpected value");
-    }
-  }
-  else if (aFontData.mSize.IsLengthUnit()) {
-    // Note that font-based length units use the parent's size unadjusted
-    // for scriptlevel changes. A scriptlevel change between us and the parent
-    // is simply ignored.
-    *aSize = CalcLengthWith(aFontData.mSize, aParentSize, aParentFont, nsnull,
-                        aPresContext, aInherited);
-    zoom = aFontData.mSize.IsFixedLengthUnit() ||
-           aFontData.mSize.GetUnit() == eCSSUnit_Pixel;
-  }
-  else if (eCSSUnit_Percent == aFontData.mSize.GetUnit()) {
-    aInherited = PR_TRUE;
-    // Note that % units use the parent's size unadjusted for scriptlevel
-    // changes. A scriptlevel change between us and the parent is simply
-    // ignored.
-    *aSize = NSToCoordRound(aParentSize *
-                            aFontData.mSize.GetPercentValue());
-    zoom = PR_FALSE;
-  }
-  else if (eCSSUnit_System_Font == aFontData.mSize.GetUnit()) {
-    // this becomes our cascading size
-    *aSize = aSystemFont.size;
-    zoom = PR_TRUE;
-  }
-  else if (eCSSUnit_Inherit == aFontData.mSize.GetUnit()) {
-    aInherited = PR_TRUE;
-    // We apply scriptlevel change for this case, because the default is
-    // to inherit and we don't want explicit "inherit" to differ from the
-    // default.
-    *aSize = aScriptLevelAdjustedParentSize;
-    zoom = PR_FALSE;
-  }
-  else if (eCSSUnit_Initial == aFontData.mSize.GetUnit()) {
-    // The initial value is 'medium', which has magical sizing based on
-    // the generic font family, so do that here too.
-    *aSize = baseSize;
-    zoom = PR_TRUE;
-  } else {
-    NS_ASSERTION(eCSSUnit_Null == aFontData.mSize.GetUnit(),
-                 "What kind of font-size value is this?");
-#ifdef MOZ_MATHML
-    // if aUsedStartStruct is true, then every single property in the
-    // font struct is being set all at once. This means scriptlevel is not
-    // going to have any influence on the font size; there is no need to
-    // do anything here.
-    if (!aUsedStartStruct && aParentSize != aScriptLevelAdjustedParentSize) {
-      // There was no rule affecting the size but the size has been
-      // affected by the parent's size via scriptlevel change. So treat
-      // this as inherited.
-      aInherited = PR_TRUE;
-      *aSize = aScriptLevelAdjustedParentSize;
-    }
-#endif
-  }
-
-  // We want to zoom the cascaded size so that em-based measurements,
-  // line-heights, etc., work.
-  if (zoom) {
-    *aSize = nsStyleFont::ZoomText(aPresContext, *aSize);
-  }
-}
-
-static PRInt8 ClampTo8Bit(PRInt32 aValue) {
-  if (aValue < -128)
-    return -128;
-  if (aValue > 127)
-    return 127;
-  return PRInt8(aValue);
-}
-
+  
 /* static */ void
 nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                     nscoord aMinFontSize,
                     PRUint8 aGenericFontID, const nsRuleDataFont& aFontData,
                     const nsStyleFont* aParentFont,
-                    nsStyleFont* aFont, PRBool aUsedStartStruct,
-                    PRBool& aInherited)
+                    nsStyleFont* aFont, PRBool& aInherited)
 {
   const nsFont* defaultVariableFont =
     aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID);
@@ -2319,79 +2082,85 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mFont.weight = defaultVariableFont->weight;
   }
 
-#ifdef MOZ_MATHML
-  // Compute scriptlevel, scriptminsize and scriptsizemultiplier now so
-  // they're available for font-size computation.
-
-  // -moz-script-min-size: length
-  if (aFontData.mScriptMinSize.IsLengthUnit()) {
-    aFont->mScriptMinSize =
-      CalcLength(aFontData.mScriptMinSize, aContext, aPresContext, aInherited);
-  }
-
-  // -moz-script-size-multiplier: factor, inherit
-  if (eCSSUnit_Number == aFontData.mScriptSizeMultiplier.GetUnit()) {
-    aFont->mScriptSizeMultiplier = aFontData.mScriptSizeMultiplier.GetFloatValue();
-    NS_ASSERTION(aFont->mScriptSizeMultiplier >= 0.0f, "Cannot have negative script size multiplier");
-  }
-  else if (eCSSUnit_Inherit == aFontData.mScriptSizeMultiplier.GetUnit()) {
-    aInherited = PR_TRUE;
-    aFont->mScriptSizeMultiplier = aParentFont->mScriptSizeMultiplier;
-  }
-  else if (eCSSUnit_Initial == aFontData.mScriptSizeMultiplier.GetUnit()) {
-    aFont->mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
-  }
-  
-  // -moz-script-level: integer, number, inherit
-  if (eCSSUnit_Integer == aFontData.mScriptLevel.GetUnit()) {
-    // "relative"
-    aFont->mScriptLevel = ClampTo8Bit(aParentFont->mScriptLevel + aFontData.mScriptLevel.GetIntValue());
-  }
-  else if (eCSSUnit_Number == aFontData.mScriptLevel.GetUnit()) {
-    // "absolute"
-    aFont->mScriptLevel = ClampTo8Bit(PRInt32(aFontData.mScriptLevel.GetFloatValue()));
-  }
-  else if (eCSSUnit_Inherit == aFontData.mScriptSizeMultiplier.GetUnit()) {
-    aInherited = PR_TRUE;
-    aFont->mScriptLevel = aParentFont->mScriptLevel;
-  }
-  else if (eCSSUnit_Initial == aFontData.mScriptSizeMultiplier.GetUnit()) {
-    aFont->mScriptLevel = 0;
-  }
-#endif
-
   // font-size: enum, length, percent, inherit
-  nscoord scriptLevelAdjustedParentSize = aParentFont->mSize;
-#ifdef MOZ_MATHML
-  nscoord scriptLevelAdjustedUnconstrainedParentSize;
-  scriptLevelAdjustedParentSize =
-    ComputeScriptLevelSize(aFont, aParentFont, aPresContext,
-                           &scriptLevelAdjustedUnconstrainedParentSize);
-  NS_ASSERTION(!aUsedStartStruct || aFont->mScriptUnconstrainedSize == aFont->mSize,
-               "If we have a start struct, we should have reset everything coming in here");
-#endif
-  SetFontSize(aPresContext, aFontData, aFont, aParentFont, &aFont->mSize,
-              systemFont, aParentFont->mSize, scriptLevelAdjustedParentSize,
-              aUsedStartStruct, aInherited);
-#ifdef MOZ_MATHML
-  if (aParentFont->mSize == aParentFont->mScriptUnconstrainedSize &&
-      scriptLevelAdjustedParentSize == scriptLevelAdjustedUnconstrainedParentSize) {
-    // Fast path: we have not been affected by scriptminsize so we don't
-    // need to call SetFontSize again to compute the
-    // scriptminsize-unconstrained size. This is OK even if we have a
-    // start struct, because if we have a start struct then 'font-size'
-    // was specified and so scriptminsize has no effect.
-    aFont->mScriptUnconstrainedSize = aFont->mSize;
-  } else {
-    SetFontSize(aPresContext, aFontData, aFont, aParentFont,
-                &aFont->mScriptUnconstrainedSize, systemFont,
-                aParentFont->mScriptUnconstrainedSize,
-                scriptLevelAdjustedUnconstrainedParentSize,
-                aUsedStartStruct, aInherited);
+  PRBool zoom = PR_FALSE;
+  PRInt32 baseSize = (PRInt32) aPresContext->
+    GetDefaultFont(aFont->mFlags & NS_STYLE_FONT_FACE_MASK)->size;
+  if (eCSSUnit_Enumerated == aFontData.mSize.GetUnit()) {
+    PRInt32 value = aFontData.mSize.GetIntValue();
+    PRInt32 scaler = aPresContext->FontScaler();
+    float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+
+    zoom = PR_TRUE;
+    if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
+        (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
+      aFont->mSize = nsStyleUtil::CalcFontPointSize(value, baseSize,
+                       scaleFactor, aPresContext, eFontSize_CSS);
+    }
+    else if (NS_STYLE_FONT_SIZE_XXXLARGE == value) {
+      // <font size="7"> is not specified in CSS, so we don't use eFontSize_CSS.
+      aFont->mSize = nsStyleUtil::CalcFontPointSize(value, baseSize,
+                       scaleFactor, aPresContext);
+    }
+    else if (NS_STYLE_FONT_SIZE_LARGER      == value ||
+             NS_STYLE_FONT_SIZE_SMALLER     == value) {
+
+      aInherited = PR_TRUE;
+
+      // Un-zoom so we use the tables correctly.  We'll then rezoom due
+      // to the |zoom = PR_TRUE| above.
+      nscoord parentSize =
+          nsStyleFont::UnZoomText(aPresContext, aParentFont->mSize);
+
+      if (NS_STYLE_FONT_SIZE_LARGER == value) {
+        aFont->mSize = nsStyleUtil::FindNextLargerFontSize(parentSize,
+                         baseSize, scaleFactor, aPresContext, eFontSize_CSS);
+        NS_ASSERTION(aFont->mSize > parentSize,
+                     "FindNextLargerFontSize failed");
+      } 
+      else {
+        aFont->mSize = nsStyleUtil::FindNextSmallerFontSize(parentSize,
+                         baseSize, scaleFactor, aPresContext, eFontSize_CSS);
+        NS_ASSERTION(aFont->mSize < parentSize ||
+                     parentSize <= nsPresContext::CSSPixelsToAppUnits(1), 
+                     "FindNextSmallerFontSize failed");
+      }
+    } else {
+      NS_NOTREACHED("unexpected value");
+    }
   }
-  NS_ASSERTION(aFont->mScriptUnconstrainedSize <= aFont->mSize,
-               "scriptminsize should never be making things bigger");
-#endif
+  else if (aFontData.mSize.IsLengthUnit()) {
+    aFont->mSize = CalcLength(aFontData.mSize, &aParentFont->mFont, nsnull, aPresContext, aInherited);
+    zoom = aFontData.mSize.IsFixedLengthUnit() ||
+           aFontData.mSize.GetUnit() == eCSSUnit_Pixel;
+  }
+  else if (eCSSUnit_Percent == aFontData.mSize.GetUnit()) {
+    aInherited = PR_TRUE;
+    aFont->mSize = NSToCoordRound(float(aParentFont->mSize) *
+                                  aFontData.mSize.GetPercentValue());
+    zoom = PR_FALSE;
+  }
+  else if (eCSSUnit_System_Font == aFontData.mSize.GetUnit()) {
+    // this becomes our cascading size
+    aFont->mSize = systemFont.size;
+    zoom = PR_TRUE;
+  }
+  else if (eCSSUnit_Inherit == aFontData.mSize.GetUnit()) {
+    aInherited = PR_TRUE;
+    aFont->mSize = aParentFont->mSize;
+    zoom = PR_FALSE;
+  }
+  else if (eCSSUnit_Initial == aFontData.mSize.GetUnit()) {
+    // The initial value is 'medium', which has magical sizing based on
+    // the generic font family, so do that here too.
+    aFont->mSize = baseSize;
+    zoom = PR_TRUE;
+  }
+
+  // We want to zoom the cascaded size so that em-based measurements,
+  // line-heights, etc., work.
+  if (zoom)
+    aFont->mSize = nsStyleFont::ZoomText(aPresContext, aFont->mSize);
 
   // enforce the user' specified minimum font-size on the value that we expose
   aFont->mFont.size = PR_MAX(aFont->mSize, aMinFontSize);
@@ -2444,12 +2213,18 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   // we will start with the default generic font from the presentation
   // context. Otherwise we start with the higher context.
   const nsFont* defaultFont = aPresContext->GetDefaultFont(aGenericFontID);
-  nsStyleFont parentFont(*defaultFont, aPresContext);
+  nsStyleFont parentFont(*defaultFont);
+  parentFont.mSize = parentFont.mFont.size
+      = nsStyleFont::ZoomText(aPresContext, parentFont.mSize);
   if (higherContext) {
     const nsStyleFont* tmpFont = higherContext->GetStyleFont();
-    parentFont = *tmpFont;
+    parentFont.mFlags = tmpFont->mFlags;
+    parentFont.mFont = tmpFont->mFont;
+    parentFont.mSize = tmpFont->mSize;
   }
-  *aFont = parentFont;
+  aFont->mFlags = parentFont.mFlags;
+  aFont->mFont = parentFont.mFont;
+  aFont->mSize = parentFont.mSize;
 
   PRBool dummy;
   PRUint32 fontBit = nsCachedStyleData::GetBitForSID(eStyleStruct_Font);
@@ -2486,15 +2261,16 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
       fontData.mFamily.Reset();
 
     nsRuleNode::SetFont(aPresContext, context, aMinFontSize,
-                        aGenericFontID, fontData, &parentFont, aFont,
-                        PR_FALSE, dummy);
+                        aGenericFontID, fontData, &parentFont, aFont, dummy);
 
     // XXX Not sure if we need to do this here
     // If we have a post-resolve callback, handle that now.
     if (ruleData.mPostResolveCallback)
       (ruleData.mPostResolveCallback)((nsStyleStruct*)aFont, &ruleData);
 
-    parentFont = *aFont;
+    parentFont.mFlags = aFont->mFlags;
+    parentFont.mFont = aFont->mFont;
+    parentFont.mSize = aFont->mSize;
   }
 }
 
@@ -2532,7 +2308,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   // using the 'font' shorthand).
 
   // See if there is a minimum font-size constraint to honor
-  nscoord minimumFontSize =
+  nscoord minimumFontSize = 
     mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
 
   if (minimumFontSize < 0)
@@ -2590,8 +2366,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   if (generic == kGenericFont_NONE) {
     // continue the normal processing
     nsRuleNode::SetFont(mPresContext, aContext, minimumFontSize, generic,
-                        fontData, parentFont, font,
-                        aStartStruct != nsnull, inherited);
+                        fontData, parentFont, font, inherited);
   }
   else {
     // re-calculate the font as a generic font
@@ -3168,7 +2943,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
     } 
     else if (displayData.mClip.mTop.IsLengthUnit()) {
-      display->mClip.y = CalcLength(displayData.mClip.mTop, aContext, mPresContext, inherited);
+      display->mClip.y = CalcLength(displayData.mClip.mTop, nsnull, aContext, mPresContext, inherited);
       fullAuto = PR_FALSE;
     }
     if (eCSSUnit_Auto == displayData.mClip.mBottom.GetUnit()) {
@@ -3179,7 +2954,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
     } 
     else if (displayData.mClip.mBottom.IsLengthUnit()) {
-      display->mClip.height = CalcLength(displayData.mClip.mBottom, aContext, mPresContext, inherited) -
+      display->mClip.height = CalcLength(displayData.mClip.mBottom, nsnull, aContext, mPresContext, inherited) -
                               display->mClip.y;
       fullAuto = PR_FALSE;
     }
@@ -3188,7 +2963,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
     } 
     else if (displayData.mClip.mLeft.IsLengthUnit()) {
-      display->mClip.x = CalcLength(displayData.mClip.mLeft, aContext, mPresContext, inherited);
+      display->mClip.x = CalcLength(displayData.mClip.mLeft, nsnull, aContext, mPresContext, inherited);
       fullAuto = PR_FALSE;
     }
     if (eCSSUnit_Auto == displayData.mClip.mRight.GetUnit()) {
@@ -3199,7 +2974,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
     } 
     else if (displayData.mClip.mRight.IsLengthUnit()) {
-      display->mClip.width = CalcLength(displayData.mClip.mRight, aContext, mPresContext, inherited) -
+      display->mClip.width = CalcLength(displayData.mClip.mRight, nsnull, aContext, mPresContext, inherited) -
                              display->mClip.x;
       fullAuto = PR_FALSE;
     }
@@ -3502,7 +3277,7 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
   }
   else if (colorData.mBackPosition.mXValue.IsLengthUnit()) {
-    bg->mBackgroundXPosition.mCoord = CalcLength(colorData.mBackPosition.mXValue, 
+    bg->mBackgroundXPosition.mCoord = CalcLength(colorData.mBackPosition.mXValue, nsnull, 
                                                  aContext, mPresContext, inherited);
     bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_LENGTH;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
@@ -3541,7 +3316,7 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
   }
   else if (colorData.mBackPosition.mYValue.IsLengthUnit()) {
-    bg->mBackgroundYPosition.mCoord = CalcLength(colorData.mBackPosition.mYValue,
+    bg->mBackgroundYPosition.mCoord = CalcLength(colorData.mBackPosition.mYValue, nsnull,
                                                  aContext, mPresContext, inherited);
     bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_LENGTH;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
@@ -4004,23 +3779,23 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct,
     if (eCSSUnit_Auto == listData.mImageRegion.mTop.GetUnit())
       list->mImageRegion.y = 0;
     else if (listData.mImageRegion.mTop.IsLengthUnit())
-      list->mImageRegion.y = CalcLength(listData.mImageRegion.mTop, aContext, mPresContext, inherited);
+      list->mImageRegion.y = CalcLength(listData.mImageRegion.mTop, nsnull, aContext, mPresContext, inherited);
       
     if (eCSSUnit_Auto == listData.mImageRegion.mBottom.GetUnit())
       list->mImageRegion.height = 0;
     else if (listData.mImageRegion.mBottom.IsLengthUnit())
-      list->mImageRegion.height = CalcLength(listData.mImageRegion.mBottom, aContext, 
+      list->mImageRegion.height = CalcLength(listData.mImageRegion.mBottom, nsnull, aContext, 
                                             mPresContext, inherited) - list->mImageRegion.y;
   
     if (eCSSUnit_Auto == listData.mImageRegion.mLeft.GetUnit())
       list->mImageRegion.x = 0;
     else if (listData.mImageRegion.mLeft.IsLengthUnit())
-      list->mImageRegion.x = CalcLength(listData.mImageRegion.mLeft, aContext, mPresContext, inherited);
+      list->mImageRegion.x = CalcLength(listData.mImageRegion.mLeft, nsnull, aContext, mPresContext, inherited);
       
     if (eCSSUnit_Auto == listData.mImageRegion.mRight.GetUnit())
       list->mImageRegion.width = 0;
     else if (listData.mImageRegion.mRight.IsLengthUnit())
-      list->mImageRegion.width = CalcLength(listData.mImageRegion.mRight, aContext, mPresContext, inherited) -
+      list->mImageRegion.width = CalcLength(listData.mImageRegion.mRight, nsnull, aContext, mPresContext, inherited) -
                                 list->mImageRegion.x;
   }
 
