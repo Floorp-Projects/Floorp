@@ -51,12 +51,14 @@
  *   This is the text to be placed in the label for the checkbox.  If no text is
  *   passed (ie, it's an empty string), the checkbox will be hidden.
  * window.arguments[5]:
- *   This is the text that is displayed below the checkbox when it is checked.
+ *   The accesskey for the checkbox
  * window.arguments[6]:
- *   This is the nsIHandlerInfo that gives us all our precious information.
+ *   This is the text that is displayed below the checkbox when it is checked.
  * window.arguments[7]:
- *   This is the nsIURI that we are being brought up for in the first place.
+ *   This is the nsIHandlerInfo that gives us all our precious information.
  * window.arguments[8]:
+ *   This is the nsIURI that we are being brought up for in the first place.
+ * window.arguments[9]:
  *   The nsIInterfaceRequestor of the parent window; may be null
  */
 
@@ -82,9 +84,9 @@ var dialog = {
   */
   initialize: function initialize()
   {
-    this._handlerInfo = window.arguments[6].QueryInterface(Ci.nsIHandlerInfo);
-    this._URI         = window.arguments[7].QueryInterface(Ci.nsIURI);
-    this._windowCtxt  = window.arguments[8];
+    this._handlerInfo = window.arguments[7].QueryInterface(Ci.nsIHandlerInfo);
+    this._URI         = window.arguments[8].QueryInterface(Ci.nsIURI);
+    this._windowCtxt  = window.arguments[9];
     if (this._windowCtxt)
       this._windowCtxt.QueryInterface(Ci.nsIInterfaceRequestor);
     this._itemChoose  = document.getElementById("item-choose");
@@ -108,7 +110,8 @@ var dialog = {
     description.text.textContent = window.arguments[2];
     options.value                = window.arguments[3];
     checkbox.desc.label          = window.arguments[4];
-    checkbox.text.textContent    = window.arguments[5];
+    checkbox.desc.accessKey      = window.arguments[5];
+    checkbox.text.textContent    = window.arguments[6];
 
     // Hide stuff that needs to be hidden
     if (!checkbox.desc.label)
