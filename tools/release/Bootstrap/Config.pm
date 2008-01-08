@@ -176,6 +176,40 @@ sub GetLinuxExtension {
     return ($useTarGz) ? 'gz' : 'bz2';
 }
 
+sub GetVersion {
+    my $this = shift;
+    my %args = @_;
+    
+    if (! defined($args{'longName'})) {
+      die "ASSERT: Bootstep::Config::GetVersion(): longName is a required argument";
+    }
+    my $longName = $args{'longName'};
+
+    my $version = $this->Get(var => 'version');
+    my $longVersion = $version;
+    $longVersion =~ s/a([0-9]+)/ Alpha $1/;
+    $longVersion =~ s/b([0-9]+)/ Beta $1/;
+
+    return ($longName) ? $longVersion : $version;
+}
+
+sub GetOldVersion {
+    my $this = shift;
+    my %args = @_;
+    
+    if (! defined($args{'longName'})) {
+      die "ASSERT: Bootstep::Config::GetOldVersion(): longName is a required argument";
+    }
+    my $longName = $args{'longName'};
+
+    my $oldVersion = $this->Get(var => 'oldVersion');
+    my $oldLongVersion = $oldVersion;
+    $oldLongVersion =~ s/a([0-9]+)/ Alpha $1/;
+    $oldLongVersion =~ s/b([0-9]+)/ Beta $1/;
+
+    return ($longName) ? $oldLongVersion : $oldVersion;
+}
+
 ##
 # Exists checks to see if a config variable exists.
 # Returns boolean (1 or 0)
