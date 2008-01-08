@@ -267,7 +267,8 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
 
   PRInt32 i;
   nsCOMPtr<nsIFontMetrics> fm;
-  aReflowState.rendContext->SetFont(aForFrame->GetStyleFont()->mFont, nsnull);
+  const nsStyleFont* font = aForFrame->GetStyleFont();
+  aReflowState.rendContext->SetFont(font->mFont, nsnull);
   aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
   nscoord axisHeight, em;
   GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
@@ -390,19 +391,19 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   /////////////////
   // opening fence ...
   ReflowChar(aPresContext, *aReflowState.rendContext, aOpenChar,
-             NS_MATHML_OPERATOR_FORM_PREFIX, presentationData.scriptLevel, 
+             NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, 
              axisHeight, leading, em, containerSize, ascent, descent);
   /////////////////
   // separators ...
   for (i = 0; i < aSeparatorsCount; i++) {
     ReflowChar(aPresContext, *aReflowState.rendContext, &aSeparatorsChar[i],
-               NS_MATHML_OPERATOR_FORM_INFIX, presentationData.scriptLevel,
+               NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel,
                axisHeight, leading, em, containerSize, ascent, descent);
   }
   /////////////////
   // closing fence ...
   ReflowChar(aPresContext, *aReflowState.rendContext, aCloseChar,
-             NS_MATHML_OPERATOR_FORM_POSTFIX, presentationData.scriptLevel,
+             NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel,
              axisHeight, leading, em, containerSize, ascent, descent);
 
   //////////////////

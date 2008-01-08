@@ -892,7 +892,7 @@ nsLocation::Reload()
     nsPresContext *pcx;
     if (doc && (shell = doc->GetPrimaryShell()) &&
         (pcx = shell->GetPresContext())) {
-      pcx->ClearStyleDataAndReflow();
+      pcx->RebuildAllStyleData();
     }
 
     return NS_OK;
