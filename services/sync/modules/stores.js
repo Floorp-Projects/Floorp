@@ -402,7 +402,7 @@ BookmarksStore.prototype = {
     switch (command.data.type) {
     case "query":
     case "bookmark":
-    case "microsummary":
+    case "microsummary": {
       this._log.info(" -> creating bookmark \"" + command.data.title + "\"");
       let URI = makeURI(command.data.URI);
       newId = this._bms.insertBookmark(parentId,
@@ -422,7 +422,7 @@ BookmarksStore.prototype = {
         }
         catch(ex) { /* ignore "missing local generator" exceptions */ }
       }
-      break;
+    } break;
     case "folder":
       this._log.info(" -> creating folder \"" + command.data.title + "\"");
       newId = this._bms.createFolder(parentId,
@@ -504,27 +504,27 @@ BookmarksStore.prototype = {
         this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
                            command.data.index);
         break;
-      case "parentGUID":
+      case "parentGUID": {
         let index = -1;
         if (command.data.index && command.data.index >= 0)
           index = command.data.index;
         this._bms.moveItem(
           itemId, this._bms.getItemIdForGUID(command.data.parentGUID), index);
-        break;
-      case "tags":
+      } break;
+      case "tags": {
         let tagsURI = this._bms.getBookmarkURI(itemId);
         this._ts.untagURI(URI, null);
         this._ts.tagURI(tagsURI, command.data.tags);
-        break;
+      } break;
       case "keyword":
         this._bms.setKeywordForBookmark(itemId, command.data.keyword);
         break;
-      case "generatorURI":
+      case "generatorURI": {
         let micsumURI = makeURI(this._bms.getBookmarkURI(itemId));
         let genURI = makeURI(command.data.generatorURI);
         let micsum = this._ms.createMicrosummary(micsumURI, genURI);
         this._ms.setMicrosummary(itemId, micsum);
-        break;
+      } break;
       case "siteURI":
         this._ls.setSiteURI(itemId, makeURI(command.data.siteURI));
         break;
