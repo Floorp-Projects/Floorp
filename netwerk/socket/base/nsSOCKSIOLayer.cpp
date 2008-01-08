@@ -612,7 +612,7 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
 
     // Sync resolve the proxy hostname.
     PRNetAddr proxyAddr;
-    nsCOMPtr<nsIDNSRecord> rec; 
+    nsCOMPtr<nsIDNSRecord> rec;
     nsresult rv;
     {
         nsCOMPtr<nsIDNSService> dns;
@@ -659,12 +659,11 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
     sockopt.option = PR_SockOpt_Nonblocking;
     sockopt.value.non_blocking = nonblocking;
 
-
     // This connectWait should be long enough to connect to local proxy
     // servers, but not much longer. Since this protocol negotiation
     // uses blocking network calls, the app can appear to hang for a maximum
     // of this time if the user presses the STOP button during the SOCKS
-    // connection negotiation. Note that this value only applies to the 
+    // connection negotiation. Note that this value only applies to the
     // connecting to the SOCKS server: once the SOCKS connection has been
     // established, the value is not used anywhere else.
     PRIntervalTime connectWait = PR_SecondsToInterval(10);
@@ -692,14 +691,10 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
     // Now we will negotiate a connection to the desired server.
 
     // External IP address returned from ConnectSOCKS5(). Not supported in SOCKS4.
-    PRNetAddr extAddr;	
+    PRNetAddr extAddr;
     PR_InitializeNetAddr(PR_IpAddrNull, 0, &extAddr);
 
- 
-
     NS_ASSERTION((socksVersion == 4) || (socksVersion == 5), "SOCKS Version must be selected");
-
-    nsresult rv;
 
     // Try to connect via SOCKS 5.
     if (socksVersion == 5) {
@@ -707,7 +702,7 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
 
         if (NS_FAILED(rv)) {
             PR_SetSocketOption(fd, &sockopt);
-            return PR_FAILURE;	
+            return PR_FAILURE;
         }
 
     }
@@ -718,7 +713,7 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
 
         if (NS_FAILED(rv)) {
             PR_SetSocketOption(fd, &sockopt);
-            return PR_FAILURE;	
+            return PR_FAILURE;
         }
 
     }
@@ -730,7 +725,7 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
     // restore non-blocking option
     PR_SetSocketOption(fd, &sockopt);
 
-    // we're set-up and connected. 
+    // we're set-up and connected.
     // this socket can be used as normal now.
 
     return PR_SUCCESS;
