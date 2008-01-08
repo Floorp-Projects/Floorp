@@ -67,8 +67,8 @@ sub Verify {
     my $rc = $config->Get(var => 'rc');
     my $oldRc = $config->Get(var => 'oldRc');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $version = $config->Get(var => 'version');
-    my $oldVersion = $config->Get(var => 'oldVersion');
+    my $version = $config->GetVersion(longName => 0);
+    my $oldVersion = $config->GetOldVersion(longName => 0);
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $stagingServer = $config->Get(var => 'stagingServer');
@@ -241,7 +241,7 @@ sub Announce {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $productTag = $config->Get(var => 'productTag');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
 

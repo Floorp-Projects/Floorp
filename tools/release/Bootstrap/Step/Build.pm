@@ -14,7 +14,7 @@ sub Execute {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $buildDir = $config->Get(sysvar => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
@@ -67,7 +67,7 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $buildDir = $config->Get(sysvar => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
@@ -102,7 +102,7 @@ sub Push {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
@@ -184,7 +184,7 @@ sub Announce {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $product = $config->Get(var => 'product');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
