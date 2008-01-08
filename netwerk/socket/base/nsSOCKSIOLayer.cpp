@@ -612,20 +612,16 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
 
     // Sync resolve the proxy hostname.
     PRNetAddr proxyAddr;
+    nsCOMPtr<nsIDNSRecord> rec; 
+    nsresult rv;
     {
         nsCOMPtr<nsIDNSService> dns;
-        nsCOMPtr<nsIDNSRecord> rec; 
-        nsresult rv;
 
         dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv))
             return PR_FAILURE;
 
         rv = dns->Resolve(proxyHost, 0, getter_AddRefs(rec));
-        if (NS_FAILED(rv))
-            return PR_FAILURE;
-
-        rv = rec->GetNextAddr(info->ProxyPort(), &proxyAddr);
         if (NS_FAILED(rv))
             return PR_FAILURE;
     }
@@ -674,10 +670,19 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
     PRIntervalTime connectWait = PR_SecondsToInterval(10);
 
     // Connect to the proxy server.
-    status = fd->lower->methods->connect(fd->lower, &proxyAddr, connectWait);
+    PRInt32 addresses = 0;
+    do {
+        rv = rec->GetNextAddr(info->ProxyPort(), &proxyAddr);
+        if (NS_FAILED(rv)) {
+            status = PR_FAILURE;
+            break;
+        }
+        ++addresses;
+        status = fd->lower->methods->connect(fd->lower, &proxyAddr, connectWait);
+    } while (PR_SUCCESS != status);
 
     if (PR_SUCCESS != status) {
-        LOGERROR(("Failed to TCP connect to the proxy server (%s): timeout = %d, status = %x.",proxyHost.get(), connectWait, status));
+        LOGERROR(("Failed to TCP connect to the proxy server (%s): timeout = %d, status = %x, tried %d addresses.", proxyHost.get(), connectWait, status, addresses));
         PR_SetSocketOption(fd, &sockopt);
         return status;
     }
