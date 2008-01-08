@@ -182,7 +182,7 @@ public:
      returns a non-null value for nsIContent::GetText() */
     eDATA_NODE           = 1 << 12,
     /** nsMathMLElement */
-    eMATHML              = 1 << 13,
+    eMATHML              = 1 << 13
   };
 
   /**
