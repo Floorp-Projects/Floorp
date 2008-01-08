@@ -209,7 +209,12 @@ sub BumpPatcherConfig {
     $appObj->{'release'}->{$version} = $releaseObj = {};
 
     $releaseObj->{'schema'} = '1';
-    $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $version;
+    if ($config->Exists(var => 'prettyAusVersion')) {
+        $releaseObj->{'version'} = $config->Get(var => 'prettyAusVersion');
+    } else {
+        $releaseObj->{'version'} = $version;
+    }
+    $releaseObj->{'extension-version'} = $version;
 
     my $linBuildId;
     my $winBuildId;
