@@ -54,7 +54,7 @@ var gOutFile;
 function createOutputFile() {
   var dirServices = Cc["@mozilla.org/file/directory_service;1"]
                     .createInstance(Ci.nsIProperties);
-  var file = dirServices.get("ProfD", Components.interfaces.nsIFile);
+  var file = dirServices.get("CurWorkD", Components.interfaces.nsIFile);
   file.append("test-output.xml");
   if (file.exists()) {
     file.remove(false);
@@ -139,12 +139,38 @@ function listPrefs() {
   output("</section>");
 }
 
+function handleEULA() {
+  var dirUtils = Cc["@mozilla.org/file/directory_service;1"]
+                 .createInstance(Ci.nsIProperties);
+  var eulaFile = dirUtils.get("CurWorkD", Components.interfaces.nsIFile);
+  eulaFile.append("EULA.txt");
+  if (eulaFile.exists()) {
+    // Then we have a EULA file, write that information into the XML output
+    output("\n<section id=\"eula\">\n");
+    var istream = Cc["@mozilla.org/network/file-input-stream;1"]
+                 .createInstance(Ci.nsIFileInputStream);
+    istream.init(eulaFile, 0x01, 0444, 0);
+    istream.QueryInterface(Ci.nsILineInputStream);
+
+    // read lines into array
+    var line = {}, hasmore;
+    var isFirstLine = true;
+    do {
+      hasmore = istream.readLine(line);
+      output("<l>" + line.value + "</l>\n");
+     } while(hasmore);
+
+    istream.close();
+    output("</section>");
+  }
+}
+
 function listBookmarks() {
   // Exports bookmarks to a testbookmarks.html file
   // If we're not less than or equal to a 1.8 build, then we're using places
   var dirUtils = Cc["@mozilla.org/file/directory_service;1"]
                  .createInstance(Ci.nsIProperties);
-  var file = dirUtils.get("ProfD", Components.interfaces.nsIFile);
+  var file = dirUtils.get("CurWorkD", Components.interfaces.nsIFile);
   file.append("test-bookmarks.html");
   if (file.exists()) {
     file.remove(false);
@@ -205,6 +231,7 @@ createOutputFile();
 listEngines();
 listPrefs();
 listExtensions();
+handleEULA();
 listBookmarks();
 listUpdates();
 closeOutputFile();

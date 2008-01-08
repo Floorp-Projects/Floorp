@@ -31,7 +31,8 @@
 
 import re
 from optparse import OptionParser
-from logAppender import LogAppender
+from logAppender import LogAppender, stderrCatcher
+import sys
 
 aus2link = re.compile(".*https:\/\/aus2.mozilla.org.*")
 
@@ -51,6 +52,7 @@ def checkHttpLog(httpLogFile, releaseChannel):
 
 def main(httpFile, releaseFile, log):
   lf = LogAppender(log)
+  sys.stderr = stderrCatcher(lf)
   rf = open(releaseFile, "r")
   # Ensure we don't pick up spurious newlines
   channel = rf.readline().split("\n")
