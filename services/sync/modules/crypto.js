@@ -98,7 +98,7 @@ WeaveCrypto.prototype = {
 
   observe: function Sync_observe(subject, topic, data) {
     switch (topic) {
-    case "extensions.weave.encryption":
+    case "extensions.weave.encryption": {
       let branch = Cc["@mozilla.org/preferences-service;1"]
         .getService(Ci.nsIPrefBranch);
 
@@ -121,7 +121,7 @@ WeaveCrypto.prototype = {
       }
       // FIXME: listen to this bad boy somewhere
       this._os.notifyObservers(null, "weave:encryption:algorithm-changed", "");
-      break;
+    } break;
     default:
       this._log.warn("Unknown encryption preference changed - ignoring");
     }
@@ -142,8 +142,8 @@ WeaveCrypto.prototype = {
       switch (algorithm) {
       case "none":
         ret = data;
-      case "XXTEA":
       case "XXXTEA": // Weave 0.1.12.10 and below had this typo
+      case "XXTEA": {
         this._log.debug("Encrypting data");
         let gen = this._xxtea.encrypt(data, identity.password);
         ret = gen.next();
@@ -154,7 +154,7 @@ WeaveCrypto.prototype = {
         }
         gen.close();
         this._log.debug("Done encrypting data");
-        break;
+      } break;
       default:
         throw "Unknown encryption algorithm: " + algorithm;
       }
@@ -184,8 +184,8 @@ WeaveCrypto.prototype = {
       case "none":
         ret = data;
         break;
-      case "XXTEA":
       case "XXXTEA": // Weave 0.1.12.10 and below had this typo
+      case "XXTEA": {
         this._log.debug("Decrypting data");
         let gen = this._xxtea.decrypt(data, identity.password);
         ret = gen.next();
@@ -196,7 +196,7 @@ WeaveCrypto.prototype = {
         }
         gen.close();
         this._log.debug("Done decrypting data");
-        break;
+      } break;
       default:
         throw "Unknown encryption algorithm: " + algorithm;
       }

@@ -485,7 +485,7 @@ Engine.prototype = {
       let status = resp.status;
   
       switch (status) {
-      case 200:
+      case 200: {
         this._log.info("Got status file from server");
   
         let status = eval(resp.responseText);
@@ -594,9 +594,9 @@ Engine.prototype = {
         ret.deltas = allDeltas;
         this._core.detectUpdates(cont, this._snapshot.data, snap.data);
         ret.updates = yield;
-        break;
-  
-      case 404:
+      } break;
+
+      case 404: {
         this._log.info("Server has no status file, Initial upload to server");
   
         this._snapshot.data = this._store.wrap();
@@ -620,8 +620,8 @@ Engine.prototype = {
         ret.snapshot = eval(uneval(this._snapshot.data));
         ret.deltas = [];
         ret.updates = [];
-        break;
-  
+      } break;
+
       default:
         this._log.error("Could not get status file: unknown HTTP status code " +
                         status);
