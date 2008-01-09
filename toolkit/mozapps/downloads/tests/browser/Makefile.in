@@ -45,10 +45,9 @@ relativesrcdir = toolkit/mozapps/downloads/tests/browser
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# XXX this test currently fails on windows
-#_BROWSER_FILES = \
-#  browser_basic_functionality.js
-#  $(NULL)
+_BROWSER_FILES = \
+  browser_basic_functionality.js \
+  $(NULL)
 
-#libs:: $(_BROWSER_FILES)
-#	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+libs:: $(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
