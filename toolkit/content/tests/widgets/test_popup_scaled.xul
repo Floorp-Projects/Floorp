@@ -72,7 +72,6 @@ function shown()
 function nextTest()
 {
   if (screenTest) {
-    setScale(window, 1);
     SimpleTest.finish();
   }
   else {
