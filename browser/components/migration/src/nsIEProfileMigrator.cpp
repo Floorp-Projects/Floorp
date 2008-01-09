@@ -1280,7 +1280,8 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
                                  sourceNameStrings, 1, getter_Copies(importedIEFavsTitle));
 
-    bms->CreateFolder(root, importedIEFavsTitle, -1, &folder);
+    bms->CreateFolder(root, NS_ConvertUTF16toUTF8(importedIEFavsTitle), -1,
+                      &folder);
   }
   else {
     // Initialize the default bookmarks
@@ -1371,7 +1372,8 @@ nsIEProfileMigrator::CopySmartKeywords(PRInt64 aParentFolder)
         nsString importedIESearchUrlsTitle;
         bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsFolder").get(),
                                     sourceNameStrings, 1, getter_Copies(importedIESearchUrlsTitle));
-        bms->CreateFolder(aParentFolder, importedIESearchUrlsTitle, -1, &keywordsFolder);
+        bms->CreateFolder(aParentFolder, NS_ConvertUTF16toUTF8(importedIESearchUrlsTitle),
+                          -1, &keywordsFolder);
       }
 
       nsCOMPtr<nsIWindowsRegKey> childKey; 
@@ -1389,7 +1391,8 @@ nsIEProfileMigrator::CopySmartKeywords(PRInt64 aParentFolder)
           }
           PRInt64 id;
           bms->InsertBookmark(keywordsFolder, uri,
-                              nsINavBookmarksService::DEFAULT_INDEX, keyName,
+                              nsINavBookmarksService::DEFAULT_INDEX,
+                              NS_ConvertUTF16toUTF8(keyName),
                               &id);
         }
         childKey->Close();
@@ -1501,7 +1504,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       PRInt64 id;
       rv = aBookmarksService->InsertBookmark(aParentFolder, bookmarkURI,
                                              nsINavBookmarksService::DEFAULT_INDEX,
-                                             bookmarkName, &id);
+                                             NS_ConvertUTF16toUTF8(bookmarkName), &id);
       NS_ENSURE_SUCCESS(rv, rv);
       if (NS_FAILED(rv)) continue;
     }
@@ -1512,7 +1515,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       }
       else {
         rv = aBookmarksService->CreateFolder(aParentFolder,
-                                             bookmarkName,
+                                             NS_ConvertUTF16toUTF8(bookmarkName),
                                              nsINavBookmarksService::DEFAULT_INDEX,
                                              &folder);
         if (NS_FAILED(rv)) continue;
@@ -1544,7 +1547,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       PRInt64 id;
       rv = aBookmarksService->InsertBookmark(aParentFolder, resolvedURI,
                                              nsINavBookmarksService::DEFAULT_INDEX,
-                                             name, &id);
+                                             NS_ConvertUTF16toUTF8(name), &id);
       if (NS_FAILED(rv)) continue;
     }
   }

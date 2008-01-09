@@ -1075,7 +1075,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
                                  sourceNameStrings, 1, 
                                  getter_Copies(importedOperaHotlistTitle));
 
-    bms->CreateFolder(parentFolder, importedOperaHotlistTitle,
+    bms->CreateFolder(parentFolder, NS_ConvertUTF16toUTF8(importedOperaHotlistTitle),
                       nsINavBookmarksService::DEFAULT_INDEX, &parentFolder);
   }
   else {
@@ -1140,7 +1140,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS,
                                 getter_Copies(importedSearchUrlsTitle));
 
   PRInt64 keywordsFolder;
-  rv = aBMS->CreateFolder(aParentFolder, importedSearchUrlsTitle,
+  rv = aBMS->CreateFolder(aParentFolder, NS_ConvertUTF16toUTF8(importedSearchUrlsTitle),
                           nsINavBookmarksService::DEFAULT_INDEX, &keywordsFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1170,22 +1170,21 @@ nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS,
     if (url.IsEmpty() || keyword.IsEmpty() || name.IsEmpty())
       continue;
 
-    NS_ConvertUTF8toUTF16 nameStr(name);
-    PRUint32 length = nameStr.Length();
+    PRUint32 length = name.Length();
     PRInt32 index = 0; 
     do {
-      index = nameStr.FindChar('&', index);
+      index = name.FindChar('&', index);
       if (index >= length - 2)
         break;
 
       // Assume "&&" is an escaped ampersand in the search query title. 
-      if (nameStr.CharAt(index + 1) == '&') {
+      if (name.CharAt(index + 1) == '&') {
         nameStr.Cut(index, 1);
         index += 2;
         continue;
       }
 
-      nameStr.Cut(index, 1);
+      name.Cut(index, 1);
     }
     while (index < length);
 
@@ -1206,7 +1205,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS,
     PRInt64 newId;
     rv = aBMS->InsertBookmark(keywordsFolder, uri,
                               nsINavBookmarksService::DEFAULT_INDEX,
-                              nameStr, &newId);
+                              name, &newId);
     NS_ENSURE_SUCCESS(rv, rv);
     // TODO -- set bookmark keyword to keyword and description to keywordDesc.
   }
@@ -1277,8 +1276,8 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
   PRBool moreData = PR_FALSE;
   nsAutoString buffer;
   EntryType entryType = EntryType_BOOKMARK;
-  nsAutoString name, keyword, description;
-  nsCAutoString url;
+  nsAutoString keyword, description;
+  nsCAutoString url, name;
   PRBool onToolbar = PR_FALSE;
   do {
     nsCAutoString cBuffer;
@@ -1302,7 +1301,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       // folder, or CopyBookmarks (which means we're done parsing all bookmarks).
       goto done;
     case LineType_NAME:
-      name = data;
+      name.Assign(NS_ConvertUTF16toUTF8(data));
       break;
     case LineType_URL:
       url.Assign(NS_ConvertUTF16toUTF8(data));

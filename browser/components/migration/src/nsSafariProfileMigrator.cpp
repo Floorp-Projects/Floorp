@@ -926,8 +926,8 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
                                  sourceNameStrings, 1,
                                  getter_Copies(importedSafariBookmarksTitle));
 
-    bms->CreateFolder(root, importedSafariBookmarksTitle, nsINavBookmarksService::DEFAULT_INDEX,
-                      &folder);
+    bms->CreateFolder(root, NS_ConvertUTF16toUTF8(importedSafariBookmarksTitle),
+                      nsINavBookmarksService::DEFAULT_INDEX, &folder);
   }
   else {
     nsCOMPtr<nsIFile> profile;
@@ -1006,8 +1006,8 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
 
     if (::CFDictionaryContainsKey(entry, CFSTR("Children")) &&
         type.EqualsLiteral("WebBookmarkTypeList")) {
-      nsAutoString title;
-      if (!GetDictionaryStringValue(entry, CFSTR("Title"), title))
+      nsCAutoString title;
+      if (!GetDictionaryCStringValue(entry, CFSTR("Title"), title, kCFStringEncodingUTF8))
         continue;
 
       CFArrayRef children = (CFArrayRef)::CFDictionaryGetValue(entry,
@@ -1048,9 +1048,9 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       // Encountered a Bookmark, so add it to the current folder...
       CFDictionaryRef URIDictionary = (CFDictionaryRef)
                       ::CFDictionaryGetValue(entry, CFSTR("URIDictionary"));
-      nsAutoString title, url;
-      if (GetDictionaryStringValue(URIDictionary, CFSTR("title"), title) &&
-          GetDictionaryStringValue(entry, CFSTR("URLString"), url)) {
+      nsCAutoString title, url;
+      if (GetDictionaryCStringValue(URIDictionary, CFSTR("title"), title, kCFStringEncodingUTF8) &&
+          GetDictionaryCStringValue(entry, CFSTR("URLString"), url, kCFStringEncodingUTF8)) {
         nsCOMPtr<nsIURI> uri;
         PRInt64 id;
         rv |= NS_NewURI(getter_AddRefs(uri), url);
