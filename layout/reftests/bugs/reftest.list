@@ -304,6 +304,11 @@ fails == 352980-1h.html 352980-1-ref.html
 == 352980-3d.html 352980-3-ref.html
 == 352980-3e.html 352980-3-ref.html
 == 352980-3f.html 352980-3-ref.html
+== 355548-1.xml 355548-1-ref.xml
+== 355548-2.xml 355548-2-ref.xml
+== 355548-3.xml 355548-3-ref.xml
+== 355548-4.xml 355548-4-ref.xml
+== 355548-5.xml 355548-5-ref.xml
 == 359903-1.html 359903-1-ref.html
 == 359869-1.html 359869-1-ref.html
 == 359903-2.html 359903-2-ref.html

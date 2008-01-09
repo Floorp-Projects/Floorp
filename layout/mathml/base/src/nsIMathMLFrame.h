@@ -226,18 +226,14 @@ public:
   TransmitAutomaticData() = 0;
 
  /* UpdatePresentationData :
-  * Increments the scriptlevel of the frame, and updates its displaystyle and
-  * compression flags. The displaystyle flag of an environment gets updated
-  * according to the MathML specification. A frame becomes "compressed" (or
-  * "cramped") according to TeX rendering rules (TeXBook, Ch.17, p.140-141).
+  * Updates the frame's displaystyle and compression flags. The displaystyle
+  * flag of an environment gets updated according to the MathML specification.
+  * A frame becomes "compressed" (or "cramped") according to TeX rendering
+  * rules (TeXBook, Ch.17, p.140-141).
   *
   * Note that <mstyle> is the only tag which allows to set
-  * <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
-  * to reset or increment the scriptlevel in a manual way. 
+  * <mstyle displaystyle="true|false">
   * Therefore <mstyle> has its own peculiar version of this method.
-  *
-  * @param aScriptLevelIncrement [in]
-  *        The value with which to increment mScriptLevel in the frame.
   *
   * @param aFlagsValues [in]
   *        The new values (e.g., display, compress) that are going to be
@@ -255,20 +251,17 @@ public:
   *        update some flags in the frame, leaving the other flags unchanged.
   */
   NS_IMETHOD
-  UpdatePresentationData(PRInt32         aScriptLevelIncrement,
-                         PRUint32        aFlagsValues,
+  UpdatePresentationData(PRUint32        aFlagsValues,
                          PRUint32        aWhichFlags) = 0;
 
  /* UpdatePresentationDataFromChildAt :
-  * Increments the scriplevel and sets the displaystyle and compression flags
-  * on the whole tree. For child frames at aFirstIndex up to aLastIndex, this
-  * method sets their displaystyle and compression flags, and increment their
-  * mScriptLevel with aScriptLevelIncrement. The update is propagated down 
-  * the subtrees of each of these child frames. 
+  * Sets displaystyle and compression flags on the whole tree. For child frames
+  * at aFirstIndex up to aLastIndex, this method sets their displaystyle and
+  * compression flags. The update is propagated down the subtrees of each of
+  * these child frames. 
   *
   * Note that <mstyle> is the only tag which allows
-  * <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
-  * to reset or increment the scriptlevel in a manual way.
+  * <mstyle displaystyle="true|false">
   * Therefore <mstyle> has its own peculiar version of this method.
   *
   * @param aFirstIndex [in]
@@ -277,9 +270,6 @@ public:
   * @param aLastIndex [in]
   *        Index of the last child where to stop the update.
   *        A value of -1 means up to last existing child.
-  *
-  * @param aScriptLevelIncrement [in]
-  *        The value with which to increment mScriptLevel in the whole sub-trees.
   *
   * @param aFlagsValues [in]
   *        The new values (e.g., display, compress) that are going to be
@@ -292,40 +282,8 @@ public:
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
-                                    PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aWhichFlags) = 0;
-
- /* ReResolveScriptStyle :
-  * During frame construction, the Style System gives us style contexts in
-  * which the sizes of the fonts are not suitable for scripting elements.
-  * Our expected behavior is that, when given the markup <mtag>base arguments</mtag>,
-  * we want to render the 'base' in a normal size, and the 'arguments' in a smaller
-  * size. This is a common functionality to tags like msub, msup, msubsup, mover,
-  * munder, munderover, mmultiscripts. Moreover, we want the reduction of the font
-  * size to happen in a top-down manner within the hierarchies of sub-expressions;
-  * and more importantly, we don't want the sizes to keep decreasing up to a point
-  * where the scripts become unreadably small.
-  *
-  * In general, this scaling effet arises when the scriptlevel changes between a
-  * parent and a child. Whenever the scriptlevel changes, either automatically or
-  * by being explicitly incremented, decremented, or set, the current font size has
-  * to be multiplied by the predefined value of 'scriptsizemultiplier' to the power
-  * of the change in the scriptlevel, and this scaling effect (downwards or upwards)
-  * has to be propagated down the subtrees, with the caveat that the font size is
-  * never allowed to go below the predefined value of 'scriptminsize' within a 
-  * sub-expression.
-  *
-  * ReResolveScriptStyle() will walk a subtree to cause this mathml-specific behavior
-  * to happen. The method is recursive and only a top-level parent wishing to reflect
-  * the changes in its children needs to call to the method.
-  *
-  * This function is *very* expensive. Unfortunately, there isn't much
-  * to do about it at the moment. For background on the problem @see 
-  * http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
-  */
-  NS_IMETHOD
-  ReResolveScriptStyle(PRInt32 aParentScriptLevel) = 0;
 };
 
 // struct used by a container frame to keep track of its embellishments.
@@ -379,15 +337,10 @@ struct nsPresentationData {
   // up-pointer on the mstyle frame, if any, that defines the scope
   nsIFrame* mstyle;
 
-  // level of nested frames within: msub, msup, msubsup, munder,
-  // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
-  PRInt32 scriptLevel;
-
   nsPresentationData() {
     flags = 0;
     baseFrame = nsnull;
     mstyle = nsnull;
-    scriptLevel = 0;
   }
 };
 
@@ -421,12 +374,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMathMLFrame, NS_IMATHMLFRAME_IID)
 // Tags like munder, mover, munderover, will fire a 
 // horizontal stretch command on all their non-empty children
 #define NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY   0x00000008
-
-// This bit is set if the frame has the explicit attribute
-// scriptlevel="value". It is only relevant to <mstyle> because that's
-// the only tag where the attribute is allowed by the spec.
-// Note: the flag is not set if the <mstyle> instead has an incremental +/-value.
-#define NS_MATHML_EXPLICIT_SCRIPTLEVEL                0x00000010
 
 // This bit is set if the frame has the explicit attribute
 // displaystyle="true" or "false". It is only relevant to <mstyle> and <mtable>
@@ -463,9 +410,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMathMLFrame, NS_IMATHMLFRAME_IID)
 
 #define NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(_flags) \
   (NS_MATHML_EXPLICIT_DISPLAYSTYLE == ((_flags) & NS_MATHML_EXPLICIT_DISPLAYSTYLE))
-
-#define NS_MATHML_HAS_EXPLICIT_SCRIPTLEVEL(_flags) \
-  (NS_MATHML_EXPLICIT_SCRIPTLEVEL == ((_flags) & NS_MATHML_EXPLICIT_SCRIPTLEVEL))
 
 #define NS_MATHML_HAS_ERROR(_flags) \
   (NS_MATHML_ERROR == ((_flags) & NS_MATHML_ERROR))

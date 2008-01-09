@@ -215,5 +215,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 // Content is of a type that gecko can't handle
 #define NS_EVENT_STATE_TYPE_UNSUPPORTED \
                                      0x00400000
+#ifdef MOZ_MATHML
+#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL 0x00800000
+#endif
 
 #endif // nsIEventStateManager_h__
