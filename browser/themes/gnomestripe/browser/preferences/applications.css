@@ -64,11 +64,13 @@ richlistitem {
 
 .actionsMenu .menulist-icon {
   -moz-margin-end: 1px;
+  height: 16px;
+  width: 16px;
 }
 
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
   -moz-padding-start: 0;
-  -moz-padding-end: 4px;
+  -moz-padding-end: 4px !important;
 }
 
 .actionsMenu > menupopup > menuitem {
