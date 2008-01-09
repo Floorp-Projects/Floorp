@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Dietrich Ayala <autonome@gmail.com>
+ *   Dietrich Ayala <dietrich@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -828,10 +828,15 @@ SessionStoreService.prototype = {
       tabData.index = history.index + 1;
     }
     else if (history && history.count > 0) {
-      for (var j = 0; j < history.count; j++)
+      // Cap the number of back history entries saved. (-1 = no cap)
+      var cap = this._prefBranch.getIntPref("sessionstore.max_tab_back_history");
+
+      var startIndex = -1 < cap && cap < history.index ? history.index - cap : 0;
+      for (var j = startIndex; j < history.count; j++)
         tabData.entries.push(this._serializeHistoryEntry(history.getEntryAtIndex(j, false)));
-      tabData.index = history.index + 1;
-      
+
+      tabData.index = history.index - startIndex + 1;
+
       browser.parentNode.__SS_data = tabData;
     }
     else {
