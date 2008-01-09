@@ -504,7 +504,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         /* First bits will be used to store max(0,-bmargin) where bmargin
          * is the bottom margin of the tab in pixels  (resp. top margin,
          * for bottom tabs). */
-        gint margin;
+        nscoord margin;
         if (IsBottomTab(aFrame)) {
             *aWidgetFlags = MOZ_GTK_TAB_BOTTOM;
             margin = aFrame->GetUsedMargin().top;
@@ -873,30 +873,35 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
                                     nsIFrame* aFrame, PRUint8 aWidgetType,
                                     nsRect* aResult)
 {
-  nsIntMargin extraSize;
+  nsMargin m;
+  PRInt32 p2a;
   if (aWidgetType == NS_THEME_TAB)
   {
     if (!IsSelectedTab(aFrame))
       return PR_FALSE;
 
-    if (IsBottomTab(aFrame)) {
-      extraSize = nsMargin(0, aFrame->PresContext()->
-                             DevPixelsToAppUnits(moz_gtk_get_tab_thickness())
-                           + PR_MIN(0, aFrame->GetUsedMargin().top), 0, 0);
-    } else {
-      extraSize = nsMargin(0, 0, 0, aFrame->PresContext()->
-                             DevPixelsToAppUnits(moz_gtk_get_tab_thickness())
-                           + PR_MIN(0, aFrame->GetUsedMargin().bottom));
-    }
-  }
-  else if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
-    return PR_FALSE;
+    p2a = aContext->AppUnitsPerDevPixel();
 
-  PRInt32 p2a = aContext->AppUnitsPerDevPixel();
-  nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
-             NSIntPixelsToAppUnits(extraSize.top, p2a),
-             NSIntPixelsToAppUnits(extraSize.right, p2a),
-             NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+    if (IsBottomTab(aFrame)) {
+      m = nsMargin(0, NSIntPixelsToAppUnits(moz_gtk_get_tab_thickness(), p2a)
+                      + PR_MIN(0, aFrame->GetUsedMargin().top), 0, 0);
+    } else {
+      m = nsMargin(0, 0, 0,
+                   NSIntPixelsToAppUnits(moz_gtk_get_tab_thickness(), p2a)
+                   + PR_MIN(0, aFrame->GetUsedMargin().bottom));
+    }
+  } else {
+    nsIntMargin extraSize;
+    if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
+      return PR_FALSE;
+
+    p2a = aContext->AppUnitsPerDevPixel();
+    m = nsMargin(NSIntPixelsToAppUnits(extraSize.left, p2a),
+                 NSIntPixelsToAppUnits(extraSize.top, p2a),
+                 NSIntPixelsToAppUnits(extraSize.right, p2a),
+                 NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+  }
+
   nsRect r(nsPoint(0, 0), aFrame->GetSize());
   r.Inflate(m);
   *aResult = r;
