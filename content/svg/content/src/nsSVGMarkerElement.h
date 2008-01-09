@@ -44,6 +44,51 @@
 #include "nsSVGEnum.h"
 #include "nsSVGAngle.h"
 
+class nsSVGOrientType
+{
+public:
+  nsSVGOrientType()
+   : mAnimVal(nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE),
+     mBaseVal(nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {}
+
+  nsresult SetBaseValue(PRUint16 aValue,
+                        nsSVGElement *aSVGElement);
+
+  void SetBaseValue(PRUint16 aValue)
+    { mAnimVal = mBaseVal = PRUint8(aValue); }
+
+  PRUint16 GetBaseValue() const
+    { return mBaseVal; }
+  PRUint16 GetAnimValue() const
+    { return mAnimVal; }
+
+  nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
+                             nsSVGElement* aSVGElement);
+
+private:
+  nsSVGEnumValue mAnimVal;
+  nsSVGEnumValue mBaseVal;
+
+  struct DOMAnimatedEnum : public nsIDOMSVGAnimatedEnumeration
+  {
+    NS_DECL_ISUPPORTS
+
+    DOMAnimatedEnum(nsSVGOrientType* aVal,
+                    nsSVGElement *aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
+
+    nsSVGOrientType *mVal; // kept alive because it belongs to content
+    nsRefPtr<nsSVGElement> mSVGElement;
+
+    NS_IMETHOD GetBaseVal(PRUint16* aResult)
+      { *aResult = mVal->GetBaseValue(); return NS_OK; }
+    NS_IMETHOD SetBaseVal(PRUint16 aValue)
+      { return mVal->SetBaseValue(aValue, mSVGElement); }
+    NS_IMETHOD GetAnimVal(PRUint16* aResult)
+      { *aResult = mVal->GetAnimValue(); return NS_OK; }
+  };
+};
+
 typedef nsSVGGraphicElement nsSVGMarkerElementBase;
 
 class nsSVGMarkerElement : public nsSVGMarkerElementBase,
@@ -109,7 +154,7 @@ protected:
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
-  enum { MARKERUNITS, ORIENTTYPE = 0xFF };
+  enum { MARKERUNITS };
   nsSVGEnum mEnumAttributes[1];
   static nsSVGEnumMapping sUnitsMap[];
   static EnumInfo sEnumInfo[1];
@@ -119,7 +164,7 @@ protected:
   static AngleInfo sAngleInfo[1];
 
   // derived properties (from 'orient') handled separately
-  nsSVGEnum                              mOrientType;
+  nsSVGOrientType                        mOrientType;
 
   nsSVGSVGElement                       *mCoordCtx;
   nsCOMPtr<nsIDOMSVGAnimatedRect>        mViewBox;
