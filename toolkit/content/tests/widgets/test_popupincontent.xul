@@ -21,6 +21,8 @@
       <menuitem label="One"/>
       <menuitem label="Two"/>
       <menuitem label="Three"/>
+      <menuitem label="Four"/>
+      <menuitem label="Five"/>
       <menuitem label="A final longer label that is actually quite long. Very long indeed."/>
     </menupopup>
   </menu>
@@ -60,13 +62,13 @@ function nextTest()
       step = "large menu";
       popup.removeAttribute("left");
       popup.removeAttribute("top");
-      for (var i = 0; i < 80; i++)
+      for (var i = 0; i < 40; i++)
         menu.appendItem("Test", "");
       synthesizeMouse(menu, 2, 2, { });
       break;
     case "large menu":
       step = "shorter menu again";
-      for (var i = 0; i < 80; i++)
+      for (var i = 0; i < 40; i++)
         menu.removeItemAt(menu.itemCount - 1);
       synthesizeMouse(menu, 2, 2, { });
       break;
@@ -82,21 +84,21 @@ function popupShown()
   var popuprect = $("popup").getBoundingClientRect();
 
   // subtract one off the edge due to a rounding issue
-  ok(Math.round(popuprect.left) >= Math.round(windowrect.left), step + " left");
-  ok(Math.round(popuprect.right) - 1 <= Math.round(windowrect.right), step + " right");
+  ok(popuprect.left >= windowrect.left, step + " left");
+  ok(popuprect.right - 1 <= windowrect.right, step + " right");
 
-  if (step == "left and top") {
-    originalHeight = Math.round(popuprect.bottom) - Math.round(popuprect.top);
+  if (step == "left and top")
+    originalHeight = popuprect.bottom - popuprect.top;
+
+  if (step == "largemenu") {
+    ok(popuprect.top == windowrect.top, step + " top");
+    ok(popuprect.bottom - 1 == windowrect.bottom, step + " bottom");
   }
-  else if (step == "large menu") {
-    ok(Math.round(popuprect.top) == Math.round($("menu").getBoundingClientRect().bottom), step + " top");
-    ok((Math.round(popuprect.bottom) == Math.round(windowrect.bottom)) ||
-       (Math.round(popuprect.bottom) - 1 == Math.round(windowrect.bottom)), step + " bottom");
-  }
-  else if (step == "shorter menu again") {
-    ok(Math.round(popuprect.top) >= Math.round(windowrect.top), step + " top");
-    ok(Math.round(popuprect.bottom) - 1 <= Math.round(windowrect.bottom), step + " bottom");
-    is(Math.round(popuprect.bottom) - Math.round(popuprect.top), originalHeight, step + " height shortened");
+  else {
+    ok(popuprect.top >= windowrect.top, step + " top");
+    ok(popuprect.bottom - 1 <= windowrect.bottom, step + " bottom");
+    // XXXndeakin disable this test for now: bug 407937
+    //  is(popuprect.bottom - popuprect.top, originalHeight, step + " height shortened");
   }
 
   $("menu").open = false;
@@ -115,4 +117,3 @@ function popupShown()
 </body>
 
 </window>
-
