@@ -48,7 +48,7 @@
 #include "nsStyledElement.h"
 
 class nsMappedAttributes;
-class nsRuleData;
+struct nsRuleData;
 
 typedef void (*nsMapRuleToAttributesFunc)(const nsMappedAttributes* aAttributes, 
                                           nsRuleData* aData);
