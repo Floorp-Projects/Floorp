@@ -764,3 +764,9 @@ gfxContext::GetFlattenedPath()
     NS_IF_ADDREF(path);
     return path;
 }
+
+PRBool
+gfxContext::HasError()
+{
+     return cairo_status(mCairo) != CAIRO_STATUS_SUCCESS;
+}
