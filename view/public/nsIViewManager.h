@@ -440,6 +440,18 @@ public:
    * (aFromScroll is false) or scrolled (aFromScroll is true).
    */
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll)=0;
+
+  /**
+   * Toggles global suppression of focus/blur events. When suppression
+   * is on, focus/blur events will not be sent to their target widgets/views.
+   * Note that when called with aSuppress as false, blur/focus events are
+   * fired to reset the focus. This can run arbitrary code, and could
+   * even destroy the view manager.
+   */
+  virtual void SetSuppressFocusEvents(PRBool aSuppress)=0;
+
+  virtual PRBool GetSuppressFocusEvents()=0;
+
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
