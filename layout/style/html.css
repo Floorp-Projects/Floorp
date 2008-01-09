@@ -490,6 +490,7 @@ noembed, param {
 
 /* emulation of non-standard HTML <marquee> tag */
 marquee {
+  width: -moz-available;
   display: inline-block;
   vertical-align: text-bottom;
   text-align: start;
