@@ -83,12 +83,10 @@ nsMathMLmunderoverFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsMathMLmunderoverFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement,
-                                                PRUint32        aFlagsValues,
+nsMathMLmunderoverFrame::UpdatePresentationData(PRUint32        aFlagsValues,
                                                 PRUint32        aFlagsToUpdate)
 {
-  nsMathMLContainerFrame::UpdatePresentationData(aScriptLevelIncrement,
-    aFlagsValues, aFlagsToUpdate);
+  nsMathMLContainerFrame::UpdatePresentationData(aFlagsValues, aFlagsToUpdate);
   // disable the stretch-all flag if we are going to act like a subscript-superscript pair
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
@@ -103,7 +101,6 @@ nsMathMLmunderoverFrame::UpdatePresentationData(PRInt32         aScriptLevelIncr
 NS_IMETHODIMP
 nsMathMLmunderoverFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                                            PRInt32         aLastIndex,
-                                                           PRInt32         aScriptLevelIncrement,
                                                            PRUint32        aFlagsValues,
                                                            PRUint32        aFlagsToUpdate)
 {
@@ -132,8 +129,7 @@ nsMathMLmunderoverFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirs
         aFlagsToUpdate &= ~NS_MATHML_DISPLAYSTYLE;
         aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
       }
-      PropagatePresentationDataFor(childFrame,
-        aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+      PropagatePresentationDataFor(childFrame, aFlagsValues, aFlagsToUpdate);
     }
     index++;
     childFrame = childFrame->GetNextSibling();
@@ -242,11 +238,10 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
      that math accents and \overline change uncramped styles to their
      cramped counterparts.
   */
-  PRInt32 increment = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
-    ? 0 : 1;
   PRUint32 compress = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
     ? NS_MATHML_COMPRESSED : 0;
-  PropagatePresentationDataFor(overscriptFrame, increment,
+  SetIncrementScriptLevel(2, !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags));
+  PropagatePresentationDataFor(overscriptFrame,
     ~NS_MATHML_DISPLAYSTYLE | compress,
      NS_MATHML_DISPLAYSTYLE | compress);
 
@@ -254,9 +249,8 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
      The TeXBook treats 'under' like a subscript, so p.141 or Rule 13a 
      say it should be compressed
   */
-  increment = NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)
-    ? 0 : 1;
-  PropagatePresentationDataFor(underscriptFrame, increment,
+  SetIncrementScriptLevel(1, !NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags));
+  PropagatePresentationDataFor(underscriptFrame,
     ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
      NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
 
