@@ -41,8 +41,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=332246
 var a1 = document.getElementById('a1');
 var a2 = document.getElementById('a2');
 a2.scrollIntoView(true);
-  todo(a1.scrollTop == 100, "Wrong scrollTop value!"); //bug 401904
+//bug 401904 for windows, bug 411297 for the Mac
+if (navigator.platform == "Win32" || navigator.platform.indexOf("Mac") == 0)
+  todo(a1.scrollTop == 100, "Wrong scrollTop value!");
+else
+  ok(a1.scrollTop == 100, "Wrong scrollTop value!");
 a2.scrollIntoView(false);
+if (navigator.platform.indexOf("Mac") == 0) //Mac bug 411297 again
+  todo((a1.scrollHeight - a1.offsetHeight - a1.scrollTop) == 100, "Wrong (scrollHeight - offsetHeight - scrollTop) value!");
+else
   ok((a1.scrollHeight - a1.offsetHeight - a1.scrollTop) == 100, "Wrong (scrollHeight - offsetHeight - scrollTop) value!");
 
 var b1 = document.getElementById('b1');
