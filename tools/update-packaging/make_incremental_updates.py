@@ -301,22 +301,42 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     if not os.path.exists(patch_file_dir):
         os.makedirs(patch_file_dir)
     shutil.copy2(os.path.join(patch_info.work_dir,"output.mar"), patch_filename)
+    return patch_filename
     
 def usage():
     print "-h for help"
     print "-f for patchlist_file"
 
-def create_partial_patches(patch_list_file):
-    """ Given the patch_list_file generates a set of partial patches"""
-    patchlist_file = os.path.abspath(patch_list_file)
+def get_buildid(work_dir, platform):
+    """ extracts buildid from MAR """
+    if platform == 'mac':
+      ini = '%s/Contents/MacOS/application.ini' % work_dir
+    else:
+      ini = '%s/application.ini' % work_dir
+    file = bz2.BZ2File(ini)
+    for line in file:
+      if line.find('BuildID') == 0:
+        return line.strip().split('=')[1]
+
+def decode_filename(filename):
+    """ Breaks filename into component parts based on regex
+        for example: firefox-3.0b3pre.en-US.linux-i686.complete.mar
+        Returns dict with keys product, version, locale, platform, type
+    """
+    try:
+      m = re.search(
+        '(?P<product>\w+)(-)(?P<version>\w+\.\w+)(\.)(?P<locale>.+?)(\.)(?P<platform>.+?)(\.)(?P<type>\w+)(.mar)',
+      filename)
+      return m.groupdict()
+    except Exception, exc:
+      raise Exception("could not parse filename %s: %s" % (filename, exc))
+
+def create_partial_patches(patches):
+    """ Given the patches generates a set of partial patches"""
     shas = {}
-    patches = []
-    f = open(patch_list_file, 'r')
-    for line in f.readlines():
-        patches.append(line)
-    f.close()
 
     work_dir_root = None
+    metadata = []
     try:
         work_dir_root = tempfile.mkdtemp()
         print "Building patches using work dir: %s" % (work_dir_root)
@@ -337,17 +357,48 @@ def create_partial_patches(patch_list_file):
             work_dir_from =  os.path.join(work_dir,"from");
             os.mkdir(work_dir_from)
             extract_mar(from_filename,work_dir_from)
+            from_decoded = decode_filename(os.path.basename(from_filename))
+            from_buildid = get_buildid(work_dir_from, from_decoded['platform'])
+            from_shasum = sha.sha(open(from_filename).read()).hexdigest()
+            from_size = str(os.path.getsize(to_filename))
             
-            # Extrat to mar into to dir
+            # Extract to mar into to dir
             work_dir_to =  os.path.join(work_dir,"to")
             os.mkdir(work_dir_to)
             extract_mar(to_filename, work_dir_to)
+            to_decoded = decode_filename(os.path.basename(from_filename))
+            to_buildid = get_buildid(work_dir_to, to_decoded['platform'])
+            to_shasum = sha.sha(open(to_filename).read()).hexdigest()
+            to_size = str(os.path.getsize(to_filename))
 
             mar_extract_time = time.time()
 
-            create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['channel-prefs.js','update.manifest'],['/readme.txt']))
+            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['channel-prefs.js','update.manifest'],['/readme.txt']))
+            partial_decoded = decode_filename(os.path.basename(partial_filename))
+            partial_buildid = to_buildid
+            partial_shasum = sha.sha(open(partial_filename).read()).hexdigest()
+            partial_size = str(os.path.getsize(partial_filename))
+
+            metadata.append({
+             'to_filename': os.path.basename(to_filename),
+             'from_filename': os.path.basename(from_filename),
+             'partial_filename': os.path.basename(partial_filename),
+             'to_buildid':to_buildid, 
+             'from_buildid':from_buildid, 
+             'to_sha1sum':to_shasum, 
+             'from_sha1sum':from_shasum, 
+             'partial_sha1sum':partial_shasum, 
+             'to_size':to_size,
+             'from_size':from_size,
+             'partial_size':partial_size,
+             'to_version':to_decoded['version'],
+             'from_version':from_decoded['version'],
+             'locale':partial_decoded['locale'],
+             'platform':partial_decoded['platform'],
+            })
             print "done with patch %s/%s time (%.2fs/%.2fs/%.2fs) (mar/patch/total)" % (str(patch_num),str(len(patches)),mar_extract_time-startTime,time.time()-mar_extract_time,time.time()-startTime)
             patch_num += 1
+        return metadata
     finally:
         # If we fail or get a ctrl-c during run be sure to clean up temp dir
         if (work_dir_root and os.path.exists(work_dir_root)):
@@ -371,7 +422,12 @@ def main(argv):
         usage()
         sys.exit(2)
         
-    create_partial_patches(patchlist_file)
+    patches = []
+    f = open(patchlist_file, 'r')
+    for line in f.readlines():
+        patches.append(line)
+    f.close()
+    create_partial_patches(patches)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
