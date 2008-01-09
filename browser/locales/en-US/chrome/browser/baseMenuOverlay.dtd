@@ -18,14 +18,13 @@
 <!ENTITY helpForIEUsers.label     "For Internet Explorer Users">
 <!ENTITY helpForIEUsers.accesskey "I">
 <!ENTITY openHelp.commandkey      "VK_F1">
-<!ENTITY openHelpMac.commandkey   "VK_HELP">
-<!-- LOCALIZATION NOTE openHelpMac2.commandkey and openHelpMac2.modifiers
+<!-- LOCALIZATION NOTE openHelpMac.commandkey and openHelpMac.modifiers
                        are all the necessary keys to hit OS X's open-help 
                        keyboard (visible) shortcut (that's Cmd+? for most locales) -->
-<!ENTITY openHelpMac2.commandkey           "/">
-<!ENTITY openHelpMac2.modifiers            "accel,shift">
-<!ENTITY openHelpMac2.frontendCommandkey   "?">
-<!ENTITY openHelpMac2.frontendModifiers    "accel">
+<!ENTITY openHelpMac.commandkey           "/">
+<!ENTITY openHelpMac.modifiers            "accel,shift">
+<!ENTITY openHelpMac.frontendCommandkey   "?">
+<!ENTITY openHelpMac.frontendModifiers    "accel">
 
 <!ENTITY helpReleaseNotes.label         "Release Notes">
 <!ENTITY helpReleaseNotes.accesskey     "N">
