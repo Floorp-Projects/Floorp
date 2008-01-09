@@ -2105,19 +2105,14 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
  */
 #define JS_MAX_OPERATION_LIMIT ((uint32) 0x7FFFFFFF)
 
-#define JS_OPERATION_WEIGHT_BASE 4096
-
 /*
  * Set the operation callback that the engine calls periodically after
  * the internal operation count reaches the specified limit.
  *
- * When operationLimit is JS_OPERATION_WEIGHT_BASE, the callback will be
- * called at least after each backward jump in the interpreter. To minimize
- * the overhead of the callback invocation we suggest at least
- *
- *   100 * JS_OPERATION_WEIGHT_BASE
- *
- * as a value for operationLimit.
+ * When operationLimit is 4096, the callback will be called at least after
+ * each backward jump in the interpreter. To minimize the overhead of the
+ * callback invocation we suggest at least 100*4096 as a value for
+ * operationLimit.
  */
 extern JS_PUBLIC_API(void)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback,
