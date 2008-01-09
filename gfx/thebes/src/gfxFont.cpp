@@ -1727,6 +1727,8 @@ gfxTextRun::CountMissingGlyphs()
 gfxTextRun::DetailedGlyph *
 gfxTextRun::AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount)
 {
+    NS_ASSERTION(aIndex < mCharacterCount, "Index out of range");
+
     if (!mCharacterGlyphs)
         return nsnull;
 
