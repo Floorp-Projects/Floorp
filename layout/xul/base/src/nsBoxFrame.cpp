@@ -1805,6 +1805,8 @@ nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
 
 /**
  * Boxed don't support fixed positionioning of their children.
+ * KEEP THIS IN SYNC WITH nsContainerFrame::CreateViewForFrame
+ * as much as possible. Until we get rid of views finally...
  */
 nsresult
 nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
@@ -1832,9 +1834,7 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
         zIndex = PR_INT32_MAX;
       }
       else {
-        nsIFrame* parent = aFrame->GetAncestorWithView();
-        NS_ASSERTION(parent, "GetAncestorWithView failed");
-        parentView = parent->GetView();
+        parentView = aFrame->GetParent()->GetParentViewForChildFrame(aFrame);
       }
 
       NS_ASSERTION(parentView, "no parent view");
