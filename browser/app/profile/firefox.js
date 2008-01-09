@@ -582,6 +582,8 @@ pref("browser.sessionstore.postdata", 0);
 pref("browser.sessionstore.privacy_level", 1);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
+// maximum number of pages of back-history per tab to save
+pref("browser.sessionstore.max_tab_back_history", 10);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
