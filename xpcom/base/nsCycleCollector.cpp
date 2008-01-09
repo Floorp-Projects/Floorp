@@ -2139,6 +2139,13 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
     mCollectionInProgress = PR_FALSE;
 
+#ifdef XP_OS2
+    // Now that the cycle collector has freed some memory, we can try to
+    // force the C library to give back as much memory to the system as
+    // possible.
+    _heapmin();
+#endif
+
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: Collect() took %lldms\n",
            (PR_Now() - start) / PR_USEC_PER_MSEC);
