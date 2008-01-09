@@ -344,8 +344,11 @@
                 // set to zero, if the document load ends without an
                 // onLocationChange, this counter gets decremented
                 // (so we keep it while switching tabs after failed loads)
+                // We need to add 2 because loadURIWithFlags may have
+                // cancelled a pending load which would have cleared
+                // its anchor scroll detection temporary increment.
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
-                  this.mBrowser.userTypedClear++;
+                  this.mBrowser.userTypedClear += 2;
 
                 if (!this.mBlank) {
                   this.mTab.setAttribute("busy", "true");
@@ -361,7 +364,9 @@
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow) {
                   // The document is done loading, we no longer want the
                   // value cleared.
-                  if (this.mBrowser.userTypedClear > 0)
+                  if (this.mBrowser.userTypedClear > 1)
+                    this.mBrowser.userTypedClear -= 2;
+                  else if (this.mBrowser.userTypedClear > 0)
                     this.mBrowser.userTypedClear--;
 
                   if (!this.mBrowser.mIconURL)
@@ -411,7 +416,7 @@
             onLocationChange : function(aWebProgress, aRequest, aLocation)
             {
               // The document loaded correctly, clear the value if we should
-              if (this.mBrowser.userTypedClear > 0 && aRequest)
+              if (this.mBrowser.userTypedClear > 0)
                 this.mBrowser.userTypedValue = null;
 
               if (aWebProgress.DOMWindow == this.mBrowser.contentWindow &&
