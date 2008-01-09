@@ -78,6 +78,46 @@ extern "C" {
 static const int kThemeScrollBarArrowsBoth = 2;
 
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
+#define MAX_FOCUS_RING_WIDTH 4
+
+// These enums are for indexing into the margin array.
+enum {
+  tigerOS,
+  leopardOS
+};
+
+enum {
+  miniControlSize,
+  smallControlSize,
+  regularControlSize
+};
+
+enum {
+  leftMargin,
+  topMargin,
+  rightMargin,
+  bottomMargin
+};
+
+static int EnumSizeForCocoaSize(NSControlSize cocoaControlSize) {
+  if (cocoaControlSize == NSMiniControlSize)
+    return miniControlSize;
+  else if (cocoaControlSize == NSSmallControlSize)
+    return smallControlSize;
+  else
+    return regularControlSize;
+}
+
+static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, const float marginSet[][3][4])
+{
+  static int osIndex = nsToolkit::OnLeopardOrLater() ? leopardOS : tigerOS;
+  int controlSize = EnumSizeForCocoaSize(cocoaControlSize);
+  const float* buttonMargins = marginSet[osIndex][controlSize];
+  rect->origin.x -= buttonMargins[leftMargin];
+  rect->origin.y -= buttonMargins[bottomMargin];
+  rect->size.width += buttonMargins[leftMargin] + buttonMargins[rightMargin];
+  rect->size.height += buttonMargins[bottomMargin] + buttonMargins[topMargin];
+}
 
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
@@ -163,34 +203,6 @@ nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind in
 #define NATURAL_REGULAR_ROUNDED_BUTTON_MIN_WIDTH 30
 #define NATURAL_REGULAR_ROUNDED_BUTTON_HEIGHT 22
 
-// These enums are for indexing into the margin array.
-enum {
-  tigerOS,
-  leopardOS
-};
-
-enum {
-  miniControlSize,
-  smallControlSize,
-  regularControlSize
-};
-
-enum {
-  leftMargin,
-  topMargin,
-  rightMargin,
-  bottomMargin
-};
-
-static int EnumSizeForCocoaSize(NSControlSize cocoaControlSize) {
-  if (cocoaControlSize == NSMiniControlSize)
-    return miniControlSize;
-  else if (cocoaControlSize == NSSmallControlSize)
-    return smallControlSize;
-  else
-    return regularControlSize;
-}
-
 // These were calculated by testing all three sizes on the respective operating system.
 static const float pushButtonMargins[2][3][4] =
 {
@@ -206,18 +218,6 @@ static const float pushButtonMargins[2][3][4] =
   }
 };
 
-static void InflatePushButtonRect(NSRect* rect, NSControlSize cocoaControlSize)
-{
-  static int osIndex = nsToolkit::OnLeopardOrLater() ? leopardOS : tigerOS;
-  int controlSize = EnumSizeForCocoaSize(cocoaControlSize);
-  const float* buttonMargins = pushButtonMargins[osIndex][controlSize];
-  rect->origin.x -= buttonMargins[leftMargin];
-  rect->origin.y -= buttonMargins[bottomMargin];
-  rect->size.width += buttonMargins[leftMargin] + buttonMargins[rightMargin];
-  rect->size.height += buttonMargins[bottomMargin] + buttonMargins[topMargin];
-}
-
-
 void
 nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
                                    PRBool inDisabled, PRInt32 inState)
@@ -227,14 +227,11 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   [mPushButtonCell setEnabled:!inDisabled];
   [mPushButtonCell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER) || (inIsDefault && !inDisabled))];
   [mPushButtonCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
-  
+
   // Set up the graphics context we've been asked to draw to.
   NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
   [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
   [NSGraphicsContext saveGraphicsState];
-
-  // We clip to exactly the gecko rect to make sure we don't draw outside of it.
-  [NSBezierPath clipRect:drawRect];
 
   // This flips the image in place and is necessary to work around a bug in the way
   // NSButtonCell draws buttons.
@@ -273,27 +270,43 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
     if (drawRect.size.height == naturalHeight) {
       // Just inflate the rect Gecko gave us by the margin for the control.
       NSRect cellRenderRect = drawRect;
-      InflatePushButtonRect(&cellRenderRect, controlSize);
-      
+      InflateControlRect(&cellRenderRect, controlSize, pushButtonMargins);
+
       [mPushButtonCell drawWithFrame:cellRenderRect inView:[NSView focusView]];
     }
     else {
-      // The initial buffer size is the natural height of the control and either the target
-      // width or the minimum width of the control.
-      NSSize initialBufferSize = NSMakeSize(drawRect.size.width, naturalHeight);
-      initialBufferSize.width = PR_MAX(minWidth, initialBufferSize.width);
-      
-      // Scale the initial buffer width up to compensate for the down-scaling we'll do.
+      // We need to calculate three things here - the size of our offscreen buffer, the rect we'll
+      // use to draw into it, and the rect that we'll copy the buffer to.
+
+      // This is the rect we'll render the control into our buffer with. We need to inset our control to leave room for a
+      // focus ring to be rendered. Also, we start with the min width for the control or the desired width, whichever is
+      // larger.
+      NSRect bufferRenderRect = NSMakeRect(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, PR_MAX(minWidth, drawRect.size.width), naturalHeight);
+
+      // Adjust the size of our control to avoid distortion when scaling.
       float scaleFactor = drawRect.size.height / naturalHeight;
       if (scaleFactor != 0.0)
-        initialBufferSize.width = initialBufferSize.width / scaleFactor;
+        bufferRenderRect.size.width = bufferRenderRect.size.width / scaleFactor;
 
-      // This is the rect we should have the cell render to in the buffer. We will then resize
-      // the image to the size of drawRect.
-      NSRect bufferRenderRect = NSMakeRect(0, 0, initialBufferSize.width, initialBufferSize.height);
-      InflatePushButtonRect(&bufferRenderRect, controlSize);
+      // At this point the size of our render rect reflects the size of the control we actually
+      // want to draw into the buffer. Grab it for our initial buffer size and then expand the
+      // buffer size to allow for a focus ring to render.
+      NSSize initialBufferSize = bufferRenderRect.size;
+      initialBufferSize.width += (MAX_FOCUS_RING_WIDTH * 2);
+      initialBufferSize.height += (MAX_FOCUS_RING_WIDTH * 2);
 
-      // Create a buffer and lock focus on it.
+      // Now we need to inflate our rendering rect to account for the quirks of NSCell rendering,
+      // which is what this rect will actually be used for. The rect we pass to NSCell for
+      // rendering is not necessarily the same size as the control that gets drawn.
+      InflateControlRect(&bufferRenderRect, controlSize, pushButtonMargins);
+
+      // This is the rect in our destination that we'll copy our buffer to.
+      NSRect finalCopyRect = NSMakeRect(drawRect.origin.x - MAX_FOCUS_RING_WIDTH,
+                                        drawRect.origin.y - MAX_FOCUS_RING_WIDTH,
+                                        drawRect.size.width + (MAX_FOCUS_RING_WIDTH * 2),
+                                        drawRect.size.height + (MAX_FOCUS_RING_WIDTH * 2));
+
+      // Now actually do all the drawing/scaling with the rects we have set up.
       NSImage *buffer = [[NSImage alloc] initWithSize:initialBufferSize];
       if (!LockFocusOnImage(buffer)) {
         [buffer release];
@@ -302,17 +315,15 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
         return;
       }
 
-      // Draw into the focused buffer.
       [mPushButtonCell drawWithFrame:bufferRenderRect inView:[NSView focusView]];
 
-      // Resize the image to the final size.
       [buffer setScalesWhenResized:YES];
       [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
-      [buffer setSize:drawRect.size];
+      [buffer setSize:finalCopyRect.size];
 
       [buffer unlockFocus];
 
-      [buffer drawInRect:drawRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+      [buffer drawInRect:finalCopyRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 
       [buffer release];
     }
@@ -1198,7 +1209,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
     {
       // We assume that the above widgets can draw a focus ring that will be less than
       // or equal to 4 pixels thick.
-      nsIntMargin extraSize = nsIntMargin(4, 4, 4, 4);
+      nsIntMargin extraSize = nsIntMargin(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
       PRInt32 p2a = aContext->AppUnitsPerDevPixel();
       nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
                  NSIntPixelsToAppUnits(extraSize.top, p2a),
