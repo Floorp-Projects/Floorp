@@ -1323,7 +1323,7 @@ function gotoHistoryIndex(aEvent)
     // Normal click.  Go there in the current tab and update session history.
 
     try {
-      getWebNavigation().gotoIndex(index);
+      getBrowser().gotoIndex(index);
     }
     catch(ex) {
       return false;
@@ -1348,7 +1348,7 @@ function BrowserForward(aEvent, aIgnoreAlt)
 
   if (where == "current") {
     try {
-      getWebNavigation().goForward();
+      getBrowser().goForward();
     }
     catch(ex) {
     }
@@ -1368,7 +1368,7 @@ function BrowserBack(aEvent, aIgnoreAlt)
 
   if (where == "current") {
     try {
-      getWebNavigation().goBack();
+      getBrowser().goBack();
     }
     catch(ex) {
     }
@@ -1611,7 +1611,7 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup)
     if (allowThirdPartyFixup) {
       flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     }
-    getWebNavigation().loadURI(uri, flags, referrer, postData, null);
+    getBrowser().loadURIWithFlags(uri, flags, referrer, null, postData);
   } catch (e) {
   }
 }
@@ -3475,10 +3475,6 @@ nsBrowserStatusHandler.prototype =
         this.reloadSkipCacheCommand.removeAttribute("disabled");
       }
 
-      // The document loaded correctly, clear the value if we should
-      if (browser.userTypedClear > 0 && aRequest)
-        browser.userTypedValue = null;
-
       if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
         gBrowser.setIcon(gBrowser.mCurrentTab, null);
 
@@ -3719,13 +3715,6 @@ nsBrowserStatusHandler.prototype =
 
   startDocumentLoad : function(aRequest)
   {
-    // It's okay to clear what the user typed when we start
-    // loading a document. If the user types, this counter gets
-    // set to zero, if the document load ends without an
-    // onLocationChange, this counter gets decremented
-    // (so we keep it while switching tabs after failed loads)
-    getBrowser().userTypedClear++;
-
     // clear out feed data
     gBrowser.mCurrentBrowser.feeds = null;
 
@@ -3744,11 +3733,6 @@ nsBrowserStatusHandler.prototype =
 
   endDocumentLoad : function(aRequest, aStatus)
   {
-    // The document is done loading, we no longer want the
-    // value cleared.
-    if (getBrowser().userTypedClear > 0)
-      getBrowser().userTypedClear--;
-
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).originalURI.spec;
 
@@ -3856,8 +3840,8 @@ nsBrowserAccess.prototype =
                                 .QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindow);
             if (aURI) {
-              getWebNavigation().loadURI(aURI.spec, loadflags, null, 
-                                         null, null);
+              gBrowser.loadURIWithFlags(aURI.spec, loadflags, null, 
+                                        null, null);
             }
           }
           if(!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
