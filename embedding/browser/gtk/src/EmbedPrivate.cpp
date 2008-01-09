@@ -525,6 +525,12 @@ EmbedPrivate::PushStartup(void)
     if (NS_FAILED(rv))
       return;
 
+    if (sProfileDir && !sProfileLock) {
+      rv = XRE_LockProfileDirectory(sProfileDir,
+                                    &sProfileLock);
+      if (NS_FAILED(rv)) return;
+    }
+
     rv = XRE_InitEmbedding(greDir, binDir,
                            const_cast<GTKEmbedDirectoryProvider*>(&kDirectoryProvider),
                            nsnull, nsnull);
@@ -557,6 +563,9 @@ EmbedPrivate::PopStartup(void)
 
     // shut down XPCOM/Embedding
     XRE_TermEmbedding();
+
+    NS_IF_RELEASE(sProfileLock);
+    NS_IF_RELEASE(sProfileDir);
   }
 }
 
@@ -612,8 +621,13 @@ EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
   if (NS_SUCCEEDED(rv) && aName)
     rv = sProfileDir->AppendNative(nsDependentCString(aName));
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
+    PRBool exists = PR_FALSE;
+    rv = sProfileDir->Exists(&exists);
+    if (!exists)
+      rv = sProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
     rv = XRE_LockProfileDirectory(sProfileDir, &sProfileLock);
+  }
 
   if (NS_SUCCEEDED(rv)) {
     if (sWidgetCount)
