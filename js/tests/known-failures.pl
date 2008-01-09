@@ -115,6 +115,8 @@ foreach $excludedfile ( @excludedfiles ) {
 
         next if ($_ =~ /^\#/);
 
+        s/\s+$//;
+
         push @excludedtests, ($_);
     }
     close EXCLUDED;
@@ -128,6 +130,8 @@ debug "pattern filter: /^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, 
 open PATTERNS, "<$patterns" or die "Unable to open known failure patterns file $patterns: $!\n";
 while (<PATTERNS>) {
     chomp;
+
+    s/\s+$//;
 
     if ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_RESULT=[^,]*, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_MACHINE=[^,]*, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_DATE=[^,]*, TEST_TIMEZONE=$knownfailuretimezonepattern,/) {
         debug "adding pattern: $_";
