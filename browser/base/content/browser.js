@@ -1445,9 +1445,10 @@ function BrowserHome()
   loadOneOrMoreURIs(homePage);
 }
 
-function BrowserHomeClick(aEvent)
+function BrowserGoHome(aEvent)
 {
-  if (aEvent.button == 2) // right-click: do nothing
+  if (aEvent && "button" in aEvent &&
+      aEvent.button == 2) // right-click: do nothing
     return;
 
   var homePage = gHomeButton.getHomePage();

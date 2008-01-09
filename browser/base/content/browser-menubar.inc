@@ -356,7 +356,8 @@
                 </menuitem>
 
                 <menuitem label="&historyHomeCmd.label;"
-                          command="Browser:Home"
+                          oncommand="BrowserGoHome(event);"
+                          onclick="checkForMiddleClick(this, event);"
                           key="goHome"/>
                 <menuseparator id="startHistorySeparator" builder="start"/>
                 <menuseparator id="endHistorySeparator" builder="end"/>
