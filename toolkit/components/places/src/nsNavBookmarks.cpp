@@ -496,7 +496,7 @@ nsNavBookmarks::InitDefaults()
   nsresult rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksMenuFolderTitle").get(),
                                            getter_Copies(bookmarksTitle));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemTitle(mBookmarksRoot, bookmarksTitle);
+  rv = SetItemTitle(mBookmarksRoot, NS_ConvertUTF16toUTF8(bookmarksTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Bookmarks Toolbar
@@ -504,7 +504,7 @@ nsNavBookmarks::InitDefaults()
   rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get(),
                                   getter_Copies(toolbarTitle));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemTitle(mToolbarFolder, toolbarTitle);
+  rv = SetItemTitle(mToolbarFolder, NS_ConvertUTF16toUTF8(toolbarTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Unfiled Bookmarks
@@ -512,7 +512,7 @@ nsNavBookmarks::InitDefaults()
   rv = mBundle->GetStringFromName(NS_LITERAL_STRING("UnfiledBookmarksFolderTitle").get(),
                                   getter_Copies(unfiledTitle));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemTitle(mUnfiledRoot, unfiledTitle);
+  rv = SetItemTitle(mUnfiledRoot, NS_ConvertUTF16toUTF8(unfiledTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Tags
@@ -520,7 +520,7 @@ nsNavBookmarks::InitDefaults()
   rv = mBundle->GetStringFromName(NS_LITERAL_STRING("TagsFolderTitle").get(),
                                   getter_Copies(tagsTitle));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetItemTitle(mTagRoot, tagsTitle);
+  rv = SetItemTitle(mTagRoot, NS_ConvertUTF16toUTF8(tagsTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -558,7 +558,7 @@ nsNavBookmarks::CreateRoot(mozIStorageStatement* aGetRootStatement,
 
   // create folder with no name or attributes
   nsCOMPtr<mozIStorageStatement> insertStatement;
-  rv = CreateFolder(aParentID, NS_LITERAL_STRING(""), nsINavBookmarksService::DEFAULT_INDEX, aID);
+  rv = CreateFolder(aParentID, EmptyCString(), nsINavBookmarksService::DEFAULT_INDEX, aID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // save root ID
@@ -860,7 +860,7 @@ nsNavBookmarks::GetUnfiledBookmarksFolder(PRInt64 *aRoot)
 
 NS_IMETHODIMP
 nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
-                               const nsAString& aTitle,
+                               const nsACString& aTitle,
                                PRInt64 *aNewBookmarkId)
 {
   // You can pass -1 to indicate append, but no other negative number is allowed
@@ -897,7 +897,7 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   if (aTitle.IsVoid())
     rv = mDBInsertBookmark->BindNullParameter(4);
   else
-    rv = mDBInsertBookmark->BindStringParameter(4, aTitle);
+    rv = mDBInsertBookmark->BindUTF8StringParameter(4, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBInsertBookmark->BindInt64Parameter(5, PR_Now());
@@ -1039,7 +1039,7 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 
 
 NS_IMETHODIMP
-nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
+nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsACString &aName,
                              PRInt32 aIndex, PRInt64 *aNewFolder)
 {
   // CreateContainerWithID returns the index of the new folder, but that's not
@@ -1052,7 +1052,7 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::CreateDynamicContainer(PRInt64 aParent, const nsAString &aName,
+nsNavBookmarks::CreateDynamicContainer(PRInt64 aParent, const nsACString &aName,
                                        const nsAString &aContractId,
                                        PRInt32 aIndex,
                                        PRInt64 *aNewFolder)
@@ -1094,7 +1094,7 @@ nsNavBookmarks::SetFolderReadonly(PRInt64 aFolder, PRBool aReadOnly)
 
 nsresult
 nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId, PRInt64 aParent,
-                                      const nsAString& aName,
+                                      const nsACString& aName,
                                       const nsAString& aContractId,
                                       PRBool aIsBookmarkFolder,
                                       PRInt32* aIndex, PRInt64* aNewFolder)
@@ -1131,7 +1131,7 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId, PRInt64 aParent,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = statement->BindStringParameter(0, aName);
+  rv = statement->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 containerType =
@@ -1377,7 +1377,7 @@ nsNavBookmarks::GetRemoveFolderTransaction(PRInt64 aFolder, nsITransaction** aRe
   // Create and initialize a RemoveFolderTransaction object that can be used to
   // recreate the folder safely later. 
 
-  nsAutoString title;
+  nsCAutoString title;
   nsresult rv = GetItemTitle(aFolder, title);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1779,7 +1779,7 @@ nsNavBookmarks::GetItemIdForGUID(const nsAString &aGUID, PRInt64 *aItemId)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsAString &aTitle)
+nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsACString &aTitle)
 {
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
@@ -1788,7 +1788,7 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsAString &aTitle)
   nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET title = ?1 WHERE id = ?2"),
                                getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindStringParameter(0, aTitle);
+  rv = statement->BindUTF8StringParameter(0, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindInt64Parameter(1, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1804,12 +1804,12 @@ nsNavBookmarks::SetItemTitle(PRInt64 aItemId, const nsAString &aTitle)
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                       OnItemChanged(aItemId, NS_LITERAL_CSTRING("title"),
-                                    PR_FALSE, NS_ConvertUTF16toUTF8(aTitle)));
+                                    PR_FALSE, aTitle));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetItemTitle(PRInt64 aItemId, nsAString &aTitle)
+nsNavBookmarks::GetItemTitle(PRInt64 aItemId, nsACString &aTitle)
 {
   mozStorageStatementScoper scope(mDBGetItemProperties);
 
@@ -1823,7 +1823,7 @@ nsNavBookmarks::GetItemTitle(PRInt64 aItemId, nsAString &aTitle)
   if (!results)
     return NS_ERROR_INVALID_ARG; // invalid bookmark id
 
-  return mDBGetItemProperties->GetString(kGetItemPropertiesIndex_Title, aTitle);
+  return mDBGetItemProperties->GetUTF8String(kGetItemPropertiesIndex_Title, aTitle);
 }
 
 NS_IMETHODIMP
