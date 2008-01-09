@@ -60,7 +60,7 @@ def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
   if profile_dir:
     profile_arg = '-profile %s' % profile_dir
 
-  cmd = '%s %s %s' % (firefox_path,
+  cmd = '%s -foreground %s %s' % (firefox_path,
                       profile_arg,
                       url)
   return cmd
