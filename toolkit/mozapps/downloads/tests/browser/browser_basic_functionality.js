@@ -191,6 +191,7 @@ function test()
     for each (var t in testFuncs)
       t(win);
 
+    win.close();
     finish();
   }
   
