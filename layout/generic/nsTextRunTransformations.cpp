@@ -240,13 +240,21 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
                     !g.IsLowSurrogate()),
                    "Don't know how to merge this stuff");
 
-      if (anyMissing) {
-        g.SetMissing(glyphs.Length());
-      } else {
-        g.SetComplex(PR_TRUE, PR_TRUE, glyphs.Length());
+      // If the start of the merge run is actually a character that should
+      // have been merged with the previous character (this can happen
+      // if there's a font change in the middle of a szlig, for example),
+      // just discard the entire merge run. See comment at start of this
+      // function.
+      if (!aCharsToMerge[mergeRunStart]) {
+        if (anyMissing) {
+          g.SetMissing(glyphs.Length());
+        } else {
+          g.SetComplex(PR_TRUE, PR_TRUE, glyphs.Length());
+        }
+        aDest->SetGlyphs(offset, g, glyphs.Elements());
+        ++offset;
       }
-      aDest->SetGlyphs(offset, g, glyphs.Elements());
-      ++offset;
+
       glyphs.Clear();
       anyMissing = PR_FALSE;
       mergeRunStart = k + 1;
