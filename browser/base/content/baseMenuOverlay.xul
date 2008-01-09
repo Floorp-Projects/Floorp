@@ -112,21 +112,16 @@
     </menu>
 
     <keyset id="baseMenuKeyset">
-        <key id="key_openHelp"
-            oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
-# VK_HELP doesn't work on other platforms yet
 #ifdef XP_MACOSX
-            keycode="&openHelpMac.commandkey;"/>
-<!-- On mac, we support both the help key and Cmd+?
-     ...Map Cmd+Shift+/, show Cmd+
+<!-- On mac, we map Cmd+Shift+/, but show Cmd+?
      (that's for en-US, it might be different for other keyboard layouts) -->
         <key id="key_openHelpMac"
              oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
-             key="&openHelpMac2.commandkey;"
-             modifiers="&openHelpMac2.modifiers;"/>
+             key="&openHelpMac.commandkey;"
+             modifiers="&openHelpMac.modifiers;"/>
         <key id="key_openHelpMacFrontend"
-             key="&openHelpMac2.frontendCommandkey;"
-             modifiers="&openHelpMac2.frontendModifiers;"/>
+             key="&openHelpMac.frontendCommandkey;"
+             modifiers="&openHelpMac.frontendModifiers;"/>
 <!-- These are used to build the Application menu under Cocoa widgets -->
         <key id="key_preferencesCmdMac"
              key="&preferencesCmdMac.commandkey;"
@@ -138,7 +133,9 @@
              key="&hideOtherAppsCmdMac.commandkey;"
              modifiers="&hideOtherAppsCmdMac.modifiers;"/>
 #else
-             keycode="&openHelp.commandkey;"/>
+        <key id="key_openHelp"
+            oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+            keycode="&openHelp.commandkey;"/>
 #endif
     </keyset>
 
