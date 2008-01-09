@@ -79,7 +79,7 @@ struct nsID {
     // See bug http://bugzilla.mozilla.org/show_bug.cgi?id=164580 for
     // details.
 
-    return (PRBool)
+    return this == &other ||
       ((((PRUint32*) &m0)[0] == ((PRUint32*) &other.m0)[0]) &&
        (((PRUint32*) &m0)[1] == ((PRUint32*) &other.m0)[1]) &&
        (((PRUint32*) &m0)[2] == ((PRUint32*) &other.m0)[2]) &&
