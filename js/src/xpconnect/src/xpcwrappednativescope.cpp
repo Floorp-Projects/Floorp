@@ -119,12 +119,11 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal)
         scope = new XPCWrappedNativeScope(ccx, aGlobal);
     else
     {
-        // We need to call SetGlobal in order to refresh our cached
-        // mPrototypeJSObject and mPrototypeJSFunction and to clear
-        // mPrototypeNoHelper (so we get a new one if requested in the
-        // new scope) in the case where the global object is being
-        // reused (JS_ClearScope has been called).  NOTE: We are only
-        // called by nsXPConnect::InitClasses.
+        // We need to call SetGlobal in order to refresh our cached 
+        // mPrototypeJSObject and mPrototypeJSFunction in the case where
+        // the global object is being reused (JS_ClearScope has been
+        // called).
+        // NOTE: We are only called by nsXPConnect::InitClasses. 
         scope->SetGlobal(ccx, aGlobal);
     }
     return scope;
@@ -140,8 +139,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
         mNext(nsnull),
         mGlobalJSObject(nsnull),
         mPrototypeJSObject(nsnull),
-        mPrototypeJSFunction(nsnull),
-        mPrototypeNoHelper(nsnull)
+        mPrototypeJSFunction(nsnull)
 {
     // add ourselves to the scopes list
     {   // scoped lock
@@ -183,41 +181,6 @@ XPCWrappedNativeScope::SetComponents(nsXPCComponents* aComponents)
     mComponents = aComponents;
 }
 
-// Dummy JS class to let wrappers w/o an xpc prototype share
-// scopes. By doing this we avoid allocating a new scope for every
-// wrapper on creation of the wrapper, and most wrappers won't need
-// their own scope at all for the lifetime of the wrapper.
-// JSCLASS_HAS_PRIVATE is key here (even though there's never anything
-// in the private data slot in these prototypes), as the number of
-// reserved slots in this class needs to match that of the wrappers
-// for the JS engine to share scopes.
-
-JSClass XPC_WN_NoHelper_Proto_JSClass = {
-    "XPC_WN_NoHelper_Proto_JSClass",// name;
-    JSCLASS_HAS_PRIVATE,            // flags;
-
-    /* Mandatory non-null function pointer members. */
-    JS_PropertyStub,                // addProperty;
-    JS_PropertyStub,                // delProperty;
-    JS_PropertyStub,                // getProperty;
-    JS_PropertyStub,                // setProperty;
-    JS_EnumerateStub,               // enumerate;
-    JS_ResolveStub,                 // resolve;
-    JS_ConvertStub,                 // convert;
-    JS_FinalizeStub,                // finalize;
-
-    /* Optionally non-null members start here. */
-    XPC_WN_Proto_GetObjectOps,      // getObjectOps;
-    nsnull,                         // checkAccess;
-    nsnull,                         // call;
-    nsnull,                         // construct;
-    nsnull,                         // xdrObject;
-    nsnull,                         // hasInstance;
-    nsnull,                         // mark/trace;
-    nsnull                          // spare;
-};
-
-
 void
 XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
 {
@@ -228,24 +191,25 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
 #ifndef XPCONNECT_STANDALONE
     mScriptObjectPrincipal = nsnull;
     // Now init our script object principal, if the new global has one
-
-    JSContext* cx = ccx.GetJSContext();
-    const JSClass* jsClass = JS_GetClass(cx, aGlobal);
-    if(!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
-                            JSCLASS_PRIVATE_IS_NSISUPPORTS)))
+    if (aGlobal)
     {
-        // Our global has an nsISupports native pointer.  Let's
-        // see whether it's what we want.
-        nsISupports* priv = (nsISupports*)JS_GetPrivate(cx, aGlobal);
-        nsCOMPtr<nsIXPConnectWrappedNative> native =
-            do_QueryInterface(priv);
-        if(native)
+        JSContext* cx = ccx.GetJSContext();
+        const JSClass* jsClass = JS_GetClass(cx, aGlobal);
+        if (jsClass && !(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
+                                            JSCLASS_PRIVATE_IS_NSISUPPORTS)))
         {
-            mScriptObjectPrincipal = do_QueryWrappedNative(native);
-        }
-        if(!mScriptObjectPrincipal)
-        {
-            mScriptObjectPrincipal = do_QueryInterface(priv);
+            // Our global has an nsISupports native pointer.  Let's
+            // see whether it's what we want.
+            nsISupports* priv = (nsISupports*)JS_GetPrivate(cx, aGlobal);
+            nsCOMPtr<nsIXPConnectWrappedNative> native =
+                do_QueryInterface(priv);
+            if (native)
+            {
+                mScriptObjectPrincipal = do_QueryWrappedNative(native);
+            }
+            if (!mScriptObjectPrincipal) {
+                mScriptObjectPrincipal = do_QueryInterface(priv);
+            }
         }
     }
 #endif
@@ -283,10 +247,6 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
             NS_ERROR("Can't get globalObject.Function.prototype");
         }
     }
-
-    // Clear the no helper wrapper prototype object so that a new one
-    // gets created if needed.
-    mPrototypeNoHelper = nsnull;
 }
 
 XPCWrappedNativeScope::~XPCWrappedNativeScope()
@@ -319,25 +279,6 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     NS_IF_RELEASE(mComponents);
 }
 
-JSObject *
-XPCWrappedNativeScope::GetPrototypeNoHelper(XPCCallContext& ccx)
-{
-    // We could create this prototype in SetGlobal(), but all scopes
-    // don't need one, so we save ourselves a bit of space if we
-    // create these when they're needed.
-    if(!mPrototypeNoHelper)
-    {
-        mPrototypeNoHelper =
-            xpc_NewSystemInheritingJSObject(ccx, &XPC_WN_NoHelper_Proto_JSClass,
-                                            mPrototypeJSObject,
-                                            mGlobalJSObject);
-
-        NS_ASSERTION(mPrototypeNoHelper,
-                     "Failed to create prototype for wrappers w/o a helper");
-    }
-
-    return mPrototypeNoHelper;
-}
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
@@ -465,11 +406,6 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
                JS_IsAboutToBeFinalized(cx, cur->mPrototypeJSFunction))
             {
                 cur->mPrototypeJSFunction = nsnull;
-            }
-            if(cur->mPrototypeNoHelper &&
-               JS_IsAboutToBeFinalized(cx, cur->mPrototypeNoHelper))
-            {
-                cur->mPrototypeNoHelper = nsnull;
             }
         }
         if(cur)
@@ -701,12 +637,11 @@ GetScopeOfObject(JSContext* cx, JSObject* obj)
     {
 #ifdef DEBUG
         {
-            if(!(~clazz->flags & (JSCLASS_HAS_PRIVATE |
-                                  JSCLASS_PRIVATE_IS_NSISUPPORTS)) &&
-               (supports = (nsISupports*) JS_GetPrivate(cx, obj)))
+            if(clazz->flags & JSCLASS_HAS_PRIVATE &&
+               clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)
             {
                 nsCOMPtr<nsIXPConnectWrappedNative> iface =
-                    do_QueryInterface(supports);
+                    do_QueryInterface((nsISupports*) JS_GetPrivate(cx, obj));
 
                 NS_ASSERTION(!iface, "Uh, how'd this happen?");
             }
@@ -926,7 +861,6 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("mGlobalJSObject @ %x", mGlobalJSObject));
         XPC_LOG_ALWAYS(("mPrototypeJSObject @ %x", mPrototypeJSObject));
         XPC_LOG_ALWAYS(("mPrototypeJSFunction @ %x", mPrototypeJSFunction));
-        XPC_LOG_ALWAYS(("mPrototypeNoHelper @ %x", mPrototypeNoHelper));
 
         XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers(s)", \
                          mWrappedNativeMap, \
