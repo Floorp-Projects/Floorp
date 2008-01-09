@@ -49,7 +49,7 @@ var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
         .getService(Ci.nsIWindowWatcher);
 var w = ww.openWindow(null,"chrome://browser/content/browser.xul",null,null,null);
 
-var gOutFile;
+var gConvStream;
 
 function createOutputFile() {
   var dirServices = Cc["@mozilla.org/file/directory_service;1"]
@@ -60,14 +60,18 @@ function createOutputFile() {
     file.remove(false);
   }
 
-  gOutFile = Cc["@mozilla.org/network/file-output-stream;1"]
+  var outFile = Cc["@mozilla.org/network/file-output-stream;1"]
              .createInstance(Ci.nsIFileOutputStream);
   const MODE_WRONLY = 0x02;
   const MODE_CREATE = 0x08;
   const MODE_TRUNCATE = 0x20;
   const MODE_APPEND = 0x10;
-  gOutFile.init(file, MODE_WRONLY | MODE_CREATE | MODE_APPEND | MODE_TRUNCATE,
+  outFile.init(file, MODE_WRONLY | MODE_CREATE | MODE_APPEND | MODE_TRUNCATE,
                 0600, 0);
+  // Need to create the converterStream
+  gConvStream = Cc["@mozilla.org/intl/converter-output-stream;1"]
+                .createInstance(Ci.nsIConverterOutputStream);
+  gConvStream.init(outFile, "UTF-8", 0, 0x0000);
 
   // Seed the file by writing the XML header
   output("<?xml version=\"1.0\"?>\n<testrun>");
@@ -75,8 +79,7 @@ function createOutputFile() {
 
 function output(s) {
   s = escape(s);
-  gOutFile.write(s, s.length);
-  dump(s);
+  gConvStream.writeString(s);
 }
 
 function escape(s) {
@@ -86,8 +89,7 @@ function escape(s) {
 }
 function closeOutputFile() {
   output("\n</testrun>\n");
-  gOutFile.flush();
-  gOutFile.close();
+  gConvStream.close();
 }
 
 function listEngines() {
