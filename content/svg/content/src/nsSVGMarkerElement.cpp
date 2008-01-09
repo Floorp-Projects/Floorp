@@ -78,6 +78,15 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Marker)
 //----------------------------------------------------------------------
 // nsISupports methods
 
+NS_IMPL_ADDREF(nsSVGOrientType::DOMAnimatedEnum)
+NS_IMPL_RELEASE(nsSVGOrientType::DOMAnimatedEnum)
+
+NS_INTERFACE_MAP_BEGIN(nsSVGOrientType::DOMAnimatedEnum)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedEnumeration)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedEnumeration)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_ADDREF_INHERITED(nsSVGMarkerElement,nsSVGMarkerElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGMarkerElement,nsSVGMarkerElementBase)
 
@@ -93,6 +102,35 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMarkerElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
+nsresult
+nsSVGOrientType::SetBaseValue(PRUint16 aValue,
+                              nsSVGElement *aSVGElement)
+{
+  if (aValue == nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_AUTO ||
+      aValue == nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {
+    SetBaseValue(aValue);
+    aSVGElement->SetAttr(
+      kNameSpaceID_None, nsGkAtoms::orient, nsnull,
+      (aValue ==nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_AUTO ?
+        NS_LITERAL_STRING("auto") : NS_LITERAL_STRING("0")),
+      PR_TRUE);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsSVGOrientType::ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
+                                   nsSVGElement *aSVGElement)
+{
+  *aResult = new DOMAnimatedEnum(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
 nsSVGMarkerElement::nsSVGMarkerElement(nsINodeInfo *aNodeInfo)
   : nsSVGMarkerElementBase(aNodeInfo), mCoordCtx(nsnull)
 {
@@ -103,11 +141,6 @@ nsSVGMarkerElement::Init()
 {
   nsresult rv = nsSVGMarkerElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
-
-  // derived (non-attrib) DOM properties
-
-  // DOM property: orientType
-  mOrientType.Init(ORIENTTYPE, SVG_MARKER_ORIENT_ANGLE);
 
   // Create mapped properties:
 
