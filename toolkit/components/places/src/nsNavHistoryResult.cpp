@@ -2840,7 +2840,8 @@ nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
   nsNavHistoryContainerResultNode(EmptyCString(), aTitle, EmptyCString(),
                                   nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
                                   PR_FALSE, aDynamicContainerType, aOptions),
-  mContentsValid(PR_FALSE)
+  mContentsValid(PR_FALSE),
+  mQueryItemId(-1)
 {
   mItemId = aFolderId;
 }
@@ -2917,6 +2918,18 @@ nsNavHistoryFolderResultNode::GetHasChildren(PRBool* aHasChildren)
   return NS_OK;
 }
 
+// nsNavHistoryFolderResultNode::GetItemId
+//
+// Returns the id of the item from which the folder node was generated, it
+// could be either a concrete folder-itemId or the id used in
+// a simple-folder-query-bookmark (place:folder=X)
+
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::GetItemId(PRInt64* aItemId)
+{
+  *aItemId = mQueryItemId == -1 ? mItemId : mQueryItemId;
+  return NS_OK;
+}
 
 // nsNavHistoryFolderResultNode::GetChildrenReadOnly
 //
@@ -3340,6 +3353,7 @@ nsNavHistoryResultNode::OnItemChanged(PRInt64 aItemId,
                                       const nsACString& aValue)
 {
   if (aProperty.EqualsLiteral("title")) {
+    // XXX: what should we do if the new title is void?
     mTitle = aValue;
   }
   else if (aProperty.EqualsLiteral("uri")) {
@@ -3407,6 +3421,15 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
                                             const nsACString& aProperty,
                                             PRBool aIsAnnotationProperty,
                                             const nsACString& aValue) {
+  // The query-item's title is used for simple-query nodes
+  if (mQueryItemId != -1) {
+    PRBool isTitleChange = aProperty.EqualsLiteral("title");
+    if ((mQueryItemId == aItemId && !isTitleChange) ||
+        (mQueryItemId != aItemId && isTitleChange)) {
+      return NS_OK;
+    }
+  }
+
   return nsNavHistoryResultNode::OnItemChanged(aItemId, aProperty,
                                                aIsAnnotationProperty,
                                                aValue);
