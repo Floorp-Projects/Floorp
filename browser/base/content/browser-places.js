@@ -597,11 +597,9 @@ var BookmarksMenuDropHandler = {
    */
   onDrop: function BMDH_onDrop(event, data, session) {
     var view = document.getElementById("bookmarksMenuPopup");
-
-    // The insertion point for a menupopup view should be -1 during a drag
-    // & drop operation.
-    NS_ASSERT(view.insertionPoint.index == -1, "Insertion point for an menupopup view during a drag must be -1!");
-    PlacesControllerDragHelper.onDrop(null, view, view.insertionPoint, 1);
+    // Put the item at the end of bookmark menu
+    var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);
+    PlacesControllerDragHelper.onDrop(null, view, ip);
     view._rebuild();
   }
 };
