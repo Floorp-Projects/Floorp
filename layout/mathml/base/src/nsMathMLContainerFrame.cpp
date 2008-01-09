@@ -64,6 +64,7 @@
 #include "nsStyleSet.h"
 #include "nsDisplayList.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsIReflowCallback.h"
 
 NS_DEFINE_CID(kInlineFrameCID, NS_INLINE_FRAME_CID);
 
@@ -569,29 +570,28 @@ nsMathMLContainerFrame::FinalizeReflow(nsIRenderingContext& aRenderingContext,
 // a subtree that may contain non-mathml container frames
 /* static */ void
 nsMathMLContainerFrame::PropagatePresentationDataFor(nsIFrame*       aFrame,
-                                                     PRInt32         aScriptLevelIncrement,
                                                      PRUint32        aFlagsValues,
                                                      PRUint32        aFlagsToUpdate)
 {
-  if (!aFrame || (!aFlagsToUpdate && !aScriptLevelIncrement))
+  if (!aFrame || !aFlagsToUpdate)
     return;
   nsIMathMLFrame* mathMLFrame;
   aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
   if (mathMLFrame) {
     // update
-    mathMLFrame->UpdatePresentationData(aScriptLevelIncrement, aFlagsValues,
+    mathMLFrame->UpdatePresentationData(aFlagsValues,
                                         aFlagsToUpdate);
     // propagate using the base method to make sure that the control
     // is passed on to MathML frames that may be overloading the method
     mathMLFrame->UpdatePresentationDataFromChildAt(0, -1,
-      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+      aFlagsValues, aFlagsToUpdate);
   }
   else {
     // propagate down the subtrees
     nsIFrame* childFrame = aFrame->GetFirstChild(nsnull);
     while (childFrame) {
       PropagatePresentationDataFor(childFrame,
-        aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+        aFlagsValues, aFlagsToUpdate);
       childFrame = childFrame->GetNextSibling();
     }
   }
@@ -601,11 +601,10 @@ nsMathMLContainerFrame::PropagatePresentationDataFor(nsIFrame*       aFrame,
 nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIFrame*       aParentFrame,
                                                              PRInt32         aFirstChildIndex,
                                                              PRInt32         aLastChildIndex,
-                                                             PRInt32         aScriptLevelIncrement,
                                                              PRUint32        aFlagsValues,
                                                              PRUint32        aFlagsToUpdate)
 {
-  if (!aParentFrame || (!aFlagsToUpdate && !aScriptLevelIncrement))
+  if (!aParentFrame || !aFlagsToUpdate)
     return;
   PRInt32 index = 0;
   nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
@@ -614,130 +613,12 @@ nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIFrame*       aPa
         ((aLastChildIndex <= 0) || ((aLastChildIndex > 0) &&
          (index <= aLastChildIndex)))) {
       PropagatePresentationDataFor(childFrame,
-        aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+        aFlagsValues, aFlagsToUpdate);
     }
     index++;
     childFrame = childFrame->GetNextSibling();
   }
 }
-
-// helper to let the scriptstyle re-resolution pass through
-// a subtree that may contain non-mathml container frames.
-// This function is *very* expensive. Unfortunately, there isn't much
-// to do about it at the moment. For background on the problem @see 
-// http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
-/* static */ void
-nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
-                                                PRInt32         aParentScriptLevel)
-{
-  if (!aFrame)
-    return;
-  nsIMathMLFrame* mathMLFrame;
-  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (mathMLFrame) {
-    // we will re-resolve our style data based on our current scriptlevel
-    nsPresentationData presentationData;
-    mathMLFrame->GetPresentationData(presentationData);
-    PRInt32 gap = presentationData.scriptLevel - aParentScriptLevel;
-
-    // since we are a MathML frame, our current scriptlevel becomes
-    // the one to use when we will propagate the recursion
-    aParentScriptLevel = presentationData.scriptLevel;
-
-    nsStyleContext* oldStyleContext = aFrame->GetStyleContext();
-    nsStyleContext* parentContext = oldStyleContext->GetParent();
-
-    nsIContent* content = aFrame->GetContent();
-    if (!gap) {
-      // unset any -moz-math-font-size attribute without notifying that we want a reflow
-      // (but leave it to the primary frame to do that, a child pseudo can't overrule)
-      if (!aFrame->GetParent() || aFrame->GetParent()->GetContent() != content)
-        content->UnsetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontsize, PR_FALSE);
-    }
-    else {
-      // By default scriptminsize=8pt and scriptsizemultiplier=0.71
-      nscoord scriptminsize = aFrame->PresContext()->PointsToAppUnits(NS_MATHML_SCRIPTMINSIZE);
-      float scriptsizemultiplier = NS_MATHML_SCRIPTSIZEMULTIPLIER;
-#if 0
-       // XXX Bug 44201
-       // user-supplied scriptminsize and scriptsizemultiplier that are
-       // restricted to particular elements are not supported because our
-       // css rules are fixed in mathml.css and are applicable to all elements.
-
-       // see if there is a scriptminsize attribute on a <mstyle> that wraps us
-       GetAttribute(nsnull, presentationData.mstyle,
-                        nsGkAtoms::scriptminsize_, fontsize);
-       if (!fontsize.IsEmpty()) {
-         nsCSSValue cssValue;
-         if (ParseNumericValue(fontsize, cssValue)) {
-           nsCSSUnit unit = cssValue.GetUnit();
-           if (eCSSUnit_Number == unit)
-             scriptminsize = nscoord(float(scriptminsize) * cssValue.GetFloatValue());
-           else if (eCSSUnit_Percent == unit)
-             scriptminsize = nscoord(float(scriptminsize) * cssValue.GetPercentValue());
-           else if (eCSSUnit_Null != unit)
-             scriptminsize = CalcLength(mStyleContext, cssValue);
-         }
-       }
-#endif
-
-      // figure out the incremental factor
-      nsAutoString fontsize;
-      if (0 > gap) { // the size is going to be increased
-        if (gap < NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT)
-          gap = NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT;
-        gap = -gap;
-        scriptsizemultiplier = 1.0f / scriptsizemultiplier;
-        fontsize.AssignLiteral("-");
-      }
-      else { // the size is going to be decreased
-        if (gap > NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT)
-          gap = NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT;
-        fontsize.AssignLiteral("+");
-      }
-      fontsize.AppendInt(gap, 10);
-      // we want to make sure that the size will stay readable
-      const nsStyleFont* font = parentContext->GetStyleFont();
-      nscoord newFontSize = font->mFont.size;
-      while (0 < gap--) {
-        newFontSize = (nscoord)((float)(newFontSize) * scriptsizemultiplier);
-      }
-      if (newFontSize <= scriptminsize) {
-        fontsize.AssignLiteral("scriptminsize");
-      }
-
-      // set the -moz-math-font-size attribute without notifying that we want a reflow
-      content->SetAttr(kNameSpaceID_None, nsGkAtoms::MOZfontsize,
-                       fontsize, PR_FALSE);
-    }
-
-    // now, re-resolve the style contexts in our subtree
-    nsFrameManager *fm = aFrame->PresContext()->FrameManager();
-    nsStyleChangeList changeList;
-    fm->ComputeStyleChangeFor(aFrame, &changeList, NS_STYLE_HINT_NONE);
-#ifdef DEBUG
-    // Use the parent frame to make sure we catch in-flows and such
-    nsIFrame* parentFrame = aFrame->GetParent();
-    fm->DebugVerifyStyleTree(parentFrame ? parentFrame : aFrame);
-#endif
-  }
-
-  // recurse down the subtrees for changes that may arise deep down
-  nsIFrame* childFrame = aFrame->GetFirstChild(nsnull);
-  while (childFrame) {
-    childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (mathMLFrame) {
-      // propagate using the base method to make sure that the control
-      // is passed on to MathML frames that may be overloading the method
-      mathMLFrame->ReResolveScriptStyle(aParentScriptLevel);
-    }
-    else {
-      PropagateScriptStyleFor(childFrame, aParentScriptLevel);
-    }
-    childFrame = childFrame->GetNextSibling();
-  }
-}
-
 
 /* //////////////////
  * Frame construction
@@ -776,22 +657,6 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return rv;
 }
 
-// This method is called in a top-down manner, as we descend the frame tree
-// during its construction
-NS_IMETHODIMP
-nsMathMLContainerFrame::Init(nsIContent*      aContent,
-                             nsIFrame*        aParent,
-                             nsIFrame*        aPrevInFlow)
-{
-  MapCommonAttributesIntoCSS(PresContext(), aContent);
-
-  // let the base class do its Init()
-  return nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
-
-  // ...We will build our automatic MathML data once the entire <math>...</math>
-  // tree is constructed.
-}
-
 // Note that this method re-builds the automatic data in the children -- not
 // in aParentFrame itself (except for those particular operations that the
 // parent frame may do in its TransmitAutomaticData()).
@@ -827,7 +692,6 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame,
     return NS_OK;
 
   // walk-up to the first frame that is a MathML frame, stop if we reach <math>
-  PRInt32 parentScriptLevel = 0;
   nsIFrame* frame = aParentFrame;
   while (1) {
      nsIFrame* parent = frame->GetParent();
@@ -837,12 +701,8 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame,
     // stop if it is a MathML frame
     nsIMathMLFrame* mathMLFrame;
     frame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (mathMLFrame) {
-      nsPresentationData parentData;
-      mathMLFrame->GetPresentationData(parentData);
-      parentScriptLevel = parentData.scriptLevel;
+    if (mathMLFrame)
       break;
-    }
 
     // stop if we reach the root <math> tag
     nsIContent* content = frame->GetContent();
@@ -862,22 +722,6 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame,
 
   // re-sync the presentation data and embellishment data of our children
   RebuildAutomaticDataForChildren(frame);
-
-  // re-resolve the style data to sync any change of script sizes
-  nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
-  while (childFrame) {
-    nsIMathMLFrame* mathMLFrame;
-    childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (mathMLFrame) {
-      // propagate using the base method to make sure that the control
-      // is passed on to MathML frames that may be overloading the method
-      mathMLFrame->ReResolveScriptStyle(parentScriptLevel);
-    }
-    else {
-      PropagateScriptStyleFor(childFrame, parentScriptLevel);
-    }
-    childFrame = childFrame->GetNextSibling();
-  }
 
   // Ask our parent frame to reflow us
   nsIFrame* parent = frame->GetParent();
@@ -963,10 +807,6 @@ nsMathMLContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          PRInt32         aModType)
 {
-  // Attributes common to MathML tags
-  if (CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
-    return NS_OK;
-
   // XXX Since they are numerous MathML attributes that affect layout, and
   // we can't check all of them here, play safe by requesting a reflow.
   // XXXldb This should only do work for attributes that cause changes!
@@ -1303,11 +1143,12 @@ public:
     InitMetricsForChild();
 
     // add inter frame spacing
+    const nsStyleFont* font = mParentFrame->GetStyleFont();
     nscoord space =
-      GetInterFrameSpacing(mParentFrame->mPresentationData.scriptLevel,
+      GetInterFrameSpacing(font->mScriptLevel,
                            prevFrameType, mChildFrameType,
                            &mFromFrameType, &mCarrySpace);
-    mX += space * GetThinSpace(mParentFrame->GetStyleFont());
+    mX += space * GetThinSpace(font);
     return *this;
   }
 
@@ -1402,6 +1243,38 @@ nsMathMLContainerFrame::PositionRowChildFrames(nscoord aOffsetX,
   }
 }
 
+class ForceReflow : public nsIReflowCallback {
+public:
+  virtual PRBool ReflowFinished() {
+    return PR_TRUE;
+  }
+  virtual void ReflowCallbackCanceled() {}
+};
+
+// We only need one of these so we just make it a static global, no need
+// to dynamically allocate/destroy it.
+static ForceReflow gForceReflow;
+
+void
+nsMathMLContainerFrame::SetIncrementScriptLevel(PRInt32 aChildIndex, PRBool aIncrement)
+{
+  nsIFrame* child = nsFrameList(GetFirstChild(nsnull)).FrameAt(aChildIndex);
+  if (!child)
+    return;
+  nsIContent* content = child->GetContent();
+  if (!content->IsNodeOfType(nsINode::eMATHML))
+    return;
+  nsMathMLElement* element = static_cast<nsMathMLElement*>(content);
+
+  if (element->GetIncrementScriptLevel() == aIncrement)
+    return;
+
+  // XXXroc this does a ContentStatesChanged, is it safe to call here? If
+  // not we should do it in a post-reflow callback.
+  element->SetIncrementScriptLevel(aIncrement, PR_TRUE);
+  PresContext()->PresShell()->PostReflowCallback(&gForceReflow);
+}
+
 // helpers to fix the inter-spacing when <math> is the only parent
 // e.g., it fixes <math> <mi>f</mi> <mo>q</mo> <mi>f</mi> <mo>I</mo> </math>
 
@@ -1450,7 +1323,7 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
   nsIAtom *parentTag = parentContent->Tag();
   if (parentTag == nsGkAtoms::math ||
       parentTag == nsGkAtoms::mtd_) {
-    gap = GetInterFrameSpacingFor(mPresentationData.scriptLevel, mParent, this);
+    gap = GetInterFrameSpacingFor(GetStyleFont()->mScriptLevel, mParent, this);
     // add our own italic correction
     nscoord leftCorrection = 0, italicCorrection = 0;
     GetItalicCorrection(mBoundingMetrics, leftCorrection, italicCorrection);

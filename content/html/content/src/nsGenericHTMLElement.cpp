@@ -1146,13 +1146,6 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         htmlDocument->ChangeContentEditableCount(this, +1);
       }
     }
-
-    // If we're in a document now, let our mapped attrs know what their new
-    // sheet is.
-    nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
-    if (sheet) {
-      mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
-    }
   }
 
   return rv;
@@ -1435,13 +1428,6 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                              aNotify);
 }
 
-nsresult
-nsGenericHTMLElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
-{
-  mAttrsAndChildren.WalkMappedAttributeStyleRules(aRuleWalker);
-  return NS_OK;
-}
-
 already_AddRefed<nsIURI>
 nsGenericHTMLElement::GetBaseURI() const
 {
@@ -1539,22 +1525,6 @@ nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   
   return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
-
-PRBool
-nsGenericHTMLElement::SetMappedAttribute(nsIDocument* aDocument,
-                                         nsIAtom* aName,
-                                         nsAttrValue& aValue,
-                                         nsresult* aRetval)
-{
-  NS_PRECONDITION(aDocument == GetCurrentDoc(), "Unexpected document");
-  nsHTMLStyleSheet* sheet = aDocument ?
-    aDocument->GetAttributeStyleSheet() : nsnull;
-  
-  *aRetval = mAttrsAndChildren.SetAndTakeMappedAttr(aName, aValue,
-                                                    this, sheet);
-  return PR_TRUE;
-}
-
 
 nsMapRuleToAttributesFunc
 nsGenericHTMLElement::GetAttributeMappingFunction() const

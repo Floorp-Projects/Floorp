@@ -201,6 +201,9 @@ public:
     { return GetPresShell()->FrameManager(); } 
 #endif
 
+  void RebuildAllStyleData();
+  void PostRebuildAllStyleDataEvent();
+
   /**
    * Access compatibility mode for this context.  This is the same as
    * our document's compatibility mode.
@@ -237,11 +240,6 @@ public:
    * Get medium of presentation
    */
   nsIAtom* Medium() { return mMedium; }
-
-  /**
-   * Clear style data from the root frame downwards, and reflow.
-   */
-  NS_HIDDEN_(void) ClearStyleDataAndReflow();
 
   void* AllocateFromShell(size_t aSize)
   {
@@ -468,7 +466,7 @@ public:
   float TextZoom() { return mTextZoom; }
   void SetTextZoom(float aZoom) {
     mTextZoom = aZoom;
-    ClearStyleDataAndReflow();
+    RebuildAllStyleData();
   }
 
   float GetFullZoom() { return mFullZoom; }
@@ -637,7 +635,7 @@ public:
    * Set the Bidi options for the presentation context
    */  
   NS_HIDDEN_(void) SetBidi(PRUint32 aBidiOptions,
-                           PRBool aForceReflow = PR_FALSE);
+                           PRBool aForceRestyle = PR_FALSE);
 
   /**
    * Get the Bidi options for the presentation context
