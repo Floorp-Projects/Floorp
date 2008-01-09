@@ -485,7 +485,7 @@
             }
             // Delete the feeds cache if we're hiding the topmost page
             // (as opposed to one of its iframes).
-            if (this.feeds && event.target == this.contentDocument)
+            if (this.feeds && aEvent.target == this.contentDocument)
               this.feeds = null;
             if (!this.docShell || !this.fastFind)
               return;
