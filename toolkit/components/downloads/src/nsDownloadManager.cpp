@@ -82,7 +82,9 @@
 
 #ifdef XP_WIN
 #include <shlobj.h>
+#ifndef __MINGW32__
 #include "nsDownloadScanner.h"
+#endif
 #endif
 
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
@@ -127,7 +129,7 @@ nsDownloadManager::GetSingleton()
 
 nsDownloadManager::~nsDownloadManager()
 {
-#ifdef XP_WIN
+#if defined(XP_WIN) and !defined(__MINGW32__)
   delete mScanner;
 #endif
   gDownloadManagerService = nsnull;
@@ -836,7 +838,7 @@ nsDownloadManager::Init()
                                    getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef XP_WIN
+#if defined(XP_WIN) and !defined(__MINGW32__)
   mScanner = new nsDownloadScanner();
   if (!mScanner)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1779,7 +1781,7 @@ nsDownload::SetState(DownloadState aState)
       // Transfers are finished, so break the reference cycle
       Finalize();
       break;
-#ifdef XP_WIN
+#if defined(XP_WIN) and !defined(__MINGW32__)
     case nsIDownloadManager::DOWNLOAD_SCANNING:
     {
       nsresult rv = mDownloadManager->mScanner ? mDownloadManager->mScanner->ScanDownload(this) : NS_ERROR_NOT_INITIALIZED;
@@ -2083,7 +2085,7 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
       mPercentComplete = 100;
       mLastUpdate = PR_Now();
 
-#ifdef XP_WIN
+#if defined(XP_WIN) and !defined(__MINGW32__)
       (void)SetState(nsIDownloadManager::DOWNLOAD_SCANNING);
 #else
       (void)SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
