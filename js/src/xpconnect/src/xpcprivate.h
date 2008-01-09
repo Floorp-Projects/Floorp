@@ -1159,16 +1159,12 @@ extern JSClass XPC_WN_NoMods_NoCall_Proto_JSClass;
 extern JSClass XPC_WN_ModsAllowed_WithCall_Proto_JSClass;
 extern JSClass XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
 extern JSClass XPC_WN_Tearoff_JSClass;
-extern JSClass XPC_WN_NoHelper_Proto_JSClass;
 
 extern JSObjectOps * JS_DLL_CALLBACK
 XPC_WN_GetObjectOpsNoCall(JSContext *cx, JSClass *clazz);
 
 extern JSObjectOps * JS_DLL_CALLBACK
 XPC_WN_GetObjectOpsWithCall(JSContext *cx, JSClass *clazz);
-
-extern JSObjectOps * JS_DLL_CALLBACK
-XPC_WN_Proto_GetObjectOps(JSContext *cx, JSClass *clazz);
 
 extern JSBool JS_DLL_CALLBACK
 XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
@@ -1226,11 +1222,6 @@ public:
 
     JSObject*
     GetPrototypeJSObject() const {return mPrototypeJSObject;}
-
-    // Getter for the prototype that we use for wrappers that have no
-    // helper.
-    JSObject*
-    GetPrototypeNoHelper(XPCCallContext& ccx);
 
 #ifndef XPCONNECT_STANDALONE
     nsIPrincipal*
@@ -1325,13 +1316,8 @@ private:
     // unless a PreCreate hook overrides it.  Note that this _may_ be null (see
     // constructor).
     JSObject*                        mGlobalJSObject;
-
-    // Cached value of Object.prototype
     JSObject*                        mPrototypeJSObject;
-    // Cached value of Function.prototype
     JSObject*                        mPrototypeJSFunction;
-    // Prototype to use for wrappers with no helper.
-    JSObject*                        mPrototypeNoHelper;
 
 #ifndef XPCONNECT_STANDALONE
     // The script object principal instance corresponding to our current global
