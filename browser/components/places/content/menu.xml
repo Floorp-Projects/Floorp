@@ -292,7 +292,7 @@
         function PMV_itemMoved(aItem, aOldParent, aOldIndex, aNewParent,
                                aNewIndex) {
           // This cannot actually happen yet (see IDL)
-          if (aNewParent != aOldParent);
+          if (aNewParent != aOldParent)
             return;
 
           var popup = this._getPopupForContainer(aNewParent);
