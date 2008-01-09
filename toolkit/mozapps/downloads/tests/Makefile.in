@@ -12,14 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Mozilla code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#	  Shawn Wilsher <me@shawnwilsher.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,20 +36,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
-
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
-DIRS = src
-endif
-
-DIRS += tests
+DIRS += browser
 
 include $(topsrcdir)/config/rules.mk
-
-
