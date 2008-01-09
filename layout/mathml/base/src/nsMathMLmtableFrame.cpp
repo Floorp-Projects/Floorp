@@ -145,10 +145,22 @@ GetValueAt(nsIFrame* aTableOrRowFrame,
 }
 
 #ifdef NS_DEBUG
+static PRBool
+IsTable(PRUint8 aDisplay)
+{
+  if ((aDisplay == NS_STYLE_DISPLAY_TABLE) ||
+      (aDisplay == NS_STYLE_DISPLAY_INLINE_TABLE))
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected) \
   NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == _frame->GetStyleDisplay()->mDisplay, "internal error");
+#define DEBUG_VERIFY_THAT_FRAME_IS_TABLE(_frame) \
+  NS_ASSERTION(IsTable(_frame->GetStyleDisplay()->mDisplay), "internal error");
 #else
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
+#define DEBUG_VERIFY_THAT_FRAME_IS_TABLE(_frame)
 #endif
 
 // map attributes that depend on the index of the row:
@@ -157,7 +169,7 @@ static void
 MapRowAttributesIntoCSS(nsIFrame* aTableFrame,
                         nsIFrame* aRowFrame)
 {
-  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, TABLE);
+  DEBUG_VERIFY_THAT_FRAME_IS_TABLE(aTableFrame);
   DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, TABLE_ROW);
   PRInt32 rowIndex = ((nsTableRowFrame*)aRowFrame)->GetRowIndex();
   nsIContent* rowContent = aRowFrame->GetContent();
@@ -198,7 +210,7 @@ MapColAttributesIntoCSS(nsIFrame* aTableFrame,
                         nsIFrame* aRowFrame,
                         nsIFrame* aCellFrame)
 {
-  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, TABLE);
+  DEBUG_VERIFY_THAT_FRAME_IS_TABLE(aTableFrame);
   DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, TABLE_ROW);
   DEBUG_VERIFY_THAT_FRAME_IS(aCellFrame, TABLE_CELL);
   PRInt32 rowIndex, colIndex;

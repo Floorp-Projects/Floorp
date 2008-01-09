@@ -93,23 +93,3 @@ nsMathMLmrowFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
   return nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
-
-nsIFrame*
-nsMathMLmrowFrame::GetContentInsertionFrame()
-{
-  // Special for <mtable>: In the frame construction code, we also use
-  // this frame class as a wrapper for mtable. Hence, if we are asked 
-  // for the insertion frame in the context where we are such a wrapper,
-  // we should return the real frame intended for mtable
-  if (mContent->Tag() == nsGkAtoms::mtable_) {
-    nsIFrame* frame = mFrames.FirstChild();
-    for ( ; frame; frame = frame->GetFirstChild(nsnull)) {
-      // drill down to the real mtable
-      if (frame->GetType() == nsGkAtoms::tableOuterFrame)
-        return frame->GetContentInsertionFrame();
-    }
-    NS_NOTREACHED("mtable wrapper without the real table frame");
-  }
-
-  return nsMathMLContainerFrame::GetContentInsertionFrame();
-}
