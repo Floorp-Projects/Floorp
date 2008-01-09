@@ -105,6 +105,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug394700.html \
 		test_bug395107.html \
 		test_bug401160.xhtml \
+		test_bug332246.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
