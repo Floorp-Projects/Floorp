@@ -1179,7 +1179,7 @@ nsOperaProfileMigrator::CopySmartKeywords(nsINavBookmarksService* aBMS,
 
       // Assume "&&" is an escaped ampersand in the search query title. 
       if (name.CharAt(index + 1) == '&') {
-        nameStr.Cut(index, 1);
+        name.Cut(index, 1);
         index += 2;
         continue;
       }
