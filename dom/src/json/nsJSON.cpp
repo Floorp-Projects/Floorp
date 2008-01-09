@@ -747,7 +747,7 @@ nsJSONListener::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
 {
   PRUint32 contentLength;
   aStream->Available(&contentLength);
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (mNeedsConverter && mSniffBuffer.Length() < 4) {
     PRUint32 readCount = (aLength < 4) ? aLength : 4;
