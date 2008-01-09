@@ -271,7 +271,7 @@ merror {
 /**************************************************************************/
 
 mtable {
-  display: table;
+  display: inline-table;
   border-collapse: separate;
   border-spacing: 0;
 }
