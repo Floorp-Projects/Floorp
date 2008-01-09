@@ -3253,6 +3253,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (stmt != tc->topScopeStmt) {
                 JS_ASSERT(!stmt->downScope);
                 JS_ASSERT(stmt->type == STMT_BLOCK ||
+                          stmt->type == STMT_SWITCH ||
                           stmt->type == STMT_TRY ||
                           stmt->type == STMT_FINALLY);
                 stmt->downScope = tc->topScopeStmt;
