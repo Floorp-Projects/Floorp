@@ -1614,8 +1614,9 @@ var PlacesUtils = {
           aNode.containerOpen = true;
         }
         for (let i = 0; i < aNode.childCount; ++i) {
+          // Include visible url nodes only
           let child = aNode.getChild(i);
-          if (this.nodeIsURI(child))
+          if (child.viewIndex != -1 && this.nodeIsURI(child))
             urls.push({uri: child.uri, isBookmark: this.nodeIsBookmark(child)});
         }
         if (!wasOpen)
