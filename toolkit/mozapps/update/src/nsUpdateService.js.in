@@ -49,6 +49,7 @@ const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
 const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
+const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -2802,23 +2803,36 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateAvailable: function(update) {
-    if (this._enabled) {
-      this._showUIWhenIdle(null, URI_UPDATE_PROMPT_DIALOG, null,
-                           "Update:Wizard", "updatesavailable", update);
-    }
+    if (!this._enabled)
+      return;
+    var bundle = this._updateBundle;
+    var stringsPrefix = "updateAvailable_" + update.type + ".";
+    var title = bundle.formatStringFromName(stringsPrefix + "title", [update.name], 1);
+    var text = bundle.GetStringFromName(stringsPrefix + "text");
+    var imageUrl = "";
+    this._showUnobtrusiveUI(null, URI_UPDATE_PROMPT_DIALOG, null,
+                           "Update:Wizard", "updatesavailable", update,
+                           title, text, imageUrl);
   },
 
   /**
    * See nsIUpdateService.idl
    */
-  showUpdateDownloaded: function(update, whenIdle) {
-    if (this._enabled) {
-      if (whenIdle)
-        this._showUIWhenIdle(null, URI_UPDATE_PROMPT_DIALOG, null,
-                             "Update:Wizard", "finishedBackground", update);
-      else
-        this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null,
-                     "Update:Wizard", "finishedBackground", update);
+  showUpdateDownloaded: function(update, background) {
+    if (background) {
+      if (!this._enabled)
+        return;
+      var bundle = this._updateBundle;
+      var stringsPrefix = "updateDownloaded_" + update.type + ".";
+      var title = bundle.formatStringFromName(stringsPrefix + "title", [update.name], 1);
+      var text = bundle.GetStringFromName(stringsPrefix + "text");
+      var imageUrl = "";
+      this._showUnobtrusiveUI(null, URI_UPDATE_PROMPT_DIALOG, null,
+                              "Update:Wizard", "finishedBackground", update,
+                              title, text, imageUrl);
+    } else {
+      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null,
+                   "Update:Wizard", "finishedBackground", update);
     }
   },
 
@@ -2841,10 +2855,7 @@ UpdatePrompt.prototype = {
     if (this._enabled) {
       // In some cases, we want to just show a simple alert dialog:
       if (update.state == STATE_FAILED && update.errorCode == WRITE_ERROR) {
-        var sbs =
-            Components.classes["@mozilla.org/intl/stringbundle;1"].
-            getService(Components.interfaces.nsIStringBundleService);
-        var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
+        var updateBundle = this._updateBundle;
         var title = updateBundle.GetStringFromName("updaterIOErrorTitle");
         var text = updateBundle.formatStringFromName("updaterIOErrorMsg",
                                                      [gApp.name, gApp.name], 2);
@@ -2874,8 +2885,84 @@ UpdatePrompt.prototype = {
     return !getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false);
   },
 
+  get _updateBundle() {
+    return Components.classes["@mozilla.org/intl/stringbundle;1"]
+                     .getService(Components.interfaces.nsIStringBundleService)
+                     .createBundle(URI_UPDATES_PROPERTIES);
+  },
+
   /**
-   * Show the Update Checking UI when the user was idle
+   * Initiate a less obtrusive UI, starting with a non-modal notification alert
+   * @param   parent
+   *          A parent window, can be null
+   * @param   uri
+   *          The URI string of the dialog to show
+   * @param   name
+   *          The Window Name of the dialog to show, in case it is already open
+   *          and can merely be focused
+   * @param   page
+   *          The page of the wizard to be displayed, if one is already open.
+   * @param   update
+   *          An update to pass to the UI in the window arguments.
+   *          Can be null
+   * @param   title
+   *          The title for the notification alert.
+   * @param   text
+   *          The contents of the notification alert.
+   * @param   imageUrl
+   *          A URL identifying the image to put in the notification alert.
+   */
+  _showUnobtrusiveUI: function(parent, uri, features, name, page, update,
+                               title, text, imageUrl) {
+    var observer = {
+      updatePrompt: this,
+      service: null,
+      timer: null,
+      notify: function () {
+        // the user hasn't restarted yet => prompt when idle
+        this.service.removeObserver(this, "quit-application");
+        this.updatePrompt._showUIWhenIdle(parent, uri, features, name, page, update);
+      },
+      observe: function (aSubject, aTopic, aData) {
+        switch (aTopic) {
+          case "alertclickcallback":
+            this.updatePrompt._showUI(parent, uri, features, name, page, update);
+            // fall thru
+          case "quit-application":
+            this.timer.cancel();
+            this.service.removeObserver(this, "quit-application");
+            break;
+        }
+      }
+    };
+
+    try {
+      var notifier = Components.classes["@mozilla.org/alerts-service;1"]
+                               .getService(Components.interfaces.nsIAlertsService);
+      notifier.showAlertNotification(imageUrl, title, text, true, "", observer);
+    }
+    catch (e) {
+      // Failed to retrieve alerts service, platform unsupported
+      this._showUIWhenIdle(parent, uri, features, name, page, update);
+      return;
+    }
+
+    observer.service =
+      Components.classes["@mozilla.org/observer-service;1"]
+                .getService(Components.interfaces.nsIObserverService);
+    observer.service.addObserver(observer, "quit-application", false);
+
+    // Give the user x seconds to react before showing the big UI
+    var promptWaitTime = getPref("getIntPref", PREF_APP_UPDATE_PROMPTWAITTIME, 43200);
+    observer.timer =
+      Components.classes["@mozilla.org/timer;1"]
+                .createInstance(Components.interfaces.nsITimer);
+    observer.timer.initWithCallback(observer, promptWaitTime * 1000,
+                                    observer.timer.TYPE_ONE_SHOT);
+  },
+
+  /**
+   * Show the UI when the user was idle
    * @param   parent
    *          A parent window, can be null
    * @param   uri
