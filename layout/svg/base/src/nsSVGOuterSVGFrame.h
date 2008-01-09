@@ -171,6 +171,9 @@ protected:
   float mFullZoom;
 
   PRPackedBool mViewportInitialized;
+#ifdef XP_MACOSX
+  PRPackedBool mEnableBitmapFallback;
+#endif
 };
 
 #endif
