@@ -14,6 +14,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsDownloadManager.h"
+#include "nsTArray.h"
 
 enum AVScanState
 {
@@ -34,8 +35,8 @@ public:
 
 private:
   PRBool mHaveAVScanner;
-  CLSID mScannerCLSID;
-  PRInt32 FindCLSID();
+  nsTArray<CLSID> mScanCLSID;
+  PRInt32 ListCLSID();
 
   static unsigned int __stdcall ScannerThreadFunction(void *p);
   class Scan : public nsRunnable
@@ -46,7 +47,6 @@ private:
 
   private:
     nsDownloadScanner *mDLScanner;
-    nsRefPtr<IOfficeAntiVirus> mAVScanner;
     HANDLE mThread;
     nsRefPtr<nsDownload> mDownload;
     AVScanState mStatus;
