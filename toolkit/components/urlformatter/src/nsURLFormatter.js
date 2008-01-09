@@ -94,17 +94,20 @@ nsURLFormatterService.prototype = {
              getService(Ci.nsIPrefBranch);
 
     try {
-      format = PS.getComplexValue(aPref, Ci.nsIPrefLocalizedString).data;
-    } catch(ex) {}
-
-    if (!format) {
-      try {
-        format = PS.getComplexValue(aPref, Ci.nsISupportsString).data;
-      } catch(ex) {
-        Cu.reportError("formatURLPref: Couldn't get pref: " + aPref);
-        return "about:blank";
-      }
+      format = PS.getComplexValue(aPref, Ci.nsISupportsString).data;
+    } catch(ex) {
+      Cu.reportError("formatURLPref: Couldn't get pref: " + aPref);
+      return "about:blank";
     }
+
+    if (!PS.prefHasUserValue(aPref) &&
+        /^chrome:\/\/.+\/locale\/.+\.properties$/.test(format)) {
+      // This looks as if it might be a localised preference
+      try {
+        format = PS.getComplexValue(aPref, Ci.nsIPrefLocalizedString).data;
+      } catch(ex) {}
+    }
+
     return this.formatURL(format);
   }
 };
