@@ -348,6 +348,7 @@ var gEditItemOverlay = {
           var menuItem = this._createMicrosummaryMenuItem(microsummary);
           if (PlacesUtils.microsummaries
                          .isMicrosummary(this._itemId, microsummary))
+            itemToSelect = menuItem;
 
           menupopup.appendChild(menuItem);
         }
