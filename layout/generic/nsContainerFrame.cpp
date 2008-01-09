@@ -69,6 +69,7 @@
 #include "nsContentErrors.h"
 #include "nsIEventStateManager.h"
 #include "nsListControlFrame.h"
+#include "nsIBaseWindow.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -448,6 +449,26 @@ IsMenuPopup(nsIFrame *aFrame)
   return (frameType == nsGkAtoms::menuPopupFrame);
 }
 
+static PRBool
+IsTopLevelWidget(nsPresContext* aPresContext)
+{
+  nsCOMPtr<nsISupports> container = aPresContext->Document()->GetContainer();
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
+  if (!baseWindow)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIWidget> mainWidget;
+  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+  if (!mainWidget)
+    return PR_FALSE;
+
+  nsWindowType windowType;
+  mainWidget->GetWindowType(windowType);
+  return windowType == eWindowType_toplevel ||
+         windowType == eWindowType_dialog;
+  // popups aren't toplevel so they're not handled here
+}
+
 static void
 SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
                                          nsIFrame*        aFrame,
@@ -466,20 +487,9 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
     nsIView* rootView;
     vm->GetRootView(rootView);
 
-    nsIDocument *doc = aPresContext->PresShell()->GetDocument();
-    if (doc) {
-      nsIContent *rootElem = doc->GetRootContent();
-      if (!doc->GetParentDocument() &&
-          (nsCOMPtr<nsISupports>(doc->GetContainer())) &&
-          rootElem && rootElem->IsNodeOfType(nsINode::eXUL)) {
-        // we're XUL at the root of the document hierarchy. Try to make our
-        // window translucent.
-        // don't proceed unless this is the root view
-        // (sometimes the non-root-view is a canvas)
-        if (aView->HasWidget() && aView == rootView) {
-          aView->GetWidget()->SetHasTransparentBackground(nsLayoutUtils::FrameHasTransparency(aFrame));
-        }
-      }
+    if (aView->HasWidget() && aView == rootView &&
+        IsTopLevelWidget(aPresContext)) {
+      aView->GetWidget()->SetHasTransparentBackground(nsLayoutUtils::FrameHasTransparency(aFrame));
     }
   }
 }
