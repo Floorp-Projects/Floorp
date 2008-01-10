@@ -411,7 +411,7 @@ public:
   NS_IMETHOD CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
   PRBool   IsMouseCaptured(nsPresContext* aPresContext);
 
-  virtual const nsStyleStruct* GetStyleDataExternal(nsStyleStructID aSID) const;
+  virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const;
 
 
 #ifdef NS_DEBUG

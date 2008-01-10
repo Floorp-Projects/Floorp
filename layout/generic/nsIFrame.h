@@ -641,16 +641,7 @@ public:
    * The use of the typesafe functions below is preferred to direct use
    * of this function.
    */
-  virtual const nsStyleStruct* GetStyleDataExternal(nsStyleStructID aSID) const = 0;
-
-  const nsStyleStruct* GetStyleData(nsStyleStructID aSID) const {
-#ifdef _IMPL_NS_LAYOUT
-    NS_ASSERTION(mStyleContext, "No style context found!");
-    return mStyleContext->GetStyleData(aSID);
-#else
-    return GetStyleDataExternal(aSID);
-#endif
-  }
+  virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const = 0;
 
   /**
    * Define typesafe getter functions for each style struct by

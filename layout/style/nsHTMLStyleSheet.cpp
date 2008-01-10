@@ -109,7 +109,7 @@ nsHTMLStyleSheet::GenericTableRule::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+static void PostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   nsStyleText* text = (nsStyleText*)aStyleStruct;
   if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_DEFAULT) {
@@ -135,13 +135,13 @@ nsHTMLStyleSheet::TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
 }
 
 static void 
-ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct, 
-                           nsRuleData*    aRuleData,
-                           PRUint8        aSide,
-                           PRBool         aGroup,
-                           PRUint8        aRulesArg1,
-                           PRUint8        aRulesArg2,
-                           PRUint8        aRulesArg3)
+ProcessTableRulesAttribute(void*       aStyleStruct, 
+                           nsRuleData* aRuleData,
+                           PRUint8     aSide,
+                           PRBool      aGroup,
+                           PRUint8     aRulesArg1,
+                           PRUint8     aRulesArg2,
+                           PRUint8     aRulesArg3)
 {
   if (!aStyleStruct || !aRuleData || !aRuleData->mPresContext) return;
 
@@ -202,7 +202,7 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
   }
 }
 
-static void TbodyPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+static void TbodyPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_TOP, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
                                NS_STYLE_TABLE_RULES_GROUPS, NS_STYLE_TABLE_RULES_ROWS);
@@ -221,7 +221,7 @@ nsHTMLStyleSheet::TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
 }
 // -----------------------------------------------------------
 
-static void RowPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+static void RowPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_TOP, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
                                NS_STYLE_TABLE_RULES_ROWS, NS_STYLE_TABLE_RULES_ROWS);
@@ -239,7 +239,7 @@ nsHTMLStyleSheet::TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
-static void ColgroupPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+static void ColgroupPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_LEFT, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
                                NS_STYLE_TABLE_RULES_GROUPS, NS_STYLE_TABLE_RULES_COLS);
@@ -257,7 +257,7 @@ nsHTMLStyleSheet::TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
-static void ColPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+static void ColPostResolveCallback(void* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_LEFT, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
                                NS_STYLE_TABLE_RULES_COLS, NS_STYLE_TABLE_RULES_COLS);
@@ -265,7 +265,7 @@ static void ColPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRul
                                NS_STYLE_TABLE_RULES_COLS, NS_STYLE_TABLE_RULES_COLS);
 }
 
-static void UngroupedColPostResolveCallback(nsStyleStruct* aStyleStruct,
+static void UngroupedColPostResolveCallback(void* aStyleStruct,
                                             nsRuleData* aRuleData)
 {
   // Pass PR_TRUE for aGroup, so that we find the table's style
