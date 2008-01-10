@@ -51,7 +51,7 @@
 #include "nsCoord.h"
 #include "nsCSSValue.h"
 #include "nsCSSProps.h"
-#include "nsValueArray.h"
+#include "nsTArray.h"
 #include "nsCSSDataBlock.h"
 #include "nsCSSStruct.h"
 
@@ -83,7 +83,9 @@ public:
   PRBool GetValueIsImportant(nsCSSProperty aProperty) const;
   PRBool GetValueIsImportant(const nsAString& aProperty) const;
 
-  PRUint32 Count() const;
+  PRUint32 Count() const {
+    return mOrder.Length(); 
+  }
   nsresult GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const;
 
   nsresult ToString(nsAString& aString) const;
@@ -247,12 +249,12 @@ private:
   // Block everyone, except us or a derivative, from deleting us.
   ~nsCSSDeclaration(void);
     
-  nsCSSProperty OrderValueAt(nsValueArrayIndex aValue) const {
-    return nsCSSProperty(mOrder.ValueAt(aValue));
+  nsCSSProperty OrderValueAt(PRUint32 aValue) const {
+    return nsCSSProperty(mOrder.ElementAt(aValue));
   }
 
 private:
-    nsValueArray mOrder;
+    nsAutoTArray<PRUint8, 8> mOrder;
     nsAutoRefCnt mRefCnt;
     nsCSSCompressedDataBlock *mData; // never null, except while expanded
     nsCSSCompressedDataBlock *mImportantData; // may be null
