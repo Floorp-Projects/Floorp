@@ -75,7 +75,6 @@ CPPSRCS		= \
 		nsUnicharBuffer.cpp \
 		nsVariant.cpp \
 		nsTimelineService.cpp \
-		nsValueArray.cpp \
 		nsArray.cpp \
 		nsHashPropertyBag.cpp \
 		$(NULL)
@@ -102,7 +101,6 @@ EXPORTS		= \
 		nsSupportsPrimitives.h \
 		nsTime.h \
 		nsVariant.h \
-		nsValueArray.h \
 		nsStringEnumerator.h \
 		nsHashPropertyBag.h \
 		nsWhitespaceTokenizer.h \
