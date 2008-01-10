@@ -422,7 +422,7 @@ EmbedPrivate::Destroy(void)
 void
 EmbedPrivate::SetURI(const char *aURI)
 {
-  CopyUTF8toUTF16(aURI, mURI);
+  mURI.Assign(aURI);
 }
 
 void
@@ -434,7 +434,7 @@ EmbedPrivate::LoadCurrentURI(void)
 
     nsAutoPopupStatePusher popupStatePusher(piWin, openAllowed);
 
-    mNavigation->LoadURI(mURI.get(),                        // URI string
+    mNavigation->LoadURI(NS_ConvertUTF8toUTF16(mURI).get(), // URI string
                          nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
                          nsnull,                            // Referring URI
                          nsnull,                            // Post data
