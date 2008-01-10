@@ -37,13 +37,11 @@
 
 #include "EmbedProgress.h"
 
-#include <nsXPIDLString.h>
 #include <nsIChannel.h>
 #include <nsIWebProgress.h>
 #include <nsIDOMWindow.h>
 
 #include "nsIURI.h"
-#include "nsCRT.h"
 
 EmbedProgress::EmbedProgress(void)
 {
@@ -82,13 +80,11 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   }
 
   // get the uri for this request
-  nsXPIDLCString uriString;
-  RequestToURIString(aRequest, getter_Copies(uriString));
-  nsString tmpString;
-  CopyUTF8toUTF16(uriString, tmpString);
+  nsCAutoString uriString;
+  RequestToURIString(aRequest, uriString);
 
   // is it the same as the current URI?
-  if (mOwner->mURI.Equals(tmpString))
+  if (mOwner->mURI.Equals(uriString))
   {
     // for people who know what they are doing
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
@@ -97,7 +93,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   }
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[NET_STATE_ALL],
-		  (const char *)uriString,
+ 		  uriString.get(),
 		  (gint)aStateFlags, (gint)aStatus);
   // and for stop, too
   if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) && 
@@ -121,14 +117,11 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
 				PRInt32         aMaxTotalProgress)
 {
 
-  nsXPIDLCString uriString;
-  RequestToURIString(aRequest, getter_Copies(uriString));
+  nsCAutoString uriString;
+  RequestToURIString(aRequest, uriString);
   
-  nsString tmpString;
-  CopyUTF8toUTF16(uriString, tmpString);
-
   // is it the same as the current uri?
-  if (mOwner->mURI.Equals(tmpString)) {
+  if (mOwner->mURI.Equals(uriString)) {
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		    moz_embed_signals[PROGRESS],
 		    aCurTotalProgress, aMaxTotalProgress);
@@ -136,7 +129,7 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
 
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[PROGRESS_ALL],
-		  (const char *)uriString,
+		  uriString.get(),
 		  aCurTotalProgress, aMaxTotalProgress);
   return NS_OK;
 }
@@ -182,16 +175,11 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
 			      nsresult         aStatus,
 			      const PRUnichar *aMessage)
 {
-  // need to make a copy so we can safely cast to a void *
-  PRUnichar *tmpString = nsCRT::strdup(aMessage);
-
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[STATUS_CHANGE],
 		  static_cast<void *>(aRequest),
 		  static_cast<int>(aStatus),
-		  static_cast<void *>(tmpString));
-
-  nsMemory::Free(tmpString);
+		  static_cast<const void *>(aMessage));
 
   return NS_OK;
 }
@@ -210,7 +198,7 @@ EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 /* static */
 void
-EmbedProgress::RequestToURIString(nsIRequest *aRequest, char **aString)
+EmbedProgress::RequestToURIString(nsIRequest *aRequest, nsACString &aString)
 {
   // is it a channel
   nsCOMPtr<nsIChannel> channel;
@@ -223,8 +211,5 @@ EmbedProgress::RequestToURIString(nsIRequest *aRequest, char **aString)
   if (!uri)
     return;
   
-  nsCAutoString uriString;
-  uri->GetSpec(uriString);
-
-  *aString = strdup(uriString.get());
+  uri->GetSpec(aString);
 }
