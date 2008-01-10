@@ -97,11 +97,11 @@ def getInstallLocation(partner, loc, isInst):
 def doDownload(partner, loc, url, minDir, creds):
   result = True
   dwnlddir = getDownloadLocation(partner, loc)
-  user = ""
-  passwd = ""
+  user = None
+  passwd = None
   if creds:
-    user = creds.split(":")[0]
-    passwd = creds.split(":")[1]
+    user, passwd = creds.split(":")
+
   mozDwnld = MozDownloader(url=url, dest=dwnlddir, user=user,
                            password=passwd)
   mozDwnld.download()
