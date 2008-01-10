@@ -1654,10 +1654,13 @@ nsObjectFrame::NotifyContentObjectWrapper()
   if (NS_FAILED(rv))
     return;
 
-  // Abuse the scriptable helper to trigger prototype setup for the
-  // wrapper for mContent so that this plugin becomes part of the DOM
-  // object.
-  helper->PostCreate(wrapper, cx, obj);
+  nsCxPusher cxPusher;
+  if (cxPusher.Push(mContent)) {
+    // Abuse the scriptable helper to trigger prototype setup for the
+    // wrapper for mContent so that this plugin becomes part of the DOM
+    // object.
+    helper->PostCreate(wrapper, cx, obj);
+  }
 }
 
 // static
