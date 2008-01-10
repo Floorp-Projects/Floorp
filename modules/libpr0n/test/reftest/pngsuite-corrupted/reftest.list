@@ -1,0 +1,10 @@
+# PngSuite - Corrupted files
+#
+# Note: these are corrupt files, and so no image should be rendered.
+
+# x00n0g01 - empty 0x0 grayscale file
+== wrapper.html?x00n0g01.png about:blank
+# xcrn0g04 - added cr bytes
+== wrapper.html?xcrn0g04.png about:blank
+# xlfn0g04 - added lf bytes 
+== wrapper.html?xlfn0g04.png about:blank
