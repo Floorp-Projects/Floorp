@@ -1075,8 +1075,8 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 #define JSOW_SET_PROPERTY           20
 #define JSOW_NEW_PROPERTY           200
 #define JSOW_DELETE_PROPERTY        30
-#define JSOW_ENTER_SHARP            4096
-#define JSOW_SCRIPT_JUMP            4096
+#define JSOW_ENTER_SHARP            JS_OPERATION_WEIGHT_BASE
+#define JSOW_SCRIPT_JUMP            JS_OPERATION_WEIGHT_BASE
 
 /*
  * Reset the operation count and call the operation callback assuming that the
