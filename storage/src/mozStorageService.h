@@ -51,8 +51,7 @@
 
 class mozStorageConnection;
 
-class mozStorageService : public mozIStorageService,
-                          public nsIObserver
+class mozStorageService : public mozIStorageService
 {
     friend class mozStorageConnection;
 
@@ -68,19 +67,12 @@ public:
     // mozIStorageService
     NS_DECL_MOZISTORAGESERVICE
 
-    NS_DECL_NSIOBSERVER
-
 private:
     virtual ~mozStorageService();
 protected:
     nsCOMPtr<nsIFile> mProfileStorageFile;
 
     static mozStorageService *gStorageService;
-
-    nsresult InitStorageAsyncIO();
-    nsresult FlushAsyncIO();
-    nsresult FinishAsyncIO();
-    void FreeLocks();
 };
 
 #endif /* _MOZSTORAGESERVICE_H_ */
