@@ -1146,7 +1146,8 @@ public:
       , trailingWhitespace(0)
     {}
 
-    // The line. This may be null if the inlines are not associated with a block.
+    // The line. This may be null if the inlines are not associated with
+    // a block or if we just don't know the line.
     const nsLineList_iterator* line;
 
     // The maximum intrinsic width for all previous lines.
