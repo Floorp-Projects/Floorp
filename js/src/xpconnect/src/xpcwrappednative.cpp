@@ -122,12 +122,6 @@ XPCWrappedNative::NoteTearoffs(nsCycleCollectionTraversalCallback& cb)
     }
 }
 
-// No need to unlink the JS objects, if the XPCWrappedNative will be cycle
-// collected then its mFlatJSObject will be cycle collected too and finalization
-// of the mFlatJSObject will unlink the js objects (see
-// XPC_WN_NoHelper_Finalize and FlatJSObjectFinalized).
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(XPCWrappedNative)
-
 #ifdef XPC_CHECK_CLASSINFO_CLAIMS
 static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper);
 #else

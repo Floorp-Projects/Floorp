@@ -414,10 +414,12 @@ nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
 }
 
 static JSGCCallback gOldJSGCCallback;
-// Number of collections that have collected nodes.
-static PRUint32 gCollections;
-// Whether to run cycle collection during GC.
-static PRBool gCollect;
+// Whether cycle collection was run.
+static PRBool gDidCollection;
+// Whether starting cycle collection was successful.
+static PRBool gInCollection;
+// Whether cycle collection collected anything.
+static PRBool gCollected;
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
@@ -427,13 +429,13 @@ XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
     {
         // This is the hook between marking and sweeping in the JS GC. Do cycle
         // collection.
-        if(gCollect && nsCycleCollector_doCollect())
-            ++gCollections;
-        else
-            // If cycle collection didn't collect anything we should stop
-            // collecting until the next call to nsXPConnect::Collect, even if
-            // there are more (nested) JS_GC calls.
-            gCollect = PR_FALSE;
+        if(!gDidCollection)
+        {
+            NS_ASSERTION(!gInCollection, "Recursing?");
+
+            gDidCollection = PR_TRUE;
+            gInCollection = nsCycleCollector_beginCollection();
+        }
 
         // Mark JS objects that are held by XPCOM objects that are in cycles
         // that will not be collected.
@@ -441,7 +443,14 @@ XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
             TraceXPConnectRoots(cx->runtime->gcMarkingTracer);
     }
     else if(status == JSGC_END)
+    {
+        if(gInCollection)
+        {
+            gInCollection = PR_FALSE;
+            gCollected = nsCycleCollector_finishCollection();
+        }
         nsXPConnect::GetRuntime()->RestoreContextGlobals();
+    }
 
     PRBool ok = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
 
@@ -451,7 +460,7 @@ XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
     return ok;
 }
 
-PRUint32
+PRBool
 nsXPConnect::Collect()
 {
     // We're dividing JS objects into 2 categories:
@@ -508,8 +517,9 @@ nsXPConnect::Collect()
 
     mCycleCollecting = PR_TRUE;
     mCycleCollectionContext = &cycleCollectionContext;
-    gCollections = 0;
-    gCollect = PR_TRUE;
+    gDidCollection = PR_FALSE;
+    gInCollection = PR_FALSE;
+    gCollected = PR_FALSE;
 
     JSContext *cx = mCycleCollectionContext->GetJSContext();
     gOldJSGCCallback = JS_SetGCCallback(cx, XPCCycleCollectGCCallback);
@@ -520,7 +530,7 @@ nsXPConnect::Collect()
     mCycleCollectionContext = nsnull;
     mCycleCollecting = PR_FALSE;
 
-    return gCollections;
+    return gCollected;
 }
 
 // JSTRACE_FUNCTION can hold on to a lot of objects, adding it to the cycle
