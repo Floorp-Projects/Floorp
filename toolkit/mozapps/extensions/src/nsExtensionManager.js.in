@@ -5720,7 +5720,7 @@ BackgroundUpdateCheckListener.prototype = {
     }
     else {
       const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
-      const EMFEATURES = "chrome,centerscreen,extra-chrome,dialog,resizable,modal";
+      const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
 
       var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                getService(Ci.nsIWindowWatcher);
