@@ -1,0 +1,28 @@
+<html>
+<head>
+<style>
+
+.colset { 
+  -moz-column-count: 2; 
+  -moz-column-width: 50px; 
+  float: left; 
+  border: 2px solid black; 
+  height: 10em; 
+  font: 12px monospace;
+}
+
+#t {
+  display: inline-block;
+  background: lightgreen;
+  height: 7em;
+  width: 29px;
+}
+
+</style>
+</head>
+
+<body onload="document.getElementById('t').style.width = '30px';">
+
+<div class="colset">The quick <span><div id="t"></div>brown</span></div>
+
+</body></html>
