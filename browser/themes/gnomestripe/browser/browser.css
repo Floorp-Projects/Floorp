@@ -768,6 +768,21 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   visibility: collapse;
 }
 
+#urlbar-search-splitter {
+  -moz-appearance: none;
+  width: 8px;
+  -moz-margin-start: -4px;
+}
+
+/*XXX The first two selectors are there because adjacent selectors aren't
+      working reliably (bug 229915). */
+#search-container + #urlbar-container > #urlbar ,
+#urlbar-container + #search-container > #searchbar > .searchbar-textbox ,
+#urlbar-search-splitter + #urlbar-container > #urlbar ,
+#urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
+  -moz-margin-start: 0;
+}
+
 #wrapper-urlbar-container #urlbar {
   -moz-user-input: disabled;
   cursor: -moz-grab;
