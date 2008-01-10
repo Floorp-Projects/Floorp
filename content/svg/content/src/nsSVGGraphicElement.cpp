@@ -76,112 +76,13 @@ nsSVGGraphicElement::nsSVGGraphicElement(nsINodeInfo *aNodeInfo)
 /* readonly attribute nsIDOMSVGElement nearestViewportElement; */
 NS_IMETHODIMP nsSVGGraphicElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
 {
-  nsBindingManager *bindingManager = nsnull;
-  // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the bindings that gives us our anonymous
-  // ancestors. That's the binding manager for the document we actually belong
-  // to, which is our owner doc.
-  nsIDocument* ownerDoc = GetOwnerDoc();
-  if (ownerDoc) {
-    bindingManager = ownerDoc->BindingManager();
-  }
-
-  nsCOMPtr<nsIContent> element = this;
-  nsCOMPtr<nsIContent> ancestor;
-  nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox;
-  unsigned short ancestorCount = 0;
-
-  while (1) {
-
-    ancestor = nsnull;
-    if (bindingManager) {
-      // check for an anonymous ancestor first
-      ancestor = bindingManager->GetInsertionParent(element);
-    }
-    if (!ancestor) {
-      // if we didn't find an anonymous ancestor, use the explicit one
-      ancestor = element->GetParent();
-    }
-
-    fitToViewBox = do_QueryInterface(element);
-
-    if (fitToViewBox && (ancestor || ancestorCount)) {
-      // right interface and not the outermost SVG element
-      nsCOMPtr<nsIDOMSVGElement> SVGElement = do_QueryInterface(element);
-      *aNearestViewportElement = SVGElement;
-      NS_ADDREF(*aNearestViewportElement);
-      return NS_OK;
-    }
-
-    if (!ancestor) {
-      // reached the top of our parent chain
-      break;
-    }
-
-    element = ancestor;
-    ancestorCount++;
-  }
-
-  *aNearestViewportElement = nsnull;
-  return NS_OK;
+  return nsSVGUtils::GetNearestViewportElement(this, aNearestViewportElement);
 }
 
 /* readonly attribute nsIDOMSVGElement farthestViewportElement; */
 NS_IMETHODIMP nsSVGGraphicElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewportElement)
 {
-  *aFarthestViewportElement = nsnull;
-
-  nsBindingManager *bindingManager = nsnull;
-  // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the bindings that gives us our anonymous
-  // ancestors. That's the binding manager for the document we actually belong
-  // to, which is our owner doc.
-  nsIDocument* ownerDoc = GetOwnerDoc();
-  if (ownerDoc) {
-    bindingManager = ownerDoc->BindingManager();
-  }
-
-  nsCOMPtr<nsIContent> element = this;
-  nsCOMPtr<nsIContent> ancestor;
-  nsCOMPtr<nsIDOMSVGFitToViewBox> fitToViewBox;
-  unsigned short ancestorCount = 0;
-
-  while (1) {
-
-    ancestor = nsnull;
-    if (bindingManager) {
-      // check for an anonymous ancestor first
-      ancestor = bindingManager->GetInsertionParent(element);
-    }
-    if (!ancestor) {
-      // if we didn't find an anonymous ancestor, use the explicit one
-      ancestor = element->GetParent();
-    }
-
-    fitToViewBox = do_QueryInterface(element);
-
-    if (fitToViewBox) {
-      // right interface
-      nsCOMPtr<nsIDOMSVGElement> SVGElement = do_QueryInterface(element);
-      *aFarthestViewportElement = SVGElement;
-    }
-
-    if (!ancestor) {
-      // reached the top of our parent chain
-      break;
-    }
-
-    element = ancestor;
-    ancestorCount++;
-  }
-
-  if (ancestorCount == 0) {
-    // outermost SVG element
-    *aFarthestViewportElement = nsnull;
-  }
-
-  NS_IF_ADDREF(*aFarthestViewportElement);
-  return NS_OK;
+  return nsSVGUtils::GetFarthestViewportElement(this, aFarthestViewportElement);
 }
 
 /* nsIDOMSVGRect getBBox (); */
