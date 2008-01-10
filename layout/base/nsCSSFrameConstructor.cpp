@@ -66,7 +66,6 @@
 #include "nsIPresShell.h"
 #include "nsStyleSet.h"
 #include "nsIViewManager.h"
-#include "nsViewManager.h"
 #include "nsIEventStateManager.h"
 #include "nsIScrollableView.h"
 #include "nsStyleConsts.h"
@@ -379,26 +378,6 @@ static PRInt32 FFWC_slowSearchForText=0;
 static nsresult
 DeletingFrameSubtree(nsFrameManager* aFrameManager,
                      nsIFrame*       aFrame);
-
-void nsFocusEventSuppressor::Suppress(nsIPresShell *aPresShell)
-{
-  NS_ASSERTION(aPresShell, "Need non-null nsIPresShell!");
-  NS_ASSERTION(!mViewManager, "Suppress before a pending UnSuppress()");
-  nsFrameManager *frameManager = aPresShell->FrameManager();
-  mViewManager = frameManager->GetPresContext()->GetViewManager();
-  if (mViewManager) {
-    mOldSuppressState = mViewManager->GetSuppressFocusEvents();
-    mViewManager->SetSuppressFocusEvents(PR_TRUE);
-  }
-}
-
-void nsFocusEventSuppressor::Unsuppress()
-{
-  if (mViewManager) {
-    mViewManager->SetSuppressFocusEvents(mOldSuppressState);
-    mViewManager = nsnull;
-  }
-}
 
 #ifdef  MOZ_SVG
 
@@ -10259,14 +10238,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 }
 
 void
-nsCSSFrameConstructor::BeginUpdate() {
-  if (!mUpdateCount) {
-    mFocusSuppressor.Suppress(mPresShell);
-  }
-  ++mUpdateCount;
-}
-
-void
 nsCSSFrameConstructor::EndUpdate()
 {
   if (mUpdateCount == 1) {
@@ -10275,8 +10246,6 @@ nsCSSFrameConstructor::EndUpdate()
 
     RecalcQuotesAndCounters();
     NS_ASSERTION(mUpdateCount == 1, "Odd update count");
-
-    mFocusSuppressor.Unsuppress();
   }
 
   --mUpdateCount;
