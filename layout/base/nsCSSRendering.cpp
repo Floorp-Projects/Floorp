@@ -4403,10 +4403,24 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       aStyle == NS_STYLE_BORDER_STYLE_NONE)
     return;
 
+  if (aDecoration != NS_STYLE_TEXT_DECORATION_UNDERLINE &&
+      aDecoration != NS_STYLE_TEXT_DECORATION_OVERLINE &&
+      aDecoration != NS_STYLE_TEXT_DECORATION_LINE_THROUGH)
+  {
+    NS_ERROR("Invalid decoration value!");
+    return;
+  }
+
   PRBool contextIsSaved = PR_FALSE;
   gfxFloat totalHeight = aLineSize.height;
+
+  gfxFloat oldLineWidth;
+  nsRefPtr<gfxPattern> oldPattern;
+
   switch (aStyle) {
     case NS_STYLE_BORDER_STYLE_SOLID:
+      oldLineWidth = aGfxContext->CurrentLineWidth();
+      oldPattern = aGfxContext->GetPattern();
       break;
     case NS_STYLE_BORDER_STYLE_DASHED: {
       aGfxContext->Save();
@@ -4461,9 +4475,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       break;
     }
     default:
-      NS_ERROR("Invalid decoration value!");
-      if (contextIsSaved)
-        aGfxContext->Restore();
+      NS_NOTREACHED("Invalid decoration value!");
       return;
   }
 
@@ -4503,12 +4515,16 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
         aGfxContext->LineTo(gfxPoint(x + width, y));
       }
       aGfxContext->Stroke();
-      aGfxContext->Restore();
-      contextIsSaved = PR_FALSE;
       break;
     default:
       NS_ERROR("Invalid style value!");
       break;
   }
-  NS_ASSERTION(!contextIsSaved, "The gfxContext has been saved, but not restored!");
+
+  if (contextIsSaved) {
+    aGfxContext->Restore();
+  } else {
+    aGfxContext->SetPattern(oldPattern);
+    aGfxContext->SetLineWidth(oldLineWidth);
+  }
 }
