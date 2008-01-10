@@ -1119,8 +1119,8 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 
   // set it all up
   // XXX is windowless different?
-  window.x = origin.x;
-  window.y = origin.y;
+  window.x = presContext->AppUnitsToDevPixels(origin.x);
+  window.y = presContext->AppUnitsToDevPixels(origin.y);
   window.width = presContext->AppUnitsToDevPixels(mRect.width);
   window.height= presContext->AppUnitsToDevPixels(mRect.height);
   window.clipRect.bottom = 0; window.clipRect.top = 0;
