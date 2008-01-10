@@ -22,7 +22,6 @@
  *
  * Contributor(s):
  *   Christian Biesinger <cbiesinger@web.de>
- *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,23 +60,21 @@
  * Buffer size. This many bytes will be buffered. If a line is longer than this,
  * the partial line will be appended to the out parameter of NS_ReadLine and the
  * buffer will be emptied.
- * Note: if you change this constant, please update the regression test in
- * netwerk/test/unit/test_readline.js accordingly (bug 397850).
  */
 #define kLineBufferSize 4096
 
 /**
  * @internal
  * Line buffer structure, buffers data from an input stream.
- * The buffer is empty when |start| == |end|.
- * Invariant: |start| <= |end|
  */
 template<typename CharT>
 class nsLineBuffer {
   public:
   CharT buf[kLineBufferSize+1];
   CharT* start;
+  CharT* current;
   CharT* end;
+  PRBool empty;
 };
 
 /**
@@ -108,7 +105,8 @@ NS_InitLineBuffer (nsLineBuffer<CharT> ** aBufferPtr) {
   if (!(*aBufferPtr))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  (*aBufferPtr)->start = (*aBufferPtr)->end = (*aBufferPtr)->buf;
+  (*aBufferPtr)->start = (*aBufferPtr)->current = (*aBufferPtr)->end = (*aBufferPtr)->buf;
+  (*aBufferPtr)->empty = PR_TRUE;
   return NS_OK;
 }
 
@@ -138,62 +136,76 @@ NS_InitLineBuffer (nsLineBuffer<CharT> ** aBufferPtr) {
 template<typename CharT, class StreamType, class StringType>
 nsresult
 NS_ReadLine (StreamType* aStream, nsLineBuffer<CharT> * aBuffer,
-             StringType & aLine, PRBool *more)
-{
-  CharT eolchar = 0; // the first eol char or 1 after \r\n or \n\r is found
-
+             StringType & aLine, PRBool *more) {
+  nsresult rv = NS_OK;
+  PRUint32 bytesRead;
+  *more = PR_TRUE;
+  PRBool eolStarted = PR_FALSE;
+  CharT eolchar = '\0';
   aLine.Truncate();
-
   while (1) { // will be returning out of this loop on eol or eof
-    if (aBuffer->start == aBuffer->end) { // buffer is empty.  Read into it.
-      PRUint32 bytesRead;
-      nsresult rv = aStream->Read(aBuffer->buf, kLineBufferSize, &bytesRead);
-      if (NS_FAILED(rv) || NS_UNLIKELY(bytesRead == 0)) {
-        *more = PR_FALSE;
+    if (aBuffer->empty) { // buffer is empty.  Read into it.
+      rv = aStream->Read(aBuffer->buf, kLineBufferSize, &bytesRead);
+      if (NS_FAILED(rv)) // read failed
         return rv;
-      }
-      aBuffer->start = aBuffer->buf;
-      aBuffer->end = aBuffer->buf + bytesRead;
-      *(aBuffer->end) = '\0';
-    }
-
-    /*
-     * Walk the buffer looking for an end-of-line.
-     * There are 3 cases to consider:
-     *  1. the eol char is the last char in the buffer
-     *  2. the eol char + one more char at the end of the buffer
-     *  3. the eol char + two or more chars at the end of the buffer
-     * we need at least one char after the first eol char to determine if
-     * it's a \r\n or \n\r sequence (and skip over it), and we need one
-     * more char after the end-of-line to set |more| correctly.
-     */
-    CharT* current = aBuffer->start;
-    if (NS_LIKELY(eolchar == 0)) {
-      for ( ; current < aBuffer->end; ++current) {
-        if (*current == '\n' || *current == '\r') {
-          eolchar = *current;
-          *current++ = '\0';
-          aLine.Append(aBuffer->start);
-          break;
-        }
-      }
-    }
-    if (NS_LIKELY(eolchar != 0)) {
-      for ( ; current < aBuffer->end; ++current) {
-        if ((eolchar == '\r' && *current == '\n') ||
-            (eolchar == '\n' && *current == '\r')) {
-          eolchar = 1;
-          continue;
-        }
-        aBuffer->start = current;
-        *more = PR_TRUE;
+      if (bytesRead == 0) { // end of file
+        *more = PR_FALSE;
         return NS_OK;
       }
+      aBuffer->end = aBuffer->buf + bytesRead;
+      aBuffer->empty = PR_FALSE;
+      *(aBuffer->end) = '\0'; // null-terminate this thing
+    }
+    // walk the buffer looking for an end-of-line
+    while (aBuffer->current < aBuffer->end) {
+      if (eolStarted) {
+          if ((eolchar == '\n' && *(aBuffer->current) == '\r') ||
+              (eolchar == '\r' && *(aBuffer->current) == '\n')) { // line end
+            (aBuffer->current)++;
+            aBuffer->start = aBuffer->current;
+          }
+          eolStarted = PR_FALSE;
+          return NS_OK;
+      } else if (*(aBuffer->current) == '\n' ||
+                 *(aBuffer->current) == '\r') { // line end
+        eolStarted = PR_TRUE;
+        eolchar = *(aBuffer->current);
+        *(aBuffer->current) = '\0';
+        aLine.Append(aBuffer->start);
+        (aBuffer->current)++;
+        aBuffer->start = aBuffer->current;
+      } else {
+        eolStarted = PR_FALSE;
+        (aBuffer->current)++;
+      }
     }
 
-    if (eolchar == 0)
-      aLine.Append(aBuffer->start);
-    aBuffer->start = aBuffer->end; // mark the buffer empty
+    // append whatever we currently have to the string
+    aLine.Append(aBuffer->start);
+
+    // we've run out of buffer.  Begin anew
+    aBuffer->current = aBuffer->start = aBuffer->buf;
+    aBuffer->empty = PR_TRUE;
+    
+    if (eolStarted) {  // have to read another char and possibly skip over it
+      rv = aStream->Read(aBuffer->buf, 1, &bytesRead);
+      if (NS_FAILED(rv)) // read failed
+        return rv;
+      if (bytesRead == 0) { // end of file
+        *more = PR_FALSE;
+        return NS_OK;
+      }
+      if ((eolchar == '\n' && *(aBuffer->buf) == '\r') ||
+          (eolchar == '\r' && *(aBuffer->buf) == '\n')) {
+        // Just return and all is good -- we've skipped the extra newline char
+        return NS_OK;
+      } else {
+        // we have a byte that we should look at later
+        aBuffer->empty = PR_FALSE;
+        aBuffer->end = aBuffer->buf + 1;
+        *(aBuffer->end) = '\0';
+      }
+    }
   }
 }
 
