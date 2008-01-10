@@ -1,0 +1,99 @@
+<html>
+<head><style>
+  /* cellspacing=0 cellpadding=0          */
+  table  { border-spacing: 0 }
+  td, th { padding: 0 }
+
+  /* Colors for the three cell types      */
+  td.a   { background: lightgreen; }
+  td.b   { background: yellow;     }
+  td.c   { background: blue;       }
+
+  /* Set min-width on colspanning cell    */
+  td.c { min-width: 200px; }
+
+  /* Set %-width on 2nd cell of first row in tables */
+  table#t0 td.b { width:   1% }
+  table#t1 td.b { width:   5% }
+  table#t2 td.b { width:  10% }
+  table#t3 td.b { width:  30% }
+  table#t4 td.b { width:  50% }
+  table#t5 td.b { width:  75% }
+  table#t6 td.b { width:  80% }
+  table#t7 td.b { width:  90% }
+  table#t8 td.b { width:  95% }
+  table#t9 td.b { width: 100% }
+
+</style></head>
+<body>
+<table id="t0"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t1"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t2"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t3"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t4"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t5"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t6"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t7"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t8"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+
+<table id="t9"><tr>
+    <td class="a">foo</td>
+    <td class="b">foo</td>
+  </tr><tr>
+    <td class="c" colspan="2">&nbsp</td>
+</tr></table>
+</body>
+</html>
