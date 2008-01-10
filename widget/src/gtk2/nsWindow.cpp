@@ -1338,21 +1338,26 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     nsCAutoString path;
     nsCStringArray iconList;
 
-    // Assume the given string is a local identifier for an icon file.
+    // Look for icons with the following suffixes appended to the base name.
+    // The last two entries (for the old XPM format) will be ignored unless
+    // no icons are found using the other suffixes. XPM icons are depricated.
 
-    ResolveIconName(aIconSpec, NS_LITERAL_STRING(".xpm"),
-                    getter_AddRefs(iconFile));
-    if (iconFile) {
-        iconFile->GetNativePath(path);
-        iconList.AppendCString(path);
-    }
+    const char extensions[6][7] = { ".png", "16.png", "32.png", "48.png",
+                                    ".xpm", "16.xpm" };
 
-    // Get the 16px icon path as well
-    ResolveIconName(aIconSpec, NS_LITERAL_STRING("16.xpm"),
-                    getter_AddRefs(iconFile));
-    if (iconFile) {
-        iconFile->GetNativePath(path);
-        iconList.AppendCString(path);
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(extensions); i++) {
+        // Don't bother looking for XPM versions if we found a PNG.
+        if (i == NS_ARRAY_LENGTH(extensions) - 2 && iconList.Count())
+            break;
+
+        nsAutoString extension;
+        extension.AppendASCII(extensions[i]);
+
+        ResolveIconName(aIconSpec, extension, getter_AddRefs(iconFile));
+        if (iconFile) {
+            iconFile->GetNativePath(path);
+            iconList.AppendCString(path);
+        }
     }
 
     // leave the default icon intact if no matching icons were found
@@ -3881,23 +3886,7 @@ nsWindow::SetWindowIconList(const nsCStringArray &aIconList)
 void
 nsWindow::SetDefaultIcon(void)
 {
-    // Set up the default window icon
-    nsCOMPtr<nsILocalFile> iconFile;
-    ResolveIconName(NS_LITERAL_STRING("default"),
-                    NS_LITERAL_STRING(".xpm"),
-                    getter_AddRefs(iconFile));
-    if (!iconFile) {
-        NS_WARNING("default.xpm not found");
-        return;
-    }
-
-    nsCAutoString path;
-    iconFile->GetNativePath(path);
-
-    nsCStringArray iconList;
-    iconList.AppendCString(path);
-
-    SetWindowIconList(iconList);
+    SetIcon(NS_LITERAL_STRING("default"));
 }
 
 void
