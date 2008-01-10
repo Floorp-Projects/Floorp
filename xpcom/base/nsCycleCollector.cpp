@@ -307,12 +307,22 @@ public:
 
     ~EdgePool()
     {
+        NS_ASSERTION(!mSentinelAndBlocks[0].block &&
+                     !mSentinelAndBlocks[1].block,
+                     "Didn't call Clear()?");
+    }
+
+    void Clear()
+    {
         Block *b = Blocks();
         while (b) {
             Block *next = b->Next();
             delete b;
             b = next;
         }
+
+        mSentinelAndBlocks[0].block = nsnull;
+        mSentinelAndBlocks[1].block = nsnull;
     }
 
 private:
@@ -507,6 +517,11 @@ public:
 
     ~NodePool()
     {
+        NS_ASSERTION(!mBlocks, "Didn't call Clear()?");
+    }
+
+    void Clear()
+    {
 #ifdef DEBUG_CC
         {
             Enumerator queue(*this);
@@ -521,6 +536,9 @@ public:
             delete b;
             b = n;
         }
+
+        mBlocks = nsnull;
+        mLast = nsnull;
     }
 
     class Builder;
@@ -599,10 +617,7 @@ private:
 };
 
 
-struct GCGraph;
 class GCGraphBuilder;
-
-static GCGraph *sCurrGraph = nsnull;
 
 struct GCGraph
 {
@@ -614,10 +629,8 @@ struct GCGraph
 #endif
 
     GCGraph() : mRootCount(0) {
-        sCurrGraph = this;
     }
     ~GCGraph() { 
-        sCurrGraph = nsnull;
     }
 };
 
@@ -846,6 +859,8 @@ struct nsCycleCollector
     nsCycleCollectionLanguageRuntime *mRuntimes[nsIProgrammingLanguage::MAX+1];
     nsCycleCollectionXPCOMRuntime mXPCOMRuntime;
 
+    GCGraph mGraph;
+
     // The buffer |mBuf| serves a variety of purposes; mostly involving the
     // transfer of pointers from a hashtable iterator routine to some outer
     // logic that might also need to mutate the hashtable.
@@ -861,9 +876,10 @@ struct nsCycleCollector
     void ForgetRuntime(PRUint32 langID);
 
     void SelectPurple();
-    void MarkRoots(GCGraph &graph, GCGraphBuilder &builder);
-    void ScanRoots(GCGraph &graph);
-    PRBool CollectWhite(GCGraph &graph); // returns whether anything collected
+    void MarkRoots(GCGraphBuilder &builder);
+    void ScanRoots();
+    void CollectWhite();
+    PRBool UnrootWhite(); // returns whether anything was collected
 
     nsCycleCollector();
     ~nsCycleCollector();
@@ -871,21 +887,29 @@ struct nsCycleCollector
     PRBool Suspect(nsISupports *n);
     PRBool Forget(nsISupports *n);
     PRBool Collect(PRUint32 aTryCollections = 1);
-    PRBool DoCollect();
+    PRBool BeginCollection();
+    PRBool FinishCollection();
     void Shutdown();
+
+    void ClearGraph()
+    {
+        mGraph.mNodes.Clear();
+        mGraph.mEdges.Clear();
+        mGraph.mRootCount = 0;
+    }
 
 #ifdef DEBUG_CC
     nsCycleCollectorStats mStats;    
 
     FILE *mPtrLog;
 
-    void MaybeDrawGraphs(GCGraph &graph);
+    void MaybeDrawGraphs();
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
 
     void ExplainLiveExpectedGarbage();
-    PRBool CreateReversedEdges(GCGraph &graph);
-    void DestroyReversedEdges(GCGraph &graph);
+    PRBool CreateReversedEdges();
+    void DestroyReversedEdges();
     void ShouldBeFreed(nsISupports *n);
     void WasFreed(nsISupports *n);
     PointerSet mExpectedGarbage;
@@ -963,7 +987,7 @@ Fault(const char *msg, const void *ptr=nsnull)
             printf("Fatal fault in cycle collector: %s\n", msg);
 
      
-        if (sCurrGraph) {
+        if (sCollector->mGraph->mRootCount > 0) {
             FILE *stream;
 #ifdef WIN32
             const char fname[] = "c:\\fault-graph.dot";
@@ -972,7 +996,7 @@ Fault(const char *msg, const void *ptr=nsnull)
 #endif
             printf("depositing faulting cycle-collection graph in %s\n", fname);
             stream = fopen(fname, "w+");
-            WriteGraph(stream, *sCurrGraph, ptr);
+            WriteGraph(stream, *sCollector->mGraph, ptr);
             fclose(stream);
         } 
 
@@ -1008,7 +1032,7 @@ Fault(const char *msg, PtrInfo *pi)
            msg, pi->mPointer, pi->mName);
     if (pi->mInternalRefs) {
         printf("  which has internal references from:\n");
-        NodePool::Enumerator queue(sCurrGraph->mNodes);
+        NodePool::Enumerator queue(sCollector->mGraph->mNodes);
         while (!queue.IsDone()) {
             PtrInfo *ppi = queue.GetNext();
             for (EdgePool::Iterator e = ppi->mFirstChild, e_end = ppi->mLastChild;
@@ -1377,8 +1401,12 @@ nsCycleCollector::SelectPurple()
     mPurpleBuf.SelectAgedPointers(&mBuf);
 }
 
+#ifdef DEBUG_CC
+static void InitMemHook(void);
+#endif
+
 void
-nsCycleCollector::MarkRoots(GCGraph &graph, GCGraphBuilder &builder)
+nsCycleCollector::MarkRoots(GCGraphBuilder &builder)
 {
     int i;
     for (i = 0; i < mBuf.GetSize(); ++i) {
@@ -1411,10 +1439,10 @@ nsCycleCollector::MarkRoots(GCGraph &graph, GCGraphBuilder &builder)
         }
     }
 
-    graph.mRootCount = builder.Count();
+    mGraph.mRootCount = builder.Count();
 
     // read the PtrInfo out of the graph that we are building
-    NodePool::Enumerator queue(graph.mNodes);
+    NodePool::Enumerator queue(mGraph.mNodes);
     while (!queue.IsDone()) {
         PtrInfo *pi = queue.GetNext();
         builder.Traverse(pi);
@@ -1470,17 +1498,17 @@ struct scanWalker : public GraphWalker
 };
 
 void
-nsCycleCollector::ScanRoots(GCGraph &graph)
+nsCycleCollector::ScanRoots()
 {
     // On the assumption that most nodes will be black, it's
     // probably faster to use a GraphWalker than a
     // NodePool::Enumerator.
-    scanWalker().WalkFromRoots(graph); 
+    scanWalker().WalkFromRoots(mGraph); 
 
 #ifdef DEBUG_CC
     // Sanity check: scan should have colored all grey nodes black or
     // white. So we ensure we have no grey nodes at this point.
-    NodePool::Enumerator etor(graph.mNodes);
+    NodePool::Enumerator etor(mGraph.mNodes);
     while (!etor.IsDone())
     {
         PtrInfo *pinfo = etor.GetNext();
@@ -1496,8 +1524,8 @@ nsCycleCollector::ScanRoots(GCGraph &graph)
 // Bacon & Rajan's |CollectWhite| routine, somewhat modified.
 ////////////////////////////////////////////////////////////////////////
 
-PRBool
-nsCycleCollector::CollectWhite(GCGraph &graph)
+void
+nsCycleCollector::CollectWhite()
 {
     // Explanation of "somewhat modified": we have no way to collect the
     // set of whites "all at once", we have to ask each of them to drop
@@ -1522,7 +1550,7 @@ nsCycleCollector::CollectWhite(GCGraph &graph)
     _CrtMemCheckpoint(&ms1);
 #endif
 
-    NodePool::Enumerator etor(graph.mNodes);
+    NodePool::Enumerator etor(mGraph.mNodes);
     while (!etor.IsDone())
     {
         PtrInfo *pinfo = etor.GetNext();
@@ -1554,7 +1582,13 @@ nsCycleCollector::CollectWhite(GCGraph &graph)
 #endif
         }
     }
+}
 
+PRBool
+nsCycleCollector::UnrootWhite()
+{
+    nsresult rv;
+    PRUint32 i, count = mBuf.GetSize();
     for (i = 0; i < count; ++i) {
         PtrInfo *pinfo = static_cast<PtrInfo*>(mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Unroot(pinfo->mPointer);
@@ -1874,7 +1908,7 @@ nsCycleCollector::MaybeDrawGraphs(GCGraph &graph)
     if (mParams.mDrawGraphs) {
         // We draw graphs only if there were any white nodes.
         PRBool anyWhites = PR_FALSE;
-        NodePool::Enumerator fwetor(graph.mNodes);
+        NodePool::Enumerator fwetor(mGraph.mNodes);
         while (!fwetor.IsDone())
         {
             PtrInfo *pinfo = fwetor.GetNext();
@@ -1893,7 +1927,7 @@ nsCycleCollector::MaybeDrawGraphs(GCGraph &graph)
 #else
             stream = popen("dotty -", "w");
 #endif
-            WriteGraph(stream, graph, nsnull);
+            WriteGraph(stream, mGraph, nsnull);
 #ifdef WIN32
             fclose(stream);
             // Even dotty doesn't work terribly well on windows, since
@@ -2122,19 +2156,19 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
     PRUint32 totalCollections = 0;
     while (aTryCollections > totalCollections) {
-        PRUint32 collections = 0;
+        PRBool collected;
         if (mRuntimes[nsIProgrammingLanguage::JAVASCRIPT]) {
-            collections = static_cast<nsCycleCollectionJSRuntime*>
+            collected = static_cast<nsCycleCollectionJSRuntime*>
                 (mRuntimes[nsIProgrammingLanguage::JAVASCRIPT])->Collect();
         }
         else {
-            collections = DoCollect() ? 1 : 0;
+            collected = BeginCollection() && FinishCollection();
         }
 
-        if(collections == 0)
+        if (!collected)
             break;
         
-        totalCollections += collections;
+        ++totalCollections;
     }
 
     mCollectionInProgress = PR_FALSE;
@@ -2157,7 +2191,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 }
 
 PRBool
-nsCycleCollector::DoCollect()
+nsCycleCollector::BeginCollection()
 {
     if (mParams.mDoNothing)
         return PR_FALSE;
@@ -2167,8 +2201,7 @@ nsCycleCollector::DoCollect()
     // into mBuf.
     mBuf.Empty();
 
-    GCGraph graph;
-    GCGraphBuilder builder(graph, mRuntimes);
+    GCGraphBuilder builder(mGraph, mRuntimes);
 
 #ifdef COLLECT_TIME_DEBUG
     PRTime now = PR_Now();
@@ -2198,8 +2231,6 @@ nsCycleCollector::DoCollect()
            (PR_Now() - now) / PR_USEC_PER_MSEC);
 #endif
 
-    PRBool didCollect = PR_FALSE;
-
     if (builder.Count()  > 0 || mBuf.GetSize() != 0) {
         mScanInProgress = PR_TRUE;
 
@@ -2209,7 +2240,7 @@ nsCycleCollector::DoCollect()
         now = PR_Now();
 #endif
 
-        MarkRoots(graph, builder);
+        MarkRoots(builder);
 
 #ifdef COLLECT_TIME_DEBUG
         {
@@ -2220,7 +2251,7 @@ nsCycleCollector::DoCollect()
         }
 #endif
 
-        ScanRoots(graph);
+        ScanRoots();
 
 #ifdef COLLECT_TIME_DEBUG
         printf("cc: ScanRoots() took %lldms\n",
@@ -2228,7 +2259,7 @@ nsCycleCollector::DoCollect()
 #endif
 
 #ifdef DEBUG_CC
-        MaybeDrawGraphs(graph);
+        MaybeDrawGraphs();
 #endif
 
         mScanInProgress = PR_FALSE;
@@ -2236,7 +2267,7 @@ nsCycleCollector::DoCollect()
 #ifdef DEBUG_CC
         if (mFollowupCollection && purpleStart != purpleEnd) {
             PRUint32 i = 0;
-            NodePool::Enumerator queue(graph.mNodes);
+            NodePool::Enumerator queue(mGraph.mNodes);
             while (i++ < purpleStart) {
                 queue.GetNext();
             }
@@ -2255,13 +2286,21 @@ nsCycleCollector::DoCollect()
 #ifdef COLLECT_TIME_DEBUG
         now = PR_Now();
 #endif
-        didCollect = CollectWhite(graph);
+        CollectWhite();
 
 #ifdef COLLECT_TIME_DEBUG
         printf("cc: CollectWhite() took %lldms\n",
                (PR_Now() - now) / PR_USEC_PER_MSEC);
 #endif
     }
+
+    return PR_TRUE;
+}
+
+PRBool
+nsCycleCollector::FinishCollection()
+{
+    PRBool collected = UnrootWhite();
 
 #ifdef DEBUG_CC
     mStats.mCollection++;
@@ -2276,7 +2315,9 @@ nsCycleCollector::DoCollect()
 
     mFollowupCollection = PR_TRUE;
 
-    return didCollect;
+    ClearGraph();
+
+    return collected;
 }
 
 void
@@ -2342,29 +2383,27 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     mScanInProgress = PR_TRUE;
 
     {
-        GCGraph graph;
-
         // Instead of filling mBuf from the purple buffer, we fill it
         // from the list of nodes we were expected to collect.
         PRUint32 suspectCurrentCount = mBuf.GetSize();
         mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, this);
 
-        GCGraphBuilder builder(graph, mRuntimes);
+        GCGraphBuilder builder(mGraph, mRuntimes);
 
         for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
             if (mRuntimes[i])
                 mRuntimes[i]->BeginCycleCollection(builder);
         }
 
-        MarkRoots(graph, builder);
-        ScanRoots(graph);
+        MarkRoots(builder);
+        ScanRoots();
 
         mScanInProgress = PR_FALSE;
 
         PRBool describeExtraRefcounts = PR_FALSE;
         PRBool findCycleRoots = PR_FALSE;
         {
-            NodePool::Enumerator queue(graph.mNodes);
+            NodePool::Enumerator queue(mGraph.mNodes);
             PRUint32 i = 0;
             while (!queue.IsDone()) {
                 PtrInfo *pi = queue.GetNext();
@@ -2382,7 +2421,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
         // The describeExtraRefcounts check isn't much use now that
         // we're traversing from suspectCurrent roots too.  But it's
         // just extra work, not extra output.
-        if (describeExtraRefcounts && CreateReversedEdges(graph)) {
+        if (describeExtraRefcounts && CreateReversedEdges()) {
             // Note that the external references may have been external
             // to a different node in the cycle collection that just
             // happened, if that different node was purple and then
@@ -2392,15 +2431,15 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             // nodes in the breadth-first search.
             const PRUint32 INDEX_UNREACHED = 0;
             const PRUint32 INDEX_REACHED = 1;
-            NodePool::Enumerator etor_clear(graph.mNodes);
+            NodePool::Enumerator etor_clear(mGraph.mNodes);
             while (!etor_clear.IsDone()) {
                 PtrInfo *pi = etor_clear.GetNext();
                 pi->mSCCIndex = INDEX_UNREACHED;
             }
 
             nsDeque queue; // for breadth-first search
-            NodePool::Enumerator etor_roots(graph.mNodes);
-            for (PRUint32 i = 0; i < graph.mRootCount; ++i) {
+            NodePool::Enumerator etor_roots(mGraph.mNodes);
+            for (PRUint32 i = 0; i < mGraph.mRootCount; ++i) {
                 PtrInfo *root_pi = etor_roots.GetNext();
                 if (i >= suspectCurrentCount) {
                     root_pi->mSCCIndex = INDEX_REACHED;
@@ -2461,7 +2500,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                 }
             }
 
-            DestroyReversedEdges(graph);
+            DestroyReversedEdges();
         }
 
         if (findCycleRoots) {
@@ -2478,7 +2517,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                 const PRUint32 INDEX_TRAVERSING = 1;
                 const PRUint32 INDEX_NUMBERED = 2;
 
-                NodePool::Enumerator etor_clear(graph.mNodes);
+                NodePool::Enumerator etor_clear(mGraph.mNodes);
                 while (!etor_clear.IsDone()) {
                     PtrInfo *pi = etor_clear.GetNext();
                     pi->mSCCIndex = INDEX_UNREACHED;
@@ -2486,8 +2525,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
                 nsDeque stack;
 
-                NodePool::Enumerator etor_roots(graph.mNodes);
-                for (PRUint32 i = 0; i < graph.mRootCount; ++i) {
+                NodePool::Enumerator etor_roots(mGraph.mNodes);
+                for (PRUint32 i = 0; i < mGraph.mRootCount; ++i) {
                     PtrInfo *root_pi = etor_roots.GetNext();
                     stack.Push(root_pi);
                 }
@@ -2518,7 +2557,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
             // Put the nodes into strongly-connected components.
             {
-                NodePool::Enumerator etor_clear(graph.mNodes);
+                NodePool::Enumerator etor_clear(mGraph.mNodes);
                 while (!etor_clear.IsDone()) {
                     PtrInfo *pi = etor_clear.GetNext();
                     pi->mSCCIndex = 0;
@@ -2535,7 +2574,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             // Mark any white nodes reachable from other components as
             // grey.
             {
-                NodePool::Enumerator queue(graph.mNodes);
+                NodePool::Enumerator queue(mGraph.mNodes);
                 while (!queue.IsDone()) {
                     PtrInfo *pi = queue.GetNext();
                     if (pi->mColor != white)
@@ -2551,7 +2590,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             }
 
             {
-                NodePool::Enumerator queue(graph.mNodes);
+                NodePool::Enumerator queue(mGraph.mNodes);
                 while (!queue.IsDone()) {
                     PtrInfo *pi = queue.GetNext();
                     if (pi->mColor == white) {
@@ -2569,6 +2608,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
         }
     }
 
+    ClearGraph();
+
     mCollectionInProgress = PR_FALSE;
 
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
@@ -2578,11 +2619,11 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 }
 
 PRBool
-nsCycleCollector::CreateReversedEdges(GCGraph &graph)
+nsCycleCollector::CreateReversedEdges()
 {
     // Count the edges in the graph.
     PRUint32 edgeCount = 0;
-    NodePool::Enumerator countQueue(graph.mNodes);
+    NodePool::Enumerator countQueue(mGraph.mNodes);
     while (!countQueue.IsDone()) {
         PtrInfo *pi = countQueue.GetNext();
         for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
@@ -2591,15 +2632,15 @@ nsCycleCollector::CreateReversedEdges(GCGraph &graph)
     }
 
     // Allocate a pool to hold all of the edges.
-    graph.mReversedEdges = new ReversedEdge[edgeCount];
-    if (graph.mReversedEdges == nsnull) {
+    mGraph.mReversedEdges = new ReversedEdge[edgeCount];
+    if (mGraph.mReversedEdges == nsnull) {
         NS_NOTREACHED("allocation failure creating reversed edges");
         return PR_FALSE;
     }
 
     // Fill in the reversed edges by scanning all forward edges.
-    ReversedEdge *current = graph.mReversedEdges;
-    NodePool::Enumerator buildQueue(graph.mNodes);
+    ReversedEdge *current = mGraph.mReversedEdges;
+    NodePool::Enumerator buildQueue(mGraph.mNodes);
     while (!buildQueue.IsDone()) {
         PtrInfo *pi = buildQueue.GetNext();
         for (EdgePool::Iterator e = pi->mFirstChild, e_end = pi->mLastChild;
@@ -2610,21 +2651,21 @@ nsCycleCollector::CreateReversedEdges(GCGraph &graph)
             ++current;
         }
     }
-    NS_ASSERTION(current - graph.mReversedEdges == edgeCount, "misallocation");
+    NS_ASSERTION(current - mGraph.mReversedEdges == edgeCount, "misallocation");
     return PR_TRUE;
 }
 
 void
-nsCycleCollector::DestroyReversedEdges(GCGraph &graph)
+nsCycleCollector::DestroyReversedEdges()
 {
-    NodePool::Enumerator queue(graph.mNodes);
+    NodePool::Enumerator queue(mGraph.mNodes);
     while (!queue.IsDone()) {
         PtrInfo *pi = queue.GetNext();
         pi->mReversedEdges = nsnull;
     }
 
-    delete graph.mReversedEdges;
-    graph.mReversedEdges = nsnull;
+    delete mGraph.mReversedEdges;
+    mGraph.mReversedEdges = nsnull;
 }
 
 void
@@ -2674,9 +2715,7 @@ NS_CycleCollectorSuspect(nsISupports *n)
 PRBool
 NS_CycleCollectorForget(nsISupports *n)
 {
-    if (sCollector)
-        return sCollector->Forget(n);
-    return PR_FALSE;
+    return sCollector ? sCollector->Forget(n) : PR_TRUE;
 }
 
 
@@ -2687,9 +2726,15 @@ nsCycleCollector_collect()
 }
 
 PRBool 
-nsCycleCollector_doCollect()
+nsCycleCollector_beginCollection()
 {
-    return sCollector ? sCollector->DoCollect() : PR_FALSE;
+    return sCollector ? sCollector->BeginCollection() : PR_FALSE;
+}
+
+PRBool 
+nsCycleCollector_finishCollection()
+{
+    return sCollector ? sCollector->FinishCollection() : PR_FALSE;
 }
 
 nsresult 
