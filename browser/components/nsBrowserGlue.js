@@ -359,6 +359,15 @@ BrowserGlue.prototype = {
 
     var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
 
+    if (!bookmarksFile.exists()) {
+      // if bookmarks file does not exist, import default bookmarks
+      var bookmarksFileName = "bookmarks.html";
+      bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
+      bookmarksFile.append(bookmarksFileName);
+      var profDir = dirService.get("ProfD", Ci.nsILocalFile);
+      bookmarksFile.copyTo(profDir, bookmarksFileName);
+    }
+
     if (bookmarksFile.exists()) {
       // import the file
       try {
