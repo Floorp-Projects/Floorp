@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
 #   Shawn Wilsher <me@shawnwilsher.com>
+#   Ryan VanderMeulen <ryanvm@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,11 +49,19 @@ MODULE           = sqlite3
 LIBRARY_NAME     = sqlite3
 FORCE_SHARED_LIB = 1
 VISIBILITY_FLAGS =
-LIB_IS_C_ONLY = 1
+LIB_IS_C_ONLY    = 1
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 DEFFILE = $(win_srcdir)/sqlite.def
+RCFILE  = sqlite.rc
+RESFILE = sqlite.res
+
+GARBAGE += sqlite-version.h
+
+sqlite-version.h: sqlite-version.py sqlite3.h
+	$(PYTHON) $^ > $@
+export:: sqlite-version.h
 endif
 endif
 
