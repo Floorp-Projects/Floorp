@@ -42,7 +42,6 @@
 #include <nsIComponentManager.h>
 #include <nsIDocShellTreeItem.h>
 #include "nsIWidget.h"
-#include "nsReadableUtils.h"
 
 #include "EmbedWindow.h"
 #include "EmbedPrivate.h"

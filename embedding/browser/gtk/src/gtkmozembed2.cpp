@@ -48,10 +48,6 @@
 // so we can do our get_nsIWebBrowser later...
 #include <nsIWebBrowser.h>
 
-// for strings
-#include <nsXPIDLString.h>
-#include <nsReadableUtils.h>
-
 #include "gtkmozembedmarshal.h"
 
 #define NEW_TOOLKIT_STRING(x) g_strdup(NS_ConvertUTF16toUTF8(x).get())
@@ -862,7 +858,7 @@ gtk_moz_embed_get_location(GtkMozEmbed *embed)
   embedPrivate = (EmbedPrivate *)embed->data;
   
   if (!embedPrivate->mURI.IsEmpty())
-    retval = NEW_TOOLKIT_STRING(embedPrivate->mURI);
+    retval = g_strdup(embedPrivate->mURI.get());
 
   return retval;
 }
