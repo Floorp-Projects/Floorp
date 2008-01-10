@@ -71,7 +71,7 @@ typedef PRInt16 DownloadType;
 
 class nsDownload;
 
-#if defined(XP_WIN) and !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__)
 class nsDownloadScanner;
 #endif
 
@@ -88,7 +88,7 @@ public:
   static nsDownloadManager *GetSingleton();
 
   virtual ~nsDownloadManager();
-#if defined(XP_WIN) and !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__)
   nsDownloadManager() : mScanner(nsnull) { };
 private:
   nsDownloadScanner *mScanner;

@@ -129,7 +129,7 @@ nsDownloadManager::GetSingleton()
 
 nsDownloadManager::~nsDownloadManager()
 {
-#if defined(XP_WIN) and !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__)
   delete mScanner;
 #endif
   gDownloadManagerService = nsnull;
@@ -838,7 +838,7 @@ nsDownloadManager::Init()
                                    getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(XP_WIN) and !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__)
   mScanner = new nsDownloadScanner();
   if (!mScanner)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1781,7 +1781,7 @@ nsDownload::SetState(DownloadState aState)
       // Transfers are finished, so break the reference cycle
       Finalize();
       break;
-#if defined(XP_WIN) and !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__)
     case nsIDownloadManager::DOWNLOAD_SCANNING:
     {
       nsresult rv = mDownloadManager->mScanner ? mDownloadManager->mScanner->ScanDownload(this) : NS_ERROR_NOT_INITIALIZED;
@@ -2085,7 +2085,7 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
       mPercentComplete = 100;
       mLastUpdate = PR_Now();
 
-#if defined(XP_WIN) and !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(__MINGW32__)
       (void)SetState(nsIDownloadManager::DOWNLOAD_SCANNING);
 #else
       (void)SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
