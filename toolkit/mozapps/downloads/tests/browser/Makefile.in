@@ -47,7 +47,6 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
   browser_basic_functionality.js \
-  browser_bug_411172.js \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)
