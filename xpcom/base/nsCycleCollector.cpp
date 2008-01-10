@@ -987,7 +987,7 @@ Fault(const char *msg, const void *ptr=nsnull)
             printf("Fatal fault in cycle collector: %s\n", msg);
 
      
-        if (sCollector->mGraph->mRootCount > 0) {
+        if (sCollector->mGraph.mRootCount > 0) {
             FILE *stream;
 #ifdef WIN32
             const char fname[] = "c:\\fault-graph.dot";
@@ -996,7 +996,7 @@ Fault(const char *msg, const void *ptr=nsnull)
 #endif
             printf("depositing faulting cycle-collection graph in %s\n", fname);
             stream = fopen(fname, "w+");
-            WriteGraph(stream, *sCollector->mGraph, ptr);
+            WriteGraph(stream, sCollector->mGraph, ptr);
             fclose(stream);
         } 
 
@@ -1032,7 +1032,7 @@ Fault(const char *msg, PtrInfo *pi)
            msg, pi->mPointer, pi->mName);
     if (pi->mInternalRefs) {
         printf("  which has internal references from:\n");
-        NodePool::Enumerator queue(sCollector->mGraph->mNodes);
+        NodePool::Enumerator queue(sCollector->mGraph.mNodes);
         while (!queue.IsDone()) {
             PtrInfo *ppi = queue.GetNext();
             for (EdgePool::Iterator e = ppi->mFirstChild, e_end = ppi->mLastChild;
@@ -1903,7 +1903,7 @@ WriteGraph(FILE *stream, GCGraph &graph, const void *redPtr)
 
 
 void 
-nsCycleCollector::MaybeDrawGraphs(GCGraph &graph)
+nsCycleCollector::MaybeDrawGraphs()
 {
     if (mParams.mDrawGraphs) {
         // We draw graphs only if there were any white nodes.
