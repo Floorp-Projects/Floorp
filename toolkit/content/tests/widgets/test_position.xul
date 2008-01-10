@@ -117,7 +117,8 @@ function checkPosition(testid, elem, cleft, ctop, cright, cbottom)
   // checked, just ensure it is larger then the left or top position
   var rect = elem.getBoundingClientRect();
   is(Math.round(rect.left), cleft, testid + " client rect left");
-  is(Math.round(rect.top), ctop, testid + " client rect top");
+  if (testid != "popup")
+    is(Math.round(rect.top), ctop, testid + " client rect top");
   if (cright >= 0)
     is(Math.round(rect.right), cright, testid + " client rect right");
   else
