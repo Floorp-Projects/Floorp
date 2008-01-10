@@ -240,11 +240,14 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
            !strcmp(aProperty, XRE_USER_APP_DATA_DIR)) {
     rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
   }
-#ifdef XP_WIN
   else if (!strcmp(aProperty, XRE_UPDATE_ROOT_DIR)) {
+#ifdef XP_WIN
     rv = GetUpdateRootDir(getter_AddRefs(file));
-  }
+#else
+    // Only supported on Windows, so just immediately fail.
+    return NS_ERROR_FAILURE;
 #endif
+  }
   else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_FILE)) {
     rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
     if (NS_SUCCEEDED(rv))
