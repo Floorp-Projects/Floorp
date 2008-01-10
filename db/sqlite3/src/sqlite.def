@@ -156,4 +156,3 @@ EXPORTS
         sqlite3_value_type
         sqlite3_version
         sqlite3_vmprintf
-        sqlite3Os DATA               ;needed by mozStorage

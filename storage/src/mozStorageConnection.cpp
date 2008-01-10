@@ -154,9 +154,6 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
         sqlite3_close (mDBConn);
         mDBConn = nsnull;
 
-        // make sure it really got closed
-        ((mozStorageService*)(mStorageService.get()))->FlushAsyncIO();
-
         return ConvertResultCode(srv);
     }
 
@@ -182,9 +179,6 @@ mozStorageConnection::Close()
     int srv = sqlite3_close(mDBConn);
     if (srv != SQLITE_OK)
         NS_WARNING("sqlite3_close failed. There are probably outstanding statements!");
-
-    // make sure it really got closed
-    ((mozStorageService*)(mStorageService.get()))->FlushAsyncIO();
 
     // Release all functions
     mFunctions.EnumerateRead(s_ReleaseFuncEnum, NULL);
