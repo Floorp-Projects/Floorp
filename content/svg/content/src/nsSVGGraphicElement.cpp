@@ -47,7 +47,6 @@
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGPoint.h"
-#include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGUtils.h"
 #include "nsDOMError.h"
 
