@@ -58,6 +58,8 @@ HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(SIMPLE_PROGRAMS:$(BIN_SUFFIX)=$(HOST
 HOST_CSRCS		= $(CSRCS)
 endif
 
+LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX)
+
 include $(topsrcdir)/config/rules.mk
 
 # Compile directly against the static lib, so we can use the tools
@@ -65,12 +67,6 @@ include $(topsrcdir)/config/rules.mk
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 DEFINES		+= -DEXPORT_XPT_API
 endif
-
-LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX)
-
-# Tell the $(SIMPLE_PROGRAMS) target that we need to be recompiled
-# when libxpt changes.
-EXTRA_DEPS	= $(wildcard $(DIST)/lib/$(LIB_PREFIX)xpt.*)
 
 ifdef CROSS_COMPILE
 HOST_LIBS		= $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.$(LIB_SUFFIX)
