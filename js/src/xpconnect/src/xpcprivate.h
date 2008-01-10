@@ -507,7 +507,7 @@ public:
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
-    virtual PRUint32 Collect();
+    virtual PRBool Collect();
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
 #endif
@@ -2027,7 +2027,15 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
-    NS_DECL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
+    // No need to unlink the JS objects, if the XPCWrappedNative will be cycle
+    // collected then its mFlatJSObject will be cycle collected too and
+    // finalization of the mFlatJSObject will unlink the js objects (see
+    // XPC_WN_NoHelper_Finalize and FlatJSObjectFinalized).
+    // We also rely on NS_DECL_CYCLE_COLLECTION_CLASS_NO_UNLINK having empty
+    // Root/Unroot methods, to avoid root/unrooting the JS objects from
+    // addrefing/releasing the XPCWrappedNative during unlinking, which would
+    // make the JS objects uncollectable to the JS GC.
+    NS_DECL_CYCLE_COLLECTION_CLASS_NO_UNLINK(XPCWrappedNative)
     NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(XPCWrappedNative)
 
 #ifndef XPCONNECT_STANDALONE
