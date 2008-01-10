@@ -288,7 +288,7 @@ however there is also a class nsStyleUIReset that holds the non-inherited
 values, so we will use that one (remember, our property is not inherited).
 Add a <a href="#StyleContextMember">data member</a>
  to hold the value:
-  <pre>struct nsStyleUIReset: public nsStyleStruct {
+  <pre>struct nsStyleUIReset {
   nsStyleUIReset(void);
   nsStyleUIReset(const nsStyleUIReset&amp; aOther);
   ~nsStyleUIReset(void);
@@ -471,9 +471,7 @@ style context. Access the new property and get its value. It is that simple.
 For this example, it looks like this, in nsImageFrame:<br>
   <pre>        PRBool forceIcon = PR_FALSE;
 
-        const nsStyleUIReset* styleData;
-        GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&amp;) styleData);
-        if (styleData-&gt;mForceBrokenImageIcon) {
+        if (GetStyleUIReset()-&gt;mForceBrokenImageIcon) {
           forceIcon = PR_TRUE;
         }
 

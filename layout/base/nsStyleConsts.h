@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* constants used in the nsStyleStruct data provided by nsStyleContext */
+/* constants used in the style struct data provided by nsStyleContext */
 
 #ifndef nsStyleConsts_h___
 #define nsStyleConsts_h___

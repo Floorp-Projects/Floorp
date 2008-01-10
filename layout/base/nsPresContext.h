@@ -85,7 +85,6 @@ class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
 class nsIAtom;
-struct nsStyleStruct;
 struct nsStyleBackground;
 template <class T> class nsRunnableMethod;
 class nsIRunnable;
