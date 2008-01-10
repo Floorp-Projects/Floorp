@@ -226,7 +226,7 @@ js_InitTokenStream(JSContext *cx, JSTokenStream *ts,
          ? 2 * JS_LINE_LIMIT * sizeof(jschar)
          : JS_LINE_LIMIT * sizeof(jschar);
     JS_ARENA_ALLOCATE_CAST(buf, jschar *, &cx->tempPool, nb);
-    if (!ts) {
+    if (!buf) {
         js_ReportOutOfScriptQuota(cx);
         return JS_FALSE;
     }
