@@ -669,8 +669,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(!JSVAL_IS_OBJECT(s) ||
                (!(obj = JSVAL_TO_OBJECT(s))) ||
-               (!(pid = xpc_JSObjectToID(cx, obj))) ||
-               (!(pid = (const nsID*) nsMemory::Clone(pid, sizeof(nsID)))))
+               (!(pid = xpc_JSObjectToID(cx, obj))))
             {
                 return JS_FALSE;
             }

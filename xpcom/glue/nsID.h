@@ -44,8 +44,6 @@
 #include "nscore.h"
 #endif
 
-#define NSID_LENGTH 39
-
 /**
  * A "unique identifier". This is modeled after OSF DCE UUIDs.
  * @status FROZEN
@@ -97,16 +95,8 @@ struct nsID {
   /**
    * nsID string encoder. Returns an allocated string in 
    * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format. Caller should free string.
-   * YOU SHOULD ONLY USE THIS IF YOU CANNOT USE ToProvidedString() BELOW.
    */
   NS_COM_GLUE char* ToString() const;
-
-  /**
-   * nsID string encoder. Builds a string in 
-   * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format, into a char[NSID_LENGTH]
-   * buffer provided by the caller (for instance, on the stack).
-   */
-  NS_COM_GLUE void ToProvidedString(char (&dest)[NSID_LENGTH]) const;
   //@}
 };
 
