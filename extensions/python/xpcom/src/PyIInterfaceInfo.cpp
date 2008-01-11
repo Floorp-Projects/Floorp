@@ -91,11 +91,12 @@ static PyObject *PyGetIID(PyObject *self, PyObject *args)
 	nsIID *iid_ret;
 	nsresult r;
 	Py_BEGIN_ALLOW_THREADS;
-	r = pI->GetIIDShared(&iid_ret);
+	r = pI->GetInterfaceIID(&iid_ret);
 	Py_END_ALLOW_THREADS;
 	if ( NS_FAILED(r) )
 		return PyXPCOM_BuildPyException(r);
 	PyObject *ret = Py_nsIID::PyObjectFromIID(*iid_ret);
+	nsMemory::Free(iid_ret);
 	return ret;
 }
 
