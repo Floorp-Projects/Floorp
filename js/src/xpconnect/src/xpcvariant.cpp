@@ -320,9 +320,14 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     // Let's see if it is a xpcJSID.
 
-    const nsID* id = xpc_JSObjectToID(ccx, jsobj);
+    // XXX It might be nice to have a non-allocing version of xpc_JSObjectToID.
+    nsID* id = xpc_JSObjectToID(ccx, jsobj);
     if(id)
-        return NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
+    {
+        JSBool success = NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
+        nsMemory::Free((char*)id);
+        return success;
+    }
     
     // Let's see if it is a js array object.
 
