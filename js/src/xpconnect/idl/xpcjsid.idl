@@ -40,19 +40,24 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(C86AE131-D101-11d2-9841-006008962422)]
+[ptr] native const_nsID_ptr(const nsID);
+
+[scriptable, uuid(baedc96a-9cee-4b6b-9160-90d257b3c8ef)]
 interface nsIJSID : nsISupports
 {
-    readonly attribute string             name;
-    readonly attribute string             number;
-    [noscript] readonly attribute nsIDPtr id;
-    readonly attribute boolean            valid;
+    readonly attribute string  name;
+    readonly attribute string  number;
+    readonly attribute boolean valid;
 
     boolean equals(in nsIJSID other);
 
     void initialize(in string idString);
 
     string toString();
+
+    // returns a pointer to the internal nsID. this pointer is only valid
+    // while the nsIJSID object remains alive!
+    [notxpcom] const_nsID_ptr getID();
 };
 
 [scriptable, uuid(e08dcda0-d651-11d2-9843-006008962422)]
