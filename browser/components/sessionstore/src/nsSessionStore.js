@@ -57,6 +57,7 @@ const Cu = Components.utils;
 const STATE_STOPPED = 0;
 const STATE_RUNNING = 1;
 const STATE_QUITTING = -1;
+const STATE_DISABLED = -2;
 
 const STATE_STOPPED_STR = "stopped";
 const STATE_RUNNING_STR = "running";
@@ -64,6 +65,8 @@ const STATE_RUNNING_STR = "running";
 const PRIVACY_NONE = 0;
 const PRIVACY_ENCRYPTED = 1;
 const PRIVACY_FULL = 2;
+
+const NOTIFY_WINDOWS_RESTORED = "sessionstore-windows-restored";
 
 // global notifications observed
 const OBSERVING = [
@@ -132,6 +135,9 @@ SessionStoreService.prototype = {
   // when crash recovery is disabled, session data is not written to disk
   _resume_from_crash: true,
 
+  // During the initial restore tracks the number of windows yet to be restored
+  _restoreCount: 0,
+
   // time in milliseconds (Date.now()) when the session was last written to file
   _lastSaveTime: 0, 
 
@@ -153,6 +159,9 @@ SessionStoreService.prototype = {
    * Initialize the component
    */
   init: function sss_init(aWindow) {
+    if (this._loadState == STATE_DISABLED)
+      return;
+
     if (!aWindow || this._loadState == STATE_RUNNING) {
       // make sure that all browser windows which try to initialize
       // SessionStore are really tracked by it
@@ -165,12 +174,17 @@ SessionStoreService.prototype = {
                        getService(Ci.nsIPrefService).getBranch("browser.");
     this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
-    // if the service is disabled, do not init 
-    if (!this._prefBranch.getBoolPref("sessionstore.enabled"))
-      return;
-
     var observerService = Cc["@mozilla.org/observer-service;1"].
                           getService(Ci.nsIObserverService);
+
+    // if the service is disabled, do not init 
+    if (!this._prefBranch.getBoolPref("sessionstore.enabled")) {
+      // Notify observers that the sessionstore has done everything it is going to.
+      observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+      // Mark as disabled so we don't even try to initialise again.
+      this._loadState = STATE_DISABLED;
+      return;
+    }
 
     OBSERVING.forEach(function(aTopic) {
       observerService.addObserver(this, aTopic, true);
@@ -420,8 +434,15 @@ SessionStoreService.prototype = {
       if (this._initialState) {
         // make sure that the restored tabs are first in the window
         this._initialState._firstTabs = true;
+        this._restoreCount = this._initialState.windows ? this._initialState.windows.length : 0;
         this.restoreWindow(aWindow, this._initialState, this._isCmdLineEmpty(aWindow));
         delete this._initialState;
+      }
+      else {
+        // Nothing to restore, notify observers things are complete.
+        var observerService = Cc["@mozilla.org/observer-service;1"].
+                              getService(Ci.nsIObserverService);
+        observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
       }
     }
     
@@ -1296,6 +1317,16 @@ SessionStoreService.prototype = {
    *        bool this isn't the restoration of the first window
    */
   restoreWindow: function sss_restoreWindow(aWindow, aState, aOverwriteTabs, aFollowUp) {
+    if (this._restoreCount) {
+      this._restoreCount--;
+      if (this._restoreCount == 0) {
+        // This was the last window restored at startup, notify observers.
+        var observerService = Cc["@mozilla.org/observer-service;1"].
+                              getService(Ci.nsIObserverService);
+        observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+      }
+    }
+
     if (!aFollowUp) {
       this.windowToFocus = aWindow;
     }
