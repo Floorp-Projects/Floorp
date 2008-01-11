@@ -49,7 +49,8 @@ function init(aEvent)
     var distroId = prefs.getCharPref("distribution.id");
     if (distroId) {
       var distroVersion = prefs.getCharPref("distribution.version");
-      var distroAbout = prefs.getComplexValue("distribution.about", Ci.nsISupportsString);
+      var distroAbout = prefs.getComplexValue("distribution.about",
+        Component.interfaces.nsISupportsString);
   
       var distroField = document.getElementById("distribution");
       distroField.value = distroAbout;
