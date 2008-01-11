@@ -1349,8 +1349,8 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
 
       if (iinfo) {
         // obtain an IID.
-        nsIID* iid = nsnull;
-        iinfo->GetInterfaceIID(&iid);
+        const nsIID* iid = nsnull;
+        iinfo->GetIIDShared(&iid);
 
         if (iid) {
           // We found a valid iid.  Add it to our table.
@@ -1362,11 +1362,8 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
           nsCOMPtr<nsIInterfaceInfo> parentInfo;
           // if it has a parent, add it to the table
           while (NS_SUCCEEDED(iinfo->GetParent(getter_AddRefs(parentInfo))) && parentInfo) {
-            // free the nsMemory::Clone()ed iid
-            nsMemory::Free(iid);
-
             // get the iid
-            parentInfo->GetInterfaceIID(&iid);
+            parentInfo->GetIIDShared(&iid);
 
             // don't add nsISupports to the table
             if (!iid || iid->Equals(NS_GET_IID(nsISupports)))
@@ -1380,10 +1377,6 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
             iinfo = parentInfo;
           }
         }
-
-        // free the nsMemory::Clone()ed iid
-        if (iid)
-          nsMemory::Free(iid);
       }
 
       token = nsCRT::strtok( newStr, ", ", &newStr );

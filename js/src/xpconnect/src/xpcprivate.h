@@ -2852,11 +2852,11 @@ public:
     void   SetNameToNoString()
         {NS_ASSERTION(!mName, "name already set"); mName = gNoString;}
     PRBool NameIsSet() const {return nsnull != mName;}
-    const nsID* GetID() const {return &mID;}
-
+    const nsID& ID() const {return mID;}
     PRBool IsValid() const {return !mID.Equals(GetInvalidIID());}
 
     static nsJSID* NewID(const char* str);
+    static nsJSID* NewID(const nsID& id);
 
     nsJSID();
     virtual ~nsJSID();
@@ -3316,7 +3316,7 @@ private:
 extern JSObject*
 xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID);
 
-extern nsID*
+extern const nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj);
 
 extern JSBool
