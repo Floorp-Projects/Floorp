@@ -436,7 +436,7 @@
             return null;
           var min = { }, max = { };
           selection.getRangeAt(0, min, max);
-          
+
           return this.getResultView().nodeForTreeIndex(min.value);
         ]]></getter>
       </property>
@@ -829,7 +829,6 @@
       <field name="_nextSelection">[]</field>
       <field name="SAVE_SELECTION_RELOAD">0</field>
       <field name="SAVE_SELECTION_INSERT">1</field>
-      <field name="SAVE_SELECTION_REMOVE">2</field>
       <method name="saveSelection">
         <parameter name="mode"/>
         <body><![CDATA[ 
@@ -838,18 +837,6 @@
           var s = this.view.selection;
           var rc = s.getRangeCount();
           switch (mode) {
-          case this.SAVE_SELECTION_REMOVE:
-            var min = { }, max = { };
-            s.getRangeAt(rc - 1, min, max);
-            var rowCount = this.view.rowCount;
-            var index = -1;
-            if (max.value == (rowCount - 1) || 
-                this.view.getLevel(max.value + 1) != this.view.getLevel(max.value))
-              index = max.value - s.count;
-            else
-              index = max.value - s.count + 1;
-            this._nextSelection = [{ min: index, max: index }];
-            break;
           case this.SAVE_SELECTION_INSERT:
             var min = { }, max = { };
             s.getRangeAt(rc - 1, min, max);

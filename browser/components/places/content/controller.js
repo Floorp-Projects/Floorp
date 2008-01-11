@@ -938,7 +938,6 @@ PlacesController.prototype = {
    */
   remove: function PC_remove(aTxnName) {
     NS_ASSERT(aTxnName !== undefined, "Must supply Transaction Name");
-    this._view.saveSelection(this._view.SAVE_SELECTION_REMOVE);
 
     var root = this._view.getResult().root;
 
@@ -955,8 +954,6 @@ PlacesController.prototype = {
     }
     else
       NS_ASSERT(false, "unexpected root");
-      
-    this._view.restoreSelection();
   },
 
   /**
