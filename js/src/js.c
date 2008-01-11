@@ -1943,6 +1943,12 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
             break;
         }
 
+        /* Protect pdobj from GC by setting it as an element of aobj now */
+        v = OBJECT_TO_JSVAL(pdobj);
+        ok = JS_SetElement(cx, aobj, i, &v);
+        if (!ok)
+            break;
+
         ok = JS_SetProperty(cx, pdobj, "id", &pd->id) &&
              JS_SetProperty(cx, pdobj, "value", &pd->value) &&
              (v = INT_TO_JSVAL(pd->flags),
@@ -1950,11 +1956,6 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
              (v = INT_TO_JSVAL(pd->slot),
               JS_SetProperty(cx, pdobj, "slot", &v)) &&
              JS_SetProperty(cx, pdobj, "alias", &pd->alias);
-        if (!ok)
-            break;
-
-        v = OBJECT_TO_JSVAL(pdobj);
-        ok = JS_SetElement(cx, aobj, i, &v);
         if (!ok)
             break;
     }
