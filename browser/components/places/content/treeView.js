@@ -306,7 +306,7 @@ PlacesTreeView.prototype = {
       replaceCount-=1;
 
     // Persist selection state
-    var nodesToSelect = [];
+    var previouslySelectedNodes = [];
     var selection = this.selection;
     var rc = selection.getRangeCount();
     for (var rangeIndex = 0; rangeIndex < rc; rangeIndex++) {
@@ -317,7 +317,8 @@ PlacesTreeView.prototype = {
         continue;
 
       for (var nodeIndex = min.value; nodeIndex <= lastIndex; nodeIndex++)
-        nodesToSelect.push(this._visibleElements[nodeIndex]);
+        previouslySelectedNodes.push({ node: this._visibleElements[nodeIndex],
+                                       oldIndex: nodeIndex });
     }
 
     // Mark the removes as invisible
@@ -345,7 +346,7 @@ PlacesTreeView.prototype = {
     }
 
     // now update the number of elements
-    if (nodesToSelect.length > 0)
+    if (previouslySelectedNodes.length > 0)
       selection.selectEventsSuppressed = true;
 
     this._tree.beginUpdateBatch();
@@ -373,14 +374,14 @@ PlacesTreeView.prototype = {
     this._tree.endUpdateBatch();
 
     // restore selection
-    if (nodesToSelect.length > 0) {
-      for each (var node in nodesToSelect) {
-        var index = node.viewIndex;
+    if (previouslySelectedNodes.length > 0) {
+      for each (var nodeInfo in previouslySelectedNodes) {
+        var index = nodeInfo.node.viewIndex;
 
         // if the same node was used (happens on sorting-changes),
         // just use viewIndex
         if (index == -1) { // otherwise, try to find an equal node
-          var itemId = node.itemId;
+          var itemId = nodeInfo.node.itemId;
           if (itemId != 1) { // bookmark-nodes in queries case
             for (i=0; i < newElements.length && index == -1; i++) {
               if (newElements[i].itemId == itemId)
@@ -388,7 +389,7 @@ PlacesTreeView.prototype = {
             }
           }
           else { // history nodes
-            var uri = node.uri;
+            var uri = nodeInfo.node.uri;
             if (uri) {
               for (i=0; i < newElements.length && index == -1; i++) {
                 if (newElements[i].uri == uri)
@@ -400,6 +401,16 @@ PlacesTreeView.prototype = {
         if (index != -1)
           selection.rangedSelect(index, index, true);
       }
+
+      // if only one node was previously selected and there's no selection now,
+      // select the node at its old-viewIndex, if any
+      if (previouslySelectedNodes.length == 1 &&
+          selection.getRangeCount() == 0 &&
+          this._visibleElements.length > previouslySelectedNodes[0].oldIndex) {
+        selection.rangedSelect(previouslySelectedNodes[0].oldIndex,
+                               previouslySelectedNodes[0].oldIndex, true);
+      }
+
       selection.selectEventsSuppressed = false;
     }
   },
@@ -667,6 +678,17 @@ PlacesTreeView.prototype = {
     if (oldViewIndex < 0)
       return; // item was already invisible, nothing to do
 
+    // if the item was exclusively selected, the node next to it will be
+    // selected
+    var selectNext = false;
+    var selection = this.selection;
+    if (selection.getRangeCount() == 1) {
+      var min = { }, max = { };
+      selection.getRangeAt(0, min, max);
+      if (min.value == max.value)
+        selectNext = true;
+    }
+
     // this may have been a container, in which case it has a lot of rows
     var count = this._countVisibleRowsForItem(aItem);
 
@@ -710,6 +732,10 @@ PlacesTreeView.prototype = {
     // redraw parent because twisty may have changed
     if (!aParent.hasChildren)
       this.itemChanged(aParent);
+
+    // restore selection
+    if (selectNext && this._visibleElements.length > oldViewIndex)
+      selection.rangedSelect(oldViewIndex, oldViewIndex, true);
   },
 
   /**
