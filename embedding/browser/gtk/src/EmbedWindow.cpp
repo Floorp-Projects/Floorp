@@ -137,8 +137,8 @@ EmbedWindow::SetStatus(PRUint32 aStatusType, const PRUnichar *aStatus)
   case STATUS_SCRIPT: 
     {
       mJSStatus = aStatus;
-      gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		      moz_embed_signals[JS_STATUS]);
+      g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                    moz_embed_signals[JS_STATUS], 0);
     }
     break;
   case STATUS_SCRIPT_DEFAULT:
@@ -147,8 +147,8 @@ EmbedWindow::SetStatus(PRUint32 aStatusType, const PRUnichar *aStatus)
   case STATUS_LINK:
     {
       mLinkMessage = aStatus;
-      gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		      moz_embed_signals[LINK_MESSAGE]);
+      g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                    moz_embed_signals[LINK_MESSAGE], 0);
     }
     break;
   }
@@ -190,16 +190,16 @@ EmbedWindow::DestroyBrowserWindow(void)
   // mark the owner as destroyed so it won't emit events anymore.
   mOwner->mIsDestroyed = PR_TRUE;
 
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DESTROY_BROWSER]);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DESTROY_BROWSER], 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[SIZE_TO], aCX, aCY);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[SIZE_TO], 0, aCX, aCY);
   return NS_OK;
 }
 
@@ -320,8 +320,8 @@ NS_IMETHODIMP
 EmbedWindow::SetTitle(const PRUnichar *aTitle)
 {
   mTitle = aTitle;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[TITLE]);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[TITLE], 0);
   return NS_OK;
 }
 
@@ -359,9 +359,9 @@ EmbedWindow::SetVisibility(PRBool aVisibility)
   if (mOwner->mIsChrome && !mOwner->mChromeLoaded)
     return NS_OK;
 
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[VISIBILITY],
-		  aVisibility);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[VISIBILITY], 0,
+                aVisibility);
   return NS_OK;
 }
 
@@ -406,7 +406,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   
   sTipWindow = gtk_window_new(GTK_WINDOW_POPUP);
   gtk_widget_set_app_paintable(sTipWindow, TRUE);
-  gtk_window_set_policy(GTK_WINDOW(sTipWindow), FALSE, FALSE, TRUE);
+  gtk_window_set_resizable(GTK_WINDOW(sTipWindow), TRUE);
   // needed to get colors + fonts etc correctly
   gtk_widget_set_name(sTipWindow, "gtk-tooltips");
   
@@ -423,8 +423,8 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   // realize the widget
   gtk_widget_realize(sTipWindow);
 
-  gtk_signal_connect(GTK_OBJECT(sTipWindow), "expose_event",
-                     GTK_SIGNAL_FUNC(tooltips_paint_window), NULL);
+  g_signal_connect(G_OBJECT(sTipWindow), "expose_event",
+                   G_CALLBACK(tooltips_paint_window), NULL);
 
   // set up the label for the tooltip
   GtkWidget *label = gtk_label_new(tipString);
