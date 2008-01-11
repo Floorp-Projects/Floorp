@@ -1263,7 +1263,7 @@ tabpanels {
   border-top-width: 1px;
   padding-top: 1px;
   -moz-border-top-colors: ThreeDShadow;
-  -moz-border-right-colors: ThreeDShadow transparent;
+  -moz-border-right-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow transparent;
   background: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
   background-repeat: repeat-x;
@@ -1335,7 +1335,8 @@ tabpanels {
 }
 
 .tabs-alltabs-button > .toolbarbutton-menu-dropmarker {
-  margin-top: 3px !important;
+  margin-top: 3px;
+  margin-bottom: 1px;
 }
 
 .tabs-alltabs-box-animate {
