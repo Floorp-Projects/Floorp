@@ -656,13 +656,6 @@ public:
     XPCContext* GetXPCContext(JSContext* cx);
     XPCContext* SyncXPCContextList(JSContext* cx = nsnull);
 
-    JSBool GetDeferReleases() const {return mDeferReleases;}
-    void   SetDeferReleases(JSBool b) 
-        {/* If deferring is turned off while any are pending they'll leak! */
-         NS_ASSERTION((mDeferReleases && b) || 
-                      !mNativesToReleaseArray.Count(), "bad"); 
-         mDeferReleases = b;}
-
     JSBool DeferredRelease(nsISupports* obj);
 
     JSBool GetDoingFinalization() const {return mDoingFinalization;}
@@ -787,7 +780,6 @@ private:
     PRThread* mThreadRunningGC;
     nsVoidArray mWrappedJSToReleaseArray;
     nsVoidArray mNativesToReleaseArray;
-    JSBool mDeferReleases;
     JSBool mDoingFinalization;
     XPCRootSetElem *mVariantRoots;
     XPCRootSetElem *mWrappedJSRoots;
