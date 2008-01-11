@@ -97,7 +97,7 @@ function synthesizeKey(aKey, aWin)
   }
 }
 
-function test_deleteKeyRemoves(aWin)
+function test_backspaceKeyRemoves(aWin)
 {
   // This also tests the ordering of the display
   var doc = aWin.document;
@@ -114,7 +114,7 @@ function test_deleteKeyRemoves(aWin)
 
   var len = DownloadData.length;
   for (var i = 0; i < len; i++) {
-    synthesizeKey("DOM_VK_DELETE", aWin);
+    synthesizeKey("DOM_VK_BACK_SPACE", aWin);
 
     stmt.executeStep();
     is(stmt.getInt32(0), len - (i + 1),
@@ -124,7 +124,7 @@ function test_deleteKeyRemoves(aWin)
 }
 
 var testFuncs = [
-    test_deleteKeyRemoves
+    test_backspaceKeyRemoves
 ];
 
 function test()
