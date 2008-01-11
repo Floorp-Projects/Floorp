@@ -75,8 +75,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) && 
       (aStateFlags & GTK_MOZ_EMBED_FLAG_START))
   {
-    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		    moz_embed_signals[NET_START]);
+    g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                  moz_embed_signals[NET_START], 0);
   }
 
   // get the uri for this request
@@ -87,20 +87,20 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   if (mOwner->mURI.Equals(uriString))
   {
     // for people who know what they are doing
-    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		    moz_embed_signals[NET_STATE],
-		    aStateFlags, aStatus);
+    g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                  moz_embed_signals[NET_STATE], 0,
+                  aStateFlags, aStatus);
   }
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[NET_STATE_ALL],
- 		  uriString.get(),
-		  (gint)aStateFlags, (gint)aStatus);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[NET_STATE_ALL], 0,
+                uriString.get(),
+                (gint)aStateFlags, (gint)aStatus);
   // and for stop, too
-  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) && 
+  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) &&
       (aStateFlags & GTK_MOZ_EMBED_FLAG_STOP))
   {
-    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		    moz_embed_signals[NET_STOP]);
+    g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                  moz_embed_signals[NET_STOP], 0);
     // let our owner know that the load finished
     mOwner->ContentFinishedLoading();
   }
@@ -119,18 +119,18 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
 
   nsCAutoString uriString;
   RequestToURIString(aRequest, uriString);
-  
+
   // is it the same as the current uri?
   if (mOwner->mURI.Equals(uriString)) {
-    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		    moz_embed_signals[PROGRESS],
-		    aCurTotalProgress, aMaxTotalProgress);
+    g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                  moz_embed_signals[PROGRESS], 0,
+                  aCurTotalProgress, aMaxTotalProgress);
   }
 
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[PROGRESS_ALL],
-		  uriString.get(),
-		  aCurTotalProgress, aMaxTotalProgress);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[PROGRESS_ALL], 0,
+                uriString.get(),
+                aCurTotalProgress, aMaxTotalProgress);
   return NS_OK;
 }
 
@@ -162,8 +162,8 @@ EmbedProgress::OnLocationChange(nsIWebProgress *aWebProgress,
 
   if (!isSubFrameLoad) {
     mOwner->SetURI(newURI.get());
-    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		    moz_embed_signals[LOCATION]);
+    g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                  moz_embed_signals[LOCATION], 0);
   }
 
   return NS_OK;
@@ -175,11 +175,11 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
 			      nsresult         aStatus,
 			      const PRUnichar *aMessage)
 {
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[STATUS_CHANGE],
-		  static_cast<void *>(aRequest),
-		  static_cast<int>(aStatus),
-		  static_cast<const void *>(aMessage));
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[STATUS_CHANGE], 0,
+                static_cast<void *>(aRequest),
+                static_cast<int>(aStatus),
+                static_cast<const void *>(aMessage));
 
   return NS_OK;
 }
@@ -189,10 +189,10 @@ EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 				nsIRequest     *aRequest,
 				PRUint32         aState)
 {
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[SECURITY_CHANGE],
-		  static_cast<void *>(aRequest),
-		  aState);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[SECURITY_CHANGE], 0,
+                static_cast<void *>(aRequest),
+                aState);
   return NS_OK;
 }
 
