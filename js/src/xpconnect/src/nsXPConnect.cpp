@@ -606,6 +606,8 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb)
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
+        nsXPConnect::GetRuntime()->UnsetContextGlobals();
+
         PRBool alreadyCollecting = mCycleCollecting;
         mCycleCollecting = PR_TRUE;
         NoteJSRootTracer trc(&mJSRoots, cb);
@@ -650,6 +652,8 @@ nsXPConnect::FinishCycleCollection()
     {
         mCycleCollectionContext = nsnull;
         mExplainCycleCollectionContext = nsnull;
+
+        nsXPConnect::GetRuntime()->RestoreContextGlobals();
     }
 #endif
 
