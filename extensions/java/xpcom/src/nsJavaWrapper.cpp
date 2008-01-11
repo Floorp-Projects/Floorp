@@ -1137,13 +1137,15 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
         // Create the string from nsID
         jstring str = nsnull;
         if (iid) {
-          char iid_str[NSID_LENGTH];
-          iid->ToProvidedString(iid_str);
-          str = env->NewStringUTF(iid_str);
-          if (!str) {
+          char* iid_str = iid->ToString();
+          if (iid_str) {
+            str = env->NewStringUTF(iid_str);
+          }
+          if (!iid_str || !str) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             break;
           }
+          PR_Free(iid_str);
         }
 
         if (aParamInfo.IsRetval() && !aIsArrayElement) {

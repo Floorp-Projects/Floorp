@@ -1706,19 +1706,23 @@ nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
   iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
 
   while (if_info) {
-    const nsIID *iid = nsnull;
+    nsIID *iid = nsnull;
 
-    if_info->GetIIDShared(&iid);
+    if_info->GetInterfaceIID(&iid);
     NS_ENSURE_TRUE(iid, NS_ERROR_UNEXPECTED);
 
     if (iid->Equals(NS_GET_IID(nsISupports))) {
+      nsMemory::Free(iid);
+
       break;
     }
 
-    const char *name;
-    if_info->GetNameShared(&name);
+    nsXPIDLCString name;
+    if_info->GetName(getter_Copies(name));
 
     nameSpaceManager->RegisterClassProto(CutPrefix(name), iid, &found_old);
+
+    nsMemory::Free(iid);
 
     if (first) {
       first = PR_FALSE;
@@ -5326,9 +5330,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       primary_iid = ci_data->mProtoChainInterface;
     }
 
-    nsCOMPtr<nsIInterfaceInfo> if_info;
-    nsCOMPtr<nsIInterfaceInfo> parent;
-    const char *class_parent_name;
+    nsXPIDLCString class_parent_name;
 
     if (!primary_iid->Equals(NS_GET_IID(nsISupports))) {
       rv = DefineInterfaceConstants(cx, class_obj, primary_iid);
@@ -5354,18 +5356,20 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
       NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
 
+      nsCOMPtr<nsIInterfaceInfo> if_info;
       iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
       NS_ENSURE_TRUE(if_info, NS_ERROR_UNEXPECTED);
 
-      const nsIID *iid = nsnull;
+      nsCOMPtr<nsIInterfaceInfo> parent;
+      nsIID *iid = nsnull;
 
       if (ci_data && !ci_data->mHasClassInterface) {
-        if_info->GetIIDShared(&iid);
+        if_info->GetInterfaceIID(&iid);
       } else {
         if_info->GetParent(getter_AddRefs(parent));
         NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
-        parent->GetIIDShared(&iid);
+        parent->GetInterfaceIID(&iid);
       }
 
       if (iid) {
@@ -5375,7 +5379,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
             // interface is the interface that should be
             // constructor.prototype.__proto__.
 
-            if_info->GetNameShared(&class_parent_name);
+            if_info->GetName(getter_Copies(class_parent_name));
           } else {
             // If the class does have a class interface (or there's no
             // real class for this name) then the parent of the
@@ -5384,9 +5388,11 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
             NS_ASSERTION(parent, "Whoa, this is bad, null parent here!");
 
-            parent->GetNameShared(&class_parent_name);
+            parent->GetName(getter_Copies(class_parent_name));
           }
         }
+
+        nsMemory::Free(iid);
       }
     }
 
