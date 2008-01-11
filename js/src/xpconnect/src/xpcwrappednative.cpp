@@ -1950,7 +1950,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             Throw(NS_ERROR_XPC_NOT_ENOUGH_ARGS, ccx);
             return JS_FALSE;
         }
-        nsID* iid;
+        const nsID* iid;
         JSObject* obj;
         if(!JSVAL_IS_OBJECT(argv[0]) ||
            (!(obj = JSVAL_TO_OBJECT(argv[0]))) ||
@@ -1971,7 +1971,6 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         if(NS_FAILED(invokeResult))
         {
             ThrowBadResult(invokeResult, ccx);
-            PR_Free(iid);
             return JS_FALSE;
         }
 
@@ -1979,7 +1978,6 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         retval = XPCConvert::NativeData2JS(ccx, &v, &qiresult, 
                                            nsXPTType::T_INTERFACE_IS | XPT_TDP_POINTER,
                                            iid, ccx.GetCurrentJSObject(), &err);
-        PR_Free(iid);
         NS_IF_RELEASE(qiresult);
 
         if(!retval)

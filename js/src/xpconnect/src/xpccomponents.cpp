@@ -622,7 +622,7 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                     if(iface)
                     {
                         nsIID const *iid;
-                        char* idstr;
+                        char idstr[NSID_LENGTH];
                         JSString* jsstr;
                         PRBool scriptable;
 
@@ -632,11 +632,10 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                             continue;
                         }
 
-                        if(NS_SUCCEEDED(iface->GetIIDShared(&iid)) &&
-                           nsnull != (idstr = iid->ToString()))
+                        if(NS_SUCCEEDED(iface->GetIIDShared(&iid)))
                         {
+                            iid->ToProvidedString(idstr);
                             jsstr = JS_NewStringCopyZ(cx, idstr);
-                            nsMemory::Free(idstr);
                             if (jsstr &&
                                 JS_ValueToId(cx, STRING_TO_JSVAL(jsstr), idp))
                             {
