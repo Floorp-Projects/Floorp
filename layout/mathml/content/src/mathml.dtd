@@ -40,6 +40,10 @@
      line with http://www.unicode.org/reports/tr25/tr25-9.html
   -->
 <!ENTITY phi "&#x3D5;">
+<!ENTITY ShortLeftArrow "&#x2190;&#x200B;"><!ENTITY slarr "&#x2190;&#x200B;">
+<!ENTITY ShortUpArrow "&#x2191;&#x200B;">
+<!ENTITY ShortRightArrow "&#x2192;&#x200B;"><!ENTITY srarr "&#x2192;&#x200B;">
+<!ENTITY ShortDownArrow "&#x2193;&#x200B;">
 <!ENTITY OverParenthesis "&#x23DC;">
 <!ENTITY UnderParenthesis "&#x23DD;">
 <!ENTITY OverBrace "&#x23DE;">
@@ -614,10 +618,10 @@
 <!ENTITY frac38 "&#x215C;">
 <!ENTITY frac58 "&#x215D;">
 <!ENTITY frac78 "&#x215E;">
-<!ENTITY larr "&#x2190;"><!ENTITY slarr "&#x2190;"><!ENTITY LeftArrow "&#x2190;"><!ENTITY leftarrow "&#x2190;"><!ENTITY ShortLeftArrow "&#x2190;">
-<!ENTITY uarr "&#x2191;"><!ENTITY ShortUpArrow "&#x2191;"><!ENTITY UpArrow "&#x2191;"><!ENTITY uparrow "&#x2191;">
-<!ENTITY rarr "&#x2192;"><!ENTITY srarr "&#x2192;"><!ENTITY RightArrow "&#x2192;"><!ENTITY rightarrow "&#x2192;"><!ENTITY ShortRightArrow "&#x2192;">
-<!ENTITY darr "&#x2193;"><!ENTITY DownArrow "&#x2193;"><!ENTITY downarrow "&#x2193;"><!ENTITY ShortDownArrow "&#x2193;">
+<!ENTITY larr "&#x2190;"><!ENTITY LeftArrow "&#x2190;"><!ENTITY leftarrow "&#x2190;">
+<!ENTITY uarr "&#x2191;"><!ENTITY UpArrow "&#x2191;"><!ENTITY uparrow "&#x2191;">
+<!ENTITY rarr "&#x2192;"><!ENTITY RightArrow "&#x2192;"><!ENTITY rightarrow "&#x2192;">
+<!ENTITY darr "&#x2193;"><!ENTITY DownArrow "&#x2193;"><!ENTITY downarrow "&#x2193;">
 <!ENTITY harr "&#x2194;"><!ENTITY LeftRightArrow "&#x2194;"><!ENTITY leftrightarrow "&#x2194;">
 <!ENTITY varr "&#x2195;"><!ENTITY UpDownArrow "&#x2195;"><!ENTITY updownarrow "&#x2195;">
 <!ENTITY nwarr "&#x2196;"><!ENTITY nwarrow "&#x2196;"><!ENTITY UpperLeftArrow "&#x2196;">
