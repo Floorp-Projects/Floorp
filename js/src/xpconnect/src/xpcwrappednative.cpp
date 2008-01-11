@@ -664,7 +664,7 @@ XPCWrappedNative::~XPCWrappedNative()
     if(mIdentity)
     {
         XPCJSRuntime* rt = GetRuntime();
-        if(rt && rt->GetDeferReleases() && rt->GetDoingFinalization())
+        if(rt && rt->GetDoingFinalization())
         {
             if(!rt->DeferredRelease(mIdentity))
             {
@@ -1005,7 +1005,7 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
                 NS_ASSERTION(*(int*)obj != 0,          "bad pointer!");
 #endif
                 XPCJSRuntime* rt = GetRuntime();
-                if(rt && rt->GetDeferReleases())
+                if(rt)
                 {
                     if(!rt->DeferredRelease(obj))
                     {

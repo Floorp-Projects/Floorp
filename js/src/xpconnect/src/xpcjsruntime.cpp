@@ -794,33 +794,30 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                 // events above.
 
                 // Do any deferred released of native objects.
-                if(self->GetDeferReleases())
+                nsVoidArray* array = &self->mNativesToReleaseArray;
+#ifdef XPC_TRACK_DEFERRED_RELEASES
+                printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
+                       array->Count());
+#endif
+                while(1)
                 {
-                    nsVoidArray* array = &self->mNativesToReleaseArray;
-#ifdef XPC_TRACK_DEFERRED_RELEASES
-                    printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
-                           array->Count());
-#endif
-                    while(1)
+                    nsISupports* obj;
                     {
-                        nsISupports* obj;
+                        PRInt32 count = array->Count();
+                        if(!count)
                         {
-                            PRInt32 count = array->Count();
-                            if(!count)
-                            {
-                                array->Compact();
-                                break;
-                            }
-                            obj = reinterpret_cast<nsISupports*>
-                                                  (array->ElementAt(count-1));
-                            array->RemoveElementAt(count-1);
+                            array->Compact();
+                            break;
                         }
-                        NS_RELEASE(obj);
+                        obj = reinterpret_cast<nsISupports*>
+                            (array->ElementAt(count-1));
+                        array->RemoveElementAt(count-1);
                     }
-#ifdef XPC_TRACK_DEFERRED_RELEASES
-                    printf("XPC - End deferred Releases\n");
-#endif
+                    NS_RELEASE(obj);
                 }
+#ifdef XPC_TRACK_DEFERRED_RELEASES
+                printf("XPC - End deferred Releases\n");
+#endif
                 break;
             }
             default:
@@ -1055,7 +1052,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mThreadRunningGC(nsnull),
    mWrappedJSToReleaseArray(),
    mNativesToReleaseArray(),
-   mDeferReleases(JS_FALSE),
    mDoingFinalization(JS_FALSE),
    mVariantRoots(nsnull),
    mWrappedJSRoots(nsnull),
@@ -1258,7 +1254,6 @@ JSBool
 XPCJSRuntime::DeferredRelease(nsISupports* obj)
 {
     NS_ASSERTION(obj, "bad param");
-    NS_ASSERTION(GetDeferReleases(), "bad call");
 
     if(!mNativesToReleaseArray.Count())
     {
