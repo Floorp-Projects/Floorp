@@ -2385,7 +2385,6 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     {
         // Instead of filling mBuf from the purple buffer, we fill it
         // from the list of nodes we were expected to collect.
-        PRUint32 suspectCurrentCount = mBuf.GetSize();
         mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, this);
 
         GCGraphBuilder builder(mGraph, mRuntimes);
@@ -2394,6 +2393,11 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
             if (mRuntimes[i])
                 mRuntimes[i]->BeginCycleCollection(builder);
         }
+
+        // This might fail to explain expected garbage that's also in
+        // the set of roots added by the runtimes (what used to be
+        // called suspectCurrent), but that seems pretty unlikely.
+        PRUint32 suspectCurrentCount = builder.Count();
 
         MarkRoots(builder);
         ScanRoots();
