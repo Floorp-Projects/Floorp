@@ -3072,8 +3072,8 @@ nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
     {
         //-- Access denied, report an error
         nsCAutoString errorMsg("Permission denied to create instance of class. CID=");
-        char cidStr[NSID_LENGTH];
-        aCID.ToProvidedString(cidStr);
+        nsXPIDLCString cidStr;
+        cidStr += aCID.ToString();
         errorMsg.Append(cidStr);
         SetPendingException(cx, errorMsg.get());
 
@@ -3103,8 +3103,8 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
     {
         //-- Access denied, report an error
         nsCAutoString errorMsg("Permission denied to get service. CID=");
-        char cidStr[NSID_LENGTH];
-        aCID.ToProvidedString(cidStr);
+        nsXPIDLCString cidStr;
+        cidStr += aCID.ToString();
         errorMsg.Append(cidStr);
         SetPendingException(cx, errorMsg.get());
 

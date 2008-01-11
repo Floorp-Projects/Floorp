@@ -49,6 +49,7 @@
 #include "nsPrintfCString.h"
 #include "nsAutoLock.h"
 #include "nsIUUIDGenerator.h"
+#include "prmem.h"
 #include "prprf.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ID = 0;
@@ -278,9 +279,10 @@ nsNavBookmarks::Init()
   nsID GUID;
   rv = uuidgen->GenerateUUIDInPlace(&GUID);
   NS_ENSURE_SUCCESS(rv, rv);
-  char GUIDChars[NSID_LENGTH];
-  GUID.ToProvidedString(GUIDChars);
-  CopyASCIItoUTF16(GUIDChars, mGUIDBase);
+  char* GUIDChars = GUID.ToString();
+  NS_ENSURE_TRUE(GUIDChars, NS_ERROR_OUT_OF_MEMORY);
+  mGUIDBase.Assign(NS_ConvertASCIItoUTF16(GUIDChars));
+  PR_Free(GUIDChars);
 
   rv = InitRoots();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1737,10 +1739,9 @@ nsNavBookmarks::GetItemGUID(PRInt64 aItemId, nsAString &aGUID)
     return rv;
 
   nsAutoString tmp;
+  tmp.Assign(mGUIDBase);
   tmp.AppendInt(mItemCount++);
-  aGUID.SetCapacity(NSID_LENGTH - 1 + tmp.Length());
-  aGUID.Assign(mGUIDBase);
-  aGUID.Append(tmp);
+  aGUID.Assign(tmp);
 
   return SetItemGUID(aItemId, aGUID);
 }

@@ -416,8 +416,10 @@ public:
     static const char kIIDDecl2[] = " =\n    \"";
     static const char kIIDDecl3[] = "\";\n\n";
 
-    nsIID* iid;
-    aIInfo->GetIIDShared(&iid);
+    nsIID* iid = nsnull;
+    aIInfo->GetInterfaceIID(&iid);
+    if (!iid)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     // create iid field name
     nsCAutoString iid_name;
@@ -433,8 +435,9 @@ public:
     ToUpperCase(iid_name);
 
     // get iid string
-    char iid_str[NSID_LENGTH];
-    iid->ToProvidedString(iid_str);
+    char* iid_str = iid->ToString();
+    if (!iid_str)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 count;
     nsresult rv = out->Write(kIIDDecl1, sizeof(kIIDDecl1) - 1, &count);
@@ -449,6 +452,8 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     // cleanup
+    PR_Free(iid_str);
+    nsMemory::Free(iid);
     return NS_OK;
   }
 
