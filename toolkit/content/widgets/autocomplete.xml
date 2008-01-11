@@ -1232,21 +1232,15 @@
             return;
           }
 
-          // emphasize the matching text, first try title, and then try url
+          // emphasize the matching text in both the title and the url
           var needle = text.toLowerCase();
+
           var hay = title.toLowerCase();
           var index = hay.indexOf(needle);
-
           this._setUpDescription(this._title, title, this._titleBox.boxObject, this._titleOverflowEllipsis, index, text.length); 
           
-          // if we didn't find it in the url, check the title
-          if (index == -1) {
-            hay = url.toLowerCase();
-            index = hay.indexOf(needle);
-          }
-          else
-            index = -1;
-      
+          hay = url.toLowerCase();
+          index = hay.indexOf(needle);
           this._setUpDescription(this._url, url, this._urlBox.boxObject, this._urlOverflowEllipsis, index, text.length);
           ]]>
         </body>
