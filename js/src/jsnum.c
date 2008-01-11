@@ -469,6 +469,8 @@ num_toExponential(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 {
+    if (JSVAL_IS_VOID(vp[2]))
+        return num_toString(cx, 0, vp);
     return num_to(cx, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
                   argc, vp);
 }
