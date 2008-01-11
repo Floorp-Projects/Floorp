@@ -311,7 +311,7 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
 
   PRBool found_old;
   nsCOMPtr<nsIInterfaceInfo> if_info;
-  const char *if_name = nsnull;
+  nsXPIDLCString if_name;
   const nsIID *iid;
 
   for ( ; domInterfaces->IsDone() == NS_ENUMERATOR_FALSE; domInterfaces->Next()) {
@@ -319,9 +319,9 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIInterfaceInfo> if_info(do_QueryInterface(entry));
-    if_info->GetNameShared(&if_name);
+    if_info->GetName(getter_Copies(if_name));
     if_info->GetIIDShared(&iid);
-    rv = RegisterInterface(if_name + sizeof(NS_DOM_INTERFACE_PREFIX) - 1,
+    rv = RegisterInterface(if_name.get() + sizeof(NS_DOM_INTERFACE_PREFIX) - 1,
                            iid, &found_old);
 
 #ifdef DEBUG
