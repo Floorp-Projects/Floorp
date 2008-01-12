@@ -141,9 +141,14 @@ struct THEBES_API gfxPoint {
     gfxPoint operator/(const gfxFloat v) const {
         return gfxPoint(x / v, y / v);
     }
+    // Round() is *not* rounding to nearest integer if the values are negative.
+    // They are always rounding as floor(n + 0.5).
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
+    // And if you need similar method which is using NS_round(), you should
+    // create new |RoundAwayFromZero()| method.
     gfxPoint& Round() {
-        x = NS_round(x);
-        y = NS_round(y);
+        x = NS_floor(x + 0.5);
+        y = NS_floor(y + 0.5);
         return *this;
     }
 };

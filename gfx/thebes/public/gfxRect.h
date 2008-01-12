@@ -115,10 +115,15 @@ struct THEBES_API gfxRect {
         Outset(sides[0], sides[1], sides[2], sides[3]);
     }
 
-    // Round the rectangle to integer coordinates; rounds to the neearest
-    // pixel centers. Suitable for most places where integral device coordinates
+    // Round the rectangle to integer coordinates.
+    // Suitable for most places where integral device coordinates
     // are needed, but note that any translation should be applied first to
-    // avoid pixel rounding errors
+    // avoid pixel rounding errors.
+    // Note that this is *not* rounding to nearest integer if the values are negative.
+    // They are always rounding as floor(n + 0.5).
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
+    // If you need similar method which is using NS_round(), you should create
+    // new |RoundAwayFromZero()| method.
     void Round();
 
     // grabbing specific points
