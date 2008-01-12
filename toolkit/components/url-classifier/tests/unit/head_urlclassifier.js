@@ -49,4 +49,39 @@ function cleanUp() {
       file.remove(false);
   } catch (e) {}
 }
+
+/*
+ * Builds an update from an object that looks like:
+ *{ "test-phish-simple" : [{
+ *    "chunkType" : "a",  // 'a' is assumed if not specified
+ *    "chunkNum" : 1,     // numerically-increasing chunk numbers are assumed
+ *                        // if not specified
+ *    "urls" : [ "foo.com/a", "foo.com/b", "bar.com/" ]
+ * }
+ */
+
+function buildUpdate(update) {
+  var updateStr = "n:1000\n";
+
+  for (var tableName in update) {
+    updateStr += "i:" + tableName + "\n";
+    var chunks = update[tableName];
+    for (var j = 0; j < chunks.length; j++) {
+      var chunk = chunks[j];
+      var chunkType = chunk.chunkType ? chunk.chunkType : 'a';
+      var chunkNum = chunk.chunkNum ? chunk.chunkNum : j;
+      updateStr += chunkType + ':' + chunkNum;
+
+      if (chunk.urls) {
+        var chunkData = chunk.urls.join("\n");
+        updateStr += ":" + chunkData.length + "\n" + chunkData;
+      }
+
+      updateStr += "\n";
+    }
+  }
+
+  return updateStr;
+}
+
 cleanUp();
