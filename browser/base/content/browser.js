@@ -42,6 +42,7 @@
 #   Simon Bünzli <zeniko@gmail.com>
 #   Johnathan Nightingale <johnath@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Dão Gottwald <dao@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1877,28 +1878,60 @@ function checkForDirectoryListing()
   }
 }
 
-// If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
-// and highlight it, unless it is about:blank, where we reset it to "".
-function handleURLBarRevert()
-{
-  var url = getWebNavigation().currentURI.spec;
-  var throbberElement = document.getElementById("navigator-throbber");
+function URLBarSetURI(aURI) {
+  var value = getBrowser().userTypedValue;
+  var state = "invalid";
 
+  if (!value) {
+    if (aURI) {
+      // If the url has "wyciwyg://" as the protocol, strip it off.
+      // Nobody wants to see it on the urlbar for dynamically generated
+      // pages.
+      if (!gURIFixup)
+        gURIFixup = Cc["@mozilla.org/docshell/urifixup;1"]
+                      .getService(Ci.nsIURIFixup);
+      try {
+        aURI = gURIFixup.createExposableURI(aURI);
+      } catch (ex) {}
+    } else {
+      aURI = getWebNavigation().currentURI;
+    }
+
+    value = aURI.spec;
+    if (value == "about:blank") {
+      // Replace "about:blank" with an empty string
+      // only if there's no opener (bug 370555).
+      if (!content.opener)
+        value = "";
+    } else {
+      // try to decode as UTF-8
+      try {
+        value = decodeURI(value).replace(/%/g, "%25");
+      } catch(e) {}
+
+      state = "valid";
+    }
+  }
+
+  gURLBar.value = value;
+  SetPageProxyState(state);
+}
+
+// If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
+// and highlight it, unless it is empty.
+function handleURLBarRevert() {
+  var throbberElement = document.getElementById("navigator-throbber");
   var isScrolling = gURLBar.popupOpen;
+
+  gBrowser.userTypedValue = null;
 
   // don't revert to last valid url unless page is NOT loading
   // and user is NOT key-scrolling through autocomplete list
   if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
-    if (url != "about:blank" || content.opener) {
-      gURLBar.value = url;
+    URLBarSetURI();
+    if (gURLBar.value)
       gURLBar.select();
-      SetPageProxyState("valid");
-    } else { //if about:blank, urlbar becomes ""
-      gURLBar.value = "";
-    }
   }
-
-  gBrowser.userTypedValue = null;
 
   // tell widget to revert to last typed text only if the user
   // was scrolling when they hit escape
@@ -3033,10 +3066,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   UpdateUrlbarSearchSplitterState();
 
   // Update the urlbar
-  var url = getWebNavigation().currentURI.spec;
   if (gURLBar) {
-    gURLBar.value = url == "about:blank" ? "" : url;
-    SetPageProxyState("valid");
+    URLBarSetURI();
     XULBrowserWindow.asyncUpdateUI();
     PlacesStarButton.updateState();
   }
@@ -3466,8 +3497,8 @@ nsBrowserStatusHandler.prototype =
     if (aWebProgress.DOMWindow == content) {
 
       if ((location == "about:blank" && !content.opener) ||
-           location == "") {                        //second condition is for new tabs, otherwise
-        location = "";                              //reload function is enabled until tab is refreshed
+           location == "") {  // Second condition is for new tabs, otherwise
+                              // reload function is enabled until tab is refreshed.
         this.reloadCommand.setAttribute("disabled", "true");
         this.reloadSkipCacheCommand.setAttribute("disabled", "true");
       } else {
@@ -3478,33 +3509,8 @@ nsBrowserStatusHandler.prototype =
       if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
         gBrowser.setIcon(gBrowser.mCurrentTab, null);
 
-      //XXXBlake don't we have to reinit this.urlBar, etc.
-      //         when the toolbar changes?
       if (gURLBar) {
-        var userTypedValue = browser.userTypedValue;
-        if (!userTypedValue) {
-          // If the url has "wyciwyg://" as the protocol, strip it off.
-          // Nobody wants to see it on the urlbar for dynamically generated
-          // pages.
-          if (!gURIFixup)
-            gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                                  .getService(Components.interfaces.nsIURIFixup);
-          if (location && gURIFixup) {
-            try {
-              location = gURIFixup.createExposableURI(aLocationURI).spec;
-            } catch (ex) {}
-          }
-
-          gURLBar.value = location;
-          SetPageProxyState("valid");
-
-          // Setting the urlBar value in some cases causes userTypedValue to
-          // become set because of oninput, so reset it to its old value.
-          browser.userTypedValue = userTypedValue;
-        } else {
-          gURLBar.value = userTypedValue;
-          SetPageProxyState("invalid");
-        }
+        URLBarSetURI(aLocationURI);
 
         // Update starring UI
         PlacesStarButton.updateState();
