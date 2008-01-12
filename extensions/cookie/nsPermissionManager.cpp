@@ -704,7 +704,7 @@ nsPermissionManager::Import()
 
   nsCOMPtr<nsIFile> permissionsFile;
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
 
   rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(kHostpermFileName));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -712,7 +712,7 @@ nsPermissionManager::Import()
   nsCOMPtr<nsIInputStream> fileInputStream;
   rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
                                   permissionsFile);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
