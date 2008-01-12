@@ -18,7 +18,7 @@ function test() {
 
   openDialog("chrome://browser/content/preferences/preferences.xul", "Preferences",
              "chrome,titlebar,toolbar,centerscreen,dialog=no", "paneApplications");
-  setTimeout(runTest, 250);
+  setTimeout(runTest, 1000);
 }
 
 function runTest() {
