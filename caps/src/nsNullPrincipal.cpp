@@ -46,7 +46,6 @@
 #include "nsMemory.h"
 #include "nsIUUIDGenerator.h"
 #include "nsID.h"
-#include "prmem.h" // For PF_Free, 'cause nsID::ToString sucks like that
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
 #include "nsNetCID.h"
@@ -105,10 +104,10 @@ nsNullPrincipal::Init()
   rv = uuidgen->GenerateUUIDInPlace(&id);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char* chars = id.ToString();
-  NS_ENSURE_TRUE(chars, NS_ERROR_OUT_OF_MEMORY);
+  char chars[NSID_LENGTH];
+  id.ToProvidedString(chars);
 
-  PRUint32 suffixLen = strlen(chars);
+  PRUint32 suffixLen = NSID_LENGTH - 1;
   PRUint32 prefixLen = NS_ARRAY_LENGTH(NS_NULLPRINCIPAL_PREFIX) - 1;
 
   // Use an nsCString so we only do the allocation once here and then share
@@ -118,8 +117,6 @@ nsNullPrincipal::Init()
 
   str.Append(NS_NULLPRINCIPAL_PREFIX);
   str.Append(chars);
-
-  PR_Free(chars);
   
   if (str.Length() != prefixLen + suffixLen) {
     NS_WARNING("Out of memory allocating null-principal URI");
