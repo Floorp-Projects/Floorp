@@ -673,7 +673,10 @@ private:
   // Handle chunk data from a stream update
   nsresult ProcessChunk(PRBool* done);
 
-  // Reset an in-progress update
+  // Reset the in-progress update stream
+  void ResetStream();
+
+  // Reset the in-progress update
   void ResetUpdate();
 
   // take a lookup string (www.hostname.com/path/to/resource.html) and
@@ -749,6 +752,10 @@ private:
 
   nsresult mUpdateStatus;
 
+  nsCOMPtr<nsIUrlClassifierUpdateObserver> mUpdateObserver;
+  PRBool mInStream;
+  PRBool mPrimaryStream;
+
   PRBool mHaveCachedLists;
   PRUint32 mCachedListsTable;
   nsCAutoString mCachedSubsStr;
@@ -780,6 +787,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierDBServiceWorker,
 
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mUpdateStatus(NS_OK)
+  , mInStream(PR_FALSE)
+  , mPrimaryStream(PR_FALSE)
   , mHaveCachedLists(PR_FALSE)
   , mCachedListsTable(PR_UINT32_MAX)
   , mHaveCachedAddChunks(PR_FALSE)
@@ -1979,6 +1988,20 @@ nsUrlClassifierDBServiceWorker::ProcessResponseLines(PRBool* done)
       }
       GetTableId(mUpdateTable, &mUpdateTableId);
       LOG(("update table: '%s' (%d)", mUpdateTable.get(), mUpdateTableId));
+    } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("u:"))) {
+      if (!mPrimaryStream) {
+        LOG(("Forwarded update tried to add its own forwarded update."));
+        return NS_ERROR_FAILURE;
+      }
+
+      const nsCSubstring& data = Substring(line, 2);
+      PRInt32 space;
+      if ((space = data.FindChar(' ')) == kNotFound) {
+        mUpdateObserver->UpdateUrlRequested(data);
+      } else {
+        mUpdateObserver->UpdateUrlRequested(Substring(data, 0, space));
+        // The rest is the mac, which we don't support for now
+      }
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("a:")) ||
                StringBeginsWith(line, NS_LITERAL_CSTRING("s:"))) {
       mState = STATE_CHUNK;
@@ -2026,16 +2049,73 @@ nsUrlClassifierDBServiceWorker::ProcessResponseLines(PRBool* done)
 }
 
 void
-nsUrlClassifierDBServiceWorker::ResetUpdate()
+nsUrlClassifierDBServiceWorker::ResetStream()
 {
-  mUpdateWait = 0;
   mState = STATE_LINE;
   mChunkNum = 0;
   mChunkLen = 0;
-  mUpdateStatus = NS_OK;
-
+  mInStream = PR_FALSE;
+  mPrimaryStream = PR_FALSE;
   mUpdateTable.Truncate();
   mPendingStreamUpdate.Truncate();
+}
+
+void
+nsUrlClassifierDBServiceWorker::ResetUpdate()
+{
+  mUpdateWait = 0;
+  mUpdateStatus = NS_OK;
+  mUpdateObserver = nsnull;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *observer)
+{
+  NS_ENSURE_STATE(!mUpdateObserver);
+
+  nsresult rv = OpenDb();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to open database");
+    return NS_ERROR_FAILURE;
+  }
+
+  PRBool transaction;
+  rv = mConnection->GetTransactionInProgress(&transaction);
+  if (NS_FAILED(rv)) {
+    mUpdateStatus = rv;
+    return rv;
+  }
+
+  if (transaction) {
+    NS_WARNING("Transaction already in progress in nsUrlClassifierDBServiceWorker::BeginUpdate.  Cancelling update.");
+    mUpdateStatus = NS_ERROR_FAILURE;
+    return rv;
+  }
+
+  rv = mConnection->BeginTransaction();
+  if (NS_FAILED(rv)) {
+    mUpdateStatus = rv;
+    return rv;
+  }
+
+  mUpdateObserver = observer;
+
+  // The first stream in an update is the only stream that may request
+  // forwarded updates.
+  mPrimaryStream = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBServiceWorker::BeginStream()
+{
+  NS_ENSURE_STATE(mUpdateObserver);
+  NS_ENSURE_STATE(!mInStream);
+
+  mInStream = PR_TRUE;
+
+  return NS_OK;
 }
 
 /**
@@ -2070,10 +2150,12 @@ nsUrlClassifierDBServiceWorker::ResetUpdate()
  * data.
  */
 NS_IMETHODIMP
-nsUrlClassifierDBServiceWorker::Update(const nsACString& chunk)
+nsUrlClassifierDBServiceWorker::UpdateStream(const nsACString& chunk)
 {
   if (gShuttingDownThread)
     return NS_ERROR_NOT_INITIALIZED;
+
+  NS_ENSURE_STATE(mInStream);
 
   HandlePendingLookups();
 
@@ -2087,16 +2169,6 @@ nsUrlClassifierDBServiceWorker::Update(const nsACString& chunk)
   // if something has gone wrong during this update, just throw it away
   if (NS_FAILED(mUpdateStatus)) {
     return mUpdateStatus;
-  }
-
-  PRBool transaction;
-  if (NS_SUCCEEDED(mConnection->GetTransactionInProgress(&transaction)) &&
-      !transaction) {
-    rv = mConnection->BeginTransaction();
-    if (NS_FAILED(rv)) {
-      mUpdateStatus = rv;
-      return rv;
-    }
   }
 
   LOG(("Got %s\n", PromiseFlatCString(chunk).get()));
@@ -2120,9 +2192,24 @@ nsUrlClassifierDBServiceWorker::Update(const nsACString& chunk)
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBServiceWorker::Finish(nsIUrlClassifierCallback* aSuccessCallback,
-                                       nsIUrlClassifierCallback* aErrorCallback)
+nsUrlClassifierDBServiceWorker::FinishStream()
 {
+  NS_ENSURE_STATE(mInStream);
+  NS_ENSURE_STATE(mUpdateObserver);
+
+  mUpdateObserver->StreamFinished();
+
+  ResetStream();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBServiceWorker::FinishUpdate()
+{
+  NS_ENSURE_STATE(!mInStream);
+  NS_ENSURE_STATE(mUpdateObserver);
+
   if (NS_SUCCEEDED(mUpdateStatus)) {
     mUpdateStatus = FlushChunkLists();
   }
@@ -2135,11 +2222,9 @@ nsUrlClassifierDBServiceWorker::Finish(nsIUrlClassifierCallback* aSuccessCallbac
   }
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
-    arg.AppendInt(mUpdateWait);
-    aSuccessCallback->HandleEvent(arg);
+    mUpdateObserver->UpdateSuccess(mUpdateWait);
   } else {
-    arg.AppendInt(mUpdateStatus);
-    aErrorCallback->HandleEvent(arg);
+    mUpdateObserver->UpdateError(mUpdateStatus);
   }
 
   ResetUpdate();
@@ -2159,10 +2244,16 @@ nsUrlClassifierDBServiceWorker::ResetDatabase()
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBServiceWorker::CancelStream()
+nsUrlClassifierDBServiceWorker::CancelUpdate()
 {
-  LOG(("CancelStream"));
+  LOG(("CancelUpdate"));
 
+  mUpdateStatus = NS_BINDING_ABORTED;
+
+  mConnection->RollbackTransaction();
+  mUpdateObserver->UpdateError(mUpdateStatus);
+
+  ResetStream();
   ResetUpdate();
 
   return NS_OK;
@@ -2547,6 +2638,14 @@ nsUrlClassifierDBService::Init()
     return rv;
   }
 
+  // Proxy for calling the worker on the background thread
+  rv = NS_GetProxyForObject(gDbBackgroundThread,
+                            NS_GET_IID(nsIUrlClassifierDBServiceWorker),
+                            mWorker,
+                            NS_PROXY_ASYNC,
+                            getter_AddRefs(mWorkerProxy));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Add an observer for shutdown
   nsCOMPtr<nsIObserverService> observerService =
       do_GetService("@mozilla.org/observer-service;1");
@@ -2633,21 +2732,12 @@ nsUrlClassifierDBService::LookupURI(nsIURI* uri,
     proxyCallback = c;
   }
 
-  // The actual worker uses the background thread.
-  nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  rv = NS_GetProxyForObject(gDbBackgroundThread,
-                            NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                            mWorker,
-                            NS_PROXY_ASYNC,
-                            getter_AddRefs(proxy));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Queue this lookup and call the lookup function to flush the queue if
   // necessary.
   rv = mWorker->QueueLookup(key, proxyCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return proxy->Lookup(EmptyCString(), nsnull, PR_FALSE);
+  return mWorkerProxy->Lookup(EmptyCString(), nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -2665,109 +2755,76 @@ nsUrlClassifierDBService::GetTables(nsIUrlClassifierCallback* c)
                             getter_AddRefs(proxyCallback));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // The actual worker uses the background thread.
-  nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  rv = NS_GetProxyForObject(gDbBackgroundThread,
-                            NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                            mWorker,
-                            NS_PROXY_ASYNC,
-                            getter_AddRefs(proxy));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return proxy->GetTables(proxyCallback);
+  return mWorkerProxy->GetTables(proxyCallback);
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::Update(const nsACString& aUpdateChunk)
+nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv;
 
-  // The actual worker uses the background thread.
-  nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  rv = NS_GetProxyForObject(gDbBackgroundThread,
-                            NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                            mWorker,
+  // The proxy observer uses the current thread
+  nsCOMPtr<nsIUrlClassifierUpdateObserver> proxyObserver;
+  rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
+                            NS_GET_IID(nsIUrlClassifierUpdateObserver),
+                            observer,
                             NS_PROXY_ASYNC,
-                            getter_AddRefs(proxy));
+                            getter_AddRefs(proxyObserver));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return proxy->Update(aUpdateChunk);
+  return mWorkerProxy->BeginUpdate(proxyObserver);
 }
 
 NS_IMETHODIMP
-nsUrlClassifierDBService::Finish(nsIUrlClassifierCallback* aSuccessCallback,
-                                 nsIUrlClassifierCallback* aErrorCallback)
+nsUrlClassifierDBService::BeginStream()
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
-  // The proxy callback uses the current thread.
-  nsCOMPtr<nsIUrlClassifierCallback> proxySuccessCallback;
-  if (aSuccessCallback) {
-    rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
-                              NS_GET_IID(nsIUrlClassifierCallback),
-                              aSuccessCallback,
-                              NS_PROXY_ASYNC,
-                              getter_AddRefs(proxySuccessCallback));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  return mWorkerProxy->BeginStream();
+}
 
-  nsCOMPtr<nsIUrlClassifierCallback> proxyErrorCallback;
-  if (aErrorCallback) {
-    rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
-                              NS_GET_IID(nsIUrlClassifierCallback),
-                              aErrorCallback,
-                              NS_PROXY_ASYNC,
-                              getter_AddRefs(proxyErrorCallback));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+NS_IMETHODIMP
+nsUrlClassifierDBService::UpdateStream(const nsACString& aUpdateChunk)
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  // The actual worker uses the background thread.
-  nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  rv = NS_GetProxyForObject(gDbBackgroundThread,
-                            NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                            mWorker,
-                            NS_PROXY_ASYNC,
-                            getter_AddRefs(proxy));
-  NS_ENSURE_SUCCESS(rv, rv);
+  return mWorkerProxy->UpdateStream(aUpdateChunk);
+}
 
-  return proxy->Finish(proxySuccessCallback, proxyErrorCallback);
+NS_IMETHODIMP
+nsUrlClassifierDBService::FinishStream()
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  return mWorkerProxy->FinishStream();
+}
+
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::FinishUpdate()
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  return mWorkerProxy->FinishUpdate();
+}
+
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::CancelUpdate()
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  return mWorkerProxy->CancelUpdate();
 }
 
 NS_IMETHODIMP
 nsUrlClassifierDBService::ResetDatabase()
 {
-  // The actual worker uses the background thread.
-  nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  nsresult rv = NS_GetProxyForObject(gDbBackgroundThread,
-                                     NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                                     mWorker,
-                                     NS_PROXY_ASYNC,
-                                     getter_AddRefs(proxy));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return proxy->ResetDatabase();
-}
-
-NS_IMETHODIMP
-nsUrlClassifierDBService::CancelStream()
-{
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
-
-  // The actual worker uses the background thread.
-  nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-  rv = NS_GetProxyForObject(gDbBackgroundThread,
-                            NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                            mWorker,
-                            NS_PROXY_ASYNC,
-                            getter_AddRefs(proxy));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return proxy->CancelStream();
+  return mWorkerProxy->ResetDatabase();
 }
 
 NS_IMETHODIMP
@@ -2815,17 +2872,12 @@ nsUrlClassifierDBService::Shutdown()
   nsresult rv;
   // First close the db connection.
   if (mWorker) {
-    nsCOMPtr<nsIUrlClassifierDBServiceWorker> proxy;
-    rv = NS_GetProxyForObject(gDbBackgroundThread,
-                              NS_GET_IID(nsIUrlClassifierDBServiceWorker),
-                              mWorker,
-                              NS_PROXY_ASYNC,
-                              getter_AddRefs(proxy));
-    if (NS_SUCCEEDED(rv)) {
-      rv = proxy->CloseDb();
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post close db event");
-    }
+    rv = mWorkerProxy->CloseDb();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post close db event");
   }
+
+  mWorkerProxy = nsnull;
+
   LOG(("joining background thread"));
 
   gShuttingDownThread = PR_TRUE;
