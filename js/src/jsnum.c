@@ -479,7 +479,7 @@ static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,       0,0,JSFUN_THISP_NUMBER),
 #endif
-    JS_FN(js_toString_str,       num_toString,       0,1,JSFUN_THISP_NUMBER),
+    JS_FN(js_toString_str,       num_toString,       1,1,JSFUN_THISP_NUMBER),
     JS_FN(js_toLocaleString_str, num_toLocaleString, 0,0,JSFUN_THISP_NUMBER),
     JS_FN(js_valueOf_str,        num_valueOf,        0,0,JSFUN_THISP_NUMBER),
     JS_FN("toFixed",             num_toFixed,        1,1,JSFUN_THISP_NUMBER),
