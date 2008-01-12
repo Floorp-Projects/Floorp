@@ -106,7 +106,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 static JS_INLINE int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
-    // Details on these functions available in the manpage for atomic
+    /* Details on these functions available in the manpage for atomic */
 #if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
     return OSAtomicCompareAndSwap64Barrier(ov, nv, (int64_t*) w);
 #else
