@@ -49,7 +49,7 @@ interface nsIUrlClassifierCallback : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(10928bf5-e18d-4086-854b-6c4006f2b009)]
+[scriptable, uuid(d598d1af-b96d-4008-b0fb-80beb39f4e75)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
@@ -103,13 +103,20 @@ interface nsIUrlClassifierDBService : nsISupports
    * and resets the stream interface.
    */
   void cancelStream();
+
+
+  /**
+   * Reset the url-classifier database.  This call will delete the existing
+   * database, emptying all tables.  Mostly intended for use in unit tests.
+   */
+  void resetDatabase();
 };
 
 /**
  * Interface for the actual worker thread.  Implementations of this need not
  * be thread aware and just work on the database.
  */
-[scriptable, uuid(1e416670-5c89-462c-8a4f-6fd628af2d10)]
+[scriptable, uuid(b840ef5c-6b8c-4d96-940c-2227db682d64)]
 interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
 {
   // Provide a way to forcibly close the db connection.
