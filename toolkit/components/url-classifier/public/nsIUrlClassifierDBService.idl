@@ -45,11 +45,39 @@ interface nsIUrlClassifierCallback : nsISupports {
 };
 
 /**
+ * The nsIUrlClassifierUpdateObserver interface is implemented by
+ * clients streaming updates to the url-classifier (usually
+ * nsUrlClassifierStreamUpdater.
+ */
+[scriptable, uuid(113671b8-c5cc-47d9-bc57-269568c7ce29)]
+interface nsIUrlClassifierUpdateObserver : nsISupports {
+  /**
+   * The update requested a new URL whose contents should be downloaded
+   * and sent to the classifier as a new stream
+   */
+  void updateUrlRequested(in ACString url);
+
+  /* A stream update has completed */
+  void streamFinished();
+
+  /* The update has encountered an error and should be cancelled */
+  void updateError(in nsresult error);
+
+  /**
+   * The update has completed successfully.
+   *
+   * @param requestedTimeout The number of seconds that the caller should
+   *                         wait before trying to update again.
+   **/
+  void updateSuccess(in unsigned long requestedTimeout);
+};
+
+/**
  * This is a proxy class that is instantiated and called from the JS thread.
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(d598d1af-b96d-4008-b0fb-80beb39f4e75)]
+[scriptable, uuid(dc3b958e-b345-458d-83f7-77e82b42a514)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
@@ -79,31 +107,70 @@ interface nsIUrlClassifierDBService : nsISupports
   void getTables(in nsIUrlClassifierCallback c);
 
   ////////////////////////////////////////////////////////////////////////////
-  // Incremental update methods.  These are named to match similar methods
-  // in, e.g., nsICryptoHash.
+  // Incremental update methods.
+  //
+  // An update to the database has the following steps:
+  //
+  // 1) The update process is started with beginUpdate().  The client
+  //    passes an nsIUrlClassifierUpdateObserver object which will be
+  //    notified as the update is processed by the dbservice.
+  // 2) The client sends an initial update stream to the dbservice,
+  //    using beginStream/updateStream/finishStream.
+  // 3) While reading this initial update stream, the dbservice may
+  //    request additional streams from the client as requested by the
+  //    update stream.
+  // 4) For each additional update stream, the client feeds the
+  //    contents to the dbservice using beginStream/updateStream/endStream.
+  // 5) Once all streams have been processed, the client calls
+  //    finishUpdate.  When the dbservice has finished processing
+  //    all streams, it will notify the observer that the update process
+  //    is complete.
+
+  /**
+   * Begin an update process.
+   */
+  void beginUpdate(in nsIUrlClassifierUpdateObserver updater);
+
+  /**
+   * Begin a stream update.  This should be called once per url being
+   * fetched.
+   */
+  void beginStream();
 
   /**
    * Update the table incrementally.
    */
-  void update(in ACString updateChunk);
+  void updateStream(in ACString updateChunk);
 
   // It would be nice to have an updateFromStream method to round out the
   // interface, but it's tricky because of XPCOM proxies.
 
   /**
-   * Finish an incremental update.  Calls successCallback with the
-   * requested delay before the next update, or failureCallback with a
-   * result code.
+   * Finish an individual stream update.  Must be called for every
+   * beginStream() call, before the next beginStream() or finishUpdate().
+   *
+   * The update observer's streamFinished will be called once the
+   * stream has been processed.
    */
-  void finish(in nsIUrlClassifierCallback successCallback,
-              in nsIUrlClassifierCallback failureCallback);
+  void finishStream();
 
   /**
-   * Cancel an incremental update.  This rolls back and pending changes.
-   * and resets the stream interface.
+   * Finish an incremental update.  This will attempt to commit any
+   * pending changes and resets the update interface.
+   *
+   * The update observer's updateSucceeded or updateError methods
+   * will be called when the update has been processed.
    */
-  void cancelStream();
+  void finishUpdate();
 
+  /**
+   * Cancel an incremental update.  This rolls back any pending changes.
+   * and resets the update interface.
+   *
+   * The update observer's updateError method will be called when the
+   * update has been rolled back.
+   */
+  void cancelUpdate();
 
   /**
    * Reset the url-classifier database.  This call will delete the existing
@@ -116,7 +183,7 @@ interface nsIUrlClassifierDBService : nsISupports
  * Interface for the actual worker thread.  Implementations of this need not
  * be thread aware and just work on the database.
  */
-[scriptable, uuid(b840ef5c-6b8c-4d96-940c-2227db682d64)]
+[scriptable, uuid(3ed0c8f9-a5d8-4186-beb1-5d828e95ea90)]
 interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
 {
   // Provide a way to forcibly close the db connection.

@@ -1,5 +1,3 @@
-var dbservice = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIUrlClassifierDBService);
-
 var checkUrls = [];
 var checkExpect;
 
@@ -136,8 +134,7 @@ function tablesCallbackWithSub(tables)
     "i:testing-phish-simple\n" +
     "sd:3\n";
 
-  dbservice.update(data);
-  dbservice.finish(expireSubSuccess, testFailure);
+  doSimpleUpdate(data, expireSubSuccess, testFailure);
 }
 
 function checkChunksWithSub()
@@ -212,8 +209,7 @@ function do_subs() {
     "ad:1\n" +
     "ad:4-6\n";
 
-  dbservice.update(data);
-  dbservice.finish(testSubSuccess, testFailure);
+  doSimpleUpdate(data, testSubSuccess, testFailure);
 }
 
 function testAddSuccess(arg) {
@@ -244,9 +240,7 @@ function do_adds() {
     "a:1:" + chunk2.length + "\n" +
       chunk2 + "\n";
 
-
-  dbservice.update(data);
-  dbservice.finish(testAddSuccess, testFailure);
+  doSimpleUpdate(data, testAddSuccess, testFailure);
 }
 
 function run_test() {

@@ -92,6 +92,7 @@ private:
   nsresult Shutdown();
   
   nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorker;
+  nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorkerProxy;
 
   // TRUE if the nsURIClassifier implementation should check for malware
   // uris on document loads.
