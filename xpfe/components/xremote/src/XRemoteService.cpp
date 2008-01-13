@@ -50,7 +50,8 @@
 #include <nsIServiceManager.h>
 #include <nsString.h>
 #include <nsCRT.h>
-#include <nsIPref.h>
+#include <nsIPrefBranch.h>
+#include <nsIPrefService.h>
 #include <nsIWindowWatcher.h>
 #include <nsXPCOM.h>
 #include <nsISupportsPrimitives.h>
@@ -332,12 +333,11 @@ nsresult
 XRemoteService::GetBrowserLocation(char **_retval)
 {
   // get the browser chrome URL
-  nsCOMPtr<nsIPref> prefs;
-  prefs = do_GetService(NS_PREF_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs)
     return NS_ERROR_FAILURE;
   
-  prefs->CopyCharPref("browser.chromeURL", _retval);
+  prefs->GetCharPref("browser.chromeURL", _retval);
 
   // fallback
   if (!*_retval)
@@ -369,12 +369,11 @@ nsresult
 XRemoteService::GetCalendarLocation(char **_retval)
 {
   // get the calendar chrome URL
-  nsCOMPtr<nsIPref> prefs;
-  prefs = do_GetService(NS_PREF_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs)
     return NS_ERROR_FAILURE;
 
-  prefs->CopyCharPref("calendar.chromeURL", _retval);
+  prefs->GetCharPref("calendar.chromeURL", _retval);
 
   // fallback
   if (!*_retval)
