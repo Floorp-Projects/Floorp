@@ -195,14 +195,21 @@ for testlogfile in $testlogfiles; do
         dumpvars branch buildtype testtype OSID testlogfile arch kernel outputprefix
     fi
 
-    $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b $branch -T $buildtype -t $testtype -o "$OSID" -z `date +%z` -l $testlogfile -A "$arch" -K "$kernel" -r $TEST_JSDIR/failures.txt -O $outputprefix
+    if ! $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b $branch -T $buildtype -t $testtype -o "$OSID" -z `date +%z` -l $testlogfile -A "$arch" -K "$kernel" -r $TEST_JSDIR/failures.txt -O $outputprefix; then
+        error "known-failures.pl"
+    fi
 
     if [[ -n "$summary" ]]; then
+        
+        # use let to work around mac problem where numbers were
+        # output with leading characters.
+        # if let's arg evaluates to 0, let will return 1
+        # so we need to test
 
-        npass=`grep TEST_RESULT=PASSED ${outputprefix}-results-all.log | wc -l`
-        nfail=`cat ${outputprefix}-results-failures.log | wc -l`
-        nfixes=`cat ${outputprefix}-results-possible-fixes.log | wc -l`
-        nregressions=`cat ${outputprefix}-results-possible-regressions.log | wc -l`
+        if let npass="`grep TEST_RESULT=PASSED ${outputprefix}-results-all.log | wc -l`"; then true; fi
+        if let nfail="`cat ${outputprefix}-results-failures.log | wc -l`"; then true; fi
+        if let nfixes="`cat ${outputprefix}-results-possible-fixes.log | wc -l`"; then true; fi
+        if let nregressions="`cat ${outputprefix}-results-possible-regressions.log | wc -l`"; then true; fi
 
         echo -e "\nJavaScript Tests $branch $buildtype $testtype\n"
         echo -e "\nFailures:\n"
@@ -215,5 +222,3 @@ for testlogfile in $testlogfiles; do
 
     fi
 done
-
-
