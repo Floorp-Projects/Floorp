@@ -662,6 +662,16 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 #endif
     script = js_NewScriptFromCG(cx, &cg);
 
+#ifdef JS_SCOPE_DEPTH_METER
+    if (script) {
+        JSObject *pobj = obj;
+        uintN depth = 1;
+        while ((pobj = OBJ_GET_PARENT(cx, pobj)) != NULL)
+            ++depth;
+        JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
+    }
+#endif
+
   out:
     js_FinishCodeGenerator(cx, &cg);
     JS_FinishArenaPool(&codePool);
@@ -1402,6 +1412,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_op = op;
     pn->pn_body = body;
     pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
+    pn->pn_sclen = funtc.maxScopeDepth;
     TREE_CONTEXT_FINISH(&funtc);
     return result;
 }
@@ -3258,6 +3269,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                           stmt->type == STMT_FINALLY);
                 stmt->downScope = tc->topScopeStmt;
                 tc->topScopeStmt = stmt;
+                if (++tc->scopeDepth > tc->maxScopeDepth)
+                    tc->maxScopeDepth = tc->scopeDepth;
             } else {
                 JS_ASSERT(stmt->type == STMT_CATCH);
                 JS_ASSERT(stmt->downScope);
