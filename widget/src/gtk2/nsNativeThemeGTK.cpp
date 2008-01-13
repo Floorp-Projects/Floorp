@@ -281,8 +281,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
             aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
             aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
-            if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
-              aState->active = PR_TRUE;
+          if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
+            aState->active = PR_TRUE;
+
+          if (aWidgetFlags) {
+            *aWidgetFlags = GetScrollbarButtonType(aFrame);
+            if (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP < 2)
+              *aWidgetFlags |= MOZ_GTK_STEPPER_VERTICAL;
+          }
         }
 
         // menu item state is determined by the attribute "_moz-menuactive",
@@ -354,8 +360,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-    if (aWidgetFlags)
-      *aWidgetFlags = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_BUTTON;
     break;
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:

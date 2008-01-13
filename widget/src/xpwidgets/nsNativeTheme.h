@@ -55,6 +55,12 @@ class nsNativeTheme
 {
  protected:
 
+  enum ScrollbarButtonType {
+    eScrollbarButton_UpTop   = 0,
+    eScrollbarButton_Down    = 1 << 0,
+    eScrollbarButton_Bottom  = 1 << 1
+  };
+
   enum TreeSortDirection {
     eTreeSortDirection_Descending,
     eTreeSortDirection_Natural,
@@ -97,6 +103,9 @@ class nsNativeTheme
   PRBool IsFocused(nsIFrame* aFrame) {
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::focused);
   }
+  
+  // scrollbar button:
+  PRInt32 GetScrollbarButtonType(nsIFrame* aFrame);
 
   // tab:
   PRBool IsSelectedTab(nsIFrame* aFrame) {
@@ -107,7 +116,7 @@ class nsNativeTheme
   PRBool IsCheckedButton(nsIFrame* aFrame) {
     return CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
   }
-  
+
   // treeheadercell:
   TreeSortDirection GetTreeSortDirection(nsIFrame* aFrame);
 
