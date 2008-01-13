@@ -760,7 +760,8 @@ calculate_arrow_dimensions(GdkRectangle* rect, GdkRectangle* arrow_rect)
 static gint
 moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
                                GdkRectangle* cliprect, GtkWidgetState* state,
-                               GtkArrowType type, GtkTextDirection direction)
+                               GtkScrollbarButtonFlags flags,
+                               GtkTextDirection direction)
 {
     GtkStateType state_type = ConvertGtkState(state);
     GtkShadowType shadow_type = (state->active) ?
@@ -768,38 +769,59 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GdkRectangle button_rect;
     GdkRectangle arrow_rect;
     GtkStyle* style;
-    GtkAdjustment *adj;
-    GtkScrollbar *scrollbar;
+    GtkWidget *scrollbar;
+    GtkArrowType arrow_type;
+    const char* detail = (flags & MOZ_GTK_STEPPER_VERTICAL) ?
+                           "vscrollbar" : "hscrollbar";
 
     ensure_scrollbar_widget();
 
-    if (type < 2)
-        scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
+    if (flags & MOZ_GTK_STEPPER_VERTICAL)
+        scrollbar = gVertScrollbarWidget;
     else
-        scrollbar = GTK_SCROLLBAR(gHorizScrollbarWidget);
+        scrollbar = gHorizScrollbarWidget;
 
-    gtk_widget_set_direction(GTK_WIDGET(scrollbar), direction);
+    gtk_widget_set_direction(scrollbar, direction);
 
     /* Some theme engines (i.e., ClearLooks) check the scrollbar's allocation
        to determine where it should paint rounded corners on the buttons.
        We need to trick them into drawing the buttons the way we want them. */
 
-    GTK_WIDGET(scrollbar)->allocation.x = rect->x;
-    GTK_WIDGET(scrollbar)->allocation.y = rect->y;
-    GTK_WIDGET(scrollbar)->allocation.width = rect->width;
-    GTK_WIDGET(scrollbar)->allocation.height = rect->height;
+    scrollbar->allocation.x = rect->x;
+    scrollbar->allocation.y = rect->y;
+    scrollbar->allocation.width = rect->width;
+    scrollbar->allocation.height = rect->height;
 
-    if (type < 2) {
-        GTK_WIDGET(scrollbar)->allocation.height *= 3;
-        if (type == GTK_ARROW_DOWN)
-            GTK_WIDGET(scrollbar)->allocation.y -= 2 * rect->height;
+    if (flags & MOZ_GTK_STEPPER_VERTICAL) {
+        scrollbar->allocation.height *= 5;
+        if (flags & MOZ_GTK_STEPPER_DOWN) {
+            arrow_type = GTK_ARROW_DOWN;
+            if (flags & MOZ_GTK_STEPPER_BOTTOM)
+                scrollbar->allocation.y -= 4 * rect->height;
+            else
+                scrollbar->allocation.y -= rect->height;
+
+        } else {
+            arrow_type = GTK_ARROW_UP;
+            if (flags & MOZ_GTK_STEPPER_BOTTOM)
+                scrollbar->allocation.y -= 3 * rect->height;
+        }
     } else {
-        GTK_WIDGET(scrollbar)->allocation.width *= 3;
-        if (type == GTK_ARROW_RIGHT)
-            GTK_WIDGET(scrollbar)->allocation.x -= 2 * rect->width;
+        scrollbar->allocation.width *= 5;
+        if (flags & MOZ_GTK_STEPPER_DOWN) {
+            arrow_type = GTK_ARROW_RIGHT;
+            if (flags & MOZ_GTK_STEPPER_BOTTOM)
+                scrollbar->allocation.x -= 4 * rect->width;
+            else
+                scrollbar->allocation.x -= rect->width;
+        } else {
+            arrow_type = GTK_ARROW_LEFT;
+            if (flags & MOZ_GTK_STEPPER_BOTTOM)
+                scrollbar->allocation.x -= 3 * rect->width;
+        }
     }
 
-    style = GTK_WIDGET(scrollbar)->style;
+    style = scrollbar->style;
 
     ensure_arrow_widget();
   
@@ -807,10 +829,8 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     TSOffsetStyleGCs(style, button_rect.x, button_rect.y);
 
     gtk_paint_box(style, drawable, state_type, shadow_type, cliprect,
-                  GTK_WIDGET(scrollbar),
-                  (type < 2) ? "vscrollbar" : "hscrollbar",
-                  button_rect.x, button_rect.y, button_rect.width,
-                  button_rect.height);
+                  scrollbar, detail, button_rect.x, button_rect.y,
+                  button_rect.width, button_rect.height);
 
     arrow_rect.width = button_rect.width / 2;
     arrow_rect.height = button_rect.height / 2;
@@ -819,10 +839,8 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
         (button_rect.height - arrow_rect.height) / 2;  
 
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    GTK_WIDGET(scrollbar), (type < 2) ?
-                    "vscrollbar" : "hscrollbar", 
-                    type, TRUE, arrow_rect.x, arrow_rect.y, arrow_rect.width,
-                    arrow_rect.height);
+                    scrollbar, detail, arrow_type, TRUE, arrow_rect.x,
+                    arrow_rect.y, arrow_rect.width, arrow_rect.height);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -2487,8 +2505,8 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                     direction);
         break;
     case MOZ_GTK_SCROLLBAR_BUTTON:
-        return moz_gtk_scrollbar_button_paint(drawable, rect, cliprect,
-                                              state, (GtkArrowType) flags,
+        return moz_gtk_scrollbar_button_paint(drawable, rect, cliprect, state,
+                                              (GtkScrollbarButtonFlags) flags,
                                               direction);
         break;
     case MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL:
