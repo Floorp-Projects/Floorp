@@ -15,13 +15,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@netscape.com>
+ *   Justin Dolske <dolske@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,17 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsError.h"
+#include "imgITools.h"
 
-/**
- * imagelib specific nsresult success and error codes
- */
-#define NS_IMAGELIB_SUCCESS_LOAD_FINISHED   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_IMGLIB, 0)
-#define NS_IMAGELIB_CHANGING_OWNER          NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_IMGLIB, 1)
+#define NS_IMGTOOLS_CID \
+{ /* fd9a9e8a-a77b-496a-b7bb-263df9715149 */         \
+     0xfd9a9e8a,                                     \
+     0xa77b,                                         \
+     0x496a,                                         \
+    {0xb7, 0xbb, 0x26, 0x3d, 0xf9, 0x71, 0x51, 0x49} \
+}
 
-#define NS_IMAGELIB_ERROR_FAILURE           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_IMGLIB, 5)
-#define NS_IMAGELIB_ERROR_NO_DECODER        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_IMGLIB, 6)
-#define NS_IMAGELIB_ERROR_NOT_FINISHED      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_IMGLIB, 7)
-#define NS_IMAGELIB_ERROR_LOAD_ABORTED      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_IMGLIB, 8)
-#define NS_IMAGELIB_ERROR_NO_ENCODER        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_IMGLIB, 9)
+class imgTools : public imgITools
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGITOOLS
 
+  imgTools();
+  virtual ~imgTools();
+};
