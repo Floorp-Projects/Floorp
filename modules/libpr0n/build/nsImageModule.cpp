@@ -58,6 +58,7 @@
 #include "imgLoader.h"
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
+#include "imgTools.h"
 
 #ifdef IMG_BUILD_DECODER_gif
 // gif
@@ -102,6 +103,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(imgCache)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(imgTools)
 
 #ifdef IMG_BUILD_DECODER_gif
 // gif
@@ -217,6 +219,10 @@ static const nsModuleComponentInfo components[] =
     NS_IMGREQUESTPROXY_CID,
     "@mozilla.org/image/request;1",
     imgRequestProxyConstructor, },
+  { "image tools",
+    NS_IMGTOOLS_CID,
+    "@mozilla.org/image/tools;1",
+    imgToolsConstructor, },
 
 #ifdef IMG_BUILD_DECODER_gif
   // gif
