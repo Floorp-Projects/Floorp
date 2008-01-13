@@ -183,7 +183,7 @@
                   preference="privacy.sanitize.promptOnSanitize"
                   label="&askBeforeClear.label;"
                   accesskey="&askBeforeClear.accesskey;"/>
-        <button id="clearDataNow"
+        <button id="clearDataNow" icon="clear"
                 label1="&clearDataNow.label;"
                 label2="&clearDataNow.label2;"
                 accesskey="&clearDataNow.accesskey;"
