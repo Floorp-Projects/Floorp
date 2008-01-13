@@ -61,7 +61,6 @@ DIRS += \
 	apppicker \
 	filepicker \
 	console \
-	exthelper \
 	viewconfig \
 	typeaheadfind \
 	$(NULL)
