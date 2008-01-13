@@ -1567,7 +1567,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             atom = js_Atomize(cx, bytes, JS_GetStringLength(str), 0);
             if (!atom)
                 return JS_FALSE;
-            if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop))
+            if (js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop) < 0)
                 return JS_FALSE;
             if (prop) {
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
