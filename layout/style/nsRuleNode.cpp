@@ -2325,8 +2325,12 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 
   // -moz-script-min-size: length
   if (aFontData.mScriptMinSize.IsLengthUnit()) {
+    // scriptminsize in font units (em, ex) has to be interpreted relative
+    // to the parent font, or the size definitions are circular and we
+    // 
     aFont->mScriptMinSize =
-      CalcLength(aFontData.mScriptMinSize, aContext, aPresContext, aInherited);
+      CalcLengthWith(aFontData.mScriptMinSize, aParentFont->mSize, aParentFont, nsnull,
+                     aPresContext, aInherited);
   }
 
   // -moz-script-size-multiplier: factor, inherit
