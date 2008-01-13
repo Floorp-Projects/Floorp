@@ -40,6 +40,7 @@ sub Execute {
     $this->CvsCo(cvsroot => $mozillaCvsroot,
                  checkoutDir => 'patcher',
                  modules => [CvsCatfile('mozilla', 'tools', 'patcher')],
+                 tag => $patcherToolsRev,
                  logFile => catfile($logDir, 'updates_patcher-checkout.log'),
                  workDir => $versionedUpdateDir
     );
