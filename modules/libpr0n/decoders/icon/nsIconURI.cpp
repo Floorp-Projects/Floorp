@@ -568,7 +568,7 @@ nsMozIconURI::GetIconSize(nsACString &aSize)
 NS_IMETHODIMP
 nsMozIconURI::GetIconState(nsACString &aState)
 {
-  if (mIconState)
+  if (mIconState >= 0)
     aState = kStateStrings[mIconState];
   else
     aState.Truncate();
