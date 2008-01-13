@@ -163,6 +163,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint16          ngvars;         /* max. no. of global variables/regexps */
     uint32          globalUses;     /* optimizable global var uses in total */
     uint32          loopyGlobalUses;/* optimizable global var uses in loops */
+    uint16          scopeDepth;     /* current lexical scope chain depth */
+    uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
     JSObject        *blockChain;    /* compile time block scope chain (NB: one
@@ -207,6 +209,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TREE_CONTEXT_INIT(tc, pc)                                             \
     ((tc)->flags = (tc)->ngvars = 0,                                          \
      (tc)->globalUses = (tc)->loopyGlobalUses = 0,                            \
+     (tc)->scopeDepth = (tc)->maxScopeDepth = 0,                              \
      (tc)->topStmt = (tc)->topScopeStmt = NULL,                               \
      (tc)->blockChain = NULL,                                                 \
      ATOM_LIST_INIT(&(tc)->decls),                                            \

@@ -3388,7 +3388,7 @@ JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name,
         return JS_FALSE;
     ok = OBJ_IS_NATIVE(obj)
          ? js_LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(atom), flags,
-                                      &obj2, &prop)
+                                      &obj2, &prop) >= 0
          : OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &obj2, &prop);
     if (ok)
         *vp = LookupResult(cx, obj, obj2, prop);
@@ -4692,6 +4692,17 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                              NULL, NULL, JSPROP_ENUMERATE, NULL)) {
         fun = NULL;
     }
+
+#ifdef JS_SCOPE_DEPTH_METER
+    if (fun && obj) {
+        JSObject *pobj = obj;
+        uintN depth = 1;
+
+        while ((pobj = OBJ_GET_PARENT(cx, pobj)) != NULL)
+            ++depth;
+        JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
+    }
+#endif
 
   out:
     LAST_FRAME_CHECKS(cx, fun);

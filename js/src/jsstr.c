@@ -2545,39 +2545,21 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
 #ifdef DEBUG
 #include <math.h>
 
-void printJSStringStats(JSRuntime *rt) {
-    double mean = 0., var = 0., sigma = 0.;
-    jsrefcount count = rt->totalStrings;
-    if (count > 0 && rt->lengthSum >= 0) {
-        mean = rt->lengthSum / count;
-        var = count * rt->lengthSquaredSum - rt->lengthSum * rt->lengthSum;
-        if (var < 0.0 || count <= 1)
-            var = 0.0;
-        else
-            var /= count * (count - 1);
+void printJSStringStats(JSRuntime *rt)
+{
+    double mean, sigma;
 
-        /* Windows says sqrt(0.0) is "-1.#J" (?!) so we must test. */
-        sigma = (var != 0.) ? sqrt(var) : 0.;
-    }
+    mean = JS_MeanAndStdDev(rt->totalStrings, rt->lengthSum,
+                            rt->lengthSquaredSum, &sigma);
+
     fprintf(stderr, "%lu total strings, mean length %g (sigma %g)\n",
-            (unsigned long)count, mean, sigma);
+            (unsigned long)rt->totalStrings, mean, sigma);
 
-    mean = var = sigma = 0.;
-    count = rt->totalDependentStrings;
-    if (count > 0 && rt->strdepLengthSum >= 0) {
-        mean = rt->strdepLengthSum / count;
-        var = count * rt->strdepLengthSquaredSum
-            - rt->strdepLengthSum * rt->strdepLengthSum;
-        if (var < 0.0 || count <= 1)
-            var = 0.0;
-        else
-            var /= count * (count - 1);
+    mean = JS_MeanAndStdDev(rt->totalDependentStrings, rt->strdepLengthSum,
+                            rt->strdepLengthSquaredSum, &sigma);
 
-        /* Windows says sqrt(0.0) is "-1.#J" (?!) so we must test. */
-        sigma = (var != 0.) ? sqrt(var) : 0.;
-    }
     fprintf(stderr, "%lu total dependent strings, mean length %g (sigma %g)\n",
-            (unsigned long)count, mean, sigma);
+            (unsigned long)rt->totalDependentStrings, mean, sigma);
 }
 #endif
 
@@ -4924,7 +4906,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
     return ucs4Char;
 }
 
-#if defined(DEBUG) || defined(DUMP_SCOPE_STATS)
+#if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
 
 JS_FRIEND_API(size_t)
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
