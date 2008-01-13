@@ -78,6 +78,12 @@ typedef struct {
   gint min_slider_size;
 } MozGtkScrollbarMetrics;
 
+typedef enum {
+  MOZ_GTK_STEPPER_DOWN        = 1 << 0,
+  MOZ_GTK_STEPPER_BOTTOM      = 1 << 1,
+  MOZ_GTK_STEPPER_VERTICAL    = 1 << 2
+} GtkScrollbarButtonFlags;
+
 /** flags for tab state **/
 typedef enum {
   /* first eight bits are used to pass a margin */
