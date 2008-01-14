@@ -109,6 +109,8 @@ protected:
                   PRBool inDirection, PRBool inIsReverse,
                   PRInt32 inCurrentValue,
                   PRInt32 inMinValue, PRInt32 inMaxValue);
+  void DrawRadioButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inSelected,
+                       PRBool inDisabled, PRInt32 inState);
   void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
                       PRBool inDisabled, PRInt32 inState);
   void DrawButton (CGContextRef context, ThemeButtonKind inKind,
@@ -119,9 +121,9 @@ protected:
                         const HIRect& inBoxRect,
                         PRBool inDisabled, ThemeDrawState inDrawState,
                         ThemeButtonAdornment inAdornment, PRInt32 inState);
-  void DrawCheckboxRadio (CGContextRef context, ThemeButtonKind inKind,
-                          const HIRect& inBoxRect, PRBool inChecked, 
-                          PRBool inDisabled, PRInt32 inState);
+  void DrawCheckbox(CGContextRef context, ThemeButtonKind inKind,
+                    const HIRect& inBoxRect, PRBool inChecked, 
+                    PRBool inDisabled, PRInt32 inState);
   // Scrollbars
   void DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame);
   void GetScrollbarPressStates (nsIFrame *aFrame, PRInt32 aButtonStates[]);
@@ -131,6 +133,7 @@ protected:
 
 private:
   NSButtonCell* mPushButtonCell;
+  NSButtonCell* mRadioButtonCell;
 };
 
 #endif // nsNativeThemeCocoa_h_
