@@ -74,10 +74,13 @@
   <!ENTITY cmdInsertNode.label "Wstaw...">
   <!ENTITY cmdDeleteNode.label "Usuń">
   <!ENTITY cmdCopyXML.label "Kopiuj XML">
+  <!ENTITY cmdCopyXML.accesskey "X">
   <!ENTITY cmdBlink.label "Wyróżnij element">
-  <!ENTITY cmdInspectBrowser.label "Przeprowadź inspekcję wewnętrznego dokumentu">
-  <!ENTITY cmdInspectInNewWindow.label "Przeprowadź inspekcję w nowym oknie">
-  
+  <!ENTITY cmdBlink.accesskey "e">
+  <!ENTITY cmdInspectBrowser.label "Zbadaj wewnętrzny dokument">
+  <!ENTITY cmdInspectBrowser.accesskey "Z">
+  <!ENTITY cmdInspectInNewWindow.label "Zbadaj w nowym oknie">
+  <!ENTITY cmdInspectInNewWindow.accesskey "b">
   <!ENTITY cmdShowPseudoClasses.label "Ustaw pseudoklasy...">
   <!ENTITY cmdShowPseudoClasses.accesskey "p">
   
@@ -105,18 +108,31 @@
   <!ENTITY findNodesCancel.label "Anuluj">
 
   <!ENTITY mnEditPasteMenu.label "Wklej">
+  <!ENTITY mnEditPasteMenu.accesskey "W">
   <!ENTITY mnEditPasteBefore.label "Przed tym elementem">
+  <!ENTITY mnEditPasteBefore.accesskey "P">
   <!ENTITY mnEditPasteAfter.label "Za tym elementem">
+  <!ENTITY mnEditPasteAfter.accesskey "Z">
   <!ENTITY mnEditPasteReplace.label "Zamiast tego elementu">
+  <!ENTITY mnEditPasteReplace.accesskey "a">
   <!ENTITY mnEditPasteFirstChild.label "Jako pierwszy element potomny">
+  <!ENTITY mnEditPasteFirstChild.accesskey "J">
   <!ENTITY mnEditPasteLastChild.label "Jako ostatni element potomny">
+  <!ENTITY mnEditPasteLastChild.accesskey "k">
   <!ENTITY mnEditPasteAsParent.label "Jako element nadrzędny">
+  <!ENTITY mnEditPasteAsParent.accesskey "o">
 
   <!ENTITY mnEditInsertMenu.label "Wstaw">
-  <!ENTITY mnEditInsertAfter.label "Po tym elemencie">
+  <!ENTITY mnEditInsertMenu.accesskey "a">
+  <!ENTITY mnEditInsertAfter.label "Za tym elementem">
+  <!ENTITY mnEditInsertAfter.accesskey "Z">
   <!ENTITY mnEditInsertBefore.label "Przed tym elementem">
+  <!ENTITY mnEditInsertBefore.accesskey "P">
   <!ENTITY mnEditInsertFirstChild.label "Jako pierwszy element potomny">
+  <!ENTITY mnEditInsertFirstChild.accesskey "J">
   <!ENTITY mnEditInsertLastChild.label "Jako ostatni element potomny">
+  <!ENTITY mnEditInsertLastChild.accesskey "a">
+
   
   <!ENTITY insertNode.title "Wstaw węzeł">
   <!ENTITY nodeType.label "Typ węzła:">
@@ -150,4 +166,8 @@
   <!ENTITY namespaceTitle.XMLEvents.label "Zdarzenia XML">
   <!ENTITY namespaceTitle.WAIRoles.label "Role WAI">
   <!ENTITY namespaceTitle.WAIProperties.label "Własności WAI">
-  
+
+  <!-- LOCALIZATION NOTE: Localizers can choose not to translate the following access keys. For a discussion about the pros and cons of such a decision, see https://bugzilla.mozilla.org/show_bug.cgi?id=398704, comments 1 and 2. -->
+  <!ENTITY cbxStateHover.accesskey "h">
+  <!ENTITY cbxStateActive.accesskey "a">
+  <!ENTITY cbxStateFocus.accesskey "f">
