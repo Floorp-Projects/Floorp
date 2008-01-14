@@ -42,7 +42,7 @@ interface nsIRequest;
 interface nsIFeedResult;
 
 /**
- * nsIFeedResultService provides a globally-accessible object for retreiving
+ * nsIFeedResultService provides a globally-accessible object for retrieving
  * the results of feed processing.
  */
 [scriptable, uuid(f3262589-48b2-4019-9947-90e5269bbfb9)]
