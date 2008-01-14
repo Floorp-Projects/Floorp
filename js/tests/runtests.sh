@@ -138,19 +138,12 @@ export testlogfile
 # exit code, we must pipe stderr from tester.sh to stdout and then
 # look into the testlogfilelist for the error
 
-if [[ -z "$extra" ]]; then
-    tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$buildtypes" 2>&1 | tee -a $testlogfilelist
-    if grep -q 'test-setup.sh failed' $testlogfilelist; then
-        error "runtests.sh: terminating due to error"
-    fi
-    testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
-else
-    tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$extra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
-    if grep -q 'test-setup.sh failed' $testlogfilelist; then
-        error "runtests.sh: terminating due to error"
-    fi
-    testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
+branchesextra=`combo.sh -d - "$branches" "$extra"`
+tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branchesextra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
+if grep -q 'test-setup.sh failed' $testlogfilelist; then
+    error "runtests.sh: terminating due to error"
 fi
+testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
 
 rm $testlogfilelist
 
@@ -184,9 +177,9 @@ for testlogfile in $testlogfiles; do
         *) error "unknown buildtype in logfile $testlogfile";;
     esac
     case "$testlogfile" in
-        *,1.8.0,*) branch=1.8.0;;
-        *,1.8.1,*) branch=1.8.1;;
-        *,1.9.0,*) branch=1.9.0;;
+        *,1.8.0*) branch=1.8.0;;
+        *,1.8.1*) branch=1.8.1;;
+        *,1.9.0*) branch=1.9.0;;
         *) error "unknown branch in logfile $testlogfile";;
     esac
     outputprefix=$testlogfile
