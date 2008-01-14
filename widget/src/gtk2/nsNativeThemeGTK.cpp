@@ -191,12 +191,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       memset(aState, 0, sizeof(GtkWidgetState));
     } else {
 
-      // for dropdown and spinner textfields,
-      // look at the parent frame (textbox or menulist)
-      if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
-          aWidgetType == NS_THEME_SPINNER_TEXTFIELD)
-        aFrame = aFrame->GetParent();
-
       // For XUL checkboxes and radio buttons, the state of the parent
       // determines our state.
       nsIFrame *stateFrame = aFrame;
