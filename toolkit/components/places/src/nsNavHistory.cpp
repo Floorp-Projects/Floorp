@@ -652,7 +652,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
       // Downgrade v1,2,4,5
       // v3,6 have no backwards incompatible changes.
-      if (DBSchemaVersion > 2) {
+      if (DBSchemaVersion > 2 && DBSchemaVersion < 6) {
         // perform downgrade to v2
         rv = ForceMigrateBookmarksDB(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
