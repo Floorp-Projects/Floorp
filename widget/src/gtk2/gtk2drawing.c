@@ -1436,6 +1436,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
                              GtkTextDirection direction)
 {
     gfloat arrow_scaling;
+    gint real_arrow_padding;
     GdkRectangle arrow_rect, real_arrow_rect;
     GtkStateType state_type = ConvertGtkState(state);
     GtkShadowType shadow_type = state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
@@ -1464,7 +1465,11 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     real_arrow_rect.width = real_arrow_rect.height =
         MIN (real_arrow_rect.width, real_arrow_rect.height) * arrow_scaling;
 
-    real_arrow_rect.x = floor (arrow_rect.x + ((arrow_rect.width - real_arrow_rect.width) / 2) + 0.5);
+    real_arrow_padding = floor((arrow_rect.width - real_arrow_rect.width) / 2 + 0.5);
+    real_arrow_rect.x = arrow_rect.x + real_arrow_padding;
+    if (direction == GTK_TEXT_DIR_RTL)
+        real_arrow_rect.x = arrow_rect.x + arrow_rect.width -
+                            real_arrow_rect.width - real_arrow_padding;
     real_arrow_rect.y = floor (arrow_rect.y + ((arrow_rect.height - real_arrow_rect.height) / 2) + 0.5);
 
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
