@@ -73,16 +73,16 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug300691-1.html \
 		test_bug300691-2.html \
 		test_bug300691-3.xhtml \
-		bug340800_iframe.txt \
-		test_bug340800.html \
 		test_bug330705-1.html \
+		test_bug332246.html \
 		test_bug332893-1.html \
 		test_bug332893-2.html \
 		test_bug332893-3.html \
 		test_bug332893-4.html \
-		test_bug388558.html \
 		test_bug332893-5.html \
 		test_bug332893-6.html \
+		bug340800_iframe.txt \
+		test_bug340800.html \
 		test_bug353415-1.html \
 		test_bug353415-2.html \
 		test_bug371375.html \
@@ -95,6 +95,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug386496.html \
 		test_bug386728.html \
 		test_bug386996.html \
+		test_bug388558.html \
 		test_bug388746.html \
 		test_bug389797.html \
 		test_bug390975.html \
@@ -105,7 +106,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug394700.html \
 		test_bug395107.html \
 		test_bug401160.xhtml \
-		test_bug332246.html \
+		test_bug408231.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
