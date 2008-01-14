@@ -128,11 +128,17 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   mPushButtonCell = [[NSButtonCell alloc] initTextCell:nil];
   [mPushButtonCell setButtonType:NSMomentaryPushInButton];
   [mPushButtonCell setHighlightsBy:NSPushInCellMask];
+
+  mRadioButtonCell = [[NSButtonCell alloc] initTextCell:nil];
+  [mRadioButtonCell setButtonType:NSRadioButton];
+  [mRadioButtonCell setBezelStyle:NSRoundedBezelStyle];
+  [mRadioButtonCell setHighlightsBy:NSPushInCellMask];
 }
 
 nsNativeThemeCocoa::~nsNativeThemeCocoa()
 {
   [mPushButtonCell release];
+  [mRadioButtonCell release];
 }
 
 
@@ -162,9 +168,9 @@ LockFocusOnImage(NSImage* aImage)
 
 
 void
-nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind inKind,
-                                      const HIRect& inBoxRect, PRBool inChecked,
-                                      PRBool inDisabled, PRInt32 inState)
+nsNativeThemeCocoa::DrawCheckbox(CGContextRef cgContext, ThemeButtonKind inKind,
+                                 const HIRect& inBoxRect, PRBool inChecked,
+                                 PRBool inDisabled, PRInt32 inState)
 {
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
@@ -185,6 +191,125 @@ nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind in
     drawFrame.origin.y += 1;
 
   HIThemeDrawButton(&drawFrame, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
+
+#if DRAW_IN_FRAME_DEBUG
+  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
+  CGContextFillRect(cgContext, inBoxRect);
+#endif
+}
+
+
+// These are the sizes that Gecko needs to request to draw if it wants
+// to get a standard-sized Aqua radio button drawn. Note that the rects
+// that draw these are actually a little bigger.
+#define NATURAL_MINI_RADIO_BUTTON_WIDTH 11
+#define NATURAL_MINI_RADIO_BUTTON_HEIGHT 11
+#define NATURAL_SMALL_RADIO_BUTTON_WIDTH 14
+#define NATURAL_SMALL_RADIO_BUTTON_HEIGHT 14
+#define NATURAL_REGULAR_RADIO_BUTTON_WIDTH 16
+#define NATURAL_REGULAR_RADIO_BUTTON_HEIGHT 16
+
+// These were calculated by testing all three sizes on the respective operating system.
+static const float radioButtonMargins[2][3][4] =
+{
+  { // Tiger
+    {0, 0, 0, 0}, // mini     - if we ever use this we'll have to calculate it
+    {0, 0, 0, 0}, // small    - if we ever use this we'll have to calculate it
+    {0, 3, 0, -3}  // regular
+  },
+  { // Leopard
+    {0, 4, 0, -4}, // mini
+    {0, 3, 0, -3}, // small
+    {0, 3, 0, -3}  // regular
+  }
+};
+
+void
+nsNativeThemeCocoa::DrawRadioButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inSelected,
+                                    PRBool inDisabled, PRInt32 inState)
+{
+  NSRect drawRect = NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y, inBoxRect.size.width, inBoxRect.size.height);
+
+  [mRadioButtonCell setEnabled:!inDisabled];
+  [mRadioButtonCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
+  [mRadioButtonCell setState:(inSelected ? NSOnState : NSOffState)];
+  [mRadioButtonCell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
+
+  // Set up the graphics context we've been asked to draw to.
+  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
+  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+  [NSGraphicsContext saveGraphicsState];
+
+  // Always use a regular size control because for some reason NSCell doesn't respect other
+  // size choices here. Maybe because of a rendering context/ctm setup it doesn't like?
+  NSControlSize controlSize = NSRegularControlSize;
+  float naturalHeight = NATURAL_REGULAR_RADIO_BUTTON_HEIGHT;
+  float naturalWidth = NATURAL_REGULAR_RADIO_BUTTON_WIDTH;
+  [mRadioButtonCell setControlSize:controlSize];
+
+  // Render, by scaling if the target height is not the natural height of the control we're drawing.
+  if (drawRect.size.height == naturalHeight &&
+      drawRect.size.width ==  naturalWidth) {
+    // Just inflate the rect Gecko gave us by the margin for the control.
+    NSRect cellRenderRect = drawRect;
+    InflateControlRect(&cellRenderRect, controlSize, radioButtonMargins);
+    [mRadioButtonCell drawWithFrame:cellRenderRect inView:[NSView focusView]];
+  }
+  else {
+    // We need to calculate three things here - the size of our offscreen buffer, the rect we'll
+    // use to draw into it, and the rect that we'll copy the buffer to.
+
+    // This is the rect we'll render the control into our buffer with. We need to inset our control to leave room for a
+    // focus ring to be rendered.
+    NSRect bufferRenderRect = NSMakeRect(MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH, naturalWidth, naturalHeight);
+
+    // At this point the size of our render rect reflects the size of the control we actually
+    // want to draw into the buffer. Grab it for our initial buffer size and then expand the
+    // buffer size to allow for a focus ring to render.
+    NSSize initialBufferSize = bufferRenderRect.size;
+    initialBufferSize.width += (MAX_FOCUS_RING_WIDTH * 2);
+    initialBufferSize.height += (MAX_FOCUS_RING_WIDTH * 2);
+
+    // Now we need to inflate our rendering rect to account for the quirks of NSCell rendering,
+    // which is what this rect will actually be used for. The rect we pass to NSCell for
+    // rendering is not necessarily the same size as the control that gets drawn.
+    InflateControlRect(&bufferRenderRect, controlSize, radioButtonMargins);
+
+    // This is the rect in our destination that we'll copy our buffer to.
+    NSRect finalCopyRect = NSMakeRect(drawRect.origin.x - MAX_FOCUS_RING_WIDTH,
+                                      drawRect.origin.y - MAX_FOCUS_RING_WIDTH,
+                                      drawRect.size.width + (MAX_FOCUS_RING_WIDTH * 2),
+                                      drawRect.size.height + (MAX_FOCUS_RING_WIDTH * 2));
+
+    // This flips the image in place and is necessary to work around a bug in the way
+    // NSButtonCell draws buttons.
+    CGContextScaleCTM(cgContext, 1.0f, -1.0f);
+    CGContextTranslateCTM(cgContext, 0.0f, -(2.0 * drawRect.origin.y + drawRect.size.height));
+
+    // Now actually do all the drawing/scaling with the rects we have set up.
+    NSImage *buffer = [[NSImage alloc] initWithSize:initialBufferSize];
+    if (!LockFocusOnImage(buffer)) {
+      [buffer release];
+      [NSGraphicsContext restoreGraphicsState];
+      [NSGraphicsContext setCurrentContext:savedContext];
+      return;
+    }
+
+    [mRadioButtonCell drawWithFrame:bufferRenderRect inView:[NSView focusView]];
+
+    [buffer setScalesWhenResized:YES];
+    [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+    [buffer setSize:finalCopyRect.size];
+
+    [buffer unlockFocus];
+
+    [buffer drawInRect:finalCopyRect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+
+    [buffer release];
+  }
+
+  [NSGraphicsContext restoreGraphicsState];
+  [NSGraphicsContext setCurrentContext:savedContext];
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
@@ -852,20 +977,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_CHECKBOX:
-      DrawCheckboxRadio(cgContext, kThemeCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
+      DrawCheckbox(cgContext, kThemeCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
       break;
 
     case NS_THEME_CHECKBOX_SMALL:
-      DrawCheckboxRadio(cgContext, kThemeSmallCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
+      DrawCheckbox(cgContext, kThemeSmallCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
       break;
 
     case NS_THEME_RADIO:
-      DrawCheckboxRadio(cgContext, kThemeRadioButton, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState);
-      break;
-
     case NS_THEME_RADIO_SMALL:
-      DrawCheckboxRadio(cgContext, kThemeSmallRadioButton, macRect,
-                        IsSelected(aFrame), IsDisabled(aFrame), eventState);
+      DrawRadioButton(cgContext, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState);
       break;
 
     case NS_THEME_BUTTON:
@@ -1275,21 +1396,14 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
     case NS_THEME_RADIO:
     {
-      SInt32 radioHeight = 0, radioWidth = 0;
-      ::GetThemeMetric(kThemeMetricRadioButtonWidth, &radioWidth);
-      ::GetThemeMetric(kThemeMetricRadioButtonHeight, &radioHeight);
-      aResult->SizeTo(radioWidth, radioHeight);
+      aResult->SizeTo(NATURAL_REGULAR_RADIO_BUTTON_WIDTH, NATURAL_REGULAR_RADIO_BUTTON_HEIGHT);
       *aIsOverridable = PR_FALSE;
       break;
     }
 
     case NS_THEME_RADIO_SMALL:
     {
-      SInt32 radioHeight = 0, radioWidth = 0;
-      ::GetThemeMetric(kThemeMetricSmallRadioButtonWidth, &radioWidth);
-      ::GetThemeMetric(kThemeMetricSmallRadioButtonHeight, &radioHeight);
-      // small radio buttons have an extra row on top and bottom, cut that off
-      aResult->SizeTo(radioWidth, radioHeight - 2);
+      aResult->SizeTo(NATURAL_SMALL_RADIO_BUTTON_WIDTH, NATURAL_SMALL_RADIO_BUTTON_HEIGHT);
       *aIsOverridable = PR_FALSE;
       break;
     }
@@ -1508,6 +1622,7 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::selected ||
         aAttribute == nsWidgetAtoms::mozmenuactive ||
         aAttribute == nsWidgetAtoms::sortdirection ||
+        aAttribute == nsWidgetAtoms::focused ||
         aAttribute == nsWidgetAtoms::_default)
       *aShouldRepaint = PR_TRUE;
   }
@@ -1632,9 +1747,13 @@ PRBool
 nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
   if (aWidgetType == NS_THEME_DROPDOWN ||
-      aWidgetType == NS_THEME_BUTTON)
+      aWidgetType == NS_THEME_BUTTON ||
+      aWidgetType == NS_THEME_RADIO ||
+      aWidgetType == NS_THEME_RADIO_SMALL ||
+      aWidgetType == NS_THEME_CHECKBOX ||
+      aWidgetType == NS_THEME_CHECKBOX_SMALL)
     return PR_TRUE;
-  
+
   return PR_FALSE;
 }
 
