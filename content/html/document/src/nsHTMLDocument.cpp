@@ -171,6 +171,21 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 PRUint32       nsHTMLDocument::gWyciwygSessionCnt = 0;
 
+// this function will return false if the command is not recognized
+// inCommandID will be converted as necessary for internal operations
+// inParam will be converted as necessary for internal operations
+// outParam will be Empty if no parameter is needed or if returning a boolean
+// outIsBoolean will determine whether to send param as a boolean or string
+// outBooleanParam will not be set unless outIsBoolean
+static PRBool ConvertToMidasInternalCommand(const nsAString & inCommandID,
+                                            const nsAString & inParam,
+                                            nsACString& outCommandID,
+                                            nsACString& outParam,
+                                            PRBool& isBoolean,
+                                            PRBool& boolValue);
+
+static PRBool ConvertToMidasInternalCommand(const nsAString & inCommandID,
+                                            nsACString& outCommandID);
 static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
@@ -4214,20 +4229,14 @@ static const char* const gBlocks[] = {
   "PRE"
 };
 
-
-// this function will return false if the command is not recognized
-// inCommandID will be converted as necessary for internal operations
-// inParam will be converted as necessary for internal operations
-// outParam will be Empty if no parameter is needed or if returning a boolean
-// outIsBoolean will determine whether to send param as a boolean or string
-// outBooleanParam will not be set unless outIsBoolean
-PRBool
-nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
-                                              const nsAString & inParam,
-                                              nsACString& outCommandID,
-                                              nsACString& outParam,
-                                              PRBool& outIsBoolean,
-                                              PRBool& outBooleanValue)
+static PRBool
+ConvertToMidasInternalCommandInner(const nsAString & inCommandID,
+                                   const nsAString & inParam,
+                                   nsACString& outCommandID,
+                                   nsACString& outParam,
+                                   PRBool& outIsBoolean,
+                                   PRBool& outBooleanValue,
+                                   PRBool aIgnoreParams)
 {
   NS_ConvertUTF16toUTF8 convertedCommandID(inCommandID);
 
@@ -4259,47 +4268,49 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
     // set outParam & outIsBoolean based on flags from the table
     outIsBoolean = gMidasCommandTable[i].convertToBoolean;
 
-    if (gMidasCommandTable[i].useNewParam) {
-      outParam.Assign(gMidasCommandTable[i].internalParamString);
-    }
-    else {
-      // handle checking of param passed in
-      if (outIsBoolean) {
-        // if this is a boolean value and it's not explicitly false
-        // (e.g. no value) we default to "true". For old backwards commands
-        // we invert the check (see bug 301490).
-        if (invertBool) {
-          outBooleanValue = inParam.LowerCaseEqualsLiteral("false");
-        }
-        else {
-          outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
-        }
-        outParam.Truncate();
+    if (!aIgnoreParams) {
+      if (gMidasCommandTable[i].useNewParam) {
+        outParam.Assign(gMidasCommandTable[i].internalParamString);
       }
       else {
-        // check to see if we need to convert the parameter
-        if (outCommandID.EqualsLiteral("cmd_paragraphState")) {
-          const PRUnichar *start = inParam.BeginReading();
-          const PRUnichar *end = inParam.EndReading();
-          if (start != end && *start == '<' && *(end - 1) == '>') {
-            ++start;
-            --end;
+        // handle checking of param passed in
+        if (outIsBoolean) {
+          // if this is a boolean value and it's not explicitly false
+          // (e.g. no value) we default to "true". For old backwards commands
+          // we invert the check (see bug 301490).
+          if (invertBool) {
+            outBooleanValue = inParam.LowerCaseEqualsLiteral("false");
           }
-
-          NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
-          PRUint32 j;
-          for (j = 0; j < NS_ARRAY_LENGTH(gBlocks); ++j) {
-            if (convertedParam.Equals(gBlocks[j],
-                                      nsCaseInsensitiveCStringComparator())) {
-              outParam.Assign(gBlocks[j]);
-              break;
-            }
+          else {
+            outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
           }
-
-          return j != NS_ARRAY_LENGTH(gBlocks);
+          outParam.Truncate();
         }
         else {
-          CopyUTF16toUTF8(inParam, outParam);
+          // check to see if we need to convert the parameter
+          if (outCommandID.EqualsLiteral("cmd_paragraphState")) {
+            const PRUnichar *start = inParam.BeginReading();
+            const PRUnichar *end = inParam.EndReading();
+            if (start != end && *start == '<' && *(end - 1) == '>') {
+              ++start;
+              --end;
+            }
+
+            NS_ConvertUTF16toUTF8 convertedParam(Substring(start, end));
+            PRUint32 j;
+            for (j = 0; j < NS_ARRAY_LENGTH(gBlocks); ++j) {
+              if (convertedParam.Equals(gBlocks[j],
+                                        nsCaseInsensitiveCStringComparator())) {
+                outParam.Assign(gBlocks[j]);
+                break;
+              }
+            }
+
+            return j != NS_ARRAY_LENGTH(gBlocks);
+          }
+          else {
+            CopyUTF16toUTF8(inParam, outParam);
+          }
         }
       }
     }
@@ -4312,6 +4323,31 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
   }
 
   return found;
+}
+
+static PRBool
+ConvertToMidasInternalCommand(const nsAString & inCommandID,
+                              const nsAString & inParam,
+                              nsACString& outCommandID,
+                              nsACString& outParam,
+                              PRBool& outIsBoolean,
+                              PRBool& outBooleanValue)
+{
+  return ConvertToMidasInternalCommandInner(inCommandID, inParam, outCommandID,
+                                            outParam, outIsBoolean,
+                                            outBooleanValue, PR_FALSE);
+}
+
+static PRBool
+ConvertToMidasInternalCommand(const nsAString & inCommandID,
+                              nsACString& outCommandID)
+{
+  nsCAutoString dummyCString;
+  nsAutoString dummyString;
+  PRBool dummyBool;
+  return ConvertToMidasInternalCommandInner(inCommandID, dummyString,
+                                            outCommandID, dummyCString,
+                                            dummyBool, dummyBool, PR_TRUE);
 }
 
 jsval
@@ -4484,9 +4520,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramStr;
-  PRBool isBool, boolVal;
-  if (!ConvertToMidasInternalCommand(commandID, commandID,
-                                     cmdToDispatch, paramStr, isBool, boolVal))
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
     return NS_ERROR_NOT_IMPLEMENTED;
 
   return cmdMgr->IsCommandEnabled(cmdToDispatch.get(), window, _retval);
@@ -4647,9 +4681,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
     return NS_ERROR_FAILURE;
 
   nsCAutoString cmdToDispatch, paramStr;
-  PRBool isBool, boolVal;
-  if (!ConvertToMidasInternalCommand(commandID, commandID,
-                                     cmdToDispatch, paramStr, isBool, boolVal))
+  if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch))
     return NS_ERROR_NOT_IMPLEMENTED;
 
   // create params
