@@ -60,6 +60,7 @@
       <rows>
         <row align="center" id="editBMPanel_nameRow">
           <label value="&editBookmarkOverlay.name.label;"
+                 accesskey="&editBookmarkOverlay.name.accesskey;"
                  control="editBMPanel_namePicker"
                  observes="paneElementsBroadcaster"/>
           <menulist id="editBMPanel_namePicker"
@@ -82,6 +83,7 @@
 
         <row align="center" id="editBMPanel_locationRow">
           <label value="&editBookmarkOverlay.location.label;"
+                 accesskey="&editBookmarkOverlay.location.accesskey;"
                  control="editBMPanel_locationField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_locationField"
@@ -91,6 +93,7 @@
 
         <row align="center" id="editBMPanel_feedLocationRow">
           <label value="&editBookmarkOverlay.feedLocation.label;"
+                 accesskey="&editBookmarkOverlay.feedLocation.accesskey;"
                  control="editBMPanel_feedLocationField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_feedLocationField"
@@ -100,6 +103,7 @@
 
         <row align="center" id="editBMPanel_siteLocationRow">
           <label value="&editBookmarkOverlay.siteLocation.label;"
+                 accesskey="&editBookmarkOverlay.siteLocation.accesskey;"
                  control="editBMPanel_siteLocationField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_siteLocationField"
@@ -151,6 +155,7 @@
 
         <row align="center" id="editBMPanel_tagsRow">
           <label value="&editBookmarkOverlay.tags.label;"
+                 accesskey="&editBookmarkOverlay.tags.accesskey;"
                  control="editBMPanel_tagsField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_tagsField"
@@ -171,6 +176,7 @@
 
         <row id="editBMPanel_keywordRow">
           <label value="&editBookmarkOverlay.keyword.label;"
+                 accesskey="&editBookmarkOverlay.keyword.accesskey;"
                  control="editBMPanel_keywordField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_keywordField"
@@ -180,6 +186,7 @@
 
         <row id="editBMPanel_descriptionRow">
           <label value="&editBookmarkOverlay.description.label;"
+                 accesskey="&editBookmarkOverlay.description.accesskey;"
                  control="editBMPanel_descriptionField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_descriptionField"
@@ -189,6 +196,7 @@
         </row>
         <checkbox id="editBMPanel_loadInSidebarCheckbox"
                   label="&editBookmarkOverlay.loadInSidebar.label;"
+                  accesskey="&editBookmarkOverlay.loadInSidebar.accesskey;"
                   oncommand="gEditItemOverlay.onLoadInSidebarCheckboxCommand();"
                   observes="paneElementsBroadcaster"/>
       </rows>
