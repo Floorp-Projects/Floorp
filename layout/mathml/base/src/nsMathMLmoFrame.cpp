@@ -892,19 +892,10 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
   // Set our overflow area
   GatherAndStoreOverflow(&aDesiredStretchSize);
 
-  if (mFrames.GetLength() != 1)
-    return NS_OK;
+  // There used to be code here to change the height of the child frame to
+  // change the caret height, but the text frame that manages the caret is now
+  // not a direct child but wrapped in a block frame.  See also bug 412033.
 
-  nsRect rect = firstChild->GetRect();
-  if (useMathMLChar) {
-    // even though our child text frame is not doing the rendering, we make it play
-    // nice with other operations that the MathMLChar doesn't handle (e.g., caret)
-    // use our whole height (i.e., with the leading that isn't part of the MathMLChar)
-    mMathMLChar.GetRect(rect);
-    rect.y = 0;
-  }
-  rect.height = aDesiredStretchSize.height;
-  firstChild->SetRect(rect);
   return NS_OK;
 }
 
