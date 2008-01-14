@@ -244,8 +244,10 @@ static PRBool            gGlobalsInitialized   = PR_FALSE;
 static PRBool            gRaiseWindows         = PR_TRUE;
 static nsWindow         *gPluginFocusWindow    = NULL;
 
-nsCOMPtr  <nsIRollupListener> gRollupListener;
-nsWeakPtr                     gRollupWindow;
+static nsCOMPtr<nsIRollupListener> gRollupListener;
+static nsWeakPtr                   gRollupWindow;
+static PRBool                      gConsumeRollupEvent;
+
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
 
@@ -1495,6 +1497,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
     LOG(("CaptureRollupEvents %p\n", (void *)this));
 
     if (aDoCapture) {
+        gConsumeRollupEvent = aConsumeRollupEvent;
         gRollupListener = aListener;
         gRollupWindow = do_GetWeakReference(static_cast<nsIWidget*>
                                                        (this));
@@ -1510,6 +1513,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
             ReleaseGrabs();
             gtk_grab_remove(widget);
         }
+        gConsumeRollupEvent = PR_FALSE;
         gRollupListener = nsnull;
         gRollupWindow = nsnull;
     }
@@ -2067,9 +2071,11 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         containerWindow->mActivatePending = PR_FALSE;
         DispatchActivateEvent();
     }
-    if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
-                         PR_FALSE))
-        return;
+
+    PRBool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
+                                       aEvent->y_root, PR_FALSE);
+    if (gConsumeRollupEvent && rolledUp)
+            return;
 
     PRUint16 domButton;
     switch (aEvent->button) {
@@ -2444,10 +2450,10 @@ void
 nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
     // check to see if we should rollup
-    if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
-                         PR_TRUE)) {
+    PRBool rolledUp =  check_for_rollup(aEvent->window, aEvent->x_root,
+                                        aEvent->y_root, PR_TRUE);
+    if (gConsumeRollupEvent && rolledUp)
         return;
-    }
 
     nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
     switch (aEvent->direction) {
