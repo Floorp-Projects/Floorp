@@ -118,7 +118,8 @@ endif
 
 ifdef BUILD_OPT
 ifdef USE_MSVC
-OPTIMIZER  = -O1
+OPTIMIZER  = -O2 -GL
+LDFLAGS    += -LTCG
 else
 OPTIMIZER  = -Os
 endif
