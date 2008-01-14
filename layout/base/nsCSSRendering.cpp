@@ -975,7 +975,8 @@ NumBorderPasses (PRUint8 *borderStyles,
       case NS_STYLE_BORDER_STYLE_OUTSET:
       case NS_STYLE_BORDER_STYLE_GROOVE:
       case NS_STYLE_BORDER_STYLE_RIDGE:
-        numBorderPasses = 2;
+        /* XXX See bug 397303 why this is 4 instead of 2; this could be optimized further */
+        numBorderPasses = 4;
         break;
 
       case NS_STYLE_BORDER_STYLE_SOLID:
