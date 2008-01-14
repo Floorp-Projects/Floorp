@@ -399,7 +399,7 @@
 
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content sizetopopup="pref">
-      <xul:hbox class="menulist-editable-box textbox-input-box" xbl:inherits="context,disabled,readonly" flex="1">
+      <xul:hbox class="menulist-editable-box textbox-input-box" xbl:inherits="context,disabled,readonly,focused" flex="1">
         <html:input class="menulist-editable-input" flex="1" anonid="input" allowevents="true"
                     xbl:inherits="value=label,value,disabled,tabindex,readonly"/>
       </xul:hbox>
