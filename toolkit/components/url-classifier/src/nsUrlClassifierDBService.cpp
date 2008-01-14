@@ -2267,8 +2267,6 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::CloseDb()
 {
   if (mConnection) {
-    CancelUpdate();
-
     mMainStore.Close();
     mPendingSubStore.Close();
 
