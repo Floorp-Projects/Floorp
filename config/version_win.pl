@@ -43,14 +43,27 @@ push(@INC, "$dir");
 require "Moz/Milestone.pm";
 use Getopt::Long;
 use Getopt::Std;
+use POSIX;
+
+# Calculate the number of days since Jan. 1, 2000 from a buildid string
+sub daysFromBuildID
+{
+    my ($buildid,) = @_;
+
+    my ($y, $m, $d, $h) = ($buildid =~ /^(\d{4})(\d{2})(\d{2})(\d{2})$/);
+    $d || die("Unrecognized buildid string.");
+
+    my $secondstodays = 60 * 60 * 24;
+    return (POSIX::mktime(00, 00, 00, $d, $m, $y - 1900) -
+            POSIX::mktime(00, 00, 00, 01, 01, 100)) / $secondstodays;
+}
 
 #Creates version resource file
 
 #Paramaters are passed on the command line:
 
-#Example: -PBI=blah -DEBUG=1
+#Example: -MODNAME nsToolkitCompsModule -DEBUG=1
 
-# PBI - your private build information (if not a milestone or nightly)
 # DEBUG - Mozilla's global debug variable - tells if its debug version
 # OFFICIAL - tells Mozilla is building a milestone or nightly
 # MSTONE - tells which milestone is being built;
@@ -90,10 +103,9 @@ sub getNextEntry
 	return undef;
 }
 
-my ($quiet,$privateinfo,$objdir,$debug,$official,$milestone,$module,$binary,$depth,$rcinclude,$bits,$srcdir);
+my ($quiet,$objdir,$debug,$official,$milestone,$buildid,$module,$binary,$depth,$rcinclude,$bits,$srcdir,$fileversion,$productversion);
 
 GetOptions( "QUIET" => \$quiet,
-		"PBI=s" => \$privateinfo,
 		"DEBUG=s" => \$debug,
 		"OFFICIAL=s" => \$official,
 		"MSTONE=s" => \$milestone,
@@ -106,7 +118,6 @@ GetOptions( "QUIET" => \$quiet,
 		"RCINCLUDE=s" => \$rcinclude,
 		"OBJDIR=s" => \$objdir,
 		"BITS=s" => \$bits);
-if (!defined($privateinfo)) {$privateinfo="";}
 if (!defined($debug)) {$debug="";}
 if (!defined($official)) {$official="";}
 if (!defined($milestone)) {$milestone="";}
@@ -121,7 +132,7 @@ if (!defined($topsrcdir)) {$topsrcdir=".";}
 if (!defined($bits)) {$bits="";}
 my $mfversion = "Personal";
 my $mpversion = "Personal";
-my $fileflags = "VS_FF_PRIVATEBUILD";
+my @fileflags = ("0");
 my $comment="";
 my $description="";
 if (!defined($module))
@@ -130,14 +141,13 @@ if (!defined($module))
 	($module) = split(/\./,$module);
 }
 
-my $productversion = "0,0,0,0";
-my $fileversion = $productversion;
 my $fileos = "VOS__WINDOWS32";
 if ($bits eq "16") { $fileos="VOS__WINDOWS16"; }
 
 my $bufferstr="    ";
 
 my $MILESTONE_FILE = "$topsrcdir/config/milestone.txt";
+my $BUILDID_FILE = "$depth/config/buildid";
 
 #Read module.ver file
 #Version file overrides for WIN32:
@@ -201,49 +211,46 @@ $milestone =~ s/^\s*(.*)\s*$/$1/;
 $description =~ s/^\s*(.*)\s*$/$1/;
 $module =~ s/^\s*(.*)\s*$/$1/;
 $depth =~ s/^\s*(.*)\s*$/$1/;
-$privateinfo =~ s/^\s*(.*)\s*$/$1/;
 $binary =~ s/^\s*(.*)\s*$/$1/;
 $displayname =~ s/^\s*(.*)\s*$/$1/;
 
+open(BUILDID, "<", $BUILDID_FILE) || die("Couldn't open buildid file: $BUILDID_FILE");
+$buildid = <BUILDID>;
+$buildid =~ s/\s*$//;
+close BUILDID;
+
+my $daycount = daysFromBuildID($buildid);
+
+if ($milestone eq "") {
+    $milestone = Moz::Milestone::getOfficialMilestone($MILESTONE_FILE);
+}
+
+$mfversion = $mpversion = $milestone;
+
 if ($debug eq "1")
 {
-	$fileflags .= " | VS_FF_DEBUG";
+	push @fileflags, "VS_FF_DEBUG";
 	$mpversion .= " Debug";
 	$mfversion .= " Debug";
 }
 
-if ($official eq "1") {
-	#its an official build
-	$privateinfo = "";
-	$fileflags = "VS_FF_PRERELEASE";
-	if ($debug eq "1") {
-		$fileflags = "VS_FF_PRERELEASE | VS_FF_DEBUG";
-	}
-
-        # Try to grab milestone.
-        # I'd love to put this in the makefiles rather than here,
-        # since I could run it once per build rather than once per
-        # dll/program, but I can't seem to get backticks working
-        # properly in the makefiles =P
-        if ($milestone eq "") {
-            $milestone = Moz::Milestone::getOfficialMilestone($MILESTONE_FILE);
-        }
-
-	if ($milestone ne "" && $milestone !~ /\+$/) {
-		#its a milestone build
-
-		$mpversion = $milestone;
-
-		$fileflags = "0";
-	      
-		my @mstone = split(/\./,$milestone);
-		$mstone[1] =~s/\D*$//g;
-		$productversion="$mstone[0],$mstone[1],0,0";
-
-	}
-
-	$mfversion = $mpversion = "$milestone";
+if ($official ne "1") {
+    push @fileflags, "VS_FF_PRIVATEBUILD";
 }
+
+if ($milestone =~ /[a-z]/) {
+    push @fileflags, "VS_FF_PRERELEASE";
+}
+
+my @mstone = split(/\./,$milestone);
+$mstone[1] =~s/\D.*$//;
+if (!$mstone[2]) {
+    $mstone[2] = "0";
+}
+else {
+    $mstone[2] =~s/\D.*$//;
+}
+$fileversion = $productversion="$mstone[0],$mstone[1],$mstone[2],$daycount";
 
 my $copyright = "License: MPL 1.1/GPL 2.0/LGPL 2.1";
 my $company = "Mozilla Foundation";
@@ -257,7 +264,7 @@ if (defined($override_fileversion)){$fileversion=$override_fileversion;}
 if (defined($override_mfversion)){$mfversion=$override_mfversion;}
 if (defined($override_company)){$company=$override_company;}
 if (defined($override_module)){$override_module =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $module=$override_module;}
-if (defined($override_copyright)){$override_copyright =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $copyright=$override_company;}
+if (defined($override_copyright)){$override_copyright =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $copyright=$override_copyright;}
 if (defined($override_trademarks)){$override_trademarks =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $trademarks=$override_trademarks;}
 if (defined($override_filename)){$binary=$override_filename;}
 if (defined($override_productname)){$override_productname =~ s/\@MOZ_APP_DISPLAYNAME\@/$displayname/g; $productname=$override_productname;}
@@ -370,6 +377,8 @@ if (open(RCINCLUDE, "<$rcinclude"))
 	
 }
 
+my $fileflags = join(' | ', @fileflags);
+
 print RCFILE qq{
 
 
@@ -379,6 +388,7 @@ print RCFILE qq{
 //
 
 1 VERSIONINFO
+ FILEVERSION    $fileversion
  PRODUCTVERSION $productversion
  FILEFLAGSMASK 0x3fL
  FILEFLAGS $fileflags
@@ -399,14 +409,8 @@ BEGIN
             VALUE "InternalName", "$module"
             VALUE "LegalTrademarks", "$trademarks"
             VALUE "OriginalFilename", "$binary"
-};
-if ($official ne "1") {
-print RCFILE qq{
-            VALUE "PrivateBuild", "$privateinfo"
-};
-}
-print RCFILE qq{
             VALUE "ProductName", "$productname"
+            VALUE "BuildID", "$buildid"
         END
     END
     BLOCK "VarFileInfo"
