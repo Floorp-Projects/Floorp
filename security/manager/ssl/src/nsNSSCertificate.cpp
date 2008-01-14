@@ -157,7 +157,8 @@ nsNSSCertificate::InitFromDER(char *certDER, int derLen)
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
                                            mCert(nsnull),
                                            mPermDelete(PR_FALSE),
-                                           mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
+                                           mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
+                                           mCachedEVStatus(ev_status_unknown)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -170,7 +171,8 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) :
 nsNSSCertificate::nsNSSCertificate() : 
   mCert(nsnull),
   mPermDelete(PR_FALSE),
-  mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
+  mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
+  mCachedEVStatus(ev_status_unknown)
 {
 }
 
