@@ -71,6 +71,7 @@ textbox.padded {
 
 textbox[enablehistory="true"] > .autocomplete-textbox-container {
   -moz-appearance: menulist-textfield;
+  -moz-margin-end: -3px;
 }
 
 .textbox-input-box {
