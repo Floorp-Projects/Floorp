@@ -86,6 +86,8 @@ public:
 
     // Get the glyphID of a space
     virtual PRUint32 GetSpaceGlyph() {
+        NS_ASSERTION(GetStyle()->size != 0,
+                     "forgot to short-circuit a text run with zero-sized font?");
         GetMetrics();
         return mSpaceGlyph;
     }
