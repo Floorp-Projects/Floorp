@@ -51,6 +51,12 @@ textbox {
   padding: 0;
 }
 
+textbox[enablehistory="true"] {
+  -moz-appearance: none;
+  border: 0;
+  background-color: transparent;
+}
+
 /* Used by autocomplete widgets that don't have an icon. Gross. -dwh */
 textbox.padded {
   padding-top: 1px;
@@ -63,6 +69,10 @@ textbox.padded {
   -moz-box-align: center;
 }
 
+textbox[enablehistory="true"] > .autocomplete-textbox-container {
+  -moz-appearance: menulist-textfield;
+}
+
 .textbox-input-box {
   margin: 0 3px;
   -moz-box-align: center;
@@ -71,98 +81,7 @@ textbox.padded {
 /* ::::: history button ::::: */
 
 .autocomplete-history-dropmarker {
-  -moz-appearance: none !important;
-  height: 20px;
-  margin: 0px;
-  border-top: none !important;
-  border-bottom: none !important;
-  border-left: 1px solid !important;
-  -moz-border-left-colors: ThreeDShadow !important;
-  border-right: none !important;
-  padding: 0 !important;
-  list-style-image: url("chrome://global/skin/icons/autocomplete-dropmark-arrow.png") !important;
-  -moz-image-region: rect(0px, 16px, 20px, 0px) !important;
-}
-
-.autocomplete-history-dropmarker[enablehistory="true"] {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#history-dropmarker")
-}
-
-textbox[chromedir="rtl"] .autocomplete-history-dropmarker {
-  border-left: none !important;
-  border-right: 1px solid !important;
-  -moz-border-right-colors: ThreeDShadow !important;
-}
-
-.autocomplete-history-dropmarker:hover {
-  -moz-image-region: rect(0px, 32px, 20px, 16px) !important;
-}
-
-.autocomplete-history-dropmarker:active {
-  -moz-image-region: rect(0px, 64px, 20px, 48px) !important;
-}
-
-.autocomplete-dropmarker-bkgnd-top {
-  list-style-image: url("chrome://global/skin/icons/autocomplete-dropmark-bkgnd.png");
-  -moz-image-region: rect(0px, 16px, 9px, 0px);
-  height: 9px;
-}
-
-/* GTK does not stretch image regions properly, so use background images instead.
-   See bugs 351764 and 254659. */
-.autocomplete-dropmarker-bkgnd-mid-top {
-  background-image: url("chrome://global/skin/icons/autocomplete-dropmark-bkgnd-mid-top.png");
-  background-repeat: repeat;
-  -moz-background-clip: padding;
-}
-
-.autocomplete-dropmarker-bkgnd-mid-bottom {
-  background-image: url("chrome://global/skin/icons/autocomplete-dropmark-bkgnd-mid-bottom.png");
-  background-repeat: repeat;
-  -moz-background-clip: padding;
-  list-style-image: none;
-}
-
-.autocomplete-dropmarker-bkgnd-bottom {
-  list-style-image: url("chrome://global/skin/icons/autocomplete-dropmark-bkgnd.png");
-  -moz-image-region: rect(11px, 16px, 20px, 0px);
-  height: 9px;
-}
-
-.autocomplete-history-dropmarker:hover .autocomplete-dropmarker-bkgnd-top {
-  -moz-image-region: rect(0px, 32px, 9px, 16px);
-  height: 9px;
-}
-
-.autocomplete-history-dropmarker:hover .autocomplete-dropmarker-bkgnd-mid-top {
-  background-position: -16px 0px;
-}
-
-.autocomplete-history-dropmarker:hover .autocomplete-dropmarker-bkgnd-mid-bottom {
-  background-position: -16px 0px;
-}
-
-.autocomplete-history-dropmarker:hover .autocomplete-dropmarker-bkgnd-bottom {
-  -moz-image-region: rect(11px, 32px, 20px, 16px);
-  height: 9px;
-}
-
-.autocomplete-history-dropmarker:hover:active .autocomplete-dropmarker-bkgnd-top {
-  -moz-image-region: rect(0px, 64px, 9px, 48px);
-  height: 9px;
-}
-
-.autocomplete-history-dropmarker:hover:active .autocomplete-dropmarker-bkgnd-mid-top {
-  background-position: -48px 0px;
-}
-
-.autocomplete-history-dropmarker:hover:active .autocomplete-dropmarker-bkgnd-mid-bottom {
-  background-position: -48px 0px;
-}
-
-.autocomplete-history-dropmarker:hover:active .autocomplete-dropmarker-bkgnd-bottom {
-  -moz-image-region: rect(11px, 64px, 20px, 48px);
-  height: 9px;
+  -moz-appearance: menulist-button;
 }
 
 /* ::::: autocomplete popups ::::: */
@@ -170,7 +89,6 @@ textbox[chromedir="rtl"] .autocomplete-history-dropmarker {
 panel[type="autocomplete"],
 panel[type="autocomplete-richlistbox"],
 .autocomplete-history-popup {
-  -moz-appearance: none;
   border-width: 1px;
   -moz-border-top-colors: ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDDarkShadow;
@@ -288,4 +206,3 @@ toolbarpaletteitem > toolbaritem > textbox > hbox > hbox > html|*.textbox-input 
 toolbarpaletteitem > toolbaritem > * > textbox > hbox > hbox > html|*.textbox-input {
   visibility: hidden;
 }
-
