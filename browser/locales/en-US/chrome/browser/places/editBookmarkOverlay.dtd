@@ -1,13 +1,21 @@
 <!ENTITY editBookmarkOverlay.name.label                      "Name:">
+<!ENTITY editBookmarkOverlay.name.accesskey                  "N">
 <!ENTITY editBookmarkOverlay.location.label                  "Location:">
+<!ENTITY editBookmarkOverlay.location.accesskey              "L">
 <!ENTITY editBookmarkOverlay.feedLocation.label              "Feed Location:">
+<!ENTITY editBookmarkOverlay.feedLocation.accesskey          "F">
 <!ENTITY editBookmarkOverlay.siteLocation.label              "Site Location:">
+<!ENTITY editBookmarkOverlay.siteLocation.accesskey          "S">
 <!ENTITY editBookmarkOverlay.liveTitlesSeparator.label       "Live Titles">
 <!ENTITY editBookmarkOverlay.folder.label                    "Folder:">
 <!ENTITY editBookmarkOverlay.foldersExpanderDown.tooltip     "Show all the bookmarks folders">
 <!ENTITY editBookmarkOverlay.expanderUp.tooltip              "Hide">
 <!ENTITY editBookmarkOverlay.tags.label                      "Tags:">
+<!ENTITY editBookmarkOverlay.tags.accesskey                  "T">
 <!ENTITY editBookmarkOverlay.description.label               "Description:">
+<!ENTITY editBookmarkOverlay.description.accesskey           "D">
 <!ENTITY editBookmarkOverlay.keyword.label                   "Keyword:">
+<!ENTITY editBookmarkOverlay.keyword.accesskey               "K">
 <!ENTITY editBookmarkOverlay.tagsExpanderDown.tooltip        "Show all tags">
 <!ENTITY editBookmarkOverlay.loadInSidebar.label             "Load this bookmark in the sidebar">
+<!ENTITY editBookmarkOverlay.loadInSidebar.accesskey         "h">
