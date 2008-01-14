@@ -2248,13 +2248,15 @@ nsUrlClassifierDBServiceWorker::CancelUpdate()
 {
   LOG(("CancelUpdate"));
 
-  mUpdateStatus = NS_BINDING_ABORTED;
+  if (mUpdateObserver) {
+    mUpdateStatus = NS_BINDING_ABORTED;
 
-  mConnection->RollbackTransaction();
-  mUpdateObserver->UpdateError(mUpdateStatus);
+    mConnection->RollbackTransaction();
+    mUpdateObserver->UpdateError(mUpdateStatus);
 
-  ResetStream();
-  ResetUpdate();
+    ResetStream();
+    ResetUpdate();
+  }
 
   return NS_OK;
 }
@@ -2267,6 +2269,8 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::CloseDb()
 {
   if (mConnection) {
+    CancelUpdate();
+
     mMainStore.Close();
     mPendingSubStore.Close();
 
