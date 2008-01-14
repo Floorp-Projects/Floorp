@@ -148,6 +148,8 @@ typedef enum {
   MOZ_GTK_DROPDOWN,
   /* Paints a dropdown arrow (a GtkButton containing a down GtkArrow). */
   MOZ_GTK_DROPDOWN_ARROW,
+  /* Paints an entry in an editable option menu */
+  MOZ_GTK_DROPDOWN_ENTRY,
   /* Paints the container part of a GtkCheckButton. */
   MOZ_GTK_CHECKBUTTON_CONTAINER,
   /* Paints the container part of a GtkRadioButton. */

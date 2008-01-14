@@ -411,7 +411,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
-  case NS_THEME_DROPDOWN_TEXTFIELD:
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
   case NS_THEME_LISTBOX:
@@ -461,6 +460,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_DROPDOWN_TEXT:
     return PR_FALSE; // nothing to do, but prevents the bg from being drawn
+  case NS_THEME_DROPDOWN_TEXTFIELD:
+    aGtkWidgetType = MOZ_GTK_DROPDOWN_ENTRY;
+    break;
   case NS_THEME_DROPDOWN_BUTTON:
     aGtkWidgetType = MOZ_GTK_DROPDOWN_ARROW;
     break;
