@@ -290,7 +290,7 @@ failUser.password = "pass\r\nword";
 tryAddUser(storage, failUser, null);
 
 var numLines = LoginTest.countLinesInFile(OUTDIR, "output-394610-1.txt");
-do_check_eq(numLines, 9);
+do_check_eq(numLines, 10);
 
 testdesc = "[flush and reload for verification]"
 LoginTest.initStorage(storage, OUTDIR, "output-394610-1.txt");
@@ -413,7 +413,7 @@ var parenLogins = [
 testdesc = "check added data"
 LoginTest.checkStorageData(storage, [], parenLogins);
 var numLines = LoginTest.countLinesInFile(OUTDIR, "output-394610-3.txt");
-do_check_eq(numLines, 58);
+do_check_eq(numLines, 66);
 
 testdesc = "[flush and reload for verification]"
 LoginTest.initStorage(storage, OUTDIR, "output-394610-3.txt");
@@ -492,7 +492,7 @@ tryAddUser(storage, nullUser, null);
 
 LoginTest.checkStorageData(storage, [], [nullUser]);
 var numLines = LoginTest.countLinesInFile(OUTDIR, "output-394610-4.txt");
-do_check_eq(numLines, 9);
+do_check_eq(numLines, 10);
 
 testdesc = "[flush and reload for verification]"
 LoginTest.initStorage(storage, OUTDIR, "output-394610-4.txt");
