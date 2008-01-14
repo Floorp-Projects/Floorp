@@ -45,7 +45,7 @@ const LoginTest = {
    */
   initStorage : function (storage, aInputPathName,  aInputFileName,
                           aOutputPathName, aOutputFileName, aExpectedError) {
-    var e, caughtError = false;
+    var err = null;
 
     var inputFile  = Cc["@mozilla.org/file/local;1"]
                             .createInstance(Ci.nsILocalFile);
@@ -63,24 +63,34 @@ const LoginTest = {
     try {
         storage.initWithFile(inputFile, outputFile);
     } catch (e) {
-        caughtError = true;
-        var err = e;
+        err = e;
     }
 
+    this.checkExpectedError(aExpectedError, err);
+
+    return;
+  },
+
+
+  /*
+   * checkExpectedError
+   *
+   * Checks to see if a thrown error was expected or not, and if it
+   * matches the expected value.
+   */
+  checkExpectedError : function (aExpectedError, aActualError) {
     if (aExpectedError) {
-        if (!caughtError)
+        if (!aActualError)
             throw "Storage didn't throw as expected (" + aExpectedError + ")";
 
-        if (!aExpectedError.test(err))
-            throw "Storage threw (" + err + "), not (" + aExpectedError;
+        if (!aExpectedError.test(aActualError))
+            throw "Storage threw (" + aActualError + "), not (" + aExpectedError;
 
         // We got the expected error, so make a note in the test log.
         dump("...that error was expected.\n\n");
-    } else if (caughtError) {
-        throw "Component threw unexpected error: " + err;
+    } else if (aActualError) {
+        throw "Component threw unexpected error: " + aActualError;
     }
-
-    return;
   },
 
 
@@ -126,6 +136,31 @@ const LoginTest = {
         do_check_true(found);
     }
 
+  },
+
+  /*
+   * countLinesInFile
+   *
+   * Counts the number of lines in the specified file.
+   */
+  countLinesInFile : function (aPathName,  aFileName) {
+    var inputFile  = Cc["@mozilla.org/file/local;1"].
+                     createInstance(Ci.nsILocalFile);
+    inputFile.initWithPath(aPathName);
+    inputFile.append(aFileName);
+
+    var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                      createInstance(Ci.nsIFileInputStream);
+    // init the stream as RD_ONLY, -1 == default permissions.
+    inputStream.init(inputFile, 0x01, -1, null);
+    var lineStream = inputStream.QueryInterface(Ci.nsILineInputStream);
+
+    var line = { value : null };
+    var lineCount = 0;
+    while (lineStream.readLine(line)) 
+        lineCount++;
+
+    return lineCount;
   }
 
 };
