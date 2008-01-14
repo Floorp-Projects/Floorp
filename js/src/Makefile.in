@@ -56,7 +56,7 @@ ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -O
 endif
 ifeq ($(OS_ARCH),WINNT)
-MODULE_OPTIMIZE_FLAGS = -O1
+MODULE_OPTIMIZE_FLAGS = -O2 -GL
 endif
 endif
 
