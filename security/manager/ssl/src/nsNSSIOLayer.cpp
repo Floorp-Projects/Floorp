@@ -787,10 +787,10 @@ static PRBool
 GetSubjectAltNames(CERTCertificate *nssCert,
                    nsINSSComponent *component,
                    nsString &allNames,
-                   PRBool &multipleNames)
+                   PRUint32 nameCount)
 {
   allNames.Truncate();
-  multipleNames = PR_FALSE;
+  nameCount = 0;
 
   PRArenaPool *san_arena = nsnull;
   SECItem altNameExtension = {siBuffer, NULL, 0 };
@@ -819,7 +819,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
       case certDNSName:
         name.AssignASCII((char*)current->name.other.data, current->name.other.len);
         if (!allNames.IsEmpty()) {
-          multipleNames = PR_TRUE;
+          ++nameCount;
           allNames.Append(NS_LITERAL_STRING(" , "));
         }
         allNames.Append(name);
@@ -844,7 +844,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
           }
           if (!name.IsEmpty()) {
             if (!allNames.IsEmpty()) {
-              multipleNames = PR_TRUE;
+              ++nameCount;
               allNames.Append(NS_LITERAL_STRING(" , "));
             }
             allNames.Append(name);
@@ -893,11 +893,11 @@ AppendErrorTextMismatch(const nsString &host,
   }
 
   nsString allNames;
-  PRBool multipleNames = PR_FALSE;
+  PRUint32 nameCount = 0;
   PRBool useSAN = PR_FALSE;
 
   if (nssCert)
-    useSAN = GetSubjectAltNames(nssCert, component, allNames, multipleNames);
+    useSAN = GetSubjectAltNames(nssCert, component, allNames, nameCount);
 
   if (!useSAN) {
     char *certName = nsnull;
@@ -908,12 +908,13 @@ AppendErrorTextMismatch(const nsString &host,
     if (!certName)
       certName = CERT_GetCommonName(&nssCert->subject);
     if (certName) {
+      ++nameCount;
       allNames.AssignASCII(certName);
       PORT_Free(certName);
     }
   }
 
-  if (multipleNames) {
+  if (nameCount > 1) {
     nsString message;
     rv = component->GetPIPNSSBundleString("certErrorMismatchMultiple", 
                                           message);
@@ -924,7 +925,7 @@ AppendErrorTextMismatch(const nsString &host,
       returnedMessage.Append(NS_LITERAL_STRING("  \n"));
     }
   }
-  else { // !multipleNames
+  else if (nameCount == 1) {
     const PRUnichar *params[1];
     params[0] = allNames.get();
 
@@ -934,6 +935,15 @@ AppendErrorTextMismatch(const nsString &host,
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {
       returnedMessage.Append(formattedString);
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    }
+  }
+  else { // nameCount == 0
+    nsString message;
+    nsresult rv = component->GetPIPNSSBundleString("certErrorMismatchNoNames",
+                                                   message);
+    if (NS_SUCCEEDED(rv)) {
+      returnedMessage.Append(message);
       returnedMessage.Append(NS_LITERAL_STRING("\n"));
     }
   }
