@@ -36,9 +36,11 @@
 
 #include "pk11func.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsProxiedService.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsPKCS11Slot.h"
 #include "nsProtectedAuthThread.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtectedAuthThread, nsIProtectedAuthThread)
@@ -51,9 +53,8 @@ static void PR_CALLBACK nsProtectedAuthThreadRunner(void *arg)
 
 nsProtectedAuthThread::nsProtectedAuthThread()
 : mMutex(nsnull)
-, mStatusDialogPtr(nsnull)
 , mIAmRunning(PR_FALSE)
-, mStatusDialogClosed(PR_FALSE)
+, mStatusObserverNotified(PR_FALSE)
 , mLoginReady(PR_FALSE)
 , mThreadHandle(nsnull)
 , mSlot(0)
@@ -67,31 +68,27 @@ nsProtectedAuthThread::~nsProtectedAuthThread()
 {
     if (mMutex)
         PR_DestroyLock(mMutex);
-
-    if (mStatusDialogPtr)
-    {
-        NS_RELEASE(mStatusDialogPtr);
-    }
 }
 
-NS_IMETHODIMP nsProtectedAuthThread::Login(nsIDOMWindowInternal *statusDialog)
+NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver)
 {
+    NS_ENSURE_ARG(aObserver);
+
     if (!mMutex)
         return NS_ERROR_FAILURE;
     
-    if (!statusDialog )
-        return NS_ERROR_FAILURE;
-
     if (!mSlot)
         // We need pointer to the slot
         return NS_ERROR_FAILURE;
-    
-    nsCOMPtr<nsIDOMWindowInternal> wi;
-    NS_GetProxyForObject( NS_PROXY_TO_MAIN_THREAD,
-                          nsIDOMWindowInternal::GetIID(),
-                          statusDialog,
-                          NS_PROXY_SYNC | NS_PROXY_ALWAYS,
-                          getter_AddRefs(wi));
+
+    nsCOMPtr<nsIObserver> observerProxy;
+    nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                                       NS_GET_IID(nsIObserver),
+                                       aObserver,
+                                       NS_PROXY_SYNC | NS_PROXY_ALWAYS,
+                                       getter_AddRefs(observerProxy));
+    if (NS_FAILED(rv))
+        return rv;
 
     PR_Lock(mMutex);
     
@@ -100,10 +97,7 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIDOMWindowInternal *statusDialog)
         return NS_OK;
     }
 
-    mStatusDialogPtr = wi;
-    NS_ADDREF(mStatusDialogPtr);
-    wi = 0;
-    
+    observerProxy.swap(mStatusObserver);
     mIAmRunning = PR_TRUE;
     
     mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsProtectedAuthThreadRunner, static_cast<void*>(this), 
@@ -118,18 +112,31 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIDOMWindowInternal *statusDialog)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsProtectedAuthThread::GetTokenName(PRUnichar **_retval)
+NS_IMETHODIMP nsProtectedAuthThread::GetTokenName(nsAString &_retval)
 {
     PR_Lock(mMutex);
 
     // Get token name
-    *_retval = UTF8ToNewUnicode(nsDependentCString(PK11_GetTokenName(mSlot)));
+    CopyUTF8toUTF16(nsDependentCString(PK11_GetTokenName(mSlot)), _retval);
 
     PR_Unlock(mMutex);
 
     return NS_OK;
 }
 
+NS_IMETHODIMP nsProtectedAuthThread::GetSlot(nsIPKCS11Slot **_retval)
+{
+    PR_Lock(mMutex);
+
+    nsRefPtr<nsPKCS11Slot> slot = new nsPKCS11Slot(mSlot);
+
+    PR_Unlock(mMutex);
+
+    if (!slot)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    return CallQueryInterface (slot.get(), _retval);
+}
 
 void nsProtectedAuthThread::SetParams(PK11SlotInfo* aSlot)
 {
@@ -150,8 +157,8 @@ void nsProtectedAuthThread::Run(void)
     // Login with null password. This call will also do C_Logout() but 
     // it is harmless here
     mLoginResult = PK11_CheckUserPassword(mSlot, 0);
-    
-    nsIDOMWindowInternal *windowToClose = 0;
+
+    nsIObserver *observer = nsnull;
     
     PR_Lock(mMutex);
     
@@ -165,18 +172,18 @@ void nsProtectedAuthThread::Run(void)
         mSlot = 0;
     }
     
-    if (!mStatusDialogClosed)
+    if (!mStatusObserverNotified)
     {
-        windowToClose = mStatusDialogPtr;
+        observer = mStatusObserver;
     }
-        
-    mStatusDialogPtr = 0;
-    mStatusDialogClosed = PR_TRUE;
+
+    mStatusObserver = nsnull;
+    mStatusObserverNotified = PR_TRUE;
     
     PR_Unlock(mMutex);
     
-    if (windowToClose)
-        windowToClose->Close();
+    if (observer)
+        observer->Observe(nsnull, "operation-completed", nsnull);
 }
 
 void nsProtectedAuthThread::Join()

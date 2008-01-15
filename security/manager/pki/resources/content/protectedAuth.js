@@ -53,7 +53,14 @@ function onLoad()
 
         setCursor("wait");
   
-        protectedAuthThread.login(window);
+        var obs = {
+          observe : function protectedAuthListenerObserve(subject, topic, data) {
+            if (topic == "operation-completed")
+              window.close();
+          }
+        };
+        
+        protectedAuthThread.login(obs);
 
     } catch (exception)
     {

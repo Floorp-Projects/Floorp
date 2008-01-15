@@ -37,6 +37,7 @@
 #ifndef NSPROTECTEDAUTHTHREAD_H_
 #define NSPROTECTEDAUTHTHREAD_H_
 
+#include <nsCOMPtr.h>
 #include "keyhi.h"
 #include "nspr.h"
 
@@ -47,10 +48,10 @@ class nsProtectedAuthThread : public nsIProtectedAuthThread
 private:
     PRLock      *mMutex;
 
-    nsIDOMWindowInternal*   mStatusDialogPtr;
+    nsCOMPtr<nsIObserver> mStatusObserver;
 
     PRBool      mIAmRunning;
-    PRBool      mStatusDialogClosed;
+    PRBool      mStatusObserverNotified;
     PRBool      mLoginReady;
 
     PRThread    *mThreadHandle;
