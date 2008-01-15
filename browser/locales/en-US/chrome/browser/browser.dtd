@@ -173,6 +173,7 @@
 
 <!ENTITY historyHomeCmd.label "Home">
 <!ENTITY showAllHistoryCmd.label "Show All History…">
+<!ENTITY showAllHistoryCmd.commandkey "H">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.accesskey             "d">

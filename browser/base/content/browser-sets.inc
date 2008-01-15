@@ -244,6 +244,7 @@
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
     <key keycode="VK_F5" command="Browser:Reload"/>
 #ifndef XP_MACOSX
+    <key id="showAllHistoryKb" key="&showAllHistoryCmd.commandkey;" command="Browser:ShowAllHistory" modifiers="accel,shift"/>
     <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
 #endif
