@@ -85,6 +85,10 @@
       <property name="value" onget="return this.getAttribute('value');">
         <setter>
           <![CDATA[
+            // if the new value is null, we still need to remove the old value
+            if (!val)
+              return this.selectedItem = val;
+
             var arr = null;
             var popup = this.menupopup;
             if (popup)
