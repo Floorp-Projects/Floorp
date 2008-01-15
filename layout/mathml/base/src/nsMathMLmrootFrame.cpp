@@ -159,7 +159,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                            nsReflowStatus&          aStatus)
 {
   nsresult rv = NS_OK;
-  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
+  nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
   nsReflowStatus childStatus;
 
   aDesiredSize.width = aDesiredSize.height = 0;
