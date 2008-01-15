@@ -151,7 +151,7 @@ const LoginTest = {
     var lineStream = inputStream.QueryInterface(Ci.nsILineInputStream);
 
     var line = { value : null };
-    var lineCount = 0;
+    var lineCount = 1;
     while (lineStream.readLine(line)) 
         lineCount++;
 
