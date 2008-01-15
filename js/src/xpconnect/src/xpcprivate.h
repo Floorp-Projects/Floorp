@@ -748,12 +748,14 @@ private:
 public:
 #endif
 
+    // For use by XPCWrappedNativeScope.
+    JSContext2XPCContextMap*  GetContextMap() const {return mContextMap;}
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect,
                  nsIJSRuntimeService* aJSRuntimeService);
 
-    JSContext2XPCContextMap*  GetContextMap() const {return mContextMap;}
     JSBool GenerateStringIDs(JSContext* cx);
     void PurgeXPCContextList();
 
@@ -884,6 +886,8 @@ public:
         }
 
     void DebugDump(PRInt16 depth);
+    void AddScope(PRCList *scope) { PR_INSERT_AFTER(scope, &mScopes); }
+    void RemoveScope(PRCList *scope) { PR_REMOVE_LINK(scope); }
 
     ~XPCContext();
 
@@ -901,6 +905,9 @@ private:
     LangType mCallingLangType;
     PRUint16 mSecurityManagerFlags;
     JSPackedBool mMarked;
+
+    // A linked list of scopes to notify when we are destroyed.
+    PRCList mScopes;
 };
 
 /***************************************************************************/
@@ -1198,7 +1205,7 @@ xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper);
 /***************************************************************************/
 // XPCWrappedNativeScope is one-to-one with a JS global object.
 
-class XPCWrappedNativeScope
+class XPCWrappedNativeScope : public PRCList
 {
 public:
 
@@ -1289,6 +1296,9 @@ public:
 
     static void InitStatics() { gScopes = nsnull; gDyingScopes = nsnull; }
 
+    XPCContext *GetContext() { return mContext; }
+    void SetContext(XPCContext *xpcc) { mContext = nsnull; }
+
 #ifndef XPCONNECT_STANDALONE
     /**
      * Fills the hash mapping global object to principal.
@@ -1321,6 +1331,7 @@ private:
     JSObject*                        mGlobalJSObject;
     JSObject*                        mPrototypeJSObject;
     JSObject*                        mPrototypeJSFunction;
+    XPCContext*                      mContext;
 
 #ifndef XPCONNECT_STANDALONE
     // The script object principal instance corresponding to our current global
