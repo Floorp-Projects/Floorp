@@ -115,6 +115,9 @@ const OP_NEEDS_DISABLE                = "needs-disable";
 
 const KEY_APP_PROFILE                 = "app-profile";
 const KEY_APP_GLOBAL                  = "app-global";
+const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
+const KEY_APP_SYSTEM_SHARE            = "app-system-share";
+const KEY_APP_SYSTEM_USER             = "app-system-user";
 
 const CATEGORY_INSTALL_LOCATIONS      = "extension-install-locations";
 const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
@@ -1009,7 +1012,7 @@ FileEnumerator.prototype = {
  *          The directory that contains the items.
  * @constructor
  */
-function DirectoryInstallLocation(name, location, restricted, priority) {
+function DirectoryInstallLocation(name, location, restricted, priority, independent) {
   this._name = name;
   if (location.exists()) {
     if (!location.isDirectory())
@@ -1029,6 +1032,7 @@ function DirectoryInstallLocation(name, location, restricted, priority) {
   this._locationToIDMap = {};
   this._restricted = restricted;
   this._priority = priority;
+  this._independent = independent;
 }
 DirectoryInstallLocation.prototype = {
   _name           : "",
@@ -1036,6 +1040,7 @@ DirectoryInstallLocation.prototype = {
   _locationToIDMap: null,
   _restricted     : false,
   _priority       : 0,
+  _independent    : false,
   _canAccess      : null,
 
   /**
@@ -1185,6 +1190,8 @@ DirectoryInstallLocation.prototype = {
    * See nsIExtensionManager.idl
    */
   itemIsManagedIndependently: function(id) {
+    if (this._independent)
+      return true;
     var itemLocation = this.location;
     itemLocation.append(id);
     return itemLocation.exists() && !itemLocation.isDirectory();
@@ -1969,7 +1976,8 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
     }
   }
   else if (installLocation.name == KEY_APP_PROFILE ||
-           installLocation.name == KEY_APP_GLOBAL) {
+           installLocation.name == KEY_APP_GLOBAL ||
+           installLocation.name == KEY_APP_SYSTEM_USER) {
     // Check for a pointer file and move it aside if it exists
     var pointerFile = installLocation.location.clone();
     pointerFile.append(itemID);
@@ -2375,7 +2383,7 @@ function ExtensionManager() {
   var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL;
   var globalLocation = new DirectoryInstallLocation(KEY_APP_GLOBAL,
                                                     appGlobalExtensions, true,
-                                                    priority);
+                                                    priority, false);
   InstallLocations.put(globalLocation);
 
   // Register App-Profile Install Location
@@ -2383,8 +2391,37 @@ function ExtensionManager() {
   var priority = Ci.nsIInstallLocation.PRIORITY_APP_PROFILE;
   var profileLocation = new DirectoryInstallLocation(KEY_APP_PROFILE,
                                                      appProfileExtensions, false,
-                                                     priority);
+                                                     priority, false);
   InstallLocations.put(profileLocation);
+
+  // Register per-user Install Location
+  var appSystemUExtensions = getDirNoCreate("XREUSysExt", [gApp.ID]);
+  var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_USER;
+  var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_USER,
+                                                    appSystemUExtensions, false,
+                                                    priority, true);
+  InstallLocations.put(systemLocation);
+
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+  // Register App-System-Shared Install Location
+  var appSystemSExtensions = getDirNoCreate("XRESysSExtPD", [gApp.ID]);
+  var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 10;
+  var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_SHARE,
+                                                    appSystemSExtensions, true,
+                                                    priority, true);
+  InstallLocations.put(systemLocation);
+
+
+  // Register App-System-Local Install Location
+  var appSystemLExtensions = getDirNoCreate("XRESysLExtPD", [gApp.ID]);
+  var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 20;
+  var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL,
+                                                    appSystemLExtensions, true,
+                                                    priority, true);
+  InstallLocations.put(systemLocation);
+#endif
+#endif
 
 #ifdef XP_WIN
   // Register HKEY_LOCAL_MACHINE Install Location
@@ -4718,7 +4755,8 @@ ExtensionManager.prototype = {
       }
     }
     else if (installLocation.name == KEY_APP_PROFILE ||
-             installLocation.name == KEY_APP_GLOBAL) {
+             installLocation.name == KEY_APP_GLOBAL ||
+             installLocation.name == KEY_APP_SYSTEM_USER) {
       // Check for a pointer file and remove it if it exists
       var pointerFile = installLocation.location.clone();
       pointerFile.append(id);
@@ -6083,10 +6121,8 @@ RDFItemUpdater.prototype = {
     }
 
     var installLocation = InstallLocations.get(emDS.getInstallLocationKey(aItem.id));
-    // Don't check items for updates that are installed in a location that is
-    // not managed by the app.
-    if (installLocation && (installLocation.name == "winreg-app-global" ||
-        installLocation.name == "winreg-app-user")) {
+    // Don't check items for updates that are managed independently
+    if (installLocation && installLocation.itemIsManagedIndependently(aItem.id)) {
       var status = Ci.nsIAddonUpdateCheckListener.STATUS_NOT_MANAGED;
       this._updater.checkForDone(aItem, status);
       return;
