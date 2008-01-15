@@ -358,7 +358,7 @@ LoginManager.prototype = {
         var logins = this.findLogins({}, login.hostname, login.formSubmitURL,
                                      login.httpRealm);
 
-        if (logins.some(function(l) { return login.username == l.username }))
+        if (logins.some(function(l) login.matches(l, true)))
             throw "This login already exists.";
 
         this.log("Adding login: " + login);
@@ -807,14 +807,14 @@ LoginManager.prototype = {
             if (!login.username && formLogin.username) {
                 var restoreMe = formLogin.username;
                 formLogin.username = ""; 
-                same = formLogin.equals(login);
+                same = formLogin.matches(login);
                 formLogin.username = restoreMe;
             } else if (!formLogin.username && login.username) {
                 formLogin.username = login.username;
-                same = formLogin.equals(login);
+                same = formLogin.matches(login);
                 formLogin.username = ""; // we know it's always blank.
             } else {
-                same = formLogin.equalsIgnorePassword(login);
+                same = formLogin.matches(login, true);
             }
 
             if (same) {
@@ -1089,7 +1089,7 @@ LoginManager.prototype = {
 
         if (!logins.some(function(l) {
                                 match = l;
-                                return currentLogin.equalsIgnorePassword(l);
+                                return currentLogin.matches(l, true);
                         }))
         {
             this.log("Can't find a login for this autocomplete result.");
