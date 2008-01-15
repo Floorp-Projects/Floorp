@@ -193,8 +193,8 @@ nsJSON::EncodeInternal(nsJSONWriter *writer)
   if (!xpc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIXPCNativeCallContext> cc;
-  rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+  nsAXPCNativeCallContext *cc = nsnull;
+  rv = xpc->GetCurrentNativeCallContext(&cc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSContext *cx = nsnull;
@@ -581,8 +581,8 @@ nsJSON::DecodeInternal(nsIInputStream *aStream,
   if (!xpc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIXPCNativeCallContext> cc;
-  rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+  nsAXPCNativeCallContext *cc = nsnull;
+  rv = xpc->GetCurrentNativeCallContext(&cc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   jsval *retvalPtr;

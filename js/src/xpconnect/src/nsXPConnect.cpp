@@ -1609,16 +1609,14 @@ nsXPConnect::GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack)
 
 /* readonly attribute nsIXPCNativeCallContext CurrentNativeCallContext; */
 NS_IMETHODIMP
-nsXPConnect::GetCurrentNativeCallContext(nsIXPCNativeCallContext * *aCurrentNativeCallContext)
+nsXPConnect::GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNativeCallContext)
 {
     NS_ASSERTION(aCurrentNativeCallContext, "bad param");
 
     XPCPerThreadData* data = XPCPerThreadData::GetData();
     if(data)
     {
-        nsIXPCNativeCallContext* temp = data->GetCallContext();
-        NS_IF_ADDREF(temp);
-        *aCurrentNativeCallContext = temp;
+        *aCurrentNativeCallContext = data->GetCallContext();
         return NS_OK;
     }
     //else...

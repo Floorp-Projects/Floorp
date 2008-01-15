@@ -2267,8 +2267,8 @@ jsdValue::GetWrappedValue()
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext(&cc);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2468,8 +2468,8 @@ jsdService::On (void)
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext(&cc);
     if (NS_FAILED(rv)) return rv;
 
     JSContext *cx;
@@ -2938,8 +2938,8 @@ jsdService::WrapValue(jsdIValue **_rval)
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext (getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext (&cc);
     if (NS_FAILED(rv))
         return rv;
 

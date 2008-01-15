@@ -1450,8 +1450,8 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                     do_GetService(nsIXPConnect::GetCID(), &rv);
                 NS_ENSURE_SUCCESS(rv, rv);
                 
-                nsCOMPtr<nsIXPCNativeCallContext> cc;
-                rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+                nsAXPCNativeCallContext *cc = nsnull;
+                rv = xpc->GetCurrentNativeCallContext(&cc);
                 NS_ENSURE_SUCCESS(rv, rv);
 
                 JSContext* cx;
