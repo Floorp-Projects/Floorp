@@ -75,12 +75,15 @@ nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
 
 }
 
-NS_IMPL_ISUPPORTS5(nsUrlClassifierStreamUpdater,
+NS_IMPL_ISUPPORTS8(nsUrlClassifierStreamUpdater,
                    nsIUrlClassifierStreamUpdater,
                    nsIUrlClassifierUpdateObserver,
                    nsIRequestObserver,
                    nsIStreamListener,
-                   nsIObserver)
+                   nsIObserver,
+                   nsIBadCertListener2,
+                   nsISSLErrorListener,
+                   nsIInterfaceRequestor)
 
 /**
  * Clear out the update.
@@ -127,7 +130,7 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
                                           const nsACString & aRequestBody)
 {
   nsresult rv;
-  rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl);
+  rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl, nsnull, nsnull, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aRequestBody.IsEmpty()) {
@@ -431,4 +434,39 @@ nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
     }
   }
   return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIBadCertListener2 implementation
+
+NS_IMETHODIMP
+nsUrlClassifierStreamUpdater::NotifyCertProblem(nsIInterfaceRequestor *socketInfo, 
+                                                nsISSLStatus *status, 
+                                                const nsACString &targetSite, 
+                                                PRBool *_retval)
+{
+  *_retval = PR_TRUE;
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsISSLErrorListener implementation
+
+NS_IMETHODIMP
+nsUrlClassifierStreamUpdater::NotifySSLError(nsIInterfaceRequestor *socketInfo, 
+                                             PRInt32 error, 
+                                             const nsACString &targetSite, 
+                                             PRBool *_retval)
+{
+  *_retval = PR_TRUE;
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIInterfaceRequestor implementation
+
+NS_IMETHODIMP
+nsUrlClassifierStreamUpdater::GetInterface(const nsIID & eventSinkIID, void* *_retval)
+{
+  return QueryInterface(eventSinkIID, _retval);
 }
