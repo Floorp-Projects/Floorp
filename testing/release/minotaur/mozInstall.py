@@ -68,6 +68,40 @@ def getPlatform():
   else:
     return platform.system()
 
+# This code is lifted directly from the buildbot code. That we use here. I
+# can't call it in buildbot without importing a trillion other things.
+# Original Source: http://mxr.mozilla.org/mozilla/source/tools/buildbot/buildbot/slave/commands.py#59
+def rmdirRecursive(dir):
+  """This is a replacement for shutil.rmtree that works better under
+  windows. Thanks to Bear at the OSAF for the code."""
+  if not os.path.exists(dir):
+      return
+
+  if os.path.islink(dir):
+      os.remove(dir)
+      return
+
+  # Verify the directory is read/write/execute for the current user
+  os.chmod(dir, 0700)
+
+  for name in os.listdir(dir):
+      full_name = os.path.join(dir, name)
+      # on Windows, if we don't have write permission we can't remove
+      # the file/directory either, so turn that on
+      if os.name == 'nt':
+          if not os.access(full_name, os.W_OK):
+              # I think this is now redundant, but I don't have an NT
+              # machine to test on, so I'm going to leave it in place
+              # -warner
+              os.chmod(full_name, 0600)
+
+      if os.path.isdir(full_name):
+          rmdirRecursive(full_name)
+      else:
+          os.chmod(full_name, 0700)
+          os.remove(full_name)
+  os.rmdir(dir)
+
 class MozUninstaller:
   def __init__(self, **kwargs):
     debug("uninstall constructor")
@@ -92,7 +126,7 @@ class MozUninstaller:
         os.rmdir(self.dest)
       except OSError:
         # Directories are still there - kill them all!
-        self.rmdirRecursive(self.dest)
+        rmdirRecursive(self.dest)
 
 
   def doWindowsUninstall(self):
@@ -136,42 +170,6 @@ class MozUninstaller:
         proc = subprocess.Popen(args, shell=True)
         proc.wait()
     time.sleep(10)
-
-  # This code is lifted directly from the buildbot code. That we use here. I
-  # can't call it in buildbot without importing a trillion other things.
-  # Original Source: http://mxr.mozilla.org/mozilla/source/tools/buildbot/buildbot/slave/commands.py#59
-  def rmdirRecursive(self, dir):
-    """This is a replacement for shutil.rmtree that works better under
-    windows. Thanks to Bear at the OSAF for the code."""
-    if not os.path.exists(dir):
-        return
-
-    if os.path.islink(dir):
-        os.remove(dir)
-        return
-
-    # Verify the directory is read/write/execute for the current user
-    os.chmod(dir, 0700)
-
-    for name in os.listdir(dir):
-        full_name = os.path.join(dir, name)
-        # on Windows, if we don't have write permission we can't remove
-        # the file/directory either, so turn that on
-        if os.name == 'nt':
-            if not os.access(full_name, os.W_OK):
-                # I think this is now redundant, but I don't have an NT
-                # machine to test on, so I'm going to leave it in place
-                # -warner
-                os.chmod(full_name, 0600)
-
-        if os.path.isdir(full_name):
-            self.rmdirRecursive(full_name)
-        else:
-            os.chmod(full_name, 0700)
-            os.remove(full_name)
-    os.rmdir(dir)
-
-
 
 class MozInstaller:
   def __init__(self, **kwargs):
@@ -279,7 +277,8 @@ if __name__ == "__main__":
                     metavar="PRODUCT")
   parser.add_option("-o", "--Operation", dest="op",
                     help="The operation you would like the script to perform.\
-                         Should be either install (i) or uninstall (u)",
+                         Should be either install (i) or uninstall (u) or delete\
+                          (d) to recursively delete the directory specified in dest",
                     metavar="OP")
 
   (options, args) = parser.parse_args()
@@ -291,3 +290,5 @@ if __name__ == "__main__":
   elif string.upper(options.op) == "UNINSTALL" or string.upper(options.op) == "U":
     uninstaller = MozUninstaller(dest = options.dest, branch = options.branch,
                                  productName = options.product)
+  elif string.upper(options.op) == "DELETE" or string.upper(options.op) == "D":
+    rmdirRecursive(options.dest)
