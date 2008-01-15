@@ -255,7 +255,7 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
     JS_ASSERT(JSVAL_IS_NUMBER(v));
     d = JSVAL_IS_INT(v) ? (jsdouble)JSVAL_TO_INT(v) : *JSVAL_TO_DOUBLE(v);
     base = 10;
-    if (!JSVAL_IS_VOID(vp[2])) {
+    if (argc != 0 && !JSVAL_IS_VOID(vp[2])) {
         if (!js_ValueToECMAInt32(cx, vp[2], &base))
             return JS_FALSE;
         if (base < 2 || base > 36) {
@@ -299,7 +299,7 @@ num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
-    if (!num_toString(cx, argc, vp))
+    if (!num_toString(cx, 0, vp))
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_STRING(*vp));
     numStr = JSVAL_TO_STRING(*vp);
@@ -479,7 +479,7 @@ static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,       0,0,JSFUN_THISP_NUMBER),
 #endif
-    JS_FN(js_toString_str,       num_toString,       1,1,JSFUN_THISP_NUMBER),
+    JS_FN(js_toString_str,       num_toString,       0,1,JSFUN_THISP_NUMBER),
     JS_FN(js_toLocaleString_str, num_toLocaleString, 0,0,JSFUN_THISP_NUMBER),
     JS_FN(js_valueOf_str,        num_valueOf,        0,0,JSFUN_THISP_NUMBER),
     JS_FN("toFixed",             num_toFixed,        1,1,JSFUN_THISP_NUMBER),
