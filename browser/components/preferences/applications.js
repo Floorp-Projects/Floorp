@@ -1323,6 +1323,13 @@ var gApplicationsPane = {
     }
 
     // Create a menu item for selecting a local application.
+#ifdef XP_WIN
+    // On Windows, selecting an application to open another application
+    // would be meaningless so we special case executables.
+    var executableType = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService)
+                                                  .getTypeFromExtension("exe");
+    if (handlerInfo.type != executableType)
+#endif
     {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("oncommand", "gApplicationsPane.chooseApp(event)");
