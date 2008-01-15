@@ -251,6 +251,28 @@ struct nsXREAppData
 #define NS_APP_PROFILE_LOCAL_DIR_STARTUP "ProfLDS"
 
 /**
+ * A directory service key which specifies the system extension
+ * parent directory containing platform-specific extensions.
+ * This key may not be available on all platforms.
+ */
+#define XRE_SYS_LOCAL_EXTENSION_PARENT_DIR "XRESysLExtPD"
+
+/**
+ * A directory service key which specifies the system extension
+ * parent directory containing platform-independent extensions.
+ * This key may not be available on all platforms.
+ * Additionally, the directory may be equal to that returned by
+ * XRE_SYS_LOCAL_EXTENSION_PARENT_DIR on some platforms.
+ */
+#define XRE_SYS_SHARE_EXTENSION_PARENT_DIR "XRESysSExtPD"
+
+/**
+ * A directory service key which specifies the user system extension
+ * parent directory.
+ */
+#define XRE_USER_SYS_EXTENSION_DIR "XREUSysExt"
+
+/**
  * Begin an XUL application. Does not return until the user exits the
  * application.
  *

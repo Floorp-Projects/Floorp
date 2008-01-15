@@ -116,12 +116,16 @@ public:
 protected:
   nsresult GetFilesInternal(const char* aProperty, nsISimpleEnumerator** aResult);
   static nsresult GetUserDataDirectory(nsILocalFile* *aFile, PRBool aLocal);
+  static nsresult GetUserDataDirectoryHome(nsILocalFile* *aFile, PRBool aLocal);
+  static nsresult GetSysUserExtensionsDirectory(nsILocalFile* *aFile);
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
   void EnsureProfileFileExists(nsIFile* aFile);
 
   // Determine the profile path within the UAppData directory. This is different
   // on every major platform.
   static nsresult AppendProfilePath(nsIFile* aFile);
+
+  static nsresult AppendSysUserExtensionPath(nsIFile* aFile);
 
   // Internal helper that splits a path into components using the '/' and '\\'
   // delimiters.
