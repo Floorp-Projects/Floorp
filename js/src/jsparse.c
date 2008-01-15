@@ -881,16 +881,16 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn = Statements(cx, ts, tc);
 #endif
 
-    js_PopStatement(tc);
-
-    /* Check for falling off the end of a function that returns a value. */
-    if (pn && JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR)) {
-        if (!CheckFinalReturn(cx, tc, pn))
-            pn = NULL;
-    }
-
-    if (pn)
+    if (pn) {
+        js_PopStatement(tc);
         pn->pn_pos.begin.lineno = firstLine;
+
+        /* Check for falling off the end of a function that returns a value. */
+        if (JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR) &&
+            !CheckFinalReturn(cx, tc, pn)) {
+            pn = NULL;
+        }
+    }
 
     tc->flags = oldflags | (tc->flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS));
     return pn;
