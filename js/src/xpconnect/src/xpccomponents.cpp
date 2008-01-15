@@ -2736,8 +2736,8 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_FAILURE;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    xpc->GetCurrentNativeCallContext(&cc);
     if(!cc)
         return NS_ERROR_FAILURE;
 
@@ -2864,8 +2864,8 @@ nsXPCComponents_Utils::ReportError()
         return NS_OK;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    xpc->GetCurrentNativeCallContext(&cc);
     if(!cc)
         return NS_OK;
 
@@ -3424,8 +3424,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         return rv;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    xpc->GetCurrentNativeCallContext(&cc);
     if(!cc)
         return NS_ERROR_FAILURE;
 
@@ -3634,8 +3634,8 @@ nsXPCComponents_Utils::ForceGC()
         return NS_ERROR_FAILURE;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    nsresult rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
     if (!cc)
         return rv;
 

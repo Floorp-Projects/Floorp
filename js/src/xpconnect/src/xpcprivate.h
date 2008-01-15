@@ -938,11 +938,22 @@ public:
 //
 // Note that most accessors are inlined.
 
-class XPCCallContext : public nsIXPCNativeCallContext
+class XPCCallContext : public nsAXPCNativeCallContext
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCNATIVECALLCONTEXT
+    NS_IMETHOD GetCallee(nsISupports **aResult);
+    NS_IMETHOD GetCalleeMethodIndex(PRUint16 *aResult);
+    NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative **aResult);
+    NS_IMETHOD GetJSContext(JSContext **aResult);
+    NS_IMETHOD GetArgc(PRUint32 *aResult);
+    NS_IMETHOD GetArgvPtr(jsval **aResult);
+    NS_IMETHOD GetRetValPtr(jsval **aResult);
+    NS_IMETHOD GetExceptionWasThrown(PRBool *aResult);
+    NS_IMETHOD SetExceptionWasThrown(PRBool aValue);
+    NS_IMETHOD GetReturnValueWasSet(PRBool *aResult);
+    NS_IMETHOD SetReturnValueWasSet(PRBool aValue);
+    NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo **aResult);
+    NS_IMETHOD GetCalleeClassInfo(nsIClassInfo **aResult);
 
     enum {NO_ARGS = (uintN) -1};
 
