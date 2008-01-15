@@ -50,6 +50,7 @@ sub Execute {
                  checkoutDir => 'MozBuild',
                  modules => [CvsCatfile('mozilla', 'tools', 'release',
                                         'MozBuild')],
+                 tag => $patcherToolsRev,
                  logFile => catfile($logDir,
                                     'updates_patcher-utils-checkout.log'),
                  workDir => catfile($versionedUpdateDir, 'patcher')
