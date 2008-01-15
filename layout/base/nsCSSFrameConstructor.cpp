@@ -12299,13 +12299,20 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsPresContext* aPresContext,
   aBlockFrame = aBlockFrame->GetFirstContinuation();
   
   PRBool stopLooking = PR_FALSE;
-  nsresult rv = RemoveFloatingFirstLetterFrames(aPresContext, aPresShell,
-                                                aFrameManager,
-                                                aBlockFrame, &stopLooking);
-  if (NS_SUCCEEDED(rv) && !stopLooking) {
-    rv = RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager,
-                                 aBlockFrame, &stopLooking);
-  }
+  nsresult rv;
+  do {
+    rv = RemoveFloatingFirstLetterFrames(aPresContext, aPresShell,
+                                         aFrameManager,
+                                         aBlockFrame, &stopLooking);
+    if (NS_SUCCEEDED(rv) && !stopLooking) {
+      rv = RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager,
+                                   aBlockFrame, &stopLooking);
+    }
+    if (stopLooking) {
+      break;
+    }
+    aBlockFrame = aBlockFrame->GetNextContinuation();
+  }  while (aBlockFrame);
   return rv;
 }
 
@@ -12316,22 +12323,28 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsFrameConstructorState& aState,
 {
   aBlockFrame = aBlockFrame->GetFirstContinuation();
   
-  nsresult rv = NS_OK;
-
-  aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
-
-  nsIFrame* blockKids = aBlockFrame->GetFirstChild(nsnull);
   nsIFrame* parentFrame = nsnull;
   nsIFrame* textFrame = nsnull;
   nsIFrame* prevFrame = nsnull;
   nsFrameItems letterFrames;
   PRBool stopLooking = PR_FALSE;
-  rv = WrapFramesInFirstLetterFrame(aState, aBlockFrame, aBlockFrame, blockKids,
-                                    &parentFrame, &textFrame, &prevFrame,
-                                    letterFrames, &stopLooking);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsresult rv;
+  do {
+    // XXX shouldn't this bit be set already (bug 408493), assert instead?
+    aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
+    rv = WrapFramesInFirstLetterFrame(aState, aBlockFrame, aBlockFrame,
+                                      aBlockFrame->GetFirstChild(nsnull),
+                                      &parentFrame, &textFrame, &prevFrame,
+                                      letterFrames, &stopLooking);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (stopLooking) {
+      break;
+    }
+    aBlockFrame = aBlockFrame->GetNextContinuation();
+  } while (aBlockFrame);
+
   if (parentFrame) {
     // Take the old textFrame out of the parents child list
     ::DeletingFrameSubtree(aState.mFrameManager, textFrame);
