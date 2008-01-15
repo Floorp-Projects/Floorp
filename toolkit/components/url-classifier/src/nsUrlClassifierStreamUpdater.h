@@ -47,6 +47,8 @@
 #include "nsIStreamListener.h"
 #include "nsNetUtil.h"
 #include "nsTArray.h"
+#include "nsIBadCertListener2.h"
+#include "nsISSLErrorListener.h"
 
 // Forward declare pointers
 class nsIURI;
@@ -54,7 +56,10 @@ class nsIURI;
 class nsUrlClassifierStreamUpdater : public nsIUrlClassifierStreamUpdater,
                                      public nsIUrlClassifierUpdateObserver,
                                      public nsIStreamListener,
-                                     public nsIObserver
+                                     public nsIObserver,
+                                     public nsIBadCertListener2,
+                                     public nsISSLErrorListener,
+                                     public nsIInterfaceRequestor
 {
 public:
   nsUrlClassifierStreamUpdater();
@@ -62,8 +67,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERSTREAMUPDATER
   NS_DECL_NSIURLCLASSIFIERUPDATEOBSERVER
+  NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIBADCERTLISTENER2
+  NS_DECL_NSISSLERRORLISTENER
   NS_DECL_NSIOBSERVER
 
 private:

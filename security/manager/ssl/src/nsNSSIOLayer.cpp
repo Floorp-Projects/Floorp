@@ -60,6 +60,7 @@
 #include "nsIClientAuthDialogs.h"
 #include "nsICertOverrideService.h"
 #include "nsIBadCertListener2.h"
+#include "nsISSLErrorListener.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsRecentBadCerts.h"
@@ -1164,6 +1165,32 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   PRInt32 port;
   socketInfo->GetPort(&port);
 
+  // Try to get a nsISSLErrorListener implementation from the socket consumer.
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  socketInfo->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (callbacks) {
+    nsCOMPtr<nsISSLErrorListener> sel = do_GetInterface(callbacks);
+    if (sel) {
+      nsISSLErrorListener *proxy_sel = nsnull;
+      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                           NS_GET_IID(nsISSLErrorListener),
+                           sel,
+                           NS_PROXY_SYNC,
+                           (void**)&proxy_sel);
+      if (proxy_sel) {
+        nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(socketInfo);
+        PRBool suppressMessage = PR_FALSE;
+        nsCString hostWithPortString = hostName;
+        hostWithPortString.AppendLiteral(":");
+        hostWithPortString.AppendInt(port);
+        rv = proxy_sel->NotifySSLError(csi, err, hostWithPortString, 
+                                       &suppressMessage);
+        if (NS_SUCCEEDED(rv) && suppressMessage)
+          return NS_OK;
+      }
+    }
+  }
+
   PRBool external = PR_FALSE;
   socketInfo->GetExternalErrorReporting(&external);
   
@@ -1217,7 +1244,7 @@ nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo,
   
   nsString formattedString;
   rv = getInvalidCertErrorMessage(multipleCollectedErrors, errorCodeToReport,
-+                                 errTrust, errMismatch, errExpired,
+                                  errTrust, errMismatch, errExpired,
                                   hostU, hostWithPortU, port, 
                                   ix509, external, nssComponent, formattedString);
 

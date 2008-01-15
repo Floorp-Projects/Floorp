@@ -52,6 +52,7 @@ SDK_XPIDLSRCS = \
     nsIASN1Object.idl \
     nsIASN1Sequence.idl \
     nsIBadCertListener2.idl \
+    nsISSLErrorListener.idl \
     nsICertificateDialogs.idl \
     nsICRLInfo.idl \
     nsIX509Cert.idl \
