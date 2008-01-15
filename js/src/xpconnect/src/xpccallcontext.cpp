@@ -303,8 +303,6 @@ XPCCallContext::SystemIsBeingShutDown()
 
 XPCCallContext::~XPCCallContext()
 {
-    NS_ASSERTION(mRefCnt == 0, "Someone is holding a bad reference to a XPCCallContext");
-
     // do cleanup...
 
     if(mXPCContext)
@@ -430,21 +428,6 @@ XPCCallContext::DeleteString(nsAString *string)
     // We're done with a string that's not one of our internal
     // strings, delete it.
     delete string;
-}
-
-
-NS_IMPL_QUERY_INTERFACE1(XPCCallContext, nsIXPCNativeCallContext)
-NS_IMPL_ADDREF(XPCCallContext)
-
-NS_IMETHODIMP_(nsrefcnt)
-XPCCallContext::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  NS_ASSERT_OWNINGTHREAD(XPCCallContext);
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "XPCCallContext");
-  // no delete this!
-  return mRefCnt;
 }
 
 /* readonly attribute nsISupports Callee; */

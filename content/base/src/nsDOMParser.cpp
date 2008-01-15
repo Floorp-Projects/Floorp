@@ -490,10 +490,10 @@ nsDOMParser::Init()
 {
   AttemptedInitMarker marker(&mAttemptedInit);
 
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  nsAXPCNativeCallContext *ncc = nsnull;
 
   nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    GetCurrentNativeCallContext(&ncc);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(ncc, NS_ERROR_UNEXPECTED);
 

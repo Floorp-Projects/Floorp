@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -54,6 +54,7 @@
 %{ C++
 #include "jspubtd.h"
 #include "xptinfo.h"
+#include "nsAXPCNativeCallContext.h"
 %}
 
 /***************************************************************************/
@@ -68,6 +69,7 @@
 [ptr] native voidPtrPtr(void*);
 [ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
 [ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
+[ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
 
 /***************************************************************************/
 
@@ -250,50 +252,6 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
     void aggregatedQueryInterface(in nsIIDRef uuid,
                                   [iid_is(uuid),retval] out nsQIResult result);
 
-};
-
-/***************************************************************************/
-
-/**
-* This is a somewhat special interface. It is available from the global
-* nsIXPConnect object when native methods have been called. It is only relevant
-* to the currently called native method on the given JSContext/thread. Holding
-* a reference past that time (or while other native methods are being called)
-* will not assure access to this data.
-*/
-
-[uuid(0FA68A60-8289-11d3-BB1A-00805F8A5DD7)]
-interface nsIXPCNativeCallContext : nsISupports
-{
-
-    readonly attribute nsISupports                  Callee;
-    readonly attribute PRUint16                     CalleeMethodIndex;
-    readonly attribute nsIXPConnectWrappedNative    CalleeWrapper;
-    readonly attribute JSContextPtr                 JSContext;
-    readonly attribute PRUint32                     Argc;
-    readonly attribute JSValPtr                     ArgvPtr;
-    /**
-    * This may be NULL if the JS caller is ignoring the result of the call.
-    */
-    readonly attribute JSValPtr                     RetValPtr;
-    /**
-    * Set this if JS_SetPendingException has been called. Return NS_OK or
-    * else this will be ignored and the native method's nsresult will be
-    * converted into an exception and thrown into JS as is the normal case.
-    */
-    attribute PRBool                                ExceptionWasThrown;
-
-    /**
-    * Set this to indicate that the callee has directly set the return value
-    * (using RetValPtr and the JSAPI). If set then xpconnect will not attempt
-    * to overwrite it with the converted retval from the C++ callee.
-    */
-    attribute PRBool                                ReturnValueWasSet;
-
-    // Methods added since mozilla 0.6....
-
-    readonly attribute nsIInterfaceInfo             CalleeInterface;
-    readonly attribute nsIClassInfo                 CalleeClassInfo;
 };
 
 /***************************************************************************/
@@ -581,7 +539,7 @@ interface nsIXPConnect : nsISupports
     void syncJSContexts();
 
     readonly attribute nsIStackFrame                CurrentJSStack;
-    readonly attribute nsIXPCNativeCallContext      CurrentNativeCallContext;
+    readonly attribute nsAXPCNativeCallContextPtr   CurrentNativeCallContext;
     /* pass nsnull to clear pending exception */
              attribute nsIException                 PendingException;
 

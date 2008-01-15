@@ -773,8 +773,8 @@ nsJSCID::CreateInstance(nsISupports **_retval)
     if(!xpc)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIXPCNativeCallContext> ccxp;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(ccxp));
+    nsAXPCNativeCallContext *ccxp = nsnull;
+    xpc->GetCurrentNativeCallContext(&ccxp);
     if(!ccxp)
         return NS_ERROR_UNEXPECTED;
 
@@ -846,8 +846,8 @@ nsJSCID::GetService(nsISupports **_retval)
     if(!xpc)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIXPCNativeCallContext> ccxp;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(ccxp));
+    nsAXPCNativeCallContext *ccxp = nsnull;
+    xpc->GetCurrentNativeCallContext(&ccxp);
     if(!ccxp)
         return NS_ERROR_UNEXPECTED;
 

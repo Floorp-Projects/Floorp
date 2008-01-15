@@ -726,7 +726,7 @@ nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSourcePrincipal
 
 nsresult
 nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
-                                                 nsIXPCNativeCallContext* aCallContext,
+                                                 nsAXPCNativeCallContext* aCallContext,
                                                  JSContext* cx, JSObject* aJSObject,
                                                  nsISupports* aObj, nsIURI* aTargetURI,
                                                  nsIClassInfo* aClassInfo,
@@ -939,8 +939,8 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 
         if (sXPConnect)
         {
-            nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
-            sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(xpcCallContext));
+            nsAXPCNativeCallContext *xpcCallContext = nsnull;
+            sXPConnect->GetCurrentNativeCallContext(&xpcCallContext);
             if (xpcCallContext)
                 xpcCallContext->SetExceptionWasThrown(PR_TRUE);
         }
@@ -1545,8 +1545,8 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
         // Tell XPConnect that an exception was thrown, if appropriate
         if (sXPConnect)
         {
-            nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
-            sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(xpcCallContext));
+            nsAXPCNativeCallContext* xpcCallContext = nsnull;
+            sXPConnect->GetCurrentNativeCallContext(&xpcCallContext);
              if (xpcCallContext)
                 xpcCallContext->SetExceptionWasThrown(PR_TRUE);
         }
@@ -3123,7 +3123,7 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanAccess(PRUint32 aAction,
-                                   nsIXPCNativeCallContext* aCallContext,
+                                   nsAXPCNativeCallContext* aCallContext,
                                    JSContext* cx,
                                    JSObject* aJSObject,
                                    nsISupports* aObj,
