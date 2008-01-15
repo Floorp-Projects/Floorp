@@ -2290,37 +2290,39 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
         pseudoFrame = pseudoFrame->GetFirstChild(nsnull);
       }
       nsCOMPtr<nsIContent> container = content->GetParent();
-      PRInt32 newIndex = container->IndexOf(content);
-      nsIFrame* kidFrame;
-      PRBool isColGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ==
-                           display->mDisplay);
-      if (isColGroup) {
-        kidFrame = mColGroups.FirstChild();
-      }
-      else {
-        kidFrame = mFrames.FirstChild();
-      }
-      // Important: need to start at a value smaller than all valid indices
-      PRInt32 lastIndex = -1;
-      while (kidFrame) {
+      if (NS_LIKELY(container)) { // XXX need this null-check, see bug 411823.
+        PRInt32 newIndex = container->IndexOf(content);
+        nsIFrame* kidFrame;
+        PRBool isColGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ==
+                             display->mDisplay);
         if (isColGroup) {
-          nsTableColGroupType groupType =
-            ((nsTableColGroupFrame *)kidFrame)->GetColType();
-          if (eColGroupAnonymousCell == groupType) {
-            continue;
+          kidFrame = mColGroups.FirstChild();
+        }
+        else {
+          kidFrame = mFrames.FirstChild();
+        }
+        // Important: need to start at a value smaller than all valid indices
+        PRInt32 lastIndex = -1;
+        while (kidFrame) {
+          if (isColGroup) {
+            nsTableColGroupType groupType =
+              ((nsTableColGroupFrame *)kidFrame)->GetColType();
+            if (eColGroupAnonymousCell == groupType) {
+              continue;
+            }
           }
+          pseudoFrame = kidFrame;
+          while (pseudoFrame  && (parentContent ==
+                                  (content = pseudoFrame->GetContent()))) {
+            pseudoFrame = pseudoFrame->GetFirstChild(nsnull);
+          }
+          PRInt32 index = container->IndexOf(content);
+          if (index > lastIndex && index < newIndex) {
+            lastIndex = index;
+            aPrevFrame = kidFrame;
+          }
+          kidFrame = kidFrame->GetNextSibling();
         }
-        pseudoFrame = kidFrame;
-        while (pseudoFrame  && (parentContent ==
-                                (content = pseudoFrame->GetContent()))) {
-          pseudoFrame = pseudoFrame->GetFirstChild(nsnull);
-        }
-        PRInt32 index = container->IndexOf(content);
-        if (index > lastIndex && index < newIndex) {
-          lastIndex = index;
-          aPrevFrame = kidFrame;
-        }
-        kidFrame = kidFrame->GetNextSibling();
       }
     }
   }
