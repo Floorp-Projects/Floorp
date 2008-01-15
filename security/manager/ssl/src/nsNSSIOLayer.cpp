@@ -2802,6 +2802,9 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
         default:
           // we are not willing to continue on any other error
           nsHandleSSLError(infoObject, i_node->error);
+          // this error is our stop condition, so let's make sure
+          // this error code will be reported to the external world.
+          PR_SetError(i_node->error, 0);
           return cancel_and_failure(infoObject);
       }
     }
