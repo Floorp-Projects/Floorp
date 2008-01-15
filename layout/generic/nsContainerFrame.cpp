@@ -217,7 +217,13 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
       //      for overflow containers once we can split abspos elements with
       //      inline containing blocks.
       if (parent == this) {
-        parent->mFrames.DestroyFrame(aOldFrame);
+        if (!parent->mFrames.DestroyFrame(aOldFrame)) {
+          // Try to remove it from our overflow list, if we have one.
+          // The simplest way is to reuse StealFrame.
+          nsresult rv = StealFrame(PresContext(), aOldFrame, PR_TRUE);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "Could not find frame to remove!");
+          aOldFrame->Destroy();
+        }
       } else {
         // This recursive call takes care of all continuations after aOldFrame,
         // so we don't need to loop anymore.
