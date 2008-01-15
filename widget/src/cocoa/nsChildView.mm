@@ -24,6 +24,7 @@
  *   Mark Mentovai <mark@moxienet.com>
  *   Håkan Waara <hwaara@gmail.com>
  *   Stuart Morgan <stuart.morgan@alumni.case.edu>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -339,7 +340,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mView(nsnull)
 , mParentView(nsnull)
 , mParentWidget(nsnull)
-, mDestructorCalled(PR_FALSE)
 , mVisible(PR_FALSE)
 , mDrawing(PR_FALSE)
 , mLiveResizeInProgress(PR_FALSE)
@@ -478,7 +478,7 @@ void nsChildView::TearDownView()
   // or a child view as the window first responder.
   if (responder && [responder isKindOfClass:[NSView class]] &&
       [(NSView*)responder isDescendantOf:mView]) {
-    [win makeFirstResponder: [mView superview]];
+    [win makeFirstResponder:[mView superview]];
   }
 
   // If mView is win's contentView, win (mView's NSWindow) "owns" mView --
@@ -530,7 +530,6 @@ NS_IMETHODIMP nsChildView::Create(nsNativeWidget aNativeParent,
 }
 
 
-// Close this nsChildView
 NS_IMETHODIMP nsChildView::Destroy()
 {
   if (mOnDestroyCalled)
@@ -542,13 +541,14 @@ NS_IMETHODIMP nsChildView::Destroy()
   nsBaseWidget::OnDestroy();
   nsBaseWidget::Destroy();
 
-  ReportDestroyEvent(); // beard: this seems to cause the window to be deleted. moved all release code to destructor.
+  ReportDestroyEvent(); 
   mParentWidget = nil;
 
   TearDownView();
 
   return NS_OK;
 }
+
 
 #pragma mark -
 
@@ -673,7 +673,7 @@ NS_IMETHODIMP nsChildView::SetHasTransparentBackground(PRBool aTransparent)
       nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
       if (widget) {
         widget->MakeBackgroundTransparent(aTransparent);
-        [mView setTransparent:aTransparent];
+        [(ChildView*)mView setTransparent:aTransparent];
       }
     }
   }
@@ -890,8 +890,11 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   if (mVisible && aRepaint)
     [mView setNeedsDisplay:YES];
 
-  if (isMoving)
+  if (isMoving) {
     ReportMoveEvent();
+    if (mOnDestroyCalled)
+      return NS_OK;
+  }
   if (isResizing)
     ReportSizeEvent();
 
@@ -1172,10 +1175,10 @@ NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIs
   NSRect r;
   nsRect bounds;
   nsIRegion* region = const_cast<nsIRegion*>(aRegion);     // ugh. this method should be const
-  region->GetBoundingBox ( &bounds.x, &bounds.y, &bounds.width, &bounds.height );
+  region->GetBoundingBox(&bounds.x, &bounds.y, &bounds.width, &bounds.height);
   GeckoRectToNSRect(bounds, r);
   
-  if ( aIsSynchronous )
+  if (aIsSynchronous)
     [mView displayRect:r];
   else
     [mView setNeedsDisplayInRect:r];
@@ -1234,6 +1237,9 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     kid->GetBounds(bounds);
     kid->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
   }
+
+  if (mOnDestroyCalled)
+    return NS_OK;
 
   if (mVisible) {
     if (viewWasDirty) {
@@ -1346,11 +1352,8 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
 {
   aStatus = nsEventStatus_eIgnore;
 
-  if (mDestructorCalled)
-    return NS_OK;
-  
   nsCOMPtr<nsIWidget> kungFuDeathGrip(event->widget);
-  nsCOMPtr<nsIWidget> kungFuDeathGrip2;
+  nsCOMPtr<nsIWidget> kungFuDeathGrip2(mParentWidget ? mParentWidget : this);
   if (mParentWidget) {
     nsWindowType type;
     mParentWidget->GetWindowType(type);
@@ -1359,10 +1362,8 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
       void* clientData = nsnull;
       if (event->widget)
         event->widget->GetClientData(clientData);
-      if (!clientData) {
+      if (!clientData)
         event->widget = mParentWidget;
-        kungFuDeathGrip2 = mParentWidget;
-      }
     }
   }
 
@@ -1395,6 +1396,7 @@ PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
     return DispatchWindowEvent(aEvent);
 
   if (mMouseListener) {
+    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
     switch (aEvent.message) {
       case NS_MOUSE_MOVE:
         result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
@@ -1404,10 +1406,12 @@ PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
         result = ConvertStatus(mMouseListener->MousePressed(aEvent));
         break;
 
-      case NS_MOUSE_BUTTON_UP:
+      case NS_MOUSE_BUTTON_UP: {
         result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
-        result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
+        if (mMouseListener)
+          result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
         break;
+      }
     } // switch
   }
 
@@ -1759,6 +1763,17 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 
 
 #pragma mark -
+
+
+// Used to retain an NSView for the remainder of a method's execution.
+class nsAutoRetainView {
+public:
+  nsAutoRetainView(NSView *aView) : mView([aView retain]) {}
+  ~nsAutoRetainView() { [mView release]; }
+
+private:
+  NSView *mView;  // [STRONG]
+};
 
 
 @implementation ChildView
@@ -2255,7 +2270,10 @@ NSEvent* gLastDragEvent = nil;
   paintEvent.rect = &fullRect;
   paintEvent.region = rgn;
 
+  nsAutoRetainView kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(paintEvent);
+  if (!mGeckoChild)
+    return;
 
   paintEvent.renderingContext = nsnull;
   paintEvent.region = nsnull;
@@ -2453,13 +2471,19 @@ class nsNonNativeContextMenuEvent : public nsRunnable {
       [mBaseView convertCocoaMouseEvent:mTriggerEvent toGeckoEvent:&geckoEvent];
       geckoEvent.button = nsMouseEvent::eRightButton;
       geckoChild->DispatchMouseEvent(geckoEvent);
+      // Even though we're not going to use the geckoChild variable any more here,
+      // we don't want to bother sending maybeInitContextMenuTracking if the widget
+      // got destroyed by the context menu event we just sent.
+      geckoChild = [mBaseView getGeckoChild];
+      if (!geckoChild)
+        return NS_ERROR_FAILURE;
       [mBaseView maybeInitContextMenuTracking];
       return NS_OK;
     }
 
   private:
-    ChildView *mBaseView;
-    NSEvent *mTriggerEvent;
+    ChildView *mBaseView;   // [STRONG]
+    NSEvent *mTriggerEvent; // [STRONG]
 };
 
 
@@ -2524,6 +2548,8 @@ class nsNonNativeContextMenuEvent : public nsRunnable {
 {
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
+
+  nsAutoRetainView kungFuDeathGrip(self);
 
   if ([self maybeRollup:theEvent])
     return;
@@ -2674,7 +2700,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
       // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
       nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
       SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
-      sLastViewEntered = nil;      
+      sLastViewEntered = nil;
     }
     return;
   }
@@ -2684,6 +2710,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild)
     return;
 
+  nsAutoRetainView kungFuDeathGrip(self);
   if (sLastViewEntered != self) {
     if (sLastViewEntered) {
       // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
@@ -2760,7 +2787,10 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   macEvent.modifiers = btnState | GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  mGeckoChild->DispatchMouseEvent(geckoEvent);    
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
+
+  // Note, sending the above event might have destroyed our widget since we didn't retain.
+  // Fine so long as we don't access any local variables from here on.
 
   gLastDragView = nil;
   gLastDragEvent = nil;
@@ -2773,8 +2803,9 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
 
-  [self maybeRollup:theEvent];
+  nsAutoRetainView kungFuDeathGrip(self);
 
+  [self maybeRollup:theEvent];
   if (!mGeckoChild)
     return;
 
@@ -2794,6 +2825,9 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   geckoEvent.nativeMsg = &macEvent;
 
   PRBool handled = mGeckoChild->DispatchMouseEvent(geckoEvent);
+  if (!mGeckoChild)
+    return;
+
   if (!handled)
     [super rightMouseDown:theEvent]; // let the superview do context menu stuff
 }
@@ -2806,7 +2840,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   if (!mGeckoChild)
     return;
-  
+
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
@@ -2821,7 +2855,11 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   macEvent.modifiers = controlKey;  // fake a context menu click
   geckoEvent.nativeMsg = &macEvent;
 
+  nsAutoRetainView kungFuDeathGrip(self);
   PRBool handled = mGeckoChild->DispatchMouseEvent(geckoEvent);
+  if (!mGeckoChild)
+    return;
+
   if (!handled)
     [super rightMouseUp:theEvent];
 }
@@ -2849,6 +2887,8 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 {
   if (![self ensureCorrectMouseEventTarget:theEvent])
     return;
+
+  nsAutoRetainView kungFuDeathGrip(self);
 
   if ([self maybeRollup:theEvent])
     return;
@@ -2906,8 +2946,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   else if (inAxis & nsMouseScrollEvent::kIsHorizontal)
     scrollDelta = -[theEvent deltaX];
   else
-    // Caller screwed up
-    return;
+    return; // caller screwed up
 
   if (scrollDelta == 0)
     // No sense in firing off a Gecko event.  Note that as of 10.4 Tiger,
@@ -2926,7 +2965,10 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   else
     geckoEvent.delta = (PRInt32)ceilf(scrollDelta);
 
+  nsAutoRetainView kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
+  if (!mGeckoChild)
+    return;
 
   // dispatch scroll wheel carbon event for plugins
   {
@@ -2974,7 +3016,12 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 -(void)scrollWheel:(NSEvent*)theEvent
 {
+  nsAutoRetainView kungFuDeathGrip(self);
+
   if ([self maybeRollup:theEvent])
+    return;
+
+  if (!mGeckoChild)
     return;
 
   // It's possible for a single NSScrollWheel event to carry both useful
@@ -2982,6 +3029,8 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   // NSMouseScrollEvent can only carry one axis at a time, so the system
   // event will be split into two Gecko events if necessary.
   [self scrollWheel:theEvent forAxis:nsMouseScrollEvent::kIsVertical];
+  if (!mGeckoChild)
+    return;
   [self scrollWheel:theEvent forAxis:nsMouseScrollEvent::kIsHorizontal];
 }
 
@@ -2991,7 +3040,11 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild || [self isPluginView])
     return nil;
 
+  nsAutoRetainView kungFuDeathGrip(self);
+
   [self maybeRollup:theEvent];
+  if (!mGeckoChild)
+    return nil;
 
   [mLastMenuForEventEvent release];
   mLastMenuForEventEvent = [theEvent retain];
@@ -3009,6 +3062,8 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
       [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
       geckoEvent.button = nsMouseEvent::eRightButton;
       mGeckoChild->DispatchMouseEvent(geckoEvent);
+      if (!mGeckoChild)
+        return nil;
     } else {
       nsIRunnable *contextMenuEvent = new nsNonNativeContextMenuEvent(self, theEvent);
       NS_DispatchToCurrentThread(contextMenuEvent);
@@ -3556,6 +3611,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild)
     return;
 
+  nsAutoRetainView kungFuDeathGrip(self);
   id arp = [[NSAutoreleasePool alloc] init];
 
   if (![insertString isKindOfClass:[NSAttributedString class]])
@@ -3609,9 +3665,10 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   }
   else {
     if (!nsTSMManager::IsComposing()) {
-      // send start composition event to gecko
       [self sendCompositionEvent:NS_COMPOSITION_START];
+      // Note: mGeckoChild might have become null here. Don't count on it from here on.
       nsTSMManager::StartComposing(self);
+      // Note: mGeckoChild might have become null here. Don't count on it from here on.
     }
 
     if (nsTSMManager::IgnoreCommit()) {
@@ -3621,14 +3678,14 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       insertString =
         [[[NSAttributedString alloc] initWithString:tmpStr] autorelease];
     }
-    // dispatch textevent
     [self sendTextEvent:bufPtr attributedString:insertString
                                selectedRange:NSMakeRange(0, len)
                                markedRange:mMarkedRange
                                doCommit:YES];
+    // Note: mGeckoChild might have become null here. Don't count on it from here on.
 
-    // send end composition event to gecko
     [self sendCompositionEvent:NS_COMPOSITION_END];
+    // Note: mGeckoChild might have become null here. Don't count on it from here on.
     nsTSMManager::EndComposing();
     mSelectedRange = mMarkedRange = NSMakeRange(NSNotFound, 0);
   }
@@ -3671,6 +3728,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@" aString = '%@'", aString);
 #endif
 
+  nsAutoRetainView kungFuDeathGrip(self);
   id arp = [[NSAutoreleasePool alloc] init];
 
   if (![aString isKindOfClass:[NSAttributedString class]])
@@ -3699,7 +3757,9 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   if (!nsTSMManager::IsComposing()) {
     [self sendCompositionEvent:NS_COMPOSITION_START];
+    // Note: mGeckoChild might have become null here. Don't count on it from here on.
     nsTSMManager::StartComposing(self);
+    // Note: mGeckoChild might have become null here. Don't count on it from here on.
   }
 
   nsTSMManager::UpdateComposing(tmpStr);
@@ -3708,9 +3768,12 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
                              selectedRange:selRange
                              markedRange:mMarkedRange
                              doCommit:NO];
+  // Note: mGeckoChild might have become null here. Don't count on it from here on.
 
-  if (nsTSMManager::IsComposing() && len == 0)
-    nsTSMManager::CommitIME();
+  if (nsTSMManager::IsComposing() && len == 0) {
+    nsTSMManager::CommitIME();    
+    // Note: mGeckoChild might have become null here. Don't count on it from here on.
+  }
   
   if (bufPtr != buffer)
     delete[] bufPtr;
@@ -3806,6 +3869,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
 
+  nsAutoRetainView kungFuDeathGrip(self);
   nsRect compositionRect = [self sendCompositionEvent:NS_COMPOSITION_QUERY];
 
   NSRect rangeRect;
@@ -3869,6 +3933,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild)
     return;
 
+  nsAutoRetainView kungFuDeathGrip(self);
   mCurKeyEvent = theEvent;
 
   PRBool dispatchedKeyPress = PR_FALSE;
@@ -3932,6 +3997,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       [self insertText:[theEvent characters]];
   }
 
+  // Note: mGeckoChild might have become null here. Don't count on it from here on.
+
   mIgnoreDoCommand = NO;
   mCurKeyEvent = nil;
   mKeyDownHandled = PR_FALSE;
@@ -3945,6 +4012,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   // if we don't have any characters we can't generate a keyUp event
   if (!mGeckoChild || [[theEvent characters] length] == 0)
     return;
+
+  nsAutoRetainView kungFuDeathGrip(self);
 
   // Cocoa doesn't send an NSKeyDown event for control-tab on 10.4, so if this
   // is an NSKeyUp event for control-tab, send a down event to gecko first.
@@ -4045,6 +4114,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return;
 
+  nsAutoRetainView kungFuDeathGrip(self);
+
   // Fire key up/down events for the modifier keys (shift, alt, ctrl, command).
   if ([theEvent type] == NSFlagsChanged) {
     unsigned int modifiers =
@@ -4070,6 +4141,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
         geckoEvent.nativeMsg = &macEvent;
 
         mGeckoChild->DispatchWindowEvent(geckoEvent);
+        if (!mGeckoChild)
+          return;
 
         // Stop if focus has changed.
         // Check to see if we are still the first responder.
@@ -4093,6 +4166,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return NO;
 
+  nsAutoRetainView kungFuDeathGrip(self);
+
   [self sendFocusEvent:NS_GOTFOCUS];
 
   return [super becomeFirstResponder];
@@ -4104,6 +4179,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 // nil -- otherwise the keyboard focus can end up in the wrong NSView.
 - (BOOL)resignFirstResponder
 {
+  nsAutoRetainView kungFuDeathGrip(self);
+
   nsTSMManager::CommitIME();
 
   if (mGeckoChild)
@@ -4117,6 +4194,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 {
   if (!mGeckoChild)
     return;
+
+  nsAutoRetainView kungFuDeathGrip(self);
 
   // check to see if the window implements the mozWindow protocol. This
   // allows embedders to avoid re-entrant calls to -makeKeyAndOrderFront,
@@ -4138,6 +4217,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 {
   if (!mGeckoChild)
     return;
+
+  nsAutoRetainView kungFuDeathGrip(self);
 
   nsTSMManager::CommitIME();
 
@@ -4229,7 +4310,10 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   geckoEvent.refPoint.x = static_cast<nscoord>(localPoint.x);
   geckoEvent.refPoint.y = static_cast<nscoord>(localPoint.y);
 
+  nsAutoRetainView kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
+  if (!mGeckoChild)
+    return YES;
 
   if (aMessage == NS_DRAGDROP_EXIT && dragSession) {
     nsCOMPtr<nsIDOMNode> sourceNode;
@@ -4279,6 +4363,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 {
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView draggingExited: entered\n"));
 
+  nsAutoRetainView kungFuDeathGrip(self);
   [self doDragAction:NS_DRAGDROP_EXIT sender:sender];
   NS_IF_RELEASE(mDragService);
 }
@@ -4286,6 +4371,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
+  nsAutoRetainView kungFuDeathGrip(self);
   BOOL handled = [self doDragAction:NS_DRAGDROP_DROP sender:sender];
   NS_IF_RELEASE(mDragService);
   return handled;
@@ -4396,10 +4482,14 @@ static BOOL keyUpAlreadySentKeyDown = NO;
     return nil;
 
   id<mozAccessible> nativeAccessible = nil;
-  
+
+  nsAutoRetainView kungFuDeathGrip(self);
+  nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
   nsCOMPtr<nsIAccessible> accessible;
   mGeckoChild->GetDocumentAccessible(getter_AddRefs(accessible));
-  
+  if (!mGeckoChild)
+    return nil;
+
   if (accessible)
     accessible->GetNativeInterface((void**)&nativeAccessible);
 
