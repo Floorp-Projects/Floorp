@@ -162,3 +162,7 @@ rm $fxdir/chrome/tests.manifest
 if [ -f ${minotaurdir}/EULA.txt ]; then
   rm ${minotaurdir}/EULA.txt
 fi
+if [ -f ${minotaurdir}/profile.txt ]; then
+  python mozInstall.py -o d -d "`cat profile.txt`"
+  rm profile.txt
+fi
