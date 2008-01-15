@@ -54,7 +54,7 @@ var failed = false;
 try
 {
   if ("3" !== 3..toLocaleString())
-    throw '"3" should equal 3..toLocaleString()";
+    throw '"3" should equal 3..toLocaleString()';
   if ("9" !== 9..toLocaleString(8))
     throw 'Number.prototype.toLocaleString should ignore its first argument';
 }
