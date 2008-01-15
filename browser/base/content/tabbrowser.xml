@@ -59,7 +59,7 @@
 
   <binding id="tabbrowser">
     <resources>
-      <stylesheet src="chrome://browser/skin/browser.css"/>
+      <stylesheet src="chrome://browser/content/tabbrowser.css"/>
     </resources>
 
     <content>
