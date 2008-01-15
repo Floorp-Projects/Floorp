@@ -2395,31 +2395,49 @@ function ExtensionManager() {
   InstallLocations.put(profileLocation);
 
   // Register per-user Install Location
-  var appSystemUExtensions = getDirNoCreate("XREUSysExt", [gApp.ID]);
-  var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_USER;
-  var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_USER,
-                                                    appSystemUExtensions, false,
-                                                    priority, true);
-  InstallLocations.put(systemLocation);
+  try {
+    var appSystemUExtensions = getDirNoCreate("XREUSysExt", [gApp.ID]);
+  }
+  catch(e) { }
+
+  if (appSystemUExtensions) {
+    var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_USER;
+    var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_USER,
+                                                      appSystemUExtensions, false,
+                                                      priority, true);
+
+    InstallLocations.put(systemLocation);
+  }
 
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
   // Register App-System-Shared Install Location
-  var appSystemSExtensions = getDirNoCreate("XRESysSExtPD", [gApp.ID]);
-  var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 10;
-  var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_SHARE,
-                                                    appSystemSExtensions, true,
-                                                    priority, true);
-  InstallLocations.put(systemLocation);
+  try {
+    var appSystemSExtensions = getDirNoCreate("XRESysSExtPD", [gApp.ID]);
+  }
+  catch (e) { }
 
+  if (appSystemSExtensions) {
+    var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 10;
+    var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_SHARE,
+                                                      appSystemSExtensions, true,
+                                                      priority, true);
+    InstallLocations.put(systemLocation);
+  }
 
   // Register App-System-Local Install Location
-  var appSystemLExtensions = getDirNoCreate("XRESysLExtPD", [gApp.ID]);
-  var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 20;
-  var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL,
-                                                    appSystemLExtensions, true,
-                                                    priority, true);
-  InstallLocations.put(systemLocation);
+  try {
+    var appSystemLExtensions = getDirNoCreate("XRESysLExtPD", [gApp.ID]);
+  }
+  catch (e) { }
+
+  if (appSystemLExtensions) {
+    var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 20;
+    var systemLocation = new DirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL,
+                                                      appSystemLExtensions, true,
+                                                      priority, true);
+    InstallLocations.put(systemLocation);
+  }
 #endif
 #endif
 
