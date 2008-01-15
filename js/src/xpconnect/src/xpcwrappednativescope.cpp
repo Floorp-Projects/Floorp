@@ -152,6 +152,12 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
 
         mNext = gScopes;
         gScopes = this;
+
+        // Grab the XPCContext associated with our context.
+        mContext = mRuntime->GetContextMap()->Find(ccx.GetJSContext());
+        NS_ASSERTION(mContext, "Context map is not synchronized");
+
+        mContext->AddScope(this);
     }
 
     if(aGlobal)
@@ -273,6 +279,9 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
         NS_ASSERTION(0 == mWrapperMap->Count(), "scope has non-empty map");
         delete mWrapperMap;
     }
+
+    if(mContext)
+        mContext->RemoveScope(this);
 
     // XXX we should assert that we are dead or that xpconnect has shutdown
     // XXX might not want to do this at xpconnect shutdown time???
