@@ -399,6 +399,10 @@
     <a href="#email1" class="include"/>
     <a href="#email2"/>
   </div>
+  <div class="vcard" id="31-include.4">
+    <a class="url fn" href="http://suda.co.uk/">Brian Suda</a>
+    <a href="#email" class="include"/>
+  </div>
 
   <table>
     <tr>
@@ -957,6 +961,13 @@ function test_hCard() {
   is(hcard.url, "http://suda.co.uk/", "31-include.3 - url");
   is(hcard.email[0].value, "correct@example.com", "31-include.3 - email");
   isnot(hcard.email[0].value, "incorrect@example.com", "31-include.3 - email");
+
+  hcard = new hCard(document.getElementById("31-include.4"));
+
+  is(hcard.fn, "Brian Suda", "31-include.3 - fn");
+  is(hcard.n["given-name"], "Brian", "31-include.3 - given-name");
+  is(hcard.n["family-name"], "Suda", "31-include.3 - family-name");
+  is(hcard.url, "http://suda.co.uk/", "31-include.3 - url");
 
   hcard = new hCard(document.getElementById("32-header.1"));
 

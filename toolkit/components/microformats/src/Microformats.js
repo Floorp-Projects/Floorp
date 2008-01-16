@@ -703,16 +703,20 @@ var Microformats = {
             if (includes[i].nodeName.toLowerCase() == "object") {
               includeId = includes[i].getAttribute("data").substr(1);
             }
-            includes[i].parentNode.replaceChild(in_mfnode.ownerDocument.getElementById(includeId).cloneNode(true), includes[i]);
+            if (in_mfnode.ownerDocument.getElementById(includeId)) {
+              includes[i].parentNode.replaceChild(in_mfnode.ownerDocument.getElementById(includeId).cloneNode(true), includes[i]);
+            }
           }
         } else {
           var headers = in_mfnode.getAttribute("headers").split(" ");
           for (let i = 0; i < headers.length; i++) {
             var tempNode = in_mfnode.ownerDocument.createElement("span");
             var headerNode = in_mfnode.ownerDocument.getElementById(headers[i]);
-            tempNode.innerHTML = headerNode.innerHTML;
-            tempNode.className = headerNode.className;
-            mfnode.appendChild(tempNode);
+            if (headerNode) {
+              tempNode.innerHTML = headerNode.innerHTML;
+              tempNode.className = headerNode.className;
+              mfnode.appendChild(tempNode);
+            }
           }
         }
       } else {
