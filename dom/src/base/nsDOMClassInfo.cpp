@@ -819,9 +819,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #endif
   NS_DEFINE_CLASSINFO_DATA(XULControllers, nsNonDOMObjectSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
-#ifdef MOZ_XUL
   NS_DEFINE_CLASSINFO_DATA(BoxObject, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
+#ifdef MOZ_XUL
   NS_DEFINE_CLASSINFO_DATA(TreeSelection, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TreeContentView, nsDOMGenericSH,
@@ -2504,11 +2504,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIControllers)
   DOM_CLASSINFO_MAP_END
 
-#ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(BoxObject, nsIBoxObject)
     DOM_CLASSINFO_MAP_ENTRY(nsIBoxObject)
   DOM_CLASSINFO_MAP_END
 
+#ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(TreeSelection, nsITreeSelection)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeSelection)
   DOM_CLASSINFO_MAP_END
