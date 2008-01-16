@@ -824,8 +824,8 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
                 description.Truncate(description.Length() - 1);
 
             escapedShort.Adopt(nsEscapeHTML2(description.get(), description.Length()));
-            // add HORIZONTAL ELLIPSIS (U+2026)
-            escapedShort.AppendLiteral("&#8230;");
+            // add HORIZONTAL ELLIPSIS (U+2026) and ZERO WIDTH SPACE (U+200B) for wrapping
+            escapedShort.AppendLiteral("&#8230;&#8203;");
             nsString tmp;
             tmp.Adopt(nsEscapeHTML2(descriptionAffix.get(), descriptionAffix.Length()));
             escapedShort.Append(tmp);
