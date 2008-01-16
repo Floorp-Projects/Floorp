@@ -1513,7 +1513,6 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
             ReleaseGrabs();
             gtk_grab_remove(widget);
         }
-        gConsumeRollupEvent = PR_FALSE;
         gRollupListener = nsnull;
         gRollupWindow = nsnull;
     }
