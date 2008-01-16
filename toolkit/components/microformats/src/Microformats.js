@@ -508,10 +508,10 @@ var Microformats = {
           }
           break;
       }
-      if (result && prop.types) {
+      if (result && prop.values) {
         var validType = false;
-        for (let type in prop.types) {
-          if (result.toLowerCase() == prop.types[type]) {
+        for (let value in prop.values) {
+          if (result.toLowerCase() == prop.values[value]) {
             validType = true;
             break;
           }
@@ -996,7 +996,7 @@ var adr_definition = {
   properties: {
     "type" : {
       plural: true,
-      types: ["work", "home", "pref", "postal", "dom", "intl", "parcel"]
+      values: ["work", "home", "pref", "postal", "dom", "intl", "parcel"]
     },
     "post-office-box" : {
     },
@@ -1069,7 +1069,7 @@ var hCard_definition = {
       subproperties: {
         "type" : {
           plural: true,
-          types: ["internet", "x400", "pref"]
+          values: ["internet", "x400", "pref"]
         },
         "value" : {
           datatype: "email",
@@ -1082,7 +1082,6 @@ var hCard_definition = {
       required: true
     },
     "geo" : {
-      value: "geo",
       datatype: "microformat",
       microformat: "geo"
     },
@@ -1202,7 +1201,7 @@ var hCard_definition = {
       subproperties: {
         "type" : {
           plural: true,
-          types: ["msg", "home", "work", "pref", "voice", "fax", "cell", "video", "pager", "bbs", "car", "isdn", "pcs"]
+          values: ["msg", "home", "work", "pref", "voice", "fax", "cell", "video", "pager", "bbs", "car", "isdn", "pcs"]
         },
         "value" : {
           datatype: "tel"
@@ -1263,7 +1262,7 @@ var hCalendar_definition = {
       microformat_property: "tag"
     },
     "class" : {
-      types: ["public", "private", "confidential"]
+      values: ["public", "private", "confidential"]
     },
     "description" : {
       datatype: "HTML"
@@ -1280,7 +1279,6 @@ var hCalendar_definition = {
     "duration" : {
     },
     "geo" : {
-      value: "geo",
       datatype: "microformat",
       microformat: "geo"
     },
@@ -1289,11 +1287,11 @@ var hCalendar_definition = {
       microformat: "hCard"
     },
     "status" : {
-      types: ["tentative", "confirmed", "cancelled"]
+      values: ["tentative", "confirmed", "cancelled"]
     },
     "summary" : {},
     "transp" : {
-      types: ["opaque", "transparent"]
+      values: ["opaque", "transparent"]
     },
     "uid" : {
       datatype: "anyURI"
