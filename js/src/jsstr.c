@@ -1015,7 +1015,7 @@ str_indexOf(JSContext *cx, uintN argc, jsval *vp)
     }
 
     /* XXX tune the BMH threshold (512) */
-    if ((jsuint)(patlen - 2) <= BMH_PATLEN_MAX - 2 && textlen >= 512) {
+    if (textlen - i >= 512 && (jsuint)(patlen - 2) <= BMH_PATLEN_MAX - 2) {
         index = js_BoyerMooreHorspool(text, textlen, pat, patlen, i);
         if (index != BMH_BAD_PATTERN)
             goto out;
