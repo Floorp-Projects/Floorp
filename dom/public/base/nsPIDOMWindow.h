@@ -72,8 +72,8 @@ class nsPresContext;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x51316cbc, 0x595e, 0x40b1, \
-  { 0xab, 0x07, 0x21, 0xbf, 0xe0, 0x92, 0x62, 0xa9 } }
+{ 0x909852b5, 0xb9e6, 0x4d94, \
+  { 0x8d, 0xe3, 0x05, 0x16, 0x34, 0x80, 0x0b, 0x73 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -271,6 +271,8 @@ public:
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
+
+  virtual PRBool IsFrozen() const = 0;
 
   // Add a timeout to this window.
   virtual nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,

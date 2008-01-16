@@ -51,7 +51,6 @@
 #include "nsBarProps.h"
 #include "nsDOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
-#include "nsDOMOfflineLoadStatusList.h"
 #include "nsDOMError.h"
 
 // Helper Classes
@@ -764,6 +763,7 @@ nsGlobalWindow::CleanUp()
   mScrollbars = nsnull;
   mLocation = nsnull;
   mFrames = nsnull;
+  mApplicationCache = nsnull;
 
   ClearControllers();
 
@@ -848,6 +848,11 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   // Remove our reference to the document and the document principal.
   mDocument = nsnull;
   mDoc = nsnull;
+
+  if (mApplicationCache) {
+    static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())->Disconnect();
+    mApplicationCache = nsnull;
+  }
 
   if (aClearScope) {
     PRUint32 lang_id;
@@ -940,6 +945,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpenerScriptPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSessionStorage)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDoc)
 
@@ -983,6 +989,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOpenerScriptPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSessionStorage)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocumentPrincipal)
 
   // Unlink any associated preserved wrapper.
@@ -2686,6 +2693,46 @@ nsGlobalWindow::GetFrames(nsIDOMWindowCollection** aFrames)
 
   *aFrames = static_cast<nsIDOMWindowCollection *>(mFrames);
   NS_IF_ADDREF(*aFrames);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCache)
+{
+  FORWARD_TO_INNER(GetApplicationCache, (aApplicationCache), NS_ERROR_UNEXPECTED);
+
+  NS_ENSURE_ARG_POINTER(aApplicationCache);
+
+  if (!mApplicationCache) {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
+    if (!webNav) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = webNav->GetCurrentURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> manifestURI;
+    nsContentUtils::GetOfflineAppManifest(GetOuterWindowInternal(),
+                                          getter_AddRefs(manifestURI));
+
+    PRBool isToplevel;
+    nsCOMPtr<nsIDOMWindow> parentWindow;
+    GetParent(getter_AddRefs(parentWindow));
+    isToplevel = (parentWindow.get() == static_cast<nsIDOMWindow*>(GetOuterWindowInternal()));
+
+    nsDOMOfflineResourceList* applicationCache =
+      new nsDOMOfflineResourceList(isToplevel, manifestURI, uri, this);
+
+    if (!applicationCache) 
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mApplicationCache = applicationCache;
+  }
+
+  NS_IF_ADDREF(*aApplicationCache = mApplicationCache);
+
   return NS_OK;
 }
 
@@ -6653,6 +6700,10 @@ nsGlobalWindow::FireDelayedDOMEvents()
     mPendingStorageEvents = nsnull;
   }
 
+  if (mApplicationCache) {
+    static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())->FirePendingEvents();
+  }
+
   if (mFireOfflineStatusChangeEventOnThaw) {
     mFireOfflineStatusChangeEventOnThaw = PR_FALSE;
     FireOfflineStatusEvent();
@@ -8996,8 +9047,6 @@ nsNavigator::LoadingNewDocument()
   // arrays may have changed.  See bug 150087.
   mMimeTypes = nsnull;
   mPlugins = nsnull;
-  mOfflineResources = nsnull;
-  mPendingOfflineLoads = nsnull;
 }
 
 nsresult
@@ -9114,54 +9163,6 @@ nsNavigator::IsLocallyAvailable(const nsAString &aURI,
   } else {
     *aIsAvailable = PR_FALSE;
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavigator::GetOfflineResources(nsIDOMOfflineResourceList **aList)
-{
-  NS_ENSURE_ARG_POINTER(aList);
-
-  if (!mOfflineResources) {
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
-    if (!webNav) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = webNav->GetCurrentURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mOfflineResources = new nsDOMOfflineResourceList(uri);
-    if (!mOfflineResources) return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_IF_ADDREF(*aList = mOfflineResources);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavigator::GetPendingOfflineLoads(nsIDOMLoadStatusList **aList)
-{
-  NS_ENSURE_ARG_POINTER(aList);
-
-  if (!mPendingOfflineLoads) {
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetDocShell()));
-    if (!webNav) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = webNav->GetCurrentURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mPendingOfflineLoads = new nsDOMOfflineLoadStatusList(uri);
-    if (!mPendingOfflineLoads) return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_IF_ADDREF(*aList = mPendingOfflineLoads);
 
   return NS_OK;
 }

@@ -145,6 +145,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIPermissionManager.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -673,6 +674,82 @@ PRBool
 nsContentUtils::IsPunctuationMark(PRUnichar aChar)
 {
   return CCMAP_HAS_CHAR(gPuncCharsCCMap, aChar);
+}
+
+/* static */
+void
+nsContentUtils::GetOfflineAppManifest(nsIDOMWindow *aWindow, nsIURI **aURI)
+{
+  nsCOMPtr<nsIDOMWindow> top;
+  aWindow->GetTop(getter_AddRefs(top));
+  if (!top) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMDocument> topDOMDocument;
+  top->GetDocument(getter_AddRefs(topDOMDocument));
+  nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDOMDocument);
+  if (!topDoc) {
+    return;
+  }
+
+  nsCOMPtr<nsIContent> docElement = topDoc->GetRootContent();
+  if (!docElement) {
+    return;
+  }
+
+  nsAutoString manifestSpec;
+  docElement->GetAttr(kNameSpaceID_None, nsGkAtoms::manifest, manifestSpec);
+
+  // Manifest URIs can't have fragment identifiers.
+  if (manifestSpec.IsEmpty() ||
+      manifestSpec.FindChar('#') != kNotFound) {
+    return;
+  }
+
+  nsContentUtils::NewURIWithDocumentCharset(aURI, manifestSpec,
+                                            topDoc, topDoc->GetBaseURI());
+}
+
+/* static */
+PRBool
+nsContentUtils::OfflineAppAllowed(nsIURI *aURI)
+{
+  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
+  if (!innerURI)
+    return PR_FALSE;
+
+  // only http and https applications can use offline APIs.
+  PRBool match;
+  nsresult rv = innerURI->SchemeIs("http", &match);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  if (!match) {
+    rv = innerURI->SchemeIs("https", &match);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    if (!match) {
+      return PR_FALSE;
+    }
+  }
+
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permissionManager) {
+    return PR_FALSE;
+  }
+
+  PRUint32 perm;
+  permissionManager->TestExactPermission(innerURI, "offline-app", &perm);
+
+  if (perm == nsIPermissionManager::UNKNOWN_ACTION) {
+    return GetBoolPref("offline-apps.allow_by_default");
+  }
+
+  if (perm == nsIPermissionManager::DENY_ACTION) {
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 // static
