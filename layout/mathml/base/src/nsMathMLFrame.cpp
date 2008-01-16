@@ -228,7 +228,8 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     }
     // stop if we reach the root <math> tag
     nsIContent* content = frame->GetContent();
-    NS_ASSERTION(content, "dangling frame without a content node");
+    NS_ASSERTION(content || !frame->GetParent(), // no assert for the root
+                 "dangling frame without a content node"); 
     if (!content)
       break;
 
@@ -241,7 +242,8 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
     }
     frame = frame->GetParent();
   }
-  NS_ASSERTION(frame, "bad MathML markup - could not find the top <math> element");
+  NS_WARN_IF_FALSE(frame && frame->GetContent(),
+                   "bad MathML markup - could not find the top <math> element");
 }
 
 // helper to get an attribute from the content or the surrounding <mstyle> hierarchy
