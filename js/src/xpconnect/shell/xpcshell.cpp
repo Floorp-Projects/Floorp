@@ -81,6 +81,10 @@
 
 #include "nsIJSContextStack.h"
 
+#ifdef MOZ_SHARK
+#include "jsdbgapi.h"
+#endif
+
 /***************************************************************************/
 
 #ifdef JS_THREADSAFE
@@ -425,6 +429,12 @@ static JSFunctionSpec glob_functions[] = {
     {"clear",           Clear,          1,0,0},
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0,0},
+#endif
+#ifdef MOZ_SHARK
+    {"startShark",      StartShark,     0,0,0},
+    {"stopShark",       StopShark,      0,0,0},
+    {"connectShark",    ConnectShark,   0,0,0},
+    {"disconnectShark", DisconnectShark,0,0,0},
 #endif
     {nsnull,nsnull,0,0,0}
 };
@@ -884,7 +894,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             compileOnly = JS_TRUE;
             isInteractive = JS_FALSE;
             break;
-
+#ifdef MOZ_SHARK
+        case 'k':
+            js_ConnectShark();
+            break;
+#endif
         default:
             return usage();
         }

@@ -522,7 +522,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'z':
             obj = split_setup(cx);
             break;
-
+#ifdef MOZ_SHARK
+        case 'k':
+            js_ConnectShark();
+            break;
+#endif
         default:
             return usage();
         }
@@ -2523,6 +2527,12 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("getslx",         GetSLX,         1,1,0),
     JS_FN("toint32",        ToInt32,        1,1,0),
     JS_FS("evalcx",         EvalInContext,  1,0,0),
+#ifdef MOZ_SHARK
+    JS_FS("startShark",      StartShark,      0,0,0),
+    JS_FS("stopShark",       StopShark,       0,0,0),
+    JS_FS("connectShark",    ConnectShark,    0,0,0),
+    JS_FS("disconnectShark", DisconnectShark, 0,0,0),
+#endif
     JS_FS_END
 };
 
@@ -2585,6 +2595,14 @@ static const char *const shell_help_messages[] = {
 "  Evaluate s in optional sandbox object o\n"
 "  if (s == '' && !o) return new o with eager standard classes\n"
 "  if (s == 'lazy' && !o) return new o with lazy standard classes",
+#ifdef MOZ_SHARK
+"startShark()             Start a Shark session.\n"
+"                         Shark must be running with programatic sampling.",
+"stopShark()              Stop a running Shark session.",
+"connectShark()           Connect to Shark.\n"
+"                         The -k switch does this automatically.",
+"disconnectShark()        Disconnect from Shark.",
+#endif
 };
 
 /* Help messages must match shell functions. */
