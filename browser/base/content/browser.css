@@ -45,3 +45,13 @@ window[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromecla
 window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-menubar) {
   display: none;
 }
+
+#navigator-toolbox ,
+#status-bar ,
+#mainPopupSet {
+  min-width: 1px;
+}
+
+#FindToolbar {
+  overflow-x: hidden;
+}
