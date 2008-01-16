@@ -46,13 +46,21 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
-        test_pendingOfflineLoads.html \
+	offlineTests.js \
+	test_badManifestMagic.html \
+	test_badManifestMime.html \
+	test_missingFile.html \
+	test_simpleManifest.html \
+	test_offlineIFrame.html \
+	badManifestMagic.cacheManifest \
+	badManifestMagic.cacheManifest^headers^ \
+	missingFile.cacheManifest \
+	missingFile.cacheManifest^headers^ \
+	simpleManifest.cacheManifest \
+	simpleManifest.cacheManifest^headers^ \
+	simpleManifest.notmanifest \
+	offlineChild.html \
         $(NULL)
-
-# XXX: disabled pending fixes
-#        test_isLocallyAvailable.html \
-#        test_offlineResources.html
-
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
