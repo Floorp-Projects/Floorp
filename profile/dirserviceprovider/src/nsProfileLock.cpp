@@ -58,6 +58,7 @@
 #include "prnetdb.h"
 #include "prsystem.h"
 #include "prprf.h"
+#include "prenv.h"
 #endif
 
 #ifdef VMS
@@ -69,6 +70,8 @@
 //
 // This code was moved from profile/src/nsProfileAccess.
 // **********************************************************************
+
+static PRBool sDisableSignalHandling = PR_FALSE;
 
 nsProfileLock::nsProfileLock() :
     mHaveLock(PR_FALSE)
@@ -84,6 +87,7 @@ nsProfileLock::nsProfileLock() :
 #if defined (XP_UNIX)
     next = prev = this;
 #endif
+    sDisableSignalHandling = PR_GetEnv("MOZ_DISABLE_SIG_HANDLER") ? PR_TRUE : PR_FALSE;
 }
 
 
@@ -379,10 +383,11 @@ nsresult nsProfileLock::LockWithSymlink(const nsACString& lockFilePath, PRBool a
                 // Clean up on abnormal termination, using POSIX sigaction.
                 // Don't arm a handler if the signal is being ignored, e.g.,
                 // because mozilla is run via nohup.
-                struct sigaction act, oldact;
-                act.sa_handler = FatalSignalHandler;
-                act.sa_flags = 0;
-                sigfillset(&act.sa_mask);
+                if (!sDisableSignalHandling) {
+                    struct sigaction act, oldact;
+                    act.sa_handler = FatalSignalHandler;
+                    act.sa_flags = 0;
+                    sigfillset(&act.sa_mask);
 
 #define CATCH_SIGNAL(signame)                                           \
 PR_BEGIN_MACRO                                                          \
@@ -393,15 +398,16 @@ PR_BEGIN_MACRO                                                          \
   }                                                                     \
   PR_END_MACRO
 
-                CATCH_SIGNAL(SIGHUP);
-                CATCH_SIGNAL(SIGINT);
-                CATCH_SIGNAL(SIGQUIT);
-                CATCH_SIGNAL(SIGILL);
-                CATCH_SIGNAL(SIGABRT);
-                CATCH_SIGNAL(SIGSEGV);
-                CATCH_SIGNAL(SIGTERM);
+                    CATCH_SIGNAL(SIGHUP);
+                    CATCH_SIGNAL(SIGINT);
+                    CATCH_SIGNAL(SIGQUIT);
+                    CATCH_SIGNAL(SIGILL);
+                    CATCH_SIGNAL(SIGABRT);
+                    CATCH_SIGNAL(SIGSEGV);
+                    CATCH_SIGNAL(SIGTERM);
 
 #undef CATCH_SIGNAL
+                }
             }
         }
     }
