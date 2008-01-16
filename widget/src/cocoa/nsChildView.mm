@@ -2657,6 +2657,16 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
 - (void)mouseMoved:(NSEvent*)theEvent
 {
+  // Work around an Apple bug that causes the OS to continue sending
+  // mouseMoved events to a window for a while after it's been miniaturized.
+  // This may be related to a similar problem with popup windows (bmo bug
+  // 378645, popup windows continue to receive mouseMoved events after having
+  // been "ordered out"), which is worked around in nsCocoaWindow::Show()
+  // (search on 378645 in nsCocoaWindow.mm).  This problem is bmo bug 410219,
+  // and exists in both OS X 10.4 and 10.5.
+  if ([[self window] isMiniaturized])
+    return;
+
   NSPoint windowEventLocation = nsCocoaUtils::EventLocationForWindow(theEvent, mWindow);
   NSPoint screenEventLocation = [mWindow convertBaseToScreen:windowEventLocation];
   NSPoint viewEventLocation = [self convertPoint:windowEventLocation fromView:nil];
