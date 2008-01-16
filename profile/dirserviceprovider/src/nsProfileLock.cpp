@@ -71,7 +71,9 @@
 // This code was moved from profile/src/nsProfileAccess.
 // **********************************************************************
 
+#if defined (XP_UNIX)
 static PRBool sDisableSignalHandling = PR_FALSE;
+#endif
 
 nsProfileLock::nsProfileLock() :
     mHaveLock(PR_FALSE)
@@ -86,8 +88,8 @@ nsProfileLock::nsProfileLock() :
 {
 #if defined (XP_UNIX)
     next = prev = this;
-#endif
     sDisableSignalHandling = PR_GetEnv("MOZ_DISABLE_SIG_HANDLER") ? PR_TRUE : PR_FALSE;
+#endif
 }
 
 
