@@ -70,10 +70,8 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsNetCID.h"
-#include "nsICache.h"
-#include "nsICacheService.h"
-#include "nsICacheSession.h"
 #include "nsIOfflineCacheUpdate.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIDOMLoadStatus.h"
 #include "nsICookieService.h"
 #include "nsIPrompt.h"
@@ -94,6 +92,7 @@
 #include "nsIDOMNode.h"
 #include "nsThreadUtils.h"
 #include "nsPresShellIterator.h"
+#include "nsPIDOMWindow.h"
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
@@ -684,11 +683,6 @@ nsContentSink::ProcessLink(nsIContent* aElement,
     PrefetchHref(aHref, aElement, hasPrefetch);
   }
 
-  // fetch href into the offline cache if relation is "offline-resource"
-  if (linkTypes.IndexOf(NS_LITERAL_STRING("offline-resource")) != -1) {
-    AddOfflineResource(aHref, aElement);
-  }
-
   // is it a stylesheet link?
   if (linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) == -1) {
     return NS_OK;
@@ -820,64 +814,62 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
   }
 }
 
-nsresult
-nsContentSink::AddOfflineResource(const nsAString &aHref, nsIContent *aSource)
+void
+nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
 {
-  PRBool match;
-  nsresult rv;
+  // Check for a manifest= attribute.
+  nsAutoString manifestSpec;
+  aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::manifest, manifestSpec);
 
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(mDocumentURI);
-  if (!innerURI)
-    return NS_ERROR_FAILURE;
-
-  if (!mHaveOfflineResources) {
-    mHaveOfflineResources = PR_TRUE;
-
-    // only let http and https urls add offline resources
-    nsresult rv = innerURI->SchemeIs("http", &match);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!match) {
-      rv = innerURI->SchemeIs("https", &match);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!match)
-        return NS_OK;
-    }
-
-    // create updater
-    mOfflineCacheUpdate =
-      do_CreateInstance(NS_OFFLINECACHEUPDATE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCAutoString ownerDomain;
-    rv = innerURI->GetHostPort(ownerDomain);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCAutoString ownerSpec;
-    rv = mDocumentURI->GetSpec(ownerSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mOfflineCacheUpdate->Init(PR_FALSE, ownerDomain,
-                                   ownerSpec, mDocumentURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Kick off this update when the document is done loading
-    nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
-    mOfflineCacheUpdate->ScheduleOnDocumentStop(doc);
+  if (manifestSpec.IsEmpty() ||
+      manifestSpec.FindChar('#') != kNotFound) {
+    return;
   }
 
-  if (!mOfflineCacheUpdate) return NS_OK;
+  // We only care about manifests in toplevel windows.
+  nsCOMPtr<nsPIDOMWindow> pwindow =
+    do_QueryInterface(mDocument->GetScriptGlobalObject());
+  if (!pwindow) {
+    return;
+  }
 
-  const nsACString &charset = mDocument->GetDocumentCharacterSet();
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aHref,
-                 charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
-                 mDocumentBaseURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(pwindow->GetOuterWindow());
+  if (!window) {
+    return;
+  }
 
-  nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
+  nsCOMPtr<nsIDOMWindow> parent;
+  window->GetParent(getter_AddRefs(parent));
+  if (parent.get() != window.get()) {
+    return;
+  }
 
-  return mOfflineCacheUpdate->AddURI(uri, domNode);
+  // Only update if the document has permission to use offline APIs.
+  if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> manifestURI;
+  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(manifestURI),
+                                            manifestSpec, mDocument,
+                                            mDocumentURI);
+  if (!manifestURI) {
+    return;
+  }
+
+  // Documents must list a manifest from the same origin
+  nsresult rv = nsContentUtils::GetSecurityManager()->
+                   CheckSameOriginURI(manifestURI, mDocumentURI, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  // Start the update
+  nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
+    do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+  updateService->ScheduleOnDocumentStop(manifestURI, mDocumentURI, domdoc);
 }
 
 void
