@@ -242,6 +242,7 @@ bin/components/nsContentDispatchChooser.js
 bin/components/nsHandlerService.js
 bin/components/nsScriptableIO.js
 bin/components/nsWebHandlerApp.js
+bin/components/libdbusservice.so
 
 ; Modules
 bin/modules/*
