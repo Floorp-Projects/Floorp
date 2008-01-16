@@ -2071,6 +2071,9 @@ nsUrlClassifierDBServiceWorker::ResetUpdate()
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *observer)
 {
+  if (gShuttingDownThread)
+    return NS_ERROR_NOT_INITIALIZED;
+
   NS_ENSURE_STATE(!mUpdateObserver);
 
   nsresult rv = OpenDb();
@@ -2110,6 +2113,9 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::BeginStream()
 {
+  if (gShuttingDownThread)
+    return NS_ERROR_NOT_INITIALIZED;
+
   NS_ENSURE_STATE(mUpdateObserver);
   NS_ENSURE_STATE(!mInStream);
 
@@ -2194,6 +2200,9 @@ nsUrlClassifierDBServiceWorker::UpdateStream(const nsACString& chunk)
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::FinishStream()
 {
+  if (gShuttingDownThread)
+    return NS_ERROR_NOT_INITIALIZED;
+
   NS_ENSURE_STATE(mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
 
@@ -2207,6 +2216,9 @@ nsUrlClassifierDBServiceWorker::FinishStream()
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::FinishUpdate()
 {
+  if (gShuttingDownThread)
+    return NS_ERROR_NOT_INITIALIZED;
+
   NS_ENSURE_STATE(!mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
 
@@ -2885,8 +2897,11 @@ nsUrlClassifierDBService::Shutdown()
   LOG(("joining background thread"));
 
   gShuttingDownThread = PR_TRUE;
-  gDbBackgroundThread->Shutdown();
-  NS_RELEASE(gDbBackgroundThread);
+
+  nsIThread *backgroundThread = gDbBackgroundThread;
+  gDbBackgroundThread = nsnull;
+  backgroundThread->Shutdown();
+  NS_RELEASE(backgroundThread);
 
   return NS_OK;
 }
