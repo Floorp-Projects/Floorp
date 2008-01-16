@@ -1435,7 +1435,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
                              GdkRectangle* cliprect, GtkWidgetState* state,
                              GtkTextDirection direction)
 {
-    gfloat arrow_scaling;
+    static gfloat arrow_scaling = 0.7;
     gint real_arrow_padding;
     GdkRectangle arrow_rect, real_arrow_rect;
     GtkStateType state_type = ConvertGtkState(state);
@@ -1459,9 +1459,6 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     style = gArrowWidget->style;
     TSOffsetStyleGCs(style, real_arrow_rect.x, real_arrow_rect.y);
 
-    gtk_widget_style_get(gArrowWidget,
-                         "arrow-scaling", &arrow_scaling,
-                         NULL);
     real_arrow_rect.width = real_arrow_rect.height =
         MIN (real_arrow_rect.width, real_arrow_rect.height) * arrow_scaling;
 
