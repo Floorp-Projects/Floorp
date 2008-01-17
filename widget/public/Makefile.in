@@ -77,8 +77,12 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 EXPORTS		+= nsIDragSessionBeOS.h
 endif
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS		+= nsIDragSessionGTK.h
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+EXPORTS		+= \
+		nsIDragSessionGTK.h \
+		nsIPrintDialogService.h \
+		$(NULL)
+
 endif
 
 XPIDLSRCS	= \
@@ -116,6 +120,10 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 XPIDLSRCS	+= nsIPrintSettingsX.idl \
 		nsIPrintSessionX.idl
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+XPIDLSRCS	+= nsIPrintSettingsGTK.idl
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
