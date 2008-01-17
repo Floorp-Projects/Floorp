@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ex: set tabstop=8 softtabstop=4 shiftwidth=4 expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,11 +13,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla GTK2 print dialog interface.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Kenneth Herron <kherron@fmailbox.com>
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Kenneth Herron <kherron@fastmail.us>.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,24 +36,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPrintDialog_h__
-#define nsPrintDialog_h__
+#ifndef nsPrintJobFactoryGTK_h__
+#define nsPrintJobFactoryGTK_h__
 
-#include "nsIPrintDialogService.h"
+class nsIPrintJobGTK;
+class nsDeviceContextSpecGTK;
 
-class nsIPrintSettings;
+/* Factory class for the print job subsystem. This class determines
+ * which print job class should handle a print job, and constructs
+ * an object of the appropriate class.
+ */
 
-class nsPrintDialogServiceGTK : public nsIPrintDialogService
+
+class nsPrintJobFactoryGTK
 {
 public:
-  nsPrintDialogServiceGTK();
-  virtual ~nsPrintDialogServiceGTK();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHODIMP Init();
-  NS_IMETHODIMP Show(nsIPrintSettings *aSettings);
-  NS_IMETHODIMP ShowPageSetup(nsIPrintSettings *aSettings);
+    /**
+     * Construct a print job object for the given device context spec.
+     * On success, the print job object is owned by the caller and should
+     * be destroyed when no longer needed.
+     *
+     * @param aSpec     An nsIDeviceContextSpecGTK object for the print
+     *                  job in question.
+     * @param aPrintJob If NS_OK is returned, this will be filled in with
+     *                  a pointer to a print job object.
+     * @return NS_OK or a suitable error value.
+     */
+    static nsresult CreatePrintJob(nsDeviceContextSpecGTK *aSpec,
+	    nsIPrintJobGTK* &aPrintJob);
 };
 
-#endif
+
+#endif /* nsPrintJobFactoryGTK_h__ */

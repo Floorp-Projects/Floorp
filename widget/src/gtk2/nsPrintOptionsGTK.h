@@ -52,7 +52,6 @@ public:
   nsPrintOptionsGTK();
   virtual ~nsPrintOptionsGTK();
 
-  virtual nsresult _CreatePrintSettings(nsIPrintSettings **_retval);
 
 };
 
