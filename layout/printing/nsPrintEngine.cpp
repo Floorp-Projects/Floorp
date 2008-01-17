@@ -597,8 +597,6 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
           // are telling GFX we want to print silent
           printSilently = PR_TRUE;
         }
-        // XXX Some platforms allow the user to change the ShrinkToFit option so change it here too
-        mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
       } else {
         rv = NS_ERROR_GFX_NO_PRINTROMPTSERVICE;
       }
