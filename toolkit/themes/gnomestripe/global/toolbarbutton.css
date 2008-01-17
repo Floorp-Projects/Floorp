@@ -123,11 +123,14 @@ toolbarbutton[checked="true"]:hover:active {
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
-  -moz-appearance: none !important;
+  -moz-appearance: toolbarbutton-dropdown !important;
+  list-style-image: none;
+  width: 13px;
+  height: 13px;
   border: none !important;
   background-color: transparent !important;
   padding: 0;
-  width: auto;
+  margin: 2px;
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
@@ -165,8 +168,10 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   border: none !important;
   background-color: transparent !important;
   padding: 3px;
-  width: auto;
-  -moz-appearance: dualbutton-dropdown !important;
+  -moz-appearance: toolbarbutton-dropdown !important;
+  list-style-image: none;
+  width: 12px;
+  height: 12px;
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {

@@ -192,6 +192,8 @@ typedef enum {
   MOZ_GTK_MENUPOPUP,
   /* Paints the arrow of menuitems that contain submenus */
   MOZ_GTK_MENUARROW,
+  /* Paints an arrow that points down */
+  MOZ_GTK_TOOLBARBUTTON_ARROW,
   /* Paints items of menubar and popups. */
   MOZ_GTK_MENUITEM,
   MOZ_GTK_CHECKMENUITEM,
