@@ -53,7 +53,7 @@ class nsIContent;
 class nsMappedAttributes;
 class nsHTMLStyleSheet;
 class nsRuleWalker;
-class nsGenericHTMLElement;
+class nsMappedAttributeElement;
 
 #define ATTRCHILD_ARRAY_GROWSIZE 8
 #define ATTRCHILD_ARRAY_LINEAR_THRESHOLD 32
@@ -120,7 +120,7 @@ public:
   PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
 
   nsresult SetAndTakeMappedAttr(nsIAtom* aLocalName, nsAttrValue& aValue,
-                                nsGenericHTMLElement* aContent,
+                                nsMappedAttributeElement* aContent,
                                 nsHTMLStyleSheet* aSheet);
   nsresult SetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet);
   void WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker);
@@ -134,7 +134,7 @@ private:
   PRUint32 NonMappedAttrCount() const;
   PRUint32 MappedAttrCount() const;
 
-  nsresult GetModifiableMapped(nsGenericHTMLElement* aContent,
+  nsresult GetModifiableMapped(nsMappedAttributeElement* aContent,
                                nsHTMLStyleSheet* aSheet,
                                PRBool aWillAddAttr,
                                nsMappedAttributes** aModifiable);

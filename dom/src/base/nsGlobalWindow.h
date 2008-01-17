@@ -301,6 +301,10 @@ public:
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
   virtual NS_HIDDEN_(nsresult) ResumeTimeouts();
   virtual NS_HIDDEN_(nsresult) FireDelayedDOMEvents();
+  virtual NS_HIDDEN_(PRBool) IsFrozen() const
+  {
+    return mIsFrozen;
+  }
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
 
@@ -390,11 +394,6 @@ public:
   nsGlobalWindow *EnsureInnerWindowInternal()
   {
     return static_cast<nsGlobalWindow *>(EnsureInnerWindow());
-  }
-
-  PRBool IsFrozen() const
-  {
-    return mIsFrozen;
   }
 
   PRBool IsCreatingInnerWindow() const
@@ -718,6 +717,8 @@ protected:
   PRBool mSetOpenerWindowCalled;
 #endif
 
+  nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
+
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   static nsIFactory *sComputedDOMStyleFactory;
@@ -804,8 +805,6 @@ public:
 protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
-  nsRefPtr<nsDOMOfflineResourceList> mOfflineResources;
-  nsRefPtr<nsDOMOfflineLoadStatusList> mPendingOfflineLoads;
   nsIDocShell* mDocShell; // weak reference
 
   static jsval       sPrefInternal_id;

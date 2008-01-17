@@ -27,7 +27,7 @@ sub Announce {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
 
     $this->SendAnnouncement(
       subject => "$product $version sign step finished",

@@ -356,16 +356,19 @@
                 </menuitem>
 
                 <menuitem label="&historyHomeCmd.label;"
-                          command="Browser:Home"
+                          oncommand="BrowserGoHome(event);"
+                          onclick="checkForMiddleClick(this, event);"
                           key="goHome"/>
+                <menuitem label="&showAllHistoryCmd.label;"
+#ifndef XP_MACOSX
+                          key="showAllHistoryKb"
+#endif
+                          command="Browser:ShowAllHistory"/>
                 <menuseparator id="startHistorySeparator" builder="start"/>
                 <menuseparator id="endHistorySeparator" builder="end"/>
                 <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
                   <menupopup id="historyUndoPopup" onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
                 </menu>
-                <menuseparator id="endUndoSeparator"/>
-                <menuitem label="&showAllHistoryCmd.label;"
-                          command="Browser:ShowAllHistory"/>
               </menupopup>
             </menu>
 
@@ -383,7 +386,7 @@
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);">
-      <menuitem label="&addCurPageAsCmd.label;" 
+      <menuitem label="&bookmarkThisPageCmd.label;" 
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
       <menuitem id="subscribeToPageMenuitem"
                 label="&subscribeToPageMenuitem.label;"

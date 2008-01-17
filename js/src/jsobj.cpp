@@ -2752,8 +2752,8 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
     }
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
-    if (!js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_CLASSNAME,
-                                    &pobj, &prop)) {
+    if (js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_CLASSNAME,
+                                   &pobj, &prop) < 0) {
         return JS_FALSE;
     }
     v = JSVAL_VOID;
@@ -3225,14 +3225,21 @@ JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp)
 {
-    return js_LookupPropertyWithFlags(cx, obj, id, 0, objp, propp);
+    return js_LookupPropertyWithFlags(cx, obj, id, 0, objp, propp) >= 0;
 }
 
-JSBool
+#ifdef JS_SCOPE_DEPTH_METER
+# define SCOPE_DEPTH_ACCUM(bs,val) JS_BASIC_STATS_ACCUM(bs,val)
+#else
+# define SCOPE_DEPTH_ACCUM(bs,val) /* nothing */
+#endif
+
+int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp)
 {
     JSObject *start, *obj2, *proto;
+    int protoIndex;
     JSScope *scope;
     JSScopeProperty *sprop;
     JSClass *clasp;
@@ -3255,7 +3262,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     JS_COUNT_OPERATION(cx, JSOW_LOOKUP_PROPERTY);
     /* Search scopes starting with obj and following the prototype link. */
     start = obj;
-    for (;;) {
+    for (protoIndex = 0; ; protoIndex++) {
         JS_LOCK_OBJ(cx, obj);
         scope = OBJ_SCOPE(obj);
         if (scope->object == obj) {
@@ -3282,7 +3289,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                  */
                 if (!js_StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry)) {
                     JS_UNLOCK_OBJ(cx, obj);
-                    return JS_FALSE;
+                    return -1;
                 }
                 if (!entry) {
                     /* Already resolving id in obj -- suppress recursion. */
@@ -3380,60 +3387,70 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             cleanup:
                 js_StopResolving(cx, &key, JSRESFLAG_LOOKUP, entry, generation);
-                if (!ok || *propp)
-                    return ok;
+                if (!ok)
+                    return -1;
+                if (*propp)
+                    return protoIndex;
             }
         }
 
         if (sprop) {
+            SCOPE_DEPTH_ACCUM(&cx->runtime->protoLookupDepthStats, protoIndex);
             JS_ASSERT(OBJ_SCOPE(obj) == scope);
             *objp = scope->object;      /* XXXbe hide in jsscope.[ch] */
 
             *propp = (JSProperty *) sprop;
-            return JS_TRUE;
+            return protoIndex;
         }
 
         proto = LOCKED_OBJ_GET_PROTO(obj);
         JS_UNLOCK_OBJ(cx, obj);
         if (!proto)
             break;
-        if (!OBJ_IS_NATIVE(proto))
-            return OBJ_LOOKUP_PROPERTY(cx, proto, id, objp, propp);
+        if (!OBJ_IS_NATIVE(proto)) {
+            if (!OBJ_LOOKUP_PROPERTY(cx, proto, id, objp, propp))
+                return -1;
+            return protoIndex;
+        }
         obj = proto;
     }
 
 out:
     *objp = NULL;
     *propp = NULL;
-    return JS_TRUE;
+    return protoIndex;
 }
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(int)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                 JSProperty **propp)
 {
     JSRuntime *rt;
     JSObject *obj, *pobj, *lastobj;
+    int scopeIndex;
     JSProperty *prop;
 
     rt = cx->runtime;
     obj = cx->fp->scopeChain;
+    scopeIndex = 0;
     do {
         if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
-            return JS_FALSE;
+            return -1;
         if (prop) {
+            SCOPE_DEPTH_ACCUM(&rt->scopeSearchDepthStats, scopeIndex);
             *objp = obj;
             *pobjp = pobj;
             *propp = prop;
-            return JS_TRUE;
+            return scopeIndex;
         }
         lastobj = obj;
+        scopeIndex++;
     } while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL);
 
     *objp = lastobj;
     *pobjp = NULL;
     *propp = NULL;
-    return JS_TRUE;
+    return scopeIndex;
 }
 
 JSObject *
@@ -3446,7 +3463,7 @@ js_FindIdentifierBase(JSContext *cx, jsid id)
      * Look for id's property along the "with" statement chain and the
      * statically-linked scope chain.
      */
-    if (!js_FindProperty(cx, id, &obj, &pobj, &prop))
+    if (js_FindProperty(cx, id, &obj, &pobj, &prop) < 0)
         return NULL;
     if (prop) {
         OBJ_DROP_PROPERTY(cx, pobj, prop);
@@ -4747,32 +4764,18 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
 
 #endif /* JS_HAS_XDR */
 
-#ifdef DEBUG_brendan
+#ifdef JS_DUMP_SCOPE_METERS
 
 #include <stdio.h>
-#include <math.h>
 
-uint32 js_entry_count_max;
-uint32 js_entry_count_sum;
-double js_entry_count_sqsum;
-uint32 js_entry_count_hist[11];
+JSBasicStats js_entry_count_bs = JS_INIT_STATIC_BASIC_STATS;
 
 static void
 MeterEntryCount(uintN count)
 {
-    if (count) {
-        js_entry_count_sum += count;
-        js_entry_count_sqsum += (double)count * count;
-        if (count > js_entry_count_max)
-            js_entry_count_max = count;
-    }
-    js_entry_count_hist[JS_MIN(count, 10)]++;
+    JS_BASIC_STATS_ACCUM(&js_entry_count_bs, count);
 }
 
-#define DEBUG_scopemeters
-#endif /* DEBUG_brendan */
-
-#ifdef DEBUG_scopemeters
 void
 js_DumpScopeMeters(JSRuntime *rt)
 {
@@ -4781,36 +4784,17 @@ js_DumpScopeMeters(JSRuntime *rt)
         logfp = fopen("/tmp/scope.stats", "a");
 
     {
-        double mean = 0., var = 0., sigma = 0.;
-        double nscopes = rt->liveScopes;
-        double nentrys = js_entry_count_sum;
-        if (nscopes > 0 && nentrys >= 0) {
-            mean = nentrys / nscopes;
-            var = nscopes * js_entry_count_sqsum - nentrys * nentrys;
-            if (var < 0.0 || nscopes <= 1)
-                var = 0.0;
-            else
-                var /= nscopes * (nscopes - 1);
+        double mean, sigma;
 
-            /* Windows says sqrt(0.0) is "-1.#J" (?!) so we must test. */
-            sigma = (var != 0.) ? sqrt(var) : 0.;
-        }
+        mean = JS_MeanAndStdDevBS(&js_entry_count_bs, &sigma);
 
-        fprintf(logfp,
-                "scopes %g entries %g mean %g sigma %g max %u",
-                nscopes, nentrys, mean, sigma, js_entry_count_max);
+        fprintf(logfp, "scopes %u entries %g mean %g sigma %g max %u",
+                js_entry_count_bs.num, js_entry_count_bs.sum, mean, sigma,
+                js_entry_count_bs.max);
     }
 
-    fprintf(logfp, " histogram %u %u %u %u %u %u %u %u %u %u %u\n",
-            js_entry_count_hist[0], js_entry_count_hist[1],
-            js_entry_count_hist[2], js_entry_count_hist[3],
-            js_entry_count_hist[4], js_entry_count_hist[5],
-            js_entry_count_hist[6], js_entry_count_hist[7],
-            js_entry_count_hist[8], js_entry_count_hist[9],
-            js_entry_count_hist[10]);
-    js_entry_count_sum = js_entry_count_max = 0;
-    js_entry_count_sqsum = 0;
-    memset(js_entry_count_hist, 0, sizeof js_entry_count_hist);
+    JS_DumpHistogram(&js_entry_count_bs, logfp);
+    JS_BASIC_STATS_INIT(&js_entry_count_bs);
     fflush(logfp);
 }
 #endif
@@ -4887,7 +4871,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     scope = OBJ_SCOPE(obj);
-#ifdef DEBUG_brendan
+#ifdef JS_DUMP_SCOPE_METERS
     if (scope->object == obj)
         MeterEntryCount(scope->entryCount);
 #endif

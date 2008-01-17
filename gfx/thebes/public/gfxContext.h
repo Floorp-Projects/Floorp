@@ -98,6 +98,11 @@ public:
     cairo_t *GetCairo() { return mCairo; }
 
     /**
+     * Returns true if the cairo context is in an error state.
+     */
+    PRBool HasError();
+
+    /**
      ** State
      **/
     // XXX document exactly what bits are saved

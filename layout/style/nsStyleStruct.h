@@ -82,15 +82,10 @@ class imgIRequest;
 #define NS_RULE_NODE_LEVEL_MASK           0xf0000000
 #define NS_RULE_NODE_LEVEL_SHIFT          28
 
-// The actual structs start here
-struct nsStyleStruct {
-};
-
 // The lifetime of these objects is managed by the presshell's arena.
 
-struct nsStyleFont : public nsStyleStruct {
-  nsStyleFont(void);
-  nsStyleFont(const nsFont& aFont);
+struct nsStyleFont {
+  nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext);
   nsStyleFont(const nsStyleFont& aStyleFont);
   nsStyleFont(nsPresContext *aPresContext);
   ~nsStyleFont(void) {}
@@ -103,19 +98,28 @@ struct nsStyleFont : public nsStyleStruct {
 
   static nscoord ZoomText(nsPresContext* aPresContext, nscoord aSize);
   static nscoord UnZoomText(nsPresContext* aPresContext, nscoord aSize);
-  
+
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsPresContext* aContext);
 
-  PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
   nsFont  mFont;        // [inherited]
   nscoord mSize;        // [inherited] Our "computed size". Can be different from mFont.size
                         // which is our "actual size" and is enforced to be >= the user's
                         // preferred min-size. mFont.size should be used for display purposes
                         // while mSize is the value to return in getComputedStyle() for example.
+  PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
+
+#ifdef MOZ_MATHML
+  // MathML scriptlevel support
+  PRInt8  mScriptLevel;          // [inherited]
+  // The value mSize would have had if scriptminsize had never been applied
+  nscoord mScriptUnconstrainedSize;
+  nscoord mScriptMinSize;        // [inherited] length
+  float   mScriptSizeMultiplier; // [inherited]
+#endif
 };
 
-struct nsStyleColor : public nsStyleStruct {
+struct nsStyleColor {
   nsStyleColor(nsPresContext* aPresContext);
   nsStyleColor(const nsStyleColor& aOther);
   ~nsStyleColor(void) {}
@@ -138,7 +142,7 @@ struct nsStyleColor : public nsStyleStruct {
   nscolor mColor;                 // [inherited]
 };
 
-struct nsStyleBackground : public nsStyleStruct {
+struct nsStyleBackground {
   nsStyleBackground(nsPresContext* aPresContext);
   nsStyleBackground(const nsStyleBackground& aOther);
   ~nsStyleBackground();
@@ -203,7 +207,7 @@ struct nsStyleBackground : public nsStyleStruct {
 #define NS_SPACING_BORDER   2
 
 
-struct nsStyleMargin: public nsStyleStruct {
+struct nsStyleMargin {
   nsStyleMargin(void);
   nsStyleMargin(const nsStyleMargin& aMargin);
   ~nsStyleMargin(void) {}
@@ -234,7 +238,7 @@ protected:
 };
 
 
-struct nsStylePadding: public nsStyleStruct {
+struct nsStylePadding {
   nsStylePadding(void);
   nsStylePadding(const nsStylePadding& aPadding);
   ~nsStylePadding(void) {}
@@ -314,7 +318,7 @@ struct nsBorderColors {
     ((l) > 0) ? PR_MAX( (tpp), ((l) + ((tpp) / 2)) / (tpp) * (tpp)) : \
                 PR_MIN(-(tpp), ((l) - ((tpp) / 2)) / (tpp) * (tpp)))
 
-struct nsStyleBorder: public nsStyleStruct {
+struct nsStyleBorder {
   nsStyleBorder(nsPresContext* aContext);
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder(void) {
@@ -495,7 +499,7 @@ protected:
 };
 
 
-struct nsStyleOutline: public nsStyleStruct {
+struct nsStyleOutline {
   nsStyleOutline(nsPresContext* aPresContext);
   nsStyleOutline(const nsStyleOutline& aOutline);
   ~nsStyleOutline(void) {}
@@ -596,7 +600,7 @@ protected:
 };
 
 
-struct nsStyleList : public nsStyleStruct {
+struct nsStyleList {
   nsStyleList(void);
   nsStyleList(const nsStyleList& aStyleList);
   ~nsStyleList(void);
@@ -620,7 +624,7 @@ struct nsStyleList : public nsStyleStruct {
   nsRect        mImageRegion;           // [inherited] the rect to use within an image  
 };
 
-struct nsStylePosition : public nsStyleStruct {
+struct nsStylePosition {
   nsStylePosition(void);
   nsStylePosition(const nsStylePosition& aOther);
   ~nsStylePosition(void);
@@ -649,7 +653,7 @@ struct nsStylePosition : public nsStyleStruct {
   nsStyleCoord  mZIndex;                // [reset] 
 };
 
-struct nsStyleTextReset : public nsStyleStruct {
+struct nsStyleTextReset {
   nsStyleTextReset(void);
   nsStyleTextReset(const nsStyleTextReset& aOther);
   ~nsStyleTextReset(void);
@@ -673,7 +677,7 @@ struct nsStyleTextReset : public nsStyleStruct {
   nsStyleCoord  mVerticalAlign;         // [reset] see nsStyleConsts.h for enums
 };
 
-struct nsStyleText : public nsStyleStruct {
+struct nsStyleText {
   nsStyleText(void);
   nsStyleText(const nsStyleText& aOther);
   ~nsStyleText(void);
@@ -711,7 +715,7 @@ struct nsStyleText : public nsStyleStruct {
   }
 };
 
-struct nsStyleVisibility : public nsStyleStruct {
+struct nsStyleVisibility {
   nsStyleVisibility(nsPresContext* aPresContext);
   nsStyleVisibility(const nsStyleVisibility& aVisibility);
   ~nsStyleVisibility() {}
@@ -743,7 +747,7 @@ struct nsStyleVisibility : public nsStyleStruct {
 	}
 };
 
-struct nsStyleDisplay : public nsStyleStruct {
+struct nsStyleDisplay {
   nsStyleDisplay();
   nsStyleDisplay(const nsStyleDisplay& aOther); 
   ~nsStyleDisplay() {}
@@ -835,7 +839,7 @@ struct nsStyleDisplay : public nsStyleStruct {
   }
 };
 
-struct nsStyleTable: public nsStyleStruct {
+struct nsStyleTable {
   nsStyleTable(void);
   nsStyleTable(const nsStyleTable& aOther);
   ~nsStyleTable(void);
@@ -860,7 +864,7 @@ struct nsStyleTable: public nsStyleStruct {
   PRInt32       mSpan;          // [reset] the number of columns spanned by a colgroup or col
 };
 
-struct nsStyleTableBorder: public nsStyleStruct {
+struct nsStyleTableBorder {
   nsStyleTableBorder(nsPresContext* aContext);
   nsStyleTableBorder(const nsStyleTableBorder& aOther);
   ~nsStyleTableBorder(void);
@@ -926,7 +930,7 @@ struct nsStyleCounterData {
 
 #define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nsnull; }
 
-struct nsStyleQuotes : public nsStyleStruct {
+struct nsStyleQuotes {
   nsStyleQuotes();
   nsStyleQuotes(const nsStyleQuotes& aQuotes);
   ~nsStyleQuotes();
@@ -996,7 +1000,7 @@ protected:
   nsString*           mQuotes;
 };
 
-struct nsStyleContent: public nsStyleStruct {
+struct nsStyleContent {
   nsStyleContent(void);
   nsStyleContent(const nsStyleContent& aContent);
   ~nsStyleContent(void);
@@ -1101,7 +1105,7 @@ protected:
   nsStyleCounterData* mResets;
 };
 
-struct nsStyleUIReset: public nsStyleStruct {
+struct nsStyleUIReset {
   nsStyleUIReset(void);
   nsStyleUIReset(const nsStyleUIReset& aOther);
   ~nsStyleUIReset(void);
@@ -1132,7 +1136,7 @@ struct nsCursorImage {
   nsCursorImage();
 };
 
-struct nsStyleUserInterface: public nsStyleStruct {
+struct nsStyleUserInterface {
   nsStyleUserInterface(void);
   nsStyleUserInterface(const nsStyleUserInterface& aOther);
   ~nsStyleUserInterface(void);
@@ -1167,7 +1171,7 @@ struct nsStyleUserInterface: public nsStyleStruct {
   void CopyCursorArrayFrom(const nsStyleUserInterface& aSource);
 };
 
-struct nsStyleXUL : public nsStyleStruct {
+struct nsStyleXUL {
   nsStyleXUL();
   nsStyleXUL(const nsStyleXUL& aSource);
   ~nsStyleXUL();
@@ -1193,7 +1197,7 @@ struct nsStyleXUL : public nsStyleStruct {
   PRUint8       mBoxPack;               // [reset] see nsStyleConsts.h
 };
 
-struct nsStyleColumn : public nsStyleStruct {
+struct nsStyleColumn {
   nsStyleColumn();
   nsStyleColumn(const nsStyleColumn& aSource);
   ~nsStyleColumn();
@@ -1243,7 +1247,7 @@ struct nsStyleSVGPaint
   }
 };
 
-struct nsStyleSVG : public nsStyleStruct {
+struct nsStyleSVG {
   nsStyleSVG();
   nsStyleSVG(const nsStyleSVG& aSource);
   ~nsStyleSVG();
@@ -1288,7 +1292,7 @@ struct nsStyleSVG : public nsStyleStruct {
   PRUint8          mTextRendering;    // [inherited] see nsStyleConsts.h
 };
 
-struct nsStyleSVGReset : public nsStyleStruct {
+struct nsStyleSVGReset {
   nsStyleSVGReset();
   nsStyleSVGReset(const nsStyleSVGReset& aSource);
   ~nsStyleSVGReset();

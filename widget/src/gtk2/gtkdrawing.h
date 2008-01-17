@@ -78,6 +78,12 @@ typedef struct {
   gint min_slider_size;
 } MozGtkScrollbarMetrics;
 
+typedef enum {
+  MOZ_GTK_STEPPER_DOWN        = 1 << 0,
+  MOZ_GTK_STEPPER_BOTTOM      = 1 << 1,
+  MOZ_GTK_STEPPER_VERTICAL    = 1 << 2
+} GtkScrollbarButtonFlags;
+
 /** flags for tab state **/
 typedef enum {
   /* first eight bits are used to pass a margin */
@@ -142,6 +148,8 @@ typedef enum {
   MOZ_GTK_DROPDOWN,
   /* Paints a dropdown arrow (a GtkButton containing a down GtkArrow). */
   MOZ_GTK_DROPDOWN_ARROW,
+  /* Paints an entry in an editable option menu */
+  MOZ_GTK_DROPDOWN_ENTRY,
   /* Paints the container part of a GtkCheckButton. */
   MOZ_GTK_CHECKBUTTON_CONTAINER,
   /* Paints the container part of a GtkRadioButton. */
@@ -184,6 +192,8 @@ typedef enum {
   MOZ_GTK_MENUPOPUP,
   /* Paints the arrow of menuitems that contain submenus */
   MOZ_GTK_MENUARROW,
+  /* Paints an arrow that points down */
+  MOZ_GTK_TOOLBARBUTTON_ARROW,
   /* Paints items of menubar and popups. */
   MOZ_GTK_MENUITEM,
   MOZ_GTK_CHECKMENUITEM,

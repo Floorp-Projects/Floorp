@@ -247,7 +247,7 @@
                      ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
                      ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
                      ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
-                     onclick="BrowserHomeClick(event);"/>
+                     onclick="BrowserGoHome(event);"/>
 
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location">

@@ -94,12 +94,16 @@ protected:
    *
    * If there is no drag image, the returned surface will be null, but
    * aScreenDragRect will still be set to the drag area.
+   *
+   * aPresContext will be set to the nsPresContext used determined from
+   * whichever of mImage or aDOMNode is used.
    */
   nsresult DrawDrag(nsIDOMNode* aDOMNode,
                     nsIScriptableRegion* aRegion,
                     PRInt32 aScreenX, PRInt32 aScreenY,
                     nsRect* aScreenDragRect,
-                    gfxASurface** aSurface);
+                    gfxASurface** aSurface,
+                    nsPresContext **aPresContext);
 
   /**
    * Draw a drag image for an image node. This is called by DrawDrag.
@@ -109,6 +113,13 @@ protected:
                             PRInt32 aScreenX, PRInt32 aScreenY,
                             nsRect* aScreenDragRect,
                             gfxASurface** aSurface);
+
+  /**
+   * Convert aScreenX and aScreenY from CSS pixels into unscaled device pixels.
+   */
+  void
+  ConvertToUnscaledDevPixels(nsPresContext* aPresContext,
+                             PRInt32* aScreenX, PRInt32* aScreenY);
 
   PRPackedBool mCanDrop;
   PRPackedBool mDoingDrag;

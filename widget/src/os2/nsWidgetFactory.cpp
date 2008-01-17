@@ -80,6 +80,7 @@
 #include "nsHTMLFormatConverter.h"
 
 #include "nsScreenManagerOS2.h"
+#include "nsRwsService.h"
 
 // Printing
 #include "nsDeviceContextSpecOS2.h"
@@ -186,6 +187,10 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
     "@mozilla.org/gfx/printerenumerator;1",
     nsPrinterEnumeratorOS2Constructor },
+  { "Rws Service Interface",
+    NS_RWSSERVICE_CID,
+    NS_RWSSERVICE_CONTRACTID,
+    nsRwsServiceConstructor },
 };
 
 PR_STATIC_CALLBACK(void)

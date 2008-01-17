@@ -89,6 +89,10 @@ CPPSRCS         += \
 		GtkPromptService.cpp
 endif
 
+LOCAL_INCLUDES += \
+		  -I. \
+		  $(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 EXPORTS		= \
@@ -113,4 +117,14 @@ CXXFLAGS        += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
 CFLAGS          += $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
 DEFINES         += -D_IMPL_GTKMOZEMBED
 
+MARSHAL_FILE = gtkmozembedmarshal
+MARSHAL_PREFIX = gtkmozembed
+
+$(MARSHAL_FILE).h: $(MARSHAL_FILE).list
+	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --header > $@
+
+$(MARSHAL_FILE).c: $(MARSHAL_FILE).list $(MARSHAL_FILE).h
+	glib-genmarshal --prefix=$(MARSHAL_PREFIX) $(srcdir)/$(MARSHAL_FILE).list --skip-source --body > $@
+
+GARBAGE += $(MARSHAL_FILE).h $(MARSHAL_FILE).c
 

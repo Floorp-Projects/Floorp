@@ -88,6 +88,8 @@ pkg_config_files = \
 	libxul-embedding-unstable.pc \
 	mozilla-js.pc \
 	mozilla-plugin.pc \
+	mozilla-gtkmozembed.pc \
+	mozilla-gtkmozembed-embedding.pc \
 	$(NULL)
 
 ifdef MOZ_NATIVE_NSPR

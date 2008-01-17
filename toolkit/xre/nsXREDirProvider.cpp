@@ -240,11 +240,14 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
            !strcmp(aProperty, XRE_USER_APP_DATA_DIR)) {
     rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
   }
-#ifdef XP_WIN
   else if (!strcmp(aProperty, XRE_UPDATE_ROOT_DIR)) {
+#ifdef XP_WIN
     rv = GetUpdateRootDir(getter_AddRefs(file));
-  }
+#else
+    // Only supported on Windows, so just immediately fail.
+    return NS_ERROR_FAILURE;
 #endif
+  }
   else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_FILE)) {
     rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
     if (NS_SUCCEEDED(rv))
@@ -297,6 +300,29 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     if (mAppProvider)
       return mAppProvider->GetFile(NS_APP_PROFILE_DIR_STARTUP, aPersistent,
                                    aFile);
+  }
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+  else if (!strcmp(aProperty, XRE_SYS_LOCAL_EXTENSION_PARENT_DIR)) {
+
+    static const char *const sysSExtDir = 
+#ifdef HAVE_USR_LIB64_DIR
+      "/usr/lib64/mozilla/extensions"
+#else
+      "/usr/lib/mozilla/extensions"
+#endif
+    ;
+
+    return NS_NewNativeLocalFile(nsDependentCString(sysSExtDir),
+                                 PR_FALSE, (nsILocalFile**)(nsIFile**) aFile);
+  }
+  else if (!strcmp(aProperty, XRE_SYS_SHARE_EXTENSION_PARENT_DIR)) {
+    static const char *const sysLExtDir = "/usr/share/mozilla/extensions";
+    return NS_NewNativeLocalFile(nsDependentCString(sysLExtDir),
+                                 PR_FALSE, (nsILocalFile**)(nsIFile**) aFile);
+  }
+#endif
+  else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DIR)) {
+    return GetSysUserExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
   }
   else if (NS_SUCCEEDED(GetProfileStartupDir(getter_AddRefs(file)))) {
     // We need to allow component, xpt, and chrome registration to
@@ -975,7 +1001,7 @@ nsXREDirProvider::GetProfileDir(nsIFile* *aResult)
 }
 
 nsresult
-nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
+nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
 {
   if (!gAppData)
     return NS_ERROR_FAILURE;
@@ -1061,6 +1087,33 @@ nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
 #else
 #error "Don't know how to get product dir on your platform"
 #endif
+
+  NS_IF_ADDREF(*aFile = localDir);
+  return rv;
+}
+
+nsresult
+nsXREDirProvider::GetSysUserExtensionsDirectory(nsILocalFile** aFile)
+{
+  nsCOMPtr<nsILocalFile> localDir;
+  nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AppendSysUserExtensionPath(localDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = EnsureDirectoryExists(localDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*aFile = localDir);
+  return NS_OK;
+}
+
+nsresult
+nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, PRBool aLocal)
+{
+  nsCOMPtr<nsILocalFile> localDir;
+  nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), aLocal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AppendProfilePath(localDir);
@@ -1145,6 +1198,40 @@ nsXREDirProvider::GetProfileDefaultsDir(nsIFile* *aResult)
   NS_ADDREF(*aResult = defaultsDir);
   return NS_OK;
 }
+
+nsresult
+nsXREDirProvider::AppendSysUserExtensionPath(nsIFile* aFile)
+{
+  NS_ASSERTION(aFile, "Null pointer!");
+
+  nsresult rv;
+
+#if defined (XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
+
+  static const char* const sXR = "Mozilla";
+  rv = aFile->AppendNative(nsDependentCString(sXR));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  static const char* const sExtensions = "Extensions";
+  rv = aFile->AppendNative(nsDependentCString(sExtensions));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#elif defined(XP_UNIX)
+
+  static const char* const sXR = ".mozilla";
+  rv = aFile->AppendNative(nsDependentCString(sXR));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  static const char* const sExtensions = "extensions";
+  rv = aFile->AppendNative(nsDependentCString(sExtensions));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#else
+#error "Don't know how to get XRE user extension path on your platform"
+#endif
+  return NS_OK;
+}
+
 
 nsresult
 nsXREDirProvider::AppendProfilePath(nsIFile* aFile)

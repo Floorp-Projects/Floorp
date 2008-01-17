@@ -293,6 +293,14 @@
           this._validateValue(newval, false);
         }
       </handler>
+
+      <handler event="focus" phase="capturing">
+        this.inputField.parentNode.setAttribute('focused', 'true');
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        this.inputField.parentNode.removeAttribute('focused');
+      </handler>
     </handlers>
 
   </binding>

@@ -171,7 +171,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
 {
     JSHashEntry *he, **hep, **hep0;
 
-#ifdef HASHMETER
+#ifdef JS_HASHMETER
     ht->nlookups++;
 #endif
     hep = hep0 = BUCKET_HEAD(ht, keyHash);
@@ -186,7 +186,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
             return hep0;
         }
         hep = &he->next;
-#ifdef HASHMETER
+#ifdef JS_HASHMETER
         ht->nsteps++;
 #endif
     }
@@ -256,7 +256,7 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
     if (ht->nentries >= OVERLOADED(n)) {
         if (!Resize(ht, ht->shift - 1))
             return NULL;
-#ifdef HASHMETER
+#ifdef JS_HASHMETER
         ht->ngrows++;
 #endif
         hep = JS_HashTableRawLookup(ht, keyHash, key);
@@ -309,7 +309,7 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
     n = NBUCKETS(ht);
     if (--ht->nentries < UNDERLOADED(n)) {
         Resize(ht, ht->shift + 1);
-#ifdef HASHMETER
+#ifdef JS_HASHMETER
         ht->nshrinks++;
 #endif
     }
@@ -396,21 +396,20 @@ out:
     return (int)n;
 }
 
-#ifdef HASHMETER
-#include <math.h>
+#ifdef JS_HASHMETER
 #include <stdio.h>
 
 JS_PUBLIC_API(void)
 JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
-    double sqsum, mean, variance, sigma;
-    uint32 nchains, nbuckets, nentries;
+    double sqsum, mean, sigma;
+    uint32 nchains, nbuckets;
     uint32 i, n, maxChain, maxChainLen;
     JSHashEntry *he;
 
     sqsum = 0;
     nchains = 0;
-    maxChainLen = 0;
+    maxChain = maxChainLen = 0;
     nbuckets = NBUCKETS(ht);
     for (i = 0; i < nbuckets; i++) {
         he = ht->buckets[i];
@@ -425,14 +424,8 @@ JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
             maxChain = i;
         }
     }
-    nentries = ht->nentries;
-    mean = (double)nentries / nchains;
-    variance = nchains * sqsum - nentries * nentries;
-    if (variance < 0 || nchains == 1)
-        variance = 0;
-    else
-        variance /= nchains * (nchains - 1);
-    sigma = sqrt(variance);
+
+    mean = JS_MeanAndStdDev(nchains, ht->nentries, sqsum, &sigma);
 
     fprintf(fp, "\nHash table statistics:\n");
     fprintf(fp, "     number of lookups: %u\n", ht->nlookups);
@@ -450,7 +443,7 @@ JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
         if (dump(he, i, fp) != HT_ENUMERATE_NEXT)
             break;
 }
-#endif /* HASHMETER */
+#endif /* JS_HASHMETER */
 
 JS_PUBLIC_API(int)
 JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
@@ -458,7 +451,7 @@ JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
     int count;
 
     count = JS_HashTableEnumerateEntries(ht, dump, fp);
-#ifdef HASHMETER
+#ifdef JS_HASHMETER
     JS_HashTableDumpMeter(ht, dump, fp);
 #endif
     return count;

@@ -92,6 +92,7 @@ EXPORTS
         sqlite3_exec
         sqlite3_expired
         sqlite3_extended_result_codes
+        sqlite3_file_control
         sqlite3_finalize
         sqlite3_free
         sqlite3_free_table
@@ -105,8 +106,19 @@ EXPORTS
         sqlite3_libversion_number
         sqlite3_load_extension
         sqlite3_malloc
+        sqlite3_memory_alarm
+        sqlite3_memory_highwater
+        sqlite3_memory_used
+        sqlite3_mutex_alloc
+        sqlite3_mutex_enter
+        sqlite3_mutex_free
+        sqlite3_mutex_held
+        sqlite3_mutex_leave
+        sqlite3_mutex_notheld
+        sqlite3_mutex_try
         sqlite3_mprintf
         sqlite3_open
+        sqlite3_open_v2
         sqlite3_open16
         sqlite3_overload_function
         sqlite3_prepare
@@ -116,6 +128,7 @@ EXPORTS
         sqlite3_profile
         sqlite3_progress_handler
         sqlite3_realloc
+        sqlite3_release_memory
         sqlite3_reset
         sqlite3_reset_auto_extension
         sqlite3_result_blob
@@ -155,5 +168,7 @@ EXPORTS
         sqlite3_value_text16le
         sqlite3_value_type
         sqlite3_version
+        sqlite3_vfs_find
+        sqlite3_vfs_unregister
+        sqlite3_vfs_register
         sqlite3_vmprintf
-        sqlite3Os DATA               ;needed by mozStorage

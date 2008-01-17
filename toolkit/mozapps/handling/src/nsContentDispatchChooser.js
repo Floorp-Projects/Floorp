@@ -86,6 +86,7 @@ nsContentDispatchChooser.prototype =
                bundle.GetStringFromName("protocol.choices.label"),
                bundle.formatStringFromName("protocol.checkbox.label",
                                            [aURI.scheme], 1),
+               bundle.GetStringFromName("protocol.checkbox.accesskey"),
                bundle.formatStringFromName("protocol.checkbox.extra",
                                            [xai.name], 1)];
 

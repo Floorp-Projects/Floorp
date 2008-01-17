@@ -628,9 +628,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   context->SetProcessingScriptTag(oldProcessingScriptTag);
 
   if (stid == nsIProgrammingLanguage::JAVASCRIPT) {
-    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nsAXPCNativeCallContext *ncc = nsnull;
     nsContentUtils::XPConnect()->
-      GetCurrentNativeCallContext(getter_AddRefs(ncc));
+      GetCurrentNativeCallContext(&ncc);
 
     if (ncc) {
       NS_ASSERTION(!::JS_IsExceptionPending(cx),

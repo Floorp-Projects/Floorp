@@ -1256,7 +1256,11 @@ if test "$GNU_CC"; then
     # -Wbad-function-cast - warns when casting a function to a new return type
     # -Wconversion - complained when char's or short's were used a function args
     # -Wshadow - removed because it generates more noise than help --pete
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith -Wcast-align"
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
+    if test "$CPU_ARCH" != "ia64"; then
+        # only use -Wcast-align for non-ia64, it's noisy on that platform
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
+    fi
 
     dnl Turn pedantic on but disable the warnings for long long
     _PEDANTIC=1
@@ -1281,7 +1285,11 @@ fi
 
 if test "$GNU_CXX"; then
     # Turn on GNU specific features
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Wcast-align -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
+    if test "$CPU_ARCH" != "ia64"; then
+        # only use -Wcast-align for non-ia64, it's noisy on that platform
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
+    fi
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -6095,6 +6103,16 @@ if test -n "$MOZ_JPROF"; then
     AC_DEFINE(MOZ_JPROF)
 fi
 
+dnl ========================================================
+dnl shark
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(shark,
+[  --enable-shark          Enable shark remote profiling (needs CHUD framework)],
+    MOZ_SHARK=1,
+    MOZ_SHARK= )
+if test -n "$MOZ_SHARK"; then
+    AC_DEFINE(MOZ_SHARK)
+fi
 
 dnl ========================================================
 dnl = Enable stripping of libs & executables
@@ -7423,6 +7441,7 @@ AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
+AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)

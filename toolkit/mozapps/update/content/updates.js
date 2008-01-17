@@ -43,7 +43,6 @@ const nsIIncrementalDownload  = Components.interfaces.nsIIncrementalDownload;
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const PREF_UPDATE_MANUAL_URL        = "app.update.url.manual";
-const PREF_UPDATE_NAGTIMER_DL       = "app.update.nagTimer.download";
 const PREF_UPDATE_NAGTIMER_RESTART  = "app.update.nagTimer.restart";
 const PREF_APP_UPDATE_LOG_BRANCH    = "app.update.log.";
 const PREF_UPDATE_TEST_LOOP         = "app.update.test.loop";
@@ -1674,7 +1673,7 @@ var gFinishedPage = {
     ps.alert(window, gUpdates.strings.getString("restartLaterTitle"),
              message);
 
-    var interval = getPref("getIntPref", PREF_UPDATE_NAGTIMER_RESTART, 1800);
+    var interval = getPref("getIntPref", PREF_UPDATE_NAGTIMER_RESTART, 86400);
     gUpdates.registerNagTimer("restart-nag-timer", interval,
                               "showUpdateComplete");
   }

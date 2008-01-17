@@ -16,6 +16,8 @@ to a pure HTML representation (no images).</p>
 
 <form onsubmit="start_convert(); return false;">
     Path to image: <input type="text" id="filepath" size="60"><br>
+    <input id="fill" type="checkbox">
+        Fill canvas with <input id="fillRGB" value="rgb(10,100,250)"> (instead of transparency).<br>
     <button type='submit'>Convert!</button>
     <br><br>
     <img id="img" onload="run_convert();"><canvas id="canvas"></canvas><span id="span"></span><br>
@@ -31,6 +33,8 @@ var img      = document.getElementById("img");
 var canvas   = document.getElementById("canvas");
 var span     = document.getElementById("span");
 var textarea = document.getElementById("textarea");
+var fill     = document.getElementById("fill");
+var fillRGB  = document.getElementById("fillRGB");
 
 function start_convert() {
     try {
@@ -64,6 +68,10 @@ function run_convert() {
         canvas.height = img.height;
         var ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, img.width, img.height);
+        if (fill.checked) {
+            ctx.fillStyle = fillRGB.value;
+            ctx.fillRect (0, 0, img.width, img.height);
+        }
         ctx.drawImage(img, 0, 0);
 
         // [r, g, b, a, r, g, b, a, ...]

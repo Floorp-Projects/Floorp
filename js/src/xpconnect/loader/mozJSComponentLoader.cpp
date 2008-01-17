@@ -1310,8 +1310,8 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
         do_GetService(kXPConnectServiceContractID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext(&cc);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -1392,7 +1392,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
 NS_IMETHODIMP
 mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                                  JSObject * targetObj,
-                                 nsIXPCNativeCallContext * cc,
+                                 nsAXPCNativeCallContext * cc,
                                  JSObject * *_retval)
 {
     nsresult rv;
@@ -1528,7 +1528,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 }
 
 nsresult
-mozJSComponentLoader::ReportOnCaller(nsIXPCNativeCallContext *cc,
+mozJSComponentLoader::ReportOnCaller(nsAXPCNativeCallContext *cc,
                                      const char *format, ...) {
     if (!cc) {
         return NS_ERROR_FAILURE;

@@ -99,8 +99,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
-    if(!JSVAL_IS_STRING(tmp->mJSVal))
-        nsVariant::Cleanup(&tmp->mData);
+    // We're sharing mJSVal's buffer, clear the pointer to it
+    // so Cleanup() won't try to delete it
+    if(JSVAL_IS_STRING(tmp->mJSVal))
+        tmp->mData.u.wstr.mWStringValue = nsnull;
+    nsVariant::Cleanup(&tmp->mData);
+
     if(JSVAL_IS_TRACEABLE(tmp->mJSVal))
     {
         XPCTraceableVariant *v = static_cast<XPCTraceableVariant*>(tmp);
@@ -320,14 +324,9 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     // Let's see if it is a xpcJSID.
 
-    // XXX It might be nice to have a non-allocing version of xpc_JSObjectToID.
-    nsID* id = xpc_JSObjectToID(ccx, jsobj);
+    const nsID* id = xpc_JSObjectToID(ccx, jsobj);
     if(id)
-    {
-        JSBool success = NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
-        nsMemory::Free((char*)id);
-        return success;
-    }
+        return NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
     
     // Let's see if it is a js array object.
 

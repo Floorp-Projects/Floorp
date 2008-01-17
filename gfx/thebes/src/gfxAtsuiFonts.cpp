@@ -449,12 +449,11 @@ PRBool gfxAtsuiFont::TestCharacterMap(PRUint32 aCh) {
 
 /**
  * Look up the font in the gfxFont cache. If we don't find it, create one.
- * In either case, add a ref, append it to the aFonts array, and return it ---
+ * In either case, add a ref and return it ---
  * except for OOM in which case we do nothing and return null.
  */
-static gfxAtsuiFont *
-GetOrMakeFont(ATSUFontID aFontID, const gfxFontStyle *aStyle,
-              nsTArray<nsRefPtr<gfxFont> > *aFonts)
+static already_AddRefed<gfxAtsuiFont>
+GetOrMakeFont(ATSUFontID aFontID, const gfxFontStyle *aStyle)
 {
     const nsAString& name =
         gfxQuartzFontCache::SharedFontCache()->GetPostscriptNameForFontID(aFontID);
@@ -465,12 +464,8 @@ GetOrMakeFont(ATSUFontID aFontID, const gfxFontStyle *aStyle,
             return nsnull;
         gfxFontCache::GetCache()->AddNew(font);
     }
-    // Add it to aFonts without unncessary refcount adjustment
-    nsRefPtr<gfxFont> *destination = aFonts->AppendElement();
-    if (!destination)
-        return nsnull;
-    destination->swap(font);
-    gfxFont *f = *destination;
+    gfxFont *f = nsnull;
+    font.swap(f);
     return static_cast<gfxAtsuiFont *>(f);
 }
 
@@ -493,7 +488,11 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         // user font.
         ATSUFontID fontID = gfxQuartzFontCache::SharedFontCache()->GetDefaultATSUFontID (aStyle);
         NS_ASSERTION(fontID != kATSUInvalidFontID, "invalid default font returned by GetDefaultATSUFontID");
-        GetOrMakeFont(fontID, aStyle, &mFonts);
+
+        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fontID, aStyle);
+        if (font) {
+            mFonts.AppendElement(font);
+        }
     }
 }
 
@@ -510,7 +509,10 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
 
     if (fontID != kATSUInvalidFontID && !fontGroup->HasFont(fontID)) {
         //fprintf (stderr, "..FindATSUFont: %s\n", NS_ConvertUTF16toUTF8(aName).get());
-        GetOrMakeFont(fontID, fontStyle, &fontGroup->mFonts);
+        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fontID, fontStyle);
+        if (font) {
+            fontGroup->mFonts.AppendElement(font);
+        }
     }
 
     return PR_TRUE;
@@ -719,7 +721,7 @@ gfxAtsuiFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
     return textRun;
 }
 
-gfxAtsuiFont*
+already_AddRefed<gfxAtsuiFont>
 gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
 {
     gfxAtsuiFont *font;
@@ -733,7 +735,9 @@ gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
             return font;
     }
 
-    return GetOrMakeFont(fid, GetStyle(), &mFonts);
+    // font is *not* appended to the font group, so fallback fonts don't get added
+    nsRefPtr<gfxAtsuiFont> f = GetOrMakeFont(fid, GetStyle());
+    return f.forget();
 }
 
 PRBool
@@ -1207,6 +1211,8 @@ struct AFLClosure {
     nsTArray<nsRefPtr<gfxFont> > *fontArray;
 };
 
+// xxx - this is almost identical to the static method FindATSUFont,
+// except for the closure struct used, we should merge these
 PRBool
 AppendFontToList(const nsAString& aName,
                  const nsACString& aGenericName,
@@ -1219,7 +1225,10 @@ AppendFontToList(const nsAString& aName,
 
     if (fontID != kATSUInvalidFontID) {
         //fprintf (stderr, "..AppendFontToList: %s\n", NS_ConvertUTF16toUTF8(aName).get());
-        GetOrMakeFont(fontID, afl->style, afl->fontArray);
+        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fontID, afl->style);
+        if (font) {
+            afl->fontArray->AppendElement(font);
+        }
     }
 
     return PR_TRUE;

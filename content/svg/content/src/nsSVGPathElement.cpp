@@ -535,11 +535,11 @@ nsSVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 
   PRUint16 lastSegmentType = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
 
-  float px, py;    // subpath initial point
-  float pathAngle;
-  PRUint32 pathIndex;
+  float px = 0, py = 0;    // subpath initial point
+  float pathAngle = 0;
+  PRUint32 pathIndex = 0;
 
-  float prevAngle = 0, startAngle, endAngle;
+  float prevAngle = 0, startAngle = 0, endAngle = 0;
 
   PRBool newSegment = PR_FALSE;
 

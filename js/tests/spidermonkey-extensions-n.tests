@@ -13,6 +13,7 @@ e4x/extensions/regress-354145-06.js
 e4x/extensions/regress-354151-01.js
 e4x/extensions/regress-354151-02.js
 e4x/extensions/regress-374163.js
+e4x/extensions/regress-410192.js
 ecma_2/extensions/constructor-001.js
 ecma_2/extensions/function-001.js
 ecma_2/extensions/instanceof-001.js
@@ -31,6 +32,7 @@ ecma_3/extensions/regress-228087.js
 ecma_3/extensions/regress-274152.js
 ecma_3/extensions/regress-320854.js
 ecma_3/extensions/regress-327170.js
+ecma_3/extensions/regress-368516.js
 ecma_3/extensions/regress-385393-03.js
 ecma/extensions/10.1.4-9.js
 ecma/extensions/10.1.6.js
@@ -145,11 +147,13 @@ js1_5/extensions/regress-351102-01.js
 js1_5/extensions/regress-351102-02.js
 js1_5/extensions/regress-351102-06.js
 js1_5/extensions/regress-351448.js
+js1_5/extensions/regress-351463-01.js
 js1_5/extensions/regress-351973.js
 js1_5/extensions/regress-352060.js
 js1_5/extensions/regress-352094.js
 js1_5/extensions/regress-352261.js
 js1_5/extensions/regress-352281.js
+js1_5/extensions/regress-352291.js
 js1_5/extensions/regress-352372.js
 js1_5/extensions/regress-352455.js
 js1_5/extensions/regress-353214.js
@@ -202,6 +206,7 @@ js1_5/extensions/regress-367630.js
 js1_5/extensions/regress-367923.js
 js1_5/extensions/regress-368859.js
 js1_5/extensions/regress-369404.js
+js1_5/extensions/regress-371636.js
 js1_5/extensions/regress-372309.js
 js1_5/extensions/regress-374589.js
 js1_5/extensions/regress-375183.js
@@ -225,6 +230,7 @@ js1_5/extensions/regress-391033-02.js
 js1_5/extensions/regress-391851.js
 js1_5/extensions/regress-394967.js
 js1_5/extensions/regress-396326.js
+js1_5/extensions/regress-407501.js
 js1_5/extensions/regress-44009.js
 js1_5/extensions/regress-50447-1.js
 js1_5/extensions/regress-50447.js
@@ -242,6 +248,7 @@ js1_7/extensions/basic-for-each.js
 js1_7/extensions/basic-for-in.js
 js1_7/extensions/basic-Iterator.js
 js1_7/extensions/destructuring-order.js
+js1_7/extensions/iterator-ctor.js
 js1_7/extensions/regress-346021.js
 js1_7/extensions/regress-346642-02.js
 js1_7/extensions/regress-346642-06.js
@@ -290,6 +297,7 @@ js1_7/extensions/regress-387955-02.js
 js1_7/extensions/regress-392308.js
 js1_7/extensions/regress-396326.js
 js1_8/extensions/regress-300079.js
+js1_8/extensions/regress-353116.js
 js1_8/extensions/regress-378789.js
 js1_8/extensions/regress-385393-01.js
 js1_8/extensions/regress-385393-10.js

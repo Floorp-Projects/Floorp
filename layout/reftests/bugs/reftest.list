@@ -304,6 +304,11 @@ fails == 352980-1h.html 352980-1-ref.html
 == 352980-3d.html 352980-3-ref.html
 == 352980-3e.html 352980-3-ref.html
 == 352980-3f.html 352980-3-ref.html
+== 355548-1.xml 355548-1-ref.xml
+== 355548-2.xml 355548-2-ref.xml
+== 355548-3.xml 355548-3-ref.xml
+== 355548-4.xml 355548-4-ref.xml
+== 355548-5.xml 355548-5-ref.xml
 == 359903-1.html 359903-1-ref.html
 == 359869-1.html 359869-1-ref.html
 == 359903-2.html 359903-2-ref.html
@@ -378,8 +383,12 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 3
 # is too exact
 # == 368247-1.html 368247-1-ref.html
 == 368247-2.html 368247-2-ref.html
-fails == 368504-1.html 368504-1-ref.html # bug 368504
-fails == 368504-2.html 368504-2-ref.html # bug 368504
+fails == 368504-1.html 368504-1-ref.html
+fails == 368504-2.html 368504-2-ref.html
+fails == 368504-3a.html 368504-3-ref.html
+fails == 368504-3b.html 368504-3-ref.html
+fails == 368504-4.html 368504-4-ref.html
+fails == 368504-5.html 368504-5-ref.html
 == 368622-1.html 368622-1-ref.html
 == 368622-1.html 368622-1-ref.html
 == 368651-1.html 368651-1-ref.html
@@ -582,7 +591,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 403426-1.html 403426-1-ref.html
 == 403455-1.html 403455-1-ref.html
 == 403505-1.xml 403505-1-ref.xul
-== 403519-1.html 403519-1-ref.html
+#== 403519-1.html 403519-1-ref.html # Fails on Mac, see also discussion in bug
 == 403519-2.html 403519-2-ref.html
 == 403656-1.html 403656-1-ref.html
 == 403656-2.html 403656-2-ref.html
@@ -610,10 +619,18 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 == 406073-1.html 406073-1-ref.html
 == 406484-1.html 406484-1-ref.html
 == 406568-1.html 406568-1-ref.html
+== 407016-1-a.html 407016-1-ref.html
+== 407016-1-b.html 407016-1-ref.html
+== 407016-2.html 407016-2-ref.html
 == 407078-1.html 407078-1-ref.html
 == 407111-1.html 407111-1-ref.html
 == 407227-1.html 407227-1-ref.html
 == 407937-1.html 407937-1-ref.html
+== 408493-1.html about:blank
+== 408493-2.html 408493-2-ref.html
+== 408656-1a.html 408656-1-ref.html 
+== 408656-1b.html 408656-1-ref.html
+== 408656-1c.html 408656-1-ref.html
 == 408782-1a.html 408782-1-ref.html
 == 408782-1b.html 408782-1-ref.html
 == 408782-2a.html 408782-2-ref.html
@@ -622,3 +639,4 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 != 409659-1b.html 409659-1-ref.html
 != 409659-1c.html 409659-1-ref.html
 == 409659-1d.html 409659-1-ref.html
+== 411334-1.xml 411334-1-ref.xml

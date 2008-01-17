@@ -40,7 +40,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIXPCNativeCallContext;
+[ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
 
 %{C++
 struct JSObject;
@@ -91,5 +91,5 @@ interface xpcIJSModuleLoader : nsISupports
    */
   [noscript] JSObjectPtr importInto(in AUTF8String aResourceURI,
                                     in JSObjectPtr targetObj,
-                                    in nsIXPCNativeCallContext cc);
+                                    in nsAXPCNativeCallContextPtr cc);
 };

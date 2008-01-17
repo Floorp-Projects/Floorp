@@ -850,9 +850,36 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       nsRefPtr<nsNSSCertificate> nssc = new nsNSSCertificate(serverCert);
       CERT_DestroyCertificate(serverCert);
       serverCert = nsnull;
-      infoObject->SetCert(nssc);
-      if (!status->mServerCert) {
-        status->mServerCert = nssc;
+
+      nsCOMPtr<nsIX509Cert> prevcert;
+      infoObject->GetPreviousCert(getter_AddRefs(prevcert));
+
+      PRBool equals_previous = PR_FALSE;
+      if (prevcert) {
+        nsresult rv = nssc->Equals(prevcert, &equals_previous);
+        if (NS_FAILED(rv)) {
+          equals_previous = PR_FALSE;
+        }
+      }
+
+      if (equals_previous) {
+        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+               ("HandshakeCallback using PREV cert %p\n", prevcert.get()));
+        infoObject->SetCert(prevcert);
+        status->mServerCert = prevcert;
+      }
+      else {
+        if (status->mServerCert) {
+          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+                 ("HandshakeCallback KEEPING cert %p\n", status->mServerCert.get()));
+          infoObject->SetCert(status->mServerCert);
+        }
+        else {
+          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+                 ("HandshakeCallback using NEW cert %p\n", nssc.get()));
+          infoObject->SetCert(nssc);
+          status->mServerCert = nssc;
+        }
       }
     }
 
@@ -932,8 +959,10 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
       status = new nsSSLStatus();
       infoObject->SetSSLStatus(status);
     }
-    if (status) {
+    if (status && !status->mServerCert) {
       status->mServerCert = new nsNSSCertificate(serverCert);
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+             ("AuthCertificateCallback setting NEW cert %p\n", status->mServerCert.get()));
     }
   }
 

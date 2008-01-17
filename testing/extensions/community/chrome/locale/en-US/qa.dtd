@@ -101,9 +101,9 @@ of platforms, operating systems, and configurations.
 xxx
 
 <html:h5>For more information on Mozilla Quality Assurance, please
-see the
-<html:a href='http://wiki.mozilla.org/Mozilla_QA_Community' target='_blank'>
-Mozilla QA Community Wiki</html:a>.</html:h5>
+see
+<html:a href='http://quality.mozilla.org' target='_blank'>
+Quality.Mozilla.Org (QMO)</html:a>.</html:h5>
 ">
 
 <!ENTITY qa.setup.aboutheader	"About the Mozilla QA Extension">

@@ -47,6 +47,8 @@ ifndef MOZ_SUITE
 DIRS = src
 endif
 
+DIRS += tests
+
 include $(topsrcdir)/config/rules.mk
 
 

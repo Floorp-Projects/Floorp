@@ -1802,9 +1802,9 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &nrv));
   NS_ENSURE_SUCCESS(nrv, nrv);
 
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  nsAXPCNativeCallContext *ncc = nsnull;
 
-  nrv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  nrv = xpc->GetCurrentNativeCallContext(&ncc);
   NS_ENSURE_SUCCESS(nrv, nrv);
 
   if (!ncc)
@@ -2483,10 +2483,10 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 
   aResult.Truncate();
 
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  nsAXPCNativeCallContext* ncc = nsnull;
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
   if (xpc) {
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    xpc->GetCurrentNativeCallContext(&ncc);
   }
 
   if (!ncc) {

@@ -157,9 +157,9 @@ protected:
   {
     NS_PRECONDITION(aFrame, "Need a frame");
 
-    nsIFrame *prevInFlow = aFrame->GetPrevInFlow();
+    nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
 
-    if (!prevInFlow || mFrame != prevInFlow) {
+    if (!prevContinuation || mFrame != prevContinuation) {
       // Ok, we've got the wrong frame.  We have to start from scratch.
       Reset();
       Init(aFrame);
@@ -177,14 +177,14 @@ protected:
   {    
     // Start with the previous flow frame as our continuation point
     // is the total of the widths of the previous frames.
-    nsIFrame* inlineFrame = aFrame->GetPrevInFlow();
+    nsIFrame* inlineFrame = aFrame->GetPrevContinuation();
 
     while (inlineFrame) {
       nsRect rect = inlineFrame->GetRect();
       mContinuationPoint += rect.width;
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
-      inlineFrame = inlineFrame->GetPrevInFlow();
+      inlineFrame = inlineFrame->GetPrevContinuation();
     }
 
     // Next add this frame and subsequent frames to the bounding box and
@@ -194,7 +194,7 @@ protected:
       nsRect rect = inlineFrame->GetRect();
       mUnbrokenWidth += rect.width;
       mBoundingBox.UnionRect(mBoundingBox, rect);
-      inlineFrame = inlineFrame->GetNextInFlow();
+      inlineFrame = inlineFrame->GetNextContinuation();
     }
 
     mFrame = aFrame;
@@ -975,7 +975,8 @@ NumBorderPasses (PRUint8 *borderStyles,
       case NS_STYLE_BORDER_STYLE_OUTSET:
       case NS_STYLE_BORDER_STYLE_GROOVE:
       case NS_STYLE_BORDER_STYLE_RIDGE:
-        numBorderPasses = 2;
+        /* XXX See bug 397303 why this is 4 instead of 2; this could be optimized further */
+        numBorderPasses = 4;
         break;
 
       case NS_STYLE_BORDER_STYLE_SOLID:
@@ -4403,10 +4404,24 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       aStyle == NS_STYLE_BORDER_STYLE_NONE)
     return;
 
+  if (aDecoration != NS_STYLE_TEXT_DECORATION_UNDERLINE &&
+      aDecoration != NS_STYLE_TEXT_DECORATION_OVERLINE &&
+      aDecoration != NS_STYLE_TEXT_DECORATION_LINE_THROUGH)
+  {
+    NS_ERROR("Invalid decoration value!");
+    return;
+  }
+
   PRBool contextIsSaved = PR_FALSE;
   gfxFloat totalHeight = aLineSize.height;
+
+  gfxFloat oldLineWidth;
+  nsRefPtr<gfxPattern> oldPattern;
+
   switch (aStyle) {
     case NS_STYLE_BORDER_STYLE_SOLID:
+      oldLineWidth = aGfxContext->CurrentLineWidth();
+      oldPattern = aGfxContext->GetPattern();
       break;
     case NS_STYLE_BORDER_STYLE_DASHED: {
       aGfxContext->Save();
@@ -4461,9 +4476,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       break;
     }
     default:
-      NS_ERROR("Invalid decoration value!");
-      if (contextIsSaved)
-        aGfxContext->Restore();
+      NS_NOTREACHED("Invalid decoration value!");
       return;
   }
 
@@ -4503,12 +4516,16 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
         aGfxContext->LineTo(gfxPoint(x + width, y));
       }
       aGfxContext->Stroke();
-      aGfxContext->Restore();
-      contextIsSaved = PR_FALSE;
       break;
     default:
       NS_ERROR("Invalid style value!");
       break;
   }
-  NS_ASSERTION(!contextIsSaved, "The gfxContext has been saved, but not restored!");
+
+  if (contextIsSaved) {
+    aGfxContext->Restore();
+  } else {
+    aGfxContext->SetPattern(oldPattern);
+    aGfxContext->SetLineWidth(oldLineWidth);
+  }
 }

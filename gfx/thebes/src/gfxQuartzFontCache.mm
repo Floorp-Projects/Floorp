@@ -897,9 +897,15 @@ gfxQuartzFontCache::FindFontForCharProc(nsUint32HashKey::KeyType aKey, nsRefPtr<
         // weight
         PRInt8 baseWeight, weightDistance;
         style->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-        PRUint16 targetWeight = (baseWeight * 100) + (weightDistance * 100);
-        if (aFontEntry->Weight() == targetWeight)
+        PRUint32 targetWeight = (baseWeight * 100) + (weightDistance * 100);
+        PRUint32 entryWeight = aFontEntry->Weight() * 100;
+        if (entryWeight == targetWeight) {
             rank += 5;
+        } else {
+            PRUint32 diffWeight = abs(entryWeight - targetWeight);
+            if (diffWeight <= 100)  // favor faces close in weight
+                rank += 2;
+        }
     } else {
         // if no font to match, prefer non-bold, non-italic fonts
         if (!aFontEntry->IsItalicStyle() && !aFontEntry->IsBold())

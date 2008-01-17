@@ -59,7 +59,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsIWebProgressListener.h"
-#include "nsRefPtrHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
@@ -84,13 +84,11 @@ public:
     nsOfflineCacheUpdateItem(nsOfflineCacheUpdate *aUpdate,
                              nsIURI *aURI,
                              nsIURI *aReferrerURI,
-                             nsIDOMNode *aSource,
                              const nsACString &aClientID);
-    ~nsOfflineCacheUpdateItem();
+    virtual ~nsOfflineCacheUpdateItem();
 
     nsCOMPtr<nsIURI>           mURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
-    nsCOMPtr<nsIWeakReference> mSource;
     nsCString                  mClientID;
 
     nsresult OpenChannel();
@@ -100,7 +98,52 @@ private:
     nsOfflineCacheUpdate*          mUpdate;
     nsCOMPtr<nsIChannel>           mChannel;
     PRUint16                       mState;
+
+protected:
     PRInt32                        mBytesRead;
+};
+
+
+class nsOfflineManifestItem : public nsOfflineCacheUpdateItem
+{
+public:
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+
+    nsOfflineManifestItem(nsOfflineCacheUpdate *aUpdate,
+                          nsIURI *aURI,
+                          nsIURI *aReferrerURI,
+                          const nsACString &aClientID);
+    virtual ~nsOfflineManifestItem();
+
+    nsCOMArray<nsIURI> &GetExplicitURIs() { return mExplicitURIs; }
+
+    PRBool ParseSucceeded()
+        { return (mParserState != PARSE_INIT && mParserState != PARSE_ERROR); }
+    PRBool NeedsUpdate() { return mParserState != PARSE_INIT && mNeedsUpdate; }
+
+private:
+    static NS_METHOD ReadManifest(nsIInputStream *aInputStream,
+                                  void *aClosure,
+                                  const char *aFromSegment,
+                                  PRUint32 aOffset,
+                                  PRUint32 aCount,
+                                  PRUint32 *aBytesConsumed);
+
+    nsresult HandleManifestLine(const nsCString::const_iterator &aBegin,
+                                const nsCString::const_iterator &aEnd);
+
+    enum {
+        PARSE_INIT,
+        PARSE_CACHE_ENTRIES,
+        PARSE_FALLBACK_ENTRIES,
+        PARSE_NETWORK_ENTRIES,
+        PARSE_ERROR
+    } mParserState;
+
+    nsCString mReadBuf;
+    nsCOMArray<nsIURI> mExplicitURIs;
+    PRBool mNeedsUpdate;
 };
 
 class nsOfflineCacheUpdate : public nsIOfflineCacheUpdate
@@ -119,17 +162,27 @@ public:
 
     void LoadCompleted();
 private:
+    nsresult HandleManifest(PRBool *aDoUpdate);
+    nsresult AddURI(nsIURI *aURI, const nsACString &aOwnerSpec);
+
     nsresult ProcessNextURI();
+
     nsresult AddOwnedItems(const nsACString &aOwnerURI);
-    nsresult AddDomainItems();
-    nsresult NotifyAdded(nsOfflineCacheUpdateItem *aItem);
+
+    nsresult GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
+    nsresult NotifyError();
+    nsresult NotifyChecking();
+    nsresult NotifyNoUpdate();
+    nsresult NotifyDownloading();
+    nsresult NotifyStarted(nsOfflineCacheUpdateItem *aItem);
     nsresult NotifyCompleted(nsOfflineCacheUpdateItem *aItem);
     nsresult Finish();
 
     enum {
         STATE_UNINITIALIZED,
         STATE_INITIALIZED,
-        STATE_RUNNING,
+        STATE_CHECKING,
+        STATE_DOWNLOADING,
         STATE_CANCELLED,
         STATE_FINISHED
     } mState;
@@ -138,14 +191,19 @@ private:
     PRBool mPartialUpdate;
     PRBool mSucceeded;
     nsCString mUpdateDomain;
-    nsCString mOwnerURI;
-    nsCOMPtr<nsIURI> mReferrerURI;
+    nsCOMPtr<nsIURI> mManifestURI;
+    nsCString mManifestOwnerSpec;
+    nsCString mDynamicOwnerSpec;
+
+    nsCOMPtr<nsIURI> mDocumentURI;
 
     nsCString mClientID;
     nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
     nsCOMPtr<nsIOfflineCacheSession> mMainCacheSession;
 
     nsCOMPtr<nsIObserverService> mObserverService;
+
+    nsRefPtr<nsOfflineManifestItem> mManifestItem;
 
     /* Items being updated */
     PRInt32 mCurrentItem;
@@ -173,8 +231,6 @@ public:
     nsresult Init();
 
     nsresult Schedule(nsOfflineCacheUpdate *aUpdate);
-    nsresult ScheduleOnDocumentStop(nsOfflineCacheUpdate *aUpdate,
-                                    nsIDOMDocument *aDocument);
     nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);
 
     /**
@@ -190,7 +246,12 @@ private:
     nsresult ProcessNextUpdate();
 
     nsTArray<nsRefPtr<nsOfflineCacheUpdate> > mUpdates;
-    nsRefPtrHashtable<nsVoidPtrHashKey, nsOfflineCacheUpdate> mDocUpdates;
+
+    struct PendingUpdate {
+        nsCOMPtr<nsIURI> mManifestURI;
+        nsCOMPtr<nsIURI> mDocumentURI;
+    };
+    nsClassHashtable<nsVoidPtrHashKey, PendingUpdate> mDocUpdates;
 
     PRBool mDisabled;
     PRBool mUpdateRunning;

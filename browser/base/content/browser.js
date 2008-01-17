@@ -42,6 +42,7 @@
 #   Simon Bünzli <zeniko@gmail.com>
 #   Johnathan Nightingale <johnath@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Dão Gottwald <dao@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1323,7 +1324,7 @@ function gotoHistoryIndex(aEvent)
     // Normal click.  Go there in the current tab and update session history.
 
     try {
-      getWebNavigation().gotoIndex(index);
+      getBrowser().gotoIndex(index);
     }
     catch(ex) {
       return false;
@@ -1348,7 +1349,7 @@ function BrowserForward(aEvent, aIgnoreAlt)
 
   if (where == "current") {
     try {
-      getWebNavigation().goForward();
+      getBrowser().goForward();
     }
     catch(ex) {
     }
@@ -1368,7 +1369,7 @@ function BrowserBack(aEvent, aIgnoreAlt)
 
   if (where == "current") {
     try {
-      getWebNavigation().goBack();
+      getBrowser().goBack();
     }
     catch(ex) {
     }
@@ -1445,9 +1446,10 @@ function BrowserHome()
   loadOneOrMoreURIs(homePage);
 }
 
-function BrowserHomeClick(aEvent)
+function BrowserGoHome(aEvent)
 {
-  if (aEvent.button == 2) // right-click: do nothing
+  if (aEvent && "button" in aEvent &&
+      aEvent.button == 2) // right-click: do nothing
     return;
 
   var homePage = gHomeButton.getHomePage();
@@ -1610,7 +1612,7 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup)
     if (allowThirdPartyFixup) {
       flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     }
-    getWebNavigation().loadURI(uri, flags, referrer, postData, null);
+    getBrowser().loadURIWithFlags(uri, flags, referrer, null, postData);
   } catch (e) {
   }
 }
@@ -1876,28 +1878,60 @@ function checkForDirectoryListing()
   }
 }
 
-// If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
-// and highlight it, unless it is about:blank, where we reset it to "".
-function handleURLBarRevert()
-{
-  var url = getWebNavigation().currentURI.spec;
-  var throbberElement = document.getElementById("navigator-throbber");
+function URLBarSetURI(aURI) {
+  var value = getBrowser().userTypedValue;
+  var state = "invalid";
 
+  if (!value) {
+    if (aURI) {
+      // If the url has "wyciwyg://" as the protocol, strip it off.
+      // Nobody wants to see it on the urlbar for dynamically generated
+      // pages.
+      if (!gURIFixup)
+        gURIFixup = Cc["@mozilla.org/docshell/urifixup;1"]
+                      .getService(Ci.nsIURIFixup);
+      try {
+        aURI = gURIFixup.createExposableURI(aURI);
+      } catch (ex) {}
+    } else {
+      aURI = getWebNavigation().currentURI;
+    }
+
+    value = aURI.spec;
+    if (value == "about:blank") {
+      // Replace "about:blank" with an empty string
+      // only if there's no opener (bug 370555).
+      if (!content.opener)
+        value = "";
+    } else {
+      // try to decode as UTF-8
+      try {
+        value = decodeURI(value).replace(/%/g, "%25");
+      } catch(e) {}
+
+      state = "valid";
+    }
+  }
+
+  gURLBar.value = value;
+  SetPageProxyState(state);
+}
+
+// If "ESC" is pressed in the url bar, we replace the urlbar's value with the url of the page
+// and highlight it, unless it is empty.
+function handleURLBarRevert() {
+  var throbberElement = document.getElementById("navigator-throbber");
   var isScrolling = gURLBar.popupOpen;
+
+  gBrowser.userTypedValue = null;
 
   // don't revert to last valid url unless page is NOT loading
   // and user is NOT key-scrolling through autocomplete list
   if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
-    if (url != "about:blank" || content.opener) {
-      gURLBar.value = url;
+    URLBarSetURI();
+    if (gURLBar.value)
       gURLBar.select();
-      SetPageProxyState("valid");
-    } else { //if about:blank, urlbar becomes ""
-      gURLBar.value = "";
-    }
   }
-
-  gBrowser.userTypedValue = null;
 
   // tell widget to revert to last typed text only if the user
   // was scrolling when they hit escape
@@ -2015,7 +2049,7 @@ function UpdateUrlbarSearchSplitterState()
       splitter.id = "urlbar-search-splitter";
       splitter.setAttribute("resizebefore", "flex");
       splitter.setAttribute("resizeafter", "flex");
-      splitter.className = "toolbar-splitter chromeclass-toolbar-additional";
+      splitter.className = "chromeclass-toolbar-additional";
     }
     urlbar.parentNode.insertBefore(splitter, ibefore);
   } else if (splitter)
@@ -3032,10 +3066,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   UpdateUrlbarSearchSplitterState();
 
   // Update the urlbar
-  var url = getWebNavigation().currentURI.spec;
   if (gURLBar) {
-    gURLBar.value = url == "about:blank" ? "" : url;
-    SetPageProxyState("valid");
+    URLBarSetURI();
     XULBrowserWindow.asyncUpdateUI();
     PlacesStarButton.updateState();
   }
@@ -3465,8 +3497,8 @@ nsBrowserStatusHandler.prototype =
     if (aWebProgress.DOMWindow == content) {
 
       if ((location == "about:blank" && !content.opener) ||
-           location == "") {                        //second condition is for new tabs, otherwise
-        location = "";                              //reload function is enabled until tab is refreshed
+           location == "") {  // Second condition is for new tabs, otherwise
+                              // reload function is enabled until tab is refreshed.
         this.reloadCommand.setAttribute("disabled", "true");
         this.reloadSkipCacheCommand.setAttribute("disabled", "true");
       } else {
@@ -3474,40 +3506,11 @@ nsBrowserStatusHandler.prototype =
         this.reloadSkipCacheCommand.removeAttribute("disabled");
       }
 
-      // The document loaded correctly, clear the value if we should
-      if (browser.userTypedClear > 0 && aRequest)
-        browser.userTypedValue = null;
-
       if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
         gBrowser.setIcon(gBrowser.mCurrentTab, null);
 
-      //XXXBlake don't we have to reinit this.urlBar, etc.
-      //         when the toolbar changes?
       if (gURLBar) {
-        var userTypedValue = browser.userTypedValue;
-        if (!userTypedValue) {
-          // If the url has "wyciwyg://" as the protocol, strip it off.
-          // Nobody wants to see it on the urlbar for dynamically generated
-          // pages.
-          if (!gURIFixup)
-            gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                                  .getService(Components.interfaces.nsIURIFixup);
-          if (location && gURIFixup) {
-            try {
-              location = gURIFixup.createExposableURI(aLocationURI).spec;
-            } catch (ex) {}
-          }
-
-          gURLBar.value = location;
-          SetPageProxyState("valid");
-
-          // Setting the urlBar value in some cases causes userTypedValue to
-          // become set because of oninput, so reset it to its old value.
-          browser.userTypedValue = userTypedValue;
-        } else {
-          gURLBar.value = userTypedValue;
-          SetPageProxyState("invalid");
-        }
+        URLBarSetURI(aLocationURI);
 
         // Update starring UI
         PlacesStarButton.updateState();
@@ -3718,13 +3721,6 @@ nsBrowserStatusHandler.prototype =
 
   startDocumentLoad : function(aRequest)
   {
-    // It's okay to clear what the user typed when we start
-    // loading a document. If the user types, this counter gets
-    // set to zero, if the document load ends without an
-    // onLocationChange, this counter gets decremented
-    // (so we keep it while switching tabs after failed loads)
-    getBrowser().userTypedClear++;
-
     // clear out feed data
     gBrowser.mCurrentBrowser.feeds = null;
 
@@ -3743,11 +3739,6 @@ nsBrowserStatusHandler.prototype =
 
   endDocumentLoad : function(aRequest, aStatus)
   {
-    // The document is done loading, we no longer want the
-    // value cleared.
-    if (getBrowser().userTypedClear > 0)
-      getBrowser().userTypedClear--;
-
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).originalURI.spec;
 
@@ -3812,11 +3803,16 @@ nsBrowserAccess.prototype =
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
+        var win = this._getMostRecentBrowserWindow();
+        if (!win) {
+          // we couldn't find a suitable window, a new one needs to be opened.
+          return null;
+        }
         var loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
-        var newTab = gBrowser.loadOneTab("about:blank", null, null, null, loadInBackground, false);
-        newWindow = gBrowser.getBrowserForTab(newTab).docShell
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindow);
+        var newTab = win.gBrowser.loadOneTab("about:blank", null, null, null, loadInBackground, false);
+        newWindow = win.gBrowser.getBrowserForTab(newTab).docShell
+                                .QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindow);
         try {
           if (aURI) {
             if (aOpener) {
@@ -3855,8 +3851,8 @@ nsBrowserAccess.prototype =
                                 .QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindow);
             if (aURI) {
-              getWebNavigation().loadURI(aURI.spec, loadflags, null, 
-                                         null, null);
+              gBrowser.loadURIWithFlags(aURI.spec, loadflags, null, 
+                                        null, null);
             }
           }
           if(!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
@@ -3865,6 +3861,55 @@ nsBrowserAccess.prototype =
         }
     }
     return newWindow;
+  },
+
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#define BROKEN_WM_Z_ORDER
+#endif
+#endif
+#ifdef XP_OS2
+#define BROKEN_WM_Z_ORDER
+#endif
+
+  // this returns the most recent non-popup browser window
+  _getMostRecentBrowserWindow : function ()
+  {
+    if (!window.document.documentElement.getAttribute("chromehidden"))
+      return window;
+ 
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+ 
+#ifdef BROKEN_WM_Z_ORDER
+    var win = wm.getMostRecentWindow("navigator:browser", true);
+ 
+    // if we're lucky, this isn't a popup, and we can just return this
+    if (win && win.document.documentElement.getAttribute("chromehidden")) {
+      win = null;
+      var windowList = wm.getEnumerator("navigator:browser", true);
+      // this is oldest to newest, so this gets a bit ugly
+      while (windowList.hasMoreElements()) {
+        var nextWin = windowList.getNext();
+        if (!nextWin.document.documentElement.getAttribute("chromehidden"))
+          win = nextWin;
+      }
+    }
+#else
+    var windowList = wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
+    if (!windowList.hasMoreElements())
+      return null;
+ 
+    var win = windowList.getNext();
+    while (win.document.documentElement.getAttribute("chromehidden")) {
+      if (!windowList.hasMoreElements()) 
+        return null;
+ 
+      win = windowList.getNext();
+    }
+#endif
+
+    return win;
   },
 
   isTabContentWindow : function(aWindow)

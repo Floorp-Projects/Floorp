@@ -726,7 +726,7 @@ nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSourcePrincipal
 
 nsresult
 nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
-                                                 nsIXPCNativeCallContext* aCallContext,
+                                                 nsAXPCNativeCallContext* aCallContext,
                                                  JSContext* cx, JSObject* aJSObject,
                                                  nsISupports* aObj, nsIURI* aTargetURI,
                                                  nsIClassInfo* aClassInfo,
@@ -795,7 +795,8 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 #ifdef DEBUG_CAPS_CheckPropertyAccessImpl
                 printf("sameOrigin ");
 #endif
-                nsCOMPtr<nsIPrincipal> objectPrincipal;
+                nsCOMPtr<nsIPrincipal> principalHolder;
+                nsIPrincipal *objectPrincipal;
                 if(aJSObject)
                 {
                     objectPrincipal = doGetObjectPrincipal(cx, aJSObject);
@@ -805,8 +806,10 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 else if(aTargetURI)
                 {
                     if (NS_FAILED(GetCodebasePrincipal(
-                          aTargetURI, getter_AddRefs(objectPrincipal))))
+                          aTargetURI, getter_AddRefs(principalHolder))))
                         return NS_ERROR_FAILURE;
+
+                    objectPrincipal = principalHolder;
                 }
                 else
                 {
@@ -842,7 +845,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
     if (NS_SUCCEEDED(rv) && classInfoData.IsContentNode())
     {
         // No access to anonymous content from the web!  (bug 164086)
-        nsCOMPtr<nsIContent> content(do_QueryInterface(aObj));
+        nsIContent *content = static_cast<nsIContent*>(aObj);
         NS_ASSERTION(content, "classinfo had CONTENT_NODE set but node did not"
                               "implement nsIContent!  Fasten your seat belt.");
         if (content->IsNativeAnonymous()) {
@@ -939,8 +942,8 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 
         if (sXPConnect)
         {
-            nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
-            sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(xpcCallContext));
+            nsAXPCNativeCallContext *xpcCallContext = nsnull;
+            sXPConnect->GetCurrentNativeCallContext(&xpcCallContext);
             if (xpcCallContext)
                 xpcCallContext->SetExceptionWasThrown(PR_TRUE);
         }
@@ -1545,8 +1548,8 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
         // Tell XPConnect that an exception was thrown, if appropriate
         if (sXPConnect)
         {
-            nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
-            sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(xpcCallContext));
+            nsAXPCNativeCallContext* xpcCallContext = nsnull;
+            sXPConnect->GetCurrentNativeCallContext(&xpcCallContext);
              if (xpcCallContext)
                 xpcCallContext->SetExceptionWasThrown(PR_TRUE);
         }
@@ -3072,8 +3075,8 @@ nsScriptSecurityManager::CanCreateInstance(JSContext *cx,
     {
         //-- Access denied, report an error
         nsCAutoString errorMsg("Permission denied to create instance of class. CID=");
-        nsXPIDLCString cidStr;
-        cidStr += aCID.ToString();
+        char cidStr[NSID_LENGTH];
+        aCID.ToProvidedString(cidStr);
         errorMsg.Append(cidStr);
         SetPendingException(cx, errorMsg.get());
 
@@ -3103,8 +3106,8 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
     {
         //-- Access denied, report an error
         nsCAutoString errorMsg("Permission denied to get service. CID=");
-        nsXPIDLCString cidStr;
-        cidStr += aCID.ToString();
+        char cidStr[NSID_LENGTH];
+        aCID.ToProvidedString(cidStr);
         errorMsg.Append(cidStr);
         SetPendingException(cx, errorMsg.get());
 
@@ -3123,7 +3126,7 @@ nsScriptSecurityManager::CanGetService(JSContext *cx,
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanAccess(PRUint32 aAction,
-                                   nsIXPCNativeCallContext* aCallContext,
+                                   nsAXPCNativeCallContext* aCallContext,
                                    JSContext* cx,
                                    JSObject* aJSObject,
                                    nsISupports* aObj,

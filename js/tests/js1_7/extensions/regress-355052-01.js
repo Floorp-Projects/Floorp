@@ -53,7 +53,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'TypeError: NaN is not a function';
+  expect = /TypeError: NaN is not a function/;
   actual = 'No Error';
   try
   {
@@ -64,7 +64,7 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }

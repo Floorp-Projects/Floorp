@@ -169,6 +169,30 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
          aPresContext->HasAuthorSpecifiedBorderOrBackground(aFrame);
 }
 
+// scrollbar button:
+PRInt32
+nsNativeTheme::GetScrollbarButtonType(nsIFrame* aFrame)
+{
+  if (!aFrame)
+    return 0;
+
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsWidgetAtoms::scrollbarDownBottom, &nsWidgetAtoms::scrollbarDownTop,
+     &nsWidgetAtoms::scrollbarUpBottom, &nsWidgetAtoms::scrollbarUpTop,
+     nsnull};
+
+  switch (aFrame->GetContent()->FindAttrValueIn(kNameSpaceID_None,
+                                                nsWidgetAtoms::sbattr,
+                                                strings, eCaseMatters)) {
+    case 0: return eScrollbarButton_Down | eScrollbarButton_Bottom;
+    case 1: return eScrollbarButton_Down;
+    case 2: return eScrollbarButton_Bottom;
+    case 3: return eScrollbarButton_UpTop;
+  }
+
+  return 0;
+}
+
 // treeheadercell:
 nsNativeTheme::TreeSortDirection
 nsNativeTheme::GetTreeSortDirection(nsIFrame* aFrame)

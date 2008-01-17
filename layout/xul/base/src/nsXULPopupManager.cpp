@@ -202,21 +202,19 @@ NS_IMETHODIMP nsXULPopupManager::ShouldRollupOnMouseActivate(PRBool *aShouldRoll
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULPopupManager::GetSubmenuWidgetChain(nsISupportsArray **_retval)
+void
+nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *_retval)
 {
   // this method is used by the widget code to determine the list of popups
   // that are open. If a mouse click occurs outside one of these popups, the
   // panels will roll up. If the click is inside a popup, they will not roll up
-  nsresult rv = NS_NewISupportsArray(_retval);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(_retval, "null parameter");
   nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
     nsCOMPtr<nsIWidget> widget;
     item->Frame()->GetWidget(getter_AddRefs(widget));
     NS_ASSERTION(widget, "open popup has no widget");
-    nsCOMPtr<nsISupports> genericWidget(do_QueryInterface(widget));
-    (*_retval)->AppendElement(genericWidget);
+    _retval->AppendElement(widget.get());
     // In the case when a menulist inside a panel is open, clicking in the
     // panel should still roll up the menu, so if a different type is found,
     // stop scanning.
@@ -226,11 +224,9 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsISupportsArray **_retval)
       break;
     item = parent;
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULPopupManager::AdjustPopupsOnWindowChange()
 {
   // Panels are moved and kept aligned with the anchor when the parent window
@@ -243,8 +239,6 @@ nsXULPopupManager::AdjustPopupsOnWindowChange()
       item->Frame()->SetPopupPosition(nsnull);
     item = item->GetParent();
   }
-
-  return NS_OK;
 }
 
 nsIFrame*

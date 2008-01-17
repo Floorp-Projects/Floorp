@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* constants used in the nsStyleStruct data provided by nsStyleContext */
+/* constants used in the style struct data provided by nsStyleContext */
 
 #ifndef nsStyleConsts_h___
 #define nsStyleConsts_h___
@@ -427,6 +427,10 @@
 #define NS_STYLE_FONT_PULL_DOWN_MENU						14
 #define NS_STYLE_FONT_LIST											15
 #define NS_STYLE_FONT_FIELD											16
+
+// defaults per MathML spec
+#define NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER 0.71f
+#define NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT 8
 
 // See nsStylePosition::mWidth, mMinWidth, mMaxWidth
 #define NS_STYLE_WIDTH_MAX_CONTENT              0

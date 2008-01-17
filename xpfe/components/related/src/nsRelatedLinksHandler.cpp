@@ -54,7 +54,8 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIInputStream.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsRDFCID.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
@@ -631,17 +632,15 @@ RelatedLinksHandlerImpl::Init()
 		gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
                              &kNC_Child);
 
-		nsCOMPtr<nsIPref> prefServ(do_GetService(NS_PREF_CONTRACTID, &rv));
+		nsCOMPtr<nsIPrefBranch> prefServ(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
 		mRLServerURL = new nsString();
 		if (NS_SUCCEEDED(rv) && (prefServ))
 		{
-			char	*prefVal = nsnull;
-			if (NS_SUCCEEDED(rv = prefServ->CopyCharPref("browser.related.provider",
-				&prefVal)) && (prefVal))
+			nsXPIDLCString	prefVal;
+			if (NS_SUCCEEDED(rv = prefServ->GetCharPref("browser.related.provider",
+				getter_Copies(prefVal))) && (!prefVal.IsEmpty()))
 			{
 				mRLServerURL->AssignWithConversion(prefVal);
-				nsCRT::free(prefVal);
-				prefVal = nsnull;
 			}
 			else
 			{

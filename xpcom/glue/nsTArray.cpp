@@ -124,7 +124,7 @@ nsTArray_base::ShrinkCapacity(size_type elemSize) {
   if (IsAutoArray() && GetAutoArrayBuffer()->mCapacity >= length) {
     Header* header = GetAutoArrayBuffer();
 
-    // copy data, but don't copy the header to avoid overwritng mCapacity
+    // Copy data, but don't copy the header to avoid overwriting mCapacity
     header->mLength = length;
     memcpy(header + 1, mHdr + 1, length * elemSize);
 

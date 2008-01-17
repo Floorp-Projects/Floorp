@@ -57,7 +57,7 @@ class EmbedProgress : public nsIWebProgressListener,
 
  private:
 
-  static void RequestToURIString (nsIRequest *aRequest, char **aString);
+  static void RequestToURIString (nsIRequest *aRequest, nsACString &aString);
 
   EmbedPrivate *mOwner;
 

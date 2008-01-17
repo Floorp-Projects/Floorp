@@ -1835,6 +1835,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mCountersDirty(PR_FALSE)
   , mInitialContainingBlockIsAbsPosContainer(PR_FALSE)
   , mIsDestroyingFrameTree(PR_FALSE)
+  , mRebuildAllStyleData(PR_FALSE)
 {
   if (!gGotXBLFormPrefs) {
     gGotXBLFormPrefs = PR_TRUE;
@@ -2860,7 +2861,7 @@ nsCSSFrameConstructor::CreatePseudoTableFrame(PRInt32                  aNameSpac
   nsFrameItems items;
   rv = ConstructTableFrame(aState, parentContent,
                            parentFrame, childStyle, aNameSpaceID,
-                           PR_TRUE, items, PR_TRUE, pseudoOuter.mFrame, 
+                           PR_TRUE, items, pseudoOuter.mFrame, 
                            pseudoInner.mFrame);
 
   if (NS_FAILED(rv)) return rv;
@@ -3489,8 +3490,6 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsGkAtoms::merror_ ||
       aTag == nsGkAtoms::none   ||
       aTag == nsGkAtoms::mprescripts_ ||
-      (aTag == nsGkAtoms::mtable_ &&
-       aStyleContext->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_TABLE) ||
       aTag == nsGkAtoms::math;
 #endif
   return PR_FALSE;
@@ -3595,7 +3594,6 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
                                            PRInt32                  aNameSpaceID,
                                            PRBool                   aIsPseudo,
                                            nsFrameItems&            aChildItems,
-                                           PRBool                   aAllowOutOfFlow,
                                            nsIFrame*&               aNewOuterFrame,
                                            nsIFrame*&               aNewInnerFrame)
 {
@@ -3638,14 +3636,9 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     }
   }
 
-  // We need the aAllowOutOfFlow thing for MathML.  See bug 355993.
-  // Once bug 348577 is fixed, we should remove this code.  At that
-  // point, the aAllowOutOfFlow arg can go away.
-  nsIFrame* geometricParent =
-    aAllowOutOfFlow ?
-      aState.GetGeometricParent(outerStyleContext->GetStyleDisplay(),
-                                parentFrame) :
-      parentFrame;
+  nsIFrame* geometricParent = aState.GetGeometricParent
+                                (outerStyleContext->GetStyleDisplay(),
+                                 parentFrame);
 
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned  
@@ -3669,8 +3662,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     aNewOuterFrame->SetInitialChildList(nsnull, aNewInnerFrame);
 
     rv = aState.AddChild(aNewOuterFrame, *frameItems, aContent,
-                         aStyleContext, parentFrame, aAllowOutOfFlow,
-                         aAllowOutOfFlow);
+                         aStyleContext, parentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -6661,8 +6653,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       nsIFrame* innerTable;
       rv = ConstructTableFrame(aState, aContent, 
                                aParentFrame, aStyleContext,
-                               aNameSpaceID, PR_FALSE, aFrameItems, PR_TRUE,
-                               newFrame, innerTable);
+                               aNameSpaceID, PR_FALSE, aFrameItems, newFrame,
+                               innerTable);
       addedToFrameList = PR_TRUE;
       // Note: table construction function takes care of initializing
       // the frame, processing children, and setting the initial child
@@ -6956,93 +6948,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
   else if (aTag == nsGkAtoms::mrow_ ||
            aTag == nsGkAtoms::merror_)
     newFrame = NS_NewMathMLmrowFrame(mPresShell, aStyleContext);
-  // CONSTRUCTION of MTABLE elements
-  else if (aTag == nsGkAtoms::mtable_ &&
-           disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
-    // <mtable> is an inline-table -- but this isn't yet supported.
-    // What we do here is to wrap the table in an anonymous containing
-    // block so that it can mix better with other surrounding MathML markups
-    // This assumes that the <mtable> is not positioned or floated.
-    // (MathML does not allow/support positioned or floated elements at all.)
-    // XXXbz once we stop doing this mess, fix IsSpecialContent accordingly.
-
-    nsStyleContext* parentContext = aParentFrame->GetStyleContext();
-    nsStyleSet *styleSet = mPresShell->StyleSet();
-
-    // first, create a MathML mrow frame that will wrap the block frame
-    nsRefPtr<nsStyleContext> mrowContext;
-    mrowContext = styleSet->ResolvePseudoStyleFor(aContent,
-                                                  nsCSSAnonBoxes::mozMathInline,
-                                                  parentContext);
-    newFrame = NS_NewMathMLmrowFrame(mPresShell, mrowContext);
-    if (NS_UNLIKELY(!newFrame)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, newFrame);
-
-    
-    nsRefPtr<nsStyleContext> blockContext;
-    blockContext = styleSet->ResolvePseudoStyleFor(aContent,
-                                                   nsCSSAnonBoxes::mozMathMLAnonymousBlock,
-                                                   mrowContext);
-    
-    // then, create a block frame that will wrap the table frame
-    nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, blockContext,
-                                            NS_BLOCK_SPACE_MGR |
-                                            NS_BLOCK_MARGIN_ROOT);
-    if (NS_UNLIKELY(!blockFrame)) {
-      newFrame->Destroy();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    InitAndRestoreFrame(aState, aContent, newFrame, nsnull, blockFrame);
-
-    // then, create the table frame itself
-    nsRefPtr<nsStyleContext> tableContext =
-      ResolveStyleContext(blockFrame, aContent);
-
-    nsFrameItems tempItems;
-    nsIFrame* outerTable;
-    nsIFrame* innerTable;
-    
-    // XXXbz note: since we're constructing a table frame, and it does things
-    // based on whether its parent is a pseudo or not, we need to save our
-    // pseudo state here.  This can go away if we switch to a direct
-    // construction of mtable as an inline-table.
-    nsPseudoFrames priorPseudoFrames; 
-    aState.mPseudoFrames.Reset(&priorPseudoFrames);
-
-    // Pass PR_FALSE for aAllowOutOfFlow so that the resulting table will be
-    // guaranteed to be in-flow (and in particular, a descendant of the <math>
-    // in the _frame_ tree).
-    rv = ConstructTableFrame(aState, aContent, blockFrame, tableContext,
-                             aNameSpaceID, PR_FALSE, tempItems, PR_FALSE,
-                             outerTable, innerTable);
-    // Note: table construction function takes care of initializing the frame,
-    // processing children, and setting the initial child list
-
-    NS_ASSERTION(aState.mPseudoFrames.IsEmpty(),
-                 "How did we end up with pseudo-frames here?");
-
-    // restore the incoming pseudo frame state.  Note that we MUST do this
-    // before adding things to aFrameItems.
-    aState.mPseudoFrames = priorPseudoFrames;
-    
-    // set the outerTable as the initial child of the anonymous block
-    blockFrame->SetInitialChildList(nsnull, outerTable);
-
-    // set the block frame as the initial child of the mrow frame
-    newFrame->SetInitialChildList(nsnull, blockFrame);
-
-    // add the new frame to the flow
-    // XXXbz this is wrong.  What if it's out-of-flow?  For that matter, this
-    // is putting the frame in the wrong child list in the "pseudoParent ==
-    // PR_TRUE" case, which I assume we can hit.
-    aFrameItems.AddChild(newFrame);
-
-    return rv; 
-  }
-  // End CONSTRUCTION of MTABLE elements 
-
   else if (aTag == nsGkAtoms::math) { 
     // root <math> element
     const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
@@ -7561,7 +7466,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
           rv = SVGSwitchProcessChildren(aState, aContent, newFrame,
                                         childItems);
         } else {
-          rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE, childItems,
+          rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE, childItems,
                                PR_FALSE);
         }
 
@@ -12394,13 +12299,20 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsPresContext* aPresContext,
   aBlockFrame = aBlockFrame->GetFirstContinuation();
   
   PRBool stopLooking = PR_FALSE;
-  nsresult rv = RemoveFloatingFirstLetterFrames(aPresContext, aPresShell,
-                                                aFrameManager,
-                                                aBlockFrame, &stopLooking);
-  if (NS_SUCCEEDED(rv) && !stopLooking) {
-    rv = RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager,
-                                 aBlockFrame, &stopLooking);
-  }
+  nsresult rv;
+  do {
+    rv = RemoveFloatingFirstLetterFrames(aPresContext, aPresShell,
+                                         aFrameManager,
+                                         aBlockFrame, &stopLooking);
+    if (NS_SUCCEEDED(rv) && !stopLooking) {
+      rv = RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager,
+                                   aBlockFrame, &stopLooking);
+    }
+    if (stopLooking) {
+      break;
+    }
+    aBlockFrame = aBlockFrame->GetNextContinuation();
+  }  while (aBlockFrame);
   return rv;
 }
 
@@ -12411,22 +12323,28 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsFrameConstructorState& aState,
 {
   aBlockFrame = aBlockFrame->GetFirstContinuation();
   
-  nsresult rv = NS_OK;
-
-  aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
-
-  nsIFrame* blockKids = aBlockFrame->GetFirstChild(nsnull);
   nsIFrame* parentFrame = nsnull;
   nsIFrame* textFrame = nsnull;
   nsIFrame* prevFrame = nsnull;
   nsFrameItems letterFrames;
   PRBool stopLooking = PR_FALSE;
-  rv = WrapFramesInFirstLetterFrame(aState, aBlockFrame, aBlockFrame, blockKids,
-                                    &parentFrame, &textFrame, &prevFrame,
-                                    letterFrames, &stopLooking);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsresult rv;
+  do {
+    // XXX shouldn't this bit be set already (bug 408493), assert instead?
+    aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
+    rv = WrapFramesInFirstLetterFrame(aState, aBlockFrame, aBlockFrame,
+                                      aBlockFrame->GetFirstChild(nsnull),
+                                      &parentFrame, &textFrame, &prevFrame,
+                                      letterFrames, &stopLooking);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (stopLooking) {
+      break;
+    }
+    aBlockFrame = aBlockFrame->GetNextContinuation();
+  } while (aBlockFrame);
+
   if (parentFrame) {
     // Take the old textFrame out of the parents child list
     ::DeletingFrameSubtree(aState.mFrameManager, textFrame);
@@ -13264,6 +13182,39 @@ nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
 #define RESTYLE_ARRAY_STACKSIZE 128
 
 void
+nsCSSFrameConstructor::RebuildAllStyleData()
+{
+  mRebuildAllStyleData = PR_FALSE;
+
+  if (!mPresShell || !mPresShell->GetRootFrame())
+    return;
+
+  // Tell the style set to get the old rule tree out of the way
+  // so we can recalculate while maintaining rule tree immutability
+  nsresult rv = mPresShell->StyleSet()->BeginReconstruct();
+  if (NS_FAILED(rv))
+    return;
+
+  // Recalculate all of the style contexts for the document
+  // Note that we can ignore the return value of ComputeStyleChangeFor
+  // because we never need to reframe the root frame
+  // XXX This could be made faster by not rerunning rule matching
+  // (but note that nsPresShell::SetPreferenceStyleRules currently depends
+  // on us re-running rule matching here
+  nsStyleChangeList changeList;
+  mPresShell->FrameManager()->ComputeStyleChangeFor(mPresShell->GetRootFrame(),
+                                                    &changeList, nsChangeHint(0));
+  // Process the required changes
+  ProcessRestyledFrames(changeList);
+  // Tell the style set it's safe to destroy the old rule tree.  We
+  // must do this after the ProcessRestyledFrames call in case the
+  // change list has frame reconstructs in it (since frames to be
+  // reconstructed will still have their old style context pointers
+  // until they are destroyed).
+  mPresShell->StyleSet()->EndReconstruct();
+}
+
+void
 nsCSSFrameConstructor::ProcessPendingRestyles()
 {
   PRUint32 count = mPendingRestyles.Count();
@@ -13309,6 +13260,12 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
 #ifdef DEBUG
   mPresShell->VerifyStyleTree();
 #endif
+
+  if (mRebuildAllStyleData) {
+    // We probably wasted a lot of work up above, but this seems safest
+    // and it should be rarely used.
+    RebuildAllStyleData();
+  }
 }
 
 void
@@ -13344,6 +13301,14 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
       mRestyleEvent = ev;
     }
   }
+}
+
+void
+nsCSSFrameConstructor::PostRebuildAllStyleDataEvent()
+{
+  mRebuildAllStyleData = PR_TRUE;
+  // Get a restyle event posted if necessary
+  mPresShell->ReconstructStyleDataInternal();
 }
 
 NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run()

@@ -35,14 +35,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIDOMWindowInternal.idl"
+#include "nsIObserver.idl"
+#include "nsIPKCS11Slot.idl"
 
 /**
  * nsIProtectedAuthThread
  *  This is used to communicate with the thread login on to 
  *  a token with CKF_PROTECTED_AUTHENTICATION_PATH set.
  */
-[scriptable, uuid(45334489-3d30-47c6-920b-0a55a313aebf)]
+[scriptable, uuid(4bb27cb7-8984-4cee-8ce7-9b014c3d091b)]
 interface nsIProtectedAuthThread : nsISupports
 {
   /**
@@ -51,13 +52,22 @@ interface nsIProtectedAuthThread : nsISupports
    *   call this method as soon as the message to the user is
    *   displayed. This will trigger login operation. No user 
    *   cancellation is possible during login operation.
+   *
+   *   When the login is done, the observe method of @observer will
+   *   be called on the UI thread with a topic of "login-finished"
+   *   and null data and subject.
    */
-  void login(in nsIDOMWindowInternal dialog);
+  void login(in nsIObserver observer);
+
+  /**
+   * The PKCS11 slot
+   */
+  readonly attribute nsIPKCS11Slot slot;
 
   /**
    * Gets token to be logged in name.
    */
-  wstring getTokenName();
+  AString getTokenName();
 };
 
 %{ C++

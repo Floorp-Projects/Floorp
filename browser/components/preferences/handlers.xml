@@ -61,12 +61,12 @@
   <binding id="handler" extends="chrome://browser/content/preferences/handlers.xml#handler-base">
     <content>
       <xul:hbox flex="1" equalsize="always">
-        <xul:hbox flex="1" align="center">
+        <xul:hbox flex="1" align="center" xbl:inherits="tooltiptext=typeDescription">
           <xul:image src="moz-icon://goat?size=16" class="typeIcon"
                      xbl:inherits="src=typeIcon" height="16" width="16"/>
           <xul:label flex="1" crop="end" xbl:inherits="value=typeDescription"/>
         </xul:hbox>
-        <xul:hbox flex="1" align="center">
+        <xul:hbox flex="1" align="center" xbl:inherits="tooltiptext=actionDescription">
           <xul:image xbl:inherits="src=actionIcon" height="16" width="16" class="actionIcon"/>
           <xul:label flex="1" crop="end" xbl:inherits="value=actionDescription"/>
         </xul:hbox>
@@ -77,13 +77,14 @@
   <binding id="handler-selected" extends="chrome://browser/content/preferences/handlers.xml#handler-base">
     <content>
       <xul:hbox flex="1" equalsize="always">
-        <xul:hbox flex="1" align="center">
+        <xul:hbox flex="1" align="center" xbl:inherits="tooltiptext=typeDescription">
           <xul:image src="moz-icon://goat?size=16" class="typeIcon"
                      xbl:inherits="src=typeIcon" height="16" width="16"/>
           <xul:label flex="1" crop="end" xbl:inherits="value=typeDescription"/>
         </xul:hbox>
         <xul:hbox flex="1">
           <xul:menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1"
+                        xbl:inherits="tooltiptext=actionDescription"
                         oncommand="gApplicationsPane.onSelectAction(event.originalTarget)">
             <xul:menupopup/>
           </xul:menulist>

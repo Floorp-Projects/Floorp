@@ -105,6 +105,15 @@ ifdef HOST_PROGRAM
 	$(INSTALL) $(HOST_PROGRAM) $(DIST)/bin
 endif
 
+# Generate a new buildid every time we "export" in config... that's only
+# supposed to be once per-build!
+export::
+ifdef MOZ_BUILD_DATE
+	printf "%s" $(MOZ_BUILD_DATE) > buildid
+else
+	$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid > buildid
+endif
+
 ifdef WRAP_SYSTEM_INCLUDES
 export::
 	if test ! -d system_wrappers; then mkdir system_wrappers; fi

@@ -508,10 +508,10 @@ var Microformats = {
           }
           break;
       }
-      if (result && prop.types) {
+      if (result && prop.values) {
         var validType = false;
-        for (let type in prop.types) {
-          if (result.toLowerCase() == prop.types[type]) {
+        for (let value in prop.values) {
+          if (result.toLowerCase() == prop.values[value]) {
             validType = true;
             break;
           }
@@ -703,16 +703,20 @@ var Microformats = {
             if (includes[i].nodeName.toLowerCase() == "object") {
               includeId = includes[i].getAttribute("data").substr(1);
             }
-            includes[i].parentNode.replaceChild(in_mfnode.ownerDocument.getElementById(includeId).cloneNode(true), includes[i]);
+            if (in_mfnode.ownerDocument.getElementById(includeId)) {
+              includes[i].parentNode.replaceChild(in_mfnode.ownerDocument.getElementById(includeId).cloneNode(true), includes[i]);
+            }
           }
         } else {
           var headers = in_mfnode.getAttribute("headers").split(" ");
           for (let i = 0; i < headers.length; i++) {
             var tempNode = in_mfnode.ownerDocument.createElement("span");
             var headerNode = in_mfnode.ownerDocument.getElementById(headers[i]);
-            tempNode.innerHTML = headerNode.innerHTML;
-            tempNode.className = headerNode.className;
-            mfnode.appendChild(tempNode);
+            if (headerNode) {
+              tempNode.innerHTML = headerNode.innerHTML;
+              tempNode.className = headerNode.className;
+              mfnode.appendChild(tempNode);
+            }
           }
         }
       } else {
@@ -992,7 +996,7 @@ var adr_definition = {
   properties: {
     "type" : {
       plural: true,
-      types: ["work", "home", "pref", "postal", "dom", "intl", "parcel"]
+      values: ["work", "home", "pref", "postal", "dom", "intl", "parcel"]
     },
     "post-office-box" : {
     },
@@ -1065,7 +1069,7 @@ var hCard_definition = {
       subproperties: {
         "type" : {
           plural: true,
-          types: ["internet", "x400", "pref"]
+          values: ["internet", "x400", "pref"]
         },
         "value" : {
           datatype: "email",
@@ -1078,7 +1082,6 @@ var hCard_definition = {
       required: true
     },
     "geo" : {
-      value: "geo",
       datatype: "microformat",
       microformat: "geo"
     },
@@ -1198,7 +1201,7 @@ var hCard_definition = {
       subproperties: {
         "type" : {
           plural: true,
-          types: ["msg", "home", "work", "pref", "voice", "fax", "cell", "video", "pager", "bbs", "car", "isdn", "pcs"]
+          values: ["msg", "home", "work", "pref", "voice", "fax", "cell", "video", "pager", "bbs", "car", "isdn", "pcs"]
         },
         "value" : {
           datatype: "tel"
@@ -1259,7 +1262,7 @@ var hCalendar_definition = {
       microformat_property: "tag"
     },
     "class" : {
-      types: ["public", "private", "confidential"]
+      values: ["public", "private", "confidential"]
     },
     "description" : {
       datatype: "HTML"
@@ -1276,7 +1279,6 @@ var hCalendar_definition = {
     "duration" : {
     },
     "geo" : {
-      value: "geo",
       datatype: "microformat",
       microformat: "geo"
     },
@@ -1285,11 +1287,11 @@ var hCalendar_definition = {
       microformat: "hCard"
     },
     "status" : {
-      types: ["tentative", "confirmed", "cancelled"]
+      values: ["tentative", "confirmed", "cancelled"]
     },
     "summary" : {},
     "transp" : {
-      types: ["opaque", "transparent"]
+      values: ["opaque", "transparent"]
     },
     "uid" : {
       datatype: "anyURI"

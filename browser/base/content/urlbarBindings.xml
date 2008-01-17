@@ -43,8 +43,6 @@
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation implements="nsIObserver, nsIDOMEventListener">
       <constructor><![CDATA[
-        this._ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                    .getService(Components.interfaces.nsIIOService);
         this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefService)
                                 .getBranch("browser.urlbar.")
@@ -66,40 +64,11 @@
       <destructor><![CDATA[
         this._prefs.removeObserver("", this);
         this._prefs = null;
-        this._ioService = null;
         this.inputField.controllers.removeController(this._copyCutController);
         this.inputField.removeEventListener("mousedown", this, false);
         this.inputField.removeEventListener("mousemove", this, false);
         this.inputField.removeEventListener("mouseout", this, false);
       ]]></destructor>
-
-      <property name="value"
-                onget="return this.inputField.value;">
-        <setter><![CDATA[
-          this.mIgnoreInput = true;
-
-          if (val != "") {
-            var uri;
-            try {
-              uri = this._ioService.newURI(val, null, null);
-            } catch(e) {}
-            if (uri) {
-              val = uri.spec;
-              try {
-                // try to decode as UTF-8
-                val = decodeURI(val);
-              } catch(e) {}
-            }
-          }
-          this.inputField.value = val;
-
-          this.mIgnoreInput = false;
-          var event = document.createEvent("Events");
-          event.initEvent("ValueChange", true, true);
-          this.inputField.dispatchEvent(event);
-          return val;
-        ]]></setter>
-      </property>
 
       <method name="_initURLTooltip">
         <body><![CDATA[
@@ -187,8 +156,10 @@
             if (start == 0 && end == urlbar.textLength) {
               // if the entire value is selected and it's a valid URI, encode it
               val = urlbar.value;
+              var ioService = Cc["@mozilla.org/network/io-service;1"]
+                                .getService(Ci.nsIIOService);
               try {
-                val = urlbar._ioService.newURI(val, null, null).spec;
+                val = ioService.newURI(val, null, null).spec;
               } catch(e) {}
               if (aCommand == "cmd_cut")
                 urlbar.value = "";
@@ -199,9 +170,9 @@
                 urlbar.selectionStart = urlbar.selectionEnd = start;
               }
             }
-            Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-                      .getService(Components.interfaces.nsIClipboardHelper)
-                      .copyString(val);
+            Cc["@mozilla.org/widget/clipboardhelper;1"]
+              .getService(Ci.nsIClipboardHelper)
+              .copyString(val);
           },
           supportsCommand: function(aCommand) {
             switch (aCommand) {

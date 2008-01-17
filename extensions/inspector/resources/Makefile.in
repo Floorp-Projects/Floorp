@@ -48,6 +48,8 @@ ALL_LOCALES = \
   de \
   en-US \
   fr \
+  pl \
+  ru \
   sk \
   $(NULL)
 

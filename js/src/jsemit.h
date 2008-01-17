@@ -66,10 +66,10 @@ typedef enum JSStmtType {
     STMT_LABEL,                 /* labeled statement:  L: s */
     STMT_IF,                    /* if (then) statement */
     STMT_ELSE,                  /* else clause of if statement */
-    STMT_SWITCH,                /* switch statement */
     STMT_BODY,                  /* synthetic body of function with
                                    destructuring formal parameters */
     STMT_BLOCK,                 /* compound statement: { s1[;... sN] } */
+    STMT_SWITCH,                /* switch statement */
     STMT_WITH,                  /* with statement */
     STMT_CATCH,                 /* catch block */
     STMT_TRY,                   /* try block */
@@ -87,14 +87,16 @@ typedef enum JSStmtType {
  * A comment on the encoding of the JSStmtType enum and type-testing macros:
  *
  * STMT_TYPE_MAYBE_SCOPE tells whether a statement type is always, or may
- * become, a lexical scope. Per the proposed JS2/ES4 spec, it includes only
- * syntactic blocks: block statements and try/catch/finally statements.
+ * become, a lexical scope.  It therefore includes block and switch (the two
+ * low-numbered "maybe" scope types) and excludes with (with has dynamic scope
+ * pending the "reformed with" in ES4/JS2).  It includes all try-catch-finally
+ * types, which are high-numbered maybe-scope types.
  *
  * STMT_TYPE_LINKS_SCOPE tells whether a JSStmtInfo of the given type eagerly
- * links to other scoping statement info records. It excludes the the "maybe"
- * type, block, as well as the try and both finally types, since try and the
- * other trailing maybe-scope types don't need block scope unless they contain
- * let declarations.
+ * links to other scoping statement info records.  It excludes the two early
+ * "maybe" types, block and switch, as well as the try and both finally types,
+ * since try and the other trailing maybe-scope types don't need block scope
+ * unless they contain let declarations.
  *
  * We treat WITH as a static scope because it prevents lexical binding from
  * continuing further up the static scope chain. With the "reformed with"
@@ -161,6 +163,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint16          ngvars;         /* max. no. of global variables/regexps */
     uint32          globalUses;     /* optimizable global var uses in total */
     uint32          loopyGlobalUses;/* optimizable global var uses in loops */
+    uint16          scopeDepth;     /* current lexical scope chain depth */
+    uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
     JSObject        *blockChain;    /* compile time block scope chain (NB: one
@@ -205,6 +209,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TREE_CONTEXT_INIT(tc, pc)                                             \
     ((tc)->flags = (tc)->ngvars = 0,                                          \
      (tc)->globalUses = (tc)->loopyGlobalUses = 0,                            \
+     (tc)->scopeDepth = (tc)->maxScopeDepth = 0,                              \
      (tc)->topStmt = (tc)->topScopeStmt = NULL,                               \
      (tc)->blockChain = NULL,                                                 \
      ATOM_LIST_INIT(&(tc)->decls),                                            \

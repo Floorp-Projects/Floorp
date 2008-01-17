@@ -26,8 +26,8 @@ sub Execute {
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(sysvar => 'logDir');
     my $configBumpDir = $config->Get(var => 'configBumpDir');
-    my $version = $config->Get(var => 'version');
-    my $oldVersion = $config->Get(var => 'oldVersion');
+    my $version = $config->GetVersion(longName => 0);
+    my $oldVersion = $config->GetOldVersion(longName => 0);
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
     my $ftpServer = $config->Get(var => 'ftpServer');
@@ -80,8 +80,8 @@ sub BumpPatcherConfig {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $configBumpDir = $config->Get(var => 'configBumpDir');
-    my $version = $config->Get(var => 'version');
-    my $oldVersion = $config->Get(var => 'oldVersion');
+    my $version = $config->GetVersion(longName => 0);
+    my $oldVersion = $config->GetOldVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $oldRc = $config->Get(var => 'oldRc');
     my $localeInfo = $config->GetLocaleInfo();
@@ -209,7 +209,12 @@ sub BumpPatcherConfig {
     $appObj->{'release'}->{$version} = $releaseObj = {};
 
     $releaseObj->{'schema'} = '1';
-    $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $version;
+    if ($config->Exists(var => 'prettyAusVersion')) {
+        $releaseObj->{'version'} = $config->Get(var => 'prettyAusVersion');
+    } else {
+        $releaseObj->{'version'} = $version;
+    }
+    $releaseObj->{'extension-version'} = $version;
 
     my $linBuildId;
     my $winBuildId;

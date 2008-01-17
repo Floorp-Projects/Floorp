@@ -84,3 +84,6 @@ include line-breaking/reftest.list
 # percent-overflow-sizing
 include percent-overflow-sizing/reftest.list
 
+# forms
+include forms/reftest.list
+

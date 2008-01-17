@@ -1506,7 +1506,8 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
     if (eventType == nsIAccessibleEvent::EVENT_DOM_CREATE || 
         eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
       nsCOMPtr<nsIAccessible> containerAccessible;
-      if (accessible) {
+      if (accessible && eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+        // For asynch show, delayed invalidatation of parent's children
         accessible->GetParent(getter_AddRefs(containerAccessible));
         nsCOMPtr<nsPIAccessible> privateContainerAccessible =
           do_QueryInterface(containerAccessible);
@@ -1853,6 +1854,15 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   // and there is always one of those.
 
   if (aChild && !isHiding) {
+    if (!isAsynch) {
+      // DOM already updated with new objects -- invalidate parent's children now
+      // For asynch we must wait until layout updates before we invalidate the children
+      nsCOMPtr<nsPIAccessible> privateContainerAccessible =
+        do_QueryInterface(containerAccessible);
+      if (privateContainerAccessible) {
+        privateContainerAccessible->InvalidateChildren();
+      }
+    }
     // Fire EVENT_SHOW, EVENT_MENUPOPUP_START for newly visible content.
     // Fire after a short timer, because we want to make sure the view has been
     // updated to make this accessible content visible. If we don't wait,
