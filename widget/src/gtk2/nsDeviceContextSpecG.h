@@ -43,8 +43,13 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h" 
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 #include "nsCRT.h" /* should be <limits.h>? */
+
+#include <gtk/gtk.h>
+#include <gtk/gtkprinter.h>
+#include <gtk/gtkprintjob.h>
 
 class nsIPrintJobGTK;
 
@@ -117,7 +122,15 @@ protected:
   float  mRight;              /* right margin */
   float  mTop;                /* top margin */
   float  mBottom;             /* bottom margin */
-  nsIPrintJobGTK * mPrintJob;
+
+  GtkPrintJob*      mPrintJob;
+  GtkPrinter*       mGtkPrinter;
+  GtkPrintSettings* mGtkPrintSettings;
+  GtkPageSetup*     mGtkPageSetup;
+
+  nsCString              mSpoolName;
+  nsCOMPtr<nsILocalFile> mSpoolFile;
+
 };
 
 //-------------------------------------------------------------------------

@@ -4597,7 +4597,7 @@ fi
 if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_ENABLE_GTK2"
 then
-    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gdk-x11-2.0 glib-2.0 gobject-2.0)
+    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 gdk-x11-2.0 glib-2.0 gobject-2.0)
 fi
 fi # COMPILE_ENVIRONMENT
 
