@@ -1,3 +1,10 @@
+PRODUCT = $(shell grep "^product[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
+VERSION = $(shell grep "^version[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
+OLD_VERSION = $(shell grep "^oldVersion[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
+PRODUCT_TAG = $(shell grep "^productTag[ \t]" bootstrap.cfg | sed -e 's/[^=]*= *//')
+# extract the numeric rc value from the config file
+PRODUCT_RC = $(shell grep "^rc[ \t]" bootstrap.cfg | sed -e 's/[^0-9]*\([0-9]*\).*/\1/')
+
 test:
 	for f in release t/test.pl `find . -name "*.pm"`; do \
 	perl -c $$f || exit $?; done
@@ -15,19 +22,19 @@ stage:
 	mkdir -p /builds/logs/
 	mkdir -p /data/symbols/
 	# fake key
-	mkdir -p /home/ftp/pub/firefox/releases/1.5/
-	touch /home/ftp/pub/firefox/releases/1.5/KEY
+	mkdir -p /home/ftp/pub/${PRODUCT}/releases/1.5/
+	touch /home/ftp/pub/${PRODUCT}/releases/1.5/KEY
 	# ftp
-	mkdir -p /home/ftp/pub/firefox/nightly
-	chown -R cltbld:firefox /home/ftp/pub/firefox
-	chmod -R g+rwxs /home/ftp/pub/firefox
+	mkdir -p /home/ftp/pub/${PRODUCT}/nightly
+	chown -R cltbld:${PRODUCT} /home/ftp/pub/${PRODUCT}
+	chmod -R g+rwxs /home/ftp/pub/${PRODUCT}
 	chmod -R o+rx /home/ftp/pub
 	# staging environment
-	mkdir -p /data/cltbld/firefox-2.0.0.12/batch1/stage
-	# download 2.0.0.11, for l10n verify
-	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.11-candidates/rc1/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/firefox/nightly/ && rm -rfv ftp.mozilla.org
-	# download 2.0.0.11 release, for update verify
-	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.11/ && mv releases.mozilla.org/releases/* /home/ftp/pub/firefox/releases/ && rm -rfv releases.mozilla.org
+	mkdir -p /data/cltbld/${PRODUCT}-${VERSION}/batch1/stage
+	# download old builds, for l10n verify
+	cd /data && wget -nv --cut-dirs=3 -np -r ftp://ftp.mozilla.org/pub/mozilla.org/${PRODUCT}/nightly/${OLD_VERSION}-candidates/rc1/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/${PRODUCT}/nightly/ && rm -rfv ftp.mozilla.org
+	# download old release, for update verify
+	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://releases.mozilla.org/pub/mozilla.org/${PRODUCT}/releases/${OLD_VERSION}/ && mv releases.mozilla.org/releases/* /home/ftp/pub/${PRODUCT}/releases/ && rm -rfv releases.mozilla.org
 
 
 cvsmirror: cvsmirror_mofo cvsmirror_main
@@ -37,12 +44,14 @@ cvsmirror_main:
 	rsync -a --delete-after cvs-mirror.mozilla.org::l10n/ /builds/cvsmirror.clean/l10n/
 	chgrp -R cvs /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
 	chmod -R g+rw /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_12_RELEASE mozilla
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_12_RELEASE_l10n mozilla/tools/tinderbox-configs/
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_12_RC1 mozilla
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_12_RC1_l10n mozilla/tools/tinderbox-configs/
-	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_12_RELEASE l10n
-	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_12_RC1 l10n
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RELEASE mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RELEASE_l10n mozilla/tools/tinderbox-configs/
+	for ((rc=1; rc <= ${PRODUCT_RC}; rc++)); do \
+		cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RC$$rc mozilla;\
+		cvs -d /builds/cvsmirror.clean/cvsroot rtag -d ${PRODUCT_TAG}_RC$$rc_l10n mozilla/tools/tinderbox-configs/;\
+		cvs -d /builds/cvsmirror.clean/l10n rtag -d ${PRODUCT_TAG}_RC$$rc l10n;\
+		cvs -d /builds/cvsmirror.clean/l10n rtag -d ${PRODUCT_TAG}_RC$$rc l10n;\
+	done
 
 cvsmirror_mofo:
 	mkdir -p /builds/cvsmirror.clean/tmp/mofo
@@ -63,8 +72,8 @@ clean_stage: clean_logs
 	rm -rf /builds/release/logs/*
 	rm -rf /builds/updates/*
 	rm -rf /builds/verify/*
-	rm -rf /data/cltbld/firefox-*/
-	rm -rf /home/ftp/pub/firefox/*
+	rm -rf /data/cltbld/${PRODUCT}-*/
+	rm -rf /home/ftp/pub/${PRODUCT}/*
 
 clean_cvsmirror: clean_cvsmirror_main clean_cvsmirror_mofo
 	rm -rf /builds/cvsmirror.clean/*
