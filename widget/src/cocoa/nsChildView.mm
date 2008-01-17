@@ -168,6 +168,17 @@ nsIWidget         * gRollupWidget   = nsnull;
 @end
 
 
+// Used to retain an NSView for the remainder of a method's execution.
+class nsAutoRetainView {
+public:
+  nsAutoRetainView(NSView *aView) : mView([aView retain]) {}
+  ~nsAutoRetainView() { [mView release]; }
+
+private:
+  NSView *mView;  // [STRONG]
+};
+
+
 #pragma mark -
 
 
@@ -341,6 +352,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mIsPluginView(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
 , mPluginIsCG(PR_FALSE)
+, mInSetFocus(PR_FALSE)
 {
 #ifdef PR_LOGGING
   if (!sCocoaLog)
@@ -739,9 +751,55 @@ NS_IMETHODIMP nsChildView::IsEnabled(PRBool *aState)
 
 NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
+  // Don't do anything if SetFocus() has been called reentrantly on the same
+  // object.  Sometimes calls to nsChildView::DispatchEvent() can get
+  // temporarily stuck, causing calls to [ChildView sendFocusEvent:] and
+  // SetFocus() to be reentered.  These reentrant calls are probably the
+  // result of one or more bugs, and doing things on a reentrant call can
+  // cause problems:  For example if mView is already the first responder and
+  // we send it an NS_GOTFOCUS event (see below), this causes the Mochitests
+  // to get stuck in the toolkit/content/tests/widgets/test_popup_button.xul
+  // test.
+  if (mInSetFocus)
+    return NS_OK;
+  mInSetFocus = PR_TRUE;
   NSWindow* window = [mView window];
-  if (window)
-    [window makeFirstResponder:mView];
+  if (window) {
+    nsAutoRetainView kungFuDeathGrip(mView);
+    // For reasons that aren't yet clear, focus changes within a window (as
+    // opposed to those between windows or between apps) should only trigger
+    // NS_LOSTFOCUS and NS_GOTFOCUS events (sent to Gecko) in the context of
+    // a call to nsChildView::SetFocus() (or nsCocoaWindow::SetFocus(), which
+    // in any case re-routes to nsChildView::SetFocus()).  If we send these
+    // events on every intra-window focus change (on every call to
+    // [ChildView becomeFirstResponder:] or [ChildView resignFirstResponder:]),
+    // the result will be strange focus bugs (like bmo bugs 399471, 403232,
+    // 404433 and 408266).
+    NSResponder* firstResponder = [window firstResponder];
+    if ([mView isEqual:firstResponder]) {
+      // Sometimes SetFocus() is called on an nsChildView object that's
+      // already focused.  In principle this shouldn't happen, and in any
+      // case we shouldn't have to dispatch any events.  But if we don't, we
+      // sometimes get text-input cursors blinking in more than one text
+      // field, or still blinking when the browser is no longer active.  For
+      // reasons that aren't at all clear, this problem can be avoided by
+      // always sending an NS_GOTFOCUS message here.
+      if ([mView isKindOfClass:[ChildView class]])
+        [(ChildView *)mView sendFocusEvent:NS_GOTFOCUS];
+    } else {
+      // Retain and release firstResponder around the call to
+      // makeFirstResponder.
+      [firstResponder retain];
+      if ([window makeFirstResponder:mView]) {
+        if ([firstResponder isKindOfClass:[ChildView class]])
+          [(ChildView *)firstResponder sendFocusEvent:NS_LOSTFOCUS];
+        if ([mView isKindOfClass:[ChildView class]])
+          [(ChildView *)mView sendFocusEvent:NS_GOTFOCUS];
+      }
+      [firstResponder release];
+    }
+  }
+  mInSetFocus = PR_FALSE;
   return NS_OK;
 }
 
@@ -1758,17 +1816,6 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 
 
 #pragma mark -
-
-
-// Used to retain an NSView for the remainder of a method's execution.
-class nsAutoRetainView {
-public:
-  nsAutoRetainView(NSView *aView) : mView([aView retain]) {}
-  ~nsAutoRetainView() { [mView release]; }
-
-private:
-  NSView *mView;  // [STRONG]
-};
 
 
 @implementation ChildView
@@ -4091,31 +4138,12 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 }
 
 
-// This method is called when we are about to be focused.
-- (BOOL)becomeFirstResponder
-{
-  if (!mGeckoChild)
-    return NO;
-
-  nsAutoRetainView kungFuDeathGrip(self);
-
-  [self sendFocusEvent:NS_GOTFOCUS];
-
-  return [super becomeFirstResponder];
-}
-
-
 // This method is called when are are about to lose focus.
 // We must always call through to our superclass, even when mGeckoChild is
 // nil -- otherwise the keyboard focus can end up in the wrong NSView.
 - (BOOL)resignFirstResponder
 {
-  nsAutoRetainView kungFuDeathGrip(self);
-
   nsTSMManager::CommitIME();
-
-  if (mGeckoChild)
-    [self sendFocusEvent:NS_LOSTFOCUS];
 
   return [super resignFirstResponder];
 }
