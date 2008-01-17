@@ -177,9 +177,23 @@ public:
   // If the caller wants that to happen synchronously, it needs to handle that
   // itself.
   void ProcessPendingRestyles();
+  
+  void RebuildAllStyleData();
 
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
+
+  /**
+   * Asynchronously clear style data from the root frame downwards and ensure
+   * it will all be rebuilt. This is safe to call anytime; it will schedule
+   * a restyle and take effect next time style changes are flushed.
+   * This method is used to recompute the style data when some change happens
+   * outside of any style rules, like a color preference change or a change
+   * in a system font size, or to fix things up when an optimization in the
+   * style data has become invalid. We assume that the root frame will not
+   * need to be reframed.
+   */
+  void PostRebuildAllStyleDataEvent();
 
   // Request to create a continuing frame
   nsresult CreateContinuingFrame(nsPresContext* aPresContext,
@@ -324,8 +338,7 @@ private:
    * to create into aChildItems.  The newly-created outer frame will either be
    * in aChildItems or a descendant of a pseudo in aChildItems (unless it's
    * positioned or floated, in which case its placeholder will be in
-   * aChildItems).  If aAllowOutOfFlow is false, the table frame will be forced
-   * to be in-flow no matter what its float or position values are.
+   * aChildItems).
    */ 
   nsresult ConstructTableFrame(nsFrameConstructorState& aState,
                                nsIContent*              aContent,
@@ -334,7 +347,6 @@ private:
                                PRInt32                  aNameSpaceID,
                                PRBool                   aIsPseudo,
                                nsFrameItems&            aChildItems,
-                               PRBool                   aAllowOutOfFlow,
                                nsIFrame*&               aNewOuterFrame,
                                nsIFrame*&               aNewInnerFrame);
 
@@ -1134,6 +1146,7 @@ private:
   PRPackedBool        mCountersDirty : 1;
   PRPackedBool        mInitialContainingBlockIsAbsPosContainer : 1;
   PRPackedBool        mIsDestroyingFrameTree : 1;
+  PRPackedBool        mRebuildAllStyleData : 1;
 
   nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
 

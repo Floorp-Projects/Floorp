@@ -38,7 +38,7 @@
 #ifndef nsGenericHTMLElement_h___
 #define nsGenericHTMLElement_h___
 
-#include "nsStyledElement.h"
+#include "nsMappedAttributeElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
@@ -50,7 +50,6 @@ class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;
 class nsIFrame;
-class nsMappedAttributes;
 class nsIStyleRule;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
@@ -64,12 +63,8 @@ class nsILayoutHistoryState;
 class nsIEditor;
 struct nsRect;
 struct nsSize;
-struct nsRuleData;
 
-typedef void (*nsMapRuleToAttributesFunc)(const nsMappedAttributes* aAttributes, 
-                                          nsRuleData* aData);
-
-typedef nsStyledElement nsGenericHTMLElementBase;
+typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 
 /**
  * A common superclass for HTML elements
@@ -239,11 +234,9 @@ public:
   {
     return mAttrsAndChildren.GetAttr(aAttr);
   }
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   virtual void UpdateEditableState();
 
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   already_AddRefed<nsIURI> GetBaseURI() const;
 
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -252,10 +245,7 @@ public:
                                 nsAttrValue& aResult);
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual PRBool SetMappedAttribute(nsIDocument* aDocument,
-                                    nsIAtom* aName,
-                                    nsAttrValue& aValue,
-                                    nsresult* aRetval);
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   /**
    * Get the base target for any links within this piece

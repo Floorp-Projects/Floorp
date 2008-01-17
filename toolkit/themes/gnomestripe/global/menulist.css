@@ -87,6 +87,10 @@ menulist[editable="true"] {
 
 .menulist-editable-box {
   -moz-appearance: menulist-textfield;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 0px;
 }
 
 menulist[editable="true"] > .menulist-dropmarker {

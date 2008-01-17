@@ -522,7 +522,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'z':
             obj = split_setup(cx);
             break;
-
+#ifdef MOZ_SHARK
+        case 'k':
+            js_ConnectShark();
+            break;
+#endif
         default:
             return usage();
         }
@@ -1567,7 +1571,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             atom = js_Atomize(cx, bytes, JS_GetStringLength(str), 0);
             if (!atom)
                 return JS_FALSE;
-            if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop))
+            if (js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop) < 0)
                 return JS_FALSE;
             if (prop) {
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
@@ -1943,6 +1947,12 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
             break;
         }
 
+        /* Protect pdobj from GC by setting it as an element of aobj now */
+        v = OBJECT_TO_JSVAL(pdobj);
+        ok = JS_SetElement(cx, aobj, i, &v);
+        if (!ok)
+            break;
+
         ok = JS_SetProperty(cx, pdobj, "id", &pd->id) &&
              JS_SetProperty(cx, pdobj, "value", &pd->value) &&
              (v = INT_TO_JSVAL(pd->flags),
@@ -1950,11 +1960,6 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
              (v = INT_TO_JSVAL(pd->slot),
               JS_SetProperty(cx, pdobj, "slot", &v)) &&
              JS_SetProperty(cx, pdobj, "alias", &pd->alias);
-        if (!ok)
-            break;
-
-        v = OBJECT_TO_JSVAL(pdobj);
-        ok = JS_SetElement(cx, aobj, i, &v);
         if (!ok)
             break;
     }
@@ -2522,6 +2527,12 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("getslx",         GetSLX,         1,1,0),
     JS_FN("toint32",        ToInt32,        1,1,0),
     JS_FS("evalcx",         EvalInContext,  1,0,0),
+#ifdef MOZ_SHARK
+    JS_FS("startShark",      StartShark,      0,0,0),
+    JS_FS("stopShark",       StopShark,       0,0,0),
+    JS_FS("connectShark",    ConnectShark,    0,0,0),
+    JS_FS("disconnectShark", DisconnectShark, 0,0,0),
+#endif
     JS_FS_END
 };
 
@@ -2584,6 +2595,14 @@ static const char *const shell_help_messages[] = {
 "  Evaluate s in optional sandbox object o\n"
 "  if (s == '' && !o) return new o with eager standard classes\n"
 "  if (s == 'lazy' && !o) return new o with lazy standard classes",
+#ifdef MOZ_SHARK
+"startShark()             Start a Shark session.\n"
+"                         Shark must be running with programatic sampling.",
+"stopShark()              Stop a running Shark session.",
+"connectShark()           Connect to Shark.\n"
+"                         The -k switch does this automatically.",
+"disconnectShark()        Disconnect from Shark.",
+#endif
 };
 
 /* Help messages must match shell functions. */

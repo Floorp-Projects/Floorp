@@ -326,7 +326,8 @@ function _filterPasswords()
 }
 
 function HandleSignonFilterKeyPress(aEvent) {
-  if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
+  if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE &&
+      document.getElementById("filter").value != "")
     SignonClearFilter();
 }
 

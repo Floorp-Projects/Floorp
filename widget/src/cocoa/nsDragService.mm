@@ -164,9 +164,10 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
     screenPoint.y = NSMaxY([[[NSScreen screens] objectAtIndex:0] frame]) - screenPoint.y;
 
   nsRefPtr<gfxASurface> surface;
+  nsPresContext* pc;
   nsresult rv = DrawDrag(aDOMNode, aRegion,
                          NSToIntRound(screenPoint.x), NSToIntRound(screenPoint.y),
-                         aDragRect, getter_AddRefs(surface));
+                         aDragRect, getter_AddRefs(surface), &pc);
   if (!aDragRect->width || !aDragRect->height) {
     // just use some suitable defaults
     aDragRect->SetRect(NSToIntRound(screenPoint.x), NSToIntRound(screenPoint.y), 20, 20);

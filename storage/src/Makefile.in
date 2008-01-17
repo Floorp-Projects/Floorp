@@ -60,7 +60,6 @@ REQUIRES = xpcom \
            $(NULL)
 
 CPPSRCS = \
-	mozStorageAsyncIO.cpp \
 	mozStorageService.cpp \
 	mozStorageConnection.cpp \
 	mozStorageStatement.cpp \

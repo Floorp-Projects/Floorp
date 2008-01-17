@@ -1051,7 +1051,6 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     mimeStream->SetAddContentLength(PR_TRUE);
     mimeStream->SetData(bodyStream);
     CallQueryInterface(mimeStream, aPostDataStream);
-    NS_ADDREF(*aPostDataStream);
   }
 
   return rv;

@@ -248,9 +248,9 @@ nsHistory::Go(PRInt32 aDelta)
 NS_IMETHODIMP
 nsHistory::Go()
 {
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  nsAXPCNativeCallContext *ncc = nsnull;
   nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    GetCurrentNativeCallContext(&ncc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)
@@ -295,7 +295,7 @@ nsHistory::Go()
       nsPresContext *pcx;
       if (doc && (shell = doc->GetPrimaryShell()) &&
           (pcx = shell->GetPresContext())) {
-        pcx->ClearStyleDataAndReflow();
+        pcx->RebuildAllStyleData();
       }
 
       return NS_OK;

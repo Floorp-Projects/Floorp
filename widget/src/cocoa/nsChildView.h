@@ -131,7 +131,10 @@ union nsPluginPort;
 
 // Stop NSView hierarchy being changed during [ChildView drawRect:]
 - (void)delayedTearDown;
+
 - (void)setTransparent:(BOOL)transparent;
+
+- (void)sendFocusEvent:(PRUint32)eventType;
 @end
 
 
@@ -347,16 +350,15 @@ protected:
 
   nsRefPtr<gfxASurface> mTempThebesSurface;
 
-  PRPackedBool          mDestructorCalled;
   PRPackedBool          mVisible;
-
   PRPackedBool          mDrawing;
-
   PRPackedBool          mLiveResizeInProgress;
   PRPackedBool          mIsPluginView; // true if this is a plugin view
   PRPackedBool          mPluginDrawing;
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
-  
+
+  PRPackedBool          mInSetFocus;
+
   nsPluginPort          mPluginPort;
 };
 

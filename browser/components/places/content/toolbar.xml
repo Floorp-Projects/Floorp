@@ -500,7 +500,7 @@
         function TV_V_itemMoved(aItem, aOldParent, aOldIndex, aNewParent,
                                 aNewIndex) {
           // This cannot actually happen yet (see IDL)
-          if (aNewParent != aOldParent);
+          if (aNewParent != aOldParent)
             return;
 
           if (aNewParent == this._self.getResultNode()) {

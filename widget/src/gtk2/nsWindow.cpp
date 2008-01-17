@@ -244,8 +244,10 @@ static PRBool            gGlobalsInitialized   = PR_FALSE;
 static PRBool            gRaiseWindows         = PR_TRUE;
 static nsWindow         *gPluginFocusWindow    = NULL;
 
-nsCOMPtr  <nsIRollupListener> gRollupListener;
-nsWeakPtr                     gRollupWindow;
+static nsCOMPtr<nsIRollupListener> gRollupListener;
+static nsWeakPtr                   gRollupWindow;
+static PRBool                      gConsumeRollupEvent;
+
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
 
@@ -1338,21 +1340,26 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     nsCAutoString path;
     nsCStringArray iconList;
 
-    // Assume the given string is a local identifier for an icon file.
+    // Look for icons with the following suffixes appended to the base name.
+    // The last two entries (for the old XPM format) will be ignored unless
+    // no icons are found using the other suffixes. XPM icons are depricated.
 
-    ResolveIconName(aIconSpec, NS_LITERAL_STRING(".xpm"),
-                    getter_AddRefs(iconFile));
-    if (iconFile) {
-        iconFile->GetNativePath(path);
-        iconList.AppendCString(path);
-    }
+    const char extensions[6][7] = { ".png", "16.png", "32.png", "48.png",
+                                    ".xpm", "16.xpm" };
 
-    // Get the 16px icon path as well
-    ResolveIconName(aIconSpec, NS_LITERAL_STRING("16.xpm"),
-                    getter_AddRefs(iconFile));
-    if (iconFile) {
-        iconFile->GetNativePath(path);
-        iconList.AppendCString(path);
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(extensions); i++) {
+        // Don't bother looking for XPM versions if we found a PNG.
+        if (i == NS_ARRAY_LENGTH(extensions) - 2 && iconList.Count())
+            break;
+
+        nsAutoString extension;
+        extension.AppendASCII(extensions[i]);
+
+        ResolveIconName(aIconSpec, extension, getter_AddRefs(iconFile));
+        if (iconFile) {
+            iconFile->GetNativePath(path);
+            iconList.AppendCString(path);
+        }
     }
 
     // leave the default icon intact if no matching icons were found
@@ -1490,6 +1497,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
     LOG(("CaptureRollupEvents %p\n", (void *)this));
 
     if (aDoCapture) {
+        gConsumeRollupEvent = aConsumeRollupEvent;
         gRollupListener = aListener;
         gRollupWindow = do_GetWeakReference(static_cast<nsIWidget*>
                                                        (this));
@@ -2062,9 +2070,11 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         containerWindow->mActivatePending = PR_FALSE;
         DispatchActivateEvent();
     }
-    if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
-                         PR_FALSE))
-        return;
+
+    PRBool rolledUp = check_for_rollup(aEvent->window, aEvent->x_root,
+                                       aEvent->y_root, PR_FALSE);
+    if (gConsumeRollupEvent && rolledUp)
+            return;
 
     PRUint16 domButton;
     switch (aEvent->button) {
@@ -2439,10 +2449,10 @@ void
 nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
     // check to see if we should rollup
-    if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
-                         PR_TRUE)) {
+    PRBool rolledUp =  check_for_rollup(aEvent->window, aEvent->x_root,
+                                        aEvent->y_root, PR_TRUE);
+    if (gConsumeRollupEvent && rolledUp)
         return;
-    }
 
     nsMouseScrollEvent event(PR_TRUE, NS_MOUSE_SCROLL, this);
     switch (aEvent->direction) {
@@ -3881,23 +3891,7 @@ nsWindow::SetWindowIconList(const nsCStringArray &aIconList)
 void
 nsWindow::SetDefaultIcon(void)
 {
-    // Set up the default window icon
-    nsCOMPtr<nsILocalFile> iconFile;
-    ResolveIconName(NS_LITERAL_STRING("default"),
-                    NS_LITERAL_STRING(".xpm"),
-                    getter_AddRefs(iconFile));
-    if (!iconFile) {
-        NS_WARNING("default.xpm not found");
-        return;
-    }
-
-    nsCAutoString path;
-    iconFile->GetNativePath(path);
-
-    nsCStringArray iconList;
-    iconList.AppendCString(path);
-
-    SetWindowIconList(iconList);
+    SetIcon(NS_LITERAL_STRING("default"));
 }
 
 void
@@ -4061,7 +4055,11 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // Sawfish, metacity, and presumably other window managers get
     // confused if we change the window decorations while the window
     // is visible.
-    gdk_window_hide(mShell->window);
+    PRBool wasVisible = PR_FALSE;
+    if (gdk_window_is_visible(mShell->window)) {
+        gdk_window_hide(mShell->window);
+        wasVisible = PR_TRUE;
+    }
 
     gint wmd;
     if (aShouldHide)
@@ -4071,7 +4069,8 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
 
     gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
 
-    gdk_window_show(mShell->window);
+    if (wasVisible)
+        gdk_window_show(mShell->window);
 
     // For some window managers, adding or removing window decorations
     // requires unmapping and remapping our toplevel window.  Go ahead
@@ -4105,26 +4104,17 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
             nsCOMPtr<nsIMenuRollup> menuRollup;
             menuRollup = (do_QueryInterface(gRollupListener));
             if (menuRollup) {
-                nsCOMPtr<nsISupportsArray> widgetChain;
-                menuRollup->GetSubmenuWidgetChain(getter_AddRefs(widgetChain));
-                if (widgetChain) {
-                    PRUint32 count = 0;
-                    widgetChain->Count(&count);
-                    for (PRUint32 i=0; i<count; ++i) {
-                        nsCOMPtr<nsISupports> genericWidget;
-                        widgetChain->GetElementAt(i,
-                                                  getter_AddRefs(genericWidget));
-                        nsCOMPtr<nsIWidget> widget(do_QueryInterface(genericWidget));
-                        if (widget) {
-                            GdkWindow* currWindow =
-                                (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
-                            if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
-                                rollup = PR_FALSE;
-                                break;
-                            }
-                        }
-                    } // foreach parent menu widget
-                }
+                nsAutoTArray<nsIWidget*, 5> widgetChain;
+                menuRollup->GetSubmenuWidgetChain(&widgetChain);
+                for (PRUint32 i=0; i<widgetChain.Length(); ++i) {
+                    nsIWidget* widget =  widgetChain[i];
+                    GdkWindow* currWindow =
+                        (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
+                    if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
+                       rollup = PR_FALSE;
+                       break;
+                    }
+                } // foreach parent menu widget
             } // if rollup listener knows about menus
 
             // if we've determined that we should still rollup, do it.

@@ -420,9 +420,8 @@ public:
 #define NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE                               \
   static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
-#define NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                     \
+#define NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)           \
 public:                                                                        \
-  NS_IMETHOD Unlink(void *p);                                                  \
   NS_IMETHOD Traverse(void *p,                                                 \
                       nsCycleCollectionTraversalCallback &cb);                 \
   NS_IMETHOD_(void) UnmarkPurple(nsISupports *s)                               \
@@ -438,6 +437,10 @@ public:                                                                        \
     return NS_ISUPPORTS_CAST(_base*, p);                                       \
   }
 
+#define NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                     \
+  NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)                 \
+  NS_IMETHOD Unlink(void *p);
+
 #define NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(_class, _base)                \
 class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public nsXPCOMCycleCollectionParticipant                                    \
@@ -448,6 +451,29 @@ NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS(_class)                                 \
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(_class, _class)
+
+// Cycle collector helper for classes that don't want to unlink anything.
+// Note: if this is used a lot it might make sense to have a base class that
+//       doesn't do anything in Root/Unlink/Unroot.
+#define NS_DECL_CYCLE_COLLECTION_CLASS_NO_UNLINK(_class)                       \
+class NS_CYCLE_COLLECTION_INNERCLASS                                           \
+ : public nsXPCOMCycleCollectionParticipant                                    \
+{                                                                              \
+  NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _class)                \
+  NS_IMETHOD Root(void *p)                                                     \
+  {                                                                            \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD Unlink(void *p)                                                   \
+  {                                                                            \
+    return NS_OK;                                                              \
+  }                                                                            \
+  NS_IMETHOD Unroot(void *p)                                                   \
+  {                                                                            \
+    return NS_OK;                                                              \
+  }                                                                            \
+};                                                                             \
+NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 
 #define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(_class, _base)  \
 class NS_CYCLE_COLLECTION_INNERCLASS                                           \

@@ -50,7 +50,7 @@ class nsPresContext;
 class nsStyleContext;
 
 struct nsRuleData;
-typedef void (*nsPostResolveFunc)(nsStyleStruct* aStyleStruct, nsRuleData* aData);
+typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 
 struct nsRuleData
 {

@@ -662,6 +662,16 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
 #endif
     script = js_NewScriptFromCG(cx, &cg);
 
+#ifdef JS_SCOPE_DEPTH_METER
+    if (script) {
+        JSObject *pobj = obj;
+        uintN depth = 1;
+        while ((pobj = OBJ_GET_PARENT(cx, pobj)) != NULL)
+            ++depth;
+        JS_BASIC_STATS_ACCUM(&cx->runtime->hostenvScopeDepthStats, depth);
+    }
+#endif
+
   out:
     js_FinishCodeGenerator(cx, &cg);
     JS_FinishArenaPool(&codePool);
@@ -871,16 +881,16 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn = Statements(cx, ts, tc);
 #endif
 
-    js_PopStatement(tc);
-
-    /* Check for falling off the end of a function that returns a value. */
-    if (pn && JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR)) {
-        if (!CheckFinalReturn(cx, tc, pn))
-            pn = NULL;
-    }
-
-    if (pn)
+    if (pn) {
+        js_PopStatement(tc);
         pn->pn_pos.begin.lineno = firstLine;
+
+        /* Check for falling off the end of a function that returns a value. */
+        if (JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR) &&
+            !CheckFinalReturn(cx, tc, pn)) {
+            pn = NULL;
+        }
+    }
 
     tc->flags = oldflags | (tc->flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS));
     return pn;
@@ -1402,6 +1412,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_op = op;
     pn->pn_body = body;
     pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
+    pn->pn_sclen = funtc.maxScopeDepth;
     TREE_CONTEXT_FINISH(&funtc);
     return result;
 }
@@ -3253,10 +3264,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (stmt != tc->topScopeStmt) {
                 JS_ASSERT(!stmt->downScope);
                 JS_ASSERT(stmt->type == STMT_BLOCK ||
+                          stmt->type == STMT_SWITCH ||
                           stmt->type == STMT_TRY ||
                           stmt->type == STMT_FINALLY);
                 stmt->downScope = tc->topScopeStmt;
                 tc->topScopeStmt = stmt;
+                if (++tc->scopeDepth > tc->maxScopeDepth)
+                    tc->maxScopeDepth = tc->scopeDepth;
             } else {
                 JS_ASSERT(stmt->type == STMT_CATCH);
                 JS_ASSERT(stmt->downScope);

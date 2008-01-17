@@ -1373,10 +1373,10 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
   PRBool async = PR_TRUE;
   nsAutoString user, password;
 
-  nsCOMPtr<nsIXPCNativeCallContext> cc;
+  nsAXPCNativeCallContext *cc = nsnull;
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   if (xpc) {
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    rv = xpc->GetCurrentNativeCallContext(&cc);
   }
 
   if (NS_SUCCEEDED(rv) && cc) {

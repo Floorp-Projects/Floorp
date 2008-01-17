@@ -273,11 +273,16 @@ BRFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP BRFrame::GetAccessible(nsIAccessible** aAccessible)
 {
+  NS_ENSURE_TRUE(mContent, NS_ERROR_FAILURE);
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-  if (accService) {
-    return accService->CreateHTMLBRAccessible(static_cast<nsIFrame*>(this), aAccessible);
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContent> parent = mContent->GetBindingParent();
+  if (parent && parent->IsNativeAnonymous() && parent->GetChildCount() == 1) {
+    // This <br> is the only node in a text control, therefore it is the hacky
+    // "bogus node" used when there is no text in the control
+    return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_FAILURE;
+  return accService->CreateHTMLBRAccessible(static_cast<nsIFrame*>(this), aAccessible);
 }
 #endif
 

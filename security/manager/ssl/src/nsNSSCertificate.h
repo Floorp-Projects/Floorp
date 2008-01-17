@@ -98,7 +98,13 @@ private:
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();
   PRBool InitFromDER(char* certDER, int derLen);  // return false on failure
+
+  enum { 
+    ev_status_unknown = -1, ev_status_invalid = 0, ev_status_valid = 1
+  } mCachedEVStatus;
+  SECOidTag mCachedEVOidTag;
   nsresult hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV);
+  nsresult getValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV);
 };
 
 class nsNSSCertList: public nsIX509CertList

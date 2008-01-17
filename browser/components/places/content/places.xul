@@ -452,8 +452,11 @@
                   <hbox>
                     <button type="image" id="infoScrollboxExpander"
                             lesslabel="&detailsPane.less.label;"
+                            lessaccesskey="&detailsPane.less.accesskey;"
                             morelabel="&detailsPane.more.label;"
+                            moreaccesskey="&detailsPane.more.accesskey;"
                             label="&detailsPane.more.label;"
+                            accesskey="&detailsPane.more.accesskey;"
                             oncommand="PlacesOrganizer.toggleAdditionalInfoFields();"
                             observes="paneElementsBroadcaster"/>
                     <spacer flex="1"/>

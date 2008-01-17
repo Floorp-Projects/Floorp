@@ -1152,6 +1152,21 @@ public:
                                          nsNativeKeyEvent* aNativeEvent,
                                          PRBool aGetCharCode);
 
+  /**
+   * Get the application manifest URI for this context.  The manifest URI
+   * is specified in the manifest= attribute of the root element of the
+   * toplevel window.
+   *
+   * @param aWindow The context to check.
+   * @param aURI The manifest URI.
+   */
+  static void GetOfflineAppManifest(nsIDOMWindow *aWindow, nsIURI **aURI);
+
+  /**
+   * Check whether an application should be allowed to use offline APIs.
+   */
+  static PRBool OfflineAppAllowed(nsIURI *aURI);
+
 private:
 
   static PRBool InitializeEventTable();
@@ -1222,7 +1237,6 @@ private:
 
   static PRBool sInitialized;
 };
-
 
 #define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \
   nsContentUtils::HoldJSObjects(NS_CYCLE_COLLECTION_UPCAST(obj, clazz),        \

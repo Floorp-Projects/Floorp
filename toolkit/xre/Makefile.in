@@ -241,11 +241,17 @@ ifdef WRAP_SYSTEM_INCLUDES
 DEFINES		+= -DWRAP_SYSTEM_INCLUDES
 endif
 
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(findstring lib64,$(libdir)))
+DEFINES     += -DHAVE_USR_LIB64_DIR
+endif
+endif
+
 export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS))
 	$(INSTALL) $^ .
 
 platform.ini: FORCE
-	$(PYTHON) $(srcdir)/make-platformini.py $(topsrcdir)/config/milestone.txt > $@
+	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(topsrcdir)/config/milestone.txt > $@
 
 libs:: platform.ini
 	$(INSTALL) $^ $(DIST)/bin

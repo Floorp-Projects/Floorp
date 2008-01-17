@@ -139,6 +139,18 @@ CPPSRCS		= \
 		nsStyleSheetService.cpp \
 		$(NULL)
 
+ifndef MOZ_XUL
+XPIDLSRCS  += \
+		nsIBoxObject.idl \
+		$(NULL)
+EXPORTS    += \
+		nsPIBoxObject.h \
+		$(NULL)
+CPPSRCS    += \
+		nsBoxObject.cpp \
+		$(NULL)
+endif
+
 ifdef IBMBIDI
 CPPSRCS		+= \
 		nsBidiPresUtils.cpp \
@@ -179,3 +191,14 @@ endif
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
 
 DEFINES += -D_IMPL_NS_LAYOUT
+
+ifndef MOZ_XUL
+nsIBoxObject.idl: %: $(topsrcdir)/layout/xul/base/public/%
+	$(INSTALL) $^ .
+nsPIBoxObject.h: %: $(topsrcdir)/layout/xul/base/public/%
+	$(INSTALL) $^ .
+nsBoxObject.cpp: %: $(topsrcdir)/layout/xul/base/src/%
+	$(INSTALL) $^ .
+
+GARBAGE    += nsIBoxObject.idl nsPIBoxObject.h nsBoxObject.cpp
+endif

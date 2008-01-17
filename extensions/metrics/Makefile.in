@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-METRICS_VERSION = 2a1
+METRICS_VERSION = 2a3
 XPI_NAME		= metrics
 USE_EXTENSION_MANIFEST	= 1
 NO_JAR_AUTO_REG		= 1

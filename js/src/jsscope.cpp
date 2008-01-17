@@ -177,6 +177,13 @@ extern void
 js_unlog_scope(JSScope *scope);
 #endif
 
+#if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
+# include "jsprf.h"
+# define LIVE_SCOPE_METER(cx,expr) JS_LOCK_RUNTIME_VOID(cx->runtime,expr)
+#else
+# define LIVE_SCOPE_METER(cx,expr) /* nothing */
+#endif
+
 void
 js_DestroyScope(JSContext *cx, JSScope *scope)
 {
@@ -193,15 +200,12 @@ js_DestroyScope(JSContext *cx, JSScope *scope)
     if (scope->table)
         JS_free(cx, scope->table);
 
-#ifdef DEBUG
-    JS_LOCK_RUNTIME_VOID(cx->runtime,
-                         cx->runtime->liveScopeProps -= scope->entryCount);
-#endif
+    LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= scope->entryCount);
     JS_RUNTIME_UNMETER(cx->runtime, liveScopes);
     JS_free(cx, scope);
 }
 
-#ifdef DUMP_SCOPE_STATS
+#ifdef JS_DUMP_PROPTREE_STATS
 typedef struct JSScopeStats {
     jsrefcount          searches;
     jsrefcount          hits;
@@ -222,7 +226,7 @@ typedef struct JSScopeStats {
     jsrefcount          shrinks;
 } JSScopeStats;
 
-JS_FRIEND_DATA(JSScopeStats) js_scope_stats;
+JS_FRIEND_DATA(JSScopeStats) js_scope_stats = {0};
 
 # define METER(x)       JS_ATOMIC_INCREMENT(&js_scope_stats.x)
 #else
@@ -1271,10 +1275,12 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
         scope->entryCount++;
         scope->lastProp = sprop;
         CHECK_ANCESTOR_LINE(scope, JS_FALSE);
+#ifdef DEBUG
         if (!overwriting) {
-            JS_RUNTIME_METER(cx->runtime, liveScopeProps);
+            LIVE_SCOPE_METER(cx, ++cx->runtime->liveScopeProps);
             JS_RUNTIME_METER(cx->runtime, totalScopeProps);
         }
+#endif
 
         /*
          * If we reach the hashing threshold, try to allocate scope->table.
@@ -1396,7 +1402,7 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
                                        child.attrs, child.flags, child.shortid);
     }
 
-#ifdef DUMP_SCOPE_STATS
+#ifdef JS_DUMP_PROPTREE_STATS
     if (!newsprop)
         METER(changeFailures);
 #endif
@@ -1451,7 +1457,7 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
             *spp = NULL;
     }
     scope->entryCount--;
-    JS_RUNTIME_UNMETER(cx->runtime, liveScopeProps);
+    LIVE_SCOPE_METER(cx, --cx->runtime->liveScopeProps);
 
     /* Update scope->lastProp directly, or set its deferred update flag. */
     if (sprop == SCOPE_LAST_PROP(scope)) {
@@ -1480,10 +1486,7 @@ void
 js_ClearScope(JSContext *cx, JSScope *scope)
 {
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
-#ifdef DEBUG
-    JS_LOCK_RUNTIME_VOID(cx->runtime,
-                         cx->runtime->liveScopeProps -= scope->entryCount);
-#endif
+    LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= scope->entryCount);
 
     if (scope->table)
         free(scope->table);
@@ -1500,10 +1503,6 @@ js_TraceId(JSTracer *trc, jsid id)
     v = ID_TO_VALUE(id);
     JS_CALL_VALUE_TRACER(trc, v, "id");
 }
-
-#if defined DEBUG || defined DUMP_SCOPE_STATS
-# include "jsprf.h"
-#endif
 
 #ifdef DEBUG
 static void
@@ -1558,30 +1557,19 @@ js_TraceScopeProperty(JSTracer *trc, JSScopeProperty *sprop)
 #endif /* JS_HAS_GETTER_SETTER */
 }
 
-#ifdef DUMP_SCOPE_STATS
+#ifdef JS_DUMP_PROPTREE_STATS
 
 #include <stdio.h>
-#include <math.h>
-
-uint32 js_nkids_max;
-uint32 js_nkids_sum;
-double js_nkids_sqsum;
-uint32 js_nkids_hist[11];
 
 static void
-MeterKidCount(uintN nkids)
+MeterKidCount(JSBasicStats *bs, uintN nkids)
 {
-    if (nkids) {
-        js_nkids_sum += nkids;
-        js_nkids_sqsum += (double)nkids * nkids;
-        if (nkids > js_nkids_max)
-            js_nkids_max = nkids;
-    }
-    js_nkids_hist[JS_MIN(nkids, 10)]++;
+    JS_BASIC_STATS_ACCUM(bs, nkids);
+    bs->hist[JS_MIN(nkids, 10)]++;
 }
 
 static void
-MeterPropertyTree(JSScopeProperty *node)
+MeterPropertyTree(JSBasicStats *bs, JSScopeProperty *node)
 {
     uintN i, nkids;
     JSScopeProperty *kids, *kid;
@@ -1596,17 +1584,17 @@ MeterPropertyTree(JSScopeProperty *node)
                     kid = chunk->kids[i];
                     if (!kid)
                         break;
-                    MeterPropertyTree(kid);
+                    MeterPropertyTree(bs, kid);
                     nkids++;
                 }
             }
         } else {
-            MeterPropertyTree(kids);
+            MeterPropertyTree(bs, kids);
             nkids = 1;
         }
     }
 
-    MeterKidCount(nkids);
+    MeterKidCount(bs, nkids);
 }
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
@@ -1614,8 +1602,9 @@ js_MeterPropertyTree(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
                      void *arg)
 {
     JSPropertyTreeEntry *entry = (JSPropertyTreeEntry *)hdr;
+    JSBasicStats *bs = (JSBasicStats *)arg;
 
-    MeterPropertyTree(entry->child);
+    MeterPropertyTree(bs, entry->child);
     return JS_DHASH_NEXT;
 }
 
@@ -1636,7 +1625,7 @@ DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
         if (JSID_IS_ATOM(sprop->id)) {
             str = JSVAL_TO_STRING(v);
         } else {
-            JSASSERT(JSID_IS_OBJECT(sprop->id));
+            JS_ASSERT(JSID_IS_OBJECT(sprop->id));
             str = js_ValueToString(cx, v);
             fputs("object ", fp);
         }
@@ -1646,10 +1635,9 @@ DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
             js_FileEscapedString(fp, str, '"');
     }
 
-    fprintf(fp, " g/s %p/%p slot %lu attrs %x flags %x shortid %d\n",
-            (void *) sprop->getter, (void *) sprop->setter,
-            (unsigned long) sprop->slot, sprop->attrs, sprop->flags,
-            sprop->shortid);
+    fprintf(fp, " g/s %p/%p slot %u attrs %x flags %x shortid %d\n",
+            (void *) sprop->getter, (void *) sprop->setter, sprop->slot,
+            sprop->attrs, sprop->flags, sprop->shortid);
     kids = sprop->kids;
     if (kids) {
         ++level;
@@ -1671,60 +1659,43 @@ DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
     }
 }
 
-#endif /* DUMP_SCOPE_STATS */
+#endif /* JS_DUMP_PROPTREE_STATS */
 
 void
 js_SweepScopeProperties(JSContext *cx)
 {
-    JSRuntime *rt;
+    JSRuntime *rt = cx->runtime;
     JSArena **ap, *a;
     JSScopeProperty *limit, *sprop, *parent, *kids, *kid;
     uintN liveCount;
     PropTreeKidsChunk *chunk, *nextChunk, *freeChunk;
     uintN i;
 
-    rt = cx->runtime;
-#ifdef DUMP_SCOPE_STATS
+#ifdef JS_DUMP_PROPTREE_STATS
+    JSBasicStats bs;
     uint32 livePropCapacity = 0, totalLiveCount = 0;
     static FILE *logfp;
     if (!logfp)
-        logfp = fopen("/tmp/proptree.stats", "a");
+        logfp = fopen("/tmp/proptree.stats", "w");
 
-    MeterKidCount(rt->propertyTreeHash.entryCount);
-    JS_DHashTableEnumerate(&rt->propertyTreeHash, js_MeterPropertyTree, NULL);
+    JS_BASIC_STATS_INIT(&bs);
+    MeterKidCount(&bs, rt->propertyTreeHash.entryCount);
+    JS_DHashTableEnumerate(&rt->propertyTreeHash, js_MeterPropertyTree, &bs);
 
     {
-        double mean = 0.0, var = 0.0, sigma = 0.0;
-        double nodesum = rt->livePropTreeNodes;
-        double kidsum = js_nkids_sum;
-        if (nodesum > 0 && kidsum >= 0) {
-            mean = kidsum / nodesum;
-            var = nodesum * js_nkids_sqsum - kidsum * kidsum;
-            if (var < 0.0 || nodesum <= 1)
-                var = 0.0;
-            else
-                var /= nodesum * (nodesum - 1);
+        double props, nodes, mean, sigma;
 
-            /* Windows says sqrt(0.0) is "-1.#J" (?!) so we must test. */
-            sigma = (var != 0.0) ? sqrt(var) : 0.0;
-        }
+        props = rt->liveScopePropsPreSweep;
+        nodes = rt->livePropTreeNodes;
+        JS_ASSERT(nodes == bs.sum);
+        mean = JS_MeanAndStdDevBS(&bs, &sigma);
 
         fprintf(logfp,
-                "props %u nodes %g beta %g meankids %g sigma %g max %u",
-                rt->liveScopeProps, nodesum, nodesum / rt->liveScopeProps,
-                mean, sigma, js_nkids_max);
+                "props %g nodes %g beta %g meankids %g sigma %g max %u\n",
+                props, nodes, nodes / props, mean, sigma, bs.max);
     }
 
-    fprintf(logfp, " histogram %u %u %u %u %u %u %u %u %u %u %u",
-            js_nkids_hist[0], js_nkids_hist[1],
-            js_nkids_hist[2], js_nkids_hist[3],
-            js_nkids_hist[4], js_nkids_hist[5],
-            js_nkids_hist[6], js_nkids_hist[7],
-            js_nkids_hist[8], js_nkids_hist[9],
-            js_nkids_hist[10]);
-    js_nkids_sum = js_nkids_max = 0;
-    js_nkids_sqsum = 0;
-    memset(js_nkids_hist, 0, sizeof js_nkids_hist);
+    JS_DumpHistogram(&bs, logfp);
 #endif
 
     ap = &rt->propertyArenaPool.first.next;
@@ -1842,7 +1813,7 @@ js_SweepScopeProperties(JSContext *cx)
                 FREENODE_REMOVE(sprop);
             JS_ARENA_DESTROY(&rt->propertyArenaPool, a, ap);
         } else {
-#ifdef DUMP_SCOPE_STATS
+#ifdef JS_DUMP_PROPTREE_STATS
             livePropCapacity += limit - (JSScopeProperty *) a->base;
             totalLiveCount += liveCount;
 #endif
@@ -1850,9 +1821,11 @@ js_SweepScopeProperties(JSContext *cx)
         }
     }
 
-#ifdef DUMP_SCOPE_STATS
-    fprintf(logfp, " arenautil %g%%\n",
-            (totalLiveCount * 100.0) / livePropCapacity);
+#ifdef JS_DUMP_PROPTREE_STATS
+    fprintf(logfp, "arenautil %g%%\n",
+            (totalLiveCount && livePropCapacity)
+            ? (totalLiveCount * 100.0) / livePropCapacity
+            : 0.0);
 
 #define RATE(f1, f2) (((double)js_scope_stats.f1 / js_scope_stats.f2) * 100.0)
 

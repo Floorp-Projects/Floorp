@@ -383,7 +383,7 @@ struct JSRuntime {
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
 
-#ifdef DEBUG
+#if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
     /* Function invocation metering. */
     jsrefcount          inlineCalls;
     jsrefcount          nativeCalls;
@@ -398,8 +398,8 @@ struct JSRuntime {
     jsrefcount          liveScopes;
     jsrefcount          sharedScopes;
     jsrefcount          totalScopes;
-    jsrefcount          badUndependStrings;
     jsrefcount          liveScopeProps;
+    jsrefcount          liveScopePropsPreSweep;
     jsrefcount          totalScopeProps;
     jsrefcount          livePropTreeNodes;
     jsrefcount          duplicatePropTreeNodes;
@@ -412,10 +412,27 @@ struct JSRuntime {
     jsrefcount          totalStrings;
     jsrefcount          liveDependentStrings;
     jsrefcount          totalDependentStrings;
+    jsrefcount          badUndependStrings;
     double              lengthSum;
     double              lengthSquaredSum;
     double              strdepLengthSum;
     double              strdepLengthSquaredSum;
+#endif /* DEBUG || JS_DUMP_PROPTREE_STATS */
+
+#ifdef JS_SCOPE_DEPTH_METER
+    /*
+     * Stats on runtime prototype chain lookups and scope chain depths, i.e.,
+     * counts of objects traversed on a chain until the wanted id is found.
+     */
+    JSBasicStats        protoLookupDepthStats;
+    JSBasicStats        scopeSearchDepthStats;
+
+    /*
+     * Stats on compile-time host environment and lexical scope chain lengths
+     * (maximum depths).
+     */
+    JSBasicStats        hostenvScopeDepthStats;
+    JSBasicStats        lexicalScopeDepthStats;
 #endif
 };
 
@@ -1075,8 +1092,8 @@ extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 #define JSOW_SET_PROPERTY           20
 #define JSOW_NEW_PROPERTY           200
 #define JSOW_DELETE_PROPERTY        30
-#define JSOW_ENTER_SHARP            4096
-#define JSOW_SCRIPT_JUMP            4096
+#define JSOW_ENTER_SHARP            JS_OPERATION_WEIGHT_BASE
+#define JSOW_SCRIPT_JUMP            JS_OPERATION_WEIGHT_BASE
 
 /*
  * Reset the operation count and call the operation callback assuming that the

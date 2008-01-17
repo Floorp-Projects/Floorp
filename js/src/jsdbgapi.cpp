@@ -62,6 +62,10 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#ifdef MOZ_SHARK
+#include <CHUD/CHUD.h>
+#endif
+
 typedef struct JSTrap {
     JSCList         links;
     JSScript        *script;
@@ -1669,3 +1673,94 @@ JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks)
     cx->debugHooks = hooks;
     return old;
 }
+
+#ifdef MOZ_SHARK
+
+JS_FRIEND_API(JSBool)
+js_StartChudRemote() 
+{
+    if (chudIsRemoteAccessAcquired() && 
+        (chudStartRemotePerfMonitor("Mozilla") == chudSuccess)) {
+        return JS_TRUE;
+    }
+
+    return JS_FALSE;
+}
+
+JS_FRIEND_API(JSBool)
+js_StopChudRemote()
+{
+    if (chudIsRemoteAccessAcquired() &&
+        (chudStopRemotePerfMonitor() == chudSuccess)) {
+        return JS_TRUE;
+    }
+
+    return JS_FALSE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ConnectShark()
+{
+    if (!chudIsInitialized() && (chudInitialize() != chudSuccess))
+        return JS_FALSE;
+
+    if (chudAcquireRemoteAccess() != chudSuccess)
+        return JS_FALSE;
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_DisconnectShark()
+{
+    if (chudIsRemoteAccessAcquired() && (chudReleaseRemoteAccess() != chudSuccess))
+        return JS_FALSE;
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+StartShark(JSContext *cx, JSObject *obj,
+           uintN argc, jsval *argv, jsval *rval)
+{
+    if (!js_StartChudRemote()) {
+        JS_ReportError(cx, "Error starting CHUD.");
+    }
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+StopShark(JSContext *cx, JSObject *obj,
+          uintN argc, jsval *argv, jsval *rval)
+{
+    if (!js_StopChudRemote()) {
+        JS_ReportError(cx, "Error stopping CHUD.");
+    }
+        
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+ConnectShark(JSContext *cx, JSObject *obj,
+             uintN argc, jsval *argv, jsval *rval)
+{
+    if (!js_ConnectShark()) {
+        JS_ReportError(cx, "Error connecting to Shark.");
+    }
+        
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+DisconnectShark(JSContext *cx, JSObject *obj,
+                uintN argc, jsval *argv, jsval *rval)
+{
+    if (!js_DisconnectShark()) {
+        JS_ReportError(cx, "Error disconnecting from Shark.");
+    }
+        
+    return JS_TRUE;
+}
+
+#endif /* MOZ_SHARK */

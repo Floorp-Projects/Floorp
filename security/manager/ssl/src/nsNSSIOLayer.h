@@ -164,8 +164,10 @@ public:
   nsresult GetPort(PRInt32 *aPort);
   nsresult SetPort(PRInt32 aPort);
 
-  nsresult GetCert(nsNSSCertificate** _result);
-  nsresult SetCert(nsNSSCertificate *aCert);
+  nsresult GetCert(nsIX509Cert** _result);
+  nsresult SetCert(nsIX509Cert *aCert);
+
+  nsresult GetPreviousCert(nsIX509Cert** _result);
 
   void SetCanceled(PRBool aCanceled);
   PRBool GetCanceled();
@@ -187,13 +189,15 @@ public:
   /* Set SSL Status values */
   nsresult SetSSLStatus(nsSSLStatus *aSSLStatus);
   nsSSLStatus* SSLStatus() { return mSSLStatus; }
+  PRBool hasCertErrors();
   
   PRStatus CloseSocketAndDestroy();
   
 protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
-  nsRefPtr<nsNSSCertificate> mCert;
+  nsCOMPtr<nsIX509Cert> mCert;
+  nsCOMPtr<nsIX509Cert> mPreviousCert;
   enum { 
     blocking_state_unknown, is_nonblocking_socket, is_blocking_socket 
   } mBlockingState;

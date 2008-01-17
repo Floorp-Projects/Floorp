@@ -289,7 +289,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                          "table[order] > thead > tr > th::after {\n"
                          "  display: none;\n"
                          "  width: .8em;\n"
-                         "  margin-right: -.8em;\n"
+                         "  -moz-margin-end: -.8em;\n"
                          "  text-align: right;\n"
                          "}\n"
                          "table[order=\"asc\"] > thead > tr > th::after {\n"
@@ -314,19 +314,28 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                          "td > a {\n"
                          "  display: block;\n"
                          "}\n"
+                         "/* name */\n"
+                         "th:first-child {\n"
+                         "  -moz-padding-end: 2em;\n"
+                         "}\n"
                          "/* size */\n"
+                         "th:first-child + th {\n"
+                         "  -moz-padding-end: 1em;\n"
+                         "}\n"
                          "td:first-child + td {\n"
                          "  text-align: right;\n"
-                         "  padding-right: 2em;\n"
+                         "  -moz-padding-end: 1em;\n"
                          "  white-space: nowrap;\n"
                          "}\n"
                          "/* date */\n"
                          "td:first-child + td + td {\n"
-                         "  padding-right: 1em;\n"
+                         "  -moz-padding-start: 1em;\n"
+                         "  -moz-padding-end: .5em;\n"
                          "  white-space: nowrap;\n"
                          "}\n"
                          "/* time */\n"
                          "td:last-child {\n"
+                         "  -moz-padding-start: .5em;\n"
                          "  white-space: nowrap;\n"
                          "}\n"
                          "@-moz-document url-prefix(gopher://) {\n"
@@ -341,13 +350,12 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                          ".dir ,\n"
                          ".symlink ,\n"
                          ".file {\n"
-                         "  padding: 0 .5em;\n"
-                         "  margin-left: 20px;\n"
+                         "  -moz-margin-start: 20px;\n"
                          "}\n"
                          ".dir::before ,\n"
                          ".file > img {\n"
-                         "  margin-right: 4px;\n"
-                         "  margin-left: -20px;\n"
+                         "  -moz-margin-end: 4px;\n"
+                         "  -moz-margin-start: -20px;\n"
                          "  vertical-align: middle;\n"
                          "}\n"
                          ".dir::before {\n"
@@ -816,8 +824,8 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
                 description.Truncate(description.Length() - 1);
 
             escapedShort.Adopt(nsEscapeHTML2(description.get(), description.Length()));
-            // add HORIZONTAL ELLIPSIS (U+2026)
-            escapedShort.AppendLiteral("&#8230;");
+            // add HORIZONTAL ELLIPSIS (U+2026) and ZERO WIDTH SPACE (U+200B) for wrapping
+            escapedShort.AppendLiteral("&#8230;&#8203;");
             nsString tmp;
             tmp.Adopt(nsEscapeHTML2(descriptionAffix.get(), descriptionAffix.Length()));
             escapedShort.Append(tmp);

@@ -138,19 +138,12 @@ export testlogfile
 # exit code, we must pipe stderr from tester.sh to stdout and then
 # look into the testlogfilelist for the error
 
-if [[ -z "$extra" ]]; then
-    tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$buildtypes" 2>&1 | tee -a $testlogfilelist
-    if grep -q 'test-setup.sh failed' $testlogfilelist; then
-        error "runtests.sh: terminating due to error"
-    fi
-    testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
-else
-    tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branches" "$extra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
-    if grep -q 'test-setup.sh failed' $testlogfilelist; then
-        error "runtests.sh: terminating due to error"
-    fi
-    testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
+branchesextra=`combo.sh -d - "$branches" "$extra"`
+tester.sh -t $TEST_JSDIR/test.sh  $verboseflag "$products" "$branchesextra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
+if grep -q 'test-setup.sh failed' $testlogfilelist; then
+    error "runtests.sh: terminating due to error"
 fi
+testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
 
 rm $testlogfilelist
 
@@ -184,9 +177,9 @@ for testlogfile in $testlogfiles; do
         *) error "unknown buildtype in logfile $testlogfile";;
     esac
     case "$testlogfile" in
-        *,1.8.0,*) branch=1.8.0;;
-        *,1.8.1,*) branch=1.8.1;;
-        *,1.9.0,*) branch=1.9.0;;
+        *,1.8.0*) branch=1.8.0;;
+        *,1.8.1*) branch=1.8.1;;
+        *,1.9.0*) branch=1.9.0;;
         *) error "unknown branch in logfile $testlogfile";;
     esac
     outputprefix=$testlogfile
@@ -195,14 +188,21 @@ for testlogfile in $testlogfiles; do
         dumpvars branch buildtype testtype OSID testlogfile arch kernel outputprefix
     fi
 
-    $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b $branch -T $buildtype -t $testtype -o "$OSID" -z `date +%z` -l $testlogfile -A "$arch" -K "$kernel" -r $TEST_JSDIR/failures.txt -O $outputprefix
+    if ! $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b $branch -T $buildtype -t $testtype -o "$OSID" -z `date +%z` -l $testlogfile -A "$arch" -K "$kernel" -r $TEST_JSDIR/failures.txt -O $outputprefix; then
+        error "known-failures.pl"
+    fi
 
     if [[ -n "$summary" ]]; then
+        
+        # use let to work around mac problem where numbers were
+        # output with leading characters.
+        # if let's arg evaluates to 0, let will return 1
+        # so we need to test
 
-        npass=`grep TEST_RESULT=PASSED ${outputprefix}-results-all.log | wc -l`
-        nfail=`cat ${outputprefix}-results-failures.log | wc -l`
-        nfixes=`cat ${outputprefix}-results-possible-fixes.log | wc -l`
-        nregressions=`cat ${outputprefix}-results-possible-regressions.log | wc -l`
+        if let npass="`grep TEST_RESULT=PASSED ${outputprefix}-results-all.log | wc -l`"; then true; fi
+        if let nfail="`cat ${outputprefix}-results-failures.log | wc -l`"; then true; fi
+        if let nfixes="`cat ${outputprefix}-results-possible-fixes.log | wc -l`"; then true; fi
+        if let nregressions="`cat ${outputprefix}-results-possible-regressions.log | wc -l`"; then true; fi
 
         echo -e "\nJavaScript Tests $branch $buildtype $testtype\n"
         echo -e "\nFailures:\n"
@@ -215,5 +215,3 @@ for testlogfile in $testlogfiles; do
 
     fi
 done
-
-

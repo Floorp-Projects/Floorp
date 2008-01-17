@@ -84,40 +84,6 @@ math[display="inline"] {
 [-moz-math-font-style="invariant"] {
   font-style: normal; /* a non-stylable character preserves its own style */
 }
-/* change of size induced by changing the scriptlevel */
-[-moz-math-font-size="+1"] {
-  font-size: 71%;
-}
-[-moz-math-font-size="+2"] {
-  font-size: 50%;
-}
-[-moz-math-font-size="+3"] {
-  font-size: 36%;
-}
-[-moz-math-font-size="+4"] {
-  font-size: 25%;
-}
-[-moz-math-font-size="+5"] {
-  font-size: 18%;
-}
-[-moz-math-font-size="scriptminsize"] {
-  font-size: 8pt;
-}
-[-moz-math-font-size="-1"] {
-  font-size: 141%;
-}
-[-moz-math-font-size="-2"] {
-  font-size: 200%;
-}
-[-moz-math-font-size="-3"] {
-  font-size: 283%;
-}
-[-moz-math-font-size="-4"] {
-  font-size: 400%;
-}
-[-moz-math-font-size="-5"] {
-  font-size: 566%;
-}
 
 /**************************************************************************/
 /* attributes common to all tags                                          */
@@ -139,34 +105,6 @@ math[display="inline"] {
 [fontweight="bold"] {
   font-weight: bold;
 }
-/* fontsize */
-[fontsize="xx-small"] {
-  font-size: xx-small;
-}
-[fontsize="x-small"] {
-  font-size: x-small;
-}
-[fontsize="small"] {
-  font-size: small;
-}
-[fontsize="smaller"] {
-  font-size: smaller;
-}
-[fontsize="medium"] {
-  font-size: medium;
-}
-[fontsize="large"] {
-  font-size: large;
-}
-[fontsize="larger"] {
-  font-size: larger;
-}
-[fontsize="x-large"] {
-  font-size: x-large;
-}
-[fontsize="xx-large"] {
-  font-size: xx-large;
-}
 
 /* attributes from MathML 2.0 */
 
@@ -176,14 +114,6 @@ math[display="inline"] {
    mathbackground (replaces 'background'):
      #rgb | #rrggbb | html-color-name
 */
-/* mathsize (replaces 'fontsize'):
-     small, big, number v-unit (a numeric value is handled in the back-end) */
-[mathsize="small"] {
-  font-size: small;
-}
-[mathsize="big"] {
-  font-size: large;
-}
 /* mathvariant (replaces 'fontstyle' & 'fontweight' & 'fontslant'):
      normal | bold | italic | bold-italic | double-struck | bold-fraktur | script |
      bold-script | fraktur | sans-serif | bold-sans-serif | sans-serif-italic |
@@ -271,7 +201,7 @@ merror {
 /**************************************************************************/
 
 mtable {
-  display: table;
+  display: inline-table;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -481,3 +411,21 @@ semantics > :not(:first-child) {
   display: inline-block !important;
   position: static !important;
 }
+
+/*****************************************/
+/* Controlling scriptlevel               */
+/*****************************************/
+
+/* mfrac, munder, mover and munderover change the scriptlevels of their children using
+   -moz-math-increment-script-level because regular CSS rules are insufficient to
+   control when the scriptlevel should be incremented */
+:-moz-math-increment-script-level { -moz-script-level:+1; }
+
+/* all other cases can be described using regular CSS, so we do it this way because it's
+   more efficient and less code */
+mroot > :not(:first-child) { -moz-script-level:+2; }
+
+msub > :not(:first-child),
+msup > :not(:first-child),
+msubsup > :not(:first-child),
+mmultiscripts > :not(:first-child) { -moz-script-level:+1; }

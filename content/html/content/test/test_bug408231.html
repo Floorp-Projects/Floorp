@@ -1,0 +1,199 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=408231
+-->
+<head>
+  <title>Test for Bug 408231</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=408231">Mozilla Bug 408231</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 408231 **/
+
+    var commandEnabledResults = [
+      ["contentReadOnly", "true"],
+      ["copy", "false"],
+      ["createlink", "true"],
+      ["cut", "false"],
+      ["decreasefontsize", "true"],
+      ["delete", "false"],
+      ["fontname", "true"],
+      ["fontsize", "true"],
+      ["formatblock", "true"],
+      ["heading", "true"],
+      ["hilitecolor", "true"],
+      ["increasefontsize", "true"],
+      ["indent", "true"],
+      ["inserthorizontalrule", "true"],
+      ["inserthtml", "true"],
+      ["insertimage", "true"],
+      ["insertorderedlist", "true"],
+      ["insertunorderedlist", "true"],
+      ["insertparagraph", "true"],
+      ["italic", "true"],
+      ["justifycenter", "true"],
+      ["justifyfull", "true"],
+      ["justifyleft", "true"],
+      ["justifyright", "true"],
+      ["outdent", "false"],
+      //["paste", "true"],
+      ["redo", "false"],
+      ["removeformat", "true"],
+      ["selectall", "true"],
+      ["strikethrough", "true"],
+      ["styleWithCSS", "true"],
+      ["subscript", "true"],
+      ["superscript", "true"],
+      ["underline", "true"],
+      ["undo", "false"],
+      ["unlink", "true"],
+      ["not-a-command", "exception"]
+    ];
+    
+    var commandStateResults = [
+      ["contentReadOnly", "exception"],
+      ["copy", "exception"],
+      ["createlink", "exception"],
+      ["cut", "exception"],
+      ["decreasefontsize", "exception"],
+      ["delete", "exception"],
+      ["fontname", "exception"],
+      ["fontsize", "exception"],
+      ["formatblock", "exception"],
+      ["heading", "exception"],
+      ["hilitecolor", "exception"],
+      ["increasefontsize", "exception"],
+      ["indent", "exception"],
+      ["inserthorizontalrule", "exception"],
+      ["inserthtml", "exception"],
+      ["insertimage", "exception"],
+      ["insertorderedlist", "false"],
+      ["insertunorderedlist", "false"],
+      ["insertparagraph", "exception"],
+      ["italic", "false"],
+      ["justifycenter", "false"],
+      ["justifyfull", "false"],
+      ["justifyleft", "true"],
+      ["justifyright", "false"],
+      ["outdent", "exception"],
+      //["paste", "exception"],
+      ["redo", "exception"],
+      ["removeformat", "exception"],
+      ["selectall", "exception"],
+      ["strikethrough", "false"],
+      ["styleWithCSS", "exception"],
+      ["subscript", "false"],
+      ["superscript", "false"],
+      ["underline", "false"],
+      ["undo", "exception"],
+      ["unlink", "false"],
+      ["not-a-command", "exception"]
+    ];
+    
+    var commandValueResults = [
+      ["contentReadOnly", "exception"],
+      ["copy", ""],
+      ["createlink", ""],
+      ["cut", ""],
+      ["decreasefontsize", ""],
+      ["delete", ""],
+      ["fontname", ""],
+      ["fontsize", ""],
+      ["formatblock", ""],
+      ["heading", ""],
+      ["hilitecolor", "transparent"],
+      ["increasefontsize", ""],
+      ["indent", ""],
+      ["inserthorizontalrule", ""],
+      ["inserthtml", ""],
+      ["insertimage", ""],
+      ["insertorderedlist", ""],
+      ["insertunorderedlist", ""],
+      ["insertparagraph", ""],
+      ["italic", ""],
+      ["justifycenter", "left"],
+      ["justifyfull", "left"],
+      ["justifyleft", "left"],
+      ["justifyright", "left"],
+      ["outdent", ""],
+      //["paste", ""],
+      ["redo", ""],
+      ["removeformat", ""],
+      ["selectall", ""],
+      ["strikethrough", ""],
+      ["styleWithCSS", "exception"],
+      ["subscript", ""],
+      ["superscript", ""],
+      ["underline", ""],
+      ["undo", ""],
+      ["unlink", ""],
+      ["not-a-command", "exception"],
+    ];
+    
+  
+    function callQueryCommandEnabled(cmdName) {
+      var result;
+      try {
+        result = '' + document.queryCommandEnabled( cmdName );
+      } catch( error ) {
+        result = 'exception';
+      }
+      return result;
+    }
+    
+    function callQueryCommandState(cmdName) {
+      var result;
+      try {
+        result = '' + document.queryCommandState( cmdName );
+      } catch( error ) {
+        result = 'exception';
+      }
+      return result;
+    }
+
+    function callQueryCommandValue(cmdName) {
+      var result;
+      try {
+        result = '' + document.queryCommandValue( cmdName );
+      } catch( error ) {
+        result = 'exception';
+      }
+      return result;    
+    }
+
+    function testQueryCommand(expectedResults, fun, funName) {
+      for (i=0; i<expectedResults.length; i++) {
+        var commandName = expectedResults[i][0];
+        var expectedResult = expectedResults[i][1];
+        var result = fun(commandName);
+        ok(result == expectedResult, funName + '('+commandName+') result=' +result+ ' expected=' + expectedResult);
+      }
+    }
+
+    function runTests() {
+      document.designMode='on';
+      testQueryCommand(commandEnabledResults, callQueryCommandEnabled, "queryCommandEnabled");
+      testQueryCommand(commandStateResults, callQueryCommandState, "queryCommandState");
+      testQueryCommand(commandValueResults, callQueryCommandValue, "queryCommandValue");
+      document.designMode='off';
+      SimpleTest.finish();
+    }
+    
+    window.onload = runTests;
+    SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

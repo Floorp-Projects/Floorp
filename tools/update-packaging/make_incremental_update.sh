@@ -150,7 +150,7 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
 
   # If we've already tested this file, then skip it
   for ((j=0; $j<$num_oldfiles; j=$j+1)); do
-    if [ "\"$f\"" = "${oldfiles[j]}" ]; then
+    if [ "$f" = "${oldfiles[j]}" ]; then
       continue 2
     fi
   done

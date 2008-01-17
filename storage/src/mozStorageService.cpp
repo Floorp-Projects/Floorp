@@ -46,11 +46,8 @@
 #include "plstr.h"
 
 #include "sqlite3.h"
-#include "sqlite3file.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(mozStorageService, mozIStorageService, nsIObserver)
-
-static const char kShutdownMessage[] = "xpcom-shutdown-threads";
+NS_IMPL_THREADSAFE_ISUPPORTS1(mozStorageService, mozIStorageService)
 
 mozStorageService *mozStorageService::gStorageService = nsnull;
 
@@ -74,37 +71,15 @@ mozStorageService::GetSingleton()
 
 mozStorageService::~mozStorageService()
 {
-    FreeLocks();
     gStorageService = nsnull;
 }
 
 nsresult
 mozStorageService::Init()
 {
-    // The service must be initialized on the main thread. The
-    // InitStorageAsyncIO function creates a thread which is joined with the
-    // main thread during shutdown. If the thread is created from a random
-    // thread, we'll join to the wrong parent.
-    NS_ENSURE_STATE(NS_IsMainThread());
-
     // this makes multiple connections to the same database share the same pager
     // cache.
     sqlite3_enable_shared_cache(1);
-
-    // Disable async IO; need to test to see whether corruption is
-    // caused by it or not
-#if 0
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService = 
-            do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = InitStorageAsyncIO();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = observerService->AddObserver(this, kShutdownMessage, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-#endif
 
     return NS_OK;
 }
@@ -165,15 +140,4 @@ mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **
 
     NS_ADDREF(*_retval = msc);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-mozStorageService::Observe(nsISupports *aSubject, const char *aTopic,
-                           const PRUnichar *aData)
-{
-    nsresult rv;
-    if (strcmp(aTopic, kShutdownMessage) == 0) {
-        rv = FinishAsyncIO();
-    }
-    return rv;
 }

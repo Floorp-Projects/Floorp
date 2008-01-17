@@ -137,7 +137,7 @@ struct _GtkMozEmbedClass
   gint (* dom_focus_out)       (GtkMozEmbed *embed, gpointer dom_event);
 };
 
-GTKMOZEMBED_API(GtkType,    gtk_moz_embed_get_type,        (void))
+GTKMOZEMBED_API(GType,      gtk_moz_embed_get_type,        (void))
 GTKMOZEMBED_API(GtkWidget*, gtk_moz_embed_new,             (void))
 GTKMOZEMBED_API(void,       gtk_moz_embed_push_startup,    (void))
 GTKMOZEMBED_API(void,       gtk_moz_embed_pop_startup,     (void))
@@ -257,6 +257,7 @@ typedef enum
 #define GTK_MOZ_EMBED_SINGLE_CLASS(klass)    GTK_CHEK_CLASS_CAST((klass), GTK_TYPE_MOZ_EMBED_SINGLE, GtkMozEmbedSingleClass)
 #define GTK_IS_MOZ_EMBED_SINGLE(obj)         GTK_CHECK_TYPE((obj), GTK_TYPE_MOZ_EMBED_SINGLE)
 #define GTK_IS_MOZ_EMBED_SINGLE_CLASS(klass) GTK_CHECK_CLASS_TYPE((klass), GTK_TYPE_MOZ_EMBED)
+#define GTK_MOZ_EMBED_SINGLE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_TYPE_MOZ_EMBED_SINGLE, GtkMozEmbedSingleClass))
 
 typedef struct _GtkMozEmbedSingle      GtkMozEmbedSingle;
 typedef struct _GtkMozEmbedSingleClass GtkMozEmbedSingleClass;
@@ -276,7 +277,7 @@ struct _GtkMozEmbedSingleClass
                                 guint chromemask);
 };
 
-GTKMOZEMBED_API(GtkType,             gtk_moz_embed_single_get_type, (void))
+GTKMOZEMBED_API(GType,               gtk_moz_embed_single_get_type, (void))
 GTKMOZEMBED_API(GtkMozEmbedSingle *, gtk_moz_embed_single_get,      (void))
 
 #ifdef __cplusplus

@@ -813,7 +813,7 @@ nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
   if (!nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size))
   {
     if (mLayoutManager) {
-      mLayoutManager->GetPrefSize(this, aBoxLayoutState, size);
+      size = mLayoutManager->GetPrefSize(this, aBoxLayoutState);
       nsIBox::AddCSSPrefSize(aBoxLayoutState, this, size);
     } else
       size = nsBox::GetPrefSize(aBoxLayoutState);
@@ -840,7 +840,7 @@ nsBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
     return 0;
 
   if (mLayoutManager)
-    mLayoutManager->GetAscent(this, aBoxLayoutState, mAscent);
+    mAscent = mLayoutManager->GetAscent(this, aBoxLayoutState);
   else
     mAscent = nsBox::GetBoxAscent(aBoxLayoutState);
 
@@ -871,7 +871,7 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
   if (!nsIBox::AddCSSMinSize(aBoxLayoutState, this, size))
   {
     if (mLayoutManager) {
-      mLayoutManager->GetMinSize(this, aBoxLayoutState, size);
+      size = mLayoutManager->GetMinSize(this, aBoxLayoutState);
       nsIBox::AddCSSMinSize(aBoxLayoutState, this, size);
     } else {
       size = nsBox::GetMinSize(aBoxLayoutState);
@@ -907,7 +907,7 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
   if (!nsIBox::AddCSSMaxSize(aBoxLayoutState, this, size))
   {
     if (mLayoutManager) {
-      mLayoutManager->GetMaxSize(this, aBoxLayoutState, size);
+      size = mLayoutManager->GetMaxSize(this, aBoxLayoutState);
       nsIBox::AddCSSMaxSize(aBoxLayoutState, this, size);
     } else {
       size = nsBox::GetMaxSize(aBoxLayoutState);
@@ -1805,6 +1805,8 @@ nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
 
 /**
  * Boxed don't support fixed positionioning of their children.
+ * KEEP THIS IN SYNC WITH nsContainerFrame::CreateViewForFrame
+ * as much as possible. Until we get rid of views finally...
  */
 nsresult
 nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
@@ -1832,9 +1834,7 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
         zIndex = PR_INT32_MAX;
       }
       else {
-        nsIFrame* parent = aFrame->GetAncestorWithView();
-        NS_ASSERTION(parent, "GetAncestorWithView failed");
-        parentView = parent->GetView();
+        parentView = aFrame->GetParent()->GetParentViewForChildFrame(aFrame);
       }
 
       NS_ASSERTION(parentView, "no parent view");

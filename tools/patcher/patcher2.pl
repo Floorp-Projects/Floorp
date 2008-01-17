@@ -47,6 +47,7 @@ use Data::Dumper;
 use Cwd;
 use English;
 use IO::Handle;
+use POSIX qw(strftime);
 
 use File::Path;
 use File::Copy qw(move copy);
@@ -173,12 +174,8 @@ sub BuildTools {
                             '-r' . $toolsRevision,
                             'mozilla/client.mk'];
 
-        my $rv = RunShellCommand(command => 'cvs',
-                                 args => $checkoutArgs, 
-                                 output => 1);
-        if ($rv->{'exitValue'} != 0) {
-            print "checkout FAILED: $rv->{'output'}\n";
-        }
+        run_shell_command(cmd => 'cvs',
+                          cmdArgs => $checkoutArgs);
 
         printf("\n\nCheckout complete.\n");
     } # Checkout 'client.mk'.
@@ -216,15 +213,10 @@ sub BuildTools {
 
         my $makeArgs = ['-f', './client.mk'];
 
-        my $rv = RunShellCommand(command => 'make',
-                                 args => $makeArgs,
-                                 dir => $mozDir,
-                                 output => 1,
-                                 timeout => 0);
-
-        if ($rv->{'exitValue'} != 0) {
-            print "make " . join(" ", $makeArgs) . " FAILED: $rv->{'output'}\n";
-        }
+        run_shell_command(cmd => 'make',
+                          cmdArgs => $makeArgs,
+                          dir => $mozDir,
+                          timeout => 0);
     } # Checkout and build mozilla dependencies and tools.
 
     if (not ValidateToolsDirectory(toolsDir => $codir)) {
@@ -598,14 +590,9 @@ sub CreatePartialPatches {
          my $args = ['-u', $fastIncrementalUpdateBinary, '-f', 
           $config->{'mPartialPatchlistFile'}];
 
-         my $rv = RunShellCommand(command => 'python',
-                                  args => $args,
-                                  output => 1);
-
-         if ($rv->{'exitValue'} != 0) {
-             die "FAILED: make_incremental_updates.py: $rv->{'exitValue'}, " . 
-              "output: $rv->{'output'}\n";
-         }
+         run_shell_command(cmd => 'python',
+                           cmdArgs => $args,
+                           timeout => 10800);
     }
 
     if (defined($total)) {
@@ -1506,6 +1493,66 @@ sub process_is_alive {
     my $psout = `ps -A | grep $pid | grep -v grep | awk "{if (\\\$1 == $pid) print}"`;
     length($psout) > 0 ? 1 : 0;
 }
+
+sub run_shell_command {
+    my %args = @_;
+
+    my $cmd = $args{'cmd'};
+    my $cmdArgs = exists($args{'cmdArgs'}) ? $args{'cmdArgs'} : [];
+    my $dir = $args{'dir'};
+    my $timeout = exists($args{'timeout'}) ? $args{'timeout'} : '600';
+
+    if (ref($cmdArgs) ne 'ARRAY') {
+        die("ASSERT: run_shell_command(): cmdArgs is not an array ref\n");
+    }
+
+    my %runShellCommandArgs = (command => $cmd,
+                               args => $cmdArgs,
+                               timeout => $timeout,
+                               output => 1);
+
+    if ($dir) {
+        $runShellCommandArgs{'dir'} = $dir;
+    }
+
+    print('Running shell command' .
+     (defined($dir) ? " in $dir" : '') . ':' . "\n");
+    print('  arg0: ' . $cmd . "\n");
+    my $argNum = 1; 
+    foreach my $arg (@{$cmdArgs}) { 
+        print('  arg' . $argNum . ': ' . $arg . "\n");
+        $argNum += 1;
+    }
+    print('Starting time is ' . strftime("%T %D", localtime()) . "\n");
+    print('Timeout: ' . $timeout . "\n");
+
+    my $rv = RunShellCommand(%runShellCommandArgs);
+
+    print('Ending time is ' . strftime("%T %D", localtime()) . "\n");
+
+    my $exitValue = $rv->{'exitValue'};
+    my $timedOut  = $rv->{'timedOut'};
+    my $signalNum  = $rv->{'signalNum'};
+    my $dumpedCore = $rv->{'dumpedCore'};
+    if ($timedOut) {
+        print("output: $rv->{'output'}\n") if $rv->{'output'};
+        die('FAIL shell call timed out after ' . $timeout . ' seconds');
+    }
+    if ($signalNum) {
+        print('WARNING shell recieved signal ' . $signalNum . "\n");
+    }
+    if ($dumpedCore) {
+        print("output: $rv->{'output'}\n") if $rv->{'output'};
+        die("FAIL shell call dumped core");
+    }
+    if ($exitValue) {
+        if ($exitValue != 0) {
+            print("output: $rv->{'output'}\n") if $rv->{'output'};
+            die("shell call returned bad exit code: $exitValue");
+        }
+    }
+}
+
 
 ##
 ## ENTRY POINT (Yes, aaaalll the way down here...)

@@ -99,14 +99,15 @@ nsDownloadScanner::Init()
   // codebase. All other COM calls/objects are made on different threads.
   nsresult rv = NS_OK;
   CoInitialize(NULL);
-  if (FindCLSID() < 0)
+  if (ListCLSID() < 0)
     rv = NS_ERROR_NOT_AVAILABLE;
   CoUninitialize();
+
   return rv;
 }
 
 PRInt32
-nsDownloadScanner::FindCLSID()
+nsDownloadScanner::ListCLSID()
 {
   nsRefPtr<ICatInformation> catInfo;
   HRESULT hr;
@@ -124,12 +125,17 @@ nsDownloadScanner::FindCLSID()
     NS_WARNING("Could not get class enumerator for category\n");
     return -2;
   }
+
   ULONG nReceived;
-  clsidEnumerator->Next(1, &mScannerCLSID, &nReceived);
-  if (nReceived == 0) {
+  CLSID clsid;
+  while(clsidEnumerator->Next(1, &clsid, &nReceived) == S_OK && nReceived == 1)
+    mScanCLSID.AppendElement(clsid);
+
+  if (mScanCLSID.Length() == 0) {
     // No installed Anti Virus program
     return -3;
   }
+
   mHaveAVScanner = PR_TRUE;
   return 0;
 }
@@ -145,7 +151,7 @@ nsDownloadScanner::ScannerThreadFunction(void *p)
 }
 
 nsDownloadScanner::Scan::Scan(nsDownloadScanner *scanner, nsDownload *download)
-  : mDLScanner(scanner), mAVScanner(NULL), mThread(NULL), 
+  : mDLScanner(scanner), mThread(NULL), 
     mDownload(download), mStatus(AVSCAN_NOTSTARTED)
 {
 }
@@ -254,35 +260,46 @@ nsDownloadScanner::Scan::DoScan()
 
   info.pwzHostName = mName.BeginWriting();
   info.u.pwzFullPath = mPath.BeginWriting();
-
   info.pwzOrigURL = mOrigin.BeginWriting();
 
   CoInitialize(NULL);
-  hr = CoCreateInstance(mDLScanner->mScannerCLSID, NULL, CLSCTX_ALL,
-                        IID_IOfficeAntiVirus, getter_AddRefs(mAVScanner));
-  if (FAILED(hr)) {
-    NS_WARNING("Could not instantiate antivirus scanner");
-    mStatus = AVSCAN_FAILED;
-  } else {
-    mStatus = AVSCAN_SCANNING;
-    hr = mAVScanner->Scan(&info);
-    switch (hr) {
-    case S_OK:
-      mStatus = AVSCAN_GOOD;
-      break;
-    case S_FALSE:
-      mStatus = AVSCAN_UGLY;
-      break;
-    case E_FAIL:
-      mStatus = AVSCAN_BAD;
-      break;
-    default:
-    case ERROR_FILE_NOT_FOUND:
-      NS_WARNING("Downloaded file disappeared before it could be scanned");
+
+  for (PRUint32 i = 0; i < mDLScanner->mScanCLSID.Length(); i++) {
+    nsRefPtr<IOfficeAntiVirus> vScanner;
+    hr = CoCreateInstance(mDLScanner->mScanCLSID[i], NULL, CLSCTX_ALL,
+                          IID_IOfficeAntiVirus, getter_AddRefs(vScanner));
+    if (FAILED(hr)) {
+      NS_WARNING("Could not instantiate antivirus scanner");
       mStatus = AVSCAN_FAILED;
-      break;
+    } else {
+      mStatus = AVSCAN_SCANNING;
+
+      hr = vScanner->Scan(&info);
+
+      if (hr == S_OK) { // Passed the scan
+        mStatus = AVSCAN_GOOD;
+        continue;
+      }
+      else if (hr == S_FALSE) { // Failed but cleaned up
+        mStatus = AVSCAN_UGLY;
+        continue;
+      }
+      else if (hr == ERROR_FILE_NOT_FOUND) {
+        NS_WARNING("Downloaded file disappeared before it could be scanned");
+        mStatus = AVSCAN_FAILED;
+        break;
+      }
+      else if (hr == E_FAIL) { // Failed
+        mStatus = AVSCAN_BAD;
+        break;
+      }
+      else {
+        mStatus = AVSCAN_FAILED;
+        break;
+      }
     }
   }
+  
   CoUninitialize();
 
   // We need to do a few more things on the main thread

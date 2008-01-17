@@ -507,7 +507,7 @@ public:
     virtual nsresult BeginCycleCollection(nsCycleCollectionTraversalCallback &cb);
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
-    virtual PRUint32 Collect();
+    virtual PRBool Collect();
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p);
 #endif
@@ -656,13 +656,6 @@ public:
     XPCContext* GetXPCContext(JSContext* cx);
     XPCContext* SyncXPCContextList(JSContext* cx = nsnull);
 
-    JSBool GetDeferReleases() const {return mDeferReleases;}
-    void   SetDeferReleases(JSBool b) 
-        {/* If deferring is turned off while any are pending they'll leak! */
-         NS_ASSERTION((mDeferReleases && b) || 
-                      !mNativesToReleaseArray.Count(), "bad"); 
-         mDeferReleases = b;}
-
     JSBool DeferredRelease(nsISupports* obj);
 
     JSBool GetDoingFinalization() const {return mDoingFinalization;}
@@ -755,12 +748,14 @@ private:
 public:
 #endif
 
+    // For use by XPCWrappedNativeScope.
+    JSContext2XPCContextMap*  GetContextMap() const {return mContextMap;}
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect,
                  nsIJSRuntimeService* aJSRuntimeService);
 
-    JSContext2XPCContextMap*  GetContextMap() const {return mContextMap;}
     JSBool GenerateStringIDs(JSContext* cx);
     void PurgeXPCContextList();
 
@@ -787,7 +782,6 @@ private:
     PRThread* mThreadRunningGC;
     nsVoidArray mWrappedJSToReleaseArray;
     nsVoidArray mNativesToReleaseArray;
-    JSBool mDeferReleases;
     JSBool mDoingFinalization;
     XPCRootSetElem *mVariantRoots;
     XPCRootSetElem *mWrappedJSRoots;
@@ -892,6 +886,8 @@ public:
         }
 
     void DebugDump(PRInt16 depth);
+    void AddScope(PRCList *scope) { PR_INSERT_AFTER(scope, &mScopes); }
+    void RemoveScope(PRCList *scope) { PR_REMOVE_LINK(scope); }
 
     ~XPCContext();
 
@@ -909,6 +905,9 @@ private:
     LangType mCallingLangType;
     PRUint16 mSecurityManagerFlags;
     JSPackedBool mMarked;
+
+    // A linked list of scopes to notify when we are destroyed.
+    PRCList mScopes;
 };
 
 /***************************************************************************/
@@ -946,11 +945,22 @@ public:
 //
 // Note that most accessors are inlined.
 
-class XPCCallContext : public nsIXPCNativeCallContext
+class XPCCallContext : public nsAXPCNativeCallContext
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIXPCNATIVECALLCONTEXT
+    NS_IMETHOD GetCallee(nsISupports **aResult);
+    NS_IMETHOD GetCalleeMethodIndex(PRUint16 *aResult);
+    NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative **aResult);
+    NS_IMETHOD GetJSContext(JSContext **aResult);
+    NS_IMETHOD GetArgc(PRUint32 *aResult);
+    NS_IMETHOD GetArgvPtr(jsval **aResult);
+    NS_IMETHOD GetRetValPtr(jsval **aResult);
+    NS_IMETHOD GetExceptionWasThrown(PRBool *aResult);
+    NS_IMETHOD SetExceptionWasThrown(PRBool aValue);
+    NS_IMETHOD GetReturnValueWasSet(PRBool *aResult);
+    NS_IMETHOD SetReturnValueWasSet(PRBool aValue);
+    NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo **aResult);
+    NS_IMETHOD GetCalleeClassInfo(nsIClassInfo **aResult);
 
     enum {NO_ARGS = (uintN) -1};
 
@@ -1195,7 +1205,7 @@ xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper);
 /***************************************************************************/
 // XPCWrappedNativeScope is one-to-one with a JS global object.
 
-class XPCWrappedNativeScope
+class XPCWrappedNativeScope : public PRCList
 {
 public:
 
@@ -1286,6 +1296,9 @@ public:
 
     static void InitStatics() { gScopes = nsnull; gDyingScopes = nsnull; }
 
+    XPCContext *GetContext() { return mContext; }
+    void SetContext(XPCContext *xpcc) { mContext = nsnull; }
+
 #ifndef XPCONNECT_STANDALONE
     /**
      * Fills the hash mapping global object to principal.
@@ -1318,6 +1331,7 @@ private:
     JSObject*                        mGlobalJSObject;
     JSObject*                        mPrototypeJSObject;
     JSObject*                        mPrototypeJSFunction;
+    XPCContext*                      mContext;
 
 #ifndef XPCONNECT_STANDALONE
     // The script object principal instance corresponding to our current global
@@ -2027,7 +2041,15 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
-    NS_DECL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
+    // No need to unlink the JS objects, if the XPCWrappedNative will be cycle
+    // collected then its mFlatJSObject will be cycle collected too and
+    // finalization of the mFlatJSObject will unlink the js objects (see
+    // XPC_WN_NoHelper_Finalize and FlatJSObjectFinalized).
+    // We also rely on NS_DECL_CYCLE_COLLECTION_CLASS_NO_UNLINK having empty
+    // Root/Unroot methods, to avoid root/unrooting the JS objects from
+    // addrefing/releasing the XPCWrappedNative during unlinking, which would
+    // make the JS objects uncollectable to the JS GC.
+    NS_DECL_CYCLE_COLLECTION_CLASS_NO_UNLINK(XPCWrappedNative)
     NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(XPCWrappedNative)
 
 #ifndef XPCONNECT_STANDALONE
@@ -2844,11 +2866,11 @@ public:
     void   SetNameToNoString()
         {NS_ASSERTION(!mName, "name already set"); mName = gNoString;}
     PRBool NameIsSet() const {return nsnull != mName;}
-    const nsID* GetID() const {return &mID;}
-
+    const nsID& ID() const {return mID;}
     PRBool IsValid() const {return !mID.Equals(GetInvalidIID());}
 
     static nsJSID* NewID(const char* str);
+    static nsJSID* NewID(const nsID& id);
 
     nsJSID();
     virtual ~nsJSID();
@@ -3308,7 +3330,7 @@ private:
 extern JSObject*
 xpc_NewIDObject(JSContext *cx, JSObject* jsobj, const nsID& aID);
 
-extern nsID*
+extern const nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj);
 
 extern JSBool

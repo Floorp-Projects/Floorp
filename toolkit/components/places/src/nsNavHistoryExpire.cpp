@@ -510,7 +510,7 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
     // Do not add comma separator for the first entry
     if (! deletedVisitIds.IsEmpty())
-      deletedVisitIds.AppendLiteral(", ");
+      deletedVisitIds.AppendLiteral(",");  
     deletedVisitIds.AppendInt(aRecords[i].visitID);
   }
 
@@ -539,15 +539,20 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
 {
   // build a comma separated string of place ids to delete
   nsCString deletedPlaceIds;
+  nsTArray<PRInt64> deletedPlaceIdsArray;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
     // IF bookmarked entries OR "place" URIs do not delete
     if (aRecords[i].bookmarked ||
         StringBeginsWith(aRecords[i].uri, NS_LITERAL_CSTRING("place:")))
       continue;
-    // Do not add comma separator for the first entry
-    if (! deletedPlaceIds.IsEmpty())
-      deletedPlaceIds.AppendLiteral(", ");
-    deletedPlaceIds.AppendInt(aRecords[i].placeID);
+    // avoid trying to delete the same place id twice
+    if (deletedPlaceIdsArray.IndexOf(aRecords[i].placeID) == -1) {
+      // Do not add comma separator for the first entry
+      if (! deletedPlaceIds.IsEmpty())
+        deletedPlaceIds.AppendLiteral(",");
+      deletedPlaceIdsArray.AppendElement(aRecords[i].placeID);
+      deletedPlaceIds.AppendInt(aRecords[i].placeID);
+    }
     aRecords[i].erased = PR_TRUE;
   }
 
@@ -575,14 +580,19 @@ nsNavHistoryExpire::EraseFavicons(mozIStorageConnection* aConnection,
 {
   // build a comma separated string of favicon ids to delete
   nsCString deletedFaviconIds;
+  nsTArray<PRInt64> deletedFaviconIdsArray;  
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
     // IF main entry not expired OR no favicon DO NOT DELETE
     if (! aRecords[i].erased || aRecords[i].faviconID == 0)
       continue;
-    // Do not add comma separator for the first entry
-    if (! deletedFaviconIds.IsEmpty())
-      deletedFaviconIds.AppendLiteral(", ");
-    deletedFaviconIds.AppendInt(aRecords[i].faviconID);
+    // avoid trying to delete the same favicon id twice
+    if (deletedFaviconIdsArray.IndexOf(aRecords[i].faviconID) == -1) {
+      // Do not add comma separator for the first entry
+      if (! deletedFaviconIds.IsEmpty())
+        deletedFaviconIds.AppendLiteral(",");
+      deletedFaviconIdsArray.AppendElement(aRecords[i].faviconID);
+      deletedFaviconIds.AppendInt(aRecords[i].faviconID);
+    }
   }
 
   if (deletedFaviconIds.IsEmpty())
@@ -606,10 +616,16 @@ nsNavHistoryExpire::EraseAnnotations(mozIStorageConnection* aConnection,
 {
   // remove annotations for the set of records passed in
   nsCString placeIds;
+  nsTArray<PRInt64> deletedPlaceIdsArray;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
-    if (!placeIds.IsEmpty())
-      placeIds.AppendLiteral(", ");
-    placeIds.AppendInt(aRecords[i].placeID);
+    // avoid trying to delete the same place id twice
+    if (deletedPlaceIdsArray.IndexOf(aRecords[i].placeID) == -1) {
+      // Do not add comma separator for the first entry
+      if (!placeIds.IsEmpty())
+        placeIds.AppendLiteral(",");
+      deletedPlaceIdsArray.AppendElement(aRecords[i].placeID);
+      placeIds.AppendInt(aRecords[i].placeID);
+    }
   }
   
   if (placeIds.IsEmpty())

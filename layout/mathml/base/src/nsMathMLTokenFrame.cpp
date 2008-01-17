@@ -128,7 +128,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.ascent = 0;
   aDesiredSize.mBoundingMetrics.Clear();
 
-  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
+  nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
   nsIFrame* childFrame = GetFirstChild(nsnull);
   while (childFrame) {
     // ask our children to compute their bounding metrics

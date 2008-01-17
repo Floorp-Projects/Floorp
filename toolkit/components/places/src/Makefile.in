@@ -59,6 +59,8 @@ REQUIRES = xpcom \
            morkreader \
            pref \
            necko \
+           imglib2 \
+           gfx \
            intl \
            layout \
            locale \

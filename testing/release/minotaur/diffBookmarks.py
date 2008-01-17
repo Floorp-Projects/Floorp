@@ -34,12 +34,15 @@
 
 from optparse import OptionParser
 from checkBookmarks import bookmarkParser
-from logAppender import LogAppender
+from logAppender import LogAppender, stderrCatcher
+import sys
 
 # The Main function
 def main(left, right, log):
   # Instantiate the log writer
   lw = LogAppender(log)
+  # Redirect stderr
+  sys.stderr = stderrCatcher(lw)
 
   # Parse the left hand file
   leftParser = bookmarkParser()

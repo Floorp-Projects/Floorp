@@ -131,7 +131,7 @@ public:
         return static_cast<gfxAtsuiFont*>(static_cast<gfxFont*>(mFonts[aFontIndex]));
     }
 
-    gfxAtsuiFont* FindFontFor(ATSUFontID fid);
+    already_AddRefed<gfxAtsuiFont> FindFontFor(ATSUFontID fid);
 
     PRBool HasFont(ATSUFontID fid);
     

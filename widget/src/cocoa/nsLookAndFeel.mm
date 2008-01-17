@@ -267,7 +267,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacTextColor(kThemeTextColorDialogActive, aColor, NS_RGB(0x00,0x00,0x00));
       break;
     case eColor__moz_dialog:
-    case eColor__moz_cellhighlight:
       // XXX There may be a better color for this, but I'm making it
       // the same as ThreeDFace since that's what's currently used where
       // I will use -moz-Dialog:
@@ -335,6 +334,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       GetMacBrushColor(kThemeBrushPrimaryHighlightColor, fallbackColor, NS_RGB(0x00,0x00,0x00));
       res = GetMacBrushColor(kThemeBrushAlternatePrimaryHighlightColor, aColor, fallbackColor);
       break;
+    case eColor__moz_cellhighlight:
     case eColor__moz_mac_secondaryhighlight:
       // For inactive list selection
       res = GetMacBrushColor(kThemeBrushSecondaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));

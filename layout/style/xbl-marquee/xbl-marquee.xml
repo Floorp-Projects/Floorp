@@ -441,17 +441,6 @@
                                corrvalue : (this.innerDiv.offsetWidth + this.startAt));
             }
 
-            // RTL Support.  If text direction is right-to-left and marquee 
-            // axis is horizontal, then negate and swap stopAt and startAt.
-            var dir = document.defaultView.getComputedStyle(this, "").direction;
-            if (dir == "rtl") {
-                if (this._direction == "right" || this._direction == "left") {
-                   var tmp = this.startAt;
-                   this.startAt = -this.stopAt;
-                   this.stopAt = -tmp;
-                }
-            }
-
             if (aResetPosition) {
               this.newPosition = this.startAt;
               this._fireEvent("start", false, false);
@@ -530,12 +519,26 @@
         <body>
         <![CDATA[
           this.stop();
-          // hack needed to fix js error, see bug 386470
-          if (!this.innerDiv)
-            return;
-          // store the original height before we add padding
-          this.innerDiv.style.padding = 0;
-          this.originalHeight = this.innerDiv.offsetHeight;
+
+          if ((this._direction != "up") && (this._direction != "down")) {
+            var width = window.getComputedStyle(this, "").width;
+            this.innerDiv.parentNode.style.margin = '0 ' + width;
+
+            //XXX Adding the margin sometimes causes the marquee to widen, 
+            // see testcase from bug bug 364434: 
+            // https://bugzilla.mozilla.org/attachment.cgi?id=249233
+            // Just add a fixed width with current marquee's width for now
+            if (width != window.getComputedStyle(this, "").width) {
+              var width = window.getComputedStyle(this, "").width;
+              this.outerDiv.style.width = width;
+              this.innerDiv.parentNode.style.margin = '0 ' + width;
+            }
+          }
+          else {
+            // store the original height before we add padding
+            this.innerDiv.style.padding = 0;
+            this.originalHeight = this.innerDiv.offsetHeight;
+          }
 
           this._doMove(true);
         ]]>
@@ -544,8 +547,9 @@
 
       <constructor>
         <![CDATA[
+          // hack needed to fix js error, see bug 386470
           var myThis = this;
-          var lambda = function myScopeFunction() { myThis.init(); }
+          var lambda = function myScopeFunction() { if (myThis.init) myThis.init(); }
 
           this._set_direction(this.getAttribute('direction'));
           this._set_behavior(this.getAttribute('behavior'));
@@ -666,8 +670,8 @@
     <!-- White-space isn't allowed because a marquee could be 
          inside 'white-space: pre' -->
     <content>
-      <html:div xbl:inherits="" style="overflow: hidden"
-        ><html:div style="display: -moz-box; margin: 0 100%;"
+      <html:div style="display: -moz-box; overflow: hidden; width: -moz-available;"
+        ><html:div style="display: -moz-box;"
           ><html:div class="innerDiv"
             ><children
           /></html:div
@@ -677,7 +681,6 @@
 
   </binding>
 
-  <!-- use -moz-margin-end to force large intrinsic width -->
   <binding id="marquee-vertical"
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
            inheritstyle="false">
@@ -685,7 +688,7 @@
     <!-- White-space isn't allowed because a marquee could be 
          inside 'white-space: pre' -->
     <content>
-      <html:div xbl:inherits="" style="overflow: hidden; width: 100%; -moz-margin-end: 100%"
+      <html:div style="overflow: hidden; width: -moz-available;"
         ><html:div class="innerDiv"
           ><children
         /></html:div
@@ -694,32 +697,26 @@
 
   </binding>
 
-  <!-- use -moz-margin-end to force large intrinsic width -->
   <binding id="marquee-horizontal-editable"
            inheritstyle="false">
 
     <!-- White-space isn't allowed because a marquee could be 
          inside 'white-space: pre' -->
     <content>
-      <html:div style="overflow: auto; width: 100%; -moz-margin-end: 100%"
-        ><html:div style="display: -moz-box;"
-          ><html:div
-            ><children
-          /></html:div
-        ></html:div
-      ></html:div>
+      <html:div style="display: -moz-box; overflow: auto; width: -moz-available;"
+        ><children
+      /></html:div>
     </content>
 
   </binding>
 
-  <!-- use -moz-margin-end to force large intrinsic width -->
   <binding id="marquee-vertical-editable"
            inheritstyle="false">
 
     <!-- White-space isn't allowed because a marquee could be 
          inside 'white-space: pre' -->
     <content>
-      <html:div style="overflow: auto; height: inherit; width: 100%; -moz-margin-end: 100%"
+      <html:div style="overflow: auto; height: inherit; width: -moz-available;"
         ><children/></html:div>
     </content>
 

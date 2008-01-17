@@ -924,7 +924,7 @@ LPGAMMATABLE ReadCurve(LPLCMSICCPROFILE  Icc)
            if (Icc -> Read(&Reserved, sizeof(icUInt16Number), 1, Icc) != 1) return NULL;
            
            AdjustEndianess16((LPBYTE) &Type);
-           if (Type > 5) {
+           if (Type > 4) {
 
                 cmsSignalError(LCMS_ERRC_ABORTED, "Unknown parametric curve type '%d' found.", Type);
                 return NULL;
@@ -1033,7 +1033,7 @@ LPGAMMATABLE ReadCurveReversed(LPLCMSICCPROFILE Icc)
            if (Icc -> Read(&Reserved, sizeof(icUInt16Number), 1, Icc) != 1) return NULL;
            
            AdjustEndianess16((LPBYTE) &Type);
-           if (Type > 5) {
+           if (Type > 4) {
 
                 cmsSignalError(LCMS_ERRC_ABORTED, "Unknown parametric curve type '%d' found.", Type);
                 return NULL;

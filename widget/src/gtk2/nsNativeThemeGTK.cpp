@@ -191,12 +191,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       memset(aState, 0, sizeof(GtkWidgetState));
     } else {
 
-      // for dropdown and spinner textfields,
-      // look at the parent frame (textbox or menulist)
-      if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
-          aWidgetType == NS_THEME_SPINNER_TEXTFIELD)
-        aFrame = aFrame->GetParent();
-
       // For XUL checkboxes and radio buttons, the state of the parent
       // determines our state.
       nsIFrame *stateFrame = aFrame;
@@ -281,8 +275,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
             aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
             aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
-            if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
-              aState->active = PR_TRUE;
+          if (CheckBooleanAttr(aFrame, nsWidgetAtoms::active))
+            aState->active = PR_TRUE;
+
+          if (aWidgetFlags) {
+            *aWidgetFlags = GetScrollbarButtonType(aFrame);
+            if (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP < 2)
+              *aWidgetFlags |= MOZ_GTK_STEPPER_VERTICAL;
+          }
         }
 
         // menu item state is determined by the attribute "_moz-menuactive",
@@ -325,7 +325,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         // should always appear depressed.
         if (aWidgetType == NS_THEME_BUTTON ||
             aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
-            aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON) {
+            aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON ||
+            aWidgetType == NS_THEME_DROPDOWN) {
           PRBool menuOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
           aState->depressed = IsCheckedButton(aFrame) || menuOpen;
           // we must not highlight buttons with open drop down menus on hover.
@@ -353,8 +354,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-    if (aWidgetFlags)
-      *aWidgetFlags = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_BUTTON;
     break;
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
@@ -412,7 +411,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
-  case NS_THEME_DROPDOWN_TEXTFIELD:
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
   case NS_THEME_LISTBOX:
@@ -462,8 +460,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_DROPDOWN_TEXT:
     return PR_FALSE; // nothing to do, but prevents the bg from being drawn
+  case NS_THEME_DROPDOWN_TEXTFIELD:
+    aGtkWidgetType = MOZ_GTK_DROPDOWN_ENTRY;
+    break;
   case NS_THEME_DROPDOWN_BUTTON:
     aGtkWidgetType = MOZ_GTK_DROPDOWN_ARROW;
+    break;
+  case NS_THEME_TOOLBAR_BUTTON_DROPDOWN:
+    aGtkWidgetType = MOZ_GTK_TOOLBARBUTTON_ARROW;
     break;
   case NS_THEME_CHECKBOX_CONTAINER:
     aGtkWidgetType = MOZ_GTK_CHECKBUTTON_CONTAINER;
@@ -504,7 +508,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         /* First bits will be used to store max(0,-bmargin) where bmargin
          * is the bottom margin of the tab in pixels  (resp. top margin,
          * for bottom tabs). */
-        gint margin;
+        nscoord margin;
         if (IsBottomTab(aFrame)) {
             *aWidgetFlags = MOZ_GTK_TAB_BOTTOM;
             margin = aFrame->GetUsedMargin().top;
@@ -873,30 +877,35 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
                                     nsIFrame* aFrame, PRUint8 aWidgetType,
                                     nsRect* aResult)
 {
-  nsIntMargin extraSize;
+  nsMargin m;
+  PRInt32 p2a;
   if (aWidgetType == NS_THEME_TAB)
   {
     if (!IsSelectedTab(aFrame))
       return PR_FALSE;
 
-    if (IsBottomTab(aFrame)) {
-      extraSize = nsMargin(0, aFrame->PresContext()->
-                             DevPixelsToAppUnits(moz_gtk_get_tab_thickness())
-                           + PR_MIN(0, aFrame->GetUsedMargin().top), 0, 0);
-    } else {
-      extraSize = nsMargin(0, 0, 0, aFrame->PresContext()->
-                             DevPixelsToAppUnits(moz_gtk_get_tab_thickness())
-                           + PR_MIN(0, aFrame->GetUsedMargin().bottom));
-    }
-  }
-  else if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
-    return PR_FALSE;
+    p2a = aContext->AppUnitsPerDevPixel();
 
-  PRInt32 p2a = aContext->AppUnitsPerDevPixel();
-  nsMargin m(NSIntPixelsToAppUnits(extraSize.left, p2a),
-             NSIntPixelsToAppUnits(extraSize.top, p2a),
-             NSIntPixelsToAppUnits(extraSize.right, p2a),
-             NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+    if (IsBottomTab(aFrame)) {
+      m = nsMargin(0, NSIntPixelsToAppUnits(moz_gtk_get_tab_thickness(), p2a)
+                      + PR_MIN(0, aFrame->GetUsedMargin().top), 0, 0);
+    } else {
+      m = nsMargin(0, 0, 0,
+                   NSIntPixelsToAppUnits(moz_gtk_get_tab_thickness(), p2a)
+                   + PR_MIN(0, aFrame->GetUsedMargin().bottom));
+    }
+  } else {
+    nsIntMargin extraSize;
+    if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
+      return PR_FALSE;
+
+    p2a = aContext->AppUnitsPerDevPixel();
+    m = nsMargin(NSIntPixelsToAppUnits(extraSize.left, p2a),
+                 NSIntPixelsToAppUnits(extraSize.top, p2a),
+                 NSIntPixelsToAppUnits(extraSize.right, p2a),
+                 NSIntPixelsToAppUnits(extraSize.bottom, p2a));
+  }
+
   nsRect r(nsPoint(0, 0), aFrame->GetSize());
   r.Inflate(m);
   *aResult = r;
@@ -1120,7 +1129,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::focused ||
         aAttribute == nsWidgetAtoms::readonly ||
         aAttribute == nsWidgetAtoms::_default ||
-        aAttribute == nsWidgetAtoms::mozmenuactive)
+        aAttribute == nsWidgetAtoms::mozmenuactive ||
+        aAttribute == nsWidgetAtoms::open)
       *aShouldRepaint = PR_TRUE;
   }
 
@@ -1159,7 +1169,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TOOLBAR:
   case NS_THEME_TOOLBAR_BUTTON:
   case NS_THEME_TOOLBAR_DUAL_BUTTON: // so we can override the border with 0
-    // case NS_THEME_TOOLBAR_DUAL_BUTTON_DROPDOWN:
+  case NS_THEME_TOOLBAR_BUTTON_DROPDOWN:
   case NS_THEME_TOOLBAR_SEPARATOR:
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_STATUSBAR:

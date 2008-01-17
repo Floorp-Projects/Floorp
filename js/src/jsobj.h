@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -480,10 +480,10 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         uintN flags, intN shortid, JSProperty **propp);
 
 /*
- * Unlike js_DefineProperty, propp must be non-null.  On success, and if id was
+ * Unlike js_DefineProperty, propp must be non-null. On success, and if id was
  * found, return true with *objp non-null and locked, and with a held property
- * stored in *propp.  If successful but id was not found, return true with both
- * *objp and *propp null.  Therefore all callers who receive a non-null *propp
+ * stored in *propp. If successful but id was not found, return true with both
+ * *objp and *propp null. Therefore all callers who receive a non-null *propp
  * must later call OBJ_DROP_PROPERTY(cx, *objp, *propp).
  */
 extern JS_FRIEND_API(JSBool)
@@ -491,13 +491,19 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp);
 
 /*
- * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
+ * Specialized subroutine that allows caller to preset JSRESOLVE_* flags and
+ * returns the index along the prototype chain in which *propp was found, or
+ * the last index if not found, or -1 on error.
  */
-extern JSBool
+extern int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                            JSObject **objp, JSProperty **propp);
 
-extern JS_FRIEND_API(JSBool)
+/*
+ * Return the index along the scope chain in which id was found, or the last
+ * index if not found, or -1 on error.
+ */
+extern JS_FRIEND_API(int)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                 JSProperty **propp);
 

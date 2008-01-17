@@ -426,7 +426,7 @@ private:
 
     nsresult
     CheckPropertyAccessImpl(PRUint32 aAction,
-                            nsIXPCNativeCallContext* aCallContext,
+                            nsAXPCNativeCallContext* aCallContext,
                             JSContext* cx, JSObject* aJSObject,
                             nsISupports* aObj, nsIURI* aTargetURI,
                             nsIClassInfo* aClassInfo,

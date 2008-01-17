@@ -2346,6 +2346,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
         if (!mNotifiedRootInsertion) {
           NotifyRootInsertion();
         }
+        ProcessOfflineManifest(mRoot);
       }
       break;
     case eHTMLTag_form:
@@ -2990,13 +2991,6 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
           element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
           if (!hrefVal.IsEmpty()) {
             PrefetchHref(hrefVal, element, hasPrefetch);
-          }
-        }
-        if (linkTypes.IndexOf(NS_LITERAL_STRING("offline-resource")) != -1) {
-          nsAutoString hrefVal;
-          element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-          if (!hrefVal.IsEmpty()) {
-            AddOfflineResource(hrefVal, element);
           }
         }
       }

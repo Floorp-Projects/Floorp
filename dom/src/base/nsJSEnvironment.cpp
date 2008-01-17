@@ -782,19 +782,19 @@ PrintWinCodebase(nsGlobalWindow *win)
 }
 #endif
 
-// The number of branch callbacks between calls to JS_MaybeGC
-#define MAYBE_GC_BRANCH_COUNT_MASK 0x00000fff // 4095
+// The number of operation callbacks between calls to JS_MaybeGC
+#define MAYBE_GC_OPERATION_COUNT_MASK 0x00000fff // 4095
 
-// The number of branch callbacks before we even check if our start
+// The number of operation callbacks before we even check if our start
 // timestamp is initialized. This is a fairly low number as we want to
 // initialize the timestamp early enough to not waste much time before
 // we get there, but we don't want to bother doing this too early as
 // it's not generally necessary.
-#define INITIALIZE_TIME_BRANCH_COUNT_MASK 0x000000ff // 255
+#define INITIALIZE_TIME_OPERATION_COUNT_MASK 0x000000ff // 255
 
 // This function is called after each JS branch execution
 JSBool JS_DLL_CALLBACK
-nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
+nsJSContext::DOMOperationCallback(JSContext *cx)
 {
   // Get the native context
   nsJSContext *ctx = static_cast<nsJSContext *>(::JS_GetContextPrivate(cx));
@@ -804,17 +804,17 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
     return JS_TRUE;
   }
 
-  PRUint32 callbackCount = ++ctx->mBranchCallbackCount;
+  PRUint32 callbackCount = ++ctx->mOperationCallbackCount;
 
-  if (callbackCount & INITIALIZE_TIME_BRANCH_COUNT_MASK) {
+  if (callbackCount & INITIALIZE_TIME_OPERATION_COUNT_MASK) {
     return JS_TRUE;
   }
 
-  if (callbackCount == INITIALIZE_TIME_BRANCH_COUNT_MASK + 1 &&
-      LL_IS_ZERO(ctx->mBranchCallbackTime)) {
-    // Initialize mBranchCallbackTime to start timing how long the
+  if (callbackCount == INITIALIZE_TIME_OPERATION_COUNT_MASK + 1 &&
+      LL_IS_ZERO(ctx->mOperationCallbackTime)) {
+    // Initialize mOperationCallbackTime to start timing how long the
     // script has run
-    ctx->mBranchCallbackTime = PR_Now();
+    ctx->mOperationCallbackTime = PR_Now();
 
     ctx->mIsTrackingChromeCodeTime =
       ::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx));
@@ -822,22 +822,22 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
     return JS_TRUE;
   }
 
-  if (callbackCount & MAYBE_GC_BRANCH_COUNT_MASK) {
+  if (callbackCount & MAYBE_GC_OPERATION_COUNT_MASK) {
     return JS_TRUE;
   }
 
-  // XXX Save the branch callback time so we can restore it after the GC,
+  // XXX Save the operation callback time so we can restore it after the GC,
   // because GCing can cause JS to run on our context, causing our
-  // ScriptEvaluated to be called, and clearing our branch callback time and
-  // count. See bug 302333.
-  PRTime callbackTime = ctx->mBranchCallbackTime;
+  // ScriptEvaluated to be called, and clearing our operation callback time
+  // and count. See bug 302333.
+  PRTime callbackTime = ctx->mOperationCallbackTime;
 
   // Run the GC if we get this far.
   JS_MaybeGC(cx);
 
   // Now restore the callback time and count, in case they got reset.
-  ctx->mBranchCallbackTime = callbackTime;
-  ctx->mBranchCallbackCount = callbackCount;
+  ctx->mOperationCallbackTime = callbackTime;
+  ctx->mOperationCallbackCount = callbackCount;
 
   PRTime now = PR_Now();
 
@@ -871,7 +871,9 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   nsresult rv;
 
   // Check if we should offer the option to debug
-  PRBool debugPossible = (cx->debugHooks->debuggerHandler != nsnull);
+  JSStackFrame* fp = ::JS_GetScriptedCaller(cx, NULL);
+  PRBool debugPossible = (fp != nsnull &&
+                          cx->debugHooks->debuggerHandler != nsnull);
 #ifdef MOZ_JSDEBUGGER
   // Get the debugger service if necessary.
   if (debugPossible) {
@@ -939,6 +941,7 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   }
 
   // Append file and line number information, if available
+  JSScript *script = fp ? ::JS_GetFrameScript(cx, fp) : nsnull;
   if (script) {
     const char *filename = ::JS_GetScriptFilename(cx, script);
     if (filename) {
@@ -994,17 +997,18 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
       }
     }
 
-    ctx->mBranchCallbackTime = PR_Now();
+    ctx->mOperationCallbackTime = PR_Now();
     return JS_TRUE;
   }
   else if ((buttonPressed == 2) && debugPossible) {
     // Debug the script
     jsval rval;
-    switch(cx->debugHooks->debuggerHandler(cx, script, cx->fp->pc, &rval,
+    switch(cx->debugHooks->debuggerHandler(cx, script, ::JS_GetFramePC(cx, fp),
+                                           &rval,
                                            cx->debugHooks->
                                            debuggerHandlerData)) {
       case JSTRAP_RETURN:
-        cx->fp->rval = rval;
+        fp->rval = rval;
         return JS_TRUE;
       case JSTRAP_ERROR:
         cx->throwing = JS_FALSE;
@@ -1092,9 +1096,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
   ++sContextCount;
 
-  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS
-                    | JSOPTION_NATIVE_BRANCH_CALLBACK
-                    | JSOPTION_ANONFUNFIX;
+  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS | JSOPTION_ANONFUNFIX;
 
   // Let xpconnect resync its JSContext tracker. We do this before creating
   // a new JSContext just in case the heap manager recycles the JSContext
@@ -1113,7 +1115,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
                                          JSOptionChangedCallback,
                                          this);
 
-    ::JS_SetBranchCallback(mContext, DOMBranchCallback);
+    ::JS_SetOperationCallback(mContext, DOMOperationCallback,
+                              JS_OPERATION_WEIGHT_BASE);
 
     static JSLocaleCallbacks localeCallbacks =
       {
@@ -1129,8 +1132,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mNumEvaluations = 0;
   mTerminations = nsnull;
   mScriptsEnabled = PR_TRUE;
-  mBranchCallbackCount = 0;
-  mBranchCallbackTime = LL_ZERO;
+  mOperationCallbackCount = 0;
+  mOperationCallbackTime = LL_ZERO;
   mProcessingScriptTag = PR_FALSE;
   mIsTrackingChromeCodeTime = PR_FALSE;
 }
@@ -1167,8 +1170,8 @@ nsJSContext::Unlink()
   // Clear our entry in the JSContext, bugzilla bug 66413
   ::JS_SetContextPrivate(mContext, nsnull);
 
-  // Clear the branch callback, bugzilla bug 238218
-  ::JS_SetBranchCallback(mContext, nsnull);
+  // Clear the operation callback, bugzilla bug 238218
+  ::JS_ClearOperationCallback(mContext);
 
   // Unregister our "javascript.options.*" pref-changed callback.
   nsContentUtils::UnregisterPrefCallback(js_options_dot_str,
@@ -1476,9 +1479,11 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   }
 
   // The result of evaluation, used only if there were no errors.  This need
-  // not be a GC root currently, provided we run the GC only from the branch
-  // callback or from ScriptEvaluated.  TODO: use JS_Begin/EndRequest to keep
-  // the GC from racing with JS execution on any thread.
+  // not be a GC root currently, provided we run the GC only from the
+  // operation callback or from ScriptEvaluated.
+  //
+  // TODO: use JS_Begin/EndRequest to keep the GC from racing with JS
+  // execution on any thread.
   jsval val;
 
   nsJSContext::TerminationFuncHolder holder(this);
@@ -1684,9 +1689,8 @@ nsJSContext::ExecuteScript(void *aScriptObject,
   }
 
   // The result of evaluation, used only if there were no errors.  This need
-  // not be a GC root currently, provided we run the GC only from the branch
-  // callback or from ScriptEvaluated.  TODO: use JS_Begin/EndRequest to keep
-  // the GC from racing with JS execution on any thread.
+  // not be a GC root currently, provided we run the GC only from the
+  // operation callback or from ScriptEvaluated.
   jsval val;
   JSBool ok;
 
@@ -3093,6 +3097,16 @@ static JSFunctionSpec JProfFunctions[] = {
 
 #endif /* defined(MOZ_JPROF) */
 
+#ifdef MOZ_SHARK
+static JSFunctionSpec SharkFunctions[] = {
+    {"startShark",                 StartShark,                 0, 0, 0},
+    {"stopShark",                  StopShark,                  0, 0, 0},
+    {"connectShark",               ConnectShark,               0, 0, 0},
+    {"disconnectShark",            DisconnectShark,            0, 0, 0},
+    {nsnull,                       nsnull,                     0, 0, 0}
+};
+#endif
+
 nsresult
 nsJSContext::InitClasses(void *aGlobalObj)
 {
@@ -3123,6 +3137,11 @@ nsJSContext::InitClasses(void *aGlobalObj)
 #ifdef MOZ_JPROF
   // Attempt to initialize JProf functions
   ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
+#endif
+
+#ifdef MOZ_SHARK
+  // Attempt to initialize Shark functions
+  ::JS_DefineFunctions(mContext, globalObj, SharkFunctions);
 #endif
 
   JSOptionChangedCallback(js_options_dot_str, this);
@@ -3225,8 +3244,8 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
   }
 #endif
 
-  mBranchCallbackCount = 0;
-  mBranchCallbackTime = LL_ZERO;
+  mOperationCallbackCount = 0;
+  mOperationCallbackTime = LL_ZERO;
 }
 
 nsresult

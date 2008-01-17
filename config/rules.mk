@@ -1087,6 +1087,19 @@ ifdef NO_LD_ARCHIVE_FLAGS
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_SHLOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
+ifeq ($(OS_ARCH),Darwin)
+	@echo Making symlinks to the original object files in the archive libraries $(SHARED_LIBRARY_LIBS)
+	@for lib in $(SHARED_LIBRARY_LIBS); do \
+		libdir=`echo $$lib|sed -e 's,/[^/]*\.a,,'`; \
+		ofiles=`$(AR_LIST) $${lib}`; \
+		for ofile in $$ofiles; do \
+			if [ -f $$libdir/$$ofile ]; then \
+				rm -f $$ofile; \
+				ln -s $$libdir/$$ofile $$ofile; \
+			fi; \
+		done; \
+	done
+endif
 endif # SHARED_LIBRARY_LIBS
 endif # NO_LD_ARCHIVE_FLAGS
 ifdef DTRACE_LIB_DEPENDENT
@@ -1122,17 +1135,6 @@ endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
 endif	# WINNT && !GCC
 ifeq ($(OS_ARCH),Darwin)
-	@for lib in $(SHARED_LIBRARY_LIBS); do \
-		libdir=`echo $$lib|sed -e 's,/[^/]*\.a,,'`; \
-		ofiles=`$(AR_LIST) $${lib}`; \
-		for ofile in $$ofiles; do \
-			if [ -f $$libdir/$$ofile ]; then \
-				rm -f $$ofile; \
-				ln -s $$libdir/$$ofile $$ofile; \
-			fi; \
-		done; \
-	done
-	@touch $(SHARED_LIBRARY)
 else # non-Darwin
 	@rm -f $(SUB_SHLOBJS)
 endif # Darwin

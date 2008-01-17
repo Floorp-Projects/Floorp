@@ -36,14 +36,15 @@ load 369438-2.svg
 load 371463-1.xhtml
 load 371563-1.xhtml
 load 375775-1.svg
-skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") load 380691-1.svg # crashes due to bug 407099
+load 380691-1.svg
 load 384391-1.xhtml
-skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") load 384637-1.svg # crashes due to bug 407099
+load 384637-1.svg
 load 384728-1.svg
 load 385246-1.svg
 load 385246-2.svg
 load 385840-1.svg # asserts (bug 385845)
 load 385852-1.svg
 load 386475-1.xhtml # asserts (bug 385554)
+load 387290-1.svg
 load 402408-1.svg
 load 409573-1.svg

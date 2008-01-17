@@ -1117,7 +1117,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
 
       // assumeDifferenceHint forces the parent's change to be also
       // applied to this frame, no matter what
-      // nsStyleStruct::CalcStyleDifference says. CalcStyleDifference
+      // nsStyleContext::CalcStyleDifference says. CalcStyleDifference
       // can't be trusted because it assumes any changes to the parent
       // style context provider will be automatically propagated to
       // the frame(s) with child style contexts.

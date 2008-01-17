@@ -42,19 +42,69 @@ interface nsIURI;
 interface nsIDOMNode;
 interface nsIDOMDocument;
 interface nsIDOMLoadStatus;
+interface nsIOfflineCacheUpdate;
 
-[scriptable, uuid(e0785ebb-b3a1-426a-a70e-be2b923e973e)]
+[scriptable, uuid(0aa38757-999c-44d6-bdb4-7dd32634fa83)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
+  /**
+   * There was an error updating the cache.
+   *
+   * @param aUpdate
+   *        The nsIOfflineCacheUpdate being processed.
+   */
+  void error(in nsIOfflineCacheUpdate aUpdate);
+
+  /**
+   * The manifest is being checked for updates
+   *
+   * @param aUpdate
+   *        The nsIOfflineCacheUpdate being processed.
+   */
+  void checking(in nsIOfflineCacheUpdate aUpdate);
+
+  /**
+   * No update was necessary.
+   *
+   * @param aUpdate
+   *        The nsIOfflineCacheUpdate being processed.
+   */
+  void noUpdate(in nsIOfflineCacheUpdate aUpdate);
+
+  /**
+   * Starting to download resources
+   *
+   * @param aUpdate
+   *        The nsIOfflineCacheUpdate being processed.
+   */
+  void downloading(in nsIOfflineCacheUpdate aUpdate);
+
+  /**
+   * An item has started downloading.
+   *
+   * @param aUpdate
+   *        The nsIOfflineCacheUpdate being processed.
+   * @param aItem
+   *        load status for the item that is being downloaded.
+   */
+  void itemStarted(in nsIOfflineCacheUpdate aUpdate,
+                   in nsIDOMLoadStatus aItem);
+
   /**
    * An item has finished loading.
    *
-   * @param aItem load status for the item that completed.
+   * @param aUpdate
+   *        The nsIOfflineCacheUpdate being processed.
+   * @param aItem
+   *         load status for the item that completed.
    */
-  void itemCompleted(in nsIDOMLoadStatus aItem);
+  void itemCompleted(in nsIOfflineCacheUpdate aUpdate,
+                     in nsIDOMLoadStatus aItem);
 };
 
 /**
- * An nsIOfflineCacheUpdate is used to update a domain's offline resources.
+ * An nsIOfflineCacheUpdate is used to update an application's offline
+ * resources.
+ *
  * It can be used to perform partial or complete updates.
  *
  * Each update object maintains a list of nsIDOMLoadStatus items for the
@@ -68,15 +118,32 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
 [scriptable, uuid(7dc06ede-1098-4384-b95e-65525ab254c9)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
+   * Fetch the status of the running update.  This will return a value
+   * defined in nsIDOMOfflineResourceList.
+   */
+  readonly attribute unsigned short status;
+
+  /**
+   * TRUE if the update is being used to add specific resources.
+   * FALSE if the complete cache update process is happening.
+   */
+  readonly attribute boolean partial;
+
+  /**
    * The domain being updated, and the domain that will own any URIs added
    * with this update.
    */
   readonly attribute ACString updateDomain;
 
   /**
-   * The URI that will own any URIs added by this update
+   * The manifest for the offline application being updated.
    */
-  readonly attribute ACString ownerURI;
+  readonly attribute nsIURI manifestURI;
+
+  /**
+   * TRUE if the cache update completed successfully.
+   */
+  readonly attribute boolean succeeded;
 
   /**
    * Initialize the update.
@@ -84,43 +151,29 @@ interface nsIOfflineCacheUpdate : nsISupports {
    * @param aPartialUpdate
    *        TRUE if the update should just update the URIs given to it,
    *        FALSE if all URLs for the owner domain should be added.
-   * @param aUpdateDomain
-   *        The domain which is being updated, and which will own any
-   *        URIs added.
-   * @param aOwnerURI
-   *        The owner URI for any URIs added.
-   * @param aReferrerURI
+   * @param aManifestURI
+   *        The manifest URI to be checked, or for partial updates the
+   *        manifest that should own resources that are added.
+   * @param aDocumentURI
    *        The page that is requesting the update.
    */
   void init(in boolean aPartialUpdate,
-            in ACString aUpdateDomain,
-            in ACString aOwnerURI,
-            in nsIURI aReferrerURI);
+            in nsIURI aManifestURI,
+            in nsIURI aDocumentURI);
 
   /**
    * Add a URI to the offline cache as part of the update.
    *
    * @param aURI
    *        The URI to add.
-   * @param aSource
-   *        The DOM node (<link> tag) associated with this node (for
-   *        implementing nsIDOMLoadStatus).
    */
-  void addURI(in nsIURI aURI, in nsIDOMNode aSource);
+  void addDynamicURI(in nsIURI aURI);
 
   /**
    * Add the update to the offline update queue.  An offline-cache-update-added
    * event will be sent to the observer service.
    */
   void schedule();
-
-  /**
-   * Request that the update be scheduled when a document finishes loading.
-   *
-   * @param aDocument
-   *        When this document finishes loading, the update will be scheduled.
-   */
-  void scheduleOnDocumentStop(in nsIDOMDocument aDocument);
 
   /**
    * Access to the list of items in the update.
@@ -149,11 +202,27 @@ interface nsIOfflineCacheUpdate : nsISupports {
   void removeObserver(in nsIOfflineCacheUpdateObserver aObserver);
 };
 
-[scriptable, uuid(f99ca10f-5cde-4966-b845-433f2921a201)]
+[scriptable, uuid(3abee04b-5bbb-4405-b659-35f780e38da0)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Access to the list of cache updates that have been scheduled.
      */
     readonly attribute unsigned long numUpdates;
     nsIOfflineCacheUpdate getUpdate(in unsigned long index);
+
+    /**
+     * Schedule a cache update for a given offline manifest.  If an
+     * existing update is scheduled or running, that update will be returned.
+     * Otherwise a new update will be scheduled.
+     */
+    nsIOfflineCacheUpdate scheduleUpdate(in nsIURI aManifestURI,
+                                         in nsIURI aDocumentURI);
+
+    /**
+     * Schedule a cache update for a manifest when the document finishes
+     * loading.
+     */
+    void scheduleOnDocumentStop(in nsIURI aManifestURI,
+                                in nsIURI aDocumentURI,
+                                in nsIDOMDocument aDocument);
 };

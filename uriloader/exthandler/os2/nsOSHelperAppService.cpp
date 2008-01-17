@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 sts=2 et cin: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -24,6 +24,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Boris Zbarsky <bzbarsky@mit.edu>  (Added mailcap and mime.types support)
  *   Peter Weilbacher <mozilla@Weilbacher.org>
+ *   Rich Walsh <dragtext@e-vertise.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -57,7 +58,15 @@
 #include "prenv.h"      // for PR_GetEnv()
 #include "nsMIMEInfoOS2.h"
 #include "nsAutoPtr.h"
+#include "nsIRwsService.h"
+#include "nsIStringBundle.h"
+#include "nsLocalHandlerApp.h"
 #include <stdlib.h>     // for system()
+
+//------------------------------------------------------------------------
+
+// reduces overhead by preventing calls to nsRws when it isn't present
+static PRBool sUseRws = PR_TRUE;
 
 static nsresult
 FindSemicolon(nsAString::const_iterator& aSemicolon_iter,
@@ -72,6 +81,8 @@ ParseMIMEType(const nsAString::const_iterator& aStart_iter,
 
 inline PRBool
 IsNetscapeFormat(const nsACString& aBuffer);
+
+//------------------------------------------------------------------------
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
@@ -1345,6 +1356,212 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
   return mimeInfo;
 }
 
+//------------------------------------------------------------------------
+
+// returns a localized string from unknownContentType.properties
+
+static nsresult
+GetNLSString(const PRUnichar *aKey, nsAString& result)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> bundleSvc =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleSvc->CreateBundle(
+    "chrome://mozapps/locale/downloads/unknownContentType.properties",
+    getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString string;
+  rv = bundle->GetStringFromName(aKey, getter_Copies(string));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  result.Assign(string);
+
+  return rv;
+}
+
+//------------------------------------------------------------------------
+
+// returns the handle of the WPS object associated with a file extension;
+// if RWS isn't being used or there's no association, returns zero;
+// also constructs a description of the handler based on available info
+
+static PRUint32
+WpsGetDefaultHandler(const char *aFileExt, nsAString& aDescription)
+{
+  aDescription.Truncate();
+
+  if (sUseRws) {
+    nsCOMPtr<nsIRwsService> rwsSvc(do_GetService("@mozilla.org/rwsos2;1"));
+    if (!rwsSvc)
+      sUseRws = PR_FALSE;
+    else {
+      PRUint32 handle;
+      // the handle may be zero if the WPS class provides the default handler
+      if (NS_SUCCEEDED(rwsSvc->HandlerFromExtension(aFileExt, &handle, aDescription)))
+        return handle;
+    }
+  }
+
+  // no RWS or RWS failed to return at least a description
+  if (NS_FAILED(GetNLSString(NS_LITERAL_STRING("wpsDefaultOS2").get(),
+                             aDescription)))
+    aDescription.Assign(NS_LITERAL_STRING("WPS default"));
+
+  return 0;
+}
+
+//------------------------------------------------------------------------
+
+// this constructs the system-default entry when neither mailcap nor
+// mime.types provided any info
+
+static void
+WpsMimeInfoFromExtension(const char *aFileExt, nsMIMEInfoOS2 *aMI)
+{
+  // this identifies whether the mimetype is a bogus
+  // "application/octet-stream" generated when no match
+  // could be found for this extension
+  PRBool exists;
+  aMI->ExtensionExists(nsDependentCString(aFileExt), &exists);
+
+  // get the default app's description and WPS handle (if any)
+  nsAutoString ustr;
+  PRUint32 handle = WpsGetDefaultHandler(aFileExt, ustr);
+  aMI->SetDefaultDescription(ustr);
+  aMI->SetDefaultAppHandle(handle);
+
+  // if the mimeinfo is bogus, change the mimetype & extensions list
+  if (!exists) {
+    nsCAutoString extLower;
+    nsCAutoString cstr;
+    ToLowerCase(nsDependentCString(aFileExt), extLower);
+    cstr.Assign(NS_LITERAL_CSTRING("application/x-") + extLower);
+    aMI->SetMIMEType(cstr);
+    aMI->SetFileExtensions(extLower);
+  }
+
+  // if the mimetype is valid, perhaps we can supply a description;
+  // if it's bogus, replace the description
+  if (exists)
+    aMI->GetDescription(ustr);
+  else
+    ustr.Truncate();
+
+  if (ustr.IsEmpty()) {
+    nsCAutoString extUpper;
+    ToUpperCase(nsDependentCString(aFileExt), extUpper);
+    CopyUTF8toUTF16(extUpper, ustr);
+
+    nsAutoString fileType;
+    if (NS_FAILED(GetNLSString(NS_LITERAL_STRING("fileType").get(), fileType)))
+      ustr.Assign(NS_LITERAL_STRING("%S file"));
+    int pos = -1;
+    if ((pos = fileType.Find("%S")) > -1);
+      fileType.Replace(pos, 2, ustr);
+    aMI->SetDescription(fileType);
+  }
+}
+
+//------------------------------------------------------------------------
+
+// this is an override of nsExternalHelperAppService's method;
+// after the parent's method has looked for a handler, add
+// an entry for the WPS's handler if there's room and one exists;
+// it will never replace entries from mailcap or mimetypes.rdf
+
+NS_IMETHODIMP
+nsOSHelperAppService::GetFromTypeAndExtension(const nsACString& aMIMEType,
+                                              const nsACString& aFileExt,
+                                              nsIMIMEInfo **_retval)
+{
+  // let the existing code do its thing
+  nsresult rv = nsExternalHelperAppService::GetFromTypeAndExtension(
+                                            aMIMEType, aFileExt, _retval);
+  if (!(*_retval))
+    return rv;
+
+  // this is needed for Get/SetDefaultApplication()
+  nsMIMEInfoOS2 *mi = static_cast<nsMIMEInfoOS2*>(*_retval);
+
+  // do lookups using the original extension if present;
+  // otherwise use the extension derived from the mimetype
+  nsCAutoString ext;
+  if (!aFileExt.IsEmpty())
+    ext.Assign(aFileExt);
+  else {
+    mi->GetPrimaryExtension(ext);
+    if (ext.IsEmpty())
+      return rv;
+  }
+
+  nsCOMPtr<nsIFile> defApp;
+  nsCOMPtr<nsIHandlerApp> prefApp;
+  mi->GetDefaultApplication(getter_AddRefs(defApp));
+  mi->GetPreferredApplicationHandler(getter_AddRefs(prefApp));
+  nsCOMPtr<nsILocalHandlerApp> locPrefApp = do_QueryInterface(prefApp, &rv);
+
+  // if neither mailcap nor mimetypes.rdf had an entry,
+  // create a default entry using the WPS handler
+  if (!defApp && !locPrefApp) {
+    WpsMimeInfoFromExtension(ext.get(), mi);
+    return rv;
+  }
+
+  PRBool gotPromoted = PR_FALSE;
+
+  // both mailcap & mimetypes.rdf have an entry;  if they're
+  // different, exit;  otherwise, clear the default entry
+  if (defApp && locPrefApp) {
+    PRBool sameFile;
+    nsCOMPtr<nsIFile> app;
+    rv = locPrefApp->GetExecutable(getter_AddRefs(app));
+    defApp->Equals(app, &sameFile);
+    if (!sameFile)
+      return rv;
+
+    defApp = 0;
+    mi->SetDefaultApplication(0);
+    mi->SetDefaultDescription(EmptyString());
+    gotPromoted = PR_TRUE;
+  }
+
+  nsAutoString description;
+
+  // mailcap has an entry but mimetypes.rdf doesn't;
+  // promote mailcap's entry to preferred
+  if (defApp && !locPrefApp) {
+    mi->GetDefaultDescription(description);
+    nsLocalHandlerApp *handlerApp(new nsLocalHandlerApp(description, defApp));
+    mi->SetPreferredApplicationHandler(handlerApp);
+    gotPromoted = PR_TRUE;
+  }
+
+  // if the former default app was promoted to preferred app,
+  // update preferred action if appropriate
+  if (gotPromoted) {
+    nsHandlerInfoAction action;
+    mi->GetPreferredAction(&action);
+    if (action == nsIMIMEInfo::useSystemDefault) {
+      mi->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+      mi->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+    }
+  }
+
+  // use the WPS default as the system default handler
+  PRUint32 handle = WpsGetDefaultHandler(ext.get(), description);
+  mi->SetDefaultDescription(description);
+  mi->SetDefaultApplication(0);
+  mi->SetDefaultAppHandle(handle);
+
+  return rv;
+}
+
+//------------------------------------------------------------------------
 
 already_AddRefed<nsIMIMEInfo>
 nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
