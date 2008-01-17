@@ -81,6 +81,11 @@ sub Execute {
             );
         }
 
+        if ($version eq 'nightly') {
+            $this->Log(msg => 'Skip TinderConfig tagging for nightly mode');
+            return;
+        }
+
         my @tagNames = ($productTag . '_RELEASE',
                         $productTag . '_RC' . $rc);
 
@@ -148,10 +153,15 @@ sub Verify {
             notAllowed => 'aborted',
         );
 
-        $this->CheckLog(
-            log => catfile($logDir, 'build_config-tag-' . $branch . '.log'),
-            checkFor => '^T',
-        );
+        # In nightly mode we don't do any tagging, so there's nothing to verify
+        if ($version eq 'nightly') {
+            $this->Log(msg => 'Skipping tag verification for nightly mode.');
+        } else {
+            $this->CheckLog(
+                log => catfile($logDir, 'build_config-tag-' . $branch . '.log'),
+                checkFor => '^T',
+            );
+        }
 
         foreach my $configFile ('mozconfig', 'tinder-config.pl') {
             $this->CheckLog(
