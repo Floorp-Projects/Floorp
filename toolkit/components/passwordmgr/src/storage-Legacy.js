@@ -582,6 +582,14 @@ LoginManagerStorage_legacy.prototype = {
         if (aLogin.hostname.indexOf("://") == -1) {
             var oldHost = aLogin.hostname;
 
+            // Check for a trailing port number, EG "site.com:80". If there's
+            // no port, it wasn't saved by the browser and is probably some
+            // arbitrary string picked by an extension.
+            if (!/:\d+$/.test(aLogin.hostname)) {
+                this.log("2E upgrade: no port, skipping " + aLogin.hostname);
+                return upgradedLogins;
+            }
+
             // Parse out "host:port".
             try {
                 // Small hack: Need a scheme for nsIURI, so just prepend http.
