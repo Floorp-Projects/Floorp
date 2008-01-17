@@ -675,7 +675,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
     if (!gtk_print_job_set_source_file(mPrintJob, mSpoolName.get(), NULL))
       return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
 
-    NS_ADDREF(mSpoolFile);
+    NS_ADDREF(mSpoolFile.get());
     gtk_print_job_send(mPrintJob, print_callback, mSpoolFile, ns_release_macro);
   } else {
     // Handle print-to-file ourselves for the benefit of embedders
