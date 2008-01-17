@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,19 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Pinkerton <pinkerton@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,19 +35,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsISupportsArray.idl"
 
+#ifndef nsIMenuRollup_h___
+#define nsIMenuRollup_h___
 
-[uuid(10C69225-2C5A-4948-8690-0BC589D145B4)]
-interface nsIMenuRollup : nsISupports
-{ 
-  // Walks up the menu parent chain of a submenu pulling out the widgets and
-  // places them into a list. Useful for determining if a click is in a
-  // parent menu.
-  nsISupportsArray GetSubmenuWidgetChain ( ) ;
+#include "nsISupports.h"
+#include "nsIWidget.h"
+#include "nsTArray.h"
 
-  // adjust the position of any open popups when the position or size of a
-  // window has been changed.
-  void AdjustPopupsOnWindowChange ( );
+#define NS_IMENUROLLUP_IID \
+  {0x2b65d177, 0xc3e4, 0x4564, \
+    { 0x8d, 0xed, 0x86, 0xd2, 0xfa, 0x2f, 0x65, 0x9a }}
+
+class nsIMenuRollup : public nsISupports {
+ public: 
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUROLLUP_IID)
+
+  /* void GetSubmenuWidgetChain (nsTArray<nsIWidget*>*); */
+  virtual void GetSubmenuWidgetChain(nsTArray<nsIWidget*> *_retval) = 0;
+
+  /* void AdjustPopupsOnWindowChange (); */
+  virtual void AdjustPopupsOnWindowChange(void) = 0;
+
 };
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuRollup, NS_IMENUROLLUP_IID)
+
+#endif

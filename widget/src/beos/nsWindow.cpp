@@ -885,28 +885,18 @@ nsWindow::DealWithPopups(uint32 methodID, nsPoint pos)
 			nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
 			if ( menuRollup ) 
 			{
-				nsCOMPtr<nsISupportsArray> widgetChain;
-				menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
-				if ( widgetChain ) 
+				nsAutoTArray<nsIWidget*, 5> widgetChain;
+				menuRollup->GetSubmenuWidgetChain(&widgetChain);
+
+				for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) 
 				{
-					PRUint32 count = 0;
-					widgetChain->Count(&count);
-					for ( PRUint32 i = 0; i < count; ++i ) 
+					nsIWidget* widget = widgetChain[i];
+					if ( nsWindow::EventIsInsideWindow((nsWindow*)widget, pos) ) 
 					{
-						nsCOMPtr<nsISupports> genericWidget;
-						widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
-						nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
-						if ( widget ) 
-						{
-							nsIWidget* temp = widget.get();
-							if ( nsWindow::EventIsInsideWindow((nsWindow*)temp, pos) ) 
-							{
-								rollup = PR_FALSE;
-								break;
-							}
-						}
-					} // foreach parent menu widget
-				} // if widgetChain
+						rollup = PR_FALSE;
+						break;
+					}
+				} // foreach parent menu widget
 			} // if rollup listener knows about menus
 		} // if rollup
 
