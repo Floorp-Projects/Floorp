@@ -4104,26 +4104,17 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
             nsCOMPtr<nsIMenuRollup> menuRollup;
             menuRollup = (do_QueryInterface(gRollupListener));
             if (menuRollup) {
-                nsCOMPtr<nsISupportsArray> widgetChain;
-                menuRollup->GetSubmenuWidgetChain(getter_AddRefs(widgetChain));
-                if (widgetChain) {
-                    PRUint32 count = 0;
-                    widgetChain->Count(&count);
-                    for (PRUint32 i=0; i<count; ++i) {
-                        nsCOMPtr<nsISupports> genericWidget;
-                        widgetChain->GetElementAt(i,
-                                                  getter_AddRefs(genericWidget));
-                        nsCOMPtr<nsIWidget> widget(do_QueryInterface(genericWidget));
-                        if (widget) {
-                            GdkWindow* currWindow =
-                                (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
-                            if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
-                                rollup = PR_FALSE;
-                                break;
-                            }
-                        }
-                    } // foreach parent menu widget
-                }
+                nsAutoTArray<nsIWidget*, 5> widgetChain;
+                menuRollup->GetSubmenuWidgetChain(&widgetChain);
+                for (PRUint32 i=0; i<widgetChain.Length(); ++i) {
+                    nsIWidget* widget =  widgetChain[i];
+                    GdkWindow* currWindow =
+                        (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
+                    if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
+                       rollup = PR_FALSE;
+                       break;
+                    }
+                } // foreach parent menu widget
             } // if rollup listener knows about menus
 
             // if we've determined that we should still rollup, do it.
