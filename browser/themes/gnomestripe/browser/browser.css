@@ -114,6 +114,15 @@ toolbarbutton.bookmark-item[open="true"] {
   display: none;
 }
 
+/* Hide icons for the container ("folder") items and use a dropmarker instead */
+.bookmark-item[container] > .toolbarbutton-menu-dropmarker {
+  display: -moz-box !important;
+}
+
+.bookmark-item[container] > .toolbarbutton-icon {
+  display: none !important;
+}
+
 .bookmarks-toolbar-customize {
   display: none;
   max-width: 15em !important;

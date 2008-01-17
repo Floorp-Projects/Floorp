@@ -466,6 +466,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_DROPDOWN_BUTTON:
     aGtkWidgetType = MOZ_GTK_DROPDOWN_ARROW;
     break;
+  case NS_THEME_TOOLBAR_BUTTON_DROPDOWN:
+    aGtkWidgetType = MOZ_GTK_TOOLBARBUTTON_ARROW;
+    break;
   case NS_THEME_CHECKBOX_CONTAINER:
     aGtkWidgetType = MOZ_GTK_CHECKBUTTON_CONTAINER;
     break;
@@ -1166,7 +1169,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_TOOLBAR:
   case NS_THEME_TOOLBAR_BUTTON:
   case NS_THEME_TOOLBAR_DUAL_BUTTON: // so we can override the border with 0
-    // case NS_THEME_TOOLBAR_DUAL_BUTTON_DROPDOWN:
+  case NS_THEME_TOOLBAR_BUTTON_DROPDOWN:
   case NS_THEME_TOOLBAR_SEPARATOR:
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_STATUSBAR:
