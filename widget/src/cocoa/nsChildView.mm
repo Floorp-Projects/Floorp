@@ -2457,16 +2457,14 @@ NSEvent* gLastDragEvent = nil;
       if (menuRollup) {
         nsAutoTArray<nsIWidget*, 5> widgetChain;
         menuRollup->GetSubmenuWidgetChain(&widgetChain);
-        if (widgetChain) {
-          for (PRUint32 i = 0; i < widgetChain.Length(); i++) {
-            nsIWidget* widget = widgetChain[i];
-            NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
-            if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
-              rollup = PR_FALSE;
-              break;
-            }
-          } // foreach parent menu widget
-        }
+        for (PRUint32 i = 0; i < widgetChain.Length(); i++) {
+          nsIWidget* widget = widgetChain[i];
+          NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
+          if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
+            rollup = PR_FALSE;
+            break;
+          }
+        } // foreach parent menu widget
       } // if rollup listener knows about menus
 
       // if we've determined that we should still rollup, do it.
