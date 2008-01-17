@@ -1431,6 +1431,31 @@ moz_gtk_option_menu_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_downarrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                        GdkRectangle* cliprect, GtkWidgetState* state)
+{
+    GtkStyle* style;
+    GtkStateType state_type = ConvertGtkState(state);
+    GtkShadowType shadow_type = state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+    GdkRectangle arrow_rect;
+
+    ensure_arrow_widget();
+    style = gArrowWidget->style;
+
+    arrow_rect.x = rect->x + 1 + XTHICKNESS(style);
+    arrow_rect.y = rect->y + 1 + YTHICKNESS(style);
+    arrow_rect.width = MAX(1, rect->width - (arrow_rect.x - rect->x) * 2);
+    arrow_rect.height = MAX(1, rect->height - (arrow_rect.y - rect->y) * 2);
+
+    TSOffsetStyleGCs(style, arrow_rect.x, arrow_rect.y);
+    gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
+                    gArrowWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                    arrow_rect.x, arrow_rect.y, arrow_rect.width, arrow_rect.height);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
                              GdkRectangle* cliprect, GtkWidgetState* state,
                              GtkTextDirection direction)
@@ -2384,6 +2409,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_WINDOW:
     case MOZ_GTK_RESIZER:
     case MOZ_GTK_MENUARROW:
+    case MOZ_GTK_TOOLBARBUTTON_ARROW:
         *left = *top = *right = *bottom = 0;
         return MOZ_GTK_SUCCESS;
     default:
@@ -2687,6 +2713,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
     case MOZ_GTK_MENUARROW:
         return moz_gtk_menu_arrow_paint(drawable, rect, cliprect, state,
                                         direction);
+        break;
+    case MOZ_GTK_TOOLBARBUTTON_ARROW:
+        return moz_gtk_downarrow_paint(drawable, rect, cliprect, state);
         break;
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:

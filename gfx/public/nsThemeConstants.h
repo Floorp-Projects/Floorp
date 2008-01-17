@@ -32,8 +32,8 @@
 // A dual toolbar button (e.g., a Back button with a dropdown)
 #define NS_THEME_TOOLBAR_DUAL_BUTTON                       14
 
-// The dropdown portion of a dual toolbar button
-#define NS_THEME_TOOLBAR_DUAL_BUTTON_DROPDOWN              15
+// The dropdown portion of a toolbar button
+#define NS_THEME_TOOLBAR_BUTTON_DROPDOWN                   15
 
 // A separator.  Can be horizontal or vertical.
 #define NS_THEME_TOOLBAR_SEPARATOR                         16
