@@ -323,8 +323,10 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIROLLUPLISTENER
-  NS_DECL_NSIMENUROLLUP
   NS_DECL_NSITIMERCALLBACK
+
+  virtual void GetSubmenuWidgetChain(nsTArray<nsIWidget*> *_retval);
+  virtual void AdjustPopupsOnWindowChange(void);
 
   static nsXULPopupManager* sInstance;
 

@@ -60,6 +60,7 @@ EXPORTS		= \
 		nsIPluginWidget.h \
 		nsINativeKeyBindings.h \
 		nsIDeviceContextSpec.h \
+		nsIMenuRollup.h \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -100,7 +101,6 @@ XPIDLSRCS	= \
 		nsIClipboardHelper.idl \
 		nsIClipboardOwner.idl \
 		nsIRollupListener.idl \
-		nsIMenuRollup.idl \
 		nsIBaseWindow.idl \
 		nsIBidiKeyboard.idl \
 		nsIFullScreen.idl \
