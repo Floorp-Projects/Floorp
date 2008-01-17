@@ -251,6 +251,12 @@ select > option {
 }
 
 option:checked {
+  background-color: -moz-cellhighlight !important;
+  color: -moz-cellhighlighttext !important;
+}
+
+select:focus > option:checked,
+select:focus > optgroup > option:checked {
   background-color: Highlight ! important;
   color: HighlightText ! important;
 }
