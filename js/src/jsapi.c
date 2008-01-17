@@ -3336,6 +3336,7 @@ JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name,
 {
     JSAtom *atom;
 
+    CHECK_REQUEST(cx);
     atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
         return JS_FALSE;
@@ -3543,6 +3544,7 @@ JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj,
 {
     JSAtom *atom;
 
+    CHECK_REQUEST(cx);
     atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
     if (!atom)
         return JS_FALSE;
