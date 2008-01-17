@@ -23,7 +23,6 @@
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Ken Herron <kherron+mozilla@fmailbox.com>
  *   Julien Lafon <julien.lafon@gmail.com>
- *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -67,15 +66,11 @@
 #include "nsPaperPS.h"  /* Paper size list */
 #endif /* USE_POSTSCRIPT */
 
+#include "nsPrintJobFactoryGTK.h"
 #include "nsIPrintJobGTK.h"
-#include "nsIPrintSettingsGTK.h"
 
 #include "nsIFileStreams.h"
 #include "nsILocalFile.h"
-
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 /* Ensure that the result is always equal to either PR_TRUE or PR_FALSE */
 #define MAKE_PR_BOOL(val) ((val)?(PR_TRUE):(PR_FALSE))
@@ -387,11 +382,13 @@ nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()\n"));
+  mPrintJob = nsnull;
 }
 
 nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()\n"));
+  delete mPrintJob;
 }
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
@@ -413,30 +410,18 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   height /= 20;
 
   DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", path, width, height));
-  nsresult rv;
 
-  // Spool file. Use Glib's temporary file function since we're
-  // already dependent on the gtk software stack.
-  gchar *buf;
-  gint fd = g_file_open_tmp("XXXXXX.tmp", &buf, nsnull);
-  if (-1 == fd)
-    return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
-  close(fd);
+  nsresult rv = nsPrintJobFactoryGTK::CreatePrintJob(this, mPrintJob);
+  if (NS_FAILED(rv))
+    return rv;
 
-  rv = NS_NewNativeLocalFile(nsDependentCString(buf), PR_FALSE,
-                             getter_AddRefs(mSpoolFile));
-  if (NS_FAILED(rv)) {
-    unlink(buf);
-    return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
-  }
-
-  mSpoolName = buf;
-  g_free(buf);
-
-  mSpoolFile->SetPermissions(0600);
+  nsCOMPtr<nsILocalFile> file;
+  rv = mPrintJob->GetSpoolFile(getter_AddRefs(file));
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-  rv = stream->Init(mSpoolFile, -1, -1, 0);
+  rv = stream->Init(file, -1, -1, 0);
   if (NS_FAILED(rv))
     return rv;
 
@@ -444,31 +429,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   mPrintSettings->GetOutputFormat(&format);
 
   nsRefPtr<gfxASurface> surface;
-  gfxSize surfaceSize(width, height);
-
-  // Determine the real format with some GTK magic
-  if (format == nsIPrintSettings::kOutputFormatNative) {
-    nsCOMPtr<nsIPrintSettingsGTK> printSettingsGTK(do_QueryInterface(mPrintSettings));
-    GtkPrintSettings* theSettings;
-    printSettingsGTK->GetGtkPrintSettings(&theSettings);
-    const gchar* fmtGTK = gtk_print_settings_get(theSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT);
-    if (!fmtGTK) {
-      // Likely not print-to-file, check printer's capabilities
-      GtkPrinter* thePrinter;
-      printSettingsGTK->GetGtkPrinter(&thePrinter);
-      format = (gtk_printer_accepts_pdf(thePrinter)) ? nsIPrintSettings::kOutputFormatPDF
-                                                     : nsIPrintSettings::kOutputFormatPS;
-    } else if (nsDependentCString(fmtGTK).EqualsIgnoreCase("pdf")) {
-        format = nsIPrintSettings::kOutputFormatPDF;
-    } else {
-        format = nsIPrintSettings::kOutputFormatPS;
-    }
-  }
-
-  if (format == nsIPrintSettings::kOutputFormatPDF) {
-    surface = new gfxPDFSurface(stream, surfaceSize);
+  if (nsIPrintSettings::kOutputFormatPDF == format) {
+    surface = new gfxPDFSurface(stream, gfxSize(width, height));
   } else {
-    surface = new gfxPSSurface(stream, surfaceSize);
+    surface = new gfxPSSurface(stream, gfxSize(width, height));
   }
 
   if (!surface)
@@ -489,28 +453,104 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
                                            PRBool aIsPrintPreview)
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::Init(aPS=%p)\n", aPS));
-
-  if (gtk_major_version < 2 ||
-      (gtk_major_version == 2 && gtk_minor_version < 10))
-    return NS_ERROR_NOT_AVAILABLE;  // I'm so sorry bz
+  nsresult rv = NS_ERROR_FAILURE;
 
   mPrintSettings = aPS;
-  mIsPPreview = aIsPrintPreview;
 
-  // This is only set by embedders
-  PRBool toFile;
-  aPS->GetPrintToFile(&toFile);
-  mToPrinter = !toFile;
+  // if there is a current selection then enable the "Selection" radio button
+  rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  nsCOMPtr<nsIPrintSettingsGTK> printSettingsGTK(do_QueryInterface(aPS));
-  if (!printSettingsGTK)
-    return NS_ERROR_NO_INTERFACE;
+  GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  printSettingsGTK->GetGtkPrinter(&mGtkPrinter);
-  printSettingsGTK->GetGtkPrintSettings(&mGtkPrintSettings);
-  printSettingsGTK->GetGtkPageSetup(&mGtkPageSetup);
+  if (aPS) {
+    PRBool     reversed       = PR_FALSE;
+    PRBool     color          = PR_FALSE;
+    PRBool     tofile         = PR_FALSE;
+    PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
+    PRInt32    orientation    = NS_PORTRAIT;
+    PRInt32    fromPage       = 1;
+    PRInt32    toPage         = 1;
+    PRUnichar *command        = nsnull;
+    PRInt32    copies         = 1;
+    PRUnichar *printer        = nsnull;
+    PRUnichar *papername      = nsnull;
+    PRUnichar *plexname       = nsnull;
+    PRUnichar *resolutionname = nsnull;
+    PRUnichar *colorspace     = nsnull;
+    PRBool     downloadfonts  = PR_TRUE;
+    PRUnichar *printfile      = nsnull;
+    double     dleft          = 0.5;
+    double     dright         = 0.5;
+    double     dtop           = 0.5;
+    double     dbottom        = 0.5; 
 
-  return NS_OK;
+    aPS->GetPrinterName(&printer);
+    aPS->GetPrintReversed(&reversed);
+    aPS->GetPrintInColor(&color);
+    aPS->GetPaperName(&papername);
+    aPS->GetResolutionName(&resolutionname);
+    aPS->GetColorspace(&colorspace);
+    aPS->GetDownloadFonts(&downloadfonts);
+    aPS->GetPlexName(&plexname);
+    aPS->GetOrientation(&orientation);
+    aPS->GetPrintCommand(&command);
+    aPS->GetPrintRange(&printRange);
+    aPS->GetToFileName(&printfile);
+    aPS->GetPrintToFile(&tofile);
+    aPS->GetStartPageRange(&fromPage);
+    aPS->GetEndPageRange(&toPage);
+    aPS->GetNumCopies(&copies);
+    aPS->GetMarginTop(&dtop);
+    aPS->GetMarginLeft(&dleft);
+    aPS->GetMarginBottom(&dbottom);
+    aPS->GetMarginRight(&dright);
+
+    if (printfile)
+      PL_strncpyz(mPath,      NS_ConvertUTF16toUTF8(printfile).get(), sizeof(mPath));
+    if (command)
+      PL_strncpyz(mCommand,   NS_ConvertUTF16toUTF8(command).get(),   sizeof(mCommand));  
+    if (printer) 
+      PL_strncpyz(mPrinter,   NS_ConvertUTF16toUTF8(printer).get(),   sizeof(mPrinter));        
+    if (papername) 
+      PL_strncpyz(mPaperName, NS_ConvertUTF16toUTF8(papername).get(), sizeof(mPaperName));  
+    if (plexname) 
+      PL_strncpyz(mPlexName,  NS_ConvertUTF16toUTF8(plexname).get(),  sizeof(mPlexName));  
+    if (resolutionname) 
+      PL_strncpyz(mResolutionName, NS_ConvertUTF16toUTF8(resolutionname).get(), sizeof(mResolutionName));  
+    if (colorspace) 
+      PL_strncpyz(mColorspace, NS_ConvertUTF16toUTF8(colorspace).get(), sizeof(mColorspace));  
+
+    DO_PR_DEBUG_LOG(("margins:   %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright));
+    DO_PR_DEBUG_LOG(("printRange %d\n",   printRange));
+    DO_PR_DEBUG_LOG(("fromPage   %d\n",   fromPage));
+    DO_PR_DEBUG_LOG(("toPage     %d\n",   toPage));
+    DO_PR_DEBUG_LOG(("tofile     %d\n",   tofile));
+    DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUTF16toUTF8(printfile).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUTF16toUTF8(command).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUTF16toUTF8(printer).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("papername  '%s'\n", papername? NS_ConvertUTF16toUTF8(papername).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("plexname   '%s'\n", plexname? NS_ConvertUTF16toUTF8(plexname).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("resolution '%s'\n", resolutionname? NS_ConvertUTF16toUTF8(resolutionname).get():"<NULL>"));
+    DO_PR_DEBUG_LOG(("colorspace '%s'\n", colorspace? NS_ConvertUTF16toUTF8(colorspace).get():"<NULL>"));
+
+    mTop         = dtop;
+    mBottom      = dbottom;
+    mLeft        = dleft;
+    mRight       = dright;
+    mFpf         = !reversed;
+    mDownloadFonts = downloadfonts;
+    mGrayscale   = !color;
+    mOrientation = orientation;
+    mToPrinter   = !tofile;
+    mCopies      = copies;
+    mIsPPreview  = aIsPrintPreview;
+    mCancel      = PR_FALSE;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetToPrinter(PRBool &aToPrinter)
@@ -648,64 +688,14 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::ClosePrintManager()
   return NS_OK;
 }
 
-static void
-print_callback(GtkPrintJob *aJob, gpointer aData, GError *aError) {
-  g_object_unref(aJob);
-  ((nsILocalFile*) aData)->Remove(PR_FALSE);
-}
-
-static void
-ns_release_macro(gpointer aData) {
-  nsILocalFile* spoolFile = (nsILocalFile*) aData;
-  NS_RELEASE(spoolFile);
-}
-
-NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(PRUnichar * aTitle, PRUnichar * aPrintToFileName,
-                                                    PRInt32 aStartPage, PRInt32 aEndPage)
+NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(PRUnichar * aTitle, PRUnichar * aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
 {
-  if (mToPrinter)
-    mPrintJob = gtk_print_job_new(NS_ConvertUTF16toUTF8(aTitle).get(), mGtkPrinter,
-                                  mGtkPrintSettings, mGtkPageSetup);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
 {
-  if (mToPrinter) {
-    if (!gtk_print_job_set_source_file(mPrintJob, mSpoolName.get(), NULL))
-      return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
-
-    NS_ADDREF(mSpoolFile.get());
-    gtk_print_job_send(mPrintJob, print_callback, mSpoolFile, ns_release_macro);
-  } else {
-    // Handle print-to-file ourselves for the benefit of embedders
-    nsXPIDLString targetPath;
-    nsCOMPtr<nsILocalFile> destFile;
-    mPrintSettings->GetToFileName(getter_Copies(targetPath));
-
-    nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(targetPath),
-                                        PR_FALSE, getter_AddRefs(destFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString destLeafName;
-    rv = destFile->GetLeafName(destLeafName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> destDir;
-    rv = destFile->GetParent(getter_AddRefs(destDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mSpoolFile->MoveTo(destDir, destLeafName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // This is the standard way to get the UNIX umask. Ugh.
-    mode_t mask = umask(0);
-    umask(mask);
-    // If you're not familiar with umasks, they contain the bits of what NOT to set in the permissions
-    // (thats because files and directories have different numbers of bits for their permissions)
-    destFile->SetPermissions(0666 & ~(mask));
-  }
-  return NS_OK;
+  return mPrintJob->Submit();
 }
 
 /* Get prefs for printer
