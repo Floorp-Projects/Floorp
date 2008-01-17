@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,37 +35,42 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsPrintOptionsGTK.h"
-#include "nsPrintSettingsGTK.h"
 
+#include "nsISupports.idl"
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsWin.h
- *	@update 6/21/00 dwc
+%{ C++
+#include <gtk/gtk.h>
+#include <gtk/gtkprinter.h>
+%}
+
+/**
+ * Native types
  */
-nsPrintOptionsGTK::nsPrintOptionsGTK()
-{
+[ptr] native nsGTKPageSetup(GtkPageSetup);
+[ptr] native nsGTKPrintSettings(GtkPrintSettings);
+[ptr] native nsGTKPrinter(GtkPrinter);
 
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
+/**
+ * Simplified PrintSettings for GTK interface 
  */
-nsPrintOptionsGTK::~nsPrintOptionsGTK()
+[scriptable, uuid(7a1c986e-c690-4eca-86ca-f17df74a6d35)]
+
+interface nsIPrintSettingsGTK : nsISupports
 {
-}
+  /**
+   * Gets a GtkPageSetup, GtkPrintSettings and GtkPrinter. The Getter does NOT Addref the Gtk objects, the Setter does.
+   * You will get an internal reference rather than a copy, so do not free it, and only modify in cases where the
+   * nsIPrintSettings Getter/Setter functions lack.
+   */
+  [noscript] attribute nsGTKPageSetup gtkPageSetup;
 
-/* nsIPrintSettings CreatePrintSettings (); */
-nsresult nsPrintOptionsGTK::_CreatePrintSettings(nsIPrintSettings **_retval)
-{
-  *_retval = nsnull;
-  nsPrintSettingsGTK* printSettings = new nsPrintSettingsGTK(); // does not initially ref count
-  NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
+  [noscript] attribute nsGTKPrintSettings gtkPrintSettings;
 
-  NS_ADDREF(*_retval = printSettings); // ref count
+  [noscript] attribute nsGTKPrinter gtkPrinter;
 
-  return NS_OK;
-}
-
+  /**
+   * If TRUE, the GtkPrintSettings value for print ranges will be ignored and print selection will be used instead.
+   */
+  [noscript] attribute boolean forcePrintSelectionOnly;
+};
 
