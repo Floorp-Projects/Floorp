@@ -795,7 +795,8 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 #ifdef DEBUG_CAPS_CheckPropertyAccessImpl
                 printf("sameOrigin ");
 #endif
-                nsCOMPtr<nsIPrincipal> objectPrincipal;
+                nsCOMPtr<nsIPrincipal> principalHolder;
+                nsIPrincipal *objectPrincipal;
                 if(aJSObject)
                 {
                     objectPrincipal = doGetObjectPrincipal(cx, aJSObject);
@@ -805,8 +806,10 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 else if(aTargetURI)
                 {
                     if (NS_FAILED(GetCodebasePrincipal(
-                          aTargetURI, getter_AddRefs(objectPrincipal))))
+                          aTargetURI, getter_AddRefs(principalHolder))))
                         return NS_ERROR_FAILURE;
+
+                    objectPrincipal = principalHolder;
                 }
                 else
                 {
@@ -842,7 +845,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
     if (NS_SUCCEEDED(rv) && classInfoData.IsContentNode())
     {
         // No access to anonymous content from the web!  (bug 164086)
-        nsCOMPtr<nsIContent> content(do_QueryInterface(aObj));
+        nsIContent *content = static_cast<nsIContent*>(aObj);
         NS_ASSERTION(content, "classinfo had CONTENT_NODE set but node did not"
                               "implement nsIContent!  Fasten your seat belt.");
         if (content->IsNativeAnonymous()) {
