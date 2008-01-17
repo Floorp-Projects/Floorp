@@ -7466,7 +7466,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
           rv = SVGSwitchProcessChildren(aState, aContent, newFrame,
                                         childItems);
         } else {
-          rv = ProcessChildren(aState, aContent, newFrame, PR_TRUE, childItems,
+          rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE, childItems,
                                PR_FALSE);
         }
 
