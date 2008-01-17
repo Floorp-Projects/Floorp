@@ -374,6 +374,20 @@ LoginTest.initStorage(storage, INDIR, "signons-2d-09.txt");
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
 
 
+/* ========== 20 ========== */
+testnum++;
+testdesc = "Initialize with signons-2d-10.txt";
+// Extensions like the eBay Companion just use an arbitrary string for the
+// hostname. We don't want to change the format of these logins.
+
+testuser1.init("eBay.companion.paypal.guard", "", null,
+               "p", "paypalpass", "", "");
+testuser2.init("eBay.companion.ebay.guard", "", null,
+               "p", "ebaypass", "", "");
+LoginTest.initStorage(storage, INDIR, "signons-2d-10.txt");
+LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+
+
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;
 }
