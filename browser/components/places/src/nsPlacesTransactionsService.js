@@ -806,7 +806,13 @@ placesSortFolderByNameTransactions.prototype = {
     var newOrder = []; 
     var preSep = []; // temporary array for sorting each group of items
     var sortingMethod =
-      function (a, b) { return a.title.localeCompare(b.title); };
+      function (a, b) {
+        if (PlacesUtils.nodeIsContainer(a) && !PlacesUtils.nodeIsContainer(b))
+          return -1;
+        if (!PlacesUtils.nodeIsContainer(a) && PlacesUtils.nodeIsContainer(b))
+          return 1;
+        return a.title.localeCompare(b.title);
+      };
 
     for (var i = 0; i < count; ++i) {
       var item = contents.getChild(i);

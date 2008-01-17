@@ -75,15 +75,13 @@ nsSVGGraphicElement::nsSVGGraphicElement(nsINodeInfo *aNodeInfo)
 /* readonly attribute nsIDOMSVGElement nearestViewportElement; */
 NS_IMETHODIMP nsSVGGraphicElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
 {
-  NS_NOTYETIMPLEMENTED("nsSVGGraphicElement::GetNearestViewportElement");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsSVGUtils::GetNearestViewportElement(this, aNearestViewportElement);
 }
 
 /* readonly attribute nsIDOMSVGElement farthestViewportElement; */
 NS_IMETHODIMP nsSVGGraphicElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewportElement)
 {
-  NS_NOTYETIMPLEMENTED("nsSVGGraphicElement::GetFarthestViewportElement");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsSVGUtils::GetFarthestViewportElement(this, aFarthestViewportElement);
 }
 
 /* nsIDOMSVGRect getBBox (); */

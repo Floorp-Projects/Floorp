@@ -83,15 +83,14 @@ nsGridLayout2::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
   return rv;
 }
 
-NS_IMETHODIMP
+void
 nsGridLayout2::IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
-  nsresult rv = nsStackLayout::IntrinsicWidthsDirty(aBox, aBoxLayoutState);
+  nsStackLayout::IntrinsicWidthsDirty(aBox, aBoxLayoutState);
   // XXXldb We really don't need to do all the work that NeedsRebuild
   // does; we just need to mark intrinsic widths dirty on the
   // (row/column)(s/-groups).
   mGrid.NeedsRebuild(aBoxLayoutState);
-  return rv;
 }
 
 nsGrid*
@@ -123,12 +122,10 @@ nsGridLayout2::AddWidth(nsSize& aSize, nscoord aSize2, PRBool aIsHorizontal)
   }
 }
 
-NS_IMETHODIMP
-nsGridLayout2::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsGridLayout2::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsresult rv = nsStackLayout::GetMinSize(aBox, aState, aSize); 
-  if (NS_FAILED(rv))
-    return rv;
+  nsSize minSize = nsStackLayout::GetMinSize(aBox, aState); 
 
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
@@ -158,18 +155,16 @@ nsGridLayout2::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 
     AddMargin(aBox, total);
     AddOffset(aState, aBox, total);
-    AddLargestSize(aSize, total);
+    AddLargestSize(minSize, total);
   }
   
-  return rv;
+  return minSize;
 }
 
-NS_IMETHODIMP
-nsGridLayout2::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsGridLayout2::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsresult rv = nsStackLayout::GetPrefSize(aBox, aState, aSize); 
-  if (NS_FAILED(rv))
-    return rv;
+  nsSize pref = nsStackLayout::GetPrefSize(aBox, aState); 
 
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
@@ -199,18 +194,16 @@ nsGridLayout2::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize
 
     AddMargin(aBox, total);
     AddOffset(aState, aBox, total);
-    AddLargestSize(aSize, total);
+    AddLargestSize(pref, total);
   }
 
-  return rv;
+  return pref;
 }
 
-NS_IMETHODIMP
-nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsresult rv = nsStackLayout::GetMaxSize(aBox, aState, aSize); 
-   if (NS_FAILED(rv))
-    return rv;
+  nsSize maxSize = nsStackLayout::GetMaxSize(aBox, aState); 
 
   // if there are no <rows> tags that will sum up our columns,
   // sum up our columns here.
@@ -242,10 +235,10 @@ nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 
     AddMargin(aBox, total);
     AddOffset(aState, aBox, total);
-    AddSmallestSize(aSize, total);
+    AddSmallestSize(maxSize, total);
   }
 
-  return rv;
+  return maxSize;
 }
 
 PRInt32
@@ -265,36 +258,32 @@ nsGridLayout2::GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal)
   return margin;
 }
 
-NS_IMETHODIMP
+void
 nsGridLayout2::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                                 nsIBox* aPrevBox, nsIBox* aChildList)
 {
   mGrid.NeedsRebuild(aState);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsGridLayout2::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
                                 nsIBox* aChildList)
 {
   mGrid.NeedsRebuild(aState);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsGridLayout2::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState,
                                nsIBox* aChildList)
 {
   mGrid.NeedsRebuild(aState);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsGridLayout2::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState,
                            nsIBox* aChildList)
 {
   mGrid.NeedsRebuild(aState);
-  return NS_OK;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsGridLayout2, nsStackLayout)

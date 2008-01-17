@@ -64,16 +64,16 @@
 #include "nsImageLoadingContent.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
-#if defined(XP_WIN) && !defined(NOUSER)
-// Prevent Windows redefining LoadImage
-#define NOUSER
-#endif
 #include "nsThebesImage.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGFilterElement.h"
+#if defined(XP_WIN)
+// Prevent Windows redefining LoadImage
+#undef LoadImage
+#endif
 
 //--------------------Filter Resource-----------------------
 /**

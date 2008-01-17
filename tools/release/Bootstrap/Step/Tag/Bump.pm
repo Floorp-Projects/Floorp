@@ -24,7 +24,7 @@ sub Execute {
     my $productTag = $config->Get(var => 'productTag');
     my $branchTag = $config->Get(var => 'branchTag');
     my $pullDate = $config->Get(var => 'pullDate');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $rc = int($config->Get(var => 'rc'));
     my $milestone = $config->Exists(var => 'milestone') ? 
      $config->Get(var => 'milestone') : undef;

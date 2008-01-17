@@ -1451,7 +1451,14 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         fun->u.i.script = script;
         if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
+        if (fun->flags & JSFUN_HEAVYWEIGHT)
+            ++cg->treeContext.maxScopeDepth;
     }
+
+#ifdef JS_SCOPE_DEPTH_METER
+    JS_BASIC_STATS_ACCUM(&cx->runtime->lexicalScopeDepthStats,
+                         cg->treeContext.maxScopeDepth);
+#endif
 
     /* Tell the debugger about this compiled script. */
     js_CallNewScriptHook(cx, script, fun);

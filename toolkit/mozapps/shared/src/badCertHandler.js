@@ -76,6 +76,16 @@ BadCertHandler.prototype = {
     checkCert(oldChannel);
   },
 
+  // Suppress any certificate errors
+  notifyCertProblem: function(socketInfo, status, targetSite) {
+    return true;
+  },
+
+  // Suppress any ssl errors
+  notifySSLError: function(socketInfo, error, targetSite) {
+    return true;
+  },
+
   // nsIInterfaceRequestor
   getInterface: function(iid) {
     return this.QueryInterface(iid);
@@ -84,6 +94,8 @@ BadCertHandler.prototype = {
   // nsISupports
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIChannelEventSink) &&
+        !iid.equals(Components.interfaces.nsIBadCertListener2) &&
+        !iid.equals(Components.interfaces.nsISSLErrorListener) &&
         !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;

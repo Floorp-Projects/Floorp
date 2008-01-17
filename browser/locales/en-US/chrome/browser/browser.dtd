@@ -55,8 +55,8 @@
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "B">
-<!ENTITY addCurPageAsCmd.label "Bookmark This Page…">
-<!ENTITY addCurPageAsCmd.commandkey "d">
+<!ENTITY bookmarkThisPageCmd.label "Bookmark This Page">
+<!ENTITY bookmarkThisPageCmd.commandkey "d">
 <!ENTITY subscribeToPageMenupopup.label "Subscribe to This Page">
 <!ENTITY subscribeToPageMenuitem.label "Subscribe to This Page…">
 <!ENTITY addCurPagesCmd.label "Bookmark All Tabs…">
@@ -173,6 +173,7 @@
 
 <!ENTITY historyHomeCmd.label "Home">
 <!ENTITY showAllHistoryCmd.label "Show All History…">
+<!ENTITY showAllHistoryCmd.commandkey "H">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.accesskey             "d">

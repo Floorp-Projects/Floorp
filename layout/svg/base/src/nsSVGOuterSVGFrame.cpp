@@ -156,10 +156,13 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
 }
 
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
-    : nsSVGOuterSVGFrameBase(aContext),
-      mRedrawSuspendCount(0),
-      mFullZoom(0),
-      mViewportInitialized(PR_FALSE)
+    : nsSVGOuterSVGFrameBase(aContext)
+    ,  mRedrawSuspendCount(0)
+    , mFullZoom(0)
+    , mViewportInitialized(PR_FALSE)
+#ifdef XP_MACOSX
+    , mEnableBitmapFallback(PR_FALSE)
+#endif
 {
 }
 
@@ -580,10 +583,12 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
 
   nsSVGRenderState ctx(&aRenderingContext);
 
-  // nquartz fallback paths, which svg tends to trigger, need
-  // a non-window context target
 #ifdef XP_MACOSX
-  ctx.GetGfxContext()->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+  if (mEnableBitmapFallback) {
+    // nquartz fallback paths, which svg tends to trigger, need
+    // a non-window context target
+    ctx.GetGfxContext()->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+  }
 #endif
 
   // paint children:
@@ -592,10 +597,31 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
     nsSVGUtils::PaintChildWithEffects(&ctx, &dirtyRect, kid);
   }
 
-// show the surface we pushed earlier for nquartz fallbacks
 #ifdef XP_MACOSX
-  ctx.GetGfxContext()->PopGroupToSource();
-  ctx.GetGfxContext()->Paint();
+  if (mEnableBitmapFallback) {
+    // show the surface we pushed earlier for fallbacks
+    ctx.GetGfxContext()->PopGroupToSource();
+    ctx.GetGfxContext()->Paint();
+  }
+  
+  if (ctx.GetGfxContext()->HasError() && !mEnableBitmapFallback) {
+    mEnableBitmapFallback = PR_TRUE;
+    // It's not really clear what area to invalidate here. We might have
+    // stuffed up rendering for the entire window in this paint pass,
+    // so we can't just invalidate our own rect. Invalidate everything
+    // in sight.
+    // This won't work for printing, by the way, but failure to print the
+    // odd document is probably no worse than printing horribly for all
+    // documents. Better to fix things so we don't need fallback.
+    nsIFrame* frame = this;
+    while (PR_TRUE) {
+      nsIFrame* next = nsLayoutUtils::GetCrossDocParentFrame(frame);
+      if (!next)
+        break;
+      frame = next;
+    }
+    frame->Invalidate(nsRect(nsPoint(0, 0), frame->GetSize()));
+  }
 #endif
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)

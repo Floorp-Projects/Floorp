@@ -2,6 +2,14 @@ searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
 }
 
+tabbrowser {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
+}
+
+toolbar[printpreview="true"] {
+  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
@@ -13,11 +21,6 @@ searchbar {
 
 #PopupAutoCompleteRichResult {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
-}
-
-/* ::::: print preview toolbar ::::: */
-toolbar[printpreview="true"] {
-  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
 
 menuitem.spell-suggestion {
@@ -37,48 +40,18 @@ window[sizemode="maximized"] #content .notification-inner {
   border-right: 0px !important;
 }
 
-tabbrowser {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
-}
-
-.tabbrowser-tabs {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
-}
-
-%ifdef XP_MACOSX
-.tabbrowser-arrowscrollbox {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-arrowscrollbox");
-}
-%endif
-
-.tabs-alltabs-popup {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
-}
-
-.tabbrowser-tab {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
-}
-
-.tabbrowser-tab > .tab-close-button,
-.tabbrowser-tabs .tabs-closebutton {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-close-tab-button");
-}
-
-.tab-close-button {
-  display: none;
-}
-
-.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"] > .tab-close-button {
-  display: -moz-box;
-}
-
-.tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
-  display: -moz-box;
-}
-
 /* Hide extension toolbars that neglected to set the proper class */
 window[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar),
-window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-menubar)
-{
+window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-menubar) {
   display: none;
+}
+
+#navigator-toolbox ,
+#status-bar ,
+#mainPopupSet {
+  min-width: 1px;
+}
+
+#FindToolbar {
+  overflow-x: hidden;
 }

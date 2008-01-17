@@ -86,9 +86,9 @@ EmbedEventListener::KeyDown(nsIDOMEvent* aDOMEvent)
   // Return FALSE to this function to mark the event as not
   // consumed...
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_KEY_DOWN],
-		  (void *)keyEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_KEY_DOWN], 0,
+                (void *)keyEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -106,9 +106,9 @@ EmbedEventListener::KeyUp(nsIDOMEvent* aDOMEvent)
   // return FALSE to this function to mark this event as not
   // consumed...
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_KEY_UP],
-		  (void *)keyEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_KEY_UP], 0,
+                (void *)keyEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -125,9 +125,9 @@ EmbedEventListener::KeyPress(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_KEY_PRESS],
-		  (void *)keyEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_KEY_PRESS], 0,
+                (void *)keyEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -144,9 +144,9 @@ EmbedEventListener::MouseDown(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_MOUSE_DOWN],
-		  (void *)mouseEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_MOUSE_DOWN], 0,
+                (void *)mouseEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -163,9 +163,9 @@ EmbedEventListener::MouseUp(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_MOUSE_UP],
-		  (void *)mouseEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_MOUSE_UP], 0,
+                (void *)mouseEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -182,9 +182,9 @@ EmbedEventListener::MouseClick(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_MOUSE_CLICK],
-		  (void *)mouseEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_MOUSE_CLICK], 0,
+                (void *)mouseEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -201,9 +201,9 @@ EmbedEventListener::MouseDblClick(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_MOUSE_DBL_CLICK],
-		  (void *)mouseEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_MOUSE_DBL_CLICK], 0,
+                (void *)mouseEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -220,9 +220,9 @@ EmbedEventListener::MouseOver(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_MOUSE_OVER],
-		  (void *)mouseEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_MOUSE_OVER], 0,
+                (void *)mouseEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -239,9 +239,9 @@ EmbedEventListener::MouseOut(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[DOM_MOUSE_OUT],
-		  (void *)mouseEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_MOUSE_OUT], 0,
+                (void *)mouseEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -257,9 +257,9 @@ EmbedEventListener::Activate(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-                  moz_embed_signals[DOM_ACTIVATE],
-                  (void *)uiEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_ACTIVATE], 0,
+                (void *)uiEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -275,9 +275,9 @@ EmbedEventListener::FocusIn(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-                  moz_embed_signals[DOM_FOCUS_IN],
-                  (void *)uiEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_FOCUS_IN], 0,
+                (void *)uiEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -293,9 +293,9 @@ EmbedEventListener::FocusOut(nsIDOMEvent* aDOMEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-                  moz_embed_signals[DOM_FOCUS_OUT],
-                  (void *)uiEvent, &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[DOM_FOCUS_OUT], 0,
+                (void *)uiEvent, &return_val);
   if (return_val) {
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();

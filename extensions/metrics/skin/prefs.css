@@ -1,12 +1,13 @@
 .prefs
 {
   background     : white;
-  margin         : 10px 10px 0px 10px;
+  margin         : 5px 5px 0px 5px;
   border         : 1px inset ThreeDFace;
 }
 
 .msg
 {
+  margin-left    : 4px;
   margin-bottom  : 10px;
 }
 

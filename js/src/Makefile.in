@@ -55,7 +55,7 @@ ifeq ($(OS_ARCH),SunOS)
 MODULE_OPTIMIZE_FLAGS = -O
 endif
 ifeq ($(OS_ARCH),WINNT)
-MODULE_OPTIMIZE_FLAGS = -O1
+MODULE_OPTIMIZE_FLAGS = -O2 -GL
 endif
 endif
 
@@ -278,6 +278,12 @@ ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
 else
 NSPR_STATIC_PATH = $(DIST)/lib
+endif
+
+ifdef MOZ_SHARK
+DEFINES += -DMOZ_SHARK
+CFLAGS += -F/System/Library/PrivateFrameworks
+LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
 endif
 
 LDFLAGS		+= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))

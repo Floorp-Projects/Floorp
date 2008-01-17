@@ -375,9 +375,11 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             nsIScriptableRegion* aRegion,
                             PRInt32 aScreenX, PRInt32 aScreenY,
                             nsRect* aScreenDragRect,
-                            gfxASurface** aSurface)
+                            gfxASurface** aSurface,
+                            nsPresContext** aPresContext)
 {
   *aSurface = nsnull;
+  *aPresContext = nsnull;
 
   // use a default size, in case of an error.
   aScreenDragRect->x = aScreenX - mImageX;
@@ -396,6 +398,8 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   if (!presShell)
     return NS_ERROR_FAILURE;
 
+  *aPresContext = presShell->GetPresContext();
+
   // check if drag images are disabled
   PRBool enableDragImages = PR_TRUE;
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -408,13 +412,12 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     // the region occupies
     if (aRegion) {
       // the region's coordinates are relative to the root frame
-      nsPresContext* pc = presShell->GetPresContext();
       nsIFrame* rootFrame = presShell->GetRootFrame();
-      if (rootFrame && pc) {
+      if (rootFrame && *aPresContext) {
         nsRect dragRect;
         aRegion->GetBoundingBox(&dragRect.x, &dragRect.y, &dragRect.width, &dragRect.height);
         dragRect.ScaleRoundOut(nsPresContext::AppUnitsPerCSSPixel());
-        dragRect.ScaleRoundOut(1.0 / pc->AppUnitsPerDevPixel());
+        dragRect.ScaleRoundOut(1.0 / (*aPresContext)->AppUnitsPerDevPixel());
 
         nsIntRect screenRect = rootFrame->GetScreenRectExternal();
         aScreenDragRect->SetRect(screenRect.x + dragRect.x, screenRect.y + dragRect.y,
@@ -452,11 +455,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(dragNode);
     // for image nodes, create the drag image from the actual image data
     if (imageLoader) {
-      nsPresContext* pc = presShell->GetPresContext();
-      if (!pc)
-        return NS_ERROR_FAILURE;
-
-      return DrawDragForImage(pc, imageLoader, aScreenX, aScreenY,
+      return DrawDragForImage(*aPresContext, imageLoader, aScreenX, aScreenY,
                               aScreenDragRect, aSurface);
     }
   }
@@ -569,3 +568,13 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   gfxRect outRect = gfxRect(destRect.x, destRect.y, destRect.width, destRect.height);
   return img->Draw(*rc, inRect, outRect);
 }
+
+void
+nsBaseDragService::ConvertToUnscaledDevPixels(nsPresContext* aPresContext,
+                                              PRInt32* aScreenX, PRInt32* aScreenY)
+{
+  PRInt32 adj = aPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
+  *aScreenX = nsPresContext::CSSPixelsToAppUnits(*aScreenX) / adj;
+  *aScreenY = nsPresContext::CSSPixelsToAppUnits(*aScreenY) / adj;
+}
+

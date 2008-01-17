@@ -82,10 +82,6 @@ p {
   float: right;
 }
 
-#UI_showHidden:not(:hover) {
-  color: graytext;
-}
-
 table {
   clear: both;
   width: 90%;
@@ -96,21 +92,18 @@ thead {
   font-size: 130%;
 }
 
-th {
-  font-weight: normal;
-}
-
-th:first-child ,
-th:first-child + th {
-  padding-right: 2em;
+/* last modified */
+th:last-child {
+  text-align: center;
 }
 
 table[order] > thead > tr > th:hover {
   text-decoration: underline;
 }
 
-tbody > tr:not(:hover) > td:not(:first-child) {
-  color: graytext;
+tbody > tr:hover {
+  outline: 1px solid ThreeDLightShadow;
+  -moz-outline-radius: .3em;
 }
 
 /* let 'Size' and 'Last Modified' take only as much space as they need and 'Name' all the rest */
@@ -118,32 +111,22 @@ td:not(:first-child) {
   width: 0;
 }
 
-.up ,
-.dir ,
-.symlink ,
-.file {
+.up {
   padding: 0 .5em;
-  margin-left: 20px;
-}
-
-.up::before ,
-.dir::before ,
-.file > img {
-  margin-right: 4px;
-  margin-left: -20px;
-  vertical-align: middle;
-}
-
-%ifdef MOZ_WIDGET_GTK2
-.dir::before {
-  content: url(moz-icon://stock/gtk-directory?size=menu);
+  -moz-margin-start: 20px;
 }
 
 .up::before {
+  -moz-margin-end: 4px;
+  -moz-margin-start: -20px;
+  vertical-align: middle;
+%ifdef MOZ_WIDGET_GTK2
   content: url(moz-icon://stock/gtk-go-up?size=menu);
 }
+.dir::before {
+  content: url(moz-icon://stock/gtk-directory?size=menu);
 %else
-.up::before {
   content: url(chrome://global/skin/dirListing/up.png);
-}
 %endif
+}
+

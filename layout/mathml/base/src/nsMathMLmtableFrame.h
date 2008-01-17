@@ -60,30 +60,16 @@ public:
   InheritAutomaticData(nsIFrame* aParent);
 
   NS_IMETHOD
-  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
-                         PRUint32 aFlagsValues,
+  UpdatePresentationData(PRUint32 aFlagsValues,
                          PRUint32 aWhichFlags);
 
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
-                                    PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aWhichFlags);
 
-  NS_IMETHOD
-  ReResolveScriptStyle(PRInt32 aParentScriptLevel)
-  {
-    nsMathMLContainerFrame::PropagateScriptStyleFor(this, aParentScriptLevel);
-    return NS_OK;
-  }
-
   // overloaded nsTableOuterFrame methods
-
-  NS_IMETHOD
-  Init(nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
@@ -183,11 +169,6 @@ public:
   // overloaded nsTableRowFrame methods
 
   NS_IMETHOD
-  Init(nsIContent* aContent,
-       nsIFrame*   aParent,
-       nsIFrame*   aPrevInFlow);
-
-  NS_IMETHOD
   AttributeChanged(PRInt32  aNameSpaceID,
                    nsIAtom* aAttribute,
                    PRInt32  aModType);
@@ -252,11 +233,6 @@ public:
   // overloaded nsTableCellFrame methods
 
   NS_IMETHOD
-  Init(nsIContent* aContent,
-       nsIFrame*   aParent,
-       nsIFrame*   aPrevInFlow);
-
-  NS_IMETHOD
   AttributeChanged(PRInt32  aNameSpaceID,
                    nsIAtom* aAttribute,
                    PRInt32  aModType);
@@ -287,19 +263,11 @@ public:
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
-                                    PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate)
   {
     nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(this,
-      aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  ReResolveScriptStyle(PRInt32 aParentScriptLevel)
-  {
-    nsMathMLContainerFrame::PropagateScriptStyleFor(this, aParentScriptLevel);
+      aFirstIndex, aLastIndex, aFlagsValues, aFlagsToUpdate);
     return NS_OK;
   }
 

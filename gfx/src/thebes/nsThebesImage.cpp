@@ -423,6 +423,10 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
       destRect.size.height = srcRect.size.height * yscale;
     }
 
+    // if either rectangle is empty now (possibly after the image complete check)
+    if (srcRect.IsEmpty() || destRect.IsEmpty())
+        return NS_OK;
+
     // Reject over-wide or over-tall images.
     if (!AllowedImageSize(destRect.size.width + 1, destRect.size.height + 1))
         return NS_ERROR_FAILURE;
@@ -438,8 +442,16 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     {
         gfxIntSize dim(NS_lroundf(destRect.size.width),
                        NS_lroundf(destRect.size.height));
+
+        // nothing to do in this case
+        if (dim.width == 0 || dim.height == 0)
+            return NS_OK;
+
         nsRefPtr<gfxASurface> temp =
             gfxPlatform::GetPlatform()->CreateOffscreenSurface (dim,  mFormat);
+        if (!temp || temp->CairoStatus() != 0)
+            return NS_ERROR_FAILURE;
+
         gfxContext tempctx(temp);
 
         gfxPattern srcpat(ThebesSurface());

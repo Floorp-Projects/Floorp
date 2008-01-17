@@ -614,10 +614,12 @@ var PlacesOrganizer = {
     if (infoScrollbox.getAttribute("minimal") == "true") {
       infoScrollbox.removeAttribute("minimal");
       scrollboxExpander.label = scrollboxExpander.getAttribute("lesslabel");
+      scrollboxExpander.accessKey = scrollboxExpander.getAttribute("lessaccesskey");
     }
     else {
       infoScrollbox.setAttribute("minimal", "true");
       scrollboxExpander.label = scrollboxExpander.getAttribute("morelabel");
+      scrollboxExpander.accessKey = scrollboxExpander.getAttribute("moreaccesskey");
     }
   },
 

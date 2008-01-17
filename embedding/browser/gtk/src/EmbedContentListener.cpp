@@ -35,9 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <strings.h>
-#include <nsXPIDLString.h>
-
 #include "nsIURI.h"
 
 #include "EmbedContentListener.h"
@@ -80,9 +77,9 @@ EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
     return rv;
 
   gint return_val = FALSE;
-  gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
-		  moz_embed_signals[OPEN_URI],
-		  specString.get(), &return_val);
+  g_signal_emit(G_OBJECT(mOwner->mOwningWidget),
+                moz_embed_signals[OPEN_URI], 0,
+                specString.get(), &return_val);
 
   *aAbortOpen = return_val;
 

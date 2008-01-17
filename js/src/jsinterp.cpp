@@ -2593,7 +2593,7 @@ interrupt:
                  * call. See bug 372331.
                  */
 
-                ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
+                ok = js_FindProperty(cx, id, &obj, &obj2, &prop) >= 0;
                 if (!ok)
                     goto out;
                 if (prop)
@@ -3184,7 +3184,7 @@ interrupt:
             id = ATOM_TO_JSID(atom);
 
             SAVE_SP_AND_PC(fp);
-            ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
+            ok = js_FindProperty(cx, id, &obj, &obj2, &prop) >= 0;
             if (!ok)
                 goto out;
 
@@ -3262,7 +3262,7 @@ interrupt:
             id = ATOM_TO_JSID(atom);
 
             SAVE_SP_AND_PC(fp);
-            ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
+            ok = js_FindProperty(cx, id, &obj, &obj2, &prop) >= 0;
             if (!ok)
                 goto out;
             if (!prop)
@@ -3927,7 +3927,7 @@ interrupt:
             id = ATOM_TO_JSID(atom);
 
             SAVE_SP_AND_PC(fp);
-            ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
+            ok = js_FindProperty(cx, id, &obj, &obj2, &prop) >= 0;
             if (!ok)
                 goto out;
             if (!prop) {

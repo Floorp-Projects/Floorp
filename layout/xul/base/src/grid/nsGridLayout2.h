@@ -65,27 +65,27 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
-  NS_IMETHOD IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual void IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
 
   virtual nsGridRowGroupLayout* CastToRowGroupLayout() { return nsnull; }
   virtual nsGridLayout2* CastToGridLayout() { return this; }
   virtual nsGrid* GetGrid(nsIBox* aBox, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull);
   virtual void GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridPart) { NS_NOTREACHED("Should not be called"); }
-  NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  virtual nsSize GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
+  virtual nsSize GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState);
   virtual void CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount) { aRowCount++; }
   virtual void DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState) { }
   virtual PRInt32 BuildRows(nsIBox* aBox, nsGridRow* aRows);
   virtual nsMargin GetTotalMargin(nsIBox* aBox, PRBool aIsHorizontal);
   virtual Type GetType() { return eGrid; }
-  NS_IMETHOD ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
+  virtual void ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                               nsIBox* aPrevBox, nsIBox* aChildList);
-  NS_IMETHOD ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
+  virtual void ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
                               nsIBox* aChildList);
-  NS_IMETHOD ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState,
+  virtual void ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState,
                              nsIBox* aChildList);
-  NS_IMETHOD ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState,
+  virtual void ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState,
                          nsIBox* aChildList);
 protected:
 

@@ -272,7 +272,7 @@ protected:
 class NativeJSContext {
 public:
     NativeJSContext() {
-        error = gXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+        error = gXPConnect->GetCurrentNativeCallContext(&ncc);
         if (NS_FAILED(error))
             return;
 
@@ -361,7 +361,7 @@ public:
         ncc->SetReturnValueWasSet(PR_TRUE);
     }
 
-    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nsAXPCNativeCallContext ncc;
     nsresult error;
     JSContext *ctx;
     PRUint32 argc;

@@ -719,16 +719,16 @@ nsNSElementTearoff::GetElementsByClassName(const nsAString& aClasses,
 static nsPoint
 GetOffsetFromInitialContainingBlock(nsIFrame* aFrame)
 {
-  nsIFrame* rootFrame = aFrame->PresContext()->FrameManager()->GetRootFrame();
-  nsPoint pt(0,0);
-  for (nsIFrame* p = aFrame; p != rootFrame; p = p->GetParent()) {
-    // coordinates of elements inside a foreignobject are relative to the top-left
-    // of the nearest foreignobject
-    if (p->IsFrameOfType(nsIFrame::eSVGForeignObject) && p != aFrame)
-      return pt;
-    pt += p->GetPosition();
-  }
-  return pt;
+  nsIFrame* refFrame = aFrame->GetParent();
+  if (!refFrame)
+    return nsPoint(0, 0);
+
+  // get the nearest enclosing SVG foreign object frame or the root frame
+  while (refFrame->GetParent() &&
+         !refFrame->IsFrameOfType(nsIFrame::eSVGForeignObject))
+    refFrame = refFrame->GetParent();
+
+  return aFrame->GetOffsetTo(refFrame);
 }
 
 static double

@@ -214,9 +214,9 @@ PRBool nsStyleContext::Equals(const nsStyleContext* aOther) const
 
 //=========================================================================================================
 
-const nsStyleStruct* nsStyleContext::GetStyleData(nsStyleStructID aSID)
+const void* nsStyleContext::GetStyleData(nsStyleStructID aSID)
 {
-  const nsStyleStruct* cachedData = mCachedStyleData.GetStyleData(aSID); 
+  const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
   return mRuleNode->GetStyleData(aSID, this, PR_TRUE); // Our rule node will take care of it for us.
@@ -235,9 +235,9 @@ const nsStyleStruct* nsStyleContext::GetStyleData(nsStyleStructID aSID)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
+inline const void* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 {
-  const nsStyleStruct* cachedData = mCachedStyleData.GetStyleData(aSID); 
+  const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
   return mRuleNode->GetStyleData(aSID, this, PR_FALSE); // Our rule node will take care of it for us.
@@ -246,7 +246,7 @@ inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 // This is an evil evil function, since it forces you to alloc your own separate copy of
 // style data!  Do not use this function unless you absolutely have to!  You should avoid
 // this at all costs! -dwh
-nsStyleStruct* 
+void* 
 nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 {
   // If we already own the struct and no kids could depend on it, then
@@ -254,13 +254,13 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   // function really shouldn't be called for style contexts that could
   // have kids depending on the data.  ClearStyleData would be OK, but
   // this test for no mChild or mEmptyChild doesn't catch that case.)
-  const nsStyleStruct *current = GetStyleData(aSID);
+  const void *current = GetStyleData(aSID);
   if (!mChild && !mEmptyChild &&
       !(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
       mCachedStyleData.GetStyleData(aSID))
-    return const_cast<nsStyleStruct*>(current);
+    return const_cast<void*>(current);
 
-  nsStyleStruct* result;
+  void* result;
   nsPresContext *presContext = PresContext();
   switch (aSID) {
 
@@ -283,9 +283,9 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   }
 
   if (!result) {
-    NS_WARNING("Ran out of memory while trying to allocate memory for a unique nsStyleStruct! "
+    NS_WARNING("Ran out of memory while trying to allocate memory for a unique style struct! "
                "Returning the non-unique data.");
-    return const_cast<nsStyleStruct*>(current);
+    return const_cast<void*>(current);
   }
 
   SetStyle(aSID, result);
@@ -295,7 +295,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 }
 
 void
-nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
+nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 {
   // This method should only be called from nsRuleNode!  It is not a public
   // method!
@@ -325,7 +325,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
     }
   }
   char* dataSlot = resetOrInherit + info.mInheritResetOffset;
-  *reinterpret_cast<nsStyleStruct**>(dataSlot) = aStruct;
+  *reinterpret_cast<void**>(dataSlot) = aStruct;
 }
 
 void

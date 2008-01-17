@@ -1,0 +1,7 @@
+CACHE MANIFEST
+http://localhost:8888/tests/SimpleTest/SimpleTest.js
+http://localhost:8888/MochiKit/packed.js
+http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js
+
+# The following item doesn't exist, and will cause an update error.
+http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/doesntExist.html

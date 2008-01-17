@@ -69,8 +69,8 @@ nsGridRowLeafLayout::~nsGridRowLeafLayout()
 {
 }
 
-NS_IMETHODIMP
-nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   PRInt32 index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
@@ -78,44 +78,45 @@ nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
 
   // If we are not in a grid. Then we just work like a box. But if we are in a grid
   // ask the grid for our size.
-  if (!grid)
-    return nsGridRowLayout::GetPrefSize(aBox, aState, aSize); 
+  if (!grid) {
+    return nsGridRowLayout::GetPrefSize(aBox, aState); 
+  }
   else {
-    aSize = grid->GetPrefRowSize(aState, index, isHorizontal);
-    //AddBorderAndPadding(aBox, aSize);
-    return NS_OK;
+    return grid->GetPrefRowSize(aState, index, isHorizontal);
+    //AddBorderAndPadding(aBox, pref);
   }
 }
 
-NS_IMETHODIMP
-nsGridRowLeafLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsGridRowLeafLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   PRInt32 index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
   PRBool isHorizontal = IsHorizontal(aBox);
 
   if (!grid)
-    return nsGridRowLayout::GetMinSize(aBox, aState, aSize); 
+    return nsGridRowLayout::GetMinSize(aBox, aState); 
   else {
-    aSize = grid->GetMinRowSize(aState, index, isHorizontal);
-    AddBorderAndPadding(aBox, aSize);
-    return NS_OK;
+    nsSize minSize = grid->GetMinRowSize(aState, index, isHorizontal);
+    AddBorderAndPadding(aBox, minSize);
+    return minSize;
   }
 }
 
-NS_IMETHODIMP
-nsGridRowLeafLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
+nsSize
+nsGridRowLeafLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   PRInt32 index = 0;
   nsGrid* grid = GetGrid(aBox, &index);
   PRBool isHorizontal = IsHorizontal(aBox);
 
   if (!grid)
-    return nsGridRowLayout::GetMaxSize(aBox, aState, aSize); 
+    return nsGridRowLayout::GetMaxSize(aBox, aState); 
   else {
-    aSize = grid->GetMaxRowSize(aState, index, isHorizontal);
-    AddBorderAndPadding(aBox, aSize);
-    return NS_OK;
+    nsSize maxSize;
+    maxSize = grid->GetMaxRowSize(aState, index, isHorizontal);
+    AddBorderAndPadding(aBox, maxSize);
+    return maxSize;
   }
 }
 

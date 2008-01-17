@@ -738,10 +738,15 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
     parent = GetParent();
   }
 
-  while (parent) {    
-    nsCOMPtr<nsIDOMSVGSVGElement> SVGSVGElement = do_QueryInterface(parent);
-    if (SVGSVGElement) {
-      *aOwnerSVGElement = SVGSVGElement;
+  while (parent && parent->GetNameSpaceID() == kNameSpaceID_SVG) {
+    nsIAtom* tag = parent->Tag();
+    if (tag == nsGkAtoms::foreignObject) {
+      // SVG in a foreignObject must have its own <svg> (nsSVGOuterSVGFrame).
+      // Leave *aOwnerSVGElement nulled out, but don't throw.
+      return NS_OK;
+    }
+    if (tag == nsGkAtoms::svg) {
+      *aOwnerSVGElement = static_cast<nsSVGSVGElement*>(parent);
       NS_ADDREF(*aOwnerSVGElement);
       return NS_OK;
     }
@@ -761,8 +766,9 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
   // we don't have a parent SVG element...
 
   // are _we_ the outermost SVG element? If yes, return nsnull, but don't fail
-  nsCOMPtr<nsIDOMSVGSVGElement> SVGSVGElement = do_QueryInterface((nsIDOMSVGElement*)this);
-  if (SVGSVGElement) return NS_OK;
+  if (Tag() == nsGkAtoms::svg) {
+    return NS_OK;
+  }
   
   // no owner found and we aren't the outermost SVG element either.
   // this situation can e.g. occur during content tree teardown. 

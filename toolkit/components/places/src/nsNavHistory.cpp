@@ -652,7 +652,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
       // Downgrade v1,2,4,5
       // v3,6 have no backwards incompatible changes.
-      if (DBSchemaVersion > 2) {
+      if (DBSchemaVersion > 2 && DBSchemaVersion < 6) {
         // perform downgrade to v2
         rv = ForceMigrateBookmarksDB(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -4305,19 +4305,17 @@ nsNavHistory::GroupByFolder(nsNavHistoryQueryResultNode *aResultNode,
     nsNavHistoryContainerResultNode* folderNode = nsnull;
     if (!folders.Get(parentId, &folderNode)) {
       // get parent folder title
-      nsAutoString title;
+      nsCAutoString title;
       rv = bookmarks->GetItemTitle(parentId, title);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCAutoString urn;
-      rv = CreatePlacesPersistURN(aResultNode, parentId, NS_ConvertUTF16toUTF8(title), urn);
+      rv = CreatePlacesPersistURN(aResultNode, parentId, title, urn);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // create parent node
       folderNode = new nsNavHistoryContainerResultNode(urn, 
-        NS_ConvertUTF16toUTF8(title),
-        EmptyCString(),
-        nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
+        title, EmptyCString(), nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
         PR_TRUE, EmptyCString(), aResultNode->mOptions);
 
       if (!folders.Put(parentId, folderNode))
@@ -4783,9 +4781,31 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   rv = aRow->GetUTF8String(kGetInfoIndex_FaviconURL, favicon);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // itemId, if any
+  PRInt64 itemId = -1;
+  PRBool isNull;
+  rv = aRow->GetIsNull(kGetInfoIndex_ItemId, &isNull);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isNull) {
+    itemId = aRow->AsInt64(kGetInfoIndex_ItemId);
+  }
+
   if (IsQueryURI(url)) {
     // special case "place:" URIs: turn them into containers
-    PRInt64 itemId = aRow->AsInt64(kGetInfoIndex_ItemId);
+      
+    // We should never expose the history title for query nodes if the
+    // bookmark-item's title is set to null (the history title may be the
+    // query string without the place: prefix). Thus we call getItemTitle
+    // explicitly. Unfortunately, query-bookmarks cannot be distinguished in the
+    // sql query.
+    if (itemId != -1) {
+      nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+      NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+      rv = bookmarks->GetItemTitle(itemId, title);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     rv = QueryRowToResult(itemId, url, title, accessCount, time, favicon, aResult);
 
     // If it's a simple folder node (i.e. a shortcut to another folder), apply
@@ -4797,13 +4817,11 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   } else if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_URI) {
     *aResult = new nsNavHistoryResultNode(url, title, accessCount, time,
                                           favicon);
-    if (! *aResult)
+    if (!*aResult)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    PRBool isNull;
-    if (NS_SUCCEEDED(aRow->GetIsNull(kGetInfoIndex_ItemId, &isNull)) &&
-        !isNull) {
-      (*aResult)->mItemId = aRow->AsInt64(kGetInfoIndex_ItemId);
+    if (itemId != -1) {
+      (*aResult)->mItemId = itemId;
       (*aResult)->mDateAdded = aRow->AsInt64(kGetInfoIndex_ItemDateAdded);
       (*aResult)->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
     }
@@ -4890,6 +4908,14 @@ nsNavHistory::QueryRowToResult(PRInt64 itemId, const nsACString& aURI,
       // this addrefs for us
       rv = bookmarks->ResultNodeForContainer(folderId, options, aNode);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // this is the query item-Id, and is what is exposed by node.itemId
+      (*aNode)->GetAsFolder()->mQueryItemId = itemId;
+
+      // Use the query item title, unless it's void (in that case,
+      // we keep the concrete folder title set)
+      if (!aTitle.IsVoid())
+        (*aNode)->mTitle = aTitle;
     } else {
       // regular query
       *aNode = new nsNavHistoryQueryResultNode(aTitle, EmptyCString(),

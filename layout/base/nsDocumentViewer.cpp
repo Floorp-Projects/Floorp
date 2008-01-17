@@ -364,7 +364,14 @@ private:
                         PRBool aDoCreation,
                         PRBool aInPrintPreview,
                         PRBool aNeedMakeCX = PR_TRUE);
-  nsresult InitPresentationStuff(PRBool aDoInitialReflow);
+  /**
+   * @param aDoInitialReflow set to true if you want to kick off the initial
+   * reflow
+   * @param aReenableRefresh set to true if you want this to reenable refresh
+   * before returning; otherwise this will return with refresh disabled
+   * in the view manager
+   */
+  nsresult InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReenableRefresh);
 
   nsresult GetPopupNode(nsIDOMNode** aNode);
   nsresult GetPopupLinkNode(nsIDOMNode** aNode);
@@ -659,7 +666,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 }
 
 nsresult
-DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
+DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReenableRefresh)
 {
   // Create the style set...
   nsStyleSet *styleSet;
@@ -721,15 +728,15 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     nsCOMPtr<nsIPresShell> shellGrip = mPresShell;
     // Initial reflow
     mPresShell->InitialReflow(width, height);
-
-    // Now trigger a refresh
-    if (mEnableRendering && mViewManager) {
-      mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-    }
   } else {
     // Store the visible area so it's available for other callers of
     // InitialReflow, like nsContentSink::StartLayout.
     mPresContext->SetVisibleArea(nsRect(0, 0, width, height));
+  }
+
+  // Now trigger a refresh
+  if (aReenableRefresh && mEnableRendering && mViewManager) {
+    mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
   }
 
   // now register ourselves as a selection listener, so that we get
@@ -753,7 +760,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     return rv;
 
   // Save old listener so we can unregister it
-  nsCOMPtr<nsIDOMFocusListener> mOldFocusListener = mFocusListener;
+  nsCOMPtr<nsIDOMFocusListener> oldFocusListener = mFocusListener;
 
   // focus listener
   //
@@ -772,8 +779,8 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     rv = mDocument->AddEventListenerByIID(mFocusListener,
                                           NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
-    if (mOldFocusListener) {
-      rv = mDocument->RemoveEventListenerByIID(mOldFocusListener,
+    if (oldFocusListener) {
+      rv = mDocument->RemoveEventListenerByIID(oldFocusListener,
                                                NS_GET_IID(nsIDOMFocusListener));
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove focus listener");
     }
@@ -906,7 +913,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
     // The ViewManager and Root View was created above (in
     // MakeWindow())...
 
-    rv = InitPresentationStuff(!makeCX);
+    rv = InitPresentationStuff(!makeCX, !makeCX);
   }
 
   return rv;
@@ -1646,31 +1653,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
       mPresContext->SetLinkHandler(linkHandler);
     }
 
-    // Create a new style set for the document
-
-    nsStyleSet *styleSet;
-    rv = CreateStyleSet(mDocument, &styleSet);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = newDoc->CreateShell(mPresContext, mViewManager, styleSet,
-                             getter_AddRefs(mPresShell));
-    if (NS_FAILED(rv)) {
-      delete styleSet;
-      return rv;
-    }
-
-    // We're done creating the style set
-    styleSet->EndUpdate();
-
-    // The pres shell owns the style set now.
-    mPresShell->BeginObservingDocument();
-
-    // Register the focus listener on the new document
-    if (mDocument) {
-      rv = mDocument->AddEventListenerByIID(mFocusListener,
-                                            NS_GET_IID(nsIDOMFocusListener));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
-    }
+    rv = InitPresentationStuff(PR_FALSE, PR_TRUE);
   }
 
   return rv;
@@ -1934,7 +1917,7 @@ DocumentViewerImpl::Show(void)
     if (mPresContext) {
       Hide();
 
-      rv = InitPresentationStuff(PR_TRUE);
+      rv = InitPresentationStuff(PR_TRUE, PR_TRUE);
     }
 
     // If we get here the document load has already started and the

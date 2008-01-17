@@ -59,6 +59,9 @@
 
 #include "gfxASurface.h"
 #include "nsImageToPixbuf.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
+#include "nsIDocument.h"
 
 static PRLogModuleInfo *sDragLm = NULL;
 
@@ -197,20 +200,24 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
         GdkPixbuf* dragPixbuf = nsnull;
         nsRect dragRect;
+        nsPresContext* pc;
         if (mHasImage || mSelection) {
           nsRefPtr<gfxASurface> surface;
           DrawDrag(aDOMNode, aRegion, mScreenX, mScreenY,
-                   &dragRect, getter_AddRefs(surface));
+                   &dragRect, getter_AddRefs(surface), &pc);
           if (surface) {
             dragPixbuf =
               nsImageToPixbuf::SurfaceToPixbuf(surface, dragRect.width, dragRect.height);
           }
         }
 
-        if (dragPixbuf)
+        if (dragPixbuf) {
+          PRInt32 sx = mScreenX, sy = mScreenY;
+          ConvertToUnscaledDevPixels(pc, &sx, &sy);
           gtk_drag_set_icon_pixbuf(context, dragPixbuf,
-                                   mScreenX - NSToIntRound(dragRect.x),
-                                   mScreenY - NSToIntRound(dragRect.y));
+                                   sx - NSToIntRound(dragRect.x),
+                                   sy - NSToIntRound(dragRect.y));
+        }
         else
           gtk_drag_set_icon_default(context);
 

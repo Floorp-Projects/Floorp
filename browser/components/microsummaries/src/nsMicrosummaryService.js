@@ -1767,6 +1767,8 @@ MicrosummaryResource.prototype = {
   // Interfaces this component implements.
   interfaces: [Ci.nsIAuthPromptProvider,
                Ci.nsIAuthPrompt,
+               Ci.nsIBadCertListener2,
+               Ci.nsISSLErrorListener,
                Ci.nsIPrompt,
                Ci.nsIProgressEventSink,
                Ci.nsIInterfaceRequestor,
@@ -1797,6 +1799,19 @@ MicrosummaryResource.prototype = {
     return this.QueryInterface(iid);
   },
 
+  // nsIBadCertListener2
+  // Suppress any certificate errors
+  notifyCertProblem: function MSR_certProblem(socketInfo, status, targetSite) {
+    return true;
+  },
+
+  // nsISSLErrorListener
+  // Suppress any ssl errors
+  notifySSLError: function MSR_SSLError(socketInfo, error, targetSite) {
+    return true;
+  },
+
+  
   // Suppress UI and abort loads for files secured by authentication.
 
   // Auth requests appear to succeed when we cancel them (since the server

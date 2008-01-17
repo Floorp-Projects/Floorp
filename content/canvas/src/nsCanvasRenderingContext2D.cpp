@@ -1853,9 +1853,9 @@ nsCanvasRenderingContext2D::DrawImage()
 {
     nsresult rv;
 
-    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nsAXPCNativeCallContext *ncc = nsnull;
     rv = nsContentUtils::XPConnect()->
-        GetCurrentNativeCallContext(getter_AddRefs(ncc));
+        GetCurrentNativeCallContext(&ncc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!ncc)
@@ -2379,9 +2379,9 @@ nsCanvasRenderingContext2D::GetImageData()
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nsAXPCNativeCallContext *ncc = nsnull;
     nsresult rv = nsContentUtils::XPConnect()->
-        GetCurrentNativeCallContext(getter_AddRefs(ncc));
+        GetCurrentNativeCallContext(&ncc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!ncc)
@@ -2504,9 +2504,9 @@ nsCanvasRenderingContext2D::PutImageData()
 {
     nsresult rv;
 
-    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nsAXPCNativeCallContext *ncc = nsnull;
     rv = nsContentUtils::XPConnect()->
-        GetCurrentNativeCallContext(getter_AddRefs(ncc));
+        GetCurrentNativeCallContext(&ncc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!ncc)

@@ -44,7 +44,7 @@
 ulimit -c 20480 2> /dev/null
 
 # Make assertions fatal
-export XPCOM_DEBUG_BREAK=stack-and-abort
+XPCOM_DEBUG_BREAK=stack-and-abort; export XPCOM_DEBUG_BREAK
 
 exit_status=0
 

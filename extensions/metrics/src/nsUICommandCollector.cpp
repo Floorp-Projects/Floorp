@@ -53,6 +53,7 @@
 const nsUICommandCollector::EventHandler nsUICommandCollector::kEvents[] = {
   { "command", &nsUICommandCollector::HandleCommandEvent },
   { "TabMove", &nsUICommandCollector::HandleTabMoveEvent },
+  { "popupshowing", &nsUICommandCollector::HandlePopupShowingEvent },
 };
 
 NS_IMPL_ISUPPORTS3(nsUICommandCollector, nsIObserver, nsIDOMEventListener,
@@ -287,6 +288,61 @@ nsUICommandCollector::HandleTabMoveEvent(nsIDOMEvent* event)
   NS_ENSURE_SUCCESS(rv, rv);
 
   MS_LOG(("Successfully logged UI Event"));
+  return NS_OK;
+}
+
+nsresult
+nsUICommandCollector::HandlePopupShowingEvent(nsIDOMEvent* event)
+{
+  PRUint32 window;
+  if (NS_FAILED(GetEventWindow(event, &window))) 
+    return NS_OK;
+
+  nsString targetId, targetAnonId;
+  if (NS_FAILED(GetEventTargets(event, targetId, targetAnonId))) 
+    return NS_OK;
+
+  NS_ASSERTION(!targetId.IsEmpty(), "can't have an empty target id");
+
+  if (!targetId.Equals(NS_LITERAL_STRING("identity-popup")) && !targetId.Equals(NS_LITERAL_STRING("editBookmarkPanel"))) 
+    return NS_OK;
+
+  // Fill a property bag with what we want to log
+  nsCOMPtr<nsIWritablePropertyBag2> properties;
+  nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
+  NS_ENSURE_STATE(properties);
+
+  nsresult rv;
+  rv = properties->SetPropertyAsUint32(NS_LITERAL_STRING("window"), window);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = properties->SetPropertyAsAString(NS_LITERAL_STRING("action"),
+                                        NS_LITERAL_STRING("popupshowing"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SetHashedValue(properties, NS_LITERAL_STRING("targetidhash"), targetId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!targetAnonId.IsEmpty()) 
+  {
+    rv = SetHashedValue(properties, NS_LITERAL_STRING("targetanonidhash"),
+                        targetAnonId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsMetricsService *ms = nsMetricsService::get();
+  NS_ENSURE_STATE(ms);
+
+  nsCOMPtr<nsIMetricsEventItem> item;
+  ms->CreateEventItem(NS_LITERAL_STRING("uielement"), getter_AddRefs(item));
+  NS_ENSURE_STATE(item);
+  item->SetProperties(properties);
+
+  // Actually log it
+  rv = ms->LogEvent(item);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MS_LOG(("Successfully logged UI popupshowing Event"));
   return NS_OK;
 }
 

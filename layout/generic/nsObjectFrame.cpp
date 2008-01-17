@@ -1119,8 +1119,8 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 
   // set it all up
   // XXX is windowless different?
-  window.x = origin.x;
-  window.y = origin.y;
+  window.x = presContext->AppUnitsToDevPixels(origin.x);
+  window.y = presContext->AppUnitsToDevPixels(origin.y);
   window.width = presContext->AppUnitsToDevPixels(mRect.width);
   window.height= presContext->AppUnitsToDevPixels(mRect.height);
   window.clipRect.bottom = 0; window.clipRect.top = 0;
@@ -1654,10 +1654,13 @@ nsObjectFrame::NotifyContentObjectWrapper()
   if (NS_FAILED(rv))
     return;
 
-  // Abuse the scriptable helper to trigger prototype setup for the
-  // wrapper for mContent so that this plugin becomes part of the DOM
-  // object.
-  helper->PostCreate(wrapper, cx, obj);
+  nsCxPusher cxPusher;
+  if (cxPusher.Push(mContent)) {
+    // Abuse the scriptable helper to trigger prototype setup for the
+    // wrapper for mContent so that this plugin becomes part of the DOM
+    // object.
+    helper->PostCreate(wrapper, cx, obj);
+  }
 }
 
 // static

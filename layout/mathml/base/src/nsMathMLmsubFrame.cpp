@@ -74,7 +74,7 @@ nsMathMLmsubFrame::TransmitAutomaticData()
   // The <msub> element increments scriptlevel by 1, and sets displaystyle to
   // "false", within subscript, but leaves both attributes unchanged within base.
   // 2. The TeXbook (Ch 17. p.141) says the subscript is compressed
-  UpdatePresentationDataFromChildAt(1, -1, 1,
+  UpdatePresentationDataFromChildAt(1, -1,
     ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
      NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
 

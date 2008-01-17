@@ -266,7 +266,8 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 folder;
-  rv = bms->CreateFolder(root, importedBookmarksTitle, -1, &folder);
+  rv = bms->CreateFolder(root, NS_ConvertUTF16toUTF8(importedBookmarksTitle),
+                         -1, &folder);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Import the bookmarks into the folder.

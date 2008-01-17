@@ -141,17 +141,13 @@ TaggingService.prototype = {
    *          otherwise.
    */
   _isURITaggedInternal: function TS__uriTagged(aURI, aTagId, aItemId) {
-    var options = this._history.getNewQueryOptions();
-    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-    var query = this._history.getNewQuery();
-    query.setFolders([aTagId], 1);
-    query.uri = aURI;
-    var result = this._history.executeQuery(query, options);
-    var rootNode = result.root;
-    rootNode.containerOpen = true;
-    if (rootNode.childCount != 0) {
-      aItemId.value = rootNode.getChild(0).itemId;
-      return true;
+    var bookmarkIds = this._bms.getBookmarkIdsForURI(aURI, {});
+    for (var i=0; i < bookmarkIds.length; i++) {
+      var parent = this._bms.getFolderIdForItem(bookmarkIds[i]);
+      if (parent == aTagId) {
+        aItemId.value = bookmarkIds[i];
+        return true;
+      }
     }
     return false;
   },

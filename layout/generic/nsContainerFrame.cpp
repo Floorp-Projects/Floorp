@@ -69,6 +69,7 @@
 #include "nsContentErrors.h"
 #include "nsIEventStateManager.h"
 #include "nsListControlFrame.h"
+#include "nsIBaseWindow.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -216,7 +217,13 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
       //      for overflow containers once we can split abspos elements with
       //      inline containing blocks.
       if (parent == this) {
-        parent->mFrames.DestroyFrame(aOldFrame);
+        if (!parent->mFrames.DestroyFrame(aOldFrame)) {
+          // Try to remove it from our overflow list, if we have one.
+          // The simplest way is to reuse StealFrame.
+          nsresult rv = StealFrame(PresContext(), aOldFrame, PR_TRUE);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "Could not find frame to remove!");
+          aOldFrame->Destroy();
+        }
       } else {
         // This recursive call takes care of all continuations after aOldFrame,
         // so we don't need to loop anymore.
@@ -448,6 +455,26 @@ IsMenuPopup(nsIFrame *aFrame)
   return (frameType == nsGkAtoms::menuPopupFrame);
 }
 
+static PRBool
+IsTopLevelWidget(nsPresContext* aPresContext)
+{
+  nsCOMPtr<nsISupports> container = aPresContext->Document()->GetContainer();
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
+  if (!baseWindow)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIWidget> mainWidget;
+  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+  if (!mainWidget)
+    return PR_FALSE;
+
+  nsWindowType windowType;
+  mainWidget->GetWindowType(windowType);
+  return windowType == eWindowType_toplevel ||
+         windowType == eWindowType_dialog;
+  // popups aren't toplevel so they're not handled here
+}
+
 static void
 SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
                                          nsIFrame*        aFrame,
@@ -466,20 +493,9 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
     nsIView* rootView;
     vm->GetRootView(rootView);
 
-    nsIDocument *doc = aPresContext->PresShell()->GetDocument();
-    if (doc) {
-      nsIContent *rootElem = doc->GetRootContent();
-      if (!doc->GetParentDocument() &&
-          (nsCOMPtr<nsISupports>(doc->GetContainer())) &&
-          rootElem && rootElem->IsNodeOfType(nsINode::eXUL)) {
-        // we're XUL at the root of the document hierarchy. Try to make our
-        // window translucent.
-        // don't proceed unless this is the root view
-        // (sometimes the non-root-view is a canvas)
-        if (aView->HasWidget() && aView == rootView) {
-          aView->GetWidget()->SetHasTransparentBackground(nsLayoutUtils::FrameHasTransparency(aFrame));
-        }
-      }
+    if (aView->HasWidget() && aView == rootView &&
+        IsTopLevelWidget(aPresContext)) {
+      aView->GetWidget()->SetHasTransparentBackground(nsLayoutUtils::FrameHasTransparency(aFrame));
     }
   }
 }
@@ -650,6 +666,8 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
     styleBorder->GetBorderWidth(startSide) +
     GetCoord(styleMargin->mMargin.Get(startSide, tmp), 0);
 
+  const nsLineList_iterator* savedLine = aData->line;
+
   for (nsContainerFrame *nif = this; nif;
        nif = (nsContainerFrame*) nif->GetNextInFlow()) {
     for (nsIFrame *kid = nif->mFrames.FirstChild(); kid;
@@ -661,7 +679,13 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
         kid->AddInlinePrefWidth(aRenderingContext,
                                 static_cast<InlinePrefWidthData*>(aData));
     }
+    
+    // After we advance to our next-in-flow, the stored line may not
+    // longer be the correct line. Just forget it.
+    aData->line = nsnull;
   }
+  
+  aData->line = savedLine;
 
   // This goes at the end no matter how things are broken and how
   // messy the bidi situations are, since per CSS2.1 section 8.6

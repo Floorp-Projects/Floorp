@@ -49,7 +49,11 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIView.h"
 #include "nsIWidget.h"
+#ifdef MOZ_XUL
 #include "nsIDOMXULElement.h"
+#else
+#include "nsIDOMElement.h"
+#endif
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsISupportsPrimitives.h"

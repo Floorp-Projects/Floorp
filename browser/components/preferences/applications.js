@@ -1248,6 +1248,7 @@ var gApplicationsPane = {
       else
         label = this._prefsBundle.getString("alwaysAsk");
       askMenuItem.setAttribute("label", label);
+      askMenuItem.setAttribute("tooltiptext", label);
       askMenuItem.setAttribute("image", ICON_URL_ASK);
       menuPopup.appendChild(askMenuItem);
     }
@@ -1259,6 +1260,7 @@ var gApplicationsPane = {
       let label = this._prefsBundle.getFormattedString("liveBookmarksInApp",
                                                        [this._brandShortName]);
       internalMenuItem.setAttribute("label", label);
+      internalMenuItem.setAttribute("tooltiptext", label);
       internalMenuItem.setAttribute("image", ICON_URL_LIVEMARK);
       menuPopup.appendChild(internalMenuItem);
 
@@ -1273,6 +1275,7 @@ var gApplicationsPane = {
       var defaultMenuItem = document.createElementNS(kXULNS, "menuitem");
       defaultMenuItem.setAttribute("action", Ci.nsIHandlerInfo.useSystemDefault);
       defaultMenuItem.setAttribute("label", handlerInfo.defaultDescription);
+      defaultMenuItem.setAttribute("tooltiptext", handlerInfo.defaultDescription);
       defaultMenuItem.setAttribute("image", this._getIconURLForSystemDefault(handlerInfo));
 
       menuPopup.appendChild(defaultMenuItem);
@@ -1289,10 +1292,13 @@ var gApplicationsPane = {
 
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.useHelperApp);
+      let label;
       if (possibleApp instanceof Ci.nsILocalHandlerApp)
-        menuItem.setAttribute("label", getDisplayNameForFile(possibleApp.executable));
+        label = getDisplayNameForFile(possibleApp.executable);
       else
-        menuItem.setAttribute("label", possibleApp.name);
+        label = possibleApp.name;
+      menuItem.setAttribute("label", label);
+      menuItem.setAttribute("tooltiptext", label);
       menuItem.setAttribute("image", this._getIconURLForHandlerApp(possibleApp));
 
       // Attach the handler app object to the menu item so we can use it
@@ -1311,15 +1317,25 @@ var gApplicationsPane = {
                                                        [handlerInfo.plugin.name,
                                                         this._brandShortName]);
       pluginMenuItem.setAttribute("label", label);
+      pluginMenuItem.setAttribute("tooltiptext", label);
       pluginMenuItem.setAttribute("image", ICON_URL_PLUGIN);
       menuPopup.appendChild(pluginMenuItem);
     }
 
     // Create a menu item for selecting a local application.
+#ifdef XP_WIN
+    // On Windows, selecting an application to open another application
+    // would be meaningless so we special case executables.
+    var executableType = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService)
+                                                  .getTypeFromExtension("exe");
+    if (handlerInfo.type != executableType)
+#endif
     {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("oncommand", "gApplicationsPane.chooseApp(event)");
-      menuItem.setAttribute("label", this._prefsBundle.getString("chooseApp"));
+      let label = this._prefsBundle.getString("chooseApp");
+      menuItem.setAttribute("label", label);
+      menuItem.setAttribute("tooltiptext", label);
       menuPopup.appendChild(menuItem);
     }
 
@@ -1331,7 +1347,9 @@ var gApplicationsPane = {
         handlerInfo.type != TYPE_MAYBE_FEED) {
       var saveMenuItem = document.createElementNS(kXULNS, "menuitem");
       saveMenuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
-      saveMenuItem.setAttribute("label", this._prefsBundle.getString("saveFile"));
+      let label = this._prefsBundle.getString("saveFile");
+      saveMenuItem.setAttribute("label", label);
+      saveMenuItem.setAttribute("tooltiptext", label);
       saveMenuItem.setAttribute("image", ICON_URL_SAVE);
       menuPopup.appendChild(saveMenuItem);
     }

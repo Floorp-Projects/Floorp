@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
 #   Shawn Wilsher <me@shawnwilsher.com>
+#   Ryan VanderMeulen <ryanvm@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,11 +49,19 @@ MODULE           = sqlite3
 LIBRARY_NAME     = sqlite3
 FORCE_SHARED_LIB = 1
 VISIBILITY_FLAGS =
-LIB_IS_C_ONLY = 1
+LIB_IS_C_ONLY    = 1
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
 DEFFILE = $(win_srcdir)/sqlite.def
+RCFILE  = sqlite.rc
+RESFILE = sqlite.res
+
+GARBAGE += sqlite-version.h
+
+sqlite-version.h: sqlite-version.py sqlite3.h
+	$(PYTHON) $^ > $@
+export:: sqlite-version.h
 endif
 endif
 
@@ -67,16 +76,17 @@ MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif
 
-EXPORTS = sqlite3.h sqlite3file.h
+EXPORTS = \
+  sqlite3.h \
+  $(NULL)
 
 CSRCS = \
 	sqlite3.c \
 	$(NULL)
 
-# REDEF_IO allows us to override IO functions, which is used in the AsyncIO
 # -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
 # don't have to vacuum to make sure the data is not visible in the file.
-DEFINES = -DSQLITE_ENABLE_REDEF_IO -DSQLITE_SECURE_DELETE=1 -DTHREADSAFE=1
+DEFINES = -DSQLITE_SECURE_DELETE=1 -DTHREADSAFE=1
 
 ifeq ($(OS_ARCH),OS2)
 ifdef MOZ_OS2_HIGH_MEMORY

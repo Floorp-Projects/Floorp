@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(a437458b-baca-4a71-a839-13861a2fd538)]
+[scriptable, uuid(9c87a9bd-bf8b-4fae-bdb8-70513b2877df)]
 
 /**
  * An object containing information for a login stored by the
@@ -114,26 +114,26 @@ interface nsILoginInfo : nsISupports {
               in AString aUsernameField, in AString aPasswordField);
 
     /**
-     * Test for equality with another nsILoginInfo object.
+     * Test for strict equality with another nsILoginInfo object.
      *
      * @param aLoginInfo
      *        The other object to test.
-     *
-     * NOTE: The formSubmitURL field is not strictly checked. A blank (but
-     *       not NULL) value will match any value (except null) in the other
-     *       object's formSubmitURL field. The blank value indicates the login
-     *       was stored before bug 360493 was fixed.
      */
     boolean equals(in nsILoginInfo aLoginInfo);
 
     /**
-     * Test for equality with another nsILoginInfo object, with the
-     * password fields ignored.
+     * Test for loose equivalency with another nsILoginInfo object. The
+     * passwordField and usernameField values are ignored, and the password
+     * values may be optionally ignored. If one login's formSubmitURL is an
+     * empty string (but not null), it will be treated as a wildcard. [The
+     * blank value indicates the login was stored before bug 360493 was fixed.]
      *
      * @param aLoginInfo
      *        The other object to test.
+     * @param ignorePassword
+     *        If true, ignore the password when checking for match.
      */
-    boolean equalsIgnorePassword(in nsILoginInfo aLoginInfo);
+    boolean matches(in nsILoginInfo aLoginInfo, in boolean ignorePassword);
 };
 
 %{C++

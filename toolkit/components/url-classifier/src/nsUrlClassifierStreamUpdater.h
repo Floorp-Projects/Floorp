@@ -46,38 +46,61 @@
 #include "nsIUrlClassifierStreamUpdater.h"
 #include "nsIStreamListener.h"
 #include "nsNetUtil.h"
+#include "nsTArray.h"
+#include "nsIBadCertListener2.h"
+#include "nsISSLErrorListener.h"
 
 // Forward declare pointers
 class nsIURI;
 
 class nsUrlClassifierStreamUpdater : public nsIUrlClassifierStreamUpdater,
-                                     public nsIObserver
+                                     public nsIUrlClassifierUpdateObserver,
+                                     public nsIStreamListener,
+                                     public nsIObserver,
+                                     public nsIBadCertListener2,
+                                     public nsISSLErrorListener,
+                                     public nsIInterfaceRequestor
 {
 public:
   nsUrlClassifierStreamUpdater();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERSTREAMUPDATER
+  NS_DECL_NSIURLCLASSIFIERUPDATEOBSERVER
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIBADCERTLISTENER2
+  NS_DECL_NSISSLERRORLISTENER
   NS_DECL_NSIOBSERVER
-
-  // When the channel gets OnStopRequest, we call this
-  // to reset the stream updater.
-  void DownloadDone();
 
 private:
   // No subclassing
   ~nsUrlClassifierStreamUpdater() {}
+
+  // When the dbservice sends an UpdateComplete or UpdateFailure, we call this
+  // to reset the stream updater.
+  void DownloadDone();
 
   // Disallow copy constructor
   nsUrlClassifierStreamUpdater(nsUrlClassifierStreamUpdater&);
 
   nsresult AddRequestBody(const nsACString &aRequestBody);
 
+  nsresult FetchUpdate(nsIURI *aURI, const nsACString &aRequestBody);
+  nsresult FetchUpdate(const nsACString &aURI, const nsACString &aRequestBody);
+
   PRBool mIsUpdating;
   PRBool mInitialized;
   nsCOMPtr<nsIURI> mUpdateUrl;
-  nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIUrlClassifierDBService> mDBService;
+
+  nsTArray<nsCAutoString> mPendingUpdateUrls;
+
+  nsCOMPtr<nsIUrlClassifierCallback> mSuccessCallback;
+  nsCOMPtr<nsIUrlClassifierCallback> mUpdateErrorCallback;
+  nsCOMPtr<nsIUrlClassifierCallback> mDownloadErrorCallback;
 };
 
 #endif // nsUrlClassifierStreamUpdater_h_

@@ -112,16 +112,15 @@ pref("app.update.url", "https://aus2.mozilla.org/update/3/%PRODUCT%/%VERSION%/%B
 // Interval: Time between checks for a new version (in seconds)
 //           default=1 day
 pref("app.update.interval", 86400);
-// Interval: Time before prompting the user to download a new version that 
-//           is available (in seconds) default=1 day
-pref("app.update.nagTimer.download", 86400);
-// Interval: Time before prompting the user to restart to install the latest
-//           download (in seconds) default=30 minutes
-pref("app.update.nagTimer.restart", 1800);
+// Interval: Time before prompting the user again to restart to install the
+//           latest download (in seconds) default=1 day
+pref("app.update.nagTimer.restart", 86400);
 // Interval: When all registered timers should be checked (in milliseconds)
 //           default=10 minutes
 pref("app.update.timer", 600000);
-// Show the Update Checking UI when the user was idle for x seconds
+// Give the user x seconds to react before showing the big UI. default=12 hrs
+pref("app.update.promptWaitTime", 43200);
+// Show the Update Checking/Ready UI when the user was idle for x seconds
 pref("app.update.idletime", 60);
 
 // Whether or not we show a dialog box informing the user that the update was
@@ -535,7 +534,7 @@ pref("browser.safebrowsing.remoteLookups", false);
 pref("browser.safebrowsing.malware.enabled", true);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.0");
+pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.1");
 
 pref("browser.safebrowsing.dataProvider", 0);
 
@@ -583,6 +582,8 @@ pref("browser.sessionstore.postdata", 0);
 pref("browser.sessionstore.privacy_level", 1);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
+// maximum number of pages of back-history per tab to save
+pref("browser.sessionstore.max_tab_back_history", 10);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);

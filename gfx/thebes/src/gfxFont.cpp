@@ -860,7 +860,15 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
         return nsnull;
 
     gfxFont *font = GetFontAt(0);
-    textRun->SetSpaceGlyph(font, aParams->mContext, 0);
+    if (NS_UNLIKELY(GetStyle()->size == 0)) {
+        // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
+        // them, and always create at least size 1 fonts, i.e. they still
+        // render something for size 0 fonts.
+        textRun->AddGlyphRun(font, 0);
+    }
+    else {
+        textRun->SetSpaceGlyph(font, aParams->mContext, 0);
+    }
     // Note that the gfxGlyphExtents glyph bounds storage for the font will
     // always contain an entry for the font's space glyph, so we don't have
     // to call FetchGlyphExtents here.
@@ -1727,6 +1735,8 @@ gfxTextRun::CountMissingGlyphs()
 gfxTextRun::DetailedGlyph *
 gfxTextRun::AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount)
 {
+    NS_ASSERTION(aIndex < mCharacterCount, "Index out of range");
+
     if (!mCharacterGlyphs)
         return nsnull;
 

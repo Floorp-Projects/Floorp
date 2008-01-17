@@ -73,9 +73,9 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
     if (!embedPrivate)
       return NS_ERROR_FAILURE;
     
-    gtk_signal_emit(GTK_OBJECT(embedPrivate->mOwningWidget),
-		    moz_embed_signals[NEW_WINDOW],
-		    &newEmbed, (guint)aChromeFlags);
+    g_signal_emit(G_OBJECT(embedPrivate->mOwningWidget),
+                  moz_embed_signals[NEW_WINDOW], 0,
+                  &newEmbed, (guint)aChromeFlags);
     
   }
 

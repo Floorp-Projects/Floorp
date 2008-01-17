@@ -79,9 +79,16 @@ ifdef JS_HAS_FILE_OBJECT
 DEFINES += -DJS_HAS_FILE_OBJECT
 endif
 
+ifdef MOZ_SHARK
+DEFINES += -DMOZ_SHARK
+CFLAGS += -F/System/Library/PrivateFrameworks
+LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
+endif
+
 #
 # XCFLAGS may be set in the environment or on the gmake command line
 #
+#CFLAGS += -DDEBUG -DDEBUG_brendan -DJS_ARENAMETER -DJS_HASHMETER -DJS_DUMP_PROPTREE_STATS -DJS_DUMP_SCOPE_METERS -DJS_SCOPE_DEPTH_METER -DJS_BASIC_STATS
 CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 
 LDFLAGS		= $(XLDFLAGS)

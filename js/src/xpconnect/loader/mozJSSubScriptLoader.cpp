@@ -102,8 +102,8 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
     if (!xpc) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext(&cc);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     JSContext *cx;

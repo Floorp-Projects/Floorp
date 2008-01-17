@@ -19,7 +19,7 @@ sub Execute {
     my $config = new Bootstrap::Config();
     my $configBumpDir = $config->Get(var => 'configBumpDir');
     my $productTag = $config->Get(var => 'productTag');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $rc = int($config->Get(var => 'rc'));
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $product = $config->Get(var => 'product');

@@ -65,6 +65,12 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DJS_THREADSAFE
 
+ifdef MOZ_SHARK
+DEFINES += -DMOZ_SHARK
+CFLAGS += -F/System/Library/PrivateFrameworks
+LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
+endif
+
 #
 # Line editing support.  If your OS supplies the readline library, define
 # JS_READLINE to get line editing in the xpcshell.

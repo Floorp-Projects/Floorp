@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 sts=2 et cin: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -62,6 +62,9 @@ public:
   virtual ~nsOSHelperAppService();
 
   // method overrides for mime.types and mime.info look up steps
+  NS_IMETHOD GetFromTypeAndExtension(const nsACString& aMIMEType,
+                                     const nsACString& aFileExt,
+                                     nsIMIMEInfo **_retval);
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMimeType,
                                                   const nsACString& aFileExt,
                                                   PRBool     *aFound);

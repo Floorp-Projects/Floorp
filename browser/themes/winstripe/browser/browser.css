@@ -854,6 +854,22 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   visibility: collapse;
 }
 
+#urlbar-search-splitter {
+  min-width: 8px;
+  -moz-margin-start: -4px;
+  border: none;
+  background: transparent;
+}
+
+/*XXX The first two selectors are there because adjacent selectors aren't
+      working reliably (bug 229915). */
+#search-container + #urlbar-container > #urlbar ,
+#urlbar-container + #search-container > #searchbar > .searchbar-textbox ,
+#urlbar-search-splitter + #urlbar-container > #urlbar ,
+#urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
+  -moz-margin-start: 0;
+}
+
 #wrapper-urlbar-container #urlbar {
   -moz-user-input: disabled;
   cursor: -moz-grab;
@@ -1097,39 +1113,36 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 /* Tabs */
 .tabbrowser-tab {
   -moz-appearance: none;
-  height: 22px;
   background: url("chrome://browser/skin/tabbrowser/tab-bkgnd.png") repeat-x;
   margin: 3px 0px 4px;
-  padding: 0px 0px 1px;
+  padding: 0px 1px 1px 0px;
   border: 2px solid;
+  border-right-width: 1px;
   border-bottom: none;
   -moz-border-radius-topleft: 2px;
   -moz-border-radius-topright: 2px;
-  -moz-border-top-colors: #b5b3a8 #e8e6dc;
-  -moz-border-right-colors: #c1bfb3 #e8e6dc;
-  -moz-border-left-colors: #c1bfb3 #e8e6dc;
+  -moz-border-top-colors: ThreeDShadow rgba(255,255,255,.3);
+  -moz-border-right-colors: rgba(0,0,0,.1);
+  -moz-border-left-colors: ThreeDShadow rgba(255,255,255,.3);
 }
 
 .tabbrowser-tab:hover,
 .tabbrowser-tab[selected="true"] {
-  border: 1px solid;
-  border-bottom: none;
+  border-width: 1px;
   -moz-border-radius-topleft: 4px;
   -moz-border-radius-topright: 4px;
-  -moz-border-top-colors: #9a9890;
-  -moz-border-right-colors: #aaa89f;
-  -moz-border-left-colors: #aaa89f;
+  -moz-border-top-colors: ThreeDShadow;
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow;
 }
 
 .tabbrowser-tab:not([selected="true"]):hover {
-  height: 23px;
   margin: 2px 0px 4px;
   padding: 2px 1px 1px;
   background: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
 }
 
 .tabbrowser-tab[selected="true"] {
-  height: 24px;
   margin: 2px 0px 3px;
   padding: 1px;
   background: -moz-dialog url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png") repeat-x;
@@ -1225,204 +1238,111 @@ tabpanels {
   outline: none !important;
 }
 
-/* Tab scrollbox arrow buttons */
+/* Tab scrollbox arrow and all-tabs buttons */
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
+.tabbrowser-arrowscrollbox > .scrollbutton-down,
+.tabs-alltabs-button {
   -moz-appearance: none;
   width: 18px;
   margin: 3px 0px 4px;
   padding: 0px;
   border: 2px solid;
+  border-right-width: 1px;
   border-bottom: none;
-  -moz-border-top-colors: #b5b3a8 #e8e6dc;
-  -moz-border-right-colors: #c1bfb3 #e8e6dc;
-  -moz-border-left-colors: #c1bfb3 #e8e6dc;
+  -moz-border-top-colors: ThreeDShadow rgba(255,255,255,.3);
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow rgba(255,255,255,.3);
   background: url("chrome://browser/skin/tabbrowser/tab-bkgnd.png");
+  background-repeat: repeat-x;
+  -moz-image-region: rect(0, 11px, 14px, 0);
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover,
+.tabs-alltabs-button:hover {
+  border-top-width: 1px;
+  padding-top: 1px;
+  -moz-border-top-colors: ThreeDShadow;
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow transparent;
+  background: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
   background-repeat: repeat-x;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover {
-  border: 1px solid;
-  border-bottom: none;
-  -moz-border-top-colors: #9a9890;
-  -moz-border-right-colors: #aaa89f;
-  -moz-border-left-colors: #aaa89f;
-  background: url("chrome://browser/skin/tabbrowser/tab-active-bkgnd.png");
-  background-repeat: repeat-x;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up {
-  border-left: none;
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start.png");
-  -moz-image-region: rect(0, 11px, 14px, 0);
-  -moz-border-radius-topright: 2px;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up[chromedir="rtl"] {
-  border-left: 2px solid;
-  border-right: none;
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end.png");
-  -moz-border-radius-topleft: 2px;
-  -moz-border-radius-topright: 0px;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"] {
-  -moz-border-radius-topright: 4px;
-  -moz-image-region: rect(0, 33px, 14px, 22px);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up[chromedir="rtl"][disabled="true"] {
-  -moz-border-radius-topright: 0px;
-  -moz-border-radius-topleft: 4px;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover {
-  -moz-border-radius-topright: 4px;
-  -moz-border-radius-topleft: 0px;
-  border-left: none;
   -moz-image-region: rect(0, 22px, 14px, 11px);
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up[chromedir="rtl"]:not([disabled="true"]):hover {
-  -moz-border-radius-topright: 0px;
-  -moz-border-radius-topleft: 4px;
-  border-left: 1px solid;
-  border-right: none;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(0, 44px, 14px, 33px);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon {    
-  margin: 6px 0px 0px 0px;
-}                                                                            
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  border-right: none;
-  -moz-border-radius-topleft: 2px;
-  -moz-border-radius-topright: 0px;
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end.png");
-  -moz-image-region: rect(0, 11px, 14px, 0);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"] {
-  border-left: none;
-  border-right: 2px solid;
-  -moz-border-radius-topleft: 0px;
-  -moz-border-radius-topright: 2px;
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start.png");
-}
-
+.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled="true"],
 .tabbrowser-arrowscrollbox > .scrollbutton-down[disabled="true"] {
-  -moz-border-radius-topleft: 4px;
-  -moz-border-radius-topright: 0px;
-  -moz-image-region: rect(0, 33px, 14px, 22px);
+  opacity: .4;
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"][disabled="true"] {
-  -moz-border-radius-topleft: 0px;
-  -moz-border-radius-topright: 4px;
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover {
-  -moz-padding-start: 1px;
-  -moz-border-radius-topleft: 4px;
-  -moz-border-radius-topright: 0px;
-  border-right: none;
-  -moz-image-region: rect(0, 22px, 14px, 11px);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"]:not([disabled="true"]):hover {
-  border-left: none;
-  border-right: 1px solid;
-  -moz-border-radius-topleft: 0px;
-  -moz-border-radius-topright: 4px;
-}
-
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled="true"]):hover:active,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled="true"]):hover:active {
   -moz-image-region: rect(0, 44px, 14px, 33px);
 }
 
+.tabbrowser-arrowscrollbox > .scrollbutton-up {
+  border-left-style: none;
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start.png");
+  -moz-border-radius-topright: 2px;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up[chromedir="rtl"] {
+  border-left-style: solid;
+  border-right-style: none;
+  -moz-border-radius-topleft: 2px;
+  -moz-border-radius-topright: 0px;
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end.png");
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon {    
+  margin: 6px 0px 0px 0px;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down,
+.tabs-alltabs-button {
+  border-right-style: none;
+  -moz-border-radius-topleft: 2px;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end.png");
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"],
+.tabs-container > stack[chromedir="rtl"] > .tabs-alltabs-button {
+  border-left-style: none;
+  border-right-style: solid;
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-topright: 2px;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down[chromedir="rtl"] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start.png");
+}
+
 .tabbrowser-arrowscrollbox > .scrollbutton-down > .toolbarbutton-icon {
   margin-top: 6px;
-}
-
-/* All tabs button */
-.tabs-alltabs-box {
-  margin-top: 2px;
-  margin-bottom: 4px;
-  width: 18px !important;
-  height: 23px !important;
-  background-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end-bkgnd-enabled.png");
-  background-repeat: no-repeat;
-  -moz-border-radius-topleft: 4px;
-}
-
-stack[chromedir="rtl"] > hbox > .tabs-alltabs-box {
-  background-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start-bkgnd-enabled.png");
-  -moz-border-radius-topleft: 0px;
-  -moz-border-radius-topright: 4px;
-}
-
-.tabbrowser-tabs[overflow="true"] .tabs-alltabs-box {
-  background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-end-bkgnd.png");
-  -moz-border-radius-topleft: 0px;
-  -moz-border-radius-topright: 0px;
-}
-
-.tabbrowser-tabs[overflow="true"] stack[chromedir="rtl"] > hbox > .tabs-alltabs-box {
-  background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-start-bkgnd.png");
-}
-
-.tabs-alltabs-button {
-  -moz-appearance: none !important;
-  border: 0px !important;
-  margin-top: 2px;
-  margin-bottom: 4px;
-  width: 18px !important;
-  height: 23px !important;
-  border: 0px !important;
-  -moz-padding-start: 4px !important;
-  -moz-padding-end: 4px !important;
-  padding: 0px;
-}
-
-.tabs-alltabs-button > .toolbarbutton-text {
-  display: none;
-}
-
-.tabs-alltabs-button > .toolbarbutton-icon {
   -moz-margin-end: 2px;
 }
 
+.tabs-alltabs-button > .toolbarbutton-text,
+.tabs-alltabs-button > .toolbarbutton-icon {
+  display: none;
+}
+
 .tabs-alltabs-button > .toolbarbutton-menu-dropmarker {
-  margin-top: 3px !important;
-}
-
-.tabs-alltabs-button:hover {
-  background-image: url("chrome://browser/skin/tabbrowser/tab-arrow-end-bkgnd-hover.png");
-  background-repeat: no-repeat;
-}
-
-stack[chromedir="rtl"] > hbox > .tabs-alltabs-button:hover {
-  background-image: url("chrome://browser/skin/tabbrowser/tab-arrow-start-bkgnd-hover.png");
-}
-
-.tabbrowser-tabs[overflow="true"] .tabs-alltabs-button:hover {
-  background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-end-bkgnd-hover.png");
-}
-
-.tabbrowser-tabs[overflow="true"] stack[chromedir="rtl"] > hbox > .tabs-alltabs-button:hover {
-  background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-start-bkgnd-hover.png");
+  margin-top: 3px;
+  margin-bottom: 1px;
 }
 
 .tabs-alltabs-box-animate {
   margin-top: 2px;
   margin-bottom: 4px;
   width: 18px !important;
-  height: 23px !important;
   background-image: url("chrome://browser/skin/tabbrowser/alltabs-box-overflow-end-bkgnd-animate.png");
   background-repeat: no-repeat;
   opacity: 0.0;
@@ -1478,11 +1398,14 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
   background-repeat: repeat-x;
   border-left: 1px solid threedshadow;
   border-top: 1px solid threedshadow;
+  -moz-border-radius-topleft: 2px;
 }
 
 .tabs-container > .tabs-closebutton[chromedir="rtl"] {
   border-left: none;
   border-right: 1px solid threedshadow;
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-topright: 2px;
 }
 
 #sidebar-box .tabs-closebutton {

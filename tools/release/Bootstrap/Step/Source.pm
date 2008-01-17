@@ -18,7 +18,7 @@ sub Execute {
     my $product = $config->Get(var => 'product');
     my $appName = $config->Get(var => 'appName');
     my $productTag = $config->Get(var => 'productTag');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $stageHome = $config->Get(var => 'stageHome');
@@ -91,7 +91,7 @@ sub Push {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $stageHome = $config->Get(var => 'stageHome');
@@ -123,7 +123,7 @@ sub Announce {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
 
     $this->SendAnnouncement(
       subject => "$product $version source step finished",

@@ -1277,7 +1277,7 @@ static struct GCHist {
     JSGCThing   *freeList;
 } gchist[NGCHIST];
 
-unsigned gchpos;
+unsigned gchpos = 0;
 #endif
 
 void *
@@ -2469,7 +2469,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     /* Reset malloc counter. */
     rt->gcMallocBytes = 0;
 
-#ifdef DEBUG_scopemeters
+#ifdef JS_DUMP_SCOPE_METERS
   { extern void js_DumpScopeMeters(JSRuntime *rt);
     js_DumpScopeMeters(rt);
   }
@@ -2552,6 +2552,11 @@ restart:
 
     /* Finalize watch points associated with unreachable objects. */
     js_SweepWatchPoints(cx);
+
+#ifdef DEBUG
+    /* Save the pre-sweep count of scope-mapped properties. */
+    rt->liveScopePropsPreSweep = rt->liveScopeProps;
+#endif
 
     /*
      * Here we need to ensure that JSObject instances are finalized before GC-
@@ -2692,6 +2697,23 @@ restart:
     printf("GC HEAP SIZE %lu\n", (unsigned long)rt->gcBytes);
   }
 #endif
+
+#ifdef JS_SCOPE_DEPTH_METER
+  { static FILE *fp;
+    if (!fp)
+        fp = fopen("/tmp/scopedepth.stats", "w");
+
+    if (fp) {
+        JS_DumpBasicStats(&rt->protoLookupDepthStats, "proto-lookup depth", fp);
+        JS_DumpBasicStats(&rt->scopeSearchDepthStats, "scope-search depth", fp);
+        JS_DumpBasicStats(&rt->hostenvScopeDepthStats, "hostenv scope depth", fp);
+        JS_DumpBasicStats(&rt->lexicalScopeDepthStats, "lexical scope depth", fp);
+
+        putc('\n', fp);
+        fflush(fp);
+    }
+  }
+#endif /* JS_SCOPE_DEPTH_METER */
 
     JS_LOCK_GC(rt);
 

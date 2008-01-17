@@ -52,6 +52,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_colorpicker_popup.xul \
 		test_deck.xul \
 		test_menulist_keynav.xul \
+		test_menulist_null_value.xul \
 		test_popup_coords.xul \
 		test_popup_recreate.xul \
 		test_popup_button.xul \
@@ -94,6 +95,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_popupremoving.xul \
 		test_popupremoving_frame.xul \
 		frame_popupremoving_frame.xul \
+		test_position.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

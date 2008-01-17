@@ -87,57 +87,37 @@ nsBoxLayout::AddMargin(nsSize& aSize, const nsMargin& aMargin)
   nsBox::AddMargin(aSize, aMargin);
 }
 
-NS_IMETHODIMP
-nsBoxLayout::GetFlex(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aFlex)
+nsSize
+nsBoxLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
-  aFlex = aBox->GetFlex(aState);
-  return NS_OK;
+  nsSize pref (0, 0);
+  AddBorderAndPadding(aBox, pref);
+
+  return pref;
+}
+
+nsSize
+nsBoxLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
+{
+  nsSize minSize (0,0);
+  AddBorderAndPadding(aBox, minSize);
+  return minSize;
+}
+
+nsSize
+nsBoxLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
+{
+  //AddBorderAndPadding () never changes maxSize (NS_INTRINSICSIZE)
+  //AddBorderAndPadding(aBox, maxSize);
+  return nsSize (NS_INTRINSICSIZE,NS_INTRINSICSIZE);
 }
 
 
-NS_IMETHODIMP
-nsBoxLayout::IsCollapsed(nsIBox* aBox, nsBoxLayoutState& aState, PRBool& aCollapsed)
+nscoord
+nsBoxLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
 {
-  aCollapsed = aBox->IsCollapsed(aState);
-  return NS_OK;
+  return 0;
 }
-
-NS_IMETHODIMP
-nsBoxLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
-{
-  aSize.width = 0;
-  aSize.height = 0;
-  AddBorderAndPadding(aBox, aSize);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
-{
-  aSize.width = 0;
-  aSize.height = 0;
-  AddBorderAndPadding(aBox, aSize);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
-{
-  aSize.width = NS_INTRINSICSIZE;
-  aSize.height = NS_INTRINSICSIZE;
-  AddBorderAndPadding(aBox, aSize);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsBoxLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
-{
-  aAscent = 0;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsBoxLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
@@ -165,34 +145,29 @@ nsBoxLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSize2)
      aSize.height = aSize2.height;
 }
 
-NS_IMETHODIMP
+void
 nsBoxLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBoxLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBoxLayout::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBoxLayout::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsBoxLayout::IntrinsicWidthsDirty(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  return NS_OK;
 }
 
 // nsISupports

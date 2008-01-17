@@ -383,8 +383,9 @@ nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 #endif
 
-#ifdef MOZ_XUL
 nsresult NS_NewBoxObject(nsIBoxObject** aResult);
+
+#ifdef MOZ_XUL
 nsresult NS_NewListBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
@@ -441,8 +442,9 @@ MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLay
 
 MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
 MAKE_CTOR(CreateNewPresShell,           nsIPresShell,           NS_NewPresShell)
-#ifdef MOZ_XUL
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
+
+#ifdef MOZ_XUL
 MAKE_CTOR(CreateNewListBoxObject,       nsIBoxObject,           NS_NewListBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
 MAKE_CTOR(CreateNewPopupBoxObject,      nsIBoxObject,           NS_NewPopupBoxObject)
@@ -811,12 +813,12 @@ static const nsModuleComponentInfo gComponents[] = {
 
   // XXX end ick
 
-#ifdef MOZ_XUL
-  { "XUL Box Object",
+  { "Box Object",
     NS_BOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject;1",
     CreateNewBoxObject },
 
+#ifdef MOZ_XUL
   { "XUL Listbox Box Object",
     NS_LISTBOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject-listbox;1",

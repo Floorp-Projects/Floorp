@@ -60,6 +60,7 @@
 #include "nsIClientAuthDialogs.h"
 #include "nsICertOverrideService.h"
 #include "nsIBadCertListener2.h"
+#include "nsISSLErrorListener.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsRecentBadCerts.h"
@@ -348,6 +349,22 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
       nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
       NS_ProxyRelease(mainThread, secureUI, PR_FALSE);
       mExternalErrorReporting = PR_TRUE;
+
+      // If this socket is associated to a docshell, let's try to remember
+      // the currently used cert. If this socket gets a notification from NSS
+      // having the same raw socket, we can keep the PSM wrapper object
+      // and all the data it has cached (like verification results).
+      nsCOMPtr<nsISSLStatusProvider> statprov = do_QueryInterface(secureUI);
+      if (statprov) {
+        nsCOMPtr<nsISupports> isup_stat;
+        statprov->GetSSLStatus(getter_AddRefs(isup_stat));
+        if (isup_stat) {
+          nsCOMPtr<nsISSLStatus> sslstat = do_QueryInterface(isup_stat);
+          if (sslstat) {
+            sslstat->GetServerCert(getter_AddRefs(mPreviousCert));
+          }
+        }
+      }
     }
   }
 
@@ -578,7 +595,17 @@ nsresult nsNSSSocketInfo::SetFileDescPtr(PRFileDesc* aFilePtr)
   return NS_OK;
 }
 
-nsresult nsNSSSocketInfo::GetCert(nsNSSCertificate** _result)
+nsresult nsNSSSocketInfo::GetPreviousCert(nsIX509Cert** _result)
+{
+  NS_ENSURE_ARG_POINTER(_result);
+
+  *_result = mPreviousCert;
+  NS_IF_ADDREF(*_result);
+
+  return NS_OK;
+}
+
+nsresult nsNSSSocketInfo::GetCert(nsIX509Cert** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);
 
@@ -588,7 +615,7 @@ nsresult nsNSSSocketInfo::GetCert(nsNSSCertificate** _result)
   return NS_OK;
 }
 
-nsresult nsNSSSocketInfo::SetCert(nsNSSCertificate *aCert)
+nsresult nsNSSSocketInfo::SetCert(nsIX509Cert *aCert)
 {
   mCert = aCert;
 
@@ -761,10 +788,10 @@ static PRBool
 GetSubjectAltNames(CERTCertificate *nssCert,
                    nsINSSComponent *component,
                    nsString &allNames,
-                   PRBool &multipleNames)
+                   PRUint32 nameCount)
 {
   allNames.Truncate();
-  multipleNames = PR_FALSE;
+  nameCount = 0;
 
   PRArenaPool *san_arena = nsnull;
   SECItem altNameExtension = {siBuffer, NULL, 0 };
@@ -793,7 +820,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
       case certDNSName:
         name.AssignASCII((char*)current->name.other.data, current->name.other.len);
         if (!allNames.IsEmpty()) {
-          multipleNames = PR_TRUE;
+          ++nameCount;
           allNames.Append(NS_LITERAL_STRING(" , "));
         }
         allNames.Append(name);
@@ -818,7 +845,7 @@ GetSubjectAltNames(CERTCertificate *nssCert,
           }
           if (!name.IsEmpty()) {
             if (!allNames.IsEmpty()) {
-              multipleNames = PR_TRUE;
+              ++nameCount;
               allNames.Append(NS_LITERAL_STRING(" , "));
             }
             allNames.Append(name);
@@ -867,11 +894,11 @@ AppendErrorTextMismatch(const nsString &host,
   }
 
   nsString allNames;
-  PRBool multipleNames = PR_FALSE;
+  PRUint32 nameCount = 0;
   PRBool useSAN = PR_FALSE;
 
   if (nssCert)
-    useSAN = GetSubjectAltNames(nssCert, component, allNames, multipleNames);
+    useSAN = GetSubjectAltNames(nssCert, component, allNames, nameCount);
 
   if (!useSAN) {
     char *certName = nsnull;
@@ -882,12 +909,13 @@ AppendErrorTextMismatch(const nsString &host,
     if (!certName)
       certName = CERT_GetCommonName(&nssCert->subject);
     if (certName) {
+      ++nameCount;
       allNames.AssignASCII(certName);
       PORT_Free(certName);
     }
   }
 
-  if (multipleNames) {
+  if (nameCount > 1) {
     nsString message;
     rv = component->GetPIPNSSBundleString("certErrorMismatchMultiple", 
                                           message);
@@ -898,7 +926,7 @@ AppendErrorTextMismatch(const nsString &host,
       returnedMessage.Append(NS_LITERAL_STRING("  \n"));
     }
   }
-  else { // !multipleNames
+  else if (nameCount == 1) {
     const PRUnichar *params[1];
     params[0] = allNames.get();
 
@@ -908,6 +936,15 @@ AppendErrorTextMismatch(const nsString &host,
                                                   formattedString);
     if (NS_SUCCEEDED(rv)) {
       returnedMessage.Append(formattedString);
+      returnedMessage.Append(NS_LITERAL_STRING("\n"));
+    }
+  }
+  else { // nameCount == 0
+    nsString message;
+    nsresult rv = component->GetPIPNSSBundleString("certErrorMismatchNoNames",
+                                                   message);
+    if (NS_SUCCEEDED(rv)) {
+      returnedMessage.Append(message);
       returnedMessage.Append(NS_LITERAL_STRING("\n"));
     }
   }
@@ -1128,6 +1165,32 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   PRInt32 port;
   socketInfo->GetPort(&port);
 
+  // Try to get a nsISSLErrorListener implementation from the socket consumer.
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  socketInfo->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (callbacks) {
+    nsCOMPtr<nsISSLErrorListener> sel = do_GetInterface(callbacks);
+    if (sel) {
+      nsISSLErrorListener *proxy_sel = nsnull;
+      NS_GetProxyForObject(NS_PROXY_TO_MAIN_THREAD,
+                           NS_GET_IID(nsISSLErrorListener),
+                           sel,
+                           NS_PROXY_SYNC,
+                           (void**)&proxy_sel);
+      if (proxy_sel) {
+        nsIInterfaceRequestor *csi = static_cast<nsIInterfaceRequestor*>(socketInfo);
+        PRBool suppressMessage = PR_FALSE;
+        nsCString hostWithPortString = hostName;
+        hostWithPortString.AppendLiteral(":");
+        hostWithPortString.AppendInt(port);
+        rv = proxy_sel->NotifySSLError(csi, err, hostWithPortString, 
+                                       &suppressMessage);
+        if (NS_SUCCEEDED(rv) && suppressMessage)
+          return NS_OK;
+      }
+    }
+  }
+
   PRBool external = PR_FALSE;
   socketInfo->GetExternalErrorReporting(&external);
   
@@ -1181,7 +1244,7 @@ nsHandleInvalidCertError(nsNSSSocketInfo *socketInfo,
   
   nsString formattedString;
   rv = getInvalidCertErrorMessage(multipleCollectedErrors, errorCodeToReport,
-+                                 errTrust, errMismatch, errExpired,
+                                  errTrust, errMismatch, errExpired,
                                   hostU, hostWithPortU, port, 
                                   ix509, external, nssComponent, formattedString);
 
@@ -2739,6 +2802,9 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
         default:
           // we are not willing to continue on any other error
           nsHandleSSLError(infoObject, i_node->error);
+          // this error is our stop condition, so let's make sure
+          // this error code will be reported to the external world.
+          PR_SetError(i_node->error, 0);
           return cancel_and_failure(infoObject);
       }
     }

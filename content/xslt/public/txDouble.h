@@ -44,11 +44,11 @@
 #ifdef __FreeBSD__
 #include <ieeefp.h>
 #ifdef __alpha__
-fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP;
+static fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP;
 #else
-fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP|FP_X_DNML;
+static fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP|FP_X_DNML;
 #endif
-fp_except_t oldmask = fpsetmask(~allmask);
+static fp_except_t oldmask = fpsetmask(~allmask);
 #endif
 
 /**
@@ -63,7 +63,9 @@ fp_except_t oldmask = fpsetmask(~allmask);
  */
 
 #if defined(__arm) || defined(__arm32__) || defined(__arm26__) || defined(__arm__)
-#define CPU_IS_ARM
+#if !defined(__VFP_FP__)
+#define FPU_IS_ARM_FPA
+#endif
 #endif
 
 #if (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || __GNUC__ > 2
@@ -75,7 +77,7 @@ fp_except_t oldmask = fpsetmask(~allmask);
 typedef union txdpun {
     PRFloat64 d;
     struct {
-#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
+#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
         PRUint32 lo, hi;
 #else
         PRUint32 hi, lo;
@@ -92,7 +94,7 @@ typedef union txdpun {
  * so this code should work.
  */
 
-#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
+#if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
 #define TX_DOUBLE_HI32(x)        (((PRUint32 *)&(x))[1])
 #define TX_DOUBLE_LO32(x)        (((PRUint32 *)&(x))[0])
 #else

@@ -419,8 +419,10 @@ JS_FinishArenaPool(JSArenaPool *pool)
     {
         JSArenaStats *stats, **statsp;
 
-        if (pool->stats.name)
+        if (pool->stats.name) {
             free(pool->stats.name);
+            pool->stats.name = NULL;
+        }
         for (statsp = &arena_stats_list; (stats = *statsp) != 0;
              statsp = &stats->next) {
             if (stats == &pool->stats) {
@@ -483,30 +485,17 @@ JS_ArenaCountRetract(JSArenaPool *pool, char *mark)
     pool->stats.nfastrels++;
 }
 
-#include <math.h>
 #include <stdio.h>
 
 JS_PUBLIC_API(void)
 JS_DumpArenaStats(FILE *fp)
 {
     JSArenaStats *stats;
-    uint32 nallocs, nbytes;
-    double mean, variance, sigma;
+    double mean, sigma;
 
     for (stats = arena_stats_list; stats; stats = stats->next) {
-        nallocs = stats->nallocs;
-        if (nallocs != 0) {
-            nbytes = stats->nbytes;
-            mean = (double)nbytes / nallocs;
-            variance = stats->variance * nallocs - nbytes * nbytes;
-            if (variance < 0 || nallocs == 1)
-                variance = 0;
-            else
-                variance /= nallocs * (nallocs - 1);
-            sigma = sqrt(variance);
-        } else {
-            mean = variance = sigma = 0;
-        }
+        mean = JS_MeanAndStdDev(stats->nallocs, stats->nbytes, stats->variance,
+                                &sigma);
 
         fprintf(fp, "\n%s allocation statistics:\n", stats->name);
         fprintf(fp, "              number of arenas: %u\n", stats->narenas);

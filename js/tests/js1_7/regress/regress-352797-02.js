@@ -40,7 +40,7 @@ var gTestfile = 'regress-352797-02.js';
 var BUGNUMBER = 352797;
 var summary = 'Do not assert: OBJ_GET_CLASS(cx, obj) == &js_BlockClass';
 var actual = 'No Crash';
-var expect = 'No Crash';
+var expect = /No Crash/;
 
 
 //-----------------------------------------------------------------------------
@@ -60,11 +60,11 @@ function test()
   catch(ex)
   {
     printStatus('Note eval can no longer be called directly');
-    expect = 'EvalError: function eval must be called directly, and not by way of a function of another name';
+    expect = /EvalError: (f|F)unction (eval|"eval") must be called directly, and not by way of a function of another name/;
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }

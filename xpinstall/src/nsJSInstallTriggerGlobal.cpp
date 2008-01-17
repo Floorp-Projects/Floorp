@@ -374,13 +374,6 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
 
 
-    // save callback function if any (ignore bad args for now)
-    if ( argc >= 2 && JS_TypeOfValue(cx,argv[1]) == JSTYPE_FUNCTION )
-    {
-        trigger->SaveCallback( cx, argv[1] );
-    }
-
-
     // pass on only if good stuff found
     if (!abortLoad && trigger->Size() > 0)
     {
@@ -407,6 +400,12 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
                 }
                 else
                 {
+                    // save callback function if any (ignore bad args for now)
+                    if ( argc >= 2 && JS_TypeOfValue(cx,argv[1]) == JSTYPE_FUNCTION )
+                    {
+                        trigger->SaveCallback( cx, argv[1] );
+                    }
+
                     PRBool result;
                     nativeThis->StartInstall(installInfo, &result);
                     *rval = BOOLEAN_TO_JSVAL(result);

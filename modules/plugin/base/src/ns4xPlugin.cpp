@@ -67,6 +67,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
+#include "nsIPrincipal.h"
 
 #include "jscntxt.h"
 
@@ -1345,8 +1346,8 @@ _forceredraw(NPP npp)
   }
 }
 
-static JSContext *
-GetJSContextFromNPP(NPP npp)
+static nsIDocument *
+GetDocumentFromNPP(NPP npp)
 {
   NS_ENSURE_TRUE(npp, nsnull);
 
@@ -1364,8 +1365,13 @@ GetJSContextFromNPP(NPP npp)
 
   nsCOMPtr<nsIDocument> doc;
   owner->GetDocument(getter_AddRefs(doc));
-  NS_ENSURE_TRUE(doc, nsnull);
 
+  return doc;
+}
+
+static JSContext *
+GetJSContextFromDoc(nsIDocument *doc)
+{
   nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
   NS_ENSURE_TRUE(sgo, nsnull);
 
@@ -1373,6 +1379,15 @@ GetJSContextFromNPP(NPP npp)
   NS_ENSURE_TRUE(scx, nsnull);
 
   return (JSContext *)scx->GetNativeContext();
+}
+
+static JSContext *
+GetJSContextFromNPP(NPP npp)
+{
+  nsIDocument *doc = GetDocumentFromNPP(npp);
+  NS_ENSURE_TRUE(doc, nsnull);
+
+  return GetJSContextFromDoc(doc);
 }
 
 NPObject* NP_CALLBACK
@@ -1613,7 +1628,10 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   NPPAutoPusher nppPusher(npp);
 
-  JSContext *cx = GetJSContextFromNPP(npp);
+  nsIDocument *doc = GetDocumentFromNPP(npp);
+  NS_ENSURE_TRUE(doc, false);
+
+  JSContext *cx = GetJSContextFromDoc(doc);
   NS_ENSURE_TRUE(cx, false);
 
   JSObject *obj =
@@ -1645,11 +1663,39 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   nsCOMPtr<nsIScriptContext> scx = GetScriptContextFromJSContext(cx);
   NS_ENSURE_TRUE(scx, false);
 
-  nsIPrincipal *principal = nsnull;
-  // XXX: Get the principal from the security stack (TBD)
+  nsIPrincipal *principal = doc->NodePrincipal();
+
+  nsCAutoString specStr;
+  const char *spec;
+
+  nsCOMPtr<nsIURI> uri;
+  principal->GetURI(getter_AddRefs(uri));
+
+  if (uri) {
+    uri->GetSpec(specStr);
+    spec = specStr.get();
+  } else {
+    // No URI in a principal means it's the system principal. If the
+    // document URI is a chrome:// URI, pass that in as the URI of the
+    // script, else pass in null for the filename as there's no way to
+    // know where this document really came from. Passing in null here
+    // also means that the script gets treated by XPConnect as if it
+    // needs additional protection, which is what we want for unknown
+    // chrome code anyways.
+
+    uri = doc->GetDocumentURI();
+    PRBool isChrome = PR_FALSE;
+
+    if (uri && NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome) {
+      uri->GetSpec(specStr);
+      spec = specStr.get();
+    } else {
+      spec = nsnull;
+    }
+  }
 
   nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
-                                             nsnull, 0, nsnull, rval, nsnull);
+                                             spec, 0, 0, rval, nsnull);
 
   return NS_SUCCEEDED(rv) &&
          (!result || JSValToNPVariant(npp, cx, *rval, result));

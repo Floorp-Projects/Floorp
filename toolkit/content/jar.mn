@@ -50,7 +50,6 @@ toolkit.jar:
 *+ content/global/bindings/listbox.xml         (widgets/listbox.xml)
 *+ content/global/bindings/menu.xml            (widgets/menu.xml)
 *+ content/global/bindings/menulist.xml        (widgets/menulist.xml)
-*+ content/global/bindings/nativescrollbar.xml (widgets/nativescrollbar.xml)
 *+ content/global/bindings/notification.xml    (widgets/notification.xml)
 *+ content/global/bindings/numberbox.xml       (widgets/numberbox.xml)
 *+ content/global/bindings/popup.xml           (widgets/popup.xml)

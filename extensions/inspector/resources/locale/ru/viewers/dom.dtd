@@ -51,6 +51,7 @@
 <!ENTITY cmdToggleProcessingInstructions.label "Показывать инструкции обработки">
 <!ENTITY cmdToggleProcessingInstructions.accesskey "о">
 <!ENTITY cmdFlashSelected.label "Подсвечивать выбранный элемент">
+<!ENTITY cmdFlashSelected.accesskey "в">
 <!ENTITY cmdToggleAttributes.label "Показывать атрибуты">
 <!ENTITY cmdToggleAttributes.accesskey "а">
 <!ENTITY cmdSelectByClick.label "Выбирать элемент щелчком">
@@ -61,42 +62,71 @@
 <!ENTITY cmdInsertNode.label "Вставка…">
 <!ENTITY cmdDeleteNode.label "Удалить">
 <!ENTITY cmdCopyXML.label "Копировать XML">
+<!ENTITY cmdCopyXML.accesskey "п">
 <!ENTITY cmdBlink.label "Подсвечивать элемент">
+<!ENTITY cmdBlink.accesskey "с">
 <!ENTITY cmdInspectBrowser.label "Исследовать открытый документ">
+<!ENTITY cmdInspectBrowser.accesskey "т">
 <!ENTITY cmdInspectInNewWindow.label "Исследовать в новом окне">
+<!ENTITY cmdInspectInNewWindow.accesskey "н">
 <!ENTITY cmdShowPseudoClasses.label "Указать псевдоклассы…">
 <!ENTITY cmdShowPseudoClasses.accesskey "У">
 <!ENTITY pseudoClasses.title "Псевдоклассы">
 <!ENTITY findNodes.title "Найти узлы">
 <!ENTITY findNodesById.label "Идентификатор">
+<!ENTITY findNodesById.accesskey "д">
+<!ENTITY findNodesById.accesskey2 "т">
 <!ENTITY findNodesByTag.label "Тег">
+<!ENTITY findNodesByTag.accesskey "е">
+<!ENTITY findNodesByTag.accesskey2 "г">
 <!ENTITY findNodesByAttr.label "Атрибут">
+<!ENTITY findNodesByAttr.accesskey "т">
+<!ENTITY findNodesByAttr.accesskey2 "р">
 <!ENTITY findNodesByAttrValue.label "Значение">
+<!ENTITY findNodesByAttrValue.accesskey "н">
 <!ENTITY findNodesSearchBy.label "Условие поиска">
 <!ENTITY findNodesDirection.label "Направление">
 <!ENTITY findNodesDirectionUp.label "Вверх">
+<!ENTITY findNodesDirectionUp.accesskey "в">
 <!ENTITY findNodesDirectionDown.label "Вниз">
+<!ENTITY findNodesDirectionDown.accesskey "н">
 <!ENTITY findNodesFind.label "Найти">
 <!ENTITY findNodesCancel.label "Отмена">
 <!ENTITY mnEditPasteMenu.label "Вставить">
+<!ENTITY mnEditPasteMenu.accesskey "т">
 <!ENTITY mnEditPasteBefore.label "Перед">
+<!ENTITY mnEditPasteBefore.accesskey "е">
 <!ENTITY mnEditPasteAfter.label "После">
+<!ENTITY mnEditPasteAfter.accesskey "о">
 <!ENTITY mnEditPasteReplace.label "Вместо (Замена)">
+<!ENTITY mnEditPasteReplace.accesskey "м">
 <!ENTITY mnEditPasteFirstChild.label "Как первый дочерний">
+<!ENTITY mnEditPasteFirstChild.accesskey "в">
 <!ENTITY mnEditPasteLastChild.label "Как последний дочерний">
+<!ENTITY mnEditPasteLastChild.accesskey "с">
 <!ENTITY mnEditPasteAsParent.label "Как родительский">
+<!ENTITY mnEditPasteAsParent.accesskey "р">
 <!ENTITY mnEditInsertMenu.label "Вставка">
+<!ENTITY mnEditInsertMenu.accesskey "т">
 <!ENTITY mnEditInsertAfter.label "После">
+<!ENTITY mnEditInsertAfter.accesskey "с">
 <!ENTITY mnEditInsertBefore.label "Перед">
+<!ENTITY mnEditInsertBefore.accesskey "р">
 <!ENTITY mnEditInsertFirstChild.label "Как первый дочерний">
+<!ENTITY mnEditInsertFirstChild.accesskey "в">
 <!ENTITY mnEditInsertLastChild.label "Как последний дочерний">
+<!ENTITY mnEditInsertLastChild.accesskey "с">
 <!ENTITY insertNode.title "Вставить узел">
 <!ENTITY nodeType.label "Тип узла:">
+<!ENTITY nodeType.accesskey "л">
 <!ENTITY nodeType.element.label "Элемент">
 <!ENTITY nodeType.text.label "Текст">
 <!ENTITY namespaceURI.label "URI пространства имен:">
+<!ENTITY namespaceURI.accesskey "м">
 <!ENTITY tagName.label "Имя тега:">
+<!ENTITY tagName.accesskey "м">
 <!ENTITY nodeValue.label "Значение узла:">
+<!ENTITY nodeValue.accesskey "н">
 <!ENTITY namespaceTitle.null.label "null">
 <!ENTITY namespaceTitle.default.label "Документа по умолчанию">
 <!ENTITY namespaceTitle.custom.label "Другой">
@@ -113,3 +143,6 @@
 <!ENTITY namespaceTitle.XMLEvents.label "XML Events">
 <!ENTITY namespaceTitle.WAIRoles.label "WAI Roles">
 <!ENTITY namespaceTitle.WAIProperties.label "WAI Properties">
+<!ENTITY cbxStateHover.accesskey "h">
+<!ENTITY cbxStateActive.accesskey "a">
+<!ENTITY cbxStateFocus.accesskey "f">

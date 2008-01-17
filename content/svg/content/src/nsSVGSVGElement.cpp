@@ -656,16 +656,14 @@ nsSVGSVGElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio * *
 NS_IMETHODIMP
 nsSVGSVGElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
 {
-  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetNearestViewportElement");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsSVGUtils::GetNearestViewportElement(this, aNearestViewportElement);
 }
 
 /* readonly attribute nsIDOMSVGElement farthestViewportElement; */
 NS_IMETHODIMP
 nsSVGSVGElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewportElement)
 {
-  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetFarthestViewportElement");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsSVGUtils::GetFarthestViewportElement(this, aFarthestViewportElement);
 }
 
 /* nsIDOMSVGRect getBBox (); */
@@ -676,22 +674,22 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
-  if (frame) {
-    nsISVGChildFrame* svgframe;
-    CallQueryInterface(frame, &svgframe);
-    if (svgframe) {
-      svgframe->SetMatrixPropagation(PR_FALSE);
-      svgframe->NotifyCanvasTMChanged(PR_TRUE);
-      nsresult rv = svgframe->GetBBox(_retval);
-      svgframe->SetMatrixPropagation(PR_TRUE);
-      svgframe->NotifyCanvasTMChanged(PR_TRUE);
-      return rv;
-    } else {
-      // XXX: outer svg
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
+  if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
+    return NS_ERROR_FAILURE;
+
+  nsISVGChildFrame* svgframe;
+  CallQueryInterface(frame, &svgframe);
+  if (svgframe) {
+    svgframe->SetMatrixPropagation(PR_FALSE);
+    svgframe->NotifyCanvasTMChanged(PR_TRUE);
+    nsresult rv = svgframe->GetBBox(_retval);
+    svgframe->SetMatrixPropagation(PR_TRUE);
+    svgframe->NotifyCanvasTMChanged(PR_TRUE);
+    return rv;
+  } else {
+    // XXX: outer svg
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
-  return NS_ERROR_FAILURE;
 }
 
 /* nsIDOMSVGMatrix getCTM (); */
