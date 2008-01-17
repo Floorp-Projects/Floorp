@@ -80,6 +80,11 @@
     <implementation>
       <constructor>
       <![CDATA[
+        // if the element has been inserted without the name attribute set,
+        // we have nothing to do here
+        if (!this.name)
+          return;
+
         this.preferences.rootBranchInternal
             .addObserver(this.name, this.preferences, false);
         // In non-instant apply mode, we must try and use the last saved state
