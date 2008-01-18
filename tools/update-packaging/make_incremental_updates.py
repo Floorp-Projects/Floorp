@@ -308,15 +308,22 @@ def usage():
     print "-f for patchlist_file"
 
 def get_buildid(work_dir, platform):
-    """ extracts buildid from MAR """
+    """ extracts buildid from MAR
+        TODO: this should handle 1.8 branch too
+    """
     if platform == 'mac':
       ini = '%s/Contents/MacOS/application.ini' % work_dir
     else:
       ini = '%s/application.ini' % work_dir
+    if not os.path.exists(ini):
+        print 'WARNING: application.ini not found, cannot find build ID'
+        return ''
     file = bz2.BZ2File(ini)
     for line in file:
       if line.find('BuildID') == 0:
         return line.strip().split('=')[1]
+    print 'WARNING: cannot find build ID in application.ini'
+    return ''
 
 def decode_filename(filename):
     """ Breaks filename into component parts based on regex
