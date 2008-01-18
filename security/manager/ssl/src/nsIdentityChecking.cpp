@@ -585,6 +585,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
   cvin[1].type = cert_pi_revocationFlags;
   cvin[1].value.scalar.ul = CERT_REV_FAIL_SOFT_CRL
                             | CERT_REV_FLAG_CRL
+                            | CERT_REV_FLAG_OCSP
                             ;
   cvin[2].type = cert_pi_end;
 
