@@ -1203,6 +1203,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         break;
 
     case nsIAccessibleEvent::EVENT_TABLE_ROW_INSERT:
+      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_INSERT\n"));
         nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
@@ -1217,9 +1218,10 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
                               rowIndex,
                               // The number of the inserted
                               numRows);
-        break;
+     } break;
 
    case nsIAccessibleEvent::EVENT_TABLE_ROW_DELETE:
+     {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_DELETE\n"));
         nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
@@ -1234,14 +1236,17 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
                               rowIndex,
                               // The number of the deleted
                               numRows);
-        break;
+      } break;
 
     case nsIAccessibleEvent::EVENT_TABLE_ROW_REORDER:
+      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_REORDER\n"));
         g_signal_emit_by_name(atkObj, "row_reordered");
         break;
+      }
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_INSERT:
+      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_INSERT\n"));
         nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
@@ -1256,9 +1261,10 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
                               colIndex,
                               // The number of the inserted
                               numCols);
-        break;
+      } break;
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_DELETE:
+      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_DELETE\n"));
         nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
         NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
@@ -1273,7 +1279,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
                               colIndex,
                               // The number of the deleted
                               numCols);
-        break;
+      } break;
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_REORDER:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_REORDER\n"));
