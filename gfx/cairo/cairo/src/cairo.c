@@ -67,7 +67,7 @@ static const cairo_t _cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_INDEX
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_TEMP_FILE_ERROR
 
 /**
  * _cairo_error:
@@ -3019,6 +3019,9 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     if (cr->status)
 	return;
 
+    if (utf8 == NULL)
+	return;
+
     cairo_get_current_point (cr, &x, &y);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
@@ -3074,6 +3077,9 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
     cairo_status_t status;
 
     if (cr->status)
+	return;
+
+    if (num_glyphs == 0)
 	return;
 
     status = _cairo_gstate_glyph_path (cr->gstate,
@@ -3326,17 +3332,19 @@ cairo_get_target (cairo_t *cr)
  * cairo_get_group_target:
  * @cr: a cairo context
  *
- * Gets the target surface for the current group as started by the
- * most recent call to cairo_push_group() or
- * cairo_push_group_with_content().
+ * Gets the current destination surface for the context. This is either
+ * the original target surface as passed to cairo_create() or the target
+ * surface for the current group as started by the most recent call to
+ * cairo_push_group() or cairo_push_group_with_content().
  *
- * This function will return NULL if called "outside" of any group
- * rendering blocks, (that is, after the last balancing call to
- * cairo_pop_group() or cairo_pop_group_to_source()).
+ * This function will always return a valid pointer, but the result
+ * can be a "nil" surface if @cr is already in an error state,
+ * (ie. cairo_status() <literal>!=</literal> %CAIRO_STATUS_SUCCESS).
+ * A nil surface is indicated by cairo_surface_status()
+ * <literal>!=</literal> %CAIRO_STATUS_SUCCESS.
  *
- * Return value: the target group surface, or NULL if none.  This
- * object is owned by cairo. To keep a reference to it, you must call
- * cairo_surface_reference().
+ * Return value: the target surface. This object is owned by cairo. To
+ * keep a reference to it, you must call cairo_surface_reference().
  *
  * Since: 1.2
  **/
@@ -3551,6 +3559,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid index passed to getter";
     case CAIRO_STATUS_CLIP_NOT_REPRESENTABLE:
         return "clip region not representable in desired format";
+    case CAIRO_STATUS_TEMP_FILE_ERROR:
+	return "error creating or writing to a temporary file";
     }
 
     return "<unknown error status>";

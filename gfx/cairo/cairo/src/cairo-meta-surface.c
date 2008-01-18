@@ -61,8 +61,7 @@
 
 typedef enum {
     CAIRO_META_REPLAY,
-    CAIRO_META_CREATE_REGIONS,
-    CAIRO_META_ANALYZE_META_PATTERN
+    CAIRO_META_CREATE_REGIONS
 } cairo_meta_replay_type_t;
 
 static const cairo_surface_backend_t cairo_meta_surface_backend;
@@ -476,7 +475,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     free (command);
-    return _cairo_error (status);
+    return status;
 }
 
 /**
@@ -853,11 +852,6 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    }
 	}
 
-	if (type == CAIRO_META_ANALYZE_META_PATTERN) {
-	    if (status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY)
-		status = CAIRO_STATUS_SUCCESS;
-	}
-
 	if (status)
 	    break;
     }
@@ -874,16 +868,6 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     return _cairo_meta_surface_replay_internal (surface,
 						target,
 						CAIRO_META_REPLAY,
-						CAIRO_META_REGION_ALL);
-}
-
-cairo_status_t
-_cairo_meta_surface_replay_analyze_meta_pattern (cairo_surface_t *surface,
-						 cairo_surface_t *target)
-{
-    return _cairo_meta_surface_replay_internal (surface,
-						target,
-						CAIRO_META_ANALYZE_META_PATTERN,
 						CAIRO_META_REGION_ALL);
 }
 

@@ -275,8 +275,14 @@ cairo_surface_write_to_png (cairo_surface_t	*surface,
     cairo_status_t status;
 
     fp = fopen (filename, "wb");
-    if (fp == NULL)
-	return _cairo_error (CAIRO_STATUS_WRITE_ERROR);
+    if (fp == NULL) {
+	switch (errno) {
+	case ENOMEM:
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	default:
+	    return _cairo_error (CAIRO_STATUS_WRITE_ERROR);
+	}
+    }
 
     status = write_png (surface, stdio_write_func, fp);
 

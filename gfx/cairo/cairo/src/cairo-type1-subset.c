@@ -147,18 +147,20 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     font->base.y_max = face->bbox.yMax;
     font->base.ascent = face->ascender;
     font->base.descent = face->descender;
-    font->base.base_font = strdup (face->family_name);
-    if (font->base.base_font == NULL) {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail2;
-    }
 
-    for (i = 0, j = 0; font->base.base_font[j]; j++) {
-	if (font->base.base_font[j] == ' ')
-	    continue;
-	font->base.base_font[i++] = font->base.base_font[j];
+    if (face->family_name) {
+	font->base.base_font = strdup (face->family_name);
+	if (font->base.base_font == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto fail2;
+	}
+	for (i = 0, j = 0; font->base.base_font[j]; j++) {
+	    if (font->base.base_font[j] == ' ')
+		continue;
+	    font->base.base_font[i++] = font->base.base_font[j];
+	}
+	font->base.base_font[i] = '\0';
     }
-    font->base.base_font[i] = '\0';
 
     font->glyphs = calloc (face->num_glyphs, sizeof font->glyphs[0]);
     if (font->glyphs == NULL) {
@@ -180,7 +182,8 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     return CAIRO_STATUS_SUCCESS;
 
  fail3:
-    free (font->base.base_font);
+    if (font->base.base_font)
+	free (font->base.base_font);
  fail2:
     _cairo_unscaled_font_destroy (unscaled_font);
     free (font);
@@ -190,16 +193,13 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     return status;
 }
 
-static int
+static void
 cairo_type1_font_subset_use_glyph (cairo_type1_font_subset_t *font, int glyph)
 {
     if (font->glyphs[glyph].subset_index >= 0)
-	return font->glyphs[glyph].subset_index;
+	return;
 
-    font->glyphs[glyph].subset_index = font->num_glyphs;
-    font->num_glyphs++;
-
-    return font->glyphs[glyph].subset_index;
+    font->glyphs[glyph].subset_index = font->num_glyphs++;
 }
 
 static cairo_bool_t
@@ -1161,7 +1161,8 @@ cairo_type1_font_subset_destroy (void *abstract_font)
 
     _cairo_unscaled_font_destroy (font->base.unscaled_font);
 
-    free (font->base.base_font);
+    if (font->base.base_font)
+	free (font->base.base_font);
     free (font->glyphs);
     free (font);
 }
@@ -1178,6 +1179,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     unsigned long parent_glyph, length;
     unsigned int i;
     cairo_unscaled_font_t *unscaled_font;
+    char buf[30];
 
     /* XXX: Need to fix this to work with a general cairo_unscaled_font_t. */
     if (!_cairo_scaled_font_is_ft (scaled_font_subset->scaled_font))
@@ -1201,7 +1203,13 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     if (status)
 	goto fail1;
 
-    type1_subset->base_font = strdup (font->base.base_font);
+    if (font->base.base_font) {
+	type1_subset->base_font = strdup (font->base.base_font);
+    } else {
+        snprintf(buf, sizeof (buf), "CairoFont-%u-%u",
+                 scaled_font_subset->font_id, scaled_font_subset->subset_id);
+	type1_subset->base_font = strdup (buf);
+    }
     if (type1_subset->base_font == NULL)
 	goto fail1;
 

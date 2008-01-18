@@ -1051,7 +1051,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 					   image->height);
     if (cairo_surface_status (snapshot)) {
 	_cairo_surface_release_source_image (surface,
-					     image, &image_extra);
+					     image, image_extra);
 	return snapshot;
     }
 
@@ -1069,7 +1069,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 
     _cairo_pattern_fini (&pattern.base);
     _cairo_surface_release_source_image (surface,
-					 image, &image_extra);
+					 image, image_extra);
 
     if (status) {
 	cairo_surface_destroy (snapshot);

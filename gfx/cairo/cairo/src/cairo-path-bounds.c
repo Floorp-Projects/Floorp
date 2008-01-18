@@ -148,7 +148,7 @@ _cairo_path_bounder_close_path (void *closure)
 }
 
 /* XXX: Perhaps this should compute a PixRegion rather than 4 doubles */
-cairo_status_t
+void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
 			  double *x2, double *y2)
@@ -165,18 +165,16 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 					  _cairo_path_bounder_curve_to,
 					  _cairo_path_bounder_close_path,
 					  &bounder);
-    if (status) {
-	*x1 = *y1 = *x2 = *y2 = 0.0;
-	_cairo_path_bounder_fini (&bounder);
-	return status;
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    if (! bounder.has_point) {
+	*x1 = *y1 = *x2 = *y2 = 0.;
+    } else {
+	*x1 = _cairo_fixed_to_double (bounder.min_x);
+	*y1 = _cairo_fixed_to_double (bounder.min_y);
+	*x2 = _cairo_fixed_to_double (bounder.max_x);
+	*y2 = _cairo_fixed_to_double (bounder.max_y);
     }
 
-    *x1 = _cairo_fixed_to_double (bounder.min_x);
-    *y1 = _cairo_fixed_to_double (bounder.min_y);
-    *x2 = _cairo_fixed_to_double (bounder.max_x);
-    *y2 = _cairo_fixed_to_double (bounder.max_y);
-
     _cairo_path_bounder_fini (&bounder);
-
-    return CAIRO_STATUS_SUCCESS;
 }

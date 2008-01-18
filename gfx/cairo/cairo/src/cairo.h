@@ -201,6 +201,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_DSC_COMMENT: invalid value for a DSC comment (Since 1.2)
  * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter (Since 1.4)
  * @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: clip region not representable in desired format (Since 1.4)
+ * @CAIRO_STATUS_TEMP_FILE_ERROR: error creating or writing to a temporary file (Since 1.6)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -233,7 +234,9 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_DASH,
     CAIRO_STATUS_INVALID_DSC_COMMENT,
     CAIRO_STATUS_INVALID_INDEX,
-    CAIRO_STATUS_CLIP_NOT_REPRESENTABLE
+    CAIRO_STATUS_CLIP_NOT_REPRESENTABLE,
+    CAIRO_STATUS_TEMP_FILE_ERROR
+    /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairo.c */
 } cairo_status_t;
 
 /**
