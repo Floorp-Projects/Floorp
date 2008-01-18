@@ -2609,9 +2609,10 @@ nsCanvasRenderingContext2D::PutImageData()
     if (mImageSurfaceData) {
         int stride = mWidth*4;
         PRUint8 *dest = mImageSurfaceData + stride*y + x*4;
+        PRUint8 *src = imageBuffer.get();
 
-        for (int32 i = 0; i < y; i++) {
-            memcpy(dest, imgPtr + (w*4)*i, w*4);
+        for (int32 i = 0; i < h; i++) {
+            memcpy(dest, src + (w*4)*i, w*4);
             dest += stride;
         }
     } else {
