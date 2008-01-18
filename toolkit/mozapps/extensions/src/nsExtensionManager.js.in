@@ -6052,12 +6052,15 @@ ExtensionItemUpdater.prototype = {
  */
 function escapeAddonURI(aItem, aURI, aDS)
 {
-  var itemStatus;
+  var itemStatus = "userEnabled";
   if (aDS.getItemProperty(aItem.id, "userDisabled") == "true" ||
       aDS.getItemProperty(aItem.id, "userDisabled") == OP_NEEDS_ENABLE)
     itemStatus = "userDisabled";
-  else
-    itemStatus = "userEnabled";
+  else if (aDS.getItemProperty(aItem.id, "type") == Ci.nsIUpdateItem.TYPE_THEME) {
+    var currentSkin = gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+    if (aDS.getItemProperty(aItem.id, "internalName") != currentSkin)
+      itemStatus = "userDisabled";
+  }
 
   if (aDS.getItemProperty(aItem.id, "compatible") == "false")
     itemStatus += ",incompatible";
