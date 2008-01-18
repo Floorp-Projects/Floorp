@@ -1,7 +1,7 @@
 diff --git a/src/cairo-ft-font.c b/src/cairo-ft-font.c
 index 59a5acb..8851387 100644
---- a/src/cairo-ft-font.c
-+++ b/src/cairo-ft-font.c
+--- a/cairo/src/cairo-ft-font.c
++++ b/cairo/src/cairo-ft-font.c
 @@ -62,6 +62,10 @@
   */
  #define MAX_OPEN_FACES 10

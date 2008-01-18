@@ -26,3 +26,7 @@ win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
 nonfatal-assertions.patch: Make assertions non-fatal
 
 endian.patch: include cairo-platform.h for endian macros
+
+fixed-24-8.patch: Switch fixed point mode from 16.16 to 24.8
+
+mac-runtime-linkage.patch: Do some runtime dlsym lookups instead of relying on gcc attributes
