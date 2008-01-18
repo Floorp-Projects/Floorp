@@ -193,9 +193,6 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
 
     AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
 
-    STOBJ_SET_PARENT(funobj, nsnull);
-    STOBJ_SET_PROTO(funobj, nsnull);
-
     if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL(iface))||
        !JS_SetReservedSlot(ccx, funobj, 1, PRIVATE_TO_JSVAL(this)))
         return JS_FALSE;
