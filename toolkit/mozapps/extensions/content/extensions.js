@@ -79,6 +79,9 @@ const PREF_EM_LAST_SELECTED_SKIN            = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
 const PREF_UPDATE_NOTIFYUSER                = "extensions.update.notifyUser";
 
+const URI_GENERIC_ICON_XPINSTALL      = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+const URI_GENERIC_ICON_THEME          = "chrome://mozapps/skin/extensions/themeGeneric.png";
+
 const RDFURI_ITEM_ROOT    = "urn:mozilla:item:root";
 const PREFIX_ITEM_URI     = "urn:mozilla:item:";
 const PREFIX_NS_EM        = "http://www.mozilla.org/2004/em-rdf#";
@@ -1496,25 +1499,19 @@ var gExtensionsDNDObserver =
       if (!fileData)
         continue;
 
-      if (fileData.type == nsIUpdateItem.TYPE_EXTENSION) {
-        xpinstallObj[fileData.fileName] = fileData.fileURL;
-        ++xpiCount;
-      }
-      else if (fileData.type == nsIUpdateItem.TYPE_THEME) {
-        themes[fileData.fileName] = fileData.fileURL;
-        ++themeCount;
-      }
+      xpinstallObj[fileData.fileName] = {
+        URL: fileData.fileURL,
+        toString: function() { return this.URL; }
+      };
+      ++xpiCount;
+      if (fileData.type == nsIUpdateItem.TYPE_THEME)
+        xpinstallObj[fileData.fileName].IconURL = URI_GENERIC_ICON_THEME;
+      else
+        xpinstallObj[fileData.fileName].IconURL = URI_GENERIC_ICON_XPINSTALL;
     }
 
     if (xpiCount > 0)
       InstallTrigger.install(xpinstallObj);
-    if (themeCount > 0) {
-      // XXXrstrong Only allow the install of one theme due to bug 257992
-      for (var fileName in themes) {
-        InstallTrigger.installChrome(InstallTrigger.SKIN, themes[fileName], fileName);
-        break;
-      }
-    }
   },
   _flavourSet: null,
   getSupportedFlavours: function ()
