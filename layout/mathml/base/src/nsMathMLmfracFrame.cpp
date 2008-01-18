@@ -130,9 +130,9 @@ nsMathMLmfracFrame::TransmitAutomaticData()
   //    false increments scriptlevel by 1, within numerator and denominator.
   // 2. The TeXbook (Ch 17. p.141) says the numerator inherits the compression
   //    while the denominator is compressed
-  SetIncrementScriptLevel(0, !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags));
-  // XXXroc how come point 1 above says we should increment scriptlevel for
-  // the denominator, but the old code didn't?
+  PRBool increment = !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
+  SetIncrementScriptLevel(0, increment);
+  SetIncrementScriptLevel(1, increment);
 
   UpdatePresentationDataFromChildAt(0, -1,
     ~NS_MATHML_DISPLAYSTYLE,
