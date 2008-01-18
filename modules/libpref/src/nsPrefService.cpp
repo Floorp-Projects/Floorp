@@ -604,7 +604,7 @@ static nsresult openPrefFile(nsIFile* aFile)
     return rv;
 
   char *fileBuffer = nsnull;
-  fileBuffer = new char[nsInt64(fileSize)];
+  fileBuffer = new char[fileSize];
   if (fileBuffer == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
