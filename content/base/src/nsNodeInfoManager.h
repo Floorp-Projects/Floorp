@@ -68,7 +68,8 @@ struct PLArenaPool;
 class nsDOMNodeAllocator
 {
 public:
-  nsDOMNodeAllocator() : mPool(nsnull) {}
+  nsDOMNodeAllocator()
+  : mSmallPool(nsnull), mLargePool(nsnull), mSmallPoolAllocated(0) {}
   ~nsDOMNodeAllocator();
 
   nsrefcnt AddRef()
@@ -86,7 +87,9 @@ protected:
   friend class nsNodeInfoManager;
   nsresult Init();
   nsAutoRefCnt mRefCnt;
-  PLArenaPool* mPool;
+  PLArenaPool* mSmallPool;
+  PLArenaPool* mLargePool;
+  size_t       mSmallPoolAllocated;
   // The recycler array points to recycled memory, where the size of
   // block is index*sizeof(void*), i.e., 0, 4, 8, 12, 16, ... or 0, 8, 16, ...
   void*        mRecyclers[NS_NODE_RECYCLER_SIZE];
