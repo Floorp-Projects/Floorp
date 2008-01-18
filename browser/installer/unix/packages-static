@@ -348,6 +348,7 @@ bin/components/pipboot.xpt
 bin/components/pipnss.xpt
 bin/components/pippki.xpt
 bin/libnss3.so
+bin/libnssutil3.so
 bin/libsmime3.so
 bin/libsoftokn3.chk
 bin/libsoftokn3.so

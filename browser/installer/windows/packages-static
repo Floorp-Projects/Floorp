@@ -331,6 +331,7 @@ bin\nssckbi.dll
 bin\components\pipboot.xpt
 bin\components\pipnss.xpt
 bin\components\pippki.xpt
+bin\nssutil3.dll
 bin\nss3.dll
 bin\smime3.dll
 bin\softokn3.chk
