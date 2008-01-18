@@ -2500,6 +2500,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       newCursor = ::LoadCursor(NULL, IDC_SIZEWE);
       break;
 
+    case eCursor_none:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_NONE));
+      break;
+
     default:
       NS_ERROR("Invalid cursor type");
       break;
