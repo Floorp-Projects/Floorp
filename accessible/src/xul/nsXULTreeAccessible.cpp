@@ -597,7 +597,7 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
         nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
         nsCOMPtr<nsIAccessibleEvent> event =
           new nsAccEvent(nsIAccessibleEvent::EVENT_DOM_DESTROY,
-                         accessible, PR_FALSE);
+                         accessible, nsnull, PR_FALSE);
         FireAccessibleEvent(event);
 
         mAccessNodeCache->Remove(key);

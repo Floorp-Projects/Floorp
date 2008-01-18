@@ -430,7 +430,7 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
 
   // No frames or iframes, so we can fire the doc load finished event early
   FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_INTERNAL_LOAD, aDocNode,
-                          eRemoveDupes);
+                          nsnull, eRemoveDupes);
 }
 
 PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
@@ -519,7 +519,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   }
   else if (mCurrentARIAMenubar) {
     nsCOMPtr<nsIAccessibleEvent> menuEndEvent =
-      new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar, PR_FALSE);
+      new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar, nsnull, PR_FALSE);
     if (menuEndEvent) {
       FireDelayedAccessibleEvent(menuEndEvent, eAllowDupes, PR_FALSE);
     }
@@ -543,7 +543,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   }
 
   FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                          finalFocusNode, eRemoveDupes, aIsAsynch);
+                          finalFocusNode, nsnull, eRemoveDupes, aIsAsynch);
 
   return PR_TRUE;
 }
