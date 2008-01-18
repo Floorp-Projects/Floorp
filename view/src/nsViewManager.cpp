@@ -1914,7 +1914,10 @@ NS_IMETHODIMP nsViewManager::ForceUpdate()
   }
 
   // Walk the view tree looking for widgets, and call Update() on each one
-  UpdateWidgetsForView(mRootView);
+  if (mRootView) {
+    UpdateWidgetsForView(mRootView);
+  }
+  
   return NS_OK;
 }
 
