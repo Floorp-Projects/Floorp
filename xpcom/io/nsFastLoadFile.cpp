@@ -630,9 +630,9 @@ nsFastLoadFileReader::SetInputStream(nsIInputStream *aInputStream)
 }
 
 /**
- * FIXME: bug #411579 (tune this macro!) Last updated: Jan 2008
+ * XXX tuneme
  */
-#define MFL_CHECKSUM_BUFSIZE    (6 * 8192)
+#define MFL_CHECKSUM_BUFSIZE    8192
 
 NS_IMETHODIMP
 nsFastLoadFileReader::ComputeChecksum(PRUint32 *aResult)
