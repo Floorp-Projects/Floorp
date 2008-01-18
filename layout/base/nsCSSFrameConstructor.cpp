@@ -13273,6 +13273,11 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
                                         nsReStyleHint aRestyleHint,
                                         nsChangeHint aMinChangeHint)
 {
+  if (NS_UNLIKELY(mIsDestroyingFrameTree)) {
+    NS_NOTREACHED("PostRestyleEvent after the shell is destroyed (bug 279505)");
+    return;
+  }
+
   if (aRestyleHint == 0 && !aMinChangeHint) {
     // Nothing to do here
     return;
