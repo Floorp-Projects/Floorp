@@ -1030,19 +1030,19 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
       multiSelectAccessNode->GetDOMNode(getter_AddRefs(multiSelectDOMNode));
       NS_ASSERTION(multiSelectDOMNode, "A new accessible without a DOM node!");
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                              multiSelectDOMNode, nsnull, eAllowDupes);
+                              multiSelectDOMNode, eAllowDupes);
 
       static nsIContent::AttrValuesArray strings[] =
         {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
       if (aContent->FindAttrValueIn(kNameSpaceID_None, aAttribute,
                                     strings, eCaseMatters) >= 0) {
         FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_REMOVE,
-                                targetNode, nsnull);
+                                targetNode);
         return;
       }
 
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_ADD,
-                                                  targetNode, nsnull);
+                                                  targetNode);
     }
   }
 
@@ -1152,7 +1152,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
 
   if (aAttribute == nsAccessibilityAtoms::aria_valuenow) {
     FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
-                            targetNode, nsnull);
+                            targetNode);
     return;
   }
 
@@ -1381,12 +1381,11 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
   
 nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                                   nsIDOMNode *aDOMNode,
-                                                  void *aData,
                                                   EDupeEventRule aAllowDupes,
                                                   PRBool aIsAsynch)
 {
   nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEvent, aDOMNode, aData, PR_TRUE);
+    new nsAccEvent(aEvent, aDOMNode, PR_TRUE);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   return FireDelayedAccessibleEvent(event, aAllowDupes, aIsAsynch);
@@ -1870,14 +1869,14 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // nsIAccessibleStates::STATE_INVISIBLE for the event's accessible object.
     PRUint32 additionEvent = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_SHOW :
                                         nsIAccessibleEvent::EVENT_DOM_CREATE;
-    FireDelayedToolkitEvent(additionEvent, childNode, nsnull,
+    FireDelayedToolkitEvent(additionEvent, childNode,
                             eCoalesceFromSameSubtree, isAsynch);
 
     // Check to see change occured in an ARIA menu, and fire an EVENT_MENUPOPUP_START if it did
     nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(childNode);
     if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
-                              childNode, nsnull, eAllowDupes, isAsynch);
+                              childNode, eAllowDupes, isAsynch);
     }
 
     // Check to see if change occured inside an alert, and fire an EVENT_ALERT if it did
@@ -1885,7 +1884,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     while (PR_TRUE) {
       if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_ALERT) {
         nsCOMPtr<nsIDOMNode> alertNode(do_QueryInterface(ancestor));
-        FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode, nsnull,
+        FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode,
                                 eRemoveDupes, isAsynch);
         break;
       }
@@ -1904,7 +1903,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // from SHOW and HIDE so that they don't fetch extra objects
     if (childAccessible) {
       nsCOMPtr<nsIAccessibleEvent> reorderEvent =
-        new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible, nsnull, PR_TRUE);
+        new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible, PR_TRUE);
       NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
       FireDelayedAccessibleEvent(reorderEvent, eCoalesceFromSameSubtree, isAsynch);
     }
@@ -1980,7 +1979,7 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRUint32 aEventType,
                       aEventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
 
     nsCOMPtr<nsIAccessibleEvent> event =
-      new nsAccEvent(aEventType, accessible, nsnull, isAsynch);
+      new nsAccEvent(aEventType, accessible, isAsynch);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
     if (aForceIsFromUserInput) {
       nsAccEvent::PrepareForEvent(aDOMNode, aForceIsFromUserInput);
