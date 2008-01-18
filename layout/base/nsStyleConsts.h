@@ -324,6 +324,7 @@
 #define NS_STYLE_CURSOR_NWSE_RESIZE             33
 #define NS_STYLE_CURSOR_NS_RESIZE               34
 #define NS_STYLE_CURSOR_EW_RESIZE               35
+#define NS_STYLE_CURSOR_NONE                    36
 
 // See nsStyleDisplay
 #define NS_STYLE_DIRECTION_LTR                  0
