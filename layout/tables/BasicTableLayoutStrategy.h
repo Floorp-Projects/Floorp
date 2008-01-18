@@ -62,8 +62,41 @@ public:
     virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState);
 
 private:
+    // NOTE: Using prefix "BTLS" to avoid overlapping names with 
+    // the values of nsLayoutUtils::IntrinsicWidthType
+    enum BtlsWidthType { BTLS_MIN_WIDTH, 
+                         BTLS_PREF_WIDTH, 
+                         BTLS_FINAL_WIDTH };
+
     // Compute intrinsic width member variables on the columns.
     void ComputeColumnIntrinsicWidths(nsIRenderingContext* aRenderingContext);
+
+    // Distribute a colspanning cell's percent width (if any) to its columns.
+    void DistributePctWidthToColumns(float aSpanPrefPct,
+                                     PRInt32 aFirstCol,
+                                     PRInt32 aColCount);
+
+    // Distribute a width of some BltsWidthType type to a set of columns.
+    //  aWidth: The amount of width to be distributed
+    //  aFirstCol: The index (in the table) of the first column to be
+    //             considered for receiving width
+    //  aColCount: The number of consecutive columns (starting with aFirstCol)
+    //             to be considered for receiving width
+    //  aWidthType: The type of width being distributed.  (BTLS_MIN_WIDTH and
+    //              BTLS_PREF_WIDTH are intended to be used for dividing up
+    //              colspan's min & pref width.  BTLS_FINAL_WIDTH is intended
+    //              to be used for distributing the table's final width across
+    //              all its columns)
+    //  aSpanHasSpecifiedWidth: Should be PR_TRUE iff:
+    //                           - We're distributing a colspanning cell's
+    //                             pref or min width to its columns
+    //                           - The colspanning cell has a specified width.
+    void DistributeWidthToColumns(nscoord aWidth, 
+                                  PRInt32 aFirstCol, 
+                                  PRInt32 aColCount,
+                                  BtlsWidthType aWidthType,
+                                  PRBool aSpanHasSpecifiedWidth);
+ 
 
     // Compute the min and pref widths of the table from the width
     // variables on the columns.
