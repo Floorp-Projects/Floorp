@@ -1049,6 +1049,13 @@ function delayedStartup()
   // themselves.
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
+  // Delayed initialization of the livemarks update timer.
+  // Livemark updates don't need to start until after bookmark UI 
+  // such as the toolbar has initialized. Starting 5 seconds after
+  // delayedStartup in order to stagger this before the download
+  // manager starts (see below).
+  setTimeout(function() PlacesUtils.livemarks.start(), 5000);
+
   // Initialize the download manager some time after the app starts so that
   // auto-resume downloads begin (such as after crashing or quitting with
   // active downloads) and speeds up the first-load of the download manager UI.
