@@ -508,7 +508,7 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     if(member && member->IsConstant())
     {
         jsval val;
-        if(!member->GetValue(ccx, iface, &val))
+        if(!member->GetConstantValue(ccx, iface, &val))
             return NS_ERROR_OUT_OF_MEMORY;
 
         jsid idid;
