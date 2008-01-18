@@ -121,30 +121,39 @@ CSRCS   = \
 
 EXPORTS = cairo.h cairo-features.h cairo-platform.h cairo-deprecated.h cairo-rename.h
 
+PSPDF_BASE_CSRCS = \
+	cairo-base85-stream.c \
+	cairo-type1-subset.c \
+	cairo-type1-fallback.c \
+	cairo-truetype-subset.c \
+	cairo-cff-subset.c \
+	$(NULL)
+
+PDF_CSRCS = \
+	cairo-pdf-surface.c \
+	cairo-pdf-operators.c \
+	$(NULL)
+
+PS_CSRCS = cairo-ps-surface.c
+
+PDF_EXPORTS = cairo-pdf.h
+PS_EXPORTS = cairo-ps.h
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CSRCS   += cairo-win32-font.c \
-           cairo-win32-surface.c \
+CSRCS	+= cairo-win32.c \
+	   cairo-win32-font.c \
+	   cairo-win32-surface.c \
 	   cairo-win32-printing-surface.c
 EXPORTS += cairo-win32.h
-CSRCS   += cairo-base85-stream.c \
-           cairo-pdf-surface.c \
-	   cairo-type1-fallback.c \
-	   cairo-truetype-subset.c \
-	   cairo-cff-subset.c
-EXPORTS += cairo-pdf.h
+CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
+EXPORTS += $(PDF_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CSRCS   += cairo-os2-surface.c
 EXPORTS += cairo-os2.h cairo-os2-private.h
-CSRCS   += cairo-base85-stream.c \
-           cairo-pdf-surface.c \
-           cairo-type1-subset.c \
-           cairo-type1-fallback.c \
-           cairo-truetype-subset.c \
-           cairo-cff-subset.c
-EXPORTS += cairo-pdf.h
+CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
+EXPORTS += $(PDF_EXPORTS)
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
@@ -158,14 +167,8 @@ EXPORTS += cairo-beos.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CSRCS   += cairo-base85-stream.c \
-           cairo-pdf-surface.c \
-           cairo-ps-surface.c \
-	   cairo-type1-subset.c \
-	   cairo-type1-fallback.c \
-	   cairo-truetype-subset.c \
-	   cairo-cff-subset.c
-EXPORTS += cairo-ps.h cairo-pdf.h
+CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
+EXPORTS += $(PDF_EXPORTS) $(PS_EXPORTS)
 endif
 
 ifdef BUILD_CAIRO_SVG

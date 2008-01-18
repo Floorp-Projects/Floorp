@@ -52,14 +52,12 @@ _cairo_region_init_rect (cairo_region_t *region,
 			     rect->width, rect->height);
 }
 
-#define STACK_BOXES_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof(pixman_box16_t)))
-
 cairo_int_status_t
 _cairo_region_init_boxes (cairo_region_t *region,
 			  cairo_box_int_t *boxes,
 			  int count)
 {
-    pixman_box16_t stack_pboxes[STACK_BOXES_LEN];
+    pixman_box16_t stack_pboxes[CAIRO_STACK_ARRAY_LENGTH (pixman_box16_t)];
     pixman_box16_t *pboxes = stack_pboxes;
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     int i;

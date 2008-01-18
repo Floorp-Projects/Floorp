@@ -35,10 +35,18 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
+#define _GNU_SOURCE
+
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
 #include "cairo-gstate-private.h"
+
+#if _XOPEN_SOURCE >= 600 || _ISOC99_SOURCE
+#define ISFINITE(x) isfinite (x)
+#else
+#define ISFINITE(x) ((x) * (x) >= 0.) /* check for NaNs */
+#endif
 
 static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other);
@@ -623,13 +631,17 @@ _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
 {
     cairo_matrix_t tmp;
 
-    if (! (tx * tx >= 0.) || ! (ty * ty >= 0.)) /* check for NaNs */
+    if (! ISFINITE (tx) || ! ISFINITE (ty))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_gstate_unset_scaled_font (gstate);
 
     cairo_matrix_init_translate (&tmp, tx, ty);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+
+    /* paranoid check against gradual numerical instability */
+    if (! _cairo_matrix_is_invertible (&gstate->ctm))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     cairo_matrix_init_translate (&tmp, -tx, -ty);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
@@ -644,13 +656,17 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
 
     if (sx * sy == 0.) /* either sx or sy is 0, or det == 0 due to underflow */
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
-    if (! (sx * sx > 0.) || ! (sy * sy > 0.)) /* check for NaNs */
+    if (! ISFINITE (sx) || ! ISFINITE (sy))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_gstate_unset_scaled_font (gstate);
 
     cairo_matrix_init_scale (&tmp, sx, sy);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+
+    /* paranoid check against gradual numerical instability */
+    if (! _cairo_matrix_is_invertible (&gstate->ctm))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     cairo_matrix_init_scale (&tmp, 1/sx, 1/sy);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
@@ -666,13 +682,17 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
     if (angle == 0.)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (! (angle * angle >= 0.)) /* check for NaNs */
+    if (! ISFINITE (angle))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_gstate_unset_scaled_font (gstate);
 
     cairo_matrix_init_rotate (&tmp, angle);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+
+    /* paranoid check against gradual numerical instability */
+    if (! _cairo_matrix_is_invertible (&gstate->ctm))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     cairo_matrix_init_rotate (&tmp, -angle);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
@@ -687,15 +707,19 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
     cairo_matrix_t tmp;
     cairo_status_t status;
 
-    _cairo_gstate_unset_scaled_font (gstate);
-
     tmp = *matrix;
-    cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
-
     status = cairo_matrix_invert (&tmp);
     if (status)
 	return status;
+
+    _cairo_gstate_unset_scaled_font (gstate);
+
+    cairo_matrix_multiply (&gstate->ctm, matrix, &gstate->ctm);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
+
+    /* paranoid check against gradual numerical instability */
+    if (! _cairo_matrix_is_invertible (&gstate->ctm))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -706,14 +730,15 @@ _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
 {
     cairo_status_t status;
 
+    if (! _cairo_matrix_is_invertible (matrix))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+
     _cairo_gstate_unset_scaled_font (gstate);
 
     gstate->ctm = *matrix;
-
     gstate->ctm_inverse = *matrix;
     status = cairo_matrix_invert (&gstate->ctm_inverse);
-    if (status)
-	return status;
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1132,9 +1157,7 @@ _cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
 {
     cairo_box_t extents;
 
-    _cairo_traps_extents (traps, &extents);
-
-    if (extents.p1.x >= extents.p2.x || extents.p1.y >= extents.p2.y) {
+    if (traps->num_traps == 0) {
         /* no traps, so we actually won't draw anything */
 	if (x1)
 	    *x1 = 0.0;
@@ -1145,6 +1168,8 @@ _cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
 	if (y2)
 	    *y2 = 0.0;
     } else {
+	_cairo_traps_extents (traps, &extents);
+
 	if (x1)
 	    *x1 = _cairo_fixed_to_double (extents.p1.x);
 	if (y1)
@@ -1575,7 +1600,6 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     return cairo_scaled_font_status (gstate->scaled_font);
 }
 
-#define STACK_GLYPHS_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_glyph_t)))
 cairo_status_t
 _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 			   const cairo_glyph_t *glyphs,
@@ -1584,7 +1608,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_status_t status;
     cairo_pattern_union_t source_pattern;
     cairo_glyph_t *transformed_glyphs;
-    cairo_glyph_t stack_transformed_glyphs[STACK_GLYPHS_LEN];
+    cairo_glyph_t stack_transformed_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
 
     if (gstate->source->status)
 	return gstate->source->status;
@@ -1597,7 +1621,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     if (status)
 	return status;
 
-    if (num_glyphs <= STACK_GLYPHS_LEN) {
+    if (num_glyphs <= ARRAY_LENGTH (stack_transformed_glyphs)) {
 	transformed_glyphs = stack_transformed_glyphs;
     } else {
 	transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
@@ -1636,13 +1660,13 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 {
     cairo_status_t status;
     cairo_glyph_t *transformed_glyphs;
-    cairo_glyph_t stack_transformed_glyphs[STACK_GLYPHS_LEN];
+    cairo_glyph_t stack_transformed_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
     if (status)
 	return status;
 
-    if (num_glyphs < STACK_GLYPHS_LEN)
+    if (num_glyphs < ARRAY_LENGTH (stack_transformed_glyphs))
       transformed_glyphs = stack_transformed_glyphs;
     else
       transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
@@ -1663,7 +1687,6 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 
     return status;
 }
-#undef STACK_GLYPHS_LEN
 
 cairo_status_t
 _cairo_gstate_set_antialias (cairo_gstate_t *gstate,

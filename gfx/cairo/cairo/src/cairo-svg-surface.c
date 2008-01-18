@@ -1032,7 +1032,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 								meta->height_pixels);
     if (paginated_surface->status) {
 	cairo_surface_destroy (&meta->base);
-	return CAIRO_STATUS_NO_MEMORY;
+	return paginated_surface->status;
     }
 
     svg_surface = (cairo_svg_surface_t *) _cairo_paginated_surface_get_target (paginated_surface);
@@ -1096,7 +1096,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
     if (_cairo_memory_stream_length (contents) > 0) {
 	if (_cairo_svg_surface_store_page (svg_surface) == NULL) {
 	    cairo_surface_destroy (paginated_surface);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
 
@@ -1538,6 +1538,8 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     if (pattern->r1 == pattern->r2) {
+	unsigned int n_stops = pattern->base.n_stops;
+
 	_cairo_output_stream_printf (document->xml_node_defs,
 				     "<radialGradient id=\"radial%d\" "
 				     "gradientUnits=\"userSpaceOnUse\" "
@@ -1549,8 +1551,7 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 	_cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", &p2u);
 	_cairo_output_stream_printf (document->xml_node_defs, ">\n");
 
-	if (extend == CAIRO_EXTEND_NONE ||
-	    pattern->base.n_stops < 1)
+	if (extend == CAIRO_EXTEND_NONE || n_stops < 1)
 	    _cairo_output_stream_printf (document->xml_node_defs,
 					 "<stop offset=\"0\" style=\""
 					 "stop-color: rgb(0%%,0%%,0%%); "
@@ -1564,15 +1565,15 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 					 pattern->base.stops[0].color.green * 100.0,
 					 pattern->base.stops[0].color.blue  * 100.0,
 					 pattern->base.stops[0].color.alpha);
-	    if (pattern->base.n_stops > 1)
+	    if (n_stops > 1)
 		_cairo_output_stream_printf (document->xml_node_defs,
 					     "<stop offset=\"0\" style=\""
 					     "stop-color: rgb(%f%%,%f%%,%f%%); "
 					     "stop-opacity: %f;\"/>\n",
-					     pattern->base.stops[1].color.red   * 100.0,
-					     pattern->base.stops[1].color.green * 100.0,
-					     pattern->base.stops[1].color.blue  * 100.0,
-					     pattern->base.stops[1].color.alpha);
+					     pattern->base.stops[n_stops - 1].color.red   * 100.0,
+					     pattern->base.stops[n_stops - 1].color.green * 100.0,
+					     pattern->base.stops[n_stops - 1].color.blue  * 100.0,
+					     pattern->base.stops[n_stops - 1].color.alpha);
 	}
 
     } else {
@@ -2377,7 +2378,7 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 		_cairo_memory_stream_length (surface->xml_node) > 0) {
 	    if (_cairo_svg_surface_store_page (surface) == NULL) {
 		if (status == CAIRO_STATUS_SUCCESS)
-		    status = CAIRO_STATUS_NO_MEMORY;
+		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 	}
 

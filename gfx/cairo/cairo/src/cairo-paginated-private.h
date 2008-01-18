@@ -110,18 +110,22 @@ struct _cairo_paginated_surface_backend {
  *
  * 6. Replays a subset of the meta-surface operations to the target surface
  *
- * 7. Replays the remaining operations to an image surface, sets an
+ * 7. Calls set_paginated_mode with an argument of CAIRO_PAGINATED_MODE_FALLBACK
+ *
+ * 8. Replays the remaining operations to an image surface, sets an
  *    appropriate clip on the target, then paints the resulting image
  *    surface to the target.
  *
- * So, the target will see drawing operations during two separate
- * stages, (ANALYZE and RENDER). During the ANALYZE phase the target
- * should not actually perform any rendering, (for example, if
- * performing output to a file, no output should be generated during
- * this stage). Instead the drawing functions simply need to return
- * CAIRO_STATUS_SUCCESS or CAIRO_INT_STATUS_UNSUPPORTED to indicate
- * whether rendering would be supported. And it should do this as
- * quickly as possible.
+ * So, the target will see drawing operations during three separate
+ * stages, (ANALYZE, RENDER and FALLBACK). During the ANALYZE phase
+ * the target should not actually perform any rendering, (for example,
+ * if performing output to a file, no output should be generated
+ * during this stage). Instead the drawing functions simply need to
+ * return CAIRO_STATUS_SUCCESS or CAIRO_INT_STATUS_UNSUPPORTED to
+ * indicate whether rendering would be supported. And it should do
+ * this as quickly as possible. The FALLBACK phase allows the surface
+ * to distinguish fallback images from native rendering in case they
+ * need to be handled as a special case.
  *
  * NOTE: The paginated surface layer assumes that the target surface
  * is "blank" by default at the beginning of each page, without any

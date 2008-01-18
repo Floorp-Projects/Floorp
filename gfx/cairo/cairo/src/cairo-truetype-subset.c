@@ -323,7 +323,7 @@ cairo_truetype_font_allocate_write_buffer (cairo_truetype_font_t  *font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 cairo_truetype_font_write (cairo_truetype_font_t *font,
 			   const void            *data,
 			   size_t                 length)
@@ -331,13 +331,11 @@ cairo_truetype_font_write (cairo_truetype_font_t *font,
     cairo_status_t status;
 
     if (font->status)
-	return font->status;
+	return;
 
     status = _cairo_array_append_multiple (&font->output, data, length);
     if (status)
-	return _cairo_truetype_font_set_error (font, status);
-
-    return CAIRO_STATUS_SUCCESS;
+	status = _cairo_truetype_font_set_error (font, status);
 }
 
 static void
@@ -366,22 +364,29 @@ cairo_truetype_font_write_be32 (cairo_truetype_font_t *font,
     cairo_truetype_font_write (font, &be32_value, sizeof be32_value);
 }
 
-static unsigned long
-cairo_truetype_font_align_output (cairo_truetype_font_t *font)
+static cairo_status_t
+cairo_truetype_font_align_output (cairo_truetype_font_t	    *font,
+	                          unsigned long		    *aligned)
 {
-    int length, aligned, pad;
+    int length, pad;
     unsigned char *padding;
 
     length = _cairo_array_num_elements (&font->output);
-    aligned = (length + 3) & ~3;
-    pad = aligned - length;
+    *aligned = (length + 3) & ~3;
+    pad = *aligned - length;
 
     if (pad) {
-	cairo_truetype_font_allocate_write_buffer (font, pad, &padding);
+	cairo_status_t status;
+
+	status = cairo_truetype_font_allocate_write_buffer (font, pad,
+		                                            &padding);
+	if (status)
+	    return status;
+
 	memset (padding, 0, pad);
     }
 
-    return aligned;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -575,8 +580,9 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
 	}
 
 	size = end - begin;
-
-        next = cairo_truetype_font_align_output (font);
+        status = cairo_truetype_font_align_output (font, &next);
+	if (status)
+	    goto FAIL;
 
         status = cairo_truetype_font_check_boundary (font, next);
 	if (status)
@@ -598,8 +604,11 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
         }
     }
 
-    font->glyphs[i].location =
-	cairo_truetype_font_align_output (font) - start_offset;
+    status = cairo_truetype_font_align_output (font, &next);
+    if (status)
+	goto FAIL;
+
+    font->glyphs[i].location = next - start_offset;
 
     status = font->status;
 FAIL:
@@ -881,8 +890,9 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
     if (status)
 	goto FAIL;
 
-    start = cairo_truetype_font_align_output (font);
-    end = start;
+    status = cairo_truetype_font_align_output (font, &start);
+    if (status)
+	goto FAIL;
 
     end = 0;
     for (i = 0; i < font->num_tables; i++) {
@@ -891,7 +901,10 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
 	    goto FAIL;
 
 	end = _cairo_array_num_elements (&font->output);
-	next = cairo_truetype_font_align_output (font);
+	status = cairo_truetype_font_align_output (font, &next);
+	if (status)
+	    goto FAIL;
+
 	cairo_truetype_font_update_entry (font, font->truetype_tables[i].pos,
                                           font->truetype_tables[i].tag, start, end);
         status = cairo_truetype_font_check_boundary (font, next);

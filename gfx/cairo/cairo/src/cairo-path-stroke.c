@@ -205,6 +205,22 @@ _cairo_stroker_face_clockwise (cairo_stroke_face_t *in, cairo_stroke_face_t *out
     return _cairo_slope_clockwise (&in_slope, &out_slope);
 }
 
+/**
+ * _cairo_slope_compare_sgn
+ *
+ * Return -1, 0 or 1 depending on the relative slopes of
+ * two lines.
+ */
+static int
+_cairo_slope_compare_sgn (double dx1, double dy1, double dx2, double dy2)
+{
+    double  c = (dx1 * dy2 - dx2 * dy1);
+
+    if (c > 0) return 1;
+    if (c < 0) return -1;
+    return 0;
+}
+
 static cairo_status_t
 _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_stroke_face_t *out)
 {
@@ -272,9 +288,6 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	double	in_dot_out = ((-in->usr_vector.x * out->usr_vector.x)+
 			      (-in->usr_vector.y * out->usr_vector.y));
 	double	ml = stroker->style->miter_limit;
-	double tolerance_squared = stroker->tolerance * stroker->tolerance;
-	double line_width_squared = (stroker->style->line_width *
-				     stroker->style->line_width);
 
 	/* Check the miter limit -- lines meeting at an acute angle
 	 * can generate long miters, the limit converts them to bevel
@@ -332,84 +345,17 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	 *
 	 *	2 <= ml² (1 - in · out)
 	 *
-	 *
-	 * That gives us the condition to avoid generating miters that
-	 * are too large from angles that are too large. But we also
-	 * need to avoid generating miters when the angle is very small.
-	 *
-	 * The miter formed from a tiny angle is also tiny, so the
-	 * miter limit is not a concern. But with a tiny angle we will
-	 * be computing the intersection of two lines that are very
-	 * near parallel. Also, the limits of the fixed-point grid on
-	 * the input face coordinates mean that the resulting
-	 * intersection could be wildly wrong. (See the
-	 * get-path-extents test case for a call to cairo_arc that
-	 * results in two problematic faces.)
-	 *
-	 * Fortunately we can also derive an expression for when using
-	 * a bevel join instead of a miter will introduce an error no
-	 * larger than the tolerance. Consider the same join from
-	 * before but with the miter now chopped off and replaced with
-	 * a bevel join. The drawing is zoomed in a bit again, the
-	 * point marked as '*' is the center of the stroke---the point
-	 * where the two line segments of interest intersect:
-	 *
-	 *    ----- .
-	 *    ^     ..
-	 *    |     . .
-	 *    |     .  .
-	 *   1/2    .   .
-	 *  miter   .    .         |
-	 *  length  .     .        |
-	 *    |     .______.    ___v___
-	 *    |     |     . \   1/2 bevel
-	 *    v     |  .     \   width
-	 *    ----  *         \ -------
-	 *	    |          \   ^
-	 *
-	 *
-	 * The length of interest here is the vertical length of the
-	 * miter that is eliminated. It's length can be obtained by
-	 * starting with 1/2 the miter length and the subtracting off
-	 * the vertical length that is included by the bevel join,
-	 * (here termed 1/2 bevel width). To determine this new bevel
-	 * width, we have a small right triangle shown, the hypotenuse
-	 * of which has a length of 1/2 the line width, and the small
-	 * angle at the upper right of the figure is psi/2.
-	 *
-	 * So we have:
-	 *
-	 *	sin (psi/2) = (bevel_width / 2) / (line_width / 2)
-	 *
-	 * And we can determine when the miter is required by
-	 * calculating when the eliminated portion of the miter is
-	 * greater than the tolerance:
-	 *
-	 *	(miter_length / 2) - (bevel_width / 2) > tolerance
-	 *
-	 * Substituting in the above expressions for miter_length and
-	 * bevel_width:
-	 *
-	 *	(line_width/2) / sin (psi/2) - (line_width/2) * sin (psi/2) > tolerance
-	 *	1 / sin(psi/2) - sin (psi/2) > 2 * tolerance / line_width
-	 *	1 / sin²(psi/2) -2 +  sin²(psi/2) > 4 * (tolerance/line_width)²
-	 *
-	 * Use identity: sin²(psi/2) = (1-cos(psi))/2
-
-	 *	2/(1 - cos(psi)) - 2 + (1-cos(psi))/2 > 4 * (tolerance/line_width)²
-	 *	4/(1 - cos(psi)) - 4 + (1-cos(psi)) > 8 * (tolerance/line_width)²
-	 *	4/(1 - cos(psi)) + (1-cos(psi)) > 8 * ((tolerance/line_width)² + 0.5)
 	 */
-	if ((2 <= ml * ml * (1 - in_dot_out)) &&
-	    ((8 * (tolerance_squared / line_width_squared + 0.5)) <
-	     4 / (1 - in_dot_out) + (1 - in_dot_out))
-	    )
+	if (2 <= ml * ml * (1 - in_dot_out))
 	{
 	    double		x1, y1, x2, y2;
 	    double		mx, my;
 	    double		dx1, dx2, dy1, dy2;
 	    cairo_point_t	outer;
 	    cairo_point_t	quad[4];
+	    double		ix, iy;
+	    double		fdx1, fdy1, fdx2, fdy2;
+	    double		mdx, mdy;
 
 	    /*
 	     * we've got the points already transformed to device
@@ -447,17 +393,46 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 		mx = (my - y2) * dx2 / dy2 + x2;
 
 	    /*
-	     * Draw the quadrilateral
+	     * When the two outer edges are nearly parallel, slight
+	     * perturbations in the position of the outer points of the lines
+	     * caused by representing them in fixed point form can cause the
+	     * intersection point of the miter to move a large amount. If
+	     * that moves the miter intersection from between the two faces,
+	     * then draw a bevel instead.
 	     */
-	    outer.x = _cairo_fixed_from_double (mx);
-	    outer.y = _cairo_fixed_from_double (my);
 
-	    quad[0] = in->point;
-	    quad[1] = *inpt;
-	    quad[2] = outer;
-	    quad[3] = *outpt;
+	    ix = _cairo_fixed_to_double (in->point.x);
+	    iy = _cairo_fixed_to_double (in->point.y);
 
-	    return _cairo_traps_tessellate_convex_quad (stroker->traps, quad);
+	    /* slope of one face */
+	    fdx1 = x1 - ix; fdy1 = y1 - iy;
+
+	    /* slope of the other face */
+	    fdx2 = x2 - ix; fdy2 = y2 - iy;
+
+	    /* slope from the intersection to the miter point */
+	    mdx = mx - ix; mdy = my - iy;
+
+	    /*
+	     * Make sure the miter point line lies between the two
+	     * faces by comparing the slopes
+	     */
+	    if (_cairo_slope_compare_sgn (fdx1, fdy1, mdx, mdy) !=
+		_cairo_slope_compare_sgn (fdx2, fdy2, mdx, mdy))
+	    {
+		/*
+		 * Draw the quadrilateral
+		 */
+		outer.x = _cairo_fixed_from_double (mx);
+		outer.y = _cairo_fixed_from_double (my);
+
+		quad[0] = in->point;
+		quad[1] = *inpt;
+		quad[2] = outer;
+		quad[3] = *outpt;
+
+		return _cairo_traps_tessellate_convex_quad (stroker->traps, quad);
+	    }
 	}
 	/* fall through ... */
     }

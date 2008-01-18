@@ -38,8 +38,10 @@
 
 #include "cairo-output-stream-private.h"
 
+#include <stdio.h>
 #include <locale.h>
 #include <ctype.h>
+#include <errno.h>
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -538,8 +540,14 @@ _cairo_output_stream_create_for_filename (const char *filename)
 
     file = fopen (filename, "wb");
     if (file == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_WRITE_ERROR);
-	return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
+	switch (errno) {
+	case ENOMEM:
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+	default:
+	    _cairo_error_throw (CAIRO_STATUS_WRITE_ERROR);
+	    return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
+	}
     }
 
     stream = malloc (sizeof *stream);

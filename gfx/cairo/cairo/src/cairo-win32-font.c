@@ -33,6 +33,15 @@
  * Contributor(s):
  */
 
+#define WIN32_LEAN_AND_MEAN
+/* We require Windows 2000 features such as GetGlyphIndices */
+#if !defined(WINVER) || (WINVER < 0x0500)
+# define WINVER 0x0500
+#endif
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
+# define _WIN32_WINNT 0x0500
+#endif
+
 #include "cairoint.h"
 
 #include "cairo-win32-private.h"
@@ -50,7 +59,7 @@
 #define TT_PRIM_CSPLINE 3
 #endif
 
-#define OPENTYPE_CFF_TAG 0x20464643
+#define CMAP_TAG 0x70616d63
 
 const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend;
 
@@ -99,9 +108,8 @@ typedef struct {
     HFONT scaled_hfont;
     HFONT unscaled_hfont;
 
-    cairo_bool_t is_truetype;
-    cairo_bool_t glyph_indexing;
-
+    cairo_bool_t is_bitmap;
+    cairo_bool_t is_type1;
     cairo_bool_t delete_scaled_hfont;
 } cairo_win32_scaled_font_t;
 
@@ -111,6 +119,10 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font);
 static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_font,
 					     cairo_scaled_glyph_t      *scaled_glyph);
+
+static cairo_status_t
+_cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_font,
+                                             cairo_scaled_glyph_t      *scaled_glyph);
 
 static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font,
@@ -566,6 +578,92 @@ _cairo_win32_scaled_font_fini (void *abstract_font)
 }
 
 static cairo_int_status_t
+_cairo_win32_scaled_font_type1_text_to_glyphs (cairo_win32_scaled_font_t *scaled_font,
+					       double		          x,
+					       double		          y,
+					       const char	         *utf8,
+					       cairo_glyph_t            **glyphs,
+					       int		         *num_glyphs)
+{
+    uint16_t *utf16;
+    int n16;
+    int i;
+    WORD *glyph_indices = NULL;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    double x_pos, y_pos;
+    HDC hdc = NULL;
+    cairo_matrix_t mat;
+
+    status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &n16);
+    if (status)
+	return status;
+
+    glyph_indices = _cairo_malloc_ab (n16 + 1, sizeof (WORD));
+    if (!glyph_indices) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto FAIL1;
+    }
+
+    hdc = _get_global_font_dc ();
+    if (!hdc) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto FAIL2;
+    }
+
+    status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
+    if (status)
+	goto FAIL2;
+
+    if (GetGlyphIndicesW (hdc, utf16, n16, glyph_indices, 0) == GDI_ERROR) {
+	status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_type1_text_to_glyphs:GetGlyphIndicesW");
+	goto FAIL2;
+    }
+
+    *num_glyphs = n16;
+    *glyphs = _cairo_malloc_ab (n16, sizeof (cairo_glyph_t));
+    if (!*glyphs) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto FAIL2;
+    }
+
+    x_pos = x;
+    y_pos = y;
+    mat = scaled_font->base.ctm;
+    cairo_matrix_invert (&mat);
+    for (i = 0; i < n16; i++) {
+	cairo_scaled_glyph_t *scaled_glyph;
+
+	(*glyphs)[i].index = glyph_indices[i];
+	(*glyphs)[i].x = x_pos;
+	(*glyphs)[i].y = y_pos;
+
+	status = _cairo_scaled_glyph_lookup (&scaled_font->base,
+					     glyph_indices[i],
+					     CAIRO_SCALED_GLYPH_INFO_METRICS,
+					     &scaled_glyph);
+	if (status) {
+	    free (*glyphs);
+	    goto FAIL2;
+	}
+
+	x = scaled_glyph->x_advance;
+	y = scaled_glyph->y_advance;
+	cairo_matrix_transform_distance (&mat, &x, &y);
+	x_pos += x;
+	y_pos += y;
+    }
+
+    cairo_win32_scaled_font_done_font (&scaled_font->base);
+
+FAIL2:
+    free (glyph_indices);
+FAIL1:
+    free (utf16);
+
+    return status;
+}
+
+static cairo_int_status_t
 _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
 					 double		x,
 					 double		y,
@@ -584,6 +682,16 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
     double x_pos, y_pos;
     double x_incr, y_incr;
     HDC hdc = NULL;
+
+    /* GetCharacterPlacement() returns utf16 instead of glyph indices
+     * for Type 1 fonts. Use GetGlyphIndices for Type 1 fonts. */
+    if (scaled_font->is_type1)
+	 return _cairo_win32_scaled_font_type1_text_to_glyphs (scaled_font,
+							       x,
+							       y,
+							       utf8,
+							       glyphs,
+							       num_glyphs);
 
     /* Compute a vector in user space along the baseline of length one logical space unit */
     x_incr = 1;
@@ -742,11 +850,27 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
 
     }
 
-    scaled_font->is_truetype = (metrics.tmPitchAndFamily & TMPF_TRUETYPE) != 0;
-    scaled_font->glyph_indexing = scaled_font->is_truetype ||
-	(GetFontData (hdc, OPENTYPE_CFF_TAG, 0, NULL, 0) != GDI_ERROR);
-    // XXX in what situations does this OPENTYPE_CFF thing not have the
-    // TMPF_TRUETYPE flag? GetFontData says it only works on Truetype fonts...
+    scaled_font->is_bitmap = !(metrics.tmPitchAndFamily & TMPF_VECTOR);
+
+    /* Need to determine if this is a Type 1 font for the special
+     * handling in _text_to_glyphs.  Unlike TrueType or OpenType,
+     * Type1 fonts do not have a "cmap" table (or any other table).
+     * However GetFontData() will retrieve a Type1 font when
+     * requesting that GetFontData() retrieve data from the start of
+     * the file. This is to distinguish Type1 from stroke fonts such
+     * as "Script" and "Modern". The TMPF_TRUETYPE test is redundant
+     * but improves performance for the most common fonts.
+     */
+    scaled_font->is_type1 = FALSE;
+    if (!(metrics.tmPitchAndFamily & TMPF_TRUETYPE) &&
+	(metrics.tmPitchAndFamily & TMPF_VECTOR))
+    {
+	 if ((GetFontData (hdc, CMAP_TAG, 0, NULL, 0) == GDI_ERROR) &&
+	     (GetFontData (hdc, 0, 0, NULL, 0) != GDI_ERROR))
+	 {
+	      scaled_font->is_type1 = TRUE;
+	 }
+    }
 
     _cairo_scaled_font_set_metrics (&scaled_font->base, &extents);
 
@@ -767,7 +891,7 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
     if (!hdc)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    if (!scaled_font->is_truetype) {
+    if (scaled_font->is_bitmap) {
 	/* GetGlyphOutline will not work. Assume that the glyph does not extend outside the font box. */
 	cairo_font_extents_t font_extents;
 	INT width = 0;
@@ -880,7 +1004,6 @@ _cairo_win32_scaled_font_glyph_bbox (void		 *abstract_font,
 	GLYPHMETRICS metrics;
 	cairo_status_t status;
 	int i;
-        UINT glyph_index_option;
 
 	if (!hdc)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -889,16 +1012,11 @@ _cairo_win32_scaled_font_glyph_bbox (void		 *abstract_font,
 	if (status)
 	    return status;
 
-        if (scaled_font->glyph_indexing)
-            glyph_index_option = GGO_GLYPH_INDEX;
-        else
-            glyph_index_option = 0;
-
 	for (i = 0; i < num_glyphs; i++) {
 	    int x = _cairo_lround (glyphs[i].x);
 	    int y = _cairo_lround (glyphs[i].y);
 
-	    GetGlyphOutlineW (hdc, glyphs[i].index, GGO_METRICS | glyph_index_option,
+	    GetGlyphOutlineW (hdc, glyphs[i].index, GGO_METRICS | GGO_GLYPH_INDEX,
 			     &metrics, 0, NULL, &matrix);
 
 	    if (i == 0 || x1 > x + metrics.gmptGlyphOrigin.x)
@@ -954,22 +1072,16 @@ _flush_glyphs (cairo_glyph_state_t *state)
     int dx = 0;
     WCHAR * elements;
     int * dx_elements;
-    UINT glyph_index_option;
 
     status = _cairo_array_append (&state->dx, &dx);
     if (status)
 	return status;
 
-    if (state->scaled_font->glyph_indexing)
-        glyph_index_option = ETO_GLYPH_INDEX;
-    else
-        glyph_index_option = 0;
-
     elements = _cairo_array_index (&state->glyphs, 0);
     dx_elements = _cairo_array_index (&state->dx, 0);
     if (!ExtTextOutW (state->hdc,
 		      state->start_x, state->last_y,
-		      glyph_index_option,
+		      ETO_GLYPH_INDEX,
 		      NULL,
 		      elements,
 		      state->glyphs.num_elements,
@@ -1157,8 +1269,10 @@ _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
 	    return status;
     }
 
-    if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0) {
-	ASSERT_NOT_REACHED;
+    if (info & CAIRO_SCALED_GLYPH_INFO_SURFACE) {
+	status = _cairo_win32_scaled_font_init_glyph_surface (scaled_font, scaled_glyph);
+	if (status)
+	    return status;
     }
 
     if ((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0) {
@@ -1316,18 +1430,143 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
     return status;
 }
 
-static void
+static cairo_int_status_t
 _cairo_win32_scaled_font_map_glyphs_to_unicode (void *abstract_font,
-                                                      cairo_scaled_font_subset_t *font_subset)
+						cairo_scaled_font_subset_t *font_subset)
 {
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
-    unsigned int i;
+    GLYPHSET *glyph_set;
+    uint16_t *utf16 = NULL;
+    WORD *glyph_indices = NULL;
+    HDC hdc = NULL;
+    int res;
+    unsigned int i, j, k, count, num_glyphs;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    if (scaled_font->glyph_indexing)
-        return;
+    hdc = _get_global_font_dc ();
+    if (!hdc)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    for (i = 0; i < font_subset->num_glyphs; i++)
-        font_subset->to_unicode[i] = font_subset->glyphs[i];
+    status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
+    if (status)
+	return status;
+
+    res = GetFontUnicodeRanges(hdc, NULL);
+    if (res == 0) {
+	status = _cairo_win32_print_gdi_error (
+	    "_cairo_win32_scaled_font_map_glyphs_to_unicode:GetFontUnicodeRanges");
+	goto fail1;
+    }
+
+    glyph_set = malloc (res);
+    if (glyph_set == NULL) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto fail1;
+    }
+
+    res = GetFontUnicodeRanges(hdc, glyph_set);
+    if (res == 0) {
+	status = _cairo_win32_print_gdi_error (
+	    "_cairo_win32_scaled_font_map_glyphs_to_unicode:GetFontUnicodeRanges");
+	goto fail2;
+    }
+
+    count = font_subset->num_glyphs;
+    for (i = 0; i < glyph_set->cRanges && count > 0; i++) {
+	num_glyphs = glyph_set->ranges[i].cGlyphs;
+
+	utf16 = _cairo_malloc_ab (num_glyphs + 1, sizeof (uint16_t));
+	if (utf16 == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto fail2;
+	}
+
+	glyph_indices = _cairo_malloc_ab (num_glyphs + 1, sizeof (WORD));
+	if (glyph_indices == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto fail2;
+	}
+
+	for (j = 0; j < num_glyphs; j++)
+	    utf16[j] = glyph_set->ranges[i].wcLow + j;
+	utf16[j] = 0;
+
+	if (GetGlyphIndicesW (hdc, utf16, num_glyphs, glyph_indices, 0) == GDI_ERROR) {
+	    status = _cairo_win32_print_gdi_error (
+		"_cairo_win32_scaled_font_map_glyphs_to_unicode:GetGlyphIndicesW");
+	    goto fail2;
+	}
+
+	for (j = 0; j < num_glyphs; j++) {
+	    for (k = 0; k < font_subset->num_glyphs; k++) {
+		if (font_subset->glyphs[k] == glyph_indices[j]) {
+		    font_subset->to_unicode[k] = utf16[j];
+		    count--;
+		    break;
+		}
+	    }
+	}
+
+	free (glyph_indices);
+	glyph_indices = NULL;
+	free (utf16);
+	utf16= NULL;
+    }
+
+fail2:
+    if (glyph_indices)
+	free (glyph_indices);
+    if (utf16)
+	free (utf16);
+    free (glyph_set);
+fail1:
+    cairo_win32_scaled_font_done_font (&scaled_font->base);
+
+    return status;
+}
+
+static cairo_status_t
+_cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_font,
+                                             cairo_scaled_glyph_t      *scaled_glyph)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_glyph_t glyph;
+    cairo_win32_surface_t *surface;
+    cairo_t *cr;
+    cairo_surface_t *image;
+    int width, height;
+    int x1, y1, x2, y2;
+
+    x1 = _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x);
+    y1 = _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y);
+    x2 = _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.x);
+    y2 = _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.y);
+    width = x2 - x1;
+    height = y2 - y1;
+
+    surface = (cairo_win32_surface_t *)
+	cairo_win32_surface_create_with_dib (CAIRO_FORMAT_RGB24, width, height);
+
+    cr = cairo_create((cairo_surface_t *)surface);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
+    cairo_destroy(cr);
+
+    glyph.index = _cairo_scaled_glyph_index (scaled_glyph);
+    glyph.x = -x1;
+    glyph.y = -y1;
+    status = _draw_glyphs_on_surface (surface, scaled_font, RGB(0,0,0),
+                                      0, 0, &glyph, 1);
+    GdiFlush();
+
+    image = _compute_a8_mask (surface);
+    cairo_surface_set_device_offset ((cairo_surface_t *)image, -x1, -y1);
+    _cairo_scaled_glyph_set_surface (scaled_glyph,
+                                     &scaled_font->base,
+                                     (cairo_image_surface_t*)image);
+    cairo_surface_destroy (&surface->base);
+
+    return status;
 }
 
 static void
@@ -1355,7 +1594,9 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     cairo_path_fixed_t *path;
     cairo_matrix_t transform;
     cairo_fixed_t x, y;
-    UINT glyph_index_option;
+
+    if (scaled_font->is_bitmap)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     hdc = _get_global_font_dc ();
     if (!hdc)
@@ -1376,13 +1617,8 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     if (status)
         goto CLEANUP_PATH;
 
-    if (scaled_font->glyph_indexing)
-        glyph_index_option = GGO_GLYPH_INDEX;
-    else
-        glyph_index_option = 0;
-
     bytesGlyph = GetGlyphOutlineW (hdc, _cairo_scaled_glyph_index (scaled_glyph),
-				   GGO_NATIVE | glyph_index_option,
+				   GGO_NATIVE | GGO_GLYPH_INDEX,
 				   &metrics, 0, NULL, &matrix);
 
     if (bytesGlyph == GDI_ERROR) {
@@ -1398,7 +1634,7 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     }
 
     if (GetGlyphOutlineW (hdc, _cairo_scaled_glyph_index (scaled_glyph),
-			  GGO_NATIVE | glyph_index_option,
+			  GGO_NATIVE | GGO_GLYPH_INDEX,
 			  &metrics, bytesGlyph, buffer, &matrix) == GDI_ERROR) {
 	status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_glyph_path");
 	goto CLEANUP_BUFFER;
