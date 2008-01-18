@@ -2825,14 +2825,23 @@ nsXPCComponents_Utils::LookupMethod()
     if(!iface)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    // get (and perhaps lazily create) the member's cloned function
+    // get (and perhaps lazily create) the member's cloneable function
     jsval funval;
-    if(!member->NewFunctionObject(inner_cc, iface, wrapper->GetFlatJSObject(),
-                                  &funval))
+    if(!member->GetValue(inner_cc, iface, &funval))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    // Make sure the function we're cloning doesn't go away while
+    // we're cloning it.
+    AUTO_MARK_JSVAL(inner_cc, funval);
+
+    // clone a function we can use for this object
+    JSObject* funobj = xpc_CloneJSFunction(inner_cc, JSVAL_TO_OBJECT(funval),
+                                           wrapper->GetFlatJSObject());
+    if(!funobj)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     // return the function and let xpconnect know we did so
-    *retval = funval;
+    *retval = OBJECT_TO_JSVAL(funobj);
     cc->SetReturnValueWasSet(PR_TRUE);
 
     return NS_OK;
