@@ -55,6 +55,12 @@
 #include "plarena.h"
 #include "nsMemory.h"
 
+#define NS_SMALL_NODE_ARENA_SIZE \
+  (512 * (sizeof(void*)/4))
+
+#define NS_LARGE_NODE_ARENA_SIZE \
+  (4096 * (sizeof(void*)/4))
+
 #define NS_MAX_NODE_RECYCLE_SIZE \
   (NS_NODE_RECYCLER_SIZE * sizeof(void*))
 
@@ -97,9 +103,13 @@ nsDOMNodeAllocatorTester gDOMAllocatorTester;
 
 nsDOMNodeAllocator::~nsDOMNodeAllocator()
 {
-  if (mPool) {
-    PL_FinishArenaPool(mPool);
-    delete mPool;
+  if (mSmallPool) {
+    PL_FinishArenaPool(mSmallPool);
+    delete mSmallPool;
+  }
+  if (mLargePool) {
+    PL_FinishArenaPool(mLargePool);
+    delete mLargePool;
   }
 #ifdef DEBUG
   --gDOMNodeAllocators;
@@ -147,14 +157,28 @@ nsDOMNodeAllocator::Alloc(size_t aSize)
       mRecyclers[index] = next;
     }
     if (!result) {
-      if (!mPool) {
-        mPool = new PLArenaPool();
-        NS_ENSURE_TRUE(mPool, nsnull);
-        PL_InitArenaPool(mPool, "nsDOMNodeAllocator",
-                         4096 * (sizeof(void*)/4), 0);
+      if ((mSmallPoolAllocated + aSize) > NS_LARGE_NODE_ARENA_SIZE) {
+        if (!mLargePool) {
+          mLargePool = new PLArenaPool();
+          NS_ENSURE_TRUE(mLargePool, nsnull);
+          PL_InitArenaPool(mLargePool, "nsDOMNodeAllocator-large",
+                           NS_LARGE_NODE_ARENA_SIZE, 0);
+        }
+        // Allocate a new chunk from the 'large' arena
+        PL_ARENA_ALLOCATE(result, mLargePool, aSize);
+      } else {
+       if (!mSmallPool) {
+          mSmallPool = new PLArenaPool();
+          NS_ENSURE_TRUE(mSmallPool, nsnull);
+          PL_InitArenaPool(mSmallPool, "nsDOMNodeAllocator-small",
+                           NS_SMALL_NODE_ARENA_SIZE, 0);
+        }
+        // Allocate a new chunk from the 'small' arena
+        PL_ARENA_ALLOCATE(result, mSmallPool, aSize);
+        if (result) {
+          mSmallPoolAllocated += aSize;
+        }
       }
-      // Allocate a new chunk from the arena
-      PL_ARENA_ALLOCATE(result, mPool, aSize);
     }
 #ifdef DEBUG
     ++gDOMNodeRecyclerCounters[index];
