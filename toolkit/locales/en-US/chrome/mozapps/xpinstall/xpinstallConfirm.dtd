@@ -1,8 +1,9 @@
 <!-- extracted from institems.xul -->
 
-<!ENTITY dialog.title "Software Installation">
-<!ENTITY warningText2.label "Malicious software can damage your computer or violate your privacy.">
-<!ENTITY warningText3.label "You should only install software from sources that you trust.">
+<!ENTITY dialog.title            "Software Installation">
+<!ENTITY dialog.style            "width: 45em">
+<!ENTITY warningMain.label       "Only install add-ons from authors whom you trust.">
+<!ENTITY warningSecondary.label  "Malicious software can damage your computer or violate your privacy.">
 
 <!ENTITY from.label "from:">
 

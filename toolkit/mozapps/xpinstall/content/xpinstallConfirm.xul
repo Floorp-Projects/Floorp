@@ -46,7 +46,7 @@
 <!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/xpinstall/xpinstallConfirm.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        id="xpinstallConfirm" title="&dialog.title;" style="width: 30em" 
+        id="xpinstallConfirm" title="&dialog.title;" style="&dialog.style;" 
         onload="XPInstallConfirm.init()" 
         ondialogaccept="return XPInstallConfirm.onOK();"
         ondialogcancel="return XPInstallConfirm.onCancel();">
@@ -57,13 +57,15 @@
                 src="chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties"/>
 
   <vbox flex="1" id="dialogContentBox">
-    <description id="itemWarningIntro"/>
-    
-    <vbox id="itemList" class="listbox" flex="1" style="height: 16em; overflow: auto;"/>
-    
-    <description>&warningText2.label;</description> 
-    <description class="warning">&warningText3.label;</description> 
+    <hbox id="xpinstallheader" align="start">
+      <image class="alert-icon"/>
+      <vbox flex="1">
+        <description class="warning">&warningMain.label;</description>
+        <description>&warningSecondary.label;</description>
+      </vbox>
+    </hbox>
+    <label id="itemWarningIntro"/>
+    <vbox id="itemList" class="listbox" flex="1" style="overflow: auto;"/>
   </vbox>
 
 </dialog>
-
