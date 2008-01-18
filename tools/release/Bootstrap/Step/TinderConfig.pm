@@ -196,7 +196,7 @@ sub DetermineBranches {
     else {
         if ($version eq 'nightly') {
             push(@branches, $branchTag);
-            push(@branches, $branchTag . 'l10n');
+            push(@branches, $branchTag . '_l10n');
         }
         else {
             push(@branches, $branchTag . '_release');
