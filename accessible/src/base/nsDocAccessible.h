@@ -108,6 +108,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
       *
       * @param aEvent - the nsIAccessibleEvent event type
       * @param aDOMNode - DOM node the accesible event should be fired for
+      * @param aData - any additional data for the event
       * @param aAllowDupes - eAllowDupes: more than one event of the same type is allowed. 
       *                      eCoalesceFromSameSubtree: if two events are in the same subtree,
       *                                                only the event on ancestor is used
@@ -118,7 +119,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
       *                  synchronous with a DOM event
       */
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
-                                     EDupeEventRule aAllowDupes = eRemoveDupes,
+                                     void *aData, EDupeEventRule aAllowDupes = eRemoveDupes,
                                      PRBool aIsAsynch = PR_FALSE);
 
     /**
