@@ -257,7 +257,7 @@ nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
   NS_ASSERTION(pAccessible, "Accessible doesn't implement nsPIAccessible");
 
   nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEventType, aAccessible, nsnull, aIsAsynch);
+    new nsAccEvent(aEventType, aAccessible, aIsAsynch);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   return pAccessible->FireAccessibleEvent(event);
