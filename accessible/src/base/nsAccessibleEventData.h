@@ -54,16 +54,16 @@ class nsAccEvent: public nsIAccessibleEvent
 {
 public:
   // Initialize with an nsIAccessible
-  nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible, void *aEventData, PRBool aIsAsynch = PR_FALSE);
+  nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible, PRBool aIsAsynch = PR_FALSE);
   // Initialize with an nsIDOMNode
-  nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode, void *aEventData, PRBool aIsAsynch = PR_FALSE);
+  nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode, PRBool aIsAsynch = PR_FALSE);
   virtual ~nsAccEvent() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLEEVENT
 
   static void GetLastEventAttributes(nsIDOMNode *aNode,
-                                      nsIPersistentProperties *aAttributes);
+                                     nsIPersistentProperties *aAttributes);
 
 protected:
   already_AddRefed<nsIAccessible> GetAccessibleByNode();
@@ -96,8 +96,6 @@ public:
    * was waiting in an event queue
    */
   static void PrepareForEvent(nsIAccessibleEvent *aEvent);
-
-  void *mEventData;
 };
 
 class nsAccStateChangeEvent: public nsAccEvent,
@@ -158,12 +156,20 @@ private:
   PRInt32 mCaretOffset;
 };
 
-// XXX todo: We might want to use XPCOM interfaces instead of struct
-//     e.g., nsAccessibleTableChangeEvent: public nsIAccessibleTableChangeEvent
+class nsAccTableChangeEvent : public nsAccEvent,
+                              public nsIAccessibleTableChangeEvent {
+public:
+  nsAccTableChangeEvent(nsIAccessible *aAccessible, PRUint32 aEventType,
+                        PRInt32 aRowOrColIndex, PRInt32 aNumRowsOrCols,
+                        PRBool aIsAsynch);
 
-struct AtkTableChange {
-  PRUint32 index;   // the start row/column after which the rows are inserted/deleted.
-  PRUint32 count;   // the number of inserted/deleted rows/columns
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
+  NS_DECL_NSIACCESSIBLETABLECHANGEEVENT
+
+private:
+  PRUint32 mRowOrColIndex;   // the start row/column after which the rows are inserted/deleted.
+  PRUint32 mNumRowsOrCols;   // the number of inserted/deleted rows/columns
 };
 
 #endif

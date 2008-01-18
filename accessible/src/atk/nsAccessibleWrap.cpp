@@ -1114,9 +1114,6 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     rv = aEvent->GetEventType(&type);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAccEvent *event = reinterpret_cast<nsAccEvent*>(aEvent);
-    void *eventData = event->mEventData;
-
     AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(accessible);
 
     // We don't create ATK objects for nsIAccessible plain text leaves,
@@ -1144,9 +1141,6 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     case nsIAccessibleEvent::EVENT_TEXT_REMOVED:
     case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
         return FireAtkTextChangedEvent(aEvent, atkObj);
-
-    case nsIAccessibleEvent::EVENT_PROPERTY_CHANGED:
-        return FireAtkPropChangedEvent(aEvent, atkObj);
 
     case nsIAccessibleEvent::EVENT_FOCUS:
       {
@@ -1210,34 +1204,36 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 
     case nsIAccessibleEvent::EVENT_TABLE_ROW_INSERT:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_INSERT\n"));
-        NS_ASSERTION(eventData, "Event needs event data");
-        if (!eventData)
-            break;
+        nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
+        NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
-        pAtkTableChange = reinterpret_cast<AtkTableChange *>(eventData);
+        PRInt32 rowIndex, numRows;
+        tableEvent->GetRowOrColIndex(&rowIndex);
+        tableEvent->GetNumRowsOrCols(&numRows);
 
         g_signal_emit_by_name(atkObj,
                               "row_inserted",
                               // After which the rows are inserted
-                              pAtkTableChange->index,
+                              rowIndex,
                               // The number of the inserted
-                              pAtkTableChange->count);
+                              numRows);
         break;
 
    case nsIAccessibleEvent::EVENT_TABLE_ROW_DELETE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_ROW_DELETE\n"));
-        NS_ASSERTION(eventData, "Event needs event data");
-        if (!eventData)
-            break;
+        nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
+        NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
-        pAtkTableChange = reinterpret_cast<AtkTableChange *>(eventData);
+        PRInt32 rowIndex, numRows;
+        tableEvent->GetRowOrColIndex(&rowIndex);
+        tableEvent->GetNumRowsOrCols(&numRows);
 
         g_signal_emit_by_name(atkObj,
                               "row_deleted",
                               // After which the rows are deleted
-                              pAtkTableChange->index,
+                              rowIndex,
                               // The number of the deleted
-                              pAtkTableChange->count);
+                              numRows);
         break;
 
     case nsIAccessibleEvent::EVENT_TABLE_ROW_REORDER:
@@ -1247,34 +1243,36 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_INSERT:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_INSERT\n"));
-        NS_ASSERTION(eventData, "Event needs event data");
-        if (!eventData)
-            break;
+        nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
+        NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
-        pAtkTableChange = reinterpret_cast<AtkTableChange *>(eventData);
+        PRInt32 colIndex, numCols;
+        tableEvent->GetRowOrColIndex(&colIndex);
+        tableEvent->GetNumRowsOrCols(&numCols);
 
         g_signal_emit_by_name(atkObj,
                               "column_inserted",
                               // After which the columns are inserted
-                              pAtkTableChange->index,
+                              colIndex,
                               // The number of the inserted
-                              pAtkTableChange->count);
+                              numCols);
         break;
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_DELETE:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TABLE_COLUMN_DELETE\n"));
-        NS_ASSERTION(eventData, "Event needs event data");
-        if (!eventData)
-            break;
+        nsCOMPtr<nsIAccessibleTableChangeEvent> tableEvent = do_QueryInterface(aEvent);
+        NS_ENSURE_TRUE(tableEvent, NS_ERROR_FAILURE);
 
-        pAtkTableChange = reinterpret_cast<AtkTableChange *>(eventData);
+        PRInt32 colIndex, numCols;
+        tableEvent->GetRowOrColIndex(&colIndex);
+        tableEvent->GetNumRowsOrCols(&numCols);
 
         g_signal_emit_by_name(atkObj,
                               "column_deleted",
                               // After which the columns are deleted
-                              pAtkTableChange->index,
+                              colIndex,
                               // The number of the deleted
-                              pAtkTableChange->count);
+                              numCols);
         break;
 
     case nsIAccessibleEvent::EVENT_TABLE_COLUMN_REORDER:
@@ -1431,76 +1429,6 @@ nsAccessibleWrap::FireAtkTextChangedEvent(nsIAccessibleEvent *aEvent,
     char *signal_name = g_strconcat(isInserted ? "text_changed::insert" : "text_changed::delete",
                                     isFromUserInput ? "" : kNonUserInputEvent, NULL);
     g_signal_emit_by_name(aObject, signal_name, start, length);
-    g_free (signal_name);
-
-    return NS_OK;
-}
-
-nsresult
-nsAccessibleWrap::FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
-                                          AtkObject *aObject)
-{
-    MAI_LOG_DEBUG(("\n\nReceived: EVENT_PROPERTY_CHANGED\n"));
-
-    AtkPropertyChange *pAtkPropChange;
-    AtkPropertyValues values = { NULL };
-    nsAccessibleWrap *oldAccWrap = nsnull, *newAccWrap = nsnull;
-
-    nsAccEvent *event = reinterpret_cast<nsAccEvent*>(aEvent);
-
-    pAtkPropChange = reinterpret_cast<AtkPropertyChange *>(event->mEventData);
-    values.property_name = sAtkPropertyNameArray[pAtkPropChange->type];
-
-    NS_ASSERTION(pAtkPropChange, "Event needs event data");
-    if (!pAtkPropChange)
-        return NS_OK;
-
-    MAI_LOG_DEBUG(("\n\nthe type of EVENT_PROPERTY_CHANGED: %d\n\n",
-                   pAtkPropChange->type));
-
-    switch (pAtkPropChange->type) {
-    case PROP_TABLE_CAPTION:
-    case PROP_TABLE_SUMMARY:
-
-        if (pAtkPropChange->oldvalue)
-            oldAccWrap = reinterpret_cast<nsAccessibleWrap *>
-                                         (pAtkPropChange->oldvalue);
-
-        if (pAtkPropChange->newvalue)
-            newAccWrap = reinterpret_cast<nsAccessibleWrap *>
-                                         (pAtkPropChange->newvalue);
-
-        if (oldAccWrap && newAccWrap) {
-            g_value_init(&values.old_value, G_TYPE_POINTER);
-            g_value_set_pointer(&values.old_value,
-                                oldAccWrap->GetAtkObject());
-            g_value_init(&values.new_value, G_TYPE_POINTER);
-            g_value_set_pointer(&values.new_value,
-                                newAccWrap->GetAtkObject());
-        }
-        break;
-
-    case PROP_TABLE_COLUMN_DESCRIPTION:
-    case PROP_TABLE_COLUMN_HEADER:
-    case PROP_TABLE_ROW_HEADER:
-    case PROP_TABLE_ROW_DESCRIPTION:
-        g_value_init(&values.new_value, G_TYPE_INT);
-        g_value_set_int(&values.new_value,
-                        *reinterpret_cast<gint *>
-                                         (pAtkPropChange->newvalue));
-        break;
-
-        //Perhaps need more cases in the future
-    default:
-        g_value_init (&values.old_value, G_TYPE_POINTER);
-        g_value_set_pointer (&values.old_value, pAtkPropChange->oldvalue);
-        g_value_init (&values.new_value, G_TYPE_POINTER);
-        g_value_set_pointer (&values.new_value, pAtkPropChange->newvalue);
-    }
-
-    char *signal_name = g_strconcat("property_change::",
-                                    values.property_name, NULL);
-    g_signal_emit_by_name(aObject, signal_name, &values, NULL);
     g_free (signal_name);
 
     return NS_OK;
