@@ -50,6 +50,7 @@ IDC_ZOOMOUT             CURSOR  DISCARDABLE     "res/zoom_out.cur"
 IDC_COLRESIZE           CURSOR  DISCARDABLE     "res/col_resize.cur"
 IDC_ROWRESIZE           CURSOR  DISCARDABLE     "res/row_resize.cur"
 IDC_VERTICALTEXT        CURSOR  DISCARDABLE     "res/vertical_text.cur"
+IDC_NONE                CURSOR  DISCARDABLE     "res/none.cur"
 
 OPTPROPSHEET DIALOG DISCARDABLE  32, 32, 288, 226
 STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
