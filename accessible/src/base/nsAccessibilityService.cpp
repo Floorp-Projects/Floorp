@@ -1395,17 +1395,16 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     if (!content->IsFocusable()) {
       // If we're in unfocusable table-related subcontent, check for the
       // Presentation role on the containing table
-      nsIAtom *tag = content->Tag();
-      if (tag == nsAccessibilityAtoms::td ||
-          tag == nsAccessibilityAtoms::th ||
-          tag == nsAccessibilityAtoms::tr ||
-          tag == nsAccessibilityAtoms::tbody ||
-          tag == nsAccessibilityAtoms::tfoot ||
-          tag == nsAccessibilityAtoms::thead) {
+      if (frame->GetType() == nsAccessibilityAtoms::tableCaptionFrame ||
+          frame->GetType() == nsAccessibilityAtoms::tableCellFrame ||
+          frame->GetType() == nsAccessibilityAtoms::tableRowGroupFrame ||
+          frame->GetType() == nsAccessibilityAtoms::tableRowFrame) {
+
         nsIContent *tableContent = content;
-        nsAutoString tableRole;
         while ((tableContent = tableContent->GetParent()) != nsnull) {
-          if (tableContent->Tag() == nsAccessibilityAtoms::table) {
+          nsIFrame *tableFrame = aPresShell->GetPrimaryFrameFor(tableContent);
+          if (tableFrame &&
+              tableFrame->GetType() == nsAccessibilityAtoms::tableOuterFrame) {
             // Table that we're a descendant of is not styled as a table,
             // and has no table accessible for an ancestor, or
             // table that we're a descendant of is presentational
@@ -1415,21 +1414,20 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
               nsRoleMapEntry *tableRoleMapEntry =
                 nsAccUtils::GetRoleMapEntry(tableNode);
               if (tableRoleMapEntry &&
-                  tableRoleMapEntry != &nsARIAMap::gLandmarkRoleMap) {
+                  tableRoleMapEntry != &nsARIAMap::gLandmarkRoleMap)
                 tryTagNameOrFrame = PR_FALSE;
-                break;
-              }
-            }
-
-            nsIFrame *tableFrame =
-              aPresShell->GetPrimaryFrameFor(tableContent);
-            if (!tableFrame ||
-                tableFrame->GetType() != nsAccessibilityAtoms::tableOuterFrame) {
-              tryTagNameOrFrame = PR_FALSE;
             }
             break;
           }
+
+          if (tableContent->Tag() == nsAccessibilityAtoms::table) {
+            tryTagNameOrFrame = PR_FALSE;
+            break;
+          }
         }
+
+        if (!tableContent)
+          tryTagNameOrFrame = PR_FALSE;
       }
     }
 

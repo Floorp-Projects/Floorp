@@ -82,6 +82,8 @@ ACCESSIBILITY_ATOM(textFrame, "TextFrame")
 ACCESSIBILITY_ATOM(tableCaptionFrame, "TableCaptionFrame")
 ACCESSIBILITY_ATOM(tableCellFrame, "TableCellFrame")
 ACCESSIBILITY_ATOM(tableOuterFrame, "TableOuterFrame")
+ACCESSIBILITY_ATOM(tableRowGroupFrame, "TableRowGroupFrame")
+ACCESSIBILITY_ATOM(tableRowFrame, "TableRowFrame")
 
   // Alphabetical list of tag names
 ACCESSIBILITY_ATOM(a, "a")
