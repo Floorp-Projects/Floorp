@@ -40,15 +40,12 @@ sub Execute {
     MkdirWithPath(dir => $productConfigBumpDir)
       or die("Cannot mkdir $productConfigBumpDir: $!");
 
-    my @branches = ();
-    # tinderbox-configs tags are different on branches vs trunk
-    # Do the right thing in both cases
-    if ($branchTag eq 'HEAD') {
-        push(@branches, ('release', 'l10n_release'));
-    }
-    else {
-        push(@branches, $branchTag . '_release');
-        push(@branches, $branchTag . '_l10n_release');
+    my @branches = @{DetermineBranches()};
+
+    if (scalar(@branches) != 2) {
+        die("ASSERT: Bootstrap::Step::TinderConfig(): Got " .
+         scalar(@branches) . " branches from DetermineBranches(), " .
+         "needed 2.");
     }
 
     foreach my $branch (@branches) {
@@ -82,8 +79,8 @@ sub Execute {
         }
 
         if ($version eq 'nightly') {
-            $this->Log(msg => 'Skip TinderConfig tagging for nightly mode');
-            return;
+            $this->Log(msg => 'Skipping TinderConfig tagging for nightly mode');
+            next;
         }
 
         my @tagNames = ($productTag . '_RELEASE',
@@ -128,16 +125,14 @@ sub Verify {
     my $config = new Bootstrap::Config();
     my $branchTag = $config->Get(var => 'branchTag');
     my $logDir = $config->Get(sysvar => 'logDir');
+    my $version = $config->Get(var => 'version');
     
-    my @branches = ();
-    # tinderbox-configs tags are different on branches vs trunk
-    # Do the right thing in both cases
-    if ($branchTag eq 'HEAD') {
-        push(@branches, ('release', 'l10n_release'));
-    }
-    else {
-        push(@branches, $branchTag . '_release');
-        push(@branches, $branchTag . '_l10n_release');
+    my @branches = @{DetermineBranches()};
+
+    if (scalar(@branches) != 2) {
+        die("ASSERT: Bootstrap::Step::TinderConfig(): Got " .
+         scalar(@branches) . " branches from DetermineBranches(), " .
+         "needed 2.");
     }
 
     foreach my $branch (@branches) {
@@ -176,4 +171,38 @@ sub Verify {
             );
         }
     }
+}
+
+sub DetermineBranches {
+    my $this = shift;
+    my %args = @_;
+
+    my $config = new Bootstrap::Config();
+    my $version = $config->Get(var => 'version');
+    my $branchTag = $config->Get(var => 'branchTag');
+
+    my @branches = ();
+    # tinderbox-configs tags are different on branches vs trunk
+    # Additionally, nightlies use different branches
+    # Do the right thing in all cases
+    if ($branchTag eq 'HEAD') {
+        if ($version eq 'nightly') {
+            push(@branches, ('HEAD', 'l10n'));
+        }
+        else {
+            push(@branches, ('release', 'l10n_release'));
+        }
+    }
+    else {
+        if ($version eq 'nightly') {
+            push(@branches, $branchTag);
+            push(@branches, $branchTag . 'l10n');
+        }
+        else {
+            push(@branches, $branchTag . '_release');
+            push(@branches, $branchTag . '_l10n_release');
+        }
+    }
+
+    return \@branches;
 }
