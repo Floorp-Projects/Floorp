@@ -121,9 +121,10 @@ CSRCS   = \
 
 EXPORTS = cairo.h cairo-features.h cairo-platform.h cairo-deprecated.h cairo-rename.h
 
+# cairo-type1-subset.c should be here, but it's only supported on freetype platforms
+
 PSPDF_BASE_CSRCS = \
 	cairo-base85-stream.c \
-	cairo-type1-subset.c \
 	cairo-type1-fallback.c \
 	cairo-truetype-subset.c \
 	cairo-cff-subset.c \
@@ -184,7 +185,7 @@ EXPORTS += cairo-xlib.h cairo-xlib-xrender.h
 endif
 
 ifdef MOZ_ENABLE_CAIRO_FT
-CSRCS   += cairo-ft-font.c
+CSRCS   += cairo-ft-font.c cairo-type1-subset.c
 EXPORTS += cairo-ft.h
 OS_INCLUDES += $(CAIRO_FT_CFLAGS)
 endif
