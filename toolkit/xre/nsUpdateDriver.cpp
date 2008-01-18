@@ -328,6 +328,8 @@ static void
 ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
             nsIFile *appDir, int appArgc, char **appArgv)
 {
+  nsresult rv;
+
   // Steps:
   //  - mark update as 'applying'
   //  - copy updater into update dir
@@ -353,8 +355,24 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
 
   if (!appFile)
     return;
+
+#ifdef XP_WIN
+  nsAutoString appFilePathW;
+  rv = appFile->GetPath(appFilePathW);
+  if (NS_FAILED(rv))
+    return;
+  NS_ConvertUTF16toUTF8 appFilePath(appFilePathW);
+
+  nsAutoString updaterPathW;
+  rv = updater->GetPath(updaterPathW);
+  if (NS_FAILED(rv))
+    return;
+
+  NS_ConvertUTF16toUTF8 updaterPath(updaterPathW);
+
+#else
   nsCAutoString appFilePath;
-  nsresult rv = appFile->GetNativePath(appFilePath);
+  rv = appFile->GetNativePath(appFilePath);
   if (NS_FAILED(rv))
     return;
   
@@ -363,16 +381,13 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (NS_FAILED(rv))
     return;
 
-  nsAutoString updaterPathW;
-  rv = updater->GetPath(updaterPathW);
-  if (NS_FAILED(rv))
-    return;
+#endif
 
   // Get the directory to which the update will be applied. On Mac OSX we need
   // to apply the update to the Foo.app directory which is the parent of the
   // parent of the appDir. On other platforms we will just apply to the appDir.
-  nsCAutoString applyToDir;
 #if defined(XP_MACOSX)
+  nsCAutoString applyToDir;
   {
     nsCOMPtr<nsIFile> parentDir1, parentDir2;
     rv = appDir->GetParent(getter_AddRefs(parentDir1));
@@ -383,7 +398,11 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
       return;
     rv = parentDir2->GetNativePath(applyToDir);
   }
+#elif defined(XP_WIN)
+  nsAutoString applyToDir;
+  rv = appDir->GetPath(applyToDir);
 #else
+  nsCAutoString applyToDir;
   rv = appDir->GetNativePath(applyToDir);
 #endif
   if (NS_FAILED(rv))
@@ -438,7 +457,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   chdir(applyToDir.get());
   execv(updaterPath.get(), argv);
 #elif defined(XP_WIN)
-  _chdir(applyToDir.get());
+  _wchdir(applyToDir.get());
 
   if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv, 1))
     return;
