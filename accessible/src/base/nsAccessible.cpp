@@ -1909,15 +1909,14 @@ PRBool nsAccessible::IsNodeRelevant(nsIDOMNode *aNode)
 }
 
 NS_IMETHODIMP
-nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget,
-                               void * aData)
+nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget)
 {
   // Don't fire event for accessible that has been shut down.
   if (!mWeakShell)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessibleEvent> accEvent =
-    new nsAccEvent(aEvent, aTarget, aData);
+    new nsAccEvent(aEvent, aTarget);
   NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
 
   return FireAccessibleEvent(accEvent);
