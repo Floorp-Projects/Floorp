@@ -1343,9 +1343,6 @@ private:
 #endif
 };
 
-JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
-                              JSObject *parent);
-
 /***************************************************************************/
 // XPCNativeMember represents a single idl declared method, attribute or
 // constant.
@@ -1364,22 +1361,9 @@ public:
 
     PRUint16 GetIndex() const {return mIndex;}
 
-    JSBool GetConstantValue(XPCCallContext& ccx, XPCNativeInterface* iface,
-                            jsval* pval)
-        {NS_ASSERTION(IsConstant(),
-                      "Only call this if you're sure this is a constant!");
-         if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
+    JSBool GetValue(XPCCallContext& ccx, XPCNativeInterface* iface, jsval* pval)
+        {if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
          *pval = mVal; return JS_TRUE;}
-
-    JSBool NewFunctionObject(XPCCallContext& ccx, XPCNativeInterface* iface,
-                             JSObject *parent, jsval* pval)
-        {NS_ASSERTION(!IsConstant(),
-                      "Only call this if you're sure this is not a constant!");
-         if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
-         JSObject* funobj =
-            xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(mVal), parent);
-         if(!funobj) return JS_FALSE;
-         *pval = OBJECT_TO_JSVAL(funobj); return JS_TRUE;}
 
     JSBool IsMethod() const
         {return 0 != (mFlags & METHOD);}
@@ -3867,6 +3851,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 // Utilities
 
 JSBool xpc_IsReportableErrorCode(nsresult code);
+
+JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
+                              JSObject *parent);
 
 #ifndef XPCONNECT_STANDALONE
 
