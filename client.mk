@@ -1024,7 +1024,7 @@ CONFIG_STATUS_DEPS := \
 	$(wildcard $(TOPSRCDIR)/directory/c-sdk/configure) \
 	$(wildcard $(TOPSRCDIR)/config/milestone.txt) \
 	$(wildcard $(TOPSRCDIR)/config/chrome-versions.sh) \
-  $(wildcard $(addsuffix confvars.sh,$(wildcard */))) \
+  $(wildcard $(addsuffix confvars.sh,$(wildcard $(TOPSRCDIR)/*/))) \
 	$(NULL)
 
 # configure uses the program name to determine @srcdir@. Calling it without
