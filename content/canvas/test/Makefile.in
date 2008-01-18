@@ -177,12 +177,8 @@ _TEST_FILES_B = \
 	test_2d.composite.transparent.lighter.html \
 	test_2d.composite.image.source-over.html \
 	test_2d.composite.image.destination-over.html \
-	test_2d.composite.image.source-in.html \
-	test_2d.composite.image.destination-in.html \
-	test_2d.composite.image.source-out.html \
 	test_2d.composite.image.destination-out.html \
 	test_2d.composite.image.source-atop.html \
-	test_2d.composite.image.destination-atop.html \
 	test_2d.composite.image.xor.html \
 	test_2d.composite.image.copy.html \
 	test_2d.composite.image.lighter.html \
@@ -517,6 +513,15 @@ _TEST_FILES_E += \
 	test_2d.line.cap.zerobezier.round.html \
 	test_2d.line.join.parallel.html \
 	test_2d.strokeRect.zero.5.html \
+	$(NULL)
+
+# These are failing due to different quartz implementations of these operators when
+# images are in play.  Bug 413026.
+_TEST_FILES_E += \
+	test_2d.composite.image.destination-in.html \
+	test_2d.composite.image.destination-atop.html \
+	test_2d.composite.image.source-in.html \
+	test_2d.composite.image.source-out.html \
 	$(NULL)
 endif
 
