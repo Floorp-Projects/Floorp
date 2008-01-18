@@ -155,9 +155,9 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
     printf(" anonymous-cell ");
     break;
   }
-  printf("\nm:%d c:%d(%c) p:%f sm:%d sc:%d(%c) sp:%f f:%d",
+  printf("\nm:%d c:%d(%c) p:%f sm:%d sc:%d sp:%f f:%d",
          mMinCoord, mPrefCoord, mHasSpecifiedCoord ? 's' : 'u', mPrefPercent,
-         mSpanMinCoord, mSpanPrefCoord, mSpanHasSpecifiedCoord ? 's' : 'u',
+         mSpanMinCoord, mSpanPrefCoord,
          mSpanPrefPercent,
          GetFinalWidth());
   printf("\n%s**END COL DUMP** ", indent);
