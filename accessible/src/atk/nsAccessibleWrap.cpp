@@ -1132,8 +1132,6 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         return NS_OK; // Node is shut down
     }
 
-    AtkTableChange * pAtkTableChange = nsnull;
-
     switch (type) {
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
         return FireAtkStateChangeEvent(aEvent, atkObj);
