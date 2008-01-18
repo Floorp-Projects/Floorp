@@ -34,6 +34,7 @@
 #include "cairoint.h"
 
 #include "cairo-xlib-private.h"
+#include "cairo-xlib-xrender-private.h"
 
 #include <fontconfig/fontconfig.h>
 
@@ -292,7 +293,14 @@ _cairo_xlib_display_get (Display *dpy)
 
     display->buggy_repeat = FALSE;
     if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
-	if (VendorRelease (dpy) <= 60802000)
+	/* When modularized, the X.Org server VendorRelease was
+	 * bogusly reset to a very small number, without any change in
+	 * the ServerVendor string. We avoid considering the new
+	 * servers with the small number as buggy by restricting the
+	 * test to known bad releases. But there could be a problem
+	 * again in the future if X.Org server versions ever climb
+	 * back up to 6.7 or 6.8. */
+	if (VendorRelease (dpy) >= 60700000 && VendorRelease (dpy) <= 60802000)
 	    display->buggy_repeat = TRUE;
     } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
 	if (VendorRelease (dpy) <= 40500000)

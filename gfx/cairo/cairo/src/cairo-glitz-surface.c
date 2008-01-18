@@ -1305,9 +1305,10 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	{
 	    if (data_size < size)
 	    {
+		void *p;
 		data_size = size;
-		data = realloc (data, data_size);
-		if (!data)
+		p = realloc (data, data_size);
+		if (!p)
 		{
 		    _cairo_glitz_pattern_release_surface (src_pattern, src,
 							  &attributes);
@@ -1315,6 +1316,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 			_cairo_pattern_fini (&tmp_src_pattern.base);
 		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		}
+		data = p;
 
 		if (buffer)
 		    glitz_buffer_destroy (buffer);

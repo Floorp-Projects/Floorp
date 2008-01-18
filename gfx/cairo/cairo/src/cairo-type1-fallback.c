@@ -110,6 +110,7 @@ cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
         goto fail;
 
     _cairo_array_init (&font->contents, sizeof (unsigned char));
+    font->output = NULL;
 
     *subset_return = font;
 
@@ -709,12 +710,13 @@ cairo_type1_font_generate (cairo_type1_font_t *font, const char *name)
 static cairo_status_t
 cairo_type1_font_destroy (cairo_type1_font_t *font)
 {
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     free (font->widths);
     cairo_scaled_font_destroy (font->type1_scaled_font);
     _cairo_array_fini (&font->contents);
-    status = _cairo_output_stream_destroy (font->output);
+    if (font->output)
+	status = _cairo_output_stream_destroy (font->output);
     free (font);
 
     return status;

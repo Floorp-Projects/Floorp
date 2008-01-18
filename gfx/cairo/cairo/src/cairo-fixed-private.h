@@ -59,7 +59,7 @@ typedef cairo_int128_t	cairo_fixed_96_32_t;
  * making sure that you compute a double-to-fixed magic number.
  * (see below).
  */
-#define CAIRO_FIXED_FRAC_BITS	8
+#define CAIRO_FIXED_FRAC_BITS	16
 
 /* A signed type CAIRO_FIXED_BITS in size; the main fixed point type */
 typedef int32_t cairo_fixed_t;
