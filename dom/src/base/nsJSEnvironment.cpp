@@ -782,17 +782,9 @@ PrintWinCodebase(nsGlobalWindow *win)
 }
 #endif
 
-// The number of operation callbacks between calls to JS_MaybeGC
-#define MAYBE_GC_OPERATION_COUNT_MASK 0x00000fff // 4095
+// The accumulated operation weight before we call JS_MaybeGC
+const PRUint32 MAYBE_GC_OPERATION_WEIGHT = 5000 * JS_OPERATION_WEIGHT_BASE;
 
-// The number of operation callbacks before we even check if our start
-// timestamp is initialized. This is a fairly low number as we want to
-// initialize the timestamp early enough to not waste much time before
-// we get there, but we don't want to bother doing this too early as
-// it's not generally necessary.
-#define INITIALIZE_TIME_OPERATION_COUNT_MASK 0x000000ff // 255
-
-// This function is called after each JS branch execution
 JSBool JS_DLL_CALLBACK
 nsJSContext::DOMOperationCallback(JSContext *cx)
 {
@@ -804,49 +796,34 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     return JS_TRUE;
   }
 
-  PRUint32 callbackCount = ++ctx->mOperationCallbackCount;
-
-  if (callbackCount & INITIALIZE_TIME_OPERATION_COUNT_MASK) {
-    return JS_TRUE;
-  }
-
-  if (callbackCount == INITIALIZE_TIME_OPERATION_COUNT_MASK + 1 &&
-      LL_IS_ZERO(ctx->mOperationCallbackTime)) {
-    // Initialize mOperationCallbackTime to start timing how long the
-    // script has run
-    ctx->mOperationCallbackTime = PR_Now();
-
-    ctx->mIsTrackingChromeCodeTime =
-      ::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx));
-
-    return JS_TRUE;
-  }
-
-  if (callbackCount & MAYBE_GC_OPERATION_COUNT_MASK) {
-    return JS_TRUE;
-  }
-
   // XXX Save the operation callback time so we can restore it after the GC,
   // because GCing can cause JS to run on our context, causing our
-  // ScriptEvaluated to be called, and clearing our operation callback time
-  // and count. See bug 302333.
+  // ScriptEvaluated to be called, and clearing our operation callback time.
+  // See bug 302333.
   PRTime callbackTime = ctx->mOperationCallbackTime;
 
-  // Run the GC if we get this far.
   JS_MaybeGC(cx);
 
   // Now restore the callback time and count, in case they got reset.
   ctx->mOperationCallbackTime = callbackTime;
-  ctx->mOperationCallbackCount = callbackCount;
 
   PRTime now = PR_Now();
+
+  if (LL_IS_ZERO(callbackTime)) {
+    // Initialize mOperationCallbackTime to start timing how long the
+    // script has run
+    ctx->mOperationCallbackTime = now;
+    return JS_TRUE;
+  }
 
   PRTime duration;
   LL_SUB(duration, now, callbackTime);
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
-  if (duration < (ctx->mIsTrackingChromeCodeTime ?
+  PRBool isTrackingChromeCodeTime =
+    ::JS_IsSystemObject(cx, ::JS_GetGlobalObject(cx));
+  if (duration < (isTrackingChromeCodeTime ?
                   sMaxChromeScriptRunTime : sMaxScriptRunTime)) {
     return JS_TRUE;
   }
@@ -991,7 +968,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
       nsIPrefBranch *prefBranch = nsContentUtils::GetPrefBranch();
 
       if (prefBranch) {
-        prefBranch->SetIntPref(ctx->mIsTrackingChromeCodeTime ?
+        prefBranch->SetIntPref(isTrackingChromeCodeTime ?
                                "dom.max_chrome_script_run_time" :
                                "dom.max_script_run_time", 0);
       }
@@ -1116,7 +1093,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
                                          this);
 
     ::JS_SetOperationCallback(mContext, DOMOperationCallback,
-                              JS_OPERATION_WEIGHT_BASE);
+                              MAYBE_GC_OPERATION_WEIGHT);
 
     static JSLocaleCallbacks localeCallbacks =
       {
@@ -1132,10 +1109,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mNumEvaluations = 0;
   mTerminations = nsnull;
   mScriptsEnabled = PR_TRUE;
-  mOperationCallbackCount = 0;
   mOperationCallbackTime = LL_ZERO;
   mProcessingScriptTag = PR_FALSE;
-  mIsTrackingChromeCodeTime = PR_FALSE;
 }
 
 nsJSContext::~nsJSContext()
@@ -3244,7 +3219,6 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
   }
 #endif
 
-  mOperationCallbackCount = 0;
   mOperationCallbackTime = LL_ZERO;
 }
 
