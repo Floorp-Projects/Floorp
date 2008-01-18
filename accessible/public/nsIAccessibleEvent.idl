@@ -569,17 +569,3 @@ interface nsIAccessibleCaretMoveEvent: nsIAccessibleEvent
   readonly attribute long caretOffset;
 };
 
-[scriptable, uuid(a9485c7b-5861-4695-8441-fab0235b205d)]
-interface nsIAccessibleTableChangeEvent: nsIAccessibleEvent
-{
-  /**
-   * Return the row or column index.
-   */
-  readonly attribute long rowOrColIndex;
-
-  /**
-   * Return the number of rows or cols
-   */
-  readonly attribute long numRowsOrCols;
-};
-

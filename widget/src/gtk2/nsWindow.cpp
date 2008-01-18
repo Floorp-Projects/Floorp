@@ -5207,7 +5207,7 @@ nsWindow::DispatchActivateEvent(void)
         if (privAcc) {
             privAcc->FireToolkitEvent(
                          nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE,
-                         rootAcc);
+                         rootAcc, nsnull);
         }
     }
 
@@ -5226,7 +5226,7 @@ nsWindow::DispatchDeactivateEvent(void)
         if (privAcc) {
             privAcc->FireToolkitEvent(
                          nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE,
-                         rootAcc);
+                         rootAcc, nsnull);
         }
     }
 }
