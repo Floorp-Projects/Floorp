@@ -448,20 +448,26 @@ XPCWrapper::ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
     return MaybePreserveWrapper(cx, wn, flags);
   }
 
+  // Get (and perhaps lazily create) the member's value (commonly a
+  // cloneable function).
+  jsval memberval;
+  if (!member->GetValue(ccx, iface, &memberval)) {
+    return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
+  }
+
+  // Make sure memberval doesn't go away while we mess with it.
+  AUTO_MARK_JSVAL(ccx, memberval);
+
   JSString *str = JSVAL_TO_STRING(id);
   if (!str) {
     return ThrowException(NS_ERROR_UNEXPECTED, cx);
   }
 
-  // Get (and perhaps lazily create) the member's value (commonly a
-  // cloneable function).
   jsval v;
   uintN attrs = JSPROP_ENUMERATE;
 
   if (member->IsConstant()) {
-    if (!member->GetConstantValue(ccx, iface, &v)) {
-      return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
-    }
+    v = memberval;
   } else if (member->IsAttribute()) {
     // An attribute is being resolved. Define the property, the value
     // will be dealt with in the get/set hooks.  Use JSPROP_SHARED to
@@ -475,27 +481,23 @@ XPCWrapper::ResolveNativeProperty(JSContext *cx, JSObject *wrapperObj,
     // use for this object.  NB: cx's newborn roots will protect funobj
     // and funWrapper and its object from GC.
 
-    jsval funval;
-    if (!member->NewFunctionObject(ccx, iface, wrapper->GetFlatJSObject(),
-                                   &funval)) {
-      return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
+    JSObject* funobj = xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(memberval),
+                                           wrapper->GetFlatJSObject());
+    if (!funobj) {
+      return JS_FALSE;
     }
 
-    AUTO_MARK_JSVAL(ccx, funval);
+    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
 
 #ifdef DEBUG_XPCNativeWrapper
     printf("Wrapping function object for %s\n",
            ::JS_GetStringBytes(JSVAL_TO_STRING(id)));
 #endif
 
-    if (!WrapFunction(cx, wrapperObj, JSVAL_TO_OBJECT(funval), &v,
-                      isNativeWrapper)) {
+    if (!WrapFunction(cx, wrapperObj, funobj, &v, isNativeWrapper)) {
       return JS_FALSE;
     }
   }
-
-  // Make sure v doesn't go away while we mess with it.
-  AUTO_MARK_JSVAL(ccx, v);
 
   // XPCNativeWrapper doesn't need to do this.
   jsval oldFlags;
@@ -602,12 +604,14 @@ XPCWrapper::GetOrSetNativeProperty(JSContext *cx, JSObject *obj,
     return JS_TRUE;
   }
 
-  if (member->IsConstant()) {
-    jsval memberval;
-    if (!member->GetConstantValue(ccx, iface, &memberval)) {
-      return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
-    }
+  // Get (and perhaps lazily create) the member's value (commonly a
+  // cloneable function).
+  jsval memberval;
+  if (!member->GetValue(ccx, iface, &memberval)) {
+    return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
+  }
 
+  if (member->IsConstant()) {
     // Getting the value of constants is easy, just return the
     // value. Setting is not supported (obviously).
     if (aIsSet) {
@@ -626,13 +630,16 @@ XPCWrapper::GetOrSetNativeProperty(JSContext *cx, JSObject *obj,
     return JS_TRUE;
   }
 
-  jsval funval;
-  if (!member->NewFunctionObject(ccx, iface, wrapper->GetFlatJSObject(),
-                                 &funval)) {
-    return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
-  }
+  // Make sure the function we're cloning doesn't go away while
+  // we're cloning it.
+  AUTO_MARK_JSVAL(ccx, memberval);
 
-  AUTO_MARK_JSVAL(ccx, funval);
+  // clone a function we can use for this object
+  JSObject* funobj = xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(memberval),
+                                         wrapper->GetFlatJSObject());
+  if (!funobj) {
+    return JS_FALSE;
+  }
 
   jsval *argv = nsnull;
   uintN argc = 0;
@@ -659,8 +666,8 @@ XPCWrapper::GetOrSetNativeProperty(JSContext *cx, JSObject *obj,
 
   // Call the getter
   jsval v;
-  if (!::JS_CallFunctionValue(cx, wrapper->GetFlatJSObject(), funval, argc,
-                              argv, &v)) {
+  if (!::JS_CallFunctionValue(cx, wrapper->GetFlatJSObject(),
+                              OBJECT_TO_JSVAL(funobj), argc, argv, &v)) {
     return JS_FALSE;
   }
 
@@ -704,22 +711,34 @@ XPCWrapper::NativeToString(JSContext *cx, XPCWrappedNative *wrappedNative,
 
   XPCNativeInterface *iface = ccx.GetInterface();
   XPCNativeMember *member = ccx.GetMember();
-  JSString* str = nsnull;
+  JSBool overridden = JS_FALSE;
+  jsval toStringVal;
 
   // First, try to see if the object declares a toString in its IDL. If it does,
   // then we need to defer to that.
-  if (iface && member && member->IsMethod()) {
-    jsval toStringVal;
-    if (!member->NewFunctionObject(ccx, iface, wn_obj, &toStringVal)) {
+  if (iface && member) {
+    if (!member->GetValue(ccx, iface, &toStringVal)) {
       return JS_FALSE;
     }
 
+    overridden = member->IsMethod();
+  }
+
+  JSString* str = nsnull;
+  if (overridden) {
     // Defer to the IDL-declared toString.
 
     AUTO_MARK_JSVAL(ccx, toStringVal);
 
+    JSObject *funobj = xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(toStringVal),
+                                           wn_obj);
+    if (!funobj) {
+      return JS_FALSE;
+    }
+
     jsval v;
-    if (!::JS_CallFunctionValue(cx, wn_obj, toStringVal, argc, argv, &v)) {
+    if (!::JS_CallFunctionValue(cx, wn_obj, OBJECT_TO_JSVAL(funobj), argc, argv,
+                                &v)) {
       return JS_FALSE;
     }
 
