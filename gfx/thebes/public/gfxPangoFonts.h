@@ -54,11 +54,6 @@
 // anything other than simple Latin work though!
 //#define ENABLE_FAST_PATH_ALWAYS
 
-#include "nsDataHashtable.h"
-#include "nsClassHashtable.h"
-
-class FontSelector;
-
 class gfxPangoTextRun;
 
 class gfxPangoFont : public gfxFont {
@@ -71,15 +66,10 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
-    PangoFontDescription *GetPangoFontDescription() { if (!mPangoFontDesc) RealizeFont(); return mPangoFontDesc; }
-    PangoContext *GetPangoContext() { if (!mPangoFontDesc) RealizeFont(); return mPangoCtx; }
-
     void GetMozLang(nsACString &aMozLang);
     void GetActualFontFamily(nsACString &aFamily);
 
     PangoFont *GetPangoFont() { if (!mPangoFont) RealizePangoFont(); return mPangoFont; }
-    gfxFloat GetAdjustedSize() { if (!mPangoFontDesc) RealizeFont(); return mAdjustedSize; }
-
     PRUint32 GetGlyph(const PRUint32 aChar);
 
     virtual nsString GetUniqueName();
@@ -93,9 +83,6 @@ public:
     }
 
 protected:
-    PangoFontDescription *mPangoFontDesc;
-    PangoContext *mPangoCtx;
-
     PangoFont *mPangoFont;
     cairo_scaled_font_t *mCairoFont;
 
@@ -104,8 +91,7 @@ protected:
     Metrics  mMetrics;
     gfxFloat mAdjustedSize;
 
-    void RealizeFont(PRBool force = PR_FALSE);
-    void RealizePangoFont(PRBool aForce = PR_FALSE);
+    void RealizePangoFont();
     void GetCharSize(const char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
                      PRUint32 *aGlyphID = nsnull);
 
@@ -168,48 +154,6 @@ protected:
     static PRBool FontCallback (const nsAString& fontName,
                                 const nsACString& genericName,
                                 void *closure);
-
-private:
-    nsTArray<gfxFontStyle> mAdditionalStyles;
-};
-
-class gfxPangoFontWrapper {
-public:
-    gfxPangoFontWrapper(PangoFont *aFont) {
-        mFont = aFont;
-        g_object_ref(mFont);
-    }
-    ~gfxPangoFontWrapper() {
-        if (mFont)
-            g_object_unref(mFont);
-    }
-    PangoFont* Get() { return mFont; }
-private:
-    PangoFont *mFont;
-};
-
-class gfxPangoFontCache
-{
-public:
-    gfxPangoFontCache();
-    ~gfxPangoFontCache();
-
-    static gfxPangoFontCache* GetPangoFontCache() {
-        if (!sPangoFontCache)
-            sPangoFontCache = new gfxPangoFontCache();
-        return sPangoFontCache;
-    }
-    static void Shutdown() {
-        if (sPangoFontCache)
-            delete sPangoFontCache;
-        sPangoFontCache = nsnull;
-    }
-
-    void Put(const PangoFontDescription *aFontDesc, PangoFont *aPangoFont);
-    PangoFont* Get(const PangoFontDescription *aFontDesc);
-private:
-    static gfxPangoFontCache *sPangoFontCache;
-    nsClassHashtable<nsUint32HashKey,  gfxPangoFontWrapper> mPangoFonts;
 };
 
 #endif /* GFX_PANGOFONTS_H */
