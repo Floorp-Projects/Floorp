@@ -6406,7 +6406,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 /* XXX fold only if all operands convert to string */
                 if (pn2->pn_type != TOK_STRING)
                     return JS_TRUE;
-                length += ATOM_TO_STRING(pn2->pn_atom)->length;
+                length += JSFLATSTR_LENGTH(ATOM_TO_STRING(pn2->pn_atom));
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
@@ -6422,8 +6422,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             /* Fill the buffer, advancing chars and recycling kids as we go. */
             for (pn2 = pn1; pn2; pn2 = RecycleTree(pn2, tc)) {
                 str2 = ATOM_TO_STRING(pn2->pn_atom);
-                length2 = str2->length;
-                js_strncpy(chars, str2->u.chars, length2);
+                length2 = JSFLATSTR_LENGTH(str2);
+                js_strncpy(chars, JSFLATSTR_CHARS(str2), length2);
                 chars += length2;
             }
             *chars = 0;
