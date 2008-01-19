@@ -7896,7 +7896,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
         str = js_NewStringCopyN(cx, chars, len);
         if (!str)
             return NULL;
-        chars = str->u.chars;
+        chars = JSFLATSTR_CHARS(str);
     } else {
         /*
          * Reallocating str (because we know it has no other references)
@@ -7911,7 +7911,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
     if (!chars)
         return NULL;
 
-    JSSTRING_INIT(str, chars, newlen);
+    JSFLATSTR_INIT(str, chars, newlen);
     chars += len;
     if (isName) {
         *chars++ = ' ';

@@ -2528,7 +2528,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
                                      sizeof(JSString));
     if (!str)
         return NULL;
-    JSSTRING_INIT(str, chars, length);
+    JSFLATSTR_INIT(str, chars, length);
     return str;
 }
 
@@ -5234,13 +5234,13 @@ JS_GetStringChars(JSString *str)
         if (s) {
             memcpy(s, JSSTRDEP_CHARS(str), n * sizeof *s);
             s[n] = 0;
-            JSSTRING_INIT(str, s, n);
+            JSFLATSTR_INIT(str, s, n);
         } else {
             s = JSSTRDEP_CHARS(str);
         }
     } else {
-        JSSTRING_CLEAR_MUTABLE(str);
-        s = str->u.chars;
+        JSFLATSTR_CLEAR_MUTABLE(str);
+        s = JSFLATSTR_CHARS(str);
     }
     return s;
 }
@@ -5266,7 +5266,7 @@ JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length)
     str = js_NewString(cx, chars, length);
     if (!str)
         return str;
-    JSSTRING_SET_MUTABLE(str);
+    JSFLATSTR_SET_MUTABLE(str);
     return str;
 }
 

@@ -1522,7 +1522,7 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
     nbytes = sizeof(JSAtom *) + sizeof(JSDHashEntryStub);
     if (ATOM_IS_STRING(atom)) {
         nbytes += sizeof(JSString);
-        nbytes += (ATOM_TO_STRING(atom)->length + 1) * sizeof(jschar);
+        nbytes += (JSFLATSTR_LENGTH(ATOM_TO_STRING(atom)) + 1) * sizeof(jschar);
     } else if (ATOM_IS_DOUBLE(atom)) {
         nbytes += sizeof(jsdouble);
     }

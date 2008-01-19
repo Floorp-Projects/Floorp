@@ -9,11 +9,9 @@ js_MatchToken ; 980277
 js_CompareStrings ; 662772
 js_Lock ; 628184
 js_Unlock ; 628184
-js_AtomizeString ; 611102
 js_HashString ; 611102
 js_DropScopeProperty ; 546476
 JS_malloc ; 484350
-js_Atomize ; 464433
 js_InflateStringToBuffer ; 460739
 js_HoldScopeProperty ; 442612
 JS_free ; 382991
@@ -46,7 +44,6 @@ JS_GetFrameFunctionObject ; 120567
 js_AllocGCThing ; 119828
 js_DestroyScopeProperty ; 115989
 js_Emit3 ; 109135
-js_AtomizeChars ; 108038
 JS_HashTableLookup ; 107154
 JS_InstanceOf ; 103905
 js_DefineProperty ; 99514
@@ -166,7 +163,6 @@ js_NewScript ; 4941
 js_InitCodeGenerator ; 4810
 js_FinishTakingSrcNotes ; 4810
 js_NewScriptFromParams ; 4810
-js_InitAtomMap ; 4810
 js_FinishTakingTryNotes ; 4810
 js_NewScriptFromCG ; 4810
 js_FinishCodeGenerator ; 4810
@@ -360,7 +356,6 @@ js_InitScriptClass ; 19
 js_obj_toString ; 15
 js_GetArgsValue ; 14
 js_GetArgsObject ; 14
-js_AtomizeDouble ; 12
 JS_DestroyIdArray ; 11
 js_NewIdArray ; 11
 JS_GetElement ; 11
