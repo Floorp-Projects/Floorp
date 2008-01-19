@@ -109,9 +109,8 @@ js_GetDependentStringChars(JSString *str)
     JSString *base;
 
     start = js_MinimizeDependentStrings(str, 0, &base);
-    JS_ASSERT(!JSSTRING_IS_DEPENDENT(base));
-    JS_ASSERT(start < (base->length & ~JSSTRFLAG_MUTABLE));
-    return base->u.chars + start;
+    JS_ASSERT(start < JSFLATSTR_LENGTH(base));
+    return JSFLATSTR_CHARS(base) + start;
 }
 
 const jschar *
@@ -119,8 +118,7 @@ js_GetStringChars(JSContext *cx, JSString *str)
 {
     if (!js_MakeStringImmutable(cx, str))
         return NULL;
-    JS_ASSERT(!JSSTRING_IS_DEPENDENT(str));
-    return str->u.chars;
+    return JSFLATSTR_CHARS(str);
 }
 
 JSString *
@@ -148,7 +146,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         ldep = NULL;
     } else {
         /* We can realloc left's space and make it depend on our result. */
-        JS_ASSERT(!JSSTRING_IS_DEPENDENT(left));
+        JS_ASSERT(JSSTRING_IS_FLAT(left));
         s = (jschar *) JS_realloc(cx, ls, (ln + rn + 1) * sizeof(jschar));
         if (!s)
             return NULL;
@@ -175,7 +173,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
                 left->u.chars = s;
         }
     } else {
-        JSSTRING_SET_MUTABLE(str);
+        JSFLATSTR_SET_MUTABLE(str);
 
         /* Morph left into a dependent prefix if we realloc'd its buffer. */
         if (ldep) {
@@ -211,7 +209,7 @@ js_UndependString(JSContext *cx, JSString *str)
 
         js_strncpy(s, JSSTRDEP_CHARS(str), n);
         s[n] = 0;
-        JSSTRING_INIT(str, s, n);
+        JSFLATSTR_INIT(str, s, n);
 
 #ifdef DEBUG
         {
@@ -225,7 +223,7 @@ js_UndependString(JSContext *cx, JSString *str)
 #endif
     }
 
-    return str->u.chars;
+    return JSFLATSTR_CHARS(str);
 }
 
 JSBool
@@ -235,7 +233,7 @@ js_MakeStringImmutable(JSContext *cx, JSString *str)
         JS_RUNTIME_METER(cx->runtime, badUndependStrings);
         return JS_FALSE;
     }
-    JSSTRING_CLEAR_MUTABLE(str);
+    JSFLATSTR_CLEAR_MUTABLE(str);
     return JS_TRUE;
 }
 
@@ -2486,7 +2484,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     str = (JSString *) js_NewGCThing(cx, GCX_STRING, sizeof(JSString));
     if (!str)
         return NULL;
-    JSSTRING_INIT(str, chars, length);
+    JSFLATSTR_INIT(str, chars, length);
 #ifdef DEBUG
   {
     JSRuntime *rt = cx->runtime;
@@ -2645,6 +2643,7 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
 void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
 {
+    jschar *chars;
     JSBool valid;
     JSStringFinalizeOp finalizer;
 
@@ -2657,14 +2656,15 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
         valid = JS_TRUE;
     } else {
         /* A stillborn string has null chars, so is not valid. */
-        valid = (str->u.chars != NULL);
+        chars = JSFLATSTR_CHARS(str);
+        valid = (chars != NULL);
         if (valid) {
-            if (IN_UNIT_STRING_SPACE_RT(rt, str->u.chars)) {
-                JS_ASSERT(rt->unitStrings[*str->u.chars] == str);
+            if (IN_UNIT_STRING_SPACE_RT(rt, chars)) {
+                JS_ASSERT(rt->unitStrings[*chars] == str);
                 JS_ASSERT(type < 0);
-                rt->unitStrings[*str->u.chars] = NULL;
+                rt->unitStrings[*chars] = NULL;
             } else if (type < 0) {
-                free(str->u.chars);
+                free(chars);
             } else {
                 JS_ASSERT((uintN) type < JS_ARRAY_LENGTH(str_finalizers));
                 finalizer = str_finalizers[type];
