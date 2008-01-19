@@ -3074,10 +3074,10 @@ static JSFunctionSpec JProfFunctions[] = {
 
 #ifdef MOZ_SHARK
 static JSFunctionSpec SharkFunctions[] = {
-    {"startShark",                 StartShark,                 0, 0, 0},
-    {"stopShark",                  StopShark,                  0, 0, 0},
-    {"connectShark",               ConnectShark,               0, 0, 0},
-    {"disconnectShark",            DisconnectShark,            0, 0, 0},
+    {"startShark",                 js_StartShark,              0, 0, 0},
+    {"stopShark",                  js_StopShark,               0, 0, 0},
+    {"connectShark",               js_ConnectShark,            0, 0, 0},
+    {"disconnectShark",            js_DisconnectShark,         0, 0, 0},
     {nsnull,                       nsnull,                     0, 0, 0}
 };
 #endif

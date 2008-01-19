@@ -1676,8 +1676,8 @@ JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks)
 
 #ifdef MOZ_SHARK
 
-JS_FRIEND_API(JSBool)
-js_StartChudRemote() 
+JS_PUBLIC_API(JSBool)
+JS_StartChudRemote() 
 {
     if (chudIsRemoteAccessAcquired() && 
         (chudStartRemotePerfMonitor("Mozilla") == chudSuccess)) {
@@ -1687,8 +1687,8 @@ js_StartChudRemote()
     return JS_FALSE;
 }
 
-JS_FRIEND_API(JSBool)
-js_StopChudRemote()
+JS_PUBLIC_API(JSBool)
+JS_StopChudRemote()
 {
     if (chudIsRemoteAccessAcquired() &&
         (chudStopRemotePerfMonitor() == chudSuccess)) {
@@ -1698,8 +1698,8 @@ js_StopChudRemote()
     return JS_FALSE;
 }
 
-JS_FRIEND_API(JSBool)
-js_ConnectShark()
+JS_PUBLIC_API(JSBool)
+JS_ConnectShark()
 {
     if (!chudIsInitialized() && (chudInitialize() != chudSuccess))
         return JS_FALSE;
@@ -1710,8 +1710,8 @@ js_ConnectShark()
     return JS_TRUE;
 }
 
-JS_FRIEND_API(JSBool)
-js_DisconnectShark()
+JS_PUBLIC_API(JSBool)
+JS_DisconnectShark()
 {
     if (chudIsRemoteAccessAcquired() && (chudReleaseRemoteAccess() != chudSuccess))
         return JS_FALSE;
@@ -1720,10 +1720,10 @@ js_DisconnectShark()
 }
 
 JS_FRIEND_API(JSBool)
-StartShark(JSContext *cx, JSObject *obj,
-           uintN argc, jsval *argv, jsval *rval)
+js_StartShark(JSContext *cx, JSObject *obj,
+              uintN argc, jsval *argv, jsval *rval)
 {
-    if (!js_StartChudRemote()) {
+    if (!JS_StartChudRemote()) {
         JS_ReportError(cx, "Error starting CHUD.");
     }
 
@@ -1731,10 +1731,10 @@ StartShark(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-StopShark(JSContext *cx, JSObject *obj,
-          uintN argc, jsval *argv, jsval *rval)
+js_StopShark(JSContext *cx, JSObject *obj,
+             uintN argc, jsval *argv, jsval *rval)
 {
-    if (!js_StopChudRemote()) {
+    if (!JS_StopChudRemote()) {
         JS_ReportError(cx, "Error stopping CHUD.");
     }
         
@@ -1742,10 +1742,10 @@ StopShark(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-ConnectShark(JSContext *cx, JSObject *obj,
-             uintN argc, jsval *argv, jsval *rval)
+js_ConnectShark(JSContext *cx, JSObject *obj,
+                uintN argc, jsval *argv, jsval *rval)
 {
-    if (!js_ConnectShark()) {
+    if (!JS_ConnectShark()) {
         JS_ReportError(cx, "Error connecting to Shark.");
     }
         
@@ -1753,10 +1753,10 @@ ConnectShark(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-DisconnectShark(JSContext *cx, JSObject *obj,
-                uintN argc, jsval *argv, jsval *rval)
+js_DisconnectShark(JSContext *cx, JSObject *obj,
+                   uintN argc, jsval *argv, jsval *rval)
 {
-    if (!js_DisconnectShark()) {
+    if (!JS_DisconnectShark()) {
         JS_ReportError(cx, "Error disconnecting from Shark.");
     }
         
