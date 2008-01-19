@@ -621,16 +621,16 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
 JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 {
-    jsval v;
     JSAtomState *state;
     JSDHashTable *table;
     JSAtomHashEntry *entry;
     JSString *key;
     uint32 gen;
+    jsval v;
 
-    JS_ASSERT(!(flags & ~(ATOM_PINNED|ATOM_INTERNED|ATOM_TMPSTR|ATOM_NOCOPY)));
-    JS_ASSERT_IF(flags & ATOM_NOCOPY, flags & ATOM_TMPSTR);
-
+    JS_ASSERT((flags &
+               ~(ATOM_PINNED | ATOM_INTERNED | ATOM_TMPSTR | ATOM_NOCOPY))
+              == 0);
     state = &cx->runtime->atomState;
     table = &state->stringAtoms;
 
@@ -638,67 +638,49 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, str, JS_DHASH_ADD));
     if (!entry)
         goto failed_hash_add;
-    if (entry->keyAndFlags != 0) {
-        key = (JSString *)ATOM_ENTRY_KEY(entry);
-    } else {
-        /*
-         * We created a new hashtable entry. Unless str is already allocated
-         * from the GC heap and flat, we have to release state->lock as
-         * string construction is a complex operation. For example, it can
-         * trigger GC which may rehash the table and make the entry invalid.
-         */
+    if (entry->keyAndFlags == 0) {
         ++state->tablegen;
+        gen = state->tablegen;
+        JS_UNLOCK(&state->lock, cx);
 
-        if (!(flags & ATOM_TMPSTR) && !JSSTRING_IS_DEPENDENT(str)) {
-            JSSTRING_CLEAR_MUTABLE(str);
-            key = str;
-        } else {
-            gen = state->tablegen;
-            JS_UNLOCK(&state->lock, cx);
-
-            if (flags & ATOM_TMPSTR) {
-                if (flags & ATOM_NOCOPY) {
-                    key = js_NewString(cx, JSFLATSTR_CHARS(str),
-                                       JSFLATSTR_LENGTH(str));
-                    if (!key)
-                        return NULL;
-
-                    /* Finish handing off chars to the GC'ed key string. */
-                    str->u.chars = NULL;
-                } else {
-                    key = js_NewStringCopyN(cx, JSFLATSTR_CHARS(str),
-                                            JSFLATSTR_LENGTH(str));
-                    if (!key)
-                        return NULL;
-                }
-            } else {
-                JS_ASSERT(JSSTRING_IS_DEPENDENT(str));
-                if (!js_UndependString(cx, str))
+        if (flags & ATOM_TMPSTR) {
+            if (flags & ATOM_NOCOPY) {
+                key = js_NewString(cx, str->u.chars, str->length);
+                if (!key)
                     return NULL;
-                key = str;
-            }
 
-            JS_LOCK(&state->lock, cx);
-            if (state->tablegen == gen) {
-                JS_ASSERT(entry->keyAndFlags == 0);
+                /* Transfer ownership of str->chars to GC-controlled string. */
+                str->u.chars = NULL;
             } else {
-                entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, key,
-                                                           JS_DHASH_ADD));
-                if (!entry)
-                    goto failed_hash_add;
-                if (entry->keyAndFlags != 0)
-                    goto finish;
-                ++state->tablegen;
+                key = js_NewStringCopyN(cx, str->u.chars, str->length);
+                if (!key)
+                    return NULL;
             }
+        } else {
+            JS_ASSERT((flags & ATOM_NOCOPY) == 0);
+            if (!JS_MakeStringImmutable(cx, str))
+                return NULL;
+            key = str;
+        }
+
+        JS_LOCK(&state->lock, cx);
+        if (state->tablegen == gen) {
+            JS_ASSERT(entry->keyAndFlags == 0);
+        } else {
+            entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, key,
+                                                       JS_DHASH_ADD));
+            if (!entry)
+                goto failed_hash_add;
+            if (entry->keyAndFlags != 0)
+                goto finish;
+            ++state->tablegen;
         }
         INIT_ATOM_ENTRY(entry, key);
-        JSSTRING_SET_ATOMIZED(key);
     }
 
   finish:
     ADD_ATOM_ENTRY_FLAGS(entry, flags & (ATOM_PINNED | ATOM_INTERNED));
-    JS_ASSERT(JSSTRING_IS_ATOMIZED(key));
-    v = STRING_TO_JSVAL(key);
+    v = STRING_TO_JSVAL((JSString *)ATOM_ENTRY_KEY(entry));
     cx->weakRoots.lastAtom = v;
     JS_UNLOCK(&state->lock, cx);
     return (JSAtom *)v;
@@ -797,36 +779,15 @@ js_AtomizePrimitiveValue(JSContext *cx, jsval v, JSAtom **atomp)
     return JS_TRUE;
 }
 
-JSBool
-js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
+JSAtom *
+js_ValueToStringAtom(JSContext *cx, jsval v)
 {
     JSString *str;
-    JSAtom *atom;
 
-    /*
-     * Optimize for the common case where v is an already-atomized string. The
-     * comment in jsstr.h before the JSSTRING_SET_ATOMIZED macro's definition
-     * explains why this is thread-safe. The extra rooting via lastAtom (which
-     * would otherwise be done in js_js_AtomizeString) ensures the caller that
-     * the resulting id at least weakly rooted.
-     */
-    if (JSVAL_IS_STRING(v)) {
-        str = JSVAL_TO_STRING(v);
-        if (JSSTRING_IS_ATOMIZED(str)) {
-            cx->weakRoots.lastAtom = v;
-            *idp = ATOM_TO_JSID((JSAtom *) v);
-            return JS_TRUE;
-        }
-    } else {
-        str = js_ValueToString(cx, v);
-        if (!str)
-            return JS_FALSE;
-    }
-    atom = js_AtomizeString(cx, str, 0);
-    if (!atom)
-        return JS_FALSE;
-    *idp = ATOM_TO_JSID(atom);
-    return JS_TRUE;
+    str = js_ValueToString(cx, v);
+    if (!str)
+        return NULL;
+    return js_AtomizeString(cx, str, 0);
 }
 
 #ifdef DEBUG

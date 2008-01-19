@@ -675,9 +675,9 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     if (JSID_IS_ATOM(id)) {
         atom = JSID_TO_ATOM(id);
     } else if (JSID_IS_INT(id)) {
-        if (!js_ValueToStringId(cx, INT_JSID_TO_JSVAL(id), &id))
+        atom = js_ValueToStringAtom(cx, INT_JSID_TO_JSVAL(id));
+        if (!atom)
             return NULL;
-        atom = JSID_TO_ATOM(id);
     } else {
         atom = NULL;
     }
@@ -690,9 +690,10 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
+JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
                  JSWatchPointHandler handler, void *closure)
 {
+    JSAtom *atom;
     jsid propid;
     JSObject *pobj;
     JSProperty *prop;
@@ -708,10 +709,15 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         return JS_FALSE;
     }
 
-    if (JSVAL_IS_INT(idval))
-        propid = INT_JSVAL_TO_JSID(idval);
-    else if (!js_ValueToStringId(cx, idval, &propid))
-        return JS_FALSE;
+    if (JSVAL_IS_INT(id)) {
+        propid = INT_JSVAL_TO_JSID(id);
+        atom = NULL;
+    } else {
+        atom = js_ValueToStringAtom(cx, id);
+        if (!atom)
+            return JS_FALSE;
+        propid = ATOM_TO_JSID(atom);
+    }
 
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
         return JS_FALSE;
@@ -746,8 +752,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             flags = sprop->flags;
             shortid = sprop->shortid;
         } else {
-            if (!OBJ_GET_PROPERTY(cx, pobj, propid, &value) ||
-                !OBJ_GET_ATTRIBUTES(cx, pobj, propid, prop, &attrs)) {
+            if (!OBJ_GET_PROPERTY(cx, pobj, id, &value) ||
+                !OBJ_GET_ATTRIBUTES(cx, pobj, id, prop, &attrs)) {
                 OBJ_DROP_PROPERTY(cx, pobj, prop);
                 return JS_FALSE;
             }
@@ -1516,8 +1522,7 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
     nbytes = sizeof(JSAtom *) + sizeof(JSDHashEntryStub);
     if (ATOM_IS_STRING(atom)) {
         nbytes += sizeof(JSString);
-        nbytes += (JSFLATSTR_LENGTH(ATOM_TO_STRING(atom)) + 1)
-                  * sizeof(jschar);
+        nbytes += (ATOM_TO_STRING(atom)->length + 1) * sizeof(jschar);
     } else if (ATOM_IS_DOUBLE(atom)) {
         nbytes += sizeof(jsdouble);
     }
