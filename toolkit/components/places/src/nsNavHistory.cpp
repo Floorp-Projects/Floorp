@@ -185,8 +185,10 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+#ifdef MOZ_XUL
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSimpleResultListener)
+#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryService)
 NS_INTERFACE_MAP_END
 
@@ -342,8 +344,10 @@ nsNavHistory::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
+#ifdef MOZ_XUL
   rv = InitAutoComplete();
   NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   // extract the last session ID so we know where to pick up. There is no index
   // over sessions so the naive statement "SELECT MAX(session) FROM
@@ -1446,6 +1450,7 @@ nsNavHistory::LoadPrefs()
                                         &mExpireSites)))
     mExpireSites = EXPIRATION_CAP_SITES;
   
+#ifdef MOZ_XUL
   PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
@@ -1454,6 +1459,7 @@ nsNavHistory::LoadPrefs()
     nsresult rv = CreateAutoCompleteQueries();
     NS_ENSURE_SUCCESS(rv, rv);
   }
+#endif
   return NS_OK;
 }
 

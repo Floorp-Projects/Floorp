@@ -57,7 +57,9 @@
 #include "nsIDynamicContainer.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
+#ifdef MOZ_XUL
 #include "nsITreeColumns.h"
+#endif
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIWritablePropertyBag.h"
