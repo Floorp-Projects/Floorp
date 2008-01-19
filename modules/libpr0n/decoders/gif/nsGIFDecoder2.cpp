@@ -395,7 +395,7 @@ void nsGIFDecoder2::EndImageFrame()
   if (mGIFStruct.rows_remaining != mGIFStruct.height) {
     if (mGIFStruct.rows_remaining && mGIFStruct.images_decoded) {
       // Clear the remaining rows (only needed for the animation frames)
-      PRUint8 *rowp = mImageData + ((mGIFStruct.rows_remaining - mGIFStruct.height) * mGIFStruct.width);
+      PRUint8 *rowp = mImageData + ((mGIFStruct.height - mGIFStruct.rows_remaining) * mGIFStruct.width);
       memset(rowp, 0, mGIFStruct.rows_remaining * mGIFStruct.width);
     }
 
