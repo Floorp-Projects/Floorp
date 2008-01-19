@@ -94,9 +94,6 @@ function compareArrays(aArray1, aArray2) {
 
 function run_test() {
 
-// Disable test for now.
-return;
-
 try {
 
 
@@ -109,6 +106,13 @@ var imgTools = Cc["@mozilla.org/image/tools;1"].
 
 if (!imgTools)
     throw "Couldn't get imgITools service"
+
+// Ugh, this is an ugly hack. The pixel values we get in Windows are sometimes
+// +/- 1 value compared to other platforms, so we need to compare against a
+// different set of reference images. nsIXULRuntime.OS doesn't seem to be
+// available in xpcshell, so we'll use this as a kludgy way to figure out if
+// we're running on Windows.
+var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
 
 /* ========== 1 ========== */
@@ -202,7 +206,7 @@ istream = imgTools.encodeScaledImage(container, "image/png", 16, 16);
 
 encodedBytes = streamToArray(istream);
 // Get bytes for exected result
-refName = "image2jpg16x16.png";
+refName = isWindows ? "image2jpg16x16-win.png" : "image2jpg16x16.png";
 refFile = do_get_file(TESTDIR + refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 948);
@@ -221,7 +225,7 @@ istream = imgTools.encodeImage(container, "image/png");
 encodedBytes = streamToArray(istream);
 
 // Get bytes for exected result
-refName = "image2jpg32x32.png";
+refName = isWindows ? "image2jpg32x32-win.png" : "image2jpg32x32.png";
 refFile = do_get_file(TESTDIR + refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 3105);
