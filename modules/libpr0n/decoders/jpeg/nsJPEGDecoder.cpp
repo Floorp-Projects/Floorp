@@ -85,15 +85,14 @@ nsJPEGDecoder::nsJPEGDecoder()
 {
   mState = JPEG_HEADER;
   mReading = PR_TRUE;
-  mError = NS_OK;
 
   mBytesToSkip = 0;
   memset(&mInfo, 0, sizeof(jpeg_decompress_struct));
   memset(&mSourceMgr, 0, sizeof(mSourceMgr));
   mInfo.client_data = (void*)this;
 
-  mSegment = nsnull;
-  mSegmentLen = 0;
+  mBuffer = nsnull;
+  mBufferLen = mBufferSize = 0;
 
   mBackBuffer = nsnull;
   mBackBufferLen = mBackBufferSize = mBackBufferUnreadLen = 0;
@@ -108,6 +107,7 @@ nsJPEGDecoder::nsJPEGDecoder()
 
 nsJPEGDecoder::~nsJPEGDecoder()
 {
+  PR_FREEIF(mBuffer);
   PR_FREEIF(mBackBuffer);
   if (mTransform)
     cmsDeleteTransform(mTransform);
@@ -125,6 +125,7 @@ nsJPEGDecoder::~nsJPEGDecoder()
 /* void init (in imgILoad aLoad); */
 NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
 {
+  mImageLoad = aLoad;
   mObserver = do_QueryInterface(aLoad);
 
   /* We set up the normal JPEG error routines, then override error_exit. */
@@ -168,14 +169,14 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
    * If we have a mismatch in width/height for the container later on we will
    * generate an error.
    */
-  aLoad->GetImage(getter_AddRefs(mImage));
+  mImageLoad->GetImage(getter_AddRefs(mImage));
 
   if (!mImage) {
     mImage = do_CreateInstance("@mozilla.org/image/container;1");
     if (!mImage)
       return NS_ERROR_OUT_OF_MEMORY;
       
-    aLoad->SetImage(mImage);
+    mImageLoad->SetImage(mImage);
     nsresult result = mImage->SetDiscardable("image/jpeg");
     if (NS_FAILED(result)) {
       mState = JPEG_ERROR;
@@ -195,16 +196,13 @@ NS_IMETHODIMP nsJPEGDecoder::Close()
   PR_LOG(gJPEGlog, PR_LOG_DEBUG,
          ("[this=%p] nsJPEGDecoder::Close\n", this));
 
+  if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER)
+    NS_WARNING("Never finished decoding the JPEG.");
+
   /* Step 8: Release JPEG decompression object */
   mInfo.src = nsnull;
 
   jpeg_destroy_decompress(&mInfo);
-
-  if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER) {
-    NS_WARNING("Never finished decoding the JPEG.");
-    /* Tell imgLoader that image decoding has failed */
-    return NS_ERROR_FAILURE;
-  }
 
   return NS_OK;
 }
@@ -216,57 +214,58 @@ NS_IMETHODIMP nsJPEGDecoder::Flush()
 
   PRUint32 ret;
   if (mState != JPEG_DONE && mState != JPEG_SINK_NON_JPEG_TRAILER && mState != JPEG_ERROR)
-    return this->ProcessData(nsnull, 0, &ret);
+    return this->WriteFrom(nsnull, 0, &ret);
 
   return NS_OK;
 }
-
-static NS_METHOD ReadDataOut(nsIInputStream* in,
-                             void* closure,
-                             const char* fromRawSegment,
-                             PRUint32 toOffset,
-                             PRUint32 count,
-                             PRUint32 *writeCount)
-{
-  nsJPEGDecoder *decoder = static_cast<nsJPEGDecoder*>(closure);
-  nsresult rv = decoder->ProcessData(fromRawSegment, count, writeCount);
-  if (NS_FAILED(rv)) {
-    /* Tell imgLoader that image decoding has failed */
-    decoder->mError = rv;
-    *writeCount = 0;
-  }
-
-  return NS_OK;
-}
-
 
 /* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
-NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *writeCount)
+NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
-  NS_ENSURE_ARG_POINTER(inStr);
-  NS_ENSURE_ARG_POINTER(writeCount);
+  LOG_SCOPE_WITH_PARAM(gJPEGlog, "nsJPEGDecoder::WriteFrom", "count", count);
 
-  /* necko doesn't propagate the errors from ReadDataOut */
-  nsresult rv = inStr->ReadSegments(ReadDataOut, this, count, writeCount);
-  if (NS_FAILED(mError)) {
-    /* Tell imgLoader that image decoding has failed */
-    rv = NS_ERROR_FAILURE;
-  }
+  PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+         ("nsJPEGDecoder::WriteFrom(decoder = %p) {\n"
+          "        image container %s; %u bytes to be added",
+          this,
+          mImage ? "exists" : "does not exist",
+          count));
 
-  return rv;
-}
+  if (inStr) {
+    if (!mBuffer) {
+      mBuffer = (JOCTET *)PR_Malloc(count);
+      if (!mBuffer) {
+        mState = JPEG_ERROR;
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (out of memory allocating buffer)"));
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mBufferSize = count;
+    } else if (count > mBufferSize) {
+      JOCTET *buf = (JOCTET *)PR_Realloc(mBuffer, count);
+      if (!buf) {
+        mState = JPEG_ERROR;
+        PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+               ("} (out of memory resizing buffer)"));
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mBuffer = buf;
+      mBufferSize = count;
+    }
 
-//******************************************************************************
-nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *writeCount)
-{
-  LOG_SCOPE_WITH_PARAM(gJPEGlog, "nsJPEGDecoder::ProcessData", "count", count);
+    nsresult rv = inStr->Read((char*)mBuffer, count, &mBufferLen);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsJPEGDecoder::WriteFrom -- inStr->Read failed");
 
-  mSegment = (const JOCTET *)data;
-  mSegmentLen = count;
-  *writeCount = count;
+    PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
+           ("nsJPEGDecoder::WriteFrom(): decoder %p got %u bytes, read %u from the stream (buffer size %u)",
+            this,
+            count,
+            mBufferLen,
+            mBufferSize));
+    
+    *_retval = mBufferLen;
 
-  if (data && count) {
-    nsresult result = mImage->AddRestoreData((char *) data, count);
+    nsresult result = mImage->AddRestoreData((char *) mBuffer, count);
 
     if (NS_FAILED(result)) {
       mState = JPEG_ERROR;
@@ -302,12 +301,12 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
   }
 
   PR_LOG(gJPEGlog, PR_LOG_DEBUG,
-         ("[this=%p] nsJPEGDecoder::ProcessData -- processing JPEG data\n", this));
+         ("[this=%p] nsJPEGDecoder::WriteFrom -- processing JPEG data\n", this));
 
   switch (mState) {
   case JPEG_HEADER:
   {
-    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::ProcessData -- entering JPEG_HEADER case");
+    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_HEADER case");
 
     /* Step 3: read file parameters with jpeg_read_header() */
     if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED) {
@@ -495,7 +494,7 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
       mImage->AppendFrame(mFrame);
 
       PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
-             ("        JPEGDecoderAccounting: nsJPEGDecoder::ProcessData -- created image frame with %ux%u pixels",
+             ("        JPEGDecoderAccounting: nsJPEGDecoder::WriteFrom -- created image frame with %ux%u pixels",
               mInfo.image_width, mInfo.image_height));
     }
 
@@ -505,7 +504,7 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
 
   case JPEG_START_DECOMPRESS:
   {
-    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::ProcessData -- entering JPEG_START_DECOMPRESS case");
+    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_START_DECOMPRESS case");
     /* Step 4: set parameters for decompression */
 
     /* FIXME -- Should reset dct_method and dither mode
@@ -536,7 +535,7 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
   {
     if (mState == JPEG_DECOMPRESS_SEQUENTIAL)
     {
-      LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::ProcessData -- JPEG_DECOMPRESS_SEQUENTIAL case");
+      LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_SEQUENTIAL case");
       
       if (!OutputScanlines()) {
         PR_LOG(gJPEGDecoderAccountingLog, PR_LOG_DEBUG,
@@ -554,7 +553,7 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
   {
     if (mState == JPEG_DECOMPRESS_PROGRESSIVE)
     {
-      LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::ProcessData -- JPEG_DECOMPRESS_PROGRESSIVE case");
+      LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_PROGRESSIVE case");
 
       int status;
       do {
@@ -619,7 +618,7 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
   {
     nsresult result;
 
-    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::ProcessData -- entering JPEG_DONE case");
+    LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_DONE case");
 
     /* Step 7: Finish decompression */
 
@@ -644,13 +643,13 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
   }
   case JPEG_SINK_NON_JPEG_TRAILER:
     PR_LOG(gJPEGlog, PR_LOG_DEBUG,
-           ("[this=%p] nsJPEGDecoder::ProcessData -- entering JPEG_SINK_NON_JPEG_TRAILER case\n", this));
+           ("[this=%p] nsJPEGDecoder::WriteFrom -- entering JPEG_SINK_NON_JPEG_TRAILER case\n", this));
 
     break;
 
   case JPEG_ERROR:
     PR_LOG(gJPEGlog, PR_LOG_DEBUG,
-           ("[this=%p] nsJPEGDecoder::ProcessData -- entering JPEG_ERROR case\n", this));
+           ("[this=%p] nsJPEGDecoder::WriteFrom -- entering JPEG_ERROR case\n", this));
 
     break;
   }
@@ -675,6 +674,7 @@ nsJPEGDecoder::OutputScanlines()
   mFrame->GetImageData(&imageData, &imageDataLength);
 
   while ((mInfo.output_scanline < mInfo.output_height)) {
+      /* Request one scanline.  Returns 0 or 1 scanlines. */    
       PRUint32 *imageRow = ((PRUint32*)imageData) +
                            (mInfo.output_scanline * mInfo.output_width);
 
@@ -686,7 +686,6 @@ nsJPEGDecoder::OutputScanlines()
         sampleRow += mInfo.output_width;
       }
 
-      /* Request one scanline.  Returns 0 or 1 scanlines. */    
       if (jpeg_read_scanlines(&mInfo, &sampleRow, 1) != 1) {
         rv = PR_FALSE; /* suspend */
         break;
@@ -879,13 +878,13 @@ fill_input_buffer (j_decompress_ptr jd)
   nsJPEGDecoder *decoder = (nsJPEGDecoder *)(jd->client_data);
 
   if (decoder->mReading) {
-    const JOCTET *new_buffer = decoder->mSegment;
-    PRUint32 new_buflen = decoder->mSegmentLen;
+    unsigned char *new_buffer = (unsigned char *)decoder->mBuffer;
+    PRUint32 new_buflen = decoder->mBufferLen;
   
     if (!new_buffer || new_buflen == 0)
       return PR_FALSE; /* suspend */
 
-    decoder->mSegmentLen = 0;
+    decoder->mBufferLen = 0;
 
     if (decoder->mBytesToSkip) {
       if (decoder->mBytesToSkip < new_buflen) {
@@ -909,7 +908,7 @@ fill_input_buffer (j_decompress_ptr jd)
     return PR_TRUE;
   }
 
-  if (src->next_input_byte != decoder->mSegment) {
+  if (src->next_input_byte != decoder->mBuffer) {
     /* Backtrack data has been permanently consumed. */
     decoder->mBackBufferUnreadLen = 0;
     decoder->mBackBufferLen = 0;
@@ -920,24 +919,37 @@ fill_input_buffer (j_decompress_ptr jd)
  
   /* Make sure backtrack buffer is big enough to hold new data. */
   if (decoder->mBackBufferSize < new_backtrack_buflen) {
-    /* Check for malformed MARKER segment lengths, before allocating space for it */
-    if (new_backtrack_buflen > MAX_JPEG_MARKER_LENGTH) {
-      my_error_exit((j_common_ptr)(&decoder->mInfo));
-    }
+
 
     /* Round up to multiple of 256 bytes. */
     const PRUint32 roundup_buflen = ((new_backtrack_buflen + 255) >> 8) << 8;
-    JOCTET *buf = (JOCTET *)PR_REALLOC(decoder->mBackBuffer, roundup_buflen);
-    /* Check for OOM */
-    if (!buf) {
-      decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;
+
+    if (decoder->mBackBuffer) {
+      JOCTET *buf = (JOCTET *)PR_REALLOC(decoder->mBackBuffer, roundup_buflen);
+      /* Check for OOM */
+      if (!buf) {
+        decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;
+        my_error_exit((j_common_ptr)(&decoder->mInfo));
+      }
+      decoder->mBackBuffer = buf;
+    } else {
+      decoder->mBackBuffer = (JOCTET*)PR_MALLOC(roundup_buflen);
+      /* Check for OOM */
+      if (!decoder->mBackBuffer) {
+        decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;
+        my_error_exit((j_common_ptr)(&decoder->mInfo));
+      }
+    }
+      
+    decoder->mBackBufferSize = (size_t)roundup_buflen;
+
+    /* Check for malformed MARKER segment lengths. */
+    if (new_backtrack_buflen > MAX_JPEG_MARKER_LENGTH) {
       my_error_exit((j_common_ptr)(&decoder->mInfo));
     }
-    decoder->mBackBuffer = buf;
-    decoder->mBackBufferSize = (size_t)roundup_buflen;
   }
 
-  /* Copy remainder of netlib segment into backtrack buffer. */
+  /* Copy remainder of netlib buffer into backtrack buffer. */
   memmove(decoder->mBackBuffer + decoder->mBackBufferLen,
           src->next_input_byte,
           src->bytes_in_buffer);
@@ -968,4 +980,9 @@ term_source (j_decompress_ptr jd)
     decoder->mObserver->OnStopContainer(nsnull, decoder->mImage);
     decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
+
+  PRBool isMutable = PR_FALSE;
+  if (decoder->mImageLoad) 
+      decoder->mImageLoad->GetIsMultiPartChannel(&isMutable);
+  decoder->mFrame->SetMutable(isMutable);
 }
