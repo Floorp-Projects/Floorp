@@ -1,7 +1,7 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.2.22 [November 6, 2007]
+ * Last changed in libpng 1.2.24 [December 14, 2007]
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2007 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -115,25 +115,14 @@ png_set_cHRM_fixed(png_structp png_ptr, png_infop info_ptr,
         "Ignoring attempt to set negative chromaticity value");
       return;
    }
-#ifdef PNG_FLOATING_POINT_SUPPORTED
-   if (white_x > (double) PNG_UINT_31_MAX ||
-       white_y > (double) PNG_UINT_31_MAX ||
-         red_x > (double) PNG_UINT_31_MAX ||
-         red_y > (double) PNG_UINT_31_MAX ||
-       green_x > (double) PNG_UINT_31_MAX ||
-       green_y > (double) PNG_UINT_31_MAX ||
-        blue_x > (double) PNG_UINT_31_MAX ||
-        blue_y > (double) PNG_UINT_31_MAX)
-#else
-   if (white_x > (png_fixed_point) PNG_UINT_31_MAX/100000L ||
-       white_y > (png_fixed_point) PNG_UINT_31_MAX/100000L ||
-         red_x > (png_fixed_point) PNG_UINT_31_MAX/100000L ||
-         red_y > (png_fixed_point) PNG_UINT_31_MAX/100000L ||
-       green_x > (png_fixed_point) PNG_UINT_31_MAX/100000L ||
-       green_y > (png_fixed_point) PNG_UINT_31_MAX/100000L ||
-        blue_x > (png_fixed_point) PNG_UINT_31_MAX/100000L ||
-        blue_y > (png_fixed_point) PNG_UINT_31_MAX/100000L)
-#endif
+   if (white_x > (png_fixed_point) PNG_UINT_31_MAX ||
+       white_y > (png_fixed_point) PNG_UINT_31_MAX ||
+         red_x > (png_fixed_point) PNG_UINT_31_MAX ||
+         red_y > (png_fixed_point) PNG_UINT_31_MAX ||
+       green_x > (png_fixed_point) PNG_UINT_31_MAX ||
+       green_y > (png_fixed_point) PNG_UINT_31_MAX ||
+        blue_x > (png_fixed_point) PNG_UINT_31_MAX ||
+        blue_y > (png_fixed_point) PNG_UINT_31_MAX )
    {
       png_warning(png_ptr,
         "Ignoring attempt to set chromaticity value exceeding 21474.83");
@@ -1000,12 +989,8 @@ png_set_sPLT(png_structp png_ptr,
            png_warning(png_ptr,
              "Out of memory while processing sPLT chunk");
         }
-        /* TODO: use png_malloc_warn */
         png_memcpy(to->name, from->name, length);
         to->entries = (png_sPLT_entryp)png_malloc_warn(png_ptr,
-            from->nentries * png_sizeof(png_sPLT_entry));
-        /* TODO: use png_malloc_warn */
-        png_memcpy(to->entries, from->entries,
             from->nentries * png_sizeof(png_sPLT_entry));
         if (to->entries == NULL)
         {
@@ -1014,6 +999,8 @@ png_set_sPLT(png_structp png_ptr,
            png_free(png_ptr,to->name);
            to->name = NULL;
         }
+        png_memcpy(to->entries, from->entries,
+            from->nentries * png_sizeof(png_sPLT_entry));
         to->nentries = from->nentries;
         to->depth = from->depth;
     }
