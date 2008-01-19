@@ -110,8 +110,8 @@ js_GetDependentStringChars(JSString *str)
 
     start = js_MinimizeDependentStrings(str, 0, &base);
     JS_ASSERT(!JSSTRING_IS_DEPENDENT(base));
-    JS_ASSERT(start < (base->length & ~JSSTRFLAG_MUTABLE));
-    return base->u.chars + start;
+    JS_ASSERT(start < JSFLATSTR_LENGTH(base));
+    return JSFLATSTR_CHARS(base) + start;
 }
 
 const jschar *
@@ -120,7 +120,7 @@ js_GetStringChars(JSContext *cx, JSString *str)
     if (!js_MakeStringImmutable(cx, str))
         return NULL;
     JS_ASSERT(!JSSTRING_IS_DEPENDENT(str));
-    return str->u.chars;
+    return JSFLATSTR_CHARS(str);
 }
 
 JSString *
@@ -225,7 +225,7 @@ js_UndependString(JSContext *cx, JSString *str)
 #endif
     }
 
-    return str->u.chars;
+    return JSFLATSTR_CHARS(str);
 }
 
 JSBool
@@ -2645,6 +2645,7 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
 void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
 {
+    jschar *chars;
     JSBool valid;
     JSStringFinalizeOp finalizer;
 
@@ -2657,14 +2658,15 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str, intN type, JSContext *cx)
         valid = JS_TRUE;
     } else {
         /* A stillborn string has null chars, so is not valid. */
-        valid = (str->u.chars != NULL);
+        chars = JSFLATSTR_CHARS(str);
+        valid = (chars != NULL);
         if (valid) {
-            if (IN_UNIT_STRING_SPACE_RT(rt, str->u.chars)) {
-                JS_ASSERT(rt->unitStrings[*str->u.chars] == str);
+            if (IN_UNIT_STRING_SPACE_RT(rt, chars)) {
+                JS_ASSERT(rt->unitStrings[*chars] == str);
                 JS_ASSERT(type < 0);
-                rt->unitStrings[*str->u.chars] = NULL;
+                rt->unitStrings[*chars] = NULL;
             } else if (type < 0) {
-                free(str->u.chars);
+                free(chars);
             } else {
                 JS_ASSERT((uintN) type < JS_ARRAY_LENGTH(str_finalizers));
                 finalizer = str_finalizers[type];
