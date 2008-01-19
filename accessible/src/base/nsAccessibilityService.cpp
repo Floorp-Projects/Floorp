@@ -1405,9 +1405,6 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           nsIFrame *tableFrame = aPresShell->GetPrimaryFrameFor(tableContent);
           if (tableFrame &&
               tableFrame->GetType() == nsAccessibilityAtoms::tableOuterFrame) {
-            // Table that we're a descendant of is not styled as a table,
-            // and has no table accessible for an ancestor, or
-            // table that we're a descendant of is presentational
 
             nsCOMPtr<nsIDOMNode> tableNode(do_QueryInterface(tableContent));
             if (tableNode) {
