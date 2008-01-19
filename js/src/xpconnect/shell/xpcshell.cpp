@@ -896,7 +896,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 #ifdef MOZ_SHARK
         case 'k':
-            js_ConnectShark();
+            JS_ConnectShark();
             break;
 #endif
         default:
