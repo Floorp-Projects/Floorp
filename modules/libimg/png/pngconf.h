@@ -1,7 +1,7 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.2.23 - November 6, 2007
+ * libpng version 1.2.24 - December 14, 2007
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2007 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -325,7 +325,7 @@
      /* If you encounter a compiler error here, see the explanation
       * near the end of INSTALL.
       */
-         __png.h__ already includes setjmp.h;
+         __pngconf.h__ already includes setjmp.h;
          __dont__ include it again.;
 #    endif
 #  endif /* __linux__ */
@@ -335,7 +335,9 @@
 
 #  ifdef __linux__
 #    ifdef PNG_SAVE_BSD_SOURCE
-#      define _BSD_SOURCE
+#      ifndef _BSD_SOURCE
+#        define _BSD_SOURCE
+#      endif
 #      undef PNG_SAVE_BSD_SOURCE
 #    endif
 #  endif /* __linux__ */

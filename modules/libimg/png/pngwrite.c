@@ -1,7 +1,7 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.2.15 January 5, 2007
+ * Last changed in libpng 1.2.24 December 14, 2007
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2007 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -1068,11 +1068,13 @@ png_write_destroy(png_structp png_ptr)
    /* free our memory.  png_free checks NULL for us. */
    png_free(png_ptr, png_ptr->zbuf);
    png_free(png_ptr, png_ptr->row_buf);
+#ifndef PNG_NO_WRITE_FILTERING
    png_free(png_ptr, png_ptr->prev_row);
    png_free(png_ptr, png_ptr->sub_row);
    png_free(png_ptr, png_ptr->up_row);
    png_free(png_ptr, png_ptr->avg_row);
    png_free(png_ptr, png_ptr->paeth_row);
+#endif
 
 #if defined(PNG_TIME_RFC1123_SUPPORTED)
    png_free(png_ptr, png_ptr->time_buffer);
