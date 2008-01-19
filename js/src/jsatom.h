@@ -416,10 +416,10 @@ JSBool
 js_AtomizePrimitiveValue(JSContext *cx, jsval v, JSAtom **atomp);
 
 /*
- * Convert v to an atomized string.
+ * Convert v to an atomized string and wrap it as an id.
  */
-extern JSAtom *
-js_ValueToStringAtom(JSContext *cx, jsval v);
+extern JSBool
+js_ValueToStringId(JSContext *cx, jsval v, jsid *idp);
 
 #ifdef DEBUG
 
