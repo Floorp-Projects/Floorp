@@ -1,13 +1,13 @@
 
 Changes made to pristine png source by mozilla.org developers.
 
-2007/12/14  -- Synced with libpng-1.2.24 (bug #408429).
+2008/01/18  -- Synced with libpng-1.2.24 (bug #408429).
 
-2007/11/10  -- Synced with libpng-1.2.23; Removed pnggccrd.c and pngvcrd.c;
+2007/11/13  -- Synced with libpng-1.2.23; Removed pnggccrd.c and pngvcrd.c;
                Reduced footprint by removing error and warning text
                (bug #403239)
 
-2007/10/13  -- Synced with libpng-1.2.22 (removes MMX support) (bug #386585)
+2007/11/06  -- Synced with libpng-1.2.22 (removes MMX support) (bug #386585)
 
 2007/07/27  -- Enabled cHRM and iCCP chunks for color management (bug #16769)
 
