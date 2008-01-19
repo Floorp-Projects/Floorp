@@ -91,13 +91,12 @@ public:
   nsJPEGDecoder();
   virtual ~nsJPEGDecoder();
 
-  nsresult  ProcessData(const char *data, PRUint32 count, PRUint32 *writeCount);
-
 protected:
   PRBool OutputScanlines();
 
 public:
   nsCOMPtr<imgIContainer> mImage;
+  nsCOMPtr<imgILoad> mImageLoad;
   nsCOMPtr<gfxIImageFrame> mFrame;
 
   nsCOMPtr<imgIDecoderObserver> mObserver;
@@ -106,12 +105,12 @@ public:
   struct jpeg_source_mgr mSourceMgr;
   decoder_error_mgr mErr;
   jstate mState;
-  nsresult mError;
 
   PRUint32 mBytesToSkip;
 
-  const JOCTET *mSegment;   // The current segment we are decoding from
-  PRUint32 mSegmentLen;     // amount of data in mSegment
+  JOCTET *mBuffer;
+  PRUint32 mBufferLen;  // amount of data currently in mBuffer
+  PRUint32 mBufferSize; // size in bytes what mBuffer was created with
 
   JOCTET *mBackBuffer;
   PRUint32 mBackBufferLen; // Offset of end of active backtrack data
@@ -125,6 +124,10 @@ public:
   cmsHTRANSFORM mTransform;
 
   PRPackedBool mReading;
+
+private:
+
+  nsresult AddToTmpAccumulateBuffer(JOCTET *src, PRUint32 len);
 };
 
 #endif // nsJPEGDecoder_h__
