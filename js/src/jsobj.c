@@ -2937,11 +2937,11 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
         if (JSID_IS_ATOM(id)) {                                               \
             JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
             JSString *str_ = ATOM_TO_STRING(atom_);                           \
-            const jschar *cp_ = JSFLATSTR_CHARS(str_);                        \
+            const jschar *cp_ = str_->u.chars;                                \
             JSBool negative_ = (*cp_ == '-');                                 \
             if (negative_) cp_++;                                             \
             if (JS7_ISDEC(*cp_)) {                                            \
-                size_t n_ = JSFLATSTR_LENGTH(str_) - negative_;               \
+                size_t n_ = str_->length - negative_;                         \
                 if (n_ <= sizeof(JSVAL_INT_MAX_STRING) - 1)                   \
                     id = CheckForStringIndex(id, cp_, cp_ + n_, negative_);   \
             }                                                                 \

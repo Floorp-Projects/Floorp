@@ -2565,15 +2565,23 @@ JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
 {
+    JSAtom *atom;
+
     CHECK_REQUEST(cx);
-    if (JSVAL_IS_INT(v))
+    if (JSVAL_IS_INT(v)) {
         *idp = INT_JSVAL_TO_JSID(v);
+    } else {
 #if JS_HAS_XML_SUPPORT
-    else if (!JSVAL_IS_PRIMITIVE(v))
-        *idp = OBJECT_JSVAL_TO_JSID(v);
+        if (JSVAL_IS_OBJECT(v)) {
+            *idp = OBJECT_JSVAL_TO_JSID(v);
+            return JS_TRUE;
+        }
 #endif
-    else
-        return js_ValueToStringId(cx, v, idp);
+        atom = js_ValueToStringAtom(cx, v);
+        if (!atom)
+            return JS_FALSE;
+        *idp = ATOM_TO_JSID(atom);
+    }
     return JS_TRUE;
 }
 
@@ -5232,7 +5240,7 @@ JS_GetStringChars(JSString *str)
         }
     } else {
         JSSTRING_CLEAR_MUTABLE(str);
-        s = JSFLATSTR_CHARS(str);
+        s = str->u.chars;
     }
     return s;
 }
