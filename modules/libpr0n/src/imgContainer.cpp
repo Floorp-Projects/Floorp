@@ -124,6 +124,9 @@ NS_IMETHODIMP imgContainer::Init(PRInt32 aWidth, PRInt32 aHeight,
 
   mSize.SizeTo(aWidth, aHeight);
   
+  // As we are reloading it means we are no longer in 'discarded' state
+  mDiscarded = PR_FALSE;
+
   mObserver = do_GetWeakReference(aObserver);
   
   return NS_OK;
@@ -566,13 +569,8 @@ NS_IMETHODIMP imgContainer::AddRestoreData(const char *aBuffer, PRUint32 aCount)
 {
   NS_ASSERTION(aBuffer, "imgContainer::AddRestoreData() called with null aBuffer");
 
-  if (!DiscardingEnabled ())
+  if (!mDiscardable)
     return NS_OK;
-
-  if (!mDiscardable) {
-    NS_WARNING ("imgContainer::AddRestoreData() can only be called if SetDiscardable is called first");
-    return NS_ERROR_FAILURE;
-  }
 
   if (mRestoreDataDone) {
     /* We are being called from the decoder while the data is being restored
@@ -622,8 +620,8 @@ get_header_str (char *buf, char *data, PRSize data_len)
 /* void restoreDataDone(); */
 NS_IMETHODIMP imgContainer::RestoreDataDone (void)
 {
-
-  if (!DiscardingEnabled ())
+  // If image is not discardable, don't start discard timer
+  if (!mDiscardable)
     return NS_OK;
 
   if (mRestoreDataDone)
@@ -654,17 +652,12 @@ NS_IMETHODIMP imgContainer::RestoreDataDone (void)
 /* void notify(in nsITimer timer); */
 NS_IMETHODIMP imgContainer::Notify(nsITimer *timer)
 {
-  nsresult result;
-
-  result = RestoreDiscardedData();
-  if (NS_FAILED (result))
-    return result;
+  nsresult rv = RestoreDiscardedData();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // This should never happen since the timer is only set up in StartAnimation()
   // after mAnim is checked to exist.
-  NS_ASSERTION(mAnim, "imgContainer::Notify() called but mAnim is null");
-  if (!mAnim)
-    return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_TRUE(mAnim, NS_ERROR_UNEXPECTED);
   NS_ASSERTION(mAnim->timer == timer,
                "imgContainer::Notify() called with incorrect timer");
 
@@ -1269,21 +1262,20 @@ static int
 get_discard_timer_ms (void)
 {
   /* FIXME: don't hardcode this */
-  return 45000; /* 45 seconds */
+  return 15000; /* 15 seconds */
 }
 
 void
 imgContainer::sDiscardTimerCallback(nsITimer *aTimer, void *aClosure)
 {
   imgContainer *self = (imgContainer *) aClosure;
-  int old_frame_count;
 
   NS_ASSERTION(aTimer == self->mDiscardTimer,
                "imgContainer::DiscardTimerCallback() got a callback for an unknown timer");
 
   self->mDiscardTimer = nsnull;
 
-  old_frame_count = self->mFrames.Count();
+  int old_frame_count = self->mFrames.Count();
 
   if (self->mAnim) {
     delete self->mAnim;
@@ -1313,12 +1305,10 @@ imgContainer::ResetDiscardTimer (void)
 
   if (!mDiscardTimer) {
     mDiscardTimer = do_CreateInstance("@mozilla.org/timer;1");
-
-    if (!mDiscardTimer)
-      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_TRUE(mDiscardTimer, NS_ERROR_OUT_OF_MEMORY);
   } else {
-    if (NS_FAILED(mDiscardTimer->Cancel()))
-      return NS_ERROR_FAILURE;
+    nsresult rv = mDiscardTimer->Cancel();
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   }
 
   return mDiscardTimer->InitWithFuncCallback(sDiscardTimerCallback,
@@ -1330,30 +1320,25 @@ imgContainer::ResetDiscardTimer (void)
 nsresult
 imgContainer::RestoreDiscardedData(void)
 {
-  nsresult result;
-  int num_expected_frames;
-
-  if (!mDiscardable)
+  // mRestoreDataDone = PR_TRUE means that we want to timeout and then discard the image frames
+  // So, we only need to restore, if mRestoreDataDone is true, and then only when the frames are discarded...
+  if (!mRestoreDataDone) 
     return NS_OK;
 
-  result = ResetDiscardTimer();
-  if (NS_FAILED (result))
-    return result;
+  // Reset timer, as the frames are accessed
+  nsresult rv = ResetDiscardTimer();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mDiscarded)
     return NS_OK;
 
-  num_expected_frames = mNumFrames;
+  int num_expected_frames = mNumFrames;
 
-  result = ReloadImages ();
-  if (NS_FAILED (result)) {
-    PR_LOG (gCompressedImageAccountingLog, PR_LOG_DEBUG,
-            ("CompressedImageAccounting: imgContainer::RestoreDiscardedData() for container %p failed to ReloadImages()",
-             this));
-    return result;
-  }
-
+  // To prevent that ReloadImages is called multiple times, reset the flag before reloading
   mDiscarded = PR_FALSE;
+
+  rv = ReloadImages();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION (mNumFrames == mFrames.Count(),
                 "number of restored image frames doesn't match");
@@ -1495,9 +1480,6 @@ ContainerLoader::FrameChanged(imgIContainer *aContainer, gfxIImageFrame *aFrame,
 nsresult
 imgContainer::ReloadImages(void)
 {
-  nsresult result = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIInputStream> stream;
-
   NS_ASSERTION(!mRestoreData.IsEmpty(),
                "imgContainer::ReloadImages(): mRestoreData should not be empty");
   NS_ASSERTION(mRestoreDataDone,
@@ -1528,7 +1510,7 @@ imgContainer::ReloadImages(void)
 
   loader->SetImage(this);
 
-  result = decoder->Init(loader);
+  nsresult result = decoder->Init(loader);
   if (NS_FAILED(result)) {
     PR_LOG(gCompressedImageAccountingLog, PR_LOG_WARNING,
            ("CompressedImageAccounting: imgContainer::ReloadImages() image container %p "
@@ -1538,6 +1520,7 @@ imgContainer::ReloadImages(void)
     return result;
   }
 
+  nsCOMPtr<nsIInputStream> stream;
   result = NS_NewByteInputStream(getter_AddRefs(stream), mRestoreData.Elements(), mRestoreData.Length(), NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(result, result);
 
@@ -1558,8 +1541,8 @@ imgContainer::ReloadImages(void)
   result = decoder->WriteFrom(stream, mRestoreData.Length(), &written);
   NS_ENSURE_SUCCESS(result, result);
 
-  if (NS_FAILED(decoder->Flush()))
-    return result;
+  result = decoder->Flush();
+  NS_ENSURE_SUCCESS(result, result);
 
   result = decoder->Close();
   NS_ENSURE_SUCCESS(result, result);
