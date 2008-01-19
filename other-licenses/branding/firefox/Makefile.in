@@ -20,7 +20,7 @@ PREF_JS_EXPORTS = $(srcdir)/pref/firefox-branding.js
 include $(topsrcdir)/config/rules.mk
 
 BROWSER_APP_FILES = \
-	default.xpm \
+	default16.png \
 	mozicon128.png \
 	mozicon16.xpm \
 	mozicon50.xpm \
