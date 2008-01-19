@@ -194,9 +194,9 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint64* d_ov, PRUi
     }
 }
 
-XPTC_PUBLIC_API(nsresult)
-XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                   PRUint32 paramCount, nsXPTCVariant* params)
+EXPORT_XPCOM_API(nsresult)
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                 PRUint32 paramCount, nsXPTCVariant* params)
 {
     PRUint64 *vtable = *(PRUint64 **)that;
 #if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
@@ -248,4 +248,5 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     );
   
     return result;
-}    
+}
+
