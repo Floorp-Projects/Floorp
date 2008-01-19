@@ -48,9 +48,11 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsINavHistoryService.h"
+#ifdef MOZ_XUL
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteSimpleResult.h"
+#endif
 #include "nsIBrowserHistory.h"
 #include "nsICollation.h"
 #include "nsIDateTimeFormat.h"
@@ -64,8 +66,10 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
+#ifdef MOZ_XUL
 #include "nsITreeSelection.h"
 #include "nsITreeView.h"
+#endif
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
@@ -109,9 +113,11 @@ class nsNavHistory : public nsSupportsWeakReference,
                      public nsIObserver,
                      public nsIBrowserHistory,
                      public nsIGlobalHistory3,
-                     public nsIDownloadHistory,
-                     public nsIAutoCompleteSearch,
+                     public nsIDownloadHistory
+#ifdef MOZ_XUL
+                     , public nsIAutoCompleteSearch,
                      public nsIAutoCompleteSimpleResultListener
+#endif
 {
   friend class AutoCompleteIntermediateResultSet;
   friend class AutoCompleteResultComparator;
@@ -126,8 +132,10 @@ public:
   NS_DECL_NSIDOWNLOADHISTORY
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
+#ifdef MOZ_XUL
   NS_DECL_NSIAUTOCOMPLETESEARCH
   NS_DECL_NSIAUTOCOMPLETESIMPLERESULTLISTENER
+#endif
 
   nsresult Init();
 
@@ -588,8 +596,10 @@ protected:
   nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
   nsString mCurrentSearchString;
+#ifdef MOZ_XUL
   nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
   nsCOMPtr<nsIAutoCompleteSimpleResult> mCurrentResult;
+#endif
   nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
   PRTime mCurrentChunkEndTime;
   PRTime mCurrentOldestVisit;
