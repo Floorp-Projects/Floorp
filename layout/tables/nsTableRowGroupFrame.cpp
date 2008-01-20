@@ -1286,7 +1286,8 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
   // not paginated ... we can't split across columns yet.
   if (aReflowState.mFlags.mTableIsSplittable &&
       (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak || 
-       aDesiredSize.height > aReflowState.availableHeight)) {
+       (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
+       aDesiredSize.height > aReflowState.availableHeight))) {
     // Nope, find a place to split the row group 
     PRBool specialReflow = (PRBool)aReflowState.mFlags.mSpecialHeightReflow;
     ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_FALSE;
