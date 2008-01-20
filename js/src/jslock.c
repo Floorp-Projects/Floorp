@@ -97,7 +97,7 @@ js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
 }
 
 static JS_INLINE int
-js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     return (js_CompareAndSwapHelper(w, ov, nv) & 1);
 }
