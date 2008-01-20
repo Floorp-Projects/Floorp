@@ -1917,7 +1917,8 @@ DocumentViewerImpl::Show(void)
     if (mPresContext) {
       Hide();
 
-      rv = InitPresentationStuff(PR_TRUE, PR_TRUE);
+      rv = InitPresentationStuff(mDocument->MayStartLayout(),
+                                 mDocument->MayStartLayout());
     }
 
     // If we get here the document load has already started and the

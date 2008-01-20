@@ -419,6 +419,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     // NOTE: If this ever starts calling nsDocument::StartDocumentLoad
     // we'll possibly need to reset our content type afterwards.
     mStillWalking = PR_TRUE;
+    mMayStartLayout = PR_FALSE;
     mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
 
     mDocumentTitle.SetIsVoid(PR_TRUE);
@@ -1932,19 +1933,13 @@ nsXULDocument::StartLayout(void)
             }
         }
 
+        mMayStartLayout = PR_TRUE;
+        
         // Make sure we're holding a strong ref to |shell| before we call
         // InitialReflow()
         nsCOMPtr<nsIPresShell> shellGrip = shell;
         rv = shell->InitialReflow(r.width, r.height);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        // Start observing the document _after_ we do the initial
-        // reflow. Otherwise, we'll get into an trouble trying to
-        // create kids before the root frame is established.
-        // XXXbz why is that an issue here and not in nsContentSink or
-        // nsDocumentViewer?  Perhaps we should just flush the way
-        // nsDocumentViewer does?
-        shell->BeginObservingDocument();
     }
 
     return NS_OK;
