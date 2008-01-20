@@ -234,7 +234,9 @@ typedef union JSTempValueUnion {
     jsval               value;
     JSObject            *object;
     JSString            *string;
-    void                *gcthing;
+    JSFunction          *function;
+    JSXML               *xml;
+    JSXMLQName          *qname;
     JSTempValueTrace    trace;
     JSScopeProperty     *sprop;
     JSWeakRoots         *weakRoots;

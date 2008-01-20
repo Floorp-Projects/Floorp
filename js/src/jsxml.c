@@ -3121,7 +3121,7 @@ ToAttributeName(JSContext *cx, jsval v)
     if (!qn)
         return NULL;
 
-    JS_PUSH_TEMP_ROOT_GCTHING(cx, qn, &tvr);
+    JS_PUSH_TEMP_ROOT_QNAME(cx, qn, &tvr);
     obj = js_GetAttributeNameObject(cx, qn);
     JS_POP_TEMP_ROOT(cx, &tvr);
     if (!obj)
@@ -7559,7 +7559,7 @@ js_NewXMLObject(JSContext *cx, JSXMLClass xml_class)
     xml = js_NewXML(cx, xml_class);
     if (!xml)
         return NULL;
-    JS_PUSH_TEMP_ROOT_GCTHING(cx, xml, &tvr);
+    JS_PUSH_TEMP_ROOT_XML(cx, xml, &tvr);
     obj = js_GetXMLObject(cx, xml);
     JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
