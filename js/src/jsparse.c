@@ -1453,7 +1453,6 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     CHECK_RECURSION();
 
-    JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_LC);
     pn = NewParseNode(cx, ts, PN_LIST, tc);
     if (!pn)
         return NULL;
