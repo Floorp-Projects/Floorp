@@ -1132,13 +1132,13 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
     PangoDirection dir = aTextRun->IsRightToLeft() ? PANGO_DIRECTION_RTL : PANGO_DIRECTION_LTR;
     GList *items = pango_itemize_with_base_dir(context, dir, aUTF8, 0, aUTF8Length, nsnull, nsnull);
 
+    PRUint32 utf16Offset = 0;
+    PRBool isRTL = aTextRun->IsRightToLeft();
+    GList *pos = items;
     PangoGlyphString *glyphString = pango_glyph_string_new();
     if (!glyphString)
         goto out; // OOM
 
-    PRUint32 utf16Offset = 0;
-    PRBool isRTL = aTextRun->IsRightToLeft();
-    GList *pos = items;
     for (; pos && pos->data; pos = pos->next) {
         PangoItem *item = (PangoItem *)pos->data;
         NS_ASSERTION(isRTL == item->analysis.level % 2, "RTL assumption mismatch");
