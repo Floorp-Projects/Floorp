@@ -54,6 +54,7 @@
 #include "prbit.h"
 #include "plarena.h"
 #include "nsMemory.h"
+#include "nsLayoutStatics.h"
 
 #define NS_SMALL_NODE_ARENA_SIZE \
   (512 * (sizeof(void*)/4))
@@ -219,8 +220,6 @@ nsDOMNodeAllocator::Free(size_t aSize, void* aPtr)
 #endif
 }
 
-PRUint32 nsNodeInfoManager::gNodeManagerCount;
-
 PLHashNumber
 nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
 {
@@ -257,36 +256,23 @@ nsNodeInfoManager::nsNodeInfoManager()
     mCommentNodeInfo(nsnull),
     mDocumentNodeInfo(nsnull)
 {
-  ++gNodeManagerCount;
+  nsLayoutStatics::AddRef();
 
   mNodeInfoHash = PL_NewHashTable(32, GetNodeInfoInnerHashValue,
                                   NodeInfoInnerKeyCompare,
                                   PL_CompareValues, nsnull, nsnull);
-
-#ifdef DEBUG_jst
-  printf ("Creating NodeInfoManager, gcount = %d\n", gNodeManagerCount);
-#endif
 }
 
 
 nsNodeInfoManager::~nsNodeInfoManager()
 {
-  --gNodeManagerCount;
-
   if (mNodeInfoHash)
     PL_HashTableDestroy(mNodeInfoHash);
-
-
-  if (gNodeManagerCount == 0) {
-    nsNodeInfo::ClearCache();
-  }
 
   // Note: mPrincipal may be null here if we never got inited correctly
   NS_IF_RELEASE(mPrincipal);
 
-#ifdef DEBUG_jst
-  printf ("Removing NodeInfoManager, gcount = %d\n", gNodeManagerCount);
-#endif
+  nsLayoutStatics::Release();
 }
 
 

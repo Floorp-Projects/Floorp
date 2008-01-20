@@ -198,8 +198,6 @@ private:
   nsINodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership
 
   nsRefPtr<nsDOMNodeAllocator> mNodeAllocator;
-
-  static PRUint32 gNodeManagerCount;
 };
 
 #endif /* nsNodeInfoManager_h___ */
