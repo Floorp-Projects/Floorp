@@ -867,8 +867,8 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
                  jsclazz->finalize, "bad class");
 
     JSObject* protoJSObject = HasProto() ?
-                                GetProto()->GetJSProtoObject() :
-                                GetScope()->GetPrototypeJSObject();
+            GetProto()->GetJSProtoObject() :
+            GetScope()->GetPrototypeJSObject();
 
     mFlatJSObject = xpc_NewSystemInheritingJSObject(ccx, jsclazz, protoJSObject,
                                                     parent);
@@ -2840,7 +2840,9 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
                         (JSBool)NS_PTR_TO_INT32(iface->FindMember(STRING_TO_JSVAL(newJSStr)))))
         {
             // found it!
-            const char* ifaceName = localIface->GetNameString();
+            const char* ifaceName = set ?
+                    localIface->GetNameString() :
+                    iface->GetNameString();
             const char* goodName = JS_GetStringBytes(newJSStr);
             const char* badName = JS_GetStringBytes(oldJSStr);
             char* locationStr = nsnull;
