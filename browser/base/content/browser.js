@@ -1911,9 +1911,10 @@ function URLBarSetURI(aURI) {
       if (!content.opener)
         value = "";
     } else {
-      // try to decode as UTF-8
+      // try to decode as UTF-8 (escaping whitespace so that it doesn't
+      // get eaten away by the location bar; cf. bug 410726)
       try {
-        value = decodeURI(value).replace(/%/g, "%25");
+        value = decodeURI(value).replace(/[%\r\n\t]/g, encodeURI);
       } catch(e) {}
 
       state = "valid";
