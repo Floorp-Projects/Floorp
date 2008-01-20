@@ -1991,17 +1991,12 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
         if (!ok)
             break;
 
-        if (mode > MAP) {
-            if (*invokevp == JSVAL_NULL) {
-                cond = JS_FALSE;
-            } else if (JSVAL_IS_BOOLEAN(*invokevp)) {
-                cond = JSVAL_TO_BOOLEAN(*invokevp);
-            } else {
-                ok = js_ValueToBoolean(cx, *invokevp, &cond);
-                if (!ok)
-                    goto out;
-            }
-        }
+        if (mode > MAP)
+            cond = js_ValueToBoolean(*invokevp);
+#ifdef __GNUC__ /* quell GCC overwarning */
+        else
+            cond = JS_FALSE;
+#endif
 
         switch (mode) {
           case FOREACH:

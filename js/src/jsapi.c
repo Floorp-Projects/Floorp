@@ -200,8 +200,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
         }
         switch (c) {
           case 'b':
-            if (!js_ValueToBoolean(cx, *sp, va_arg(ap, JSBool *)))
-                return JS_FALSE;
+            *va_arg(ap, JSBool *) = js_ValueToBoolean(*sp);
             break;
           case 'c':
             if (!js_ValueToUint16(cx, *sp, va_arg(ap, uint16 *)))
@@ -459,7 +458,7 @@ JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
 JS_PUBLIC_API(JSBool)
 JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 {
-    JSBool ok, b;
+    JSBool ok;
     JSObject *obj;
     JSString *str;
     jsdouble d, *dp;
@@ -496,10 +495,8 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         }
         break;
       case JSTYPE_BOOLEAN:
-        ok = js_ValueToBoolean(cx, v, &b);
-        if (ok)
-            *vp = BOOLEAN_TO_JSVAL(b);
-        break;
+        *vp = js_ValueToBoolean(v);
+        return JS_TRUE;
       default: {
         char numBuf[12];
         JS_snprintf(numBuf, sizeof numBuf, "%d", (int)type);
@@ -579,7 +576,8 @@ JS_PUBLIC_API(JSBool)
 JS_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 {
     CHECK_REQUEST(cx);
-    return js_ValueToBoolean(cx, v, bp);
+    *bp = js_ValueToBoolean(v);
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSType)

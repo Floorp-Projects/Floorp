@@ -1314,15 +1314,12 @@ xml_setting_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 xml_setting_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSBool b;
     uint8 flag;
 
     JS_ASSERT(JSVAL_IS_INT(id));
-    if (!js_ValueToBoolean(cx, *vp, &b))
-        return JS_FALSE;
 
     flag = JS_BIT(JSVAL_TO_INT(id));
-    if (b)
+    if (js_ValueToBoolean(*vp))
         cx->xmlSettingFlags |= flag;
     else
         cx->xmlSettingFlags &= ~flag;
@@ -1894,14 +1891,13 @@ FillSettingsCache(JSContext *cx)
     int i;
     const char *name;
     jsval v;
-    JSBool isSet;
 
     /* Note: XML_PRETTY_INDENT is not a boolean setting. */
     for (i = XML_IGNORE_COMMENTS; i < XML_PRETTY_INDENT; i++) {
         name = xml_static_props[i].name;
-        if (!GetXMLSetting(cx, name, &v) || !js_ValueToBoolean(cx, v, &isSet))
+        if (!GetXMLSetting(cx, name, &v))
             return JS_FALSE;
-        if (isSet)
+        if (js_ValueToBoolean(v))
             cx->xmlSettingFlags |= JS_BIT(i);
         else
             cx->xmlSettingFlags &= ~JS_BIT(i);
@@ -8191,7 +8187,7 @@ js_DeleteXMLListElements(JSContext *cx, JSObject *listobj)
 JSBool
 js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
 {
-    JSBool ok, match;
+    JSBool ok;
     JSStackFrame *fp;
     uint32 flags;
     JSObject *scobj, *listobj, *resobj, *withobj, *kidobj;
@@ -8244,8 +8240,8 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
         if (!kidobj)
             break;
         OBJ_SET_PROTO(cx, withobj, kidobj);
-        ok = js_Interpret(cx, pc, vp) && js_ValueToBoolean(cx, *vp, &match);
-        if (ok && match)
+        ok = js_Interpret(cx, pc, vp);
+        if (ok && js_ValueToBoolean(*vp))
             ok = Append(cx, result, kid);
         if (!ok)
             break;
