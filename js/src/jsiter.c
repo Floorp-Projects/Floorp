@@ -174,9 +174,7 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
     uintN flags;
     JSObject *obj;
 
-    keyonly = JS_FALSE;
-    if (!js_ValueToBoolean(cx, argv[1], &keyonly))
-        return JS_FALSE;
+    keyonly = js_ValueToBoolean(argv[1]);
     flags = keyonly ? 0 : JSITER_FOREACH;
 
     if (cx->fp->flags & JSFRAME_CONSTRUCTING) {
