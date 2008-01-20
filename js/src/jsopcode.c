@@ -616,7 +616,7 @@ struct JSPrinter {
     JSScript        *script;        /* script being printed */
     jsbytecode      *dvgfence;      /* js_DecompileValueGenerator fencepost */
     JSFunction      *fun;           /* interpreted function */
-    JSAtom          **localNames;   /* argument and variable names */
+    jsuword         *localNames;    /* argument and variable names */
 };
 
 /*
@@ -644,10 +644,9 @@ JS_NEW_PRINTER(JSContext *cx, const char *name,  JSFunction *fun,
     jp->script = NULL;
     jp->dvgfence = NULL;
     jp->fun = fun;
-    if (!fun || !FUN_INTERPRETED(fun) || fun->nargs + fun->u.i.nvars == 0) {
-        jp->localNames = NULL;
-    } else {
-        jp->localNames = js_GetLocalNames(cx, fun, &jp->pool, NULL);
+    jp->localNames = NULL;
+    if (fun && FUN_INTERPRETED(fun) && JS_GET_LOCAL_NAME_COUNT(fun)) {
+        jp->localNames = js_GetLocalNameArray(cx, fun);
         if (!jp->localNames) {
             js_DestroyPrinter(jp);
             return NULL;
@@ -659,6 +658,8 @@ JS_NEW_PRINTER(JSContext *cx, const char *name,  JSFunction *fun,
 void
 js_DestroyPrinter(JSPrinter *jp)
 {
+    if (jp->localNames)
+        js_PutLocalNameArray(jp->sprinter.context, jp->fun, jp->localNames);
     JS_FinishArenaPool(&jp->pool);
     JS_free(jp->sprinter.context, jp);
 }
@@ -1103,15 +1104,14 @@ GetSlotAtom(JSPrinter *jp, JSBool argument, uintN slot)
     LOCAL_ASSERT_RV(jp->localNames, NULL);
     if (argument) {
         LOCAL_ASSERT_RV(slot < fun->nargs, NULL);
-        name = jp->localNames[slot];
-#if !JS_HAS_DESTRUCTURING
-        LOCAL_ASSERT_RV(name, NULL);
-#endif
     } else {
         LOCAL_ASSERT_RV(slot < fun->u.i.nvars, NULL);
-        name = jp->localNames[fun->nargs + slot];
-        LOCAL_ASSERT_RV(name, NULL);
+        slot += fun->nargs;
     }
+    name = JS_LOCAL_NAME_TO_ATOM(jp->localNames[slot]);
+#if !JS_HAS_DESTRUCTURING
+    LOCAL_ASSERT_RV(name, NULL);
+#endif
     return name;
 }
 
