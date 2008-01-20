@@ -975,6 +975,7 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
   mLayoutStarted = PR_TRUE;
   mLastNotificationTime = PR_Now();
 
+  mDocument->SetMayStartLayout(PR_TRUE);
   nsPresShellIterator iter(mDocument);
   nsCOMPtr<nsIPresShell> shell;
   while ((shell = iter.GetNextShell())) {
@@ -995,10 +996,6 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
       continue;
     }
 
-    // Make shell an observer for next time
-    shell->BeginObservingDocument();
-
-    // Resize-reflow this time
     nsRect r = shell->GetPresContext()->GetVisibleArea();
     nsCOMPtr<nsIPresShell> shellGrip = shell;
     nsresult rv = shell->InitialReflow(r.width, r.height);
