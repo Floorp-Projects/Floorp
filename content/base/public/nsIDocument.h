@@ -96,9 +96,8 @@ struct JSObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xed21686d, 0x4e2f, 0x41f5, \
-  { 0x94, 0xaa, 0xcc, 0x1f, 0xbd, 0xfa, 0x1f, 0x84 } }
-
+{ 0x626d86d2, 0x615f, 0x4a12, \
+ { 0x94, 0xd8, 0xe3, 0xdb, 0x3a, 0x29, 0x83, 0x72 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -121,6 +120,7 @@ public:
       mNodeInfoManager(nsnull),
       mCompatMode(eCompatibility_FullStandards),
       mIsInitialDocumentInWindow(PR_FALSE),
+      mMayStartLayout(PR_TRUE),
       mPartID(0),
       mJSObject(nsnull)
   {
@@ -151,6 +151,11 @@ public:
    * @param aSink The content sink to use for the data.  If this is null and
    *              the document needs a content sink, it will create one based
    *              on whatever it knows about the data it's going to load.
+   *
+   * Once this has been called, the document will return false for
+   * MayStartLayout() until SetMayStartLayout(PR_TRUE) is called on it.  Making
+   * sure this happens is the responsibility of the caller of
+   * StartDocumentLoad().
    */  
   virtual nsresult StartDocumentLoad(const char* aCommand,
                                      nsIChannel* aChannel,
@@ -359,7 +364,9 @@ public:
   /**
    * Create a new presentation shell that will use aContext for its
    * presentation context (presentation contexts <b>must not</b> be
-   * shared among multiple presentation shells).
+   * shared among multiple presentation shells). The caller of this
+   * method is responsible for calling BeginObservingDocument() on the
+   * presshell if the presshell should observe document mutations.
    */
   virtual nsresult CreateShell(nsPresContext* aContext,
                                nsIViewManager* aViewManager,
@@ -914,6 +921,16 @@ public:
     return mLoadedAsData;
   }
 
+  PRBool MayStartLayout()
+  {
+    return mMayStartLayout;
+  }
+
+  void SetMayStartLayout(PRBool aMayStartLayout)
+  {
+    mMayStartLayout = aMayStartLayout;
+  }
+
   JSObject* GetJSObject() const
   {
     return mJSObject;
@@ -992,6 +1009,10 @@ protected:
   // True if we're loaded as data and therefor has any dangerous stuff, such
   // as scripts and plugins, disabled.
   PRPackedBool mLoadedAsData;
+
+  // If true, whoever is creating the document has gotten it to the
+  // point where it's safe to start layout on it.
+  PRPackedBool mMayStartLayout;
 
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h

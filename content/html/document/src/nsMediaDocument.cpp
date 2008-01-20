@@ -265,13 +265,10 @@ nsMediaDocument::CreateSyntheticDocument()
 nsresult
 nsMediaDocument::StartLayout()
 {
+  mMayStartLayout = PR_TRUE;
   nsPresShellIterator iter(this);
   nsCOMPtr<nsIPresShell> shell;
   while ((shell = iter.GetNextShell())) {
-    // Make shell an observer for next time.
-    shell->BeginObservingDocument();
-
-    // Initial-reflow this time.
     nsRect visibleArea = shell->GetPresContext()->GetVisibleArea();
     nsCOMPtr<nsIPresShell> shellGrip = shell;
     nsresult rv = shell->InitialReflow(visibleArea.width, visibleArea.height);
