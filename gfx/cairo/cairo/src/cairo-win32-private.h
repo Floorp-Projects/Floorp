@@ -128,7 +128,7 @@ _cairo_win32_surface_finish (void *abstract_surface);
 
 cairo_int_status_t
 _cairo_win32_surface_get_extents (void		          *abstract_surface,
-				  cairo_rectangle_int16_t *rectangle);
+				  cairo_rectangle_int_t   *rectangle);
 
 uint32_t
 _cairo_win32_flags_for_dc (HDC dc);
