@@ -222,10 +222,7 @@
         } else if (JSVAL_IS_BOOLEAN(v)) {                                     \
             b = JSVAL_TO_BOOLEAN(v);                                          \
         } else {                                                              \
-            SAVE_SP_AND_PC(fp);                                               \
-            ok = js_ValueToBoolean(cx, v, &b);                                \
-            if (!ok)                                                          \
-                goto out;                                                     \
+            b = js_ValueToBoolean(v);                                         \
         }                                                                     \
         sp--;                                                                 \
     JS_END_MACRO
