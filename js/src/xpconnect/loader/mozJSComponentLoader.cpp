@@ -83,6 +83,10 @@
 #include "prmem.h"
 #include "plbase64.h"
 
+#ifdef MOZ_SHARK
+#include "jsdbgapi.h"
+#endif
+
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
@@ -272,7 +276,12 @@ static JSFunctionSpec gGlobalFun[] = {
     {"debug",   Debug,  1,0,0},
     {"atob",    Atob,   1,0,0},
     {"btoa",    Btoa,   1,0,0},
-
+#ifdef MOZ_SHARK
+    {"startShark",      js_StartShark,     0,0,0},
+    {"stopShark",       js_StopShark,      0,0,0},
+    {"connectShark",    js_ConnectShark,   0,0,0},
+    {"disconnectShark", js_DisconnectShark,0,0,0},
+#endif
     {nsnull,nsnull,0,0,0}
 };
 
