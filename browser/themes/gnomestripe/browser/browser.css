@@ -801,11 +801,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   display: none;
 }
 
-/* Keep the URL bar LTR */
-#urlbar .autocomplete-textbox-container {
-  direction: ltr;
-}
-
 #PopupAutoComplete {
   direction: ltr !important;
 }
@@ -967,7 +962,9 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
 }
 
+/* keep the URL bar content LTR */
 #autocomplete-security-wrapper {
+  direction: ltr;
   -moz-box-align: center;
 }
 
