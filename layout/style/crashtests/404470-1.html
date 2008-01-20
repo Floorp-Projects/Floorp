@@ -1,0 +1,15 @@
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var iframe = document.createElement("iframe");
+  document.body.appendChild(iframe);
+  iframe.setAttribute("src", 'data:application/vnd.mozilla.xul+xml,<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"><script>window.parent.document.body.style.display="inline"; window.parent.document.body.offsetWidth;</' + 'script></window>');
+}
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
