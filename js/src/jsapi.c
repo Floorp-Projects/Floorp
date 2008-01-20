@@ -4653,6 +4653,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, uintN lineno)
 {
     JSFunction *fun;
+    JSTempValueRooter tvr;
     JSAtom *funAtom, *argAtom;
     uintN i;
 
@@ -4663,12 +4664,15 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         funAtom = js_Atomize(cx, name, strlen(name), 0);
         if (!funAtom) {
             fun = NULL;
-            goto out;
+            goto out2;
         }
     }
     fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
     if (!fun)
-        goto out;
+        goto out2;
+
+    /* From this point the control must flow through the label out. */
+    JS_PUSH_TEMP_ROOT_FUNCTION(cx, fun, &tvr);
     for (i = 0; i < nargs; i++) {
         argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
         if (!argAtom) {
@@ -4707,6 +4711,10 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 #endif
 
   out:
+    cx->weakRoots.newborn[JSTRACE_FUNCTION] = fun;
+    JS_POP_TEMP_ROOT(cx, &tvr);
+
+  out2:
     LAST_FRAME_CHECKS(cx, fun);
     return fun;
 }
