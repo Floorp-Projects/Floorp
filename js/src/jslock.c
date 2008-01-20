@@ -85,18 +85,21 @@ js_UnlockGlobal(void *id)
 /* Exclude Alpha NT. */
 #if defined(_WIN32) && defined(_M_IX86)
 #pragma warning( disable : 4035 )
+#pragma intrinsic(_InterlockedCompareExchange)
 
 static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
 {
+    _InterlockedCompareExchange(w, nv, ov);
     __asm {
-        mov eax, ov
-        mov ecx, nv
-        mov ebx, w
-        lock cmpxchg [ebx], ecx
         sete al
-        and eax, 1h
     }
+}
+
+static JS_INLINE int
+js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
+{
+    return (js_CompareAndSwapHelper(w, ov, nv) & 1);
 }
 
 #elif defined(XP_MACOSX) || defined(DARWIN)
