@@ -152,7 +152,6 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIDOMXPathEvaluator.h"
 #include "nsDOMCID.h"
 
-#include "nsLayoutStatics.h"
 #include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
 #include "nsCycleCollector.h"
@@ -772,7 +771,6 @@ nsDocument::nsDocument(const char* aContentType)
     mChildren(nsnull),
     mVisible(PR_TRUE)
 {
-  nsLayoutStatics::AddRef();
   mContentType = aContentType;
   
 #ifdef PR_LOGGING
@@ -881,7 +879,6 @@ nsDocument::~nsDocument()
   delete mHeaderData;
   delete mBoxObjectTable;
   delete mContentWrapperHash;
-  nsLayoutStatics::Release();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
