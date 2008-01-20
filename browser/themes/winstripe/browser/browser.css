@@ -1447,12 +1447,41 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   -moz-margin-end: 4px;
 }
 
-#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-textbox-container,
-#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-textbox-container {
-  background-color: #F5F6BE; /* #F7F898; */
+/* Secure site coloring */
+#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-textbox-container ,
+#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-history-dropmarker ,
+#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-textbox-container ,
+#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-history-dropmarker {
+  background-color: #F5F6BE;
   color: #000000;
 }
 
+/* Location bar dropmarker */
+#urlbar > .autocomplete-history-dropmarker {
+  -moz-appearance: none;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  width: auto;
+}
+
+#urlbar > .autocomplete-history-dropmarker:hover {
+  background-color: -moz-dialog;
+  -moz-appearance: toolbox;
+  outline: 1px solid ThreeDShadow;
+  -moz-margin-start: 1px;
+}
+
+#urlbar > .autocomplete-history-dropmarker > .dropmarker-icon {
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
+}
+
+#urlbar > .autocomplete-history-dropmarker:hover > .dropmarker-icon {
+  -moz-margin-start: 5px;
+}
+
+/* Feed icon */
 #feed-button, #feed-button > .button-box,
 #feed-button:hover:active > .button-box {
   padding: 0px;
