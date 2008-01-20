@@ -889,7 +889,7 @@ JSExtendedClass XPC_WN_NoHelper_JSClass = {
         XPC_WN_NoHelper_Finalize,       // finalize;
 
         /* Optionally non-null members start here. */
-        nsnull,                         // getObjectOps;
+        XPC_WN_GetObjectOpsNoCall,      // getObjectOps;
         nsnull,                         // checkAccess;
         nsnull,                         // call;
         nsnull,                         // construct;
@@ -1176,9 +1176,11 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp)
 {
-    if(!IS_WRAPPER_CLASS(JS_GET_CLASS(cx, obj)))
+    JSClass *clazz = JS_GET_CLASS(cx, obj);
+    if(!IS_WRAPPER_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass.base)
     {
-        // obj must be a prototype object. Short circuit this call to
+        // obj must be a prototype object or a wrapper w/o a
+        // helper. Short circuit this call to
         // js_ObjectOps.enumerate().
 
         return js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
@@ -1623,7 +1625,8 @@ XPC_WN_Proto_GetObjectOps(JSContext *cx, JSClass *clazz)
         return &XPC_WN_WithCall_JSOps;
 
     NS_ASSERTION(clazz == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
-                 clazz == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+                 clazz == &XPC_WN_NoMods_NoCall_Proto_JSClass ||
+                 clazz == &XPC_WN_NoHelper_Proto_JSClass,
                  "bad proto");
 
     return &XPC_WN_NoCall_JSOps;
