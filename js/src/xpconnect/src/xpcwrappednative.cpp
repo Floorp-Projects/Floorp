@@ -867,8 +867,12 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
                  jsclazz->finalize, "bad class");
 
     JSObject* protoJSObject = HasProto() ?
-            GetProto()->GetJSProtoObject() :
-            GetScope()->GetPrototypeJSObject();
+                                GetProto()->GetJSProtoObject() :
+                                GetScope()->GetPrototypeNoHelper(ccx);
+
+    if (!protoJSObject) {
+        return JS_FALSE;
+    }
 
     mFlatJSObject = xpc_NewSystemInheritingJSObject(ccx, jsclazz, protoJSObject,
                                                     parent);
