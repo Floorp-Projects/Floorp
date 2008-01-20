@@ -774,36 +774,28 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
     if (!buffer.AppendElements(aUTF8Length + 1))
         return;
 
+    pango_break(aUTF8, aUTF8Length, aAnalysis,
+                buffer.Elements(), buffer.Length());
+
     const gchar *p = aUTF8;
     const gchar *end = aUTF8 + aUTF8Length;
+    const PangoLogAttr *attr = buffer.Elements();
     gfxTextRun::CompressedGlyph g;
-
     while (p < end) {
-        PangoLogAttr *attr = buffer.Elements();
-        pango_break(p, end - p, aAnalysis, attr, buffer.Length());
-
-        while (p < end) {
-            if (!attr->is_cursor_position) {
-                aTextRun->SetGlyphs(aUTF16Offset, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
-            }
-            ++aUTF16Offset;
-        
-            gunichar ch = g_utf8_get_char(p);
-            NS_ASSERTION(!IS_SURROGATE(ch), "Shouldn't have surrogates in UTF8");
-            if (ch >= 0x10000) {
-                ++aUTF16Offset;
-            }
-            // We produced this utf8 so we don't need to worry about malformed stuff
-            p = g_utf8_next_char(p);
-            ++attr;
-
-            if (ch == 0) {
-                // pango_break (pango 1.16.2) only analyses text before the
-                // first NUL (but sets one extra attr), so call pango_break
-                // again to analyse after the NUL.
-                break;
-            }
+        if (!attr->is_cursor_position) {
+            aTextRun->SetGlyphs(aUTF16Offset, g.SetComplex(PR_FALSE, PR_TRUE, 0), nsnull);
         }
+        ++aUTF16Offset;
+        
+        gunichar ch = g_utf8_get_char(p);
+        NS_ASSERTION(ch != 0, "Shouldn't have NUL in pango_break");
+        NS_ASSERTION(!IS_SURROGATE(ch), "Shouldn't have surrogates in UTF8");
+        if (ch >= 0x10000) {
+            ++aUTF16Offset;
+        }
+        // We produced this utf8 so we don't need to worry about malformed stuff
+        p = g_utf8_next_char(p);
+        ++attr;
     }
 }
 
@@ -953,6 +945,7 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
     utf8Index = 0;
     // The next glyph cluster in logical order. 
     gint nextGlyphClusterStart = logGlyphs[utf8Index];
+    NS_ASSERTION(nextGlyphClusterStart >= 0, "No glyphs! - NUL in string?");
     while (utf8Index < aUTF8Length) {
         if (utf16Offset >= textRunLength) {
           NS_ERROR("Someone has added too many glyphs!");
@@ -967,44 +960,32 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
         do {
             ++utf8Index;
             nextGlyphClusterStart = logGlyphs[utf8Index];
-        } while (nextGlyphClusterStart < 0 && aUTF8[utf8Index] != '\0');
+        } while (nextGlyphClusterStart < 0);
         const gchar *clusterUTF8 = &aUTF8[clusterUTF8Start];
         PRUint32 clusterUTF8Length = utf8Index - clusterUTF8Start;
 
         PRBool haveMissingGlyph = PR_FALSE;
         gint glyphIndex = glyphClusterStart;
-        if (glyphClusterStart < 0) {
-            // No glyphs - This happens with a NUL: Pango doesn't create
-            // glyphs for these, not even missing-glyph glyphIDs.
-            // Treat a NUL byte as a missing glyph.
-            haveMissingGlyph = PR_TRUE;
-            // Any non-NUL UTF8 bytes are unexpected.
-            NS_ASSERTION(*clusterUTF8 == '\0' && clusterUTF8Length == 1,
-                         "No glyphs and not a NUL");
-            if (aAbortOnMissingGlyph &&
-                (*clusterUTF8 != '\0' || clusterUTF8Length != 1)) {
-                return NS_ERROR_FAILURE;
-            }
-        } else {
-            do {
-                if (IS_EMPTY_GLYPH(glyphs[glyphIndex].glyph)) {
-                    // The zero width characters return empty glyph ID at
-                    // shaping, we should override it.
-                    glyphs[glyphIndex].glyph = aFont->GetGlyph(' ');
-                    glyphs[glyphIndex].geometry.width = 0;
-                } else if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
-                    // Does pango ever provide more than one glyph in the
-                    // cluster if there is a missing glyph?
-                    // behdad: yes
-                    haveMissingGlyph = PR_TRUE;
-                }
-                glyphIndex++;
-            } while (glyphIndex < numGlyphs && 
-                     logClusters[glyphIndex] == gint(clusterUTF8Start));
 
-            if (haveMissingGlyph && aAbortOnMissingGlyph)
-                return NS_ERROR_FAILURE;
-        }
+        // It's now unncecessary to do NUL handling here.
+        do {
+            if (IS_EMPTY_GLYPH(glyphs[glyphIndex].glyph)) {
+                // The zero width characters return empty glyph ID at
+                // shaping, we should override it.
+                glyphs[glyphIndex].glyph = aFont->GetGlyph(' ');
+                glyphs[glyphIndex].geometry.width = 0;
+            } else if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
+                // Does pango ever provide more than one glyph in the
+                // cluster if there is a missing glyph?
+                // behdad: yes
+                haveMissingGlyph = PR_TRUE;
+            }
+            glyphIndex++;
+        } while (glyphIndex < numGlyphs && 
+                 logClusters[glyphIndex] == gint(clusterUTF8Start));
+
+        if (haveMissingGlyph && aAbortOnMissingGlyph)
+            return NS_ERROR_FAILURE;
 
         nsresult rv;
         if (haveMissingGlyph) {
@@ -1151,6 +1132,10 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
     PangoDirection dir = aTextRun->IsRightToLeft() ? PANGO_DIRECTION_RTL : PANGO_DIRECTION_LTR;
     GList *items = pango_itemize_with_base_dir(context, dir, aUTF8, 0, aUTF8Length, nsnull, nsnull);
 
+    PangoGlyphString *glyphString = pango_glyph_string_new();
+    if (!glyphString)
+        goto out; // OOM
+
     PRUint32 utf16Offset = 0;
     PRBool isRTL = aTextRun->IsRightToLeft();
     GList *pos = items;
@@ -1161,20 +1146,12 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
         PRUint32 offset = item->offset;
         PRUint32 length = item->length;
         if (offset < aUTF8HeaderLen) {
-            if (offset + length <= aUTF8HeaderLen) {
-                pango_item_free(item);
+            if (offset + length <= aUTF8HeaderLen)
                 continue;
-            }
+
             length -= aUTF8HeaderLen - offset;
             offset = aUTF8HeaderLen;
         }
-
-        // need to append glyph runs here.
-        PangoGlyphString *glyphString = pango_glyph_string_new();
-        if (!glyphString)
-            return; // OOM
-
-        pango_shape(aUTF8 + offset, length, &item->analysis, glyphString);
 
         /* look up the gfxPangoFont from the PangoFont */
         // XXX we need a function to do this.. until then do this
@@ -1185,21 +1162,47 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
         //printf("Using %s\n", pango_font_description_get_family(d));
 
         pango_font_description_free(d);
-        SetupClusterBoundaries(aTextRun, aUTF8 + offset, length, utf16Offset, &item->analysis);
 
         nsresult rv = aTextRun->AddGlyphRun(font, utf16Offset, PR_TRUE);
         if (NS_FAILED(rv)) {
             NS_ERROR("AddGlyphRun Failed");
-            pango_glyph_string_free(glyphString);
-            return;
+            goto out;
         }
 
         PRUint32 spaceWidth = NS_lround(font->GetMetrics().spaceWidth * FLOAT_PANGO_SCALE);
 
-        rv = SetGlyphs(aTextRun, font, aUTF8 + offset, length, &utf16Offset, glyphString, spaceWidth, PR_FALSE);
+        const gchar *p = aUTF8 + offset;
+        const gchar *end = p + length;
+        while (p < end) {
+            if (*p == 0) {
+                aTextRun->SetMissingGlyph(utf16Offset, 0);
+                ++p;
+                ++utf16Offset;
+                continue;
+            }
 
-        pango_glyph_string_free(glyphString);
+            // It's necessary to loop over pango_shape as it treats
+            // NULs as string terminators
+            const gchar *text = p;
+            do {
+                ++p;
+            } while(p < end && *p != 0);
+            gint len = p - text;
+
+            pango_shape(text, len, &item->analysis, glyphString);
+            SetupClusterBoundaries(aTextRun, text, len, utf16Offset, &item->analysis);
+            SetGlyphs(aTextRun, font, text, len, &utf16Offset, glyphString, spaceWidth, PR_FALSE);
+        }
     }
+
+    aTextRun->SortGlyphRuns();
+
+out:
+    if (glyphString)
+        pango_glyph_string_free(glyphString);
+
+    for (pos = items; pos; pos = pos->next)
+        pango_item_free((PangoItem *)pos->data);
 
     if (items)
         g_list_free(items);
@@ -1207,8 +1210,6 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
     pango_font_description_free(fontDesc);
 
     g_object_unref(context);
-
-    aTextRun->SortGlyphRuns();
 }
 
 
