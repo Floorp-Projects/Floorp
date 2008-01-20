@@ -208,7 +208,7 @@ var PlacesCommandHook = {
       if (aBrowser.contentWindow == window.content) {
         var starIcon = aBrowser.ownerDocument.getElementById("star-button");
         if (starIcon && isElementVisible(starIcon)) {
-          this.showEditBookmarkPopup(itemId, starIcon, "after_start");
+          this.showEditBookmarkPopup(itemId, starIcon, "after_end");
           return;
         }
       }
