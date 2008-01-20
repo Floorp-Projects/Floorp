@@ -933,19 +933,6 @@
           for (var i = this._matchCount; i < existingItemsCount; i++)
             this.richlistbox.childNodes[i].collapsed = true;
 
-          var clearSelection = true;
-          var currentSelectedIndex = this.selectedIndex;
-          if (currentSelectedIndex != -1 && currentSelectedIndex < this._matchCount) {
-            var controller = this.mInput.controller;
-            var item = this.richlistbox.childNodes[currentSelectedIndex];
-            if (item.getAttribute("url") == controller.getValueAt(currentSelectedIndex) &&
-                item.getAttribute("title") == controller.getCommentAt(currentSelectedIndex)) {
-              clearSelection = false;
-            }
-          }
-          if (currentSelectedIndex != -1 && clearSelection)
-            this.selectedIndex = -1;
-
           this._currentIndex = 0;
           this._appendCurrentResult();
         ]]>
