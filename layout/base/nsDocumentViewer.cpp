@@ -3431,11 +3431,6 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
 #endif
 
-  if (!mContainer) {
-    PR_PL(("Container was destroyed yet we are still trying to use it!"));
-    return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");
 
@@ -3529,11 +3524,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     return NS_ERROR_FAILURE;
   }
 #endif
-
-  if (!mContainer) {
-    PR_PL(("Container was destroyed yet we are still trying to use it!"));
-    return NS_ERROR_FAILURE;
-  }
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");
