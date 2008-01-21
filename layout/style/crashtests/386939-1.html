@@ -1,0 +1,24 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function rM(n)
+{
+  n.parentNode.removeChild(n);
+}
+
+function boom()
+{
+  rM(document.getElementById("f1"));
+  rM(document.getElementById("f2"));
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<frameset rows="170,*" onload="setTimeout(boom, 30);">
+<frame src="data:text/html,frame1" id="f1">
+<frame src="data:text/html,frame2" id="f2">
+</frameset>
+
+</html>
