@@ -85,7 +85,19 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
 
   NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
                "Shouldn't have unconstrained stuff here");
+  
+  DoReflow(aPresContext, aMetrics, aReflowState, aStatus);
 
+  FinishAndStoreOverflow(&aMetrics);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLeafFrame::DoReflow(nsPresContext* aPresContext,
+                      nsHTMLReflowMetrics& aMetrics,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus& aStatus)
+{
   aMetrics.width = aReflowState.ComputedWidth();
   if (NS_INTRINSICSIZE != aReflowState.ComputedHeight()) {
     aMetrics.height = aReflowState.ComputedHeight();
@@ -101,13 +113,13 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("exit nsLeafFrame::Reflow: size=%d,%d",
+                 ("exit nsLeafFrame::DoReflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
 
   aMetrics.mOverflowArea =
     nsRect(0, 0, aMetrics.width, aMetrics.height);
-  FinishAndStoreOverflow(&aMetrics);
+  
   return NS_OK;
 }
 
