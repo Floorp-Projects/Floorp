@@ -384,7 +384,7 @@ nsXPCThreadJSContextStackImpl::Pop(JSContext * *_retval)
 NS_IMETHODIMP
 nsXPCThreadJSContextStackImpl::Push(JSContext * cx)
 {
-    XPCJSContextStack* myStack = GetStackForCurrentThread();
+    XPCJSContextStack* myStack = GetStackForCurrentThread(cx);
 
     if(!myStack)
         return NS_ERROR_FAILURE;
@@ -413,7 +413,7 @@ nsXPCThreadJSContextStackImpl::GetSafeJSContext(JSContext * *aSafeJSContext)
 NS_IMETHODIMP
 nsXPCThreadJSContextStackImpl::SetSafeJSContext(JSContext * aSafeJSContext)
 {
-    XPCJSContextStack* myStack = GetStackForCurrentThread();
+    XPCJSContextStack* myStack = GetStackForCurrentThread(aSafeJSContext);
 
     if(!myStack)
         return NS_ERROR_FAILURE;
@@ -423,9 +423,11 @@ nsXPCThreadJSContextStackImpl::SetSafeJSContext(JSContext * aSafeJSContext)
 
 /***************************************************************************/
 
-PRUintn           XPCPerThreadData::gTLSIndex = BAD_TLS_INDEX;
-PRLock*           XPCPerThreadData::gLock     = nsnull;
-XPCPerThreadData* XPCPerThreadData::gThreads  = nsnull;
+PRUintn           XPCPerThreadData::gTLSIndex       = BAD_TLS_INDEX;
+PRLock*           XPCPerThreadData::gLock           = nsnull;
+XPCPerThreadData* XPCPerThreadData::gThreads        = nsnull;
+XPCPerThreadData *XPCPerThreadData::sMainThreadData = nsnull;
+void *            XPCPerThreadData::sMainJSThread   = nsnull;
 
 static jsuword
 GetThreadStackLimit()
@@ -559,7 +561,7 @@ void XPCPerThreadData::MarkAutoRootsAfterJSFinalize()
 
 // static
 XPCPerThreadData*
-XPCPerThreadData::GetData()
+XPCPerThreadData::GetDataImpl(JSContext *cx)
 {
     XPCPerThreadData* data;
 
@@ -604,6 +606,14 @@ XPCPerThreadData::GetData()
             return nsnull;
         }
     }
+
+    if(cx && !sMainJSThread && NS_IsMainThread())
+    {
+        sMainJSThread = cx->thread;
+
+        sMainThreadData = data;
+    }
+
     return data;
 }
 

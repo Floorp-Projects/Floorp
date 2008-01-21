@@ -229,7 +229,7 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
     nsCOMPtr<nsIException> finalException;
     nsCOMPtr<nsIException> defaultException;
     nsXPCException::NewException(sz, rv, nsnull, nsnull, getter_AddRefs(defaultException));
-    XPCPerThreadData* tls = XPCPerThreadData::GetData();
+    XPCPerThreadData* tls = XPCPerThreadData::GetData(cx);
     if(tls)
     {
         nsIExceptionManager * exceptionManager = tls->GetExceptionManager();

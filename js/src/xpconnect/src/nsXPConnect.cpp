@@ -1613,7 +1613,7 @@ nsXPConnect::GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNati
 {
     NS_ASSERTION(aCurrentNativeCallContext, "bad param");
 
-    XPCPerThreadData* data = XPCPerThreadData::GetData();
+    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
     if(data)
     {
         *aCurrentNativeCallContext = data->GetCallContext();
@@ -1630,7 +1630,7 @@ nsXPConnect::GetPendingException(nsIException * *aPendingException)
 {
     NS_ASSERTION(aPendingException, "bad param");
 
-    XPCPerThreadData* data = XPCPerThreadData::GetData();
+    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
     if(!data)
     {
         *aPendingException = nsnull;
@@ -1643,7 +1643,7 @@ nsXPConnect::GetPendingException(nsIException * *aPendingException)
 NS_IMETHODIMP
 nsXPConnect::SetPendingException(nsIException * aPendingException)
 {
-    XPCPerThreadData* data = XPCPerThreadData::GetData();
+    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
     if(!data)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -1993,7 +1993,7 @@ NS_IMETHODIMP
 nsXPConnect::ReleaseJSContext(JSContext * aJSContext, PRBool noGC)
 {
     NS_ASSERTION(aJSContext, "bad param");
-    XPCPerThreadData* tls = XPCPerThreadData::GetData();
+    XPCPerThreadData* tls = XPCPerThreadData::GetData(aJSContext);
     if(tls)
     {
         XPCCallContext* ccx = nsnull;
