@@ -3215,7 +3215,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	if (status)
 	    goto BAIL0;
     } else {
-        cairo_rectangle_int16_t glyph_extents;
+        cairo_rectangle_int_t glyph_extents;
 
         status = _cairo_scaled_font_glyph_device_extents (scaled_font,
                                                           glyphs,

@@ -2411,7 +2411,7 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
     } else {
-        cairo_rectangle_int16_t glyph_extents;
+        cairo_rectangle_int_t glyph_extents;
 
         status = _cairo_scaled_font_glyph_device_extents (scaled_font,
                                                           glyphs,

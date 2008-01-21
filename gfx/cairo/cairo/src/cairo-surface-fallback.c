@@ -997,8 +997,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 	return status;
 
     if (_cairo_operator_bounded_by_mask (op)) {
-        cairo_rectangle_int16_t glyph_extents;
-        cairo_rectangle_int_t glyph_extents_full;
+        cairo_rectangle_int_t glyph_extents;
 	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
 							  glyphs,
 							  num_glyphs,
@@ -1006,11 +1005,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 	if (status)
 	    return status;
 
-        glyph_extents_full.x = glyph_extents.x;
-        glyph_extents_full.y = glyph_extents.y;
-        glyph_extents_full.width = glyph_extents.width;
-        glyph_extents_full.height = glyph_extents.height;
-	_cairo_rectangle_intersect (&extents, &glyph_extents_full);
+	_cairo_rectangle_intersect (&extents, &glyph_extents);
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
