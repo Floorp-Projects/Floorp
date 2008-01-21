@@ -79,7 +79,10 @@ EXPORTS		+= nsIDragSessionBeOS.h
 endif
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS		+= nsIDragSessionGTK.h
+EXPORTS		+= \
+		nsIDragSessionGTK.h \
+		nsIPrintDialogService.h \
+		$(NULL)
 endif
 
 XPIDLSRCS	= \

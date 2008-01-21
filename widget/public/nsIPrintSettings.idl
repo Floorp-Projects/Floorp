@@ -58,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(81b8dfee-25cc-479c-ad2c-a5e3875650cb)]
+[scriptable, uuid(3e097aba-c1d6-425d-9c52-b371d5da964a)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -301,4 +301,14 @@ interface nsIPrintSettings : nsISupports
   /* Purposely made this an "in" arg */
   [noscript] void GetMarginInTwips(in nsNativeMarginRef aMargin);
   [noscript] void GetEdgeInTwips(in nsNativeMarginRef aEdge);
+
+  /**
+   * We call this function so that anything that requires a run of the event loop
+   * can do so safely. The print dialog runs the event loop but in silent printing
+   * that doesn't happen.
+   *
+   * Either this or ShowPrintDialog (but not both) MUST be called by the print engine
+   * before printing, otherwise printing can fail on some platforms.
+   */
+  [noscript] void SetupSilentPrinting();
 };
