@@ -565,7 +565,6 @@ nsWebShell::~nsWebShell()
              // recursively if the refcount is allowed to remain 0
 
   mContentViewer=nsnull;
-  mDeviceContext=nsnull;
 
   InitFrameData();
 
