@@ -44,6 +44,7 @@
 #include "nsISupportsUtils.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
+#include "nsIPrintDialogService.h"
 
 // Printing Progress Includes
 #include "nsPrintProgress.h"
@@ -109,6 +110,13 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
     NS_ENSURE_ARG(webBrowserPrint);
     NS_ENSURE_ARG(printSettings);
 
+    // Try to access a component dialog
+    nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
+                                             NS_PRINTDIALOGSERVICE_CONTRACTID));
+    if (dlgPrint)
+      return dlgPrint->Show(printSettings);
+
+    // Show the built-in dialog instead
     ParamBlock block;
     nsresult rv = block.Init();
     if (NS_FAILED(rv))
@@ -176,6 +184,12 @@ NS_IMETHODIMP
 nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
     NS_ENSURE_ARG(printSettings);
+
+    // Try to access a component dialog
+    nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
+                                             NS_PRINTDIALOGSERVICE_CONTRACTID));
+    if (dlgPrint)
+      return dlgPrint->ShowPageSetup(printSettings);
 
     ParamBlock block;
     nsresult rv = block.Init();

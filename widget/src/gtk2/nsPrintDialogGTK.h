@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ex: set tabstop=8 softtabstop=4 shiftwidth=4 expandtab: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,11 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is the Mozilla GTK2 print dialog interface.
  *
  * The Initial Developer of the Original Code is
- * Kenneth Herron <kherron@fastmail.us>.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Kenneth Herron <kherron@fmailbox.com>
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,35 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPrintJobFactoryGTK_h__
-#define nsPrintJobFactoryGTK_h__
+#ifndef nsPrintDialog_h__
+#define nsPrintDialog_h__
 
-class nsIPrintJobGTK;
-class nsDeviceContextSpecGTK;
+#include "nsIPrintDialogService.h"
 
-/* Factory class for the print job subsystem. This class determines
- * which print job class should handle a print job, and constructs
- * an object of the appropriate class.
- */
+class nsIPrintSettings;
 
-
-class nsPrintJobFactoryGTK
+class nsPrintDialogServiceGTK : public nsIPrintDialogService
 {
 public:
-    /**
-     * Construct a print job object for the given device context spec.
-     * On success, the print job object is owned by the caller and should
-     * be destroyed when no longer needed.
-     *
-     * @param aSpec     An nsIDeviceContextSpecGTK object for the print
-     *                  job in question.
-     * @param aPrintJob If NS_OK is returned, this will be filled in with
-     *                  a pointer to a print job object.
-     * @return NS_OK or a suitable error value.
-     */
-    static nsresult CreatePrintJob(nsDeviceContextSpecGTK *aSpec,
-	    nsIPrintJobGTK* &aPrintJob);
+  nsPrintDialogServiceGTK();
+  virtual ~nsPrintDialogServiceGTK();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHODIMP Init();
+  NS_IMETHODIMP Show(nsIPrintSettings *aSettings);
+  NS_IMETHODIMP ShowPageSetup(nsIPrintSettings *aSettings);
 };
 
-
-#endif /* nsPrintJobFactoryGTK_h__ */
+#endif
