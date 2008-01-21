@@ -132,11 +132,11 @@ filefield {
 }
 
 filefield[disabled="true"] .fileFieldContentBox {
-  -moz-opacity: 0.5;
+  opacity: 0.5;
 }
 
 filefield[disabled="true"] .fileFieldIcon {
-  -moz-opacity: 0.2;
+  opacity: 0.2;
 }
 
 .fileFieldIcon {
