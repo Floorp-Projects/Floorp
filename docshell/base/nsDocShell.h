@@ -240,7 +240,6 @@ protected:
 
     // Content Viewer Management
     NS_IMETHOD EnsureContentViewer();
-    NS_IMETHOD EnsureDeviceContext();
     // aPrincipal can be passed in if the caller wants.  If null is
     // passed in, the about:blank principal will end up being used.
     nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal);
@@ -600,7 +599,6 @@ protected:
     nsRect                     mBounds; // Dimensions of the docshell
     nsCOMPtr<nsIContentViewer> mContentViewer;
     nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
-    nsCOMPtr<nsIDeviceContext> mDeviceContext;
     nsCOMPtr<nsIWidget>        mParentWidget;
     nsCOMPtr<nsIPrefBranch>    mPrefs;
 
