@@ -1108,12 +1108,12 @@ cairo_status_t
 _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 					 const cairo_glyph_t	 *glyphs,
 					 int                      num_glyphs,
-					 cairo_rectangle_int16_t *extents)
+					 cairo_rectangle_int_t   *extents)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
-    short min_x = INT16_MAX, max_x = INT16_MIN;
-    short min_y = INT16_MAX, max_y = INT16_MIN;
+    cairo_point_int_t min = { CAIRO_RECT_INT_MIN, CAIRO_RECT_INT_MIN };
+    cairo_point_int_t max = { CAIRO_RECT_INT_MAX, CAIRO_RECT_INT_MAX };
 
     if (scaled_font->status)
 	return scaled_font->status;
@@ -1140,16 +1140,16 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	right  = x + _cairo_fixed_integer_ceil(scaled_glyph->bbox.p2.x);
 	bottom = y + _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.y);
 
-	if (left < min_x) min_x = left;
-	if (right > max_x) max_x = right;
-	if (top < min_y) min_y = top;
-	if (bottom > max_y) max_y = bottom;
+	if (left < min.x) min.x = left;
+	if (right > max.x) max.x = right;
+	if (top < min.y) min.y = top;
+	if (bottom > max.y) max.y = bottom;
     }
-    if (min_x < max_x && min_y < max_y) {
-	extents->x = min_x;
-	extents->width = max_x - min_x;
-	extents->y = min_y;
-	extents->height = max_y - min_y;
+    if (min.x < max.x && min.y < max.y) {
+	extents->x = min.x;
+	extents->width = max.x - min.x;
+	extents->y = min.y;
+	extents->height = max.y - min.y;
     } else {
 	extents->x = extents->y = 0;
 	extents->width = extents->height = 0;
