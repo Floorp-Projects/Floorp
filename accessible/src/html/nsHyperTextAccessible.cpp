@@ -987,13 +987,6 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     if (!endFrame) {
       return NS_ERROR_FAILURE;
     }
-    if (endAcc && Role(endAcc) == nsIAccessibleRole::ROLE_STATICTEXT) {
-      // Static text like list bullets will ruin our forward calculation,
-      // since the caret cannot be in the static text. Start just after the static text.
-      startOffset = endOffset = finalStartOffset + (aBoundaryType == BOUNDARY_LINE_END) + TextLength(endAcc);
-      endFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
-                               nsnull, getter_AddRefs(endAcc));
-    }
     finalEndOffset = GetRelativeOffset(presShell, endFrame, endOffset, endAcc,
                                        amount, eDirNext, needsStart);
     NS_ENSURE_TRUE(endOffset >= 0, NS_ERROR_FAILURE);
