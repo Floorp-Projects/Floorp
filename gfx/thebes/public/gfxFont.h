@@ -52,6 +52,10 @@
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 class gfxContext;
 class gfxTextRun;
 class nsIAtom;
@@ -1260,6 +1264,8 @@ public:
 #ifdef DEBUG
     // number of entries referencing this textrun in the gfxTextRunWordCache
     PRUint32 mCachedWords;
+    
+    void Dump(FILE* aOutput);
 #endif
 
 protected:

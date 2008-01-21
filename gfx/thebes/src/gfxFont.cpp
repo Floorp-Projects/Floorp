@@ -1979,3 +1979,36 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
         }
     }
 }
+
+#ifdef DEBUG
+void
+gfxTextRun::Dump(FILE* aOutput) {
+    if (!aOutput) {
+        aOutput = stdout;
+    }
+
+    PRUint32 i;
+    fputc('"', aOutput);
+    for (i = 0; i < mCharacterCount; ++i) {
+        PRUnichar ch = GetChar(i);
+        if (ch >= 32 && ch < 128) {
+            fputc(ch, aOutput);
+        } else {
+            fprintf(aOutput, "\\u%4x", ch);
+        }
+    }
+    fputs("\" [", aOutput);
+    for (i = 0; i < mGlyphRuns.Length(); ++i) {
+        if (i > 0) {
+            fputc(',', aOutput);
+        }
+        gfxFont* font = mGlyphRuns[i].mFont;
+        const gfxFontStyle* style = font->GetStyle();
+        NS_ConvertUTF16toUTF8 fontName(font->GetName());
+        fprintf(aOutput, "%d: %s %f/%d/%d/%s", mGlyphRuns[i].mCharacterOffset,
+                fontName.get(), style->size,
+                style->weight, style->style, style->langGroup.get());
+    }
+    fputc(']', aOutput);
+}
+#endif

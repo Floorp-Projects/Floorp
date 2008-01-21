@@ -37,6 +37,10 @@
 
 #include "gfxTextRunWordCache.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 /**
  * Cache individual "words" (strings delimited by white-space or white-space-like
  * characters that don't involve kerning or ligatures) in textruns.
@@ -82,6 +86,10 @@ public:
      * is deleted! The text in the textrun must still be valid.
      */
     void RemoveTextRun(gfxTextRun *aTextRun);
+
+#ifdef DEBUG
+    void Dump();
+#endif
 
 protected:
     struct CacheHashKey {
@@ -158,6 +166,10 @@ protected:
                     PRUint32 aEnd, PRUint32 aHash);    
 
     nsTHashtable<CacheHashEntry> mCache;
+    
+#ifdef DEBUG
+    static PLDHashOperator PR_CALLBACK CacheDumpEntry(CacheHashEntry* aEntry, void* userArg);
+#endif
 };
 
 static PRLogModuleInfo *gWordCacheLog = PR_NewLogModule("wordCache");
@@ -659,6 +671,28 @@ TextRunWordCache::CacheHashEntry::HashKey(const KeyTypePointer aKey)
         aKey->mIsDoubleByteText + aKey->mIsRTL*2 + aKey->mEnabledOptionalLigatures*4 +
         aKey->mOptimizeSpeed*8;
 }
+
+#ifdef DEBUG
+PLDHashOperator PR_CALLBACK
+TextRunWordCache::CacheDumpEntry(CacheHashEntry* aEntry, void* userArg)
+{
+    FILE* output = static_cast<FILE*>(userArg);
+    if (!aEntry->mTextRun) {
+        fprintf(output, "<EMPTY>\n");
+        return PL_DHASH_NEXT;
+    }
+    fprintf(output, "Word at %x:%d => ", aEntry->mTextRun, aEntry->mWordOffset);
+    aEntry->mTextRun->Dump(output);
+    fprintf(output, " (hashed by %s)\n", aEntry->mHashedByFont ? "font" : "fontgroup");
+    return PL_DHASH_NEXT;
+}
+
+void
+TextRunWordCache::Dump()
+{
+    mCache.EnumerateEntries(CacheDumpEntry, stdout);
+}
+#endif
 
 static TextRunWordCache *gTextRunWordCache = nsnull;
 
