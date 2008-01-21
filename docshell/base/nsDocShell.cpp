@@ -3782,15 +3782,6 @@ nsDocShell::SetParentWidget(nsIWidget * aParentWidget)
 {
     mParentWidget = aParentWidget;
 
-    if (!mParentWidget) {
-        // If the parent widget is set to null we don't want to hold
-        // on to the current device context any more since it is
-        // associated with the parent widget we no longer own. We'll
-        // need to create a new device context if one is needed again.
-
-        mDeviceContext = nsnull;
-    }
-
     return NS_OK;
 }
 
@@ -5112,24 +5103,6 @@ nsDocShell::EnsureContentViewer()
     return rv;
 }
 
-NS_IMETHODIMP
-nsDocShell::EnsureDeviceContext()
-{
-    if (mDeviceContext)
-        return NS_OK;
-
-    mDeviceContext = do_CreateInstance(kDeviceContextCID);
-    NS_ENSURE_TRUE(mDeviceContext, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIWidget> widget;
-    GetMainWidget(getter_AddRefs(widget));
-    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-    mDeviceContext->Init(widget->GetNativeData(NS_NATIVE_WIDGET));
-
-    return NS_OK;
-}
-
 nsresult
 nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal)
 {
@@ -6272,13 +6245,16 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     nsCOMPtr<nsIWidget> widget;
     NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
 
+    nsCOMPtr<nsIDeviceContext> deviceContext;
     if (widget) {
-        NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
+        deviceContext = do_CreateInstance(kDeviceContextCID);
+        NS_ENSURE_TRUE(deviceContext, NS_ERROR_FAILURE);
+        deviceContext->Init(widget->GetNativeData(NS_NATIVE_WIDGET));
     }
 
     nsRect bounds(x, y, cx, cy);
 
-    if (NS_FAILED(mContentViewer->Init(widget, mDeviceContext, bounds))) {
+    if (NS_FAILED(mContentViewer->Init(widget, deviceContext, bounds))) {
         mContentViewer = nsnull;
         NS_ERROR("ContentViewer Initialization failed");
         return NS_ERROR_FAILURE;

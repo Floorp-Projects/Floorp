@@ -1505,10 +1505,7 @@ DocumentViewerImpl::Destroy()
     mPreviousViewer = nsnull;
   }
 
-  if (mDeviceContext) {
-    mDeviceContext->FlushFontCache();
-    mDeviceContext = nsnull;
-  }
+  mDeviceContext = nsnull;
 
   if (mPresShell) {
     // Break circular reference (or something)
@@ -1957,10 +1954,6 @@ DocumentViewerImpl::Hide(void)
     // just because the window is hidden.
 
     return NS_OK;
-  }
-
-  if (mDeviceContext) {
-    mDeviceContext->FlushFontCache();
   }
 
   // Break circular reference (or something)
