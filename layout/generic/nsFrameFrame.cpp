@@ -486,8 +486,8 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
   
   if (IsInline()) {
     // XUL <iframe> or <browser>, or HTML <iframe>, <object> or <embed>
-    nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState,
-                                      aStatus);
+    nsresult rv = nsLeafFrame::DoReflow(aPresContext, aDesiredSize, aReflowState,
+                                        aStatus);
     NS_ENSURE_SUCCESS(rv, rv);
 
     offset = nsPoint(aReflowState.mComputedBorderPadding.left,
