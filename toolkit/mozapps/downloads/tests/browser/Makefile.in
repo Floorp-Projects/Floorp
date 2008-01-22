@@ -49,6 +49,7 @@ _BROWSER_FILES = \
   browser_basic_functionality.js \
   browser_bug_411172.js \
   browser_bug_394039.js \
+  browser_bug_410289.js \
   $(NULL)
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
