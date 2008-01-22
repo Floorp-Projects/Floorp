@@ -119,6 +119,13 @@ GetCurrentWorkingDir(char *buf, size_t size)
 #if defined(XP_OS2)
   if (DosQueryPathInfo( ".", FIL_QUERYFULLNAME, buf, size))
     return NS_ERROR_FAILURE;
+#elif defined(XP_WIN)
+  wchar_t *wpath = _wgetcwd(NULL, size);
+  if (!wpath)
+    return NS_ERROR_FAILURE;
+  NS_ConvertUTF16toUTF8 path(wpath);
+  strncpy(buf, path.get(), size);
+  free(wpath);
 #else
   if(!getcwd(buf, size))
     return NS_ERROR_FAILURE;
@@ -408,8 +415,16 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (NS_FAILED(rv))
     return;
 
+#if defined(XP_WIN)
+  nsAutoString updateDirPathW;
+  rv = updateDir->GetPath(updateDirPathW);
+
+  NS_ConvertUTF16toUTF8 updateDirPath(updateDirPathW);
+#else
   nsCAutoString updateDirPath;
   rv = updateDir->GetNativePath(updateDirPath);
+#endif
+
   if (NS_FAILED(rv))
     return;
 
