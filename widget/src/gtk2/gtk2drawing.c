@@ -266,11 +266,18 @@ ensure_dropdown_entry_widget()
     if (!gDropdownEntryWidget) {
         ensure_combo_box_entry_widget();
 
-        gDropdownEntryWidget = gtk_entry_new();
-        gtk_widget_set_parent(gDropdownEntryWidget, gComboBoxEntryWidget);
+        gDropdownEntryWidget = GTK_BIN(gComboBoxEntryWidget)->child;
         gtk_widget_realize(gDropdownEntryWidget);
     }
     return MOZ_GTK_SUCCESS;
+}
+
+static void
+moz_gtk_get_dropdown_button(GtkWidget *widget,
+                            gpointer client_data)
+{
+    if (GTK_IS_TOGGLE_BUTTON(widget))
+        gDropdownButtonWidget = widget;
 }
 
 static gint
@@ -279,12 +286,13 @@ ensure_arrow_widget()
     if (!gArrowWidget) {
         ensure_combo_box_entry_widget();
 
-        gDropdownButtonWidget = gtk_button_new();
-        gtk_widget_set_parent(gDropdownButtonWidget, gComboBoxEntryWidget);
-        gtk_widget_realize(gDropdownButtonWidget);
+        gtk_container_forall(GTK_CONTAINER(gComboBoxEntryWidget),
+                             moz_gtk_get_dropdown_button,
+                             NULL);
 
         gArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
-        gtk_container_add(GTK_CONTAINER(gDropdownButtonWidget), gArrowWidget);
+        gtk_container_add(GTK_CONTAINER(GTK_BIN(gDropdownButtonWidget)->child),
+                          gArrowWidget);
         gtk_widget_realize(gArrowWidget);
     }
     return MOZ_GTK_SUCCESS;
