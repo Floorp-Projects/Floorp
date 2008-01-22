@@ -1196,6 +1196,34 @@ nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
   return rv;
 }
 
+static PRBool HasRelatedContent(nsIContent *aContent)
+{
+  nsAutoString id;
+  if (!aContent || !nsAccUtils::GetID(aContent, id) || id.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  nsIAtom *relationAttrs[] = {nsAccessibilityAtoms::aria_labelledby,
+                              nsAccessibilityAtoms::aria_describedby,
+                              nsAccessibilityAtoms::aria_owns,
+                              nsAccessibilityAtoms::aria_controls,
+                              nsAccessibilityAtoms::aria_flowto};
+  if (nsAccUtils::FindNeighbourPointingToNode(aContent, relationAttrs, NS_ARRAY_LENGTH(relationAttrs))) {
+    return PR_TRUE;
+  }
+
+  nsIContent *ancestorContent = aContent;
+  nsAutoString activeID;
+  while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
+    if (ancestorContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant, activeID)) {
+        // ancestor has activedescendant property, this content could be active
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
                                                     nsIPresShell *aPresShell,
                                                     nsIWeakReference *aWeakShell,
@@ -1468,7 +1496,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       (content->IsFocusable() ||
       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
-       HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry)) {
+       HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry) ||
+       HasRelatedContent(content)) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.

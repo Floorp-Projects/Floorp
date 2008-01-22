@@ -277,15 +277,27 @@ public:
    * attribute value that equals to ID attribute of the given element.
    * ID attribute can be either 'id' attribute or 'anonid' if the element is
    * anonymous.
+   * The first matched content will be returned.
    *
    * @param aForNode - the given element the search is performed for
-   * @param aRelationAttr - attribute name of searched element, ignored if aAriaProperty passed in
+   * @param aRelationAttrs - an array of attributes, element is attribute name of searched element, ignored if aAriaProperty passed in
+   * @param aAttrNum - how many attributes in aRelationAttrs
    * @param aTagName - tag name of searched element, or nsnull for any -- ignored if aAriaProperty passed in
    * @param aAncestorLevelsToSearch - points how is the neighborhood of the
    *                                  given element big.
    */
   static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
-                                                 nsIAtom *aRelationAttr,
+                                                 nsIAtom **aRelationAttrs, 
+                                                 PRUint32 aAttrNum,
+                                                 nsIAtom *aTagName = nsnull,
+                                                 PRUint32 aAncestorLevelsToSearch = 5);
+
+  /**
+   * Overloaded version of FindNeighbourPointingToNode to accept only one
+   * relation attribute.
+   */
+  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
+                                                 nsIAtom *aRelationAttr, 
                                                  nsIAtom *aTagName = nsnull,
                                                  PRUint32 aAncestorLevelsToSearch = 5);
 
@@ -293,14 +305,27 @@ public:
    * Search for element that satisfies the requirements in subtree of the given
    * element. The requirements are tag name, attribute name and value of
    * attribute.
+   * The first matched content will be returned.
    *
    * @param aId - value of searched attribute
    * @param aLookContent - element that search is performed inside
-   * @param aRelationAttr - searched attribute
-   * @param                 if both aAriaProperty and aRelationAttr are null, then any element with aTagType will do
+   * @param aRelationAttrs - an array of searched attributes
+   * @param aAttrNum - how many attributes in aRelationAttrs
+   * @param                 if both aAriaProperty and aRelationAttrs are null, then any element with aTagType will do
    * @param aExcludeContent - element that is skiped for search
    * @param aTagType - tag name of searched element, by default it is 'label' --
    *                   ignored if aAriaProperty passed in
+   */
+  static nsIContent *FindDescendantPointingToID(const nsString *aId,
+                                                nsIContent *aLookContent,
+                                                nsIAtom **aRelationAttrs,
+                                                PRUint32 aAttrNum = 1,
+                                                nsIContent *aExcludeContent = nsnull,
+                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
+
+  /**
+   * Overloaded version of FindDescendantPointingToID to accept only one
+   * relation attribute.
    */
   static nsIContent *FindDescendantPointingToID(const nsString *aId,
                                                 nsIContent *aLookContent,
@@ -311,7 +336,8 @@ public:
   // Helper for FindDescendantPointingToID(), same args
   static nsIContent *FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
                                                     nsIContent *aLookContent,
-                                                    nsIAtom *aRelationAttrs,
+                                                    nsIAtom **aRelationAttrs,
+                                                    PRUint32 aAttrNum = 1,
                                                     nsIContent *aExcludeContent = nsnull,
                                                     nsIAtom *aTagType = nsAccessibilityAtoms::label);
 };
