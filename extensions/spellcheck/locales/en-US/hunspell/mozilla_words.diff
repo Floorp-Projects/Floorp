@@ -146,3 +146,24 @@ diff -up4 en-US.dic en-US.dic
  wed/AS
  wedded/A
  wedder
+diff -up4 en-US.aff en-US.aff
+--- en-US.aff	Fri Jan 11 00:27:09 2008
++++ en-US.aff	Sat Jan 12 09:00:41 2008
+@@ -109,15 +109,16 @@ SFX B   e     able       [^aeiou]e
+ 
+ SFX L Y 1
+ SFX L   0     ment       .
+ 
+-REP 88
++REP 89
+ REP a ei
+ REP ei a
+ REP a ey
+ REP ey a
+ REP ai ie
+ REP ie ai
++REP alot a_lot
+ REP are air
+ REP are ear
+ REP are eir
+ REP air are
