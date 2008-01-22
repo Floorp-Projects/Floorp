@@ -19,11 +19,11 @@ TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
  * Make sure the tests don't hang indefinitely.
 **/
 TestRunner._numTimeouts = 0;
-TestRunner._currentTestStartTime = Date.now();
+TestRunner._currentTestStartTime = new Date().valueOf();
 
 TestRunner._checkForHangs = function() {
   if (TestRunner._currentTest < TestRunner._urls.length) {
-    var runtime = (Date.now() - TestRunner._currentTestStartTime) / 1000;
+    var runtime = (new Date().valueOf() - TestRunner._currentTestStartTime) / 1000;
     if (runtime >= TestRunner.timeout) {
       var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
                        	$('testframe').contentWindow;
@@ -105,7 +105,7 @@ TestRunner.runNextTest = function() {
 
         $("current-test-path").innerHTML = url;
         
-        TestRunner._currentTestStartTime = Date.now();
+        TestRunner._currentTestStartTime = new Date().valueOf();
 
         if (TestRunner.logEnabled)
             TestRunner.logger.log("Running " + url + "...");
@@ -116,10 +116,10 @@ TestRunner.runNextTest = function() {
         TestRunner._makeIframe("about:blank");
         if (TestRunner.logEnabled) {
             TestRunner.logger.log("SimpleTest FINISHED");
-	    TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
- 	    TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
-	    TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
-	}
+            TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
+            TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
+            TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
+        }
         if (TestRunner.onComplete)
             TestRunner.onComplete();
     }
