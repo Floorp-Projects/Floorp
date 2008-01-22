@@ -78,7 +78,7 @@ BEGIN
     CONTROL         "tell mozilla about this crash so they can fix it",IDC_SUBMITREPORTCHECK,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,25,222,10
     CHECKBOX        "details...",IDC_VIEWREPORTBUTTON,24,40,54,14,BS_PUSHLIKE
-    EDITTEXT        IDC_COMMENTTEXT,24,59,210,43,ES_MULTILINE | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
+    EDITTEXT        IDC_COMMENTTEXT,24,59,210,43,ES_MULTILINE | ES_WANTRETURN | WS_VSCROLL
     CONTROL         "include the address of the page i was on",IDC_INCLUDEURLCHECK,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,107,210,10
     CONTROL         "tell mozilla to email me with more information",IDC_EMAILMECHECK,
