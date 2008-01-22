@@ -15,6 +15,8 @@
 #include <iostream>
 #include <fstream>
 
+#define MAX_COMMENT_LENGTH   500
+
 #if defined(XP_WIN32)
 
 #include <windows.h>
@@ -35,19 +37,27 @@ typedef std::map<std::string, std::string> StringTable;
 
 #define ST_CRASHREPORTERTITLE        "CrashReporterTitle"
 #define ST_CRASHREPORTERVENDORTITLE  "CrashReporterVendorTitle"
-#define ST_CRASHREPORTERERROR        "CrashReporterError"
+#define ST_CRASHREPORTERERROR        "CrashReporterErrorText"
 #define ST_CRASHREPORTERPRODUCTERROR "CrashReporterProductError"
-#define ST_CRASHREPORTERHEADER       "CrashReporterHeader"
-#define ST_CRASHREPORTERDESCRIPTION  "CrashReporterDescription"
+#define ST_CRASHREPORTERHEADER       "CrashReporterSorry"
+#define ST_CRASHREPORTERDESCRIPTION  "CrashReporterDescriptionText"
 #define ST_CRASHREPORTERDEFAULT      "CrashReporterDefault"
-#define ST_VIEWREPORT                "ViewReport"
+#define ST_VIEWREPORT                "Details"
+#define ST_VIEWREPORTTITLE           "ViewReportTitle"
+#define ST_COMMENTGRAYTEXT           "CommentGrayText"
 #define ST_EXTRAREPORTINFO           "ExtraReportInfo"
-#define ST_CHECKSUBMIT               "CheckSubmit"
-#define ST_CHECKURL                  "CheckURL"
-#define ST_CHECKEMAIL                "CheckEmail"
-#define ST_CLOSE                     "Close"
+#define ST_CHECKSUBMIT               "CheckSendReport"
+#define ST_CHECKURL                  "CheckIncludeURL"
+#define ST_CHECKEMAIL                "CheckSendEmail"
+#define ST_EMAILGRAYTEXT             "EmailGrayText"
+#define ST_REPORTPRESUBMIT           "ReportPreSubmit"
+#define ST_REPORTDURINGSUBMIT        "ReportDuringSubmit"
+#define ST_REPORTSUBMITSUCCESS       "ReportSubmitSuccess"
+#define ST_SUBMITFAILED              "ReportSubmitFailed"
+#define ST_QUIT                      "Quit"
 #define ST_RESTART                   "Restart"
-#define ST_SUBMITFAILED              "SubmitFailed"
+#define ST_OK                        "Ok"
+#define ST_CLOSE                     "Close"
 
 #define ST_ERROR_BADARGUMENTS        "ErrorBadArguments"
 #define ST_ERROR_EXTRAFILEEXISTS     "ErrorExtraFileExists"
