@@ -356,6 +356,9 @@ class THEBES_API gfxFont {
 public:
     nsrefcnt AddRef(void) {
         NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+        if (mExpirationState.IsTracked()) {
+            gfxFontCache::GetCache()->RemoveObject(this);
+        }
         ++mRefCnt;
         NS_LOG_ADDREF(this, mRefCnt, "gfxFont", sizeof(*this));
         return mRefCnt;
