@@ -302,6 +302,7 @@ nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode,
 
 nsAccessibleWrap::~nsAccessibleWrap()
 {
+    NS_ASSERTION(!mAtkObject, "ShutdownAtkObject() is not called");
 
 #ifdef MAI_LOGGING
     ++mAccWrapDeleted;
