@@ -32,7 +32,7 @@ stage:
 	# staging environment
 	mkdir -p /data/cltbld/${PRODUCT}-${VERSION}/batch1/stage
 	# download old builds, for l10n verify
-	cd /data && wget -nv --cut-dirs=3 -np -r ftp://ftp.mozilla.org/pub/mozilla.org/${PRODUCT}/nightly/${OLD_VERSION}-candidates/rc1/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/${PRODUCT}/nightly/ && rm -rfv ftp.mozilla.org
+	cd /data && wget -nv --cut-dirs=3 -np -r ftp://ftp.mozilla.org/pub/mozilla.org/${PRODUCT}/nightly/${OLD_VERSION}-candidates/rc1/* && mv ftp.mozilla.org/nightly/* /home/ftp/pub/${PRODUCT}/nightly/ && rm -rfv ftp.mozilla.org
 	# download old release, for update verify
 	cd /data && wget -nv --cut-dirs=3 -np -r -e robots=off http://releases.mozilla.org/pub/mozilla.org/${PRODUCT}/releases/${OLD_VERSION}/ && mv releases.mozilla.org/releases/* /home/ftp/pub/${PRODUCT}/releases/ && rm -rfv releases.mozilla.org
 
