@@ -7662,3 +7662,8 @@ void ColorToString(nscolor aColor, nsAutoString &aString)
               NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
   CopyASCIItoUTF16(buf, aString);
 }
+
+nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame *aFrame)
+{
+  return FrameConstructor()->GetAbsoluteContainingBlock(aFrame);
+}
