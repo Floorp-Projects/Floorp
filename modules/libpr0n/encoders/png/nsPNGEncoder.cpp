@@ -336,10 +336,12 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
                            PRUint32* offsetX,
                            PRUint32* offsetY)
 {
-  char* token;
-  char* options = nsCRT::strdup(PromiseFlatCString(NS_ConvertUTF16toUTF8(aOptions)).get());
+  // Make a copy of aOptions, because strtok() will modify it.
+  nsCAutoString optionsCopy;
+  optionsCopy.Assign(NS_ConvertUTF16toUTF8(aOptions));
+  char* options = optionsCopy.BeginWriting();
 
-  while ((token = nsCRT::strtok(options, ";", &options))) {
+  while (char* token = nsCRT::strtok(options, ";", &options)) {
     // If there's an '=' character, split the token around it.
     char* equals = token, *value = nsnull;
     while(*equals != '=' && *equals) { ++equals; }
