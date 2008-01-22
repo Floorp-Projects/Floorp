@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (original author)
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Florian Queze <florian@queze.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -134,18 +135,33 @@ var dialog = {
       let elm = document.createElement("richlistitem");
       elm.setAttribute("type", "handler");
       elm.setAttribute("name", app.name);
-      try {
+      elm.obj = app;
+
+      if (app instanceof Ci.nsILocalHandlerApp) {
         // See if we have an nsILocalHandlerApp and set the icon
-        app = app.QueryInterface(Ci.nsILocalHandlerApp);
         let uri = Cc["@mozilla.org/network/util;1"].
                   getService(Ci.nsIIOService).
                   newFileURI(app.executable);
         elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
-      } catch (e) {
-        // so we have an nsIWebHandlerApp
-        // TODO get some icon for this
       }
-      elm.obj = app;
+      else if (app instanceof Ci.nsIWebHandlerApp) {
+        let uri = IO.newURI(app.uriTemplate);
+        if (/^https?/.test(uri.scheme)) {
+          let iconURI;
+          try {
+            iconURI = Cc["@mozilla.org/browser/favicon-service;1"].
+                      getService(Ci.nsIFaviconService).
+                      getFaviconForPage(IO.newURI(uri.prePath)).spec;
+          }
+          catch (e) {
+            iconURI = uri.prePath + "/favicon.ico";
+          }
+          elm.setAttribute("image", iconURI);
+        }
+        elm.setAttribute("description", uri.prePath);
+      }
+      else
+        throw "unknown handler type";
 
       items.insertBefore(elm, this._itemChoose);
       if (preferredHandler && app == preferredHandler)
