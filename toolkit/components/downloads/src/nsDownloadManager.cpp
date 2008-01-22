@@ -214,7 +214,7 @@ nsDownloadManager::RemoveAllDownloads()
     nsRefPtr<nsDownload> dl = mCurrentDownloads[0];
 
     nsresult result;
-    if (dl->IsRealPaused())
+    if (dl->IsPaused())
       result = mCurrentDownloads.RemoveObject(dl);
     else
       result = CancelDownload(dl->mID);
@@ -1617,10 +1617,7 @@ nsDownloadManager::Observe(nsISupports *aSubject,
                            const PRUnichar *aData)
 {
   // Count active downloads that aren't real-paused
-  PRInt32 currDownloadCount = 0;
-  for (PRInt32 i = mCurrentDownloads.Count() - 1; i >= 0; --i)
-    if (!mCurrentDownloads[i]->IsRealPaused())
-      currDownloadCount++;
+  PRInt32 currDownloadCount = mCurrentDownloads.Count();
 
   nsresult rv;
   if (strcmp(aTopic, "oncancel") == 0) {
@@ -2234,6 +2231,13 @@ nsDownload::GetReferrer(nsIURI **referrer)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDownload::GetResumable(PRBool *resumable)
+{
+  *resumable = IsResumable();
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// nsDownload Helper Functions
 
@@ -2401,13 +2405,10 @@ nsDownload::SetProgressBytes(PRInt64 aCurrBytes, PRInt64 aMaxBytes)
 nsresult
 nsDownload::Pause()
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  if (IsResumable())
-    rv = Cancel();
-  else if (mRequest)
-    rv = mRequest->Suspend();
-  else
-    NS_NOTREACHED("We don't have a resumable download or a request to suspend??");
+  if (!IsResumable())
+    return NS_ERROR_UNEXPECTED;
+
+  nsresult rv = Cancel();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SetState(nsIDownloadManager::DOWNLOAD_PAUSED);
@@ -2429,21 +2430,9 @@ nsDownload::Cancel()
 nsresult
 nsDownload::Resume()
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  if (IsResumable())
-    rv = RealResume();
-  else if (mRequest)
-    rv = mRequest->Resume();
-  else
-    NS_NOTREACHED("We don't have a resumable download or a request to resume??");
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!IsPaused() || !IsResumable())
+    return NS_ERROR_UNEXPECTED;
 
-  return SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
-}
-
-nsresult
-nsDownload::RealResume()
-{
   nsresult rv;
   nsCOMPtr<nsIWebBrowserPersist> wbp =
     do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
@@ -2511,7 +2500,7 @@ nsDownload::RealResume()
     return rv;
   }
 
-  return NS_OK;
+  return SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
 }
 
 PRBool
@@ -2530,12 +2519,6 @@ PRBool
 nsDownload::WasResumed()
 {
   return mResumedAt != -1;
-}
-
-PRBool
-nsDownload::IsRealPaused()
-{
-  return IsPaused() && IsResumable();
 }
 
 PRBool
