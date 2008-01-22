@@ -568,6 +568,15 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
   validEV = PR_FALSE;
   resultOidTag = SEC_OID_UNKNOWN;
 
+  PRBool isOCSPEnabled = PR_FALSE;
+  nsCOMPtr<nsIX509CertDB> certdb;
+  certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
+  if (certdb)
+    certdb->GetIsOcspOn(&isOCSPEnabled);
+  // No OCSP, no EV
+  if (!isOCSPEnabled)
+    return NS_OK;
+
   SECOidTag oid_tag;
   SECStatus rv = getFirstEVPolicy(mCert, oid_tag);
   if (rv != SECSuccess)
