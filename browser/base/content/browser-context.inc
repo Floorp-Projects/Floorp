@@ -54,8 +54,8 @@
                 oncommand="gContextMenu.openLinkInTab();"/>
       <menuseparator id="context-sep-open"/>
       <menuitem id="context-bookmarklink"
-                label="&bookmarkLinkCmd.label;"
-                accesskey="&bookmarkLinkCmd.accesskey;"
+                label="&bookmarkThisLinkCmd.label;"
+                accesskey="&bookmarkThisLinkCmd.accesskey;"
                 oncommand="gContextMenu.bookmarkLink();"/>
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
@@ -126,8 +126,8 @@
                 command="Browser:Stop"/>
       <menuseparator id="context-sep-stop"/>
       <menuitem id="context-bookmarkpage"
-                label="&bookmarkPageCmd.label;"
-                accesskey="&bookmarkPageCmd.accesskey;"
+                label="&bookmarkPageCmd2.label;"
+                accesskey="&bookmarkPageCmd2.accesskey;"
                 oncommand="gContextMenu.bookmarkThisPage();"/>
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
@@ -194,8 +194,8 @@
                     accesskey="&reloadFrameCmd.accesskey;"
                     oncommand="gContextMenu.reloadFrame();"/>
           <menuseparator/>
-          <menuitem label="&bookmarkFrameCmd.label;"
-                    accesskey="&bookmarkFrameCmd.accesskey;"
+          <menuitem label="&bookmarkThisFrameCmd.label;"
+                    accesskey="&bookmarkThisFrameCmd.accesskey;"
                     oncommand="gContextMenu.addBookmarkForFrame();"/>
           <menuitem label="&saveFrameCmd.label;"
                     accesskey="&saveFrameCmd.accesskey;"

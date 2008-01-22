@@ -233,12 +233,12 @@
 <!ENTITY viewBGImageCmd.accesskey     "w">
 <!ENTITY setDesktopBackgroundCmd.label      "Set As Desktop Background…">
 <!ENTITY setDesktopBackgroundCmd.accesskey  "S">
-<!ENTITY bookmarkPageCmd.label        "Bookmark This Page…">
-<!ENTITY bookmarkPageCmd.accesskey    "m">
-<!ENTITY bookmarkLinkCmd.label        "Bookmark This Link…">
-<!ENTITY bookmarkLinkCmd.accesskey    "L">
-<!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame…">
-<!ENTITY bookmarkFrameCmd.accesskey   "m">
+<!ENTITY bookmarkPageCmd2.label       "Bookmark This Page">
+<!ENTITY bookmarkPageCmd2.accesskey   "m">
+<!ENTITY bookmarkThisLinkCmd.label      "Bookmark This Link">
+<!ENTITY bookmarkThisLinkCmd.accesskey  "L">
+<!ENTITY bookmarkThisFrameCmd.label      "Bookmark This Frame">
+<!ENTITY bookmarkThisFrameCmd.accesskey  "m">
 <!ENTITY sendPageCmd.label            "Send Link…">
 <!ENTITY sendPageCmd.accesskey        "e">
 <!ENTITY savePageCmd.label            "Save Page As…">
