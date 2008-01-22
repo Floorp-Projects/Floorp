@@ -107,7 +107,7 @@
 
     <panel id="editBookmarkPanel" orient="vertical" hidden="true"
            onpopupshown="PlacesCommandHook.editBookmarkPanelShown();"
-           label="&bookmarkPageCmd.label;">
+           label="&bookmarkPageCmd2.label;">
       <vbox id="editBookmarkPanelContent" flex="1"/>
       <hbox flex="1">
         <spacer flex="1"/>
