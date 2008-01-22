@@ -95,10 +95,8 @@ NS_IMETHODIMP
 nsSSLStatus::GetIsDomainMismatch(PRBool* _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
-  if (!mHaveCertStatus)
-    return NS_ERROR_NOT_AVAILABLE;
 
-  *_result = mIsDomainMismatch;
+  *_result = mHaveCertErrorBits && mIsDomainMismatch;
 
   return NS_OK;
 }
@@ -107,10 +105,8 @@ NS_IMETHODIMP
 nsSSLStatus::GetIsNotValidAtThisTime(PRBool* _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
-  if (!mHaveCertStatus)
-    return NS_ERROR_NOT_AVAILABLE;
 
-  *_result = mIsNotValidAtThisTime;
+  *_result = mHaveCertErrorBits && mIsNotValidAtThisTime;
 
   return NS_OK;
 }
@@ -119,10 +115,8 @@ NS_IMETHODIMP
 nsSSLStatus::GetIsUntrusted(PRBool* _result)
 {
   NS_ASSERTION(_result, "non-NULL destination required");
-  if (!mHaveCertStatus)
-    return NS_ERROR_NOT_AVAILABLE;
 
-  *_result = mIsUntrusted;
+  *_result = mHaveCertErrorBits && mIsUntrusted;
 
   return NS_OK;
 }
@@ -154,7 +148,7 @@ nsSSLStatus::Read(nsIObjectInputStream* stream)
 
   rv = stream->ReadBoolean(&mHaveKeyLengthAndCipher);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stream->ReadBoolean(&mHaveCertStatus);
+  rv = stream->ReadBoolean(&mHaveCertErrorBits);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -184,7 +178,7 @@ nsSSLStatus::Write(nsIObjectOutputStream* stream)
 
   rv = stream->WriteBoolean(mHaveKeyLengthAndCipher);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stream->WriteBoolean(mHaveCertStatus);
+  rv = stream->WriteBoolean(mHaveCertErrorBits);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -259,7 +253,7 @@ nsSSLStatus::nsSSLStatus()
 , mIsNotValidAtThisTime(PR_FALSE)
 , mIsUntrusted(PR_FALSE)
 , mHaveKeyLengthAndCipher(PR_FALSE)
-, mHaveCertStatus(PR_FALSE)
+, mHaveCertErrorBits(PR_FALSE)
 {
 }
 

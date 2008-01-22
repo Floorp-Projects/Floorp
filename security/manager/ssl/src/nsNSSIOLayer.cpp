@@ -2827,7 +2827,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
       status->mServerCert = nssCert;
     }
 
-    status->mHaveCertStatus = PR_TRUE;
+    status->mHaveCertErrorBits = PR_TRUE;
     status->mIsDomainMismatch = collected_errors & nsICertOverrideService::ERROR_MISMATCH;
     status->mIsNotValidAtThisTime = collected_errors & nsICertOverrideService::ERROR_TIME;
     status->mIsUntrusted = collected_errors & nsICertOverrideService::ERROR_UNTRUSTED;
