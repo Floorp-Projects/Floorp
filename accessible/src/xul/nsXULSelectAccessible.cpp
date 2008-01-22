@@ -41,6 +41,7 @@
 #include "nsAccessibilityService.h"
 #include "nsIContent.h"
 #include "nsIDOMXULMenuListElement.h"
+#include "nsIDOMXULPopupElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULTextboxElement.h"
@@ -194,9 +195,20 @@ NS_IMETHODIMP nsXULListboxAccessible::GetValue(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsXULListboxAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULListboxAccessible::GetRole(PRUint32 *aRole)
 {
-  *_retval = nsIAccessibleRole::ROLE_LIST;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  if (content) {
+    // A richlistbox is used with the new autocomplete URL bar,
+    // and has a parent popup <panel>
+    nsCOMPtr<nsIDOMXULPopupElement> xulPopup =
+      do_QueryInterface(content->GetParent());
+    if (xulPopup) {
+      *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+      return NS_OK;
+    }
+  }
+  *aRole = nsIAccessibleRole::ROLE_LIST;
   return NS_OK;
 }
 
@@ -250,6 +262,8 @@ NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *aRole)
 {
   if (mIsCheckbox)
     *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
+  else if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
   else
     *aRole = nsIAccessibleRole::ROLE_RICH_OPTION;
   return NS_OK;
