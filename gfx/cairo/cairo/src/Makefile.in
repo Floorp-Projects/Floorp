@@ -153,6 +153,10 @@ EXPORTS += $(PDF_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+DEFINES += -DOS2_USE_PLATFORM_ALLOC
+ifdef MOZ_OS2_HIGH_MEMORY
+DEFINES += -DOS2_HIGH_MEMORY
+endif
 CSRCS   += cairo-os2-surface.c
 EXPORTS += cairo-os2.h cairo-os2-private.h
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
