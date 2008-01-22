@@ -202,7 +202,7 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
  * before deserialization of bytecode.  If the saved version does not match
  * the current version, abort deserialization and invalidate the file.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 19)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 18)
 
 /*
  * Library-private functions.
