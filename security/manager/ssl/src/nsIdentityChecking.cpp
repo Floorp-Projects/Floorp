@@ -690,7 +690,7 @@ nsNSSComponent::CleanupIdentityInfo()
   if (testEVInfosLoaded) {
     testEVInfosLoaded = PR_FALSE;
     if (testEVInfos) {
-      for (size_t i; i<testEVInfos->Length(); ++i) {
+      for (size_t i = 0; i<testEVInfos->Length(); ++i) {
         delete testEVInfos->ElementAt(i);
       }
       testEVInfos->Clear();
