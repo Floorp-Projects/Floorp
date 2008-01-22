@@ -4427,8 +4427,10 @@ js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
             return JS_FALSE;
         }
         if (VALUE_IS_FUNCTION(cx, fval)) {
-            return js_InternalCall(cx, obj, fval, 1, &v, &rval) &&
-                   js_ValueToBoolean(cx, rval, bp);
+            if (!js_InternalCall(cx, obj, fval, 1, &v, &rval))
+                return JS_FALSE;
+            *bp = js_ValueToBoolean(rval);
+            return JS_TRUE;
         }
     }
 #endif
