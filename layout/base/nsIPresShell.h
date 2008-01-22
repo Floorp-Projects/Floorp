@@ -645,6 +645,8 @@ public:
    */
   static PRInt32 GetVerifyReflowFlags();
 
+  virtual nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
+
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD DumpReflows() = 0;
   NS_IMETHOD CountReflows(const char * aName, nsIFrame * aFrame) = 0;

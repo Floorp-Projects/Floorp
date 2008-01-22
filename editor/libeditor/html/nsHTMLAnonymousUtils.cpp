@@ -203,8 +203,18 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
           aShell->GetPresContext()->GetPresShell() == aShell) {
         nsCOMPtr<nsIDocumentObserver> docObserver = do_QueryInterface(aShell);
         if (docObserver) {
+          // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
+          // knows we're messing with the frame tree.
+          nsCOMPtr<nsIDOMDocument> domDocument;
+          nsresult res = GetDocument(getter_AddRefs(domDocument));
+          nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+          if (document)
+            docObserver->BeginUpdate(document, UPDATE_CONTENT_MODEL);
+
           docObserver->ContentRemoved(content->GetCurrentDoc(),
                                       aParentContent, content, -1);
+          if (document)
+            docObserver->EndUpdate(document, UPDATE_CONTENT_MODEL);
         }
       }
       content->UnbindFromTree();
