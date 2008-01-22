@@ -1157,8 +1157,6 @@ function Application() {
 
   os.addObserver(this, "final-ui-startup", false);
   os.addObserver(this, "quit-application-requested", false);
-  os.addObserver(this, "quit-application-granted", false);
-  os.addObserver(this, "quit-application", false);
   os.addObserver(this, "xpcom-shutdown", false);
 }
 
@@ -1221,11 +1219,7 @@ Application.prototype = {
                          .getService(Ci.nsIObserverService);
 
       os.removeObserver(this, "final-ui-startup");
-
       os.removeObserver(this, "quit-application-requested");
-      os.removeObserver(this, "quit-application-granted");
-      os.removeObserver(this, "quit-application");
-
       os.removeObserver(this, "xpcom-shutdown");
 
       this._info = null;
