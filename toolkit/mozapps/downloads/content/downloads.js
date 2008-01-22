@@ -78,6 +78,7 @@ var gUserInteracted = false;
 // bundle on startup.
 let gStr = {
   paused: "paused",
+  cannotPause: "cannotPause",
   statusFormat: "statusFormat2",
   transferSameUnits: "transferSameUnits",
   transferDiffUnits: "transferDiffUnits",
@@ -613,6 +614,7 @@ var gDownloadViewController = {
     }
 
     let dl = aItem;
+    let download = null; // used for getting an nsIDownload object
 
     switch (aCommand) {
       case "cmd_cancel":
@@ -621,11 +623,14 @@ var gDownloadViewController = {
         let file = getLocalFileFromNativePathOrUrl(dl.getAttribute("file"));
         return dl.openable && file.exists();
       case "cmd_pause":
-        return dl.inProgress && !dl.paused;
+        download = gDownloadManager.getDownload(dl.getAttribute("dlid"));
+        return dl.inProgress && !dl.paused && download.resumable;
       case "cmd_pauseResume":
-        return dl.inProgress || dl.paused;
+        download = gDownloadManager.getDownload(dl.getAttribute("dlid"));
+        return (dl.inProgress || dl.paused) && download.resumable;
       case "cmd_resume":
-        return dl.paused;
+        download = gDownloadManager.getDownload(dl.getAttribute("dlid"));
+        return dl.paused && download.resumable;
       case "cmd_openReferrer":
         return dl.hasAttribute("referrer");
       case "cmd_removeFromList":
@@ -784,6 +789,12 @@ function updateButtons(aItem)
     let cmd = buttons[i].getAttribute("cmd");
     let enabled = gDownloadViewController.isCommandEnabled(cmd, aItem);
     buttons[i].disabled = !enabled;
+
+    if ("cmd_pause" == cmd && !enabled) {
+      // We need to add the tooltip indicating that the download cannot be
+      // paused now.
+      buttons[i].setAttribute("tooltiptext", gStr.cannotPause);
+    }
   }
 }
 

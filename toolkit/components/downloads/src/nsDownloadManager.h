@@ -276,14 +276,9 @@ protected:
   nsresult Cancel();
 
   /**
-   * Resume the download. Works for both real-paused and fake-paused.
+   * Resume the download.
    */
   nsresult Resume();
-
-  /**
-   * Resume the real-paused download. Let Resume decide if this should get used.
-   */
-  nsresult RealResume();
 
   /**
    * Download is not transferring?
@@ -299,11 +294,6 @@ protected:
    * Download was resumed?
    */
   PRBool WasResumed();
-
-  /**
-   * Download is real-paused? (not fake-paused by stalling the channel)
-   */
-  PRBool IsRealPaused();
 
   /**
    * Indicates if the download should try to automatically resume or not.
