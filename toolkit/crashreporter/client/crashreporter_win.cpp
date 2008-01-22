@@ -518,7 +518,10 @@ static int NewTextLength(HWND hwndEdit, wchar_t* insert)
   int selectionLength = 0;
   if (selEnd - selStart > 0) {
     wchar_t selection[MAX_COMMENT_LENGTH + 1];
-    wcsncpy_s(selection, current + selStart, selEnd - selStart);
+    google_breakpad::WindowsStringUtils::safe_wcsncpy(selection,
+                                                      MAX_COMMENT_LENGTH + 1,
+                                                      current + selStart,
+                                                      selEnd - selStart);
     selection[selEnd - selStart] = '\0';
     selectionLength = BytesInUTF8(selection);
   }
