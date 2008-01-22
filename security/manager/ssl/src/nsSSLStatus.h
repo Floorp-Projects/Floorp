@@ -74,7 +74,7 @@ public:
   PRBool mIsUntrusted;
 
   PRBool mHaveKeyLengthAndCipher;
-  PRBool mHaveCertStatus;
+  PRBool mHaveCertErrorBits;
 };
 
 // 2c3837af-8b85-4a68-b0d8-0aed88985b32

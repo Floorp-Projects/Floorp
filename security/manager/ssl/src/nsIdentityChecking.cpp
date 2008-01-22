@@ -505,14 +505,12 @@ static SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
 PRBool
 nsNSSSocketInfo::hasCertErrors()
 {
-  if (!mSSLStatus || !mSSLStatus->mHaveCertStatus) {
-    // if the status is unknown, assume the cert is bad :-)
+  if (!mSSLStatus) {
+    // if the status is unknown, assume the cert is bad, better safe than sorry
     return PR_TRUE;
   }
 
-  return mSSLStatus->mIsDomainMismatch ||
-         mSSLStatus->mIsNotValidAtThisTime ||
-         mSSLStatus->mIsUntrusted;
+  return mSSLStatus->mHaveCertErrorBits;
 }
 
 NS_IMETHODIMP
@@ -524,6 +522,7 @@ nsNSSSocketInfo::GetIsExtendedValidation(PRBool* aIsEV)
   if (!mCert)
     return NS_OK;
 
+  // Never allow bad certs for EV, regardless of overrides.
   if (hasCertErrors())
     return NS_OK;
 
