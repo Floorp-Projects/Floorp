@@ -619,6 +619,17 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
   // accessible for the next DOM node which has one (based on forward depth first search)
   nsCOMPtr<nsIAccessible> descendantAccessible;
   if (findNode) {
+    nsCOMPtr<nsIContent> findContent = do_QueryInterface(findNode);
+    if (findContent->IsNodeOfType(nsINode::eHTML) && 
+        findContent->NodeInfo()->Equals(nsAccessibilityAtoms::br)) {
+      nsIContent *parent = findContent->GetParent();
+      if (parent && parent->IsNativeAnonymous() && parent->GetChildCount() == 1) {
+        // This <br> is the only node in a text control, therefore it is the hacky
+        // "bogus node" used when there is no text in a control
+        *aHyperTextOffset = 0;
+        return NS_OK;
+      }
+    }
     descendantAccessible = GetFirstAvailableAccessible(findNode);
   }
   // From the descendant, go up and get the immediate child of this hypertext
