@@ -118,9 +118,6 @@ gfxFontCache::Lookup(const nsAString &aName,
 
     gfxFont *font = entry->mFont;
     NS_ADDREF(font);
-    if (font->GetExpirationState()->IsTracked()) {
-        RemoveObject(font);
-    }
     return font;
 }
 
@@ -131,15 +128,16 @@ gfxFontCache::AddNew(gfxFont *aFont)
     HashEntry *entry = mFonts.PutEntry(key);
     if (!entry)
         return;
-    if (entry->mFont) {
-        // This is weird. Someone's asking us to overwrite an existing font.
-        // Oh well, make it happen ... just ensure that we're not tracking
-        // the old font
-        if (entry->mFont->GetExpirationState()->IsTracked()) {
-            RemoveObject(entry->mFont);
-        }
-    }
+    gfxFont *oldFont = entry->mFont;
     entry->mFont = aFont;
+    // If someone's asked us to replace an existing font entry, then that's a
+    // bit weird, but let it happen, and expire the old font if it's not used.
+    if (oldFont && oldFont->GetExpirationState()->IsTracked()) {
+        // if oldFont == aFont, recount should be > 0,
+        // so we shouldn't be here.
+        NS_ASSERTION(aFont != oldFont, "new font is tracked for expiry!");
+        NotifyExpired(oldFont);
+    }
 }
 
 void
@@ -168,7 +166,11 @@ void
 gfxFontCache::DestroyFont(gfxFont *aFont)
 {
     Key key(aFont->GetName(), aFont->GetStyle());
-    mFonts.RemoveEntry(key);
+    HashEntry *entry = mFonts.GetEntry(key);
+    if (entry && entry->mFont == aFont)
+        mFonts.RemoveEntry(key);
+    NS_ASSERTION(aFont->GetRefCount() == 0,
+                 "Destroying with non-zero ref count!");
     delete aFont;
 }
 
