@@ -522,6 +522,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                                            nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mSheetURI(aCopy.mSheetURI),
+    mOriginalSheetURI(aCopy.mOriginalSheetURI),
     mBaseURI(aCopy.mBaseURI),
     mPrincipal(aCopy.mPrincipal),
     mComplete(aCopy.mComplete)
