@@ -1635,6 +1635,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   border-right: 1px solid #888;
   background-color: white;
   opacity: 0.9;
+  -moz-user-focus: normal;
+}
+
+#identity-box:focus {
+  outline: 1.4pt solid -moz-mac-focusring;
 }
 
 #identity-box:hover {

@@ -52,7 +52,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_CARET. unused on OS X
   NSAccessibilityWindowRole,                    // ROLE_ALERT
   NSAccessibilityWindowRole,                    // ROLE_WINDOW. irrelevant on OS X; all window a11y is handled by the system.
-  @"AXWebArea",                                 // ROLE_CLIENT
+  @"AXWebArea",                                 // ROLE_INTERNAL_FRAME
   NSAccessibilityMenuRole,                      // ROLE_MENUPOPUP. the parent of menuitems
   NSAccessibilityMenuItemRole,                  // ROLE_MENUITEM.
   @"AXHelpTag",                                 // ROLE_TOOLTIP. 10.4+ only, so we re-define the constant.
