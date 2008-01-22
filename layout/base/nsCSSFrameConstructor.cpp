@@ -4358,7 +4358,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 #endif
 
   nsIFrame* contentFrame = nsnull;
-  PRBool canHaveGeneratedContent = PR_TRUE;
   PRBool isBlockFrame = PR_FALSE;
   nsresult rv;
 
@@ -4391,7 +4390,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
       if (aDocElement->Tag() == nsGkAtoms::svg && NS_SVGEnabled()) {
         contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, styleContext);
-        canHaveGeneratedContent = PR_FALSE;
       } else {
         return NS_ERROR_FAILURE;
       }
@@ -4442,8 +4440,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     // never constructed before the popupset.
     CreateAnonymousFrames(nsnull, aState, aDocElement, contentFrame,
                           PR_FALSE, childItems, PR_TRUE);
-    ProcessChildren(aState, aDocElement, contentFrame, canHaveGeneratedContent,
-                    childItems, isBlockFrame);
+    ProcessChildren(aState, aDocElement, contentFrame, PR_TRUE, childItems,
+                    isBlockFrame);
 
     // Set the initial child lists
     contentFrame->SetInitialChildList(nsnull, childItems.childList);
