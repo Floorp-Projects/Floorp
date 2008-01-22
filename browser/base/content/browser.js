@@ -1503,20 +1503,13 @@ function loadOneOrMoreURIs(aURIString)
   }
 }
 
-function focusAndSelectUrlBar()
+function openLocation()
 {
   if (gURLBar && isElementVisible(gURLBar) && !gURLBar.readOnly) {
     gURLBar.focus();
     gURLBar.select();
-    return true;
-  }
-  return false;
-}
-
-function openLocation()
-{
-  if (focusAndSelectUrlBar())
     return;
+  }
 #ifdef XP_MACOSX
   if (window.location.href != getBrowserURL()) {
     var win = getTopWin();
@@ -5758,23 +5751,16 @@ IdentityHandler.prototype = {
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
   },
-
-  hideIdentityPopup : function() {
-    this._identityPopup.hidePopup();
-  },
-
+  
   /**
    * Click handler for the identity-box element in primary chrome.  
    */
-  handleIdentityButtonEvent : function(event) {
-  
+  handleIdentityClick : function(event) {
     event.stopPropagation();
- 
-    if ((event.type == "click" && event.button != 0) ||
-        (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
-         event.keyCode != KeyEvent.DOM_VK_RETURN))
-      return; // Left click, space or enter only
 
+    if (event.button != 0)
+      return; // We only want left-clicks
+        
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
     this._identityPopup.hidden = false;

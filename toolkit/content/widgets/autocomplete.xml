@@ -386,9 +386,6 @@
       <method name="onKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.target.localName != "textbox")
-            return;  // Let child buttons of autocomplete take input
-
           //XXXpch this is so bogus...
           if (aEvent.getPreventDefault())
             return false;
@@ -539,7 +536,7 @@
     </resources>
 
     <content ignorekeys="true">
-      <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1" seltype="single">
+      <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1">
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
         </xul:treecols>
@@ -744,10 +741,6 @@
 
   <binding id="autocomplete-base-popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation implements="nsIAutoCompletePopup">
-      <!-- nsIAccessible from #popup -->
-      <property name="accessibleType" readonly="true"
-                onget="return Components.interfaces.nsIAccessibleProvider.NoAccessible;"/>
-
       <field name="mInput">null</field>
       <field name="mPopupOpen">false</field>
 
@@ -842,9 +835,6 @@
       ]]></handler>
 
       <handler event="popuphiding"><![CDATA[
-        var isListActive = true;
-        if (this.selectedIndex == -1)
-          isListActive = false;
         var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
         controller.stopSearch();
 
@@ -860,10 +850,6 @@
         // when the popupshowing handler runs.
         this.mInput.maxRows = this._normalMaxRows;
         this._normalMaxRows = -1;
-        // If the list was being navigated and then closed, make sure
-        // we fire accessible focus event back to textbox
-        if (isListActive)
-          this.mInput._focus();
       ]]></handler>
     </handlers>
   </binding>

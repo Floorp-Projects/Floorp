@@ -1630,8 +1630,6 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
   switch (type)
   {
 #ifdef MOZ_XUL
-    case nsIAccessibleProvider::NoAccessible:
-      return NS_OK;
     // XUL controls
     case nsIAccessibleProvider::XULAlert:
       *aAccessible = new nsXULAlertAccessible(aNode, weakShell);
@@ -1715,9 +1713,6 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     }
     case nsIAccessibleProvider::XULMenuSeparator:
       *aAccessible = new nsXULMenuSeparatorAccessible(aNode, weakShell);
-      break;
-    case nsIAccessibleProvider::XULPane:
-      *aAccessible = new nsEnumRoleAccessible(aNode, weakShell, nsIAccessibleRole::ROLE_PANE);
       break;
     case nsIAccessibleProvider::XULProgressMeter:
       *aAccessible = new nsXULProgressMeterAccessible(aNode, weakShell);

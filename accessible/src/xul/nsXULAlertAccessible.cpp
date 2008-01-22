@@ -64,11 +64,3 @@ nsXULAlertAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULAlertAccessible::GetName(nsAString& aName)
-{
-  // Screen readers need to read contents of alert, not the accessible name.
-  // If we have both some screen readers will read the alert twice.
-  aName.Truncate();
-  return NS_OK;
-}

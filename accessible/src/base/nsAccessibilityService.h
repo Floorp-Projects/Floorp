@@ -152,7 +152,7 @@ static const char kRoleNames[][20] = {
   "caret",               //ROLE_CARET
   "alert",               //ROLE_ALERT
   "window",              //ROLE_WINDOW
-  "internal frame",      //ROLE_INTERNAL_FRAME
+  "client",              //ROLE_CLIENT
   "menupopup",           //ROLE_MENUPOPUP
   "menuitem",            //ROLE_MENUITEM
   "tooltip",             //ROLE_TOOLTIP

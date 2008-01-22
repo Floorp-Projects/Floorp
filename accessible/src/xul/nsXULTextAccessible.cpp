@@ -61,9 +61,13 @@ NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& aName)
   if (!content) {
     return NS_ERROR_FAILURE;  // Node shut down
   }
-  // if the value attr doesn't exist, the screen reader must get the accessible text
-  // from the accessible text interface or from the children
-  return content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+                        aName)) {
+    // if the value doesn't exist, flatten the inner content as the name (for descriptions)
+    return AppendFlatStringFromSubtree(content, &aName);
+  }
+  // otherwise, use the value attribute as the name (for labels)
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -172,9 +176,13 @@ NS_IMETHODIMP nsXULLinkAccessible::GetName(nsAString& aName)
 
 NS_IMETHODIMP nsXULLinkAccessible::GetRole(PRUint32 *aRole)
 {
-  // We used to say ROLE_BUTTON if there was no href, but then screen readers
-  // would tell users to hit the space bar for activation, which is wrong for a link
-  *aRole = nsIAccessibleRole::ROLE_LINK;
+  if (mIsLink) {
+    *aRole = nsIAccessibleRole::ROLE_LINK;
+  } else {
+    // default to calling the link a button; might have javascript
+    *aRole = nsIAccessibleRole::ROLE_PUSHBUTTON;
+  }
+  // should there be a third case where it becomes just text?
   return NS_OK;
 }
 

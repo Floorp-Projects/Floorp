@@ -171,7 +171,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   nsIPresShell *presShell = doc->GetPrimaryShell();
   NS_ENSURE_TRUE(presShell, NS_OK);
 
-  // Get first nsIAccessibleText in parent chain and fire caret-move, selection-change event for it
+  // Get first nnsIAccessibleText in parent chain and fire caret-move, selection-change event for it
   nsCOMPtr<nsIAccessible> accessible;
   nsIAccessibilityService *accService = mRootAccessible->GetAccService();
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);

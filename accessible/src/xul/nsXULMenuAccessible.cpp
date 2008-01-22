@@ -486,9 +486,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAccessible> parent;
-  GetParent(getter_AddRefs(parent));
-  if (parent && Role(parent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
+  if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
     return NS_OK;
   }
@@ -718,18 +716,14 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *aRole)
   if (!content) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIAccessible> parent;
-  GetParent(getter_AddRefs(parent));
-  if (parent) {
-    // Some widgets like the search bar have several popups, owned by buttons
-    PRUint32 role = Role(parent);
-    if (role == nsIAccessibleRole::ROLE_COMBOBOX ||
-        role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
-      *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
-      return NS_OK;
-    }
+  if ((mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) ||
+      content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::autocomplete, eIgnoreCase)) {
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
   }
-  *aRole = nsIAccessibleRole::ROLE_MENUPOPUP;
+  else {
+    *aRole = nsIAccessibleRole::ROLE_MENUPOPUP;
+  }
   return NS_OK;
 }
 
