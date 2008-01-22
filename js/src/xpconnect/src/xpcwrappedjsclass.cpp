@@ -503,6 +503,12 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
 static JSContext *
 GetContextFromObject(JSObject *obj)
 {
+    // Don't stomp over running code.
+    nsAXPCNativeCallContext *cc = nsnull;
+    nsXPConnect::GetXPConnect()->GetCurrentNativeCallContext(&cc);
+    if(cc)
+        return nsnull;
+
     // In order to get a context, we need a context.
     XPCCallContext ccx(NATIVE_CALLER);
     XPCWrappedNativeScope* scope =
