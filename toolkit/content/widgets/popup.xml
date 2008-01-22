@@ -9,8 +9,20 @@
     <resources>
       <stylesheet src="chrome://global/skin/popup.css"/>
     </resources>
+  </binding>
 
-    <implementation implements="nsIDOMXULPopupElement">
+  <binding id="panel"
+           extends="chrome://global/content/bindings/popup.xml#popup-base">
+
+    <implementation implements="nsIDOMXULPopupElement, nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULMenupopup;
+          ]]>
+        </getter>
+      </property>
+
       <property name="position" onget="return this.getAttribute('position');"
                                 onset="this.setAttribute('position', val); return val;"/>
       <property name="popupBoxObject">
@@ -155,23 +167,12 @@
   </binding>
 
   <binding id="popup"
-           extends="chrome://global/content/bindings/popup.xml#popup-base">
-    
+           extends="chrome://global/content/bindings/popup.xml#panel">
     <content>
       <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
         <children/>
       </xul:arrowscrollbox>
     </content>
-
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-              return Components.interfaces.nsIAccessibleProvider.XULMenupopup;
-            ]]>
-        </getter>
-      </property>
-    </implementation>
 
     <handlers>
       <handler event="contextmenu" action="event.preventDefault();"/>
@@ -194,64 +195,6 @@
             array[i].width = width;
         ]]>
       </handler>
-    </handlers>
-  </binding>
-
-  <binding id="panel"
-           extends="chrome://global/content/bindings/popup.xml#popup-base">
-    <!-- This separate binding for dialog-like panels - not menu, list or autocomplete popups
-         exposes the popup as an alert or a pane, depending on whether it is always intended
-         to get keyboard navigation when it opens -->
-    <implementation implements="nsIDOMXULPopupElement, nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-          return (this.getAttribute("noautofocus") == "true") ?
-                       Components.interfaces.nsIAccessibleProvider.XULAlert :
-                       Components.interfaces.nsIAccessibleProvider.XULPane;
-        ]]></getter>
-      </property>
-      <field name="_prevFocus">0</field>
-    </implementation>
-    
-    <handlers>
-      <handler event="popupshowing"><![CDATA[
-        // Capture the previous focus before has a chance to get set inside the panel
-        try {
-          this._prevFocus = document.commandDispatcher.focusedElement;
-          if (!this._prevFocus)  // Content window has focus
-            this._prevFocus = document.commandDispatcher.focusedWindow;
-        } catch (ex) {}
-       ]]></handler>
-      <handler event="popupshown"><![CDATA[
-        // Fire event for accessibility APIs
-        var alertEvent = document.createEvent("Events");
-        alertEvent.initEvent("AlertActive", true, true);
-        this.dispatchEvent(alertEvent);
-       ]]></handler>
-      <handler event="popuphiding"><![CDATA[
-        function restoreFocusIfInPanel(aPanel, currentFocus, prevFocus) {
-          try {
-            if (document.commandDispatcher.focusedWindow != window)
-              return; // Focus has already been set to a window outside of this panel
-          } catch(ex) {}
-          var ancestorOfFocus = currentFocus;
-          while (ancestorOfFocus) {
-            if (ancestorOfFocus == aPanel) {
-              // Focus was set on an element inside this panel,
-              // so we need to move it back to where it was previously
-              prevFocus.focus();
-              return;
-            }
-            ancestorOfFocus = ancestorOfFocus.parentNode;
-          }
-        }
-        try {
-          if (this._prevFocus && this.getAttribute("norestorefocus") != "true")
-            setTimeout(restoreFocusIfInPanel, 0, this, document.commandDispatcher.focusedElement,
-                       this._prevFocus);
-        } catch(ex) { }
-      ]]></handler>
     </handlers>
   </binding>
 
