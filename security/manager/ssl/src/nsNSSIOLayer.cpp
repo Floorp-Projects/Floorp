@@ -2547,8 +2547,27 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     /* Get CN and O of the subject and O of the issuer */
     char *ccn = CERT_GetCommonName(&serverCert->subject);
+    charCleaner ccnCleaner(ccn);
     NS_ConvertUTF8toUTF16 cn(ccn);
-    if (ccn) PORT_Free(ccn);
+
+    PRInt32 port;
+    info->GetPort(&port);
+    char *hostname = SSL_RevealURL(socket);
+    charCleaner hostnameCleaner(hostname);
+
+    nsString cn_host_port;
+    if (ccn && strcmp(ccn, hostname) == 0) {
+      cn_host_port.Append(cn);
+      cn_host_port.AppendLiteral(":");
+      cn_host_port.AppendInt(port);
+    }
+    else {
+      cn_host_port.Append(cn);
+      cn_host_port.AppendLiteral(" (");
+      cn_host_port.AppendLiteral(":");
+      cn_host_port.AppendInt(port);
+      cn_host_port.AppendLiteral(")");
+    }
 
     char *corg = CERT_GetOrgName(&serverCert->subject);
     NS_ConvertUTF8toUTF16 org(corg);
@@ -2615,7 +2634,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
         rv = NS_ERROR_NOT_AVAILABLE;
       }
       else {
-        rv = dialogs->ChooseCertificate(info, cn.get(), org.get(), issuer.get(), 
+        rv = dialogs->ChooseCertificate(info, cn_host_port.get(), org.get(), issuer.get(), 
           (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
           CertsToUse, &selectedIndex, &canceled);
       }
