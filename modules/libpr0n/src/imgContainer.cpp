@@ -1097,41 +1097,46 @@ PRBool imgContainer::CopyFrameImage(gfxIImageFrame *aSrcFrame,
 }
 
 //******************************************************************************
+/* 
+ * aSrc is the current frame being drawn,
+ * aDst is the composition frame where the current frame is drawn into.
+ * aSrcRect is the size of the current frame, and the position of that frame
+ *          in the composition frame.
+ */
 nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
                                    gfxIImageFrame *aDst, 
-                                   nsIntRect& aDstRect)
+                                   nsIntRect& aSrcRect)
 {
-  if (!aSrc || !aDst)
-    return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_ARG_POINTER(aSrc);
+  NS_ENSURE_ARG_POINTER(aDst);
 
-  nsIntRect srcRect, dstRect;
-  aSrc->GetRect(srcRect);
+  nsIntRect dstRect;
   aDst->GetRect(dstRect);
 
+  // According to both AGIF and APNG specs, offsets are unsigned
+  if (aSrcRect.x < 0 || aSrcRect.y < 0) {
+    NS_WARNING("imgContainer::DrawFrameTo: negative offsets not allowed");
+    return NS_ERROR_FAILURE;
+  }
+  // Outside the destination frame, skip it
+  if ((aSrcRect.x > dstRect.width) || (aSrcRect.y > dstRect.height)) {
+    return NS_OK;
+  }
   gfx_format format;
   aSrc->GetFormat(&format);
   if (format == gfxIFormats::PAL || format == gfxIFormats::PAL_A1) {
-    // Outside the destination frame, skip it
-    if ((aDstRect.x > dstRect.width) || (aDstRect.y > dstRect.height)) {
-      return NS_OK;
-    }
     // Larger than the destination frame, clip it
-    PRInt32 width = (PRUint32)aDstRect.width;
-    PRInt32 height = (PRUint32)aDstRect.height;
-    if (aDstRect.x + aDstRect.width > dstRect.width) {
-      width = dstRect.width - aDstRect.x;
-    }
-    if (aDstRect.y + aDstRect.height > dstRect.height) {
-      height = dstRect.height - aDstRect.y;
-    }
-    // dstRect must fully fit within destination image 
-    NS_ASSERTION((aDstRect.x >= 0) && (aDstRect.y >= 0) &&
-                 (aDstRect.x + width <= dstRect.width) &&
-                 (aDstRect.y + height <= dstRect.height),
-                "imgContainer::DrawFrameTo: Invalid aDstRect");
+    PRInt32 width = PR_MIN(aSrcRect.width, dstRect.width - aSrcRect.x);
+    PRInt32 height = PR_MIN(aSrcRect.height, dstRect.height - aSrcRect.y);
 
-    // dstRect size may be smaller than source, but not larger
-    NS_ASSERTION((width <= srcRect.width) && (height <= srcRect.height),
+    // The clipped image must now fully fit within destination image frame
+    NS_ASSERTION((aSrcRect.x >= 0) && (aSrcRect.y >= 0) &&
+                 (aSrcRect.x + width <= dstRect.width) &&
+                 (aSrcRect.y + height <= dstRect.height),
+                "imgContainer::DrawFrameTo: Invalid aSrcRect");
+
+    // clipped image size may be smaller than source, but not larger
+    NS_ASSERTION((width <= aSrcRect.width) && (height <= aSrcRect.height),
                  "imgContainer::DrawFrameTo: source must be smaller than dest");
 
     if (NS_FAILED(aDst->LockImageData()))
@@ -1151,14 +1156,14 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
     }
 
     // Skip to the right offset
-    dstPixels += aDstRect.x + (aDstRect.y * dstRect.width);
+    dstPixels += aSrcRect.x + (aSrcRect.y * dstRect.width);
     if (format == gfxIFormats::PAL) {
       for (PRInt32 r = height; r > 0; --r) {
         for (PRInt32 c = 0; c < width; c++) {
           dstPixels[c] = colormap[srcPixels[c]];
         }
         // Go to the next row in the source resp. destination image
-        srcPixels += srcRect.width;
+        srcPixels += aSrcRect.width;
         dstPixels += dstRect.width;
       }
     } else {
@@ -1170,7 +1175,7 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
             dstPixels[c] = color;
         }
         // Go to the next row in the source resp. destination image
-        srcPixels += srcRect.width;
+        srcPixels += aSrcRect.width;
         dstPixels += dstRect.width;
       }
     }
@@ -1187,26 +1192,18 @@ nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
   dstImg->GetSurface(getter_AddRefs(dstSurf));
 
   gfxContext dst(dstSurf);
+  dst.Translate(gfxPoint(aSrcRect.x, aSrcRect.y));
+  dst.Rectangle(gfxRect(0, 0, aSrcRect.width, aSrcRect.height), PR_TRUE);
   
   // first clear the surface if the blend flag says so
   PRInt32 blendMethod;
   aSrc->GetBlendMethod(&blendMethod);
-  gfxContext::GraphicsOperator defaultOperator = dst.CurrentOperator();
   if (blendMethod == imgIContainer::kBlendSource) {
+    gfxContext::GraphicsOperator defaultOperator = dst.CurrentOperator();
     dst.SetOperator(gfxContext::OPERATOR_CLEAR);
-    dst.Rectangle(gfxRect(aDstRect.x, aDstRect.y, aDstRect.width, aDstRect.height));
     dst.Fill();
+    dst.SetOperator(defaultOperator);
   }
-  
-  dst.NewPath();
-  dst.SetOperator(defaultOperator);
-  // We don't use PixelSnappedRectangleAndSetPattern because if
-  // these coords aren't already pixel aligned, we've lost
-  // before we've even begun.
-  dst.Translate(gfxPoint(aDstRect.x, aDstRect.y));
-  dst.Rectangle(gfxRect(0, 0, aDstRect.width, aDstRect.height), PR_TRUE);
-  dst.Scale(double(aDstRect.width) / srcRect.width, 
-            double(aDstRect.height) / srcRect.height);
   dst.SetSource(srcSurf);
   dst.Paint();
 
