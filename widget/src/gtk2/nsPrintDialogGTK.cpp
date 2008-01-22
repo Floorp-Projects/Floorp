@@ -73,9 +73,10 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
   printBundle->GetStringFromName(NS_LITERAL_STRING("headerFooterCustom").get(), getter_Copies(intlString));
   GtkWidget* prompt_dialog = gtk_dialog_new_with_buttons(NS_ConvertUTF16toUTF8(intlString).get(), NULL,
                                                          GTK_DIALOG_MODAL,
-                                                         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                                                         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                                          NULL);
+  gtk_dialog_set_default_response(GTK_DIALOG(prompt_dialog), GTK_RESPONSE_ACCEPT);
 
   printBundle->GetStringFromName(NS_LITERAL_STRING("customHeaderFooterPrompt").get(), getter_Copies(intlString));
   GtkWidget* custom_label = gtk_label_new(NS_ConvertUTF16toUTF8(intlString).get());
