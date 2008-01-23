@@ -1755,25 +1755,23 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       // which it is if anyone asks for its children right now.
       return InvalidateChildren();
     }
-    if (aChangeEventType == nsIAccessibleEvent::EVENT_DOM_CREATE) {
-      nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
-      NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
-      if (!esm->IsHandlingUserInputExternal()) {
-        // Adding content during page load, but not caused by user input
-        // Just invalidate accessible hierarchy and return,
-        // otherwise the page load time slows down way too much
-        nsCOMPtr<nsIAccessible> containerAccessible;
-        GetAccessibleInParentChain(childNode, PR_FALSE, getter_AddRefs(containerAccessible));
-        if (!containerAccessible) {
-          containerAccessible = this;
-        }
-        nsCOMPtr<nsPIAccessible> privateContainer = do_QueryInterface(containerAccessible);
-        return privateContainer->InvalidateChildren();
-      }     
-      // else: user input, so we must fall through and for full handling,
-      // e.g. fire the mutation events. Note: user input could cause DOM_CREATE
-      // during page load if user typed into an input field or contentEditable area
-    }
+    nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
+    NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
+    if (!esm->IsHandlingUserInputExternal()) {
+      // Changes during page load, but not caused by user input
+      // Just invalidate accessible hierarchy and return,
+      // otherwise the page load time slows down way too much
+      nsCOMPtr<nsIAccessible> containerAccessible;
+      GetAccessibleInParentChain(childNode, PR_FALSE, getter_AddRefs(containerAccessible));
+      if (!containerAccessible) {
+        containerAccessible = this;
+      }
+      nsCOMPtr<nsPIAccessible> privateContainer = do_QueryInterface(containerAccessible);
+      return privateContainer->InvalidateChildren();
+    }     
+    // else: user input, so we must fall through and for full handling,
+    // e.g. fire the mutation events. Note: user input could cause DOM_CREATE
+    // during page load if user typed into an input field or contentEditable area
   }
 
   // Update last change state information
