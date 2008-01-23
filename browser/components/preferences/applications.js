@@ -850,10 +850,16 @@ var gApplicationsPane = {
     // Figure out how we should be sorting the list.  We persist sort settings
     // across sessions, so we can't assume the default sort column/direction.
     // XXX should we be using the XUL sort service instead?
-    if (document.getElementById("typeColumn").hasAttribute("sortDirection"))
-      this._sortColumn = document.getElementById("typeColumn");
-    else if (document.getElementById("actionColumn").hasAttribute("sortDirection"))
+    if (document.getElementById("actionColumn").hasAttribute("sortDirection")) {
       this._sortColumn = document.getElementById("actionColumn");
+      // The typeColumn element always has a sortDirection attribute,
+      // either because it was persisted or because the default value
+      // from the xul file was used.  If we are sorting on the other
+      // column, we should remove it.
+      document.getElementById("typeColumn").removeAttribute("sortDirection");
+    }
+    else 
+      this._sortColumn = document.getElementById("typeColumn");
 
     // Load the data and build the list of handlers.
     // By doing this in a timeout, we let the preferences dialog resize itself
