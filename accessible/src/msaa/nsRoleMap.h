@@ -95,8 +95,8 @@ static const WindowsRoleMapItem gWindowsRoleMap[] = {
   // nsIAccessibleRole::ROLE_WINDOW
   { ROLE_SYSTEM_WINDOW, ROLE_SYSTEM_WINDOW },
 
-  // nsIAccessibleRole::ROLE_CLIENT
-  { USE_ROLE_STRING, IA2_ROLE_UNKNOWN},
+  // nsIAccessibleRole::ROLE_INTERNAL_FRAME
+  { USE_ROLE_STRING, IA2_ROLE_INTERNAL_FRAME},
 
   // nsIAccessibleRole::ROLE_MENUPOPUP
   { ROLE_SYSTEM_MENUPOPUP, ROLE_SYSTEM_MENUPOPUP },
@@ -429,7 +429,7 @@ static const WindowsRoleMapItem gWindowsRoleMap[] = {
   { ROLE_SYSTEM_LISTITEM, ROLE_SYSTEM_LISTITEM },
   
   // nsIAccessibleRole::ROLE_RICH_OPTION
-  { ROLE_SYSTEM_LIST, ROLE_SYSTEM_LIST },
+  { ROLE_SYSTEM_LISTITEM, ROLE_SYSTEM_LISTITEM },
   
   // nsIAccessibleRole::ROLE_LISTBOX
   { ROLE_SYSTEM_LIST, ROLE_SYSTEM_LIST },
