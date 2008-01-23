@@ -66,7 +66,6 @@
 #include "nsCRTGlue.h"
 #include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
-#include "nsCycleCollectionParticipant.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -92,8 +91,7 @@ protected:
 
 public:
     // nsISupports interface
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(LocalStoreImpl, nsILocalStore)
+    NS_DECL_ISUPPORTS
 
     // nsILocalStore interface
 
@@ -215,13 +213,13 @@ public:
     }
 
     NS_IMETHOD GetLoaded(PRBool* _result);
-    NS_IMETHOD Init(const char *uri);
-    NS_IMETHOD Flush();
-    NS_IMETHOD FlushTo(const char *aURI);
-    NS_IMETHOD Refresh(PRBool sync);
-
-    // nsIObserver
-    NS_DECL_NSIOBSERVER
+	NS_IMETHOD Init(const char *uri);
+	NS_IMETHOD Flush();
+	NS_IMETHOD FlushTo(const char *aURI);
+	NS_IMETHOD Refresh(PRBool sync);
+	
+	// nsIObserver
+	NS_DECL_NSIOBSERVER
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -266,20 +264,50 @@ NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
-NS_IMPL_CYCLE_COLLECTION_1(LocalStoreImpl, mInner)
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(LocalStoreImpl, nsILocalStore)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(LocalStoreImpl, nsILocalStore)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LocalStoreImpl)
-    NS_INTERFACE_MAP_ENTRY(nsILocalStore)
-    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
-    NS_INTERFACE_MAP_ENTRY(nsIRDFRemoteDataSource)
-    NS_INTERFACE_MAP_ENTRY(nsIObserver)
-    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsILocalStore)
-NS_INTERFACE_MAP_END
+// nsISupports interface
+
+NS_IMPL_ADDREF(LocalStoreImpl)
+NS_IMPL_RELEASE(LocalStoreImpl)
+
+NS_IMETHODIMP
+LocalStoreImpl::QueryInterface(REFNSIID aIID, void** aResult)
+{
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (aIID.Equals(kISupportsIID) ||
+        aIID.Equals(NS_GET_IID(nsILocalStore))) {
+        *aResult = static_cast<nsILocalStore*>(this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIRDFDataSource))) {
+        *aResult = static_cast<nsIRDFDataSource *>(this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIRDFRemoteDataSource))) {
+        *aResult = static_cast<nsIRDFRemoteDataSource *>(this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIObserver))) {
+        *aResult = static_cast<nsIObserver *>(this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
+        *aResult = static_cast<nsISupportsWeakReference *>(this);
+    }
+    else {
+        *aResult = nsnull;
+        return NS_NOINTERFACE;
+    }
+
+    NS_ADDREF(this);
+    return NS_OK;
+}
+
 
 // nsILocalStore interface
+
+
 
 // nsIRDFDataSource interface
 
