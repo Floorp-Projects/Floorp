@@ -412,7 +412,8 @@ void nsTimerImpl::Fire()
 
   // If the callback didn't re-init the timer, and it's not a one-shot timer,
   // restore the callback state.
-  if (mCallbackType == CALLBACK_TYPE_UNKNOWN && callbackType != TYPE_ONE_SHOT) {
+  if (mCallbackType == CALLBACK_TYPE_UNKNOWN &&
+      mType != TYPE_ONE_SHOT && !mCanceled) {
     mCallback = callback;
     mCallbackType = callbackType;
   } else {
