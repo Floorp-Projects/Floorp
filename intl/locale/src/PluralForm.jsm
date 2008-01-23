@@ -41,6 +41,8 @@ EXPORTED_SYMBOLS = [ "PluralForm" ];
  * out which plural form of a word to use for a given number based on the
  * current localization.
  *
+ * See: http://developer.mozilla.org/en/docs/Localization_and_Plurals
+ *
  * List of methods:
  *
  * string pluralForm
