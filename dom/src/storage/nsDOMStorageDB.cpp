@@ -169,6 +169,13 @@ nsDOMStorageDB::Init()
          getter_AddRefs(mRemoveKeyStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // remove keys owned by a specific domain
+  rv = mConnection->CreateStatement(
+         NS_LITERAL_CSTRING("DELETE FROM webappsstore "
+                            "WHERE owner = ?1"),
+         getter_AddRefs(mRemoveOwnerStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // remove all keys
   rv = mConnection->CreateStatement(
          NS_LITERAL_CSTRING("DELETE FROM webappsstore"),
@@ -410,6 +417,22 @@ nsDOMStorageDB::RemoveKey(const nsAString& aDomain,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mRemoveKeyStatement->Execute();
+}
+
+nsresult
+nsDOMStorageDB::RemoveOwner(const nsAString& aOwner)
+{
+  mozStorageStatementScoper scope(mRemoveOwnerStatement);
+
+  if (aOwner == mCachedOwner) {
+    mCachedUsage = 0;
+    mCachedOwner.Truncate();
+  }
+
+  nsresult rv = mRemoveOwnerStatement->BindStringParameter(0, aOwner);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mRemoveOwnerStatement->Execute();
 }
 
 nsresult
