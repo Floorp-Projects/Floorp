@@ -287,6 +287,8 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
   nsCOMPtr<gfxIImageFrame> frame;
   rv = aContainer->GetFrameAt(0, getter_AddRefs(frame));
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!frame)
+    return NS_ERROR_NOT_AVAILABLE;
 
   PRInt32 w,h;
   frame->GetWidth(&w);
