@@ -17,7 +17,7 @@
 <checkbox id="b1" label="Item 1"/>
 
 <!-- Focus should be in this order: 2 6 3 8 1 4 5 7 9 -->
-<panel id="panel" onpopupshown="panelShown()" onpopuphidden="panelHidden()">
+<panel id="panel" norestorefocus="true" onpopupshown="panelShown()" onpopuphidden="panelHidden()">
   <button id="t1" label="Button One"/>
   <button id="t2" tabindex="1" label="Button Two" onblur="gButtonBlur++;"/>
   <button id="t3" tabindex="2" label="Button Three"/>
