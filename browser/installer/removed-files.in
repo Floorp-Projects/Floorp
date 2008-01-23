@@ -39,6 +39,7 @@ searchplugins/yahoo.gif
 searchplugins/
 #ifdef MOZ_ENABLE_LIBXUL
 @DLL_PREFIX@xpcom_core@DLL_SUFFIX@
+@DLL_PREFIX@xpistub@DLL_SUFFIX@
 components/@DLL_PREFIX@jar50@DLL_SUFFIX@
 #ifdef XP_WIN
 components/jsd3250.dll
@@ -59,7 +60,6 @@ component.reg
 components/compreg.dat
 components/@DLL_PREFIX@myspell@DLL_SUFFIX@
 components/@DLL_PREFIX@spellchecker@DLL_SUFFIX@
-components/spellchecker.xpt
 components/@DLL_PREFIX@spellchk@DLL_SUFFIX@
 components/xpti.dat
 components/xptitemp.dat
@@ -90,6 +90,7 @@ extensions/reporter@mozilla.org/chrome/reporter.jar
 extensions/reporter@mozilla.org/defaults/preferences/reporter.js
 extensions/inspector@mozilla.org/components/inspector.xpt
 extensions/inspector@mozilla.org/components/@DLL_PREFIX@inspector@DLL_SUFFIX@
+extensions/inspector@mozilla.org/chrome/icons/default/winInspectorMain.ico
 uninstall/UninstallFirefox.exe
 uninstall/UninstallDeerPark.exe
 uninstall/uninst.exe
@@ -522,8 +523,8 @@ extensions/talkback@mozilla.org/components/talkback/Talkback.app/Contents/Resour
 #else
 extensions/talkback@mozilla.org/components/talkback/talkback
 extensions/talkback@mozilla.org/components/talkback/XTalkback.ad
-extensions/talkback@mozilla.org/components/master.ini
-extensions/talkback@mozilla.org/components/talkback.so
+extensions/talkback@mozilla.org/components/talkback/master.ini
+extensions/talkback@mozilla.org/components/talkback/talkback.so
 #endif
 #endif
 components/airbag.xpt
@@ -546,4 +547,35 @@ res/fonts/mathfontMath4.properties
 res/fonts/mathfontMTExtra.properties
 res/fonts/mathfontPUA.properties
 res/fonts/mathfontSymbol.properties
-
+res/fonts/fontEncoding.properties
+res/fonts/pangoFontEncoding.properties
+res/fonts/fontNameMap.properties
+@DLL_PREFIX@xpcom_compat@DLL_SUFFIX@
+components/nsDictionary.js
+components/nsXmlRpcClient.js
+components/nsInterfaceInfoToIDL.js
+chrome/chromelist.txt
+#ifdef XP_MACOSX
+LICENSE
+extensions/inspector@mozilla.org/chrome/chromelist.txt
+components/accessibility.xpt
+components/gksvgrenderer.xpt
+components/jsconsole.xpt
+components/necko_data.xpt
+components/nsKillAll.js
+components/passwordmgr.xpt
+components/progressDlg.xpt
+components/search.xpt
+components/websrvcs.xpt
+components/widget_mac.xpt
+components/xml-rpc.xpt
+components/xpcom_obsolete.xpt
+init.d/README
+redo-prebinding.sh
+res/viewer.properties
+#endif
+#ifdef XP_UNIX
+readme.txt
+#endif
+dictionaries/PL.dic
+dictionaries/PL.aff

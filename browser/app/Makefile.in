@@ -377,6 +377,9 @@ else
 APPFILES = MacOS
 endif
 
+libs:: $(srcdir)/profile/prefs.js
+	$(INSTALL) $^ $(DIST)/bin/defaults/profile
+
 libs repackage:: $(PROGRAM) application.ini
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
@@ -415,12 +418,6 @@ ifeq ($(OS_ARCH),WINNT)
 else
 	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
 endif
-
-libs:: $(srcdir)/profile/prefs.js
-	$(INSTALL) $^ $(DIST)/bin/defaults/profile
-
-install:: $(srcdir)/profile/prefs.js
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
 
 ifdef LIBXUL_SDK
 ifndef SKIP_COPY_XULRUNNER

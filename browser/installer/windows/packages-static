@@ -182,6 +182,7 @@ bin\components\widget.xpt
 bin\components\windowds.xpt
 bin\components\windowwatcher.xpt
 bin\components\shellservice.xpt
+bin\components\spellchecker.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_system.xpt
 bin\components\xpcom_components.xpt
