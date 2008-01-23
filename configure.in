@@ -1824,7 +1824,6 @@ case "$target" in
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
-    MOZ_ENABLE_COREXFONTS=
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 ;;
@@ -4795,79 +4794,19 @@ AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
 dnl ========================================================
-dnl = Xft
+dnl = Xft and Pango
 dnl ========================================================
-if test "$MOZ_ENABLE_GTK2"; then
-    MOZ_ENABLE_XFT=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(xft,
-[  --disable-xft           Disable Xft support ],
-    MOZ_ENABLE_XFT=,
-    MOZ_ENABLE_XFT=1)
-
-if test "$MOZ_ENABLE_XFT" && test -z "$MOZ_ENABLE_GTK2"; then
-    AC_MSG_ERROR([Cannot enable XFT support for non-GTK2 toolkits.])
-fi
-
-if test "$MOZ_ENABLE_XFT"
+if test "$MOZ_ENABLE_GTK2"
 then
-    AC_DEFINE(MOZ_ENABLE_XFT)
     PKG_CHECK_MODULES(MOZ_XFT, xft)
+    AC_SUBST(MOZ_XFT_CFLAGS)
+    AC_SUBST(MOZ_XFT_LIBS)
+
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
-fi
-
-AC_SUBST(MOZ_ENABLE_XFT)
-AC_SUBST(MOZ_XFT_CFLAGS)
-AC_SUBST(MOZ_XFT_LIBS)
-
-dnl ========================================================
-dnl = pango font rendering
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(pango,
-[  --enable-pango          Enable Pango font rendering support],
-    MOZ_ENABLE_PANGO=1,
-    MOZ_ENABLE_PANGO=)
-
-if test "$MOZ_ENABLE_PANGO" && test -z "$MOZ_ENABLE_CAIRO_GFX"
-then
-    AC_MSG_ERROR([Cairo gfx is required for Pango font rendering])
-fi
-
-if test "$MOZ_ENABLE_GTK2" && test "$MOZ_ENABLE_CAIRO_GFX"
-then
-    # For gtk2, we require --enable-pango; gtk2 already implies --enable-xft
-    if test -z "$MOZ_ENABLE_PANGO"
-    then
-        AC_MSG_WARN([Pango is required for cairo gfx builds, assuming --enable-pango])
-        MOZ_ENABLE_PANGO=1
-    fi
-fi
-
-if test "$MOZ_ENABLE_PANGO" && test "$MOZ_ENABLE_CAIRO_GFX"
-then
-    AC_DEFINE(MOZ_ENABLE_PANGO)
     PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangocairo >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
-    AC_SUBST(MOZ_ENABLE_PANGO)
     AC_SUBST(MOZ_PANGO_CFLAGS)
     AC_SUBST(MOZ_PANGO_LIBS)
 fi
-
-dnl ========================================================
-dnl = x11 core font support (default and ability to enable depend on toolkit)
-dnl ========================================================
-if test "$MOZ_X11"
-then
-    MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS-1}
-else
-    MOZ_ENABLE_COREXFONTS=
-fi
-if test "$MOZ_ENABLE_COREXFONTS"
-then
-    AC_DEFINE(MOZ_ENABLE_COREXFONTS)
-fi
-
-AC_SUBST(MOZ_ENABLE_COREXFONTS)
 
 dnl ========================================================
 dnl = PostScript print module
@@ -5020,8 +4959,7 @@ dnl = those converters are not built on other platforms/toolkits.
 dnl = (see bug 180851)
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK2" \
-&& test "$MOZ_ENABLE_COREXFONTS"
+if test "$MOZ_ENABLE_GTK2"
 then
     AC_DEFINE(MOZ_EXTRA_X11CONVERTERS)
     MOZ_EXTRA_X11CONVERTERS=1
