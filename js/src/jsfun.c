@@ -70,10 +70,6 @@
 # include "jsiter.h"
 #endif
 
-#if JS_HAS_XDR
-# include "jsxdrapi.h"
-#endif
-
 /* Generic function/call/arguments tinyids -- also reflected bit numbers. */
 enum {
     CALL_ARGUMENTS  = -1,       /* predefined arguments local variable */
@@ -753,9 +749,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSFunction *fun;
     uintN n, i, slot;
     void *mark;
-    jsuword *names;
-    JSBool ok;
-    JSAtom *name;
+    JSAtom **names, *name;
     JSObject *pobj;
     JSProperty *prop;
     jsval v;
@@ -771,21 +765,17 @@ call_enumerate(JSContext *cx, JSObject *obj)
      * local functions.
      */
     fun = fp->fun;
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->nargs + fun->u.i.nvars;
     if (n == 0)
         return JS_TRUE;
 
     mark = JS_ARENA_MARK(&cx->tempPool);
-
-    /* From this point the control must flow through the label out. */
-    names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
-    if (!names) {
-        ok = JS_FALSE;
+    names = js_GetLocalNames(cx, fun, &cx->tempPool, NULL);
+    if (!names)
         goto out;
-    }
 
     for (i = 0; i != n; ++i) {
-        name = JS_LOCAL_NAME_TO_ATOM(names[i]);
+        name = names[i];
         if (!name)
             continue;
 
@@ -793,9 +783,10 @@ call_enumerate(JSContext *cx, JSObject *obj)
          * Trigger reflection by looking up the name of the argument or
          * variable.
          */
-        ok = js_LookupProperty(cx, obj, ATOM_TO_JSID(name), &pobj, &prop);
-        if (!ok)
+        if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(name), &pobj, &prop)) {
+            names = NULL;
             goto out;
+        }
 
         /*
          * At this point the call object always has a property corresponding
@@ -809,11 +800,10 @@ call_enumerate(JSContext *cx, JSObject *obj)
         v = (i < fun->nargs) ? fp->argv[i] : fp->vars[i - fun->nargs];
         LOCKED_OBJ_SET_SLOT(obj, slot, v);
     }
-    ok = JS_TRUE;
 
   out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
-    return ok;
+    return names != NULL;
 }
 
 static JSBool
@@ -1169,9 +1159,6 @@ fun_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
 #include "jsxdrapi.h"
 
-static JSBool
-XDRLocalNames(JSXDRState *xdr, JSFunction *fun);
-
 /* XXX store parent and proto, if defined */
 static JSBool
 fun_xdrObject(JSXDRState *xdr, JSObject **objp)
@@ -1179,7 +1166,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSContext *cx;
     JSFunction *fun;
     uint32 nullAtom;            /* flag to indicate if fun->atom is NULL */
-    uintN nargs, nvars;
+    uintN nargs, nvars, n;
     uint32 localsword;          /* word to xdr argument and variable counts */
     uint32 flagsword;           /* originally only flags was JS_XDRUint8'd */
     JSTempValueRooter tvr;
@@ -1231,8 +1218,81 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     }
 
     /* do arguments and local vars */
-    if (!XDRLocalNames(xdr, fun))
-        goto bad;
+    if (fun->object && (n = nargs + nvars) != 0) {
+        void *mark;
+        uintN i;
+        uintN bitmapLength;
+        uint32 *bitmap;
+        JSAtom **names, *name;
+        JSLocalKind localKind;
+
+        mark = JS_ARENA_MARK(&xdr->cx->tempPool);
+
+        /* From this point the control must flow through label release_mark. */
+        bitmapLength = JS_HOWMANY(n, JS_BITS_PER_UINT32);
+        if (xdr->mode == JSXDR_ENCODE) {
+            names = js_GetLocalNames(xdr->cx, fun, &xdr->cx->tempPool, &bitmap);
+            if (!names) {
+                ok = JS_FALSE;
+                goto release_mark;
+            }
+        } else {
+#ifdef __GNUC__
+            names = NULL;   /* quell GCC uninitialized warning */
+#endif
+            JS_ARENA_ALLOCATE_CAST(bitmap, uint32 *, &xdr->cx->tempPool,
+                                   bitmapLength * sizeof *bitmap);
+            if (!bitmap) {
+                js_ReportOutOfScriptQuota(xdr->cx);
+                ok = JS_FALSE;
+                goto release_mark;
+            }
+        }
+        for (i = 0; i != bitmapLength; ++i) {
+            ok = JS_XDRUint32(xdr, &bitmap[i]);
+            if (!ok)
+                goto release_mark;
+        }
+        for (i = 0; i != n; ++i) {
+            if (i < nargs &&
+                !(bitmap[i / JS_BITS_PER_UINT32] &
+                  JS_BIT(i & (JS_BITS_PER_UINT32 - 1)))) {
+                if (xdr->mode == JSXDR_DECODE) {
+                    ok = js_AddLocal(xdr->cx, fun, NULL, JSLOCAL_ARG);
+                    if (!ok)
+                        goto release_mark;
+                } else {
+                    JS_ASSERT(!names[i]);
+                }
+                continue;
+            }
+            if (xdr->mode == JSXDR_ENCODE)
+                name = names[i];
+            ok = js_XDRStringAtom(xdr, &name);
+            if (!ok)
+                goto release_mark;
+            if (xdr->mode == JSXDR_DECODE) {
+                localKind = (i < nargs)
+                            ? JSLOCAL_ARG
+                            : bitmap[i / JS_BITS_PER_UINT32] &
+                              JS_BIT(i & (JS_BITS_PER_UINT32 - 1))
+                            ? JSLOCAL_CONST
+                            : JSLOCAL_VAR;
+                ok = js_AddLocal(xdr->cx, fun, name, localKind);
+                if (!ok)
+                    goto release_mark;
+            }
+        }
+        ok = JS_TRUE;
+
+      release_mark:
+        JS_ARENA_RELEASE(&xdr->cx->tempPool, mark);
+        if (!ok)
+            goto out;
+
+        if (xdr->mode == JSXDR_DECODE)
+            js_FreezeLocalNames(cx, fun);
+    }
 
     if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
         goto bad;
@@ -2246,7 +2306,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
         else
             JS_ASSERT(kind == JSLOCAL_VAR);
     }
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->nargs + fun->u.i.nvars;
     if (n == 0) {
         JS_ASSERT(fun->u.i.names.taggedAtom == 0);
         fun->u.i.names.taggedAtom = taggedAtom;
@@ -2339,7 +2399,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
     JSLocalNameHashEntry *entry;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->nargs + fun->u.i.nvars;
     if (n == 0)
         return JSLOCAL_NONE;
     if (n <= MAX_ARRAY_LOCALS) {
@@ -2349,7 +2409,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
         i = n;
         do {
             --i;
-            if (atom == JS_LOCAL_NAME_TO_ATOM(array[i])) {
+            if (atom == (JSAtom *) (array[i] & ~1)) {
                 if (i < fun->nargs) {
                     if (indexp)
                         *indexp = i;
@@ -2357,9 +2417,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
                 }
                 if (indexp)
                     *indexp = i - fun->nargs;
-                return JS_LOCAL_NAME_IS_CONST(array[i])
-                       ? JSLOCAL_CONST
-                       : JSLOCAL_VAR;
+                return (array[i] & 1) ? JSLOCAL_CONST : JSLOCAL_VAR;
             }
         } while (i != 0);
     } else {
@@ -2376,65 +2434,68 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
     return JSLOCAL_NONE;
 }
 
-typedef struct JSLocalNameEnumeratorArgs {
+typedef struct JSGetLocalNamesArgs {
     JSFunction      *fun;
-    jsuword         *names;
+    JSAtom          **names;
+    uint32          *bitmap;
 #ifdef DEBUG
     uintN           nCopiedArgs;
     uintN           nCopiedVars;
 #endif
-} JSLocalNameEnumeratorArgs;
+} JSGetLocalNamesArgs;
+
+#define SET_BIT32(bitmap, bit)                                                \
+    ((bitmap)[(bit) >> JS_BITS_PER_UINT32_LOG2] |=                            \
+         JS_BIT((bit) & (JS_BITS_PER_UINT32 - 1)))
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 get_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
                            uint32 number, void *arg)
 {
     JSLocalNameHashEntry *entry;
-    JSLocalNameEnumeratorArgs *args;
+    JSGetLocalNamesArgs *args;
     uint i;
-    jsuword constFlag;
 
     entry = (JSLocalNameHashEntry *) hdr;
-    args = (JSLocalNameEnumeratorArgs *) arg;
+    args = (JSGetLocalNamesArgs *) arg;
     JS_ASSERT(entry->name);
     if (entry->localKind == JSLOCAL_ARG) {
         JS_ASSERT(entry->index < args->fun->nargs);
         JS_ASSERT(args->nCopiedArgs++ < args->fun->nargs);
         i = entry->index;
-        constFlag = 0;
     } else {
         JS_ASSERT(entry->localKind == JSLOCAL_VAR ||
                   entry->localKind == JSLOCAL_CONST);
         JS_ASSERT(entry->index < args->fun->u.i.nvars);
         JS_ASSERT(args->nCopiedVars++ < args->fun->u.i.nvars);
         i = args->fun->nargs + entry->index;
-        constFlag = (entry->localKind == JSLOCAL_CONST) ? 1 : 0;
     }
-    args->names[i] = (jsuword) entry->name | constFlag;
+    args->names[i] = entry->name;
+    if (args->bitmap && entry->localKind != JSLOCAL_VAR)
+        SET_BIT32(args->bitmap, i);
     return JS_DHASH_NEXT;
 }
 
-jsuword *
-js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
+JSAtom **
+js_GetLocalNames(JSContext *cx, JSFunction *fun, JSArenaPool *pool,
+                 uint32 **bitmap)
 {
-    uintN n;
-    jsuword *names;
+    uintN n, i;
+    size_t allocsize;
+    JSAtom **names;
+    jsuword *array;
     JSLocalNameMap *map;
-    JSLocalNameEnumeratorArgs args;
+    JSGetLocalNamesArgs args;
     JSNameIndexPair *dup;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    JS_ASSERT(OBJ_IS_NATIVE(fun->object));
+    n = fun->nargs + fun->u.i.nvars;
     JS_ASSERT(n != 0);
-
-    if (n <= MAX_ARRAY_LOCALS)
-        return (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
-
-    /*
-     * No need to check for overflow of the allocation size as we are making a
-     * copy of already allocated data. As such it must fit size_t.
-     */
-    JS_ARENA_ALLOCATE_CAST(names, jsuword *, pool, (size_t) n * sizeof *names);
+    allocsize = n * sizeof *names;
+    if (bitmap)
+        allocsize += JS_HOWMANY(n, JS_BITS_PER_UINT32) * sizeof(uint32);
+    JS_ARENA_ALLOCATE_CAST(names, JSAtom **, pool, allocsize);
     if (!names) {
         js_ReportOutOfScriptQuota(cx);
         return NULL;
@@ -2444,23 +2505,45 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
     /* Some parameter names can be NULL due to destructuring patterns. */
     memset(names, 0, fun->nargs * sizeof *names);
 #endif
-    map = fun->u.i.names.map;
-    args.fun = fun;
-    args.names = names;
-#ifdef DEBUG
-    args.nCopiedArgs = 0;
-    args.nCopiedVars = 0;
-#endif
-    JS_DHashTableEnumerate(&map->names, get_local_names_enumerator, &args);
-    for (dup = map->lastdup; dup; dup = dup->link) {
-        JS_ASSERT(dup->index < fun->nargs);
-        JS_ASSERT(args.nCopiedArgs++ < fun->nargs);
-        names[dup->index] = (jsuword) dup->name;
+    if (bitmap) {
+        *bitmap = (uint32 *) (names + n);
+        memset(*bitmap, 0, JS_HOWMANY(n, JS_BITS_PER_UINT32) * sizeof(uint32));
     }
-#if !JS_HAS_DESTRUCTURING
-    JS_ASSERT(args.nCopiedArgs == fun->nargs);
+
+    if (n <= MAX_ARRAY_LOCALS) {
+        array = (n == 1) ? &fun->u.i.names.taggedAtom : fun->u.i.names.array;
+
+        i = n;
+        do {
+            --i;
+            names[i] = (JSAtom *) (array[i] & ~1);
+            if (bitmap &&
+                (i < fun->nargs ? array[i] != 0 : array[i] & 1)) {
+                SET_BIT32(*bitmap, i);
+            }
+        } while (i != 0);
+    } else {
+        map = fun->u.i.names.map;
+        args.fun = fun;
+        args.names = names;
+        args.bitmap = bitmap ? *bitmap : NULL;
+#ifdef DEBUG
+        args.nCopiedArgs = 0;
+        args.nCopiedVars = 0;
 #endif
-    JS_ASSERT(args.nCopiedVars == fun->u.i.nvars);
+        JS_DHashTableEnumerate(&map->names, get_local_names_enumerator, &args);
+        for (dup = map->lastdup; dup; dup = dup->link) {
+            JS_ASSERT(dup->index < fun->nargs);
+            JS_ASSERT(args.nCopiedArgs++ < fun->nargs);
+            names[dup->index] = dup->name;
+            if (bitmap)
+                SET_BIT32(*bitmap, dup->index);
+        }
+#if !JS_HAS_DESTRUCTURING
+        JS_ASSERT(args.nCopiedArgs == fun->nargs);
+#endif
+        JS_ASSERT(args.nCopiedVars == fun->u.i.nvars);
+    }
 
     return names;
 }
@@ -2490,7 +2573,7 @@ TraceLocalNames(JSTracer *trc, JSFunction *fun)
     jsuword *array;
 
     JS_ASSERT(FUN_INTERPRETED(fun));
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
+    n = fun->nargs + fun->u.i.nvars;
     if (n == 0)
         return;
     if (n <= MAX_ARRAY_LOCALS) {
@@ -2548,106 +2631,3 @@ js_FreezeLocalNames(JSContext *cx, JSFunction *fun)
             fun->u.i.names.array = array;
     }
 }
-
-#if JS_HAS_XDR
-
-static JSBool
-XDRLocalNames(JSXDRState *xdr, JSFunction *fun)
-{
-    uintN n, bitmapLength, i;
-    void *mark;
-    uint32 *bitmap;
-    jsuword *names;
-    JSAtom *name;
-    JSBool ok;
-    JSLocalKind localKind;
-
-    JS_ASSERT(FUN_INTERPRETED(fun));
-    n = JS_GET_LOCAL_NAME_COUNT(fun);
-    if (n == 0)
-        return JS_TRUE;
-
-    mark = JS_ARENA_MARK(&xdr->cx->tempPool);
-
-    /*
-     * From this point the control must flow through the label out.
-     *
-     * To xdr the names we prefix the names with a bitmap descriptor and then
-     * xdr the names as strings. For argument names (indexes below fun->nargs)
-     * the corresponding bit in the bitmap is unset when the name is null.
-     * Such null names are not encoded or decoded. For variable names (indexes
-     * starting from fun->nargs) bitmap's bit is set when the name is declared
-     * as const, not as ordinary var.
-     */
-    bitmapLength = JS_HOWMANY(n, JS_BITS_PER_UINT32);
-    JS_ARENA_ALLOCATE_CAST(bitmap, uint32 *, &xdr->cx->tempPool,
-                           bitmapLength * sizeof *bitmap);
-
-    if (xdr->mode == JSXDR_ENCODE) {
-        names = js_GetLocalNameArray(xdr->cx, fun, &xdr->cx->tempPool);
-        if (!names)
-            return JS_FALSE;
-        memset(bitmap, 0, bitmapLength * sizeof *bitmap);
-        for (i = 0; i != n; ++i) {
-            if (i < fun->nargs
-                ? JS_LOCAL_NAME_TO_ATOM(names[i]) != NULL
-                : JS_LOCAL_NAME_IS_CONST(names[i])) {
-                bitmap[i >> JS_BITS_PER_UINT32_LOG2] |=
-                    JS_BIT(i & (JS_BITS_PER_UINT32 - 1));
-            }
-        }
-    }
-#ifdef __GNUC__
-    else {
-        names = NULL;   /* quell GCC uninitialized warning */
-    }
-#endif
-
-    for (i = 0; i != bitmapLength; ++i) {
-        ok = JS_XDRUint32(xdr, &bitmap[i]);
-        if (!ok)
-            goto out;
-    }
-
-    for (i = 0; i != n; ++i) {
-        if (i < fun->nargs &&
-            !(bitmap[i >> JS_BITS_PER_UINT32_LOG2] &
-              JS_BIT(i & (JS_BITS_PER_UINT32 - 1)))) {
-            if (xdr->mode == JSXDR_DECODE) {
-                ok = js_AddLocal(xdr->cx, fun, NULL, JSLOCAL_ARG);
-                if (!ok)
-                    goto out;
-            } else {
-                JS_ASSERT(JS_LOCAL_NAME_TO_ATOM(names[i]));
-            }
-            continue;
-        }
-        if (xdr->mode == JSXDR_ENCODE)
-            name = JS_LOCAL_NAME_TO_ATOM(names[i]);
-        ok = js_XDRStringAtom(xdr, &name);
-        if (!ok)
-            goto out;
-        if (xdr->mode == JSXDR_DECODE) {
-            localKind = i < fun->nargs
-                        ? JSLOCAL_ARG
-                        : (bitmap[i >> JS_BITS_PER_UINT32_LOG2] &
-                           JS_BIT(i & (JS_BITS_PER_UINT32 - 1)))
-                        ? JSLOCAL_CONST
-                        : JSLOCAL_VAR;
-            ok = js_AddLocal(xdr->cx, fun, name, localKind);
-            if (!ok)
-                goto out;
-        }
-    }
-    if (xdr->mode == JSXDR_DECODE)
-        js_FreezeLocalNames(xdr->cx, fun);
-    ok = JS_TRUE;
-
-  out:
-    JS_ARENA_RELEASE(&xdr->cx->tempPool, mark);
-
-    return ok;
-}
-
-#endif
-
