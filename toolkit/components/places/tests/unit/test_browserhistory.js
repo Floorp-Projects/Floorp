@@ -55,7 +55,7 @@ function run_test() {
    * the History migrator. 
    */
   try {
-    bhist.addPageWithDetails(testURI, "testURI", Date.now());
+    bhist.addPageWithDetails(testURI, "testURI", Date.now() * 1000);
   } catch(ex) {
     do_throw("addPageWithDetails failed");
   }
@@ -89,13 +89,13 @@ function run_test() {
    * If aEntireDomain is true, will assume aHost is a domain,
    * and remove all pages from the entire domain.
    */
-  bhist.addPageWithDetails(testURI, "testURI", Date.now());
+  bhist.addPageWithDetails(testURI, "testURI", Date.now() * 1000);
   bhist.removePagesFromHost("mozilla.com", true);
   do_check_eq(0, bhist.count);
 
   // test aEntireDomain
-  bhist.addPageWithDetails(testURI, "testURI", Date.now());
-  bhist.addPageWithDetails(uri("http://foobar.mozilla.com"), "testURI2", Date.now());
+  bhist.addPageWithDetails(testURI, "testURI", Date.now() * 1000);
+  bhist.addPageWithDetails(uri("http://foobar.mozilla.com"), "testURI2", Date.now() * 1000);
   bhist.removePagesFromHost("mozilla.com", false);
   do_check_eq(1, bhist.count);
 
@@ -115,7 +115,7 @@ function run_test() {
    * as if it was visited, and then marked as hidden
    */
   //XXX NOT IMPLEMENTED in the history service
-  //bhist.addPageWithDetails(testURI, "testURI", Date.now());
+  //bhist.addPageWithDetails(testURI, "testURI", Date.now() * 1000);
   //bhist.hidePage(testURI);
   //do_check_eq(0, bhist.count);
 }

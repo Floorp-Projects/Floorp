@@ -53,7 +53,7 @@ try {
 
 // adds a test URI visit to the database, and checks for a valid place ID
 function add_visit(aURI, aDate) {
-  var date = aDate || Date.now();
+  var date = aDate || Date.now() * 1000;
   var placeID = histsvc.addVisit(aURI,
                                  date,
                                  null, // no referrer
@@ -152,7 +152,7 @@ function run_test() {
   do_check_eq(root.uri, viewer.changedItem.uri);
 
   // nsINavHistoryResultViewer.itemChanged for a leaf node
-  bhist.addPageWithDetails(testURI, "baz", Date.now());
+  bhist.addPageWithDetails(testURI, "baz", Date.now() * 1000);
   do_check_eq(viewer.changedItem.title, "baz");
 
   // nsINavHistoryResultViewer.itemRemoved
