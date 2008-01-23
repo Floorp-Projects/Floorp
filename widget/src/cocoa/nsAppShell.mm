@@ -466,10 +466,10 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
     // Minefield) the modal window (or non-main event loop) won't receive key
     // events or most mouse events.
     if ([NSApp _isRunningModal] || !InGeckoMainEventLoop()) {
-      if (nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-                                         untilDate:waitUntil
-                                            inMode:currentMode
-                                           dequeue:YES]) {
+      if ((nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                          untilDate:waitUntil
+                                             inMode:currentMode
+                                            dequeue:YES])) {
         [NSApp sendEvent:nextEvent];
         eventProcessed = PR_TRUE;
       }

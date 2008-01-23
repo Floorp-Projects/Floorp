@@ -41,8 +41,7 @@
 
 #include "nsIMenuItem.h"
 #include "nsString.h"
-#include "nsIChangeManager.h"
-#include "nsIWidget.h"
+#include "nsChangeObserver.h"
 #include "nsAutoPtr.h"
 
 #import <Cocoa/Cocoa.h>
@@ -51,11 +50,11 @@ class nsIMenu;
 class nsMenuItemIconX;
 
 /**
- * Native Motif MenuItem wrapper
+ * Native menu item wrapper
  */
 
 class nsMenuItemX : public nsIMenuItem,
-                    public nsIChangeObserver
+                    public nsChangeObserver
 {
 public:
   nsMenuItemX();
@@ -63,11 +62,11 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICHANGEOBSERVER
+  NS_DECL_CHANGEOBSERVER
 
   // nsIMenuItem Methods
   NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
-                    nsIChangeManager* aManager, nsIContent* aNode);
+                    nsMenuBarX* aMenuBar, nsIContent* aNode);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);
@@ -95,7 +94,7 @@ protected:
   nsString                  mKeyEquivalent;
 
   nsIMenu*                  mMenuParent;          // weak, parent owns us
-  nsIChangeManager*         mManager;             // weak
+  nsMenuBarX*               mMenuBar;             // weak
   
   nsCOMPtr<nsIContent>      mContent;
   nsCOMPtr<nsIContent>      mCommandContent;

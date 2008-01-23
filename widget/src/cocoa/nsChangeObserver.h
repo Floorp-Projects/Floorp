@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Mike Pinkerton
+ *   Josh Aas <josh@mozilla.com> (decomtaminate)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,30 +38,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsChangeObserver_h_
+#define nsChangeObserver_h_
 
+class nsIContent;
+class nsIDocument;
+class nsIAtom;
 
-interface nsIMenuItem;
+#define NS_DECL_CHANGEOBSERVER \
+void ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute); \
+void ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer); \
+void ObserveContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer);
 
-
+// Something that wants to be alerted to changes in attributes or changes in
+// its corresponding content object.
 //
-// nsIMenuCommandDispatcher
+// This interface is used by our menu code so we only have to have one
+// nsIDocumentObserver.
 //
-// A central manager for registering and unregistering CommandIDs
-// and their associated content node in the DOM.
-//
-
-[scriptable, uuid(d1969b7e-1dd1-11b2-a442-c5a01ae643d1)]
-interface nsIMenuCommandDispatcher : nsISupports
+// Any class that implements this interface must take care to unregister itself
+// on deletion.
+class nsChangeObserver
 {
-    // Given a menu item, creates a unique 4-character command ID and
-    // maps it to the item. Returns the id for use by the client.
-  unsigned long Register ( in nsIMenuItem aItem ) ;
-  
-    // Removes the mapping between the given 4-character command ID
-    // and its associated menu item.
-  void Unregister ( in unsigned long aCommandID ) ;
-  
-}; // nsIMenuCommandDispatcher
+public:
+  virtual void ObserveAttributeChanged(nsIDocument* aDocument,
+                                       nsIContent* aContent,
+                                       nsIAtom* aAttribute)=0;
 
+  virtual void ObserveContentRemoved(nsIDocument* aDocument,
+                                     nsIContent* aChild, 
+                                     PRInt32 aIndexInContainer)=0;
 
+  virtual void ObserveContentInserted(nsIDocument* aDocument,
+                                      nsIContent* aChild, 
+                                      PRInt32 aIndexInContainer)=0;
+};
+
+#endif // nsChangeObserver_h_

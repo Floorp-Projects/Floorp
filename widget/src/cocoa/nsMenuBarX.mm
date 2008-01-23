@@ -64,8 +64,7 @@
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
 
-NS_IMPL_ISUPPORTS5(nsMenuBarX, nsIMenuBar, nsIMutationObserver, 
-                   nsIChangeManager, nsIMenuCommandDispatcher, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsMenuBarX, nsIMenuBar, nsIMutationObserver, nsISupportsWeakReference)
 
 EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
@@ -102,7 +101,10 @@ PRBool NodeIsHiddenOrCollapsed(nsIContent* inContent)
 
 
 nsMenuBarX::nsMenuBarX()
-: mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(eCommand_ID_Last), mDocument(nsnull)
+: mParent(nsnull),
+  mIsMenuBarAdded(PR_FALSE),
+  mCurrentCommandID(eCommand_ID_Last),
+  mDocument(nsnull)
 {
   mRootMenu = [[NSMenu alloc] initWithTitle:@"MainMenuBar"];
   
@@ -335,8 +337,7 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
         // Create nsMenu, the menubar will own it
         nsCOMPtr<nsIMenu> pnsMenu(do_CreateInstance(kMenuCID));
         if (pnsMenu) {
-          pnsMenu->Create(static_cast<nsIMenuBar*>(this), menuName, menuAccessKey, 
-                          static_cast<nsIChangeManager *>(this), menu);
+          pnsMenu->Create(static_cast<nsIMenuBar*>(this), menuName, menuAccessKey, this, menu);
           AddMenu(pnsMenu);
         }
       } 
@@ -722,20 +723,19 @@ nsMenuBarX::CharacterDataChanged(nsIDocument * aDocument,
 
 
 void
-nsMenuBarX::ContentAppended(nsIDocument * aDocument, nsIContent  * aContainer,
+nsMenuBarX::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
                             PRInt32 aNewIndexInContainer)
 {
   if (aContainer != mMenuBarContent) {
-    nsCOMPtr<nsIChangeObserver> obs;
-    Lookup(aContainer, getter_AddRefs(obs));
+    nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
     if (obs)
-      obs->ContentInserted(aDocument, aContainer, aNewIndexInContainer);
+      obs->ObserveContentInserted(aDocument, aContainer, aNewIndexInContainer);
     else {
       nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if (parent) {
-        Lookup(parent, getter_AddRefs(obs));
+        obs = LookupContentChangeObserver(parent);
         if (obs)
-          obs->ContentInserted(aDocument, aContainer, aNewIndexInContainer);
+          obs->ObserveContentInserted(aDocument, aContainer, aNewIndexInContainer);
       }
     }
   }
@@ -755,32 +755,31 @@ nsMenuBarX::AttributeChanged(nsIDocument * aDocument, nsIContent * aContent,
                              PRInt32 aModType, PRUint32 aStateMask)
 {
   // lookup and dispatch to registered thang
-  nsCOMPtr<nsIChangeObserver> obs;
-  Lookup(aContent, getter_AddRefs(obs));
+  nsChangeObserver* obs = LookupContentChangeObserver(aContent);
   if (obs)
-    obs->AttributeChanged(aDocument, aNameSpaceID, aContent, aAttribute);
+    obs->ObserveAttributeChanged(aDocument, aContent, aAttribute);
 }
 
 
 void
 nsMenuBarX::ContentRemoved(nsIDocument * aDocument, nsIContent * aContainer,
-                            nsIContent * aChild, PRInt32 aIndexInContainer)
-{  
+                           nsIContent * aChild, PRInt32 aIndexInContainer)
+{
   if (aContainer == mMenuBarContent) {
-    Unregister(aChild);
+    UnregisterForContentChanges(aChild);
     RemoveMenu(aIndexInContainer);
   }
   else {
-    nsCOMPtr<nsIChangeObserver> obs;
-    Lookup (aContainer, getter_AddRefs(obs));
-    if (obs)
-      obs->ContentRemoved(aDocument, aChild, aIndexInContainer);
+    nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
+    if (obs) {
+      obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
+    }
     else {
       nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if (parent) {
-        Lookup (parent, getter_AddRefs(obs));
+        obs = LookupContentChangeObserver(parent);
         if (obs)
-          obs->ContentRemoved(aDocument, aChild, aIndexInContainer);
+          obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
       }
     }
   }
@@ -790,18 +789,17 @@ nsMenuBarX::ContentRemoved(nsIDocument * aDocument, nsIContent * aContainer,
 void
 nsMenuBarX::ContentInserted(nsIDocument * aDocument, nsIContent * aContainer,
                              nsIContent * aChild, PRInt32 aIndexInContainer)
-{  
+{
   if (aContainer != mMenuBarContent) {
-    nsCOMPtr<nsIChangeObserver> obs;
-    Lookup (aContainer, getter_AddRefs(obs));
+    nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
     if (obs)
-      obs->ContentInserted (aDocument, aChild, aIndexInContainer);
+      obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
     else {
       nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if (parent) {
-        Lookup (parent, getter_AddRefs(obs));
+        obs = LookupContentChangeObserver(parent);
         if (obs)
-          obs->ContentInserted(aDocument, aChild, aIndexInContainer);
+          obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
       }
     }
   }
@@ -814,81 +812,62 @@ nsMenuBarX::ParentChainChanged(nsIContent *aContent)
 }
 
 
-//
-// nsIChangeManager
-//
-// We don't use a |nsSupportsHashtable| because we know that the lifetime of all these items
-// is bounded by the lifetime of the menubar. No need to add any more strong refs to the
-// picture because the containment hierarchy already uses strong refs.
-//
-
-
-NS_IMETHODIMP
-nsMenuBarX::Register(nsIContent *aContent, nsIChangeObserver *aMenuObject)
+// For change management, we don't use a |nsSupportsHashtable| because we know that the
+// lifetime of all these items is bounded by the lifetime of the menubar. No need to add
+// any more strong refs to the picture because the containment hierarchy already uses
+// strong refs.
+void
+nsMenuBarX::RegisterForContentChanges(nsIContent *aContent, nsChangeObserver *aMenuObject)
 {
   nsVoidKey key(aContent);
   mObserverTable.Put(&key, aMenuObject);
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsMenuBarX::Unregister(nsIContent *aContent)
+void
+nsMenuBarX::UnregisterForContentChanges(nsIContent *aContent)
 {
   nsVoidKey key(aContent);
   mObserverTable.Remove(&key);
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsMenuBarX::Lookup(nsIContent *aContent, nsIChangeObserver **_retval)
+nsChangeObserver*
+nsMenuBarX::LookupContentChangeObserver(nsIContent* aContent)
 {
-  *_retval = nsnull;
-  
-  nsVoidKey key (aContent);
-  *_retval = reinterpret_cast<nsIChangeObserver*>(mObserverTable.Get(&key));
-  NS_IF_ADDREF (*_retval);
-  
-  return NS_OK;
+  nsVoidKey key(aContent);
+  return reinterpret_cast<nsChangeObserver*>(mObserverTable.Get(&key));
 }
-
-
-//
-// Implementation methods for nsIMenuCommandDispatcher
-//
 
 
 // Given a menu item, creates a unique 4-character command ID and
 // maps it to the item. Returns the id for use by the client.
-NS_IMETHODIMP
-nsMenuBarX::Register(nsIMenuItem* inMenuItem, PRUint32* outCommandID)
+PRUint32
+nsMenuBarX::RegisterForCommand(nsIMenuItem* inMenuItem)
 {
   // no real need to check for uniqueness. We always start afresh with each
   // window at 1. Even if we did get close to the reserved Apple command id's,
   // those don't start until at least '    ', which is integer 538976288. If
   // we have that many menu items in one window, I think we have other problems.
 
+  // make id unique
+  ++mCurrentCommandID;
+
   // put it in the table, set out param for client
   nsPRUint32Key key(mCurrentCommandID);
   mObserverTable.Put(&key, inMenuItem);
-  *outCommandID = mCurrentCommandID;
-  
-  // make id unique for next time
-  ++mCurrentCommandID;
-  
-  return NS_OK;
+
+  return mCurrentCommandID;
 }
 
 
 // Removes the mapping between the given 4-character command ID
 // and its associated menu item.
-NS_IMETHODIMP
-nsMenuBarX::Unregister(PRUint32 inCommandID)
+void
+nsMenuBarX::UnregisterCommand(PRUint32 inCommandID)
 {
   nsPRUint32Key key(inCommandID);
   mObserverTable.Remove(&key);
-  return NS_OK;
 }
 
 

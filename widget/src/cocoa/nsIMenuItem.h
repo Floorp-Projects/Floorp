@@ -51,8 +51,8 @@
 
 class nsIMenu;
 class nsIWidget;
-class nsIChangeManager;
 class nsIContent;
+class nsMenuBarX;
 
 enum {
   knsMenuItemNoModifier      = 0,
@@ -77,7 +77,7 @@ class nsIMenuItem : public nsISupports {
     *
     */
     NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
-                      nsIChangeManager* aManager, nsIContent* aNode) = 0;
+                      nsMenuBarX* aMenuBar, nsIContent* aNode) = 0;
 
    /**
     * Get the MenuItem label

@@ -50,7 +50,6 @@
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
-#include "nsIMenuCommandDispatcher.h"
 #include "nsToolkit.h"
 
 #include "nsString.h"
@@ -83,11 +82,11 @@ static PRBool gConstructingMenu = PR_FALSE;
 static NS_DEFINE_CID(kMenuCID,     NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
-NS_IMPL_ISUPPORTS2(nsMenuX, nsIMenu, nsIChangeObserver)
+NS_IMPL_ISUPPORTS1(nsMenuX, nsIMenu)
 
 
 nsMenuX::nsMenuX()
-: mVisibleItemsCount(0), mParent(nsnull), mManager(nsnull), mMacMenuID(0), 
+: mVisibleItemsCount(0), mParent(nsnull), mMenuBar(nsnull), mMacMenuID(0), 
   mMacMenu(nil), mNativeMenuItem(nil), mIsEnabled(PR_TRUE),
   mDestroyHandlerCalled(PR_FALSE), mNeedsRebuild(PR_TRUE),
   mConstructed(PR_FALSE), mVisible(PR_TRUE), mXBLAttached(PR_FALSE)
@@ -106,25 +105,24 @@ nsMenuX::~nsMenuX()
   [mMacMenu release];
   [mMenuDelegate release];
   [mNativeMenuItem release];
-  
+
   // alert the change notifier we don't care no more
-  mManager->Unregister(mMenuContent);
+  if (mMenuContent)
+    mMenuBar->UnregisterForContentChanges(mMenuContent);
 }
 
 
 NS_IMETHODIMP
 nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                nsIChangeManager* aManager, nsIContent* aNode)
+                nsMenuBarX* aMenuBar, nsIContent* aNode)
 {
   mMenuContent = aNode;
+  NS_ASSERTION(mMenuContent, "Menu not given a dom node at creation time");
 
   // register this menu to be notified when changes are made to our content object
-  mManager = aManager; // weak ref
-  nsCOMPtr<nsIChangeObserver> changeObs(do_QueryInterface(static_cast<nsIChangeObserver*>(this)));
-  mManager->Register(mMenuContent, changeObs);
-
-  NS_ASSERTION(mMenuContent, "Menu not given a dom node at creation time");
-  NS_ASSERTION(mManager, "No change manager given, can't tell content model updates");
+  mMenuBar = aMenuBar; // weak ref
+  NS_ASSERTION(mMenuBar, "No menu bar given, must have one");
+  mMenuBar->RegisterForContentChanges(mMenuContent, this);
 
   mParent = aParent;
   // our parent could be either a menu bar (if we're toplevel) or a menu (if we're a submenu)
@@ -249,13 +247,7 @@ nsresult nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   [newNativeMenuItem setAction:@selector(menuItemHit:)];
   
   // set its command. we get the unique command id from the menubar
-  nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
-  if (dispatcher) {
-    PRUint32 commandID = 0L;
-    dispatcher->Register(aMenuItem, &commandID);
-    if (commandID)
-      [newNativeMenuItem setTag:commandID];
-  }
+  [newNativeMenuItem setTag:mMenuBar->RegisterForCommand(aMenuItem)];
   
   return NS_OK;
 }
@@ -387,13 +379,11 @@ NS_IMETHODIMP nsMenuX::RemoveItem(const PRUint32 aPos)
 
 NS_IMETHODIMP nsMenuX::RemoveAll()
 {
-  if (mMacMenu != nil) {
+  if (mMacMenu) {
     // clear command id's
-    nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
-    if (dispatcher) {
-      for (int i = 0; i < [mMacMenu numberOfItems]; i++)
-        dispatcher->Unregister((PRUint32)[[mMacMenu itemAtIndex:i] tag]);
-    }
+    int itemCount = [mMacMenu numberOfItems];
+    for (int i = 0; i < itemCount; i++)
+      mMenuBar->UnregisterCommand((PRUint32)[[mMacMenu itemAtIndex:i] tag]);
     // get rid of Cocoa menu items
     for (int i = [mMacMenu numberOfItems] - 1; i >= 0; i--)
       [mMacMenu removeItemAtIndex:i];
@@ -644,7 +634,7 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
   }
 
   // Create the item.
-  pnsMenuItem->Create(this, menuitemName, itemType, mManager, inMenuItemContent);
+  pnsMenuItem->Create(this, menuitemName, itemType, mMenuBar, inMenuItemContent);
 
   AddMenuItem(pnsMenuItem);
 
@@ -665,7 +655,7 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
   if (!pnsMenu)
     return;
 
-  pnsMenu->Create(reinterpret_cast<nsISupports*>(this), menuName, EmptyString(), mManager, inMenuContent);
+  pnsMenu->Create(reinterpret_cast<nsISupports*>(this), menuName, EmptyString(), mMenuBar, inMenuContent);
 
   AddMenu(pnsMenu);
 
@@ -959,16 +949,16 @@ nsMenuX::GetNativeMenuItem()
 
 
 //
-// nsIChangeObserver
+// nsChangeObserver
 //
 
 
-NS_IMETHODIMP nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID,
-                                        nsIContent *aContent, nsIAtom *aAttribute)
+void
+nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute)
 {
   // ignore the |open| attribute, which is by far the most common
   if (gConstructingMenu || (aAttribute == nsWidgetAtoms::open))
-    return NS_OK;
+    return;
 
   nsCOMPtr<nsIMenuBar> menubarParent = do_QueryInterface(mParent);
 
@@ -1004,7 +994,7 @@ NS_IMETHODIMP nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpa
 
     // don't do anything if the state is correct already
     if (contentIsHiddenOrCollapsed != mVisible)
-      return NS_OK;
+      return;
 
     nsCOMPtr<nsIMenu> menuParent = do_QueryInterface(mParent);
     if (contentIsHiddenOrCollapsed) {
@@ -1038,36 +1028,32 @@ NS_IMETHODIMP nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpa
   }
   else if (aAttribute == nsWidgetAtoms::image) {
     SetupIcon();
-  }  
-
-  return NS_OK;
+  }
 }
 
 
-NS_IMETHODIMP nsMenuX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild,
-                                      PRInt32 aIndexInContainer)
+void
+nsMenuX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild,
+                          PRInt32 aIndexInContainer)
 {  
   if (gConstructingMenu)
-    return NS_OK;
+    return;
 
   SetRebuild(PR_TRUE);
 
   RemoveItem(aIndexInContainer);
-  mManager->Unregister(aChild);
-
-  return NS_OK;
+  mMenuBar->UnregisterForContentChanges(aChild);
 }
 
 
-NS_IMETHODIMP nsMenuX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild,
-                                       PRInt32 aIndexInContainer)
+void
+nsMenuX::ObserveContentInserted(nsIDocument *aDocument, nsIContent *aChild,
+                           PRInt32 aIndexInContainer)
 {  
   if (gConstructingMenu)
-    return NS_OK;
+    return;
 
   SetRebuild(PR_TRUE);
-  
-  return NS_OK;
 }
 
 
