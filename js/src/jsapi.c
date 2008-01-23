@@ -2760,7 +2760,7 @@ bad:
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj)
 {
-    return GC_AWARE_GET_CLASS(cx, obj);
+    return OBJ_GET_CLASS(cx, obj);
 }
 #else
 JS_PUBLIC_API(JSClass *)
@@ -2802,7 +2802,7 @@ JS_GetPrivate(JSContext *cx, JSObject *obj)
     jsval v;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
-    v = GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    v = obj->fslots[JSSLOT_PRIVATE];
     if (!JSVAL_IS_INT(v))
         return NULL;
     return JSVAL_TO_PRIVATE(v);
@@ -2812,7 +2812,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
 {
     JS_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(data));
+    obj->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(data);
     return JS_TRUE;
 }
 
@@ -2831,7 +2831,7 @@ JS_GetPrototype(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     CHECK_REQUEST(cx);
-    proto = GC_AWARE_GET_PROTO(cx, obj);
+    proto = OBJ_GET_PROTO(cx, obj);
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return proto && proto->map ? proto : NULL;
@@ -2852,7 +2852,7 @@ JS_GetParent(JSContext *cx, JSObject *obj)
 {
     JSObject *parent;
 
-    parent = GC_AWARE_GET_PARENT(cx, obj);
+    parent = OBJ_GET_PARENT(cx, obj);
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return parent && parent->map ? parent : NULL;
@@ -3773,7 +3773,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
         obj->map->ops->clear(cx, obj);
 
     /* Clear cached class objects on the global object. */
-    if (JS_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) {
+    if (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) {
         int key;
 
         for (key = JSProto_Null; key < JSProto_LIMIT; key++)
@@ -3861,7 +3861,7 @@ prop_iter_finalize(JSContext *cx, JSObject *obj)
     jsint i;
     JSIdArray *ida;
 
-    v = GC_AWARE_GET_SLOT(cx, obj, JSSLOT_ITER_INDEX);
+    v = obj->fslots[JSSLOT_ITER_INDEX];
     if (JSVAL_IS_VOID(v))
         return;
 
@@ -3883,10 +3883,10 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
     JSIdArray *ida;
     jsid id;
 
-    v = GC_AWARE_GET_SLOT(trc->context, obj, JSSLOT_PRIVATE);
+    v = obj->fslots[JSSLOT_PRIVATE];
     JS_ASSERT(!JSVAL_IS_VOID(v));
 
-    i = JSVAL_TO_INT(OBJ_GET_SLOT(trc->context, obj, JSSLOT_ITER_INDEX));
+    i = JSVAL_TO_INT(obj->fslots[JSSLOT_ITER_INDEX]);
     if (i < 0) {
         /* Native case: just mark the next property to visit. */
         sprop = (JSScopeProperty *) JSVAL_TO_PRIVATE(v);

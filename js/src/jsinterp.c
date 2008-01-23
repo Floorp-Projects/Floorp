@@ -407,7 +407,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      */
     if (fp->fun && !fp->callobj) {
         JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass ||
-                  JS_GetPrivate(cx, fp->scopeChain) != fp);
+                  OBJ_GET_PRIVATE(cx, fp->scopeChain) != fp);
         if (!js_GetCallObject(cx, fp, fp->scopeChain))
             return NULL;
     }
@@ -479,7 +479,7 @@ PutBlockObjects(JSContext *cx, JSStackFrame *fp)
     ok = JS_TRUE;
     for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
         if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
-            if (JS_GetPrivate(cx, obj) != fp)
+            if (OBJ_GET_PRIVATE(cx, obj) != fp)
                 break;
             ok &= js_PutBlockObject(cx, obj);
         }
@@ -1004,7 +1004,7 @@ have_fun:
                         native,
                         JSVAL_IS_OBJECT(vp[1])
                         ? ((OBJ_GET_CLASS(cx, frame.thisp) == &js_FunctionClass)
-                           ? JS_GetFunctionName(JS_GetPrivate(cx, frame.thisp))
+                           ? JS_GetFunctionName(OBJ_GET_PRIVATE(cx, frame.thisp))
                            : OBJ_GET_CLASS(cx, frame.thisp)->name)
                         : JSVAL_IS_BOOLEAN(vp[1])
                         ? js_BooleanClass.name
@@ -2177,7 +2177,7 @@ interrupt:
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if (clasp != &js_BlockClass && clasp != &js_WithClass)
                     continue;
-                if (JS_GetPrivate(cx, obj) != fp)
+                if (OBJ_GET_PRIVATE(cx, obj) != fp)
                     break;
                 JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj)
                                      + ((clasp == &js_BlockClass)
@@ -5903,7 +5903,7 @@ out:
                  clasp = OBJ_GET_CLASS(cx, obj);
                  if (clasp != &js_WithClass && clasp != &js_BlockClass)
                      break;
-                 if (JS_GetPrivate(cx, obj) != fp ||
+                 if (OBJ_GET_PRIVATE(cx, obj) != fp ||
                      OBJ_BLOCK_DEPTH(cx, obj) < i) {
                      break;
                  }
