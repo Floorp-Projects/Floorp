@@ -38,13 +38,13 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY jsCopyValue.label "Kopiera värde">
-<!ENTITY jsEval.label "Utvärdera JavaScript...">
+<!ENTITY jsEval.label "Utvärdera JavaScript…">
 
 <!ENTITY jsProperty.label "Egenskap">
 <!ENTITY jsValue.label "Värde">
 
 <!ENTITY evaluateDialog.title "Utvärdera uttryck">
-<!ENTITY jsEval.desc "Skriv in ett JavaScript-uttryck.  Variabeln ”target” är för närvarande det valda objektet.">
+<!ENTITY jsEval.desc "Skriv in ett JavaScript-uttryck.  Variabeln &quot;target&quot; är för närvarande det valda objektet.">
 <!ENTITY jsExecute.label "Kör">
 <!ENTITY inspectReturn.label "Inspektera återgång i">
 <!ENTITY inspectReturnNew.label "Nytt fönster">
