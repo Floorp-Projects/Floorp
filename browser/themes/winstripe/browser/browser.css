@@ -1592,6 +1592,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   /* currently, the identity box is always LTR */
   -moz-outline-radius-topleft: 2px;
   -moz-outline-radius-bottomleft: 2px;
+  -moz-user-focus: normal;
+}
+
+#identity-box:focus {
+  outline: 1px dotted -moz-DialogText;
 }
 
 #identity-box:hover {

@@ -97,11 +97,8 @@ var PlacesCommandHook = {
         break;
       case "keypress":
         if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE ||
-            aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
-          // focus the content area and hide the panel
-          window.content.focus();
-          this.panel.hidePopup();
-        }
+            aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+          this.panel.hidePopup(); // hide the panel
         break;
     }
   },
