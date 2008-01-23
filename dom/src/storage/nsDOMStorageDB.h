@@ -106,6 +106,12 @@ public:
             PRInt32 aKeyUsage);
 
   /**
+   * Removes all keys added by a given domain.
+   */
+  nsresult
+  RemoveOwner(const nsAString& aOwner);
+
+  /**
    * Removes all keys from storage. Used when clearing storage.
    */
   nsresult
@@ -123,6 +129,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mUpdateKeyStatement;
   nsCOMPtr<mozIStorageStatement> mSetSecureStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveKeyStatement;
+  nsCOMPtr<mozIStorageStatement> mRemoveOwnerStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveAllStatement;
   nsCOMPtr<mozIStorageStatement> mGetUsageStatement;
 
