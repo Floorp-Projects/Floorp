@@ -259,6 +259,26 @@ nsNavHistoryExpire::ClearHistory()
   if (NS_FAILED(rv))
     NS_WARNING("ExpireAnnotationsParanoid failed.");
 
+  // for all remaining places, reset the frecency
+  // Note, we don't reset the visit_count, as we use that in our "on idle"
+  // query to figure out which places to recalcuate frecency first.
+  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places SET frecency = -1"));
+  if (NS_FAILED(rv))
+    NS_WARNING("failed to recent frecency");
+
+  // some of the remaining places could be place: urls or
+  // unvisited livemark items, so setting the frecency to -1
+  // will cause them to show up in the url bar autocomplete
+  // call FixInvalidFrecenciesForExcludedPlaces() to handle that scenario
+  rv = mHistory->FixInvalidFrecenciesForExcludedPlaces();
+  if (NS_FAILED(rv))
+    NS_WARNING("failed to fix invalid frecencies");
+
+  // XXX todo
+  // forcibly call the "on idle" timer here to do a little work
+  // but the rest will happen on idle.
+
   ENUMERATE_WEAKARRAY(mHistory->mObservers, nsINavHistoryObserver,
                       OnClearHistory())
 
@@ -506,21 +526,54 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
     const nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
   // build a comma separated string of visit ids to delete
+  // also build a comma separated string of place ids to reset frecency and
+  // visit_count.
   nsCString deletedVisitIds;
+  nsCString placeIds;
+  nsTArray<PRInt64> deletedPlaceIdsArray, deletedVisitIdsArray;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
-    // Do not add comma separator for the first entry
-    if (! deletedVisitIds.IsEmpty())
-      deletedVisitIds.AppendLiteral(",");  
-    deletedVisitIds.AppendInt(aRecords[i].visitID);
+    // Do not add comma separator for the first visit id
+    if (deletedVisitIdsArray.IndexOf(aRecords[i].visitID) == -1) {
+      if (!deletedVisitIds.IsEmpty())
+        deletedVisitIds.AppendLiteral(",");  
+      deletedVisitIds.AppendInt(aRecords[i].visitID);
+    }
+
+    // Do not add comma separator for the first place id
+    if (deletedPlaceIdsArray.IndexOf(aRecords[i].placeID) == -1) {
+      if (!placeIds.IsEmpty())
+        placeIds.AppendLiteral(",");
+      placeIds.AppendInt(aRecords[i].placeID);
+    }
   }
 
   if (deletedVisitIds.IsEmpty())
     return NS_OK;
 
-  return aConnection->ExecuteSimpleSQL(
+  nsresult rv = aConnection->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("DELETE FROM moz_historyvisits WHERE id IN (") +
     deletedVisitIds +
     NS_LITERAL_CSTRING(")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (placeIds.IsEmpty())
+    return NS_OK;
+
+  // reset the frecencies for these places.
+  // Note, we don't reset the visit_count, as we use that in our "on idle"
+  // query to figure out which places to recalcuate frecency first.
+  rv = aConnection->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("UPDATE moz_places SET "
+      "frecency = -1 WHERE id IN (") +
+    placeIds +
+    NS_LITERAL_CSTRING(")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // XXX todo
+  // forcibly call the "on idle" timer here to do a little work
+  // but the rest will happen on idle.
+
+  return NS_OK;
 }
 
 
@@ -548,7 +601,7 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
     // avoid trying to delete the same place id twice
     if (deletedPlaceIdsArray.IndexOf(aRecords[i].placeID) == -1) {
       // Do not add comma separator for the first entry
-      if (! deletedPlaceIds.IsEmpty())
+      if (!deletedPlaceIds.IsEmpty())
         deletedPlaceIds.AppendLiteral(",");
       deletedPlaceIdsArray.AppendElement(aRecords[i].placeID);
       deletedPlaceIds.AppendInt(aRecords[i].placeID);
@@ -583,12 +636,12 @@ nsNavHistoryExpire::EraseFavicons(mozIStorageConnection* aConnection,
   nsTArray<PRInt64> deletedFaviconIdsArray;  
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
     // IF main entry not expired OR no favicon DO NOT DELETE
-    if (! aRecords[i].erased || aRecords[i].faviconID == 0)
+    if (!aRecords[i].erased || aRecords[i].faviconID == 0)
       continue;
     // avoid trying to delete the same favicon id twice
     if (deletedFaviconIdsArray.IndexOf(aRecords[i].faviconID) == -1) {
       // Do not add comma separator for the first entry
-      if (! deletedFaviconIds.IsEmpty())
+      if (!deletedFaviconIds.IsEmpty())
         deletedFaviconIds.AppendLiteral(",");
       deletedFaviconIdsArray.AppendElement(aRecords[i].faviconID);
       deletedFaviconIds.AppendInt(aRecords[i].faviconID);
@@ -893,7 +946,7 @@ nsNavHistoryExpire::ComputeNextExpirationTime(
 
   PRBool hasMore;
   rv = statement->ExecuteStep(&hasMore);
-  if (NS_FAILED(rv) || ! hasMore)
+  if (NS_FAILED(rv) || !hasMore)
     return; // no items, we'll leave mNextExpirationTime = 0 and try to expire
             // again next time
 
@@ -907,7 +960,7 @@ nsNavHistoryExpire::ComputeNextExpirationTime(
 nsresult
 nsNavHistoryExpire::StartTimer(PRUint32 aMilleseconds)
 {
-  if (! mTimer)
+  if (!mTimer)
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
   NS_ENSURE_STATE(mTimer); // returns on error
   nsresult rv = mTimer->InitWithFuncCallback(TimerCallback, this,

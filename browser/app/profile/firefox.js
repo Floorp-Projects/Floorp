@@ -599,6 +599,42 @@ pref("browser.places.createdSmartBookmarks", false);
 // XXX to be removed after beta 2 (bug 391419)
 pref("browser.places.migratePostDataAnnotations", true);
 
+// the (maximum) number of the recent visits to sample
+// when calculating frecency
+pref("places.frecency.numVisits", 10);
+
+// Perform frecency recalculation after this amount of idle, repeating.
+// A value of zero disables updating of frecency on idle.
+// Default is 1 minute (60000ms).
+pref("places.frecency.updateIdleTime", 60000);
+
+// buckets (in days) for frecency calculation
+pref("places.frecency.firstBucketCutoff", 4);
+pref("places.frecency.secondBucketCutoff", 14);
+pref("places.frecency.thirdBucketCutoff", 31);
+pref("places.frecency.fourthBucketCutoff", 90);
+
+// weights for buckets for frecency calculations
+pref("places.frecency.firstBucketWeight", 100);
+pref("places.frecency.secondBucketWeight", 70);
+pref("places.frecency.thirdBucketWeight", 50);
+pref("places.frecency.fourthBucketWeight", 30);
+pref("places.frecency.defaultBucketWeight", 10);
+
+// bonus (in percent) for visit transition types for frecency calculations
+pref("places.frecency.embedVisitBonus", 0);
+pref("places.frecency.linkVisitBonus", 120);
+pref("places.frecency.typedVisitBonus", 200);
+pref("places.frecency.bookmarkVisitBonus", 140);
+pref("places.frecency.downloadVisitBonus", 0);
+pref("places.frecency.permRedirectVisitBonus", 0);
+pref("places.frecency.tempRedirectVisitBonus", 0);
+pref("places.frecency.defaultVisitBonus", 0);
+
+// bonus (in percent) for place types for frecency calculations
+pref("places.frecency.unvisitedBookmarkBonus", 140);
+pref("places.frecency.unvisitedTypedBonus", 200);
+
 // Controls behavior of the "Add Exception" dialog launched from SSL error pages
 // 0 - don't pre-populate anything
 // 1 - pre-populate site URL, but don't fetch certificate
