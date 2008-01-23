@@ -1769,12 +1769,6 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   nsCOMPtr<nsIAccessNode> childAccessNode;
   GetCachedAccessNode(childNode, getter_AddRefs(childAccessNode));
   nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
-  if (!childAccessible && !isHiding) {
-    // If not about to hide it, make sure there's an accessible so we can fire an
-    // event for it
-    GetAccService()->GetAttachedAccessibleFor(childNode,
-                                              getter_AddRefs(childAccessible));
-  }
 
 #ifdef DEBUG_A11Y
   nsAutoString localName;
