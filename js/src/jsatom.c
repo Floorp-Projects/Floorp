@@ -690,12 +690,13 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
                 ++state->tablegen;
             }
         }
-        JS_ASSERT(JSSTRING_IS_FLAT(str) && !JSSTRING_IS_MUTABLE(str));
         INIT_ATOM_ENTRY(entry, key);
+        JSFLATSTR_SET_ATOMIZED(key);
     }
 
   finish:
     ADD_ATOM_ENTRY_FLAGS(entry, flags & (ATOM_PINNED | ATOM_INTERNED));
+    JS_ASSERT(JSSTRING_IS_ATOMIZED(key));
     v = STRING_TO_JSVAL(key);
     cx->weakRoots.lastAtom = v;
     JS_UNLOCK(&state->lock, cx);
@@ -795,15 +796,36 @@ js_AtomizePrimitiveValue(JSContext *cx, jsval v, JSAtom **atomp)
     return JS_TRUE;
 }
 
-JSAtom *
-js_ValueToStringAtom(JSContext *cx, jsval v)
+JSBool
+js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
 {
     JSString *str;
+    JSAtom *atom;
 
-    str = js_ValueToString(cx, v);
-    if (!str)
-        return NULL;
-    return js_AtomizeString(cx, str, 0);
+    /*
+     * Optimize for the common case where v is an already-atomized string. The
+     * comment in jsstr.h before the JSSTRING_SET_ATOMIZED macro's definition
+     * explains why this is thread-safe. The extra rooting via lastAtom (which
+     * would otherwise be done in js_js_AtomizeString) ensures the caller that
+     * the resulting id at is least weakly rooted.
+     */
+    if (JSVAL_IS_STRING(v)) {
+        str = JSVAL_TO_STRING(v);
+        if (JSSTRING_IS_ATOMIZED(str)) {
+            cx->weakRoots.lastAtom = v;
+            *idp = ATOM_TO_JSID((JSAtom *) v);
+            return JS_TRUE;
+        }
+    } else {
+        str = js_ValueToString(cx, v);
+        if (!str)
+            return JS_FALSE;
+    }
+    atom = js_AtomizeString(cx, str, 0);
+    if (!atom)
+        return JS_FALSE;
+    *idp = ATOM_TO_JSID(atom);
+    return JS_TRUE;
 }
 
 #ifdef DEBUG
