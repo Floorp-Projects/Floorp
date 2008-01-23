@@ -54,6 +54,7 @@ bin/res/cmessage.txt
 bin/res/effective_tld_names.dat
 bin/xpicleanup
 bin/libsqlite3.so
+bin/README.txt
 
 ; [Components]
 bin/components/alerts.xpt
@@ -161,6 +162,7 @@ bin/components/satchel.xpt
 bin/components/saxparser.xpt
 bin/components/search.xpt
 bin/components/shistory.xpt
+bin/components/spellchecker.xpt
 bin/components/storage.xpt
 bin/components/profile.xpt
 bin/components/toolkitprofile.xpt
