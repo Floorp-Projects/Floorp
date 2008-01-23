@@ -9,6 +9,7 @@
 <!ENTITY cmd.close.commandKey             "w">
 
 <!-- View labels -->
+<!ENTITY search.label                     "Get Add-ons">
 <!ENTITY extensions.label                 "Extensions">
 <!ENTITY themes.label                     "Themes">
 <!ENTITY locales.label                    "Languages">
@@ -32,7 +33,7 @@
 <!ENTITY cmd.restartApp2.accesskey        "R">
 <!ENTITY cmd.restartApp2.tooltip          "Restart &brandShortName; to apply changes">
 <!ENTITY cmd.skip.label                   "Skip">
-<!ENTITY cmd.skip.accesskey               "S">
+<!ENTITY cmd.skip.accesskey               "k">
 <!ENTITY cmd.skip.tooltip                 "Skip these updates">
 <!ENTITY cmd.continue.label               "Continue">
 <!ENTITY cmd.continue.accesskey           "C">
@@ -82,6 +83,9 @@
 <!ENTITY cmd.hideUpdateInfo.label         "Hide Information">
 <!ENTITY cmd.hideUpdateInfo.accesskey     "H">
 <!ENTITY cmd.hideUpdateInfo.tooltip       "Hide information about these updates">
+<!ENTITY cmd.installSearchResult.label     "Add to &brandShortName;…">
+<!ENTITY cmd.installSearchResult.accesskey "A">
+<!ENTITY cmd.installSearchResult.tooltip   "Download and install this Add-on">
 <!-- The selected add-on's cancel action button label -->
 <!ENTITY cancel.label                     "Cancel">
 <!ENTITY cancel.accesskey                 "C">
@@ -117,6 +121,27 @@
 <!ENTITY getExtensions.label              "Get Extensions">
 <!ENTITY getThemes.label                  "Get Themes">
 <!ENTITY getPlugins.label                 "Get Plugins">
+
+<!ENTITY searchAddons.label               "Search All Add-ons">
+<!ENTITY browseAddons.label               "Browse All Add-ons">
+<!ENTITY searchFailed.label               "&brandShortName; couldn't retrieve add-ons">
+<!ENTITY recommendedHeader.label          "Recommended">
+<!ENTITY recommendedThrobber.label        "Retrieving recommended add-ons">
+<!ENTITY searchThrobber.label             "Searching add-ons">
+<!ENTITY resetSearch.label                "Clear Results">
+<!ENTITY searchEmpty.label                "No Matching Add-ons">
+<!ENTITY searchEmpty.button               "Ok">
+<!ENTITY cancelSearch.button              "Cancel">
+<!ENTITY searchResultHomepage.value       "Learn More">
+<!ENTITY searchBox.label                  "Search All Add-ons">
+<!ENTITY recommendedResults.label         "See all Recommended Add-ons">
+<!ENTITY searchResultInstalling.label     "Installing…">
+<!ENTITY searchResultFailed.label         "Install Failed">
+<!ENTITY searchResultInstalled.label      "Install Complete">
+<!ENTITY addonTypeExtension.label         "Extension">
+<!ENTITY addonTypeTheme.label             "Theme">
+<!ENTITY missingThumbnail.label           "No Preview">
+
 <!ENTITY previewNoThemeSelected.label     "No Theme Selected">
 <!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
 <!ENTITY moreInfo.label                   "More Information">
@@ -134,3 +159,8 @@
 <!ENTITY installFailure.label             "Install failed.">
 
 <!ENTITY progressStatus.label             "Checking For Updates">
+
+<!ENTITY eula.title                       "End User License Agreement">
+<!ENTITY eula.width                       "560px">
+<!ENTITY eula.height                      "400px">
+<!ENTITY eula.accept                      "Accept and Install…">
