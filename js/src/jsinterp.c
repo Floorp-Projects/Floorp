@@ -1629,8 +1629,6 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
 static JSBool
 InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
 {
-    JSAtom *atom;
-
     JS_ASSERT(!JSVAL_IS_INT(idval));
 
 #if JS_HAS_XML_SUPPORT
@@ -1646,11 +1644,7 @@ InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
     }
 #endif
 
-    atom = js_ValueToStringAtom(cx, idval);
-    if (!atom)
-        return JS_FALSE;
-    *idp = ATOM_TO_JSID(atom);
-    return JS_TRUE;
+    return js_ValueToStringId(cx, idval, idp);
 }
 
 /*
