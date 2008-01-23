@@ -73,7 +73,7 @@ static const char kMaxEntriesPref[] =  "offline.max_site_resources";
 #define DEFAULT_MAX_ENTRIES 100
 #define MAX_URI_LENGTH 2048
 
-static nsCAutoString gCachedHostPort;
+static nsCAutoString gCachedAsciiHost;
 static char **gCachedKeys = nsnull;
 static PRUint32 gCachedKeysCount = 0;
 
@@ -187,7 +187,7 @@ nsDOMOfflineResourceList::Init()
 
   // Dynamically-managed resources are stored as a separate ownership list
   // from the manifest.
-  rv = mManifestURI->GetSpec(mDynamicOwnerSpec);
+  rv = mManifestURI->GetAsciiSpec(mDynamicOwnerSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDynamicOwnerSpec.Append("#dynamic");
@@ -196,7 +196,7 @@ nsDOMOfflineResourceList::Init()
   if (!innerURI)
     return NS_ERROR_FAILURE;
 
-  rv = innerURI->GetHostPort(mHostPort);
+  rv = innerURI->GetAsciiHost(mAsciiHost);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICacheService> serv = do_GetService(NS_CACHESERVICE_CONTRACTID,
@@ -383,7 +383,7 @@ nsDOMOfflineResourceList::Remove(const nsAString& aURI)
 
   ClearCachedKeys();
 
-  rv = mCacheSession->RemoveOwnedKey(mHostPort, mDynamicOwnerSpec, key);
+  rv = mCacheSession->RemoveOwnedKey(mAsciiHost, mDynamicOwnerSpec, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mCacheSession->EvictUnownedEntries();
@@ -969,7 +969,7 @@ nsDOMOfflineResourceList::UpdateCompleted(nsIOfflineCacheUpdate *aUpdate)
 nsresult
 nsDOMOfflineResourceList::GetCacheKey(nsIURI *aURI, nsCString &aKey)
 {
-  nsresult rv = aURI->GetSpec(aKey);
+  nsresult rv = aURI->GetAsciiSpec(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // url fragments aren't used in cache keys
@@ -987,16 +987,16 @@ nsDOMOfflineResourceList::GetCacheKey(nsIURI *aURI, nsCString &aKey)
 nsresult
 nsDOMOfflineResourceList::CacheKeys()
 {
-  if (gCachedKeys && mHostPort == gCachedHostPort)
+  if (gCachedKeys && mAsciiHost == gCachedAsciiHost)
     return NS_OK;
 
   ClearCachedKeys();
 
-  nsresult rv = mCacheSession->GetOwnedKeys(mHostPort, mDynamicOwnerSpec,
+  nsresult rv = mCacheSession->GetOwnedKeys(mAsciiHost, mDynamicOwnerSpec,
                                             &gCachedKeysCount, &gCachedKeys);
 
   if (NS_SUCCEEDED(rv))
-    gCachedHostPort = mHostPort;
+    gCachedAsciiHost = mAsciiHost;
 
   return rv;
 }
@@ -1010,7 +1010,7 @@ nsDOMOfflineResourceList::ClearCachedKeys()
     gCachedKeysCount = 0;
   }
 
-  gCachedHostPort = "";
+  gCachedAsciiHost = "";
 }
 
 
