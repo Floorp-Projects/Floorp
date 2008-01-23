@@ -609,10 +609,10 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
     JS_ASSERT(slot < obj->map->freeslot);
 
     /*
-     * Avoid locking if called from the GC (see GC_AWARE_GET_SLOT in jsobj.h).
-     * Also avoid locking an object owning a sealed scope.  If neither of those
-     * special cases applies, try to claim scope's flyweight lock from whatever
-     * context may have had it in an earlier request.
+     * Avoid locking if called from the GC.  Also avoid locking an object
+     * owning a sealed scope.  If neither of those special cases applies, try
+     * to claim scope's flyweight lock from whatever context may have had it in
+     * an earlier request.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
@@ -702,10 +702,10 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JS_ASSERT(slot < obj->map->freeslot);
 
     /*
-     * Avoid locking if called from the GC (see GC_AWARE_GET_SLOT in jsobj.h).
-     * Also avoid locking an object owning a sealed scope.  If neither of those
-     * special cases applies, try to claim scope's flyweight lock from whatever
-     * context may have had it in an earlier request.
+     * Avoid locking if called from the GC.  Also avoid locking an object
+     * owning a sealed scope.  If neither of those special cases applies, try
+     * to claim scope's flyweight lock from whatever context may have had it in
+     * an earlier request.
      */
     if (CX_THREAD_IS_RUNNING_GC(cx) ||
         (SCOPE_IS_SEALED(scope) && scope->object == obj) ||
