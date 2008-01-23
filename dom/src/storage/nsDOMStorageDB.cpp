@@ -271,7 +271,8 @@ nsDOMStorageDB::SetKey(const nsAString& aDomain,
                        const nsAString& aValue,
                        PRBool aSecure,
                        const nsAString& aOwner,
-                       PRInt32 aQuota)
+                       PRInt32 aQuota,
+                       PRInt32 *aNewUsage)
 {
   mozStorageStatementScoper scope(mGetKeyValueStatement);
  
@@ -361,6 +362,8 @@ nsDOMStorageDB::SetKey(const nsAString& aDomain,
     mCachedOwner = aOwner;
     mCachedUsage = usage;
   }
+
+  *aNewUsage = usage;
 
   return NS_OK;
 }

@@ -71,6 +71,14 @@ pref("browser.cache.offline.enable",           true);
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         10240);
 
+// offline apps should be limited to this much data in global storage
+// (in kilobytes)
+pref("offline-apps.quota.max",        204800);
+
+// the user should be warned if offline app disk usage exceeds this amount
+// (in kilobytes)
+pref("offline-apps.quota.warn",        51200);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);

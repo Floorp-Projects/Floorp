@@ -85,7 +85,8 @@ public:
          const nsAString& aValue,
          PRBool aSecure,
          const nsAString& aOwner,
-         PRInt32 aQuota);
+         PRInt32 aQuota,
+         PRInt32* aNewUsage);
 
   /**
    * Set the secure flag for a key in storage. Does nothing if the key was

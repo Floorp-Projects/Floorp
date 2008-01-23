@@ -60,6 +60,7 @@ REQUIRES       = xpcom         \
                  unicharutil   \
                  widget        \
                  xpconnect     \
+                 prefetch      \
                  $(NULL)
 
 ifdef MOZ_STORAGE
