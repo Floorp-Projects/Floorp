@@ -176,7 +176,7 @@ function run_test() {
 
   // add a visit that matches the search term
   var testURI = uri("http://" + searchTerm + ".com");
-  bhist.addPageWithDetails(testURI, searchTerm, Date.now());
+  bhist.addPageWithDetails(testURI, searchTerm, Date.now() * 1000);
 
   // create a saved-search that matches the visit we added
   var searchId = bmsvc.insertBookmark(testRoot,
@@ -216,7 +216,7 @@ function run_test() {
       do_check_eq(item.uri, testURI.spec); // history visit
 
       // test live-update of query results - add a history visit that matches the query
-      bhist.addPageWithDetails(uri("http://foo.com"), searchTerm + "blah", Date.now());
+      bhist.addPageWithDetails(uri("http://foo.com"), searchTerm + "blah", Date.now() * 1000);
       do_check_eq(node.childCount, 2);
 
       // test live-update of query results - delete a history visit that matches the query
