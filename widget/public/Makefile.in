@@ -64,10 +64,7 @@ EXPORTS		= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXPORTS		+= \
-		nsIMenuBar.h \
-		nsIMenu.h \
-		nsIMenuItem.h
+EXPORTS		+= nsIMenuBar.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
