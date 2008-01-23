@@ -112,6 +112,6 @@ function setPassword(realm, username, password) {
   let nsLoginInfo = new Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
   let login = new nsLoginInfo('chrome://sync', null, realm,
-                              username, password, null, null);
+                              username, password, "", "");
   lm.addLogin(login);
 }
