@@ -52,6 +52,7 @@
 #include "nsNetUtil.h"
 #include "nsIPrefBranch.h"
 #include "nsICookiePermission.h"
+#include "nsIPermission.h"
 #include "nsIPermissionManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIOfflineCacheUpdate.h"
@@ -232,6 +233,44 @@ ClearStorage(nsDOMStorageEntry* aEntry, void* userArg)
   return PL_DHASH_REMOVE;
 }
 
+static nsresult
+GetOfflineDomains(nsStringArray& aDomains)
+{
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (permissionManager) {
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    nsresult rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore;
+    while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsIPermission> perm;
+      rv = enumerator->GetNext(getter_AddRefs(perm));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRUint32 capability;
+      rv = perm->GetCapability(&capability);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (capability != nsIPermissionManager::DENY_ACTION) {
+        nsCAutoString type;
+        rv = perm->GetType(type);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (type.EqualsLiteral("offline-app")) {
+          nsCAutoString host;
+          rv = perm->GetHost(host);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          aDomains.AppendString(NS_ConvertUTF8toUTF16(host));
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsDOMStorageManager::Observe(nsISupports *aSubject,
                              const char *aTopic,
@@ -250,7 +289,12 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
 #ifdef MOZ_STORAGE
     nsresult rv = nsDOMStorage::InitDB();
     NS_ENSURE_SUCCESS(rv, rv);
-    return nsDOMStorage::gStorageDB->RemoveAll();
+
+    // Remove global storage for domains that aren't marked for offline use.
+    nsStringArray domains;
+    rv = GetOfflineDomains(domains);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_FALSE);
 #endif
   }
 
@@ -265,6 +309,18 @@ nsDOMStorageManager::GetUsage(const nsAString& aDomain,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsDOMStorage::gStorageDB->GetUsage(aDomain, aUsage);
+}
+
+NS_IMETHODIMP
+nsDOMStorageManager::ClearOfflineApps()
+{
+    nsresult rv = nsDOMStorage::InitDB();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsStringArray domains;
+    rv = GetOfflineDomains(domains);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return nsDOMStorage::gStorageDB->RemoveOwners(domains, PR_TRUE);
 }
 
 void
