@@ -350,6 +350,7 @@ bin\updater.exe
 ; [Crash Reporter]
 bin\crashreporter.exe
 bin\crashreporter.ini
+bin\crashreporter-override.ini
 
 ; [Additional Developer Tools]
 [adt]
