@@ -258,6 +258,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             obj = js_ValueToFunctionObject(cx, sp, 0);
             if (!obj)
                 return JS_FALSE;
+            *sp = OBJECT_TO_JSVAL(obj);
             *va_arg(ap, JSFunction **) = (JSFunction *) JS_GetPrivate(cx, obj);
             break;
           case 'v':
