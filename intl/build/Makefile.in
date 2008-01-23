@@ -106,7 +106,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_ENABLE_PANGO
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_PANGO_LIBS) \
 		$(NULL)
