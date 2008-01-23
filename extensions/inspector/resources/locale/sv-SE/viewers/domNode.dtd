@@ -42,9 +42,9 @@
 <!ENTITY localName.label "Lokalt namn:">
 <!ENTITY namespaceURI.label "Namnrymdens URI:">
 <!ENTITY nodeType.label "Nodtyp:">
-<!ENTITY nodeValue.label "Nodevärde:">
+<!ENTITY nodeValue.label "Nodvärde:">
 
-<!ENTITY namespaceTitle.null.label "noll">
+<!ENTITY namespaceTitle.null.label "null">
 <!ENTITY namespaceTitle.default.label "Dokumentstandard">
 <!ENTITY namespaceTitle.custom.label "Anpassad">
 
