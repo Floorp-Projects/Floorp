@@ -889,7 +889,8 @@ function delayedStartup()
     gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                              .getService(Components.interfaces.nsIPrefBranch2);
   BrowserOffline.init();
-  
+  OfflineApps.init();
+
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
@@ -1098,6 +1099,7 @@ function BrowserShutdown()
     gSanitizeListener.shutdown();
 
   BrowserOffline.uninit();
+  OfflineApps.uninit();
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
@@ -3371,6 +3373,11 @@ nsBrowserStatusHandler.prototype =
           var browser = gBrowser.mCurrentBrowser;
           if (!gBrowser.mTabbedMode && !browser.mIconURL)
             gBrowser.useDefaultIcon(gBrowser.mCurrentTab);
+
+          if (Components.isSuccessCode(aStatus) &&
+              content.document.documentElement.getAttribute("manifest")) {
+            OfflineApps.offlineAppRequested(content);
+          }
         }
       }
 
@@ -4826,6 +4833,117 @@ var BrowserOffline = {
       this._uiElement.setAttribute("disabled", "true");
 
     this._uiElement.setAttribute("checked", aOffline);
+  }
+};
+
+var OfflineApps = {
+  /////////////////////////////////////////////////////////////////////////////
+  // OfflineApps Public Methods
+  init: function ()
+  {
+    // XXX: empty init left as a placeholder for patch in bug 397417
+  },
+
+  uninit: function ()
+  {
+    // XXX: empty uninit left as a placeholder for patch in bug 397417
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // OfflineApps Implementation Methods
+
+  // XXX: _getBrowserWindowForContentWindow and _getBrowserForContentWindow
+  // were taken from browser/components/feeds/src/WebContentConverter.
+  _getBrowserWindowForContentWindow: function(aContentWindow) {
+    return aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow)
+                         .wrappedJSObject;
+  },
+
+  _getBrowserForContentWindow: function(aBrowserWindow, aContentWindow) {
+    // This depends on pseudo APIs of browser.js and tabbrowser.xml
+    aContentWindow = aContentWindow.top;
+    var browsers = aBrowserWindow.getBrowser().browsers;
+    for (var i = 0; i < browsers.length; ++i) {
+      if (browsers[i].contentWindow == aContentWindow)
+        return browsers[i];
+    }
+  },
+
+  offlineAppRequested: function(aContentWindow) {
+    var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
+    var browser = this._getBrowserForContentWindow(browserWindow,
+                                                   aContentWindow);
+
+    var currentURI = browser.webNavigation.currentURI;
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+
+    // don't bother showing UI if the user has already made a decision
+    if (pm.testExactPermission(currentURI, "offline-app") !=
+        Ci.nsIPermissionManager.UNKNOWN_ACTION)
+      return;
+
+    try {
+      if (gPrefService.getBoolPref("offline-apps.allow_by_default")) {
+        // all pages can use offline capabilities, no need to ask the user
+        return;
+      }
+    } catch(e) {
+      // this pref isn't set by default, ignore failures
+    }
+
+    var notificationBox = gBrowser.getNotificationBox(browser);
+    var notification = notificationBox.getNotificationWithValue("offline-app-requested");
+    if (!notification) {
+      var bundle_browser = document.getElementById("bundle_browser");
+
+      var buttons = [{
+        label: bundle_browser.getString("offlineApps.allow"),
+        accessKey: bundle_browser.getString("offlineApps.allowAccessKey"),
+        callback: function() { OfflineApps.allowSite(); }
+      }];
+
+      const priority = notificationBox.PRIORITY_INFO_LOW;
+      var message = bundle_browser.getFormattedString("offlineApps.available",
+                                                      [ currentURI.host ]);
+      notificationBox.appendNotification(message, "offline-app-requested",
+                                         "chrome://browser/skin/Info.png",
+                                         priority, buttons);
+    }
+  },
+
+  allowSite: function() {
+    var currentURI = gBrowser.selectedBrowser.webNavigation.currentURI;
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+    pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+
+    // When a site is enabled while loading, <link rel="offline-resource">
+    // resources will start fetching immediately.  This one time we need to
+    // do it ourselves.
+    this._startFetching();
+  },
+
+  _startFetching: function() {
+    var manifest = content.document.documentElement.getAttribute("manifest");
+    if (!manifest)
+      return;
+
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+
+    var contentURI = ios.newURI(content.location.href, null, null);
+    var manifestURI = ios.newURI(manifest, content.document.characterSet,
+                                 contentURI);
+
+    var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
+                        getService(Ci.nsIOfflineCacheUpdateService);
+    updateService.scheduleUpdate(manifestURI, contentURI);
   }
 };
 

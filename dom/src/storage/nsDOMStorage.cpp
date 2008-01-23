@@ -153,8 +153,10 @@ nsDOMStorageManager::Initialize()
   NS_ADDREF(gStorageManager);
 
   nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-  if (os)
+  if (os) {
     os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
+    os->AddObserver(gStorageManager, "offline-app-removed", PR_FALSE);
+  }
 
   return NS_OK;
 }
@@ -194,7 +196,14 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
                              const char *aTopic,
                              const PRUnichar *aData)
 {
-  if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("cleared").get())) {
+  if (!strcmp(aTopic, "offline-app-removed")) {
+#ifdef MOZ_STORAGE
+    nsresult rv = nsDOMStorage::InitDB();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return nsDOMStorage::gStorageDB->RemoveOwner(nsDependentString(aData));
+#endif
+  } else if (!strcmp(aTopic, "cookie-changed") &&
+             !nsCRT::strcmp(aData, NS_LITERAL_STRING("cleared").get())) {
     mStorages.EnumerateEntries(ClearStorage, nsnull);
 
 #ifdef MOZ_STORAGE
