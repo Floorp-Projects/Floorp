@@ -113,6 +113,13 @@ public:
   RemoveOwner(const nsAString& aOwner);
 
   /**
+   * Removes keys owned by domains that either match or don't match the
+   * list.
+   */
+  nsresult
+  RemoveOwners(const nsStringArray& aOwners, PRBool aMatch);
+
+  /**
    * Removes all keys from storage. Used when clearing storage.
    */
   nsresult
