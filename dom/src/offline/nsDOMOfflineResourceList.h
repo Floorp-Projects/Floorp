@@ -110,7 +110,7 @@ private:
   nsCOMPtr<nsIWeakReference> mWindow;
   nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
   nsCOMPtr<nsIOfflineCacheUpdate> mCacheUpdate;
-  nsCAutoString mHostPort;
+  nsCAutoString mAsciiHost;
   nsCAutoString mDynamicOwnerSpec;
 
   nsCOMArray<nsIDOMEventListener> mCheckingListeners;
