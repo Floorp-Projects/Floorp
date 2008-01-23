@@ -81,7 +81,7 @@ endif
 endif
 endif # MOZ_ENABLE_CAIRO_GFX
 
-ifdef MOZ_ENABLE_PANGO
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
 endif
 

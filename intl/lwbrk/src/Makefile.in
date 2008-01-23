@@ -58,7 +58,7 @@ CPPSRCS		= \
 		nsSemanticUnitScanner.cpp \
 		$(NULL)
 
-ifdef MOZ_ENABLE_PANGO
+ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS		+= \
 		nsPangoBreaker.cpp \
 		$(NULL)
@@ -84,7 +84,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_ENABLE_PANGO
+ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CXXFLAGS	+= \
 		$(MOZ_PANGO_CFLAGS) \
 		$(NULL)
