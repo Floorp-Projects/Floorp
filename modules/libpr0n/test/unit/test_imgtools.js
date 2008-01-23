@@ -92,6 +92,28 @@ function compareArrays(aArray1, aArray2) {
 }
 
 
+/*
+ * checkExpectedError
+ *
+ * Checks to see if a thrown error was expected or not, and if it
+ * matches the expected value.
+ */
+function checkExpectedError (aExpectedError, aActualError) {
+  if (aExpectedError) {
+      if (!aActualError)
+          throw "Didn't throw as expected (" + aExpectedError + ")";
+
+      if (!aExpectedError.test(aActualError))
+          throw "Threw (" + aActualError + "), not (" + aExpectedError;
+
+      // We got the expected error, so make a note in the test log.
+      dump("...that error was expected.\n\n");
+  } else if (aActualError) {
+      throw "Threw unexpected error: " + aActualError;
+  }
+}
+
+
 function run_test() {
 
 try {
@@ -100,6 +122,7 @@ try {
 /* ========== 0 ========== */
 var testnum = 0;
 var testdesc = "imgITools setup";
+var err = null;
 
 var imgTools = Cc["@mozilla.org/image/tools;1"].
                getService(Ci.imgITools);
@@ -297,6 +320,35 @@ referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.
 compareArrays(encodedBytes, referenceBytes);
+
+
+
+
+/* ========== bug 413512  ========== */
+testnum = 413512;
+testdesc = "test decoding bad favicon (bug 413512)";
+
+imgName = "bug413512.ico";
+inMimeType = "image/x-icon";
+imgFile = do_get_file(TESTDIR + imgName);
+
+istream = getFileInputStream(imgFile);
+do_check_eq(istream.available(), 17759);
+
+// You'd think the decoder would fail, but it doesn't. The decoders use
+// stream->ReadSegments with a callback, and buffered streams ignore errors
+// from the callback. :-( See bug 413595.
+outParam = { value: null };
+imgTools.decodeImageData(istream, inMimeType, outParam);
+container = outParam.value;
+
+try {
+    istream = imgTools.encodeImage(container, "image/png");
+} catch (e) {
+    err = e;
+}
+checkExpectedError(/NS_ERROR_NOT_AVAILABLE/, err);
+
 
 /* ========== end ========== */
 
