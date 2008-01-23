@@ -54,18 +54,26 @@
 #include "nsICookiePermission.h"
 #include "nsIPermissionManager.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIOfflineCacheUpdate.h"
+#include "nsIJSContextStack.h"
 
 static const PRUint32 ASK_BEFORE_ACCEPT = 1;
 static const PRUint32 ACCEPT_SESSION = 2;
 static const PRUint32 BEHAVIOR_REJECT = 2;
 
 static const PRUint32 DEFAULT_QUOTA = 5 * 1024;
+// Be generous with offline apps by default...
+static const PRUint32 DEFAULT_OFFLINE_APP_QUOTA = 200 * 1024;
+// ... but warn if it goes over this amount
+static const PRUint32 DEFAULT_OFFLINE_WARN_QUOTA = 50 * 1024;
 
 static const char kPermissionType[] = "cookie";
 static const char kStorageEnabled[] = "dom.storage.enabled";
 static const char kDefaultQuota[] = "dom.storage.default_quota";
 static const char kCookiesBehavior[] = "network.cookie.cookieBehavior";
 static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
+static const char kOfflineAppWarnQuota[] = "offline-apps.quota.warn";
+static const char kOfflineAppQuota[] = "offline-apps.quota.max";
 
 //
 // Helper that tells us whether the caller is secure or not.
@@ -104,11 +112,44 @@ IsCallerSecure()
   return NS_SUCCEEDED(rv) && isHttps;
 }
 
-static PRInt32
-GetQuota(const nsAString &domain)
+
+// Returns two quotas - A hard limit for which adding data will be an error,
+// and a limit after which a warning event will be sent to the observer
+// service.  The warn limit may be -1, in which case there will be no warning.
+static void
+GetQuota(const nsAString &aDomain, PRInt32 *aQuota, PRInt32 *aWarnQuota)
 {
+  // Fake a URI for the permission manager
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_STRING("http://") + aDomain);
+
+  if (uri) {
+    nsCOMPtr<nsIPermissionManager> permissionManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+
+    PRUint32 perm;
+    if (permissionManager &&
+        NS_SUCCEEDED(permissionManager->TestExactPermission(uri, "offline-app", &perm)) &&
+        perm != nsIPermissionManager::UNKNOWN_ACTION &&
+        perm != nsIPermissionManager::DENY_ACTION) {
+      // This is an offline app, give more space by default.
+      *aQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppQuota,
+                                                     DEFAULT_OFFLINE_WARN_QUOTA * 1024));
+
+      if (perm == nsIOfflineCacheUpdateService::ALLOW_NO_WARN) {
+        *aWarnQuota = -1;
+      } else {
+        *aWarnQuota = ((PRInt32)nsContentUtils::GetIntPref(kOfflineAppWarnQuota,
+                                                           DEFAULT_OFFLINE_WARN_QUOTA) * 1024);
+      }
+      return;
+    }
+  }
+
   // FIXME: per-domain quotas?
-  return ((PRInt32)nsContentUtils::GetIntPref(kDefaultQuota, DEFAULT_QUOTA) * 1024);
+  *aQuota = ((PRInt32)nsContentUtils::GetIntPref(kDefaultQuota,
+                                                 DEFAULT_QUOTA) * 1024);
+  *aWarnQuota = -1;
 }
 
 nsSessionStorageEntry::nsSessionStorageEntry(KeyTypePointer aStr)
@@ -771,11 +812,36 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
     currentDomain = mDomain;
   }
 
+  PRInt32 quota;
+  PRInt32 warnQuota;
+  GetQuota(currentDomain, &quota, &warnQuota);
+
+  PRInt32 usage;
   rv = gStorageDB->SetKey(mDomain, aKey, aValue, aSecure,
-                          currentDomain, GetQuota(currentDomain));
+                          currentDomain, quota, &usage);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mItemsCached = PR_FALSE;
+
+  if (warnQuota >= 0 && usage > warnQuota) {
+    // try to include the window that exceeded the warn quota
+    nsCOMPtr<nsIDOMWindow> window;
+    JSContext *cx;
+    nsCOMPtr<nsIJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    if (stack && NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
+      nsCOMPtr<nsIScriptContext> scriptContext;
+      scriptContext = GetScriptContextFromJSContext(cx);
+      if (scriptContext) {
+        window = do_QueryInterface(scriptContext->GetGlobalObject());
+      }
+    }
+
+    nsCOMPtr<nsIObserverService> os =
+      do_GetService("@mozilla.org/observer-service;1");
+    os->NotifyObservers(window, "dom-storage-warn-quota-exceeded",
+                        currentDomain.get());
+  }
 
   BroadcastChangeNotification();
 #endif
