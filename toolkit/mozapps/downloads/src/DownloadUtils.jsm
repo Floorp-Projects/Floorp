@@ -58,10 +58,15 @@ EXPORTED_SYMBOLS = [ "DownloadUtils" ];
  *
  * [double convertedBytes, string units]
  * convertByteUnits(int aBytes)
+ *
+ * [int time, string units, int subTime, string subUnits]
+ * convertTimeUnits(double aSecs)
  */
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils
+Cu.import("resource://gre/modules/PluralForm.jsm");
 
 const kDownloadProperties =
   "chrome://mozapps/locale/downloads/downloads.properties";
@@ -73,13 +78,16 @@ let gStr = {
   transferSameUnits: "transferSameUnits",
   transferDiffUnits: "transferDiffUnits",
   transferNoTotal: "transferNoTotal",
-  timeMinutesLeft: "timeMinutesLeft",
-  timeSecondsLeft: "timeSecondsLeft",
+  timePair: "timePair",
+  timeLeftSingle: "timeLeftSingle",
+  timeLeftDouble: "timeLeftDouble",
   timeFewSeconds: "timeFewSeconds",
   timeUnknown: "timeUnknown",
   doneScheme: "doneScheme",
   doneFileScheme: "doneFileScheme",
   units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
+  // Update timeSize in convertTimeUnits if changing the length of this array
+  timeUnits: ["seconds", "minutes", "hours", "days"],
 };
 
 // Convert strings to those in the string bundle
@@ -122,7 +130,7 @@ let DownloadUtils = {
 
     // Calculate the time remaining if we have valid values
     let seconds = (aSpeed > 0) && (aMaxBytes > 0) ?
-      Math.ceil((aMaxBytes - aCurrBytes) / aSpeed) : -1;
+      (aMaxBytes - aCurrBytes) / aSpeed : -1;
 
     // Update the bytes transferred and bytes total
     let (transfer = DownloadUtils.getTransferTotal(aCurrBytes, aMaxBytes)) {
@@ -186,7 +194,8 @@ let DownloadUtils = {
   /**
    * Generate a "time left" string given an estimate on the time left and the
    * last time. The extra time is used to give a better estimate on the time to
-   * show.
+   * show. Both the time values are doubles instead of integers to help get
+   * sub-second accuracy for current and future estimates.
    *
    * @param aSeconds
    *        Current estimate on number of seconds left for the download
@@ -202,12 +211,22 @@ let DownloadUtils = {
     if (aSeconds < 0)
       return [gStr.timeUnknown, aLastSec];
 
-    // Reuse the last seconds if the new one is only slighty longer
-    // This avoids jittering seconds, e.g., 41 40 38 40 -> 41 40 38 38
-    // However, large changes are shown, e.g., 41 38 49 -> 41 38 49
-    let (diff = aSeconds - aLastSec) {
-      if (diff > 0 && diff <= 10)
-        aSeconds = aLastSec;
+    // Apply smoothing only if the new time isn't a huge change -- e.g., if the
+    // new time is more than half the previous time; this is useful for
+    // downloads that start/resume slowly
+    if (aSeconds > aLastSec / 2) {
+      // Apply hysteresis to favor downward over upward swings
+      // 30% of down and 10% of up (exponential smoothing)
+      let (diff = aSeconds - aLastSec) {
+        aSeconds = aLastSec + (diff < 0 ? .3 : .1) * diff;
+      }
+
+      // If the new time is similar, reuse something close to the last seconds,
+      // but subtract a little to provide forward progress
+      let diff = aSeconds - aLastSec;
+      let diffPct = diff / aLastSec * 100;
+      if (Math.abs(diff) < 5 || Math.abs(diffPct) < 5)
+        aSeconds = aLastSec - (diff < 0 ? .4 : .2);
     }
 
     // Decide what text to show for the time
@@ -215,13 +234,24 @@ let DownloadUtils = {
     if (aSeconds < 4) {
       // Be friendly in the last few seconds
       timeLeft = gStr.timeFewSeconds;
-    } else if (aSeconds <= 60) {
-      // Show 2 digit seconds starting at 60
-      timeLeft = replaceInsert(gStr.timeSecondsLeft, 1, aSeconds);
     } else {
-      // Show minutes
-      timeLeft = replaceInsert(gStr.timeMinutesLeft, 1,
-                               Math.ceil(aSeconds / 60));
+      // Convert the seconds into its two largest units to display
+      let [time1, unit1, time2, unit2] =
+        DownloadUtils.convertTimeUnits(aSeconds);
+
+      let pair1 = replaceInsert(gStr.timePair, 1, time1);
+      pair1 = replaceInsert(pair1, 2, unit1);
+      let pair2 = replaceInsert(gStr.timePair, 1, time2);
+      pair2 = replaceInsert(pair2, 2, unit2);
+
+      // Only show minutes for under 1 hour or the second pair is 0
+      if (aSeconds < 3600 || time2 == 0) {
+        timeLeft = replaceInsert(gStr.timeLeftSingle, 1, pair1);
+      } else {
+        // We've got 2 pairs of times to display
+        timeLeft = replaceInsert(gStr.timeLeftDouble, 1, pair1);
+        timeLeft = replaceInsert(timeLeft, 2, pair2);
+      }
     }
 
     return [timeLeft, aSeconds];
@@ -315,7 +345,75 @@ let DownloadUtils = {
 
     return [aBytes, gStr.units[unitIndex]];
   },
+
+  /**
+   * Converts a number of seconds to the two largest units. Time values are
+   * whole numbers, and units have the correct plural/singular form.
+   *
+   * @param aSecs
+   *        Seconds to convert into the appropriate 2 units
+   * @return 4-item array [first value, its unit, second value, its unit]
+   */
+  convertTimeUnits: function(aSecs)
+  {
+    // These are the maximum values for seconds, minutes, hours corresponding
+    // with gStr.timeUnits without the last item
+    let timeSize = [60, 60, 24];
+
+    let time = aSecs;
+    let scale = 1;
+    let unitIndex = 0;
+
+    // Keep converting to the next unit while we have units left and the
+    // current one isn't the largest unit possible
+    while ((unitIndex < timeSize.length) && (time >= timeSize[unitIndex])) {
+      time /= timeSize[unitIndex];
+      scale *= timeSize[unitIndex];
+      unitIndex++;
+    }
+
+    let value = convertTimeUnitsValue(time);
+    let units = convertTimeUnitsUnits(value, unitIndex);
+
+    let extra = aSecs - value * scale;
+    let nextIndex = unitIndex - 1;
+
+    // Convert the extra time to the next largest unit
+    for (let index = 0; index < nextIndex; index++)
+      extra /= timeSize[index];
+
+    let value2 = convertTimeUnitsValue(extra);
+    let units2 = convertTimeUnitsUnits(value2, nextIndex);
+
+    return [value, units, value2, units2];
+  },
 };
+
+/**
+ * Private helper for convertTimeUnits that gets the display value of a time
+ *
+ * @param aTime
+ *        Time value for display
+ * @return An integer value for the time rounded down
+ */
+function convertTimeUnitsValue(aTime)
+{
+  return Math.floor(aTime);
+}
+
+/**
+ * Private helper for convertTimeUnits that gets the display units of a time
+ *
+ * @param aTime
+ *        Time value for display
+ * @param aIndex
+ *        Index into gStr.timeUnits for the appropriate unit
+ * @return The appropriate plural form of the unit for the time
+ */
+function convertTimeUnitsUnits(aTime, aIndex)
+{
+  return PluralForm.get(aTime, gStr.timeUnits[aIndex]);
+}
 
 /**
  * Private helper function to replace a placeholder string with a real string
