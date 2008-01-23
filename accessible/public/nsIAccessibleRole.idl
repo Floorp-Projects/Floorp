@@ -110,9 +110,9 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_WINDOW = 9;
 
   /**
-   * XXX: document this.
+   * A sub-document (<frame> or <iframe>)
    */
-  const unsigned long ROLE_CLIENT = 10;
+  const unsigned long ROLE_INTERNAL_FRAME = 10;
 
   /**
    * Represents a menu, which presents a list of options from which the user can
