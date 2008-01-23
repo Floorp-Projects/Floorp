@@ -139,9 +139,9 @@ function run_test() {
   histsvc.addVisit(removeAllTestURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   var bmURI = uri("http://bookmarked");
   bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, bmURI, bmsvc.DEFAULT_INDEX, "foo");
-  //bhist.addPageWithDetails(placeURI, "place uri", Date.now());
+  //bhist.addPageWithDetails(placeURI, "place uri", Date.now() * 1000);
   var placeURI = uri("place:folder=23");
-  bhist.addPageWithDetails(placeURI, "place uri", Date.now());
+  bhist.addPageWithDetails(placeURI, "place uri", Date.now() * 1000);
   annosvc.setPageAnnotation(removeAllTestURI, testAnnoName + "Hist", testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
   annosvc.setPageAnnotation(removeAllTestURINever, testAnnoName + "Never", testAnnoVal, 0, annosvc.EXPIRE_NEVER);
   bhist.removeAllPages();
