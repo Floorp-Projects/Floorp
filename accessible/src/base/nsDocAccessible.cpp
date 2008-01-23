@@ -1624,6 +1624,10 @@ void nsDocAccessible::FlushEventsCallback(nsITimer *aTimer, void *aClosure)
 
 void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
 {
+  if (mAccessNodeCache.Count() <= 1) {
+    return; // All we have is a doc accessible. There is nothing to invalidate, quit early
+  }
+
   nsCOMPtr<nsIAccessNode> accessNode;
   GetCachedAccessNode(aStartNode, getter_AddRefs(accessNode));
   nsCOMPtr<nsIDOMNode> nextNode, iterNode;
@@ -1672,8 +1676,15 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
       iterNode->GetNextSibling(getter_AddRefs(nextNode));
     }
 
-    // Don't shutdown our doc object!
-    if (accessNode && accessNode != static_cast<nsIAccessNode*>(this)) {
+    if (accessNode == this) {
+      // Don't shutdown our doc object -- this may just be from the finished loading.
+      // We will completely shut it down when the pagehide event is received
+      // However, we must invalidate the doc accessible's children in order to be sure
+      // all pointers to them are correct
+      InvalidateChildren();
+      return;
+    }
+    if (accessNode) {
       // Fire menupopup end if a menu goes away
       PRUint32 role = Role(accessible);
       if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
