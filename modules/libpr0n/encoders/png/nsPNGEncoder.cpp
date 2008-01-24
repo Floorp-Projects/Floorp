@@ -45,12 +45,6 @@
 #include "nsString.h"
 #include "nsStreamUtils.h"
 
-// Bug 308126 - AIX defines jmpbuf in sys/context.h which conflicts with the
-// definition of jmpbuf in the png.h header file.
-#ifdef jmpbuf
-#undef jmpbuf
-#endif
-
 // Input streams that do not implement nsIAsyncInputStream should be threadsafe
 // so that they may be used with nsIInputStreamPump and nsIInputStreamChannel,
 // which read such a stream on a background thread.
