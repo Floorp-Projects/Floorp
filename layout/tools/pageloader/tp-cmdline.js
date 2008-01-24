@@ -91,8 +91,6 @@ PageLoaderCmdLineHandler.prototype =
       args.offline = cmdLine.handleFlag("tpoffline", false);
       args.noisy = cmdLine.handleFlag("tpnoisy", false);
       args.timeout = cmdLine.handleFlagWithParam("tptimeout", false);
-      args.quitDelay = cmdLine.handleFlagWithParam("tpquitdelay", false);
-      args.numWindows = cmdLine.handleFlagWithParam("tpnumwindows", false);
       args.noForceCC = cmdLine.handleFlag("tpnoforcecc", false);
     }
     catch (e) {
@@ -123,8 +121,6 @@ PageLoaderCmdLineHandler.prototype =
   "  -tpoffline         Force offline mode\n" +
   "  -tpnoisy           Dump the name of the last loaded page to console\n" + 
   "  -tptimeout         Max amount of time given for a page to load, quit if exceeded\n" +
-  "  -tpquitdelay       Number of milliseconds to pause before quitting the browser at the end of the text\n" +
-  "  -tpnumwindows      Number of windows to have open during the test run.  If 1 all pageloads will happen in same window\n" +
   "  -tpnoforcecc       Don't force cycle collection between each pageload\n"
 
 };
