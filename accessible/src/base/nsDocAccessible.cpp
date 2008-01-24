@@ -1630,12 +1630,24 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
 
   nsCOMPtr<nsIAccessNode> accessNode;
   GetCachedAccessNode(aStartNode, getter_AddRefs(accessNode));
-  nsCOMPtr<nsIDOMNode> nextNode, iterNode;
 
   // Shut down accessible subtree, which may have been created for
   // anonymous content subtree
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
   if (accessible) {
+    // Fire menupopup end if a menu goes away
+    PRUint32 role = Role(accessible);
+    if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
+      nsCOMPtr<nsIDOMNode> domNode;
+      accessNode->GetDOMNode(getter_AddRefs(domNode));
+      nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(domNode));
+      if (!popup) {
+        // Popup elements already fire these via DOMMenuInactive
+        // handling in nsRootAccessible::HandleEvent
+        nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
+                                 accessible);
+      }
+    }
     nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(accessible);
     NS_ASSERTION(privateAccessible, "No nsPIAccessible for nsIAccessible");
 
@@ -1651,62 +1663,54 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
 
       PRUint32 childCount;
       children->GetLength(&childCount);
+      nsCOMPtr<nsIDOMNode> possibleAnonNode;
       for (PRUint32 index = 0; index < childCount; index++) {
         nsCOMPtr<nsIAccessNode> childAccessNode;
         children->QueryElementAt(index, NS_GET_IID(nsIAccessNode),
                                  getter_AddRefs(childAccessNode));
-        childAccessNode->GetDOMNode(getter_AddRefs(iterNode));
-        nsCOMPtr<nsIContent> iterContent = do_QueryInterface(iterNode);
+        childAccessNode->GetDOMNode(getter_AddRefs(possibleAnonNode));
+        nsCOMPtr<nsIContent> iterContent = do_QueryInterface(possibleAnonNode);
         if (iterContent && (iterContent->IsNativeAnonymous() ||
                             iterContent->GetBindingParent())) {
           // GetBindingParent() check is a perf win -- make sure we don't
           // shut down the same subtree twice since we'll reach non-anon content via
           // DOM traversal later in this method
-          RefreshNodes(iterNode);
+          RefreshNodes(possibleAnonNode);
         }
       }
-    }
-
-    // Shutdown ordinary content subtree as well -- there may be
-    // access node children which are not full accessible objects
-    aStartNode->GetFirstChild(getter_AddRefs(nextNode));
-    while (nextNode) {
-      nextNode.swap(iterNode);
-      RefreshNodes(iterNode);
-      iterNode->GetNextSibling(getter_AddRefs(nextNode));
-    }
-
-    if (accessNode == this) {
-      // Don't shutdown our doc object -- this may just be from the finished loading.
-      // We will completely shut it down when the pagehide event is received
-      // However, we must invalidate the doc accessible's children in order to be sure
-      // all pointers to them are correct
-      InvalidateChildren();
-      return;
-    }
-    if (accessNode) {
-      // Fire menupopup end if a menu goes away
-      PRUint32 role = Role(accessible);
-      if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
-        nsCOMPtr<nsIDOMNode> domNode;
-        accessNode->GetDOMNode(getter_AddRefs(domNode));
-        nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(domNode));
-        if (!popup) {
-          // Popup elements already fire these via DOMMenuInactive
-          // handling in nsRootAccessible::HandleEvent
-          nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
-                                   accessible);
-        }
-      }
-      // Shut down the actual accessible or access node
-      void *uniqueID;
-      accessNode->GetUniqueID(&uniqueID);
-      nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
-      privateAccessNode->Shutdown();
-      // Remove from hash table as well
-      mAccessNodeCache.Remove(uniqueID);
     }
   }
+
+  // Shutdown ordinary content subtree as well -- there may be
+  // access node children which are not full accessible objects
+  nsCOMPtr<nsIDOMNode> nextNode, iterNode;
+  aStartNode->GetFirstChild(getter_AddRefs(nextNode));
+  while (nextNode) {
+    nextNode.swap(iterNode);
+    RefreshNodes(iterNode);
+    iterNode->GetNextSibling(getter_AddRefs(nextNode));
+  }
+
+  if (!accessNode)
+    return;
+
+  if (accessNode == this) {
+    // Don't shutdown our doc object -- this may just be from the finished loading.
+    // We will completely shut it down when the pagehide event is received
+    // However, we must invalidate the doc accessible's children in order to be sure
+    // all pointers to them are correct
+    InvalidateChildren();
+    return;
+  }
+
+  // Shut down the actual accessible or access node
+  void *uniqueID;
+  accessNode->GetUniqueID(&uniqueID);
+  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
+  privateAccessNode->Shutdown();
+
+  // Remove from hash table as well
+  mAccessNodeCache.Remove(uniqueID);
 }
 
 NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
