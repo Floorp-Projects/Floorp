@@ -23,6 +23,17 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
 }
 
+/* ::::: Unified Back-/Forward Button ::::: */
+#unified-back-forward-button {
+  -moz-binding: url("chrome://browser/content/bindings.xml#unified-back-forward-button-wrapper");
+}
+#unified-back-forward-button > toolbarbutton > dropmarker {
+  display: none; /* we provide our own */
+}
+.unified-nav-current {
+  font-weight: bold;
+}
+
 menuitem.spell-suggestion {
   font-weight: bold;
 }
