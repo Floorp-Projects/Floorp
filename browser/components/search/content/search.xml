@@ -26,6 +26,7 @@
 #   Ben Goodger <beng@google.com>
 #   Pamela Greene <pamg.bugs@gmail.com>
 #   Michael Ventnor <m.ventnor@gmail.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -552,7 +553,11 @@
 
       <handler event="DOMMouseScroll"
                phase="capturing"
-               action="this.selectEngine(event, (event.detail > 0));"/>
+#ifdef XP_MACOSX
+               action="if (event.metaKey) this.selectEngine(event, (event.detail > 0));"/>
+#else
+               action="if (event.ctrlKey) this.selectEngine(event, (event.detail > 0));"/>
+#endif
     </handlers>
   </binding>
 
