@@ -96,7 +96,7 @@ NS_IMETHODIMP nsIconDecoder::Close()
 
 NS_IMETHODIMP nsIconDecoder::Flush()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
