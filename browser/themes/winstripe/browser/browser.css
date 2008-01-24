@@ -1466,7 +1466,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 #urlbar > .autocomplete-history-dropmarker:hover {
-  background-color: -moz-dialog;
+  background-color: -moz-dialog !important;
   -moz-appearance: toolbox;
   outline: 1px solid ThreeDShadow;
   -moz-margin-start: 1px;
