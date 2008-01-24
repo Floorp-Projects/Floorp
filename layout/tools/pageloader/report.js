@@ -107,18 +107,22 @@ function getArrayStats(ary) {
   }
 
   // median
-  sorted_ary = ary.concat();
-  sorted_ary.sort();
-  // remove longest run
-  sorted_ary.pop();
-  if (sorted_ary.length%2) {
-    r.median = sorted_ary[(sorted_ary.length-1)/2]; 
+  if (ary.length > 1) {
+      sorted_ary = ary.concat();
+      sorted_ary.sort();
+      // remove longest run
+      sorted_ary.pop();
+      if (sorted_ary.length%2) {
+        r.median = sorted_ary[(sorted_ary.length-1)/2]; 
+      }else{
+        var n = Math.floor(sorted_ary.length / 2);
+        if (n >= sorted_ary.length)
+          r.median = sorted_ary[n];
+        else
+          r.median = (sorted_ary[n] + sorted_ary[n + 1]) / 2;
+      }
   }else{
-    var n = Math.floor(sorted_ary.length / 2);
-    if (n >= sorted_ary.length)
-      r.median = sorted_ary[n];
-    else
-      r.median = (sorted_ary[n] + sorted_ary[n + 1]) / 2;
+    r.median = ary[0];
   }
 
   // ignore max value when computing mean and stddev
