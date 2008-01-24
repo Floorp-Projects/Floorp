@@ -372,7 +372,7 @@ fails == 352980-1h.html 352980-1-ref.html
 == 367612-1e.html 367612-1-ref.html
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
-fails == 368020-1.html 368020-1-ref.html # bug 368079
+== 368020-1.html 368020-1-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-2.html 368020-2-ref.html # bug 368157 (gtk)
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
