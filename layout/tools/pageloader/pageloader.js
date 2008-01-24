@@ -58,13 +58,9 @@ var report;
 var renderReport;
 var noisy = false;
 var timeout = -1;
-var quitDelay = 0;
 var timeoutEvent = -1;
 var running = false;
 var forceCC = true;
-var wwatch = null;
-var blank = null;
-var browserLoadFunc = null;
 
 var content;
 
@@ -74,23 +70,6 @@ var browserWindow = null;
 
 // the io service
 var gIOS = null;
-
-var numWindows = 1;
-var windows = Array();
-var windowNum = 0;
-
-
-function plCreateWindow() {
-  if (windows[windowNum]) {
-    windows[windowNum].close();
-    windows[windowNum] = null;
-  }
-  browserWindow = windows[windowNum] = wwatch.openWindow
-    (null, "chrome://browser/content/", "_blank",
-     "chrome,dialog=no,width=" + winWidth + ",height=" + winHeight, blank);
-
-  browserWindow.addEventListener('load', browserLoadFunc, true);	
-}
 
 function plInit() {
   if (running) {
@@ -115,8 +94,6 @@ function plInit() {
     if (args.filter) pageFilterRegexp = new RegExp(args.filter);
     if (args.noisy) noisy = true;
     if (args.timeout) timeout = parseInt(args.timeout);
-    if (args.quitDelay) quitDelay = parseInt(args.quitDelay);
-    if (args.numWindows) numWindows = parseInt(args.numWindows);
     forceCC = !args.noForceCC;
     doRenderTest = args.doRender;
 
@@ -144,11 +121,6 @@ function plInit() {
       plStop(true);
     }
 
-    if ((!args.useBrowserChrome) && (numWindows > 1)) {
-      dumpLine('tp: numWindows > 1 does not work without browser chrome');
-      plStop(true);
-    }
-
     if (startIndex < 0)
       startIndex = 0;
     if (endIndex == -1 || endIndex >= pages.length)
@@ -168,20 +140,19 @@ function plInit() {
     pageIndex = 0;
 
     if (args.useBrowserChrome) {
-      wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+      var wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"]
         .getService(Ci.nsIWindowWatcher);
-      blank = Cc["@mozilla.org/supports-string;1"]
+      var blank = Cc["@mozilla.org/supports-string;1"]
         .createInstance(Ci.nsISupportsString);
       blank.data = "about:blank";
-
-      browserWindow = windows[windowNum] = wwatch.openWindow
+      browserWindow = wwatch.openWindow
         (null, "chrome://browser/content/", "_blank",
          "chrome,dialog=no,width=" + winWidth + ",height=" + winHeight, blank);
 
       // get our window out of the way
       window.resizeTo(10,10);
 
-      browserLoadFunc = function (ev) {
+      var browserLoadFunc = function (ev) {
         browserWindow.removeEventListener('load', browserLoadFunc, true);
 
         // do this half a second after load, because we need to be
@@ -189,7 +160,7 @@ function plInit() {
         // by the persisted values
         setTimeout(function () {
                      browserWindow.resizeTo(winWidth, winHeight);
-                     browserWindow.moveTo(30*windowNum, 30*windowNum);
+                     browserWindow.moveTo(0, 0);
                      browserWindow.focus();
 
                      content = browserWindow.getBrowser();
@@ -267,15 +238,8 @@ function plNextPage() {
       var tccend = new Date();
       report.recordCCTime(tccend - tccstart);
     }
-    
-    if (numWindows > 1) {
-      // Move our window index forward
-      windowNum = (windowNum + 1) % numWindows;
-      // Create windows as needed
-      plCreateWindow();
-    } else {
-      setTimeout(plLoadPage, 250);
-    }
+
+    setTimeout(plLoadPage, 250);
   } else {
     plStop(false);
   }
@@ -359,19 +323,6 @@ function runRenderTest() {
   renderReport.recordTime(pageIndex, end - start);
 }
 
-function plDumpReports() {
-  var formats = reportFormat.split(",");
-
-  if (!renderReport) {
-    for each (var fmt in formats)
-      dumpLine(report.getReport(fmt));
-  } else {
-    dumpLine ("*************** Render report *******************");
-    for each (var fmt in formats)
-      dumpLine(renderReport.getReport(fmt));
-  }	
-}
-
 function plStop(force) {
   try {
     if (force == false) {
@@ -381,14 +332,19 @@ function plStop(force) {
         setTimeout(plLoadPage, 250);
         return;
       }
-      // Close all the windows
-      for each (var window in windows)
-        window.close();
 
-      // Leave time at the end for the browser to clean up for better memory usage measurements
-      setTimeout(plDumpReports, quitDelay);
-      return;	  
-    } 
+      var formats = reportFormat.split(",");
+
+      if (!renderReport) {
+        for each (var fmt in formats)
+          dumpLine(report.getReport(fmt));
+      }
+      else {
+        dumpLine ("*************** Render report *******************");
+        for each (var fmt in formats)
+          dumpLine(renderReport.getReport(fmt));
+      }
+    }
   } catch (e) {
     dumpLine(e);
   }
