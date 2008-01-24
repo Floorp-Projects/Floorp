@@ -185,12 +185,6 @@ public:
   nsresult GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
                        PRBool aAutoCreate);
 
-  nsresult CalculateVisitCount(PRInt64 aPlaceId, PRBool aForFrecency, PRInt32 *aVisitCount);
-
-  nsresult UpdateFrecency(PRInt64 aPageID, PRBool isBookmark);
-
-  nsresult FixInvalidFrecenciesForExcludedPlaces();
-
   /**
    * Returns a pointer to the storage connection used by history. This
    * connection object is also used by the annotation service and bookmarks, so
@@ -396,28 +390,14 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
 
-  nsresult RecalculateFrecencies();
-  nsresult RecalculateFrecenciesInternal(mozIStorageStatement *aStatement, PRInt64 aBindParameter);
-
-  nsresult CalculateFrecency(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, nsCAutoString &aURL, PRInt32 *aFrecency);
-  nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, PRBool aIsBookmarked, PRInt32 *aFrecency);
-  nsCOMPtr<mozIStorageStatement> mDBVisitsForFrecency;
-  nsCOMPtr<mozIStorageStatement> mDBInvalidFrecencies;
-  nsCOMPtr<mozIStorageStatement> mDBOldFrecencies;
-  nsCOMPtr<mozIStorageStatement> mDBUpdateFrecencyAndHidden;
-  nsCOMPtr<mozIStorageStatement> mDBGetPlaceVisitStats;
-  nsCOMPtr<mozIStorageStatement> mDBGetBookmarkParentsForPlace;
-  nsCOMPtr<mozIStorageStatement> mDBVisitCountForFrecency;
-  nsCOMPtr<mozIStorageStatement> mDBTrueVisitCount;
-
   nsresult InitDBFile(PRBool aForceInit);
   nsresult BackupDBFile();
-  nsresult InitDB(PRInt16 *aMadeChanges);
+  nsresult InitDB(PRBool *aDoImport);
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
-  nsresult EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool *aMadeChanges);
+  nsresult EnsureCurrentSchema(mozIStorageConnection* aDBConn);
   nsresult CleanUpOnQuit();
 
 #ifdef IN_MEMORY_LINKS
@@ -438,8 +418,7 @@ protected:
                          PRInt64* aSessionID, PRInt64* aRedirectBookmark);
   nsresult InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
                               PRBool aHidden, PRBool aTyped,
-                              PRInt32 aVisitCount, PRBool aCalculateFrecency,
-                              PRInt64* aPageID);
+                              PRInt32 aVisitCount, PRInt64* aPageID);
   nsresult InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
                             PRInt64 aSessionID, PRTime aTime,
                             PRInt32 aTransitionType, PRInt64* aVisitID);
@@ -608,7 +587,6 @@ protected:
   static const PRInt32 kAutoCompleteIndex_FaviconURL;
   static const PRInt32 kAutoCompleteIndex_ItemId;
   static const PRInt32 kAutoCompleteIndex_ParentId;
-  static const PRInt32 kAutoCompleteIndex_BookmarkTitle;
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBTagAutoCompleteQuery; //  kAutoCompleteIndex_* results
 
@@ -618,21 +596,20 @@ protected:
   nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
   nsString mCurrentSearchString;
-  nsString mCurrentSearchStringEscaped;
-
 #ifdef MOZ_XUL
   nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
   nsCOMPtr<nsIAutoCompleteSimpleResult> mCurrentResult;
 #endif
-
   nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
-  PRInt32 mCurrentChunkOffset;
+  PRTime mCurrentChunkEndTime;
+  PRTime mCurrentOldestVisit;
+  PRBool mFirstChunk;
 
   nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;
   nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
 
   nsresult AutoCompleteTypedSearch();
-  nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
+  nsresult AutoCompleteFullHistorySearch();
   nsresult AutoCompleteTagsSearch();
 
   nsresult PerformAutoComplete();
@@ -644,36 +621,12 @@ protected:
   PRInt32 mExpireDaysMax;
   PRInt32 mExpireSites;
 
-  // frecency prefs
-  PRInt32 mNumVisitsForFrecency;
-  PRInt32 mFrecencyUpdateIdleTime;
-  PRInt32 mFirstBucketCutoffInDays;
-  PRInt32 mSecondBucketCutoffInDays;
-  PRInt32 mThirdBucketCutoffInDays;
-  PRInt32 mFourthBucketCutoffInDays;
-  PRInt32 mFirstBucketWeight;
-  PRInt32 mSecondBucketWeight;
-  PRInt32 mThirdBucketWeight;
-  PRInt32 mFourthBucketWeight;
-  PRInt32 mDefaultWeight;
-  PRInt32 mEmbedVisitBonus;
-  PRInt32 mLinkVisitBonus;
-  PRInt32 mTypedVisitBonus;
-  PRInt32 mBookmarkVisitBonus;
-  PRInt32 mDownloadVisitBonus;
-  PRInt32 mPermRedirectVisitBonus;
-  PRInt32 mTempRedirectVisitBonus;
-  PRInt32 mDefaultVisitBonus;
-  PRInt32 mUnvisitedBookmarkBonus;
-  PRInt32 mUnvisitedTypedBonus;
-
   // in nsNavHistoryQuery.cpp
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
                            nsCOMArray<nsNavHistoryQuery>* aQueries,
                            nsNavHistoryQueryOptions* aOptions);
 
   nsCOMPtr<nsITimer> mIdleTimer;
-  nsresult InitializeIdleTimer();
   static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
   nsresult OnIdle();
 
