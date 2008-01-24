@@ -232,6 +232,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_GRAYTEXT;
       break;
     case eColor_highlight:
+    case eColor__moz_html_cellhighlight:
     case eColor__moz_menuhover:
       idx = COLOR_HIGHLIGHT;
       break;
@@ -275,6 +276,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       }
 #endif
     case eColor_highlighttext:
+    case eColor__moz_html_cellhighlighttext:
       idx = COLOR_HIGHLIGHTTEXT;
       break;
     case eColor_inactiveborder:

@@ -251,8 +251,8 @@ select > option {
 }
 
 option:checked {
-  background-color: -moz-cellhighlight !important;
-  color: -moz-cellhighlighttext !important;
+  background-color: -moz-html-cellhighlight !important;
+  color: -moz-html-cellhighlighttext !important;
 }
 
 select:focus > option:checked,

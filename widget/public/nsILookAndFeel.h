@@ -44,10 +44,10 @@
 struct nsSize;
 
 
-// {BEC234D0-AAA5-430D-8435-B10100F78003}
+// {6672E0EA-C936-11DC-9BB7-0014850B592F}
 #define NS_ILOOKANDFEEL_IID \
-{ 0xbec234d0, 0xaaa5, 0x430d, \
-    { 0x84, 0x35, 0xb1, 0x01, 0x00, 0xf7, 0x80, 0x03} }
+{ 0x6672e0ea, 0xc936, 0x11dc, \
+    { 0x9b, 0xb7, 0x00, 0x14, 0x85, 0x0b, 0x59, 0x2f} }
 
 
 class nsILookAndFeel: public nsISupports {
@@ -129,6 +129,8 @@ public:
 
     eColor__moz_cellhighlight,                               //used to cell text background, selected but not focus
     eColor__moz_cellhighlighttext,                           //used to cell text, selected but not focus
+    eColor__moz_html_cellhighlight,                          //used to html select cell text background, selected but not focus
+    eColor__moz_html_cellhighlighttext,                      //used to html select cell text, selected but not focus
     eColor__moz_buttonhoverface,                             //used to button text background, when mouse is over
     eColor__moz_buttonhovertext,                             //used to button text, when mouse is over
     eColor__moz_menuhover,                                   //used to menu item background, when mouse is over
