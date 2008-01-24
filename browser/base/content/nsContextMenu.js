@@ -83,6 +83,11 @@ function nsContextMenu(aXulMenu, aBrowser) {
   this.shouldDisplay     = true;
   this.isDesignMode      = false;
   this.possibleSpellChecking = false;
+  this.ellipsis = "\u2026";
+  try {
+    this.ellipsis = gPrefService.getComplexValue("intl.ellipsis",
+                                                 Ci.nsIPrefLocalizedString).data;
+  } catch (e) { }
 
   // Initialize new menu.
   this.initMenu(aXulMenu, aBrowser);
@@ -249,7 +254,7 @@ nsContextMenu.prototype = {
       if (hostLabel) {
         var shortenedUriHost = hostLabel.replace(/^www\./i,"");
         if (shortenedUriHost.length > 15)
-          shortenedUriHost = shortenedUriHost.substr(0,15) + "...";
+          shortenedUriHost = shortenedUriHost.substr(0,15) + this.ellipsis;
         blockImage.label = gNavigatorBundle.getFormattedString("blockImages", [shortenedUriHost]);
 
         if (this.isImageBlocked())
@@ -1035,7 +1040,7 @@ nsContextMenu.prototype = {
       return false;
 
     if (selectedText.length > 15)
-      selectedText = selectedText.substr(0,15) + "...";
+      selectedText = selectedText.substr(0,15) + this.ellipsis;
 
     // Use the current engine if the search bar is visible, the default
     // engine otherwise.
