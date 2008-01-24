@@ -1866,20 +1866,13 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
     nsXPTCVariant paramBuffer[PARAM_BUFFER_COUNT];
 
-    // Number of nsAutoStrings to construct on the stack for use with method
-    // calls that use 'out' AStrings (aka [domstring]). These can save us from 
-    // a new/delete of an nsString. But the cost is that the ctor/dtor code 
-    // is run for each nsAutoString in the array for each call - whether or not 
-    // a specific call actually uses *any* AStrings. Also, we have these
-    // large-ish nsAutoString objects using up stack space.
-    //
-    // Set this to zero to disable use of these auto strings.
-#define PARAM_AUTOSTRING_COUNT     1
-
-#if PARAM_AUTOSTRING_COUNT
-    nsVoidableString autoStrings[PARAM_AUTOSTRING_COUNT];
-    int autoStringIndex = 0;
-#endif
+    // Reserve space on the stack for one nsAutoString. We don't want
+    // the string itself to be declared on the stack as that would
+    // make the ctor and dtors run for each pass through this code,
+    // and they're only needed in a fraction of all the calls that
+    // come through here.
+    char autoString[sizeof(nsAutoString)];
+    PRBool autoStringUsed = PR_FALSE;
 
     JSBool retval = JS_FALSE;
 
@@ -2118,19 +2111,24 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                         // now and then continue in order to skip the call to
                         // JSData2Native
 
-                        // If autoStrings array support is enabld, then use
-                        // one of them if they are not already used up.
-#if PARAM_AUTOSTRING_COUNT
-                        if(autoStringIndex < PARAM_AUTOSTRING_COUNT)
+                        if(!autoStringUsed)
                         {
+                            // Our stack space for an nsAutoString is
+                            // still available, initialize the string
+                            // object (using placement new) and use
+                            // it.
+                            nsAutoString *s = (nsAutoString*)&autoString;
+                            new (s) nsAutoString();
+                            autoStringUsed = PR_TRUE;
+
                             // Don't call SetValIsDOMString because we don't 
                             // want to delete this pointer.
-                            dp->val.p = &autoStrings[autoStringIndex++];
+                            dp->val.p = s;
                             continue;
                         }
-#endif
+
                         dp->SetValIsDOMString();
-                        if(!(dp->val.p = new nsVoidableString()))
+                        if(!(dp->val.p = new nsAutoString()))
                         {
                             JS_ReportOutOfMemory(ccx);
                             goto done;
@@ -2528,6 +2526,14 @@ done:
             else if(dp->IsValCString())
                 delete (nsCString*) p;
         }   
+    }
+
+    if (autoStringUsed) {
+        // Our stack based nsAutoString was used, clean it up.
+
+        nsAutoString *s = (nsAutoString*)&autoString;
+
+        s->~nsAutoString();
     }
 
     if(dispatchParams && dispatchParams != paramBuffer)
