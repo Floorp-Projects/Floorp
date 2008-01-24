@@ -49,6 +49,10 @@
 <!ENTITY fullScreenMinimize.tooltip "Minimize">
 <!ENTITY fullScreenRestore.tooltip "Restore">
 <!ENTITY fullScreenClose.tooltip "Close">
+<!ENTITY fullScreenAutohide.label "Hide Toolbars">
+<!ENTITY fullScreenAutohide.accesskey "H">
+<!ENTITY fullScreenExit.label "Exit Full Screen Mode">
+<!ENTITY fullScreenExit.accesskey "F">
 
 <!ENTITY closeWindow.label "Close Window">
 <!ENTITY closeWindow.accesskey "d">
