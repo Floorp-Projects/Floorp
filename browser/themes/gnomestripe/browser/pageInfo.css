@@ -179,6 +179,14 @@ groupbox.treebox .groupbox-body {
   min-height: 10em;
 }
 
+#mediaGrid {
+  min-height: 9em;
+}
+
+#mediaLabelColumn {
+  min-width: 10em;
+}
+
 #thepreviewimage {
   margin: 1em;
 }
