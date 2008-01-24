@@ -240,9 +240,9 @@
                 oncommand="gContextMenu.showMetadata();"/>
       <menuseparator id="spell-separator"/>
       <menuitem id="spell-check-enabled"
-                label="&spellEnable.label;"
+                label="&spellCheckEnable.label;"
                 type="checkbox"
-                accesskey="&spellEnable.accesskey;"
+                accesskey="&spellCheckEnable.accesskey;"
                 oncommand="InlineSpellCheckerUI.toggleEnabled();"/>
 #ifndef MOZ_WIDGET_COCOA
       <menuitem id="spell-add-dictionaries-main"
