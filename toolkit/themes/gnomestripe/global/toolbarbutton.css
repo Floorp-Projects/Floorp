@@ -68,15 +68,6 @@ toolbarbutton.tabbable {
   -moz-user-focus: normal !important;
 }
 
-toolbarbutton:focus 
-{
-  /* -moz-appearance looks redundant here but is necessary.
-      Without it, the outline won't appear. */
-  -moz-appearance: toolbarbutton;
-  outline: 1px dotted -moz-DialogText;
-  -moz-outline-offset: -2px;
-}
-
 toolbarbutton:hover,
 toolbarbutton[buttonover="true"] {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
