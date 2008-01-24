@@ -590,6 +590,8 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
       }
 
       if (oldcode == -1) {
+        if (code >= MAX_BITS)
+          return PR_FALSE;
         *rowp++ = suffix[code];
         if (rowp == rowend)
           OUTPUT_ROW();
