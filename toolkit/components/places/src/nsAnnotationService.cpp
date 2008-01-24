@@ -1691,7 +1691,7 @@ nsAnnotationService::CopyItemAnnotations(PRInt64 aSourceItemId,
                                          PRInt64 aDestItemId,
                                          PRBool aOverwriteDest)
 {
- // XXX: Implement Me!
+ // XXX: Implment Me!
  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
