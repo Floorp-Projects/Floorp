@@ -807,7 +807,7 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   PRBool migrated = PR_FALSE;
   rv = EnsureCurrentSchema(mDBConn, &migrated);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (*aMadeChanges != DB_MIGRATION_CREATED)
+  if (migrated && *aMadeChanges != DB_MIGRATION_CREATED)
     *aMadeChanges = DB_MIGRATION_UPDATED;
 
   rv = transaction.Commit();
