@@ -101,8 +101,8 @@ richlistitem[isDisabled="true"] {
 }
 
 richlistitem[selected="true"] {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
 }
 
 #extensionsView:focus > richlistitem[selected="true"] {
