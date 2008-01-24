@@ -1,0 +1,5 @@
+<!ENTITY crashes.title              "Submitted Crash Reports">
+<!ENTITY id.heading                 "Report ID">
+<!ENTITY date.heading               "Date Submitted">
+<!ENTITY noReports.label            "No crash reports have been submitted.">
+<!ENTITY clearReports.label         "Remove Reports">
