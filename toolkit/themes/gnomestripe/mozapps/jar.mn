@@ -1,6 +1,7 @@
 classic.jar:
 #ifndef MINIMO
 + skin/classic/mozapps/update/update.png                   (update/update.png)
++ skin/classic/mozapps/update/updates.css                  (update/updates.css)
 + skin/classic/mozapps/downloads/downloads.css             (downloads/downloads.css)
 + skin/classic/mozapps/extensions/extensions.css           (extensions/extensions.css)
 + skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png  (xpinstall/xpinstallItemGeneric.png)
