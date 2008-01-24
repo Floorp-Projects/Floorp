@@ -964,12 +964,27 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
         MozGtkScrollbarMetrics metrics;
         moz_gtk_get_scrollbar_metrics(&metrics);
 
+        nsRect rect = aFrame->GetParent()->GetRect();
+        PRInt32 p2a = aFrame->PresContext()->DeviceContext()->
+                        AppUnitsPerDevPixel();
+        nsMargin margin;
+
+        /* Get the available space, if that is smaller then the minimum size,
+         * adjust the mininum size to fit into it.
+         * Setting aIsOverridable to PR_TRUE has no effect for thumbs. */
+        aFrame->GetMargin(margin);
+        rect.Deflate(margin);
+        aFrame->GetParent()->GetBorderAndPadding(margin);
+        rect.Deflate(margin);
+
         if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL) {
           aResult->width = metrics.slider_width;
-          aResult->height = metrics.min_slider_size;
+          aResult->height = PR_MIN(NSAppUnitsToIntPixels(rect.height, p2a),
+                                   metrics.min_slider_size);
         } else {
-          aResult->width = metrics.min_slider_size;
           aResult->height = metrics.slider_width;
+          aResult->width = PR_MIN(NSAppUnitsToIntPixels(rect.width, p2a),
+                                  metrics.min_slider_size);
         }
 
         *aIsOverridable = PR_FALSE;
