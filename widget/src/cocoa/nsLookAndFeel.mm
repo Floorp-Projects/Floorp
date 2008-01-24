@@ -274,6 +274,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       break;
     case eColor__moz_dialogtext:
     case eColor__moz_cellhighlighttext:
+    case eColor__moz_html_cellhighlighttext:
       // XXX There may be a better color for this, but I'm making it
       // the same as WindowText since that's what's currently used where
       // I will use -moz-DialogText.
@@ -335,6 +336,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacBrushColor(kThemeBrushAlternatePrimaryHighlightColor, aColor, fallbackColor);
       break;
     case eColor__moz_cellhighlight:
+    case eColor__moz_html_cellhighlighttext:
     case eColor__moz_mac_secondaryhighlight:
       // For inactive list selection
       res = GetMacBrushColor(kThemeBrushSecondaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
