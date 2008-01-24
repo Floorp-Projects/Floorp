@@ -88,6 +88,8 @@ nsresult nsCaretAccessible::ClearControlSelectionListener()
 
 nsresult nsCaretAccessible::SetControlSelectionListener(nsIDOMNode *aCurrentNode)
 {
+  NS_ENSURE_TRUE(mRootAccessible, NS_ERROR_FAILURE);
+
   mCurrentControl = aCurrentNode;
   mLastTextAccessible = nsnull;
 
@@ -248,6 +250,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   nsRect caretRect;
   NS_ENSURE_TRUE(aOutWidget, caretRect);
   *aOutWidget = nsnull;
+  NS_ENSURE_TRUE(mRootAccessible, caretRect);
 
   if (!mLastTextAccessible) {
     return caretRect;    // Return empty rect
