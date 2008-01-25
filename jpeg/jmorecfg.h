@@ -116,9 +116,9 @@ typedef short JCOEF;
 #endif
 
 #if defined(__GNUC__) && defined(__i386__)
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #define HAVE_SSE2_INTRINSICS
-#endif ! XP_MAC || XP_MACOSX
+#endif ! XP_MACOSX
 #endif ! GNUC && i386
 
 /* Add support for other platforms here */

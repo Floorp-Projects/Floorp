@@ -473,9 +473,9 @@ static int sse2supportGCC()
   /* Mac Intel started with Core Duo chips which have SSE2 Support */
 
 #if defined(__GNUC__) && defined(__i386__)
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   return 1;
-#endif ! XP_MAC || XP_MACOSX
+#endif ! XP_MACOSX
 #endif ! GNUC && i386
 
   /* Add checking for SSE2 support for other platforms here */
