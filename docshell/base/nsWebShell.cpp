@@ -766,7 +766,7 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
-  if (mFiredUnloadEvent) {
+  if (!IsOKToLoadURI(aURI)) {
     return NS_OK;
   }
 
@@ -797,7 +797,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     *aRequest = nsnull;
   }
 
-  if (mFiredUnloadEvent) {
+  if (!IsOKToLoadURI(aURI)) {
     return NS_OK;
   }
 
