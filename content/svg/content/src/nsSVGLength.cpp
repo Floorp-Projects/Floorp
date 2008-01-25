@@ -530,8 +530,11 @@ float nsSVGLength::mmPerPixel()
     return 1.0f;
   }
 
-  nsSVGSVGElement *ctx =
-    static_cast<nsSVGElement*>(element.get())->GetCtx();
+  nsSVGSVGElement *ctx = static_cast<nsSVGElement*>(element.get())->GetCtx();
+  if (!ctx) {
+    return 1e-4f; // some small value
+  }
+
   float mmPerPx = ctx->GetMMPerPx(mCtxType);
 
   if (mmPerPx == 0.0f) {
@@ -550,8 +553,11 @@ float nsSVGLength::AxisLength()
     return 1.0f;
   }
 
-  nsSVGSVGElement *ctx =
-    static_cast<nsSVGElement*>(element.get())->GetCtx();
+  nsSVGSVGElement *ctx = static_cast<nsSVGElement*>(element.get())->GetCtx();
+  if (!ctx) {
+    return 1e-20f; // some small value
+  }
+
   float d = ctx->GetLength(mCtxType);
 
   if (d == 0.0f) {
