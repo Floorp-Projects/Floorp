@@ -49,6 +49,9 @@ nsTArray_base::nsTArray_base()
 }
 
 nsTArray_base::~nsTArray_base() {
+  if (mHdr != &sEmptyHdr && !UsesAutoArrayBuffer()) {
+    NS_Free(mHdr);
+  }
   MOZ_COUNT_DTOR(nsTArray_base);
 }
 
