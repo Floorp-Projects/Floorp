@@ -304,7 +304,7 @@ public:
    * override ComputeSize to enforce their width/height invariants.
    *
    * Implementations may optimize by returning a garbage width if
-   * GetStylePosition()->mWidth.GetUnit() != eStyleUnit_Auto, and
+   * GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto, and
    * likewise for height, since in such cases the result is guaranteed
    * to be unused.
    */

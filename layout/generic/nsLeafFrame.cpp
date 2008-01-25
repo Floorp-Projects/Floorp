@@ -67,15 +67,6 @@ nsLeafFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   return result;
 }
 
-/* virtual */ nsSize
-nsLeafFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
-                             nsSize aCBSize, nscoord aAvailableWidth,
-                             nsSize aMargin, nsSize aBorder,
-                             nsSize aPadding, PRBool aShrinkWrap)
-{
-  return nsSize(GetIntrinsicWidth(), GetIntrinsicHeight());
-}
-
 NS_IMETHODIMP
 nsLeafFrame::Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
@@ -89,12 +80,11 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
+  // XXX add in code to check for width/height being set via css
+  // and if set use them instead of calling GetDesiredSize.
+
   NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
-               "Shouldn't have unconstrained stuff here "
-               "Thanks to the rules of reflow");
-  NS_ASSERTION(NS_INTRINSICSIZE != aReflowState.ComputedHeight(),
-               "Shouldn't have unconstrained stuff here "
-               "thanks to ComputeAutoSize");
+               "Shouldn't have unconstrained stuff here");
   
   DoReflow(aPresContext, aMetrics, aReflowState, aStatus);
 
@@ -109,7 +99,15 @@ nsLeafFrame::DoReflow(nsPresContext* aPresContext,
                       nsReflowStatus& aStatus)
 {
   aMetrics.width = aReflowState.ComputedWidth();
-  aMetrics.height = aReflowState.ComputedHeight();
+  if (NS_INTRINSICSIZE != aReflowState.ComputedHeight()) {
+    aMetrics.height = aReflowState.ComputedHeight();
+  } else {
+    aMetrics.height = GetIntrinsicHeight();
+    // XXXbz using NS_CSS_MINMAX like this presupposes content-box sizing.
+    aMetrics.height = NS_CSS_MINMAX(aMetrics.height,
+                                    aReflowState.mComputedMinHeight,
+                                    aReflowState.mComputedMaxHeight);
+  }
   
   AddBordersAndPadding(aReflowState, aMetrics);
   aStatus = NS_FRAME_COMPLETE;
