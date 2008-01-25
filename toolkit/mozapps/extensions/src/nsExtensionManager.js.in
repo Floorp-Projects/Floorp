@@ -57,6 +57,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
+const PREF_EM_ENABLED_ITEMS           = "extensions.enabledItems";
 const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
 const PREF_EM_IGNOREMTIMECHANGES      = "extensions.ignoreMTimeChanges";
@@ -2573,6 +2574,20 @@ ExtensionManager.prototype = {
     }
     catch (e) {
     }
+
+    if ("nsICrashReporter" in Ci && gApp instanceof Ci.nsICrashReporter) {
+      // Annotate the crash report with the list of add-ons
+      try {
+        try {
+          gApp.annotateCrashReport("Add-ons", gPref.getCharPref(PREF_EM_ENABLED_ITEMS));
+        } catch (e) { }
+        gApp.annotateCrashReport("Theme", gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN));
+      }
+      catch (ex) {
+        // This will fail in unnofficial builds, ignorable error
+      }
+    }
+
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
     gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
     gCheckUpdateSecurity = getPref("getBoolPref", PREF_EM_CHECK_UPDATE_SECURITY, true);
@@ -3841,7 +3856,8 @@ ExtensionManager.prototype = {
       }
       // Suppress items that have been disabled by the user or the app.
       if (ds.getItemProperty(item.id, "isDisabled") != "true")
-        activeItems.push({ id: item.id, location: installLocation });
+        activeItems.push({ id: item.id, version: item.version,
+                           location: installLocation });
     }
 
     return activeItems;
@@ -3867,6 +3883,7 @@ ExtensionManager.prototype = {
     var extensionsLocationsFile = getFile(KEY_PROFILEDIR, [FILE_EXTENSION_MANIFEST]);
     var fos = openSafeFileOutputStream(extensionsLocationsFile);
 
+    var enabledItems = [];
     var extensionSectionHeader = "[ExtensionDirs]\r\n";
     fos.write(extensionSectionHeader, extensionSectionHeader.length);
     for (var i = 0; i < validExtensions.length; ++i) {
@@ -3875,6 +3892,7 @@ ExtensionManager.prototype = {
       var descriptor = getAbsoluteDescriptor(itemLocation);
       var line = "Extension" + i + "=" + descriptor + "\r\n";
       fos.write(line, line.length);
+      enabledItems.push(e.id + ":" + e.version);
     }
 
     var themeSectionHeader = "[ThemeDirs]\r\n";
@@ -3885,9 +3903,13 @@ ExtensionManager.prototype = {
       var descriptor = getAbsoluteDescriptor(itemLocation);
       var line = "Extension" + i + "=" + descriptor + "\r\n";
       fos.write(line, line.length);
+      enabledItems.push(e.id + ":" + e.version);
     }
 
     closeSafeFileOutputStream(fos);
+
+    // Cache the enabled list for annotating the crash report subsequently
+    gPref.setCharPref(PREF_EM_ENABLED_ITEMS, enabledItems.join(","));
 
     // Now refresh the compatibility manifest.
     this._extensionListChanged = needsRestart;
