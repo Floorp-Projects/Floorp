@@ -74,13 +74,6 @@
  */
 #undef RIGHT_SHIFT_IS_UNSIGNED
 
-#ifdef XP_MAC                   /* Macintosh */
-
-#define ALIGN_TYPE long         /* for sane memory alignment */
-#define NO_GETENV               /* we do have the function, but it's dead */
-
-#endif /* XP_MAC */
-
 #endif /* JPEG_INTERNALS */
 
 
