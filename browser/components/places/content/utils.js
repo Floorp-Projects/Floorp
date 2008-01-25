@@ -1566,8 +1566,9 @@ var PlacesUtils = {
   getMostRecentBookmarkForURI:
   function PU_getMostRecentBookmarkForURI(aURI) {
     var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI, {});
-    for each (var bk in bmkIds) {
+    for (var i = 0; i < bmkIds.length; i++) {
       // Find the first folder which isn't a tag container
+      var bk = bmkIds[i];
       var parent = this.bookmarks.getFolderIdForItem(bk);
       if (parent == this.unfiledBookmarksFolderId)
         return bk;
@@ -1688,7 +1689,8 @@ var PlacesUtils = {
     */
   _openTabset: function PU__openTabset(aItemsToOpen, aEvent) {
     var urls = [];
-    for each (var item in aItemsToOpen) {
+    for (var i = 0; i < aItemsToOpen.length; i++) {
+      var item = aItemsToOpen[i];
       if (item.isBookmark)
         this.markPageAsFollowedBookmark(item.uri);
       else
