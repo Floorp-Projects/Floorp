@@ -96,7 +96,10 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
 
     if (mRoleMapEntry &&
         (mRoleMapEntry->role == nsIAccessibleRole::ROLE_GRAPHIC ||
-         mRoleMapEntry->role == nsIAccessibleRole::ROLE_IMAGE_MAP)) {
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_IMAGE_MAP ||
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_SLIDER ||
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_PROGRESSBAR ||
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_SEPARATOR)) {
       // ARIA roles that these interfaces are not appropriate for
       return nsAccessible::QueryInterface(aIID, aInstancePtr);
     }
@@ -565,7 +568,10 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
   // On failure, return null. On success, return the DOM node which contains the offset.
   NS_ENSURE_ARG_POINTER(aHyperTextOffset);
   *aHyperTextOffset = 0;
-  NS_ENSURE_ARG_POINTER(aNode);
+
+  if (!aNode) {
+    return NS_ERROR_FAILURE;
+  }
   if (aFinalAccessible) {
     *aFinalAccessible = nsnull;
   }
