@@ -100,6 +100,7 @@ namespace CrashReporter {
                           StringTable& strings,
                           bool escape);
   void LogMessage(const std::string& message);
+  void DeleteDump();
 }
 
 //=============================================================================
@@ -113,7 +114,9 @@ void UIShutdown();
 void UIShowDefaultUI();
 
 // Run the UI for when the app was launched with a dump file
-void UIShowCrashUI(const std::string& dumpfile,
+// Return true if the user sent (or tried to send) the crash report,
+// false if they chose not to, and it should be deleted.
+bool UIShowCrashUI(const std::string& dumpfile,
                    const StringTable& queryParameters,
                    const std::string& sendURL,
                    const std::vector<std::string>& restartArgs);
