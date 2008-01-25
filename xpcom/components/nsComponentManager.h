@@ -64,6 +64,7 @@
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
 #include "nsTArray.h"
+#include "nsIEnumerator.h"
 
 struct nsFactoryEntry;
 class nsIServiceManager;
@@ -332,6 +333,47 @@ struct nsContractIDTableEntry : public PLDHashEntryHdr {
     char           *mContractID;
     PRUint32        mContractIDLen;
     nsFactoryEntry *mFactoryEntry;    
+};
+
+typedef NS_CALLBACK(EnumeratorConverter)(PLDHashTable *table,
+                                         const PLDHashEntryHdr *hdr,
+                                         void *data,
+                                         nsISupports **retval);
+
+class PLDHashTableEnumeratorImpl : public nsIBidirectionalEnumerator,
+                                   public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIENUMERATOR
+    NS_DECL_NSIBIDIRECTIONALENUMERATOR
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    PLDHashTableEnumeratorImpl(PLDHashTable *table,
+                               EnumeratorConverter converter,
+                               void *converterData);
+    PRInt32 Count() { return mCount; }
+private:
+    PLDHashTableEnumeratorImpl(); /* no implementation */
+
+    ~PLDHashTableEnumeratorImpl();
+    void ReleaseElements();
+
+    nsVoidArray   mElements;
+    PRInt32       mCount, mCurrent;
+    PRMonitor*    mMonitor;
+
+    struct Closure {
+        PRBool                        succeeded;
+        EnumeratorConverter           converter;
+        void                          *data;
+        PLDHashTableEnumeratorImpl    *impl;
+    };
+
+    static PLDHashOperator PR_CALLBACK Enumerator(PLDHashTable *table,
+                                                  PLDHashEntryHdr *hdr,
+                                                  PRUint32 number,
+                                                  void *data);
 };
 
 #endif // nsComponentManager_h__

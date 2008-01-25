@@ -520,7 +520,7 @@ JAVA_GEN_DIR  = _javagen
 JAVA_DIST_DIR = $(DEPTH)/$(JAVA_GEN_DIR)
 JAVA_IFACES_PKG_NAME = org/mozilla/interfaces
 
-REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d) -I$(DIST)/include 
+REQ_INCLUDES	= -I$(srcdir) -I. $(foreach d,$(REQUIRES),-I$(DIST)/include/$d) -I$(DIST)/include 
 ifdef LIBXUL_SDK
 REQ_INCLUDES_SDK = $(foreach d,$(REQUIRES),-I$(LIBXUL_SDK)/include/$d) -I$(LIBXUL_SDK)/include
 endif

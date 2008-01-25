@@ -1,0 +1,135 @@
+%import-idl "nsIMutableArray.idl"
+%import-idl "nsIProperty.idl"
+%import-idl "nsIINIParser.idl"
+%import-idl "nsIFactory.idl"
+%import-idl "nsIVariant.idl"
+%import-idl "nsIPersistentProperties2.idl"
+%import-idl "nsISimpleEnumerator.idl"
+%import-idl "nsIStringEnumerator.idl"
+%import-idl "nsISupportsArray.idl"
+%import-idl "nsISerializable.idl"
+%import-idl "nsIAtom.idl"
+%import-idl "nsISupportsPrimitives.idl"
+%import-idl "nsIWritablePropertyBag.idl"
+%import-idl "nsIWritablePropertyBag2.idl"
+
+%{C++
+#include "nsArray.h"
+#include "nsIByteBuffer.h"
+#include "nsHashPropertyBag.h"
+#include "nsINIParserImpl.h"
+#include "nsVariant.h"
+#include "nsByteBuffer.h"
+#include "nsPersistentProperties.h"
+#include "nsUnicharBuffer.h"
+#include "nsObserverList.h"
+#include "nsStringEnumerator.h"
+#include "nsSupportsArray.h"
+#include "nsAtomTable.h"
+#include "nsStaticAtom.h"
+#include "nsSupportsArrayEnumerator.h"
+#include "nsSupportsPrimitives.h"
+%}
+
+%pseudo-iid nsIByteBuffer e4a6e4b0-93b4-11d1-895b-006008911b81
+%pseudo-iid nsIUnicharBuffer 14cf6970-93b5-11d1-895b-006008911b81
+
+NS_IMPL_ISUPPORTS2(nsArray, nsIArray, nsIMutableArray)
+
+NS_IMPL_ISUPPORTS1(nsSimpleProperty, nsIProperty)
+
+NS_IMPL_ISUPPORTS2(nsINIParserFactory,
+                   nsIINIParserFactory,
+                   nsIFactory)
+
+NS_IMPL_ISUPPORTS1(nsINIParserImpl,
+                   nsIINIParser)
+
+NS_IMPL_ISUPPORTS2(nsVariant, nsIVariant, nsIWritableVariant)
+
+NS_IMPL_ISUPPORTS1(ByteBufferImpl,nsIByteBuffer)
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsPersistentProperties, nsIPersistentProperties, nsIProperties)
+
+NS_INTERFACE_MAP_BEGIN(nsHashPropertyBag)
+  NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIPropertyBag, nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY(nsIPropertyBag2)
+  NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag2)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ISUPPORTS1(nsPropertyElement, nsIPropertyElement)
+
+NS_IMPL_ISUPPORTS1(UnicharBufferImpl, nsIUnicharBuffer)
+
+NS_IMPL_ISUPPORTS1(nsObserverEnumerator, nsISimpleEnumerator)
+
+NS_IMPL_ISUPPORTS3(nsStringEnumerator,
+                   nsIStringEnumerator,
+                   nsIUTF8StringEnumerator,
+                   nsISimpleEnumerator)
+
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsSupportsArray, nsISupportsArray, nsICollection, nsISerializable)
+
+NS_IMPL_ISUPPORTS1(nsArrayEnumerator, nsISimpleEnumerator)
+
+NS_IMPL_ISUPPORTS1(AtomImpl, nsIAtom)
+
+NS_IMPL_QUERY_INTERFACE1(nsStaticAtomWrapper, nsIAtom)
+
+NS_IMPL_ISUPPORTS2(nsSupportsArrayEnumerator, nsIBidirectionalEnumerator, nsIEnumerator)
+
+NS_IMPL_ISUPPORTS2(nsSupportsIDImpl, nsISupportsID, nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsCStringImpl, nsISupportsCString,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsStringImpl, nsISupportsString,
+                   nsISupportsPrimitive)
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsPRBoolImpl, nsISupportsPRBool,
+                              nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsPRUint8Impl, nsISupportsPRUint8,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsPRUint16Impl, nsISupportsPRUint16,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsPRUint32Impl, nsISupportsPRUint32,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsPRUint64Impl, nsISupportsPRUint64,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsPRTimeImpl, nsISupportsPRTime,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsCharImpl, nsISupportsChar,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsPRInt16Impl, nsISupportsPRInt16,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsPRInt32Impl, nsISupportsPRInt32,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsPRInt64Impl, nsISupportsPRInt64,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsFloatImpl, nsISupportsFloat,
+                   nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsDoubleImpl, nsISupportsDouble,
+                   nsISupportsPrimitive)
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsVoidImpl, nsISupportsVoid,
+                              nsISupportsPrimitive)
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsInterfacePointerImpl,
+                              nsISupportsInterfacePointer,
+                              nsISupportsPrimitive)
+
+NS_IMPL_ISUPPORTS2(nsSupportsDependentCString,nsISupportsCString,nsISupportsPrimitive)
+
