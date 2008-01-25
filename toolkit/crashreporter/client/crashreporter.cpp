@@ -324,17 +324,21 @@ static bool AddSubmittedReport(const string& serverResponse)
   return true;
 }
 
+void DeleteDump()
+{
+  const char* noDelete = getenv("MOZ_CRASHREPORTER_NO_DELETE_DUMP");
+  if (!noDelete || *noDelete == '\0') {
+    if (!gDumpFile.empty())
+      UIDeleteFile(gDumpFile);
+    if (!gExtraFile.empty())
+      UIDeleteFile(gExtraFile);
+  }
+}
+
 bool SendCompleted(bool success, const string& serverResponse)
 {
   if (success) {
-    const char* noDelete = getenv("MOZ_CRASHREPORTER_NO_DELETE_DUMP");
-    if (!noDelete || *noDelete == '\0') {
-      if (!gDumpFile.empty())
-        UIDeleteFile(gDumpFile);
-      if (!gExtraFile.empty())
-        UIDeleteFile(gExtraFile);
-    }
-
+    DeleteDump();
     return AddSubmittedReport(serverResponse);
   }
   return true;
@@ -508,7 +512,8 @@ int main(int argc, char** argv)
       sendURL = urlEnv;
     }
 
-    UIShowCrashUI(gDumpFile, queryParameters, sendURL, restartArgs);
+    if (!UIShowCrashUI(gDumpFile, queryParameters, sendURL, restartArgs))
+      DeleteDump();
   }
 
   UIShutdown();
