@@ -857,29 +857,22 @@ nsHTMLTableAccessible::GetTableNode(nsIDOMNode **_retval)
 }
 
 nsresult
-nsHTMLTableAccessible::GetTableLayout(nsITableLayout **aLayoutObject)
+nsHTMLTableAccessible::GetTableLayout(nsITableLayout **aTableLayout)
 {
-  *aLayoutObject = nsnull;
-
-  nsresult rv = NS_OK;
+  *aTableLayout = nsnull;
 
   nsCOMPtr<nsIDOMNode> tableNode;
-  rv = GetTableNode(getter_AddRefs(tableNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetTableNode(getter_AddRefs(tableNode));
+  nsCOMPtr<nsIContent> tableContent(do_QueryInterface(tableNode));
+  if (!tableContent) {
+    return NS_ERROR_FAILURE; // Table shut down
+  }
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(tableNode));
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
-  nsIDocument *doc = content->GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-
-  nsCOMPtr<nsISupports> layoutObject;
-  rv = presShell->GetLayoutObjectFor(content, getter_AddRefs(layoutObject));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CallQueryInterface(layoutObject, aLayoutObject);
+  nsIFrame *frame = shell->GetPrimaryFrameFor(tableContent);
+  return frame ? CallQueryInterface(frame, aTableLayout) : NS_ERROR_FAILURE;
 }
 
 nsresult
