@@ -73,6 +73,7 @@ static GtkWidget* gCloseButton = 0;
 static GtkWidget* gRestartButton = 0;
 
 static bool gInitialized = false;
+static bool gDidTrySend = false;
 static string gDumpFile;
 static StringTable gQueryParameters;
 static string gSendURL;
@@ -278,6 +279,7 @@ static void RestartClicked(GtkButton* button,
   RestartApplication();
 
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
+    gDidTrySend = true;
     SendReport();
   } else {
     gtk_main_quit();
@@ -545,7 +547,7 @@ void UIShowDefaultUI()
   gtk_dialog_run(GTK_DIALOG(errorDialog));
 }
 
-void UIShowCrashUI(const string& dumpfile,
+bool UIShowCrashUI(const string& dumpfile,
                    const StringTable& queryParameters,
                    const string& sendURL,
                    const vector<string>& restartArgs)
@@ -719,6 +721,8 @@ void UIShowCrashUI(const string& dumpfile,
   gtk_widget_hide_all(gThrobber);
 
   gtk_main();
+
+  return gDidTrySend;
 }
 
 void UIError_impl(const string& message)
