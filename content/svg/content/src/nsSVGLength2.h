@@ -71,6 +71,8 @@ public:
 
   PRUint8 GetCtxType() const { return mCtxType; }
   PRUint8 GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
+  PRBool IsPercentage() const
+    { return mSpecifiedUnitType == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE; }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
 
