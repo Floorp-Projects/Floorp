@@ -59,6 +59,10 @@ CPPSRCS		= \
 		nsServiceManagerObsolete.cpp \
 		$(NULL)
 
+GQI_SRCS = \
+  xpcomcomponents.gqi \
+  $(NULL)
+
 EXPORTS		= \
 		nsCategoryManagerUtils.h \
 		nsIServiceManagerObsolete.h \

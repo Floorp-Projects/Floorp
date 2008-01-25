@@ -35,77 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHTMLSpanElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsPresContext.h"
-#include "nsIAtom.h"
-#include "nsRuleData.h"
+#ifndef nsHTMLIFrameElement_h__
+#define nsHTMLIFrameElement_h__
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Span)
+#include "nsIFrameSetElement.h"
+#include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLIFrameElement.h"
 
-nsHTMLSpanElement::nsHTMLSpanElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
-{
-}
-
-nsHTMLSpanElement::~nsHTMLSpanElement()
-{
-}
-
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement)
-
-NS_IMPL_ELEMENT_CLONE(nsHTMLSpanElement)
-
-
-nsresult
-nsHTMLSpanElement::GetInnerHTML(nsAString& aInnerHTML)
-{
-  if (mNodeInfo->Equals(nsGkAtoms::xmp) ||
-      mNodeInfo->Equals(nsGkAtoms::plaintext)) {
-    nsContentUtils::GetNodeTextContent(this, PR_FALSE, aInnerHTML);
-    return NS_OK;
-  }
-
-  return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);  
-}
-
-nsresult
-nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
-{
-  if (mNodeInfo->Equals(nsGkAtoms::xmp) ||
-      mNodeInfo->Equals(nsGkAtoms::plaintext)) {
-    return nsContentUtils::SetNodeTextContent(this, aInnerHTML, PR_TRUE);
-  }
-
-  return nsGenericHTMLElement::SetInnerHTML(aInnerHTML);
-}
-
-// ------------------------------------------------------------------
-
-class nsHTMLUnknownElement : public nsHTMLSpanElement
+class nsHTMLIFrameElement : public nsGenericHTMLFrameElement,
+                            public nsIDOMHTMLIFrameElement
 {
 public:
-  nsHTMLUnknownElement(nsINodeInfo *aNodeInfo);
+  nsHTMLIFrameElement(nsINodeInfo *aNodeInfo);
+  virtual ~nsHTMLIFrameElement();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMNode
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFrameElement::)
+
+  // nsIDOMElement
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFrameElement::)
+
+  // nsIDOMHTMLElement
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFrameElement::)
+
+  // nsIDOMHTMLIFrameElement
+  NS_DECL_NSIDOMHTMLIFRAMEELEMENT
+
+  // nsIContent
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
-NS_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLUnknownElement)
-NS_INTERFACE_MAP_END_INHERITING(nsHTMLSpanElement)
-
-nsHTMLUnknownElement::nsHTMLUnknownElement(nsINodeInfo *aNodeInfo)
-  : nsHTMLSpanElement(aNodeInfo)
-{
-}
-
-
-NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
-
-
-NS_IMPL_ELEMENT_CLONE(nsHTMLUnknownElement)
+#endif

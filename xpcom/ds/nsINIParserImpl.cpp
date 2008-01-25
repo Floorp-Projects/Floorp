@@ -43,25 +43,6 @@
 #include "nsStringEnumerator.h"
 #include "nsVoidArray.h"
 
-class nsINIParserImpl :
-  public nsIINIParser
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIINIPARSER
-
-  nsresult Init(nsILocalFile* aINIFile) {
-    return mParser.Init(aINIFile);
-  }
-
-private:
-  nsINIParser mParser;
-};
-
-NS_IMPL_ISUPPORTS2(nsINIParserFactory,
-                   nsIINIParserFactory,
-                   nsIFactory)
-
 NS_IMETHODIMP
 nsINIParserFactory::CreateINIParser(nsILocalFile* aINIFile,
                                     nsIINIParser* *aResult)
@@ -96,9 +77,6 @@ nsINIParserFactory::LockFactory(PRBool aLock)
 {
   return NS_OK;
 }
-
-NS_IMPL_ISUPPORTS1(nsINIParserImpl,
-                   nsIINIParser)
 
 static PRBool
 SectionCB(const char* aSection, void *aClosure)

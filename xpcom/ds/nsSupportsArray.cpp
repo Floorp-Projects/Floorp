@@ -216,8 +216,6 @@ nsSupportsArray::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   return it->QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsSupportsArray, nsISupportsArray, nsICollection, nsISerializable)
-
 NS_IMETHODIMP
 nsSupportsArray::Read(nsIObjectInputStream *aStream)
 {
@@ -682,27 +680,6 @@ NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
   return rv;
 }
 
-class nsArrayEnumerator : public nsISimpleEnumerator
-{
-public:
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsISimpleEnumerator interface
-    NS_IMETHOD HasMoreElements(PRBool* aResult);
-    NS_IMETHOD GetNext(nsISupports** aResult);
-
-    // nsArrayEnumerator methods
-    nsArrayEnumerator(nsISupportsArray* aValueArray);
-
-private:
-    ~nsArrayEnumerator(void);
-
-protected:
-    nsISupportsArray* mValueArray;
-    PRInt32 mIndex;
-};
-
 nsArrayEnumerator::nsArrayEnumerator(nsISupportsArray* aValueArray)
     : mValueArray(aValueArray),
       mIndex(0)
@@ -714,8 +691,6 @@ nsArrayEnumerator::~nsArrayEnumerator(void)
 {
     NS_IF_RELEASE(mValueArray);
 }
-
-NS_IMPL_ISUPPORTS1(nsArrayEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsArrayEnumerator::HasMoreElements(PRBool* aResult)

@@ -883,54 +883,6 @@ nsDocument::~nsDocument()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
 
-NS_INTERFACE_TABLE_HEAD(nsDocument)
-  NS_INTERFACE_TABLE_BEGIN
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsINode)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentEvent)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSDocumentStyle)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentView)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentRange)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTraversal)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentXBL)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIScriptObjectPrincipal)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3EventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNSEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNode)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsPIDOMEventTarget)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3Node)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3Document)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
-    // nsNodeSH::PreCreate() depends on the identity pointer being the
-    // same as nsINode (which nsIDocument inherits), so if you change
-    // the below line, make sure nsNodeSH::PreCreate() still does the
-    // right thing!
-    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsDocument, nsISupports, nsIDocument)
-  NS_INTERFACE_TABLE_END
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDocument)
-  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
-      aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
-    if (!mXPathEvaluatorTearoff) {
-      nsresult rv;
-      mXPathEvaluatorTearoff =
-        do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID,
-                          static_cast<nsIDocument *>(this), &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    return mXPathEvaluatorTearoff->QueryInterface(aIID, aInstancePtr);
-  }
-  else
-NS_INTERFACE_MAP_END
-
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDocument, nsIDocument)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument, 
                                                         nsIDocument,
