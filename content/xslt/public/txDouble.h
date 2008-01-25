@@ -68,14 +68,7 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 #endif
 #endif
 
-#if (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || __GNUC__ > 2
-/**
- * This version of the macros is safe for the alias optimizations
- * that gcc does, but uses gcc-specific extensions.
- */
-
 typedef union txdpun {
-    PRFloat64 d;
     struct {
 #if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
         PRUint32 lo, hi;
@@ -83,8 +76,14 @@ typedef union txdpun {
         PRUint32 hi, lo;
 #endif
     } s;
+    PRFloat64 d;
 } txdpun;
 
+#if (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || __GNUC__ > 2
+/**
+ * This version of the macros is safe for the alias optimizations
+ * that gcc does, but uses gcc-specific extensions.
+ */
 #define TX_DOUBLE_HI32(x) (__extension__ ({ txdpun u; u.d = (x); u.s.hi; }))
 #define TX_DOUBLE_LO32(x) (__extension__ ({ txdpun u; u.d = (x); u.s.lo; }))
 
@@ -113,11 +112,11 @@ typedef union txdpun {
  (TX_DOUBLE_LO32(x) || (TX_DOUBLE_HI32(x) & TX_DOUBLE_HI32_MANTMASK)))
 
 #ifdef IS_BIG_ENDIAN
-#define TX_DOUBLE_NaN {TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_MANTMASK,   \
-                       0xffffffff}
+#define TX_DOUBLE_NaN {{TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_MANTMASK,   \
+                        0xffffffff}}
 #else
-#define TX_DOUBLE_NaN {0xffffffff,                                         \
-                       TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_MANTMASK}
+#define TX_DOUBLE_NaN {{0xffffffff,                                         \
+                        TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_MANTMASK}}
 #endif
 
 #if defined(XP_WIN)
