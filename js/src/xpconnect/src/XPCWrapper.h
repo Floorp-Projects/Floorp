@@ -87,7 +87,6 @@ XPC_XOW_ClassNeedsXOW(const char *name)
   // TODO Make a perfect hash of these and use that?
   return !strcmp(name, "Window")            ||
          !strcmp(name, "Location")          ||
-         !strcmp(name, "HTMLDocument")      ||
          !strcmp(name, "HTMLIFrameElement") ||
          !strcmp(name, "HTMLFrameElement");
 }
