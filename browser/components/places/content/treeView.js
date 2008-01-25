@@ -375,7 +375,8 @@ PlacesTreeView.prototype = {
 
     // restore selection
     if (previouslySelectedNodes.length > 0) {
-      for each (var nodeInfo in previouslySelectedNodes) {
+      for (var i = 0; i < previouslySelectedNodes.length; i++) {
+        var nodeInfo = previouslySelectedNodes[i];
         var index = nodeInfo.node.viewIndex;
 
         // if the same node was used (happens on sorting-changes),
@@ -780,7 +781,8 @@ PlacesTreeView.prototype = {
 
     // restore selection
     if (nodesToSelect.length > 0) {
-      for each (var node in nodesToSelect) {
+      for (var i = 0; i < nodesToSelect.length; i++) {
+        var node = nodesToSelect[i];
         var index = node.viewIndex;
         selection.rangedSelect(index, index, true);
       }
