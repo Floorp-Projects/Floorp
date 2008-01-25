@@ -100,7 +100,9 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
     nsISVGChildFrame* SVGFrame = nsnull;
     CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged(PR_TRUE);
+      // The CTM of each frame referencing us can be different.
+      SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION | 
+                                 nsISVGChildFrame::TRANSFORM_CHANGED);
       SVGFrame->PaintSVG(aContext, nsnull);
     }
   }
@@ -139,7 +141,7 @@ nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
       // Notify the child frame that we may be working with a
       // different transform, so it can update its covered region
       // (used to shortcut hit testing).
-      SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
+      SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
 
       nsIFrame *temp = nsnull;
       nsresult rv = SVGFrame->GetFrameForPointSVG(aX, aY, &temp);

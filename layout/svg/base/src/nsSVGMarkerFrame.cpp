@@ -171,7 +171,9 @@ nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
     nsISVGChildFrame* SVGFrame = nsnull;
     CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged(PR_TRUE);
+      // The CTM of each frame referencing us may be different.
+      SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                                 nsISVGChildFrame::TRANSFORM_CHANGED);
       nsSVGUtils::PaintChildWithEffects(aContext, nsnull, kid);
     }
   }

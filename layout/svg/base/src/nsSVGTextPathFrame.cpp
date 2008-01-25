@@ -202,8 +202,7 @@ nsSVGTextPathFrame::GetStartOffset()
   if (val == 0.0f)
     return 0.0;
 
-  if (length->GetSpecifiedUnitType() ==
-      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+  if (length->IsPercentage()) {
     nsRefPtr<gfxFlattenedPath> data = GetFlattenedPath();
     return data ? (val * data->GetLength() / 100.0) : 0.0;
   } else {

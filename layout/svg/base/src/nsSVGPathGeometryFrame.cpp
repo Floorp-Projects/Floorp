@@ -470,12 +470,10 @@ nsSVGPathGeometryFrame::InitialUpdate()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
+void
+nsSVGPathGeometryFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  UpdateGraphic(suppressInvalidation);
-
-  return NS_OK;
+  UpdateGraphic((aFlags & SUPPRESS_INVALIDATION) != 0);
 }
 
 NS_IMETHODIMP

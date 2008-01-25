@@ -130,13 +130,7 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
     // make sure our cached transform matrix gets (lazily) updated
     mCanvasTM = nsnull;
     
-    for (nsIFrame* kid = mFrames.FirstChild(); kid;
-         kid = kid->GetNextSibling()) {
-      nsISVGChildFrame* SVGFrame = nsnull;
-      CallQueryInterface(kid, &SVGFrame);
-      if (SVGFrame)
-        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
-    }
+    nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
     return NS_OK;
   }
 
