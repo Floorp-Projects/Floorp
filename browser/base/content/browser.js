@@ -1920,11 +1920,20 @@ function URLBarSetURI(aURI) {
       if (!content.opener)
         value = "";
     } else {
-      // try to decode as UTF-8 (escaping whitespace so that it doesn't
-      // get eaten away by the location bar; cf. bug 410726)
-      try {
-        value = decodeURI(value).replace(/[%\r\n\t]/g, encodeURI);
-      } catch(e) {}
+      // Try to decode as UTF-8 if there's no encoding sequence that we would break.
+      if (!/%25(?:3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/i.test(value))
+        try {
+          value = decodeURI(value)
+                    // 1. decodeURI decodes %25 to %, which creates unintended
+                    //    encoding sequences. Re-encode it, unless it's part of
+                    //    a sequence that survived decodeURI, i.e. one for:
+                    //    ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
+                    //    (RFC 3987 section 3.2)
+                    // 2. Re-encode whitespace so that it doesn't get eaten away
+                    //    by the location bar (bug 410726).
+                    .replace(/%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)|[\r\n\t]/ig,
+                             encodeURIComponent);
+        } catch (e) {}
 
       state = "valid";
     }
