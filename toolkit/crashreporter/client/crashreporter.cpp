@@ -287,6 +287,21 @@ static bool AddSubmittedReport(const string& serverResponse)
   istringstream in(serverResponse);
   ReadStrings(in, responseItems, false);
 
+  if (responseItems.find("StopSendingReportsFor") != responseItems.end()) {
+    // server wants to tell us to stop sending reports for a certain version
+    string reportPath =
+      gSettingsPath + UI_DIR_SEPARATOR + "EndOfLife" +
+      responseItems["StopSendingReportsFor"];
+
+    ofstream* reportFile = UIOpenWrite(reportPath);
+    if (reportFile->is_open()) {
+      // don't really care about the contents
+      *reportFile << 1 << "\n";
+      reportFile->close();
+    }
+    delete reportFile;
+  }
+
   if (responseItems.find("CrashID") == responseItems.end())
     return false;
 
@@ -385,6 +400,19 @@ void RewriteStrings(StringTable& queryParameters)
               gStrings[ST_RESTART].c_str(),
               product.c_str());
   gStrings[ST_RESTART] = buf;
+
+
+  UI_SNPRINTF(buf, sizeof(buf),
+              gStrings[ST_ERROR_ENDOFLIFE].c_str(),
+              product.c_str());
+  gStrings[ST_ERROR_ENDOFLIFE] = buf;
+}
+
+bool CheckEndOfLifed(string version)
+{
+  string reportPath =
+    gSettingsPath + UI_DIR_SEPARATOR + "EndOfLife" + version;
+  return UIFileExists(reportPath);
 }
 
 int main(int argc, char** argv)
@@ -511,6 +539,14 @@ int main(int argc, char** argv)
     if (urlEnv && *urlEnv) {
       sendURL = urlEnv;
     }
+
+     // see if this version has been end-of-lifed
+     if (queryParameters.find("Version") != queryParameters.end() &&
+         CheckEndOfLifed(queryParameters["Version"])) {
+       UIError(gStrings[ST_ERROR_ENDOFLIFE]);
+       DeleteDump();
+       return 0;
+     }
 
     if (!UIShowCrashUI(gDumpFile, queryParameters, sendURL, restartArgs))
       DeleteDump();
