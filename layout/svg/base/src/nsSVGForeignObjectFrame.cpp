@@ -380,40 +380,46 @@ nsSVGForeignObjectFrame::InitialUpdate()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGForeignObjectFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
+void
+nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  mCanvasTM = nsnull;
+  PRBool reflow = PR_FALSE;
 
-  // XXX we should really have a separate notification for viewport changes and
-  // not overload NotifyCanvasTMChanged, e.g. we wouldn't need to check
-  // IsReflowLocked below. Note both notifications would be required for
-  // viewport changes when there's a viewBox though!
-  //
-  // If our width/height have a percentage value then we need to reflow if the
-  // width/height of our parent coordinate context changes. XXX Perhaps
-  // unexpectedly we also reflow if our CTM changes. This is because glyph
-  // metrics do not necessarily scale uniformly with change in scale and, as a
-  // result, CTM changes may require text to break at different points. roc
-  // says we shouldn't do this. See bug 381285 comment 20.
+  if (aFlags & TRANSFORM_CHANGED) {
+    // Perhaps unexpectedly, we reflow if our CTM changes. This is because
+    // glyph metrics do not necessarily scale uniformly with change in scale
+    // and, as a result, CTM changes may require text to break at different
+    // points.
+    // XXX roc says we shouldn't do this. See bug 381285 comment 20.
+    reflow = PR_TRUE;
+    mCanvasTM = nsnull;
 
-  UpdateGraphic(); // update mRect before requesting reflow
-
-  // If we're called while the PresShell is handling reflow events then we
-  // must have been called as a result of the NotifyViewportChange() call in
-  // our nsSVGOuterSVGFrame's Reflow() method. We must not call RequestReflow
-  // at this point (i.e. during reflow) because it could confuse the PresShell
-  // and prevent it from reflowing us properly in future. Besides that,
-  // nsSVGOuterSVGFrame::DidReflow will take care of reflowing us
-  // synchronously, so there's no need.
-
-  PRBool reflowing;
-  PresContext()->PresShell()->IsReflowLocked(&reflowing);
-  if (!reflowing) {
-    RequestReflow(nsIPresShell::eResize); // XXX use mState & NS_FRAME_IN_REFLOW?
+  } else if (aFlags & COORD_CONTEXT_CHANGED) {
+    // Our coordinate context's width/height has changed. If we have a
+    // percentage width/height our dimensions will change so we must reflow.
+    nsSVGForeignObjectElement *fO =
+      static_cast<nsSVGForeignObjectElement*>(mContent);
+    if (fO->mLengthAttributes[nsSVGForeignObjectElement::WIDTH].IsPercentage() ||
+        fO->mLengthAttributes[nsSVGForeignObjectElement::HEIGHT].IsPercentage()) {
+      reflow = PR_TRUE;
+    }
   }
 
-  return NS_OK;
+  if (reflow) {
+    // If we're called while the PresShell is handling reflow events then we
+    // must have been called as a result of the NotifyViewportChange() call in
+    // our nsSVGOuterSVGFrame's Reflow() method. We must not call RequestReflow
+    // at this point (i.e. during reflow) because it could confuse the
+    // PresShell and prevent it from reflowing us properly in future. Besides
+    // that, nsSVGOuterSVGFrame::DidReflow will take care of reflowing us
+    // synchronously, so there's no need.
+    PRBool reflowing;
+    PresContext()->PresShell()->IsReflowLocked(&reflowing);
+    if (!reflowing) {
+      UpdateGraphic(); // update mRect before requesting reflow
+      RequestReflow(nsIPresShell::eResize);
+    }
+  }
 }
 
 NS_IMETHODIMP

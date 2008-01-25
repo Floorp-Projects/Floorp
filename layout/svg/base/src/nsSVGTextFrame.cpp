@@ -95,15 +95,9 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
     // make sure our cached transform matrix gets (lazily) updated
     mCanvasTM = nsnull;
-    
-    nsIFrame* kid = mFrames.FirstChild();
-    while (kid) {
-      nsISVGChildFrame* SVGFrame = nsnull;
-      CallQueryInterface(kid, &SVGFrame);
-      if (SVGFrame)
-        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
-      kid = kid->GetNextSibling();
-    }
+
+    nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
+   
   } else if (aAttribute == nsGkAtoms::x ||
              aAttribute == nsGkAtoms::y ||
              aAttribute == nsGkAtoms::dx ||
@@ -198,19 +192,25 @@ nsSVGTextFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
-NS_IMETHODIMP
-nsSVGTextFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
+void
+nsSVGTextFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  // make sure our cached transform matrix gets (lazily) updated
-  mCanvasTM = nsnull;
+  if (aFlags & TRANSFORM_CHANGED) {
+    // make sure our cached transform matrix gets (lazily) updated
+    mCanvasTM = nsnull;
+  }
 
-  // If we are positioned using percentage values we need to update our
-  // position whenever our viewport's dimensions change.
-  // XXX we should really have a separate notification for viewport changes and
-  // not overload NotifyCanvasTMChanged.
-  NotifyGlyphMetricsChange();
+  if (aFlags & COORD_CONTEXT_CHANGED) {
+    // If we are positioned using percentage values we need to update our
+    // position whenever our viewport's dimensions change.
 
-  return nsSVGTextFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
+    // XXX We could check here whether the text frame or any of its children
+    // have any percentage co-ordinates and only update if they don't. This
+    // may not be worth it as we might need to check each glyph
+    NotifyGlyphMetricsChange();
+  }
+
+  nsSVGTextFrameBase::NotifySVGChanged(aFlags);
 }
 
 NS_IMETHODIMP
