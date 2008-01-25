@@ -161,3 +161,7 @@ interface nsILivemarkService : nsISupports
 	 */
   void reloadLivemarkFolder(in long long folderID);
 };
+
+%{C++
+#define LMANNO_FEEDURI "livemark/feedURI"
+%}
