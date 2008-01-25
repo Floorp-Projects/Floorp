@@ -1022,19 +1022,20 @@ var gApplicationsPane = {
 
     // Get the preferences that help determine what types to show.
     var showPlugins = this._prefSvc.getBoolPref(PREF_SHOW_PLUGINS_IN_LIST);
-    var hideTypesWithoutExtensions =
+    var hidePluginsWithoutExtensions =
       this._prefSvc.getBoolPref(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS);
 
     for (let type in this._handledTypes) {
       let handlerInfo = this._handledTypes[type];
 
-      // Hide types without extensions if so prefed so we don't show a whole
-      // bunch of obscure types handled by plugins on Mac.
+      // Hide plugins without associated extensions if so prefed so we don't
+      // show a whole bunch of obscure types handled by plugins on Mac.
       // Note: though protocol types don't have extensions, we still show them;
-      // the pref is only meant to be applied to MIME types.
-      // FIXME: if the type has a plugin, should we also check the "suffixes"
-      // property of the plugin?  Filed as bug 395135.
-      if (hideTypesWithoutExtensions &&
+      // the pref is only meant to be applied to MIME types, since plugins are
+      // only associated with MIME types.
+      // FIXME: should we also check the "suffixes" property of the plugin?
+      // Filed as bug 395135.
+      if (hidePluginsWithoutExtensions && handlerInfo.handledOnlyByPlugin &&
           handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo &&
           !handlerInfo.primaryExtension)
         continue;
