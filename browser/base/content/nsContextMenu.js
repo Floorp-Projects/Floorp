@@ -844,9 +844,10 @@ nsContextMenu.prototype = {
 
     var uri = this.target.QueryInterface(Ci.nsIImageLoadingContent).currentURI;
 
-    permissionmanager.add(uri, "image",
-                          aBlock ? Ci.nsIPermissionManager.DENY_ACTION :
-                                   Ci.nsIPermissionManager.ALLOW_ACTION);
+    if (aBlock)
+      permissionmanager.add(uri, "image", Ci.nsIPermissionManager.DENY_ACTION);
+    else
+      permissionmanager.remove(uri.host, "image");
 
     var brandBundle = document.getElementById("bundle_brand");
     var app = brandBundle.getString("brandShortName");
