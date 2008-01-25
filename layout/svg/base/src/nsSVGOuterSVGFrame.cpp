@@ -231,6 +231,9 @@ nsSVGOuterSVGFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
     result = nscoord(0);
   } else {
     result = nsPresContext::CSSPixelsToAppUnits(width.GetAnimValue(svg));
+    if (result < 0) {
+      result = nscoord(0);
+    }
   }
 
   return result;
@@ -284,7 +287,14 @@ nsSVGOuterSVGFrame::GetIntrinsicRatio()
 
   if (width.GetSpecifiedUnitType()  != nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE &&
       height.GetSpecifiedUnitType() != nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-    return nsSize(width.GetAnimValue(content), height.GetAnimValue(content));
+    nsSize ratio(width.GetAnimValue(content), height.GetAnimValue(content));
+    if (ratio.width < 0) {
+      ratio.width = 0;
+    }
+    if (ratio.height < 0) {
+      ratio.height = 0;
+    }
+    return ratio;
   }
 
   if (content->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
