@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Myk Melez <myk@mozilla.org>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Florian Queze <florian@queze.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -674,7 +675,7 @@ HandlerService.prototype = {
       let handlerAppID = this._getPossibleHandlerAppID(handlerApp);
       if (!this._hasResourceAssertion(infoID, NC_POSSIBLE_APP, handlerAppID)) {
         this._storeHandlerApp(handlerAppID, handlerApp);
-        this._addResourceTarget(infoID, NC_POSSIBLE_APP, handlerAppID);
+        this._addResourceAssertion(infoID, NC_POSSIBLE_APP, handlerAppID);
       }
       delete currentHandlerApps[handlerAppID];
     }
@@ -685,7 +686,7 @@ HandlerService.prototype = {
     // leave it clogged up with information about handler apps we don't care
     // about anymore.
     for (let handlerAppID in currentHandlerApps) {
-      this._removeTarget(infoID, NC_POSSIBLE_APP, handlerAppID);
+      this._removeResourceAssertion(infoID, NC_POSSIBLE_APP, handlerAppID);
       if (!this._existsResourceTarget(NC_POSSIBLE_APP, handlerAppID))
         this._removeAssertions(handlerAppID);
     }
@@ -1148,13 +1149,31 @@ HandlerService.prototype = {
    * @param propertyURI {string} the URI of the property
    * @param targetURI   {string} the URI of the target
    */
-  _addResourceTarget: function HS__addResourceTarget(sourceURI, propertyURI,
-                                                     targetURI) {
+  _addResourceAssertion: function HS__addResourceAssertion(sourceURI,
+                                                           propertyURI,
+                                                           targetURI) {
     var source = this._rdf.GetResource(sourceURI);
     var property = this._rdf.GetResource(propertyURI);
     var target = this._rdf.GetResource(targetURI);
     
     this._ds.Assert(source, property, target, true);
+  },
+
+  /**
+   * Remove an assertion with a resource target.
+   *
+   * @param sourceURI   {string} the URI of the source
+   * @param propertyURI {string} the URI of the property
+   * @param targetURI   {string} the URI of the target
+   */
+  _removeResourceAssertion: function HS__removeResourceAssertion(sourceURI,
+                                                                 propertyURI,
+                                                                 targetURI) {
+    var source = this._rdf.GetResource(sourceURI);
+    var property = this._rdf.GetResource(propertyURI);
+    var target = this._rdf.GetResource(targetURI);
+
+    this._ds.Unassert(source, property, target);
   },
 
   /**
