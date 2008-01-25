@@ -80,7 +80,7 @@
 <!ENTITY useTLS1.label                   "Use TLS 1.0">
 <!ENTITY useTLS1.accesskey               "1">
 <!ENTITY certificates.label              "Certificates">
-<!ENTITY certselect.description          "When a web site requires a certificate:">
+<!ENTITY certSelection.description       "When a server requests my personal certificate:">
 <!ENTITY certs.auto                      "Select one automatically">
 <!ENTITY certs.auto.accesskey            "l">
 <!ENTITY certs.ask                       "Ask me every time">

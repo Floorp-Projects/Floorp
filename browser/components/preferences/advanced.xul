@@ -24,6 +24,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Jeff Walden <jwalden+code@mit.edu>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -333,7 +334,7 @@
           <groupbox id="certificatesGroup">
             <caption id="CertGroupCaption" label="&certificates.label;"/>
 
-            <description id="CertSelectionDesc" control="certSelection">&certselect.description;</description>
+            <description id="CertSelectionDesc" control="certSelection">&certSelection.description;</description>
 
             <!--
               The values on these radio buttons may look like l12y issues, but
