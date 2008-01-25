@@ -75,7 +75,7 @@
 #expand <label id="version" value="&aboutVersion; __MOZ_APP_VERSION__"/>
       <label id="distribution"/>
       <label id="distributionId"/>
-      <description id="copyright">&copyrightText;</description>
+      <description id="copyright">&copyrightInfo;</description>
       <textbox id="userAgent" multiline="true" readonly="true"/>
     </vbox>
     <vbox flex="1" id="creditsBox">
