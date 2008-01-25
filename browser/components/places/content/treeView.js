@@ -592,10 +592,11 @@ PlacesTreeView.prototype = {
         // At the end of the child list without finding a visible sibling: This
         // is a little harder because we don't know how many rows the last item
         // in our list takes up (it could be a container with many children).
-        var lastRowCount =
-          this._countVisibleRowsForItem(aParent.getChild(aNewIndex - 1));
-        newViewIndex =
-          aParent.getChild(aNewIndex - 1).viewIndex + lastRowCount;
+        var prevChild = aParent.getChild(aNewIndex - 1);
+        newViewIndex = prevChild.viewIndex + this._countVisibleRowsForItem(prevChild);
+        // If we were in the same parent and we are swapping the order, we need to adjust
+        if (prevChild.parent == aItem.parent && prevChild.viewIndex > aItem.viewIndex) 
+          newViewIndex--;
       }
     }
 
