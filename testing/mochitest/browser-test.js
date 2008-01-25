@@ -125,6 +125,13 @@ function testScope(aTests) {
   this.todo = function test_todo(condition, name, diag) {
     self.tests.push(new testResult(!condition, name, diag, true));
   }
+  this.todo_is = function test_todo_is(a, b, name) {
+    self.todo(a == b, name, "Got " + a + ", expected " + b);
+  },
+  this.todo_isnot = function test_todo_isnot(a, b, name) {
+    self.todo(a != b, name, "Didn't expect " + a + ", but got it");
+  },
+
   this.waitForExplicitFinish = function test_WFEF() {
     self.done = false;
   }
