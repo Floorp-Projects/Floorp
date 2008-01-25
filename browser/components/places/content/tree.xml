@@ -512,10 +512,11 @@
           //
           // If the sole selection is the bookmarks toolbar folder, we insert
           // into it even if it is not opened
+          var itemId =
+            PlacesUtils.getConcreteItemId(resultView.nodeForTreeIndex(max.value));
           if (this.hasSingleSelection && resultView.isContainer(max.value) &&
               (resultView.isContainerOpen(max.value) ||
-               resultView.nodeForTreeIndex(max.value)
-                         .itemId == PlacesUtils.bookmarksMenuFolderId))
+               itemId == PlacesUtils.bookmarksMenuFolderId))
             orientation = NHRVO.DROP_ON;
 
           this._cachedInsertionPoint =
@@ -528,10 +529,8 @@
         <parameter name="aContainer"/>
         <body><![CDATA[
           // Disallow insertion of items under readonly folders
-          // Disallow insertion of items under the places root
           return (!PlacesUtils.nodeIsFolder(aContainer) ||
-                   PlacesUtils.nodeIsReadOnly(aContainer) ||
-                   aContainer.itemId == PlacesUtils.placesRootId);
+                   PlacesUtils.nodeIsReadOnly(aContainer));
         ]]></body>
       </method>
 
@@ -581,7 +580,8 @@
           if (this._disallowInsertion(container))
             return null;
 
-          return new InsertionPoint(container.itemId, index, orientation);
+          return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
+                                    index, orientation);
         ]]></body>
       </method>
 
@@ -627,7 +627,13 @@
           function findNodes(node) {
             var foundOne = false;
             // See if node matches an ID we wanted; add to results.
+            // For simple folder queries, check both itemId and the concrete
+            // item id.
             var index = ids.indexOf(node.itemId);
+            if (index == -1 &&
+                node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT)
+              index = ids.indexOf(asQuery(node).folderItemId);
+
             if (index != -1) {
               nodes.push(node);
               foundOne = true;

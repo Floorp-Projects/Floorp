@@ -382,10 +382,10 @@ PlacesTreeView.prototype = {
         // if the same node was used (happens on sorting-changes),
         // just use viewIndex
         if (index == -1) { // otherwise, try to find an equal node
-          var itemId = nodeInfo.node.itemId;
+          var itemId = PlacesUtils.getConcreteItemId(nodeInfo.node);
           if (itemId != 1) { // bookmark-nodes in queries case
             for (i=0; i < newElements.length && index == -1; i++) {
-              if (newElements[i].itemId == itemId)
+              if (PlacesUtils.getConcreteItemId(newElements[i]) == itemId)
                 index = newElements[i].viewIndex;
             }
           }
@@ -687,7 +687,8 @@ PlacesTreeView.prototype = {
     if (selection.getRangeCount() == 1) {
       var min = { }, max = { };
       selection.getRangeAt(0, min, max);
-      if (min.value == max.value)
+      if (min.value == max.value &&
+          this.nodeForTreeIndex(min.value) == aItem)
         selectNext = true;
     }
 
@@ -1012,25 +1013,27 @@ PlacesTreeView.prototype = {
 
     var node = this._visibleElements[aRow];
 
-    // To disable the tree gestures for containers (e.g. double-click to open)
-    // we don't mark container nodes as such in flat list mode. The container
-    // appearance is desired though, so we add the container atom manually.
-    if (this._flatList && PlacesUtils.nodeIsContainer(node))
-      aProperties.AppendElement(this._getAtomFor("container"));
-
-    if (PlacesUtils.nodeIsSeparator(node))
-      aProperties.AppendElement(this._getAtomFor("separator"));
-    else if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
-      aProperties.AppendElement(this._getAtomFor("query"));
-    else if (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
-      if (PlacesUtils.annotations.itemHasAnnotation(node.itemId,
-                                                    LMANNO_FEEDURI))
-        aProperties.AppendElement(this._getAtomFor("livemark"));
-      else if (PlacesUtils.bookmarks.getFolderIdForItem(node.itemId) ==
-               PlacesUtils.tagsFolderId) {
-        aProperties.AppendElement(this._getAtomFor("tagContainer"));
+    var nodeType = node.type;
+    if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
+      // To disable the tree gestures for containers (e.g. double-click to open)
+      // we don't mark container nodes as such in flat list mode. The container
+      // appearance is desired though, so we add the container atom manually.
+      if (this._flatList)
+        aProperties.AppendElement(this._getAtomFor("container"));
+      if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
+        aProperties.AppendElement(this._getAtomFor("query"));
+      else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
+               nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
+        if (PlacesUtils.annotations.itemHasAnnotation(node.itemId,
+                                                      LMANNO_FEEDURI))
+          aProperties.AppendElement(this._getAtomFor("livemark"));
+        else if (PlacesUtils.bookmarks.getFolderIdForItem(node.itemId) ==
+                 PlacesUtils.tagsFolderId)
+          aProperties.AppendElement(this._getAtomFor("tagContainer"));
       }
     }
+    else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
+      aProperties.AppendElement(this._getAtomFor("separator"));
   },
 
   getColumnProperties: function(aColumn, aProperties) { },
