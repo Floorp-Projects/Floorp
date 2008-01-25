@@ -314,6 +314,7 @@ public:
             type == nsINavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER ||
             type == nsINavHistoryResultNode::RESULT_TYPE_QUERY ||
             type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
+            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT ||
             type == nsINavHistoryResultNode::RESULT_TYPE_DAY);
   }
   PRBool IsContainer() {
@@ -359,7 +360,8 @@ public:
     return IsTypeVisit(type);
   }
   static PRBool IsTypeFolder(PRUint32 type) {
-    return (type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER);
+    return (type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
+            type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT);
   }
   PRBool IsFolder() {
     PRUint32 type;
@@ -760,8 +762,14 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE_NO_GETITEMMID
-  NS_IMETHOD GetType(PRUint32* type)
-    { *type = nsNavHistoryResultNode::RESULT_TYPE_FOLDER; return NS_OK; }
+  NS_IMETHOD GetType(PRUint32* type) {
+    if (mQueryItemId != -1) {
+      *type = nsNavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT;
+    } else {
+      *type = nsNavHistoryResultNode::RESULT_TYPE_FOLDER;
+    }
+    return NS_OK;
+  }
   NS_IMETHOD GetUri(nsACString& aURI);
   NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN_AND_READONLY
   NS_IMETHOD GetHasChildren(PRBool* aHasChildren);
