@@ -101,3 +101,13 @@
 #undef PROGRESS_REPORT
 
 #endif /* JPEG_CJPEG_DJPEG */
+
+/* SSE* alignment support - only use on platforms that support declspec and __attribute__ */
+
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+#define ALIGN16_const_vector_short(name) __declspec(align(16)) const short name[8]
+#define ALIGN16_const_vector_uchar(name) __declspec(align(16)) const unsigned char name[16]
+#else
+#define ALIGN16_const_vector_short(name) const short name[8] __attribute__ ((aligned (16)))
+#define ALIGN16_const_vector_uchar(name) const unsigned char name[16] __attribute__ ((aligned (16)))
+#endif ! XP_WIN32 && _M_IX86 && !__GNUC
