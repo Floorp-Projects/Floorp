@@ -341,7 +341,7 @@ public:
    * Returns a layout object associated with the primary frame for the content object.
    *
    * @param aContent   the content object for which we seek a layout object
-   * @param aResult    the resulting layout object as an nsISupports, if found.  Refcounted.
+   * @param aResult    the resulting layout object as an nsISupports, if found.
    */
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const = 0;
