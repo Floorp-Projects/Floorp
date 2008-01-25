@@ -116,7 +116,7 @@ void nsOuterDocAccessible::CacheChildren()
     return;
   }
 
-  SetFirstChild(nsnull);
+  InvalidateChildren();
   mAccChildCount = 0;
 
   // In these variable names, "outer" relates to the nsOuterDocAccessible
