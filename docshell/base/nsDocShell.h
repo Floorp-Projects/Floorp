@@ -512,6 +512,11 @@ protected:
 
     // Check whether aURI is about:blank
     static PRBool IsAboutBlank(nsIURI* aURI);
+
+    // Call this when a URI load is handed to us (via OnLinkClick or
+    // InternalLoad).  This makes sure that we're not inside unload, or that if
+    // we are it's still OK to load this URI.
+    PRBool IsOKToLoadURI(nsIURI* aURI);
     
 protected:
     // Override the parent setter from nsDocLoader
@@ -641,6 +646,13 @@ protected:
 
     // Suspends/resumes channels based on the URI classifier.
     nsRefPtr<nsClassifierCallback> mClassifier;
+
+    // The URI we're currently loading.  This is only relevant during the
+    // firing of a pagehide/unload.  The caller of FirePageHideNotification()
+    // is responsible for setting it and unsetting it.  It may be null if the
+    // pagehide/unload is happening for some reason other than just loading a
+    // new URI.
+    nsCOMPtr<nsIURI> mLoadingURI;
 
     // WEAK REFERENCES BELOW HERE.
     // Note these are intentionally not addrefd.  Doing so will create a cycle.
