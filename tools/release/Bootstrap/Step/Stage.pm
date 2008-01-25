@@ -658,7 +658,8 @@ sub IsValidLocaleDeliverable {
         $locale = $parts[$partsCount - 4];
         $platform = $DELIVERABLE_TO_PLATFORM{$parts[$partsCount - 3]};
     } else {
-        $this->Log(msg => "WARNING: Unknown file type in tree: $dirent");
+        die('ASSERT: IsValidLocaleDeliverable(): Unknown file type in tree: ' .
+               $dirent);
     }
 
     foreach my $allowedPlatform (@{$this->{'localeManifest'}->{$locale}}) {
