@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,19 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla XPCOM.
+ * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is
- * Benjamin Smedberg <benjamin@smedbergs.us>
- *
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,43 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsINIParserImpl_h__
-#define nsINIParserImpl_h__
+#ifndef nsHTMLSpanElement_h__
+#define nsHTMLSpanElement_h__
 
-#include "nsIINIParser.h"
-#include "nsINIParser.h"
-#include "nsIFactory.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsGenericHTMLElement.h"
 
-#define NS_INIPARSERFACTORY_CID \
-{ 0xdfac10a9, 0xdd24, 0x43cf, \
-  { 0xa0, 0x95, 0x6f, 0xfa, 0x2e, 0x4b, 0x6a, 0x6c } }
-
-#define NS_INIPARSERFACTORY_CONTRACTID \
-  "@mozilla.org/xpcom/ini-parser-factory;1"
-
-class nsINIParserFactory :
-  public nsIINIParserFactory,
-  public nsIFactory
+class nsHTMLSpanElement : public nsGenericHTMLElement,
+                          public nsIDOMHTMLElement
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIINIPARSERFACTORY
-  NS_DECL_NSIFACTORY
+  nsHTMLSpanElement(nsINodeInfo *aNodeInfo);
+  virtual ~nsHTMLSpanElement();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMNode
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
+
+  // nsIDOMElement
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
+
+  // nsIDOMHTMLElement
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
+
+  virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
+  virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
-class nsINIParserImpl :
-  public nsIINIParser
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIINIPARSER
-
-  nsresult Init(nsILocalFile* aINIFile) {
-    return mParser.Init(aINIFile);
-  }
-
-private:
-  nsINIParser mParser;
-};
-
-#endif // nsINIParserImpl_h__
+#endif

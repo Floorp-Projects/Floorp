@@ -1,0 +1,17 @@
+%import "contentbase.gqi"
+
+%import-idl "nsIDOMHTMLDocument.idl"
+%import-idl "nsIDOMNSHTMLDocument.idl"
+
+%{C++
+#include "nsHTMLDocument.h"
+%}
+
+%pseudo-iid nsIHTMLDocument 61e989a8-70cd-4582-845e-6e5e12559a83
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLDocument, nsDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLDocument)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLDocument)
+NS_INTERFACE_MAP_END

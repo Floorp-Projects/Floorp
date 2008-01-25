@@ -50,9 +50,6 @@ struct findIndexOfClosure
 
 PR_STATIC_CALLBACK(PRBool) FindElementCallback(void* aElement, void* aClosure);
 
-
-NS_IMPL_ISUPPORTS2(nsArray, nsIArray, nsIMutableArray)
-
 nsArray::~nsArray()
 {
     Clear();

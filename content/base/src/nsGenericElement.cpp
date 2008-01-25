@@ -3449,28 +3449,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGenericElement)
-  NS_INTERFACE_MAP_ENTRY(nsIContent)
-  NS_INTERFACE_MAP_ENTRY(nsINode)
-  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSElement, new nsNSElementTearoff(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
-                                 nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
-                                 new nsNodeSupportsWeakRefTearoff(this))
-  // nsNodeSH::PreCreate() depends on the identity pointer being the
-  // same as nsINode (which nsIContent inherits), so if you change the
-  // below line, make sure nsNodeSH::PreCreate() still does the right
-  // thing!
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
-NS_INTERFACE_MAP_END
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericElement, nsIContent)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsGenericElement, 
 							nsIContent,
