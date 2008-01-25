@@ -511,17 +511,17 @@
           var index = -1;
           var folderId = 0;
           if (PlacesUtils.nodeIsFolder(this._resultNode))
-            folderId = this._resultNode.itemId;
+            folderId = PlacesUtils.getConcreteItemId(this._resultNode);
 
           if (this.hasSelection) {
             if (PlacesUtils.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
-              folderId = this.selectedNode.itemId;
+              folderId = PlacesUtils.getConcreteItemId(selectedNode);
             } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
-              folderId = this.selectedNode.parent.itemId;
+              folderId = PlacesUtils.getConcreteItemId(this.selectedNode.parent);
               index = PlacesUtils.getIndexOfNode(this.selectedNode)
             }
           }

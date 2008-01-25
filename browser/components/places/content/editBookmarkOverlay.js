@@ -643,7 +643,8 @@ var gEditItemOverlay = {
     // Update folder-tree selection
     if (!this._folderTree.collapsed) {
       var selectedNode = this._folderTree.selectedNode;
-      if (!selectedNode || selectedNode.itemId != container)
+      if (!selectedNode ||
+          PlacesUtils.getConcreteItemId(selectedNode) != container)
         this._folderTree.selectItems([container]);
     }
   },
@@ -653,7 +654,7 @@ var gEditItemOverlay = {
     if (!selectedNode)
       return;
 
-    var folderId = selectedNode.itemId;
+    var folderId = PlacesUtils.getConcreteItemId(selectedNode);
     if (this._getFolderIdFromMenuList() == folderId)
       return;
 

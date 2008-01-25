@@ -2059,6 +2059,7 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
            aOptions->ExcludeQueries()) ||
           (nodeType != nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
            nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER &&
+           nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT &&
            aOptions->ExcludeItems())) {
         continue;
       }
