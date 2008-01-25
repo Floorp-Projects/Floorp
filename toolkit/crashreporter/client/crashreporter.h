@@ -69,6 +69,7 @@ typedef std::map<std::string, std::string> StringTable;
 #define ST_ERROR_NOSERVERURL         "ErrorNoServerURL"
 #define ST_ERROR_NOSETTINGSPATH      "ErrorNoSettingsPath"
 #define ST_ERROR_CREATEDUMPDIR       "ErrorCreateDumpDir"
+#define ST_ERROR_ENDOFLIFE           "ErrorEndOfLife"
 
 //=============================================================================
 // implemented in crashreporter.cpp
