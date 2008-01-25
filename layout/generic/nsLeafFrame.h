@@ -68,14 +68,6 @@ public:
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
 
   /**
-   * Our auto size is just intrinsic width and intrinsic height.
-   */
-  virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
-                                 nsSize aCBSize, nscoord aAvailableWidth,
-                                 nsSize aMargin, nsSize aBorder,
-                                 nsSize aPadding, PRBool aShrinkWrap);
-
-  /**
    * Reflow our frame.  This will use the computed width plus borderpadding for
    * the desired width, and use the return value of GetIntrinsicHeight plus
    * borderpadding for the desired height.  Ascent will be set to the height,
