@@ -6234,8 +6234,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
           aContent->Tag()->ToString(parentTag);
           badKid->Tag()->ToString(kidTag);
           const PRUnichar* params[] = { parentTag.get(), kidTag.get() };
+          const char *message =
+            (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX)
+              ? "NeededToWrapXULInlineBox" : "NeededToWrapXUL";
           nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
-                                          "NeededToWrapXUL",
+                                          message,
                                           params, NS_ARRAY_LENGTH(params),
                                           mDocument->GetDocumentURI(),
                                           EmptyString(), 0, 0, // not useful
