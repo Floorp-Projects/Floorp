@@ -21,14 +21,19 @@
 #include "jpeglib.h"
 
 #ifdef HAVE_MMX_INTEL_MNEMONICS
+#include "intrin.h"
 int MMXAvailable;
 static int mmxsupport();
 #endif
 
-#ifdef HAVE_SSE2_INTEL_MNEMONICS
+#ifdef HAVE_SSE2_INTRINSICS
 int SSE2Available = 0;
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
 static int sse2support();
-#endif
+#else
+static int sse2supportGCC();
+#endif ! HAVE_SSE2_INTEL_MNEMONICS
+#endif ! HAVE_SSE2_INTRINSICS
 
 
 /*
@@ -57,7 +62,17 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
 
 	cpuidDetected = 1;
   }
-#endif
+#else
+#ifdef HAVE_SSE2_INTRINSICS
+  static int cpuidDetected = 0;
+
+  if(!cpuidDetected) {
+    SSE2Available = sse2supportGCC();
+    cpuidDetected = 1;
+  }
+
+#endif ! HAVE_SSE2_INTRINSICS
+#endif ! HAVE_MMX_INTEL_MNEMONICS
 
   /* For debugging purposes, zero the whole master structure.
    * But error manager pointer is already there, so save and restore it.
@@ -427,73 +442,48 @@ jpeg_finish_decompress (j_decompress_ptr cinfo)
 
 
 #ifdef HAVE_MMX_INTEL_MNEMONICS
-
-
 static int mmxsupport()
 {
-	int mmx_supported = 0;
+  int CPUInfo[4];
 
-	_asm {
-		pushfd					//Save Eflag to stack
-		pop eax					//Get Eflag from stack into eax
-		mov ecx, eax			//Make another copy of Eflag in ecx
-		xor eax, 0x200000		//Toggle ID bit in Eflag [i.e. bit(21)] 
-		push eax				//Save modified Eflag back to stack
-
-		popfd					//Restored modified value back to Eflag reg 
-		pushfd					//Save Eflag to stack
-		pop eax					//Get Eflag from stack
-		xor eax, ecx			//Compare the new Eflag with the original Eflag
-		jz NOT_SUPPORTED		//If the same, CPUID instruction is not supported,
-								//skip following instructions and jump to
-								//NOT_SUPPORTED label
-
-		xor eax, eax			//Set eax to zero
-					
-		cpuid
-		
-		cmp eax, 1				//make sure eax return non-zero value
-		jl NOT_SUPPORTED		//If eax is zero, mmx not supported
-
-		xor eax, eax			//set eax to zero
-		inc eax					//Now increment eax to 1.  This instruction is 
-								//faster than the instruction "mov eax, 1"
-		
-		cpuid
-
-		and edx, 0x00800000		//mask out all bits but mmx bit(24)
-		cmp edx, 0				// 0 = mmx not supported
-		jz	NOT_SUPPORTED		// non-zero = Yes, mmx IS supported
-
-		mov	mmx_supported, 1	//set return value to 1
-
-NOT_SUPPORTED:
-		mov	eax, mmx_supported	//move return value to eax	
-
-	}
-
-	return mmx_supported;		
+  __cpuid(CPUInfo, 1);
+  if (CPUInfo[3] & (0x1 << 23))
+    return 1;
+  else
+    return 0;
 }
 #endif
 
 #ifdef HAVE_SSE2_INTEL_MNEMONICS
-
 static int sse2support()
 {
-	int sse2available = 0;
-	int my_edx;
-	_asm
-	{
-		mov eax, 01                       
-		cpuid                                    
-		mov my_edx, edx    
-	}
-	if (my_edx & (0x1 << 26)) 
-		sse2available = 1; 
-	else sse2available = 2;
+  int CPUInfo[4];
 
-	return sse2available;
+  __cpuid(CPUInfo, 1);
+  if (CPUInfo[3] & (0x1 << 26))
+    return 1;
+  else
+    return 2;
 }
+#else
+#ifdef HAVE_SSE2_INTRINSICS
+static int sse2supportGCC()
+{
 
-#endif
+  /* Mac Intel started with Core Duo chips which have SSE2 Support */
+
+#if defined(__GNUC__) && defined(__i386__)
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  return 1;
+#endif ! XP_MAC || XP_MACOSX
+#endif ! GNUC && i386
+
+  /* Add checking for SSE2 support for other platforms here */
+
+  /* We don't have SSE2 intrinsics support */
+
+  return 2;
+}
+#endif ! HAVE_SSE2_INTRINSICS
+#endif ! HAVE_SSE2_INTEL_MNEMONICS
 
