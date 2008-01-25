@@ -829,7 +829,7 @@ NS_IMETHODIMP nsAccessible::TestChildCache(nsIAccessible *aCachedChild)
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
-  if (mAccChildCount == eChildCountUninitialized) {
+  if (mAccChildCount <= 0) {
     return NS_OK;
   }
   nsCOMPtr<nsIAccessible> sibling = mFirstChild;
