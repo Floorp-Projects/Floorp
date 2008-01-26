@@ -138,8 +138,8 @@
     </popup>
 
     <popup id="contentAreaContextMenu"
-           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this) { gContextMenu = null; }">
+           onpopupshowing="if (event.target != this) return true; updateEditUIVisibility(); gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
+           onpopuphiding="if (event.target == this) { gContextMenu = null; updateEditUIVisibility(); }">
 #include browser-context.inc
     </popup>
 
