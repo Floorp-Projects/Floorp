@@ -782,11 +782,12 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
 
   NS_ADDREF(*aResult = rect);
   
-  nsIFrame* frame = mContent->GetPrimaryFrame(Flush_Layout);  
+  nsIFrame* frame = mContent->GetPrimaryFrame(Flush_Layout);
   if (!frame) {
     // display:none, perhaps? Return the empty rect
     return NS_OK;
   }
+  nsPresContext* presContext = frame->PresContext();
   
   nsRect r;
   if (TryGetSVGBoundingRect(frame, &r)) {
@@ -805,7 +806,7 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
     r = nsLayoutUtils::GetAllInFlowBoundingRect(frame) +
         GetOffsetFromInitialContainingBlock(frame);
   }
-  SetTextRectangle(r, frame->PresContext(), rect);
+  SetTextRectangle(r, presContext, rect);
   return NS_OK;
 }
 
