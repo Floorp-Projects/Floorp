@@ -230,6 +230,11 @@ static bool ReadConfig()
   if (!ReadStringsFromFile(iniPath, gStrings, true))
     return false;
 
+  // See if we have a string override file, if so process it
+  char* overrideEnv = getenv("MOZ_CRASHREPORTER_STRINGS_OVERRIDE");
+  if (overrideEnv && *overrideEnv && UIFileExists(overrideEnv))
+    ReadStringsFromFile(overrideEnv, gStrings, true);
+
   return true;
 }
 
