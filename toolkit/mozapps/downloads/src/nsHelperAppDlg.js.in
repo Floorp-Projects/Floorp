@@ -710,13 +710,7 @@ nsUnknownContentTypeDialog.prototype = {
         }
       }
       
-      // otherHandler is always disabled on Mac
-#ifdef XP_MACOSX
-      otherHandler.hidden = true;
-      otherHandler.nextSibling.hidden = otherHandler.nextSibling.nextSibling.hidden = true;
-#else
       otherHandler.nextSibling.hidden = otherHandler.nextSibling.nextSibling.hidden = false;
-#endif
       this.updateOKButton();
     },
 
