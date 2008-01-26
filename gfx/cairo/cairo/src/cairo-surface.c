@@ -78,10 +78,14 @@ const cairo_surface_t name = {					\
     }					/* font_options */	\
 }
 
-DEFINE_NIL_SURFACE(CAIRO_STATUS_NO_MEMORY, _cairo_surface_nil);
-DEFINE_NIL_SURFACE(CAIRO_STATUS_FILE_NOT_FOUND, _cairo_surface_nil_file_not_found);
-DEFINE_NIL_SURFACE(CAIRO_STATUS_READ_ERROR, _cairo_surface_nil_read_error);
-DEFINE_NIL_SURFACE(CAIRO_STATUS_WRITE_ERROR, _cairo_surface_nil_write_error);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_NO_MEMORY, _cairo_surface_nil);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_CONTENT, _cairo_surface_nil_invalid_content);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_FORMAT, _cairo_surface_nil_invalid_format);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_VISUAL, _cairo_surface_nil_invalid_visual);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_FILE_NOT_FOUND, _cairo_surface_nil_file_not_found);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_TEMP_FILE_ERROR, _cairo_surface_nil_temp_file_error);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_READ_ERROR, _cairo_surface_nil_read_error);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_WRITE_ERROR, _cairo_surface_nil_write_error);
 
 static cairo_status_t
 _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
@@ -228,7 +232,7 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
     cairo_format_t format = _cairo_format_from_content (content);
 
     if (other->status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (other->status);
 
     if (other->backend->create_similar) {
 	surface = other->backend->create_similar (other, content, width, height);
@@ -289,12 +293,10 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 			      int		height)
 {
     if (other->status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (other->status);
 
-    if (! CAIRO_CONTENT_VALID (content)) {
-	_cairo_error_throw (CAIRO_STATUS_INVALID_CONTENT);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (! CAIRO_CONTENT_VALID (content))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_CONTENT));
 
     return _cairo_surface_create_similar_solid (other, content,
 						width, height,
@@ -317,17 +319,14 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 
     surface = _cairo_surface_create_similar_scratch (other, content,
 						     width, height);
-    if (surface->status) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (surface->status)
+	return surface;
 
     if (pattern == NULL) {
 	source = _cairo_pattern_create_solid (color, content);
 	if (source->status) {
 	    cairo_surface_destroy (surface);
-	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	    return (cairo_surface_t*) &_cairo_surface_nil;
+	    return _cairo_surface_create_in_error (source->status);
 	}
     } else
 	source = pattern;
@@ -342,8 +341,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 
     if (status) {
 	cairo_surface_destroy (surface);
-	_cairo_error_throw (status);
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
     }
 
     return surface;
@@ -1141,7 +1139,7 @@ cairo_surface_t *
 _cairo_surface_snapshot (cairo_surface_t *surface)
 {
     if (surface->finished)
-	return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (surface->backend->snapshot)
 	return surface->backend->snapshot (surface);
@@ -2191,12 +2189,9 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     has_drawn_region = TRUE;
     has_clear_region = TRUE;
 
-    if (_cairo_region_subtract (&clear_region, &clear_region, &drawn_region)
-	!= CAIRO_STATUS_SUCCESS)
-    {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_region_subtract (&clear_region, &clear_region, &drawn_region);
+    if (status)
         goto CLEANUP_REGIONS;
-    }
 
     status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_SOURCE,
                                          CAIRO_COLOR_TRANSPARENT,
@@ -2410,6 +2405,32 @@ _cairo_surface_set_resolution (cairo_surface_t *surface,
 {
     surface->x_resolution = x_res;
     surface->y_resolution = y_res;
+}
+
+cairo_surface_t *
+_cairo_surface_create_in_error (cairo_status_t status)
+{
+    switch (status) {
+    case CAIRO_STATUS_NO_MEMORY:
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    case CAIRO_STATUS_INVALID_CONTENT:
+	return (cairo_surface_t *) &_cairo_surface_nil_invalid_content;
+    case CAIRO_STATUS_INVALID_FORMAT:
+	return (cairo_surface_t *) &_cairo_surface_nil_invalid_format;
+    case CAIRO_STATUS_INVALID_VISUAL:
+	return (cairo_surface_t *) &_cairo_surface_nil_invalid_visual;
+    case CAIRO_STATUS_READ_ERROR:
+	return (cairo_surface_t *) &_cairo_surface_nil_read_error;
+    case CAIRO_STATUS_WRITE_ERROR:
+	return (cairo_surface_t *) &_cairo_surface_nil_write_error;
+    case CAIRO_STATUS_FILE_NOT_FOUND:
+	return (cairo_surface_t *) &_cairo_surface_nil_file_not_found;
+    case CAIRO_STATUS_TEMP_FILE_ERROR:
+	return (cairo_surface_t *) &_cairo_surface_nil_temp_file_error;
+    default:
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
 }
 
 /*  LocalWords:  rasterized

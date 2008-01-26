@@ -165,6 +165,7 @@ struct pixman_transform
     pixman_fixed_t	matrix[3][3];
 };
 
+PIXMAN_EXPORT
 pixman_bool_t pixman_transform_point_3d (pixman_transform_t *transform,
 					 pixman_vector_t    *vector);
 
@@ -370,7 +371,7 @@ pixman_bool_t pixman_fill (uint32_t *bits,
 			   int y,
 			   int width,
 			   int height,
-			   uint32_t xor);
+			   uint32_t _xor);
 /*
  * Images
  */

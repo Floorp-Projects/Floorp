@@ -176,6 +176,9 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
 {
     word_wrap_stream_t *stream;
 
+    if (output->status)
+	return _cairo_output_stream_create_in_error (output->status);
+
     stream = malloc (sizeof (word_wrap_stream_t));
     if (stream == NULL) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
@@ -301,7 +304,7 @@ _cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
     word_wrap = _word_wrap_stream_create (stream, 79);
     status = _cairo_output_stream_get_status (word_wrap);
     if (status)
-	return status;
+	return _cairo_output_stream_destroy (word_wrap);
 
     path_info.surface = surface;
     path_info.stream = word_wrap;
@@ -851,6 +854,7 @@ _cairo_ps_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t	*font_su
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
+    ASSERT_NOT_REACHED;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -869,6 +873,7 @@ _cairo_ps_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subs
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
+    ASSERT_NOT_REACHED;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -937,7 +942,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					      double		     width,
 					      double		     height)
 {
-    cairo_status_t status;
+    cairo_status_t status, status_ignored;
     cairo_ps_surface_t *surface;
 
     surface = malloc (sizeof (cairo_ps_surface_t));
@@ -967,11 +972,13 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->stream = _cairo_output_stream_create_for_file (surface->tmpfile);
     status = _cairo_output_stream_get_status (surface->stream);
     if (status)
-	goto CLEANUP_TMPFILE;
+	goto CLEANUP_OUTPUT_STREAM;
 
     surface->font_subsets = _cairo_scaled_font_subsets_create_simple ();
-    if (! surface->font_subsets)
+    if (surface->font_subsets == NULL) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_OUTPUT_STREAM;
+    }
 
     surface->eps = FALSE;
     surface->ps_level = CAIRO_PS_LEVEL_3;
@@ -995,22 +1002,21 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					   CAIRO_CONTENT_COLOR_ALPHA,
 					   width, height,
 					   &cairo_ps_surface_paginated_backend);
-    if (surface->paginated_surface->status == CAIRO_STATUS_SUCCESS)
+    status = surface->paginated_surface->status;
+    if (status == CAIRO_STATUS_SUCCESS)
 	return surface->paginated_surface;
 
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
  CLEANUP_OUTPUT_STREAM:
-    status = _cairo_output_stream_destroy (surface->stream);
-    /* Ignore status---we're already on a failure path. */
- CLEANUP_TMPFILE:
+    status_ignored = _cairo_output_stream_destroy (surface->stream);
     fclose (surface->tmpfile);
  CLEANUP_SURFACE:
     free (surface);
  CLEANUP:
     /* destroy stream on behalf of caller */
-    status = _cairo_output_stream_destroy (stream);
-    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-    return (cairo_surface_t*) &_cairo_surface_nil;
+    status_ignored = _cairo_output_stream_destroy (stream);
+
+    return _cairo_surface_create_in_error (status);
 }
 
 /**
@@ -1042,15 +1048,11 @@ cairo_ps_surface_create (const char		*filename,
 			 double			 width_in_points,
 			 double			 height_in_points)
 {
-    cairo_status_t status;
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create_for_filename (filename);
-    status = _cairo_output_stream_get_status (stream);
-    if (status)
-	return (status == CAIRO_STATUS_WRITE_ERROR) ?
-		(cairo_surface_t*) &_cairo_surface_nil_write_error :
-		(cairo_surface_t*) &_cairo_surface_nil;
+    if (_cairo_output_stream_get_status (stream))
+	return _cairo_surface_create_in_error (_cairo_output_stream_destroy (stream));
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
 							 width_in_points,
@@ -1088,13 +1090,11 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    double		width_in_points,
 				    double		height_in_points)
 {
-    cairo_status_t status;
     cairo_output_stream_t *stream;
 
     stream = _cairo_output_stream_create (write_func, NULL, closure);
-    status = _cairo_output_stream_get_status (stream);
-    if (status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+    if (_cairo_output_stream_get_status (stream))
+	return _cairo_surface_create_in_error (_cairo_output_stream_destroy (stream));
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
 							 width_in_points,
@@ -2031,13 +2031,13 @@ _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
     string_array_stream = _string_array_stream_create (surface->stream);
     status = _cairo_output_stream_get_status (string_array_stream);
     if (status)
-	return status;
+	return _cairo_output_stream_destroy (string_array_stream);
 
     base85_stream = _cairo_base85_stream_create (string_array_stream);
     status = _cairo_output_stream_get_status (base85_stream);
     if (status) {
 	status2 = _cairo_output_stream_destroy (string_array_stream);
-	return status;
+	return _cairo_output_stream_destroy (base85_stream);
     }
 
     _cairo_output_stream_write (base85_stream, data, length);
@@ -3255,9 +3255,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
             _cairo_output_stream_printf (surface->stream, "<%02x> S\n", glyph_ids[i].glyph_id);
         } else {
             word_wrap = _word_wrap_stream_create (surface->stream, 79);
-	    status = _cairo_output_stream_get_status (word_wrap);
-	    if (status)
+	    if (_cairo_output_stream_get_status (word_wrap)) {
+		status = _cairo_output_stream_destroy (word_wrap);
 		goto fail;
+	    }
 
             _cairo_output_stream_printf (word_wrap, "<");
             for (j = i; j < last+1; j++)

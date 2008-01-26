@@ -123,7 +123,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
 				       unsigned int height);
 
 /* Load all extra symbols */
-static void quartz_ensure_symbols()
+static void quartz_ensure_symbols(void)
 {
     if (_cairo_quartz_symbol_lookup_done)
 	return;
@@ -882,27 +882,16 @@ _cairo_quartz_teardown_source (cairo_quartz_surface_t *surface,
  * get source/dest image implementation
  */
 
-static void
-ImageDataReleaseFunc(void *info, const void *data, size_t size)
-{
-    if (data != NULL) {
-	free((void *) data);
-    }
-}
-
 /* Read the image from the surface's front buffer */
 static cairo_int_status_t
 _cairo_quartz_get_image (cairo_quartz_surface_t *surface,
-			  cairo_image_surface_t **image_out,
-			  unsigned char **data_out)
+			 cairo_image_surface_t **image_out)
 {
     unsigned char *imageData;
     cairo_image_surface_t *isurf;
 
     if (IS_EMPTY(surface)) {
 	*image_out = (cairo_image_surface_t*) cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
-	if (data_out)
-	    *data_out = NULL;
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -1016,11 +1005,11 @@ _cairo_quartz_surface_acquire_source_image (void *abstract_surface,
 
     //ND((stderr, "%p _cairo_quartz_surface_acquire_source_image\n", surface));
 
-    *image_extra = NULL;
-
-    status = _cairo_quartz_get_image (surface, image_out, NULL);
+    status = _cairo_quartz_get_image (surface, image_out);
     if (status)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    *image_extra = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1043,17 +1032,15 @@ _cairo_quartz_surface_acquire_dest_image (void *abstract_surface,
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t status;
-    unsigned char *data;
 
     ND((stderr, "%p _cairo_quartz_surface_acquire_dest_image\n", surface));
 
-    *image_rect = surface->extents;
-
-    status = _cairo_quartz_get_image (surface, image_out, &data);
+    status = _cairo_quartz_get_image (surface, image_out);
     if (status)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    *image_extra = data;
+    *image_rect = surface->extents;
+    *image_extra = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1065,47 +1052,9 @@ _cairo_quartz_surface_release_dest_image (void *abstract_surface,
 					  cairo_rectangle_int_t *image_rect,
 					  void *image_extra)
 {
-    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
-    unsigned char *imageData = (unsigned char *) image_extra;
+    //cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
 
     //ND((stderr, "%p _cairo_quartz_surface_release_dest_image\n", surface));
-
-    if (IS_EMPTY(surface)) {
-	cairo_surface_destroy ((cairo_surface_t*) image);
-	return;
-    }
-
-    if (!CGBitmapContextGetData (surface->cgContext)) {
-	CGDataProviderRef dataProvider;
-	CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
-	CGImageRef img;
-
-	dataProvider = CGDataProviderCreateWithData (NULL, imageData,
-						     surface->extents.width * surface->extents.height * 4,
-						     ImageDataReleaseFunc);
-
-	img = CGImageCreate (surface->extents.width, surface->extents.height,
-			     8, 32,
-			     surface->extents.width * 4,
-			     rgb,
-			     kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
-			     dataProvider,
-			     NULL,
-			     false,
-			     kCGRenderingIntentDefault);
-	CGColorSpaceRelease (rgb);
-
-	CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeCopy);
-
-	CGContextDrawImage (surface->cgContext,
-			    CGRectMake (0, 0, surface->extents.width, surface->extents.height),
-			    img);
-
-	CGImageRelease (img);
-	CGDataProviderRelease (dataProvider);
-
-	ND((stderr, "Image for surface %p was recovered from a bitmap\n", surface));
-    }
 
     cairo_surface_destroy ((cairo_surface_t *) image);
 }
@@ -1552,6 +1501,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     cairo_quartz_action_t action;
     float xprev, yprev;
     int i;
+    CGFontRef cgfref;
 
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
@@ -1581,7 +1531,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
     /* this doesn't addref */
-    CGFontRef cgfref = _cairo_atsui_scaled_font_get_cg_font_ref (scaled_font);
+    cgfref = _cairo_atsui_scaled_font_get_cg_font_ref (scaled_font);
     CGContextSetFont (surface->cgContext, cgfref);
 
     /* So this should include the size; I don't know if I need to extract the
@@ -1882,10 +1832,8 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
 
     /* Init the base surface */
     surface = malloc(sizeof(cairo_quartz_surface_t));
-    if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return NULL;
-    }
+    if (surface == NULL)
+	return (cairo_quartz_surface_t*) _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     memset(surface, 0, sizeof(cairo_quartz_surface_t));
 
@@ -1957,10 +1905,10 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
 
     surf = _cairo_quartz_surface_create_internal (cgContext, CAIRO_CONTENT_COLOR_ALPHA,
 						  width, height);
-    if (!surf) {
+    if (surf->base.status) {
 	CGContextRelease (cgContext);
 	// create_internal will have set an error
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return (cairo_surface_t*) surf;
     }
 
     return (cairo_surface_t *) surf;
@@ -1995,10 +1943,8 @@ cairo_quartz_surface_create (cairo_format_t format,
     int bitsPerComponent;
 
     // verify width and height of surface
-    if (!verify_surface_size(width, height)) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (!verify_surface_size(width, height))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     if (width == 0 || height == 0) {
 	return (cairo_surface_t*) _cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),
@@ -2028,18 +1974,15 @@ cairo_quartz_surface_create (cairo_format_t format,
 	 * cairo_format_t -- these are 1-bit pixels stored in 32-bit
 	 * quantities.
 	 */
-	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     } else {
-	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     }
 
     imageData = _cairo_malloc_ab (height, stride);
     if (!imageData) {
 	CGColorSpaceRelease (cgColorspace);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
     /* zero the memory to match the image surface behaviour */
     memset (imageData, 0, height * stride);
@@ -2054,9 +1997,8 @@ cairo_quartz_surface_create (cairo_format_t format,
     CGColorSpaceRelease (cgColorspace);
 
     if (!cgc) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	free (imageData);
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     /* flip the Y axis */
@@ -2065,11 +2007,11 @@ cairo_quartz_surface_create (cairo_format_t format,
 
     surf = _cairo_quartz_surface_create_internal (cgc, _cairo_content_from_format (format),
 						  width, height);
-    if (!surf) {
+    if (surf->base.status) {
 	CGContextRelease (cgc);
 	free (imageData);
 	// create_internal will have set an error
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return (cairo_surface_t*) surf;
     }
 
     surf->imageData = imageData;

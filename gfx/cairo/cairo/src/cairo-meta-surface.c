@@ -83,10 +83,8 @@ _cairo_meta_surface_create (cairo_content_t	content,
     cairo_meta_surface_t *meta;
 
     meta = malloc (sizeof (cairo_meta_surface_t));
-    if (meta == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (meta == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
 			 content);
@@ -498,10 +496,8 @@ _cairo_meta_surface_snapshot (void *abstract_other)
     cairo_meta_surface_t *meta;
 
     meta = malloc (sizeof (cairo_meta_surface_t));
-    if (meta == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (meta == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
 			 other->base.content);

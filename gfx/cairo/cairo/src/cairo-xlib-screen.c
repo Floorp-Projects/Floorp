@@ -244,9 +244,6 @@ _cairo_xlib_init_screen_font_options (Display *dpy, cairo_xlib_screen_info_t *in
 cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info)
 {
-    if (info == NULL)
-	return NULL;
-
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&info->ref_count));
 
     _cairo_reference_count_inc (&info->ref_count);
@@ -272,9 +269,6 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 {
     cairo_xlib_screen_info_t **prev;
     cairo_xlib_screen_info_t *list;
-
-    if (info == NULL)
-	return;
 
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&info->ref_count));
 

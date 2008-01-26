@@ -722,6 +722,7 @@ cairo_os2_surface_create (HPS hps_client_window,
                           int height)
 {
     cairo_os2_surface_t *local_os2_surface;
+    cairo_status_t status;
     int rc;
 
     /* Check the size of the window */
@@ -729,15 +730,13 @@ cairo_os2_surface_create (HPS hps_client_window,
         (height <= 0))
     {
         /* Invalid window size! */
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     local_os2_surface = (cairo_os2_surface_t *) malloc (sizeof (cairo_os2_surface_t));
     if (!local_os2_surface) {
         /* Not enough memory! */
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     /* Initialize the OS/2 specific parts of the surface! */
@@ -749,8 +748,7 @@ cairo_os2_surface_create (HPS hps_client_window,
                             FALSE);
     if (rc != NO_ERROR) {
         /* Could not create mutex semaphore! */
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     /* Save PS handle */
@@ -769,8 +767,7 @@ cairo_os2_surface_create (HPS hps_client_window,
         /* Could not create event semaphore! */
         DosCloseMutexSem (local_os2_surface->hmtx_use_private_fields);
         free (local_os2_surface);
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     /* Prepare BITMAPINFO2 structure for our buffer */
@@ -788,8 +785,7 @@ cairo_os2_surface_create (HPS hps_client_window,
         DosCloseEventSem (local_os2_surface->hev_pixel_array_came_back);
         DosCloseMutexSem (local_os2_surface->hmtx_use_private_fields);
         free (local_os2_surface);
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     /* Create image surface from pixel array */
@@ -800,14 +796,14 @@ cairo_os2_surface_create (HPS hps_client_window,
                                              height,     /* Height */
                                              width * 4); /* Rowstride */
 
-    if (local_os2_surface->image_surface->base.status) {
+    status = local_os2_surface->image_surface->base.status;
+    if (status) {
         /* Could not create image surface! */
         _buffer_free (local_os2_surface->pixels);
         DosCloseEventSem (local_os2_surface->hev_pixel_array_came_back);
         DosCloseMutexSem (local_os2_surface->hmtx_use_private_fields);
         free (local_os2_surface);
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_surface_t *) &_cairo_surface_nil;
+        return _cairo_surface_create_in_error (status);
     }
 
     /* Initialize base surface */

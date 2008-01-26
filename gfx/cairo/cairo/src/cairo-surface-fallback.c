@@ -1038,8 +1038,8 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 
     status = _cairo_surface_acquire_source_image (surface,
 						  &image, &image_extra);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return (cairo_surface_t *) &_cairo_surface_nil;
+    if (status)
+	return _cairo_surface_create_in_error (status);
 
     snapshot = cairo_image_surface_create (image->format,
 					   image->width,
@@ -1068,7 +1068,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 
     if (status) {
 	cairo_surface_destroy (snapshot);
-	return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
     }
 
     snapshot->device_transform = surface->device_transform;
