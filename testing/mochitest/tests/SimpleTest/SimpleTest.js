@@ -150,9 +150,11 @@ SimpleTest.toggle = function(el) {
 /**
  * Toggle visibility for divs with a specific class.
 **/
-SimpleTest.toggleByClass = function (cls) {
+SimpleTest.toggleByClass = function (cls, evt) {
     var elems = getElementsByTagAndClassName('div', cls);
     MochiKit.Base.map(SimpleTest.toggle, elems);
+    if (evt)
+        evt.preventDefault();
 };
 
 /**
