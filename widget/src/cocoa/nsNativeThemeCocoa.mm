@@ -868,8 +868,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   //fprintf (stderr, "surface: %p cgContext: %p\n", quartzSurf, cgContext);
 
   if (cgContext == nsnull) {
-    NS_WARNING("Invalid CGContext!");
-    return NS_ERROR_FAILURE;
+    // The Quartz surface handles 0x0 surfaces by internally
+    // making all operations no-ops; there's no cgcontext created for them.
+    // Unfortunately, this means that callers that want to render
+    // directly to the CGContext need to be aware of this quirk.
+    return NS_OK;
   }
 
   // Eventually we can just do a GetCTM and restore it with SetCTM,
