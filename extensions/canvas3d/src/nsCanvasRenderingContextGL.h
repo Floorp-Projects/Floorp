@@ -361,7 +361,7 @@ public:
         ncc->SetReturnValueWasSet(PR_TRUE);
     }
 
-    nsAXPCNativeCallContext ncc;
+    nsAXPCNativeCallContext *ncc;
     nsresult error;
     JSContext *ctx;
     PRUint32 argc;
