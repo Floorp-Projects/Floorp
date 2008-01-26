@@ -2636,16 +2636,16 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // pass some basic info from the app data
     if (appData.vendor)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
-                                     nsDependentCString(appData.vendor));
+                                         nsDependentCString(appData.vendor));
     if (appData.name)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductName"),
-                                     nsDependentCString(appData.name));
+                                         nsDependentCString(appData.name));
     if (appData.version)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Version"),
-                                     nsDependentCString(appData.version));
+                                         nsDependentCString(appData.version));
     if (appData.buildID)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
-                                     nsDependentCString(appData.buildID));
+                                         nsDependentCString(appData.buildID));
     CrashReporter::SetRestartArgs(argc, argv);
 
     // annotate other data (user id etc)
@@ -2654,9 +2654,31 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
     if (NS_SUCCEEDED(rv) &&
         NS_SUCCEEDED(dirProvider.GetUserAppDataDirectory(
-                                 getter_AddRefs(userAppDataDir)))) {
+                                                         getter_AddRefs(userAppDataDir)))) {
       CrashReporter::SetupExtraData(userAppDataDir,
                                     nsDependentCString(appData.buildID));
+
+      // see if we have a crashreporter-override.ini in the application directory
+      nsCOMPtr<nsIFile> overrideini;
+      PRBool exists;
+      static char overrideEnv[MAXPATHLEN];
+      if (NS_SUCCEEDED(dirProvider.GetAppDir()->Clone(getter_AddRefs(overrideini))) &&
+          NS_SUCCEEDED(overrideini->AppendNative(NS_LITERAL_CSTRING("crashreporter-override.ini"))) &&
+          NS_SUCCEEDED(overrideini->Exists(&exists)) &&
+          exists) {
+#ifdef XP_WIN
+        nsAutoString overridePathW;
+        overrideini->GetPath(overridePathW);
+        NS_ConvertUTF16toUTF8 overridePath(overridePathW);
+#else
+        nsAutoCString overridePath;
+        overrideini->GetNativePath(overridePath);
+#endif
+
+        sprintf(overrideEnv, "MOZ_CRASHREPORTER_STRINGS_OVERRIDE=%s",
+                overridePath.get());
+        PR_SetEnv(overrideEnv);
+      }
     }
   }
 #endif
