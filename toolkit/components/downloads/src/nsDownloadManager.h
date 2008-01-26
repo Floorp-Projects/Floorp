@@ -197,6 +197,27 @@ protected:
 
   PRInt32 GetRetentionBehavior();
 
+  /**
+   * Type to indicate possible behaviors for active downloads across sessions.
+   *
+   * Possible values are:
+   *  QUIT_AND_RESUME  - downloads should be auto-resumed
+   *  QUIT_AND_PAUSE   - downloads should be paused
+   *  QUIT_AND_CANCEL  - downloads should be cancelled
+   */
+  enum QuitBehavior {
+    QUIT_AND_RESUME = 0, 
+    QUIT_AND_PAUSE = 1, 
+    QUIT_AND_CANCEL = 2
+  };
+
+  /**
+   * Indicates user-set behavior for active downloads across sessions,
+   *
+   * @return value of user-set pref for active download behavior
+   */
+  enum QuitBehavior GetQuitBehavior();
+
 private:
   nsCOMArray<nsIDownloadProgressListener> mListeners;
   nsCOMPtr<nsIStringBundle> mBundle;
