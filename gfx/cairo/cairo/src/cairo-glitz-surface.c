@@ -88,20 +88,16 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
     gformat =
 	glitz_find_standard_format (drawable,
 				    _glitz_format_from_content (content));
-    if (!gformat) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (!gformat)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     surface = glitz_surface_create (drawable, gformat,
 				    width <= 0 ? 1 : width,
 				    height <= 0 ? 1 : height,
 				    0, NULL);
 
-    if (surface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (surface == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     crsurface = cairo_glitz_surface_create (surface);
 
@@ -150,36 +146,39 @@ _CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
     return FALSE;
 }
 
-static glitz_box_t *
-_cairo_glitz_get_boxes_from_region (cairo_region_t *region, int *nboxes)
+static cairo_status_t
+_cairo_glitz_get_boxes_from_region (cairo_region_t *region, glitz_box_t **boxes, int *nboxes)
 {
     cairo_box_int_t *cboxes;
-    glitz_box_t *gboxes;
+    cairo_status_t status;
     int n, i;
 
-    if (_cairo_region_get_boxes (region, &n, &cboxes) != CAIRO_STATUS_SUCCESS)
-        return NULL;
+    status = _cairo_region_get_boxes (region, &n, &cboxes);
+    if (status)
+	return status;
 
-    *nboxes = n;
-    if (n == 0)
-        return NULL;
+    if (n == 0) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto done;
+    }
 
-    gboxes = _cairo_malloc_ab (n, sizeof(glitz_box_t));
-    if (gboxes == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-        goto done;
+    *boxes = _cairo_malloc_ab (n, sizeof(glitz_box_t));
+    if (*boxes == NULL) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto done;
     }
 
     for (i = 0; i < n; i++) {
-        gboxes[i].x1 = cboxes[i].p1.x;
-        gboxes[i].y1 = cboxes[i].p1.y;
-        gboxes[i].x2 = cboxes[i].p2.x;
-        gboxes[i].y2 = cboxes[i].p2.y;
+        (*boxes)[i].x1 = cboxes[i].p1.x;
+        (*boxes)[i].y1 = cboxes[i].p1.y;
+        (*boxes)[i].x2 = cboxes[i].p2.x;
+        (*boxes)[i].y2 = cboxes[i].p2.y;
     }
 
+    *nboxes = n;
 done:
     _cairo_region_boxes_fini (region, cboxes);
-    return gboxes;
+    return status;
 }
 
 static cairo_status_t
@@ -296,12 +295,13 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
     /* restore the clip, if any */
     if (surface->has_clip) {
 	glitz_box_t *box;
+	cairo_status_t status;
         int n;
 
-        box = _cairo_glitz_get_boxes_from_region (&surface->clip, &n);
-        if (box == NULL && n != 0) {
+        status = _cairo_glitz_get_boxes_from_region (&surface->clip, &box, &n);
+        if (status) {
             free (pixels);
-            return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+            return status;
         }
 
 	glitz_surface_set_clip_region (surface->surface, 0, 0, box, n);
@@ -1467,11 +1467,11 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
             return status;
         }
 
-        box = _cairo_glitz_get_boxes_from_region (&surface->clip, &n);
-        if (box == NULL && n != 0) {
+	status = _cairo_glitz_get_boxes_from_region (&surface->clip, &box, &n);
+	if (status) {
             _cairo_region_fini (&surface->clip);
 	    surface->has_clip = FALSE;
-            return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+            return status;
         }
 
 	glitz_surface_set_clip_region (surface->surface, 0, 0, box, n);
@@ -2456,13 +2456,11 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
     glitz_format_t *format;
 
     if (surface == NULL)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NULL_POINTER));
 
     crsurface = malloc (sizeof (cairo_glitz_surface_t));
-    if (crsurface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (crsurface == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     format = glitz_surface_get_format (surface);
     _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend,

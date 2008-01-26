@@ -74,10 +74,11 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
 				 const cairo_paginated_surface_backend_t	*backend)
 {
     cairo_paginated_surface_t *surface;
+    cairo_status_t status;
 
     surface = malloc (sizeof (cairo_paginated_surface_t));
     if (surface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
 
@@ -97,7 +98,8 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     surface->backend = backend;
 
     surface->meta = _cairo_meta_surface_create (content, width, height);
-    if (cairo_surface_status (surface->meta))
+    status = cairo_surface_status (surface->meta);
+    if (status)
 	goto FAIL_CLEANUP_SURFACE;
 
     surface->page_num = 1;
@@ -108,7 +110,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
   FAIL_CLEANUP_SURFACE:
     free (surface);
   FAIL:
-    return (cairo_surface_t*) &_cairo_surface_nil;
+    return _cairo_surface_create_in_error (status);
 }
 
 cairo_bool_t
@@ -292,9 +294,8 @@ _paint_page (cairo_paginated_surface_t *surface)
 
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
-    if (analysis == NULL)
-	return _cairo_surface_set_error (surface->target,
-		                         CAIRO_STATUS_NO_MEMORY);
+    if (analysis->status)
+	return _cairo_surface_set_error (surface->target, analysis->status);
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);
@@ -326,6 +327,16 @@ _paint_page (cairo_paginated_surface_t *surface)
             has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
             break;
 
+	case CAIRO_SURFACE_TYPE_IMAGE:
+	case CAIRO_SURFACE_TYPE_XLIB:
+	case CAIRO_SURFACE_TYPE_XCB:
+	case CAIRO_SURFACE_TYPE_GLITZ:
+	case CAIRO_SURFACE_TYPE_QUARTZ:
+	case CAIRO_SURFACE_TYPE_WIN32:
+	case CAIRO_SURFACE_TYPE_BEOS:
+	case CAIRO_SURFACE_TYPE_DIRECTFB:
+	case CAIRO_SURFACE_TYPE_SVG:
+	case CAIRO_SURFACE_TYPE_OS2:
         default:
             if (_cairo_analysis_surface_has_unsupported (analysis)) {
                 has_supported = FALSE;

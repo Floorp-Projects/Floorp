@@ -750,7 +750,7 @@ union pixman_image
 
 #define MAX_ALPHA(n)	((1 << (n)) - 1)
 #define N_Y_FRAC(n)	((n) == 1 ? 1 : (1 << ((n)/2)) - 1)
-#define N_X_FRAC(n)	((1 << ((n)/2)) + 1)
+#define N_X_FRAC(n)	((n) == 1 ? 1 : (1 << ((n)/2)) + 1)
 
 #define STEP_Y_SMALL(n)	(pixman_fixed_1 / N_Y_FRAC(n))
 #define STEP_Y_BIG(n)	(pixman_fixed_1 - (N_Y_FRAC(n) - 1) * STEP_Y_SMALL(n))

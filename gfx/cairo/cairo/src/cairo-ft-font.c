@@ -1365,7 +1365,7 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 	if (!hinting) {
 	    ft_options.base.hint_style = CAIRO_HINT_STYLE_NONE;
 	}
-#endif /* FC_FHINT_STYLE */
+#endif /* FC_HINT_STYLE */
     } else {
 	ft_options.base.antialias = CAIRO_ANTIALIAS_NONE;
     }
@@ -1467,6 +1467,8 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
 
     options->load_flags = load_flags | load_target;
     options->extra_flags = other->extra_flags;
+    if (options->base.hint_metrics != CAIRO_HINT_METRICS_OFF)
+	options->extra_flags |= CAIRO_FT_OPTIONS_HINT_METRICS;
 }
 
 static cairo_status_t
@@ -1496,9 +1498,6 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 
     _cairo_unscaled_font_reference (&unscaled->base);
     scaled_font->unscaled = unscaled;
-
-    if (options->hint_metrics != CAIRO_HINT_METRICS_OFF)
-	ft_options.extra_flags |= CAIRO_FT_OPTIONS_HINT_METRICS;
 
     _cairo_font_options_init_copy (&scaled_font->ft_options.base, options);
     _cairo_ft_options_merge (&scaled_font->ft_options, &ft_options);
@@ -1648,7 +1647,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (&sf, &scale);
 
-    if (! FcPatternAddInteger (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
+    if (! FcPatternAddDouble (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FREE_PATTERN;
     }
@@ -1658,9 +1657,11 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 	goto FREE_PATTERN;
     }
 
-    status = _cairo_ft_font_options_substitute (font_options, pattern);
-    if (status)
-	goto FREE_PATTERN;
+    if (font_options != NULL) {
+	status = _cairo_ft_font_options_substitute (font_options, pattern);
+	if (status)
+	    goto FREE_PATTERN;
+    }
 
     FcDefaultSubstitute (pattern);
 
@@ -2446,6 +2447,9 @@ void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 				  FcPattern                  *pattern)
 {
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	return;
+
     _cairo_ft_font_options_substitute (options, pattern);
 }
 

@@ -147,7 +147,11 @@ fbRasterizeEdges8 (pixman_image_t       *image,
 	    lx = 0;
 	rx = r->x;
 	if (pixman_fixed_to_int (rx) >= width)
-	    rx = pixman_int_to_fixed (width);
+	    /* Use the last pixel of the scanline, covered 100%.
+	     * We can't use the first pixel following the scanline,
+	     * because accessing it could result in a buffer overrun.
+	     */
+	    rx = pixman_int_to_fixed (width) - 1;
 
 	/* Skip empty (or backwards) sections */
 	if (rx > lx)
@@ -235,11 +239,7 @@ fbRasterizeEdges8 (pixman_image_t       *image,
 		    add_saturate_8 (ap + lxi, N_X_FRAC(8), rxi - lxi);
 		}
 
-		/* Do not add in a 0 alpha here. This check is
-		 * necessary to avoid a buffer overrun, (when rx
-		 * is exactly on a pixel boundary). */
-		if (rxs)
-		    WRITE(image, ap + rxi, clip255 (READ(image, ap + rxi) + rxs));
+		WRITE(image, ap + rxi, clip255 (READ(image, ap + rxi) + rxs));
 	    }
 	}
 

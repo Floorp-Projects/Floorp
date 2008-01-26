@@ -584,6 +584,11 @@ cairo_stroke_to_path (cairo_t *cr);
 cairo_public void
 cairo_close_path (cairo_t *cr);
 
+cairo_public void
+cairo_path_extents (cairo_t *cr,
+		    double *x1, double *y1,
+		    double *x2, double *y2);
+
 /* Painting functions */
 cairo_public void
 cairo_paint (cairo_t *cr);

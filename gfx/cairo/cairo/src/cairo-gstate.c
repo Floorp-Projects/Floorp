@@ -818,6 +818,17 @@ _cairo_gstate_stroke_to_path (cairo_gstate_t *gstate)
 }
 */
 
+void
+_cairo_gstate_path_extents (cairo_gstate_t     *gstate,
+			    cairo_path_fixed_t *path,
+			    double *x1, double *y1,
+			    double *x2, double *y2)
+{
+    _cairo_path_fixed_bounds (path, x1, y1, x2, y2, gstate->tolerance);
+    
+    _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
+}
+
 static cairo_status_t
 _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
 					cairo_pattern_t *pattern,
@@ -1365,7 +1376,7 @@ _cairo_gstate_set_font_options (cairo_gstate_t             *gstate,
 {
     _cairo_gstate_unset_scaled_font (gstate);
 
-    gstate->font_options = *options;
+    _cairo_font_options_init_copy (&gstate->font_options, options);
 }
 
 void

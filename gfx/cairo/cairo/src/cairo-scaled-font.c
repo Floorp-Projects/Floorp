@@ -412,7 +412,7 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     /* ignore translation values in the ctm */
     scaled_font->ctm.x0 = 0.;
     scaled_font->ctm.y0 = 0.;
-    scaled_font->options = *options;
+    _cairo_font_options_init_copy (&scaled_font->options, options);
 
     /* We do a bytewise hash on the font matrices */
     hash = _hash_bytes_fnv ((unsigned char *)(&scaled_font->font_matrix.xx),
@@ -466,9 +466,11 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     cairo_matrix_t inverse;
     cairo_status_t status;
 
-    status = cairo_font_options_status ((cairo_font_options_t *) options);
-    if (status)
-	return status;
+    if (options != NULL) {
+	status = cairo_font_options_status ((cairo_font_options_t *) options);
+	if (status)
+	    return status;
+    }
 
     /* Initialize scaled_font->scale early for easier bail out on an
      * invalid matrix. */
@@ -580,7 +582,8 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
  * @ctm: user to device transformation matrix with which the font will
  *       be used.
  * @options: options to use when getting metrics for the font and
- *           rendering with it.
+ *           rendering with it. A %NULL pointer will be interpreted as
+ *           meaning the default options.
  *
  * Creates a #cairo_scaled_font_t object from a font face and matrices that
  * describe the size of the font and the environment in which it will
@@ -602,8 +605,11 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     if (font_face->status)
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
 
-    if (cairo_font_options_status ((cairo_font_options_t *) options))
+    if (options != NULL &&
+	cairo_font_options_status ((cairo_font_options_t *) options))
+    {
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+    }
 
     if (! _cairo_matrix_is_invertible (font_matrix))
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
@@ -901,15 +907,27 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
     int num_glyphs;
 
     if (scaled_font->status)
-	return;
+	goto ZERO_EXTENTS;
+
+    if (utf8 == NULL)
+	goto ZERO_EXTENTS;
 
     status = _cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0., utf8, &glyphs, &num_glyphs);
-    if (status) {
-        status = _cairo_scaled_font_set_error (scaled_font, status);
-        return;
-    }
+    if (status)
+	goto ZERO_EXTENTS;
+
     cairo_scaled_font_glyph_extents (scaled_font, glyphs, num_glyphs, extents);
     free (glyphs);
+
+    return;
+
+ZERO_EXTENTS:
+    extents->x_bearing = 0.0;
+    extents->y_bearing = 0.0;
+    extents->width  = 0.0;
+    extents->height = 0.0;
+    extents->x_advance = 0.0;
+    extents->y_advance = 0.0;
 }
 
 /**
@@ -945,7 +963,7 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
     if (scaled_font->status) {
 	extents->x_bearing = 0.0;
 	extents->y_bearing = 0.0;
-	extents->width = 0.0;
+	extents->width  = 0.0;
 	extents->height = 0.0;
 	extents->x_advance = 0.0;
 	extents->y_advance = 0.0;
@@ -1098,7 +1116,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     if (ucs4)
 	free (ucs4);
 
-    return status;
+    return _cairo_scaled_font_set_error (scaled_font, status);
 }
 
 /*

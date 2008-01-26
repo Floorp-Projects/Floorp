@@ -7,8 +7,8 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.5.x - 1.5.4-141-g57c2b75)
-  pixman (0.9.x - pixman-0.9.6-25-ge0af592)
+  cairo (1.5.x - 1.5.6-65-gea9afec)
+  pixman (0.9.x - pixman-0.9.6-34-g787cc57)
   glitz 0.5.2 (cvs - 2006-01-10)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
@@ -28,5 +28,3 @@ nonfatal-assertions.patch: Make assertions non-fatal
 endian.patch: include cairo-platform.h for endian macros
 
 fixed-24-8.patch: Switch fixed point mode from 16.16 to 24.8
-
-mac-runtime-linkage.patch: Do some runtime dlsym lookups instead of relying on gcc attributes

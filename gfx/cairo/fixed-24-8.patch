@@ -1,12 +1,21 @@
-diff --git a/gfx/cairo/cairo/src/cairo-fixed-private.h b/gfx/cairo/cairo/src/cairo-fixed-private.h
---- a/cairo/src/cairo-fixed-private.h
-+++ b/cairo/src/cairo-fixed-private.h
-@@ -59,7 +59,7 @@ typedef cairo_int128_t	cairo_fixed_96_32
+--- /Users/vladimir/proj/cairo/src/cairo-fixed-type-private.h	2008-01-22 15:20:39.000000000 -0800
++++ cairo/src/cairo-fixed-type-private.h	2008-01-24 11:49:15.000000000 -0800
+@@ -54,17 +54,17 @@ typedef cairo_int128_t	cairo_fixed_96_32
+  * size of a fixed type.  For now, it must be 32.
+  */
+ #define CAIRO_FIXED_BITS	32
+ 
+ /* The number of fractional bits.  Changing this involves
   * making sure that you compute a double-to-fixed magic number.
   * (see below).
   */
 -#define CAIRO_FIXED_FRAC_BITS	16
-+#define CAIRO_FIXED_FRAC_BITS	8
++#define CAIRO_FIXED_FRAC_BITS	24
  
  /* A signed type CAIRO_FIXED_BITS in size; the main fixed point type */
  typedef int32_t cairo_fixed_t;
+ 
+ /* An unsigned type of the same size as cairo_fixed_t */
+ typedef uint32_t cairo_fixed_unsigned_t;
+ 
+ #endif /* CAIRO_FIXED_TYPE_PRIVATE_H */
