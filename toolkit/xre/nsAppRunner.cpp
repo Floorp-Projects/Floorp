@@ -2671,7 +2671,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         overrideini->GetPath(overridePathW);
         NS_ConvertUTF16toUTF8 overridePath(overridePathW);
 #else
-        nsAutoCString overridePath;
+        nsCAutoString overridePath;
         overrideini->GetNativePath(overridePath);
 #endif
 
