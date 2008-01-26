@@ -107,9 +107,7 @@
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
 
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>    
-    <command id="Tools:Downloads" oncommand="toOpenWindowByType('Download:Manager', 
-                                                                'chrome://mozapps/content/downloads/downloads.xul',
-                                                                'chrome,dialog=no,resizable');"/>
+    <command id="Tools:Downloads" oncommand="BrowserDownloadsUI();"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
     <command id="Tools:Sanitize"
      oncommand="Cc[GLUE_CID].getService(Ci.nsIBrowserGlue).sanitize(window || null);"/>

@@ -2988,6 +2988,12 @@ function toJavaScriptConsole()
   toOpenWindowByType("global:console", "chrome://global/content/console.xul");
 }
 
+function BrowserDownloadsUI()
+{
+  Cc["@mozilla.org/download-manager-ui;1"].
+  getService(Ci.nsIDownloadManagerUI).show();
+}
+
 function toOpenWindowByType(inType, uri, features)
 {
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
