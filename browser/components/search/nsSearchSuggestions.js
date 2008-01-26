@@ -427,7 +427,7 @@ SuggestAutoComplete.prototype = {
   },
 
   /**
-   * Makes a note of the fact that we've recieved a backoff-triggering
+   * Makes a note of the fact that we've received a backoff-triggering
    * response, so that we can adjust the backoff behavior appropriately.
    */
   _noteServerError: function SAC__noteServeError() {
