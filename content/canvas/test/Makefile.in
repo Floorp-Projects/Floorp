@@ -510,10 +510,11 @@ endif
 # Tests that fail on Mac (possibly because spec is underdefined?).  Bug 407105
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 _TEST_FILES_E += \
-	test_2d.line.cap.zerobezier.round.html \
 	test_2d.line.join.parallel.html \
 	test_2d.strokeRect.zero.5.html \
 	$(NULL)
+
+# test_2d.line.cap.zerobezier.round.html disabled for now, from above
 
 # These are failing due to different quartz implementations of these operators when
 # images are in play.  Bug 413026.
