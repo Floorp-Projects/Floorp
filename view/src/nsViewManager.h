@@ -164,7 +164,7 @@ public:
   NS_IMETHOD  DisableRefresh(void);
   NS_IMETHOD  EnableRefresh(PRUint32 aUpdateFlags);
 
-  NS_IMETHOD  BeginUpdateViewBatch(void);
+  virtual nsIViewManager* BeginUpdateViewBatch(void);
   NS_IMETHOD  EndUpdateViewBatch(PRUint32 aUpdateFlags);
 
   NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);

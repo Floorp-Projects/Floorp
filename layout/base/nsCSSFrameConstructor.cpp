@@ -9779,7 +9779,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
 
   // XXX this needs to detect the need for a view due to an opacity change and deal with it...
 
-  viewManager->BeginUpdateViewBatch();
+  nsIViewManager::UpdateViewBatch batch(viewManager);
 
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = PR_TRUE;
@@ -9790,7 +9790,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
   gInApplyRenderingChangeToTree = PR_FALSE;
 #endif
   
-  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 }
 
 /**
@@ -9850,11 +9850,10 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
     // Wrap this in a DEFERRED view update batch so we don't try to
     // flush out layout here
 
-    nsIViewManager* viewManager = presContext->GetViewManager();
-    viewManager->BeginUpdateViewBatch();  
+    nsIViewManager::UpdateViewBatch batch(presContext->GetViewManager());  
     ApplyRenderingChangeToTree(presContext, ancestor,
                                nsChangeHint_RepaintFrame);
-    viewManager->EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
+    batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
   }
 }
 

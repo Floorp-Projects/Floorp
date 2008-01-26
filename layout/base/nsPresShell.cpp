@@ -2502,8 +2502,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     return NS_OK;
 
   NS_ASSERTION(mViewManager, "Must have view manager");
-  nsCOMPtr<nsIViewManager> viewManager = mViewManager;
-  viewManager->BeginUpdateViewBatch();
+  nsCOMPtr<nsIViewManager> viewManagerDeathGrip = mViewManager;
+  nsIViewManager::UpdateViewBatch batch(mViewManager);
 
   // Take this ref after viewManager so it'll make sure to go away first
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
@@ -2531,7 +2531,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     DidDoReflow();
   }
 
-  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   if (!mIsDestroying) {
     CreateResizeEventTimer();
@@ -3340,7 +3340,7 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   // to keep the number of entrypoints down.
 
   NS_ASSERTION(mViewManager, "Should have view manager");
-  mViewManager->BeginUpdateViewBatch();
+  nsIViewManager::UpdateViewBatch batch(mViewManager);
 
   // Have to make sure that the content notifications are flushed before we
   // start messing with the frame model; otherwise we can get content doubling.
@@ -3354,7 +3354,7 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   nsresult rv = mFrameConstructor->ProcessRestyledFrames(changeList);
   --mChangeNestCount;
   
-  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 #ifdef ACCESSIBILITY
   InvalidateAccessibleSubtree(aContent);
 #endif
@@ -4456,10 +4456,8 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
 
   NS_ASSERTION(!isSafeToFlush || mViewManager, "Must have view manager");
   // Make sure the view manager stays alive while batching view updates.
-  // XXX FIXME: If viewmanager hierarchy is modified while we're in update
-  //            batch... We need to address that somehow.  See bug 369165.
-  nsCOMPtr<nsIViewManager> viewManager = mViewManager;
-  if (isSafeToFlush && viewManager) {
+  nsCOMPtr<nsIViewManager> viewManagerDeathGrip = mViewManager;
+  if (isSafeToFlush && mViewManager) {
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
     nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
@@ -4467,7 +4465,7 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // Style reresolves not in conjunction with reflows can't cause
     // painting or geometry changes, so don't bother with view update
     // batching if we only have style reresolve
-    viewManager->BeginUpdateViewBatch();
+    nsIViewManager::UpdateViewBatch batch(mViewManager);
 
     // Force flushing of any pending content notifications that might have
     // queued up while our event was pending.  That will ensure that we don't
@@ -4519,7 +4517,7 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
       // at the end of this view batch.
       updateFlags = NS_VMREFRESH_DEFERRED;
     }
-    viewManager->EndUpdateViewBatch(updateFlags);
+    batch.EndUpdateViewBatch(updateFlags);
   }
 
   return NS_OK;
@@ -6420,7 +6418,7 @@ PresShell::Observe(nsISupports* aSubject,
     // at interesting times during startup.
     if (rootFrame) {
       NS_ASSERTION(mViewManager, "View manager must exist");
-      mViewManager->BeginUpdateViewBatch();
+      nsIViewManager::UpdateViewBatch batch(mViewManager);
 
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
                                     &ReResolveMenusAndTrees, nsnull);
@@ -6436,7 +6434,7 @@ PresShell::Observe(nsISupports* aSubject,
       mFrameConstructor->ProcessRestyledFrames(changeList);
       --mChangeNestCount;
 
-      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+      batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 #ifdef ACCESSIBILITY
       InvalidateAccessibleSubtree(nsnull);
 #endif
