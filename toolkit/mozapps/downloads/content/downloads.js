@@ -90,6 +90,8 @@ let gStr = {
   stateDirty: "stateDirty",
   yesterday: "yesterday",
   monthDate: "monthDate",
+  downloadsTitleFiles: "downloadsTitleFiles",
+  downloadsTitlePercent: "downloadsTitlePercent",
   fileExecutableSecurityWarningTitle: "fileExecutableSecurityWarningTitle",
   fileExecutableSecurityWarningDontAsk: "fileExecutableSecurityWarningDontAsk"
 };
@@ -329,47 +331,47 @@ var gLastComputedMean = -1;
 var gLastActiveDownloads = 0;
 function onUpdateProgress()
 {
-  if (gDownloadManager.activeDownloads == 0) {
+  let numActiveDownloads = gDownloadManager.activeDownloadCount;
+
+  // Use the default title and reset "last" values if there's no downloads
+  if (numActiveDownloads == 0) {
     document.title = document.documentElement.getAttribute("statictitle");
     gLastComputedMean = -1;
+    gLastActiveDownloads = 0;
+
     return;
   }
 
   // Establish the mean transfer speed and amount downloaded.
   var mean = 0;
   var base = 0;
-  var numActiveDownloads = 0;
   var dls = gDownloadManager.activeDownloads;
   while (dls.hasMoreElements()) {
-    let dl = dls.getNext();
-    dl.QueryInterface(Ci.nsIDownload);
+    let dl = dls.getNext().QueryInterface(Ci.nsIDownload);
     if (dl.percentComplete < 100 && dl.size > 0) {
       mean += dl.amountTransferred;
       base += dl.size;
     }
-    numActiveDownloads++;
   }
 
-  // we're not downloading anything at the moment,
-  // but we already downloaded something.
-  if (base == 0) {
-    mean = 100;
-  } else {
+  // Calculate the percent transferred, unless we don't have a total file size
+  let title = gStr.downloadsTitlePercent;
+  if (base == 0)
+    title = gStr.downloadsTitleFiles;
+  else
     mean = Math.floor((mean / base) * 100);
-  }
 
   // Update title of window
   if (mean != gLastComputedMean || gLastActiveDownloads != numActiveDownloads) {
     gLastComputedMean = mean;
     gLastActiveDownloads = numActiveDownloads;
 
-    let strings = document.getElementById("downloadStrings");
-    if (numActiveDownloads > 1) {
-      document.title = strings.getFormattedString("downloadsTitleMultiple",
-                                                  [mean, numActiveDownloads]);
-    } else {
-      document.title = strings.getFormattedString("downloadsTitle", [mean]);
-    }
+    // Get the correct plural form and insert number of downloads and percent
+    title = PluralForm.get(numActiveDownloads, title);
+    title = replaceInsert(title, 1, numActiveDownloads);
+    title = replaceInsert(title, 2, mean);
+
+    document.title = title;
   }
 }
 
