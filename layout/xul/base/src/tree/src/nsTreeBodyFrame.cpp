@@ -1350,7 +1350,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
   if (width > maxWidth) {
     // See if the width is even smaller than the ellipsis
     // If so, clear the text completely.
-    const nsDependentString kEllipsis = nsContentUtils::GetLocalizedEllipsis();
+    const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
     nscoord ellipsisWidth;
     aRenderingContext.SetTextRunRTL(PR_FALSE);
     aRenderingContext.GetWidth(kEllipsis, ellipsisWidth);
