@@ -1721,9 +1721,14 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JS_ASSERT(!fp->script && fp->fun && fp->fun->u.n.native == Function);
     caller = JS_GetScriptedCaller(cx, fp);
     if (caller) {
-        filename = caller->script->filename;
-        lineno = js_PCToLineNumber(cx, caller->script, caller->pc);
         principals = JS_EvalFramePrincipals(cx, fp, caller);
+        if (principals == caller->script->principals) {
+            filename = caller->script->filename;
+            lineno = js_PCToLineNumber(cx, caller->script, caller->pc);
+        } else {
+            filename = principals->codebase;
+            lineno = 0;
+        }
     } else {
         filename = NULL;
         lineno = 0;
