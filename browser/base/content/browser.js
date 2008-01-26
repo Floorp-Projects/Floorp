@@ -114,6 +114,10 @@ var gBookmarkAllTabsHandler = null;
 var gClickAndHoldTimer = null;
 #endif
 
+#ifndef XP_MACOSX
+var gEditUIVisible = true;
+#endif
+
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -1064,6 +1068,10 @@ function delayedStartup()
   // downloads will start right away, and getting the service again won't hurt.
   setTimeout(function() Cc["@mozilla.org/download-manager;1"].
                         getService(Ci.nsIDownloadManager), 10000);
+
+#ifndef XP_MACOSX
+  updateEditUIVisibility();
+#endif
 }
 
 function BrowserShutdown()
@@ -3087,6 +3095,10 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     gHomeButton.updateTooltip();
     gIdentityHandler._cacheElements();
     window.XULBrowserWindow.init();
+
+#ifndef XP_MACOSX
+  updateEditUIVisibility();
+#endif
   }
 
   UpdateUrlbarSearchSplitterState();
@@ -3124,6 +3136,62 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
 #ifndef TOOLBAR_CUSTOMIZATION_SHEET
   // XXX Shouldn't have to do this, but I do
   window.focus();
+#endif
+}
+
+/**
+ * Update the global flag that tracks whether or not any edit UI (the Edit menu,
+ * edit-related items in the context menu, and edit-related toolbar buttons
+ * is visible, then update the edit commands' enabled state accordingly.  We use
+ * this flag to skip updating the edit commands on focus or selection changes
+ * when no UI is visible to improve performance (including pageload performance,
+ * since focus changes when you load a new page).
+ *
+ * If the UI is visible, we use goUpdateEd
+ * If the UI isn't visible, we enable all edit commands so keyboard shortcuts
+ * still work and just lazily disable them as needed when the user presses a
+ * shortcut.
+ *
+ * This doesn't work on Mac, since Mac menus flash when users press their
+ * keyboard shortcuts, so edit UI is essentially always visible on the Mac,
+ * and we need to always update the edit commands.  Thus on Mac this function
+ * is a no op.
+ */
+function updateEditUIVisibility()
+{
+#ifndef XP_MACOSX
+  let editMenuPopupState = document.getElementById("menu_EditPopup").state;
+  let contextMenuPopupState = document.getElementById("contentAreaContextMenu").state;
+
+  // The UI is visible if the Edit menu is opening or open, if the context menu
+  // is open, or if the toolbar has been customized to include the Cut, Copy,
+  // or Paste toolbar buttons.
+  gEditUIVisible = editMenuPopupState == "showing" ||
+                   editMenuPopupState == "open" ||
+                   contextMenuPopupState == "showing" ||
+                   contextMenuPopupState == "open" ||
+                   document.getElementById("cut-button") ||
+                   document.getElementById("copy-button") ||
+                   document.getElementById("paste-button") ? true : false;
+
+  // If UI is visible, update the edit commands' enabled state to reflect
+  // whether or not they are actually enabled for the current focus/selection.
+  if (gEditUIVisible)
+    goUpdateGlobalEditMenuItems();
+
+  // Otherwise, enable all commands, so that keyboard shortcuts still work,
+  // then lazily determine their actual enabled state when the user presses
+  // a keyboard shortcut.
+  else {
+    goSetCommandEnabled("cmd_undo");
+    goSetCommandEnabled("cmd_redo");
+    goSetCommandEnabled("cmd_cut");
+    goSetCommandEnabled("cmd_copy");
+    goSetCommandEnabled("cmd_paste");
+    goSetCommandEnabled("cmd_selectAll");
+    goSetCommandEnabled("cmd_delete");
+    goSetCommandEnabled("cmd_switchTextDirection");
+  }
 #endif
 }
 

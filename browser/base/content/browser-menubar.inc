@@ -88,7 +88,9 @@
   
             <menu id="edit-menu" label="&editMenu.label;"
                   accesskey="&editMenu.accesskey;">
-              <menupopup id="menu_EditPopup">
+              <menupopup id="menu_EditPopup"
+                         onpopupshowing="updateEditUIVisibility()"
+                         onpopuphidden="updateEditUIVisibility()">
                 <menuitem label="&undoCmd.label;"
                           key="key_undo"
                           accesskey="&undoCmd.accesskey;"
