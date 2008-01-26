@@ -65,11 +65,11 @@
 #include "nsIInlineSpellChecker.h"
 #include "nsPIDOMEventTarget.h"
 #include "nsStubMutationObserver.h"
+#include "nsIViewManager.h"
 
 class nsIDOMCharacterData;
 class nsIDOMRange;
 class nsIPresShell;
-class nsIViewManager;
 class ChangeAttributeTxn;
 class CreateElementTxn;
 class InsertElementTxn;
@@ -597,6 +597,7 @@ protected:
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   nsIViewManager *mViewManager;
   PRInt32         mUpdateCount;
+  nsIViewManager::UpdateViewBatch mBatch;
 
   // Spellchecking
   enum Tristate {
