@@ -1071,6 +1071,9 @@ function delayedStartup()
 
 #ifndef XP_MACOSX
   updateEditUIVisibility();
+  let placesContext = document.getElementById("placesContext");
+  placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
+  placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
 #endif
 }
 
@@ -3147,7 +3150,9 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
  * when no UI is visible to improve performance (including pageload performance,
  * since focus changes when you load a new page).
  *
- * If the UI is visible, we use goUpdateEd
+ * If UI is visible, we use goUpdateGlobalEditMenuItems to set the commands'
+ * enabled state so the UI will reflect it appropriately.
+ * 
  * If the UI isn't visible, we enable all edit commands so keyboard shortcuts
  * still work and just lazily disable them as needed when the user presses a
  * shortcut.
@@ -3162,6 +3167,7 @@ function updateEditUIVisibility()
 #ifndef XP_MACOSX
   let editMenuPopupState = document.getElementById("menu_EditPopup").state;
   let contextMenuPopupState = document.getElementById("contentAreaContextMenu").state;
+  let placesContextMenuPopupState = document.getElementById("placesContext").state;
 
   // The UI is visible if the Edit menu is opening or open, if the context menu
   // is open, or if the toolbar has been customized to include the Cut, Copy,
@@ -3170,6 +3176,8 @@ function updateEditUIVisibility()
                    editMenuPopupState == "open" ||
                    contextMenuPopupState == "showing" ||
                    contextMenuPopupState == "open" ||
+                   placesContextMenuPopupState == "showing" ||
+                   placesContextMenuPopupState == "open" ||
                    document.getElementById("cut-button") ||
                    document.getElementById("copy-button") ||
                    document.getElementById("paste-button") ? true : false;
@@ -3183,14 +3191,14 @@ function updateEditUIVisibility()
   // then lazily determine their actual enabled state when the user presses
   // a keyboard shortcut.
   else {
-    goSetCommandEnabled("cmd_undo");
-    goSetCommandEnabled("cmd_redo");
-    goSetCommandEnabled("cmd_cut");
-    goSetCommandEnabled("cmd_copy");
-    goSetCommandEnabled("cmd_paste");
-    goSetCommandEnabled("cmd_selectAll");
-    goSetCommandEnabled("cmd_delete");
-    goSetCommandEnabled("cmd_switchTextDirection");
+    goSetCommandEnabled("cmd_undo", true);
+    goSetCommandEnabled("cmd_redo", true);
+    goSetCommandEnabled("cmd_cut", true);
+    goSetCommandEnabled("cmd_copy", true);
+    goSetCommandEnabled("cmd_paste", true);
+    goSetCommandEnabled("cmd_selectAll", true);
+    goSetCommandEnabled("cmd_delete", true);
+    goSetCommandEnabled("cmd_switchTextDirection", true);
   }
 #endif
 }
