@@ -2664,10 +2664,8 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
   if (!GetIsPrintPreview()) {
     mTextZoom = aTextZoom;
   }
-  nsCOMPtr<nsIViewManager> vm = GetViewManager();
-  if (vm) {
-    vm->BeginUpdateViewBatch();
-  }
+
+  nsIViewManager::UpdateViewBatch batch(GetViewManager());
       
   // Set the text zoom on all children of mContainer (even if our zoom didn't
   // change, our children's zoom may be different, though it would be unusual).
@@ -2682,9 +2680,7 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
       pc->SetTextZoom(aTextZoom);
   }
 
-  if (vm) {
-    vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-  }
+  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   
   return NS_OK;
 }
@@ -2705,10 +2701,7 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
     mPageZoom = aFullZoom;
   }
 
-  nsCOMPtr<nsIViewManager> vm = GetViewManager();
-  if (vm) {
-    vm->BeginUpdateViewBatch();
-  }
+  nsIViewManager::UpdateViewBatch batch(GetViewManager());
 
   struct ZoomInfo ZoomInfo = { aFullZoom };
   CallChildren(SetChildFullZoom, &ZoomInfo);
@@ -2718,9 +2711,7 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
     pc->SetFullZoom(aFullZoom);
   }
 
-  if (vm) {
-    vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-  }
+  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   return NS_OK;
 }
