@@ -111,6 +111,16 @@ CAIRO_BEGIN_DECLS
 #define __attribute__(x)
 #endif
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#undef inline
+#define inline __inline
+#endif
+
+#ifdef __STRICT_ANSI__
+#undef inline
+#define inline __inline__
+#endif
 
 CAIRO_END_DECLS
 

@@ -125,9 +125,6 @@ _cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
 cairo_xlib_display_t *
 _cairo_xlib_display_reference (cairo_xlib_display_t *display)
 {
-    if (display == NULL)
-	return NULL;
-
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&display->ref_count));
 
     _cairo_reference_count_inc (&display->ref_count);
@@ -138,9 +135,6 @@ _cairo_xlib_display_reference (cairo_xlib_display_t *display)
 void
 _cairo_xlib_display_destroy (cairo_xlib_display_t *display)
 {
-    if (display == NULL)
-	return;
-
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&display->ref_count));
 
     if (! _cairo_reference_count_dec_and_test (&display->ref_count))
@@ -213,6 +207,7 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     }
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
 
+    assert (display != NULL);
     _cairo_xlib_display_destroy (display);
 
     /* Return value in accordance with requirements of

@@ -622,3 +622,102 @@ _cairo_path_fixed_is_equal (cairo_path_fixed_t *path,
     }
     return TRUE;
 }
+
+/* Closure for path flattening */
+typedef struct cairo_path_flattener {
+    double tolerance;
+    cairo_point_t current_point;
+    cairo_path_fixed_move_to_func_t	*move_to;
+    cairo_path_fixed_line_to_func_t	*line_to;
+    cairo_path_fixed_close_path_func_t	*close_path;
+    void *closure;
+} cpf_t;
+
+static cairo_status_t
+_cpf_move_to (void *closure, cairo_point_t *point)
+{
+    cpf_t *cpf = closure;
+
+    cpf->current_point = *point;
+
+    return cpf->move_to (cpf->closure, point);
+}
+
+static cairo_status_t
+_cpf_line_to (void *closure, cairo_point_t *point)
+{
+    cpf_t *cpf = closure;
+
+    cpf->current_point = *point;
+
+    return cpf->line_to (cpf->closure, point);
+}
+
+static cairo_status_t
+_cpf_curve_to (void		*closure,
+	       cairo_point_t	*p1,
+	       cairo_point_t	*p2,
+	       cairo_point_t	*p3)
+{
+    cpf_t *cpf = closure;
+    cairo_status_t status;
+    cairo_spline_t spline;
+    int i;
+
+    cairo_point_t *p0 = &cpf->current_point;
+
+    status = _cairo_spline_init (&spline, p0, p1, p2, p3);
+    if (status == CAIRO_INT_STATUS_DEGENERATE)
+	return CAIRO_STATUS_SUCCESS;
+
+    status = _cairo_spline_decompose (&spline, cpf->tolerance);
+    if (status)
+      goto out;
+
+    for (i=1; i < spline.num_points; i++) {
+	status = cpf->line_to (cpf->closure, &spline.points[i]);
+	if (status)
+	    goto out;
+    }
+
+    cpf->current_point = *p3;
+
+    status = CAIRO_STATUS_SUCCESS;
+
+ out:
+    _cairo_spline_fini (&spline);
+    return status;
+}
+
+static cairo_status_t
+_cpf_close_path (void *closure)
+{
+    cpf_t *cpf = closure;
+
+    return cpf->close_path (cpf->closure);
+}
+
+
+cairo_status_t
+_cairo_path_fixed_interpret_flat (cairo_path_fixed_t			*path,
+				  cairo_direction_t			dir,
+				  cairo_path_fixed_move_to_func_t	*move_to,
+				  cairo_path_fixed_line_to_func_t	*line_to,
+				  cairo_path_fixed_close_path_func_t	*close_path,
+				  void					*closure,
+				  double				tolerance)
+{
+    cpf_t flattener;
+
+    flattener.tolerance = tolerance;
+    flattener.move_to = move_to;
+    flattener.line_to = line_to;
+    flattener.close_path = close_path;
+    flattener.closure = closure;
+    return _cairo_path_fixed_interpret (path, dir,
+					_cpf_move_to,
+					_cpf_line_to,
+					_cpf_curve_to,
+					_cpf_close_path,
+					&flattener);
+}

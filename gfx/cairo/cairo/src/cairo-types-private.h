@@ -41,7 +41,7 @@
 /* This is the only header file not including cairoint.h.  It only contains
  * typedefs.*/
 #include "cairo.h"
-#include "cairo-fixed-private.h"
+#include "cairo-fixed-type-private.h"
 
 typedef struct _cairo_array cairo_array_t;
 typedef struct _cairo_hash_table cairo_hash_table_t;
@@ -198,7 +198,7 @@ typedef struct _cairo_point_int16 {
 } cairo_point_int16_t;
 
 typedef struct _cairo_point_int32 {
-    int16_t x, y;
+    int32_t x, y;
 } cairo_point_int32_t;
 
 typedef struct _cairo_box_int16 {

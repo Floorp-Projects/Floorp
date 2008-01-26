@@ -106,6 +106,11 @@ typedef struct _cairo_string_entry {
     char *string;
 } cairo_string_entry_t;
 
+static cairo_status_t
+_cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
+			   unsigned long	 scaled_font_glyph_index,
+                           cairo_scaled_font_subsets_glyph_t *subset_glyph);
+
 static void
 _cairo_sub_font_glyph_init_key (cairo_sub_font_glyph_t  *sub_font_glyph,
 				unsigned long		 scaled_font_glyph_index)
@@ -221,6 +226,8 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
                         cairo_bool_t                     is_composite)
 {
     cairo_sub_font_t *sub_font;
+    cairo_status_t status;
+    cairo_scaled_font_subsets_glyph_t subset_glyph;
 
     sub_font = malloc (sizeof (cairo_sub_font_t));
     if (sub_font == NULL) {
@@ -246,9 +253,11 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
 	return NULL;
     }
 
-    if (parent->type != CAIRO_SUBSETS_SCALED) {
-        /* Reserve first glyph in subset for the .notdef glyph */
-        sub_font->num_glyphs_in_current_subset++;
+    /* Reserve first glyph in subset for the .notdef glyph */
+    status = _cairo_sub_font_map_glyph (sub_font, 0, &subset_glyph);
+    if (status) {
+	_cairo_error_throw (status);
+	return NULL;
     }
 
     return sub_font;
@@ -307,6 +316,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
     cairo_sub_font_glyph_t key, *sub_font_glyph;
     cairo_status_t status;
     cairo_scaled_glyph_t *scaled_glyph;
+    cairo_scaled_font_subsets_glyph_t tmp_subset_glyph;
 
     _cairo_sub_font_glyph_init_key (&key, scaled_font_glyph_index);
     if (! _cairo_hash_table_lookup (sub_font->sub_font_glyphs, &key.base,
@@ -317,10 +327,10 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	    sub_font->current_subset++;
 	    sub_font->num_glyphs_in_current_subset = 0;
 
-            if (sub_font->parent->type != CAIRO_SUBSETS_SCALED) {
-                /* Reserve first glyph in subset for the .notdef glyph */
-                sub_font->num_glyphs_in_current_subset++;
-            }
+	    /* Reserve first glyph in subset for the .notdef glyph */
+	    status = _cairo_sub_font_map_glyph (sub_font, 0, &tmp_subset_glyph);
+	    if (status)
+		return status;
 	}
 
         status = _cairo_scaled_glyph_lookup (sub_font->scaled_font,
@@ -381,16 +391,8 @@ _cairo_sub_font_collect (void *entry, void *closure)
 
     for (i = 0; i <= sub_font->current_subset; i++) {
 	collection->subset_id = i;
-
-        if (sub_font->parent->type == CAIRO_SUBSETS_SCALED) {
-            collection->num_glyphs = 0;
-            collection->max_glyph = 0;
-        } else {
-            /* Assign .notdef glyph to the first glyph in the subset */
-            collection->glyphs[0] = 0;
-            collection->num_glyphs = 1;
-            collection->max_glyph = 0;
-        }
+	collection->num_glyphs = 0;
+	collection->max_glyph = 0;
 
 	_cairo_hash_table_foreach (sub_font->sub_font_glyphs,
 				   _cairo_sub_font_glyph_collect, collection);

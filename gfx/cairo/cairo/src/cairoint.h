@@ -68,17 +68,6 @@
 
 #include "cairo-compiler-private.h"
 
-#ifdef _MSC_VER
-#define snprintf _snprintf
-#undef inline
-#define inline __inline
-#endif
-
-#ifdef __STRICT_ANSI__
-#undef inline
-#define inline __inline__
-#endif
-
 CAIRO_BEGIN_DECLS
 
 #ifdef _WIN32
@@ -110,6 +99,10 @@ _cairo_win32_tmpfile (void);
 #define assert(expr) \
     do { if (!(expr)) fprintf(stderr, "Assertion failed at %s:%d: %s\n", \
           __FILE__, __LINE__, #expr); } while (0)
+#endif
+
+#ifndef M_SQRT2
+#define M_SQRT2 1.41421356237309504880
 #endif
 
 #undef  ARRAY_LENGTH
@@ -1023,6 +1016,12 @@ _cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
                                          double *x2, double *y2,
                                          cairo_bool_t *is_tight);
 
+cairo_private void
+_cairo_gstate_path_extents (cairo_gstate_t     *gstate,
+			    cairo_path_fixed_t *path,
+			    double *x1, double *y1,
+			    double *x2, double *y2);
+
 cairo_private cairo_status_t
 _cairo_gstate_paint (cairo_gstate_t *gstate);
 
@@ -1268,13 +1267,6 @@ _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 cairo_private unsigned char *
 _cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out);
 
-/* cairo_operator.c */
-cairo_private cairo_bool_t
-_cairo_operator_always_opaque (cairo_operator_t op);
-
-cairo_private cairo_bool_t
-_cairo_operator_always_translucent (cairo_operator_t op);
-
 /* cairo_path.c */
 cairo_private void
 _cairo_path_fixed_init (cairo_path_fixed_t *path);
@@ -1365,10 +1357,20 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t		  *path,
 		       cairo_path_fixed_close_path_func_t *close_path,
 		       void				  *closure);
 
+cairo_private cairo_status_t
+_cairo_path_fixed_interpret_flat (cairo_path_fixed_t	  *path,
+		       cairo_direction_t		   dir,
+		       cairo_path_fixed_move_to_func_t	  *move_to,
+		       cairo_path_fixed_line_to_func_t	  *line_to,
+		       cairo_path_fixed_close_path_func_t *close_path,
+		       void				  *closure,
+		       double				  tolerance);
+
 cairo_private void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
-			  double *x2, double *y2);
+			  double *x2, double *y2,
+			  double tolerance);
 
 cairo_private void
 _cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
@@ -1483,10 +1485,8 @@ _cairo_stroke_style_fini (cairo_stroke_style_t *style);
 
 /* cairo-surface.c */
 
-extern const cairo_private cairo_surface_t _cairo_surface_nil;
-extern const cairo_private cairo_surface_t _cairo_surface_nil_read_error;
-extern const cairo_private cairo_surface_t _cairo_surface_nil_write_error;
-extern const cairo_private cairo_surface_t _cairo_surface_nil_file_not_found;
+cairo_private cairo_surface_t *
+_cairo_surface_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
 _cairo_surface_set_error (cairo_surface_t	*surface,
@@ -2230,6 +2230,7 @@ slim_hidden_proto (cairo_matrix_translate);
 slim_hidden_proto (cairo_move_to);
 slim_hidden_proto (cairo_new_path);
 slim_hidden_proto (cairo_paint);
+slim_hidden_proto (cairo_path_extents);
 slim_hidden_proto (cairo_pattern_create_for_surface);
 slim_hidden_proto (cairo_pattern_create_rgb);
 slim_hidden_proto (cairo_pattern_create_rgba);
@@ -2287,6 +2288,7 @@ slim_hidden_proto (cairo_surface_write_to_png_stream);
 CAIRO_END_DECLS
 
 #include "cairo-mutex-private.h"
+#include "cairo-fixed-private.h"
 #include "cairo-wideint-private.h"
 #include "cairo-malloc-private.h"
 #include "cairo-hash-private.h"
