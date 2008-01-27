@@ -273,6 +273,10 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
                           nsIAutoCompleteResult *aPreviousResult,
                           nsIAutoCompleteObserver *aListener)
 {
+  // We don't use aPreviousResult to get some matches from previous results in
+  // order to make sure ordering of results are consistent between reusing and
+  // not reusing results, see bug #412730 for details
+
   NS_ENSURE_ARG_POINTER(aListener);
   mCurrentSearchString = aSearchString;
   // remove whitespace, see bug #392141 for details
@@ -283,131 +287,36 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
   mCurrentListener = aListener;
 
-  // determine if we can start by searching through the previous search results.
-  // if we can't, we need to reset mCurrentChunkOffset
-  // if we can, we will search through our previous search results and then resume 
-  // searching using the previous mCurrentOldestVisit and mLast values.
-  PRBool searchPrevious = PR_FALSE;
-  // XXX Re-use of previous search results is disabled due to bug 412730.
-  //if (aPreviousResult) {
-  if (0) {
-    nsAutoString prevSearchString;
-    aPreviousResult->GetSearchString(prevSearchString);
-
-    // if search string begins with the previous search string, it's a go.
-    // but don't search previous results if the previous search string was empty
-    // or if the current search string is empty.  (an empty search string is a "typed only"
-    // search from when clicking on the drop down to the right of the url bar.)
-    searchPrevious = !prevSearchString.IsEmpty() && Substring(mCurrentSearchString, 0,
-                      prevSearchString.Length()).Equals(prevSearchString);
-  }
-
   mCurrentResult = do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mCurrentChunkOffset = 0;
   mCurrentResultURLs.Clear();
+  mLivemarkFeedItemIds.Clear();
+  mLivemarkFeedURIs.Clear();
 
-  // if we are searching through our previous results,
-  // we don't need to regenerate these hash tables
-  if (!searchPrevious) {
-    mLivemarkFeedItemIds.Clear();
-    mLivemarkFeedURIs.Clear();
+  // find all the items that have the "livemark/feedURI" annotation
+  // and save off their item ids and URIs. when doing autocomplete, 
+  // if a result's parent item id matches a saved item id, the result
+  // it is not really a bookmark, but a rss feed item.
+  // if a results URI matches a saved URI, the result is a bookmark,
+  // so we should show the star.
+  mozStorageStatementScoper scope(mFoldersWithAnnotationQuery);
 
-    // find all the items that have the "livemark/feedURI" annotation
-    // and save off their item ids and URIs. when doing autocomplete, 
-    // if a result's parent item id matches a saved item id, the result
-    // it is not really a bookmark, but a rss feed item.
-    // if a results URI matches a saved URI, the result is a bookmark,
-    // so we should show the star.
-    mozStorageStatementScoper scope(mFoldersWithAnnotationQuery);
+  rv = mFoldersWithAnnotationQuery->BindUTF8StringParameter(0, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mFoldersWithAnnotationQuery->BindUTF8StringParameter(0, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
+  PRBool hasMore = PR_FALSE;
+  while (NS_SUCCEEDED(mFoldersWithAnnotationQuery->ExecuteStep(&hasMore)) && hasMore) {
+    PRInt64 itemId = 0;
+    rv = mFoldersWithAnnotationQuery->GetInt64(0, &itemId);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasMore = PR_FALSE;
-    while (NS_SUCCEEDED(mFoldersWithAnnotationQuery->ExecuteStep(&hasMore)) && hasMore) {
-      PRInt64 itemId = 0;
-      rv = mFoldersWithAnnotationQuery->GetInt64(0, &itemId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      mLivemarkFeedItemIds.Put(itemId, PR_TRUE);
-      nsAutoString feedURI;
-      // no need to worry about duplicates.
-      rv = mFoldersWithAnnotationQuery->GetString(1, feedURI);
-      NS_ENSURE_SUCCESS(rv, rv);
-      mLivemarkFeedURIs.Put(feedURI, PR_TRUE);
-    }
-  }
-
-  // Search through the previous result
-  if (searchPrevious) {
-    // when searching our previous results
-    // we need to first re-search tags.
-    // if our previous search was for "foo", we would have shown
-    // items tagged with "foo".  if our current search is "food"
-    // we need to re-search for tags matching "food" first.
-    // then, when processing results we have to remove any previous tag matches
-    rv = AutoCompleteTagsSearch();
+    mLivemarkFeedItemIds.Put(itemId, PR_TRUE);
+    nsAutoString feedURI;
+    // no need to worry about duplicates.
+    rv = mFoldersWithAnnotationQuery->GetString(1, feedURI);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    PRUint32 matchCount;
-    aPreviousResult->GetMatchCount(&matchCount);
-    for (PRUint32 i = 0; i < matchCount; i++) {
-      // if the previous result item was a tagged item, and it matches
-      // the current search term (due to url or title) don't include it.
-      // find it "naturally" with a history or bookmark search.
-      // 
-      // note, if the previous result item is tagged with the current search term,
-      // our call to AutoCompleteTagsSearch() above will find it.
-      nsAutoString style;
-      aPreviousResult->GetStyleAt(i, style);
-      if (!style.Equals(NS_LITERAL_STRING("tag"))) {
-        nsAutoString url;
-        aPreviousResult->GetValueAt(i, url);
-
-        // make sure the url isn't already listed, as a tag result
-        PRBool dummy;
-        if (!mCurrentResultURLs.Get(url, &dummy)) {
-          nsAutoString title;
-          aPreviousResult->GetCommentAt(i, title);
-
-          // assuming that people learn to use the urlbar for titles (and not urls)
-          // we should search in titles first, to potentially save the second call to
-          // CaseInsensitiveFindInReadable() for the url
-          PRBool isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, title);
-          if (!isMatch)
-            isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, url);
-
-          if (isMatch) {
-            nsAutoString image;
-            aPreviousResult->GetImageAt(i, image);
-
-            mCurrentResultURLs.Put(url, PR_TRUE);
-  
-            rv = mCurrentResult->AppendMatch(url, title, image, style);
-            NS_ENSURE_SUCCESS(rv, rv);
-          }
-        }
-      }
-    }
-    // if we found some results, announce them now instead of waiting
-    // to do the first db search.
-    PRUint32 count;
-    mCurrentResult->GetMatchCount(&count); 
-
-    if (count > 0) {
-      // when searching previous autocomplete results, 
-      // if we found any matches, tell the front end immediately, 
-      // instead of waiting until our first query returns.
-      mCurrentResult->SetSearchResult(nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING);
-      mCurrentResult->SetDefaultIndex(0);
-      rv = mCurrentResult->SetListener(this);
-      NS_ENSURE_SUCCESS(rv, rv);
-      mCurrentListener->OnSearchResult(this, mCurrentResult);
-    }
-  }
-  else if (!mCurrentSearchString.IsEmpty()) {
-    // reset mCurrentChunkOffset 
-    mCurrentChunkOffset = 0;
+    mLivemarkFeedURIs.Put(feedURI, PR_TRUE);
   }
 
   // fire right away, we already waited to start searching
