@@ -69,7 +69,8 @@
 
 <!ENTITY offlineAppsList.label           "The following websites have data installed for offline use:">
 <!ENTITY offlineAppsList.height          "7em">
-<!ENTITY offlineAppsList.remove          "Remove...">
+<!ENTITY offlineAppsListRemove.label     "Remove…">
+<!ENTITY offlineAppsListRemove.accesskey "R">
 <!ENTITY offlineAppRemove.confirm        "Remove offline data">
 
 <!ENTITY encryptionTab.label             "Encryption">
