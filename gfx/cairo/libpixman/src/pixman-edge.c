@@ -25,7 +25,7 @@
 #endif
 
 #include <string.h>
-#include "pixman.h"
+
 #include "pixman-private.h"
 
 #ifdef PIXMAN_FB_ACCESSORS

@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pixman.h"
+
 #include "pixman-private.h"
 #include "pixman-mmx.h"
 
