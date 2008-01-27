@@ -825,8 +825,10 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*              aFrame,
     else
       aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST);
   }
-  nsMargin margin;
-  aFrame->GetMargin(margin);
+  // This method is called from nsBlockFrame::PlaceLine via the call to
+  // bidiUtils->ReorderFrames, so this is guaranteed to be after the inlines
+  // have been reflowed, which is required for GetUsedMargin/Border/Padding
+  nsMargin margin = aFrame->GetUsedMargin();
   if (isLeftMost)
     aLeft += margin.left;
 
@@ -835,8 +837,7 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*              aFrame,
   if (!IsBidiLeaf(aFrame))
   {
     nscoord x = 0;
-    nsMargin borderPadding;
-    aFrame->GetBorderAndPadding(borderPadding);
+    nsMargin borderPadding = aFrame->GetUsedBorderAndPadding();
     if (isLeftMost) {
       x += borderPadding.left;
     }
@@ -905,12 +906,14 @@ nsBidiPresUtils::InitContinuationStates(nsIFrame*              aFrame,
 void
 nsBidiPresUtils::RepositionInlineFrames(nsIFrame* aFirstChild) const
 {
-  nsMargin margin;
   const nsStyleVisibility* vis = aFirstChild->GetStyleVisibility();
   PRBool isLTR = (NS_STYLE_DIRECTION_LTR == vis->mDirection);
   nscoord leftSpace = 0;
 
-  aFirstChild->GetMargin(margin);
+  // This method is called from nsBlockFrame::PlaceLine via the call to
+  // bidiUtils->ReorderFrames, so this is guaranteed to be after the inlines
+  // have been reflowed, which is required for GetUsedMargin/Border/Padding
+  nsMargin margin = aFirstChild->GetUsedMargin();
   if (!aFirstChild->GetPrevContinuation())
     leftSpace = isLTR ? margin.left : margin.right;
 
