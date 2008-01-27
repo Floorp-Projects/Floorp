@@ -2927,6 +2927,9 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance)
 #endif
   nsRect tile = fr.GetSourceRegion();
 
+  if (tile.width == 0 || tile.height == 0)
+    return NS_OK;
+
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     PRUint32 tileY = tile.y + (y - tile.y + tile.height) % tile.height;
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
