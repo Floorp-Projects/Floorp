@@ -229,6 +229,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             }
           }
         }
+      } else if (aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN ||
+                 aWidgetType == NS_THEME_TREEVIEW_HEADER_SORTARROW) {
+        stateFrame = aFrame->GetParent();
       }
 
       PRInt32 eventState = GetContentState(stateFrame, aWidgetType);
@@ -326,7 +329,11 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         if (aWidgetType == NS_THEME_BUTTON ||
             aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
             aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON ||
+            aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN ||
             aWidgetType == NS_THEME_DROPDOWN) {
+          if (aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN)
+            aFrame = aFrame->GetParent();
+
           PRBool menuOpen = CheckBooleanAttr(aFrame, nsWidgetAtoms::open);
           aState->depressed = IsCheckedButton(aFrame) || menuOpen;
           // we must not highlight buttons with open drop down menus on hover.
@@ -1119,7 +1126,6 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_MENUBAR ||
       aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_TOOLTIP ||
-      aWidgetType == NS_THEME_TREEVIEW_HEADER_SORTARROW ||
       aWidgetType == NS_THEME_MENUSEPARATOR ||
       aWidgetType == NS_THEME_WINDOW ||
       aWidgetType == NS_THEME_DIALOG) {
