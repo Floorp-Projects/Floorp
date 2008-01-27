@@ -655,10 +655,10 @@ var gDownloadViewController = {
       pauseDownload(aSelectedItem);
     },
     cmd_pauseResume: function(aSelectedItem) {
-      if (aSelectedItem.inProgress)
-        this.commands.cmd_pause(aSelectedItem);
+      if (aSelectedItem.paused)
+        this.cmd_resume(aSelectedItem);
       else
-        this.commands.cmd_resume(aSelectedItem);
+        this.cmd_pause(aSelectedItem);
     },
     cmd_removeFromList: function(aSelectedItem) {
       removeDownload(aSelectedItem);
