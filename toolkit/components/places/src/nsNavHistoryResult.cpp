@@ -4032,7 +4032,10 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
     if (folder) {
       PRUint32 nodeIndex;
       nsNavHistoryResultNode* node = folder->FindChildById(aItemId, &nodeIndex);
-      if (node && !(folder->mOptions->ExcludeItems()) &&
+      // if ExcludeItems is true we don't update non visible items
+      if (node &&
+          (!folder->mOptions->ExcludeItems() ||
+           !(node->IsURI() || node->IsSeparator())) &&
           folder->StartIncrementalUpdate()) {
         node->OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue);
       }
