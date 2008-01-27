@@ -637,6 +637,11 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
       NS_ENSURE_SUCCESS(rv, rv);
 
       mCurrentResultURLs.Put(entryURL, PR_TRUE);
+
+      if (mCurrentResultURLs.Count() >= mAutoCompleteMaxResults) {
+        *aHasMoreResults = PR_FALSE;
+        break;
+      }
     }
   }
 
