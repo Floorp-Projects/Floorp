@@ -389,6 +389,8 @@ private:
   PRInt64 mResumedAt;
   double mSpeed;
 
+  PRBool mHasMultipleFiles;
+
   /**
    * Track various states of the download trying to auto-resume when starting
    * the download manager or restoring from a crash.
