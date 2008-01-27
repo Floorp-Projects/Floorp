@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+# Mark Finkle <mfinkle@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -73,6 +74,12 @@ LIBS            += \
 endif
 
 ifeq (WINNT,$(OS_ARCH))
+RCINCLUDE = xulrunner-stub.rc
+ifndef GNU_CC
+RCFLAGS += -DMOZ_XULRUNNER -I$(srcdir)
+else
+RCFLAGS += -DMOZ_XULRUNNER --include-dir $(srcdir)
+endif
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 endif
 
