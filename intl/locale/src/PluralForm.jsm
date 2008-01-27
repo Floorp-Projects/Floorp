@@ -47,6 +47,9 @@ EXPORTED_SYMBOLS = [ "PluralForm" ];
  *
  * string pluralForm
  * get(int aNum, string aWords)
+ *
+ * int numForms
+ * numForms()
  */
 
 const Cc = Components.classes;
@@ -55,20 +58,42 @@ const Ci = Components.interfaces;
 const kIntlProperties = "chrome://global/locale/intl.properties";
 
 // These are the available plural functions that give the appropriate index
-// based on the plural rule number specified
+// based on the plural rule number specified. The first element is the number
+// of plural forms and the second is the function to figure out the index.
 let gFunctions = [
-  function(n) 0,
-  function(n) n!=1?1:0,
-  function(n) n>1?1:0,
-  function(n) n%10==1&&n%100!=11?1:n!=0?2:0,
-  function(n) n==1?0:n==2?1:2,
-  function(n) n==1?0:n==0||n%100>0&&n%100<20?1:2,
-  function(n) n%10==1&&n%100!=11?0:n%10>=2&&(n%100<10||n%100>=20)?2:1,
-  function(n) n%10==1&&n%100!=11?0:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?1:2,
-  function(n) n==1?0:n>=2&&n<=4?1:2,
-  function(n) n==1?0:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?1:2,
-  function(n) n%100==1?0:n%100==2?1:n%100==3||n%100==4?2:3
+  // 0: Chinese
+  [1, function(n) 0],
+  // 1: English
+  [2, function(n) n!=1?1:0],
+  // 2: French
+  [2, function(n) n>1?1:0],
+  // 3: Latvian
+  [3, function(n) n%10==1&&n%100!=11?1:n!=0?2:0],
+  // 4: Scottish Gaelic
+  [3, function(n) n==1?0:n==2?1:2],
+  // 5: Romanian
+  [3, function(n) n==1?0:n==0||n%100>0&&n%100<20?1:2],
+  // 6: Lithuanian
+  [3, function(n) n%10==1&&n%100!=11?0:n%10>=2&&(n%100<10||n%100>=20)?2:1],
+  // 7: Russian
+  [3, function(n) n%10==1&&n%100!=11?0:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?1:2],
+  // 8: Slovak
+  [3, function(n) n==1?0:n>=2&&n<=4?1:2],
+  // 9: Polish
+  [3, function(n) n==1?0:n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?1:2],
+  // 10: Slovenian
+  [4, function(n) n%100==1?0:n%100==2?1:n%100==3||n%100==4?2:3],
+  // 11: Irish Gaeilge
+  [5, function(n) n==1?0:n==2?1:n>=3&&n<=6?2:n>=7&&n<=10?3:4],
+  // 12: Arabic
+  [4, function(n) n==1?0:n==2?1:n<=10?2:3],
+  // 13: Maltese
+  [4, function(n) n==1?0:n==0||n%100>0&&n%100<=10?1:n%100>10&&n%100<20?2:3],
+  // 14: Macedonian
+  [3, function(n) n%10==1?0:n%10==2?1:2],
 ];
+
+let gNumForms;
 
 let PluralForm = {
   /**
@@ -98,14 +123,18 @@ let PluralForm = {
       ruleNum = 0;
     }
 
+    // Get the desired pluralRule function
+    let pluralFunc;
+    [gNumForms, pluralFunc] = gFunctions[ruleNum];
+
     // Return a function that gets the right plural form
-    let pluralFunc = gFunctions[ruleNum];
     return function(aNum, aWords) {
       // Figure out which index to use for the semi-colon separated words
       let index = pluralFunc(aNum ? Number(aNum) : 0);
       let words = aWords ? aWords.split(/;/) : [""];
 
-      let ret = words[index];
+      // Explicitly check bounds to avoid strict warnings
+      let ret = index < words.length ? words[index] : undefined;
 
       // Check for array out of bounds or empty strings
       if ((ret == undefined) || (ret == "")) {
@@ -120,6 +149,13 @@ let PluralForm = {
       return ret;
     };
   })(),
+
+  /**
+   * Get the number of forms for the current plural rule
+   *
+   * @return The number of forms
+   */
+  numForms: function() gNumForms,
 };
 
 /**
