@@ -8011,7 +8011,9 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
   if (IsFrameSpecial(aParentFrame) &&
       !IsInlineFrame(aParentFrame) &&
       IsInlineOutside(aFrameList.lastChild)) {
-    NS_ASSERTION(!aParentFrame->GetNextContinuation(), "Shouldn't happen");
+    NS_ASSERTION(!aParentFrame->GetNextContinuation() ||
+                 !aParentFrame->GetNextContinuation()->GetFirstChild(nsnull),
+                 "Shouldn't happen");
     
     // We want to put some of the frames into the following inline frame.
     nsIFrame* lastBlock = FindLastBlock(aFrameList.childList);
@@ -8355,11 +8357,7 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
 
     // The frame may have a continuation. If so, we want the last
     // non-overflow-container continuation as our previous sibling.
-    sibling = sibling->GetLastContinuation();
-    while (sibling->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
-      sibling = sibling->GetPrevInFlow();
-      NS_ASSERTION(sibling, "first-in-flow can't be overflow container");
-    }
+    sibling = sibling->GetTailContinuation();
   }
 
   if (aTargetContent &&
@@ -8673,8 +8671,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     parentFrame = GetLastSpecialSibling(parentFrame);
   }
 
-  // Get the parent frame's last continuation
-  parentFrame = parentFrame->GetLastContinuation();
+  // Get continuation that parents the last child
+  parentFrame = nsLayoutUtils::GetLastContinuationWithChild(parentFrame);
 
   nsIAtom* frameType = parentFrame->GetType();
   // Deal with fieldsets
@@ -9121,7 +9119,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
         nsLayoutUtils::IsGeneratedContentFor(aContainer, firstChild,
                                              nsCSSPseudoElements::before)) {
       // Insert the new frames after the last continuation of the :before
-      prevSibling = firstChild->GetLastContinuation();
+      prevSibling = firstChild->GetTailContinuation();
       parentFrame = prevSibling->GetParent();
       // We perhaps could leave this true and take the AppendFrames path
       // below, but we'd have to update appendAfterFrame and it seems safer
@@ -11174,7 +11172,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame
        // Not a kid of the third part of the IB split
        GetSpecialSibling(parent) || !IsInlineOutside(parent) ||
        // Or not the only child
-       aFrame->GetLastContinuation()->GetNextSibling() ||
+       aFrame->GetTailContinuation()->GetNextSibling() ||
        aFrame != parent->GetFirstContinuation()->GetFirstChild(nsnull)
       )) {
     return PR_FALSE;
