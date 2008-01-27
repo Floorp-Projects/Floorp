@@ -153,7 +153,7 @@ nsMathMLmoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 // get the text that we enclose and setup our nsMathMLChar
 void
-nsMathMLmoFrame::ProcessTextData(PRBool aComputeStyleChange)
+nsMathMLmoFrame::ProcessTextData()
 {
   mFlags = 0;
 
@@ -958,7 +958,7 @@ nsMathMLmoFrame::MarkIntrinsicWidthsDirty()
   // from the parent of our outermost embellished container (we ensure
   // that we are the core, not just a sibling of the core)
 
-  ProcessTextData(PR_FALSE);
+  ProcessTextData();
 
   nsIFrame* target = this;
   nsEmbellishData embellishData;
