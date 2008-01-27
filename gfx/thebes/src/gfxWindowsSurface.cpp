@@ -125,6 +125,13 @@ gfxWindowsSurface::~gfxWindowsSurface()
 already_AddRefed<gfxImageSurface>
 gfxWindowsSurface::GetImageSurface()
 {
+    if (!mSurfaceValid) {
+        NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
+        return nsnull;
+    }
+
+    NS_ASSERTION(CairoSurface() != nsnull, "CairoSurface() shouldn't be nsnull when mSurfaceValid is TRUE!");
+
     if (mForPrinting)
         return nsnull;
 

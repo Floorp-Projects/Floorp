@@ -111,7 +111,7 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 
     mFormat = format;
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
     if (!ShouldUseImageSurfaces()) {
         mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
         if (mWinSurface && mWinSurface->CairoStatus() == 0) {
@@ -120,13 +120,22 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
         }
     }
 
-    if (!mImageSurface) {
+    if (!mImageSurface)
         mWinSurface = nsnull;
-        mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
+#elif defined(XP_MACOSX)
+    if (!ShouldUseImageSurfaces()) {
+        mQuartzSurface = new gfxQuartzSurface(gfxSize(mWidth, mHeight), format);
+        if (mQuartzSurface && mQuartzSurface->CairoStatus() == 0) {
+            mImageSurface = mQuartzSurface->GetImageSurface();
+        }
     }
-#else
-    mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
+
+    if (!mImageSurface)
+        mQuartzSurface = nsnull;
 #endif
+
+    if (!mImageSurface)
+        mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
 
     if (!mImageSurface || mImageSurface->CairoStatus()) {
         mImageSurface = nsnull;
@@ -298,6 +307,11 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
     }
 #endif
 
+#ifdef XP_MACOSX
+    if (mQuartzSurface && !mFormatChanged)
+        mOptSurface = mQuartzSurface;
+#endif
+
     if (mOptSurface == nsnull)
         mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface, mFormat);
 
@@ -305,6 +319,9 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
         mImageSurface = nsnull;
 #ifdef XP_WIN
         mWinSurface = nsnull;
+#endif
+#ifdef XP_MACOSX
+        mQuartzSurface = nsnull;
 #endif
     }
 

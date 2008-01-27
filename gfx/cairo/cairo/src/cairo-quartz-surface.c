@@ -895,6 +895,11 @@ _cairo_quartz_get_image (cairo_quartz_surface_t *surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
+    if (surface->imageSurfaceEquiv) {
+	*image_out = (cairo_image_surface_t*) cairo_surface_reference(surface->imageSurfaceEquiv);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     if (CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0) {
 	unsigned int stride;
 	unsigned int bitinfo;
@@ -903,6 +908,7 @@ _cairo_quartz_get_image (cairo_quartz_surface_t *surface,
 	unsigned int color_comps;
 
 	imageData = (unsigned char *) CGBitmapContextGetData(surface->cgContext);
+
 #ifdef USE_10_3_WORKAROUNDS
 	bitinfo = CGBitmapContextGetAlphaInfo (surface->cgContext);
 #else
@@ -986,6 +992,11 @@ _cairo_quartz_surface_finish (void *abstract_surface)
     CGContextRelease (surface->cgContext);
 
     surface->cgContext = NULL;
+
+    if (surface->imageSurfaceEquiv) {
+	cairo_surface_destroy (surface->imageSurfaceEquiv);
+	surface->imageSurfaceEquiv = NULL;
+    }
 
     if (surface->imageData) {
 	free (surface->imageData);
@@ -1861,6 +1872,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
     surface->cgContextBaseCTM = CGContextGetCTM (cgContext);
 
     surface->imageData = NULL;
+    surface->imageSurfaceEquiv = NULL;
 
     return surface;
 }
@@ -2015,6 +2027,7 @@ cairo_quartz_surface_create (cairo_format_t format,
     }
 
     surf->imageData = imageData;
+    surf->imageSurfaceEquiv = cairo_image_surface_create_for_data (imageData, format, width, height, stride);
 
     return (cairo_surface_t *) surf;
 }
@@ -2140,5 +2153,16 @@ quartz_surface_to_png (cairo_quartz_surface_t *nq, char *dest)
 
     CGImageRelease(imgref);
 #endif
+}
+
+cairo_surface_t *
+cairo_quartz_surface_get_image (cairo_surface_t *surface)
+{
+    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t*)surface;
+
+    if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_QUARTZ)
+	return NULL;
+
+    return quartz->imageSurfaceEquiv;
 }
 
