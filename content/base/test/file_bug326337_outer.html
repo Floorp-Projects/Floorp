@@ -2,6 +2,7 @@
 <html>
 <body>
 <iframe id="inner" src="http://test1.example.com/tests/content/base/test/file_bug326337_inner.html"></iframe>
+<script>
 var t = setInterval(doCheck, 300);
 function doCheck() {
   if (location.hash) {
@@ -9,6 +10,6 @@ function doCheck() {
     window.opener.finishTest(location.hash);
   }
 }
-<script>
+</script>
 </body>
 </html>
