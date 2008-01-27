@@ -64,21 +64,9 @@
 .search-go-button {
   padding: 1px;
   list-style-image: url("chrome://browser/skin/Search-glass.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
 }
 
 .search-go-button[chromedir="rtl"] {
   list-style-image: url("chrome://browser/skin/Search-glass-rtl.png");
 }
 
-.search-go-button:hover {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-.search-go-button[disabled="true"] {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-
-.search-go-button:hover:active {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
-}
