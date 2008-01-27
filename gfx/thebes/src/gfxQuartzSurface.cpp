@@ -94,3 +94,23 @@ gfxQuartzSurface::~gfxQuartzSurface()
 {
     CGContextRelease(mCGContext);
 }
+
+already_AddRefed<gfxImageSurface>
+gfxQuartzSurface::GetImageSurface()
+{
+    if (!mSurfaceValid) {
+        NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
+        return nsnull;
+    }
+
+    NS_ASSERTION(CairoSurface() != nsnull, "CairoSurface() shouldn't be nsnull when mSurfaceValid is TRUE!");
+
+    cairo_surface_t *isurf = cairo_quartz_surface_get_image(CairoSurface());
+    if (!isurf)
+        return nsnull;
+
+    nsRefPtr<gfxASurface> asurf = gfxASurface::Wrap(isurf);
+    gfxImageSurface *imgsurf = (gfxImageSurface*) asurf.get();
+    NS_ADDREF(imgsurf);
+    return imgsurf;
+}
