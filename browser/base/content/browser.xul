@@ -470,6 +470,9 @@
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="statusbar-display" label="" flex="1"/>
+    <statusbarpanel id="download-monitor" class="statusbarpanel-iconic-text"
+                    tooltiptext="&downloadMonitor.tooltip;" hidden="true"
+                    ondblclick="doCommand();" command="Tools:Downloads"/>
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
