@@ -133,6 +133,7 @@ let DownloadUtils = {
       (aMaxBytes - aCurrBytes) / aSpeed : -1;
 
     // Update the bytes transferred and bytes total
+    let status;
     let (transfer = DownloadUtils.getTransferTotal(aCurrBytes, aMaxBytes)) {
       // Insert 1 is the download progress
       status = replaceInsert(gStr.statusFormat, 1, transfer);
