@@ -264,12 +264,12 @@ NS_IMETHODIMP nsGIFDecoder2::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   /* necko doesn't propagate the errors from ReadDataOut - take matters
      into our own hands.  if we have at least one frame of an animated
      gif, then return success so we keep displaying as much as possible. */
-  if (NS_SUCCEEDED(rv) && mGIFStruct.state == gif_error) {
+  if (mGIFStruct.state == gif_error || mGIFStruct.state == gif_oom) {
     PRUint32 numFrames = 0;
     if (mImageContainer)
       mImageContainer->GetNumFrames(&numFrames);
-    if (numFrames <= 0)
-      return NS_ERROR_FAILURE;
+    if (numFrames <= 1)
+      rv = NS_ERROR_FAILURE;
   }
 
   return rv;
@@ -605,13 +605,13 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
         *stackp++ = firstchar;
         code = oldcode;
 
-        if (stackp == stack + MAX_BITS)
+        if (stackp >= stack + MAX_BITS)
           return PR_FALSE;
       }
 
       while (code >= clear_code)
       {
-        if (code == prefix[code])
+        if ((code >= MAX_BITS) || (code == prefix[code]))
           return PR_FALSE;
 
         *stackp++ = suffix[code];
