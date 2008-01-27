@@ -105,7 +105,7 @@ var gBrowser = null;
 var gNavToolbox = null;
 var gSidebarCommand = "";
 var gInPrintPreviewMode = false;
-let gDownloadManager = null;
+let gDownloadMgr = null;
 
 // Global variable that holds the nsContextMenu instance.
 var gContextMenu = null;
@@ -1074,11 +1074,11 @@ function delayedStartup()
   // If the user manually opens the download manager before the timeout, the
   // downloads will start right away, and getting the service again won't hurt.
   setTimeout(function() {
-    gDownloadManager = Cc["@mozilla.org/download-manager;1"].
-                       getService(Ci.nsIDownloadManager);
+    gDownloadMgr = Cc["@mozilla.org/download-manager;1"].
+                   getService(Ci.nsIDownloadManager);
 
     // Initialize the downloads monitor panel listener
-    gDownloadManager.addListener(DownloadMonitorPanel);
+    gDownloadMgr.addListener(DownloadMonitorPanel);
     DownloadMonitorPanel.init();
   }, 10000);
 
@@ -6065,7 +6065,7 @@ let DownloadMonitorPanel = {
    * Update status based on the number of active and paused downloads
    */
   updateStatus: function DMP_updateStatus() {
-    let numActive = gDownloadManager.activeDownloadCount;
+    let numActive = gDownloadMgr.activeDownloadCount;
 
     // Hide the panel and reset the "last time" if there's no downloads
     if (numActive == 0) {
@@ -6078,17 +6078,17 @@ let DownloadMonitorPanel = {
     // Find the download with the longest remaining time
     let numPaused = 0;
     let maxTime = -Infinity;
-    let dls = gDownloadManager.activeDownloads;
+    let dls = gDownloadMgr.activeDownloads;
     while (dls.hasMoreElements()) {
       let dl = dls.getNext().QueryInterface(Ci.nsIDownload);
-      if (dl.state == gDownloadManager.DOWNLOAD_DOWNLOADING) {
+      if (dl.state == gDownloadMgr.DOWNLOAD_DOWNLOADING) {
         // Figure out if this download takes longer
         if (dl.speed > 0 && dl.size > 0)
           maxTime = Math.max(maxTime, (dl.size - dl.amountTransferred) / dl.speed);
         else
           maxTime = -1;
       }
-      else if (dl.state == gDownloadManager.DOWNLOAD_PAUSED)
+      else if (dl.state == gDownloadMgr.DOWNLOAD_PAUSED)
         numPaused++;
     }
 
