@@ -138,9 +138,12 @@ let PluralForm = {
 
       // Check for array out of bounds or empty strings
       if ((ret == undefined) || (ret == "")) {
+        // Report the caller to help figure out who is causing badness
+        let caller = this.get.caller ? this.get.caller.name : "top";
+
         // Display a message in the error console
         log(["Index #", index, " of '", aWords, "' for value ", aNum,
-            " is invalid -- plural rule #", ruleNum]);
+            " is invalid -- plural rule #", ruleNum, "; called by ", caller]);
 
         // Default to the first entry (which might be empty, but not undefined)
         ret = words[0];
