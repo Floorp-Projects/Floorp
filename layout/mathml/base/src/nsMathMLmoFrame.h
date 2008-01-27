@@ -103,8 +103,7 @@ protected:
   float            mMaxSize;
 
   // overload the base method so that we can setup our nsMathMLChar
-  virtual void
-  ProcessTextData(PRBool aComputeStyleChange);
+  virtual void ProcessTextData();
 
   // helper to get our 'form' and lookup in the Operator Dictionary to fetch 
   // our default data that may come from there, and to complete the setup
