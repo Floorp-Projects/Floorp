@@ -1963,7 +1963,7 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
           // For simplicity, any pressed attribute indicates it's a toggle button
           *aRole = nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
         }
-        else if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::aria_secret,
+        else if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::aria_haspopup,
                                       nsAccessibilityAtoms::_true, eCaseMatters)) {
           // For button with aria-haspopup="true"
           *aRole = nsIAccessibleRole::ROLE_BUTTONMENU;
