@@ -450,7 +450,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
     extent = gfx->UserToDevice(extent);
   } else {
     gfx->IdentityMatrix();
-    extent = gfx->GetUserFillExtent();
+    extent = gfx->GetUserPathExtent();
   }
 
   mRect = nsSVGUtils::ToBoundingPixelRect(extent);
@@ -520,7 +520,7 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
 
   LoopCharacters(gfx, text, cp, STROKE);
   gfx->IdentityMatrix();
-  gfxRect rect = gfx->GetUserFillExtent();
+  gfxRect rect = gfx->GetUserPathExtent();
 
   return NS_NewSVGRect(_retval, rect);
 }
@@ -889,7 +889,7 @@ nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 
     gfx->IdentityMatrix();
 
-    gfxRect rect = gfx->GetUserFillExtent();
+    gfxRect rect = gfx->GetUserPathExtent();
 
     gfx->SetMatrix(matrix);
 
