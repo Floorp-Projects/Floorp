@@ -189,17 +189,14 @@ sub main {
   }
 
   my $manifest = initializeProfile($app, $do_browser_chrome);
-  my $serverPid;
-  if (!$do_browser_chrome) {
-    $serverPid = startServer($close_when_done);
-  
-    # If we're lucky, the server has fully started by now, and all paths are
-    # ready, etc.  However, xpcshell cold start times suck, at least for debug
-    # builds.  We'll try to connect to the server for 30 seconds or until we
-    # succeed, whichever is first.  If we succeed, then we continue with
-    # execution.  If we fail, we try to kill the server and exit with an error.
-    wait_for_server_startup($serverPid, SERVER_STARTUP_TIMEOUT);
-  }
+  my $serverPid = startServer($close_when_done);
+
+  # If we're lucky, the server has fully started by now, and all paths are
+  # ready, etc.  However, xpcshell cold start times suck, at least for debug
+  # builds.  We'll try to connect to the server for 30 seconds or until we
+  # succeed, whichever is first.  If we succeed, then we continue with
+  # execution.  If we fail, we try to kill the server and exit with an error.
+  wait_for_server_startup($serverPid, SERVER_STARTUP_TIMEOUT);
 
   my $url;
   if ($do_chrome) {
@@ -234,9 +231,7 @@ sub main {
   
   my $test_start = runTests($url, \%browser_env, \%browser_args);
 
-  if (!$do_browser_chrome) {
-    shutdownServer($serverPid);
-  }
+  shutdownServer($serverPid);
 
   # print test run times
   my $test_finish = localtime();
