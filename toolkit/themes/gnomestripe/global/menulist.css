@@ -68,7 +68,18 @@ menulist {
   display: none;
 }
 
-menulist[disabled="true"] {
+menulist:hover {
+  color: -moz-buttonhovertext;
+}
+
+menulist:hover:active,
+menulist[open="true"] {
+  color: ButtonText;
+}
+
+menulist[disabled="true"],
+menulist[disabled="true"]:hover,
+menulist[disabled="true"]:hover:active {
   color: GrayText;
 }
 
@@ -120,6 +131,10 @@ html|*.menulist-editable-input {
   background-color: ThreeDFace;
   color: ButtonText;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.menulist-compact:hover {
+  color: ButtonText;
 }
 
 .menulist-compact > .menulist-label-box > .menulist-label {
