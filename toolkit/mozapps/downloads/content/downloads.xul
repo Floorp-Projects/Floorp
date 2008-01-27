@@ -123,8 +123,8 @@
               cmd="cmd_open"/>
     <menuitem id="menuitem_show"
 #ifdef XP_MACOSX
-              label="&cmd.show.labelMac;"
-              accesskey="&cmd.show.accesskeyMac;"
+              label="&cmd.showMac.label;"
+              accesskey="&cmd.showMac.accesskey;"
 #else
               label="&cmd.show.label;"
               accesskey="&cmd.show.accesskey;"
