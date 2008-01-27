@@ -4537,13 +4537,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
         } else {
             op = JSOP_POP;
-            if (!pn2->pn_kid1) {
+            pn3 = pn2->pn_kid1;
+            if (!pn3) {
                 /* No initializer: emit an annotated nop for the decompiler. */
                 op = JSOP_NOP;
             } else {
                 cg->treeContext.flags |= TCF_IN_FOR_INIT;
 #if JS_HAS_DESTRUCTURING
-                pn3 = pn2->pn_kid1;
                 if (pn3->pn_type == TOK_ASSIGN &&
                     !MaybeEmitGroupAssignment(cx, cg, op, pn3, &op)) {
                     return JS_FALSE;
