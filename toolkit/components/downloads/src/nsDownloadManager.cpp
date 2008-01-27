@@ -1767,6 +1767,7 @@ nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTE
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
                            mResumedAt(-1),
                            mSpeed(0),
+                           mHasMultipleFiles(PR_FALSE),
                            mAutoResume(DONT_RESUME)
 {
 }
@@ -2009,6 +2010,10 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   mDownloadManager->NotifyListenersOnProgressChange(
     aWebProgress, aRequest, currBytes, maxBytes, currBytes, maxBytes, this);
 
+  // If the maximums are different, then there must be more than one file
+  if (aMaxSelfProgress != aMaxTotalProgress)
+    mHasMultipleFiles = PR_TRUE;
+
   return NS_OK;
 }
 
@@ -2064,10 +2069,9 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
   // We don't want to lose access to our member variables
   nsRefPtr<nsDownload> kungFuDeathGrip = this;
 
-  // We need to update mDownloadState before updating the dialog, because
-  // that will close and call CancelDownload if it was the last open window.
-
-  if (aStateFlags & STATE_START) {
+  // Check if we're starting a request; the NETWORK flag is necessary to not
+  // pick up the START of *each* file but only for the whole request
+  if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_NETWORK)) {
     nsresult rv;
     nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
     if (NS_SUCCEEDED(rv)) {
@@ -2082,17 +2086,21 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
         (void)SetState(nsIDownloadManager::DOWNLOAD_BLOCKED);
       }
     }
-  } else if ((aStateFlags & STATE_STOP) && IsFinishable()) {
+  } else if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK) &&
+             IsFinishable()) {
+    // We got both STOP and NETWORK so that means the whole request is done
+    // (and not just a single file if there are multiple files) 
     if (NS_SUCCEEDED(aStatus)) {
       // We can't completely trust the bytes we've added up because we might be
       // missing on some/all of the progress updates (especially from cache).
-      // Our best bet is the file itself, but if for some reason it's gone, the
-      // next best is what we've calculated.
+      // Our best bet is the file itself, but if for some reason it's gone or
+      // if we have multiple files, the next best is what we've calculated.
       PRInt64 fileSize;
       nsCOMPtr<nsILocalFile> file;
       //  We need a nsIFile clone to deal with file size caching issues. :(
       nsCOMPtr<nsIFile> clone;
-      if (NS_SUCCEEDED(GetTargetFile(getter_AddRefs(file))) &&
+      if (!mHasMultipleFiles &&
+          NS_SUCCEEDED(GetTargetFile(getter_AddRefs(file))) &&
           NS_SUCCEEDED(file->Clone(getter_AddRefs(clone))) &&
           NS_SUCCEEDED(clone->GetFileSize(&fileSize)) && fileSize > 0) {
         mCurrBytes = mMaxBytes = fileSize;
