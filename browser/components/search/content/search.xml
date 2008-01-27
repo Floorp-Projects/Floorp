@@ -92,8 +92,7 @@
             <xul:menuitem class="open-engine-manager"
                           anonid="open-engine-manager"
                           label="&cmd_engineManager.label;"
-                          oncommand="openManager(event);"
-                          accesskey="&cmd_engineManager.accesskey;"/>
+                          oncommand="openManager(event);"/>
           </xul:menupopup>
         </xul:button>
         <xul:hbox class="search-go-container">
