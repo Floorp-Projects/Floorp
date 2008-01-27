@@ -90,12 +90,6 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
 
 .new-dir-button {
   list-style-image: url("chrome://global/skin/Filepicker.png");
-  -moz-image-region: rect(0px 72px 24px 48px);
   max-width: 36px;
 }
 
-.new-dir-button:hover {
-  list-style-image: url("chrome://global/skin/Filepicker.png");
-  -moz-image-region: rect(24px 72px 48px 48px);
-  max-width: 36px;
-}
