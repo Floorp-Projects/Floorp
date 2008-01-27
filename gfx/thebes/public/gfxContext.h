@@ -538,6 +538,7 @@ public:
     /**
      ** Extents - returns user space extent of current path
      **/
+    gfxRect GetUserPathExtent();
     gfxRect GetUserFillExtent();
     gfxRect GetUserStrokeExtent();
 

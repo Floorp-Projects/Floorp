@@ -440,7 +440,7 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
     }
   } else {
     context.IdentityMatrix();
-    extent = context.GetUserFillExtent();
+    extent = context.GetUserPathExtent();
     if (!IsDegeneratePath(extent)) {
       mRect = nsSVGUtils::ToBoundingPixelRect(extent);
     }
@@ -522,14 +522,7 @@ nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
   GeneratePath(&context);
   context.IdentityMatrix();
 
-  gfxRect extent = context.GetUserFillExtent();
-
-  if (IsDegeneratePath(extent)) {
-    context.SetLineWidth(0);
-    extent = context.GetUserStrokeExtent();
-  }
-
-  return NS_NewSVGRect(_retval, extent);
+  return NS_NewSVGRect(_retval, context.GetUserPathExtent());
 }
 
 //----------------------------------------------------------------------

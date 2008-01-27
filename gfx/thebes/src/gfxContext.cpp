@@ -741,6 +741,14 @@ gfxContext::PointInStroke(const gfxPoint& pt)
 }
 
 gfxRect
+gfxContext::GetUserPathExtent()
+{
+    double xmin, ymin, xmax, ymax;
+    cairo_path_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
+    return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
+}
+
+gfxRect
 gfxContext::GetUserFillExtent()
 {
     double xmin, ymin, xmax, ymax;
