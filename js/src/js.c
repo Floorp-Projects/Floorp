@@ -2447,7 +2447,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ok = JS_FALSE;
             goto out;
         }
-        v = BOOLEAN_TO_JSVAL(v);
+        v = BOOLEAN_TO_JSVAL(lazy);
         ok = JS_SetProperty(cx, sobj, "lazy", &v);
         if (!ok)
             goto out;
