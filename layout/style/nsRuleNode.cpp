@@ -1969,12 +1969,15 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
 
   double scriptLevelScale =
     pow(aParentFont->mScriptSizeMultiplier, scriptLevelChange);
-  // Compute the size we would have had if minscriptsize had never been applied
+  // Compute the size we would have had if minscriptsize had never been
+  // applied, also prevent overflow (bug 413274)
   *aUnconstrainedSize =
-    NSToCoordRound(aParentFont->mScriptUnconstrainedSize*scriptLevelScale);
+    NSToCoordRound(PR_MIN(aParentFont->mScriptUnconstrainedSize*scriptLevelScale,
+                          nscoord_MAX));
   // Compute the size we could get via scriptlevel change
   nscoord scriptLevelSize =
-    NSToCoordRound(aParentFont->mSize*scriptLevelScale);
+    NSToCoordRound(PR_MIN(aParentFont->mSize*scriptLevelScale,
+                          nscoord_MAX));
   if (scriptLevelScale <= 1.0) {
     if (aParentFont->mSize <= minScriptSize) {
       // We can't decrease the font size at all, so just stick to no change
