@@ -517,7 +517,7 @@
             if (PlacesUtils.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
-              folderId = PlacesUtils.getConcreteItemId(selectedNode);
+              folderId = PlacesUtils.getConcreteItemId(this.selectedNode);
             } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
