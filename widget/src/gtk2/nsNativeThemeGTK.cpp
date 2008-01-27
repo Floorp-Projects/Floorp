@@ -330,7 +330,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
             aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON ||
             aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN ||
-            aWidgetType == NS_THEME_DROPDOWN) {
+            aWidgetType == NS_THEME_DROPDOWN ||
+            aWidgetType == NS_THEME_DROPDOWN_BUTTON) {
           if (aWidgetType == NS_THEME_TOOLBAR_BUTTON_DROPDOWN)
             aFrame = aFrame->GetParent();
 
