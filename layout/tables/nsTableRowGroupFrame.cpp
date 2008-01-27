@@ -1051,6 +1051,10 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
   PRBool isTopOfPage = aReflowState.mFlags.mIsTopOfPage;
   nsTableRowFrame* firstRowThisPage = GetFirstRow();
 
+  // Need to dirty the table's geometry, or else the row might skip
+  // reflowing its cell as an optimization.
+  aTableFrame->SetGeometryDirty();
+
   // Walk each of the row frames looking for the first row frame that doesn't fit 
   // in the available space
   for (nsTableRowFrame* rowFrame = firstRowThisPage; rowFrame; rowFrame = rowFrame->GetNextRow()) {
