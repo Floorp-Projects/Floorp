@@ -1283,3 +1283,12 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #checkForUpdates[loading="true"] {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }
+
+#download-monitor {
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
+}
+
+#download-monitor image {
+  height: 16px;
+  width: 16px;
+}
