@@ -1302,13 +1302,15 @@ function ctrlNumberTabSelection(event)
   }
 
 #ifdef XP_MACOSX
-  if (!event.metaKey)
+  // Mac: Cmd+number
+  if (!event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
 #else
 #ifdef XP_UNIX
-  // don't let tab selection clash with numeric accesskeys (bug 366084)
-  if (!event.altKey || event.shiftKey)
+  // Linux: Alt+number
+  if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)
 #else
-  if (!event.ctrlKey)
+  // Windows: Ctrl+number
+  if (!event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)
 #endif
 #endif
     return;
