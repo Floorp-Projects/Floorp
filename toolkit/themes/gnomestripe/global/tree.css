@@ -239,6 +239,11 @@ treecolpicker {
   padding: 0px 2px;
 }
 
+treecol:hover,
+treecolpicker:hover {
+  color: -moz-buttonhovertext;
+}
+
 .treecol-image {
   padding: 0px 1px;
 }
@@ -257,6 +262,7 @@ treecol[hideheader="true"] {
 
 treecol:hover:active,
 treecolpicker:hover:active {
+  color: ButtonText;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
   -moz-border-right-colors: ThreeDShadow transparent;
