@@ -158,37 +158,32 @@ nsSVGInnerSVGFrame::GetType() const
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 {
-  nsresult rv = NS_OK;
-
-  gfxContext *gfx = aContext->GetGfxContext();
-
-  gfx->Save();
+  gfxContextAutoSaveRestore autoSR;
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
+    float x, y, width, height;
+    static_cast<nsSVGSVGElement*>(mContent)->
+      GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
+    if (width <= 0 || height <= 0) {
+      return NS_OK;
+    }
+
     nsCOMPtr<nsIDOMSVGMatrix> clipTransform;
     if (!mPropagateTransform) {
       NS_NewSVGMatrix(getter_AddRefs(clipTransform));
     } else {
-      nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>
-                                               (mParent);
-      clipTransform = parent->GetCanvasTM();
+      clipTransform = static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();
     }
 
     if (clipTransform) {
-      nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(mContent);
-
-      float x, y, width, height;
-      svg->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-
+      gfxContext *gfx = aContext->GetGfxContext();
+      autoSR.SetContext(gfx);
       nsSVGUtils::SetClipRect(gfx, clipTransform, x, y, width, height);
     }
   }
 
-  rv = nsSVGInnerSVGFrameBase::PaintSVG(aContext, aDirtyRect);
-
-  gfx->Restore();
-
-  return rv;
+  return nsSVGInnerSVGFrameBase::PaintSVG(aContext, aDirtyRect);
 }
 
 void
