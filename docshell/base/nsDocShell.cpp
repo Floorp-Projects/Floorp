@@ -1905,37 +1905,35 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     // XXXbz should we care if aAccessingItem or the document therein is
     // chrome?  Should those get extra privileges?
 
-    // Now do a security check
-    // Bug 13871: Prevent frameset spoofing
-    //     See BugSplat 336170, 338737 and XP_FindNamedContextInList in
-    //     the classic codebase
-    //     Nav's behaviour was:
-    //         - pref controlled: "browser.frame.validate_origin" 
-    //           (gValidateOrigin)
-    //         - allow load if host of target or target's parent is same
-    //           as host of origin
-    //         - allow load if target is a top level window
-    
-    //     We are going to be a little more restrictive, with the
-    //     following algorithm:
-    //         - pref controlled in the same way
-    //         - allow access if the two treeitems are in the same tree
-    //         - allow access if the aTargetItem or one of its ancestors
-    //           has the same origin as aAccessingItem
-    //         - allow access if the target is a toplevel window and we can
-    //           access its opener.  Note that we only allow one level of
-    //           recursion there.
+    // For historical context, see:
+    // 
+    // Bug 13871:  Prevent frameset spoofing
+    // Bug 103638: Targets with same name in different windows open in wrong
+    //             window with javascript
 
-    nsCOMPtr<nsIDocShellTreeItem> targetRoot;
-    aTargetItem->GetSameTypeRootTreeItem(getter_AddRefs(targetRoot));
+    // Now do a security check
+    //
+    // Allow navigation if
+    //  1) aAccessingItem can script aTargetItem or one of its ancestors in
+    //     the frame hierarchy or
+    //  2) aTargetItem is a top-level frame and aAccessingItem is its descendant
+    //  3) aTargetItem is a top-level frame and aAccessingItem can target
+    //     its opener per rule (1) or (2).
+
+    if (aTargetItem == aAccessingItem) {
+        // A frame is allowed to navigate itself.
+        return PR_TRUE;  
+    }
 
     nsCOMPtr<nsIDocShellTreeItem> accessingRoot;
     aAccessingItem->GetSameTypeRootTreeItem(getter_AddRefs(accessingRoot));
 
-    if (targetRoot == accessingRoot) {
+    if (aTargetItem == accessingRoot) {
+        // A frame can navigate its root.
         return PR_TRUE;
     }
 
+    // Check if aAccessingItem can navigate one of aTargetItem's ancestors.
     nsCOMPtr<nsIDocShellTreeItem> target = aTargetItem;
     do {
         if (ValidateOrigin(aAccessingItem, target)) {
@@ -1946,6 +1944,9 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
         target->GetSameTypeParent(getter_AddRefs(parent));
         parent.swap(target);
     } while (target);
+
+    nsCOMPtr<nsIDocShellTreeItem> targetRoot;
+    aTargetItem->GetSameTypeRootTreeItem(getter_AddRefs(targetRoot));
 
     if (aTargetItem != targetRoot) {
         // target is a subframe, not in accessor's frame hierarchy, and all its
@@ -6418,50 +6419,6 @@ nsDocShell::CheckLoadingPermissions()
         item->GetSameTypeParent(getter_AddRefs(tmp));
         item.swap(tmp);
     } while (item);
-
-    // The caller is not from the same origin as this item, or any if
-    // this items ancestors. Only permit loading content if both are
-    // part of the same window, assuming we can find the window of the
-    // caller.
-
-    nsCOMPtr<nsIJSContextStack> stack =
-        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-    if (!stack) {
-        // No context stack available. Should never happen, but in
-        // case it does, return the sameOrigin error from the security
-        // check above.
-
-        return sameOrigin;
-    }
-
-    JSContext *cx = nsnull;
-    stack->Peek(&cx);
-
-    if (!cx) {
-        // No caller docshell reachable, return the sameOrigin error
-        // from the security check above.
-
-        return sameOrigin;
-    }
-
-    nsIScriptContext *currentCX = GetScriptContextFromJSContext(cx);
-    nsCOMPtr<nsIDocShellTreeItem> callerTreeItem;
-    nsCOMPtr<nsPIDOMWindow> win;
-    if (currentCX &&
-        (win = do_QueryInterface(currentCX->GetGlobalObject())) &&
-        (callerTreeItem = do_QueryInterface(win->GetDocShell()))) {
-        nsCOMPtr<nsIDocShellTreeItem> callerRoot;
-        callerTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(callerRoot));
-
-        nsCOMPtr<nsIDocShellTreeItem> ourRoot;
-        GetSameTypeRootTreeItem(getter_AddRefs(ourRoot));
-
-        if (ourRoot == callerRoot) {
-            // The running JS is in the same window as the target
-            // frame, permit load.
-            sameOrigin = NS_OK;
-        }
-    }
 
     return sameOrigin;
 }
