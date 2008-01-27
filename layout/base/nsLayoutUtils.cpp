@@ -80,6 +80,19 @@
  * A namespace class for static layout utilities.
  */
 
+
+nsIFrame*
+nsLayoutUtils::GetLastContinuationWithChild(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "NULL frame pointer");
+  aFrame = aFrame->GetLastContinuation();
+  while (!aFrame->GetFirstChild(nsnull) &&
+         aFrame->GetPrevContinuation()) {
+    aFrame = aFrame->GetPrevContinuation();
+  }
+  return aFrame;
+}
+
 /**
  * GetFirstChildFrame returns the first "real" child frame of a
  * given frame.  It will descend down into pseudo-frames (unless the
@@ -121,11 +134,11 @@ GetLastChildFrame(nsIFrame*       aFrame,
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
-  // Get the last continuation frame
-  nsIFrame* lastContinuation = aFrame->GetLastContinuation();
+  // Get the last continuation frame that's a parent
+  nsIFrame* lastParentContinuation = nsLayoutUtils::GetLastContinuationWithChild(aFrame);
 
   // Get the last child frame
-  nsIFrame* firstChildFrame = lastContinuation->GetFirstChild(nsnull);
+  nsIFrame* firstChildFrame = lastParentContinuation->GetFirstChild(nsnull);
   if (firstChildFrame) {
     nsFrameList frameList(firstChildFrame);
     nsIFrame*   lastChildFrame = frameList.LastChild();
