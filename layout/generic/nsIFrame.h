@@ -1058,7 +1058,14 @@ public:
   virtual nsIFrame* GetLastContinuation() const {
     return const_cast<nsIFrame*>(this);
   }
-  
+
+  /**
+   * GetTailContinuation gets the last non-overflow-container continuation
+   * in the continuation chain, i.e. where the next sibling element
+   * should attach).
+   */
+  nsIFrame* GetTailContinuation();
+
   /**
    * Flow member functions
    */
