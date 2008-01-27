@@ -95,6 +95,8 @@
 
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
 
+/* static */ gfxPangoFontCache* gfxPangoFontCache::sPangoFontCache = nsnull;
+
 /**
  ** gfxPangoFontGroup
  **/
@@ -248,6 +250,8 @@ gfxPangoFont::~gfxPangoFont()
 /* static */ void
 gfxPangoFont::Shutdown()
 {
+    gfxPangoFontCache::Shutdown();
+
     // This just cleans up memory used by Pango's caches and may cause an
     // assert and crash in cairo (Bug 399556), so only do this when we care
     // about cleaning up memory on shutdown.
@@ -403,6 +407,22 @@ gfxPangoFont::GetOrMakeFont(PangoFont *aPangoFont)
     return font;
 }
 
+static PangoFont*
+LoadPangoFont(PangoContext *aPangoCtx, const PangoFontDescription *aPangoFontDesc)
+{
+    gfxPangoFontCache *cache = gfxPangoFontCache::GetPangoFontCache();
+    if (!cache)
+        return nsnull; // Error
+    PangoFont* pangoFont = cache->Get(aPangoFontDesc);
+    if (!pangoFont) {
+        pangoFont = pango_context_load_font(aPangoCtx, aPangoFontDesc);
+        if (pangoFont) {
+            cache->Put(aPangoFontDesc, pangoFont);
+        }
+    }
+    return pangoFont;
+}
+
 void
 gfxPangoFont::RealizePangoFont()
 {
@@ -421,7 +441,7 @@ gfxPangoFont::RealizePangoFont()
             pango_context_set_language(pangoCtx, lang);
     }
 
-    mPangoFont = pango_context_load_font(pangoCtx, pangoFontDesc);
+    mPangoFont = LoadPangoFont(pangoCtx, pangoFontDesc);
 
     gfxFloat size = GetStyle()->size;
     // Checking mPangoFont to avoid infinite recursion through GetCharSize
@@ -436,7 +456,7 @@ gfxPangoFont::RealizePangoFont()
             pango_font_description_set_absolute_size(pangoFontDesc,
                                                      size * PANGO_SCALE);
             g_object_unref(mPangoFont);
-            mPangoFont = pango_context_load_font(pangoCtx, pangoFontDesc);
+            mPangoFont = LoadPangoFont(pangoCtx, pangoFontDesc);
         }
     }
 
@@ -1553,3 +1573,36 @@ static const MozPangoLangGroup PangoAllLangGroup[] = {
 };
 
 #define NUM_PANGO_ALL_LANG_GROUPS (G_N_ELEMENTS (PangoAllLangGroup))
+
+gfxPangoFontCache::gfxPangoFontCache()
+{
+    mPangoFonts.Init(500);
+}
+
+gfxPangoFontCache::~gfxPangoFontCache()
+{
+}
+
+void
+gfxPangoFontCache::Put(const PangoFontDescription *aFontDesc, PangoFont *aPangoFont)
+{
+    if (mPangoFonts.Count() > 5000)
+        mPangoFonts.Clear();
+    PRUint32 key = pango_font_description_hash(aFontDesc);
+    gfxPangoFontWrapper *value = new gfxPangoFontWrapper(aPangoFont);
+    if (!value)
+        return;
+    mPangoFonts.Put(key, value);
+}
+
+PangoFont*
+gfxPangoFontCache::Get(const PangoFontDescription *aFontDesc)
+{
+    PRUint32 key = pango_font_description_hash(aFontDesc);
+    gfxPangoFontWrapper *value;
+    if (!mPangoFonts.Get(key, &value))
+        return nsnull;
+    PangoFont *font = value->Get();
+    g_object_ref(font);
+    return font;
+}
