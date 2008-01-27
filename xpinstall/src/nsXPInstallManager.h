@@ -112,7 +112,7 @@ class nsXPInstallManager : public nsIXPIListener,
     private:
         nsresult    InitManagerInternal();
         NS_IMETHOD  DownloadNext();
-        void        Shutdown();
+        void        Shutdown(PRInt32 status = nsInstall::USER_CANCELLED);
         NS_IMETHOD  GetDestinationFile(nsString& url, nsILocalFile* *file);
         NS_IMETHOD  LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, nsIDialogParamBlock** aParams);
 #ifdef ENABLE_SKIN_SIMPLE_INSTALLATION_UI
