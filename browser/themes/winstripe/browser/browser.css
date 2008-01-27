@@ -1702,3 +1702,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
     min-width: 280px;
     padding: 10px;
 }
+
+#download-monitor {
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
+}
+
+#download-monitor image {
+  height: 16px;
+  width: 16px;
+}
