@@ -54,9 +54,6 @@
 // anything other than simple Latin work though!
 //#define ENABLE_FAST_PATH_ALWAYS
 
-#include "nsDataHashtable.h"
-#include "nsClassHashtable.h"
-
 class gfxPangoTextRun;
 
 class gfxPangoFont : public gfxFont {
@@ -157,45 +154,6 @@ protected:
     static PRBool FontCallback (const nsAString& fontName,
                                 const nsACString& genericName,
                                 void *closure);
-};
-
-class gfxPangoFontWrapper {
-public:
-    gfxPangoFontWrapper(PangoFont *aFont) {
-        mFont = aFont;
-        g_object_ref(mFont);
-    }
-    ~gfxPangoFontWrapper() {
-        if (mFont)
-            g_object_unref(mFont);
-    }
-    PangoFont* Get() { return mFont; }
-private:
-    PangoFont *mFont;
-};
-
-class gfxPangoFontCache
-{
-public:
-    gfxPangoFontCache();
-    ~gfxPangoFontCache();
-
-    static gfxPangoFontCache* GetPangoFontCache() {
-        if (!sPangoFontCache)
-            sPangoFontCache = new gfxPangoFontCache();
-        return sPangoFontCache;
-    }
-    static void Shutdown() {
-        if (sPangoFontCache)
-            delete sPangoFontCache;
-        sPangoFontCache = nsnull;
-    }
-
-    void Put(const PangoFontDescription *aFontDesc, PangoFont *aPangoFont);
-    PangoFont* Get(const PangoFontDescription *aFontDesc);
-private:
-    static gfxPangoFontCache *sPangoFontCache;
-    nsClassHashtable<nsUint32HashKey,  gfxPangoFontWrapper> mPangoFonts;
 };
 
 #endif /* GFX_PANGOFONTS_H */
