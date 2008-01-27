@@ -111,6 +111,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_CrossSiteXHR_pass3.xml \
 		test_bug326337.html \
 		file_bug326337_inner.html \
+		file_bug326337_outer.html \
 		file_bug326337.xml \
 		file_bug326337_multipart.txt \
 		file_bug326337_multipart.txt^headers^ \
