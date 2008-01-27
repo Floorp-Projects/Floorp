@@ -84,7 +84,15 @@ function findInsertionPoint(reports, date) {
 function populateReportList() {
   var prefService = Cc["@mozilla.org/preferences-service;1"].
                     getService(Ci.nsIPrefBranch);
-  var reportURL = prefService.getCharPref("breakpad.reportURL");
+
+  try {
+    var reportURL = prefService.getCharPref("breakpad.reportURL");
+  }
+  catch (e) {
+    document.getElementById("reportList").style.display = "none";
+    document.getElementById("noConfig").style.display = "block";
+    return;
+  }
   var directoryService = Cc["@mozilla.org/file/directory_service;1"].
                          getService(Ci.nsIProperties);
 
@@ -202,5 +210,6 @@ function clearReports() {
   </table>
 </div>
 <p id="noReports" style="display: none">&noReports.label;</p>
+<p id="noConfig" style="display: none">&noConfig.label;</p>
 </body>
 </html>
