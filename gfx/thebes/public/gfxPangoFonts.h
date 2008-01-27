@@ -64,15 +64,17 @@ public:
     gfxPangoFont (const nsAString& aName,
                   const gfxFontStyle *aFontStyle);
     virtual ~gfxPangoFont ();
+    static already_AddRefed<gfxPangoFont> GetOrMakeFont(PangoFont *aPangoFont);
 
     static void Shutdown();
 
     virtual const gfxFont::Metrics& GetMetrics();
 
-    void GetMozLang(nsACString &aMozLang);
-    void GetActualFontFamily(nsACString &aFamily);
-
     PangoFont *GetPangoFont() { if (!mPangoFont) RealizePangoFont(); return mPangoFont; }
+
+    // Check GetStyle()->sizeAdjust != 0.0 before calling this 
+    gfxFloat GetAdjustedSize() { if (!mPangoFont) RealizePangoFont(); return mAdjustedSize; }
+
     PRUint32 GetGlyph(const PRUint32 aChar);
 
     virtual nsString GetUniqueName();
@@ -94,14 +96,14 @@ protected:
     Metrics  mMetrics;
     gfxFloat mAdjustedSize;
 
+    gfxPangoFont(PangoFont *aPangoFont, const nsAString &aName,
+                 const gfxFontStyle *aFontStyle);
     void RealizePangoFont();
     void GetCharSize(const char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
                      PRUint32 *aGlyphID = nsnull);
 
     virtual PRBool SetupCairoFont(gfxContext *aContext);
 };
-
-class FontSelector;
 
 class THEBES_API gfxPangoFontGroup : public gfxFontGroup {
 public:
@@ -122,8 +124,6 @@ public:
     }
 
 protected:
-    friend class FontSelector;
-
     // ****** Textrun glyph conversion helpers ******
 
     /**
