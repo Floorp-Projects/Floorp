@@ -29,6 +29,7 @@
 #  define BITMAP_BIT_ORDER LSBFirst
 #endif
 
+#undef DEBUG
 #define DEBUG 0
 
 #if defined (__GNUC__)
@@ -41,16 +42,25 @@
 
 #ifndef INT16_MIN
 # define INT16_MIN              (-32767-1)
+#endif
+
+#ifndef INT16_MAX
 # define INT16_MAX              (32767)
 #endif
 
 #ifndef INT32_MIN
 # define INT32_MIN              (-2147483647-1)
+#endif
+
+#ifndef INT32_MAX
 # define INT32_MAX              (2147483647)
 #endif
 
 #ifndef UINT32_MIN
 # define UINT32_MIN             (0)
+#endif
+
+#ifndef UINT32_MAX
 # define UINT32_MAX             (4294967295U)
 #endif
 
