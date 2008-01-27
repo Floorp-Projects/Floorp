@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="text/javascript" src="NavigationUtils.js"></script>        
+    <style type="text/css">
+      iframe { width: 90%; height: 50px; }
+    </style>
+<script>
+window.onload = function () {
+  //navigateByLocation(window0);  // Don't have a handle to the window.
+  navigateByOpen("window1");
+  navigateByForm("window2");
+  navigateByHyperlink("window3");
+}
+
+xpcWaitForFinishedFrames(function() {
+  is(xpcGetFramesByName("window1").length, 2, "Should not be able to navigate popup's popup by calling window.open.");
+  is(xpcGetFramesByName("window2").length, 2, "Should not be able to navigate popup's popup by submitting form.");
+  is(xpcGetFramesByName("window3").length, 2, "Should not be able to navigate popup's popup by targeted hyperlink.");
+
+  //opener0.close();
+  opener1.close();
+  opener2.close();
+  opener3.close();
+
+  xpcCleanupWindows();
+  SimpleTest.finish();
+}, 3);
+
+//opener0 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window0", "_blank", "width=10,height=10");
+opener1 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window1", "_blank", "width=10,height=10");
+opener2 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window2", "_blank", "width=10,height=10");
+opener3 = window.open("http://test1.example.org:80/tests/docshell/test/navigation/open.html#window3", "_blank", "width=10,height=10");
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=408052">Mozilla Bug 408052</a>
+<pre id="test">
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
