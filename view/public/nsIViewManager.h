@@ -381,7 +381,7 @@ public:
     }
 
   private:
-    UpdateViewBatch(const UpdateViewBatch& aOther) : mRootVM(aOther.mRootVM);
+    UpdateViewBatch(const UpdateViewBatch& aOther);
     const UpdateViewBatch& operator=(const UpdateViewBatch& aOther);
 
     nsCOMPtr<nsIViewManager> mRootVM;
