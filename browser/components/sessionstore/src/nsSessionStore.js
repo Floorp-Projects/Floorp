@@ -865,8 +865,6 @@ SessionStoreService.prototype = {
       tabData.index = 1;
     }
     
-    tabData.zoom = browser.markupDocumentViewer.textZoom;
-    
     var disallow = [];
     for (var i = 0; i < CAPABILITIES.length; i++)
       if (!browser.docShell["allow" + CAPABILITIES[i]])
@@ -1501,8 +1499,6 @@ SessionStoreService.prototype = {
     if (tabData.extData) {
       tab.__SS_extdata = tabData.extData;
     }
-    
-    browser.markupDocumentViewer.textZoom = parseFloat(tabData.zoom || 1);
     
     for (var i = 0; i < tabData.entries.length; i++) {
       history.addEntry(this._deserializeHistoryEntry(tabData.entries[i], aIdMap), true);
