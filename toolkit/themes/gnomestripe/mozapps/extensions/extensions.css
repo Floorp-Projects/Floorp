@@ -274,29 +274,22 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 
 /* View buttons */
 .viewSelector {
-  border-bottom: 2px groove ThreeDFace;
-  margin: 0px;
-  -moz-padding-start: 10px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  -moz-appearance: listbox;
+  margin: 8px 8px 0 8px;
+  padding: 0;
 }
 
 #viewGroup radio {
   -moz-appearance: none;
-  margin: 0px 1px 0px 1px;
-  padding: 1px 3px 1px 3px;
   min-width: 4.5em;
+  margin: 0;
+  padding: 3px;
   list-style-image: url("chrome://mozapps/skin/extensions/viewButtons.png");
 }
 
-#viewGroup radio:hover {
-  background-color: #E0E8F6;
-  color: black;
-}
-
 #viewGroup radio[selected="true"] {
-  background-color: #C1D2EE;
-  color: black;
+  background-color: Highlight;
+  color: HighlightText; 
 }
 
 .viewButtonIcon {
