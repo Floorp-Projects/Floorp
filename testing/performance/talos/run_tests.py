@@ -65,7 +65,7 @@ import ttest
 
 def shortNames(name):
   if name == "tp_loadtime":
-    return "tp_l"
+    return "tp"
   elif name == "tp_js_loadtime":
     return "tp_js_l"
   elif name == "tp_Percent Processor Time":
@@ -222,20 +222,29 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
           chunk_link = post_chunk(results_server, results_link, '%s_%s (%d values)' % (res, count_type, len(chunk)), filename)
           os.remove(filename)
         links += chunk_link
-    
+ 
+  first_results = ''
+  last_results = '' 
+  full_results = 'RETURN:<p style="font-size:smaller;">Details:<br>'  
   lines = links.split('\n')
   for line in lines:
     if line == "":
       continue
     values = line.split(":")
     linkName = values[1]
+    if linkName in ('tp_pbytes', 'tp_%cpu'):
+      continue
     if float(values[2]) > 0:
-      linkName += "_T: " + values[2]
+      linkName += ":&nbsp;" + values[2]
+      url = url_format % (results_server, values[0])
+      link = link_format % (url, linkName)
+      first_results = first_results + "RETURN:" + link + '<br>' 
     else:
-      linkName += "_1"
-    url = url_format % (results_server, values[0],)
-    link = link_format % (url, linkName,)
-    print "RETURN: " + link
+      url = url_format % (results_server, values[0])
+      link = link_format % (url, linkName)
+      last_results = last_results + '| ' + link + ' '
+  full_results = first_results + full_results + last_results + '|</p>'
+  print full_results
 
 def test_file(filename):
   """Runs the Ts and Tp tests on the given config file and generates a report.
