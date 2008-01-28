@@ -92,7 +92,7 @@ IteratorNext(JSContext *cx, uintN argc, jsval *vp)
     *vp = v;
   } else {
     // We need to return an [id, value] pair.
-    if (!OBJ_GET_PROPERTY(cx, JS_GetParent(cx, obj), id, &v)) {
+    if (!OBJ_GET_PROPERTY(cx, STOBJ_GET_PARENT(obj), id, &v)) {
       return JS_FALSE;
     }
 
@@ -161,7 +161,7 @@ XPCWrapper::CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     if (!XPCWrapper::Enumerate(cx, iterObj, innerObj)) {
       return nsnull;
     }
-  } while ((innerObj = JS_GetPrototype(cx, innerObj)) != nsnull);
+  } while ((innerObj = STOBJ_GET_PROTO(innerObj)) != nsnull);
 
   JSIdArray *ida = JS_Enumerate(cx, iterObj);
   if (!ida) {
@@ -293,7 +293,7 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
     return JS_TRUE;
   }
 
-  JSBool isXOW = (JS_GET_CLASS(cx, wrapperObj) == &sXPC_XOW_JSClass.base);
+  JSBool isXOW = (STOBJ_GET_CLASS(wrapperObj) == &sXPC_XOW_JSClass.base);
   uintN attrs = JSPROP_ENUMERATE;
   if (OBJ_IS_NATIVE(innerObjp)) {
     JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
@@ -312,7 +312,7 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
   if (!preserveVal && isXOW && !JSVAL_IS_PRIMITIVE(v)) {
     JSObject *obj = JSVAL_TO_OBJECT(v);
     if (JS_ObjectIsFunction(cx, obj)) {
-      JSFunction *fun = reinterpret_cast<JSFunction *>(JS_GetPrivate(cx, obj));
+      JSFunction *fun = reinterpret_cast<JSFunction *>(xpc_GetJSPrivate(obj));
       if (JS_GetFunctionNative(cx, fun) == sEvalNative &&
           !WrapFunction(cx, wrapperObj, obj, &v, JS_FALSE)) {
         return JS_FALSE;

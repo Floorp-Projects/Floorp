@@ -395,7 +395,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         if(NS_FAILED(rv))
             return rv;
 
-        NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(ccx, parent),
+        NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
                      "Parent should never be an XPCNativeWrapper here");
 
         if(parent != plannedParent)
@@ -470,7 +470,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     NS_ADDREF(wrapper);
 
-    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(ccx, parent),
+    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(parent),
                  "XPCNativeWrapper being used to parent XPCWrappedNative?");
     
     if(!wrapper->Init(ccx, parent, isGlobal, &sciWrapper))
@@ -1197,7 +1197,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             // is directly using that of its XPCWrappedNativeProto.
 
             if(wrapper->HasProto() &&
-               JS_GetPrototype(ccx, wrapper->GetFlatJSObject()) ==
+               STOBJ_GET_PROTO(wrapper->GetFlatJSObject()) ==
                oldProto->GetJSProtoObject())
             {
                 if(!JS_SetPrototype(ccx, wrapper->GetFlatJSObject(),
@@ -1283,15 +1283,15 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
 
     if(funobj)
     {
-        JSObject* funObjParent = JS_GetParent(cx, funobj);
+        JSObject* funObjParent = STOBJ_GET_PARENT(funobj);
         NS_ASSERTION(funObjParent, "funobj has no parent");
 
-        JSClass* funObjParentClass = JS_GET_CLASS(cx, funObjParent);
+        JSClass* funObjParentClass = STOBJ_GET_CLASS(funObjParent);
 
         if(IS_PROTO_CLASS(funObjParentClass))
         {
-            NS_ASSERTION(JS_GetParent(cx, funObjParent), "funobj's parent (proto) is global");
-            proto = (XPCWrappedNativeProto*) JS_GetPrivate(cx, funObjParent);
+            NS_ASSERTION(STOBJ_GET_PARENT(funObjParent), "funobj's parent (proto) is global");
+            proto = (XPCWrappedNativeProto*) xpc_GetJSPrivate(funObjParent);
             if(proto)
                 protoClassInfo = proto->GetClassInfo();
         }
@@ -1302,7 +1302,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         }
         else if(IS_TEAROFF_CLASS(funObjParentClass))
         {
-            NS_ASSERTION(JS_GetParent(cx, funObjParent), "funobj's parent (tearoff) is global");
+            NS_ASSERTION(STOBJ_GET_PARENT(funObjParent), "funobj's parent (tearoff) is global");
             cur = funObjParent;
             goto return_tearoff;
         }
@@ -1313,17 +1313,17 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         }
     }
 
-    for(cur = obj; cur; cur = JS_GetPrototype(cx, cur))
+    for(cur = obj; cur; cur = STOBJ_GET_PROTO(cur))
     {
         // this is on two lines to make the compiler happy given the goto.
         JSClass* clazz;
-        clazz = JS_GET_CLASS(cx, cur);
+        clazz = STOBJ_GET_CLASS(cur);
 
         if(IS_WRAPPER_CLASS(clazz))
         {
 return_wrapper:
             XPCWrappedNative* wrapper =
-                (XPCWrappedNative*) JS_GetPrivate(cx, cur);
+                (XPCWrappedNative*) xpc_GetJSPrivate(cur);
             if(proto && proto != wrapper->GetProto() &&
                (proto->GetScope() != wrapper->GetScope() ||
                 !protoClassInfo || !wrapper->GetProto() ||
@@ -1338,7 +1338,7 @@ return_wrapper:
         {
 return_tearoff:
             XPCWrappedNative* wrapper =
-                (XPCWrappedNative*) JS_GetPrivate(cx, JS_GetParent(cx,cur));
+                (XPCWrappedNative*) xpc_GetJSPrivate(STOBJ_GET_PARENT(cur));
             if(proto && proto != wrapper->GetProto() &&
                (proto->GetScope() != wrapper->GetScope() ||
                 !protoClassInfo || !wrapper->GetProto() ||
@@ -1347,7 +1347,7 @@ return_tearoff:
             if(pobj2)
                 *pobj2 = cur;
             XPCWrappedNativeTearOff* to =
-                (XPCWrappedNativeTearOff*) JS_GetPrivate(cx, cur);
+                (XPCWrappedNativeTearOff*) xpc_GetJSPrivate(cur);
             if(!to)
                 return nsnull;
             if(pTearOff)
@@ -1367,11 +1367,11 @@ return_tearoff:
             if(pobj2)
                 *pobj2 = cur;
 
-            return XPCNativeWrapper::GetWrappedNative(cx, cur);
+            return XPCNativeWrapper::GetWrappedNative(cur);
         }
 
         if(IsXPCSafeJSObjectWrapperClass(clazz) &&
-           (unsafeObj = JS_GetParent(cx, cur)))
+           (unsafeObj = STOBJ_GET_PARENT(cur)))
             return GetWrappedNativeOfJSObject(cx, unsafeObj, funobj, pobj2,
                                               pTearOff);
     }
@@ -1379,7 +1379,7 @@ return_tearoff:
     // If we didn't find a wrapper using the given funobj and obj, try
     // again with obj's outer object, if it's got one.
 
-    JSClass *clazz = JS_GET_CLASS(cx, obj);
+    JSClass *clazz = STOBJ_GET_CLASS(obj);
 
     if((clazz->flags & JSCLASS_IS_EXTENDED) &&
         ((JSExtendedClass*)clazz)->outerObject)
@@ -1388,7 +1388,7 @@ return_tearoff:
 
         // Protect against infinite recursion through XOWs.
         JSObject *unsafeObj;
-        clazz = JS_GET_CLASS(cx, outer);
+        clazz = STOBJ_GET_CLASS(outer);
         if(clazz == &sXPC_XOW_JSClass.base &&
            (unsafeObj = XPCWrapper::Unwrap(cx, outer)))
         {
@@ -1631,14 +1631,14 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                         JSObject* proto  = nsnull;
                         JSObject* our_proto = GetProto()->GetJSProtoObject();
 
-                        proto = JS_GetPrototype(ccx, jso);
+                        proto = STOBJ_GET_PROTO(jso);
 
                         NS_ASSERTION(proto && proto != our_proto,
                             "!!! xpconnect/xbl check - wrapper has no special proto");
 
                         PRBool found_our_proto = PR_FALSE;
                         while(proto && !found_our_proto) {
-                            proto = JS_GetPrototype(ccx, proto);
+                            proto = STOBJ_GET_PROTO(proto);
 
                             found_our_proto = proto == our_proto;
                         }

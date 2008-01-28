@@ -3098,7 +3098,7 @@ JS_STATIC_DLL_CALLBACK(void)
 sandbox_finalize(JSContext *cx, JSObject *obj)
 {
     nsIScriptObjectPrincipal *sop =
-        (nsIScriptObjectPrincipal *)JS_GetPrivate(cx, obj);
+        (nsIScriptObjectPrincipal *)xpc_GetJSPrivate(obj);
     NS_IF_RELEASE(sop);
 }
 
@@ -3483,11 +3483,11 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
                   PRBool returnStringOnly, jsval *rval)
 {
-    if (JS_GetClass(cx, sandbox) != &SandboxClass)
+    if (STOBJ_GET_CLASS(sandbox) != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
 
     nsIScriptObjectPrincipal *sop =
-        (nsIScriptObjectPrincipal*)JS_GetPrivate(cx, sandbox);
+        (nsIScriptObjectPrincipal*)xpc_GetJSPrivate(sandbox);
     NS_ASSERTION(sop, "Invalid sandbox passed");
     nsCOMPtr<nsIPrincipal> prin = sop->GetPrincipal();
 

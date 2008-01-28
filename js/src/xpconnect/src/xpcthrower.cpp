@@ -259,16 +259,6 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
         JS_ReportOutOfMemory(cx);
 }
 
-static JSObject*
-GetGlobalObject(JSContext* cx, JSObject* start)
-{
-    JSObject* parent;
-
-    while((parent = JS_GetParent(cx, start)) != nsnull)
-        start = parent;
-    return start;
-}
-
 // static
 JSBool
 XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
@@ -282,7 +272,7 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
             JSObject* glob = JS_GetScopeChain(cx);
             if(!glob)
                 return JS_FALSE;
-            glob = GetGlobalObject(cx, glob);
+            glob = JS_GetGlobalForObject(cx, glob);
 
             nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
             nsresult rv = xpc->WrapNative(cx, glob, e,

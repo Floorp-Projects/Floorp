@@ -148,15 +148,15 @@ XPCConvert::IsMethodReflectable(const XPTMethodDescriptor& info)
 /***************************************************************************/
 
 static JSBool
-GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
+GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 {
-    JSClass* jsclass = JS_GET_CLASS(cx, obj);
+    JSClass* jsclass = STOBJ_GET_CLASS(obj);
     NS_ASSERTION(jsclass, "obj has no class");
     if(jsclass &&
        (jsclass->flags & JSCLASS_HAS_PRIVATE) &&
        (jsclass->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS))
     {
-        *iface = (nsISupports*) JS_GetPrivate(cx, obj);
+        *iface = (nsISupports*) xpc_GetJSPrivate(obj);
         return JS_TRUE;
     }
     return JS_FALSE;
@@ -487,8 +487,8 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                         if(NS_FAILED(holder->GetJSObject(&jsobj)))
                             return JS_FALSE;
 #ifdef DEBUG
-                        if(!JS_GetParent(ccx, jsobj))
-                            NS_ASSERTION(JS_GET_CLASS(ccx, jsobj)->flags & JSCLASS_IS_GLOBAL,
+                        if(!STOBJ_GET_PARENT(jsobj))
+                            NS_ASSERTION(STOBJ_GET_CLASS(jsobj)->flags & JSCLASS_IS_GLOBAL,
                                          "Why did we recreate this wrapper?");
 #endif
                         *d = OBJECT_TO_JSVAL(jsobj);
@@ -1141,7 +1141,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                         // is a JS function object.  Look for the script for
                         // this function.
                         JSFunction* fun =
-                            (JSFunction*) JS_GetPrivate(ccx, callee);
+                            (JSFunction*) xpc_GetJSPrivate(callee);
                         NS_ASSERTION(fun,
                                      "Must have JSFunction for a Function "
                                      "object");
@@ -1194,7 +1194,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
             }
 
             JSObject *flat = wrapper->GetFlatJSObject();
-            const char *name = JS_GET_CLASS(ccx, flat)->name;
+            const char *name = STOBJ_GET_CLASS(flat)->name;
             uint32 flags = JS_GetTopScriptFilenameFlags(ccx, nsnull);
             if(allowNativeWrapper &&
                !(flags & JSFILENAME_SYSTEM) &&
@@ -1278,7 +1278,7 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
         // Does the JSObject have 'nsISupportness'?
         // XXX hmm, I wonder if this matters anymore with no 
         // oldstyle DOM objects around.
-        if(GetISupportsFromJSObject(cx, src, &iface))
+        if(GetISupportsFromJSObject(src, &iface))
         {
             if(iface)
                 return NS_SUCCEEDED(iface->QueryInterface(*iid, dest));

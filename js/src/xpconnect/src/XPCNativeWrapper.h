@@ -53,14 +53,14 @@ public:
     return clazz == &sXPC_NW_JSClass.base;
   }
 
-  static PRBool IsNativeWrapper(JSContext *cx, JSObject *obj)
+  static PRBool IsNativeWrapper(JSObject *obj)
   {
-    return JS_GET_CLASS(cx, obj) == &sXPC_NW_JSClass.base;
+    return STOBJ_GET_CLASS(obj) == &sXPC_NW_JSClass.base;
   }
 
-  static XPCWrappedNative *GetWrappedNative(JSContext *cx, JSObject *obj)
+  static XPCWrappedNative *GetWrappedNative(JSObject *obj)
   {
-    return (XPCWrappedNative *)::JS_GetPrivate(cx, obj);
+    return (XPCWrappedNative *)xpc_GetJSPrivate(obj);
   }
 
   static JSClass *GetJSClass()
