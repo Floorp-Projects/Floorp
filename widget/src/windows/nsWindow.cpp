@@ -4629,13 +4629,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
       }
 
-#ifdef ACCESSIBILITY
-      if (nsWindow::gIsAccessibilityOn) {
-        // Create it for the first time so that it can start firing events
-        nsCOMPtr<nsIAccessible> rootAccessible = GetRootAccessible();
-      }
-#endif
-
 #ifdef WINCE
       // On Windows CE, we have a window that overlaps
       // the ISP button.  In this case, we should always
