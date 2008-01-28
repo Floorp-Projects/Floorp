@@ -1,41 +1,150 @@
-/* Toolbar */
-#placesToolbar {
-  border-bottom: none;
+/* Unified toolbar */
+
+#places {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
 }
+
+/* Places Organizer Sidebars */
+
+#placesList {
+  -moz-appearance: none;
+  border: none;
+  margin: 0;
+}
+
+#placesList treechildren::-moz-tree-row {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+#placesList treechildren::-moz-tree-row(History),
+#placesList treechildren::-moz-tree-row(history)  {
+  background-color: blue;
+}
+
+#placesList treechildren::-moz-tree-cell(leaf) ,
+#placesList treechildren::-moz-tree-image(leaf) {
+  cursor: pointer;
+}
+
+#placesList treechildren::-moz-tree-cell-text(leaf, hover) {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+#placesList treechildren::-moz-tree-cell(separator) {
+  cursor: default;
+}
+
+#placesToolbar {
+  background-color: #969696;
+  border-bottom: 1px solid #404040;
+  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
+  background-repeat: repeat-x;
+  background-position: 3px 0px;
+  margin-top: -3px;
+  padding: 0 4px;
+}
+
+#placesView {
+  border-top: none !important;
+}
+
+#placesView > splitter {
+  border-left: none !important;
+  border-right: 1px solid #404040;
+  min-width: 1px;
+  width: 1px;
+  background-image: none !important;       
+} 
+
 
 /* back button */
 
 #back-button {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px, 24px, 24px, 0px);
+  -moz-image-region: rect(0px, 617px, 23px, 584px);
+  -moz-margin-end: 0;
+  -moz-padding-end: 0;
+  border-left: none;
+  border-right: none;
 }
+
 #back-button[disabled="true"] {
- -moz-image-region: rect(48px, 24px, 72px, 0px) !important;
+ -moz-image-region: rect(23px, 617px, 46px, 584px) !important;
+}
+
+#back-button:hover:active,
+#back-button[buttondown="true"],
+#back-button[open="true"] {
+  -moz-image-region: rect(46px, 617px, 69px, 584px);
+}
+
+#back-button > .toolbarbutton-text,
+#forward-button > .toolbarbutton-text {
+  display: none;
 }
 
 /* forward button */
 
 #forward-button {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px, 48px, 24px, 24px);
+  -moz-image-region: rect(0px, 651px, 23px, 617px);
+  -moz-margin-start: 0;
+  -moz-margin-end: 12px;
+  -moz-padding-start: 0;
+  border-left: none;
+  border-right: none;
 }
+
 #forward-button[disabled="true"] {
- -moz-image-region: rect(48px, 48px, 72px, 24px) !important;
+ -moz-image-region: rect(23px, 651px, 46px, 617px);
+}
+
+#forward-button:hover:active,
+#forward-button[buttondown="true"],
+#forward-button[open="true"] {
+  -moz-image-region: rect(46px, 651px, 69px, 617px);
+}
+
+#placesToolbar > toolbarbutton[type="menu"] {
+  -moz-margin-start: 5px;
+  -moz-padding-end: 6px;
+  background: url("chrome://browser/skin/places/menubutton-end.png") center right no-repeat;
+}
+
+#placesToolbar > toolbarbutton[type="menu"] > menupopup {
+  -moz-margin-start: 2px;
+  margin-top: -4px;
+}
+
+#placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-icon {
+  background: url("chrome://browser/skin/places/menubutton-start.png") center left no-repeat;
+  padding: 4px 2px;
+  height: 23px;
+}
+
+#placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-text {
+  background: url("chrome://browser/skin/places/menubutton-mid.png") center left repeat-x;
+  height: 23px;
+  margin: 0;
+  padding: 4px;
+}
+
+#placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
+  list-style-image: url("chrome://browser/skin/places/folderDropArrow.png");
 }
 
 /* organize button */
 #organizeButton {
-  list-style-image: url("chrome://browser/skin/wrench.png");
 }
 
 /* view button */
 #viewMenu {
-  list-style-image: url("chrome://browser/skin/wrench.png");
 }
 
 /* maintenance button */
 #maintenanceButton {
-  list-style-image: url("chrome://browser/skin/wrench.png");
 }
 
 /* Root View */
@@ -57,14 +166,68 @@
 
 #placesList {
   -moz-appearance: none;
+  background-color: #d2d8e2;
   width: 160px;
   margin: 0px;
   border: 0px;
 }
 
+#contentSplitter {
+  height: 10px !important;
+  min-height: 10px;
+  border-top: 1px solid #919191;
+  border-bottom: none;
+  background-color: #f0f0f0;
+  background-image: none;
+}
+
+#contentSplitter > grippy {
+  background-image: url('chrome://browser/skin/places/infoPaneGrippy.png');
+  background-position: center center;
+  height: 5px;
+}
+
+#contentSplitter > grippy:hover {
+  background-color: transparent;
+}
+
+#infoPane {
+  background-color: #f0f0f0;
+  padding: 10px;
+}
+
 #placeContent {
   -moz-appearance: none;
   border: 0px;
+}
+
+#placeContent treechildren::-moz-tree-row {
+  border-top: none !important;
+  padding-top: 1px;
+}
+
+#placeContent treechildren::-moz-tree-row(odd) {
+  background-color: #edf3fe;
+}
+
+#placeContent treechildren::-moz-tree-row(selected),
+#placeContent treechildren::-moz-tree-row(odd, selected) {
+  background-color: -moz-mac-secondaryhighlight;
+}
+
+#placeContent treechildren::-moz-tree-row(selected, focus), 
+#placeContent treechildren::-moz-tree-row(odd, selected, focus) {
+  background-color: Highlight;
+  color: HighlightText !important;
+}
+
+#placeContent treechildren::-moz-tree-cell,
+#placeContent treechildren::-moz-tree-column {
+  border-right: 1px solid #d7dad7;
+}
+
+#placeContent treechildren::-moz-tree-cell(separator) {
+  border-color: transparent;
 }
 
 /* Search Bar */
@@ -110,15 +273,26 @@
 }
 
 #searchFilter {
-  padding: 0px;
+  -moz-appearance: none;
+  border: 3px solid;
+  -moz-border-top-colors: #676767 #C5C5C5 -moz-Field;
+  -moz-border-bottom-colors: #C2C2C2 #A4A4A4 -moz-Field;
+  -moz-border-right-colors: #969696 #C5C5C5 -moz-Field;
+  -moz-border-left-colors: #969696 #C5C5C5 -moz-Field;
+  -moz-border-radius: 11.5px;
+  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
+  -moz-background-clip: padding !important;
+  padding: 0 8px;
+  -moz-padding-start: 14px;
 }
 
 #searchFilter[empty="true"] {
   color: GrayText;
 }
 
-#searchFilter .textbox-input-box {
-  padding: 2px 2px 3px 4px;
+#searchFilter > .textbox-input-box {
+  padding: 2px;
+  border-left: 2px solid transparent;
 }
 
 .filterList {
@@ -254,4 +428,8 @@
 
 .expander-up:hover:active {
   list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
+}
+
+#editBookmarkPanelGrid > rows > row > label {
+  text-align: right !important;
 }

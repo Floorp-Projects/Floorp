@@ -151,11 +151,12 @@ iframe {
 /* ::::: statusbar ::::: */
 
 statusbar {
-  border-top: 1px solid #A3A3A3 !important;
+  border-top: 1px solid #505050 !important;
+  
   min-width: 1px; /* DON'T DELETE!
   Prevents hiding of scrollbars in browser when window is made smaller.*/
   min-height: 15px !important;
-  background-color: #FFFFFF;
+  background: url("chrome://global/skin/statusbar-background.gif") #949393 repeat-x top left;
   margin: 0px !important;
   padding: 0px 16px 1px 1px;
   -moz-appearance: none;
@@ -165,7 +166,6 @@ statusbarpanel {
   -moz-box-align: center;
   -moz-box-pack: center;
   padding: 0 4px;
-  -moz-appearance: dialog;
 }
 
 .statusbarpanel-iconic {

@@ -39,59 +39,39 @@
 
 @import "chrome://global/skin/";
 
+#main-window {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
+}
+
+
+#topStackBar {
+  display: -moz-box;
+  background-color: #969696;
+  border-bottom: 1px solid #404040;
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.gif");
+  background-repeat: repeat-x;
+  background-position: top right;
+  padding: 4px 0 8px;
+  -moz-box-pack: center;
+}
+
 /* View buttons */
+
+#viewGroup {
+  border: 1px solid #404040;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #C2C2C2 #404040;
+  -moz-border-radius: 4px;
+  -moz-border-radius-bottomright: 5px;
+  -moz-border-radius-bottomleft: 5px;
+  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
+  background-repeat: repeat-x;
+}
+
 #viewGroup radio {
-  list-style-image: url("chrome://browser/skin/pageInfo.png");
   -moz-box-orient: vertical;
   -moz-box-align: center;
   -moz-appearance: none;
-}
-
-.viewSelector {
-  padding: 0 5px;
-  border-bottom: 1px solid #a3a3a3;
-  background: url("chrome://global/skin/toolbar/toolbar-pinstripe-overlay.png") repeat;
-  margin: 0;
-}
-
-#generalTab {
-  -moz-image-region: rect(0px, 32px, 32px, 0px)
-}
-
-#generalTab:hover, #generalTab[selected="true"] {
-  -moz-image-region: rect(32px, 32px, 64px, 0px)
-}
-
-#mediaTab {
-  -moz-image-region: rect(0px, 64px, 32px, 32px)
-}
-
-#mediaTab:hover, #mediaTab[selected="true"] {
-  -moz-image-region: rect(32px, 64px, 64px, 32px)
-}
-
-#feedTab {
-  -moz-image-region: rect(0px, 96px, 32px, 64px)
-}
-
-#feedTab:hover, #feedTab[selected="true"] {
-  -moz-image-region: rect(32px, 96px, 64px, 64px)
-}
-
-#permTab {
-  -moz-image-region: rect(0px, 128px, 32px, 96px)
-}
-
-#permTab:hover, #permTab[selected="true"] {
-  -moz-image-region: rect(32px, 128px, 64px, 96px)
-}
-
-#securityTab {
-  -moz-image-region: rect(0px, 160px, 32px, 128px)
-}
-
-#securityTab:hover, #securityTab[selected="true"] {
-  -moz-image-region: rect(32px, 160px, 64px, 128px)
 }
 
 deck {

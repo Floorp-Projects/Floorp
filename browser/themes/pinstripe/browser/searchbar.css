@@ -6,7 +6,7 @@
   margin-right: 15px;
   -moz-appearance: none;
   font: icon;
-  height: 22px;
+  height: 23px;
   width: 5em;
   min-width: 5em;
   border: none;
@@ -15,25 +15,30 @@
 .searchbar-engine-image {
   width: 16px;
   height: 16px;
-  -moz-margin-start: 3px;
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 .searchbar-engine-button {
-  background: url("chrome://browser/skin/search-bar-background-left.png") no-repeat;
-  height: 22px;
+  background: url("chrome://browser/skin/urlbar/startcap.png") left center no-repeat;
+  height: 23px;
   -moz-appearance: none;
-  min-width: 0;
+  min-width: 42px;
   margin: 0 3px 0 -11px;
-  padding: 2px 0 2px 4px;
   border: 0;
   -moz-box-align: center;
 }
 
+.searchbar-engine-button:active,
+.searchbar-engine-button[open="true"] {
+  background-image: url("chrome://browser/skin/urlbar/startcap-active.png");
+}
+
 .searchbar-engine-button > .button-box {
   -moz-appearance: none;
+  -moz-margin-start: -1px;
+  margin-bottom: 1px;
   padding: 0;
-  padding-right: 3px;
+  -moz-padding-end: 3px;
   border: 0;
 }
 
@@ -43,29 +48,26 @@
 
 .searchbar-dropmarker-image {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
-  -moz-margin-start: 3px;
+  -moz-margin-start: 2px;
 }
 
 .search-go-container {
   -moz-box-align: center;
-  background: url("chrome://browser/skin/search-bar-background-right.png") no-repeat right top;
-  height: 22px;
+  background: url("chrome://browser/skin/urlbar/endcap.png") no-repeat right top;
+  height: 23px;
   margin-right: -11px;
   padding-right: 4px;
+}
+
+
+#searchbar[empty="true"] .search-go-button {
+  visibility: hidden;
 }
 
 .search-go-button {
   padding: 1px;
   list-style-image: url("chrome://browser/skin/Search.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-.search-go-button:hover {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-.search-go-button[disabled="true"] {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+  -moz-padding-end: 6px;
 }
 
 .searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
