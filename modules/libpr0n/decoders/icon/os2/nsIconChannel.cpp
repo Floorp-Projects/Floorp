@@ -455,8 +455,10 @@ static HPOINTER GetIcon(nsCString& file, PRBool fExists,
   HPOINTER hRtn = 0;
   *fWpsIcon = PR_FALSE;
 
-  if (file.IsEmpty())
-    return 0;
+  if (file.IsEmpty()) {
+    // append something so that we get at least the generic icon
+    file.Append("pmwrlw");
+  }
 
   // if RWS is enabled, try to get the icon from the WPS
   if (sUseRws) {
