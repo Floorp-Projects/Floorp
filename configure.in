@@ -7770,7 +7770,6 @@ MOZ_V1_STRING_ABI
 "
 
 AC_CONFIG_HEADER(
-gfx/gfx-config.h
 netwerk/necko-config.h
 xpcom/xpcom-config.h
 xpcom/xpcom-private.h
