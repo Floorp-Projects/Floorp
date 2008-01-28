@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,14 +14,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Extension Manager.
+# The Original Code is The Extension Manager.
 #
-# The Initial Developer of the Original Code is Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# The Initial Developer of the Original Code is mozilla.org
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Ben Goodger <ben@mozilla.org>
+#   Dave Townsend <dtownsend@oxymoronical.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,21 +37,32 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/eula.css" type="text/css"?>
 
-include $(DEPTH)/config/autoconf.mk
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
+%extensionsDTD;
+]>
 
-MODULE        = extensions
-XPIDL_MODULE  = extensions
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&eula.title;" width="&eula.width;" height="&eula.height;"
+        buttons="accept,cancel" buttonlabelaccept="&eula.accept;"
+        ondialogaccept="window.arguments[0].accepted = true"
+        onload="Startup();">
 
-XPIDLSRCS = \
-  nsIExtensionManager.idl \
-  nsIBlocklistService.idl \
-  nsIAddonRepository.idl \
-  $(NULL)
+  <script type="application/javascript" src="chrome://mozapps/content/extensions/eula.js"/>
+  
+  <stringbundleset id="extensionsSet">
+    <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+  </stringbundleset>
 
-include $(topsrcdir)/config/rules.mk
+  <label id="heading"/>
 
+  <vbox id="scrollbox" flex="1">
+    <description id="eula"/>
+  </vbox>
+
+</dialog>

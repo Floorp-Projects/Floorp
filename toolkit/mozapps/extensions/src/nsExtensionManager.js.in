@@ -6215,13 +6215,11 @@ RDFItemUpdater.prototype = {
         uri.spec + ", item = " + aItem.objectSource);
 
     var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                  createInstance(Ci.nsIXMLHttpRequest).
-                  QueryInterface(Ci.nsIJSXMLHttpRequest);
+                  createInstance(Ci.nsIXMLHttpRequest);
     request.open("GET", uri.spec, true);
     request.channel.notificationCallbacks = new BadCertHandler();
     request.overrideMimeType("text/xml");
     request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
-    request.QueryInterface(Ci.nsIJSXMLHttpRequest);
 
     var self = this;
     request.onerror     = function(event) { self.onXMLError(event, aItem);    };
