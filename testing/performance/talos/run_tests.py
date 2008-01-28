@@ -225,7 +225,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
  
   first_results = ''
   last_results = '' 
-  full_results = 'RETURN:<p style="font-size:smaller;">Details:<br>'  
+  full_results = '\nRETURN:<p style="font-size:smaller;">Details:<br>'  
   lines = links.split('\n')
   for line in lines:
     if line == "":
@@ -238,7 +238,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
       linkName += ":&nbsp;" + str(values[2])
       url = url_format % (results_server, values[0])
       link = link_format % (url, linkName)
-      first_results = first_results + "RETURN:" + link + '<br>' 
+      first_results = first_results + "\nRETURN:" + link + '<br>' 
     else:
       url = url_format % (results_server, values[0])
       link = link_format % (url, linkName)
