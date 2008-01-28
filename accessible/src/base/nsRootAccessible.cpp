@@ -677,6 +677,21 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     }
     // Focus was on or inside of a popup that's being hidden
     FireCurrentFocusEvent();
+    return NS_OK;
+  }
+
+  if (aTargetNode == mDOMNode && mDOMNode != gLastFocusedNode && eventType.EqualsLiteral("focus")) {
+    // Got focus event for the window, we will make sure that an accessible
+    // focus event for initial focus is fired. We do this on a short timer
+    // because the initial focus may not have been set yet.
+    if (!mFireFocusTimer) {
+      mFireFocusTimer = do_CreateInstance("@mozilla.org/timer;1");
+    }
+    if (mFireFocusTimer) {
+      mFireFocusTimer->InitWithFuncCallback(FireFocusCallback, this,
+                                            0, nsITimer::TYPE_ONE_SHOT);
+    }
+    return NS_OK;
   }
 
   nsCOMPtr<nsIAccessible> accessible;
@@ -808,19 +823,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else
 #endif
   if (eventType.EqualsLiteral("focus")) {
-    if (aTargetNode == mDOMNode && mDOMNode != gLastFocusedNode) {
-      // Got focus event for the window, we will make sure that an accessible
-      // focus event for initial focus is fired. We do this on a short timer
-      // because the initial focus may not have been set yet.
-      if (!mFireFocusTimer) {
-        mFireFocusTimer = do_CreateInstance("@mozilla.org/timer;1");
-      }
-      if (mFireFocusTimer) {
-        mFireFocusTimer->InitWithFuncCallback(FireFocusCallback, this,
-                                              0, nsITimer::TYPE_ONE_SHOT);
-      }
-    }
-
     // Keep a reference to the target node. We might want to change
     // it to the individual radio button or selected item, and send
     // the focus event to that.
