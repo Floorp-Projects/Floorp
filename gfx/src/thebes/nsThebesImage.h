@@ -44,10 +44,8 @@
 #include "gfxColor.h"
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
-#if defined(XP_WIN)
+#ifdef XP_WIN
 #include "gfxWindowsSurface.h"
-#elif defined(XP_MACOSX)
-#include "gfxQuartzSurface.h"
 #endif
 
 class nsThebesImage : public nsIImage
@@ -99,13 +97,7 @@ public:
     gfxASurface* ThebesSurface() {
         if (mOptSurface)
             return mOptSurface;
-#if defined(XP_WIN)
-        if (mWinSurface)
-            return mWinSurface;
-#elif defined(XP_MACOSX)
-        if (mQuartzSurface)
-            return mQuartzSurface;
-#endif
+
         return mImageSurface;
     }
 
@@ -159,10 +151,8 @@ protected:
 
     nsRefPtr<gfxImageSurface> mImageSurface;
     nsRefPtr<gfxASurface> mOptSurface;
-#if defined(XP_WIN)
+#ifdef XP_WIN
     nsRefPtr<gfxWindowsSurface> mWinSurface;
-#elif defined(XP_MACOSX)
-    nsRefPtr<gfxQuartzSurface> mQuartzSurface;
 #endif
 
     PRUint8 mAlphaDepth;
