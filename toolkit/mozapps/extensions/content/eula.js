@@ -1,3 +1,4 @@
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,15 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Extension Manager.
+# The Original Code is The Extension Manager.
 #
-# The Initial Developer of the Original Code is Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# The Initial Developer of the Original Code is mozilla.org
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Ben Goodger <ben@mozilla.org>
-#
+#   Dave Townsend <dtownsend@oxymoronical.com>
+# 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
 # the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -34,21 +35,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
-MODULE        = extensions
-XPIDL_MODULE  = extensions
-
-XPIDLSRCS = \
-  nsIExtensionManager.idl \
-  nsIBlocklistService.idl \
-  nsIAddonRepository.idl \
-  $(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
+function Startup() {
+  var bundle = document.getElementById("extensionsStrings");
+  var label = document.createTextNode(bundle.getFormattedString("eulaHeader", [window.arguments[0].name]));
+  document.getElementById("heading").appendChild(label);
+  document.getElementById("eula").appendChild(document.createTextNode(window.arguments[0].text));
+}
