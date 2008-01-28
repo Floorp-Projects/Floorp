@@ -92,8 +92,8 @@ function makeListener(headerIdx, bodyIdx) {
       try {
         var chan = request.QueryInterface(Components.interfaces.nsIChannel);
 
-	do_check_eq(chan.status, Components.results.NS_OK);
-	
+        do_check_eq(chan.status, Components.results.NS_OK);
+        
         var type = chan.contentType;
 
         var expectedType =
@@ -169,8 +169,12 @@ function makeHandler(headerIdx, bodyIdx) {
 
 var httpserv;
 function run_test() {
-  // disable again for now
-  return;
+  // disable on Windows for now, because it seems to leak sockets and die.
+  // Silly operating system!
+  // This is a really nasty way to detect Windows.  I wish we could do better.
+  if ("@mozilla.org/windows-registry-key;1" in Cc) {
+    return;
+  }
   
   httpserv = new nsHttpServer();
 
