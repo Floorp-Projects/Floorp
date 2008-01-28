@@ -110,7 +110,6 @@
     <command id="cmd_installFile" oncommand="installWithFilePicker();"/>
     <command id="cmd_checkUpdatesAll" oncommand="checkUpdatesAll();"/>
     <command id="cmd_installUpdatesAll" oncommand="installUpdatesAll();"/>
-    <command id="cmd_restartApp" oncommand="restartApp();"/>
     <command id="cmd_continue" oncommand="closeEM();" disabled="true"/>
     <command id="cmd_close" oncommand="closeEM();"/>
     <command id="cmd_showUpdateInfo" oncommand="showUpdateInfo();"/>
@@ -246,11 +245,6 @@
              valuethemes="&getThemes.label;"
              valueplugins="&getPlugins.label;"
              valueextensions="&getExtensions.label;"/>
-      <spacer flex="1"/>
-      <button id="restartAppButton" label="&cmd.restartApp2.label;"
-              accesskey="&cmd.restartApp2.accesskey;"
-              tooltiptext="&cmd.restartApp2.tooltip;"
-              command="cmd_restartApp"/>
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
