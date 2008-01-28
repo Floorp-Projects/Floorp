@@ -196,37 +196,29 @@ CreateBidiContinuation(nsIFrame*       aFrame,
 }
 
 static PRBool
-IsFrameInCurrentLine(nsBlockInFlowLineIterator* aLineIter,
-                     nsIFrame* aPrevFrame, nsIFrame* aFrame)
-{
-  nsIFrame* endFrame = aLineIter->IsLastLineInList() ? nsnull :
-    aLineIter->GetLine().next()->mFirstChild;
-  nsIFrame* startFrame = aPrevFrame ? aPrevFrame : aLineIter->GetLine()->mFirstChild;
-  return nsFrameList(startFrame).ContainsFrameBefore(aFrame, endFrame);
-}
-
-static void
 AdvanceLineIteratorToFrame(nsIFrame* aFrame,
-                           nsBlockInFlowLineIterator* aLineIter,
-                           nsIFrame*& aPrevFrame)
+                           nsIFrame* aBlockFrame,
+                           nsBlockFrame::line_iterator& aLine,
+                           nsIFrame*& aPrevFrame,
+                           const nsBlockFrame::line_iterator& aEndLines)
 {
   // Advance aLine to the line containing aFrame
   nsIFrame* child = aFrame;
   nsIFrame* parent = child->GetParent();
-  while (parent && parent->IsFrameOfType(nsIFrame::eLineParticipant)) {
+  while (parent && parent != aBlockFrame) {
+    if (parent->GetStyleDisplay()->IsBlockOutside())
+      return PR_FALSE;
     child = parent;
     parent = child->GetParent();
   }
   NS_ASSERTION (parent, "aFrame is not a descendent of aBlockFrame");
-  while (!IsFrameInCurrentLine(aLineIter, aPrevFrame, child)) {
-#ifdef DEBUG
-    PRBool hasNext =
-#endif
-      aLineIter->Next();
-    NS_ASSERTION(hasNext, "Can't find frame in lines!");
+  while (aLine != aEndLines && !aLine->ContainsAfter(aPrevFrame, child, aLine, aEndLines)) {
+    ++aLine;
     aPrevFrame = nsnull;
   }
   aPrevFrame = child;
+  NS_ASSERTION (aLine != aEndLines, "frame not found on any line");
+  return PR_TRUE;
 }
 
 /*
@@ -353,11 +345,8 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
 
   nsPropertyTable *propTable = presContext->PropertyTable();
 
-  nsBlockInFlowLineIterator lineIter(aBlockFrame, aBlockFrame->begin_lines(), PR_FALSE);
-  if (lineIter.GetLine() == aBlockFrame->end_lines()) {
-    // Advance to first valid line (might be in a next-continuation)
-    lineIter.Next();
-  }
+  nsBlockFrame::line_iterator line = aBlockFrame->begin_lines();
+  nsBlockFrame::line_iterator endLines = aBlockFrame->end_lines();
   nsIFrame* prevFrame = nsnull;
   PRBool lineNeedsUpdate = PR_FALSE;
   
@@ -430,10 +419,12 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
             break;
           }
           if (lineNeedsUpdate) {
-            AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
-            lineNeedsUpdate = PR_FALSE;
+            if (AdvanceLineIteratorToFrame(frame, aBlockFrame, line,
+                                           prevFrame, endLines)) {
+              lineNeedsUpdate = PR_FALSE;
+            }
           }
-          lineIter.GetLine()->MarkDirty();
+          line->MarkDirty();
           frame = nextBidi;
           contentOffset += runLength;
         } // if (runLength < fragmentLength)
@@ -443,10 +434,12 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
           if (newIndex > frameIndex) {
             RemoveBidiContinuation(frame, frameIndex, newIndex, temp);
             if (lineNeedsUpdate) {
-              AdvanceLineIteratorToFrame(frame, &lineIter, prevFrame);
-              lineNeedsUpdate = PR_FALSE;
+              if (AdvanceLineIteratorToFrame(frame, aBlockFrame, line,
+                                             prevFrame, endLines)) {
+                lineNeedsUpdate = PR_FALSE;
+              }
             }
-            lineIter.GetLine()->MarkDirty();
+            line->MarkDirty();
             runLength -= temp;
             fragmentLength -= temp;
             lineOffset += temp;
