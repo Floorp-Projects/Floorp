@@ -554,6 +554,7 @@ pref("browser.safebrowsing.provider.0.name", "Google");
 pref("browser.safebrowsing.provider.0.lookupURL", "http://sb.google.com/safebrowsing/lookup?sourceid=firefox-antiphish&features=TrustRank&client={moz:client}&appver={moz:version}&");
 pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/getkey?client={moz:client}&");
 pref("browser.safebrowsing.provider.0.reportURL", "http://sb.google.com/safebrowsing/report?");
++pref("browser.safebrowsing.provider.0.gethashURL", "http://sb.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.1");
 
 // privacy policy -- Both url and fallbackurl must exist, although they may
 // point to the same file.  fallbackurl must be a chrome url

@@ -375,6 +375,9 @@ PROT_PhishingWarden.prototype.addWebProgressToAllTabs_ = function() {
  * @param url
  */ 
 PROT_PhishingWarden.prototype.onDocNavStart = function(request, url) {
+  // XXX: most of this code is dead and needs to be removed.
+  return;
+
   G_Debug(this, "checkRemote: " +
           (this.checkRemote_ ? "yes" : "no"));
 

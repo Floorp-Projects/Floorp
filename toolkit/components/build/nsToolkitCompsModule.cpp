@@ -58,6 +58,7 @@
 #include "nsUrlClassifierDBService.h"
 #include "nsUrlClassifierStreamUpdater.h"
 #include "nsUrlClassifierUtils.h"
+#include "nsUrlClassifierHashCompleter.h"
 #include "nsDocShellCID.h"
 #endif
 
@@ -88,6 +89,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 #ifdef MOZ_URL_CLASSIFIER
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlClassifierStreamUpdater)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlClassifierUtils, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlClassifierHashCompleter, Init)
 
 static NS_IMETHODIMP
 nsUrlClassifierDBServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
@@ -167,6 +169,10 @@ static const nsModuleComponentInfo components[] =
     NS_URLCLASSIFIERUTILS_CID,
     NS_URLCLASSIFIERUTILS_CONTRACTID,
     nsUrlClassifierUtilsConstructor },
+  { "Url Classifier Hash Completer",
+    NS_URLCLASSIFIERHASHCOMPLETER_CID,
+    NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID,
+    nsUrlClassifierHashCompleterConstructor },
 #endif
 #ifdef MOZ_FEEDS
   { "Unescape HTML",
