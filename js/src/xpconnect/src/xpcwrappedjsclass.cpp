@@ -503,10 +503,12 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
 static JSContext *
 GetContextFromObject(JSObject *obj)
 {
-    // Don't stomp over running code.
-    nsAXPCNativeCallContext *cc = nsnull;
-    nsXPConnect::GetXPConnect()->GetCurrentNativeCallContext(&cc);
-    if(cc)
+    // Don't stomp over a running context.
+    XPCJSContextStack* stack =
+        XPCPerThreadData::GetData(nsnull)->GetJSContextStack();
+    JSContext* topJSContext;
+
+    if(stack && NS_SUCCEEDED(stack->Peek(&topJSContext)) && topJSContext)
         return nsnull;
 
     // In order to get a context, we need a context.
