@@ -94,7 +94,7 @@ nsUrlClassifierStreamUpdater::DownloadDone()
   LOG(("nsUrlClassifierStreamUpdater::DownloadDone [this=%p]", this));
   mIsUpdating = PR_FALSE;
 
-  mPendingUpdateUrls.Clear();
+  mPendingUpdates.Clear();
   mSuccessCallback = nsnull;
   mUpdateErrorCallback = nsnull;
   mDownloadErrorCallback = nsnull;
@@ -127,7 +127,8 @@ nsUrlClassifierStreamUpdater::SetUpdateUrl(const nsACString & aUpdateUrl)
 
 nsresult
 nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
-                                          const nsACString & aRequestBody)
+                                          const nsACString & aRequestBody,
+                                          const nsACString & aStreamTable)
 {
   nsresult rv;
   rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl, nsnull, nsnull, this);
@@ -142,18 +143,23 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   rv = mChannel->AsyncOpen(this, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mStreamTable = aStreamTable;
+
   return NS_OK;
 }
 
 nsresult
 nsUrlClassifierStreamUpdater::FetchUpdate(const nsACString & aUpdateUrl,
-                                          const nsACString & aRequestBody)
+                                          const nsACString & aRequestBody,
+                                          const nsACString & aStreamTable)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aUpdateUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return FetchUpdate(uri, aRequestBody);
+  LOG(("Fetching update from %s\n", PromiseFlatCString(aUpdateUrl).get()));
+
+  return FetchUpdate(uri, aRequestBody, aStreamTable);
 }
 
 NS_IMETHODIMP
@@ -215,23 +221,29 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   *_retval = PR_TRUE;
 
 
-  return FetchUpdate(mUpdateUrl, aRequestBody);
+  return FetchUpdate(mUpdateUrl, aRequestBody, EmptyCString());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIUrlClassifierUpdateObserver implementation
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::UpdateUrlRequested(const nsACString &aUrl)
+nsUrlClassifierStreamUpdater::UpdateUrlRequested(const nsACString &aUrl,
+                                                 const nsACString &aTable)
 {
   LOG(("Queuing requested update from %s\n", PromiseFlatCString(aUrl).get()));
 
+  PendingUpdate *update = mPendingUpdates.AppendElement();
+  if (!update)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   // Allow data: urls for unit testing purposes, otherwise assume http
   if (StringBeginsWith(aUrl, NS_LITERAL_CSTRING("data:"))) {
-    mPendingUpdateUrls.AppendElement(aUrl);
+    update->mUrl = aUrl;
   } else {
-    mPendingUpdateUrls.AppendElement(NS_LITERAL_CSTRING("http://") + aUrl);
+    update->mUrl = NS_LITERAL_CSTRING("http://") + aUrl;
   }
+  update->mTable = aTable;
 
   return NS_OK;
 }
@@ -242,15 +254,16 @@ nsUrlClassifierStreamUpdater::StreamFinished()
   nsresult rv;
 
   // Pop off a pending URL and update it.
-  if (mPendingUpdateUrls.Length() > 0) {
-    rv = FetchUpdate(mPendingUpdateUrls[0], NS_LITERAL_CSTRING(""));
+  if (mPendingUpdates.Length() > 0) {
+    PendingUpdate &update = mPendingUpdates[0];
+    rv = FetchUpdate(update.mUrl, EmptyCString(), update.mTable);
     if (NS_FAILED(rv)) {
-      LOG(("Error fetching update url: %s\n", mPendingUpdateUrls[0].get()));
+      LOG(("Error fetching update url: %s\n", update.mUrl.get()));
       mDBService->CancelUpdate();
       return rv;
     }
 
-    mPendingUpdateUrls.RemoveElementAt(0);
+    mPendingUpdates.RemoveElementAt(0);
   } else {
     mDBService->FinishUpdate();
   }
@@ -262,7 +275,7 @@ NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::UpdateSuccess(PRUint32 requestedTimeout)
 {
   LOG(("nsUrlClassifierStreamUpdater::UpdateSuccess [this=%p]", this));
-  NS_ASSERTION(mPendingUpdateUrls.Length() == 0,
+  NS_ASSERTION(mPendingUpdates.Length() == 0,
                "Didn't fetch all update URLs.");
 
   // DownloadDone() clears mSuccessCallback, so we save it off here.
@@ -330,12 +343,14 @@ nsUrlClassifierStreamUpdater::AddRequestBody(const nsACString &aRequestBody)
 // nsIStreamListenerObserver implementation
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request, nsISupports* context)
+nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
+                                             nsISupports* context)
 {
   nsresult rv;
 
-  rv = mDBService->BeginStream();
+  rv = mDBService->BeginStream(mStreamTable);
   NS_ENSURE_SUCCESS(rv, rv);
+  mStreamTable.Truncate();
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   if (httpChannel) {
