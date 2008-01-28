@@ -80,23 +80,6 @@ const DownloadData = [
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0 }
 ];
 
-// XXX remove me when Bug 411521 is fixed
-function synthesizeKey(aKey, aWin)
-{
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var utils = aWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIDOMWindowUtils);
-  if (utils) {
-    var charCode = 0;
-    var keyCode = Ci.nsIDOMKeyEvent[aKey];
-    var modifiers = 0;
-    utils.sendKeyEvent("keydown", keyCode, charCode, modifiers);
-    utils.sendKeyEvent("keypress", keyCode, charCode, modifiers);
-    utils.sendKeyEvent("keyup", keyCode, charCode, modifiers);
-  }
-}
-
 function test_backspaceKeyRemoves(aWin)
 {
   // This also tests the ordering of the display
@@ -114,7 +97,7 @@ function test_backspaceKeyRemoves(aWin)
 
   var len = DownloadData.length;
   for (var i = 0; i < len; i++) {
-    synthesizeKey("DOM_VK_BACK_SPACE", aWin);
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {}, aWin);
 
     stmt.executeStep();
     is(stmt.getInt32(0), len - (i + 1),

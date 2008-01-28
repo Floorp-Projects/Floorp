@@ -191,13 +191,18 @@ function _parseModifiers(aEvent)
  *
  * If the type is specified, an mouse event of that type is fired. Otherwise,
  * a mousedown followed by a mouse up is performed.
+ *
+ * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent)
+function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+  if (!aWindow)
+    aWindow = window;
+
+  var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                      getInterface(Components.interfaces.nsIDOMWindowUtils);
   if (utils) {
     var button = aEvent.button || 0;
     var clickCount = aEvent.clickCount || 1;
@@ -228,13 +233,18 @@ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent)
  *
  * If the type is specified, a key event of that type is fired. Otherwise,
  * a keydown, a keypress and then a keyup event are fired in sequence.
+ *
+ * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeKey(aKey, aEvent)
+function synthesizeKey(aKey, aEvent, aWindow)
 {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+  if (!aWindow)
+    aWindow = window;
+
+  var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                      getInterface(Components.interfaces.nsIDOMWindowUtils);
   if (utils) {
     var keyCode = 0, charCode = 0;
     if (aKey.indexOf("VK_") == 0)
@@ -312,12 +322,15 @@ function _checkExpectedEvent(aExpectedTarget, aExpectedEvent, aEventHandler, aTe
  * To test that an event is not fired, use an expected type preceded by an
  * exclamation mark, such as '!select'. This might be used to test that a
  * click on a disabled element doesn't fire certain events for instance.
+ *
+ * aWindow is optional, and defaults to the current window object.
  */
 function synthesizeMouseExpectEvent(aTarget, aOffsetX, aOffsetY, aEvent,
-                                    aExpectedTarget, aExpectedEvent, aTestName)
+                                    aExpectedTarget, aExpectedEvent, aTestName,
+                                    aWindow)
 {
   var eventHandler = _expectEvent(aExpectedTarget, aExpectedEvent, aTestName);
-  synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent);
+  synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
   _checkExpectedEvent(aExpectedTarget, aExpectedEvent, eventHandler, aTestName);
 }
 
@@ -331,10 +344,13 @@ function synthesizeMouseExpectEvent(aTarget, aOffsetX, aOffsetY, aEvent,
  *
  * To test that an event is not fired, use an expected type preceded by an
  * exclamation mark, such as '!select'.
+ *
+ * aWindow is optional, and defaults to the current window object.
  */
-function synthesizeKeyExpectEvent(key, aEvent, aExpectedTarget, aExpectedEvent, aTestName)
+function synthesizeKeyExpectEvent(key, aEvent, aExpectedTarget, aExpectedEvent,
+                                  aTestName, aWindow)
 {
   var eventHandler = _expectEvent(aExpectedTarget, aExpectedEvent, aTestName);
-  synthesizeKey(key, aEvent);
+  synthesizeKey(key, aEvent, aWindow);
   _checkExpectedEvent(aExpectedTarget, aExpectedEvent, eventHandler, aTestName);
 }
