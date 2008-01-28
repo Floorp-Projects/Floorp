@@ -83,6 +83,10 @@ public:
 
   PRBool Matches(nsIContent* aContent, PRUint32 aIndex);
 
+  // Unbind all the default content in this insertion point.  Used
+  // when the insertion parent is going away.
+  void UnbindDefaultContent();
+
 protected:
   nsAutoRefCnt mRefCnt;
   nsIContent* mParentElement;            // This ref is weak.  The parent of the <children> element.

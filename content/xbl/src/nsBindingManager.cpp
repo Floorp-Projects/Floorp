@@ -448,10 +448,7 @@ RemoveInsertionParentForNodeList(nsIDOMNodeList* aList, nsIContent* aParent)
     PRInt32 count = list->GetInsertionPointCount();
     for (PRInt32 i = 0; i < count; ++i) {
       nsRefPtr<nsXBLInsertionPoint> currPoint = list->GetInsertionPointAt(i);
-      nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContent();
-      if (defContent) {
-        defContent->UnbindFromTree();
-      }
+      currPoint->UnbindDefaultContent();
 #ifdef DEBUG
       nsCOMPtr<nsIContent> parent = currPoint->GetInsertionParent();
       NS_ASSERTION(!parent || parent == aParent, "Wrong insertion parent!");
