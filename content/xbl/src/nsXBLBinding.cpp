@@ -565,10 +565,7 @@ ChangeDocumentForDefaultContent(nsISupports* aKey,
 {
   PRInt32 count = aData->Length();
   for (PRInt32 i = 0; i < count; i++) {
-    nsXBLInsertionPoint* currPoint = aData->ElementAt(i);
-    nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContent();
-    if (defContent)
-      defContent->UnbindFromTree();
+    aData->ElementAt(i)->UnbindDefaultContent();
   }
 
   return PL_DHASH_NEXT;
@@ -1402,10 +1399,7 @@ nsXBLBinding::RemoveInsertionParent(nsIContent* aParent)
       PRInt32 count = list->Length();
       for (PRInt32 i = 0; i < count; ++i) {
         nsRefPtr<nsXBLInsertionPoint> currPoint = list->ElementAt(i);
-        nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContent();
-        if (defContent) {
-          defContent->UnbindFromTree();
-        }
+        currPoint->UnbindDefaultContent();
 #ifdef DEBUG
         nsCOMPtr<nsIContent> parent = currPoint->GetInsertionParent();
         NS_ASSERTION(!parent || parent == aParent, "Wrong insertion parent!");
