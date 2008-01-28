@@ -156,7 +156,7 @@ def chunk_list(val_list):
 def send_to_graph(results_server, results_link, title, date, browser_config, results):
   tbox = title
   url_format = "http://%s/%s"
-  link_format= "<a href = \"%s\">%s</a>"
+  link_format= "<a href=\"%s\">%s</a>"
   #value, testname, tbox, timeval, date, branch, buildid, type, data
   result_format = "%.2f,%s,%s,%d,%d,%s,%s,%s,%s,\n"
   result_format2 = "%.2f,%s,%s,%d,%d,%s,%s,%s,\n"
@@ -235,7 +235,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
     if linkName in ('tp_pbytes', 'tp_%cpu'):
       continue
     if float(values[2]) > 0:
-      linkName += ":&nbsp;" + values[2]
+      linkName += ":&nbsp;" + str(values[2])
       url = url_format % (results_server, values[0])
       link = link_format % (url, linkName)
       first_results = first_results + "RETURN:" + link + '<br>' 
