@@ -1549,7 +1549,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     uintN i;
     JSString *str;
     const char *bytes;
-    JSAtom *atom;
+    jsid id;
     JSObject *obj2;
     JSProperty *prop;
     jsval value;
@@ -1558,6 +1558,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return JS_FALSE;
+        argv[i] = STRING_TO_JSVAL(str);
         bytes = JS_GetStringBytes(str);
         if (strcmp(bytes, "arena") == 0) {
 #ifdef JS_ARENAMETER
@@ -1568,14 +1569,13 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         } else if (strcmp(bytes, "global") == 0) {
             DumpScope(cx, cx->globalObject, stdout);
         } else {
-            atom = js_Atomize(cx, bytes, JS_GetStringLength(str), 0);
-            if (!atom)
+            if (!JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
                 return JS_FALSE;
-            if (js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop) < 0)
+            if (js_FindProperty(cx, id, &obj, &obj2, &prop) < 0)
                 return JS_FALSE;
             if (prop) {
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
-                if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &value))
+                if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
                     return JS_FALSE;
             }
             if (!prop || !JSVAL_IS_OBJECT(value)) {
