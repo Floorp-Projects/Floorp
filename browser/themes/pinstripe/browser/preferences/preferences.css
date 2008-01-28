@@ -39,22 +39,16 @@
 # ***** END LICENSE BLOCK *****
 */
 
- menulist > menupopup > menuitem {
-   font: -moz-pull-down-menu;
- }
- 
+#BrowserPreferences {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedPrefwindow");
+}
+
 .prefWindow-dlgbuttons {
   margin: 0 12px 8px 12px;
 }
 
 #BrowserPreferences .prefWindow-dlgbuttons {
   padding-top: 0 !important;
-}
-
-#FontsDialog > .prefWindow-dlgbuttons,
-#ColorsDialog > .prefWindow-dlgbuttons,
-#LanguagesDialog > .prefWindow-dlgbuttons {
-  margin: 0;
 }
 
 .windowDialog {
@@ -64,41 +58,51 @@
 
 .paneSelector {
   list-style-image: url("chrome://browser/skin/preferences/Options.png");
-  padding: 0 5px;
-  border-bottom: 1px solid #a3a3a3;
-  background: url("chrome://global/skin/toolbar/toolbar-pinstripe-overlay.png") repeat;
+  padding: 0 5px 2px 5px;
+  background-color: #969696;
+  border-bottom: 1px solid #404040;
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.gif");
+  background-repeat: repeat-x;
+  background-position: top right;
   margin: 0;
 }
 
+.paneSelector > radio[pane] {
+  -moz-binding: url("chrome://browser/skin/browser.xml#radio-shadow") !important;
+}
+
 .paneSelector radio {
-  border-right: 1px solid transparent;
-  border-left: 1px solid transparent;
-  padding: 3px 0 3px 0;
+  border-right: 2px solid transparent;
+  border-left: 2px solid transparent;
+  padding: 5px 0 3px 0;
   margin: 0;
   -moz-appearance: none !important;
 }
 
-radio[pane][selected="true"] {
-    background-color: #DDDDDD;
-    background-image: none;
-    border-right: 1px solid #b9b9b9;
-    border-left: 1px solid #b9b9b9;
-    color: ButtonText !important;
+.paneButtonLabel-shadow,
+.paneButtonLabel {
+  margin: 0;
+  padding: 1px 6px 0 6px;
 }
 
+.paneButtonLabel-shadow {
+  padding-top: 2px;
+}
+
+radio[pane][selected="true"] {
+    background: url("chrome://browser/skin/radio-selected-bg.gif") repeat-x center center;
+    -moz-border-left-colors: #6a6a6a #868686;
+    -moz-border-right-colors: #6a6a6a #868686;    
+}
 
 /* ----- GENERAL BUTTON ----- */
 
 radio[pane=paneGeneral],
 radio[pane=paneMain] {
 	-moz-image-region: rect(0px, 32px, 32px, 0px)
-}
-radio[pane=paneGeneral]:hover, 
+} 
 radio[pane=paneGeneral]:active,
-radio[pane=paneGeneral][selected="true"],
-radio[pane=paneMain]:hover, 
-radio[pane=paneMain]:active,
-radio[pane=paneMain][selected="true"]  {
+radio[pane=paneMain]:active {
 	-moz-image-region: rect(32px, 32px, 64px, 0px)
 }
 
@@ -107,9 +111,8 @@ radio[pane=paneMain][selected="true"]  {
 radio[pane=paneTabs] {
 	-moz-image-region: rect(0px, 64px, 32px, 32px);
 }
-radio[pane=paneTabs]:hover,
-radio[pane=paneTabs]:active,
-radio[pane=paneTabs][selected="true"] {
+
+radio[pane=paneTabs]:active {
 	-moz-image-region: rect(32px, 64px, 64px, 32px);
 }
 
@@ -119,9 +122,7 @@ radio[pane=paneContent] {
 	-moz-image-region: rect(0px, 96px, 32px, 64px);
 }
 
-radio[pane=paneContent]:hover,
-radio[pane=paneContent]:active,
-radio[pane=paneContent][selected="true"] {
+radio[pane=paneContent]:active {
 	-moz-image-region: rect(32px, 96px, 64px, 64px);
 }
 
@@ -130,9 +131,8 @@ radio[pane=paneContent][selected="true"] {
 radio[pane=paneApplications] {
 	-moz-image-region: rect(0px, 128px, 32px, 96px);
 }
-radio[pane=paneApplications]:hover,
-radio[pane=paneApplications]:active,
-radio[pane=paneApplications][selected="true"] {
+
+radio[pane=paneApplications]:active {
 	-moz-image-region: rect(32px, 128px, 64px, 96px);
 }
 
@@ -141,9 +141,8 @@ radio[pane=paneApplications][selected="true"] {
 radio[pane=panePrivacy] {
 	-moz-image-region: rect(0px, 160px, 32px, 128px);
 }
-radio[pane=panePrivacy]:hover,
-radio[pane=panePrivacy]:active,
-radio[pane=panePrivacy][selected="true"] {
+
+radio[pane=panePrivacy]:active {
 	-moz-image-region: rect(32px, 160px, 64px, 128px);
 }
 
@@ -152,9 +151,8 @@ radio[pane=panePrivacy][selected="true"] {
 radio[pane=paneSecurity] {
 	-moz-image-region: rect(0px, 192px, 32px, 160px);
 }
-radio[pane=paneSecurity]:hover,
-radio[pane=paneSecurity]:active,
-radio[pane=paneSecurity][selected="true"] {
+
+radio[pane=paneSecurity]:active {
 	-moz-image-region: rect(32px, 192px, 64px, 160px);
 }
 
@@ -163,9 +161,8 @@ radio[pane=paneSecurity][selected="true"] {
 radio[pane=paneAdvanced] {
 	-moz-image-region: rect(0px, 224px, 32px, 192px);
 }
-radio[pane=paneAdvanced]:hover,
-radio[pane=paneAdvanced]:active,
-radio[pane=paneAdvanced][selected="true"] {
+
+radio[pane=paneAdvanced]:active {
 	-moz-image-region: rect(32px, 224px, 64px, 192px);
 }
 
@@ -178,10 +175,6 @@ radio[pane=paneAdvanced][selected="true"] {
 
 #BrowserPreferences[animated="false"] #handlersView {
   -moz-box-flex: 1;
-}
-
-.content-box > separator {
-  border: 1px solid red;
 }
 
 description {
