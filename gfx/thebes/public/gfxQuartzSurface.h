@@ -40,6 +40,7 @@
 #define GFX_QUARTZSURFACE_H
 
 #include "gfxASurface.h"
+#include "gfxImageSurface.h"
 
 #include <Carbon/Carbon.h>
 
@@ -56,6 +57,8 @@ public:
     CGContextRef GetCGContext() { return mCGContext; }
 
     virtual PRInt32 GetDefaultContextFlags() const;
+
+    already_AddRefed<gfxImageSurface> GetImageSurface();
 
 protected:
     CGContextRef mCGContext;
