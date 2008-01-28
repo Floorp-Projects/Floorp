@@ -52,7 +52,7 @@
 inline
 XPCDispParamPropJSClass* GetParamProp(JSContext* cx, JSObject* obj)
 {
-    return reinterpret_cast<XPCDispParamPropJSClass*>(JS_GetPrivate(cx, obj));
+    return reinterpret_cast<XPCDispParamPropJSClass*>(xpc_GetJSPrivate(cx, obj));
 }
 
 /**

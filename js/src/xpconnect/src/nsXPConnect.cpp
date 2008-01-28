@@ -767,7 +767,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         char name[72];
         if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
         {
-            XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
+            XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(obj);
             if(wn)
             {
                 XPCNativeScriptableInfo* si = wn->GetScriptableInfo();
@@ -814,7 +814,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             if(IS_PROTO_CLASS(clazz))
             {
                 XPCWrappedNativeProto* p =
-                    (XPCWrappedNativeProto*) JS_GetPrivate(cx, obj);
+                    (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
                 si = p->GetScriptableInfo();
             }
             if(si)
@@ -824,7 +824,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             }
             else if(clazz == &js_ScriptClass)
             {
-                JSScript* script = (JSScript*) JS_GetPrivate(cx, obj);
+                JSScript* script = (JSScript*) xpc_GetJSPrivate(obj);
                 if(script->filename)
                 {
                     JS_snprintf(name, sizeof(name), "JS Object (Script - %s)",
@@ -837,7 +837,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             }
             else if(clazz == &js_FunctionClass)
             {
-                JSFunction* fun = (JSFunction*) JS_GetPrivate(cx, obj);
+                JSFunction* fun = (JSFunction*) xpc_GetJSPrivate(obj);
                 if(fun->atom && ATOM_IS_STRING(fun->atom))
                 {
                     NS_ConvertUTF16toUTF8
@@ -896,7 +896,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         // (see XPCWrappedNative::FlatJSObjectFinalized). Its XPCWrappedNative
         // will be held alive through the parent of the JSObject of the tearoff.
         XPCWrappedNativeTearOff *to =
-            (XPCWrappedNativeTearOff*) JS_GetPrivate(cx, obj);
+            (XPCWrappedNativeTearOff*) xpc_GetJSPrivate(obj);
         cb.NoteXPCOMChild(to->GetNative());
     }
     // XXX XPCNativeWrapper seems to be the only class that doesn't hold a
@@ -907,7 +907,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS &&
             !XPCNativeWrapper::IsNativeWrapperClass(clazz))
     {
-        cb.NoteXPCOMChild(static_cast<nsISupports*>(JS_GetPrivate(cx, obj)));
+        cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
     }
 
 #ifndef XPCONNECT_STANDALONE
@@ -1210,7 +1210,7 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
 #ifdef DEBUG
     JSObject* returnObj;
     (*_retval)->GetJSObject(&returnObj);
-    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(aJSContext, returnObj),
+    NS_ASSERTION(!XPCNativeWrapper::IsNativeWrapper(returnObj),
                  "Shouldn't be returning a native wrapper here");
 #endif
     
@@ -1748,7 +1748,7 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
     if(NS_FAILED(rv))
         return UnexpectedFailure(rv);
 
-    if(!IS_PROTO_CLASS(JS_GET_CLASS(ccx, protoJSObject)))
+    if(!IS_PROTO_CLASS(STOBJ_GET_CLASS(protoJSObject)))
         return UnexpectedFailure(NS_ERROR_INVALID_ARG);
 
     XPCWrappedNativeScope* scope =
@@ -1757,7 +1757,7 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
     XPCWrappedNativeProto *proto =
-        (XPCWrappedNativeProto*)JS_GetPrivate(ccx, protoJSObject);
+        (XPCWrappedNativeProto*)xpc_GetJSPrivate(protoJSObject);
     if(!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 

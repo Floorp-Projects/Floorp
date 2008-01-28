@@ -1379,10 +1379,8 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
             NS_ERROR("null calling object");
             return NS_ERROR_FAILURE;
         }
-        
-        JSObject *parent;
-        while ((parent = JS_GetParent(cx, targetObject)))
-            targetObject = parent;
+
+        targetObject = JS_GetGlobalForObject(cx, targetObject);
     }
  
     JSObject *globalObj = nsnull;

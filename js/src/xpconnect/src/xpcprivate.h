@@ -3906,6 +3906,18 @@ NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 
 JSBool xpc_IsReportableErrorCode(nsresult code);
 
+inline void *
+xpc_GetJSPrivate(JSObject *obj)
+{
+    jsval v;
+
+    JS_ASSERT(STOBJ_GET_CLASS(obj)->flags & JSCLASS_HAS_PRIVATE);
+    v = obj->fslots[JSSLOT_PRIVATE];
+    if (!JSVAL_IS_INT(v))
+        return NULL;
+    return JSVAL_TO_PRIVATE(v);
+}
+
 #ifndef XPCONNECT_STANDALONE
 
 // Helper for creating a sandbox object to use for evaluating
@@ -3958,7 +3970,7 @@ PRBool
 IsXPCSafeJSObjectWrapperClass(JSClass *clazz);
 
 JSObject *
-XPC_SJOW_GetUnsafeObject(JSContext *cx, JSObject *obj);
+XPC_SJOW_GetUnsafeObject(JSObject *obj);
 
 JSBool
 XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN, jsval *argv,
