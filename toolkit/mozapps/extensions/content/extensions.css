@@ -10,6 +10,46 @@ richlistitem[selected="true"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-selected");
 }
 
+richlistitem[typeName="searchResult"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#searchresult");
+}
+
+richlistitem[typeName="searchResult"][selected="true"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#searchresult-selected");
+}
+
+vbox[typeName="status"][type="search-failure"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-search-failure");
+}
+
+vbox[typeName="status"][type="recommended-failure"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-recommended-failure");
+}
+
+vbox[typeName="status"][type="header-recommended"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-header-recommended");
+}
+
+vbox[typeName="status"][type="footer-recommended"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-recommended");
+}
+
+vbox[typeName="status"][type="footer-search"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-search");
+}
+
+vbox[typeName="status"][type="footer-search"][count="0"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-search-empty");
+}
+
+vbox[typeName="status"][type="retrieve-search"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-retrieve-search");
+}
+
+vbox[typeName="status"][type="retrieve-recommended"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-retrieve-recommended");
+}
+
 richlistitem[typeName="update"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#update-found");
 }
@@ -99,6 +139,10 @@ richlistitem[opType="needs-disable"] hbox.addon-description {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-disable");
 }
 
+#searchbox {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#search-textbox");
+}
+
 #viewGroup radio {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#viewbutton");
   -moz-box-orient: vertical;
@@ -147,4 +191,37 @@ richlistitem[type="4"] .disableHide {
 richlistitem:not([plugin]) .pluginIcon ,
 richlistitem[plugin] .addonIcon:not(.pluginIcon) {
   display: none;
+}
+
+richlistitem[action] .addonInstallButton {
+  display: none;
+}
+
+.searchResultInstalling, .searchResultFailed, .searchResultInstalled {
+  display: none;
+}
+
+richlistitem[action="installing"] .searchResultInstalling {
+  display: -moz-box;
+}
+
+richlistitem[action="failed"] .searchResultFailed,
+richlistitem[action="failed"] .addonInstallButton {
+  display: -moz-box;
+}
+
+richlistitem[action="installed"] .searchResultInstalled {
+  display: -moz-box;
+}
+
+richlistitem .addonType {
+  display: none;
+}
+
+richlistitem[addonType="2"] .addonTypeExtension {
+  display: -moz-box;
+}
+
+richlistitem[addonType="4"] .addonTypeTheme {
+  display: -moz-box;
 }
