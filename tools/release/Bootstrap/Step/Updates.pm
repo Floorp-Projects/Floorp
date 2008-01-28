@@ -137,11 +137,6 @@ sub Verify {
 
     # Create verification area.
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
-
-    if (-e $verifyDirVersion) {
-        die "ASSERT: Updates::Verify(): $verifyDirVersion already exists?";
-    }
-
     MkdirWithPath(dir => $verifyDirVersion) 
       or die("Could not mkdir $verifyDirVersion: $!");
 

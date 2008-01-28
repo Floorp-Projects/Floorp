@@ -78,9 +78,6 @@ sub Verify {
     # l10n metadiff test
 
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
-    if (-e $verifyDirVersion) {
-        die "ASSERT: Repack::Verify(): $verifyDirVersion already exists?";
-    }
 
     MkdirWithPath(dir => $verifyDirVersion)
       or die("Cannot mkdir $verifyDirVersion: $!");
