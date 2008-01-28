@@ -7,12 +7,12 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
   <binding id="unifiedWindow">
-    <content titlebarcolor="#EBEBEB"/>
+    <content titlebarcolor="#C4C4C4"/>
   </binding>
 
   <binding id="unifiedDialog"
            extends="chrome://global/content/bindings/dialog.xml#dialog">
-    <content titlebarcolor="#EBEBEB">
+    <content titlebarcolor="#C4C4C4">
       <xul:vbox class="box-inherit dialog-content-box" flex="1">
         <children/>
       </xul:vbox>
@@ -32,7 +32,7 @@
 
   <binding id="unifiedWizard"
            extends="chrome://global/content/bindings/wizard.xml#wizard">
-    <content titlebarcolor="#EBEBEB">
+    <content titlebarcolor="#C4C4C4">
       <xul:hbox class="wizard-header" anonid="Header"/>
       <xul:deck class="wizard-page-box" flex="1" anonid="Deck">
         <children includes="wizardpage"/>
@@ -50,7 +50,7 @@
              closebuttonaccesskey="&preferencesCloseButton.accesskey;"
              role="dialog"
              title="&preferencesDefaultTitleMac.title;"
-             titlebarcolor="#EBEBEB">
+             titlebarcolor="#C4C4C4">
       <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
                       role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
       <xul:hbox flex="1" class="paneDeckContainer">

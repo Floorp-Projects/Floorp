@@ -45,6 +45,7 @@ classic.jar:
 +  skin/classic/global/scrollbox.css
 +  skin/classic/global/spinbuttons.css
 +  skin/classic/global/splitter.css
++  skin/classic/global/statusbar-background.gif
 +  skin/classic/global/tabbox.css
 +  skin/classic/global/textbox.css
 +  skin/classic/global/datetimepicker.css
@@ -98,6 +99,7 @@ classic.jar:
 +  skin/classic/global/icons/blacklist_large.png                      (icons/blacklist_large.png)
 +  skin/classic/global/icons/chevron.png                              (icons/chevron.png)
 +  skin/classic/global/icons/close.gif                                (icons/close.gif)
++  skin/classic/global/icons/checkbox.png                             (icons/checkbox.png)
 +  skin/classic/global/icons/closetab-active.png                      (icons/closetab-active.png)
 +  skin/classic/global/icons/closetab-hover.png                       (icons/closetab-hover.png)
 +  skin/classic/global/icons/closetab.png                             (icons/closetab.png)
@@ -107,7 +109,7 @@ classic.jar:
 +  skin/classic/global/icons/find-bar-notfound.png                    (icons/find-bar-notfound.png)
 +  skin/classic/global/icons/grip-vrt.gif                             (icons/grip-vrt.gif)
 +  skin/classic/global/icons/loading_16_grey.gif                      (icons/loading_16_grey.gif)
-+  skin/classic/global/icons/loading_16.gif                           (icons/loading_16.gif)
++  skin/classic/global/icons/loading_16.png                           (icons/loading_16.png)
 +  skin/classic/global/icons/menuflashblue.gif                        (icons/menuflashblue.gif)
 +  skin/classic/global/icons/menuselected.png                         (icons/menuselected.png)
 +  skin/classic/global/icons/minimize.gif                             (icons/minimize.gif)
@@ -117,13 +119,30 @@ classic.jar:
 +  skin/classic/global/icons/popup-overlay.png                        (icons/popup-overlay.png)
 +  skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
 +  skin/classic/global/icons/restore.gif                              (icons/restore.gif)
++  skin/classic/global/icons/search-textbox.png                       (icons/search-textbox.png)
 +  skin/classic/global/icons/small-document.png                       (icons/small-document.png)
 +  skin/classic/global/icons/small-globe-sunken-grey.png              (icons/small-globe-sunken-grey.png)
 +  skin/classic/global/icons/small-globe-sunken.png                   (icons/small-globe-sunken.png)
 +  skin/classic/global/icons/white-gray-gradient.gif                  (icons/white-gray-gradient.gif)
++  skin/classic/global/icons/white-gray-gradient-active.gif           (icons/white-gray-gradient-active.gif)
 +  skin/classic/global/icons/warning-large.png                        (icons/warning-large.png)
 +  skin/classic/global/icons/Error.png                                (icons/Error.png)
 +  skin/classic/global/icons/thumb.png                                (icons/thumb.png)
++  skin/classic/global/icons/highlight-active-leftcap.png             (icons/highlight-active-leftcap.png)
++  skin/classic/global/icons/highlight-active-right.png               (icons/highlight-active-right.png)
++  skin/classic/global/icons/round-button-active-dropmarker.png       (icons/round-button-active-dropmarker.png)
++  skin/classic/global/icons/round-button-active-left.png             (icons/round-button-active-left.png)
++  skin/classic/global/icons/round-button-active-leftcap.png          (icons/round-button-active-leftcap.png)
++  skin/classic/global/icons/round-button-active-middle.png           (icons/round-button-active-middle.png)
++  skin/classic/global/icons/round-button-active-right.png            (icons/round-button-active-right.png)
++  skin/classic/global/icons/round-button-dropmarker.png              (icons/round-button-dropmarker.png)
++  skin/classic/global/icons/round-button-left.png                    (icons/round-button-left.png)
++  skin/classic/global/icons/round-button-leftcap.png                 (icons/round-button-leftcap.png)
++  skin/classic/global/icons/round-button-middle.png                  (icons/round-button-middle.png)
++  skin/classic/global/icons/round-button-right.png                   (icons/round-button-right.png)
++  skin/classic/global/icons/white-checkbox-active.png                (icons/white-checkbox-active.png)
++  skin/classic/global/icons/white-checkbox-checked.png               (icons/white-checkbox-checked.png)
++  skin/classic/global/icons/white-checkbox.png                       (icons/white-checkbox.png)
 +  skin/classic/global/menu/menu-arrow-dis.gif                        (menu/menu-arrow-dis.gif)
 +  skin/classic/global/menu/menu-arrow-hov.gif                        (menu/menu-arrow-hov.gif)
 +  skin/classic/global/menu/menu-arrow.gif                            (menu/menu-arrow.gif)
@@ -155,6 +174,7 @@ classic.jar:
 +  skin/classic/global/toolbar/dropmark-nav-small.png                 (toolbar/dropmark-nav-small.png)
 +  skin/classic/global/toolbar/spring.gif                             (toolbar/spring.gif)
 +  skin/classic/global/toolbar/toolbar-background.gif                 (toolbar/toolbar-background.gif)
++  skin/classic/global/toolbar/toolbar-background-tall.gif            (toolbar/toolbar-background-tall.gif)
 +  skin/classic/global/toolbar/toolbar-pinstripe-overlay.png          (toolbar/toolbar-pinstripe-overlay.png)
 +  skin/classic/global/toolbar/toolbar-separator.png                  (toolbar/toolbar-separator.png)
 +  skin/classic/global/toolbar/toolbarbutton-customhover-left.png     (toolbar/toolbarbutton-customhover-left.png)
@@ -164,6 +184,7 @@ classic.jar:
 +  skin/classic/global/tree/folder-dis.png                            (tree/folder-dis.png)
 +  skin/classic/global/tree/folder.png                                (tree/folder.png)
 +  skin/classic/global/tree/item.png                                  (tree/item.png)
++  skin/classic/global/tree/item-grayscale.png                        (tree/item-grayscale.png)
 +  skin/classic/global/tree/sort-asc.gif                              (tree/sort-asc.gif)
 +  skin/classic/global/tree/sort-dsc.gif                              (tree/sort-dsc.gif)
 
