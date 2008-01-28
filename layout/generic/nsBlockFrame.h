@@ -674,10 +674,9 @@ private:
 class nsBlockInFlowLineIterator {
 public:
   typedef nsBlockFrame::line_iterator line_iterator;
-  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine, PRBool aInOverflow);
-  
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator& aLine, PRBool aInOverflow);
+
   line_iterator GetLine() { return mLine; }
-  PRBool IsLastLineInList();
   nsBlockFrame* GetContainer() { return mFrame; }
   PRBool GetInOverflow() { return mInOverflowLines != nsnull; }
   /**
