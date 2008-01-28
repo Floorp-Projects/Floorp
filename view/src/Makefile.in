@@ -55,11 +55,9 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  pref \
+		  thebes \
+		  cairo \
 		  $(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += thebes cairo
-endif
 
 EXTRA_DSO_LIBS = gkgfx
 
@@ -71,6 +69,4 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_ENABLE_CAIRO_GFX
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
-endif

@@ -80,15 +80,13 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  intl \
 		  uconv \
+		  thebes \
+		  cairo \
 		  $(NULL)
 
 # Sun's Complex Text Layout support
 ifdef SUNCTL
 REQUIRES	+= ctl
-endif
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES	+= thebes cairo
 endif
 
 EXPORTS		= \
