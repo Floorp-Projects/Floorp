@@ -236,13 +236,13 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
     // Now init our script object principal, if the new global has one
 
     JSContext* cx = ccx.GetJSContext();
-    const JSClass* jsClass = JS_GetClass(cx, aGlobal);
+    const JSClass* jsClass = STOBJ_GET_CLASS(aGlobal);
     if(!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
                             JSCLASS_PRIVATE_IS_NSISUPPORTS)))
     {
         // Our global has an nsISupports native pointer.  Let's
         // see whether it's what we want.
-        nsISupports* priv = (nsISupports*)JS_GetPrivate(cx, aGlobal);
+        nsISupports* priv = (nsISupports*)xpc_GetJSPrivate(aGlobal);
         nsCOMPtr<nsIXPConnectWrappedNative> native =
             do_QueryInterface(priv);
         if(native)
@@ -700,19 +700,19 @@ XPCWrappedNativeScope::SystemIsBeingShutDown(JSContext* cx)
 
 static
 XPCWrappedNativeScope*
-GetScopeOfObject(JSContext* cx, JSObject* obj)
+GetScopeOfObject(JSObject* obj)
 {
     nsISupports* supports;
-    JSClass* clazz = JS_GET_CLASS(cx, obj);
+    JSClass* clazz = STOBJ_GET_CLASS(obj);
 
     if(!IS_WRAPPER_CLASS(clazz) ||
-       !(supports = (nsISupports*) JS_GetPrivate(cx, obj)))
+       !(supports = (nsISupports*) xpc_GetJSPrivate(obj)))
     {
 #ifdef DEBUG
         {
             if(!(~clazz->flags & (JSCLASS_HAS_PRIVATE |
                                   JSCLASS_PRIVATE_IS_NSISUPPORTS)) &&
-               (supports = (nsISupports*) JS_GetPrivate(cx, obj)))
+               (supports = (nsISupports*) xpc_GetJSPrivate(obj)))
             {
                 nsCOMPtr<nsIXPConnectWrappedNative> iface =
                     do_QueryInterface(supports);
@@ -784,7 +784,7 @@ XPCWrappedNativeScope::FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
     // If this object is itself a wrapped native then we can get the
     // scope directly.
 
-    scope = GetScopeOfObject(ccx, obj);
+    scope = GetScopeOfObject(obj);
     if(scope)
         return scope;
 

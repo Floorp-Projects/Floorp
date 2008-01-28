@@ -155,7 +155,7 @@ SafeFinalize(JSContext* cx, JSObject* obj)
 {
 #ifndef XPCONNECT_STANDALONE
     nsIScriptObjectPrincipal* sop =
-        static_cast<nsIScriptObjectPrincipal*>(JS_GetPrivate(cx, obj));
+        static_cast<nsIScriptObjectPrincipal*>(xpc_GetJSPrivate(obj));
     NS_IF_RELEASE(sop);
 #endif
 }
