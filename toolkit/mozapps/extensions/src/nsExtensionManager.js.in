@@ -62,7 +62,6 @@ const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
 const PREF_EM_IGNOREMTIMECHANGES      = "extensions.ignoreMTimeChanges";
 const PREF_EM_DISABLEDOBSOLETE        = "extensions.disabledObsolete";
-const PREF_EM_LAST_SELECTED_SKIN      = "extensions.lastSelectedSkin";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.%UUID%.";
 const PREF_EM_ITEM_UPDATE_ENABLED     = "extensions.%UUID%.update.enabled";
 const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
@@ -4511,8 +4510,19 @@ ExtensionManager.prototype = {
       else {
         this._configureForthcomingItem(installManifest, installData.id,
                                         installLocation, installData.type);
-        if (!restartRequired)
+        if (!restartRequired) {
           this._finalizeInstall(installData.id, stagedFile);
+          if (installData.type == Ci.nsIUpdateItem.TYPE_THEME) {
+            var internalName = this.datasource.getItemProperty(installData.id, "internalName");
+            if (gPref.getBoolPref(PREF_EM_DSS_ENABLED)) {
+              gPref.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, internalName);
+            }
+            else {
+              gPref.setBoolPref(PREF_DSS_SWITCHPENDING, true);
+              gPref.setCharPref(PREF_DSS_SKIN_TO_SELECT, internalName);
+            }
+          }
+        }
       }
       this._updateManifests(restartRequired);
       break;
