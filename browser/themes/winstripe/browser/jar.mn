@@ -54,6 +54,7 @@ classic.jar:
         skin/classic/browser/safebrowsing/warning16x16.png            (safebrowsing/warning16x16.png)
         skin/classic/browser/safebrowsing/warning24x24.png            (safebrowsing/warning24x24.png)
 #endif
+        skin/classic/browser/preferences/alwaysAsk.png          (preferences/alwaysAsk.png)
         skin/classic/browser/preferences/application.png        (preferences/application.png)
         skin/classic/browser/preferences/Options.png            (preferences/Options.png)
         skin/classic/browser/preferences/plugin.png             (preferences/plugin.png)
