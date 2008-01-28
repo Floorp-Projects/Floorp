@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  autocomplete \
 		  places \
 		  toolkitcomps \
+		  locale \
 		  $(NULL)
 
 CSRCS		= \
