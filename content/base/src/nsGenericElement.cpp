@@ -803,31 +803,33 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMTextRectangle** aResult)
       r.UnionRect(r, nextRect);
     }
   } else {
-    r = nsLayoutUtils::GetAllInFlowBoundingRect(frame) +
-        GetOffsetFromInitialContainingBlock(frame);
+    // The weird frame layout of tables requires this
+    if (frame->GetType() == nsGkAtoms::tableOuterFrame) {
+      nsIFrame* innerTable = frame->GetFirstChild(nsnull);
+      if (innerTable) {
+        r = nsLayoutUtils::GetAllInFlowBoundingRect(innerTable) + innerTable->GetPosition();
+      }
+      nsIFrame* caption = frame->GetFirstChild(nsGkAtoms::captionList);
+      if (caption) {
+        r.UnionRect(r, nsLayoutUtils::GetAllInFlowBoundingRect(caption) + caption->GetPosition());
+      }
+    } else {
+      r = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
+    }
+    r += GetOffsetFromInitialContainingBlock(frame);
   }
   SetTextRectangle(r, presContext, rect);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
+static nsresult
+AddRectanglesForFrames(nsTextRectangleList* aRectList, nsIFrame* aFrame)
 {
-  // Weak ref, since we addref it below
-  nsTextRectangleList* rectList = new nsTextRectangleList();
-  if (!rectList)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  NS_ADDREF(*aResult = rectList);
-  
-  nsIFrame* frame = mContent->GetPrimaryFrame(Flush_Layout);
-  if (!frame) {
-    // display:none, perhaps? Return an empty list
+  if (!aFrame)
     return NS_OK;
-  }
-  
-  nsPresContext* presContext = frame->PresContext();
-  for (nsIFrame* f = frame; f;
+
+  nsPresContext* presContext = aFrame->PresContext();
+  for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
     nsRefPtr<nsTextRectangle> rect = new nsTextRectangle();
     if (!rect)
@@ -838,8 +840,45 @@ nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
       r = nsRect(GetOffsetFromInitialContainingBlock(f), f->GetSize());
     }
     SetTextRectangle(r, presContext, rect);
-    rectList->Append(rect);
+    aRectList->Append(rect);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetClientRects(nsIDOMTextRectangleList** aResult)
+{
+  *aResult = nsnull;
+
+  // Weak ref, since we addref it below
+  nsRefPtr<nsTextRectangleList> rectList = new nsTextRectangleList();
+  if (!rectList)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  nsIFrame* frame = mContent->GetPrimaryFrame(Flush_Layout);
+  if (!frame) {
+    // display:none, perhaps? Return an empty list
+    *aResult = rectList.forget().get();
+    return NS_OK;
+  }
+
+  if (frame->GetType() == nsGkAtoms::tableOuterFrame) {
+    // The weird frame layout of tables requires this
+    nsIFrame* innerTable = frame->GetFirstChild(nsnull);
+    nsresult rv = AddRectanglesForFrames(rectList, innerTable);
+    if (NS_FAILED(rv))
+      return rv;
+    nsIFrame* caption = frame->GetFirstChild(nsGkAtoms::captionList);
+    rv = AddRectanglesForFrames(rectList, caption);
+    if (NS_FAILED(rv))
+      return rv;
+  } else {
+    nsresult rv = AddRectanglesForFrames(rectList, frame);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  *aResult = rectList.forget().get();
   return NS_OK;
 }
 
