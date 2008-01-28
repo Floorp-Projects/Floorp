@@ -69,7 +69,6 @@ DEFINES += \
 	-D_IMPL_NS_WIDGET \
 	$(NULL)
 
-ifdef MOZ_ENABLE_CAIRO_GFX
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10)
 endif
@@ -79,7 +78,6 @@ ifdef MOZ_ENABLE_GLITZ
 EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
 endif
 endif
-endif # MOZ_ENABLE_CAIRO_GFX
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
