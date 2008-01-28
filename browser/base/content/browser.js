@@ -181,45 +181,6 @@ function UpdateBackForwardCommands(aWebNavigation)
   }
 }
 
-var UnifiedBackForwardButton = {
-  unify: function() {
-    var backButton = document.getElementById("back-button");
-    if (!backButton || !backButton.nextSibling || backButton.nextSibling.id != "forward-button")
-      return; // back and forward buttons aren't adjacent
-
-    var wrapper = document.createElement("toolbaritem");
-    wrapper.id = "unified-back-forward-button";
-    wrapper.className = "chromeclass-toolbar-additional";
-    wrapper.setAttribute("context", "backMenu");
-    
-    var toolbar = backButton.parentNode;
-    toolbar.insertBefore(wrapper, backButton);
-    
-    var forwardButton = backButton.nextSibling;
-    wrapper.appendChild(backButton);
-    wrapper.appendChild(forwardButton);
-    
-    var popup = backButton.getElementsByTagName("menupopup")[0].cloneNode(true);
-    wrapper.appendChild(popup);
-    
-    this._unified = true;
-  },
-
-  separate: function() {
-    if (!this._unified)
-      return;
-    
-    var wrapper = document.getElementById("unified-back-forward-button");
-    var toolbar = wrapper.parentNode;
-    
-    toolbar.insertBefore(wrapper.firstChild, wrapper); // Back button
-    toolbar.insertBefore(wrapper.firstChild, wrapper); // Forward button
-    toolbar.removeChild(wrapper);
-    
-    this._unified = false;
-  }
-};
-
 #ifdef XP_MACOSX
 /**
  * Click-and-Hold implementation for the Back and Forward buttons
@@ -959,7 +920,6 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
 
-  UnifiedBackForwardButton.unify();
   UpdateUrlbarSearchSplitterState();
   
   try {
@@ -1484,14 +1444,12 @@ function BrowserHandleShiftBackspace()
 
 function BrowserBackMenu(event)
 {
-  var menuType = UnifiedBackForwardButton._unified ? "unified" : "back";
-  return FillHistoryMenu(event.target, menuType);
+  return FillHistoryMenu(event.target, "back");
 }
 
 function BrowserForwardMenu(event)
 {
-  var menuType = UnifiedBackForwardButton._unified ? "unified" : "forward";
-  return FillHistoryMenu(event.target, menuType);
+  return FillHistoryMenu(event.target, "forward");
 }
 
 function BrowserStop()
@@ -2976,7 +2934,6 @@ function FillHistoryMenu(aParent, aMenu)
 
     var webNav = getWebNavigation();
     var sessionHistory = webNav.sessionHistory;
-    var bundle_browser = document.getElementById("bundle_browser");
 
     var count = sessionHistory.count;
     var index = sessionHistory.index;
@@ -2993,8 +2950,7 @@ function FillHistoryMenu(aParent, aMenu)
             {
               entry = sessionHistory.getEntryAtIndex(j, false);
               if (entry)
-                createMenuItem(aParent, j, entry.title || entry.URI.spec,
-                               bundle_browser.getString("tabHistory.goBack"));
+                createMenuItem(aParent, j, entry.title);
             }
           break;
         case "forward":
@@ -3004,38 +2960,8 @@ function FillHistoryMenu(aParent, aMenu)
             {
               entry = sessionHistory.getEntryAtIndex(j, false);
               if (entry)
-                createMenuItem(aParent, j, entry.title || entry.URI.spec,
-                               bundle_browser.getString("tabHistory.goForward"));
+                createMenuItem(aParent, j, entry.title);
             }
-          break;
-        case "unified":
-          if (count <= 1) // don't display the popup for a single item
-            return false;
-          
-          var half_length = Math.floor(MAX_HISTORY_MENU_ITEMS / 2);
-          var start = Math.max(index - half_length, 0);
-          end = Math.min(start == 0 ? MAX_HISTORY_MENU_ITEMS : index + half_length + 1, count);
-          if (end == count)
-            start = Math.max(count - MAX_HISTORY_MENU_ITEMS, 0);
-          
-          var tooltips = [
-            bundle_browser.getString("tabHistory.goBack"),
-            bundle_browser.getString("tabHistory.current"),
-            bundle_browser.getString("tabHistory.goForward")
-          ];
-          var classNames = ["unified-nav-back", "unified-nav-current", "unified-nav-forward"];
-          
-          for (var j = end - 1; j >= start; j--) {
-            entry = sessionHistory.getEntryAtIndex(j, false);
-            var tooltip = tooltips[j < index ? 0 : j == index ? 1 : 2];
-            var className = classNames[j < index ? 0 : j == index ? 1 : 2];
-            var item = createMenuItem(aParent, j, entry.title || entry.URI.spec, tooltip, className);
-            
-            if (j == index) { // mark the current history item
-              item.setAttribute("type", "radio");
-              item.setAttribute("checked", "true");
-            }
-          }
           break;
       }
 
@@ -3058,16 +2984,12 @@ function addToUrlbarHistory(aUrlToAdd)
    }
 }
 
-function createMenuItem(aParent, aIndex, aLabel, aTooltipText, aClassName)
+function createMenuItem( aParent, aIndex, aLabel)
   {
     var menuitem = document.createElement( "menuitem" );
     menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
-    if (aTooltipText)
-      menuitem.setAttribute("tooltiptext", aTooltipText);
-    if (aClassName)
-      menuitem.className = aClassName;
-    return aParent.appendChild(menuitem);
+    aParent.appendChild( menuitem );
   }
 
 function deleteHistoryItems(aParent)
@@ -3166,8 +3088,6 @@ function BrowserCustomizeToolbar()
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.setAttribute("disabled", "true");
 
-  UnifiedBackForwardButton.separate();
-
   var splitter = document.getElementById("urlbar-search-splitter");
   if (splitter)
     splitter.parentNode.removeChild(splitter);
@@ -3210,7 +3130,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
 #endif
   }
 
-  UnifiedBackForwardButton.unify();
   UpdateUrlbarSearchSplitterState();
 
   // Update the urlbar
