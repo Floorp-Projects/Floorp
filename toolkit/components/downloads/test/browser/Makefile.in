@@ -16,7 +16,7 @@
 #
 # The Initial Developer of the Original Code is
 # Mozilla Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -36,23 +36,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+DEPTH          = ../../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = toolkit/components/downloads/test/browser
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE = test_dm
-
-XPCSHELL_TESTS = \
-  unit \
-  schema_migration \
-  $(NULL)
-
-DIRS = \
-  browser \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
+_BROWSER_FILES = \
+  browser_nsIDownloadManagerUI.js \
+  $(NULL)
+
+libs:: $(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
