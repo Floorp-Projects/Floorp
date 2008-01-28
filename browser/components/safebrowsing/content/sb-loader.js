@@ -73,7 +73,7 @@ var safebrowsing = {
     safebrowsing.malwareWarden = malwareWarden;
 
     // Register tables
-    malwareWarden.registerBlackTable("goog-malware-sha128");
+    malwareWarden.registerBlackTable("goog-malware-shavar");
 
     malwareWarden.maybeToggleUpdateChecking();
 
@@ -87,7 +87,7 @@ var safebrowsing = {
     // Register tables
     // XXX: move table names to a pref that we originally will download
     // from the provider (need to workout protocol details)
-    phishWarden.registerBlackTable("goog-phish-sha128");
+    phishWarden.registerBlackTable("goog-phish-shavar");
 
     // Download/update lists if we're in non-enhanced mode
     phishWarden.maybeToggleUpdateChecking();
