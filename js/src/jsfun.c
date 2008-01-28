@@ -278,7 +278,7 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
 static JSBool
 args_enumerate(JSContext *cx, JSObject *obj);
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *argsobj;
@@ -589,7 +589,6 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
     callobj = fp->callobj;
     if (callobj)
         return callobj;
-    JS_ASSERT(fp->fun);
 
     /* The default call parent is its function's parent (static link). */
     if (!parent) {
@@ -616,7 +615,7 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent)
 static JSBool
 call_enumerate(JSContext *cx, JSObject *obj);
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *callobj;
