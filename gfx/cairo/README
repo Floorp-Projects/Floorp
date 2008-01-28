@@ -28,5 +28,3 @@ nonfatal-assertions.patch: Make assertions non-fatal
 endian.patch: include cairo-platform.h for endian macros
 
 fixed-24-8.patch: Switch fixed point mode from 16.16 to 24.8
-
-quartz-get-image-surface.patch: Add cairo_quartz_get_image_surface API analogous to the win32 one

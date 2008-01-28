@@ -57,9 +57,6 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
 cairo_public CGContextRef
 cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
 
-cairo_public cairo_surface_t *
-cairo_quartz_surface_get_image (cairo_surface_t *surface);
-
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_QUARTZ_SURFACE */

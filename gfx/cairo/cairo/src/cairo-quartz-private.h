@@ -48,8 +48,6 @@ typedef struct cairo_quartz_surface {
 
     void *imageData;
 
-    cairo_surface_t *imageSurfaceEquiv;
-
     CGContextRef cgContext;
     CGAffineTransform cgContextBaseCTM;
 
