@@ -4952,21 +4952,6 @@ AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
 AC_SUBST(MOZ_DBUS_GLIB_LIBS)
 
 dnl ========================================================
-dnl = Setting MOZ_EXTRA_X11CONVERTERS turns on additional 
-dnl = converters in intl/uconv that are used only by X11 gfx 
-dnl = implementations. By default, it's undefined so that 
-dnl = those converters are not built on other platforms/toolkits. 
-dnl = (see bug 180851)
-dnl ========================================================
-
-if test "$MOZ_ENABLE_GTK2"
-then
-    AC_DEFINE(MOZ_EXTRA_X11CONVERTERS)
-    MOZ_EXTRA_X11CONVERTERS=1
-fi
-AC_SUBST(MOZ_EXTRA_X11CONVERTERS)
-
-dnl ========================================================
 dnl = Build Personal Security Manager
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(crypto,

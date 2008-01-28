@@ -60,13 +60,6 @@
 #define NS_UNICODETOISO2022KR_CID \
   { 0xba6151a0, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
-#ifdef MOZ_EXTRA_X11CONVERTERS
-// Class ID for our UnicodeToKSC5601 charset converter
-// {BA615194-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_UNICODETOKSC5601_CID \
-  { 0xba615194, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-#endif
-
 // Class ID for our UnicodeToCP949 charset converter
 #define NS_UNICODETOCP949_CID \
   { 0x9416bfbe, 0x1f93, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
@@ -74,12 +67,6 @@
 // Class ID for our CP949ToUnicode charset converter
 #define NS_CP949TOUNICODE_CID \
   { 0x9416bfbf, 0x1f93, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-#ifdef MOZ_EXTRA_X11CONVERTERS
-// Class ID for our UnicodeToX11Johab charset converter
-#define NS_UNICODETOX11JOHAB_CID \
-  { 0x21dd6a01, 0x413c, 0x11d3, {0xb3, 0xc3, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-#endif
 
 // Class ID for our UnicodeToJohab charset converter
 // {D9B1F97E-CFA0-80b6-FB92-9972E48E3DCC}
@@ -90,13 +77,6 @@
 // {D9B1F97F-CFA0-80b6-FB92-9972E48E3DCC}
 #define NS_JOHABTOUNICODE_CID \
   { 0xd9b1f97f, 0xcfa0, 0x80b6,  {0xfb, 0x92, 0x99, 0x72, 0xe4, 0x8e, 0x3d, 0xcc}} 
-
-#ifdef MOZ_EXTRA_X11CONVERTERS
-// Class ID for our UnicodeToJohabNoAscii charset converter
-// {7090544B-C885-4c52-95F8-3C8F0C2FDE67}
-#define NS_UNICODETOJOHABNOASCII_CID \
-  { 0x7090544b, 0xc885, 0x4c52, {0x95, 0xf8, 0x3c, 0x8f, 0xc, 0x2f, 0xde, 0x67}}
-#endif
 
 // Class ID for our UnicodeToJamoTTF charset converter
 // {47433d1d-d9a7-4954-994f-f7a05cf87c2e}
