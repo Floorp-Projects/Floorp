@@ -5128,20 +5128,13 @@ nsBlockFrame::TryAllLines(nsLineList::iterator* aIterator,
 }
 
 nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
-    line_iterator aLine, PRBool aInOverflow)
+    line_iterator& aLine, PRBool aInOverflow)
   : mFrame(aFrame), mLine(aLine), mInOverflowLines(nsnull)
 {
   if (aInOverflow) {
     mInOverflowLines = aFrame->GetOverflowLines();
     NS_ASSERTION(mInOverflowLines, "How can we be in overflow if there isn't any?");
   }
-}
-
-PRBool
-nsBlockInFlowLineIterator::IsLastLineInList()
-{
-  line_iterator end = mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
-  return mLine != end && mLine.next() == end;
 }
 
 PRBool

@@ -153,7 +153,6 @@ public:
   }
 
   PRBool ContainsFrame(const nsIFrame* aFrame) const;
-  PRBool ContainsFrameBefore(const nsIFrame* aFrame, const nsIFrame* aEnd) const;
 
   PRInt32 GetLength() const;
 

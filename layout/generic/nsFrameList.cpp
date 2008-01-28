@@ -296,23 +296,6 @@ nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
   return PR_FALSE;
 }
 
-PRBool
-nsFrameList::ContainsFrameBefore(const nsIFrame* aFrame, const nsIFrame* aEnd) const
-{
-  NS_PRECONDITION(nsnull != aFrame, "null ptr");
-  nsIFrame* frame = mFirstChild;
-  while (frame) {
-    if (frame == aEnd) {
-      return PR_FALSE;
-    }
-    if (frame == aFrame) {
-      return PR_TRUE;
-    }
-    frame = frame->GetNextSibling();
-  }
-  return PR_FALSE;
-}
-
 PRInt32
 nsFrameList::GetLength() const
 {
