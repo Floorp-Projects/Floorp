@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Dave Camp <dcamp@mozilla.com>
+ *   Ted Mielczarek <ted.mielczarek@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,31 +44,40 @@
 #include "HTTPMultipartUpload.h"
 #include "crashreporter.h"
 
+// Defined below
+@class TextViewWithPlaceHolder;
+
 @interface CrashReporterUI : NSObject
 {
-    IBOutlet NSWindow* window;
+    IBOutlet NSWindow* mWindow;
 
     /* Crash reporter view */
-    IBOutlet NSTextField* headerLabel;
-    IBOutlet NSTextField* descriptionLabel;
-    IBOutlet NSButton* viewReportButton;
-    IBOutlet NSTextField* viewReportLabel;
-    IBOutlet NSScrollView* viewReportScrollView;
-    IBOutlet NSTextView* viewReportTextView;
-    IBOutlet NSButton* submitReportButton;
-    IBOutlet NSButton* includeURLButton;
-    IBOutlet NSButton* emailMeButton;
-    IBOutlet NSTextField* emailText;
-    IBOutlet NSButton* closeButton;
-    IBOutlet NSButton* restartButton;
+    IBOutlet NSTextField* mHeaderLabel;
+    IBOutlet NSTextField* mDescriptionLabel;
+    IBOutlet NSButton* mViewReportButton;
+    IBOutlet NSScrollView* mCommentScrollView;
+    IBOutlet TextViewWithPlaceHolder* mCommentText;
+    IBOutlet NSButton* mSubmitReportButton;
+    IBOutlet NSButton* mIncludeURLButton;
+    IBOutlet NSButton* mEmailMeButton;
+    IBOutlet NSTextField* mEmailText;
+    IBOutlet NSButton* mCloseButton;
+    IBOutlet NSButton* mRestartButton;
+    IBOutlet NSProgressIndicator* mProgressIndicator;
+    IBOutlet NSTextField* mProgressText;
 
     /* Error view */
-    IBOutlet NSView* errorView;
-    IBOutlet NSTextField* errorHeaderLabel;
-    IBOutlet NSTextField* errorLabel;
-    IBOutlet NSButton* errorCloseButton;
+    IBOutlet NSView* mErrorView;
+    IBOutlet NSTextField* mErrorHeaderLabel;
+    IBOutlet NSTextField* mErrorLabel;
+    IBOutlet NSButton* mErrorCloseButton;
 
-    HTTPMultipartUpload *mPost;
+    /* For "show info" alert */
+    IBOutlet NSWindow* mViewReportWindow;
+    IBOutlet NSTextView* mViewReportTextView;
+    IBOutlet NSButton* mViewReportOkButton;
+
+    HTTPMultipartUpload* mPost;
 }
 
 - (void)showCrashUI:(const std::string&)dumpfile
@@ -76,28 +86,52 @@
 - (void)showErrorUI:(const std::string&)dumpfile;
 - (void)showReportInfo;
 
+- (IBAction)submitReportClicked:(id)sender;
 - (IBAction)viewReportClicked:(id)sender;
+- (IBAction)viewReportOkClicked:(id)sender;
 - (IBAction)closeClicked:(id)sender;
-- (IBAction)closeAndSendClicked:(id)sender;
 - (IBAction)restartClicked:(id)sender;
 - (IBAction)includeURLClicked:(id)sender;
 - (IBAction)emailMeClicked:(id)sender;
 
 - (void)controlTextDidChange:(NSNotification *)note;
+- (void)textDidEndEditing:(NSNotification *)aNotification;
+- (BOOL)textView:(NSTextView *)aTextView shouldChangeTextInRange:(NSRange)affectedCharRange replacementString:(NSString *)replacementString;
 
+- (void)doInitialResizing;
 - (float)setStringFitVertically:(NSControl*)control
                          string:(NSString*)str
                    resizeWindow:(BOOL)resizeWindow;
 - (void)setView:(NSView*)v animate: (BOOL) animate;
+- (void)enableControls:(BOOL)enabled;
+- (void)updateSubmit;
 - (void)updateURL;
 - (void)updateEmail;
 - (void)sendReport;
 - (bool)setupPost;
-- (void)uploadThread:(id)post;
-- (void)uploadComplete:(id)data;
+- (void)uploadThread:(HTTPMultipartUpload*)post;
+- (void)uploadComplete:(NSData*)data;
 
 -(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication;
 -(void)applicationWillTerminate:(NSNotification *)aNotification;
+
+@end
+
+/*
+ * Subclass NSTextView to provide a text view with placeholder text.
+ * Also provide a setEnabled implementation.
+ */
+@interface TextViewWithPlaceHolder : NSTextView {
+  NSAttributedString *mPlaceHolderString;
+}
+
+- (BOOL)becomeFirstResponder;
+- (void)drawRect:(NSRect)rect;
+- (BOOL)resignFirstResponder;  
+- (void)setPlaceholder:(NSString*)placeholder;
+- (void)insertTab:(id)sender;
+- (void)setEnabled:(BOOL)enabled;
+- (void)dealloc;
 
 @end
 
