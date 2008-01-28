@@ -689,8 +689,6 @@ class WrappedNative2WrapperMap
     static struct JSDHashTableOps sOps;
 
     static void ClearLink(JSDHashTable* table, JSDHashEntryHdr* entry);
-    static void CopyLink(JSDHashTable* table, const JSDHashEntryHdr* from,
-                         JSDHashEntryHdr* to);
 
 public:
     struct Link : public PRCList
@@ -702,7 +700,7 @@ public:
     {
         // Note: key must be the flat JSObject for a wrapped native.
         JSObject*         key;
-        Link              value;
+        Link*             value;
     };
 
     static WrappedNative2WrapperMap* newMap(int size);
@@ -714,7 +712,7 @@ public:
             JS_DHashTableOperate(mTable, wrapper, JS_DHASH_LOOKUP);
         if(JS_DHASH_ENTRY_IS_FREE(entry))
             return nsnull;
-        return entry->value.obj;
+        return entry->value->obj;
     }
 
     // Note: If the entry already exists, then this will overwrite the
@@ -729,7 +727,7 @@ public:
         Entry* entry = (Entry*)
             JS_DHashTableOperate(mTable, wrappedObject, JS_DHASH_LOOKUP);
         if(JS_DHASH_ENTRY_IS_BUSY(entry))
-            return &entry->value;
+            return entry->value;
         return nsnull;
     }
 
