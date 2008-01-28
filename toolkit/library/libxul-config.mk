@@ -283,27 +283,8 @@ COMPONENT_LIBS += imgicon
 endif
 endif
 
-ifdef MOZ_ENABLE_CAIRO_GFX
 STATIC_LIBS += thebes
 COMPONENT_LIBS += gkgfxthebes
-
-else # Platform-specific GFX layer
-  ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-  COMPONENT_LIBS += gkgfxwin
-  endif
-  ifeq (beos,$(MOZ_WIDGET_TOOLKIT))
-  COMPONENT_LIBS += gfx_beos
-  endif
-  ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
-  COMPONENT_LIBS += gfx_os2
-  endif
-  ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-  COMPONENT_LIBS += gfx_mac
-  endif
-  ifdef MOZ_ENABLE_PHOTON
-  COMPONENT_LIBS += gfx_photon
-  endif
-endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += gkwidget

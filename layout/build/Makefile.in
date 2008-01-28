@@ -64,9 +64,7 @@ PACKAGE_VARS += MOZ_XUL
 ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS	= gkgfx
 endif
-ifdef MOZ_ENABLE_CAIRO_GFX
 EXTRA_DSO_LIBS	+= thebes
-endif
 
 REQUIRES	= xpcom \
 		  string \
@@ -100,11 +98,8 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  uconv \
 		  txtsvc \
+		  thebes \
 		  $(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += thebes
-endif
 
 CPPSRCS		= \
 		nsLayoutModule.cpp \
@@ -227,21 +222,10 @@ ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
 endif
 
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LIBS += thebes
-else
-ifdef MOZ_ENABLE_CANVAS
-EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
-endif
-endif
-
 ifdef MOZ_ENABLE_GTK2
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
+		    -lXrender \
 		    $(NULL)
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LDOPTS += -lXrender \
-		    $(NULL)
-endif
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
