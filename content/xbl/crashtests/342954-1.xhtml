@@ -1,0 +1,46 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xbl="http://www.mozilla.org/xbl">
+
+
+<head>
+
+<script>
+<![CDATA[
+
+function boo()
+{
+  s1 = document.getElementById("s1");  
+  marq = document.getElementById("marq");
+  marqAnonymousSomething = document.getAnonymousNodes(marq)[0].childNodes[0];
+
+  removeNode(marqAnonymousSomething);
+  s1.appendChild(document.createElement("div"));
+}
+
+function removeNode(q1) { q1.parentNode.removeChild(q1); }
+
+]]>
+</script>
+
+<xbl:bindings id="marqueeBindings">
+  <xbl:binding id="marquee-horizontal-12">
+    <xbl:content>
+      <div>
+        <xbl:children/>
+      </div>
+    </xbl:content>
+  </xbl:binding>
+</xbl:bindings>
+
+</head>
+
+
+<body onload="boo()">
+
+<span id="s1">Span</span>
+
+<div id="marq" style="-moz-binding: url('#marquee-horizontal-12');">Marquee</div>
+
+</body>
+
+
+</html>
