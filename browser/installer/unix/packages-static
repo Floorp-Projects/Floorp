@@ -199,6 +199,7 @@ bin/components/FeedConverter.js
 bin/components/FeedWriter.js
 bin/components/fuelApplication.js
 bin/components/WebContentConverter.js
+bin/components/nsAddonRepository.js
 bin/components/nsBrowserContentHandler.js
 bin/components/nsBrowserGlue.js
 bin/components/nsSetDefaultBrowser.js
