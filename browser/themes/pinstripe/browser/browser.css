@@ -691,7 +691,6 @@ toolbar[mode="icons"][currentset*="back-button,forward-button"] #forward-button[
 }
 
 #page-proxy-deck {
-  cursor: -moz-grab;
   -moz-margin-start: 11px;
   margin-bottom: 1px;
   opacity: 1.0;
@@ -1002,10 +1001,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab[selected="true"] {
   -moz-user-focus: normal;
-}
-
-.tabbrowser-tab[selected="true"] > .tab-image-middle > .tab-icon {
-  cursor: -moz-grab;
 }
 
 .tabbrowser-tab > .tab-image-middle > .tab-text {
