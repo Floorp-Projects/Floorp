@@ -653,16 +653,7 @@ XPCNativeWrapperMap::~XPCNativeWrapperMap()
 // implement WrappedNative2WrapperMap...
 
 struct JSDHashTableOps
-WrappedNative2WrapperMap::sOps = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    JS_DHashVoidPtrKeyStub,
-    JS_DHashMatchEntryStub,
-    CopyLink,
-    ClearLink,
-    JS_DHashFinalizeStub,
-    nsnull
-};
+WrappedNative2WrapperMap::sOps = { nsnull };
 
 // static
 void
@@ -671,25 +662,12 @@ WrappedNative2WrapperMap::ClearLink(JSDHashTable* table,
 {
     Entry* e = static_cast<Entry*>(entry);
     e->key = nsnull;
-    PR_REMOVE_LINK(&e->value);
-    memset(e, 0, sizeof(*e));
-}
-
-// static
-void
-WrappedNative2WrapperMap::CopyLink(JSDHashTable* table,
-                                   const JSDHashEntryHdr* from,
-                                   JSDHashEntryHdr* to)
-{
-    const Entry* oldEntry = static_cast<const Entry*>(from);
-    Entry* newEntry = static_cast<Entry*>(to);
-
-    newEntry->key = oldEntry->key;
-    newEntry->value = oldEntry->value;
-
-    // Now update the list.
-    newEntry->value.next->prev = &newEntry->value;
-    newEntry->value.prev->next = &newEntry->value;
+    if(e->value)
+    {
+        PR_REMOVE_LINK(e->value);
+        delete e->value;
+        e->value = nsnull;
+    }
 }
 
 // static
@@ -705,6 +683,12 @@ WrappedNative2WrapperMap::newMap(int size)
 
 WrappedNative2WrapperMap::WrappedNative2WrapperMap(int size)
 {
+    if(!sOps.allocTable)
+    {
+        sOps = *JS_DHashGetStubOps();
+        sOps.clearEntry = WrappedNative2WrapperMap::ClearLink;
+    }
+
     mTable = JS_NewDHashTable(&sOps, nsnull, sizeof(Entry), size);
 }
 
@@ -726,7 +710,9 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
         return nsnull;
     NS_ASSERTION(!entry->key || this == head, "dangling pointer?");
     entry->key = wrappedObject;
-    Link* l = &entry->value;
+    Link* l = new Link;
+    if(!l)
+        return nsnull;
     PR_INIT_CLIST(l);
     l->obj = wrapper;
 
@@ -738,7 +724,12 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
             Entry* dummy = (Entry*)
                 JS_DHashTableOperate(head->mTable, wrappedObject, JS_DHASH_ADD);
             dummy->key = wrappedObject;
-            headLink = &dummy->value;
+            headLink = dummy->value = new Link;
+            if(!headLink)
+            {
+                Remove(wrappedObject);
+                return nsnull;
+            }
             PR_INIT_CLIST(headLink);
             headLink->obj = nsnull;
         }
@@ -746,6 +737,7 @@ WrappedNative2WrapperMap::Add(WrappedNative2WrapperMap* head,
         PR_INSERT_BEFORE(l, headLink);
     }
 
+    entry->value = l;
     return wrapper;
 }
 
@@ -758,7 +750,12 @@ WrappedNative2WrapperMap::AddLink(JSObject* wrappedObject, Link* oldLink)
         return PR_FALSE;
     NS_ASSERTION(!entry->key, "Eh? What's happening?");
     entry->key = wrappedObject;
-    Link* newLink = &entry->value;
+    Link* newLink = entry->value = new Link;
+    if(!newLink)
+    {
+        Remove(wrappedObject);
+        return PR_FALSE;
+    }
 
     PR_INSERT_LINK(newLink, oldLink);
     PR_REMOVE_AND_INIT_LINK(oldLink);
