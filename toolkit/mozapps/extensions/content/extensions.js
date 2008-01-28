@@ -64,6 +64,7 @@ var gAppID            = "";
 var gPref             = null;
 var gPriorityCount    = 0;
 var gInstallCount     = 0;
+var gPendingActions   = false;
 var gPlugins          = null;
 var gPluginsDS        = null;
 
@@ -289,7 +290,6 @@ function showView(aView) {
   catch (e) { }
   var showCheckUpdatesAll = true;
   var showInstallUpdatesAll = false;
-  var showRestartApp = true;
   var showSkip = false;
   var showContinue = false;
   switch (aView) {
@@ -313,10 +313,8 @@ function showView(aView) {
       showInstallFile = false;
       showCheckUpdatesAll = false;
       showInstallUpdatesAll = true;
-      if (gUpdatesOnly) {
+      if (gUpdatesOnly)
         showSkip = true;
-        showRestartApp = false;
-      }
       bindingList = [ ["aboutURL", "?aboutURL"],
                       ["availableUpdateURL", "?availableUpdateURL"],
                       ["availableUpdateVersion", "?availableUpdateVersion"],
@@ -343,10 +341,8 @@ function showView(aView) {
       showInstallFile = false;
       showCheckUpdatesAll = false;
       showInstallUpdatesAll = false;
-      if (gUpdatesOnly) {
+      if (gUpdatesOnly)
         showContinue = true;
-        showRestartApp = false;
-      }
       bindingList = [ ["aboutURL", "?aboutURL"],
                       ["addonID", "?addonID"],
                       ["availableUpdateURL", "?availableUpdateURL"],
@@ -407,7 +403,6 @@ function showView(aView) {
   document.getElementById("installFileButton").hidden = !showInstallFile;
   document.getElementById("checkUpdatesAllButton").hidden = !showCheckUpdatesAll;
   document.getElementById("installUpdatesAllButton").hidden = !showInstallUpdatesAll;
-  document.getElementById("restartAppButton").hidden = !showRestartApp;
   document.getElementById("skipDialogButton").hidden = !showSkip;
   document.getElementById("continueDialogButton").hidden = !showContinue;
   document.getElementById("themePreviewArea").hidden = !isThemes;
@@ -932,8 +927,10 @@ XPInstallDownloadManager.prototype = {
           setElementDisabledByID("cmd_continue", false);
           document.getElementById("continueDialogButton").focus();
         }
-        else
+        else {
+          updateOptionalViews();
           updateGlobalCommands();
+        }
         break;
     }
   },
@@ -1037,6 +1034,7 @@ UpdateCheckListener.prototype = {
     viewGroup.hidden = false;
     gExtensionsView.removeAttribute("update-operation");
     gExtensionsViewController.onCommandUpdate();
+    updateOptionalViews();
     updateGlobalCommands();
     if (this._updateFound)
       showView("updates");
@@ -1557,6 +1555,9 @@ const gAddonsMsgObserver = {
       break;
     case "addons-message-dismiss":
       break;
+    case "addons-restart-app":
+      restartApp();
+      break;
     }
     if (gExtensionsView.selectedItem)
       gExtensionsView.selectedItem.focus();
@@ -1618,6 +1619,28 @@ function canWriteToLocation(element)
   return installLocation ? installLocation.canAccess : false;
 }
 
+function enableRestartButton() {
+  var addonsMsg = document.getElementById("addonsMsg");
+  var notification = addonsMsg.getNotificationWithValue("restart-app");
+  if (!notification) {
+    var appname = getBrandShortName();
+    var message = getExtensionString("restartMessage", [appname]);
+    var buttons = [ new MessageButton(getExtensionString("restartButton", [appname]),
+                                      getExtensionString("restartAccessKey"),
+                                      "addons-restart-app") ];
+    addonsMsg.appendNotification(message, "restart-app",
+                                 "chrome://mozapps/skin/extensions/question.png",
+                                 addonsMsg.PRIORITY_WARNING_HIGH, buttons);
+  }
+}
+
+function disableRestartButton() {
+  var addonsMsg = document.getElementById("addonsMsg");
+  var notification = addonsMsg.getNotificationWithValue("restart-app");
+  if (notification)
+    notification.close();
+}
+
 function updateOptionalViews() {
   var ds = gExtensionsView.database;
   var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -1630,6 +1653,11 @@ function updateOptionalViews() {
   var showUpdates = false;
   var showInstalls = false;
   gInstallCount = 0;
+  gPendingActions = false;
+
+  var stateArc = rdfs.GetResource(PREFIX_NS_EM + "state");
+  var opTypeArc = rdfs.GetResource(PREFIX_NS_EM + "opType");
+
   while (elements.hasMoreElements()) {
     var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
     if (!showLocales) {
@@ -1641,13 +1669,21 @@ function updateOptionalViews() {
       }
     }
 
-    var stateArc = rdfs.GetResource(PREFIX_NS_EM + "state");
     var state = ds.GetTarget(e, stateArc, true);
     if (state) {
       showInstalls = true;
       if (state instanceof Components.interfaces.nsIRDFLiteral &&
           state.Value != "success" && state.Value != "failure")
         gInstallCount++;
+    }
+
+    if (!gPendingActions) {
+      var opType = ds.GetTarget(e, opTypeArc, true);
+      if (opType) {
+        if (opType instanceof Components.interfaces.nsIRDFLiteral &&
+            opType.Value != OP_NONE)
+          gPendingActions = true;
+      }
     }
 
     if (!showUpdates) {
@@ -1671,14 +1707,14 @@ function updateGlobalCommands() {
   var disableInstallFile = false;
   var disableUpdateCheck = true;
   var disableInstallUpdate = true;
-  var disableAppRestart = (gInstallCount > 0);
+
   if (gExtensionsView.hasAttribute("update-operation")) {
     disableInstallFile = true;
-    disableAppRestart = true;
+    disableRestartButton();
   }
   else if (gView == "updates") {
     disableInstallUpdate = false;
-    disableAppRestart = true;
+    disableRestartButton();
   }
   else {
     var children = gExtensionsView.children;
@@ -1688,10 +1724,16 @@ function updateGlobalCommands() {
         break;
       }
     }
+
+    if (gInstallCount == 0 &&
+        (gPendingActions || gPref.getBoolPref(PREF_EXTENSIONS_DSS_SWITCHPENDING)))
+      enableRestartButton();
+    else
+      disableRestartButton();
   }
+
   setElementDisabledByID("cmd_checkUpdatesAll", disableUpdateCheck);
   setElementDisabledByID("cmd_installUpdatesAll", disableInstallUpdate);
-  setElementDisabledByID("cmd_restartApp", disableAppRestart);
   setElementDisabledByID("cmd_installFile", disableInstallFile);
 }
 
@@ -2073,19 +2115,19 @@ var gExtensionsViewController = {
       }
       gExtensionManager.uninstallItem(getIDFromResourceURI(aSelectedItem.id));
       gExtensionsViewController.onCommandUpdate();
-      updateGlobalCommands();
       if (gExtensionsView.selectedItem)
         gExtensionsView.selectedItem.focus();
       updateOptionalViews();
+      updateGlobalCommands();
     },
 
     cmd_cancelUninstall: function (aSelectedItem)
     {
       gExtensionManager.cancelUninstallItem(getIDFromResourceURI(aSelectedItem.id));
       gExtensionsViewController.onCommandUpdate();
-      updateGlobalCommands();
       gExtensionsView.selectedItem.focus();
       updateOptionalViews();
+      updateGlobalCommands();
     },
 
     cmd_cancelInstall: function (aSelectedItem)
@@ -2111,9 +2153,9 @@ var gExtensionsViewController = {
 
       gExtensionManager.cancelInstallItem(getIDFromResourceURI(aSelectedItem.id));
       gExtensionsViewController.onCommandUpdate();
-      updateGlobalCommands();
       gExtensionsView.selectedItem.focus();
       updateOptionalViews();
+      updateGlobalCommands();
     },
 
     cmd_cancelUpgrade: function (aSelectedItem)
@@ -2145,6 +2187,7 @@ var gExtensionsViewController = {
       gExtensionsViewController.onCommandUpdate();
       gExtensionsView.selectedItem.focus();
       updateOptionalViews();
+      updateGlobalCommands();
     },
 
     cmd_enable: function (aSelectedItem)
@@ -2160,6 +2203,7 @@ var gExtensionsViewController = {
       gExtensionsViewController.onCommandUpdate();
       gExtensionsView.selectedItem.focus();
       updateOptionalViews();
+      updateGlobalCommands();
     }
   }
 };
