@@ -151,13 +151,12 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, EMenuIt
           nsCOMPtr<nsIContent> keyContent(do_QueryInterface(keyElement));
           nsAutoString keyChar(NS_LITERAL_STRING(" "));
           keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
-          if (!keyChar.EqualsLiteral(" ")) 
-            SetShortcutChar(keyChar);
-    
+
           nsAutoString modifiersStr;
           keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
           PRUint8 modifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(modifiersStr);
-          SetModifiers(modifiers);
+
+          SetKeyEquiv(modifiers, keyChar);
         }
       }
     }
@@ -296,39 +295,6 @@ NS_IMETHODIMP nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *p
   return NS_OK;  
 }
 
-   
-NS_METHOD nsMenuItemX::GetModifiers(PRUint8 * aModifiers) 
-{
-  *aModifiers = mModifiers; 
-  return NS_OK; 
-}
-
-
-NS_METHOD nsMenuItemX::SetModifiers(PRUint8 aModifiers)
-{  
-  mModifiers = aModifiers;
-
-  // set up shortcut key modifiers on native menu item
-  unsigned int macModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(mModifiers);
-  [mNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
-  
-  return NS_OK;
-}
- 
-
-NS_METHOD nsMenuItemX::SetShortcutChar(const nsString &aText)
-{
-  mKeyEquivalent = aText;
-  
-  // set up shortcut key on native menu item
-  NSString *keyEquivalent = [[NSString stringWithCharacters:(unichar*)mKeyEquivalent.get()
-                                                     length:mKeyEquivalent.Length()] lowercaseString];
-  if (![keyEquivalent isEqualToString:@" "])
-    [mNativeMenuItem setKeyEquivalent:keyEquivalent];
-
-  return NS_OK;
-}
-
 
 NS_METHOD nsMenuItemX::GetShortcutChar(nsString &aText)
 {
@@ -364,6 +330,26 @@ nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
       }
     }    
   }
+}
+
+
+void nsMenuItemX::SetKeyEquiv(PRUint8 aModifiers, const nsString &aText)
+{
+  mMenuBar->UnregisterKeyEquivalent([mNativeMenuItem keyEquivalentModifierMask], [mNativeMenuItem keyEquivalent]);
+
+  mModifiers = aModifiers;
+  unsigned int macModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(mModifiers);
+  [mNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
+
+  mKeyEquivalent = aText;
+  NSString *keyEquivalent = [[NSString stringWithCharacters:(unichar*)mKeyEquivalent.get()
+                                                     length:mKeyEquivalent.Length()] lowercaseString];
+  if ([keyEquivalent isEqualToString:@" "])
+    [mNativeMenuItem setKeyEquivalent:@""];
+  else
+    [mNativeMenuItem setKeyEquivalent:keyEquivalent];
+
+  mMenuBar->RegisterKeyEquivalent([mNativeMenuItem keyEquivalentModifierMask], [mNativeMenuItem keyEquivalent]);  
 }
 
 

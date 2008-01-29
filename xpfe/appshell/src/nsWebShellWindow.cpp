@@ -531,6 +531,8 @@ static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
   if (!pnsMenuBar)
     return;
 
+  pnsMenuBar->Create(aParentWindow);
+
   // fake event
   nsMenuEvent fake(PR_TRUE, 0, nsnull);
   pnsMenuBar->MenuConstruct(fake, aParentWindow, menubarNode);

@@ -43,6 +43,7 @@
 #include "nsIMutationObserver.h"
 #include "nsCOMArray.h"
 #include "nsHashtable.h"
+#include "nsTHashtable.h"
 #include "nsWeakReference.h"
 #include "nsIContent.h"
 
@@ -75,8 +76,66 @@ namespace MenuHelpersX
 @end
 
 
+struct CocoaKeyEquivContainer {
+  CocoaKeyEquivContainer(const unsigned int modifiers, const NSString* string)
+  {
+    mModifiers = modifiers;
+    mString = [string retain];
+  }
+  
+  ~CocoaKeyEquivContainer()
+  {
+    [mString release];
+  }
+  
+  CocoaKeyEquivContainer(const CocoaKeyEquivContainer& other)
+  {
+    mModifiers = other.mModifiers;
+    mString = [other.mString retain];
+  }
+  
+  CocoaKeyEquivContainer& operator=(CocoaKeyEquivContainer& other)
+  {
+    mModifiers = other.mModifiers;
+    if (mString)
+      [mString release];
+    mString = [other.mString retain];
+    return *this;
+  }
+  
+  unsigned int mModifiers;
+  NSString* mString;
+};
+
+
+struct CocoaKeyEquivKey : public PLDHashEntryHdr {
+  typedef const CocoaKeyEquivContainer& KeyType;
+  typedef const CocoaKeyEquivContainer* KeyTypePointer;
+  
+  CocoaKeyEquivKey(KeyTypePointer aObj) : mObj(*aObj) { }
+  CocoaKeyEquivKey(const CocoaKeyEquivKey& other) : mObj(other.mObj) { }
+  ~CocoaKeyEquivKey() { }
+  
+  KeyType GetKey() const { return mObj; }
+  
+  PRBool KeyEquals(KeyTypePointer aKey) const {
+    return aKey->mModifiers == mObj.mModifiers &&
+    [aKey->mString isEqualToString:mObj.mString];
+  }
+  
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    return [aKey->mString hash] ^ aKey->mModifiers;
+  }
+  enum { ALLOW_MEMMOVE = PR_FALSE };
+private:
+  const CocoaKeyEquivContainer mObj;
+};
+
+
+
 //
-// Native Mac menu bar wrapper
+// Native menu bar wrapper
 //
 
 class nsMenuBarX : public nsIMenuBar,
@@ -111,6 +170,7 @@ public:
     NS_IMETHOD Paint();
     NS_IMETHOD SetNativeData(void* aData);
     NS_IMETHOD MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, void * aMenuNode);
+    PRBool ContainsKeyEquiv(unsigned int modifiers, NSString* string);
 
     PRUint32 RegisterForCommand(nsIMenuItem* aItem);
     void UnregisterCommand(PRUint32 aCommandID);
@@ -119,6 +179,8 @@ public:
     void UnregisterForContentChanges(nsIContent* aContent);
     nsChangeObserver* LookupContentChangeObserver(nsIContent* aContent);
 
+    void RegisterKeyEquivalent(unsigned int modifiers, NSString* string);
+    void UnregisterKeyEquivalent(unsigned int modifiers, NSString* string);
 protected:
     // Make our menubar conform to Aqua UI guidelines
     void AquifyMenuBar();
@@ -150,7 +212,9 @@ protected:
     nsIDocument*            mDocument;            // pointer to document
 
     NSMenu*                 mRootMenu;            // root menu, representing entire menu bar
- 
+
+    nsTHashtable<CocoaKeyEquivKey> mKeyEquivTable;
+
     static EventHandlerUPP  sCommandEventHandler; // carbon event handler for commands, shared
 };
 
