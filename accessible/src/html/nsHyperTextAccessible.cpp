@@ -1001,15 +1001,15 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     nsCOMPtr<nsIAccessible> endAcc;
     nsIFrame *endFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
                                        nsnull, getter_AddRefs(endAcc));
-    if (!endFrame) {
-      return NS_ERROR_FAILURE;
-    }
     if (endAcc && Role(endAcc) == nsIAccessibleRole::ROLE_STATICTEXT) {
       // Static text like list bullets will ruin our forward calculation,
       // since the caret cannot be in the static text. Start just after the static text.
       startOffset = endOffset = finalStartOffset + (aBoundaryType == BOUNDARY_LINE_END) + TextLength(endAcc);
       endFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
                                nsnull, getter_AddRefs(endAcc));
+    }
+    if (!endFrame) {
+      return NS_ERROR_FAILURE;
     }
     finalEndOffset = GetRelativeOffset(presShell, endFrame, endOffset, endAcc,
                                        amount, eDirNext, needsStart);
@@ -1593,6 +1593,7 @@ nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon,
   nsCOMPtr<nsISelection> domSel;
   nsCOMPtr<nsISelectionController> selCon;
 
+  nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIEditor> editor;
   GetAssociatedEditor(getter_AddRefs(editor));
   nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
@@ -1608,7 +1609,12 @@ nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon,
 
     editor->GetSelection(getter_AddRefs(domSel));
     NS_ENSURE_TRUE(domSel, NS_ERROR_FAILURE);
-    }
+
+    nsCOMPtr<nsIDOMElement> editorRoot;
+    editor->GetRootElement(getter_AddRefs(editorRoot));
+    startNode = do_QueryInterface(editorRoot);
+    NS_ENSURE_STATE(startNode);
+  }
   else {
     // Case 2: rich content subtree (can be rich editor)
     // This uses the selection controller from the entire document
@@ -1622,6 +1628,8 @@ nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon,
     selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                          getter_AddRefs(domSel));
     NS_ENSURE_TRUE(domSel, NS_ERROR_FAILURE);
+
+    startNode = mDOMNode;
   }
 
   if (aSelCon) {
@@ -1635,13 +1643,13 @@ nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon,
     NS_ENSURE_TRUE(selection2, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDOMNodeList> childNodes;
-    nsresult rv = mDOMNode->GetChildNodes(getter_AddRefs(childNodes));
+    nsresult rv = startNode->GetChildNodes(getter_AddRefs(childNodes));
     NS_ENSURE_SUCCESS(rv, rv);
     PRUint32 numChildren; 
     rv = childNodes->GetLength(&numChildren);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = selection2->GetRangesForIntervalCOMArray(mDOMNode, 0,
-                                                  mDOMNode, numChildren,
+    rv = selection2->GetRangesForIntervalCOMArray(startNode, 0,
+                                                  startNode, numChildren,
                                                   PR_TRUE, aRanges);
     NS_ENSURE_SUCCESS(rv, rv);
     // Remove collapsed ranges
