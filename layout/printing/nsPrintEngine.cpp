@@ -1709,12 +1709,23 @@ nsPrintEngine::SetupToPrintContent()
   // Don't start printing when regression test are executed  
   if (!mPrt->mDebugFilePtr && mIsDoingPrinting) {
     rv = mPrt->mPrintDC->BeginDocument(docTitleStr, fileName, startPage, endPage);
+  } 
+
+  if (mIsDoingPrintPreview) {
+    // Print Preview -- Pass ownership of docTitleStr and docURLStr
+    // to the pageSequenceFrame, to be displayed in the header
+    nsIPageSequenceFrame *seqFrame = nsnull;
+    mPrt->mPrintObject->mPresShell->GetPageSequenceFrame(&seqFrame);
+    if (seqFrame) {
+      seqFrame->StartPrint(mPrt->mPrintObject->mPresContext, 
+                           mPrt->mPrintSettings, docTitleStr, docURLStr);
+    }
+  } else {
+    if (docTitleStr) nsMemory::Free(docTitleStr);
+    if (docURLStr) nsMemory::Free(docURLStr);
   }
 
   PR_PL(("****************** Begin Document ************************\n"));
-
-  if (docTitleStr) nsMemory::Free(docTitleStr);
-  if (docURLStr) nsMemory::Free(docURLStr);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
