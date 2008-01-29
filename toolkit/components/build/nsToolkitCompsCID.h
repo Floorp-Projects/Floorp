@@ -83,9 +83,6 @@
 #define NS_URLCLASSIFIERUTILS_CONTRACTID \
     "@mozilla.org/url-classifier/utils;1"
 
-#define NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID \
-    "@mozilla.org/url-classifier/hashcompleter;1"
-
 #define NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID "@mozilla.org/feed-unescapehtml;1"
 
 #define NS_NAVHISTORYSERVICE_CONTRACTID \
@@ -158,11 +155,6 @@
 // {b7b2ccec-7912-4ea6-a548-b038447004bd}
 #define NS_URLCLASSIFIERUTILS_CID \
 { 0xb7b2ccec, 0x7912, 0x4ea6, { 0xa5, 0x48, 0xb0, 0x38, 0x44, 0x70, 0x04, 0xbd} }
-
-// {786e0a0e-e035-4600-8ee0-365a63a80b80}
-#define NS_URLCLASSIFIERHASHCOMPLETER_CID \
-{ 0x786e0a0e, 0xe035, 0x4600, \
-  { 0x8e, 0xe0, 0x36, 0x5a, 0x63, 0xa8, 0x0b, 0x80 } }
 
 // {10f2f5f0-f103-4901-980f-ba11bd70d60d}
 #define NS_SCRIPTABLEUNESCAPEHTML_CID  \
