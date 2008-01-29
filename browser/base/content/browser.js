@@ -5757,12 +5757,15 @@ function IdentityHandler() {
   this._stringBundle = document.getElementById("bundle_browser");
   this._staticStrings = {};
   this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
+    title: this._stringBundle.getString("identity.domainverified.title"),
     encryption_label: this._stringBundle.getString("identity.encrypted")  
   };
   this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
+    title: this._stringBundle.getString("identity.identified.title"),
     encryption_label: this._stringBundle.getString("identity.encrypted")
   };
   this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
+    title: this._stringBundle.getString("identity.unknown.title"),
     encryption_label: this._stringBundle.getString("identity.unencrypted")  
   };
 
@@ -5787,8 +5790,8 @@ IdentityHandler.prototype = {
     this._identityPopup = document.getElementById("identity-popup");
     this._identityBox = document.getElementById("identity-box");
     this._identityPopupContentBox = document.getElementById("identity-popup-content-box");
-    this._identityPopupContentHost = document.getElementById("identity-popup-content-host");
-    this._identityPopupContentOwner = document.getElementById("identity-popup-content-owner");
+    this._identityPopupTitle = document.getElementById("identity-popup-title");
+    this._identityPopupContent = document.getElementById("identity-popup-content");
     this._identityPopupContentSupp = document.getElementById("identity-popup-content-supplemental");
     this._identityPopupContentVerif = document.getElementById("identity-popup-content-verifier");
     this._identityPopupEncLabel = document.getElementById("identity-popup-encryption-label");
@@ -5834,7 +5837,6 @@ IdentityHandler.prototype = {
     
     // Human readable name of Certificate Authority
     result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
-    result.cert = cert;
     
     return result;
   },
@@ -5895,43 +5897,10 @@ IdentityHandler.prototype = {
       // typically what we want here, but thanks to x509 certs being extensible,
       // it's not the only place you have to check, there can be more than one domain,
       // et cetera, ad nauseum.  We know the cert is valid for location.host, so
-      // let's just use that. Check the pref to determine how much of the verified
-      // hostname to show
-      var icon_label = "";
-      switch (gPrefService.getIntPref("browser.identity.ssl_domain_display")) {
-        case 2 : // Show full domain
-          icon_label = this._lastHost;
-          break;
-        case 1 : // Show eTLD.  Cache eTLD service the first time we need it.
-          if (!this._eTLDService)
-            this._eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"]
-                                .getService(Ci.nsIEffectiveTLDService);
-          try {
-            icon_label = this._eTLDService.getBaseDomainFromHost(this._lastHost);
-          } catch (e) {
-            // If something goes wrong (e.g. _lastHost is an IP address) just fail back
-            // to the full domain.
-            icon_label = this._lastHost;
-          }
-      }
-      
-      // We need a port number for all lookups.  If one hasn't been specified, use
-      // the https default
-      var lookupHost = this._lastHost;
-      if (lookupHost.indexOf(':') < 0)
-        lookupHost += ":443";
-
-      // Cache the override service the first time we need to check it
-      if (!this._overrideService)
-        this._overrideService = Components.classes["@mozilla.org/security/certoverride;1"]
-                                          .getService(Components.interfaces.nsICertOverrideService);
-
-      // Verifier is either the CA Org, for a normal cert, or a special string
-      // for certs that are trusted because of a security exception.
+      // let's just use that, it's what the status bar does too.
+      var icon_label = this._lastHost; 
       var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                           [iData.caOrg]);
-      if (this._overrideService.hasMatchingOverride(lookupHost, iData.cert, {}, {}))
-        tooltip = this._stringBundle.getString("identity.identified.verified_by_you");
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
       // If it's identified, then we can populate the dialog with credentials
@@ -5945,7 +5914,7 @@ IdentityHandler.prototype = {
         icon_label = iData.subjectOrg;
     }
     else {
-      tooltip = this._stringBundle.getString("identity.unknown.tooltip");
+      tooltip = this._stringBundle.getString("identity.unknown.body");
       icon_label = "";
     }
     
@@ -5967,42 +5936,30 @@ IdentityHandler.prototype = {
     this._identityPopupContentBox.className = newMode;
     
     // Set the static strings up front
+    this._identityPopupTitle.value = this._staticStrings[newMode].title;
     this._identityPopupEncLabel.textContent = this._staticStrings[newMode].encryption_label;
     
     // Initialize the optional strings to empty values
     var supplemental = "";
     var verifier = "";
       
-    // Cache eTLD service if we haven't yet
-    if (!this._eTLDService)
-      this._eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"]
-                          .getService(Ci.nsIEffectiveTLDService);
-                                
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
 
-      try {
-        var host = this._eTLDService.getBaseDomainFromHost(this._lastHost);
-      } catch (e) {
-        // Fail back to the full domain.
-        host = this._lastHost;
-      }
-      var owner = this._stringBundle.getString("identity.ownerUnknown");
-      verifier = this._identityBox.tooltipText;
-      supplemental = "";
+      var body = this._lastHost;     
+      verifier = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                       [iData.caOrg]);
+      supplemental = this._stringBundle.getString("identity.domainverified.supplemental");
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
       // If it's identified, then we can populate the dialog with credentials
       iData = this.getIdentityData();
 
-      try {
-        host = this._eTLDService.getBaseDomainFromHost(this._lastHost);
-      } catch (e) {
-        // Fail back to the full domain.
-        host = this._lastHost;
-      }
-      owner = iData.subjectOrg; 
-      verifier = this._identityBox.tooltipText;
+      // Pull the basics out with fallback options in case common
+      // (optional) fields are left blank
+      body = iData.subjectOrg; 
+      verifier = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                       [iData.caOrg]);
 
       // Build an appropriate supplemental block out of whatever location data we have
       if (iData.city)
@@ -6016,14 +5973,11 @@ IdentityHandler.prototype = {
         supplemental += iData.country;
     }
     else {
-      // These strings will be hidden in CSS anyhow
-      host = "";
-      owner = "";
+      body = this._stringBundle.getString("identity.unknown.body");
     }
     
     // Push the appropriate strings out to the UI
-    this._identityPopupContentHost.textContent = host;
-    this._identityPopupContentOwner.textContent = owner;
+    this._identityPopupContent.textContent = body;
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
   },
