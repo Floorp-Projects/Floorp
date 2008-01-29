@@ -38,4 +38,11 @@ function run_test() {
   do_check_eq(isASCII.value, true);
   do_check_eq(idnService.convertToDisplayIDN("xn--bcher-kva.uk", isASCII), "xn--bcher-kva.uk");
   do_check_eq(isASCII.value, true);
+
+  // check ACE TLD's are handled by the whitelist
+  pbi.setBoolPref("network.IDN.whitelist.xn--k-dha", true);
+  do_check_eq(idnService.convertToDisplayIDN("test.\u00FCk", isASCII), "test.\u00FCk");
+  do_check_eq(isASCII.value, false);
+  do_check_eq(idnService.convertToDisplayIDN("test.xn--k-dha", isASCII), "test.\u00FCk");
+  do_check_eq(isASCII.value, false);
 }
