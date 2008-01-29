@@ -49,6 +49,8 @@
 #include "nsIObserverService.h"
 #include "nsIOfflineCacheSession.h"
 #include "nsIWebProgress.h"
+#include "nsICryptoHash.h"
+#include "nsICacheEntryDescriptor.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -124,7 +126,8 @@ nsOfflineCacheUpdateItem::OpenChannel()
                                 mURI,
                                 nsnull, nsnull, this,
                                 nsIRequest::LOAD_BACKGROUND |
-                                nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
+                                nsICachingChannel::LOAD_ONLY_IF_MODIFIED |
+                                nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // configure HTTP specific stuff
@@ -393,6 +396,7 @@ nsOfflineManifestItem::nsOfflineManifestItem(nsOfflineCacheUpdate *aUpdate,
     : nsOfflineCacheUpdateItem(aUpdate, aURI, aReferrerURI, aClientID)
     , mParserState(PARSE_INIT)
     , mNeedsUpdate(PR_TRUE)
+    , mManifestHashInitialized(PR_FALSE)
 {
 }
 
@@ -416,11 +420,35 @@ nsOfflineManifestItem::ReadManifest(nsIInputStream *aInputStream,
     nsOfflineManifestItem *manifest =
         static_cast<nsOfflineManifestItem*>(aClosure);
 
+    nsresult rv;
+
     *aBytesConsumed = aCount;
 
     if (manifest->mParserState == PARSE_ERROR) {
         // parse already failed, ignore this
         return NS_OK;
+    }
+
+    if (!manifest->mManifestHashInitialized) {
+        // Avoid re-creation of crypto hash when it fails from some reason the first time
+        manifest->mManifestHashInitialized = PR_TRUE;
+
+        manifest->mManifestHash = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv = manifest->mManifestHash->Init(nsICryptoHash::MD5);
+            if (NS_FAILED(rv)) {
+                manifest->mManifestHash = nsnull;
+                LOG(("Could not initialize manifest hash for byte-to-byte check, rv=%08x", rv));
+            }
+        }
+    }
+
+    if (manifest->mManifestHash) {
+        rv = manifest->mManifestHash->Update(reinterpret_cast<const PRUint8 *>(aFromSegment), aCount);
+        if (NS_FAILED(rv)) {
+            manifest->mManifestHash = nsnull;
+            LOG(("Could not update manifest hash, rv=%08x", rv));
+        }
     }
 
     manifest->mReadBuf.Append(aFromSegment, aCount);
@@ -547,6 +575,78 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
     return NS_OK;
 }
 
+nsresult 
+nsOfflineManifestItem::GetOldManifestContentHash(nsIRequest *aRequest)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(aRequest, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // load the main cache token that is actually the old offline cache token and 
+    // read previous manifest content hash value
+    nsCOMPtr<nsISupports> cacheToken;
+    cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
+    if (cacheToken) {
+        nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor(do_QueryInterface(cacheToken, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+    
+        rv = cacheDescriptor->GetMetaDataElement("offline-manifest-hash", getter_Copies(mOldManifestHashValue));
+        if (NS_FAILED(rv))
+            mOldManifestHashValue.Truncate();
+    }
+
+    return NS_OK;
+}
+
+nsresult 
+nsOfflineManifestItem::CheckNewManifestContentHash(nsIRequest *aRequest)
+{
+    nsresult rv;
+
+    if (!mManifestHash) {
+        // Nothing to compare against...
+        return NS_OK;
+    }
+
+    nsCString newManifestHashValue;
+    rv = mManifestHash->Finish(PR_TRUE, newManifestHashValue);
+    mManifestHash = nsnull;
+
+    if (NS_FAILED(rv)) {
+        LOG(("Could not finish manifest hash, rv=%08x", rv));
+        // This is not critical error
+        return NS_OK;
+    }
+
+    if (!ParseSucceeded()) {
+        // Parsing failed, the hash is not valid
+        return NS_OK;
+    }
+
+    if (mOldManifestHashValue == newManifestHashValue) {
+        LOG(("Update not needed, downloaded manifest content is byte-for-byte identical"));
+        mNeedsUpdate = PR_FALSE;
+    }
+
+    // Store the manifest content hash value to the new
+    // offline cache token
+    nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(aRequest, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupports> cacheToken;
+    cachingChannel->GetOfflineCacheToken(getter_AddRefs(cacheToken));
+    if (cacheToken) {
+        nsCOMPtr<nsICacheEntryDescriptor> cacheDescriptor(do_QueryInterface(cacheToken, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+    
+        rv = cacheDescriptor->SetMetaDataElement("offline-manifest-hash", PromiseFlatCString(newManifestHashValue).get());
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
                                       nsISupports *aContext)
@@ -576,6 +676,9 @@ nsOfflineManifestItem::OnStartRequest(nsIRequest *aRequest,
         mParserState = PARSE_ERROR;
         return NS_ERROR_ABORT;
     }
+
+    rv = GetOldManifestContentHash(aRequest);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return nsOfflineCacheUpdateItem::OnStartRequest(aRequest, aContext);
 }
@@ -621,10 +724,9 @@ nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
         // we didn't need to read (because LOAD_ONLY_IF_MODIFIED was
         // specified.)
         mNeedsUpdate = PR_FALSE;
-
-        // XXX: The spec calls for a byte-by-byte comparison of the manifest,
-        // with an exact match skipping the update.  Need to implement this
-        // or we'll be fetching way too often.
+    } else {
+        rv = CheckNewManifestContentHash(aRequest);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return nsOfflineCacheUpdateItem::OnStopRequest(aRequest, aContext, aStatus);

@@ -63,8 +63,11 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
+#include "nsICryptoHash.h"
 
 class nsOfflineCacheUpdate;
+
+class nsICacheEntryDescriptor;
 
 class nsOfflineCacheUpdateItem : public nsIDOMLoadStatus
                                , public nsIStreamListener
@@ -133,6 +136,20 @@ private:
     nsresult HandleManifestLine(const nsCString::const_iterator &aBegin,
                                 const nsCString::const_iterator &aEnd);
 
+    /**
+     * Saves "offline-manifest-hash" meta data from the old offline cache
+     * token to mOldManifestHashValue member to be compared on
+     * successfull load.
+     */
+    nsresult GetOldManifestContentHash(nsIRequest *aRequest);
+    /**
+     * This method setups the mNeedsUpdate to PR_FALSE when hash value
+     * of the just downloaded manifest file is the same as stored in cache's 
+     * "offline-manifest-hash" meta data. Otherwise stores the new value
+     * to this meta data.
+     */
+    nsresult CheckNewManifestContentHash(nsIRequest *aRequest);
+
     enum {
         PARSE_INIT,
         PARSE_CACHE_ENTRIES,
@@ -144,6 +161,11 @@ private:
     nsCString mReadBuf;
     nsCOMArray<nsIURI> mExplicitURIs;
     PRBool mNeedsUpdate;
+
+    // manifest hash data
+    nsCOMPtr<nsICryptoHash> mManifestHash;
+    PRBool mManifestHashInitialized;
+    nsCString mOldManifestHashValue;
 };
 
 class nsOfflineCacheUpdate : public nsIOfflineCacheUpdate
