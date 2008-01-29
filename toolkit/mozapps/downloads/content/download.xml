@@ -99,8 +99,12 @@
       <property name="buttons">
         <getter>
         <![CDATA[
+          var startEl = document.getAnonymousNodes(this);
+          if (!startEl.length)
+            startEl = [this];
+
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          return this.getElementsByTagNameNS(XULNS, "button");
+          return startEl[0].getElementsByTagNameNS(XULNS, "button");
         ]]>
         </getter>
       </property>

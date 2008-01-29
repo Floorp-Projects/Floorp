@@ -86,7 +86,7 @@
         <setter>
           <![CDATA[
             // if the new value is null, we still need to remove the old value
-            if (!val)
+            if (val == null)
               return this.selectedItem = val;
 
             var arr = null;
@@ -96,8 +96,10 @@
 
             if (arr && arr.item(0))
               this.selectedItem = arr[0];
-            else
+            else {
+              this.selectedItem = null;
               this.setAttribute('value', val);
+            }
 
             return val;
           ]]>
@@ -407,7 +409,8 @@
         <html:input class="menulist-editable-input" flex="1" anonid="input" allowevents="true"
                     xbl:inherits="value=label,value,disabled,tabindex,readonly"/>
       </xul:hbox>
-      <xul:dropmarker class="menulist-dropmarker" type="menu"/>
+      <xul:dropmarker class="menulist-dropmarker" type="menu"
+          xbl:inherits="open"/>
       <children includes="menupopup"/>
     </content>
 

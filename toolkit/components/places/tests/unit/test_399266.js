@@ -49,7 +49,7 @@ try {
 // adds a test URI visit to the database, and checks for a valid place ID
 function add_visit(aURI, aType) {
   var placeID = histsvc.addVisit(uri(aURI),
-                                 Date.now(),
+                                 Date.now() * 1000,
                                  null, // no referrer
                                  aType,
                                  false, // not redirect

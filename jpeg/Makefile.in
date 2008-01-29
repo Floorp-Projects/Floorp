@@ -47,6 +47,10 @@ LIBRARY_NAME	= mozjpeg
 
 ifeq ($(OS_ARCH),WINNT)
 LIBRARY_NAME	= jpeg$(MOZ_BITS)$(VERSION_NUMBER)
+# FIXME: bug 413019
+ifndef GNU_CC
+OS_COMPILE_CFLAGS += -GL-
+endif
 endif
 
 GRE_MODULE	= 1

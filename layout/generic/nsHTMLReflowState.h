@@ -59,12 +59,17 @@ struct nsStylePadding;
 struct nsStyleText;
 struct nsHypotheticalBox;
 
-#define NS_CSS_MINMAX(_value,_min,_max) \
-    ((_value) < (_min)           \
-     ? (_min)                    \
-     : ((_value) > (_max)        \
-        ? (_max)                 \
-        : (_value)))
+template <class NumericType>
+NumericType
+NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue, NumericType aMaxValue)
+{
+  NumericType result = aValue;
+  if (aMaxValue < result)
+    result = aMaxValue;
+  if (aMinValue > result)
+    result = aMinValue;
+  return result;
+}
 
 /**
  * Constant used to indicate an unconstrained size.

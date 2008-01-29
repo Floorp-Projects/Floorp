@@ -196,10 +196,8 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
 	cairo_xcb_surface_create_with_xrender_format (dpy, pixmap, src->screen,
 						      xrender_format,
 						      width, height);
-    if (surface->base.status) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (surface->base.status)
+	return surface;
 
     surface->owns_pixmap = TRUE;
 
@@ -315,7 +313,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
     y2 = surface->height;
 
     if (interest_rect) {
-	cairo_rectangle_int16_t rect;
+	cairo_rectangle_int_t rect;
 
 	rect.x = interest_rect->x;
 	rect.y = interest_rect->y;
@@ -1730,10 +1728,8 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
     const xcb_render_query_version_reply_t *r;
 
     surface = malloc (sizeof (cairo_xcb_surface_t));
-    if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (surface == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     if (xrender_format) {
 	depth = xrender_format->depth;
@@ -1873,10 +1869,8 @@ cairo_xcb_surface_create (xcb_connection_t *c,
 {
     xcb_screen_t	*screen = _cairo_xcb_screen_from_visual (c, visual);
 
-    if (screen == NULL) {
-	_cairo_error (CAIRO_STATUS_INVALID_VISUAL);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (screen == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_VISUAL));
 
     return _cairo_xcb_surface_create_internal (c, drawable, screen,
 					       visual, NULL,
@@ -2411,7 +2405,7 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
     } else {
-        cairo_rectangle_int16_t glyph_extents;
+        cairo_rectangle_int_t glyph_extents;
 
         status = _cairo_scaled_font_glyph_device_extents (scaled_font,
                                                           glyphs,

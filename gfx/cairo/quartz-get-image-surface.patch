@@ -1,0 +1,486 @@
+? gfx/cairo/quartz-get-image-surface.patch
+Index: gfx/cairo/README
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/README,v
+retrieving revision 1.70
+diff -u -p -8 -r1.70 README
+--- gfx/cairo/README	26 Jan 2008 00:25:22 -0000	1.70
++++ gfx/cairo/README	27 Jan 2008 23:52:34 -0000
+@@ -23,8 +23,10 @@ max-font-size.patch: Clamp freetype font
+ 
+ win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
+ 
+ nonfatal-assertions.patch: Make assertions non-fatal
+ 
+ endian.patch: include cairo-platform.h for endian macros
+ 
+ fixed-24-8.patch: Switch fixed point mode from 16.16 to 24.8
++
++quartz-get-image-surface.patch: Add cairo_quartz_get_image_surface API analogous to the win32 one
+Index: gfx/cairo/cairo/src/cairo-quartz-private.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-quartz-private.h,v
+retrieving revision 1.19
+diff -u -p -8 -r1.19 cairo-quartz-private.h
+--- gfx/cairo/cairo/src/cairo-quartz-private.h	8 Dec 2007 07:09:15 -0000	1.19
++++ gfx/cairo/cairo/src/cairo-quartz-private.h	27 Jan 2008 23:52:34 -0000
+@@ -43,16 +43,18 @@
+ #ifdef CAIRO_HAS_QUARTZ_SURFACE
+ #include <cairo-quartz.h>
+ 
+ typedef struct cairo_quartz_surface {
+     cairo_surface_t base;
+ 
+     void *imageData;
+ 
++    cairo_surface_t *imageSurfaceEquiv;
++
+     CGContextRef cgContext;
+     CGAffineTransform cgContextBaseCTM;
+ 
+     cairo_rectangle_int_t extents;
+ 
+     /* These are stored while drawing operations are in place, set up
+      * by quartz_setup_source() and quartz_finish_source()
+      */
+Index: gfx/cairo/cairo/src/cairo-quartz-surface.c
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-quartz-surface.c,v
+retrieving revision 1.37
+diff -u -p -8 -r1.37 cairo-quartz-surface.c
+--- gfx/cairo/cairo/src/cairo-quartz-surface.c	26 Jan 2008 00:25:15 -0000	1.37
++++ gfx/cairo/cairo/src/cairo-quartz-surface.c	27 Jan 2008 23:52:35 -0000
+@@ -890,24 +890,30 @@ _cairo_quartz_get_image (cairo_quartz_su
+     unsigned char *imageData;
+     cairo_image_surface_t *isurf;
+ 
+     if (IS_EMPTY(surface)) {
+ 	*image_out = (cairo_image_surface_t*) cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+ 	return CAIRO_STATUS_SUCCESS;
+     }
+ 
++    if (surface->imageSurfaceEquiv) {
++	*image_out = (cairo_image_surface_t*) cairo_surface_reference(surface->imageSurfaceEquiv);
++	return CAIRO_STATUS_SUCCESS;
++    }
++
+     if (CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0) {
+ 	unsigned int stride;
+ 	unsigned int bitinfo;
+ 	unsigned int bpc, bpp;
+ 	CGColorSpaceRef colorspace;
+ 	unsigned int color_comps;
+ 
+ 	imageData = (unsigned char *) CGBitmapContextGetData(surface->cgContext);
++
+ #ifdef USE_10_3_WORKAROUNDS
+ 	bitinfo = CGBitmapContextGetAlphaInfo (surface->cgContext);
+ #else
+ 	bitinfo = CGBitmapContextGetBitmapInfo (surface->cgContext);
+ #endif
+ 	stride = CGBitmapContextGetBytesPerRow (surface->cgContext);
+ 	bpp = CGBitmapContextGetBitsPerPixel (surface->cgContext);
+ 	bpc = CGBitmapContextGetBitsPerComponent (surface->cgContext);
+@@ -982,16 +988,21 @@ _cairo_quartz_surface_finish (void *abst
+ 
+     /* Restore our saved gstate that we use to reset clipping */
+     CGContextRestoreGState (surface->cgContext);
+ 
+     CGContextRelease (surface->cgContext);
+ 
+     surface->cgContext = NULL;
+ 
++    if (surface->imageSurfaceEquiv) {
++	cairo_surface_destroy (surface->imageSurfaceEquiv);
++	surface->imageSurfaceEquiv = NULL;
++    }
++
+     if (surface->imageData) {
+ 	free (surface->imageData);
+ 	surface->imageData = NULL;
+     }
+ 
+     return CAIRO_STATUS_SUCCESS;
+ }
+ 
+@@ -1856,16 +1867,17 @@ _cairo_quartz_surface_create_internal (C
+      * required for proper behaviour of intersect_clip_path(NULL)
+      */
+     CGContextSaveGState (cgContext);
+ 
+     surface->cgContext = cgContext;
+     surface->cgContextBaseCTM = CGContextGetCTM (cgContext);
+ 
+     surface->imageData = NULL;
++    surface->imageSurfaceEquiv = NULL;
+ 
+     return surface;
+ }
+ 
+ /**
+  * cairo_quartz_surface_create_for_cg_context
+  * @cgContext: the existing CGContext for which to create the surface
+  * @width: width of the surface, in pixels
+@@ -2010,16 +2022,17 @@ cairo_quartz_surface_create (cairo_forma
+     if (surf->base.status) {
+ 	CGContextRelease (cgc);
+ 	free (imageData);
+ 	// create_internal will have set an error
+ 	return (cairo_surface_t*) surf;
+     }
+ 
+     surf->imageData = imageData;
++    surf->imageSurfaceEquiv = cairo_image_surface_create_for_data (imageData, format, width, height, stride);
+ 
+     return (cairo_surface_t *) surf;
+ }
+ 
+ /**
+  * cairo_quartz_surface_get_cg_context
+  * @surface: the Cairo Quartz surface
+  *
+@@ -2137,8 +2150,19 @@ quartz_surface_to_png (cairo_quartz_surf
+     }
+ 
+     ExportCGImageToPNGFile(imgref, dest);
+ 
+     CGImageRelease(imgref);
+ #endif
+ }
+ 
++cairo_surface_t *
++cairo_quartz_surface_get_image (cairo_surface_t *surface)
++{
++    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t*)surface;
++
++    if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_QUARTZ)
++	return NULL;
++
++    return quartz->imageSurfaceEquiv;
++}
++
+Index: gfx/cairo/cairo/src/cairo-quartz.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-quartz.h,v
+retrieving revision 1.11
+diff -u -p -8 -r1.11 cairo-quartz.h
+--- gfx/cairo/cairo/src/cairo-quartz.h	4 Apr 2007 01:09:15 -0000	1.11
++++ gfx/cairo/cairo/src/cairo-quartz.h	27 Jan 2008 23:52:35 -0000
+@@ -52,15 +52,18 @@ cairo_quartz_surface_create (cairo_forma
+ cairo_public cairo_surface_t *
+ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
+                                             unsigned int width,
+                                             unsigned int height);
+ 
+ cairo_public CGContextRef
+ cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
+ 
++cairo_public cairo_surface_t *
++cairo_quartz_surface_get_image (cairo_surface_t *surface);
++
+ CAIRO_END_DECLS
+ 
+ #else  /* CAIRO_HAS_QUARTZ_SURFACE */
+ # error Cairo was not compiled with support for the quartz backend
+ #endif /* CAIRO_HAS_QUARTZ_SURFACE */
+ 
+ #endif /* CAIRO_QUARTZ_H */
+Index: gfx/cairo/cairo/src/cairo-rename.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-rename.h,v
+retrieving revision 1.21
+diff -u -p -8 -r1.21 cairo-rename.h
+--- gfx/cairo/cairo/src/cairo-rename.h	26 Jan 2008 00:25:15 -0000	1.21
++++ gfx/cairo/cairo/src/cairo-rename.h	27 Jan 2008 23:52:35 -0000
+@@ -164,16 +164,17 @@
+ #define cairo_ps_surface_restrict_to_level _moz_cairo_ps_surface_restrict_to_level
+ #define cairo_ps_surface_set_eps _moz_cairo_ps_surface_set_eps
+ #define cairo_ps_surface_set_size _moz_cairo_ps_surface_set_size
+ #define cairo_push_group _moz_cairo_push_group
+ #define cairo_push_group_with_content _moz_cairo_push_group_with_content
+ #define cairo_quartz_surface_create _moz_cairo_quartz_surface_create
+ #define cairo_quartz_surface_create_for_cg_context _moz_cairo_quartz_surface_create_for_cg_context
+ #define cairo_quartz_surface_get_cg_context _moz_cairo_quartz_surface_get_cg_context
++#define cairo_quartz_surface_get_image _moz_cairo_quartz_surface_get_image
+ #define cairo_rectangle _moz_cairo_rectangle
+ #define cairo_rectangle_list_destroy _moz_cairo_rectangle_list_destroy
+ #define cairo_reference _moz_cairo_reference
+ #define cairo_rel_curve_to _moz_cairo_rel_curve_to
+ #define cairo_rel_line_to _moz_cairo_rel_line_to
+ #define cairo_rel_move_to _moz_cairo_rel_move_to
+ #define cairo_reset_clip _moz_cairo_reset_clip
+ #define cairo_restore _moz_cairo_restore
+Index: gfx/src/thebes/nsThebesImage.cpp
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/src/thebes/nsThebesImage.cpp,v
+retrieving revision 1.57
+diff -u -p -8 -r1.57 nsThebesImage.cpp
+--- gfx/src/thebes/nsThebesImage.cpp	10 Jan 2008 22:13:13 -0000	1.57
++++ gfx/src/thebes/nsThebesImage.cpp	27 Jan 2008 23:52:35 -0000
+@@ -106,33 +106,42 @@ nsThebesImage::Init(PRInt32 aWidth, PRIn
+         default:
+             format = gfxImageSurface::ImageFormatRGB24;
+             mAlphaDepth = 0;
+             break;
+     }
+ 
+     mFormat = format;
+ 
+-#ifdef XP_WIN
++#if defined(XP_WIN)
+     if (!ShouldUseImageSurfaces()) {
+         mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
+         if (mWinSurface && mWinSurface->CairoStatus() == 0) {
+             // no error
+             mImageSurface = mWinSurface->GetImageSurface();
+         }
+     }
+ 
+-    if (!mImageSurface) {
++    if (!mImageSurface)
+         mWinSurface = nsnull;
+-        mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
++#elif defined(XP_MACOSX)
++    if (!ShouldUseImageSurfaces()) {
++        mQuartzSurface = new gfxQuartzSurface(gfxSize(mWidth, mHeight), format);
++        if (mQuartzSurface && mQuartzSurface->CairoStatus() == 0) {
++            mImageSurface = mQuartzSurface->GetImageSurface();
++        }
+     }
+-#else
+-    mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
++
++    if (!mImageSurface)
++        mQuartzSurface = nsnull;
+ #endif
+ 
++    if (!mImageSurface)
++        mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
++
+     if (!mImageSurface || mImageSurface->CairoStatus()) {
+         mImageSurface = nsnull;
+         // guess
+         return NS_ERROR_OUT_OF_MEMORY;
+     }
+ 
+     mStride = mImageSurface->Stride();
+ 
+@@ -293,24 +302,32 @@ nsThebesImage::Optimize(nsIDeviceContext
+         }
+         if (!mOptSurface && !mFormatChanged) {
+             // just use the DIB if the format has not changed
+             mOptSurface = mWinSurface;
+         }
+     }
+ #endif
+ 
++#ifdef XP_MACOSX
++    if (mQuartzSurface && !mFormatChanged)
++        mOptSurface = mQuartzSurface;
++#endif
++
+     if (mOptSurface == nsnull)
+         mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface, mFormat);
+ 
+     if (mOptSurface) {
+         mImageSurface = nsnull;
+ #ifdef XP_WIN
+         mWinSurface = nsnull;
+ #endif
++#ifdef XP_MACOSX
++        mQuartzSurface = nsnull;
++#endif
+     }
+ 
+     return NS_OK;
+ }
+ 
+ nsColorMap *
+ nsThebesImage::GetColorMap()
+ {
+Index: gfx/src/thebes/nsThebesImage.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/src/thebes/nsThebesImage.h,v
+retrieving revision 1.17
+diff -u -p -8 -r1.17 nsThebesImage.h
+--- gfx/src/thebes/nsThebesImage.h	27 Nov 2007 09:35:18 -0000	1.17
++++ gfx/src/thebes/nsThebesImage.h	27 Jan 2008 23:52:35 -0000
+@@ -39,18 +39,20 @@
+ #ifndef _NSTHEBESIMAGE_H_
+ #define _NSTHEBESIMAGE_H_
+ 
+ #include "nsIImage.h"
+ 
+ #include "gfxColor.h"
+ #include "gfxASurface.h"
+ #include "gfxImageSurface.h"
+-#ifdef XP_WIN
++#if defined(XP_WIN)
+ #include "gfxWindowsSurface.h"
++#elif defined(XP_MACOSX)
++#include "gfxQuartzSurface.h"
+ #endif
+ 
+ class nsThebesImage : public nsIImage
+ {
+ public:
+     nsThebesImage();
+     ~nsThebesImage();
+ 
+@@ -92,17 +94,23 @@ public:
+         *aSurface = ThebesSurface();
+         NS_ADDREF(*aSurface);
+         return NS_OK;
+     }
+ 
+     gfxASurface* ThebesSurface() {
+         if (mOptSurface)
+             return mOptSurface;
+-
++#if defined(XP_WIN)
++        if (mWinSurface)
++            return mWinSurface;
++#elif defined(XP_MACOSX)
++        if (mQuartzSurface)
++            return mQuartzSurface;
++#endif
+         return mImageSurface;
+     }
+ 
+     void SetHasNoAlpha();
+ 
+ protected:
+     static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight) {
+         NS_ASSERTION(aWidth > 0, "invalid image width");
+@@ -146,18 +154,20 @@ protected:
+ #ifdef XP_WIN
+     PRPackedBool mIsDDBSurface;
+ #endif
+ 
+     gfxRGBA mSinglePixelColor;
+ 
+     nsRefPtr<gfxImageSurface> mImageSurface;
+     nsRefPtr<gfxASurface> mOptSurface;
+-#ifdef XP_WIN
++#if defined(XP_WIN)
+     nsRefPtr<gfxWindowsSurface> mWinSurface;
++#elif defined(XP_MACOSX)
++    nsRefPtr<gfxQuartzSurface> mQuartzSurface;
+ #endif
+ 
+     PRUint8 mAlphaDepth;
+ 
+     // this function should return true if
+     // we should (temporarily) not allocate any
+     // platform native surfaces and instead use
+     // image surfaces for everything.
+Index: gfx/thebes/public/gfxQuartzSurface.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/thebes/public/gfxQuartzSurface.h,v
+retrieving revision 1.11
+diff -u -p -8 -r1.11 gfxQuartzSurface.h
+--- gfx/thebes/public/gfxQuartzSurface.h	7 Jan 2008 00:50:18 -0000	1.11
++++ gfx/thebes/public/gfxQuartzSurface.h	27 Jan 2008 23:52:36 -0000
+@@ -35,16 +35,17 @@
+  * the terms of any one of the MPL, the GPL or the LGPL.
+  *
+  * ***** END LICENSE BLOCK ***** */
+ 
+ #ifndef GFX_QUARTZSURFACE_H
+ #define GFX_QUARTZSURFACE_H
+ 
+ #include "gfxASurface.h"
++#include "gfxImageSurface.h"
+ 
+ #include <Carbon/Carbon.h>
+ 
+ class THEBES_API gfxQuartzSurface : public gfxASurface {
+ public:
+     gfxQuartzSurface(const gfxSize& size, gfxImageFormat format, PRBool aForPrinting = PR_FALSE);
+     gfxQuartzSurface(CGContextRef context, const gfxSize& size, PRBool aForPrinting = PR_FALSE);
+     gfxQuartzSurface(cairo_surface_t *csurf, PRBool aForPrinting = PR_FALSE);
+@@ -52,15 +53,17 @@ public:
+     virtual ~gfxQuartzSurface();
+ 
+     const gfxSize& GetSize() const { return mSize; }
+ 
+     CGContextRef GetCGContext() { return mCGContext; }
+ 
+     virtual PRInt32 GetDefaultContextFlags() const;
+ 
++    already_AddRefed<gfxImageSurface> GetImageSurface();
++
+ protected:
+     CGContextRef mCGContext;
+     gfxSize      mSize;
+     PRPackedBool mForPrinting;
+ };
+ 
+ #endif /* GFX_QUARTZSURFACE_H */
+Index: gfx/thebes/src/gfxQuartzSurface.cpp
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/thebes/src/gfxQuartzSurface.cpp,v
+retrieving revision 1.12
+diff -u -p -8 -r1.12 gfxQuartzSurface.cpp
+--- gfx/thebes/src/gfxQuartzSurface.cpp	7 Jan 2008 00:50:18 -0000	1.12
++++ gfx/thebes/src/gfxQuartzSurface.cpp	27 Jan 2008 23:52:36 -0000
+@@ -89,8 +89,28 @@ PRInt32 gfxQuartzSurface::GetDefaultCont
+ 
+     return 0;
+ }
+ 
+ gfxQuartzSurface::~gfxQuartzSurface()
+ {
+     CGContextRelease(mCGContext);
+ }
++
++already_AddRefed<gfxImageSurface>
++gfxQuartzSurface::GetImageSurface()
++{
++    if (!mSurfaceValid) {
++        NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
++        return nsnull;
++    }
++
++    NS_ASSERTION(CairoSurface() != nsnull, "CairoSurface() shouldn't be nsnull when mSurfaceValid is TRUE!");
++
++    cairo_surface_t *isurf = cairo_quartz_surface_get_image(CairoSurface());
++    if (!isurf)
++        return nsnull;
++
++    nsRefPtr<gfxASurface> asurf = gfxASurface::Wrap(isurf);
++    gfxImageSurface *imgsurf = (gfxImageSurface*) asurf.get();
++    NS_ADDREF(imgsurf);
++    return imgsurf;
++}
+Index: gfx/thebes/src/gfxWindowsSurface.cpp
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/thebes/src/gfxWindowsSurface.cpp,v
+retrieving revision 1.32
+diff -u -p -8 -r1.32 gfxWindowsSurface.cpp
+--- gfx/thebes/src/gfxWindowsSurface.cpp	7 Jan 2008 00:50:18 -0000	1.32
++++ gfx/thebes/src/gfxWindowsSurface.cpp	27 Jan 2008 23:52:36 -0000
+@@ -120,16 +120,23 @@ gfxWindowsSurface::~gfxWindowsSurface()
+         else
+             ::DeleteDC(mDC);
+     }
+ }
+ 
+ already_AddRefed<gfxImageSurface>
+ gfxWindowsSurface::GetImageSurface()
+ {
++    if (!mSurfaceValid) {
++        NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
++        return nsnull;
++    }
++
++    NS_ASSERTION(CairoSurface() != nsnull, "CairoSurface() shouldn't be nsnull when mSurfaceValid is TRUE!");
++
+     if (mForPrinting)
+         return nsnull;
+ 
+     cairo_surface_t *isurf = cairo_win32_surface_get_image(CairoSurface());
+     if (!isurf)
+         return nsnull;
+ 
+     nsRefPtr<gfxASurface> asurf = gfxASurface::Wrap(isurf);

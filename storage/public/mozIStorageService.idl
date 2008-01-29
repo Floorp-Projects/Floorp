@@ -46,11 +46,6 @@ interface nsIFile;
  * a service that can create storage connections (mozIStorageConnection)
  * to either a well-known profile database or to a specific database file.
  *
- * The implementation of this service using sqlite with the async IO module
- * must be created the first time on the main thread. If you want to use it
- * from another thread, you should be sure you call getService from the main
- * thread before accessing it from another thread.
- *
  * This is the only way to open a database connection.
  */
 [scriptable, uuid(a4a0cad9-e0da-4379-bee4-2feef3dddc7e)]
@@ -83,10 +78,6 @@ interface mozIStorageService : nsISupports {
    * SAME NAME for the file each time, including case. The sqlite code uses
    * a simple string compare to see if there is already a connection. Opening
    * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
-   *
-   * Opening connections from more than one thread to the same database will
-   * also CORRUPT YOUR DATABASE. All connections share the same sqlite cache,
-   * and the cache is not threadsafe.
    *
    * The connection object returned by this function is not threadsafe. You must
    * use it only from the thread you created it from.

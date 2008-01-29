@@ -60,15 +60,15 @@ nsIDOMNode* nsAccEvent::gLastEventNodeWeak = 0;
 NS_IMPL_ISUPPORTS1(nsAccEvent, nsIAccessibleEvent)
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                       void *aEventData, PRBool aIsAsynch):
-  mEventType(aEventType), mAccessible(aAccessible), mEventData(aEventData)
+                       PRBool aIsAsynch):
+  mEventType(aEventType), mAccessible(aAccessible)
 {
   CaptureIsFromUserInput(aIsAsynch);
 }
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
-                       void *aEventData, PRBool aIsAsynch):
-  mEventType(aEventType), mDOMNode(aDOMNode), mEventData(aEventData)
+                       PRBool aIsAsynch):
+  mEventType(aEventType), mDOMNode(aDOMNode)
 {
   CaptureIsFromUserInput(aIsAsynch);
 }
@@ -274,7 +274,7 @@ nsAccStateChangeEvent::
   nsAccStateChangeEvent(nsIAccessible *aAccessible,
                         PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
 {
 }
@@ -283,7 +283,7 @@ nsAccStateChangeEvent::
   nsAccStateChangeEvent(nsIDOMNode *aNode,
                         PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
 {
 }
@@ -291,7 +291,7 @@ nsAccStateChangeEvent::
 nsAccStateChangeEvent::
   nsAccStateChangeEvent(nsIDOMNode *aNode,
                         PRUint32 aState, PRBool aIsExtraState):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode),
   mState(aState), mIsExtraState(aIsExtraState)
 {
   // Use GetAccessibleByNode() because we do not want to store an accessible
@@ -337,7 +337,7 @@ nsAccTextChangeEvent::
   nsAccTextChangeEvent(nsIAccessible *aAccessible,
                        PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted, PRBool aIsAsynch):
   nsAccEvent(aIsInserted ? nsIAccessibleEvent::EVENT_TEXT_INSERTED : nsIAccessibleEvent::EVENT_TEXT_REMOVED,
-             aAccessible, nsnull, aIsAsynch),
+             aAccessible, aIsAsynch),
   mStart(aStart), mLength(aLength), mIsInserted(aIsInserted)
 {
   nsCOMPtr<nsIAccessibleText> textAccessible = do_QueryInterface(aAccessible);
@@ -381,14 +381,14 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccCaretMoveEvent, nsAccEvent,
 
 nsAccCaretMoveEvent::
   nsAccCaretMoveEvent(nsIAccessible *aAccessible, PRInt32 aCaretOffset) :
-  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, nsnull, PR_TRUE), // Currently always asynch
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, PR_TRUE), // Currently always asynch
   mCaretOffset(aCaretOffset)
 {
 }
 
 nsAccCaretMoveEvent::
   nsAccCaretMoveEvent(nsIDOMNode *aNode) :
-  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, nsnull, PR_TRUE), // Currently always asynch
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, PR_TRUE), // Currently always asynch
   mCaretOffset(-1)
 {
 }
@@ -399,6 +399,36 @@ nsAccCaretMoveEvent::GetCaretOffset(PRInt32* aCaretOffset)
   NS_ENSURE_ARG_POINTER(aCaretOffset);
 
   *aCaretOffset = mCaretOffset;
+  return NS_OK;
+}
+
+// nsAccTableChangeEvent 
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccTableChangeEvent, nsAccEvent,
+                             nsIAccessibleTableChangeEvent)
+
+nsAccTableChangeEvent::
+  nsAccTableChangeEvent(nsIAccessible *aAccessible, PRUint32 aEventType,
+                        PRInt32 aRowOrColIndex, PRInt32 aNumRowsOrCols, PRBool aIsAsynch):
+  nsAccEvent(aEventType, aAccessible, aIsAsynch), 
+  mRowOrColIndex(aRowOrColIndex), mNumRowsOrCols(aNumRowsOrCols)
+{
+}
+
+NS_IMETHODIMP
+nsAccTableChangeEvent::GetRowOrColIndex(PRInt32* aRowOrColIndex)
+{
+  NS_ENSURE_ARG_POINTER(aRowOrColIndex);
+
+  *aRowOrColIndex = mRowOrColIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccTableChangeEvent::GetNumRowsOrCols(PRInt32* aNumRowsOrCols)
+{
+  NS_ENSURE_ARG_POINTER(aNumRowsOrCols);
+
+  *aNumRowsOrCols = mNumRowsOrCols;
   return NS_OK;
 }
 

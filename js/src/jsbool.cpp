@@ -122,16 +122,11 @@ static JSFunctionSpec boolean_methods[] = {
 static JSBool
 Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSBool b;
     jsval bval;
 
-    if (argc != 0) {
-        if (!js_ValueToBoolean(cx, argv[0], &b))
-            return JS_FALSE;
-        bval = BOOLEAN_TO_JSVAL(b);
-    } else {
-        bval = JSVAL_FALSE;
-    }
+    bval = (argc != 0)
+           ? BOOLEAN_TO_JSVAL(js_ValueToBoolean(argv[0]))
+           : JSVAL_FALSE;
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         *rval = bval;
         return JS_TRUE;
@@ -160,27 +155,22 @@ js_BooleanToString(JSContext *cx, JSBool b)
 }
 
 JSBool
-js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
+js_ValueToBoolean(jsval v)
 {
-    JSBool b;
-    jsdouble d;
+    if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
+        return JS_FALSE;
+    if (JSVAL_IS_OBJECT(v))
+        return JS_TRUE;
+    if (JSVAL_IS_STRING(v))
+        return JSSTRING_LENGTH(JSVAL_TO_STRING(v)) != 0;
+    if (JSVAL_IS_INT(v))
+        return JSVAL_TO_INT(v) != 0;
+    if (JSVAL_IS_DOUBLE(v)) {
+        jsdouble d;
 
-    if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
-        b = JS_FALSE;
-    } else if (JSVAL_IS_OBJECT(v)) {
-        b = JS_TRUE;
-    } else if (JSVAL_IS_STRING(v)) {
-        b = JSSTRING_LENGTH(JSVAL_TO_STRING(v)) ? JS_TRUE : JS_FALSE;
-    } else if (JSVAL_IS_INT(v)) {
-        b = JSVAL_TO_INT(v) ? JS_TRUE : JS_FALSE;
-    } else if (JSVAL_IS_DOUBLE(v)) {
         d = *JSVAL_TO_DOUBLE(v);
-        b = (!JSDOUBLE_IS_NaN(d) && d != 0) ? JS_TRUE : JS_FALSE;
-    } else {
-        JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-        b = JSVAL_TO_BOOLEAN(v);
+        return !JSDOUBLE_IS_NaN(d) && d != 0;
     }
-
-    *bp = b;
-    return JS_TRUE;
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    return JSVAL_TO_BOOLEAN(v);
 }

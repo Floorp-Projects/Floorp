@@ -201,6 +201,7 @@ components/libpipnss.so
 components/pipnss.xpt
 chrome/pipnss.jar
 defaults/pref/security-prefs.js
+libnssutil3.so
 libnss3.so
 libsmime3.so
 libsoftokn3.chk

@@ -104,17 +104,18 @@
     <command id="cmd_enable"/>
     <command id="cmd_disable"/>
     <command id="cmd_useTheme"/>
+    <command id="cmd_installSearchResult"/>
   </commandset>
   
   <commandset id="globalCommands">
     <command id="cmd_installFile" oncommand="installWithFilePicker();"/>
     <command id="cmd_checkUpdatesAll" oncommand="checkUpdatesAll();"/>
     <command id="cmd_installUpdatesAll" oncommand="installUpdatesAll();"/>
-    <command id="cmd_restartApp" oncommand="restartApp();"/>
     <command id="cmd_continue" oncommand="closeEM();" disabled="true"/>
     <command id="cmd_close" oncommand="closeEM();"/>
     <command id="cmd_showUpdateInfo" oncommand="showUpdateInfo();"/>
     <command id="cmd_hideUpdateInfo" oncommand="hideUpdateInfo();"/>
+    <command id="cmd_resetSearch" oncommand="resetSearch();"/>
   </commandset>
 
   <vbox id="addonContextMenuPalette" hidden="true">
@@ -157,6 +158,7 @@
   <stack id="topStackBar">
     <radiogroup id="viewGroup" xhtml:role="listbox" persist="last-selected"
                 class="viewSelector chromeclass-toolbar" orient="horizontal">
+      <radio id="search-view" label="&search.label;" oncommand="showView('search');" persist="last-selected"/>
       <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
       <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>
       <radio id="locales-view" label="&locales.label;" oncommand="showView('locales');" persist="last-selected"/>
@@ -175,46 +177,57 @@
     </vbox>
   </stack>
   <notificationbox id="addonsMsg" flex="1">
-    <hbox id="extensionsBox" flex="1">
-      <richlistbox id="extensionsView" flex="1" 
-                   datasources="rdf:null" context="addonContextMenu"
-                   ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
-                   ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
-                   ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
-                   ondblclick="onViewDoubleClick(event);"/>
-
-      <splitter id="themeSplitter" hidden="true" collapse="after" persist="state"/>
-
-      <vbox id="themePreviewArea" hidden="true" width="220" persist="width">
-        <deck id="previewImageDeck" flex="1">
-          <vbox id="noThemeSelected" pack="center" align="center">
-            <label class="previewText">&previewNoThemeSelected.label;</label>
-          </vbox>
-          <vbox id="noPreviewImage" pack="center" align="center">
-            <label class="previewText">&previewNoPreviewImage.label;</label>
-          </vbox>
-          <vbox id="previewImageContainer" align="center" pack="center">
-            <description>
-              <image id="previewImage"/>
-            </description>
-          </vbox>
-          <vbox id="infoNoAddonSelected" align="center" pack="center">
-            <label class="previewText">&infoNoAddonSelected.label;</label>
-          </vbox>
-          <vbox id="infoNoUpdateInfo" align="center" pack="center">
-            <label class="previewText">&infoNoUpdateInfo.label;</label>
-          </vbox>
-          <vbox id="infoLoadingInfo" align="center" pack="center">
-            <image class="addonThrobber"/>
-          </vbox>
-          <vbox id="infoUpdateInfoError" align="center" pack="center">
-            <label class="previewText">&infoUpdateInfoError.label;</label>
-          </vbox>
-          <vbox id="infoDisplay">
-          </vbox>
-        </deck>
-      </vbox>
-    </hbox>
+    <vbox id="extensionsBox" flex="1">
+      <hbox id="searchPanel" align="center">
+        <textbox id="searchbox" emptyText="&searchAddons.label;"
+                 oncommand="retrieveRepositoryAddons(this.value);"
+                 persist="value"/>
+        <spacer flex="1"/>
+        <label id="browseAddons" class="text-link" value="&browseAddons.label;"
+               onclick="openURL(this.getAttribute('homepageURL'));"/>
+      </hbox>
+      
+      <hbox flex="1">
+        <richlistbox id="extensionsView" flex="1" 
+                     datasources="rdf:null" context="addonContextMenu"
+                     ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
+                     ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
+                     ondblclick="onViewDoubleClick(event);"/>
+  
+        <splitter id="themeSplitter" hidden="true" collapse="after" persist="state"/>
+  
+        <vbox id="themePreviewArea" hidden="true" width="220" persist="width">
+          <deck id="previewImageDeck" flex="1">
+            <vbox id="noThemeSelected" pack="center" align="center">
+              <label class="previewText">&previewNoThemeSelected.label;</label>
+            </vbox>
+            <vbox id="noPreviewImage" pack="center" align="center">
+              <label class="previewText">&previewNoPreviewImage.label;</label>
+            </vbox>
+            <vbox id="previewImageContainer" align="center" pack="center">
+              <description>
+                <image id="previewImage"/>
+              </description>
+            </vbox>
+            <vbox id="infoNoAddonSelected" align="center" pack="center">
+              <label class="previewText">&infoNoAddonSelected.label;</label>
+            </vbox>
+            <vbox id="infoNoUpdateInfo" align="center" pack="center">
+              <label class="previewText">&infoNoUpdateInfo.label;</label>
+            </vbox>
+            <vbox id="infoLoadingInfo" align="center" pack="center">
+              <image class="addonThrobber"/>
+            </vbox>
+            <vbox id="infoUpdateInfoError" align="center" pack="center">
+              <label class="previewText">&infoUpdateInfoError.label;</label>
+            </vbox>
+            <vbox id="infoDisplay">
+            </vbox>
+          </deck>
+        </vbox>
+      </hbox>
+    </vbox>
   </notificationbox>
   <vbox>
     <hbox id="commandBarBottom" align="center">
@@ -246,11 +259,6 @@
              valuethemes="&getThemes.label;"
              valueplugins="&getPlugins.label;"
              valueextensions="&getExtensions.label;"/>
-      <spacer flex="1"/>
-      <button id="restartAppButton" label="&cmd.restartApp2.label;"
-              accesskey="&cmd.restartApp2.accesskey;"
-              tooltiptext="&cmd.restartApp2.tooltip;"
-              command="cmd_restartApp"/>
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"

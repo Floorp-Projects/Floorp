@@ -807,12 +807,11 @@ call_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
              JSObject **objp)
 {
     JSStackFrame *fp;
-    JSString *str;
-    JSAtom *atom;
+    jsid id;
     JSLocalKind localKind;
     JSPropertyOp getter, setter;
     uintN slot, attrs;
@@ -824,15 +823,13 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     JS_ASSERT(fp->fun);
     JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee) == fp->fun);
 
-    if (!JSVAL_IS_STRING(id))
+    if (!JSVAL_IS_STRING(idval))
         return JS_TRUE;
 
-    str = JSVAL_TO_STRING(id);
-    atom = js_AtomizeString(cx, str, 0);
-    if (!atom)
+    if (!js_ValueToStringId(cx, idval, &id))
         return JS_FALSE;
 
-    localKind = js_LookupLocal(cx, fp->fun, atom, &slot);
+    localKind = js_LookupLocal(cx, fp->fun, JSID_TO_ATOM(id), &slot);
     if (localKind != JSLOCAL_NONE) {
         if (localKind == JSLOCAL_ARG) {
             JS_ASSERT(slot < fp->fun->nargs);
@@ -850,9 +847,9 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                     ? JSPROP_PERMANENT | JSPROP_READONLY
                     : JSPROP_PERMANENT;
         }
-        if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), vp[slot],
-                                     getter, setter, attrs,
-                                     SPROP_HAS_SHORTID, (int) slot, NULL)) {
+        if (!js_DefineNativeProperty(cx, obj, id, vp[slot], getter, setter,
+                                     attrs, SPROP_HAS_SHORTID, (int) slot,
+                                     NULL)) {
             return JS_FALSE;
         }
         *objp = obj;
@@ -863,10 +860,8 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
      * Resolve arguments so that we never store a particular Call object's
      * arguments object reference in a Call prototype's |arguments| slot.
      */
-    atom = cx->runtime->atomState.argumentsAtom;
-    if (id == ATOM_KEY(atom)) {
-        if (!js_DefineNativeProperty(cx, obj,
-                                     ATOM_TO_JSID(atom), JSVAL_VOID,
+    if (id == ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom)) {
+        if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID,
                                      NULL, NULL, JSPROP_PERMANENT,
                                      SPROP_HAS_SHORTID, CALL_ARGUMENTS,
                                      NULL)) {
@@ -1726,9 +1721,14 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JS_ASSERT(!fp->script && fp->fun && fp->fun->u.n.native == Function);
     caller = JS_GetScriptedCaller(cx, fp);
     if (caller) {
-        filename = caller->script->filename;
-        lineno = js_PCToLineNumber(cx, caller->script, caller->pc);
         principals = JS_EvalFramePrincipals(cx, fp, caller);
+        if (principals == caller->script->principals) {
+            filename = caller->script->filename;
+            lineno = js_PCToLineNumber(cx, caller->script, caller->pc);
+        } else {
+            filename = principals->codebase;
+            lineno = 0;
+        }
     } else {
         filename = NULL;
         lineno = 0;

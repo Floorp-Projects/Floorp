@@ -88,6 +88,10 @@ nsresult nsCaretAccessible::ClearControlSelectionListener()
 
 nsresult nsCaretAccessible::SetControlSelectionListener(nsIDOMNode *aCurrentNode)
 {
+  NS_ENSURE_TRUE(mRootAccessible, NS_ERROR_FAILURE);
+
+  ClearControlSelectionListener();
+
   mCurrentControl = aCurrentNode;
   mLastTextAccessible = nsnull;
 
@@ -121,7 +125,6 @@ nsresult nsCaretAccessible::SetControlSelectionListener(nsIDOMNode *aCurrentNode
   nsCOMPtr<nsISelection> domSel;
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
 
-  ClearControlSelectionListener();
   nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(domSel));
   NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
 
@@ -131,6 +134,8 @@ nsresult nsCaretAccessible::SetControlSelectionListener(nsIDOMNode *aCurrentNode
 
 nsresult nsCaretAccessible::AddDocSelectionListener(nsIDOMDocument *aDoc)
 {
+  NS_ENSURE_TRUE(mRootAccessible, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(doc->GetPrimaryShell());
@@ -171,7 +176,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   nsIPresShell *presShell = doc->GetPrimaryShell();
   NS_ENSURE_TRUE(presShell, NS_OK);
 
-  // Get first nnsIAccessibleText in parent chain and fire caret-move, selection-change event for it
+  // Get first nsIAccessibleText in parent chain and fire caret-move, selection-change event for it
   nsCOMPtr<nsIAccessible> accessible;
   nsIAccessibilityService *accService = mRootAccessible->GetAccService();
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
@@ -248,6 +253,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   nsRect caretRect;
   NS_ENSURE_TRUE(aOutWidget, caretRect);
   *aOutWidget = nsnull;
+  NS_ENSURE_TRUE(mRootAccessible, caretRect);
 
   if (!mLastTextAccessible) {
     return caretRect;    // Return empty rect

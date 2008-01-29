@@ -563,9 +563,11 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
   if (aCount > 0)
     return NS_OK;
 
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsITreeColumns> cols;
   nsresult rv = mTree->GetColumns(getter_AddRefs(cols));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(cols);
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   PRInt32 colsCount = 0;
@@ -597,7 +599,7 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
         nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
         nsCOMPtr<nsIAccessibleEvent> event =
           new nsAccEvent(nsIAccessibleEvent::EVENT_DOM_DESTROY,
-                         accessible, nsnull, PR_FALSE);
+                         accessible, PR_FALSE);
         FireAccessibleEvent(event);
 
         mAccessNodeCache->Remove(key);

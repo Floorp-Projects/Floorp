@@ -42,6 +42,7 @@
 #include "nsPIPluginInstancePeer.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
+#include "nsDOMJSUtils.h"
 #include "nsIDocument.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIJSContextStack.h"
@@ -265,7 +266,22 @@ struct AutoCXPusher
 
   ~AutoCXPusher()
   {
-    sContextStack->Pop(nsnull);
+    JSContext *cx = nsnull;
+    sContextStack->Pop(&cx);
+
+    JSContext *currentCx = nsnull;
+    sContextStack->Peek(&currentCx);
+
+    if (!currentCx) {
+      // No JS is running, tell the context we're done executing
+      // script.
+
+      nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
+
+      if (scx) {
+        scx->ScriptEvaluated(PR_TRUE);
+      }
+    }
 
     OnWrapperDestroyed();
   }

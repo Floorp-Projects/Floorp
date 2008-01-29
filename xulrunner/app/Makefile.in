@@ -227,10 +227,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(DIST)/branding/default.xpm $(DIST)/bin/chrome/icons/default
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/chrome/icons/default
+	$(INSTALL) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
 endif
 
 # XXX applications would need to supply this file
@@ -250,7 +247,7 @@ ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/document.png $(DIST)/branding/document.png
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
+	cp $(srcdir)/default16.png   $(DIST)/branding/default16.png
 endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/xulrunner.ico

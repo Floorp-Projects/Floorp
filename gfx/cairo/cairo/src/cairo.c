@@ -67,7 +67,7 @@ static const cairo_t _cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_INDEX
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_TEMP_FILE_ERROR
 
 /**
  * _cairo_error:
@@ -1870,6 +1870,50 @@ cairo_close_path (cairo_t *cr)
 slim_hidden_def(cairo_close_path);
 
 /**
+ * cairo_path_extents:
+ * @cr: a cairo context
+ * @x1: left of the resulting extents
+ * @y1: top of the resulting extents
+ * @x2: right of the resulting extents
+ * @y2: bottom of the resulting extents
+ *
+ * Computes a bounding box in user-space coordinates covering the
+ * points on the current path. If the current path is empty, returns
+ * an empty rectangle ((0,0), (0,0)). Stroke parameters, fill rule,
+ * surface dimensions and clipping are not taken into account.
+ *
+ * Contrast with cairo_fill_extents() and cairo_stroke_extents() which
+ * return the extents of only the area that would be "inked" by
+ * the corresponding drawing operations.
+ *
+ * The result of cairo_path_extents() is defined as equivalent to the
+ * limit of cairo_stroke_extents() with CAIRO_LINE_CAP_ROUND as the
+ * line width approaches 0.0, (but never reaching the empty-rectangle
+ * returned by cairo_stroke_extents() for a line width of 0.0).
+ *
+ * Specifically, this means that zero-area sub-paths such as
+ * cairo_move_to();cairo_line_to() segments, (even degenerate cases
+ * where the coordinates to both calls are identical), will be
+ * considered as contributing to the extents. However, a lone
+ * cairo_move_to() will not contribute to the results of
+ * cairo_path_extents().
+ *
+ * Since: 1.6
+ **/
+void
+cairo_path_extents (cairo_t *cr,
+		    double *x1, double *y1, double *x2, double *y2)
+{
+    if (cr->status)
+	return;
+
+    _cairo_gstate_path_extents (cr->gstate,
+				cr->path,
+				x1, y1, x2, y2);
+}
+slim_hidden_def (cairo_path_extents);
+
+/**
  * cairo_paint:
  * @cr: a cairo context
  *
@@ -2236,10 +2280,16 @@ cairo_in_fill (cairo_t *cr, double x, double y)
  * @y2: bottom of the resulting extents
  *
  * Computes a bounding box in user coordinates covering the area that
- * would be affected by a cairo_stroke() operation operation given the
- * current path and stroke parameters. If the current path is empty,
- * returns an empty rectangle (0,0, 0,0). Surface dimensions and
- * clipping are not taken into account.
+ * would be affected, (the "inked" area), by a cairo_stroke()
+ * operation operation given the current path and stroke
+ * parameters. If the current path is empty, returns an empty
+ * rectangle ((0,0), (0,0)). Surface dimensions and clipping are not
+ * taken into account.
+ *
+ * Note that if the line width is set to exactly zero, then
+ * cairo_stroke_extents will return an empty rectangle. Contrast with
+ * cairo_path_extents() which can be used to compute the non-empty
+ * bounds as the line width approaches zero.
  *
  * See cairo_stroke(), cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
@@ -2270,10 +2320,14 @@ cairo_stroke_extents (cairo_t *cr,
  * @y2: bottom of the resulting extents
  *
  * Computes a bounding box in user coordinates covering the area that
- * would be affected by a cairo_fill() operation given the current path
- * and fill parameters. If the current path is empty, returns an empty
- * rectangle (0,0, 0,0). Surface dimensions and clipping are not taken
- * into account.
+ * would be affected, (the "inked" area), by a cairo_fill() operation
+ * given the current path and fill parameters. If the current path is
+ * empty, returns an empty rectangle ((0,0), (0,0)). Surface
+ * dimensions and clipping are not taken into account.
+ *
+ * Contrast with cairo_path_extents(), which is similar, but returns
+ * non-zero extents for some paths no inked area, (such as a simple
+ * line segment).
  *
  * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
  **/
@@ -2666,10 +2720,12 @@ cairo_set_font_options (cairo_t                    *cr,
     if (cr->status)
 	return;
 
-    status = cairo_font_options_status ((cairo_font_options_t *) options);
-    if (status) {
-	_cairo_set_error (cr, status);
-	return;
+    if (options != NULL) {
+	status = cairo_font_options_status ((cairo_font_options_t *) options);
+	if (status) {
+	    _cairo_set_error (cr, status);
+	    return;
+	}
     }
 
     _cairo_gstate_set_font_options (cr->gstate, options);
@@ -2812,18 +2868,18 @@ cairo_text_extents (cairo_t              *cr,
     int num_glyphs;
     double x, y;
 
+    extents->x_bearing = 0.0;
+    extents->y_bearing = 0.0;
+    extents->width  = 0.0;
+    extents->height = 0.0;
+    extents->x_advance = 0.0;
+    extents->y_advance = 0.0;
+
     if (cr->status)
 	return;
 
-    if (utf8 == NULL) {
-	extents->x_bearing = 0.0;
-	extents->y_bearing = 0.0;
-	extents->width = 0.0;
-	extents->height = 0.0;
-	extents->x_advance = 0.0;
-	extents->y_advance = 0.0;
+    if (utf8 == NULL)
 	return;
-    }
 
     cairo_get_current_point (cr, &x, &y);
 
@@ -2831,14 +2887,10 @@ cairo_text_extents (cairo_t              *cr,
 					   x, y,
 					   &glyphs, &num_glyphs);
 
-    if (status) {
-	if (glyphs)
-	    free (glyphs);
-	_cairo_set_error (cr, status);
-	return;
-    }
-
-    status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs, extents);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_gstate_glyph_extents (cr->gstate,
+		                              glyphs, num_glyphs,
+					      extents);
     if (glyphs)
 	free (glyphs);
 
@@ -2871,6 +2923,13 @@ cairo_glyph_extents (cairo_t                *cr,
 		     cairo_text_extents_t   *extents)
 {
     cairo_status_t status;
+
+    extents->x_bearing = 0.0;
+    extents->y_bearing = 0.0;
+    extents->width  = 0.0;
+    extents->height = 0.0;
+    extents->x_advance = 0.0;
+    extents->y_advance = 0.0;
 
     if (cr->status)
 	return;
@@ -3019,6 +3078,9 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     if (cr->status)
 	return;
 
+    if (utf8 == NULL)
+	return;
+
     cairo_get_current_point (cr, &x, &y);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
@@ -3074,6 +3136,9 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
     cairo_status_t status;
 
     if (cr->status)
+	return;
+
+    if (num_glyphs == 0)
 	return;
 
     status = _cairo_gstate_glyph_path (cr->gstate,
@@ -3317,7 +3382,7 @@ cairo_surface_t *
 cairo_get_target (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (cr->status);
 
     return _cairo_gstate_get_original_target (cr->gstate);
 }
@@ -3326,17 +3391,19 @@ cairo_get_target (cairo_t *cr)
  * cairo_get_group_target:
  * @cr: a cairo context
  *
- * Gets the target surface for the current group as started by the
- * most recent call to cairo_push_group() or
- * cairo_push_group_with_content().
+ * Gets the current destination surface for the context. This is either
+ * the original target surface as passed to cairo_create() or the target
+ * surface for the current group as started by the most recent call to
+ * cairo_push_group() or cairo_push_group_with_content().
  *
- * This function will return NULL if called "outside" of any group
- * rendering blocks, (that is, after the last balancing call to
- * cairo_pop_group() or cairo_pop_group_to_source()).
+ * This function will always return a valid pointer, but the result
+ * can be a "nil" surface if @cr is already in an error state,
+ * (ie. cairo_status() <literal>!=</literal> %CAIRO_STATUS_SUCCESS).
+ * A nil surface is indicated by cairo_surface_status()
+ * <literal>!=</literal> %CAIRO_STATUS_SUCCESS.
  *
- * Return value: the target group surface, or NULL if none.  This
- * object is owned by cairo. To keep a reference to it, you must call
- * cairo_surface_reference().
+ * Return value: the target surface. This object is owned by cairo. To
+ * keep a reference to it, you must call cairo_surface_reference().
  *
  * Since: 1.2
  **/
@@ -3344,7 +3411,7 @@ cairo_surface_t *
 cairo_get_group_target (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (cr->status);
 
     return _cairo_gstate_get_target (cr->gstate);
 }
@@ -3551,6 +3618,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid index passed to getter";
     case CAIRO_STATUS_CLIP_NOT_REPRESENTABLE:
         return "clip region not representable in desired format";
+    case CAIRO_STATUS_TEMP_FILE_ERROR:
+	return "error creating or writing to a temporary file";
     }
 
     return "<unknown error status>";

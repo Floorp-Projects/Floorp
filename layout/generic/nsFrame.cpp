@@ -3291,6 +3291,22 @@ NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsIFrame* nsIFrame::GetTailContinuation()
+{
+  nsIFrame* frame = this;
+  while (frame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+    frame = frame->GetPrevContinuation();
+    NS_ASSERTION(frame, "first continuation can't be overflow container");
+  }
+  for (nsIFrame* next = frame->GetNextContinuation();
+       next && !(next->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER);
+       next = frame->GetNextContinuation())  {
+    frame = next;
+  }
+  NS_POSTCONDITION(frame, "illegal state in continuation chain.");
+  return frame;
+}
+
 nsIView*
 nsIFrame::GetParentViewForChildFrame(nsIFrame* aFrame) const
 {

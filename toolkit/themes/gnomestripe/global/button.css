@@ -199,82 +199,166 @@ button[icon="accept"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-ok?size=button");
 }
 
+button[icon="accept"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-ok?size=button&state=disabled");
+}
+
 button[icon="cancel"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-cancel?size=button");
+}
+
+button[icon="cancel"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-cancel?size=button&state=disabled");
 }
 
 button[icon="help"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-help?size=button");
 }
 
+button[icon="help"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-help?size=button&state=disabled");
+}
+
 button[icon="open"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-open?size=button");
 }
 
+button[icon="open"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-open?size=button&state=disabled");
+}
+
 button[icon="save"] .button-icon {
-  list-style-image: url(moz-icon://stock/gtk-save?size=button);
+  list-style-image: url("moz-icon://stock/gtk-save?size=button");
+}
+
+button[icon="save"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-save?size=button&state=disabled");
 }
 
 button[icon="find"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-find?size=button");
 }
 
+button[icon="find"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-find?size=button&state=disabled");
+}
+
 button[icon="clear"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-clear?size=button");
+}
+
+button[icon="clear"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-clear?size=button&state=disabled");
 }
 
 button[icon="yes"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-yes?size=button");
 }
 
+button[icon="yes"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-yes?size=button&state=disabled");
+}
+
 button[icon="no"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-no?size=button");
+}
+
+button[icon="no"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-no?size=button&state=disabled");
 }
 
 button[icon="apply"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-apply?size=button");
 }
 
+button[icon="apply"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-apply?size=button&state=disabled");
+}
+
 button[icon="close"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-close?size=button");
+}
+
+button[icon="close"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-close?size=button&state=disabled");
 }
 
 button[icon="print"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-print?size=button");
 }
 
+button[icon="print"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-print?size=button&state=disabled");
+}
+
 button[icon="add"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-add?size=button");
+}
+
+button[icon="add"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-add?size=button&state=disabled");
 }
 
 button[icon="remove"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-remove?size=button");
 }
 
+button[icon="remove"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-remove?size=button&state=disabled");
+}
+
 button[icon="refresh"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=button");
+}
+
+button[icon="refresh"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-refresh?size=button&state=disabled");
 }
 
 button[icon="go-forward"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-forward?size=button");
 }
 
+button[icon="go-forward"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-go-forward?size=button&state=disabled");
+}
+
 button[icon="go-back"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-go-back?size=button");
+}
+
+button[icon="go-back"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-go-back?size=button&state=disabled");
 }
 
 button[icon="properties"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-properties?size=button");
 }
 
+button[icon="properties"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-properties?size=button&state=disabled");
+}
+
 button[icon="select-font"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-select-font?size=button");
+}
+
+button[icon="select-font"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-select-font?size=button&state=disabled");
 }
 
 button[icon="select-color"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-color-picker?size=button");
 }
 
+button[icon="select-color"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-color-picker?size=button&state=disabled");
+}
+
 button[icon="network"] .button-icon {
   list-style-image: url("moz-icon://stock/gtk-network?size=button");
+}
+
+button[icon="network"][disabled="true"] .button-icon {
+  list-style-image: url("moz-icon://stock/gtk-network?size=button&state=disabled");
 }

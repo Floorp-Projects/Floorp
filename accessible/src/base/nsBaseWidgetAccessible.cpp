@@ -146,13 +146,18 @@ nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsLinkableAccessible::GetValue(nsAString& _retval)
+NS_IMETHODIMP nsLinkableAccessible::GetValue(nsAString& aValue)
 {
+  aValue.Truncate();
+  nsHyperTextAccessible::GetValue(aValue);
+  if (!aValue.IsEmpty())
+    return NS_OK;
+
   if (mIsLink) {
     nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mActionContent));
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
     if (linkNode && presShell)
-      return presShell->GetLinkLocation(linkNode, _retval);
+      return presShell->GetLinkLocation(linkNode, aValue);
   }
   return NS_ERROR_NOT_IMPLEMENTED;
 }

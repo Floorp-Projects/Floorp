@@ -215,21 +215,6 @@ protected:
   NS_IMETHOD VerifyTree() const;
 #endif
 
-  /**
-   * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow
-   * pointers.
-   *
-   * Updates the child count and content offsets of all containers that are
-   * affected
-   *
-   * Overloaded here because nsContainerFrame makes assumptions about pseudo-frames
-   * that are not true for tables.
-   *
-   * @param   aChild child this child's next-in-flow
-   * @return  PR_TRUE if successful and PR_FALSE otherwise
-   */
-  virtual void DeleteChildsNextInFlow(nsPresContext* aPresContext, nsIFrame* aChild);
-
   PRUint8 GetCaptionSide();
   
   PRUint8 GetCaptionVerticalAlign();

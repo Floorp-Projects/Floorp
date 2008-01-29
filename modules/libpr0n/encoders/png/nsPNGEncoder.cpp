@@ -45,12 +45,6 @@
 #include "nsString.h"
 #include "nsStreamUtils.h"
 
-// Bug 308126 - AIX defines jmpbuf in sys/context.h which conflicts with the
-// definition of jmpbuf in the png.h header file.
-#ifdef jmpbuf
-#undef jmpbuf
-#endif
-
 // Input streams that do not implement nsIAsyncInputStream should be threadsafe
 // so that they may be used with nsIInputStreamPump and nsIInputStreamChannel,
 // which read such a stream on a background thread.
@@ -336,10 +330,12 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
                            PRUint32* offsetX,
                            PRUint32* offsetY)
 {
-  char* token;
-  char* options = nsCRT::strdup(PromiseFlatCString(NS_ConvertUTF16toUTF8(aOptions)).get());
+  // Make a copy of aOptions, because strtok() will modify it.
+  nsCAutoString optionsCopy;
+  optionsCopy.Assign(NS_ConvertUTF16toUTF8(aOptions));
+  char* options = optionsCopy.BeginWriting();
 
-  while ((token = nsCRT::strtok(options, ";", &options))) {
+  while (char* token = nsCRT::strtok(options, ";", &options)) {
     // If there's an '=' character, split the token around it.
     char* equals = token, *value = nsnull;
     while(*equals != '=' && *equals) { ++equals; }
@@ -488,7 +484,7 @@ NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
     aCount = maxCount;
   nsresult rv = aWriter(this, aClosure,
                         reinterpret_cast<const char*>(mImageBuffer),
-                        0, aCount, _retval);
+                        mImageBufferReadPoint, aCount, _retval);
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(*_retval <= aCount, "bad write count");
     mImageBufferReadPoint += *_retval;

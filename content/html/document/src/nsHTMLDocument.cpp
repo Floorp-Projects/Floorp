@@ -416,18 +416,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLDocument, nsDocument)
 NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
 
-
-// QueryInterface implementation for nsHTMLDocument
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
-  NS_INTERFACE_TABLE_INHERITED3(nsHTMLDocument,
-                                nsIHTMLDocument,
-                                nsIDOMHTMLDocument,
-                                nsIDOMNSHTMLDocument)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDocument)
-NS_INTERFACE_MAP_END_INHERITING(nsDocument)
-
-
 nsresult
 nsHTMLDocument::Init()
 {
@@ -2095,17 +2083,39 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   }
 
   nsCOMPtr<nsIPrincipal> callerPrincipal;
-  nsContentUtils::GetSecurityManager()->
-    GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+
+  secMan->GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
+
+  if (!callerPrincipal) {
+    // If we're called from C++ we can't do a document.open w/o
+    // changing the principal of the document to something like
+    // about:blank (as that's the only sane thing to do when we don't
+    // know the origin of this call), and since we can't change the
+    // principals of a document for security reasons we'll have to
+    // refuse to go ahead with this call.
+
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // We're called from script. Make sure the script is from the same
+  // origin, not just that the caller can access the document. This is
+  // needed to keep document principals from ever changing, which is
+  // needed because of the way we use our XOW code, and is a sane
+  // thing to do anyways.
+
+  PRBool equals = PR_FALSE;
+  if (NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &equals)) ||
+      !equals) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   // The URI for the document after this call. Get it from the calling
   // principal (if available), or set it to "about:blank" if no
   // principal is reachable.
   nsCOMPtr<nsIURI> uri;
+  callerPrincipal->GetURI(getter_AddRefs(uri));
 
-  if (callerPrincipal) {
-    callerPrincipal->GetURI(getter_AddRefs(uri));
-  }
   if (!uri) {
     rv = NS_NewURI(getter_AddRefs(uri),
                    NS_LITERAL_CSTRING("about:blank"));
@@ -2162,15 +2172,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   if (window) {
     // Remember the old scope in case the call to SetNewDocument changes it.
     nsCOMPtr<nsIScriptGlobalObject> oldScope(do_QueryReferent(mScopeObject));
-
-    // If callerPrincipal doesn't match our principal. make sure that
-    // SetNewDocument gives us a new inner window and clears our scope.
-    PRBool samePrincipal;
-    if (!callerPrincipal ||
-        NS_FAILED(callerPrincipal->Equals(NodePrincipal(), &samePrincipal)) ||
-        !samePrincipal) {
-      SetIsInitialDocument(PR_FALSE);
-    }
 
     rv = window->SetNewDocument(this, nsnull, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);

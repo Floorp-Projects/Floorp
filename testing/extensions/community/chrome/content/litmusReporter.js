@@ -62,7 +62,7 @@ function LitmusResults(a) {
   this.machinename = a.machinename || '';
   this.requireField('username', a);
   this.requireField('password', a);
-  this.server = a.server || 'http://litmus.mozilla.org/process_test.cgi';
+  this.server = a.server || 'https://litmus.mozilla.org/process_test.cgi';
   this.action = 'submit';
 
   this.results = new Array();
@@ -97,7 +97,7 @@ LitmusResults.prototype = {
     var d = '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'+"\n";
     d += '<!DOCTYPE litmusresults PUBLIC' +
                ' "-//Mozilla Corporation//Litmus Result Submission DTD//EN/"' +
-               ' "http://litmus.mozilla.org/litmus_results.dtd">'+"\n";
+               ' "https://litmus.mozilla.org/litmus_results.dtd">'+"\n";
     d += '<litmusresults action="'+this.action+'" useragent="'+
       'litmusReporter.js/'+VERSION+' ('+this.machinename+')" '+
       (this.machinename ? 'machinename="'+this.machinename+'">' : '>') +"\n";

@@ -257,7 +257,7 @@ nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
   NS_ASSERTION(pAccessible, "Accessible doesn't implement nsPIAccessible");
 
   nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEventType, aAccessible, nsnull, aIsAsynch);
+    new nsAccEvent(aEventType, aAccessible, aIsAsynch);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   return pAccessible->FireAccessibleEvent(event);
@@ -587,6 +587,16 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
                                         nsIAtom *aTagName,
                                         PRUint32 aAncestorLevelsToSearch)
 {
+  return FindNeighbourPointingToNode(aForNode, &aRelationAttr, 1, aTagName, aAncestorLevelsToSearch);
+}
+
+nsIContent*
+nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode, 
+                                        nsIAtom **aRelationAttrs,
+                                        PRUint32 aAttrNum,
+                                        nsIAtom *aTagName,
+                                        PRUint32 aAncestorLevelsToSearch)
+{
   nsCOMPtr<nsIContent> binding;
   nsAutoString controlID;
   if (!nsAccUtils::GetID(aForNode, controlID)) {
@@ -638,14 +648,16 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
 
         if (content != prevSearched) {
           labelContent = FindDescendantPointingToID(&controlID, content,
-                                                    aRelationAttr, nsnull, aTagName);
+                                                    aRelationAttrs, aAttrNum,
+                                                    nsnull, aTagName);
         }
       }
       break;
     }
 
     labelContent = FindDescendantPointingToID(&controlID, aForNode,
-                                              aRelationAttr, prevSearched, aTagName);
+                                              aRelationAttrs, aAttrNum,
+                                              prevSearched, aTagName);
     prevSearched = aForNode;
   }
 
@@ -656,7 +668,8 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
 nsIContent*
 nsAccUtils::FindDescendantPointingToID(const nsString *aId,
                                        nsIContent *aLookContent,
-                                       nsIAtom *aRelationAttr,
+                                       nsIAtom **aRelationAttrs,
+                                       PRUint32 aAttrNum,
                                        nsIContent *aExcludeContent,
                                        nsIAtom *aTagType)
 {
@@ -665,31 +678,45 @@ nsAccUtils::FindDescendantPointingToID(const nsString *aId,
   LossyAppendUTF16toASCII(*aId, idWithSpaces);
   idWithSpaces += ' ';
   return FindDescendantPointingToIDImpl(idWithSpaces, aLookContent,
-                                        aRelationAttr, aExcludeContent, aTagType);
+                                        aRelationAttrs, aAttrNum,
+                                        aExcludeContent, aTagType);
+}
+
+nsIContent*
+nsAccUtils::FindDescendantPointingToID(const nsString *aId,
+                                       nsIContent *aLookContent,
+                                       nsIAtom *aRelationAttr,
+                                       nsIContent *aExcludeContent,
+                                       nsIAtom *aTagType)
+{
+  return FindDescendantPointingToID(aId, aLookContent, &aRelationAttr, 1, aExcludeContent, aTagType);
 }
 
 nsIContent*
 nsAccUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
                                            nsIContent *aLookContent,
-                                           nsIAtom *aRelationAttr,
+                                           nsIAtom **aRelationAttrs,
+                                           PRUint32 aAttrNum,
                                            nsIContent *aExcludeContent,
                                            nsIAtom *aTagType)
 {
   NS_ENSURE_TRUE(aLookContent, nsnull);
-  NS_ENSURE_TRUE(aRelationAttr, nsnull);
+  NS_ENSURE_TRUE(aRelationAttrs && *aRelationAttrs, nsnull);
 
   if (!aTagType || aLookContent->Tag() == aTagType) {
     // Tag matches
-    // Check for ID in the attribute aRelationAttr, which can be a list
-    nsAutoString idList;
-    if (aLookContent->GetAttr(kNameSpaceID_None, aRelationAttr, idList)) {
-      idList.Insert(' ', 0);  // Surround idlist with spaces for search
-      idList.Append(' ');
-      // idList is now a set of id's with spaces around each,
-      // and id also has spaces around it.
-      // If id is a substring of idList then we have a match
-      if (idList.Find(aIdWithSpaces) != -1) {
-        return aLookContent;
+    // Check for ID in the attributes aRelationAttrs, which can be a list
+    for (PRUint32 i = 0; i < aAttrNum; i++) {
+      nsAutoString idList;
+      if (aLookContent->GetAttr(kNameSpaceID_None, aRelationAttrs[i], idList)) {
+        idList.Insert(' ', 0);  // Surround idlist with spaces for search
+        idList.Append(' ');
+        // idList is now a set of id's with spaces around each,
+        // and id also has spaces around it.
+        // If id is a substring of idList then we have a match
+        if (idList.Find(aIdWithSpaces) != -1) {
+          return aLookContent;
+        }
       }
     }
     if (aTagType) {
@@ -707,7 +734,8 @@ nsAccUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
   while ((child = aLookContent->GetChildAt(count++)) != nsnull) {
     if (child != aExcludeContent) {
       labelContent = FindDescendantPointingToIDImpl(aIdWithSpaces, child,
-                                                    aRelationAttr, aExcludeContent, aTagType);
+                                                    aRelationAttrs, aAttrNum,
+                                                    aExcludeContent, aTagType);
       if (labelContent) {
         return labelContent;
       }

@@ -45,7 +45,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = extensions
 
 EXTRA_COMPONENTS = nsExtensionManager.js
-EXTRA_PP_COMPONENTS = nsBlocklistService.js
+EXTRA_PP_COMPONENTS = \
+  nsBlocklistService.js \
+  nsAddonRepository.js \
+  $(NULL)
+
 GARBAGE += nsExtensionManager.js
 
 include $(topsrcdir)/config/rules.mk

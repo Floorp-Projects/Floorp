@@ -68,6 +68,15 @@ pref("extensions.logging.enabled", false);
 // Hides the install button in the add-ons mgr
 pref("extensions.hideInstallButton", true);
 
+// Preferences for the Get Add-ons pane
+pref("extensions.getAddons.showPane", true);
+pref("extensions.getAddons.browseAddons", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%");
+pref("extensions.getAddons.maxResults", 5);
+pref("extensions.getAddons.recommended.browseURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/recommended");
+pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/list/featured/all/10");
+pref("extensions.getAddons.search.browseURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/search?q=%TERMS%");
+pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/search/%TERMS%");
+
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
 pref("extensions.blocklist.interval", 86400);
@@ -217,6 +226,7 @@ pref("browser.download.manager.openDelay", 0);
 pref("browser.download.manager.focusWhenStarting", false);
 pref("browser.download.manager.flashCount", 2);
 pref("browser.download.manager.addToRecentDocs", true);
+pref("browser.download.manager.quitBehavior", 0);
 
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/search-engines/");
@@ -335,14 +345,15 @@ pref("privacy.popups.usecustom",            true);
 pref("privacy.popups.firstTime",            true);
 pref("privacy.popups.showBrowserMessage",   true);
  
-pref("privacy.item.history",    true);
-pref("privacy.item.formdata",   true);
-pref("privacy.item.passwords",  false);
-pref("privacy.item.downloads",  true);
-pref("privacy.item.cookies",    false);
-pref("privacy.item.cache",      true);
-pref("privacy.item.siteprefs",  false);
-pref("privacy.item.sessions",   true);
+pref("privacy.item.history",     true);
+pref("privacy.item.formdata",    true);
+pref("privacy.item.passwords",   false);
+pref("privacy.item.downloads",   true);
+pref("privacy.item.cookies",     false);
+pref("privacy.item.cache",       true);
+pref("privacy.item.siteprefs",   false);
+pref("privacy.item.sessions",    true);
+pref("privacy.item.offlineApps", false);
 
 pref("privacy.sanitize.sanitizeOnShutdown", false);
 pref("privacy.sanitize.promptOnSanitize", true);
@@ -599,6 +610,42 @@ pref("browser.places.createdSmartBookmarks", false);
 // XXX to be removed after beta 2 (bug 391419)
 pref("browser.places.migratePostDataAnnotations", true);
 
+// the (maximum) number of the recent visits to sample
+// when calculating frecency
+pref("places.frecency.numVisits", 10);
+
+// Perform frecency recalculation after this amount of idle, repeating.
+// A value of zero disables updating of frecency on idle.
+// Default is 1 minute (60000ms).
+pref("places.frecency.updateIdleTime", 60000);
+
+// buckets (in days) for frecency calculation
+pref("places.frecency.firstBucketCutoff", 4);
+pref("places.frecency.secondBucketCutoff", 14);
+pref("places.frecency.thirdBucketCutoff", 31);
+pref("places.frecency.fourthBucketCutoff", 90);
+
+// weights for buckets for frecency calculations
+pref("places.frecency.firstBucketWeight", 100);
+pref("places.frecency.secondBucketWeight", 70);
+pref("places.frecency.thirdBucketWeight", 50);
+pref("places.frecency.fourthBucketWeight", 30);
+pref("places.frecency.defaultBucketWeight", 10);
+
+// bonus (in percent) for visit transition types for frecency calculations
+pref("places.frecency.embedVisitBonus", 0);
+pref("places.frecency.linkVisitBonus", 120);
+pref("places.frecency.typedVisitBonus", 200);
+pref("places.frecency.bookmarkVisitBonus", 140);
+pref("places.frecency.downloadVisitBonus", 0);
+pref("places.frecency.permRedirectVisitBonus", 0);
+pref("places.frecency.tempRedirectVisitBonus", 0);
+pref("places.frecency.defaultVisitBonus", 0);
+
+// bonus (in percent) for place types for frecency calculations
+pref("places.frecency.unvisitedBookmarkBonus", 140);
+pref("places.frecency.unvisitedTypedBonus", 200);
+
 // Controls behavior of the "Add Exception" dialog launched from SSL error pages
 // 0 - don't pre-populate anything
 // 1 - pre-populate site URL, but don't fetch certificate
@@ -608,3 +655,5 @@ pref("browser.ssl_override_behavior", 1);
 // replace newlines with spaces when pasting into <input type="text"> fields
 pref("editor.singleLine.pasteNewlines", 2);
 
+// The breakpad report server to link to in about:crashes
+pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");

@@ -85,7 +85,7 @@ JS_STATIC_ASSERT(sizeof(JSAtom *) == JS_BYTES_PER_WORD);
  * The lifetime of the result extends at least until the next GC activation,
  * longer if cx's string newborn root is not overwritten.
  */
-extern JS_FRIEND_API(const char *)
+extern const char *
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom);
 
 struct JSAtomListElement {
@@ -396,10 +396,10 @@ js_AtomizeDouble(JSContext *cx, jsdouble d);
 extern JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
 
-extern JS_FRIEND_API(JSAtom *)
+extern JSAtom *
 js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags);
 
-extern JS_FRIEND_API(JSAtom *)
+extern JSAtom *
 js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags);
 
 /*
@@ -416,10 +416,10 @@ JSBool
 js_AtomizePrimitiveValue(JSContext *cx, jsval v, JSAtom **atomp);
 
 /*
- * Convert v to an atomized string.
+ * Convert v to an atomized string and wrap it as an id.
  */
-extern JSAtom *
-js_ValueToStringAtom(JSContext *cx, jsval v);
+extern JSBool
+js_ValueToStringId(JSContext *cx, jsval v, jsid *idp);
 
 #ifdef DEBUG
 
@@ -439,7 +439,7 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al);
  * to its address. map->length must already be set to the number of atoms in
  * the list and map->vector must point to pre-allocated memory.
  */
-extern JS_FRIEND_API(void)
+extern void
 js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
 
 JS_END_EXTERN_C

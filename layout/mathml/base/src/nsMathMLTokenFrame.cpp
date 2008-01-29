@@ -111,7 +111,7 @@ nsMathMLTokenFrame::SetInitialChildList(nsIAtom*        aListName,
     return rv;
 
   SetQuotes();
-  ProcessTextData(PR_FALSE);
+  ProcessTextData();
   return rv;
 }
 
@@ -212,7 +212,7 @@ nsMathMLTokenFrame::MarkIntrinsicWidthsDirty()
 {
   // this could be called due to changes in the nsTextFrame beneath us
   // when something changed in the text content. So re-process our text
-  ProcessTextData(PR_TRUE);
+  ProcessTextData();
 
   nsMathMLContainerFrame::MarkIntrinsicWidthsDirty();
 }
@@ -232,14 +232,10 @@ nsMathMLTokenFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 void
-nsMathMLTokenFrame::ProcessTextData(PRBool aComputeStyleChange)
+nsMathMLTokenFrame::ProcessTextData()
 {
   // see if the style changes from normal to italic or vice-versa
   if (!SetTextStyle())
-    return;
-
-  // has changed but it doesn't have to be reflected straightaway
-  if (!aComputeStyleChange)
     return;
 
   // explicitly request a re-resolve to pick up the change of style

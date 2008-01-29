@@ -74,21 +74,26 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
 			   int		 	height)
 {
     test_meta_surface_t *surface;
+    cairo_status_t status;
 
     surface = malloc (sizeof (test_meta_surface_t));
-    if (surface == NULL)
+    if (surface == NULL) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
+    }
 
     _cairo_surface_init (&surface->base, &test_meta_surface_backend,
 			 content);
 
     surface->meta = _cairo_meta_surface_create (content, width, height);
-    if (cairo_surface_status (surface->meta))
+    status = cairo_surface_status (surface->meta);
+    if (status)
 	goto FAIL_CLEANUP_SURFACE;
 
     surface->image = _cairo_image_surface_create_with_content (content,
 							       width, height);
-    if (cairo_surface_status (surface->image))
+    status = cairo_surface_status (surface->image);
+    if (status)
 	goto FAIL_CLEANUP_META;
 
     surface->image_reflects_meta = FALSE;
@@ -100,8 +105,7 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
   FAIL_CLEANUP_SURFACE:
     free (surface);
   FAIL:
-    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-    return (cairo_surface_t*) &_cairo_surface_nil;
+    return _cairo_surface_create_in_error (status);
 }
 
 static cairo_status_t
@@ -309,7 +313,7 @@ _test_meta_surface_snapshot (void *abstract_other)
 
     status = _cairo_surface_get_extents (other->image, &extents);
     if (status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
 
     surface = cairo_surface_create_similar (other->image,
 					    CAIRO_CONTENT_COLOR_ALPHA,
@@ -319,7 +323,7 @@ _test_meta_surface_snapshot (void *abstract_other)
     status = _cairo_meta_surface_replay (other->meta, surface);
     if (status) {
 	cairo_surface_destroy (surface);
-	surface = (cairo_surface_t*) &_cairo_surface_nil;
+	surface = _cairo_surface_create_in_error (status);
     }
 
     return surface;

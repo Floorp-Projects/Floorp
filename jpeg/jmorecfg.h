@@ -112,7 +112,17 @@ typedef short JCOEF;
 
 /* SSE2 code appears broken for some cpus (bug 247437) */
 #define HAVE_SSE2_INTEL_MNEMONICS
+#define HAVE_SSE2_INTRINSICS
 #endif
+
+#if defined(__GNUC__) && defined(__i386__)
+#if defined(XP_MACOSX)
+#define HAVE_SSE2_INTRINSICS
+#endif ! XP_MACOSX
+#endif ! GNUC && i386
+
+/* Add support for other platforms here */
+
 
 /* Compressed datastreams are represented as arrays of JOCTET.
  * These must be EXACTLY 8 bits wide, at least once they are written to

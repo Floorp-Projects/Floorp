@@ -2367,43 +2367,22 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
                 (nsIXPConnectWrappedNative *)JS_GetPrivate(aCx, aObj);
 
             if (xpcWrapper) {
-                nsISupports *native = xpcWrapper->Native();
-                char ch = jsClass->name[0];
-
-                // XXXjst: Ideally this code would simply call into
-                // xpcWrapper->GetObjectPrincipal() and use that if we
-                // find a principal through that. If not, we can fall
-                // back to the below code. See bug 317240.
-
-                // For classes that are unlikely to be window object
-                // classes (Window, ModalContentWindow, and
-                // ChromeWindow), check if the native pointer is an
-                // nsINode. Note that this is merely a performance
-                // optimization, so missing this optimization is
-                // non-critical and must result in us finding the same
-                // principal that we would have gotten by asking the
-                // nsINode here.
-                if (ch != 'W' && ch != 'M' && ch != 'C'
 #ifdef DEBUG
-                    && aAllowShortCircuit
+                if (aAllowShortCircuit) {
 #endif
-                    ) {
-                    nsCOMPtr<nsINode> node = do_QueryInterface(native);
+                    result = xpcWrapper->GetObjectPrincipal();
 
-                    if (node) {
-                        result = node->NodePrincipal();
-
-                        // NodePrincipal() *always* returns a
-                        // principal.
-
+                    if (result) {
                         break;
                     }
+#ifdef DEBUG
                 }
+#endif
 
                 // If not, check if it points to an
                 // nsIScriptObjectPrincipal
                 nsCOMPtr<nsIScriptObjectPrincipal> objPrin =
-                    do_QueryInterface(native);
+                    do_QueryWrappedNative(xpcWrapper);
                 if (objPrin) {
                     result = objPrin->GetPrincipal();
 

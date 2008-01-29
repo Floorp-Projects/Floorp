@@ -450,7 +450,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
     extent = gfx->UserToDevice(extent);
   } else {
     gfx->IdentityMatrix();
-    extent = gfx->GetUserFillExtent();
+    extent = gfx->GetUserPathExtent();
   }
 
   mRect = nsSVGUtils::ToBoundingPixelRect(extent);
@@ -475,12 +475,10 @@ nsSVGGlyphFrame::InitialUpdate()
   return NS_OK;
 }  
 
-NS_IMETHODIMP
-nsSVGGlyphFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
+void
+nsSVGGlyphFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  UpdateGeometry(PR_TRUE, suppressInvalidation);
-  
-  return NS_OK;
+  UpdateGeometry(PR_TRUE, (aFlags & SUPPRESS_INVALIDATION) != 0);
 }
 
 NS_IMETHODIMP
@@ -522,7 +520,7 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
 
   LoopCharacters(gfx, text, cp, STROKE);
   gfx->IdentityMatrix();
-  gfxRect rect = gfx->GetUserFillExtent();
+  gfxRect rect = gfx->GetUserPathExtent();
 
   return NS_NewSVGRect(_retval, rect);
 }
@@ -891,7 +889,7 @@ nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 
     gfx->IdentityMatrix();
 
-    gfxRect rect = gfx->GetUserFillExtent();
+    gfxRect rect = gfx->GetUserPathExtent();
 
     gfx->SetMatrix(matrix);
 

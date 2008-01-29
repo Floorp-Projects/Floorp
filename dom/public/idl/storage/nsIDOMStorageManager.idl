@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(74dc93d1-8cdf-43b1-a52c-776dcb873475)]
+[scriptable, uuid(6e4bc25e-f056-4c6c-b27e-89152ca91834)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**
@@ -49,4 +49,10 @@ interface nsIDOMStorageManager : nsISupports
    * @returns the space usage of the domain, in bytes.
    */
   long getUsage(in AString aOwnerDomain);
+
+  /**
+   * Clear keys owned by offline applications.  All data owned by a domain
+   * with the "offline-app" permission will be removed from the database.
+   */
+  void clearOfflineApps();
 };

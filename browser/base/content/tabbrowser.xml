@@ -92,8 +92,8 @@
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
             <xul:menuseparator/>
-            <xul:menuitem label="&bookmarkCurTab.label;"
-                          accesskey="&bookmarkCurTab.accesskey;"
+            <xul:menuitem label="&bookmarkThisTab.label;"
+                          accesskey="&bookmarkThisTab.accesskey;"
                           oncommand="BookmarkThisTab();"/>
             <xul:menuitem label="&bookmarkAllTabs.label;"
                           accesskey="&bookmarkAllTabs.accesskey;"
@@ -2128,9 +2128,10 @@
         <parameter name="aFlags"/>
         <parameter name="aReferrerURI"/>
         <parameter name="aCharset"/>
+        <parameter name="aPostData"/>
         <body>
           <![CDATA[
-            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset);
+            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData);
           ]]>
         </body>
       </method>

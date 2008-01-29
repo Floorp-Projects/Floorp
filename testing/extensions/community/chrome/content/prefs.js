@@ -173,9 +173,16 @@ var CC_loginManager = Components.classes["@mozilla.org/login-manager;1"];
       var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                         Components.interfaces.nsILoginInfo,
                                         "init");
-            var newLogin = new nsLoginInfo('chrome://qa', 'Litmus Login', litmus.baseURL,
-              username, password, null, null);
-            this.manager().addLogin(newLogin);
+
+      // The LoginManager does not like "null" for username/password fields,
+      // So we send in the field names from the XUL.
+      var newLogin = new nsLoginInfo('chrome://qa', 'Litmus Login', litmus.baseURL,
+                                     username, password, "username", "password");
+      try {
+        this.manager().addLogin(newLogin);
+      } catch (err) {
+        alert("ERROR: " + err);
+      }
     },
     getPasswordObj: function() {
       try {

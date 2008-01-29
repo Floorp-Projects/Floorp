@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pixman.h"
 #include "pixman-private.h"
 
 static void

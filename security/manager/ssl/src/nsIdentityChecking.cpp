@@ -505,14 +505,12 @@ static SECStatus getFirstEVPolicy(CERTCertificate *cert, SECOidTag &outOidTag)
 PRBool
 nsNSSSocketInfo::hasCertErrors()
 {
-  if (!mSSLStatus || !mSSLStatus->mHaveCertStatus) {
-    // if the status is unknown, assume the cert is bad :-)
+  if (!mSSLStatus) {
+    // if the status is unknown, assume the cert is bad, better safe than sorry
     return PR_TRUE;
   }
 
-  return mSSLStatus->mIsDomainMismatch ||
-         mSSLStatus->mIsNotValidAtThisTime ||
-         mSSLStatus->mIsUntrusted;
+  return mSSLStatus->mHaveCertErrorBits;
 }
 
 NS_IMETHODIMP
@@ -524,6 +522,7 @@ nsNSSSocketInfo::GetIsExtendedValidation(PRBool* aIsEV)
   if (!mCert)
     return NS_OK;
 
+  // Never allow bad certs for EV, regardless of overrides.
   if (hasCertErrors())
     return NS_OK;
 
@@ -569,6 +568,15 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
   validEV = PR_FALSE;
   resultOidTag = SEC_OID_UNKNOWN;
 
+  PRBool isOCSPEnabled = PR_FALSE;
+  nsCOMPtr<nsIX509CertDB> certdb;
+  certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
+  if (certdb)
+    certdb->GetIsOcspOn(&isOCSPEnabled);
+  // No OCSP, no EV
+  if (!isOCSPEnabled)
+    return NS_OK;
+
   SECOidTag oid_tag;
   SECStatus rv = getFirstEVPolicy(mCert, oid_tag);
   if (rv != SECSuccess)
@@ -585,6 +593,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
   cvin[1].type = cert_pi_revocationFlags;
   cvin[1].value.scalar.ul = CERT_REV_FAIL_SOFT_CRL
                             | CERT_REV_FLAG_CRL
+                            | CERT_REV_FLAG_OCSP
                             ;
   cvin[2].type = cert_pi_end;
 
@@ -690,7 +699,7 @@ nsNSSComponent::CleanupIdentityInfo()
   if (testEVInfosLoaded) {
     testEVInfosLoaded = PR_FALSE;
     if (testEVInfos) {
-      for (size_t i; i<testEVInfos->Length(); ++i) {
+      for (size_t i = 0; i<testEVInfos->Length(); ++i) {
         delete testEVInfos->ElementAt(i);
       }
       testEVInfos->Clear();

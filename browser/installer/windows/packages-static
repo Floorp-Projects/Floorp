@@ -182,6 +182,7 @@ bin\components\widget.xpt
 bin\components\windowds.xpt
 bin\components\windowwatcher.xpt
 bin\components\shellservice.xpt
+bin\components\spellchecker.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_system.xpt
 bin\components\xpcom_components.xpt
@@ -331,6 +332,7 @@ bin\nssckbi.dll
 bin\components\pipboot.xpt
 bin\components\pipnss.xpt
 bin\components\pippki.xpt
+bin\nssutil3.dll
 bin\nss3.dll
 bin\smime3.dll
 bin\softokn3.chk
@@ -349,6 +351,7 @@ bin\updater.exe
 ; [Crash Reporter]
 bin\crashreporter.exe
 bin\crashreporter.ini
+bin\crashreporter-override.ini
 
 ; [Additional Developer Tools]
 [adt]

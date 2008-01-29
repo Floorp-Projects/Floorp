@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#if CAIRO_HAS_XLIB_SURFACE
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
@@ -56,8 +56,8 @@ cairo_xlib_surface_create_with_xrender_format (Display		 *dpy,
 
 CAIRO_END_DECLS
 
-#else  /* CAIRO_HAS_XLIB_SURFACE */
-# error Cairo was not compiled with support for the xlib backend
-#endif /* CAIRO_HAS_XLIB_SURFACE */
+#else  /* CAIRO_HAS_XLIB_XRENDER_SURFACE */
+# error Cairo was not compiled with support for the xlib XRender backend
+#endif /* CAIRO_HAS_XLIB_XRENDER_SURFACE */
 
 #endif /* CAIRO_XLIB_XRENDER_H */

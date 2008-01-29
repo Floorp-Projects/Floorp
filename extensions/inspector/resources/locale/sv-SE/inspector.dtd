@@ -3,6 +3,7 @@
 
 <!ENTITY thDOMNodes.label "DOM-noder">
 <!ENTITY btnInspect.label "Inspektera">
+<!ENTITY btnInspect.accesskey "I">
 <!ENTITY bxDocPanel.title "Dokument">
 <!ENTITY bxObjectPanel.title "Objekt">
 <!ENTITY btnSelecting.tooltip "Hitta en nod att inspektera genom att klicka på den">
@@ -46,6 +47,7 @@
 <!ENTITY mnView.label "Visa">
 <!ENTITY mnView.accesskey "v">
 <!ENTITY cmdToggleBrowser.label "Webbläsare">
+<!ENTITY cmdToggleBrowser.accesskey "W">
 <!ENTITY cmdToggleSearch.label "Sökresultat">
 
 <!ENTITY browserPanel.label "Webbläsare">

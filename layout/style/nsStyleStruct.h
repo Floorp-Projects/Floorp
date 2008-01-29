@@ -389,15 +389,6 @@ struct nsStyleBorder {
     return mActualBorder.side(aSide);
   }
 
-  // Get the computed border width for a particular side, in twips.  Note that
-  // this is zero if and only if there is no border to be painted for this
-  // side.  That is, this value takes into account the border style and the
-  // value is rounded to the nearest device pixel by NS_ROUND_BORDER_TO_PIXELS.
-  nscoord GetComputedBorderWidth(PRUint8 aSide) const
-  {
-    return mActualBorder.side(aSide) ? mBorder.side(aSide) : 0;
-  }
-
   PRUint8 GetBorderStyle(PRUint8 aSide) const
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 

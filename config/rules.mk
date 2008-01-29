@@ -117,6 +117,10 @@ ifdef EXTRA_DSO_LIBS
 EXTRA_DSO_LIBS	:= $(call EXPAND_MOZLIBNAME,$(EXTRA_DSO_LIBS))
 endif
 
+ifdef GQI_SRCS
+CPPSRCS += $(GQI_SRCS:.gqi=QI.cpp)
+endif
+
 #
 # Library rules
 #
@@ -1187,6 +1191,9 @@ MAKE_DEPS_AUTO_CXX = $(MAKE_DEPS_AUTO)
 endif # COMPILER_DEPEND
 
 endif # MOZ_AUTO_DEPS
+
+%QI.cpp: %.gqi $(topsrcdir)/xpcom/base/gqi.py
+	$(PYTHON) $(topsrcdir)/xpcom/base/gqi.py $(INCLUDES) -I $(IDL_DIR) -o $@ -D $(MDDEPDIR)/$(@F).pp $<
 
 # Rules for building native targets must come first because of the host_ prefix
 host_%.$(OBJ_SUFFIX): %.c Makefile Makefile.in

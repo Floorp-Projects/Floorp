@@ -39,6 +39,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "prlog.h"
 
 #define NS_IUNICHARBUFFER_IID \
 { 0x14cf6970, 0x93b5, 0x11d1, \

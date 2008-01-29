@@ -509,7 +509,7 @@ BrowserGlue.prototype = {
     }
     finally {
       prefBranch.setBoolPref("browser.places.createdSmartBookmarks", true);
-      prefBranch.savePrefFile(null);
+      prefBranch.QueryInterface(Ci.nsIPrefService).savePrefFile(null);
     }
   },
 

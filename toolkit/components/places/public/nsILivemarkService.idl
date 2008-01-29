@@ -42,9 +42,16 @@
 interface nsIURI;
 interface nsINavBookmarksService;
 
-[scriptable, uuid(602e3a71-2d10-4d8f-80c2-6db302b5c89d)]
+[scriptable, uuid(7879747e-8871-4a7b-9032-5c4fff1d6017)]
 interface nsILivemarkService : nsISupports
 {
+  /**
+   * Starts the livemark refresh timer.
+   * Being able to manually control this allows activity such
+   * as bookmarks import to occur without kicking off HTTP traffic.
+   */
+  void start();
+
   /**
    * Creates a new livemark
    * @param folder      The id of the parent folder
@@ -154,3 +161,7 @@ interface nsILivemarkService : nsISupports
 	 */
   void reloadLivemarkFolder(in long long folderID);
 };
+
+%{C++
+#define LMANNO_FEEDURI "livemark/feedURI"
+%}

@@ -148,7 +148,7 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
 
 // This array MUST be kept in the same order as the color list in nsILookAndFeel.h.
 /* XXX If you add any strings longer than
- * "ui.-moz-mac-accentlightesthighlight"
+ * "ui.IMESelectedConvertedTextBackground"
  * to the following array then you MUST update the
  * sizes of the sColorPrefs array in nsXPLookAndFeel.h
  */
@@ -214,6 +214,8 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-dialog",
   "ui.-moz-dialogtext",
   "ui.-moz-dragtargetzone",
+  "ui.-moz-html-cellhighlight",
+  "ui.-moz-html-cellhighlighttext",
   "ui.-moz-mac-focusring",
   "ui.-moz-mac-menuselect",
   "ui.-moz-mac-menushadow",

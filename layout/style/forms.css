@@ -251,8 +251,8 @@ select > option {
 }
 
 option:checked {
-  background-color: -moz-cellhighlight !important;
-  color: -moz-cellhighlighttext !important;
+  background-color: -moz-html-cellhighlight !important;
+  color: -moz-html-cellhighlighttext !important;
 }
 
 select:focus > option:checked,
@@ -488,12 +488,22 @@ button {
   display: block;
 }
 
+button:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover {
+  background-color: -moz-buttonhoverface;
+  color: -moz-buttonhovertext;
+}
+
 button:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
   padding: 0px 5px 0px 7px;
   border-style: inset;
+  background-color: ButtonFace;
+  color: ButtonText;
 }
 
 button::-moz-focus-inner,

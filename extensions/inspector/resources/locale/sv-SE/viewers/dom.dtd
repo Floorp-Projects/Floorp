@@ -21,7 +21,9 @@
    -
    - Contributor(s):
    -   Shawn Wilsher <me@shawnwilsher.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -   Hasse Wallanger <hasse@jasajudeju.se>
+   -   Lars P M <larspeemm@netscape.net>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +40,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-  <!ENTITY cmdShowFindDialog.label "Hitta noder...">
+  <!ENTITY cmdShowFindDialog.label "Hitta noder…">
   <!ENTITY cmdShowFindDialog.accesskey "H">
   <!ENTITY cmdShowFindDialog.accelkey "f">
 
@@ -57,7 +59,8 @@
   <!ENTITY cmdToggleProcessingInstructions.label "Visa processinstruktioner">
   <!ENTITY cmdToggleProcessingInstructions.accesskey "c">
 
-  <!ENTITY cmdFlashSelected.label "Blinka med det markerade elementet">
+  <!ENTITY cmdFlashSelected.label "Blinka det markerade elementet">
+  <!ENTITY cmdFlashSelected.accesskey "B">
 
   <!ENTITY cmdToggleAttributes.label "Visa attribut">
   <!ENTITY cmdToggleAttributes.accesskey "a">
@@ -67,56 +70,85 @@
 
   <!ENTITY ColumnsDialog.title "Kolumner">
 
-  <!ENTITY cmdShowColumnsDialog.label "Kolumner...">
+  <!ENTITY cmdShowColumnsDialog.label "Kolumner…">
   <!ENTITY cmdShowColumnsDialog.accesskey "K">
   
-  <!ENTITY cmdInsertNode.label "Infoga...">
+  <!ENTITY cmdInsertNode.label "Infoga…">
   <!ENTITY cmdDeleteNode.label "Ta bort">
   <!ENTITY cmdCopyXML.label "Kopiera XML">
+  <!ENTITY cmdCopyXML.accesskey "X">
   <!ENTITY cmdBlink.label "Blinka element">
+  <!ENTITY cmdBlink.accesskey "B">
   <!ENTITY cmdInspectBrowser.label "Inspektera dokumentet">
+  <!ENTITY cmdInspectBrowser.accesskey "d">
   <!ENTITY cmdInspectInNewWindow.label "Inspektera i nytt fönster">
-  
-  <!ENTITY cmdShowPseudoClasses.label "Ange pseudoklasser...">
+  <!ENTITY cmdInspectInNewWindow.accesskey "n">  
+
+  <!ENTITY cmdShowPseudoClasses.label "Ange pseudoklasser…">
   <!ENTITY cmdShowPseudoClasses.accesskey "p">
   
   <!ENTITY pseudoClasses.title "Pseudoklasser">
 
   <!ENTITY findNodes.title "Hitta noder">
   <!ENTITY findNodesById.label "Id">
+  <!ENTITY findNodesById.accesskey "I">
+  <!ENTITY findNodesById.accesskey2 "d">
   <!ENTITY findNodesByTag.label "Tagg">
+  <!ENTITY findNodesByTag.accesskey "T">
+  <!ENTITY findNodesByTag.accesskey2 "g">
   <!ENTITY findNodesByAttr.label "Attr">
+  <!ENTITY findNodesByAttr.accesskey "A">
+  <!ENTITY findNodesByAttr.accesskey2 "r">
   <!ENTITY findNodesByAttrValue.label "Värde">
+  <!ENTITY findNodesByAttrValue.accesskey "V">
   <!ENTITY findNodesSearchBy.label "Sök efter">
   <!ENTITY findNodesDirection.label "Riktning">
-  <!ENTITY findNodesDirectionUp.label "Upp">
-  <!ENTITY findNodesDirectionDown.label "Ner">
+  <!ENTITY findNodesDirectionUp.label "Uppåt">
+  <!ENTITY findNodesDirectionUp.accesskey "U">
+  <!ENTITY findNodesDirectionDown.label "Nedåt">
+  <!ENTITY findNodesDirectionDown.accesskey "N">
   <!ENTITY findNodesFind.label "Hitta">
   <!ENTITY findNodesCancel.label "Avbryt">
 
   <!ENTITY mnEditPasteMenu.label "Klistra in">
-  <!ENTITY mnEditPasteBefore.label "Innan">
+  <!ENTITY mnEditPasteMenu.accesskey "l">
+  <!ENTITY mnEditPasteBefore.label "Före">
+  <!ENTITY mnEditPasteBefore.accesskey "F">
   <!ENTITY mnEditPasteAfter.label "Efter">
-  <!ENTITY mnEditPasteReplace.label "I ställe för (ersätt)">
+  <!ENTITY mnEditPasteAfter.accesskey "E">
+  <!ENTITY mnEditPasteReplace.label "I stället för (Ersätt)">
+  <!ENTITY mnEditPasteReplace.accesskey "s">
   <!ENTITY mnEditPasteFirstChild.label "Som första barn">
+  <!ENTITY mnEditPasteFirstChild.accesskey "r">
   <!ENTITY mnEditPasteLastChild.label "Som sista barn">
+  <!ENTITY mnEditPasteLastChild.accesskey "a">
   <!ENTITY mnEditPasteAsParent.label "Som förälder">
+  <!ENTITY mnEditPasteAsParent.accesskey "ö">
 
   <!ENTITY mnEditInsertMenu.label "Infoga">
+  <!ENTITY mnEditInsertMenu.accesskey "I">
   <!ENTITY mnEditInsertAfter.label "Efter">
+  <!ENTITY mnEditInsertAfter.accesskey "E">
   <!ENTITY mnEditInsertBefore.label "Före">
-  <!ENTITY mnEditInsertFirstChild.label "Som första underordnad">
-  <!ENTITY mnEditInsertLastChild.label "Som sista underordnad">
+  <!ENTITY mnEditInsertBefore.accesskey "F">
+  <!ENTITY mnEditInsertFirstChild.label "Som första barn">
+  <!ENTITY mnEditInsertFirstChild.accesskey "r">
+  <!ENTITY mnEditInsertLastChild.label "Som sista barn">
+  <!ENTITY mnEditInsertLastChild.accesskey "a">
 
   <!ENTITY insertNode.title "Infoga nod">
   <!ENTITY nodeType.label "Nodtyp:">
+  <!ENTITY nodeType.accesskey "t">
   <!ENTITY nodeType.element.label "Element">
   <!ENTITY nodeType.text.label "Text">
-  <!ENTITY namespaceURI.label "Namnrymd-URI:">
+  <!ENTITY namespaceURI.label "Namnrymdens URI:">
+  <!ENTITY namespaceURI.accesskey "U">
   <!ENTITY tagName.label "Taggnamn:">
+  <!ENTITY tagName.accesskey "n">
   <!ENTITY nodeValue.label "Nodvärde:">
+  <!ENTITY nodeValue.accesskey "v">
 
-  <!ENTITY namespaceTitle.null.label "ingen">
+  <!ENTITY namespaceTitle.null.label "null">
   <!ENTITY namespaceTitle.default.label "Dokumentstandard">
   <!ENTITY namespaceTitle.custom.label "Anpassad">
 
@@ -136,3 +168,8 @@
   <!ENTITY namespaceTitle.XMLEvents.label "XML Events">
   <!ENTITY namespaceTitle.WAIRoles.label "WAI Roles">
   <!ENTITY namespaceTitle.WAIProperties.label "WAI Properties">
+
+  <!-- LOCALIZATION NOTE: Localizers can choose not to translate the following access keys. For a discussion about the pros and cons of such a decision, see https://bugzilla.mozilla.org/show_bug.cgi?id=398704, comments 1 and 2. -->
+  <!ENTITY cbxStateHover.accesskey "h">
+  <!ENTITY cbxStateActive.accesskey "a">
+  <!ENTITY cbxStateFocus.accesskey "f">

@@ -140,10 +140,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 		aColor = PH_TO_NS_RGB(Pg_DGREY);
 		break;
 	  case eColor_highlight:
+	  case eColor__moz_html_cellhighlight:
 	  case eColor__moz_menuhover:
 		aColor = PH_TO_NS_RGB(0x9ba9c9); // bill blue
 		break;
 	  case eColor_highlighttext:
+	  case eColor__moz_html_cellhighlighttext:
 	  case eColor__moz_menuhovertext:
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
 		break;

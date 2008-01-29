@@ -315,3 +315,8 @@ else
 endif
 endif
 endif
+
+ifdef MOZ_CRASHREPORTER
+libs:: $(addprefix $(LOCALE_SRCDIR)/,crashreporter/crashreporter-override.ini)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
+endif

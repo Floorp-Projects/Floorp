@@ -200,8 +200,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
         }
         switch (c) {
           case 'b':
-            if (!js_ValueToBoolean(cx, *sp, va_arg(ap, JSBool *)))
-                return JS_FALSE;
+            *va_arg(ap, JSBool *) = js_ValueToBoolean(*sp);
             break;
           case 'c':
             if (!js_ValueToUint16(cx, *sp, va_arg(ap, uint16 *)))
@@ -259,6 +258,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             obj = js_ValueToFunctionObject(cx, sp, 0);
             if (!obj)
                 return JS_FALSE;
+            *sp = OBJECT_TO_JSVAL(obj);
             *va_arg(ap, JSFunction **) = (JSFunction *) JS_GetPrivate(cx, obj);
             break;
           case 'v':
@@ -459,7 +459,7 @@ JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
 JS_PUBLIC_API(JSBool)
 JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 {
-    JSBool ok, b;
+    JSBool ok;
     JSObject *obj;
     JSString *str;
     jsdouble d, *dp;
@@ -496,10 +496,8 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         }
         break;
       case JSTYPE_BOOLEAN:
-        ok = js_ValueToBoolean(cx, v, &b);
-        if (ok)
-            *vp = BOOLEAN_TO_JSVAL(b);
-        break;
+        *vp = js_ValueToBoolean(v);
+        return JS_TRUE;
       default: {
         char numBuf[12];
         JS_snprintf(numBuf, sizeof numBuf, "%d", (int)type);
@@ -579,7 +577,8 @@ JS_PUBLIC_API(JSBool)
 JS_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 {
     CHECK_REQUEST(cx);
-    return js_ValueToBoolean(cx, v, bp);
+    *bp = js_ValueToBoolean(v);
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSType)
@@ -2528,7 +2527,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
                                      sizeof(JSString));
     if (!str)
         return NULL;
-    JSSTRING_INIT(str, chars, length);
+    JSFLATSTR_INIT(str, chars, length);
     return str;
 }
 
@@ -2565,23 +2564,15 @@ JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
 {
-    JSAtom *atom;
-
     CHECK_REQUEST(cx);
-    if (JSVAL_IS_INT(v)) {
+    if (JSVAL_IS_INT(v))
         *idp = INT_JSVAL_TO_JSID(v);
-    } else {
 #if JS_HAS_XML_SUPPORT
-        if (JSVAL_IS_OBJECT(v)) {
-            *idp = OBJECT_JSVAL_TO_JSID(v);
-            return JS_TRUE;
-        }
+    else if (!JSVAL_IS_PRIMITIVE(v))
+        *idp = OBJECT_JSVAL_TO_JSID(v);
 #endif
-        atom = js_ValueToStringAtom(cx, v);
-        if (!atom)
-            return JS_FALSE;
-        *idp = ATOM_TO_JSID(atom);
-    }
+    else
+        return js_ValueToStringId(cx, v, idp);
     return JS_TRUE;
 }
 
@@ -2769,7 +2760,7 @@ bad:
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj)
 {
-    return GC_AWARE_GET_CLASS(cx, obj);
+    return OBJ_GET_CLASS(cx, obj);
 }
 #else
 JS_PUBLIC_API(JSClass *)
@@ -2811,7 +2802,7 @@ JS_GetPrivate(JSContext *cx, JSObject *obj)
     jsval v;
 
     JS_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
-    v = GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    v = obj->fslots[JSSLOT_PRIVATE];
     if (!JSVAL_IS_INT(v))
         return NULL;
     return JSVAL_TO_PRIVATE(v);
@@ -2821,7 +2812,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
 {
     JS_ASSERT(OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_HAS_PRIVATE);
-    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(data));
+    obj->fslots[JSSLOT_PRIVATE] = PRIVATE_TO_JSVAL(data);
     return JS_TRUE;
 }
 
@@ -2840,7 +2831,7 @@ JS_GetPrototype(JSContext *cx, JSObject *obj)
     JSObject *proto;
 
     CHECK_REQUEST(cx);
-    proto = GC_AWARE_GET_PROTO(cx, obj);
+    proto = OBJ_GET_PROTO(cx, obj);
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return proto && proto->map ? proto : NULL;
@@ -2861,7 +2852,7 @@ JS_GetParent(JSContext *cx, JSObject *obj)
 {
     JSObject *parent;
 
-    parent = GC_AWARE_GET_PARENT(cx, obj);
+    parent = OBJ_GET_PARENT(cx, obj);
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
     return parent && parent->map ? parent : NULL;
@@ -3782,7 +3773,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
         obj->map->ops->clear(cx, obj);
 
     /* Clear cached class objects on the global object. */
-    if (JS_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) {
+    if (OBJ_GET_CLASS(cx, obj)->flags & JSCLASS_IS_GLOBAL) {
         int key;
 
         for (key = JSProto_Null; key < JSProto_LIMIT; key++)
@@ -3870,7 +3861,7 @@ prop_iter_finalize(JSContext *cx, JSObject *obj)
     jsint i;
     JSIdArray *ida;
 
-    v = GC_AWARE_GET_SLOT(cx, obj, JSSLOT_ITER_INDEX);
+    v = obj->fslots[JSSLOT_ITER_INDEX];
     if (JSVAL_IS_VOID(v))
         return;
 
@@ -3892,10 +3883,10 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
     JSIdArray *ida;
     jsid id;
 
-    v = GC_AWARE_GET_SLOT(trc->context, obj, JSSLOT_PRIVATE);
+    v = obj->fslots[JSSLOT_PRIVATE];
     JS_ASSERT(!JSVAL_IS_VOID(v));
 
-    i = JSVAL_TO_INT(OBJ_GET_SLOT(trc->context, obj, JSSLOT_ITER_INDEX));
+    i = JSVAL_TO_INT(obj->fslots[JSSLOT_ITER_INDEX]);
     if (i < 0) {
         /* Native case: just mark the next property to visit. */
         sprop = (JSScopeProperty *) JSVAL_TO_PRIVATE(v);
@@ -4653,6 +4644,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, uintN lineno)
 {
     JSFunction *fun;
+    JSTempValueRooter tvr;
     JSAtom *funAtom, *argAtom;
     uintN i;
 
@@ -4663,12 +4655,15 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         funAtom = js_Atomize(cx, name, strlen(name), 0);
         if (!funAtom) {
             fun = NULL;
-            goto out;
+            goto out2;
         }
     }
     fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
     if (!fun)
-        goto out;
+        goto out2;
+
+    /* From this point the control must flow through the label out. */
+    JS_PUSH_TEMP_ROOT_FUNCTION(cx, fun, &tvr);
     for (i = 0; i < nargs; i++) {
         argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
         if (!argAtom) {
@@ -4707,6 +4702,10 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 #endif
 
   out:
+    cx->weakRoots.newborn[JSTRACE_FUNCTION] = fun;
+    JS_POP_TEMP_ROOT(cx, &tvr);
+
+  out2:
     LAST_FRAME_CHECKS(cx, fun);
     return fun;
 }
@@ -5234,13 +5233,13 @@ JS_GetStringChars(JSString *str)
         if (s) {
             memcpy(s, JSSTRDEP_CHARS(str), n * sizeof *s);
             s[n] = 0;
-            JSSTRING_INIT(str, s, n);
+            JSFLATSTR_INIT(str, s, n);
         } else {
             s = JSSTRDEP_CHARS(str);
         }
     } else {
-        JSSTRING_CLEAR_MUTABLE(str);
-        s = str->u.chars;
+        JSFLATSTR_CLEAR_MUTABLE(str);
+        s = JSFLATSTR_CHARS(str);
     }
     return s;
 }
@@ -5266,7 +5265,7 @@ JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length)
     str = js_NewString(cx, chars, length);
     if (!str)
         return str;
-    JSSTRING_SET_MUTABLE(str);
+    JSFLATSTR_SET_MUTABLE(str);
     return str;
 }
 

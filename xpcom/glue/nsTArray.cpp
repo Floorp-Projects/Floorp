@@ -49,6 +49,9 @@ nsTArray_base::nsTArray_base()
 }
 
 nsTArray_base::~nsTArray_base() {
+  if (mHdr != &sEmptyHdr && !UsesAutoArrayBuffer()) {
+    NS_Free(mHdr);
+  }
   MOZ_COUNT_DTOR(nsTArray_base);
 }
 
@@ -82,11 +85,7 @@ nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {
   }
 
   // Use doubling algorithm when forced to increase available capacity.
-  NS_ASSERTION(mHdr->mCapacity > 0, "should not have buffer of zero size");
-  size_type temp = mHdr->mCapacity;
-  while (temp < capacity)
-    temp <<= 1;
-  capacity = temp;
+  capacity = PR_MAX(capacity, mHdr->mCapacity << 1);
 
   Header *header;
   if (UsesAutoArrayBuffer()) {

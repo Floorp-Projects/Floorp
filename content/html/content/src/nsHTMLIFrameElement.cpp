@@ -34,8 +34,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIDOMHTMLIFrameElement.h"
-#include "nsGenericHTMLElement.h"
+
+#include "nsHTMLIFrameElement.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -45,42 +45,8 @@
 #include "nsRuleData.h"
 #include "nsStyleConsts.h"
 
-class nsHTMLIFrameElement : public nsGenericHTMLFrameElement,
-                            public nsIDOMHTMLIFrameElement
-{
-public:
-  nsHTMLIFrameElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsHTMLIFrameElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFrameElement::)
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFrameElement::)
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFrameElement::)
-
-  // nsIDOMHTMLIFrameElement
-  NS_DECL_NSIDOMHTMLIFRAMEELEMENT
-
-  // nsIContent
-  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-};
-
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(IFrame)
-
 
 nsHTMLIFrameElement::nsHTMLIFrameElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLFrameElement(aNodeInfo)
@@ -94,13 +60,6 @@ nsHTMLIFrameElement::~nsHTMLIFrameElement()
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement,nsGenericElement)
-
-// QueryInterface implementation for nsHTMLIFrameElement
-NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLIFrameElement,
-                                     nsGenericHTMLFrameElement)
-  NS_INTERFACE_TABLE_INHERITED1(nsHTMLIFrameElement, nsIDOMHTMLIFrameElement)
-NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLIFrameElement)
-
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLIFrameElement)
 

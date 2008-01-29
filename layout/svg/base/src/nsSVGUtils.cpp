@@ -918,8 +918,7 @@ nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
   }
   }
 
-  if (aLength->GetSpecifiedUnitType() ==
-      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+  if (aLength->IsPercentage()) {
     fraction = aLength->GetAnimValInSpecifiedUnits() / 100;
   } else
     fraction = aLength->GetAnimValue(static_cast<nsSVGSVGElement*>
@@ -1115,7 +1114,7 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
 }
 
 void 
-nsSVGUtils::NotifyChildrenCanvasTMChanged(nsIFrame *aFrame, PRBool suppressInvalidation)
+nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
 {
   nsIFrame *aKid = aFrame->GetFirstChild(nsnull);
 
@@ -1123,12 +1122,12 @@ nsSVGUtils::NotifyChildrenCanvasTMChanged(nsIFrame *aFrame, PRBool suppressInval
     nsISVGChildFrame* SVGFrame = nsnull;
     CallQueryInterface(aKid, &SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation); 
+      SVGFrame->NotifySVGChanged(aFlags); 
     } else {
       NS_ASSERTION(aKid->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
-      nsSVGUtils::NotifyChildrenCanvasTMChanged(aKid, suppressInvalidation);
+      nsSVGUtils::NotifyChildrenOfSVGChange(aKid, aFlags);
     }
     aKid = aKid->GetNextSibling();
   }

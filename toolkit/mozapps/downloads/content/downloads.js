@@ -53,7 +53,10 @@ const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+let Cu = Components.utils;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/DownloadUtils.jsm");
+Cu.import("resource://gre/modules/PluralForm.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -78,28 +81,18 @@ var gUserInteracted = false;
 // bundle on startup.
 let gStr = {
   paused: "paused",
-  statusFormat: "statusFormat2",
-  transferSameUnits: "transferSameUnits",
-  transferDiffUnits: "transferDiffUnits",
-  transferNoTotal: "transferNoTotal",
-  timeMinutesLeft: "timeMinutesLeft",
-  timeSecondsLeft: "timeSecondsLeft",
-  timeFewSeconds: "timeFewSeconds",
-  timeUnknown: "timeUnknown",
+  cannotPause: "cannotPause",
   doneStatus: "doneStatus",
   doneSize: "doneSize",
   doneSizeUnknown: "doneSizeUnknown",
-  doneScheme: "doneScheme",
-  doneFileScheme: "doneFileScheme",
   stateFailed: "stateFailed",
   stateCanceled: "stateCanceled",
   stateBlocked: "stateBlocked",
   stateDirty: "stateDirty",
   yesterday: "yesterday",
   monthDate: "monthDate",
-
-  units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
-
+  downloadsTitleFiles: "downloadsTitleFiles",
+  downloadsTitlePercent: "downloadsTitlePercent",
   fileExecutableSecurityWarningTitle: "fileExecutableSecurityWarningTitle",
   fileExecutableSecurityWarningDontAsk: "fileExecutableSecurityWarningDontAsk"
 };
@@ -107,7 +100,8 @@ let gStr = {
 // Create a getDisplayHost function for queries to use
 gDownloadManager.DBConnection.createFunction("getDisplayHost", 1, {
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIStorageFunction]),
-  onFunctionCall: function(aArgs) getHost(aArgs.getUTF8String(0))[0]
+  onFunctionCall: function(aArgs)
+    DownloadUtils.getURIHost(aArgs.getUTF8String(0))[0]
 });
 
 // The statement to query for downloads that are active or match the search
@@ -338,47 +332,47 @@ var gLastComputedMean = -1;
 var gLastActiveDownloads = 0;
 function onUpdateProgress()
 {
-  if (gDownloadManager.activeDownloads == 0) {
+  let numActiveDownloads = gDownloadManager.activeDownloadCount;
+
+  // Use the default title and reset "last" values if there's no downloads
+  if (numActiveDownloads == 0) {
     document.title = document.documentElement.getAttribute("statictitle");
     gLastComputedMean = -1;
+    gLastActiveDownloads = 0;
+
     return;
   }
 
   // Establish the mean transfer speed and amount downloaded.
   var mean = 0;
   var base = 0;
-  var numActiveDownloads = 0;
   var dls = gDownloadManager.activeDownloads;
   while (dls.hasMoreElements()) {
-    let dl = dls.getNext();
-    dl.QueryInterface(Ci.nsIDownload);
+    let dl = dls.getNext().QueryInterface(Ci.nsIDownload);
     if (dl.percentComplete < 100 && dl.size > 0) {
       mean += dl.amountTransferred;
       base += dl.size;
     }
-    numActiveDownloads++;
   }
 
-  // we're not downloading anything at the moment,
-  // but we already downloaded something.
-  if (base == 0) {
-    mean = 100;
-  } else {
+  // Calculate the percent transferred, unless we don't have a total file size
+  let title = gStr.downloadsTitlePercent;
+  if (base == 0)
+    title = gStr.downloadsTitleFiles;
+  else
     mean = Math.floor((mean / base) * 100);
-  }
 
   // Update title of window
   if (mean != gLastComputedMean || gLastActiveDownloads != numActiveDownloads) {
     gLastComputedMean = mean;
     gLastActiveDownloads = numActiveDownloads;
 
-    let strings = document.getElementById("downloadStrings");
-    if (numActiveDownloads > 1) {
-      document.title = strings.getFormattedString("downloadsTitleMultiple",
-                                                  [mean, numActiveDownloads]);
-    } else {
-      document.title = strings.getFormattedString("downloadsTitle", [mean]);
-    }
+    // Get the correct plural form and insert number of downloads and percent
+    title = PluralForm.get(numActiveDownloads, title);
+    title = replaceInsert(title, 1, numActiveDownloads);
+    title = replaceInsert(title, 2, mean);
+
+    document.title = title;
   }
 }
 
@@ -613,6 +607,7 @@ var gDownloadViewController = {
     }
 
     let dl = aItem;
+    let download = null; // used for getting an nsIDownload object
 
     switch (aCommand) {
       case "cmd_cancel":
@@ -621,11 +616,14 @@ var gDownloadViewController = {
         let file = getLocalFileFromNativePathOrUrl(dl.getAttribute("file"));
         return dl.openable && file.exists();
       case "cmd_pause":
-        return dl.inProgress && !dl.paused;
+        download = gDownloadManager.getDownload(dl.getAttribute("dlid"));
+        return dl.inProgress && !dl.paused && download.resumable;
       case "cmd_pauseResume":
-        return dl.inProgress || dl.paused;
+        download = gDownloadManager.getDownload(dl.getAttribute("dlid"));
+        return (dl.inProgress || dl.paused) && download.resumable;
       case "cmd_resume":
-        return dl.paused;
+        download = gDownloadManager.getDownload(dl.getAttribute("dlid"));
+        return dl.paused && download.resumable;
       case "cmd_openReferrer":
         return dl.hasAttribute("referrer");
       case "cmd_removeFromList":
@@ -658,10 +656,10 @@ var gDownloadViewController = {
       pauseDownload(aSelectedItem);
     },
     cmd_pauseResume: function(aSelectedItem) {
-      if (aSelectedItem.inProgress)
-        this.commands.cmd_pause(aSelectedItem);
+      if (aSelectedItem.paused)
+        this.cmd_resume(aSelectedItem);
       else
-        this.commands.cmd_resume(aSelectedItem);
+        this.cmd_pause(aSelectedItem);
     },
     cmd_removeFromList: function(aSelectedItem) {
       removeDownload(aSelectedItem);
@@ -784,6 +782,12 @@ function updateButtons(aItem)
     let cmd = buttons[i].getAttribute("cmd");
     let enabled = gDownloadViewController.isCommandEnabled(cmd, aItem);
     buttons[i].disabled = !enabled;
+
+    if ("cmd_pause" == cmd && !enabled) {
+      // We need to add the tooltip indicating that the download cannot be
+      // paused now.
+      buttons[i].setAttribute("tooltiptext", gStr.cannotPause);
+    }
   }
 }
 
@@ -803,94 +807,45 @@ function updateStatus(aItem, aDownload) {
   let state = Number(aItem.getAttribute("state"));
   switch (state) {
     case nsIDM.DOWNLOAD_PAUSED:
-    case nsIDM.DOWNLOAD_DOWNLOADING:
+    {
       let currBytes = Number(aItem.getAttribute("currBytes"));
       let maxBytes = Number(aItem.getAttribute("maxBytes"));
 
-      // Update the bytes transferred and bytes total
-      let ([progress, progressUnits] = convertByteUnits(currBytes),
-           [total, totalUnits] = convertByteUnits(maxBytes),
-           transfer) {
-        if (total < 0)
-          transfer = gStr.transferNoTotal;
-        else if (progressUnits == totalUnits)
-          transfer = gStr.transferSameUnits;
-        else
-          transfer = gStr.transferDiffUnits;
-
-        transfer = replaceInsert(transfer, 1, progress);
-        transfer = replaceInsert(transfer, 2, progressUnits);
-        transfer = replaceInsert(transfer, 3, total);
-        transfer = replaceInsert(transfer, 4, totalUnits);
-
-        if (state == nsIDM.DOWNLOAD_PAUSED) {
-          status = replaceInsert(gStr.paused, 1, transfer);
-
-          // don't need to process any more for PAUSED
-          break;
-        }
-
-        // Insert 1 is the download progress
-        status = replaceInsert(gStr.statusFormat, 1, transfer);
-      }
-
-      // if we don't have an active download, assume 0 bytes/sec
-      let speed = aDownload ? aDownload.speed : 0;
-
-      // Update the download rate
-      let ([rate, unit] = convertByteUnits(speed)) {
-        // Insert 2 is the download rate
-        status = replaceInsert(status, 2, rate);
-        // Insert 3 is the |unit|/sec
-        status = replaceInsert(status, 3, unit);
-      }
-
-      // Update time remaining.
-      let (remain) {
-        if ((speed > 0) && (maxBytes > 0)) {
-          let seconds = Math.ceil((maxBytes - currBytes) / speed);
-          let lastSec = Number(aItem.getAttribute("lastSeconds"));
-
-          // Reuse the last seconds if the new one is only slighty longer
-          // This avoids jittering seconds, e.g., 41 40 38 40 -> 41 40 38 38
-          // However, large changes are shown, e.g., 41 38 49 -> 41 38 49
-          let (diff = seconds - lastSec) {
-            if (diff > 0 && diff <= 10)
-              seconds = lastSec;
-            else
-              aItem.setAttribute("lastSeconds", seconds);
-          }
-
-          // Be friendly in the last few seconds
-          if (seconds <= 3)
-            remain = gStr.timeFewSeconds;
-          // Show 2 digit seconds starting at 60; otherwise use minutes
-          else if (seconds <= 60)
-            remain = replaceInsert(gStr.timeSecondsLeft, 1, seconds);
-          else
-            remain = replaceInsert(gStr.timeMinutesLeft, 1,
-                                   Math.ceil(seconds / 60));
-        } else {
-          remain = gStr.timeUnknown;
-        }
-
-        // Insert 4 is the time remaining
-        status = replaceInsert(status, 4, remain);
-      }
+      let transfer = DownloadUtils.getTransferTotal(currBytes, maxBytes);
+      status = replaceInsert(gStr.paused, 1, transfer);
 
       break;
+    }
+    case nsIDM.DOWNLOAD_DOWNLOADING:
+    {
+      let currBytes = Number(aItem.getAttribute("currBytes"));
+      let maxBytes = Number(aItem.getAttribute("maxBytes"));
+      // If we don't have an active download, assume 0 bytes/sec
+      let speed = aDownload ? aDownload.speed : 0;
+      let lastSec = Number(aItem.getAttribute("lastSeconds"));
+
+      let newLast;
+      [status, newLast] =
+        DownloadUtils.getDownloadStatus(currBytes, maxBytes, speed, lastSec);
+
+      // Update lastSeconds to be the new value
+      aItem.setAttribute("lastSeconds", newLast);
+
+      break;
+    }
     case nsIDM.DOWNLOAD_FINISHED:
     case nsIDM.DOWNLOAD_FAILED:
     case nsIDM.DOWNLOAD_CANCELED:
     case nsIDM.DOWNLOAD_BLOCKED:
     case nsIDM.DOWNLOAD_DIRTY:
+    {
       let (stateSize = {}) {
         stateSize[nsIDM.DOWNLOAD_FINISHED] = function() {
           // Display the file size, but show "Unknown" for negative sizes
           let fileSize = Number(aItem.getAttribute("maxBytes"));
           let sizeText = gStr.doneSizeUnknown;
           if (fileSize >= 0) {
-            let [size, unit] = convertByteUnits(fileSize);
+            let [size, unit] = DownloadUtils.convertByteUnits(fileSize);
             sizeText = replaceInsert(gStr.doneSize, 1, size);
             sizeText = replaceInsert(sizeText, 2, unit);
           }
@@ -905,13 +860,15 @@ function updateStatus(aItem, aDownload) {
         status = replaceInsert(gStr.doneStatus, 1, stateSize[state]());
       }
 
-      let [displayHost, fullHost] = getHost(getReferrerOrSource(aItem));
+      let [displayHost, fullHost] =
+        DownloadUtils.getURIHost(getReferrerOrSource(aItem));
       // Insert 2 is the eTLD + 1 or other variations of the host
       status = replaceInsert(status, 2, displayHost);
       // Set the tooltip to be the full host
       statusTip = fullHost;
 
       break;
+    }
   }
 
   aItem.setAttribute("status", status);
@@ -978,92 +935,16 @@ function updateTime(aItem)
 }
 
 /**
- * Converts a number of bytes to the appropriate unit that results in a
- * number that needs fewer than 4 digits
+ * Helper function to replace a placeholder string with a real string
  *
- * @return a pair: [new value with 3 sig. figs., its unit]
+ * @param aText
+ *        Source text containing placeholder (e.g., #1)
+ * @param aIndex
+ *        Index number of placeholder to replace
+ * @param aValue
+ *        New string to put in place of placeholder
+ * @return The string with placeholder replaced with the new string
  */
-function convertByteUnits(aBytes)
-{
-  let unitIndex = 0;
-
-  // convert to next unit if it needs 4 digits (after rounding), but only if
-  // we know the name of the next unit
-  while ((aBytes >= 999.5) && (unitIndex < gStr.units.length - 1)) {
-    aBytes /= 1024;
-    unitIndex++;
-  }
-
-  // Get rid of insignificant bits by truncating to 1 or 0 decimal points
-  // 0 -> 0; 1.2 -> 1.2; 12.3 -> 12.3; 123.4 -> 123; 234.5 -> 235
-  aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) ? 1 : 0);
-
-  return [aBytes, gStr.units[unitIndex]];
-}
-
-/**
- * Get the appropriate display host string for a URI string depending on if the
- * URI has an eTLD + 1, is an IP address, a local file, or other protocol
- *
- * @param aURIString
- *        The URI string to try getting an eTLD + 1, etc.
- * @return a pair: [display host for the provided URI string, full host name]
- */
-function getHost(aURIString)
-{
-  let ioService = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
-  let eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].
-                    getService(Ci.nsIEffectiveTLDService);
-  let idnService = Cc["@mozilla.org/network/idn-service;1"].
-                   getService(Ci.nsIIDNService);
-
-  // Get a URI that knows about its components
-  let uri = ioService.newURI(aURIString, null, null);
-
-  // Get the inner-most uri for schemes like jar:
-  if (uri instanceof Ci.nsINestedURI)
-    uri = uri.innermostURI;
-
-  let fullHost;
-  try {
-    // Get the full host name; some special URIs fail (data: jar:)
-    fullHost = uri.host;
-  } catch (e) {
-    fullHost = "";
-  }
-
-  let displayHost;
-  try {
-    // This might fail if it's an IP address or doesn't have more than 1 part
-    let baseDomain = eTLDService.getBaseDomain(uri);
-
-    // Convert base domain for display; ignore the isAscii out param
-    displayHost = idnService.convertToDisplayIDN(baseDomain, {});
-  } catch (e) {
-    // Default to the host name
-    displayHost = fullHost;
-  }
-
-  // Check if we need to show something else for the host
-  if (uri.scheme == "file") {
-    // Display special text for file protocol
-    displayHost = gStr.doneFileScheme;
-    fullHost = displayHost;
-  } else if (displayHost.length == 0) {
-    // Got nothing; show the scheme (data: about: moz-icon:)
-    displayHost = replaceInsert(gStr.doneScheme, 1, uri.scheme);
-    fullHost = displayHost;
-  } else if (uri.port != -1) {
-    // Tack on the port if it's not the default port
-    let port = ":" + uri.port;
-    displayHost += port;
-    fullHost += port;
-  }
-
-  return [displayHost, fullHost];
-}
-
 function replaceInsert(aText, aIndex, aValue)
 {
   return aText.replace("#" + aIndex, aValue);

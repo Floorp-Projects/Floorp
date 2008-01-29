@@ -438,14 +438,14 @@ var gEditItemOverlay = {
     if (tags.length > 0 || currentTags.length > 0) {
       var tagsToRemove = [];
       var tagsToAdd = [];
-      var t;
-      for each (t in currentTags) {
-        if (tags.indexOf(t) == -1)
-          tagsToRemove.push(t);
+      var i;
+      for (i = 0; i < currentTags.length; i++) {
+        if (tags.indexOf(currentTags[i]) == -1)
+          tagsToRemove.push(currentTags[i]);
       }
-      for each (t in tags) {
-        if (currentTags.indexOf(t) == -1)
-          tagsToAdd.push(t);
+      for (i = 0; i < tags.length; i++) {
+        if (currentTags.indexOf(tags[i]) == -1)
+          tagsToAdd.push(tags[i]);
       }
 
       if (tagsToAdd.length > 0)
@@ -643,7 +643,8 @@ var gEditItemOverlay = {
     // Update folder-tree selection
     if (!this._folderTree.collapsed) {
       var selectedNode = this._folderTree.selectedNode;
-      if (!selectedNode || selectedNode.itemId != container)
+      if (!selectedNode ||
+          PlacesUtils.getConcreteItemId(selectedNode) != container)
         this._folderTree.selectItems([container]);
     }
   },
@@ -653,7 +654,7 @@ var gEditItemOverlay = {
     if (!selectedNode)
       return;
 
-    var folderId = selectedNode.itemId;
+    var folderId = PlacesUtils.getConcreteItemId(selectedNode);
     if (this._getFolderIdFromMenuList() == folderId)
       return;
 
@@ -682,7 +683,8 @@ var gEditItemOverlay = {
 
     var tagsInField = this._getTagsArrayFromTagField();
     var allTags = PlacesUtils.tagging.allTags;
-    for each (var tag in allTags) {
+    for (var i = 0; i < allTags.length; i++) {
+      var tag = allTags[i];
       var elt = document.createElement("listitem");
       elt.setAttribute("type", "checkbox");
       elt.setAttribute("label", tag);

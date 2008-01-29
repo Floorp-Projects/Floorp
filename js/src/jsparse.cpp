@@ -85,6 +85,14 @@
 #endif
 
 /*
+ * Asserts to verify assumptions behind pn_ macros.
+ */
+JS_STATIC_ASSERT(offsetof(JSParseNode, pn_u.name.atom) ==
+                 offsetof(JSParseNode, pn_u.apair.atom));
+JS_STATIC_ASSERT(offsetof(JSParseNode, pn_u.name.slot) ==
+                 offsetof(JSParseNode, pn_u.lexical.slot));
+
+/*
  * JS parsers, from lowest to highest precedence.
  *
  * Each parser takes a context, a token stream, and a tree context struct.
@@ -1106,6 +1114,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn = NewParseNode(cx, ts, PN_FUNC, tc);
     if (!pn)
         return NULL;
+#ifdef DEBUG
+    pn->pn_index = (uint32) -1;
+#endif
 
     /* Scan the optional function name into funAtom. */
     ts->flags |= TSF_KEYWORD_IS_NAME;
@@ -1453,8 +1464,11 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         ts->flags |= TSF_OPERAND;
         tt = js_PeekToken(cx, ts);
         ts->flags &= ~TSF_OPERAND;
-        if (tt <= TOK_EOF || tt == TOK_RC)
+        if (tt <= TOK_EOF || tt == TOK_RC) {
+            if (tt == TOK_ERROR)
+                return NULL;
             break;
+        }
         pn2 = Statement(cx, ts, tc);
         if (!pn2) {
             if (ts->flags & TSF_EOF)
@@ -1462,10 +1476,21 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         }
 
-        /* Detect a function statement for the TOK_LC case in Statement. */
-        if (pn2->pn_type == TOK_FUNCTION && !AT_TOP_LEVEL(tc))
-            tc->flags |= TCF_HAS_FUNCTION_STMT;
-
+        if (pn2->pn_type == TOK_FUNCTION) {
+            /*
+             * PNX_FUNCDEFS notifies the emitter that the block contains top-
+             * level function definitions that should be processed before the
+             * rest of nodes.
+             *
+             * TCF_HAS_FUNCTION_STMT is for the TOK_LC case in Statement. It
+             * is relevant only for function definitions not at top-level,
+             * which we call function statements.
+             */
+            if (AT_TOP_LEVEL(tc))
+                pn->pn_extra |= PNX_FUNCDEFS;
+            else
+                tc->flags |= TCF_HAS_FUNCTION_STMT;
+        }
         PN_APPEND(pn, pn2);
     }
 
@@ -1477,10 +1502,6 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     if (tc->blockNode != pn)
         pn = tc->blockNode;
     tc->blockNode = saveBlock;
-
-    ts->flags &= ~TSF_OPERAND;
-    if (tt == TOK_ERROR)
-        return NULL;
 
     pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
     return pn;
@@ -6406,7 +6427,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 /* XXX fold only if all operands convert to string */
                 if (pn2->pn_type != TOK_STRING)
                     return JS_TRUE;
-                length += ATOM_TO_STRING(pn2->pn_atom)->length;
+                length += JSFLATSTR_LENGTH(ATOM_TO_STRING(pn2->pn_atom));
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
@@ -6422,8 +6443,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             /* Fill the buffer, advancing chars and recycling kids as we go. */
             for (pn2 = pn1; pn2; pn2 = RecycleTree(pn2, tc)) {
                 str2 = ATOM_TO_STRING(pn2->pn_atom);
-                length2 = str2->length;
-                js_strncpy(chars, str2->u.chars, length2);
+                length2 = JSFLATSTR_LENGTH(str2);
+                js_strncpy(chars, JSFLATSTR_CHARS(str2), length2);
                 chars += length2;
             }
             *chars = 0;

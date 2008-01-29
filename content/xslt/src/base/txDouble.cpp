@@ -50,18 +50,18 @@
  */
 
 //-- Initialize Double related constants
-const PRUint32 nanMask[2] =    TX_DOUBLE_NaN;
+const txdpun nanMask =    TX_DOUBLE_NaN;
 #ifdef IS_BIG_ENDIAN
-const PRUint32 infMask[2] =    {TX_DOUBLE_HI32_EXPMASK, 0};
-const PRUint32 negInfMask[2] = {TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT, 0};
+const txdpun infMask =    {{TX_DOUBLE_HI32_EXPMASK, 0}};
+const txdpun negInfMask = {{TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT, 0}};
 #else
-const PRUint32 infMask[2] =    {0, TX_DOUBLE_HI32_EXPMASK};
-const PRUint32 negInfMask[2] = {0, TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT};
+const txdpun infMask =    {{0, TX_DOUBLE_HI32_EXPMASK}};
+const txdpun negInfMask = {{0, TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT}};
 #endif
 
-const double Double::NaN = *((double*)nanMask);
-const double Double::POSITIVE_INFINITY = *((double*)infMask);
-const double Double::NEGATIVE_INFINITY = *((double*)negInfMask);
+const double Double::NaN = nanMask.d;
+const double Double::POSITIVE_INFINITY = infMask.d;
+const double Double::NEGATIVE_INFINITY = negInfMask.d;
 
 /*
  * Determines whether the given double represents positive or negative

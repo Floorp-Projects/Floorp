@@ -2861,16 +2861,11 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nscoord width;
-  const nsStyleDisplay *disp = GetStyleDisplay();
-  if (mFrame && mFrame->IsThemed(disp)) {
-    nsMargin result;
-    nsPresContext *presContext = mFrame->PresContext();
-    presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
-                                             mFrame, disp->mAppearance,
-                                             &result);
-    width = presContext->DevPixelsToAppUnits(result.side(aSide));
+  if (mFrame) {
+    FlushPendingReflows();
+    width = mFrame->GetUsedBorder().side(aSide);
   } else {
-    width = GetStyleBorder()->GetComputedBorderWidth(aSide);
+    width = GetStyleBorder()->GetBorderWidth(aSide);
   }
   val->SetAppUnits(width);
 

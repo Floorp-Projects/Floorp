@@ -74,10 +74,11 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
 				 const cairo_paginated_surface_backend_t	*backend)
 {
     cairo_paginated_surface_t *surface;
+    cairo_status_t status;
 
     surface = malloc (sizeof (cairo_paginated_surface_t));
     if (surface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
 
@@ -97,7 +98,8 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     surface->backend = backend;
 
     surface->meta = _cairo_meta_surface_create (content, width, height);
-    if (cairo_surface_status (surface->meta))
+    status = cairo_surface_status (surface->meta);
+    if (status)
 	goto FAIL_CLEANUP_SURFACE;
 
     surface->page_num = 1;
@@ -108,7 +110,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
   FAIL_CLEANUP_SURFACE:
     free (surface);
   FAIL:
-    return (cairo_surface_t*) &_cairo_surface_nil;
+    return _cairo_surface_create_in_error (status);
 }
 
 cairo_bool_t
@@ -149,7 +151,7 @@ _cairo_paginated_surface_set_size (cairo_surface_t	*surface,
 							  width, height);
     status = cairo_surface_status (paginated_surface->meta);
     if (status)
-	return status;
+	return _cairo_surface_set_error (surface, status);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -161,7 +163,7 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (surface->page_is_blank == FALSE || surface->page_num == 1)
-	status = _cairo_paginated_surface_show_page (abstract_surface);
+	status = cairo_surface_show_page (abstract_surface);
 
     if (status == CAIRO_STATUS_SUCCESS) {
 	cairo_surface_finish (surface->target);
@@ -292,8 +294,8 @@ _paint_page (cairo_paginated_surface_t *surface)
 
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
-    if (analysis == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (analysis->status)
+	return _cairo_surface_set_error (surface->target, analysis->status);
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);
@@ -325,6 +327,16 @@ _paint_page (cairo_paginated_surface_t *surface)
             has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
             break;
 
+	case CAIRO_SURFACE_TYPE_IMAGE:
+	case CAIRO_SURFACE_TYPE_XLIB:
+	case CAIRO_SURFACE_TYPE_XCB:
+	case CAIRO_SURFACE_TYPE_GLITZ:
+	case CAIRO_SURFACE_TYPE_QUARTZ:
+	case CAIRO_SURFACE_TYPE_WIN32:
+	case CAIRO_SURFACE_TYPE_BEOS:
+	case CAIRO_SURFACE_TYPE_DIRECTFB:
+	case CAIRO_SURFACE_TYPE_SVG:
+	case CAIRO_SURFACE_TYPE_OS2:
         default:
             if (_cairo_analysis_surface_has_unsupported (analysis)) {
                 has_supported = FALSE;
@@ -341,6 +353,7 @@ _paint_page (cairo_paginated_surface_t *surface)
 	status = _cairo_meta_surface_replay_region (surface->meta,
 						    surface->target,
 						    CAIRO_META_REGION_NATIVE);
+	assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
 	if (status)
 	    goto FAIL;
     }
@@ -364,7 +377,9 @@ _paint_page (cairo_paginated_surface_t *surface)
         cairo_box_int_t *boxes;
         int num_boxes, i;
 
-	/* Reset clip region before drawing the fall back images */
+	surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_FALLBACK);
+
+    /* Reset clip region before drawing the fall back images */
 	status = _cairo_surface_intersect_clip_path (surface->target,
 						     NULL,
 						     CAIRO_FILL_RULE_WINDING,
@@ -614,43 +629,9 @@ _cairo_paginated_surface_show_glyphs (void			*abstract_surface,
 static cairo_surface_t *
 _cairo_paginated_surface_snapshot (void *abstract_other)
 {
-    cairo_status_t status;
     cairo_paginated_surface_t *other = abstract_other;
 
-    /* XXX: Just making a snapshot of other->meta is what we really
-     * want. But this currently triggers a bug somewhere (the "mask"
-     * test from the test suite segfaults).
-     *
-     * For now, we'll create a new image surface and replay onto
-     * that. It would be tempting to replay into other->image and then
-     * return a snapshot of that, but that will cause the self-copy
-     * test to fail, (since our replay will be affected by a clip that
-     * should not have any effect on the use of the resulting snapshot
-     * as a source).
-     */
-
-#if 0
     return _cairo_surface_snapshot (other->meta);
-#else
-    cairo_rectangle_int_t extents;
-    cairo_surface_t *surface;
-
-    status = _cairo_surface_get_extents (other->target, &extents);
-    if (status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
-
-    surface = _cairo_paginated_surface_create_image_surface (other,
-							     extents.width,
-							     extents.height);
-
-    status = _cairo_meta_surface_replay (other->meta, surface);
-    if (status) {
-	cairo_surface_destroy (surface);
-	surface = (cairo_surface_t*) &_cairo_surface_nil;
-    }
-
-    return surface;
-#endif
 }
 
 static const cairo_surface_backend_t cairo_paginated_surface_backend = {

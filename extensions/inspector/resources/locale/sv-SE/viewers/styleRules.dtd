@@ -37,7 +37,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY miFindCSSRules.label "Hitta CSS-stilregler...">
+<!ENTITY miFindCSSRules.label "Hitta CSS-regler…">
 <!ENTITY miFindCSSRules.accesskey "H">
 
 <!ENTITY newRules.label "Ny">

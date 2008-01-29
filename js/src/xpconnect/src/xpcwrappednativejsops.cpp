@@ -427,7 +427,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
         AutoResolveName arn(ccx, idval);
         if(resolved)
             *resolved = JS_TRUE;
-        return member->GetValue(ccx, iface, &val) &&
+        return member->GetConstantValue(ccx, iface, &val) &&
                JS_ValueToId(ccx, idval, &id) &&
                OBJ_DEFINE_PROPERTY(ccx, obj, id, val, nsnull, nsnull,
                                    propFlags, nsnull);
@@ -440,24 +440,12 @@ DefinePropertyIfFound(XPCCallContext& ccx,
         idval == rt->GetStringJSVal(XPCJSRuntime::IDX_QUERY_INTERFACE)))
         propFlags &= ~JSPROP_ENUMERATE;
 
-    JSObject* funobj;
-    
-    {
-        // scoped gc protection of funval
-        jsval funval;
-
-        if(!member->GetValue(ccx, iface, &funval))
-            return JS_FALSE;
-    
-        AUTO_MARK_JSVAL(ccx, funval);
-
-        funobj = xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(funval), obj);
-        if(!funobj)
-            return JS_FALSE;
-    }
+    jsval funval;
+    if(!member->NewFunctionObject(ccx, iface, obj, &funval))
+        return JS_FALSE;
 
     // protect funobj until it is actually attached
-    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
+    AUTO_MARK_JSVAL(ccx, funval);
 
 #ifdef off_DEBUG_jband
     {
@@ -473,8 +461,8 @@ DefinePropertyIfFound(XPCCallContext& ccx,
         if(resolved)
             *resolved = JS_TRUE;
         return JS_ValueToId(ccx, idval, &id) &&
-               OBJ_DEFINE_PROPERTY(ccx, obj, id, OBJECT_TO_JSVAL(funobj),
-                                   nsnull, nsnull, propFlags, nsnull);
+               OBJ_DEFINE_PROPERTY(ccx, obj, id, funval, nsnull, nsnull,
+                                   propFlags, nsnull);
     }
 
     // else...
@@ -491,6 +479,8 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     AutoResolveName arn(ccx, idval);
     if(resolved)
         *resolved = JS_TRUE;
+
+    JSObject* funobj = JSVAL_TO_OBJECT(funval);
     return JS_ValueToId(ccx, idval, &id) &&
            OBJ_DEFINE_PROPERTY(ccx, obj, id, JSVAL_VOID,
                                (JSPropertyOp) funobj,
@@ -899,7 +889,7 @@ JSExtendedClass XPC_WN_NoHelper_JSClass = {
         XPC_WN_NoHelper_Finalize,       // finalize;
 
         /* Optionally non-null members start here. */
-        nsnull,                         // getObjectOps;
+        XPC_WN_GetObjectOpsNoCall,      // getObjectOps;
         nsnull,                         // checkAccess;
         nsnull,                         // call;
         nsnull,                         // construct;
@@ -1186,9 +1176,11 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp)
 {
-    if(!IS_WRAPPER_CLASS(JS_GET_CLASS(cx, obj)))
+    JSClass *clazz = JS_GET_CLASS(cx, obj);
+    if(!IS_WRAPPER_CLASS(clazz) || clazz == &XPC_WN_NoHelper_JSClass.base)
     {
-        // obj must be a prototype object. Short circuit this call to
+        // obj must be a prototype object or a wrapper w/o a
+        // helper. Short circuit this call to
         // js_ObjectOps.enumerate().
 
         return js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
@@ -1633,7 +1625,8 @@ XPC_WN_Proto_GetObjectOps(JSContext *cx, JSClass *clazz)
         return &XPC_WN_WithCall_JSOps;
 
     NS_ASSERTION(clazz == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
-                 clazz == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+                 clazz == &XPC_WN_NoMods_NoCall_Proto_JSClass ||
+                 clazz == &XPC_WN_NoHelper_Proto_JSClass,
                  "bad proto");
 
     return &XPC_WN_NoCall_JSOps;

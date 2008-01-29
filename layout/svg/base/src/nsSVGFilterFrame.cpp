@@ -79,7 +79,8 @@ nsSVGFilterFrame::FilterFailCleanup(nsSVGRenderState *aContext,
 {
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
-  aTarget->NotifyCanvasTMChanged(PR_TRUE);
+  aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                            nsISVGChildFrame::TRANSFORM_CHANGED);
   aTarget->PaintSVG(aContext, nsnull);
 }
 
@@ -121,7 +122,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   nsSVGElement *target = static_cast<nsSVGElement*>(frame->GetContent());
 
   aTarget->SetMatrixPropagation(PR_FALSE);
-  aTarget->NotifyCanvasTMChanged(PR_TRUE);
+  aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                            nsISVGChildFrame::TRANSFORM_CHANGED);
 
   nsSVGFilterElement *filter = static_cast<nsSVGFilterElement*>(mContent);
 
@@ -192,7 +194,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
                   0.0f,                         filterRes.height / height,
                   -x * filterRes.width / width, -y * filterRes.height / height);
   aTarget->SetOverrideCTM(filterTransform);
-  aTarget->NotifyCanvasTMChanged(PR_TRUE);
+  aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                            nsISVGChildFrame::TRANSFORM_CHANGED);
 
   // paint the target geometry
   nsRefPtr<gfxImageSurface> tmpSurface =
@@ -289,7 +292,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
-  aTarget->NotifyCanvasTMChanged(PR_TRUE);
+  aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                            nsISVGChildFrame::TRANSFORM_CHANGED);
 
   return NS_OK;
 }
@@ -314,12 +318,14 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
   nsCOMPtr<nsIDOMSVGRect> bbox;
 
   svg->SetMatrixPropagation(PR_FALSE);
-  svg->NotifyCanvasTMChanged(PR_TRUE);
+  svg->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                        nsISVGChildFrame::TRANSFORM_CHANGED);
 
   svg->GetBBox(getter_AddRefs(bbox));
 
   svg->SetMatrixPropagation(PR_TRUE);
-  svg->NotifyCanvasTMChanged(PR_TRUE);
+  svg->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                        nsISVGChildFrame::TRANSFORM_CHANGED);
 
   nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
   tmpX = &filter->mLengthAttributes[nsSVGFilterElement::X];

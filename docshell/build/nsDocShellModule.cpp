@@ -156,6 +156,13 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "config",
       nsAboutRedirector::Create
     },
+#ifdef MOZ_CRASHREPORTER
+    { "about:crashes",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "crashes",
+      nsAboutRedirector::Create
+    },
+#endif
     { "about:credits",
       NS_ABOUT_REDIRECTOR_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "credits",

@@ -89,7 +89,7 @@ nsDownloadManagerUI.prototype = {
              getService(Ci.nsIWindowWatcher);
     ww.openWindow(window,
                   DOWNLOAD_MANAGER_URL,
-                  null,
+                  "Download:Manager",
                   "chrome,dialog=no,resizable",
                   params);
   },

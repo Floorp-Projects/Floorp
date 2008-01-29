@@ -805,7 +805,7 @@ gfxAtsuiFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNex
     if (!selectedFont) {
         FontEntry *fe;
         
-        fe = gfxQuartzFontCache::SharedFontCache()->FindFontForChar(aCh, aPrevMatchedFont);
+        fe = gfxQuartzFontCache::SharedFontCache()->FindFontForChar(aCh, GetFontAt(0));
         if (fe) {
             selectedFont = FindFontFor(fe->GetFontID());
             return selectedFont.forget();
@@ -1434,7 +1434,7 @@ static void MirrorSubstring(ATSUTextLayout layout, nsAutoArrayPtr<PRUnichar>& mi
 class CmapFontMatcher {
 public:
     CmapFontMatcher(const PRUnichar *aString, PRUint32 aBeginOffset, PRUint32 aEndOffset, gfxAtsuiFontGroup* aFontGroup) :
-        mString(aString), mOffset(aBeginOffset), mPrevOffset(aBeginOffset), mEndOffset(aEndOffset), mPrevCh(0), mFirstPass(PR_TRUE), mFontGroup(aFontGroup), mMatchedFont(0), mNextMatchedFont(0)
+        mString(aString), mOffset(aBeginOffset), mPrevOffset(aBeginOffset), mEndOffset(aEndOffset), mPrevCh(0), mFirstRange(PR_TRUE), mFontGroup(aFontGroup), mMatchedFont(0), mNextMatchedFont(0)
     {}
     
     // match the next substring that uses the same font, returns the length matched
@@ -1445,7 +1445,7 @@ public:
         
         matchStartOffset = mPrevOffset;
 
-        if ( !mFirstPass ) {
+        if ( !mFirstRange ) {
             mMatchedFont = mNextMatchedFont;
         }
         
@@ -1473,9 +1473,9 @@ public:
             mPrevCh = ch;
             
             // no previous match, set one up
-            if ( mFirstPass ) {
+            if ( mFirstRange ) {
                 mMatchedFont = font;
-                mFirstPass = PR_FALSE;
+                mFirstRange = PR_FALSE;
             } else if ( font != mMatchedFont ) {
                 mPrevOffset = chStartOffset;
                 mNextMatchedFont = font;
@@ -1498,7 +1498,7 @@ private:
     PRUint32                mPrevOffset;
     PRUint32                mEndOffset;
     PRUint32                mPrevCh;
-    PRBool                  mFirstPass;
+    PRBool                  mFirstRange;
     gfxAtsuiFontGroup       *mFontGroup;
     nsRefPtr<gfxAtsuiFont>  mMatchedFont;
     nsRefPtr<gfxAtsuiFont>  mNextMatchedFont;

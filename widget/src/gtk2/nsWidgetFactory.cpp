@@ -60,6 +60,7 @@
 #include "nsIPrefBranch.h"
 #include "nsImageToPixbuf.h"
 #include "nsIdleServiceGTK.h"
+#include "nsPrintDialogGTK.h"
 
 #ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
@@ -97,6 +98,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceGTK)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceGTK, Init)
 
 static NS_IMETHODIMP
 nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
@@ -274,6 +276,10 @@ static const nsModuleComponentInfo components[] =
     NS_IDLE_SERVICE_CID,
     "@mozilla.org/widget/idleservice;1",
     nsIdleServiceGTKConstructor },
+  { "Native Print Dialog",
+    NS_PRINTDIALOGSERVICE_CID,
+    NS_PRINTDIALOGSERVICE_CONTRACTID,
+    nsPrintDialogServiceGTKConstructor },
 };
 
 PR_STATIC_CALLBACK(void)

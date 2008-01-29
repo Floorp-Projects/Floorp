@@ -91,8 +91,6 @@ _cairo_pattern_set_error (cairo_pattern_t *pattern,
 static void
 _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
 {
-    CAIRO_MUTEX_INITIALIZE ();
-
     pattern->type      = type;
     CAIRO_REFERENCE_COUNT_INIT (&pattern->ref_count, 1);
     pattern->status    = CAIRO_STATUS_SUCCESS;
@@ -212,6 +210,42 @@ _cairo_pattern_fini (cairo_pattern_t *pattern)
     } break;
     }
 }
+
+cairo_status_t
+_cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
+			    const cairo_pattern_t  *other)
+{
+    cairo_status_t status;
+
+    if (other->status)
+	return other->status;
+
+    switch (other->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	*pattern = malloc (sizeof (cairo_solid_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	*pattern = malloc (sizeof (cairo_surface_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_LINEAR:
+	*pattern = malloc (sizeof (cairo_linear_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	*pattern = malloc (sizeof (cairo_radial_pattern_t));
+	break;
+    }
+    if (*pattern == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    status = _cairo_pattern_init_copy (*pattern, other);
+    if (status) {
+	free (*pattern);
+	return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 
 void
 _cairo_pattern_init_solid (cairo_solid_pattern_t *pattern,
@@ -339,6 +373,8 @@ _cairo_pattern_create_in_error (cairo_status_t status)
     if (status == CAIRO_STATUS_NO_MEMORY)
 	return (cairo_pattern_t *)&_cairo_pattern_nil.base;
 
+    CAIRO_MUTEX_INITIALIZE ();
+
     pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK),
 					   CAIRO_CONTENT_COLOR);
     if (pattern->status == CAIRO_STATUS_SUCCESS)
@@ -378,6 +414,8 @@ cairo_pattern_create_rgb (double red, double green, double blue)
     _cairo_restrict_value (&blue,  0.0, 1.0);
 
     _cairo_color_init_rgb (&color, red, green, blue);
+
+    CAIRO_MUTEX_INITIALIZE ();
 
     pattern = _cairo_pattern_create_solid (&color,
 					   CAIRO_CONTENT_COLOR);
@@ -423,6 +461,8 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 
     _cairo_color_init_rgba (&color, red, green, blue, alpha);
 
+    CAIRO_MUTEX_INITIALIZE ();
+
     pattern = _cairo_pattern_create_solid (&color,
 					   CAIRO_CONTENT_COLOR_ALPHA);
     if (pattern->status)
@@ -463,6 +503,8 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *)&_cairo_pattern_nil.base;
     }
+
+    CAIRO_MUTEX_INITIALIZE ();
 
     _cairo_pattern_init_for_surface (pattern, surface);
 
@@ -506,6 +548,8 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
     }
+
+    CAIRO_MUTEX_INITIALIZE ();
 
     _cairo_pattern_init_linear (pattern, x0, y0, x1, y1);
 
@@ -551,6 +595,8 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
     }
+
+    CAIRO_MUTEX_INITIALIZE ();
 
     _cairo_pattern_init_radial (pattern, cx0, cy0, radius0, cx1, cy1, radius1);
 
@@ -1782,7 +1828,8 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 							     attributes);
     } break;
     default:
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	ASSERT_NOT_REACHED;
+	status = _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
     }
 
     return status;

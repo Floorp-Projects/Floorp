@@ -75,8 +75,8 @@
   <spacer height="20px" />
   <label value="&qa.setup.haveaccount;"/>
   <radiogroup id="qa-setup-account-haveaccount">
-    <radio value="0" label="&qa.setup.accountno;" onclick="qaSetup.accountSetting('0');"/>
-    <radio value="1" label="&qa.setup.accountyes;" onclick="qaSetup.accountSetting('1');"/>
+    <radio value="0" label="&qa.setup.accountno;" oncommand="qaSetup.accountSetting('0');"/>
+    <radio value="1" label="&qa.setup.accountyes;" oncommand="qaSetup.accountSetting('1');"/>
   </radiogroup>
   <spacer height="20px" />
 

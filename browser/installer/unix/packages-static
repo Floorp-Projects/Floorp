@@ -54,6 +54,7 @@ bin/res/cmessage.txt
 bin/res/effective_tld_names.dat
 bin/xpicleanup
 bin/libsqlite3.so
+bin/README.txt
 
 ; [Components]
 bin/components/alerts.xpt
@@ -161,6 +162,7 @@ bin/components/satchel.xpt
 bin/components/saxparser.xpt
 bin/components/search.xpt
 bin/components/shistory.xpt
+bin/components/spellchecker.xpt
 bin/components/storage.xpt
 bin/components/profile.xpt
 bin/components/toolkitprofile.xpt
@@ -271,7 +273,7 @@ bin/chrome/comm.jar
 bin/chrome/comm.manifest
 bin/chrome/toolkit.jar
 bin/chrome/toolkit.manifest
-bin/chrome/icons/default/default.xpm
+bin/chrome/icons/default/default16.png
 bin/chrome/reporter.manifest
 bin/chrome/reporter.jar
 bin/@PREF_DIR@/reporter.js
@@ -348,6 +350,7 @@ bin/components/pipboot.xpt
 bin/components/pipnss.xpt
 bin/components/pippki.xpt
 bin/libnss3.so
+bin/libnssutil3.so
 bin/libsmime3.so
 bin/libsoftokn3.chk
 bin/libsoftokn3.so
@@ -375,6 +378,8 @@ bin/updater
 ;
 bin/crashreporter
 bin/crashreporter.ini
+bin/crashreporter-override.ini
+bin/Throbber-small.gif
 
 ; [Extensions]
 ;

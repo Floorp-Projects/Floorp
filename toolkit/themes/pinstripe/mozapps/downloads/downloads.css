@@ -1,26 +1,36 @@
 #downloadView {
+  -moz-appearance: none;
   margin: 0;
-  border-bottom: 1px solid #8E8E8E;
   padding: 0;
+  border-width: 0;
+  border-bottom: 1px solid #404040;
 }
 
 /* Download View Items */
 richlistitem[type="download"] {
-  padding: 4px 8px 4px 4px;
-  min-height: 46px !important;
+  padding: 3px 8px;
+  min-height: 40px !important;
 }
 
 richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
-  background-color: #ecf2fe;
+  background-color: #EDF3FE;
 }
 
 richlistitem[type="download"] .name {
-  font-size: larger;
+  font-size: small;
 }
 
-richlistitem[type="download"] .dateTime {
+richlistitem[type="download"] .dateTime,
+richlistitem[type="download"] .status {
   font-size: smaller;
+  color: #555;
 }
+
+richlistbox:focus > richlistitem[selected="true"][type="download"] .dateTime,
+richlistbox:focus > richlistitem[selected="true"][type="download"] .status {
+  color: highlighttext;
+}
+
 
 richlistitem[type="download"] button {
   -moz-appearance: none;
@@ -59,8 +69,34 @@ richlistitem[type="download"] button {
 .downloadTypeIcon {
   min-height: 32px;
   min-width: 32px;
+  -moz-padding-end: 2px;
+}
+
+#search {
+  -moz-box-pack: end;
+  -moz-padding-end: 4px;
+  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
+  background-repeat: repeat-x;
+}
+
+#search > spacer {
+  display: none;
+}
+
+#searchbox {
+  -moz-appearance: none;
+  border: 3px solid;
+  -moz-border-top-colors: #676767 #C5C5C5 -moz-Field;
+  -moz-border-bottom-colors: #C2C2C2 #A4A4A4 -moz-Field;
+  -moz-border-right-colors: #969696 #C5C5C5 -moz-Field;
+  -moz-border-left-colors: #969696 #C5C5C5 -moz-Field;
+  -moz-border-radius: 11.5px;
+  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
+  -moz-background-clip: padding !important;
+  padding: 0 8px;
+  -moz-padding-start: 16px;
 }
 
 #searchbox[empty] {
-  color: GrayText;
+  color: -moz-Field;
 }

@@ -277,11 +277,9 @@ private:
   PRPackedBool mScriptsEnabled;
   PRPackedBool mGCOnDestruction;
   PRPackedBool mProcessingScriptTag;
-  PRPackedBool mIsTrackingChromeCodeTime;
 
-  PRUint32 mOperationCallbackCount;
-  PRTime mOperationCallbackTime;
   PRUint32 mDefaultJSOptions;
+  PRTime mOperationCallbackTime;
 
   // mGlobalWrapperRef is used only to hold a strong reference to the
   // global object wrapper while the nsJSContext is alive. This cuts
