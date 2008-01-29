@@ -404,12 +404,6 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
             mProxyConfig = static_cast<ProxyConfig>(type);
             reloadPAC = PR_TRUE;
         }
-
-        if (mProxyConfig == eProxyConfig_System) {
-            mSystemProxySettings = do_GetService(NS_SYSTEMPROXYSETTINGS_CONTRACTID);
-        } else {
-            mSystemProxySettings = nsnull;
-        }
     }
 
     if (!pref || !strcmp(pref, PROXY_PREF("http")))
@@ -467,10 +461,8 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
             LoadHostFilters(tempString.get());
     }
 
-    // We're done if not using something that could give us a PAC URL
-    // (PAC, WPAD or System)
-    if (mProxyConfig != eProxyConfig_PAC && mProxyConfig != eProxyConfig_WPAD &&
-        mProxyConfig != eProxyConfig_System)
+    // We're done if not using PAC or WPAD
+    if (mProxyConfig != eProxyConfig_PAC && mProxyConfig != eProxyConfig_WPAD)
         return;
 
     // OK, we need to reload the PAC file if:
@@ -485,20 +477,17 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
         if (mProxyConfig == eProxyConfig_PAC) {
             prefBranch->GetCharPref(PROXY_PREF("autoconfig_url"),
                                     getter_Copies(tempString));
-        } else {
+        }
+        else if (mProxyConfig == eProxyConfig_WPAD) {
             // We diverge from the WPAD spec here in that we don't walk the
             // hosts's FQDN, stripping components until we hit a TLD.  Doing so
             // is dangerous in the face of an incomplete list of TLDs, and TLDs
             // get added over time.  We could consider doing only a single
             // substitution of the first component, if that proves to help
             // compatibility.
-            if (mSystemProxySettings)
-                mSystemProxySettings->GetPACURI(tempString);
-            else
-                tempString.AssignLiteral(WPAD_URL);
+            tempString.AssignLiteral(WPAD_URL);
         }
-        if (!tempString.IsEmpty())
-            ConfigureFromPAC(tempString);
+        ConfigureFromPAC(tempString);
     }
 }
 
@@ -766,15 +755,12 @@ nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    mFailedProxies.Clear();
+
     nsCOMPtr<nsIURI> pacURI;
     nsresult rv = NS_NewURI(getter_AddRefs(pacURI), spec);
     if (NS_FAILED(rv))
         return rv;
-
-    if (mPACMan->IsPACURI(pacURI))
-        return NS_OK;
-
-    mFailedProxies.Clear();
 
     return mPACMan->LoadPACFromURI(pacURI);
 }
@@ -950,10 +936,8 @@ nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo  *aProxy,
                                             nsresult       aStatus,
                                             nsIProxyInfo **aResult)
 {
-    // We only support failover when a PAC file is configured, either
-    // directly or via system settings
-    if (mProxyConfig != eProxyConfig_PAC && mProxyConfig != eProxyConfig_WPAD &&
-        mProxyConfig != eProxyConfig_System)
+    // We only support failover when a PAC file is configured.
+    if (mProxyConfig != eProxyConfig_PAC && mProxyConfig != eProxyConfig_WPAD)
         return NS_ERROR_NOT_AVAILABLE;
 
     // Verify that |aProxy| is one of our nsProxyInfo objects.
@@ -1250,37 +1234,15 @@ nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
     if (!(info.flags & nsIProtocolHandler::ALLOWS_PROXY))
         return NS_OK;  // Can't proxy this (filters may not override)
 
-    if (mSystemProxySettings) {
-        nsCAutoString PACURI;
-        if (NS_SUCCEEDED(mSystemProxySettings->GetPACURI(PACURI)) &&
-            !PACURI.IsEmpty()) {
-            // Switch to new PAC file if that setting has changed. If the setting
-            // hasn't changed, ConfigureFromPAC will exit early.
-            nsresult rv = ConfigureFromPAC(PACURI);
-            if (NS_FAILED(rv))
-                return rv;
-        } else {
-            nsCAutoString proxy;
-            nsresult rv = mSystemProxySettings->GetProxyForURI(uri, proxy);
-            if (NS_SUCCEEDED(rv)) {
-                ProcessPACString(proxy, result);
-                return NS_OK;
-            }
-            // no proxy, stop search
-            return NS_OK;
-        }
-    }
-
     // if proxies are enabled and this host:port combo is supposed to use a
     // proxy, check for a proxy.
     if (mProxyConfig == eProxyConfig_Direct ||
             (mProxyConfig == eProxyConfig_Manual &&
              !CanUseProxy(uri, info.defaultPort)))
         return NS_OK;
-
+    
     // Proxy auto config magic...
-    if (mProxyConfig == eProxyConfig_PAC || mProxyConfig == eProxyConfig_WPAD ||
-        mProxyConfig == eProxyConfig_System) {
+    if (mProxyConfig == eProxyConfig_PAC || mProxyConfig == eProxyConfig_WPAD) {
         // Do not query PAC now.
         *usePAC = PR_TRUE;
         return NS_OK;

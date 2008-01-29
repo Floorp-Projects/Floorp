@@ -326,10 +326,6 @@
 #define NS_INCREMENTALDOWNLOAD_CONTRACTID \
     "@mozilla.org/network/incremental-download;1"
 
-// component implementing nsISystemProxySettings.
-#define NS_SYSTEMPROXYSETTINGS_CONTRACTID \
-    "@mozilla.org/system-proxy-settings;1"
-
 // service implementing nsIStreamTransportService
 #define NS_STREAMTRANSPORTSERVICE_CLASSNAME \
     "nsStreamTransportService"

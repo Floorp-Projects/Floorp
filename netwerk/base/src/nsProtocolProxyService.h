@@ -47,7 +47,6 @@
 #include "nsIProtocolProxyService2.h"
 #include "nsIProtocolProxyFilter.h"
 #include "nsIProxyAutoConfig.h"
-#include "nsISystemProxySettings.h"
 #include "nsIProxyInfo.h"
 #include "nsIObserver.h"
 #include "nsDataHashtable.h"
@@ -316,7 +315,6 @@ protected:
         eProxyConfig_PAC,
         eProxyConfig_Direct4x,
         eProxyConfig_WPAD,
-        eProxyConfig_System, // use system proxy settings if available, otherwise DIRECT
         eProxyConfig_Last
     };
 
@@ -378,7 +376,6 @@ protected:
     PRBool                       mSOCKSProxyRemoteDNS;
 
     nsRefPtr<nsPACMan>           mPACMan;  // non-null if we are using PAC
-    nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;
 
     PRTime                       mSessionStart;
     nsFailedProxyTable           mFailedProxies;

@@ -661,7 +661,6 @@ MAKEFILES_xulapp="
   toolkit/components/downloads/src/Makefile
   toolkit/components/filepicker/Makefile
   toolkit/system/gnome/Makefile
-  toolkit/system/unixproxy/Makefile
   toolkit/components/help/Makefile
   toolkit/components/history/Makefile
   toolkit/components/history/public/Makefile
