@@ -54,13 +54,18 @@ menuitem:not([type]) {
 #menuitem_open {
   list-style-image: url("moz-icon://stock/gtk-open?size=menu");
 }
-#menuitem_open[disabled] {
+#menuitem_open[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-open?size=menu&state=disabled");
 }
 
 .pause,
 #menuitem_pause {
   list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu");
+}
+
+.pause[disabled="true"],
+#menuitem_pause[disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-media-pause?size=menu&state=disabled");
 }
 
 .resume,
