@@ -11,16 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org build system.
+# The Original Code is the Mozilla GNOME integration code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
-#  Pierre Chanial <chanial@noos.fr>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,37 +35,31 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ..
+DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= \
-		content \
-		locales \
-		obsolete \
-		profile \
-		themes \
-		$(NULL)
+MODULE          = unixproxy
+LIBRARY_NAME    = unixproxy
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += system/unixproxy
-endif
+EXPORT_LIBRARY  = 1
+IS_COMPONENT    = 1
+MODULE_NAME     = nsUnixProxyModule
+GRE_MODULE      = 1
+LIBXUL_LIBRARY  = 1
 
-ifdef MOZ_CRASHREPORTER
-DIRS += crashreporter
-endif
-
-ifndef MINIMO
-DIRS += \
-	xre \
-        mozapps \
+REQUIRES = \
+        xpcom \
+        string \
+        necko \
+        mozgnome \
         $(NULL)
-endif
+
+CPPSRCS = \
+        nsUnixSystemProxySettings.cpp \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-export::
-	@$(MAKE) -C xre export
