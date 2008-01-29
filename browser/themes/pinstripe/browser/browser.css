@@ -340,11 +340,11 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
   -moz-image-region: rect(0px, 36px, 23px, 0px);
 }
 #back-button[disabled="true"] {
-  -moz-image-region: rect(0px, 36px, 46px, 0px) !important;
+  -moz-image-region: rect(23px, 36px, 46px, 0px) !important;
 }
 #back-button:hover:active,
 #back-button[buttondown="true"] {
-  -moz-image-region: rect(0px, 36px, 69px, 0px);
+  -moz-image-region: rect(46px, 36px, 69px, 0px);
 }
 
 /* ----- DEFAULT FORWARD BUTTON, STAND-ALONE ----- */	
