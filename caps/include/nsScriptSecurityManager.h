@@ -409,7 +409,7 @@ private:
     // Returns null if a principal cannot be found; generally callers
     // should error out at that point.
     static nsIPrincipal*
-    doGetObjectPrincipal(JSContext *cx, JSObject *obj
+    doGetObjectPrincipal(JSObject *obj
 #ifdef DEBUG
                          , PRBool aAllowShortCircuit = PR_TRUE
 #endif
