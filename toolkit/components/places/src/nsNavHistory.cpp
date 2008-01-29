@@ -113,6 +113,8 @@
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MAX_RICH_RESULTS      "urlbar.maxRichResults"
+#define PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE     "urlbar.search.chunkSize"
+#define PREF_AUTOCOMPLETE_SEARCH_TIMEOUT        "urlbar.search.timeout"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
 #define PREF_FRECENCY_NUM_VISITS                "places.frecency.numVisits"
 #define PREF_FRECENCY_UPDATE_IDLE_TIME          "places.frecency.updateIdleTime"
@@ -311,6 +313,8 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireSites(0),
                                mAutoCompleteOnlyTyped(PR_FALSE),
                                mAutoCompleteMaxResults(25),
+                               mAutoCompleteSearchChunkSize(100),
+                               mAutoCompleteSearchTimeout(100),
                                mBatchLevel(0),
                                mLock(nsnull),
                                mBatchHasTransaction(PR_FALSE),
@@ -453,6 +457,8 @@ nsNavHistory::Init()
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
@@ -1668,6 +1674,10 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
                            &mAutoCompleteOnlyTyped);
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS,
                            &mAutoCompleteMaxResults);
+  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE,
+                           &mAutoCompleteSearchChunkSize);
+  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT,
+                           &mAutoCompleteSearchTimeout);
   if (!aInitializing && oldCompleteOnlyTyped != mAutoCompleteOnlyTyped) {
     // update the autocomplete statements if the option has changed.
     nsresult rv = CreateAutoCompleteQueries();

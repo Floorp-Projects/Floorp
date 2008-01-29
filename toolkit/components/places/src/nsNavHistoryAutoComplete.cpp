@@ -45,7 +45,7 @@
  * Autocomplete algorithm:
  *
  * Searches moz_places by frecency (in descending order)
- * in chunks (AUTOCOMPLETE_SEARCH_CHUNK_SIZE).  We currently
+ * in chunks (mAutoCompleteSearchChunkSize).  We currently
  * do SQL LIKE searches of the search term in the place title, place url
  * and bookmark titles (since a "place" can have multiple bookmarks)
  * within in each chunk. The results are ordered by frecency.
@@ -178,16 +178,6 @@ nsNavHistory::StartAutoCompleteTimer(PRUint32 aMilliseconds)
   return NS_OK;
 }
 
-// number of places to search per chunk
-// too big, and the UI will be unresponsive
-// as we will be off searching the database.
-// too small, and because of AUTOCOMPLETE_SEARCH_TIMEOUT
-// results won't come back in fast enough to feel snappy.
-#define AUTOCOMPLETE_SEARCH_CHUNK_SIZE 100
-
-// wait this many milliseconds between searches
-#define AUTOCOMPLETE_SEARCH_TIMEOUT 100
-
 // nsNavHistory::AutoCompleteTimerCallback
 
 void // static
@@ -248,8 +238,8 @@ nsNavHistory::PerformAutoComplete()
   // if we're not done searching, adjust our current offset
   // and search the next chunk
   if (moreChunksToSearch) {
-    mCurrentChunkOffset += AUTOCOMPLETE_SEARCH_CHUNK_SIZE;
-    rv = StartAutoCompleteTimer(AUTOCOMPLETE_SEARCH_TIMEOUT);
+    mCurrentChunkOffset += mAutoCompleteSearchChunkSize;
+    rv = StartAutoCompleteTimer(mAutoCompleteSearchTimeout);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     DoneSearching();
@@ -565,7 +555,7 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
   nsresult rv = mDBAutoCompleteQuery->BindStringParameter(0, NS_LITERAL_STRING("%") + mCurrentSearchStringEscaped + NS_LITERAL_STRING("%"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBAutoCompleteQuery->BindInt32Parameter(1, AUTOCOMPLETE_SEARCH_CHUNK_SIZE);
+  rv = mDBAutoCompleteQuery->BindInt32Parameter(1, mAutoCompleteSearchChunkSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBAutoCompleteQuery->BindInt32Parameter(2, mCurrentChunkOffset);
