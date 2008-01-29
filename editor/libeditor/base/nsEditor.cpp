@@ -4353,9 +4353,7 @@ nsresult nsEditor::BeginUpdateViewBatch()
     }
 
     // Turn off view updating.
-
-    if (mViewManager)
-      mViewManager->BeginUpdateViewBatch();
+    mBatch.BeginUpdateViewBatch(mViewManager);
   }
 
   mUpdateCount++;
@@ -4411,7 +4409,7 @@ nsresult nsEditor::EndUpdateViewBatch()
         // have selection code that does sync caret scrolling in this case.
         presShell->FlushPendingNotifications(Flush_Layout);
       }
-      mViewManager->EndUpdateViewBatch(updateFlag);
+      mBatch.EndUpdateViewBatch(updateFlag);
     }
 
     // Turn selection updating and notifications back on.

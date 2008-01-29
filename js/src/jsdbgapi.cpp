@@ -675,9 +675,9 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     if (JSID_IS_ATOM(id)) {
         atom = JSID_TO_ATOM(id);
     } else if (JSID_IS_INT(id)) {
-        atom = js_ValueToStringAtom(cx, INT_JSID_TO_JSVAL(id));
-        if (!atom)
+        if (!js_ValueToStringId(cx, INT_JSID_TO_JSVAL(id), &id))
             return NULL;
+        atom = JSID_TO_ATOM(id);
     } else {
         atom = NULL;
     }
@@ -690,10 +690,9 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
+JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
                  JSWatchPointHandler handler, void *closure)
 {
-    JSAtom *atom;
     jsid propid;
     JSObject *pobj;
     JSProperty *prop;
@@ -709,15 +708,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
         return JS_FALSE;
     }
 
-    if (JSVAL_IS_INT(id)) {
-        propid = INT_JSVAL_TO_JSID(id);
-        atom = NULL;
-    } else {
-        atom = js_ValueToStringAtom(cx, id);
-        if (!atom)
-            return JS_FALSE;
-        propid = ATOM_TO_JSID(atom);
-    }
+    if (JSVAL_IS_INT(idval))
+        propid = INT_JSVAL_TO_JSID(idval);
+    else if (!js_ValueToStringId(cx, idval, &propid))
+        return JS_FALSE;
 
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
         return JS_FALSE;
@@ -752,8 +746,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
             flags = sprop->flags;
             shortid = sprop->shortid;
         } else {
-            if (!OBJ_GET_PROPERTY(cx, pobj, id, &value) ||
-                !OBJ_GET_ATTRIBUTES(cx, pobj, id, prop, &attrs)) {
+            if (!OBJ_GET_PROPERTY(cx, pobj, propid, &value) ||
+                !OBJ_GET_ATTRIBUTES(cx, pobj, propid, prop, &attrs)) {
                 OBJ_DROP_PROPERTY(cx, pobj, prop);
                 return JS_FALSE;
             }
@@ -1522,7 +1516,7 @@ GetAtomTotalSize(JSContext *cx, JSAtom *atom)
     nbytes = sizeof(JSAtom *) + sizeof(JSDHashEntryStub);
     if (ATOM_IS_STRING(atom)) {
         nbytes += sizeof(JSString);
-        nbytes += (ATOM_TO_STRING(atom)->length + 1) * sizeof(jschar);
+        nbytes += (JSFLATSTR_LENGTH(ATOM_TO_STRING(atom)) + 1) * sizeof(jschar);
     } else if (ATOM_IS_DOUBLE(atom)) {
         nbytes += sizeof(jsdouble);
     }
@@ -1676,8 +1670,8 @@ JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks)
 
 #ifdef MOZ_SHARK
 
-JS_FRIEND_API(JSBool)
-js_StartChudRemote() 
+JS_PUBLIC_API(JSBool)
+JS_StartChudRemote() 
 {
     if (chudIsRemoteAccessAcquired() && 
         (chudStartRemotePerfMonitor("Mozilla") == chudSuccess)) {
@@ -1687,8 +1681,8 @@ js_StartChudRemote()
     return JS_FALSE;
 }
 
-JS_FRIEND_API(JSBool)
-js_StopChudRemote()
+JS_PUBLIC_API(JSBool)
+JS_StopChudRemote()
 {
     if (chudIsRemoteAccessAcquired() &&
         (chudStopRemotePerfMonitor() == chudSuccess)) {
@@ -1698,8 +1692,8 @@ js_StopChudRemote()
     return JS_FALSE;
 }
 
-JS_FRIEND_API(JSBool)
-js_ConnectShark()
+JS_PUBLIC_API(JSBool)
+JS_ConnectShark()
 {
     if (!chudIsInitialized() && (chudInitialize() != chudSuccess))
         return JS_FALSE;
@@ -1710,8 +1704,8 @@ js_ConnectShark()
     return JS_TRUE;
 }
 
-JS_FRIEND_API(JSBool)
-js_DisconnectShark()
+JS_PUBLIC_API(JSBool)
+JS_DisconnectShark()
 {
     if (chudIsRemoteAccessAcquired() && (chudReleaseRemoteAccess() != chudSuccess))
         return JS_FALSE;
@@ -1720,10 +1714,10 @@ js_DisconnectShark()
 }
 
 JS_FRIEND_API(JSBool)
-StartShark(JSContext *cx, JSObject *obj,
-           uintN argc, jsval *argv, jsval *rval)
+js_StartShark(JSContext *cx, JSObject *obj,
+              uintN argc, jsval *argv, jsval *rval)
 {
-    if (!js_StartChudRemote()) {
+    if (!JS_StartChudRemote()) {
         JS_ReportError(cx, "Error starting CHUD.");
     }
 
@@ -1731,10 +1725,10 @@ StartShark(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-StopShark(JSContext *cx, JSObject *obj,
-          uintN argc, jsval *argv, jsval *rval)
+js_StopShark(JSContext *cx, JSObject *obj,
+             uintN argc, jsval *argv, jsval *rval)
 {
-    if (!js_StopChudRemote()) {
+    if (!JS_StopChudRemote()) {
         JS_ReportError(cx, "Error stopping CHUD.");
     }
         
@@ -1742,10 +1736,10 @@ StopShark(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-ConnectShark(JSContext *cx, JSObject *obj,
-             uintN argc, jsval *argv, jsval *rval)
+js_ConnectShark(JSContext *cx, JSObject *obj,
+                uintN argc, jsval *argv, jsval *rval)
 {
-    if (!js_ConnectShark()) {
+    if (!JS_ConnectShark()) {
         JS_ReportError(cx, "Error connecting to Shark.");
     }
         
@@ -1753,10 +1747,10 @@ ConnectShark(JSContext *cx, JSObject *obj,
 }
 
 JS_FRIEND_API(JSBool)
-DisconnectShark(JSContext *cx, JSObject *obj,
-                uintN argc, jsval *argv, jsval *rval)
+js_DisconnectShark(JSContext *cx, JSObject *obj,
+                   uintN argc, jsval *argv, jsval *rval)
 {
-    if (!js_DisconnectShark()) {
+    if (!JS_DisconnectShark()) {
         JS_ReportError(cx, "Error disconnecting from Shark.");
     }
         

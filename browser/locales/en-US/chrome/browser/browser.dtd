@@ -49,6 +49,10 @@
 <!ENTITY fullScreenMinimize.tooltip "Minimize">
 <!ENTITY fullScreenRestore.tooltip "Restore">
 <!ENTITY fullScreenClose.tooltip "Close">
+<!ENTITY fullScreenAutohide.label "Hide Toolbars">
+<!ENTITY fullScreenAutohide.accesskey "H">
+<!ENTITY fullScreenExit.label "Exit Full Screen Mode">
+<!ENTITY fullScreenExit.accesskey "F">
 
 <!ENTITY closeWindow.label "Close Window">
 <!ENTITY closeWindow.accesskey "d">
@@ -227,18 +231,20 @@
 <!ENTITY viewPageInfoCmd.accesskey    "I">
 <!ENTITY viewFrameInfoCmd.label       "View Frame Info">
 <!ENTITY viewFrameInfoCmd.accesskey   "I">
+<!ENTITY showImageCmd.label           "Show Image">
+<!ENTITY showImageCmd.accesskey       "S">
 <!ENTITY viewImageCmd.label           "View Image">
 <!ENTITY viewImageCmd.accesskey       "I">
 <!ENTITY viewBGImageCmd.label         "View Background Image">
 <!ENTITY viewBGImageCmd.accesskey     "w">
 <!ENTITY setDesktopBackgroundCmd.label      "Set As Desktop Background…">
 <!ENTITY setDesktopBackgroundCmd.accesskey  "S">
-<!ENTITY bookmarkPageCmd.label        "Bookmark This Page…">
-<!ENTITY bookmarkPageCmd.accesskey    "m">
-<!ENTITY bookmarkLinkCmd.label        "Bookmark This Link…">
-<!ENTITY bookmarkLinkCmd.accesskey    "L">
-<!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame…">
-<!ENTITY bookmarkFrameCmd.accesskey   "m">
+<!ENTITY bookmarkPageCmd2.label       "Bookmark This Page">
+<!ENTITY bookmarkPageCmd2.accesskey   "m">
+<!ENTITY bookmarkThisLinkCmd.label      "Bookmark This Link">
+<!ENTITY bookmarkThisLinkCmd.accesskey  "L">
+<!ENTITY bookmarkThisFrameCmd.label      "Bookmark This Frame">
+<!ENTITY bookmarkThisFrameCmd.accesskey  "m">
 <!ENTITY sendPageCmd.label            "Send Link…">
 <!ENTITY sendPageCmd.accesskey        "e">
 <!ENTITY savePageCmd.label            "Save Page As…">
@@ -260,6 +266,8 @@
 <!ENTITY sendImageCmd.accesskey       "n">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
 <!ENTITY copyLinkCmd.accesskey        "a">
+<!ENTITY copyLinkTextCmd.label        "Copy Link Text">
+<!ENTITY copyLinkTextCmd.accesskey    "x">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "o">
 <!ENTITY copyImageContentsCmd.label   "Copy Image">
@@ -283,6 +291,8 @@
 <!ENTITY fullZoomResetCmd.commandkey    "0">
 <!ENTITY fullZoomResetCmd.label         "Reset">
 <!ENTITY fullZoomResetCmd.accesskey     "R">
+<!ENTITY fullZoomToggleCmd.label        "Zoom Text Only">
+<!ENTITY fullZoomToggleCmd.accesskey    "T">
 <!ENTITY fullZoom.label                 "Zoom">
 <!ENTITY fullZoom.accesskey             "Z">
 
@@ -339,10 +349,12 @@
 <!ENTITY findAgainCmd.commandkey "g">
 <!ENTITY findAgainCmd.commandkey2 "VK_F3">
 
-<!ENTITY spellAddDictionaries.label "Add dictionaries…">
+<!ENTITY spellAddDictionaries.label "Add Dictionaries…">
 <!ENTITY spellAddDictionaries.accesskey "A">
 
 <!ENTITY editBookmark.done.label                      "Done">
 <!ENTITY editBookmark.delete.label                    "Delete">
 
 <!ENTITY identity.moreInfoLinkText "Tell me more about this web site…">
+
+<!ENTITY downloadMonitor.tooltip "Double-click to open downloads window">

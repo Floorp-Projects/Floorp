@@ -1169,12 +1169,16 @@ extern JSClass XPC_WN_NoMods_NoCall_Proto_JSClass;
 extern JSClass XPC_WN_ModsAllowed_WithCall_Proto_JSClass;
 extern JSClass XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
 extern JSClass XPC_WN_Tearoff_JSClass;
+extern JSClass XPC_WN_NoHelper_Proto_JSClass;
 
 extern JSObjectOps * JS_DLL_CALLBACK
 XPC_WN_GetObjectOpsNoCall(JSContext *cx, JSClass *clazz);
 
 extern JSObjectOps * JS_DLL_CALLBACK
 XPC_WN_GetObjectOpsWithCall(JSContext *cx, JSClass *clazz);
+
+extern JSObjectOps * JS_DLL_CALLBACK
+XPC_WN_Proto_GetObjectOps(JSContext *cx, JSClass *clazz);
 
 extern JSBool JS_DLL_CALLBACK
 XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
@@ -1232,6 +1236,11 @@ public:
 
     JSObject*
     GetPrototypeJSObject() const {return mPrototypeJSObject;}
+
+    // Getter for the prototype that we use for wrappers that have no
+    // helper.
+    JSObject*
+    GetPrototypeNoHelper(XPCCallContext& ccx);
 
 #ifndef XPCONNECT_STANDALONE
     nsIPrincipal*
@@ -1329,8 +1338,14 @@ private:
     // unless a PreCreate hook overrides it.  Note that this _may_ be null (see
     // constructor).
     JSObject*                        mGlobalJSObject;
+
+    // Cached value of Object.prototype
     JSObject*                        mPrototypeJSObject;
+    // Cached value of Function.prototype
     JSObject*                        mPrototypeJSFunction;
+    // Prototype to use for wrappers with no helper.
+    JSObject*                        mPrototypeNoHelper;
+
     XPCContext*                      mContext;
 
 #ifndef XPCONNECT_STANDALONE
@@ -1342,6 +1357,9 @@ private:
     nsCOMPtr<nsIScriptObjectPrincipal> mScriptObjectPrincipal;
 #endif
 };
+
+JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
+                              JSObject *parent);
 
 /***************************************************************************/
 // XPCNativeMember represents a single idl declared method, attribute or
@@ -1361,9 +1379,22 @@ public:
 
     PRUint16 GetIndex() const {return mIndex;}
 
-    JSBool GetValue(XPCCallContext& ccx, XPCNativeInterface* iface, jsval* pval)
-        {if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
+    JSBool GetConstantValue(XPCCallContext& ccx, XPCNativeInterface* iface,
+                            jsval* pval)
+        {NS_ASSERTION(IsConstant(),
+                      "Only call this if you're sure this is a constant!");
+         if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
          *pval = mVal; return JS_TRUE;}
+
+    JSBool NewFunctionObject(XPCCallContext& ccx, XPCNativeInterface* iface,
+                             JSObject *parent, jsval* pval)
+        {NS_ASSERTION(!IsConstant(),
+                      "Only call this if you're sure this is not a constant!");
+         if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
+         JSObject* funobj =
+            xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(mVal), parent);
+         if(!funobj) return JS_FALSE;
+         *pval = OBJECT_TO_JSVAL(funobj); return JS_TRUE;}
 
     JSBool IsMethod() const
         {return 0 != (mFlags & METHOD);}
@@ -3010,7 +3041,19 @@ class XPCPerThreadData
 {
 public:
     // Get the instance of this object for the current thread
-    static XPCPerThreadData* GetData();
+    static inline XPCPerThreadData* GetData(JSContext *cx)
+    {
+        if(cx)
+        {
+            NS_ASSERTION(cx->thread, "Uh, JS context w/o a thread?");
+
+            if(cx->thread == sMainJSThread)
+                return sMainThreadData;
+        }
+
+        return GetDataImpl(cx);
+    }
+
     static void CleanupAllThreads();
 
     ~XPCPerThreadData();
@@ -3112,8 +3155,12 @@ public:
         {mWrappedNativeThreadsafetyReportDepth = 0;}
 #endif
 
+    static void ShutDown()
+        {sMainJSThread = nsnull; sMainThreadData = nsnull;}
+
 private:
     XPCPerThreadData();
+    static XPCPerThreadData* GetDataImpl(JSContext *cx);
 
 private:
     XPCJSContextStack*   mJSContextStack;
@@ -3140,6 +3187,13 @@ private:
     static PRLock*           gLock;
     static XPCPerThreadData* gThreads;
     static PRUintn           gTLSIndex;
+
+    // Cached value of cx->thread on the main thread. 
+    static void *sMainJSThread;
+
+    // Cached per thread data for the main thread. Only safe to access
+    // if cx->thread == sMainJSThread.
+    static XPCPerThreadData *sMainThreadData;
 };
 
 /**************************************************************/
@@ -3168,8 +3222,8 @@ public:
     virtual ~nsXPCThreadJSContextStackImpl();
 
 private:
-    XPCJSContextStack* GetStackForCurrentThread()
-        {XPCPerThreadData* data = XPCPerThreadData::GetData();
+    XPCJSContextStack* GetStackForCurrentThread(JSContext *cx = nsnull)
+        {XPCPerThreadData* data = XPCPerThreadData::GetData(cx);
          return data ? data->GetJSContextStack() : nsnull;}
 
     static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack;
@@ -3851,9 +3905,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 // Utilities
 
 JSBool xpc_IsReportableErrorCode(nsresult code);
-
-JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
-                              JSObject *parent);
 
 #ifndef XPCONNECT_STANDALONE
 

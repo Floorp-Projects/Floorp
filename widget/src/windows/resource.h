@@ -45,4 +45,4 @@
 #define IDC_ROWRESIZE                   4109
 #define IDC_VERTICALTEXT                4110
 #define IDC_DUMMY_CE_MENUBAR            4111
-
+#define IDC_NONE                        4112

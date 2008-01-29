@@ -164,6 +164,10 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
                                 nsIUrlClassifierCallback *aDownloadErrorCallback,
                                 PRBool *_retval)
 {
+  NS_ENSURE_ARG(aSuccessCallback);
+  NS_ENSURE_ARG(aUpdateErrorCallback);
+  NS_ENSURE_ARG(aDownloadErrorCallback);
+
   if (mIsUpdating) {
     LOG(("already updating, skipping update"));
     *_retval = PR_FALSE;
@@ -194,6 +198,15 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     mInitialized = PR_TRUE;
   }
 
+  rv = mDBService->BeginUpdate(this);
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    LOG(("already updating, skipping update"));
+    *_retval = PR_FALSE;
+    return NS_OK;
+  } else if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   mSuccessCallback = aSuccessCallback;
   mUpdateErrorCallback = aUpdateErrorCallback;
   mDownloadErrorCallback = aDownloadErrorCallback;
@@ -201,7 +214,6 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   mIsUpdating = PR_TRUE;
   *_retval = PR_TRUE;
 
-  mDBService->BeginUpdate(this);
 
   return FetchUpdate(mUpdateUrl, aRequestBody);
 }
@@ -269,7 +281,7 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(PRUint32 requestedTimeout)
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::UpdateError(PRUint32 result)
 {
-  LOG(("nsUrlClassifierStreamUpdater::UpdateSuccess [this=%p]", this));
+  LOG(("nsUrlClassifierStreamUpdater::UpdateError [this=%p]", this));
 
   // DownloadDone() clears mUpdateErrorCallback, so we save it off here.
   nsCOMPtr<nsIUrlClassifierCallback> errorCallback = mUpdateErrorCallback;

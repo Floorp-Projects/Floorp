@@ -289,9 +289,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_PRELIGHT]);
         break;
     case eColor__moz_cellhighlight:
+    case eColor__moz_html_cellhighlight:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_ACTIVE]);
         break;
     case eColor__moz_cellhighlighttext:
+    case eColor__moz_html_cellhighlighttext:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_ACTIVE]);
         break;
     case eColor__moz_menuhover:

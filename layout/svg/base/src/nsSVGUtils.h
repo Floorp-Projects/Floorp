@@ -354,10 +354,10 @@ public:
   static already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM(nsIFrame *aFrame);
 
   /*
-   * Tells child frames that the canvasTM has changed
+   * Tells child frames that something that might affect them has changed
    */
   static void
-  NotifyChildrenCanvasTMChanged(nsIFrame *aFrame, PRBool suppressInvalidation);
+  NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags);
 
   /*
    * Get frame's covered region by walking the children and doing union.

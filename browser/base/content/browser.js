@@ -58,6 +58,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
+let Ci = Components.interfaces;
+let Cu = Components.utils;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/DownloadUtils.jsm");
+Cu.import("resource://gre/modules/PluralForm.jsm");
+
 const kXULNS =
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -99,6 +105,7 @@ var gBrowser = null;
 var gNavToolbox = null;
 var gSidebarCommand = "";
 var gInPrintPreviewMode = false;
+let gDownloadMgr = null;
 
 // Global variable that holds the nsContextMenu instance.
 var gContextMenu = null;
@@ -112,6 +119,10 @@ var gBookmarkAllTabsHandler = null;
 
 #ifdef XP_MACOSX
 var gClickAndHoldTimer = null;
+#endif
+
+#ifndef XP_MACOSX
+var gEditUIVisible = true;
 #endif
 
 /**
@@ -169,6 +180,45 @@ function UpdateBackForwardCommands(aWebNavigation)
       forwardBroadcaster.setAttribute("disabled", true);
   }
 }
+
+var UnifiedBackForwardButton = {
+  unify: function() {
+    var backButton = document.getElementById("back-button");
+    if (!backButton || !backButton.nextSibling || backButton.nextSibling.id != "forward-button")
+      return; // back and forward buttons aren't adjacent
+
+    var wrapper = document.createElement("toolbaritem");
+    wrapper.id = "unified-back-forward-button";
+    wrapper.className = "chromeclass-toolbar-additional";
+    wrapper.setAttribute("context", "backMenu");
+    
+    var toolbar = backButton.parentNode;
+    toolbar.insertBefore(wrapper, backButton);
+    
+    var forwardButton = backButton.nextSibling;
+    wrapper.appendChild(backButton);
+    wrapper.appendChild(forwardButton);
+    
+    var popup = backButton.getElementsByTagName("menupopup")[0].cloneNode(true);
+    wrapper.appendChild(popup);
+    
+    this._unified = true;
+  },
+
+  separate: function() {
+    if (!this._unified)
+      return;
+    
+    var wrapper = document.getElementById("unified-back-forward-button");
+    var toolbar = wrapper.parentNode;
+    
+    toolbar.insertBefore(wrapper.firstChild, wrapper); // Back button
+    toolbar.insertBefore(wrapper.firstChild, wrapper); // Forward button
+    toolbar.removeChild(wrapper);
+    
+    this._unified = false;
+  }
+};
 
 #ifdef XP_MACOSX
 /**
@@ -889,7 +939,8 @@ function delayedStartup()
     gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                              .getService(Components.interfaces.nsIPrefBranch2);
   BrowserOffline.init();
-  
+  OfflineApps.init();
+
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
@@ -908,6 +959,7 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
 
+  UnifiedBackForwardButton.unify();
   UpdateUrlbarSearchSplitterState();
   
   try {
@@ -1049,13 +1101,33 @@ function delayedStartup()
   // themselves.
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
+  // Delayed initialization of the livemarks update timer.
+  // Livemark updates don't need to start until after bookmark UI 
+  // such as the toolbar has initialized. Starting 5 seconds after
+  // delayedStartup in order to stagger this before the download
+  // manager starts (see below).
+  setTimeout(function() PlacesUtils.livemarks.start(), 5000);
+
   // Initialize the download manager some time after the app starts so that
   // auto-resume downloads begin (such as after crashing or quitting with
   // active downloads) and speeds up the first-load of the download manager UI.
   // If the user manually opens the download manager before the timeout, the
   // downloads will start right away, and getting the service again won't hurt.
-  setTimeout(function() Cc["@mozilla.org/download-manager;1"].
-                        getService(Ci.nsIDownloadManager), 10000);
+  setTimeout(function() {
+    gDownloadMgr = Cc["@mozilla.org/download-manager;1"].
+                   getService(Ci.nsIDownloadManager);
+
+    // Initialize the downloads monitor panel listener
+    gDownloadMgr.addListener(DownloadMonitorPanel);
+    DownloadMonitorPanel.init();
+  }, 10000);
+
+#ifndef XP_MACOSX
+  updateEditUIVisibility();
+  let placesContext = document.getElementById("placesContext");
+  placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
+  placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
+#endif
 }
 
 function BrowserShutdown()
@@ -1091,6 +1163,7 @@ function BrowserShutdown()
     gSanitizeListener.shutdown();
 
   BrowserOffline.uninit();
+  OfflineApps.uninit();
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
@@ -1269,13 +1342,15 @@ function ctrlNumberTabSelection(event)
   }
 
 #ifdef XP_MACOSX
-  if (!event.metaKey)
+  // Mac: Cmd+number
+  if (!event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
 #else
 #ifdef XP_UNIX
-  // don't let tab selection clash with numeric accesskeys (bug 366084)
-  if (!event.altKey || event.shiftKey)
+  // Linux: Alt+number
+  if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)
 #else
-  if (!event.ctrlKey)
+  // Windows: Ctrl+number
+  if (!event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)
 #endif
 #endif
     return;
@@ -1409,12 +1484,14 @@ function BrowserHandleShiftBackspace()
 
 function BrowserBackMenu(event)
 {
-  return FillHistoryMenu(event.target, "back");
+  var menuType = UnifiedBackForwardButton._unified ? "unified" : "back";
+  return FillHistoryMenu(event.target, menuType);
 }
 
 function BrowserForwardMenu(event)
 {
-  return FillHistoryMenu(event.target, "forward");
+  var menuType = UnifiedBackForwardButton._unified ? "unified" : "forward";
+  return FillHistoryMenu(event.target, menuType);
 }
 
 function BrowserStop()
@@ -1496,13 +1573,20 @@ function loadOneOrMoreURIs(aURIString)
   }
 }
 
-function openLocation()
+function focusAndSelectUrlBar()
 {
   if (gURLBar && isElementVisible(gURLBar) && !gURLBar.readOnly) {
     gURLBar.focus();
     gURLBar.select();
-    return;
+    return true;
   }
+  return false;
+}
+
+function openLocation()
+{
+  if (focusAndSelectUrlBar())
+    return;
 #ifdef XP_MACOSX
   if (window.location.href != getBrowserURL()) {
     var win = getTopWin();
@@ -1904,10 +1988,25 @@ function URLBarSetURI(aURI) {
       if (!content.opener)
         value = "";
     } else {
-      // try to decode as UTF-8
-      try {
-        value = decodeURI(value).replace(/%/g, "%25");
-      } catch(e) {}
+      // Try to decode as UTF-8 if there's no encoding sequence that we would break.
+      if (!/%25(?:3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/i.test(value))
+        try {
+          value = decodeURI(value)
+                    // 1. decodeURI decodes %25 to %, which creates unintended
+                    //    encoding sequences. Re-encode it, unless it's part of
+                    //    a sequence that survived decodeURI, i.e. one for:
+                    //    ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
+                    //    (RFC 3987 section 3.2)
+                    // 2. Re-encode whitespace so that it doesn't get eaten away
+                    //    by the location bar (bug 410726).
+                    .replace(/%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)|[\r\n\t]/ig,
+                             encodeURIComponent);
+        } catch (e) {}
+
+      // Encode bidirectional formatting characters.
+      // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
+      value = value.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
+                            encodeURIComponent);
 
       state = "valid";
     }
@@ -2877,6 +2976,7 @@ function FillHistoryMenu(aParent, aMenu)
 
     var webNav = getWebNavigation();
     var sessionHistory = webNav.sessionHistory;
+    var bundle_browser = document.getElementById("bundle_browser");
 
     var count = sessionHistory.count;
     var index = sessionHistory.index;
@@ -2893,7 +2993,8 @@ function FillHistoryMenu(aParent, aMenu)
             {
               entry = sessionHistory.getEntryAtIndex(j, false);
               if (entry)
-                createMenuItem(aParent, j, entry.title);
+                createMenuItem(aParent, j, entry.title || entry.URI.spec,
+                               bundle_browser.getString("tabHistory.goBack"));
             }
           break;
         case "forward":
@@ -2903,8 +3004,38 @@ function FillHistoryMenu(aParent, aMenu)
             {
               entry = sessionHistory.getEntryAtIndex(j, false);
               if (entry)
-                createMenuItem(aParent, j, entry.title);
+                createMenuItem(aParent, j, entry.title || entry.URI.spec,
+                               bundle_browser.getString("tabHistory.goForward"));
             }
+          break;
+        case "unified":
+          if (count <= 1) // don't display the popup for a single item
+            return false;
+          
+          var half_length = Math.floor(MAX_HISTORY_MENU_ITEMS / 2);
+          var start = Math.max(index - half_length, 0);
+          end = Math.min(start == 0 ? MAX_HISTORY_MENU_ITEMS : index + half_length + 1, count);
+          if (end == count)
+            start = Math.max(count - MAX_HISTORY_MENU_ITEMS, 0);
+          
+          var tooltips = [
+            bundle_browser.getString("tabHistory.goBack"),
+            bundle_browser.getString("tabHistory.current"),
+            bundle_browser.getString("tabHistory.goForward")
+          ];
+          var classNames = ["unified-nav-back", "unified-nav-current", "unified-nav-forward"];
+          
+          for (var j = end - 1; j >= start; j--) {
+            entry = sessionHistory.getEntryAtIndex(j, false);
+            var tooltip = tooltips[j < index ? 0 : j == index ? 1 : 2];
+            var className = classNames[j < index ? 0 : j == index ? 1 : 2];
+            var item = createMenuItem(aParent, j, entry.title || entry.URI.spec, tooltip, className);
+            
+            if (j == index) { // mark the current history item
+              item.setAttribute("type", "radio");
+              item.setAttribute("checked", "true");
+            }
+          }
           break;
       }
 
@@ -2927,12 +3058,16 @@ function addToUrlbarHistory(aUrlToAdd)
    }
 }
 
-function createMenuItem( aParent, aIndex, aLabel)
+function createMenuItem(aParent, aIndex, aLabel, aTooltipText, aClassName)
   {
     var menuitem = document.createElement( "menuitem" );
     menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
-    aParent.appendChild( menuitem );
+    if (aTooltipText)
+      menuitem.setAttribute("tooltiptext", aTooltipText);
+    if (aClassName)
+      menuitem.className = aClassName;
+    return aParent.appendChild(menuitem);
   }
 
 function deleteHistoryItems(aParent)
@@ -2949,6 +3084,12 @@ function deleteHistoryItems(aParent)
 function toJavaScriptConsole()
 {
   toOpenWindowByType("global:console", "chrome://global/content/console.xul");
+}
+
+function BrowserDownloadsUI()
+{
+  Cc["@mozilla.org/download-manager-ui;1"].
+  getService(Ci.nsIDownloadManagerUI).show();
 }
 
 function toOpenWindowByType(inType, uri, features)
@@ -3025,6 +3166,8 @@ function BrowserCustomizeToolbar()
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.setAttribute("disabled", "true");
 
+  UnifiedBackForwardButton.separate();
+
   var splitter = document.getElementById("urlbar-search-splitter");
   if (splitter)
     splitter.parentNode.removeChild(splitter);
@@ -3061,8 +3204,13 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     gHomeButton.updateTooltip();
     gIdentityHandler._cacheElements();
     window.XULBrowserWindow.init();
+
+#ifndef XP_MACOSX
+  updateEditUIVisibility();
+#endif
   }
 
+  UnifiedBackForwardButton.unify();
   UpdateUrlbarSearchSplitterState();
 
   // Update the urlbar
@@ -3098,6 +3246,67 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
 #ifndef TOOLBAR_CUSTOMIZATION_SHEET
   // XXX Shouldn't have to do this, but I do
   window.focus();
+#endif
+}
+
+/**
+ * Update the global flag that tracks whether or not any edit UI (the Edit menu,
+ * edit-related items in the context menu, and edit-related toolbar buttons
+ * is visible, then update the edit commands' enabled state accordingly.  We use
+ * this flag to skip updating the edit commands on focus or selection changes
+ * when no UI is visible to improve performance (including pageload performance,
+ * since focus changes when you load a new page).
+ *
+ * If UI is visible, we use goUpdateGlobalEditMenuItems to set the commands'
+ * enabled state so the UI will reflect it appropriately.
+ * 
+ * If the UI isn't visible, we enable all edit commands so keyboard shortcuts
+ * still work and just lazily disable them as needed when the user presses a
+ * shortcut.
+ *
+ * This doesn't work on Mac, since Mac menus flash when users press their
+ * keyboard shortcuts, so edit UI is essentially always visible on the Mac,
+ * and we need to always update the edit commands.  Thus on Mac this function
+ * is a no op.
+ */
+function updateEditUIVisibility()
+{
+#ifndef XP_MACOSX
+  let editMenuPopupState = document.getElementById("menu_EditPopup").state;
+  let contextMenuPopupState = document.getElementById("contentAreaContextMenu").state;
+  let placesContextMenuPopupState = document.getElementById("placesContext").state;
+
+  // The UI is visible if the Edit menu is opening or open, if the context menu
+  // is open, or if the toolbar has been customized to include the Cut, Copy,
+  // or Paste toolbar buttons.
+  gEditUIVisible = editMenuPopupState == "showing" ||
+                   editMenuPopupState == "open" ||
+                   contextMenuPopupState == "showing" ||
+                   contextMenuPopupState == "open" ||
+                   placesContextMenuPopupState == "showing" ||
+                   placesContextMenuPopupState == "open" ||
+                   document.getElementById("cut-button") ||
+                   document.getElementById("copy-button") ||
+                   document.getElementById("paste-button") ? true : false;
+
+  // If UI is visible, update the edit commands' enabled state to reflect
+  // whether or not they are actually enabled for the current focus/selection.
+  if (gEditUIVisible)
+    goUpdateGlobalEditMenuItems();
+
+  // Otherwise, enable all commands, so that keyboard shortcuts still work,
+  // then lazily determine their actual enabled state when the user presses
+  // a keyboard shortcut.
+  else {
+    goSetCommandEnabled("cmd_undo", true);
+    goSetCommandEnabled("cmd_redo", true);
+    goSetCommandEnabled("cmd_cut", true);
+    goSetCommandEnabled("cmd_copy", true);
+    goSetCommandEnabled("cmd_paste", true);
+    goSetCommandEnabled("cmd_selectAll", true);
+    goSetCommandEnabled("cmd_delete", true);
+    goSetCommandEnabled("cmd_switchTextDirection", true);
+  }
 #endif
 }
 
@@ -3279,7 +3488,10 @@ nsBrowserStatusHandler.prototype =
 
   setOverLink : function(link, b)
   {
-    this.overLink = link;
+    // Encode bidirectional formatting characters.
+    // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
+    this.overLink = link.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
+                                 encodeURIComponent);
     this.updateStatusField();
   },
 
@@ -3363,6 +3575,11 @@ nsBrowserStatusHandler.prototype =
           var browser = gBrowser.mCurrentBrowser;
           if (!gBrowser.mTabbedMode && !browser.mIconURL)
             gBrowser.useDefaultIcon(gBrowser.mCurrentTab);
+
+          if (Components.isSuccessCode(aStatus) &&
+              content.document.documentElement.getAttribute("manifest")) {
+            OfflineApps.offlineAppRequested(content);
+          }
         }
       }
 
@@ -4821,6 +5038,117 @@ var BrowserOffline = {
   }
 };
 
+var OfflineApps = {
+  /////////////////////////////////////////////////////////////////////////////
+  // OfflineApps Public Methods
+  init: function ()
+  {
+    // XXX: empty init left as a placeholder for patch in bug 397417
+  },
+
+  uninit: function ()
+  {
+    // XXX: empty uninit left as a placeholder for patch in bug 397417
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // OfflineApps Implementation Methods
+
+  // XXX: _getBrowserWindowForContentWindow and _getBrowserForContentWindow
+  // were taken from browser/components/feeds/src/WebContentConverter.
+  _getBrowserWindowForContentWindow: function(aContentWindow) {
+    return aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow)
+                         .wrappedJSObject;
+  },
+
+  _getBrowserForContentWindow: function(aBrowserWindow, aContentWindow) {
+    // This depends on pseudo APIs of browser.js and tabbrowser.xml
+    aContentWindow = aContentWindow.top;
+    var browsers = aBrowserWindow.getBrowser().browsers;
+    for (var i = 0; i < browsers.length; ++i) {
+      if (browsers[i].contentWindow == aContentWindow)
+        return browsers[i];
+    }
+  },
+
+  offlineAppRequested: function(aContentWindow) {
+    var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
+    var browser = this._getBrowserForContentWindow(browserWindow,
+                                                   aContentWindow);
+
+    var currentURI = browser.webNavigation.currentURI;
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+
+    // don't bother showing UI if the user has already made a decision
+    if (pm.testExactPermission(currentURI, "offline-app") !=
+        Ci.nsIPermissionManager.UNKNOWN_ACTION)
+      return;
+
+    try {
+      if (gPrefService.getBoolPref("offline-apps.allow_by_default")) {
+        // all pages can use offline capabilities, no need to ask the user
+        return;
+      }
+    } catch(e) {
+      // this pref isn't set by default, ignore failures
+    }
+
+    var notificationBox = gBrowser.getNotificationBox(browser);
+    var notification = notificationBox.getNotificationWithValue("offline-app-requested");
+    if (!notification) {
+      var bundle_browser = document.getElementById("bundle_browser");
+
+      var buttons = [{
+        label: bundle_browser.getString("offlineApps.allow"),
+        accessKey: bundle_browser.getString("offlineApps.allowAccessKey"),
+        callback: function() { OfflineApps.allowSite(); }
+      }];
+
+      const priority = notificationBox.PRIORITY_INFO_LOW;
+      var message = bundle_browser.getFormattedString("offlineApps.available",
+                                                      [ currentURI.host ]);
+      notificationBox.appendNotification(message, "offline-app-requested",
+                                         "chrome://browser/skin/Info.png",
+                                         priority, buttons);
+    }
+  },
+
+  allowSite: function() {
+    var currentURI = gBrowser.selectedBrowser.webNavigation.currentURI;
+    var pm = Cc["@mozilla.org/permissionmanager;1"].
+             getService(Ci.nsIPermissionManager);
+    pm.add(currentURI, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+
+    // When a site is enabled while loading, <link rel="offline-resource">
+    // resources will start fetching immediately.  This one time we need to
+    // do it ourselves.
+    this._startFetching();
+  },
+
+  _startFetching: function() {
+    var manifest = content.document.documentElement.getAttribute("manifest");
+    if (!manifest)
+      return;
+
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+
+    var contentURI = ios.newURI(content.location.href, null, null);
+    var manifestURI = ios.newURI(manifest, content.document.characterSet,
+                                 contentURI);
+
+    var updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"].
+                        getService(Ci.nsIOfflineCacheUpdateService);
+    updateService.scheduleUpdate(manifestURI, contentURI);
+  }
+};
+
 function WindowIsClosing()
 {
   var browser = getBrowser();
@@ -5743,16 +6071,23 @@ IdentityHandler.prototype = {
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;
   },
-  
+
+  hideIdentityPopup : function() {
+    this._identityPopup.hidePopup();
+  },
+
   /**
    * Click handler for the identity-box element in primary chrome.  
    */
-  handleIdentityClick : function(event) {
+  handleIdentityButtonEvent : function(event) {
+  
     event.stopPropagation();
+ 
+    if ((event.type == "click" && event.button != 0) ||
+        (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
+         event.keyCode != KeyEvent.DOM_VK_RETURN))
+      return; // Left click, space or enter only
 
-    if (event.button != 0)
-      return; // We only want left-clicks
-        
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
     this._identityPopup.hidden = false;
@@ -5780,3 +6115,110 @@ function getIdentityHandler() {
     gIdentityHandler = new IdentityHandler();
   return gIdentityHandler;    
 }
+
+let DownloadMonitorPanel = {
+  //////////////////////////////////////////////////////////////////////////////
+  //// DownloadMonitorPanel Member Variables
+
+  _panel: null,
+  _activeStr: null,
+  _pausedStr: null,
+  _lastTime: Infinity,
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// DownloadMonitorPanel Public Methods
+
+  /**
+   * Initialize the status panel and member variables
+   */
+  init: function DMP_init() {
+    // Initialize "private" member variables
+    this._panel = document.getElementById("download-monitor");
+
+    // Cache the status strings
+    let (bundle = document.getElementById("bundle_browser")) {
+      this._activeStr = bundle.getString("activeDownloads");
+      this._pausedStr = bundle.getString("pausedDownloads");
+    }
+
+    this.updateStatus();
+  },
+
+  /**
+   * Update status based on the number of active and paused downloads
+   */
+  updateStatus: function DMP_updateStatus() {
+    let numActive = gDownloadMgr.activeDownloadCount;
+
+    // Hide the panel and reset the "last time" if there's no downloads
+    if (numActive == 0) {
+      this._panel.hidden = true;
+      this._lastTime = Infinity;
+
+      return;
+    }
+  
+    // Find the download with the longest remaining time
+    let numPaused = 0;
+    let maxTime = -Infinity;
+    let dls = gDownloadMgr.activeDownloads;
+    while (dls.hasMoreElements()) {
+      let dl = dls.getNext().QueryInterface(Ci.nsIDownload);
+      if (dl.state == gDownloadMgr.DOWNLOAD_DOWNLOADING) {
+        // Figure out if this download takes longer
+        if (dl.speed > 0 && dl.size > 0)
+          maxTime = Math.max(maxTime, (dl.size - dl.amountTransferred) / dl.speed);
+        else
+          maxTime = -1;
+      }
+      else if (dl.state == gDownloadMgr.DOWNLOAD_PAUSED)
+        numPaused++;
+    }
+
+    // Get the remaining time string and last sec for time estimation
+    let timeLeft;
+    [timeLeft, this._lastSec] = DownloadUtils.getTimeLeft(maxTime, this._lastSec);
+
+    // Figure out how many downloads are currently downloading
+    let numDls = numActive - numPaused;
+    let status = this._activeStr;
+
+    // If all downloads are paused, show the paused message instead
+    if (numDls == 0) {
+      numDls = numPaused;
+      status = this._pausedStr;
+    }
+
+    // Get the correct plural form and insert the number of downloads and time
+    // left message if necessary
+    status = PluralForm.get(numDls, status);
+    status = status.replace("#1", numDls);
+    status = status.replace("#2", timeLeft);
+
+    // Update the panel and show it
+    this._panel.label = status;
+    this._panel.hidden = false;
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsIDownloadProgressListener
+
+  /**
+   * Update status for download progress changes
+   */
+  onProgressChange: function() {
+    this.updateStatus();
+  },
+
+  /**
+   * Update status for download state changes
+   */
+  onDownloadStateChange: function() {
+    this.updateStatus();
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsISupports
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadProgressListener]),
+};

@@ -92,10 +92,29 @@ function compareArrays(aArray1, aArray2) {
 }
 
 
-function run_test() {
+/*
+ * checkExpectedError
+ *
+ * Checks to see if a thrown error was expected or not, and if it
+ * matches the expected value.
+ */
+function checkExpectedError (aExpectedError, aActualError) {
+  if (aExpectedError) {
+      if (!aActualError)
+          throw "Didn't throw as expected (" + aExpectedError + ")";
 
-// Disable test for now.
-return;
+      if (!aExpectedError.test(aActualError))
+          throw "Threw (" + aActualError + "), not (" + aExpectedError;
+
+      // We got the expected error, so make a note in the test log.
+      dump("...that error was expected.\n\n");
+  } else if (aActualError) {
+      throw "Threw unexpected error: " + aActualError;
+  }
+}
+
+
+function run_test() {
 
 try {
 
@@ -103,12 +122,20 @@ try {
 /* ========== 0 ========== */
 var testnum = 0;
 var testdesc = "imgITools setup";
+var err = null;
 
 var imgTools = Cc["@mozilla.org/image/tools;1"].
                getService(Ci.imgITools);
 
 if (!imgTools)
     throw "Couldn't get imgITools service"
+
+// Ugh, this is an ugly hack. The pixel values we get in Windows are sometimes
+// +/- 1 value compared to other platforms, so we need to compare against a
+// different set of reference images. nsIXULRuntime.OS doesn't seem to be
+// available in xpcshell, so we'll use this as a kludgy way to figure out if
+// we're running on Windows.
+var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
 
 /* ========== 1 ========== */
@@ -197,12 +224,13 @@ do_check_eq(container.height, 32);
 testnum++;
 testdesc = "test encoding a scaled PNG";
 
+if (!isWindows) {
 // we'll reuse the container from the previous test
 istream = imgTools.encodeScaledImage(container, "image/png", 16, 16);
 
 encodedBytes = streamToArray(istream);
 // Get bytes for exected result
-refName = "image2jpg16x16.png";
+refName = isWindows ? "image2jpg16x16-win.png" : "image2jpg16x16.png";
 refFile = do_get_file(TESTDIR + refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 948);
@@ -210,18 +238,20 @@ referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.
 compareArrays(encodedBytes, referenceBytes);
+}
 
 
 /* ========== 6 ========== */
 testnum++;
 testdesc = "test encoding an unscaled PNG";
 
+if (!isWindows) {
 // we'll reuse the container from the previous test
 istream = imgTools.encodeImage(container, "image/png");
 encodedBytes = streamToArray(istream);
 
 // Get bytes for exected result
-refName = "image2jpg32x32.png";
+refName = isWindows ? "image2jpg32x32-win.png" : "image2jpg32x32.png";
 refFile = do_get_file(TESTDIR + refName);
 istream = getFileInputStream(refFile);
 do_check_eq(istream.available(), 3105);
@@ -229,6 +259,7 @@ referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.
 compareArrays(encodedBytes, referenceBytes);
+}
 
 
 /* ========== 7 ========== */
@@ -265,7 +296,7 @@ encodedBytes = streamToArray(istream);
 refName = "image3ico32x32.png";
 refFile = do_get_file(TESTDIR + refName);
 istream = getFileInputStream(refFile);
-do_check_eq(istream.available(), 2281);
+do_check_eq(istream.available(), 2372);
 referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.
@@ -289,6 +320,35 @@ referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.
 compareArrays(encodedBytes, referenceBytes);
+
+
+
+
+/* ========== bug 413512  ========== */
+testnum = 413512;
+testdesc = "test decoding bad favicon (bug 413512)";
+
+imgName = "bug413512.ico";
+inMimeType = "image/x-icon";
+imgFile = do_get_file(TESTDIR + imgName);
+
+istream = getFileInputStream(imgFile);
+do_check_eq(istream.available(), 17759);
+
+// You'd think the decoder would fail, but it doesn't. The decoders use
+// stream->ReadSegments with a callback, and buffered streams ignore errors
+// from the callback. :-( See bug 413595.
+outParam = { value: null };
+imgTools.decodeImageData(istream, inMimeType, outParam);
+container = outParam.value;
+
+try {
+    istream = imgTools.encodeImage(container, "image/png");
+} catch (e) {
+    err = e;
+}
+checkExpectedError(/NS_ERROR_NOT_AVAILABLE/, err);
+
 
 /* ========== end ========== */
 

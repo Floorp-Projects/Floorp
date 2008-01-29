@@ -52,6 +52,10 @@
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 class gfxContext;
 class gfxTextRun;
 class nsIAtom;
@@ -352,6 +356,9 @@ class THEBES_API gfxFont {
 public:
     nsrefcnt AddRef(void) {
         NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+        if (mExpirationState.IsTracked()) {
+            gfxFontCache::GetCache()->RemoveObject(this);
+        }
         ++mRefCnt;
         NS_LOG_ADDREF(this, mRefCnt, "gfxFont", sizeof(*this));
         return mRefCnt;
@@ -1260,6 +1267,8 @@ public:
 #ifdef DEBUG
     // number of entries referencing this textrun in the gfxTextRunWordCache
     PRUint32 mCachedWords;
+    
+    void Dump(FILE* aOutput);
 #endif
 
 protected:
@@ -1438,9 +1447,6 @@ public:
                               void *closure);
     PRBool ForEachFont(FontCreationCallback fc, void *closure);
 
-    /* this will call back fc with the a generic font based on the style's langgroup */
-    void FindGenericFontFromStyle(FontCreationCallback fc, void *closure);
-
     const nsString& GetFamilies() { return mFamilies; }
 
 protected:
@@ -1448,11 +1454,24 @@ protected:
     gfxFontStyle mStyle;
     nsTArray< nsRefPtr<gfxFont> > mFonts;
 
+    /* If aResolveGeneric is true, then CSS/Gecko generic family names are
+     * replaced with preferred fonts.
+     *
+     * If aResolveFontName is true then fc() is called only for existing fonts
+     * and with actual font names.  If false then fc() is called with each
+     * family name in aFamilies (after resolving CSS/Gecko generic family names
+     * if aResolveGeneric).
+     */
     static PRBool ForEachFontInternal(const nsAString& aFamilies,
                                       const nsACString& aLangGroup,
                                       PRBool aResolveGeneric,
+                                      PRBool aResolveFontName,
                                       FontCreationCallback fc,
                                       void *closure);
+
+    /* this will call back fc with the a generic font based on the style's langgroup */
+    void FindGenericFontFromStyle(PRBool aResolveFontName,
+                                  FontCreationCallback fc, void *closure);
 
     static PRBool FontResolverProc(const nsAString& aName, void *aClosure);
 };

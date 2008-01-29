@@ -77,7 +77,9 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
 
     NS_ADDREF(mXPC);
 
-    if(!(mThreadData = XPCPerThreadData::GetData()))
+    mThreadData = XPCPerThreadData::GetData(mJSContext);
+
+    if(!mThreadData)
         return;
 
     XPCJSContextStack* stack = mThreadData->GetJSContextStack();
@@ -357,7 +359,7 @@ XPCCallContext::~XPCCallContext()
             // Don't clear newborns if JS frames (compilation or execution)
             // are active!  Doing so violates ancient invariants in the JS
             // engine, and it's not necessary to fix JS component leaks.
-            if (!mJSContext->fp)
+            if(!mJSContext->fp)
                 JS_ClearNewbornRoots(mJSContext);
         }
     }
@@ -389,7 +391,8 @@ XPCCallContext::NewStringWrapper(PRUnichar *str, PRUint32 len)
     {
         StringWrapperEntry& ent = se[i];
 
-        if (!ent.mInUse) {
+        if(!ent.mInUse)
+        {
             ent.mInUse = PR_TRUE;
 
             // Construct the string using placement new.
@@ -413,7 +416,7 @@ XPCCallContext::DeleteString(nsAString *string)
     for(i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i)
     {
         StringWrapperEntry& ent = se[i];
-        if (string == &ent.mString)
+        if(string == &ent.mString)
         {
             // One of our internal strings is no longer in use, mark
             // it as such and destroy the string.

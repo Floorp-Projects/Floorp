@@ -1051,6 +1051,10 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
   PRBool isTopOfPage = aReflowState.mFlags.mIsTopOfPage;
   nsTableRowFrame* firstRowThisPage = GetFirstRow();
 
+  // Need to dirty the table's geometry, or else the row might skip
+  // reflowing its cell as an optimization.
+  aTableFrame->SetGeometryDirty();
+
   // Walk each of the row frames looking for the first row frame that doesn't fit 
   // in the available space
   for (nsTableRowFrame* rowFrame = firstRowThisPage; rowFrame; rowFrame = rowFrame->GetNextRow()) {
@@ -1286,7 +1290,8 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
   // not paginated ... we can't split across columns yet.
   if (aReflowState.mFlags.mTableIsSplittable &&
       (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak || 
-       aDesiredSize.height > aReflowState.availableHeight)) {
+       (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
+       aDesiredSize.height > aReflowState.availableHeight))) {
     // Nope, find a place to split the row group 
     PRBool specialReflow = (PRBool)aReflowState.mFlags.mSpecialHeightReflow;
     ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_FALSE;

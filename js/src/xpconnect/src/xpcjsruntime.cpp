@@ -238,7 +238,7 @@ ContextCallback(JSContext *cx, uintN operation)
     {
         if (operation == JSCONTEXT_NEW)
         {
-            XPCPerThreadData* tls = XPCPerThreadData::GetData();
+            XPCPerThreadData* tls = XPCPerThreadData::GetData(cx);
             if(tls)
             {
                 JS_SetThreadStackLimit(cx, tls->GetStackLimit());
@@ -1201,7 +1201,7 @@ XPCJSRuntime::SyncXPCContextList(JSContext* cx /* = nsnull */)
     // get rid of any XPCContexts that represent dead JSContexts
     mContextMap->Enumerate(SweepContextsCB, 0);
 
-    XPCPerThreadData* tls = XPCPerThreadData::GetData();
+    XPCPerThreadData* tls = XPCPerThreadData::GetData(cx);
     if(tls)
     {
         if(found)

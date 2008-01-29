@@ -51,6 +51,7 @@ ALL_LOCALES = \
   pl \
   ru \
   sk \
+  sv-SE \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

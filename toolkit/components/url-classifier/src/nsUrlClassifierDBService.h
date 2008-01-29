@@ -101,6 +101,12 @@ private:
   // TRUE if the nsURIClassifier implementation should check for phishing
   // uris on document loads.
   PRBool mCheckPhishing;
+
+  // TRUE if a BeginUpdate() has been called without an accompanying
+  // CancelUpdate()/FinishUpdate().  This is used to prevent competing
+  // updates, not to determine whether an update is still being
+  // processed.
+  PRBool mInUpdate;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsUrlClassifierDBService, NS_URLCLASSIFIERDBSERVICE_CID)

@@ -85,7 +85,8 @@ public:
          const nsAString& aValue,
          PRBool aSecure,
          const nsAString& aOwner,
-         PRInt32 aQuota);
+         PRInt32 aQuota,
+         PRInt32* aNewUsage);
 
   /**
    * Set the secure flag for a key in storage. Does nothing if the key was
@@ -106,6 +107,19 @@ public:
             PRInt32 aKeyUsage);
 
   /**
+   * Removes all keys added by a given domain.
+   */
+  nsresult
+  RemoveOwner(const nsAString& aOwner);
+
+  /**
+   * Removes keys owned by domains that either match or don't match the
+   * list.
+   */
+  nsresult
+  RemoveOwners(const nsStringArray& aOwners, PRBool aMatch);
+
+  /**
    * Removes all keys from storage. Used when clearing storage.
    */
   nsresult
@@ -123,6 +137,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mUpdateKeyStatement;
   nsCOMPtr<mozIStorageStatement> mSetSecureStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveKeyStatement;
+  nsCOMPtr<mozIStorageStatement> mRemoveOwnerStatement;
   nsCOMPtr<mozIStorageStatement> mRemoveAllStatement;
   nsCOMPtr<mozIStorageStatement> mGetUsageStatement;
 

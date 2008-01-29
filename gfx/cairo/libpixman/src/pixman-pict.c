@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pixman.h"
+
 #include "pixman-private.h"
 #include "pixman-mmx.h"
 
@@ -1387,6 +1387,249 @@ pixman_image_composite_rect  (pixman_op_t                   op,
 	free (scanline_buffer);
 }
 
+/* These "formats" both have depth 0, so they
+ * will never clash with any real ones
+ */
+#define PIXMAN_null		PIXMAN_FORMAT(0,0,0,0,0,0)
+#define PIXMAN_solid		PIXMAN_FORMAT(0,1,0,0,0,0)
+
+#define NEED_COMPONENT_ALPHA		(1 << 0)
+#define NEED_PIXBUF			(1 << 1)
+#define NEED_SOLID_MASK		        (1 << 2)
+
+typedef struct
+{
+    pixman_op_t			op;
+    pixman_format_code_t	src_format;
+    pixman_format_code_t	mask_format;
+    pixman_format_code_t	dest_format;
+    CompositeFunc		func;
+    uint32_t			flags;
+} FastPathInfo;
+
+#ifdef USE_MMX
+static const FastPathInfo mmx_fast_paths[] =
+{
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565mmx,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565mmx,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8x8888mmx,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8x8888mmx,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8x8888mmx,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8x8888mmx,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8888x8888Cmmx, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8888x8888Cmmx, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8888x0565Cmmx, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8888x8888Cmmx, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8888x8888Cmmx, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8888x0565Cmmx, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_x888xnx8888mmx,    NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_x888xnx8888mmx,	   NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,	PIXMAN_a8b8g8r8, fbCompositeSrc_x888xnx8888mmx,	   NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,	PIXMAN_x8b8g8r8, fbCompositeSrc_x888xnx8888mmx,	   NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8x8888mmx,    NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8x8888mmx,	   NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,	PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8x8888mmx,	   NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,	PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8x8888mmx,	   NEED_SOLID_MASK },
+#if 0
+    /* FIXME: This code is commented out since it's apparently not actually faster than the generic code. */
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,	PIXMAN_x8r8g8b8, fbCompositeOver_x888x8x8888mmx,   0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,	PIXMAN_a8r8g8b8, fbCompositeOver_x888x8x8888mmx,   0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8r8g8, PIXMAN_a8,	PIXMAN_x8b8g8r8, fbCompositeOver_x888x8x8888mmx,   0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8r8g8, PIXMAN_a8,	PIXMAN_a8r8g8b8, fbCompositeOver_x888x8x8888mmx,   0 },
+#endif
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeSolid_nx8888mmx,        0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSolid_nx8888mmx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSolid_nx0565mmx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreammx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeCopyAreammx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888mmx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888mmx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_r5g6b5,	 fbCompositeSrc_8888x0565mmx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8888mmx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888mmx,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_8888x0565mmx,	   0 },
+
+    { PIXMAN_OP_ADD, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeSrcAdd_8888x8888mmx,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrcAdd_8888x8888mmx,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000mmx,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fbCompositeSrcAdd_8888x8x8mmx,    0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMaskSrc_nx8x8888mmx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMaskSrc_nx8x8888mmx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMaskSrc_nx8x8888mmx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMaskSrc_nx8x8888mmx, 0 },
+
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeIn_8x8mmx,   0 },
+    { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeIn_nx8x8mmx, 0 },
+    { PIXMAN_OP_NONE },
+};
+#endif
+
+static const FastPathInfo c_fast_paths[] =
+{
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r8g8b8,   fbCompositeSolidMask_nx8x0888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b8g8r8,   fbCompositeSolidMask_nx8x0888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8x8888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8x8888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8x8888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8x8888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8888x8888C, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8888x8888C, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8888x0565C, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8888x8888C, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8888x8888C, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8888x0565C, NEED_COMPONENT_ALPHA },
+#if 0
+    /* FIXME: This code is commented out since it's apparently not actually faster than the generic code */
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,	PIXMAN_x8r8g8b8, fbCompositeOver_x888x8x8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,	PIXMAN_a8r8g8b8, fbCompositeOver_x888x8x8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8r8g8, PIXMAN_a8,	PIXMAN_x8b8g8r8, fbCompositeOver_x888x8x8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8r8g8, PIXMAN_a8,	PIXMAN_a8r8g8b8, fbCompositeOver_x888x8x8888,       0 },
+#endif
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_r5g6b5,	 fbCompositeSrc_8888x0565,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8888,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_8888x0565,	   0 },
+#if 0
+    /* FIXME */
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_r5g6b5,   fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_b5g6r5,   fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_r8g8b8,   fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_b8g8r8,   fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx1xn,	   0 },
+#endif
+    { PIXMAN_OP_ADD, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeSrcAdd_8888x8888,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrcAdd_8888x8888,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000,   0 },
+#if 0
+    /* FIXME */
+    { PIXMAN_OP_ADD, PIXMAN_a1,        PIXMAN_null,     PIXMAN_a1,       fbCompositeSrcAdd_1000x1000,   0 },
+#endif
+    { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fbCompositeSrcAdd_8888x8x8,    0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSolidFill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSolidFill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeSolidFill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSolidFill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8,       fbCompositeSolidFill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSolidFill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSrc_8888xx888, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSrc_8888xx888, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888xx888, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888xx888, 0 },
+#if 0
+    /* FIXME */
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrcSrc_nxn, 0 },
+#endif
+    { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcIn_8x8,   0 },
+    { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeSolidMaskIn_nx8x8, 0 },
+    { PIXMAN_OP_NONE },
+};
+
+static pixman_bool_t
+mask_is_solid (pixman_image_t *mask)
+{
+    if (mask->type == SOLID)
+	return TRUE;
+
+    if (mask->type == BITS &&
+	mask->common.repeat == PIXMAN_REPEAT_NORMAL &&
+	mask->bits.width == 1 &&
+	mask->bits.height == 1)
+    {
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+static const FastPathInfo *
+get_fast_path (const FastPathInfo *fast_paths,
+	       pixman_op_t         op,
+	       pixman_image_t     *pSrc,
+	       pixman_image_t     *pMask,
+	       pixman_image_t     *pDst,
+	       pixman_bool_t       is_pixbuf)
+{
+    const FastPathInfo *info;
+
+    for (info = fast_paths; info->op != PIXMAN_OP_NONE; info++)
+    {
+	pixman_bool_t valid_src		= FALSE;
+	pixman_bool_t valid_mask	= FALSE;
+
+	if (info->op != op)
+	    continue;
+
+	if ((info->src_format == PIXMAN_solid && can_get_solid (pSrc))		||
+	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
+	{
+	    valid_src = TRUE;
+	}
+
+	if (!valid_src)
+	    continue;
+
+	if ((info->mask_format == PIXMAN_null && !pMask)			||
+	    (pMask && pMask->type == BITS && info->mask_format == pMask->bits.format))
+	{
+	    valid_mask = TRUE;
+
+	    if (info->flags & NEED_SOLID_MASK)
+	    {
+		if (!pMask || !mask_is_solid (pMask))
+		    valid_mask = FALSE;
+	    }
+
+	    if (info->flags & NEED_COMPONENT_ALPHA)
+	    {
+		if (!pMask || !pMask->common.component_alpha)
+		    valid_mask = FALSE;
+	    }
+	}
+
+	if (!valid_mask)
+	    continue;
+	
+	if (info->dest_format != pDst->bits.format)
+	    continue;
+
+	if ((info->flags & NEED_PIXBUF) && !is_pixbuf)
+	    continue;
+
+	return info;
+    }
+
+    return NULL;
+}
 
 void
 pixman_image_composite (pixman_op_t      op,
@@ -1449,573 +1692,42 @@ pixman_image_composite (pixman_op_t      op,
 	&& !pSrc->common.read_func && !pSrc->common.write_func
 	&& !(pMask && pMask->common.read_func) && !(pMask && pMask->common.write_func)
 	&& !pDst->common.read_func && !pDst->common.write_func)
-    switch (op) {
-    case PIXMAN_OP_OVER:
-	if (pMask)
-	{
-	    if (can_get_solid(pSrc) &&
-		!maskRepeat)
-	    {
-		if (pSrc->type == SOLID || PIXMAN_FORMAT_COLOR(pSrc->bits.format)) {
-		    switch (pMask->bits.format) {
-		    case PIXMAN_a8:
-			switch (pDst->bits.format) {
-			case PIXMAN_r5g6b5:
-			case PIXMAN_b5g6r5:
-#ifdef USE_MMX
-			    if (pixman_have_mmx())
-				func = fbCompositeSolidMask_nx8x0565mmx;
-			    else
-#endif
-				func = fbCompositeSolidMask_nx8x0565;
-			    break;
-			case PIXMAN_r8g8b8:
-			case PIXMAN_b8g8r8:
-			    func = fbCompositeSolidMask_nx8x0888;
-			    break;
-			case PIXMAN_a8r8g8b8:
-			case PIXMAN_x8r8g8b8:
-			case PIXMAN_a8b8g8r8:
-			case PIXMAN_x8b8g8r8:
-#ifdef USE_MMX
-			    if (pixman_have_mmx())
-				func = fbCompositeSolidMask_nx8x8888mmx;
-			    else
-#endif
-				func = fbCompositeSolidMask_nx8x8888;
-			    break;
-			default:
-			    break;
-			}
-			break;
-		    case PIXMAN_a8r8g8b8:
-			if (pMask->common.component_alpha) {
-			    switch (pDst->bits.format) {
-			    case PIXMAN_a8r8g8b8:
-			    case PIXMAN_x8r8g8b8:
-#ifdef USE_MMX
-				if (pixman_have_mmx())
-				    func = fbCompositeSolidMask_nx8888x8888Cmmx;
-				else
-#endif
-				    func = fbCompositeSolidMask_nx8888x8888C;
-				break;
-			    case PIXMAN_r5g6b5:
-#ifdef USE_MMX
-				if (pixman_have_mmx())
-				    func = fbCompositeSolidMask_nx8888x0565Cmmx;
-				else
-#endif
-				    func = fbCompositeSolidMask_nx8888x0565C;
-				break;
-			    default:
-				break;
-			    }
-			}
-			break;
-		    case PIXMAN_a8b8g8r8:
-			if (pMask->common.component_alpha) {
-			    switch (pDst->bits.format) {
-			    case PIXMAN_a8b8g8r8:
-			    case PIXMAN_x8b8g8r8:
-#ifdef USE_MMX
-				if (pixman_have_mmx())
-				    func = fbCompositeSolidMask_nx8888x8888Cmmx;
-				else
-#endif
-				    func = fbCompositeSolidMask_nx8888x8888C;
-				break;
-			    case PIXMAN_b5g6r5:
-#ifdef USE_MMX
-				if (pixman_have_mmx())
-				    func = fbCompositeSolidMask_nx8888x0565Cmmx;
-				else
-#endif
-				    func = fbCompositeSolidMask_nx8888x0565C;
-				break;
-			    default:
-				break;
-			    }
-			}
-			break;
-		    case PIXMAN_a1:
-			switch (pDst->bits.format) {
-			case PIXMAN_r5g6b5:
-			case PIXMAN_b5g6r5:
-			case PIXMAN_r8g8b8:
-			case PIXMAN_b8g8r8:
-			case PIXMAN_a8r8g8b8:
-			case PIXMAN_x8r8g8b8:
-			case PIXMAN_a8b8g8r8:
-			case PIXMAN_x8b8g8r8:
-			{
-			    uint32_t src;
+    {
+	const FastPathInfo *info;
+	pixman_bool_t pixbuf;
 
-#if 0
-			    /* FIXME */
-			    fbComposeGetSolid(pSrc, src, pDst->bits.format);
-			    if ((src & 0xff000000) == 0xff000000)
-				func = fbCompositeSolidMask_nx1xn;
-#endif
-			    break;
-			}
-			default:
-			    break;
-			}
-			break;
-		    default:
-			break;
-		    }
-		}
-		if (func)
-		    srcRepeat = FALSE;
-	    }
-	    else if (!srcRepeat) /* has mask and non-repeating source */
-	    {
-		if (pSrc->bits.bits == pMask->bits.bits &&
-		    xSrc == xMask &&
-		    ySrc == yMask &&
-		    !pMask->common.component_alpha && !maskRepeat)
-		{
-		    /* source == mask: non-premultiplied data */
-		    switch (pSrc->bits.format) {
-		    case PIXMAN_x8b8g8r8:
-			switch (pMask->bits.format) {
-			case PIXMAN_a8r8g8b8:
-			case PIXMAN_a8b8g8r8:
-			    switch (pDst->bits.format) {
-			    case PIXMAN_a8r8g8b8:
-			    case PIXMAN_x8r8g8b8:
-#ifdef USE_MMX
-				if (pixman_have_mmx())
-				    func = fbCompositeSrc_8888RevNPx8888mmx;
-#endif
-				break;
-			    case PIXMAN_r5g6b5:
-#ifdef USE_MMX
-				if (pixman_have_mmx())
-				    func = fbCompositeSrc_8888RevNPx0565mmx;
-#endif
-				break;
-			    default:
-				break;
-			    }
-			    break;
-			default:
-			    break;
-			}
-			break;
-		    case PIXMAN_x8r8g8b8:
-			switch (pMask->bits.format) {
-			case PIXMAN_a8r8g8b8:
-			case PIXMAN_a8b8g8r8:
-			    switch (pDst->bits.format) {
-			    case PIXMAN_a8b8g8r8:
-			    case PIXMAN_x8b8g8r8:
-#ifdef USE_MMX
-				if (pixman_have_mmx())
-				    func = fbCompositeSrc_8888RevNPx8888mmx;
-#endif
-				break;
-			    case PIXMAN_r5g6b5:
-#ifdef USE_MMX
-				if (pixman_have_mmx())
-				    func = fbCompositeSrc_8888RevNPx0565mmx;
-#endif
-				break;
-			    default:
-				break;
-			    }
-			    break;
-			default:
-			    break;
-			}
-			break;
-		    default:
-			break;
-		    }
-		    break;
-		}
-		else if (maskRepeat &&
-			 pMask->bits.width == 1 &&
-			 pMask->bits.height == 1)
-		{
-		    switch (pSrc->bits.format) {
-#ifdef USE_MMX
-		    case PIXMAN_x8r8g8b8:
-			if ((pDst->bits.format == PIXMAN_a8r8g8b8 ||
-			     pDst->bits.format == PIXMAN_x8r8g8b8) &&
-			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
-			    func = fbCompositeSrc_x888xnx8888mmx;
-			break;
-		    case PIXMAN_x8b8g8r8:
-			if ((pDst->bits.format == PIXMAN_a8b8g8r8 ||
-			     pDst->bits.format == PIXMAN_x8b8g8r8) &&
-			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
-			    func = fbCompositeSrc_x888xnx8888mmx;
-			break;
-		    case PIXMAN_a8r8g8b8:
-			if ((pDst->bits.format == PIXMAN_a8r8g8b8 ||
-			     pDst->bits.format == PIXMAN_x8r8g8b8) &&
-			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
-			    func = fbCompositeSrc_8888x8x8888mmx;
-			break;
-		    case PIXMAN_a8b8g8r8:
-			if ((pDst->bits.format == PIXMAN_a8b8g8r8 ||
-			     pDst->bits.format == PIXMAN_x8b8g8r8) &&
-			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
-			    func = fbCompositeSrc_8888x8x8888mmx;
-			break;
-#endif
-		    default:
-			break;
-		    }
+	pixbuf =
+	    pSrc && pSrc->type == BITS		&&
+	    pMask && pMask->type == BITS	&&
+	    pSrc->bits.bits == pMask->bits.bits &&
+	    xSrc == xMask			&&
+	    ySrc == yMask			&&
+	    !pMask->common.component_alpha	&&
+	    !maskRepeat;
 
-		    if (func)
-			maskRepeat = FALSE;
-		}
-		else
-		{
-#if 0
-		    /* FIXME: This code is commented out since it's apparently not
-		     * actually faster than the generic code.
-		     */
-		    if (pMask->bits.format == PIXMAN_a8)
-		    {
-			if ((pSrc->bits.format == PIXMAN_x8r8g8b8 &&
-			     (pDst->bits.format == PIXMAN_x8r8g8b8 ||
-			      pDst->bits.format == PIXMAN_a8r8g8b8))  ||
-			    (pSrc->bits.format == PIXMAN_x8b8g8r8 &&
-			     (pDst->bits.format == PIXMAN_x8b8g8r8 ||
-			      pDst->bits.format == PIXMAN_a8b8g8r8)))
-			{
 #ifdef USE_MMX
-			    if (pixman_have_mmx())
-				func = fbCompositeOver_x888x8x8888mmx;
-			    else
+	info = NULL;
+	if (pixman_have_mmx())
+	    info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+	if (!info)
 #endif
-				func = fbCompositeOver_x888x8x8888;
-			}
-		    }
-#endif
-		}
-	    }
-	}
-	else /* no mask */
+	    info = get_fast_path (c_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+
+	if (info)
 	{
-	    if (can_get_solid(pSrc))
-	    {
-		/* no mask and repeating source */
-		if (pSrc->type == SOLID || pSrc->bits.format == PIXMAN_a8r8g8b8)
-		{
-		    switch (pDst->bits.format) {
-		    case PIXMAN_a8r8g8b8:
-		    case PIXMAN_x8r8g8b8:
-#ifdef USE_MMX
-			if (pixman_have_mmx())
-			{
-			    srcRepeat = FALSE;
-			    func = fbCompositeSolid_nx8888mmx;
-			}
-#endif
-			break;
-		    case PIXMAN_r5g6b5:
-#ifdef USE_MMX
-			if (pixman_have_mmx())
-			{
-			    srcRepeat = FALSE;
-			    func = fbCompositeSolid_nx0565mmx;
-			}
-#endif
-			break;
-		    default:
-			break;
-		    }
-		    break;
-		}
-	    }
-	    else if (! srcRepeat)
-	    {
-		/*
-		 * Formats without alpha bits are just Copy with Over
-		 */
-		if (pSrc->bits.format == pDst->bits.format && !PIXMAN_FORMAT_A(pSrc->bits.format))
-		{
-#ifdef USE_MMX
-		    if (pixman_have_mmx() &&
-			(pSrc->bits.format == PIXMAN_x8r8g8b8 || pSrc->bits.format == PIXMAN_x8b8g8r8))
-			func = fbCompositeCopyAreammx;
-		    else
-#endif
-#if 0
-		    /* FIXME */
-			func = fbCompositeSrcSrc_nxn
-#endif
-			    ;
-		}
-		else switch (pSrc->bits.format) {
-		case PIXMAN_a8r8g8b8:
-		    switch (pDst->bits.format) {
-		    case PIXMAN_a8r8g8b8:
-		    case PIXMAN_x8r8g8b8:
-#ifdef USE_MMX
-			if (pixman_have_mmx())
-			    func = fbCompositeSrc_8888x8888mmx;
-			else
-#endif
-			    func = fbCompositeSrc_8888x8888;
-			break;
-		    case PIXMAN_r8g8b8:
-			func = fbCompositeSrc_8888x0888;
-			break;
-		    case PIXMAN_r5g6b5:
-#ifdef USE_MMX
-			if (pixman_have_mmx())
-			    func = fbCompositeSrc_8888x0565mmx;
-			else
-#endif
-			    func = fbCompositeSrc_8888x0565;
-			break;
-		    default:
-			break;
-		    }
-		    break;
-		case PIXMAN_x8r8g8b8:
-		    switch (pDst->bits.format) {
-		    case PIXMAN_x8r8g8b8:
-#ifdef USE_MMX
-			if (pixman_have_mmx())
-			    func = fbCompositeCopyAreammx;
-#endif
-			break;
-		    default:
-			break;
-		    }
-		case PIXMAN_x8b8g8r8:
-		    switch (pDst->bits.format) {
-		    case PIXMAN_x8b8g8r8:
-#ifdef USE_MMX
-			if (pixman_have_mmx())
-			    func = fbCompositeCopyAreammx;
-#endif
-			break;
-		    default:
-			break;
-		    }
-		    break;
-		case PIXMAN_a8b8g8r8:
-		    switch (pDst->bits.format) {
-		    case PIXMAN_a8b8g8r8:
-		    case PIXMAN_x8b8g8r8:
-#ifdef USE_MMX
-			if (pixman_have_mmx())
-			    func = fbCompositeSrc_8888x8888mmx;
-			else
-#endif
-			    func = fbCompositeSrc_8888x8888;
-			break;
-		    case PIXMAN_b8g8r8:
-			func = fbCompositeSrc_8888x0888;
-			break;
-		    case PIXMAN_b5g6r5:
-#ifdef USE_MMX
-			if (pixman_have_mmx())
-			    func = fbCompositeSrc_8888x0565mmx;
-			else
-#endif
-			    func = fbCompositeSrc_8888x0565;
-			break;
-		    default:
-			break;
-		    }
-		    break;
-		default:
-		    break;
-		}
-	    }
-	}
-	break;
-    case PIXMAN_OP_ADD:
-	if (pMask == 0)
-	{
-	    switch (pSrc->bits.format) {
-	    case PIXMAN_a8r8g8b8:
-		switch (pDst->bits.format) {
-		case PIXMAN_a8r8g8b8:
-#ifdef USE_MMX
-		    if (pixman_have_mmx())
-			func = fbCompositeSrcAdd_8888x8888mmx;
-		    else
-#endif
-			func = fbCompositeSrcAdd_8888x8888;
-		    break;
-		default:
-		    break;
-		}
-		break;
-	    case PIXMAN_a8b8g8r8:
-		switch (pDst->bits.format) {
-		case PIXMAN_a8b8g8r8:
-#ifdef USE_MMX
-		    if (pixman_have_mmx())
-			func = fbCompositeSrcAdd_8888x8888mmx;
-		    else
-#endif
-			func = fbCompositeSrcAdd_8888x8888;
-		    break;
-		default:
-		    break;
-		}
-		break;
-	    case PIXMAN_a8:
-		switch (pDst->bits.format) {
-		case PIXMAN_a8:
-#ifdef USE_MMX
-		    if (pixman_have_mmx())
-			func = fbCompositeSrcAdd_8000x8000mmx;
-		    else
-#endif
-			func = fbCompositeSrcAdd_8000x8000;
-		    break;
-		default:
-		    break;
-		}
-		break;
-	    case PIXMAN_a1:
-		switch (pDst->bits.format) {
-		case PIXMAN_a1:
-#if 0
-		    /* FIXME */
-		    func = fbCompositeSrcAdd_1000x1000;
-#endif
-		    break;
-		default:
-		    break;
-		}
-		break;
-	    default:
-		break;
-	    }
-	}
-	else
-	{
-	    if (can_get_solid (pSrc)		&&
-		pMask->bits.format == PIXMAN_a8	&&
-		pDst->bits.format == PIXMAN_a8)
-	    {
+	    func = info->func;
+
+	    if (info->src_format == PIXMAN_solid)
 		srcRepeat = FALSE;
-#ifdef USE_MMX
-		if (pixman_have_mmx())
-		    func = fbCompositeSrcAdd_8888x8x8mmx;
-		else
-#endif
-		    func = fbCompositeSrcAdd_8888x8x8;
-	    }
-	}
-	break;
-    case PIXMAN_OP_SRC:
-	if (pMask)
-	{
-#ifdef USE_MMX
-	    if (can_get_solid (pSrc))
-	    {
-		if (pMask->bits.format == PIXMAN_a8)
-		{
-		    switch (pDst->bits.format)
-		    {
-		    case PIXMAN_a8r8g8b8:
-		    case PIXMAN_x8r8g8b8:
-		    case PIXMAN_a8b8g8r8:
-		    case PIXMAN_x8b8g8r8:
-			if (pixman_have_mmx())
-			{
-			    srcRepeat = FALSE;
-			    func = fbCompositeSolidMaskSrc_nx8x8888mmx;
-			}
-			break;
-		    default:
-			break;
-		    }
-		}
-	    }
-#endif
-	}
-	else
-	{
-	    if (can_get_solid (pSrc))
-	    {
-		switch (pDst->bits.format)
-		{
-		case PIXMAN_a8r8g8b8:
-		case PIXMAN_x8r8g8b8:
-		case PIXMAN_a8b8g8r8:
-		case PIXMAN_x8b8g8r8:
-		case PIXMAN_a8:
-		case PIXMAN_r5g6b5:
-		    func = fbCompositeSolidFill;
-		    srcRepeat = FALSE;
-		    break;
-		default:
-		    break;
-		}
-	    }
-	    else if (pSrc->bits.format == pDst->bits.format)
-	    {
-#ifdef USE_MMX
-		if (pSrc->bits.bits != pDst->bits.bits && pixman_have_mmx() &&
-		    (PIXMAN_FORMAT_BPP (pSrc->bits.format) == 16 ||
-		     PIXMAN_FORMAT_BPP (pSrc->bits.format) == 32))
-		    func = fbCompositeCopyAreammx;
-		else
-#endif
-		    /* FIXME */
-#if 0
-		    func = fbCompositeSrcSrc_nxn
-#endif
-			;
-	    }
-	    else if (((pSrc->bits.format == PIXMAN_a8r8g8b8 ||
-		       pSrc->bits.format == PIXMAN_x8r8g8b8) &&
-		      pDst->bits.format == PIXMAN_x8r8g8b8)	||
-		     ((pSrc->bits.format == PIXMAN_a8b8g8r8 ||
-		       pSrc->bits.format == PIXMAN_x8b8g8r8) &&
-		      pDst->bits.format == PIXMAN_x8b8g8r8))
-	    {
-		func = fbCompositeSrc_8888xx888;
-	    }
-	}
-	break;
-    case PIXMAN_OP_IN:
-	if (pSrc->bits.format == PIXMAN_a8 &&
-	    pDst->bits.format == PIXMAN_a8 &&
-	    !pMask)
-	{
-#ifdef USE_MMX
-	    if (pixman_have_mmx())
-		func = fbCompositeIn_8x8mmx;
-	    else
-#endif
-		func = fbCompositeSrcIn_8x8;
-	}
-	else if (srcRepeat && pMask && !pMask->common.component_alpha &&
-		 (pSrc->bits.format == PIXMAN_a8r8g8b8 ||
-		  pSrc->bits.format == PIXMAN_a8b8g8r8)   &&
-		 (pMask->bits.format == PIXMAN_a8)        &&
-		 pDst->bits.format == PIXMAN_a8)
-	{
-#ifdef USE_MMX
-	    if (pixman_have_mmx())
-		func = fbCompositeIn_nx8x8mmx;
-	    else
-#endif
-		func = fbCompositeSolidMaskIn_nx8x8;
-	    srcRepeat = FALSE;
-	}
-       break;
-    default:
-	break;
-    }
 
+	    if (info->mask_format == PIXMAN_solid	||
+		info->flags & NEED_SOLID_MASK)
+	    {
+		maskRepeat = FALSE;
+	    }
+	}
+    }
+    
     if ((srcRepeat			&&
 	 pSrc->bits.width == 1		&&
 	 pSrc->bits.height == 1)	||
@@ -2034,7 +1746,8 @@ pixman_image_composite (pixman_op_t      op,
 	func = NULL;
     }
 
-    if (!func) {
+    if (!func)
+    {
 	func = pixman_image_composite_rect;
 
 	/* CompositeGeneral optimizes 1x1 repeating images itself */

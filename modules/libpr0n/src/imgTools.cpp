@@ -233,7 +233,8 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = decoder->WriteFrom(aInStr, length, &written);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(written == length, "decoder didn't eat all of its vegetables");
+  if (written != length)
+    NS_WARNING("decoder didn't eat all of its vegetables");
   rv = decoder->Flush();
   NS_ENSURE_SUCCESS(rv, rv);
   rv = decoder->Close();
@@ -287,6 +288,8 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
   nsCOMPtr<gfxIImageFrame> frame;
   rv = aContainer->GetFrameAt(0, getter_AddRefs(frame));
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!frame)
+    return NS_ERROR_NOT_AVAILABLE;
 
   PRInt32 w,h;
   frame->GetWidth(&w);

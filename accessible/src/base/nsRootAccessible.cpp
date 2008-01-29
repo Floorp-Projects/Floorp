@@ -430,7 +430,7 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
 
   // No frames or iframes, so we can fire the doc load finished event early
   FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_INTERNAL_LOAD, aDocNode,
-                          nsnull, eRemoveDupes);
+                          eRemoveDupes);
 }
 
 PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
@@ -519,7 +519,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   }
   else if (mCurrentARIAMenubar) {
     nsCOMPtr<nsIAccessibleEvent> menuEndEvent =
-      new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar, nsnull, PR_FALSE);
+      new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar, PR_FALSE);
     if (menuEndEvent) {
       FireDelayedAccessibleEvent(menuEndEvent, eAllowDupes, PR_FALSE);
     }
@@ -543,7 +543,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   }
 
   FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                          finalFocusNode, nsnull, eRemoveDupes, aIsAsynch);
+                          finalFocusNode, eRemoveDupes, aIsAsynch);
 
   return PR_TRUE;
 }
@@ -597,6 +597,9 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   aEvent->GetType(eventType);
   nsAutoString localName;
   aTargetNode->GetLocalName(localName);
+#ifdef MOZ_XUL
+  PRBool isTree = localName.EqualsLiteral("tree");
+#endif
 #ifdef DEBUG_A11Y
   // Very useful for debugging, please leave this here.
   if (eventType.EqualsLiteral("AlertActive")) {
@@ -642,14 +645,53 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     return NS_OK;
   }
 
+#ifdef MOZ_XUL
   if (eventType.EqualsLiteral("TreeViewChanged")) { // Always asynch, always from user input
-    if (!localName.EqualsLiteral("tree"))
+    if (!isTree)
       return NS_OK;
 
     nsCOMPtr<nsIContent> treeContent = do_QueryInterface(aTargetNode);
     nsAccEvent::PrepareForEvent(aTargetNode, PR_TRUE);
     return accService->InvalidateSubtreeFor(eventShell, treeContent,
                                             nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE);
+  }
+#endif
+
+  if (eventType.EqualsLiteral("popuphiding")) {
+    // If accessible focus was on or inside popup that closes,
+    // then restore it to true current focus.
+    // This is the case when we've been getting DOMMenuItemActive events
+    // inside of a combo box that closes. The real focus is on the combo box.
+    // It's also the case when a popup gets focus in ATK -- when it closes
+    // we need to fire an event to restore focus to where it was
+    if (!gLastFocusedNode) {
+      return NS_OK;
+    }
+    if (gLastFocusedNode != aTargetNode) {
+      // Was not focused on popup
+      nsCOMPtr<nsIDOMNode> parentOfFocus;
+      gLastFocusedNode->GetParentNode(getter_AddRefs(parentOfFocus));
+      if (parentOfFocus != aTargetNode) {
+        return NS_OK;  // And was not focused on an item inside the popup
+      }
+    }
+    // Focus was on or inside of a popup that's being hidden
+    FireCurrentFocusEvent();
+    return NS_OK;
+  }
+
+  if (aTargetNode == mDOMNode && mDOMNode != gLastFocusedNode && eventType.EqualsLiteral("focus")) {
+    // Got focus event for the window, we will make sure that an accessible
+    // focus event for initial focus is fired. We do this on a short timer
+    // because the initial focus may not have been set yet.
+    if (!mFireFocusTimer) {
+      mFireFocusTimer = do_CreateInstance("@mozilla.org/timer;1");
+    }
+    if (mFireFocusTimer) {
+      mFireFocusTimer->InitWithFuncCallback(FireFocusCallback, this,
+                                            0, nsITimer::TYPE_ONE_SHOT);
+    }
+    return NS_OK;
   }
 
   nsCOMPtr<nsIAccessible> accessible;
@@ -659,8 +701,9 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   if (!privAcc)
     return NS_OK;
 
+#ifdef MOZ_XUL
   if (eventType.EqualsLiteral("TreeRowCountChanged")) {
-    if (!localName.EqualsLiteral("tree"))
+    if (!isTree)
       return NS_OK;
 
     nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
@@ -685,6 +728,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
 
     return treeAccCache->InvalidateCache(index, count);
   }
+#endif
 
   if (eventType.EqualsLiteral("RadioStateChange")) {
     PRUint32 state = State(accessible);
@@ -723,7 +767,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   nsCOMPtr<nsIAccessible> treeItemAccessible;
 #ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item
-  if (localName.EqualsLiteral("tree")) {
+  if (isTree) {
     nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
       do_QueryInterface(aTargetNode);
     if (multiSelect) {
@@ -779,19 +823,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else
 #endif
   if (eventType.EqualsLiteral("focus")) {
-    if (aTargetNode == mDOMNode && mDOMNode != gLastFocusedNode) {
-      // Got focus event for the window, we will make sure that an accessible
-      // focus event for initial focus is fired. We do this on a short timer
-      // because the initial focus may not have been set yet.
-      if (!mFireFocusTimer) {
-        mFireFocusTimer = do_CreateInstance("@mozilla.org/timer;1");
-      }
-      if (mFireFocusTimer) {
-        mFireFocusTimer->InitWithFuncCallback(FireFocusCallback, this,
-                                              0, nsITimer::TYPE_ONE_SHOT);
-      }
-    }
-
     // Keep a reference to the target node. We might want to change
     // it to the individual radio button or selected item, and send
     // the focus event to that.
@@ -847,28 +878,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       nsAccUtils::FireAccEvent(event, accessible);
     }
   }
-
-  else if (eventType.EqualsLiteral("popuphiding")) {
-    // If accessible focus was on or inside popup that closes,
-    // then restore it to true current focus.
-    // This is the case when we've been getting DOMMenuItemActive events
-    // inside of a combo box that closes. The real focus is on the combo box.
-    // It's also the case when a popup gets focus in ATK -- when it closes
-    // we need to fire an event to restore focus to where it was
-    if (!gLastFocusedNode) {
-      return NS_OK;
-    }
-    if (gLastFocusedNode != aTargetNode) {
-      // Was not focused on popup
-      nsCOMPtr<nsIDOMNode> parentOfFocus;
-      gLastFocusedNode->GetParentNode(getter_AddRefs(parentOfFocus));
-      if (parentOfFocus != aTargetNode) {
-        return NS_OK;  // And was not focused on an item inside the popup
-      }
-    }
-    // Focus was on or inside of a popup that's being hidden
-    FireCurrentFocusEvent();
-  }
   else if (eventType.EqualsLiteral("DOMMenuInactive")) {
     if (Role(accessible) == nsIAccessibleRole::ROLE_MENUPOPUP) {
       nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
@@ -877,6 +886,11 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   }
   else if (eventType.EqualsLiteral("DOMMenuItemActive")) {
     if (!treeItemAccessible) {
+#ifdef MOZ_XUL
+      if (isTree) {
+        return NS_OK; // Tree with nothing selected
+      }
+#endif
       nsCOMPtr<nsPIAccessNode> menuAccessNode = do_QueryInterface(accessible);
       NS_ENSURE_TRUE(menuAccessNode, NS_ERROR_FAILURE);
       nsIFrame* menuFrame = menuAccessNode->GetFrame();

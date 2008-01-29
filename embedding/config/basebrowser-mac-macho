@@ -162,6 +162,7 @@ components/pipnss.xpt
 chrome/pipnss.jar
 defaults/pref/security-prefs.js
 libnss3.dylib
+libnssutil3.dylib
 libsmime3.dylib
 libsoftokn3.chk
 libsoftokn3.dylib

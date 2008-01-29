@@ -1,9 +1,6 @@
 /* Sidebars */
 .sidebar-placesTree {
-  -moz-appearance: none;
-  border: 0;
   margin: 0;
-  border-top: 1px solid ThreeDShadow;
 }
 
 .sidebar-placesTreechildren::-moz-tree-cell(leaf) ,
@@ -38,7 +35,7 @@ treechildren::-moz-tree-image(title, container) {
 }
 
 treechildren::-moz-tree-image(title, container, livemark) {
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
   -moz-image-region: auto;
 }
 

@@ -254,6 +254,124 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   padding: 5px !important;
 }
 
+/* ::::: unified back and forward buttons - see Bug 386228 ::::: */
+
+/* wrapper containing back, forward, and dropmarker, when unified with keyhole icons */
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button {
+  -moz-padding-start: 2px;
+  -moz-padding-end: 2px;
+}
+
+/* unified back button with keyhole icons */
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #back-button {
+  -moz-image-region: rect(0px 394px 34px 360px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #back-button:not([disabled="true"]):hover {
+  -moz-image-region: rect(34px 394px 68px 360px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #back-button[disabled="true"] {
+  -moz-image-region: rect(68px 394px 102px 360px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #back-button:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(102px 394px 136px 360px);
+}
+
+/* unified back button with keyhole icons, RTL version */
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #back-button[chromedir="rtl"] {
+  -moz-image-region: rect(0px 504px 34px 470px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #back-button[chromedir="rtl"]:not([disabled="true"]):hover {
+  -moz-image-region: rect(34px 504px 68px 470px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #back-button[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(68px 504px 102px 470px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #back-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(102px 504px 136px 470px);
+}
+
+/* unified forward button with keyhole icons */
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #forward-button {
+  -moz-image-region: rect(3px 420px 31px 394px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #forward-button:not([disabled="true"]):hover {
+  -moz-image-region: rect(37px 420px 65px 394px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #forward-button[disabled="true"] {
+  -moz-image-region: rect(71px 420px 99px 394px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #forward-button:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(105px 420px 133px 394px);
+}
+
+/* unified forward button with keyhole icons, RTL version */
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #forward-button[chromedir="rtl"] {
+  -moz-image-region: rect(3px 470px 31px 432px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #forward-button[chromedir="rtl"]:not([disabled="true"]):hover {
+  -moz-image-region: rect(37px 470px 65px 432px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #forward-button[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(71px 470px 99px 432px);
+}
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > #forward-button[chromedir="rtl"]:not([disabled="true"]):hover:active {
+  -moz-image-region: rect(105px 470px 133px 432px);
+}
+
+/* unified button with keyhole icons never shows a border and hence doesn't need padding to offset it either */
+/* this rule covers both the unified forward and unified back buttons */
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-1 > .toolbarbutton-menubutton-button:hover,
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-1 > .toolbarbutton-menubutton-button:hover:active {
+  border: none;
+  padding: 0px;
+}
+
+/* dropmarker for unified back and forward buttons with keyhole icons */
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-menubutton-dropmarker {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-image-region: rect(3px 432px 31px 420px);
+  padding: 0px;
+}
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]):hover {
+  -moz-image-region: rect(37px 432px 65px 420px);
+}
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-menubutton-dropmarker[disabled="true"] {
+  -moz-image-region: rect(71px 432px 99px 420px);
+  padding: 0px !important; /* !important to overcome toolbarbutton.css and dropmarker.css */
+}
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-menubutton-dropmarker:hover:active {
+  -moz-image-region: rect(105px 432px 133px 420px);
+}
+
+/* unified dropmarker with keyhole icons, RTL version */
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-menubutton-dropmarker[chromedir="rtl"] {
+  -moz-image-region: rect(3px 444px 31px 432px);
+}
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-menubutton-dropmarker[chromedir="rtl"]:not([disabled="true"]):hover {
+  -moz-image-region: rect(37px 444px 65px 432px);
+}
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-menubutton-dropmarker[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(71px 444px 99px 432px);
+}
+
+toolbar[iconsize="large"][mode="icons"] > #unified-back-forward-button > .toolbarbutton-menubutton-dropmarker[chromedir="rtl"]:hover:active {
+  -moz-image-region: rect(105px 444px 133px 432px);
+}
+
 /* ::::: 24px primary toolbar buttons ::::: */
 
 toolbar:not([iconsize="small"]) .toolbarbutton-1 .toolbarbutton-icon {
@@ -1447,12 +1565,41 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   -moz-margin-end: 4px;
 }
 
-#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-textbox-container,
-#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-textbox-container {
-  background-color: #F5F6BE; /* #F7F898; */
+/* Secure site coloring */
+#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-textbox-container ,
+#urlbar[level="high"][pageproxystate="valid"] > .autocomplete-history-dropmarker ,
+#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-textbox-container ,
+#urlbar[level="low"][pageproxystate="valid"] > .autocomplete-history-dropmarker {
+  background-color: #F5F6BE;
   color: #000000;
 }
 
+/* Location bar dropmarker */
+#urlbar > .autocomplete-history-dropmarker {
+  -moz-appearance: none;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  width: auto;
+}
+
+#urlbar > .autocomplete-history-dropmarker:hover {
+  background-color: -moz-dialog !important;
+  -moz-appearance: toolbox;
+  outline: 1px solid ThreeDShadow;
+  -moz-margin-start: 1px;
+}
+
+#urlbar > .autocomplete-history-dropmarker > .dropmarker-icon {
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
+}
+
+#urlbar > .autocomplete-history-dropmarker:hover > .dropmarker-icon {
+  -moz-margin-start: 5px;
+}
+
+/* Feed icon */
 #feed-button, #feed-button > .button-box,
 #feed-button:hover:active > .button-box {
   padding: 0px;
@@ -1563,6 +1710,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   /* currently, the identity box is always LTR */
   -moz-outline-radius-topleft: 2px;
   -moz-outline-radius-bottomleft: 2px;
+  -moz-user-focus: normal;
+}
+
+#identity-box:focus {
+  outline: 1px dotted -moz-DialogText;
 }
 
 #identity-box:hover {
@@ -1667,4 +1819,13 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
     background-color: white;
     min-width: 280px;
     padding: 10px;
+}
+
+#download-monitor {
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
+}
+
+#download-monitor image {
+  height: 16px;
+  width: 16px;
 }

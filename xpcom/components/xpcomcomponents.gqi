@@ -1,0 +1,41 @@
+%import-idl "nsIEnumerator.idl"
+%import-idl "nsIComponentManager.idl"
+%import-idl "nsIServiceManager.idl"
+%import-idl "nsIWeakReference.idl"
+%import-idl "nsIInterfaceRequestor.idl"
+%import-idl "nsIComponentRegistrar.idl"
+%import-idl "nsIComponentManagerObsolete.idl"
+%import-idl "nsIStringEnumerator.idl"
+%import-idl "nsIModuleLoader.idl"
+%import-idl "nsICategoryManager.idl"
+
+%{C++
+#include "nsComponentManager.h"
+#include "nsCategoryManager.h"
+#include "nsNativeComponentLoader.h"
+%}
+
+%pseudo-iid nsIServiceManagerObsolete cf0df3b0-3401-11d2-8163-006008119d7a
+
+NS_IMPL_ISUPPORTS3(PLDHashTableEnumeratorImpl,
+                   nsIBidirectionalEnumerator,
+                   nsIEnumerator,
+                   nsISimpleEnumerator)
+
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsComponentManagerImpl,
+                              nsIComponentManager,
+                              nsIServiceManager,
+                              nsISupportsWeakReference,
+                              nsIInterfaceRequestor,
+                              nsIComponentRegistrar,
+                              nsIServiceManagerObsolete,
+                              nsIComponentManagerObsolete)
+
+NS_IMPL_ISUPPORTS1(nsCategoryManagerFactory, nsIFactory)
+
+NS_IMPL_ISUPPORTS2(BaseStringEnumerator, nsISimpleEnumerator, nsIUTF8StringEnumerator)
+
+NS_IMPL_QUERY_INTERFACE1(nsNativeModuleLoader, 
+                         nsIModuleLoader)
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCategoryManager, nsICategoryManager)

@@ -1181,7 +1181,7 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
 {
   RECT r;
 
-  if (Msg == WM_ACTIVATE)
+  if (Msg == WM_ACTIVATEAPP)
 #ifndef WINCE
     // don't care about activation/deactivation
     return PR_FALSE;
@@ -2498,6 +2498,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
     case eCursor_ew_resize:
       newCursor = ::LoadCursor(NULL, IDC_SIZEWE);
+      break;
+
+    case eCursor_none:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_NONE));
       break;
 
     default:
@@ -4624,13 +4628,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         gJustGotDeactivate = PR_FALSE;
         result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
       }
-
-#ifdef ACCESSIBILITY
-      if (nsWindow::gIsAccessibilityOn) {
-        // Create it for the first time so that it can start firing events
-        nsCOMPtr<nsIAccessible> rootAccessible = GetRootAccessible();
-      }
-#endif
 
 #ifdef WINCE
       // On Windows CE, we have a window that overlaps

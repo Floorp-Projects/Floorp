@@ -568,10 +568,12 @@ _cairo_traps_contain (cairo_traps_t *traps, double x, double y)
 void
 _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
 {
-    *extents = traps->extents;
+    if (traps->num_traps == 0) {
+	extents->p1.x = extents->p1.y = _cairo_fixed_from_int (0);
+	extents->p2.x = extents->p2.y = _cairo_fixed_from_int (0);
+    } else
+	*extents = traps->extents;
 }
-
-#define STACK_BOXES_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof(cairo_box_int_t)))
 
 /**
  * _cairo_traps_extract_region:
@@ -591,7 +593,7 @@ cairo_int_status_t
 _cairo_traps_extract_region (cairo_traps_t  *traps,
 			     cairo_region_t *region)
 {
-    cairo_box_int_t stack_boxes[STACK_BOXES_LEN];
+    cairo_box_int_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (cairo_box_int_t)];
     cairo_box_int_t *boxes = stack_boxes;
     int i, box_count;
     cairo_int_status_t status;

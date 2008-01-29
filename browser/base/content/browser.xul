@@ -106,7 +106,8 @@
     <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
     <panel id="editBookmarkPanel" orient="vertical" hidden="true"
-           onpopupshown="PlacesCommandHook.editBookmarkPanelShown();">
+           onpopupshown="PlacesCommandHook.editBookmarkPanelShown();"
+           label="&bookmarkPageCmd2.label;">
       <vbox id="editBookmarkPanelContent" flex="1"/>
       <hbox flex="1">
         <spacer flex="1"/>
@@ -137,20 +138,22 @@
     </popup>
 
     <popup id="contentAreaContextMenu"
-           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this) { gContextMenu = null; }">
+           onpopupshowing="if (event.target != this) return true; updateEditUIVisibility(); gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
+           onpopuphiding="if (event.target == this) { gContextMenu = null; updateEditUIVisibility(); }">
 #include browser-context.inc
     </popup>
 
     <popup id="placesContext"/>
 
     <!-- Popup for site identity information -->
-    <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true">
+    <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
+           onpopupshown="document.getElementById('identity-popup-more-info-link').focus();"
+           onpopuphidden="focusAndSelectUrlBar();" norestorefocus="true">
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box">
           <!-- Title Bar -->
-          <label id="identity-popup-title"/>
+          <label id="identity-popup-title" control="identity-popup"/>
           <!-- Content area -->
           <description id="identity-popup-content"/>
           <description id="identity-popup-content-supplemental"/>
@@ -167,6 +170,7 @@
           <label id="identity-popup-more-info-link"
                  class="text-link plain"
                  value="&identity.moreInfoLinkText;"
+                 onblur="getIdentityHandler().hideIdentityPopup();"
                  onclick="getIdentityHandler().handleMoreInfoClick(event);"/>
         </vbox>
       </hbox>
@@ -269,8 +273,9 @@
                  pageproxystate="invalid">
           <!-- Use onclick instead of normal popup= syntax since the popup
                code fires onmousedown, and hence eats our favicon drag events -->
-          <box id="identity-box"
-               onclick="getIdentityHandler().handleIdentityClick(event);">
+          <box id="identity-box" role="button"
+               onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
+               onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
             <hbox align="center">
               <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
                 <image id="page-proxy-button"
@@ -465,6 +470,9 @@
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="statusbar-display" label="" flex="1"/>
+    <statusbarpanel id="download-monitor" class="statusbarpanel-iconic-text"
+                    tooltiptext="&downloadMonitor.tooltip;" hidden="true"
+                    ondblclick="doCommand();" command="Tools:Downloads"/>
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>

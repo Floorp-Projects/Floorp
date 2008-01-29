@@ -741,8 +741,7 @@ void GetHTMLCharset(guchar * data, PRInt32 dataLength, nsCString& str)
         return;
     }
     // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
-    nsDependentCString htmlStr =
-        nsDependentCString((const char *)data, dataLength);
+    const nsDependentCString htmlStr((const char *)data, dataLength);
     nsACString::const_iterator start, end;
     htmlStr.BeginReading(start);
     htmlStr.EndReading(end);

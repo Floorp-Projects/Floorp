@@ -201,6 +201,12 @@ public:
                                        nsIFrame* aCommonAncestor = nsnull);
 
   /**
+   * GetLastContinuationWithChild gets the last continuation in aFrame's chain
+   * that has a child, or the first continuation if the frame has no children.
+   */
+  static nsIFrame* GetLastContinuationWithChild(nsIFrame* aFrame);
+
+  /**
    * GetLastSibling simply finds the last sibling of aFrame, or returns nsnull if
    * aFrame is null.
    */

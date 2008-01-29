@@ -29,6 +29,7 @@
 #  define BITMAP_BIT_ORDER LSBFirst
 #endif
 
+#undef DEBUG
 #define DEBUG 0
 
 #if defined (__GNUC__)
@@ -41,16 +42,25 @@
 
 #ifndef INT16_MIN
 # define INT16_MIN              (-32767-1)
+#endif
+
+#ifndef INT16_MAX
 # define INT16_MAX              (32767)
 #endif
 
 #ifndef INT32_MIN
 # define INT32_MIN              (-2147483647-1)
+#endif
+
+#ifndef INT32_MAX
 # define INT32_MAX              (2147483647)
 #endif
 
 #ifndef UINT32_MIN
 # define UINT32_MIN             (0)
+#endif
+
+#ifndef UINT32_MAX
 # define UINT32_MAX             (4294967295U)
 #endif
 
@@ -750,7 +760,7 @@ union pixman_image
 
 #define MAX_ALPHA(n)	((1 << (n)) - 1)
 #define N_Y_FRAC(n)	((n) == 1 ? 1 : (1 << ((n)/2)) - 1)
-#define N_X_FRAC(n)	((1 << ((n)/2)) + 1)
+#define N_X_FRAC(n)	((n) == 1 ? 1 : (1 << ((n)/2)) + 1)
 
 #define STEP_Y_SMALL(n)	(pixman_fixed_1 / N_Y_FRAC(n))
 #define STEP_Y_BIG(n)	(pixman_fixed_1 - (N_Y_FRAC(n) - 1) * STEP_Y_SMALL(n))

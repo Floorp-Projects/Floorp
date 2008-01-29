@@ -597,9 +597,14 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
           // are telling GFX we want to print silent
           printSilently = PR_TRUE;
         }
+        // The user might have changed shrink-to-fit in the print dialog, so update our copy of its state
+        mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
       } else {
         rv = NS_ERROR_GFX_NO_PRINTROMPTSERVICE;
       }
+    } else {
+      // Call any code that requires a run of the event loop.
+      rv = mPrt->mPrintSettings->SetupSilentPrinting();
     }
     // Check explicitly for abort because it's expected
     if (rv == NS_ERROR_ABORT) 

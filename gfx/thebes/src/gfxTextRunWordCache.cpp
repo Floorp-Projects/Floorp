@@ -37,10 +37,29 @@
 
 #include "gfxTextRunWordCache.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 /**
  * Cache individual "words" (strings delimited by white-space or white-space-like
  * characters that don't involve kerning or ligatures) in textruns.
-  */
+ *  
+ * The characters treated as word boundaries are defined by IsWordBoundary
+ * below. The characters are: space, NBSP, and all the characters
+ * defined by gfxFontGroup::IsInvalidChar. The latter are all converted
+ * to invisible missing glyphs in this code. Thus, this class ensures
+ * that none of those invalid characters are ever passed to platform
+ * textrun implementations.
+ * 
+ * Some platforms support marks combining with spaces to form clusters.
+ * In such cases we treat "before the space" as a word boundary but
+ * "after the space" is not a word boundary; words with a leading space
+ * are kept out of the cache. Also, words at the start of text, which start
+ * with combining marks that would combine with a space if there was one,
+ * are also kept out of the cache.
+ */
+
 class TextRunWordCache {
 public:
     TextRunWordCache() {
@@ -82,6 +101,10 @@ public:
      * is deleted! The text in the textrun must still be valid.
      */
     void RemoveTextRun(gfxTextRun *aTextRun);
+
+#ifdef DEBUG
+    void Dump();
+#endif
 
 protected:
     struct CacheHashKey {
@@ -151,13 +174,17 @@ protected:
                       PRUint32 aStart, PRUint32 aEnd, PRUint32 aHash,
                       nsTArray<DeferredWord>* aDeferredWords);
     void FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
-                       gfxContext *aContext,
+                       const gfxFontGroup::Parameters *aParams,
                        const nsTArray<DeferredWord>& aDeferredWords,
                        PRBool aSuccessful);
     void RemoveWord(gfxTextRun *aTextRun, PRUint32 aStart,
                     PRUint32 aEnd, PRUint32 aHash);    
 
     nsTHashtable<CacheHashEntry> mCache;
+    
+#ifdef DEBUG
+    static PLDHashOperator PR_CALLBACK CacheDumpEntry(CacheHashEntry* aEntry, void* userArg);
+#endif
 };
 
 static PRLogModuleInfo *gWordCacheLog = PR_NewLogModule("wordCache");
@@ -295,7 +322,7 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
  */
 void
 TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
-                                gfxContext *aContext,
+                                const gfxFontGroup::Parameters *aParams,
                                 const nsTArray<DeferredWord>& aDeferredWords,
                                 PRBool aSuccessful)
 {
@@ -310,23 +337,37 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
         gfxTextRun *source = word->mSourceTextRun;
         if (!source) {
             source = aNewRun;
-            // we created a cache entry for this word based on the assumption
+        }
+        // If the word starts inside a cluster we don't want this word
+        // in the cache, so we'll remove the associated cache entry
+        PRBool wordStartsInsideCluster =
+            !source->IsClusterStart(word->mSourceOffset);
+        if (source == aNewRun) {
+            // We created a cache entry for this word based on the assumption
             // that the word matches GetFontAt(0). If this assumption is false,
             // we need to remove that cache entry and replace it with an entry
             // keyed off the fontgroup.
-            if (!aSuccessful ||
-                GetWordFontOrGroup(aNewRun, word->mSourceOffset, word->mLength) != font) {
+            PRBool rekeyWithFontGroup =
+                GetWordFontOrGroup(aNewRun, word->mSourceOffset, word->mLength) != font;
+            if (!aSuccessful || wordStartsInsideCluster || rekeyWithFontGroup) {
+                // We need to remove the current placeholder cache entry
                 CacheHashKey key(aTextRun, font, word->mDestOffset, word->mLength,
                                  word->mHash);
                 NS_ASSERTION(mCache.GetEntry(key),
                              "This entry should have been added previously!");
                 mCache.RemoveEntry(key);
+#ifdef DEBUG
+                --aTextRun->mCachedWords;
+#endif
                 PR_LOG(gWordCacheLog, PR_LOG_DEBUG, ("%p(%d-%d,%d): removed using font", aTextRun, word->mDestOffset, word->mLength, word->mHash));
                 
-                if (aSuccessful) {
+                if (aSuccessful && !wordStartsInsideCluster) {
                     key.mFontOrGroup = fontGroup;
                     CacheHashEntry *groupEntry = mCache.PutEntry(key);
                     if (groupEntry) {
+#ifdef DEBUG
+                        ++aTextRun->mCachedWords;
+#endif
                         PR_LOG(gWordCacheLog, PR_LOG_DEBUG, ("%p(%d-%d,%d): added using fontgroup", aTextRun, word->mDestOffset, word->mLength, word->mHash));
                         groupEntry->mTextRun = aTextRun;
                         groupEntry->mWordOffset = word->mDestOffset;
@@ -341,9 +382,38 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
             // Copy the word. If the source is aNewRun, then
             // allow CopyGlyphDataFrom to steal the internal data of
             // aNewRun since that's only temporary anyway.
-            aTextRun->CopyGlyphDataFrom(source,
-                word->mSourceOffset, word->mLength, word->mDestOffset,
-                source == aNewRun);
+            PRUint32 sourceOffset = word->mSourceOffset;
+            PRUint32 destOffset = word->mDestOffset;
+            PRUint32 length = word->mLength;
+            nsAutoPtr<gfxTextRun> tmpTextRun;
+            PRBool stealData = source == aNewRun;
+            if (wordStartsInsideCluster) {
+                NS_ASSERTION(sourceOffset > 0, "How can the first character be inside a cluster?");
+                if (destOffset > 0 && IsBoundarySpace(aTextRun->GetChar(destOffset - 1))) {
+                    // We should copy over data for the preceding space
+                    // as well. The glyphs have probably been attached
+                    // to that character.
+                    --sourceOffset;
+                    --destOffset;
+                    ++length;
+                } else {
+                    // URK! This case sucks! We have combining marks
+                    // at the start of the text. We had to prepend a space
+                    // just so we could detect these are combining marks
+                    // (so we can keep this "word" out of the cache).
+                    // But now the data in aNewRun is no use to us. We
+                    // need to find out what the platform would do
+                    // if the marks were at the start of the text.
+                    tmpTextRun = aNewRun->GetFontGroup()->MakeTextRun(
+                        aTextRun->GetTextUnicode(), length, aParams,
+                        aNewRun->GetFlags());
+                    source = tmpTextRun;
+                    sourceOffset = 0;
+                    stealData = PR_TRUE;
+                }
+            }
+            aTextRun->CopyGlyphDataFrom(source, sourceOffset, length,
+                destOffset, stealData);
             // Fill in additional spaces
             PRUint32 endCharIndex;
             if (i + 1 < aDeferredWords.Length()) {
@@ -355,7 +425,7 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
             for (charIndex = word->mDestOffset + word->mLength;
                  charIndex < endCharIndex; ++charIndex) {
                 if (IsBoundarySpace(aTextRun->GetChar(charIndex))) {
-                    aTextRun->SetSpaceGlyph(font, aContext, charIndex);
+                    aTextRun->SetSpaceGlyph(font, aParams->mContext, charIndex);
                 }
             }
         }
@@ -413,9 +483,9 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
             PRBool hit = LookupWord(textRun, font, wordStart, i, hash,
                                     deferredWords.Length() == 0 ? nsnull : &deferredWords);
             if (!hit) {
-                if (tempString.Length() > 0) {
-                    tempString.AppendElement(' ');
-                }
+                // Always put a space before the word so we can detect
+                // combining characters at the start of a word
+                tempString.AppendElement(' ');
                 PRUint32 offset = tempString.Length();
                 PRUint32 length = i - wordStart;
                 PRUnichar *chars = tempString.AppendElements(length);
@@ -455,7 +525,7 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
     newRun = aFontGroup->MakeTextRun(tempString.Elements(), tempString.Length(),
                                      &params, aFlags | gfxTextRunFactory::TEXT_IS_PERSISTENT);
 
-    FinishTextRun(textRun, newRun, aParams->mContext, deferredWords, newRun != nsnull);
+    FinishTextRun(textRun, newRun, aParams, deferredWords, newRun != nsnull);
     return textRun.forget();
 }
 
@@ -538,7 +608,7 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
     newRun = aFontGroup->MakeTextRun(tempString.Elements(), tempString.Length(),
                                      &params, aFlags | gfxTextRunFactory::TEXT_IS_PERSISTENT);
 
-    FinishTextRun(textRun, newRun, aParams->mContext, deferredWords, newRun != nsnull);
+    FinishTextRun(textRun, newRun, aParams, deferredWords, newRun != nsnull);
     return textRun.forget();
 }
 
@@ -659,6 +729,28 @@ TextRunWordCache::CacheHashEntry::HashKey(const KeyTypePointer aKey)
         aKey->mIsDoubleByteText + aKey->mIsRTL*2 + aKey->mEnabledOptionalLigatures*4 +
         aKey->mOptimizeSpeed*8;
 }
+
+#ifdef DEBUG
+PLDHashOperator PR_CALLBACK
+TextRunWordCache::CacheDumpEntry(CacheHashEntry* aEntry, void* userArg)
+{
+    FILE* output = static_cast<FILE*>(userArg);
+    if (!aEntry->mTextRun) {
+        fprintf(output, "<EMPTY>\n");
+        return PL_DHASH_NEXT;
+    }
+    fprintf(output, "Word at %x:%d => ", aEntry->mTextRun, aEntry->mWordOffset);
+    aEntry->mTextRun->Dump(output);
+    fprintf(output, " (hashed by %s)\n", aEntry->mHashedByFont ? "font" : "fontgroup");
+    return PL_DHASH_NEXT;
+}
+
+void
+TextRunWordCache::Dump()
+{
+    mCache.EnumerateEntries(CacheDumpEntry, stdout);
+}
+#endif
 
 static TextRunWordCache *gTextRunWordCache = nsnull;
 

@@ -24,6 +24,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Jeff Walden <jwalden+code@mit.edu>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -214,9 +215,9 @@
              </hbox>
            </groupbox>
 
-           <!-- Cache -->
-           <groupbox id="cacheGroup">
-             <caption label="&cache.label;"/>
+           <!-- Cache/Offline apps -->
+           <groupbox id="offlineGroup">
+             <caption label="&offlineStorage.label;"/>
 
              <hbox align="center">
                <label id="useCacheBefore"
@@ -231,7 +232,26 @@
                        label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
                        oncommand="gAdvancedPane.clearCache();"/>
              </hbox>
-           </groupbox>
+	     <hbox>
+	       <vbox flex="1">
+
+		 <label id="offlineAppsListLabel">&offlineAppsList.label;</label>
+		 <listbox id="offlineAppsList"
+			  style="height: &offlineAppsList.height;;"
+			  flex="1"
+			  aria-labelledby="offlineAppsListLabel"
+			  onselect="gAdvancedPane.offlineAppSelected(event);">
+		 </listbox>
+	       </vbox>
+	       <vbox pack="end">
+		 <button id="offlineAppsListRemove"
+			 disabled="true"
+			 label="&offlineAppsListRemove.label;"
+			 accesskey="&offlineAppsListRemove.accesskey;" 
+			 oncommand="gAdvancedPane.removeOfflineApp();"/>
+	       </vbox>
+	     </hbox>
+	   </groupbox>
         </tabpanel>
 
         <!-- Update -->
@@ -315,7 +335,7 @@
           <groupbox id="certificatesGroup">
             <caption id="CertGroupCaption" label="&certificates.label;"/>
 
-            <description id="CertSelectionDesc" control="certSelection">&certselect.description;</description>
+            <description id="CertSelectionDesc" control="certSelection">&certSelection.description;</description>
 
             <!--
               The values on these radio buttons may look like l12y issues, but

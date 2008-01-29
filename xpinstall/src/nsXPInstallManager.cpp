@@ -361,14 +361,8 @@ nsXPInstallManager::InitManagerInternal()
 
     if ( cbstatus != 0 )
     {
-        // --- inform callbacks of error
-        for (PRUint32 i = 0; i < mTriggers->Size(); i++)
-        {
-            mTriggers->SendStatus( mTriggers->Get(i)->mURL.get(), cbstatus );
-        }
-
-        // --- must delete ourselves if not continuing
-        NS_RELEASE_THIS();
+        // --- must shutdown if not continuing
+        Shutdown( cbstatus );
     }
 
     return rv;
@@ -869,7 +863,7 @@ PRBool nsXPInstallManager::VerifyHash(nsXPITriggerItem* aItem)
 }
 
 
-void nsXPInstallManager::Shutdown()
+void nsXPInstallManager::Shutdown(PRInt32 status)
 {
     if (mDlg)
     {
@@ -890,8 +884,7 @@ void nsXPInstallManager::Shutdown()
             item = (nsXPITriggerItem*)mTriggers->Get(mNextItem++);
             if ( item && !item->mURL.IsEmpty() )
             {
-                mTriggers->SendStatus( item->mURL.get(),
-                                       nsInstall::USER_CANCELLED );
+                mTriggers->SendStatus( item->mURL.get(), status );
             }
         }
 

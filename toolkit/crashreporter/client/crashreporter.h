@@ -15,6 +15,8 @@
 #include <iostream>
 #include <fstream>
 
+#define MAX_COMMENT_LENGTH   500
+
 #if defined(XP_WIN32)
 
 #include <windows.h>
@@ -35,19 +37,27 @@ typedef std::map<std::string, std::string> StringTable;
 
 #define ST_CRASHREPORTERTITLE        "CrashReporterTitle"
 #define ST_CRASHREPORTERVENDORTITLE  "CrashReporterVendorTitle"
-#define ST_CRASHREPORTERERROR        "CrashReporterError"
-#define ST_CRASHREPORTERPRODUCTERROR "CrashReporterProductError"
-#define ST_CRASHREPORTERHEADER       "CrashReporterHeader"
-#define ST_CRASHREPORTERDESCRIPTION  "CrashReporterDescription"
+#define ST_CRASHREPORTERERROR        "CrashReporterErrorText"
+#define ST_CRASHREPORTERPRODUCTERROR "CrashReporterProductErrorText2"
+#define ST_CRASHREPORTERHEADER       "CrashReporterSorry"
+#define ST_CRASHREPORTERDESCRIPTION  "CrashReporterDescriptionText2"
 #define ST_CRASHREPORTERDEFAULT      "CrashReporterDefault"
-#define ST_VIEWREPORT                "ViewReport"
+#define ST_VIEWREPORT                "Details"
+#define ST_VIEWREPORTTITLE           "ViewReportTitle"
+#define ST_COMMENTGRAYTEXT           "CommentGrayText"
 #define ST_EXTRAREPORTINFO           "ExtraReportInfo"
-#define ST_CHECKSUBMIT               "CheckSubmit"
-#define ST_CHECKURL                  "CheckURL"
-#define ST_CHECKEMAIL                "CheckEmail"
-#define ST_CLOSE                     "Close"
+#define ST_CHECKSUBMIT               "CheckSendReport"
+#define ST_CHECKURL                  "CheckIncludeURL"
+#define ST_CHECKEMAIL                "CheckSendEmail"
+#define ST_EMAILGRAYTEXT             "EmailGrayText"
+#define ST_REPORTPRESUBMIT           "ReportPreSubmit"
+#define ST_REPORTDURINGSUBMIT        "ReportDuringSubmit"
+#define ST_REPORTSUBMITSUCCESS       "ReportSubmitSuccess"
+#define ST_SUBMITFAILED              "ReportSubmitFailed"
+#define ST_QUIT                      "Quit"
 #define ST_RESTART                   "Restart"
-#define ST_SUBMITFAILED              "SubmitFailed"
+#define ST_OK                        "Ok"
+#define ST_CLOSE                     "Close"
 
 #define ST_ERROR_BADARGUMENTS        "ErrorBadArguments"
 #define ST_ERROR_EXTRAFILEEXISTS     "ErrorExtraFileExists"
@@ -59,6 +69,7 @@ typedef std::map<std::string, std::string> StringTable;
 #define ST_ERROR_NOSERVERURL         "ErrorNoServerURL"
 #define ST_ERROR_NOSETTINGSPATH      "ErrorNoSettingsPath"
 #define ST_ERROR_CREATEDUMPDIR       "ErrorCreateDumpDir"
+#define ST_ERROR_ENDOFLIFE           "ErrorEndOfLife"
 
 //=============================================================================
 // implemented in crashreporter.cpp
@@ -90,6 +101,7 @@ namespace CrashReporter {
                           StringTable& strings,
                           bool escape);
   void LogMessage(const std::string& message);
+  void DeleteDump();
 }
 
 //=============================================================================
@@ -103,7 +115,9 @@ void UIShutdown();
 void UIShowDefaultUI();
 
 // Run the UI for when the app was launched with a dump file
-void UIShowCrashUI(const std::string& dumpfile,
+// Return true if the user sent (or tried to send) the crash report,
+// false if they chose not to, and it should be deleted.
+bool UIShowCrashUI(const std::string& dumpfile,
                    const StringTable& queryParameters,
                    const std::string& sendURL,
                    const std::vector<std::string>& restartArgs);

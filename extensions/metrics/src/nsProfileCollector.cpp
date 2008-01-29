@@ -57,6 +57,7 @@
 #include "nsINavBookmarksService.h"
 #include "nsINavHistoryService.h"
 #include "nsILivemarkService.h"
+#include "nsILocaleService.h"
 #include "nsToolkitCompsCID.h"
 
 // We need to suppress inclusion of nsString.h
@@ -284,6 +285,43 @@ nsProfileCollector::LogInstall(nsIMetricsEventItem *profile)
   properties->SetPropertyAsACString(NS_LITERAL_STRING("buildid"), buildID);
   MS_LOG(("Logged install buildid=%s", buildID.get()));
 
+  nsCOMPtr<nsIExtensionManager> em = do_GetService("@mozilla.org/extensions/manager;1");
+  NS_ENSURE_STATE(em);
+
+  nsCOMPtr<nsIUpdateItem> item;
+  nsresult rv = em->GetItemForID(NS_LITERAL_STRING("metrics@mozilla.org"), getter_AddRefs(item));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get the metrics extension version
+  nsAutoString extversion;
+  rv = item->GetVersion(extversion);
+  NS_ENSURE_SUCCESS(rv, rv);
+  properties->SetPropertyAsAString(NS_LITERAL_STRING("extversion"), extversion);
+  
+  MS_LOG(("Logged install extversion=%s", NS_ConvertUTF16toUTF8(extversion).get()));
+
+  // get the application version
+  nsCString appversion;
+  appInfo->GetVersion(appversion);
+  properties->SetPropertyAsACString(NS_LITERAL_STRING("appversion"), appversion);
+
+  MS_LOG(("Logged install appversion=%s", appversion.get()));
+
+  // get the application locale
+  nsCOMPtr<nsILocaleService> ls = do_GetService(NS_LOCALESERVICE_CONTRACTID);
+  NS_ENSURE_STATE(ls);
+
+  nsCOMPtr<nsILocale> locale(nsnull);
+  rv = ls->GetApplicationLocale(getter_AddRefs(locale));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString l;
+  rv = locale->GetCategory(NS_LITERAL_STRING("NSILOCALE_CTYPE"), l);
+  NS_ENSURE_SUCCESS(rv, rv);
+  properties->SetPropertyAsAString(NS_LITERAL_STRING("locale"), l);
+
+  MS_LOG(("Logged install locale=%s", NS_ConvertUTF16toUTF8(l).get()));
+
   // The file defaults/pref/channel-prefs.js is exlucded from any
   // security update, so we can use its creation time as an indicator
   // of when this installation was performed.
@@ -295,7 +333,7 @@ nsProfileCollector::LogInstall(nsIMetricsEventItem *profile)
   nsCOMPtr<nsILocalFile> channelPrefs = do_QueryInterface(prefsDirectory);
   NS_ENSURE_STATE(channelPrefs);
 
-  nsresult rv = channelPrefs->Append(NS_LITERAL_STRING("channel-prefs.js"));
+  rv = channelPrefs->Append(NS_LITERAL_STRING("channel-prefs.js"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString nativePath;

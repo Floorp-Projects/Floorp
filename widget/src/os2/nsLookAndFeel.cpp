@@ -149,9 +149,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_MENUDISABLEDTEXT;
       break;
     case eColor_highlight:
+    case eColor__moz_html_cellhighlight:
       idx = SYSCLR_HILITEBACKGROUND;
       break;
     case eColor_highlighttext:
+    case eColor__moz_html_cellhighlighttext:
       idx = SYSCLR_HILITEFOREGROUND;
       break;
     case eColor_inactiveborder:

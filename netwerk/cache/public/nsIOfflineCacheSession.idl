@@ -80,14 +80,15 @@ interface nsIOfflineCacheSession : nsISupports
     /**
      * Gets the list of owner URIs associated with a domain.
      *
-     * @param ownerDomain
+     * @param ownerAsciiDomain
      *        The domain to query
+     *        !! IMPORTANT !! : This must be ascii encoded host - nsIURI.asciiHost
      * @param count
      *        The number of uris returned
      * @param uris
      *        The uris in this domain that own resources
      */
-    void getOwnerURIs(in ACString ownerDomain,
+    void getOwnerURIs(in ACString ownerAsciiDomain,
                       out unsigned long count,
                       [array, size_is(count)]out string uris);
 
@@ -101,37 +102,41 @@ interface nsIOfflineCacheSession : nsISupports
      * an entry is created with this key, it will be owned by the
      * domain/URI pair.
      *
-     * @param ownerDomain
-     *        The domain that owns the resources.
-     * @param ownerURI
-     *        The specific URI that owns the resources.  This can be empty if
-     *        no URI specifically owns the resources.
+     * @param ownerAsciiDomain
+     *        The domain that owns the resources
+     *        !! IMPORTANT !! : This must be ascii encoded host - nsIURI.asciiHost
+     * @param ownerAsciiKey
+     *        The specific key that owns the resources.  You may use 
+     *        ascii encoded URI spec of the owner - nsIURI.asciiSpec.
+     *        This can be empty if none specifically owns the resources.
      * @param count
      *        The number of keys in keys.
      * @param keys
      *        The keys that the domain/URI pair own.  This can be empty to
      *        clear ownership for the domain/URI pair.
      */
-    void setOwnedKeys(in ACString ownerDomain,
-                      in ACString ownerURI,
+    void setOwnedKeys(in ACString ownerAsciiDomain,
+                      in ACString ownerAsciiKey,
                       in unsigned long count,
                       [array, size_is(count)]in string keys);
 
     /**
      * Gets the list of resources owned by a given domain/URI pair.
      *
-     * @param ownerDomain
-     *        The domain that owns the resources.
-     * @param ownerURI
-     *        The specific URI that owns the resources.  This can be empty
-     *        if no URI specifically owns the resources.
+     * @param ownerAsciiDomain
+     *        The domain that owns the resources
+     *        !! IMPORTANT !! : This must be ascii encoded host - nsIURI.asciiHost
+     * @param ownerAsciiKey
+     *        The specific key that owns the resources.  You may use 
+     *        ascii encoded URI spec of the owner - nsIURI.asciiSpec.
+     *        This can be empty if none specifically owns the resources.
      * @param count
      *        The number of keys in keys.
      * @param keys
      *        The keys that the domain/URI pair own.
      */
-    void getOwnedKeys(in ACString ownerDomain,
-                      in ACString ownerURI,
+    void getOwnedKeys(in ACString ownerAsciiDomain,
+                      in ACString ownerAsciiKey,
                       out unsigned long count,
                       [array, size_is(count)]out string keys);
 
@@ -142,16 +147,18 @@ interface nsIOfflineCacheSession : nsISupports
      * an entry is created with this key, it will be owned by the
      * domain/URI pair.
      *
-     * @param ownerDomain
-     *        The domain that owns the resources.
-     * @param ownerURI
-     *        The specific URI that owns the resources.  This can be empty
-     *        if no URI specifically owns the resources.
+     * @param ownerAsciiDomain
+     *        The domain that owns the resources
+     *        !! IMPORTANT !! : This must be ascii encoded host - nsIURI.asciiHost
+     * @param ownerAsciiKey
+     *        The specific key that owns the resources.  You may use 
+     *        ascii encoded URI spec of the owner - nsIURI.asciiSpec.
+     *        This can be empty if none specifically owns the resources.
      * @param key
      *        The key to add.
      */
-    void addOwnedKey(in ACString ownerDomain,
-                     in ACString ownerURI,
+    void addOwnedKey(in ACString ownerAsciiDomain,
+                     in ACString ownerAsciiKey,
                      in ACString key);
 
     /**
@@ -160,38 +167,44 @@ interface nsIOfflineCacheSession : nsISupports
      * If the key does not exist, an NS_ERROR_NOT_AVAILABLE exception
      * will be thrown.
      *
-     * @param ownerDomain
-     *        The domain that owns the resources.
-     * @param ownerURI
-     *        The specific URI that owns the resources.  This can be empty
-     *        if no URI specifically owns the resources.
+     * @param ownerAsciiDomain
+     *        The domain that owns the resources
+     *        !! IMPORTANT !! : This must be ascii encoded host - nsIURI.asciiHost
+     * @param ownerAsciiKey
+     *        The specific key that owns the resources.  You may use 
+     *        ascii encoded URI spec of the owner - nsIURI.asciiSpec.
+     *        This can be empty if none specifically owns the resources.
      * @param key The key to remove.
      */
-    void removeOwnedKey(in ACString ownerDomain,
-                        in ACString ownerURI,
+    void removeOwnedKey(in ACString ownerAsciiDomain,
+                        in ACString ownerAsciiKey,
                         in ACString key);
 
     /**
      * Checks whether a key is owned by a given domain/URI pair.
      *
-     * @param ownerDomain
-     *        The domain that owns the resources.
-     * @param ownerURI
-     *        The specific URI that owns the resources.  This can be empty
-     *        if no URI specifically owns the resources.
+     * @param ownerAsciiDomain
+     *        The domain that owns the resources
+     *        !! IMPORTANT !! : This must be ascii encoded host - nsIURI.asciiHost
+     * @param ownerAsciiKey
+     *        The specific key that owns the resources.  You may use 
+     *        ascii encoded URI spec of the owner - nsIURI.asciiSpec.
+     *        This can be empty if none specifically owns the resources.
      * @param key The key to check
      */
-    boolean keyIsOwned(in ACString ownerDomain,
-                       in ACString ownerURI,
+    boolean keyIsOwned(in ACString ownerAsciiDomain,
+                       in ACString ownerAsciiKey,
                        in ACString key);
 
     /**
      * Remove all keys owned by a domain, including keys owned by
      * a specific URI.
      *
-     * @param domain The domain for which keys should be removed.
+     * @param ownerAsciiDomain
+     *        The domain for which keys should be removed
+     *        !! IMPORTANT !! : This must be ascii encoded host - nsIURI.asciiHost
      */
-    void clearKeysOwnedByDomain(in ACString ownerDomain);
+    void clearKeysOwnedByDomain(in ACString ownerAsciiDomain);
 
     /**
      * Evict all entries that are not owned by a domain.

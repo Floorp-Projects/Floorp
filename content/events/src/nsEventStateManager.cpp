@@ -2859,6 +2859,9 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
   case NS_STYLE_CURSOR_EW_RESIZE:
     c = eCursor_ew_resize;
     break;
+  case NS_STYLE_CURSOR_NONE:
+    c = eCursor_none;
+    break;
   }
 
   // First, try the imgIContainer, if non-null

@@ -112,13 +112,15 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
 
       aParent->SetMatrixPropagation(PR_FALSE);
-      aParent->NotifyCanvasTMChanged(PR_TRUE);
+      aParent->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                                nsISVGChildFrame::TRANSFORM_CHANGED);
 
       nsCOMPtr<nsIDOMSVGRect> bbox;
       aParent->GetBBox(getter_AddRefs(bbox));
 
       aParent->SetMatrixPropagation(PR_TRUE);
-      aParent->NotifyCanvasTMChanged(PR_TRUE);
+      aParent->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                                nsISVGChildFrame::TRANSFORM_CHANGED);
 
       if (!bbox)
         return nsnull;

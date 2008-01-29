@@ -258,6 +258,7 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
     return CAIRO_STATUS_SUCCESS;
 }
 
+#if CAIRO_HAS_UTF8_TO_UTF16
 /**
  * _cairo_utf8_to_utf16:
  * @str: an UTF-8 string
@@ -333,3 +334,4 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 
     return CAIRO_STATUS_SUCCESS;
 }
+#endif

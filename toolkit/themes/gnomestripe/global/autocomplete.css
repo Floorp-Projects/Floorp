@@ -79,12 +79,6 @@ textbox[enablehistory="true"] > .autocomplete-textbox-container {
   -moz-box-align: center;
 }
 
-/* ::::: history button ::::: */
-
-.autocomplete-history-dropmarker {
-  -moz-appearance: menulist-button;
-}
-
 /* ::::: autocomplete popups ::::: */
 
 panel[type="autocomplete"],

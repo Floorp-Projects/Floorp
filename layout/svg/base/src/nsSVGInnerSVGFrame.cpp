@@ -87,7 +87,7 @@ public:
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
-  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
+  virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM();
@@ -158,46 +158,77 @@ nsSVGInnerSVGFrame::GetType() const
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 {
-  nsresult rv = NS_OK;
-
-  gfxContext *gfx = aContext->GetGfxContext();
-
-  gfx->Save();
+  gfxContextAutoSaveRestore autoSR;
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
+    float x, y, width, height;
+    static_cast<nsSVGSVGElement*>(mContent)->
+      GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
+    if (width <= 0 || height <= 0) {
+      return NS_OK;
+    }
+
     nsCOMPtr<nsIDOMSVGMatrix> clipTransform;
     if (!mPropagateTransform) {
       NS_NewSVGMatrix(getter_AddRefs(clipTransform));
     } else {
-      nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>
-                                               (mParent);
-      clipTransform = parent->GetCanvasTM();
+      clipTransform = static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();
     }
 
     if (clipTransform) {
-      nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(mContent);
-
-      float x, y, width, height;
-      svg->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-
+      gfxContext *gfx = aContext->GetGfxContext();
+      autoSR.SetContext(gfx);
       nsSVGUtils::SetClipRect(gfx, clipTransform, x, y, width, height);
     }
   }
 
-  rv = nsSVGInnerSVGFrameBase::PaintSVG(aContext, aDirtyRect);
-
-  gfx->Restore();
-
-  return rv;
+  return nsSVGInnerSVGFrameBase::PaintSVG(aContext, aDirtyRect);
 }
 
-NS_IMETHODIMP
-nsSVGInnerSVGFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
+void
+nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  // make sure our cached transform matrix gets (lazily) updated
-  mCanvasTM = nsnull;
+  if (aFlags & COORD_CONTEXT_CHANGED) {
 
-  return nsSVGInnerSVGFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
+    nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(mContent);
+
+    // Coordinate context changes affect mCanvasTM if we have a
+    // percentage 'x' or 'y', or if we have a percentage 'width' or 'height' AND
+    // a 'viewBox'.
+
+    if (!(aFlags & TRANSFORM_CHANGED) &&
+        svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
+        svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage() ||
+        (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
+         (svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
+          svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage()))) {
+    
+      aFlags |= TRANSFORM_CHANGED;
+    }
+
+    // XXX We could clear the COORD_CONTEXT_CHANGED flag in some circumstances
+    // if we have a non-percentage 'width' AND 'height, or if we have a 'viewBox'
+    // rect. This is because, when we have a viewBox rect, the viewBox rect
+    // is the coordinate context for our children, and it isn't changing.
+    // Percentage lengths on our children will continue to resolve to the
+    // same number of user units because they're relative to our viewBox rect. The
+    // same is true if we have a non-percentage width and height and don't have a
+    // viewBox. We (the <svg>) establish the coordinate context for our children. Our
+    // children don't care about changes to our parent coordinate context unless that
+    // change results in a change to the coordinate context that _we_ establish. Hence
+    // we can (should, really) stop propagating COORD_CONTEXT_CHANGED in these cases.
+    // We'd actually need to check that we have a viewBox rect and not just
+    // that viewBox is set, since it could be set to none.
+    // Take care not to break the testcase for bug 394463 when implementing this
+  }
+
+  if (aFlags & TRANSFORM_CHANGED) {
+    // make sure our cached transform matrix gets (lazily) updated
+    mCanvasTM = nsnull;
+  }
+
+  nsSVGInnerSVGFrameBase::NotifySVGChanged(aFlags);
 }
 
 NS_IMETHODIMP
@@ -275,19 +306,30 @@ nsSVGInnerSVGFrame::UnsuspendRedraw()
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::NotifyViewportChange()
 {
+  PRUint32 flags = COORD_CONTEXT_CHANGED;
+
+#if 1
+  // XXX nsSVGSVGElement::InvalidateTransformNotifyFrame calls us for changes
+  // to 'x' and 'y'. Until this is fixed, add TRANSFORM_CHANGED to flags
+  // unconditionally.
+
+  flags |= TRANSFORM_CHANGED;
+
   // make sure canvas transform matrix gets (lazily) recalculated:
   mCanvasTM = nsnull;
+#else
+  // viewport changes only affect our transform if we have a viewBox attribute
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+    // make sure canvas transform matrix gets (lazily) recalculated:
+    mCanvasTM = nsnull;
+
+    flags |= TRANSFORM_CHANGED;
+  }
+#endif
   
   // inform children
   SuspendRedraw();
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
-    if (SVGFrame)
-      SVGFrame->NotifyCanvasTMChanged(PR_FALSE); 
-    kid = kid->GetNextSibling();
-  }
+  nsSVGUtils::NotifyChildrenOfSVGChange(this, flags);
   UnsuspendRedraw();
   return NS_OK;
 }

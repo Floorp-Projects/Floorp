@@ -1824,7 +1824,6 @@ case "$target" in
     _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
-    MOZ_ENABLE_COREXFONTS=
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
 ;;
@@ -2828,7 +2827,7 @@ AC_DEFINE_UNQUOTED(NEW_H, <$NEW_H>)
 AC_LANG_C
 
 AC_ARG_ENABLE(dtrace,
-              build with dtrace support if available (default=no),
+              [  --enable-dtrace         build with dtrace support if available (default=no)],
               [enable_dtrace="yes"],)
 if test "x$enable_dtrace" = "xyes"; then
   AC_CHECK_HEADER(sys/sdt.h, HAVE_DTRACE=1)
@@ -3933,6 +3932,7 @@ else
         $(LIBXUL_DIST)/lib/$(DLL_PREFIX)smime'$NSS_VERSION'$(DLL_SUFFIX) \\\
         $(LIBXUL_DIST)/lib/$(DLL_PREFIX)ssl'$NSS_VERSION'$(DLL_SUFFIX) \\\
         $(LIBXUL_DIST)/lib/$(DLL_PREFIX)nss'$NSS_VERSION'$(DLL_SUFFIX) \\\
+        $(LIBXUL_DIST)/lib/$(DLL_PREFIX)nssutil'$NSS_VERSION'$(DLL_SUFFIX) \\\
         $(LIBXUL_DIST)/lib/$(DLL_PREFIX)softokn'$NSS_VERSION'$(DLL_SUFFIX)'
 
    if test -z "$GNU_CC" && test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "WINCE" -o "$OS_ARCH" = "OS2"; then
@@ -3941,9 +3941,10 @@ else
         $(LIBXUL_DIST)/lib/$(LIB_PREFIX)smime'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX) \\\
         $(LIBXUL_DIST)/lib/$(LIB_PREFIX)ssl'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX) \\\
         $(LIBXUL_DIST)/lib/$(LIB_PREFIX)nss'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX) \\\
+        $(LIBXUL_DIST)/lib/$(LIB_PREFIX)nssutil'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX) \\\
         $(LIBXUL_DIST)/lib/$(LIB_PREFIX)softokn'$NSS_VERSION'.$(IMPORT_LIB_SUFFIX)'
    else
-       NSS_LIBS='$(LIBS_DIR)'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lsoftokn$NSS_VERSION"
+       NSS_LIBS='$(LIBS_DIR)'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lnssutil$NSS_VERSION -lsoftokn$NSS_VERSION"
    fi
 fi
 
@@ -4595,7 +4596,7 @@ fi
 if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_ENABLE_GTK2"
 then
-    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gdk-x11-2.0 glib-2.0 gobject-2.0)
+    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 gdk-x11-2.0 glib-2.0 gobject-2.0)
 fi
 fi # COMPILE_ENVIRONMENT
 
@@ -4791,79 +4792,19 @@ AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
 dnl ========================================================
-dnl = Xft
+dnl = Xft and Pango
 dnl ========================================================
-if test "$MOZ_ENABLE_GTK2"; then
-    MOZ_ENABLE_XFT=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(xft,
-[  --disable-xft           Disable Xft support ],
-    MOZ_ENABLE_XFT=,
-    MOZ_ENABLE_XFT=1)
-
-if test "$MOZ_ENABLE_XFT" && test -z "$MOZ_ENABLE_GTK2"; then
-    AC_MSG_ERROR([Cannot enable XFT support for non-GTK2 toolkits.])
-fi
-
-if test "$MOZ_ENABLE_XFT"
+if test "$MOZ_ENABLE_GTK2"
 then
-    AC_DEFINE(MOZ_ENABLE_XFT)
     PKG_CHECK_MODULES(MOZ_XFT, xft)
+    AC_SUBST(MOZ_XFT_CFLAGS)
+    AC_SUBST(MOZ_XFT_LIBS)
+
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
-fi
-
-AC_SUBST(MOZ_ENABLE_XFT)
-AC_SUBST(MOZ_XFT_CFLAGS)
-AC_SUBST(MOZ_XFT_LIBS)
-
-dnl ========================================================
-dnl = pango font rendering
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(pango,
-[  --enable-pango          Enable Pango font rendering support],
-    MOZ_ENABLE_PANGO=1,
-    MOZ_ENABLE_PANGO=)
-
-if test "$MOZ_ENABLE_PANGO" && test -z "$MOZ_ENABLE_CAIRO_GFX"
-then
-    AC_MSG_ERROR([Cairo gfx is required for Pango font rendering])
-fi
-
-if test "$MOZ_ENABLE_GTK2" && test "$MOZ_ENABLE_CAIRO_GFX"
-then
-    # For gtk2, we require --enable-pango; gtk2 already implies --enable-xft
-    if test -z "$MOZ_ENABLE_PANGO"
-    then
-        AC_MSG_WARN([Pango is required for cairo gfx builds, assuming --enable-pango])
-        MOZ_ENABLE_PANGO=1
-    fi
-fi
-
-if test "$MOZ_ENABLE_PANGO" && test "$MOZ_ENABLE_CAIRO_GFX"
-then
-    AC_DEFINE(MOZ_ENABLE_PANGO)
     PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangocairo >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
-    AC_SUBST(MOZ_ENABLE_PANGO)
     AC_SUBST(MOZ_PANGO_CFLAGS)
     AC_SUBST(MOZ_PANGO_LIBS)
 fi
-
-dnl ========================================================
-dnl = x11 core font support (default and ability to enable depend on toolkit)
-dnl ========================================================
-if test "$MOZ_X11"
-then
-    MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS-1}
-else
-    MOZ_ENABLE_COREXFONTS=
-fi
-if test "$MOZ_ENABLE_COREXFONTS"
-then
-    AC_DEFINE(MOZ_ENABLE_COREXFONTS)
-fi
-
-AC_SUBST(MOZ_ENABLE_COREXFONTS)
 
 dnl ========================================================
 dnl = PostScript print module
@@ -5016,8 +4957,7 @@ dnl = those converters are not built on other platforms/toolkits.
 dnl = (see bug 180851)
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK2" \
-&& test "$MOZ_ENABLE_COREXFONTS"
+if test "$MOZ_ENABLE_GTK2"
 then
     AC_DEFINE(MOZ_EXTRA_X11CONVERTERS)
     MOZ_EXTRA_X11CONVERTERS=1
@@ -5339,19 +5279,12 @@ if test -n "$MOZ_CRASHREPORTER"; then
    AC_DEFINE(MOZ_CRASHREPORTER)
 
   if test "$OS_ARCH" = "Linux" && \
-     test -z "$SKIP_LIBRARY_CHECKS"; then
-     _SAVE_LDFLAGS=$LDFLAGS
-     LDFLAGS="$LDFLAGS -lcurl"
-     AC_CACHE_CHECK(for libcurl,
-                    ac_cv_have_libcurl,
-                    [AC_TRY_LINK([#include <curl/curl.h>],
-                                 [curl_easy_init();],
-                                 ac_cv_have_libcurl="yes",
-                                 ac_cv_have_libcurl="no")])
-    if test "$ac_cv_have_libcurl" = "no"; then
-        AC_MSG_ERROR([Couldn't find libcurl, which is required for the crash reporter.  Use --disable-crashreporter to disable the crash reporter.])
-    fi
-    LDFLAGS=$_SAVE_LDFLAGS
+    test -z "$SKIP_LIBRARY_CHECKS"; then
+    PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
+    AC_SUBST(MOZ_GTHREAD_CFLAGS)
+    AC_SUBST(MOZ_GTHREAD_LIBS)
+
+    AC_CHECK_HEADERS([curl/curl.h], [], [AC_MSG_ERROR([Couldn't find curl/curl.h which is required for the crash reporter.  Use --disable-crashreporter to disable the crash reporter.])])
   fi
 fi
 

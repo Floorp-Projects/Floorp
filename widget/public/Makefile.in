@@ -64,10 +64,7 @@ EXPORTS		= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXPORTS		+= \
-		nsIMenuBar.h \
-		nsIMenu.h \
-		nsIMenuItem.h
+EXPORTS		+= nsIMenuBar.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -79,7 +76,10 @@ EXPORTS		+= nsIDragSessionBeOS.h
 endif
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS		+= nsIDragSessionGTK.h
+EXPORTS		+= \
+		nsIDragSessionGTK.h \
+		nsIPrintDialogService.h \
+		$(NULL)
 endif
 
 XPIDLSRCS	= \

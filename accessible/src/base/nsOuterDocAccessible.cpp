@@ -74,7 +74,7 @@ NS_IMETHODIMP nsOuterDocAccessible::GetName(nsAString& aName)
 /* unsigned long getRole (); */
 NS_IMETHODIMP nsOuterDocAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = nsIAccessibleRole::ROLE_CLIENT;
+  *aRole = nsIAccessibleRole::ROLE_INTERNAL_FRAME;
   return NS_OK;
 }
 
@@ -116,7 +116,7 @@ void nsOuterDocAccessible::CacheChildren()
     return;
   }
 
-  SetFirstChild(nsnull);
+  InvalidateChildren();
   mAccChildCount = 0;
 
   // In these variable names, "outer" relates to the nsOuterDocAccessible

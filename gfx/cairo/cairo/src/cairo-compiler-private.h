@@ -70,12 +70,14 @@ CAIRO_BEGIN_DECLS
 #endif
 
 /* slim_internal.h */
+#define CAIRO_HAS_HIDDEN_SYMBOLS 1
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun)
 #define cairo_private_no_warn	__attribute__((__visibility__("hidden")))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #define cairo_private_no_warn	__hidden
 #else /* not gcc >= 3.3 and not Sun Studio >= 8 */
 #define cairo_private_no_warn
+#undef CAIRO_HAS_HIDDEN_SYMBOLS
 #endif
 
 #ifndef WARN_UNUSED_RESULT
@@ -109,6 +111,16 @@ CAIRO_BEGIN_DECLS
 #define __attribute__(x)
 #endif
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#undef inline
+#define inline __inline
+#endif
+
+#ifdef __STRICT_ANSI__
+#undef inline
+#define inline __inline__
+#endif
 
 CAIRO_END_DECLS
 

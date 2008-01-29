@@ -1480,7 +1480,7 @@ version 1.2.9beta5 [March 4, 2006]
   Restored scripts/makefile.elf which was inadvertently deleted.
 
 version 1.2.9beta6 [March 6, 2006]
-  Fixed typo (23) in configuration files.
+  Fixed typo (RELEASE) in configuration files.
 
 version 1.2.9beta7 [March 7, 2006]
   Removed libpng.vers and libpng.sym from libpng12_la_SOURCES in Makefile.am
@@ -1669,7 +1669,7 @@ version 1.2.15rc2 [December 21, 2006]
   Added scripts/makefile.nommx
 
 version 1.2.15rc3 [December 25, 2006]
-  Fixed shared library numbering error that was intruduced in 1.2.15beta6.
+  Fixed shared library numbering error that was introduced in 1.2.15beta6.
 
 version 1.2.15rc4 [December 27, 2006]
   Fixed handling of rgb_to_gray when png_ptr->color.gray isn't set.
@@ -1897,6 +1897,7 @@ version 1.0.27 and 1.2.19 [August 18, 2007]
 
 version 1.2.20beta01 [August 19, 2007]
   Fixed problem with compiling pnggccrd.c on Intel-Apple platforms.
+  Changed png_malloc() to png_malloc_warn() in png_set_sPLT().
   Added PNG_NO_ERROR_TEXT feature, with demo in contrib/pngminim
   Removed define PNG_WARN_UNINITIALIZED_ROW 1 /* 0: warning; 1: error */
     because it caused some trouble.
@@ -2009,6 +2010,27 @@ version 1.2.23rc01 [November 2, 2007]
 
 version 1.2.23 [November 6, 2007]
   No changes.
+
+version 1.2.24beta01 [November 19, 2007]
+  Moved misplaced test for malloc failure in png_set_sPLT().  This bug was
+    introduced in libpng-1.2.20beta01.
+  Ifdef out avg_row etc from png.h and pngwrite.c when PNG_NO_WRITE_FILTER
+  Do not use png_ptr->free_fn and png_ptr->mem_fn in png_destroy_read_struct()
+    when png_ptr is NULL (Marshall Clow).
+  Updated handling of symbol prefixes in Makefile.am and configure.ac (Mike
+    Frysinger).
+
+version 1.2.24beta02 [November 30, 2007]
+  Removed a useless test and fixed incorrect test in png_set_cHRM_fixed()
+    (David Hill).
+
+version 1.2.24rc01 [December 7, 2007]
+  No changes.
+
+version 1.2.24     [December 14, 2007]
+  Make sure not to redefine _BSD_SOURCE in pngconf.h
+  Revised gather.sh and makefile.std in contrib/pngminim to avoid compiling
+    unused files.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

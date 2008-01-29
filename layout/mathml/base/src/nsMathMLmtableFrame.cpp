@@ -766,8 +766,8 @@ nsMathMLmtdFrame::GetRowSpan()
 {
   PRInt32 rowspan = 1;
 
-  // Don't look at the content's rowspan if we're not an mtd.
-  if (mContent->Tag() == nsGkAtoms::mtd_) {
+  // Don't look at the content's rowspan if we're not an mtd or a pseudo cell.
+  if ((mContent->Tag() == nsGkAtoms::mtd_) && !GetStyleContext()->GetPseudoType()) {
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, value);
     if (!value.IsEmpty()) {
@@ -785,8 +785,8 @@ nsMathMLmtdFrame::GetColSpan()
 {
   PRInt32 colspan = 1;
 
-  // Don't look at the content's rowspan if we're not an mtd.
-  if (mContent->Tag() == nsGkAtoms::mtd_) {
+  // Don't look at the content's colspan if we're not an mtd or a pseudo cell.
+  if ((mContent->Tag() == nsGkAtoms::mtd_) && !GetStyleContext()->GetPseudoType()) {
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::columnspan_, value);
     if (!value.IsEmpty()) {

@@ -201,6 +201,8 @@ nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {
         fprintf(stderr, "nJRSI: destroyed runtime %p\n", (void *)mRuntime);
 #endif
     }
+
+    XPCPerThreadData::ShutDown();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsJSRuntimeServiceImpl,
@@ -257,7 +259,7 @@ nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
         //
         // We rely on the implementation of NSPR that calls destructors at 
         // the same order of calling PR_NewThreadPrivateIndex.
-        XPCPerThreadData::GetData();
+        XPCPerThreadData::GetData(nsnull);
         
         mRuntime = JS_NewRuntime(gGCSize);
         if(!mRuntime)

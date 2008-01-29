@@ -1259,6 +1259,8 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 	if (aCursor != mCursor) 
 	{
 		BCursor const *newCursor = B_CURSOR_SYSTEM_DEFAULT;
+		if (be_app->IsCursorHidden())
+			be_app->ShowCursor();
 		
 		// Check to see if the array has been loaded, if not, do it.
 		if (gCursorArray.Count() == 0) 
@@ -1418,6 +1420,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
 			case eCursor_ew_resize:
 				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				break;
+
+			case eCursor_none:
+				be_app->HideCursor();
 				break;
 
 			default:

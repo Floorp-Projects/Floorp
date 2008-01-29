@@ -429,7 +429,7 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
 
     nsStringArray familyArray;
     ForEachFont(FontCallback, &familyArray);
-    FindGenericFontFromStyle(FontCallback, &familyArray);
+    FindGenericFontFromStyle(PR_TRUE, FontCallback, &familyArray);
 
     // To be able to easily search for glyphs in other fonts, append a few good
     // replacement candidates to the list. The best ones are the Unicode fonts that

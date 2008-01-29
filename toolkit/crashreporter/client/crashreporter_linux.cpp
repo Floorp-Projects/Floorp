@@ -51,6 +51,7 @@
 #include <signal.h>
 
 #include <gtk/gtk.h>
+#include <glib.h>
 
 #include "common/linux/http_upload.h"
 
@@ -60,18 +61,29 @@ using std::vector;
 using namespace CrashReporter;
 
 static GtkWidget* gWindow = 0;
-static GtkWidget* gViewReportTextView = 0;
 static GtkWidget* gSubmitReportCheck = 0;
+static GtkWidget* gViewReportButton = 0;
+static GtkWidget* gCommentText = 0;
 static GtkWidget* gIncludeURLCheck = 0;
 static GtkWidget* gEmailMeCheck = 0;
 static GtkWidget* gEmailEntry = 0;
+static GtkWidget* gThrobber = 0;
+static GtkWidget* gProgressLabel = 0;
+static GtkWidget* gCloseButton = 0;
+static GtkWidget* gRestartButton = 0;
 
 static bool gInitialized = false;
+static bool gDidTrySend = false;
 static string gDumpFile;
 static StringTable gQueryParameters;
 static string gSendURL;
 static vector<string> gRestartArgs;
 static string gURLParameter;
+
+static bool gEmailFieldHint = true;
+static bool gCommentFieldHint = true;
+
+static GThread* gSendThreadID;
 
 // handle from dlopen'ing libgnome
 static void* gnomeLib = NULL;
@@ -86,6 +98,7 @@ static void LoadSettings()
   if (ReadStringsFromFile(gSettingsPath + "/" + kIniFile, settings, true)) {
     if (settings.find("Email") != settings.end()) {
       gtk_entry_set_text(GTK_ENTRY(gEmailEntry), settings["Email"].c_str());
+      gEmailFieldHint = false;
     }
     if (settings.find("EmailMe") != settings.end()) {
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gEmailMeCheck),
@@ -108,7 +121,11 @@ static void SaveSettings()
   StringTable settings;
 
   ReadStringsFromFile(gSettingsPath + "/" + kIniFile, settings, true);
-  settings["Email"] = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
+  if (!gEmailFieldHint)
+    settings["Email"] = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
+  else
+    settings.erase("Email");
+
   settings["EmailMe"] =
     gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck)) ? "1" : "0";
   if (gIncludeURLCheck != 0)
@@ -149,7 +166,25 @@ static bool RestartApplication()
   return true;
 }
 
-static gboolean SendReportIdle(gpointer userData)
+// Quit the app, used as a timeout callback
+static gboolean CloseApp(gpointer data)
+{
+  gtk_main_quit();
+  g_thread_join(gSendThreadID);
+  return FALSE;
+}
+
+static gboolean ReportCompleted(gpointer success)
+{
+  gtk_widget_hide_all(gThrobber);
+  string str = success ? gStrings[ST_REPORTSUBMITSUCCESS]
+                       : gStrings[ST_SUBMITFAILED];
+  gtk_label_set_text(GTK_LABEL(gProgressLabel), str.c_str());
+  g_timeout_add(5000, CloseApp, 0);
+  return FALSE;
+}
+
+static gpointer SendThread(gpointer args)
 {
   string response, error;
   bool success = google_breakpad::HTTPUpload::SendRequest
@@ -166,37 +201,40 @@ static gboolean SendReportIdle(gpointer userData)
   else {
     LogMessage("Crash report submission failed: " + error);
   }
+
   SendCompleted(success, response);
+  // Apparently glib is threadsafe, and will schedule this
+  // on the main thread, see:
+  // http://library.gnome.org/devel/gtk-faq/stable/x500.html
+  g_idle_add(ReportCompleted, (gpointer)success);
 
-  if (!success) {
-    GtkWidget* errorDialog =
-      gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
-                             GTK_MESSAGE_ERROR,
-                             GTK_BUTTONS_CLOSE,
-                             "%s", gStrings[ST_SUBMITFAILED].c_str());
-
-    gtk_window_set_title(GTK_WINDOW(errorDialog),
-                         gStrings[ST_CRASHREPORTERTITLE].c_str());
-    gtk_dialog_run(GTK_DIALOG(errorDialog));
-  }
-  gtk_main_quit();
-
-  return FALSE;
+  return NULL;
 }
 
 static void SendReport()
 {
-  // On the other platforms we spawn off a thread here.  Because the window
-  // should be hidden before the report is sent, don't bother to spawn
-  // a thread here.  Just kick it out to an idle handler (to give
-  // gtk_widget_hide() a chance to take)
-  g_idle_add(SendReportIdle, 0);
+  // disable all our gui controls, show the throbber + change the progress text
+  gtk_widget_set_sensitive(gSubmitReportCheck, FALSE);
+  gtk_widget_set_sensitive(gViewReportButton, FALSE);
+  gtk_widget_set_sensitive(gCommentText, FALSE);
+  gtk_widget_set_sensitive(gIncludeURLCheck, FALSE);
+  gtk_widget_set_sensitive(gEmailMeCheck, FALSE);
+  gtk_widget_set_sensitive(gEmailEntry, FALSE);
+  gtk_widget_set_sensitive(gCloseButton, FALSE);
+  gtk_widget_set_sensitive(gRestartButton, FALSE);
+  gtk_widget_show_all(gThrobber);
+  gtk_label_set_text(GTK_LABEL(gProgressLabel),
+                     gStrings[ST_REPORTDURINGSUBMIT].c_str());
+
+  // and spawn a thread to do the sending
+  GError* err;
+  gSendThreadID = g_thread_create(SendThread, NULL, TRUE, &err);
 }
 
-static void ShowReportInfo()
+static void ShowReportInfo(GtkTextView* viewReportTextView)
 {
   GtkTextBuffer* buffer =
-    gtk_text_view_get_buffer(GTK_TEXT_VIEW(gViewReportTextView));
+    gtk_text_view_get_buffer(viewReportTextView);
 
   GtkTextIter start, end;
   gtk_text_buffer_get_start_iter(buffer, &start);
@@ -231,12 +269,7 @@ static void CloseClicked(GtkButton* button,
                          gpointer userData)
 {
   SaveSettings();
-  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
-    gtk_widget_hide(gWindow);
-    SendReport();
-  } else {
-    gtk_main_quit();
-  }
+  gtk_main_quit();
 }
 
 static void RestartClicked(GtkButton* button,
@@ -246,11 +279,157 @@ static void RestartClicked(GtkButton* button,
   RestartApplication();
 
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
-    gtk_widget_hide(gWindow);
+    gDidTrySend = true;
     SendReport();
   } else {
     gtk_main_quit();
   }
+}
+
+static void UpdateSubmit()
+{
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
+    gtk_widget_set_sensitive(gViewReportButton, TRUE);
+    gtk_widget_set_sensitive(gCommentText, TRUE);
+    gtk_widget_set_sensitive(gIncludeURLCheck, TRUE);
+    gtk_widget_set_sensitive(gEmailMeCheck, TRUE);
+    gtk_widget_set_sensitive(gEmailEntry,
+                             gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck)));
+    gtk_label_set_text(GTK_LABEL(gProgressLabel),
+                       gStrings[ST_REPORTPRESUBMIT].c_str());
+  } else {
+    gtk_widget_set_sensitive(gViewReportButton, FALSE);
+    gtk_widget_set_sensitive(gCommentText, FALSE);
+    gtk_widget_set_sensitive(gIncludeURLCheck, FALSE);
+    gtk_widget_set_sensitive(gEmailMeCheck, FALSE);
+    gtk_widget_set_sensitive(gEmailEntry, FALSE);
+    gtk_label_set_text(GTK_LABEL(gProgressLabel), "");
+  }
+}
+
+static void SubmitReportChecked(GtkButton* sender, gpointer userData)
+{
+  UpdateSubmit();
+}
+
+static void ViewReportClicked(GtkButton* button,
+                              gpointer userData)
+{
+  GtkDialog* dialog =
+    GTK_DIALOG(gtk_dialog_new_with_buttons(gStrings[ST_VIEWREPORTTITLE].c_str(),
+                                           GTK_WINDOW(gWindow),
+                                           GTK_DIALOG_MODAL,
+                                           GTK_STOCK_OK,
+                                           GTK_RESPONSE_OK,
+                                           NULL));
+
+  GtkWidget* scrolled = gtk_scrolled_window_new(0, 0);
+  gtk_container_add(GTK_CONTAINER(dialog->vbox), scrolled);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
+                                 GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+  gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
+                                      GTK_SHADOW_IN);
+
+  GtkWidget* viewReportTextView = gtk_text_view_new();
+  gtk_container_add(GTK_CONTAINER(scrolled), viewReportTextView);
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(viewReportTextView), FALSE);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(viewReportTextView),
+                              GTK_WRAP_WORD);
+  gtk_widget_set_size_request(GTK_WIDGET(viewReportTextView), -1, 100);
+
+  ShowReportInfo(GTK_TEXT_VIEW(viewReportTextView));
+
+  gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
+  gtk_widget_set_size_request(GTK_WIDGET(dialog), 400, 200);
+  gtk_widget_show_all(GTK_WIDGET(dialog));
+  gtk_dialog_run(dialog);
+  gtk_widget_destroy(GTK_WIDGET(dialog));
+}
+
+static void CommentChanged(GtkTextBuffer* buffer, gpointer userData)
+{
+  GtkTextIter start, end;
+  gtk_text_buffer_get_start_iter(buffer, &start);
+  gtk_text_buffer_get_end_iter(buffer, &end);
+  const char* comment = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+  if (comment[0] == '\0')
+    gQueryParameters.erase("Comments");
+  else
+    gQueryParameters["Comments"] = comment;
+}
+
+static void CommentInsert(GtkTextBuffer* buffer,
+                          GtkTextIter* location,
+                          gchar* text,
+                          gint len,
+                          gpointer userData)
+{
+  GtkTextIter start, end;
+  gtk_text_buffer_get_start_iter(buffer, &start);
+  gtk_text_buffer_get_end_iter(buffer, &end);
+  const char* comment = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+
+  // limit to 500 bytes in utf-8
+  if (strlen(comment) + len > MAX_COMMENT_LENGTH) {
+    g_signal_stop_emission_by_name(buffer, "insert-text");
+  }
+}
+
+static void UpdateHintText(GtkWidget* widget, gboolean gainedFocus,
+                           bool* hintShowing, const char* hintText)
+{
+  GtkTextBuffer* buffer = NULL;
+  if (GTK_IS_TEXT_VIEW(widget))
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
+
+  if (gainedFocus) {
+    if (*hintShowing) {
+      if (buffer == NULL) { // sort of cheating
+        gtk_entry_set_text(GTK_ENTRY(widget), "");
+      }
+      else { // GtkTextView
+        gtk_text_buffer_set_text(buffer, "", 0);
+      }
+      gtk_widget_modify_text(widget, GTK_STATE_NORMAL, NULL);
+      *hintShowing = false;
+    }
+  }
+  else {
+    // lost focus
+    const char* text = NULL;
+    if (buffer == NULL) {
+      text = gtk_entry_get_text(GTK_ENTRY(widget));
+    }
+    else {
+      GtkTextIter start, end;
+      gtk_text_buffer_get_start_iter(buffer, &start);
+      gtk_text_buffer_get_end_iter(buffer, &end);
+      text = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+    }
+
+    if (text == NULL || text[0] == '\0') {
+      *hintShowing = true;
+
+      if (buffer == NULL) {
+        gtk_entry_set_text(GTK_ENTRY(widget), hintText);
+      }
+      else {
+        gtk_text_buffer_set_text(buffer, hintText, -1);
+      }
+
+      gtk_widget_modify_text(widget, GTK_STATE_NORMAL,
+                              &gtk_widget_get_style(widget)->text[GTK_STATE_INSENSITIVE]);
+    }
+  }
+}
+
+static gboolean CommentFocusChange(GtkWidget* widget, GdkEventFocus* event,
+                                   gpointer userData)
+{
+  UpdateHintText(widget, event->in, &gCommentFieldHint,
+                 gStrings[ST_COMMENTGRAYTEXT].c_str());
+
+  return FALSE;
 }
 
 static void UpdateURL()
@@ -262,39 +441,39 @@ static void UpdateURL()
   }
 }
 
-static void IncludeURLClicked(GtkButton* sender, gpointer userData)
-{
-  UpdateURL();
-  ShowReportInfo();
-}
-
 static void UpdateEmail()
 {
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gEmailMeCheck))) {
     gQueryParameters["Email"] = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
+    gtk_widget_set_sensitive(gEmailEntry, TRUE);
   } else {
     gQueryParameters.erase("Email");
+    gtk_widget_set_sensitive(gEmailEntry, FALSE);
   }
+}
+
+static void IncludeURLClicked(GtkButton* sender, gpointer userData)
+{
+  UpdateURL();
 }
 
 static void EmailMeClicked(GtkButton* sender, gpointer userData)
 {
   UpdateEmail();
-  ShowReportInfo();
 }
 
 static void EmailChanged(GtkEditable* editable, gpointer userData)
 {
-  // Email text changed, assume they want the "Email me" checkbox
-  // updated appropriately
-  const char* email = gtk_entry_get_text(GTK_ENTRY(editable));
-  if (email[0] == '\0')
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gEmailMeCheck), FALSE);
-  else
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gEmailMeCheck), TRUE);
-
   UpdateEmail();
-  ShowReportInfo();
+}
+
+static gboolean EmailFocusChange(GtkWidget* widget, GdkEventFocus* event,
+                         gpointer userData)
+{
+  UpdateHintText(widget, event->in, &gEmailFieldHint,
+                 gStrings[ST_EMAILGRAYTEXT].c_str());
+
+  return FALSE;
 }
 
 typedef struct _GnomeProgram GnomeProgram;
@@ -335,6 +514,9 @@ bool UIInit()
   sigfillset(&signals);
   sigprocmask(SIG_UNBLOCK, &signals, &old);
 
+  // tell glib we're going to use threads
+  g_thread_init(NULL);
+
   if (gtk_init_check(&gArgc, &gArgv)) {
     gInitialized = true;
     TryInitGnome();
@@ -365,7 +547,7 @@ void UIShowDefaultUI()
   gtk_dialog_run(GTK_DIALOG(errorDialog));
 }
 
-void UIShowCrashUI(const string& dumpfile,
+bool UIShowCrashUI(const string& dumpfile,
                    const StringTable& queryParameters,
                    const string& sendURL,
                    const vector<string>& restartArgs)
@@ -381,6 +563,7 @@ void UIShowCrashUI(const string& dumpfile,
   gtk_window_set_title(GTK_WINDOW(gWindow),
                        gStrings[ST_CRASHREPORTERTITLE].c_str());
   gtk_window_set_resizable(GTK_WINDOW(gWindow), FALSE);
+  gtk_window_set_position(GTK_WINDOW(gWindow), GTK_WIN_POS_CENTER);
   gtk_container_set_border_width(GTK_CONTAINER(gWindow), 12);
   g_signal_connect(gWindow, "delete-event", G_CALLBACK(WindowDeleted), 0);
 
@@ -409,29 +592,54 @@ void UIShowCrashUI(const string& dumpfile,
   gtk_box_pack_start(GTK_BOX(vbox), indentBox, FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(indentBox), gtk_label_new(""), FALSE, FALSE, 6);
 
-  GtkWidget* innerVBox = gtk_vbox_new(FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(indentBox), innerVBox, TRUE, TRUE, 0);
+  GtkWidget* innerVBox1 = gtk_vbox_new(FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(indentBox), innerVBox1, TRUE, TRUE, 0);
 
-  GtkWidget* expander = gtk_expander_new(gStrings[ST_VIEWREPORT].c_str());
-  gtk_box_pack_start(GTK_BOX(innerVBox), expander, FALSE, FALSE, 6);
+  gSubmitReportCheck =
+    gtk_check_button_new_with_label(gStrings[ST_CHECKSUBMIT].c_str());
+  gtk_box_pack_start(GTK_BOX(innerVBox1), gSubmitReportCheck, FALSE, FALSE, 0);
+  g_signal_connect(gSubmitReportCheck, "clicked",
+                   G_CALLBACK(SubmitReportChecked), 0);
+
+  // indent again, below the "submit report" checkbox
+  GtkWidget* indentBox2 = gtk_hbox_new(FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(innerVBox1), indentBox2, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(indentBox2), gtk_label_new(""), FALSE, FALSE, 6);
+
+  GtkWidget* innerVBox = gtk_vbox_new(FALSE, 0);
+  gtk_box_pack_start(GTK_BOX(indentBox2), innerVBox, TRUE, TRUE, 0);
+  gtk_box_set_spacing(GTK_BOX(innerVBox), 6);
+
+  GtkWidget* viewReportButtonBox = gtk_hbutton_box_new();
+  gtk_box_pack_start(GTK_BOX(innerVBox), viewReportButtonBox, FALSE, FALSE, 0);
+  gtk_box_set_spacing(GTK_BOX(viewReportButtonBox), 6);
+  gtk_button_box_set_layout(GTK_BUTTON_BOX(viewReportButtonBox), GTK_BUTTONBOX_START);
+
+  gViewReportButton =
+    gtk_button_new_with_label(gStrings[ST_VIEWREPORT].c_str());
+  gtk_box_pack_start(GTK_BOX(viewReportButtonBox), gViewReportButton, FALSE, FALSE, 0);
+  g_signal_connect(gViewReportButton, "clicked", G_CALLBACK(ViewReportClicked), 0);
 
   GtkWidget* scrolled = gtk_scrolled_window_new(0, 0);
-  gtk_container_add(GTK_CONTAINER(expander), scrolled);
+  gtk_container_add(GTK_CONTAINER(innerVBox), scrolled);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
                                  GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
                                       GTK_SHADOW_IN);
 
-  gViewReportTextView = gtk_text_view_new();
-  gtk_container_add(GTK_CONTAINER(scrolled), gViewReportTextView);
-  gtk_text_view_set_editable(GTK_TEXT_VIEW(gViewReportTextView), FALSE);
-  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(gViewReportTextView),
-                              GTK_WRAP_WORD);
-  gtk_widget_set_size_request(GTK_WIDGET(gViewReportTextView), -1, 100);
+  gCommentText = gtk_text_view_new();
+  gtk_text_view_set_accepts_tab(GTK_TEXT_VIEW(gCommentText), FALSE);
+  g_signal_connect(gCommentText, "focus-in-event", G_CALLBACK(CommentFocusChange), 0);
+  g_signal_connect(gCommentText, "focus-out-event", G_CALLBACK(CommentFocusChange), 0);
 
-  gSubmitReportCheck =
-    gtk_check_button_new_with_label(gStrings[ST_CHECKSUBMIT].c_str());
-  gtk_box_pack_start(GTK_BOX(innerVBox), gSubmitReportCheck, FALSE, FALSE, 0);
+  GtkTextBuffer* commentBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(gCommentText));
+  g_signal_connect(commentBuffer, "changed", G_CALLBACK(CommentChanged), 0);
+  g_signal_connect(commentBuffer, "insert-text", G_CALLBACK(CommentInsert), 0);
+
+  gtk_container_add(GTK_CONTAINER(scrolled), gCommentText);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(gCommentText),
+                              GTK_WRAP_WORD);
+  gtk_widget_set_size_request(GTK_WIDGET(gCommentText), -1, 100);
 
   if (gQueryParameters.find("URL") != gQueryParameters.end()) {
     gIncludeURLCheck =
@@ -455,36 +663,66 @@ void UIShowCrashUI(const string& dumpfile,
   gEmailEntry = gtk_entry_new();
   gtk_box_pack_start(GTK_BOX(emailIndentBox), gEmailEntry, TRUE, TRUE, 0);
   g_signal_connect(gEmailEntry, "changed", G_CALLBACK(EmailChanged), 0);
+  g_signal_connect(gEmailEntry, "focus-in-event", G_CALLBACK(EmailFocusChange), 0);
+  g_signal_connect(gEmailEntry, "focus-out-event", G_CALLBACK(EmailFocusChange), 0);
+
+  GtkWidget* progressBox = gtk_hbox_new(FALSE, 6);
+  gtk_box_pack_start(GTK_BOX(vbox), progressBox, TRUE, TRUE, 0);
+
+  // Get the throbber image from alongside the executable
+  char* dir = g_path_get_dirname(gArgv[0]);
+  char* path = g_build_filename(dir, "Throbber-small.gif", NULL);
+  g_free(dir);
+  gThrobber = gtk_image_new_from_file(path);
+  gtk_box_pack_start(GTK_BOX(progressBox), gThrobber, FALSE, FALSE, 0);
+
+  gProgressLabel =
+    gtk_label_new(gStrings[ST_REPORTPRESUBMIT].c_str());
+  gtk_box_pack_start(GTK_BOX(progressBox), gProgressLabel, TRUE, TRUE, 0);
+  // force the label to line wrap
+  gtk_widget_set_size_request(gProgressLabel, 400, -1);
+  gtk_label_set_line_wrap(GTK_LABEL(gProgressLabel), TRUE);
 
   GtkWidget* buttonBox = gtk_hbutton_box_new();
   gtk_box_pack_end(GTK_BOX(vbox), buttonBox, FALSE, FALSE, 0);
   gtk_box_set_spacing(GTK_BOX(buttonBox), 6);
   gtk_button_box_set_layout(GTK_BUTTON_BOX(buttonBox), GTK_BUTTONBOX_END);
 
-  GtkWidget* closeButton =
-    gtk_button_new_with_label(gStrings[ST_CLOSE].c_str());
-  gtk_box_pack_start(GTK_BOX(buttonBox), closeButton, FALSE, FALSE, 0);
-  GTK_WIDGET_SET_FLAGS(closeButton, GTK_CAN_DEFAULT);
-  g_signal_connect(closeButton, "clicked", G_CALLBACK(CloseClicked), 0);
+  gCloseButton =
+    gtk_button_new_with_label(gStrings[ST_QUIT].c_str());
+  gtk_box_pack_start(GTK_BOX(buttonBox), gCloseButton, FALSE, FALSE, 0);
+  GTK_WIDGET_SET_FLAGS(gCloseButton, GTK_CAN_DEFAULT);
+  g_signal_connect(gCloseButton, "clicked", G_CALLBACK(CloseClicked), 0);
 
-  GtkWidget* restartButton = 0;
+  gRestartButton = 0;
   if (restartArgs.size() > 0) {
-    restartButton = gtk_button_new_with_label(gStrings[ST_RESTART].c_str());
-    gtk_box_pack_start(GTK_BOX(buttonBox), restartButton, FALSE, FALSE, 0);
-    GTK_WIDGET_SET_FLAGS(restartButton, GTK_CAN_DEFAULT);
-    g_signal_connect(restartButton, "clicked", G_CALLBACK(RestartClicked), 0);
+    gRestartButton = gtk_button_new_with_label(gStrings[ST_RESTART].c_str());
+    gtk_box_pack_start(GTK_BOX(buttonBox), gRestartButton, FALSE, FALSE, 0);
+    GTK_WIDGET_SET_FLAGS(gRestartButton, GTK_CAN_DEFAULT);
+    g_signal_connect(gRestartButton, "clicked", G_CALLBACK(RestartClicked), 0);
   }
 
-  gtk_widget_grab_focus(gEmailEntry);
+  gtk_widget_grab_focus(gSubmitReportCheck);
 
-  gtk_widget_grab_default(restartButton ? restartButton : closeButton);
+  gtk_widget_grab_default(gRestartButton ? gRestartButton : gCloseButton);
 
   LoadSettings();
-  ShowReportInfo();
+
+  UpdateEmail();
+  UpdateSubmit();
+
+  UpdateHintText(gCommentText, FALSE, &gCommentFieldHint,
+                 gStrings[ST_COMMENTGRAYTEXT].c_str());
+  UpdateHintText(gEmailEntry, FALSE, &gEmailFieldHint,
+                 gStrings[ST_EMAILGRAYTEXT].c_str());
 
   gtk_widget_show_all(gWindow);
+  // stick this here to avoid the show_all above...
+  gtk_widget_hide_all(gThrobber);
 
   gtk_main();
+
+  return gDidTrySend;
 }
 
 void UIError_impl(const string& message)

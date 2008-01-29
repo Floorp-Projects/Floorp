@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+
+function boo()
+{
+  s1 = document.getElementById("s1");  
+  marq = document.getElementById("marq");
+  marqAnonymousSomething = document.getAnonymousNodes(marq)[0].childNodes[0];
+
+  removeNode(marqAnonymousSomething);
+  s1.appendChild(document.createElement("div"));
+}
+
+function removeNode(q1) { q1.parentNode.removeChild(q1); }
+
+]]>
+</script>
+</head>
+
+<body onload="boo()">
+
+<span id="s1">Span</span>
+
+<div id="marq" style="-moz-binding: url('342954-2-xbl.xml#marquee-horizontal-10');">Marquee</div>
+
+</body>
+</html>

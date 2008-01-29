@@ -704,7 +704,7 @@ _cairo_clip_int_rect_to_user (cairo_gstate_t *gstate,
     return is_tight;
 }
 
-cairo_private cairo_rectangle_list_t*
+cairo_rectangle_list_t *
 _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 {
     cairo_rectangle_list_t *list;
@@ -721,7 +721,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 	cairo_box_int_t *boxes;
         int i;
 
-	if (_cairo_region_get_boxes (&clip->region, &n_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
+	if (_cairo_region_get_boxes (&clip->region, &n_boxes, &boxes))
 	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 
 	if (n_boxes) {

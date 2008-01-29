@@ -1,0 +1,30 @@
+<html>
+<head>
+    <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script src="NavigationUtils.js"></script>
+</head>
+<body>
+<script>
+var arguments = window.location.hash.substring(1).split(",");
+var target = arguments[0];
+var mechanism = arguments[1];
+
+document.write("target=" + target + " mechanism=" + mechanism);
+
+switch(mechanism) {
+case "location":
+  navigateByLocation(eval(target));
+  break;
+case "open":
+  navigateByOpen(target);
+  break;
+case "form":
+  navigateByForm(target);
+  break;
+case "hyperlink":
+  navigateByHyperlink(target);
+  break;
+}
+</script>
+</body>
+</html>

@@ -1196,6 +1196,34 @@ nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
   return rv;
 }
 
+static PRBool HasRelatedContent(nsIContent *aContent)
+{
+  nsAutoString id;
+  if (!aContent || !nsAccUtils::GetID(aContent, id) || id.IsEmpty()) {
+    return PR_FALSE;
+  }
+
+  nsIAtom *relationAttrs[] = {nsAccessibilityAtoms::aria_labelledby,
+                              nsAccessibilityAtoms::aria_describedby,
+                              nsAccessibilityAtoms::aria_owns,
+                              nsAccessibilityAtoms::aria_controls,
+                              nsAccessibilityAtoms::aria_flowto};
+  if (nsAccUtils::FindNeighbourPointingToNode(aContent, relationAttrs, NS_ARRAY_LENGTH(relationAttrs))) {
+    return PR_TRUE;
+  }
+
+  nsIContent *ancestorContent = aContent;
+  nsAutoString activeID;
+  while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
+    if (ancestorContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant, activeID)) {
+        // ancestor has activedescendant property, this content could be active
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
                                                     nsIPresShell *aPresShell,
                                                     nsIWeakReference *aWeakShell,
@@ -1395,41 +1423,36 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     if (!content->IsFocusable()) {
       // If we're in unfocusable table-related subcontent, check for the
       // Presentation role on the containing table
-      nsIAtom *tag = content->Tag();
-      if (tag == nsAccessibilityAtoms::td ||
-          tag == nsAccessibilityAtoms::th ||
-          tag == nsAccessibilityAtoms::tr ||
-          tag == nsAccessibilityAtoms::tbody ||
-          tag == nsAccessibilityAtoms::tfoot ||
-          tag == nsAccessibilityAtoms::thead) {
+      if (frame->GetType() == nsAccessibilityAtoms::tableCaptionFrame ||
+          frame->GetType() == nsAccessibilityAtoms::tableCellFrame ||
+          frame->GetType() == nsAccessibilityAtoms::tableRowGroupFrame ||
+          frame->GetType() == nsAccessibilityAtoms::tableRowFrame) {
+
         nsIContent *tableContent = content;
-        nsAutoString tableRole;
         while ((tableContent = tableContent->GetParent()) != nsnull) {
-          if (tableContent->Tag() == nsAccessibilityAtoms::table) {
-            // Table that we're a descendant of is not styled as a table,
-            // and has no table accessible for an ancestor, or
-            // table that we're a descendant of is presentational
+          nsIFrame *tableFrame = aPresShell->GetPrimaryFrameFor(tableContent);
+          if (tableFrame &&
+              tableFrame->GetType() == nsAccessibilityAtoms::tableOuterFrame) {
 
             nsCOMPtr<nsIDOMNode> tableNode(do_QueryInterface(tableContent));
             if (tableNode) {
               nsRoleMapEntry *tableRoleMapEntry =
                 nsAccUtils::GetRoleMapEntry(tableNode);
               if (tableRoleMapEntry &&
-                  tableRoleMapEntry != &nsARIAMap::gLandmarkRoleMap) {
+                  tableRoleMapEntry != &nsARIAMap::gLandmarkRoleMap)
                 tryTagNameOrFrame = PR_FALSE;
-                break;
-              }
-            }
-
-            nsIFrame *tableFrame =
-              aPresShell->GetPrimaryFrameFor(tableContent);
-            if (!tableFrame ||
-                tableFrame->GetType() != nsAccessibilityAtoms::tableOuterFrame) {
-              tryTagNameOrFrame = PR_FALSE;
             }
             break;
           }
+
+          if (tableContent->Tag() == nsAccessibilityAtoms::table) {
+            tryTagNameOrFrame = PR_FALSE;
+            break;
+          }
         }
+
+        if (!tableContent)
+          tryTagNameOrFrame = PR_FALSE;
       }
     }
 
@@ -1473,7 +1496,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       (content->IsFocusable() ||
       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
-       HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry)) {
+       HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry) ||
+       HasRelatedContent(content)) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.
@@ -1606,6 +1630,8 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
   switch (type)
   {
 #ifdef MOZ_XUL
+    case nsIAccessibleProvider::NoAccessible:
+      return NS_OK;
     // XUL controls
     case nsIAccessibleProvider::XULAlert:
       *aAccessible = new nsXULAlertAccessible(aNode, weakShell);
@@ -1689,6 +1715,9 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     }
     case nsIAccessibleProvider::XULMenuSeparator:
       *aAccessible = new nsXULMenuSeparatorAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULPane:
+      *aAccessible = new nsEnumRoleAccessible(aNode, weakShell, nsIAccessibleRole::ROLE_PANE);
       break;
     case nsIAccessibleProvider::XULProgressMeter:
       *aAccessible = new nsXULProgressMeterAccessible(aNode, weakShell);

@@ -22,6 +22,9 @@ classic.jar:
 +  skin/classic/global/notification.css
 +  skin/classic/global/printPreview.css
 +  skin/classic/global/printPageSetup.css
++  skin/classic/global/preferences.css
++  skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
++  skin/classic/global/icons/find.png                          (icons/find.png)
 +  skin/classic/global/icons/notfound.png                      (icons/notfound.png)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)
 +  skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)

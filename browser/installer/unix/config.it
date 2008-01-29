@@ -760,6 +760,13 @@ Destination=[SETUP PATH]
 Fail If Exists=FALSE
 Do Not Uninstall=FALSE
 
+[Copy File9]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\nssutil3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
 [Path Lookup $GRE_INSTALL_DIR]
 Path Reg Key Root=HKEY_LOCAL_MACHINE
 Path Reg Key=Software\mozilla.org\GRE\$GreUniqueID$\Main

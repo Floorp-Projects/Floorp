@@ -54,7 +54,7 @@ interface nsIMIMEInfo;
  *       nsIDownloadManager::DOWNLOAD_FAILED
  *       nsIDownloadManager::DOWNLOAD_CANCELED
  */
-[scriptable, uuid(4ee8befe-b05a-4ca2-9b30-6c47a9c4a622)]
+[scriptable, uuid(c891111e-92a6-47b8-bc46-874ebb61ac9d)]
 interface nsIDownload : nsITransfer {
     
     /**
@@ -133,6 +133,13 @@ interface nsIDownload : nsITransfer {
      * and can be null.
      */
     readonly attribute nsIURI referrer;
+
+    /**
+     * Indicates if the download can be resumed after being paused or not.  This
+     * is only the case if the download is over HTTP/1.1 or FTP and if the
+     * server supports it.
+     */
+    readonly attribute boolean resumable;
 };
 
 %{C++

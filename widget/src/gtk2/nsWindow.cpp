@@ -4356,6 +4356,9 @@ get_gtk_cursor(nsCursor aCursor)
     case eCursor_ew_resize:
         gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
         break;
+    case eCursor_none:
+        newType = MOZ_CURSOR_NONE;
+        break;
     default:
         NS_ASSERTION(aCursor, "Invalid cursor type");
         gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
@@ -5207,7 +5210,7 @@ nsWindow::DispatchActivateEvent(void)
         if (privAcc) {
             privAcc->FireToolkitEvent(
                          nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE,
-                         rootAcc, nsnull);
+                         rootAcc);
         }
     }
 
@@ -5226,7 +5229,7 @@ nsWindow::DispatchDeactivateEvent(void)
         if (privAcc) {
             privAcc->FireToolkitEvent(
                          nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE,
-                         rootAcc, nsnull);
+                         rootAcc);
         }
     }
 }

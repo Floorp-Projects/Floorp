@@ -1045,9 +1045,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                 // refresh will be disabled it won't be able to do the paint.
                 // We should really sort out the rules on our synch painting
                 // api....
-                BeginUpdateViewBatch();
+                UpdateViewBatch batch(this);
                 observer->WillPaint();
-                EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+                batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
                 // Get the view pointer again since the code above might have
                 // destroyed it (bug 378273).
@@ -1843,7 +1843,7 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::BeginUpdateViewBatch(void)
+nsIViewManager* nsViewManager::BeginUpdateViewBatch(void)
 {
   if (!IsRootVM()) {
     return RootViewManager()->BeginUpdateViewBatch();
@@ -1859,14 +1859,12 @@ NS_IMETHODIMP nsViewManager::BeginUpdateViewBatch(void)
   if (NS_SUCCEEDED(result))
     ++mUpdateBatchCnt;
 
-  return result;
+  return this;
 }
 
 NS_IMETHODIMP nsViewManager::EndUpdateViewBatch(PRUint32 aUpdateFlags)
 {
-  if (!IsRootVM()) {
-    return RootViewManager()->EndUpdateViewBatch(aUpdateFlags);
-  }
+  NS_ASSERTION(IsRootVM(), "Should only be called on root");
   
   nsresult result = NS_OK;
 
@@ -1914,7 +1912,10 @@ NS_IMETHODIMP nsViewManager::ForceUpdate()
   }
 
   // Walk the view tree looking for widgets, and call Update() on each one
-  UpdateWidgetsForView(mRootView);
+  if (mRootView) {
+    UpdateWidgetsForView(mRootView);
+  }
+  
   return NS_OK;
 }
 

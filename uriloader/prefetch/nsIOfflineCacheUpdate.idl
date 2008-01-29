@@ -205,6 +205,19 @@ interface nsIOfflineCacheUpdate : nsISupports {
 [scriptable, uuid(3abee04b-5bbb-4405-b659-35f780e38da0)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
+     * Constants for the offline-app permission.
+     *
+     * XXX: This isn't a great place for this, but it's really the only
+     * private offline-app-related interface
+     */
+
+    /**
+     * Allow the domain to use offline APIs, and don't warn about excessive
+     * usage.
+     */
+    const unsigned long ALLOW_NO_WARN = 3;
+
+    /**
      * Access to the list of cache updates that have been scheduled.
      */
     readonly attribute unsigned long numUpdates;

@@ -41,7 +41,8 @@ check_updates () {
   if [ -d source/$platform_dirname ]; then
     cd source/$platform_dirname;
     cp $updater ../../update
-    ../../update/updater ../../update 0
+    # FIXME remove once fix in 401608 has shipped
+    ../../update/updater ../../update 0 blah blah
     cd ../..
   else
     echo "FAIL: no dir in source/$platform_dirname"

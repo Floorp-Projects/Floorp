@@ -58,6 +58,7 @@ static StringTable gQueryParameters;
 static string gURLParameter;
 static string gSendURL;
 static vector<string> gRestartArgs;
+static bool gDidTrySend = false;
 
 #define NSSTR(s) [NSString stringWithUTF8String:(s).c_str()]
 
@@ -276,6 +277,7 @@ static bool RestartApplication()
     // Hide the dialog after "closing", but leave it around to coordinate
     // with the upload thread
     [window orderOut:nil];
+    gDidTrySend = true;
     [self sendReport];
   } else {
     [NSApp terminate:self];
@@ -289,6 +291,7 @@ static bool RestartApplication()
     // Hide the dialog after "closing", but leave it around to coordinate
     // with the upload thread
     [window orderOut:nil];
+    gDidTrySend = true;
     [self sendReport];
   } else {
     [NSApp terminate:self];
@@ -488,6 +491,14 @@ static bool RestartApplication()
     return NO;
 }
 
+-(void)applicationWillTerminate:(NSNotification *)aNotification
+{
+  // since we use [NSApp terminate:] we never return to main,
+  // so do our cleanup here
+  if (!gDidTrySend)
+    DeleteDump();
+}
+
 @end
 
 /* === Crashreporter UI Functions === */
@@ -512,7 +523,7 @@ void UIShowDefaultUI()
   [NSApp run];
 }
 
-void UIShowCrashUI(const string& dumpfile,
+bool UIShowCrashUI(const string& dumpfile,
                    const StringTable& queryParameters,
                    const string& sendURL,
                    const vector<string>& restartArgs)
@@ -523,6 +534,8 @@ void UIShowCrashUI(const string& dumpfile,
        queryParameters: queryParameters
        sendURL: sendURL];
   [NSApp run];
+
+  return gDidTrySend;
 }
 
 void UIError_impl(const string& message)

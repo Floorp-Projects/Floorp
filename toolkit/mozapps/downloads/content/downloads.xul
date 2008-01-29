@@ -60,7 +60,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="downloadManager" windowtype="Download:Manager"
         orient="vertical" title="&downloads.title;" statictitle="&downloads.title;"
-        width="&window.width;" height="&window.height;" screenX="10" screenY="10"
+        width="&window.width2;" height="&window.height;" screenX="10" screenY="10"
         persist="width height screenX screenY sizemode"
         onload="Startup();" onunload="Shutdown();"
         onclose="return closeWindow(false);">
@@ -84,7 +84,7 @@
   <keyset id="downloadKeys">
     <key keycode="VK_ENTER" oncommand="doDefaultForSelected();"/>
     <key keycode="VK_RETURN" oncommand="doDefaultForSelected();"/>
-    <key id="key_pauseResume" key=" " command="cmd_pauseResume"/>
+    <key id="key_pauseResume" key=" " oncommand="performCommand('cmd_pauseResume');"/>
     <key id="key_removeFromList"  keycode="VK_DELETE" oncommand="performCommand('cmd_removeFromList');"/>
 #ifdef XP_MACOSX
     <key id="key_removeFromList2" keycode="VK_BACK" oncommand="performCommand('cmd_removeFromList');"/>
@@ -123,8 +123,8 @@
               cmd="cmd_open"/>
     <menuitem id="menuitem_show"
 #ifdef XP_MACOSX
-              label="&cmd.show.labelMac;"
-              accesskey="&cmd.show.accesskeyMac;"
+              label="&cmd.showMac.label;"
+              accesskey="&cmd.showMac.accesskey;"
 #else
               label="&cmd.show.label;"
               accesskey="&cmd.show.accesskey;"

@@ -26,7 +26,7 @@
 #endif
 
 #include <stdlib.h>
-#include "pixman.h"
+
 #include "pixman-private.h"
 #include "pixman-mmx.h"
 

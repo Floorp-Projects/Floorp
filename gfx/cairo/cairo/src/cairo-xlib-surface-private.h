@@ -34,6 +34,8 @@
 #define CAIRO_XLIB_SURFACE_PRIVATE_H
 
 #include "cairo-xlib.h"
+#include "cairo-xlib-private.h"
+#include "cairo-xlib-xrender-private.h"
 
 #include "cairo-surface-private.h"
 

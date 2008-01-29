@@ -82,7 +82,7 @@ public:
   virtual nsresult
   ChildListChanged(PRInt32 aModType)
   {
-    ProcessTextData(PR_TRUE);
+    ProcessTextData();
     return nsMathMLContainerFrame::ChildListChanged(aModType);
   }
 
@@ -93,8 +93,7 @@ protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
   // hook to perform MathML-specific actions depending on the tag
-  virtual void
-  ProcessTextData(PRBool aComputeStyleChange);
+  virtual void ProcessTextData();
 
   // helper to set the style of <mi> which has to be italic or normal
   // depending on its textual content

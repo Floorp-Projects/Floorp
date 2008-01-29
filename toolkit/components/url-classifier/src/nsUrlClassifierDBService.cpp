@@ -2593,6 +2593,7 @@ nsUrlClassifierDBService::GetInstance(nsresult *result)
 nsUrlClassifierDBService::nsUrlClassifierDBService()
  : mCheckMalware(CHECK_MALWARE_DEFAULT)
  , mCheckPhishing(CHECK_PHISHING_DEFAULT)
+ , mInUpdate(PR_FALSE)
 {
 }
 
@@ -2779,6 +2780,11 @@ nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
+  if (mInUpdate)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  mInUpdate = PR_TRUE;
+
   nsresult rv;
 
   // The proxy observer uses the current thread
@@ -2817,11 +2823,12 @@ nsUrlClassifierDBService::FinishStream()
   return mWorkerProxy->FinishStream();
 }
 
-
 NS_IMETHODIMP
 nsUrlClassifierDBService::FinishUpdate()
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  mInUpdate = PR_FALSE;
 
   return mWorkerProxy->FinishUpdate();
 }
@@ -2831,6 +2838,8 @@ NS_IMETHODIMP
 nsUrlClassifierDBService::CancelUpdate()
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  mInUpdate = PR_FALSE;
 
   return mWorkerProxy->CancelUpdate();
 }

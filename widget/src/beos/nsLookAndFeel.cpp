@@ -180,6 +180,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       aColor = NS_RGB(0x77, 0x77, 0x77);
       break;
     case eColor_highlight:
+    case eColor__moz_html_cellhighlight:
     case eColor__moz_menuhover:
       {
         // B_MENU_SELECTION_BACKGROUND_COLOR  is used for text selection
@@ -189,6 +190,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       }
       break;
     case eColor_highlighttext:
+    case eColor__moz_html_cellhighlighttext:
     case eColor__moz_menuhovertext:
       {
         color = ui_color(B_MENU_SELECTED_ITEM_TEXT_COLOR);

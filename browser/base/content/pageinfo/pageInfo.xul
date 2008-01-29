@@ -232,32 +232,17 @@
       </tree>
       <splitter orient="vertical" id="mediaSplitter"/>
       <vbox flex="1" id="mediaPreviewBox" collapsed="true">
-        <grid>
+        <grid id="mediaGrid">
           <columns>
-            <column/>
+            <column id="mediaLabelColumn"/>
             <column class="gridSeparator"/>
             <column flex="1"/>
           </columns>
           <rows>
             <row>
-              <label control="imageurltext" value="&mediaURL;"/>
+              <label control="imageurltext" value="&mediaLocation;"/>
               <separator/>
               <textbox readonly="true" id="imageurltext"/>
-            </row>
-            <row>
-              <label control="imagetitletext" value="&mediaTitle;"/>
-              <separator/>
-              <textbox readonly="true" id="imagetitletext"/>
-            </row>
-            <row>
-              <label control="imagealttext" value="&mediaAlt;"/>
-              <separator/>
-              <textbox readonly="true" id="imagealttext"/>
-            </row>
-            <row>
-              <label control="imagelongdesctext" value="&mediaLongdesc;"/>
-              <separator/>
-              <textbox readonly="true" id="imagelongdesctext"/>
             </row>
             <row>
               <label control="imagetypetext" value="&generalType;"/>
@@ -265,24 +250,24 @@
               <textbox readonly="true" id="imagetypetext"/>
             </row>
             <row>
-              <label control="imagesourcetext" value="&generalSource;"/>
-              <separator/>
-              <textbox readonly="true" id="imagesourcetext"/>
-            </row>
-            <row>
               <label control="imagesizetext" value="&generalSize;"/>
               <separator/>
               <textbox readonly="true" id="imagesizetext"/>
             </row>
             <row>
-              <label control="imageSize" value="&mediaDimensions;"/>
+              <label control="imagedimensiontext" value="&mediaDimension;"/>
               <separator/>
-              <textbox readonly="true" id="imageSize"/>
+              <textbox readonly="true" id="imagedimensiontext"/>
             </row>
             <row>
-              <label control="physSize" value="&mediaPhysDimensions;"/>
+              <label control="imagetext" value="&mediaText;"/>
               <separator/>
-              <textbox readonly="true" id="physSize"/>
+              <textbox readonly="true" id="imagetext"/>
+            </row>
+            <row>
+              <label control="imagelongdesctext" value="&mediaLongdesc;"/>
+              <separator/>
+              <textbox readonly="true" id="imagelongdesctext"/>
             </row>
           </rows>
         </grid>

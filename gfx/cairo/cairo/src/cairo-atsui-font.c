@@ -273,8 +273,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
     err = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix, &font->style);
     if (err != noErr) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
 
@@ -301,8 +300,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
     status = _cairo_atsui_font_set_metrics (font);
 
-    font->cgfref = NULL;
-
+    font->cgfref = 0;
   FAIL:
     if (status) {
 	if (font) {
@@ -453,6 +451,7 @@ _cairo_atsui_font_fini(void *abstract_font)
         ATSUDisposeStyle(font->unscaled_style);
     if (font->cgfref)
 	CGFontRelease(font->cgfref);
+
 }
 
 static GlyphID 

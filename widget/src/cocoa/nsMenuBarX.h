@@ -41,8 +41,6 @@
 
 #include "nsIMenuBar.h"
 #include "nsIMutationObserver.h"
-#include "nsIChangeManager.h"
-#include "nsIMenuCommandDispatcher.h"
 #include "nsCOMArray.h"
 #include "nsHashtable.h"
 #include "nsWeakReference.h"
@@ -54,6 +52,7 @@
 class nsIWidget;
 class nsIDocument;
 class nsIDOMNode;
+class nsChangeObserver;
 
 extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
 
@@ -82,8 +81,6 @@ namespace MenuHelpersX
 
 class nsMenuBarX : public nsIMenuBar,
                    public nsIMutationObserver,
-                   public nsIChangeManager,
-                   public nsIMenuCommandDispatcher,
                    public nsSupportsWeakReference
 {
 public:
@@ -96,8 +93,6 @@ public:
     static NSWindow* sEventTargetWindow;
     
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICHANGEMANAGER
-    NS_DECL_NSIMENUCOMMANDDISPATCHER
 
     // nsIMutationObserver
     NS_DECL_NSIMUTATIONOBSERVER
@@ -117,8 +112,14 @@ public:
     NS_IMETHOD SetNativeData(void* aData);
     NS_IMETHOD MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, void * aMenuNode);
 
+    PRUint32 RegisterForCommand(nsIMenuItem* aItem);
+    void UnregisterCommand(PRUint32 aCommandID);
+
+    void RegisterForContentChanges(nsIContent* aContent, nsChangeObserver* aMenuObject);
+    void UnregisterForContentChanges(nsIContent* aContent);
+    nsChangeObserver* LookupContentChangeObserver(nsIContent* aContent);
+
 protected:
-    
     // Make our menubar conform to Aqua UI guidelines
     void AquifyMenuBar();
     void HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode);

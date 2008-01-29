@@ -39,6 +39,7 @@
 #define nsINIParserImpl_h__
 
 #include "nsIINIParser.h"
+#include "nsINIParser.h"
 #include "nsIFactory.h"
 
 #define NS_INIPARSERFACTORY_CID \
@@ -56,6 +57,21 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINIPARSERFACTORY
   NS_DECL_NSIFACTORY
+};
+
+class nsINIParserImpl :
+  public nsIINIParser
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINIPARSER
+
+  nsresult Init(nsILocalFile* aINIFile) {
+    return mParser.Init(aINIFile);
+  }
+
+private:
+  nsINIParser mParser;
 };
 
 #endif // nsINIParserImpl_h__

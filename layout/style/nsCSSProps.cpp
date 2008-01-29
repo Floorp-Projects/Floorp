@@ -435,6 +435,8 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_dialogtext, nsILookAndFeel::eColor__moz_dialogtext,
   eCSSKeyword__moz_dragtargetzone, nsILookAndFeel::eColor__moz_dragtargetzone,
   eCSSKeyword__moz_hyperlinktext, NS_COLOR_MOZ_HYPERLINKTEXT,
+  eCSSKeyword__moz_html_cellhighlight, nsILookAndFeel::eColor__moz_html_cellhighlight,
+  eCSSKeyword__moz_html_cellhighlighttext, nsILookAndFeel::eColor__moz_html_cellhighlighttext,
   eCSSKeyword__moz_mac_focusring, nsILookAndFeel::eColor__moz_mac_focusring,
   eCSSKeyword__moz_mac_menuselect, nsILookAndFeel::eColor__moz_mac_menuselect,
   eCSSKeyword__moz_mac_menushadow, nsILookAndFeel::eColor__moz_mac_menushadow,
@@ -500,6 +502,7 @@ const PRInt32 nsCSSProps::kCursorKTable[] = {
   eCSSKeyword_nwse_resize, NS_STYLE_CURSOR_NWSE_RESIZE,
   eCSSKeyword_ns_resize, NS_STYLE_CURSOR_NS_RESIZE,
   eCSSKeyword_ew_resize, NS_STYLE_CURSOR_EW_RESIZE,
+  eCSSKeyword_none, NS_STYLE_CURSOR_NONE,
   // -moz- prefixed aliases for some CSS3 cursors for backward compat
   eCSSKeyword__moz_copy, NS_STYLE_CURSOR_COPY,
   eCSSKeyword__moz_alias, NS_STYLE_CURSOR_ALIAS,

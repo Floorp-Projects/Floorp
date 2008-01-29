@@ -206,28 +206,7 @@ menuitem.bookmark-item {
 /* livemarks have the same layout as folder-item, but in the browser-only livemark-item.png */
 /* only the folder icon has any effect for now, item icon is unused */
 .bookmark-item[container][livemark] { 
-  list-style-image: url("chrome://browser/skin/places/livemark-folder.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.bookmark-item[container][livemark][chromedir="rtl"] { 
-  list-style-image: url("chrome://browser/skin/places/livemark-folder-rtl.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.bookmark-item[container][livemark][open],
-.bookmark-item[container][livemark][open][chromedir="rtl"] { 
-  -moz-image-region: rect(16px, 16px, 32px, 0px);
-}
-
-.bookmark-item[type="menu"][livemark],
-.bookmark-item[type="menu"][livemark][chromedir="rtl"] { 
-  -moz-image-region: rect(0px, 32px, 16px, 16px) !important;
-}
-
-.bookmark-item[type="menu"][livemark][open],
-.bookmark-item[type="menu"][livemark][open][chromedir="rtl"] { 
-  -moz-image-region: rect(16px, 32px, 32px, 16px) !important;
+  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
 }
 
 .bookmark-item[container][tagContainer] {
@@ -801,11 +780,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   display: none;
 }
 
-/* Keep the URL bar LTR */
-#urlbar .autocomplete-textbox-container {
-  direction: ltr;
-}
-
 #PopupAutoComplete {
   direction: ltr !important;
 }
@@ -851,6 +825,11 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #identity-box {
   background-color: -moz-dialog;
   -moz-border-end: 1px solid ThreeDShadow;
+  -moz-user-focus: normal;
+}
+
+#identity-box:focus {
+  outline: 1px dotted -moz-DialogText;
 }
 
 #identity-icon-label {
@@ -942,7 +921,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 .verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,
 .verifiedDomain > #identity-popup-encryption > * > #identity-popup-encryption-icon {
   list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
 }
 
 /* Identity popup bounding box */
@@ -967,7 +945,9 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
 }
 
+/* keep the URL bar content LTR */
 #autocomplete-security-wrapper {
+  direction: ltr;
   -moz-box-align: center;
 }
 
@@ -994,16 +974,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #feed-button[feeds] {
-  -moz-image-region: rect(0px, 36px, 18px, 18px);
-  list-style-image: url("chrome://browser/skin/places/livemark-item.png");
-}
-
-#feed-button[feeds]:hover {
-  -moz-image-region: rect(18px, 36px, 36px, 18px);
-}
-
-#feed-button[feeds]:active {
-  -moz-image-region: rect(54px, 36px, 72px, 18px);
+  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
 }
 
 /* Autocomplete */
@@ -1059,23 +1030,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #go-button {
   padding: 3px 2px 2px 2px;
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
-  -moz-image-region: rect(0px 11px 13px 0px);
 }
 
 #go-button[chromedir="rtl"] {
   list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
-}
-
-#go-button:hover {
-  -moz-image-region: rect(0px 22px 13px 11px);
-}
-
-#go-button:hover:active {
-  -moz-image-region: rect(0px 44px 13px 33px);
-}
-
-#go-button[disabled="true"] {
-  -moz-image-region: rect(0px 33px 13px 22px);
 }
 
 /* Star button */
@@ -1108,21 +1066,14 @@ statusbarpanel#statusbar-display {
   display: none;
 }
 
-#security-button[level="high"] {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
-  display: -moz-box;
-}
-
+#security-button[level="high"],
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
   display: -moz-box;
 }
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
-  -moz-image-region: rect(36px, 18px, 54px, 0px);
   display: -moz-box;
 }
 
@@ -1331,4 +1282,13 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 
 #checkForUpdates[loading="true"] {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+
+#download-monitor {
+  list-style-image: url("chrome://mozapps/skin/downloads/downloadIcon.png");
+}
+
+#download-monitor image {
+  height: 16px;
+  width: 16px;
 }

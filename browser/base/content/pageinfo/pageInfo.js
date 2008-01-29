@@ -823,97 +823,87 @@ function makePreview(row)
 {
   var imageTree = document.getElementById("imagetree");
   var item = getSelectedImage(imageTree);
-  var col = imageTree.columns["image-address"];
-  var url = gImageView.getCellText(row, col);
-  // image-bg
+  var url = gImageView.data[row][COL_IMAGE_ADDRESS];
   var isBG = gImageView.data[row][COL_IMAGE_BG];
 
   setItemValue("imageurltext", url);
 
-  if (item.hasAttribute("title"))
-    setItemValue("imagetitletext", item.title);
-  else
-    setItemValue("imagetitletext", null);
-
-  if (item.hasAttribute("longDesc"))
-    setItemValue("imagelongdesctext", item.longDesc);
-  else
-    setItemValue("imagelongdesctext", null);
-
-  if (item.hasAttribute("alt"))
-    setItemValue("imagealttext", item.alt);
-  else if (item instanceof HTMLImageElement || isBG)
-    setItemValue("imagealttext", null);
-  else
-    setItemValue("imagealttext", getValueText(item));
-
+  var imageText;
+  if (!isBG &&
 #ifdef MOZ_SVG
-  if (item instanceof SVGImageElement) {
-    setItemValue("imagetitletext", null);
-    setItemValue("imagelongdesctext", null);
-    setItemValue("imagealttext", null);
-  }
+      !(item instanceof SVGImageElement) &&
 #endif
+      !(gDocument instanceof ImageDocument)) {
+    imageText = item.title || item.alt;
+
+    if (!imageText && !(item instanceof HTMLImageElement))
+      imageText = getValueText(item);
+  }
+  setItemValue("imagetext", imageText);
+
+  setItemValue("imagelongdesctext", item.longDesc);
 
   // get cache info
-  var sourceText = gBundle.getString("generalNotCached");
   var cacheKey = url.replace(/#.*$/, "");
   try {
     // open for READ, in non-blocking mode
     var cacheEntryDescriptor = httpCacheSession.openCacheEntry(cacheKey, ACCESS_READ, false);
-    if (cacheEntryDescriptor)
-      switch (cacheEntryDescriptor.deviceID) {
-        case "disk":
-          sourceText = gBundle.getString("generalDiskCache");
-          break;
-        case "memory":
-          sourceText = gBundle.getString("generalMemoryCache");
-          break;
-        default:
-          sourceText = cacheEntryDescriptor.deviceID;
-          break;
-      }
   }
   catch(ex) {
     try {
       // open for READ, in non-blocking mode
       cacheEntryDescriptor = ftpCacheSession.openCacheEntry(cacheKey, ACCESS_READ, false);
-      if (cacheEntryDescriptor)
-        switch (cacheEntryDescriptor.deviceID) {
-          case "disk":
-            sourceText = gBundle.getString("generalDiskCache");
-            break;
-          case "memory":
-            sourceText = gBundle.getString("generalMemoryCache");
-            break;
-          default:
-            sourceText = cacheEntryDescriptor.deviceID;
-            break;
-        }
     }
     catch(ex2) { }
   }
-  setItemValue("imagesourcetext", sourceText);
 
   // find out the file size
   var sizeText;
   if (cacheEntryDescriptor) {
-    var pageSize = cacheEntryDescriptor.dataSize;
-    var kbSize = Math.round(pageSize / 1024 * 100) / 100;
+    var imageSize = cacheEntryDescriptor.dataSize;
+    var kbSize = Math.round(imageSize / 1024 * 100) / 100;
     sizeText = gBundle.getFormattedString("generalSize",
-                                          [formatNumber(kbSize), formatNumber(pageSize)]);
+                                          [formatNumber(kbSize), formatNumber(imageSize)]);
   }
+  else
+    sizeText = gBundle.getString("mediaUnknownNotCached");
   setItemValue("imagesizetext", sizeText);
 
   var mimeType;
+  var numFrames = 1;
   if (item instanceof HTMLObjectElement ||
       item instanceof HTMLEmbedElement ||
       item instanceof HTMLLinkElement)
     mimeType = item.type;
-  if (!mimeType)
-    mimeType = getContentTypeFromImgRequest(item) ||
-               getContentTypeFromHeaders(cacheEntryDescriptor);
 
+  if (!mimeType && item instanceof nsIImageLoadingContent) {
+    var imageRequest = item.getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+    if (imageRequest) {
+      mimeType = imageRequest.mimeType;
+      var image = imageRequest.image;
+      if (image)
+        numFrames = image.numFrames;
+    }
+  }
+  if (!mimeType)
+    mimeType = getContentTypeFromHeaders(cacheEntryDescriptor);
+
+  if (mimeType) {
+    // We found the type, try to display it nicely
+    var imageMimeType = /^image\/(.*)/.exec(mimeType);
+    if (imageMimeType) {
+      mimeType = imageMimeType[1].toUpperCase();
+      if (numFrames > 1)
+        mimeType = gBundle.getFormattedString("mediaAnimatedImageType",
+                                              [mimeType, numFrames]);
+      else
+        mimeType = gBundle.getFormattedString("mediaImageType", [mimeType]);
+    }
+  }
+  else {
+    // We couldn't find the type, fall back to the value in the treeview
+    mimeType = gImageView.data[row][COL_IMAGE_TYPE];
+  }
   setItemValue("imagetypetext", mimeType);
 
   var imageContainer = document.getElementById("theimagecontainer");
@@ -974,18 +964,21 @@ function makePreview(row)
   }
 
   var imageSize = "";
-  if (url)
-    imageSize = gBundle.getFormattedString("mediaSize",
-                                           [formatNumber(width),
-                                           formatNumber(height)]);
-  setItemValue("imageSize", imageSize);
-
-  var physSize = "";
-  if (width != physWidth || height != physHeight)
-    physSize = gBundle.getFormattedString("mediaSize",
-                                          [formatNumber(physWidth),
-                                           formatNumber(physHeight)]);
-  setItemValue("physSize", physSize);
+  if (url) {
+    if (width != physWidth || height != physHeight) {
+      imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
+                                             [formatNumber(physWidth),
+                                              formatNumber(physHeight),
+                                              formatNumber(width),
+                                              formatNumber(height)]);
+    }
+    else {
+      imageSize = gBundle.getFormattedString("mediaDimensions",
+                                             [formatNumber(width),
+                                              formatNumber(height)]);
+    }
+  }
+  setItemValue("imagedimensiontext", imageSize);
 
   makeBlockImage(url);
 
@@ -1045,21 +1038,6 @@ function getContentTypeFromHeaders(cacheEntryDescriptor)
 
   return (/^Content-Type:\s*(.*?)\s*(?:\;|$)/mi
           .exec(cacheEntryDescriptor.getMetaDataElement("response-head")))[1];
-}
-
-function getContentTypeFromImgRequest(item)
-{
-  var httpRequest;
-
-  try {
-    var imageItem = item.QueryInterface(nsIImageLoadingContent);
-    var imageRequest = imageItem.getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
-    if (imageRequest)
-      httpRequest = imageRequest.mimeType;
-  }
-  catch (ex) { } // This never happened.  ;)
-
-  return httpRequest;
 }
 
 //******** Other Misc Stuff

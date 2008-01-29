@@ -137,6 +137,9 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
     // in more context, including the display and/or target surface type that
     // we should try to match
     Display* display = GDK_DISPLAY();
+    if (!display)
+        return nsnull;
+
     if (!UseGlitz()) {
         GdkPixmap* pixmap = nsnull;
         XRenderPictFormat* xrenderFormat =

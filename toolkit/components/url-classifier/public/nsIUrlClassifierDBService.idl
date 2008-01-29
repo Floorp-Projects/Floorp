@@ -127,7 +127,8 @@ interface nsIUrlClassifierDBService : nsISupports
   //    is complete.
 
   /**
-   * Begin an update process.
+   * Begin an update process.  Will throw NS_ERROR_NOT_AVAILABLE if there
+   * is already an update in progress.
    */
   void beginUpdate(in nsIUrlClassifierUpdateObserver updater);
 

@@ -67,6 +67,15 @@ nsLeafFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   return result;
 }
 
+/* virtual */ nsSize
+nsLeafFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                             nsSize aCBSize, nscoord aAvailableWidth,
+                             nsSize aMargin, nsSize aBorder,
+                             nsSize aPadding, PRBool aShrinkWrap)
+{
+  return nsSize(GetIntrinsicWidth(), GetIntrinsicHeight());
+}
+
 NS_IMETHODIMP
 nsLeafFrame::Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
@@ -80,41 +89,46 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
-  // XXX add in code to check for width/height being set via css
-  // and if set use them instead of calling GetDesiredSize.
+  DoReflow(aPresContext, aMetrics, aReflowState, aStatus);
 
+  FinishAndStoreOverflow(&aMetrics);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLeafFrame::DoReflow(nsPresContext* aPresContext,
+                      nsHTMLReflowMetrics& aMetrics,
+                      const nsHTMLReflowState& aReflowState,
+                      nsReflowStatus& aStatus)
+{
   NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
-               "Shouldn't have unconstrained stuff here");
+               "Shouldn't have unconstrained stuff here "
+               "Thanks to the rules of reflow");
+  NS_ASSERTION(NS_INTRINSICSIZE != aReflowState.ComputedHeight(),
+               "Shouldn't have unconstrained stuff here "
+               "thanks to ComputeAutoSize");  
 
   aMetrics.width = aReflowState.ComputedWidth();
-  if (NS_INTRINSICSIZE != aReflowState.ComputedHeight()) {
-    aMetrics.height = aReflowState.ComputedHeight();
-  } else {
-    aMetrics.height = GetIntrinsicHeight();
-    // XXXbz using NS_CSS_MINMAX like this presupposes content-box sizing.
-    aMetrics.height = NS_CSS_MINMAX(aMetrics.height,
-                                    aReflowState.mComputedMinHeight,
-                                    aReflowState.mComputedMaxHeight);
-  }
+  aMetrics.height = aReflowState.ComputedHeight();
   
   AddBordersAndPadding(aReflowState, aMetrics);
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("exit nsLeafFrame::Reflow: size=%d,%d",
+                 ("exit nsLeafFrame::DoReflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
 
   aMetrics.mOverflowArea =
     nsRect(0, 0, aMetrics.width, aMetrics.height);
-  FinishAndStoreOverflow(&aMetrics);
+  
   return NS_OK;
 }
 
 nscoord
 nsLeafFrame::GetIntrinsicHeight()
 {
-  NS_NOTREACHED("Someone didn't override Reflow");
+  NS_NOTREACHED("Someone didn't override Reflow or ComputeAutoSize");
   return 0;
 }
 

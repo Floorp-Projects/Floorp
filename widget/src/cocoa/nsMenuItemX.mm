@@ -57,14 +57,14 @@
 #include "nsGUIEvent.h"
 
 
-NS_IMPL_ISUPPORTS2(nsMenuItemX, nsIMenuItem, nsIChangeObserver)
+NS_IMPL_ISUPPORTS1(nsMenuItemX, nsIMenuItem)
 
 
 nsMenuItemX::nsMenuItemX()
 {
   mNativeMenuItem     = nil;
   mMenuParent         = nsnull;
-  mManager            = nsnull;
+  mMenuBar            = nsnull;
   mKeyEquivalent.AssignLiteral(" ");
   mEnabled            = PR_TRUE;
   mIsChecked          = PR_FALSE;
@@ -76,14 +76,14 @@ nsMenuItemX::~nsMenuItemX()
 {
   [mNativeMenuItem autorelease];
   if (mContent)
-    mManager->Unregister(mContent);
+    mMenuBar->UnregisterForContentChanges(mContent);
   if (mCommandContent)
-    mManager->Unregister(mCommandContent);
+    mMenuBar->UnregisterForContentChanges(mCommandContent);
 }
 
 
 NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
-                              nsIChangeManager* aManager, nsIContent* aNode)
+                              nsMenuBarX* aMenuBar, nsIContent* aNode)
 {
   mContent = aNode;      // addref
   mMenuParent = aParent; // weak
@@ -91,10 +91,10 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, EMenuIt
   mType = aItemType;
 
   // register for AttributeChanged messages
-  mManager = aManager;
-  nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(static_cast<nsIChangeObserver*>(this));
-  mManager->Register(mContent, obs); // does not addref this
-  
+  mMenuBar = aMenuBar;
+  NS_ASSERTION(mMenuBar, "No menu bar given, must have one");
+  mMenuBar->RegisterForContentChanges(mContent, this);
+
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mContent->GetCurrentDoc()));
 
   // if we have a command associated with this menu item, register for changes
@@ -110,7 +110,7 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, EMenuIt
       if (commandElement) {
         mCommandContent = do_QueryInterface(commandElement);
         // register to observe the command DOM element
-        mManager->Register(mCommandContent, obs); // does not addref this
+        mMenuBar->RegisterForContentChanges(mCommandContent, this);
       }
     }
   }
@@ -368,15 +368,15 @@ nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
 
 
 //
-// nsIChangeObserver
+// nsChangeObserver
 //
 
 
-NS_IMETHODIMP
-nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIContent *aContent, nsIAtom *aAttribute)
+void
+nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute)
 {
   if (!aContent)
-    return NS_OK;
+    return;
   
   if (aContent == mContent) { // our own content node changed
     if (aAttribute == nsWidgetAtoms::checked) {
@@ -427,29 +427,25 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIC
         [mNativeMenuItem setEnabled:YES];
     }
   }
-  
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsMenuItemX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+void
+nsMenuItemX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
   if (aChild == mCommandContent) {
-    mManager->Unregister(mCommandContent);
+    mMenuBar->UnregisterForContentChanges(mCommandContent);
     mCommandContent = nsnull;
   }
 
   mMenuParent->SetRebuild(PR_TRUE);
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsMenuItemX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
+void
+nsMenuItemX::ObserveContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
   mMenuParent->SetRebuild(PR_TRUE);
-  return NS_OK;
 }
 
 

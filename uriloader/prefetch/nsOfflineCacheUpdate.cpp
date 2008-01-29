@@ -686,12 +686,12 @@ nsOfflineCacheUpdate::Init(PRBool aPartialUpdate,
 
     mManifestURI = aManifestURI;
 
-    rv = mManifestURI->GetHostPort(mUpdateDomain);
+    rv = mManifestURI->GetAsciiHost(mUpdateDomain);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString manifestSpec;
 
-    rv = mManifestURI->GetSpec(manifestSpec);
+    rv = mManifestURI->GetAsciiSpec(manifestSpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 ref = manifestSpec.FindChar('#');

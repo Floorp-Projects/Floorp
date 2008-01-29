@@ -118,9 +118,6 @@ gfxFontCache::Lookup(const nsAString &aName,
 
     gfxFont *font = entry->mFont;
     NS_ADDREF(font);
-    if (font->GetExpirationState()->IsTracked()) {
-        RemoveObject(font);
-    }
     return font;
 }
 
@@ -131,15 +128,16 @@ gfxFontCache::AddNew(gfxFont *aFont)
     HashEntry *entry = mFonts.PutEntry(key);
     if (!entry)
         return;
-    if (entry->mFont) {
-        // This is weird. Someone's asking us to overwrite an existing font.
-        // Oh well, make it happen ... just ensure that we're not tracking
-        // the old font
-        if (entry->mFont->GetExpirationState()->IsTracked()) {
-            RemoveObject(entry->mFont);
-        }
-    }
+    gfxFont *oldFont = entry->mFont;
     entry->mFont = aFont;
+    // If someone's asked us to replace an existing font entry, then that's a
+    // bit weird, but let it happen, and expire the old font if it's not used.
+    if (oldFont && oldFont->GetExpirationState()->IsTracked()) {
+        // if oldFont == aFont, recount should be > 0,
+        // so we shouldn't be here.
+        NS_ASSERTION(aFont != oldFont, "new font is tracked for expiry!");
+        NotifyExpired(oldFont);
+    }
 }
 
 void
@@ -168,7 +166,11 @@ void
 gfxFontCache::DestroyFont(gfxFont *aFont)
 {
     Key key(aFont->GetName(), aFont->GetStyle());
-    mFonts.RemoveEntry(key);
+    HashEntry *entry = mFonts.GetEntry(key);
+    if (entry && entry->mFont == aFont)
+        mFonts.RemoveEntry(key);
+    NS_ASSERTION(aFont->GetRefCount() == 0,
+                 "Destroying with non-zero ref count!");
     delete aFont;
 }
 
@@ -648,7 +650,7 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
                           void *closure)
 {
     return ForEachFontInternal(mFamilies, mStyle.langGroup,
-                               PR_TRUE, fc, closure);
+                               PR_TRUE, PR_TRUE, fc, closure);
 }
 
 PRBool
@@ -658,7 +660,7 @@ gfxFontGroup::ForEachFont(const nsAString& aFamilies,
                           void *closure)
 {
     return ForEachFontInternal(aFamilies, aLangGroup,
-                               PR_FALSE, fc, closure);
+                               PR_FALSE, PR_TRUE, fc, closure);
 }
 
 struct ResolveData {
@@ -678,6 +680,7 @@ PRBool
 gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                                   const nsACString& aLangGroup,
                                   PRBool aResolveGeneric,
+                                  PRBool aResolveFontName,
                                   FontCreationCallback fc,
                                   void *closure)
 {
@@ -765,14 +768,20 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         
         if (!family.IsEmpty()) {
             NS_LossyConvertUTF16toASCII gf(genericFamily);
-            ResolveData data(fc, gf, closure);
-            PRBool aborted;
-            gfxPlatform *pf = gfxPlatform::GetPlatform();
-            nsresult rv = pf->ResolveFontName(family,
-                                              gfxFontGroup::FontResolverProc,
-                                              &data, aborted);
-            if (NS_FAILED(rv) || aborted)
-                return PR_FALSE;
+            if (aResolveFontName) {
+                ResolveData data(fc, gf, closure);
+                PRBool aborted;
+                gfxPlatform *pf = gfxPlatform::GetPlatform();
+                nsresult rv = pf->ResolveFontName(family,
+                                                  gfxFontGroup::FontResolverProc,
+                                                  &data, aborted);
+                if (NS_FAILED(rv) || aborted)
+                    return PR_FALSE;
+            }
+            else {
+                if (!fc(family, gf, closure))
+                    return PR_FALSE;
+            }
         }
 
         if (generic && aResolveGeneric) {
@@ -783,7 +792,8 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             nsXPIDLString value;
             nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
             if (NS_SUCCEEDED(rv)) {
-                ForEachFontInternal(value, lang, PR_FALSE, fc, closure);
+                ForEachFontInternal(value, lang, PR_FALSE, aResolveFontName,
+                                    fc, closure);
             }
         }
 
@@ -801,7 +811,8 @@ gfxFontGroup::FontResolverProc(const nsAString& aName, void *aClosure)
 }
 
 void
-gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
+gfxFontGroup::FindGenericFontFromStyle(PRBool aResolveFontName,
+                                       FontCreationCallback fc,
                                        void *closure)
 {
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
@@ -825,7 +836,7 @@ gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
         rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
         if (NS_SUCCEEDED(rv)) {
             ForEachFontInternal(familyName, mStyle.langGroup,
-                                PR_FALSE, fc, closure);
+                                PR_FALSE, aResolveFontName, fc, closure);
         }
 
         prefName.AssignLiteral("font.name-list.");
@@ -836,7 +847,7 @@ gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
         rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
         if (NS_SUCCEEDED(rv)) {
             ForEachFontInternal(familyName, mStyle.langGroup,
-                                PR_FALSE, fc, closure);
+                                PR_FALSE, aResolveFontName, fc, closure);
         }
     }
 }
@@ -1979,3 +1990,36 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
         }
     }
 }
+
+#ifdef DEBUG
+void
+gfxTextRun::Dump(FILE* aOutput) {
+    if (!aOutput) {
+        aOutput = stdout;
+    }
+
+    PRUint32 i;
+    fputc('"', aOutput);
+    for (i = 0; i < mCharacterCount; ++i) {
+        PRUnichar ch = GetChar(i);
+        if (ch >= 32 && ch < 128) {
+            fputc(ch, aOutput);
+        } else {
+            fprintf(aOutput, "\\u%4x", ch);
+        }
+    }
+    fputs("\" [", aOutput);
+    for (i = 0; i < mGlyphRuns.Length(); ++i) {
+        if (i > 0) {
+            fputc(',', aOutput);
+        }
+        gfxFont* font = mGlyphRuns[i].mFont;
+        const gfxFontStyle* style = font->GetStyle();
+        NS_ConvertUTF16toUTF8 fontName(font->GetName());
+        fprintf(aOutput, "%d: %s %f/%d/%d/%s", mGlyphRuns[i].mCharacterOffset,
+                fontName.get(), style->size,
+                style->weight, style->style, style->langGroup.get());
+    }
+    fputc(']', aOutput);
+}
+#endif

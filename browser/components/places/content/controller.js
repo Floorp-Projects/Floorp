@@ -425,6 +425,7 @@ PlacesController.prototype = {
           nodeData["dynamiccontainer"] = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT:
           nodeData["folder"] = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST:

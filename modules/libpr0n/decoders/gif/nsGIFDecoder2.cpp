@@ -264,12 +264,12 @@ NS_IMETHODIMP nsGIFDecoder2::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   /* necko doesn't propagate the errors from ReadDataOut - take matters
      into our own hands.  if we have at least one frame of an animated
      gif, then return success so we keep displaying as much as possible. */
-  if (NS_SUCCEEDED(rv) && mGIFStruct.state == gif_error) {
+  if (mGIFStruct.state == gif_error || mGIFStruct.state == gif_oom) {
     PRUint32 numFrames = 0;
     if (mImageContainer)
       mImageContainer->GetNumFrames(&numFrames);
-    if (numFrames <= 0)
-      return NS_ERROR_FAILURE;
+    if (numFrames <= 1)
+      rv = NS_ERROR_FAILURE;
   }
 
   return rv;
@@ -395,7 +395,7 @@ void nsGIFDecoder2::EndImageFrame()
   if (mGIFStruct.rows_remaining != mGIFStruct.height) {
     if (mGIFStruct.rows_remaining && mGIFStruct.images_decoded) {
       // Clear the remaining rows (only needed for the animation frames)
-      PRUint8 *rowp = mImageData + ((mGIFStruct.rows_remaining - mGIFStruct.height) * mGIFStruct.width);
+      PRUint8 *rowp = mImageData + ((mGIFStruct.height - mGIFStruct.rows_remaining) * mGIFStruct.width);
       memset(rowp, 0, mGIFStruct.rows_remaining * mGIFStruct.width);
     }
 
@@ -590,6 +590,8 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
       }
 
       if (oldcode == -1) {
+        if (code >= MAX_BITS)
+          return PR_FALSE;
         *rowp++ = suffix[code];
         if (rowp == rowend)
           OUTPUT_ROW();
@@ -603,13 +605,13 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
         *stackp++ = firstchar;
         code = oldcode;
 
-        if (stackp == stack + MAX_BITS)
+        if (stackp >= stack + MAX_BITS)
           return PR_FALSE;
       }
 
       while (code >= clear_code)
       {
-        if (code == prefix[code])
+        if ((code >= MAX_BITS) || (code == prefix[code]))
           return PR_FALSE;
 
         *stackp++ = suffix[code];
