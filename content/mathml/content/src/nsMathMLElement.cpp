@@ -222,7 +222,7 @@ Implementation here:
 /* static */ PRBool
 nsMathMLElement::ParseNumericValue(const nsString& aString,
                                    nsCSSValue&     aCSSValue,
-                                   PRBool          aRequireLengthUnit)
+                                   PRUint32        aFlags)
 {
   nsAutoString str(aString);
   str.CompressWhitespace(); // aString is const in this code...
@@ -237,6 +237,8 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
   PRInt32 i = 0;
   PRUnichar c = str[0];
   if (c == '-') {
+    if (!(aFlags & PARSE_ALLOW_NEGATIVE))
+      return PR_FALSE;
     number.Append(c);
     i++;
 
@@ -270,16 +272,16 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
 
   nsCSSUnit cssUnit;
   if (unit.IsEmpty()) {
-    if (aRequireLengthUnit) {
-      // We are supposed to have a length unit, but there isn't one.
+    if (aFlags & PARSE_ALLOW_UNITLESS) {
+      // no explicit unit, this is a number that will act as a multiplier
+      cssUnit = eCSSUnit_Number;
+    } else {
+      // We are supposed to have a unit, but there isn't one.
       // If the value is 0 we can just call it "pixels" otherwise
       // this is illegal.
       if (floatValue != 0.0)
         return PR_FALSE;
       cssUnit = eCSSUnit_Pixel;
-    } else {
-      // no explicit unit, this is a number that will act as a multiplier
-      cssUnit = eCSSUnit_Number;
     }
   }
   else if (unit.EqualsLiteral("%")) {
@@ -328,7 +330,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (value && value->Type() == nsAttrValue::eString &&
         aData->mFontData->mScriptMinSize.GetUnit() == eCSSUnit_Null) {
       ParseNumericValue(value->GetStringValue(),
-                        aData->mFontData->mScriptMinSize, PR_TRUE);
+                        aData->mFontData->mScriptMinSize, 0);
     }
 
     value = aAttributes->GetAttr(nsGkAtoms::scriptlevel_);
@@ -363,7 +365,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (value && value->Type() == nsAttrValue::eString &&
         aData->mFontData->mSize.GetUnit() == eCSSUnit_Null) {
       nsAutoString str(value->GetStringValue());
-      if (!ParseNumericValue(str, aData->mFontData->mSize, PR_TRUE) &&
+      if (!ParseNumericValue(str, aData->mFontData->mSize, 0) &&
           parseSizeKeywords) {
         static const char sizes[3][7] = { "small", "normal", "big" };
         static const PRInt32 values[NS_ARRAY_LENGTH(sizes)] = {
