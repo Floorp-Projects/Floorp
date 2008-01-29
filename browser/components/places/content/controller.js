@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const NHRVO = Ci.nsINavHistoryResultViewObserver;
-
 // XXXmano: we should move most/all of these constants to PlacesUtils
 const ORGANIZER_ROOT_BOOKMARKS = "place:folder=2&excludeItems=1&queryType=1";
 const ORGANIZER_SUBSCRIPTIONS_QUERY = "place:annotation=livemark%2FfeedURI";
@@ -121,16 +119,11 @@ PlacesController.prototype = {
       return this._view.selectedURINode;
     case "placesCmd_new:folder":
     case "placesCmd_new:livemark":
-      return this._canInsert() &&
-             this._view.peerDropTypes
-                 .indexOf(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) != -1;
+      return this._canInsert();
     case "placesCmd_new:bookmark":
-      return this._canInsert() &&
-             this._view.peerDropTypes.indexOf(PlacesUtils.TYPE_X_MOZ_URL) != -1;
+      return this._canInsert();
     case "placesCmd_new:separator":
       return this._canInsert() &&
-             this._view.peerDropTypes
-                 .indexOf(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) != -1 &&
              !asQuery(this._view.getResult().root).queryOptions.excludeItems &&
              this._view.getResult().sortingMode ==
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
@@ -777,7 +770,7 @@ PlacesController.prototype = {
       throw Cr.NS_ERROR_NOT_AVAILABLE;
 
     this._view.saveSelection(this._view.SAVE_SELECTION_INSERT);
-    
+
     var performed = false;
     if (aType == "bookmark")
       performed = PlacesUtils.showAddBookmarkUI(null, null, null, ip);
@@ -1407,7 +1400,7 @@ PlacesMenuDNDObserver.prototype = {
     if (!dropPoint)
       return;
 
-    PlacesControllerDragHelper.onDrop(null, this._view, dropPoint.ip);
+    PlacesControllerDragHelper.onDrop(dropPoint.ip);
   },
 
   onDragExit: function TBV_DO_onDragExit(event, session) {
@@ -1425,8 +1418,9 @@ PlacesMenuDNDObserver.prototype = {
 
   getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
     var flavorSet = new FlavourSet();
-    for (var i = 0; i < this._view.peerDropTypes.length; ++i)
-      flavorSet.appendFlavour(this._view.peerDropTypes[i]);
+    var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
+    for (var i = 0; i < types; ++i)
+      flavorSet.appendFlavour(types[i]);
     return flavorSet;
   },
 
@@ -1496,24 +1490,21 @@ var PlacesControllerDragHelper = {
    * Determines whether or not the data currently being dragged can be dropped
    * on the specified view. 
    * @param   view
-   *          An object implementing the AVI
+   *          A places view object (nsINavHistoryResultViewer)
    * @param   orientation
    *          The orientation of the drop
    * @returns true if the data being dragged is of a type supported by the view
    *          it is being dragged over, false otherwise. 
    */
   canDrop: function PCDH_canDrop(view, orientation) {
-    var root = view.getResult().root;
+    var root = view.result.root;
     if (PlacesUtils.nodeIsReadOnly(root) || 
         !PlacesUtils.nodeIsFolder(root))
       return false;
 
     var session = this.getSession();
     if (session) {
-      if (orientation != NHRVO.DROP_ON)
-        var types = view.peerDropTypes;
-      else
-        types = view.childDropTypes;
+      var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
       for (var i = 0; i < types.length; ++i) {
         if (session.isDataFlavorSupported(types[i]))
           return true;
@@ -1527,21 +1518,13 @@ var PlacesControllerDragHelper = {
    * supported by a view. 
    * @param   session
    *          The active drag session
-   * @param   view
-   *          An object implementing the AVI that supplies a list of 
-   *          supported droppable content types
-   * @param   orientation
-   *          The orientation of the drop
    * @returns An object implementing nsITransferable that can receive data
    *          dropped onto a view. 
    */
-  _initTransferable: function PCDH__initTransferable(session, view, orientation) {
+  _initTransferable: function PCDH__initTransferable(session) {
     var xferable = Cc["@mozilla.org/widget/transferable;1"].
                    createInstance(Ci.nsITransferable);
-    if (orientation != NHRVO.DROP_ON) 
-      var types = view.peerDropTypes;
-    else
-      types = view.childDropTypes;    
+    var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES;
     for (var i = 0; i < types.length; ++i) {
       if (session.isDataFlavorSupported(types[i]))
         xferable.addDataFlavor(types[i]);
@@ -1551,19 +1534,14 @@ var PlacesControllerDragHelper = {
 
   /**
    * Handles the drop of one or more items onto a view.
-   * @param   sourceView
-   *          The AVI-implementing object that started the drop. 
-   * @param   targetView
-   *          The AVI-implementing object that received the drop. 
    * @param   insertionPoint
    *          The insertion point where the items should be dropped
    */
-  onDrop: function PCDH_onDrop(sourceView, targetView, insertionPoint) {
+  onDrop: function PCDH_onDrop(insertionPoint) {
     var session = this.getSession();
     var copy = session.dragAction & Ci.nsIDragService.DRAGDROP_ACTION_COPY;
     var transactions = [];
-    var xferable = this._initTransferable(session, targetView, 
-                                          insertionPoint.orientation);
+    var xferable = this._initTransferable(session);
     var dropCount = session.numDropItems;
 
     var movedCount = 0;

@@ -417,73 +417,6 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
   readonly attribute long long folderItemId;
 };
 
-/**
- *  Allows clients of the HistoryResult to define domain specific handling 
- *  of specific nsITreeView methods that the HistoryResult does not implement.
- *
- *  @see nsINavHistoryResult for where this fits in
- */
-[scriptable, uuid(b34d5ca4-ce8e-49a6-9201-a59ae2128d2c)]
-interface nsINavHistoryResultViewObserver : nsISupports
-{
-  const long DROP_BEFORE = -1;
-  const long DROP_ON = 0;
-  const long DROP_AFTER = 1;
-  /**
-   * Methods used by the drag feedback code to determine if a drag is allowable at
-   * the current location. To get the behavior where drops are only allowed on
-   * items, such as the mailNews folder pane, always return false whe
-   * the orientation is not DROP_ON. Implementors should not change the content of
-   * the observer list!
-   */
-  boolean canDrop(in long index, in long orientation);
-
-  /**
-   * Called when the user drops something on this view. The |orientation| param
-   * specifies before/on/after the given |row|.
-   */
-  void onDrop(in long row, in long orientation);
-
-  /** 
-   * Called when an item is opened or closed. 
-   */
-  void onToggleOpenState (in long index);
-
-  /** 
- * Called when a header is clicked.
-   */
-  void onCycleHeader(in nsITreeColumn column);
-
-  /**
-   * Called when a cell in a non-selectable cycling column (e.g. 
-   * unread/flag/etc.) is clicked.
-   */
-  void onCycleCell(in long row, in nsITreeColumn column);
-
-  /** 
-   * Called when selection in the tree changes
-   */
-  void onSelectionChanged();
-
-  /**
-   * A command API that can be used to invoke commands on the selection.  
-   * The tree will automatically invoke this method when certain keys 
-   * are pressed.  For example, when the DEL key is pressed, performAction 
-   * will be called with the "delete" string. 
-   */
-  void onPerformAction(in wstring action);
-
-  /**
-   * A command API that can be used to invoke commands on a specific row.
-   */
-  void onPerformActionOnRow(in wstring action, in long row);
-
-  /**
-   * A command API that can be used to invoke commands on a specific cell.
-   */
-  void onPerformActionOnCell(in wstring action, in long row, in nsITreeColumn column);
-};
-
 
 /**
  * Allows clients to observe what is happening to a result as it updates itself
@@ -492,7 +425,7 @@ interface nsINavHistoryResultViewObserver : nsISupports
  *
  * @see nsINavHistoryResult for where this fits in
  */
-[scriptable, uuid(76cad155-21d5-427e-9740-01386cc8b923)]
+[scriptable, uuid(e60f4429-3787-45c8-a8c0-18ef52621bbf)]
 interface nsINavHistoryResultViewer : nsISupports
 {
   /**
@@ -592,21 +525,6 @@ interface nsINavHistoryResultViewer : nsISupports
    * is being deallocated. This should not be set by other code.
    */
   attribute nsINavHistoryResult result;
-
-  /**
-   * Adds the specified view observer to the view. In ownsWeak is false, then
-   * the result will hold a strong reference to the observer. If ownsWeak is
-   * true, then the observer must implement nsISupportsWeakReference, and the
-   * result will hold a weak reference to the observer.
-   */
-  void addViewObserver(in nsINavHistoryResultViewObserver observer,
-                       in boolean ownsWeak);
-
-  /**
-   * Removes the specified view observer from this view. This observer must
-   * have been previously registered using addViewObserver.
-   */
-  void removeViewObserver(in nsINavHistoryResultViewObserver observer);
 };
 
 
@@ -619,7 +537,7 @@ interface nsINavHistoryResultViewer : nsISupports
  * object, attach it to a result, never attach it to a tree, and forget about
  * it, it will leak!
  */
-[scriptable, uuid(ecd6ad22-8eb0-4824-8a57-5edad9a08ae6)]
+[scriptable, uuid(e0ce87df-8b77-407b-a52b-7510eab14fb5)]
 interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
 {
   /**
@@ -636,14 +554,6 @@ interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
    * refresh.
    */
   attribute boolean collapseDuplicates;
-
-  /**
-   * This tells you how many items are in the flattened list of results, i.e.
-   * how many rows are in this tree right now. The tree adaptor will also
-   * QI to nsITreeView, and this will be the same as nsITreeView.rowCount.
-   * This is only valid when a tree is attached, the result will be 0 otherwise.
-   */
-  readonly attribute unsigned long flatItemCount;
 
   /**
    * This allows you to get at the real node for a given row index. This is
@@ -677,21 +587,13 @@ interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
  * represents the model where the data is stored. External components
  * provide the view and controller which define how the data looks and how
  * interaction happens.
- *                           +-- nsINavHistoryResultViewObserver
- *                           |
  *   [RESULT]----->[viewer]----->[controller]
  *             |
  *             +-- nsINavHistoryResultViewer
  *
  * The result indicates to the view when something changes through the
- * nsINavHistoryResultViewer interface. Viewers register themselves through
- * the nsINavHistoryResult.RegisterViewer. The viewer interface would then tell
- * the actual view object what to do. A nsINavHistoryResultTreeViewer is
- * provided which provides pre-packaged interaction with a nsITreeBoxObject.
- * Other views will need to provide their own viewer interfaces.
- *
- * The viewer provides notifications to the controller when view events occur
- * through the nsINavHistoryResultViewObserver interface.
+ * nsINavHistoryResultViewer interface. The viewer is set through
+ * the nsINavHistoryResult.viewer property.
  */
 
 [scriptable, uuid(d1562f6f-8d5a-4042-8524-72f747a51b18)]

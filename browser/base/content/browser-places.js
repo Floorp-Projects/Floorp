@@ -564,8 +564,9 @@ var BookmarksMenuDropHandler = {
   getSupportedFlavours: function BMDH_getSupportedFlavours() {
     var flavorSet = new FlavourSet();
     var view = document.getElementById("bookmarksMenuPopup");
-    for (var i = 0; i < view.peerDropTypes.length; ++i)
-      flavorSet.appendFlavour(view.peerDropTypes[i]);
+    var types = PlacesUtils.GENERIC_VIEW_DROP_TYPES
+    for (var i = 0; i < types.length; ++i)
+      flavorSet.appendFlavour(types[i]);
     return flavorSet;
   }, 
 
@@ -596,7 +597,7 @@ var BookmarksMenuDropHandler = {
     var view = document.getElementById("bookmarksMenuPopup");
     // Put the item at the end of bookmark menu
     var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);
-    PlacesControllerDragHelper.onDrop(null, view, ip);
+    PlacesControllerDragHelper.onDrop(view, ip);
     view._rebuild();
   }
 };
