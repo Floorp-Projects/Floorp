@@ -60,7 +60,8 @@
  * be passed to MAKE_LOAD_TYPE.
  */
 #define EXTRA_LOAD_FLAGS (LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP | \
-                          LOAD_FLAGS_FIRST_LOAD)
+                          LOAD_FLAGS_FIRST_LOAD | \
+                          LOAD_FLAGS_BYPASS_CLASSIFIER)
 
 /* load types are legal combinations of load commands and flags 
  *  

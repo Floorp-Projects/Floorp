@@ -126,6 +126,8 @@ interface nsIDocShell : nsISupports
   // @see nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD
   const long INTERNAL_LOAD_FLAGS_FIRST_LOAD              = 0x8;
 
+  const long INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER       = 0x10;
+
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except
    * that its parameter list is broken out instead of being packaged inside
