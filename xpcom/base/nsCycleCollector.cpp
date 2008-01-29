@@ -878,8 +878,8 @@ struct nsCycleCollector
     void SelectPurple();
     void MarkRoots(GCGraphBuilder &builder);
     void ScanRoots();
-    void RootWhite();
-    PRBool CollectWhite(); // returns whether anything was collected
+    void CollectWhite();
+    PRBool UnrootWhite(); // returns whether anything was collected
 
     nsCycleCollector();
     ~nsCycleCollector();
@@ -1525,7 +1525,7 @@ nsCycleCollector::ScanRoots()
 ////////////////////////////////////////////////////////////////////////
 
 void
-nsCycleCollector::RootWhite()
+nsCycleCollector::CollectWhite()
 {
     // Explanation of "somewhat modified": we have no way to collect the
     // set of whites "all at once", we have to ask each of them to drop
@@ -1562,17 +1562,11 @@ nsCycleCollector::RootWhite()
     PRUint32 i, count = mBuf.GetSize();
     for (i = 0; i < count; ++i) {
         PtrInfo *pinfo = static_cast<PtrInfo*>(mBuf.ObjectAt(i));
-        rv = pinfo->mParticipant->RootAndUnlinkJSObjects(pinfo->mPointer);
+        rv = pinfo->mParticipant->Root(pinfo->mPointer);
         if (NS_FAILED(rv))
             Fault("Failed root call while unlinking", pinfo);
     }
-}
 
-PRBool
-nsCycleCollector::CollectWhite()
-{
-    nsresult rv;
-    PRUint32 i, count = mBuf.GetSize();
     for (i = 0; i < count; ++i) {
         PtrInfo *pinfo = static_cast<PtrInfo*>(mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Unlink(pinfo->mPointer);
@@ -1588,7 +1582,13 @@ nsCycleCollector::CollectWhite()
 #endif
         }
     }
+}
 
+PRBool
+nsCycleCollector::UnrootWhite()
+{
+    nsresult rv;
+    PRUint32 i, count = mBuf.GetSize();
     for (i = 0; i < count; ++i) {
         PtrInfo *pinfo = static_cast<PtrInfo*>(mBuf.ObjectAt(i));
         rv = pinfo->mParticipant->Unroot(pinfo->mPointer);
@@ -2286,7 +2286,7 @@ nsCycleCollector::BeginCollection()
 #ifdef COLLECT_TIME_DEBUG
         now = PR_Now();
 #endif
-        RootWhite();
+        CollectWhite();
 
 #ifdef COLLECT_TIME_DEBUG
         printf("cc: CollectWhite() took %lldms\n",
@@ -2300,7 +2300,7 @@ nsCycleCollector::BeginCollection()
 PRBool
 nsCycleCollector::FinishCollection()
 {
-    PRBool collected = CollectWhite();
+    PRBool collected = UnrootWhite();
 
 #ifdef DEBUG_CC
     mStats.mCollection++;

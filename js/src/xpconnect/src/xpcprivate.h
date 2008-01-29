@@ -497,7 +497,7 @@ public:
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
 
     // nsCycleCollectionParticipant
-    NS_IMETHOD RootAndUnlinkJSObjects(void *p);
+    NS_IMETHOD Root(void *p);
     NS_IMETHOD Unlink(void *p);
     NS_IMETHOD Unroot(void *p);
     NS_IMETHOD Traverse(void *p,
@@ -2488,14 +2488,8 @@ public:
     NS_DECL_NSIXPCONNECTWRAPPEDJS
     NS_DECL_NSISUPPORTSWEAKREFERENCE
     NS_DECL_NSIPROPERTYBAG
-
-    class NS_CYCLE_COLLECTION_INNERCLASS
-     : public nsXPCOMCycleCollectionParticipant
-    {
-      NS_IMETHOD RootAndUnlinkJSObjects(void *p);
-      NS_DECL_CYCLE_COLLECTION_CLASS_BODY(nsXPCWrappedJS, nsIXPConnectWrappedJS)
-    };
-    NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPCWrappedJS,
+                                             nsIXPConnectWrappedJS)
     NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(nsXPCWrappedJS)
 
     NS_IMETHOD CallMethod(PRUint16 methodIndex,

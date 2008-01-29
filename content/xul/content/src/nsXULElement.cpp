@@ -2416,6 +2416,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
         static_cast<nsXULPrototypeElement*>(tmp)->Unlink();
     }
+    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+        static_cast<nsXULPrototypeScript*>(tmp)->Unlink();
+    }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
@@ -2449,15 +2452,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_NATIVE_BEGIN(nsXULPrototypeNode)
                                                 script->mScriptObject.mObject)
     }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN_NATIVE(nsXULPrototypeNode, AddRef)
-    if (tmp->mType == nsXULPrototypeNode::eType_Element) {
-        static_cast<nsXULPrototypeElement*>(tmp)->UnlinkJSObjects();
-    }
-    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
-        static_cast<nsXULPrototypeScript*>(tmp)->UnlinkJSObjects();
-    }
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-//NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXULPrototypeNode, AddRef)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXULPrototypeNode, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXULPrototypeNode, Release)
 
 //----------------------------------------------------------------------
@@ -2755,18 +2750,13 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 }
 
 void
-nsXULPrototypeElement::UnlinkJSObjects()
+nsXULPrototypeElement::Unlink()
 {
     if (mHoldsScriptObject) {
         nsContentUtils::DropScriptObjects(mScriptTypeID, this,
                                           &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
         mHoldsScriptObject = PR_FALSE;
     }
-}
-
-void
-nsXULPrototypeElement::Unlink()
-{
     mNumAttributes = 0;
     delete[] mAttributes;
     mAttributes = nsnull;
@@ -2794,7 +2784,7 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLangID, PRUint32 aLineNo, P
 
 nsXULPrototypeScript::~nsXULPrototypeScript()
 {
-    UnlinkJSObjects();
+    Unlink();
 }
 
 nsresult

@@ -216,7 +216,7 @@ nsXBLProtoImpl::Trace(TraceCallback aCallback, void *aClosure) const
 }
 
 void
-nsXBLProtoImpl::UnlinkJSObjects()
+nsXBLProtoImpl::Unlink()
 {
   if (mClassObject) {
     DestroyMembers(nsnull);
