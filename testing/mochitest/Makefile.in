@@ -52,7 +52,9 @@ DIRS =	MochiKit \
 include $(topsrcdir)/config/rules.mk
 
 # files that get copied into $objdir/_tests/
-_SERV_FILES = 	runtests.pl \
+_SERV_FILES = 	\
+		runtests.pl \
+		runtests.py \
 		gen_template.pl \
 		server.js \
 		harness.xul \
@@ -83,11 +85,22 @@ browser_path = \"../$(DIST)/bin/$(PROGRAM)\"
 endif
 
 # These go in _tests/ so they need to go up an extra path segement
-TEST_DRIVER_PPARGS = 	-DBROWSER_PATH=$(browser_path) \
+TEST_DRIVER_PPARGS = 	\
+			-DBROWSER_PATH=$(browser_path) \
 			-DXPC_BIN_PATH=\"../$(DIST)/bin\" \
 			$(NULL)
 
+ifeq ($(OS_ARCH),Darwin)
+TEST_DRIVER_PPARGS += -DIS_MAC=1
+else
+TEST_DRIVER_PPARGS += -DIS_MAC=0
+endif
+
 runtests.pl: runtests.pl.in
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
+	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+
+runtests.py: runtests.py.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
