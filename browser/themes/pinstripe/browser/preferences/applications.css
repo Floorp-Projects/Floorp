@@ -61,6 +61,26 @@ richlistitem {
   min-height: 22px;
 }
 
+richlistitem[appHandlerIcon="ask"],
+menuitem[appHandlerIcon="ask"] {
+  list-style-image: url("chrome://browser/skin/preferences/application.png");
+}
+
+richlistitem[appHandlerIcon="save"],
+menuitem[appHandlerIcon="save"] {
+  list-style-image: url("chrome://browser/skin/preferences/application.png");
+}
+
+richlistitem[appHandlerIcon="feed"],
+menuitem[appHandlerIcon="feed"] {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+}
+
+richlistitem[appHandlerIcon="plugin"],
+menuitem[appHandlerIcon="plugin"] {
+  list-style-image: url("chrome://browser/skin/preferences/plugin.png");
+}
+
 .actionsMenu .menulist-icon {
   -moz-margin-end: 1px;
 }
