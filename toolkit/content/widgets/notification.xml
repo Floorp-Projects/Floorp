@@ -169,6 +169,21 @@
         </body>
       </method>
 
+      <method name="removeTransientNotifications">
+        <body>
+          <![CDATA[
+            var notifications = this.allNotifications;
+            for (var n = notifications.length - 1; n >= 0; n--) {
+              var notification = notifications[n];
+              if (notification.persistence)
+                notification.persistence--;
+              else if (Date.now() > notification.timeout)
+                this.removeNotification(notification);
+            }
+          ]]>
+        </body>
+      </method>
+
       <method name="_showNotification">
         <parameter name="aNotification"/>
         <parameter name="aSlideIn"/>
@@ -347,6 +362,9 @@
                             onget="return this.getAttribute('type');"/>
       <property name="priority" onget="return parseInt(this.getAttribute('priority')) || 0;"
                                 onset="this.setAttribute('priority', val); return val;"/>
+      <property name="persistence" onget="return parseInt(this.getAttribute('persistance')) || 0;"
+                                   onset="this.setAttribute('persistence', val); return val;"/>
+      <field name="timeout">0</field>
 
       <property name="control" readonly="true">
         <getter>
