@@ -1,0 +1,608 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Robert Sayre <sayrer@gmail.com>
+#   Jeff Walden <jwalden+bmo@mit.edu>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+"""
+Runs the Mochitest test harness.
+"""
+
+from datetime import datetime
+import itertools
+import optparse
+import os
+import os.path
+import shutil
+import signal
+import sys
+import time
+from urllib import quote_plus as encodeURIComponent
+import urllib2
+
+
+# Path to the test script on the server
+TEST_SERVER_HOST = "localhost:8888"
+TEST_PATH = "/tests/"
+CHROME_PATH = "/redirect.html";
+TESTS_URL = "http://" + TEST_SERVER_HOST + TEST_PATH
+CHROMETESTS_URL = "http://" + TEST_SERVER_HOST + CHROME_PATH
+SERVER_SHUTDOWN_URL = "http://" + TEST_SERVER_HOST + "/server/shutdown"
+
+# Max time in seconds to wait for server startup before tests will fail -- if
+# this seems big, it's mostly for debug machines where cold startup
+# (particularly after a build) takes forever.
+SERVER_STARTUP_TIMEOUT = 45
+
+# Since some tests require cross-domain support in Mochitest, across ports,
+# domains, subdomains, etc. we use a proxy autoconfig hack to map a bunch of
+# servers onto localhost:8888.  We have to grant them the same privileges as
+# localhost:8888 here, since the browser only knows them as the URLs they're
+# pretending to be.  We also have two servers which are set up but don't have
+# privileges, for testing privilege functionality.
+#
+# These lists must be kept in sync with the following list:
+#
+# http://developer.mozilla.org/en/docs/Mochitest#How_do_I_test_issues_which_only_show_up_when_tests_are_run_across_domains.3F
+#
+servers = [
+           "localhost:8888", # MUST be first -- see PAC pref-setting code
+           "example.org:80",
+           "test1.example.org:80",
+           "test2.example.org:80",
+           "sub1.test1.example.org:80",
+           "sub1.test2.example.org:80",
+           "sub2.test1.example.org:80",
+           "sub2.test2.example.org:80",
+           "example.org:8000",
+           "test1.example.org:8000",
+           "test2.example.org:8000",
+           "sub1.test1.example.org:8000",
+           "sub1.test2.example.org:8000",
+           "sub2.test1.example.org:8000",
+           "sub2.test2.example.org:8000",
+           "example.com:80",
+           "test1.example.com:80",
+           "test2.example.com:80",
+           "sub1.test1.example.com:80",
+           "sub1.test2.example.com:80",
+           "sub2.test1.example.com:80",
+           "sub2.test2.example.com:80",
+           "sectest1.example.org:80",
+           "sub.sectest2.example.org:80",
+           "sub1.xn--lt-uia.example.org:8000", # U+00E4 U+006C U+0074
+           "sub2.xn--lt-uia.example.org:80",   # U+00E4 U+006C U+0074
+          ]
+
+unprivilegedServers = [
+                       "sectest2.example.org:80",
+                       "sub.sectest1.example.org:80",
+                      ]
+
+PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
+
+ # These are generated in mozilla/testing/mochitest/Makefile.in
+#expand DIST_BIN = "./" + __XPC_BIN_PATH__
+#expand IS_WIN32 = len("__WIN32__") != 0
+#expand IS_MAC = __IS_MAC__ != 0
+UNIXISH = not IS_WIN32 and not IS_MAC
+
+
+#expand DEFAULT_APP = "./" + __BROWSER_PATH__
+
+
+#######################
+# COMMANDLINE OPTIONS #
+#######################
+
+class MochitestOptions(optparse.OptionParser):
+  """Parses Mochitest commandline options."""
+  def __init__(self, **kwargs):
+    optparse.OptionParser.__init__(self, **kwargs)
+    defaults = {}
+
+    self.add_option("--close-when-done",
+                    action = "store_true", dest = "closeWhenDone",
+                    help = "close the application when tests are done running")
+    defaults["closeWhenDone"] = False
+
+    self.add_option("--appname",
+                    action = "store", type = "string", dest = "app",
+                    help = "absolute path to application, overriding default")
+    defaults["app"] = DEFAULT_APP
+
+    self.add_option("--log-file",
+                    action = "store", type = "string", dest = "logFile",
+                    help = "file to which logging occurs")
+    defaults["logFile"] = None
+
+    self.add_option("--autorun",
+                    action = "store_true", dest = "autorun",
+                    help = "start running tests when the application starts")
+    defaults["autorun"] = False
+
+    LOG_LEVELS = ("DEBUG", "INFO", "ERROR", "FATAL", "WARNING")
+
+    self.add_option("--console-level",
+                    action = "store", type = "choice", dest = "consoleLevel",
+                    choices = LOG_LEVELS,
+                    help = "logging level of console logging")
+    defaults["consoleLevel"] = None
+
+    self.add_option("--file-level", 
+                    action = "store", type = "choice", dest = "fileLevel",
+                    choices = LOG_LEVELS,
+                    help = "logging level of file logging")
+    defaults["fileLevel"] = None
+
+    self.add_option("--chrome",
+                    action = "store_true", dest = "chrome",
+                    help = "run chrome Mochitests")
+    defaults["chrome"] = False
+
+    self.add_option("--test-path",
+                    action = "store", type = "string", dest = "testPath",
+                    help = "start in the given directory's tests")
+    defaults["testPath"] = ""
+
+    self.add_option("--browser-chrome",
+                    action = "store_true", dest = "browserChrome",
+                    help = "run browser chrome Mochitests")
+    defaults["browserChrome"] = False
+
+    self.add_option("--setenv",
+                    action = "append", type = "string", dest = "environment",
+                    help = "given a VAR=value pair, sets that in the "
+                           "browser's environment")
+    defaults["environment"] = []
+    
+    self.add_option("--browser-arg",
+                    action = "append", type = "string", dest = "browserArgs",
+                    help = "provides an argument to the test application")
+    defaults["browserArgs"] = []
+
+    # -h, --help are automatically handled by OptionParser
+
+    self.set_defaults(**defaults)
+
+    usage = """\
+Usage instructions for runtests.py.
+All arguments are optional.
+If --log-file is specified, --file-level must be specified as well.
+If --chrome is specified, chrome tests will be run instead of web content tests.
+If --browser-chrome is specified, browser-chrome tests will be run instead of web content tests.
+Logging levels are one of %s.
+For further details on the logging levels, see
+<http://mochikit.com/doc/html/MochiKit/Logging.html>.""" % ", ".join(LOG_LEVELS)
+    self.set_usage(usage)
+
+
+
+#######################
+# HTTP SERVER SUPPORT #
+#######################
+
+class MochitestServer:
+  "Web server used to serve Mochitests, for closer fidelity to the real web."
+
+  def __init__(self, options):
+    self._closeWhenDone = options.closeWhenDone
+
+  def start(self):
+    "Run the Mochitest server, returning the process ID of the server."
+    
+    env = dict(os.environ)
+    if UNIXISH:
+      env["LD_LIBRARY_PATH"] = DIST_BIN
+      env["MOZILLA_FIVE_HOME"] = DIST_BIN
+      env["XPCOM_DEBUG_BREAK"] = "warn"
+
+    args = ["-v", "170",
+            "-f", "./" + "httpd.js",
+            "-f", "./" + "server.js"]
+
+    self._process = Process(DIST_BIN + "/" + "xpcshell", args, env = env)
+    pid = self._process.pid
+    if pid < 0:
+      print "Error starting server."
+      sys.exit(2)
+    print "Server pid: " + str(pid)
+    
+
+  def ensureReady(self, timeout):
+    assert timeout >= 0
+
+    aliveFile = PROFILE_DIRECTORY + "/" + "server_alive.txt"
+    i = 0
+    while i < timeout:
+      if os.path.exists(aliveFile):
+        break
+      time.sleep(1)
+      i += 1
+    else:
+      print "Timed out while waiting for server startup."
+      self.stop()
+      sys.exit(1)
+
+  def stop(self):
+    pid = self._process.pid
+    try:
+      c = urllib2.urlopen(SERVER_SHUTDOWN_URL)
+      c.read()
+      c.close()
+      os.waitpid(pid, 0)
+    except:
+      if IS_WIN32:
+        pass # XXX do something here!
+      else:
+        os.kill(pid, signal.SIGKILL)
+
+
+
+#################
+# SUBPROCESSING #
+#################
+
+class Process:
+  """
+  Represents a subprocess of this process.  We don't just directly use the
+  subprocess module here because we want compatibility with Python 2.3 on
+  non-Windows platforms.  :-(
+  """
+
+  def __init__(self, command, args, env):
+    """
+    Executes the given command, which must be an absolute path, with the given
+    arguments in the given environment.
+    """
+    command = os.path.abspath(command)
+    if IS_WIN32:
+      import subprocess
+      cmd = [command]
+      cmd.extend(args)
+      self._process = subprocess.Popen(cmd, env = env)
+    else:
+      import popen2
+      cmd = []
+      for (k, v) in env.iteritems():
+        cmd.append(k + "='" + v + "' ")
+      cmd.append("'" + command + "'")
+      cmd.extend(map(lambda x: "'" + x + "'", args))
+      cmd = " ".join(cmd)
+      self._process = popen2.Popen4(cmd)
+    self.pid = self._process.pid
+
+  def wait(self):
+    "Waits for this process to finish, then returns the process's status."
+    if IS_WIN32:
+      return self._process.wait()
+    # popen2 is a bit harder to work with because we have to manually redirect
+    # output to stdout
+    p = self._process
+    stdout = sys.stdout
+    out = p.fromchild
+    while p.poll() == -1:
+      print >> stdout, out.readline().rstrip()
+    # read in the last lines that happened between the last -1 poll and the
+    # process finishing
+    for line in out:
+      print >> stdout, line.rstrip()
+    return p.poll()
+
+
+#################
+# MAIN FUNCTION #
+#################
+
+def main():
+  parser = MochitestOptions()
+  options, args = parser.parse_args()
+  
+  if not os.path.exists(options.app):
+    msg = """\
+Error: Path %(app)s doesn't exist.
+Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
+    print msg % {"app": options.app}
+    sys.exit(1)
+
+  # browser environment
+  browserEnv = {}
+  for v in options.environment:
+    ix = v.find("=")
+    if ix <= 0:
+      print "Error: syntax error in --setenv=" + v
+      sys.exit(1)
+    browserEnv[v[:ix]] = v[ix + 1:]
+  
+  manifest = initializeProfile(options)
+  server = MochitestServer(options)
+  server.start()
+
+  # If we're lucky, the server has fully started by now, and all paths are
+  # ready, etc.  However, xpcshell cold start times suck, at least for debug
+  # builds.  We'll try to connect to the server for awhile, and if we fail,
+  # we'll try to kill the server and exit with an error.
+  server.ensureReady(SERVER_STARTUP_TIMEOUT)
+
+
+  # URL parameters to test URL:
+  #
+  # autorun -- kick off tests automatically
+  # closeWhenDone -- runs quit.js after tests
+  # logFile -- logs test run to an absolute path
+  #
+  
+  # consoleLevel, fileLevel: set the logging level of the console and
+  # file logs, if activated.
+  # <http://mochikit.com/doc/html/MochiKit/Logging.html>
+
+  testURL = TESTS_URL + options.testPath
+  if options.chrome:
+    testURL = CHROMETESTS_URL + options.testPath
+  elif options.browserChrome:
+    testURL = "about:blank"
+
+  if options.browserChrome:
+    makeTestConfig(options)
+  else:
+    urlOpts = []
+    if options.autorun:
+      urlOpts.append("autorun=1")
+    if options.closeWhenDone:
+      urlOpts.append("closeWhenDone=1")
+    if options.logFile:
+      urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
+    if options.fileLevel:
+      urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
+    if options.consoleLevel:
+      urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
+    if len(urlOpts) > 0:
+      testURL += "?" + "&".join(urlOpts)
+
+
+  start = runTests(testURL, browserEnv, options)
+
+  server.stop()
+
+  # print test run times
+  finish = datetime.now()
+  print " started: " + str(start)
+  print "finished: " + str(finish)
+
+  # delete the profile and manifest
+  os.remove(manifest)
+
+
+
+#######################
+# CONFIGURATION SETUP #
+#######################
+
+def makeTestConfig(options):
+  "Creates a test configuration file for customizing test execution."
+  def boolString(b):
+    if b:
+      return "true"
+    return "false"
+
+  logFile = options.logFile.replace("\\", "\\\\")
+  testPath = options.testPath.replace("\\", "\\\\")
+  content = """\
+({
+  autoRun: %(autorun)s,
+  closeWhenDone: %(closeWhenDone)s,
+  logPath: "%(logPath)s",
+  testPath: "%(testPath)s"
+})""" % {"autorun": boolString(options.autorun),
+         "closeWhenDone": boolString(options.closeWhenDone),
+         "logPath": logFile,
+         "testPath": testPath}
+
+  config = open(PROFILE_DIRECTORY + "/" + "testConfig.js", "w")
+  config.write(content)
+  config.close() 
+
+
+def initializeProfile(options):
+  "Sets up the standard Mochitest profile."
+
+  # Start with a clean slate.
+  shutil.rmtree(PROFILE_DIRECTORY, True)
+  os.mkdir(PROFILE_DIRECTORY)
+
+
+  prefs = []
+
+  part = """\
+user_pref("browser.dom.window.dump.enabled", true);
+user_pref("dom.disable_open_during_load", false);
+user_pref("dom.max_script_run_time", 0); // no slow script dialogs
+user_pref("signed.applets.codebase_principal_support", true);
+user_pref("security.warn_submit_insecure", false);
+user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.warnOnQuit", false);
+"""
+  prefs.append(part)
+
+  # Grant God-power to all the servers on which tests can run.
+  for (i, server) in itertools.izip(itertools.count(1), servers):
+    part = """
+user_pref("capability.principal.codebase.p%(i)d.granted",
+          "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
+           UniversalPreferencesRead UniversalPreferencesWrite \
+           UniversalFileRead");
+user_pref("capability.principal.codebase.p%(i)d.id", "http://%(server)s");
+user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
+"""  % {"i": i, "server": server}
+    prefs.append(part)
+
+  # Now add the two servers that do NOT have God-power so we can properly test
+  # the granting and receiving of God-power.  Strip off the first server because
+  # we proxy all the others to it.
+  allServers = servers[1:] + unprivilegedServers
+               
+
+  # Now actually create the preference to make the proxying happen.
+  quotedServers = ", ".join(map(lambda x: "'" + x + "'", allServers))
+
+  pacURL = """data:text/plain,
+function FindProxyForURL(url, host)
+{
+  var servers = [%(quotedServers)s];
+  var regex = new RegExp('http://(.*?(:\\\\\\\\d+)?)/');
+  var matches = regex.exec(url);
+  if (!matches)
+    return 'DIRECT';
+  var hostport = matches[1], port = matches[2];
+  if (!port)
+    hostport += ':80';
+  if (servers.indexOf(hostport) >= 0)
+    return 'PROXY localhost:8888';
+  return 'DIRECT';
+}""" % {"quotedServers": quotedServers}
+  pacURL = "".join(pacURL.splitlines())
+
+  part = """
+user_pref("network.proxy.type", 2);
+user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
+""" % {"pacURL": pacURL}
+  prefs.append(part)
+
+  # write the preferences
+  prefsFile = open(PROFILE_DIRECTORY + "/" + "user.js", "a")
+  prefsFile.write("".join(prefs))
+  prefsFile.close()
+
+
+  # Now onto chrome config changes
+
+  chromedir = PROFILE_DIRECTORY + "/" + "chrome"
+  os.mkdir(chromedir)
+
+  chrome = []
+
+  part = """
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+toolbar,
+toolbarpalette {
+  background-repeat: repeat-x !important;
+  background-position: top right !important;
+  background-color: rgb(235, 235, 235) !important;
+  background-image: url("chrome://browser/skin/bookmark_toolbar_background.gif") !important;
+}
+toolbar#nav-bar {
+  background-image: none !important;
+}
+"""
+  chrome.append(part)
+
+
+
+  # write userChrome.css
+  chromeFile = open(PROFILE_DIRECTORY + "/" + "userChrome.css", "a")
+  chromeFile.write("".join(chrome))
+  chromeFile.close()
+
+
+  # register our chrome dir
+  chrometestDir = os.path.abspath(".") + "/"
+  if IS_WIN32:
+    chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
+
+
+  (path, leaf) = os.path.split(options.app)
+  manifest = path + "/" + "chrome/mochikit.manifest"
+  manifestFile = open(manifest, "w")
+  manifestFile.write("content mochikit " + chrometestDir + "\n")
+  if options.browserChrome:
+    overlayLine = "overlay chrome://browser/content/browser.xul " \
+                  "chrome://mochikit/content/browser-test-overlay.xul\n"
+    manifestFile.write(overlayLine)
+  manifestFile.close()
+
+  return manifest
+
+
+
+ ##################
+ # TEST EXECUTION #
+ ##################
+
+def runTests(testURL, browserEnv, options):
+  "Run the tests, returning the time at which the tests were started."
+
+  # mark the start
+  start = datetime.now()
+
+  # Set env vars so Firefox doesn't quit weirdly and break the script, but
+  # otherwise start empty so we can override from outside this method.
+  env = {"NO_EM_RESTART": "1", "XPCOM_DEBUG_BREAK": "warn"}
+  
+  if UNIXISH:
+    env["LD_LIBRARY_PATH"] = DIST_BIN
+    env["MOZILLA_FIVE_HOME"] = DIST_BIN
+
+  # copy over anything provided outside this function
+  env.update(browserEnv)
+
+
+  # now run with the profile we created
+  cmd = options.app
+  if IS_MAC and not cmd.endswith("-bin"):
+    cmd += "-bin"
+  cmd = os.path.abspath(cmd)
+
+  args = []
+  if IS_MAC:
+    args.append("-foreground")
+  args.extend(("-no-remote", "-profile", PROFILE_DIRECTORY + "/", testURL))
+
+  proc = Process(cmd, args, env = env)
+  print "Application pid: " + str(proc.pid)
+  status = proc.wait()
+  if status != 0:
+    print "FAIL Exited with code " + str(status) + " during test run"
+
+  return start
+
+
+
+#########
+# DO IT #
+#########
+
+if __name__ == "__main__":
+  main()

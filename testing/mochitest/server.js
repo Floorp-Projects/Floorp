@@ -101,8 +101,8 @@ function makeTagFunc(tagName)
 
 function makeTags() {
   // map our global HTML generation functions
-  for each(var tag in tags) {
-      this[tag] = makeTagFunc(tag);
+  for each (var tag in tags) {
+      this[tag] = makeTagFunc(tag.toLowerCase());
   }
 }
 
@@ -113,9 +113,9 @@ if (this["nsHttpServer"]) {
   //
   runServer();
 
-  // We can only have gotten here if CLOSE_WHEN_DONE was specified and the
-  // /server/shutdown path was requested.  We can shut down the xpcshell now
-  // that all testing requests have been served.
+  // We can only have gotten here if the /server/shutdown path was requested,
+  // and we can shut down the xpcshell now that all testing requests have been
+  // served.
   quit(0);
 }
 
@@ -137,8 +137,7 @@ function runServer()
   server = new nsHttpServer();
   server.registerDirectory("/", serverBasePath);
 
-  if (environment["CLOSE_WHEN_DONE"])
-    server.registerPathHandler("/server/shutdown", serverShutdown);
+  server.registerPathHandler("/server/shutdown", serverShutdown);
 
   server.registerPathHandler("/redirect", redirect);
 
