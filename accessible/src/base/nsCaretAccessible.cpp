@@ -132,13 +132,12 @@ nsresult nsCaretAccessible::SetControlSelectionListener(nsIDOMNode *aCurrentNode
   return selPrivate->AddSelectionListener(this);
 }
 
-nsresult nsCaretAccessible::AddDocSelectionListener(nsIDOMDocument *aDoc)
+nsresult
+nsCaretAccessible::AddDocSelectionListener(nsIPresShell *aShell)
 {
   NS_ENSURE_TRUE(mRootAccessible, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(doc->GetPrimaryShell());
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(aShell);
   NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelection> domSel;
@@ -149,12 +148,10 @@ nsresult nsCaretAccessible::AddDocSelectionListener(nsIDOMDocument *aDoc)
   return selPrivate->AddSelectionListener(this);
 }
 
-nsresult nsCaretAccessible::RemoveDocSelectionListener(nsIDOMDocument *aDoc)
+nsresult
+nsCaretAccessible::RemoveDocSelectionListener(nsIPresShell *aShell)
 {
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(doc->GetPrimaryShell());
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(aShell);
   NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelection> domSel;
