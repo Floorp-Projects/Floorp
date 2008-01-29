@@ -898,31 +898,6 @@ PlacesTreeView.prototype = {
     return val;
   },
 
-  addViewObserver: function PTV_addViewObserver(aObserver, aWeak) {
-    if (aWeak)
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-
-    if (this._observers.indexOf(aObserver) == -1)
-      this._observers.push(aObserver);
-  },
-
-  removeViewObserver: function PTV_removeViewObserver(aObserver) {
-    var index = this._observers.indexOf(aObserver);
-    if (index != -1)
-      this._observers.splice(index, 1);
-  },
-
-  _enumerateObservers: function PTV__enumerateObservers(aFunctionName, aArgs) {
-    for (var i=0; i < this._observers.length; i++) {
-      // Don't bail out if one of the observer threw
-      try {
-        var obs = this._observers[i];
-        obs[aFunctionName].apply(obs, aArgs);
-      }
-      catch (ex) { Components.utils.reportError(ex); }
-    }
-  },
-
   // nsINavHistoryResultTreeViewer
   get collapseDuplicates() {
     return this._collapseDuplicates;
@@ -937,10 +912,6 @@ PlacesTreeView.prototype = {
       this.invalidateAll();
 
     return val;
-  },
-
-  get flatItemCount() {
-    return this._visibleElements.length;
   },
 
   nodeForTreeIndex: function PTV_nodeForTreeIndex(aIndex) {
@@ -1095,15 +1066,87 @@ PlacesTreeView.prototype = {
   },
 
   canDrop: function PTV_canDrop(aRow, aOrientation) {
-    for (var i=0; i < this._observers.length; i++) {
-      if (this._observers[i].canDrop(aRow, aOrientation))
-        return true;
+    if (!this._result)
+      throw Cr.NS_ERROR_UNEXPECTED;
+
+    var node = aRow != -1 ? this.nodeForTreeIndex(aRow) : this._result.root;
+
+    if (aOrientation == Ci.nsITreeView.DROP_ON) {
+      // The user cannot drop an item into itself or a read-only container
+      var dragService =  Cc["@mozilla.org/widget/dragservice;1"].
+                         getService(Ci.nsIDragService);
+      var dragSession = dragService.getCurrentSession();
+      var elt = dragSession.sourceNode.parentNode;
+      if (elt.localName == "tree" && elt.view == this &&
+          this.selection.isSelected(aRow))
+        return false;
+      if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent))
+        return false;
     }
-    return false;
+    return PlacesControllerDragHelper.canDrop(this, aOrientation);
+  },
+
+  // XXXmano: these two are copied over from tree.xml, to fix this we need to
+  // either add a helper to PlacesUtils or keep it here and add insertionPoint
+  // to the view interface.
+  _disallowInsertion: function PTV__disallowInsertion(aContainer) {
+    // Disallow insertion of items under readonly folders
+    return (!PlacesUtils.nodeIsFolder(aContainer) ||
+            PlacesUtils.nodeIsReadOnly(aContainer));
+  },
+
+  _getInsertionPoint: function PTV__getInsertionPoint(index, orientation) {
+    var container = this._result.root;
+    // When there's no selection, assume the container is the container
+    // the view is populated from (i.e. the result's itemId).
+    if (index != -1) {
+      var lastSelected = this.nodeForTreeIndex(index);
+      if (this.isContainer(index) && orientation == Ci.nsITreeView.DROP_ON) {
+        // If the last selected item is an open container, append _into_
+        // it, rather than insert adjacent to it. 
+        container = lastSelected;
+        index = -1;
+      }
+      else if (!this._disallowInsertion(lastSelected) &&
+               lastSelected.containerOpen &&
+               orientation == Ci.nsITreeView.DROP_AFTER) {
+        // If the last selected item is an open container and the user is
+        // trying to drag into it as a first item, really insert into it.
+        container = lastSelected;
+        orientation = Ci.nsITreeView.DROP_BEFORE;
+        index = 0;
+      }
+      else {
+        // Use the last-selected node's container unless the root node
+        // is selected, in which case we use the root node itself as the
+        // insertion point.
+        container = lastSelected.parent || container;
+
+        // avoid the potentially expensive call to getIndexOfNode() 
+        // if we know this container doesn't allow insertion
+        if (this._disallowInsertion(container))
+          return null;
+
+        var lsi = PlacesUtils.getIndexOfNode(lastSelected);
+        index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
+      }
+    }
+
+    if (this._disallowInsertion(container))
+      return null;
+
+    return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
+                              index, orientation);
   },
 
   drop: function PTV_drop(aRow, aOrientation) {
-    this._enumerateObservers("onDrop", [aRow, aOrientation]);
+    // We are responsible for translating the |index| and |orientation| 
+    // parameters into a container id and index within the container, 
+    // since this information is specific to the tree view.
+    var ip = this._getInsertionPoint(aRow, aOrientation);
+    if (!ip)
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
+    PlacesControllerDragHelper.onDrop(ip);
   },
 
   getParentIndex: function PTV_getParentIndex(aRow) {
@@ -1248,8 +1291,6 @@ PlacesTreeView.prototype = {
       throw Cr.NS_ERROR_UNEXPECTED;
     this._ensureValidRow(aRow);
 
-    this._enumerateObservers("onToggleOpenState", [aRow]);
-
     var node = this._visibleElements[aRow];
     if (!PlacesUtils.nodeIsContainer(node))
       return; // not a container, nothing to do
@@ -1271,8 +1312,6 @@ PlacesTreeView.prototype = {
   cycleHeader: function PTV_cycleHeader(aColumn) {
     if (!this._result)
       throw Cr.NS_ERROR_UNEXPECTED;
-
-    this._enumerateObservers("onCycleHeader", [aColumn]);
 
     // Sometimes you want a tri-state sorting, and sometimes you don't. This
     // rule allows tri-state sorting when the root node is a folder. This will
@@ -1395,30 +1434,14 @@ PlacesTreeView.prototype = {
     this._result.sortingMode = newSort;
   },
 
-  selectionChanged: function PTV_selectionChnaged() {
-    this._enumerateObservers("onSelectionChanged");
-  },
-
-  cycleCell: function PTV_cycleCell(aRow, aColumn) {
-    this._enumerateObservers("onCycleCell", [aRow, aColumn]);
-  },
-
+  selectionChanged: function() { },
+  cycleCell: function PTV_cycleCell(aRow, aColumn) { },
   isEditable: function(aRow, aColumn) { return false; },
   isSelectable: function(aRow, aColumn) { return false; },
   setCellText: function(aRow, aColumn) { },
-
-  performAction: function PTV_performAction(aAction) {
-    this._enumerateObservers("onPerformAction", [aAction]);
-  },
-
-  performActionOnRow: function PTV_perfromActionOnRow(aAction, aRow) {
-    this._enumerateObservers("onPerformActionOnRow", [aAction, aRow]);
-  },
-
-  performActionOnCell:
-  function PTV_performActionOnCell(aAction, aRow, aColumn) {
-    this._enumerateObservers("onPerformActionOnRow", [aAction, aRow, aColumn]);
-  }
+  performAction: function(aAction) { },
+  performActionOnRow: function(aAction, aRow) { },
+  performActionOnCell: function(aAction, aRow, aColumn) { }
 };
 
 function PlacesTreeView(aShowRoot, aFlatList) {
@@ -1431,7 +1454,6 @@ function PlacesTreeView(aShowRoot, aFlatList) {
   this._showSessions = false;
   this._selection = null;
   this._visibleElements = [];
-  this._observers = [];
   this._showRoot = aShowRoot;
   this._flatList = aFlatList;
 }
