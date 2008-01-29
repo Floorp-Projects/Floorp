@@ -65,21 +65,17 @@ var streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
  * }
  */
 
-function buildUpdate(update, hashSize) {
-  if (!hashSize) {
-    hashSize = 32;
-  }
+function buildUpdate(update) {
   var updateStr = "n:1000\n";
 
   for (var tableName in update) {
-    if (tableName != "")
-      updateStr += "i:" + tableName + "\n";
+    updateStr += "i:" + tableName + "\n";
     var chunks = update[tableName];
     for (var j = 0; j < chunks.length; j++) {
       var chunk = chunks[j];
       var chunkType = chunk.chunkType ? chunk.chunkType : 'a';
       var chunkNum = chunk.chunkNum ? chunk.chunkNum : j;
-      updateStr += chunkType + ':' + chunkNum + ':' + hashSize;
+      updateStr += chunkType + ':' + chunkNum;
 
       if (chunk.urls) {
         var chunkData = chunk.urls.join("\n");
@@ -93,12 +89,8 @@ function buildUpdate(update, hashSize) {
   return updateStr;
 }
 
-function buildPhishingUpdate(chunks, hashSize) {
-  return buildUpdate({"test-phish-simple" : chunks}, hashSize);
-}
-
-function buildBareUpdate(chunks, hashSize) {
-  return buildUpdate({"" : chunks}, hashSize);
+function buildPhishingUpdate(chunks) {
+  return buildUpdate({"test-phish-simple" : chunks});
 }
 
 /**
@@ -121,7 +113,7 @@ function doSimpleUpdate(updateText, success, failure) {
   };
 
   dbservice.beginUpdate(listener);
-  dbservice.beginStream("");
+  dbservice.beginStream();
   dbservice.updateStream(updateText);
   dbservice.finishStream();
   dbservice.finishUpdate();
@@ -160,8 +152,6 @@ tableData : function(expectedTables, cb)
 
 checkUrls: function(urls, expected, cb)
 {
-  // work with a copy of the list.
-  urls = urls.slice(0);
   var doLookup = function() {
     if (urls.length > 0) {
       var fragment = urls.shift();
@@ -185,11 +175,6 @@ urlsDontExist: function(urls, cb)
 urlsExist: function(urls, cb)
 {
   this.checkUrls(urls, 'test-phish-simple', cb);
-},
-
-malwareUrlsExist: function(urls, cb)
-{
-  this.checkUrls(urls, 'test-malware-simple', cb);
 },
 
 subsDontExist: function(urls, cb)
@@ -232,6 +217,8 @@ function updateError(arg)
 
 // Runs a set of updates, and then checks a set of assertions.  
 function doUpdateTest(updates, assertions, successCallback, errorCallback) {
+  dbservice.resetDatabase();
+
   var runUpdate = function() {
     if (updates.length > 0) {
       var update = updates.shift();
@@ -254,10 +241,6 @@ function runNextTest()
     return;
   }
 
-  dbservice.resetDatabase();
-  dbservice.setHashCompleter('test-phish-simple', null);
-  dumpn("running " + gTests[gNextTest]);
-
   gTests[gNextTest++]();
 }
 
@@ -265,24 +248,6 @@ function runTests(tests)
 {
   gTests = tests;
   runNextTest();
-}
-
-function Timer(delay, cb) {
-  this.cb = cb;
-  var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback(this, delay, timer.TYPE_ONE_SHOT);
-}
-
-Timer.prototype = {
-QueryInterface: function(iid) {
-    if (!iid.equals(Ci.nsISupports) && !iid.equals(Ci.nsITimerCallback)) {
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
-    return this;
-  },
-notify: function(timer) {
-    this.cb();
-  }
 }
 
 cleanUp();

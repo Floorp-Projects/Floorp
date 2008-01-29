@@ -38,14 +38,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "nsTArray.h"
-class nsUrlClassifierLookupResult;
-%}
-[ptr] native ResultArray(nsTArray<nsUrlClassifierLookupResult>);
-
-interface nsIUrlClassifierHashCompleter;
-
 // Interface for JS function callbacks
 [scriptable, function, uuid(4ca27b6b-a674-4b3d-ab30-d21e2da2dffb)]
 interface nsIUrlClassifierCallback : nsISupports {
@@ -57,17 +49,13 @@ interface nsIUrlClassifierCallback : nsISupports {
  * clients streaming updates to the url-classifier (usually
  * nsUrlClassifierStreamUpdater.
  */
-[scriptable, uuid(bb0528b3-71e2-4795-8732-d60a4476e6df)]
+[scriptable, uuid(113671b8-c5cc-47d9-bc57-269568c7ce29)]
 interface nsIUrlClassifierUpdateObserver : nsISupports {
   /**
    * The update requested a new URL whose contents should be downloaded
-   * and sent to the classifier as a new stream.
-   *
-   * @param url The url that was requested.
-   * @param table The table name that this URL's contents will be associated
-   *              with.
+   * and sent to the classifier as a new stream
    */
-  void updateUrlRequested(in ACString url, in ACString table);
+  void updateUrlRequested(in ACString url);
 
   /* A stream update has completed */
   void streamFinished();
@@ -89,7 +77,7 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(bcc32b18-78be-49f6-a895-a1a341a9e94b)]
+[scriptable, uuid(dc3b958e-b345-458d-83f7-77e82b42a514)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
@@ -99,9 +87,12 @@ interface nsIUrlClassifierDBService : nsISupports
    *        by the service.
    * @param c: The callback will be called with a comma-separated list
    *        of tables to which the key belongs.
+   * @param needsProxy: Should be true if the callback needs to be called
+   *        in the main thread, false if the callback is threadsafe.
    */
   void lookup(in ACString spec,
-              in nsIUrlClassifierCallback c);
+              in nsIUrlClassifierCallback c,
+              in boolean needsProxy);
 
   /**
    * Lists the tables along with which chunks are available in each table.
@@ -114,14 +105,6 @@ interface nsIUrlClassifierDBService : nsISupports
    *   goog-white-regexp;a:1-3,5
    */
   void getTables(in nsIUrlClassifierCallback c);
-
-  /**
-   * Set the nsIUrlClassifierCompleter object for a given table.  This
-   * object will be used to request complete versions of partial
-   * hashes.
-   */
-  void setHashCompleter(in ACString tableName,
-                        in nsIUrlClassifierHashCompleter completer);
 
   ////////////////////////////////////////////////////////////////////////////
   // Incremental update methods.
@@ -152,11 +135,8 @@ interface nsIUrlClassifierDBService : nsISupports
   /**
    * Begin a stream update.  This should be called once per url being
    * fetched.
-   *
-   * @param table The table the contents of this stream will be associated
-   *              with, or empty for the initial stream.
    */
-  void beginStream(in ACString table);
+  void beginStream();
 
   /**
    * Update the table incrementally.
@@ -204,30 +184,9 @@ interface nsIUrlClassifierDBService : nsISupports
  * Interface for the actual worker thread.  Implementations of this need not
  * be thread aware and just work on the database.
  */
-[scriptable, uuid(76d923e5-bbde-4292-ae35-16a67d04d524)]
+[scriptable, uuid(3ed0c8f9-a5d8-4186-beb1-5d828e95ea90)]
 interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
 {
   // Provide a way to forcibly close the db connection.
   void closeDb();
-};
-
-/**
- * This is an internal helper interface for communication between the
- * main thread and the dbservice worker thread.  It is called for each
- * lookup to provide a set of possible results, which the main thread
- * may need to expand using an nsIUrlClassifierCompleter.
- */
-[uuid(f1dc83c6-ad43-4f0f-a809-fd43de7de8a4)]
-interface nsIUrlClassifierLookupCallback : nsISupports
-{
-  /**
-   * The lookup process is complete.
-   *
-   * @param results
-   *        If this parameter is null, there were no results found.
-   *        If not, it contains an array of nsUrlClassifierEntry objects
-   *        with possible matches.  The callee is responsible for freeing
-   *        this array.
-   */
-  void lookupComplete(in ResultArray results);
 };

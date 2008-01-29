@@ -47,7 +47,6 @@
 // reportURL: When shown a warning bubble, we send back the user decision
 //            (get me out of here/ignore warning) to this URL (strip cookies
 //            first).  This is optional.
-// gethashURL: Url for requesting complete hashes from the provider.
 // reportGenericURL: HTML page for general user feedback
 // reportPhishURL: HTML page for notifying the provider of a new phishing page
 // reportErrorURL: HTML page for notifying the provider of a false positive
@@ -111,7 +110,6 @@ PROT_DataProvider.prototype.loadDataProviderPrefs_ = function() {
   this.lookupURL_ = this.getUrlPref_(basePref + "lookupURL");
   this.keyURL_ = this.getUrlPref_(basePref + "keyURL");
   this.reportURL_ = this.getUrlPref_(basePref + "reportURL");
-  this.gethashURL_ = this.getUrlPref_(basePref + "gethashURL");
 
   // Urls to HTML report pages
   this.reportGenericURL_ = this.getUrlPref_(basePref + "reportGenericURL");
@@ -145,8 +143,6 @@ PROT_DataProvider.prototype.updateListManager_ = function() {
     // Clear the key to stop updates.
     listManager.setKeyUrl("");
   }
-
-  listManager.setGethashUrl(this.getGethashURL());
 }
 
 /**
@@ -210,9 +206,11 @@ PROT_DataProvider.prototype.getUpdateURL = function() {
 PROT_DataProvider.prototype.getLookupURL = function() {
   return this.lookupURL_;
 }
-
-PROT_DataProvider.prototype.getGethashURL = function() {
-  return this.gethashURL_;
+PROT_DataProvider.prototype.getKeyURL = function() {
+  return this.keyURL_;
+}
+PROT_DataProvider.prototype.getReportURL = function() {
+  return this.reportURL_;
 }
 
 PROT_DataProvider.prototype.getReportGenericURL = function() {
