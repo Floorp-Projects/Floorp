@@ -711,6 +711,7 @@ NS_IMETHODIMP nsAccessible::GetChildAt(PRInt32 aChildNum, nsIAccessible **aChild
 // readonly attribute nsIArray children;
 NS_IMETHODIMP nsAccessible::GetChildren(nsIArray **aOutChildren)
 {
+  *aOutChildren = nsnull;
   nsCOMPtr<nsIMutableArray> children = do_CreateInstance(NS_ARRAY_CONTRACTID);
   if (!children)
     return NS_ERROR_FAILURE;
