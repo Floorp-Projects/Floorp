@@ -210,15 +210,19 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
 
   const nsMargin& borderPadding = BorderPadding();
 
-  // text controls are not splittable
-  // XXXldb Why not just set the frame state bit?
-
-  nsSplittableType splitType = aFrame->GetSplittableType();
-  if ((NS_FRAME_SPLITTABLE_NON_RECTANGULAR == splitType ||     // normal blocks 
-       NS_FRAME_NOT_SPLITTABLE == splitType) &&                // things like images mapped to display: block
-      !(aFrame->IsFrameOfType(nsIFrame::eReplaced)) &&         // but not replaced elements
-      aFrame->GetType() != nsGkAtoms::scrollFrame)         // or scroll frames
-  {
+  // XXX Do we really want this condition to be this restrictive (i.e.,
+  // more restrictive than it used to be)?  The |else| here is allowed
+  // by the CSS spec, but only out of desperation given implementations,
+  // and the behavior it leads to is quite undesirable (it can cause
+  // things to become extremely narrow when they'd fit quite well a
+  // little bit lower).  Should the else be a quirk or something that
+  // applies to a specific set of frame classes and no new ones?
+  // If we did that, then for those frames where the condition below is
+  // true but nsBlockFrame::BlockCanIntersectFloats is false,
+  // nsBlockFrame::WidthToClearPastFloats would need to use the
+  // shrink-wrap formula, max(MIN_WIDTH, min(avail width, PREF_WIDTH))
+  // rather than just using MIN_WIDTH.
+  if (nsBlockFrame::BlockCanIntersectFloats(aFrame)) {
     if (mBand.GetFloatCount()) {
       // Use the float-edge property to determine how the child block
       // will interact with the float.
@@ -1035,7 +1039,8 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRB
 }
 
 nscoord
-nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType)
+nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType,
+                                nscoord aReplacedWidth)
 {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
@@ -1052,8 +1057,38 @@ nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType)
 #endif
   
   const nsMargin& bp = BorderPadding();
-  nscoord newY = mSpaceManager->ClearFloats(aY - bp.top, aBreakType);
-  newY += bp.top;
+  nscoord newY = aY;
+
+  if (aBreakType != NS_STYLE_CLEAR_NONE) {
+    newY = bp.top + mSpaceManager->ClearFloats(newY - bp.top, aBreakType);
+  }
+
+  if (aReplacedWidth > 0) {
+    for (;;) {
+      GetAvailableSpace(newY, PR_FALSE);
+      if (mAvailSpaceRect.width >= aReplacedWidth || mBand.GetFloatCount() == 0) {
+        break;
+      }
+      // See the analogous code for inlines in nsBlockFrame::DoReflowInlineFrames
+      if (mAvailSpaceRect.height > 0) {
+        // See if there's room in the next band.
+        newY += mAvailSpaceRect.height;
+      } else {
+        if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+          // Stop trying to clear here; we'll just get pushed to the
+          // next column or page and try again there.
+          break;
+        }
+        NS_NOTREACHED("avail space rect with zero height!");
+        newY += 1;
+      }
+    }
+    // Restore mBand and mAvailSpaceRect to the way they were.  This may
+    // well not be needed, and we should probably come up with
+    // well-defined rules about when these members are valid so that
+    // it's clearly not needed.
+    GetAvailableSpace();
+  }
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
