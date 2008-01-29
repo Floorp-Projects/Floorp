@@ -361,12 +361,6 @@ nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
     mInsertionPointTable->Enumerate(TraverseInsertionPoint, &cb);
   if (mInterfaceTable)
     mInterfaceTable->Enumerate(TraverseBinding, &cb);
-
-  nsXBLPrototypeHandler* curr = mPrototypeHandler;
-  while (curr) {
-    curr->Traverse(cb);
-    curr = curr->GetNextHandler();
-  }
 }
 
 void
