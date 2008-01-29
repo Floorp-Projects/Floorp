@@ -25,6 +25,7 @@ CPPSRCS = \
           nsUrlClassifierDBService.cpp \
           nsUrlClassifierStreamUpdater.cpp \
           nsUrlClassifierUtils.cpp \
+          nsUrlClassifierHashCompleter.cpp \
           $(NULL)
 
 LOCAL_INCLUDES = \
@@ -39,5 +40,3 @@ EXTRA_PP_COMPONENTS = nsUrlClassifierLib.js \
 
 include $(topsrcdir)/config/rules.mk
 
-export:: $(topsrcdir)/security/nss/lib/freebl/sha512.c
-	$(INSTALL) $^ .
