@@ -1,8 +1,8 @@
 <!ENTITY  typeColumn.label        "Content Type">
 <!ENTITY  typeColumn.accesskey    "T">
 
-<!ENTITY  actionColumn.label      "Application">
-<!ENTITY  actionColumn.accesskey  "A">
+<!ENTITY  actionColumn2.label     "Action">
+<!ENTITY  actionColumn2.accesskey "A">
 
 <!ENTITY  focusSearch1.key        "f">
 <!ENTITY  focusSearch2.key        "k">
