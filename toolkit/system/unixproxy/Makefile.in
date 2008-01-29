@@ -58,7 +58,7 @@ REQUIRES = \
         mozgnome \
         $(NULL)
 
-EXTRA_DSO_LDOPTS = \
+EXTRA_DSO_LDOPTS += \
         $(XPCOM_GLUE_LDOPTS) \
         $(XPCOM_FROZEN_LDOPTS) \
         $(NSPR_LIBS) \
