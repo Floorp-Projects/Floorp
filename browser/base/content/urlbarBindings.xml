@@ -154,13 +154,21 @@
               return;
             var val;
             if (start == 0 && end == urlbar.textLength) {
-              // if the entire value is selected and it's a valid URI, encode it
               val = urlbar.value;
-              var ioService = Cc["@mozilla.org/network/io-service;1"]
-                                .getService(Ci.nsIIOService);
-              try {
-                val = ioService.newURI(val, null, null).spec;
-              } catch(e) {}
+
+              // If the entire value is selected and it's a valid non-javascript,
+              // non-data URI, encode it.
+              var uri;
+              if (urlbar.getAttribute("pageproxystate") == "valid") {
+                var ioService = Cc["@mozilla.org/network/io-service;1"]
+                                  .getService(Ci.nsIIOService);
+                try {
+                  uri = ioService.newURI(val, null, null);
+                } catch (e) {}
+              }
+              if (uri && !uri.schemeIs("javascript") && !uri.schemeIs("data"))
+                 val = uri.spec;
+
               if (aCommand == "cmd_cut")
                 urlbar.value = "";
             } else {
