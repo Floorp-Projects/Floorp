@@ -186,7 +186,7 @@ statusbarpanel {
 	line-height: 13px;
 }
 
-#commonDialog > hbox > vbox {
+#commonDialog #infoContainer {
 	max-width: 33em !important;
 }
 
