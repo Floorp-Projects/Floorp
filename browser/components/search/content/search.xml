@@ -89,9 +89,11 @@
                          anonid="searchbar-popup"
                          position="after_start">
             <xul:menuseparator/>
+            <!-- XXX See bug 336231 for tooltip --> 
             <xul:menuitem class="open-engine-manager"
                           anonid="open-engine-manager"
                           label="&cmd_engineManager.label;"
+                          tooltiptext=""
                           oncommand="openManager(event);"/>
           </xul:menupopup>
         </xul:button>
