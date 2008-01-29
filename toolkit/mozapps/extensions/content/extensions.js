@@ -106,6 +106,8 @@ const OP_NEEDS_UNINSTALL              = "needs-uninstall";
 const OP_NEEDS_ENABLE                 = "needs-enable";
 const OP_NEEDS_DISABLE                = "needs-disable";
 
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
 function setElementDisabledByID(aID, aDoDisable) {
@@ -1153,17 +1155,9 @@ function getURLSpecFromFile(aFile)
 
 function XPInstallDownloadManager()
 {
-  this._statusFormatKBMB  = getExtensionString("statusFormatKBMB");
-  this._statusFormatKBKB  = getExtensionString("statusFormatKBKB");
-  this._statusFormatMBMB  = getExtensionString("statusFormatMBMB");
 }
 
 XPInstallDownloadManager.prototype = {
-  _statusFormat     : null,
-  _statusFormatKBMB : null,
-  _statusFormatKBKB : null,
-  _statusFormatMBMB : null,
-
   observe: function (aSubject, aTopic, aData)
   {
     switch (aTopic) {
@@ -1294,50 +1288,10 @@ XPInstallDownloadManager.prototype = {
     if (percent > 1 && !(aAddon.xpiURL in this._urls))
       this._urls[aAddon.xpiURL] = true;
 
-    var KBProgress = parseInt(aValue/1024 + .5);
-    var KBTotal = parseInt(aMaxValue/1024 + .5);
     var statusPrevious = element.getAttribute("status");
-    var statusCurrent = this._formatKBytes(KBProgress, KBTotal);
+    var statusCurrent = DownloadUtils.getTransferTotal(aValue, aMaxValue);
     if (statusCurrent != statusPrevious)
       element.setAttribute("status", statusCurrent);
-  },
-
-  _replaceInsert: function ( text, index, value )
-  {
-    return text.replace("#"+index, value);
-  },
-
-  // aBytes     aTotalKBytes    returns:
-  // x, < 1MB   y < 1MB         x of y KB
-  // x, < 1MB   y >= 1MB        x KB of y MB
-  // x, >= 1MB  y >= 1MB        x of y MB
-  _formatKBytes: function (aKBytes, aTotalKBytes)
-  {
-    var progressHasMB = parseInt(aKBytes/1000) > 0;
-    var totalHasMB = parseInt(aTotalKBytes/1000) > 0;
-
-    var format = "";
-    if (!progressHasMB && !totalHasMB) {
-      format = this._statusFormatKBKB;
-      format = this._replaceInsert(format, 1, aKBytes);
-      format = this._replaceInsert(format, 2, aTotalKBytes);
-    }
-    else if (progressHasMB && totalHasMB) {
-      format = this._statusFormatMBMB;
-      format = this._replaceInsert(format, 1, (aKBytes / 1000).toFixed(1));
-      format = this._replaceInsert(format, 2, (aTotalKBytes / 1000).toFixed(1));
-    }
-    else if (totalHasMB && !progressHasMB) {
-      format = this._statusFormatKBMB;
-      format = this._replaceInsert(format, 1, aKBytes);
-      format = this._replaceInsert(format, 2, (aTotalKBytes / 1000).toFixed(1));
-    }
-    else {
-      // This is an undefined state!
-      dump("*** huh?!\n");
-    }
-
-    return format;
   },
 
   /////////////////////////////////////////////////////////////////////////////
