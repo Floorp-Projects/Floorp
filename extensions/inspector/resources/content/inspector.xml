@@ -452,7 +452,7 @@
     <handlers>
       <handler event="focus" phase="capturing">
       <![CDATA[
-        if (!event.originalTarget || event.originalTarget.nodeType != Node.ELEMENT_NODE)
+        if (!(event.originalTarget instanceof Element))
           return;
 
         var targetDoc = event.originalTarget.ownerDocument;
