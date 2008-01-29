@@ -355,21 +355,6 @@
 <!ENTITY editBookmark.done.label                      "Done">
 <!ENTITY editBookmark.delete.label                    "Delete">
 
-<!ENTITY identity.unverifiedsite "You are connected to an unverified site.">
-<!ENTITY identity.connectedTo "You are connected to">
-<!-- Localization note (identity.runBy) : This string appears between a
-domain name (above) and an organization name (below). E.g.
-
-example.com
-which is run by
-Example Enterprises, Inc.
-
-The layout of the identity dialog prevents combining this into a single string with
-substitution variables.  If it is difficult to translate the sense of the string
-with that structure, consider a translation which ignores the preceding domain and
-just addresses the organization to follow, e.g. "This site is run by " -->
-<!ENTITY identity.runBy "which is run by">
-
-<!ENTITY identity.moreInfoLinkText "More Information…">
+<!ENTITY identity.moreInfoLinkText "Tell me more about this web site…">
 
 <!ENTITY downloadMonitor2.tooltip "Click to open downloads window">
