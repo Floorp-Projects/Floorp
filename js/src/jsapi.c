@@ -732,12 +732,6 @@ JS_NewRuntime(uint32 maxbytes)
     rt->stateChange = JS_NEW_CONDVAR(rt->gcLock);
     if (!rt->stateChange)
         goto bad;
-    rt->setSlotLock = JS_NEW_LOCK();
-    if (!rt->setSlotLock)
-        goto bad;
-    rt->setSlotDone = JS_NEW_CONDVAR(rt->setSlotLock);
-    if (!rt->setSlotDone)
-        goto bad;
     rt->scopeSharingDone = JS_NEW_CONDVAR(rt->gcLock);
     if (!rt->scopeSharingDone)
         goto bad;
@@ -798,10 +792,6 @@ JS_DestroyRuntime(JSRuntime *rt)
         JS_DESTROY_LOCK(rt->rtLock);
     if (rt->stateChange)
         JS_DESTROY_CONDVAR(rt->stateChange);
-    if (rt->setSlotLock)
-        JS_DESTROY_LOCK(rt->setSlotLock);
-    if (rt->setSlotDone)
-        JS_DESTROY_CONDVAR(rt->setSlotDone);
     if (rt->scopeSharingDone)
         JS_DESTROY_CONDVAR(rt->scopeSharingDone);
     if (rt->debuggerLock)
