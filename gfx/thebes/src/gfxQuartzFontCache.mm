@@ -547,6 +547,12 @@ gfxQuartzFontCache::InitFontList()
             PRInt32 weight = [[face objectAtIndex:INDEX_FONT_WEIGHT] unsignedIntValue];
             PRUint32 traits = [[face objectAtIndex:INDEX_FONT_TRAITS] unsignedIntValue];
             
+            // 10.5 doesn't set NSUnitalicFontMask and NSUnboldFontMask - manually set these for consistency 
+            if (!(traits & NSBoldFontMask))
+                traits |= NSUnboldFontMask;
+            if (!(traits & NSItalicFontMask))
+                traits |= NSUnitalicFontMask;
+            
             PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(init) family: %s, psname: %s, face: %s, apple-weight: %d, css-weight: %d, traits: %8.8x\n", 
                 [availableFamily UTF8String], [psname UTF8String], [[face objectAtIndex:INDEX_FONT_FACE_NAME] UTF8String], weight, gfxQuartzFontCache::AppleWeightToCSSWeight(weight), traits ));
 
