@@ -60,6 +60,7 @@ REQUIRES = \
 
 EXTRA_DSO_LDOPTS = \
         $(XPCOM_GLUE_LDOPTS) \
+        $(XPCOM_FROZEN_LDOPTS) \
         $(NSPR_LIBS) \
         $(NULL)
 
