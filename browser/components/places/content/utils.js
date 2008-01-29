@@ -53,6 +53,7 @@ const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
+const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
 
 #ifdef XP_MACOSX
@@ -1808,28 +1809,24 @@ var PlacesUtils = {
 
   // get the folder id for the organizer left-pane folder
   get leftPaneFolderId() {
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch2);
     var leftPaneRoot = -1;
     var allBookmarksId;
-    try {
-      leftPaneRoot = prefs.getIntPref("browser.places.leftPaneFolderId");
-      // if the pref is set to -1 then we must create a new root because we have a new places.sqlite
-      if (leftPaneRoot != -1) {
-        // Build the leftPaneQueries Map
-        delete this.leftPaneQueries;
-        this.leftPaneQueries = {};
-        var items = this.annotations.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, { });
-        for (var i=0; i < items.length; i++) {
-          var queryName = this.annotations
-                              .getItemAnnotation(items[i], ORGANIZER_QUERY_ANNO);
-          this.leftPaneQueries[queryName] = items[i];
-        }
-        delete this.leftPaneFolderId;
-        return this.leftPaneFolderId = leftPaneRoot;
+    var items = this.annotations.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+    if (items.length != 0 && items[0] != -1)
+      leftPaneRoot = items[0];
+    if (leftPaneRoot != -1) {
+      // Build the leftPaneQueries Map
+      delete this.leftPaneQueries;
+      this.leftPaneQueries = {};
+      var items = this.annotations.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, { });
+      for (var i=0; i < items.length; i++) {
+        var queryName = this.annotations
+                            .getItemAnnotation(items[i], ORGANIZER_QUERY_ANNO);
+        this.leftPaneQueries[queryName] = items[i];
       }
+      delete this.leftPaneFolderId;
+      return this.leftPaneFolderId = leftPaneRoot;
     }
-    catch (ex) { }
 
     var self = this;
     const EXPIRE_NEVER = this.annotations.EXPIRE_NEVER;
@@ -1893,7 +1890,8 @@ var PlacesUtils = {
       }
     };
     this.bookmarks.runInBatchMode(callback, null);
-    prefs.setIntPref("browser.places.leftPaneFolderId", leftPaneRoot);
+    this.annotations.setItemAnnotation(leftPaneRoot, ORGANIZER_FOLDER_ANNO,
+                                       true, 0, EXPIRE_NEVER);
     delete this.leftPaneFolderId;
     return this.leftPaneFolderId = leftPaneRoot;
   },
