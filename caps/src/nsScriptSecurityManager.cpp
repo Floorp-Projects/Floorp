@@ -59,6 +59,7 @@
 #include "jsdbgapi.h"
 #include "jsarena.h"
 #include "jsfun.h"
+#include "jsobj.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsTextFormatter.h"
@@ -118,6 +119,24 @@ JSValIDToString(JSContext *cx, const jsval idval)
     if(!str)
         return nsnull;
     return reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
+}
+
+// Inline copy of JS_GetPrivate() for better inlining and optimization
+// possibilities. Also doesn't take a cx argument as it's not
+// needed. We access the private data only on objects whose private
+// data is not expected to change during the lifetime of the object,
+// so thus we won't worry about locking and holding on to slot values
+// etc while referencing private data.
+inline void *
+caps_GetJSPrivate(JSObject *obj)
+{
+    jsval v;
+
+    JS_ASSERT(STOBJ_GET_CLASS(obj)->flags & JSCLASS_HAS_PRIVATE);
+    v = obj->fslots[JSSLOT_PRIVATE];
+    if (!JSVAL_IS_INT(v))
+        return NULL;
+    return JSVAL_TO_PRIVATE(v);
 }
 
 static nsIScriptContext *
@@ -597,7 +616,7 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
     // Do the same-origin check -- this sets a JS exception if the check fails.
     // Pass the parent object's class name, as we have no class-info for it.
     nsresult rv =
-        ssm->CheckPropertyAccess(cx, target, JS_GetClass(cx, obj)->name, id,
+        ssm->CheckPropertyAccess(cx, target, STOBJ_GET_CLASS(obj)->name, id,
                                  (mode & JSACC_WRITE) ?
                                  nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
                                  nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
@@ -799,7 +818,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 nsIPrincipal *objectPrincipal;
                 if(aJSObject)
                 {
-                    objectPrincipal = doGetObjectPrincipal(cx, aJSObject);
+                    objectPrincipal = doGetObjectPrincipal(aJSObject);
                     if (!objectPrincipal)
                         rv = NS_ERROR_DOM_SECURITY_ERR;
                 }
@@ -846,8 +865,6 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
     {
         // No access to anonymous content from the web!  (bug 164086)
         nsIContent *content = static_cast<nsIContent*>(aObj);
-        NS_ASSERTION(content, "classinfo had CONTENT_NODE set but node did not"
-                              "implement nsIContent!  Fasten your seat belt.");
         if (content->IsNativeAnonymous()) {
             rv = NS_ERROR_DOM_SECURITY_ERR;
         }
@@ -1649,14 +1666,14 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
 #ifdef DEBUG
         {
             JSFunction *fun =
-                (JSFunction *)JS_GetPrivate(aCx, (JSObject *)aFunObj);
+                (JSFunction *)caps_GetJSPrivate((JSObject *)aFunObj);
             JSScript *script = JS_GetFunctionScript(aCx, fun);
 
             NS_ASSERTION(!script, "Null principal for non-native function!");
         }
 #endif
 
-        subject = doGetObjectPrincipal(aCx, (JSObject*)aFunObj);
+        subject = doGetObjectPrincipal((JSObject*)aFunObj);
     }
 
     if (!subject)
@@ -1681,7 +1698,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     ** Get origin of subject and object and compare.
     */
     JSObject* obj = (JSObject*)aTargetObj;
-    nsIPrincipal* object = doGetObjectPrincipal(aCx, obj);
+    nsIPrincipal* object = doGetObjectPrincipal(obj);
 
     if (!object)
         return NS_ERROR_FAILURE;        
@@ -2161,7 +2178,7 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
                                                     nsresult *rv)
 {
     NS_PRECONDITION(rv, "Null out param");
-    JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    JSFunction *fun = (JSFunction *) caps_GetJSPrivate(obj);
     JSScript *script = JS_GetFunctionScript(cx, fun);
 
     *rv = NS_OK;
@@ -2201,7 +2218,7 @@ nsScriptSecurityManager::GetFunctionObjectPrincipal(JSContext *cx,
         // principal from the clone's scope chain. There are no
         // reliable principals compiled into the function itself.
 
-        nsIPrincipal *result = doGetObjectPrincipal(cx, obj);
+        nsIPrincipal *result = doGetObjectPrincipal(obj);
         if (!result)
             *rv = NS_ERROR_FAILURE;
         return result;
@@ -2230,7 +2247,7 @@ nsScriptSecurityManager::GetFramePrincipal(JSContext *cx,
 #ifdef DEBUG
     if (NS_SUCCEEDED(*rv) && !result)
     {
-        JSFunction *fun = (JSFunction *)JS_GetPrivate(cx, obj);
+        JSFunction *fun = (JSFunction *)caps_GetJSPrivate(obj);
         JSScript *script = JS_GetFunctionScript(cx, fun);
 
         NS_ASSERTION(!script, "Null principal for non-native function!");
@@ -2305,7 +2322,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                                             nsIPrincipal **result)
 {
-    *result = doGetObjectPrincipal(aCx, aObj);
+    *result = doGetObjectPrincipal(aObj);
     if (!*result)
         return NS_ERROR_FAILURE;
     NS_ADDREF(*result);
@@ -2314,7 +2331,7 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
 // static
 nsIPrincipal*
-nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
+nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
 #ifdef DEBUG
                                               , PRBool aAllowShortCircuit
 #endif
@@ -2327,7 +2344,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
     JSObject* origObj = aObj;
 #endif
     
-    const JSClass *jsClass = JS_GET_CLASS(aCx, aObj);
+    const JSClass *jsClass = STOBJ_GET_CLASS(aObj);
 
     // A common case seen in this code is that we enter this function
     // with aObj being a Function object, whose parent is a Call
@@ -2337,20 +2354,20 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
     // the loop.
 
     if (jsClass == &js_FunctionClass) {
-        aObj = JS_GetParent(aCx, aObj);
+        aObj = STOBJ_GET_PARENT(aObj);
 
         if (!aObj)
             return nsnull;
 
-        jsClass = JS_GET_CLASS(aCx, aObj);
+        jsClass = STOBJ_GET_CLASS(aObj);
 
         if (jsClass == &js_CallClass) {
-            aObj = JS_GetParent(aCx, aObj);
+            aObj = STOBJ_GET_PARENT(aObj);
 
             if (!aObj)
                 return nsnull;
 
-            jsClass = JS_GET_CLASS(aCx, aObj);
+            jsClass = STOBJ_GET_CLASS(aObj);
         }
     }
 
@@ -2364,7 +2381,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
             jsClass->getObjectOps == sXPCWrappedNativeGetObjOps1 ||
             jsClass->getObjectOps == sXPCWrappedNativeGetObjOps2) {
             nsIXPConnectWrappedNative *xpcWrapper =
-                (nsIXPConnectWrappedNative *)JS_GetPrivate(aCx, aObj);
+                (nsIXPConnectWrappedNative *)caps_GetJSPrivate(aObj);
 
             if (xpcWrapper) {
 #ifdef DEBUG
@@ -2393,7 +2410,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
             }
         } else if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
                                         JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
-            nsISupports *priv = (nsISupports *)JS_GetPrivate(aCx, aObj);
+            nsISupports *priv = (nsISupports *)caps_GetJSPrivate(aObj);
 
 #ifdef DEBUG
             if (aAllowShortCircuit) {
@@ -2419,16 +2436,16 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
             }
         }
 
-        aObj = JS_GetParent(aCx, aObj);
+        aObj = STOBJ_GET_PARENT(aObj);
 
         if (!aObj)
             break;
 
-        jsClass = JS_GET_CLASS(aCx, aObj);
+        jsClass = STOBJ_GET_CLASS(aObj);
     } while (1);
 
     NS_ASSERTION(!aAllowShortCircuit ||
-                 result == doGetObjectPrincipal(aCx, origObj, PR_FALSE),
+                 result == doGetObjectPrincipal(origObj, PR_FALSE),
                  "Principal mismatch.  Not good");
     
     return result;
