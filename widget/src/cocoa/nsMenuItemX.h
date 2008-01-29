@@ -68,7 +68,6 @@ public:
   NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
                     nsMenuBarX* aMenuBar, nsIContent* aNode);
   NS_IMETHOD GetLabel(nsString &aText);
-  NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);
   NS_IMETHOD GetEnabled(PRBool *aIsEnabled);
   NS_IMETHOD SetChecked(PRBool aIsEnabled);
@@ -79,14 +78,13 @@ public:
 
   NS_IMETHOD DoCommand();
   NS_IMETHOD DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled);
-  NS_IMETHOD SetModifiers(PRUint8 aModifiers);
-  NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
   NS_IMETHOD SetupIcon();
   NS_IMETHOD GetMenuItemContent(nsIContent ** aMenuItemContent);
 
 protected:
 
   void UncheckRadioSiblings(nsIContent* inCheckedElement);
+  void SetKeyEquiv(PRUint8 aModifiers, const nsString &aText);
 
   NSMenuItem*               mNativeMenuItem;       // strong ref, we own
   

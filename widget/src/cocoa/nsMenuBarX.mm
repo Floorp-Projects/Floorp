@@ -355,6 +355,8 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
 NS_IMETHODIMP nsMenuBarX::Create(nsIWidget *aParent)
 {
   SetParent(aParent);
+  if (!mKeyEquivTable.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
@@ -837,6 +839,27 @@ nsMenuBarX::LookupContentChangeObserver(nsIContent* aContent)
 {
   nsVoidKey key(aContent);
   return reinterpret_cast<nsChangeObserver*>(mObserverTable.Get(&key));
+}
+
+
+void nsMenuBarX::RegisterKeyEquivalent(unsigned int modifiers, NSString* string)
+{
+  const CocoaKeyEquivContainer keyEquiv(modifiers, string);
+  mKeyEquivTable.PutEntry(keyEquiv);
+}
+
+
+void nsMenuBarX::UnregisterKeyEquivalent(unsigned int modifiers, NSString* string)
+{
+  CocoaKeyEquivContainer keyEquiv(modifiers, string);
+  mKeyEquivTable.RemoveEntry(keyEquiv);  
+}
+
+
+PRBool nsMenuBarX::ContainsKeyEquiv(unsigned int modifiers, NSString* string)
+{
+  const CocoaKeyEquivContainer keyEquiv(modifiers, string);
+  return (mKeyEquivTable.GetEntry(keyEquiv) != nsnull);
 }
 
 

@@ -44,10 +44,10 @@
 
 #include "nsIDOMElement.h"
 
-// CC986E81-9F46-4AA2-B809-C544789E6F06
+// 33FA04E3-EAFE-4DD1-AFB3-B3BC8C712716
 #define NS_IMENUITEM_IID \
-{ 0xCC986E81, 0x9F46, 0x4AA2, \
-  { 0xB8, 0x09, 0xC5, 0x44, 0x78, 0x9E, 0x6F, 0x06 } }
+{ 0x33FA04E3, 0xEAFE, 0x4DD1, \
+  { 0xAF, 0xB3, 0xB3, 0xBC, 0x8C, 0x71, 0x27, 0x16 } }
 
 class nsIMenu;
 class nsIWidget;
@@ -85,12 +85,6 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD GetLabel(nsString &aText) = 0;
 
-   /**
-    * Set the Menu shortcut char
-    *
-    */
-    NS_IMETHOD SetShortcutChar(const nsString &aText) = 0;
-  
     /**
     * Get the Menu shortcut char
     *
@@ -144,12 +138,6 @@ class nsIMenuItem : public nsISupports {
      * @return NS_OK if the event was sent properly, otherwise an error code
      */
     NS_IMETHOD DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled) = 0;
-
-    /**
-    *
-    */
-    NS_IMETHOD SetModifiers(PRUint8 aModifiers) = 0;
-    NS_IMETHOD GetModifiers(PRUint8 * aModifiers) = 0;
 
    /**
     * Sets an appropriate icon for the menu item.
