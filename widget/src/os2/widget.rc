@@ -52,6 +52,7 @@ POINTER IDC_VERTICALTEXT   res\vertical_text.ptr
 POINTER IDC_ARROWWAIT      res\arrow_wait.ptr
 POINTER IDC_CROSS          res\crosshair.ptr
 POINTER IDC_HELP           res\help.ptr
+POINTER IDC_NONE           res\none.ptr
 
 ICON    IDC_DNDURL         res\dndurl.ico
 ICON    IDC_DNDTEXT        res\dndtext.ico

@@ -96,7 +96,10 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
 
     if (mRoleMapEntry &&
         (mRoleMapEntry->role == nsIAccessibleRole::ROLE_GRAPHIC ||
-         mRoleMapEntry->role == nsIAccessibleRole::ROLE_IMAGE_MAP)) {
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_IMAGE_MAP ||
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_SLIDER ||
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_PROGRESSBAR ||
+         mRoleMapEntry->role == nsIAccessibleRole::ROLE_SEPARATOR)) {
       // ARIA roles that these interfaces are not appropriate for
       return nsAccessible::QueryInterface(aIID, aInstancePtr);
     }
@@ -565,7 +568,10 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
   // On failure, return null. On success, return the DOM node which contains the offset.
   NS_ENSURE_ARG_POINTER(aHyperTextOffset);
   *aHyperTextOffset = 0;
-  NS_ENSURE_ARG_POINTER(aNode);
+
+  if (!aNode) {
+    return NS_ERROR_FAILURE;
+  }
   if (aFinalAccessible) {
     *aFinalAccessible = nsnull;
   }
@@ -619,6 +625,17 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
   // accessible for the next DOM node which has one (based on forward depth first search)
   nsCOMPtr<nsIAccessible> descendantAccessible;
   if (findNode) {
+    nsCOMPtr<nsIContent> findContent = do_QueryInterface(findNode);
+    if (findContent->IsNodeOfType(nsINode::eHTML) && 
+        findContent->NodeInfo()->Equals(nsAccessibilityAtoms::br)) {
+      nsIContent *parent = findContent->GetParent();
+      if (parent && parent->IsNativeAnonymous() && parent->GetChildCount() == 1) {
+        // This <br> is the only node in a text control, therefore it is the hacky
+        // "bogus node" used when there is no text in a control
+        *aHyperTextOffset = 0;
+        return NS_OK;
+      }
+    }
     descendantAccessible = GetFirstAvailableAccessible(findNode);
   }
   // From the descendant, go up and get the immediate child of this hypertext
@@ -986,6 +1003,13 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
                                        nsnull, getter_AddRefs(endAcc));
     if (!endFrame) {
       return NS_ERROR_FAILURE;
+    }
+    if (endAcc && Role(endAcc) == nsIAccessibleRole::ROLE_STATICTEXT) {
+      // Static text like list bullets will ruin our forward calculation,
+      // since the caret cannot be in the static text. Start just after the static text.
+      startOffset = endOffset = finalStartOffset + (aBoundaryType == BOUNDARY_LINE_END) + TextLength(endAcc);
+      endFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
+                               nsnull, getter_AddRefs(endAcc));
     }
     finalEndOffset = GetRelativeOffset(presShell, endFrame, endOffset, endAcc,
                                        amount, eDirNext, needsStart);

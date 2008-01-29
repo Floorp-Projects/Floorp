@@ -835,11 +835,17 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
+  // Don't do any work to convert to object.
+  if (type == JSTYPE_OBJECT) {
+    *vp = OBJECT_TO_JSVAL(obj);
+    return JS_TRUE;
+  }
+
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
   if (!wrappedObj) {
     // Converting the prototype to something.
 
-    if (type == JSTYPE_STRING) {
+    if (type == JSTYPE_STRING || type == JSTYPE_VOID) {
       return XPC_XOW_toString(cx, obj, 0, nsnull, vp);
     }
 
@@ -859,8 +865,13 @@ XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_FALSE;
   }
 
-  // TODO wrap return value?
-  return JS_GET_CLASS(cx, wrappedObj)->convert(cx, wrappedObj, type, vp);
+  if (!JS_GET_CLASS(cx, wrappedObj)->convert(cx, wrappedObj, type, vp)) {
+    return JS_FALSE;
+  }
+
+  return NS_SUCCEEDED(rv)
+         ? WrapSameOriginProp(cx, obj, vp)
+         : XPC_XOW_RewrapIfNeeded(cx, obj, vp);
 }
 
 JS_STATIC_DLL_CALLBACK(void)

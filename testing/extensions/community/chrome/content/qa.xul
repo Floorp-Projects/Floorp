@@ -36,8 +36,6 @@
 -
 - ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://qa/skin/qa.css" type="text/css"?>
 <?xml-stylesheet href="chrome://qa/skin/platform.css" type="text/css"?>
 

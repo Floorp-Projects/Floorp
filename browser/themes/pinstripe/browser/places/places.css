@@ -1,28 +1,103 @@
 /* Sidebars */
 
 .sidebar-placesTree {
+  border-top: none !important;
+}
+
+#sidebar tree,
+#sidebar page {
+  background-color: transparent !important;
+  -moz-appearance: none !important;
+  border: none !important;
+}
+
+#bookmarksPanel, 
+#history-panel,
+#bookmarksPanel > hbox,
+#history-panel > hbox {
+  -moz-appearance: none !important;
+  background-color: #d6dde5 !important;
+  border-top: none !important;
+}
+
+#bookmarks-view,
+#historyTree,
+#historyTree treechildren::-moz-tree-row, 
+#bookmarks-view treechildren::-moz-tree-row {
+  background-color: transparent;
+  border-color: transparent;
+  -moz-margin-end: 0;
   -moz-appearance: none;
-  border: 0;
   margin: 0;
-  border-top: 1px solid ThreeDShadow;
+  border: none;
 }
 
-.sidebar-placesTreechildren::-moz-tree-cell(leaf) ,
-.sidebar-placesTreechildren::-moz-tree-image(leaf) {
-  cursor: pointer;
+#historyTree treechildren::-moz-tree-row, 
+#bookmarks-view treechildren::-moz-tree-row {
+  padding-bottom: 1px;
 }
 
-.sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
-  cursor: pointer;
-  text-decoration: underline;
+#historyTree treechildren::-moz-tree-row(selected), 
+#bookmarks-view treechildren::-moz-tree-row(selected) {  
+  background-color: -moz-mac-secondaryhighlight !important;
+  background-image: url("chrome://browser/skin/places/selected-gradient.png");
+  background-repeat: repeat-x;
+  background-position: center left;
 }
 
-.sidebar-placesTreechildren::-moz-tree-cell(separator) {
-  cursor: default;
+#historyTree treechildren::-moz-tree-separator,
+#bookmarks-view treechildren::-moz-tree-separator {
+  border-top: 1px solid #505d6d;
+  margin: 0 10px;
 }
 
+
+#historyTree treechildren::-moz-tree-row(selected,focus),
+#bookmarks-view treechildren::-moz-tree-row(selected,focus),
+#placesList treechildren::-moz-tree-row(selected,focus) {  
+  background-image: url("chrome://browser/skin/places/selected-focused-gradient.png");
+  background-color: Highlight !important;
+  color: HighlightText !important;
+  border-top: 1px solid Highlight;
+}
+
+#historyTree treechildren::-moz-tree-cell-text(selected,focus), 
+#bookmarks-view treechildren::-moz-tree-cell-text(selected,focus),
+#placesList treechildren::-moz-tree-cell-text(selected,focus) {  
+  font-weight: bold !important;
+  color: HighlightText !important;
+}
+
+#bookmarksPanel > hbox > label,
+#history-panel > hbox > label {
+  display: none;
+}
+
+#viewButton {
+  -moz-appearance: none;
+  margin: 0 2px !important;
+  padding: 2px 0 2px 7px !important;
+  background: url("chrome://global/skin/icons/round-button-leftcap.png") no-repeat center left !important;
+  border: none;
+}
+
+#viewButton .button-text {
+  margin: 0 !important;
+  padding: 2px 18px 0 1px !important;
+  background: url("chrome://global/skin/icons/round-button-dropmarker.png") no-repeat center right !important;
+  height: 19px;
+}
+
+#viewButton .button-menu-dropmarker {
+  display: none;
+}
+
+page > hbox {
+ margin: 0 4px 6px 4px;
+}
 
 /* Trees */
+
 treechildren::-moz-tree-image(title) {
   padding-right: 2px;
   margin: 0px 2px;

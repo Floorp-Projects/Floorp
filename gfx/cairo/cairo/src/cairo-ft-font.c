@@ -1365,7 +1365,7 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 	if (!hinting) {
 	    ft_options.base.hint_style = CAIRO_HINT_STYLE_NONE;
 	}
-#endif /* FC_FHINT_STYLE */
+#endif /* FC_HINT_STYLE */
     } else {
 	ft_options.base.antialias = CAIRO_ANTIALIAS_NONE;
     }
@@ -1467,6 +1467,8 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
 
     options->load_flags = load_flags | load_target;
     options->extra_flags = other->extra_flags;
+    if (options->base.hint_metrics != CAIRO_HINT_METRICS_OFF)
+	options->extra_flags |= CAIRO_FT_OPTIONS_HINT_METRICS;
 }
 
 static cairo_status_t
@@ -1497,9 +1499,6 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     _cairo_unscaled_font_reference (&unscaled->base);
     scaled_font->unscaled = unscaled;
 
-    if (options->hint_metrics != CAIRO_HINT_METRICS_OFF)
-	ft_options.extra_flags |= CAIRO_FT_OPTIONS_HINT_METRICS;
-
     _cairo_font_options_init_copy (&scaled_font->ft_options.base, options);
     _cairo_ft_options_merge (&scaled_font->ft_options, &ft_options);
 
@@ -1508,6 +1507,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 				      font_matrix, ctm, options,
 				      &cairo_ft_scaled_font_backend);
     if (status) {
+	_cairo_unscaled_font_destroy (&unscaled->base);
 	free (scaled_font);
 	goto FAIL;
     }
@@ -1515,34 +1515,11 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     status = _cairo_ft_unscaled_font_set_scale (unscaled,
 				                &scaled_font->base.scale);
     if (status) {
+	_cairo_unscaled_font_destroy (&unscaled->base);
 	free (scaled_font);
 	goto FAIL;
     }
 
-    /*
-     * Force non-AA drawing when using a bitmap strike that
-     * won't be resampled due to non-scaling transform
-     */
-    if (!unscaled->have_shape &&
-	(scaled_font->ft_options.load_flags & FT_LOAD_NO_BITMAP) == 0 &&
-	scaled_font->ft_options.base.antialias != CAIRO_ANTIALIAS_NONE &&
-	(face->face_flags & FT_FACE_FLAG_FIXED_SIZES))
-    {
-	int		i;
-	FT_Size_Metrics	*size_metrics = &face->size->metrics;
-
-	for (i = 0; i < face->num_fixed_sizes; i++)
-	{
-	    FT_Bitmap_Size  *bitmap_size = &face->available_sizes[i];
-
-	    if (bitmap_size->x_ppem == size_metrics->x_ppem * 64 &&
-		bitmap_size->y_ppem == size_metrics->y_ppem * 64)
-	    {
-		scaled_font->ft_options.base.antialias = CAIRO_ANTIALIAS_NONE;
-		break;
-	    }
-	}
-    }
 
     metrics = &face->size->metrics;
 
@@ -1670,7 +1647,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (&sf, &scale);
 
-    if (! FcPatternAddInteger (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
+    if (! FcPatternAddDouble (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FREE_PATTERN;
     }
@@ -1680,9 +1657,11 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 	goto FREE_PATTERN;
     }
 
-    status = _cairo_ft_font_options_substitute (font_options, pattern);
-    if (status)
-	goto FREE_PATTERN;
+    if (font_options != NULL) {
+	status = _cairo_ft_font_options_substitute (font_options, pattern);
+	if (status)
+	    goto FREE_PATTERN;
+    }
 
     FcDefaultSubstitute (pattern);
 
@@ -2170,7 +2149,7 @@ _cairo_ft_load_truetype_table (void	       *abstract_font,
     return status;
 }
 
-static void
+static cairo_int_status_t
 _cairo_ft_map_glyphs_to_unicode (void	                    *abstract_font,
                                  cairo_scaled_font_subset_t *font_subset)
 {
@@ -2184,7 +2163,7 @@ _cairo_ft_map_glyphs_to_unicode (void	                    *abstract_font,
 
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
-	return;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     count = font_subset->num_glyphs;
     charcode = FT_Get_First_Char( face, &glyph);
@@ -2197,9 +2176,11 @@ _cairo_ft_map_glyphs_to_unicode (void	                    *abstract_font,
                 break;
             }
         }
-        charcode = FT_Get_Next_Char(face, charcode, &glyph);
+        charcode = FT_Get_Next_Char (face, charcode, &glyph);
     }
     _cairo_ft_unscaled_font_unlock_face (unscaled);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
@@ -2466,6 +2447,9 @@ void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 				  FcPattern                  *pattern)
 {
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	return;
+
     _cairo_ft_font_options_substitute (options, pattern);
 }
 

@@ -45,6 +45,7 @@ MODULE = test_docshell
 
 DIRS += chrome \
 	browser \
+	navigation \
 	$(NULL)
 
 XPCSHELL_TESTS = unit

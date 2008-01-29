@@ -41,6 +41,10 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+#JSConsoleWindow {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
+}
+
 .console-box {
   background-color: -moz-Field;
   color: -moz-FieldText;
@@ -128,28 +132,33 @@
   color: #FFF !important;  
 }
 
-/* ::::: icons ::::: */
+/* ::::: row colors ::::: */
 
-.console-row {
-  list-style-image: url("chrome://global/skin/console/console-bullets.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
 .console-row[type="error"],
 .console-row[type="exception"] {
   background-color: #FFD0DC;
 }
 
 .console-row[type="warning"] {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
   background-color: #F8F3CC;
 }
 
 .console-row[type="message"] {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
   background-color: #D3EDFF;
 }
 
 /* ::::: toolbars ::::: */
+
+#ToolbarEval {
+  background: url("chrome://global/skin/icons/find-bar-background.png") repeat-x top center #D0D0D0;
+  border-bottom: 1px solid #686868;
+  padding: 2px;
+}
+
+#ToolbarEval > label {
+  font-weight: bold;
+  color: #5F5F5F;
+}
 
 #TextfieldEval {
   margin: 2px !important;
@@ -158,59 +167,76 @@
 
 #ButtonEval {
   margin: 2px 2px 2px 0px !important;
-  -moz-appearance: button-bevel;
+  -moz-appearance: none;
+  border: 1px solid #5F5F5F;
+  -moz-border-radius: 4px;
+  background: url("chrome://global/skin/icons/white-gray-gradient.gif") #A09E9D repeat-x top center;
+  padding: 0;
+}
+
+#ButtonEval:hover:active {
+  background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
 }
 
 
 toolbarseparator {
   min-height: 1em;
+  background-image: none;
 }
 
 /* Toolbar icons */
 
 toolbar#ToolbarMode {
-  padding-right: 5px;
-  padding-left: 5px;
+  background-color: #969696;
+  border-bottom: 1px solid #404040;
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.gif");
+  background-repeat: repeat-x;
+  background-position: top right;
+  padding: 4px 0 8px;
+  -moz-box-pack: center;
 }
 
 toolbar#ToolbarMode toolbarbutton {
-  list-style-image: url("chrome://global/skin/console/console-toolbar.png");
-  -moz-box-orient: vertical;
+  border: 1px solid #404040;
+  border-bottom: 2px solid;
+  border-left: none;
+  -moz-border-bottom-colors: #C2C2C2 #404040;
+  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
+  background-repeat: repeat-x;
+  font: menu;
+  margin: 0;
+  padding: 0 4px;
 }
 
-#Console\:modeWarnings {
-  -moz-image-region: rect(0px, 24px, 24px, 0px);
-}
-#Console\:modeWarnings:hover:active {
-  -moz-image-region: rect(24px, 24px, 48px, 0px);
-}
-
-#Console\:modeMessages {
-  -moz-image-region: rect(0px, 48px, 24px, 24px);
-}
-#Console\:modeMessages:hover:active {
-  -moz-image-region: rect(24px, 48px, 48px, 24px);
-}
-
-#Console\:modeErrors {
-  -moz-image-region: rect(0px, 72px, 24px, 48px);
-}
-#Console\:modeErrors:hover:active {
-  -moz-image-region: rect(24px, 72px, 48px, 48px);
+toolbar#ToolbarMode toolbarbutton[checked] {
+  background-image: none;
+  background-color: #5E5E5E;
+  color: #ffffff !important;
 }
 
 #Console\:modeAll {
-  -moz-image-region: rect(0px, 96px, 24px, 72px);
+  border-left: 1px solid #404040 !important;
+  -moz-border-radius-bottomleft: 5px;
+  -moz-border-radius-topleft: 4px;
 }
-#Console\:modeAll:hover:active {
-  -moz-image-region: rect(24px, 96px, 48px, 72px);
+
+#Console\:modeMessages {
+  -moz-border-radius-bottomright: 5px;
+  -moz-border-radius-topright: 4px;
 }
 
 #Console\:clear {
-  -moz-image-region: rect(0px, 120px, 24px, 96px);
+  border-left: 1px solid #404040 !important;
+  -moz-border-radius-topright: 4px;
+  -moz-border-radius-topleft: 4px;
+  -moz-border-radius-bottomright: 5px;
+  -moz-border-radius-bottomleft: 5px;
 }
+
 #Console\:clear:hover:active {
-  -moz-image-region: rect(24px, 120px, 48px, 96px);
+  background-image: none; 
+  background-color: #5E5E5E;
+  color: #ffffff !important;
 }
 
 #ConsoleBox {

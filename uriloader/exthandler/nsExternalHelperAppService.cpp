@@ -1778,7 +1778,10 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
       {
         mWebProgressListener->OnProgressChange64(nsnull, nsnull, mProgress, mContentLength, mProgress, mContentLength);
       }
-      mWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
+      mWebProgressListener->OnStateChange(nsnull, nsnull,
+        nsIWebProgressListener::STATE_STOP |
+        nsIWebProgressListener::STATE_IS_REQUEST |
+        nsIWebProgressListener::STATE_IS_NETWORK, NS_OK);
     }
   }
   
@@ -1836,7 +1839,9 @@ nsresult nsExternalAppHandler::CreateProgressListener()
     InitializeDownload(tr);
 
   if (tr)
-    tr->OnStateChange(nsnull, mRequest, nsIWebProgressListener::STATE_START, NS_OK);
+    tr->OnStateChange(nsnull, mRequest, nsIWebProgressListener::STATE_START |
+      nsIWebProgressListener::STATE_IS_REQUEST |
+      nsIWebProgressListener::STATE_IS_NETWORK, NS_OK);
 
   // note we might not have a listener here if the QI() failed, or if
   // there is no nsITransfer object, but we still call

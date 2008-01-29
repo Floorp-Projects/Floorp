@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  pref \
 		  lwbrk \
+		  view \
 		  gfx \
 		  thebes \
 		  widget \

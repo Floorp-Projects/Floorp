@@ -322,13 +322,34 @@ public:
    */
   NS_IMETHOD EnableRefresh(PRUint32 aUpdateFlags) = 0;
 
+  class UpdateViewBatch {
+  public:
+    UpdateViewBatch() {}
   /**
    * prevents the view manager from refreshing. allows UpdateView()
    * to notify widgets of damaged regions that should be repainted
-   * when the batch is ended.
+   * when the batch is ended. Call EndUpdateViewBatch on this object
+   * before it is destroyed
    * @return error status
    */
-  NS_IMETHOD BeginUpdateViewBatch(void) = 0;
+    UpdateViewBatch(nsIViewManager* aVM) {
+      if (aVM) {
+        mRootVM = aVM->BeginUpdateViewBatch();
+      }
+    }
+    ~UpdateViewBatch() {
+      NS_ASSERTION(!mRootVM, "Someone forgot to call EndUpdateViewBatch!");
+    }
+    
+    /**
+     * See the constructor, this lets you "fill in" a blank UpdateViewBatch.
+     */
+    void BeginUpdateViewBatch(nsIViewManager* aVM) {
+      NS_ASSERTION(!mRootVM, "already started a batch!");
+      if (aVM) {
+        mRootVM = aVM->BeginUpdateViewBatch();
+      }
+    }
 
   /**
    * allow the view manager to refresh any damaged areas accumulated
@@ -352,7 +373,27 @@ public:
    * @param aUpdateFlags see bottom of nsIViewManager.h for
    * description @return error status
    */
+    void EndUpdateViewBatch(PRUint32 aUpdateFlags) {
+      if (!mRootVM)
+        return;
+      mRootVM->EndUpdateViewBatch(aUpdateFlags);
+      mRootVM = nsnull;
+    }
+
+  private:
+    UpdateViewBatch(const UpdateViewBatch& aOther);
+    const UpdateViewBatch& operator=(const UpdateViewBatch& aOther);
+
+    nsCOMPtr<nsIViewManager> mRootVM;
+  };
+  
+private:
+  friend class UpdateViewBatch;
+
+  virtual nsIViewManager* BeginUpdateViewBatch(void) = 0;
   NS_IMETHOD EndUpdateViewBatch(PRUint32 aUpdateFlags) = 0;
+
+public:
 
   /**
    * set the view that is is considered to be the root scrollable

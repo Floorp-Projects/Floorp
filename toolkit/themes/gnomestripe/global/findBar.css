@@ -56,11 +56,12 @@ findbar {
 /* highlight button */
 
 .findbar-highlight {
-  list-style-image: url("moz-icon://stock/gtk-select-all?size=menu");
+  list-style-image: url("chrome://global/skin/icons/find.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
 .findbar-highlight[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-select-all?size=menu&state=disabled");
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
 .find-status-icon {

@@ -40,6 +40,7 @@
 #define nsIFramesetElement_h___
 
 #include "nsISupports.h"
+#include "nsCoord.h"
 
 // IID for the nsIFramesetElement interface
 #define NS_IFRAMESETELEMENT_IID \

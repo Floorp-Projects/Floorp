@@ -1617,7 +1617,7 @@ nsCycleCollector::UnrootWhite()
 
 static PRBool hookedMalloc = PR_FALSE;
 
-#ifdef __GLIBC__
+#if defined(__GLIBC__) && !defined(__UCLIBC__)
 #include <malloc.h>
 
 static void* (*old_memalign_hook)(size_t, size_t, const void *);

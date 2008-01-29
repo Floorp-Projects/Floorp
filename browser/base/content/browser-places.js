@@ -97,11 +97,8 @@ var PlacesCommandHook = {
         break;
       case "keypress":
         if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE ||
-            aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
-          // focus the content area and hide the panel
-          window.content.focus();
-          this.panel.hidePopup();
-        }
+            aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+          this.panel.hidePopup(); // hide the panel
         break;
     }
   },
@@ -208,7 +205,7 @@ var PlacesCommandHook = {
       if (aBrowser.contentWindow == window.content) {
         var starIcon = aBrowser.ownerDocument.getElementById("star-button");
         if (starIcon && isElementVisible(starIcon)) {
-          this.showEditBookmarkPopup(itemId, starIcon, "after_start");
+          this.showEditBookmarkPopup(itemId, starIcon, "after_end");
           return;
         }
       }

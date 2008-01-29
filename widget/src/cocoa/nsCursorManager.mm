@@ -199,6 +199,13 @@ static nsCursorManager *gInstance;
   if (aCursor != mCurrentCursor) {
     [[self getCursor: mCurrentCursor] unset];
     [[self getCursor: aCursor] set];
+
+    if (aCursor == eCursor_none) {
+      [NSCursor hide];
+    } else if (mCurrentCursor == eCursor_none) {
+      [NSCursor unhide];
+    }
+
     mCurrentCursor = aCursor;
   }
 }

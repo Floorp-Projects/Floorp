@@ -91,6 +91,7 @@ struct _cairo_scaled_font {
 
     /* "live" scaled_font members */
     cairo_matrix_t scale;	  /* font space => device space */
+    cairo_matrix_t scale_inverse; /* device space => font space */
     cairo_font_extents_t extents; /* user space */
 
     /* The mutex protects modification to all subsequent fields. */

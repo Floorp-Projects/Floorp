@@ -38,8 +38,10 @@
 
 #include "cairo-output-stream-private.h"
 
+#include <stdio.h>
 #include <locale.h>
 #include <ctype.h>
+#include <errno.h>
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -132,6 +134,29 @@ _cairo_output_stream_create (cairo_write_func_t		write_func,
     return &stream->base;
 }
 
+cairo_output_stream_t *
+_cairo_output_stream_create_in_error (cairo_status_t status)
+{
+    cairo_output_stream_t *stream;
+
+    /* check for the common ones */
+    if (status == CAIRO_STATUS_NO_MEMORY)
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    if (status == CAIRO_STATUS_WRITE_ERROR)
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
+
+    stream = malloc (sizeof (cairo_output_stream_t));
+    if (stream == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
+
+    _cairo_output_stream_init (stream, NULL, NULL);
+    stream->status = status;
+
+    return stream;
+}
+
 cairo_status_t
 _cairo_output_stream_close (cairo_output_stream_t *stream)
 {
@@ -163,8 +188,7 @@ _cairo_output_stream_destroy (cairo_output_stream_t *stream)
 {
     cairo_status_t status;
 
-    if (stream == NULL)
-	return _cairo_error (CAIRO_STATUS_NULL_POINTER);
+    assert (stream != NULL);
 
     if (stream == &_cairo_output_stream_nil ||
 	stream == &_cairo_output_stream_nil_write_error)
@@ -538,8 +562,14 @@ _cairo_output_stream_create_for_filename (const char *filename)
 
     file = fopen (filename, "wb");
     if (file == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_WRITE_ERROR);
-	return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
+	switch (errno) {
+	case ENOMEM:
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+	default:
+	    _cairo_error_throw (CAIRO_STATUS_WRITE_ERROR);
+	    return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
+	}
     }
 
     stream = malloc (sizeof *stream);

@@ -112,7 +112,7 @@ public:
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   NS_IMETHOD UpdateCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
+  virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate) { return NS_OK; }

@@ -76,8 +76,8 @@ listbox:focus > listitem[current="true"] {
 }
 
 listitem[selected="true"] {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
 }
 
 listbox:focus > listitem[selected="true"] {
@@ -100,7 +100,12 @@ listheader {
   padding: 0 2px;
 }
 
+listheader:hover {
+  color: -moz-buttonhovertext;
+}
+
 listheader[sortable="true"]:hover:active {
+  color: ButtonText;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
   -moz-border-right-colors: ThreeDShadow transparent;

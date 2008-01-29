@@ -681,10 +681,12 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
   CallQueryInterface(frame, &svgframe);
   if (svgframe) {
     svgframe->SetMatrixPropagation(PR_FALSE);
-    svgframe->NotifyCanvasTMChanged(PR_TRUE);
+    svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                               nsISVGChildFrame::TRANSFORM_CHANGED);
     nsresult rv = svgframe->GetBBox(_retval);
     svgframe->SetMatrixPropagation(PR_TRUE);
-    svgframe->NotifyCanvasTMChanged(PR_TRUE);
+    svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                               nsISVGChildFrame::TRANSFORM_CHANGED);
     return rv;
   } else {
     // XXX: outer svg

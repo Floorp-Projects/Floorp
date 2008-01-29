@@ -1421,7 +1421,7 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
 {
     int intersections;
     cairo_status_t status;
-    cairo_bo_edge_t stack_edges[CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_bo_edge_t)];
+    cairo_bo_edge_t stack_edges[CAIRO_STACK_ARRAY_LENGTH (cairo_bo_edge_t)];
     cairo_bo_edge_t *edges;
     cairo_fixed_t xmin = 0x7FFFFFFF;
     cairo_fixed_t ymin = 0x7FFFFFFF;

@@ -5800,34 +5800,21 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
 nsresult
 nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 & aY)
 {
-  // we are going to need the PresShell
+  aX = 0;
+  aY = 0;
+
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsIFrame *frame = ps->GetPrimaryFrameFor(content); // not ref-counted
+  nsIFrame *frame = ps->GetPrimaryFrameFor(content);
 
-  if (nsHTMLEditUtils::IsHR(aElement) && frame) {
-    frame = frame->GetNextSibling();
-  }
-  PRInt32 offsetX = 0, offsetY = 0;
-  while (frame) {
-    // Look for a widget so we can get screen coordinates
-    nsIView* view = frame->GetViewExternal();
-    if (view && view->HasWidget())
-      break;
-    
-    // No widget yet, so count up the coordinates of the frame 
-    nsPoint origin = frame->GetPosition();
-    offsetX += origin.x;
-    offsetY += origin.y;
-
-    frame = frame->GetParent();
-  }
-
-  aX = nsPresContext::AppUnitsToIntCSSPixels(offsetX);
-  aY = nsPresContext::AppUnitsToIntCSSPixels(offsetY);
+  nsIFrame *container = ps->GetAbsoluteContainingBlock(frame);
+  if (!frame) return NS_OK;
+  nsPoint off = frame->GetOffsetTo(container);
+  aX = nsPresContext::AppUnitsToIntCSSPixels(off.x);
+  aY = nsPresContext::AppUnitsToIntCSSPixels(off.y);
 
   return NS_OK;
 }

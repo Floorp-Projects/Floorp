@@ -1337,7 +1337,7 @@ public:
                     // close out the previous range
                     prevRange.end = origI;
 
-                    TextRange r(i, i+1);
+                    TextRange r(origI, i+1);
                     r.font = fe;
                     mRanges.AppendElement(r);
                 }

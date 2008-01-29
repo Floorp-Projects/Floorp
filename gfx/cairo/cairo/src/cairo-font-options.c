@@ -52,7 +52,7 @@ static const cairo_font_options_t _cairo_font_options_nil = {
 void
 _cairo_font_options_init_default (cairo_font_options_t *options)
 {
-    if (options == (cairo_font_options_t *)&_cairo_font_options_nil)
+    if (cairo_font_options_status (options))
 	return;
 
     options->antialias = CAIRO_ANTIALIAS_DEFAULT;
@@ -65,10 +65,13 @@ void
 _cairo_font_options_init_copy (cairo_font_options_t		*options,
 			       const cairo_font_options_t	*other)
 {
-    options->antialias = other->antialias;
-    options->subpixel_order = other->subpixel_order;
-    options->hint_style = other->hint_style;
-    options->hint_metrics = other->hint_metrics;
+    if (other != NULL) {
+	options->antialias = other->antialias;
+	options->subpixel_order = other->subpixel_order;
+	options->hint_style = other->hint_style;
+	options->hint_metrics = other->hint_metrics;
+    } else
+	_cairo_font_options_init_default (options);
 }
 
 /**
@@ -91,7 +94,7 @@ cairo_font_options_create (void)
     options = malloc (sizeof (cairo_font_options_t));
     if (!options) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_font_options_t *)&_cairo_font_options_nil;
+	return (cairo_font_options_t *) &_cairo_font_options_nil;
     }
 
     _cairo_font_options_init_default (options);
@@ -118,13 +121,16 @@ cairo_font_options_copy (const cairo_font_options_t *original)
 {
     cairo_font_options_t *options;
 
-    if (original == &_cairo_font_options_nil)
-	return (cairo_font_options_t *)&_cairo_font_options_nil;
+    if (original != NULL &&
+	cairo_font_options_status ((cairo_font_options_t *) original))
+    {
+	return (cairo_font_options_t *) &_cairo_font_options_nil;
+    }
 
     options = malloc (sizeof (cairo_font_options_t));
     if (!options) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_font_options_t *)&_cairo_font_options_nil;
+	return (cairo_font_options_t *) &_cairo_font_options_nil;
     }
 
     _cairo_font_options_init_copy (options, original);
@@ -142,7 +148,7 @@ cairo_font_options_copy (const cairo_font_options_t *original)
 void
 cairo_font_options_destroy (cairo_font_options_t *options)
 {
-    if (options == (cairo_font_options_t *)&_cairo_font_options_nil)
+    if (cairo_font_options_status (options))
 	return;
 
     free (options);
@@ -161,7 +167,9 @@ slim_hidden_def (cairo_font_options_destroy);
 cairo_status_t
 cairo_font_options_status (cairo_font_options_t *options)
 {
-    if (options == (cairo_font_options_t *)&_cairo_font_options_nil)
+    if (options == NULL)
+	return CAIRO_STATUS_NULL_POINTER;
+    else if (options == (cairo_font_options_t *) &_cairo_font_options_nil)
 	return CAIRO_STATUS_NO_MEMORY;
     else
 	return CAIRO_STATUS_SUCCESS;
@@ -182,7 +190,11 @@ void
 cairo_font_options_merge (cairo_font_options_t       *options,
 			  const cairo_font_options_t *other)
 {
-    if (options == (cairo_font_options_t *)&_cairo_font_options_nil)
+    if (cairo_font_options_status (options))
+	return;
+
+    /* A NULL other maps to the defaults and would not overwrite options */
+    if (cairo_font_options_status ((cairo_font_options_t *) other))
 	return;
 
     if (other->antialias != CAIRO_ANTIALIAS_DEFAULT)
@@ -209,6 +221,14 @@ cairo_bool_t
 cairo_font_options_equal (const cairo_font_options_t *options,
 			  const cairo_font_options_t *other)
 {
+    if (options == NULL)
+	options = &_cairo_font_options_nil;
+    if (other == NULL)
+	other = &_cairo_font_options_nil;
+
+    if (options == other)
+	return TRUE;
+
     return (options->antialias == other->antialias &&
 	    options->subpixel_order == other->subpixel_order &&
 	    options->hint_style == other->hint_style &&
@@ -231,6 +251,9 @@ slim_hidden_def (cairo_font_options_equal);
 unsigned long
 cairo_font_options_hash (const cairo_font_options_t *options)
 {
+    if (options == NULL)
+	options = &_cairo_font_options_nil;
+
     return ((options->antialias) |
 	    (options->subpixel_order << 4) |
 	    (options->hint_style << 8) |
@@ -250,7 +273,7 @@ void
 cairo_font_options_set_antialias (cairo_font_options_t *options,
 				  cairo_antialias_t     antialias)
 {
-    if (options == (cairo_font_options_t *)&_cairo_font_options_nil)
+    if (cairo_font_options_status (options))
 	return;
 
     options->antialias = antialias;
@@ -268,6 +291,9 @@ slim_hidden_def (cairo_font_options_set_antialias);
 cairo_antialias_t
 cairo_font_options_get_antialias (const cairo_font_options_t *options)
 {
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	return CAIRO_ANTIALIAS_DEFAULT;
+
     return options->antialias;
 }
 
@@ -286,7 +312,7 @@ void
 cairo_font_options_set_subpixel_order (cairo_font_options_t   *options,
 				       cairo_subpixel_order_t  subpixel_order)
 {
-    if (options == (cairo_font_options_t *)&_cairo_font_options_nil)
+    if (cairo_font_options_status (options))
 	return;
 
     options->subpixel_order = subpixel_order;
@@ -305,6 +331,9 @@ slim_hidden_def (cairo_font_options_set_subpixel_order);
 cairo_subpixel_order_t
 cairo_font_options_get_subpixel_order (const cairo_font_options_t *options)
 {
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	return CAIRO_SUBPIXEL_ORDER_DEFAULT;
+
     return options->subpixel_order;
 }
 
@@ -322,7 +351,7 @@ void
 cairo_font_options_set_hint_style (cairo_font_options_t *options,
 				   cairo_hint_style_t    hint_style)
 {
-    if (options == (cairo_font_options_t *)&_cairo_font_options_nil)
+    if (cairo_font_options_status (options))
 	return;
 
     options->hint_style = hint_style;
@@ -341,6 +370,9 @@ slim_hidden_def (cairo_font_options_set_hint_style);
 cairo_hint_style_t
 cairo_font_options_get_hint_style (const cairo_font_options_t *options)
 {
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	return CAIRO_HINT_STYLE_DEFAULT;
+
     return options->hint_style;
 }
 
@@ -358,7 +390,7 @@ void
 cairo_font_options_set_hint_metrics (cairo_font_options_t *options,
 				     cairo_hint_metrics_t  hint_metrics)
 {
-    if (options == (cairo_font_options_t *)&_cairo_font_options_nil)
+    if (cairo_font_options_status (options))
 	return;
 
     options->hint_metrics = hint_metrics;
@@ -377,5 +409,8 @@ slim_hidden_def (cairo_font_options_set_hint_metrics);
 cairo_hint_metrics_t
 cairo_font_options_get_hint_metrics (const cairo_font_options_t *options)
 {
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	return CAIRO_HINT_METRICS_DEFAULT;
+
     return options->hint_metrics;
 }

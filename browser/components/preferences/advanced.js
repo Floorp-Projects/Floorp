@@ -55,6 +55,7 @@ var gAdvancedPane = {
     this.updateAppUpdateItems();
     this.updateAutoItems();
     this.updateModeItems();
+    this.updateOfflineApps();
   },
 
   /**
@@ -177,6 +178,94 @@ var gAdvancedPane = {
     try {
       cacheService.evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
     } catch(ex) {}
+  },
+
+  /**
+   * Updates the list of offline applications
+   */
+  updateOfflineApps: function ()
+  {
+    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                       .getService(Components.interfaces.nsIPermissionManager);
+
+    var list = document.getElementById("offlineAppsList");
+    while (list.firstChild) {
+      list.removeChild(list.firstChild);
+    }
+
+    var enumerator = pm.enumerator;
+    while (enumerator.hasMoreElements()) {
+      var perm = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
+      if (perm.type == "offline-app" &&
+          perm.capability != Components.interfaces.nsIPermissionManager.DEFAULT_ACTION &&
+          perm.capability != Components.interfaces.nsIPermissionManager.DENY_ACTION) {
+        var row = document.createElementNS(kXULNS, "listitem");
+        row.id = "";
+        row.className = "listitem";
+        row.setAttribute("label", perm.host);
+
+        list.appendChild(row);
+      }
+    }
+  },
+
+  offlineAppSelected: function()
+  {
+    var removeButton = document.getElementById("offlineAppsListRemove");
+    var list = document.getElementById("offlineAppsList");
+    if (list.selectedItem) {
+      removeButton.setAttribute("disabled", "false");
+    } else {
+      removeButton.setAttribute("disabled", "true");
+    }
+  },
+
+  removeOfflineApp: function()
+  {
+    var list = document.getElementById("offlineAppsList");
+    var item = list.selectedItem;
+    var host = item.getAttribute("label");
+
+    var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                            .getService(Components.interfaces.nsIPromptService);
+    var flags = prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_0 +
+                prompts.BUTTON_TITLE_CANCEL * prompts.BUTTON_POS_1;
+
+    var bundle = document.getElementById("bundlePreferences");
+    var title = bundle.getString("offlineAppRemoveTitle");
+    var prompt = bundle.getFormattedString("offlineAppRemovePrompt", [host]);
+    var confirm = bundle.getString("offlineAppRemoveConfirm");
+    var result = prompts.confirmEx(window, title, prompt, flags, confirm,
+                                   null, null, null, {});
+    if (result != 0)
+      return;
+
+    // clear offline cache entries
+    var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+                       .getService(Components.interfaces.nsICacheService);
+    var cacheSession = cacheService.createSession("HTTP-offline",
+                                                  Components.interfaces.nsICache.STORE_OFFLINE,
+                                                  true)
+                       .QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+    cacheSession.clearKeysOwnedByDomain(host);
+    cacheSession.evictUnownedEntries();
+
+    // send out an offline-app-removed signal.  The nsDOMStorage
+    // service will clear DOM storage for this host.
+    var obs = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+    obs.notifyObservers(null, "offline-app-removed", host);
+
+    // remove the permission
+    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                       .getService(Components.interfaces.nsIPermissionManager);
+    pm.remove(host, "offline-app",
+              Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+    pm.remove(host, "offline-app",
+              Components.interfaces.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
+
+    list.removeChild(item);
+    gAdvancedPane.offlineAppSelected();
   },
 
   // UPDATE TAB

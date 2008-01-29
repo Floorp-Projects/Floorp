@@ -678,7 +678,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     PRUint32 aLoadFlags,
                     PRBool aFirstParty)
 {
-    if (!IsNavigationAllowed()) {
+    // Note: we allow loads to get through here even if mFiredUnloadEvent is
+    // true; that case will get handled in LoadInternal or LoadHistoryEntry.
+    if (IsPrintingOrPP()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -1903,37 +1905,35 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     // XXXbz should we care if aAccessingItem or the document therein is
     // chrome?  Should those get extra privileges?
 
-    // Now do a security check
-    // Bug 13871: Prevent frameset spoofing
-    //     See BugSplat 336170, 338737 and XP_FindNamedContextInList in
-    //     the classic codebase
-    //     Nav's behaviour was:
-    //         - pref controlled: "browser.frame.validate_origin" 
-    //           (gValidateOrigin)
-    //         - allow load if host of target or target's parent is same
-    //           as host of origin
-    //         - allow load if target is a top level window
-    
-    //     We are going to be a little more restrictive, with the
-    //     following algorithm:
-    //         - pref controlled in the same way
-    //         - allow access if the two treeitems are in the same tree
-    //         - allow access if the aTargetItem or one of its ancestors
-    //           has the same origin as aAccessingItem
-    //         - allow access if the target is a toplevel window and we can
-    //           access its opener.  Note that we only allow one level of
-    //           recursion there.
+    // For historical context, see:
+    // 
+    // Bug 13871:  Prevent frameset spoofing
+    // Bug 103638: Targets with same name in different windows open in wrong
+    //             window with javascript
 
-    nsCOMPtr<nsIDocShellTreeItem> targetRoot;
-    aTargetItem->GetSameTypeRootTreeItem(getter_AddRefs(targetRoot));
+    // Now do a security check
+    //
+    // Allow navigation if
+    //  1) aAccessingItem can script aTargetItem or one of its ancestors in
+    //     the frame hierarchy or
+    //  2) aTargetItem is a top-level frame and aAccessingItem is its descendant
+    //  3) aTargetItem is a top-level frame and aAccessingItem can target
+    //     its opener per rule (1) or (2).
+
+    if (aTargetItem == aAccessingItem) {
+        // A frame is allowed to navigate itself.
+        return PR_TRUE;  
+    }
 
     nsCOMPtr<nsIDocShellTreeItem> accessingRoot;
     aAccessingItem->GetSameTypeRootTreeItem(getter_AddRefs(accessingRoot));
 
-    if (targetRoot == accessingRoot) {
+    if (aTargetItem == accessingRoot) {
+        // A frame can navigate its root.
         return PR_TRUE;
     }
 
+    // Check if aAccessingItem can navigate one of aTargetItem's ancestors.
     nsCOMPtr<nsIDocShellTreeItem> target = aTargetItem;
     do {
         if (ValidateOrigin(aAccessingItem, target)) {
@@ -1944,6 +1944,9 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
         target->GetSameTypeParent(getter_AddRefs(parent));
         parent.swap(target);
     } while (target);
+
+    nsCOMPtr<nsIDocShellTreeItem> targetRoot;
+    aTargetItem->GetSameTypeRootTreeItem(getter_AddRefs(targetRoot));
 
     if (aTargetItem != targetRoot) {
         // target is a subframe, not in accessor's frame hierarchy, and all its
@@ -3603,6 +3606,10 @@ nsDocShell::Destroy()
         }
     }
 
+    // Make sure to blow away our mLoadingURI just in case.  No loads
+    // from inside this pagehide.
+    mLoadingURI = nsnull;
+    
     // Fire unload event before we blow anything away.
     (void) FirePageHideNotification(PR_TRUE);
 
@@ -3781,15 +3788,6 @@ NS_IMETHODIMP
 nsDocShell::SetParentWidget(nsIWidget * aParentWidget)
 {
     mParentWidget = aParentWidget;
-
-    if (!mParentWidget) {
-        // If the parent widget is set to null we don't want to hold
-        // on to the current device context any more since it is
-        // associated with the parent widget we no longer own. We'll
-        // need to create a new device context if one is needed again.
-
-        mDeviceContext = nsnull;
-    }
 
     return NS_OK;
 }
@@ -5112,24 +5110,6 @@ nsDocShell::EnsureContentViewer()
     return rv;
 }
 
-NS_IMETHODIMP
-nsDocShell::EnsureDeviceContext()
-{
-    if (mDeviceContext)
-        return NS_OK;
-
-    mDeviceContext = do_CreateInstance(kDeviceContextCID);
-    NS_ENSURE_TRUE(mDeviceContext, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIWidget> widget;
-    GetMainWidget(getter_AddRefs(widget));
-    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-    mDeviceContext->Init(widget->GetNativeData(NS_NATIVE_WIDGET));
-
-    return NS_OK;
-}
-
 nsresult
 nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal)
 {
@@ -5165,6 +5145,10 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal)
 
     mSavingOldViewer = CanSavePresentation(LOAD_NORMAL, nsnull, nsnull);
 
+    // Make sure to blow away our mLoadingURI just in case.  No loads
+    // from inside this pagehide.
+    mLoadingURI = nsnull;
+    
     // Notify the current document that it is about to be unloaded!!
     //
     // It is important to fire the unload() notification *before* any state
@@ -5581,6 +5565,10 @@ nsDocShell::RestoreFromHistory()
     // pagehide or unload.
     nsCOMPtr<nsISHEntry> origLSHE = mLSHE;
 
+    // Make sure to blow away our mLoadingURI just in case.  No loads
+    // from inside this pagehide.
+    mLoadingURI = nsnull;
+    
     // Notify the old content viewer that it's being hidden.
     FirePageHideNotification(!mSavingOldViewer);
 
@@ -5943,7 +5931,14 @@ nsDocShell::CreateContentViewer(const char *aContentType,
         mSavingOldViewer = CanSavePresentation(mLoadType, request, doc);
     }
 
+    NS_ASSERTION(!mLoadingURI, "Re-entering unload?");
+    
+    nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
+    if (aOpenedChannel) {
+        aOpenedChannel->GetURI(getter_AddRefs(mLoadingURI));
+    }
     FirePageHideNotification(!mSavingOldViewer);
+    mLoadingURI = nsnull;
 
     // Set mFiredUnloadEvent = PR_FALSE so that the unload handler for the
     // *new* document will fire.
@@ -5953,8 +5948,6 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     // OnLoadingSite(), but don't fire OnLocationChange()
     // notifications before we've called Embed(). See bug 284993.
     mURIResultedInDocument = PR_TRUE;
-
-    nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
     PRBool onLocationChangeNeeded = OnLoadingSite(aOpenedChannel, PR_FALSE);
 
@@ -6272,13 +6265,16 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     nsCOMPtr<nsIWidget> widget;
     NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
 
+    nsCOMPtr<nsIDeviceContext> deviceContext;
     if (widget) {
-        NS_ENSURE_SUCCESS(EnsureDeviceContext(), NS_ERROR_FAILURE);
+        deviceContext = do_CreateInstance(kDeviceContextCID);
+        NS_ENSURE_TRUE(deviceContext, NS_ERROR_FAILURE);
+        deviceContext->Init(widget->GetNativeData(NS_NATIVE_WIDGET));
     }
 
     nsRect bounds(x, y, cx, cy);
 
-    if (NS_FAILED(mContentViewer->Init(widget, mDeviceContext, bounds))) {
+    if (NS_FAILED(mContentViewer->Init(widget, deviceContext, bounds))) {
         mContentViewer = nsnull;
         NS_ERROR("ContentViewer Initialization failed");
         return NS_ERROR_FAILURE;
@@ -6424,56 +6420,66 @@ nsDocShell::CheckLoadingPermissions()
         item.swap(tmp);
     } while (item);
 
-    // The caller is not from the same origin as this item, or any if
-    // this items ancestors. Only permit loading content if both are
-    // part of the same window, assuming we can find the window of the
-    // caller.
-
-    nsCOMPtr<nsIJSContextStack> stack =
-        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-    if (!stack) {
-        // No context stack available. Should never happen, but in
-        // case it does, return the sameOrigin error from the security
-        // check above.
-
-        return sameOrigin;
-    }
-
-    JSContext *cx = nsnull;
-    stack->Peek(&cx);
-
-    if (!cx) {
-        // No caller docshell reachable, return the sameOrigin error
-        // from the security check above.
-
-        return sameOrigin;
-    }
-
-    nsIScriptContext *currentCX = GetScriptContextFromJSContext(cx);
-    nsCOMPtr<nsIDocShellTreeItem> callerTreeItem;
-    nsCOMPtr<nsPIDOMWindow> win;
-    if (currentCX &&
-        (win = do_QueryInterface(currentCX->GetGlobalObject())) &&
-        (callerTreeItem = do_QueryInterface(win->GetDocShell()))) {
-        nsCOMPtr<nsIDocShellTreeItem> callerRoot;
-        callerTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(callerRoot));
-
-        nsCOMPtr<nsIDocShellTreeItem> ourRoot;
-        GetSameTypeRootTreeItem(getter_AddRefs(ourRoot));
-
-        if (ourRoot == callerRoot) {
-            // The running JS is in the same window as the target
-            // frame, permit load.
-            sameOrigin = NS_OK;
-        }
-    }
-
     return sameOrigin;
 }
 
 //*****************************************************************************
 // nsDocShell: Site Loading
 //*****************************************************************************   
+class InternalLoadEvent : public nsRunnable
+{
+public:
+    InternalLoadEvent(nsDocShell* aDocShell, nsIURI * aURI, nsIURI * aReferrer,
+                      nsISupports * aOwner, PRUint32 aFlags,
+                      const PRUnichar *aWindowTarget, const char* aTypeHint,
+                      nsIInputStream * aPostData,
+                      nsIInputStream * aHeadersData, PRUint32 aLoadType,
+                      nsISHEntry * aSHEntry, PRBool aFirstParty) :
+        mDocShell(aDocShell),
+        mURI(aURI),
+        mReferrer(aReferrer),
+        mOwner(aOwner),
+        mFlags(aFlags),
+        mPostData(aPostData),
+        mHeadersData(aHeadersData),
+        mLoadType(aLoadType),
+        mSHEntry(aSHEntry),
+        mFirstParty(aFirstParty)
+    {
+        // Make sure to keep null things null as needed
+        if (aWindowTarget) {
+            mWindowTarget = aWindowTarget;
+        }
+        if (aTypeHint) {
+            mTypeHint = aTypeHint;
+        }
+    }
+    
+    NS_IMETHOD Run() {
+        return mDocShell->InternalLoad(mURI, mReferrer, mOwner, mFlags,
+                                       mWindowTarget.get(), mTypeHint.get(),
+                                       mPostData, mHeadersData, mLoadType,
+                                       mSHEntry, mFirstParty, nsnull, nsnull);
+    }
+
+private:
+    nsRefPtr<nsDocShell> mDocShell;
+    nsCOMPtr<nsIURI> mURI;
+    nsCOMPtr<nsIURI> mReferrer;
+    nsCOMPtr<nsISupports> mOwner;
+    PRUint32 mFlags;
+
+    // Use IDL strings so .get() returns null by default
+    nsXPIDLString mWindowTarget;
+    nsXPIDLCString mTypeHint;
+    
+    nsCOMPtr<nsIInputStream> mPostData;
+    nsCOMPtr<nsIInputStream> mHeadersData;
+    PRUint32 mLoadType;
+    nsCOMPtr<nsISHEntry> mSHEntry;
+    PRBool mFirstParty;
+};
+
 NS_IMETHODIMP
 nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIURI * aReferrer,
@@ -6489,10 +6495,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIDocShell** aDocShell,
                          nsIRequest** aRequest)
 {
-    if (mFiredUnloadEvent) {
-      return NS_OK; // JS may not handle returning of an error code
-    }
-
     nsresult rv = NS_OK;
 
 #ifdef PR_LOGGING
@@ -6519,6 +6521,21 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     NS_ENSURE_TRUE(IsValidLoadType(aLoadType), NS_ERROR_INVALID_ARG);
 
     NS_ENSURE_TRUE(!mIsBeingDestroyed, NS_ERROR_NOT_AVAILABLE);
+
+    if (mFiredUnloadEvent) {
+        if (IsOKToLoadURI(aURI)) {
+            // Do this asynchronously
+            nsCOMPtr<nsIRunnable> ev =
+                new InternalLoadEvent(this, aURI, aReferrer, aOwner, aFlags,
+                                      aWindowTarget, aTypeHint,
+                                      aPostData, aHeadersData, aLoadType,
+                                      aSHEntry, aFirstParty);
+            return NS_DispatchToCurrentThread(ev);
+        }
+
+        // Just ignore this load attempt
+        return NS_OK;
+    }
 
     // wyciwyg urls can only be loaded through history. Any normal load of
     // wyciwyg through docshell is  illegal. Disallow such loads.
@@ -8088,6 +8105,10 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
 NS_IMETHODIMP
 nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
 {
+    if (!IsNavigationAllowed()) {
+        return NS_OK;
+    }
+    
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIInputStream> postData;
     nsCOMPtr<nsIURI> referrerURI;
@@ -9233,6 +9254,26 @@ nsDocShell::IsAboutBlank(nsIURI* aURI)
     nsCAutoString str;
     aURI->GetSpec(str);
     return str.EqualsLiteral("about:blank");
+}
+
+PRBool
+nsDocShell::IsOKToLoadURI(nsIURI* aURI)
+{
+    NS_PRECONDITION(aURI, "Must have a URI!");
+    
+    if (!mFiredUnloadEvent) {
+        return PR_TRUE;
+    }
+
+    if (!mLoadingURI) {
+        return PR_FALSE;
+    }
+
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+    return
+        secMan &&
+        NS_SUCCEEDED(secMan->CheckSameOriginURI(aURI, mLoadingURI, PR_FALSE));
 }
 
 //*****************************************************************************

@@ -45,13 +45,28 @@ rasterizeEdges (pixman_image_t  *image,
 	int	lxi;
 	int rxi;
 
-	/* clip X */
 	lx = l->x;
+	rx = r->x;
+#if N_BITS == 1
+	/* For the non-antialiased case, round the coordinates up, in effect
+	 * sampling the center of the pixel. (The AA case does a similar 
+	 * adjustment in RenderSamplesX) */
+	lx += X_FRAC_FIRST(1);
+	rx += X_FRAC_FIRST(1);
+#endif
+	/* clip X */
 	if (lx < 0)
 	    lx = 0;
-	rx = r->x;
 	if (pixman_fixed_to_int (rx) >= width)
+#if N_BITS == 1
 	    rx = pixman_int_to_fixed (width);
+#else
+	    /* Use the last pixel of the scanline, covered 100%.
+	     * We can't use the first pixel following the scanline,
+	     * because accessing it could result in a buffer overrun.
+	     */
+	    rx = pixman_int_to_fixed (width) - 1;
+#endif
 
 	/* Skip empty (or backwards) sections */
 	if (rx > lx)
@@ -109,12 +124,7 @@ rasterizeEdges (pixman_image_t  *image,
 			AddAlpha (N_X_FRAC(N_BITS));
 			StepAlpha;
 		    }
-		    /* Do not add in a 0 alpha here. This check is necessary
-		     * to avoid a buffer overrun when rx is exactly on a pixel
-		     * boundary.
-		     */
-		    if (rxs != 0)
-			AddAlpha (rxs);
+		    AddAlpha (rxs);
 		}
 	    }
 #endif

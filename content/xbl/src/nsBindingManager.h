@@ -241,7 +241,9 @@ protected:
   // A mapping from nsIContent* to an nsIDOMNodeList*
   // (nsAnonymousContentList*).  This list contains an accurate
   // reflection of our *explicit* children (once intermingled with
-  // insertion points) in the altered DOM.
+  // insertion points) in the altered DOM.  There is an entry for a
+  // content node in this table only if that content node has some
+  // <children> kids.
   PLDHashTable mContentListTable;
 
   // A mapping from nsIContent* to an nsIDOMNodeList*
@@ -250,7 +252,10 @@ protected:
   // intermingled with insertion points) in the altered DOM.  This
   // table is not used if no insertion points were defined directly
   // underneath a <content> tag in a binding.  The NodeList from the
-  // <content> is used instead as a performance optimization.
+  // <content> is used instead as a performance optimization.  There
+  // is an entry for a content node in this table only if that content
+  // node has a binding with a <content> attached and this <content>
+  // contains <children> elements directly.
   PLDHashTable mAnonymousNodesTable;
 
   // A mapping from nsIContent* to nsIContent*.  The insertion parent

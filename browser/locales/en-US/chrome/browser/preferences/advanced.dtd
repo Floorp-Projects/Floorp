@@ -34,7 +34,7 @@
 <!ENTITY connectionSettings.label        "Settings…">
 <!ENTITY connectionSettings.accesskey    "e">
 
-<!ENTITY cache.label "Cache">
+<!ENTITY offlineStorage.label            "Offline Storage">
 
 <!-- LOCALIZATION NOTE:
   The entities useCacheBefore.label and useCacheAfter.label appear on a single
@@ -67,6 +67,11 @@
 <!ENTITY updateHistory.label             "Show Update History">
 <!ENTITY updateHistory.accesskey         "p">
 
+<!ENTITY offlineAppsList.label           "The following websites have data installed for offline use:">
+<!ENTITY offlineAppsList.height          "7em">
+<!ENTITY offlineAppsListRemove.label     "Remove…">
+<!ENTITY offlineAppsListRemove.accesskey "R">
+<!ENTITY offlineAppRemove.confirm        "Remove offline data">
 
 <!ENTITY encryptionTab.label             "Encryption">
 
@@ -76,7 +81,7 @@
 <!ENTITY useTLS1.label                   "Use TLS 1.0">
 <!ENTITY useTLS1.accesskey               "1">
 <!ENTITY certificates.label              "Certificates">
-<!ENTITY certselect.description          "When a web site requires a certificate:">
+<!ENTITY certSelection.description       "When a server requests my personal certificate:">
 <!ENTITY certs.auto                      "Select one automatically">
 <!ENTITY certs.auto.accesskey            "l">
 <!ENTITY certs.ask                       "Ask me every time">

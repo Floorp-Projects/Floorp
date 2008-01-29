@@ -131,7 +131,7 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
     status->mServerCert = new nsNSSCertificate(nssCert);
     CERT_DestroyCertificate(nssCert);
 
-    status->mHaveCertStatus = PR_TRUE;
+    status->mHaveCertErrorBits = PR_TRUE;
     status->mIsDomainMismatch = isDomainMismatch;
     status->mIsNotValidAtThisTime = isNotValidAtThisTime;
     status->mIsUntrusted = isUntrusted;

@@ -682,9 +682,10 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
     nsCAutoString filePath;
     rv = aChromeURL->GetFilePath(filePath);
     NS_ENSURE_SUCCESS(rv, rv);
+    filePath.SetLength(nsUnescapeCount(filePath.BeginWriting()));
 
-    if (filePath.Find(NS_LITERAL_CSTRING("..")) != -1 ||
-        filePath.FindChar(':') != -1) {
+    if (filePath.Find(NS_LITERAL_CSTRING("..")) != kNotFound ||
+        filePath.FindChar(':') != kNotFound) {
       return NS_ERROR_DOM_BAD_URI;
     }
   }

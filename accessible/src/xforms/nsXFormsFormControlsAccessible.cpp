@@ -51,7 +51,7 @@ nsXFormsLabelAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = nsIAccessibleRole::ROLE_STATICTEXT;
+  *aRole = nsIAccessibleRole::ROLE_LABEL;
   return NS_OK;
 }
 

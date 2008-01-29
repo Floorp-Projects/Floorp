@@ -50,6 +50,7 @@
 #include "nsAutoLock.h"
 #include "nsIUUIDGenerator.h"
 #include "prprf.h"
+#include "nsILivemarkService.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Type = 1;
@@ -796,8 +797,6 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
 {
   NS_ASSERTION(aStartIndex <= aEndIndex, "start index must be <= end index");
 
-  mozIStorageConnection *dbConn = DBConn();
-
   nsCAutoString buffer;
   buffer.AssignLiteral("UPDATE moz_bookmarks SET position = position + ");
   buffer.AppendInt(aDelta);
@@ -910,6 +909,43 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex,
   NS_ENSURE_SUCCESS(rv, rv);
   *aNewBookmarkId = rowId;
 
+  // XXX
+  // 0n import / fx 2 migration, is the frecency work going to slow us down?
+  // We might want to skip this stuff, as well as the frecency work
+  // caused by GetUrlIdFor() which calls InternalAddNewPage().
+  // If we do skip this, after import, we will
+  // need to call FixInvalidFrecenciesForExcludedPlaces().
+  // We might need to call it anyways, if items aren't properly annotated
+  // as livemarks feeds yet.
+
+  nsCAutoString url;
+  rv = aItem->GetSpec(url);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // prevent place: queries from showing up in the URL bar autocomplete results
+  PRBool isBookmark = !IsQueryURI(url);
+
+  if (isBookmark) {
+    // if it is a livemark item (the parent is a livemark), 
+    // we pass in false for isBookmark.  otherwise, unvisited livemark 
+    // items will appear in URL autocomplete before we visit them.
+    PRBool parentIsLivemark;
+    nsCOMPtr<nsILivemarkService> lms = 
+      do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = lms->IsLivemark(aFolder, &parentIsLivemark);
+    NS_ENSURE_SUCCESS(rv, rv);
+ 
+    isBookmark = !parentIsLivemark;
+  }
+  
+  // when we created the moz_place entry for the new bookmark 
+  // (a side effect of calling GetUrlIdFor()) frecency -1;
+  // now we re-calculate the frecency for this moz_place entry. 
+  rv = History()->UpdateFrecency(childID, isBookmark);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = SetItemLastModified(aFolder, PR_Now());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1003,6 +1039,17 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 
   rv = UpdateBookmarkHashOnRemove(placeId);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // XXX is this too expensive when updating livemarks?
+  // UpdateBookmarkHashOnRemove() does a sanity check using
+  // IsBookmarkedInDatabase(),  so it might not have actually 
+  // removed the bookmark.  should we have a boolean out param
+  // for if we actually removed it, and use that to decide if we call
+  // UpdateFrecency() and the rest of this code?
+  if (itemType == TYPE_BOOKMARK) {
+    rv = History()->UpdateFrecency(placeId, PR_FALSE /* isBookmark */);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                       OnItemRemoved(aItemId, folderId, childIndex))
@@ -2012,6 +2059,7 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
            aOptions->ExcludeQueries()) ||
           (nodeType != nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
            nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER &&
+           nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT &&
            aOptions->ExcludeItems())) {
         continue;
       }
@@ -2143,6 +2191,19 @@ nsNavBookmarks::ChangeBookmarkURI(PRInt64 aBookmarkId, nsIURI *aNewURI)
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // upon changing the uri for a bookmark, update the frecency for the new place
+  // no need to check if this is a livemark, because...
+  rv = History()->UpdateFrecency(placeId, PR_TRUE /* isBookmark */);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#if 0
+  // upon changing the uri for a bookmark, update the frecency for the old place
+  // XXX todo, we need to get the oldPlaceId (fk) before changing it above
+  // and then here, we need to determine if that oldPlaceId is still a bookmark (and not a livemark)
+  rv = History()->UpdateFrecency(oldPlaceId,  PR_FALSE /* isBookmark */);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   nsCAutoString spec;
   rv = aNewURI->GetSpec(spec);

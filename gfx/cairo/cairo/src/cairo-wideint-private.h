@@ -37,42 +37,7 @@
 #ifndef CAIRO_WIDEINT_H
 #define CAIRO_WIDEINT_H
 
-#if   HAVE_STDINT_H
-# include <stdint.h>
-#elif HAVE_INTTYPES_H
-# include <inttypes.h>
-#elif HAVE_SYS_INT_TYPES_H
-# include <sys/int_types.h>
-#elif defined(_MSC_VER)
-  typedef __int8 int8_t;
-  typedef unsigned __int8 uint8_t;
-  typedef __int16 int16_t;
-  typedef unsigned __int16 uint16_t;
-  typedef __int32 int32_t;
-  typedef unsigned __int32 uint32_t;
-  typedef __int64 int64_t;
-  typedef unsigned __int64 uint64_t;
-# ifndef HAVE_UINT64_T
-#  define HAVE_UINT64_T 1
-# endif
-# ifndef INT16_MIN
-#  define INT16_MIN	(-32767-1)
-# endif
-# ifndef INT16_MAX
-#  define INT16_MAX	(32767)
-# endif
-# ifndef UINT16_MAX
-#  define UINT16_MAX	(65535)
-# endif
-# ifndef INT32_MIN
-#  define INT32_MIN	(-2147483647-1)
-# endif
-# ifndef INT32_MAX
-#  define INT32_MAX	(2147483647)
-# endif
-#else
-#error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
-#endif
+#include "cairo-wideint-type-private.h"
 
 #include "cairo-compiler-private.h"
 
@@ -85,10 +50,6 @@
 #define I cairo_private
 
 #if !HAVE_UINT64_T
-
-typedef struct _cairo_uint64 {
-    uint32_t	lo, hi;
-} cairo_uint64_t, cairo_int64_t;
 
 cairo_uint64_t I	_cairo_uint32_to_uint64 (uint32_t i);
 #define			_cairo_uint64_to_uint32(a)  ((a).lo)
@@ -124,9 +85,6 @@ int	       I	_cairo_int64_lt (cairo_uint64_t a, cairo_uint64_t b);
 #define			_cairo_int64_not(a)	    _cairo_uint64_not(a)
 
 #else
-
-typedef uint64_t    cairo_uint64_t;
-typedef int64_t	    cairo_int64_t;
 
 #define			_cairo_uint32_to_uint64(i)  ((uint64_t) (i))
 #define			_cairo_uint64_to_uint32(i)  ((uint32_t) (i))
@@ -181,16 +139,6 @@ typedef int64_t	    cairo_int64_t;
  * a function which returns both for the 'native' type as well
  */
 
-typedef struct _cairo_uquorem64 {
-    cairo_uint64_t	quo;
-    cairo_uint64_t	rem;
-} cairo_uquorem64_t;
-
-typedef struct _cairo_quorem64 {
-    cairo_int64_t	quo;
-    cairo_int64_t	rem;
-} cairo_quorem64_t;
-
 cairo_uquorem64_t I
 _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den);
 
@@ -204,10 +152,6 @@ _cairo_int64_divrem (cairo_int64_t num, cairo_int64_t den);
  */
 
 #if !HAVE_UINT128_T
-
-typedef struct cairo_uint128 {
-    cairo_uint64_t	lo, hi;
-} cairo_uint128_t, cairo_int128_t;
 
 cairo_uint128_t I	_cairo_uint32_to_uint128 (uint32_t i);
 cairo_uint128_t I	_cairo_uint64_to_uint128 (cairo_uint64_t i);
@@ -248,9 +192,6 @@ int 	        I	_cairo_int128_lt (cairo_int128_t a, cairo_int128_t b);
 
 #else	/* !HAVE_UINT128_T */
 
-typedef uint128_t	cairo_uint128_t;
-typedef int128_t	cairo_int128_t;
-
 #define			_cairo_uint32_to_uint128(i) ((uint128_t) (i))
 #define			_cairo_uint64_to_uint128(i) ((uint128_t) (i))
 #define			_cairo_uint128_to_uint64(i) ((uint64_t) (i))
@@ -289,16 +230,6 @@ typedef int128_t	cairo_int128_t;
 #define			_cairo_int128_not(a)	    (~(a))
 
 #endif	/* HAVE_UINT128_T */
-
-typedef struct _cairo_uquorem128 {
-    cairo_uint128_t	quo;
-    cairo_uint128_t	rem;
-} cairo_uquorem128_t;
-
-typedef struct _cairo_quorem128 {
-    cairo_int128_t	quo;
-    cairo_int128_t	rem;
-} cairo_quorem128_t;
 
 cairo_uquorem128_t I
 _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den);

@@ -5284,12 +5284,11 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   PRInt32 offset = GetContentOffset();
 
   // Restrict preformatted text to the nearest newline
-  PRInt32 newLineOffset = -1;
+  PRInt32 newLineOffset = -1; // this will be -1 or a content offset
   if (textStyle->WhiteSpaceIsSignificant()) {
     newLineOffset = FindChar(frag, offset, length, '\n');
     if (newLineOffset >= 0) {
       length = newLineOffset + 1 - offset;
-      newLineOffset -= mContentOffset;
     }
   } else {
     if (atStartOfLine) {
@@ -5403,6 +5402,13 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   gfxSkipCharsIterator end(provider.GetEndHint());
   end.SetSkippedOffset(transformedOffset + transformedCharsFit);
   PRInt32 charsFit = end.GetOriginalOffset() - offset;
+  if (offset + charsFit == newLineOffset) {
+    // We broke before a trailing preformatted '\n'. The newline should
+    // be assigned to this frame. Note that newLineOffset will be -1 if
+    // there was no preformatted newline, so we wouldn't get here in that
+    // case.
+    ++charsFit;
+  }
   // That might have taken us beyond our assigned content range (because
   // we might have advanced over some skipped chars that extend outside
   // this frame), so get back in.
@@ -5543,7 +5549,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   if (charsFit == 0 && length > 0) {
     // Couldn't place any text
     aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-  } else if (contentLength > 0 && contentLength - 1 == newLineOffset) {
+  } else if (contentLength > 0 && mContentOffset + contentLength - 1 == newLineOffset) {
     // Ends in \n
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
     lineLayout.SetLineEndsInBR(PR_TRUE);

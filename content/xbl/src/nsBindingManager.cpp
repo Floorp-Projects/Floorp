@@ -1384,8 +1384,7 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                &isAnonymousContentList);
 
       if (nodeList && isAnonymousContentList) {
-        // Find a non-pseudo-insertion point and just jam ourselves in.
-        // This is not 100% correct.  Hack city, baby.
+        // Find the one non-pseudo-insertion point and just add ourselves.
         nsAnonymousContentList* contentList =
           static_cast<nsAnonymousContentList*>(nodeList.get());
 
@@ -1424,13 +1423,33 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
   }
 }
 
+static void
+RemoveChildFromInsertionPoint(nsAnonymousContentList* aInsertionPointList,
+                              nsIContent* aChild,
+                              PRBool aRemoveFromPseudoPoints)
+{
+  // We need to find the insertion point that contains aChild and remove it
+  // from that insertion point.  Sadly, we don't know which point it is, or
+  // when we've hit it, but just trying to remove from all the pseudo or
+  // non-pseudo insertion points, depending on the value of
+  // aRemoveFromPseudoPoints, should work.
+  PRInt32 count = aInsertionPointList->GetInsertionPointCount();
+  for (PRInt32 i = 0; i < count; i++) {
+    nsXBLInsertionPoint* point =
+      aInsertionPointList->GetInsertionPointAt(i);
+    if ((point->GetInsertionIndex() == -1) == aRemoveFromPseudoPoints) {
+      point->RemoveChild(aChild);
+    }
+  }
+}
+
 void
 nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aContainer,
                                  nsIContent* aChild,
                                  PRInt32 aIndexInContainer)
 {
-  if (aIndexInContainer != -1 &&
+  if (aContainer && aIndexInContainer != -1 &&
       (mContentListTable.ops || mAnonymousNodesTable.ops)) {
     // It's not anonymous
     nsCOMPtr<nsIContent> point = GetNestedInsertionPoint(aContainer, aChild);
@@ -1443,17 +1462,26 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
       
       if (nodeList && isAnonymousContentList) {
         // Find a non-pseudo-insertion point and remove ourselves.
-        nsAnonymousContentList* contentList = static_cast<nsAnonymousContentList*>(static_cast<nsIDOMNodeList*>(nodeList));
-        PRInt32 count = contentList->GetInsertionPointCount();
-        for (PRInt32 i =0; i < count; i++) {
-          nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
-          if (point->GetInsertionIndex() != -1) {
-            point->RemoveChild(aChild);
-          }
-        }
+        RemoveChildFromInsertionPoint(static_cast<nsAnonymousContentList*>
+                                        (static_cast<nsIDOMNodeList*>
+                                                    (nodeList)),
+                                      aChild,
+                                      PR_FALSE);
         SetInsertionParent(aChild, nsnull);
       }
-    }  
+    }
+
+    // Whether the child has a nested insertion point or not, aContainer might
+    // have insertion points under it.  If that's the case, we need to remove
+    // aChild from the pseudo insertion point it's in.
+    if (mContentListTable.ops) {
+      nsAnonymousContentList* insertionPointList =
+        static_cast<nsAnonymousContentList*>(LookupObject(mContentListTable,
+                                                          aContainer));
+      if (insertionPointList) {
+        RemoveChildFromInsertionPoint(insertionPointList, aChild, PR_TRUE);
+      }
+    }
   }
 }
 
@@ -1534,7 +1562,7 @@ nsBindingManager::HandleChildInsertion(nsIContent* aContainer,
 {
   NS_PRECONDITION(aChild, "Must have child");
   NS_PRECONDITION(!aContainer ||
-                  aContainer->IndexOf(aChild) == aIndexInContainer,
+                  PRUint32(aContainer->IndexOf(aChild)) == aIndexInContainer,
                   "Child not at the right index?");
 
   nsIContent* ins = GetNestedInsertionPoint(aContainer, aChild);
@@ -1546,8 +1574,10 @@ nsBindingManager::HandleChildInsertion(nsIContent* aContainer,
                              &isAnonymousContentList);
 
     if (nodeList && isAnonymousContentList) {
-      // Find a non-pseudo-insertion point and just jam ourselves in.
-      // This is not 100% correct.  Hack city, baby.
+      // Find a non-pseudo-insertion point and just jam ourselves in.  This is
+      // not 100% correct, since there might be multiple insertion points under
+      // this insertion parent, and we should really be using the one that
+      // matches our content...  Hack city, baby.
       nsAnonymousContentList* contentList =
         static_cast<nsAnonymousContentList*>(nodeList.get());
 

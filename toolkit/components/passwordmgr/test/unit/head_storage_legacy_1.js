@@ -143,6 +143,8 @@ const LoginTest = {
                      createInstance(Ci.nsILocalFile);
     inputFile.initWithPath(aPathName);
     inputFile.append(aFileName);
+    if (inputFile.fileSize == 0)
+      return 0;
 
     var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
                       createInstance(Ci.nsIFileInputStream);
@@ -151,7 +153,7 @@ const LoginTest = {
     var lineStream = inputStream.QueryInterface(Ci.nsILineInputStream);
 
     var line = { value : null };
-    var lineCount = 1;
+    var lineCount = 1; // Empty files were dealt with above.
     while (lineStream.readLine(line)) 
         lineCount++;
 

@@ -1,0 +1,55 @@
+%import "htmlgenericelement.gqi"
+
+%import-idl "nsIDOMHTMLAnchorElement.idl"
+%import-idl "nsIDOMNSHTMLAnchorElement2.idl"
+%import-idl "nsIDOMHTMLDivElement.idl"
+%import-idl "nsIDOMHTMLFrameElement.idl"
+%import-idl "nsIDOMHTMLFrameSetElement.idl"
+%import-idl "nsIDOMHTMLIFrameElement.idl"
+
+%{C++
+#include "nsHTMLAnchorElement.h"
+#include "nsHTMLDivElement.h"
+#include "nsHTMLSpanElement.h"
+#include "nsHTMLFrameElement.h"
+#include "nsHTMLFrameSetElement.h"
+#include "nsHTMLIFrameElement.h"
+%}
+
+%pseudo-iid nsILink 0c212bc4-fcd7-479d-8c3f-3be8e6787450
+%pseudo-iid nsIFrameSetElement eefe0fe5-44ac-4d7f-a751-f4aa5f22b0bf
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLAnchorElement, nsGenericHTMLElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAnchorElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement2)
+  NS_INTERFACE_MAP_ENTRY(nsILink)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLAnchorElement)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLDivElement, nsGenericHTMLElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDivElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLDivElement)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLSpanElement, nsGenericHTMLElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLSpanElement)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLFrameElement, nsGenericHTMLFrameElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLFrameElement)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLFrameSetElement, nsGenericHTMLElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameSetElement)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameSetElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLFrameSetElement)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN(nsHTMLIFrameElement, nsGenericHTMLFrameElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLIFrameElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLIFrameElement)
+NS_INTERFACE_MAP_END
+
+

@@ -222,10 +222,7 @@
         } else if (JSVAL_IS_BOOLEAN(v)) {                                     \
             b = JSVAL_TO_BOOLEAN(v);                                          \
         } else {                                                              \
-            SAVE_SP_AND_PC(fp);                                               \
-            ok = js_ValueToBoolean(cx, v, &b);                                \
-            if (!ok)                                                          \
-                goto out;                                                     \
+            b = js_ValueToBoolean(v);                                         \
         }                                                                     \
         sp--;                                                                 \
     JS_END_MACRO
@@ -410,7 +407,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
      */
     if (fp->fun && !fp->callobj) {
         JS_ASSERT(OBJ_GET_CLASS(cx, fp->scopeChain) != &js_BlockClass ||
-                  JS_GetPrivate(cx, fp->scopeChain) != fp);
+                  OBJ_GET_PRIVATE(cx, fp->scopeChain) != fp);
         if (!js_GetCallObject(cx, fp, fp->scopeChain))
             return NULL;
     }
@@ -482,7 +479,7 @@ PutBlockObjects(JSContext *cx, JSStackFrame *fp)
     ok = JS_TRUE;
     for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
         if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
-            if (JS_GetPrivate(cx, obj) != fp)
+            if (OBJ_GET_PRIVATE(cx, obj) != fp)
                 break;
             ok &= js_PutBlockObject(cx, obj);
         }
@@ -1007,7 +1004,7 @@ have_fun:
                         native,
                         JSVAL_IS_OBJECT(vp[1])
                         ? ((OBJ_GET_CLASS(cx, frame.thisp) == &js_FunctionClass)
-                           ? JS_GetFunctionName(JS_GetPrivate(cx, frame.thisp))
+                           ? JS_GetFunctionName(OBJ_GET_PRIVATE(cx, frame.thisp))
                            : OBJ_GET_CLASS(cx, frame.thisp)->name)
                         : JSVAL_IS_BOOLEAN(vp[1])
                         ? js_BooleanClass.name
@@ -1632,8 +1629,6 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
 static JSBool
 InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
 {
-    JSAtom *atom;
-
     JS_ASSERT(!JSVAL_IS_INT(idval));
 
 #if JS_HAS_XML_SUPPORT
@@ -1649,11 +1644,7 @@ InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
     }
 #endif
 
-    atom = js_ValueToStringAtom(cx, idval);
-    if (!atom)
-        return JS_FALSE;
-    *idp = ATOM_TO_JSID(atom);
-    return JS_TRUE;
+    return js_ValueToStringId(cx, idval, idp);
 }
 
 /*
@@ -2186,7 +2177,7 @@ interrupt:
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if (clasp != &js_BlockClass && clasp != &js_WithClass)
                     continue;
-                if (JS_GetPrivate(cx, obj) != fp)
+                if (OBJ_GET_PRIVATE(cx, obj) != fp)
                     break;
                 JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj)
                                      + ((clasp == &js_BlockClass)
@@ -4720,51 +4711,17 @@ interrupt:
              */
             slot = GET_VARNO(pc);
 
-            JS_ASSERT(!fp->blockChain);
-            if (!(fp->flags & JSFRAME_POP_BLOCKS)) {
-                /*
-                 * If the compiler-created function object (obj) is scoped by a
-                 * let-induced body block, temporarily update fp->blockChain so
-                 * that js_GetScopeChain will clone the block into the runtime
-                 * scope needed to parent the function object's clone.
-                 */
-                parent = OBJ_GET_PARENT(cx, obj);
-                if (parent && OBJ_GET_CLASS(cx, parent) == &js_BlockClass)
-                    fp->blockChain = parent;
-                parent = js_GetScopeChain(cx, fp);
-            } else {
-                /*
-                 * We have already emulated JSOP_ENTERBLOCK for the enclosing
-                 * body block, for a prior JSOP_DEFLOCALFUN in the prolog,  so
-                 * we just load fp->scopeChain into parent.
-                 *
-                 * In typical execution scenarios, the prolog bytecodes that
-                 * include this JSOP_DEFLOCALFUN run, then come main bytecodes
-                 * including JSOP_ENTERBLOCK for the outermost (body) block.
-                 * JSOP_ENTERBLOCK will detect that it need not do anything if
-                 * the body block was entered above due to a local function.
-                 * Finally the matching JSOP_LEAVEBLOCK runs.
-                 *
-                 * If the matching JSOP_LEAVEBLOCK for the body block does not
-                 * run for some reason, the body block will be properly "put"
-                 * (via js_PutBlockObject) by the PutBlockObjects call at the
-                 * bottom of js_Interpret.
-                 */
-                parent = fp->scopeChain;
-                JS_ASSERT(OBJ_GET_CLASS(cx, parent) == &js_BlockClass);
-                JS_ASSERT(OBJ_GET_PROTO(cx, parent) == OBJ_GET_PARENT(cx, obj));
-                JS_ASSERT(OBJ_GET_CLASS(cx, OBJ_GET_PARENT(cx, parent))
-                          == &js_CallClass);
+            parent = js_GetScopeChain(cx, fp);
+            if (!parent) {
+                ok = JS_FALSE;
+                goto out;
             }
 
-            /* If re-parenting, store a clone of the function object. */
-            if (OBJ_GET_PARENT(cx, obj) != parent) {
-                SAVE_SP_AND_PC(fp);
-                obj = js_CloneFunctionObject(cx, obj, parent);
-                if (!obj) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
+            SAVE_SP_AND_PC(fp);
+            obj = js_CloneFunctionObject(cx, obj, parent);
+            if (!obj) {
+                ok = JS_FALSE;
+                goto out;
             }
 
             fp->vars[slot] = OBJECT_TO_JSVAL(obj);
@@ -5550,23 +5507,12 @@ interrupt:
              */
             if (fp->flags & JSFRAME_POP_BLOCKS) {
                 JS_ASSERT(!fp->blockChain);
-
-                /*
-                 * Check whether JSOP_DEFLOCALFUN emulated JSOP_ENTERBLOCK for
-                 * the body block in order to correctly scope the local cloned
-                 * function object it creates.
-                 */
-                parent = fp->scopeChain;
-                if (OBJ_GET_PROTO(cx, parent) == obj) {
-                    JS_ASSERT(OBJ_GET_CLASS(cx, parent) == &js_BlockClass);
-                } else {
-                    obj = js_CloneBlockObject(cx, obj, parent, fp);
-                    if (!obj) {
-                        ok = JS_FALSE;
-                        goto out;
-                    }
-                    fp->scopeChain = obj;
+                obj = js_CloneBlockObject(cx, obj, fp->scopeChain, fp);
+                if (!obj) {
+                    ok = JS_FALSE;
+                    goto out;
                 }
+                fp->scopeChain = obj;
             } else {
                 JS_ASSERT(!fp->blockChain ||
                           OBJ_GET_PARENT(cx, obj) == fp->blockChain);
@@ -5957,7 +5903,7 @@ out:
                  clasp = OBJ_GET_CLASS(cx, obj);
                  if (clasp != &js_WithClass && clasp != &js_BlockClass)
                      break;
-                 if (JS_GetPrivate(cx, obj) != fp ||
+                 if (OBJ_GET_PRIVATE(cx, obj) != fp ||
                      OBJ_BLOCK_DEPTH(cx, obj) < i) {
                      break;
                  }

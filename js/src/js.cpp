@@ -524,7 +524,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 #ifdef MOZ_SHARK
         case 'k':
-            js_ConnectShark();
+            JS_ConnectShark();
             break;
 #endif
         default:
@@ -1694,7 +1694,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 DoExport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSAtom *atom;
+    jsid id;
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
@@ -1707,19 +1707,18 @@ DoExport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JS_ValueToObject(cx, argv[0], &obj))
         return JS_FALSE;
     argv[0] = OBJECT_TO_JSVAL(obj);
-    atom = js_ValueToStringAtom(cx, argv[1]);
-    if (!atom)
+    if (!js_ValueToStringId(cx, argv[1], &id))
         return JS_FALSE;
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &obj2, &prop))
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
                                  JSPROP_EXPORTED, NULL);
     } else {
-        ok = OBJ_GET_ATTRIBUTES(cx, obj, ATOM_TO_JSID(atom), prop, &attrs);
+        ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, &attrs);
         if (ok) {
             attrs |= JSPROP_EXPORTED;
-            ok = OBJ_SET_ATTRIBUTES(cx, obj, ATOM_TO_JSID(atom), prop, &attrs);
+            ok = OBJ_SET_ATTRIBUTES(cx, obj, id, prop, &attrs);
         }
         OBJ_DROP_PROPERTY(cx, obj2, prop);
     }
@@ -2448,7 +2447,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ok = JS_FALSE;
             goto out;
         }
-        v = BOOLEAN_TO_JSVAL(v);
+        v = BOOLEAN_TO_JSVAL(lazy);
         ok = JS_SetProperty(cx, sobj, "lazy", &v);
         if (!ok)
             goto out;

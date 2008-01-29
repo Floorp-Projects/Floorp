@@ -56,7 +56,7 @@ try {
  */
 function add_visit(aURI, aReferrer) {
   var placeID = histsvc.addVisit(aURI,
-                                 Date.now(),
+                                 Date.now() * 1000,
                                  aReferrer,
                                  histsvc.TRANSITION_TYPED, // user typed in URL bar
                                  false, // not redirect

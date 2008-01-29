@@ -522,6 +522,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                                            nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mSheetURI(aCopy.mSheetURI),
+    mOriginalSheetURI(aCopy.mOriginalSheetURI),
     mBaseURI(aCopy.mBaseURI),
     mPrincipal(aCopy.mPrincipal),
     mComplete(aCopy.mComplete)
@@ -1334,7 +1335,7 @@ nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
   securityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
 
   if (!subjectPrincipal) {
-    return NS_OK;
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   PRBool subsumes;
@@ -1507,17 +1508,25 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
                             PRUint32 aIndex, 
                             PRUint32* aReturn)
 {
+  //-- Security check: Only scripts whose principal subsumes that of the
+  //   style sheet can modify rule collections.
+  nsresult rv = SubjectSubsumesInnerPrincipal();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return InsertRuleInternal(aRule, aIndex, aReturn);
+}
+
+NS_IMETHODIMP
+nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule, 
+                                    PRUint32 aIndex, 
+                                    PRUint32* aReturn)
+{
   // No doing this if the sheet is not complete!
   PRBool complete;
   GetComplete(complete);
   if (!complete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
-
-  //-- Security check: Only scripts whose principal subsumes that of the
-  //   style sheet can modify rule collections.
-  nsresult rv = SubjectSubsumesInnerPrincipal();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRule.IsEmpty()) {
     // Nothing to do here

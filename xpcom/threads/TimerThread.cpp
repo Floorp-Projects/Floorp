@@ -166,6 +166,7 @@ nsresult TimerThread::Shutdown()
     nsTimerImpl *timer;
     for (PRInt32 i = mTimers.Count() - 1; i >= 0; i--) {
       timer = static_cast<nsTimerImpl*>(mTimers[i]);
+      timer->ReleaseCallback();
       RemoveTimerInternal(timer);
     }
   }

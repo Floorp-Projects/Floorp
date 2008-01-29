@@ -1505,10 +1505,7 @@ DocumentViewerImpl::Destroy()
     mPreviousViewer = nsnull;
   }
 
-  if (mDeviceContext) {
-    mDeviceContext->FlushFontCache();
-    mDeviceContext = nsnull;
-  }
+  mDeviceContext = nsnull;
 
   if (mPresShell) {
     // Break circular reference (or something)
@@ -1917,7 +1914,8 @@ DocumentViewerImpl::Show(void)
     if (mPresContext) {
       Hide();
 
-      rv = InitPresentationStuff(PR_TRUE, PR_TRUE);
+      rv = InitPresentationStuff(mDocument->MayStartLayout(),
+                                 mDocument->MayStartLayout());
     }
 
     // If we get here the document load has already started and the
@@ -1956,10 +1954,6 @@ DocumentViewerImpl::Hide(void)
     // just because the window is hidden.
 
     return NS_OK;
-  }
-
-  if (mDeviceContext) {
-    mDeviceContext->FlushFontCache();
   }
 
   // Break circular reference (or something)
@@ -2670,10 +2664,8 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
   if (!GetIsPrintPreview()) {
     mTextZoom = aTextZoom;
   }
-  nsCOMPtr<nsIViewManager> vm = GetViewManager();
-  if (vm) {
-    vm->BeginUpdateViewBatch();
-  }
+
+  nsIViewManager::UpdateViewBatch batch(GetViewManager());
       
   // Set the text zoom on all children of mContainer (even if our zoom didn't
   // change, our children's zoom may be different, though it would be unusual).
@@ -2688,9 +2680,7 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
       pc->SetTextZoom(aTextZoom);
   }
 
-  if (vm) {
-    vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-  }
+  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   
   return NS_OK;
 }
@@ -2711,10 +2701,7 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
     mPageZoom = aFullZoom;
   }
 
-  nsCOMPtr<nsIViewManager> vm = GetViewManager();
-  if (vm) {
-    vm->BeginUpdateViewBatch();
-  }
+  nsIViewManager::UpdateViewBatch batch(GetViewManager());
 
   struct ZoomInfo ZoomInfo = { aFullZoom };
   CallChildren(SetChildFullZoom, &ZoomInfo);
@@ -2724,9 +2711,7 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
     pc->SetFullZoom(aFullZoom);
   }
 
-  if (vm) {
-    vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-  }
+  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   return NS_OK;
 }
@@ -3437,6 +3422,11 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
 #endif
 
+  if (!mContainer) {
+    PR_PL(("Container was destroyed yet we are still trying to use it!"));
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");
 
@@ -3530,6 +3520,11 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     return NS_ERROR_FAILURE;
   }
 #endif
+
+  if (!mContainer) {
+    PR_PL(("Container was destroyed yet we are still trying to use it!"));
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");

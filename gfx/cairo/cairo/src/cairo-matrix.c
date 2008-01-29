@@ -38,6 +38,12 @@
 
 #include "cairoint.h"
 
+#if _XOPEN_SOURCE >= 600 || _ISOC99_SOURCE
+#define ISFINITE(x) isfinite (x)
+#else
+#define ISFINITE(x) ((x) * (x) >= 0.) /* check for NaNs */
+#endif
+
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar);
 
@@ -475,8 +481,7 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
     if (det == 0)
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
-    /* this weird construct is for detecting NaNs */
-    if (! (det * det > 0.))
+    if (! ISFINITE (det))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_matrix_compute_adjoint (matrix);
@@ -493,7 +498,7 @@ _cairo_matrix_is_invertible (const cairo_matrix_t *matrix)
 
     _cairo_matrix_compute_determinant (matrix, &det);
 
-    return det != 0. && det * det > 0.;
+    return det != 0. && ISFINITE (det);
 }
 
 void
@@ -516,6 +521,8 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
     double det;
 
     _cairo_matrix_compute_determinant (matrix, &det);
+
+    assert (ISFINITE (det));
 
     if (det == 0)
     {
@@ -746,6 +753,10 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         *pixman_transform = pixman_identity_transform;
     }
     else {
+        cairo_matrix_t inv = *matrix;
+        double x = 0, y = 0;
+        pixman_vector_t vector;
+
         pixman_transform->matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
         pixman_transform->matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
         pixman_transform->matrix[0][2] = _cairo_fixed_16_16_from_double (matrix->x0);
@@ -757,5 +768,36 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         pixman_transform->matrix[2][0] = 0;
         pixman_transform->matrix[2][1] = 0;
         pixman_transform->matrix[2][2] = 1 << 16;
+
+        /* The conversion above breaks cairo's translation invariance:
+         * a translation of (a, b) in device space translates to
+         * a translation of (xx * a + xy * b, yx * a + yy * b)
+         * for cairo, while pixman uses rounded versions of xx ... yy.
+         * This error increases as a and b get larger.
+         *
+         * To compensate for this, we fix the point (0, 0) in pattern
+         * space and adjust pixman's transform to agree with cairo's at
+         * that point. */
+
+        /* Note: If we can't invert the transformation, skip the adjustment. */
+        if (cairo_matrix_invert (&inv) != CAIRO_STATUS_SUCCESS)
+            return;
+
+        /* find the device space coordinate that maps to (0, 0) */
+        cairo_matrix_transform_point (&inv, &x, &y);
+
+        /* transform the resulting device space coordinate back
+         * to the pattern space, using pixman's transform */
+        vector.vector[0] = _cairo_fixed_16_16_from_double (x);
+        vector.vector[1] = _cairo_fixed_16_16_from_double (y);
+        vector.vector[2] = 1 << 16;
+
+        if (!pixman_transform_point_3d (pixman_transform, &vector))
+            return;
+
+        /* Ideally, the vector should now be (0, 0). We can now compensate
+         * for the resulting error */
+        pixman_transform->matrix[0][2] -= vector.vector[0];
+        pixman_transform->matrix[1][2] -= vector.vector[1];
     }
 }

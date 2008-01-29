@@ -349,7 +349,7 @@ NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, cons
   NS_ENSURE_ARG_POINTER(mimeinfo);
   *mimeinfo = nsnull;
 
-  if (aFileExtension)
+  if (aFileExtension && *aFileExtension)
   {
     nsCAutoString fileExtension;
     fileExtension.Assign(".");  

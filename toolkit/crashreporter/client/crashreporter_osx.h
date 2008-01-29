@@ -97,6 +97,7 @@
 - (void)uploadComplete:(id)data;
 
 -(BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication;
+-(void)applicationWillTerminate:(NSNotification *)aNotification;
 
 @end
 

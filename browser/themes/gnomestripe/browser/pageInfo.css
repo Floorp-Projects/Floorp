@@ -47,15 +47,15 @@
   -moz-box-orient: vertical;
   -moz-box-align: center;
   -moz-appearance: none;
-  padding: 5px 3px 1px 3px;
+  min-width: 4.5em;
+  margin: 0;
+  padding: 3px;
 }
 
 .viewSelector {
-  border-bottom: 2px groove ThreeDFace;
-  margin: 0;
-  -moz-padding-start: 10px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  -moz-appearance: listbox;
+  margin: 8px 8px 0 8px;
+  padding: 0;
 }
 
 #generalTab {
@@ -179,6 +179,14 @@ groupbox.treebox .groupbox-body {
   min-height: 10em;
 }
 
+#mediaGrid {
+  min-height: 9em;
+}
+
+#mediaLabelColumn {
+  min-width: 10em;
+}
+
 #thepreviewimage {
   margin: 1em;
 }
@@ -221,6 +229,7 @@ treechildren::-moz-tree-cell-text(broken) {
 
 /* Permissions Tab */
 #permList {
+  -moz-appearance: listbox;
   margin-top: .5em;
   overflow: auto;
   border: 2px solid;

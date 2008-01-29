@@ -318,10 +318,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(DIST)/branding/default.xpm $(DIST)/bin/chrome/icons/default
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/chrome/icons/default
+	$(INSTALL) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
 endif
 
 export::
@@ -347,7 +344,7 @@ ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/document.png $(DIST)/branding/document.png
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
+	cp $(srcdir)/default16.png   $(DIST)/branding/default16.png
 endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/firefox-os2.ico   $(DIST)/branding/firefox.ico
@@ -379,6 +376,9 @@ APPFILES = Resources
 else
 APPFILES = MacOS
 endif
+
+libs:: $(srcdir)/profile/prefs.js
+	$(INSTALL) $^ $(DIST)/bin/defaults/profile
 
 libs repackage:: $(PROGRAM) application.ini
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
@@ -418,12 +418,6 @@ ifeq ($(OS_ARCH),WINNT)
 else
 	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
 endif
-
-libs:: $(srcdir)/profile/prefs.js
-	$(INSTALL) $^ $(DIST)/bin/defaults/profile
-
-install:: $(srcdir)/profile/prefs.js
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
 
 ifdef LIBXUL_SDK
 ifndef SKIP_COPY_XULRUNNER

@@ -723,14 +723,16 @@ private:
   nsIFrame* GetFrameFor(nsIContent* aContent);
 
   /**
-   * These functions are used when we start frame creation from a non-root
+   * These two functions are used when we start frame creation from a non-root
    * element. They should recreate the same state that we would have
    * arrived at if we had built frames from the root frame to aFrame.
    * Therefore, any calls to PushFloatContainingBlock and
    * PushAbsoluteContainingBlock during frame construction should get
    * corresponding logic in these functions.
    */
+public:
   nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
+private:
   nsIFrame* GetFloatContainingBlock(nsIFrame* aFrame);
 
   nsIContent* PropagateScrollToViewport();

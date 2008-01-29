@@ -184,7 +184,7 @@ struct TestEntry {
 #elif defined(XP_MACOSX)
         if (strcmp(platform, "macosx"))
             return;
-#elif defined(MOZ_ENABLE_PANGO)
+#elif defined(XP_UNIX)
         if (strcmp(platform, "gtk2-pango"))
             return;
 #else

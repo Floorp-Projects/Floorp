@@ -87,6 +87,9 @@ public:
   nsresult GetFaviconLinkForIconString(const nsCString& aIcon, nsIURI** aOutput);
   void GetFaviconSpecForIconString(const nsCString& aIcon, nsACString& aOutput);
 
+  static nsresult OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
+                                       const nsACString& aMimeType,
+                                       nsACString& aNewData, nsACString& aNewMimeType);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
 

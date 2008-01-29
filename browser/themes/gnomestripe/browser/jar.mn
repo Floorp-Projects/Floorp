@@ -43,6 +43,7 @@ classic.jar:
   skin/classic/browser/places/tag.png                 (places/tag.png)
   skin/classic/browser/places/toolbarDropMarker.png   (places/toolbarDropMarker.png)
   skin/classic/browser/places/wrench.png              (places/wrench.png)
+  skin/classic/browser/preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png    (preferences/application.png)
   skin/classic/browser/preferences/Options.png        (preferences/Options.png)
   skin/classic/browser/preferences/plugin.png         (preferences/plugin.png)

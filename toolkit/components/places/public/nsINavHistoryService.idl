@@ -85,6 +85,7 @@ interface nsINavHistoryResultNode : nsISupports
   const unsigned long RESULT_TYPE_FOLDER = 6;            // nsINavHistoryQueryResultNode
   const unsigned long RESULT_TYPE_SEPARATOR = 7;         // nsINavHistoryResultNode
   const unsigned long RESULT_TYPE_DAY = 8;               // nsINavHistoryContainerResultNode
+  const unsigned long RESULT_TYPE_FOLDER_SHORTCUT = 9;   // nsINavHistoryQueryResultNode
   readonly attribute unsigned long type;
 
   /**
@@ -393,7 +394,7 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
  * generated this node, this item will report it has no children and never try
  * to populate itself.
  */
-[scriptable, uuid(dcd6a2b7-3d50-4c78-b1cb-2f0f18ac5864)]
+[scriptable, uuid(ea17745a-1852-4155-a98f-d1dd1763b3df)]
 interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
 {
   /**
@@ -408,6 +409,12 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
    * Only valid for RESULT_TYPE_QUERY nodes.
    */
   readonly attribute nsINavHistoryQueryOptions queryOptions;
+
+  /**
+   * For both simple folder nodes and simple-folder-query nodes, this is set
+   * to the concrete itemId of the folder. Otherwise, this is set to -1.
+   */
+  readonly attribute long long folderItemId;
 };
 
 /**

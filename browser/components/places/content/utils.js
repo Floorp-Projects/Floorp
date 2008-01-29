@@ -253,7 +253,8 @@ var PlacesUtils = {
    */
   nodeIsFolder: function PU_nodeIsFolder(aNode) {
     NS_ASSERT(aNode, "null node");
-    return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER);
+    return (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
+            aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT);
   },
 
   /**
@@ -331,7 +332,7 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     if (this.nodeIsFolder(aNode))
-      return this.bookmarks.getFolderReadonly(aNode.itemId);
+      return this.bookmarks.getFolderReadonly(asQuery(aNode).folderItemId);
     if (this.nodeIsQuery(aNode))
       return asQuery(aNode).childrenReadOnly;
     return false;
@@ -355,6 +356,7 @@ var PlacesUtils = {
    * @returns true if the node is a container item, false otherwise
    */
   containerTypes: [Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+                   Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT,
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY,
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST,
                    Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY,
@@ -414,7 +416,17 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     return this.nodeIsFolder(aNode) &&
-           this.bookmarks.getFolderReadonly(aNode.itemId);
+           this.bookmarks.getFolderReadonly(asQuery(aNode).folderItemId);
+  },
+
+  /**
+   * Gets the concrete item-id for the given node. Generally, this is just
+   * node.itemId, but for folder-shortcuts that's node.folderItemId.
+   */
+  getConcreteItemId: function PU_getConcreteItemId(aNode) {
+    if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT)
+      return asQuery(aNode).folderItemId;
+    return aNode.itemId;
   },
 
   /**
@@ -1566,8 +1578,9 @@ var PlacesUtils = {
   getMostRecentBookmarkForURI:
   function PU_getMostRecentBookmarkForURI(aURI) {
     var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI, {});
-    for each (var bk in bmkIds) {
+    for (var i = 0; i < bmkIds.length; i++) {
       // Find the first folder which isn't a tag container
+      var bk = bmkIds[i];
       var parent = this.bookmarks.getFolderIdForItem(bk);
       if (parent == this.unfiledBookmarksFolderId)
         return bk;
@@ -1688,7 +1701,8 @@ var PlacesUtils = {
     */
   _openTabset: function PU__openTabset(aItemsToOpen, aEvent) {
     var urls = [];
-    for each (var item in aItemsToOpen) {
+    for (var i = 0; i < aItemsToOpen.length; i++) {
+      var item = aItemsToOpen[i];
       if (item.isBookmark)
         this.markPageAsFollowedBookmark(item.uri);
       else

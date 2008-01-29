@@ -38,8 +38,6 @@
 
 @import url(chrome://global/skin/);
 
-@import url(chrome://browser/skin/);
-
 @namespace html "http://www.w3.org/1999/xhtml";
 
 #qa-pass {
@@ -103,7 +101,8 @@ html|li {
 
 #qa_tabbox #qa-tabbar-qmo {
   list-style-image: url(qmo-16px.png);
-  width: 15px;
+  text-align: center;
+  width: 24px;
 }
 
 #qa_tabbox #qa-tabbar-spacer {

@@ -781,10 +781,12 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
     CallQueryInterface(aSource, &callerSVGFrame);
 
   callerSVGFrame->SetMatrixPropagation(PR_FALSE);
-  callerSVGFrame->NotifyCanvasTMChanged(PR_TRUE);
+  callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION | 
+                                   nsISVGChildFrame::TRANSFORM_CHANGED );
   callerSVGFrame->GetBBox(aBBox);
   callerSVGFrame->SetMatrixPropagation(PR_TRUE);
-  callerSVGFrame->NotifyCanvasTMChanged(PR_TRUE);
+  callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                                   nsISVGChildFrame::TRANSFORM_CHANGED);
 
   // Sanity check
   PRUint16 type = GetPatternUnits();

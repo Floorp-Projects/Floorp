@@ -169,6 +169,13 @@ nsDOMStorageDB::Init()
          getter_AddRefs(mRemoveKeyStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // remove keys owned by a specific domain
+  rv = mConnection->CreateStatement(
+         NS_LITERAL_CSTRING("DELETE FROM webappsstore "
+                            "WHERE owner = ?1"),
+         getter_AddRefs(mRemoveOwnerStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // remove all keys
   rv = mConnection->CreateStatement(
          NS_LITERAL_CSTRING("DELETE FROM webappsstore"),
@@ -264,7 +271,8 @@ nsDOMStorageDB::SetKey(const nsAString& aDomain,
                        const nsAString& aValue,
                        PRBool aSecure,
                        const nsAString& aOwner,
-                       PRInt32 aQuota)
+                       PRInt32 aQuota,
+                       PRInt32 *aNewUsage)
 {
   mozStorageStatementScoper scope(mGetKeyValueStatement);
  
@@ -355,6 +363,8 @@ nsDOMStorageDB::SetKey(const nsAString& aDomain,
     mCachedUsage = usage;
   }
 
+  *aNewUsage = usage;
+
   return NS_OK;
 }
 
@@ -410,6 +420,63 @@ nsDOMStorageDB::RemoveKey(const nsAString& aDomain,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return mRemoveKeyStatement->Execute();
+}
+
+nsresult
+nsDOMStorageDB::RemoveOwner(const nsAString& aOwner)
+{
+  mozStorageStatementScoper scope(mRemoveOwnerStatement);
+
+  if (aOwner == mCachedOwner) {
+    mCachedUsage = 0;
+    mCachedOwner.Truncate();
+  }
+
+  nsresult rv = mRemoveOwnerStatement->BindStringParameter(0, aOwner);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mRemoveOwnerStatement->Execute();
+}
+
+
+nsresult
+nsDOMStorageDB::RemoveOwners(const nsStringArray &aOwners, PRBool aMatch)
+{
+  if (aOwners.Count() == 0) {
+    if (aMatch) {
+      return NS_OK;
+    }
+
+    return RemoveAll();
+  }
+
+  nsCAutoString expression;
+
+  if (aMatch) {
+    expression.Assign(NS_LITERAL_CSTRING("DELETE FROM webappsstore "
+                                         "WHERE owner IN (?"));
+  } else {
+    expression.Assign(NS_LITERAL_CSTRING("DELETE FROM webappsstore "
+                                         "WHERE owner NOT IN (?"));
+  }
+
+  for (PRInt32 i = 1; i < aOwners.Count(); i++) {
+    expression.Append(", ?");
+  }
+  expression.Append(")");
+
+  nsCOMPtr<mozIStorageStatement> statement;
+
+  nsresult rv = mConnection->CreateStatement(expression,
+                                             getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRInt32 i = 0; i < aOwners.Count(); i++) {
+    rv = statement->BindStringParameter(i, *aOwners[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return statement->Execute();
 }
 
 nsresult

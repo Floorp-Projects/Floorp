@@ -71,11 +71,16 @@ typedef struct _cairo_win32_surface {
 
     cairo_surface_t *image;
 
-    cairo_rectangle_int_t clip_rect;
-
-    HRGN saved_clip;
-
     cairo_rectangle_int_t extents;
+
+    /* Initial clip bits
+     * We need these kept around so that we maintain
+     * whatever clip was set on the original DC at creation
+     * time when cairo is asked to reset the surface clip.
+     */
+    cairo_rectangle_int_t clip_rect;
+    HRGN initial_clip_rgn;
+    cairo_bool_t had_simple_clip;
 
     /* Surface DC flags */
     uint32_t flags;
@@ -83,9 +88,9 @@ typedef struct _cairo_win32_surface {
     /* printing surface bits */
     cairo_paginated_mode_t paginated_mode;
     cairo_content_t content;
+    cairo_bool_t path_empty;
     cairo_bool_t has_ctm;
     cairo_matrix_t ctm;
-    int clip_saved_dc;
     HBRUSH brush, old_brush;
 } cairo_win32_surface_t;
 
@@ -127,7 +132,7 @@ _cairo_win32_surface_finish (void *abstract_surface);
 
 cairo_int_status_t
 _cairo_win32_surface_get_extents (void		          *abstract_surface,
-				  cairo_rectangle_int16_t *rectangle);
+				  cairo_rectangle_int_t   *rectangle);
 
 uint32_t
 _cairo_win32_flags_for_dc (HDC dc);
@@ -166,5 +171,14 @@ _cairo_matrix_to_win32_xform (const cairo_matrix_t *m,
     xform->eDx = (FLOAT) m->x0;
     xform->eDy = (FLOAT) m->y0;
 }
+
+cairo_int_status_t
+_cairo_win32_save_initial_clip (HDC dc, cairo_win32_surface_t *surface);
+
+cairo_int_status_t
+_cairo_win32_restore_initial_clip (cairo_win32_surface_t *surface);
+
+void
+_cairo_win32_debug_dump_hrgn (HRGN rgn, char *header);
 
 #endif /* CAIRO_WIN32_PRIVATE_H */

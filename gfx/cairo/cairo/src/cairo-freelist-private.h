@@ -22,8 +22,7 @@
 #ifndef CAIRO_FREELIST_H
 #define CAIRO_FREELIST_H
 
-#include "cairoint.h"
-#include <stddef.h>
+#include "cairo-types-private.h"
 
 /* Opaque implementation types. */
 typedef struct _cairo_freelist cairo_freelist_t;

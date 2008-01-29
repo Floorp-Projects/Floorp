@@ -266,11 +266,18 @@ ensure_dropdown_entry_widget()
     if (!gDropdownEntryWidget) {
         ensure_combo_box_entry_widget();
 
-        gDropdownEntryWidget = gtk_entry_new();
-        gtk_widget_set_parent(gDropdownEntryWidget, gComboBoxEntryWidget);
+        gDropdownEntryWidget = GTK_BIN(gComboBoxEntryWidget)->child;
         gtk_widget_realize(gDropdownEntryWidget);
     }
     return MOZ_GTK_SUCCESS;
+}
+
+static void
+moz_gtk_get_dropdown_button(GtkWidget *widget,
+                            gpointer client_data)
+{
+    if (GTK_IS_TOGGLE_BUTTON(widget))
+        gDropdownButtonWidget = widget;
 }
 
 static gint
@@ -279,12 +286,13 @@ ensure_arrow_widget()
     if (!gArrowWidget) {
         ensure_combo_box_entry_widget();
 
-        gDropdownButtonWidget = gtk_button_new();
-        gtk_widget_set_parent(gDropdownButtonWidget, gComboBoxEntryWidget);
-        gtk_widget_realize(gDropdownButtonWidget);
+        gtk_container_forall(GTK_CONTAINER(gComboBoxEntryWidget),
+                             moz_gtk_get_dropdown_button,
+                             NULL);
 
         gArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
-        gtk_container_add(GTK_CONTAINER(gDropdownButtonWidget), gArrowWidget);
+        gtk_container_add(GTK_CONTAINER(GTK_BIN(gDropdownButtonWidget)->child),
+                          gArrowWidget);
         gtk_widget_realize(gArrowWidget);
     }
     return MOZ_GTK_SUCCESS;
@@ -1241,6 +1249,8 @@ moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
                        GdkRectangle* cliprect, GtkWidgetState* state,
                        GtkTextDirection direction)
 {
+    gint xthickness, ythickness;
+
     GtkStyle *style;
     GtkStateType state_type;
 
@@ -1258,15 +1268,20 @@ moz_gtk_treeview_paint(GdkDrawable* drawable, GdkRectangle* rect,
                          &gTreeViewWidget->style->base[state_type]);
 
     style = gTreeViewWidget->style;
+    xthickness = XTHICKNESS(style);
+    ythickness = YTHICKNESS(style);
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
     gtk_paint_flat_box(style, drawable, state_type, GTK_SHADOW_NONE,
-                       cliprect, gTreeViewWidget, "treeview", rect->x + 1,
-                       rect->y + 1, rect->width - 1, rect->height - 1);
+                       cliprect, gTreeViewWidget, "treeview",
+                       rect->x + xthickness, rect->y + ythickness,
+                       rect->width - 2 * xthickness,
+                       rect->height - 2 * ythickness);
 
-    gdk_draw_rectangle(drawable, style->dark_gc[state_type], FALSE, rect->x,
-                       rect->y, rect->width - 1, rect->height - 1);
+    gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
+                     cliprect, gTreeViewWidget, "scrolled_window",
+                     rect->x, rect->y, rect->width, rect->height); 
 
     return MOZ_GTK_SUCCESS;
 }

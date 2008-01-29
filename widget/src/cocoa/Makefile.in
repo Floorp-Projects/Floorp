@@ -84,6 +84,9 @@ endif
 
 EXPORTS = \
 		mozView.h \
+		nsChangeObserver.h \
+		nsIMenu.h \
+		nsIMenuItem.h \
 		$(NULL)
 
 CMMSRCS = \
@@ -117,8 +120,6 @@ CMMSRCS = \
 		$(NULL)
 
 XPIDLSRCS	+= \
-		nsIChangeManager.idl \
-		nsIMenuCommandDispatcher.idl \
 		nsPIWidgetCocoa.idl \
 		$(NULL)
 

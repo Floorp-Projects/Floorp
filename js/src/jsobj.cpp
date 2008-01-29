@@ -1994,6 +1994,7 @@ JSObject *
 js_NewBlockObject(JSContext *cx)
 {
     JSObject *obj;
+    JSBool ok;
 
     /*
      * Null obj's proto slot so that Object.prototype.* does not pollute block
@@ -2001,7 +2002,12 @@ js_NewBlockObject(JSContext *cx)
      * not affect OBJ_SCOPE(obj).
      */
     obj = js_NewObject(cx, &js_BlockClass, NULL, NULL);
-    if (!obj || !js_GetMutableScope(cx, obj))
+    if (!obj)
+        return NULL;
+    JS_LOCK_OBJ(cx, obj);
+    ok = js_GetMutableScope(cx, obj) != NULL;
+    JS_UNLOCK_OBJ(cx, obj);
+    if (!ok)
         return NULL;
     OBJ_SET_PROTO(cx, obj, NULL);
     return obj;
@@ -2874,7 +2880,7 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     }
 
     /* Finalize obj first, in case it needs map and slots. */
-    GC_AWARE_GET_CLASS(cx, obj)->finalize(cx, obj);
+    STOBJ_GET_CLASS(obj)->finalize(cx, obj);
 
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
@@ -2937,11 +2943,11 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
         if (JSID_IS_ATOM(id)) {                                               \
             JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
             JSString *str_ = ATOM_TO_STRING(atom_);                           \
-            const jschar *cp_ = str_->u.chars;                                \
+            const jschar *cp_ = JSFLATSTR_CHARS(str_);                        \
             JSBool negative_ = (*cp_ == '-');                                 \
             if (negative_) cp_++;                                             \
             if (JS7_ISDEC(*cp_)) {                                            \
-                size_t n_ = str_->length - negative_;                         \
+                size_t n_ = JSFLATSTR_LENGTH(str_) - negative_;               \
                 if (n_ <= sizeof(JSVAL_INT_MAX_STRING) - 1)                   \
                     id = CheckForStringIndex(id, cp_, cp_ + n_, negative_);   \
             }                                                                 \
@@ -4427,8 +4433,10 @@ js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
             return JS_FALSE;
         }
         if (VALUE_IS_FUNCTION(cx, fval)) {
-            return js_InternalCall(cx, obj, fval, 1, &v, &rval) &&
-                   js_ValueToBoolean(cx, rval, bp);
+            if (!js_InternalCall(cx, obj, fval, 1, &v, &rval))
+                return JS_FALSE;
+            *bp = js_ValueToBoolean(rval);
+            return JS_TRUE;
         }
     }
 #endif

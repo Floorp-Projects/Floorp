@@ -14,7 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=326337
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
-<iframe id="inner" src="http://test1.example.com/tests/content/base/test/file_bug326337_inner.html"></iframe>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -22,13 +21,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=326337
 
 SimpleTest.waitForExplicitFinish();
 
-var t = setInterval(doCheck, 300);
-function doCheck() {
-  if (location.hash) {
-    clearInterval(t);
-    is(location.hash, "#done", "failed to run");
+var win = window.open("file_bug326337_outer.html", "", "width=10, height=10");
+
+function finishTest(str) {
+    win.close();
+    is(str, "#done", "failed to run");
     SimpleTest.finish();
-  }
 }
 
 </script>

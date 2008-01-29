@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Content Appended in Pagination</title>
+
+  <style type="text/css">
+    #colset {
+      height: 200px;
+      width: 450px;
+      -moz-column-width: 150px;
+      -moz-column-gap: 0;
+      border: 3px solid silver;
+    }
+
+    #mark {
+      border-bottom: 4px solid blue;
+    }
+
+    #shift {
+      height: 201px;
+      border-bottom: 4px solid blue;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="colset">
+  <div id="x">
+    <div id="shift"></div>
+    <div id="mark">This must be in the second column between two 4px blue lines.</div>
+  </div>
+</div>
+
+</body>
+
+</html>

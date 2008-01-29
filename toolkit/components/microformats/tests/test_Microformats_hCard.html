@@ -775,14 +775,12 @@ function test_hCard() {
   isnot(hcard.tel[2].type[13], "invalid", "21-tel - type");
   is(hcard.tel[3].value, "+1 415 555 1234", "21-tel - tel");
   is(hcard.tel[3].type[0], "home", "21-tel - type");
-//  is(hcard.tel[4].value, "+1.415.555.1235", "21-tel - tel");
-//  is(hcard.tel[5].value, "+1.415.555.1236", "21-tel - tel");
-//  is(hcard.tel[6].value, "+1.415.555.1237", "21-tel - tel");
-//  is(hcard.tel[7].value, "+1.415.555.1238", "21-tel - tel");
-//  is(hcard.tel[8].value, "+1.415.555.1239", "21-tel - tel");
-//  is(hcard.tel[9].value, "+1.415.555.1240", "21-tel - tel");
-//  is(hcard.tel[9].value, "+1.415.555.1241", "21-tel - tel");
-//  is(hcard.tel[9].value, "+1.415.555.1242", "21-tel - tel");
+  is(hcard.tel[4].value, "+1.415.555.1235", "21-tel - tel");
+  is(hcard.tel[5].value, "+1.415.555.1236", "21-tel - tel");
+  is(hcard.tel[6].value, "+1.415.555.1238", "21-tel - tel");
+  is(hcard.tel[7].value, "+1.415.555.1239", "21-tel - tel");
+  is(hcard.tel[8].value, "+1.415.555.1241", "21-tel - tel");
+  is(hcard.tel[9].value, "+1.415.555.1242", "21-tel - tel");
 
   hcard = new hCard(document.getElementById("22-adr"));
 

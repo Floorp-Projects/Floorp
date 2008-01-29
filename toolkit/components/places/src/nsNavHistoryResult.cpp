@@ -57,7 +57,9 @@
 #include "nsIDynamicContainer.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
+#ifdef MOZ_XUL
 #include "nsITreeColumns.h"
+#endif
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIWritablePropertyBag.h"
@@ -2189,6 +2191,14 @@ nsNavHistoryQueryResultNode::GetUri(nsACString& aURI)
   return NS_OK;
 }
 
+// nsNavHistoryQueryResultNode::GetFolderItemId
+
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::GetFolderItemId(PRInt64* aItemId)
+{
+  *aItemId = mItemId;
+  return NS_OK;
+}
 
 // nsNavHistoryQueryResultNode::GetQueries
 
@@ -2950,6 +2960,15 @@ nsNavHistoryFolderResultNode::GetChildrenReadOnly(PRBool *aChildrenReadOnly)
   return bookmarks->GetFolderReadonly(mItemId, aChildrenReadOnly);
 }
 
+
+// nsNavHistoryFolderResultNode::GetFolderItemId
+
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::GetFolderItemId(PRInt64* aItemId)
+{
+  *aItemId = mItemId;
+  return NS_OK;
+}
 
 // nsNavHistoryFolderResultNode::GetUri
 //
@@ -4013,7 +4032,10 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
     if (folder) {
       PRUint32 nodeIndex;
       nsNavHistoryResultNode* node = folder->FindChildById(aItemId, &nodeIndex);
-      if (node && !(folder->mOptions->ExcludeItems()) &&
+      // if ExcludeItems is true we don't update non visible items
+      if (node &&
+          (!folder->mOptions->ExcludeItems() ||
+           !(node->IsURI() || node->IsSeparator())) &&
           folder->StartIncrementalUpdate()) {
         node->OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue);
       }

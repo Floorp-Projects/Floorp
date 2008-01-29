@@ -128,6 +128,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
         else
         {
             ptr = nsnull;
+            val.p = nsnull; // make sure 'val.p' is always initialized
             switch(t.TagPart()) {
               case nsXPTType::T_I8:                val.i8  = mv.val.i8;  break;
               case nsXPTType::T_I16:               val.i16 = mv.val.i16; break;

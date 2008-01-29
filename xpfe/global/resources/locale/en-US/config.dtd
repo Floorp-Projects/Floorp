@@ -37,10 +37,11 @@
 
 <!ENTITY window.title "about:config">
 
-<!ENTITY scaryWarningTitle.label "Be careful!">
-<!ENTITY scaryWarningText.label "This configuration page contains settings that keep this application working properly.  Modifying these settings may cause problems such as instability, data loss, broken features, or even security vulnerabilities.">
-<!ENTITY scaryWarningButton.label "I understand and wish to continue">
-<!ENTITY scaryWarningCheckbox.label "Show this warning next time">
+<!-- about:config warning page -->
+<!ENTITY configWarningTitle.label "Be careful!">
+<!ENTITY configWarningText.label "This configuration page contains settings that keep this application working properly. Modifying these settings may cause problems such as instability, data loss, broken features, or even security vulnerabilities.">
+<!ENTITY configWarningButton.label "I understand and wish to continue">
+<!ENTITY configWarningCheckbox.label "Show this warning next time">
 
 <!ENTITY filterPrefs.label "Filter:">
 <!ENTITY filterPrefs.accesskey "I">

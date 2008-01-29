@@ -70,13 +70,6 @@ NS_NewHashPropertyBag(nsIWritablePropertyBag* *_retval)
 
 NS_IMPL_THREADSAFE_ADDREF(nsHashPropertyBag)
 NS_IMPL_THREADSAFE_RELEASE(nsHashPropertyBag)
-NS_INTERFACE_MAP_BEGIN(nsHashPropertyBag)
-  NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIPropertyBag, nsIWritablePropertyBag)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWritablePropertyBag)
-  NS_INTERFACE_MAP_ENTRY(nsIPropertyBag2)
-  NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag2)
-NS_INTERFACE_MAP_END
 
 nsresult
 nsHashPropertyBag::Init()
@@ -145,22 +138,6 @@ nsHashPropertyBag::DeleteProperty(const nsAString& name)
 //
 // nsSimpleProperty class and impl; used for GetEnumerator
 //
-
-class nsSimpleProperty : public nsIProperty {
-public:
-    nsSimpleProperty(const nsAString& aName, nsIVariant* aValue)
-        : mName(aName), mValue(aValue)
-    {
-    }
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIPROPERTY
-protected:
-    nsString mName;
-    nsCOMPtr<nsIVariant> mValue;
-};
-
-NS_IMPL_ISUPPORTS1(nsSimpleProperty, nsIProperty)
 
 NS_IMETHODIMP
 nsSimpleProperty::GetName(nsAString& aName)

@@ -1065,11 +1065,8 @@ FindSelectionRoot(nsIEditor *aEditor, nsIContent *aContent)
 
     CallQueryInterface(rootElement, &root);
 
-    if (!root) {
-      nsIDocument *document = aContent->GetCurrentDoc();
-      if (document) {
-        NS_IF_ADDREF(root = document->GetRootContent());
-      }
+    if (!root && document) {
+      NS_IF_ADDREF(root = document->GetRootContent());
     }
 
     return root;
@@ -1119,12 +1116,19 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
     { // only enable caret and selection if the editor is not disabled
       nsCOMPtr<nsIContent> content = do_QueryInterface(target);
 
-      nsCOMPtr<nsIContent> editableRoot =
-        content ? FindSelectionRoot(mEditor, content) : nsnull;
+      PRBool targetIsEditableDoc = PR_FALSE;
+      nsCOMPtr<nsIContent> editableRoot;
+      if (content) {
+        editableRoot = FindSelectionRoot(mEditor, content);
+      }
+      else {
+        nsCOMPtr<nsIDocument> document = do_QueryInterface(target);
+        targetIsEditableDoc = document && document->HasFlag(NODE_IS_EDITABLE);
+      }
 
       nsCOMPtr<nsISelectionController> selCon;
       mEditor->GetSelectionController(getter_AddRefs(selCon));
-      if (selCon)
+      if (selCon && (targetIsEditableDoc || editableRoot))
       {
         nsCOMPtr<nsISelection> selection;
         selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
@@ -1203,6 +1207,18 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
         }
 
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+        nsCOMPtr<nsISelectionController> presSelCon =
+          do_QueryInterface(presShell);
+        if (presSelCon == selCon && selection) {
+          nsCOMPtr<nsIDOMEventTarget> target;
+          aEvent->GetTarget(getter_AddRefs(target));
+          nsCOMPtr<nsINode> node = do_QueryInterface(target);
+          nsIDocument* doc = node ? node->GetOwnerDoc() : nsnull;
+          if (doc && !doc->HasFlag(NODE_IS_EDITABLE)) {
+            selection->RemoveAllRanges();
+          }
+        }
+
         if (presShell) {
           nsCOMPtr<nsICaret> caret;
           presShell->GetCaret(getter_AddRefs(caret));

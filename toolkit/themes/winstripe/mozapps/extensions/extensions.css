@@ -101,8 +101,8 @@ richlistitem[isDisabled="true"] {
 }
 
 richlistitem[selected="true"] {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
 }
 
 #extensionsView:focus > richlistitem[selected="true"] {
@@ -263,6 +263,138 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
   display: none;
 }
 
+.addon-search-details {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 0;
+}
+
+.addonThumbnailContainer {
+  background: window;
+  padding: 5px;
+  border: 2px solid ActiveBorder;
+  width: 135px;
+  min-height: 104px;
+  -moz-margin-end: 5px;
+}
+
+.addonMissingThumbnail {
+  color: GrayText;
+}
+
+.addonFailure {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+.addonRating {
+  display: none;
+}
+
+.addonLearnMore {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.addonRating[rating] {
+  display: -moz-box;
+  width: 68px;
+  height: 12px;
+  list-style-image: url("chrome://mozapps/skin/extensions/ratings.png");
+}
+
+.addonRating[rating="0"] {
+  -moz-image-region: rect(0px 68px 12px 0px);
+}
+
+.addonRating[rating="1"], .addonRating[rating="2"] {
+  -moz-image-region: rect(12px 68px 24px 0px);
+}
+
+.addonRating[rating="3"], .addonRating[rating="4"] {
+  -moz-image-region: rect(24px 68px 36px 0px);
+}
+
+.addonRating[rating="5"], .addonRating[rating="6"] {
+  -moz-image-region: rect(36px 68px 48px 0px);
+}
+
+.addonRating[rating="7"], .addonRating[rating="8"] {
+  -moz-image-region: rect(48px 68px 60px 0px);
+}
+
+.addonRating[rating="9"], .addonRating[rating="10"] {
+  -moz-image-region: rect(60px 68px 72px 0px);
+}
+
+.addonType image {
+  -moz-margin-start: 6px;
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionIcons.png");
+  width: 16px;
+  height: 16px;
+}
+
+.addonTypeExtension image {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.addonTypeTheme image {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+vbox[typeName="status"][type="search-failure"],
+vbox[typeName="status"][type="recommended-failure"],
+vbox[typeName="status"][type="retrieve-search"],
+vbox[typeName="status"][type="retrieve-recommended"] {
+  margin-top: 2em;
+}
+
+vbox[typeName="status"][type="footer-recommended"],
+vbox[typeName="status"][type="footer-search"] {
+  margin-top: 1em;
+}
+
+vbox[typeName="status"][type="header-recommended"] {
+  font-size: 150%;
+  background: -moz-dialog;
+}
+
+#searchbox {
+  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
+  -moz-image-region: rect(0px 19px 19px 0px);
+  padding: 0;
+}
+
+.searchbox-search, .searchbox-cancel {
+  -moz-appearance: none;
+  cursor: pointer;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  width: 19px;
+  height: 19px;
+  min-width: 19px;
+}
+
+.searchbox-search .button-box,
+.searchbox-cancel .button-box {
+  border: 0px;
+  padding: 0px;
+}
+
+.searchbox-search {
+  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
+  -moz-image-region: rect(0px 38px 19px 19px);
+}
+
+.searchbox-cancel {
+  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
+  -moz-image-region: rect(0px 57px 19px 38px);
+}
+
 #progressBox {
   padding: 5px 5px 5px 5px;
 }
@@ -343,6 +475,13 @@ radio#installs-view {
 }
 radio#installs-view:hover, radio#installs-view[selected="true"] {
   -moz-image-region: rect(32px, 192px, 64px, 160px)
+}
+
+radio#search-view {
+  -moz-image-region: rect(0px, 224px, 32px, 192px)
+}
+radio#search-view:hover, radio#search-view[selected="true"] {
+  -moz-image-region: rect(32px, 224px, 64px, 192px)
 }
 
 /* Update view checkbox */

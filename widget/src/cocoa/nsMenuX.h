@@ -42,7 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIMenu.h"
-#include "nsIChangeManager.h"
+#include "nsChangeObserver.h"
 #include "nsMenuBarX.h"
 
 #import <Carbon/Carbon.h>
@@ -67,21 +67,20 @@ class nsMenuItemIconX;
 
 
 class nsMenuX : public nsIMenu,
-                public nsIChangeObserver
+                public nsChangeObserver
 {
-
 public:
     nsMenuX();
     virtual ~nsMenuX();
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICHANGEOBSERVER
+    NS_DECL_CHANGEOBSERVER
 
     id GetNativeMenuItem();
 
     // nsIMenu Methods
     NS_IMETHOD Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                      nsIChangeManager* aManager, nsIContent* aNode);
+                      nsMenuBarX* aMenuBar, nsIContent* aNode);
     NS_IMETHOD GetParent(nsISupports *&aParent);
     NS_IMETHOD GetLabel(nsString &aText);
     NS_IMETHOD SetLabel(const nsAString &aText);
@@ -140,7 +139,7 @@ protected:
     PRUint32                    mVisibleItemsCount;     // caching number of visible items in mMenuItemsArray
 
     nsISupports*                mParent;                // weak, my parent owns me
-    nsIChangeManager*           mManager;               // weak ref, it will outlive us [menubar]
+    nsMenuBarX*                 mMenuBar;               // weak ref, it will outlive us
     nsCOMPtr<nsIContent>        mMenuContent;           // the |menu| tag, strong ref
     nsRefPtr<nsMenuItemIconX>   mIcon;
 

@@ -49,6 +49,13 @@ LIBRARY_NAME	= png
 endif
 LIBXUL_LIBRARY = 1
 
+ifndef GNU_CC
+ifeq ($(OS_ARCH),WINNT)
+# FIXME: bug 413019
+OS_COMPILE_CFLAGS += -GL-
+endif
+endif
+
 REQUIRES	= $(ZLIB_REQUIRES) \
 		  $(NULL)
 

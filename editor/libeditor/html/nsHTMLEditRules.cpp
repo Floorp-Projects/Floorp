@@ -6476,7 +6476,11 @@ nsHTMLEditRules::ReturnInParagraph(nsISelection *aSelection,
   PRBool newBRneeded = PR_FALSE;
   nsCOMPtr<nsIDOMNode> sibling;
 
-  if (mHTMLEditor->IsTextNode(aNode))
+  if (aNode == aPara && doesCRCreateNewP) {
+    // we are at the edges of the block, newBRneeded not needed!
+    sibling = aNode;
+  }
+  else if (mHTMLEditor->IsTextNode(aNode))
   {
     nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aNode);
     PRUint32 strLength;

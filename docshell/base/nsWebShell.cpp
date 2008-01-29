@@ -565,7 +565,6 @@ nsWebShell::~nsWebShell()
              // recursively if the refcount is allowed to remain 0
 
   mContentViewer=nsnull;
-  mDeviceContext=nsnull;
 
   InitFrameData();
 
@@ -767,7 +766,7 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
-  if (mFiredUnloadEvent) {
+  if (!IsOKToLoadURI(aURI)) {
     return NS_OK;
   }
 
@@ -798,7 +797,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     *aRequest = nsnull;
   }
 
-  if (mFiredUnloadEvent) {
+  if (!IsOKToLoadURI(aURI)) {
     return NS_OK;
   }
 

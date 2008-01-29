@@ -206,6 +206,7 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                 eCursor_nwse_resize,
                 eCursor_ns_resize,
                 eCursor_ew_resize,
+                eCursor_none,
                 // This one better be the last one in this list.
                 eCursorCount
                 }; 

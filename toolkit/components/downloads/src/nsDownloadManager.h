@@ -197,6 +197,27 @@ protected:
 
   PRInt32 GetRetentionBehavior();
 
+  /**
+   * Type to indicate possible behaviors for active downloads across sessions.
+   *
+   * Possible values are:
+   *  QUIT_AND_RESUME  - downloads should be auto-resumed
+   *  QUIT_AND_PAUSE   - downloads should be paused
+   *  QUIT_AND_CANCEL  - downloads should be cancelled
+   */
+  enum QuitBehavior {
+    QUIT_AND_RESUME = 0, 
+    QUIT_AND_PAUSE = 1, 
+    QUIT_AND_CANCEL = 2
+  };
+
+  /**
+   * Indicates user-set behavior for active downloads across sessions,
+   *
+   * @return value of user-set pref for active download behavior
+   */
+  enum QuitBehavior GetQuitBehavior();
+
 private:
   nsCOMArray<nsIDownloadProgressListener> mListeners;
   nsCOMPtr<nsIStringBundle> mBundle;
@@ -276,14 +297,9 @@ protected:
   nsresult Cancel();
 
   /**
-   * Resume the download. Works for both real-paused and fake-paused.
+   * Resume the download.
    */
   nsresult Resume();
-
-  /**
-   * Resume the real-paused download. Let Resume decide if this should get used.
-   */
-  nsresult RealResume();
 
   /**
    * Download is not transferring?
@@ -299,11 +315,6 @@ protected:
    * Download was resumed?
    */
   PRBool WasResumed();
-
-  /**
-   * Download is real-paused? (not fake-paused by stalling the channel)
-   */
-  PRBool IsRealPaused();
 
   /**
    * Indicates if the download should try to automatically resume or not.
@@ -377,6 +388,8 @@ private:
   PRTime mLastUpdate;
   PRInt64 mResumedAt;
   double mSpeed;
+
+  PRBool mHasMultipleFiles;
 
   /**
    * Track various states of the download trying to auto-resume when starting

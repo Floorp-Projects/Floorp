@@ -36,10 +36,11 @@
 
 <!ENTITY window.title "about:config">
 
-<!ENTITY scaryWarningTitle.label "Be careful, this gun is loaded!">
-<!ENTITY scaryWarningText.label "This configuration page allows you to modify advanced preferences that control this application. It is possible to create harmful side effects by changing the values of these preferences. You should only continue if you know what you are doing or if you are following trusted advice.">
-<!ENTITY scaryWarningButton.label "I'll be careful, I promise!">
-<!ENTITY scaryWarningCheckbox.label "Show this warning next time">
+<!-- about:config warning page -->
+<!ENTITY configWarningTitle.label "Be careful, this page is loaded!">
+<!ENTITY configWarningText.label "Changing the values of these advanced settings can be harmful to the stability, security, and performance of this application. You should only continue if you are sure of what you are doing.">
+<!ENTITY configWarningButton.label "I'll be careful, I promise!">
+<!ENTITY configWarningCheckbox.label "Show this warning next time">
 
 <!ENTITY filterPrefs.label "Filter:">
 <!ENTITY filterPrefs.accesskey "I">

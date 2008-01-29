@@ -1,4 +1,7 @@
-<!ENTITY window.width                     "400">
+<!-- LOCALIZATION NOTE (window.width2, window.height): These values should be
+close to the golden ratio (1.618:1) while making sure it's wide enough for long
+file names and tall enough to hint that there are more downloads in the list -->
+<!ENTITY window.width2                    "485">
 <!ENTITY window.height                    "300"> 
 
 <!ENTITY starting.label                   "Starting…">
@@ -13,9 +16,9 @@
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "C">
 <!ENTITY cmd.show.label                   "Open Containing Folder">
-<!ENTITY cmd.show.labelMac                "Show in Finder">
 <!ENTITY cmd.show.accesskey               "F">
-<!ENTITY cmd.show.accesskeyMac            "F">
+<!ENTITY cmd.showMac.label                "Show in Finder">
+<!ENTITY cmd.showMac.accesskey            "F">
 <!ENTITY cmd.open.label                   "Open">
 <!ENTITY cmd.open.accesskey               "O">
 <!ENTITY cmd.openWith.label               "Open With…">

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Percentage padding on inlines ignored in presence of certain characters in source</title>
+  <style type="text/css">
+#test {
+	border: 1px solid #000;
+	width: 500px;
+}
+#test span {
+	border: 1px solid #f00;
+	padding: 0 10%;
+}
+  </style>
+ </head>
+ <body>
+<!-- To enable bidi: א -->
+  <div id="test"><span>one</span><span>two</span></div>
+ </body>
+</html>

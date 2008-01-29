@@ -538,6 +538,7 @@ public:
     /**
      ** Extents - returns user space extent of current path
      **/
+    gfxRect GetUserPathExtent();
     gfxRect GetUserFillExtent();
     gfxRect GetUserStrokeExtent();
 
@@ -578,6 +579,37 @@ private:
     cairo_t *mCairo;
     nsRefPtr<gfxASurface> mSurface;
     PRInt32 mFlags;
+};
+
+
+/**
+ * Sentry helper class for functions with multiple return points that need to
+ * call Save() on a gfxContext and have Restore() called automatically on the
+ * gfxContext before they return.
+ */
+class THEBES_API gfxContextAutoSaveRestore
+{
+public:
+  gfxContextAutoSaveRestore() : mContext(nsnull) {}
+
+  gfxContextAutoSaveRestore(gfxContext *aContext) : mContext(aContext) {
+    mContext->Save();
+  }
+
+  ~gfxContextAutoSaveRestore() {
+    if (mContext) {
+      mContext->Restore();
+    }
+  }
+
+  void SetContext(gfxContext *aContext) {
+    NS_ASSERTION(!mContext, "Not going to call Restore() on some context!!!");
+    mContext = aContext;
+    mContext->Save();    
+  }
+
+private:
+  gfxContext *mContext;
 };
 
 #endif /* GFX_CONTEXT_H */

@@ -76,7 +76,7 @@ treechildren::-moz-tree-row {
 }
 
 treechildren::-moz-tree-row(selected) {
-  background-color: -moz-Dialog;
+  background-color: -moz-cellhighlight;
 }
 
 treechildren::-moz-tree-row(selected, focus) {
@@ -110,7 +110,7 @@ treechildren::-moz-tree-cell-text {
 }
 
 treechildren::-moz-tree-cell-text(selected) {
-  color: -moz-DialogText;
+  color: -moz-cellhighlighttext;
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell {
@@ -124,15 +124,15 @@ tree[seltype="text"] > treechildren::-moz-tree-cell-text {
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected) {
-  background-color: -moz-Dialog;
+  background-color: -moz-cellhighlight;
 }
 tree[seltype="cell"] > treechildren::-moz-tree-cell-text(active, selected) {
-  color: -moz-DialogText;
+  color: -moz-cellhighlighttext;
 }
 
 tree[seltype="text"] > treechildren::-moz-tree-cell-text(active, selected) {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
 }
 
 treechildren::-moz-tree-cell-text(selected, focus) {
@@ -239,6 +239,11 @@ treecolpicker {
   padding: 0px 2px;
 }
 
+treecol:hover,
+treecolpicker:hover {
+  color: -moz-buttonhovertext;
+}
+
 .treecol-image {
   padding: 0px 1px;
 }
@@ -257,6 +262,7 @@ treecol[hideheader="true"] {
 
 treecol:hover:active,
 treecolpicker:hover:active {
+  color: ButtonText;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
   -moz-border-right-colors: ThreeDShadow transparent;
