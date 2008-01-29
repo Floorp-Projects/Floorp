@@ -72,10 +72,22 @@ function getService()
 }
 
 var gDBConn = null;
-function getOpenedDatabase()
+
+/**
+ * Get a connection to the test database.  Creates and caches the connection
+ * if necessary, otherwise reuses the existing cached connection.
+ *
+ * @param unshared {boolean}
+ *        whether or not to open a connection to the database that doesn't share
+ *        its cache; if true, we use mozIStorageService::openUnsharedDatabase
+ *        to create the connection; otherwise we use openDatabase.
+ */
+function getOpenedDatabase(unshared)
 {
   if (!gDBConn) {
-    gDBConn = getService().openDatabase(getTestDB());
+    gDBConn = getService()
+              [unshared ? "openUnsharedDatabase" : "openDatabase"]
+              (getTestDB());
   }
   return gDBConn;
 }

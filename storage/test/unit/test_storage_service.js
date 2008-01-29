@@ -35,7 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This file tests the functions of mozIStorageService
+// This file tests the functions of mozIStorageService except for
+// openUnsharedDatabase, which is tested by test_storage_service_unshared.js.
 
 function test_openSpecialDatabase_invalid_arg()
 {
