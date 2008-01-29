@@ -1563,7 +1563,7 @@ public:
     eLineParticipant =                  1 << 6,
     eXULBox =                           1 << 7,
     eCanContainOverflowContainers =     1 << 8,
-
+    eBlockFrame =                       1 << 9,
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only

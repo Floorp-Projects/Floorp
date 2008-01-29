@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Testcase, bug 134706</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	table { margin: 0; border-spacing: 0; }
+	td, th { padding: 0; }
+
+	</style>
+</head>
+<body>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:left; background:blue; width: 100px; height: 20px"></div>
+  <div style="float:left; background:silver; width: 100px; height: 6px"></div>
+  <table style="background: yellow"><tr><td>
+    <div style="width: 150px; height: 10px; background: purple"></div>
+  </td></tr></table>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:left; background:blue; width: 100px; height: 20px"></div>
+  <div style="float:right; background:silver; width: 100px; height: 6px"></div>
+  <table style="background: yellow"><tr><td>
+    <div style="width: 150px; height: 10px; background: purple"></div>
+  </td></tr></table>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:right; background:blue; width: 100px; height: 20px"></div>
+  <div style="float:left; background:silver; width: 100px; height: 6px"></div>
+  <table style="background: yellow"><tr><td>
+    <div style="width: 150px; height: 10px; background: purple"></div>
+  </td></tr></table>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:right; background:blue; width: 100px; height: 20px"></div>
+  <div style="float:right; background:silver; width: 100px; height: 6px"></div>
+  <table style="background: yellow"><tr><td>
+    <div style="width: 150px; height: 10px; background: purple"></div>
+  </td></tr></table>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:left; background:blue; width: 100px; height: 20px"></div>
+  <div style="float:left; background:silver; width: 100px; height: 6px"></div>
+  <div style="overflow: hidden; background: yellow">
+    <div style="width: 150px; height: 10px; background: purple"></div>
+  </div>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:left; background:blue; width: 100px; height: 20px"></div>
+  <div style="float:right; background:silver; width: 100px; height: 6px"></div>
+  <div style="overflow: hidden; background: yellow">
+    <div style="width: 150px; height: 10px; background: purple"></div>
+  </div>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:right; background:blue; width: 100px; height: 20px"></div>
+  <div style="float:left; background:silver; width: 100px; height: 6px"></div>
+  <div style="overflow: hidden; background: yellow">
+    <div style="width: 150px; height: 10px; background: purple"></div>
+  </div>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:right; background:blue; width: 100px; height: 20px"></div>
+  <div style="float:right; background:silver; width: 100px; height: 6px"></div>
+  <div style="overflow: hidden; background: yellow">
+    <div style="width: 150px; height: 10px; background: purple"></div>
+  </div>
+</td></tr></table>
+
+</body>
+</html>

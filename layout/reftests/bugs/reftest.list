@@ -81,6 +81,24 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 28811-2a.html 28811-2-ref.html # bug 38
 == 120834-2j.html 120834-2-ref.html
 == 124903-1.html 124903-1-ref.html
 == 130767-1.html 130767-1-ref.html
+== 134706-1-left-scrollframe.html 134706-1-left-scrollframe-ref.html
+== 134706-1-left-table.html 134706-1-left-table-ref.html
+== 134706-1-right-scrollframe.html 134706-1-right-scrollframe-ref.html
+== 134706-1-right-table.html 134706-1-right-table-ref.html
+== 134706-2-left-scrollframe.html 134706-2-left-ref.html
+== 134706-2-left-table.html 134706-2-left-ref.html
+== 134706-2-right-scrollframe.html 134706-2-right-ref.html
+== 134706-2-right-table.html 134706-2-right-ref.html
+== 134706-3-left-scrollframe.html 134706-3-left-scrollframe-ref.html
+== 134706-3-left-table.html 134706-3-left-table-ref.html
+== 134706-3-right-scrollframe.html 134706-3-right-scrollframe-ref.html
+== 134706-3-right-table.html 134706-3-right-table-ref.html
+== 134706-4.html 134706-4-ref.html
+== 134706-5.html 134706-5-ref.html
+== 134706-6.html 134706-6-ref.html
+fails == 134706-6b.html 134706-6b-ref.html # bug 363248 (via bug 414193, anyway)
+== 134706-6c.html 134706-6c-ref.html
+== 134706-7.html 134706-7-ref.html
 == 139550-1a.html 139550-1-ref.html
 == 139550-1b.html 139550-1-ref.html
 == 142233-1.html 142233-1-ref.html
