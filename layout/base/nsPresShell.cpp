@@ -2501,37 +2501,41 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   if (!rootFrame)
     return NS_OK;
 
-  NS_ASSERTION(mViewManager, "Must have view manager");
-  nsCOMPtr<nsIViewManager> viewManagerDeathGrip = mViewManager;
-  nsIViewManager::UpdateViewBatch batch(mViewManager);
+  if (!GetPresContext()->SupressingResizeReflow())
+  {
+    NS_ASSERTION(mViewManager, "Must have view manager");
+    nsCOMPtr<nsIViewManager> viewManagerDeathGrip = mViewManager;
+    nsIViewManager::UpdateViewBatch batch(mViewManager);
 
-  // Take this ref after viewManager so it'll make sure to go away first
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+    // Take this ref after viewManager so it'll make sure to go away first
+    nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
 
-  // Make sure style is up to date
-  mFrameConstructor->ProcessPendingRestyles();
-  if (!mIsDestroying) {
-    // XXX Do a full invalidate at the beginning so that invalidates along
-    // the way don't have region accumulation issues?
+    // Make sure style is up to date
+    mFrameConstructor->ProcessPendingRestyles();
 
-    WillCauseReflow();
-    WillDoReflow();
+    if (!mIsDestroying) {
+      // XXX Do a full invalidate at the beginning so that invalidates along
+      // the way don't have region accumulation issues?
 
-    {
-      // Kick off a top-down reflow
-      AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-      mIsReflowing = PR_TRUE;
+      WillCauseReflow();
+      WillDoReflow();
 
-      mDirtyRoots.RemoveElement(rootFrame);
-      DoReflow(rootFrame);
-      mIsReflowing = PR_FALSE;
+      {
+        // Kick off a top-down reflow
+        AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
+        mIsReflowing = PR_TRUE;
+
+        mDirtyRoots.RemoveElement(rootFrame);
+        DoReflow(rootFrame);
+        mIsReflowing = PR_FALSE;
+      }
+
+      DidCauseReflow();
+      DidDoReflow();
     }
 
-    DidCauseReflow();
-    DidDoReflow();
+    batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   }
-
-  batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   if (!mIsDestroying) {
     CreateResizeEventTimer();
