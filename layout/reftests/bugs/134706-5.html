@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Testcase, bug 134706</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	table { margin: 0; border-spacing: 0; }
+	td, th { padding: 0; vertical-align: top; }
+
+	</style>
+</head>
+<body>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:left; background:blue; width: 200px; height: 20px"></div>
+  <table style="background: yellow" width="50%" height="20"><tr><td>50%</td></tr></table>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:right; background:blue; width: 200px; height: 20px"></div>
+  <table style="background: yellow" width="50%" height="20"><tr><td>50%</td></tr></table>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:left; background:blue; width: 200px; height: 20px"></div>
+  <div style="overflow:hidden; background: yellow; width: 50%; height: 20px;">50%</div>
+</td></tr></table>
+
+<table width="300" style="background: aqua"><tr><td>
+  <div style="float:right; background:blue; width: 200px; height: 20px"></div>
+  <div style="overflow:hidden; background: yellow; width: 50%; height: 20px;">50%</div>
+</td></tr></table>
+
+</body>
+</html>
