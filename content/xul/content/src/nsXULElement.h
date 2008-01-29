@@ -254,7 +254,6 @@ public:
 
     virtual ~nsXULPrototypeElement()
     {
-        UnlinkJSObjects();
         Unlink();
         NS_ASSERTION(!mChildren && mNumChildren == 0,
                      "ReleaseSubtree not called");
@@ -290,7 +289,6 @@ public:
 
     nsresult SetAttrAt(PRUint32 aPos, const nsAString& aValue, nsIURI* aDocumentURI);
 
-    void UnlinkJSObjects();
     void Unlink();
 
     PRUint32                 mNumChildren;
@@ -361,7 +359,7 @@ public:
                      nsIDocument* aDocument,
                      nsIScriptGlobalObjectOwner* aGlobalOwner);
 
-    void UnlinkJSObjects()
+    void Unlink()
     {
         if (mScriptObject.mObject) {
             nsContentUtils::DropScriptObjects(mScriptObject.mLangID, this,

@@ -154,7 +154,7 @@ public:
   }
 
   void Trace(TraceCallback aCallback, void *aClosure) const;
-  void UnlinkJSObjects();
+  void Unlink();
 	
 public:
   static PRUint32 gRefCnt;

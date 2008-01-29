@@ -364,14 +364,14 @@ nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
 }
 
 void
-nsXBLPrototypeBinding::UnlinkJSObjects()
+nsXBLPrototypeBinding::Unlink()
 {
   if (mImplementation)
-    mImplementation->UnlinkJSObjects();
+    mImplementation->Unlink();
 
   nsXBLPrototypeHandler* curr = mPrototypeHandler;
   while (curr) {
-    curr->UnlinkJSObjects();
+    curr->Unlink();
     curr = curr->GetNextHandler();
   }
 }

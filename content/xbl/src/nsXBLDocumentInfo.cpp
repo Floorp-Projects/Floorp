@@ -445,10 +445,10 @@ TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
 }
 
 static PRIntn PR_CALLBACK
-UnlinkProtoJSObjects(nsHashKey *aKey, void *aData, void* aClosure)
+UnlinkProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
-  proto->UnlinkJSObjects();
+  proto->Unlink();
   return kHashEnumerateNext;
 }
 
@@ -468,12 +468,10 @@ TraceProtos(nsHashKey *aKey, void *aData, void* aClosure)
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsXBLDocumentInfo)
-  if (tmp->mBindingTable) {
-    tmp->mBindingTable->Enumerate(UnlinkProtoJSObjects, nsnull);
-  }
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
+  if (tmp->mBindingTable) {
+    tmp->mBindingTable->Enumerate(UnlinkProtos, nsnull);
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObject)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

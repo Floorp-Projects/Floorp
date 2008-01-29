@@ -91,7 +91,7 @@ public:
   }
 
   void Trace(TraceCallback aCallback, void *aClosure) const;
-  void UnlinkJSObjects();
+  void Unlink();
 
   nsXBLProtoImplField* FindField(const nsString& aFieldName) const;
 
