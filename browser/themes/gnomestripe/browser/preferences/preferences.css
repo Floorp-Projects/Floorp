@@ -161,14 +161,6 @@ filefield[disabled="true"] .fileFieldIcon {
   padding: 0px;
 }
 
-#cookieInfoBox textbox {
-  background-color: transparent;
-}
-
-#cookieInfoGrid {
-  background-color: #E9E7E3; 
-}
-
 /* bottom-most box containing a groupbox in a prefpane. Prevents the bottom
    of the groupbox from being cutoff */
 .bottomBox {
