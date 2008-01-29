@@ -38,6 +38,10 @@
 
 #include "nsGConfService.h"
 #include "nsStringAPI.h"
+#include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIMutableArray.h"
 
 #include <gconf/gconf-client.h>
 
@@ -120,6 +124,37 @@ nsGConfService::GetFloat(const nsACString &aKey, float* aResult)
     return NS_ERROR_FAILURE;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
+{
+  nsCOMPtr<nsIMutableArray> items(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  if (!items)
+    return NS_ERROR_OUT_OF_MEMORY;
+    
+  GError* error = nsnull;
+  GSList* list = gconf_client_get_list(mClient, PromiseFlatCString(aKey).get(),
+                                       GCONF_VALUE_STRING, &error);
+  if (error) {
+    g_error_free(error);
+    return NS_ERROR_FAILURE;
+  }
+
+  for (GSList* l = list; l; l = l->next) {
+    nsCOMPtr<nsISupportsString> obj(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
+    if (!obj) {
+      g_slist_free(list);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    obj->SetData(NS_ConvertUTF8toUTF16((const char*)l->data));
+    items->AppendElement(obj, PR_FALSE);
+    g_free(l->data);
+  }
+  
+  g_slist_free(list);
+  NS_ADDREF(*aResult = items);
   return NS_OK;
 }
 

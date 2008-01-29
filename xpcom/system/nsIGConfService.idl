@@ -37,8 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIArray.idl"
 
-[scriptable, uuid(01ac7b2e-c07c-465f-b35c-542eaef420a9)]
+[scriptable, uuid(5009acae-6973-48c3-b6d6-52c692cc5d9d)]
 interface nsIGConfService : nsISupports
 {
   /* Basic registry access */
@@ -46,6 +47,12 @@ interface nsIGConfService : nsISupports
   AUTF8String   getString(in AUTF8String key);
   long          getInt(in AUTF8String key);
   float         getFloat(in AUTF8String key);
+
+  /*
+   * Use this to return any list items in GConf, this will return
+   * an array of UTF16 nsISupportsString's.
+   */
+  nsIArray      getStringList(in AUTF8String key);
 
   void setBool(in AUTF8String key, in boolean value);
   void setString(in AUTF8String key, in AUTF8String value);
