@@ -233,10 +233,10 @@ CAccessibleText::get_textBeforeOffset(long aOffset,
     rv = textAcc->GetText(startOffset, endOffset, text);
   } else {
     nsAccessibleTextBoundary boundaryType = GetGeckoTextBoundary(aBoundaryType);
-    if (boundaryType != -1) {
-      rv = textAcc->GetTextBeforeOffset(aOffset, boundaryType,
-                                        &startOffset, &endOffset, text);
-    }
+    if (boundaryType == -1)
+      return S_FALSE;
+    rv = textAcc->GetTextBeforeOffset(aOffset, boundaryType,
+                                      &startOffset, &endOffset, text);
   }
 
   if (NS_FAILED(rv))
@@ -267,10 +267,10 @@ CAccessibleText::get_textAfterOffset(long aOffset,
     rv = textAcc->GetText(startOffset, endOffset, text);
   } else {
     nsAccessibleTextBoundary boundaryType = GetGeckoTextBoundary(aBoundaryType);
-    if (boundaryType != -1) {
-      rv = textAcc->GetTextAfterOffset(aOffset, boundaryType,
-                                       &startOffset, &endOffset, text);
-    }
+    if (boundaryType == -1)
+      return S_FALSE;
+    rv = textAcc->GetTextAfterOffset(aOffset, boundaryType,
+                                     &startOffset, &endOffset, text);
   }
 
   if (NS_FAILED(rv))
@@ -301,10 +301,10 @@ CAccessibleText::get_textAtOffset(long aOffset,
     rv = textAcc->GetText(startOffset, endOffset, text);
   } else {
     nsAccessibleTextBoundary boundaryType = GetGeckoTextBoundary(aBoundaryType);
-    if (boundaryType != -1) {
-      rv = textAcc->GetTextAtOffset(aOffset, boundaryType,
-                                    &startOffset, &endOffset, text);
-    }
+    if (boundaryType == -1)
+      return S_FALSE;
+    rv = textAcc->GetTextAtOffset(aOffset, boundaryType,
+                                  &startOffset, &endOffset, text);
   }
 
   if (NS_FAILED(rv))
@@ -425,13 +425,11 @@ CAccessibleText::GetGeckoTextBoundary(enum IA2TextBoundaryType aBoundaryType)
       return nsIAccessibleText::BOUNDARY_CHAR;
     case IA2_TEXT_BOUNDARY_WORD:
       return nsIAccessibleText::BOUNDARY_WORD_START;
-    case IA2_TEXT_BOUNDARY_SENTENCE:
-      return nsIAccessibleText::BOUNDARY_SENTENCE_START;
-    case IA2_TEXT_BOUNDARY_PARAGRAPH:
-      // XXX: not implemented
-      return nsIAccessibleText::BOUNDARY_LINE_START;
     case IA2_TEXT_BOUNDARY_LINE:
       return nsIAccessibleText::BOUNDARY_LINE_START;
+    //case IA2_TEXT_BOUNDARY_SENTENCE:
+    //case IA2_TEXT_BOUNDARY_PARAGRAPH:
+      // XXX: not implemented
     default:
       return -1;
   }
