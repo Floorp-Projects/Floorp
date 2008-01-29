@@ -516,7 +516,15 @@ GetContextFromObject(JSObject *obj)
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::FindInJSObjectScope(ccx, obj);
     XPCContext *xpcc = scope->GetContext();
-    return xpcc ? xpcc->GetJSContext() : nsnull;
+
+    if(xpcc)
+    {
+        JSContext *cx = xpcc->GetJSContext();
+        if(cx->thread->id == js_CurrentThreadId())
+            return cx;
+    }
+
+    return nsnull;
 }
 
 NS_IMETHODIMP
