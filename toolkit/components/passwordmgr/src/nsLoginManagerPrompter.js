@@ -385,14 +385,13 @@ LoginManagerPrompter.prototype = {
 
         // The page we're going to hasn't loaded yet, so we want to persist
         // across the first location change.
-        newBar.ignoreFirstLocationChange = true;
+        newBar.persistence++;
 
         // Sites like Gmail perform a funky redirect dance before you end up
         // at the post-authentication page. I don't see a good way to
         // heuristically determine when to ignore such location changes, so
         // we'll try ignoring location changes based on a time interval.
-        var now = Date.now() / 1000;
-        newBar.ignoreLocationChangeTimeout = now + 10; // 10 seconds
+        newBar.timeout = Date.now() + 10000; // 10 seconds
 
         if (oldBar) {
             this.log("(...and removing old save-password notification bar)");
