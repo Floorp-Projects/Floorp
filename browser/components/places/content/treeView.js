@@ -384,17 +384,17 @@ PlacesTreeView.prototype = {
         if (index == -1) { // otherwise, try to find an equal node
           var itemId = PlacesUtils.getConcreteItemId(nodeInfo.node);
           if (itemId != 1) { // bookmark-nodes in queries case
-            for (i=0; i < newElements.length && index == -1; i++) {
-              if (PlacesUtils.getConcreteItemId(newElements[i]) == itemId)
-                index = newElements[i].viewIndex;
+            for (var j = 0; j < newElements.length && index == -1; j++) {
+              if (PlacesUtils.getConcreteItemId(newElements[j]) == itemId)
+                index = newElements[j].viewIndex;
             }
           }
           else { // history nodes
             var uri = nodeInfo.node.uri;
             if (uri) {
-              for (i=0; i < newElements.length && index == -1; i++) {
-                if (newElements[i].uri == uri)
-                  index = newElements[i].viewIndex;
+              for (var j = 0; j < newElements.length && index == -1; j++) {
+                if (newElements[j].uri == uri)
+                  index = newElements[j].viewIndex;
               }
             }
           }
