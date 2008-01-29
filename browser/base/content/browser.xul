@@ -265,6 +265,7 @@
                  showcommentcolumn="true"
                  showimagecolumn="true"
                  enablehistory="true"
+                 timeout="100"
                  maxrows="10"
                  newlines="stripsurroundingwhitespace"
                  oninput="URLBarOnInput(event);"
