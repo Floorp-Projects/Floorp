@@ -48,7 +48,7 @@ interface nsIFile;
  *
  * This is the only way to open a database connection.
  */
-[scriptable, uuid(a4a0cad9-e0da-4379-bee4-2feef3dddc7e)]
+[scriptable, uuid(336d2741-8438-449d-8746-8c37c62a2ccb)]
 interface mozIStorageService : nsISupports {
   /**
    * Get a connection to a named special database storage.
@@ -82,15 +82,47 @@ interface mozIStorageService : nsISupports {
    * The connection object returned by this function is not threadsafe. You must
    * use it only from the thread you created it from.
    *
+   * If your database contains virtual tables (f.e. for full-text indexes), you
+   * must open it with openUnsharedDatabase, as those tables are incompatible
+   * with a shared cache.  If you attempt to use this method to open a database
+   * containing virtual tables, it will think the database is corrupted and
+   * throw NS_ERROR_FILE_CORRUPTED.
+   *
    * @param aDatabaseFile a nsIFile of the database to open.
    *
-   * @returns a mozIStorageConnection for the requested
-   * database file.
+   * @returns a mozIStorageConnection for the requested database file.
    *
-   * @throws NS_ERROR_FAILURE if any operation fails while opening
-   * the database.
+   * @throws NS_ERROR_FAILURE if any operation fails while opening the database.
    */
   mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
+
+  /**
+   * Open a connection to the specified file that doesn't share a sqlite cache.
+   *
+   * Each connection uses its own sqlite cache, which is inefficient, so you
+   * should use openDatabase instead of this method unless you need a feature
+   * of SQLite that is incompatible with a shared cache, like virtual table
+   * and full text indexing support.
+   *
+   * ==========
+   *   DANGER
+   * ==========
+   *
+   * If you have more than one connection to a file, you MUST use the EXACT
+   * SAME NAME for the file each time, including case. The sqlite code uses
+   * a simple string compare to see if there is already a connection. Opening
+   * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
+   *
+   * The connection object returned by this function is not threadsafe. You must
+   * use it only from the thread you created it from.
+   *
+   * @param aDatabaseFile a nsIFile of the database to open.
+   *
+   * @returns a mozIStorageConnection for the requested database file.
+   *
+   * @throws NS_ERROR_FAILURE if any operation fails while opening the database.
+   */
+  mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile);
 
 };
 
