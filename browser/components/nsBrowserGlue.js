@@ -219,6 +219,10 @@ BrowserGlue.prototype = {
 
   _onQuitRequest: function(aCancelQuit, aQuitType)
   {
+    // If user has already dismissed quit request, then do nothing
+    if ((aCancelQuit instanceof Ci.nsISupportsPRBool) && aCancelQuit.data)
+      return;
+
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
              getService(Ci.nsIWindowMediator);
     var windowcount = 0;
