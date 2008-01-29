@@ -12,6 +12,7 @@
 </bindings>
 
 <script>
+<![CDATA[
 
 var xbltarget;
 
@@ -26,13 +27,14 @@ function boom2()
 {
   var anox = document.getAnonymousNodes(xbltarget)[0];
   var frame = document.createElementNS("http://www.w3.org/1999/xhtml", "frame")
-  frame.src = "http://www.squarefree.com/tests/simple.html";
+  frame.src = "data:text/html,<html><body>Hi!</body></html>";
   anox.appendChild(frame);
   xbltarget.style.MozBinding = "url('#empty')";
   
   document.documentElement.removeAttribute("class");
 }
 
+]]>
 </script>
 </head>
 <body onload="boom1()">
