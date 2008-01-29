@@ -67,6 +67,7 @@
 #include "nsCursorManager.h"
 #include "nsWindowMap.h"
 #include "nsCocoaUtils.h"
+#include "nsMenuBarX.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -820,12 +821,6 @@ NS_IMETHODIMP nsChildView::SetMenuBar(nsIMenuBar * aMenuBar)
 NS_IMETHODIMP nsChildView::ShowMenuBar(PRBool aShow)
 {
   return NS_ERROR_FAILURE; // subviews don't have menu bars
-}
-
-
-nsIMenuBar* nsChildView::GetMenuBar()
-{
-  return nsnull; // subviews don't have menu bars
 }
 
 
@@ -3221,6 +3216,7 @@ enum
   kInsertKeyCode          = 0x72, // also help key
   kDeleteKeyCode          = 0x75, // also forward delete key
   kTabKeyCode             = 0x30,
+  kTildeKeyCode           = 0x32,
   kBackspaceKeyCode       = 0x33,
   kHomeKeyCode            = 0x73, 
   kEndKeyCode             = 0x77,
@@ -4059,18 +4055,46 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent
 {
-  // don't bother if we don't have a gecko widget or we're in composition
-  if (!mGeckoChild || nsTSMManager::IsComposing())
+  // First we need to ignore certain system commands. If we don't we'll have
+  // to duplicate their functionality in Gecko, which as of this time we haven't.
+  // The only thing we ignore now is command-tilde, because NSApp handles that for us
+  // and we need the event to propagate to there.
+  unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+  if (modifierFlags & NSCommandKeyMask && [theEvent keyCode] == kTildeKeyCode)
     return NO;
 
-  // see if the menu system will handle the event
-  if ([[NSApp mainMenu] performKeyEquivalent:theEvent])
+  // don't bother if we don't have a gecko widget or we're in composition
+  if (!mGeckoChild || nsTSMManager::IsComposing())
     return YES;
+
+  // see if the menu system will handle the event
+  if ([[NSApp mainMenu] performKeyEquivalent:theEvent]) {
+    return YES;
+  }
+  else {
+    // On Mac OS X 10.5 NSMenu's performKeyEquivalent: method returns NO for disabled menu
+    // items that have a matching key equiv. We need to know if that was the case so we can
+    // stop here like we would on 10.4 (it returns YES in that case). Since we want to eat
+    // the event if that happens the system won't give the disabled command beep, do it here
+    // manually.
+    if (nsToolkit::OnLeopardOrLater()) {
+      id delegate = [[self window] delegate];
+      if (delegate && [delegate isKindOfClass:[WindowDelegate class]]) {
+        nsCocoaWindow* toplevelWindow = [delegate geckoWidget];
+        if (toplevelWindow) {
+          nsMenuBarX* menuBar = static_cast<nsMenuBarX*>(toplevelWindow->GetMenuBar());
+          if (menuBar && menuBar->ContainsKeyEquiv(modifierFlags, [theEvent characters])) {
+            NSBeep();
+            return YES;
+          }
+        }
+      }
+    }
+  }
 
   // don't handle this if certain modifiers are down - those should
   // be sent as normal key up/down events and cocoa will do so automatically
   // if we reject here
-  unsigned int modifierFlags = [theEvent modifierFlags];
   if ((modifierFlags & NSFunctionKeyMask) || (modifierFlags & NSNumericPadKeyMask))
     return NO;
 
@@ -4083,7 +4107,9 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
   geckoEvent.nativeMsg = &macEvent;
 
-  return (BOOL)mGeckoChild->DispatchWindowEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  return YES;
 }
 
 
