@@ -81,21 +81,34 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
   // until we are done with it.
   NS_ASSERTION(aScopeObject && aContext,
                "EventListener with no context or scope?");
-  NS_HOLD_JS_OBJECTS(this, nsJSEventListener);
+  nsContentUtils::HoldScriptObject(aContext->GetScriptTypeID(), this,
+                                   &NS_CYCLE_COLLECTION_NAME(nsJSEventListener),
+                                   aScopeObject, PR_FALSE);
 }
 
 nsJSEventListener::~nsJSEventListener() 
 {
   if (mContext)
-    NS_DROP_JS_OBJECTS(this, nsJSEventListener);
+    nsContentUtils::DropScriptObjects(mContext->GetScriptTypeID(), this,
+                                &NS_CYCLE_COLLECTION_NAME(nsJSEventListener));
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsJSEventListener)
+  if (tmp->mContext &&
+      tmp->mContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT) {
+    NS_DROP_JS_OBJECTS(tmp, nsJSEventListener);
+    tmp->mScopeObject = nsnull;
+  }
+NS_IMPL_CYCLE_COLLECTION_ROOT_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTarget)
   if (tmp->mContext) {
-    tmp->mScopeObject = nsnull;
-    NS_DROP_JS_OBJECTS(tmp, nsJSEventListener);
+    if (tmp->mScopeObject) {
+      nsContentUtils::DropScriptObjects(tmp->mContext->GetScriptTypeID(), this,
+                                  &NS_CYCLE_COLLECTION_NAME(nsJSEventListener));
+      tmp->mScopeObject = nsnull;
+    }
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
