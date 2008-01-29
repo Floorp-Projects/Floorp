@@ -99,8 +99,8 @@
                  accesskey="&typeColumn.accesskey;" persist="sortDirection"
                  flex="1" onclick="gApplicationsPane.sort(event);"
                  sortDirection="ascending"/>
-        <treecol id="actionColumn" label="&actionColumn.label;" value="action"
-                 accesskey="&actionColumn.accesskey;" persist="sortDirection"
+        <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
+                 accesskey="&actionColumn2.accesskey;" persist="sortDirection"
                  flex="1" onclick="gApplicationsPane.sort(event);"/>
       </listheader>
     </richlistbox>
