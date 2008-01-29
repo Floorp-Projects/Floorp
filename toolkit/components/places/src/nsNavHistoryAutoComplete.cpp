@@ -115,10 +115,10 @@ nsNavHistory::CreateAutoCompleteQueries()
     "FROM moz_places h "
     "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
     "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-    "WHERE h.frecency <> 0 AND ");
+    "WHERE h.frecency <> 0 ");
 
   if (mAutoCompleteOnlyTyped)
-    sql += NS_LITERAL_CSTRING("h.typed = 1 AND ");
+    sql += NS_LITERAL_CSTRING("AND h.typed = 1 ");
 
   // NOTE:
   // after migration or clear all private data, we might end up with
@@ -128,10 +128,7 @@ nsNavHistory::CreateAutoCompleteQueries()
   // in the case of a frecency tie, break it with h.typed and h.visit_count
   // which is better than nothing.  but this is slow, so not doing it yet.
   sql += NS_LITERAL_CSTRING(
-    "(b.title LIKE ?1 ESCAPE '/' OR " 
-     "h.title LIKE ?1 ESCAPE '/' OR "
-     "h.url LIKE ?1 ESCAPE '/') "
-    "ORDER BY h.frecency DESC LIMIT ?2 OFFSET ?3");
+    "ORDER BY h.frecency DESC LIMIT ?1 OFFSET ?2");
 
   nsresult rv = mDBConn->CreateStatement(sql, 
     getter_AddRefs(mDBAutoCompleteQuery));
@@ -272,11 +269,9 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   // remove whitespace, see bug #392141 for details
   mCurrentSearchString.Trim(" \r\n\t\b");
 
-  nsresult rv = mDBAutoCompleteQuery->EscapeStringForLIKE(mCurrentSearchString, PRUnichar('/'), mCurrentSearchStringEscaped);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mCurrentListener = aListener;
 
+  nsresult rv;
   mCurrentResult = do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -551,14 +546,10 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
 {
   mozStorageStatementScoper scope(mDBAutoCompleteQuery);
 
-  // prepend and append with % for "contains"
-  nsresult rv = mDBAutoCompleteQuery->BindStringParameter(0, NS_LITERAL_STRING("%") + mCurrentSearchStringEscaped + NS_LITERAL_STRING("%"));
+  nsresult rv = mDBAutoCompleteQuery->BindInt32Parameter(0, mAutoCompleteSearchChunkSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mDBAutoCompleteQuery->BindInt32Parameter(1, mAutoCompleteSearchChunkSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mDBAutoCompleteQuery->BindInt32Parameter(2, mCurrentChunkOffset);
+  rv = mDBAutoCompleteQuery->BindInt32Parameter(1, mCurrentChunkOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
@@ -597,6 +588,17 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      // If the search string is in the bookmark title, show that in the result
+      // (instead of the page title)
+      PRBool matchInBookmarkTitle = itemId && 
+        CaseInsensitiveFindInReadable(mCurrentSearchString, entryBookmarkTitle);
+
+      // If we don't match the bookmark, title or url, don't add the result
+      if (!matchInBookmarkTitle &&
+          !CaseInsensitiveFindInReadable(mCurrentSearchString, entryTitle) &&
+          !CaseInsensitiveFindInReadable(mCurrentSearchString, entryURL))
+        continue;
+
       // don't show rss feed items as bookmarked,
       // but do show rss feed URIs as bookmarked.
       //
@@ -614,11 +616,6 @@ nsNavHistory::AutoCompleteFullHistorySearch(PRBool* aHasMoreResults)
       nsCAutoString faviconSpec;
       faviconService->GetFaviconSpecForIconString(
         NS_ConvertUTF16toUTF8(entryFavicon), faviconSpec);
-
-      // if the search string is in the bookmark title, show that in the
-      // result (instead of the page title)
-      PRBool matchInBookmarkTitle = itemId && 
-        CaseInsensitiveFindInReadable(mCurrentSearchString, entryBookmarkTitle);
 
       rv = mCurrentResult->AppendMatch(entryURL, 
         matchInBookmarkTitle ? entryBookmarkTitle : entryTitle, 
