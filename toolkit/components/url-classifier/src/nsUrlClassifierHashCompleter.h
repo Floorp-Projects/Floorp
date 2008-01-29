@@ -76,7 +76,7 @@ private:
   nsresult AddRequestBody(const nsACString &requestBody);
   nsresult HandleItem(const nsACString &item,
                       const nsACString &table,
-                      PRUint32 item);
+                      PRUint32 chunkId);
   nsresult HandleTable(const nsACString &response,
                        nsACString::const_iterator &begin);
   nsresult HandleResponse();
