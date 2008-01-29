@@ -97,14 +97,11 @@ const PREF_FEED_SELECTED_READER = "browser.feeds.handler.default";
 // identifying the "use plugin" action, so we use this constant instead.
 const kActionUsePlugin = 5;
 
-const ICON_URL_PLUGIN   = "chrome://browser/skin/preferences/plugin.png";
-const ICON_URL_LIVEMARK = "chrome://browser/skin/page-livemarks.png";
 const ICON_URL_APP      = "chrome://browser/skin/preferences/application.png";
-// FIXME: come up with icons for the "always ask" and "save file" actions.
-// Filed as bug 398627.
-const ICON_URL_ASK      = ICON_URL_APP;
-const ICON_URL_SAVE     = ICON_URL_APP;
 
+// For CSS. Can be one of "ask", "save", "plugin" or "feed". If absent, the icon URL
+// was set by us to a custom handler icon and CSS should not try to override it.
+const APP_ICON_ATTR_NAME = "appHandlerIcon";
 
 //****************************************************************************//
 // Utilities
@@ -1073,8 +1070,12 @@ var gApplicationsPane = {
         item.setAttribute("typeIcon", visibleType.smallIcon);
       item.setAttribute("actionDescription",
                         this._describePreferredAction(visibleType));
-      item.setAttribute("actionIcon",
-                        this._getIconURLForPreferredAction(visibleType));
+
+      if (!this._setIconClassForPreferredAction(visibleType, item)) {
+        item.setAttribute("actionIcon",
+                          this._getIconURLForPreferredAction(visibleType));
+      }
+
       this._list.appendChild(item);
     }
 
@@ -1256,7 +1257,7 @@ var gApplicationsPane = {
         label = this._prefsBundle.getString("alwaysAsk");
       askMenuItem.setAttribute("label", label);
       askMenuItem.setAttribute("tooltiptext", label);
-      askMenuItem.setAttribute("image", ICON_URL_ASK);
+      askMenuItem.setAttribute(APP_ICON_ATTR_NAME, "ask");
       menuPopup.appendChild(askMenuItem);
     }
 
@@ -1268,7 +1269,7 @@ var gApplicationsPane = {
                                                        [this._brandShortName]);
       internalMenuItem.setAttribute("label", label);
       internalMenuItem.setAttribute("tooltiptext", label);
-      internalMenuItem.setAttribute("image", ICON_URL_LIVEMARK);
+      internalMenuItem.setAttribute(APP_ICON_ATTR_NAME, "feed");
       menuPopup.appendChild(internalMenuItem);
 
       // Add a separator to distinguish these items from the helper app items
@@ -1325,7 +1326,7 @@ var gApplicationsPane = {
                                                         this._brandShortName]);
       pluginMenuItem.setAttribute("label", label);
       pluginMenuItem.setAttribute("tooltiptext", label);
-      pluginMenuItem.setAttribute("image", ICON_URL_PLUGIN);
+      pluginMenuItem.setAttribute(APP_ICON_ATTR_NAME, "plugin");
       menuPopup.appendChild(pluginMenuItem);
     }
 
@@ -1357,7 +1358,7 @@ var gApplicationsPane = {
       let label = this._prefsBundle.getString("saveFile");
       saveMenuItem.setAttribute("label", label);
       saveMenuItem.setAttribute("tooltiptext", label);
-      saveMenuItem.setAttribute("image", ICON_URL_SAVE);
+      saveMenuItem.setAttribute(APP_ICON_ATTR_NAME, "save");
       menuPopup.appendChild(saveMenuItem);
     }
 
@@ -1546,8 +1547,10 @@ var gApplicationsPane = {
     // Update the action label and image to reflect the new preferred action.
     typeItem.setAttribute("actionDescription",
                           this._describePreferredAction(handlerInfo));
-    typeItem.setAttribute("actionIcon",
-                          this._getIconURLForPreferredAction(handlerInfo));
+    if (!this._setIconClassForPreferredAction(handlerInfo, typeItem)) {
+      typeItem.setAttribute("actionIcon",
+                            this._getIconURLForPreferredAction(handlerInfo));
+    }
   },
 
   chooseApp: function(aEvent) {
@@ -1637,19 +1640,39 @@ var gApplicationsPane = {
                               this._list.selectedItem.getAttribute("type"));
   },
 
-  _getIconURLForPreferredAction: function(aHandlerInfo) {
-    if (aHandlerInfo.alwaysAskBeforeHandling)
-      return ICON_URL_ASK;
+  _setIconClassForPreferredAction: function(aHandlerInfo, aElement) {
+    // If this returns true, the attribute that CSS sniffs for was set to something
+    // so you shouldn't manually set an icon URI.
+    // This removes the existing actionIcon attribute if any, even if returning false.
+    aElement.removeAttribute("actionIcon");
+
+    if (aHandlerInfo.alwaysAskBeforeHandling) {
+      aElement.setAttribute(APP_ICON_ATTR_NAME, "ask");
+      return true;
+    }
 
     switch (aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.saveToDisk:
-        return ICON_URL_SAVE;
+        aElement.setAttribute(APP_ICON_ATTR_NAME, "save");
+        return true;
 
       case Ci.nsIHandlerInfo.handleInternally:
-        if (aHandlerInfo.type == TYPE_MAYBE_FEED)
-          return ICON_URL_LIVEMARK;
+        if (aHandlerInfo.type == TYPE_MAYBE_FEED) {
+          aElement.setAttribute(APP_ICON_ATTR_NAME, "feed");
+          return true;
+        }
         break;
 
+      case kActionUsePlugin:
+        aElement.setAttribute(APP_ICON_ATTR_NAME, "plugin");
+        return true;
+    }
+    aElement.removeAttribute(APP_ICON_ATTR_NAME);
+    return false;
+  },
+
+  _getIconURLForPreferredAction: function(aHandlerInfo) {
+    switch (aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.useSystemDefault:
         return this._getIconURLForSystemDefault(aHandlerInfo);
 
@@ -1659,9 +1682,6 @@ var gApplicationsPane = {
             return this._getIconURLForHandlerApp(preferredApp);
         }
         break;
-
-      case kActionUsePlugin:
-        return ICON_URL_PLUGIN;
 
       // This should never happen, but if preferredAction is set to some weird
       // value, then fall back to the generic application icon.
