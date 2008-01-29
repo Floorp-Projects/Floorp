@@ -389,10 +389,17 @@ private:
   nsCOMPtr<nsIAtom> mPseudo;
 
   /*
-   * While computing style data, the primary frame for mContent.  Null
+   * While computing style data, the primary frame for mContent --- named "outer"
+   * because we should use it to compute positioning data.  Null
    * otherwise.
    */
-  nsIFrame* mFrame;
+  nsIFrame* mOuterFrame;
+  /*
+   * While computing style data, the "inner frame" for mContent --- the frame
+   * which we should use to compute margin, border, padding and content data.  Null
+   * otherwise.
+   */
+  nsIFrame* mInnerFrame;
   /*
    * While computing style data, the presshell we're working with.  Null
    * otherwise.
