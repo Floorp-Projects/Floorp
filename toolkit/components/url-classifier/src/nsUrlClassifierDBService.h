@@ -43,21 +43,9 @@
 #include <nsISupportsUtils.h>
 
 #include "nsID.h"
-#include "nsInterfaceHashtable.h"
 #include "nsIObserver.h"
-#include "nsIUrlClassifierHashCompleter.h"
 #include "nsIUrlClassifierDBService.h"
 #include "nsIURIClassifier.h"
-#include "nsToolkitCompsCID.h"
-
-// The hash length for a domain key.
-#define DOMAIN_LENGTH 4
-
-// The hash length of a partial hash entry.
-#define PARTIAL_LENGTH 4
-
-// The hash length of a complete hash entry.
-#define COMPLETE_LENGTH 32
 
 class nsUrlClassifierDBServiceWorker;
 
@@ -86,19 +74,16 @@ public:
   NS_DECL_NSIURICLASSIFIER
   NS_DECL_NSIOBSERVER
 
-  PRBool GetCompleter(const nsACString& tableName,
-                      nsIUrlClassifierHashCompleter** completer) {
-    return mCompleters.Get(tableName, completer);
-  }
-
 private:
   // No subclassing
   ~nsUrlClassifierDBService();
 
+  nsresult LookupURI(nsIURI* uri,
+                     nsIUrlClassifierCallback* c,
+                     PRBool needsProxy);
+
   // Disallow copy constructor
   nsUrlClassifierDBService(nsUrlClassifierDBService&);
-
-  nsresult LookupURI(nsIURI* uri, nsIUrlClassifierCallback* c);
 
   // Make sure the event queue is intialized before we use it.
   void EnsureThreadStarted();
@@ -108,8 +93,6 @@ private:
   
   nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorker;
   nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorkerProxy;
-
-  nsInterfaceHashtable<nsCStringHashKey, nsIUrlClassifierHashCompleter> mCompleters;
 
   // TRUE if the nsURIClassifier implementation should check for malware
   // uris on document loads.

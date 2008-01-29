@@ -44,19 +44,19 @@ function testMultipleAdds() {
 function testSimpleSub()
 {
   var addUrls = ["foo.com/a", "bar.com/b"];
-  var subUrls = ["1:foo.com/a"];
+  var subUrls = ["foo.com/a"];
 
   var addUpdate = buildPhishingUpdate(
     [{ "chunkNum" : 1, // adds and subtracts don't share a chunk numbering space
        "urls": addUrls }]);
 
   var subUpdate = buildPhishingUpdate(
-    [{ "chunkNum" : 50,
+    [{ "chunkNum" : 1,
        "chunkType" : "s",
        "urls": subUrls }]);
 
   var assertions = {
-    "tableData" : "test-phish-simple;a:1:s:50",
+    "tableData" : "test-phish-simple;a:1:s:1",
     "urlsExist" : [ "bar.com/b" ],
     "urlsDontExist": ["foo.com/a" ],
     "subsDontExist" : [ "foo.com/a" ]
@@ -69,20 +69,20 @@ function testSimpleSub()
 // Same as testSimpleSub(), but the sub comes in before the add.
 function testSubEmptiesAdd()
 {
-  var subUrls = ["1:foo.com/a"];
+  var subUrls = ["foo.com/a"];
   var addUrls = ["foo.com/a", "bar.com/b"];
 
   var subUpdate = buildPhishingUpdate(
-    [{ "chunkNum" : 50,
+    [{ "chunkNum" : 1,
        "chunkType" : "s",
        "urls": subUrls }]);
 
   var addUpdate = buildPhishingUpdate(
-    [{ "chunkNum" : 1,
+    [{ "chunkNum" : 1, // adds and subtracts don't share a chunk numbering space
        "urls": addUrls }]);
 
   var assertions = {
-    "tableData" : "test-phish-simple;a:1:s:50",
+    "tableData" : "test-phish-simple;a:1:s:1",
     "urlsExist" : [ "bar.com/b" ],
     "urlsDontExist": ["foo.com/a" ],
     "subsDontExist" : [ "foo.com/a" ] // this sub was found, it shouldn't exist anymore
@@ -95,7 +95,7 @@ function testSubEmptiesAdd()
 // still have an item left over that needs to be synced.
 function testSubPartiallyEmptiesAdd()
 {
-  var subUrls = ["1:foo.com/a"];
+  var subUrls = ["foo.com/a"];
   var addUrls = ["foo.com/a", "foo.com/b", "bar.com/b"];
 
   var subUpdate = buildPhishingUpdate(
@@ -123,7 +123,7 @@ function testSubPartiallyEmptiesAdd()
 // then adding it twice should leave the url intact.
 function testPendingSubRemoved()
 {
-  var subUrls = ["1:foo.com/a", "2:foo.com/b"];
+  var subUrls = ["foo.com/a", "foo.com/b"];
   var addUrls = ["foo.com/a", "foo.com/b"];
 
   var subUpdate = buildPhishingUpdate(
@@ -151,7 +151,7 @@ function testPendingSubRemoved()
 // Make sure that a saved sub is removed when the sub chunk is expired.
 function testPendingSubExpire()
 {
-  var subUrls = ["1:foo.com/a", "1:foo.com/b"];
+  var subUrls = ["foo.com/a", "foo.com/b"];
   var addUrls = ["foo.com/a", "foo.com/b"];
 
   var subUpdate = buildPhishingUpdate(
@@ -176,7 +176,7 @@ function testPendingSubExpire()
   doTest([subUpdate, expireUpdate, addUpdate], assertions);
 }
 
-// Make sure that the sub url removes from only the chunk that it specifies
+// Two adds plus one sub of the same URL will leave one of the adds there
 function testDuplicateAdds()
 {
   var urls = ["foo.com/a"];
@@ -190,7 +190,7 @@ function testDuplicateAdds()
   var subUpdate = buildPhishingUpdate(
     [{ "chunkNum" : 3,
        "chunkType" : "s",
-       "urls": ["2:foo.com/a"]}]);
+       "urls": urls }]);
 
   var assertions = {
     "tableData" : "test-phish-simple;a:1-2:s:3",
@@ -204,17 +204,17 @@ function testDuplicateAdds()
 // Tests a sub which matches some existing adds but leaves others.
 function testSubPartiallyMatches()
 {
-  var subUrls = ["foo.com/a"];
-  var addUrls = ["1:foo.com/a", "2:foo.com/b"];
+  var addUrls = ["foo.com/a"];
+  var subUrls = ["foo.com/a", "foo.com/b"];
 
   var addUpdate = buildPhishingUpdate(
     [{ "chunkNum" : 1,
+       "chunkType" : "s",
        "urls" : addUrls }]);
 
   var subUpdate = buildPhishingUpdate(
     [{ "chunkNum" : 1,
-       "chunkType" : "s",
-       "urls" : addUrls }]);
+       "urls" : subUrls }]);
 
   var assertions = {
     "tableData" : "test-phish-simple;a:1:s:1",
@@ -232,7 +232,7 @@ function testSubPartiallyMatches()
 function testSubPartiallyMatches2()
 {
   var addUrls = ["foo.com/a"];
-  var subUrls = ["1:foo.com/a", "2:foo.com/b"];
+  var subUrls = ["foo.com/a", "foo.com/b"];
   var addUrls2 = ["foo.com/b"];
 
   var addUpdate = buildPhishingUpdate(
@@ -258,10 +258,11 @@ function testSubPartiallyMatches2()
 }
 
 // Verify that two subs for the same domain but from different chunks
-// match (tests that existing sub entries are properly updated)
+// match (tests that existing sub entries are properly updated, and
+// helps exercise nsUrlClassifierEntry::RemoveFragments().
 function testSubsDifferentChunks() {
-  var subUrls1 = [ "3:foo.com/a" ];
-  var subUrls2 = [ "3:foo.com/b" ];
+  var subUrls1 = [ "foo.com/a" ];
+  var subUrls2 = [ "foo.com/b" ];
 
   var addUrls = [ "foo.com/a", "foo.com/b", "foo.com/c" ];
 

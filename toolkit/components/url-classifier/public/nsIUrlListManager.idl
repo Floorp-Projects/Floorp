@@ -49,7 +49,7 @@ interface nsIUrlListManagerCallback : nsISupports {
 };
 
 
-[scriptable, uuid(9c5598ec-9986-40cf-af40-b5e0d817a3a0)]
+[scriptable, uuid(874d6c95-fb8b-4f89-b36d-85fe267ab356)]
 interface nsIUrlListManager : nsISupports
 {
     /**
@@ -62,12 +62,6 @@ interface nsIUrlListManager : nsISupports
      * enchash tables.
      */
     void setKeyUrl(in ACString url);
-
-    /**
-     * Set the URL that we will query for complete hashes after a partial
-     * hash match.
-     */
-    void setGethashUrl(in ACString url);
 
     /**
      * Add a table to the list of tables we are managing.  The name is a

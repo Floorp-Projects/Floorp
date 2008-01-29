@@ -13,19 +13,18 @@ function testSimpleForward() {
   var add3Urls = [ "bar.com/d" ];
 
   var update = "n:1000\n";
-  update += "i:test-phish-simple\n";
 
-  var update1 = buildBareUpdate(
+  var update1 = buildPhishingUpdate(
     [{ "chunkNum" : 1,
        "urls" : add1Urls }]);
   update += "u:data:," + encodeURIComponent(update1) + "\n";
 
-  var update2 = buildBareUpdate(
+  var update2 = buildPhishingUpdate(
     [{ "chunkNum" : 2,
        "urls" : add2Urls }]);
   update += "u:data:," + encodeURIComponent(update2) + "\n";
 
-  var update3 = buildBareUpdate(
+  var update3 = buildPhishingUpdate(
     [{ "chunkNum" : 3,
        "urls" : add3Urls }]);
   update += "u:data:," + encodeURIComponent(update3) + "\n";
@@ -45,16 +44,15 @@ function testNestedForward() {
   var add2Urls = [ "foo.com/b" ];
 
   var update = "n:1000\n";
-  update += "i:test-phish-simple\n";
 
-  var update1 = buildBareUpdate(
+  var update1 = buildPhishingUpdate(
     [{ "chunkNum" : 1,
        "urls" : add1Urls }]);
   update += "u:data:," + encodeURIComponent(update1) + "\n";
 
-  var update2 = buildBareUpdate(
+  var update2 = buildPhishingUpdate(
     [{ "chunkNum" : 2 }]);
-  var update3 = buildBareUpdate(
+  var update3 = buildPhishingUpdate(
     [{ "chunkNum" : 3,
        "urls" : add1Urls }]);
 
@@ -104,48 +102,13 @@ function testErrorUrlForward() {
   doTest([update], assertions, true);
 }
 
-function testMultipleTables() {
-  var add1Urls = [ "foo.com/a", "bar.com/c" ];
-  var add2Urls = [ "foo.com/b" ];
-  var add3Urls = [ "bar.com/d" ];
-
-  var update = "n:1000\n";
-  update += "i:test-phish-simple\n";
-
-  var update1 = buildBareUpdate(
-    [{ "chunkNum" : 1,
-       "urls" : add1Urls }]);
-  update += "u:data:," + encodeURIComponent(update1) + "\n";
-
-  var update2 = buildBareUpdate(
-    [{ "chunkNum" : 2,
-       "urls" : add2Urls }]);
-  update += "u:data:," + encodeURIComponent(update2) + "\n";
-
-  update += "i:test-malware-simple\n";
-
-  var update3 = buildBareUpdate(
-    [{ "chunkNum" : 3,
-       "urls" : add3Urls }]);
-  update += "u:data:," + encodeURIComponent(update3) + "\n";
-
-  var assertions = {
-    "tableData" : "test-malware-simple;a:3\ntest-phish-simple;a:1-2",
-    "urlsExist" : add1Urls.concat(add2Urls),
-    "malwareUrlsExist" : add3Urls
-  };
-
-  doTest([update], assertions, false);
-}
-
 function run_test()
 {
   runTests([
     testSimpleForward,
     testNestedForward,
     testInvalidUrlForward,
-    testErrorUrlForward,
-    testMultipleTables
+    testErrorUrlForward
   ]);
 }
 
