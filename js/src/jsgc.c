@@ -506,10 +506,15 @@ ShrinkPtrTable(JSPtrTable *table, const JSPtrTableInfo *info,
 }
 
 #ifdef JS_GCMETER
-# define METER(x) x
+# define METER(x)               ((void) (x))
+# define METER_IF(condition, x) ((void) ((condition) && (x)))
 #else
-# define METER(x) ((void) 0)
+# define METER(x)               ((void) 0)
+# define METER_IF(condition, x) ((void) 0)
 #endif
+
+#define METER_UPDATE_MAX(maxLval, rval)                                       \
+    METER_IF((maxLval) < (rval), (maxLval) = (rval))
 
 /*
  * For chunks allocated via over-sized malloc, get a pointer to store the gap
@@ -738,7 +743,6 @@ InitGCArenaLists(JSRuntime *rt)
         arenaList->lastCount = THINGS_PER_ARENA(thingSize);
         arenaList->thingSize = (uint16)thingSize;
         arenaList->freeList = NULL;
-        METER(memset(&arenaList->stats, 0, sizeof arenaList->stats));
     }
 }
 
@@ -759,7 +763,7 @@ FinishGCArenaLists(JSRuntime *rt)
         arenaList->last = NULL;
         arenaList->lastCount = THINGS_PER_ARENA(arenaList->thingSize);
         arenaList->freeList = NULL;
-        METER(arenaList->stats.narenas = 0);
+        METER(rt->gcStats.arenas[i].narenas = 0);
     }
     rt->gcBytes = 0;
     JS_ASSERT(rt->gcChunkList == 0);
@@ -899,6 +903,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      */
     rt->gcMaxBytes = rt->gcMaxMallocBytes = maxbytes;
 
+    METER(memset(&rt->gcStats, 0, sizeof rt->gcStats));
     return JS_TRUE;
 }
 
@@ -911,12 +916,15 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     size_t totalThings, totalMaxThings, totalBytes;
     size_t sumArenas, sumTotalArenas;
     size_t sumFreeSize, sumTotalFreeSize;
+    JSGCArenaList *list;
+    JSGCArenaStats *stats;
 
     fprintf(fp, "\nGC allocation statistics:\n");
 
 #define UL(x)       ((unsigned long)(x))
 #define ULSTAT(x)   UL(rt->gcStats.x)
     totalThings = 0;
+
     totalMaxThings = 0;
     totalBytes = 0;
     sumArenas = 0;
@@ -924,8 +932,8 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     sumFreeSize = 0;
     sumTotalFreeSize = 0;
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
-        JSGCArenaList *list = &rt->gcArenaList[i];
-        JSGCArenaStats *stats = &list->stats;
+        list = &rt->gcArenaList[i];
+        stats = &rt->gcStats.arenas[i];
         if (stats->maxarenas == 0) {
             fprintf(fp, "ARENA LIST %u (thing size %lu): NEVER USED\n",
                     i, UL(GC_FREELIST_NBYTES(i)));
@@ -1289,6 +1297,9 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     JSGCThing *thing;
     uint8 *flagp;
     JSGCArenaList *arenaList;
+#ifdef JS_GCMETER
+    JSGCArenaStats *listStats;
+#endif
     JSGCArenaInfo *a;
     uintN thingsLimit;
     JSLocalRootStack *lrs;
@@ -1299,13 +1310,13 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     JSGCThing *tmpthing;
     uint8 *tmpflagp;
     uintN maxFreeThings;         /* max to take from the global free list */
-    METER(size_t nfree);
 #endif
 
     rt = cx->runtime;
     METER(rt->gcStats.alloc++);        /* this is not thread-safe */
     nbytes = JS_ROUNDUP(nbytes, sizeof(JSGCThing));
     flindex = GC_FREELIST_INDEX(nbytes);
+    METER(listStats = &rt->gcStats.arenas[flindex]);
 
 #ifdef JS_THREADSAFE
     gcLocked = JS_FALSE;
@@ -1366,8 +1377,8 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             arenaList->freeList = thing->next;
             flagp = thing->flagp;
             JS_ASSERT(*flagp & GCF_FINAL);
-            METER(arenaList->stats.freelen--);
-            METER(arenaList->stats.recycle++);
+            METER(listStats->freelen--);
+            METER(listStats->recycle++);
 
 #ifdef JS_THREADSAFE
             /*
@@ -1415,10 +1426,8 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             }
 
             rt->gcBytes += GC_ARENA_SIZE;
-            METER(++arenaList->stats.narenas);
-            METER(arenaList->stats.maxarenas
-                  = JS_MAX(arenaList->stats.maxarenas,
-                           arenaList->stats.narenas));
+            METER(listStats->narenas++);
+            METER_UPDATE_MAX(listStats->maxarenas, listStats->narenas);
 
             a->list = arenaList;
             a->prev = arenaList->last;
@@ -1440,12 +1449,11 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
          */
         if (rt->gcMallocBytes >= rt->gcMaxMallocBytes || flbase[flindex])
             break;
-        METER(nfree = 0);
         lastptr = &flbase[flindex];
         maxFreeThings = thingsLimit - arenaList->lastCount;
         if (maxFreeThings > MAX_THREAD_LOCAL_THINGS)
             maxFreeThings = MAX_THREAD_LOCAL_THINGS;
-        METER(arenaList->stats.freelen += maxFreeThings);
+        METER(listStats->freelen += maxFreeThings);
         while (maxFreeThings != 0) {
             --maxFreeThings;
 
@@ -1503,19 +1511,13 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     if (++gchpos == NGCHIST)
         gchpos = 0;
 #endif
-#ifdef JS_GCMETER
-    {
-        JSGCArenaStats *stats = &rt->gcArenaList[flindex].stats;
 
-        /* This is not thread-safe for thread-local allocations. */
-        if (flags & GCF_LOCK)
-            rt->gcStats.lockborn++;
-        stats->totalnew++;
-        stats->nthings++;
-        if (stats->nthings > stats->maxthings)
-            stats->maxthings = stats->nthings;
-    }
-#endif
+    /* This is not thread-safe for thread-local allocations. */
+    METER_IF(flags & GCF_LOCK, rt->gcStats.lockborn++);
+    METER(listStats->totalnew++);
+    METER(listStats->nthings++);
+    METER_UPDATE_MAX(listStats->maxthings, listStats->nthings);
+
 #ifdef JS_THREADSAFE
     if (gcLocked)
         JS_UNLOCK_GC(rt);
@@ -1748,8 +1750,7 @@ DelayTracingChildren(JSRuntime *rt, uint8 *flagp)
     METER(rt->gcStats.untraced++);
 #ifdef DEBUG
     ++rt->gcTraceLaterCount;
-    METER(if (rt->gcTraceLaterCount > rt->gcStats.maxuntraced)
-              rt->gcStats.maxuntraced = rt->gcTraceLaterCount);
+    METER_UPDATE_MAX(rt->gcStats.maxuntraced, rt->gcTraceLaterCount);
 #endif
 
     a = FLAGP_TO_ARENA(flagp);
@@ -2322,6 +2323,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     uint32 requestDebit;
     JSContext *acx, *iter;
 #endif
+#ifdef JS_GCMETER
+    JSGCArenaStats *listStats;
+    size_t nfree;
+#endif
 
     rt = cx->runtime;
 #ifdef JS_THREADSAFE
@@ -2372,8 +2377,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     if (rt->gcThread == cx->thread) {
         JS_ASSERT(rt->gcLevel > 0);
         rt->gcLevel++;
-        METER(if (rt->gcLevel > rt->gcStats.maxlevel)
-                  rt->gcStats.maxlevel = rt->gcLevel);
+        METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
         if (gckind != GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
         return;
@@ -2423,8 +2427,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     if (rt->gcLevel > 0) {
         /* Bump gcLevel to restart the current GC, so it finds new garbage. */
         rt->gcLevel++;
-        METER(if (rt->gcLevel > rt->gcStats.maxlevel)
-                  rt->gcStats.maxlevel = rt->gcLevel);
+        METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
 
         /* Wait for the other thread to finish, then resume our request. */
         while (rt->gcLevel > 0)
@@ -2448,8 +2451,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
     /* Bump gcLevel and return rather than nest; the outer gc will restart. */
     rt->gcLevel++;
-    METER(if (rt->gcLevel > rt->gcStats.maxlevel)
-              rt->gcStats.maxlevel = rt->gcLevel);
+    METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
     if (rt->gcLevel > 1)
         return;
 
@@ -2580,23 +2582,25 @@ restart:
         JS_ASSERT(arenaList->lastCount > 0);
         arenaList->freeList = NULL;
         freeList = NULL;
-        METER(arenaList->stats.nthings = 0);
-        METER(arenaList->stats.freelen = 0);
+
+        /* Here i is not the list index due to the above swap. */
+        METER(listStats = &rt->gcStats.arenas[arenaList - &rt->gcArenaList[0]]);
+        METER(listStats->nthings = 0);
+        METER(listStats->freelen = 0);
         thingSize = arenaList->thingSize;
         indexLimit = THINGS_PER_ARENA(thingSize);
         flagp = THING_FLAGP(a, arenaList->lastCount - 1);
         for (;;) {
-            METER(size_t nfree = 0);
-
             JS_ASSERT(a->prevUntracedPage == 0);
             JS_ASSERT(a->untracedThings == 0);
             allClear = JS_TRUE;
+            METER(nfree = 0);
             do {
                 flags = *flagp;
                 if (flags & (GCF_MARK | GCF_LOCK)) {
                     *flagp &= ~GCF_MARK;
                     allClear = JS_FALSE;
-                    METER(++arenaList->stats.nthings);
+                    METER(listStats->nthings++);
                 } else {
                     thing = FLAGP_TO_THING(flagp, thingSize);
                     if (!(flags & GCF_FINAL)) {
@@ -2661,9 +2665,9 @@ restart:
             } else {
                 arenaList->freeList = freeList;
                 ap = &a->prev;
-                METER(arenaList->stats.freelen += nfree);
-                METER(arenaList->stats.totalfreelen += nfree);
-                METER(++arenaList->stats.totalarenas);
+                METER(listStats->freelen += nfree);
+                METER(listStats->totalfreelen += nfree);
+                METER(listStats->totalarenas++);
             }
             if (!(a = *ap))
                 break;
