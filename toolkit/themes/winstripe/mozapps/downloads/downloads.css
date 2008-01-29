@@ -47,13 +47,16 @@ richlistitem[type="download"] .dateTime {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 .pause {
-  -moz-image-region: rect(32px, 32px, 48px, 16px);
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+.pause[disabled="true"] {
+  -moz-image-region: rect(16px, 48px, 16px, 32px);
 }
 .resume {
-  -moz-image-region: rect(16px, 48px, 32px, 32px);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 .retry {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
 .blockedIcon {
