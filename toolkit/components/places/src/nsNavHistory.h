@@ -621,7 +621,6 @@ protected:
   nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
   nsString mCurrentSearchString;
-  nsString mCurrentSearchStringEscaped;
 
 #ifdef MOZ_XUL
   nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
