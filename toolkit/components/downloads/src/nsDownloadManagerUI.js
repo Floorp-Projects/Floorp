@@ -66,6 +66,9 @@ nsDownloadManagerUI.prototype = {
       return;
     }
 
+    // We try to get a window to use as the parent here.  If we don't have one,
+    // the download manager will close immediately after opening if the pref
+    // browser.download.manager.closeWhenDone is set to true.
     var window = null;
     try {
       if (aWindowContext)
