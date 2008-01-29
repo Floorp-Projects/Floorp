@@ -442,10 +442,10 @@ static NSString* CreateNameFromBuffer(const UInt8 *aBuf, ByteCount aLength,
     return (NSString*) outName;
 }
 
-// ATSUI only defines TT/OT name table id's up to the license id (14)
 
+// 10.4 headers only define TT/OT name table id's up to the license id (14) but 10.5 does, so use our own enum
 enum {
-  kFontPreferredFamilyName            = 16,
+  kMozillaFontPreferredFamilyName            = 16,
 };
 
 // xxx - rather than use ATSUI calls, probably faster to load name table directly, 
@@ -475,7 +475,7 @@ static void ReadLocalizedNames(NSString *familyName, NSArray *faceArray,
         ByteCount len;
 
         err = ATSUGetIndFontName(fontID, i, kBufLength, buf, &len, &nameCode, &platformCode, &scriptCode, &langCode);
-        if (!(nameCode == kFontFamilyName || nameCode == kFontPreferredFamilyName)) continue; 
+        if (!(nameCode == kFontFamilyName || nameCode == kMozillaFontPreferredFamilyName)) continue; 
         if (len >= kBufLength) continue; 
         buf[len] = 0;
         
