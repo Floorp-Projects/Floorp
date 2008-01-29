@@ -114,9 +114,7 @@ STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 
 ifdef GNU_CC
 STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,winmm wsock32 gdi32)
 endif
-ifdef MOZ_ENABLE_CAIRO_GFX
 STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME, usp10)
-endif
 endif
 
 ifeq ($(OS_ARCH),AIX)
