@@ -2337,7 +2337,7 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
 #endif
                                               )
 {
-    NS_ASSERTION(aCx && aObj, "Bad call to doGetObjectPrincipal()!");
+    NS_ASSERTION(aObj, "Bad call to doGetObjectPrincipal()!");
     nsIPrincipal* result = nsnull;
 
 #ifdef DEBUG
