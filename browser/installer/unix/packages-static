@@ -275,6 +275,7 @@ bin/chrome/comm.manifest
 bin/chrome/toolkit.jar
 bin/chrome/toolkit.manifest
 bin/chrome/icons/default/default16.png
+bin/chrome/icons/default/default48.png
 bin/chrome/reporter.manifest
 bin/chrome/reporter.jar
 bin/@PREF_DIR@/reporter.js

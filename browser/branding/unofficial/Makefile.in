@@ -21,6 +21,7 @@ include $(topsrcdir)/config/rules.mk
 
 BROWSER_APP_FILES = \
 	default16.png \
+	default48.png \
 	mozicon128.png \
 	mozicon16.xpm \
 	mozicon50.xpm \
