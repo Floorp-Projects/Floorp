@@ -128,47 +128,48 @@ function isInaccessible(wnd, message) {
 // Functions that require UniversalXPConnect privilege
 ///////////////////////////////////////////////////////////////////////////
 
-// Note: This only searches for top-level frames with this name.
-function xpcGetFramesByName(name) {
+function xpcEnumerateContentWindows(callback) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                      .getService(Components.interfaces.nsIWindowWatcher);
   var enumerator = ww.getWindowEnumerator();
 
-  var results = [];
+  var contentWindows = [];
 
   while (enumerator.hasMoreElements()) {
     var win = enumerator.getNext();
-    var tabs = win.gBrowser.browsers;
-
-    for (var i = 0; i < tabs.length; i++) {
-      var domwindow = tabs[i].docShell.document.defaultView;
-
-      if (domwindow.name == name)
-        results.push(domwindow);
+    if (typeof ChromeWindow != "undefined" && win instanceof ChromeWindow) {
+      if (win.gBrowser) {
+        var tabs = win.gBrowser.browsers;
+        for (var i = 0; i < tabs.length; i++)
+          contentWindows.push(tabs[i].docShell.document.defaultView);
+      }
+    } else {
+      contentWindows.push(win);
     }
   }
+
+  while (contentWindows.length > 0)
+    callback(contentWindows.pop());
+}
+
+// Note: This only searches for top-level frames with this name.
+function xpcGetFramesByName(name) {
+  var results = [];
+
+  xpcEnumerateContentWindows(function(win) {
+    if (win.name == name)
+      results.push(win);
+  });
 
   return results;
 }
 
 function xpcCleanupWindows() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                     .getService(Components.interfaces.nsIWindowWatcher);
-  var enumerator = ww.getWindowEnumerator();
-
-  while (enumerator.hasMoreElements()) {
-    var win = enumerator.getNext();
-    var tabs = win.gBrowser.browsers;
-
-    for (var i = 0; i < tabs.length; i++) {
-      var domwindow = tabs[i].docShell.document.defaultView;
-
-      if (domwindow.location.protocol == "data:")
-        domwindow.close();
-    }
-  }
+  xpcEnumerateContentWindows(function(win) {
+    if (win.location.protocol == "data:")
+      win.close();
+  });
 }
 
 function xpcWaitForFinishedFrames(callback, numFrames) {
@@ -210,20 +211,7 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
   function poll() {
     // This only gives us UniversalXPConnect for the current stack frame
     // We're using setInterval, so the main page's privileges are still normal
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                       .getService(Components.interfaces.nsIWindowWatcher);
-    var enumerator = ww.getWindowEnumerator();
-    while (enumerator.hasMoreElements()) {
-      var win = enumerator.getNext();
-      if (!win.gBrowser)
-        continue;  // This window hasn't finished initializing
-      var tabs = win.gBrowser.browsers;
-
-      for (var i = 0; i < tabs.length; i++) {
-        searchForFinishedFrames(tabs[i].docShell.document.defaultView);
-      }
-    }
+    xpcEnumerateContentWindows(searchForFinishedFrames);
   }
 
   var frameWaitInterval = setInterval(poll, 500);
