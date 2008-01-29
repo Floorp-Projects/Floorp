@@ -5409,6 +5409,10 @@ ExtensionManager.prototype = {
    *          false otherwise.
    */
   _confirmCancelDownloadsOnQuit: function(subject) {
+    // If user has already dismissed quit request, then do nothing
+    if ((subject instanceof Ci.nsISupportsPRBool) && subject.data)
+      return;
+
     if (this._downloadCount > 0) {
       // The observers will be notified again after this so set the download
       // count to 0 to prevent this dialog from being displayed again.
