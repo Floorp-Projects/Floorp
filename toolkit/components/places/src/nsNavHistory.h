@@ -616,6 +616,8 @@ protected:
   nsresult CreateAutoCompleteQueries();
   PRBool mAutoCompleteOnlyTyped;
   PRInt32 mAutoCompleteMaxResults;
+  PRInt32 mAutoCompleteSearchChunkSize;
+  PRInt32 mAutoCompleteSearchTimeout;
   nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
   nsString mCurrentSearchString;
