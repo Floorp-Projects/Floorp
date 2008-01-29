@@ -370,7 +370,9 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
         const PRUint16 encodingID = ReadShortAt(table, TableOffsetEncodingID);
         const PRUint32 offset = ReadLongAt(table, TableOffsetOffset);
 
-        NS_ASSERTION(offset < aBufLength, "ugh");
+        NS_ASSERTION(offset < aBufLength, "cmap table offset is longer than table size");
+        NS_ENSURE_TRUE(offset < aBufLength, NS_ERROR_FAILURE);
+
         const PRUint8 *subtable = aBuf + offset;
         const PRUint16 format = ReadShortAt(subtable, SubtableOffsetFormat);
 
