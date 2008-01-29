@@ -90,13 +90,13 @@ void
 rdf_FormatDate(PRTime aTime, nsACString &aResult)
 {
     // Outputs Unixish date in GMT plus usecs; e.g.,
-    //   Wed Jan  9 19:15:13 GMT 2002 +002441
+    //   Wed Jan  9 19:15:13 2002 +002441
     //
     PRExplodedTime t;
-    PR_ExplodeTime(aTime, PR_LocalTimeParameters, &t);
+    PR_ExplodeTime(aTime, PR_GMTParameters, &t);
 
     char buf[256];
-    PR_FormatTimeUSEnglish(buf, sizeof buf, "%a %b %d %H:%M:%S %Z %Y", &t);
+    PR_FormatTimeUSEnglish(buf, sizeof buf, "%a %b %d %H:%M:%S %Y", &t);
     aResult.Append(buf);
 
     // usecs
