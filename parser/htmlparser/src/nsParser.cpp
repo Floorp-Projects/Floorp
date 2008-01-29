@@ -48,6 +48,7 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsICharsetAlias.h"
+#include "nsICharsetConverterManager.h"
 #include "nsIInputStream.h"
 #include "CNavDTD.h"
 #include "prenv.h"
@@ -154,6 +155,9 @@ public:
 
 //-------------- End ParseContinue Event Definition ------------------------
 
+nsICharsetAlias* nsParser::sCharsetAliasService = nsnull;
+nsICharsetConverterManager* nsParser::sCharsetConverterManager = nsnull;
+
 /**
  *  This gets called when the htmlparser module is initialized.
  */
@@ -204,6 +208,17 @@ nsParser::Init()
     }
   }
 
+  nsCOMPtr<nsICharsetAlias> charsetAlias =
+    do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsICharsetConverterManager> charsetConverter =
+    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  charsetAlias.swap(sCharsetAliasService);
+  charsetConverter.swap(sCharsetConverterManager);
+
   return NS_OK;
 }
 
@@ -216,8 +231,10 @@ void nsParser::Shutdown()
 {
   delete sParserDataListeners;
   sParserDataListeners = nsnull;
+  
+  NS_IF_RELEASE(sCharsetAliasService);
+  NS_IF_RELEASE(sCharsetConverterManager);
 }
-
 
 #ifdef DEBUG
 static PRBool gDumpContent=PR_FALSE;
