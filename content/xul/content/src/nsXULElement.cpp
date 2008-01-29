@@ -1004,6 +1004,19 @@ nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             attrVal->ToString(oldValue);
             UnregisterAccessKey(oldValue);
         }
+    } 
+    else if (aNamespaceID == kNameSpaceID_None && (aName ==
+             nsGkAtoms::command || aName == nsGkAtoms::observes) && IsInDoc()) {
+//         XXX sXBL/XBL2 issue! Owner or current document?
+        nsAutoString oldValue;
+        GetAttr(kNameSpaceID_None, nsGkAtoms::observes, oldValue);
+        if (oldValue.IsEmpty()) {
+          GetAttr(kNameSpaceID_None, nsGkAtoms::command, oldValue);
+        }
+
+        if (!oldValue.IsEmpty()) {
+          RemoveBroadcaster(oldValue);
+        }
     }
 
     return nsGenericElement::BeforeSetAttr(aNamespaceID, aName,
@@ -1311,17 +1324,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         // need to remove our broadcaster goop completely.
         if (doc && (aName == nsGkAtoms::observes ||
                           aName == nsGkAtoms::command)) {
-            nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(doc);
-            if (xuldoc) {
-                // Do a getElementById to retrieve the broadcaster
-                nsCOMPtr<nsIDOMElement> broadcaster;
-                nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-                domDoc->GetElementById(oldValue, getter_AddRefs(broadcaster));
-                if (broadcaster) {
-                    xuldoc->RemoveBroadcastListenerFor(broadcaster, this,
-                                                       NS_LITERAL_STRING("*"));
-                }
-            }
+            RemoveBroadcaster(oldValue);
         }
     }
 
@@ -1360,6 +1363,21 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     }
 
     return NS_OK;
+}
+
+void
+nsXULElement::RemoveBroadcaster(const nsAString & broadcasterId)
+{
+    nsCOMPtr<nsIDOMXULDocument> xuldoc = do_QueryInterface(GetOwnerDoc());
+    if (xuldoc) {
+        nsCOMPtr<nsIDOMElement> broadcaster;
+        nsCOMPtr<nsIDOMDocument> domDoc (do_QueryInterface(xuldoc));
+        domDoc->GetElementById(broadcasterId, getter_AddRefs(broadcaster));
+        if (broadcaster) {
+            xuldoc->RemoveBroadcastListenerFor(broadcaster, this,
+              NS_LITERAL_STRING("*"));
+        }
+    }
 }
 
 const nsAttrName*
