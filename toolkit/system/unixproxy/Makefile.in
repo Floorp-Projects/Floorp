@@ -58,6 +58,11 @@ REQUIRES = \
         mozgnome \
         $(NULL)
 
+EXTRA_DSO_LDOPTS = \
+        $(XPCOM_GLUE_LDOPTS) \
+        $(NSPR_LIBS) \
+        $(NULL)
+
 CPPSRCS = \
         nsUnixSystemProxySettings.cpp \
         $(NULL)
