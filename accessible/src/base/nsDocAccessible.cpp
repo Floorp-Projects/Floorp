@@ -669,8 +669,7 @@ nsresult nsDocAccessible::AddEventListeners()
     NS_ENSURE_TRUE(rootAccessible, NS_ERROR_FAILURE);
     nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
     if (caretAccessible) {
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
-      caretAccessible->AddDocSelectionListener(domDoc);
+      caretAccessible->AddDocSelectionListener(presShell);
     }
   }
 
@@ -698,8 +697,8 @@ nsresult nsDocAccessible::RemoveEventListeners()
   if (rootAccessible) {
     nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
     if (caretAccessible) {
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
-      caretAccessible->RemoveDocSelectionListener(domDoc);
+      nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+      caretAccessible->RemoveDocSelectionListener(presShell);
     }
   }
 
