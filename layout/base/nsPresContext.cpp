@@ -179,7 +179,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL,
                         NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
     mCanPaginatedScroll(PR_FALSE),
-    mIsRootPaginatedDocument(PR_FALSE)
+    mIsRootPaginatedDocument(PR_FALSE), mSupressResizeReflow(PR_FALSE)
 {
   // NOTE! nsPresContext::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
@@ -1138,10 +1138,17 @@ nsPresContext::SetFullZoom(float aZoom)
   if (mDeviceContext->SetPixelScale(aZoom)) {
     mDeviceContext->FlushFontCache();
   }
+
+  NS_ASSERTION(mSupressResizeReflow == PR_FALSE, "two zooms happening at the same time? impossible!");
+  mSupressResizeReflow = PR_TRUE;
+
   mFullZoom = aZoom;
-  GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels*AppUnitsPerDevPixel()),
-                                        NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel()));
+  GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
+                                        NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
   RebuildAllStyleData();
+
+  mSupressResizeReflow = PR_FALSE;
+
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
 
