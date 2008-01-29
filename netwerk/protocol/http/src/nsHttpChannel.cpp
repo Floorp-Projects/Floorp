@@ -1384,21 +1384,27 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
         accessRequested = nsICache::ACCESS_READ_WRITE; // normal browsing
 
     nsCOMPtr<nsICacheSession> session;
-    rv = gHttpHandler->GetCacheSession(storagePolicy,
-                                       getter_AddRefs(session));
-    if (NS_FAILED(rv)) return rv;
+    if (mLoadFlags & LOAD_CHECK_OFFLINE_CACHE) {
+        // when LOAD_CHECK_OFFLINE_CACHE set prefer the offline cache
+        rv = gHttpHandler->GetCacheSession(nsICache::STORE_OFFLINE,
+                                           getter_AddRefs(session));
+        if (NS_FAILED(rv)) return rv;
 
-    // we'll try to synchronously open the cache entry... however, it may be
-    // in use and not yet validated, in which case we'll try asynchronously
-    // opening the cache entry.
-    rv = session->OpenCacheEntry(cacheKey, accessRequested, PR_FALSE,
-                                 getter_AddRefs(mCacheEntry));
+        // we'll try to synchronously open the cache entry... however, it may be
+        // in use and not yet validated, in which case we'll try asynchronously
+        // opening the cache entry.
+        //
+        // we need open in ACCESS_READ only because we don't want to overwrite
+        // the offline cache entry non-atomically so ACCESS_READ
+        // will prevent us from writing to the HTTP-offline cache as a
+        // normal cache entry.
+        rv = session->OpenCacheEntry(cacheKey, nsICache::ACCESS_READ, PR_FALSE,
+                                     getter_AddRefs(mCacheEntry));
+    }
 
-    if ((mLoadFlags & LOAD_CHECK_OFFLINE_CACHE) &&
-        !(NS_SUCCEEDED(rv) || rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)) {
-        // couldn't find it in the main cache, check the offline cache
-
-        storagePolicy = nsICache::STORE_OFFLINE;
+    if (!(mLoadFlags & LOAD_CHECK_OFFLINE_CACHE) ||
+        (NS_FAILED(rv) && rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION)) 
+    {
         rv = gHttpHandler->GetCacheSession(storagePolicy,
                                            getter_AddRefs(session));
         if (NS_FAILED(rv)) return rv;
@@ -4546,6 +4552,21 @@ nsHttpChannel::GetCacheToken(nsISupports **token)
 
 NS_IMETHODIMP
 nsHttpChannel::SetCacheToken(nsISupports *token)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetOfflineCacheToken(nsISupports **token)
+{
+    NS_ENSURE_ARG_POINTER(token);
+    if (!mOfflineCacheEntry)
+        return NS_ERROR_NOT_AVAILABLE;
+    return CallQueryInterface(mOfflineCacheEntry, token);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetOfflineCacheToken(nsISupports *token)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
