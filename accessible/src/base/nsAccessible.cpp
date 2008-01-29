@@ -1986,9 +1986,10 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
       }
     }
 
-    if (*aRole != nsIAccessibleRole::ROLE_NOTHING) {
-      return NS_OK;
-    }
+    // We can now expose ROLE_NOTHING when there is a role map entry, which will
+    // cause ATK to use ROLE_UNKNOWN and MSAA to use a BSTR role with the ARIA role or element's tag.
+    // In either case the AT can also use the object attributes tag and xml-roles to find out more.
+    return NS_OK;
   }
   return mDOMNode ? GetRole(aRole) : NS_ERROR_FAILURE;  // Node already shut down
 }
