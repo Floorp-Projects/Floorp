@@ -86,6 +86,12 @@ nsCharsetConverterManager::~nsCharsetConverterManager()
   NS_IF_RELEASE(mTitleBundle);
 }
 
+nsresult nsCharsetConverterManager::Init()
+{
+  if (!mDecoderHash.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
 
 nsresult nsCharsetConverterManager::RegisterConverterManagerData()
 {
@@ -254,30 +260,28 @@ nsCharsetConverterManager::GetUnicodeDecoderRaw(const char * aSrc,
 #endif
   nsresult rv = NS_OK;
 
-  NS_NAMED_LITERAL_CSTRING(kUnicodeDecoderContractIDBase,
-                           NS_UNICODEDECODER_CONTRACTID_BASE);
-
-  nsCAutoString contractid(kUnicodeDecoderContractIDBase +
-                           nsDependentCString(aSrc));
-
-  if (!strncmp(aSrc,
-               NS_1BYTE_CODER_PATTERN,
-               NS_1BYTE_CODER_PATTERN_LEN))
+  NS_NAMED_LITERAL_CSTRING(contractbase, NS_UNICODEDECODER_CONTRACTID_BASE);
+  nsDependentCString src(aSrc);
+  
+  if (!strncmp(aSrc, NS_1BYTE_CODER_PATTERN, NS_1BYTE_CODER_PATTERN_LEN))
   {
-    // Single byte decoders dont hold state. Optimize by using a service.
-    decoder = do_GetService(contractid.get(), &rv);
+    // Single byte decoders don't hold state. Optimize by using a service, and
+    // cache it in our hash to avoid repeated trips through the service manager.
+    if (!mDecoderHash.Get(aSrc, getter_AddRefs(decoder))) {
+      decoder = do_GetService(PromiseFlatCString(contractbase + src).get(),
+                              &rv);
+      if (NS_SUCCEEDED(rv))
+        mDecoderHash.Put(aSrc, decoder);
+    }
   }
   else
   {
-    decoder = do_CreateInstance(contractid.get(), &rv);
+    decoder = do_CreateInstance(PromiseFlatCString(contractbase + src).get(),
+                                &rv);
   }
-  if(NS_FAILED(rv))
-    rv = NS_ERROR_UCONV_NOCONV;
-  else
-  {
-    *aResult = decoder.get();
-    NS_ADDREF(*aResult);
-  }
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_UCONV_NOCONV);
+
+  decoder.forget(aResult);
   return rv;
 }
 
