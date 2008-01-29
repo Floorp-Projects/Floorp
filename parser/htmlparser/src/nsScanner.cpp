@@ -103,7 +103,6 @@ nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset,
   mIncremental = PR_FALSE;
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
-  SetDocumentCharset(aCharset, aSource);
 }
 
 /**
@@ -149,42 +148,48 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSou
   if( aSource < mCharsetSource) // priority is lower the the current one , just
     return res;
 
-  nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID, &res));
-  NS_ASSERTION( nsnull != calias, "cannot find charset alias");
-  if( NS_SUCCEEDED(res) && (nsnull != calias))
+  nsICharsetAlias* calias = nsParser::GetCharsetAliasService();
+  NS_ASSERTION(calias, "Must have the charset alias service!");
+
+  if (!mCharset.IsEmpty())
   {
-    PRBool same = PR_FALSE;
+    PRBool same;
     res = calias->Equals(aCharset, mCharset, &same);
     if(NS_SUCCEEDED(res) && same)
     {
       return NS_OK; // no difference, don't change it
     }
-    // different, need to change it
-    nsCAutoString charsetName;
-    res = calias->GetPreferred(aCharset, charsetName);
-
-    if(NS_FAILED(res) && (kCharsetUninitialized == mCharsetSource) )
-    {
-       // failed - unknown alias , fallback to ISO-8859-1
-      charsetName.AssignLiteral("ISO-8859-1");
-    }
-    mCharset = charsetName;
-    mCharsetSource = aSource;
-
-    nsCOMPtr<nsICharsetConverterManager> ccm = 
-             do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-    if(NS_SUCCEEDED(res) && (nsnull != ccm))
-    {
-      nsIUnicodeDecoder * decoder = nsnull;
-      res = ccm->GetUnicodeDecoderRaw(mCharset.get(), &decoder);
-      if(NS_SUCCEEDED(res) && (nsnull != decoder))
-      {
-         NS_IF_RELEASE(mUnicodeDecoder);
-
-         mUnicodeDecoder = decoder;
-      }    
-    }
   }
+
+  // different, need to change it
+  nsCString charsetName;
+  res = calias->GetPreferred(aCharset, charsetName);
+
+  if(NS_FAILED(res) && (mCharsetSource == kCharsetUninitialized))
+  {
+     // failed - unknown alias , fallback to ISO-8859-1
+    mCharset.AssignLiteral("ISO-8859-1");
+  }
+  else
+  {
+    mCharset.Assign(charsetName);
+  }
+
+  mCharsetSource = aSource;
+
+  NS_ASSERTION(nsParser::GetCharsetConverterManager(),
+               "Must have the charset converter manager!");
+
+  nsIUnicodeDecoder * decoder = nsnull;
+  res = nsParser::GetCharsetConverterManager()->
+    GetUnicodeDecoderRaw(mCharset.get(), &decoder);
+  if(NS_SUCCEEDED(res) && (nsnull != decoder))
+  {
+     NS_IF_RELEASE(mUnicodeDecoder);
+
+     mUnicodeDecoder = decoder;
+  }
+
   return res;
 }
 

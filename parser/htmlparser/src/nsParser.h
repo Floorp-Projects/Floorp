@@ -90,6 +90,8 @@
 #include "nsIUnicharStreamListener.h"
 #include "nsCycleCollectionParticipant.h"
 
+class nsICharsetConverterManager;
+class nsICharsetAlias;
 class nsIDTD;
 class nsScanner;
 class nsIProgressEventSink;
@@ -123,7 +125,6 @@ class nsParser : public nsIParser,
      * @update	gess5/11/98
      */
     nsParser();
-
 
     /**
      * Destructor
@@ -372,6 +373,14 @@ class nsParser : public nsIParser,
 
     static nsCOMArray<nsIUnicharStreamListener> *sParserDataListeners;
 
+    static nsICharsetAlias* GetCharsetAliasService() {
+      return sCharsetAliasService;
+    }
+
+    static nsICharsetConverterManager* GetCharsetConverterManager() {
+      return sCharsetConverterManager;
+    }
+
 protected:
 
     /**
@@ -455,7 +464,8 @@ protected:
     nsCString           mCharset;
     nsCString           mCommandStr;
 
-    
+    static nsICharsetAlias*            sCharsetAliasService;
+    static nsICharsetConverterManager* sCharsetConverterManager;
    
 public:  
    

@@ -63,6 +63,16 @@ nsCharsetAlias2::~nsCharsetAlias2()
   if(mDelegate)
      delete mDelegate;
 }
+
+// 
+static const char* kAliases[][3] = {
+  // Triple with { lower-case test string, out string, length of out string }
+  { "iso-8859-1", "ISO-8859-1", (const char*)10 },
+  { "utf-8",      "UTF-8",      (const char*)5  },
+  { "x-sjis",     "Shift_JIS",  (const char*)9  },
+  { "shift_jis",  "Shift_JIS",  (const char*)9  }
+};
+
 //--------------------------------------------------------------
 NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
                                             nsACString& oResult)
@@ -70,35 +80,26 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    if (aAlias.IsEmpty()) return NS_ERROR_NULL_POINTER;
    NS_TIMELINE_START_TIMER("nsCharsetAlias2:GetPreferred");
 
-   nsCAutoString aKey(aAlias);
-   ToLowerCase(aKey);
-   oResult.Truncate();
 
    // Delay loading charsetalias.properties by hardcoding the most
    // frequent aliases.  Note that it's possible to recur in to this
    // function *while loading* charsetalias.properties (see bug 190951),
    // so we might have an |mDelegate| already that isn't valid yet, but
    // the load is guaranteed to be "UTF-8" so things will be OK.
-   if(aKey.EqualsLiteral("utf-8")) {
-     oResult.AssignLiteral("UTF-8");
-     NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
-     return NS_OK;
-   } 
-   if(aKey.EqualsLiteral("iso-8859-1")) {
-     oResult.AssignLiteral("ISO-8859-1");
-     NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
-     return NS_OK;
-   } 
-   if(aKey.EqualsLiteral("x-sjis") ||
-      aKey.EqualsLiteral("shift_jis")) {
-     oResult.AssignLiteral("Shift_JIS");
-     NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
-     return NS_OK;
-   } 
+   for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(kAliases); index++) {
+     if (aAlias.LowerCaseEqualsASCII(kAliases[index][0])) {
+       oResult.Assign(nsDependentCString(kAliases[index][1],
+                                         (PRUint32)kAliases[index][2]));
+       NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
+       return NS_OK;
+     }
+   }
+
+   oResult.Truncate();
 
    if(!mDelegate) {
      //load charsetalias.properties string bundle with all remaining aliases
-     // we may need to protect the following section with a lock so we won't call the 
+     // we may need to protect the following section with a lock so we won't call the
      // 'new nsGREResProperties' from two different threads
      mDelegate = new nsGREResProperties( NS_LITERAL_CSTRING("charsetalias.properties") );
      NS_ASSERTION(mDelegate, "cannot create nsGREResProperties");
@@ -109,10 +110,13 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
    NS_TIMELINE_MARK_TIMER("nsCharsetAlias2:GetPreferred");
 
+   nsCAutoString key(aAlias);
+   ToLowerCase(key);
+
    // hack for now, have to fix nsGREResProperties, but we can't until
    // string bundles use UTF8 keys
    nsAutoString result;
-   nsresult rv = mDelegate->Get(NS_ConvertASCIItoUTF16(aKey), result);
+   nsresult rv = mDelegate->Get(NS_ConvertASCIItoUTF16(key), result);
    LossyAppendUTF16toASCII(result, oResult);
    return rv;
 }
