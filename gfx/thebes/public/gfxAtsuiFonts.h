@@ -48,13 +48,15 @@
 #include <Carbon/Carbon.h>
 
 class gfxAtsuiFontGroup;
-class FontEntry;
+
+class MacOSFontEntry;
 
 class gfxAtsuiFont : public gfxFont {
 public:
-    gfxAtsuiFont(ATSUFontID fontID,
-                 const nsAString& name,
+
+    gfxAtsuiFont(MacOSFontEntry *aFontEntry,
                  const gfxFontStyle *fontStyle);
+
     virtual ~gfxAtsuiFont();
 
     virtual const gfxFont::Metrics& GetMetrics();
@@ -62,7 +64,7 @@ public:
     float GetCharWidth(PRUnichar c, PRUint32 *aGlyphID = nsnull);
     float GetCharHeight(PRUnichar c);
 
-    ATSUFontID GetATSUFontID() { return mATSUFontID; }
+    ATSUFontID GetATSUFontID();
 
     cairo_font_face_t *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
@@ -83,10 +85,9 @@ public:
 protected:
     const gfxFontStyle *mFontStyle;
 
-    ATSUFontID mATSUFontID;
     ATSUStyle mATSUStyle;
 
-    nsRefPtr<FontEntry> mFontEntry;
+    nsRefPtr<MacOSFontEntry> mFontEntry;
 
     PRBool mHasMirroring;
     PRBool mHasMirroringLookedUp;
@@ -131,10 +132,8 @@ public:
         return static_cast<gfxAtsuiFont*>(static_cast<gfxFont*>(mFonts[aFontIndex]));
     }
 
-    already_AddRefed<gfxAtsuiFont> FindFontFor(ATSUFontID fid);
-
     PRBool HasFont(ATSUFontID fid);
-    
+
     inline gfxAtsuiFont* WhichFontSupportsChar(nsTArray< nsRefPtr<gfxFont> >& aFontList, PRUint32 aCh) {
         PRUint32 len = aFontList.Length();
         for (PRUint32 i = 0; i < len; i++) {

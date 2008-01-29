@@ -164,22 +164,18 @@ static nsresult AppendAllPrefFonts(nsTArray<nsRefPtr<gfxFont> > *aFonts,
 static eFontPrefLang GetFontPrefLangFor(const char* aLang);
 eFontPrefLang GetFontPrefLangFor(PRUint8 aUnicodeRange);
 
-
-
-gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
-                           const nsAString& name,
+gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
                            const gfxFontStyle *fontStyle)
-    : gfxFont(name, fontStyle),
-      mFontStyle(fontStyle), mATSUFontID(fontID), mATSUStyle(nsnull),
+    : gfxFont(aFontEntry->Name(), fontStyle),
+      mFontStyle(fontStyle), mFontEntry(aFontEntry), mATSUStyle(nsnull),
       mHasMirroring(PR_FALSE), mHasMirroringLookedUp(PR_FALSE), mAdjustedSize(0.0f)
 {
+    ATSUFontID fontID = mFontEntry->GetFontID();
     ATSFontRef fontRef = FMGetATSFontRefFromFont(fontID);
 
     InitMetrics(fontID, fontRef);
 
-    mFontFace = cairo_atsui_font_face_create_for_atsu_font_id(mATSUFontID);
-    
-    mFontEntry = gfxQuartzFontCache::SharedFontCache()->FindFontEntry(mATSUFontID);                   
+    mFontFace = cairo_atsui_font_face_create_for_atsu_font_id(fontID);
     
     cairo_matrix_t sizeMatrix, ctm;
     cairo_matrix_init_identity(&ctm);
@@ -190,6 +186,12 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     cairo_font_options_destroy(fontOptions);
     NS_ASSERTION(cairo_scaled_font_status(mScaledFont) == CAIRO_STATUS_SUCCESS,
                  "Failed to create scaled font");
+}
+
+
+ATSUFontID gfxAtsuiFont::GetATSUFontID()
+{
+    return mFontEntry->GetFontID();
 }
 
 void
@@ -283,7 +285,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     else
         mMetrics.aveCharWidth = xWidth;
 
-    if (gfxQuartzFontCache::SharedFontCache()->IsFixedPitch(aFontID)) {
+    if (mFontEntry->IsFixedPitch()) {
         // Some Quartz fonts are fixed pitch, but there's some glyph with a bigger
         // advance than the average character width... this forces
         // those fonts to be recognized like fixed pitch fonts by layout.
@@ -452,14 +454,14 @@ PRBool gfxAtsuiFont::TestCharacterMap(PRUint32 aCh) {
  * In either case, add a ref and return it ---
  * except for OOM in which case we do nothing and return null.
  */
+ 
 static already_AddRefed<gfxAtsuiFont>
-GetOrMakeFont(ATSUFontID aFontID, const gfxFontStyle *aStyle)
+GetOrMakeFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aStyle)
 {
-    const nsAString& name =
-        gfxQuartzFontCache::SharedFontCache()->GetPostscriptNameForFontID(aFontID);
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(name, aStyle);
+    // the font entry name is the psname, not the family name
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->Name(), aStyle);
     if (!font) {
-        font = new gfxAtsuiFont(aFontID, name, aStyle);
+        font = new gfxAtsuiFont(aFontEntry, aStyle);
         if (!font)
             return nsnull;
         gfxFontCache::GetCache()->AddNew(font);
@@ -486,10 +488,12 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         // If we get here, we most likely didn't have a default font for
         // a specific langGroup.  Let's just pick the default OSX
         // user font.
-        ATSUFontID fontID = gfxQuartzFontCache::SharedFontCache()->GetDefaultATSUFontID (aStyle);
-        NS_ASSERTION(fontID != kATSUInvalidFontID, "invalid default font returned by GetDefaultATSUFontID");
 
-        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fontID, aStyle);
+        MacOSFontEntry *defaultFont = gfxQuartzFontCache::SharedFontCache()->GetDefaultFont(aStyle);
+        NS_ASSERTION(defaultFont, "invalid default font returned by GetDefaultFont");
+
+        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(defaultFont, aStyle);
+
         if (font) {
             mFonts.AppendElement(font);
         }
@@ -505,11 +509,11 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
     const gfxFontStyle *fontStyle = fontGroup->GetStyle();
 
     gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
-    ATSUFontID fontID = fc->FindATSUFontIDForFamilyAndStyle (aName, fontStyle);
 
-    if (fontID != kATSUInvalidFontID && !fontGroup->HasFont(fontID)) {
-        //fprintf (stderr, "..FindATSUFont: %s\n", NS_ConvertUTF16toUTF8(aName).get());
-        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fontID, fontStyle);
+    MacOSFontEntry *fe = fc->FindFontForFamily(aName, fontStyle);
+
+    if (fe && !fontGroup->HasFont(fe->GetFontID())) {
+        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fe, fontStyle);
         if (font) {
             fontGroup->mFonts.AppendElement(font);
         }
@@ -721,25 +725,6 @@ gfxAtsuiFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
     return textRun;
 }
 
-already_AddRefed<gfxAtsuiFont>
-gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
-{
-    gfxAtsuiFont *font;
-
-    // In most cases, this will just be 1 -- maybe a
-    // small number, so no need for any more complex
-    // lookup
-    for (PRUint32 i = 0; i < FontListLength(); i++) {
-        font = GetFontAt(i);
-        if (font->GetATSUFontID() == fid)
-            return font;
-    }
-
-    // font is *not* appended to the font group, so fallback fonts don't get added
-    nsRefPtr<gfxAtsuiFont> f = GetOrMakeFont(fid, GetStyle());
-    return f.forget();
-}
-
 PRBool
 gfxAtsuiFontGroup::HasFont(ATSUFontID fid)
 {
@@ -803,11 +788,11 @@ gfxAtsuiFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNex
     
     // -- otherwise look for other stuff
     if (!selectedFont) {
-        FontEntry *fe;
-        
+        MacOSFontEntry *fe;
+
         fe = gfxQuartzFontCache::SharedFontCache()->FindFontForChar(aCh, GetFontAt(0));
         if (fe) {
-            selectedFont = FindFontFor(fe->GetFontID());
+            selectedFont = GetOrMakeFont(fe, &mStyle);
             return selectedFont.forget();
         }
     }
@@ -1221,11 +1206,11 @@ AppendFontToList(const nsAString& aName,
     struct AFLClosure *afl = (struct AFLClosure *) closure;
 
     gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
-    ATSUFontID fontID = fc->FindATSUFontIDForFamilyAndStyle (aName, afl->style);
 
-    if (fontID != kATSUInvalidFontID) {
-        //fprintf (stderr, "..AppendFontToList: %s\n", NS_ConvertUTF16toUTF8(aName).get());
-        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fontID, afl->style);
+    MacOSFontEntry *fe = fc->FindFontForFamily(aName, afl->style);
+
+    if (fe) {
+        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fe, afl->style);
         if (font) {
             afl->fontArray->AppendElement(font);
         }
