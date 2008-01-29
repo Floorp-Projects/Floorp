@@ -104,7 +104,6 @@ XPIDLSRCS	= \
 		nsIStreamTransportService.idl \
 		nsIStreamLoader.idl \
 		nsISyncStreamListener.idl \
-		nsISystemProxySettings.idl \
 		nsIUnicharStreamLoader.idl \
 		nsIStandardURL.idl \
 		nsINestedURI.idl \

@@ -147,14 +147,6 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifdef MOZ_XUL
-ifdef MOZ_ENABLE_GTK2
-COMPONENT_LIBS += \
-        unixproxy \
-        $(NULL)
-endif
-endif
-
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS  += mozutil_s
 endif

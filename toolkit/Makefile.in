@@ -51,10 +51,6 @@ DIRS	= \
 		themes \
 		$(NULL)
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += system/unixproxy
-endif
-
 ifdef MOZ_CRASHREPORTER
 DIRS += crashreporter
 endif
