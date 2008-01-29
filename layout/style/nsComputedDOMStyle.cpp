@@ -116,8 +116,8 @@ GetContainingBlockFor(nsIFrame* aFrame) {
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle()
-  : mInner(this), mDocumentWeak(nsnull), mFrame(nsnull), mPresShell(nsnull),
-    mAppUnitsPerInch(0)
+  : mInner(this), mDocumentWeak(nsnull), mOuterFrame(nsnull),
+    mInnerFrame(nsnull), mPresShell(nsnull), mAppUnitsPerInch(0)
 {
 }
 
@@ -315,8 +315,9 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   NS_ENSURE_TRUE(mPresShell && mPresShell->GetPresContext(),
                  NS_ERROR_NOT_AVAILABLE);
 
-  mFrame = mPresShell->GetPrimaryFrameFor(mContent);
-  if (!mFrame || mPseudo) {
+  mOuterFrame = mPresShell->GetPrimaryFrameFor(mContent);
+  mInnerFrame = mOuterFrame;
+  if (!mOuterFrame || mPseudo) {
     // Need to resolve a style context
     mStyleContextHolder =
       nsInspectorCSSUtils::GetStyleContextForContent(mContent,
@@ -324,19 +325,18 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
                                                      mPresShell);
     NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
   } else {
-    nsIAtom* type = mFrame->GetType();
-    nsIFrame* frame = mFrame;
+    nsIAtom* type = mOuterFrame->GetType();
     if (type == nsGkAtoms::tableOuterFrame) {
       // If the frame is an outer table frame then we should get the style
       // from the inner table frame.
-      frame = frame->GetFirstChild(nsnull);
-      NS_ASSERTION(frame, "Outer table must have an inner");
-      NS_ASSERTION(!frame->GetNextSibling(),
+      mInnerFrame = mOuterFrame->GetFirstChild(nsnull);
+      NS_ASSERTION(mInnerFrame, "Outer table must have an inner");
+      NS_ASSERTION(!mInnerFrame->GetNextSibling(),
                    "Outer table frames should have just one child, the inner "
                    "table");
     }
 
-    mStyleContextHolder = frame->GetStyleContext();
+    mStyleContextHolder = mInnerFrame->GetStyleContext();
     NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
   }
 
@@ -366,7 +366,8 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
     *aReturn = nsnull;
   }
 
-  mFrame = nsnull;
+  mOuterFrame = nsnull;
+  mInnerFrame = nsnull;
   mPresShell = nsnull;
 
   // Release the current style context for it should be re-resolved
@@ -2430,12 +2431,12 @@ nsComputedDOMStyle::GetHeight(nsIDOMCSSValue** aValue)
 
   PRBool calcHeight = PR_FALSE;
   
-  if (mFrame) {
+  if (mInnerFrame) {
     calcHeight = PR_TRUE;
 
     const nsStyleDisplay* displayData = GetStyleDisplay();
     if (displayData->mDisplay == NS_STYLE_DISPLAY_INLINE &&
-        !(mFrame->IsFrameOfType(nsIFrame::eReplaced))) {
+        !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced))) {
       calcHeight = PR_FALSE;
     }
   }
@@ -2443,7 +2444,7 @@ nsComputedDOMStyle::GetHeight(nsIDOMCSSValue** aValue)
   if (calcHeight) {
     FlushPendingReflows();
   
-    val->SetAppUnits(mFrame->GetContentRect().height);
+    val->SetAppUnits(mInnerFrame->GetContentRect().height);
   } else {
     const nsStylePosition *positionData = GetStylePosition();
 
@@ -2471,12 +2472,12 @@ nsComputedDOMStyle::GetWidth(nsIDOMCSSValue** aValue)
 
   PRBool calcWidth = PR_FALSE;
 
-  if (mFrame) {
+  if (mInnerFrame) {
     calcWidth = PR_TRUE;
 
     const nsStyleDisplay *displayData = GetStyleDisplay();
     if (displayData->mDisplay == NS_STYLE_DISPLAY_INLINE &&
-        !(mFrame->IsFrameOfType(nsIFrame::eReplaced))) {
+        !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced))) {
       calcWidth = PR_FALSE;
     }
   }
@@ -2484,7 +2485,7 @@ nsComputedDOMStyle::GetWidth(nsIDOMCSSValue** aValue)
   if (calcWidth) {
     FlushPendingReflows();
 
-    val->SetAppUnits(mFrame->GetContentRect().width);
+    val->SetAppUnits(mInnerFrame->GetContentRect().width);
   } else {
     const nsStylePosition *positionData = GetStylePosition();
 
@@ -2625,12 +2626,12 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsIFrame* container = GetContainingBlockFor(mFrame);
+  nsIFrame* container = GetContainingBlockFor(mOuterFrame);
   if (container) {
-    nsMargin margin = mFrame->GetUsedMargin();
+    nsMargin margin = mOuterFrame->GetUsedMargin();
     nsMargin border = container->GetUsedBorder();
     nsMargin scrollbarSizes(0, 0, 0, 0);
-    nsRect rect = mFrame->GetRect();
+    nsRect rect = mOuterFrame->GetRect();
     nsRect containerRect = container->GetRect();
       
     if (container->GetType() == nsGkAtoms::viewportFrame) {
@@ -2750,13 +2751,13 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  if (!mFrame) {
+  if (!mInnerFrame) {
     nsStyleCoord c;
     SetValueToCoord(val, GetStylePadding()->mPadding.Get(aSide, c));
   } else {
     FlushPendingReflows();
   
-    val->SetAppUnits(mFrame->GetUsedPadding().side(aSide));
+    val->SetAppUnits(mInnerFrame->GetUsedPadding().side(aSide));
   }
 
   return CallQueryInterface(val, aValue);
@@ -2861,9 +2862,9 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nscoord width;
-  if (mFrame) {
+  if (mInnerFrame) {
     FlushPendingReflows();
-    width = mFrame->GetUsedBorder().side(aSide);
+    width = mInnerFrame->GetUsedBorder().side(aSide);
   } else {
     width = GetStyleBorder()->GetBorderWidth(aSide);
   }
@@ -2907,13 +2908,13 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  if (!mFrame) {
+  if (!mInnerFrame) {
     nsStyleCoord c;
     SetValueToCoord(val, GetStyleMargin()->mMargin.Get(aSide, c));
   } else {
     FlushPendingReflows();
 
-    val->SetAppUnits(mFrame->GetUsedMargin().side(aSide));
+    val->SetAppUnits(mInnerFrame->GetUsedMargin().side(aSide));
   }
 
   return CallQueryInterface(val, aValue);
@@ -3062,11 +3063,11 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
 PRBool
 nsComputedDOMStyle::GetCBContentWidth(nscoord& aWidth)
 {
-  if (!mFrame) {
+  if (!mOuterFrame) {
     return PR_FALSE;
   }
 
-  nsIFrame* container = GetContainingBlockFor(mFrame);
+  nsIFrame* container = GetContainingBlockFor(mOuterFrame);
   if (!container) {
     return PR_FALSE;
   }
@@ -3080,11 +3081,11 @@ nsComputedDOMStyle::GetCBContentWidth(nscoord& aWidth)
 PRBool
 nsComputedDOMStyle::GetCBContentHeight(nscoord& aHeight)
 {
-  if (!mFrame) {
+  if (!mOuterFrame) {
     return PR_FALSE;
   }
 
-  nsIFrame* container = GetContainingBlockFor(mFrame);
+  nsIFrame* container = GetContainingBlockFor(mOuterFrame);
   if (!container) {
     return PR_FALSE;
   }
@@ -3098,13 +3099,13 @@ nsComputedDOMStyle::GetCBContentHeight(nscoord& aHeight)
 PRBool
 nsComputedDOMStyle::GetFrameBorderRectWidth(nscoord& aWidth)
 {
-  if (!mFrame) {
+  if (!mInnerFrame) {
     return PR_FALSE;
   }
 
   FlushPendingReflows();
 
-  aWidth = mFrame->GetSize().width;
+  aWidth = mInnerFrame->GetSize().width;
   return PR_TRUE;
 }
 
