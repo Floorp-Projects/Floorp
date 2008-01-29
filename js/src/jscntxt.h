@@ -210,10 +210,6 @@ struct JSRuntime {
      */
     JSPtrTable          gcIteratorTable;
 
-#ifdef JS_GCMETER
-    JSGCStats           gcStats;
-#endif
-
     /*
      * The trace operation and its data argument to trace embedding-specific
      * GC roots.
@@ -383,6 +379,12 @@ struct JSRuntime {
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
 
+    /*
+     * Various metering fields are defined at the end of JSRuntime. In this
+     * way there is no need to recompile all the code that refers to other
+     * fields of JSRuntime after enabling the corresponding metering macro.
+     */
+
 #if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
     /* Function invocation metering. */
     jsrefcount          inlineCalls;
@@ -433,6 +435,10 @@ struct JSRuntime {
      */
     JSBasicStats        hostenvScopeDepthStats;
     JSBasicStats        lexicalScopeDepthStats;
+#endif
+
+#ifdef JS_GCMETER
+    JSGCStats           gcStats;
 #endif
 };
 
