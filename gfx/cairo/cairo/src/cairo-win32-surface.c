@@ -1677,9 +1677,9 @@ _cairo_win32_surface_show_glyphs (void			*surface,
  *
  * Creates a cairo surface that targets the given DC.  The DC will be
  * queried for its initial clip extents, and this will be used as the
- * size of the cairo surface.  Also, if the DC is a raster DC, it will
- * be queried for its pixel format and the cairo surface format will
- * be set appropriately.
+ * size of the cairo surface.  The resulting surface will always
+ * be of format CAIRO_FORMAT_RGB24; should you need an ARGB32 surface,
+ * you will need to create one through cairo_win32_surface_create_with_dib.
  *
  * Return value: the newly created surface
  **/
@@ -1692,25 +1692,8 @@ cairo_win32_surface_create (HDC hdc)
     cairo_format_t format;
     RECT rect;
 
-    if (GetDeviceCaps(hdc, TECHNOLOGY) == DT_RASDISPLAY) {
-	depth = GetDeviceCaps(hdc, BITSPIXEL);
-	if (depth == 32)
-	    format = CAIRO_FORMAT_RGB24;
-	else if (depth == 24)
-	    format = CAIRO_FORMAT_RGB24;
-	else if (depth == 16)
-	    format = CAIRO_FORMAT_RGB24;
-	else if (depth == 8)
-	    format = CAIRO_FORMAT_A8;
-	else if (depth == 1)
-	    format = CAIRO_FORMAT_A1;
-	else {
-	    _cairo_win32_print_gdi_error("cairo_win32_surface_create(bad BITSPIXEL)");
-	    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
-	}
-    } else {
-	format = CAIRO_FORMAT_RGB24;
-    }
+    /* Assume that everything coming in as a HDC is RGB24 */
+    format = CAIRO_FORMAT_RGB24;
 
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL)
