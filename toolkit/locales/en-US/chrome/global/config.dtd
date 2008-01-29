@@ -37,10 +37,11 @@
 <!ENTITY window.title "about:config">
 
 <!-- about:config warning page -->
-<!ENTITY configWarningTitle.label "Be careful, this page is loaded!">
-<!ENTITY configWarningText.label "Changing the values of these advanced settings can be harmful to the stability, security, and performance of this application. You should only continue if you are sure of what you are doing.">
-<!ENTITY configWarningButton.label "I'll be careful, I promise!">
-<!ENTITY configWarningCheckbox.label "Show this warning next time">
+<!-- LOCALIZATION NOTE: aboutWarningTitle.label should be attention grabbing and playful -->
+<!ENTITY aboutWarningTitle.label "This might void your warranty!">
+<!ENTITY aboutWarningText.label "Changing the default values of these advanced settings can be harmful to the stability, security, and performance of this application. You should only continue if you are sure of what you are doing.">
+<!ENTITY aboutWarningButton.label "I'll be careful, I promise!">
+<!ENTITY aboutWarningCheckbox.label "Show this warning next time">
 
 <!ENTITY filterPrefs.label "Filter:">
 <!ENTITY filterPrefs.accesskey "I">

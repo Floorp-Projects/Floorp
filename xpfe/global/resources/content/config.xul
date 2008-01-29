@@ -82,11 +82,11 @@
     <hbox id="warningBox" align="top">
       <image id="exclam" class="alert-icon"/>
       <vbox id="warningInnerBox" flex="1">
-        <label id="warningTitle">&configWarningTitle.label;</label>
-        <label id="warningText">&configWarningText.label;</label>
-        <checkbox id="showWarningNextTime" label="&configWarningCheckbox.label;" checked="true"/>
+        <label id="warningTitle">&aboutWarningTitle.label;</label>
+        <label id="warningText">&aboutWarningText.label;</label>
+        <checkbox id="showWarningNextTime" label="&aboutWarningCheckbox.label;" checked="true"/>
         <hbox pack="center">
-          <button id="warningButton" oncommand="ShowPrefs();" label="&configWarningButton.label;"/>
+          <button id="warningButton" oncommand="ShowPrefs();" label="&aboutWarningButton.label;"/>
         </hbox>
       </vbox>
     </hbox>
