@@ -1642,12 +1642,12 @@ pref("font.name-list.serif.zh-CN", "华文宋体");
 pref("font.name-list.sans-serif.zh-CN", "Hei");
 pref("font.name-list.monospace.zh-CN", "Hei");
 
-pref("font.name.serif.zh-TW", "Apple LiSung Light"); 
-pref("font.name.sans-serif.zh-TW", "Apple LiGothic Medium");  
-pref("font.name.monospace.zh-TW", "Apple LiGothic Medium");  
-pref("font.name-list.serif.zh-TW", "Apple LiSung Light"); 
-pref("font.name-list.sans-serif.zh-TW", "Apple LiGothic Medium");  
-pref("font.name-list.monospace.zh-TW", "Apple LiGothic Medium");  
+pref("font.name.serif.zh-TW", "Apple LiSung"); 
+pref("font.name.sans-serif.zh-TW", "Apple LiGothic");  
+pref("font.name.monospace.zh-TW", "Apple LiGothic");  
+pref("font.name-list.serif.zh-TW", "Apple LiSung"); 
+pref("font.name-list.sans-serif.zh-TW", "Apple LiGothic");  
+pref("font.name-list.monospace.zh-TW", "Apple LiGothic");  
 
 pref("font.name.serif.zh-HK", "儷宋 Pro");
 pref("font.name.sans-serif.zh-HK", "儷黑 Pro");
