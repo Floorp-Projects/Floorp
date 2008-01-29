@@ -717,6 +717,8 @@ protected:
 
     const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
+    void RemoveBroadcaster(const nsAString & broadcasterId);
+
 protected:
     // Internal accessor. This shadows the 'Slots', and returns
     // appropriate value.
