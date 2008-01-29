@@ -163,6 +163,16 @@ typedef struct JSPropertyTreeEntry {
  */
 typedef struct JSNativeIteratorState JSNativeIteratorState;
 
+typedef struct JSSetSlotRequest JSSetSlotRequest;
+
+struct JSSetSlotRequest {
+    JSObject            *obj;           /* object containing slot to set */
+    JSObject            *pobj;          /* new proto or parent reference */
+    uint16              slot;           /* which to set, proto or parent */
+    uint16              errnum;         /* JSMSG_NO_ERROR or error result */
+    JSSetSlotRequest    *next;          /* next request in GC worklist */
+};
+
 struct JSRuntime {
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
@@ -221,6 +231,14 @@ struct JSRuntime {
     JSTraceDataOp       gcExtraRootsTraceOp;
     void                *gcExtraRootsData;
 
+    /*
+     * Used to serialize cycle checks when setting __proto__ or __parent__ by
+     * requesting the GC handle the required cycle detection. If the GC hasn't
+     * been poked, it won't scan for garbage. This member is protected by
+     * rt->gcLock.
+     */
+    JSSetSlotRequest    *setSlotRequests;
+
     /* Random number generator state, used by jsmath.c. */
     JSBool              rngInitialized;
     int64               rngMultiplier;
@@ -278,12 +296,6 @@ struct JSRuntime {
 
     /* Used to synchronize down/up state change; protected by gcLock. */
     PRCondVar           *stateChange;
-
-    /* Used to serialize cycle checks when setting __proto__ or __parent__. */
-    PRLock              *setSlotLock;
-    PRCondVar           *setSlotDone;
-    JSBool              setSlotBusy;
-    JSScope             *setSlotScope;  /* deadlock avoidance, see jslock.c */
 
     /*
      * State for sharing single-threaded scopes, once a second thread tries to
