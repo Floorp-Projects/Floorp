@@ -51,6 +51,7 @@ _TEST_FILES	= \
 	test_badManifestMime.html \
 	test_missingFile.html \
 	test_simpleManifest.html \
+	test_identicalManifest.html \
 	test_offlineIFrame.html \
 	badManifestMagic.cacheManifest \
 	badManifestMagic.cacheManifest^headers^ \
