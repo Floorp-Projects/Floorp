@@ -270,6 +270,10 @@ toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
   -moz-box-orient: vertical;
 }
 
+toolbar[mode="text"] .toolbarbutton-1 > .toolbarbutton-text {
+  margin: 4px;
+}
+
 #nav-bar .toolbarbutton-1 {
   padding-top: 0;
   padding-bottom: 0;
