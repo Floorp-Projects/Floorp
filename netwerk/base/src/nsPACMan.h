@@ -128,14 +128,6 @@ public:
    */
   PRBool IsLoading() { return mLoader != nsnull; }
 
-  /**
-   * Returns true if the given URI matches the URI of our PAC file.
-   */
-  PRBool IsPACURI(nsIURI *uri) {
-    PRBool result;
-    return mPACURI && NS_SUCCEEDED(mPACURI->Equals(uri, &result)) && result;
-  }
-
 private:
   NS_DECL_NSISTREAMLOADEROBSERVER
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -169,6 +161,14 @@ private:
    * Called when we fail to load the PAC file.
    */
   void OnLoadFailure();
+
+  /**
+   * Returns true if the given URI matches the URI of our PAC file.
+   */
+  PRBool IsPACURI(nsIURI *uri) {
+    PRBool result;
+    return mPACURI && NS_SUCCEEDED(mPACURI->Equals(uri, &result)) && result;
+  }
 
 private:
   nsCOMPtr<nsIProxyAutoConfig> mPAC;

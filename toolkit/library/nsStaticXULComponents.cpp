@@ -262,15 +262,6 @@
 #define XMLEXTRAS_MODULE
 #endif
 
-#ifdef MOZ_XUL
-#ifdef MOZ_ENABLE_GTK2
-#define UNIXPROXY_MODULE MODULE(nsUnixProxyModule)
-#endif
-#endif
-#ifndef UNIXPROXY_MODULE
-#define UNIXPROXY_MODULE
-#endif
-
 #define XUL_MODULES                          \
     MODULE(xpconnect)                        \
     MATHML_MODULES                           \
@@ -322,7 +313,6 @@
     SPELLCHECK_MODULE                        \
     XMLEXTRAS_MODULE                         \
     LAYOUT_DEBUG_MODULE                      \
-    UNIXPROXY_MODULE                         \
     /* end of list */
 
 #define MODULE(_name) \
