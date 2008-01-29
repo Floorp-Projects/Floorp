@@ -319,15 +319,16 @@ NS_IMETHODIMP nsIDNService::ConvertToDisplayIDN(const nsACString & input, PRBool
       *_isASCII = PR_TRUE;
     }
   } else {
-    if (mShowPunycode && NS_SUCCEEDED(ConvertUTF8toACE(input, _retval))) {
+    // We have to normalize the hostname before testing against the domain
+    // whitelist (see bug 315411), and to ensure the entire string gets
+    // normalized.
+    rv = Normalize(input, _retval);
+    if (NS_FAILED(rv)) return rv;
+
+    if (mShowPunycode && NS_SUCCEEDED(ConvertUTF8toACE(_retval, _retval))) {
       *_isASCII = PR_TRUE;
       return NS_OK;
     }
-
-    // We have to normalize the hostname before testing against the domain
-    // whitelist.  See bug 315411.
-    rv = Normalize(input, _retval);
-    if (NS_FAILED(rv)) return rv;
 
     // normalization could result in an ASCII-only hostname. alternatively, if
     // the host is converted to ACE by the normalizer, then the host may contain
@@ -638,10 +639,18 @@ PRBool nsIDNService::isInWhitelist(const nsACString &host)
     nsCAutoString tld(host);
     tld.Trim(".");
     PRInt32 pos = tld.RFind(".");
+    if (pos == kNotFound)
+      return PR_FALSE;
+
+    tld.Cut(0, pos + 1);
+
+    // make sure the TLD is ACE for lookup.
+    if (!IsASCII(tld) &&
+        NS_FAILED(ConvertUTF8toACE(tld, tld)))
+      return PR_FALSE;
 
     PRBool safe;
-    if (pos != kNotFound &&
-        NS_SUCCEEDED(mIDNWhitelistPrefBranch->GetBoolPref(tld.get() + pos + 1, &safe)))
+    if (NS_SUCCEEDED(mIDNWhitelistPrefBranch->GetBoolPref(tld.get(), &safe)))
       return safe;
   }
 
