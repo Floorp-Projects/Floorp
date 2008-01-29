@@ -1448,18 +1448,8 @@ nsAccessibleWrap::FireAtkShowHideEvent(nsIAccessibleEvent *aEvent,
     else
         MAI_LOG_DEBUG(("\n\nReceived: Hide event\n"));
 
-    nsCOMPtr<nsIAccessible> accessible;
-    aEvent->GetAccessible(getter_AddRefs(accessible));
-    NS_ENSURE_STATE(accessible);
-
-    nsCOMPtr<nsIAccessible> parentAccessible;
-    accessible->GetParent(getter_AddRefs(parentAccessible));
-    NS_ENSURE_STATE(parentAccessible);
-
-    PRInt32 indexInParent = -1;
-    accessible->GetIndexInParent(&indexInParent);
-
-    AtkObject *parentObject = GetAtkObject(parentAccessible);
+    PRInt32 indexInParent = getIndexInParentCB(aObject);
+    AtkObject *parentObject = getParentCB(aObject);
     NS_ENSURE_STATE(parentObject);
 
     PRBool isFromUserInput;
