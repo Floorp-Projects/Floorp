@@ -67,10 +67,10 @@ nsCharsetAlias2::~nsCharsetAlias2()
 // 
 static const char* kAliases[][3] = {
   // Triple with { lower-case test string, out string, length of out string }
-  { "iso-8859-1", "ISO-8859-1", (const char*)10 },
-  { "utf-8",      "UTF-8",      (const char*)5  },
-  { "x-sjis",     "Shift_JIS",  (const char*)9  },
-  { "shift_jis",  "Shift_JIS",  (const char*)9  }
+  { "iso-8859-1", "ISO-8859-1", (const char*)NS_INT32_TO_PTR(10) },
+  { "utf-8",      "UTF-8",      (const char*)NS_INT32_TO_PTR(5)  },
+  { "x-sjis",     "Shift_JIS",  (const char*)NS_INT32_TO_PTR(9)  },
+  { "shift_jis",  "Shift_JIS",  (const char*)NS_INT32_TO_PTR(9)  }
 };
 
 //--------------------------------------------------------------
@@ -89,7 +89,7 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(kAliases); index++) {
      if (aAlias.LowerCaseEqualsASCII(kAliases[index][0])) {
        oResult.Assign(nsDependentCString(kAliases[index][1],
-                                         (PRUint32)kAliases[index][2]));
+                                         NS_PTR_TO_UINT32(kAliases[index][2])));
        NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
        return NS_OK;
      }
