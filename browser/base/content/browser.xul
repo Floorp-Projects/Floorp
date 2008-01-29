@@ -152,10 +152,12 @@
       <hbox id="identity-popup-container" align="top">
         <image id="identity-popup-icon"/>
         <vbox id="identity-popup-content-box">
-          <!-- Title Bar -->
-          <label id="identity-popup-title" control="identity-popup"/>
-          <!-- Content area -->
-          <description id="identity-popup-content"/>
+          <label id="identity-popup-connectedToLabel" value="&identity.connectedTo;"/>
+          <label id="identity-popup-connectedToLabel2"
+                 value="&identity.unverifiedsite;"/>
+          <description id="identity-popup-content-host"/>
+          <label id="identity-popup-runByLabel" value="&identity.runBy;"/>
+          <description id="identity-popup-content-owner"/>
           <description id="identity-popup-content-supplemental"/>
           <description id="identity-popup-content-verifier"/>
           <hbox id="identity-popup-encryption" flex="1">
