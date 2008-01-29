@@ -256,11 +256,52 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind);
 extern void
 js_UpdateMallocCounter(JSContext *cx, size_t nbytes);
 
+typedef struct JSGCArenaInfo JSGCArenaInfo;
+typedef struct JSGCArenaList JSGCArenaList;
+typedef struct JSGCChunkInfo JSGCChunkInfo;
+
+struct JSGCArenaList {
+    JSGCArenaInfo   *last;          /* last allocated GC arena */
+    uint16          lastCount;      /* number of allocated things in the last
+                                       arena */
+    uint16          thingSize;      /* size of things to allocate on this list
+                                     */
+    JSGCThing       *freeList;      /* list of free GC things */
+};
+
+struct JSWeakRoots {
+    /* Most recently created things by type, members of the GC's root set. */
+    void            *newborn[GCX_NTYPES];
+
+    /* Atom root for the last-looked-up atom on this context. */
+    jsval           lastAtom;
+
+    /* Root for the result of the most recent js_InternalInvoke call. */
+    jsval           lastInternalResult;
+};
+
+JS_STATIC_ASSERT(JSVAL_NULL == 0);
+#define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
+
 #ifdef DEBUG_notme
 #define JS_GCMETER 1
 #endif
 
 #ifdef JS_GCMETER
+
+typedef struct JSGCArenaStats {
+    uint32  narenas;        /* number of arena in list */
+    uint32  maxarenas;      /* maximun number of allocated arenas */
+    uint32  nthings;        /* number of allocates JSGCThing */
+    uint32  maxthings;      /* maximum number number of allocates JSGCThing */
+    uint32  totalnew;       /* number of succeeded calls to js_NewGCThing */
+    uint32  freelen;        /* freeList lengths */
+    uint32  recycle;        /* number of things recycled through freeList */
+    uint32  totalarenas;    /* total number of arenas with live things that
+                               GC scanned so far */
+    uint32  totalfreelen;   /* total number of things that GC put to free
+                               list so far */
+} JSGCArenaStats;
 
 typedef struct JSGCStats {
 #ifdef JS_THREADSAFE
@@ -294,60 +335,14 @@ typedef struct JSGCStats {
     uint32  maxnclose;  /* max number of objects with close hooks */
     uint32  closelater; /* number of close hooks scheduled to run */
     uint32  maxcloselater; /* max number of close hooks scheduled to run */
+
+    JSGCArenaStats  arenas[GC_NUM_FREELISTS];
 } JSGCStats;
 
 extern JS_FRIEND_API(void)
 js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* JS_GCMETER */
-
-typedef struct JSGCArenaInfo JSGCArenaInfo;
-typedef struct JSGCArenaList JSGCArenaList;
-typedef struct JSGCChunkInfo JSGCChunkInfo;
-
-#ifdef JS_GCMETER
-typedef struct JSGCArenaStats JSGCArenaStats;
-
-struct JSGCArenaStats {
-    uint32  narenas;        /* number of arena in list */
-    uint32  maxarenas;      /* maximun number of allocated arenas */
-    uint32  nthings;        /* number of allocates JSGCThing */
-    uint32  maxthings;      /* maximum number number of allocates JSGCThing */
-    uint32  totalnew;       /* number of succeeded calls to js_NewGCThing */
-    uint32  freelen;        /* freeList lengths */
-    uint32  recycle;        /* number of things recycled through freeList */
-    uint32  totalarenas;    /* total number of arenas with live things that
-                               GC scanned so far */
-    uint32  totalfreelen;   /* total number of things that GC put to free
-                               list so far */
-};
-#endif
-
-struct JSGCArenaList {
-    JSGCArenaInfo   *last;          /* last allocated GC arena */
-    uint16          lastCount;      /* number of allocated things in the last
-                                       arena */
-    uint16          thingSize;      /* size of things to allocate on this list
-                                     */
-    JSGCThing       *freeList;      /* list of free GC things */
-#ifdef JS_GCMETER
-    JSGCArenaStats  stats;
-#endif
-};
-
-struct JSWeakRoots {
-    /* Most recently created things by type, members of the GC's root set. */
-    void            *newborn[GCX_NTYPES];
-
-    /* Atom root for the last-looked-up atom on this context. */
-    jsval           lastAtom;
-
-    /* Root for the result of the most recent js_InternalInvoke call. */
-    jsval           lastInternalResult;
-};
-
-JS_STATIC_ASSERT(JSVAL_NULL == 0);
-#define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
 JS_END_EXTERN_C
 
