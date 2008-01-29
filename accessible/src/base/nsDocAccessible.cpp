@@ -1660,9 +1660,9 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
       // GetNextSibling(), because after we shutdown the first child,
       // mNextSibling will be set null.
       accessible->GetChildren(getter_AddRefs(children));
-
-      PRUint32 childCount;
-      children->GetLength(&childCount);
+      PRUint32 childCount =0;
+      if (children)
+        children->GetLength(&childCount);
       nsCOMPtr<nsIDOMNode> possibleAnonNode;
       for (PRUint32 index = 0; index < childCount; index++) {
         nsCOMPtr<nsIAccessNode> childAccessNode;
