@@ -141,3 +141,28 @@ mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **
     NS_ADDREF(*_retval = msc);
     return NS_OK;
 }
+
+/* mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile); */
+NS_IMETHODIMP
+mozStorageService::OpenUnsharedDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **_retval)
+{
+    nsresult rv;
+
+    mozStorageConnection *msc = new mozStorageConnection(this);
+    if (!msc)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Initialize the connection, temporarily turning off shared caches so the
+    // new connection gets its own cache.  Database connections are assigned
+    // caches when they are opened, and they retain those caches for their
+    // lifetimes, unaffected by changes to the shared caches setting, so we can
+    // disable shared caches temporarily while we initialize the new connection
+    // without affecting the caches currently in use by other connections.
+    sqlite3_enable_shared_cache(0);
+    rv = msc->Initialize (aDatabaseFile);
+    sqlite3_enable_shared_cache(1);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ADDREF(*_retval = msc);
+    return NS_OK;
+}
