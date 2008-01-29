@@ -211,8 +211,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     nsMargin edgeTwips;
     mPageData->mPrintSettings->GetEdgeInTwips(edgeTwips);
 
-    // sanity check the values. an inch is still probably excessive
-    nscoord inchInTwips = NS_INCHES_TO_TWIPS(1.0);
+    // sanity check the values. three inches are sometimes needed
+    nscoord inchInTwips = NS_INCHES_TO_TWIPS(3.0);
     edgeTwips.top = PR_MIN(PR_MAX(edgeTwips.top, 0), inchInTwips);
     edgeTwips.bottom = PR_MIN(PR_MAX(edgeTwips.bottom, 0), inchInTwips);
     edgeTwips.left = PR_MIN(PR_MAX(edgeTwips.left, 0), inchInTwips);
