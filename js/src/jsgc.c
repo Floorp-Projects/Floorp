@@ -2301,95 +2301,9 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
 }
 
-static void
-ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
-{
-    JSObject *obj, *pobj;
-    uint32 slot;
-
-    obj = ssr->obj;
-    pobj = ssr->pobj;
-    slot = ssr->slot;
-
-    while (pobj) {
-        JSClass *clasp = STOBJ_GET_CLASS(pobj);
-        if (clasp->flags & JSCLASS_IS_EXTENDED) {
-            JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
-            if (xclasp->wrappedObject) {
-                /* If there is no wrapped object, use the wrapper. */
-                JSObject *wrapped = xclasp->wrappedObject(cx, pobj);
-                if (wrapped)
-                    pobj = wrapped;
-            }
-        }
-
-        if (pobj == obj) {
-            ssr->errnum = JSMSG_CYCLIC_VALUE;
-            return;
-        }
-        pobj = JSVAL_TO_OBJECT(STOBJ_GET_SLOT(pobj, slot));
-    }
-
-    pobj = ssr->pobj;
-
-    if (slot == JSSLOT_PROTO && OBJ_IS_NATIVE(obj)) {
-        JSScope *scope, *newscope;
-        JSObject *oldproto;
-
-        /* Check to see whether obj shares its prototype's scope. */
-        scope = OBJ_SCOPE(obj);
-        oldproto = STOBJ_GET_PROTO(obj);
-        if (oldproto && OBJ_SCOPE(oldproto) == scope) {
-            /* Either obj needs a new empty scope, or it should share pobj's. */
-            if (!pobj ||
-                !OBJ_IS_NATIVE(pobj) ||
-                OBJ_GET_CLASS(cx, pobj) != STOBJ_GET_CLASS(oldproto)) {
-                /*
-                 * With no proto and no scope of its own, obj is truly empty.
-                 *
-                 * If pobj is not native, obj needs its own empty scope -- it
-                 * should not continue to share oldproto's scope once oldproto
-                 * is not on obj's prototype chain.  That would put properties
-                 * from oldproto's scope ahead of properties defined by pobj,
-                 * in lookup order.
-                 *
-                 * If pobj's class differs from oldproto's, we may need a new
-                 * scope to handle differences in private and reserved slots,
-                 * so we suboptimally but safely make one.
-                 */
-                if (!js_GetMutableScope(cx, obj)) {
-                    ssr->errnum = JSMSG_OUT_OF_MEMORY;
-                    return;
-                }
-            } else if (OBJ_SCOPE(pobj) != scope) {
-                newscope = (JSScope *) js_HoldObjectMap(cx, pobj->map);
-                obj->map = &newscope->map;
-                js_DropObjectMap(cx, &scope->map, obj);
-                JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
-            }
-        }
-
-#if 0
-        /*
-         * Regenerate property cache type ids for all of the scopes along the
-         * old prototype chain, in case any property cache entries were filled
-         * by looking up starting from obj.
-         */
-        while (oldproto && OBJ_IS_NATIVE(oldproto)) {
-            scope = OBJ_SCOPE(oldproto);
-            SCOPE_GENERATE_PCTYPE(cx, scope);
-            oldproto = STOBJ_GET_PROTO(scope->object);
-        }
-#endif
-    }
-
-    /* Finally, do the deed. */
-    STOBJ_SET_SLOT(obj, slot, OBJECT_TO_JSVAL(pobj));
-}
-
 /*
- * The gckind flag bit GC_LOCK_HELD indicates a call from js_NewGCThing with
- * rt->gcLock already held, so the lock should be kept on return.
+ * When gckind is GC_LAST_DITCH, it indicates a call from js_NewGCThing with
+ * rt->gcLock already held and when the lock should be kept on return.
  */
 void
 js_GC(JSContext *cx, JSGCInvocationKind gckind)
@@ -2415,11 +2329,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JS_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));
 #endif
 
-    if (gckind & GC_KEEP_ATOMS) {
-        /*
-         * The set slot request and last ditch GC kinds preserve all atoms and
-         * weak roots.
-         */
+    if (gckind == GC_LAST_DITCH) {
+        /* The last ditch GC preserves all atoms and weak roots. */
         keepAtoms = JS_TRUE;
     } else {
         /* Keep atoms when a suspended compile is running on another context. */
@@ -2448,7 +2359,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
 
     /* Lock out other GC allocator and collector invocations. */
-    if (!(gckind & GC_LOCK_HELD))
+    if (gckind != GC_LAST_DITCH)
         JS_LOCK_GC(rt);
 
     METER(rt->gcStats.poke++);
@@ -2463,7 +2374,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         rt->gcLevel++;
         METER(if (rt->gcLevel > rt->gcStats.maxlevel)
                   rt->gcStats.maxlevel = rt->gcLevel);
-        if (!(gckind & GC_LOCK_HELD))
+        if (gckind != GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
         return;
     }
@@ -2520,7 +2431,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             JS_AWAIT_GC_DONE(rt);
         if (requestDebit)
             rt->requestCount += requestDebit;
-        if (!(gckind & GC_LOCK_HELD))
+        if (gckind != GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
         return;
     }
@@ -2553,45 +2464,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * waiting for GC to finish.
      */
     rt->gcRunning = JS_TRUE;
-
-    if (gckind == GC_SET_SLOT_REQUEST) {
-        JSSetSlotRequest *ssr;
-
-        while ((ssr = rt->setSlotRequests) != NULL) {
-            rt->setSlotRequests = ssr->next;
-            JS_UNLOCK_GC(rt);
-            ssr->next = NULL;
-            ProcessSetSlotRequest(cx, ssr);
-            JS_LOCK_GC(rt);
-        }
-
-        /*
-         * We assume here that killing links to parent and prototype objects
-         * does not create garbage (such objects typically are long-lived and
-         * widely shared, e.g. global objects, Function.prototype, etc.). We
-         * collect garbage only if a racing thread attempted GC and is waiting
-         * for us to finish (gcLevel > 1) or if someone already poked us.
-         */
-        if (rt->gcLevel == 1 && !rt->gcPoke)
-            goto done_running;
-        rt->gcLevel = 1;
-        rt->gcPoke = JS_FALSE;
-    }
-
     JS_UNLOCK_GC(rt);
 
     /* Reset malloc counter. */
     rt->gcMallocBytes = 0;
-
-#if 0
-    /*
-     * Clear property cache weak references and disable the cache so nothing
-     * can fill it during GC (this is paranoia, since scripts should not run
-     * during GC).
-     */
-    js_DisablePropertyCache(cx);
-    js_FlushPropertyCache(cx);
-#endif
 
 #ifdef JS_DUMP_SCOPE_METERS
   { extern void js_DumpScopeMeters(JSRuntime *rt);
@@ -2618,24 +2494,16 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             continue;
         memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
         GSN_CACHE_CLEAR(&acx->thread->gsnCache);
-#if 0
-        js_FlushPropertyCache(acx);
-#endif
     }
 #else
     /* The thread-unsafe case just has to clear the runtime's GSN cache. */
     GSN_CACHE_CLEAR(&rt->gsnCache);
 #endif
 
-  restart:
+restart:
     rt->gcNumber++;
     JS_ASSERT(!rt->gcUntracedArenaStackTop);
     JS_ASSERT(rt->gcTraceLaterCount == 0);
-
-#if 0
-    /* Reset the property cache's type id generator so we can compress ids. */
-    rt->pcTypeGen = 0;
-#endif
 
     /*
      * Mark phase.
@@ -2865,15 +2733,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         JS_UNLOCK_GC(rt);
         goto restart;
     }
-
-#if 0
-    if (!(rt->pcTypeGen & PCTYPE_OVERFLOW_BIT))
-        js_EnablePropertyCache(cx);
-#endif
-
-    rt->gcLastBytes = rt->gcBytes;
-  done_running:
     rt->gcLevel = 0;
+    rt->gcLastBytes = rt->gcBytes;
     rt->gcRunning = JS_FALSE;
 
 #ifdef JS_THREADSAFE
@@ -2884,9 +2745,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JS_NOTIFY_GC_DONE(rt);
 
     /*
-     * Unlock unless we have GC_LOCK_HELD which requires locked GC on return.
+     * Unlock unless we have GC_LAST_DITCH which requires locked GC on return.
      */
-    if (!(gckind & GC_LOCK_HELD))
+    if (gckind != GC_LAST_DITCH)
         JS_UNLOCK_GC(rt);
 #endif
 
@@ -2895,11 +2756,11 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         JSWeakRoots savedWeakRoots;
         JSTempValueRooter tvr;
 
-        if (gckind & GC_KEEP_ATOMS) {
+        if (gckind == GC_LAST_DITCH) {
             /*
              * We allow JSGC_END implementation to force a full GC or allocate
-             * new GC things. Thus we must protect the weak roots from garbage
-             * collection and overwrites.
+             * new GC things. Thus we must protect the weak roots from GC or
+             * overwrites.
              */
             savedWeakRoots = cx->weakRoots;
             JS_PUSH_TEMP_ROOT_WEAK_COPY(cx, &savedWeakRoots, &tvr);
@@ -2909,7 +2770,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
         (void) rt->gcCallback(cx, JSGC_END);
 
-        if (gckind & GC_KEEP_ATOMS) {
+        if (gckind == GC_LAST_DITCH) {
             JS_LOCK_GC(rt);
             JS_UNKEEP_ATOMS(rt);
             JS_POP_TEMP_ROOT(cx, &tvr);
