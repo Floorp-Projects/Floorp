@@ -38,46 +38,46 @@
     </popup>
   </popupset>
 
-  <hbox flex="1">
-    <hbox align="start">
-      <image id="info.icon" class="spaced"/>
-    </hbox>
-    
-    <vbox flex="1" style="max-width: 45em;">
-#ifdef XP_MACOSX
-# On mac, we're exposing the dialog title inside the dialog
-      <!-- Dialog title -->
-      <description id="info.title" class="dialogTitle"/>
-#endif
-      <!-- text -->
-      <description id="info.header" class="header"/>
-      <vbox id="info.box">
-        <description context="contentAreaContextMenu" tabindex="-1"/>
-      </vbox>
 
-      <!-- textboxes -->
-      <vbox id="loginContainer" hidden="true">
+  <grid>
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+
+    <rows>
+      <row>
+        <hbox align="start">
+          <image id="info.icon" class="spaced"/>
+        </hbox>
+        <vbox id="infoContainer">
+#ifdef XP_MACOSX
+          <!-- Dialog title is inside dialog for OS X -->
+          <description id="info.title" class="dialogTitle"/>
+#endif
+          <description id="info.header" class="header"/>
+          <description id="info.body" context="contentAreaContextMenu" tabindex="-1"/>
+        </vbox>
+      </row>
+      <row id="loginContainer" hidden="true" align="center">
         <label id="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
         <textbox id="loginTextbox"/>
-        <separator class="thin"/>
-      </vbox>
-      <vbox id ="password1Container" hidden="true">
+      </row>
+      <row id ="password1Container" hidden="true" align="center">
         <label id="password1Label" value="&editfield1.label;" control="password1Textbox"/>
         <textbox type="password" id="password1Textbox"/>
-        <separator class="thin"/>
-      </vbox>
-      <vbox id="password2Container" hidden="true">
+      </row>
+      <row id="password2Container" hidden="true" align="center">
         <label id="password2Label" value="&editfield2.label;" control="password2Textbox"/>
         <textbox type="password" id="password2Textbox"/>
-        <separator class="thin"/>
-      </vbox>
-  
-      <!-- checkbox -->
-      <vbox id="checkboxContainer" align="start" collapsed="true">
+      </row>
+      <row id="checkboxContainer" hidden="true">
+        <spacer/>
         <checkbox id="checkbox" oncommand="onCheckboxClick(this);"/>
-      </vbox>
-    </vbox>
-  </hbox>
+      </row>
+    </rows>
+  </grid>
+
 
   <!-- This method is called inline because it may unset hidden="true" on the
        above boxes, causing their frames to be build and bindings to load.  

@@ -37,9 +37,18 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 
-#info\.box > description {
+#infoContainer {
+  max-width: 45em;
+}
+
+#info\.body {
   -moz-user-focus: normal;
   -moz-user-select: text;
   cursor: text !important;
   white-space: -moz-pre-wrap;
 }
+
+#loginLabel, #password1Label, #password2Label {
+  text-align: right;
+}
+
