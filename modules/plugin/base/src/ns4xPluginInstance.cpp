@@ -822,6 +822,7 @@ ns4xPluginInstance::ns4xPluginInstance(NPPluginFuncs* callbacks,
     mTransparent(PR_FALSE),
     mStarted(PR_FALSE),
     mCached(PR_FALSE),
+    mIsJavaPlugin(PR_FALSE),
     mInPluginInitCall(PR_FALSE),
     fLibrary(aLibrary),
     mStreams(nsnull)
@@ -1073,6 +1074,8 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
     }
   }
 
+  mIsJavaPlugin = nsPluginHostImpl::IsJavaMIMEType(mimetype);
+
   // Assign mPeer now and mark this instance as started before calling NPP_New 
   // because the plugin may call other NPAPI functions, like NPN_GetURLNotify,
   // that assume these are set before returning. If the plugin returns failure,
@@ -1126,13 +1129,14 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   // XXX 4.x plugins don't want a SetWindow(NULL).
   if (!window || !mStarted)
     return NS_OK;
-  
+
   NPError error;
 
 #if defined (MOZ_WIDGET_GTK2)
-  if (window->type == nsPluginWindowType_Window &&
+  // bug 108347, flash plugin on linux doesn't like window->width <=
+  // 0, but Java needs wants this call.
+  if (!mIsJavaPlugin && window->type == nsPluginWindowType_Window &&
       (window->width <= 0 || window->height <= 0)) {
-    // bug 108347, flash plugin on linux doesn't like window->width <= 0
     return NS_OK;
   }
 #endif // MOZ_WIDGET

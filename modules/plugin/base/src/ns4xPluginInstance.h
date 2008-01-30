@@ -189,6 +189,7 @@ protected:
     PRPackedBool  mTransparent;
     PRPackedBool  mStarted;
     PRPackedBool  mCached;
+    PRPackedBool  mIsJavaPlugin;
 
 public:
     // True while creating the plugin, or calling NPP_SetWindow() on
