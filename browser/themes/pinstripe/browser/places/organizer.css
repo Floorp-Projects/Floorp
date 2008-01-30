@@ -237,7 +237,8 @@
 
 .textbox-input-closebutton {
   -moz-appearance: none;
-  margin: -2px 2px -2px 1px;
+  margin: -2px 0;
+  -moz-margin-end: -2px;
   min-width: 0;
   background-color: transparent;
   border: none;
@@ -282,7 +283,7 @@
   -moz-border-radius: 11.5px;
   background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
   -moz-background-clip: padding !important;
-  padding: 0 8px;
+  padding: 0;
   -moz-padding-start: 14px;
 }
 
@@ -316,6 +317,149 @@
 
 .filterList .button-menu-dropmarker {
   margin: 9px -3px -4px 8px;
+}
+
+/* Scope Bar */
+
+#scopeBarTitle {
+  color: #6D6D6D;
+  border: 1px solid transparent;
+  -moz-border-radius: 10px;
+  padding-top: 1px;
+}
+
+#organizerScopeBar {
+  background: url("chrome://global/skin/icons/find-bar-background.png") repeat-x top center #D0D0D0;
+  color: #474747;
+  font-size: 105%;
+  font-weight: bold;
+  border-bottom: 1px solid #B1B1B1;
+  padding: 2px 0;
+}
+
+#advancedSearch > hbox, 
+#advancedSearchRows > row {
+  background-color: #E8E8E8;
+  border-top: 1px solid #F8F8F8;
+  border-bottom: 1px solid #BABABA;
+}
+
+#advancedSearchRows > row,
+#searchActions {
+  -moz-padding-start: 2px;
+  -moz-padding-end: 8px;
+}
+
+
+#organizerScopeBar > toolbarbutton {
+  border: 1px solid transparent;
+  -moz-border-radius: 10px;
+  padding: 0;
+  margin: 0 1px;
+}
+
+#organizerScopeBar .toolbarbutton-text {
+   margin: 0 !important;
+   padding: 0 5px !important;
+}
+
+#organizerScopeBar> toolbarbutton:hover {
+  color: #fff;
+  background: url("chrome://global/skin/20pct_transparent_pixel.png") repeat;
+}
+
+#organizerScopeBar > toolbarbutton[checked="true"]  {
+  background: url("chrome://global/skin/icons/white-gray-gradient-active.gif") repeat-x -1px 50%;
+  border-color:   #656565;
+  color: #fff !important;
+}
+
+#organizerScopeBarExpander {
+  margin: 0;
+  padding: 0;
+  -moz-padding-end: 2px;
+}
+
+#organizerScopeBar  > .expander-up {
+  list-style-image: url("chrome://browser/skin/places/plus.png") !important;
+}
+
+#organizerScopeBar  > .expander-up:hover:active {
+  list-style-image: url("chrome://browser/skin/places/plus-active.png") !important;
+}
+
+#organizerScopeBar  > .expander-down {
+  list-style-image: url("chrome://browser/skin/places/minus.png") !important;
+}
+
+#organizerScopeBar  > .expander-down:hover:active {
+  list-style-image: url("chrome://browser/skin/places/minus-active.png") !important;
+}
+
+menulist {
+  -moz-appearance: none;
+  margin: 0px 3px 0px 5px !important;
+  padding: 2px 0px 2px 0px;
+  background: url("chrome://global/skin/icons/round-button-leftcap.png") no-repeat center left;
+}
+
+menulist:active,
+menulist[open="true"]  {
+ background: url("chrome://global/skin/icons/round-button-active-leftcap.png") no-repeat center left !important;
+}
+  
+.menulist-label-box {
+  -moz-appearance: none;
+  margin: 0px 0px 0px 8px !important;
+  padding: 2px 0 2px 0px;
+  background: url("chrome://global/skin/icons/round-button-dropmarker.png") no-repeat center right;
+  border: none;
+}
+menulist:active > .menulist-label-box,
+menulist[open="true"] > .menulist-label-box {
+  background: url("chrome://global/skin/icons/round-button-active-dropmarker.png") no-repeat center right !important;
+}
+
+.menulist-label {
+  -moz-appearance: none;
+  margin: 0px 14px 0px 0px !important;
+  padding: 2px 0px 2px 0px;
+  background: url("chrome://global/skin/icons/round-button-middle.png") repeat-x center left;
+  border: none;
+}
+menulist:active > .menulist-label-box .menulist-label,
+menulist[open="true"] > .menulist-label-box  .menulist-label {
+  background: url("chrome://global/skin/icons/round-button-active-middle.png") repeat-x center left !important;
+}
+
+#editBMPanel_namePicker {
+  background: none !important;
+  margin: 0px !important;
+  padding:  0px !important;
+}
+
+#saveSearch {
+  -moz-appearance: none;
+  margin: 0;
+  padding: 4px 0 3px 0;
+  -moz-padding-start: 7px;
+  background: url("chrome://global/skin/icons/round-button-leftcap.png") no-repeat center left;
+  border: none;
+}
+
+#saveSearch:active {
+  background: url("chrome://global/skin/icons/round-button-active-leftcap.png") no-repeat center left;
+}
+
+#saveSearch .button-text {
+  margin: 0 !important;
+  padding: 2px 8px 2px 1px !important;
+  background: url("chrome://global/skin/icons/round-button-right.png") no-repeat center right;
+  font-size: 12px;
+}
+
+#saveSearch:active .button-text {
+  background: url("chrome://global/skin/icons/round-button-active-right.png") no-repeat center right;
 }
 
 /* Calendar */
@@ -403,6 +547,37 @@
 #selectItemDescription {
   color: GrayText;
 }
+
+
+.advancedSearchPlus,
+.advancedSearchMinus {
+  width: 18px;
+  height: 18px;
+  -moz-appearance: none;
+  -moz-margin-start: 2px;
+}
+
+.advancedSearchPlus .button-text,
+.advancedSearchMinus  .button-text {
+    display: none;
+} 
+
+.advancedSearchPlus {
+  background: url("chrome://browser/skin/places/plus.png") no-repeat left center;
+} 
+
+.advancedSearchPlus:active {
+   background: url("chrome://browser/skin/places/plus-active.png") no-repeat left center;
+} 
+
+.advancedSearchMinus {
+  background: url("chrome://browser/skin/places/minus.png") no-repeat left center;
+}
+
+.advancedSearchMinus:active {
+  background: url("chrome://browser/skin/places/minus-active.png") no-repeat left center;
+}
+
 
 /**** expanders ****/
 
