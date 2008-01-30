@@ -117,7 +117,7 @@
                  observes="paneElementsBroadcaster"/>
           <menulist id="editBMPanel_folderMenuList"
                     class="folder-icon"
-                    oncommand="gEditItemOverlay.onFolderMenuListCommand();"
+                    oncommand="gEditItemOverlay.onFolderMenuListCommand(event);"
                     observes="paneElementsBroadcaster">
             <menupopup>
               <!-- Static item for special folders -->
@@ -128,6 +128,10 @@
               <menuitem id="editBMPanel_toolbarFolderItem"
                         class="menuitem-iconic folder-icon"/>
               <menuseparator id="editBMPanel_foldersSeparator" hidden="true"/>
+              <menuseparator id="editBMPanel_chooseFolderSeparator"/>
+              <menuitem id="editBMPanel_chooseFolderMenuItem"
+	        label="&editBookmarkOverlay.choose.label;"
+                        class="menuitem-iconic folder-icon"/>
             </menupopup>
           </menulist>
           <button id="editBMPanel_foldersExpander"

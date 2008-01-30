@@ -62,6 +62,8 @@ classic.jar:
   skin/classic/browser/places/menubutton-mid.png            (places/menubutton-mid.png)
   skin/classic/browser/places/starPage.png                  (places/starPage.png)
   skin/classic/browser/places/pageStarred.png               (places/pageStarred.png)
+  skin/classic/browser/places/starred48.png                 (places/starred48.png)
+  skin/classic/browser/places/unstarred48.png               (places/unstarred48.png)
   skin/classic/browser/places/twisty-open.gif               (places/twisty-open.gif)
   skin/classic/browser/places/twisty-closed.gif             (places/twisty-closed.gif)
   skin/classic/browser/places/tag.png                       (places/tag.png)

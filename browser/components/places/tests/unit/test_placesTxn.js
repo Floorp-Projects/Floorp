@@ -60,11 +60,18 @@ try {
 
 // Get Places Transaction Manager Service
 try {
-    var ptSvc =
-      Cc["@mozilla.org/browser/placesTransactionsService;1"].
-        getService(Ci.nsIPlacesTransactionsService);
+  var ptSvc = Cc["@mozilla.org/browser/placesTransactionsService;1"].
+              getService(Ci.nsIPlacesTransactionsService);
 } catch(ex) {
   do_throw("Could not get Places Transactions Service\n");
+}
+
+// Get tagging service
+try {
+  var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
+                getService(Ci.nsITaggingService);
+} catch(ex) {
+  do_throw("Could not get tagging service\n");
 }
 
 // create and add bookmarks observer
@@ -413,4 +420,21 @@ function run_test() {
   do_check_eq(newModified, bmsvc.getItemLastModified(bkmk1Id));
   eilmTxn.undoTransaction();
   do_check_eq(oldModified, bmsvc.getItemLastModified(bkmk1Id));
+
+  // Test tagURI/untagURI
+  var tagURI = uri("http://foo.tld");
+  var tagTxn = ptSvc.tagURI(tagURI, ["foo", "bar"]);
+  tagTxn.doTransaction();
+  do_check_eq(uneval(tagssvc.getTagsForURI(tagURI, { })), uneval(["bar","foo"]));
+  tagTxn.undoTransaction();
+  do_check_true(tagssvc.getTagsForURI(tagURI, { }).length == 0);
+  tagTxn.redoTransaction();
+  do_check_eq(uneval(tagssvc.getTagsForURI(tagURI, { })), uneval(["bar","foo"]));
+  var untagTxn = ptSvc.untagURI(tagURI, ["bar"]);
+  untagTxn.doTransaction();
+  do_check_eq(uneval(tagssvc.getTagsForURI(tagURI, { })), uneval(["foo"]));
+  untagTxn.undoTransaction();
+  do_check_eq(uneval(tagssvc.getTagsForURI(tagURI, { })), uneval(["bar","foo"]));
+  untagTxn.redoTransaction();
+  do_check_eq(uneval(tagssvc.getTagsForURI(tagURI, { })), uneval(["foo"]));
 }

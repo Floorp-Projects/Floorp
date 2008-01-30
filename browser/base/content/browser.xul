@@ -106,18 +106,40 @@
     <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
     <panel id="editBookmarkPanel" orient="vertical" hidden="true"
-           onpopupshown="PlacesCommandHook.editBookmarkPanelShown();"
+           onpopupshown="StarUI.panelShown(event);"
            label="&bookmarkPageCmd2.label;">
-      <vbox id="editBookmarkPanelContent" flex="1"/>
-      <hbox flex="1">
+      <hbox flex="1" align="top">
+        <image id="editBookmarkPanelStarIcon"/>
+        <vbox flex="1">
+          <label id="editBookmarkPanelTitle" flex="1"/>
+          <description id="editBookmarkPanelDescription" flex="1"/>
+          <hbox>
+            <button id="editBookmarkPanelUndoRemoveButton"
+                    hidden="true"
+                    oncommand="StarUI.undoRemoveBookmarkCommand();"
+                    label="&editBookmark.undo.label;"
+                    accesskey="&editBookmark.undo.accessKey;"/>
+            <button id="editBookmarkPanelRemoveButton"
+                    oncommand="StarUI.removeBookmarkButtonCommand();"
+                    label="&editBookmark.removeBookmark.label;"
+                    accesskey="&editBookmark.removeBookmark.accessKey;"/>
+            <button id="editBookmarkPanelEditButton"
+                    oncommand="StarUI.editButtonCommand();"
+                    label="&editBookmark.edit.label;"
+                    accesskey="&editBookmark.edit.accessKey;"/>
+          </hbox>
+        </vbox>
+      </hbox>
+      <vbox id="editBookmarkPanelContent" flex="1" hidden="true"/>
+      <hbox flex="1" id="editBookmarkPanelBottomButtons">
         <spacer flex="1"/>
         <button id="editBookmarkPanelDeleteButton"
-                label="&editBookmark.delete.label;"
-                oncommand="PlacesCommandHook.deleteButtonOnCommand();"/>
+                label="&editBookmark.cancel.label;"
+                oncommand="StarUI.cancelButtonOnCommand();"/>
         <button id="editBookmarkPanelDoneButton"
                 label="&editBookmark.done.label;"
                 default="true"
-                oncommand="PlacesCommandHook.doneButtonOnCommand();"/>
+                oncommand="StarUI.panel.hidePopup();"/>
       </hbox>
     </panel>
 
