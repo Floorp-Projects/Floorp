@@ -1440,16 +1440,6 @@ function BrowserHandleShiftBackspace()
   }
 }
 
-function BrowserBackMenu(event)
-{
-  return FillHistoryMenu(event.target, "back");
-}
-
-function BrowserForwardMenu(event)
-{
-  return FillHistoryMenu(event.target, "forward");
-}
-
 function BrowserStop()
 {
   try {
@@ -2925,46 +2915,58 @@ const BrowserSearch = {
   }
 }
 
-function FillHistoryMenu(aParent, aMenu)
-  {
-    // Remove old entries if any
-    deleteHistoryItems(aParent);
-
-    var webNav = getWebNavigation();
-    var sessionHistory = webNav.sessionHistory;
-
-    var count = sessionHistory.count;
-    var index = sessionHistory.index;
-    var end;
-    var j;
-    var entry;
-
-    switch (aMenu)
-      {
-        case "back":
-          end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
-          if ((index - 1) < end) return false;
-          for (j = index - 1; j >= end; j--)
-            {
-              entry = sessionHistory.getEntryAtIndex(j, false);
-              if (entry)
-                createMenuItem(aParent, j, entry.title);
-            }
-          break;
-        case "forward":
-          end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count - 1;
-          if ((index + 1) > end) return false;
-          for (j = index + 1; j <= end; j++)
-            {
-              entry = sessionHistory.getEntryAtIndex(j, false);
-              if (entry)
-                createMenuItem(aParent, j, entry.title);
-            }
-          break;
-      }
-
-    return true;
+function FillHistoryMenu(aParent) {
+  // Remove old entries if any
+  var children = aParent.childNodes;
+  for (var i = children.length - 1; i >= 0; --i) {
+    if (children[i].hasAttribute("index"))
+      aParent.removeChild(children[i]);
   }
+
+  var webNav = getWebNavigation();
+  var sessionHistory = webNav.sessionHistory;
+  var bundle_browser = document.getElementById("bundle_browser");
+
+  var count = sessionHistory.count;
+  var index = sessionHistory.index;
+  var end;
+
+  if (count <= 1) // don't display the popup for a single item
+    return false;
+
+  var half_length = Math.floor(MAX_HISTORY_MENU_ITEMS / 2);
+  var start = Math.max(index - half_length, 0);
+  end = Math.min(start == 0 ? MAX_HISTORY_MENU_ITEMS : index + half_length + 1, count);
+  if (end == count)
+    start = Math.max(count - MAX_HISTORY_MENU_ITEMS, 0);
+
+  var tooltipBack = bundle_browser.getString("tabHistory.goBack");
+  var tooltipCurrent = bundle_browser.getString("tabHistory.current");
+  var tooltipForward = bundle_browser.getString("tabHistory.goForward");
+
+  for (var j = end - 1; j >= start; j--) {
+    let item = document.createElement("menuitem");
+    let entry = sessionHistory.getEntryAtIndex(j, false);
+
+    item.setAttribute("label", entry.title || entry.URI.spec);
+    item.setAttribute("index", j);
+    if (j < index) {
+      item.className = "unified-nav-back";
+      item.setAttribute("tooltiptext", tooltipBack);
+    } else if (j == index) {
+      item.setAttribute("type", "radio");
+      item.setAttribute("checked", "true");
+      item.className = "unified-nav-current";
+      item.setAttribute("tooltiptext", tooltipCurrent);
+    } else {
+      item.className = "unified-nav-forward";
+      item.setAttribute("tooltiptext", tooltipForward);
+    }
+
+    aParent.appendChild(item);
+  }
+  return true;
+}
 
 function addToUrlbarHistory(aUrlToAdd)
 {
@@ -2980,25 +2982,6 @@ function addToUrlbarHistory(aUrlToAdd)
    }
    catch(ex) {
    }
-}
-
-function createMenuItem( aParent, aIndex, aLabel)
-  {
-    var menuitem = document.createElement( "menuitem" );
-    menuitem.setAttribute( "label", aLabel );
-    menuitem.setAttribute( "index", aIndex );
-    aParent.appendChild( menuitem );
-  }
-
-function deleteHistoryItems(aParent)
-{
-  var children = aParent.childNodes;
-  for (var i = children.length - 1; i >= 0; --i)
-    {
-      var index = children[i].getAttribute("index");
-      if (index)
-        aParent.removeChild(children[i]);
-    }
 }
 
 function toJavaScriptConsole()
@@ -3123,8 +3106,14 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     gIdentityHandler._cacheElements();
     window.XULBrowserWindow.init();
 
+    var backForwardDropmarker = document.getElementById("back-forward-dropmarker");
+    if (backForwardDropmarker)
+      backForwardDropmarker.disabled =
+        document.getElementById('Browser:Back').hasAttribute('disabled') &&
+        document.getElementById('Browser:Forward').hasAttribute('disabled');
+
 #ifndef XP_MACOSX
-  updateEditUIVisibility();
+    updateEditUIVisibility();
 #endif
   }
 

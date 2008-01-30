@@ -87,16 +87,10 @@
 #include browser-sets.inc
 
   <popupset id="mainPopupSet">
-    <popup id="backMenu" 
-           position="after_start" 
-           onpopupshowing="return BrowserBackMenu(event);"
-           oncommand="gotoHistoryIndex(event);"
-           onclick="checkForMiddleClick(this, event);"/>
-    <popup id="forwardMenu"
-           position="after_start"
-           onpopupshowing="return BrowserForwardMenu(event);"
-           oncommand="gotoHistoryIndex(event);"
-           onclick="checkForMiddleClick(this, event);"/>
+    <menupopup id="backForwardMenu"
+               onpopupshowing="return FillHistoryMenu(event.target);"
+               oncommand="gotoHistoryIndex(event);"
+               onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
     <!-- for search and content formfill/pw manager -->
@@ -232,33 +226,37 @@
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
-      <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     chromedir="&locale.dir;"
-                     label="&backCmd.label;"
-                     oncommand="BrowserBack(event)"
-                     onclick="checkForMiddleClick(this, event);"
-                     context="backMenu"
-                     tooltiptext="&backButton.tooltip;">
-        <observes element="Browser:Back" attribute="disabled"/>
-        <menupopup context=""
-                   onpopupshowing="BrowserBackMenu(event);"
-                   oncommand="gotoHistoryIndex(event); event.stopPropagation();"
-                   onclick="checkForMiddleClick(this, event);"/>
-      </toolbarbutton>
 
-      <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     chromedir="&locale.dir;"
-                     label="&forwardCmd.label;"
-                     oncommand="BrowserForward(event)"
-                     onclick="checkForMiddleClick(this, event);"
-                     context="forwardMenu"
-                     tooltiptext="&forwardButton.tooltip;">
-        <observes element="Browser:Forward" attribute="disabled"/>
-        <menupopup context=""
-                   onpopupshowing="BrowserForwardMenu(event);"
-                   oncommand="gotoHistoryIndex(event); event.stopPropagation()"
-                   onclick="checkForMiddleClick(this, event);"/>
-      </toolbarbutton>
+      <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
+                   context="backForwardMenu"
+                   onbroadcast="document.getElementById('back-forward-dropmarker').disabled =
+                                  document.getElementById('Browser:Back').hasAttribute('disabled') &amp;&amp;
+                                  document.getElementById('Browser:Forward').hasAttribute('disabled');">
+        <toolbarbutton id="back-button" class="toolbarbutton-1"
+                       chromedir="&locale.dir;"
+                       label="&backCmd.label;"
+                       oncommand="BrowserBack(event)"
+                       onclick="checkForMiddleClick(this, event);"
+                       tooltiptext="&backButton.tooltip;">
+          <observes element="Browser:Back" attribute="disabled"/>
+        </toolbarbutton>
+        <toolbarbutton id="forward-button" class="toolbarbutton-1"
+                       chromedir="&locale.dir;"
+                       label="&forwardCmd.label;"
+                       oncommand="BrowserForward(event)"
+                       onclick="checkForMiddleClick(this, event);"
+                       tooltiptext="&forwardButton.tooltip;">
+          <observes element="Browser:Forward" attribute="disabled"/>
+        </toolbarbutton>
+        <toolbarbutton id="back-forward-dropmarker" type="menu" chromedir="&locale.dir;"
+                       disabled="true">
+          <menupopup context=""
+                     position="after_start"
+                     onpopupshowing="return FillHistoryMenu(event.target);"
+                     oncommand="gotoHistoryIndex(event);"
+                     onclick="checkForMiddleClick(this, event);"/>
+        </toolbarbutton>
+      </toolbaritem>
 
       <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&reloadCmd.label;"
@@ -430,9 +428,9 @@
              fullscreentoolbar="true" mode="icons"
              customizable="true"
 #ifdef XP_MACOSX
-             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,splitter,search-container,throbber-box"
+             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,splitter,search-container,throbber-box"
 #else
-             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,splitter,search-container,fullscreenflex,window-controls"
+             defaultset="unified-back-forward-button,reload-button,stop-button,home-button,urlbar-container,splitter,search-container,fullscreenflex,window-controls"
 #endif
              context="toolbar-context-menu">
 #ifndef XP_MACOSX
