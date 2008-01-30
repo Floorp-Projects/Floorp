@@ -99,7 +99,10 @@
     <!-- for url bar autocomplete -->
     <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
-    <panel id="editBookmarkPanel" orient="vertical" hidden="true"
+    <panel id="editBookmarkPanel"
+           orient="vertical"
+           ignorekeys="true"
+           hidden="true"
            onpopupshown="StarUI.panelShown(event);"
            label="&bookmarkPageCmd2.label;">
       <hbox flex="1" align="top">
