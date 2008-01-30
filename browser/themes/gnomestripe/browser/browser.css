@@ -1035,6 +1035,25 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   list-style-image: url("chrome://browser/skin/places/pageStarred.png");
 }
 
+/* Bookmarking panel */
+#editBookmarkPanel {
+  padding: 4px;
+}
+
+#editBookmarkPanelStarIcon {
+  list-style-image: url("chrome://browser/skin/places/starred48.png");
+  width: 48px;
+  height: 48px;
+}
+
+#editBookmarkPanelStarIcon[unstarred] {
+  list-style-image: url("chrome://browser/skin/places/unstarred48.png");
+}
+
+#editBookmarkPanelTitle {
+  font-size: 130%;
+}
+
 /* Content area */
 #sidebar {
   background-color: Window;

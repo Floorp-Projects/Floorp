@@ -152,7 +152,7 @@ var PlacesCommandHook = {
   },
 
   editBookmarkPanelShown:
-  function PCH__doShowEditBookmarkPanel() {
+  function PCH_editBookmarkPanelShown() {
     var namePicker = document.getElementById("editBMPanel_namePicker");
     namePicker.focus();
     namePicker.editor.selectAll();

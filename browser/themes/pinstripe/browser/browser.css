@@ -785,6 +785,26 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://browser/skin/places/pageStarred.png");
 }
 
+/* BOOKMARKING PANEL */
+#editBookmarkPanel {
+  padding: 4px;
+}
+
+#editBookmarkPanelStarIcon {
+  list-style-image: url("chrome://browser/skin/places/starred48.png");
+  width: 48px;
+  height: 48px;
+}
+
+#editBookmarkPanelStarIcon[unstarred] {
+  list-style-image: url("chrome://browser/skin/places/unstarred48.png");
+}
+
+#editBookmarkPanelTitle {
+  font-size: 130%;
+}
+
+
 /* ----- SIDEBAR ELEMENTS ----- */
 
 sidebarheader { 

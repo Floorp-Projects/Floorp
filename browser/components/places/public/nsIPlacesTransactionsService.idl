@@ -52,7 +52,7 @@ interface nsITransaction;
  * the global scope of a js window.
  */
 
-[scriptable, uuid(310f22ff-35e3-44b2-8593-08a119933f7e)]
+[scriptable, uuid(d91e4575-14cf-497d-b497-bd47b40c50e3)]
 interface nsIPlacesTransactionsService : nsITransactionManager
 {
   /**
@@ -321,4 +321,30 @@ interface nsIPlacesTransactionsService : nsITransactionManager
    */
   nsITransaction sortFolderByName(in long long aFolderId,
                                   in long long aFolderIndex);
+
+  /**
+   * Transaction for tagging a URL with the given set of tags. Current tags set
+   * for the URL persist. It's the caller's job to check whether or not aURI
+   * was already tagged by any of the tags in aTags, undoing this tags
+   * transaction removes them all from aURL!
+   *
+   * @param aURI
+   *        the URL to tag.
+   * @param aTags
+   *        Array of tags to set for the given URL.
+   */
+  nsITransaction tagURI(in nsIURI aURI, in nsIVariant aTags);
+
+  /**
+   * Transaction for removing tags from a URL. It's the caller's job to check
+   * whether or not aURI isn't tagged by any of the tags in aTags, undoing this
+   * tags transaction adds them all to aURL!
+   *
+   * @param aURI
+   *        the URL to un-tag.
+   * @param aTags
+   *        Array of tags to unset. pass null to remove all tags from the given
+   *        url.
+   */
+  nsITransaction untagURI(in nsIURI aURI, in nsIVariant aTags);
 };
