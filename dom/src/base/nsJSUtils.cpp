@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -60,7 +61,7 @@
 
 JSBool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
-                              PRUint32 *aLineno)
+                              PRUint32* aLineno, JSPrincipals* aPrincipals)
 {
   // Get the current filename and line number
   JSStackFrame* frame = nsnull;
@@ -74,6 +75,20 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
   } while (frame && !script);
 
   if (script) {
+    // If aPrincipals is non-null then our caller is asking us to ensure
+    // that the filename we return does not have elevated privileges.
+    if (aPrincipals) {
+      JSPrincipals* scriptPrins = JS_GetScriptPrincipals(aContext, script);
+
+      // Return the weaker of the two principals if they differ.
+      if (scriptPrins != aPrincipals &&
+          scriptPrins->subsume(scriptPrins, aPrincipals)) {
+        *aFilename = aPrincipals->codebase;
+        *aLineno = 0;
+        return JS_TRUE;
+      }
+    }
+
     const char* filename = ::JS_GetScriptFilename(aContext, script);
 
     if (filename) {
