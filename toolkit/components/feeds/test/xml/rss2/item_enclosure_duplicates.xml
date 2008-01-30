@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: feed with duplicate enclosures on a single item
+Expect: ((feed.type == 4) && (feed.enclosureCount == 1));
+
+-->
+<rss xmlns:media="http://search.yahoo.com/mrss" version="2.0" >
+<channel>
+
+<item>
+<enclosure length="24986239" type="video/mpeg" url="http://dallas.example.com/joebob_050689.mpeg" /> 
+<media:content fileSize="24986239" type="video/mpeg" url="http://dallas.example.com/joebob_050689.mpeg" /> 
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>test audio</title>
+
+<category domain="foo">bar</category>
+
+<description>Listen to the words that are coming out of my mouth.</description>
+</item>
+
+</channel>
+</rss>
