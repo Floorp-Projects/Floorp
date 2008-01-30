@@ -44,7 +44,32 @@
 
 #include "gfxTypes.h"
 
+#define GFX_UINT32_FROM_BPTR(pbptr,i) (((PRUint32*)(pbptr))[i])
+
+#if defined(IS_BIG_ENDIAN)
+  #define GFX_NTOHL(x) (x)
+  #define GFX_HAVE_CHEAP_NTOHL
+#elif defined(_WIN32)
+  #if (_MSC_VER >= 1300) // also excludes MinGW
+    #include <stdlib.h>
+    #pragma intrinsic(_byteswap_ulong)
+    #define GFX_NTOHL(x) _byteswap_ulong(x)
+    #define GFX_HAVE_CHEAP_NTOHL
+  #else
+    // A reasonably fast generic little-endian implementation.
+    #define GFX_NTOHL(x) \
+         ( (PR_ROTATE_RIGHT32((x),8) & 0xFF00FF00) | \
+           (PR_ROTATE_LEFT32((x),8)  & 0x00FF00FF) )
+  #endif
+#else
+  #include "prio.h" // for ntohl
+  #define GFX_NTOHL(x) ntohl(x)
+  #define GFX_HAVE_CHEAP_NTOHL
+#endif
+
 /**
+ * GFX_0XFF_PPIXEL_FROM_BPTR(x)
+ *
  * Avoid tortured construction of 32-bit ARGB pixel from 3 individual bytes
  *   of memory plus constant 0xFF.  RGB bytes are already contiguous!
  * Equivalent to: GFX_PACKED_PIXEL(0xff,r,g,b)
@@ -52,27 +77,41 @@
  * Attempt to use fast byte-swapping instruction(s), e.g. bswap on x86, in
  *   preference to a sequence of shift/or operations.
  */
-#if defined(_WIN32)
-  #if defined(IS_BIG_ENDIAN)
-    #define GFX_0XFF_PPIXEL_FROM_BPTR(pbptr) \
-         ( (*((PRUint32 *)(pbptr)) >> 8) | (0xFF << 24) )
-  #elif (_MSC_VER >= 1300) // also excludes MinGW
-    #include <stdlib.h>
-    #pragma intrinsic(_byteswap_ulong)
-    #define GFX_0XFF_PPIXEL_FROM_BPTR(pbptr) \
-         ( (_byteswap_ulong(*((PRUint32 *)(pbptr))) >> 8) | (0xFF << 24) )
-  #else
-    // A reasonably fast generic implementation.
-    #define GFX_BYTESWAP24FF(x) \
-         ( ((((x) << 16) | ((x) >> 16)) | 0xFF00FF00) & ((x) | 0xFFFF00FF) )
-    #define GFX_0XFF_PPIXEL_FROM_BPTR(pbptr) \
-         ( GFX_BYTESWAP24FF(*((PRUint32 *)(pbptr))) )
-    #endif
+#if defined(GFX_HAVE_CHEAP_NTOHL)
+  #define GFX_0XFF_PPIXEL_FROM_UINT32(x) \
+       ( (GFX_NTOHL(x) >> 8) | (0xFF << 24) )
 #else
-  #include "prio.h" // for ntohl
-  #define GFX_0XFF_PPIXEL_FROM_BPTR(pbptr) \
-       ( (ntohl(*((PRUint32 *)(pbptr))) >> 8) | (0xFF << 24) )
+  // A reasonably fast generic little-endian implementation.
+  #define GFX_0XFF_PPIXEL_FROM_UINT32(x) \
+       ( (PR_ROTATE_LEFT32((x),16) | 0xFF00FF00) & ((x) | 0xFFFF00FF) )
 #endif
+
+#define GFX_0XFF_PPIXEL_FROM_BPTR(x) \
+     ( GFX_0XFF_PPIXEL_FROM_UINT32(GFX_UINT32_FROM_BPTR((x),0)) )
+
+/**
+ * GFX_BLOCK_RGB_TO_FRGB(from,to)
+ *   sizeof(*from) == sizeof(char)
+ *   sizeof(*to)   == sizeof(PRUint32)
+ *
+ * Copy 4 pixels at a time, reading blocks of 12 bytes (RGB x4)
+ *   and writing blocks of 16 bytes (FRGB x4)
+ */
+#define GFX_BLOCK_RGB_TO_FRGB(from,to) \
+  PR_BEGIN_MACRO \
+    PRUint32 m0 = GFX_UINT32_FROM_BPTR(from,0), \
+             m1 = GFX_UINT32_FROM_BPTR(from,1), \
+             m2 = GFX_UINT32_FROM_BPTR(from,2), \
+             rgbr = GFX_NTOHL(m0), \
+             gbrg = GFX_NTOHL(m1), \
+             brgb = GFX_NTOHL(m2), \
+             p0, p1, p2, p3; \
+    p0 = 0xFF000000 | ((rgbr) >>  8); \
+    p1 = 0xFF000000 | ((rgbr) << 16) | ((gbrg) >> 16); \
+    p2 = 0xFF000000 | ((gbrg) <<  8) | ((brgb) >> 24); \
+    p3 = 0xFF000000 | (brgb); \
+    to[0] = p0; to[1] = p1; to[2] = p2; to[3] = p3; \
+  PR_END_MACRO
 
 /**
  * Fast approximate division by 255. It has the property that
