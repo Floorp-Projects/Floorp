@@ -2379,10 +2379,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     if (callback) {
         JSBool ok;
 
-        if (gckind & GC_LOCK_HELD)
+        if (gckind != GC_LAST_DITCH)
             JS_UNLOCK_GC(rt);
         ok = callback(cx, JSGC_BEGIN);
-        if (gckind & GC_LOCK_HELD)
+        if (gckind != GC_LAST_DITCH)
             JS_LOCK_GC(rt);
         if (!ok && gckind != GC_LAST_CONTEXT)
             return;
