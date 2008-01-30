@@ -1307,7 +1307,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
 static jsbytecode *
 DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
 {
-    ptrdiff_t head, todo;
+    ptrdiff_t head;
     JSContext *cx;
     JSPrinter *jp;
     JSOp op, saveop;
@@ -1341,6 +1341,10 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
     lasti = -1;
 
     while (pc < endpc) {
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+        ptrdiff_t nameoff = -1;
+#endif
+
         LOAD_OP_DATA(pc);
         saveop = op;
 
@@ -1393,6 +1397,9 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
             *OFF2STR(&ss->sprinter, head) = '{';
             GET_ATOM_FROM_BYTECODE(jp->script, pc, 0, atom);
             str = ATOM_TO_STRING(atom);
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+            nameoff = ss->sprinter.offset;
+#endif
             if (!QuoteString(&ss->sprinter, str,
                              js_IsIdentifier(str) ? 0 : (jschar)'\'')) {
                 return NULL;
@@ -1417,6 +1424,37 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
         pc = DecompileDestructuringLHS(ss, pc, endpc, &hole);
         if (!pc)
             return NULL;
+
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+        if (nameoff >= 0) {
+            ptrdiff_t offset, initlen;
+
+            offset = ss->sprinter.offset;
+            LOCAL_ASSERT(*OFF2STR(&ss->sprinter, offset) == '\0');
+            initlen = offset - nameoff;
+            LOCAL_ASSERT(initlen >= 4);
+
+            /* Early check to rule out odd "name: lval" length. */
+            if (((size_t)initlen & 1) == 0) {
+                size_t namelen;
+                const char *name;
+
+                /*
+                 * Even "name: lval" string length: check for "x: x" and the
+                 * like, and apply the shorthand if we can.
+                 */
+                namelen = (size_t)(initlen - 2) >> 1;
+                name = OFF2STR(&ss->sprinter, nameoff);
+                if (!strncmp(name + namelen, ": ", 2) &&
+                    !strncmp(name, name + namelen + 2, namelen)) {
+                    offset -= namelen + 2;
+                    *OFF2STR(&ss->sprinter, offset) = '\0';
+                    ss->sprinter.offset = offset;
+                }
+            }
+        }
+#endif
+
         if (pc == endpc || *pc != JSOP_DUP)
             break;
 
@@ -1437,8 +1475,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc)
 
 out:
     lval = OFF2STR(&ss->sprinter, head);
-    todo = SprintPut(&ss->sprinter, (*lval == '[') ? "]" : "}", 1);
-    if (todo < 0)
+    if (SprintPut(&ss->sprinter, (*lval == '[') ? "]" : "}", 1) < 0)
         return NULL;
     return pc;
 }
@@ -3504,7 +3541,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 atom = GetSlotAtom(ss->printer, op == JSOP_GETARGPROP,
                                    GET_UINT16(pc));
                 LOCAL_ASSERT(atom);
-                JS_ASSERT(ATOM_IS_STRING(atom));
+                LOCAL_ASSERT(ATOM_IS_STRING(atom));
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!lval || !PushOff(ss, STR2OFF(&ss->sprinter, lval), op))
                     return NULL;
@@ -3669,7 +3706,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_DOUBLE:
                 LOAD_ATOM(0);
                 val = ATOM_KEY(atom);
-                JS_ASSERT(JSVAL_IS_DOUBLE(val));
+                LOCAL_ASSERT(JSVAL_IS_DOUBLE(val));
                 todo = SprintDoubleValue(&ss->sprinter, val, &saveop);
                 break;
 
@@ -3820,7 +3857,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_OBJECT:
                 LOAD_OBJECT(0);
-                JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
+                LOCAL_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
                 goto do_regexp;
 
               case JSOP_REGEXP:
@@ -4104,7 +4141,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_NEWINIT:
               {
                 i = GET_INT8(pc);
-                JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
+                LOCAL_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
                 todo = ss->sprinter.offset;
 #if JS_HAS_SHARP_VARS
