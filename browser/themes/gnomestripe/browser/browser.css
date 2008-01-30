@@ -843,6 +843,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   margin: 0;
 }
 
+#identity-icon-label[value=""] {
+    display: none;
+}
+
 #identity-box.verifiedIdentity > hbox {
   background-color: rgba(0, 255, 0, 0.25);
 }
