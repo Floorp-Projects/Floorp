@@ -314,6 +314,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
 	$(INSTALL) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
 	$(INSTALL) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
 endif
 
@@ -341,6 +342,7 @@ ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	cp $(srcdir)/default16.png   $(DIST)/branding/default16.png
+	cp $(srcdir)/default32.png   $(DIST)/branding/default32.png
 	cp $(srcdir)/default48.png   $(DIST)/branding/default48.png
 endif
 ifeq ($(OS_ARCH),OS2)
