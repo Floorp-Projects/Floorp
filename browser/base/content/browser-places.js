@@ -168,21 +168,23 @@ var StarUI = {
     this._element("editBookmarkPanelTitle").value =
       bundle.getString("editBookmarkPanel.pageBookmarkedTitle");
 
-    // No description; show the Done, Cancel, Remove buttons;
-    // hid the Edit, Undo buttons
+    // No description; show the Done, Cancel;
+    // hide the Edit, Undo buttons
     this._element("editBookmarkPanelDescription").textContent = "";
     this._element("editBookmarkPanelBottomButtons").hidden = false;
     this._element("editBookmarkPanelContent").hidden = false;
     this._element("editBookmarkPanelEditButton").hidden = true;
-    this._element("editBookmarkPanelRemoveButton").hidden = false;
     this._element("editBookmarkPanelUndoRemoveButton").hidden = true;
+
+    // The remove button is shown only if we're not already batching, i.e.
+    // if the cancel button/ESC does not remove the bookmark.
+    this._element("editBookmarkPanelRemoveButton").hidden = this._batching;
 
     // unset the unstarred state, if set
     this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
 
     this._itemId = aItemId !== undefined ? aItemId : this._itemId;
-    this._batching = true;
-    PlacesUtils.ptm.beginBatch();
+    this.beginBatch();
 
     // XXXmano hack: We push a no-op transaction on the stack so it's always
     // safe for the Cancel button to call undoTransaction after endBatch.
@@ -201,6 +203,11 @@ var StarUI = {
           .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
       this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
     }
+    else {
+      var namePicker = this._element("editBMPanel_namePicker");
+      namePicker.focus();
+      namePicker.editor.selectAll();
+    }
 
     gEditItemOverlay.initPanel(this._itemId,
                                { hiddenRows: ["description", "location",
@@ -209,11 +216,14 @@ var StarUI = {
 
   panelShown:
   function SU_panelShown(aEvent) {
-    if (aEvent.target == this.panel &&
-        !this._element("editBookmarkPanelContent").hidden) {
-      var namePicker = this._element("editBMPanel_namePicker");
-      namePicker.focus();
-      namePicker.editor.selectAll();
+    if (aEvent.target == this.panel) {
+      if (!this._element("editBookmarkPanelContent").hidden) {
+        var namePicker = this._element("editBMPanel_namePicker");
+        namePicker.focus();
+        namePicker.editor.selectAll();
+      }
+      else
+        this.panel.focus();
     }
   },
 
@@ -254,6 +264,8 @@ var StarUI = {
           .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
       this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
     }
+    else
+      this.panel.focus();
   },
 
   editButtonCommand: function SU_editButtonCommand() {
@@ -261,8 +273,7 @@ var StarUI = {
   },
 
   cancelButtonOnCommand: function SU_cancelButtonOnCommand() {
-    PlacesUtils.ptm.endBatch();
-    this._batching = false;
+    this.endBatch();
     PlacesUtils.ptm.undoTransaction();
     this.panel.hidePopup();
   },
@@ -288,6 +299,7 @@ var StarUI = {
       this._element("editBookmarkPanelUndoRemoveButton").hidden = false;
       this._element("editBookmarkPanelRemoveButton").hidden = true;
       this._element("editBookmarkPanelStarIcon").setAttribute("unstarred", "true");
+      this.panel.focus();
     }
 
     // remove the bookmark
@@ -309,11 +321,24 @@ var StarUI = {
   undoRemoveBookmarkCommand: function SU_undoRemoveBookmarkCommand() {
     // restore the bookmark by undoing the last transaction and go back
     // to the edit state
-    PlacesUtils.ptm.endBatch();
-    this._batching = false;
+    this.endBatch();
     PlacesUtils.ptm.undoTransaction();
     this._itemId = PlacesUtils.getMostRecentBookmarkForURI(this._uri);
     this.showEditBookmarkPopup();
+  },
+
+  beginBatch: function SU_beginBatch() {
+    if (!this._batching) {
+      PlacesUtils.ptm.beginBatch();
+      this._batching = true;
+    }
+  },
+
+  endBatch: function SU_endBatch() {
+    if (this._batching) {
+      PlacesUtils.ptm.endBatch();
+      this._batching = false;
+    }
   }
 }
 
@@ -348,6 +373,13 @@ var PlacesCommandHook = {
         description = PlacesUtils.getDescriptionFromDocument(webNav.document);
       }
       catch (e) { }
+
+      if (aShowEditUI) {
+        // If we bookmark the page here (i.e. page was not "starred" already)
+        // but open right into the "edit" state, start batching here, so
+        // "Cancel" in that state removes the bookmark.
+        StarUI.beginBatch();
+      }
 
       var parent = aParent != undefined ?
                    aParent : PlacesUtils.unfiledBookmarksFolderId;
@@ -398,9 +430,10 @@ var PlacesCommandHook = {
       var txn = PlacesUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
       PlacesUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
+      StarUI.beginBatch();
     }
 
-    this.showEditBookmarkPopup(itemId, getBrowser(), "overlap");
+    StarUI.showEditBookmarkPopup(itemId, getBrowser(), "overlap");
   },
 
   /**
