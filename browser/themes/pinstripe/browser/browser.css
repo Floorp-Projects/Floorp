@@ -347,7 +347,8 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
   -moz-image-region: rect(23px, 36px, 46px, 0px) !important;
 }
 #back-button:hover:active,
-#back-button[buttondown="true"] {
+#back-button[buttondown="true"],
+#back-button[open="true"]{
   -moz-image-region: rect(46px, 36px, 69px, 0px);
 }
 
@@ -361,7 +362,8 @@ toolbar[mode="icons"] #forward-button .toolbarbutton-text-box,
   -moz-image-region: rect(23px, 72px, 46px, 36px) !important;
 }
 #forward-button:hover:active,
-#forward-button[buttondown="true"] {
+#forward-button[buttondown="true"],
+#forward-button[open="true"] {
   -moz-image-region: rect(46px, 72px, 69px, 36px);
 }
 
@@ -379,7 +381,8 @@ toolbar[mode="icons"] #back-button[disabled="true"] {
  -moz-image-region: rect(23px, 617px, 46px, 584px) !important;
 }
 
-toolbar[mode="icons"] #back-button:hover:active:not([disabled]) {
+toolbar[mode="icons"] #back-button:hover:active:not([disabled]),
+toolbar[mode="icons"] #back-button[open="true"] {
   -moz-image-region: rect(46px, 617px, 69px, 584px) !important;
 }
 
@@ -395,7 +398,8 @@ toolbar[mode="icons"] #forward-button {
 toolbar[mode="icons"] #forward-button[disabled="true"] {
  -moz-image-region: rect(23px, 651px, 46px, 617px) !important;
 }
-toolbar[mode="icons"] #forward-button:hover:active:not([disabled]) {
+toolbar[mode="icons"] #forward-button:hover:active:not([disabled]),
+toolbar[mode="icons"] #forward-button[open="true"] {
   -moz-image-region: rect(46px, 651px, 69px, 617px) !important;
 }
 
@@ -1479,4 +1483,9 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #download-monitor image {
   height: 16px;
   width: 16px;
+}
+
+/* Hide the dropmarker until it's styled */
+#back-forward-dropmarker {
+  display: none;
 }
