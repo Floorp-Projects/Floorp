@@ -304,6 +304,8 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
 
 vbox[typeName="status"][type="search-failure"],
 vbox[typeName="status"][type="recommended-failure"],
+vbox[typeName="status"][type="message-norecommended"],
+vbox[typeName="status"][type="message-nosearchresults"],
 vbox[typeName="status"][type="retrieve-search"],
 vbox[typeName="status"][type="retrieve-recommended"] {
   margin-top: 2em;

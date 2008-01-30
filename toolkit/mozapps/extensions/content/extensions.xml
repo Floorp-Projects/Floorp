@@ -557,7 +557,7 @@
         <xul:image class="addonFailure"/>
         <xul:label value="&searchFailed.label;"/>
       </xul:hbox>
-      <xul:button command="cmd_resetSearch" label="&cancelSearch.button;"/>
+      <xul:button command="cmd_resetSearch" label="&searchFailed.button;"/>
     </content>
   </binding>
 
@@ -573,6 +573,22 @@
   <binding id="status-header-recommended">
     <content>
       <xul:label value="&recommendedHeader.label;"/>
+    </content>
+  </binding>
+
+  <binding id="status-message-nosearchresults">
+    <content>
+      <xul:hbox align="center" pack="center">
+        <xul:label value="&noSearchResults.label;"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="status-message-norecommended">
+    <content>
+      <xul:hbox align="center" pack="center">
+        <xul:label value="&noRecommendedResults.label;"/>
+      </xul:hbox>
     </content>
   </binding>
 
@@ -606,8 +622,8 @@
 
   <binding id="status-footer-search-empty">
     <content align="center">
-      <xul:label value="&searchEmpty.label;"/>
-      <xul:button command="cmd_resetSearch" label="&searchEmpty.button;"/>
+      <xul:label value="&emptySearch.label;"/>
+      <xul:button command="cmd_resetSearch" label="&emptySearch.button;"/>
     </content>
   </binding>
 
