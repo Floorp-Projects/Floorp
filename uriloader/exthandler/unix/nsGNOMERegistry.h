@@ -43,8 +43,6 @@ class nsMIMEInfoBase;
 class nsGNOMERegistry
 {
  public:
-  static void Startup();
-
   static PRBool HandlerExists(const char *aProtocolScheme);
 
   static nsresult LoadURL(nsIURI *aURL);
@@ -52,7 +50,7 @@ class nsGNOMERegistry
   static void GetAppDescForScheme(const nsACString& aScheme,
                                   nsAString& aDesc);
 
-  static already_AddRefed<nsMIMEInfoBase> GetFromExtension(const char *aFileExt);
+  static already_AddRefed<nsMIMEInfoBase> GetFromExtension(const nsACString& aFileExt);
 
-  static already_AddRefed<nsMIMEInfoBase> GetFromType(const char *aMIMEType);
+  static already_AddRefed<nsMIMEInfoBase> GetFromType(const nsACString& aMIMEType);
 };
