@@ -58,10 +58,6 @@
 class nsTextPaintStyle;
 class PropertyProvider;
 
-// This state bit is set on frames that have some non-collapsed characters after
-// reflow
-#define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x02000000
-
 class nsTextFrame : public nsFrame {
 public:
   friend class nsContinuingTextFrame;
@@ -192,14 +188,6 @@ public:
    * line.
    */
   PRBool IsAtEndOfLine() const;
-  
-  /**
-   * Call this only after reflow the frame. Returns true if non-collapsed
-   * characters are present.
-   */
-  PRBool HasNoncollapsedCharacters() const {
-    return (GetStateBits() & TEXT_HAS_NONCOLLAPSED_CHARACTERS) != 0;
-  }
   
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);

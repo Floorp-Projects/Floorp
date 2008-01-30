@@ -145,10 +145,7 @@
 
 #define TEXT_REFLOW_FLAGS    \
   (TEXT_FIRST_LETTER|TEXT_START_OF_LINE|TEXT_END_OF_LINE|TEXT_HYPHEN_BREAK| \
-   TEXT_TRIMMED_TRAILING_WHITESPACE|TEXT_HAS_NONCOLLAPSED_CHARACTERS)
-
-// defined in nsTextFrame.h
-// #define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x02000000
+   TEXT_TRIMMED_TRAILING_WHITESPACE)
 
 // Cache bits for IsEmpty().
 // Set this bit if the textframe is known to be only collapsible whitespace.
@@ -5516,7 +5513,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // frame to accumulate with trimmable width from this frame.)
   if (transformedCharsFit > 0) {
     lineLayout.SetTrimmableWidth(NSToCoordFloor(trimmableWidth));
-    AddStateBits(TEXT_HAS_NONCOLLAPSED_CHARACTERS);
   }
   if (charsFit > 0 && charsFit == length &&
       HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
@@ -5864,7 +5860,7 @@ nsIAtom*
 nsTextFrame::GetType() const
 {
   return nsGkAtoms::textFrame;
-}
+} 
 
 /* virtual */ PRBool
 nsTextFrame::IsEmpty()
