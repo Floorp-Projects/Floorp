@@ -360,22 +360,36 @@ private:
   
   /**
    * Helper method for Resolve()
-   * Truncate a text frame and possibly create a continuation frame with the
-   * remainder of its content.
+   * Truncate a text frame to the end of a single-directional run and possibly
+   * create a continuation frame for the remainder of its content.
    *
    * @param aFrame       the original frame
    * @param aNewFrame    [OUT] the new frame that was created
    * @param aFrameIndex  [IN/OUT] index of aFrame in mLogicalFrames
+   * @param aStart       [IN] the start of the content mapped by aFrame (and 
+   *                          any fluid continuations)
+   * @param aEnd         [IN] the offset of the end of the single-directional
+   *                          text run.
    *
    * If there is already a bidi continuation for this frame in mLogicalFrames,
    * no new frame will be created. On exit aNewFrame will point to the existing
    * bidi continuation and aFrameIndex will contain its index.
+   *
+   * If aFrame has fluid continuations (which can happen when re-resolving
+   * after line breaking) all the frames in the continuation chain except for
+   * the last one will be set to zero length and the last one will be truncated
+   * at aEnd.
+   *
+   * aFrame must always be a first-in-flow.
+   *
    * @see Resolve()
    * @see RemoveBidiContinuation()
    */
   PRBool EnsureBidiContinuation(nsIFrame*       aFrame,
                                 nsIFrame**      aNewFrame,
-                                PRInt32&        aFrameIndex);
+                                PRInt32&        aFrameIndex,
+                                PRInt32         aStart,
+                                PRInt32         aEnd);
 
   /**
    * Helper method for Resolve()

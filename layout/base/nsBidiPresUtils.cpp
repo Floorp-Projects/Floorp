@@ -426,8 +426,9 @@ nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
-          frame->AdjustOffsetsForBidi(contentOffset, contentOffset + runLength);
-          if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex) ) {
+          if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex,
+                                      contentOffset,
+                                      contentOffset + runLength) ) {
             break;
           }
           if (lineNeedsUpdate) {
@@ -1036,10 +1037,14 @@ nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame*  aFrame,
 PRBool
 nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
-                                        PRInt32&        aFrameIndex)
+                                        PRInt32&        aFrameIndex,
+                                        PRInt32         aStart,
+                                        PRInt32         aEnd)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   NS_PRECONDITION(aFrame, "aFrame is null");
+  NS_ASSERTION(!aFrame->GetPrevInFlow(),
+               "Calling EnsureBidiContinuation on non-first-in-flow");
 
   *aNewFrame = nsnull;
   nsBidiLevel embeddingLevel = NS_GET_EMBEDDING_LEVEL(aFrame);
@@ -1062,9 +1067,11 @@ nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
     frame->SetProperty(nsGkAtoms::charType, NS_INT32_TO_PTR(charType));
     frame->AddStateBits(NS_FRAME_IS_BIDI);
     aFrameIndex++;
+    aFrame->AdjustOffsetsForBidi(aStart, aStart);
     aFrame = frame;
   }
   
+  aFrame->AdjustOffsetsForBidi(aStart, aEnd);
   if (!*aNewFrame) {
     mSuccess = CreateBidiContinuation(aFrame, aNewFrame);
     if (NS_FAILED(mSuccess) ) {
