@@ -1169,9 +1169,10 @@ nsContextMenu.prototype = {
                                            -1, title, null, [descAnno]);
       PlacesUtils.ptm.doTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
+      StarUI.beginBatch();
     }
 
-    window.top.PlacesCommandHook.showEditBookmarkPopup(itemId, this.browser, "overlap");
+    window.top.StarUI.showEditBookmarkPopup(itemId, this.browser, "overlap");
   },
 
   savePageAs: function CM_savePageAs() {
