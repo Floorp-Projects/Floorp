@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
 #   Jeff Walden <jwalden+code@mit.edu>
+#   Will Guaraldi <will.guaraldi@pculture.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,6 +58,8 @@ const PCPH_CLASSID = Components.ID("{1c31ed79-accd-4b94-b517-06e0c81999d5}");
 const PCPH_CLASSNAME = "Podcast Protocol Handler";
 
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
+const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
+const TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";
 const TYPE_ANY = "*/*";
 
 const FEEDHANDLER_URI = "about:feeds";
@@ -65,6 +68,68 @@ const PREF_SELECTED_APP = "browser.feeds.handlers.application";
 const PREF_SELECTED_WEB = "browser.feeds.handlers.webservice";
 const PREF_SELECTED_ACTION = "browser.feeds.handler";
 const PREF_SELECTED_READER = "browser.feeds.handler.default";
+
+const PREF_VIDEO_SELECTED_APP = "browser.videoFeeds.handlers.application";
+const PREF_VIDEO_SELECTED_WEB = "browser.videoFeeds.handlers.webservice";
+const PREF_VIDEO_SELECTED_ACTION = "browser.videoFeeds.handler";
+const PREF_VIDEO_SELECTED_READER = "browser.videoFeeds.handler.default";
+
+const PREF_AUDIO_SELECTED_APP = "browser.audioFeeds.handlers.application";
+const PREF_AUDIO_SELECTED_WEB = "browser.audioFeeds.handlers.webservice";
+const PREF_AUDIO_SELECTED_ACTION = "browser.audioFeeds.handler";
+const PREF_AUDIO_SELECTED_READER = "browser.audioFeeds.handler.default";
+
+function getPrefAppForType(t) {
+  switch (t) {
+    case Ci.nsIFeed.TYPE_VIDEO:
+      return PREF_VIDEO_SELECTED_APP;
+
+    case Ci.nsIFeed.TYPE_AUDIO:
+      return PREF_AUDIO_SELECTED_APP;
+
+    default:
+      return PREF_SELECTED_APP;
+  }
+}
+
+function getPrefWebForType(t) {
+  switch (t) {
+    case Ci.nsIFeed.TYPE_VIDEO:
+      return PREF_VIDEO_SELECTED_WEB;
+
+    case Ci.nsIFeed.TYPE_AUDIO:
+      return PREF_AUDIO_SELECTED_WEB;
+
+    default:
+      return PREF_SELECTED_WEB;
+  }
+}
+
+function getPrefActionForType(t) {
+  switch (t) {
+    case Ci.nsIFeed.TYPE_VIDEO:
+      return PREF_VIDEO_SELECTED_ACTION;
+
+    case Ci.nsIFeed.TYPE_AUDIO:
+      return PREF_AUDIO_SELECTED_ACTION;
+
+    default:
+      return PREF_SELECTED_ACTION;
+  }
+}
+
+function getPrefReaderForType(t) {
+  switch (t) {
+    case Ci.nsIFeed.TYPE_VIDEO:
+      return PREF_VIDEO_SELECTED_READER;
+
+    case Ci.nsIFeed.TYPE_AUDIO:
+      return PREF_AUDIO_SELECTED_READER;
+
+    default:
+      return PREF_SELECTED_READER;
+  }
+}
 
 function safeGetCharPref(pref, defaultValue) {
   var prefs =   
@@ -102,7 +167,9 @@ FeedConverter.prototype = {
    */
   canConvert: function FC_canConvert(sourceType, destinationType) {
     // We only support one conversion.
-    return destinationType == TYPE_ANY && sourceType == TYPE_MAYBE_FEED;
+    return destinationType == TYPE_ANY && ((sourceType == TYPE_MAYBE_FEED) ||
+                                           (sourceType == TYPE_MAYBE_VIDEO) ||
+                                           (sourceType == TYPE_MAYBE_AUDIO));
   },
   
   /**
@@ -174,18 +241,23 @@ FeedConverter.prototype = {
           Cc["@mozilla.org/browser/feeds/result-service;1"].
           getService(Ci.nsIFeedResultService);
       if (!this._forcePreviewPage && result.doc) {
-        var handler = safeGetCharPref(PREF_SELECTED_ACTION, "ask");
+        var feed = result.doc.QueryInterface(Ci.nsIFeed);
+        var handler = safeGetCharPref(getPrefActionForType(feed.type), "ask");
+
         if (handler != "ask") {
           if (handler == "reader")
-            handler = safeGetCharPref(PREF_SELECTED_READER, "bookmarks");
+            handler = safeGetCharPref(getPrefReaderForType(feed.type), "bookmarks");
           switch (handler) {
             case "web":
               var wccr = 
                   Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
                   getService(Ci.nsIWebContentConverterService);
-              var feed = result.doc.QueryInterface(Ci.nsIFeed);
-              if (feed.type == Ci.nsIFeed.TYPE_FEED &&
-                  wccr.getAutoHandler(TYPE_MAYBE_FEED)) {
+              if ((feed.type == Ci.nsIFeed.TYPE_FEED &&
+                   wccr.getAutoHandler(TYPE_MAYBE_FEED)) ||
+                  (feed.type == Ci.nsIFeed.TYPE_VIDEO &&
+                   wccr.getAutoHandler(TYPE_MAYBE_VIDEO_FEED)) ||
+                  (feed.type == Ci.nsIFeed.TYPE_AUDIO &&
+                   wccr.getAutoHandler(TYPE_MAYBE_AUDIO_FEED))) {
                 wccr.loadPreferredHandler(this._request);
                 return;
               }
@@ -197,10 +269,9 @@ FeedConverter.prototype = {
             case "bookmarks":
             case "client":
               try {
-                var feed = result.doc.QueryInterface(Ci.nsIFeed);
                 var title = feed.title ? feed.title.plainText() : "";
                 var desc = feed.subtitle ? feed.subtitle.plainText() : "";
-                feedService.addToClientReader(result.uri.spec, title, desc);
+                feedService.addToClientReader(result.uri.spec, title, desc, feed.type);
                 return;
               } catch(ex) { /* fallback to preview mode */ }
           }
@@ -338,25 +409,25 @@ var FeedResultService = {
   _results: { },
   
   /**
-   * See nsIFeedService.idl
+   * See nsIFeedResultService.idl
    */
   forcePreviewPage: false,
   
   /**
-   * See nsIFeedService.idl
+   * See nsIFeedResultService.idl
    */
-  addToClientReader: function FRS_addToClientReader(spec, title, subtitle) {
+  addToClientReader: function FRS_addToClientReader(spec, title, subtitle, feedType) {
     var prefs =   
         Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
 
-    var handler = safeGetCharPref(PREF_SELECTED_ACTION, "bookmarks");
+    var handler = safeGetCharPref(getPrefActionForType(feedType), "bookmarks");
     if (handler == "ask" || handler == "reader")
-      handler = safeGetCharPref(PREF_SELECTED_READER, "bookmarks");
+      handler = safeGetCharPref(getPrefReaderForType(feedType), "bookmarks");
 
     switch (handler) {
     case "client":
-      var clientApp = prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
+      var clientApp = prefs.getComplexValue(getPrefAppForType(feedType), Ci.nsILocalFile);
 
       // For the benefit of applications that might know how to deal with more
       // URLs than just feeds, send feed: URLs in the following format:
@@ -397,7 +468,7 @@ var FeedResultService = {
   },
   
   /**
-   * See nsIFeedService.idl
+   * See nsIFeedResultService.idl
    */
   addFeedResult: function FRS_addFeedResult(feedResult) {
     NS_ASSERT(feedResult.uri != null, "null URI!");
@@ -409,7 +480,7 @@ var FeedResultService = {
   },
   
   /**
-   * See nsIFeedService.idl
+   * See nsIFeedResultService.idl
    */
   getFeedResult: function RFS_getFeedResult(uri) {
     NS_ASSERT(uri != null, "null URI!");
@@ -422,7 +493,7 @@ var FeedResultService = {
   },
   
   /**
-   * See nsIFeedService.idl
+   * See nsIFeedResultService.idl
    */
   removeFeedResult: function FRS_removeFeedResult(uri) {
     NS_ASSERT(uri != null, "null URI!");
@@ -589,7 +660,17 @@ var Module = {
         converterPrefix + TYPE_MAYBE_FEED + "&to=" + TYPE_ANY;
     cr.registerFactoryLocation(FC_CLASSID, FC_CLASSNAME, converterContractID,
                                file, location, type);
-  },
+
+    converterContractID = 
+        converterPrefix + TYPE_MAYBE_VIDEO_FEED + "&to=" + TYPE_ANY;
+    cr.registerFactoryLocation(FC_CLASSID, FC_CLASSNAME, converterContractID,
+                               file, location, type);
+
+    converterContractID = 
+        converterPrefix + TYPE_MAYBE_AUDIO_FEED + "&to=" + TYPE_ANY;
+    cr.registerFactoryLocation(FC_CLASSID, FC_CLASSNAME, converterContractID,
+                               file, location, type);
+    },
   
   unregisterSelf: function M_unregisterSelf(cm, location, type) {
     var cr = cm.QueryInterface(Ci.nsIComponentRegistrar);
