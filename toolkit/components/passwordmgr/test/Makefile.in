@@ -63,6 +63,7 @@ MOCHI_TESTS = \
 		test_bug_360493_1.html \
 		test_bug_360493_2.html \
 		test_bug_391514.html \
+		test_zzz_finish.html \
 		$(NULL)
 
 XPCSHELL_TESTS  = unit
