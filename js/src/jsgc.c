@@ -2326,6 +2326,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
     JSBool keepAtoms;
+    JSGCCallback callback;
     uintN i, type;
     JSTracer trc;
     uint32 thingSize, indexLimit;
@@ -2370,12 +2371,21 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
   restart_after_callback:
     /*
      * Let the API user decide to defer a GC if it wants to (unless this
-     * is the last context).  Invoke the callback regardless.
+     * is the last context).  Invoke the callback regardless. Sample the
+     * callback in case we are freely racing with a JS_SetGCCallback{,RT} on
+     * another thread.
      */
-    if (rt->gcCallback &&
-        !rt->gcCallback(cx, JSGC_BEGIN) &&
-        gckind != GC_LAST_CONTEXT) {
-        return;
+    callback = rt->gcCallback;
+    if (callback) {
+        JSBool ok;
+
+        if (gckind & GC_LOCK_HELD)
+            JS_UNLOCK_GC(rt);
+        ok = callback(cx, JSGC_BEGIN);
+        if (gckind & GC_LOCK_HELD)
+            JS_LOCK_GC(rt);
+        if (!ok && gckind != GC_LAST_CONTEXT)
+            return;
     }
 
     /* Lock out other GC allocator and collector invocations. */
@@ -2770,8 +2780,13 @@ restart:
         JS_UNLOCK_GC(rt);
 #endif
 
-    /* Execute JSGC_END callback outside the lock. */
-    if (rt->gcCallback) {
+    /*
+     * Execute JSGC_END callback outside the lock. Again, sample the callback
+     * pointer in case it changes, since we are outside of the GC vs. requests
+     * interlock mechanism here.
+     */
+    callback = rt->gcCallback;
+    if (callback) {
         JSWeakRoots savedWeakRoots;
         JSTempValueRooter tvr;
 
@@ -2787,7 +2802,7 @@ restart:
             JS_UNLOCK_GC(rt);
         }
 
-        (void) rt->gcCallback(cx, JSGC_END);
+        (void) callback(cx, JSGC_END);
 
         if (gckind == GC_LAST_DITCH) {
             JS_LOCK_GC(rt);
