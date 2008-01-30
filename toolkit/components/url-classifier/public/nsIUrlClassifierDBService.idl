@@ -209,6 +209,9 @@ interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
 {
   // Provide a way to forcibly close the db connection.
   void closeDb();
+
+  // Cache the results of a hash completion.
+  [noscript]void cacheCompletions(in ResultArray entries);
 };
 
 /**

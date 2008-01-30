@@ -385,6 +385,87 @@ function testWrongChunk()
   doTest([update], assertions);
 }
 
+function setupCachedResults(addUrls, part2)
+{
+  var update = buildPhishingUpdate(
+        [
+          { "chunkNum" : 1,
+            "urls" : addUrls
+          }],
+        4);
+
+  var completer = installCompleter('test-phish-simple', [[1, addUrls]], []);
+
+  var assertions = {
+    "tableData" : "test-phish-simple;a:1",
+    // Request the add url.  This should cause the completion to be cached.
+    "urlsExist" : addUrls,
+    // Make sure the completer was actually queried.
+    "completerQueried" : [completer, addUrls]
+  };
+
+  doUpdateTest([update], assertions,
+               function() {
+                 // Give the dbservice a chance to cache the result.
+                 var timer = new Timer(3000, part2);
+               }, updateError);
+}
+
+function testCachedResults()
+{
+  setupCachedResults(["foo.com/a"], function(add) {
+      // This is called after setupCachedResults().  Verify that
+      // checking the url again does not cause a completer request.
+
+      // install a new completer, this one should never be queried.
+      var newCompleter = installCompleter('test-phish-simple', [[1, []]], []);
+
+      var assertions = {
+        "urlsExist" : ["foo.com/a"],
+        "completerQueried" : [newCompleter, []]
+      };
+      checkAssertions(assertions, runNextTest);
+    });
+}
+
+function testCachedResultsWithSub() {
+  setupCachedResults(["foo.com/a"], function() {
+      // install a new completer, this one should never be queried.
+      var newCompleter = installCompleter('test-phish-simple', [[1, []]], []);
+
+      var removeUpdate = buildPhishingUpdate(
+        [ { "chunkNum" : 2,
+            "chunkType" : "s",
+            "urls": ["1:foo.com/a"] }],
+        4);
+
+      var assertions = {
+        "urlsDontExist" : ["foo.com/a"],
+        "completerQueried" : [newCompleter, []]
+      }
+
+      doTest([removeUpdate], assertions);
+    });
+}
+
+function testCachedResultsWithExpire() {
+  setupCachedResults(["foo.com/a"], function() {
+      // install a new completer, this one should never be queried.
+      var newCompleter = installCompleter('test-phish-simple', [[1, []]], []);
+
+      var expireUpdate =
+        "n:1000\n" +
+        "i:test-phish-simple\n" +
+        "ad:1\n";
+
+      var assertions = {
+        "urlsDontExist" : ["foo.com/a"],
+        "completerQueried" : [newCompleter, []]
+      }
+      doTest([expireUpdate], assertions);
+    });
+}
+
 function run_test()
 {
   runTests([
@@ -396,7 +477,10 @@ function run_test()
     testMixedSizesSameDomain,
     testMixedSizesDifferentDomains,
     testMixedSizesNoCompleter,
-    testInvalidHashSize
+    testInvalidHashSize,
+    testCachedResults,
+    testCachedResultsWithSub,
+    testCachedResultsWithExpire,
   ]);
 }
 
