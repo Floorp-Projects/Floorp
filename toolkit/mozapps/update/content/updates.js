@@ -740,7 +740,7 @@ var gUpdatesAvailablePage = {
     gUpdates.setButtons(null, true, "downloadButton_" + severity,
                         false, null, false,
                         null, false, true,
-                        "laterButton", false,
+                        "notNowButton", false,
                         severity == "major" ? "neverButton" : null, false);
     gUpdates.wiz.getButton("next").focus();
   },
@@ -1573,7 +1573,7 @@ var gFinishedPage = {
    */
   onPageShow: function(aDelayRestart) {
     gUpdates.setButtons(null, true, null, true, "restartButton", aDelayRestart,
-                        "laterButton", false, false, null, false, null, false);
+                        "notNowButton", false, false, null, false, null, false);
     if (aDelayRestart)
       setTimeout(this._enableRestartButton, 2000);
     else
@@ -1662,17 +1662,10 @@ var gFinishedPage = {
   },
 
   /**
-   * Called when the wizard is canceled, i.e. when the "Later" button is
+   * Called when the wizard is canceled, i.e. when the "Not Now" button is
    * clicked.
    */
   onWizardCancel: function() {
-    var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                       .getService(Components.interfaces.nsIPromptService);
-    var message = gUpdates.strings.getFormattedString("restartLaterMsg",
-      [gUpdates.brandName]);
-    ps.alert(window, gUpdates.strings.getString("restartLaterTitle"),
-             message);
-
     var interval = getPref("getIntPref", PREF_UPDATE_NAGTIMER_RESTART, 86400);
     gUpdates.registerNagTimer("restart-nag-timer", interval,
                               "showUpdateComplete");
