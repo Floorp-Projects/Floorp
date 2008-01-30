@@ -114,7 +114,7 @@ class nsXPITriggerInfo
     nsXPITriggerInfo();
     ~nsXPITriggerInfo();
 
-    void                Add( nsXPITriggerItem *aItem ) 
+    void                Add( nsXPITriggerItem *aItem )
                         { if ( aItem ) mItems.AppendElement( (void*)aItem ); }
 
     nsXPITriggerItem*   Get( PRUint32 aIndex )

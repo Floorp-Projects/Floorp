@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dave Townsend <dtownsend@oxymoronical.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,10 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#include "nsSoftwareUpdate.h"
 #include "nsXPInstallManager.h"
 #include "nsInstallTrigger.h"
-#include "nsInstallVersion.h"
 #include "nsIDOMInstallTriggerGlobal.h"
 
 #include "nscore.h"
@@ -65,8 +64,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-#include "VerReg.h"
-
 #include "nsIContentHandler.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
@@ -76,9 +73,6 @@
 nsInstallTrigger::nsInstallTrigger()
 {
     mScriptObject   = nsnull;
-
-    // make sure all the SoftwareUpdate initialization has happened
-    nsCOMPtr<nsISoftwareUpdate> svc (do_GetService(NS_IXPINSTALLCOMPONENT_CONTRACTID));
 }
 
 nsInstallTrigger::~nsInstallTrigger()
@@ -183,7 +177,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
 
 
     // Get the global object of the target window for StartSoftwareUpdate
-    nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner = 
+    nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner =
                                          do_QueryInterface(aWindowContext);
     nsIScriptGlobalObject* globalObject =
       globalObjectOwner ? globalObjectOwner->GetScriptGlobalObject() : nsnull;
@@ -202,7 +196,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         // they trust the actual source when they get the install confirmation
         // dialog. The decision we're making here is whether the triggering
         // site is one which is allowed to annoy the user with modal dialogs.
-        
+
         checkuri = referringURI;
     }
     else
@@ -391,7 +385,7 @@ nsInstallTrigger::GetOriginatingURI(nsIScriptGlobalObject* aGlobalObject, nsIURI
     NS_ENSURE_ARG_POINTER(aGlobalObject);
 
     *aUri = nsnull;
-    
+
     // find the current site
     nsCOMPtr<nsIDOMDocument> domdoc;
     nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(aGlobalObject));
@@ -441,7 +435,7 @@ nsInstallTrigger::StartInstall(nsIXPIInstallInfo* aInstallInfo, PRBool* aReturn)
 {
     if (aReturn)
         *aReturn = PR_FALSE;
-    
+
     nsXPInstallManager *mgr = new nsXPInstallManager();
     if (mgr)
     {
@@ -455,187 +449,3 @@ nsInstallTrigger::StartInstall(nsIXPIInstallInfo* aInstallInfo, PRBool* aReturn)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 }
-
-NS_IMETHODIMP
-nsInstallTrigger::Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRBool* aReturn)
-{
-    NS_ASSERTION(aReturn, "Invalid pointer arg");
-    *aReturn = PR_FALSE;
-
-    nsresult rv;
-    nsXPInstallManager *mgr = new nsXPInstallManager();
-    if (mgr)
-    {
-        nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(aGlobalObject));
-        // The Install manager will delete itself when done
-        rv = mgr->InitManager( win, aTrigger, 0 );
-        if (NS_SUCCEEDED(rv))
-            *aReturn = PR_TRUE;
-    }
-    else
-    {
-        delete aTrigger;
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-
-
-    return rv;
-}
-
-
-NS_IMETHODIMP
-nsInstallTrigger::InstallChrome(nsIScriptGlobalObject* aGlobalObject, PRUint32 aType, nsXPITriggerItem *aItem, PRBool* aReturn)
-{
-    NS_ENSURE_ARG_POINTER(aReturn);
-    NS_ENSURE_ARG_POINTER(aItem);
-    *aReturn = PR_FALSE;
-
-
-    // The Install manager will delete itself when done, once we've called
-    // InitManager. Before then **WE** must delete it
-    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-    nsXPInstallManager *mgr = new nsXPInstallManager();
-    if (mgr)
-    {
-        nsXPITriggerInfo* trigger = new nsXPITriggerInfo();
-        if ( trigger )
-        {
-            trigger->Add( aItem );
-
-            nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(aGlobalObject));
-            // The Install manager will delete itself when done
-            rv = mgr->InitManager( win, trigger, aType );
-            *aReturn = PR_TRUE;
-        }
-        else
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            delete mgr;
-            delete aItem;
-        }
-    }
-    else
-    {
-        delete aItem;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsInstallTrigger::StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)
-{
-    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-    *aReturn = PR_FALSE;
-
-    // The Install manager will delete itself when done, once we've called
-    // InitManager. Before then **WE** must delete it
-    nsXPInstallManager *mgr = new nsXPInstallManager();
-    if (mgr)
-    {
-        nsXPITriggerInfo* trigger = new nsXPITriggerInfo();
-        if ( trigger )
-        {
-            nsXPITriggerItem* item = new nsXPITriggerItem(0,aURL.get(),nsnull);
-            if (item)
-            {
-                trigger->Add( item );
-                nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(aGlobalObject));
-                // The Install manager will delete itself when done
-                rv = mgr->InitManager(win, trigger, 0 );
-                *aReturn = PR_TRUE;
-            }
-            else
-            {
-                rv = NS_ERROR_OUT_OF_MEMORY;
-                delete trigger;
-                delete mgr;
-            }
-        }
-        else
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            delete mgr;
-        }
-    }
-
-    return rv;
-}
-
-
-NS_IMETHODIMP
-nsInstallTrigger::CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)
-{
-    nsInstallVersion inVersion;
-    inVersion.Init(aMajor, aMinor, aRelease, aBuild);
-
-    return CompareVersion(aRegName, &inVersion, aReturn);
-}
-
-NS_IMETHODIMP
-nsInstallTrigger::CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)
-{
-    nsInstallVersion inVersion;
-    inVersion.Init(aVersion);
-
-    return CompareVersion(aRegName, &inVersion, aReturn);
-}
-
-NS_IMETHODIMP
-nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
-{
-    *aReturn = NOT_FOUND;  // assume failure.
-
-    VERSION              cVersion;
-    NS_ConvertUTF16toUTF8 regName(aRegName);
-    REGERR               status;
-    nsInstallVersion     regNameVersion;
-
-    status = VR_GetVersion( const_cast<char *>(regName.get()), &cVersion );
-    if ( status == REGERR_OK )
-    {
-        // we found the version
-        if ( VR_ValidateComponent( const_cast<char *>(regName.get()) ) != REGERR_NOFILE )
-        {
-            // and the installed file was not missing:  do the compare
-            regNameVersion.Init(cVersion.major,
-                                cVersion.minor,
-                                cVersion.release,
-                                cVersion.build);
-
-            regNameVersion.CompareTo( aVersion, aReturn );
-        }
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
-{
-    VERSION              cVersion;
-    NS_ConvertUTF16toUTF8 regName(component);
-    REGERR               status;
-
-    status = VR_GetVersion( const_cast<char *>(regName.get()), &cVersion );
-
-    version.Truncate();
-
-    /* if we got the version */
-    // XXX fix the right way after PR3 or RTM
-    // if ( status == REGERR_OK && VR_ValidateComponent( tempCString ) == REGERR_OK)
-    if ( status == REGERR_OK )
-    {
-        nsInstallVersion regNameVersion;
-
-        regNameVersion.Init(cVersion.major,
-                            cVersion.minor,
-                            cVersion.release,
-                            cVersion.build);
-
-        regNameVersion.ToString(version);
-    }
-
-    return NS_OK;
-}
-

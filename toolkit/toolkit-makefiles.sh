@@ -519,9 +519,7 @@ MAKEFILES_xpcom_tests="
 MAKEFILES_xpinstall="
   xpinstall/Makefile
   xpinstall/public/Makefile
-  xpinstall/res/Makefile
   xpinstall/src/Makefile
-  xpinstall/stub/Makefile
 "
 
 MAKEFILES_xpfe="

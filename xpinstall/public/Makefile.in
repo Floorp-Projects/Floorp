@@ -23,6 +23,7 @@
 # Contributor(s):
 #   Daniel Veditz <dveditz@netscape.com>
 #   Douglas Turner <dougt@netscape.com>
+#   Dave Townsend <dtownsend@oxymoronical.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -51,19 +52,14 @@ GRE_MODULE	= 1
 XPIDLSRCS	= \
 		nsIXPIDialogService.idl \
 		nsIXPIProgressDialog.idl \
-		nsIXPINotifier.idl \
 		nsIXPInstallManager.idl \
 		nsIXPIInstallInfo.idl \
-		nsPIXPIProxy.idl \
-		nsPIXPIStubHook.idl \
 		nsPICertNotification.idl \
 		$(NULL)
 
 EXPORTS		= \
 		nsIDOMInstallTriggerGlobal.h \
-		nsIDOMInstallVersion.h \
 		nsSoftwareUpdateIIDs.h \
-		nsISoftwareUpdate.h \
 		$(NULL)
 
 PREF_JS_EXPORTS	= $(srcdir)/xpinstall.js

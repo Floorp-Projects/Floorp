@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Daniel Veditz <dveditz@netscape.com>
+ *   Dave Townsend <dtownsend@oxymoronical.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -101,7 +102,7 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
         {
             mHasher = do_CreateInstance("@mozilla.org/security/hash;1");
             if (!mHasher) return;
-            
+
             *colon = '\0'; // null the colon so that aHash is just the type.
             nsresult rv = mHasher->InitWithString(nsDependentCString(aHash));
             *colon = ':';  // restore the colon
@@ -264,10 +265,10 @@ XPITriggerEvent::Run()
             do_GetService("@mozilla.org/js/xpc/ContextStack;1");
         if (stack)
             stack->Push(cx);
-        
-        nsCOMPtr<nsIScriptSecurityManager> secman = 
+
+        nsCOMPtr<nsIScriptSecurityManager> secman =
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        
+
         if (!secman)
         {
             errorStr = "Could not get script security manager service";
