@@ -808,6 +808,7 @@ public:
   NS_IMETHOD StyleChangeReflow();
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
   virtual NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent) const;
+  virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const;
 
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const;
@@ -4784,6 +4785,15 @@ nsIFrame*
 PresShell::GetPrimaryFrameFor(nsIContent* aContent) const
 {
   return FrameManager()->GetPrimaryFrameFor(aContent, -1);
+}
+
+nsIFrame*
+PresShell::GetRealPrimaryFrameFor(nsIContent* aContent) const
+{
+  nsIFrame *primaryFrame = FrameManager()->GetPrimaryFrameFor(aContent, -1);
+  if (!primaryFrame)
+    return nsnull;
+  return nsPlaceholderFrame::GetRealFrameFor(primaryFrame);
 }
 
 NS_IMETHODIMP

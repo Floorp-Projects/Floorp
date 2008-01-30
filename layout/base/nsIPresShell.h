@@ -332,10 +332,18 @@ public:
    * being scrolled). The primary frame is always the first-in-flow.
    *
    * In the case of absolutely positioned elements and floated elements,
-   * the primary frame is the frame that is out of the flow and not the
-   * placeholder frame.
+   * the primary frame is the placeholder frame.
    */
   virtual NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent) const = 0;
+
+  /**
+   * Gets the real primary frame associated with the content object.
+   *
+   * In the case of absolutely positioned elements and floated elements,
+   * the real primary frame is the frame that is out of the flow and not the
+   * placeholder frame.
+   */
+  virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const = 0;
 
   /**
    * Returns a layout object associated with the primary frame for the content object.
