@@ -51,9 +51,9 @@
         persist="screenX screenY">
 
   <script type="application/javascript"
-          src="chrome://browser/content/preferences/applicationManager.js"/>
-  <script type="application/javascript"
           src="chrome://browser/content/preferences/applications.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/preferences/applicationManager.js"/>
 
   <commandset id="appManagerCommandSet">
     <command id="cmd_remove"
