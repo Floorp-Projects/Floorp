@@ -35,9 +35,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-
 var TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 
 var gAppManagerDialog = {
