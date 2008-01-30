@@ -56,7 +56,7 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
-#PersonalToolbar {
+#personal-toolbar {
   min-height: 26px;
 }
 
@@ -80,7 +80,7 @@
 }
 
 #navigator-toolbox[inFullscreen="true"],
-#navigator-toolbox[inFullscreen="true"] > #nav-bar {
+#navigator-toolbox[inFullscreen="true"] > #navigation-toolbar {
   border-top: none;
 }
 
@@ -642,10 +642,12 @@ toolbar[iconsize="small"] #reload-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
 }
 
-toolbar[iconsize="small"] #home-button {
+toolbar[iconsize="small"] #home-button ,
+#personal-toolbar > #home-button {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
-toolbar[iconsize="small"] #home-button[disabled="true"] {
+toolbar[iconsize="small"] #home-button[disabled="true"] ,
+#personal-toolbar > #home-button[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 

@@ -66,7 +66,7 @@
 
 /* ----- BOOKMARK TOOLBAR ----- */
 
-#PersonalToolbar {
+#personal-toolbar {
   background: url("chrome://browser/skin/bookmark_toolbar_background.gif") repeat-x center center;
   border-top: 1px solid #DDDDDD;
   border-bottom: 2px solid;
@@ -274,7 +274,7 @@ toolbar[mode="text"] .toolbarbutton-1 > .toolbarbutton-text {
   margin: 4px;
 }
 
-#nav-bar .toolbarbutton-1 {
+#navigation-toolbar .toolbarbutton-1 {
   padding-top: 0;
   padding-bottom: 0;
 }
@@ -935,7 +935,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-#nav-bar {
+#navigation-toolbar {
   background-color: #969696;
   border-bottom: 1px solid #404040;
   background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
@@ -944,7 +944,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding: 0 4px;
 }
 
-#nav-bar[mode="full"] {
+#navigation-toolbar[mode="full"] {
   background-image: url("chrome://global/skin/toolbar/toolbar-background-tall.gif");
 }
 
