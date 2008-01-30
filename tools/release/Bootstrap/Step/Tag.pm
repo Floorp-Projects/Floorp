@@ -6,7 +6,7 @@ package Bootstrap::Step::Tag;
 use Cwd;
 use File::Copy qw(move);
 use POSIX qw(strftime);
-use Date::Manip;
+#use Date::Manip;
 
 use MozBuild::Util qw(MkdirWithPath RunShellCommand);
 use Bootstrap::Util qw(CvsCatfile);
