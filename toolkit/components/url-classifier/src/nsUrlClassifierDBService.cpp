@@ -405,6 +405,10 @@ public:
   // Write an entry to the database
   nsresult WriteEntry(nsUrlClassifierEntry& entry);
 
+  // Update an entry in the database.  The entry must already exist in the
+  // database or this method will fail.
+  nsresult UpdateEntry(nsUrlClassifierEntry& entry);
+
   // Remove all entries for a given table/chunk pair from the database.
   nsresult Expire(PRUint32 tableId,
                   PRUint32 chunkNum);
@@ -423,6 +427,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mLookupWithChunkStatement;
   nsCOMPtr<mozIStorageStatement> mLookupWithIDStatement;
 
+  nsCOMPtr<mozIStorageStatement> mInsertStatement;
   nsCOMPtr<mozIStorageStatement> mUpdateStatement;
   nsCOMPtr<mozIStorageStatement> mDeleteStatement;
   nsCOMPtr<mozIStorageStatement> mExpireStatement;
@@ -482,6 +487,7 @@ nsUrlClassifierStore::Close()
   mLookupWithIDStatement = nsnull;
   mLookupWithChunkStatement = nsnull;
 
+  mInsertStatement = nsnull;
   mUpdateStatement = nsnull;
   mDeleteStatement = nsnull;
   mExpireStatement = nsnull;
@@ -690,6 +696,14 @@ nsUrlClassifierAddStore::Init(nsUrlClassifierDBServiceWorker *worker,
   rv = mConnection->CreateStatement
     (NS_LITERAL_CSTRING("INSERT OR REPLACE INTO ") + entriesTableName +
      NS_LITERAL_CSTRING(" VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
+     getter_AddRefs(mInsertStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mConnection->CreateStatement
+    (NS_LITERAL_CSTRING("UPDATE ") + entriesTableName +
+     NS_LITERAL_CSTRING(" SET domain=?2, partial_data=?3, "
+                        " complete_data=?4, chunk_id=?5, table_id=?6"
+                        " WHERE id=?1"),
      getter_AddRefs(mUpdateStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -740,6 +754,14 @@ nsUrlClassifierSubStore::Init(nsUrlClassifierDBServiceWorker *worker,
   rv = mConnection->CreateStatement
     (NS_LITERAL_CSTRING("INSERT OR REPLACE INTO ") + entriesTableName +
      NS_LITERAL_CSTRING(" VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"),
+     getter_AddRefs(mInsertStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mConnection->CreateStatement
+    (NS_LITERAL_CSTRING("UPDATE ") + entriesTableName +
+     NS_LITERAL_CSTRING(" SET domain=?2, partial_data=?3, complete_data=?4,"
+                        " chunk_id=?5, table_id=?6, add_chunk_id=?7"
+                        " WHERE id=?1"),
      getter_AddRefs(mUpdateStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1556,14 +1578,14 @@ nsUrlClassifierStore::DeleteEntry(nsUrlClassifierEntry& entry)
 nsresult
 nsUrlClassifierStore::WriteEntry(nsUrlClassifierEntry& entry)
 {
-  mozStorageStatementScoper scoper(mUpdateStatement);
+  mozStorageStatementScoper scoper(mInsertStatement);
 
   PRBool newEntry = (entry.mId == 0);
 
-  nsresult rv = BindStatement(entry, mUpdateStatement);
+  nsresult rv = BindStatement(entry, mInsertStatement);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mUpdateStatement->Execute();
+  rv = mInsertStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (newEntry) {
@@ -1577,6 +1599,22 @@ nsUrlClassifierStore::WriteEntry(nsUrlClassifierEntry& entry)
 
     entry.mId = rowId;
   }
+
+  return NS_OK;
+}
+
+nsresult
+nsUrlClassifierStore::UpdateEntry(nsUrlClassifierEntry& entry)
+{
+  mozStorageStatementScoper scoper(mUpdateStatement);
+
+  NS_ENSURE_ARG(entry.mId != 0);
+
+  nsresult rv = BindStatement(entry, mUpdateStatement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mUpdateStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -2579,6 +2617,29 @@ nsUrlClassifierDBServiceWorker::CloseDb()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsUrlClassifierDBServiceWorker::CacheCompletions(nsTArray<nsUrlClassifierLookupResult> *results)
+{
+  LOG(("nsUrlClassifierDBServiceWorker::CacheCompletions [%p]", this));
+
+  nsAutoPtr<nsTArray<nsUrlClassifierLookupResult> > resultsPtr(results);
+
+  // Start a new transaction.  If a transaction is open for an update
+  // this will be a noop, and this cache will be included in the
+  // update's transaction.
+  mozStorageTransaction trans(mConnection, PR_TRUE);
+
+  for (PRUint32 i = 0; i < results->Length(); i++) {
+    nsUrlClassifierLookupResult& result = results->ElementAt(i);
+    // Failing to update here shouldn't be fatal (and might be common,
+    // if we're updating entries that were removed since they were
+    // returned after a lookup).
+    mMainStore.UpdateEntry(result.mEntry);
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsUrlClassifierDBServiceWorker::OpenDb()
 {
@@ -2657,6 +2718,7 @@ nsUrlClassifierDBServiceWorker::OpenDb()
 
   rv = mPendingSubStore.Init(this, connection,
                              NS_LITERAL_CSTRING("moz_subs"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = connection->CreateStatement
          (NS_LITERAL_CSTRING("SELECT add_chunks, sub_chunks FROM moz_tables"
@@ -2792,6 +2854,10 @@ private:
 
   nsRefPtr<nsUrlClassifierDBService> mDBService;
   nsAutoPtr<nsTArray<nsUrlClassifierLookupResult> > mResults;
+
+  // Completed results to send back to the worker for caching.
+  nsAutoPtr<nsTArray<nsUrlClassifierLookupResult> > mCacheResults;
+
   PRUint32 mPendingCompletions;
   nsCOMPtr<nsIUrlClassifierCallback> mCallback;
 };
@@ -2855,6 +2921,12 @@ nsUrlClassifierLookupCallback::CompletionFinished(nsresult status)
   mPendingCompletions--;
   if (mPendingCompletions == 0) {
     HandleResults();
+
+    if (mCacheResults) {
+      // This hands ownership of the cache results array back to the worker
+      // thread.
+      mDBService->CacheCompletions(mCacheResults.forget());
+    }
   }
 
   return NS_OK;
@@ -2888,7 +2960,13 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
       if (result.mLookupFragment == hash)
         result.mConfirmed = PR_TRUE;
 
-      // XXX: Schedule this result for caching.
+      if (!mCacheResults) {
+        mCacheResults = new nsTArray<nsUrlClassifierLookupResult>();
+        if (!mCacheResults)
+          return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      mCacheResults->AppendElement(result);
     }
   }
 
@@ -3296,6 +3374,14 @@ nsUrlClassifierDBService::ResetDatabase()
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   return mWorkerProxy->ResetDatabase();
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::CacheCompletions(nsTArray<nsUrlClassifierLookupResult> *results)
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  return mWorkerProxy->CacheCompletions(results);
 }
 
 NS_IMETHODIMP
