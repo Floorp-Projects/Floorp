@@ -9,6 +9,6 @@
 <!ENTITY ms.label "(ms)">
 <!ENTITY blinkSpeed.label "Rychlost zvýraznění">
 <!ENTITY invertColors.label "Obrátit barvy">
-<!ENTITY installHowTo.label "Postranní lišta DOM Inspektoru není nainstalována. Pro přidání postranní lišty klepněta na tlačítko 'Instalovat'.">
+<!ENTITY installHowTo.label "Postranní lišta DOM Inspektoru není nainstalována. Pro přidání postranní lišty klepněte na tlačítko 'Instalovat'.">
 <!ENTITY install.label "Instalovat">
-<!ENTITY addNavigatorHooks.label "Přidat do kontextové nabídky v Prohlížeči">
+<!ENTITY addNavigatorHooks.label "Přidat do místní nabídky v Prohlížeči">
