@@ -934,10 +934,17 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
 }
 
-/* keep the URL bar content LTR */
 #autocomplete-security-wrapper {
+  /* keep the URL bar content LTR */
   direction: ltr;
   -moz-box-align: center;
+  /* cover the white gap between the text field and the drop down button */
+  margin-right: -3px;
+}
+
+#urlbar[chromedir="rtl"] > .autocomplete-textbox-container > #autocomplete-security-wrapper {
+  margin-right: 0px;
+  margin-left: -3px;
 }
 
 /* Feed icon */
