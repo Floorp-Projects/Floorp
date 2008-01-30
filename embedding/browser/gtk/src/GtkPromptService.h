@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsIPromptService.h>
-#include <nsString.h>
+#include "nsIPromptService.h"
+#include "nsString.h"
 #include <gtk/gtk.h>
 
 class nsIDOMWindow;

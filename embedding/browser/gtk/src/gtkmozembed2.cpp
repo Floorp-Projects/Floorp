@@ -46,7 +46,7 @@
 #include "EmbedWindow.h"
 
 // so we can do our get_nsIWebBrowser later...
-#include <nsIWebBrowser.h>
+#include "nsIWebBrowser.h"
 
 #include "gtkmozembedmarshal.h"
 

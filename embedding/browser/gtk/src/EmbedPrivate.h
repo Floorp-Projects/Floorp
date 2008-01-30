@@ -38,19 +38,19 @@
 #ifndef __EmbedPrivate_h
 #define __EmbedPrivate_h
 
-#include <nsCOMPtr.h>
-#include <nsString.h>
-#include <nsIWebNavigation.h>
-#include <nsISHistory.h>
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsIWebNavigation.h"
+#include "nsISHistory.h"
 // for our one function that gets the EmbedPrivate via the chrome
 // object.
-#include <nsIWebBrowserChrome.h>
-#include <nsIAppShell.h>
-#include <nsPIDOMEventTarget.h>
-#include <nsVoidArray.h>
+#include "nsIWebBrowserChrome.h"
+#include "nsIAppShell.h"
+#include "nsPIDOMEventTarget.h"
+#include "nsVoidArray.h"
 // app component registration
-#include <nsIGenericFactory.h>
-#include <nsIComponentRegistrar.h>
+#include "nsIGenericFactory.h"
+#include "nsIComponentRegistrar.h"
 
 #include "gtkmozembedprivate.h"
 

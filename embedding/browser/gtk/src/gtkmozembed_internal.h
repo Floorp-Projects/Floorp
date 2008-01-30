@@ -38,8 +38,8 @@
 #ifndef gtkmozembed_internal_h
 #define gtkmozembed_internal_h
 
-#include <nsIWebBrowser.h>
-#include <nsXPCOM.h>
+#include "nsIWebBrowser.h"
+#include "nsXPCOM.h"
 
 struct nsModuleComponentInfo;
 
