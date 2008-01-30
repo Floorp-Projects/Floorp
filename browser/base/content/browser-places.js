@@ -37,9 +37,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-var PlacesCommandHook = {
+
+var StarUI = {
+  _itemId: -1,
+  uri: null,
+  _batching: false,
+
   // nsISupports
-  QueryInterface: function PCH_QueryInterface(aIID) {
+  QueryInterface: function SU_QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIDOMEventListener) ||
         aIID.equals(Ci.nsISupports))
       return this;
@@ -47,10 +52,14 @@ var PlacesCommandHook = {
     throw Cr.NS_NOINTERFACE;
   },
 
+  _element: function(aID) {
+    return document.getElementById(aID);
+  },
+
   // Edit-bookmark panel
   get panel() {
     delete this.panel;
-    var element = document.getElementById("editBookmarkPanel");
+    var element = this._element("editBookmarkPanel");
     // initially the panel is hidden
     // to avoid impacting startup / new window performance
     element.hidden = false;
@@ -61,10 +70,9 @@ var PlacesCommandHook = {
 
   // list of command elements (by id) to disable when the panel is opened
   _blockedCommands: ["cmd_close", "cmd_closeWindow"],
-
-  _blockCommands: function PCH__blockCommands() {
+  _blockCommands: function SU__blockCommands() {
     for each(var key in this._blockedCommands) {
-      var elt = document.getElementById(key);
+      var elt = this._element(key);
       // make sure not to permanently disable this item (see bug 409155)
       if (elt.hasAttribute("wasDisabled"))
         continue;
@@ -77,9 +85,9 @@ var PlacesCommandHook = {
     }
   },
 
-  _restoreCommandsState: function PCH__restoreCommandsState() {
+  _restoreCommandsState: function SU__restoreCommandsState() {
     for each(var key in this._blockedCommands) {
-      var elt = document.getElementById(key);
+      var elt = this._element(key);
       if (elt.getAttribute("wasDisabled") != "true")
         elt.removeAttribute("disabled");
       elt.removeAttribute("wasDisabled");
@@ -87,17 +95,30 @@ var PlacesCommandHook = {
   },
 
   // nsIDOMEventListener
-  handleEvent: function PCH_handleEvent(aEvent) {
+  handleEvent: function SU_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "popuphidden":
         if (aEvent.originalTarget == this.panel) {
-          gEditItemOverlay.uninitPanel(true);
+          if (!this._element("editBookmarkPanelContent").hidden)
+            gEditItemOverlay.uninitPanel(true);
           this._restoreCommandsState();
+          this._itemId = -1;
+          this._uri = null;
+          if (this._batching) {
+            PlacesUtils.ptm.endBatch();
+            this._batching = false;
+          }
         }
         break;
       case "keypress":
-        if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE ||
-            aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+        if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+          // In edit mode, the ESC key is mapped to the cancel button
+          if (!this._element("editBookmarkPanelContent").hidden)
+            this.cancelButtonOnCommand();
+          else // otherwise we just hide the panel
+            this.panel.hidePopup();
+        }
+        else if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
           this.panel.hidePopup(); // hide the panel
         break;
     }
@@ -106,7 +127,7 @@ var PlacesCommandHook = {
   _overlayLoaded: false,
   _overlayLoading: false,
   showEditBookmarkPopup:
-  function PCH_showEditBookmarkPopup(aItemId, aAnchorElement, aPosition) {
+  function SU_showEditBookmarkPopup(aItemId, aAnchorElement, aPosition) {
     // Performance: load the overlay the first time the panel is opened
     // (see bug 392443).
     if (this._overlayLoading)
@@ -195,22 +216,23 @@ var PlacesCommandHook = {
       var txn = PlacesUtils.ptm.createItem(uri, parent, -1,
                                            title, null, [descAnno]);
       PlacesUtils.ptm.doTransaction(txn);
-      if (aShowEditUI)
-        itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
+      itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
 
-    if (aShowEditUI) {
-      // dock the panel to the star icon when possible, otherwise dock
-      // it to the content area
-      if (aBrowser.contentWindow == window.content) {
-        var starIcon = aBrowser.ownerDocument.getElementById("star-button");
-        if (starIcon && isElementVisible(starIcon)) {
-          this.showEditBookmarkPopup(itemId, starIcon, "after_end");
-          return;
-        }
+    // dock the panel to the star icon when possible, otherwise dock
+    // it to the content area
+    if (aBrowser.contentWindow == window.content) {
+      var starIcon = aBrowser.ownerDocument.getElementById("star-button");
+      if (starIcon && isElementVisible(starIcon)) {
+        if (aShowEditUI)
+          StarUI.showEditBookmarkPopup(itemId, starIcon, "after_end");
+        else
+          StarUI.showPageBookmarkedNotification(itemId, starIcon, "after_end");
+        return;
       }
-      this.showEditBookmarkPopup(itemId, aBrowser, "overlap");
     }
+
+    StarUI.showEditBookmarkPopup(itemId, aBrowser, "overlap");
   },
 
   /**
@@ -330,10 +352,6 @@ var PlacesCommandHook = {
       organizer.PlacesOrganizer.selectLeftPaneQuery(aLeftPaneRoot);
       organizer.focus();
     }
-  },
-
-  doneButtonOnCommand: function PCH_doneButtonOnCommand() {
-    this.panel.hidePopup();
   },
 
   deleteButtonOnCommand: function PCH_deleteButtonCommand() {
