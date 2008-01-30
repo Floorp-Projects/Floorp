@@ -57,7 +57,7 @@ class nsJSUtils
 {
 public:
   static JSBool GetCallingLocation(JSContext* aContext, const char* *aFilename,
-                                   PRUint32 *aLineno);
+                                   PRUint32* aLineno, JSPrincipals* aPrincipals);
 
   static jsval ConvertStringToJSVal(const nsString& aProp,
                                     JSContext* aContext);

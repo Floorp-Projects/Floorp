@@ -138,7 +138,7 @@ enum OpenAllowValue {
 };
 
 extern nsresult
-NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
+NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
                           PRBool *aIsInterval,
                           PRInt32 *aInterval,
                           nsIScriptTimeoutHandler **aRet);
