@@ -92,7 +92,4 @@ HDC PrnOpenDC( PRTQUEUE *pPrintQueue, PSZ pszApplicationName, int copies, int de
 // Get the hardcopy caps for the selected form
 BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo);
 
-// Abort the current job started with PrnStartJob().
-BOOL PrnAbortJob( HDC hdc);
-
 #endif

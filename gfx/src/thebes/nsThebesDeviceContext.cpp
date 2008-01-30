@@ -711,6 +711,24 @@ nsThebesDeviceContext::CalcPrintingSize()
         break;
     }
 #endif
+
+#ifdef XP_OS2
+    case gfxASurface::SurfaceTypeOS2:
+    {
+        inPoints = PR_FALSE;
+        // we already set the size in the surface constructor we set for
+        // printing, so just get those values here
+        size = reinterpret_cast<gfxOS2Surface*>(mPrintingSurface.get())->GetSize();
+        // still need to get the depth from the device context
+        HDC dc = GetPrintHDC();
+        LONG value;
+        if (DevQueryCaps(dc, CAPS_COLOR_BITCOUNT, 1, &value))
+            mDepth = value;
+        else
+            mDepth = 8; // default to 8bpp, should be enough for printers
+        break;
+    }
+#endif
     default:
         NS_ASSERTION(0, "trying to print to unknown surface type");
     }
