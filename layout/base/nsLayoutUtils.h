@@ -753,6 +753,33 @@ public:
   static PRUint32 GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
                                           const nsStyleText* aStyleText,
                                           const nsStyleFont* aStyleFont);
+
+  /**
+   * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should
+   * disabled.
+   */
+#ifdef DEBUG
+  static PRBool sDisableGetUsedXAssertions;
+#endif
+};
+
+class nsAutoDisableGetUsedXAssertions
+{
+#ifdef DEBUG
+public:
+  nsAutoDisableGetUsedXAssertions()
+    : mOldValue(nsLayoutUtils::sDisableGetUsedXAssertions)
+  {
+    nsLayoutUtils::sDisableGetUsedXAssertions = PR_TRUE;
+  }
+  ~nsAutoDisableGetUsedXAssertions()
+  {
+    nsLayoutUtils::sDisableGetUsedXAssertions = mOldValue;
+  }
+
+private:
+  PRBool mOldValue;
+#endif  
 };
 
 #endif // nsLayoutUtils_h__
