@@ -76,7 +76,18 @@ var Microformats = {
           continue;
         }
       }
-      targetArray.push(new Microformats[name].mfObject(microformatNodes[i]));
+      try {
+        if (options && options.debug) {
+          /* Don't validate in the debug case so that we don't get errors thrown */
+          /* in the debug case, we want all microformats, even if they are invalid */
+          targetArray.push(new Microformats[name].mfObject(microformatNodes[i], false));
+        } else {
+          targetArray.push(new Microformats[name].mfObject(microformatNodes[i], true));
+        }
+      } catch (ex) {
+        /* Creation of individual object probably failed because it is invalid. */
+        /* This isn't a problem, because the page might have invalid microformats */
+      }
     }
     return targetArray;
   },
@@ -90,6 +101,8 @@ var Microformats = {
    *                       for microformats (optional - defaults to true)
    *                       showHidden -  Whether or not to add hidden microformat
    *                       (optional - defaults to false)
+   *                       debug - Whether or not we are in debug mode (optional
+   *                       - defaults to false)
    * @return The new count
    */
   count: function(name, rootElement, options) {
@@ -548,7 +561,7 @@ var Microformats = {
       }
       return result;
     },
-    newMicroformat: function(object, in_node, microformat) {
+    newMicroformat: function(object, in_node, microformat, validate) {
       /* check to see if we are even valid */
       if (!Microformats[microformat]) {
         throw("Invalid microformat - " + microformat);
@@ -578,6 +591,9 @@ var Microformats = {
       /* we also store the node that has been "resolved" */
       object.resolvedNode = node; 
       object.semanticType = microformat;
+      if (validate) {
+        Microformats.parser.validate(object.node, microformat);
+      }
     },
     getMicroformatPropertyGenerator: function getMicroformatPropertyGenerator(node, name, property, microformat)
     {
@@ -750,26 +766,18 @@ var Microformats = {
       }
       return mfnode;
     },
-    validate: function validate(mfnode, mfname, error) {
+    validate: function validate(mfnode, mfname) {
+      var error = "";
       if (Microformats[mfname].validate) {
-        return Microformats[mfname].validate(mfnode, error);
-      } else {
-        var mfobject = new Microformats[mfname].mfObject(mfnode);
-        if (Microformats[mfname].required) {
-          error.message = "";
-          for (let i=0;i<Microformats[mfname].required.length;i++) {
-            if (!mfobject[Microformats[mfname].required[i]]) {
-              error.message += "Required property " + Microformats[mfname].required[i] + " not specified\n";
-            }
+        return Microformats[mfname].validate(mfnode);
+      } else if (Microformats[mfname].required) {
+        for (let i=0;i<Microformats[mfname].required.length;i++) {
+          if (!Microformats.parser.getMicroformatProperty(mfnode, mfname, Microformats[mfname].required[i])) {
+            error += "Required property " + Microformats[mfname].required[i] + " not specified\n";
           }
-          if (error.message.length > 0) {
-            return false;
-          }
-        } else {
-          if (!mfobject.toString()) {
-            error.message = "Unable to create microformat";
-            return false;
-          }
+        }
+        if (error.length > 0) {
+          throw(error);
         }
         return true;
       }
@@ -968,9 +976,9 @@ var Microformats = {
 
 /* MICROFORMAT DEFINITIONS BEGIN HERE */
 
-function adr(node) {
+function adr(node, validate) {
   if (node) {
-    Microformats.parser.newMicroformat(this, node, "adr");
+    Microformats.parser.newMicroformat(this, node, "adr", validate);
   }
 }
 
@@ -1039,14 +1047,30 @@ var adr_definition = {
     },
     "country-name" : {
     }
+  },
+  validate: function(node) {
+    var xpathExpression = "count(descendant::*[" +
+                                              "contains(concat(' ', @class, ' '), ' post-office-box ')" +
+                                              " or contains(concat(' ', @class, ' '), ' street-address ')" +
+                                              " or contains(concat(' ', @class, ' '), ' extended-address ')" +
+                                              " or contains(concat(' ', @class, ' '), ' locality ')" +
+                                              " or contains(concat(' ', @class, ' '), ' region ')" +
+                                              " or contains(concat(' ', @class, ' '), ' postal-code ')" +
+                                              " or contains(concat(' ', @class, ' '), ' country-name')" +
+                                              "])";
+    var xpathResult = (node.ownerDocument || node).evaluate(xpathExpression, node, null,  Components.interfaces.nsIDOMXPathResult.ANY_TYPE, null).numberValue;
+    if (xpathResult == 0) {
+      throw("Unable to create microformat");
+    }
+    return true;
   }
 };
 
 Microformats.add("adr", adr_definition);
 
-function hCard(node) {
+function hCard(node, validate) {
   if (node) {
-    Microformats.parser.newMicroformat(this, node, "hCard");
+    Microformats.parser.newMicroformat(this, node, "hCard", validate);
   }
 }
 hCard.prototype.toString = function() {
@@ -1250,9 +1274,9 @@ var hCard_definition = {
 
 Microformats.add("hCard", hCard_definition);
 
-function hCalendar(node) {
+function hCalendar(node, validate) {
   if (node) {
-    Microformats.parser.newMicroformat(this, node, "hCalendar");
+    Microformats.parser.newMicroformat(this, node, "hCalendar", validate);
   }
 }
 hCalendar.prototype.toString = function() {
@@ -1431,9 +1455,9 @@ var hCalendar_definition = {
 
 Microformats.add("hCalendar", hCalendar_definition);
 
-function geo(node) {
+function geo(node, validate) {
   if (node) {
-    Microformats.parser.newMicroformat(this, node, "geo");
+    Microformats.parser.newMicroformat(this, node, "geo", validate);
   }
 }
 geo.prototype.toString = function() {
@@ -1513,9 +1537,9 @@ var geo_definition = {
 
 Microformats.add("geo", geo_definition);
 
-function tag(node) {
+function tag(node, validate) {
   if (node) {
-    Microformats.parser.newMicroformat(this, node, "tag");
+    Microformats.parser.newMicroformat(this, node, "tag", validate);
   }
 }
 tag.prototype.toString = function() {
@@ -1587,24 +1611,18 @@ var tag_definition = {
     }
     return returnTag;
   },
-  validate: function(node, error) {
+  validate: function(node) {
     var tag = Microformats.parser.getMicroformatProperty(node, "tag", "tag");
     if (!tag) {
       if (node.href) {
         var url_array = node.getAttribute("href").split("/");
         for(let i=url_array.length-1; i > 0; i--) {
           if (url_array[i] !== "") {
-            if (error) {
-              error.message = "Invalid tag name (" + url_array[i] + ")";
-            }
-            return false;
+            throw("Invalid tag name (" + url_array[i] + ")");;
           }
         }
       } else {
-        if (error) {
-          error.message = "No href specified on tag";
-        }
-        return false;
+        throw("No href specified on tag");
       }
     }
     return true;
