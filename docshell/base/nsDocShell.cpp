@@ -6436,8 +6436,7 @@ class InternalLoadEvent : public nsRunnable
 public:
     InternalLoadEvent(nsDocShell* aDocShell, nsIURI * aURI, nsIURI * aReferrer,
                       nsISupports * aOwner, PRUint32 aFlags,
-                      const PRUnichar *aWindowTarget, const char* aTypeHint,
-                      nsIInputStream * aPostData,
+                      const char* aTypeHint, nsIInputStream * aPostData,
                       nsIInputStream * aHeadersData, PRUint32 aLoadType,
                       nsISHEntry * aSHEntry, PRBool aFirstParty) :
         mDocShell(aDocShell),
@@ -6452,9 +6451,6 @@ public:
         mFirstParty(aFirstParty)
     {
         // Make sure to keep null things null as needed
-        if (aWindowTarget) {
-            mWindowTarget = aWindowTarget;
-        }
         if (aTypeHint) {
             mTypeHint = aTypeHint;
         }
@@ -6462,7 +6458,7 @@ public:
     
     NS_IMETHOD Run() {
         return mDocShell->InternalLoad(mURI, mReferrer, mOwner, mFlags,
-                                       mWindowTarget.get(), mTypeHint.get(),
+                                       nsnull, mTypeHint.get(),
                                        mPostData, mHeadersData, mLoadType,
                                        mSHEntry, mFirstParty, nsnull, nsnull);
     }
@@ -6526,21 +6522,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     NS_ENSURE_TRUE(IsValidLoadType(aLoadType), NS_ERROR_INVALID_ARG);
 
     NS_ENSURE_TRUE(!mIsBeingDestroyed, NS_ERROR_NOT_AVAILABLE);
-
-    if (mFiredUnloadEvent) {
-        if (IsOKToLoadURI(aURI)) {
-            // Do this asynchronously
-            nsCOMPtr<nsIRunnable> ev =
-                new InternalLoadEvent(this, aURI, aReferrer, aOwner, aFlags,
-                                      aWindowTarget, aTypeHint,
-                                      aPostData, aHeadersData, aLoadType,
-                                      aSHEntry, aFirstParty);
-            return NS_DispatchToCurrentThread(ev);
-        }
-
-        // Just ignore this load attempt
-        return NS_OK;
-    }
 
     // wyciwyg urls can only be loaded through history. Any normal load of
     // wyciwyg through docshell is  illegal. Disallow such loads.
@@ -6795,6 +6776,35 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         return NS_ERROR_FAILURE;
     }
 
+    rv = CheckLoadingPermissions();
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    if (mFiredUnloadEvent) {
+        if (IsOKToLoadURI(aURI)) {
+            NS_PRECONDITION(!aWindowTarget || !*aWindowTarget,
+                            "Shouldn't have a window target here!");
+
+            // If this is a replace load, make whatever load triggered
+            // the unload event also a replace load, so we don't
+            // create extra history entries.
+            if (LOAD_TYPE_HAS_FLAGS(aLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {
+                mLoadType = LOAD_NORMAL_REPLACE;
+            }
+            
+            // Do this asynchronously
+            nsCOMPtr<nsIRunnable> ev =
+                new InternalLoadEvent(this, aURI, aReferrer, aOwner, aFlags,
+                                      aTypeHint, aPostData, aHeadersData,
+                                      aLoadType, aSHEntry, aFirstParty);
+            return NS_DispatchToCurrentThread(ev);
+        }
+
+        // Just ignore this load attempt
+        return NS_OK;
+    }
+
     // Before going any further vet loads initiated by external programs.
     if (aLoadType == LOAD_NORMAL_EXTERNAL) {
         // Disallow external chrome: loads targetted at content windows
@@ -6812,11 +6822,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // reset loadType so we don't have to add lots of tests for
         // LOAD_NORMAL_EXTERNAL after this point
         aLoadType = LOAD_NORMAL;
-    }
-
-    rv = CheckLoadingPermissions();
-    if (NS_FAILED(rv)) {
-        return rv;
     }
 
     mAllowKeywordFixup =
