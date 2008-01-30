@@ -425,7 +425,7 @@
 
     <toolbar id="navigation-toolbar" class="toolbar-primary chromeclass-toolbar"
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
-             fullscreentoolbar="true" mode="icons"
+             fullscreentoolbar="true" mode="icons" iconsize="large"
              customizable="true"
 #ifdef XP_MACOSX
              defaultset="unified-back-forward-button,reload-button,stop-button,urlbar-container,search-container,throbber-box"
