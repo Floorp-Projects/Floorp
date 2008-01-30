@@ -392,6 +392,10 @@ nsMenuFrame::Destroy()
   // doesn't try to interact with a deallocated frame.
   mTimerMediator->ClearFrame();
 
+  // if the menu content is just being hidden, it may be made visible again
+  // later, so make sure to clear the highlighting.
+  mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, PR_FALSE);
+
   // are we our menu parent's current menu item?
   if (mMenuParent && mMenuParent->GetCurrentMenuItem() == this) {
     // yes; tell it that we're going away
