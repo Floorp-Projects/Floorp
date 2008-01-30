@@ -1387,6 +1387,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     NS_ASSERTION(aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE,
       "Shouldn't be incomplete if availableHeight is UNCONSTRAINED.");
     aMetrics.height = PR_MAX(aState.mY, aReflowState.availableHeight);
+    if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE)
+      // This should never happen, but it does. See bug 414255
+      aMetrics.height = aState.mY;
   }
 
   if (IS_TRUE_OVERFLOW_CONTAINER(this) &&
