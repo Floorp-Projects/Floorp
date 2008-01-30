@@ -30,8 +30,19 @@ html {
   -moz-margin-end: 1em;
   -moz-padding-start: 2.9em;
   font-size: 110%;
-  background: url("chrome://browser/skin/feeds/feedIcon.png") 0% 10% no-repeat InfoBackground;
   color: InfoText;
+}
+
+.feedBackground {
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 0% 10% no-repeat InfoBackground;
+}
+
+.videoPodcastBackground {
+  background: url("chrome://browser/skin/feeds/videoFeedIcon.png") 0% 10% no-repeat InfoBackground;
+}
+
+.audioPodcastBackground {
+  background: url("chrome://browser/skin/feeds/audioFeedIcon.png") 0% 10% no-repeat InfoBackground;
 }
 
 #feedHeader[dir="rtl"] {
