@@ -20,8 +20,6 @@
  *
  * Contributor(s):
  *   Rob Arnold <robarnold@mozilla.com> (Original Author)
- *   Masatoshi Kimura <VYV03354@nifty.ne.jp>
- *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,25 +47,25 @@
 /**
  * Code overview
  *
- * Download scanner attempts to make use of one of two different virus
- * scanning interfaces available on Windows - IOfficeAntiVirus (Windows
- * 95/NT 4 and IE 5) and IAttachmentExecute (XPSP2 and up).  The latter
- * interface supports calling IOfficeAntiVirus internally, while also
- * adding support for XPSP2+ ADS forks which define security related
- * prompting on downloaded content.  
+ * Antivirus vendors on Windows can implement the IOfficeAntiVirus interface
+ * so that other programs (not just Office) can use their functionality.
+ * According to the Microsoft documentation, this interface requires only
+ * Windows 95/NT 4 and IE 5 so it is used in preference to IAttachmentExecute
+ * which requires XP SP2 (Windows 2000 is still supported at this time). 
  *
- * Both interfaces are synchronous and can take a while, so it is not a
- * good idea to call either from the main thread. Some antivirus scanners can
- * take a long time to scan or the call might block while the scanner shows
- * its UI so if the user were to download many files that finished around the
- * same time, they would have to wait a while if the scanning were done on
- * exactly one other thread. Since the overhead of creating a thread is
- * relatively small compared to the time it takes to download a file and scan
- * it, a new thread is spawned for each download that is to be scanned. Since
- * most of the mozilla codebase is not threadsafe, all the information needed
- * for the scanner is gathered in the main thread in nsDownloadScanner::Scan::Start.
- * The only function of nsDownloadScanner::Scan which is invoked on another
- * thread is DoScan.
+ * The interface is rather simple; it provides a Scan method which takes a
+ * small structure describing what to scan. Unfortunately, the method is
+ * synchronous and could take a while, so it is not a good idea to call it from
+ * the main thread. Some antivirus scanners can take a long time to scan or the
+ * call might block while the scanner shows its UI so if the user were to
+ * download many files that finished around the same time, they would have to
+ * wait a while if the scanning were done on exactly one other thread. Since
+ * the overhead of creating a thread is relatively small compared to the time
+ * it takes to download a file and scan it, a new thread is spawned for each
+ * download that is to be scanned. Since most of the mozilla codebase is not
+ * threadsafe, all the information needed for the scanner is gathered in the
+ * main thread in nsDownloadScanner::Scan::Start. The only function of
+ * nsDownloadScanner::Scan which is invoked on another thread is DoScan.
  *
  * There are 4 possible outcomes of the virus scan:
  *    AVSCAN_GOOD   => the file is clean
@@ -80,6 +78,8 @@
  * Failed states transition to finished downloads.
  *
  * Possible Future enhancements:
+ *  * Use all available virus scanners instead of just the first one that is
+ *    enumerated (or use some heuristic)
  *  * Create an interface for scanning files in general
  *  * Make this a service
  *  * Get antivirus scanner status via WMI/registry
@@ -87,20 +87,8 @@
 
 #define PREF_BDA_DONTCLEAN "browser.download.antivirus.dontclean"
 
-// IAttachementExecute supports user definable settings for certain
-// security related prompts. This defines a general GUID for use in
-// all projects. Individual projects can define an individual guid
-// if they want to.
-#ifndef MOZ_VIRUS_SCANNER_PROMPT_GUID
-#define MOZ_VIRUS_SCANNER_PROMPT_GUID \
-  { 0xb50563d1, 0x16b6, 0x43c2, { 0xa6, 0x6a, 0xfa, 0xe6, 0xd2, 0x11, 0xf2, \
-  0xea } }
-#endif
-static const GUID GUID_MozillaVirusScannerPromptGeneric =
-  MOZ_VIRUS_SCANNER_PROMPT_GUID;
-
 nsDownloadScanner::nsDownloadScanner()
-  : mHaveAVScanner(PR_FALSE), mHaveAttachmentExecute(PR_FALSE)
+  : mHaveAVScanner(PR_FALSE)
 {
 }
 
@@ -111,28 +99,11 @@ nsDownloadScanner::Init()
   // codebase. All other COM calls/objects are made on different threads.
   nsresult rv = NS_OK;
   CoInitialize(NULL);
-  if (!IsAESAvailable() && ListCLSID() < 0)
+  if (ListCLSID() < 0)
     rv = NS_ERROR_NOT_AVAILABLE;
   CoUninitialize();
 
   return rv;
-}
-
-PRBool
-nsDownloadScanner::IsAESAvailable()
-{
-  nsRefPtr<IAttachmentExecute> ae;
-  HRESULT hr;
-  hr = CoCreateInstance(CLSID_AttachmentServices, NULL, CLSCTX_INPROC,
-                        IID_IAttachmentExecute, getter_AddRefs(ae));
-  if (FAILED(hr)) {
-    NS_WARNING("Could not instantiate attachment execution service\n");
-    return PR_FALSE;
-  }
-
-  mHaveAVScanner = PR_TRUE;
-  mHaveAttachmentExecute = PR_TRUE;
-  return PR_TRUE;
 }
 
 PRInt32
@@ -210,6 +181,7 @@ nsDownloadScanner::Scan::Start()
   rv = file->GetPath(mPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
+
   // Grab the app name
   nsCOMPtr<nsIXULAppInfo> appinfo =
     do_GetService(XULAPPINFO_SERVICE_CONTRACTID, &rv);
@@ -219,6 +191,7 @@ nsDownloadScanner::Scan::Start()
   rv = appinfo->GetName(name);
   NS_ENSURE_SUCCESS(rv, rv);
   CopyUTF8toUTF16(name, mName);
+
 
   // Get the origin
   nsCOMPtr<nsIURI> uri;
@@ -230,6 +203,7 @@ nsDownloadScanner::Scan::Start()
   NS_ENSURE_SUCCESS(rv, rv);
 
   CopyUTF8toUTF16(origin, mOrigin);
+
 
   // We count https/ftp/http as an http download
   PRBool isHttp(PR_FALSE), isFtp(PR_FALSE), isHttps(PR_FALSE);
@@ -273,41 +247,7 @@ nsDownloadScanner::Scan::Run()
 }
 
 void
-nsDownloadScanner::Scan::DoScanAES()
-{
-  HRESULT hr;
-  nsRefPtr<IAttachmentExecute> ae;
-  hr = CoCreateInstance(CLSID_AttachmentServices, NULL, CLSCTX_ALL,
-                        IID_IAttachmentExecute, getter_AddRefs(ae));
-
-  mStatus = AVSCAN_SCANNING;
-
-  if (SUCCEEDED(hr)) {
-    (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
-    (void)ae->SetLocalPath(mPath.BeginWriting());
-    (void)ae->SetSource(mOrigin.BeginWriting());
-
-    // Save() will invoke the scanner
-    hr = ae->Save();
-
-    if (SUCCEEDED(hr)) { // Passed the scan
-      mStatus = AVSCAN_GOOD;
-    }
-    else if (HRESULT_CODE(hr) == ERROR_FILE_NOT_FOUND) {
-      NS_WARNING("Downloaded file disappeared before it could be scanned");
-      mStatus = AVSCAN_FAILED;
-    }
-    else { 
-      mStatus = AVSCAN_UGLY;
-    }
-  }
-  else {
-    mStatus = AVSCAN_FAILED;
-  }
-}
-
-void
-nsDownloadScanner::Scan::DoScanOAV()
+nsDownloadScanner::Scan::DoScan()
 {
   HRESULT hr;
   MSOAVINFO info;
@@ -321,6 +261,8 @@ nsDownloadScanner::Scan::DoScanOAV()
   info.pwzHostName = mName.BeginWriting();
   info.u.pwzFullPath = mPath.BeginWriting();
   info.pwzOrigURL = mOrigin.BeginWriting();
+
+  CoInitialize(NULL);
 
   for (PRUint32 i = 0; i < mDLScanner->mScanCLSID.Length(); i++) {
     nsRefPtr<IOfficeAntiVirus> vScanner;
@@ -342,7 +284,7 @@ nsDownloadScanner::Scan::DoScanOAV()
         mStatus = AVSCAN_UGLY;
         continue;
       }
-      else if (HRESULT_CODE(hr) == ERROR_FILE_NOT_FOUND) {
+      else if (hr == ERROR_FILE_NOT_FOUND) {
         NS_WARNING("Downloaded file disappeared before it could be scanned");
         mStatus = AVSCAN_FAILED;
         break;
@@ -357,18 +299,7 @@ nsDownloadScanner::Scan::DoScanOAV()
       }
     }
   }
-}
-
-void
-nsDownloadScanner::Scan::DoScan()
-{
-  CoInitialize(NULL);
-
-  if (mDLScanner->mHaveAttachmentExecute)
-    DoScanAES();
-  else
-    DoScanOAV();
-
+  
   CoUninitialize();
 
   // We need to do a few more things on the main thread
