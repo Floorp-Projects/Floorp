@@ -946,7 +946,9 @@ function delayedStartup()
 
   SetPageProxyState("invalid");
 
-  getNavToolbox().customizeDone = BrowserToolboxCustomizeDone;
+  var navToolbox = getNavToolbox();
+  navToolbox.customizeDone = BrowserToolboxCustomizeDone;
+  navToolbox.customizeChange = BrowserToolboxCustomizeChange;
 
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
@@ -958,8 +960,6 @@ function delayedStartup()
 
   gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
-  //XXX
-  //gHomeButton.setPersonalToolbarStyle();
 
 #ifdef HAVE_SHELL_SERVICE
   // Perform default browser checking (after window opens).
@@ -3084,8 +3084,6 @@ function BrowserCustomizeToolbar()
   if (splitter)
     splitter.parentNode.removeChild(splitter);
 
-  gHomeButton.unsetPersonalToolbarStyle();
-
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
   var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
   sheetFrame.hidden = false;
@@ -3132,7 +3130,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
 
   UpdateUrlbarSearchSplitterState();
 
-  gHomeButton.setPersonalToolbarStyle();
+  gHomeButton.updatePersonalToolbarStyle();
 
   // Update the urlbar
   if (gURLBar) {
@@ -3168,6 +3166,10 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   // XXX Shouldn't have to do this, but I do
   window.focus();
 #endif
+}
+
+function BrowserToolboxCustomizeChange() {
+  gHomeButton.updatePersonalToolbarStyle();
 }
 
 /**
@@ -4216,18 +4218,14 @@ var gHomeButton = {
     return url;
   },
 
-  setPersonalToolbarStyle: function ()
-  {
-    var homeButton = document.getElementById("home-button");
-    if (homeButton && homeButton.parentNode.id == "personal-toolbar")
-      homeButton.className = homeButton.className.replace("toolbarbutton-1", "bookmark-item");
-  },
-
-  unsetPersonalToolbarStyle: function ()
+  updatePersonalToolbarStyle: function ()
   {
     var homeButton = document.getElementById("home-button");
     if (homeButton)
-      homeButton.className = homeButton.className.replace("bookmark-item", "toolbarbutton-1");
+      homeButton.className = homeButton.parentNode.id == "personal-toolbar"
+                               || homeButton.parentNode.parentNode.id == "personal-toolbar" ?
+                             homeButton.className.replace("toolbarbutton-1", "bookmark-item") :
+                             homeButton.className.replace("bookmark-item", "toolbarbutton-1");
   }
 };
 

@@ -652,11 +652,11 @@ toolbar[iconsize="small"] #reload-button[disabled="true"] {
 }
 
 toolbar[iconsize="small"] #home-button ,
-#personal-toolbar > #home-button {
+#home-button.bookmark-item {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
 }
 toolbar[iconsize="small"] #home-button[disabled="true"] ,
-#personal-toolbar > #home-button[disabled="true"] {
+#home-button.bookmark-item[disabled="true"] {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 

@@ -272,6 +272,7 @@
                      tooltiptext="&stopButton.tooltip;"/>
 
       <toolbarbutton id="home-button" class="bookmark-item chromeclass-toolbar-additional"
+                     persist="class"
                      label="&homeButton.label;"
                      ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
                      ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
