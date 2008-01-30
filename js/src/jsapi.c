@@ -2500,6 +2500,9 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
       case JSGC_MAX_MALLOC_BYTES:
         rt->gcMaxMallocBytes = value;
         break;
+      case JSGC_STACKPOOL_LIFESPAN:
+        rt->gcStackPoolLifespan = value;
+        break;
     }
 }
 
