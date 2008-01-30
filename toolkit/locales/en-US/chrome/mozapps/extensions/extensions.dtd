@@ -129,9 +129,12 @@
 <!ENTITY recommendedThrobber.label        "Retrieving recommended add-ons">
 <!ENTITY searchThrobber.label             "Searching add-ons">
 <!ENTITY resetSearch.label                "Clear Results">
-<!ENTITY searchEmpty.label                "No Matching Add-ons">
-<!ENTITY searchEmpty.button               "Ok">
+<!ENTITY noSearchResults.label            "All results are already installed or incompatible.">
+<!ENTITY noRecommendedResults.label       "All recommendations are already installed or incompatible.">
+<!ENTITY emptySearch.label                "No matching add-ons">
+<!ENTITY emptySearch.button               "OK">
 <!ENTITY cancelSearch.button              "Cancel">
+<!ENTITY searchFailed.button              "OK">
 <!ENTITY searchResultHomepage.value       "Learn More">
 <!ENTITY searchBox.label                  "Search All Add-ons">
 <!ENTITY recommendedResults.label         "See All Recommended Add-ons">

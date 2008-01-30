@@ -699,6 +699,27 @@ function displaySearchResults(addons, count, isRecommended) {
     }
     addons.sort(compare);
   }
+  
+  if (addons.length == 0 && (isRecommended || count > 0)) {
+    var labelNode = gRDF.GetResource("urn:mozilla:addons:search:status:noresults");
+    rootctr.AppendElement(labelNode);
+    gSearchDS.Assert(labelNode,
+                     gRDF.GetResource(PREFIX_NS_EM + "statusMessage"),
+                     gRDF.GetLiteral("true"),
+                     true);
+    if (isRecommended) {
+      gSearchDS.Assert(labelNode,
+                       gRDF.GetResource(PREFIX_NS_EM + "type"),
+                       gRDF.GetLiteral("message-norecommended"),
+                       true);
+    }
+    else {
+      gSearchDS.Assert(labelNode,
+                       gRDF.GetResource(PREFIX_NS_EM + "type"),
+                       gRDF.GetLiteral("message-nosearchresults"),
+                       true);
+    }
+  }
 
   var urlproperties = [ "iconURL", "homepageURL", "thumbnailURL", "xpiURL" ];
   var properties = [ "name", "eula", "iconURL", "homepageURL", "thumbnailURL", "xpiURL", "xpiHash" ];

@@ -30,6 +30,14 @@ vbox[typeName="status"][type="header-recommended"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-header-recommended");
 }
 
+vbox[typeName="status"][type="message-norecommended"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-message-norecommended");
+}
+
+vbox[typeName="status"][type="message-nosearchresults"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-message-nosearchresults");
+}
+
 vbox[typeName="status"][type="footer-recommended"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-recommended");
 }
