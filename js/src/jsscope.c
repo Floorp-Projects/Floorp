@@ -403,18 +403,18 @@ js_HashScopeProperty(JSDHashTable *table, const void *key)
     hash = 0;
     gsop = sprop->getter;
     if (gsop)
-        hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ (jsword)gsop;
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsword)gsop;
     gsop = sprop->setter;
     if (gsop)
-        hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ (jsword)gsop;
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsword)gsop;
 
-    hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4)
+    hash = JS_ROTATE_LEFT32(hash, 4)
            ^ (sprop->flags & ~SPROP_FLAGS_NOT_MATCHED);
 
-    hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ sprop->attrs;
-    hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ sprop->shortid;
-    hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ sprop->slot;
-    hash = (hash >> (JS_DHASH_BITS - 4)) ^ (hash << 4) ^ sprop->id;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ sprop->attrs;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ sprop->shortid;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ sprop->slot;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ sprop->id;
     return hash;
 }
 

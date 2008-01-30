@@ -103,7 +103,7 @@ JS_DHashStringKey(JSDHashTable *table, const void *key)
 
     h = 0;
     for (s = (const unsigned char *) key; *s != '\0'; s++)
-        h = (h >> (JS_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
     return h;
 }
 
