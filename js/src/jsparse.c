@@ -5447,6 +5447,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
       case TOK_LC:
       {
         JSBool afterComma;
+        JSParseNode *pnval;
 
         pn = NewParseNode(cx, ts, PN_LIST, tc);
         if (!pn)
@@ -5535,13 +5536,38 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                     return NULL;
             }
 #endif
+
             if (tt != TOK_COLON) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                            JSMSG_COLON_AFTER_ID);
-                return NULL;
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+                if (tt != TOK_COMMA && tt != TOK_RC) {
+#endif
+                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                                JSMSG_COLON_AFTER_ID);
+                    return NULL;
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+                }
+
+                /*
+                 * Support, e.g., |var {x, y} = o| as destructuring shorthand
+                 * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
+                 */
+                js_UngetToken(ts);
+                pn->pn_extra |= PNX_SHORTHAND;
+                pnval = pn3;
+                if (pnval->pn_type == TOK_NAME) {
+                    pnval->pn_arity = PN_NAME;
+                    pnval->pn_expr = NULL;
+                    pnval->pn_slot = -1;
+                    pnval->pn_const = JS_FALSE;
+                }
+                op = JSOP_NOP;
+#endif
+            } else {
+                op = CURRENT_TOKEN(ts).t_op;
+                pnval = AssignExpr(cx, ts, tc);
             }
-            op = CURRENT_TOKEN(ts).t_op;
-            pn2 = NewBinary(cx, TOK_COLON, op, pn3, AssignExpr(cx, ts, tc), tc);
+
+            pn2 = NewBinary(cx, TOK_COLON, op, pn3, pnval, tc);
 #if JS_HAS_GETTER_SETTER
           skip:
 #endif
