@@ -32,6 +32,10 @@ classic.jar:
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png                 (feeds/feedIcon16.png)
+  skin/classic/browser/feeds/videoFeedIcon.png              (feeds/videoFeedIcon.png)
+  skin/classic/browser/feeds/videoFeedIcon16.png            (feeds/videoFeedIcon16.png)
+  skin/classic/browser/feeds/audioFeedIcon.png              (feeds/audioFeedIcon.png)
+  skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/audioFeedIcon16.png)
   skin/classic/browser/radio-selected-bg.gif
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
