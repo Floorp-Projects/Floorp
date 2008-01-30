@@ -1980,7 +1980,7 @@ nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries
         // easy case: the URI is an exact match
         PRBool equals;
         nsresult rv = query->Uri()->Equals(nodeUri, &equals);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, PR_FALSE);
         if (! equals)
           continue;
       } else {
@@ -2309,7 +2309,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     rv = mDBGetPageVisitStats->GetInt32(2, &oldTypedState);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRInt32 oldHiddenState = 0;
+    PRBool oldHiddenState = 0;
     rv = mDBGetPageVisitStats->GetInt32(3, &oldHiddenState);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4754,17 +4754,17 @@ nsNavHistory::URIHasTag(const nsACString& aURISpec, const nsAString& aTag)
   mozStorageStatementScoper scoper(mDBURIHasTag);
 
   nsresult rv = mDBURIHasTag->BindUTF8StringParameter(0, aURISpec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   rv = mDBURIHasTag->BindStringParameter(1, aTag);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   rv = mDBURIHasTag->BindInt64Parameter(2, GetTagsFolder());
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   PRBool hasTag = PR_FALSE;
   rv = mDBURIHasTag->ExecuteStep(&hasTag);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
   return hasTag;
 }
 
@@ -4830,23 +4830,23 @@ nsNavHistory::URIHasAnyTagFromTerms(const nsACString& aURISpec, const nsStringAr
   nsCOMPtr<mozIStorageStatement> uriHasAnyTagQuery;
 
   nsresult rv = mDBConn->CreateStatement(tagQuery, getter_AddRefs(uriHasAnyTagQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   rv = uriHasAnyTagQuery->BindUTF8StringParameter(0, aURISpec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   rv = uriHasAnyTagQuery->BindInt64Parameter(1, GetTagsFolder());
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   for (PRUint32 i=0; i<termsCount; i++) {
     // +2 to skip over the "?2", which is the tag root parameter
     rv = uriHasAnyTagQuery->BindStringParameter(i+2, *(aTerms.StringAt(i)));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
   }
 
   PRBool hasAnyTag = PR_FALSE;
   rv = uriHasAnyTagQuery->ExecuteStep(&hasAnyTag);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
   return hasAnyTag;
 }
 
