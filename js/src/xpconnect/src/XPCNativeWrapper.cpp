@@ -500,11 +500,26 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 
   if (!aIsSet &&
       id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
-    // Return a safe wrapper for the underlying native object, the
-    // XPConnect wrapped object that this additional wrapper layer
-    // wraps.
+    // If we're wrapping an untrusted content wrapper, then we should
+    // return a safe wrapper for the underlying native object. Otherwise,
+    // such a wrapper would be superfluous.
 
     jsval nativeVal = OBJECT_TO_JSVAL(nativeObj);
+
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    nsCOMPtr<nsIPrincipal> prin;
+    nsresult rv = ssm->GetObjectPrincipal(cx, nativeObj,
+                                          getter_AddRefs(prin));
+    if (NS_FAILED(rv)) {
+      return ThrowException(rv, cx);
+    }
+
+    PRBool isSystem;
+    if (NS_SUCCEEDED(ssm->IsSystemPrincipal(prin, &isSystem)) && isSystem) {
+      *vp = nativeVal;
+      return JS_TRUE;
+    }
+
     return XPC_SJOW_Construct(cx, nsnull, 1, &nativeVal, vp);
   }
 

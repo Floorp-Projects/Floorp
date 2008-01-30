@@ -162,6 +162,15 @@ public:
   }
 
   /**
+   * Returns the script security manager used by XPConnect.
+   */
+  static nsIScriptSecurityManager *GetSecurityManager() {
+    extern nsIScriptSecurityManager *gScriptSecurityManager;
+
+    return gScriptSecurityManager;
+  }
+
+  /**
    * Used to ensure that an XPCWrappedNative stays alive when its scriptable
    * helper defines an "expando" property on it.
    */
