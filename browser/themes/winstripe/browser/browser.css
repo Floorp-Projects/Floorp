@@ -753,28 +753,29 @@ toolbar[iconsize="small"] #reload-button[disabled="true"] {
 toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 64px 80px 48px);
 }
+
 /* home button */
 
-toolbar[iconsize="small"] #home-button .toolbarbutton-icon {
+toolbar[iconsize="small"] #home-button.toolbarbutton-1 .toolbarbutton-icon {
   padding-left: 1px;
 }
-#personal-toolbar > #home-button {
+#home-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
 toolbar[iconsize="small"] #home-button ,
-#personal-toolbar > #home-button {
+#home-button.bookmark-item {
   -moz-image-region: rect(0px 80px 16px 64px);
 }
 toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover ,
-#personal-toolbar > #home-button:not([disabled="true"]):hover {
+#home-button.bookmark-item:not([disabled="true"]):hover {
   -moz-image-region: rect(16px 80px 32px 64px);
 }
 toolbar[iconsize="small"] #home-button[disabled="true"] ,
-#personal-toolbar > #home-button[disabled="true"] {
+#home-button.bookmark-item[disabled="true"] {
   -moz-image-region: rect(32px 80px 48px 64px);
 }
 toolbar[iconsize="small"] #home-button:not([disabled="true"]):hover:active ,
-#personal-toolbar > #home-button:not([disabled="true"]):hover:active {
+#home-button.bookmark-item:not([disabled="true"]):hover:active {
   -moz-image-region: rect(64px 80px 80px 64px);
 }
 
