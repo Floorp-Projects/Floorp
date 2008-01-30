@@ -1958,10 +1958,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         }
 
         nsISupports* qiresult = nsnull;
-        {
-            AutoJSSuspendRequest req(ccx);
-            invokeResult = callee->QueryInterface(*iid, (void**) &qiresult);
-        }
+        invokeResult = callee->QueryInterface(*iid, (void**) &qiresult);
 
         xpcc->SetLastResult(invokeResult);
 
@@ -2337,16 +2334,9 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     }
 
 
-    {
-        // avoid deadlock in case the native method blocks somehow
-        AutoJSSuspendRequest req(ccx);  // scoped suspend of request
-
-        // do the invoke
-        invokeResult = NS_InvokeByIndex(callee, vtblIndex,
-                                        paramCount, dispatchParams);
-        // resume non-blocking JS operations now
-    }
-
+    // do the invoke
+    invokeResult = NS_InvokeByIndex(callee, vtblIndex, paramCount,
+                                    dispatchParams);
 
     xpcc->SetLastResult(invokeResult);
 
