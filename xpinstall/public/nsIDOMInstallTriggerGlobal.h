@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dave Townsend <dtownsend@oxymoronical.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -46,8 +47,8 @@
 
 
 #define NS_IDOMINSTALLTRIGGERGLOBAL_IID \
- { 0xe8c7941c, 0xaaa0, 0x4faf, \
-  {0x83, 0xe8, 0x01, 0xbe, 0x8b, 0xbe, 0x8a, 0x57}}
+ { 0x23bb93a4, 0xdaee, 0x4a47, \
+  {0x87, 0xe76, 0xb1, 0x72, 0x35, 0x86, 0x2d, 0xac}}
 
 class nsIDOMInstallTriggerGlobal : public nsISupports {
 public:
@@ -68,18 +69,6 @@ public:
   NS_IMETHOD    UpdateEnabled(nsIURI* aURI, PRBool aUseWhitelist, PRBool* aReturn)=0;
 
   NS_IMETHOD    StartInstall(nsIXPIInstallInfo* aInstallInfo, PRBool* aReturn)=0;
-
-  NS_IMETHOD    Install(nsIScriptGlobalObject* globalObject, nsXPITriggerInfo* aInfo, PRBool* aReturn)=0;
-
-  NS_IMETHOD    InstallChrome(nsIScriptGlobalObject* globalObject, PRUint32 aType, nsXPITriggerItem* aItem, PRBool* aReturn)=0;
-
-  NS_IMETHOD    StartSoftwareUpdate(nsIScriptGlobalObject* globalObject, const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)=0;
-
-  NS_IMETHOD    CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)=0;
-  NS_IMETHOD    CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)=0;
-  NS_IMETHOD    CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)=0;
-
-  NS_IMETHOD    GetVersion(const nsString& component, nsString& version)=0;
 
 };
 

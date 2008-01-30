@@ -54,7 +54,7 @@ public:
 
 private:
   ~nsXPIInstallInfo();
-  
+
   nsCOMPtr<nsIDOMWindowInternal> mOriginatingWindow;
   nsCOMPtr<nsIURI> mOriginatingURI;
   nsXPITriggerInfo* mTriggerInfo;

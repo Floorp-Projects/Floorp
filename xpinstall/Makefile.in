@@ -24,6 +24,7 @@
 #   Daniel Veditz <dveditz@netscape.com>
 #   Douglas Turner <dougt@netscape.com>
 #   Samir Gehani <sgehani@netscape.com>
+#   Dave Townsend <dtownsend@oxymoronical.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,14 +48,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
-DIRS		= public src cleanup
-
-ifndef MOZ_ENABLE_LIBXUL
-DIRS		+= stub
-endif
-
-ifndef MOZ_XUL_APP
-DIRS		+= res
-endif
+DIRS		= public src
 
 include $(topsrcdir)/config/rules.mk

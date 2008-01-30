@@ -129,10 +129,6 @@
 
 #include "nsINIParser.h"
 
-#ifdef MOZ_XPINSTALL
-#include "InstallCleanupDefines.h"
-#endif
-
 #include <stdlib.h>
 
 #ifdef XP_UNIX
@@ -1157,69 +1153,6 @@ DumpHelp()
   // out of the bug, because we ship a component.reg file, it works correctly.
   DumpArbitraryHelp();
 }
-
-#ifdef MOZ_XPINSTALL
-// don't modify aAppDir directly... clone it first
-static int
-VerifyInstallation(nsIFile* aAppDir)
-{
-  static const char lastResortMessage[] =
-    "A previous install did not complete correctly.  Finishing install.";
-
-  // Maximum allowed / used length of alert message is 255 chars, due to restrictions on Mac.
-  // Please make sure that file contents and fallback_alert_text are at most 255 chars.
-
-  char message[256];
-  PRInt32 numRead = 0;
-  const char *messageToShow = lastResortMessage;
-
-  nsresult rv;
-  nsCOMPtr<nsIFile> messageFile;
-  rv = aAppDir->Clone(getter_AddRefs(messageFile));
-  if (NS_SUCCEEDED(rv)) {
-    messageFile->AppendNative(NS_LITERAL_CSTRING("res"));
-    messageFile->AppendNative(CLEANUP_MESSAGE_FILENAME);
-    PRFileDesc* fd = 0;
-
-    nsCOMPtr<nsILocalFile> lf (do_QueryInterface(messageFile));
-    if (lf) {
-      rv = lf->OpenNSPRFileDesc(PR_RDONLY, 0664, &fd);
-      if (NS_SUCCEEDED(rv)) {
-        numRead = PR_Read(fd, message, sizeof(message)-1);
-        if (numRead > 0) {
-          message[numRead] = 0;
-          messageToShow = message;
-        }
-      }
-    }
-  }
-
-  ShowOSAlert(messageToShow);
-
-  nsCOMPtr<nsIFile> cleanupUtility;
-  aAppDir->Clone(getter_AddRefs(cleanupUtility));
-  if (!cleanupUtility) return 1;
-
-  cleanupUtility->AppendNative(CLEANUP_UTIL);
-
-  ScopedXPCOMStartup xpcom;
-  rv = xpcom.Initialize();
-  if (NS_FAILED(rv)) return 1;
-
-  { // extra scoping needed to release things before xpcom shutdown
-    //Create the process framework to run the cleanup utility
-    nsCOMPtr<nsIProcess> cleanupProcess
-      (do_CreateInstance(NS_PROCESS_CONTRACTID));
-    rv = cleanupProcess->Init(cleanupUtility);
-    if (NS_FAILED(rv)) return 1;
-
-    rv = cleanupProcess->Run(PR_FALSE,nsnull, 0, nsnull);
-    if (NS_FAILED(rv)) return 1;
-  }
-
-  return 0;
-}
-#endif
 
 #ifdef DEBUG_warren
 #ifdef XP_WIN
@@ -2875,33 +2808,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (NS_FAILED(rv) || !canRun) {
       return 1;
     }
-
-#ifdef MOZ_XPINSTALL
-    //----------------------------------------------------------------
-    // We need to check if a previous installation occured and
-    // if so, make sure it finished and cleaned up correctly.
-    //
-    // If there is an xpicleanup.dat file left around, that means the
-    // previous installation did not finish correctly. We must cleanup
-    // before a valid mozilla can run.
-    //
-    // Show the user a platform-specific Alert message, then spawn the
-    // xpicleanup utility, then exit.
-    //----------------------------------------------------------------
-    {
-      nsCOMPtr<nsIFile> registryFile;
-      rv = dirProvider.GetAppDir()->Clone(getter_AddRefs(registryFile));
-      if (NS_SUCCEEDED(rv)) {
-        registryFile->AppendNative(CLEANUP_REGISTRY);
-
-        PRBool exists;
-        rv = registryFile->Exists(&exists);
-        if (NS_SUCCEEDED(rv) && exists) {
-          return VerifyInstallation(dirProvider.GetAppDir());
-        }
-      }
-    }
-#endif
 
 #ifdef MOZ_ENABLE_XREMOTE
     // handle -remote now that xpcom is fired up
