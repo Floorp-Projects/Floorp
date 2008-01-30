@@ -827,7 +827,9 @@ nsCanvasRenderingContext2D::Save()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Restore()
 {
-    if (mSaveCount <= 0)
+    if (mSaveCount == 0)
+        return NS_OK;
+    if (mSaveCount < 0)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
 
     mStyleStack.RemoveElementAt(mSaveCount);
