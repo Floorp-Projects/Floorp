@@ -352,8 +352,14 @@
 <!ENTITY spellAddDictionaries.label "Add Dictionaries…">
 <!ENTITY spellAddDictionaries.accesskey "A">
 
-<!ENTITY editBookmark.done.label                      "Done">
-<!ENTITY editBookmark.delete.label                    "Delete">
+<!ENTITY editBookmark.done.label                     "Done">
+<!ENTITY editBookmark.cancel.label                   "Cancel">
+<!ENTITY editBookmark.removeBookmark.label           "Remove Bookmark">
+<!ENTITY editBookmark.removeBookmark.accessKey       "R">
+<!ENTITY editBookmark.undo.label                     "Undo">
+<!ENTITY editBookmark.undo.accessKey                 "U">
+<!ENTITY editBookmark.edit.label                     "Edit…">
+<!ENTITY editBookmark.edit.accessKey                 "E">
 
 <!ENTITY identity.unverifiedsite "You are connected to an unverified site.">
 <!ENTITY identity.connectedTo "You are connected to">

@@ -145,7 +145,15 @@ placesTransactionsService.prototype = {
   },
 
   sortFolderByName: function placesSortFldrByName(aFolderId, aFolderIndex) {
-   return new placesSortFolderByNameTransactions(aFolderId, aFolderIndex);
+    return new placesSortFolderByNameTransactions(aFolderId, aFolderIndex);
+  },
+
+  tagURI: function placesTagURI(aURI, aTags) {
+    return new placesTagURITransaction(aURI, aTags);
+  },
+
+  untagURI: function placesTagURI(aURI, aTags) {
+    return new placesUntagURITransaction(aURI, aTags);
   },
 
   // Update commands in the undo group of the active window
@@ -843,6 +851,43 @@ placesSortFolderByNameTransactions.prototype = {
       PlacesUtils.bookmarks.setItemIndex(item, this._oldOrder[item]);
   }
 };
+
+function placesTagURITransaction(aURI, aTags) {
+  this._uri = aURI;
+  this._tags = aTags;
+  this.redoTransaction = this.doTransaction;
+}
+
+placesTagURITransaction.prototype = {
+  __proto__: placesBaseTransaction.prototype,
+
+  doTransaction: function PTU_doTransaction() {
+    PlacesUtils.tagging.tagURI(this._uri, this._tags);
+  },
+
+  undoTransaction: function PTU_undoTransaction() {
+    PlacesUtils.tagging.untagURI(this._uri, this._tags);
+  }
+};
+
+function placesUntagURITransaction(aURI, aTags) {
+  this._uri = aURI;
+  this._tags = aTags || PlacesUtils.tagging.getTagsForURI(this._uri, {});
+  this.redoTransaction = this.doTransaction;
+}
+
+placesUntagURITransaction.prototype = {
+  __proto__: placesBaseTransaction.prototype,
+
+  doTransaction: function PUTU_doTransaction() {
+    PlacesUtils.tagging.untagURI(this._uri, this._tags);
+  },
+
+  undoTransaction: function PUTU_undoTransaction() {
+    PlacesUtils.tagging.tagURI(this._uri, this._tags);
+  }
+};
+
 
 function NSGetModule(aCompMgr, aFileSpec) {
   return XPCOMUtils.generateModule([placesTransactionsService]);
