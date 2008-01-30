@@ -435,6 +435,7 @@ protected:
   void ClearControllers();
 
   void FreeInnerObjects(PRBool aClearScope);
+  nsGlobalWindow *CallerInnerWindow();
 
   nsresult SetNewDocument(nsIDocument *aDocument,
                           nsISupports *aState,
