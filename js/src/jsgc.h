@@ -247,20 +247,20 @@ typedef enum JSGCInvocationKind {
      * Currently, this flag is set for the invocation kinds that also preserve
      * atoms and weak roots, so we don't need another bit for GC_KEEP_ATOMS.
      */
-    GC_LOCK_HELD        = 2,
+    GC_LOCK_HELD        = 0x10,
     GC_KEEP_ATOMS       = GC_LOCK_HELD,
 
     /*
      * Called from js_SetProtoOrParent with a request to set an object's proto
      * or parent slot inserted on rt->setSlotRequests.
      */
-    GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 0,
+    GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 1,
 
     /*
      * Called from js_NewGCThing as a last-ditch GC attempt. See comments
      * in jsgc.c just before js_GC's definition for details.
      */
-    GC_LAST_DITCH       = GC_LOCK_HELD | 1
+    GC_LAST_DITCH       = GC_LOCK_HELD | 2
 } JSGCInvocationKind;
 
 extern void
