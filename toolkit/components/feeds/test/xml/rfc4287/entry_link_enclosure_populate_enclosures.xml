@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: item enclosure added to enclosures
+Expect: var encs = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).enclosures; encs.QueryInterface(Components.interfaces.nsIArray); var enc = encs.queryElementAt(0, Components.interfaces.nsIPropertyBag2); ((enc.getProperty('length') == '24986239') && (enc.getProperty('type') == 'audio/mpeg') && (enc.getProperty('url') == 'http://dallas.example.com/joebob_050689.mp3'));
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:snellspace.com,2006:/atom/conformance/linktest/</id>
+  <title>Atom Link Tests</title>
+  <updated>2005-01-18T15:10:00Z</updated>
+  <author><name>James Snell</name></author>
+  <link href="http://www.intertwingly.net/wiki/pie/LinkConformanceTests" />
+  <link rel="self" href="http://www.snellspace.com/public/linktests.xml" />
+
+  
+
+  <entry>
+
+    <id>tag:snellspace.com,2006:/atom/conformance/linktest/4</id>
+    <title>One of each core link rel type + An additional alternate link</title>
+    <updated>2005-01-18T15:00:04Z</updated>
+    <summary>The aggregator should pick either the first or last links as the alternate. First link is likely better.</summary>
+    <link rel="enclosure" length="24986239" type="audio/mpeg" href="http://dallas.example.com/joebob_050689.mp3" /> 
+  </entry>  
+  
+</feed>

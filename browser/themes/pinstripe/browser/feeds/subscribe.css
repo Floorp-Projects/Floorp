@@ -126,3 +126,21 @@ a[href] img {
   font-size: 85%;
   font-weight: normal;
 }
+
+.type-icon {
+  vertical-align: bottom;
+  height: 16px;
+  width: 16px;
+}
+
+.enclosures {
+  border: 1px solid THreeDShadow;
+  padding: 1em;
+  margin: 1em auto;
+  background: -moz-Dialog;
+}
+
+.enclosure {
+  vertical-align: middle;
+  margin-left: 2px;
+}
