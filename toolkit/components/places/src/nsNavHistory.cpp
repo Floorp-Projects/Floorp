@@ -1,4 +1,4 @@
-//* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -74,8 +74,6 @@
 #include "nsEscape.h"
 #include "nsIVariant.h"
 #include "nsVariant.h"
-#include "nsIEffectiveTLDService.h"
-#include "nsIIDNService.h"
 
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
@@ -226,7 +224,13 @@ NS_INTERFACE_MAP_END
 
 static nsresult GetReversedHostname(nsIURI* aURI, nsAString& host);
 static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
+static void GetSubstringFromNthDot(const nsCString& aInput, PRInt32 aStartingSpot,
+                                   PRInt32 aN, PRBool aIncludeDot,
+                                   nsACString& aSubstr);
 static nsresult GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle);
+static PRInt32 GetTLDCharCount(const nsCString& aHost);
+static PRInt32 GetTLDType(const nsCString& aHostTail);
+static PRBool IsNumericHostName(const nsCString& aHost);
 static PRInt64 GetSimpleBookmarksQueryFolder(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions);
@@ -286,6 +290,7 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_ItemId = 3;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_ParentId = 4;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_BookmarkTitle = 5;
 
+static nsDataHashtable<nsCStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
 static const char* gXpcomShutdown = "xpcom-shutdown";
 
@@ -401,12 +406,6 @@ nsNavHistory::Init()
     else
       mLastSessionID = 1;
   }
-
-  // effective tld service
-  mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // string bundle for localization
   nsCOMPtr<nsIStringBundleService> bundleService =
@@ -1953,21 +1952,20 @@ nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries
         if (NS_FAILED(NS_NewURI(getter_AddRefs(nodeUri), aNode->mURI)))
           continue;
       }
+      nsCAutoString host;
+      if (NS_FAILED(nodeUri->GetAsciiHost(host)))
+        continue;
       nsCAutoString asciiRequest;
       if (NS_FAILED(AsciiHostNameFromHostString(query->Domain(), asciiRequest)))
         continue;
 
       if (query->DomainIsHost()) {
-        nsCAutoString host;
-        if (NS_FAILED(nodeUri->GetAsciiHost(host)))
-          continue;
-
         if (! asciiRequest.Equals(host))
           continue; // host names don't match
       }
       // check domain names
       nsCAutoString domain;
-      DomainNameFromURI(nodeUri, domain);
+      DomainNameFromHostName(host, domain);
       if (! asciiRequest.Equals(domain))
         continue; // domain names don't match
     }
@@ -2030,22 +2028,27 @@ nsNavHistory::AsciiHostNameFromHostString(const nsACString& aHostName,
 }
 
 
-// nsNavHistory::DomainNameFromURI
+// nsNavHistory::DomainNameFromHostName
 //
 //    This does the www.mozilla.org -> mozilla.org and
 //    foo.theregister.co.uk -> theregister.co.uk conversion
 
-void
-nsNavHistory::DomainNameFromURI(nsIURI *aURI,
-                                nsACString& aDomainName)
+void // static
+nsNavHistory::DomainNameFromHostName(const nsCString& aHostName,
+                                     nsACString& aDomainName)
 {
-  // get the base domain for a given hostname.
-  // e.g. for "images.bbc.co.uk", this would be "bbc.co.uk".
-  nsresult rv = mTLDService->GetBaseDomain(aURI, 0, aDomainName);
-  if (NS_FAILED(rv)) {
-    // just return the original hostname
-    // (it's also possible the host is an IP address)
-    aURI->GetAsciiHost(aDomainName);
+  if (IsNumericHostName(aHostName)) {
+    // easy case
+    aDomainName = aHostName;
+  } else {
+    // compute the toplevel domain name
+    PRInt32 tldLength = GetTLDCharCount(aHostName);
+    if (tldLength < PRInt32(aHostName.Length())) {
+      // bugzilla.mozilla.org : tldLength = 3, topDomain = mozilla.org
+      GetSubstringFromNthDot(aHostName,
+                             aHostName.Length() - tldLength - 2,
+                             1, PR_FALSE, aDomainName);
+    }
   }
 }
 
@@ -3972,6 +3975,10 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       mAutoCompleteTimer->Cancel();
       mAutoCompleteTimer = nsnull;
     }
+    if (gTldTypes) {
+      delete gTldTypes;
+      gTldTypes = nsnull;
+    }
     nsresult rv;
     nsCOMPtr<nsIPrefService> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
@@ -4613,29 +4620,22 @@ nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
       continue;
     }
 
-    // get the host or domain name
+    // get the host name
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), aSource[i]->mURI);
-    nsCAutoString curHostName;
-    if (NS_SUCCEEDED(rv)) {
-      if (aIsDomain) {
-        nsCAutoString domainName;
-        DomainNameFromURI(uri, domainName);
-
-        // domainName will be ASCII/ACE encoded; convert it back to display IDN
-        // to be consistent with nsIURI::GetHost()
-        PRBool isAscii;
-        rv = mIDNService->ConvertToDisplayIDN(domainName, &isAscii, curHostName);
-
-      } else {
-        // just use the full host name
-        rv = uri->GetHost(curHostName);
-      }
-    }
-    if (NS_FAILED(rv)) {
+    nsCAutoString fullHostName;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aSource[i]->mURI)) ||
+        NS_FAILED(uri->GetHost(fullHostName))) {
       // invalid host name, just drop it in the top level
       aDest->AppendObject(aSource[i]);
       continue;
+    }
+
+    nsCAutoString curHostName;
+    if (aIsDomain) {
+      DomainNameFromHostName(fullHostName, curHostName);
+    } else {
+      // just use the full host name
+      curHostName = fullHostName;
     }
 
     nsNavHistoryContainerResultNode* curTopGroup = nsnull;
@@ -5706,6 +5706,32 @@ GetReversedHostname(const nsString& aForward, nsAString& aRevHost)
 }
 
 
+// IsNumericHostName
+//
+//    For host-based groupings, numeric IPs should not be collapsed by the
+//    last part of the domain name, but should stand alone. This code determines
+//    if this is the case so we don't collapse "10.1.2.3" to "3". It would be
+//    nice to use the URL parsing code, but it doesn't give us this information,
+//    this is usually done by the OS in response to DNS lookups.
+//
+//    This implementation is not perfect, we just check for all numbers and
+//    digits, and three periods. You could come up with crazy internal host
+//    names that would fool this logic, but I bet there are no real examples.
+
+PRBool IsNumericHostName(const nsCString& aHost)
+{
+  PRInt32 periodCount = 0;
+  for (PRUint32 i = 0; i < aHost.Length(); i ++) {
+    PRUnichar cur = aHost[i];
+    if (cur == '.')
+      periodCount ++;
+    else if (cur < '0' || cur > '9')
+      return PR_FALSE;
+  }
+  return (periodCount == 3);
+}
+
+
 // GetSimpleBookmarksQueryFolder
 //
 //    Determines if this set of queries is a simple bookmarks query for a
@@ -5835,6 +5861,124 @@ GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle)
   }
   aTitle = NS_ConvertUTF8toUTF16(name);
   return NS_OK;
+}
+
+
+// GetTLDCharCount
+//
+//    Given a normal, forward host name ("bugzilla.mozilla.org")
+//    returns the number of 8-bit characters that the TLD occupies, NOT
+//    including the trailing dot: bugzilla.mozilla.org -> 3
+//                  theregister.co.uk -> 5
+//                  mysite.us -> 2
+
+PRInt32
+GetTLDCharCount(const nsCString& aHost)
+{
+  nsCAutoString trailing;
+  GetSubstringFromNthDot(aHost, aHost.Length() - 1, 1,
+                         PR_FALSE, trailing);
+
+  switch (GetTLDType(trailing)) {
+    case 0:
+      // not a known TLD
+      return 0;
+    case 1:
+      // first-level TLD
+      return trailing.Length();
+    case 2: {
+      // need to check second level and trim it too (if valid)
+      nsCAutoString trailingMore;
+      GetSubstringFromNthDot(aHost, aHost.Length() - 1,
+                             2, PR_FALSE, trailingMore);
+      if (GetTLDType(trailingMore))
+        return trailingMore.Length();
+      else
+        return trailing.Length();
+    }
+    default:
+      NS_NOTREACHED("Invalid TLD type");
+      return 0;
+  }
+}
+
+
+// GetTLDType
+//
+//    Given the last part of a host name, tells you whether this is a known TLD.
+//      0 -> not known
+//      1 -> known 1st or second level TLD ("com", "co.uk")
+//      2 -> end of a two-part TLD ("uk")
+//
+//    If this returns 2, you should probably re-call the function including
+//    the next level of name. For example ("uk" -> 2, then you call with
+//    "co.uk" and know that the last two pars of this domain name are
+//    "toplevel".
+//
+//    This should be moved somewhere else (like cookies) and made easier to
+//    update.
+
+PRInt32
+GetTLDType(const nsCString& aHostTail)
+{
+  //static nsDataHashtable<nsStringHashKey, int> tldTypes;
+  if (! gTldTypes) {
+    // need to populate table
+    gTldTypes = new nsDataHashtable<nsCStringHashKey, int>();
+    if (! gTldTypes)
+      return 0;
+
+    gTldTypes->Init(256);
+
+    gTldTypes->Put(NS_LITERAL_CSTRING("com"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("org"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("net"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("edu"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("gov"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("mil"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("uk"), 2);
+    gTldTypes->Put(NS_LITERAL_CSTRING("co.uk"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("kr"), 2);
+    gTldTypes->Put(NS_LITERAL_CSTRING("co.kr"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("hu"), 1);
+    gTldTypes->Put(NS_LITERAL_CSTRING("us"), 1);
+
+    // FIXME: add the rest
+  }
+
+  PRInt32 type = 0;
+  if (gTldTypes->Get(aHostTail, &type))
+    return type;
+  else
+    return 0;
+}
+
+
+// GetSubstringFromNthDot
+//
+//    Similar to GetSubstringToNthDot except searches backward
+//      GetSubstringFromNthDot("foo.bar", length, 1, PR_FALSE) -> "bar"
+//
+//    It is legal to pass in a starting position < 0 so you can just
+//    use Length()-1 as the starting position even if the length is 0.
+
+void GetSubstringFromNthDot(const nsCString& aInput, PRInt32 aStartingSpot,
+                            PRInt32 aN, PRBool aIncludeDot, nsACString& aSubstr)
+{
+  PRInt32 dotsFound = 0;
+  for (PRInt32 i = aStartingSpot; i >= 0; i --) {
+    if (aInput[i] == '.') {
+      dotsFound ++;
+      if (dotsFound == aN) {
+        if (aIncludeDot)
+          aSubstr = Substring(aInput, i, aInput.Length() - i);
+        else
+          aSubstr = Substring(aInput, i + 1, aInput.Length() - i - 1);
+        return;
+      }
+    }
+  }
+  aSubstr = aInput; // no dot found
 }
 
 
