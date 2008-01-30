@@ -1101,8 +1101,14 @@ extern JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing);
 
 typedef enum JSGCParamKey {
-    JSGC_MAX_BYTES        = 0,  /* maximum nominal heap before last ditch GC */
-    JSGC_MAX_MALLOC_BYTES = 1   /* # of JS_malloc bytes before last ditch GC */
+    /* Maximum nominal heap before last ditch GC. */
+    JSGC_MAX_BYTES          = 0,
+
+    /* Number of JS_malloc bytes before last ditch GC. */
+    JSGC_MAX_MALLOC_BYTES   = 1,
+
+    /* Hoard stackPools for this long, in ms, default is 30 seconds. */
+    JSGC_STACKPOOL_LIFESPAN = 2
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)

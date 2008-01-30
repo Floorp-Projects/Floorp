@@ -296,6 +296,18 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
 {
     jsval *sp;
 
+    if (!cx->stackPool.first.next) {
+        int64 *timestamp;
+
+        JS_ARENA_ALLOCATE(timestamp, &cx->stackPool, sizeof(*timestamp));
+        if (!timestamp) {
+            js_ReportOutOfScriptQuota(cx);
+            return NULL;
+        }
+
+        *timestamp = JS_Now();
+    }
+
     if (markp)
         *markp = JS_ARENA_MARK(&cx->stackPool);
     JS_ARENA_ALLOCATE_CAST(sp, jsval *, &cx->stackPool, nslots * sizeof(jsval));
