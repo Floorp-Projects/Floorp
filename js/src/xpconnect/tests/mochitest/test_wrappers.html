@@ -44,6 +44,19 @@
        expected.sort().toString(),
        'enumeration over SJOWs walks the prototype chain and works over XOWs');
 
+    ok(!(new XPCSafeJSObjectWrapper({}) == new XPCSafeJSObjectWrapper({})),
+       'SJOWs equality hook returns false correctly');
+
+    let (obj = {}) {
+        ok(new XPCSafeJSObjectWrapper(obj) == new XPCSafeJSObjectWrapper(obj),
+           'SJOWs equality hook returns true correctly');
+    }
+
+    ok(new XPCSafeJSObjectWrapper(window) == new XPCNativeWrapper(window),
+       'SJOWs equality hook returns true correctly against XPCNW');
+    ok(new XPCSafeJSObjectWrapper(window) == window,
+       'SJOWs equality hook returns true correctly against XOW');
+
     var origProto = window.__proto__;
     try {
         window.__proto__ = window;
