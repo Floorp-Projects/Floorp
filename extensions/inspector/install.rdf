@@ -66,5 +66,14 @@
     <em:description>Inspects the structure and properties of a window and its contents.</em:description>
     <em:creator>mozilla.org</em:creator>
     <em:homepageURL>http://www.mozilla.org/projects/inspector/</em:homepageURL>
+
+    <em:localized>
+      <Description>
+        <em:locale>sk</em:locale>
+        <em:name>DOM Inspector</em:name>
+        <em:description>Umožní preskúmať štruktúru a vlastnosti okna a jeho obsahu.</em:description>
+      </Description>
+    </em:localized> 
+    
   </Description>
 </RDF>
