@@ -13,11 +13,15 @@ my %equivalents = (
 
   "Crocodile Clips Ltd." => "Crocodile Clips Ltd",
 
+  "Hewlett-Packard Company. Portions created by Hewlett-Packard Company are Copyright" => "Hewlett-Packard Company",
+  
   "IBM" => "IBM Corporation",
   "IBM Corp" => "IBM Corporation",
   "International Business Machines Corporation" => "IBM Corporation",
 
+  "None" => "Mozilla Foundation",
   "a mozilla.org contributor" => "Mozilla Foundation",
+  "person recorded in the version control logs" => "Mozilla Foundation",
   "Mozilla" => "Mozilla Foundation",
   "Mozilla.com" => "Mozilla Corporation",
   "Mozilla.org" => "Mozilla Foundation",
@@ -37,7 +41,9 @@ my %equivalents = (
   "Netscape Communications, Inc" => "Netscape Communications Corporation",
   "Netscape Communications Corp" => "Netscape Communications Corporation",
   "Netscape Communications Corp." => "Netscape Communications Corporation",
+  "Netscape Commmunications Corp" => "Netscape Communications Corporation",
   "Netscape Communications Corp, Inc" => "Netscape Communications Corporation",
+  "Netscape Communication Corporation" => "Netscape Communications Corporation",
 
   "Novell" => "Novell Inc",
   "Novell, Inc" => "Novell Inc",
@@ -70,15 +76,14 @@ my %equivalents = (
   "Google" => "Google Inc",
   "Telephone Corporation)" => "NTT",
 
-  "Frank Schoenheit" => "Frank Schönheit",
-  "HÃ¥kan Waara" => "Håkan Waara",
-  "Karsten DÃ¼sterloh" => "Karsten Düsterloh",
-  "Simon BÃ¼nzli" => "Simon Bünzli",
-  "Vincent BÃ©ron" => "Vincent Béron",
-  "Tomas Mšller" => "Tomas Müller",
-  
-  "person recorded in the version control logs" => "Mozilla Foundation",
-  "None" => "Mozilla Foundation"
+  "Frank Schoenheit" => "Frank Sch&ouml;nheit",
+  "Frank Schönheit" => "Frank Sch&ouml;nheit",
+  "HÃ¥kan Waara" => "H&aring;kan Waara",
+  "Håkan Waara" => "H&aring;kan Waara",
+  "Karsten DÃ¼sterloh" => "Karsten D&uuml;sterloh",
+  "Simon BÃ¼nzli" => "Simon B&uuml;nzli",
+  "Vincent BÃ©ron" => "Vincent B&eacute;ron",
+  "Tomas Mšller" => "Tomas M&uuml;ller",  
 );
 
 # 'indevs' == "Initial Developers"
@@ -92,7 +97,7 @@ while (<>)
   {
     # Chop off email addresses and suchlike
     $indev =~ s/[<,\(].*$//;
-    $indev =~ s/^The\s*//i;
+    $indev =~ s/^The\s+//i;
 
     # Trim whitespace
     $indev =~ s/^\s*//;
