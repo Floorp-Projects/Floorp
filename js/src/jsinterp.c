@@ -535,6 +535,7 @@ static JSBool
 ComputeGlobalThis(JSContext *cx, jsval *argv)
 {
     JSObject *thisp;
+    JSClass *clasp;
 
     if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
         !OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]))) {
@@ -559,6 +560,14 @@ ComputeGlobalThis(JSContext *cx, jsval *argv)
             thisp = parent;
         }
     }
+
+    clasp = OBJ_GET_CLASS(cx, thisp);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        if (xclasp->outerObject && !(thisp = xclasp->outerObject(cx, thisp)))
+            return JS_FALSE;
+    }
+
     argv[-1] = OBJECT_TO_JSVAL(thisp);
     return JS_TRUE;
 }
