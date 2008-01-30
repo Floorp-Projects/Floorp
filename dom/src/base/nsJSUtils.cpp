@@ -81,7 +81,7 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
       JSPrincipals* scriptPrins = JS_GetScriptPrincipals(aContext, script);
 
       // Return the weaker of the two principals if they differ.
-      if (scriptPrins != aPrincipals &&
+      if (scriptPrins && scriptPrins != aPrincipals &&
           scriptPrins->subsume(scriptPrins, aPrincipals)) {
         *aFilename = aPrincipals->codebase;
         *aLineno = 0;
