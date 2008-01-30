@@ -1668,12 +1668,12 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
-  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS,
-                           &mAutoCompleteMaxResults);
-  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE,
-                           &mAutoCompleteSearchChunkSize);
-  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT,
-                           &mAutoCompleteSearchTimeout);
+  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS,
+                          &mAutoCompleteMaxResults);
+  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE,
+                          &mAutoCompleteSearchChunkSize);
+  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT,
+                          &mAutoCompleteSearchTimeout);
   if (!aInitializing && oldCompleteOnlyTyped != mAutoCompleteOnlyTyped) {
     // update the autocomplete statements if the option has changed.
     nsresult rv = CreateAutoCompleteQueries();
