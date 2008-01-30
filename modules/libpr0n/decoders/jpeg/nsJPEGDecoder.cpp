@@ -58,7 +58,14 @@
 
 extern "C" {
 #include "iccjpeg.h"
-#include "jpegint.h"
+
+/* Colorspace conversion (copied from jpegint.h) */
+struct jpeg_color_deconverter {
+  JMETHOD(void, start_pass, (j_decompress_ptr cinfo));
+  JMETHOD(void, color_convert, (j_decompress_ptr cinfo,
+				JSAMPIMAGE input_buf, JDIMENSION input_row,
+				JSAMPARRAY output_buf, int num_rows));
+};
 
 METHODDEF(void)
 ycc_rgb_convert_argb (j_decompress_ptr cinfo,
@@ -1205,6 +1212,28 @@ const int Cb_g_tab[(MAXJSAMPLE+1) * sizeof(int)] ={
   0xffd7e404UL, 0xffd78beaUL, 0xffd733d0UL, 0xffd6dbb6UL, 0xffd6839cUL, 0xffd62b82UL,
   0xffd5d368UL, 0xffd57b4eUL, 0xffd52334UL, 0xffd4cb1aUL
  };
+
+
+/* We assume that right shift corresponds to signed division by 2 with
+ * rounding towards minus infinity.  This is correct for typical "arithmetic
+ * shift" instructions that shift in copies of the sign bit.  But some
+ * C compilers implement >> with an unsigned shift.  For these machines you
+ * must define RIGHT_SHIFT_IS_UNSIGNED.
+ * RIGHT_SHIFT provides a proper signed right shift of an INT32 quantity.
+ * It is only applied with constant shift counts.  SHIFT_TEMPS must be
+ * included in the variables of any routine using RIGHT_SHIFT.
+ */
+
+#ifdef RIGHT_SHIFT_IS_UNSIGNED
+#define SHIFT_TEMPS	INT32 shift_temp;
+#define RIGHT_SHIFT(x,shft)  \
+	((shift_temp = (x)) < 0 ? \
+	 (shift_temp >> (shft)) | ((~((INT32) 0)) << (32-(shft))) : \
+	 (shift_temp >> (shft)))
+#else
+#define SHIFT_TEMPS
+#define RIGHT_SHIFT(x,shft)	((x) >> (shft))
+#endif
 
 
 METHODDEF(void)
