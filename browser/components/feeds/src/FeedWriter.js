@@ -744,7 +744,7 @@ FeedWriter.prototype = {
       try {
         var prefs = Cc["@mozilla.org/preferences-service;1"].
                     getService(Ci.nsIPrefBranch);
-        if (prefs.getCharPref(getPrefActionFromType(feedType)) != "ask")
+        if (prefs.getCharPref(getPrefActionForType(feedType)) != "ask")
           alwaysUse = true;
       }
       catch(ex) { }
@@ -843,7 +843,7 @@ FeedWriter.prototype = {
 
     var handler = "bookmarks";
     try {
-      handler = prefs.getCharPref(getPrefReaderFromType(feedType));
+      handler = prefs.getCharPref(getPrefReaderForType(feedType));
     }
     catch (ex) { }
 
@@ -851,7 +851,7 @@ FeedWriter.prototype = {
       case "web": {
         var handlersMenuList = this._document.getElementById("handlersMenuList");
         if (handlersMenuList) {
-          var url = prefs.getComplexValue(getPrefWebFromType(feedType), Ci.nsISupportsString).data;
+          var url = prefs.getComplexValue(getPrefWebForType(feedType), Ci.nsISupportsString).data;
           var handlers =
             handlersMenuList.getElementsByAttribute("webhandlerurl", url);
           if (handlers.length == 0) {
@@ -867,7 +867,7 @@ FeedWriter.prototype = {
         var selectedAppMenuItem = this.selectedApplicationItemWrapped;
         if (selectedAppMenuItem) {
           try {
-            var selectedApp = prefs.getComplexValue(getPrefAppFromType(feedType),
+            var selectedApp = prefs.getComplexValue(getPrefAppForType(feedType),
                                                     Ci.nsILocalFile);
           } catch(ex) { }
 
@@ -930,7 +930,7 @@ FeedWriter.prototype = {
     try {
       var prefs = Cc["@mozilla.org/preferences-service;1"].
                   getService(Ci.nsIPrefBranch);
-      selectedApp = prefs.getComplexValue(getPrefAppFromType(feedType),
+      selectedApp = prefs.getComplexValue(getPrefAppForType(feedType),
                                           Ci.nsILocalFile);
 
       if (selectedApp.exists())
@@ -1221,12 +1221,12 @@ FeedWriter.prototype = {
 
     if (selectedItem.hasAttribute("webhandlerurl")) {
       var webURI = selectedItem.getAttribute("webhandlerurl");
-      prefs.setCharPref(getPrefReaderFromType(feedType), "web");
+      prefs.setCharPref(getPrefReaderForType(feedType), "web");
 
       var supportsString = Cc["@mozilla.org/supports-string;1"].
                            createInstance(Ci.nsISupportsString);
       supportsString.data = webURI;
-      prefs.setComplexValue(getPrefWebFromType(feedType), Ci.nsISupportsString,
+      prefs.setComplexValue(getPrefWebForType(feedType), Ci.nsISupportsString,
                             supportsString);
 
       var wccr = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
@@ -1242,18 +1242,18 @@ FeedWriter.prototype = {
     else {
       switch (selectedItem.id) {
         case "selectedAppMenuItem":
-          prefs.setCharPref(getPrefReaderFromType(feedType), "client");
-          prefs.setComplexValue(getPrefAppFromType(feedType), Ci.nsILocalFile, 
+          prefs.setCharPref(getPrefReaderForType(feedType), "client");
+          prefs.setComplexValue(getPrefAppForType(feedType), Ci.nsILocalFile, 
                                 this.selectedApplicationItemWrapped.file);
           break;
         case "defaultHandlerMenuItem":
-          prefs.setCharPref(getPrefReaderFromType(feedType), "client");
-          prefs.setComplexValue(getPrefAppFromType(feedType), Ci.nsILocalFile, 
+          prefs.setCharPref(getPrefReaderForType(feedType), "client");
+          prefs.setComplexValue(getPrefAppForType(feedType), Ci.nsILocalFile, 
                                 this.defaultSystemReaderItemWrapped.file);
           break;
         case "liveBookmarksMenuItem":
           defaultHandler = "bookmarks";
-          prefs.setCharPref(getPrefReaderFromType(feedType), "bookmarks");
+          prefs.setCharPref(getPrefReaderForType(feedType), "bookmarks");
           break;
       }
       var feedService = Cc["@mozilla.org/browser/feeds/result-service;1"].
@@ -1270,9 +1270,9 @@ FeedWriter.prototype = {
     // or to "bookmarks" (if the live bookmarks option is selected).
     // Otherwise, we should set it to "ask"
     if (useAsDefault)
-      prefs.setCharPref(getPrefActionFromType(feedType), defaultHandler);
+      prefs.setCharPref(getPrefActionForType(feedType), defaultHandler);
     else
-      prefs.setCharPref(getPrefActionFromType(feedType), "ask");
+      prefs.setCharPref(getPrefActionForType(feedType), "ask");
   },
 
   // nsIObserver
