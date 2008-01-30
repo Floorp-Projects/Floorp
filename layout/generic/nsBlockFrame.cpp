@@ -294,7 +294,7 @@ nsBlockFrame::Destroy()
   }
 
   mFloats.DestroyFrames();
-  
+
   nsPresContext* presContext = PresContext();
 
   nsLineBox::DeleteLineList(presContext, mLines);
