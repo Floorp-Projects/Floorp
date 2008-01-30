@@ -1230,11 +1230,12 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
   popup->Invalidate();
   
-  // Make sure the popup is open, if necessary, since we now
-  // have at least one search result ready to display
+  // Make sure the popup is open, if necessary, since we now have at least one
+  // search result ready to display. Don't force the popup closed if we might
+  // get results in the future to avoid unnecessarily canceling searches.
   if (mRowCount)
     OpenPopup();
-  else
+  else if (result != nsIAutoCompleteResult::RESULT_NOMATCH_ONGOING)
     ClosePopup();
 
   if (mSearchesOngoing == 0) {
