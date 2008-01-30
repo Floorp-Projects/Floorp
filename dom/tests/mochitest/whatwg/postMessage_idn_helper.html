@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage IDN test page</title>
+  <script type="application/javascript">
+    function receiveMessage(evt)
+    {
+      var response = "idn-response";
+
+      if (!(evt instanceof MessageEvent))
+        response += " not-a-MessageEvent";
+      if (evt.uri !== "http://localhost:8888/tests/dom/tests/mochitest/whatwg/test_postMessage_idn.xhtml")
+        response += " wrong-sender-uri(" + evt.uri + ")";
+      if (evt.domain !== "localhost")
+        response += " wrong-sender-domain(" + evt.domain + ")";
+      if (evt.data !== "idn-message")
+        response += " wrong-data(" + evt.data + ")";
+      if (evt.source !== window.parent)
+        response += " wrong-source";
+      if (evt.target !== document)
+        response += " wrong-target";
+      if (evt.type !== "message")
+        response += " wrong-type(" + evt.type + ")";
+
+      evt.source.postMessage(response);
+    }
+    document.addEventListener("message", receiveMessage, false);
+
+    function setup()
+    {
+      var target = document.getElementById("location");
+      target.textContent = document.domain;
+    }
+
+    window.addEventListener("load", setup, false);
+  </script>
+</head>
+<body>
+<h1 id="location">No location!</h1>
+</body>
+</html>

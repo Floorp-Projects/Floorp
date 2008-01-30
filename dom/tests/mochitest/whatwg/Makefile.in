@@ -15,11 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Jeff Walden <jwalden+code@mit.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,39 +40,38 @@ DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir	= dom/tests/mochitest/whatwg
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE		= dom
-XPIDL_MODULE	= dom_events
-GRE_MODULE	= 1
-
-SDK_XPIDLSRCS =                                 \
-	nsIDOMDocumentEvent.idl			\
-	nsIDOMEvent.idl				\
-	nsIDOMEventTarget.idl			\
-	nsIDOMEventListener.idl			\
-	nsIDOM3DocumentEvent.idl		\
-	nsIDOM3EventTarget.idl			\
-	nsIDOMEventGroup.idl			\
-	nsIDOMCustomEvent.idl			\
-	nsIDOMMouseEvent.idl			\
-	nsIDOMUIEvent.idl			\
-	$(NULL)
-
-XPIDLSRCS =					\
-	nsIDOMNSEvent.idl			\
-	nsIDOMDataContainerEvent.idl	\
-	nsIDOMKeyEvent.idl			\
-	nsIDOMMutationEvent.idl			\
-	nsIDOMNSUIEvent.idl			\
-	nsIDOMPopupBlockedEvent.idl		\
-	nsIDOMBeforeUnloadEvent.idl		\
-	nsIDOMNSEventTarget.idl			\
-	nsIDOMSmartCardEvent.idl                \
-	nsIDOMPageTransitionEvent.idl		\
-	nsIDOMCommandEvent.idl			\
-	nsIDOMMessageEvent.idl			\
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES	= \
+		browserFu.js \
+		test_MessageEvent.html \
+		test_postMessage.html \
+		postMessage_helper.html \
+		test_postMessage_joined.html \
+		postMessage_joined_helper.html \
+		postMessage_joined_helper2.html \
+		test_postMessage_onOther.html \
+		postMessage_onOther.html \
+		test_MessageEvent_dispatchToOther.html \
+		test_postMessage_override.html \
+		postMessage_override_helper.html \
+		test_postMessage_throw.html \
+		postMessage_throw_helper.html \
+		postMessage_chrome_helper.html \
+		test_postMessage_special.xhtml \
+		test_postMessage_idn.xhtml \
+		postMessage_idn_helper.html \
+		$(NULL)
+
+_CHROME_FILES	= \
+		test_postMessage_chrome.html \
+		$(NULL)		
+
+libs:: 	$(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

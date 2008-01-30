@@ -44,7 +44,14 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-[scriptable, uuid(0d12a345-3fe2-491e-af0d-bcfd5c4baa03)]
+%{C++
+/* I hate you, Windows. */
+#ifdef PostMessage
+#undef PostMessage
+#endif
+%}
+
+[scriptable, uuid(86f7b733-aff9-469a-9e8c-2996f7db2720)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -200,4 +207,19 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
   nsIVariant                showModalDialog(in DOMString aURI,
                                             [optional] in nsIVariant aArgs,
                                             [optional] in DOMString aOptions);
+
+  /**
+   * Implements a safe message-passing system which can cross same-origin
+   * boundaries.
+   *
+   * This method, when called, causes a MessageEvent to be dispatched at the
+   * primary document for the window upon which this method is called.  (Note
+   * that the postMessage property on windows is allAccess and thus is readable
+   * cross-origin.)  The dispatched event will have message as its data, the
+   * calling context's window as its source, and a domain and URI determined by
+   * the calling context's main document URI.
+   * 
+   * See the WHATWG HTML5 specification, section 6.4, for more details.
+   */
+  void postMessage(in DOMString message);
 };

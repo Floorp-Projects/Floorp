@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>Basic postMessage tests</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="browserFu.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_helper.html"
+        name="otherSameDomain"></iframe>
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_helper.html"
+        name="otherCrossDomain"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var otherPath = "/tests/dom/tests/mochitest/whatwg/postMessage_helper.html";
+var path = "/tests/dom/tests/mochitest/whatwg/test_postMessage.html";
+
+var testsCompletedCount = 0;
+
+/** Variable for receivers to attempt to get. */
+window.privateVariable = 17;
+
+/** For sentinel finish, if necessary in deficient browsers */
+var finished = false;
+
+/** Receives MessageEvents to this window. */
+function messageReceiver(evt)
+{
+  try
+  {
+    ok(evt instanceof MessageEvent, "umm, how did we get this?");
+    is(evt.type, "message", "expected events of type 'message'");
+  
+    if (isMozilla)
+    {
+      ok(evt.isTrusted === false, "shouldn't have been a trusted event");
+    }
+  
+    var data = evt.data;
+  
+    // Check for the message we send to ourselves; it can't be
+    // counted as a test, and it's conceptually distinct from
+    // the other cases, so just return after handling it.
+    if (data === "post-to-self")
+    {
+      respondToSelf(evt);
+      return;
+    }
+
+    switch (evt.data)
+    {
+      case "post-to-self":
+        
+      case "post-to-self-response":
+        receiveSelf(evt);
+        break;
+  
+      case "post-to-other-same-domain-response":
+        receiveOtherSameDomain(evt);
+        break;
+  
+      case "post-to-other-cross-domain-response":
+        receiveOtherCrossDomain(evt);
+        break;
+  
+      default:
+        ok(false, "unexpected message: " + evt.data);
+        break;
+    }
+  }
+  catch (e)
+  {
+    ok(false, "error processing event with data '" + evt.data + "': " + e);
+  }
+
+  // if all the tests have executed, we're done
+  if (++testsCompletedCount == allTests.length)
+  {
+    finished = true;
+    SimpleTest.finish();
+  }
+}
+
+
+/******************
+ * SELF-RESPONDER *
+ ******************/
+
+function respondToSelf(evt)
+{
+  is(evt.domain, "localhost", "what domain are we on again?");
+  is(evt.uri, "http://localhost:8888" + path, "event has wrong URI");
+  is(evt.source, window, "we posted this message!");
+  
+  evt.source.postMessage("post-to-self-response");
+}
+
+
+/*************
+ * RECEIVERS *
+ *************/
+
+function receiveSelf(evt)
+{
+  is(evt.domain, "localhost", "what domain are we on again?");
+  is(evt.uri, "http://localhost:8888" + path, "event has wrong URI");
+  is(evt.source, window, "we posted this message!");
+}
+
+function receiveOtherSameDomain(evt)
+{
+  is(evt.domain, "localhost", "we should be same domain");
+  is(evt.uri, "http://localhost:8888" + otherPath,
+     "same-domain response event has wrong URI");
+  is(evt.source, window.frames.otherSameDomain,
+     "wrong source for same-domain message!");
+}
+
+function receiveOtherCrossDomain(evt)
+{
+  is(evt.domain, "example.org", "we should be same domain");
+  is(evt.uri, "http://example.org:8000" + otherPath,
+     "same-domain response event has wrong URI");
+
+  // can't use |is| here, because ok tries to get properties on its arguments
+  // for creating a formatted logging message
+  ok(evt.source === window.frames.otherCrossDomain,
+     "wrong source for cross-domain message!");
+}
+
+
+/**************
+ * TEST SETUP *
+ **************/
+
+document.addEventListener("message", messageReceiver, false);
+
+/**
+ * Returns a nullary function which posts the given message to the given
+ * destination.
+ */
+function createMessageDispatcher(message, destination)
+{
+  function dispatcher()
+  {
+    try
+    {
+      destination.postMessage(message);
+    }
+    catch (e)
+    {
+      ok(false, "error while calling postMessage: " + e);
+    }
+  }
+
+  return dispatcher;
+}
+
+var allTests =
+  [
+    createMessageDispatcher("post-to-self", window),
+    createMessageDispatcher("post-to-other-same-domain",
+                            window.frames.otherSameDomain),
+    createMessageDispatcher("post-to-other-cross-domain",
+                            window.frames.otherCrossDomain),
+  ];
+
+for (var i = 0, sz = allTests.length; i != sz; i++)
+  addLoadEvent(allTests[i]);
+
+/**
+ * Browsers which fail to send a response to a postMessage need this to
+ * finish the test.
+ */
+function sentinel()
+{
+  if (!finished)
+  {
+    ok(false, "shouldn't be necessary (finished in last of allTests)");
+    SimpleTest.finish();
+  }
+}
+
+addLoadEvent(sentinel);
+</script>
+</pre>
+</body>
+</html>
