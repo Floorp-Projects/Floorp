@@ -1,0 +1,17 @@
+<DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var t = document.body.firstChild;
+  t.data = "a" + t.data;
+}
+
+</script>
+</head>
+
+<body onload="boom();" style="width: 1px;">b c&#1603;</body>
+
+</html>
