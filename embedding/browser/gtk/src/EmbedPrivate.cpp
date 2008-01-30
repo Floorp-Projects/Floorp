@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsIDocShell.h>
-#include <nsIWebProgress.h>
+#include "nsIDocShell.h"
+#include "nsIWebProgress.h"
 #include "nsIWidget.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
@@ -46,32 +46,32 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 // for do_GetInterface
-#include <nsIInterfaceRequestor.h>
+#include "nsIInterfaceRequestor.h"
 // for do_CreateInstance
-#include <nsIComponentManager.h>
+#include "nsIComponentManager.h"
 
 // for initializing our window watcher service
-#include <nsIWindowWatcher.h>
+#include "nsIWindowWatcher.h"
 
-#include <nsILocalFile.h>
+#include "nsILocalFile.h"
 
 #include "nsXULAppAPI.h"
 
 // all of the crap that we need for event listeners
 // and when chrome windows finish loading
-#include <nsIDOMWindow.h>
-#include <nsPIDOMWindow.h>
-#include <nsIDOMWindowInternal.h>
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 
 // For seting scrollbar visibilty
-#include <nsIDOMBarProp.h>
+#include "nsIDOMBarProp.h"
 
 // for the focus hacking we need to do
-#include <nsIFocusController.h>
+#include "nsIFocusController.h"
 
 // app component registration
-#include <nsIGenericFactory.h>
-#include <nsIComponentRegistrar.h>
+#include "nsIGenericFactory.h"
+#include "nsIComponentRegistrar.h"
 
 // all of our local includes
 #include "EmbedPrivate.h"

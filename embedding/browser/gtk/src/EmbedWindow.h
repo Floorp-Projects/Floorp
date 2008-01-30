@@ -38,16 +38,15 @@
 #ifndef __EmbedWindow_h
 #define __EmbedWindow_h
 
-#include <nsString.h>
-#include <nsIWebBrowserChrome.h>
-#include <nsIWebBrowserChromeFocus.h>
-#include <nsIEmbeddingSiteWindow.h>
-#include <nsITooltipListener.h>
-#include <nsISupports.h>
-#include <nsIWebBrowser.h>
-#include <nsIBaseWindow.h>
-#include <nsIInterfaceRequestor.h>
-#include <nsCOMPtr.h>
+#include "nsIWebBrowserChrome.h"
+#include "nsIWebBrowserChromeFocus.h"
+#include "nsIEmbeddingSiteWindow.h"
+#include "nsITooltipListener.h"
+#include "nsISupports.h"
+#include "nsIWebBrowser.h"
+#include "nsIBaseWindow.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
 
 #include <gtk/gtk.h>

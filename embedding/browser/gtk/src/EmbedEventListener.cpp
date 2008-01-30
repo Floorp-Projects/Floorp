@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsCOMPtr.h>
-#include <nsIDOMMouseEvent.h>
+#include "nsCOMPtr.h"
+#include "nsIDOMMouseEvent.h"
 
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMUIEvent.h"

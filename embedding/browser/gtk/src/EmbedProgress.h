@@ -38,8 +38,8 @@
 #ifndef __EmbedProgress_h
 #define __EmbedProgress_h
 
-#include <nsIWebProgressListener.h>
-#include <nsWeakReference.h>
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 #include "EmbedPrivate.h"
 
 class EmbedProgress : public nsIWebProgressListener,
