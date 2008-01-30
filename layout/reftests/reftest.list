@@ -87,3 +87,5 @@ include percent-overflow-sizing/reftest.list
 # forms
 include forms/reftest.list
 
+# mathml
+include mathml/reftest.list
