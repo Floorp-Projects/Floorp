@@ -159,26 +159,165 @@ var StarUI = {
   },
 
   _doShowEditBookmarkPanel:
-  function PCH__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
+  function SU__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
     this._blockCommands(); // un-done in the popuphiding handler
 
-    // Consume dismiss clicks, see bug 400924
-    this.panel.popupBoxObject
-        .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-    this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
+    var bundle = this._element("bundle_browser");
 
-    gEditItemOverlay.initPanel(aItemId,
+    // "Page Bookmarked" title
+    this._element("editBookmarkPanelTitle").value =
+      bundle.getString("editBookmarkPanel.pageBookmarkedTitle");
+
+    // No description; show the Done, Cancel, Remove buttons;
+    // hid the Edit, Undo buttons
+    this._element("editBookmarkPanelDescription").textContent = "";
+    this._element("editBookmarkPanelBottomButtons").hidden = false;
+    this._element("editBookmarkPanelContent").hidden = false;
+    this._element("editBookmarkPanelEditButton").hidden = true;
+    this._element("editBookmarkPanelRemoveButton").hidden = false;
+    this._element("editBookmarkPanelUndoRemoveButton").hidden = true;
+
+    // unset the unstarred state, if set
+    this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
+
+    this._itemId = aItemId !== undefined ? aItemId : this._itemId;
+    this._batching = true;
+    PlacesUtils.ptm.beginBatch();
+
+    // XXXmano hack: We push a no-op transaction on the stack so it's always
+    // safe for the Cancel button to call undoTransaction after endBatch.
+    // Otherwise, if no changes were done in the edit-item panel, the last
+    // transaction on the undo stack may be the initial createItem transaction,
+    // or worse, the batched editing of some other item.
+    PlacesUtils.ptm.doTransaction({ doTransaction: function() { },
+                                    undoTransaction: function() { },
+                                    redoTransaction: function() { },
+                                    isTransient: false,
+                                    merge: function() { return false; } });
+
+    if (this.panel.state == "closed") {
+      // Consume dismiss clicks, see bug 400924
+      this.panel.popupBoxObject
+          .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
+      this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
+    }
+
+    gEditItemOverlay.initPanel(this._itemId,
                                { hiddenRows: ["description", "location",
                                               "loadInSidebar", "keyword"] });
   },
 
-  editBookmarkPanelShown:
-  function PCH_editBookmarkPanelShown() {
-    var namePicker = document.getElementById("editBMPanel_namePicker");
-    namePicker.focus();
-    namePicker.editor.selectAll();
+  panelShown:
+  function SU_panelShown(aEvent) {
+    if (aEvent.target == this.panel &&
+        !this._element("editBookmarkPanelContent").hidden) {
+      var namePicker = this._element("editBMPanel_namePicker");
+      namePicker.focus();
+      namePicker.editor.selectAll();
+    }
   },
 
+  showPageBookmarkedNotification:
+  function PCH_showPageBookmarkedNotification(aItemId, aAnchorElement, aPosition) {
+    this._blockCommands(); // un-done in the popuphiding handler
+
+    var bundle = this._element("bundle_browser");
+    var brandBundle = this._element("bundle_brand");
+    var brandShortName = brandBundle.getString("brandShortName");
+
+    // "Page Bookmarked" title
+    this._element("editBookmarkPanelTitle").value =
+      bundle.getString("editBookmarkPanel.pageBookmarkedTitle");
+
+    // description
+    this._element("editBookmarkPanelDescription").textContent =
+      bundle.getFormattedString("editBookmarkPanel.pageBookmarkedDescription",
+                                [brandShortName]);
+
+    // hide the edit panel and the buttons below to it (Cancel, Done)
+    this._element("editBookmarkPanelContent").hidden = true;
+    this._element("editBookmarkPanelBottomButtons").hidden = true;
+
+    // show the "Edit.." button and the Remove Bookmark button, hide the
+    // undo-remove-bookmark button.
+    this._element("editBookmarkPanelEditButton").hidden = false;
+    this._element("editBookmarkPanelRemoveButton").hidden = false;
+    this._element("editBookmarkPanelUndoRemoveButton").hidden = true;
+
+    // unset the unstarred state, if set
+    this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
+
+    this._itemId = aItemId !== undefined ? aItemId : this._itemId;
+    if (this.panel.state == "closed") {
+      // Consume dismiss clicks, see bug 400924
+      this.panel.popupBoxObject
+          .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
+      this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
+    }
+  },
+
+  editButtonCommand: function SU_editButtonCommand() {
+    this.showEditBookmarkPopup();
+  },
+
+  cancelButtonOnCommand: function SU_cancelButtonOnCommand() {
+    PlacesUtils.ptm.endBatch();
+    this._batching = false;
+    PlacesUtils.ptm.undoTransaction();
+    this.panel.hidePopup();
+  },
+
+  removeBookmarkButtonCommand: function SU_removeBookmarkButtonCommand() {
+    // In minimal mode ("page bookmarked" notification), the bookmark
+    // is removed and the panel is hidden immediately. In full edit mode,
+    // a "Bookmark Removed" notification along with an Undo button is
+    // shown
+    if (this._batching) {
+      PlacesUtils.ptm.endBatch();
+      PlacesUtils.ptm.beginBatch(); // allow undo from within the notification
+      var bundle = this._element("bundle_browser");
+
+      // "Bookmark Removed" title (the description field is already empty in
+      // this mode)
+      this._element("editBookmarkPanelTitle").value =
+        bundle.getString("editBookmarkPanel.bookmarkedRemovedTitle");
+      // hide the edit fields, the buttons below to and the remove bookmark
+      // button. Show the undo-remove-bookmark button.
+      this._element("editBookmarkPanelContent").hidden = true;
+      this._element("editBookmarkPanelBottomButtons").hidden = true;
+      this._element("editBookmarkPanelUndoRemoveButton").hidden = false;
+      this._element("editBookmarkPanelRemoveButton").hidden = true;
+      this._element("editBookmarkPanelStarIcon").setAttribute("unstarred", "true");
+    }
+
+    // remove the bookmark
+    // cache its uri so we can get the new itemId in the case of undo
+    this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
+    var txn = PlacesUtils.ptm.removeItem(this._itemId);
+    PlacesUtils.ptm.doTransaction(txn);
+
+    // remove all tags for the associated url
+    var untagTxn = PlacesUtils.ptm.untagURI(this._uri, null);
+    PlacesUtils.ptm.doTransaction(untagTxn);
+
+    // hidePopup resets our itemId, thus we call it only after removing
+    // the bookmark
+    if (!this._batching)
+      this.panel.hidePopup();
+  },
+
+  undoRemoveBookmarkCommand: function SU_undoRemoveBookmarkCommand() {
+    // restore the bookmark by undoing the last transaction and go back
+    // to the edit state
+    PlacesUtils.ptm.endBatch();
+    this._batching = false;
+    PlacesUtils.ptm.undoTransaction();
+    this._itemId = PlacesUtils.getMostRecentBookmarkForURI(this._uri);
+    this.showEditBookmarkPopup();
+  }
+}
+
+var PlacesCommandHook = {
   /**
    * Adds a bookmark to the page loaded in the given browser.
    *
