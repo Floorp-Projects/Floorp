@@ -1161,6 +1161,17 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
 
   // Check for dangerous headers
   if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
+    
+    // Make sure we don't leak header information from denied cross-site
+    // requests.
+    if (mChannel) {
+      nsresult status;
+      mChannel->GetStatus(&status);
+      if (NS_FAILED(status)) {
+        return NS_OK;
+      }
+    }
+
     const char *kCrossOriginSafeHeaders[] = {
       "cache-control", "content-language", "content-type", "expires",
       "last-modified", "pragma"
