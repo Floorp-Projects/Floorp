@@ -6141,6 +6141,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_RC:
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+        if (pn->pn_extra & PNX_SHORTHAND) {
+            js_ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR,
+                                        JSMSG_BAD_OBJECT_INIT);
+            return JS_FALSE;
+        }
+#endif
         /*
          * Emit code for {p:a, '%q':b, 2:c} of the form:
          *   t = new Object; t.p = a; t['%q'] = b; t[2] = c; t;

@@ -177,6 +177,9 @@ JS_BEGIN_EXTERN_C
  * TOK_RC       list        pn_head: list of pn_count TOK_COLON nodes where
  *                          each has pn_left: property id, pn_right: value
  *                          #n={...} produces TOK_DEFSHARP at head of list
+ *                          var {x} = object destructuring shorthand shares
+ *                          PN_NAME node for x on left and right of TOK_COLON
+ *                          node in TOK_RC's list, has PNX_SHORTHAND flag
  * TOK_DEFSHARP unary       pn_num: jsint value of n in #n=
  *                          pn_kid: null for #n=[...] and #n={...}, primary
  *                          if #n=primary for function, paren, name, object
@@ -309,7 +312,7 @@ struct JSParseNode {
             JSAtom      *atom;          /* name or label atom, null if slot */
             JSParseNode *expr;          /* object or initializer */
             jsint       slot;           /* -1 or arg or local var slot */
-            JSBool      constslot;      /* true for const names */
+            JSBool      isconst;        /* true for const names */
         } name;
         struct {                        /* lexical scope. */
             JSParsedObjectBox *pob;     /* block object */
@@ -349,7 +352,7 @@ struct JSParseNode {
 #define pn_atom         pn_u.name.atom
 #define pn_expr         pn_u.name.expr
 #define pn_slot         pn_u.name.slot
-#define pn_const        pn_u.name.constslot
+#define pn_const        pn_u.name.isconst
 #define pn_dval         pn_u.dval
 #define pn_atom2        pn_u.apair.atom2
 #define pn_pob          pn_u.object.pob
@@ -366,6 +369,9 @@ struct JSParseNode {
 #define PNX_NEEDBRACES  0x80            /* braces necessary due to closure */
 #define PNX_FUNCDEFS   0x100            /* contains top-level function
                                            statements */
+#define PNX_SHORTHAND  0x200            /* shorthand syntax used, at present
+                                           object destructuring ({x,y}) only */
+
 /*
  * Move pn2 into pn, preserving pn->pn_pos and pn->pn_offset and handing off
  * any kids in pn2->pn_u, by clearing pn2.
