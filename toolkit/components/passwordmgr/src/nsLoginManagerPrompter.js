@@ -391,7 +391,7 @@ LoginManagerPrompter.prototype = {
         // at the post-authentication page. I don't see a good way to
         // heuristically determine when to ignore such location changes, so
         // we'll try ignoring location changes based on a time interval.
-        newBar.timeout = Date.now() + 10000; // 10 seconds
+        newBar.timeout = Date.now() + 20000; // 20 seconds
 
         if (oldBar) {
             this.log("(...and removing old save-password notification bar)");
