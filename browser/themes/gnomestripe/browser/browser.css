@@ -821,7 +821,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #identity-box {
   background-color: -moz-dialog;
   -moz-border-end: 1px solid ThreeDShadow;
-  -moz-user-focus: normal;
 }
 
 #identity-box:focus {

@@ -1308,7 +1308,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #identity-box {
   background: url("chrome://browser/skin/urlbar/startcap.png") left center no-repeat;
   min-width: 42px;
-  -moz-user-focus: normal;
 }
 
 #identity-box:focus {
