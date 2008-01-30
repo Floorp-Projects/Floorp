@@ -202,7 +202,7 @@ menuitem.bookmark-item {
 /* livemarks have the same layout as folder-item, but in the browser-only livemark-item.png */
 /* only the folder icon has any effect for now, item icon is unused */
 .bookmark-item[container][livemark] { 
-  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
 
 .bookmark-item[container][tagContainer] {
@@ -970,7 +970,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #feed-button[feeds] {
-  list-style-image: url("chrome://browser/skin/feeds/feedIcon16.png");
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
 
 /* Autocomplete */
