@@ -49,6 +49,7 @@
 #include "nsJSEnvironment.h"
 #include "nsServiceManagerUtils.h"
 #include "nsDOMError.h"
+#include "nsGlobalWindow.h"
 
 static const char kSetIntervalStr[] = "setInterval";
 static const char kSetTimeoutStr[] = "setTimeout";
@@ -87,7 +88,7 @@ public:
   // added.
   virtual void SetLateness(PRIntervalTime aHowLate);
 
-  nsresult Init(nsIScriptContext *aContext, PRBool *aIsInterval,
+  nsresult Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
                 PRInt32 *aInterval);
 
   void ReleaseJSObjects();
@@ -165,17 +166,16 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
 }
 
 nsresult
-nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
+nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
                                PRInt32 *aInterval)
 {
-  if (!aContext) {
+  mContext = aWindow->GetContextInternal();
+  if (!mContext) {
     // This window was already closed, or never properly initialized,
     // don't let a timer be scheduled on such a window.
 
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  mContext = aContext;
 
   nsAXPCNativeCallContext *ncc = nsnull;
   nsresult rv = nsContentUtils::XPConnect()->
@@ -253,11 +253,18 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
 
     mExpr = expr;
 
+    nsIPrincipal *prin = aWindow->GetPrincipal();
+    JSPrincipals *jsprins;
+    rv = prin->GetJSPrincipals(cx, &jsprins);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Get the calling location.
     const char *filename;
-    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo)) {
+    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo, jsprins)) {
       mFileName.Assign(filename);
     }
+
+    JSPRINCIPALS_DROP(cx, jsprins);
   } else if (funobj) {
     rv = NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -315,7 +322,7 @@ nsJSScriptTimeoutHandler::GetHandlerText()
                          (::JS_GetStringChars(mExpr));
 }
 
-nsresult NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
+nsresult NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
                                    PRBool *aIsInterval,
                                    PRInt32 *aInterval,
                                    nsIScriptTimeoutHandler **aRet)
@@ -325,7 +332,7 @@ nsresult NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
   if (!handler)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = handler->Init(aContext, aIsInterval, aInterval);
+  nsresult rv = handler->Init(aWindow, aIsInterval, aInterval);
   if (NS_FAILED(rv)) {
     delete handler;
     return rv;

@@ -7355,7 +7355,7 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   PRInt32 interval = 0;
   PRBool isInterval = aIsInterval;
   nsCOMPtr<nsIScriptTimeoutHandler> handler;
-  nsresult rv = NS_CreateJSTimeoutHandler(GetContextInternal(),
+  nsresult rv = NS_CreateJSTimeoutHandler(this,
                                           &isInterval,
                                           &interval,
                                           getter_AddRefs(handler));
