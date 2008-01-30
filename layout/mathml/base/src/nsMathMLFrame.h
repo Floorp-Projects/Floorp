@@ -218,9 +218,7 @@ public:
   static PRBool
   ParseNumericValue(const nsString& aString,
                     nsCSSValue&     aCSSValue) {
-    return nsMathMLElement::ParseNumericValue(aString, aCSSValue,
-            nsMathMLElement::PARSE_ALLOW_NEGATIVE |
-            nsMathMLElement::PARSE_ALLOW_UNITLESS);
+    return nsMathMLElement::ParseNumericValue(aString, aCSSValue, PR_FALSE);
   }
 
   static nscoord 
